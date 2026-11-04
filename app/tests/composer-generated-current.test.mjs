@@ -42,8 +42,13 @@ test('generator output matches the pinned 3.6556.2 sources (check mode); imports
   assert.equal(manifest.generator, 'scripts/extract-code-composer.mjs');
   assert.deepEqual(manifest.modules.map(m => m.target), [
     'composer-tokens.mjs', 'composer-testids.mjs', 'composer-glyph.mjs', 'owner-support.mjs', 'placeholder-fit.mjs', 'shortcut-caps.mjs',
+    // W14-code composer-09: the keycap class (shared-frame ec) and the CDS Kbd (cbd6db52c r) of the history hint.
+    'composer-keycap.mjs', 'composer-kbd.mjs',
     'transcript-surface.mjs', 'path-tooltip-placement.mjs', 'composer-card-tokens.mjs', 'composer-dialog-focus.mjs',
-    'composer-focus-yield.mjs', 'composer-key-label.mjs',
+    'composer-focus-yield.mjs',
+    // W14-code r7 gen-final-7 review fix: c227f4d5e K6 (exported y, cc43287c9 yte), bL's finalFocus in Dle.
+    'composer-final-focus.mjs',
+    'composer-key-label.mjs',
     // 3.6556.2: shared-8 HF (Jr), the Stop glyph name KM reads (fizzy-lake icons part, off).
     'composer-stop-glyph.mjs', 'composer-send-cell.mjs',
     // R3-composer composer-copy-command: the transcript predicates and the /copy reply reader.
@@ -54,7 +59,8 @@ test('generator output matches the pinned 3.6556.2 sources (check mode); imports
     // R3-composer focus call sites: shared-8 pR (2.42304.0 xM), consumed by src/composer-focus-handoff.mjs.
     'keyboard-activation.mjs',
     // R3-composer step 3 composer-shell: the CDS ChatComposer shell (shared-5 vm / Sm / hm / mm) over its closure.
-    'chat-composer-react-version.mjs', 'chat-composer-frame.mjs', 'chat-composer-attachments.mjs', 'chat-composer-dock.mjs',
+    // W14-code r2 closeout-2 (DC-06): chat-composer-react-version.mjs (unimported) is retired.
+    'chat-composer-frame.mjs', 'chat-composer-attachments.mjs', 'chat-composer-dock.mjs',
     'chat-composer-presence.mjs', 'chat-composer-layout.mjs', 'chat-composer-shell.mjs',
     // R4g-composer CP2 (X7-08): shared-28 nw, the elementtiming mark of cm's placeholder span.
     'chat-composer-placeholder-timing.mjs',
@@ -63,7 +69,8 @@ test('generator output matches the pinned 3.6556.2 sources (check mode); imports
     // R4g-composer CP4 / R4i-graph GR3: the object URL hook, the video name test, c0fbbe82d's tile wrappers, the Code
     // pane's experimental flags, the one intake route (shared-52 nP / pb, cafc2a89b a, cc43287c9 Kq) and the pane drop zone.
     'composer-object-url.mjs', 'composer-video-types.mjs',
-    'composer-attachment-tiles.mjs', 'code-pane-experimental.mjs', 'composer-intake-split.mjs', 'composer-image-types.mjs', 'composer-intake-route.mjs',
+    // W14-code composer-15: Go's Saved draft dialog (c0fbbe82d ca / sa).
+    'composer-attachment-tiles.mjs', 'composer-held-text-dialog.mjs', 'code-pane-experimental.mjs', 'composer-intake-split.mjs', 'composer-image-types.mjs', 'composer-intake-route.mjs',
     'composer-drop-target.mjs', 'composer-pane-drop-zone.mjs',
   ]);
   assert.deepEqual((await fs.readdir(generated)).sort(), [...manifest.modules.map(m => m.target), 'manifest.json'].sort());
@@ -149,8 +156,10 @@ test('generator output matches the pinned 3.6556.2 sources (check mode); imports
   const routed = kind => manifest.modules.flatMap(m => m.imports.filter(i => i.kind === kind).map(i => `${i.via}=${i.name}`));
   // Host adapters: react-intl (useIntl, FormattedMessage), the tile wrappers' tile set (shared-2 th) and path hover card
   // (c856385e2 Kn). 3.6556.2: the page drop scrim's portal root is view-tabs CdsPortalRoot, so its stand-in is gone.
-  assert.deepEqual([...new Set(routed('adapter'))].sort(), ['c856385e2-aEyDzrcK.js:a=ComposerPathHoverCard', 'shared-2-TF8v67kg.js:ry=ComposerAttachmentTiles',
-    'vendor-intl-DYfox5Co.js:l=ComposerMessage', 'vendor-intl-DYfox5Co.js:p=useComposerIntl']);
+  // W14-code composer-15: c0fbbe82d Hr (the lazily loaded EpitaxyCodeMirrorText) is a local adapter, the host editor.
+  // W14-code r6-composer-02: shared-5 Dd (Od's dynamic import of cb6c4b462) is the host's presence motion loader.
+  assert.deepEqual([...new Set(routed('adapter'))].sort(), ['c0fbbe82d-COsmfHJY.js:Hr=ComposerHeldTextEditor', 'c856385e2-aEyDzrcK.js:a=ComposerPathHoverCard', 'shared-2-TF8v67kg.js:ry=ComposerAttachmentTiles',
+    'shared-5-Bg6ZMqvt.js:Dd=loadPresenceMotionChunk', 'vendor-intl-DYfox5Co.js:l=ComposerMessage', 'vendor-intl-DYfox5Co.js:p=useComposerIntl']);
   assert.equal(Adapters.ComposerPageDropSurface, undefined, 'the throwing drop surface stand-in is removed');
   const viewTabs = new Set(routed('view-tabs'));
   for (const pin of ['shared-frame-6jtSkIit.js:Eu=CdsButton', 'shared-frame-6jtSkIit.js:od=CdsIcon', 'shared-frame-6jtSkIit.js:Kl=CdsTooltip',

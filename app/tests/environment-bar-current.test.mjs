@@ -69,7 +69,9 @@ test("second: the folder chip shows the basename or 'Choose…', the path as its
   assert.match(second, /^<div data-testid="environment-bar-second" class="flex shrink-\[3\] rounded /);
   const folder = tag(second, 'environment-bar-folder');
   assert.match(folder, /title="\/tmp\/fixture\/project, \/tmp\/other\/lib"/);
-  assert.match(folder, /aria-label="Folder: \/tmp\/fixture\/project, \/tmp\/other\/lib"/);
+  // W14-code composer-02: an extra folder folds into the chip (hse Ce "+{count}", Te kIIspeB92o).
+  assert.match(folder, /aria-label="project \+1, folder: \/tmp\/fixture\/project, \/tmp\/other\/lib"/);
+  assert.match(second, /<span class="shrink-0 text-secondary">\+1<\/span>/);
   assert.match(folder, /aria-haspopup="menu"/);
   assert.doesNotMatch(folder, /data-placeholder/);
   assert.match(second, />project<\/span>/);
@@ -82,7 +84,7 @@ test("second: the folder chip shows the basename or 'Choose…', the path as its
   assert.doesNotMatch(tag(slot(home({ folderMenu: false }), 'environment-bar-second'), 'environment-bar-folder'), /aria-haspopup/);
   // F7 (shared-19, j2's Gr): a home folder reads ~-relative.
   assert.deepEqual(Bar.environmentBarChips({ workdir: '/Users/me/code/app' }).folder,
-    { label: 'app', title: '~/code/app', tooltipText: '~/code/app', ariaLabel: 'Folder: ~/code/app' });
+    { label: 'app', tail: undefined, title: '~/code/app', tooltipText: '~/code/app', ariaLabel: 'Folder: ~/code/app' });
 });
 
 test('mode and trailing: the composer’s Mode trigger in the empty:hidden mode slot; the bar Model trigger (effort as its tail) and the ring each in a c0 group', () => {
@@ -96,7 +98,7 @@ test('mode and trailing: the composer’s Mode trigger in the empty:hidden mode 
   // "shrink-0 whitespace-pre text-muted-control" — and no separate effort trigger (its menu has the Effort submenu).
   assert.match(mode, /<span class="inline-flex min-w-0"><button type="button" data-cds="Button" data-cds-ghost=""[^>]*class="[^"]* min-w-0 shrink text-secondary sc-permission"/);
   const trailing = slot(html, 'environment-bar-trailing');
-  assert.match(trailing, /<button type="button" data-cds="Button" data-cds-ghost=""[^>]*class="[^"]* shrink text-secondary sc-model-trigger" aria-label="Model" data-testid="environment-row-model"/);
+  assert.match(trailing, /<button type="button" data-cds="Button" data-cds-ghost=""[^>]*class="[^"]* shrink text-secondary sc-model-trigger" aria-label="Model: [^"]+" data-testid="environment-row-model"/);
   assert.equal(Env.environmentTriggerClass(true, true), 'shrink text-secondary');
   assert.ok(trailing.includes(`<span class="flex min-w-0 items-center gap-1 "><span class="${Tokens.environmentTriggerGivesWayClass}">Fixture</span><span class="shrink-0 whitespace-pre text-pro font-medium" data-top-tier=""> High</span></span>`), 'b6: the name, then the effort tail (High is the fixture model\'s highest level: purple, user decision 2026-10-18)');
   assert.ok(slot(home({ effort: 'low' }), 'environment-bar-trailing').includes('<span class="shrink-0 whitespace-pre text-muted-control"> Low</span>'), 'a lower level keeps x6\'s text-muted-control');

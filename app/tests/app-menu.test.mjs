@@ -111,12 +111,36 @@ test('View follows pNr: sidebar item first, bNr pane items and Close Pane, dNr z
   assert.deepEqual(items[2],{type:'separator'});
   for(const role of ['resetZoom','zoomIn','zoomOut','togglefullscreen'])assert.equal(items.some(item=>item.role===role),false,role);
  }
- assert.deepEqual(shape(open.slice(3)),['Show Changes','Show Files','Close Pane','---','Split View','---','Actual Size','Zoom In','Zoom In (indie cooler version)','Zoom Out','Zoom In (numpad)','Zoom Out (numpad)','Actual Size (numpad)','---','reload','toggleDevTools','---','Enter Full Screen']);
+ assert.deepEqual(shape(open.slice(3)),['Show Changes','Show Files','Close Pane','---','Split View','---','Actual Size','Zoom In','Zoom In (indie cooler version)','Zoom Out','Zoom In (numpad)','Zoom Out (numpad)','Actual Size (numpad)','---','Reload','toggleDevTools','---','Enter Full Screen']);
+ // W14-code r2-shared-07: jPKPzV-P lTi("CmdOrCtrl+R") is a plain item whose click (dTi) main.cjs runs: preview first, else the app.
+ const reload=open.find(item=>item.label==='Reload');
+ assert.equal(reload.role,undefined);assert.equal(reload.accelerator,'CmdOrCtrl+R');
+ const reloadEvents=[];const reloadWindows=[];
+ view(appMenuTemplate({sidebarOpen:true,emit:(e,w)=>{reloadEvents.push(e);reloadWindows.push(w);}})).find(item=>item.label==='Reload').click({},'win');
+ assert.deepEqual(reloadEvents,[{kind:'reload'}]);assert.deepEqual(reloadWindows,['win']);
  assert.equal(closed.some(item=>item.role==='toggleDevTools'),false,'no Toggle Developer Tools in a packaged build');
  assert.deepEqual(open.at(-1).accelerator,'Control+Command+F');
  assert.equal(view(appMenuTemplate({sidebarOpen:true,fullScreen:true,emit})).at(-1).label,'Exit Full Screen');
  open[1].click();closed[1].click();open.at(-1).click();open[0].click();open[0].click({},null,viaAccelerator);
  assert.deepEqual(events,[{kind:'toggle-sidebar'},{kind:'toggle-sidebar'},{kind:'toggle-full-screen'},{kind:'open-search',toggle:true}],'⌘K through the accelerator is the renderer’s');
+});
+
+test('W14-code fr2-20: View › Show/Hide Session Rail is the renderer pageItem after Side Chat, no accelerator',()=>{
+ // jPKPzV-P `...r.pageItem?[a({show:_Ti(r.pageItem.showLabel),hide:…},null,Q_.PageItem,r.pageItem)]:[]`; c11959232 am pageItem.
+ const labels={showLabel:'Show Session Rail',hideLabel:'Hide Session Rail',name:'Session Rail'};
+ const base={panes:{changes:{enabled:true,open:false},files:{enabled:true,open:false},sideChat:{enabled:true,open:false}},closePane:{enabled:true}};
+ const events=[];
+ const items=open=>view(appMenuTemplate({sidebarOpen:true,menuState:menuState({...base,panes:{...base.panes,pageItem:{enabled:true,open,...labels}}}),emit:e=>events.push(e)}));
+ const shown=items(true),hidden=items(false);
+ const at=shown.findIndex(item=>item.label==='Hide Session Rail');
+ assert.equal(shown[at-1].label,'Show Side Chat');assert.equal(shown[at+1].label,'Close Pane');
+ assert.equal(shown[at].accelerator,undefined);assert.equal('accelerator' in shown[at],false);
+ assert.ok(hidden.some(item=>item.label==='Show Session Rail'));
+ shown[at].click();assert.deepEqual(events,[{kind:'toggle-pane',pane:'pageItem'}]);
+ const disabled=view(appMenuTemplate({sidebarOpen:true,menuState:menuState({...base,panes:{...base.panes,pageItem:{enabled:false,open:true,...labels}}}),emit:()=>{}})).find(item=>/Session Rail/.test(item.label||''));
+ assert.equal(disabled.label,'Show Session Rail');assert.equal(disabled.enabled,false);
+ // No labels (presets off, _V null): no item.
+ assert.equal(view(appMenuTemplate({sidebarOpen:true,menuState:menuState({...base,panes:{...base.panes,pageItem:{enabled:true,open:true}}}),emit:()=>{}})).some(item=>/Session Rail/.test(item.label||'')),false);
 });
 
 test('View pane items in bNr order: Terminal, Changes, Preview, Files, Side Chat (⌘;), Close Pane',()=>{

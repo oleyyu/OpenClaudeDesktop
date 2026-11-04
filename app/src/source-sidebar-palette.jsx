@@ -2,7 +2,8 @@ import React, { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } f
 import { createPortal } from "react-dom";
 import { Icon } from "./icons";
 import { holdModalInert } from "./modal-inert.mjs";
-import { SourceSettingsButton } from "./source-settings-button.jsx";
+// W14-code r6 R6DC-02: c2771e1f6 / ce8be540f palette buttons are shared-frame Uu (E41 direct import).
+import { CdsButton } from "./generated/view-tabs/shared-frame-6jtSkIit.js";
 import { SourceSpinner } from "./source-pane-states.jsx";
 import { hasPendingApproval } from "./state.js";
 import { sessionArchived, sessionName, sessionState, sessionUpdatedAt } from "./sidebar-model";
@@ -198,8 +199,8 @@ export function SourceSidebarPalette({
       return <button key={item.id} {...common}>
         <span className="spal-row-main"><Glyph name="Code" dot={dot} />
           <span className="spal-row-text"><Highlighted text={sessionName(session)} query={query} /></span>
-          {archived && <span className="spal-sr-only"> {t("Archived")}</span>}
-          {dot && <span className="spal-sr-only"> {t(DOT_LABELS[dot])}</span>}
+          {archived && <span className="sr-only"> {t("Archived")}</span>}
+          {dot && <span className="sr-only"> {t(DOT_LABELS[dot])}</span>}
         </span>
         <Trailing selected={isSelected}>{archived
           ? <span className="spal-badge" aria-hidden="true"><Icon name="Archive" size={12} />{t("Archived")}</span>
@@ -241,21 +242,21 @@ export function SourceSidebarPalette({
   const tree = (
     <div className="spal-portal cds-root" data-cds-portal="" {...portalAttributes()}>
       <div className="spal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) { event.preventDefault(); close(); } }} />
-      <div ref={popup} role="dialog" aria-modal="true" aria-label={t("Command palette")} className="spal-popup cds-reset" data-palette-mode={mode}
+      <div ref={popup} role="dialog" aria-modal="true" className="spal-popup cds-reset" data-palette-mode={mode}
         data-testid="command-palette">
         <div className="spal-body">
           <div className="spal-head">
             <div className="spal-input-row">
               {mode === "search" && <span className="spal-mode-icon" aria-label={t("Search mode")}><Icon name="Search" size={20} /></span>}
               {mode === "actions" && <span className="spal-mode-chip"><span aria-label={t("Actions mode")}><Icon name="Keyboard" size={20} /></span>
-                <SourceSettingsButton variant="ghost" size="xs" iconOnly icon="X" iconSize={12} aria-label={t("Clear filter")}
+                <CdsButton type="button" variant="ghost" size="xs" iconOnly icon="X" aria-label={t("Clear filter")}
                   onMouseDown={(event) => event.preventDefault()} onClick={() => { setMode("default"); input.current?.focus(); }} /></span>}
               <input ref={input} id="command-palette-input" type="text" role="combobox" aria-autocomplete="list" aria-expanded="true"
                 aria-controls={listId} aria-activedescendant={current >= 0 ? `${listId}-${current}` : undefined} aria-label={placeholder}
                 placeholder={placeholder} value={query} autoComplete="off" spellCheck={false} className="spal-input"
                 onChange={(event) => setQuery?.(event.target.value)} onKeyDown={onKeyDown} />
               <span className="spal-spinner-slot">{deeper && <span role="status" aria-label={t("Searching deeper...")} className="leading-[0]"><SourceSpinner size="md" delay={150} /></span>}</span>
-              <SourceSettingsButton variant="ghost" iconOnly icon="X" iconSize="auto" aria-label={t("Close")} onClick={close} />
+              <CdsButton type="button" variant="ghost" iconOnly icon="X" aria-label={t("Close")} onClick={close} />
             </div>
             {mode === "search" && <div className="spal-filters" role="group" aria-label={t("Filters")} onMouseDown={(event) => event.preventDefault()}>
               <div role="tablist" aria-label={t("Type")} className="spal-tabs">
@@ -282,7 +283,7 @@ export function SourceSidebarPalette({
             </div>
             {empty && <div className="spal-empty">
               <p aria-hidden="true" className="spal-empty-words">{t("No results found")}</p>
-              {filtered && <SourceSettingsButton size="sm" onMouseDown={(event) => event.preventDefault()} onClick={() => setFilters(EMPTY_PALETTE_FILTERS)}>{t("Clear filters")}</SourceSettingsButton>}
+              {filtered && <CdsButton type="button" variant="secondary" size="sm" onMouseDown={(event) => event.preventDefault()} onClick={() => setFilters(EMPTY_PALETTE_FILTERS)}>{t("Clear filters")}</CdsButton>}
             </div>}
           </div>
           <div className="spal-footer">
@@ -293,7 +294,7 @@ export function SourceSidebarPalette({
             </div>
           </div>
         </div>
-        <div className="spal-sr-only" aria-live="polite" aria-atomic="true">{term && !deeper
+        <div className="sr-only" aria-live="polite" aria-atomic="true">{term && !deeper
           ? resultCount > 0 ? tn(resultCount, "{count} result available", "{count} results available") : t("No results found")
           : null}</div>
       </div>

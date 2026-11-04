@@ -11,17 +11,18 @@ import { currentSidebarSession } from '../src/sidebar-session-current-model.mjs'
 import { sidebarReadStatePatch } from '../electron/sidebar-read-state.cjs';
 import { withMemoCache } from './support/react-memo-cache.mjs';
 
-// cds-merge-props re-exports the view-tabs vendor-frame (SG-2), whose React boundary is a .jsx host adapter: load via Vite.
+// The CDS Badge / density context and Base UI mergeProps are the view-tabs originals (SG-2; W14-code r2 closeout-2 DC-06
+// retired code-current's cds-badge / cds-merge-props shims), whose React boundary is a .jsx host adapter: load via Vite.
 let server, Sidebar, Badge, NavBadge, Status, Fade, mergeCdsProps;
 before(async () => {
   server = await createServer({ configFile:false, root:new URL('..',import.meta.url).pathname, plugins:[react()],
     server:{middlewareMode:true,hmr:false,watch:null},appType:'custom',logLevel:'error' });
   Sidebar = await server.ssrLoadModule('/src/source-sidebar.jsx');
-  Badge = await server.ssrLoadModule('/src/generated/code-current/cds-badge.mjs');
+  Badge = await server.ssrLoadModule('/src/generated/view-tabs/shared-frame-6jtSkIit.js');
   NavBadge = await server.ssrLoadModule('/src/generated/code-current/sidebar-nav-badge.mjs');
   Status = await server.ssrLoadModule('/src/generated/code-current/sidebar-status-glyph.mjs');
   Fade = await server.ssrLoadModule('/src/generated/code-current/sidebar-fade-label.mjs');
-  ({ mergeCdsProps } = await server.ssrLoadModule('/src/generated/code-current/cds-merge-props.mjs'));
+  ({ mergeProps: mergeCdsProps } = await server.ssrLoadModule('/src/generated/view-tabs/vendor-frame-CnSY1sxv.js'));
 });
 after(()=>server?.close());
 const thread=(fields={})=>({id:'row',name:'A task',cwd:'/repo',createdAt:1,updatedAt:1,...fields});
@@ -76,21 +77,22 @@ test('shared metadata boundary distinguishes automatic completions from manual u
   const main=readFileSync(new URL('../electron/main.cjs',import.meta.url),'utf8');
   assert.match(main,/sidebarReadStatePatch\(p\.patch, \{ automatic: p\.automatic === true \}\)/);
 });
-test('Code Projects uses the original compact neutral xs Beta badge with the source label wrapper',()=>{
+test('Code nav has no Projects row (so no Beta badge); Chat Projects carries no New badge',()=>{
   const html=render();
-  // 3.6556.2 CdsBadge also carries its inert fizzy-lake `stacks:` variant classes (E12) between the tone and the host class.
-  assert.match(html,/<span class="flex min-w-0 flex-1 items-center"><span>Projects<\/span><span data-cds="Badge" data-size="xs"[^>]*bg-neutral text-secondary(?: stacks:[^ "]+)* ms-2"/);
-  assert.match(html,/leading-\[calc\(0\.75rem\*var\(--cds-rem-scale,1\)\)\] py-\[0\.125em\] -my-\[0\.125em\]">Beta<\/span>/);
+  // W14-code r8 fr8-07 (E95): shared-21 hH `{id:"projects",modes:["chat","cowork"]}`; Code's epitaxy-projects row needs
+  // bH's O = Ll() (shared-26 `e && W("amber_tributary_osprey")`, Uon always !1 on the 3P desktop).
+  assert.doesNotMatch(html,/<span class="min-w-0 truncate">Projects<\/span>/);
+  assert.doesNotMatch(html,/>Beta<\/span>/);
   assert.doesNotMatch(html,/surface-new-badge/);
   // w13-surfaces-nav surf-12: shared-21 bH sets y="new-neutral" for projects only when N (tp = !1), so Chat Projects carries no New badge.
   const chat=render({mode:'chat'});assert.doesNotMatch(chat,/surface-new-badge/);
 });
 test('original navigation badge supports New, Beta, Preview, neutral New and upgrade without fabricating lab labels',()=>{
-  const badge=value=>renderToStaticMarkup(React.createElement(Badge.CdsBadgeDensity.Provider,{value:'compact'},React.createElement(NavBadge.SidebarNavBadge,{badge:value})));
+  const badge=value=>renderToStaticMarkup(React.createElement(Badge.CdsDensityContext.Provider,{value:'compact'},React.createElement(NavBadge.SidebarNavBadge,{badge:value})));
   assert.equal(badge(undefined),'');assert.equal(badge('lab'),'');
   assert.match(badge('new'),/bg-tint-blue text-accent/);assert.match(badge('new-neutral'),/bg-neutral text-secondary/);
   assert.match(badge('preview'),/>Preview<\/span>/);assert.match(badge('upgrade'),/data-inline-badge=""/);
-  const comfortable=renderToStaticMarkup(React.createElement(Badge.CurrentCdsBadge,{size:'xs'},'Beta'));
+  const comfortable=renderToStaticMarkup(React.createElement(Badge.CdsBadge,{size:'xs'},'Beta'));
   assert.match(comfortable,/pb-\[0\.05em\]/);
 });
 test('original CDS removal-prop merge preserves styles, custom handler ordering and Base UI cancellation',()=>{

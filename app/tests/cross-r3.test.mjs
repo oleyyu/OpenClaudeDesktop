@@ -166,13 +166,6 @@ test('instruction files a core reads itself: Qwen QWEN.md / AGENTS.md, Gemini GE
   assert.deepEqual(names('kimi'), []);
 });
 
-test('auto-compact hint: a reported limit, Codex’s 90% rule, else unknown', async () => {
-  const { autoCompactPercent } = await import('../src/context-usage-model.mjs');
-  assert.equal(autoCompactPercent({ engine: 'codex' }, { modelContextWindow: 272000 }), 90);
-  assert.equal(autoCompactPercent({ engine: 'opencode' }, { modelContextWindow: 200000, codeDesktop: { autoCompactTokens: 150000 } }), 75);
-  assert.equal(autoCompactPercent({ engine: 'kimi' }, { modelContextWindow: 200000 }), null);
-});
-
 test('a bridge that turns connectors on and off (mcpEnable) gets mcp_servers.<name>.enabled; others are refused', async () => {
   const { createRequire } = await import('node:module');
   const require = createRequire(import.meta.url);

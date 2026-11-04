@@ -1,7 +1,8 @@
 import React,{createContext,useContext,useEffect,useId,useLayoutEffect,useRef,useState,useSyncExternalStore} from 'react';
 import {createPortal} from 'react-dom';
 import {Icon} from './icons.jsx';
-import {SourceSettingsButton} from './source-settings-button.jsx';
+// W14-code r6 sh6-03: shared-22 QI `action: o(A,{size:"sm",variant:"secondary",onClick:…})` — A is shared-frame Uu (E41 direct import).
+import {CdsButton} from './generated/view-tabs/shared-frame-6jtSkIit.js';
 import {t} from '../electron/i18n/index.mjs';
 import {createToastStore,toastClearance} from './toast-store.mjs';
 import './source-toast.css';
@@ -48,7 +49,7 @@ function ToastViewport({store}) {
   useLayoutEffect(()=>{
     const node=scope.current;if(!shown||!node)return;
     const view=node.ownerDocument.defaultView;let frame=0;
-    const update=()=>{frame=0;const regions=[...node.ownerDocument.querySelectorAll('[data-toast-safe-region]')].filter(region=>!region.closest('[inert]')).map(region=>region.getBoundingClientRect());
+    const update=()=>{frame=0;const regions=[...node.ownerDocument.querySelectorAll('[data-toast-safe-region]')].filter(region=>!region.closest('[inert]')).map(region=>{const {left,right,top,bottom,width,height}=region.getBoundingClientRect();return {left,right,top,bottom,width,height,nearWindowBottomOnly:region.getAttribute('data-toast-safe-region')==='near-bottom'};});
       const value=toastClearance(node.getBoundingClientRect(),regions,view.innerHeight);
       if(value>0)node.style.setProperty('--toast-clearance',`${Math.round(value)}px`);else node.style.removeProperty('--toast-clearance');};
     const schedule=()=>{if(!frame)frame=view.requestAnimationFrame(update);};
@@ -94,7 +95,7 @@ function ToastCard({entry,front,limited,order,zIndex,frontHeight,onHeight,store,
       <div className="source-toast-text">
         <div id={title} className="source-toast-message">{text}</div>
         {entry.description&&<p id={description} className="source-toast-description">{entry.description}</p>}
-        {entry.action&&<div className="source-toast-action"><SourceSettingsButton size="sm" variant="secondary" onClick={()=>{try{entry.action.onClick();}finally{dismiss(entry.id);}}}>{entry.action.label}</SourceSettingsButton></div>}
+        {entry.action&&<div className="source-toast-action"><CdsButton size="sm" variant="secondary" onClick={()=>{try{entry.action.onClick();}finally{dismiss(entry.id);}}}>{entry.action.label}</CdsButton></div>}
       </div>
       <button type="button" className="source-toast-dismiss" aria-label={t('Dismiss')} onClick={()=>dismiss(entry.id)}><Icon name="X" size={16}/></button>
     </div></div>

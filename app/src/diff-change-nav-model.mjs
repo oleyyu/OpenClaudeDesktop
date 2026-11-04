@@ -3,7 +3,7 @@
 // R3-files FT-07 (diffgit-09): the anchors and the step are the 2.42304.0 originals (generated/files-changes/
 // diff-change-nav.mjs: c44d00c7f pi / mi / hi, with hi's `belowPane` case); this module keeps the key bindings and the
 // host's hunk shape.
-import { adjacentChange, changeAnchors, sameChangeAnchor } from "./generated/files-changes/diff-change-nav.mjs";
+import { adjacentChange, changeAnchors } from "./generated/files-changes/diff-change-nav.mjs";
 
 /** shared-19 m6: { command, key, when }; `!isLinux` rows are dropped on Linux. */
 export function diffChangeShortcuts({ linux = false } = {}) {
@@ -50,11 +50,6 @@ export function pierreDiffHunks(hunks = []) {
  * and `removes` whether it deletes lines. A hunk with an empty side starts that side at the line after its header's. */
 export function diffChangeTargets(id, hunks = []) {
   return changeAnchors(id, { hunks: pierreDiffHunks(hunks) });
-}
-
-/** mi, null-safe for the host's "no previous press". */
-export function sameDiffChange(a, b) {
-  return !!a && !!b && sameChangeAnchor(a, b);
 }
 
 /** hi(targets, fileOrder, {last, viewport}, direction): the change to go to. `last` is the change the previous press

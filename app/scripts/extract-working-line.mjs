@@ -152,7 +152,9 @@ const modules = [
     features: { a: ['leading:', 'seated:'] } },
   { target: 'clipboard.mjs', source: 'shared-1-BJhqMmkf.js', linkExports: ['CR'] },
   { target: 'shared-156.mjs', source: 'shared-156-BLTosN8U.js' },
-  { target: 'shared-2.mjs', source: 'shared-2-TF8v67kg.js', linkExports: ['R6'] },
+  // W14-code r5 R5DC-09 (D1): x6, the message actions' beside context (S6 `g = x(x6)`), is exported so the code transcript
+  // links this one copy and its provider (c96d752d0 `u(x6.Provider, {value: !0, children: yt})`) reaches S6.
+  { target: 'shared-2.mjs', source: 'shared-2-TF8v67kg.js', linkExports: ['R6', 'x6'] },
   { target: 'shared-4.mjs', source: 'shared-4-DUB1Oi0O.js' },
   { target: 'shared-28.mjs', source: 'shared-28-DNYlf4wu.js' },
   // w12 (D1): aa left linkExports once view-tabs published it as cdsNodeOwnerWindow (w12-preview); transcript rows import
@@ -179,7 +181,17 @@ const modules = [
   // w10-ccres-rail-readout (D1): the session rail context area's chart tooltip kit (c0ce8f953 useSpring, ca74e9c4f
   // useMotionValue, cddbfc1b6) imports the motion values, frame loop and spring generator from here (one framer-motion).
   { target: 'vendor-motion.mjs', source: 'vendor-motion-DlXQpU4V.js',
-    linkExports: ['C', 'fd', 'pd', 'ul', 'En', 'F', 'G', 'K', 'M', 'N', 'Qr', 'S', 'Sn', 'Zc', 'hn', 'un', 'vn', 'x'] },
+    // W14-code r6-composer-02: Cl (LazyMotion) and su (the `m` namespace) join C (PresenceContext) and ul (AnimatePresence)
+    // as the four vendor-motion bindings cb6c4b462 re-exports (see presence-motion.mjs below); ol (useIsPresent), which
+    // presence-motion's HidingPresenceElement reads, is the transcript rows' turn mark's one copy too (D1).
+    linkExports: ['C', 'Cl', 'fd', 'ol', 'pd', 'ul', 'En', 'F', 'G', 'K', 'M', 'N', 'Qr', 'S', 'Sn', 'Zc', 'hn', 'su', 'un', 'vn', 'x'] },
+  // W14-code r6-composer-02: cb6c4b462 (704 bytes), the `cds_lazy_presence_motion` chunk shared-5 Od loads (Dd
+  // `import("./cb6c4b462-Dl6QEgSL.js")`): domMax (`{ renderer: cu, ...du, ...ud, ...Yu, ...dd }`) and the two presence
+  // elements over this one vendor-motion. Its export statement also re-exports vendor-motion ul / Cl / C / su as
+  // AnimatePresence / LazyMotion / PresenceContext / m; runSlicer emits declarations only, so the code composer's loader
+  // adapter (src/source-composer-current-adapters.jsx loadPresenceMotionChunk) assembles the same seven-name namespace.
+  { target: 'presence-motion.mjs', source: 'cb6c4b462-Dl6QEgSL.js', exports: { d: 'domMax', f: 'PresenceElement', p: 'HidingPresenceElement' },
+    features: { d: ['renderer: o,'], f: ['ref: i'], p: ['"aria-hidden": c,'] } },
   // cb6930dae: the keyed morph (Ja), the turn mark broker's context ($a: the tool rows hold the mark and say their
   // words there — U6's toolLabel in the desktop) and the turn activity context (jo). The transcript rows area imports
   // the contexts from here, so each exists once.
@@ -248,8 +260,9 @@ async function readSourceIn(name, cache, dir = source) {
   // Top-level expression statements (vendor-motion: `sn.applyToOptions = …`, `or.translateX = or.x, …`): carried as
   // original initializers when the closure holds the object they assign to (see extractWorkingLine).
   // A top-level for…of or if (c5d464fa3 registers its lazily loaded code themes in one, c64baa838 defines the
-  // diffs-container element in one) is carried only by carryStatements.
-  const statements = ast.program.body.filter(node => ['ExpressionStatement', 'ForOfStatement', 'IfStatement'].includes(node.type)).map(node => {
+  // diffs-container element in one) is carried only by carryStatements, and so is a top-level for (W14-code: c7b19a753
+  // fills the alluvium parser's ASCII punctuation table in one).
+  const statements = ast.program.body.filter(node => ['ExpressionStatement', 'ForOfStatement', 'IfStatement', 'ForStatement'].includes(node.type)).map(node => {
     const assigned = new Set();
     const visit = e => { if (!e) return; if (e.type === 'SequenceExpression') e.expressions.forEach(visit);
       else if (e.type === 'AssignmentExpression' && e.left.type === 'MemberExpression' && e.left.object.type === 'Identifier') assigned.add(e.left.object.name); };
@@ -344,7 +357,18 @@ const allowedGlobals = new Set(['Math', 'Number', 'Array', 'Object', 'Error', 'T
   // w6-transcript-rows-cont (3.6556.2 tool rows): the o11y idle queue reads the page visibility entries.
   'PerformanceObserver', 'fetch', 'Request', 'HTMLScriptElement',
   // w13-close-chat-renderer (chat-renderer, c76f98194 selection helpers): the DOM Range constants (Range.START_TO_START).
-  'Range']);
+  'Range',
+  // W14-code renderer-core (code-transcript): shared-0's abortable sleep (bU: `new DOMException("sleep aborted",
+  // "AbortError")`) and the retry-after read of an API error (_X: `t instanceof Headers`), platform globals of the renderer.
+  'DOMException', 'Headers',
+  // and idb-keyval's store (vendor-all-0 te: `indexedDB.open(…)` when a persisted store is first read).
+  'indexedDB',
+  // and shared-52's blob-to-data-URL read of an attachment preview ($N: `new FileReader()`).
+  'FileReader',
+  // and the timers / abort signals of shared-104's idle work queue (AbortSignal.timeout, requestIdleCallback).
+  'AbortSignal', 'requestIdleCallback', 'cancelIdleCallback', 'CSSStyleRule', 'HTMLIFrameElement', 'HTMLVideoElement', 'HTMLMediaElement', 'HTMLDivElement', 'HTMLSpanElement', 'SVGGraphicsElement', 'CSSMediaRule', 'DOMRect', 'eval', 'FormData', 'ReadableStream', 'XMLHttpRequest', 'Notification', 'HTMLElement', 'File', 'FileList', 'DataTransfer', 'ClipboardEvent', 'DragEvent', 'TouchEvent', 'WebSocket', 'WheelEvent', 'FocusEvent', 'InputEvent', 'HTMLAnchorElement', 'HTMLImageElement', 'HTMLCanvasElement', 'SVGSVGElement', 'DocumentFragment', 'ShadowRoot', 'BroadcastChannel',
+  // W14-code r5: c64baa838's virtualizer (`_n` → on: `t instanceof Document ? this.setupWindow() : …`), for pierre's File.
+  'Document']);
 
 // Generated areas this one imports from instead of slicing again: file#local -> { from, name } for every binding a
 // linked area emits and exports; a binding it slices without exporting is `null` (stops generation: export it there,
@@ -509,14 +533,16 @@ export async function runSlicer(cfg, { check = false, dryRun = false } = {}) {
         st.imports.set(name, { from: adapterModule, name: adapter.name, via, kind: 'adapter', original: local });
         return;
       }
+      // A verified React alias is React itself, even where vendor-frame's own declaration of it is a local adapter
+      // (W14-code r6-composer-02: effort-control answers vendor-frame R = c.useEffect for vendor-frame's own code).
+      const react = vendorImport(depFile, alias, dep);
+      if (react) { st.imports.set(name, { from: react[0], name: react[1], via, kind: 'react' }); return; }
       const standIn = localAdapters[`${depFile}#${local}`];
       if (standIn) {
         assertFeatures(`${target}: local adapter ${depFile}#${local}`, await featureText(dep, dep.top.get(local)), standIn.features);
         st.imports.set(name, { from: adapterModule, name: standIn.name, via, kind: 'adapter', original: local });
         return;
       }
-      const react = vendorImport(depFile, alias, dep);
-      if (react) { st.imports.set(name, { from: react[0], name: react[1], via, kind: 'react' }); return; }
       const shared = published.get(`${depFile}#${local}`);
       if (shared) { st.imports.set(name, { from: `../view-tabs/${depFile}`, name: shared.name, via, kind: 'view-tabs', original: local }); return; }
       const link = linkedImport(`${depFile}#${local}`);

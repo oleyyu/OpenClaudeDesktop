@@ -98,10 +98,8 @@
 //                       allowlist turns those off through thread/start codeDesktop.tools.disabled (runner toolNarrowing.js).
 //   workflowMcpSwitches the bridge honours thread/start config mcp_servers.<name>.enabled / .disabled_tools as Codex does,
 //                       so a workflow agent's mcp__… exclusions apply there too (OpenCode, MiMo).
-//   workflowArtifacts   codeDesktop/workflow/artifact reads a run's published deliverables (item.workflowRun.artifacts:
-//                       ZCode's artifact.*); the run card lists them, primary first, and opens their content.
-//   workflowRunSettings codeDesktop/workflow/settings changes a running run's sub-agent model and agent limit (the run card's
-//                       Configure: ZCode's amendWorkflowRunSettings).
+//   (workflowArtifacts / workflowRunSettings: gone with the host run card's artifact list and Configure, W14-code r5
+//                       cleanup R5DC-03 / E95; the app no longer forwards codeDesktop/workflow/artifact or /settings.)
 //   savedWorkflows      codeDesktop/workflows/list|get|delete|runs serve the agent's own saved-workflow library (ZCode's
 //                       .zcode/workflows): the '/' menu and Settings › Dynamic workflows list it while its own engine runs.
 //   agentsWrite         codeDesktop/agents/write|remove create and delete the agent's own agent files (OpenCode, MiMo):

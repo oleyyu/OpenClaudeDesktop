@@ -12,6 +12,17 @@
  *   MCP / skills / plugins  the generated config folder (config.js) + live /mcp calls
  *   usage                folded from the sessions' own token counts (usage.js)
  *   side question        a temporary fork with every tool denied, deleted afterwards
+ *
+ * OpenCode 2.x (flavor.api 'v2', flavor.js detectApi) moved every route under /api, the event stream and the `serve`
+ * flags: its server, API client and event normalizer are src/v2/*, and `this.v2` (null on the 1.x API, MiMo included)
+ * holds them; v2-specific behaviour is dispatched on `this.v2`, never on the flavor id. Its history is read as 1.x-shaped
+ * messages (v2/history.js) that projection.js groups into turns by position (Projector api 'v2'); its models come from
+ * /api/model (v2/catalog.js). Its sessions and turns are the *V2 methods of v2/session.js (Bridge) and v2/turns.js
+ * (LiveThread): one POST /api/session with the ruleset (v2/rules.js), prompts with ids the bridge chose, live events
+ * built into the same entries a reload reads (v2/live.js), turns started and ended by session.execution.*. Its sign-ins
+ * are integrations and credentials (v2/account.js), Claude's the user's own Claude Code (v2/claude.js). Its connectors,
+ * skills, commands, plugins, agent files and tool list are v2/extensions.js (GET /api/config's documents, /api/mcp,
+ * /api/skill, /api/command, /api/plugin), its usage v2/usage.js.
  */
 import fs from 'node:fs'
 import os from 'node:os'
@@ -35,6 +46,23 @@ import { McpToolCache } from './mcp-tools.js'
 import { PLUGIN_FILE } from './plugin.js'
 import { OAuthCallbacks, callbackOf } from './oauth-callback.js'
 import { UsageCache, accountUsage, codeStats, foldSession, localDayKey } from './usage.js'
+import { AgentServerV2 } from './v2/server.js'
+import { V2Api } from './v2/api.js'
+import { CATALOG_EVENTS, SeqFilter, normalizeEvent } from './v2/events.js'
+import { readMessages, toV1Messages, toV1Session } from './v2/history.js'
+import { CatalogV2 } from './v2/catalog.js'
+import { acquireFirstStart, importAuthKeys, markReady, v2Paths } from './v2/db.js'
+import { hiddenUnder, markV2Writes, threadOwnedBy } from './v2/threads.js'
+import { BridgeConfigV2 } from './v2/config.js'
+import { writeSandboxV2 } from './v2/sandbox.js'
+import { planDirV2 } from './v2/rules.js'
+import { THREAD_V2 } from './v2/turns.js'
+import { ASKS_V2, globalAskV2 } from './v2/asks.js'
+import { BRIDGE_V2 } from './v2/session.js'
+import { ACCOUNT_V2, CLAUDE_ID } from './v2/account.js'
+import { ClaudeCode } from './v2/claude.js'
+import { EXTENSIONS_V2, agentDenyV2, agentMarkdownV2 } from './v2/extensions.js'
+import { USAGE_V2 } from './v2/usage.js'
 
 export const BRIDGE_VERSION = '0.1.0'
 // MiMo's built-in slash commands whose descriptions it translates itself (cli/cmd/tui/i18n/slash-command.ts).
@@ -50,6 +78,10 @@ const SESSION_PAGE_MIN = 100
 const SESSION_PAGES_MAX = 1000
 // thread/list cursors that carry OpenCode's own cursor (other cursors are offsets into a full listing).
 const SESSION_CURSOR = 'oc:'
+// OpenCode 2.x's session list cursor, handed back as it came after this prefix.
+const SESSION_CURSOR_V2 = 'oc2:'
+// OpenCode 2.x's built-in agents (agent.ts has no `native` flag).
+const BUILTIN_AGENTS_V2 = new Set(['build', 'plan', 'general', 'explore', 'compaction', 'title', 'summary'])
 /** The OpenClaude Desktop workflow runner's clientInfo.name (app/electron/workflow-child.mjs), and its agents' session title. */
 const WORKFLOW_CLIENT = 'code-desktop-workflows'
 /** Removes workflow-runs/<pid> folders (a runner bridge's generated config) whose process is gone. */
@@ -70,7 +102,12 @@ const withoutIds = (extra, list) => {
   return (Array.isArray(extra) ? extra : []).filter((entry) => !seen.has(entry?.info?.id))
 }
 /** Permission asks of the agent's own tools, never an MCP tool's name. */
-const BUILTIN_ASKS = new Set(['bash', 'edit', 'read', 'external_directory', 'doom_loop', 'bash_delete', 'mcp_sampling', 'question', 'task', 'webfetch', 'websearch', 'skill', 'workflow'])
+const BUILTIN_ASKS = new Set(['bash', 'edit', 'read', 'external_directory', 'doom_loop', 'bash_delete', 'mcp_sampling', 'question', 'task', 'webfetch', 'websearch', 'skill', 'workflow',
+  // OpenCode 2.x's own names.
+  'shell', 'subagent', 'glob', 'grep', 'todowrite', 'execute'])
+// OpenCode 2.x's read tools under the 1.x names its asks are decided by (v2/asks.js: shell → bash, subagent → task): no
+// list, lsp, codesearch or todoread there.
+const READ_TOOLS_V2 = Object.freeze(['read', 'glob', 'grep', 'todowrite', 'question', 'skill', 'webfetch', 'websearch', 'task'])
 /** A title that names nothing: OpenCode's default, or the placeholder a workflow agent's session was created with. */
 const placeholderTitle = (title, meta) => isDefaultTitle(title) || (meta?.workflowAgent === true && title === WORKFLOW_TITLE)
 
@@ -106,7 +143,13 @@ export function loginInputs(value) {
 const AGENT_NAME = /^[a-z0-9][a-z0-9-]{0,63}$/
 const AGENT_PERMISSIONS = ['bash', 'read', 'edit', 'glob', 'grep', 'webfetch', 'task', 'todowrite', 'websearch', 'lsp', 'skill']
 
-export function capabilitiesFor(flavor) {
+/**
+ * api: the HTTP API generation (flavor.api; flavor.js detectApi). OpenCode 2.x has no share links (G1) and no per-turn
+ * structured output (G2): both are reported false there, outranking the descriptor (core-registry.mjs coreCapabilities:
+ * implied, then reported), which implies neither since a core can run either generation.
+ */
+export function capabilitiesFor(flavor, api = flavor?.api ?? 'v1') {
+  const v2 = api === 'v2'
   return {
     customization: true,
     permissionHints: true,
@@ -114,7 +157,9 @@ export function capabilitiesFor(flavor) {
     livePermissions: true,
     toolSelection: true,
     codeStats: true,
-    structuredOutput: true,
+    // turn/start outputSchema (OpenClaude Desktop's /workflow runner): 2.x's prompt has no format, so its runner asks
+    // for JSON in the prompt instead (main.cjs runnerStructuredOutput).
+    structuredOutput: !v2,
     sideQuestion: true,
     // The agent titles its sessions (session.updated title → thread/name/updated) unless the user named one.
     generatesTitles: true,
@@ -133,8 +178,8 @@ export function capabilitiesFor(flavor) {
     // item.workflowRun (projection.js mimoWorkflowRun), stop with codeDesktop/workflow/stop and resume with
     // codeDesktop/workflow/resume (run.resumable).
     modelWorkflows: flavor.id === 'mimo',
-    // /cd moves the session to another folder of its project (OpenCode's /move: codeDesktop/thread/move); MiMo has no
-    // move-session route.
+    // /cd moves the session to another folder of its project (OpenCode's /move: codeDesktop/thread/move; 2.x's
+    // POST /api/session/:id/move, which leaves uncommitted changes where they are); MiMo has no move-session route.
     moveCwd: flavor.id === 'opencode',
     harnessProfile: false,
     providerSettings: false,
@@ -157,7 +202,8 @@ export function capabilitiesFor(flavor) {
     ...(flavor.id === 'mimo' ? { mcpSampling: true } : {}),
     // codeDesktop/references/list: OpenCode's `references` (named repos and folders), offered in the app's @ menu.
     references: flavor.id === 'opencode',
-    // OpenClaude Desktop keeps its config changes in its own overlay (OPENCODE_CONFIG_DIR), never in the user's file.
+    // OpenClaude Desktop keeps its config changes in its own overlay (1.x: OPENCODE_CONFIG_DIR; 2.x: OPENCODE_CONFIG,
+    // v2/config.js), never in the user's file.
     configOverlay: true,
     // codeDesktop/history/import: MiMo imports other tools' sessions on request (Settings › Code).
     ...(flavor.id === 'mimo' ? { historyImport: ['cc', 'codex', 'opencode'] } : {}),
@@ -171,8 +217,8 @@ export function capabilitiesFor(flavor) {
     // codeDesktop/mcpServer/logout: drop a connector's stored sign-in (DELETE /mcp/:name/auth).
     mcpLogout: true,
     // codeDesktop/thread/share: OpenCode's /share and /unshare (POST / DELETE /session/:id/share); the link rides on the
-    // thread as codeDesktop.shareUrl.
-    ...(flavor.id === 'opencode' ? { threadShare: true } : {}),
+    // thread as codeDesktop.shareUrl. 2.x has no share route.
+    ...(flavor.id === 'opencode' ? { threadShare: !v2 } : {}),
     // codeDesktop/agents/list: the agent's own agents (GET /agent) for Customize; primaryAgents: a session can run as
     // one of its primary agents (codeDesktop.agent on thread/start and turn/start; default_agent otherwise).
     agentsList: true,
@@ -185,9 +231,12 @@ export function capabilitiesFor(flavor) {
     // Dynamic workflows on OpenClaude Desktop's engine: an agent() opts.disallowedTools entry turns these tools off for that
     // agent through thread/start codeDesktop.tools.disabled (Claude tool name → this agent's own tool ids): web fetch,
     // web and code search, and sub-agents (OpenCode's `task`; MiMo's `actor`, since its `task` is the work-item list).
+    // OpenCode 2.x has no codesearch, and its sub-agent tool is `subagent`.
     workflowToolSwitches: flavor.id === 'mimo'
       ? { WebFetch: ['webfetch'], WebSearch: ['websearch', 'codesearch'], Agent: ['actor'], Task: ['actor'] }
-      : { WebFetch: ['webfetch'], WebSearch: ['websearch', 'codesearch'], Agent: ['task'], Task: ['task'] },
+      : v2
+        ? { WebFetch: ['webfetch'], WebSearch: ['websearch'], Agent: ['subagent'], Task: ['subagent'] }
+        : { WebFetch: ['webfetch'], WebSearch: ['websearch', 'codesearch'], Agent: ['task'], Task: ['task'] },
     // ...and an `mcp__<server>[__<tool>]` entry through thread/start config mcp_servers.<name>.enabled false /
     // .disabled_tools (as on Codex; tools.js mcpConfigSelection), against the servers config/read lists.
     workflowMcpSwitches: true,
@@ -259,26 +308,31 @@ const SIDE_PROMPT = 'You answer a side question about the conversation above. Th
 
 export class Bridge {
   /**
-   * @param {{ flavor: any, binary: string, runner?: string, nodeBinary?: string, version?: string, stateDir: string, env?: object, input?: any, output?: any, log?: (line: string) => void }} options
+   * @param {{ flavor: any, binary: string, runner?: string, nodeBinary?: string, version?: string, detectedVersion?: string | null, stateDir: string, env?: object, input?: any, output?: any, log?: (line: string) => void }} options
    */
-  constructor({ flavor, binary, runner = '', nodeBinary, version = '', stateDir, env = process.env, input = process.stdin, output = process.stdout, log = () => {} }) {
+  constructor({ flavor, binary, runner = '', nodeBinary, version = '', detectedVersion = null, stateDir, env = process.env, input = process.stdin, output = process.stdout, log = () => {} }) {
     this.flavor = flavor
     this.binary = binary
     this.runner = runner
     this.nodeBinary = nodeBinary ?? process.execPath
     this.reportedVersion = version
+    // What `<binary> --version` said before spawning (flavor.js detectApi), when it was asked.
+    this.detectedVersion = detectedVersion
     this.stateDir = stateDir
     this.env = env
     this.log = log
     fs.mkdirSync(stateDir, { recursive: true })
-    this.config = new BridgeConfig({ flavor, stateDir, env })
+    // OpenCode 2.x's overlay is OPENCODE_CONFIG + OPENCODE_CONFIG_CONTENT in a folder of its own (v2/config.js).
+    this.config = flavor?.api === 'v2' ? new BridgeConfigV2({ flavor, stateDir, env }) : new BridgeConfig({ flavor, stateDir, env })
     // Generated-config folders of workflow runners that are gone (config.js runnerDir).
     if (!this.config.runnerDir) sweepRunnerFolders(stateDir)
     // OpenClaude Desktop's own tools server (app-tools.js; registered by the config overlay), or null.
     this.appTools = appToolsServer(env)
     this.store = new ThreadStore(stateDir)
     this.settingsFile = path.join(stateDir, 'settings.json')
-    this.catalog = new ModelCatalog(() => this.api('GET', '/config/providers', { directory: this.homeDir() }), { rank: (provider) => providerRank(provider, this.credentialContext()) })
+    this.catalog = flavor?.api === 'v2'
+      ? new CatalogV2(() => this.v2Api(), { location: () => this.homeDir() })
+      : new ModelCatalog(() => this.api('GET', '/config/providers', { directory: this.homeDir() }), { rank: (provider) => providerRank(provider, this.credentialContext()) })
     this.mcpTools = new McpToolCache({ log })
     this.usageCache = new UsageCache()
     /** @type {Map<string, LiveThread>} root threads loaded here */
@@ -297,6 +351,15 @@ export class Bridge {
     this.accountRetry = null
     this.oauthCallbacks = new OAuthCallbacks({ log })
     this.server = null
+    // OpenCode 2.x's adapters (set up by startServerV2), or null on the 1.x API. (`this.api` is the HTTP helper.)
+    // claimMs: how long a /command's turn waits for its prompt to be enqueued (v2/turns.js); resyncMs: the reconnection debounce.
+    // claude: Claude Code for the claude-agent provider (v2/claude.js; `claude.path` is a future core setting).
+    this.v2 = flavor?.api === 'v2' ? {
+      api: null, seq: new SeqFilter(), starting: null, resyncTimer: null, claimMs: 3000, resyncMs: 250, loading: new Map(),
+      claude: new ClaudeCode({ env, log: (line) => this.log(line), configured: () => { const value = this.settings().coreSettings?.['claude.path']; return typeof value === 'string' ? value : null } }),
+    } : null
+    // threads.json is shared with the other engine: v2's entries carry its marker (v2/threads.js).
+    if (this.v2) markV2Writes(this.store)
     this.closed = false
     // $TMPDIR (canonical); /tmp is added by sandboxPolicy unless the client excludes it.
     this.tmpRoots = [...new Set([env.TMPDIR, os.tmpdir()].filter(Boolean).map((dir) => { try { return fs.realpathSync(dir) } catch { return null } }).filter(Boolean))]
@@ -326,8 +389,11 @@ export class Bridge {
   // ------------------------------------------------------------------ agent server
 
   async ensureServer() {
+    // OpenCode 2.x may wait for the first-start lock before its server exists: concurrent callers share that start.
+    if (this.v2?.starting) return this.v2.starting
     if (this.server) return this.server.ready()
     if (!this.binary) throw new RpcError(-32000, `${this.flavor.name} is not installed. Download it in Settings › Cores or install \`${this.flavor.binary}\`.`)
+    if (this.v2) return (this.v2.starting = this.startServerV2().finally(() => { this.v2.starting = null }))
     const env = this.config.write()
     this.server = new AgentServer({
       flavor: this.flavor, binary: this.binary, runner: this.runner, nodeBinary: this.nodeBinary, log: this.log,
@@ -343,6 +409,64 @@ export class Bridge {
       setTimeout(() => { if (!this.closed && this.clientName !== WORKFLOW_CLIENT) void this.removeWorkflowSessions({ timeoutMs: 60000 }).catch((error) => this.log(`workflow sessions: ${error?.message}`)) }, 0).unref?.()
     }
     return this.server
+  }
+
+  /**
+   * OpenCode 2.x: `serve --stdio` on the bridge's own database (v2/db.js), the first start serialized with a workflow
+   * runner's bridge on the same state, then auth.json's API keys imported once.
+   */
+  async startServerV2() {
+    const paths = v2Paths(this.stateDir)
+    // Claude Code for the claude-agent provider (v2/claude.js), looked up while the lock is waited for.
+    const locating = this.v2.claude.locate().catch((error) => { this.log(`claude lookup: ${error?.message || error}`); return null })
+    const release = await acquireFirstStart(this.stateDir, { log: this.log, cancelled: () => this.closed })
+    // stop() may come while the lock is waited for, or the server starts: nothing is left running after it.
+    const stopped = async (server) => {
+      if (!this.closed) return
+      await server?.stop().catch(() => {})
+      if (server && this.server === server) this.server = null
+      throw new RpcError(-32000, 'OpenClaude Desktop core stopped.')
+    }
+    let server
+    try {
+      await stopped(null)
+      // OPENCODE_CONFIG / OPENCODE_CONFIG_CONTENT, the plugin and the sandbox wrapper (v2/config.js), the app tools' channel.
+      const env = this.config.write()
+      const claude = await locating
+      this.v2.claudeServed = claude?.path ?? null
+      server = this.server = new AgentServerV2({
+        flavor: this.flavor, binary: this.binary, runner: this.runner, nodeBinary: this.nodeBinary, log: this.log, db: paths.db,
+        env: { ...(this.env === process.env ? {} : this.env), ...env, ...this.v2.claude.serveEnv(claude, this.env.PATH ?? process.env.PATH ?? '') },
+        onExit: (info) => this.serverExited(info),
+        ...(this.v2.fetch ? { fetch: this.v2.fetch } : {}),
+        ...(this.v2.spawn ? { spawn: this.v2.spawn } : {}),
+      })
+      try { await server.start() } catch (error) { if (this.server === server) this.server = null; throw error }
+      await stopped(server)
+      // A new serve process: every location runs its plugins anew, so each folder's verdict on the bridge's plugin goes.
+      this.pluginGuardResetV2()
+      this.v2.api = new V2Api(server, { log: this.log })
+      await importAuthKeys({ api: this.v2.api, stateDir: this.stateDir, authFile: authFile(this.flavor, this.env), log: this.log })
+        .catch((error) => this.log(`v2 API key import: ${error?.message || error}`))
+      // Bookkeeping only: a running server is never left without its event stream for it.
+      try { markReady(this.stateDir, { version: server.version }) } catch (error) { this.log(`v2 ready marker: ${error?.message || error}`) }
+    } finally {
+      release()
+    }
+    await stopped(server)
+    this.stopEvents = server.events((event) => this.onEventV2(event), { onOpen: () => this.resyncV2() })
+    // As on 1.x: sessions of workflow agents whose runner was stopped before it could delete them (DELETE /api/session/:id).
+    if (!this.config.runnerDir && !this.sweptWorkflowSessions) {
+      this.sweptWorkflowSessions = true
+      setTimeout(() => { if (!this.closed && this.clientName !== WORKFLOW_CLIENT) void this.removeWorkflowSessions({ timeoutMs: 60000 }).catch((error) => this.log(`workflow sessions: ${error?.message}`)) }, 0).unref?.()
+    }
+    return server
+  }
+
+  /** OpenCode 2.x's API client, once its server is started. */
+  async v2Api() {
+    await this.ensureServer()
+    return this.v2.api
   }
 
   serverEnv() {
@@ -429,12 +553,17 @@ export class Bridge {
   }
 
   async api(method, route, options = {}) {
+    // A 1.x route on OpenCode 2.x answers 404 (every route moved under /api/): refused before it is sent, so no 1.x
+    // path reads that as a deleted session while its v2 counterpart is missing.
+    if (this.v2 && !String(route).startsWith('/api/')) throw new RpcError(METHOD_NOT_FOUND, `${this.flavor.name} ${this.server?.version ?? '2.x'} does not support this yet (${method} ${route}).`)
     const server = await this.ensureServer()
     return server.request(method, route, options)
   }
 
   serverExited(info) {
     this.log(`${this.flavor.name} exited (${info.signal ?? info.code})`)
+    // OpenCode 2.x: the next serve runs every location's plugins anew (v2/extensions.js bridgePluginGuardV2).
+    if (this.v2) this.pluginGuardResetV2()
     // Its workflow runs ended with it (MiMo's list keeps them running: projected as interrupted, resumable).
     this.liveWorkflows.clear()
     for (const thread of [...this.threads.values(), ...this.children.values()]) thread.workflowHeld?.clear()
@@ -446,8 +575,52 @@ export class Bridge {
     }
   }
 
+  /**
+   * OpenCode 2.x: one /api/event envelope (v2/events.js), handed to the session's live thread when it has one. The
+   * bridge sees every session event first, live thread or not (onSessionEventV2: true when it took the event), as
+   * onEvent does on 1.x: a sub-agent's session.created (data.parentID), session.updated/deleted of a listed thread, an
+   * ask for a session not loaded here.
+   */
+  onEventV2(envelope) {
+    const event = normalizeEvent(envelope)
+    if (!event || event.kind === 'ignored' || event.kind === 'connected') return
+    if (event.durable && !this.v2.seq.accept(event)) return
+    if (event.sessionID) {
+      const thread = this.threads.get(event.sessionID) ?? this.children.get(event.sessionID) ?? null
+      if (this.onSessionEventV2?.(event, thread) === true) return
+      // A thread openThread is loading holds them (2.x's events are incremental: one missed would lose its item).
+      ;(thread ?? this.v2.loading?.get(event.sessionID))?.onEventV2?.(event)
+      return
+    }
+    this.onGlobalEventV2?.(event)
+  }
+
+  /** OpenCode 2.x's events of no session: a changed list drops what was cached of it; a "global" form is cancelled. */
+  onGlobalEventV2(event) {
+    if (event.kind === 'ask') return void globalAskV2(this, event).catch((error) => this.log(`ask ${event.type}: ${error?.message ?? error}`))
+    const list = event.kind === 'catalog' ? CATALOG_EVENTS[event.type] : null
+    if (list === 'models' || list === 'account') { this.catalog.invalidate(); this.accountEventV2(event) }
+    else if (list === 'agents' || list === 'config') { this.agentListCache?.clear(); this.agentDirCache?.clear() }
+    // A connector (re)connected or failed: its tools are listed again (1.x's mcp.tools.changed isn't on 2.x's stream).
+    else if (list === 'mcp') this.mcpTools.invalidate(typeof event.data?.server === 'string' ? event.data.server : undefined)
+    else if (list === 'plugins') this.pluginsUpdatedV2(event)
+    // A location built again runs its plugins again: its verdict on the bridge's plugin is checked again (v2/extensions.js).
+    else if (list === 'location') this.pluginGuardResetV2()
+  }
+
+  /** OpenCode 2.x replays nothing after a reconnection: one resync for a burst of them. */
+  resyncV2() {
+    // A plugin.updated or location.shutdown missed while the stream was down: each folder is checked again.
+    this.pluginGuardResetV2()
+    clearTimeout(this.v2.resyncTimer)
+    this.v2.resyncTimer = setTimeout(() => { this.v2.resyncTimer = null; if (!this.closed) this.resync() }, this.v2.resyncMs)
+    this.v2.resyncTimer.unref?.()
+  }
+
   // After an SSE (re)connection: reload every live thread's history so nothing is missed.
   resync() {
+    // OpenCode 2.x: each thread's events wait while it reloads, then apply over it (v2/turns.js resyncV2).
+    if (this.v2) return this.resyncThreadsV2()
     for (const thread of [...this.threads.values(), ...this.children.values()]) {
       void thread.reload().catch((error) => this.log(`resync ${thread.id}: ${error?.message || error}`))
     }
@@ -581,6 +754,14 @@ export class Bridge {
   }
 
   async sessionInfo(id, directory) {
+    // OpenCode 2.x resolves a session's folder itself (GET /api/session/:id; 400: not a session id).
+    if (this.v2) {
+      const api = await this.v2Api()
+      try { return toV1Session(await api.session(id)) } catch (error) {
+        if (error?.status === 404 || error?.status === 400) return null
+        throw error
+      }
+    }
     try { return await this.api('GET', `/session/${encodeURIComponent(id)}`, { directory: directory ?? this.store.get(id).cwd }) } catch (error) {
       if (error?.status === 404 || error?.status === 400) return null
       throw error
@@ -614,6 +795,7 @@ export class Bridge {
 
   async openThread(id) {
     if (typeof id !== 'string' || !id) throw new RpcError(INVALID_PARAMS, 'threadId is required')
+    this.requireOwned(id)
     const live = this.threads.get(id)
     if (live) return live
     if (this.children.has(id)) return this.children.get(id)
@@ -624,13 +806,16 @@ export class Bridge {
       const info = await this.sessionInfo(id)
       if (!info || this.store.get(id).deleted) throw new RpcError(INVALID_PARAMS, `This session is not available in ${this.flavor.name}.`, { codexErrorInfo: 'threadNotFound', threadId: id })
       const thread = new LiveThread(this, { info })
-      await Promise.all([thread.reload(), this.loadCompaction(thread.cwd).catch(() => {})])
+      // OpenCode 2.x: a session that runs now goes on while it loads; its events wait and apply over what was read.
+      if (this.v2) { thread.holdV2(); this.v2.loading.set(id, thread) }
+      try { await Promise.all([thread.reload(), this.loadCompaction(thread.cwd).catch(() => {})]) } finally { if (this.v2?.loading.get(id) === thread) this.v2.loading.delete(id) }
       this.threads.set(id, thread)
       thread.permission = applyPermissionParams(this.store.get(id).permission ?? defaultPermission(), {})
       thread.tools = this.store.get(id).tools ?? null
       thread.dynamicWorkflows = this.store.get(id).dynamicWorkflows === true
       thread.custom = this.store.get(id).custom ?? {}
       thread.writeRuntime()
+      if (this.v2) thread.releaseV2()
       return thread
     })().finally(() => this.opening.delete(id))
     this.opening.set(id, promise)
@@ -643,6 +828,21 @@ export class Bridge {
     // front: nobody sees its title, and OpenCode and MiMo would spend a model request generating one per agent
     // (SessionPrompt.ensureTitle skips a session created with a title).
     const workflowAgent = this.clientName === WORKFLOW_CLIENT
+    // OpenCode 2.x: one POST /api/session with the ruleset, agent, model and metadata (v2/session.js).
+    if (this.v2) {
+      const [{ info, rules }] = await Promise.all([
+        this.createSessionV2(params, cwd, { workflowAgent, ...(workflowAgent ? { title: WORKFLOW_TITLE } : {}) }),
+        this.mcpNamesByDir?.has(cwd) ? null : this.refreshMcpNames(cwd),
+      ])
+      this.store.update(info.id, { cwd: info.directory ?? cwd, createdBy: 'code-desktop', ...(workflowAgent ? { workflowAgent: true, runnerPid: process.pid } : {}) })
+      const thread = new LiveThread(this, { info })
+      thread.projector.load([])
+      thread.appliedRules = JSON.stringify(rules)
+      this.threads.set(info.id, thread)
+      if (typeof params.developerInstructions === 'string' && params.developerInstructions.trim()) thread.custom.developer = params.developerInstructions.trim()
+      await thread.applyParams(params, { initial: true })
+      return thread
+    }
     const body = workflowAgent ? { title: WORKFLOW_TITLE } : {}
     const [info] = await Promise.all([
       this.api('POST', '/session', { directory: cwd, body }),
@@ -706,6 +906,8 @@ export class Bridge {
 
   /** Every session OpenCode has (paged to the end); folder by folder when the global list is missing. */
   async listSessions({ roots = false } = {}) {
+    // OpenCode 2.x: GET /api/session, archived ones included (its `archived` filter is three-state: never sent).
+    if (this.v2) return (await (await this.v2Api()).sessions({ parentID: roots ? null : undefined })).map(toV1Session).filter(Boolean)
     const sessions = []
     let cursor
     for (let page = 0; page < SESSION_PAGES_MAX; page++) {
@@ -749,6 +951,8 @@ export class Bridge {
       const meta = this.store.get(info.id)
       // A workflow agent's session (the runner's bridge started it) is never one of the user's.
       if (meta.deleted || meta.hidden || meta.workflowAgent === true) return null
+      // A thread of the other engine (v2/threads.js): kept for it, not listed here.
+      if (this.otherEngineThread(meta)) return null
       if (info.parentID ? !wantChildren : !wantRoots) return null
       if (sessionArchived(info, meta) !== wantArchived) return null
       if (cwdFilter && !cwdFilter.has(info.directory)) return null
@@ -756,8 +960,8 @@ export class Bridge {
       const thread = live ? live.threadObject() : this.coldThread(info)
       // Matched here, not with OpenCode's `search` (title only): the first message and names set here count too.
       if (term && !`${thread.name ?? ''} ${thread.preview}`.toLowerCase().includes(term)) return null
-      // A session nobody sent a message to yet stays out of the list.
-      if (!info.parentID && !live && !meta.lastActivity && placeholderTitle(info.title, meta) && !meta.name) return null
+      // A session nobody sent a message to yet stays out of the list (OpenCode 2.x: one that never ran, time.busy).
+      if (!info.parentID && !live && !meta.lastActivity && !(this.v2 && info.time?.busy) && placeholderTitle(info.title, meta) && !meta.name) return null
       return thread
     }
     // MiMo actors live inside their parent session: the loaded ones are listed as sub-agent threads.
@@ -768,9 +972,16 @@ export class Bridge {
       return items
     }
     const cursor = params.cursor ? String(params.cursor) : ''
+    // OpenCode 2.x pages on its own opaque cursor (one folder asked for is its exact `directory` filter).
+    if (this.v2 && key === 'updatedAt' && params.sortDirection !== 'asc' && (!cursor || cursor.startsWith(SESSION_CURSOR_V2))) {
+      const directory = cwdFilter?.size === 1 ? [...cwdFilter][0] : undefined
+      const paged = await this.listThreadsPagedV2({ cursor: cursor ? cursor.slice(SESSION_CURSOR_V2.length) : null, roots: !wantChildren, directory, size, accept, pageSize: term || wantArchived ? SESSION_PAGE : Math.max(SESSION_PAGE_MIN, size * 2) }).catch((error) => { this.log(`paged session list failed (${error?.message}); listing every session`); return null })
+      if (paged) return { data: order(paged.items), nextCursor: paged.next ? SESSION_CURSOR_V2 + paged.next : null, backwardsCursor: null }
+      seen.clear()
+    }
     // Newest-updated first is OpenCode's own order: page on its cursor, so every session is reachable
     // and each page reads only as much of the list as it needs.
-    if (key === 'updatedAt' && params.sortDirection !== 'asc' && (!cursor || cursor.startsWith(SESSION_CURSOR))) {
+    if (!this.v2 && key === 'updatedAt' && params.sortDirection !== 'asc' && (!cursor || cursor.startsWith(SESSION_CURSOR))) {
       const paged = await this.listThreadsPaged({ cursor: cursor ? cursor.slice(SESSION_CURSOR.length) : undefined, roots: !wantChildren, size, accept, pageSize: term || wantArchived ? SESSION_PAGE : Math.max(SESSION_PAGE_MIN, size * 2) }).catch((error) => { this.log(`paged session list failed (${error?.message}); listing every session`); return null })
       if (paged) return { data: order([...paged.items, ...(cursor ? [] : actors())]), nextCursor: paged.next ? SESSION_CURSOR + paged.next : null, backwardsCursor: null }
       seen.clear()
@@ -809,8 +1020,36 @@ export class Bridge {
     return { items, next: cursor ?? null }
   }
 
+  /**
+   * OpenCode 2.x: threads from its pages, from `cursor` on, until `size` are accepted, read in full pages as on 1.x
+   * (sparse listings, a search or Archived, in larger ones). 2.x's cursor is opaque and anchored at a page's last
+   * session, so a page that fills the listing part-way is asked for again from the same cursor, cut right after the
+   * session that filled it: that answer's cursor resumes exactly there (one extra request per listing, not per session).
+   */
+  async listThreadsPagedV2({ cursor, roots, directory, size, accept, pageSize = SESSION_PAGE }) {
+    const api = await this.v2Api()
+    const query = { parentID: roots ? null : undefined, directory }
+    const items = []
+    for (let page = 0; page < SESSION_PAGES_MAX; page++) {
+      const result = await api.page('/api/session', { query, limit: pageSize, cursor })
+      const more = result.data.length >= pageSize && Boolean(result.next)
+      for (let index = 0; index < result.data.length; index++) {
+        const thread = accept(toV1Session(result.data[index]))
+        if (thread) items.push(thread)
+        if (items.length < size) continue
+        if (index + 1 === result.data.length) return { items, next: more ? result.next : null }
+        const cut = await api.page('/api/session', { query, limit: index + 1, cursor })
+        return { items, next: cut.next ?? result.next }
+      }
+      if (!more) return { items, next: null }
+      cursor = result.next
+    }
+    return { items, next: cursor }
+  }
+
   /** A thread's history (loaded here, or read once). */
   async historyOf(id) {
+    this.requireOwned(id)
     const live = this.threads.get(id) ?? this.children.get(id)
     if (live) return live
     const actor = parseActorThreadId(id)
@@ -840,11 +1079,14 @@ export class Bridge {
   }
 
   async mergedConfig(directory) {
+    // OpenCode 2.x answers its documents, never one merged config (v2/extensions.js).
+    if (this.v2) return this.mergedConfigV2(directory)
     try { return await this.api('GET', '/config', { directory }) } catch { return {} }
   }
 
   /** The MCP servers a folder runs: the agent's merged config, updated by this app's own edits (mcp.json). */
   async mcpServers(directory) {
+    if (this.v2) return this.mcpServersV2(directory)
     const config = await this.mergedConfig(directory)
     const servers = { ...(isRecord(config.mcp) ? config.mcp : {}) }
     const own = this.config.readMcp()
@@ -894,12 +1136,14 @@ export class Bridge {
 
   disabledSkills() { return this.settings().disabledSkills ?? [] }
 
-  readTools() { return this.flavor.readTools }
+  readTools() { return this.v2 ? READ_TOOLS_V2 : this.flavor.readTools }
 
   /** The agent's data folder (<XDG_DATA_HOME>/<dataDir>, OpenCode's Global.Path.data). */
   dataDir() { return path.join(this.env.XDG_DATA_HOME || path.join(this.homeDir(), '.local', 'share'), this.flavor.dataDir) }
 
   planPaths(cwd) {
+    // OpenCode 2.x writes plans in ~/.opencode/plan only (plugin/plan.ts).
+    if (this.v2) return [path.join(planDirV2(this.homeDir()), '*')]
     const data = path.join(this.dataDir(), 'plans')
     return [path.join(data, '*'), path.join(`.${this.flavor.dataDir}`, 'plans', '*.md'), `.${this.flavor.dataDir}/plans/*.md`, path.join(cwd ?? '', `.${this.flavor.dataDir}`, 'plans', '*')]
   }
@@ -930,8 +1174,9 @@ export class Bridge {
     const key = directory ?? ''
     const cached = this.agentListCache?.get(key)
     if (cached && Date.now() - cached.at < 60000) return cached.value
-    const agents = await this.api('GET', '/agent', { directory, timeout: 10000 })
-    const value = Array.isArray(agents) ? agents.filter((agent) => agent && typeof agent.name === 'string') : []
+    // OpenCode 2.x keys an agent by its id (Agent.ID; name is what it is shown as) and lists the default one first.
+    const agents = this.v2 ? await (await this.v2Api()).get('/api/agent', { location: directory, timeout: 10000 }) : await this.api('GET', '/agent', { directory, timeout: 10000 })
+    const value = Array.isArray(agents) ? agents.filter((agent) => agent && typeof (this.v2 ? agent.id : agent.name) === 'string') : []
     this.agentListCache ??= new Map()
     this.agentListCache.set(key, { value, at: Date.now() })
     return value
@@ -945,9 +1190,10 @@ export class Bridge {
   async primaryAgent(directory, choice = null) {
     let agents
     try { agents = await this.agentList(directory) } catch (error) { this.log(`agents: ${error?.message ?? error}`); return typeof choice === 'string' && choice ? choice : 'build' }
-    const visible = agents.filter((agent) => agent.mode !== 'subagent' && agent.hidden !== true && agent.name !== 'plan')
-    if (typeof choice === 'string' && visible.some((agent) => agent.name === choice)) return choice
-    return visible[0]?.name ?? 'build'
+    const key = (agent) => (this.v2 ? agent.id : agent.name)
+    const visible = agents.filter((agent) => agent.mode !== 'subagent' && agent.hidden !== true && key(agent) !== 'plan')
+    if (typeof choice === 'string' && visible.some((agent) => key(agent) === choice)) return choice
+    return visible[0] ? key(visible[0]) : 'build'
   }
 
   /**
@@ -974,16 +1220,20 @@ export class Bridge {
     }
     return {
       agents: agents.filter((agent) => agent.hidden !== true).map((agent) => {
-        const file = typeof agent.name === 'string' && AGENT_NAME.test(agent.name) ? fileOf(agent.name) : null
+        // OpenCode 2.x: the id is what a thread chooses (codeDesktop.agent) and what its file is named after.
+        const name = this.v2 ? agent.id : agent.name
+        const modelID = this.v2 ? agent.model?.id : agent.model?.modelID
+        const native = this.v2 ? BUILTIN_AGENTS_V2.has(name) : agent.native === true
+        const file = typeof name === 'string' && AGENT_NAME.test(name) ? fileOf(name) : null
         return {
-          name: agent.name,
+          name,
           description: typeof agent.description === 'string' ? agent.description : '',
           mode: agent.mode,
           primary: agent.mode !== 'subagent',
-          model: agent.model?.providerID && agent.model?.modelID ? `${agent.model.providerID}/${agent.model.modelID}` : null,
-          scope: file?.scope ?? (agent.native === true && !Object.hasOwn(own, agent.name) ? 'builtin' : 'user'),
+          model: agent.model?.providerID && modelID ? `${agent.model.providerID}/${modelID}` : null,
+          scope: file?.scope ?? (native && !Object.hasOwn(own, name) ? 'builtin' : 'user'),
           ...(file ? { path: file.path, removable: true } : {}),
-          default: agent.name === fallback,
+          default: name === fallback,
         }
       }),
       defaultAgent: fallback,
@@ -1015,15 +1265,18 @@ export class Bridge {
     if (model && !/^[^\s/]+\/\S+$/.test(model)) throw new RpcError(INVALID_PARAMS, 'Write the model as provider/model.')
     const prompt = typeof params.prompt === 'string' ? params.prompt.trim() : ''
     if (!prompt || prompt.length > 100000) throw new RpcError(INVALID_PARAMS, 'Write the agent’s instructions.')
-    const deny = (Array.isArray(params.deny) ? params.deny : []).filter((key) => AGENT_PERMISSIONS.includes(key))
+    // OpenCode 2.x also takes its own names (shell, subagent).
+    const deny = (Array.isArray(params.deny) ? params.deny : []).filter((key) => AGENT_PERMISSIONS.includes(key) || (this.v2 && ['shell', 'subagent', 'question'].includes(key)))
     const dir = this.agentDirs(directory)[params.scope === 'user' ? 'global' : 'project'][0]
     const file = path.join(dir, `${name}.md`)
-    const lines = ['---', `description: ${JSON.stringify(description)}`, `mode: ${mode}`, ...(model ? [`model: ${JSON.stringify(model)}`] : []),
-      ...(deny.length ? ['permission:', ...deny.map((key) => `  ${key}: deny`)] : []), '---', '', prompt, '']
+    // OpenCode 2.x: its own frontmatter (`permissions:` rules under its tool names; v2/extensions.js).
+    const text = this.v2 ? agentMarkdownV2({ description, mode, model, prompt, deny: agentDenyV2(deny) }) : ['---', `description: ${JSON.stringify(description)}`, `mode: ${mode}`, ...(model ? [`model: ${JSON.stringify(model)}`] : []),
+      ...(deny.length ? ['permission:', ...deny.map((key) => `  ${key}: deny`)] : []), '---', '', prompt, ''].join('\n')
     fs.mkdirSync(dir, { recursive: true })
-    try { fs.writeFileSync(file, lines.join('\n'), { flag: 'wx' }) }
+    try { fs.writeFileSync(file, text, { flag: 'wx' }) }
     catch (error) { if (error?.code === 'EEXIST') throw new RpcError(-32000, `An agent named ${name} already exists there.`); throw error }
-    await this.reloadAgents(directory, params.scope === 'user')
+    if (this.v2) await this.agentChangedV2(directory, name, true)
+    else await this.reloadAgents(directory, params.scope === 'user')
     return { path: file }
   }
 
@@ -1038,7 +1291,8 @@ export class Bridge {
         const file = path.join(dir, `${name}.md`)
         try { if (!fs.statSync(file).isFile()) continue } catch { continue }
         fs.unlinkSync(file)
-        await this.reloadAgents(directory, global)
+        if (this.v2) await this.agentChangedV2(directory, name, false)
+        else await this.reloadAgents(directory, global)
         return { path: file }
       }
     }
@@ -1073,6 +1327,7 @@ export class Bridge {
 
   /** The folders the agent writes plan files in: the data folder's plans (a folder without git) and the project's. */
   planDirs(cwd) {
+    if (this.v2) return [planDirV2(this.homeDir())]
     return [path.join(this.dataDir(), 'plans'), ...(cwd ? [path.join(cwd, `.${this.flavor.dataDir}`, 'plans')] : [])]
   }
 
@@ -1096,7 +1351,8 @@ export class Bridge {
     const busy = [...this.threads.values(), ...this.children.values()].some((thread) => thread.busy || thread.activeTurn)
     if (busy) { this.pendingReload = true; return false }
     this.pendingReload = false
-    try { await this.api('POST', '/global/dispose', {}) } catch (error) { this.log(`dispose failed: ${error?.message}`) }
+    // OpenCode 2.x watches OPENCODE_CONFIG and reloads its locations itself (config.updated).
+    if (!this.v2) try { await this.api('POST', '/global/dispose', {}) } catch (error) { this.log(`dispose failed: ${error?.message}`) }
     this.configReloaded()
     return true
   }
@@ -1109,6 +1365,7 @@ export class Bridge {
     this.stopEvents?.()
     this.server = null
     await old.stop()
+    if (this.v2) this.pluginGuardResetV2()
     this.configReloaded()
     await this.ensureServer()
     this.catalog.invalidate()
@@ -1181,18 +1438,21 @@ export class Bridge {
           platformOs: process.platform === 'darwin' ? 'macos' : process.platform,
           engine: this.flavor.engine,
           engineVersion: version,
-          capabilities: capabilitiesFor(this.flavor),
+          capabilities: { ...capabilitiesFor(this.flavor), ...(this.v2 ? this.historyStoreV2() : {}) },
           configPath: this.config.configPath,
         }
       }
       case 'initialized': return {}
       case 'model/list': {
+        // OpenCode 2.x: its own default and context windows (v2/catalog.js).
+        if (this.v2) return { data: await this.catalog.codexModels(), nextCursor: null }
         const config = await this.mergedConfig(this.homeDir())
         const compaction = this.compactionOf(this.homeDir(), config)
         return { data: await this.catalog.codexModels(config.model, { windowOf: (entry) => this.windowFor(entry, null, compaction) }), nextCursor: null }
       }
-      case 'account/read': return this.readAccount()
-      case 'account/login/start': return this.loginStart(params)
+      // OpenCode 2.x: integrations and credentials (v2/account.js).
+      case 'account/read': return this.v2 ? this.readAccountV2() : this.readAccount()
+      case 'account/login/start': return this.v2 ? this.loginStartV2(params, loginInputs(params.codeDesktop?.inputs)) : this.loginStart(params)
       case 'codeDesktop/login/code': return this.loginCode(params)
       case 'account/login/cancel': {
         const login = this.logins.get(params.loginId)
@@ -1206,6 +1466,14 @@ export class Bridge {
         // store (what account/read reports as the account: browser sign-ins and saved API keys).
         // Keys from environment variables or config files stay; account/read still lists them.
         const named = typeof params.codeDesktop?.provider === 'string' && params.codeDesktop.provider ? [params.codeDesktop.provider] : null
+        if (this.v2) {
+          // OpenCode 2.x: its credentials (connectors' aside); Claude Code itself stays signed in (codeDesktop.notice).
+          const { removed, notice } = await this.logoutV2(named?.[0] ?? null)
+          if (removed.length) return notice ? { codeDesktop: { notice } } : {}
+          const kept = ((await this.readAccountV2())[this.flavor.id]?.providers ?? []).filter((provider) => !provider.removable)
+          if (kept.length) throw new RpcError(-32000, signOutElsewhere(this.flavor, kept))
+          return {}
+        }
         const providers = named ?? Object.keys(this.credentialContext().stored)
         if (!providers.length) {
           // Nothing here to remove: say where the credential lives instead of answering as if it were gone.
@@ -1314,7 +1582,8 @@ export class Bridge {
           try {
             // MiMo guards renames with the title revision it last reported.
             const info = this.flavor.id === 'mimo' ? await this.sessionInfo(id) : null
-            await this.api('PATCH', `/session/${encodeURIComponent(id)}`, { directory: this.store.get(id).cwd, body: { title: name, ...(Number.isInteger(info?.titleRevision) ? { expectedRevision: info.titleRevision } : {}) } })
+            if (this.v2) await (await this.v2Api()).patch(`/api/session/${encodeURIComponent(id)}`, { title: name })
+            else await this.api('PATCH', `/session/${encodeURIComponent(id)}`, { directory: this.store.get(id).cwd, body: { title: name, ...(Number.isInteger(info?.titleRevision) ? { expectedRevision: info.titleRevision } : {}) } })
           } catch (error) { this.log(`rename ${id}: ${error?.message}`) }
         }
         this.notify('thread/name/updated', { threadId: id, ...(name ? { threadName: name } : {}) })
@@ -1325,7 +1594,10 @@ export class Bridge {
         this.store.update(id, { archived: true, unarchivedAt: undefined })
         // Archived in OpenCode too (its own apps hide the session); the local flag stays the fallback.
         if (!parseActorThreadId(id)) {
-          try { await this.api('PATCH', `/session/${encodeURIComponent(id)}`, { directory: this.store.get(id).cwd, body: { time: { archived: Date.now() } } }) } catch (error) { this.log(`archive ${id}: ${error?.message}`) }
+          try {
+            if (this.v2) await (await this.v2Api()).patch(`/api/session/${encodeURIComponent(id)}`, { archived: true })
+            else await this.api('PATCH', `/session/${encodeURIComponent(id)}`, { directory: this.store.get(id).cwd, body: { time: { archived: Date.now() } } })
+          } catch (error) { this.log(`archive ${id}: ${error?.message}`) }
         }
         const live = this.threads.get(id)
         if (live && !live.mustStayLoaded()) this.unload(id)
@@ -1338,6 +1610,8 @@ export class Bridge {
         // OpenCode's API can set time.archived but never clear it: the restore is remembered here and
         // outranks every archive OpenCode recorded before it (a later archive in OpenCode wins again).
         this.store.update(id, { archived: undefined, unarchivedAt: Date.now() })
+        // OpenCode 2.x can (PATCH {archived:false}).
+        if (this.v2) await this.v2Api().then((api) => api.patch(`/api/session/${encodeURIComponent(id)}`, { archived: false })).catch((error) => this.log(`unarchive ${id}: ${error?.message}`))
         this.notify('thread/unarchived', { threadId: id })
         return { thread: thread.threadObject() }
       }
@@ -1345,8 +1619,16 @@ export class Bridge {
         const id = this.requireId(params.threadId)
         const live = this.threads.get(id)
         if (live) { await live.interrupt().catch(() => {}); live.close('Session deleted.'); this.threads.delete(id) }
+        // OpenCode 2.x: its sub-agent threads go with it (as unload drops them): left behind they would still count as busy
+        // and be listed. Not left to session.deleted: the root is gone from this.threads by then, and a failed DELETE sends none.
+        if (live && this.v2) for (const [childId, child] of this.children) if (child.root === live) { this.children.delete(childId); child.close('Session deleted.') }
         const directory = this.store.get(id).cwd
-        try { await this.api('DELETE', `/session/${encodeURIComponent(id)}`, { directory }) } catch (error) { if (error?.status !== 404) this.log(`delete ${id}: ${error?.message}`) }
+        // Marked first: OpenCode 2.x's session.deleted then finds it gone already (v2/session.js onSessionEventV2).
+        if (this.v2) this.store.update(id, { deleted: true, inputs: undefined, steers: undefined, queue: undefined })
+        try {
+          if (this.v2) await (await this.v2Api()).delete(`/api/session/${encodeURIComponent(id)}`, { timeout: 60000 })
+          else await this.api('DELETE', `/session/${encodeURIComponent(id)}`, { directory })
+        } catch (error) { if (error?.status !== 404) this.log(`delete ${id}: ${error?.message}`) }
         this.store.update(id, { deleted: true, inputs: undefined, steers: undefined, queue: undefined })
         this.notify('thread/deleted', { threadId: id })
         return {}
@@ -1364,6 +1646,8 @@ export class Bridge {
       case 'thread/rollback': throw new RpcError(METHOD_NOT_FOUND, 'Use thread/revert (rewind) on this core.')
       case 'thread/compact/start': {
         const thread = await this.openThread(params.threadId)
+        // OpenCode 2.x: POST …/compact {id} with the session's own model (v2/turns.js).
+        if (this.v2) return thread.compactV2()
         if (thread.busy || thread.activeTurn) throw new RpcError(-32600, 'Wait for the current turn to finish before compacting.', { codexErrorInfo: 'activeTurnNotSteerable' })
         const model = splitModel(thread.model ?? await this.catalog.defaultId())
         if (!model) throw new RpcError(-32000, 'No model is available to compact with.')
@@ -1405,6 +1689,7 @@ export class Bridge {
         // while the app showed only this one stopped. Stopping the main turn stops them all.
         if (thread?.actor || (!thread && parseActorThreadId(id))) throw new RpcError(-32600, 'MiMo can’t stop one sub-agent on its own. Stop the main turn to stop all of its sub-agents.')
         if (thread) await thread.interrupt()
+        else if (this.v2) await this.v2Api().then((api) => api.interrupt(id)).catch(() => {})
         else await this.api('POST', `/session/${encodeURIComponent(id)}/abort`, { directory: this.store.get(id).cwd }).catch(() => {})
         return {}
       }
@@ -1426,7 +1711,8 @@ export class Bridge {
         return { applied: true, mode: live.permission.mode }
       }
       case 'codeDesktop/diagnostics': return {
-        flavor: this.flavor.id, binary: this.binary, version: this.agentVersion(), server: this.server?.url ?? null,
+        flavor: this.flavor.id, api: this.flavor.api ?? 'v1', binary: this.binary, version: this.agentVersion(), server: this.server?.url ?? null,
+        ...(this.v2 ? { claude: this.v2.claude.found ?? null, usageCheck: this.v2.usageCheck ?? null } : {}),
         liveThreads: this.threads.size, children: this.children.size, configDir: this.config.configDir, stateDir: this.stateDir, pendingReload: Boolean(this.pendingReload),
         busy: [...this.threads.values(), ...this.children.values()].filter((thread) => thread.busy || thread.activeTurn).map((thread) => ({ id: thread.id, busy: thread.busy, turn: thread.activeTurn?.id ?? null })),
       }
@@ -1437,7 +1723,18 @@ export class Bridge {
 
   requireId(value) {
     if (typeof value !== 'string' || !value) throw new RpcError(INVALID_PARAMS, 'threadId is required')
-    return value
+    return this.requireOwned(value)
+  }
+
+  /** Whether a threads.json entry is the other engine's (v2/threads.js): hidden here, never deleted or rewritten. */
+  otherEngineThread(meta) {
+    return hiddenUnder(this.v2 ? 'v2' : 'v1', meta)
+  }
+
+  /** A thread id this engine owns; the other engine's are unknown here (not asked for: 2.x answers 404 for a 1.x id). */
+  requireOwned(id) {
+    if (this.otherEngineThread(this.store.get(id))) throw new RpcError(INVALID_PARAMS, `This session is not available in ${this.flavor.name}.`, { codexErrorInfo: 'threadNotFound', threadId: id })
+    return id
   }
 
   unload(id) {
@@ -1538,6 +1835,11 @@ export class Bridge {
   }
 
   async loginStart(params) {
+    // Claude Code's sign-in is OpenCode 2.x's claude-agent provider: a 1.x (or MiMo) core says which program it runs.
+    if (params.codeDesktop?.provider === CLAUDE_ID) {
+      const version = this.server?.version ?? this.detectedVersion ?? (this.reportedVersion || 'of an unknown version')
+      throw new RpcError(-32000, `Claude login needs OpenCode 2.2 or later. This core runs ${this.flavor.name} ${version} (${this.binary || 'no program found'}).`)
+    }
     // An API key for one of the agent's providers (core descriptor login.apiKey: template = provider id).
     if (params.type === 'apiKey') {
       const provider = typeof params.codeDesktop?.template === 'string' && params.codeDesktop.template ? params.codeDesktop.template : null
@@ -1610,6 +1912,7 @@ export class Bridge {
     if (!entry || entry.done) throw new RpcError(INVALID_PARAMS, 'This sign-in has already finished. Start it again.')
     const code = typeof params.code === 'string' ? params.code.trim() : ''
     if (!code || code.length > 8192 || /\s/.test(code)) throw new RpcError(INVALID_PARAMS, 'Paste the whole code from the browser.')
+    if (entry.v2 || this.v2) return this.loginCodeV2(entry, params.loginId, code)
     try {
       await this.api('POST', `/provider/${encodeURIComponent(entry.provider)}/oauth/callback`, { directory: this.homeDir(), body: { method: entry.method, code }, timeout: 60000 })
     } catch (failure) {
@@ -1641,6 +1944,8 @@ export class Bridge {
   }
 
   async usageFolds() {
+    // OpenCode 2.x: its message types, fork copies left out, checked against its own stats (v2/usage.js).
+    if (this.v2) return this.usageFoldsV2()
     const sessions = await this.listSessions({})
     const ids = new Set()
     const folds = []
@@ -1736,10 +2041,11 @@ export class Bridge {
     this.config.writeMcp(mcp)
     this.config.rewriteConfig()
     // Live: every loaded folder's instance adds or drops the servers now (OpenCode's /mcp), and idle
-    // instances reload the config (MiMo only reports servers from its config).
+    // instances reload the config (MiMo only reports servers from its config). OpenCode 2.x has no such 1.x routes: it
+    // reloads on the rewritten file, and the plugin reloads MCP when mcp.json's disabled list changes (v2/plugin.js).
     for (const name of touched) {
       this.mcpTools.invalidate(name)
-      if (this.flavor.id === 'mimo') continue
+      if (this.flavor.id === 'mimo' || this.v2) continue
       for (const directory of this.loadedDirectories()) {
         try {
           if (mcp.servers[name]) await this.api('POST', '/mcp', { directory, body: { name, config: mcp.servers[name] }, timeout: 60000 })
@@ -1750,7 +2056,7 @@ export class Bridge {
     // A connector turned on or off: connected or disconnected now in every loaded folder (OpenCode's /mcp/:name/*).
     for (const [name, on] of toggled ?? []) {
       this.mcpTools.invalidate(name)
-      if (this.flavor.id === 'mimo') continue
+      if (this.flavor.id === 'mimo' || this.v2) continue
       for (const directory of this.loadedDirectories()) {
         try { await this.api('POST', `/mcp/${encodeURIComponent(name)}/${on ? 'connect' : 'disconnect'}`, { directory, timeout: 60000 }) }
         catch (error) { this.log(`mcp ${name} ${on ? 'connect' : 'disconnect'} in ${directory}: ${error?.message}`) }
@@ -1762,6 +2068,7 @@ export class Bridge {
   }
 
   async mcpReload() {
+    if (this.v2) return this.mcpReloadV2()
     this.mcpTools.invalidate()
     for (const directory of this.loadedDirectories()) {
       for (const [name, value] of await this.mcpServers(directory)) {
@@ -1777,6 +2084,7 @@ export class Bridge {
   }
 
   async mcpStatusList(params) {
+    if (this.v2) return this.mcpStatusListV2(params)
     const directory = this.directoryFor(params)
     const [servers, statuses] = await Promise.all([this.mcpServers(directory), this.api('GET', '/mcp', { directory }).catch(() => ({}))])
     this.rememberMcpNames(directory, servers.map(([name]) => name))
@@ -1812,6 +2120,7 @@ export class Bridge {
    */
   async shareThread(params) {
     if (this.flavor.id !== 'opencode') throw new RpcError(METHOD_NOT_FOUND, `${this.flavor.name} has no share links.`)
+    if (this.v2) throw new RpcError(METHOD_NOT_FOUND, `${this.flavor.name} ${this.server?.version ?? '2.x'} has no share links.`)
     const id = typeof params?.threadId === 'string' ? params.threadId : ''
     if (!id) throw invalidParams('threadId is required')
     const live = this.threads.get(id) ?? this.children.get(id)
@@ -1831,6 +2140,7 @@ export class Bridge {
    */
   async moveThread(params) {
     if (this.flavor.id !== 'opencode') throw new RpcError(METHOD_NOT_FOUND, `${this.flavor.name} can’t move a session to another folder.`)
+    if (this.v2) return this.moveThreadV2(params)
     const id = this.requireId(params?.threadId)
     if (parseActorThreadId(id) || this.children.has(id)) throw invalidParams('A sub-agent’s session can’t be moved.')
     const live = this.threads.get(id)
@@ -1870,6 +2180,7 @@ export class Bridge {
   }
 
   async mcpLogout(params) {
+    if (this.v2) return this.mcpLogoutV2(params)
     const directory = this.directoryFor(params)
     const name = String(params.name ?? '')
     if (!name) throw invalidParams('name is required')
@@ -1882,6 +2193,8 @@ export class Bridge {
   }
 
   async mcpLogin(params) {
+    // OpenCode 2.x signs a connector in through its integration and takes the redirect itself (no port held here).
+    if (this.v2) return this.mcpLoginV2(params)
     const directory = this.directoryFor(params)
     const name = String(params.name ?? '')
     const config = new Map(await this.mcpServers(directory)).get(name)
@@ -1927,6 +2240,7 @@ export class Bridge {
 
   /** Reload one folder's agent instance (new skills, commands, config) when nothing runs there. */
   async reloadDirectory(directory) {
+    if (this.v2) return this.reloadDirectoryV2(directory)
     const busy = [...this.threads.values(), ...this.children.values()].some((thread) => thread.cwd === directory && (thread.busy || thread.activeTurn))
     if (busy) return false
     try { await this.api('POST', '/instance/dispose', { directory }) } catch (error) { this.log(`instance dispose ${directory}: ${error?.message}`) }
@@ -1934,6 +2248,7 @@ export class Bridge {
   }
 
   async skillsList(params) {
+    if (this.v2) return this.skillsListV2(params)
     const cwds = Array.isArray(params.cwds) && params.cwds.length ? params.cwds : [this.directoryFor(params)]
     if (params.forceReload === true) for (const cwd of cwds) await this.reloadDirectory(cwd)
     const disabled = new Set(this.disabledSkills())
@@ -1997,6 +2312,7 @@ export class Bridge {
   }
 
   async skillsWrite(params) {
+    if (this.v2) return this.skillsWriteV2(params)
     const file = String(params.path ?? '')
     if (file.startsWith('command:') || (file.endsWith('.md') && !file.endsWith('SKILL.md'))) throw invalidParams('Commands cannot be turned off.')
     let name = file.startsWith('builtin:') ? file.slice(8) : path.basename(path.dirname(file))
@@ -2071,6 +2387,7 @@ export class Bridge {
 
   /** The agent's global config folders (Global.Path.config and ~/.<agent>): a plugins folder there is the user's own. */
   pluginGlobalDirs() {
+    if (this.v2) return this.globalDirsV2()
     const home = this.homeDir()
     return [path.join(this.env.XDG_CONFIG_HOME || path.join(home, '.config'), this.flavor.dataDir), path.join(home, `.${this.flavor.dataDir}`)]
   }
@@ -2084,6 +2401,7 @@ export class Bridge {
    * home folder has it too). An entry written as [spec, options] keeps its options (shown, never edited here).
    */
   async pluginsInstalled(params = {}) {
+    if (this.v2) return this.pluginsInstalledV2(params)
     const own = this.pluginSettings()
     const home = this.homeDir()
     const homeSpecs = new Set()
@@ -2178,6 +2496,7 @@ export class Bridge {
 
   /** The failure OpenCode reports for a plugin once a folder loads it (null when none came in time). */
   async pluginVerdict(spec, waitMs = PLUGIN_VERDICT_MS) {
+    if (this.v2) return this.pluginVerdictV2(spec)
     try { await this.api('GET', '/config', { directory: this.homeDir() }) } catch { return null }
     const until = Date.now() + waitMs
     while (Date.now() < until) {
@@ -2195,6 +2514,7 @@ export class Bridge {
    * description; while that list is unavailable every tool the source defines is shown.
    */
   async pluginRead(params) {
+    if (this.v2) return this.pluginReadV2(params)
     const list = (await this.pluginsInstalled(params)).marketplaces[0].plugins
     const plugin = list.find((candidate) => candidate.id === params.pluginName) ?? list.find((candidate) => candidate.name === params.pluginName)
     if (!plugin) throw invalidParams(`Unknown plugin: ${params.pluginName}`)
@@ -2292,6 +2612,7 @@ export class Bridge {
   // ------------------------------------------------------------------ tools / preview
 
   async toolsList(params) {
+    if (this.v2) return this.toolsListV2(params)
     const directory = this.directoryFor(params)
     let builtin = []
     try { builtin = await this.api('GET', '/experimental/tool', { directory, query: this.toolQuery() }) } catch {
@@ -2337,7 +2658,9 @@ export class Bridge {
     const text = parts.join('\n') + tail
     const template = defaultText.split(cwd).join('{{cwd}}').split(parsed.modelID || '\u0000').join('{{model}}')
     let tools = []
-    try { tools = (await this.api('GET', '/experimental/tool/ids', { directory: cwd })).filter((id) => id !== 'invalid') } catch {}
+    // OpenCode 2.x has no tool list route: the tools of the last request the plugin saw (v2/plugin.js).
+    if (this.v2) tools = Array.isArray(captured?.tools) ? captured.tools.filter((id) => typeof id === 'string') : []
+    else try { tools = (await this.api('GET', '/experimental/tool/ids', { directory: cwd })).filter((id) => id !== 'invalid') } catch {}
     return {
       text: text || `${this.flavor.name} assembles its built-in system prompt for the model on the first request in this folder.`,
       defaultText, defaultTemplate: template, custom: Boolean(systemPrompt),
@@ -2350,6 +2673,7 @@ export class Bridge {
   // ------------------------------------------------------------------ session actions
 
   async fork(params) {
+    if (this.v2) return this.forkV2(params)
     const source = await this.historyOf(this.requireId(params.threadId))
     let messageID
     if (params.lastTurnId) {
@@ -2370,6 +2694,7 @@ export class Bridge {
   }
 
   async revert(params) {
+    if (this.v2) return this.revertV2(params)
     const thread = await this.openThread(this.requireId(params.threadId))
     if (thread.busy || thread.activeTurn) throw new RpcError(-32600, 'Wait for the current turn to finish before rewinding.')
     const turns = thread.turns()
@@ -2406,6 +2731,8 @@ export class Bridge {
     if (!model) throw new RpcError(-32000, 'No model is available for a side question.')
     const history = Array.isArray(params.history) ? params.history.slice(-20) : []
     const promptText = [...history.map((entry) => `Earlier side question: ${entry.question}\nAnswer: ${entry.answer}`), question].join('\n\n')
+    // OpenCode 2.x answers from the session's own context without a copy (POST …/generate, v2/session.js).
+    if (this.v2) return this.sideQuestionV2({ id, source, model, promptText, requestId, instructions: SIDE_PROMPT })
     // MiMo's own side question (its /btw): POST /session/:id/ask answers over a frozen snapshot of the session with the
     // session's own system prompt, tools and messages, so the provider's prompt cache covers all but the question, and
     // nothing is copied or added to the session. An older MiMo without it, and OpenCode, answer in a forked copy.
@@ -2557,11 +2884,13 @@ export class Bridge {
   async stop() {
     this.closed = true
     this.oauthCallbacks.close()
+    // OpenCode 2.x: sign-ins being watched (v2/account.js) stop polling a server that is going away.
+    if (this.v2) { for (const login of this.logins.values()) login.controller?.abort(); clearTimeout(this.v2.accountTimer); clearTimeout(this.v2.pluginTimer) }
     this.stopEvents?.()
     for (const thread of this.threads.values()) thread.close('OpenClaude Desktop core stopped.')
     // A workflow runner's bridge takes its agents' sessions with it (the runner never deletes them itself).
     // (Only while the agent server still runs: a dead one is not restarted for it; the app's next sweep gets them.)
-    if (this.server?.child && this.server.url && (this.config.runnerDir || this.clientName === WORKFLOW_CLIENT)) await this.removeWorkflowSessions({ own: true, timeoutMs: 800 }).catch(() => {})
+    if (!this.v2 && this.server?.child && this.server.url && (this.config.runnerDir || this.clientName === WORKFLOW_CLIENT)) await this.removeWorkflowSessions({ own: true, timeoutMs: 800 }).catch(() => {})
     this.store.flush()
     await this.server?.stop()
   }
@@ -2580,6 +2909,8 @@ export class Bridge {
     const ids = this.store.ids().filter((id) => {
       const meta = this.store.get(id)
       if (meta.workflowAgent !== true || meta.deleted || parseActorThreadId(id)) return false
+      // A thread of the other engine (v2/threads.js) has no session in this one's database: kept, not swept.
+      if (!threadOwnedBy(this.v2 ? 'v2' : 'v1', meta)) return false
       return own ? meta.runnerPid === process.pid || this.threads.has(id) : !alive(meta.runnerPid)
     }).slice(0, limit)
     const deadline = Date.now() + timeoutMs
@@ -2589,7 +2920,9 @@ export class Bridge {
       for (let id = queue.shift(); id !== undefined; id = queue.shift()) {
         if (Date.now() > deadline) return
         try {
-          await this.api('DELETE', `/session/${encodeURIComponent(id)}`, { directory: this.store.get(id).cwd, timeout: Math.max(300, deadline - Date.now()) })
+          const timeout = Math.max(300, deadline - Date.now())
+          if (this.v2) await (await this.v2Api()).delete(`/api/session/${encodeURIComponent(id)}`, { timeout })
+          else await this.api('DELETE', `/session/${encodeURIComponent(id)}`, { directory: this.store.get(id).cwd, timeout })
         } catch (error) {
           if (error?.status !== 404) { this.log(`workflow session ${id}: ${error?.message}`); continue }
         }
@@ -2700,7 +3033,7 @@ export class LiveThread {
     this.sessionGrants = []
     /** Bumped whenever the grants are dropped: a card still open across a mode change records no grant. */
     this.grantEpoch = 0
-    this.projector = new Projector({ threadId: info.id, cwd: this.cwd, meta, mcpServers: () => bridge.knownMcpNames(this.cwd), askDiffs: this.askDiffs, actor })
+    this.projector = new Projector({ threadId: info.id, cwd: this.cwd, meta, mcpServers: () => bridge.knownMcpNames(this.cwd), askDiffs: this.askDiffs, actor, api: bridge.v2 ? 'v2' : 'v1' })
     // MiMo workflow runs whose structure this MiMo held, or no longer held, when last read: its list keeps a run it quit
     // with as running, and only the runtime knows (a run just started has no structure yet, but its workflow.started).
     this.workflowHeld = new Set()
@@ -2790,6 +3123,7 @@ export class LiveThread {
   }
 
   async reload() {
+    if (this.bridge.v2) return this.reloadV2()
     // The folder's MCP servers before the history is projected: their tools are mcpToolCall rows.
     const [info, messages, actors, slices] = await Promise.all([
       this.actor ? Promise.resolve(null) : this.bridge.sessionInfo(this.id, this.cwd),
@@ -2832,6 +3166,48 @@ export class LiveThread {
       const run = found && this.projector.itemOf(found.part, found.message)?.workflowRun
       if (run?.runId && run.status === 'running') this.watchWorkflow(runID, found.part, run)
     }
+  }
+
+  /**
+   * OpenCode 2.x: the session, every message page (v2/history.js), and whether this server runs it now (GET
+   * /api/session/active: its own executions only). A staged revert hides its message and after.
+   */
+  async reloadV2() {
+    // A live thread's events wait while it reloads, then apply over what it read (v2/turns.js holdV2: openThread and
+    // resyncV2 hold them already). Not a history read once (Bridge.historyOf): nothing routes events or replies to it.
+    const bridge = this.bridge
+    const live = bridge.threads.get(this.id) === this || bridge.children.get(this.id) === this || bridge.v2.loading?.get(this.id) === this
+    const holding = live && !this.resyncBufferV2
+    if (holding) this.holdV2()
+    try { await this.readV2({ live }) } finally { if (holding) this.releaseV2() }
+  }
+
+  async readV2({ live }) {
+    const api = await this.bridge.v2Api()
+    const [info, messages, active] = await Promise.all([
+      this.bridge.sessionInfo(this.id),
+      readMessages(api, this.sessionID),
+      api.active().catch((error) => { this.bridge.log(`active sessions: ${error?.message || error}`); return {} }),
+      this.bridge.refreshMcpNames(this.cwd),
+    ])
+    if (info) { this.info = info; this.projector.revert = info.revert ?? null }
+    this.projector.meta = this.store.get(this.id)
+    this.projector.load(toV1Messages(messages, { sessionID: this.sessionID }))
+    // Live events continue from what was read (v2/turns.js): its messages, the inbox not yet delivered, open asks.
+    if (live) await this.reloadedV2(messages)
+    // As reload() does on 1.x, from here on.
+    const busy = Object.hasOwn(active, this.sessionID)
+    if (!busy && (this.busy || this.activeTurn)) this.finishTurn()
+    this.busy = busy
+    if (busy && !this.activeTurn) {
+      const last = this.projector.turns({ busy: true }).at(-1)
+      if (last?.status === 'inProgress') {
+        this.activeTurn = { id: last.id, startedMs: last.startedMs ?? Date.now() }
+        for (const item of last.items) this.items.set(item.id, { started: true, completed: item.status && item.status !== 'inProgress', len: item.text?.length ?? item.aggregatedOutput?.length ?? 0 })
+      }
+    }
+    this.mapTurns()
+    this.totals = this.projector.usage().total
   }
 
   mapTurns() {
@@ -3016,6 +3392,8 @@ export class LiveThread {
   /** PATCH the session's ruleset (a child keeps its own deny rules from OpenCode). */
   async applyRules(inherited) {
     if (this.actor) return
+    // OpenCode 2.x's rules are {action, resource, effect} under other tool names (v2/rules.js, v2/turns.js).
+    if (this.bridge.v2) return this.applyRulesV2()
     if (Array.isArray(inherited)) this.inheritedRules = inherited.filter((rule) => rule.action === 'deny' && rule.permission !== 'todowrite' && rule.permission !== 'task')
     const rules = this.rules(this.inheritedRules ?? [], await this.bridge.userRules(this.cwd).catch(() => []))
     const key = JSON.stringify(rules)
@@ -3050,8 +3428,26 @@ export class LiveThread {
       modelParams: root.custom?.modelParams ?? null, sandbox: sandboxPolicy(root.permission, { cwd: root.cwd, tmp: this.bridge.tmpRoots }), editGuard,
       // OpenClaude Desktop's tools: the plugin names the app thread (the root, for a sub-agent) on each call of one of them.
       ...(this.bridge.appTools ? { appTools: { prefix: appToolsPrefix(this.bridge.appTools), session: root.id } } : {}),
+      // OpenCode 2.x: the plugin's permission.evaluate answers from the mode in-process (v2/plugin.js).
+      ...(this.bridge.v2 ? { policy: this.policyV2() } : {}),
     }
+    // OpenCode 2.x: the shell wrapper reads the session's profile from its own file (v2/sandbox.js), before the
+    // runtime file, which the plugin waits for.
+    if (this.bridge.v2) writeSandboxV2(this.bridge.config.sandboxDir, this.id, runtime.sandbox)
     writeAtomic(path.join(this.bridge.config.runtimeDir, 'sessions', `${safeId(this.id)}.json`), JSON.stringify(runtime))
+  }
+
+  /**
+   * The policy OpenCode 2.x's plugin evaluates permissions with: the root's mode, folders and "Allow for this session"
+   * grants (agentDirs: the agent's own external folders, as the bridge last read them).
+   */
+  policyV2() {
+    const root = this.rootThread
+    return {
+      mode: root.permission.mode, readOnly: isReadOnlyMode(root.permission.mode), cwd: root.cwd,
+      planDirs: this.bridge.planDirs(root.cwd), agentDirs: root.agentDirsV2 ?? [], roots: root.permission.extraRoots ?? [],
+      grants: root.sessionGrants ?? [], noUser: root.noUser(),
+    }
   }
 
   mustStayLoaded() {
@@ -3166,7 +3562,13 @@ export class LiveThread {
   }
 
   async startTurn(params) {
-    if (this.busy || this.activeTurn) throw new RpcError(-32600, 'A turn is already running. Steer it or queue the message.', { codexErrorInfo: { activeTurnNotSteerable: { turnKind: 'regular' } } })
+    if (this.busy || this.activeTurn || (this.bridge.v2 && this.startingTurn)) throw new RpcError(-32600, 'A turn is already running. Steer it or queue the message.', { codexErrorInfo: { activeTurnNotSteerable: { turnKind: 'regular' } } })
+    // OpenCode 2.x: claimed until its user message arrives (onMessage sets activeTurn; planApprovedV2 claims it the same
+    // way): another start meanwhile would post a prompt too.
+    if (this.bridge.v2) {
+      this.startingTurn = true
+      try { return await this.beginTurnV2(params) } finally { this.startingTurn = false }
+    }
     await this.applyParams(params)
     // Picks up edits of the user's own permission config since the last turn (PATCHed only when the rules changed).
     await this.applyRules().catch((error) => this.bridge.log(`rules ${this.id}: ${error?.message}`))
@@ -3231,6 +3633,7 @@ export class LiveThread {
   }
 
   async steer(params) {
+    if (this.bridge.v2) return this.steerV2(params)
     const active = this.activeTurn
     if (!active || (params.expectedTurnId && params.expectedTurnId !== active.id) || active.kind === 'compaction')
       throw new RpcError(-32600, 'No active turn to steer.', { codexErrorInfo: { activeTurnNotSteerable: { turnKind: active?.kind === 'compaction' ? 'compact' : 'regular' } } })
@@ -3253,6 +3656,10 @@ export class LiveThread {
   }
 
   async review(params) {
+    if (this.bridge.v2) {
+      const target = params.target ?? { type: 'uncommittedChanges' }
+      return this.reviewV2(params, { args: reviewArguments(target), label: reviewLabel(target) })
+    }
     if (this.busy || this.activeTurn) throw new RpcError(-32600, 'Wait for the current turn to finish before starting a review.')
     await this.applyParams(params)
     const target = params.target ?? { type: 'uncommittedChanges' }
@@ -3285,6 +3692,7 @@ export class LiveThread {
   }
 
   async interrupt() {
+    if (this.bridge.v2) return this.interruptV2()
     for (const entry of [...this.pending.values()]) entry.abort('Turn interrupted.')
     this.interrupted = true
     await this.bridge.api('POST', `/session/${encodeURIComponent(this.sessionID)}/abort`, { directory: this.cwd }).catch((error) => this.bridge.log(`abort ${this.id}: ${error?.message}`))
@@ -3306,7 +3714,7 @@ export class LiveThread {
     const entry = { id: randomUUID(), input: params.input, clientUserMessageId: typeof params.clientUserMessageId === 'string' ? params.clientUserMessageId : null }
     this.queue.push(entry)
     this.queueChanged()
-    if (!this.busy && !this.activeTurn) setImmediate(() => this.startNext())
+    if (!this.busy && !this.activeTurn && !(this.bridge.v2 && this.startingTurn)) setImmediate(() => this.startNext())
     return { queuedSubmission: this.queueEntry(entry) }
   }
 
@@ -3342,13 +3750,22 @@ export class LiveThread {
     if (!entry) throw new RpcError(-32600, this.queue.length ? 'That queued message already started.' : 'The queue is empty.')
     this.queue.splice(index, 1)
     this.queueChanged()
-    if (this.activeTurn) await this.steer({ input: entry.input, expectedTurnId: this.activeTurn.id, clientUserMessageId: entry.clientUserMessageId })
-    else await this.startTurn({ input: entry.input })
+    try {
+      if (this.activeTurn) await this.steer({ input: entry.input, expectedTurnId: this.activeTurn.id, clientUserMessageId: entry.clientUserMessageId })
+      else await this.startTurn({ input: entry.input })
+    } catch (error) {
+      // OpenCode 2.x: back in its place, as startNext does: a refused or failed start must not lose the message.
+      if (this.bridge.v2) {
+        this.queue.splice(Math.min(index, this.queue.length), 0, entry)
+        this.queueChanged()
+      }
+      throw error
+    }
     return {}
   }
 
   startNext() {
-    if (this.closed || this.busy || this.activeTurn || !this.queue.length || this.pausedQueue) return
+    if (this.closed || this.busy || this.activeTurn || (this.bridge.v2 && this.startingTurn) || !this.queue.length || this.pausedQueue) return
     const entry = this.queue.shift()
     this.queueChanged()
     void this.startTurn({ input: entry.input }).catch((error) => {
@@ -3836,13 +4253,20 @@ export class LiveThread {
     await this.refreshRules()
   }
 
-  /** Close the active turn: open items complete from the final history, then turn/completed. */
-  finishTurn() {
+  /**
+   * Close the active turn: open items complete from the final history, then turn/completed. `continuing`: the session
+   * runs on into the next turn (OpenCode 2.x: a queued prompt delivered in the same execution), so it stays busy and the
+   * queue waits.
+   */
+  finishTurn({ continuing = false } = {}) {
     const active = this.activeTurn
     if (this.reviewRestore) void this.endReview().catch((error) => this.bridge.log(`end review ${this.id}: ${error?.message ?? error}`))
-    this.busy = false
+    if (!continuing) this.busy = false
     if (!active) { this.publishStatus(); return }
-    for (const entry of [...this.pending.values()]) entry.abort('Turn finished.')
+    // OpenCode 2.x: only this session's asks end with its execution (a background sub-agent's cards stay; the plan card
+    // shown after the turn too: v2/asks.js), and not while it runs on into the next turn.
+    if (this.bridge.v2) { if (!continuing) this.rootThread.withdrawAsksV2(this.sessionID, 'Turn finished.') }
+    else for (const entry of [...this.pending.values()]) entry.abort('Turn finished.')
     const turn = this.projector.turns({ busy: false }).find((candidate) => candidate.id === active.id)
     let status = turn?.status ?? 'completed'
     let error = turn?.error ?? null
@@ -3865,6 +4289,7 @@ export class LiveThread {
     this.emit('turn/completed', { threadId: this.id, turn: { id: active.id, items: [], itemsView: 'notLoaded', status, error, startedAt: seconds(active.startedMs), completedAt: seconds(completed), durationMs: Math.max(0, completed - active.startedMs) } })
     this.publishStatus()
     this.items.clear()
+    if (continuing) return
     if (this.root) this.publishStatus({ type: 'idle' })
     this.bridge.maybePendingReload()
     // MiMo's next-prompt prediction (experimental.predict_next_prompt, on by default; the TUI's ghost text after each
@@ -3905,12 +4330,14 @@ export class LiveThread {
       .catch((error) => this.bridge.log(`session argument ${part.id}: ${error?.message ?? error}`))
   }
 
-  /** A sub-agent session appeared: link it to the running task/actor item. */
+  /** A sub-agent session appeared: link it to the running task/actor item (OpenCode 2.x: subagent, metadata.sessionID). */
   linkChild(info) {
+    const tools = this.bridge.v2 ? ['subagent'] : ['task', 'actor']
     for (const message of [...this.projector.messages.values()].reverse()) {
       for (const part of [...message.parts].reverse()) {
-        if (part.type !== 'tool' || !['task', 'actor'].includes(part.tool) || this.projector.children.has(part.id)) continue
-        if (part.state?.metadata?.sessionId && part.state.metadata.sessionId !== info.id) continue
+        if (part.type !== 'tool' || !tools.includes(part.tool) || this.projector.children.has(part.id)) continue
+        const known = this.bridge.v2 ? part.state?.metadata?.sessionID : part.state?.metadata?.sessionId
+        if (known && known !== info.id) continue
         if (part.state?.status === 'completed' || part.state?.status === 'error') continue
         this.projector.children.set(part.id, info.id)
         this.onPart(part)
@@ -4145,10 +4572,15 @@ export class LiveThread {
     this.workflowTimer = null
     for (const entry of [...this.pending.values()]) entry.abort(reason)
     for (const expectation of this.expect.splice(0)) expectation.reject?.(new RpcError(-32000, reason))
+    this.commandClaimV2 = null
     this.release()
     this.closed = true
   }
 }
+
+// OpenCode 2.x's session operations, turn lifecycle and approvals (v2/session.js, v2/turns.js, v2/asks.js): methods named *V2, dispatched on `this.v2`.
+Object.assign(Bridge.prototype, BRIDGE_V2, ACCOUNT_V2, EXTENSIONS_V2, USAGE_V2)
+Object.assign(LiveThread.prototype, THREAD_V2, ASKS_V2)
 
 const MIME = { '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.gif': 'image/gif', '.webp': 'image/webp', '.pdf': 'application/pdf', '.svg': 'image/svg+xml' }
 const mimeOf = (file, fallback) => MIME[path.extname(file).toLowerCase()] ?? fallback

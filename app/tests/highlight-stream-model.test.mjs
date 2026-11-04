@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
-  STREAM_LIMITS, acceptsUpdate, coveredLength, createLimitTracker, createStreamPhase, flattenTokens, nextStreamPhase,
+  STREAM_LIMITS, coveredLength, createLimitTracker, createStreamPhase, flattenTokens, nextStreamPhase,
   prepareStreamHighlight, reduceBatch, splitChunk, validateStreamTokens,
 } from "../src/highlight-stream-model.mjs";
 import { hslHex, streamLightPalette, streamLightTheme, streamDarkTheme, darkPalette, streamRules } from "../src/highlight-themes.mjs";
@@ -27,10 +27,7 @@ test("official chunk limits: 16384 units, split after the last newline within th
   assert.equal(splitChunk(late).chunk.length, 16_384, "a newline beyond the limit does not extend the chunk");
 });
 
-test("prefix acceptance and eligibility share the settled language aliases", () => {
-  assert.equal(acceptsUpdate("const a", "const a = 1;", "js", "js"), true);
-  assert.equal(acceptsUpdate("const a", "let a", "js", "js"), false);
-  assert.equal(acceptsUpdate("const a", "const a", "js", "ts"), false);
+test("stream eligibility shares the settled language aliases", () => {
   assert.equal(prepareStreamHighlight({ text: "", language: "JS" }).language, "javascript");
   assert.equal(prepareStreamHighlight({ text: "", language: "notalang" }).reason, "unknown-language");
   // Every bundled grammar streams (c5a058668 table); text and ansi never open a stream (code-block-current.js:1566).

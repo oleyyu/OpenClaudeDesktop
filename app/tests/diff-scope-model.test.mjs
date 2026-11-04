@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   DEFAULT_DIFF_SCOPE, UNCOMMITTED_DIFF_SCOPE, DIFF_SCOPE_COMMIT_LIMIT, branchSearchEmptyLabel, commitScopeLabel, compareAgainstBranches,
-  diffScopeParam, diffScopeSections, diffScopeTrigger, filterSearchItems, resolveDiffScope, sameDiffScope,
+  diffScopeParam, diffScopeSections, diffScopeTrigger, resolveDiffScope, sameDiffScope,
   carriedOverDiff, commitScopeGone, commitsSearchEmptyLabel, commitsSubmenuHint, diffScopePick, uncommittedScopeAvailable,
 } from '../src/diff-scope-model.mjs';
 
@@ -94,7 +94,8 @@ test('selection: scope rows, commit rows and Compare against route through the c
   assert.deepEqual(calls, [['base', null], ['scope', DEFAULT_DIFF_SCOPE]]);
 });
 
-test('Compare against helpers: Fm order, Im empty labels, H search filter', () => {
+// W14-code r4 gen-final-4: the host's test-only filterSearchItems (H) is deleted.
+test('Compare against helpers: Fm order, Im empty labels', () => {
   assert.deepEqual(compareAgainstBranches(['b', 'a', 'b', 'main', 'cur'], 'main', 'cur'), ['main', 'a', 'b']);
   assert.deepEqual(compareAgainstBranches(['b', 'a'], undefined, undefined), ['a', 'b']);
   assert.equal(branchSearchEmptyLabel({ error: true }), 'Couldn’t load branches');
@@ -103,8 +104,6 @@ test('Compare against helpers: Fm order, Im empty labels, H search filter', () =
   // 3.6556.2 cccc2cf0a YS `p = O ? e : A || j ? x : "No branches match"`: a loaded, empty list has no match (the
   // "diff-base-note" row covers loading / a failed empty load).
   assert.equal(branchSearchEmptyLabel({ loaded: true, count: 0 }), 'No branches match');
-  assert.deepEqual(filterSearchItems([{ label: 'Main' }, { label: 'feature/x' }, { label: 'release' }], 'MA').map((row) => row.label), ['Main']);
-  assert.equal(filterSearchItems([{ label: 'a' }], '').length, 1);
 });
 
 // B15: 2.31226.0 cccc2cf0a C_ (readable :3166-3230) Commits submenu row.
@@ -120,10 +119,7 @@ test('Commits submenu: count hint (or the picked shortSha), "Search commits", th
   assert.equal(picked.hint, commits[1].shortSha);
   assert.equal(commitsSubmenuHint({ kind: 'commit', sha: 'abcdef0123456789' }, [], 4), 'abcdef0', 'an unlisted commit shows its 7-character sha');
   assert.equal(commitsSearchEmptyLabel(50), 'No commits match');
-  // H: rows whose label is a FormattedMessage in the source ("{n} older commits not shown") are filtered out by any query.
-  assert.deepEqual(filterSearchItems(row.items, 'older').map((item) => item.value), []);
-  assert.deepEqual(filterSearchItems(row.items, 'commit 5').map((item) => item.label), ['Commit 5', 'Commit 50']);
-  assert.equal(filterSearchItems(row.items, '').length, 51);
+  assert.equal(row.items.length, 51);
 });
 
 // B15: c44d00c7f Xc + cb61be3a2 Je Mt (carriedOver).

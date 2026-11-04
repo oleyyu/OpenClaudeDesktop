@@ -10,7 +10,7 @@ import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
-import { surfaceNavRows, surfaceNavGates, SURFACE_NAV_ITEMS } from '../src/surface-nav-model.mjs';
+import { surfaceNavRows, surfaceNavGates } from '../src/surface-nav-model.mjs';
 
 const app = path.resolve(import.meta.dirname, '..');
 const readable = path.resolve(app, '../analysis/claude-3.6556.2-migrate-20261025/readable/3.6556.2');
@@ -52,8 +52,6 @@ test('official text: hH entries, their order and modes', () => {
   assert.ok(design.includes('icon: "Palette",') && design.includes('gate: "design",') && design.includes('modes: ["chat", "cowork"]'));
   const dispatch = entry('id: "dispatch",');
   assert.ok(dispatch.includes('gate: "dispatch",') && dispatch.includes('modes: ["cowork"]'));
-  // The model's table follows the same order and modes for the rows it keeps.
-  assert.deepEqual(SURFACE_NAV_ITEMS.map(item => item.id), ['projects', 'cowork-artifacts', 'scheduled', 'dispatch', 'artifacts', 'design', 'customize']);
 });
 
 test('official text: bH gates and the projects / badge rules', () => {
@@ -126,7 +124,9 @@ const navRows = html => {
   const primary = html.slice(html.indexOf('class="source-sidebar-primary"'));
   const block = primary.slice(0, primary.indexOf('</div>'));
   return [...block.matchAll(/<button[^>]*class="source-sidebar-nav-row[^"]*"[^>]*>([\s\S]*?)<\/button>/g)]
-    .map(m => m[1].replace(/<kbd[\s\S]*?<\/kbd>/g, '').replace(/<[^>]+>/g, '').replace(/[\uE000-\uF8FF]/g, '').trim()); // icon-font glyphs
+    // W14-code frame: the Code New row's ⌘N keycap is now the CDS Shortcut (shared-18 yk, data-cds="Shortcut") whose
+    // keys are <kbd>s joined by a <span class="scds-joiner">+</span>; drop the whole keycap, not only the <kbd>s.
+    .map(m => m[1].replace(/<span[^>]*data-cds="Shortcut"[\s\S]*?<\/kbd><\/span>/g, '').replace(/<kbd[\s\S]*?<\/kbd>/g, '').replace(/<[^>]+>/g, '').replace(/[\uE000-\uF8FF]/g, '').trim()); // icon-font glyphs
 };
 
 test('SSR: the sidebar draws the hH rows for chat, cowork and a chat session on the merged home', () => {

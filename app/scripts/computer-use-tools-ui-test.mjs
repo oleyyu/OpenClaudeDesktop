@@ -30,7 +30,7 @@ try{
  // throttling) but transparent and click-through, so the user's screen is never covered.
  await app.evaluate(({BrowserWindow})=>{for(const w of BrowserWindow.getAllWindows()){w.setOpacity(0);w.setIgnoreMouseEvents(true);}});
  await page.waitForFunction(()=>{const c=document.querySelector('[data-cds=ChatComposer]');return c&&!c.hasAttribute('data-disabled');},null,{timeout:20000});
- const input=page.getByRole('textbox',{name:'Message DeepSeek',exact:true});
+ const input=page.getByRole('textbox',{ name: /^(?:Prompt|Message DeepSeek)$/ });
  const send=async(text)=>{await fillComposer(page,input,text);await page.locator('[data-testid="code-prompt-send"]:not([inert] *)').click();};
 
  // 1. The screenshot row.
@@ -55,7 +55,7 @@ try{
  const note=await page.evaluate(()=>{const p=document.querySelector('[data-cua-note]');return p?{kind:p.dataset.cuaNote,className:p.className,text:p.textContent}:null;});
  assert.deepEqual(note,{kind:'background',className:'text-footnote text-muted-as-secondary',text:'DeepSeek will work in these apps in the background while you keep using your Mac.'});
  await page.screenshot({path:path.join(directory,'access-card.png')});
- await page.waitForTimeout(700); // allow clicks arm 400 ms after the card appears (source-approval-card.jsx useAllowArming)
+ await page.waitForTimeout(700); // allow clicks arm 400 ms after the card appears (source-approval-card.jsx ApprovalAllowArm, shared-10 OS)
  await allow.click();await allow.waitFor({state:'detached',timeout:5000});
  await page.waitForFunction(()=>/"tier": "full"/.test(document.body.innerText),null,{timeout:15000});
  report.checks.push('request_access raises the access card (Finder by bundle id, its icon, the file-system risk) and Allow grants it');

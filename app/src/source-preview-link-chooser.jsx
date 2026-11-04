@@ -5,7 +5,8 @@ import { previewLinksStore } from './preview-links-model.mjs';
 import { previewChooserStore } from './preview-link-routing.mjs';
 import { useRoutineIntl } from './source-routine-adapters.jsx';
 import { SourceDialog } from './source-dialog.jsx';
-import { SourceSettingsButton } from './source-settings-button.jsx';
+// W14-code r6 R6DC-02: the chooser dialog's Cancel / confirm are shared-frame Uu (E41 direct import).
+import { CdsButton } from './generated/view-tabs/shared-frame-6jtSkIit.js';
 import { useSourceToasts } from './source-toast.jsx';
 import { holdModalInert } from './modal-inert.mjs';
 import { Icon } from './icons.jsx';
@@ -40,8 +41,8 @@ function ConfirmationDialog({ open, onOpenChange, onConfirm, title, description,
   const cancel = useRef(null);
   return <SourceDialog open={open} alert size="sm" showClose={false} title={title} description={description}
     initialFocusRef={cancel} onClose={() => onOpenChange(false)} className={`preview-link-chooser ${className}`}
-    footer={<><SourceSettingsButton ref={cancel} variant="secondary" onClick={() => onOpenChange(false)}>{t('Cancel')}</SourceSettingsButton>
-      <SourceSettingsButton variant="primary" disabled={disabled} onClick={onConfirm}>{confirmLabel}</SourceSettingsButton></>}>
+    footer={<><CdsButton ref={cancel} variant="secondary" onClick={() => onOpenChange(false)}>{t('Cancel')}</CdsButton>
+      <CdsButton variant="primary" disabled={disabled} onClick={onConfirm}>{confirmLabel}</CdsButton></>}>
     {children}
   </SourceDialog>;
 }

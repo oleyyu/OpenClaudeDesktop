@@ -1,7 +1,8 @@
 import React from 'react';
 import { createPreviewAddressField, displayPreviewURL } from './generated/code-editor/preview-address-field.mjs';
 import { createPreviewNavigation } from './generated/code-editor/preview-navigation.mjs';
-import { SourceSettingsButton } from './source-settings-button.jsx';
+// W14-code r6 R6DC-02: cf550b864 pe's Button is shared-frame Uu (E41 direct import).
+import { CdsButton } from './generated/view-tabs/shared-frame-6jtSkIit.js';
 import { SourceTooltip, useExplicitSourceTooltip } from './source-tooltip.jsx';
 import { SourceSpinner } from './source-pane-states.jsx';
 import { t } from '../electron/i18n/index.mjs';
@@ -9,7 +10,8 @@ import { useDefaultBrowserLabel } from './use-default-browser-label.mjs';
 
 function AddressButton({ tooltip, tooltipSide, shortcut, pressed, ...props }) {
   const explicitTooltip = useExplicitSourceTooltip();
-  const button = <SourceSettingsButton {...props} aria-pressed={pressed} iconSize="auto" />;
+  // Uu `pressed` (aria-pressed + its pressed paint); the host SourceTooltip keeps the shortcut hint, so Uu's own is off.
+  const button = <CdsButton {...props} pressed={pressed} tooltip={false} />;
   return tooltip === false || explicitTooltip ? button : <SourceTooltip content={props['aria-label']} shortcut={shortcut} side={tooltipSide} hoverable={false}>{button}</SourceTooltip>;
 }
 // 3.6556.2 cf550b864 pe: the owner window comes from the CDS anchor context (view-tabs useCdsOwnerWindowAnchor) inside

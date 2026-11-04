@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
-  emptyQueue, submitLane, queueFromList, previewText, queuedCountLabel, lockEntry, unlockEntry,
+  emptyQueue, submitLane, queueFromList, previewText, lockEntry, unlockEntry,
   optimisticRemove, reorderEntries, optimisticReorder, editableDraft, isNotSteerable, lastDequeueable,
   canSendNow, restoredOrder,
 } from "../src/queued-messages-model.mjs";
@@ -30,11 +30,11 @@ test("queue list normalizes real QueuedSubmission entries and keeps live locks o
   assert.deepEqual(queueFromList({ data: [{ id: 1 }, { id: "x" }] }, "t").entries, [], "malformed entries are dropped, never invented");
 });
 
-test("preview text and count labels follow the official copy", () => {
+// W14-code r7 r7c-01: the count label is the original bar's own (cf74bc599 WE / GE "{count, plural, …}"), no host helper.
+test("preview text follows the official copy", async () => {
   assert.equal(previewText([text("  a   b "), { type: "mention", name: "f.md", path: "/f.md" }]), "a b @f.md");
   assert.equal(previewText([]), "…");
-  assert.equal(queuedCountLabel(1), "1 message queued");
-  assert.equal(queuedCountLabel(2), "2 messages queued");
+  assert.equal("queuedCountLabel" in await import("../src/queued-messages-model.mjs"), false);
 });
 
 test("optimistic remove restores at the original index on rollback", () => {

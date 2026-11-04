@@ -55,18 +55,6 @@ test('chin Mode label: rQ truncating span, Manual warning tone and hidden descri
   assert.ok(loading.includes('<span class="relative block"><span class="sr-only">Permission mode</span><span aria-hidden="true" class="invisible">Mode</span><span aria-hidden="true" class="absolute inset-0 flex items-center"><span data-cds="Skeleton" class="smenu-skeleton sc-permission-skeleton w-full"></span></span></span>'), loading);
 });
 
-// c8e04f916 C: the marked stop, the label row under the track and '{name} ({badge})' value text.
-test('effort slider: the badged level marks its stop and names the value text; a warning badge adds the note', () => {
-  const levels = [{ reasoningEffort: 'low' }, { reasoningEffort: 'medium', badge: { message: 'Default', variant: 'neutral' } }, { reasoningEffort: 'high' }];
-  const html = renderToStaticMarkup(React.createElement(C.EffortControl, { levels, value: 'medium', onChange: noop }));
-  assert.match(html, /data-slider-stop="1" data-marked="" title="Medium \(Default\)"/);
-  assert.match(html, /aria-valuetext="Medium \(Default\)"/);
-  assert.match(html, /<span class="sc-slider-mark-row" aria-hidden="true" data-current=""><span class="sc-slider-mark-span" style="width:100%"><span class="sc-slider-mark-label">Default<\/span>/);
-  const low = renderToStaticMarkup(React.createElement(C.EffortControl, { levels, value: 'low', onChange: noop }));
-  assert.match(low, /aria-valuetext="Low"/);
-  assert.doesNotMatch(low, /sc-slider-mark-row[^>]*data-current/);
-  assert.doesNotMatch(html, /sc-effort-warning/);
-  const warned = renderToStaticMarkup(React.createElement(C.EffortControl, { levels: [{ reasoningEffort: 'high' }, { reasoningEffort: 'max', badge: { message: 'High usage', variant: 'warning' } }], value: 'max', onChange: noop }));
-  assert.match(warned, /data-effort-warning=""[^>]*>[\s\S]*DeepSeek thinks longer with Max effort/);
-  assert.doesNotMatch(warned, /sc-slider-mark-row/, 'a warning badge is not a mark');
-});
+// W14-code r6-composer-02: the effort slider (marked stop, mark row, '{name} ({badge})' value text, warning note) is the
+// sliced c8e04f916 EffortControl / c2d9b9a76 Slider now; tests/w14-r6-composer.test.mjs covers it. The host's hand-drawn
+// EffortControl these assertions pinned is gone.

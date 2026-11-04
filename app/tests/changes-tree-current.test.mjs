@@ -428,7 +428,8 @@ test('FT-07 CSS: no unlayered rule restates the rows; the official utilities win
 
 test('FT-07 Ca: Hide whitespace pauses per file while a comment, a draft or a finding sits on it (diffgit-11)', async () => {
   const D = await ssr('/src/source-diff.jsx');
-  const C = await ssr('/src/diff-comments-model.mjs');
+  // W14-code r7 (r7pa-03): the host rows' per-file store reads the official cc8941b7b store (source-diff-comments.jsx).
+  const C = await ssr('/src/source-diff-comments.jsx');
   const { whitespaceHidingPaused } = await ssr('/src/generated/files-changes/diff-whitespace-pause.mjs');
   // The host's Ca inputs: saved comments are annotations, open or unsaved ones drafts; no PR comments; none from Files.
   const inputs = D.whitespacePauseInputs([{ id: 'additions:1', side: 'additions', start: 1, end: 1, body: 'x', savedBody: 'x' }, { id: 'additions:3', body: '' }], []);
@@ -467,8 +468,13 @@ test('FT-07 Ca: Hide whitespace pauses per file while a comment, a draft or a fi
   assert.deepEqual([shown(html, 'a.js'), shown(html, 'b.js')], [{ body: false, whitespaceOnly: true }, { body: true, whitespaceOnly: false }]);
   // Wiring: the list-level decision feeds the same sections the F7 targets read.
   const text = source('src/source-diff.jsx');
+  // W14-code r7 (R7DC-01): only the host rows filter here; the official body gets the unfiltered sections (c44d00c7f qu
+  // pauses per file itself: `hideWhitespace:N&&!Dc({annotations:c,prComments:l,findings:u,drafts:d})`).
+  assert.match(text, /const hostWhitespace = hideWhitespace && !pierre;/);
+  assert.match(text, /shownDiffSections\(parsed\.sections, \{ listed, tree, groupByKind, hideWhitespace: hostWhitespace, paused \}\)/);
   assert.match(text, /return hideWhitespace \? ordered\.map\(\(section\) => \(paused\.has\(section\.path\) \? section : whitespaceHidden\(section\)\)\) : ordered;/);
-  assert.match(text, /const changeFiles = useMemo\(\(\) => \(changes \? sections\.filter/);
+  // W14-code pa2-04 (E84.3): the inline placement is gone; SourceDiff always renders the Changes body.
+  assert.match(text, /const changeFiles = useMemo\(\(\) => sections\.filter/);
   assert.match(source('src/source-diff-comments.jsx'), /const store = useMemo\(\(\) => \(enabled \? diffFileCommentsStore\(scope, file\.path\) : null\)/);
 });
 

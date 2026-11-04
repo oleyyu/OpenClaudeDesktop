@@ -3,6 +3,7 @@ import { parseSideChatUserText } from './generated/code-editor/side-chat-user-se
 import { renderSideChatUserSegment, sideChatTextBreaks } from './generated/code-editor/side-chat-user-render.mjs';
 import { detectSideChatSecrets as detectSecrets, maskSideChatSecret } from './generated/code-editor/side-chat-secrets.mjs';
 import { SourceRedactedSecret } from './source-session.jsx';
+import { hostGrowthBookFlag } from './host-growthbook.mjs';
 
 // Current Bp/z: ordinary text and line breaks, with independently revealable
 // secret runs. These are user messages, so links/fences stay literal.
@@ -21,10 +22,12 @@ function SideChatText({ text }) {
 }
 const renderText = text => <SideChatText text={text}/>;
 
-// OT's ccd_user_message_lists_main branch is enabled locally. Both parser and
-// recursive SP/xP renderer (c96d752d0, with list dir and bidi isolation) are extracted from the 3.6556.2 snapshot.
+// W14-code r5 gates-r5-03 (E81): cccc2cf0a HF `n = Po()` (c96d752d0 mP `jt("ccd_user_message_lists_main")`, not in the
+// desktop's Uon: off), `i = a ? (n ? Jd(a) : [{ kind: "text", text: a }]) : []` — with the gate off the body is one plain
+// text segment; with it on, the parser and recursive SP/xP renderer (c96d752d0, with list dir and bidi isolation) are
+// extracted from the 3.6556.2 snapshot.
 // cccc2cf0a HF `c`: the segments (YF = Ao(segment, index, BF)) sit in `div.flex flex-col gap-1.25`.
-export function SourceSideChatUserContent({ text }) {
-  const segments = useMemo(() => parseSideChatUserText(text), [text]);
+export function SourceSideChatUserContent({ text, userMessageLists = hostGrowthBookFlag("ccd_user_message_lists_main") }) {
+  const segments = useMemo(() => (text ? (userMessageLists ? parseSideChatUserText(text) : [{ kind: "text", text }]) : []), [text, userMessageLists]);
   return <div className="flex flex-col gap-1.25">{segments.map((segment, index) => renderSideChatUserSegment(segment, index, renderText))}</div>;
 }

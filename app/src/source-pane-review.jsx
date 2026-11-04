@@ -1,6 +1,5 @@
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useSyncExternalStore } from "react";
-import { SourceTooltip } from "./source-tooltip";
-import { SourceSettingsButton } from "./source-settings-button.jsx";
+import { CdsButton } from "./generated/view-tabs/shared-frame-6jtSkIit.js";
 import { findingAnnotation, findingCounts, findingsStatusText, fixFindingsPrompt, latestReviewFindings, paneReviewSeed, paneReviewView, seedPaneReview } from "./review-findings-model.mjs";
 import { ReviewFindingCard } from "./generated/review-findings/review-finding-card.mjs";
 import { isSendStopped } from "./generated/r4e-findings/send-stopped.mjs";
@@ -18,13 +17,22 @@ import "./source-pane-review.css";
 // R4f-findings-store: both read and act on the session review store the transcript's findings card writes
 // (useChangesPaneReview).
 
+// 3.6556.2 cccc2cf0a ES (panels part off): the bar is c82eca2bd z_ wrap (G: H + `flex-wrap min-h-[…] py-xs`, H carrying
+// bg-alpha-1); the status `text-body text-muted-as-secondary whitespace-nowrap tabular-nums`; the steppers c =
+// "rounded text-muted-as-secondary"; a `grow` spacer; Apply fixes / Re-run review secondary sm `${TS} text-secondary` and
+// Dismiss ghost sm `${TS} text-muted-as-secondary`, TS = "rounded-[5px] text-footnote px-[6px]". W14-code r5 cleanup
+// css5-settings-button-replica: every button is the shared-frame Button (F = Uu = CdsButton), whose layered classes merge
+// with these, so source-pane-review.css no longer restates them (no .spr-step / .spr-action / .spr-dismiss).
+const BAR_CLASS = 'epitaxy-panel-subheader flex items-center gap-[4px] shrink-0 px-md bg-alpha-1 flex-wrap min-h-[calc(2rem*var(--cds-rem-scale,1))] py-xs';
+const STATUS_CLASS = 'text-body text-muted-as-secondary whitespace-nowrap tabular-nums';
+const STEP_CLASS = 'rounded text-muted-as-secondary';
+const ACTION_CLASS = 'rounded-[5px] text-footnote px-[6px]';
+
+// ES: `u(F,{variant:"ghost",iconOnly:!0,icon:"CaretLeft",className:c,"aria-label":fe,disabledReason:fe,disabled:k<=0,onClick:ne})`
+// — the Button's own tooltip (its aria-label) and disabled-reason tooltip.
 function StepButton({ label, icon, disabled, onClick }) {
-  return (
-    <SourceTooltip content={label} disabledReason={disabled ? label : undefined} side="bottom" hoverable={false}>
-      <SourceSettingsButton variant="ghost" iconOnly icon={icon} iconSize="auto" className="spr-step" aria-label={label} disabled={disabled}
-        onMouseDown={(event) => event.preventDefault()} onClick={onClick} />
-    </SourceTooltip>
-  );
+  return <CdsButton variant="ghost" iconOnly icon={icon} className={STEP_CLASS} aria-label={label} disabledReason={label} disabled={disabled}
+    onMouseDown={(event) => event.preventDefault()} onClick={onClick} />;
 }
 
 /**
@@ -43,17 +51,17 @@ export function SourceReviewFindingsBar({ findings, statuses = {}, currentIndex 
   const allFixed = counts.addressed === findings.length;
   const canApply = !allFixed && counts.open > 0;
   return (
-    <div className="epitaxy-panel-subheader spr-bar" data-review-findings="">
-      <span role="status" className="spr-status">{findingsStatusText(findings, statuses, currentIndex)}</span>
+    <div className={`spr-bar ${BAR_CLASS}`} data-review-findings="">
+      <span role="status" className={`spr-status ${STATUS_CLASS}`}>{findingsStatusText(findings, statuses, currentIndex)}</span>
       {findings.length > 1 && <>
         <StepButton label={t("Previous finding")} icon="CaretLeft" disabled={currentIndex <= 0} onClick={() => onStep(currentIndex - 1)} />
         <StepButton label={t("Next finding")} icon="CaretRight" disabled={currentIndex >= findings.length - 1} onClick={() => onStep(currentIndex + 1)} />
       </>}
-      <span className="spr-grow" />
+      <span className="grow" />
       {allFixed
-        ? onRerun && <SourceSettingsButton variant="secondary" size="sm" className="spr-action" disabled={busy} onClick={onRerun}>{t("Re-run review")}</SourceSettingsButton>
-        : canApply && onApply && <SourceSettingsButton variant="secondary" size="sm" className="spr-action" disabled={busy} data-review-apply="" onClick={onApply}>{t("Apply fixes")}</SourceSettingsButton>}
-      <SourceSettingsButton variant="ghost" size="sm" className="spr-action spr-dismiss" onClick={onDismiss}>{t("Dismiss")}</SourceSettingsButton>
+        ? onRerun && <CdsButton variant="secondary" size="sm" className={`${ACTION_CLASS} text-secondary`} disabled={busy} onClick={onRerun}>{t("Re-run review")}</CdsButton>
+        : canApply && onApply && <CdsButton variant="secondary" size="sm" className={`${ACTION_CLASS} text-secondary`} disabled={busy} data-review-apply="" onClick={onApply}>{t("Apply fixes")}</CdsButton>}
+      <CdsButton variant="ghost" size="sm" className={`${ACTION_CLASS} text-muted-as-secondary`} onClick={onDismiss}>{t("Dismiss")}</CdsButton>
     </div>
   );
 }
@@ -84,6 +92,20 @@ export function SourceReviewFindingCard({ finding, current = false, status = "op
       </ReviewFindingStateContext>
     </div>
   );
+}
+
+// W14-code r6 pierre (R6DC-01): in the pierre Changes body (generated/pierre-changes, c44d00c7f qu) a finding's card is
+// drawn by Pc `r.kind === "finding" ? n(wc, {sessionId, annotation: r.finding, onFix, onNext, onDismiss})`; the
+// extractor hands wc to this stand-in, which draws the host's card for that finding over the review the Changes pane
+// shows (PierreReviewContext: SourceDiff's `review`), so Fix / Next / Dismiss and the current / status state are the
+// findings bar's, as on the host rows.
+export const PierreReviewContext = React.createContext(null);
+export function PierreReviewFindingCard({ annotation }) {
+  const review = React.useContext(PierreReviewContext);
+  const finding = review?.findings?.find((entry) => entry.id === annotation?.id);
+  if (!review || !finding) return null;
+  return <SourceReviewFindingCard finding={finding} current={finding.id === review.currentId} status={review.statuses?.[finding.id] ?? "open"}
+    onDismiss={() => review.onDismiss(finding.id)} onFix={review.onFix ? () => review.onFix(finding.id) : null} onNext={review.onNext ? () => review.onNext(finding.id) : null} />;
 }
 
 // ── R4f-findings-store (F1): the Changes pane over the session review store ─────────────────────────────────────────

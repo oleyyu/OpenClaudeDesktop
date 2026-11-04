@@ -8,7 +8,7 @@ import './source-settings-button.css';
 export const SourceSettingsButton = React.forwardRef(function SourceSettingsButton({
   variant = 'secondary', size, icon, iconSize = 20, iconOnly = false,
   iconPosition = 'start', className = '', children, type = 'button',
-  busy=false, flush=false, style, onClick, onKeyDown, onKeyUp, onMouseDown, onPointerDownCapture, ...props
+  busy=false, busyLabel, flush=false, style, onClick, onKeyDown, onKeyUp, onMouseDown, onPointerDownCapture, ...props
 }, ref) {
   // shared-frame ks :2833-2836/:2880-2882: flush (true = "start") applies only to
   // a non-joined ghost; Cs start/end/both = ms-/me-/mx-outset against
@@ -48,5 +48,7 @@ export const SourceSettingsButton = React.forwardRef(function SourceSettingsButt
     <span aria-hidden="true" className="ssb-squish"><span data-cds-part="paint" className="ssb-paint"/></span>
     <span className="ssb-content">{iconOnly ? glyph : <>{iconPosition === 'start' && glyph}{children}{iconPosition === 'end' && glyph}</>}</span>
     {busy&&<span className="ssb-spinner" aria-hidden="true"><span data-cds="Spinner"><span/><span/></span></span>}
+    {/* shared-frame Uu busyLabel: the busy spinner's spoken label (Ac `label`). */}
+    {busy&&busyLabel&&<span className="sr-only">{busyLabel}</span>}
   </button>;
 });

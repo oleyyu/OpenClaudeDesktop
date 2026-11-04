@@ -13,4 +13,3 @@ if (typeof sessions.setAvailableNextActions !== "function") {
     return Promise.resolve(call("turn-plan:available-next-actions", { sessionId, actions: actions === undefined ? null : actions }));
   };
 }
-export const localSessionsBridge = sessions;

@@ -10,8 +10,8 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
 import { ionSource } from '../scripts/official-3.6556.2.mjs';
-import { CHAT_DELETE_MESSAGES, CHAT_ROW_MENU_MESSAGES, DESKTOP_FRAME, STARRED_SECTION_MESSAGES, chatDeleteConfirmCopy, chatRowHotkeys,
-  chatRowMenuEntries, chatSessionStarred, splitStarredRows, starredSectionMessage } from '../src/chat-starred-model.mjs';
+import { CHAT_DELETE_MESSAGES, CHAT_ROW_MENU_MESSAGES, DESKTOP_FRAME, chatDeleteConfirmCopy, chatRowHotkeys,
+  chatRowMenuEntries, chatSessionStarred, splitStarredRows } from '../src/chat-starred-model.mjs';
 import zh from '../electron/i18n/zh-CN/index.mjs';
 
 const root = new URL('..', import.meta.url).pathname;
@@ -70,7 +70,8 @@ test('official: the desktop frame (shared-78 gK) turns Star / Unstar / Starred i
 });
 
 test('every message the model uses is the official en-US text for its id, and has zh-CN', () => {
-  const all = [...Object.values(CHAT_ROW_MENU_MESSAGES), ...Object.values(CHAT_DELETE_MESSAGES), ...Object.values(STARRED_SECTION_MESSAGES)];
+  // W14-code r4 gen-final-4: the test-only STARRED_SECTION_MESSAGES table is deleted.
+  const all = [...Object.values(CHAT_ROW_MENU_MESSAGES), ...Object.values(CHAT_DELETE_MESSAGES)];
   for (const { id, defaultMessage } of all) {
     assert.equal(enUS[id], defaultMessage, id);
     assert.ok(typeof zh[defaultMessage] === 'string' && zh[defaultMessage].trim(), `zh-CN: ${defaultMessage}`);
@@ -111,8 +112,6 @@ test('model: hotkeys, starred flag, delete copy, section heading and the Zl spli
   assert.equal(chatSessionStarred({}), false);
   assert.equal(chatSessionStarred(undefined), false);
   assert.deepEqual(chatDeleteConfirmCopy(), { title: 'Delete chat', body: 'Are you sure you want to delete this chat?', confirmLabel: 'Delete', danger: true });
-  assert.equal(starredSectionMessage().defaultMessage, 'Pinned');
-  assert.equal(starredSectionMessage(false).defaultMessage, 'Starred');
   const rows = [{ id: 'a' }, { id: 'b', s: true }, { id: 'c' }, { id: 'd', s: true }];
   assert.deepEqual(splitStarredRows(rows, (row) => !!row.s), { starredRows: [rows[1], rows[3]], recentRows: [rows[0], rows[2]] });
 });

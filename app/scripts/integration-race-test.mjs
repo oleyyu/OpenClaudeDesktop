@@ -28,13 +28,14 @@ try{
  await row('race-a').waitFor();await row('race-a').click();await row('race-b').click();await row('race-a').click();
  await page.getByText('CURRENT_SNAPSHOT',{exact:true}).waitFor();await page.waitForTimeout(1600);assert.equal(await page.getByText('STALE_SNAPSHOT',{exact:true}).count(),0);
  checks.push('A→B→A out-of-order resume cannot replace current transcript with stale history');
- const input=page.getByRole('textbox',{name:'Message DeepSeek'});await input.fill('fixture:complete delayed send');await page.locator('[data-testid="code-prompt-send"]:not([inert] *)').click();
- await page.locator('.sc-spinner').waitFor();await input.fill('A new draft typed during the pending send');await page.waitForFunction(()=>!document.querySelector('.sc-spinner'));
+ const input=page.getByRole('textbox',{ name: /^(?:Prompt|Message DeepSeek)$/ });await input.fill('fixture:complete delayed send');await page.locator('[data-testid="code-prompt-send"]:not([inert] *)').click();
+ // R4 closeout: the pending send is the CdsButton's busy state (composer-send-cell KM `busy: submitQueued` -> aria-busy), not .sc-spinner.
+ await page.locator('[data-testid="code-prompt-send"][aria-busy="true"]:not([inert] *)').waitFor();await input.fill('A new draft typed during the pending send');await page.waitForFunction(()=>!document.querySelector('[data-testid="code-prompt-send"][aria-busy="true"]'));
  // HANDOFF 0.2.81/0.2.124: the composer is a contenteditable ProseMirror editor exposing its serialized draft as
  // node.value (src/source-composer-editor.jsx:61); Playwright inputValue only reads input/textarea/select.
  assert.equal(await input.evaluate(node=>node.value),'A new draft typed during the pending send');checks.push('pending send does not discard text typed after submission');
  await input.fill('');await row('race-a').hover();await page.locator('[data-source-session-id="race-a"] .source-session-more').click();await page.getByRole('menuitem',{name:/Archive/}).click();await row('race-b').click();
- await page.waitForTimeout(1600);assert.equal(await page.locator('.st-title').textContent(),'race-b');assert.equal(await row('race-a').count(),0);
+ await page.waitForTimeout(1600);assert.equal(await page.locator(':is(.st-title,button[data-pane-title])').textContent(),'race-b');assert.equal(await row('race-a').count(),0);
  checks.push('delayed archive of A preserves navigation to B');
  assert.deepEqual(errors,[]);const report={passed:true,at:new Date().toISOString(),fixture:true,checks,errors};await fs.writeFile(path.join(evidence,'integration-race-test.json'),JSON.stringify(report,null,2));console.log(report);
 }finally{await app.close();}

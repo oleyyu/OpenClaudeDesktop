@@ -4,6 +4,7 @@ import { SourceTooltip } from "./source-tooltip";
 import { SourcePopover } from "./source-popover";
 import { attachmentOpenAction, attachmentViewerState, extensionOf } from "./composer-attachments-model.mjs";
 import { SourceImageViewer } from "./source-image-viewer.jsx";
+import { CdsSkeleton } from "./generated/view-tabs/shared-frame-6jtSkIit.js";
 import { convertedTooltip } from "./chat-attachment-model.mjs"; // w13-close-chat-composer
 import { SourceContextPill, SourceSelectedElementPill, attachmentStripHandlers, useAttachmentPreviewIntent } from "./source-selected-element.jsx";
 import "./source-composer-attachments.css";
@@ -28,12 +29,13 @@ function AttachmentPill({ entry, onRemove, onOpen, disabled }) {
       {image ? (
         <span className="sca-thumb">
           {entry.previewUrl && <img src={entry.previewUrl} alt="" className="sca-picture" draggable={false} />}
-          {entry.status === "loading" && (
-            <span role="status" className="sca-loading">
-              <span className="sc-spinner" aria-hidden="true" />
-              <span className="sca-sr-only">{t("Processing image")}</span>
-            </span>
-          )}
+          {/* W14-code css2-spinner-attachment: a pending image is shared-2-TF8v67kg.js Om's `t === "pending"` overlay,
+              u("span", {"aria-hidden": !0, className: "contents", children: u(Be, {className: "absolute inset-0 size-full
+              rounded-card"})}) (Be = shared-frame af Skeleton), and c0fbbe82d's sibling sr-only status "Processing image". */}
+          {entry.status === "loading" && <>
+            <span aria-hidden="true" className="contents"><CdsSkeleton className="absolute inset-0 size-full rounded-card" /></span>
+            <span role="status" className="sr-only">{t("Processing image")}</span>
+          </>}
         </span>
       ) : (
         <span className="sca-glyph" aria-hidden="true">

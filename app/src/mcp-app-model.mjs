@@ -164,19 +164,4 @@ export function sessionMcpAppServers(reply) {
   });
 }
 
-/** Whether the running core can serve third-party MCP Apps (MA-4 core {supported, unavailable?, reason?}). */
-export function coreServesMcpApps(reply) {
-  return reply?.core?.supported === true && reply.core.unavailable === undefined;
-}
 
-/** The pending tool permission requests kQe waits on ({[itemId]: {status:"pending", toolName}}) for a session's items. */
-export function pendingMcpAppRequests(items, pendingItemIds) {
-  const requests = {};
-  if (!Array.isArray(items) || !pendingItemIds?.size) return requests;
-  for (const item of items) {
-    if (!pendingItemIds.has(item?.id)) continue;
-    const name = officialToolName(item);
-    if (name !== null) requests[item.id] = { status: 'pending', toolName: name };
-  }
-  return requests;
-}

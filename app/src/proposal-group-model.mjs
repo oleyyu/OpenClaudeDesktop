@@ -81,8 +81,6 @@ export function proposalTaskId(record) {
 export const isProposingTool = (record) => record?.name === SPAWN_TASK_TOOL;
 /** c96d752d0 gL: a proposing call the card draws (it has its task id). */
 export const isPlacedProposal = (record) => isProposingTool(record) && proposalTaskId(record) !== undefined;
-/** c96d752d0 mL: the call failed, was rejected or was cut off. */
-export const proposalToolFailed = (record) => record?.status === 'error' || record?.isError === true || record?.rejected === true || record?.interrupted === true;
 
 /**
  * c96d752d0 PPe over one entry's tools: {tools, firstProposingCallId}: the first proposing call's id (even one still
@@ -149,7 +147,6 @@ export function proposalCardToolIds(items) {
     if (typeof item?.turnId === 'string' && item.turnId && isPlacedProposal(proposalToolRecord(item))) ids.add(item.id);
   return ids;
 }
-export const isProposalCardTool = (item) => typeof item?.turnId === 'string' && !!item.turnId && isPlacedProposal(proposalToolRecord(item));
 
 /** c96d752d0 bL / OPe: every task id the loaded transcript's tool calls carry (pL). */
 export function transcriptTaskIds(items) {

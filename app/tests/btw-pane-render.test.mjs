@@ -197,6 +197,8 @@ function componentFixture(component, props) {
     useLayoutEffect(fn,deps){return dispatcher.useEffect(fn,deps);},
     // R4g-btw BT4: the generated qj keeps its card-left callback with useCallback.
     useCallback(fn,deps){return dispatcher.useMemo(()=>fn,deps);},
+    // W14-code r4 r4pa-c03: the pane header reads PaneWindowContext (pane-window-header.jsx); outside a provider, the default.
+    useContext(context){return context._currentValue;},
   };
   const render=()=>{cursor=0;const internals=React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,old=internals.H;
     internals.H=withMemoCache(dispatcher);try{tree=component(props);}finally{internals.H=old;}return tree;};
@@ -326,7 +328,10 @@ test('the child transcript draws its own failed turn (card, then markers); the t
   assert.match(notice,/data-turn-error="card" data-turn-id="thread"/);
   const noticeScope=notice.indexOf('data-approval-hotkey-scope="btw:notice-ssr"'),noticeCard=notice.indexOf('data-turn-id="thread"'),composer=notice.indexOf('Reply in this session');
   assert.ok(noticeScope>=0&&noticeScope<noticeCard&&noticeCard<composer,'nT is the first child of the approval scope, before the composer');
-  assert.match(notice,/<span class="ste-headline">[^<]*<\/span><span class="ste-dismiss -my-pad-xs -me-pad-xs flex shrink-0"><button aria-label="Dismiss"[^>]*data-variant="ghost"[^>]*data-size="sm" data-cds-icon-only=""[^>]*class="source-settings-button text-muted-as-secondary hover:text-primary"/);
+  // W14-code r4 btw-error-card (E95): the main session's official card (cb1a6e506 j) — its own header Dismiss
+  // (`span.-my-pad-xs -me-pad-xs flex shrink-0` > ghost sm icon-only X, "text-muted-as-secondary hover:text-primary").
+  assert.match(notice,/data-turn-id="thread"[^]*<span class="-my-pad-xs -me-pad-xs flex shrink-0"><button type="button" data-cds="Button" data-cds-icon-only="" data-cds-ghost="" data-size="sm" class="[^"]*text-muted-as-secondary hover:text-primary[^"]*" aria-label="Dismiss"/);
+  assert.doesNotMatch(notice,/ste-card|ste-dismiss/,'not the host card');
   assert.doesNotMatch(notice,/>Try again<|>Compact session</,'c3e34355f under nT: no onRetry, compactHelps: !1');
   const plain=renderToStaticMarkup(React.createElement(TurnError.SourceTurnError,{error:{message:'x'},turnId:'t'}));
   assert.doesNotMatch(plain,/aria-label="Dismiss"|ste-dismiss/,'other cards have no Dismiss unless asked');
@@ -351,7 +356,8 @@ test('SourceTurnError onDismiss only adds the header Dismiss span to a card; mar
     {message:'net',codexErrorInfo:{responseStreamDisconnected:{httpStatusCode:502}}},{message:'',codexErrorInfo:null},null];
   const all={onRetry:noop,onCompact:noop,onViewUsage:noop,onNewSession:noop,onOpenSettings:noop,onOpenLink:noop,onRewind:noop,onSwitchModel:noop,onSignIn:noop,onEditConfig:noop};
   const draw=props=>renderToStaticMarkup(React.createElement(TurnError.SourceTurnError,{turnId:'t',...props}));
-  const span=/<span class="ste-dismiss -my-pad-xs -me-pad-xs flex shrink-0"><button aria-label="Dismiss"[^]*?<\/button><\/span>/;
+  // W14-code r6 R6DC-02: the Dismiss is CdsButton (type / data-cds attrs before aria-label).
+  const span=/<span class="ste-dismiss -my-pad-xs -me-pad-xs flex shrink-0"><button [^>]*aria-label="Dismiss"[^]*?<\/button><\/span>/;
   for(const error of errors)for(const extra of [{},all]){
     const base=draw({error,...extra}),dismissable=draw({error,...extra,onDismiss:noop});
     assert.equal((dismissable.match(/ste-dismiss/g)||[]).length,1);assert.equal(dismissable.replace(span,''),base,'the span is the only difference');
@@ -361,7 +367,9 @@ test('SourceTurnError onDismiss only adds the header Dismiss span to a card; mar
   assert.equal(draw({...auth,onDismiss:noop}),draw(auth),'the settled Signed in again marker ignores onDismiss');
   const css=await readFile(path.resolve(import.meta.dirname,'../src/source-turn-error.css'),'utf8');
   const rules=css.replace(/\/\*[^]*?\*\//g,'').split('}').map(rule=>rule.split('{')[0].trim()).filter(selector=>selector.includes('ste-dismiss'));
-  assert.deepEqual(rules,['.ste-dismiss .source-settings-button[data-cds=Button]','.ste-dismiss .source-settings-button[data-cds=Button]:hover'],'only the two scoped colour rules (text-muted-as-secondary / hover:text-primary restated over the unlayered button colour)');
+  // W14-code r6 R6DC-02: the Dismiss is CdsButton (cb1a6e506 j), whose own text-muted-as-secondary / hover:text-primary
+  // utilities colour it, so the two restatements over the host replica are gone and .ste-dismiss has no rule.
+  assert.deepEqual(rules,[],'no .ste-dismiss rule');
 });
 const threadFailed=id=>({...failedChild(id,{ownError:null}),errors:{[id]:{message:'Thread-wide failure'}}});
 const noticeOf=tree=>findNode(tree,n=>n.type===TurnError.SourceTurnError&&n.props.turnId==='thread');
@@ -431,7 +439,7 @@ const slotCommand=(instanceId,threadId='child')=>({id:instanceId,bridgeApproval:
 const answer=(runtime,request)=>runtime.submit(runtime.ticketFor(request),'accept',async()=>({ok:true,identity:request.bridgeApproval}),{getVisibleThreadId:()=>request.params.threadId});
 test('the shared slot watches the one drawn card as ${variant}:${id}; an answered tombstone gives way to the next card in the same render',async()=>{
   const command=slotCommand('slot-c'),question=slotQuestion('slot-q'),runtime=createApprovalDraftRuntime();runtime.reconcile([command,question]);
-  const props={runtime,requests:[command,question],toComposer:()=>{},renderRequest:r=>React.createElement('section',{key:r.bridgeApproval.instanceId,id:r.bridgeApproval.instanceId})};
+  const props={runtime,requests:[command,question],toComposer:()=>{},landing:true,renderRequest:r=>React.createElement('section',{key:r.bridgeApproval.instanceId,id:r.bridgeApproval.instanceId})};
   const f=componentFixture(Pane.SourceBtwApprovalSlot,props),parts=()=>f.tree.props.children;
   assert.equal(parts()[0],null,'no watch before the slot element exists');
   const element={};parts()[1].props.ref(element);f.render();
@@ -442,13 +450,17 @@ test('the shared slot watches the one drawn card as ${variant}:${id}; an answere
   assert.deepEqual(parts()[1].props.children[0].map(n=>n.key),['slot-q'],'the tombstone is left out (the core has not removed it yet)');
   runtime.expire(runtime.ticketFor(question));f.render();
   assert.equal(parts()[0],null,'a request without a live draft is not drawn');
-  const handoff=componentFixture(Pane.SourceBtwApprovalSlot,{extraCard:'turn-1',toComposer:()=>{},children:'HANDOFF'});
+  const handoff=componentFixture(Pane.SourceBtwApprovalSlot,{extraCard:'turn-1',toComposer:()=>{},landing:true,children:'HANDOFF'});
   handoff.tree.props.children[1].props.ref(element);handoff.render();
   assert.equal(handoff.tree.props.children[0].key,'plan:turn-1','the local Plan handoff is the plan card');assert.equal(handoff.tree.props.children[1].props.children[1],'HANDOFF');
   const off=componentFixture(Pane.SourceBtwApprovalSlot,{runtime,requests:[slotCommand('slot-x')],children:null});
   assert.equal(off.tree.props.children[1].props.ref,undefined,'$j: no onFocusHandBack, no slot (at = Vj() && k !== void 0)');
   const Card=await server.ssrLoadModule('/src/source-approval-card.jsx');
-  assert.equal(Card.APPROVAL_LANDING_FLAG,'__gb__1616707004');assert.equal(Card.APPROVAL_LANDING_ON,true);
+  // W14-code r4 gates-r4-05 (E81 / E95): __gb__1616707004 is not in Uon, so the host table leaves it off and a slot
+  // with an onFocusHandBack still has no landing (at = Vj() && k: Vj false) — no watch, no slot ref.
+  assert.equal(Card.APPROVAL_LANDING_FLAG,'__gb__1616707004');assert.equal(Card.APPROVAL_LANDING_ON,false);
+  const gated=componentFixture(Pane.SourceBtwApprovalSlot,{runtime,requests:[slotCommand('slot-y')],toComposer:()=>{},children:null});
+  assert.equal(gated.tree.props.children[0],null);assert.equal(gated.tree.props.children[1].props.ref,undefined,'3P: Vj() is off');gated.close();
   assert.deepEqual(Card.approvalLandingOptions('tool'),{takesFocus:true,chordActsAnywhere:false});
   assert.deepEqual(Card.approvalLandingOptions('plan'),{takesFocus:true,chordActsAnywhere:true});
   assert.deepEqual(Card.approvalLandingOptions('tool',{defaultToNo:true}),{takesFocus:false,chordActsAnywhere:false});
@@ -466,7 +478,7 @@ async function leaveCard({ next = true, draft = false, framed = false, lost = tr
   composer.ignoreStrayEnter = () => calls.push('ignoreStrayEnter');
   const command = slotCommand(`leave-${next}-${draft}-${framed}-${lost}`), question = slotQuestion(`next-${next}-${draft}-${framed}-${lost}`);
   const runtime = createApprovalDraftRuntime();runtime.reconcile(next ? [command, question] : [command]);
-  const props = { runtime, requests: next ? [command, question] : [command], hasDraft: () => draft,
+  const props = { runtime, requests: next ? [command, question] : [command], hasDraft: () => draft, landing: true,
     toComposer: () => { composer.focusPreservingSelection(); composer.ignoreStrayEnter(); }, renderRequest: r => React.createElement('section', { key: r.id }) };
   const f = componentFixture(Pane.SourceBtwApprovalSlot, props);f.tree.props.children[1].props.ref(slotEl);f.render();f.flush();
   if (framed) for (const l of win.listeners.filter(l => l.target === 'document' && l.type === 'focusin')) l.fn({ target: element('iframe') });
@@ -521,7 +533,7 @@ test('a card leaving focus nowhere hands it to the child composer through focusP
     const slot=findNode(f.tree,n=>n.type===Pane.SourceBtwApprovalSlot);assert.equal(slot.props.extraCard,'own-plan');
     assert.equal(findNode(slot,n=>n.props?.handoffKey)?.props.handoffKey,`btw:${id}:own-plan`,'the handoff card is inside the slot');
     // R4g-btw BT4: the slot is the generated qj; its watch's onLeft is qj f (no next card here, so the composer takes it).
-    const sf=componentFixture(Pane.SourceBtwApprovalSlot,slot.props),place={nodeType:1,ownerDocument:doc,parentElement:{ownerDocument:doc},
+    const sf=componentFixture(Pane.SourceBtwApprovalSlot,{...slot.props,landing:true}),place={nodeType:1,ownerDocument:doc,parentElement:{ownerDocument:doc},
       querySelectorAll:()=>[],firstElementChild:null,addEventListener(){},removeEventListener(){}};
     sf.tree.props.children[1].props.ref(place);sf.render();sf.flush();assert.equal(sf.tree.props.children[0].key,'plan:own-plan');
     sf.tree.props.children[0].props.onLeft(place);await Promise.resolve();
@@ -624,33 +636,28 @@ test('IO: the active tab detached from this menu with an empty draft yields; a d
   assert.deepEqual(yields,[['one',false,order],['one',true,order]],'D() = ey(pane): focus in another pane is kept, focus in this one moves with the tab');
   props.meta=undefined;pane.render();assert.equal(findNode(pane.tree,n=>n.type===Pane.SourceBtwTabs).props.activeDetached,undefined);pane.close();
 });
-// R4g-btw BT1 (X7-17): c3e34355f draws helpLink as a link of its own and billing through the router, so the official child
-// pane's cards show them without any nT prop; the local card's link/settings buttons need the two callbacks.
-test('child pane error cards take onOpenLink and onOpenSettings: the notice and the transcript card show their links',async()=>{
-  const {readFile}=await import('node:fs/promises');
-  const v1=path.resolve(import.meta.dirname,'../../reference/installed-2.42304.0-20261017/ion-dist/assets/v1');
-  const card=await readFile(path.join(v1,'c3e34355f-DqW-8zts.js'),'utf8'),count=(text,needle)=>text.split(needle).length-1;
-  assert.equal(count(card,'bn=Y.helpLink?.href'),1);assert.equal(count(card,'a(ye,{href:bn,external:"with-icon"'),1);
-  assert.equal(count(card,'Yt("/settings/billing")'),1);assert.equal(count(card,'Yt=ke()'),1);
-  const id='notice-links',opened=[],settings=[];
-  const onOpenLink=url=>opened.push(url),onOpenSettings=page=>settings.push(page);
+// W14-code r4 btw-error-card (E95, replaces R4g-btw BT1 X7-17): the child pane's cards are the main session's official card
+// (cb1a6e506 j through SourceTurnError official), so the host card's Open settings / link buttons are gone with it — the
+// pane takes no onOpenLink / onOpenSettings, and passing them changes nothing.
+test('child pane error cards are the official card: no host settings or link buttons',async()=>{
+  const id='notice-links';
   const thread={...failedChild(id,{ownError:null}),errors:{[id]:{message:'bad key',codexErrorInfo:'unauthorized',additionalDetails:'AUTH'}}};
   const props={sessionId:id,meta:{btw:{permission:'ask',ownTurnIds:['own']}},thread:{id},tabs:[{id}],state:thread,connected:true,
     onLoad:noop,onSend:noop,onStop:noop,onSelect:noop,onCloseTab:noop,onError:noop};
-  assert.doesNotMatch(renderToStaticMarkup(React.createElement(Pane.SourceBtwPane,props)),/>Open settings</,'without the callback (before BT1)');
-  assert.match(renderToStaticMarkup(React.createElement(Pane.SourceBtwPane,{...props,onOpenLink,onOpenSettings})),/data-turn-id="thread"[^]*>Open settings</);
-  const f=componentFixture(Pane.SourceBtwContent,{...props,onOpenLink,onOpenSettings,input:{current:null},root:{current:null},connected:false});
-  const notice=noticeOf(f.tree);notice.props.onOpenSettings('models');notice.props.onOpenLink('https://x.test/notice');f.close();
-  assert.deepEqual([settings,opened],[['models'],['https://x.test/notice']]);
-  // A safety refusal in the child's own turn: the transcript card's Learn more.
+  const withCallbacks={...props,onOpenLink:noop,onOpenSettings:noop};
+  const html=renderToStaticMarkup(React.createElement(Pane.SourceBtwPane,withCallbacks));
+  assert.match(html,/data-turn-error="card" data-turn-id="thread"/);assert.doesNotMatch(html,/>Open settings<|ste-card/);
+  const f=componentFixture(Pane.SourceBtwContent,{...withCallbacks,input:{current:null},root:{current:null},connected:false});
+  const notice=noticeOf(f.tree);f.close();
+  // r4 复核 (turn-cards): the notice is c3e34355f Hn (cccc2cf0a jy), so it takes Hn's fix destinations (onOpenLink for View
+  // billing's provider page) but never the host card's Open settings / Open config.
+  assert.equal(notice.props.official,true);assert.equal(notice.props.officialSurface,'session');
+  assert.deepEqual([notice.props.onOpenSettings,notice.props.onOpenLink,notice.props.onEditConfig],[undefined,noop,undefined]);
+  // A safety refusal in the child's own turn: no Learn more either.
   const refused=failedChild(id,{ownError:{message:'refused',codexErrorInfo:'cyberPolicy'}});
-  const html=renderToStaticMarkup(React.createElement(Pane.SourceBtwPane,{...props,state:refused,onOpenLink,onOpenSettings}));
-  assert.match(html,/data-turn-error="card" data-turn-id="own"[^]*>Learn more</);
-  assert.doesNotMatch(renderToStaticMarkup(React.createElement(Pane.SourceBtwPane,{...props,state:refused})),/>Learn more</);
-  const g=componentFixture(Pane.SourceBtwContent,{...props,state:refused,onOpenLink,onOpenSettings,input:{current:null},root:{current:null},connected:false});
-  const own=findNode(g.tree,n=>n.type===TurnError.SourceTurnError&&n.props.turnId==='own');own.props.onOpenLink('https://x.test/own');g.close();
-  assert.deepEqual(opened,['https://x.test/notice','https://x.test/own']);
-  assert.doesNotMatch(html,/>Try again<|>Compact session<|>View usage</,'still no retry, compact or usage report in the child pane');
+  const own=renderToStaticMarkup(React.createElement(Pane.SourceBtwPane,{...withCallbacks,state:refused}));
+  assert.match(own,/data-turn-error="card" data-turn-id="own"/);assert.doesNotMatch(own,/>Learn more<|>Apply for Daybreak</);
+  assert.doesNotMatch(own,/>Try again<|>Compact session<|>View usage</,'still no retry, compact or usage report in the child pane');
 });
 // R4g-btw BT1 (X7-18): the official child composer takes no attachments, and the local one is wired the same.
 test('the child pane composer, as the official jT one, takes no pasted or dropped attachments',async()=>{
@@ -669,44 +676,39 @@ test('the child pane composer, as the official jT one, takes no pasted or droppe
   assert.ok(composer.length>0);assert.doesNotMatch(composer,/onStageFiles|onAddFolders/);
 });
 // R4i-transcript TR2 (btw-error-01): the official child pane's transcript card is c227f4d5e OW without MW, i.e. TW — no
-// retry, compact, fallback, mode or usage-report callbacks — while the card's own actions (links by href, billing through
-// the router) stay. The host's own session-independent action (Open config) follows the links; the child's model picks
-// the cyber notice; an older failure's marker takes no callbacks, as in the main transcript.
-test('TR2: child error cards take onEditConfig and the child model on the card only; markers get no callbacks',async()=>{
+// retry, compact, fallback, mode or usage-report callbacks. W14-code r4 btw-error-card (E95): the card is the main session's
+// official card, so the host's Open config / refusal links are gone too; the child's model still picks headline and hint,
+// and an older own failure is a marker.
+test('TR2: child error cards are official with the child model on the card only; no host actions; markers stay',async()=>{
   const {readFile}=await import('node:fs/promises');
   const v1=path.resolve(import.meta.dirname,'../../reference/installed-2.42304.0-20261017/ion-dist/assets/v1');
   const shell=await readFile(path.join(v1,'c227f4d5e-Ba-r--Rl.js'),'utf8'),count=(text,needle)=>text.split(needle).length-1;
   assert.equal(count(shell,'TW={onRetryLastTurn:void 0,canSendMessage:!1,onCompactLastTurn:void 0,fallbackModelLabel:void 0,onRetryWithFallback:void 0,onSwitchToAuto:void 0,onChangeMode:void 0,sessionReportsAutoMode:!1,retryModelItems:void 0,retryModelLabel:null,onShowUsageReport:void 0}'),1);
-  assert.equal(count(shell,'function OW(){let e=P(EW),t=e?.scopeStore??DW,'),1);assert.equal(count(shell,'if(e===null)return TW;'),1);
-  const id='tr2-child',noop2=()=>{},edits=[];
+  const id='tr2-child',noop2=()=>{};
   const budget=failedChild(id,{ownError:{message:'budget',codexErrorInfo:'sessionBudgetExceeded'}});
   const props={sessionId:id,meta:{model:'gpt-5.6-sol',btw:{permission:'ask',ownTurnIds:['own']}},thread:{id},tabs:[{id}],state:budget,connected:true,
-    onLoad:noop,onSend:noop,onStop:noop,onSelect:noop,onCloseTab:noop,onError:noop,onOpenLink:noop2,onOpenSettings:noop2};
-  assert.doesNotMatch(renderToStaticMarkup(React.createElement(Pane.SourceBtwPane,props)),/>Open config</,'no callback, no button');
-  const onEditConfig=()=>edits.push('config');
-  assert.match(renderToStaticMarkup(React.createElement(Pane.SourceBtwPane,{...props,onEditConfig})),/data-turn-error="card" data-turn-id="own"[^]*>Open config</);
-  const f=componentFixture(Pane.SourceBtwContent,{...props,onEditConfig,input:{current:null},root:{current:null},connected:false});
-  const card=findNode(f.tree,n=>n.type===TurnError.SourceTurnError&&n.props.turnId==='own');
-  assert.equal(card.props.model,'gpt-5.6-sol');card.props.onEditConfig();f.close();assert.deepEqual(edits,['config']);
-  // The child's own model chooses the cyber notice (Daybreak's Apply only for gpt-5.6-sol).
+    onLoad:noop,onSend:noop,onStop:noop,onSelect:noop,onCloseTab:noop,onError:noop,onOpenLink:noop2,onOpenSettings:noop2,onEditConfig:noop2};
+  const html=renderToStaticMarkup(React.createElement(Pane.SourceBtwPane,props));
+  assert.match(html,/data-turn-error="card" data-turn-id="own"/);assert.doesNotMatch(html,/>Open config<|ste-card/);
+  const f=componentFixture(Pane.SourceBtwContent,{...props,input:{current:null},root:{current:null},connected:false});
+  const card=findNode(f.tree,n=>n.type===TurnError.SourceTurnError&&n.props.turnId==='own');f.close();
+  assert.equal(card.props.model,'gpt-5.6-sol');assert.equal(card.props.official,true);assert.equal(card.props.onEditConfig,undefined);
   const refused=failedChild(id,{ownError:{message:'refused',codexErrorInfo:'cyberPolicy'}});
-  assert.match(renderToStaticMarkup(React.createElement(Pane.SourceBtwPane,{...props,state:refused})),/>Apply for Daybreak</);
-  assert.doesNotMatch(renderToStaticMarkup(React.createElement(Pane.SourceBtwPane,{...props,meta:{...props.meta,model:'other'},state:refused})),/>Apply for Daybreak</);
-  // The session notice (nT) is a card too: it takes the same pair.
+  assert.doesNotMatch(renderToStaticMarkup(React.createElement(Pane.SourceBtwPane,{...props,state:refused})),/>Apply for Daybreak<|>Learn more</);
   const thread={...failedChild(id,{ownError:null}),errors:{[id]:{message:'budget',codexErrorInfo:'sessionBudgetExceeded'}}};
-  assert.match(renderToStaticMarkup(React.createElement(Pane.SourceBtwPane,{...props,state:thread,onEditConfig})),/data-turn-id="thread"[^]*>Open config</);
-  // An older own failure is a marker: no callbacks reach it.
+  assert.doesNotMatch(renderToStaticMarkup(React.createElement(Pane.SourceBtwPane,{...props,state:thread})),/data-turn-id="thread"[^]*>Open config</);
+  // An older own failure is a marker.
   const two=failedChild(id);two.turnErrors[id].own2={message:'Second failure',codexErrorInfo:'serverOverloaded'};
   two.items[id].push({id:'second-user',type:'userMessage',turnId:'own2',content:[{type:'text',text:'Again'}]});
-  const g=componentFixture(Pane.SourceBtwContent,{...props,onEditConfig,meta:{...props.meta,btw:{permission:'ask',ownTurnIds:['own','own2']}},state:two,input:{current:null},root:{current:null},connected:false});
+  const g=componentFixture(Pane.SourceBtwContent,{...props,meta:{...props.meta,btw:{permission:'ask',ownTurnIds:['own','own2']}},state:two,input:{current:null},root:{current:null},connected:false});
   const marker=findNode(g.tree,n=>n.type===TurnError.SourceTurnError&&n.props.turnId==='own'),newest=findNode(g.tree,n=>n.type===TurnError.SourceTurnError&&n.props.turnId==='own2');g.close();
-  assert.equal(marker.props.variant,'marker');
-  assert.deepEqual([marker.props.onOpenLink,marker.props.onOpenSettings,marker.props.onEditConfig],[undefined,undefined,undefined]);
-  assert.equal(newest.props.variant,'card');assert.equal(typeof newest.props.onOpenLink,'function');assert.equal(typeof newest.props.onEditConfig,'function');
-  // main.jsx passes the same Open config as the main card, gated on a live core.
+  assert.equal(marker.props.variant,'marker');assert.equal(newest.props.variant,'card');
+  // main.jsx no longer hands the pane the host card's callbacks.
   const main=await readFile(path.resolve(import.meta.dirname,'../src/main.jsx'),'utf8');
-  const mount=main.slice(main.indexOf('<SourceBtwPane key={current}'),main.indexOf('controls={PANE_WINDOW ? <SourcePopoutControls paneName={PANE_NAMES.session}')); // R4i-transcript TR3: the /btw popout's controls
-  assert.equal(count(mount,'onEditConfig={boot?.connected ? () => call("desktop-edit-config").catch(actionFailed("open-config")) : undefined}'),1);
+  const mount=main.slice(main.indexOf('<SourceBtwPane key={current}'),main.indexOf('controls={PANE_WINDOW ? <SourcePopoutControls paneName={PANE_NAMES.session}'));
+  assert.ok(mount.length>0);assert.doesNotMatch(mount,/onEditConfig=|onOpenSettings=/);
+  // r4 复核: Hn's fix destinations (Sign in again, Open usage settings, View billing) do reach the pane's notice.
+  assert.match(mount,/onSignIn=\{hasSignInOptions\(boot\?\.core\) \? startCoreSignIn : undefined\}/);assert.match(mount,/onViewUsage=/);assert.match(mount,/onOpenLink=/);
 });
 // w10-ccres-e31-btw: 3.6556.2 cccc2cf0a qP's tab strip: `overflowArrowCloses:!1`, `maxLabelWidth:320`, and an untitled tab
 // is "Side chat" when it is the parent's first /btw child (HP ordinal 1), else "Side chat {n}" by that ordinal.

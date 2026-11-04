@@ -14,7 +14,8 @@ test('header menu trigger labels follow wm', (context) => {
   assert.equal(viewOptionsLabel(), 'View options');
   assert.equal(viewOptionsLabel(true), 'View options (a dev server or command is running)');
   setLocale('zh-CN');
-  assert.equal(sessionMenuTriggerLabel('修复'), '“修复”的更多选项');
+  // W14-code r8 fr8-06: the official rKQPgfPvWS key "More options for {label}" (zh-CN app.mjs).
+  assert.equal(sessionMenuTriggerLabel('修复'), '修复 的更多选项');
   assert.equal(sessionMenuTriggerLabel(''), '更多选项');
   assert.equal(viewOptionsLabel(), '视图选项');
   assert.equal(viewOptionsLabel(true), '视图选项（有开发服务器或命令正在运行）');
@@ -67,5 +68,5 @@ test('the caret tooltip cuts the title at 80 graphemes; the label keeps it whole
   assert.equal(sessionMenuTriggerTooltip('   '), 'More options');
   assert.equal(sessionMenuTriggerTooltip(undefined), 'More options');
   setLocale('zh-CN');
-  assert.equal(sessionMenuTriggerTooltip('修'.repeat(90)), `“${'修'.repeat(79)}…”的更多选项`);
+  assert.equal(sessionMenuTriggerTooltip('修'.repeat(90)), `${'修'.repeat(79)}… 的更多选项`);
 });

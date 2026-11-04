@@ -1,12 +1,13 @@
 // Session chapters: the chapter heading (cd5a31703 CX/wX/SX, readable 60429-60494), the title reveal it animates
 // with (shared-21 M9, readable 30502-30560) and the Session chapters rail (cf74bc599 tb/nb/eb, readable 3187-3520),
 // over the per-session chapter store in session-chapters-model.mjs.
-import React, { memo, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import { SourceMenu } from "./source-menu.jsx";
+import React, { memo, useCallback, useEffect, useId, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import {
   CHAPTER_READING_OFFSET, CHAPTER_SAMPLE_THROTTLE_MS, EMPTY_CHAPTER_STATE, activeChapterId, chapterAnchorId,
-  chapterStore, chapterView, deferChapterSample, hasChapters, sessionChapterState,
+  chapterStore, chapterView, deferChapterSample, hasChapters,
 } from "./session-chapters-model.mjs";
+import { RAIL_BAND_START_CLASS } from "./generated/session-rail-kit/rail-layout.mjs";
+import { CdsContextMenu, CdsOverflowTooltip, CdsTooltip, cdsSurfaceClass } from "./generated/view-tabs/index.js";
 import "./source-chapters.css";
 import { t } from "../electron/i18n/index.mjs";
 
@@ -15,10 +16,6 @@ const serverSnapshot = () => EMPTY_CHAPTER_STATE;
 export function useChapterStoreState() {
   const store = chapterStore();
   return useSyncExternalStore(store.subscribe, store.getSnapshot, serverSnapshot);
-}
-/** One session's {renames, hidden, userChapters}. */
-export function useSessionChapterState(sessionId) {
-  return sessionChapterState(useChapterStoreState(), sessionId);
 }
 
 // M9 (shared-21 :30502): jce 30ms per grapheme, Mce 4 graphemes of tail, A9 200ms blur-out.
@@ -63,7 +60,7 @@ export function SourceTitleReveal({ text, skipInitialReveal = false }) {
   }, [phase, shown]);
   if (skipInitialReveal && phase === "initial") return text;
   return <>
-    <span className="sch-sr-only">{text}</span>
+    <span className="sr-only">{text}</span>
     <span key={shown} aria-hidden="true" data-revealing={done ? undefined : ""} className="sch-reveal"
       style={phase === "initial" || phase === "idle" ? undefined : phase === "out" && text !== shown ? BLUR_OUT : BLUR_IN}>
       {graphemes.map((grapheme, index) => <span key={index} className="sch-grapheme" style={{ "--i": `${index}` }}>{grapheme === " " ? " " : grapheme}</span>)}
@@ -85,10 +82,14 @@ function ChapterHeadingText({ text }) {
 }
 
 /**
- * CX: the chapter h2 (text-body-semibold text-primary select-text scroll-mt-[56px]). A double-click renames it in
- * place: a field-sized input with the outline-fill-accent ring; Enter or blur saves a changed, non-empty title,
- * Escape cancels. itemId keeps a mark_chapter heading addressable as its transcript row.
+ * 3.6556.2 c96d752d0 GY: the chapter h2 (text-body-semibold text-primary select-text scroll-mt-[56px]). A double-click
+ * renames it in place: a field-sized input with the outline-fill-accent ring; Enter or blur saves a changed, non-empty
+ * title, Escape cancels. itemId keeps a mark_chapter heading addressable as its transcript row.
+ * W14-code r8 css8-chapter-heading-handcopy: the h2 and the input carry GY's own class strings (source-message stays as
+ * the transcript row hook); the hand-copied .source-chapter / .source-chapter-input rules are gone.
  */
+const CHAPTER_HEADING_CLASS = "text-body-semibold text-primary select-text scroll-mt-[56px]";
+const CHAPTER_INPUT_CLASS = "min-w-0 max-w-full rounded-[3px] border-0 bg-transparent p-0 outline outline-[1.5px] outline-fill-accent outline-offset-[1px] [field-sizing:content]";
 export const SourceChapterHeading = memo(function SourceChapterHeading({ id, title, sessionId = null, itemId = undefined, source = "claude" }) {
   const [editing, setEditing] = useState(false);
   const input = useRef(null), settled = useRef(false);
@@ -104,10 +105,10 @@ export const SourceChapterHeading = memo(function SourceChapterHeading({ id, tit
     if (sessionId && value && value !== title) chapterStore().rename(sessionId, id, value);
     setEditing(false);
   }, [sessionId, id, title]);
-  const shared = { id: chapterAnchorId(id), className: "source-message source-chapter", "data-chapter": "", "data-chapter-source": source,
+  const shared = { id: chapterAnchorId(id), className: `source-message ${CHAPTER_HEADING_CLASS}`, "data-chapter": "", "data-chapter-source": source,
     "data-transcript-item-id": itemId };
   if (editing) return <h2 {...shared} data-editing="">
-    <input ref={input} className="source-chapter-input" defaultValue={title} aria-label={t("Chapter title")}
+    <input ref={input} className={CHAPTER_INPUT_CLASS} defaultValue={title} aria-label={t("Chapter title")}
       size={Math.min(Math.max(title.length, 10), 40)} onBlur={commit}
       onKeyDown={(event) => {
         if (event.key === "Enter") { event.preventDefault(); commit(); }
@@ -179,9 +180,8 @@ export function useActiveChapter(chapters, viewportRef, scrollKey) {
 }
 
 /** nb: one chapter in the open rail — jump on click, rename on double-click or Rename, Delete in its context menu. */
-const ChapterEntry = memo(function ChapterEntry({ chapter, sessionId, isActive, isEditing, onJump, onStartRename, onContextMenuOpenChange }) {
-  const input = useRef(null), settled = useRef(false), button = useRef(null);
-  const [menuPoint, setMenuPoint] = useState(null);
+const ChapterEntry = memo(function ChapterEntry({ chapter, sessionId, isActive, isEditing, isListExpanded, onJump, onStartRename, onContextMenuOpenChange }) {
+  const input = useRef(null), settled = useRef(false), summaryId = useId();
   useEffect(() => {
     if (!isEditing) return;
     settled.current = false;
@@ -194,39 +194,46 @@ const ChapterEntry = memo(function ChapterEntry({ chapter, sessionId, isActive, 
     if (sessionId && value && value !== chapter.title) chapterStore().rename(sessionId, chapter.id, value);
     onStartRename(null);
   }, [sessionId, chapter.id, chapter.title, onStartRename]);
-  if (isEditing) return <li className="sch-toc-entry sch-toc-editing">
-    <span aria-hidden="true" className="sch-toc-mark sch-toc-mark-edit" />
-    <input ref={input} className="sch-toc-input" defaultValue={chapter.title} aria-label={t("Chapter title")} onBlur={commit}
+  // W14-code r6 review (css6-toc-position-gutter, E84): FC's own class strings (3.6556.2 cf74bc599 readable 5541-5590) —
+  // the editing row and its mark, the field-sizing input, the row button `j`, the mark `N`, and the title in E
+  // (shared-frame hh, CdsOverflowTooltip lazy / non-hoverable / inline-end, className flex-1). The host's .sch-toc-entry /
+  // -button / -mark / -mark-edit / -title / -input restatements are gone (its text-align:left was wrong under RTL).
+  if (isEditing) return <li className="flex items-center gap-sm px-1.25 h-control app-list-row rounded-[5px]">
+    <span aria-hidden="true" className="block h-[2px] w-[10px] rounded-full bg-alpha-8 shrink-0" />
+    <input ref={input} defaultValue={chapter.title} size={Math.max(chapter.title.length, 1)} aria-label={t("Chapter title")} onBlur={commit}
+      className="flex-1 min-w-0 [field-sizing:content] bg-transparent text-body text-primary focus-visible:outline-hidden focus-visible:shadow-focus"
       onKeyDown={(event) => {
         if (event.key === "Enter") { event.preventDefault(); commit(); }
         else if (event.key === "Escape") { event.preventDefault(); settled.current = true; onStartRename(null); }
       }} />
   </li>;
+  // W14-code r7 css7-toc-entry-tooltip-menu: FC (cf74bc599 readable 5609-5679) — the summary is a hidden span the row
+  // button names with aria-describedby (no native title), the row sits in the CDS Tooltip (shared-frame Xm = Kl: lazy,
+  // non-hoverable, inline-end; `content: a && t.summary ? t.title : void 0, detail: t.summary`, a the open list), and a
+  // Claude or user chapter's right-click menu is the CDS ContextMenu (kA = qi): Rename, a separator, danger Delete.
   const session = chapter.source === "session";
-  const closeMenu = () => { setMenuPoint(null); onContextMenuOpenChange(false); };
-  return <li>
-    <button ref={button} type="button" className="sch-toc-entry sch-toc-button" data-active={isActive ? "" : undefined}
-      aria-current={isActive ? "true" : undefined} title={chapter.summary} onClick={() => onJump(chapter)}
-      onDoubleClick={session ? undefined : () => onStartRename(chapter.id)}
-      onContextMenu={session ? undefined : (event) => {
-        event.preventDefault();
-        setMenuPoint({ x: event.clientX, y: event.clientY });
-        onContextMenuOpenChange(true);
-      }}>
-      <span aria-hidden="true" className="sch-toc-mark" />
-      <span className="sch-toc-title"><SourceTitleReveal text={chapter.title} /></span>
-    </button>
-    {menuPoint && <SourceMenu.Popup anchor={button.current} point={menuPoint} dataCds="ContextMenu" layer="contextmenu"
-      label={chapter.title} onClose={closeMenu}>
-      <SourceMenu.Item onClick={() => onStartRename(chapter.id)}>{t("Rename")}</SourceMenu.Item>
-      <SourceMenu.Separator />
-      <SourceMenu.Item variant="danger" onClick={() => {
+  const row = <button type="button" onClick={() => onJump(chapter)} onDoubleClick={session ? undefined : () => onStartRename(chapter.id)}
+    aria-current={isActive ? "true" : undefined} aria-describedby={chapter.summary ? summaryId : undefined}
+    className={`group/ch hit-row-main w-full flex items-center gap-sm px-1.25 h-control app-list-row rounded-[5px] text-start text-body hover:bg-fill-ghost-hover ${isActive ? "text-primary" : "text-secondary hover:text-primary"}`}>
+    <span aria-hidden="true" className={`block h-[2px] rounded-full shrink-0 transition-[background-color] duration-150 ${isActive ? "w-[14px] bg-alpha-8" : "w-[9px] bg-alpha-3 group-hover/ch:bg-alpha-5"}`} />
+    <CdsOverflowTooltip lazy hoverable={false} side="inline-end" className="flex-1"><SourceTitleReveal text={chapter.title} /></CdsOverflowTooltip>
+    {chapter.summary && <span id={summaryId} hidden>{chapter.summary}</span>}
+  </button>;
+  const tooltip = (trigger) => <CdsTooltip lazy hoverable={false} side="inline-end"
+    content={isListExpanded && chapter.summary ? chapter.title : undefined} detail={chapter.summary}>{trigger}</CdsTooltip>;
+  if (session) return <li className="hit-row">{tooltip(row)}</li>;
+  return <li className="hit-row"><CdsContextMenu.Root onOpenChange={(open) => onContextMenuOpenChange(open)}>
+    {tooltip(<CdsContextMenu.Trigger render={row} />)}
+    <CdsContextMenu.Popup>
+      <CdsContextMenu.Item onClick={() => onStartRename(chapter.id)}>{t("Rename")}</CdsContextMenu.Item>
+      <CdsContextMenu.Separator />
+      <CdsContextMenu.Item variant="danger" onClick={() => {
         if (!sessionId) return;
         if (chapter.source === "user") chapterStore().removeUserChapter(sessionId, chapter.id);
         else chapterStore().setHidden(sessionId, chapter.id, true);
-      }}>{t("Delete")}</SourceMenu.Item>
-    </SourceMenu.Popup>}
-  </li>;
+      }}>{t("Delete")}</CdsContextMenu.Item>
+    </CdsContextMenu.Popup>
+  </CdsContextMenu.Root></li>;
 });
 
 /**
@@ -234,6 +241,9 @@ const ChapterEntry = memo(function ChapterEntry({ chapter, sessionId, isActive, 
  * and darker); hovering or focusing it opens the chapter list over the gutter. onJump(chapter) scrolls to a heading
  * (Session start scrolls to the top).
  */
+// cf74bc599 jC / MC: a tick's line, at 9/14 scale in alpha-3, or full width in alpha-8 for the current chapter.
+const TOC_LINE = "w-[calc(var(--chat-gutter)*3/8+2px)] origin-left [&:where(:root[dir=rtl]_:dir(rtl))]:origin-right scale-x-[calc(9/14)] bg-alpha-3";
+const TOC_LINE_ACTIVE = "w-[calc(var(--chat-gutter)*3/8+2px)] origin-left [&:where(:root[dir=rtl]_:dir(rtl))]:origin-right bg-alpha-8";
 export const SourceChapterToc = memo(function SourceChapterToc({ sessionId, chapters, viewportRef, scrollKey, onJump }) {
   const [open, setOpen] = useState(false);
   const [editing, setEditingState] = useState(null);
@@ -252,18 +262,22 @@ export const SourceChapterToc = memo(function SourceChapterToc({ sessionId, chap
   }, [hide]);
   const jump = useCallback((chapter) => onJump?.(chapter), [onJump]);
   if (!hasChapters(chapters)) return null;
-  return <div className="epitaxy-toc sch-toc" data-shown={active === null ? undefined : ""}>
-    <nav ref={nav} aria-label={t("Session chapters")} tabIndex={0} className="sch-toc-nav" onMouseLeave={hide} onFocus={show}
+  // W14-code r6 css6-toc-position-gutter (E84): 3.6556.2 cf74bc599 NC in its own class strings. The root is
+  // `epitaxy-toc absolute top-[20px] bottom-[32px] ${yi} z-[11] pointer-events-none ${w===null?"invisible":"epitaxy-toc-fade-in"}`
+  // with yi = shared-18 Hx (RAIL_BAND_START_CLASS), so the rail follows the session rail band; --chat-gutter is the
+  // .epitaxy-root default (32px), narrowed by the nav's tile-slot rule (source-chapters.css). kC / AC / PC / R / B below.
+  return <div className={`epitaxy-toc sch-toc absolute top-[20px] bottom-[32px] ${RAIL_BAND_START_CLASS} z-[11] pointer-events-none ${active === null ? "invisible" : "epitaxy-toc-fade-in"}`}>
+    <nav ref={nav} aria-label={t("Session chapters")} tabIndex={0} className="sch-toc-nav relative h-full w-[var(--chat-gutter)] focus-visible:outline-hidden focus-visible:shadow-focus" onMouseLeave={hide} onFocus={show}
       onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) hide(); }}>
-      <ol aria-hidden="true" className="sch-toc-rail" onMouseEnter={show}>
-        {chapters.map((chapter) => <li key={chapter.id} className="sch-toc-tick">
-          <span className="sch-toc-line" data-active={chapter.id === active ? "" : undefined} />
+      <ol aria-hidden="true" data-dash-rail="" className="max-h-full flex flex-col py-1.25 ps-[calc(var(--chat-gutter)*3/16)] overflow-hidden pointer-events-auto" onMouseEnter={show}>
+        {chapters.map((chapter) => <li key={chapter.id} className="h-[8px] flex items-center">
+          <span className={`block h-[2px] rounded-full transition-[scale,background-color] duration-200 ${chapter.id === active ? TOC_LINE_ACTIVE : TOC_LINE}`} />
         </li>)}
       </ol>
-      <div className="sch-toc-popover" data-open={open ? "" : undefined}>
-        <ol role="list" className="sch-toc-list">
+      <div className={`absolute start-0 top-0 isolate ${cdsSurfaceClass("popover")} rounded-lg w-max min-w-[232px] max-w-[320px] max-h-full flex flex-col py-sm transition-[opacity,transform,visibility] motion-reduce:transition-none duration-150 ease-out ${open ? "visible opacity-100 pointer-events-auto" : "invisible opacity-0 -translate-x-1 [&:where(:root[dir=rtl]_:dir(rtl))]:translate-x-1"}`}>
+        <ol role="list" className="flex-1 min-h-0 flex flex-col hit-gap-y-0.75 overflow-y-auto px-xs">
           {chapters.map((chapter) => <ChapterEntry key={chapter.id} chapter={chapter} sessionId={sessionId}
-            isActive={chapter.id === active} isEditing={chapter.id === editing} onJump={jump} onStartRename={setEditing}
+            isActive={chapter.id === active} isEditing={chapter.id === editing} isListExpanded={open} onJump={jump} onStartRename={setEditing}
             onContextMenuOpenChange={onMenuOpenChange} />)}
         </ol>
       </div>

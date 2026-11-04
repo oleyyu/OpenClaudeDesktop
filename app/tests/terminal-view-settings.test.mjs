@@ -1,6 +1,8 @@
 import test from 'node:test';import assert from 'node:assert/strict';
-import {DEFAULT_TERMINAL_VIEW,TERMINAL_VIEW_KEYS,normalizeTerminalView,createTerminalViewSettings,terminalViewMenu,terminalViewOptions} from '../src/terminal-view-settings.mjs';
+import {TERMINAL_VIEW_KEYS,normalizeTerminalView,createTerminalViewSettings,terminalViewMenu,terminalViewOptions} from '../src/terminal-view-settings.mjs';
 import {terminalSelectionText,installTerminalCopyOnSelect} from '../src/terminal-copy-selection.mjs';
+// W14-code r4 closeout R4DC-N7: the test-only DEFAULT_TERMINAL_VIEW export is gone; the source defaults.
+const DEFAULT_TERMINAL_VIEW={cursorStyle:'block',cursorBlink:true,copyOnSelect:false,scrollback:10000};
 test('source defaults, allowed values and boolean normalization',()=>{
  assert.deepEqual(normalizeTerminalView(),DEFAULT_TERMINAL_VIEW);
  assert.deepEqual(normalizeTerminalView({cursorStyle:'beam',cursorBlink:0,copyOnSelect:1,scrollback:50000}),DEFAULT_TERMINAL_VIEW);
@@ -19,6 +21,11 @@ test('preferences persist, broadcast external changes and use the exact original
  assert.deepEqual(menu[0].items.map(x=>x.label),['Block','Bar','Underline']);
  assert.deepEqual(menu[3].items.map(x=>x.label),['1,000 lines','5,000 lines','10,000 lines']);
  assert.ok(menu[1].keepOpen&&menu[2].keepOpen);menu[1].onSelect();assert.equal(store.getSnapshot().cursorBlink,false);
+ // 3.6556.2 cccc2cf0a QP: Blink cursor is disabled with its reason under reduced motion (its checked state is the setting).
+ assert.equal(menu[1].disabled,false);
+ const reduced=terminalViewMenu(store.getSnapshot(),store.set,true)[0].items[1];
+ assert.equal(reduced.disabled,true);assert.equal(reduced.checked,false);
+ assert.equal(reduced.disabledReason,'This isn’t available while reduced motion is on. To use it, turn off reduced motion in your system settings and set Motion to System in Settings → General.');
  map.set(TERMINAL_VIEW_KEYS.cursorStyle,'{');external({key:null});assert.equal(store.getSnapshot().cursorStyle,'block');store.dispose();
 });
 test('selection normalization removes only trailing empty rows and the replay banner',()=>{

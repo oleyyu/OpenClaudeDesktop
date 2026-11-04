@@ -81,7 +81,7 @@ try {
   await page.locator(`[data-source-session-id="${RC}"]`).waitFor();
   await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].setContentSize(1324, 768));
   await page.waitForFunction(() => innerWidth === 1324 && innerHeight === 768);
-  const editor=page.getByRole('textbox',{name:'Message DeepSeek',exact:true});
+  const editor=page.getByRole('textbox',{ name: /^(?:Prompt|Message DeepSeek)$/ });
   const command=async text=>{await fillComposer(page,editor,text);await page.locator('[data-testid="code-prompt-send"]:not([inert] *)').click();};
   const requests=async()=>{try{return (await fs.readFile(path.join(profile,'fixture-requests.jsonl'),'utf8')).trim().split('\n').filter(Boolean).map(JSON.parse);}catch{return [];}};
   await fillComposer(page,editor,'/');const menu=page.getByRole('menu',{name:'Slash commands',exact:true});await menu.waitFor();
@@ -139,7 +139,7 @@ try {
   await poll(async()=>await editor.evaluate(node=>node.value)==='','second fast command acknowledged');await command('/fast on');await page.waitForTimeout(300);
   metrics.fastToast=await toast('Fast mode is already on.').evaluateAll(nodes=>nodes.filter(node=>node.dataset.phase!=='ending').map(node=>node.textContent));
   assert.equal(metrics.fastToast.length,1,'one keyed toast');assert.ok(!metrics.fastToast[0].includes('×'),'the keyed toast is replaced, not counted');
-  await command('/name Renamed fixture');await page.locator('.st-title').filter({hasText:'Renamed fixture'}).waitFor();assert.equal(await page.getByRole('dialog',{name:'Rename session'}).count(),0);
+  await command('/name Renamed fixture');await page.locator(':is(.st-title,button[data-pane-title])').filter({hasText:'Renamed fixture'}).waitFor();assert.equal(await page.getByRole('dialog',{name:'Rename session'}).count(),0);
   await command('/plan Explain the change');await poll(async()=>await editor.evaluate(node=>node.value)==='Explain the change','plan leaves description in draft');await fillComposer(page,editor,'');
   // :33860-33877: already planning with no plan written → the 'No plan written yet' warning toast (uniqueKey epitaxy-plan-command-notice).
   await command('/plan');await toast('Already in plan mode. No plan written yet.','warning').waitFor();

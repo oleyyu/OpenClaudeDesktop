@@ -19,14 +19,13 @@
 .sca-body:focus { outline: none; box-shadow: var(--cds-focus-shadow); }
 .sca-thumb { position: relative; display: block; width: 100%; height: 100%; }
 .sca-picture { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-.sca-loading { position: absolute; inset: 0; display: grid; place-items: center; background: color-mix(in srgb, var(--cds-surface-2) 60%, transparent); }
 .sca-glyph { display: grid; place-items: center; width: 100%; height: 100%; }
 .sca-extension { font-size: var(--cds-font-size-caption, 11px); line-height: var(--cds-leading-caption, 15px); font-weight: var(--cds-font-weight-medium, 500); text-transform: lowercase; color: var(--cds-text-muted); }
 .sca-remove { position: absolute; top: -6px; right: -6px; z-index: 10; display: grid; place-items: center; width: 16px; height: 16px; padding: 0; margin: 0; border: 0; border-radius: 50%; background: var(--cds-surface-2); color: var(--cds-text-secondary); box-shadow: 0 0 0 1px var(--cds-alpha-2); opacity: 0; pointer-events: none; transition: opacity .18s cubic-bezier(.215, .61, .355, 1); cursor: default; }
 .sca-remove:hover { color: var(--cds-text-primary); }
 .sca-pill:hover .sca-remove, .sca-pill:focus-within .sca-remove { opacity: 1; pointer-events: auto; }
 .sca-remove:disabled { pointer-events: none; }
-.sca-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; border: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+/* W14-code r5 cleanup css5-sr-only-handcopies: the hand-copied sr-only rule is gone; the JSX uses the official c6a992d55 .sr-only. */
 @media (prefers-reduced-motion: reduce) { .sca-slot, .sca-pill, .sca-remove { transition: none; } }
 html[data-local-motion="reduce"] .sca-slot, html[data-local-motion="reduce"] .sca-pill, html[data-local-motion="reduce"] .sca-remove { transition: none; }
 /* Skill chip (local representation of the official skillChip editor node): a wide flat pill
@@ -40,7 +39,3 @@ html[data-local-motion="reduce"] .sca-slot, html[data-local-motion="reduce"] .sc
 .sca-preview-body:focus { outline: none; }
 .sca-preview-body:focus-visible { box-shadow: var(--cds-focus-shadow); }
 .sca-preview-text { white-space: pre-wrap; overflow-wrap: anywhere; }
-/* ca80fca8d pk issue / agent pills: the labelled pill body (thumbnail + label) beside the attachments. */
-.sca-pill.sc-context-pill .epitaxy-pill-body { cursor:default; font:inherit; padding:0 var(--cds-pad-md); background:var(--cds-fill-secondary); color:var(--cds-text-secondary); }
-.sc-context-pill-loading { display:flex; width:12px; height:12px; align-items:center; justify-content:center; }
-.sc-context-pill-loading .sc-spinner { width:12px; height:12px; }

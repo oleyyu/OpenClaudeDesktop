@@ -91,16 +91,15 @@ try {
     await page.getByRole('menuitemcheckbox',{name:/Files/}).click();
   }
   checks.push('Existing session opens with working Files toolbar control');
-  await page.getByRole('button',{name:'Projects',exact:true}).click();
-  await page.locator('.source-chat-tile-content[data-section="projects"]').waitFor();
-  assert.ok(await page.locator('.surface-projects').isVisible());
+  // W14-code r8 fr8-07 (E95): shared-21 hH — Code's nav has no Projects row (projects is chat/cowork only).
+  assert.equal(await page.locator('.source-sidebar-nav-row').filter({hasText:'Projects'}).count(),0);
   await page.getByRole('button',{name:'New',exact:true}).click();
   await page.evaluate(() => window.desktop.call('settings',{mode:'chat'}));
   await page.reload();
   await page.locator('.source-chat-tile-content[data-surface="chat"]').waitFor();
   await page.screenshot({path:path.join(out,'chat-home.png')});
   assert.equal(await page.locator('.sc-zone[data-code-layout="presets"]').count(),0);
-  checks.push('Projects navigation and Chat home survive the shared CSS update');
+  checks.push('Code nav without Projects and Chat home survive the shared CSS update');
   await page.evaluate(() => window.desktop.call('settings',{mode:'code',theme:'dark',locale:'zh-CN'}));
   await page.reload();
   await page.getByRole('button',{name:'新建',exact:true}).click();

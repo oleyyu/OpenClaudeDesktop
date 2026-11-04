@@ -3,9 +3,9 @@ import assert from 'node:assert/strict';
 import { parseUnifiedDiff } from '../src/diff-model.js';
 import {
   DIFF_FILE_KINDS, DIFF_FILE_LIST_LABELS, DIFF_FILE_LIST_MIN_PANE, DIFF_FILE_LIST_WIDTH, LARGE_DIFF_FILES, LARGE_DIFF_LINES, LARGE_DIFF_LINES_SINGLE_LIST,
-  clampDiffFileListWidth, compareDiffPaths, diffFileEntries, diffFileFlat, diffFileKind, diffFileList, diffFileListCanFit, diffFileListLimit,
-  diffFileTree, diffTotals, groupFilesByKind, isLargeDiff, isTestPath, kindSectionOpen, openKindSections, orderDiffFiles, orderDiffSections,
-  revealCollapsed, toggleCollapsed, treeRowTarget,
+  clampDiffFileListWidth, compareDiffPaths, diffFileEntries, diffFileFlat, diffFileKind, diffFileList, diffFileListCanFit,
+  diffFileTree, diffTotals, groupFilesByKind, isLargeDiff, isTestPath, orderDiffFiles, orderDiffSections,
+  toggleCollapsed, treeRowTarget,
 } from '../src/diff-file-list-model.mjs';
 
 // 2.2553.1 readable/panes-diff-view-current.js:2577-2586 (di/fi), :3916-4036
@@ -146,26 +146,11 @@ test('diffgit-08 $e: line limit (He), then patches_withheld, then the no-patch h
   assert.equal(isLargeDiff(many('diff --git a/x b/x\nnew file mode 100644\n').slice(1), { lazyPatches: true }), false);
 });
 
-test('selection: La reveals collapsed ancestors, Ia kind sections, Ga row targets', () => {
-  const collapsed = new Set(['src', 'src/a', 'lib']);
-  const revealed = revealCollapsed(collapsed, 'src/a/x.js');
-  assert.deepEqual([...revealed], ['lib']);
-  assert.notEqual(revealed, collapsed);
-  assert.equal(revealCollapsed(collapsed, 'other.js'), collapsed, 'unchanged set is returned as is');
-  assert.equal(revealCollapsed(collapsed, null), collapsed);
-  assert.equal(revealCollapsed(new Set(['sr']), 'src/x.js').has('sr'), true, 'prefix must end at a folder boundary');
+// W14-code r4 gen-final-4: the test-only revealCollapsed / kindSectionOpen / diffFileListLimit helpers are deleted.
+// W14-code r5 cleanup R5DC-05: openKindSections (Ia) is test-only too and is deleted with its cases.
+test('selection: collapse toggles, Ga row targets', () => {
   assert.deepEqual([...toggleCollapsed(new Set(['a']), 'b')], ['a', 'b']);
   assert.deepEqual([...toggleCollapsed(new Set(['a']), 'a')], []);
-  // Ia: default = holds the selected file; a stored choice wins until a file inside is selected again.
-  assert.equal(kindSectionOpen(undefined, false), false);
-  assert.equal(kindSectionOpen(undefined, true), true);
-  assert.equal(kindSectionOpen(false, true), false);
-  const sections = [{ kind: 'test', paths: ['a.test.js'] }, { kind: 'build', paths: ['BUILD'] }];
-  assert.deepEqual(openKindSections({ test: false }, sections, 'a.test.js'), { test: true });
-  const stored = { build: true };
-  assert.equal(openKindSections(stored, sections, 'BUILD'), stored);
-  assert.equal(openKindSections(stored, sections, 'src/x.js'), stored);
-  assert.equal(openKindSections(stored, sections, null), stored);
   // Ga: from the tree itself the current row (else the first); clamped steps; Home/End.
   assert.equal(treeRowTarget('ArrowDown', { index: -1, count: 5, currentIndex: 3 }), 3);
   assert.equal(treeRowTarget('ArrowUp', { index: -1, count: 5 }), 0);
@@ -186,9 +171,6 @@ test('width: cf3dc7910 {240, 160, 640} rounded clamp, 160px left for the diff, f
   assert.equal(clampDiffFileListWidth(9999), 640);
   assert.equal(clampDiffFileListWidth('300'), 240);
   assert.equal(clampDiffFileListWidth(NaN), 240);
-  assert.equal(diffFileListLimit(1000), 640);
-  assert.equal(diffFileListLimit(500), 340);
-  assert.equal(diffFileListLimit(200), 160);
   assert.equal(diffFileListCanFit(0), true, 'unmeasured counts as fitting (diffCanFitTree ?? true)');
   assert.equal(diffFileListCanFit(399), false);
   assert.equal(diffFileListCanFit(400), true);

@@ -5,48 +5,6 @@
   "adapterModule": "src/source-sidebar-sections-adapters.jsx",
   "modules": [
     {
-      "target": "define-messages.mjs",
-      "source": "vendor-intl-DYfox5Co.js",
-      "sourceSha256": "5fe49d3a34f7583ec9f95b03817a66af29352be20d8f4a49d742bd0758f6761e",
-      "sha256": "bd1f1dcf25ffab5807224db2ae7467aeb4881b9bea5890248b2fd9a28a201ee0",
-      "referenceVersion": "3.6556.2",
-      "bindings": [],
-      "imports": [
-        {
-          "local": "tn",
-          "from": "../app-switch/define-messages.mjs",
-          "name": "defineMessages",
-          "via": "vendor-intl-DYfox5Co.js:tn",
-          "kind": "external",
-          "original": "vendor-intl-DYfox5Co.js:tn"
-        }
-      ],
-      "exports": {
-        "tn": "defineMessages"
-      }
-    },
-    {
-      "target": "error-text.mjs",
-      "source": "preload-helper-D0dM6GpB.js",
-      "sourceSha256": "07e10a7d6381c359ad25382bea60b373312701162217c2ca372a3a04b889eaef",
-      "sha256": "75e90a9dfcd57cc0e251b93f070a9562430a92283d0d624ed9b1dd51f284ce18",
-      "referenceVersion": "3.6556.2",
-      "bindings": [],
-      "imports": [
-        {
-          "local": "e",
-          "from": "../view-tabs/preload-helper-D0dM6GpB.js",
-          "name": "tagErrorText",
-          "via": "preload-helper-D0dM6GpB.js:e",
-          "kind": "external",
-          "original": "preload-helper-D0dM6GpB.js:e"
-        }
-      ],
-      "exports": {
-        "e": "tagErrorText"
-      }
-    },
-    {
       "target": "zustand.mjs",
       "source": "vendor-all-0-DXM0MGjZ.js",
       "sourceSha256": "a9bcb496d6a94739de4cf2f924169442032e55416cb83e2395c789958272c772",
@@ -160,36 +118,6 @@
       ],
       "exports": {
         "un": "useDirection"
-      }
-    },
-    {
-      "target": "cds-helpers.mjs",
-      "source": "shared-frame-6jtSkIit.js",
-      "sourceSha256": "22b990df9384da0621c5197a060f6c2c8fe1ccf5a79ee1f8c6e7a6cb033b259c",
-      "sha256": "1de4f45bedf5a02671a18d0b551766cdd3f75786bede4476294e1bef8b168bf6",
-      "referenceVersion": "3.6556.2",
-      "bindings": [],
-      "imports": [
-        {
-          "local": "Ha",
-          "from": "../view-tabs/shared-frame-6jtSkIit.js",
-          "name": "useCdsDensity",
-          "via": "shared-frame-6jtSkIit.js:Ha",
-          "kind": "external",
-          "original": "shared-frame-6jtSkIit.js:Ha"
-        },
-        {
-          "local": "Uc",
-          "from": "../view-tabs/shared-frame-6jtSkIit.js",
-          "name": "asElementNode",
-          "via": "shared-frame-6jtSkIit.js:Uc",
-          "kind": "external",
-          "original": "shared-frame-6jtSkIit.js:Uc"
-        }
-      ],
-      "exports": {
-        "Ha": "useCdsDensity",
-        "Uc": "elementOrNull"
       }
     },
     {

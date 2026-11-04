@@ -5,7 +5,6 @@
 // collision shifting), the layer scheme (al: base + 100, menu offset 20),
 // shortcut formatting and the PendingList skeleton plan.
 
-import { shortcutCaps, shortcutSequence } from "./shortcut-model.mjs";
 
 export const TYPEAHEAD_TIMEOUT = 500;
 export const LAYER_STEP = 100; // shared-frame Zc
@@ -16,7 +15,6 @@ export const NESTED_SIDE_OFFSET = 2; // l_: nested popups
 export const CONTEXT_MENU_SIDE_OFFSET = -5; // Base UI positioner default for a context-menu anchor
 export const CONTEXT_MENU_ALIGN_OFFSET = 2; // Base UI positioner default for a context-menu anchor
 export const SUBMENU_HOVER_DELAY = 100; // Base UI SubmenuTrigger delay (open) and restMs
-export const SUBMENU_CLOSE_DELAY = 0; // Base UI SubmenuTrigger closeDelay
 export const SAFE_POLYGON_BUFFER = 0.5; // floating-ui safePolygon buffer (px)
 export const SAFE_POLYGON_LINGER = 40; // ms resting inside the polygon before it closes
 export const SAFE_POLYGON_MIN_SPEED = 0.1; // px/ms; slower outside the popups counts as resting
@@ -60,12 +58,6 @@ export function typeaheadMatch(labels, from, text) {
   return null;
 }
 
-/** Digit shortcut target: the item whose digit equals the pressed key. */
-export function digitIndex(digits, key) {
-  if (!/^[1-9]$/.test(key)) return null;
-  const index = digits.findIndex((digit) => digit !== undefined && digit !== null && String(digit) === key);
-  return index === -1 ? null : index;
-}
 
 /**
  * Where focus goes after a close (shared-frame Id + Cg close reasons).
@@ -152,11 +144,6 @@ export function normalizeShortcut(keys) {
   return parts.map(name).join("+");
 }
 
-/** Visible caps as plain text: "⌘ ," / "⇧ ⌘ F" / "Esc" / "P" (chords joined by "then"). Delegates to the
- *  CDS Shortcut caps (shared-frame-C_2npUJq.js:2206-2254 po/ho), so modifiers read in ⌃⌥⇧⌘ order. */
-export function formatShortcut(keys, mac = true) {
-  return shortcutSequence(keys).map((chord) => shortcutCaps(chord, mac).map(({ label }) => label).join(" ")).join(" then ");
-}
 
 export const isNumericText = (text) => /^\d+$/.test(String(text ?? ""));
 

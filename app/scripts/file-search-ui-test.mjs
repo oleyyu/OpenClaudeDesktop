@@ -55,10 +55,10 @@ const resultButton = (pathname) =>
 // These fixture paths are ASCII CSS strings; quoting also keeps '/' literal.
 const treeRow = (pathname) =>
   tree().locator(`[data-tree-row-body]:has(> [data-tree-primary][data-file-path=${JSON.stringify(pathname)}])`); // 0.2.97: rows have no native title (panes-tile-current.js:5692 Wr.Trigger).
-const tabs = () => panel().locator(".source-file-tab");
+const tabs = () => panel().locator("[data-view-tab-bar] [data-vtb-id]");
 const tabPaths = () =>
-  tabs().evaluateAll((nodes) => nodes.map((node) => node.dataset.filePath));
-const previewText = () => panel().locator(".source-file-preview").textContent();
+  tabs().evaluateAll((nodes) => nodes.map((node) => node.dataset.vtbId));
+const previewText = () => panel().locator("[data-file-viewer]").textContent();
 async function screenshot(name) {
   const file = path.join(runDirectory, name);
   await page.screenshot({ path: file });
@@ -100,7 +100,7 @@ async function selectSession(id) {
     .locator(`[data-source-session-id="${id}"] .source-session-open`)
     .click();
   await page.waitForFunction(
-    (name) => document.querySelector(".st-title")?.textContent.includes(name),
+    (name) => document.querySelector(":is(.st-title,button[data-pane-title])")?.textContent.includes(name),
     names[id],
   );
   await page.locator(".loading-state").waitFor({ state: "hidden" });
@@ -534,10 +534,10 @@ try {
     .getByRole("button", { name: "AnchorKeep.txt", exact: true })
     .click();
   await panel()
-    .locator('.source-file-tab[data-file-path$="AnchorKeep.txt"][data-preview]')
+    .locator('[data-view-tab-bar] [data-vtb-id$="AnchorKeep.txt"]:has(.italic)')
     .dblclick();
   await panel()
-    .locator(".source-file-preview")
+    .locator("[data-file-viewer]")
     .filter({ hasText: "ANCHOR_A_STAYS_OPEN" })
     .waitFor();
   await ensureBrowser();
@@ -566,9 +566,10 @@ try {
   );
   assert.equal(await input().getAttribute("placeholder"), "Filter files…");
   metrics.wide = await panel().evaluate((node) => {
-    const bar = node.querySelector(".sfs-filter-bar"),
-      field = node.querySelector(".sfs-field"),
-      row = node.querySelector(".sfs-result-row");
+    // W14 cccc2cf0a: the filter bar Dn holds the CdsTextInput (ve).
+    const bar = node.querySelector("[data-files-filter]"),
+      field = node.querySelector('[data-files-filter] [data-cds="TextInput"]'),
+      row = node.querySelector(".sfs-results [data-tree-row]");
     return {
       paneWidth: node.clientWidth,
       barHeight: bar.getBoundingClientRect().height,
@@ -583,7 +584,7 @@ try {
   await screenshot("wide-search.png");
   await resultButton(deepFile).click();
   await panel()
-    .locator(".source-file-preview")
+    .locator("[data-file-viewer]")
     .filter({ hasText: "DEEP_A_REAL_PREVIEW" })
     .waitFor();
   // A result click opens a preview tab, whose name ends with the sr-only
@@ -617,10 +618,10 @@ try {
   await query("ManyHit");
   assert.equal(await results().getByRole("treeitem").count(), 50);
   assert.match(
-    await panel().locator(".sfs-limit").textContent(),
+    await panel().locator("[data-files-limit]").textContent(),
     /first 50 results/,
   );
-  const limitId = await panel().locator(".sfs-limit").getAttribute("id");
+  const limitId = await panel().locator("[data-files-limit]").getAttribute("id");
   assert.ok(
     (await input().getAttribute("aria-describedby"))
       .split(/\s+/)
@@ -685,7 +686,7 @@ try {
   assert.equal(await results().getAttribute("aria-busy"), "true");
   await releaseGate("pending-enter");
   await panel()
-    .locator(".source-file-preview")
+    .locator("[data-file-viewer]")
     .filter({ hasText: "DELAYED_TARGET_A" })
     .waitFor();
   await armGate("blur-enter", sessionA, "BlurTarget");
@@ -693,7 +694,7 @@ try {
   await input().press("Enter");
   await heldGate("blur-enter");
   await page
-    .getByRole("textbox", { name: "Message DeepSeek", exact: true })
+    .getByRole("textbox", { name: /^(?:Prompt|Message DeepSeek)$/ })
     .focus();
   await releaseGate("blur-enter");
   await phase("success");
@@ -705,27 +706,17 @@ try {
 
   await query("NothingMatchesZQ987");
   await results().getByText("No matching files", { exact: true }).waitFor();
-  await input().fill("? contents");
-  await phase("error");
-  assert.match(
-    await panel().locator(".sfs-error").textContent(),
-    /filenames only/,
-  );
-  assert.equal(
-    await results().getByText("No matching files", { exact: true }).count(),
-    0,
-  );
+  // W14 cccc2cf0a _T has no error branch: a failed local read shows WT "No matching files", no alert, no Retry.
   await fs.rename(workspaceA, `${workspaceA}-offline`);
   movedWorkspace = true;
   await input().fill("RecoverableFile");
   await phase("error");
-  assert.match(
-    await panel().locator(".sfs-error").textContent(),
-    /workspace root no longer exists/,
-  );
+  await results().getByText("No matching files", { exact: true }).waitFor();
+  assert.equal(await panel().getByRole("alert").count(), 0);
   await fs.rename(`${workspaceA}-offline`, workspaceA);
   movedWorkspace = false;
-  await panel().getByRole("button", { name: "Retry", exact: true }).click();
+  await input().fill("RecoverableFil");
+  await input().fill("RecoverableFile");
   await phase("success");
   await resultButton("RecoverableFile.txt").waitFor();
   checks.push(
@@ -773,7 +764,7 @@ try {
   await query("UniqueNeedle");
   await resultButton(deepFile).click();
   await panel()
-    .locator(".source-file-preview")
+    .locator("[data-file-viewer]")
     .filter({ hasText: "DEEP_A_REAL_PREVIEW" })
     .waitFor();
   assert.equal(await input().isVisible(), false);
@@ -823,7 +814,7 @@ try {
   await selectSession(sessionB);
   await query("SharedRace");
   await releaseGate("old-error");
-  assert.equal(await panel().locator(".sfs-error").count(), 0);
+  assert.equal(await panel().getByRole("alert").count(), 0);
   await resultButton("SharedRace-B.txt").waitFor();
   checks.push(
     "A→B with an identical query rejects both a late real A result and a late real A missing-root error; B retains only B paths and no stale alert",

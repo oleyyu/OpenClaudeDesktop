@@ -14,6 +14,7 @@ export default {
 
   'Recent environments': '最近使用的环境',
   'New environment': '新建环境',
+  'Select environment': '选择环境',
   'Edit environment': '编辑环境',
   'Create environment': '创建环境',
   'Add environment': '添加环境',
@@ -123,27 +124,22 @@ export default {
   'Rename': '重命名',
   'Session name': '会话名称',
   '{title}, rename session': '{title}，重命名会话',
-  'Folder: {path}': '文件夹：{path}',
   'Loading session': '正在加载会话',
-  'Saving session name': '正在保存会话名称',
   'Session options': '会话选项',
   'Back': '后退',
   'Forward': '前进',
 
   // What's new
   'What’s new': '新功能',
-  'These release notes are included with this version of the app and may be one release behind.': '这些发行说明随此版本的应用一同提供，可能比最新版本落后一个版本。',
+  'These release notes are included with this version of the app and may be one release behind. See the <changelogLink>online changelog</changelogLink> for the latest.': '这些发行说明随此版本的应用一同提供，可能比最新版本落后一个版本。最新内容请查看<changelogLink>在线更新日志</changelogLink>。',
   'No release notes yet.': '暂无发行说明。',
-  'Known limits:': '已知限制：',
   'New': '新增',
   'Improved': '改进',
   'Fixed': '修复',
 
   // Menus (composer env, folder, add, titlebar, account, connection)
-  'Local environment': '本地环境',
   'Working directory': '工作目录',
   'Branch': '分支',
-  'Connection settings': '连接设置',
   'Environment settings': '环境设置',
   // Code › env pill › Local › "Edit local environment" (source-local-environment-dialog.jsx, prefs/local-environment.mjs).
   ', environment settings, right arrow': '，环境设置，右箭头',
@@ -178,7 +174,6 @@ export default {
   'Manage plugins': '管理插件',
   '{name} plugin': '{name} 插件',
   'Transcript view': '对话记录视图',
-  'Session menu': '会话菜单',
   'Account menu': '账户菜单',
   'Usage': '用量',
   'Light appearance': '浅色外观',
@@ -189,8 +184,6 @@ export default {
   'Keyboard shortcuts': '键盘快捷键',
   'Reconnect': '重新连接',
   'API key': 'API 密钥',
-  '{name} connected': '{name} 已连接',
-  '{name} disconnected': '{name} 已断开连接',
 
   // Home: greeting, connection cards, Action Center, stats card
   'What’s up next, {name}?': '{name}，接下来做什么？',
@@ -330,7 +323,7 @@ export default {
   'Using credits': '正在使用额度',
   'Your plan’s included usage is used up. New messages use your credits.': '套餐内含的用量已用完，新消息将使用你的额度。',
   '{used} of {limit} credits used': '已用 {used} / {limit} 额度',
-  '{percent}% of 5-hour limit': '已用 5 小时限额的 {percent}%',
+  '{percent}% of session limit': '已用会话限额的 {percent}%', // W14-code r8 r8c-03: c227f4d5e F3 R/GumoF8us
   '{limit}: {percent}%': '{limit}：{percent}%',
   'Resets soon': '即将重置',
   'Resets in {minutes} min': '{minutes} 分钟后重置',
@@ -427,9 +420,15 @@ export default {
   'Compacting conversation…': '正在压缩对话…',
   'Reviewing code…': '正在审查代码…',
   'Forking session…': '正在分叉会话…',
+  'Forking session with your prompt…': '正在带着你的提示分叉会话…',
   'Dismiss session action': '关闭会话操作',
   'Switched transcript view to Thinking.': '对话记录视图已切换为“思考”。',
   'Switched transcript view to Normal.': '对话记录视图已切换为“普通”。',
+  // W14-code r3 r3-composer-04: cc43287c9 OV / DV, the default-view nudge.
+  'Make {mode} your default view?': '要把“{mode}”设为默认视图吗？',
+  'You’ve picked {mode} in more than one session. You can change the default anytime in Settings.': '你已在多个会话中选择了“{mode}”。你可以随时在设置中更改默认视图。',
+  'Make default': '设为默认',
+  '{mode} is now the default view.': '“{mode}”现在是默认视图。',
   'Standard': '标准',
   'Could not read repository changes: {reason}': '无法读取仓库更改：{reason}',
   'Couldn’t update the working tree.': '无法更新工作区。',
@@ -458,14 +457,14 @@ export default {
 
   // Session actions (action-error-model.mjs catalog copy and guards)
   'A session action is already starting.': '已有会话操作正在启动。',
-  'Stop the running task before archiving it.': '请先停止正在运行的任务，再归档。',
-  'Stop the running task before deleting it.': '请先停止正在运行的任务，再删除。',
   'Unsupported session action.': '不支持的会话操作。',
   'Couldn’t rename this task. Try again.': '无法重命名此任务，请重试。',
   'Couldn’t archive this session. Try again.': '无法归档此会话，请重试。',
   'Couldn’t unarchive this session. Try again.': '无法取消归档此会话，请重试。',
   'Couldn’t delete this session. Try again.': '无法删除此会话，请重试。',
   'Couldn’t fork this session.': '无法分叉此会话。',
+  // W14-code r4-shared-01: c6b8adeaf no() j49tT4QevF.
+  'Couldn’t start compacting.': '无法开始压缩。',
   'Couldn’t pin this task. Try again.': '无法置顶此任务，请重试。',
   'Couldn’t unpin this task. Try again.': '无法取消置顶此任务，请重试。',
   'Couldn’t mark as unread. Try again.': '无法标为未读，请重试。',
@@ -499,6 +498,9 @@ export default {
   'Toggle file list in changes or files': '切换更改或文件中的文件列表',
   'Next change in changes': '更改中的下一处更改',
   'Previous change in changes': '更改中的上一处更改',
+  // W14-code sh7-01: c518a31cc He Panes (0ungAlwxa5 / S8O1UaCzaD).
+  'Next unresolved comment': '下一条未解决的评论',
+  'Previous unresolved comment': '上一条未解决的评论',
   'Toggle Files': '切换文件',
   'Close pane': '关闭面板',
   'Expand or collapse pane': '展开或收起面板',
@@ -661,9 +663,9 @@ export default {
   "OpenClaude Desktop could not create a worktree: this repository's remote HEAD leads through a symbolic remote-tracking ref, which git itself never creates there, so the remote's default branch cannot be read from it. List the remote-tracking refs (git for-each-ref --format=\"%(refname) %(symref)\" refs/remotes), delete each branch entry that shows a second column (git symbolic-ref --delete <refname>), then run \"git fetch\" in the repository and try again.": "OpenClaude Desktop 无法创建工作树：此仓库的远程 HEAD 经过了一个符号化的远程跟踪引用（git 自身从不在那里创建这种引用），因此无法从中读取远程的默认分支。请列出远程跟踪引用（git for-each-ref --format=\"%(refname) %(symref)\" refs/remotes），删除每个显示第二列的分支条目（git symbolic-ref --delete <refname>），然后在仓库中运行 \"git fetch\" 并重试。",
   "OpenClaude Desktop could not create a worktree: this repository's remote-tracking ref for the branch is a symbolic ref, which git itself never creates there, so the remote's copy of the branch cannot be read from it. Delete it ({command}), then run \"git fetch\" in the repository and try again.": "OpenClaude Desktop 无法创建工作树：此仓库中该分支的远程跟踪引用是符号引用（git 自身从不在那里创建这种引用），因此无法从中读取远程的该分支副本。请将其删除（{command}），然后在仓库中运行 \"git fetch\" 并重试。",
   // end R2-files
-  'Added to {name}': '已添加到 {name}',
   'This session will be added to {name} in the sidebar when you start it.': '开始此会话后，它会被添加到侧边栏的 {name} 中。',
   'Don’t add to {name}': '不添加到 {name}',
+  'Don’t add': '不添加',
   'Custom command': '自定义命令',
   'Some commands didn’t load. Type / again to retry.': '部分命令未能加载。再次输入 / 重试。',
   'Edit link': '编辑链接',
@@ -699,4 +701,37 @@ export default {
   // (jO7VoK4TtU); same wording as View › Show Side Chat (menus.mjs).
   'New Side Chat': '新建侧边对话',
   // V3-w10-shell-new-side-chat end.
+  // W14-code fr2-20: View › Show/Hide Session Rail (3.6556.2 cc43287c9 _V D51Rg00H+B / cpEXLxZB9d / zAxRiK0DOZ), same
+  // wording as the rail toggle's Show / Hide session rail tooltip (session.mjs R4f-rail block; unquoted here so
+  // tests/session-rail-i18n.test.mjs, which looks for the quoted key in other area files, sees one definition).
+  'Show Session Rail': '显示会话详情栏',
+  'Hide Session Rail': '隐藏会话详情栏',
+  'Session Rail': '会话详情栏',
+  // V3-W14-code-frame: the saved environment dialog and local variables editor (3.6556.2 ca690a791 I / Ut / Sn / Ln,
+  // c3f9f1667 Z).
+  'No matching branches': '没有匹配的分支',
+  'No other recent folders': '没有其他最近的文件夹',
+  'Choose the folder the session starts in.': '选择会话开始时所在的文件夹。',
+  'Environment variables apply to every local session. <link>Edit</link>': '环境变量适用于所有本地会话。<link>编辑</link>',
+  'Create this environment?': '创建此环境？',
+  'In <link>.env format</link>. These are stored securely and passed to {assistant} sessions.': '使用 <link>.env 格式</link>。这些变量会加密保存，并传给 {assistant} 会话。',
+  // V3-W14-code-frame end.
+  // W14-code r2 closeout-2 (fr2-09): ca690a791 busyLabel, cc3b500c8 h (the Delete environment? question), c6aeda0b7 T.
+  'Checking sessions…': '正在检查会话…',
+  '“{name}” will be permanently deleted. {count, plural, one {Keep the session started from it, or delete both.} other {Keep the # sessions started from it, or delete them too.}}': '“{name}”将被永久删除。{count, plural, one {保留从它启动的会话，或将两者一起删除。} other {保留从它启动的 # 个会话，或将它们一起删除。}}',
+  '{count, plural, one {Delete # session too} other {Delete # sessions too}}': '{count, plural, one {同时删除 # 个会话} other {同时删除 # 个会话}}',
+  '{pinnedCount, plural, =1 {One of them is pinned, but deleting the sessions deletes it anyway.} one {# of them is pinned, but deleting the sessions deletes it anyway.} other {# of them are pinned, but deleting the sessions deletes them anyway.}}': '{pinnedCount, plural, =1 {其中一个已置顶，但删除会话时仍会将其删除。} one {其中 # 个已置顶，但删除会话时仍会将其删除。} other {其中 # 个已置顶，但删除会话时仍会将它们删除。}}',
+  '{count, plural, =1 {That session is pinned, but deleting both deletes it anyway.} =2 {Both of them are pinned, but deleting the sessions deletes them anyway.} one {That session is pinned, but deleting both deletes it anyway.} other {All of them are pinned, but deleting the sessions deletes them anyway.}}': '{count, plural, =1 {该会话已置顶，但一起删除时仍会将其删除。} =2 {两个会话都已置顶，但删除会话时仍会将它们删除。} one {该会话已置顶，但一起删除时仍会将其删除。} other {这些会话都已置顶，但删除会话时仍会将它们删除。}}',
+  '{runningCount, plural, =1 {One of them is still running.} one {# of them is still running.} other {# of them are still running.}}': '{runningCount, plural, =1 {其中一个仍在运行。} one {其中 # 个仍在运行。} other {其中 # 个仍在运行。}}',
+  '{count, plural, =1 {That session is still running.} =2 {Both of them are still running.} one {That session is still running.} other {All of them are still running.}}': '{count, plural, =1 {该会话仍在运行。} =2 {两个会话都仍在运行。} one {该会话仍在运行。} other {这些会话都仍在运行。}}',
+  'SSH and WSL conversations aren’t deleted from where they ran.': 'SSH 和 WSL 对话不会从其运行位置删除。',
+  'Nothing was deleted because the sessions changed. To try again, edit the environment and delete it.': '会话已发生变化，因此未删除任何内容。如需重试，请编辑该环境并删除。',
+  'Couldn’t finish deleting “{name}”.{sessionsToo, select, yes { Some of its sessions may already be deleted.} other {}} To try again, edit the environment and delete it.': '未能完成删除“{name}”。{sessionsToo, select, yes {它的部分会话可能已被删除。} other {}}如需重试，请编辑该环境并删除。',
+  'Still deleting the sessions started from “{name}”. The environment is deleted once they all are.': '仍在删除从“{name}”启动的会话。全部删除后，该环境才会被删除。',
+  // W14-code r5-shared-04/05/06 (c6b8adeaf So / lo / po / fa): Code's Stop, queued-message and Unarchive toasts.
+  'Couldn’t stop the response — check your connection and try again.': '无法停止回复，请检查网络连接后重试。',
+  'Couldn’t reorder the queued messages. Try again.': '无法调整排队消息的顺序，请重试。',
+  'Couldn’t send the message now. It’s still in the queue.': '暂时无法立即发送这条消息，它仍在队列中。',
+  'Session unarchived.': '已取消归档会话。',
+  '{count, plural, one {# session wasn’t deleted} other {# sessions weren’t deleted}}, so “{name}” was kept. To try again, edit the environment and delete it.': '{count, plural, one {# 个会话未被删除} other {# 个会话未被删除}}，因此保留了“{name}”。如需重试，请编辑该环境并删除。',
 };

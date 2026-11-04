@@ -60,8 +60,6 @@ export const MEMORY_COPY = Object.freeze({
   settingError: 'Couldn’t update memory setting. Please try again.',
   regenerateError: 'Couldn’t regenerate memory right now',
 });
-// Local edit limits (chat-memory.mjs MAX_CONTROLS / CONTROL_MAX_CHARS; the official ones come from the server).
-export const MEMORY_MAX_EDITS = 30, MEMORY_EDIT_MAX_CHARS = 500;
 
 export function generateDescription({ chosen, cowork }) {
   return t(chosen ? (cowork ? MEMORY_COPY.generateChosenCowork : MEMORY_COPY.generateChosen) : (cowork ? MEMORY_COPY.generateFirstCowork : MEMORY_COPY.generateFirst));

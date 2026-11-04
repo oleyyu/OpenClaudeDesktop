@@ -1,4 +1,4 @@
-// Cross-cutting fixes, round 4, rendered: a ZCode run card's deliverables, open questions, stall and Configure; the
+// Cross-cutting fixes, round 4, rendered (W14-code r4 R4T-08b: the ZCode run card's part went with the host card): the
 // transcript's question / stall / settings notices; Qwen's MCP App note.
 import test, { before, after } from 'node:test';
 import assert from 'node:assert/strict';
@@ -18,29 +18,9 @@ before(async () => {
 });
 after(() => server?.close());
 
-const run = {
-  id: 'dwfrun-1', runId: 'dwfrun-1', source: 'model', status: 'running', name: 'review', description: 'review', startedAt: Date.now() - 5000, sequence: 3,
-  workflowProgress: [{ type: 'workflow_agent', index: 1, id: 'ask#1@0', label: 'checker', state: 'progress', question: 'Threshold 94?' }],
-  usage: { totalTokens: 10 }, stall: { sinceMs: 1260000, at: Date.now() },
-  pendingQuestions: [{ qid: 'q1', agent: 'checker', question: 'Should the threshold be 94?', context: 'Two tests fail at 96.', askedAt: Date.now() - 60000 }],
-  artifacts: [{ id: 'perf', kind: 'table', version: 1, title: 'Timings' }, { id: 'report', kind: 'markdown', version: 2, title: 'Review', primary: true }],
-  maxConcurrency: 4, concurrencyCeiling: 8,
-};
 
-test('a running ZCode run card shows its stall, open questions, deliverables (primary first) and Configure', () => {
-  const html = renderToStaticMarkup(React.createElement(W.WorkflowCard, { run, onStop: () => {}, onArtifact: async () => ({}), onSettings: async () => {}, models: [] }));
-  assert.match(html, /data-stall=""[\s\S]*Waiting for the model provider · 21m \d+s/);
-  assert.match(html, /Questions waiting for an answer[\s\S]*checker asks[\s\S]*Should the threshold be 94\?[\s\S]*Two tests fail at 96\./);
-  assert.match(html, /Waiting for an answer/);
-  assert.ok(html.indexOf('Review') < html.indexOf('Timings'), 'the primary deliverable leads');
-  assert.match(html, /Main result · Version 2/);
-  assert.match(html, /Configure…/);
-  const settled = renderToStaticMarkup(React.createElement(W.WorkflowCard, { run: { ...run, status: 'completed' }, onArtifact: async () => ({}), onSettings: async () => {} }));
-  assert.doesNotMatch(settled, /Configure…|Questions waiting|Waiting for the model provider/);
-  assert.match(settled, /Deliverables/, 'deliverables stay after the run ends');
-  const withoutReader = renderToStaticMarkup(React.createElement(W.WorkflowCard, { run }));
-  assert.doesNotMatch(withoutReader, /Deliverables|Configure…/, 'only a core that serves them');
-});
+// W14-code r4 ct-feed R4T-08b (E95): the host workflow card (stall, open questions, deliverables, Configure) is gone; the Tasks
+// pane's run is the desktop's N$ detailed card (tests/workflow-card-render.test.mjs).
 
 const notice = (fields) => ({ type: 'userMessage', id: 'n1', content: [], workflowNotification: fields });
 test('transcript notices: an agent\'s question opens its text; a stall and a settings change are one line', () => {

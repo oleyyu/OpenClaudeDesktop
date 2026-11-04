@@ -2,21 +2,44 @@
 // and the app-level chords that main.jsx's window keydown handles. zR lists General, Panes and
 // Composer rows ($ :14466-14506); only rows whose chord this app really binds are kept, with
 // zR's labels ("Stop Claude’s response" names the local agent). Every chord is matched by
-// globalShortcutCommand below, sessionCycleDelta (session-cycle-model.mjs), paneShortcutKind
+// globalShortcutCommand below, the session cycler (session-cycle-model.mjs sessionCycleChord), paneShortcutKind
 // (pane-shortcuts.mjs), chinShortcutCommand (chin-shortcuts.mjs), the composer's escapeAction
 // (composer-keys-model.mjs), the sidebar's jump and archive chords (sidebar-jump-model.mjs
 // isMetaJumpChord/jumpDigit, archiveChord) or the menus' 1-9 digit keys (source-menu.jsx
 // data-number-key, chin-shortcuts.mjs modeMenuDigit).
 import { MODE_MENU_KEYS } from "./chin-shortcuts.mjs";
 import { diffChangeShortcuts } from "./diff-change-nav-model.mjs";
+import { prCommentKeyboardEnabled } from "./diff-pr-comment-nav-model.mjs";
 import { t } from "../electron/i18n/index.mjs";
+import { hostGrowthBookFlag } from "./host-growthbook.mjs";
 
 // shortcuts_modal binding {key:"/", modifiers:["cmd"], platform:"mac"} (ion-dist shared-7).
 export const SHORTCUTS_DIALOG_KEYS = "cmd+/";
 
+// W14-code r3 r3-shared-02: shared-46 `KL = ["1", …, "9"]`, `qL = [...KL, "0"].flatMap(e => { t = e === "0" ? "newPreset" :
+// `selectPreset${e}`, n = `Digit${e}`; [{ command: t, key: `cmd+alt+${e}`, code: n, mac: !0, gate: "sessionPresets" },
+// { command: t, key: `alt+${e}`, code: n, mac: !1, when: "isClaudeApp || !isLinux", gate: "sessionPresets" }] })`.
+// A target is the index of a picker place (0 for selectPreset1) or "new" (newPreset).
+export const PRESET_CHORD_DIGITS = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
+export function presetShortcut(target, mac = isMacPlatform()) {
+  const digit = target === "new" ? "0" : PRESET_CHORD_DIGITS[target];
+  if (digit === undefined) return undefined;
+  return mac ? `cmd+alt+${digit}` : `alt+${digit}`;
+}
+// cc43287c9 c8 `Ka(e, { isClaudeApp: c, sessionEnvironments: !0, commands: kae })` then `Aae`: the binding's code (Digit0-9)
+// with exactly its modifiers ("newPreset" -> "new", `selectPreset${n}` -> n - 1), else null.
+export function presetChordTarget(event, mac = isMacPlatform()) {
+  const match = /^Digit(\d)$/.exec(event?.code ?? "");
+  if (!match) return null;
+  if (!event.altKey || !!event.ctrlKey || !!event.shiftKey || !!event.metaKey !== mac) return null;
+  return match[1] === "0" ? "new" : Number(match[1]) - 1;
+}
+
 // command: what the chord does here; keys: one Shortcut per alternative ("or" between them).
-// Rows follow 2.31226 c518a31cc Ce (:560-1066, the Code route body of ShortcutsModalBody ve) with
-// ccd_palette_session_actions on (this app binds the ⌥⌘ session chords), filtered to what this app binds.
+// Rows follow 2.31226 c518a31cc Ce (:560-1066, the Code route body of ShortcutsModalBody ve), filtered to what this app
+// binds. W14-code r5 gates-r5-01 (E81): 3.6556.2 c518a31cc He `p = c("ccd_prompt_jump"), m = c("ccd_palette_session_actions")`
+// — neither is in the desktop's Uon, so both are off (host-growthbook.mjs: not listed = off; this replaces B25's "on").
+// sessionActionsOnly rows are He's `m &&` block, sessionActionsOff its `!m &&` ⌘⇧⌫ row, promptJumpOnly its `p &&` rows.
 const GENERAL = [
   // ⌘K: Ce command_palette row "Search or start a session" toggles the command palette
   // (source-sidebar-palette.jsx); its 'New session' row starts one from the typed text.
@@ -29,9 +52,22 @@ const GENERAL = [
   { command: "shortcuts", label: t("Keyboard shortcuts"), keys: [SHORTCUTS_DIALOG_KEYS] },
   // Ce X: the Claude app's Settings row is "cmd+,".
   { command: "settings", label: t("Settings"), keys: ["cmd+,"] },
+  // W14 E81: c518a31cc je after Settings (ve) in He's General: `c("__gb__1686253244")` (cai_soft_fern, Uon always on) with
+  // shared-1 focus_next_region / focus_previous_region (kF / AF: f6 / shift+f6), the F6 page-area cycle this app binds
+  // (focus-region-model.mjs, use-focus-regions.js).
+  { command: "focus-next-region", label: t("Focus next page area"), keys: ["f6"] },
+  { command: "focus-previous-region", label: t("Focus previous page area"), keys: ["shift+f6"] },
   { command: "new-session", label: t("New session"), keys: ["cmd+n"] },
   // Ce new_code_session_from_current (File › New Session with Current Settings, app-menu.cjs CmdOrCtrl+Shift+N).
   { command: "new-session-current", label: t("New session with current settings"), keys: ["cmd+shift+n"] },
+  // W14-code r3 r3-shared-02: c518a31cc He `ae = t(Ee, { isClaudeApp: w })` right after new_code_session_from_current.
+  // Ee: `e = y("selectPreset1", n, { sessionEnvironments: a })`, `s = y("newPreset", …)` (a = L(), the presets gate
+  // claudeai_cc_epitaxy_session_presets_main; null when either shortcut is unbound), "Select environment" (oYSOsx4YRS)
+  // with `e.replace(/1$/, "1…9")` and "New environment" (5xkWpa1rVR) with s. shared-46 qL: cmd+alt+N on a Mac, alt+N
+  // elsewhere (`when: "isClaudeApp || !isLinux"`, the desktop app). Bound by the start page's environment picker
+  // (source-environment-menu.jsx useEnvironmentChords, cc43287c9 c8).
+  { command: "select-environment", label: t("Select environment"), keys: [presetShortcut(0, true).replace(/1$/, "1…9")], offMac: [presetShortcut(0, false).replace(/1$/, "1…9")], presetsOnly: true },
+  { command: "new-environment", label: t("New environment"), keys: [presetShortcut("new", true)], offMac: [presetShortcut("new", false)], presetsOnly: true },
   // Ce isClaudeApp block: "cmd+w" closes the focused pane, else the session view (File > Close Session);
   // U = reopenClosed "cmd+shift+t".
   { command: "close-session", label: t("Close tab, pane, or session"), keys: ["cmd+w"] },
@@ -43,6 +79,9 @@ const GENERAL = [
   { command: "jump-session", label: t("Jump to session"), keys: ["cmd+1…9"] },
   // He `t(Te, {})` after Jump to session: SIDEBAR_TAB_ROWS (sidebarTabOnly).
   ...sidebarTabPlaceholder(),
+  // W14-code r5 gates-r5-01: c518a31cc He `t(Te, {}), !m && t(Q, { shortcut: "cmd+shift+backspace", children: "Archive session"
+  // (WIm4/6845I) })` — the sidebar's archive chord (source-sidebar.jsx archiveShortcut, sidebar-jump-model.mjs archiveChord).
+  { command: "archive-session", label: t("Archive session"), keys: ["cmd+shift+backspace"], sessionActionsOff: true },
   // Ce {shortcut:"alt+click"}: ⌥-click a sidebar row (source-sidebar.jsx onOpenSplit), then he
   // (new_session_pane_right and new_session_pane_below, View › Split View's chords: split-view-model.mjs splitShortcut) and the
   // focus_next_pane / focus_previous_pane / close rows.
@@ -52,19 +91,18 @@ const GENERAL = [
   { command: "split-focus-next", label: t("Focus next split view"), keys: ["ctrl+]"] },
   { command: "split-focus-previous", label: t("Focus previous split view"), keys: ["ctrl+["] },
   { command: "split-close", label: t("Close split view"), keys: ["ctrl+cmd+w"] },
-  // Ce h block (ccd_palette_session_actions): ⌥⌘P/R/A/U/G/O on the open session. V3-w12b-settings-dialogs: 3.6556.2
-  // c518a31cc He lists ⌘⇧⌫ "Archive session" only under `!m` (palette session actions off); with m on, Archive is h's
-  // `shortcut: "cmd+alt+a"` alone, so the sidebar's ⌘⇧⌫ (still bound) is not listed.
-  { command: "pin-session", label: t("Pin / unpin session"), keys: ["cmd+alt+p"] },
-  { command: "rename-session", label: t("Rename session"), keys: ["cmd+alt+r"] },
-  { command: "archive-session", label: t("Archive session"), keys: ["cmd+alt+a"] },
-  { command: "unread-session", label: t("Mark session as read/unread"), keys: ["cmd+alt+u"] },
+  // Ce h block (ccd_palette_session_actions, `m &&`): ⌥⌘P/R/A/U/G/O on the open session. 3.6556.2 c518a31cc He lists ⌘⇧⌫
+  // "Archive session" only under `!m`; with m on, Archive is h's `shortcut: "cmd+alt+a"` alone.
+  { command: "pin-session", label: t("Pin / unpin session"), keys: ["cmd+alt+p"], sessionActionsOnly: true },
+  { command: "rename-session", label: t("Rename session"), keys: ["cmd+alt+r"], sessionActionsOnly: true },
+  { command: "archive-session", label: t("Archive session"), keys: ["cmd+alt+a"], sessionActionsOnly: true },
+  { command: "unread-session", label: t("Mark session as read/unread"), keys: ["cmd+alt+u"], sessionActionsOnly: true },
   // open_code_session_pr "cmd+alt+g" (cf74bc599 wO it(t) && xe: the session's PR, else nothing).
-  { command: "open-session-pr", label: t("Open session PR"), keys: ["cmd+alt+g"] },
-  { command: "fork-session", label: t("Fork session"), keys: ["cmd+alt+o"] },
-  // Ce p (ccd_prompt_jump): jumpPrevPrompt / jumpNextPrompt "cmd+alt+up" / "cmd+alt+down".
-  { command: "jump-prev-prompt", label: t("Jump to previous prompt"), keys: ["cmd+alt+up"] },
-  { command: "jump-next-prompt", label: t("Jump to next prompt"), keys: ["cmd+alt+down"] },
+  { command: "open-session-pr", label: t("Open session PR"), keys: ["cmd+alt+g"], sessionActionsOnly: true },
+  { command: "fork-session", label: t("Fork session"), keys: ["cmd+alt+o"], sessionActionsOnly: true },
+  // Ce p (ccd_prompt_jump, `p &&`): jumpPrevPrompt / jumpNextPrompt "cmd+alt+up" / "cmd+alt+down".
+  { command: "jump-prev-prompt", label: t("Jump to previous prompt"), keys: ["cmd+alt+up"], promptJumpOnly: true },
+  { command: "jump-next-prompt", label: t("Jump to next prompt"), keys: ["cmd+alt+down"], promptJumpOnly: true },
   // cycleTranscriptMode = "ctrl+o".
   { command: "transcript-view", label: t("Transcript view"), keys: ["ctrl+o"] },
   // V3-w12b-settings-dialogs: 3.6556.2 c518a31cc He General `F = J0($, 71) ? K0($, 71, t(Ae, {}))` between Transcript view
@@ -87,6 +125,12 @@ const PANES = [
   // (⌥F5 then F7; diff-change-nav-model.mjs diffChangeShortcuts), handled by the Changes pane (source-diff.jsx).
   { command: "next-change", label: t("Next change in changes"), keys: diffChangeShortcuts().next },
   { command: "previous-change", label: t("Previous change in changes"), keys: diffChangeShortcuts().prev },
+  // W14-code sh7-01: 3.6556.2 c518a31cc He `o && w && E.length > 0 && […"Next unresolved comment" (0ungAlwxa5) E,
+  // "Previous unresolved comment" (S8O1UaCzaD) v("prevPrComment", w)]`, E = v("nextPrComment", w): w = u() the Mac check
+  // (macOnly), o = G() = c4d5c642f `!e("__gb__3741111118")` (prCommentKeyboardEnabled; not in Uon, so on). shared-46 YL
+  // nextPrComment alt+f9 / prevPrComment shift+alt+f9, bound by the Changes pane (diff-pr-comment-nav-model.mjs).
+  { command: "next-pr-comment", label: t("Next unresolved comment"), keys: ["alt+f9"], macOnly: true, prCommentOnly: true },
+  { command: "previous-pr-comment", label: t("Previous unresolved comment"), keys: ["shift+alt+f9"], macOnly: true, prCommentOnly: true },
   // goToDiffFile = "cmd+p": the Changes pane's Go to file (diff-go-to-file-model.mjs isGoToFileShortcut).
   { command: "go-to-file", label: t("Go to file in changes or files"), keys: ["cmd+p"] },
   // togglePreview "cmd+shift+p".
@@ -96,14 +140,14 @@ const PANES = [
   { command: "select-element", label: t("Select element in preview"), keys: ["cmd+shift+s"] },
   // Ce toggleSketchMode "Annotate page in preview": the Preview pane's Annotate button (SKETCH_SHORTCUT).
   { command: "annotate", label: t("Annotate page in preview"), keys: ["cmd+shift+x"] },
-  // Ce E && j: the Browser tab strip's chords, which the Preview pane's tab strip binds (source-preview-pane.jsx
-  // onKeyDown, electron/preview-tab-shortcuts.mjs): ⌘T, U, ⌃⇥ / ⌃⇧⇥, W = selectBrowserTab1 as "cmd+1…9", ⌘L.
-  { command: "preview-new-tab", label: t("New Browser tab"), keys: ["cmd+t"] },
-  { command: "preview-reopen-tab", label: t("Reopen closed Browser tab"), keys: ["cmd+shift+t"] },
-  { command: "preview-next-tab", label: t("Next Browser tab"), keys: ["ctrl+tab"] },
-  { command: "preview-previous-tab", label: t("Previous Browser tab"), keys: ["ctrl+shift+tab"] },
-  { command: "preview-jump-tab", label: t("Jump to Browser tab"), keys: ["cmd+1…9"] },
-  { command: "preview-address", label: t("Focus address bar in Browser"), keys: ["cmd+l"] },
+  // W14-code r2 (r2-shared-08): 3.6556.2 c518a31cc He lists the six Browser tab rows only under `V = w && k && r(i, {…
+  // "New Browser tab" …})`, k = x() (shared-78 iE: JT() frontend_preview_external_domains, default-off here per D36,
+  // || QT() sink_planter_vase / __gb__2035791980, not in Uon), so with k off they are not listed (the tab strip still
+  // binds them: source-preview-pane.jsx onKeyDown, electron/preview-tab-shortcuts.mjs).
+  // r2-shared-07: then `me = w && t(Ve, { browser: k })`: Ve "Reload page in preview" (wld+KBThBq), `i = "cmd+r"` on a
+  // Mac, else `n ? Be : "f5"` (k off: "f5"). Bound by the Preview pane's keydown and, from inside the page,
+  // preview-service.cjs previewShortcut "reload"; View › Reload (app-menu.cjs, jPKPzV-P lTi/dTi) reloads the focused preview.
+  { command: "preview-reload", label: t("Reload page in preview"), keys: ["cmd+r"], offMac: ["f5"] },
   { command: "files", label: t("Toggle Files"), keys: ["cmd+shift+f"] },
   // attachTerminalOutput "cmd+shift+l": the transcript selection as composer context (source-transcript.jsx).
   { command: "attach-selection", label: t("Attach selection as context"), keys: ["cmd+shift+l"] },
@@ -157,7 +201,7 @@ const COMPOSER = [
 // b is the route kind (shared-52 Mv: "chat" only for /chat/<id>, "cowork" for a task route), so the Reuse row and the
 // chat/task action rows show only while a chat or task is open (`route`). Left out, each for a reason: T Se and ae
 // (gated: shared-18 N, me = !1), le je
-// (__gb__1686253244, off), B ge Queue/Send now (re()/oe() gates unverified here), V extended_thinking ⇧⌘E (this app's ⇧⌘E
+// (__gb__1686253244: on per W14 E81 and listed on the Code route; this Code-only wave leaves Ne as it was), B ge Queue/Send now (re()/oe() gates unverified here), V extended_thinking ⇧⌘E (this app's ⇧⌘E
 // opens the effort selector), U model_selector ⇧⌘. (not bound; in Chat ⇧⌘I is the incognito chat, shared-21 oO, and the
 // model menu opens from the chin), ae the incognito row (`I1($, 4, me, e.incognito)`, me = !1: never listed), G ye (dictation
 // binding), fe "esc esc" Edit your last message (se() gate; the local Esc Esc opens Rewind), pe Find ⌘F/⌘G (not bound),
@@ -206,11 +250,15 @@ function sidebarTabRows(rtl) {
     { command: "previous-sidebar-tab", label: t("Previous sidebar tab"), keys: [rtl ? "cmd+alt+right" : "cmd+alt+left"] },
   ];
 }
+// W14-code r5 gates-r5-01 (E81): the two He gates as the host table answers them (neither is in Uon: off). The Code
+// route's window keydown (main.jsx) and the ⌘K palette (sidebar-palette-model.mjs) read the same two.
+export const codeSessionActionsGate = () => hostGrowthBookFlag("ccd_palette_session_actions");
+export const promptJumpGate = () => hostGrowthBookFlag("ccd_prompt_jump");
 const withSidebarTabs = (list, { sidebarChord, rtl }) => list.flatMap((row) => (row.sidebarTabOnly ? (sidebarChord ? sidebarTabRows(rtl) : []) : [row]));
 
 // shared-78 Do (SE, the S() of c518a31cc Ae; Eo tests the user agent for macintosh|macintel…): the Mac check, read here
 // as source-find-bar.jsx isMac reads it (findShortcut takes F3 / ⇧F3 on every platform; Ae lists them off a Mac only).
-const isMacPlatform = () => typeof navigator === "undefined" || /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent || "");
+export const isMacPlatform = () => typeof navigator === "undefined" || /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent || "");
 
 /** Ne off the Code route: General, "In chats" and, on an open task, "In tasks". `route`: Mv's kind of the open view. */
 function homeShortcutsDialogSections(route, tabs) {
@@ -227,14 +275,18 @@ function homeShortcutsDialogSections(route, tabs) {
  * (chat, cowork) the dialog is Ne (homeShortcutsDialogSections), with `route` the open chat's or task's surface (null on Home).
  */
 export function shortcutsDialogSections({ fastMode = false, sideChat = false, rewind = true, surface = "code", route = null, mac = isMacPlatform(),
-  sidebarChord = false, rtl = false } = {}) {
+  sidebarChord = false, rtl = false, presets = false, sessionActions = codeSessionActionsGate(), promptJump = promptJumpGate(),
+  prComment = prCommentKeyboardEnabled() } = {}) {
   const tabs = { sidebarChord, rtl };
   if (surface === "chat" || surface === "cowork") return homeShortcutsDialogSections(route === "chat" || route === "cowork" ? route : null, tabs);
   // V3-w12b-settings-dialogs: He's `N && …` rows (routeOnly) show only on the open Code session's route; Ae's Find next /
   // previous take Oe / ke (with F3) off a Mac.
+  // presets: Ee's `a = L()` (claudeai_cc_epitaxy_session_presets_main), the caller's gate read.
   const rows = (list) => withSidebarTabs(list, tabs).filter((row) => (!row.fastOnly || fastMode) && (!row.sideChatOnly || sideChat) && (!row.rewindOnly || rewind)
-    && (!row.routeOnly || row.routeOnly.includes(route)))
-    .map(({ fastOnly, sideChatOnly, rewindOnly, routeOnly, offMac, ...row }) => (offMac && !mac ? { ...row, keys: offMac } : row));
+    && (!row.routeOnly || row.routeOnly.includes(route)) && (!row.presetsOnly || presets)
+    && (!row.sessionActionsOnly || sessionActions) && (!row.sessionActionsOff || !sessionActions) && (!row.promptJumpOnly || promptJump)
+    && (!row.macOnly || mac) && (!row.prCommentOnly || prComment))
+    .map(({ fastOnly, sideChatOnly, rewindOnly, routeOnly, presetsOnly, sessionActionsOnly, sessionActionsOff, promptJumpOnly, macOnly, prCommentOnly, offMac, ...row }) => (offMac && !mac ? { ...row, keys: offMac } : row));
   return [
     { title: t("General"), rows: rows(GENERAL) },
     { title: t("Panes"), rows: rows(PANES) },

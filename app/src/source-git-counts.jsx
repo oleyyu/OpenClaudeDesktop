@@ -46,7 +46,9 @@ export function useCountTween(value, duration = COUNT_TWEEN_MS) {
 
 /** OV: `tabular-nums` + className around an sr-only unit list and an
  * aria-hidden `contents` pair of +added / −removed (the visible numbers tween). */
-export function GitCounts({ added, removed, className = "", addedClassName = "sg-added", removedClassName = "sg-removed" }) {
+// W14-code r7 gen-final-7: the default ink is c60636ac6 Qe's (`l === void 0 ? "text-git-added" : l`, `u === void 0 ?
+// "text-git-removed" : u`); the host's .sg-added / .sg-removed rules went with the composer band (css7-git-band-prbarrow).
+export function GitCounts({ added, removed, className = "", addedClassName = "text-git-added", removedClassName = "text-git-removed" }) {
   const shownAdded = useCountTween(added), shownRemoved = useCountTween(removed);
   return <span className={`tabular-nums ${className}`.trim()} data-git-counts="">
     <span className="sr-only">{gitCountsLabel(added, removed)}</span>

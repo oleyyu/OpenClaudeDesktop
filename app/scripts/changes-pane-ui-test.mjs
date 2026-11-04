@@ -50,16 +50,18 @@ const poll=async(fn,label,ms=10000)=>{const end=Date.now()+ms;while(Date.now()<e
 async function launch(){app=await electron.launch({args:[root],executablePath:path.join(root,'node_modules/electron/dist/Electron.app/Contents/MacOS/Electron'),env,timeout:20000});page=await app.firstWindow();page.setDefaultTimeout(12000);
  page.on('pageerror',e=>report.rendererErrors.push({phase,message:e.message}));await page.getByRole('button',{name:'Model',exact:true}).filter({hasText:'Test model'}).waitFor();
  await app.evaluate(({BrowserWindow})=>BrowserWindow.getAllWindows()[0].setContentSize(1280,820));await page.waitForFunction(()=>innerWidth===1280&&innerHeight===820);await frames();}
-async function open(){await page.locator(`[data-source-session-id="${A}"] .source-session-open`).click();await page.locator('.st-title').waitFor();await page.locator('.loading-state').waitFor({state:'detached'});await frames();}
+async function open(){await page.locator(`[data-source-session-id="${A}"] .source-session-open`).click();await page.locator(':is(.st-title,button[data-pane-title])').waitFor();await page.locator('.loading-state').waitFor({state:'detached'});await frames();}
 async function shot(name){await page.screenshot({path:path.join(directory,name+'.png')});}
 const button=()=>page.locator('.st-trailing button[aria-label="Changes"]');
 const indicator=()=>button().locator('[data-cds-part="indicator"]');
 const diffTile=()=>page.locator('[data-pane-kind="diff"]'),filesTile=()=>page.locator('.source-side-tile[data-tile-id="files"]');
 const tip='.source-tooltip-popup';
 const menu=()=>page.getByRole('menu',{name:'Changes settings',exact:true});
+// W14-code r4 closeout R4DC-REG-01: the arrange popup is the CDS Popover holding the picks (fr3-07), not role=menu .spc-arrange.
+const ARRANGE_POPUP='.min-w-44:has([data-pane-arrange="fill"])';
 // The titlebar Changes toggle sits where the opened tile's hover-intent arrange trigger lands, so park the pointer
 // on the transcript after opening the tile and wait for that hover popup to close before measuring or capturing.
-async function openTile(){await button().click();await diffTile().waitFor();await page.mouse.move(480,600);await page.locator('[role="menu"].spc-arrange').waitFor({state:'detached'});}
+async function openTile(){await button().click();await diffTile().waitFor();await page.mouse.move(480,600);await page.locator(ARRANGE_POPUP).waitFor({state:'detached'});}
 async function openSettings(){await diffTile().getByRole('button',{name:'Changes settings',exact:true}).click();await menu().waitFor();await frames();}
 async function closeSettings(){await page.keyboard.press('Escape');await menu().waitFor({state:'detached'});}
 const menuShape=()=>menu().evaluate(m=>[...m.querySelectorAll('[role^="menuitem"],[role="separator"]')].filter(n=>n.closest('[role="menu"]')===m)
@@ -171,7 +173,7 @@ try{
  // named by its label: its remove control reads "Remove {label}" (chat-composer-attachments.mjs dp).
  const snippetPill=page.locator('.sc-composer [data-cds-attachment][data-cds="MessageAttachmentsQuote"]');await poll(async()=>await snippetPill.count()===1,'Save attaches one composer snippet');
  assert.match(await snippetPill.locator('[data-cds-attachment-remove]').getAttribute('aria-label'),/^Remove README\.md:L\d+$/,'the snippet tile is named by the file and line');
- await readme.locator('.sfv-comment-body').filter({hasText:'Rename this heading'}).waitFor();
+ await readme.locator('[data-file-comment-card] div[role="button"]').filter({hasText:'Rename this heading'}).waitFor();
  await readme.getByRole('button',{name:'Delete comment',exact:true}).click();
  await poll(async()=>await snippetPill.count()===0,'Delete detaches the snippet');assert.equal(await readme.locator('[data-file-comment-card]').count(),0);
  await neutral();await readme.locator('.sdiff-row .sdiff-code-cell').first().click({button:'right'});
@@ -348,7 +350,7 @@ try{
  await listToggle().click();await poll(async()=>!(await listShown()),'hidden before closing');
  await page.keyboard.press('Meta+Shift+D');await diffTile().waitFor({state:'detached'});await page.evaluate(()=>document.activeElement?.blur());
  await page.keyboard.press('Meta+Shift+Y');await diffTile().waitFor();await fileTree().waitFor();assert.equal(await listToggle().getAttribute('aria-pressed'),'true');
- await page.mouse.move(480,600);await page.locator('[role="menu"].spc-arrange').waitFor({state:'detached'});
+ await page.mouse.move(480,600);await page.locator(ARRANGE_POPUP).waitFor({state:'detached'});
  report.checks.push('⇧⌘Y with nothing focused toggles the Changes list; with the Files pane focused it toggles the Files tree and leaves the list; with Changes closed it opens Changes with the list shown');
  // A row click scrolls its file to the top of the diff scroller and expands it (Zt + reveal); the row becomes aria-current.
  step('file-list-select');const bigFile=prefix=>Array.from({length:400},(_,i)=>`${prefix} line ${i+1}`).join('\n')+'\n';

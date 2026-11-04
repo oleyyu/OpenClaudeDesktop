@@ -5,6 +5,7 @@ import {
   CdsLabelsContext as ee,
   asElementNode as l,
   cdsClassNames as c,
+  isDomNode as h,
   memoChanged1 as J1,
   memoChanged2 as J2,
   memoChanged3 as J3,
@@ -30,7 +31,6 @@ import {
   Xf as m,
   Zf as g,
   gn as s,
-  qf as h,
 } from "./shared-frame-6jtSkIit.mjs";
 import {
   useContext as i,

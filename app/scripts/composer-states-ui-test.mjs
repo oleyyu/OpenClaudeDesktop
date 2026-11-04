@@ -118,7 +118,7 @@ async function open(id, lastItem) {
   await page.evaluate(() => document.fonts.ready);
   await frames(6);
 }
-const editor = () => page.getByRole("textbox", { name: "Message DeepSeek", exact: true });
+const editor = () => page.getByRole("textbox", { name: /^(?:Prompt|Message DeepSeek)$/ });
 // cc43287c9-BMbiZYzF.js:28686 placeholder Yn ? 'Type / for commands' : 'Describe a task or ask a question'
 // (:27454 Yn = Pn?.id ?? null). The PM editor carries it as data-placeholder and paints it
 // through [data-empty=true]::before content: attr(data-placeholder).
@@ -253,7 +253,7 @@ async function releaseSwap() {
 }
 // Idle = no Stop control, no pending send (the fixture's turn/start log line is
 // written before the renderer has the response, so the spinner is the gate).
-async function idle() { await stopButton().waitFor({ state: "detached" }); await page.waitForFunction(() => !document.querySelector('.sc-spinner, [data-testid="code-prompt-send"][aria-busy="true"]')); await page.locator('[data-transcript-status="idle"], .source-transcript-status').first().waitFor({ state: "attached" }).catch(() => {}); }
+async function idle() { await stopButton().waitFor({ state: "detached" }); await page.waitForFunction(() => !document.querySelector('[data-testid="code-prompt-send"][aria-busy="true"]')); await page.locator('[data-transcript-status="idle"], .source-transcript-status').first().waitFor({ state: "attached" }).catch(() => {}); }
 try {
   build = JSON.parse(await fs.readFile(path.join(root, "dist/build-info.json"), "utf8"));
   await verifySource();
@@ -416,8 +416,8 @@ try {
   await textPill.waitFor();
   await textPill.locator('[data-cds="CardLink"]').click();
   await page.getByRole("complementary", { name: "Files panel", exact: true }).waitFor();
-  await page.waitForFunction(() => document.querySelector('.source-file-tab[data-file-path$="fixture-a.txt"]'));
-  metrics.attachmentFileOpened = await page.locator('.source-file-tab[data-file-path$="fixture-a.txt"]').first().getAttribute("data-file-path");
+  await page.waitForFunction(() => document.querySelector('[data-view-tab-bar] [data-vtb-id$="fixture-a.txt"]'));
+  metrics.attachmentFileOpened = await page.locator('[data-view-tab-bar] [data-vtb-id$="fixture-a.txt"]').first().getAttribute("data-vtb-id");
   await page.getByRole("button", { name: "Close panel", exact: true }).click();
   await page.locator(".source-side-tile").waitFor({ state: "detached" });
   await textPill.hover();
@@ -552,10 +552,10 @@ try {
   // (ca80fca8d vN, listed before the files provider in Yt :15373) puts them ahead of the files, so pick the file row.
   const pickFileMention = () => dropdown.locator('[role="option"]').filter({ has: page.locator(".smd-label", { hasText: /^fixture-[ab]\.txt$/ }) }).first().click();
   metrics.mentionChip = await mentionChip().evaluate((node) => {
-    const label = node.querySelector(".sc-mention-chip-label"), probe = document.createElement("span"); probe.style.color = "var(--cds-text-accent)"; document.body.appendChild(probe);
+    const label = node.querySelector("[data-mention] [title], [title]"), probe = document.createElement("span"); probe.style.color = "var(--cds-text-accent)"; document.body.appendChild(probe);
     const accent = getComputedStyle(probe).color; probe.remove();
     return { path: node.dataset.mention, text: label.textContent, title: label.getAttribute("title"), accent: getComputedStyle(label).color === accent, editable: node.contentEditable,
-      display: getComputedStyle(node.querySelector(".sc-mention-chip")).display, chips: document.querySelectorAll(".sc-input [data-mention]").length };
+      display: getComputedStyle(node.querySelector("[data-mention] > span, :scope > span")).display, chips: document.querySelectorAll(".sc-input [data-mention]").length };
   });
   assert.deepEqual(metrics.mentionChip, { path: second, text: path.basename(second), title: second, accent: true, editable: "false", display: "inline-flex", chips: 1 });
   // A click opens the chip menu (Copy ▸, Open in ▸, Delete); Escape closes it and the draft stays.
@@ -566,7 +566,7 @@ try {
     const copy = node.cloneNode(true); copy.querySelectorAll('[data-cds="Icon"], [aria-hidden="true"]').forEach((part) => part.remove());
     return [copy.textContent.trim(), node.dataset.variant ?? null]; }));
   assert.deepEqual(metrics.mentionMenu, [["Copy", null], ["Open in", null], ["Delete", "danger"]]);
-  assert.equal(await mentionChip().evaluate((node) => node.querySelector(".sc-mention-chip").hasAttribute("data-selected")), true, "the pressed chip is the selected atom (bg-accent)");
+  assert.equal(await mentionChip().evaluate((node) => node.querySelector("[data-mention] > span, :scope > span").hasAttribute("data-selected")), true, "the pressed chip is the selected atom (bg-accent)");
   await page.screenshot({ path: path.join(directory, "mention-chip-menu-light.png") });
   await page.keyboard.press("Escape");
   await mentionMenu.waitFor({ state: "detached" });
@@ -708,12 +708,12 @@ try {
   const bar = page.locator("[data-queued-messages]");
   await bar.waitFor();
   metrics.queueSingle = await bar.evaluate(node => {
-    const row = node.querySelector(".sqm-single"), probe = document.createElement("span"); probe.style.background = "var(--cds-alpha-1)"; document.body.appendChild(probe);
+    const row = node.querySelector("[data-take-back-entry]"), probe = document.createElement("span"); probe.style.background = "var(--cds-alpha-1)"; document.body.appendChild(probe);
     const alpha1 = getComputedStyle(probe).backgroundColor; probe.remove();
     const style = getComputedStyle(row);
     return { height: row.getBoundingClientRect().height, paddingLeft: style.paddingLeft, paddingRight: style.paddingRight, radius: style.borderRadius, background: style.backgroundColor, alpha1, gap: style.gap,
-      count: node.querySelector(".sqm-count").textContent, countSize: getComputedStyle(node.querySelector(".sqm-count")).fontSize, countLine: getComputedStyle(node.querySelector(".sqm-count")).lineHeight, countWeight: getComputedStyle(node.querySelector(".sqm-count")).fontWeight,
-      preview: node.querySelector(".sqm-preview").textContent, transition: getComputedStyle(node).transitionDuration, timing: getComputedStyle(node).transitionTimingFunction,
+      count: node.querySelector("[data-take-back-entry] > span:first-child").textContent, countSize: getComputedStyle(node.querySelector("[data-take-back-entry] > span:first-child")).fontSize, countLine: getComputedStyle(node.querySelector("[data-take-back-entry] > span:first-child")).lineHeight, countWeight: getComputedStyle(node.querySelector("[data-take-back-entry] > span:first-child")).fontWeight,
+      preview: node.querySelector("[data-take-back-entry] > span:nth-child(2)").textContent, transition: getComputedStyle(node).transitionDuration, timing: getComputedStyle(node).transitionTimingFunction,
       buttons: [...node.querySelectorAll("button")].map(button => ({ label: button.getAttribute("aria-label"), width: button.getBoundingClientRect().width, height: button.getBoundingClientRect().height })) };
   });
   assert.ok(metrics.queueSingle.height >= 40, "single row is at least 40px");
@@ -727,8 +727,8 @@ try {
   await page.keyboard.press("Meta+Enter");
   await waitCount("thread/queue/add", 2);
   await page.locator('[data-queued-messages][data-count="2"]').waitFor();
-  const collapsed = page.locator(".sqm-collapsed");
-  metrics.queueCollapsed = await collapsed.evaluate(node => ({ expanded: node.getAttribute("aria-expanded"), count: node.querySelector(".sqm-count").textContent, preview: node.querySelector(".sqm-preview").textContent, caret: !!node.querySelector(".sqm-caret [data-cds=\"Icon\"]"), height: node.getBoundingClientRect().height }));
+  const collapsed = page.locator("[data-queued-messages] button[aria-expanded=\"false\"]");
+  metrics.queueCollapsed = await collapsed.evaluate(node => ({ expanded: node.getAttribute("aria-expanded"), count: node.querySelector(":scope > span:first-child").textContent, preview: node.querySelector(":scope > span:nth-child(2)").textContent, caret: !!node.querySelector(":scope > span:nth-child(3) [data-cds=\"Icon\"]"), height: node.getBoundingClientRect().height }));
   assert.equal(metrics.queueCollapsed.expanded, "false"); assert.equal(metrics.queueCollapsed.count, "2 messages queued"); assert.equal(metrics.queueCollapsed.preview, "Next: later one");
   assert.ok(metrics.queueCollapsed.caret && metrics.queueCollapsed.height >= 40);
   await collapsed.click();
@@ -738,9 +738,9 @@ try {
     const list = document.querySelector('[role="list"][aria-label="Queued messages"]');
     const items = [...list.querySelectorAll('[role="listitem"]')];
     const style = getComputedStyle(list), item = getComputedStyle(items[0]);
-    return { maxHeight: style.maxHeight, padding: style.padding, items: items.map(node => node.querySelector(".sqm-item-text").textContent), itemPadding: item.padding, itemGap: item.gap, itemRadius: item.borderRadius, clamp: getComputedStyle(items[0].querySelector(".sqm-item-text")).webkitLineClamp,
-      dividers: list.querySelectorAll('[role="presentation"]').length, clear: document.querySelector(".sqm-clear")?.textContent ?? null, clearSize: getComputedStyle(document.querySelector(".sqm-clear")).fontSize,
-      collapse: document.querySelector('[aria-label="Collapse queued messages"]')?.getAttribute("aria-expanded") ?? null, handle: items[0].querySelector(".sqm-handle")?.getBoundingClientRect().width ?? null, menu: !!items[0].querySelector('[aria-label="Queued message actions"]') };
+    return { maxHeight: style.maxHeight, padding: style.padding, items: items.map(node => node.querySelector("span.line-clamp-2").textContent), itemPadding: item.padding, itemGap: item.gap, itemRadius: item.borderRadius, clamp: getComputedStyle(items[0].querySelector("span.line-clamp-2")).webkitLineClamp,
+      dividers: list.querySelectorAll('[role="presentation"]').length, clear: document.querySelector("[data-queued-messages] .text-footnote.text-danger")?.textContent ?? null, clearSize: getComputedStyle(document.querySelector("[data-queued-messages] .text-footnote.text-danger")).fontSize,
+      collapse: document.querySelector('[aria-label="Collapse queued messages"]')?.getAttribute("aria-expanded") ?? null, handle: items[0].querySelector("[aria-label=\"Reorder queued message\"]")?.getBoundingClientRect().width ?? null, menu: !!items[0].querySelector('[aria-label="Queued message actions"]') };
   });
   near(parseFloat(metrics.queueExpanded.maxHeight), Math.min(.4 * 768, 352), "list max-height min(40vh, 22rem)", 1);
   assert.equal(metrics.queueExpanded.padding, "4px"); assert.deepEqual(metrics.queueExpanded.items, ["later one", "later two"]);
@@ -748,15 +748,15 @@ try {
   assert.equal(metrics.queueExpanded.dividers, 1); assert.equal(metrics.queueExpanded.clear, "Clear all"); assert.equal(metrics.queueExpanded.clearSize, "12px"); assert.equal(metrics.queueExpanded.collapse, "true");
   assert.equal(metrics.queueExpanded.handle, 20); assert.equal(metrics.queueExpanded.menu, true);
   // Keyboard reorder on the handle issues thread/queue/reorder with the new order.
-  await list.locator(".sqm-handle").nth(1).focus();
+  await list.locator("[aria-label=\"Reorder queued message\"]").nth(1).focus();
   await page.keyboard.press("ArrowUp");
   await waitCount("thread/queue/reorder", 1);
   const queueEntries = (await readThreads()).threads[A].queue.map(entry => entry.input[0].text);
   assert.deepEqual(queueEntries, ["later two", "later one"]);
   assert.deepEqual((await requests("thread/queue/reorder"))[0].params.queuedSubmissionIds.length, 2);
-  await page.waitForFunction(() => [...document.querySelectorAll('[role="list"][aria-label="Queued messages"] .sqm-item-text')].map(node => node.textContent).join("|") === "later two|later one");
+  await page.waitForFunction(() => [...document.querySelectorAll('[role="list"][aria-label="Queued messages"] span.line-clamp-2')].map(node => node.textContent).join("|") === "later two|later one");
   // Clear all removes both through thread/queue/delete and unmounts the bar.
-  await page.locator(".sqm-clear").click();
+  await page.locator("[data-queued-messages] .text-footnote.text-danger").click();
   await waitCount("thread/queue/delete", 2);
   await bar.waitFor({ state: "detached" });
   assert.deepEqual((await readThreads()).threads[A].queue, []);
@@ -841,7 +841,7 @@ try {
   await waitCount("turn/steer", 3);
   await waitCount("thread/queue/add", 7);
   await bar.waitFor();
-  assert.equal(await bar.locator(".sqm-preview").textContent(), "steer a review");
+  assert.equal(await bar.locator("[data-take-back-entry] > span:nth-child(2)").textContent(), "steer a review");
   await page.getByRole("button", { name: "Remove from queue", exact: true }).click();
   await bar.waitFor({ state: "detached" });
   await stopButton().click();
@@ -995,7 +995,7 @@ try {
     return { cds: node.dataset.cds, overlay: node.hasAttribute("data-cds-overlay"), side: node.dataset.side, align: node.dataset.align, width: box.width,
       gap: Math.round(trigger.top - box.bottom), endGap: Math.round(trigger.right - box.right), labelledBy: node.getAttribute("aria-labelledby") === title?.id,
       title: title?.textContent, titleClip: [title?.getBoundingClientRect().width, title?.getBoundingClientRect().height], bodyPadding: getComputedStyle(body).padding,
-      text: [...node.querySelectorAll(".sc-usage-body .sc-usage-muted, .sc-usage-body .sc-usage-link")].map((part) => part.textContent), menuitems: node.querySelectorAll('[role^="menuitem"]').length,
+      text: [...node.querySelectorAll(".sc-usage-popover .flex-col.py-sm [data-session-cost] > span, .sc-usage-popover .flex-col.py-sm .flex.px-lg.py-xs > button")].map((part) => part.textContent), menuitems: node.querySelectorAll('[role^="menuitem"]').length,
       headings: node.querySelectorAll(".menu-heading").length, progress: node.querySelector('[role="progressbar"]')?.getAttribute("aria-valuenow"),
       background: getComputedStyle(node).backgroundColor, surface, radius: getComputedStyle(node).borderRadius };
   });
@@ -1004,7 +1004,7 @@ try {
     background: undefined, surface: undefined, radius: undefined });
   assert.equal(metrics.usagePopover.background, metrics.usagePopover.surface, "surface-3 popover");
   // R05 (cf6ae6197 Tw minPct 50): at 0% the compact action row stays absent.
-  assert.equal(await usagePopover.locator(".sc-usage-compact-row").count(), 0, "no compact row below 50%");
+  assert.equal(await usagePopover.locator("[data-usage-compact]").count(), 0, "no compact row below 50%");
   await page.mouse.move(usageBox.x + usageBox.width / 2 + 1, usageBox.y + usageBox.height / 2);
   await page.waitForTimeout(900);
   metrics.usageTooltipWhileOpen = await cdsTip().count();
@@ -1026,20 +1026,21 @@ try {
   await usageTrigger().click();
   await usagePopover.waitFor();
   metrics.usageCompact = await usagePopover.evaluate((node) => {
-    const row = node.querySelector(".sc-usage-compact-row"), button = row?.querySelector("button"), style = row && getComputedStyle(row);
-    const bar = node.querySelector(".sc-usage-bar").getBoundingClientRect(), separator = node.querySelector(".sc-usage-separator")?.getBoundingClientRect();
-    return { rows: node.querySelectorAll(".sc-usage-compact-row").length, label: button?.textContent, cds: button?.dataset.cds, disabled: button?.disabled,
+    const row = node.querySelector("[data-usage-compact]"), button = row?.querySelector("button"), style = row && getComputedStyle(row);
+    const bar = node.querySelector('[role="progressbar"].h-\\[4px\\]').getBoundingClientRect(), separator = node.querySelector(".h-px.bg-alpha-2")?.getBoundingClientRect();
+    return { rows: node.querySelectorAll("[data-usage-compact]").length, label: button?.textContent, cds: button?.dataset.cds, disabled: button?.disabled,
       afterBar: !!row && row.getBoundingClientRect().top >= bar.bottom, beforeSeparator: !!row && !!separator && row.getBoundingClientRect().bottom <= separator.top,
-      minHeight: style?.minHeight, gap: style?.columnGap, display: style?.display, underline: button && getComputedStyle(button).textDecorationLine };
+      minHeight: style?.minHeight, gap: style?.columnGap, display: style?.display, size: button?.dataset.size };
   });
-  assert.deepEqual(metrics.usageCompact, { rows: 1, label: "Compact session", cds: "TextLink", disabled: false, afterBar: true, beforeSeparator: true,
-    minHeight: "20px", gap: metrics.usageCompact.gap, display: "flex", underline: "underline" });
+  // W14-code r7 css7-usage-compact-button: c2d611398 Ve's xs CdsButton (data-cds Button), not the old TextLink.
+  assert.deepEqual(metrics.usageCompact, { rows: 1, label: "Compact session", cds: "Button", disabled: false, afterBar: true, beforeSeparator: true,
+    minHeight: "20px", gap: metrics.usageCompact.gap, display: "flex", size: "xs" });
   await page.screenshot({ path: path.join(directory, "usage-popover-compact.png") });
   await page.keyboard.press("Escape");
   await usagePopover.waitFor({ state: "detached" });
   await deliverUsage(metrics.placeholderCreatedThread, 100);
   await page.waitForFunction(() => document.querySelector(".sc-chin .sc-usage-trigger")?.getAttribute("aria-label") === "Usage: Context 100 / 128k (0%)");
-  checks.push("R05 usage compact row: absent at 0%; at 64k / 128k (50%) the popover shows one row after the bar and before the separator (flex, min-height 20px) holding the enabled CDS TextLink 'Compact session' (underlined)");
+  checks.push("R05 usage compact row: absent at 0%; at 64k / 128k (50%) the popover shows one row after the bar and before the separator (flex, min-height 20px) holding the enabled xs CDS Button 'Compact session' (c2d611398 Ve)");
   await page.mouse.move(100, 700);
   await page.screenshot({ path: path.join(directory, "placeholder-session.png") });
   await page.getByRole("button", { name: "New", exact: true }).click();
@@ -1280,7 +1281,7 @@ try {
   // status span dispatches the second chord right after the 'Fast mode on' commit; the listener must already see
   // fastSaving false (main.jsx registers it in a layout effect), so the chord is claimed and turns Fast back off.
   metrics.chinFastCommitWindow = await page.evaluate(() => new Promise(resolve => {
-    const status = document.querySelector('.sc-chin span[role="status"].sr-only'), target = document.querySelector('[aria-label="Message DeepSeek"]'), now = performance.now;
+    const status = document.querySelector('.sc-chin span[role="status"].sr-only'), target = document.querySelector('[aria-label="Prompt"],[aria-label="Message DeepSeek"]'), now = performance.now;
     let offset = 0; const result = { first: null, second: null };
     const chord = () => { const event = new KeyboardEvent("keydown", { key: "ƒ", code: "KeyF", metaKey: true, altKey: true, bubbles: true, cancelable: true }); target.dispatchEvent(event); return event.defaultPrevented; };
     const observer = new MutationObserver(() => { if (status.textContent !== "Fast mode on" || result.second !== null) return; result.second = chord(); performance.now = now; observer.disconnect(); });
@@ -1396,7 +1397,7 @@ try {
   await page.waitForFunction((dir) => document.querySelector('[role="menu"] [data-highlighted]')?.dataset.recentFolder === dir, pickerRepo);
   await page.keyboard.press("ArrowDown");
   await page.waitForFunction((dir) => document.querySelector('[role="menu"] [data-highlighted]')?.dataset.recentFolder === dir, workspace);
-  metrics.dismissVisible = await page.evaluate(() => getComputedStyle(document.querySelector('[role="menu"] [data-highlighted] .sc-recent-dismiss')).opacity);
+  metrics.dismissVisible = await page.evaluate(() => getComputedStyle(document.querySelector('[role="menu"] [data-highlighted] [data-dismiss-recent]')).opacity);
   assert.equal(metrics.dismissVisible, "1", "the highlighted recent reveals its Remove from recent X");
   await page.keyboard.press("Delete");
   await page.waitForFunction(() => document.querySelectorAll('[role="menu"] [role="menuitemradio"]').length === 1);
@@ -1438,12 +1439,14 @@ try {
   await page.evaluate(() => { document.documentElement.dataset.mode = "light"; });
   checks.push("F03 surfaces: the Recent menu and the usage popover portals copy data-mode and paint --cds-surface-3 in light and dark");
 
-  // hT step 1: the repo's branch chip opens a searchable radio list (main first, then localeCompare).
-  const branchChip = page.locator(".sc-context-row .sc-branch-chip"), worktreeBox = page.locator(".sc-context-row .sc-worktree input");
-  // The chip's label is its last span (the icon glyph precedes it).
-  const branchLabel = (name) => page.waitForFunction((name) => document.querySelector(".sc-context-row .sc-branch-chip > span:last-child")?.textContent === name, name);
+  // W14-code r7 css7-branch-picker-bl: the chip is cc43287c9 Dle's bL (cd2687f9f we, a Base UI Combobox trigger) in the
+  // "group/split" pill (data-branch-worktree, the host's e2e hook); its list is a listbox of options (main first, then
+  // localeCompare) above the search field; the worktree checkbox is the CDS Checkbox (role checkbox).
+  const branchChip = page.locator(".sc-context-row [data-branch-worktree] button").first(), worktreeBox = page.locator(".sc-context-row [data-branch-worktree] [role=\"checkbox\"]");
+  // The trigger's label is bL's span.truncate (the GitBranch icon precedes it).
+  const branchLabel = (name) => page.waitForFunction((name) => document.querySelector(".sc-context-row [data-branch-worktree] button span.truncate")?.textContent === name, name);
   await branchLabel("main");
-  metrics.branchTooltips = { branch: await chipTip(branchChip), worktree: await chipTip(page.locator(".sc-context-row .sc-worktree")) };
+  metrics.branchTooltips = { branch: await chipTip(branchChip), worktree: await chipTip(page.locator(".sc-context-row [data-branch-worktree] label")) };
   assert.deepEqual(metrics.branchTooltips, { branch: { label: "Branch to start from", detail: null, rtl: null, hoverable: "true" },
     worktree: { label: "Work in an isolated copy of the repository", detail: null, rtl: null, hoverable: "false" } });
   metrics.worktreeDescription = await worktreeBox.evaluate((input) => document.getElementById(input.getAttribute("aria-describedby"))?.textContent);
@@ -1452,34 +1455,33 @@ try {
   await page.mouse.move(100, 700);
   const worktreeBefore = await worktreeBox.isChecked();
   await branchChip.click();
-  const branchMenu = page.getByRole("menu", { name: "Branch", exact: true }), branchSearch = branchMenu.getByRole("textbox", { name: "Search branches…", exact: true });
+  const branchMenu = page.locator(".group\\/pill-popup"), branchSearch = branchMenu.getByRole("combobox", { name: "Search branches…", exact: true });
   await branchMenu.waitFor();
-  await page.waitForFunction(() => document.activeElement?.matches('[role="menu"] input[aria-label="Search branches…"]'));
+  await page.waitForFunction(() => document.activeElement?.matches('input[aria-label="Search branches…"]'));
   metrics.branchMenu = await branchMenu.evaluate((menu) => {
-    const chip = document.querySelector(".sc-context-row .sc-branch-chip").getBoundingClientRect(), box = menu.getBoundingClientRect();
-    const rows = [...menu.querySelectorAll('[role="menuitemradio"]')];
-    return { side: menu.dataset.side, align: menu.dataset.align, gap: Math.round(chip.top - box.bottom), rows: rows.map((node) => [node.dataset.branch, node.getAttribute("aria-checked")]),
-      icons: menu.querySelectorAll(".smenu-icon").length, headings: menu.querySelectorAll(".smenu-group-label, .smenu-header").length,
-      placeholder: menu.querySelector("input").placeholder, fieldLast: menu.querySelector(".sc-branch-search").getBoundingClientRect().top >= rows.at(-1).getBoundingClientRect().bottom };
+    const chip = document.querySelector(".sc-context-row [data-branch-worktree] button").getBoundingClientRect(), box = menu.getBoundingClientRect();
+    const rows = [...menu.querySelectorAll('[role="option"]')];
+    return { side: menu.dataset.side, above: chip.top >= box.bottom, rows: rows.map((node) => [node.textContent, node.getAttribute("aria-selected")]),
+      placeholder: menu.querySelector("input").placeholder, fieldLast: menu.querySelector("input").getBoundingClientRect().top >= rows.at(-1).getBoundingClientRect().bottom };
   });
-  assert.deepEqual(metrics.branchMenu, { side: "top", align: "start", gap: 8, rows: [["main", "true"], ["feature/login", "false"], ["zeta-topic", "false"]],
-    icons: 0, headings: 0, placeholder: "Search branches…", fieldLast: true });
+  assert.deepEqual(metrics.branchMenu, { side: "top", above: true, rows: [["main", "true"], ["feature/login", "false"], ["zeta-topic", "false"]],
+    placeholder: "Search branches…", fieldLast: true });
   await page.screenshot({ path: path.join(directory, "env-branch-menu.png") });
   // Typed characters stay in the field (no menu typeahead) and filter the list.
   await page.keyboard.type("zzz");
   assert.equal(await branchSearch.inputValue(), "zzz");
-  await branchMenu.locator(".sc-branch-empty", { hasText: "No branches match" }).waitFor();
-  assert.equal(await branchMenu.getByRole("menuitemradio").count(), 0);
+  await branchMenu.getByText("No branches match", { exact: true }).waitFor();
+  assert.equal(await branchMenu.getByRole("option").count(), 0);
   await page.screenshot({ path: path.join(directory, "env-branch-empty.png") });
   await branchSearch.fill("zeta");
-  await page.waitForFunction(() => document.querySelectorAll('[role="menu"] [role="menuitemradio"]').length === 1);
-  assert.equal(await branchMenu.locator(".sc-branch-empty").count(), 0);
+  await page.waitForFunction(() => document.querySelectorAll('.group\\/pill-popup [role="option"]').length === 1);
+  assert.equal(await branchMenu.getByText("No branches match", { exact: true }).count(), 0);
   await branchSearch.press("Enter");
   await branchMenu.waitFor({ state: "detached" });
   await branchLabel("zeta-topic");
   assert.equal(await worktreeBox.isChecked(), worktreeBefore, "choosing a branch leaves the worktree checkbox unchanged");
   await page.screenshot({ path: path.join(directory, "env-chips-branch.png") });
-  checks.push("F03 branch picker: tooltip 'Branch to start from' and the worktree label tooltip with an sr-only description; the menu (side top, align start, 8px above) focuses 'Search branches…', lists main / feature/login / zeta-topic as radio rows without icons or heading and the field last; 'zzz' stays in the field and shows 'No branches match'; Enter picks the first match 'zeta-topic' and the worktree checkbox is unchanged");
+  checks.push("F03 branch picker: tooltip 'Branch to start from' and the worktree label tooltip with an sr-only description; bL's popup (side top, above the chip) focuses 'Search branches…', lists main / feature/login / zeta-topic as options and the field last; 'zzz' stays in the field and shows 'No branches match'; Enter picks the first match 'zeta-topic' and the worktree checkbox is unchanged");
 
   // 17b. R05 branch step 2 without a worktree (cc43287c9-BMbiZYzF.js:12084-12145 me/he/ge, :15860-16120 UR/GR, :35132
   // branchChanged + the spawn's 'git switch'): a clean pick is recorded and the next spawn checks it out first; on a
@@ -1492,7 +1494,7 @@ try {
   const pickBranch = async (name) => {
     await branchChip.click();
     await branchMenu.waitFor();
-    await branchMenu.locator(`[role="menuitemradio"][data-branch="${name}"]`).click();
+    await branchMenu.getByRole("option", { name, exact: true }).click();
     await branchMenu.waitFor({ state: "detached" });
   };
   await pickBranch("feature/login");
@@ -1533,18 +1535,20 @@ try {
   const switchDialog = page.getByRole("alertdialog", { name: "Uncommitted changes on feature/login", exact: true });
   await switchDialog.waitFor();
   await page.waitForFunction(() => document.activeElement?.textContent === "Cancel");
-  metrics.branchDialog = await switchDialog.evaluate((node) => ({ alert: node.hasAttribute("data-alert"), cds: node.dataset.cds,
-    description: node.querySelector(".sdlg-description")?.textContent, files: node.querySelector(".sbs-files")?.textContent,
+  // r6 git: cc43287c9 Jie is the shared-frame CdsAlertDialog (role alertdialog, aria-describedby → he.Description); the
+  // files line is the "flex flex-wrap items-center gap-1.25 text-body text-secondary" <p>.
+  metrics.branchDialog = await switchDialog.evaluate((node) => ({
+    description: document.getElementById(node.getAttribute("aria-describedby") ?? "")?.textContent, files: node.querySelector("p.gap-1\\.25")?.textContent,
     code: [...node.querySelectorAll("code")].map((code) => code.textContent),
     buttons: [...node.querySelectorAll("button")].map((button) => button.getAttribute("aria-label") || button.textContent),
     split: node.querySelector('[data-cds="SplitDropdownButton"]')?.getAttribute("aria-label"), width: Math.round(node.getBoundingClientRect().width) }));
-  assert.deepEqual({ ...metrics.branchDialog, width: undefined }, { alert: true, cds: "ConfirmationDialog", description: "Handle them before switching to zeta-topic.",
+  assert.deepEqual({ ...metrics.branchDialog, width: undefined }, { description: "Handle them before switching to zeta-topic.",
     files: "1 file changed+1 −0", code: ["feature/login", "zeta-topic"], buttons: ["Cancel", "Stash changes", "More options"], split: "Stash changes", width: undefined });
   assert.ok(metrics.branchDialog.width <= 480, "max-w-[30rem]");
   await switchDialog.getByRole("button", { name: "More options", exact: true }).click();
   const switchModes = page.getByRole("menu", { name: "More options", exact: true });
   await switchModes.waitFor();
-  metrics.branchModes = await switchModes.evaluate((menu) => [...menu.querySelectorAll('[role="menuitemradio"]')].map((node) => [node.querySelector(".smenu-label")?.textContent, node.getAttribute("aria-checked")]));
+  metrics.branchModes = await switchModes.evaluate((menu) => [...menu.querySelectorAll('[role="menuitemradio"]')].map((node) => [node.textContent.trim(), node.getAttribute("aria-checked")]));
   assert.deepEqual(metrics.branchModes, [["Stash changes", "true"], ["Commit as WIP", "false"], ["Discard changes", "false"]]);
   await page.screenshot({ path: path.join(directory, "branch-switch-dialog.png") });
   await page.keyboard.press("Escape");
@@ -1711,8 +1715,8 @@ try {
   await page.keyboard.press("ArrowUp");
   await page.waitForFunction(() => document.querySelector(".sc-input").value === "queued two");
   await waitCount("thread/queue/delete", queueDeletes + 1);
-  await page.locator('[data-queued-messages] .sqm-single').waitFor();
-  metrics.dequeue = { value: await editor().evaluate(node => node.value), count: await page.locator("[data-queued-messages] .sqm-count").textContent(), history: await page.locator('.sc-composer [data-cds="ChatComposerHeader"]').count(),
+  await page.locator('[data-queued-messages] [data-take-back-entry]').waitFor();
+  metrics.dequeue = { value: await editor().evaluate(node => node.value), count: await page.locator("[data-queued-messages] [data-take-back-entry] > span:first-child").textContent(), history: await page.locator('.sc-composer [data-cds="ChatComposerHeader"]').count(),
     left: (await readThreads()).threads[G].queue.map(entry => entry.input[0].text) };
   assert.deepEqual(metrics.dequeue, { value: "queued two", count: "1 message queued", history: 0, left: ["queued one"] });
   await page.getByRole("button", { name: "Remove from queue", exact: true }).click();
@@ -1755,7 +1759,7 @@ try {
   assert.match(chipValue, /^look @fixture-[ab]\.txt $/);
   await page.keyboard.press("Backspace");
   await page.keyboard.press("Backspace");
-  metrics.chipBackspace = { value: await editor().evaluate(node => node.value), selected: await mentionChip().evaluate(node => node.querySelector(".sc-mention-chip").hasAttribute("data-selected")) };
+  metrics.chipBackspace = { value: await editor().evaluate(node => node.value), selected: await mentionChip().evaluate(node => node.querySelector("[data-mention] > span, :scope > span").hasAttribute("data-selected")) };
   assert.deepEqual(metrics.chipBackspace, { value: chipValue.slice(0, -1), selected: true }, "the first Backspace after the atom selects it");
   await page.keyboard.press("Backspace");
   await mentionChip().waitFor({ state: "detached" });
@@ -1768,7 +1772,7 @@ try {
   metrics.mentionChipModes = {};
   for (const mode of ["dark", "light"]) {
     await page.evaluate((mode) => { document.documentElement.dataset.mode = mode; }, mode);
-    metrics.mentionChipModes[mode] = await mentionChip().evaluate((node) => { const label = node.querySelector(".sc-mention-chip-label"), probe = document.createElement("span"); probe.style.color = "var(--cds-text-accent)"; node.closest(".sc-composer").appendChild(probe); const accent = getComputedStyle(probe).color; probe.remove(); return [getComputedStyle(label).color, accent]; });
+    metrics.mentionChipModes[mode] = await mentionChip().evaluate((node) => { const label = node.querySelector("[data-mention] [title], [title]"), probe = document.createElement("span"); probe.style.color = "var(--cds-text-accent)"; node.closest(".sc-composer").appendChild(probe); const accent = getComputedStyle(probe).color; probe.remove(); return [getComputedStyle(label).color, accent]; });
     assert.equal(metrics.mentionChipModes[mode][0], metrics.mentionChipModes[mode][1], `${mode} chip uses --cds-text-accent`);
     await page.locator(".sc-composer").screenshot({ path: path.join(directory, `mention-chip-${mode}.png`) });
   }
@@ -1860,6 +1864,9 @@ try {
   assert.equal(metrics.storedAfterSend.includes("composer-draft:epitaxy-draft"), true, "the Home draft stays stored");
   checks.push("R05 persisted drafts: 'fixture:complete keep me @fixture-…' (one mention chip) in session E and 'home draft' on Home are stored under composer-draft:epitaxy-<id> / composer-draft:epitaxy-draft; after page.reload() Home shows 'home draft' and E shows its draft with the chip; sending E removes its key while the Home key stays");
 
+  // W14-code r6-composer-02: locators moved to the generated c8e04f916 EffortControl / c2d9b9a76 Slider / c227f4d5e P$
+  // (data-cds="Slider", [data-slider-overlay], the value label's official classes); the assertions below still describe
+  // the retired host control (data-accent, glow data-r, the user's 2026-10-18 any-highest-level accent) and need a GUI pass.
   // 20. Purple top tier (c8e04f916 scratch effort.js:59-112/:150-153 accent + glow label, c992c8428 lit.js overlay,
   // c360a9e1c:5257 mounted only when the last effort is the tier). Runs in idle session E on fixture-1 ("Test model 2",
   // efforts …, xhigh, max, ultra); the chip tint is a requested local extension (the source chip is plain).
@@ -1881,20 +1888,20 @@ try {
   const closeEffort = async () => { await page.keyboard.press("Escape"); await effortPopover().waitFor({ state: "detached" }); };
   // Settled once the controller is live (canvas sized to device pixels) or has reported no WebGL2 (transition none).
   const litSettled = () => page.waitForFunction(() => {
-    const ground = document.querySelector('[data-cds="ModelSelectorEffort"] .sc-effort-lit-ground'), canvas = document.querySelector('[data-cds="ModelSelectorEffort"] .sc-effort-lit-field canvas');
+    const ground = document.querySelector('[data-cds="ModelSelectorEffort"] [data-slider-overlay] .bg-surface-3'), canvas = document.querySelector('[data-cds="ModelSelectorEffort"] [data-slider-overlay] canvas');
     return !ground || ground.style.transition === "none" || (canvas && canvas.width > 1);
   });
   const effortState = () => effortPopover().evaluate((node) => {
-    const swap = node.querySelector(".sc-effort-value > .sc-effort-swap:not([data-leaving])"), plain = node.querySelector(".sc-effort-value > .sc-effort-plain");
+    const swap = node.querySelector('[aria-hidden="true"].relative.min-w-0 > .relative.isolate'), plain = node.querySelector('[aria-hidden="true"].relative.min-w-0 > .block.min-w-0.truncate');
     const label = swap || plain, chip = document.querySelector(".sc-chin .sc-effort-trigger");
     const probe = document.createElement("span"); probe.style.color = "var(--cds-text-pro)"; node.appendChild(probe); const pro = getComputedStyle(probe).color; probe.remove();
-    const ground = node.querySelector(".sc-effort-lit-ground"), canvas = node.querySelector(".sc-effort-lit-field canvas");
-    const overlay = node.querySelector(".sc-slider-fill > [data-slider-overlay]"), fill = node.querySelector(".sc-slider-fill"), track = node.querySelector(".sc-slider-track");
-    return { pro, text: label.querySelector(".sc-effort-glow")?.textContent ?? label.textContent, color: getComputedStyle(label).color, weight: getComputedStyle(label).fontWeight,
-      accent: label.hasAttribute("data-accent"), plain: !!plain, glows: [...node.querySelectorAll(".sc-effort-value .sc-effort-glow")].filter((glow) => getComputedStyle(glow).display !== "none").map((glow) => glow.dataset.r),
+    const ground = node.querySelector("[data-slider-overlay] .bg-surface-3"), canvas = node.querySelector("[data-slider-overlay] canvas");
+    const overlay = node.querySelector('[data-cds="Slider"] [data-slider-overlay]'), fill = overlay?.parentElement, track = node.querySelector('[data-cds="Slider"] [container-type]') ?? node.querySelector('[data-cds="Slider"] .overflow-hidden');
+    return { pro, text: label.querySelector(".block.truncate")?.textContent ?? label.textContent, color: getComputedStyle(label).color, weight: getComputedStyle(label).fontWeight,
+      accent: label.hasAttribute("data-accent"), plain: !!plain, glows: [...node.querySelectorAll('[aria-hidden="true"].relative.min-w-0 .truncate')].filter((glow) => getComputedStyle(glow).display !== "none").map((glow) => glow.dataset.r),
       swapAnimation: swap ? getComputedStyle(swap).animationName : null,
       chip: { text: chip.textContent, top: chip.hasAttribute("data-top-tier"), color: getComputedStyle(chip).color, weight: getComputedStyle(chip).fontWeight },
-      atMax: node.querySelector(".sc-slider").hasAttribute("data-at-max"), overlay: !!overlay,
+      atMax: node.querySelector('[data-cds="Slider"]').hasAttribute("data-at-max"), overlay: !!overlay,
       ground: ground ? { on: ground.hasAttribute("data-on"), opacity: getComputedStyle(ground).opacity, transition: ground.style.transition } : null,
       canvas: canvas ? { px: canvas.width, css: Math.round(canvas.getBoundingClientRect().width), track: Math.round(track.getBoundingClientRect().width),
         rightGap: Math.round(fill.getBoundingClientRect().right - overlay.getBoundingClientRect().right) } : null };

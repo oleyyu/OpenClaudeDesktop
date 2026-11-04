@@ -6,6 +6,24 @@ const { scopedPath } = require('./files.cjs');
 const hash = bytes => createHash('sha256').update(bytes).digest('hex');
 const inside = (root, file) => file !== root && file.startsWith(root + path.sep);
 const writes = new Map();
+// W14-code r4 r4pa-c08: 3.6556.2 asar index.chunk-DNPOm2Zc.js `HOOK_MANAGER_PACKAGE_JSON_KEYS=["lint-staged","husky",
+// "commitlint","pre-commit","precommit","gitHooks","nano-staged"]` / parsePackageJsonObject / isHookManagerPackageJsonKeyChange:
+// a save to package.json that changes any Git-hook tool key (compared as JSON, absent ≠ present) is refused with
+// {status: Denied, deniedReason: "hook_manager_package_key"} before the baseline check; unparsable new text is not refused.
+const HOOK_MANAGER_PACKAGE_JSON_KEYS = ['lint-staged', 'husky', 'commitlint', 'pre-commit', 'precommit', 'gitHooks', 'nano-staged'];
+function parsePackageJsonObject(text) {
+  if (text === undefined) return undefined;
+  try {
+    const value = JSON.parse(text.replace(/^\uFEFF/, ''));
+    return typeof value === 'object' && value && !Array.isArray(value) ? value : undefined;
+  } catch { return undefined; }
+}
+function isHookManagerPackageJsonKeyChange(previous, next) {
+  const after = parsePackageJsonObject(next);
+  if (!after) return false;
+  const before = parsePackageJsonObject(previous) ?? {};
+  return HOOK_MANAGER_PACKAGE_JSON_KEYS.some(key => (key in before ? JSON.stringify(before[key]) : undefined) !== (key in after ? JSON.stringify(after[key]) : undefined));
+}
 
 // The viewer's baseline is read as bytes, so replacement decoding can never
 // silently make an invalid UTF-8 file writable. Writes compare the on-disk hash.
@@ -46,11 +64,15 @@ async function writeFile(root, relative, text, expectedHash) {
         try {
           const stat = await fs.lstat(target);
           if (!stat.isFile() || stat.isSymbolicLink()) return { denied: true };
-          return { hash: hash(await fs.readFile(target)), mode: stat.mode & 0o777 };
+          const bytes = await fs.readFile(target);
+          return { hash: hash(bytes), mode: stat.mode & 0o777, bytes };
         } catch (error) { if (error.code === 'ENOENT') return { hash: null, mode: 0o644 }; throw error; }
       };
       const before = await current();
       if (before.denied) return { status: 'denied' };
+      if (path.basename(target).toLowerCase() === 'package.json' &&
+          isHookManagerPackageJsonKeyChange(before.bytes === undefined ? undefined : before.bytes.toString('utf8'), text))
+        return { status: 'denied', deniedReason: 'hook_manager_package_key' };
       if (before.hash !== expectedHash) return { status: 'conflict', currentHash: before.hash };
       if (before.hash !== null) await fs.access(target, constants.W_OK);
       temp = path.join(path.dirname(target), `.openclaude-${randomUUID()}.tmp`);
@@ -70,4 +92,4 @@ async function writeFile(root, relative, text, expectedHash) {
   writes.set(target, operation);
   try { return await operation; } finally { if (writes.get(target) === operation) writes.delete(target); }
 }
-module.exports = { readEditableFile, writeFile };
+module.exports = { readEditableFile, writeFile, isHookManagerPackageJsonKeyChange, HOOK_MANAGER_PACKAGE_JSON_KEYS };

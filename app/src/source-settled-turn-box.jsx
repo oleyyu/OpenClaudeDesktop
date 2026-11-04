@@ -3,8 +3,8 @@
 // receipt (generated/turn-plan/settled-turn-box.mjs SettledTurnBox, over the generated cb6930dae / cd4f82e77 originals).
 // The row comes from turn-plan-model.mjs withTurnBoxRows (in front of the prompt row that answered it); the prompt it
 // quotes is c96d752d0 dN over that row (2.42304.0 AL), as the official transcript passes `prompt:dN(n)?.text??""`.
-// Host difference: the official row sits in the transcript's inset wrapper (c96d752d0 D9 → Git); the host transcript
-// spaces its rows itself.
+// Under the renderer main.jsx sits the row in c96d752d0 i9's `n9(Et, n)` card (e9 `{card: !0}`, TranscriptInsetRow), as
+// the official transcript does (W14-code r7 R7T-04).
 import React, { useMemo } from "react";
 import { SettledTurnBox, promptOfRow } from "./generated/turn-plan/settled-turn-box.mjs";
 import { useDismissedWrapUpCalls } from "./generated/turn-box/turn-tail.mjs";

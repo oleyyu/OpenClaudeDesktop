@@ -1,52 +1,8 @@
-/* Shared CDS Dialog (2.2553.1 shared-frame-C_2npUJq.js:5561-5574 mf/hf/gf/_f/vf/yf, :5618-5644 Of/Mf/Nf/If,
-   :5806-5869 Yf/Jf/Qf). Generalised from source-bypass-permission.css. */
+/* Shared CDS Dialog. W14-code r2-shared-06 / css2-dialog-body: the backdrop, popup, Zv body, header, footer and sizes
+   are the 3.6556.2 shared-frame-6jtSkIit.js utility classes themselves (hy/gy, Sy/Xv/my/Cy/wy, Zv, Zy, eb; see
+   source-dialog.jsx), so only the portal stacking and two local behaviours stay here. */
 .sdlg-portal > * { z-index: var(--cds-portal-z); } /* nl: [&>*]:z-[var(--cds-portal-z)] */
-/* yf: fixed inset-0 bg-backdrop backdrop-blur-[2px], faded over duration-base ease-out. The popup is this
-   element's child, so the fade runs on the colour and the blur instead of opacity. */
-.sdlg-backdrop {
-  position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
-  background-color: var(--cds-backdrop); backdrop-filter: blur(2px);
-  transition: background-color var(--cds-dur-base) var(--cds-ease-out), backdrop-filter var(--cds-dur-base) var(--cds-ease-out);
-  -webkit-app-region: no-drag;
-}
-.sdlg-backdrop[data-starting-style], .sdlg-backdrop[data-ending-style] { background-color: transparent; backdrop-filter: blur(0); }
-.sdlg-backdrop[data-ending-style] { pointer-events: none; }
-/* gf + mf (Wd("popover") = rounded-card bg-surface-3, shadow-panel-lg) + _f p-xl; hf max height. */
-.sdlg-popup {
-  position: relative; box-sizing: border-box; display: flex; flex-direction: column;
-  width: calc(100vw - 2rem); max-height: calc(100dvh - max(2rem, 2 * var(--desktop-titlebar-inset, 0px)));
-  overflow-y: auto; padding: var(--cds-pad-xl);
-  border: 0; border-radius: calc(var(--cds-radius) + .25rem * var(--cds-rem-scale, 1));
-  background: var(--cds-surface-3); color: var(--cds-text-primary);
-  box-shadow: inset 0 0 0 var(--cds-ring-inner) var(--cds-ring-color), 0 0 0 var(--cds-ring-outer) var(--cds-ring-color), var(--cds-shadow-lg);
-  font-size: var(--cds-font-size-body); line-height: var(--cds-leading-body); font-weight: var(--cds-font-weight-regular);
-  outline: none;
-  /* vf: transition-[opacity,scale,filter] duration-base ease-out. */
-  transition: opacity var(--cds-dur-base) var(--cds-ease-out), scale var(--cds-dur-base) var(--cds-ease-out), filter var(--cds-dur-base) var(--cds-ease-out);
-}
-.sdlg-popup[data-starting-style], .sdlg-popup[data-ending-style] { opacity: 0; scale: .98; }
-/* Of sizes. Not data-size: .cds-root [data-size] rescales the CDS control tokens (design-system.css:54629). */
-.sdlg-popup[data-dialog-size="sm"] { max-width: 400px; }
-.sdlg-popup[data-dialog-size="md"] { max-width: 520px; }
-.sdlg-popup[data-dialog-size="lg"] { max-width: 720px; }
-/* 2.31226 shared-frame tg adds xl 880 / 2xl 1024 (the Changes "View image" dialog is 2xl). */
-.sdlg-popup[data-dialog-size="xl"] { max-width: 880px; }
-.sdlg-popup[data-dialog-size="2xl"] { max-width: 1024px; }
-/* Yf: mb-pad-md flex items-start gap-2; the title column is -mt-1 flex-col gap-1. */
-.sdlg-header { display: flex; flex-shrink: 0; align-items: flex-start; gap: 8px; margin: 0 0 var(--cds-pad-md); }
-.sdlg-heading { display: flex; flex: 1; min-width: 0; flex-direction: column; gap: 4px; margin-top: -4px; }
-/* Nf: text-title font-semibold; If: mt-1 text-body text-secondary. */
-.sdlg-title { margin: 0; overflow-wrap: break-word; color: var(--cds-text-primary); font-size: var(--cds-font-size-title); line-height: var(--cds-leading-title); font-weight: var(--cds-font-weight-semibold); }
-.sdlg-popup .sdlg-description { margin: 0; color: var(--cds-text-secondary); font-size: var(--cds-font-size-body); line-height: var(--cds-leading-body); font-weight: var(--cds-font-weight-regular); }
-/* rp: Mf (text-heading font-medium) with Pf -mt-0.5 straight in the body, If below it; no header margin. */
-.sdlg-header[data-alert] { display: block; margin: -2px 0 0; }
-.sdlg-header[data-alert] .sdlg-title { font-size: var(--cds-font-size-heading); line-height: var(--cds-leading-heading); font-weight: var(--cds-font-weight-medium); }
-.sdlg-popup .sdlg-header[data-alert] .sdlg-description { margin-top: 4px; }
-/* Jf flush: -me-pad-sm -mt-pad-sm. */
-.sdlg-close-flush { margin-inline-end: calc(-1 * var(--cds-pad-sm)); margin-top: calc(-1 * var(--cds-pad-sm)); }
-/* Qf: mt-pad-lg flex flex-col-reverse gap-2 sm:flex-row sm:justify-end. */
-.sdlg-footer { display: flex; flex-shrink: 0; flex-direction: column-reverse; gap: 8px; margin-top: var(--cds-pad-lg); }
-@media (min-width: 640px) { .sdlg-footer { flex-direction: row; justify-content: flex-end; } }
-@media (min-width: 640px) { .sdlg-footer[data-align="between"] { justify-content: space-between; } }
-@media (prefers-reduced-motion: reduce) { .sdlg-popup, .sdlg-backdrop { transition: none; } }
+/* Local: a closing dialog hands focus back at once, so presses pass through the layer while it plays its exit. */
+.sdlg-portal > [data-ending-style] { pointer-events: none; }
+/* Local: the app's Reduce motion setting (html[data-reduce-motion]) as well as prefers-reduced-motion (motion-reduce:). */
 html[data-reduce-motion="true"] .sdlg-popup, html[data-reduce-motion="true"] .sdlg-backdrop { transition: none; }

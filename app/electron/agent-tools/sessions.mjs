@@ -152,8 +152,16 @@ export const tools = [
       const title = typeof args.title === "string" ? args.title.replace(/\s+/g, " ").trim() : "";
       if (!title) throw new Error("title is required.");
       if (title.length > MAX_TITLE) throw new Error(`Keep the title under ${MAX_TITLE} characters.`);
-      await service(ctx).rename(title);
-      return `Session renamed to “${title}”.`;
+      const sessions = service(ctx);
+      const before = typeof sessions.get === "function" ? sessions.get(ctx.sessionId) : null;
+      const previous = typeof before?.title === "string" ? before.title.trim() : "";
+      await sessions.rename(title);
+      // W14-code r2 R2T-TS7: 3.6556.2's tool answers with the rename record in the result's _meta (c52b02f3f
+      // `Dt = "ccdSessionRenamed"`; Mt reads `resultMcpMeta._meta[Dt]` {sessionId, isSelf, title, previousTitle,
+      // previousTitleSource}, only while `input.title.trim() === title.trim()`), which cb6930dae bc draws under the tool
+      // row as From / To with "Undo rename". The text the model reads stays the same.
+      return { content: [{ type: "text", text: `Session renamed to “${title}”.` }],
+        _meta: { ccdSessionRenamed: { sessionId: ctx.sessionId, isSelf: true, title, ...(previous && previous !== title ? { previousTitle: previous } : {}) } } };
     },
   },
 ];

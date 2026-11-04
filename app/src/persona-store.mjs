@@ -1,9 +1,8 @@
 // C2 persona store: the renderer's single source for the assistant display
-// name, home greeting template and spark icon. Pure (node-testable); main.jsx
+// name and spark icon. Pure (node-testable); main.jsx
 // syncs it from boot.config.persona and use-persona.js wraps it for React.
-// Visible copy only: accessible names ("Message DeepSeek", ...) never read it.
+// Visible copy only: accessible names ("Stop DeepSeek’s response", ...) never read it.
 import { normalizePersona, PERSONA_DEFAULT } from '../electron/prefs/persona.mjs';
-import { greetingName, greetingText } from './home-model.mjs';
 import { getAssistantName } from '../electron/i18n/index.mjs';
 
 export const DEFAULT_ASSISTANT_NAME = 'DeepSeek';
@@ -28,25 +27,4 @@ export function assistantName() { return persona.assistantName || getAssistantNa
 
 /** Escape a name for use inside a RegExp source. */
 export function escapeRegExp(text) { return String(text).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
-
-/** Fill a greeting template: {name} → first name, or drop it and tidy punctuation. */
-export function fillGreeting(template, displayName) {
-  const full = greetingName(displayName);
-  const first = full ? full.split(/\s+/)[0] : '';
-  if (first) return template.replaceAll('{name}', first).trim();
-  return template
-    .replaceAll('{name}', '')
-    .replace(/[ \t]+/g, ' ')
-    .replace(/\s*,\s*([?!.])/g, '$1')
-    .replace(/\s+([?!.,])/g, '$1')
-    .replace(/,\s*$/, '')
-    .replace(/^\s*[,]\s*/, '')
-    .trim();
-}
-
-/** Home greeting: the built-in copy for an empty template, otherwise the filled template. */
-export function greetingFor({ displayName, landingClear = true } = {}, value = persona) {
-  const template = typeof value?.greeting === 'string' ? value.greeting.trim() : '';
-  if (!template) return greetingText(greetingName(displayName), landingClear);
-  return fillGreeting(template, displayName) || greetingText(greetingName(displayName), landingClear);
-}
+// W14-code r5 cleanup R5DC-01: fillGreeting / greetingFor left with the Settings › Persona "Home greeting" row.

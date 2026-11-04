@@ -181,7 +181,8 @@ test('sidebar-14 Code nav row reads "Routines": the Scheduled rename and (Was Ro
   const label = (mode, key) => rowsOf(mode).find(row => row[2] === key)?.[0];
   assert.equal(label('code', 'routines'), 'Routines');
   assert.equal(label('cowork', 'routines'), 'Scheduled', 'the other mode keeps its own label');
-  once(sidebar, ["{mode === 'code' ? <span className=\"flex min-w-0 flex-1 items-center\"><span>{t(label)}</span>"]);
+  // W14-code frame: the label span carries shared-21 l5's \`className:"min-w-0 truncate",children:B\`.
+  once(sidebar, ["{mode === 'code' ? <span className=\"flex min-w-0 flex-1 items-center\"><span className=\"min-w-0 truncate\">{t(label)}</span>"]);
   for (const text of ['Was Routines', 'routines-renamed-on-click', 'cai_fizzy_nest', 'claude_ai_unified_routines'])
     assert.equal(count(sidebar, text), 0, text);
   setLocale(DEFAULT_LOCALE);

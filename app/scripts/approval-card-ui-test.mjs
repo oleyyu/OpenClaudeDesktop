@@ -38,7 +38,7 @@ const checks = [], metrics = {}, errors = [], screenshots = [];
 let app, page, buildInfo;
 const near = (actual, expected, tolerance = .5) => assert.ok(Math.abs(actual - expected) <= tolerance,
   `${actual} should be within ${tolerance} of ${expected}`);
-const card = () => page.locator(".sac-card");
+const card = () => page.locator("[data-approval-card-root]");
 async function records() {
   try { return (await fs.readFile(path.join(profile, "fixture-responses.jsonl"), "utf8")).trim().split("\n").filter(Boolean).map(JSON.parse); }
   catch (error) { if (error.code === "ENOENT") return []; throw error; }
@@ -50,9 +50,9 @@ async function screenshot(name) {
   screenshots.push(file);
 }
 async function send(prompt, kind) {
-  await page.getByRole("textbox", { name: "Message DeepSeek", exact: true }).fill(prompt);
+  await page.getByRole("textbox", { name: /^(?:Prompt|Message DeepSeek)$/ }).fill(prompt);
   await page.locator('[data-testid="code-prompt-send"]:not([inert] *)').click();
-  await page.locator(`.sac-card[data-approval-kind="${kind}"]`).waitFor();
+  await page.locator(`[data-approval-card-root][data-approval-kind="${kind}"]`).waitFor();
   await card().scrollIntoViewIfNeeded();
   assert.ok(await card().getAttribute("data-approval-instance"));
   assert.equal(await card().count(), 1);
@@ -69,7 +69,7 @@ async function finish(action, expected) {
 async function measure() {
   return card().evaluate(element => {
     const style = getComputedStyle(element), heading = element.querySelector(".sac-heading");
-    const allows = element.querySelector(".sac-allows"), actions = element.querySelector(".sac-actions");
+    const allows = element.querySelector("[data-approval-allow]"), actions = element.querySelector(".epitaxy-approval-actions");
     const rectangle = element.getBoundingClientRect();
     return { outerWidth: rectangle.width, contentWidth: element.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight),
       background: style.backgroundColor, border: style.borderTopWidth, shadow: style.boxShadow,
@@ -187,7 +187,7 @@ try {
   // a synthetic click regression, recorded as such, never a real command.
   await page.evaluate(() => {
     const observer = new MutationObserver(() => {
-      const button = document.querySelector('.sac-card[data-approval-kind="command"] [data-approval-action="accept"]');
+      const button = document.querySelector('[data-approval-card-root][data-approval-kind="command"] [data-approval-action="accept"]');
       if (!button) return;
       observer.disconnect();
       window.cardInitialClick = { disabled: button.disabled, ariaDisabled: button.getAttribute("aria-disabled"), at: performance.now() };
@@ -200,7 +200,7 @@ try {
   // F07 NM (approval-current.js:15959-16006): an sr-only role=status span in the card is cleared, then
   // filled 50 ms after a new request with pM's 'Permission requested: …' (polled from the send; ~100 ms).
   metrics.announcement = await page.evaluate(() => new Promise(resolve => {
-    const node = document.querySelector(".sac-card [data-approval-announcement]"), start = performance.now();
+    const node = document.querySelector("[data-approval-card-root] [data-approval-announcement]"), start = performance.now();
     const check = () => node?.textContent ? resolve({ text: node.textContent, role: node.getAttribute("role"), at: performance.now() - start,
       hidden: getComputedStyle(node).clip }) : performance.now() - start > 2000 ? resolve(null) : requestAnimationFrame(check);
     check();
@@ -227,7 +227,7 @@ try {
   assert.match(await card().locator('[data-context="cwd"]').innerText(), /workspace/);
   assert.match(await card().locator('[data-context="network"]').innerText(), /https:\/\/approval-card\.example\.invalid:8443/);
   await heading.click();
-  assert.equal(await card().locator(".sac-code").textContent(), "printf approval-test");
+  assert.equal(await card().locator("[data-approval-value]").textContent(), "printf approval-test");
   assert.equal(await card().locator(".sac-heading [data-cds=Icon]").count(), 0);
   checks.push("real command request: reason/cwd/network persist outside raw detail disclosure; source heading adds no caret; initial allow grace prevents a synthetic mount click");
 
@@ -246,11 +246,11 @@ try {
   });
   await frames(); assert.equal((await records()).length, 0);
   await page.getByRole("button", { name: "View options", exact: true }).click();
-  await page.getByRole("menu", { name: "Session menu", exact: true }).waitFor();
+  await page.locator('[role="menu"]:not([aria-label]):not([aria-labelledby])').waitFor();
   await card().evaluate(element => element.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", metaKey: true, bubbles: true, cancelable: true })));
   await frames(); assert.equal((await records()).length, 0);
   await page.keyboard.press("Escape");
-  await page.getByRole("menu", { name: "Session menu", exact: true }).waitFor({ state: "detached" });
+  await page.locator('[role="menu"]:not([aria-label]):not([aria-labelledby])').waitFor({ state: "detached" });
   checks.push("local card Enter only focuses primary; four action arrows wrap; Alt/IME/229/repeat and real open-menu state do not grant");
 
   // Exercise the exact bug: keep focus on the card, scroll it fully outside its
@@ -361,13 +361,13 @@ try {
   await page.waitForTimeout(450);
   const beforeBusy = await card().locator('[data-approval-action="accept"]').boundingBox();
   await card().locator('[data-approval-action="accept"]').click();
-  await page.waitForFunction(() => document.querySelector(".sac-card")?.getAttribute("aria-busy") === "true");
+  await page.waitForFunction(() => document.querySelector("[data-approval-card-root]")?.getAttribute("aria-busy") === "true");
   const callsWhileHeld = await app.evaluate(() => globalThis.approvalCardUiGate.calls);
   assert.equal(callsWhileHeld, 1);
   assert.equal((await records()).length, 0, "The real response is still gated before dispatch");
   assert.equal(await card().locator('.sac-button[aria-disabled="true"]').count(), 3);
   assert.equal(await card().locator('.sac-button[aria-busy="true"]').getAttribute("data-approval-action"), "accept");
-  assert.equal(await card().locator(".sac-button-spinner").count(), 1);
+  assert.equal(await card().locator("[data-cds=Button][aria-busy=true] [aria-hidden=true]").count(), 1);
   // ks :2886 fades the whole content span (label + Shortcut) while busy; the cap keeps its width.
   assert.equal(await card().locator('[data-approval-action="accept"] [data-cds="Shortcut"]').evaluate(element => getComputedStyle(element).opacity), "0");
   const busyBox = await card().locator('[data-approval-action="accept"]').boundingBox();
@@ -379,7 +379,7 @@ try {
   assert.equal(await app.evaluate(() => globalThis.approvalCardUiGate.calls), callsWhileHeld);
   await page.emulateMedia({ reducedMotion: "reduce" });
   assert.equal(await card().evaluate(element => getComputedStyle(element).animationName), "none");
-  assert.equal(await card().locator(".sac-button-spinner i:last-child").evaluate(element => getComputedStyle(element).animationName), "none");
+  assert.equal(await card().locator("[data-cds=Button][aria-busy=true] [aria-hidden=true] i:last-child").evaluate(element => getComputedStyle(element).animationName), "none");
   await screenshot("approval-card-busy.png");
   await app.evaluate(() => globalThis.approvalCardUiGate.release?.());
   await card().waitFor({ state: "detached" });
@@ -392,7 +392,7 @@ try {
   const body = card().locator(".sac-body");
   await page.waitForFunction(() => document.querySelector(".sac-body")?.getAttribute("tabindex") === "0");
   assert.equal(await body.getAttribute("role"), "group"); assert.equal(await body.getAttribute("aria-label"), "Request details");
-  assert.equal(await card().locator(".sac-code").textContent(), longCommand);
+  assert.equal(await card().locator("[data-approval-value]").textContent(), longCommand);
   await body.focus(); await page.keyboard.press("End");
   await page.waitForFunction(() => document.querySelector(".sac-body").scrollTop > 0);
   metrics.longBody = await body.evaluate(element => ({ scrollHeight: element.scrollHeight, clientHeight: element.clientHeight, scrollTop: element.scrollTop }));
@@ -420,7 +420,7 @@ try {
     probe.style.cssText = "-webkit-line-clamp:2;-webkit-box-orient:vertical;display:-webkit-box;overflow:hidden";
     const sourceDisplay = getComputedStyle(probe).display; probe.remove();
     const inner = element.firstElementChild, css = getComputedStyle(inner);
-    return { tag: element.tagName, text: element.textContent, aria: element.closest(".sac-card").getAttribute("aria-label"), primary,
+    return { tag: element.tagName, text: element.textContent, aria: element.closest("[data-approval-card-root]").getAttribute("aria-label"), primary,
       heading: getComputedStyle(element).color, clamp: inner.getAttribute("data-clamp"), lineClamp: css.webkitLineClamp,
       display: css.display, sourceDisplay, boxOrient: css.webkitBoxOrient, overflow: css.overflow,
       em: [...element.querySelectorAll(".sac-em")].map(span => ({ text: span.textContent, color: getComputedStyle(span).color, bidi: getComputedStyle(span).unicodeBidi })) };
@@ -438,13 +438,13 @@ try {
   // detail box, then the transcript's in-card diff body (UO header path + Copy over the code box); no
   // local FileChanges title or Changes-pane file header. YO pure side: the gutter reads '+ 1'.
   metrics.fileDetail = await card().locator(".sac-details").evaluate(node => ({
-    path: node.querySelector(".sac-path")?.textContent, children: [...node.children].map(child => child.className),
+    path: node.querySelector("[data-approval-value]")?.textContent, children: [...node.children].map(child => child.className),
     inCard: node.querySelectorAll(".sft-outer[data-in-card]").length, legacy: node.querySelectorAll(".source-file-change-title, .source-file-changes, [data-placement=changes]").length,
     header: node.querySelector(".sft-outer[data-in-card] > .sft-header .sft-path")?.getAttribute("aria-label"),
     gutter: node.querySelector(".sft-diff[data-pure-side] .sft-number")?.textContent, signs: node.querySelectorAll(".sft-sign").length,
-    pathBox: (() => { const box = node.querySelector(".sac-path"); const css = box && getComputedStyle(box); return css && { radius: css.borderTopLeftRadius, font: css.fontFamily, color: css.color }; })() }));
+    pathBox: (() => { const box = node.querySelector("[data-approval-value]"); const css = box && getComputedStyle(box); return css && { radius: css.borderTopLeftRadius, font: css.fontFamily, color: css.color }; })() }));
   assert.equal(metrics.fileDetail.path, path.join(workspace, "created.ts"));
-  assert.deepEqual(metrics.fileDetail.children, ["sac-code sac-path", "sft-outer"]);
+  assert.deepEqual(metrics.fileDetail.children, ["bg-alpha-1 rounded-[5px] py-md px-lg text-code text-secondary whitespace-pre-wrap break-words select-text [unicode-bidi:plaintext]", "sft-outer"]);
   assert.equal(metrics.fileDetail.inCard, 1); assert.equal(metrics.fileDetail.legacy, 0);
   assert.equal(metrics.fileDetail.header, path.join(workspace, "created.ts"));
   assert.equal(metrics.fileDetail.gutter, "+ 1"); assert.equal(metrics.fileDetail.signs, 0);
@@ -454,7 +454,7 @@ try {
   metrics.fileAnnouncementWait = await page.evaluate(async () => {
     const start = performance.now();
     while (performance.now() - start < 2000) {
-      const text = document.querySelector(".sac-card [data-approval-announcement]")?.textContent;
+      const text = document.querySelector("[data-approval-card-root] [data-approval-announcement]")?.textContent;
       if (text) return { text, waited: Math.round(performance.now() - start) };
       await new Promise(resolve => setTimeout(resolve, 10));
     }
@@ -464,14 +464,14 @@ try {
   await screenshot("approval-card-file-heading.png");
   await finish("decline", { decision: "decline" });
   await send("fixture:file-tool-approval-multi", "file");
-  assert.equal(await card().locator(".sac-path").textContent(), [path.join(workspace, "created.ts"), path.join(workspace, "fixture.txt")].join("\n"));
+  assert.equal(await card().locator("[data-approval-value]").textContent(), [path.join(workspace, "created.ts"), path.join(workspace, "fixture.txt")].join("\n"));
   assert.equal(await card().locator(".sac-details .sft-outer[data-in-card]").count(), 2);
   assert.equal(await card().locator(".sac-heading").textContent(), "Allow DeepSeek to edit files?");
   assert.equal(await card().locator(".sac-heading .sac-em").count(), 0);
   assert.equal(await card().locator(".sac-heading [data-clamp]").count(), 0);
   await finish("decline", { decision: "decline" });
   checks.push("single real FileUpdateChange add names its basename with two text-primary spans and a 2-line clamp; two changes keep the generic title");
-  checks.push("F07 file request: the full-path sac-code box then one .sft-outer[data-in-card] diff per change (no FileChanges title / Changes-pane header), pure-side gutter '+ 1', two changes list both paths");
+  checks.push("F07 file request: the full-path N_ [data-approval-value] box then one .sft-outer[data-in-card] diff per change (no FileChanges title / Changes-pane header), pure-side gutter '+ 1', two changes list both paths");
   // F07 Task/Agent (approval-current.js:14570-14579): "run an agent" + description, no detail, so the
   // heading is a plain div (no toggle, no clamp) and there is no Working directory line.
   await send("fixture:agent-approval", "command");
@@ -480,7 +480,7 @@ try {
   assert.equal(await card().locator(".sac-details").count(), 0);
   assert.equal(await card().locator('[data-context="cwd"]').count(), 0);
   assert.equal(await card().locator(".sac-heading [data-clamp]").count(), 0);
-  await page.waitForFunction(() => document.querySelector(".sac-card [data-approval-announcement]")?.textContent === "Permission requested: run an agent, Audit the parser");
+  await page.waitForFunction(() => document.querySelector("[data-approval-card-root] [data-approval-announcement]")?.textContent === "Permission requested: run an agent, Audit the parser");
   await finish("decline", { decision: "decline" });
   checks.push("F07 agent approval: div heading 'Allow DeepSeek to run an agent Audit the parser?' with no detail, clamp or cwd; announced as 'Permission requested: run an agent, Audit the parser'");
   await send("fixture:permissions card", "permissions");
@@ -496,13 +496,14 @@ try {
 
   // Question card primary (approval-current.js:8249-8256 `shortcut: a ? "cmd+enter"`) draws the same keycap,
   // and yk's ep({ allowOnce: K }) (:8011-8023) makes ⌘⏎ advance from the card, not only from the Other input.
-  await page.getByRole("textbox", { name: "Message DeepSeek", exact: true }).fill("fixture:input card");
+  await page.getByRole("textbox", { name: /^(?:Prompt|Message DeepSeek)$/ }).fill("fixture:input card");
   await page.locator('[data-testid="code-prompt-send"]:not([inert] *)').click();
   const question = page.locator(".source-question-card");
   await question.waitFor(); await question.scrollIntoViewIfNeeded();
   const questionProbe = () => question.evaluate(element => {
     const shortcuts = [...element.querySelectorAll('[data-cds="Shortcut"]')], shortcut = shortcuts[0];
-    const submit = element.querySelector(".justify-end > button:last-child"), kbd = shortcut?.querySelector("kbd");
+    // R4T-05 (c2f6611a3 En): the actions row is `epitaxy-approval-actions` with Skip and the primary inside an allow arm.
+    const submit = [...element.querySelectorAll('.epitaxy-approval-actions [data-cds="Button"]')].at(-1), kbd = shortcut?.querySelector("kbd");
     return { count: shortcuts.length, inSubmit: !!shortcut && submit.contains(shortcut), ariaHidden: shortcut?.getAttribute("aria-hidden"),
       label: submit.querySelector("span.inline-flex").firstChild?.textContent,
       marginStart: shortcut && getComputedStyle(shortcut).marginInlineStart, disabled: submit.disabled,
@@ -518,15 +519,20 @@ try {
   // Product correction (0.2.115), not a loosening: _se (approval-current.js:7790-7800) preselects options[0],
   // so the single-page Submit starts enabled (was asserted disabled before preselection existed).
   assert.equal(metrics.questionKeycap.ink, metrics.questionKeycap.buttonColor); assert.equal(metrics.questionKeycap.disabled, false);
-  assert.equal(await question.locator(".gap-0\\.75 > button").filter({ hasText: "First test choice" }).getAttribute("aria-pressed"), "true");
-  assert.equal(await question.locator('.gap-0\\.75 > button[aria-pressed="true"]').count(), 1);
+  // R4T-05: En rows are answer-option.mjs Tn `button.epitaxy-answer-option` with aria-pressed (single and multi).
+  assert.equal(await question.locator("button.epitaxy-answer-option").filter({ hasText: "First test choice" }).getAttribute("aria-pressed"), "true");
+  assert.equal(await question.locator('button.epitaxy-answer-option[aria-pressed="true"]').count(), 1);
+  // E95 / R4T-05: En draws a pager only for count > 1 and has no collapse caret or dismiss X (dt's are gone in Code).
+  assert.equal(await question.getByRole("button", { name: /^Show (?:next|previous) question$/ }).count(), 0);
+  assert.equal(await question.getByRole("button", { name: /^(?:View question options|Dismiss question)$/ }).count(), 0);
   // Footer :8232-8258: `flex items-center justify-end gap-sm` = br{secondary 'Skip'} then the primary.
   const skipProbe = () => question.evaluate(element => {
-    const footer = element.querySelector(".justify-end"), skip = footer.querySelector(".justify-end > button:nth-last-child(2)"), submit = footer.querySelector(".justify-end > button:last-child");
+    const footer = element.querySelector(".epitaxy-approval-actions"), buttons = [...footer.querySelectorAll('[data-cds="Button"]')];
+    const skip = buttons.find(button => button.textContent === "Skip"), submit = buttons.at(-1);
     const probe = footer.ownerDocument.createElement("div"); probe.style.columnGap = "var(--cds-gap-sm)"; footer.append(probe);
     const gapSm = parseFloat(getComputedStyle(probe).columnGap); probe.remove();
     const a = skip.getBoundingClientRect(), b = submit.getBoundingClientRect(), css = getComputedStyle(skip), paint = getComputedStyle(skip, "::before");
-    return { order: [...footer.children].map(child => child === submit ? "submit" : child === skip ? "skip" : child.textContent),
+    return { order: buttons.map(child => child === submit ? "submit" : child === skip ? "skip" : child.textContent),
       text: skip.textContent, variant: skip.dataset.variant, disabled: skip.disabled, keycaps: skip.querySelectorAll('[data-cds="Shortcut"]').length,
       justify: getComputedStyle(footer).justifyContent, footerGap: parseFloat(getComputedStyle(footer).columnGap), gapSm,
       spacing: b.left - a.right, skipHeight: a.height, submitHeight: b.height, sameRow: Math.abs(a.top - b.top),
@@ -534,7 +540,7 @@ try {
       skipColor: css.color, paint: paint.backgroundColor, ring: paint.boxShadow, submitPaint: getComputedStyle(submit, "::before").backgroundColor };
   });
   metrics.questionSkip = await skipProbe();
-  // W12 (c9ed5627b dt vr): Skip then je's primary in `flex items-center justify-end gap-[8px]`; no Back on page 1.
+  // R4T-05 (c2f6611a3 En): Skip then the primary in `epitaxy-approval-actions flex items-center justify-end gap-sm px-lg`.
   assert.deepEqual(metrics.questionSkip.order, ["skip", "submit"]);
   assert.equal(metrics.questionSkip.text, "Skip");
   assert.equal(metrics.questionSkip.disabled, false); assert.equal(metrics.questionSkip.keycaps, 0);
@@ -546,26 +552,31 @@ try {
   assert.notEqual(metrics.questionSkip.paint, metrics.questionSkip.submitPaint); assert.match(metrics.questionSkip.ring, /inset/);
   await screenshot("approval-card-question-keycap.png");
   const beforeQuestion = (await records()).length;
-  await question.locator(".gap-0\\.75 > button").filter({ hasText: "First test choice" }).click();
-  await question.locator(".gap-0\\.75 > button").filter({ hasText: "First test choice" }).focus();
+  await question.locator("button.epitaxy-answer-option").filter({ hasText: "First test choice" }).click();
+  await question.locator("button.epitaxy-answer-option").filter({ hasText: "First test choice" }).focus();
+  // R4T-05: En has no digit or arrow keys; Tab walks the plain row buttons in DOM order without selecting.
+  await page.keyboard.press("Tab");
+  assert.equal(await question.locator("button.epitaxy-answer-option").filter({ hasText: "Second test choice" }).evaluate(node => node === document.activeElement), true);
+  assert.equal(await question.locator('button.epitaxy-answer-option[aria-pressed="true"]').filter({ hasText: "First test choice" }).count(), 1);
   await page.keyboard.press("Meta+Enter");
   await question.waitFor({ state: "detached" });
   await page.locator('[data-testid="code-prompt-stop"]:not([inert] *)').waitFor({ state: "detached" });
   assert.equal((await records()).length, beforeQuestion + 1);
   assert.deepEqual((await records()).at(-1).result, { answers: { approach: { answers: ["First"] } } });
-  checks.push("question card: first option preselected (_se) so Submit starts enabled; one aria-hidden ⌘⏎ keycap inside the Submit primary (round(font+6) cap, 4px radius, currentColor ink, ms 4px); secondary Skip left of Submit at gap-sm, same height, no keycap; card-scoped Cmd+Enter from a focused option submits the real answer");
+  checks.push("question card: first option preselected (_se) so Submit starts enabled; one aria-hidden ⌘⏎ keycap inside the Submit primary (round(font+6) cap, 4px radius, currentColor ink, ms 4px); secondary Skip left of Submit at gap-sm, same height, no keycap; Tab moves focus between En rows without changing the answer; card-scoped Cmd+Enter from a focused option submits the real answer");
 
   // Skip q (approval-current.js:7997-8008) on the single (last) page: uk counts skipped, so it submits at once.
   // The real respond is held first: while busy Skip is disabled (br disabled: l) and nothing is dispatched.
-  await page.getByRole("textbox", { name: "Message DeepSeek", exact: true }).fill("fixture:input skip");
+  await page.getByRole("textbox", { name: /^(?:Prompt|Message DeepSeek)$/ }).fill("fixture:input skip");
   await page.locator('[data-testid="code-prompt-send"]:not([inert] *)').click();
   await question.waitFor(); await question.scrollIntoViewIfNeeded();
   const beforeSkip = (await records()).length;
   await app.evaluate(() => { globalThis.approvalCardUiGate.holdNext = true; });
-  await question.locator(".justify-end > button:nth-last-child(2)").click();
+  await question.locator('.epitaxy-approval-actions [data-cds="Button"]').filter({ hasText: "Skip" }).click();
   await page.waitForFunction(() => document.querySelector(".source-question-card")?.getAttribute("aria-busy") === "true");
-  metrics.questionSkipBusy = await question.evaluate(element => ({ skipDisabled: element.querySelector(".justify-end > button:nth-last-child(2)").disabled,
-    submitBusy: element.querySelector(".justify-end > button:last-child").getAttribute("aria-busy"), spinner: element.querySelectorAll("[data-cds=Spinner]").length }));
+  metrics.questionSkipBusy = await question.evaluate(element => { const buttons = [...element.querySelectorAll('.epitaxy-approval-actions [data-cds="Button"]')];
+    return { skipDisabled: buttons.find(button => button.textContent === "Skip").disabled,
+      submitBusy: buttons.at(-1).getAttribute("aria-busy"), spinner: element.querySelectorAll("[data-cds=Spinner]").length }; });
   assert.deepEqual(metrics.questionSkipBusy, { skipDisabled: true, submitBusy: "true", spinner: 1 });
   assert.equal((await records()).length, beforeSkip, "Skip's response is still gated before dispatch");
   await screenshot("approval-card-question-skip-busy.png");
@@ -578,18 +589,20 @@ try {
 
   // F07 multiSelect (approval-current.js:7789-7962, :8085-8088): checkbox marks (li) for every option
   // and Other, nothing preselected (_se), clicks toggle (V), Submit sends every chosen label in order.
-  await page.getByRole("textbox", { name: "Message DeepSeek", exact: true }).fill("fixture:input-multi kinds");
+  await page.getByRole("textbox", { name: /^(?:Prompt|Message DeepSeek)$/ }).fill("fixture:input-multi kinds");
   await page.locator('[data-testid="code-prompt-send"]:not([inert] *)').click();
   await question.waitFor(); await question.scrollIntoViewIfNeeded();
   const multiProbe = () => question.evaluate(element => ({
-    marks: [...element.querySelectorAll(".gap-0\\.75 > button > [data-size=sm], .gap-0\\.75 > div > button > [data-size=sm]")].length,
-    radios: element.querySelectorAll(".gap-0\\.75 > button > .pointer-events-none").length,
-    pressed: [...element.querySelectorAll(".gap-0\\.75 > button[aria-pressed]")].map(node => node.getAttribute("aria-pressed")),
-    checked: [...element.querySelectorAll("[aria-pressed=\"true\"] > [data-size=sm]")].length,
-    submitDisabled: element.querySelector(".justify-end > button:last-child").disabled,
-    box: (() => { const mark = element.querySelector("[data-size=sm] > *"), css = getComputedStyle(mark), rect = mark.getBoundingClientRect();
+    // R4T-05 (c2f6611a3 En): option rows draw the CDS checkbox indicator (data-checked / data-unchecked) and the Other
+    // row's aria-hidden label draws the same mark; a single-select row would draw cn `.epitaxy-radio-mark` instead.
+    marks: element.querySelectorAll(".epitaxy-answer-option :is([data-checked], [data-unchecked]):not(.epitaxy-radio-mark)").length,
+    radios: element.querySelectorAll(".epitaxy-radio-mark").length,
+    pressed: [...element.querySelectorAll("button.epitaxy-answer-option[aria-pressed]")].map(node => node.getAttribute("aria-pressed")),
+    checked: element.querySelectorAll("button.epitaxy-answer-option[aria-pressed=\"true\"] > [data-checked]").length,
+    submitDisabled: [...element.querySelectorAll(".epitaxy-approval-actions [data-cds=\"Button\"]")].at(-1).disabled,
+    box: (() => { const mark = element.querySelector("button.epitaxy-answer-option > :is([data-checked], [data-unchecked])"), css = getComputedStyle(mark), rect = mark.getBoundingClientRect();
       return { width: rect.width, height: rect.height, radius: css.borderTopLeftRadius }; })(),
-    filled: (() => { const mark = element.querySelector("[aria-pressed=\"true\"] > [data-size=sm]"); if (!mark) return null;
+    filled: (() => { const mark = element.querySelector("button.epitaxy-answer-option[aria-pressed=\"true\"] > [data-checked]"); if (!mark) return null;
       const probe = document.createElement("span"); probe.style.color = "var(--cds-fill-accent)"; element.append(probe);
       const accent = getComputedStyle(probe).color; probe.remove();
       return { background: getComputedStyle(mark).backgroundColor, accent, glyph: mark.querySelector("[data-cds=Icon]") !== null }; })(),
@@ -602,7 +615,7 @@ try {
   near(metrics.multiSelect.initial.box.width, metrics.multiSelect.initial.box.height, .1);
   assert.notEqual(metrics.multiSelect.initial.box.radius, "9999px");
   const beforeMulti = (await records()).length;
-  for (const label of ["Live", "Unit", "UI", "UI"]) await question.locator(".gap-0\\.75 > button").filter({ hasText: `${label === "UI" ? "UI suites" : label === "Unit" ? "Unit tests" : "Live smoke"}` }).click();
+  for (const label of ["Live", "Unit", "UI", "UI"]) await question.locator("button.epitaxy-answer-option").filter({ hasText: `${label === "UI" ? "UI suites" : label === "Unit" ? "Unit tests" : "Live smoke"}` }).click();
   metrics.multiSelect.toggled = await multiProbe();
   assert.deepEqual(metrics.multiSelect.toggled.pressed, ["true", "false", "true"], "two aria-pressed options after toggling UI back off");
   assert.equal(metrics.multiSelect.toggled.checked, 2);
@@ -610,7 +623,7 @@ try {
   assert.equal(metrics.multiSelect.toggled.filled.glyph, true);
   assert.equal(metrics.multiSelect.toggled.submitDisabled, false);
   await screenshot("approval-card-question-multiselect.png");
-  await question.locator(".justify-end > button:last-child").click();
+  await question.locator('.epitaxy-approval-actions [data-cds="Button"]').last().click();
   await question.waitFor({ state: "detached" });
   await page.locator('[data-testid="code-prompt-stop"]:not([inert] *)').waitFor({ state: "detached" });
   assert.equal((await records()).length, beforeMulti + 1);
@@ -645,8 +658,8 @@ try {
   checks.push("observed scroll-out/frame/return re-arms only grant hotkeys: early Cmd+Enter is blocked then succeeds after400ms; Escape and an already-armed visible allow click remain immediate");
 
   // ---- R07 (fidelity round 3): plan approval card, dismiss-on-send, empty Other, one card at a time ----
-  const planCard = () => page.locator('.sac-card[data-approval-kind="plan"]');
-  const composer = () => page.getByRole("textbox", { name: "Message DeepSeek", exact: true });
+  const planCard = () => page.locator('[data-approval-card-root][data-approval-kind="plan"]');
+  const composer = () => page.getByRole("textbox", { name: /^(?:Prompt|Message DeepSeek)$/ });
   const settled = () => page.locator('[data-testid="code-prompt-stop"]:not([inert] *)').waitFor({ state: "detached" });
   async function requestLog() {
     try { return (await fs.readFile(path.join(profile, "fixture-requests.jsonl"), "utf8")).trim().split("\n").filter(Boolean).map(JSON.parse); }
@@ -658,7 +671,7 @@ try {
   await send("fixture:plan-review", "plan");
   metrics.planCard = await planCard().evaluate(element => {
     const buttons = [...element.querySelectorAll(".sac-button:not(.spc-more)")], more = element.querySelector(".spc-split .spc-more"), link = element.querySelector(".spc-open-plan"), title = element.querySelector(".spc-title");
-    return { heading: title?.textContent, labelledBy: element.getAttribute("aria-labelledby") === title?.id, questionCard: element.querySelectorAll(".gap-0\\.75 > button").length,
+    return { heading: title?.textContent, labelledBy: element.getAttribute("aria-labelledby") === title?.id, questionCard: element.querySelectorAll("button.epitaxy-answer-option").length,
       link: link?.textContent, linkInTrailing: !!link?.closest(".spc-trailing"), linkSize: link && getComputedStyle(link).fontSize, linkDecoration: link && getComputedStyle(link).textDecorationLine,
       titleWeight: getComputedStyle(title).fontWeight, titleSize: getComputedStyle(title).fontSize,
       groups: [...element.querySelectorAll(".spc-actions > div")].map(group => [...group.querySelectorAll(".sac-button:not(.spc-more)")].map(button => button.dataset.approvalAction)),
@@ -727,8 +740,8 @@ try {
   const feedback = planCard().getByRole("textbox", { name: "Plan feedback", exact: true });
   await feedback.waitFor();
   metrics.planFeedback = await feedback.evaluate(node => ({ focused: document.activeElement === node, rows: node.rows, placeholder: node.placeholder,
-    buttons: [...node.closest(".sac-card").querySelectorAll(".spc-actions .sac-button")].map(button => [button.dataset.variant, button.textContent]),
-    caps: node.closest(".sac-card").querySelectorAll('.spc-actions [data-cds="Shortcut"]').length }));
+    buttons: [...node.closest("[data-approval-card-root]").querySelectorAll(".spc-actions .sac-button")].map(button => [button.dataset.variant, button.textContent]),
+    caps: node.closest("[data-approval-card-root]").querySelectorAll('.spc-actions [data-cds="Shortcut"]').length }));
   assert.deepEqual(metrics.planFeedback, { focused: true, rows: 3, placeholder: "What should change? (optional)",
     buttons: [["secondary", "Back"], ["primary", "Revise"]], caps: 0 });
   await page.keyboard.type("throwaway"); await page.keyboard.press("Escape");
@@ -774,14 +787,17 @@ try {
   await composer().fill("fixture:input other");
   await page.locator('[data-testid="code-prompt-send"]:not([inert] *)').click();
   await question.waitFor(); await question.scrollIntoViewIfNeeded();
-  // The source's transparent Other button lies behind the textarea, so its center is no pointer target; activate it
+  // R4T-05 (c2f6611a3 En rn): the Other row's hit is a transparent `aria-label="Other"` button over the row; activate it
   // from the keyboard as approval-transport's chooseOther does.
-  await question.getByRole("button", { name: /^Other\b/ }).focus();
-  await question.getByRole("button", { name: /^Other\b/ }).press("Space");
-  // W12: a single-select Other button has no aria-pressed (dt `J ? Y : void 0`); choosing it opens its field (tabIndex 0).
-  assert.equal(await question.locator('[data-cds="TextArea"][aria-label="Other option"]').getAttribute("tabindex"), "0");
-  assert.equal(await question.locator(".justify-end > button:last-child").isDisabled(), false);
-  await question.locator(".justify-end > button:last-child").click();
+  await question.getByRole("button", { name: "Other", exact: true }).focus();
+  await question.getByRole("button", { name: "Other", exact: true }).press("Space");
+  // En: the Other hit always carries aria-pressed (Qt); kt `n(() => P(-1)), Ot.current?.focus()` mounts and focuses the field.
+  assert.equal(await question.getByRole("button", { name: "Other", exact: true }).getAttribute("aria-pressed"), "true");
+  const otherField = question.locator('[data-cds="TextArea"][aria-label="Other option"]');
+  assert.equal(await otherField.isVisible(), true);
+  assert.equal(await otherField.evaluate(node => node === document.activeElement), true);
+  assert.equal(await question.locator('.epitaxy-approval-actions [data-cds="Button"]').last().isDisabled(), false);
+  await question.locator('.epitaxy-approval-actions [data-cds="Button"]').last().click();
   await question.waitFor({ state: "detached" }); await settled();
   assert.deepEqual((await records()).at(-1).result, { answers: { approach: { answers: ["Something else"] } } });
   checks.push("R07 empty Other: selecting Other without text enables Submit and sends ['Something else']");
@@ -792,14 +808,14 @@ try {
   await card().waitFor();
   await page.waitForTimeout(250); // the fixture sends B 30 ms after A
   await frames();
-  assert.equal(await page.locator(".sac-card, .source-question-card").count(), 1, "only the head request renders");
+  assert.equal(await page.locator("[data-approval-card-root], .source-question-card").count(), 1, "only the head request renders");
   const headInstance = await card().getAttribute("data-approval-instance");
   await page.evaluate(first => {
     const observer = new MutationObserver(() => {
-      const button = [...document.querySelectorAll(".sac-card")].find(node => node.dataset.approvalInstance !== first)?.querySelector('[data-approval-action="accept"]');
+      const button = [...document.querySelectorAll("[data-approval-card-root]")].find(node => node.dataset.approvalInstance !== first)?.querySelector('[data-approval-action="accept"]');
       if (!button) return;
       observer.disconnect();
-      window.pairEarlyClick = { at: performance.now(), cards: document.querySelectorAll(".sac-card, .source-question-card").length };
+      window.pairEarlyClick = { at: performance.now(), cards: document.querySelectorAll("[data-approval-card-root], .source-question-card").length };
       button.click();
     });
     observer.observe(document.body, { childList: true, subtree: true });
@@ -824,7 +840,7 @@ try {
   await send("fixture:elicitation-tool", "elicitation");
   assert.equal(await card().getAttribute("data-approval-method"), "mcpServer/elicitation/request");
   assert.equal(await card().getAttribute("aria-label"), "Permission request: Allow DeepSeek to use write_note (probe)?");
-  // toolcards-01: the arguments sit in the read gate (generated ApprovalReadRows, Mj's q block), not the .sac-code pre.
+  // toolcards-01: the arguments sit in the read gate (generated ApprovalReadRows, Mj's q block), not the N_ value block.
   assert.equal(await card().locator('[data-testid="approval-read-rows"] [data-approval-value]').innerText(), "text: fixture note");
   assert.deepEqual(await card().locator("[data-approval-action]").evaluateAll(nodes => nodes.map(node => node.dataset.approvalAction)),
     ["decline", "acceptAlways", "acceptForSession", "accept"]);
@@ -842,7 +858,7 @@ try {
   const beforeForm = (await records()).length;
   await page.waitForTimeout(450);
   await card().locator('[data-approval-action="accept"]').click();
-  await page.waitForFunction(() => document.querySelector(".sac-card .sac-error")?.textContent === "Title is required.");
+  await page.waitForFunction(() => document.querySelector("[data-approval-card-root] .sac-error")?.textContent === "Title is required.");
   assert.equal(await card().locator('[data-elicitation-field="title"]').evaluate(node => node === document.activeElement), true);
   assert.equal((await records()).length, beforeForm, "an invalid form sends nothing");
   await card().locator('[data-elicitation-field="title"]').fill("probe run");
@@ -857,7 +873,7 @@ try {
   checks.push("MCP form elicitation: required/min checks stay local and focus the field; Submit sends the typed content");
 
   await send("fixture:elicitation-url", "elicitation");
-  assert.equal(await card().locator(".sac-code").innerText(), "https://probe.example.invalid/authorize");
+  assert.equal(await card().locator("[data-approval-value]").innerText(), "https://probe.example.invalid/authorize");
   assert.equal(await card().getByRole("button", { name: "Open link", exact: true }).count(), 1);
   await finish("accept", { action: "accept" });
   await send("fixture:elicitation-unsupported", "elicitation");

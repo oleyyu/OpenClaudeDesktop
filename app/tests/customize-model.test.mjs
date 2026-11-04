@@ -2,8 +2,8 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { createRequire } from "node:module";
 import {
-  applySkillEnabled, customizeCore, filterMcp, filterPlugins, filterSkills, mcpBatchWriteParams, mcpRows, mcpServerConfigValue, mcpStatusKind,
-  patchMcpRow, pluginMenuGroups, pluginRows, shortDate, skillAuthor, skillGroupOptions, skillMenuItems, skillRows, splitArguments, joinArguments,
+  applySkillEnabled, customizeCore, filterMcp, filterPlugins, mcpRows, mcpServerConfigValue, mcpStatusKind,
+  patchMcpRow, pluginMenuGroups, pluginRows, shortDate, skillAuthor, skillMenuItems, skillRows, splitArguments, joinArguments,
   validateServerName, pluginDisplayNames, filterMcpByStatus, connectorDetailState, connectorDetailMessage, connectorsListView, MCP_STATUS_FILTERS, CONNECTOR_ACTION_LABELS,
   skillInvocable, skillTrigger, MCP_STATUS_LABELS, CONNECTOR_TOASTS,
 } from "../src/customize-model.mjs";
@@ -61,15 +61,9 @@ test("author labels follow scope and plugin ownership", () => {
   assert.equal(skillAuthor(byName.plug, []), "acme-plugin");
 });
 
-test("owner segments appear only with two or more non-empty groups; search and scope filter rows", () => {
+// W14-code r4 gen-final-4: the host's skillGroupOptions / filterSkills (test-only, no caller) are deleted.
+test("skill enable toggles are pure updates", () => {
   const rows = skillRows(listing).skills;
-  const groups = skillGroupOptions(rows);
-  assert.equal(groups.show, true);
-  assert.deepEqual(groups.options.map((option) => option.value), ["all", "personal", "repository", "plugins", "managed"]);
-  assert.equal(skillGroupOptions(rows.filter((row) => row.group === "personal")).show, false);
-  assert.deepEqual(filterSkills(rows, { query: "alpha" }).map((row) => row.name), ["Alpha Skill"]);
-  assert.deepEqual(filterSkills(rows, { group: "personal" }).map((row) => row.name), ["off", "zeta"]);
-  assert.equal(filterSkills(rows, { query: "nomatch" }).length, 0);
   const toggled = applySkillEnabled(rows, "/home/u/.codex/skills/off/SKILL.md", true);
   assert.equal(toggled.find((row) => row.name === "off").enabled, true);
   assert.equal(rows.find((row) => row.name === "off").enabled, false, "pure update");
@@ -139,10 +133,7 @@ test("connector payload builders: name validation, argument splitting, stdio/url
   assert.deepEqual(mcpServerConfigValue({ url: "https://example.invalid/mcp" }), { url: "https://example.invalid/mcp" });
   assert.throws(() => mcpServerConfigValue({ url: "ftp://x" }), /http/);
   assert.throws(() => mcpServerConfigValue({}), /command or a URL/);
-  assert.deepEqual(mcpBatchWriteParams("fx-new", { command: "npx", args: ["-y", "demo"] }),
-    { edits: [{ keyPath: "mcp_servers.fx-new", value: { command: "npx", args: ["-y", "demo"] }, mergeStrategy: "upsert" }], reloadUserConfig: true });
-  assert.deepEqual(mcpBatchWriteParams("gone", null).edits[0], { keyPath: "mcp_servers.gone", value: null, mergeStrategy: "replace" });
-  assert.throws(() => mcpBatchWriteParams("bad name!", {}), /letters/);
+  // W14-code r4 gen-final-4: mcpBatchWriteParams (test-only, no caller) is deleted.
   // Main-process twin used by the IPC operation.
   assert.deepEqual(mcpServerValue({ command: "npx", args: ["-y", "demo"] }), { command: "npx", args: ["-y", "demo"] });
   assert.throws(() => mcpServerValue({ command: "npx", args: [""] }), /arguments/i);

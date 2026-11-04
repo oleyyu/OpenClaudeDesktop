@@ -1048,4 +1048,5 @@ export {
   Ok as SidebarRenameInput,
   Xk as SidebarWideDecoration,
   rA as SidebarRowMoreControl,
+  yk as SidebarRowShortcut,
 };

@@ -56,7 +56,7 @@ const waitUntil = async (condition, message) => {
 };
 const trigger = () => page.getByRole("button", { name: "Permission mode", exact: true });
 const menu = () => page.getByRole("menu", { name: "Mode", exact: true });
-const input = () => page.getByRole("textbox", { name: "Message DeepSeek", exact: true });
+const input = () => page.getByRole("textbox", { name: /^(?:Prompt|Message DeepSeek)$/ });
 async function launch() {
   app = await electron.launch({ executablePath, args: [root], env });
   page = await app.firstWindow();
@@ -252,7 +252,7 @@ try {
       return Object.values(db.threads).some((thread) => thread.turns.some((turn) =>
         turn.status === "completed" && turn.items.some((item) => item.content?.[0]?.text === text)));
     }, `Fixture ${value} turn completed`);
-    await page.waitForFunction(() => !document.querySelector('.sc-spinner') && !document.querySelector('[data-testid="code-prompt-stop"]:not([inert] *)'));
+    await page.waitForFunction(() => !document.querySelector('[data-testid="code-prompt-send"][aria-busy="true"]') && !document.querySelector('[data-testid="code-prompt-stop"]:not([inert] *)'));
     const request = (await requests()).find((request) => request.method === "turn/start" && request.params.input[0].text === text);
     assert.ok(request);
     assert.equal(request.params.approvalPolicy, policy);
@@ -313,7 +313,7 @@ try {
   await app.close(); app = null;
   await fs.writeFile(path.join(profile, "fixture-core.json"), JSON.stringify({ engine: "deepseek-harness" }));
   await launch();
-  const planCard = () => page.locator('.sac-card[data-approval-kind="plan"]');
+  const planCard = () => page.locator('[data-approval-card-root][data-approval-kind="plan"]');
   const settled = () => page.waitForFunction(() => !document.querySelector('[data-testid="code-prompt-stop"]:not([inert] *)'));
   async function planTurn(text) {
     await select("acceptEdits", "Accept edits");

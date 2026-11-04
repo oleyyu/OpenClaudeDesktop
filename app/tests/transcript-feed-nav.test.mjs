@@ -7,7 +7,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { createServer } from "vite";
 import react from "@vitejs/plugin-react";
 import {
-  ASSISTANT_NAME, FEED_INSTRUCTIONS, FEED_LABEL, STREAMING_LABEL, articleLabel, currentArticleIndex, feedArticles,
+  FEED_INSTRUCTIONS, FEED_LABEL, STREAMING_LABEL, articleLabel, currentArticleIndex, feedArticles,
   feedKeyAction, isStreamingArticle, messageLabel, messageSummary, plainEscape, promptHeading, responseHeading,
 } from "../src/transcript-feed-nav.mjs";
 
@@ -108,7 +108,7 @@ test("summaries (af): first sentence of the first plain line, Markdown stripped,
 test("sr-only headings: 'You said', and '<assistant> responded' except while streaming", () => {
   assert.equal(promptHeading("Please run the tests. Thanks"), "You said: Please run the tests.");
   assert.equal(promptHeading("   "), null);
-  assert.equal(ASSISTANT_NAME, "DeepSeek");
+  // W14-code r4 gen-final-4: the test-only ASSISTANT_NAME constant is deleted (E83: the name is the persona's).
   assert.equal(responseHeading("All tests pass. Details below."), "DeepSeek responded: All tests pass.");
   assert.equal(responseHeading("All tests pass.", { streaming: true }), null);
   assert.equal(responseHeading(`${"x".repeat(700)} tail.`).length, "DeepSeek responded: ".length + 160, "first 600 units, capped at 160");
@@ -139,7 +139,10 @@ test("wiring: the transcript is a feed (no role=log), main.jsx passes responding
   assert.ok(bar > 0 && keyed > bar, "SourceFindBar is mounted before (outside) the keyed SourceTranscript");
   assert.ok(main.slice(bar, keyed).includes("/>"), "the find bar element closes before the transcript opens");
   assert.equal(main.split("<SourceFindBar ").length, 2, "one find bar");
-  assert.match(main.slice(bar, keyed), /sessionKey=\{current \?\? "draft"\}\s+getScope=\{\(\) => transcriptRef\.current\?\.getContent\?\.\(\)\}/);
+  // W14-code r4 ct-feed R4T-09: the Code feed list (c4a9ee384 ba, windowed) is told to hold every row before the find bar
+  // reads the transcript's DOM (ba keeps them all mounted for a print the same way, `ji`). W14-code r5 R5T-REG-03: only
+  // while the find bar is open; closed, the hold ends (releaseRows) and the list windows again (c96d752d0 Aat with c9).
+  assert.match(main.slice(bar, keyed), /sessionKey=\{current \?\? "draft"\}\s+getScope=\{\(\) => \{ if \(findBarOpen\(\)\) transcriptRef\.current\?\.holdAllRows\?\.\(\); else transcriptRef\.current\?\.releaseRows\?\.\(\);[^}]*\*\/ return transcriptRef\.current\?\.getContent\?\.\(\); \}\}/);
   assert.match(main.slice(keyed, keyed + 200), /findBarRef=\{findBarRef\}/);
   assert.ok(main.indexOf("findBarRef = useRef(null)") > 0 && main.indexOf("findBarRef = useRef(null)") < bar, "declared before use");
   const findBar = readFileSync(new URL("../src/source-find-bar.jsx", import.meta.url), "utf8");

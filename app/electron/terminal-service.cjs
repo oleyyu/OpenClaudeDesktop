@@ -321,7 +321,11 @@ function createTerminalService(options = {}) {
   async function create({ owner, sessionId = null, cwd, cols, rows, title = null, openedBy = "user", runCommand = null }) {
     if (disposed) throw new Error("The app is quitting.");
     const mine = ownerRecords(owner);
-    if (mine.length >= model.MAX_TERMINALS_PER_OWNER) throw new Error("Too many terminals are open in this session.");
+    // W14-code R6DC-05 (E95): official local terminals have no per-session cap (asar index.chunk-hSh48Lyb.js only budgets
+    // remote hosts: `liveChannels()+i()+1<=9` → "Too many terminals are open on ${hostLabel} for one connection"), so a
+    // user tab always opens. Only the agent's tabs keep the cap (agent-tools/terminal.mjs roomForTab checks first; this
+    // is its backstop against a race between that check and this create).
+    if (openedBy === "agent" && mine.length >= model.MAX_TERMINALS_PER_OWNER) throw new Error("Too many terminals are open in this session.");
     let id;
     do id = `term-${crypto.randomBytes(9).toString("hex").slice(0, 12)}`; while (records.has(id));
     const record = {
@@ -781,9 +785,9 @@ function createTerminalService(options = {}) {
         const real = (dir) => { try { return fs.realpathSync(dir); } catch { return dir; } };
         if (real(from.cwd) !== real(target.cwd)) return [];
         const moving = ownerRecords(from.owner);
-        const room = Math.max(0, model.MAX_TERMINALS_PER_OWNER - ownerRecords(target.owner).length);
+        // W14-code R6DC-05: no per-session cap for local terminals (see create), so every one of the page's tabs moves.
         const moved = [];
-        for (const record of moving.slice(0, room)) {
+        for (const record of moving) {
           toEveryone({ kind: "removed", id: record.id, owner: record.owner, reason: "moved" });
           record.owner = target.owner;
           record.sessionId = target.sessionId;

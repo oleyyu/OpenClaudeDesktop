@@ -56,7 +56,7 @@ try {
   await page.waitForFunction(() => innerWidth === 1324);
   await page.locator(`[data-source-session-id="${RC}"] .source-session-open`).click();
   await page.getByText("ORIGINAL_RESPONSE", { exact: true }).waitFor();
-  const editor = page.getByRole("textbox", { name: "Message DeepSeek" });
+  const editor = page.getByRole("textbox", { name: /^(?:Prompt|Message DeepSeek)$/ });
 
   // --- Settings › Code › Dynamic workflows
   await editor.focus(); await page.keyboard.press("Meta+,");
@@ -166,13 +166,13 @@ try {
   await fillComposer(page, editor, `fixture:workflow-tool ${JSON.stringify({ script, args: { n: 1 } })}`);
   await page.locator('[data-testid="code-prompt-send"]:not([inert] *)').click();
   await poll(async () => (await turnStarts())[workflowAt], "workflow-tool turn");
-  const workflowCard = page.locator(".sac-card").filter({ has: page.locator('[data-approval-action="accept"]') }).last();
+  const workflowCard = page.locator("[data-approval-card-root]").filter({ has: page.locator('[data-approval-action="accept"]') }).last();
   await workflowCard.waitFor();
   metrics.workflowCardText = await workflowCard.textContent();
   assert.match(metrics.workflowCardText, /run a dynamic workflow ui-run/);
   assert.match(metrics.workflowCardText, /UI workflow[\s\S]*1\. Go/);
   assert.deepEqual(await workflowCard.locator("[data-approval-action]").evaluateAll((nodes) => nodes.map((node) => node.textContent.replace(/⌘.*$/, "").trim())), ["No", "Yes, run it"]);
-  // Allow buttons arm 400 ms after the card appears (or the window regains focus; source-approval-card.jsx useAllowArming).
+  // Allow buttons arm 400 ms after the card appears (or the window regains focus; source-approval-card.jsx ApprovalAllowArm, shared-10 OS).
   await poll(async () => { if (!(await workflowCard.count())) return true; await new Promise((resolve) => setTimeout(resolve, 500)); await workflowCard.locator('[data-approval-action="accept"]').click({ timeout: 2000 }).catch(() => {}); return false; }, "workflow card answered");
   await idle();
   const listed = await poll(async () => (await requests()).find((entry) => entry.method === "mcp:tools/list"), "tools/list");

@@ -10,14 +10,11 @@
 //   to show it), sidebarFocused, dialogOpen, typing (focus in a text field or terminal), focusedPane: index holding the
 //   DOM focus or null, openedBy: { paneKey: caller session id }, hasRoom (a new pane fits), popoutSessionIds,
 //   otherPopoutCount }
-export const LAYOUT_COMMANDS = Object.freeze(["get-layout", "open-in-split", "open-in-window", "focus", "close-split", "set-sidebar-collapsed"]);
 export const OUTCOMES = Object.freeze({ DONE: "done", NOOP: "noop", REFUSED: "refused", FAILED: "failed" });
 const done = (extra = {}) => ({ outcome: OUTCOMES.DONE, ...extra });
 const noop = (reason) => ({ outcome: OUTCOMES.NOOP, reason });
 const refused = (reason) => ({ outcome: OUTCOMES.REFUSED, reason });
 const failed = (reason) => ({ outcome: OUTCOMES.FAILED, reason });
-// How long the window has to answer before the command counts as expired (c2189a16b t.deadline).
-export const LAYOUT_COMMAND_TIMEOUT_MS = 5000;
 
 const validId = (value) => typeof value === "string" && value.length > 0 && value.length <= 200 && !/[\u0000-\u001f]/.test(value) ? value : null;
 const panesOf = (snapshot) => (Array.isArray(snapshot?.panes) ? snapshot.panes : []);
@@ -131,8 +128,3 @@ export function runLayoutCommand(command, snapshot) {
   }
 }
 
-/** The agent's text for an outcome: the outcome and reason c2189a16b reports, then the layout as JSON. */
-export function layoutCommandText(response) {
-  const { outcome = OUTCOMES.FAILED, reason, paneIndex, layout } = response ?? {};
-  return JSON.stringify({ outcome, ...(reason ? { reason } : {}), ...(Number.isInteger(paneIndex) ? { paneIndex } : {}), ...(layout ? { layout } : {}) }, null, 2);
-}

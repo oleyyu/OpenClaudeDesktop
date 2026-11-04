@@ -67,13 +67,6 @@ export function goToFileItems(entries, query, limit = GO_TO_FILE_LIMIT) {
   return { items: ranked.length > limit ? ranked.slice(0, limit) : ranked, more: Math.max(0, ranked.length - limit) };
 }
 
-/** Which side the popup opens on, from the trigger's rectangle and the viewport height (eh). Pure. */
-export function goToFileSide(rect, viewportHeight, padding = 8) {
-  if (!rect) return "bottom";
-  const below = viewportHeight - rect.bottom - padding, above = rect.top - padding;
-  return below < GO_TO_FILE_FLIP_PX && above > below ? "top" : "bottom";
-}
-
 /** ⌘P (goToDiffFile, shared-21-D098Wd--.js:14268): Meta+P with no other modifier, not while composing. */
 export function isGoToFileShortcut(event) {
   return !!event && event.metaKey && !event.shiftKey && !event.ctrlKey && !event.altKey && !event.isComposing && (event.code === "KeyP" || event.key === "p");

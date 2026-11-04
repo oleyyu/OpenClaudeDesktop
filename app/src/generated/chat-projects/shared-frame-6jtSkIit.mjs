@@ -15,9 +15,6 @@ function Kf(e) {
   let t = e;
   return t?.nodeType === 1 ? t.namespaceURI : void 0;
 }
-function qf(e) {
-  return typeof e?.nodeType == "number";
-}
 function Jf(e) {
   return Kf(e) === Wf;
 }
@@ -27,4 +24,4 @@ function Xf(e) {
 function Zf(e) {
   return Jf(e) && e.localName === "input";
 }
-export { mn, gn, Wf, Kf, qf, Jf, Xf, Zf };
+export { mn, gn, Wf, Kf, Jf, Xf, Zf };

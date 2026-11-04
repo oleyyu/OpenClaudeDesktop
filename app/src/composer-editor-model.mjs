@@ -8,7 +8,9 @@ export const composerSchema=new Schema({nodes:{
  doc:{content:'block+'},
  paragraph:{group:'block',content:'inline*',whitespace:'pre',toDOM:()=>['p',0],parseDOM:[{tag:'p'}]},
  code_block:{group:'block',content:'text*',marks:'',code:true,defining:true,whitespace:'pre',attrs:{language:{default:''}},
-  toDOM:node=>['pre',{class:'sc-code-block',...(node.attrs.language?{'data-language':node.attrs.language}:{})},['code',0]],
+  // W14-code css/composer-marks-code-link: shared-28 Lb's 'code-block' div > pre (dir ltr, shared-26 vo) > code, so the
+  // official `.epitaxy-root .ProseMirror .code-block pre` rule styles it.
+  toDOM:node=>['div',{class:'code-block'},['pre',{dir:'ltr',class:'my-4 block rounded-md bg-[#282c34] p-2 text-[0.875rem] text-[#abb2bf]',...(node.attrs.language?{'data-language':node.attrs.language}:{})},['code',0]]],
   parseDOM:[{tag:'pre',preserveWhitespace:'full',getAttrs:dom=>({language:codeLanguage(dom.getAttribute?.('data-language')||/(?:^|\s)language-(\S+)/.exec(dom.querySelector?.('code')?.className||'')?.[1]||'')})}]},
  text:{group:'inline'},
  hard_break:{inline:true,group:'inline',selectable:false,toDOM:()=>['br'],parseDOM:[{tag:'br'}],leafText:()=> '\n'},

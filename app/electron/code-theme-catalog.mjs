@@ -35,7 +35,6 @@ export const CODE_THEMES = Object.freeze([
 ].map((entry) => Object.freeze(entry)));
 
 export const DEFAULT_CODE_THEMES = Object.freeze({ light: "claude-light", dark: "claude-dark" });
-export const CODE_THEME_MODES = Object.freeze(["light", "dark"]);
 
 export function lightThemes() { return CODE_THEMES.filter((entry) => entry.mode === "light"); }
 export function darkThemes() { return CODE_THEMES.filter((entry) => entry.mode === "dark"); }

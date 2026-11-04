@@ -1,5 +1,4 @@
-import React, { useCallback, useEffect, useEffectEvent, useId, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import { Icon } from "./icons";
+import React, { useCallback, useContext, useEffect, useEffectEvent, useId, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { parseUnifiedDiff } from "./diff-model";
 import { previewHunks } from './file-preview-model.mjs';
 import { useDiffHunk } from './use-diff-hunk.mjs';
@@ -12,7 +11,6 @@ import { FILE_MENU_LABELS, changedFileMenu } from './file-context-menu-model.mjs
 import { canOpenFileInEditor } from './generated/files-changes/file-editor-path.mjs';
 import { SourceTooltip, SourceTooltipGroup } from './source-tooltip';
 import { SourceMenu } from './source-menu.jsx';
-import { SourceSettingsButton } from './source-settings-button.jsx';
 import { CONTEXT_MENU_ALIGN_OFFSET, CONTEXT_MENU_SIDE_OFFSET } from './menu-model.mjs';
 import { hideWhitespaceChanges } from './diff-whitespace-model.mjs';
 import { clearDiffTarget, diffTarget, diffTreeJumpTarget, scrollDiffTarget, subscribeDiffReveal, subscribeDiffTargets, takeDiffRevealRequest } from './diff-reveal.mjs';
@@ -23,8 +21,8 @@ import { DiffTreeEdgeHandle, DiffTreeResizeHandle, DiffTreeResizeShield } from '
 import { DIFF_FILE_LIST_LABELS, DIFF_FILE_LIST_WIDTH, clampDiffFileListWidth, diffFileEntries, diffFileList, diffFileListCanFit,
   isLargeDiff, withComparisonFiles, withRawFiles, createPatchFetchQueue, orderDiffSections, toggleCollapsed, treeRowTarget } from './diff-file-list-model.mjs';
 import { t, tn } from '../electron/i18n/index.mjs';
-import { diffFileCommentsStore, rowCommentTarget } from './diff-comments-model.mjs';
-import { useDiffComments, usePrCommentShortcuts } from './source-diff-comments.jsx';
+import { rowCommentTarget } from './diff-comments-model.mjs';
+import { annotationStoreSyncing, diffFileCommentsStore, useDiffComments, usePrCommentShortcuts } from './source-diff-comments.jsx';
 import { SourceDiffCommits } from './source-diff-commits.jsx';
 import { enterPick, preventNativeMenu } from './diff-commits-model.mjs';
 // shared-18 ok / sk (c44d00c7f `$e` / `Z`): the tree's keyboard context menu and its menu-item Enter-repeat guard.
@@ -36,7 +34,7 @@ import { diffChangeCommand, diffChangeHeaderOffset, diffChangeTargets, pickDiffC
 // R3-files FT-07: the Changed files tree on its 3.6556.2 originals (c44d00c7f-Cr1FDL2F cs / ls / Xo / as over c621b1e2d,
 // the Si tooltip, $o expansion; c784da984 path forms; 2.42304.0 Rc / zc / Ec / Fc, ca7840910, Jr, kc) and the per-file
 // whitespace pause (3.6556.2 Dc, 2.42304.0 Ca).
-import { CdsDialog, CdsIcon, CdsSkeleton, useCdsLayerAwareZIndex } from './generated/view-tabs/index.js';
+import { CdsButton, CdsDialog, CdsIcon, CdsSkeleton, useCdsLayerAwareZIndex } from './generated/view-tabs/index.js';
 import { FileTypeIcon } from './generated/files-changes/file-type-icon.mjs';
 import { fileTreeCompactRow, fileTreeGroup, fileTreeKeptGuides, fileTreePadding, fileTreeRowCurrent, fileTreeRowIdle } from './generated/files-changes/file-tree-row-classes.mjs';
 import { fileTreeIconSize, fileTreeRowStyle, guideGradient, treeIndent } from './generated/code-current/file-tree-style.mjs';
@@ -48,6 +46,21 @@ import { isNodeHidden } from './generated/files-changes/node-hidden.mjs';
 import { DiffTreeRowTooltip } from './generated/files-changes/diff-tree-tooltip.mjs';
 import { PathSegments as TreePathSegments, NameThenFolder } from './generated/files-changes/path-segments.mjs';
 import { whitespaceHidingPaused } from './generated/files-changes/diff-whitespace-pause.mjs';
+// c6e73333a b (c44d00c7f en): the code background the Changes file header paints under its alpha gradient.
+import { codeBackground } from './generated/files-changes/diff-widget-background.mjs';
+// W14-code r6 pierre (R6DC-01 = r6pa-01 = gates-r6-11, E90 / E95): the 3.6556.2 Changes body, c44d00c7f Ju (qu over the
+// pierre CodeView ca7ba268c Ba) with its comment / finding store cc8941b7b F / I (generated/pierre-changes), behind the
+// host switch local_pierre_changes_body (false: the host's per-file rows below).
+import { PierreChanges, comparisonFileEntries, useDiffFetchScheduler, DiffImageViewerContext, DiffImageViewerShownContext } from './generated/pierre-changes/pierre-changes.mjs';
+import { useDiffAnnotationStore, diffAnnotationActions } from './generated/pierre-changes/pierre-cc8941b7b-DAgMZRvX.mjs';
+import { QueryClientProvider } from './generated/files-changes/file-browser-query.mjs';
+import { fileBrowserQueryClient } from './source-breadcrumb-adapters.jsx';
+import { CdsContextMenu } from './generated/view-tabs/index.js';
+import { hostGrowthBookFlag } from './host-growthbook.mjs';
+import { PierreReviewContext } from './source-pane-review.jsx';
+import { addToPrompt, serializeLineComment } from './inline-comments.mjs';
+import { diffCommentAttachmentKey } from './diff-comments-model.mjs';
+import { findingAnnotation } from './review-findings-model.mjs';
 import "./source-diff.css";
 
 // Tn (panes-diff-view-current.js:377-401) with hideWhitespace: gn filters the
@@ -122,23 +135,10 @@ function RawPatch({ value, reason }) {
   </div>;
 }
 
-// Inline placement only (approval FileChanges); the Changes placement uses the
-// c219730b0 W row labels from diff-file-header-model.mjs instead.
-function metadata(file) {
-  const labels = [];
-  if (file.binary) labels.push(t("Binary file"));
-  if (file.renamedFrom && file.renamedFrom !== file.path) labels.push(t("Renamed from {path}", { path: file.renamedFrom }));
-  if (file.copiedFrom) labels.push(t("Copied from {path}", { path: file.copiedFrom }));
-  if (file.status === "added") labels.push(t("New file"));
-  if (file.status === "deleted") labels.push(t("Deleted file"));
-  if (file.oldMode && file.newMode && file.oldMode !== file.newMode) {
-    labels.push(file.oldMode === "100644" && file.newMode === "100755" ? t("Made executable")
-      : file.oldMode === "100755" && file.newMode === "100644" ? t("No longer executable")
-      : t("Mode {from} → {to}", { from: file.oldMode, to: file.newMode }));
-  } else if (file.newMode && file.status === "added") labels.push(t("Mode {mode}", { mode: file.newMode }));
-  else if (file.oldMode && file.status === "deleted") labels.push(t("Mode {mode}", { mode: file.oldMode }));
-  return labels;
-}
+// W14-code pa2-04 (E84.3): the inline placement (approval FileChanges header, its metadata labels, Copy patch /
+// Copied patch / Patch and "No text hunks in this patch") had no caller and no 3.6556.2 counterpart; it is gone, and
+// SourceDiff always renders the Changes pane body. The RawPatch notice "{reason}. Showing original patch." is the
+// host's parser fallback, without an official string.
 
 // c44d00c7f Uc (3.6556.2): the gutter "+" is `button[type=button]` with style Hc = {...c64baa838 un, top:
 // "calc((var(--diffs-line-height, 1lh) - 1rem) / 2)", bottom: "auto"} and class `-left-0.5 ${Pn}` (cda9b4504 Pn), its
@@ -158,7 +158,8 @@ function DiffLine({ row, lines, wordRanges, side, onComment = null, rowTargets =
     {target && onComment && <button type="button" style={GUTTER_ADD_STYLE} className={`sdiff-gutter-add ${GUTTER_ADD_CLASS}`} aria-label={t("Add comment on this line")}
       onClick={() => onComment(target)}><CdsIcon name="Add" size="sm" bold /></button>}
     <div className="sdiff-line-number" aria-hidden="true">{number}</div>
-    <div className="sdiff-code-cell"><span className="sdiff-marker" aria-hidden="true">{row.type === 'added' ? '+' : row.type === 'removed' ? '−' : ' '}</span>
+    {/* c49d7f557 [data-indicators="classic"]: the indicator is `content: "+"` / `content: "-"` (a hyphen-minus). */}
+    <div className="sdiff-code-cell"><span className="sdiff-marker" aria-hidden="true">{row.type === 'added' ? '+' : row.type === 'removed' ? '-' : ' '}</span>
       <code className="sdiff-line-content scb-code source-diff-code"><SourceHighlightedLine tokens={lines[row.side]?.[row.line] || [{ text: row.text }]} ranges={wordRanges?.[row.rowIndex]}/></code>
       {row.notes?.map((text, index) => <div className="sdiff-note" data-no-newline="" key={index}><span>{t('No newline at end of file')}</span></div>)}
     </div>
@@ -170,7 +171,8 @@ function NoNewline({ after }) {
   const type = after?.type === 'added' || after?.type === 'removed' ? after.type : 'context';
   return <div className={`sdiff-row sdiff-no-newline ${type}`} data-no-newline="" data-line-type={type === 'added' ? 'change-addition' : type === 'removed' ? 'change-deletion' : 'context'}>
     <div className="sdiff-line-number" aria-hidden="true"/>
-    <div className="sdiff-code-cell"><span className="sdiff-no-newline-text">{t('No newline at end of file')}</span></div>
+    {/* c49d7f557: a change-addition / change-deletion [data-no-newline] row carries the classic "+" / "-" indicator too. */}
+    <div className="sdiff-code-cell">{type !== 'context' && <span className="sdiff-marker" aria-hidden="true">{type === 'added' ? '+' : '-'}</span>}<span className="sdiff-no-newline-text">{t('No newline at end of file')}</span></div>
   </div>;
 }
 function DiffHunk({ hunk, file, scopeKey, layout, separator, wordDiff = true, onComment = null, rowTargets = false, renderAfter = null }) {
@@ -207,10 +209,11 @@ function ContextGap({ region, onExpand }) {
   return <div className="sdiff-hunk-separator sdiff-context-gap" data-separator="line-info" data-expand-index={region.id}
     data-separator-first={region.first || undefined} data-separator-last={region.last || undefined}>
     <div className="sdiff-separator-wrapper" data-multi-button={directions.length > 1 || undefined}>
+      {/* ca7ba268c tn / nn: the expand buttons ([data-expand-button][data-expand-{up,down,both}]) carry only the icon and
+          the content ([data-separator-content]) only "{n} unmodified line(s)"; no label or title of their own. */}
       {directions.map(direction => <button key={direction} type="button" className="sdiff-expand" data-direction={direction}
-        aria-label={region.remaining <= 100 ? t('Expand {count} unmodified lines', { count: region.remaining }) : direction === 'both' ? t('Expand 100 lines in both directions') : direction === 'up' ? t('Expand 100 lines below previous change') : t('Expand 100 lines above next change')}
         onClick={event => onExpand(region, direction, event.currentTarget)}><ExpandIcon direction={direction}/></button>)}
-      <button type="button" className="sdiff-separator-content" title={t("Expand unmodified lines")}
+      <button type="button" className="sdiff-separator-content"
         onClick={event => onExpand(region, 'both', event.currentTarget)}><span>{tn(region.remaining, '{count} unmodified line', '{count} unmodified lines')}</span></button>
     </div>
   </div>;
@@ -220,6 +223,14 @@ function ContextGap({ region, onExpand }) {
 const CHEVRON = 'M3.47 5.47a.75.75 0 0 1 1.06 0L8 8.94l3.47-3.47a.75.75 0 1 1 1.06 1.06l-4 4a.75.75 0 0 1-1.06 0l-4-4a.75.75 0 0 1 0-1.06';
 // c219730b0 Ue (3.6556.2 c44d00c7f Gi): row label class.
 const ROW_LABEL_CLASS = 'min-w-0 shrink-[9999] truncate text-body text-muted-as-secondary';
+// c44d00c7f Xu (Zu, the CodeView's renderCustomHeader Jt; Jd takes that path, pt, outside popout windows): the H.Trigger
+// `group/diff-file @container/diff-file relative`; the button `${ma} aria-disabled:cursor-default` with ma = `${tr} w-full
+// select-none text-left focus-visible:outline-hidden hide-focus-ring focus-visible:shadow-focus disabled:cursor-default` and
+// tr = c82eca2bd Ce (V "epitaxy-panel-subheader flex items-center gap-[4px] shrink-0 px-md", H = V + bg-alpha-1, U the 2rem
+// height, then the alpha-1 / hover alpha-2 gradient), data-sticky, style re = {backgroundColor: en}. The CodeView's
+// stickyHeaders keep it at the top; source-diff.css stands in for that (sticky, top 0).
+const CHANGES_HEADER_BUTTON_CLASS = 'epitaxy-panel-subheader flex items-center gap-[4px] shrink-0 px-md bg-alpha-1 h-[calc(2rem*var(--cds-rem-scale,1))] bg-[linear-gradient(var(--cds-alpha-1),var(--cds-alpha-1))] enabled:hover:bg-[linear-gradient(var(--cds-alpha-2),var(--cds-alpha-2))] w-full select-none text-left focus-visible:outline-hidden hide-focus-ring focus-visible:shadow-focus disabled:cursor-default aria-disabled:cursor-default';
+const CHANGES_HEADER_STYLE = Object.freeze({ backgroundColor: codeBackground });
 
 // c784da984 c: directory prefix (truncating) then the last segment; title
 // defaults to the path and "" suppresses it; aria-label only with a prefix.
@@ -358,7 +369,7 @@ function ChangesFileHeader({ file, path, expanded, hasBody, bodyId, onToggle, ac
   return <div ref={headerRef} className="sdiff-header group/diff-file @container/diff-file relative" data-diff-file-header=""
     onContextMenu={onCopy ? (event) => { event.preventDefault(); event.stopPropagation(); setMenu({ x: event.clientX, y: event.clientY }); } : undefined}>
     {/* aa :3717-3723: onClick/aria-expanded only with a body, else aria-disabled. */}
-    <button ref={toggleRef} type="button" className="sdiff-file-toggle aria-disabled:cursor-default" aria-disabled={hasBody ? undefined : true}
+    <button ref={toggleRef} type="button" className={`sdiff-file-toggle ${CHANGES_HEADER_BUTTON_CLASS}`} data-sticky="" style={CHANGES_HEADER_STYLE} aria-disabled={hasBody ? undefined : true}
       aria-expanded={hasBody ? expanded : undefined} aria-controls={hasBody ? bodyId : undefined} onClick={hasBody ? onToggle : undefined}>
       <span aria-hidden="true" className={`sdiff-chevron flex items-center justify-center size-[16px] shrink-0 text-muted-as-secondary${hasBody ? '' : ' opacity-40'}`}>
         <svg width={16} height={16} viewBox="0 0 16 16"
@@ -380,18 +391,18 @@ function ChangesFileHeader({ file, path, expanded, hasBody, bodyId, onToggle, ac
       {imageAction && <span aria-hidden="true" data-size="xs" className="w-control shrink-0" />}
     </button>
     {imageAction && <span className="sdiff-view-image pointer-events-none absolute inset-y-0 end-0 flex items-center gap-xs pe-md">
+      {/* W14-code r6 pierre (r6pa-04 / R6DC-02): c44d00c7f il `n(T, {size: "xs", variant: "ghost", icon: "Image", iconOnly: !0,
+          "aria-label": u, tooltipSide: "bottom", disabled: d, disabledReasonSide: "bottom", disabledReason: f, onClick: p})`, T the
+          shared-frame CDS Button (its own tooltip and disabled-reason tooltip). */}
       <span className="pointer-events-auto flex">
-        <SourceTooltip content={t("View image")} side="bottom" hoverable={false} disabledReason={imageViewer.stale ? t("Loading the new changes") : undefined}>
-          <SourceSettingsButton size="xs" variant="ghost" icon="Image" iconSize="auto-sm" iconOnly aria-label={t("View image")}
-            disabled={!!imageViewer.stale} onClick={() => imageViewer.open(file.path)} />
-        </SourceTooltip>
+        <CdsButton size="xs" variant="ghost" icon="Image" iconOnly aria-label={t("View image")} tooltipSide="bottom"
+          disabled={!!imageViewer.stale} disabledReasonSide="bottom" disabledReason={t("Loading the new changes")} onClick={() => imageViewer.open(file.path)} />
       </span>
       {onOpenFile && <span aria-hidden="true" data-size="xs" className="w-control shrink-0" />}
     </span>}
     {onOpenFile && <span className="sdiff-open-file absolute inset-y-0 end-0 flex items-center pe-md opacity-0 transition-opacity motion-reduce:transition-none group-hover/diff-file:opacity-100 group-focus-within/diff-file:opacity-100 pointer-coarse:opacity-100">
-      <SourceTooltip content={t("Open file")} side="bottom" hoverable={false}>
-        <SourceSettingsButton size="xs" variant="ghost" icon="ArrowUpRight" iconSize="auto-sm" iconOnly aria-label={t("Open file")} onClick={() => onOpenFile(file.path)} />
-      </SourceTooltip>
+      {/* c44d00c7f _a: `n(T, {size: "xs", variant: "ghost", icon: "ArrowUpRight", iconOnly: !0, "aria-label": o, tooltipSide: "bottom", onClick: s})`. */}
+      <CdsButton size="xs" variant="ghost" icon="ArrowUpRight" iconOnly aria-label={t("Open file")} tooltipSide="bottom" onClick={() => onOpenFile(file.path)} />
     </span>}
     {menu && <SourceMenu.Popup anchor={headerRef.current} trigger={toggleRef.current} point={menu} side="bottom" align="start"
       sideOffset={CONTEXT_MENU_SIDE_OFFSET} alignOffset={CONTEXT_MENU_ALIGN_OFFSET} layer="contextmenu" dataCds="ContextMenu" contextMenuGuard="always"
@@ -401,7 +412,7 @@ function ChangesFileHeader({ file, path, expanded, hasBody, bodyId, onToggle, ac
   </div>;
 }
 
-function FileDiff({ file, scopeKey, layout, completeContext, foldAll = null, placement = "inline", fileActions = null, wordDiff = true, defaultExpanded = true, reveal = null, review = null, commentScope = null, imageViewer = null, lazyPatch = null }) {
+function FileDiff({ file, scopeKey, layout, completeContext, foldAll = null, fileActions = null, wordDiff = true, defaultExpanded = true, reveal = null, review = null, commentScope = null, imageViewer = null, lazyPatch = null }) {
   // vo defaultCollapsed (panes-diff-view-current.js:5258-5276, :5647): a large
   // diff (Qe) mounts every file collapsed.
   const [expanded, setExpanded] = useState(defaultExpanded);
@@ -424,7 +435,6 @@ function FileDiff({ file, scopeKey, layout, completeContext, foldAll = null, pla
     appliedFold.current = foldAll.seq;
     setExpanded(!foldAll.collapsed);
   }, [foldAll]);
-  const [copyState, setCopyState] = useState("");
   const [contextState, setContextState] = useState(null);
   const fileRef = useRef(null), expansionFocus = useRef(null);
   const regions = useMemo(() => contextRegions(file, completeContext), [file, completeContext]);
@@ -439,28 +449,19 @@ function FileDiff({ file, scopeKey, layout, completeContext, foldAll = null, pla
     expansionFocus.current = null;
   }, [context]);
   const bodyId = useId();
-  const changes = placement === "changes";
-  const path = file.path || t("Patch");
+  const path = file.path || "";
   // B14: Changes-pane line comments as inline annotation cards (c44d00c7f ha/ga/Ca/Ho/yo, source-diff-comments.jsx),
   // kept per session and file (commentScope) and sent with the next message.
   const bodyRef = useRef(null);
   const shownHunks = useMemo(() => (context ? context.filter((region) => region.kind !== 'gap') : file.hunks), [context, file.hunks]);
-  const comments = useDiffComments({ file, scope: changes ? commentScope : null, menu: changes, shownHunks, complete: !!regions, path, fileActions, bodyRef });
+  const comments = useDiffComments({ file, scope: commentScope, menu: true, shownHunks, complete: !!regions, path, fileActions, bodyRef });
   // panes-diff-view-current.js:3279 hasBody; a fallback file's body is its raw patch. R4i-files FI2: c44d00c7f ml
   // `Y=q!==null&&q.hunks.length>0||J` with J = Ee&&!whitespaceOnly, Ee = Ko(file, fetchFilePatch)&&!patchUnavailable: a
   // withheld file whose patch can still be read is expandable, and expanding it reads the patch (Qo, enabled:!be).
   const pending = !!lazyPatch?.pending;
-  const hasBody = !changes || !!file.fallbackReason || file.hunks.length > 0 || pending;
+  const hasBody = !!file.fallbackReason || file.hunks.length > 0 || pending;
   useEffect(() => { if (expanded && pending) lazyPatch.load(); }, [expanded, pending, lazyPatch]);
-  // The metadata-only body line below is reachable only in the inline placement
-  // (a Changes file without hunks has no body, see hasBody).
-  const labels = changes ? [] : metadata(file);
   const separators = useMemo(() => diffSeparators(file.hunks), [file.hunks]);
-  const copy = async () => {
-    try { await navigator.clipboard.writeText(file.raw); setCopyState(t("Copied patch")); }
-    // Catalog clipboard failure wording (en-US ugO0/irMRD), as the code-block copy.
-    catch { setCopyState(t("Couldn’t copy to the clipboard. Try again.")); }
-  };
   // Review findings on this file (Rn cards): under the row of the finding's end line; one whose line is not in a
   // hunk sits at the top of the body. The current finding expands its file.
   const fileFindings = useMemo(() => (review ? review.findings.filter((entry) => sameFindingFile(file.path, entry.file)) : []), [review, file.path]);
@@ -480,24 +481,8 @@ function FileDiff({ file, scopeKey, layout, completeContext, foldAll = null, pla
   const maximum = file.hunks.reduce((highest, hunk) => Math.max(highest,
     hunk.oldStart + hunk.oldCount - 1, hunk.newStart + hunk.newCount - 1), 1);
   return <section className="sdiff-file relative" ref={fileRef} data-file-path={file.path || undefined} data-complete-context={regions ? '' : undefined}>
-    {changes ? <ChangesFileHeader file={file} path={path} expanded={expanded} hasBody={hasBody} bodyId={bodyId} onToggle={() => setExpanded((value) => !value)} actions={fileActions} imageViewer={imageViewer} />
-    : <div className="sdiff-header">
-      <button type="button" className="sdiff-file-toggle" aria-expanded={expanded} aria-controls={bodyId}
-        title={[path, ...labels].join(" · ")} onClick={() => setExpanded((value) => !value)}>
-        <Icon name="CaretDown" size={16} className={`sdiff-caret${expanded ? "" : " is-collapsed"}`} />
-        <Icon name="File" size={12} className="sdiff-file-icon" />
-        <div className="sdiff-path">{path}</div>
-        {labels.length > 0 && <div className="sdiff-meta">{labels.join(" · ")}</div>}
-        {file.hunks.length > 0 && !file.fallbackReason && <div className="sdiff-counts" aria-label={t("{added} additions, {removed} deletions", { added: file.added, removed: file.removed })}>
-          <b className="sdiff-count-added">+{file.added}</b><b className="sdiff-count-removed">−{file.removed}</b>
-        </div>}
-      </button>
-      {typeof navigator !== "undefined" && navigator.clipboard?.writeText && <button type="button" className="sdiff-copy"
-        aria-label={t("Copy patch for {path}", { path })} title={copyState || t("Copy patch")} onClick={copy}>
-        <Icon name={copyState === t("Copied patch") ? "Check" : "Copy"} size={12} />
-      </button>}
-    </div>}
-    {!changes && copyState && <div className="sdiff-copy-status" role="status">{copyState}</div>}
+    {/* c44d00c7f aa over c219730b0 We/Ze/$e: the Changes file header. */}
+    <ChangesFileHeader file={file} path={path} expanded={expanded} hasBody={hasBody} bodyId={bodyId} onToggle={() => setExpanded((value) => !value)} actions={fileActions} imageViewer={imageViewer} />
     {expanded && hasBody && <div ref={bodyRef} id={bodyId} className="sdiff-file-body" tabIndex={-1} aria-busy={pending || undefined} style={{ "--sdiff-number-width": `${Math.max(3, String(maximum).length)}ch` }} {...comments.bodyProps}>
       {unplaced.length > 0 && unplaced.map(findingCard)}
       {comments.unplacedCards}
@@ -506,7 +491,7 @@ function FileDiff({ file, scopeKey, layout, completeContext, foldAll = null, pla
           ? <ContextGap key={region.id} region={region} onExpand={expand}/>
           : <DiffHunk key={region.id} hunk={region} file={file} layout={layout} wordDiff={wordDiff} onComment={comments.onGutterAdd} rowTargets={comments.rowTargets} renderAfter={renderAfter} scopeKey={JSON.stringify([scopeKey, file.id, file.path, region.id])}/>)
         : file.hunks.length ? file.hunks.map((hunk, index) => <DiffHunk key={index} hunk={hunk} separator={separators[index]} file={file} layout={layout} wordDiff={wordDiff} onComment={comments.onGutterAdd} rowTargets={comments.rowTargets} renderAfter={renderAfter} scopeKey={JSON.stringify([scopeKey, file.id, file.path, index])}/>)
-          : pending ? null : <div className="sdiff-metadata-only">{labels.join(" · ") || t("No text hunks in this patch")}</div>}
+          : null}
     </div>}
     {comments.overlays}
   </section>;
@@ -912,7 +897,7 @@ function DiffTreeSection({ section, open, onToggle }) {
    (Un === undefined) and the result is reported upward (onCanFitChange). */
 // c44d00c7f al: a carried-over comparison (another scope still loading) dims after 200ms.
 const STALE_CLASS = 'opacity-60 transition-opacity delay-200 duration-100';
-function ChangesFileLayout({ fileList, entries, activePath, onSelect, onOpenFile, actions = null, banner, stale = false, commits = null, children }) {
+function ChangesFileLayout({ fileList, entries, activePath, onSelect, onOpenFile, actions = null, banner, stale = false, commits = null, pierre = false, children }) {
   const layoutRef = useRef(null);
   const [bodyWidth, setBodyWidth] = useState(0);
   useLayoutEffect(() => {
@@ -941,7 +926,7 @@ function ChangesFileLayout({ fileList, entries, activePath, onSelect, onOpenFile
   const shortcut = fileList.toggleShortcut;
   // Jd onEnterPick = cccc2cf0a `() => Xe(r)` (requestDiffFocus for the tile), consumed by WO on the tile body (this
   // data-diff-pane-body): the first `[role="group"][tabindex="0"]` (HO) in it, else the body itself, takes focus with
-  // UO `{preventScroll:!0,focusVisible:!1}`. Host: the diff renders no such group, so the body takes it.
+  // UO `{preventScroll:!0,focusVisible:!1}`: the .source-changes scroll root (the CodeView group, see below).
   const enterPick = useCallback(() => {
     const body = layoutRef.current;
     if (body) (body.querySelector('[role="group"][tabindex="0"]') ?? body).focus({ preventScroll: true, focusVisible: false });
@@ -970,7 +955,10 @@ function ChangesFileLayout({ fileList, entries, activePath, onSelect, onOpenFile
     <DiffTreeResizeShield active={column.resizing} />
     <div className={`sdiff-changes-main${stale ? ` ${STALE_CLASS}` : ''}`} data-stale={stale || undefined} aria-busy={stale || undefined}>
       {banner}
-      <div className="source-changes">{children}</div>
+      {/* ca7ba268c Ha / Va (the Changes CodeView's scroll root): `h-full overflow-y-auto` + ca focus classes, and La gives it
+          role="group", the c44d00c7f dl scrollRegionLabel "Changes" and tabIndex 0 (the group Jd's onEnterPick focuses). */}
+      {pierre ? children
+        : <div className="source-changes outline-none focus-visible:outline-hidden focus-visible:shadow-focus transition-shadow duration-fast" role="group" aria-label={t("Changes")} tabIndex={0}>{children}</div>}
     </div>
   </div>;
 }
@@ -1028,7 +1016,6 @@ function DiffImageDialog({ file, fetchImages, open, onClose, onExited }) {
     </CdsDialog.Popup>
   </CdsDialog.Root>;
 }
-export { DiffImageDialog as SourceDiffImageDialog };
 
 // B34 next / previous change (c44d00c7f Rt, ds/fs/ps, An): DOM reads over the rendered Changes rows.
 const DIFF_ROW_SELECTOR = ".sdiff-row[data-old-line], .sdiff-row[data-new-line]";
@@ -1085,12 +1072,262 @@ function diffChangeVisible(view, scroller, offset, target) {
   return rect.height > 0 && rect.bottom > box.top + offset && rect.top < box.bottom;
 }
 
+// ── W14-code r6 pierre (R6DC-01 = r6pa-01 = gates-r6-11; E90 / E95): the official Changes body ──────────────────────
+// c44d00c7f Jd draws `pt ? n(Ju, {sessionId, tileId, revealTick, hiddenRef, files: Q, foldScope: Qt, foldsProvisional:
+// Z, collapseAll: gn, collapseTestFiles: _n, fetchFileLines: $e, fetchFilePatch: et, fetchScheduler: St, onOpenFile,
+// onAttachFile, onAnnotationSaved, onAnnotationCreated, commentOrigin, renderFileMenuItems, resolveAbsolutePath,
+// diffStyle: Wr, expandUnchanged, wordWrap, wordDiff, hideWhitespace, foldAll: hn, onFixFinding, onDismissFinding, viewId:
+// Pt, onStepPrComment: Nt, readOnly}) : <the per-file list Md>` with `pt = Le(!dt && !Ye)` (dt = W(): a pop-out pane
+// window; Ye = perFileList). The host switch local_pierre_changes_body (host-growthbook.mjs) chooses this body; false
+// keeps the host's per-file rows (FileDiff) as the rollback. Tests pin either side through PierreChangesBodyContext.
+export const PIERRE_CHANGES_BODY_SWITCH = "local_pierre_changes_body";
+export const PierreChangesBodyContext = React.createContext(hostGrowthBookFlag(PIERRE_CHANGES_BODY_SWITCH));
+// shared-frame co() (Jd `dt = W()`): a pop-out pane window (main.jsx PopoutApp, `?popout=<session>&pane=changes`) shows
+// the per-file list, not the CodeView.
+export function inPopoutPaneWindow(win = typeof window === "undefined" ? null : window) {
+  try { return !!win && new URLSearchParams(win.location?.search ?? "").has("popout"); } catch { return false; }
+}
+
+// mi's input (Jd `X`, the cb61be3a2 comparison: GitHub-shaped files {filename, status, additions, deletions, changes,
+// patch, previous_filename}, `lazy_file_hunks` when patches are read per file) from the host's parsed sections. A
+// withheld file (withComparisonFiles' lazyPatch) has no patch and is read through fetchFilePatch (c44d00c7f Yl: no
+// patch, a fetcher, changes > 0); every other file carries its own patch text (a header-only one for a binary, mode or
+// pure rename change, which ci parses to a body-less header).
+const PIERRE_STATUS = Object.freeze({ added: "added", deleted: "removed", renamed: "renamed", copied: "copied", modified: "modified" });
+export function pierreComparison(sections, { completeContext = false } = {}) {
+  const files = [], lines = new Map();
+  let lazy = false;
+  for (const section of sections ?? []) {
+    if (section?.type !== "file" || !section.path) continue;
+    const additions = Number.isFinite(section.added) ? section.added : 0, deletions = Number.isFinite(section.removed) ? section.removed : 0;
+    const previous = renamedFrom(section) ?? (section.status === "copied" && section.copiedFrom ? section.copiedFrom : undefined);
+    const file = { filename: section.path, status: PIERRE_STATUS[section.status] ?? "modified", additions, deletions, changes: additions + deletions,
+      ...(previous ? { previous_filename: previous } : {}) };
+    if (section.lazyPatch) { lazy = true; files.push(file); continue; }
+    const complete = pierreCompleteFile(section, completeContext);
+    if (complete) lines.set(section.path, complete.fileLines);
+    files.push({ ...file, patch: complete?.patch ?? (typeof section.raw === "string" && section.raw ? section.raw : undefined) });
+  }
+  return { comparison: { files, merge_base: "", lazy_file_hunks: lazy }, fileLines: lines };
+}
+// The workspace diff asks git for complete context (main.jsx `completeContext: true`), so a modified text file is one
+// hunk holding the whole file. The official comparison is a 3-line-context patch whose unchanged runs pierre expands from
+// the file's two texts (fetchFileLines → c44d00c7f fi {oldFile, newFile}); both are rebuilt here from that one hunk.
+export const PIERRE_CONTEXT_LINES = 3;
+const NO_NEWLINE_MARK = "\\ No newline at end of file";
+export function pierreCompleteFile(section, completeContext, context = PIERRE_CONTEXT_LINES) {
+  if (!contextRegions(section, completeContext)) return null;
+  const items = [];
+  let oldEnd = true, newEnd = true;
+  for (const row of section.hunks[0].rows ?? []) {
+    if (row.type === "note") {
+      const last = items.at(-1);
+      if (!last) continue;
+      last.note = true;
+      if (last.type !== "added") oldEnd = false;
+      if (last.type !== "removed") newEnd = false;
+      continue;
+    }
+    items.push({ ...row, note: false });
+  }
+  const changed = items.flatMap((item, index) => (item.type === "context" ? [] : [index]));
+  if (!changed.length) return null;
+  const oldLines = items.filter((item) => item.type !== "added").map((item) => item.text);
+  const newLines = items.filter((item) => item.type !== "removed").map((item) => item.text);
+  const text = (list, end) => (list.length ? `${list.join("\n")}${end ? "\n" : ""}` : "");
+  const groups = [];
+  for (const index of changed) {
+    const start = Math.max(0, index - context), end = Math.min(items.length - 1, index + context);
+    const last = groups.at(-1);
+    if (last && start <= last.end + 1) last.end = Math.max(last.end, end); else groups.push({ start, end });
+  }
+  const hunk = section.hunks[0];
+  const before = (index, key, origin) => { for (let at = index - 1; at >= 0; at--) if (items[at][key] != null) return items[at][key]; return origin - 1; };
+  const body = groups.map(({ start, end }) => {
+    const part = items.slice(start, end + 1);
+    const oldCount = part.filter((item) => item.type !== "added").length, newCount = part.filter((item) => item.type !== "removed").length;
+    const oldStart = oldCount ? part.find((item) => item.oldLine != null).oldLine : before(start, "oldLine", hunk.oldStart);
+    const newStart = newCount ? part.find((item) => item.newLine != null).newLine : before(start, "newLine", hunk.newStart);
+    return [`@@ -${oldStart},${oldCount} +${newStart},${newCount} @@`, ...part.flatMap((item) => (item.note ? [item.raw, NO_NEWLINE_MARK] : [item.raw]))].join("\n");
+  });
+  const raw = String(section.raw ?? "").split("\n");
+  const header = raw.slice(0, Math.max(0, raw.findIndex((line) => line.startsWith("@@"))));
+  return { patch: `${[...header, ...body].join("\n")}\n`,
+    fileLines: { oldText: section.status === "added" ? "" : text(oldLines, oldEnd), newText: section.status === "deleted" ? "" : text(newLines, newEnd) } };
+}
+
+// onAnnotationSaved / the comment store → the composer. Jd's caller (cccc2cf0a) answers a saved comment with
+// `requestComposerAction(submit ? "submit" : "focus")`, the composer reading the session's saved annotations from
+// cc8941b7b; the host composer carries a saved comment as a keyed snippet (main.jsx onSaveComment, the host rows' path),
+// so each comment the store saves, edits or removes for the session is written to or taken out of the composer, and
+// the card's keyboard save (`t.viaKeyboard && v?.({submit})`) focuses / submits through the same call.
+export function pierreCommentEntry(annotation, scope) {
+  const path = annotation.filePath;
+  return { id: annotation.id, path, start: annotation.startLine, end: annotation.endLine, side: annotation.side, code: annotation.snippet ?? "",
+    body: annotation.body, savedBody: annotation.body, key: diffCommentAttachmentKey(scope, path, annotation.id) };
+}
+const isLineComment = (annotation) => annotation?.source !== "pr" && annotation?.source !== "file" && annotation?.source !== "finding";
+export function sessionLineComments(state, sessionId) {
+  const out = new Map();
+  for (const list of Object.values(state.annotationsBySession?.[sessionId] ?? {})) for (const annotation of list ?? []) if (isLineComment(annotation)) out.set(annotation.id, annotation);
+  return out;
+}
+/** What changed between two sessionLineComments snapshots: added or edited comments (saved), and removed ones. */
+export function lineCommentChanges(before, next) {
+  const saved = [], removed = [];
+  for (const [id, annotation] of next) if (before.get(id) !== annotation) saved.push(annotation);
+  for (const [id, annotation] of before) if (!next.has(id)) removed.push(annotation);
+  return { saved, removed };
+}
+export function usePierreCommentBridge(sessionId, scope, fileActions) {
+  const actions = useRef(fileActions);
+  actions.current = fileActions;
+  const lastSaved = useRef(null);
+  const send = useCallback((annotation, options) => {
+    const entry = pierreCommentEntry(annotation, scope);
+    if (actions.current?.onSaveComment) actions.current.onSaveComment(entry, options);
+    else if (!options.viaKeyboard) addToPrompt(serializeLineComment({ path: entry.path, start: entry.start, end: entry.end, side: entry.side, code: entry.code, text: entry.body }));
+  }, [scope]);
+  useEffect(() => {
+    if (!sessionId) return undefined;
+    let known = sessionLineComments(useDiffAnnotationStore.getState(), sessionId);
+    return useDiffAnnotationStore.subscribe((state) => {
+      const next = sessionLineComments(state, sessionId), { saved, removed } = lineCommentChanges(known, next);
+      known = next;
+      // r7pa-03: comments read in from another window's write (source-diff-comments annotationStoreSyncing) are that
+      // window's saves, not this composer's; a comment deleted there still takes its snippet out here.
+      const external = annotationStoreSyncing();
+      for (const annotation of external ? [] : saved) {
+        lastSaved.current = annotation;
+        send(annotation, { viaKeyboard: false, submit: false });
+      }
+      for (const annotation of removed) {
+        if (lastSaved.current?.id === annotation.id) lastSaved.current = null;
+        actions.current?.onDeleteComment?.(pierreCommentEntry(annotation, scope));
+      }
+    });
+  }, [sessionId, scope, send]);
+  return useCallback((options) => {
+    const annotation = lastSaved.current;
+    if (annotation && actions.current?.onSaveComment) send(annotation, { viaKeyboard: true, submit: options?.submit === true });
+  }, [send]);
+}
+
+// The review the Changes pane shows (SourceDiff `review`) as the store's findings (Jd's Bt effect: `wr.resolveReviewFindingPaths(i,
+// a ?? "diff", Q.map(tf))` over the session's findings), so Tc places each card under its line; the card itself is the
+// host's (source-pane-review.jsx PierreReviewFindingCard). The current finding is scrolled to (cc8941b7b stepReviewFinding's
+// `scrollToAnnotation(e, file, {anchor: {side, line: endLine}})`).
+export function pierreFindings(findings, paths) {
+  return (findings ?? []).map((entry) => {
+    const annotation = findingAnnotation(entry);
+    const path = paths.find((candidate) => sameFindingFile(candidate, entry.file));
+    return path ? { ...annotation, filePath: path } : annotation;
+  });
+}
+function usePierreFindings(sessionId, review, paths) {
+  const findings = useMemo(() => pierreFindings(review?.findings, paths), [review?.findings, paths]);
+  useEffect(() => {
+    if (!sessionId) return;
+    diffAnnotationActions.setReviewFindings(sessionId, findings);
+    diffAnnotationActions.resolveReviewFindingPaths(sessionId, "diff", paths);
+  }, [sessionId, findings, paths]);
+  const currentId = review?.currentId ?? null, currentSeq = review?.currentSeq;
+  useEffect(() => {
+    const current = currentId && findings.find((entry) => entry.id === currentId);
+    if (!sessionId || !current) return;
+    diffAnnotationActions.scrollToAnnotation(sessionId, current.filePath, { anchor: { side: current.side, line: current.endLine } });
+  }, [sessionId, currentId, currentSeq]); // eslint-disable-line react-hooks/exhaustive-deps
+}
+
+// renderFileMenuItems (cccc2cf0a, after Ca's Attach / Copy path / Open file): the host's "Open in ▸" editors and "Show in
+// Finder" (changedFileEntries), as CdsContextMenu items in the file header's official menu.
+function PierreFileMenuEntries({ entries, actions }) {
+  return entries.map((entry, index) => entry.kind === "submenu"
+    ? <CdsContextMenu.Submenu key={`submenu-${entry.label}`}>
+      <CdsContextMenu.SubmenuTrigger>{entry.label}</CdsContextMenu.SubmenuTrigger>
+      <CdsContextMenu.SubmenuPopup><PierreFileMenuEntries entries={entry.items} actions={actions} /></CdsContextMenu.SubmenuPopup>
+    </CdsContextMenu.Submenu>
+    : <CdsContextMenu.Item key={`${entry.action}-${index}`} onClick={() => runChangedFileAction(actions, entry)}>{entry.label}</CdsContextMenu.Item>);
+}
+export function pierreFileMenuEntries(actions, path, { isDirectory = false } = {}) {
+  return changedFileEntries(actions, path, { isDirectory }).filter((entry) => entry.action === "show-in-finder"
+    || (entry.kind === "submenu" && entry.items?.some((item) => item.action === "open-in-editor")));
+}
+
+// The body: Ju inside the app's one QueryClient (files-changes' copy, the patch and file-line queries) with the image
+// viewer (Xc / Yc) and the review (PierreReviewContext) the header and finding cards read.
+function PierreChangesBody({ sessionId, scopeKey, sections, completeContext, layout, wordWrap, wordDiff, hideWhitespace, foldAll, collapseAll, stale,
+  fileActions, review, commentScope, imageViewer }) {
+  const built = useMemo(() => pierreComparison(sections, { completeContext }), [sections, completeContext]);
+  const files = useMemo(() => comparisonFileEntries(built.comparison, undefined, "tree"), [built]);
+  const paths = useMemo(() => files.map((file) => file.filePath), [files]);
+  const scheduler = useDiffFetchScheduler(sessionId);
+  const actions = useRef(fileActions);
+  actions.current = fileActions;
+  const lines = useRef(built.fileLines);
+  lines.current = built.fileLines;
+  const canFetchPatch = typeof fileActions?.fetchFilePatch === "function";
+  // c44d00c7f tu: `o.schedule({fileKey, kind: "patch"}, () => r(n))`, the patch text of one comparison file ("" when none).
+  const fetchFilePatch = useMemo(() => (canFetchPatch ? async (file) => {
+    const patch = await actions.current?.fetchFilePatch?.({ filePath: file.filePath, previousPath: file.rawFile?.previous_filename });
+    return typeof patch === "string" ? patch : "";
+  } : undefined), [canFetchPatch]);
+  // c44d00c7f eu / fi: the two texts pierre expands unchanged lines from. A complete-context hunk already holds them
+  // (pierreCompleteFile); any other file (several hunks, a withheld patch read later) asks the main process
+  // (fileActions.fetchFileLines → workspace-git-file-text, W14-code r7 r7pa-05; cb61be3a2 getDiffFileContent).
+  const canFetchLines = typeof fileActions?.fetchFileLines === "function";
+  const fetchFileLines = useMemo(() => (completeContext || canFetchLines ? async (file) => {
+    const known = lines.current.get(file.filePath);
+    if (known) return known;
+    const read = await actions.current?.fetchFileLines?.({ filePath: file.filePath, previousPath: file.rawFile?.previous_filename });
+    return read && typeof read === "object" ? { oldText: read.oldText ?? null, newText: read.newText ?? null } : { oldText: null, newText: null };
+  } : undefined), [completeContext, canFetchLines]);
+  const onAnnotationSaved = usePierreCommentBridge(sessionId, commentScope ?? scopeKey, fileActions);
+  usePierreFindings(sessionId, review, paths);
+  // qu / Wl: Open file (path) and ⌘-click on a line number (path, line).
+  const onOpenFile = useMemo(() => (fileActions?.onOpenFile ? (path, line) => actions.current?.onOpenFile?.(path, line) : undefined), [!!fileActions?.onOpenFile]); // eslint-disable-line react-hooks/exhaustive-deps
+  const onAttachFile = useMemo(() => (fileActions?.onAttachFile ? (path) => actions.current?.onAttachFile?.(path) : undefined), [!!fileActions?.onAttachFile]); // eslint-disable-line react-hooks/exhaustive-deps
+  const resolveAbsolutePath = useCallback((path) => absoluteDiffPath(actions.current?.root, path) ?? undefined, []);
+  const renderFileMenuItems = useCallback((path, { separatorBefore = false, isDirectory = false } = {}) => {
+    const entries = pierreFileMenuEntries(actions.current, path, { isDirectory });
+    return entries.length ? <>{separatorBefore && <CdsContextMenu.Separator />}<PierreFileMenuEntries entries={entries} actions={actions.current} /></> : null;
+  }, []);
+  return <QueryClientProvider client={fileBrowserQueryClient}>
+    <DiffImageViewerShownContext.Provider value={!!imageViewer}>
+      <DiffImageViewerContext.Provider value={imageViewer ?? null}>
+        <PierreReviewContext.Provider value={review}>
+          <PierreChanges sessionId={sessionId} files={files} foldScope={scopeKey} foldsProvisional={!!stale} collapseAll={collapseAll}
+            fetchFileLines={fetchFileLines} fetchFilePatch={fetchFilePatch} fetchScheduler={scheduler} onOpenFile={onOpenFile} onAttachFile={onAttachFile}
+            onAnnotationSaved={onAnnotationSaved} renderFileMenuItems={renderFileMenuItems} resolveAbsolutePath={resolveAbsolutePath}
+            diffStyle={layout} expandUnchanged={false} wordWrap={wordWrap} wordDiff={wordDiff} hideWhitespace={hideWhitespace} foldAll={foldAll ?? undefined} />
+        </PierreReviewContext.Provider>
+      </DiffImageViewerContext.Provider>
+    </DiffImageViewerShownContext.Provider>
+  </QueryClientProvider>;
+}
+// The server render has no store snapshot for qu's prefetcher (`$u`: useSyncExternalStore without getServerSnapshot):
+// the body mounts on the client only; a server render (tests) gets qu's root box.
+const noSubscribe = () => () => {};
+function useClientRender() {
+  return useSyncExternalStore(noSubscribe, () => true, () => false);
+}
+function PierreChangesMount(props) {
+  const client = useClientRender();
+  return client ? <PierreChangesBody {...props} /> : <div className="relative flex-1 min-h-0" data-pierre-changes="" />;
+}
+
+// The sections the body draws: the Changed files column's order, and — for the host rows only (R7DC-01: the official body
+// is handed hideWhitespace: false here and filters per file itself) — Hide whitespace's filter on every file Ca does not pause.
+export function shownDiffSections(sections, { listed = false, tree = true, groupByKind = false, hideWhitespace = false, paused = NO_PAUSE } = {}) {
+  const ordered = listed ? orderDiffSections(sections, { tree, groupByKind }) : sections;
+  return hideWhitespace ? ordered.map((section) => (paused.has(section.path) ? section : whitespaceHidden(section))) : ordered;
+}
+
 /** Render only the actual local Codex/Git patch; no inferred unchanged lines.
  * placement "changes" (the Changes pane, source-session.jsx FilePane) renders the
  * c219730b0 We/Ze/$e header with fileActions {root, onCopy, onOpenFile,
  * onAttachFile, and for the B16 menus/drag: editors, onOpenInEditor, onRevealFile,
- * revealRoot, onAttachFiles, onDragFiles}; the default "inline" placement (approval-card FileChanges) keeps
- * its existing header (path · metadata, native title, Copy patch).
+ * revealRoot, onAttachFiles, onDragFiles}; W14-code pa2-04: that is the only placement now (the inline one is gone).
  * wordDiff / hideWhitespace are the Changes "Highlight changed words" and "Hide
  * whitespace changes" preferences (panes-tile-current.js:3597-3598, 3805-3835);
  * hideWhitespace runs the gn port per file (diff-whitespace-model.mjs, Tn
@@ -1119,56 +1356,66 @@ function diffChangeVisible(view, scroller, offset, target) {
  *   onSelectUncommitted, collapsed, onCollapsedChange}; the "Commits" section under the file tree.
  * - emptyPlaceholder (B15, c44d00c7f cl Ne at :7273): with fileList and no patch, the body shows this
  *   (the empty Changes state) beside the column, so the Commits section stays reachable. */
-export function SourceDiff({ value = "", scopeKey = "standalone", layout = "unified", wordWrap = true, completeContext = false, onCanFitSplitChange, foldAll = null, placement = "inline", fileActions = null,
+export function SourceDiff({ value = "", scopeKey = "standalone", layout = "unified", wordWrap = true, completeContext = false, onCanFitSplitChange, foldAll = null, fileActions = null,
   wordDiff = true, hideWhitespace = false, fileList = null, onIsLargeChange, review = null, commentScope = null, stale = false, commits = null, emptyPlaceholder = null, patchesWithheld, comparisonFiles }) {
   const root = useRef(null), [canFitSplit, setCanFitSplit] = useState(true);
   const placeholderShown = !!fileList && !!emptyPlaceholder && !String(value ?? "").trim();
-  useLayoutEffect(() => (root.current ? observeDiffSplitFit(root.current, fit => { setCanFitSplit(fit); onCanFitSplitChange?.(fit); }) : undefined), [scopeKey, onCanFitSplitChange, placeholderShown]);
+  // W14-code r6 pierre: the split-fit observer follows the body root across the official / host body switch.
+  const pierreRoot = useContext(PierreChangesBodyContext) && !!fileList?.sessionId;
+  useLayoutEffect(() => (root.current ? observeDiffSplitFit(root.current, fit => { setCanFitSplit(fit); onCanFitSplitChange?.(fit); }) : undefined), [scopeKey, onCanFitSplitChange, placeholderShown, pierreRoot]);
   const actualLayout = layout === "split" && canFitSplit ? "split" : "unified";
-  const changes = placement === "changes";
   // R4i-files FI2: comparisonFiles (the main process's files with counts) completes the withheld header-only blocks.
   const parsedPatch = useMemo(() => parseUnifiedDiff(value), [value]);
-  const parsed = useMemo(() => (changes ? { ...parsedPatch, sections: withComparisonFiles(parsedPatch.sections, comparisonFiles) } : parsedPatch), [changes, parsedPatch, comparisonFiles]);
-  const entries = useMemo(() => (changes ? withRawFiles(diffFileEntries(parsed.sections), parsed.sections) : []), [changes, parsed]);
+  const parsed = useMemo(() => ({ ...parsedPatch, sections: withComparisonFiles(parsedPatch.sections, comparisonFiles) }), [parsedPatch, comparisonFiles]);
+  const entries = useMemo(() => withRawFiles(diffFileEntries(parsed.sections), parsed.sections), [parsed]);
   // $e: Qe = patchesWithheld, Fe = fileActions.fetchFilePatch, He = false (see isLargeDiff).
   const lazyPatches = typeof fileActions?.fetchFilePatch === "function";
-  const large = changes && isLargeDiff(entries, { withheld: patchesWithheld, lazyPatches, singleList: false });
+  const large = isLargeDiff(entries, { withheld: patchesWithheld, lazyPatches, singleList: false });
   // c44d00c7f Jd: a fold-all request applies when it collapses or the diff is not large (`(le.collapsed || !qt) && …`);
   // an expand-all that arrives while the diff is large is consumed without effect (the Changes menu disables it then).
   const ignoredFold = useRef(null);
-  if (changes && foldAll && !foldAll.collapsed && large && ignoredFold.current !== foldAll) ignoredFold.current = foldAll;
+  if (foldAll && !foldAll.collapsed && large && ignoredFold.current !== foldAll) ignoredFold.current = foldAll;
   const foldRequest = foldAll && ignoredFold.current !== foldAll ? foldAll : null;
   const listed = !!fileList, tree = fileList?.tree !== false, groupByKind = !!fileList?.groupByKind;
+  // c44d00c7f Jd: the session the Changes pane serves; the official body is drawn in the main window's Changes pane.
+  const targetSession = fileList?.sessionId ?? undefined;
+  // W14-code r6 pierre: Jd's `pt = Le(!dt && !Ye)` — the main window's Changes pane (a session, the Changed files layout,
+  // not a pop-out window) draws the official body (PierreChangesBody) unless local_pierre_changes_body is off.
+  const pierreSwitch = useContext(PierreChangesBodyContext);
+  const pierre = pierreSwitch && listed && !!targetSession && !inPopoutPaneWindow();
   // R3-files FT-07 (diffgit-11): c44d00c7f hides a file's whitespace changes only while Ca says nothing is anchored on
   // its lines (`hideWhitespace: k && !Ca({annotations, prComments, findings, drafts})`, per file of the list).
-  const paused = useWhitespacePausedFiles({ parsed, active: hideWhitespace, commentScope: changes ? commentScope : null, findings: changes ? review?.findings : null });
-  const sections = useMemo(() => {
-    const ordered = listed ? orderDiffSections(parsed.sections, { tree, groupByKind }) : parsed.sections;
-    return hideWhitespace ? ordered.map((section) => (paused.has(section.path) ? section : whitespaceHidden(section))) : ordered;
-  }, [parsed, hideWhitespace, listed, tree, groupByKind, paused]);
+  // W14-code r7 (R7DC-01): that is the host rows' own filter (FileDiff, the rollback). The official body gets the
+  // unfiltered sections: Ju pauses or hides per file itself (c44d00c7f qu `hideWhitespace:N&&!Dc({annotations:c,
+  // prComments:l,findings:u,drafts:d})` over the cc8941b7b store, then `ci(s,void 0,{hideWhitespace:f.hideWhitespace})`).
+  const hostWhitespace = hideWhitespace && !pierre;
+  const paused = useWhitespacePausedFiles({ parsed, active: hostWhitespace, commentScope, findings: review?.findings ?? null });
+  const sections = useMemo(() => shownDiffSections(parsed.sections, { listed, tree, groupByKind, hideWhitespace: hostWhitespace, paused }),
+    [parsed, hostWhitespace, listed, tree, groupByKind, paused]);
   const patchQueue = useMemo(() => createPatchFetchQueue(), [scopeKey]); // eslint-disable-line react-hooks/exhaustive-deps
   const reportLarge = useRef(onIsLargeChange);
   reportLarge.current = onIsLargeChange;
-  useEffect(() => { if (changes) reportLarge.current?.(large); }, [changes, large]);
+  useEffect(() => { reportLarge.current?.(large); }, [large]);
   const [activePath, setActivePath] = useState(null);
   const [reveal, setReveal] = useState(null);
   // c44d00c7f Jd: a tree pick is `$r = e => wr.scrollToAnnotation(i, e, {tileId: a})`, and a request the pane resolves to
   // one of its files is `wr.scrollToAnnotation(i, t[0].filePath, {tileId: ei.tileId, anchor: ei.anchor})`; the session's
   // scroll target (diff-reveal.mjs, cc8941b7b scrollTargetBySession) is what the tree counts as a jump (Vo). The host
   // selects the file directly and records the target beside it; the tile is the host's undefined Changes tile.
-  const targetSession = changes ? fileList?.sessionId ?? undefined : undefined;
   const selectFile = useCallback((path, anchor) => {
     setActivePath(path);
     setReveal((previous) => ({ path, seq: (previous?.seq ?? 0) + 1 }));
     scrollDiffTarget(targetSession, path, anchor ? { anchor } : undefined);
-  }, [targetSession]);
+    // The body takes the pick from the session's scroll target in the official store (qu's Qt effect over cc8941b7b vr:
+    // un-collapse the file, prioritise its patch, scroll it — or its anchor line — into view, clearScrollTarget).
+    if (pierre) diffAnnotationActions.scrollToAnnotation(targetSession, path, anchor ? { anchor } : undefined);
+  }, [targetSession, pierre]);
   // A file row of the per-turn edits card (diff-reveal.mjs): that file's section, as a file-list selection.
   useEffect(() => {
-    if (!changes) return undefined;
     const take = () => { const request = takeDiffRevealRequest(entries.map((entry) => entry.filePath)); if (request) selectFile(request.path, request.anchor); };
     take();
     return subscribeDiffReveal(take);
-  }, [changes, entries, selectFile]);
+  }, [entries, selectFile]);
   // c44d00c7f (the Qt effect): a plain target naming a listed file is taken by the diff (wr.clearScrollTarget(e)) once it
   // has been shown; the host's reveal effect below has already put the section on screen.
   const target = useSyncExternalStore(subscribeDiffTargets, () => diffTarget(targetSession), () => undefined);
@@ -1190,7 +1437,7 @@ export function SourceDiff({ value = "", scopeKey = "standalone", layout = "unif
   // disabled while a carried-over comparison is shown, and a scope change closes it.
   const fetchImageRef = useRef(null);
   fetchImageRef.current = fileActions?.fetchImage ?? null;
-  const canFetchImages = changes && typeof fileActions?.fetchImage === "function";
+  const canFetchImages = typeof fileActions?.fetchImage === "function";
   const fetchFileImages = useMemo(() => (canFetchImages ? fetchDiffFileImages((request) => fetchImageRef.current?.(request) ?? null) : null),
     [canFetchImages, scopeKey]); // eslint-disable-line react-hooks/exhaustive-deps
   const [imageView, setImageView] = useState(null);
@@ -1208,14 +1455,15 @@ export function SourceDiff({ value = "", scopeKey = "standalone", layout = "unif
   // B34 Eo/Rt: F7 / ⇧F7 (⌥F5 / ⇧⌥F5 off Linux) anywhere in the Changes pane (its [data-pane-root] or dialog) scrolls
   // the next / previous change block (diffChangeTargets) to the middle; collapsed files are skipped. A press steps
   // from the change the last one went to while it is still on screen, else from the topmost visible line.
-  const changeFiles = useMemo(() => (changes ? sections.filter((section) => section.type === "file" && section.path && !section.fallbackReason)
-    .map((section) => ({ id: section.path, targets: diffChangeTargets(section.path, section.hunks) })) : []), [changes, sections]);
+  const changeFiles = useMemo(() => sections.filter((section) => section.type === "file" && section.path && !section.fallbackReason)
+    .map((section) => ({ id: section.path, targets: diffChangeTargets(section.path, section.hunks) })), [sections]);
   const changeFilesRef = useRef(changeFiles);
   changeFilesRef.current = changeFiles;
   const lastChange = useRef(null);
   useEffect(() => {
     const view = root.current;
-    if (!changes || !view) return undefined;
+    // The official body registers F7 / ⇧F7 itself (qu Gl: Fn nextDiffChange / prevDiffChange on the pane root).
+    if (!view || pierre) return undefined;
     const doc = view.ownerDocument, win = doc.defaultView ?? window;
     const target = view.closest('[data-pane-root], [role="dialog"], [role="alertdialog"]') ?? view;
     const platform = `${win.navigator?.userAgentData?.platform ?? ""} ${win.navigator?.platform ?? ""}`;
@@ -1249,25 +1497,39 @@ export function SourceDiff({ value = "", scopeKey = "standalone", layout = "unif
     };
     target.addEventListener("keydown", onKeyDown);
     return () => target.removeEventListener("keydown", onKeyDown);
-  }, [changes, scopeKey, placeholderShown]);
+  }, [scopeKey, placeholderShown, pierre]);
   // panes:C2-7 (c44d00c7f Jd Qn): ⌥F9 / ⇧⌥F9 next / previous PR review comment, beside the change keys above. The host has
   // no PR review comments (NO_PR_COMMENTS), so the official enabled condition (kt.open.length > 0) keeps it off.
-  usePrCommentShortcuts({ rootRef: root, files: changes ? entries.length : 0 });
-  const banner = changes && large && entries.length > 0
+  usePrCommentShortcuts({ rootRef: root, files: entries.length });
+  const banner = large && entries.length > 0
     ? <div className="sdiff-large-banner shrink-0 px-md py-1.25 text-body text-muted-as-secondary">{DIFF_FILE_LIST_LABELS.largeBanner}</div> : null;
-  const view = <div ref={root} key={scopeKey} data-layout={actualLayout} data-word-wrap={wordWrap} data-word-highlight={wordDiff} data-hide-whitespace={hideWhitespace || undefined} data-large-diff={large || undefined} className="source-diff diff sdiff-view" data-source-component="FileDiff" data-placement={placement} aria-label={t("File changes")}>
+  const view = <div ref={root} key={scopeKey} data-layout={actualLayout} data-word-wrap={wordWrap} data-word-highlight={wordDiff} data-hide-whitespace={hideWhitespace || undefined} data-large-diff={large || undefined} className="source-diff sdiff-view" data-source-component="FileDiff" data-placement="changes">
     {!listed && banner}
     {sections.map((section) => section.type === "file" && section.lazyPatch && lazyPatches
-      ? <LazyFileDiff key={`lazy:${section.path}`} file={section} fetchFilePatch={fileActions.fetchFilePatch} queue={patchQueue} scopeKey={scopeKey} layout={actualLayout} completeContext={false} foldAll={foldRequest} placement={placement} fileActions={fileActions} wordDiff={wordDiff}
-        defaultExpanded={!large} reveal={changes ? reveal : null} review={changes ? review : null} commentScope={changes ? commentScope : null} imageViewer={changes ? imageViewer : null} />
+      ? <LazyFileDiff key={`lazy:${section.path}`} file={section} fetchFilePatch={fileActions.fetchFilePatch} queue={patchQueue} scopeKey={scopeKey} layout={actualLayout} completeContext={false} foldAll={foldRequest} fileActions={fileActions} wordDiff={wordDiff}
+        defaultExpanded={!large} reveal={reveal} review={review} commentScope={commentScope} imageViewer={imageViewer} />
       : section.type === "file"
-      ? <FileDiff key={`${section.id}:${section.path}`} file={section} scopeKey={scopeKey} layout={actualLayout} completeContext={completeContext} foldAll={foldRequest} placement={placement} fileActions={fileActions} wordDiff={wordDiff}
-        defaultExpanded={!large} reveal={changes ? reveal : null} review={changes ? review : null} commentScope={changes ? commentScope : null} imageViewer={changes ? imageViewer : null} />
+      ? <FileDiff key={`${section.id}:${section.path}`} file={section} scopeKey={scopeKey} layout={actualLayout} completeContext={completeContext} foldAll={foldRequest} fileActions={fileActions} wordDiff={wordDiff}
+        defaultExpanded={!large} reveal={reveal} review={review} commentScope={commentScope} imageViewer={imageViewer} />
       : <RawPatch key={section.id} value={section.raw} reason={section.reason} />)}
   </div>;
+  // c44d00c7f Jd: a comparison listing files none of which has a patch to show (cd14a8022 F: no `patch`, not
+  // lazy_file_hunks) renders only "Diff content unavailable for {count} files." — here the main process's files arrived
+  // and the patch yielded no file section.
+  if (Array.isArray(comparisonFiles) && comparisonFiles.length > 0 && entries.length === 0 && !String(value ?? "").trim())
+    return <div className="flex h-full items-center justify-center text-body text-muted-as-secondary">
+      {tn(comparisonFiles.length, "Diff content unavailable for {count} file.", "Diff content unavailable for {count} files.")}</div>;
   if (!listed) return <>{view}{imageDialog}</>;
+  // The official body sits in the layout's main column (qu's root `relative flex-1 min-h-0`; the CodeView is the scroll
+  // root and the "Changes" group itself, ca7ba268c La); root measures the split fit there as on the host body.
+  const body = placeholderShown ? <div className="min-h-0 flex-1 h-full">{emptyPlaceholder}</div>
+    : pierre ? <div ref={root} className="relative flex min-h-0 flex-1 flex-col" data-layout={actualLayout} data-pierre-changes-body="">
+      <PierreChangesMount sessionId={targetSession} scopeKey={scopeKey} sections={sections} completeContext={completeContext} layout={actualLayout}
+        wordWrap={wordWrap} wordDiff={wordDiff} hideWhitespace={hideWhitespace} foldAll={foldRequest} collapseAll={large} stale={stale}
+        fileActions={fileActions} review={review} commentScope={commentScope} imageViewer={imageViewer} />
+    </div> : view;
   return <><ChangesFileLayout fileList={fileList} entries={entries} activePath={activePath} onSelect={selectFile} onOpenFile={fileActions?.onOpenFile} actions={fileActions} banner={banner}
-    stale={stale} commits={commits}>{placeholderShown ? <div className="min-h-0 flex-1 h-full">{emptyPlaceholder}</div> : view}</ChangesFileLayout>{imageDialog}</>;
+    stale={stale} commits={commits} pierre={pierre && !placeholderShown}>{body}</ChangesFileLayout>{imageDialog}</>;
 }
 // Test hooks (R3-files FT-07: SSR of the Changed files tree and a hook dispatcher over its rows).
 export { LazyFileDiff as SourceLazyFileDiff };

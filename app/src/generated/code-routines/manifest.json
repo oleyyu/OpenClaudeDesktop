@@ -32,6 +32,10 @@
       "file": "c0243d234-CVQfH8d_.js",
       "local": "K"
     },
+    "WorkspaceTrustDialog": {
+      "file": "c165c93f1-DO0V7qMe.js",
+      "local": "ie"
+    },
     "useLocalRoutineForm": {
       "file": "c0fd2fda3-CntNPbFi.js",
       "local": "hn"
@@ -83,6 +87,14 @@
     "clampRoutinePermissionChoice": {
       "file": "c0fd2fda3-CntNPbFi.js",
       "local": "cn"
+    },
+    "SearchablePillSelect": {
+      "file": "cd2687f9f-BuSCKovQ.js",
+      "local": "we"
+    },
+    "identityItemLabel": {
+      "file": "cd2687f9f-BuSCKovQ.js",
+      "local": "k"
     }
   },
   "modules": [

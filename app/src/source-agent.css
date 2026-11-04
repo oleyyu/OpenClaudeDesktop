@@ -4,12 +4,14 @@
 .sag-trigger:focus-visible { outline:none; box-shadow:var(--cds-focus-shadow); }
 .sag-name { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .sag-verb,.sag-model,.sag-outcome { flex-shrink:0; }
-.sag-model { color:var(--cds-text-muted); }
+/* BOe: `text-body shrink-0 ${settled ? "text-muted-as-secondary" : "text-secondary"}`. */
+.sag-model { color:var(--muted-as-secondary, var(--cds-text-muted)); }
 /* he (approval-current.js:17127-17131): text-secondary while running, text-muted settled (Ve). */
 .sag[data-agent-state=running] .sag-model { color:var(--cds-text-secondary); }
 /* Ie in rE's `min-w-0` slot as `block truncate`; the plain verb stays whitespace-nowrap. */
 .sag-verb[data-described] { flex-shrink:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .sag-activity { min-width:0; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; color:var(--cds-text-secondary); }
+.sag-activity-count { flex-shrink:0; white-space:nowrap; color:var(--cds-text-secondary); }
 .sag-caret { flex-shrink:0; align-self:center; color:var(--cds-text-muted); }
 .sag-trigger:hover { color:var(--cds-text-secondary); }
 .sag[data-agent-state=failed] .sag-verb { color:var(--cds-text-danger); }
@@ -27,19 +29,6 @@
 .sag-entries { display:flex; flex-direction:column; gap:var(--chat-turn-gap,15px); overflow-wrap:anywhere; }
 .sag-entries > .source-message.source-message { margin:0; }
 .sag-entries .source-user-message { align-self:stretch; }
-.sag-model-note { margin:0; font-size:var(--cds-font-size-footnote); line-height:var(--cds-leading-footnote); color:var(--cds-text-muted); }
-.sag-model-note span { color:var(--cds-text-secondary); }
-.sag-thinking { display:flex; align-items:center; height:20px; }
-.sag-empty { margin:0; font-size:var(--cds-font-size-body); color:var(--cds-text-muted); }
 .sag-link { border:0; padding:0; background:none; color:var(--cds-text-secondary); text-decoration:underline; }
 @media(prefers-reduced-motion:reduce){.sag-surface{transition:none;}}
 html[data-reduce-motion="true"] .sag-surface { transition: none; }
-/* A continuable sub-agent's follow-up box, under its transcript (CDS input surface, light and dark tokens). */
-.sag-composer { flex-shrink:0; padding:0 var(--cds-pad-lg) var(--cds-pad-lg); }
-.sag-composer-box { display:flex; align-items:flex-end; gap:var(--cds-gap-sm); padding:6px 6px 6px 10px; border:1px solid var(--cds-border); border-radius:12px; background:var(--cds-surface-1); }
-.sag-composer-box:focus-within { border-color:var(--cds-border-strong, var(--cds-border)); box-shadow:var(--cds-focus-shadow); }
-.sag-composer textarea { flex:1; min-width:0; max-height:120px; resize:none; border:0; outline:none; background:transparent; color:var(--cds-text-primary); font:inherit; font-size:var(--cds-font-size-body); line-height:var(--cds-leading-body); padding:3px 0; field-sizing:content; }
-.sag-composer textarea::placeholder { color:var(--cds-text-muted); }
-.sag-composer .source-tool-error { margin:6px 0 0; }
-/* zw (cccc2cf0a :13175): the finished sub-agent's stats footnote, text-footnote text-muted tabular-nums. */
-.sag-stats { margin:0; font-size:var(--cds-font-size-footnote); line-height:var(--cds-leading-footnote); color:var(--cds-text-muted); font-variant-numeric:tabular-nums; }

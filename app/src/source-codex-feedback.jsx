@@ -1,7 +1,9 @@
 import React, { useState } from "react";
 import { ActionDialog } from "./source-session-actions.jsx";
 import { SourceDialogFooter } from "./source-dialog.jsx";
-import { SourceSettingsButton } from "./source-settings-button.jsx";
+// W14-code r7 R7DC-02 / css7-deliverables-settings-button: the CDS Button (shared-frame Uu, official Eu) straight from the
+// shared-frame file (E41), in place of the host settings-button copy.
+import { CdsButton } from "./generated/view-tabs/shared-frame-6jtSkIit.js";
 import { t } from "../electron/i18n/index.mjs";
 import "./source-claude-import.css";
 
@@ -35,10 +37,10 @@ export function CodexFeedbackDialog({ rpc, threadId = null, initialNote = "", co
   return <ActionDialog {...dialog} title={coreLabel === "Codex" ? t("Send feedback to Codex") : t("Send feedback to {core}", { core: coreLabel })} className="claude-import-dialog" onClose={() => !busy && onClose()}>
     {sent !== null ? <>
       <p role="status">{opened ? t("{core}’s bug report opened in your browser. Review it and submit it there.", { core: coreLabel }) : t("Thanks. Your feedback was sent.")}</p>
-      {opened && <p className="claude-import-muted"><SourceSettingsButton size="sm" variant="ghost" onClick={() => void onOpenLink?.(opened)}>{t("Open again")}</SourceSettingsButton>
-        <SourceSettingsButton size="sm" variant="ghost" onClick={() => void globalThis.navigator?.clipboard?.writeText(opened).catch(() => {})}>{t("Copy link")}</SourceSettingsButton></p>}
-      {sent && <p className="claude-import-muted">{t("Reference: {id}", { id: sent })} <SourceSettingsButton size="sm" variant="ghost" onClick={() => void globalThis.navigator?.clipboard?.writeText(sent).catch(() => {})}>{t("Copy")}</SourceSettingsButton></p>}
-      <SourceDialogFooter><SourceSettingsButton variant="primary" data-autofocus onClick={onClose}>{t("Done")}</SourceSettingsButton></SourceDialogFooter>
+      {opened && <p className="claude-import-muted"><CdsButton size="sm" variant="ghost" onClick={() => void onOpenLink?.(opened)}>{t("Open again")}</CdsButton>
+        <CdsButton size="sm" variant="ghost" onClick={() => void globalThis.navigator?.clipboard?.writeText(opened).catch(() => {})}>{t("Copy link")}</CdsButton></p>}
+      {sent && <p className="claude-import-muted">{t("Reference: {id}", { id: sent })} <CdsButton size="sm" variant="ghost" onClick={() => void globalThis.navigator?.clipboard?.writeText(sent).catch(() => {})}>{t("Copy")}</CdsButton></p>}
+      <SourceDialogFooter><CdsButton variant="primary" data-autofocus onClick={onClose}>{t("Done")}</CdsButton></SourceDialogFooter>
     </> : <>
       <div className="claude-import-list" role="radiogroup" aria-label={t("How was this?")}>{CATEGORIES().map((entry) => <label key={entry.value} className="claude-import-item">
         <input type="radio" name="codex-feedback" checked={category === entry.value} disabled={busy} onChange={() => setCategory(entry.value)} />
@@ -48,8 +50,8 @@ export function CodexFeedbackDialog({ rpc, threadId = null, initialNote = "", co
       {threadId && logsSupported && <label className="claude-import-item"><input type="checkbox" checked={logs} disabled={busy} onChange={(event) => setLogs(event.target.checked)} />
         <span><strong>{t("Include this session’s logs")}</strong><span className="claude-import-muted">{t("Share this session’s Codex logs and diagnostics with OpenAI for troubleshooting.")}</span></span></label>}
       {error && <p role="alert" className="claude-import-error">{error}</p>}
-      <SourceDialogFooter><SourceSettingsButton data-autofocus disabled={busy} onClick={onClose}>{t("Cancel")}</SourceSettingsButton>
-        <SourceSettingsButton variant="primary" busy={busy} onClick={() => void send()}>{t("Send feedback")}</SourceSettingsButton></SourceDialogFooter>
+      <SourceDialogFooter><CdsButton data-autofocus disabled={busy} onClick={onClose}>{t("Cancel")}</CdsButton>
+        <CdsButton variant="primary" busy={busy} onClick={() => void send()}>{t("Send feedback")}</CdsButton></SourceDialogFooter>
     </>}
   </ActionDialog>;
 }

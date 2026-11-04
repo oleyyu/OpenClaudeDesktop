@@ -8,7 +8,7 @@
 .sdc-copy { display:inline-flex; align-items:center; justify-content:center; flex:none; width:var(--cds-h-control,32px); height:var(--cds-h-control,32px); padding:0; border:0; border-radius:var(--cds-radius,6px); color:var(--cds-text-primary); background:transparent; cursor:var(--cds-cursor-interactive,default); backdrop-filter:blur(12px); }
 .sdc-copy:hover { background:var(--cds-fill-ghost-hover); }
 .sdc-copy:focus-visible { outline:none; box-shadow:var(--cds-focus-shadow); }
-.sdc-status { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
+/* W14-code r5 cleanup css5-sr-only-handcopies: the hand-copied sr-only rule is gone; the JSX uses the official c6a992d55 .sr-only. */
 .sdc-label { padding:14px 14px 0; color:var(--cds-text-muted); font:var(--cds-font-size-caption,12px)/var(--cds-leading-caption,16px) var(--cds-font-sans); }
 .sdc-scroll { overflow-x:auto; }
 .skf-markdown .sdc-pre { margin:0; padding:14px; border:0; border-radius:var(--msg-block-radius,8px); background:transparent; color:hsl(220 20% 10%); font:14px/21px var(--font-mono); white-space:pre; overflow-wrap:normal; overflow:visible; }

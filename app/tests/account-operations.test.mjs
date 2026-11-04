@@ -41,6 +41,11 @@ test('sign out requires confirmation, invalidates cached identity and reads actu
  f.setHandler(async method=>method==='account/logout'?{}:{account:{type:'apiKey'},requiresOpenaiAuth:false});await f.service.logout(true);assert.deepEqual(f.calls.map(x=>x.method),['account/logout','account/read']);assert.equal(f.accounts[0],null);assert.equal(f.accounts[1].account.type,'apiKey');assert.equal(f.service.snapshot().phase,'idle');
  f.setHandler(async method=>{if(method==='account/read')throw Error('Account read failed');return {};});await assert.rejects(f.service.logout(true),/Account read failed/);assert.equal(f.accounts.at(-1),null);assert.equal(f.service.snapshot().error,'Account read failed');
 });
+test('a sign out that leaves something signed in elsewhere publishes its notice until the next operation',async()=>{
+ const f=fixture();f.setHandler(async method=>method==='account/logout'?{codeDesktop:{notice:'Claude Code itself stays signed in: run `claude auth logout` in a terminal to sign out of your Claude account.'}}:{account:null,requiresOpenaiAuth:true});
+ await f.service.logout(true);assert.equal(f.service.snapshot().phase,'idle');assert.equal(f.service.snapshot().error,'');assert.match(f.service.snapshot().notice,/claude auth logout/);
+ f.setHandler(async method=>method==='account/logout'?{}:{account:null,requiresOpenaiAuth:true});await f.service.logout(true);assert.equal(f.service.snapshot().notice,'');
+});
 test('newer account snapshots win out-of-order refreshes without overwriting identity',async()=>{
  const f=fixture(),a=deferred(),b=deferred();let n=0;f.setHandler(()=>++n===1?a.promise:b.promise);const first=f.service.refresh();await tick();const second=f.service.refresh();await tick();b.resolve({account:{type:'chatgpt',email:'new@example.test'}});await second;a.resolve({account:{type:'chatgpt',email:'old@example.test'}});await first;assert.deepEqual(f.accounts.map(a=>a.account.email),['new@example.test']);
 });

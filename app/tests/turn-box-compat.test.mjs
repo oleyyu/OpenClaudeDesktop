@@ -69,5 +69,25 @@ test('real tree: the 3.6556.2 manifest itself, its exports as the consumers read
   // The importers, pinned so a new one is a conscious change. The earlier ones left as they moved to 3.6556.2:
   // session-rail-context (its Spinner import) and session-rail (W5 w5-session-rail-gen: stable-array's zU/ZU are now its
   // own 3.6556.2 shared-25 UH/DG/kG slice; turn-box, still 2.42304.0, holds the old copy in the other release).
-  assert.deepEqual([...importers].sort(), []);
+  // W14-code renderer-core (E86): the Code transcript renderer (code-transcript, 3.6556.2) links the turn box instead of
+  // cutting a second copy (D1), so its modules are the only importers; the area declares the link in its manifest.
+  const transcriptDir = 'src/generated/code-transcript/';
+  // W14-code r4 sidebar-new (fr4-07): the sidebar hover card (sidebar-hover-card, 3.6556.2) links the turn box's
+  // strip-markup / shared-11 / session-messages too (D1, declared in its manifest's linkedAreas).
+  const hoverDir = 'src/generated/sidebar-hover-card/';
+  // W14-code r6 pierre (gen-final-6 syncs this pin): the pierre Changes body (pierre-changes, 3.6556.2) links every area
+  // the transcript renderer links, the turn box included (D1, declared in its manifest's linkedAreas).
+  const pierreDir = 'src/generated/pierre-changes/';
+  // W14-code r7 r7c-01: the queued message bar (queued-bar, 3.6556.2) links every area the transcript renderer links,
+  // the turn box included (D1, declared in its manifest's linkedAreas), as pierre-changes does.
+  const queuedDir = 'src/generated/queued-bar/';
+  assert.deepEqual([...importers].filter(file => !file.startsWith(transcriptDir) && !file.startsWith(hoverDir) && !file.startsWith(pierreDir) && !file.startsWith(queuedDir)).sort(), []);
+  assert.ok(JSON.parse(fs.readFileSync(path.join(app, queuedDir, 'manifest.json'), 'utf8')).linkedAreas.some(link => (link.area ?? link) === 'turn-box'));
+  assert.ok(JSON.parse(fs.readFileSync(path.join(app, pierreDir, 'manifest.json'), 'utf8')).linkedAreas.some(link => (link.area ?? link) === 'turn-box'));
+  const hoverManifest = JSON.parse(fs.readFileSync(path.join(app, hoverDir, 'manifest.json'), 'utf8'));
+  assert.ok(hoverManifest.linkedAreas.some(link => (link.area ?? link) === 'turn-box'));
+  assert.ok([...importers].some(file => file.startsWith(transcriptDir)));
+  const transcriptManifest = JSON.parse(fs.readFileSync(path.join(app, transcriptDir, 'manifest.json'), 'utf8'));
+  assert.equal(transcriptManifest.referenceVersion, '3.6556.2');
+  assert.ok(transcriptManifest.linkedAreas.includes('turn-box'));
 });

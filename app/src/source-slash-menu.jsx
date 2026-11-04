@@ -1,4 +1,4 @@
-import React,{useCallback,useEffect,useLayoutEffect,useRef,useState} from 'react';
+import React,{useCallback,useLayoutEffect,useRef,useState} from 'react';
 import {createPortal} from 'react-dom';
 import {slashMenuLayout,slashFilterFits} from './slash-menu-layout.mjs';
 import {SkillDescriptionTooltip} from './source-menu.jsx';
@@ -83,8 +83,8 @@ export function SourceSlashMenu({commands,selected,onSelect,onHover,onDismiss,id
  },[selected,query,entries,caret?.left,caret?.top,preSession,loading,failed,editorRef,virtual]);
  if(!caret)return null;
  const renderEntry=(entry,key)=>entry.type==='header'?<div key={key} className="slash-header" role="presentation">{t(entry.label)}</div>
-  :entry.type==='loading'?<div key={key} className="smenu-skeleton-row slash-loading" data-slash-loading=""><span className="smenu-skeleton" style={{width:skeletonPlan(1)[0].width,height:16}} role="status"><span className="smenu-sr-only">{t('Loading')}</span></span></div>
-  :(({command:c,index:i})=><div key={key} id={`${id}-${i}`} role="menuitem" tabIndex={-1} data-highlighted={selected===i?'':undefined} onMouseMove={()=>{if(i!==selected){mouseSelection.current=i;onHover(i);}}} onClick={()=>onSelect(c.id)}><span className="slash-label"><Match text={c.id} query={query}/>{c.matchedAlias&&<span className="slash-alias"> (<Match text={c.matchedAlias} query={query}/>)</span>}</span>{c.subtitle&&<span className="slash-subtitle"><span className="sc-sr-only">, </span>{t(c.subtitle)}</span>}</div>)(entry);
+  :entry.type==='loading'?<div key={key} className="smenu-skeleton-row slash-loading" data-slash-loading=""><span className="smenu-skeleton" style={{width:skeletonPlan(1)[0].width,height:16}} role="status"><span className="sr-only">{t('Loading')}</span></span></div>
+  :(({command:c,index:i})=><div key={key} id={`${id}-${i}`} role="menuitem" tabIndex={-1} data-highlighted={selected===i?'':undefined} onMouseMove={()=>{if(i!==selected){mouseSelection.current=i;onHover(i);}}} onClick={()=>onSelect(c.id)}><span className="slash-label"><Match text={c.id} query={query}/>{c.matchedAlias&&<span className="slash-alias"> (<Match text={c.matchedAlias} query={query}/>)</span>}</span>{c.subtitle&&<span className="slash-subtitle"><span className="sr-only">, </span>{t(c.subtitle)}</span>}</div>)(entry);
  const description=active?.skillDescription||active?.description||undefined,hasDescription=!!(description||active?.sourcePluginName||active?.sourceRepo);
  const doc=editorRef?.current?.ownerDocument||document;
  return createPortal(<>
@@ -120,5 +120,5 @@ export function SlashHint({caret,text,argument=false,id,editorRef,getCaret}) {
   return()=>{observer.disconnect();mutation.disconnect();doc.removeEventListener('selectionchange',update);view.removeEventListener('resize',update);view.removeEventListener('scroll',update,true);};
  },[text,argument,caret?.left,caret?.top,editorRef,getCaret]);
  if(!caret||!text)return null;
- return createPortal(<><span ref={ref} className={argument?'slash-argument cds-root':'slash-filter cds-root'} data-skill-arg-hint={argument||undefined} aria-hidden="true" style={{left:caret.left+2,top:caret.top+caret.height/2}}>{text}</span>{argument&&<span className="sc-sr-only" role="status" aria-live="polite" id={id}>{text}</span>}</>,editorRef?.current?.ownerDocument.body||document.body);
+ return createPortal(<><span ref={ref} className={argument?'slash-argument cds-root':'slash-filter cds-root'} data-skill-arg-hint={argument||undefined} aria-hidden="true" style={{left:caret.left+2,top:caret.top+caret.height/2}}>{text}</span>{argument&&<span className="sr-only" role="status" aria-live="polite" id={id}>{text}</span>}</>,editorRef?.current?.ownerDocument.body||document.body);
 }

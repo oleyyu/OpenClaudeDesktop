@@ -92,6 +92,8 @@ const sessionCommands = (overrides = {}) => {
       sideChat: null, ...overrides.panes },
     onTogglePane: (kind) => ran.push(`pane:${kind}`), onClosePane: overrides.onClosePane === null ? undefined : () => ran.push('close-pane'),
     prompts: { available: true, onJump: (direction) => ran.push(`prompt:${direction}`), ...overrides.prompts },
+    // W14-code r5 gates-r5-01: the gate-on shape (cf74bc599 K / promptJumpEnabled); the host defaults are off (see below).
+    sessionActions: overrides.sessionActions ?? true, promptJump: overrides.promptJump ?? true,
   });
   return { actions, ran };
 };
@@ -129,11 +131,23 @@ test('Actions catalog: the open session and pane commands with registry labels, 
   assert.deepEqual(paletteActionGroups(actions).map((group) => group.title), ['Navigation', 'Chat', 'Session', 'Settings', 'General']);
 });
 
+test('W14-code r5 gates-r5-01: ccd_palette_session_actions / ccd_prompt_jump are off (not in Uon): no rename / pin / fork / prompt jumps', () => {
+  // cf74bc599 `$e("rename_code_session", K && A ? Xe : void 0)` … `$e("fork_code_session", K && !g && Oe ? nt : void 0)`; archive,
+  // delete and unarchive are not gated by K. The jump rows take `skip: !T` (T = promptJumpEnabled && …).
+  const off = paletteActions({ session: { archived: false, pinned: false, canArchive: true, canDelete: true, canFork: true, onAction() {} },
+    prompts: { available: true, onJump() {} } }).filter((action) => action.group === 'session').map((action) => action.id);
+  assert.deepEqual(off, ['archive_code_session', 'delete_code_session', 'new_code_session_from_current']);
+  const pinned = paletteActions({ session: { archived: true, pinned: true, canArchive: true, canDelete: true, onAction() {} } }).map((action) => action.id);
+  assert.ok(pinned.includes('unarchive_code_session') && !pinned.includes('unpin_code_session'));
+  const { actions } = sessionCommands({ sessionActions: false, promptJump: false });
+  for (const id of ['rename_code_session', 'pin_code_session', 'fork_code_session', 'jump_prev_prompt', 'jump_next_prompt']) assert.ok(!actions.some((action) => action.id === id), id);
+});
+
 test('Actions catalog: hide_all_nested_sessions / show_all_nested_sessions (shared-20 _S, moved out of Group and sort in 2.42304.0)', async () => {
   const PaletteCopy = await import('../src/generated/code-current/nested-session-palette-copy.mjs');
   const ran = [];
   const nested = { anyShown: true, anyHidden: true, onHideAll: () => ran.push('hide'), onShowAll: () => ran.push('show') };
-  const actions = paletteActions({ session: { canArchive: true, canDelete: true, canFork: true, onAction() {} }, nested });
+  const actions = paletteActions({ session: { canArchive: true, canDelete: true, canFork: true, onAction() {} }, nested, sessionActions: true /* gate-on order */ });
   const session = actions.filter((action) => action.group === 'session').map((action) => action.id);
   // shared-1 registry order: … fork_code_session, hide/show_all_nested_sessions, … new_code_session_from_current.
   assert.deepEqual(session.slice(session.indexOf('fork_code_session'), session.indexOf('new_code_session_from_current') + 1),
@@ -187,7 +201,10 @@ test('Actions mode renders the registry groups with titles; a typed default view
 
 test('default mode: a modal dialog with the combobox, Quick actions and Recents, footer key hints', () => {
   const html = palette({});
-  assert.match(html, /role="dialog" aria-modal="true" aria-label="Command palette"/);
+  // W14-code r2 fr2-06: shared-19 re.Popup {"data-command-palette":"",unstyled:!0,surface:"surface-3"} carries no aria-label
+  // (en-US.json has only "Command palette options"), so the host popup has no accessible name of its own.
+  assert.match(html, /role="dialog" aria-modal="true" class="spal-popup cds-reset"/);
+  assert.doesNotMatch(html, /aria-label="Command palette"/);
   assert.match(html, /role="combobox"[^>]*placeholder="Search or start a session"/);
   assert.match(html, /aria-label="Quick actions"/);
   assert.match(html, /aria-label="Recents"/);
@@ -217,7 +234,7 @@ test('search mode: type tabs, date filter and the empty state', () => {
 test('every palette string has a zh-CN entry', () => {
   const zh = dictionary('zh-CN');
   for (const s of ['Search or start a session', 'Search sessions and projects', 'Search actions', 'Quick actions', 'Recents', 'Actions', 'Projects',
-    'Command palette', 'Command palette options', 'Search results', 'Search mode', 'Actions mode', 'Searching deeper...', 'Filters', 'No results found',
+    'Command palette options', 'Search results', 'Search mode', 'Actions mode', 'Searching deeper...', 'Filters', 'No results found',
     'Select', '{count} result available', '{count} results available', 'Past hour', 'Past week', 'Past month', 'Past year', 'Settings → {section}',
     'Customize → {section}', 'Show PR status', 'Navigation', 'Chat', 'Session', 'Archive session', 'Delete session', 'Unarchive session', 'Rename session',
     'Pin session', 'Unpin session', 'Fork session', 'New session with current settings', 'Show terminal', 'Hide terminal', 'Show changes', 'Hide changes',
@@ -242,6 +259,8 @@ test('pointer-opened menus highlight nothing; the account menu has no invented a
   assert.match(sidebar, /onClick=\{\(event\) => onAccount\?\.\(event, keyboardEntry\(event\)\)\}/);
   const main = readFileSync(path.resolve(import.meta.dirname, '../src/main.jsx'), 'utf8');
   // A click (detail > 0) passes no entry, so SourceMenu's focusItemOnOpen "auto" leaves every row unhighlighted.
-  assert.match(sidebar, /onMenu\?\.\("connection", event\.currentTarget, undefined, keyboardEntry\(event\)\)/);
+  // W14-code r4 复核 (E95): the footer Connection settings trigger is gone (hL df-footer-aux is empty in code mode), so
+  // the sidebar's own Filter trigger stands for the menu triggers here.
+  assert.match(sidebar, /setMenu\(menu\?\.kind === "filter" \? null : \{ kind: "filter", anchor: event\.currentTarget, entry: keyboardEntry\(event\) \}\)/);
   assert.doesNotMatch(main, /t\("Dark appearance"\)|t\("Light appearance"\)/);
 });

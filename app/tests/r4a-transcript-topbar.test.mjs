@@ -15,7 +15,7 @@ import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
 import { setLocale, DEFAULT_LOCALE, dictionary, tn } from '../electron/i18n/index.mjs';
 import { collectFindText, findMatches } from '../src/transcript-find-model.mjs';
-import { fileGroupPresentation, fileGroupSummary } from '../src/file-tool-model.mjs';
+import { fileGroupPresentation } from '../src/file-tool-model.mjs';
 import { titlebarControlClass } from '../src/titlebar-controls-model.mjs';
 import { sessionArchived } from '../src/sidebar-model.js';
 import { createClipboardFeedback } from '../src/clipboard-feedback.mjs';
@@ -198,16 +198,17 @@ test('transcript-04 official: the row and the editing row carry h-control app-li
   assert.equal(total(js, '.app-list-row'), 0, 'no 2.42304.0 script selects .app-list-row');
 });
 
-test('transcript-04 local: the same rows (h-control height, 5px radius) and the 8px tick, without the inert marker', () => {
+test('transcript-04 local: the same rows (h-control height, 5px radius) and the 8px tick, with the inert marker as officially', () => {
   const jsx = local('src/source-chapters.jsx');
-  assert.match(jsx, /if \(isEditing\) return <li className="sch-toc-entry sch-toc-editing">/);
-  assert.match(jsx, /<button ref=\{button\} type="button" className="sch-toc-entry sch-toc-button" data-active=\{isActive \? "" : undefined\}/);
-  assert.match(jsx, /\{chapters\.map\(\(chapter\) => <li key=\{chapter\.id\} className="sch-toc-tick">\n\s+<span className="sch-toc-line" data-active=\{chapter\.id === active \? "" : undefined\} \/>/);
+  // W14-code r6 review (E84): 3.6556.2 cf74bc599 FC's own class strings (readable 5545 / 5555 / 5583-5584), the inert
+  // app-list-row marker included, instead of the host's .sch-toc-entry / .sch-toc-button restatement.
+  assert.match(jsx, /if \(isEditing\) return <li className="flex items-center gap-sm px-1\.25 h-control app-list-row rounded-\[5px\]">/);
+  assert.ok(jsx.includes('className={`group/ch hit-row-main w-full flex items-center gap-sm px-1.25 h-control app-list-row rounded-[5px] text-start text-body hover:bg-fill-ghost-hover ${isActive ? "text-primary" : "text-secondary hover:text-primary"}`}'));
+  // W14-code r6 css6-toc-position-gutter: the tick is cf74bc599 PC's `li.h-[8px] flex items-center > span.block h-[2px] rounded-full …`.
+  assert.match(jsx, /\{chapters\.map\(\(chapter\) => <li key=\{chapter\.id\} className="h-\[8px\] flex items-center">\n\s+<span className=\{`block h-\[2px\] rounded-full transition-\[scale,background-color\] duration-200 \$\{chapter\.id === active \? TOC_LINE_ACTIVE : TOC_LINE\}`\} \/>/);
   const css = local('src/source-chapters.css');
-  assert.match(css, /\.sch-toc-entry \{[^}]*padding: 0 5px;\s+height: var\(--cds-h-control, 24px\); border-radius: 5px; \}/);
-  assert.match(css, /\.sch-toc-tick \{ height: 8px; display: flex; align-items: center; \}/);
-  assert.match(css, /\.sch-toc-line \{ display: block; height: 2px;[^}]*border-radius: 9999px;/);
-  // The marker has no local rule either, so omitting it changes nothing.
+  assert.doesNotMatch(css.replace(/\/\*[^]*?\*\//g, ''), /\.sch-toc-(tick|line|rail|popover|entry|button|mark|title|input)\b/, 'the rail and the rows are utility classes now');
+  // The marker has no local rule either, so carrying it changes nothing.
   for (const file of fs.readdirSync(path.join(app, 'src')).filter((name) => name.endsWith('.css')).map((name) => `src/${name}`))
     assert.equal(count(local(file), 'app-list-row'), 0, file);
 });
@@ -227,17 +228,9 @@ test('transcript-06 local: the summary is keyed by the English copy, so the id c
   assert.match(source, /const words = \{ add: t\('created'\), update: t\('edited'\), delete: t\('deleted'\), read: t\('read'\),/);
   assert.match(source, /const COUNT_META = \{ file: \['a file', '\{count\} files'\],/);
   const read = (id, file) => ({ id, type: 'commandExecution', status: 'completed', command: `Read ${file}`, commandActions: [{ type: 'read', path: `/w/${file}` }] });
-  assert.equal(fileGroupSummary([read('r1', 'a.ts'), read('r2', 'b.ts')]).label, 'Read 2 files');
   assert.equal(fileGroupPresentation([read('r1', 'a.ts'), read('r2', 'b.ts')]).segments[0].verb, 'Read');
-  assert.deepEqual(fileGroupSummary([read('r1', 'a.ts')]), { label: 'Read a.ts', path: '/w/a.ts' });
   const zh = dictionary('zh-CN');
   assert.equal(zh.read, '读取了');
-  setLocale('zh-CN');
-  try {
-    assert.equal(fileGroupSummary([read('r1', 'a.ts'), read('r2', 'b.ts')]).label, `${zh.read} ${tn(2, 'a file', '{count} files')}`);
-    assert.equal(fileGroupSummary([read('r1', 'a.ts'), read('r2', 'b.ts')]).label, '读取了 2 个文件');
-    assert.equal(fileGroupSummary([read('r1', 'a.ts')]).label, '读取了 a.ts');
-  } finally { setLocale(DEFAULT_LOCALE); }
 });
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -314,26 +307,26 @@ test('topbar-09 local: no selected variant (as default), and the pressed toggle 
   const html = renderTitlebar({ terminalAvailable: true, panes: new Set(['terminal']) });
   const toggle = html.match(/<button[^>]*data-pane-toggle="terminal"[^>]*>/)[0];
   assert.match(toggle, /aria-pressed="true"/);
-  assert.match(toggle, /class="code-icon-button text-secondary is-selected"/);
+  // W14-code r2 fr2-16: ToolButton is the CDS ghost Button (its own gc paint layer), no host class or is-selected.
+  assert.match(toggle, /data-cds-ghost="" class="[^"]* text-secondary"/);
   // Same as the default-off branch: no data-cds-pressed-variant and no ghost-selected fill.
   assert.doesNotMatch(html, /data-cds-pressed-variant|bg-fill-ghost-selected/);
-  assert.equal(titlebarControlClass(true), 'code-icon-button text-secondary is-selected');
+  assert.equal(titlebarControlClass(true), 'text-secondary');
   assert.match(html, /<div class="st-trailing panel-toggles">/);
-  // ALIGNED: the official default path is gc + Il ghost, bg-accent behind text-accent, hovered or not. ToolButton has no
-  // paint layer, so source-titlebar.css puts those two utilities' declarations on the pressed button itself, above the
-  // legacy alpha-1 wash and the local hover (tests/titlebar-rail-toggle.test.mjs resolves it through the real cascade).
+  // ALIGNED: the official default path is gc + Il ghost, bg-accent behind text-accent, hovered or not. W14-code r2 fr2-16:
+  // ToolButton is the CDS Button itself, so its paint layer carries gc and its class Il; no host pressed rule is left.
   const css = local('src/source-titlebar.css');
-  const rule = css.match(/\.st-toolbar \.code-icon-button\.text-secondary\[aria-pressed="true"\],\n\.st-toolbar \.code-icon-button\.text-secondary\[aria-pressed="true"\]:hover:not\(:disabled\) \{([^}]*)\}/);
-  assert.ok(rule, 'the pressed rule, hover included');
-  assert.match(rule[1], /background-color: var\(--cds-bg-accent\);/);
-  assert.match(rule[1], /color: var\(--cds-text-accent\);/);
+  assert.doesNotMatch(css, /\.st-toolbar \.code-icon-button/);
+  const toggleHtml = html.slice(html.indexOf(toggle), html.indexOf('</button>', html.indexOf(toggle)));
+  assert.match(toggleHtml, /group-aria-pressed\/btn:bg-accent/);
+  assert.match(toggle, /aria-pressed:text-accent/);
   // The same values as the loaded official utilities that gc and Il name.
   const sheet = local('public/assets/v1/c6a992d55-Che1orl5.css');
   pin(sheet, ['.group-aria-pressed\\/btn\\:bg-accent:is(:where(.group\\/btn)[aria-pressed=true] :where(.group-aria-pressed\\/btn\\:bg-accent)){background-color:var(--cds-bg-accent)}',
     '.aria-pressed\\:text-accent[aria-pressed=true]{color:var(--cds-text-accent)}']);
   // The popout Keep window on top (DW: ghost, pressed: t, no pressedVariant) takes the same default pressed look.
   const pinned = renderTitlebar({ popoutWindow: { alwaysOnTop: true, onDock() {}, onTogglePin() {} } });
-  assert.match(pinned.match(/<button[^>]*data-popout-pin=""[^>]*>/)[0], /class="code-icon-button text-secondary is-selected"[^>]*aria-pressed="true"/);
+  assert.match(pinned.match(/<button[^>]*data-popout-pin=""[^>]*>/)[0], /data-cds-ghost="" class="[^"]* text-secondary" aria-pressed="true"/);
   pin(official('cc43287c9-DAfOi8yP.js'), ['v(fd,{variant:"ghost",iconOnly:!0,icon:Hh(t?"PinFilled":"Pin"),className:a,pressed:t,onClick:n,"aria-label":r})']);
 });
 
@@ -349,7 +342,8 @@ test('topbar-12 official: the session pane title falls back to formatMessage "Un
 test('topbar-12 local: an unnamed session renders t("Untitled"), 未命名 in zh-CN', () => {
   assert.match(local('src/source-titlebar.jsx'), /const title = session\?\.name \|\| session\?\.preview \|\| t\("Untitled"\);/);
   assert.equal(dictionary('zh-CN').Untitled, '未命名');
-  const titleButton = (html) => html.match(/<button[^>]*class="session-title st-title"[^>]*>([^<]*)<\/button>/);
+  // W14-code r8 fr8-03: the Code title is c9543da06 Mp's button[data-pane-title] (aria-label Z444Es4IIr).
+  const titleButton = (html) => html.match(/<button[^>]*data-pane-title=""[^>]*>([^<]*)<\/button>/);
   const en = titleButton(renderTitlebar({ session: { id: 'u', cwd: '/tmp/work' } }));
   assert.equal(en[1], 'Untitled');
   assert.match(en[0], /aria-label="Untitled, rename session"/);
@@ -392,7 +386,8 @@ test('tasks-07 local: no plan path, so no Open in; Copy plan writes navigator.cl
   assert.match(electronMain, /const POPOUT_KINDS = new Set\(\["files", "changes", "plan", "tasks", "terminal", "side-chat", "session"\]\);/);
   assert.match(local('src/main.jsx'), /\? <PopoutApp sessionId=\{popoutSession\} pane=\{popoutQuery\.get\("pane"\)\}/);
   const button = renderToStaticMarkup(h(P.SourcePlanCopyButton, { document: 'Plan' }));
-  assert.match(button, /<button type="button" class="source-icon-button spc-ghost" aria-label="Copy plan" data-plan-copy="">/);
+  // W14-code r3 fr3-08: the CDS ghost iconOnly Button (3.6556.2 cccc2cf0a Copy plan `u(F,{variant:"ghost",size:"base",iconOnly:!0,…})`).
+  assert.match(button, /<button type="button" data-cds="Button" data-cds-icon-only="" data-cds-ghost="" class="[^"]*" aria-label="Copy plan" data-plan-copy=""/);
   assert.doesNotMatch(button, /Open in/);
   // The copy itself: the document text goes to the injected writeText, then Copied, then back to idle.
   // Outside this item (not asserted as equal): official MP() trims the text and keeps "Copied" 2000ms; the local

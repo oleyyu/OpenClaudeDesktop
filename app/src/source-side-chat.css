@@ -3,23 +3,20 @@
    dark outline (CdsSurface "panel" + Lt). Placement/rebasing and handle definitions are extracted from the reference;
    the turns, notice, error row and composer wrapper carry UF/HF/r8 utilities too. No host rules for any of them. */
 
-/* kT/lo composer (shared RI/yP ChatComposer). */
-.ssc-field { border-radius:var(--cds-radius-composer,12px); }
-.ssc-field .ssc-input { max-height:min(24rem,40svh);font-size:var(--cds-font-size-body,14px); }
-.ssc-field .ssc-input[data-empty=true]::before { white-space:normal; }
-.ssc-field .ssc-submit { flex-shrink:0;align-self:flex-end;width:24px;height:24px;min-height:24px; }
-.ssc-field .ssc-submit [data-cds="Icon"] { color:var(--cds-text-secondary); }
-.ssc-field .ssc-submit:disabled [data-cds="Icon"] { color:var(--cds-text-disabled); }
-
-/* _F hands the status row to Go (the host's classic source-transcript-status row), without the transcript's top gap. */
-.ssc-status .source-transcript-status { margin:0; }
+/* W14-code r3 css3-side-chat-composer: UF's composer is the main Code card (SourceComposer, embedded); inside the panel's
+   `px-md pb-md` row it fills the row, so the host's main-column measure and gutters (style.css .composer-zone,
+   source-composer.css .sc-zone.composer-zone) are undone here as in the /btw pane (source-btw-pane.css). */
+.ssc-root .composer-zone[data-embedded] { max-width:none;margin:0;padding:0; }
 
 /* c19e90103-CuNz46ca.css (not a loaded stylesheet): the user list classes the extracted SP/xP renderer writes. */
 .epitaxy-user-list{gap:var(--cds-pad-sm);flex-direction:column;padding-inline-start:20px;list-style:outside;display:flex}
 ol.epitaxy-user-list{list-style:decimal}
 li>.epitaxy-user-list{margin-top:var(--cds-pad-sm)}
 
-/* B27 side chat window (cccc2cf0a kT epitaxy-pane-window; cd377abb5 _i, 280x160 minimum): the frame fills the window,
-   and its header clears the traffic lights (the host window has no .dframe-root[data-popout] for [data-top-left]). */
+/* B27 side chat window (cccc2cf0a kT epitaxy-pane-window; cd377abb5 _i, 280x160 minimum): the frame fills the window.
+   W14-code r4 r4pa-c03 (E90 / E95, GUI check): the window's frame root carries data-popout (main.jsx, cd377abb5 lr), so the
+   header's data-top-left (N_ leadingClearance) clears the traffic lights through shared-styles' `.dframe-root[data-popout=
+   traffic-lights] .epitaxy-pane-window [data-top-left]{margin-left:calc(var(--df-popout-lights-room) + 8px)}` at the
+   header's own height; the host's 40px / 76px header is only the rollback switch's (no data-popout). */
 .ssc-root[data-windowed] { width:100%;height:100vh; }
-.ssc-root[data-windowed] .ssc-header { height:40px;padding-left:76px; }
+.dframe-root:not([data-popout]) .ssc-root[data-windowed] .ssc-header { height:40px;padding-left:76px; }

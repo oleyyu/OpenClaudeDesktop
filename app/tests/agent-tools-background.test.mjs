@@ -446,15 +446,17 @@ test('the Background tasks pane: monitors are Monitor task rows with output; sch
   assert.equal(loopDaysLeft(loop, now), 7);
   const markup = renderToStaticMarkup(React.createElement(B.LoopCard, { loop, stopping: false, onStop: () => {} }));
   assert.match(markup, /aria-label="Loop: Check CI"/);
-  assert.match(markup, /<span class="sbt-kind">Loop<\/span>/);
+  // W14-code r6 r6pa-06: cccc2cf0a tN — the kind is `span.text-secondary`, Next / Ends are the official ICU with jM values.
+  assert.match(markup, /<span class="text-secondary">Loop<\/span>/);
   assert.match(markup, /<span>every 5 minutes<\/span>/);
-  assert.match(markup, /Next <span class="sbt-value">1m 5s<\/span>|Next <span class="sbt-value">1m 4s<\/span>/);
-  assert.match(markup, /Ends <span class="sbt-value">7<\/span>d/);
+  assert.match(markup, /Next <span class="text-secondary">1m [45]s<\/span>/);
+  assert.match(markup, /Ends <span class="text-secondary">7d<\/span>/);
   assert.match(markup, /aria-label="Stop this loop"/);
-  assert.doesNotMatch(markup, /cursor/);
+  // The card itself is not clickable (the Stop button is CdsButton, whose own cursor utility is the CDS one).
+  assert.doesNotMatch(markup, /cursor-pointer|cursor:\s*pointer/);
   const single = renderToStaticMarkup(React.createElement(B.LoopCard, { loop: once, stopping: true, onStop: () => {} }));
   assert.match(single, /aria-label="Once: Remind me"/);
-  assert.match(single, /<span class="sbt-kind">Once<\/span>/);
+  assert.match(single, /<span class="text-secondary">Once<\/span>/);
   assert.doesNotMatch(single, /Ends/);
   assert.match(single, /Stop requested…/);
 });
@@ -475,8 +477,8 @@ test('approval cards for a monitor, a scheduled prompt and a web page say what w
   assert.match(loop.reason, /for up to 7 days/);
   assert.equal(card({ kind: 'schedule', cron: '1 2 3 4 *', prompt: 'x', recurring: false }).heading.action, 'schedule a prompt');
   const site = card({ kind: 'web-fetch', host: 'example.com', url: 'https://example.com/a' });
-  assert.equal(site.heading.action, 'fetch example.com');
-  assert.equal(site.detail.text, 'https://example.com/a');
+  // cc32965c2 Wh WebFetch: "fetch" with the address as meta; no prompt, no detail.
+  assert.deepEqual([site.heading.action, site.heading.meta, site.detail], ['fetch', 'https://example.com/a', null]);
   assert.deepEqual(site.allows.map((action) => action.key), ['acceptForSession', 'accept']);
   // Without a connection, the native sheet says the same.
   const tt = (source, values) => String(source).replace(/\{(\w+)\}/g, (match, key) => values?.[key] ?? match);
@@ -491,7 +493,7 @@ test('every new string has a zh-CN translation', () => {
     'Starting loop', 'Started loop', 'Failed to start loop', 'Listing scheduled prompts', 'Listed scheduled prompts', 'Failed to list scheduled prompts', 'Stopping scheduled prompt',
     'Stopped scheduled prompt', 'Failed to stop scheduled prompt', 'Reporting review findings', 'Reported review findings', 'Failed to report review findings',
     'watch a command in the background', 'schedule a prompt', 'start a loop', 'fetch {host}', 'Let {assistant} watch this command in the background?', 'Let {assistant} schedule this prompt?',
-    'Let {assistant} start this loop?', 'Let {assistant} fetch {host}?', 'Loop', 'Once', 'Recurring loop', 'Loop: {description}', 'Once: {description}', 'Next {countdown}', 'Ends {days}d',
+    'Let {assistant} start this loop?', 'Let {assistant} fetch {host}?', 'Loop', 'Once', 'Recurring loop', 'Loop: {description}', 'Once: {description}', 'Next <v>{countdown}</v>', 'Ends <v>{days}d</v>',
     'Stop this loop', 'Stop this scheduled prompt', 'Stopping task', 'Stopped task', 'Failed to stop task', 'Fetching', 'Fetched', 'Failed to fetch', 'Scheduled prompt'])
     assert.ok(typeof zh[key] === 'string' && zh[key], `zh-CN: ${key}`);
 });
@@ -584,9 +586,9 @@ test('NotebookEdit replaces, inserts and deletes cells inside the session folder
   // Its row and card.
   assert.deepEqual(appToolLabel({ id: 'n', type: 'mcpToolCall', server: 'code_desktop', tool: 'NotebookEdit', status: 'completed', arguments: { notebook_path: '/w/a/analysis.ipynb' }, result: { content: [] } }, 'busy'), { label: 'Editing', meta: 'analysis.ipynb' });
   const card = approvalCardModel({ method: 'item/commandExecution/requestApproval', params: { threadId: 't', cwd: '/w', codeDesktop: { agentTool: { kind: 'notebook-edit', path: '/w/analysis.ipynb', mode: 'replace', cellId: 'load', source: 'import numpy' } } } }, null);
-  assert.equal(card.heading.action, 'edit analysis.ipynb');
-  assert.equal(card.detail.text, 'import numpy');
-  assert.deepEqual(card.context.map((part) => part.text), ['Cell load']);
+  // cc32965c2 Wh NotebookEdit: "edit" + x_(notebook_path): the name as meta, the path as the clamped title's detail.
+  assert.deepEqual([card.heading.action, card.heading.meta, card.detail.text, card.clampTitle], ['edit', 'analysis.ipynb', '/w/analysis.ipynb', true]);
+  assert.deepEqual(card.context, []);
 });
 
 // ---------------------------------------------------------------- Sessions (ccd_session_mgmt subset)
@@ -610,7 +612,9 @@ test('list_sessions and get_session read the app’s sessions; set_session_title
   assert.equal(JSON.parse(await byName.get_session.handler({}, ctx)).session_id, 'a');
   assert.equal(JSON.parse(await byName.get_session.handler({ session_id: 'c' }, ctx)).status, 'archived');
   await assert.rejects(byName.get_session.handler({ session_id: 'zz' }, ctx), /No session zz/);
-  assert.equal(await byName.set_session_title.handler({ title: '  Login   fix ' }, ctx), 'Session renamed to “Login fix”.');
+  // W14-code r2 R2T-TS7: the result carries 3.6556.2's rename record (c52b02f3f Dt "ccdSessionRenamed") in its _meta.
+  assert.deepEqual(await byName.set_session_title.handler({ title: '  Login   fix ' }, ctx), { content: [{ type: 'text', text: 'Session renamed to “Login fix”.' }],
+    _meta: { ccdSessionRenamed: { sessionId: 'a', isSelf: true, title: 'Login fix', previousTitle: 'Fix login bug' } } });
   assert.deepEqual(renamed, ['Login fix']);
   await assert.rejects(byName.set_session_title.handler({ title: 'x'.repeat(121) }, ctx), /under 120/);
   assert.deepEqual(byName.set_session_title.inputSchema.required, ['title'], 'no session_id: only this session');

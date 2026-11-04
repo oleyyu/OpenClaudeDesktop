@@ -24,9 +24,9 @@ before(async () => {
 after(async () => { await server?.close(); });
 
 // The 3.6556.2 generator (W2 w2-files): each module, its 3.6556.2 chunk and roots (data/panes-binding-map.json;
-// reports/W2/w2-files.md §1.1). error-text / event-element are the view-tabs roots tagErrorText / asElementNode
-// re-exported under their old names (D1, manifest reexport:'view-tabs', no bindings of their own); so is coarse-pointer
-// (shared-frame tn = view-tabs matchesCoarseOrHoverlessPointer), which c052e27aa now reads from view-tabs directly.
+// reports/W2/w2-files.md §1.1). event-element is the view-tabs root asElementNode re-exported under its old name (D1,
+// manifest reexport:'view-tabs', no bindings of its own). W14-code r2 closeout-2 (DC-06) retired the unimported
+// coarse-pointer / error-text re-exports (c052e27aa reads view-tabs matchesCoarseOrHoverlessPointer directly).
 const OFFICIAL_V3 = official3.ionSource;
 const officialV3 = (name) => fs.readFileSync(path.join(OFFICIAL_V3, name), 'utf8');
 const NEW = {
@@ -42,9 +42,7 @@ const NEW = {
   'file-selection.mjs': ['c856385e2-aEyDzrcK.js', { Ke: 'createFileSelectionStore', qe: 'selectFileRange', Je: 'selectAllFiles', Qe: 'inMultiSelection' }],
   'file-content-results.mjs': ['cccc2cf0a-DhZC33Gc.js', { cT: 'groupContentResults', pT: 'collapseContentWhitespace', gT: 'contentSnippetLayout' }],
   'file-tree-pointer.mjs': ['cccc2cf0a-DhZC33Gc.js', { Ww: 'isBlankTreeTarget', Gw: 'isBlankTreePress' }],
-  'coarse-pointer.mjs': ['shared-frame-6jtSkIit.js', { tn: 'isCoarsePointer' }],
   'file-context-drag.mjs': ['c052e27aa-DlzVwnbz.js', { i: 'fileContextDragType', s: 'fileContextDragEnabled', c: 'beginFileContextDrag', l: 'isFileContextDrag', u: 'draggedFilePaths', d: 'commitFileContextDrag', o: 'clearFileContextDrag' }],
-  'error-text.mjs': ['preload-helper-D0dM6GpB.js', { e: 'withErrorText' }],
   'array-min.mjs': ['cf80fba0c-CT5qqVq9.js', { e: 'iterableMin' }],
   'file-frontmatter.mjs': ['c3fde7009-LYGOoUpG.js', { $i: 'splitFrontmatter', sa: 'frontmatterFields', Qi: 'emptyFrontmatterBlock', Zi: 'frontmatterBlock' }],
   // Vi: the anchors of one file (changes-tree-current.test.mjs).
@@ -57,7 +55,7 @@ const NEW = {
   'event-element.mjs': ['shared-frame-6jtSkIit.js', { Uc: 'elementTarget' }],
   'menu-open-gate.mjs': ['c0cdf4a08-C69Ng1c8.js', { m: 'openAfterCheck', h: 'useMenuOpenGate' }],
 };
-const VIEW_TABS_REEXPORT = { 'coarse-pointer.mjs': ['tn', '../view-tabs/shared-frame-6jtSkIit.js', 'matchesCoarseOrHoverlessPointer'], 'error-text.mjs': ['e', '../view-tabs/preload-helper-D0dM6GpB.js', 'tagErrorText'], 'event-element.mjs': ['Uc', '../view-tabs/shared-frame-6jtSkIit.js', 'asElementNode'] };
+const VIEW_TABS_REEXPORT = { 'event-element.mjs': ['Uc', '../view-tabs/shared-frame-6jtSkIit.js', 'asElementNode'] };
 
 test('generator: check mode passes; every new module names its 3.6556.2 chunk, roots and resolved imports', async () => {
   await extractFilesChanges({ check: true });
@@ -734,14 +732,15 @@ test('host wiring (Y1-R3-files-2): tree rows and search results ask isSessionPat
       },
     };
     searchHarness.render(searchProps);
-    const inputEl = () => findElements(searchHarness.tree, (el) => el.type === 'input')[0];
+    // W14 cccc2cf0a: the filter field is the CdsTextInput (ve), found by its aria-label.
+    const inputEl = () => findElements(searchHarness.tree, (el) => el.props?.['aria-label'] === 'Filter files')[0];
     let replied = waitSearchReply();
     inputEl().props.onChange({ target: { value: 'src' } });
     searchHarness.render(searchProps);
     await replied;
     await tick();
     searchHarness.render(searchProps);
-    // W12b cf-03: a filename result is RT's tree row (file-tree-row classes), a content result keeps sfs-result-row.
+    // W12b cf-03: a filename result is RT's tree row (file-tree-row classes), a content result is BT on the same row classes (r8pa-01).
     const resultRows = () => findElements(searchHarness.tree, (el) => el.props?.role === 'treeitem' && el.props?.['data-tree-row'] === '');
     assert.equal(resultRows().length, 3);
 
@@ -808,6 +807,12 @@ test('host wiring (Y1-R3-files-2): tree rows and search results ask isSessionPat
     searchHarness.render(searchProps);
     const contentRow = resultRows().find((el) => el.props['data-content-match'] === 12);
     assert.ok(contentRow, 'content match row rendered');
+    // r8pa-01: 3.6556.2 cccc2cf0a BT — the match row is `R(de(), dw, ol)` at el(1) (no host .sfs-result-row), and zT's
+    // file row above it is RT at el(0).
+    assert.doesNotMatch(contentRow.props.className, /sfs-/);
+    assert.match(contentRow.props.className, /app-list-row/);
+    assert.ok(contentRow.props.style.paddingInlineStart > resultRows()[0].props.style.paddingInlineStart, 'the match is indented one level');
+    assert.equal(resultRows()[0].props['aria-level'], 1);
     contentRow.props.onContextMenu({ preventDefault() {}, stopPropagation() {}, currentTarget: domRows[0], type: 'contextmenu', clientX: 16, clientY: 20 });
     searchHarness.render(searchProps);
     assert.deepEqual(goneCalls, [{ sessionId: 's1', path: '/repo/src/a.ts' }]);

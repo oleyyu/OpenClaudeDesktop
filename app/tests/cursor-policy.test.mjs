@@ -18,9 +18,7 @@ const LINK_SELECTORS = [
   // CDS TextLink (shared-frame-C_2npUJq.js:3562-3640 renders span role=button.cds-text-link): the
   // desktop-layout.css:1035-1036 pointer exception while enabled (message-style.css).
   ':root[data-dframe] [data-cds="TextLink"]:not(:disabled):not([data-disabled]):not(.cursor-default)',
-  // Workflow card member Skip/Retry (source-workflow.jsx): borderless text buttons underlined on hover, the
-  // original's button.underline link exception (desktop-layout.css:1035-1036).
-  '.swf-member-controls button',
+  // (W14-code r4 R4T-08b, E95: the host workflow card's member Skip / Retry links are gone with the card.)
 ];
 
 /** Every `selector { … cursor: pointer … }` rule in a stylesheet, as [selector, line]. */

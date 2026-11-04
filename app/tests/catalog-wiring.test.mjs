@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { createRequire } from "node:module";
 import { configReadResponse, mcpServerStatuses, pluginReadResponse, pluginsInstalledResponse, skillsListEntry } from "../../harness/packages/codex-app-server/src/catalog.js";
-import { mcpRows, pluginRows, skillAuthor, skillGroupOptions, skillMenuItems, skillRows } from "../src/customize-model.mjs";
+import { mcpRows, pluginRows, skillAuthor, skillMenuItems, skillRows } from "../src/customize-model.mjs";
 import { pluginDetailTabs } from "../src/plugin-detail-model.mjs";
 const require = createRequire(import.meta.url);
 const { mcpDefinitions } = require("../electron/settings-pages.cjs");
@@ -28,7 +28,7 @@ test("bridge skills/list rows: Personal and Repository groups, You/Repository au
     ["lint", "repository", "Repository", true],
     ["quiet", "personal", "You", false],
   ]);
-  assert.deepEqual(skillGroupOptions(skills).options.map((option) => option.value), ["all", "personal", "repository"]);
+  // W14-code r4 gen-final-4: skillGroupOptions (test-only host helper, no caller) is deleted.
   // R04: the slash-only 'quiet' is offered (user-invocable); the model-only 'auto' is not.
   assert.deepEqual(skillMenuItems(skills).map((item) => item.skillName), ["figma", "lint", "quiet"]);
   const incomplete = skillRows({ data: [skillsListEntry("/w", { complete: false, skills: [] })] });

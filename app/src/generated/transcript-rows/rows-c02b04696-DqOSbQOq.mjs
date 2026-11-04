@@ -5,4 +5,4 @@ var n = t(null);
 function r() {
   return e(n);
 }
-export { r };
+export { n, r };

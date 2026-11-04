@@ -10,8 +10,8 @@ import { sessionMenuTooltipLabel } from "./generated/code-current/session-menu-t
 
 export function sessionMenuTriggerLabel(title) {
   const label = typeof title === "string" ? title.trim() : "";
-  // The reference message is "More options for {label}"; the local catalog holds the same English under {name}.
-  return label ? t("More options for {name}", { name: label }) : t("More options");
+  // W14-code r8 fr8-06: cc43287c9 rKQPgfPvWS "More options for {label}" (the official placeholder, zh-CN app.mjs).
+  return label ? t("More options for {label}", { label }) : t("More options");
 }
 
 // R2-topbar TT-02 (2.42304.0 cc43287c9 _W): the caret's tooltip `Ge` words the same message around `Ue`, the
@@ -20,7 +20,7 @@ export function sessionMenuTriggerLabel(title) {
 // local locales are LTR, so the tooltip is plain text.
 export function sessionMenuTriggerTooltip(title) {
   const label = typeof title === "string" ? title.trim() : "";
-  return label ? t("More options for {name}", { name: sessionMenuTooltipLabel(label) }) : t("More options");
+  return label ? t("More options for {label}", { label: sessionMenuTooltipLabel(label) }) : t("More options");
 }
 
 // zt's trigger; the local cramped titlebar folds Preview/Terminal into it, so their activity dot names itself here.

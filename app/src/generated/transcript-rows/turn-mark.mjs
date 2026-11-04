@@ -8,9 +8,11 @@ import {
   ErrorCard as Gi,
   TranscriptMarkdown as In,
   InboxMessageBody as Qs,
+  useGrowthBookFeatureState as R,
   useRequestStore as Tt,
   useIntl as V,
-  SessionRenameBody as bc,
+  useSessionRenameMutation as ai,
+  logRenameUndone as mn,
   subscribePendingRequests as tt,
 } from "../../source-transcript-rows-adapters.jsx";
 import { VX as lt } from "../code-routines/shared-156-BLTosN8U.mjs";
@@ -70,6 +72,7 @@ import { Mh as T } from "../working-line/shared-frame.mjs";
 import {
   fd as Ge,
   ul as Ke,
+  ol as We,
   pd as qe,
 } from "../working-line/vendor-motion.mjs";
 import { Fs as gt } from "./find-omitted.mjs";
@@ -118,6 +121,7 @@ import {
   b as Wr,
   ct as Yr,
   X as Zr,
+  Ot as ei,
   E as ni,
   Vn as qr,
   Mt as ti,
@@ -180,8 +184,7 @@ import {
   gM as Te,
   CG as xe,
 } from "./rows-shared-78-D5Fw2h0a.mjs";
-import { gT as St, og as bt } from "./rows-shared-8-Db1QN4mf.mjs";
-import { ol as We } from "./rows-vendor-motion-DlXQpU4V.mjs";
+import { gT as St, og as bt, v_ as xt } from "./rows-shared-8-Db1QN4mf.mjs";
 import { BV as ht } from "./shared-130.mjs";
 import { Kj as Je, RM as Xe, qj as Ye } from "./shared-2.mjs";
 import { rk as ce, tm as le, kG as me, Nu as pe } from "./shared-52.mjs";
@@ -1693,6 +1696,165 @@ function tc(e) {
         n === void 0 ? null : i("p", { ...Js, className: Xs, children: n }),
       )
     : $[3];
+}
+var vc = "__gb__3085520803";
+var yc = { [gt]: "" };
+function bc(e) {
+  let $ = J9(29),
+    { rename: t, renamedAt: n, kind: a } = e,
+    o = a === void 0 ? "tool" : a,
+    c = R(vc) !== "off",
+    l = ds(),
+    u = xt(l),
+    { mutate: d, isPending: f } = ai(),
+    p = r(null),
+    { sessionId: m, title: h, previousTitle: g, previousTitleSource: _ } = t,
+    v = J1($, 0, h) ? K1($, 0, h, ei(h)) : $[1],
+    y = J1($, 2, g) ? K1($, 2, g, g === void 0 ? void 0 : ei(g)) : $[3],
+    x =
+      !c || l === void 0 || m !== l || g === void 0 || g === h || u === void 0
+        ? "unavailable"
+        : u === g
+          ? "undone"
+          : u === h
+            ? "available"
+            : "unavailable",
+    S = J5($, 4, l, f, o, g, _, d, n, x)
+      ? K5($, 4, l, f, o, g, _, d, n, x, () => {
+          x !== "available" ||
+            f ||
+            g === void 0 ||
+            l === void 0 ||
+            (p.current?.focus(),
+            d({ ref: { id: l, type: "local" }, title: g, via: "undo" }),
+            mn({
+              session_type: "local",
+              rename_kind: o,
+              previous_title_source: _ ?? null,
+              seconds_since_rename:
+                n === void 0
+                  ? null
+                  : Math.max(0, Math.round((Date.now() - n) / 1e3)),
+            }));
+        })
+      : $[12],
+    C = J2($, 13, g, y)
+      ? K2(
+          $,
+          13,
+          g,
+          y,
+          g === void 0
+            ? null
+            : s("div", {
+                className: "flex min-w-0 gap-md",
+                children: [
+                  i("span", {
+                    ...yc,
+                    className: "min-w-12 shrink-0 text-secondary",
+                    children: i(B, {
+                      defaultMessage: "From",
+                      id: "tD8/hN97ku",
+                    }),
+                  }),
+                  i("span", {
+                    className: "min-w-0 break-words text-primary",
+                    children: y,
+                  }),
+                ],
+              }),
+        )
+      : $[15],
+    w = J0($, 16)
+      ? K0(
+          $,
+          16,
+          i("span", {
+            ...yc,
+            className: "min-w-12 shrink-0 text-secondary",
+            children: i(B, { defaultMessage: "To", id: "2B7yxMSjT4" }),
+          }),
+        )
+      : $[16],
+    T =
+      x === "undone"
+        ? "min-w-0 break-words text-secondary line-through decoration-1"
+        : "min-w-0 break-words text-primary",
+    E = J2($, 17, v, T)
+      ? K2(
+          $,
+          17,
+          v,
+          T,
+          s("div", {
+            className: "flex min-w-0 gap-md",
+            children: [w, i("span", { className: T, children: v })],
+          }),
+        )
+      : $[19],
+    D = J4($, 20, S, f, y, x)
+      ? K4(
+          $,
+          20,
+          S,
+          f,
+          y,
+          x,
+          x === "unavailable"
+            ? null
+            : s("div", {
+                ...yc,
+                className: "flex min-w-0 items-center gap-md pt-0.5",
+                children: [
+                  i("span", {
+                    "aria-hidden": !0,
+                    className: "min-w-12 shrink-0",
+                  }),
+                  x === "available"
+                    ? i(b, {
+                        variant: "secondary",
+                        size: "xxs",
+                        busy: f,
+                        onClick: S,
+                        className: "shrink-0 text-footnote text-secondary",
+                        children: i(B, {
+                          defaultMessage: "Undo rename",
+                          id: "1ie4Id+tTB",
+                        }),
+                      })
+                    : null,
+                  i("span", {
+                    ref: p,
+                    role: "status",
+                    tabIndex: -1,
+                    className:
+                      "min-w-0 break-words text-footnote text-secondary focus-visible:outline-hidden",
+                    children:
+                      x === "undone"
+                        ? i(B, {
+                            defaultMessage: "Restored to {previousTitle}",
+                            id: "YShKvQGOTa",
+                            values: { previousTitle: y },
+                          })
+                        : null,
+                  }),
+                ],
+              }),
+        )
+      : $[24];
+  return J3($, 25, C, E, D)
+    ? K3(
+        $,
+        25,
+        C,
+        E,
+        D,
+        s("div", {
+          className: "flex flex-col gap-0.75 text-body",
+          children: [C, E, D],
+        }),
+      )
+    : $[28];
 }
 var xc = et({
   running: { defaultMessage: "Running", id: "nDyaq/M7Oj" },
@@ -5089,16 +5251,24 @@ export {
   $i,
   Aa,
   Cd,
+  Do,
+  Js,
+  Oc,
   Ul,
+  Uo,
   Va,
   Xa,
+  Xs,
   Zl,
   _s,
   ao,
+  ca,
+  gs,
   hs,
   kc,
   oa,
   ps,
+  sa,
   us,
   wo,
   ys,

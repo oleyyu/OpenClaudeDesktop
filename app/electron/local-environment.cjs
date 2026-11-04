@@ -8,7 +8,8 @@
 // source); an empty set removes the file. launchEnv() is what every core spawn adds (codex.cjs setLocalEnvironment):
 // the saved variables minus whatever the app manages for that launch (managedKeys: the provider keys, the agent
 // tools' variables), so a saved variable never shadows them. A running core keeps the environment it started with:
-// the renderer reconnects to apply a save.
+// W14-code r6 fr6-02, a changed save marks the core for a restart (core-restart.cjs mark), done idle before the next new
+// session (the renderer no longer reconnects).
 const fs = require("node:fs");
 const path = require("node:path");
 

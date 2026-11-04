@@ -8,13 +8,20 @@
 // - the rail's output files come from the host transcript (SessionRailOutputsContext, filled by the mount, SR-7);
 // - branches the host can never reach (Remote Control row, Goal / Progress card bodies, artifact rows, the bridge's
 //   "Learn more" link) refuse to render instead of approximating the original.
-import React, { createContext, useContext, useMemo } from "react";
+import React, { createContext, useCallback, useContext, useLayoutEffect, useMemo, useState, useSyncExternalStore } from "react";
 // R6: view-tabs through the facade, by semantic name.
 import { cdsClassNames } from "./generated/view-tabs/index.js";
 import { useSessionFileOpener } from "./generated/r3b-transcript/session-file-access.mjs";
 import { recentOutputPaths } from "./generated/code-current/file-output-order.mjs";
 import { useStableArray } from "./generated/session-rail/stable-array.mjs";
+import { InlineBand } from "./generated/session-rail/inline-band.mjs";
 import { createStore, useStore } from "./generated/session-rail-kit/react-store.mjs";
+import { t } from "../electron/i18n/index.mjs";
+import { useSourceToasts } from "./source-toast.jsx";
+import { useStartIntl } from "./source-code-start-adapters.jsx";
+import { usePersistedValue, writePersistedValue } from "./source-files-changes-adapters.jsx";
+import { HOST_GROWTHBOOK, growthBookFlagKey, hostGrowthBookFlag } from "./host-growthbook.mjs";
+import { keptAwakeStore, sleepInterruptionStore, subscribeSendBegun } from "./kept-awake-model.mjs";
 
 // vendor-intl q / Gt, shared-4 Sk: the same host services as the rail kit (SR-1).
 export { useIntl, FormattedMessage, RegionEntry } from "./source-session-rail-kit-adapters.jsx";
@@ -93,10 +100,29 @@ export function useGoneOutputPaths() {
 export function RemoteControlRow() {
   return refuse("the Remote Control row", "claude.ai Remote Control (D17)");
 }
-// vM (2.42304.0 CD): the Goal card's body (a CLI goal: condition, iterations, last check). Local Codex goals have other fields
-// (r4-session-rail.md §3 #15); the host passes `goal: null` and keeps SourceGoalStrip.
-export function GoalCardBody() {
-  return refuse("the Goal card", "CLI goals only; the host passes goal: null");
+// W14-code r4 shell fr4-12a (E95): vM, the Goal card's body, is generated now (rail-view.mjs); the host maps the core's goal
+// onto the card's fields with railGoal below and SourceGoalStrip is gone.
+
+/**
+ * cf74bc599 Gj's `session.goal` (TN: `goal: L.goal ?? null`, the CLI goal of the session meta: `{condition, iterations,
+ * lastReason?, setAt, editText?}`) over a core goal (Codex thread/goal/*: `{objective, status, codeDesktop?}`). What the
+ * core does not report takes the card's empty value: iterations the core's rounds or 0 (_M "Not checked yet"), lastReason
+ * a blocked goal's reason or absent, setAt the goal's own time or its objective (vM keys and measures by it). editText (vM's
+ * Edit goal, `onEdit(editText, keyboard)` → TN's AA `/goal ${editText}`) is `edit <objective>`, the core's in-place edit,
+ * only while the goal can be edited (`editable`) and is not complete.
+ */
+export function railGoal(goal, { editable = false } = {}) {
+  if (!goal || typeof goal.objective !== "string" || !goal.objective.trim()) return null;
+  const rounds = goal.codeDesktop?.rounds;
+  const reason = goal.status === "blocked" && typeof goal.codeDesktop?.blockedReason === "string" ? goal.codeDesktop.blockedReason.trim() : "";
+  const setAt = goal.setAt ?? goal.createdAt ?? goal.objective;
+  return {
+    condition: goal.objective,
+    iterations: typeof rounds === "number" && Number.isFinite(rounds) && rounds > 0 ? Math.floor(rounds) : 0,
+    ...(reason ? { lastReason: reason } : {}),
+    setAt: typeof setAt === "number" ? setAt : String(setAt),
+    ...(editable && goal.status !== "complete" ? { editText: `edit ${goal.objective}` } : {}),
+  };
 }
 // sM (2.42304.0 pD): the Progress card's body. The progress section is always excluded (the kit's RAIL_SECTIONS_OFF).
 export function ProgressCardBody() {
@@ -117,7 +143,23 @@ export function ArtifactOutputRow() {
 // the rail has read (session-rail-meta, setRailLocalSession); the session → environment record lives in this window only
 // (C7 persists it; the host's sessionMetadata.environmentId is written at session start only, main.cjs). Every
 // environment here is local, so Kc refuses.
-const railEnvironmentStore = createStore()(() => ({ environments: [], startedPlaces: [] }));
+// W14-code r4 shell fr4-08: the start line (save-environment.mjs Mx) also calls cd0cf5b5e z's quietStartedPlace(target) on
+// "Not now" (Mx `c`, Zx); the host keeps that mark for this window (a quiet place reads startCount 0 in Vx: no "Not now"
+// again). Start counting matches official for this host's targets, all local: cc43287c9's rememberStart (It) returns null
+// for a local draft (`if(kt==="local"){…return null}`), so a local start neither calls rememberStartedPlace nor writes
+// startedSetup on that branch (Aue: `t!==null&&(local||ssh)`; a start from a picked saved environment with changes does:
+// recordStartedFromEnvironment below); only cf74bc599 Kx's move line remembers a local place. Vx then reads
+// `b?.starts ?? 1`: startCount 1 ("Started on {place}"), as here. (cd0cf5b5e Ze drops `starts` on rehydrate, so a
+// window-only store loses nothing official keeps.)
+const railEnvironmentStore = createStore()((set, get) => ({ environments: [], startedPlaces: [],
+  quietStartedPlace(target) {
+    if (!target) return;
+    const places = get().startedPlaces;
+    const index = places.findIndex((place) => sameStartedTarget(place.target, target));
+    set({ startedPlaces: index >= 0 ? places.map((place, i) => (i === index ? { ...place, quiet: true } : place)) : [...places, { target, quiet: true }] });
+  } }));
+// cd0cf5b5e fv over the local targets this host has: same kind and folder (and WSL distro).
+const sameStartedTarget = (a, b) => !!a && !!b && a.kind === b.kind && a.cwd === b.cwd && (a.wslDistro ?? null) === (b.wslDistro ?? null);
 /** cd0cf5b5e z as Vx reads it: a selector hook over the saved environments. */
 export function useEnvironmentStore(selector) {
   return useStore(railEnvironmentStore, selector);
@@ -159,6 +201,33 @@ export function useSessionEnvironmentId(sessionId, startedFromEnvironmentId) {
   return typeof own === "string" || startedFromEnvironmentId === undefined ? own : startedFromEnvironmentId;
 }
 
+// W14-code r5-composer-03 / fr5-06: cc43287c9 Aue's start from a picked saved environment with place changes —
+// `r.setState({startedSetup: {target: m.target, settings: a.draftSettings(), ...u, occasion: "start", fromEnvironment:
+// {id, name, changes, update}}})` on the starting tile's scope store, which cf74bc599 dw reads as `dt` for Mx's
+// "Started from {name} with {changes}" branch. Host: the scope store belongs to the tile (one per side), not to the
+// session, so main records the start per session here (recordStartedFromEnvironment) and the start line loads it into the
+// scope store, tagged with its session (`sessionId`), when that session is shown; Jx's later outcome (updated /
+// declined / savedAs) is kept when the tile moves to another session.
+const railStartedSetupStore = createStore()(() => ({ bySessionId: {} }));
+/** main's start path: the session started from saved environment `{id, name}` with `changes` (labels), `update()` saving them. */
+export function recordStartedFromEnvironment(sessionId, { target, settings = {}, fromEnvironment } = {}) {
+  if (typeof sessionId !== "string" || !sessionId || !target || !fromEnvironment || !Array.isArray(fromEnvironment.changes) || !fromEnvironment.changes.length) return;
+  keepStartedSetup(sessionId, { target, settings, occasion: "start", fromEnvironment, sessionId });
+}
+/** Keeps (or with no setup, drops) one session's started setup. */
+export function keepStartedSetup(sessionId, setup) {
+  if (typeof sessionId !== "string" || !sessionId) return;
+  railStartedSetupStore.setState((state) => {
+    if (state.bySessionId[sessionId] === setup) return state;
+    const { [sessionId]: _dropped, ...rest } = state.bySessionId;
+    return { bySessionId: setup ? { ...rest, [sessionId]: setup } : rest };
+  });
+}
+/** The session's recorded started setup, if main recorded one. */
+export function useStartedSetupRecord(sessionId) {
+  return useStore(railStartedSetupStore, (state) => (typeof sessionId === "string" ? state.bySessionId[sessionId] : undefined));
+}
+
 /** c73f45bc3 du: creates a non-local environment straight from the setup. Vx only builds local setups here. */
 export function addRemoteEnvironment() {
   return refuse("saving a non-local environment", "the host saves local folders only (D31)");
@@ -178,3 +247,222 @@ export function canonicalModelId(id) {
 export const localEnvironmentDialogHandle = null;
 /** cc5b397c6 l (`a.handle`, the epitaxy_environment_dialogs chunk c28ccf1ab): no cloud environments here (D31). */
 export const cloudEnvironmentDialogHandle = null;
+
+// ---- W14-code r6 sleep lane: cf74bc599 wO (the sleep band) and dO (the kept-awake band) ----
+// The two bands are sliced into generated/session-rail/sleep-band.mjs and render the c73f45bc3 k_ band card
+// (code-band.mjs) in the Code column's notice slots (generated/composer-notices code-notice-slots.mjs). What they read
+// of the desktop is answered here from the host's session state, which the bands' host (src/source-sleep-notice.jsx
+// SourceSessionBands) provides: the session, whether it runs, whether input waits, the desktop settings and their
+// writer, the fixed-turn send. Cloud continuation, the environment teleport and cloud environments are claude.ai
+// services (E59): they refuse — the bands' cloud CTAs never show (aO's canContinueInCloud is false).
+export const SessionBandsHostContext = createContext(null);
+const useBandsHost = () => useContext(SessionBandsHostContext);
+const sameSession = (host, ref) => !!host && !!ref && ref.type === "local" && ref.id === host.sessionId;
+
+/** shared-52 cB (exported ha): the ErrorsProvider's addError — the host's danger toast in the UI language. */
+export function useBandErrors() {
+  const toasts = useSourceToasts();
+  return useMemo(() => ({
+    addError: (message) => { toasts?.add?.(typeof message === "string" ? message : t(message?.defaultMessage ?? ""), { variant: "danger" }); },
+  }), [toasts]);
+}
+
+/** c227f4d5e Q0 (exported Dt): a dev-preview state hook (hO / oO: Storybook's mock values). Never a preview here. */
+export function previewStateHook() {
+  return noPreview;
+}
+function noPreview() {
+  return false;
+}
+
+/**
+ * c5da7eb42 QI (exported et): the session view's fields through `select` (shared-78 gn picks them). The host's session
+ * view for the bands is the desktop's two records: sleepInterruption (desktop-sleep-interruption) and keptAwake
+ * (desktop-kept-awake), undefined when unset as in the desktop's view. Any other session (or none): no data.
+ */
+export function useSessionBandFields(sessionRef, select) {
+  const id = sessionRef?.type === "local" ? sessionRef.id : null;
+  const subscribe = useCallback((listener) => {
+    const a = sleepInterruptionStore.subscribe(listener), b = keptAwakeStore.subscribe(listener);
+    return () => { a(); b(); };
+  }, []);
+  const sleepInterruption = useSyncExternalStore(subscribe, () => sleepInterruptionStore.get(id), () => null);
+  const keptAwake = useSyncExternalStore(subscribe, () => keptAwakeStore.get(id), () => null);
+  const data = useMemo(() => (id === null ? undefined
+    : select({ sleepInterruption: sleepInterruption ?? undefined, keptAwake: keptAwake ?? undefined }) ?? undefined), [id, select, sleepInterruption, keptAwake]);
+  return { data };
+}
+
+/** c5da7eb42 aL (exported pt): whether the session runs (iL over the session view). The host's turn state. */
+export function useSessionBandRunning(sessionRef) {
+  const host = useBandsHost();
+  return sameSession(host, sessionRef) ? host.running === true : false;
+}
+
+/** c06cf64bb aO (exported Gt): whether the session has input waiting (a pending queued send or held input). The host's
+ * local queue of the session. */
+export function useSessionBandInputWaiting(sessionId) {
+  const host = useBandsHost();
+  return !!host && sessionId === host.sessionId && host.inputWaiting === true;
+}
+
+/** c06cf64bb IE (exported Y): a listener of the sends that begin in a session (`e(i, a)`: uuid, synthetic). The host
+ * hears a turn start in the session (kept-awake-model.mjs subscribeSendBegun). */
+export function subscribeSessionSendBegun(sessionId, listener) {
+  return subscribeSendBegun(sessionId, listener);
+}
+
+/** c6b8adeaf So (exported b): the stop-session mutation SO awaits before its "continue" send (a session still marked
+ * running after the wake is stopped first). The host's Stop (main.jsx stop: the turn interrupt, its own "Couldn’t stop
+ * the response" toast on failure); a session that does not run has nothing to stop. */
+export function useStopSessionMutation() {
+  const host = useBandsHost();
+  return useMemo(() => ({
+    mutateAsync: async (ref) => { if (sameSession(host, ref) && host.running === true && typeof host.stopSession === "function") await host.stopSession(); },
+  }), [host]);
+}
+
+/** c6b8adeaf Xa (exported g): `sendWithOutcome({ref, text, uuid})` — the host's fixed-turn send (queued while running). */
+export function useBandSend() {
+  const host = useBandsHost();
+  return useMemo(() => ({
+    sendWithOutcome: async ({ ref, text }) => {
+      if (!sameSession(host, ref) || typeof host.sendContinue !== "function") throw Error("No session to continue");
+      return host.sendContinue(text);
+    },
+  }), [host]);
+}
+
+/** cf74bc599 aO: `{canContinueInCloud, settled}` — cloud sessions are claude.ai's (E59): never, and settled. */
+export function useCanContinueInCloud() {
+  return NO_CLOUD;
+}
+const NO_CLOUD = Object.freeze({ canContinueInCloud: false, settled: true });
+/** caec4a2d4 Ir (exported o): the account's active cloud environments. None here (E59). */
+export function useCloudEnvironments() {
+  return NO_ENVIRONMENTS;
+}
+const NO_ENVIRONMENTS = Object.freeze([]);
+/** shared-104 du (exported ep): the cloud environment list query. No claude.ai account here (E59): no data. */
+export function useCloudEnvironmentList() {
+  return NO_QUERY_DATA;
+}
+const NO_QUERY_DATA = Object.freeze({ data: undefined });
+/** cc53cbea3 b (exported i): whether the cloud resume flow is on. Off here (E59). */
+export function useCloudResumeOn() {
+  return false;
+}
+/** cc53cbea3 C (exported r): clears a cloud teleport marker. No teleport here (E59). */
+export function clearTeleportMarker() {
+  return refuse("the cloud teleport", "no claude.ai cloud sessions (E59)");
+}
+/** cc53cbea3 M (exported t): the paused-for-cloud banner. Only mounted with canContinueInCloud, which is false here. */
+export function CloudResumeBanner() {
+  return refuse("the cloud resume banner", "no claude.ai cloud sessions (E59)");
+}
+/** caec4a2d4 fo (exported t): the teleport-to-cloud dialog. Only opened from a cloud CTA, which never shows here. */
+export function TeleportToCloudDialog() {
+  return refuse("the teleport-to-cloud dialog", "no claude.ai cloud sessions (E59)");
+}
+
+/** shared-25 ps (exported ng): a GrowthBook feature's state, "on" / "off" / "unknown" (Ko), from the host table:
+ * listed and on is "on", listed and off is "off", unlisted is "unknown" (vO ccd_sleep_band_keep_awake_main is not in
+ * Uon, so the band reads "unknown" — not "off" — and takes the rework copy). */
+export function useBandFeatureState(key) {
+  if (hostGrowthBookFlag(key)) return "on";
+  return Object.hasOwn(HOST_GROWTHBOOK, growthBookFlagKey(key)) ? "off" : "unknown";
+}
+
+// c1e585df0: the keep-awake preferences (`t("ccKeepAwakeWhileWorking", !0)`, `t("ccKeepAwakeOnBattery", !0)`) — here the
+// desktop settings' keepAwake / keepAwakeOnBattery (unset reads as on), written with the host's settings writer.
+/** c1e585df0 o (n.useHasKey): the preference is loaded — the host's settings have arrived. */
+export function useKeepAwakeSettingLoaded() {
+  const host = useBandsHost();
+  return !!host?.config;
+}
+/** c1e585df0 i (n.useEnabled): keep the computer awake while working. */
+export function useKeepAwakeWhileWorking() {
+  const host = useBandsHost();
+  return host?.config?.keepAwake !== false;
+}
+/** c1e585df0 a (r.useEnabled): keep it awake on battery power too. */
+export function useKeepAwakeOnBattery() {
+  const host = useBandsHost();
+  return host?.config?.keepAwakeOnBattery !== false;
+}
+/** c1e585df0 c: `(kind, value, opts) => store.write(value)` for "while_working" / "on_battery" (no telemetry, D17). */
+export function useWriteKeepAwakeSetting() {
+  const host = useBandsHost();
+  return useCallback((kind, value) => {
+    const key = kind === "on_battery" ? "keepAwakeOnBattery" : kind === "while_working" ? "keepAwake" : null;
+    if (key && typeof host?.saveSettings === "function") host.saveSettings({ [key]: value });
+  }, [host]);
+}
+/** shared-78 K (exported zv): the desktop's app features. Keep awake (`codeSessionKeepAwake`) is the host's own
+ * power-save blocker (desktop-settings.cjs): supported. */
+export function useDesktopAppFeatures() {
+  return BAND_APP_FEATURES;
+}
+const BAND_APP_FEATURES = Object.freeze({ codeSessionKeepAwake: Object.freeze({ status: "supported" }) });
+
+/** shared-28 Kp (exported zc): an account-scoped persisted preference `[value, set]` — the host's persisted values. */
+export function useBandPersistedPreference(key, fallback) {
+  const value = usePersistedValue(key, fallback);
+  const set = useCallback((next) => writePersistedValue(key, next, fallback), [key, fallback]);
+  return [value, set];
+}
+/** shared-28 Mp (exported Rc): the account preferences have loaded. Local storage is synchronous: always. */
+export function useAccountPreferencesReady() {
+  return true;
+}
+// shared-1 wE (exported Cc) / TE (exported wc): the session scope's hidden state and its change listener. No host surface
+// provides that scope (source-code-notice-adapters.jsx useSessionScopeHidden): never hidden, never changes.
+export { useSessionScopeHidden } from "./source-code-notice-adapters.jsx";
+export function useOnSessionScopeHiddenChange() {}
+
+/** c227f4d5e oL (exported zs): the inline band k_ falls back to outside the Code notice region. W14-code r7 notices
+ * (r7c-02 / sh7-04 / gates-r7-01, E81): __gb__100087145 is off on the 3P desktop, so the Code session has no region and
+ * k_ draws the sliced oL (generated/session-rail/inline-band.mjs) where the column mounts the band. With the rollback
+ * switch local_code_notice_region the host mounts the region again and k_ registers into its slot instead. W14-code r6
+ * sleep review fix: Chat / Cowork are not the Code session (the official bands are cc43287c9 EpitaxySessionScopeBody's
+ * cf74bc599 vA only) and keep the host's notice-stack banner they had before; there SourceSessionBands provides an
+ * InlineBandSlotContext ({sink, name}) and the band's k_ props go to that sink, which the host stack draws in its own
+ * order (source-sleep-notice.jsx useInlineBandNotices). */
+export const InlineBandSlotContext = createContext(null);
+export function InlineCodeBand(props) {
+  const slot = useContext(InlineBandSlotContext);
+  if (!slot) return <InlineBand {...props} />;
+  return <InlineBandSinkEntry slot={slot} band={props} />;
+}
+// shared-4 bk (exported at; c227f4d5e Ea): whether the hub's tool approval body is showing (vk `{body}`, set by its tool
+// approval surface yk). oL lets a band that stands in for the composer speak as a note while it shows. No hub tool
+// approval surface here: never.
+export function useHubToolApprovalBodyShown() {
+  return false;
+}
+function InlineBandSinkEntry({ slot: { sink, name }, band }) {
+  const [seq] = useState(() => sink.nextSeq());
+  useLayoutEffect(() => { sink.set(name, seq, band); }, [sink, name, seq, band]);
+  useLayoutEffect(() => () => sink.remove(name, seq), [sink, name, seq]);
+  return null;
+}
+
+// vendor-intl q / Gt for the sleep and kept-awake bands only (sleep-band.mjs, E83): the bands' copy names Claude as the
+// assistant ("Your computer went to sleep while Claude was working.", "Claude kept your computer awake for …"); the
+// local catalog keys it with "DeepSeek", which t() turns into the running core's assistant, as the host's sleep band
+// did (W14-code r5 fr5-07 kept-awake-model copy). Everything else is the rail kit's intl.
+// (The rail's catalog check reads `defaultMessage:` literals; the keyed copy is assigned, as it is not a new message.)
+function personaMessage(message) {
+  const text = message?.defaultMessage;
+  if (typeof text !== "string" || !/\bClaude\b/.test(text)) return message;
+  const keyed = { ...message };
+  keyed.defaultMessage = text.replace(/\bClaude\b/g, "DeepSeek");
+  return keyed;
+}
+export function useBandIntl() {
+  const intl = useStartIntl();
+  return useMemo(() => ({ ...intl, formatMessage: (message, values) => intl.formatMessage(personaMessage(message), values) }), [intl]);
+}
+export function BandMessage({ values, ...message }) {
+  return useBandIntl().formatMessage(message, values);
+}

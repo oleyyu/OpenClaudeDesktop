@@ -3,25 +3,18 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { SERVER_SETTLE_MS, PREVIEW_LOGS_EXPANDED_KEY, failureLogLine, heldPort, logsServer, logsSourceLabel, previewRunningToolLabel, readLogsExpanded, serverStartHold, startFailurePrompt, startFailureText, startingServer, writeLogsExpanded } from '../src/preview-model.mjs';
-import { SHOW_RETRY_MS, anyServerRunning, boundsOf, clampLogsHeight, failedServer, isOccluded, logTone, occlusionSamples, pageError, pageRefused, pageServer, previewSurface, stoppedServer, sameBounds, serverErrorText, serverRows, urlParts, viewportLabel } from '../src/preview-model.mjs';
+import { SHOW_RETRY_MS, boundsOf, clampLogsHeight, failedServer, isOccluded, occlusionSamples, pageRefused, pageServer, previewSurface, stoppedServer, sameBounds, serverErrorText, serverRows, viewportLabel } from '../src/preview-model.mjs';
 import { appToolCall, appToolLabel } from '../src/agent-tool-titles.mjs';
 import { genericToolLabel, genericToolDetails } from '../src/generic-tool-model.mjs';
 
 const state = (patch = {}) => ({ hasPage: false, hostId: null, url: '', error: null, servers: [], launch: { exists: true, configs: [{ name: 'web', port: 3000, url: 'http://localhost:3000', attach: false }] }, viewport: { preset: 'responsive' }, ...patch });
 
-test('urlParts splits host and the rest; files show their name', () => {
-  assert.deepEqual(urlParts('http://localhost:5173/a/b?x=1#h'), { host: 'localhost:5173', rest: '/a/b?x=1#h' });
-  assert.deepEqual(urlParts('https://example.com/'), { host: 'example.com', rest: '' });
-  assert.deepEqual(urlParts('file:///work/app/dist/index.html'), { host: 'index.html', rest: '' });
-  assert.deepEqual(urlParts('about:blank'), { host: '', rest: '' });
-});
+// W14-code r4 gen-final-4: urlParts (test-only) is deleted.
 
 test('server rows merge configurations with live servers', () => {
   const rows = serverRows(state({ servers: [{ name: 'web', port: 3001, url: 'http://localhost:3001', status: 'running' }] }));
   assert.deepEqual(rows, [{ name: 'web', port: 3001, url: 'http://localhost:3001', attach: false, status: 'running', error: null, running: true, busy: false }]);
   assert.equal(serverRows(state())[0].status, 'stopped');
-  assert.equal(anyServerRunning(state({ servers: [{ name: 'web', status: 'starting' }] })), true);
-  assert.equal(anyServerRunning(state({ servers: [{ name: 'web', status: 'stopped' }] })), false);
 });
 
 test('the surface: start page, starting, failure, page, error; a page another pane shows is still the page surface', () => {
@@ -40,9 +33,10 @@ test('the surface: start page, starting, failure, page, error; a page another pa
   assert.equal(pageRefused(state({ hasPage: true, hostId: null }), 'a'), false, 'nobody shows it: not refused');
   assert.deepEqual(SHOW_RETRY_MS, [50, 250, 1000]);
   const broken = state({ hasPage: true, url: 'http://localhost:3000/', error: { code: '-102', description: 'ERR_CONNECTION_REFUSED', url: 'http://localhost:3000/' } });
-  assert.equal(previewSurface(broken, { instanceId: 'a' }), 'error');
-  assert.match(pageError(broken).body, /Nothing is answering at http:\/\/localhost:3000\//);
-  assert.equal(pageError(state({ error: { code: 'crashed' } })).title, 'The page stopped working');
+  // W14-code r4 r4pa-c04: a failed load is the main process's data: error page in the tab (jPKPzV-P Idi), so the pane
+  // shows the page, not a host "error" surface.
+  assert.equal(previewSurface(broken, { instanceId: 'a' }), 'page');
+  assert.equal(previewSurface(state({ hasPage: true, url: 'http://localhost:3000/', error: { code: 'crashed' } }), { instanceId: 'a' }), 'page');
 });
 
 test('server errors read in plain words; the fix prompt carries the output', () => {
@@ -113,10 +107,7 @@ test('cf580efe9 wr: the running tool names the Setting up preview state', () => 
 });
 
 test('log tones, occlusion sampling, bounds and the logs drawer limits', () => {
-  assert.equal(logTone('npm ERR! missing script'), 'danger');
-  assert.equal(logTone('Build FAILED'), 'danger');
-  assert.equal(logTone('warning: deprecated'), 'warning');
-  assert.equal(logTone('ready in 300ms'), null);
+  // W14-code r4 gen-final-4: logTone (test-only) is deleted.
   const rect = { left: 100, top: 50, right: 500, bottom: 450, width: 400, height: 400 };
   assert.equal(occlusionSamples(rect).length, 9);
   assert.deepEqual(occlusionSamples({ left: 0, top: 0, right: 5, bottom: 5, width: 5, height: 5 }), []);
@@ -165,8 +156,7 @@ test('a page whose dev server stopped shows "Stopped" with Restart; a running se
   assert.equal(previewSurface({ ...stopped, servers: [{ ...stopped.servers[0], attach: true }] }), 'page');
   assert.equal(previewSurface({ ...stopped, hasPage: false }), 'start');
   assert.equal(previewSurface({ ...stopped, url: 'file:///x/index.html' }), 'page');
-  // A config that never ran here: only the Restart on a refused page sees it.
+  // A config that never ran here is not the page's server (the refused-page Restart that also looked at configs is gone, r4pa-c04).
   assert.equal(pageServer(base), null);
-  assert.deepEqual(pageServer(base, { configs: true }), { name: 'web', port: 5173, url: 'http://localhost:5173/', status: 'stopped' });
   assert.equal(previewSurface(base), 'page');
 });

@@ -2,7 +2,7 @@ import React, { useEffect, useId, useLayoutEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { MODAL_LAYER } from "./source-dialog.jsx";
 import { holdModalInert } from "./modal-inert.mjs";
-import { SourceSettingsButton } from "./source-settings-button.jsx";
+import { CdsButton } from "./generated/view-tabs/shared-frame-6jtSkIit.js";
 import "./source-image-viewer.css";
 import { t } from "../electron/i18n/index.mjs";
 
@@ -111,12 +111,14 @@ export function SourceImageViewer({ src, alt = "", caption, originRef, onClose }
   return createPortal(
     <div className="sdlg-portal cds-root" data-cds-portal="" style={{ "--cds-portal-z": MODAL_LAYER.z, "--cds-layer-base": MODAL_LAYER.base }}>
       <div ref={popup} role="dialog" aria-modal="true" aria-labelledby={titleId} tabIndex={-1} data-cds="ImagePreviewModal"
-        className="siv-popup" onClick={close} onKeyDown={keyDown}>
-        <h2 id={titleId} className="siv-sr-only">{alt || t("Image preview")}</h2>
+        className="fixed inset-0 grid place-items-center p-4 sm:p-10 bg-black/62.5 outline-none siv-popup" onClick={close} onKeyDown={keyDown}>
+        <h2 id={titleId} className="sr-only">{alt || t("Image preview")}</h2>
         <div className="siv-frame">
           <div className="siv-figure" onClick={(event) => event.stopPropagation()}>
             <div className="cds-dark-scope siv-actions" data-mode="dark">
-              <SourceSettingsButton ref={closeButton} variant="ghost" iconOnly icon="X" iconSize="auto" aria-label={t("Close image preview")}
+              {/* 3.6556.2 cb1b78cfa: `t(o,{iconOnly:!0,icon:"X","aria-label":m,tooltip:!1,"data-testid":"close-file-preview"})`
+                  (o = shared-frame Uu = CdsButton; W14-code r5 cleanup css5-settings-button-replica). */}
+              <CdsButton ref={closeButton} variant="ghost" iconOnly icon="X" aria-label={t("Close image preview")} tooltip={false}
                 data-testid="close-file-preview" onClick={pressClose} />
             </div>
             <div ref={frame} className="siv-image" onClick={pressClose}>

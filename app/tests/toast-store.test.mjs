@@ -42,6 +42,21 @@ test('toast clearance: innerHeight - top of the overlapping safe regions, capped
  assert.equal(toastClearance(scope,[{left:420,right:1190,top:700,width:770,height:68},{left:1000,right:1300,top:500,width:300,height:268}],768),268,'the tallest lift wins');
  assert.equal(toastClearance(scope,[],768),0);
 });
+// W14-code r5-composer-02 — shared-26-CGuBxVt9.js OP `rP.has(i) && window.innerHeight - a.bottom > eP` (eP = 200):
+// a nearWindowBottomOnly region (cc43287c9 Code dock column) is skipped while its bottom is more than 200px above the
+// window bottom; a plain region still lifts the toast wherever it sits.
+test('toast clearance: a nearWindowBottomOnly region only counts within 200px of the window bottom',()=>{
+ const scope={left:948,right:1308};
+ // Code new-session page: the composer sits mid-window (bottom 468 → 300px above a 768px window): no lift.
+ assert.equal(toastClearance(scope,[{left:420,right:1190,top:300,bottom:468,width:770,height:168,nearWindowBottomOnly:true}],768),0);
+ // The same rect without the flag still lifts (innerHeight - top).
+ assert.equal(toastClearance(scope,[{left:420,right:1190,top:300,bottom:468,width:770,height:168}],768),468);
+ // Exactly 200px above the bottom still counts (strict > in OP).
+ assert.equal(toastClearance(scope,[{left:420,right:1190,top:400,bottom:568,width:770,height:168,nearWindowBottomOnly:true}],768),368);
+ // A docked session composer (bottom at the window edge) lifts; bottom falls back to top + height.
+ assert.equal(toastClearance(scope,[{left:420,right:1190,top:600,width:770,height:168,nearWindowBottomOnly:true}],768),168);
+ assert.equal(toastClearance(scope,[{left:420,right:1190,top:200,width:770,height:168,nearWindowBottomOnly:true}],768),0);
+});
 test('only neutral, warning and danger exist; any other variant name is neutral (shared-21 HA/UA/WA/GA, shared-25 info bridge)',()=>{
  const {store}=harness();
  for(const variant of ['success','error','info','typo'])store.add(`m ${variant}`,{variant});

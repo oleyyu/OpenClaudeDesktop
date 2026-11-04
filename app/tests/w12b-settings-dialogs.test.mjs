@@ -13,7 +13,12 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
 import { cleanBrowserName, createDefaultBrowserName, DEFAULT_BROWSER_NAME_CACHE_MS } from '../electron/default-browser-name.cjs';
-import { browserLabel, defaultBrowserName, refreshDefaultBrowserName, resetDefaultBrowserName, subscribeDefaultBrowserName } from '../src/default-browser-name.mjs';
+import { browserLabel, defaultBrowserName, refreshDefaultBrowserName, subscribeDefaultBrowserName } from '../src/default-browser-name.mjs';
+// W14-code r4 closeout R4DC-N7: the module's test-only resetDefaultBrowserName is gone; a bridge answering null clears it.
+const resetDefaultBrowserName = async () => {
+  refreshDefaultBrowserName({ getDefaultBrowserName: () => Promise.resolve(null) });
+  await new Promise((done) => setTimeout(done, 0));
+};
 import { messageMenu } from '../src/transcript-context-menu-model.mjs';
 import zhPreview from '../electron/i18n/zh-CN/preview.mjs';
 
@@ -45,7 +50,7 @@ test('S2: Keyboard shortcuts is the standard Zc Header (shared-19 jM {showClose:
   assert.match(frame, /b\(Xy,\{"aria-label":i,flush:!0\}\)/);
   assert.ok(frame.includes('My="-mt-1"') && frame.includes('Ay="text-title font-semibold font-header break-words"'));
   const html = withDocument(() => renderToStaticMarkup(h(Actions.KeyboardShortcutsDialog, { onClose() {} })));
-  assert.match(html, /<header class="sdlg-header"><div class="sdlg-heading"><h2 id="[^"]+" class="sdlg-title">Keyboard shortcuts<\/h2><\/div><button[^>]*class="[^"]*sdlg-close sdlg-close-flush/);
+  assert.match(html, /<div class="sdlg-header mb-pad-md flex items-start gap-2"><div class="-mt-1 flex min-w-0 flex-1 flex-col gap-1"><h2 id="[^"]+" class="text-primary text-title font-semibold font-header break-words">Keyboard shortcuts<\/h2><\/div><button[^>]*class="[^"]*-me-pad-sm -mt-pad-sm/);
   assert.doesNotMatch(html, /sdlg-bleed/);
   assert.equal([...html.matchAll(/aria-label="Close"/g)].length, 1);
   // The bleed header has no user left: SourceDialog and its CSS dropped it.
@@ -59,11 +64,11 @@ test('S2: What’s new (cb63ed069 B) has the standard Header; the entry list ble
     || /E=t\(u\.Header,\{showClose:!0,children:t\(w,\{defaultMessage:"What’s new"/.test(official));
   assert.ok(official.includes('"-mx-pad-xl -mb-pad-xl flex min-h-0 flex-1 flex-col gap-lg overflow-y-auto px-xl pb-xl pt-md'));
   assert.ok(official.includes('className:"flex max-h-[min(720px,85vh)] flex-col"'));
-  const css = local('src/source-titlebar.css');
-  const rule = css.slice(css.indexOf('.st-release-scroll {'), css.indexOf('}', css.indexOf('.st-release-scroll {')));
-  assert.match(rule, /margin: 0 calc\(-1 \* var\(--cds-pad-xl\)\) calc\(-1 \* var\(--cds-pad-xl\)\);/);
-  assert.match(rule, /padding: var\(--cds-pad-md\) var\(--cds-pad-xl\) var\(--cds-pad-xl\);/);
-  assert.match(rule, /overflow-y: auto;/);
+  // W14-code r2 fr2-18: the host now writes B's own strings instead of a .st-release-scroll copy.
+  const jsx = local('src/source-titlebar.jsx');
+  assert.ok(jsx.includes('className="-mx-pad-xl -mb-pad-xl flex min-h-0 flex-1 flex-col gap-lg overflow-y-auto px-xl pb-xl pt-md in-data-cds-fizzy:flex-none in-data-cds-fizzy:overflow-visible in-data-cds-fizzy:pt-0"'));
+  assert.ok(jsx.includes('className="flex max-h-[min(720px,85vh)] flex-col"'));
+  assert.doesNotMatch(local('src/source-titlebar.css'), /\.st-release-(scroll|entry|group|version|code|date|empty)/);
 });
 
 test('S3 main: Ctr / Etr / Dtr — the https handler name, cleaned, cached for 30 s', () => {
@@ -98,7 +103,7 @@ test('S3 renderer: c8ae173c6 store — named / generic label, focus refresh whil
     'window.addEventListener("focus",u)', 'let e=r?.getDefaultBrowserName?.();e&&(c=!0,e.then(e=>{let t=e||null;t!==s&&(s=t,l.notify())}'])
     assert.ok(official.includes(needle), needle);
   assert.equal(zhPreview['Open in {browserName}'], '在 {browserName} 中打开');
-  resetDefaultBrowserName();
+  await resetDefaultBrowserName();
   assert.equal(defaultBrowserName(), null);
   assert.equal(browserLabel(), 'Open in default browser');
   assert.equal(browserLabel('Safari'), 'Open in Safari');
@@ -126,7 +131,7 @@ test('S3 renderer: c8ae173c6 store — named / generic label, focus refresh whil
   await new Promise((done) => setTimeout(done, 0));
   assert.deepEqual(notes, ['Google Chrome', null], 'a falsy answer is null (generic again)');
   unsubscribe();
-  resetDefaultBrowserName();
+  await resetDefaultBrowserName();
   // l.subscribe: the first listener adds the window focus refresh (u asks window.desktop), the last one removes it.
   const added = [], removed = [];
   let focusAsked = 0;
@@ -141,7 +146,7 @@ test('S3 renderer: c8ae173c6 store — named / generic label, focus refresh whil
     assert.equal(defaultBrowserName(), 'Safari');
     one(); assert.equal(removed.length, 0);
     two(); assert.deepEqual(removed, added);
-  } finally { delete globalThis.window; resetDefaultBrowserName(); }
+  } finally { delete globalThis.window; await resetDefaultBrowserName(); }
   // Every label the host showed as "Open in default browser" reads the store.
   assert.match(local('src/source-preview-link-chooser.jsx'), /useBrowserLabel: useDefaultBrowserLabel,/);
   assert.match(local('src/source-preview-address.jsx'), /const openExternal = useDefaultBrowserLabel\(\);[\s\S]*openExternal,\n/);
@@ -168,7 +173,7 @@ test('S7: Choose your language has only the title and Close (shared-19 bM header
   assert.match(official, /\{showClose:!0\},[a-zA-Z_$]+=h\(Q,\{defaultMessage:"Choose your language",id:"qapewxNreP"\}\)/);
   assert.ok(!chunk('c49da61a8-CCSGo0x8.js').includes('reload'));
   const html = withDocument(() => renderToStaticMarkup(h(Picker.SourceLanguagePicker, { open: true, onClose() {}, onSave: async () => {} })));
-  assert.match(html, /<header class="sdlg-header"><div class="sdlg-heading"><h2 id="[^"]+" class="sdlg-title">Choose your language<\/h2><\/div><button/);
-  assert.doesNotMatch(html, /sdlg-description|reloads the window/);
+  assert.match(html, /<div class="sdlg-header mb-pad-md flex items-start gap-2"><div class="-mt-1 flex min-w-0 flex-1 flex-col gap-1"><h2 id="[^"]+" class="text-primary text-title font-semibold font-header break-words">Choose your language<\/h2><\/div><button/);
+  assert.doesNotMatch(html, /text-body font-normal text-secondary break-words|reloads the window/);
   assert.doesNotMatch(html, /aria-describedby/);
 });

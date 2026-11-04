@@ -11,7 +11,8 @@ import {history,undo,redo,closeHistory} from 'prosemirror-history';
 import {compositionEdgePlugins,finishCompositionBeforePaste,trackComposition} from './generated/code-current/composer-composition.mjs';
 import {composerSchema,composerDocument,composerText,composerTextOffset,composerPosition,composerSelection,selectCommandBefore,commandTransaction,caretRunStart,mentionTransaction,skillTransaction,reconcileComposerText,composerArgumentHint,commandSeparatorPlugin,leafText,mentionLabel,composerEchoTracker,inputRuleTransaction,pasteTransaction,caretInCode,activeLink,editLinkTransaction,removeLinkTransaction,linkHrefValid,LINK_PROTOCOL,toggleInlineCode,toggleCodeBlock,clearCodeBlock,exitCodeBlockUp,exitCodeBlockDown} from './composer-editor-model.mjs';
 import {SourceDialog} from './source-dialog.jsx';
-import {SourceSettingsButton} from './source-settings-button.jsx';
+// W14-code r6 R6DC-02: c227f4d5e link bubble / Edit link dialog buttons are shared-frame Uu (E41 direct import).
+import {CdsButton} from './generated/view-tabs/shared-frame-6jtSkIit.js';
 import {SourceMenu} from './source-menu.jsx';
 import {pathChoices} from './file-tool-model.mjs';
 import {positionMenu} from './menu-model.mjs';
@@ -30,6 +31,29 @@ function keywordPlugin(enabled){
  return plugin;
 }
 
+// W14-code r4 (css4-skill-chip-card): the skill chip and its hover card are shared-9-CM21XrJw.js GS → WS → VS → BS, the
+// class strings verbatim. WS root 'group/chip inline-flex relative cursor-interactive text-accent' (data-card-open, dir
+// auto) > VS trigger 'inline-flex relative cursor-interactive' > [the glow 'absolute -inset-y-0.5 -start-0.5 -end-1
+// rounded-md pointer-events-none' + bg-accent when selected, else group-hover/chip / group-data-[card-open]/chip
+// bg-accent, BS 'relative ps-2' > the '/' and the name]. The stacks: variants are left out: no loaded sheet defines a
+// stacks variant. VS opens on hover (delay 300) even without a description, because GS always passes subtitle = zS.
+const SKILL_CHIP_ROOT='group/chip inline-flex relative cursor-interactive text-accent';
+const skillChipGlowClass=selected=>`absolute -inset-y-0.5 -start-0.5 -end-1 rounded-md pointer-events-none ${selected?'bg-accent':'group-hover/chip:bg-accent group-data-[card-open]/chip:bg-accent'}`;
+const SKILL_CHIP_SLASH='absolute top-1/2 -translate-y-1/2 start-0 w-2 h-5 flex items-center justify-center font-base-bold opacity-50 select-none';
+// VS popup: side top, align start, sideOffset 8 (positioned below); without href, no hover:bg-surface-1 transition-colors.
+const SKILL_CARD='rounded-xl border-0.5 border-border-300 bg-surface-3 shadow-lg font-base w-[178px] p-2 flex flex-col gap-2';
+const SKILL_CARD_DESCRIPTION='text-muted-as-secondary font-small bg-surface-1 rounded-lg p-2';
+// shared-9 zS(id, record): 'Skill'; an MCP skill (record.source "mcp", or shared-5 Qw: '<uuid>:<name>') reads
+// '{mcpServerName || Connector}  ·  Skill'; a 'plugin:skill' id (not wrapped) reads '{hJ(plugin)}  ·  Skill' (shared-52
+// Ao takes the part before ':', mJ upper-cases its first '-' segment and joins the segments with spaces).
+const MCP_SKILL_ID=/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}:([A-Za-z0-9][A-Za-z0-9_-]*)$/;
+const pluginLabel=name=>{const parts=name.split('-');if(parts.length===0||(parts.length===1&&parts[0]===''))return name;parts[0]=parts[0].charAt(0).toUpperCase()+parts[0].slice(1);return parts.join(' ');};
+export function skillChipSubtitle(id,record){
+ const skill=t('Skill');
+ if(record?.source==='mcp'||(id&&MCP_SKILL_ID.test(id)))return `${record?.mcpServerName||t('Connector')}  \u00B7  ${skill}`;
+ if(!id||!id.includes(':')||record?.wrapped)return skill;
+ return `${pluginLabel(id.slice(0,id.indexOf(':')))}  \u00B7  ${skill}`;
+}
 function CommandChip({command,selected}) {
  const [open,setOpen]=useState(false),trigger=useRef(null),popup=useRef(null),timer=useRef(null),corridor=useRef(null);
  const clear=()=>{clearTimeout(timer.current);timer.current=null;};
@@ -41,23 +65,32 @@ function CommandChip({command,selected}) {
  const dismiss=event=>{if(event.type==='keydown'){if(event.key!=='Escape'||event.isComposing)return;event.preventDefault();event.stopPropagation();setOpen(false);}else if(!trigger.current?.contains(event.target)&&!popup.current?.contains(event.target))setOpen(false);};
  doc.addEventListener('pointermove',move);doc.addEventListener('keydown',dismiss,true);doc.addEventListener('pointerdown',dismiss,true);
  return()=>{doc.removeEventListener('pointermove',move);doc.removeEventListener('keydown',dismiss,true);doc.removeEventListener('pointerdown',dismiss,true);clear();corridor.current=null;};},[open]);
- return <span ref={trigger} className="sc-command-chip" data-selected={selected||undefined} data-card-open={open||undefined} onPointerEnter={enter} onPointerMove={event=>{if(!open)enter(event);}} onPointerLeave={leave} onMouseDown={event=>{event.preventDefault();event.stopPropagation();}} onClick={event=>{event.preventDefault();event.stopPropagation();}}>
- <span className="sc-command-chip-glow"/><span className="sc-command-chip-label"><span className="sc-command-chip-slash" aria-hidden="true">/</span>{command.label||command.id}</span>
- {open&&command.description&&<CommandCard {...{command,trigger,popup}} onPointerEnter={()=>{clear();corridor.current=null;}} onPointerLeave={leave}/>}</span>;
+ return <span className={SKILL_CHIP_ROOT} data-card-open={open||undefined} dir="auto">
+ <span ref={trigger} className="inline-flex relative cursor-interactive" onPointerEnter={enter} onPointerMove={event=>{if(!open)enter(event);}} onPointerLeave={leave} onMouseDown={event=>{event.preventDefault();event.stopPropagation();}} onClick={event=>{event.preventDefault();event.stopPropagation();}}>
+ <span className={skillChipGlowClass(selected)}/><span className="relative ps-2"><span aria-hidden="true" className={SKILL_CHIP_SLASH}>/</span><span className="select-none">{command.label||command.id}</span></span></span>
+ {open&&<CommandCard {...{command,trigger,popup}} onPointerEnter={()=>{clear();corridor.current=null;}} onPointerLeave={leave}/>}</span>;
 }
 function CommandCard({command,trigger,popup,...events}) {
  useLayoutEffect(()=>{const owner=trigger.current,node=popup.current,view=owner.ownerDocument.defaultView;const update=()=>{for(const name of ['data-mode','data-density','data-cds-theme','data-platform','data-font']){const value=owner.closest(`[${name}]`)?.getAttribute(name);if(value!=null)node.setAttribute(name,value);else node.removeAttribute(name);}const css=view.getComputedStyle(owner);node.style.setProperty('--cds-rem-scale',css.getPropertyValue('--cds-rem-scale'));const box=node.getBoundingClientRect(),p=positionMenu({anchor:owner.getBoundingClientRect(),size:box,viewport:{width:view.innerWidth,height:view.innerHeight},side:'top',align:'start',sideOffset:8,collisionPadding:5});Object.assign(node.style,{left:`${p.left}px`,top:`${p.top}px`,zIndex:(parseInt(css.getPropertyValue('--cds-layer-base'),10)||0)+50,visibility:'visible'});};update();const observer=new view.ResizeObserver(update);observer.observe(owner);observer.observe(node);const mutation=new view.MutationObserver(update);for(let current=owner;current;current=current.parentElement)mutation.observe(current,{attributes:true});view.addEventListener('resize',update);view.addEventListener('scroll',update,true);return()=>{observer.disconnect();mutation.disconnect();view.removeEventListener('resize',update);view.removeEventListener('scroll',update,true);};},[command,trigger,popup]);
- return createPortal(<div {...events} ref={popup} className="sc-command-card cds-root epitaxy-root" style={{visibility:'hidden'}}><div className="sc-command-card-description"><p>{command.description}</p></div></div>,trigger.current.ownerDocument.body);
+ return createPortal(<div {...events} ref={popup} className={`${SKILL_CARD} cds-root epitaxy-root`} style={{position:'fixed',visibility:'hidden'}}>
+  {command.description&&<div className={SKILL_CARD_DESCRIPTION}><p className="line-clamp-5">{command.description}</p></div>}
+  <div className="text-muted-as-secondary font-small">{skillChipSubtitle(command.id,command)}</div></div>,trigger.current.ownerDocument.body);
 }
 function commandNodeView(node){const dom=document.createElement('span');dom.contentEditable='false';dom.setAttribute('data-skill-chip','');dom.setAttribute('data-chip-kind',node.attrs.kind||'command');dom.dir='auto';const root=createRoot(dom);let selected=false;const render=()=>root.render(<CommandChip command={node.attrs} selected={selected}/>);render();return {dom,selectNode(){selected=true;render();},deselectNode(){selected=false;render();},update(next){if(next.type!==node.type)return false;node=next;render();return true;},ignoreMutation:()=>true,destroy(){queueMicrotask(()=>root.unmount());}};}
 
-// shared-13-Bl2X1oob.js:7882-7958 Aw: the mention chip is 'inline-flex relative cursor-interactive group/mention mx-0.5
-// text-accent' around a glow span ('absolute -inset-y-0.5 -left-0.5 -right-1 rounded-md pointer-events-none', bg-accent
-// when selected, else group-hover bg-fill-ghost-hover) and the label (the basename, title = the path). The Sw menu
+// W14-code r4 (css4-mention-chip-wrap): shared-28-DNYlf4wu.js vS, the class strings verbatim: the root 'inline-flex
+// relative cursor-interactive group/mention mx-0.5 [overflow-wrap:anywhere] max-w-[calc(100%-0.25rem)] text-accent' (a
+// long file name wraps inside the editor instead of widening it) > the menu trigger F 'inline-flex relative min-w-0
+// max-w-full' > [the glow 'absolute -inset-y-0.5 -left-0.5 -right-1 rounded-md pointer-events-none' + bg-accent when
+// selected, else group-hover/mention:bg-fill-ghost-hover; the label box N 'relative min-w-0 max-w-full' (no icon, so no
+// pl-5) > M 'relative [&::selection]:bg-transparent' (the basename, title = the path)]. data-selected / data-menu-open
+// are host state hooks (no style reads them). The Sw menu
 // opens on click: for a picked file (c099c328d-CbkcmYSW.js:7052-7062 op, ccd-files) the c856385e2 Z path actions —
 // Copy ▸ Absolute path / Relative path / Filename (c3e58cab4 p, 'Copied to clipboard.'), then Open in ▸ Files pane
 // (zn; the local pane is the one target) — a separator and the danger Delete, which removes the node and refocuses.
 // A non-primary mousedown and the context menu stay with the chip (Cw/ww); a primary press selects the atom.
+const MENTION_CHIP_ROOT='inline-flex relative cursor-interactive group/mention mx-0.5 [overflow-wrap:anywhere] max-w-[calc(100%-0.25rem)] text-accent';
+const mentionGlowClass=selected=>`absolute -inset-y-0.5 -left-0.5 -right-1 rounded-md pointer-events-none ${selected?'bg-accent':'group-hover/mention:bg-fill-ghost-hover'}`;
 function MentionChip({path,label,selected,getActions,onDelete,onFocusEditor}) {
  const [menu,setMenu]=useState(false),trigger=useRef(null),name=label||mentionLabel(path);
  const act=fn=>()=>{setMenu(false);fn();};
@@ -65,10 +98,10 @@ function MentionChip({path,label,selected,getActions,onDelete,onFocusEditor}) {
  const file=!/^session:/.test(path);
  const choices=menu&&file?pathChoices(path,getActions()?.root):null;
  const copy=text=>getActions()?.onCopy?.(text);
- return <span ref={trigger} className="sc-mention-chip" data-selected={selected||undefined} data-menu-open={menu||undefined}
+ return <span ref={trigger} className={MENTION_CHIP_ROOT} data-selected={selected||undefined} data-menu-open={menu||undefined}
   onMouseDown={event=>{if(event.button!==0)event.stopPropagation();}} onContextMenu={event=>event.stopPropagation()}
   onClick={event=>{if(!event.currentTarget.contains(event.target))return;event.preventDefault();setMenu(true);}}>
-  <span className="sc-mention-chip-trigger"><span className="sc-mention-chip-glow" aria-hidden="true"/><span className="sc-mention-chip-label" title={path}>{name}</span></span>
+  <span className="inline-flex relative min-w-0 max-w-full"><span className={mentionGlowClass(selected)} aria-hidden="true"/><span className="relative min-w-0 max-w-full"><span className="relative [&::selection]:bg-transparent" title={path}>{name}</span></span></span>
   {menu&&<SourceMenu.Popup anchor={trigger.current} side="bottom" align="start" label={t('Mention actions')} finalFocus={false} layerBase={getActions()?.layerBase}
    onClose={reason=>{setMenu(false);if(reason==='escape-key'||reason==='item-click')requestAnimationFrame(onFocusEditor);}}>
    {file&&<><SourceMenu.Submenu><SourceMenu.SubmenuTrigger>{t('Copy')}</SourceMenu.SubmenuTrigger><SourceMenu.Popup label={t('Copy')}>
@@ -107,7 +140,8 @@ function LinkBubble({anchor,rect,href,onEdit,onOpen,onRemove}) {
   Object.assign(node.style,{left:`${p.left}px`,top:`${p.top}px`,zIndex:(parseInt(css.getPropertyValue('--cds-layer-base'),10)||0)+50,visibility:'visible'});},[anchor,rect]);
  const isCopied=copied!==null&&copied===href;
  const copy=()=>{if(!href)return;Promise.resolve(anchor.ownerDocument.defaultView.navigator.clipboard?.writeText(href)).then(()=>{if(!mounted.current)return;setCopied(href);clearTimeout(timer.current);timer.current=setTimeout(()=>setCopied(null),COPIED_MS);},()=>{});};
- const button=(icon,label,onClick)=><SourceSettingsButton variant="ghost" iconOnly icon={icon} iconSize="auto" aria-label={label} onClick={onClick}/>;
+ // c227f4d5e: `y(Y,{size:"base",variant:"ghost",icon:…,"aria-label":…,onClick:…,iconOnly:!0})`.
+ const button=(icon,label,onClick)=><CdsButton size="base" variant="ghost" icon={icon} aria-label={label} onClick={onClick} iconOnly/>;
  return createPortal(<div ref={popup} className="sc-link-bubble cds-root epitaxy-root" data-link-bubble="" style={{visibility:'hidden'}} onMouseDown={event=>event.preventDefault()}>
   {button('Edit',t('Edit link'),onEdit)}
   {button('ArrowOutSquare',t('Open link'),onOpen)}
@@ -123,7 +157,7 @@ function EditLinkDialog({initialText,initialHref,onSave,onClose}) {
  const save=()=>{if(valid)onSave(text.current,href.current.trim());};
  const keyDown=event=>{if(event.nativeEvent.isComposing||event.keyCode===229)return;if(event.key==='Enter'){event.preventDefault();save();}};
  return <SourceDialog title={t('Edit link')} size="sm" showClose={false} className="sc-link-dialog epitaxy-root" onClose={reason=>{if(reason!=='outside-press')onClose();}}
-  footer={<><SourceSettingsButton variant="secondary" onClick={onClose}>{t('Cancel')}</SourceSettingsButton><SourceSettingsButton variant="primary" disabled={!valid} onClick={save}>{t('Save')}</SourceSettingsButton></>}>
+  footer={<><CdsButton variant="secondary" onClick={onClose}>{t('Cancel')}</CdsButton><CdsButton variant="primary" disabled={!valid} onClick={save}>{t('Save')}</CdsButton></>}>
   <div className="sc-link-fields">
    <div className="sc-link-field"><label htmlFor={textId}>{t('Text')}</label><input id={textId} type="text" data-cds="TextInput" className="cds-input cds-reset" defaultValue={initialText} spellCheck={false} autoComplete="off" onChange={event=>{text.current=event.target.value;}} onKeyDown={keyDown}/></div>
    <div className="sc-link-field"><label htmlFor={linkId}>{t('Link')}</label><input id={linkId} type="text" data-cds="TextInput" data-autofocus="" className="cds-input cds-reset" defaultValue={initialHref} spellCheck={false} autoComplete="off" aria-invalid={!valid||undefined} onChange={event=>{href.current=event.target.value;setValid(linkHrefValid(event.target.value));}} onKeyDown={keyDown}/></div>
@@ -260,7 +294,7 @@ export function SourceComposerEditor({value,onChange,inputRef,scope,disabled,onK
  useLayoutEffect(()=>{const editor=view.current;if(!editor)return;if(previousScope.current!==scope){previousScope.current=scope;host.current.resetComposer();}else{const kind=echoes.current.classify(value,composerText(editor.state.doc));
   if(editor.composing){if(kind==='current')pendingValue.current=null;else if(kind==='external')pendingValue.current={value,scope};}else if(kind==='external')syncValue.current?.(value);}host.current.dataset.empty=composerText(editor.state.doc)?'false':'true';editor.setProps({editable:()=>!disabled});},[value,scope,disabled]);
  const focusEditor=()=>{const editor=view.current;if(editor&&!editor.isDestroyed)editor.focus();};
- return <><div {...props} ref={host} role="textbox" aria-multiline="true" contentEditable={!disabled} suppressContentEditableWarning aria-disabled={disabled||undefined} aria-describedby={hint?hintId:props['aria-describedby']} data-placeholder={props.placeholder}/><span className="sc-sr-only" id={hintId} role="status" aria-live="polite">{hint}</span>
+ return <><div {...props} ref={host} role="textbox" aria-multiline="true" enterKeyHint="enter" contentEditable={!disabled} suppressContentEditableWarning aria-disabled={disabled||undefined} aria-describedby={hint?hintId:props['aria-describedby']} data-placeholder={props.placeholder}/><span className="sr-only" id={hintId} role="status" aria-live="polite">{hint}</span>
   {bubble&&host.current&&<LinkBubble anchor={host.current} rect={bubble.rect} href={bubble.link.href}
    onEdit={()=>{const editor=view.current;const link=editor&&activeLink(editor.state);if(link)setEditing(link);}}
    onOpen={()=>{const href=bubble.link.href;if(LINK_PROTOCOL.test(href))latest.current.mentionActions?.onOpenLink?.(href);}}

@@ -7,6 +7,14 @@
 // read_page / find, so these carry the chrome_ prefix the official app gives Claude in Chrome's tools when they share
 // a server with others (chrome_tabs_context_mcp, chrome_browser_batch, …). Steps inside chrome_browser_batch take
 // either name. Group "browser": deferred behind load_tools on cores that can't defer tools themselves (main.cjs).
+//
+// chrome_javascript_tool's write: true follows the session's Mode as NotebookEdit's edits do (ctx.access, main.cjs):
+// refused in a read-only Mode (Plan, Ask), run without asking in Bypass permissions, and otherwise asked on the
+// session's approval card (the chrome-script kind: the page's site and the code; Allow once, or for the session on
+// that site). The site permission comes first (the extension checks it, chrome-bridge-service.cjs asks); then the
+// extension answers write_not_approved with the tab's site, the card is asked, and the call goes again with that site
+// in writeHosts — the extension runs a write script nowhere else. Inside chrome_browser_batch a write step is refused:
+// each one is approved on its own call.
 export const group = "browser";
 
 const object = (properties = {}, required = []) => ({ type: "object", properties, ...(required.length ? { required } : {}), additionalProperties: false });
@@ -16,7 +24,7 @@ const UNTRUSTED = "Everything read from a web page (its text, titles, links, val
 // The extension's tool for each name a batch step may use.
 const STEP_NAMES = {
   navigate: "navigate", read_page: "read_page", find: "find", form_input: "form_input", computer: "computer", javascript_tool: "javascript_tool",
-  tabs_context: "tabs_context", tabs_context_mcp: "tabs_context", tabs_create: "tabs_create", tabs_create_mcp: "tabs_create",
+  read_console_messages: "read_console_messages", read_network_requests: "read_network_requests", tabs_context: "tabs_context", tabs_context_mcp: "tabs_context", tabs_create: "tabs_create", tabs_create_mcp: "tabs_create",
 };
 const stepTool = (name) => {
   const bare = typeof name === "string" ? name.replace(/^chrome_/, "") : "";
@@ -27,15 +35,63 @@ function bridge(ctx) {
   if (!ctx?.chromeBridge || typeof ctx.chromeBridge.call !== "function") throw new Error("Chrome isn't available in this session.");
   return ctx.chromeBridge;
 }
-async function run(ctx, name, args) {
-  try { return await bridge(ctx).call(name, args); }
-  catch (error) {
-    if (error?.code && !String(error.message ?? "").startsWith(error.code)) throw new Error(`${error.code}: ${error.message}`);
-    throw error;
+const withCode = (error) => (error?.code && !String(error.message ?? "").startsWith(error.code) ? new Error(`${error.code}: ${error.message}`) : error);
+async function run(ctx, name, args, options) {
+  try { return await bridge(ctx).call(name, args, options); }
+  catch (error) { throw withCode(error); }
+}
+
+// chrome_javascript_tool write: true — the sites each session allowed scripts on for the rest of the session.
+const scriptSites = new Map(); // session id → Set<site>
+const MAX_WRITE_CODE = 20_000; // what the approval card shows in full
+const MAX_SCRIPT_ASKS = 3;
+
+async function sessionMode(ctx) {
+  let facts = null;
+  try { facts = await ctx.access?.get?.(); } catch { facts = null; }
+  const access = facts?.access ?? "read-only";
+  // Bypass only as the session's access has it (main.cjs agentToolAsk does the same): a "bypass" the turn claimed but
+  // didn't run with, or one the user has since turned off, is downgraded there and asks here.
+  return { readOnly: access === "read-only", bypass: access === "danger-full-access" };
+}
+
+/** javascript_tool with write: true, gated by the session's Mode and, unless Bypass, the user's approval of the site. */
+async function runWrite(ctx, args) {
+  const code = typeof args.code === "string" ? args.code : "";
+  if (!code.trim()) throw new Error("code is required.");
+  const mode = await sessionMode(ctx);
+  if (mode.readOnly) throw new Error("This session is in a read-only mode (Plan or Ask), so the script didn’t run and the page wasn’t changed. Leave out write to read the page with a read-only script, or switch the session’s mode to change the page.");
+  if (code.length > MAX_WRITE_CODE) throw new Error(`A write script can be at most ${MAX_WRITE_CODE} characters (the user reads all of it before it runs). Shorten it or split it into several calls.`);
+  // Only the model's own arguments go to the extension; which sites are approved is the app's to say.
+  const input = { code, write: true, ...(args.tabId !== undefined ? { tabId: args.tabId } : {}), ...(args.timeout_ms !== undefined ? { timeout_ms: args.timeout_ms } : {}) };
+  const granted = scriptSites.get(ctx.sessionId) ?? new Set();
+  const once = new Set();
+  for (let asks = 0; ; asks += 1) {
+    const writeHosts = mode.bypass ? ["*"] : [...granted, ...once];
+    let failure;
+    try { return await bridge(ctx).call("javascript_tool", input, { writeHosts }); }
+    catch (error) { failure = error; }
+    const site = failure?.code === "write_not_approved" ? failure.data?.host : null;
+    if (!site || asks >= MAX_SCRIPT_ASKS) throw withCode(failure);
+    // Asked about the tab the extension resolved: the call that goes again acts on that one, whatever is current then.
+    if (Number.isInteger(failure.data?.tabId)) input.tabId = failure.data.tabId;
+    if (ctx.signal?.aborted) throw new Error("The turn was stopped. The script didn’t run.");
+    const answer = typeof ctx.requestApproval === "function" ? await ctx.requestApproval({ kind: "chrome-script", host: site, url: typeof failure.data?.url === "string" ? failure.data.url : "", code }) : false;
+    if (ctx.signal?.aborted) throw new Error("The turn was stopped. The script didn’t run.");
+    // The native sheet (no card could be shown) only offers what it can show in full.
+    if (Number.isInteger(answer?.tooLong)) throw new Error(`This script is too long to show the user in full right now (at most ${answer.tooLong} characters can be shown), so it didn’t run. Shorten it or split it into several calls.`);
+    // The card ended without an answer (the turn ended, the core disconnected): not a refusal.
+    if (answer === null || answer === undefined) throw new Error(`The approval request for running this script on ${site} ended without an answer, so nothing ran. Ask again with the same call if it is still needed.`);
+    if (!(answer === true || answer?.approved === true)) throw new Error(`The user declined running this script on ${site}. Nothing ran. Don’t retry it unless the user asks; a read-only script (without write) or chrome_form_input / chrome_computer may still do what you need.`);
+    if (answer?.always === true) { granted.add(site); scriptSites.set(ctx.sessionId, granted); }
+    once.add(site);
   }
 }
 
 const json = (value) => { try { return JSON.stringify(value); } catch { return String(value); } };
+// A console entry's text is the page's: its own line breaks become indented continuation lines, so it can't make
+// lines that read as other entries or as this tool's own.
+const pageLines = (text) => String(text ?? "").replace(/\r\n|[\r\n\u2028\u2029]/g, "\n    ");
 const quoted = (text) => (text ? ` “${text}”` : "");
 
 // Text for the model, one per extension tool.
@@ -73,7 +129,54 @@ const FORMAT = {
     return parts.join(" ");
   },
   javascript_tool: (r) => r.type === "undefined" ? "undefined" : typeof r.value === "string" && r.type !== "string" ? r.value : json(r.value) + (r.truncated ? " (truncated)" : ""),
+  read_console_messages: (r) => {
+    const lines = [];
+    if (r.started) lines.push(`Started watching tab ${r.tabId}’s console just now: what the page logged before is included as far as Chrome kept it; from now on every message is kept until the tab closes or 10 minutes pass without a read.`);
+    const messages = r.messages ?? [];
+    if (!messages.length) lines.push(r.total ? `No console message on tab ${r.tabId} matches (${r.total} recorded).` : `No console messages on tab ${r.tabId}${r.url ? ` (${r.url})` : ""}.`);
+    else {
+      lines.push(`${plural(r.matched, "console message")} on tab ${r.tabId}${r.matched > messages.length ? ` (the newest ${messages.length})` : ""}, oldest first:`);
+      for (const m of messages) lines.push(`[${m.level}${m.source && m.source !== "console" ? ` · ${m.source}` : ""}] ${pageLines(m.text)}${m.url ? ` (${m.url}${m.line ? `:${m.line}${m.column ? `:${m.column}` : ""}` : ""})` : ""}`);
+    }
+    if (r.cleared) lines.push("Cleared: the next read shows only newer messages.");
+    return lines.join("\n");
+  },
+  read_network_requests: (r) => {
+    const lines = [];
+    if (r.started) lines.push(`Started recording tab ${r.tabId}’s network requests just now: earlier requests aren’t known. To see a page load’s requests, reload it (chrome_navigate to the same URL with this tabId) and call this again.`);
+    if (r.request) {
+      const q = r.request;
+      lines.push(requestLine(q));
+      for (const [label, headers] of [["Request headers", q.headers?.request], ["Response headers", q.headers?.response]]) {
+        const entries = Object.entries(headers ?? {});
+        if (entries.length) lines.push(`${label}:`, ...entries.map(([name, value]) => `  ${name}: ${value}`));
+      }
+      if (q.body !== undefined) lines.push(`Response body${q.mimeType ? ` (${q.mimeType})` : ""}${q.bodyTruncated ? ", truncated" : ""}:`, q.body);
+      else if (q.bodyOmitted) lines.push(`Response body not shown: ${q.bodyOmitted}.`);
+      return lines.join("\n");
+    }
+    const requests = r.requests ?? [];
+    if (!requests.length) lines.push(r.total ? `No request on tab ${r.tabId} matches (${r.total} recorded).` : `No requests recorded on tab ${r.tabId} yet.`);
+    else {
+      lines.push(`${plural(r.matched, "request")} on tab ${r.tabId}${r.matched > requests.length ? ` (the newest ${requests.length})` : ""}, oldest first (#id: pass it as requestId for one request’s headers and response body):`);
+      for (const q of requests) {
+        lines.push(requestLine(q));
+        for (const [mark, headers] of [[">", q.headers?.request], ["<", q.headers?.response]]) for (const [name, value] of Object.entries(headers ?? {})) lines.push(`    ${mark} ${name}: ${value}`);
+      }
+    }
+    if (r.cleared) lines.push("Cleared: the next read shows only newer requests.");
+    return lines.join("\n");
+  },
 };
+function plural(count, noun) { return `${count} ${noun}${count === 1 ? "" : "s"}`; }
+function bytes(size) { return size >= 1048576 ? `${(size / 1048576).toFixed(1)} MB` : size >= 1024 ? `${(size / 1024).toFixed(1)} kB` : `${size} B`; }
+/** One request: #id METHOD url → status · type mime · size · time · cache · initiator. */
+function requestLine(q) {
+  const outcome = q.failed ? `failed (${q.errorText ?? "failed"})` : q.pending ? "pending" : Number.isInteger(q.status) ? `${q.status}${q.statusText ? ` ${q.statusText}` : ""}` : "no response";
+  const facts = [[q.type, q.mimeType].filter(Boolean).join(" "), Number.isFinite(q.size) ? bytes(q.size) : null, Number.isFinite(q.duration) ? `${q.duration} ms` : null,
+    q.fromCache ? "from cache" : null, q.fromServiceWorker ? "from service worker" : null, q.initiator ? `by ${q.initiator}` : null].filter(Boolean);
+  return `#${q.requestId} ${q.method} ${q.url} → ${outcome}${facts.length ? ` · ${facts.join(" · ")}` : ""}`;
+}
 const formatted = (name, result) => (FORMAT[name] ?? json)(result ?? {});
 
 function call(name) {
@@ -155,15 +258,54 @@ export const tools = [
   {
     name: "chrome_javascript_tool",
     title: "Run page script in Chrome",
-    description: `Evaluate JavaScript in a page's own context in the user's Chrome (its globals and DOM) and get the value: an expression's value, or the last expression of a few statements. Read-only, enforced by Chrome: anything that would change the DOM or globals, make a request, use storage or timers is refused, and cookies read as empty; await isn't available. Some plain DOM methods count as side effects (getElementById): use querySelector. Use chrome_form_input / chrome_computer to change the page. ${UNTRUSTED}`,
-    inputSchema: object({ code: { type: "string", description: "JavaScript to evaluate." }, tabId: TAB_ID, timeout_ms: { type: "number", description: "Stop the script after this long (default 10000)." } }, ["code"]),
+    description: `Evaluate JavaScript in a page's own context in the user's Chrome (its globals and DOM) and get the value: an expression's value, or the last expression of a few statements. By default read-only, enforced by Chrome: anything that would change the DOM or globals, make a request, use storage or timers is refused, cookies read as empty, and await isn't available; some plain DOM methods count as side effects (getElementById): use querySelector. Use chrome_form_input / chrome_computer to change the page as a user would. Set write: true only when you must change or wait on the page in a way those can't: call the page's own functions, set state, dispatch events, fetch from the page's origin, await a promise. It then runs like code typed into DevTools' console (top-level await, a promise it ends with awaited, $ / $$ helpers, a user gesture, the page's cookies); the user approves it for the page's site first (not in Bypass permissions), it is refused in Plan and Ask modes, and it can't be a chrome_browser_batch step. ${UNTRUSTED}`,
+    inputSchema: object({
+      code: { type: "string", description: "JavaScript to evaluate." },
+      tabId: TAB_ID,
+      timeout_ms: { type: "number", description: "Stop the script (or, with write, stop waiting for it) after this long, up to 60000 (default 10000)." },
+      write: { type: "boolean", description: "Run it as DevTools' console does, able to change the page and await promises; the user approves it first. Default false (read-only)." },
+    }, ["code"]),
+    // Read-only unless write: true, which this handler gates itself (the session's Mode, then the chrome-script card),
+    // so a core doesn't put its own prompt in front of every read.
     annotations: { readOnlyHint: true, openWorldHint: true },
-    handler: call("javascript_tool"),
+    handler: async (args = {}, ctx) => {
+      if (args.write !== undefined && typeof args.write !== "boolean") throw new Error("write is true or false.");
+      return formatted("javascript_tool", args.write === true ? await runWrite(ctx, args) : await run(ctx, "javascript_tool", { ...args, write: undefined }));
+    },
+  },
+  {
+    name: "chrome_read_console_messages",
+    title: "Read Chrome console",
+    description: `Read a tab's console in the user's Chrome: console.log / warn / error … messages, uncaught exceptions, and the browser's own entries (failed loads, CSP and security messages), oldest first, each with its level, text, and source location. The tab is watched from its first read on (Chrome shows its "started debugging" bar while it is): messages the page logged before are included as far as Chrome kept them, and only the current site's are kept (navigating to another origin starts over). Use it to debug a page: onlyErrors for errors only, pattern (a case-insensitive regular expression) to filter the text, limit for how many of the newest (default 100), clear to forget what was read. ${UNTRUSTED}`,
+    inputSchema: object({
+      tabId: TAB_ID,
+      pattern: { type: "string", description: "Only messages whose text matches this regular expression (case-insensitive)." },
+      onlyErrors: { type: "boolean", description: "Only errors and uncaught exceptions. Default false." },
+      limit: { type: "number", description: "Most messages to return, the newest (default 100)." },
+      clear: { type: "boolean", description: "Forget the tab's messages after reading them. Default false." },
+    }),
+    annotations: { readOnlyHint: true, openWorldHint: true },
+    handler: call("read_console_messages"),
+  },
+  {
+    name: "chrome_read_network_requests",
+    title: "Read Chrome network requests",
+    description: `List a tab's network requests in the user's Chrome, oldest first: method, URL, status, resource type, MIME type, size, time, cache, what started it, or why it failed. Recording starts on the tab's first call (Chrome shows its "started debugging" bar while it is), so earlier requests aren't known: to see a page load's requests, call this once, reload the page (chrome_navigate to the same URL with its tabId), then call it again. Only the current site's are kept (navigating to another origin starts over). urlPattern filters by a substring of the URL ("/api/" keeps URLs with that path segment), or a regular expression written /…/ with pattern characters or flags (/\\/v\\d+\\//, /graphql/i); includeHeaders adds headers (cookie, authorization, token and key values redacted); requestId shows one request's headers and response body. ${UNTRUSTED}`,
+    inputSchema: object({
+      tabId: TAB_ID,
+      urlPattern: { type: "string", description: "Only URLs containing this text (e.g. \"/api/\"), or matching a /regular expression/ that has pattern characters or flags." },
+      limit: { type: "number", description: "Most requests to return, the newest (default 100)." },
+      clear: { type: "boolean", description: "Forget the tab's requests after reading them. Default false." },
+      includeHeaders: { type: "boolean", description: "Add request and response headers (cookie, authorization, token and key values redacted). Default false." },
+      requestId: { type: "string", description: "One request's id (the #id of a listed request): its headers and response body." },
+    }),
+    annotations: { readOnlyHint: true, openWorldHint: true },
+    handler: call("read_network_requests"),
   },
   {
     name: "chrome_browser_batch",
     title: "Chrome actions",
-    description: "Run several Chrome actions in order in one round trip: each step is {name, input}, name one of navigate, read_page, find, form_input, computer, javascript_tool, tabs_create_mcp, tabs_context_mcp (with or without the chrome_ prefix), input what that tool takes. It stops at the first step that fails; later steps don't run. Refs a read_page step hands out can't be used by later steps in the same batch (you don't know them yet): batch steps whose refs or coordinates you already have, or that need none.",
+    description: "Run several Chrome actions in order in one round trip: each step is {name, input}, name one of navigate, read_page, find, form_input, computer, javascript_tool (read-only: write: true runs only on its own call), read_console_messages, read_network_requests, tabs_create_mcp, tabs_context_mcp (with or without the chrome_ prefix), input what that tool takes. It stops at the first step that fails; later steps don't run. Refs a read_page step hands out can't be used by later steps in the same batch (you don't know them yet): batch steps whose refs or coordinates you already have, or that need none.",
     inputSchema: object({
       actions: {
         type: "array", minItems: 1, maxItems: 50,
@@ -177,7 +319,10 @@ export const tools = [
       const steps = actions.map((step, index) => {
         const tool = stepTool(step?.name);
         if (!tool) throw new Error(`Step ${index + 1}: ${json(step?.name)} isn't a Chrome tool a batch can run.`);
-        return { name: tool, input: step.input && typeof step.input === "object" ? step.input : {} };
+        const input = step.input && typeof step.input === "object" ? step.input : {};
+        // A write script is approved on its own call (runWrite): never as a step.
+        if (tool === "javascript_tool" && input.write !== undefined && input.write !== false) throw new Error(`Step ${index + 1}: javascript_tool with write: true can't run in a batch (the user approves each one). Call chrome_javascript_tool with write: true on its own, before or after the batch.`);
+        return { name: tool, input };
       });
       const result = await run(ctx, "browser_batch", { actions: steps });
       const lines = (result.steps ?? []).map((step, index) => `${index + 1}. ${step.name}: ${step.ok ? formatted(step.name, step.result) : `failed (${step.error?.code}): ${step.error?.message}`}`);

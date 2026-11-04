@@ -88,9 +88,12 @@ test('host: ChangesFileLayout renders the generated column and handles, no hand-
   ]);
   assert.doesNotMatch(read('src/source-diff.css'), /\[data-resizing\]|source-tree-edge/);
   // Fold all (Jd): an expand-all on a large diff is consumed without effect.
-  once(diff, ['if (changes && foldAll && !foldAll.collapsed && large && ignoredFold.current !== foldAll) ignoredFold.current = foldAll;',
+  // W14-code pa2-04 (E84.3): the inline placement is gone; SourceDiff always renders the Changes body.
+  once(diff, ['if (foldAll && !foldAll.collapsed && large && ignoredFold.current !== foldAll) ignoredFold.current = foldAll;',
     'const foldRequest = foldAll && ignoredFold.current !== foldAll ? foldAll : null;']);
-  assert.equal(diff.match(/foldAll=\{foldRequest\}/g)?.length, 2);
+  // W14-code r6 pierre: the official body (c44d00c7f Ju, Jd `foldAll: hn`) takes the same consumed request as the two host
+  // FileDiff placements (lazy and parsed), so three props carry it.
+  assert.equal(diff.match(/foldAll=\{foldRequest\}/g)?.length, 3);
   assert.doesNotMatch(diff, /foldAll=\{foldAll\}/);
 });
 
@@ -267,7 +270,8 @@ test('image viewer: c44d00c7f Zc / tl on the shared-frame CDS Dialog (view-tabs 
     'className={`grid grid-cols-1 gap-md${viewer.columns > 1 ? " sm:grid-cols-2" : ""}`}',
   ]);
   assert.doesNotMatch(diff, /SourceDialog/);
-  assert.match(diff, /import \{ CdsDialog, CdsIcon, CdsSkeleton, useCdsLayerAwareZIndex \} from '\.\/generated\/view-tabs\/index\.js';/);
+  // W14-code r6 pierre: CdsButton joins the import (the header's View image / Open file are c44d00c7f il / _a's CDS Button).
+  assert.match(diff, /import \{ CdsButton, CdsDialog, CdsIcon, CdsSkeleton, useCdsLayerAwareZIndex \} from '\.\/generated\/view-tabs\/index\.js';/);
 });
 
 // ---------------------------------------------------------------- selection chip: ceb49ada3 Tt
@@ -313,6 +317,6 @@ test('large diff: the collapsed note is Jd vi (Ud classes, the q0jjHC00PT messag
   assert.match(view, /lt&&!bt&&o\(s,\{children:\[" ",n\(Fe,\{id:"11jd482"\}\)\]\}\)/);
   const diff = read('src/source-diff.jsx');
   once(diff, ['<div className="sdiff-large-banner shrink-0 px-md py-1.25 text-body text-muted-as-secondary">{DIFF_FILE_LIST_LABELS.largeBanner}</div>']);
-  once(fnBody(diff, 'function ChangesFileLayout('), ['{banner}\n      <div className="source-changes">{children}</div>']);
+  once(fnBody(diff, 'function ChangesFileLayout('), ['{banner}\n', '<div className="source-changes outline-none focus-visible:outline-hidden focus-visible:shadow-focus transition-shadow duration-fast" role="group" aria-label={t("Changes")} tabIndex={0}>{children}</div>']);
   once(read('src/diff-file-list-model.mjs'), ['largeBanner: t("Files are collapsed for large diffs. Select a file to expand it."),']);
 });

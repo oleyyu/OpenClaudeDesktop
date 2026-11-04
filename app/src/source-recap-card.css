@@ -1,11 +1,5 @@
-/* c96d752d0 gH / OLe recap card: one plain footnote paragraph (no scroller, no Markdown). */
-.src-recap.src-recap.source-message {
-  box-sizing: border-box; width: 100%; max-width: 100%; margin: 0; overflow: clip;
-  border: 1px solid var(--cds-border); border-radius: 10px; background: var(--cds-surface-1);
-  box-shadow: 0 1px 2px color-mix(in srgb, var(--cds-black, #000) 3%, transparent);
-}
-.src-recap-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 12px; border-bottom: 1px solid var(--cds-border); }
-.src-recap-title { margin: 0; color: var(--cds-text-secondary); font-size: var(--cds-font-size-caption, 12px); line-height: var(--cds-leading-caption, 16px); font-weight: var(--cds-font-weight-medium, 500); }
-.src-recap .src-recap-dismiss { margin-inline-end: -6px; color: var(--cds-text-secondary); }
-.src-recap .src-recap-dismiss:hover .ssb-paint { background: var(--cds-alpha-2); }
-.src-recap-body { margin: 0; padding: 12px; overflow-wrap: break-word; color: var(--cds-text-secondary); font-size: var(--cds-font-size-footnote, 12px); line-height: var(--cds-leading-footnote, 16px); font-style: italic; }
+/* c96d752d0 gH / OLe recap card: the card, header, title, Dismiss and body are gH's utility class strings in
+   source-recap-card.jsx (W14-code r6 R6DC-02). What is left is the host transcript row: the section also carries
+   .source-message (row hook), so keep it full width with no row margin; h3 / p drop the host's default margins. */
+.src-recap.src-recap.source-message { box-sizing: border-box; width: 100%; max-width: 100%; margin: 0; }
+.src-recap-title, .src-recap-body { margin: 0; }

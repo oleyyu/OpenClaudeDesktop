@@ -15,7 +15,6 @@
 .source-chat-composer .surface-folder-trigger { min-width: 0; }
 .source-chat-composer .surface-folder-trigger .ssb-content { overflow: hidden; }
 .source-chat-composer .surface-folder-trigger .ssb-content > span { overflow: hidden; text-overflow: ellipsis; }
-.source-chat-presence[data-leaving] { opacity: 0; transition: opacity 200ms; }
 .source-chat-tile-content:not([data-surface="code"]) .source-chat-body { flex-direction: row; }
 .source-chat-tile-content[data-surface]:not([data-surface="code"]) .source-transcript-content { --chat-body: 16px; --chat-leading: 1.6; }
 
@@ -32,7 +31,6 @@
 
 .surface-project-detail { width: 100%; }
 .source-chat-tile-content[data-section="projects"] .surface-project-detail .composer-zone { max-width: none; }
-.surface-project-session { padding: 8px 12px; }
 
 .source-chat-tile-content:not([data-surface="code"])[data-section="artifacts"] .conversation { padding: 0; justify-content: flex-start; }
 .surface-artifact-library { width: 100%; }

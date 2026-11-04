@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { parseThemeCommand, localizedThemeWords, THEME_LABELS, resolveThemeMode, initialAppearance, isColorTransitionProperty, finishesColorTransitions, finishColorTransitions, writeThemeMode } from '../src/theme-command-model.mjs';
+import { parseThemeCommand, localizedThemeWords, resolveThemeMode, initialAppearance, isColorTransitionProperty, finishesColorTransitions, finishColorTransitions, writeThemeMode } from '../src/theme-command-model.mjs';
 
 test('/theme follows cc43287c9 zI: light, dark, system, auto as system; anything else opens Appearance', () => {
   assert.deepEqual(parseThemeCommand('light'), { set: 'light' });
@@ -11,7 +11,7 @@ test('/theme follows cc43287c9 zI: light, dark, system, auto as system; anything
   assert.deepEqual(parseThemeCommand('Auto'), { set: 'system' });
   for (const value of ['', '   ', undefined, null, 'sepia', 'dark mode'])
     assert.deepEqual(parseThemeCommand(value), { open: 'appearance' }, String(value));
-  assert.deepEqual(THEME_LABELS, { light: 'Light', dark: 'Dark', system: 'System' });
+  // W14-code r3 R3DC-05: /theme toasts the three literal c4 addSuccess('Appearance set to …') lines, so THEME_LABELS is gone.
 });
 
 test('/theme r4: text on more than one line is extra lines; trailing whitespace is not', () => {

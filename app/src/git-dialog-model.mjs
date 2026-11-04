@@ -3,8 +3,6 @@
 // composer says why (rY) and starting the session opens this dialog instead of failing with a raw error.
 import { t } from "../electron/i18n/index.mjs";
 
-export const GIT_REASONS = Object.freeze(["missing", "exec_blocked", "startup_failed"]);
-
 /** cb92a6d7a T: the Git download page for the platform. */
 export function gitDownloadUrl(platform) {
   return platform === "win32" ? "https://git-scm.com/download/win" : platform === "linux" ? "https://git-scm.com/download/linux" : "https://git-scm.com/download/mac";

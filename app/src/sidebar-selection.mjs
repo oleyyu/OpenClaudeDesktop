@@ -4,8 +4,6 @@
 // resets the selection to that single row instead of mixing lists.
 // Pure and immutable: every operation returns a new state object.
 
-export const EMPTY_SELECTION = Object.freeze({ selectedKeys: new Set(), anchorKey: null, anchorDomain: "" });
-
 export function createSelection() {
   return { selectedKeys: new Set(), anchorKey: null, anchorDomain: "" };
 }

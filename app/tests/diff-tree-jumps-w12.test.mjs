@@ -146,7 +146,8 @@ test('Ho (useDiffTreeCollapsed): a new jump re-opens the folders hiding the same
 
 test('host wiring: SourceDiff records picks and taken requests as the session target, takes it back; the tree passes jumps', () => {
   const jsx = source('src/source-diff.jsx');
-  assert.match(jsx, /const targetSession = changes \? fileList\?\.sessionId \?\? undefined : undefined;/);
+  // W14-code pa2-04 (E84.3): the inline placement is gone; SourceDiff always renders the Changes body.
+  assert.match(jsx, /const targetSession = fileList\?\.sessionId \?\? undefined;/);
   assert.match(jsx, /scrollDiffTarget\(targetSession, path, anchor \? \{ anchor \} : undefined\);/);
   assert.match(jsx, /const request = takeDiffRevealRequest\(entries\.map\(\(entry\) => entry\.filePath\)\); if \(request\) selectFile\(request\.path, request\.anchor\);/);
   assert.match(jsx, /if \(!target \|\| target\.fuzzy \|\| target\.tileId \|\| !entries\.some\(\(entry\) => entry\.filePath === target\.filePath\)\) return;\n\s+clearDiffTarget\(targetSession\);/);

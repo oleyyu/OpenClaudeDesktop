@@ -52,9 +52,6 @@ export function skillGroup(skill) {
   }
 }
 
-export const SKILL_GROUP_LABELS = Object.freeze({
-  all: t("All"), personal: t("Personal"), repository: t("Repository"), plugins: t("Plugins"), managed: t("Managed"),
-});
 
 // Official Hi: Anthropic / owner / "Your organization" / "You". Locally the
 // scope is the only real identity signal; plugin rows show the plugin name.
@@ -135,26 +132,6 @@ export function baseName(path) {
   return parts.pop() || String(path || "");
 }
 
-// Segmented owner filter: only groups with rows, and the control is shown
-// only when at least two groups are non-empty (official De).
-export function skillGroupOptions(skills) {
-  const counts = {};
-  for (const row of skills) counts[row.group] = (counts[row.group] || 0) + 1;
-  const present = ["personal", "repository", "plugins", "managed"].filter((group) => counts[group] > 0);
-  return { show: present.length >= 2, options: ["all", ...present].map((value) => ({ value, label: SKILL_GROUP_LABELS[value], count: value === "all" ? skills.length : counts[value] })) };
-}
-
-export function filterSkills(skills, { query = "", group = "all" } = {}) {
-  const term = query.trim().toLowerCase();
-  return skills.filter((row) => (group === "all" || row.group === group)
-    && (!term || `${row.name} ${row.skillName} ${row.description}`.toLowerCase().includes(term)));
-}
-
-export function filterErrors(errors, { query = "" } = {}) {
-  const term = query.trim().toLowerCase();
-  return errors.filter((row) => !term || `${row.name} ${row.path} ${row.message}`.toLowerCase().includes(term));
-}
-
 // Apply a skills/config/write response to the rows (row badge follows
 // effectiveEnabled, never the optimistic request).
 export function applySkillEnabled(skills, path, effectiveEnabled) {
@@ -201,7 +178,6 @@ export function skillMenuItems(skills) {
 // fixtures) keep every control. Copy names the running core from its descriptor
 // (name, vendor), never a fixed vendor.
 
-export const CODEX_CONFIG_FILE = "~/.codex/config.toml";
 export const MCP_CLIENT_PACKAGE = "@deepseek-ai/dsh-mcp-client";
 
 // Whether an absolute path the core reported is the descriptor's "~/…" file.
@@ -500,7 +476,8 @@ export function connectorDetailState(row) {
     case "unreachable": return state("disconnected", true, "reconnect");
     case "signIn": return state("disconnected", row.runtimeStatus === "authenticationRequired", "signIn");
     case "disabled": return state("disconnected", false, "connect", true);
-    case "trust": return { view: "trust", issue: false, action: "trust", label: t("Trust this folder"), disabled: !row.trust?.cwd };
+    // W14-code r2-shared-14: the official workspace trust action, c165c93f1 "Trust workspace" (0L2liwSugy).
+    case "trust": return { view: "trust", issue: false, action: "trust", label: t("Trust workspace"), disabled: !row.trust?.cwd };
     default: return state("disconnected", false, "connect");
   }
 }
@@ -596,12 +573,6 @@ export function connectorPairs(textValue, kind = "env") {
     out[key] = line.slice(at + 1).trim();
   }
   return out;
-}
-
-export function mcpBatchWriteParams(name, value) {
-  const problem = validateServerName(name);
-  if (problem) throw new Error(problem);
-  return { edits: [{ keyPath: `mcp_servers.${name}`, value, mergeStrategy: value === null ? "replace" : "upsert" }], reloadUserConfig: true };
 }
 
 // ---------------------------------------------------------------------------
@@ -755,8 +726,47 @@ export function pluginAppsNeedingAuth(result) {
   return { apps, onUse: result?.authPolicy === "ON_USE" };
 }
 
-export function nativePluginOutcome(result, error) {
-  if (error) return { ok: false, message: text(error?.message).trim() || t("The plugin change failed.") };
+// shared-78 (3.6556.2) plugin failure copy, one rule per operation:
+// - toggle, y1 → v1: ENOSPC → _1 "Your disk is full…"; a Node errno "EXXX: …", an "(HTTP nnn)" status, Electron's
+//   "Error invoking remote method" wrapper or a multi-line dump is never shown; else the reason, or "Failed to update
+//   plugin state." (rZb1d+ckYN).
+// - install T1 / update w1 → C1: the reason after shared-25 OG (FH drops lone surrogates, EG strips control / format /
+//   separator / invisible code points but keeps \t \n \r ZWNJ ZWJ), trimmed; empty → x1 "Plugin couldn’t be installed.
+//   Try again." (XdyHypM9Kr) / b1 "Plugin couldn’t be updated. Try again." (UEbloDDnec). No ENOSPC or errno filter.
+// - remove, E1: ENOSPC → _1, every other reason → S1 "Plugin couldn’t be removed. Try again." (4ipmjbYc32).
+// The MARKETPLACE_ERROR: codes (K$ / h1) are org policy answers a local core never sends.
+const PLUGIN_FAILURE_FALLBACK = {
+  toggle: "Failed to update plugin state.",
+  update: "Plugin couldn’t be updated. Try again.",
+  install: "Plugin couldn’t be installed. Try again.",
+  remove: "Plugin couldn’t be removed. Try again.",
+};
+// shared-25 OG = FH(e).replace(EG(), ""); EG's set is CG with shared-0 jL (U+2800 U+FFFC U+1D159 U+13441 U+13442
+// U+16910 U+16FE4) in place of ${ne}.
+const PLUGIN_REASON_INVISIBLE = /(?![\t\n\r\u200c\u200d])[\p{Cc}\p{Cf}\p{Zl}\p{Zp}\u2060-\u2069\u115f\u1160\u3164\uffa0\u{2800}\u{fffc}\u{1d159}\u{13441}\u{13442}\u{16910}\u{16fe4}\u{e0000}-\u{e007f}]/gu;
+function pluginReasonText(value) {
+  const wellFormed = typeof value.isWellFormed === "function" && !value.isWellFormed() ? value.replace(/\p{Cs}/gu, "") : value;
+  return wellFormed.replace(PLUGIN_REASON_INVISIBLE, "");
+}
+export function pluginFailureMessage(reason, operation = "toggle") {
+  const kind = Object.hasOwn(PLUGIN_FAILURE_FALLBACK, operation) ? operation : "toggle";
+  const fallback = t(PLUGIN_FAILURE_FALLBACK[kind]);
+  const raw = text(reason instanceof Error ? reason.message : typeof reason === "string" ? reason : reason?.message);
+  if (kind === "install" || kind === "update") return pluginReasonText(raw.trim()).trim() || fallback;
+  if (raw.includes("ENOSPC")) return t("Your disk is full. Free up space and try again.");
+  if (kind === "remove") return fallback;
+  const trimmed = raw.trim();
+  return (/^E[A-Z][A-Z0-9]+: /.test(trimmed) || /\(HTTP \d{3}\)/.test(trimmed) || trimmed.startsWith("Error invoking remote method") || trimmed.includes("\n") ? "" : trimmed) || fallback;
+}
+// A plugin operation (main customize) → the failure copy it falls back to.
+export function pluginOperationKind(operation) {
+  const name = text(operation);
+  return /^plugin-install/.test(name) ? "install" : /^plugin-(?:uninstall|remove)/.test(name) ? "remove"
+    : /^plugin-update/.test(name) ? "update" : /^plugin-(?:set-)?enable/.test(name) ? "toggle" : null;
+}
+export function nativePluginOutcome(result, error, operation) {
+  const kind = pluginOperationKind(operation);
+  if (error) return { ok: false, message: kind ? pluginFailureMessage(error, kind) : text(error?.message).trim() || t("The plugin change failed.") };
   return { ok: true, restartRequired: false, ...(result && typeof result === "object" ? { result } : {}) };
 }
 
@@ -867,7 +877,7 @@ const INSTALL_FAILURES = {
   "not-found": t("No package was found for this spec."),
   "no-matching-version": t("No version of this package matches."),
   network: t("The package registry could not be reached. Check your connection and try again."),
-  "disk-full": t("There is not enough disk space."),
+  "disk-full": t("Your disk is full. Free up space and try again."),
   permission: t("The plugin folder is not writable."),
   "build-blocked": t("The package needs to run build scripts."),
   integrity: t("The downloaded package failed its integrity check."),
@@ -891,10 +901,22 @@ export function pluginChangeOutcome(result) {
     const incompatible = Array.isArray(result.error?.incompatible) && result.error.incompatible.length
       ? ` (${result.error.incompatible.map((item) => `${item.name}@${item.version}`).join(", ")})` : "";
     const message = (result.error?.code && MANAGEMENT_ERRORS[result.error.code] ? MANAGEMENT_ERRORS[result.error.code] + incompatible : "")
-      || (kind && INSTALL_FAILURES[kind]) || text(result.error?.diagnostic).trim() || t("The plugin change failed.");
+      || (kind && INSTALL_FAILURES[kind])
+      || pluginFailureMessage(result.error?.diagnostic, { install: "install", update: "update", remove: "remove" }[result.stage] ?? "toggle");
     return { ok: false, message, pendingBuilds: pending, output: text(result.packageResult?.output) };
   }
-  return { ok: true, restartRequired: result.application === "restart-required" && result.changed !== false, bundle: text(result.bundle) || text(result.target) };
+  return { ok: true, restartRequired: result.application === "restart-required" && result.changed !== false, bundle: text(result.bundle) || text(result.target),
+    // W14-code r2-shared-09: an update's version fields, when the core reports them (pluginUpdateToast).
+    ...(result.alreadyUpToDate === true ? { alreadyUpToDate: true } : {}),
+    ...(text(result.oldVersion) && text(result.newVersion) ? { oldVersion: text(result.oldVersion), newVersion: text(result.newVersion) } : {}) };
+}
+// W14-code r2-shared-09: the Update success toast, c6692ffeb-BkiaJ2Hx.js W `t.alreadyUpToDate ? "Plugin is already up to
+// date." (OWw/l8CmQo) : t.oldVersion && t.newVersion ? "Updated from {oldVersion} to {newVersion}." (iLy5GkeHBh) :
+// "Plugin updated." (W3A5TFl7fM)`. A core that reports no versions gets "Plugin updated.".
+export function pluginUpdateToast(outcome) {
+  if (outcome?.alreadyUpToDate) return t("Plugin is already up to date.");
+  if (outcome?.oldVersion && outcome?.newVersion) return t("Updated from {oldVersion} to {newVersion}.", { oldVersion: outcome.oldVersion, newVersion: outcome.newVersion });
+  return t("Plugin updated.");
 }
 
 // install-state progress → one status line.

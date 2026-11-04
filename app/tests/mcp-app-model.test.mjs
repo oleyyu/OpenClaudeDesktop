@@ -5,7 +5,7 @@ import path from 'node:path';
 import { createRequire } from 'node:module';
 import {
   MCP_APP_ROW, VISUALIZE_SERVER_UUID, mcpCallOf, officialToolName, mcpAppRowKind, groupAroundMcpAppRows, toMcpAppTool,
-  sessionMcpAppServers, coreServesMcpApps, pendingMcpAppRequests,
+  sessionMcpAppServers,
 } from '../src/mcp-app-model.mjs';
 import { groupFileTools } from '../src/file-tool-model.mjs';
 import { ionSource, looseFeature } from '../scripts/official-3.6556.2.mjs';
@@ -144,14 +144,5 @@ test('sessionMcpAppServers: MA-4 servers → the card adapters’ session state'
     { uuid: 'weather', name: 'weather', type: 'local', isBuiltIn: false, sessionOwned: true, tools: weather.tools, status: 'ready' },
   ]);
   assert.deepEqual(sessionMcpAppServers(null), []);
-  assert.equal(coreServesMcpApps(reply), true);
-  assert.equal(coreServesMcpApps({ core: { supported: false, unavailable: 'not_connected', reason: 'core_unsupported' } }), false);
-  assert.equal(coreServesMcpApps({ core: { supported: true, unavailable: 'read_failed' } }), false);
 });
 
-test('pendingMcpAppRequests: the approvals kQe waits on, under the official tool name', () => {
-  const items = [{ id: 'w', type: 'mcpToolCall', server: 'code_desktop', tool: 'show_widget', status: 'inProgress' },
-    { id: 'c', type: 'commandExecution', status: 'inProgress' }];
-  assert.deepEqual(pendingMcpAppRequests(items, new Set(['w', 'c'])), { w: { status: 'pending', toolName: 'mcp__visualize__show_widget' } });
-  assert.deepEqual(pendingMcpAppRequests(items, new Set()), {});
-});

@@ -45,7 +45,7 @@ async function launch() {
   return { app, page };
 }
 async function send(page, text) {
-  await page.getByRole("textbox", { name: "Message DeepSeek" }).fill(text);
+  await page.getByRole("textbox", { name: /^(?:Prompt|Message DeepSeek)$/ }).fill(text);
   await page.locator('[data-testid="code-prompt-send"]:not([inert] *)').click();
 }
 let { app, page } = await launch();
@@ -86,7 +86,7 @@ try {
     () =>
       document.querySelectorAll(".assistant-message").length >= 2 &&
       !document.querySelector(".source-working") &&
-      !document.querySelector(".sc-spinner"),
+      !document.querySelector('[data-testid="code-prompt-send"][aria-busy="true"]'),
     {},
     { timeout: 150000 },
   );

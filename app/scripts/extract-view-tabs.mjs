@@ -298,6 +298,9 @@ const roots=[
   {file:SF,local:'Fc',name:'cdsDisabledReasonWrappers',expect:[{loose:'nc=new WeakSet'},{in:'wl',ref:'(e){e!==null&&@@.add(e)}'}]},
   {file:SF,local:'Kd',export:'bu',name:'CdsLoadingSkeleton',expect:['\'[data-cds="SkeletonGroup"]\'']},
   {file:SF,local:'bv',name:'useCdsFocusReturn',expect:['popupRef:','finalFocus:',{in:'aw',ref:'inalFocus:m,popupRef:h}=@@(J1($,12,p)?K1($,12,p,{r'}]},
+  // W14-code r6 R6T-02: Sv (exported `el`), the dialog focus return cb1b78cfa ImagePreviewModal and ab read; one copy of
+  // its popup registries (jv / Mv / av / ov) for the code transcript's image preview.
+  {file:SF,local:'Sv',export:'el',name:'useCdsDialogFocusReturn',expect:['popupRef:','finalFocus:',{in:'ab',ref:'{finalFocus:P,popupRef:I}=@@(t)'}]},
   {file:SF,local:'pi',export:'tf',name:'isNewBrowsingContextTarget',expect:[{loose:'(e){return!!e&&!ei.has('}]},
   {file:SF,local:'qu',name:'CdsLinkPrimitive',expect:['actionDisabled:','nativeButton:']},
   {file:SF,local:'rS',name:'useIsInCdsSheetFrame',expect:[{loose:'(){return W(Fy)'},{in:'TN',ref:' Mk(e){return @@()?H(Nk,{...e}'}]},
@@ -536,11 +539,9 @@ const roots=[
   {file:SF,local:'wh',export:'Hl',name:'prefersReducedMotion',expect:[{loose:'window.matchMedia(Sh).matches||document.documentElement.getAttribute(Ch)==="true"'}]},
   {file:SF,local:'Jg',export:'bl',name:'CdsSpark',expect:['"data-cds":"Spark"','"--cds-spark-size":','viewBox:"0 0 100 100"']},
   {file:'shared-25-DOWZRSlq.js',local:'QV',export:'Zn',name:'setToggle',expect:[{loose:'(e,t){return ZV(e,t,!e.has(t))}'}]},
-  // w12-viewtabs (item 10, D1): the overflow menu's RTL arrow flip (L) and typeahead reset keys (ie), both read by ae and
-  // ViewTabOverflowItem (se); already selected, so code-current's terminal-tab-overflow.mjs re-exports these with se and
-  // viewTabSizes instead of slicing a second se (and a second P = createContext("xs") icon-size context).
-  {file:'cfe7c4b3b-BF79K6ux.js',local:'L',name:'viewTabRtlArrowKey',expect:[{loose:'(e){return e==="ArrowLeft"?"ArrowRight":e==="ArrowRight"?"ArrowLeft":e}'}]},
-  {file:'cfe7c4b3b-BF79K6ux.js',local:'ie',name:'viewTabOverflowTypeaheadResetKeys',expect:['["ArrowUp","ArrowDown","Home","End","ArrowRight","Delete"]']},
+  // w12-viewtabs (item 10) published L (RTL arrow flip) and ie (typeahead reset keys) for code-current's
+  // terminal-tab-overflow.mjs re-export; W14-code r2 closeout-2 (DC-03) retired that re-export and gen-final-2 dropped
+  // the two names (no reader left; ae and ViewTabOverflowItem se still read L / ie inside cfe7c4b3b).
   // w12 viewtabs-cont (publish only, for the settings / diff / side-chat lanes): the labeled text input and textarea
   // (eM exported `Oi`, tM exported `Di`: Qj label/hint/error over uC CdsTextInput / nk CdsTextArea), the checkbox row
   // classes (DS `Fs`, OS `Ls`, kS `Is`) and its double-click selection guard (Ks `$u`), the checkbox row itself
@@ -591,6 +592,16 @@ const roots=[
   // `t`), already selected through CdsSelectableTable (c9c7785eb F); c71dee58b Ol renders it as `bo` for the project
   // page's conversation rows (columns Tl, getRowKey _l, getRowHref vl, linkComponent Sl, flush), and chat-projects imports it.
   {file:'ce802b15a-C7eXhKeI.js',local:'Mo',export:'t',name:'CdsDataTable',expect:[{to:'To',ref:'(@@))'},{in:'To',has:'getRowLinkLabel:m,'},{in:'To',has:'skeletonRowCount:x,'}]},
+  // W14-code renderer-core (publish only, D46): the CDS root's shrink-wrap memory context (Pa, read by Fa `return
+  // J(Pa)??!1`, provided by the root as `Pa.Provider`), already selected; generated/code-transcript reaches it.
+  {file:SF,local:'Pa',name:'CdsShrinkWrapMemoryContext',expect:[{in:'Fa',ref:'return J(@@)??!1'}]},
+  // W14-code approvals (publish only, D46): already selected bindings the elicitation form (generated/approval-elicitation:
+  // c9e77b76c A, cd359c6df b) reaches — base-ui's field item context (uh, read by useFieldItemContext dh), form context
+  // (Hm, read by useFormContext Um), its generic event details (Aa) and the CDS DOM node test (qf).
+  {file:VF,local:'uh',export:'jt',name:'FieldItemContext',expect:[{in:'dh',ref:'return F(@@)'}]},
+  {file:VF,local:'Hm',export:'Lt',name:'FormContext',expect:[{in:'Um',ref:'return F(@@)'}]},
+  {file:VF,local:'Aa',export:'Si',name:'createGenericEventDetails',expect:['event:t??new Event("base-ui"),...r}']},
+  {file:SF,local:'qf',export:'nu',name:'isDomNode',expect:['typeof e?.nodeType=="number"']},
 ];
 // E4 (3.6556.2): every D46 name once held back here is published; nothing is pending.
 const pendingNames={};

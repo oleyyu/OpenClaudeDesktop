@@ -55,10 +55,10 @@ export function easeScrollStep(top, target) {
 }
 
 // shared-16 ip: what owns its own keys (editors, menus, options, tabs, comboboxes, sliders, trees, canvases,
-// applications) — plus an open approval card (local .sac-card is the reference's .epitaxy-approval-card).
+// applications) — plus an open approval card (the reference's .epitaxy-approval-card, which the local cards carry).
 export const KEY_OWNER_SELECTOR =
   'input,textarea,select,[contenteditable]:not([contenteditable="false"]),[role^="menu"],[role="option"],[role="tab"],[role="combobox"],[role="textbox"],[role="searchbox"],[role="listbox"],[role="radiogroup"],[role="radio"],[role="tree"],[role="treeitem"],[role="slider"],canvas, [role="application"]';
-export const OPEN_CARD_SELECTOR = '.sac-card[data-approval-presentation="card"]:not([data-collapsed])';
+export const OPEN_CARD_SELECTOR = '.epitaxy-approval-card[data-approval-presentation="card"]:not([data-collapsed])';
 export const COMPOSER_EDITOR_SELECTOR = '[data-cds="ChatComposerEditor"]';
 // The reference's Space exception (cc43287c9 :45166-45170): Space presses a focused button-like control.
 export const BUTTON_LIKE_SELECTOR = 'button,[role="button"],[role="switch"],[role="checkbox"],[role="radio"]';

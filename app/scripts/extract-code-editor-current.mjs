@@ -76,7 +76,10 @@ export async function extractCurrentEditor({check = false} = {}) {
   await adapter('keyboard-repeat.mjs',`${bindings(repeat,['Uj','Gj'])}\nexport {Uj as suppressKeyRepeat, Gj as suppressEscapeRepeat};`,[repeat.ref]);
   await adapter('newlines.mjs',`${bindings(newline,['D'])}\nexport {D as normalizeEditorNewlines};`,[newline.ref]);
   // 3.6556.2 moved the editor/gutter padding into cc3bc2027 tokens shared with the diff view (n, r(compact)).
-  await adapter('layout-tokens.mjs',`${bindings(newline,['n','r'])}\nexport {n as editorLayout, r as lineNumberLayout};`,[newline.ref]);
+  // W14-code r5 gen-final-5 (D1): the transcript rows area slices cc3bc2027 for the pierre file view and exports n / r
+  // (extract-transcript-rows.mjs), so this adapter re-exports that one copy; the bindings check pins they are still n / r.
+  if(!bindings(newline,['n','r']).includes('numberPadStart: "18px"')) throw Error('cc3bc2027 layout tokens moved');
+  await adapter('layout-tokens.mjs',`export {editorLayout, lineNumberLayout} from '../transcript-rows/rows-cc3bc2027-CqmDBxcX.mjs';`,[newline.ref]);
   await adapter('theme.mjs',`${coreImport}
     import {editorLayout as At, lineNumberLayout as Ot} from './layout-tokens.mjs';
     // c5d464fa3 default palette values (unchanged in 3.6556.2); the fold placeholder pad stays var(--cds-pad-xs).

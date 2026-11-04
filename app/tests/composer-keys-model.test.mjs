@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { isComposingEvent, keyKind, escapeAction, enterAction, submitPriority, windowEscapeAction, escapeExemptTarget, emptyArrowUpDequeues, createDoubleEscape, strayEnterSwallowed } from "../src/composer-keys-model.mjs";
+import { isComposingEvent, escapeAction, enterAction, submitPriority, windowEscapeAction, escapeExemptTarget, emptyArrowUpDequeues, createDoubleEscape, strayEnterSwallowed } from "../src/composer-keys-model.mjs";
 
 const key = (overrides) => ({ key: "Enter", shiftKey: false, altKey: false, metaKey: false, ctrlKey: false, repeat: false, isComposing: false, keyCode: 13, ...overrides });
 
@@ -9,10 +9,6 @@ test("IME classification: isComposing, keyCode 229 and key 'Process'", () => {
   assert.equal(isComposingEvent(key({ keyCode: 229 })), true);
   assert.equal(isComposingEvent(key({ key: "Process" })), true);
   assert.equal(isComposingEvent(key({ nativeEvent: { isComposing: true } })), true);
-  assert.equal(keyKind(key({ key: "Process" })), "ime");
-  assert.equal(keyKind(key({ key: "Meta", metaKey: true })), "modifier");
-  assert.equal(keyKind(key({ metaKey: true })), "shortcut");
-  assert.equal(keyKind(key()), "text");
 });
 
 test("Enter: newline on Shift/Alt, ignored on repeat/IME/Cmd while composing, submit lanes", () => {

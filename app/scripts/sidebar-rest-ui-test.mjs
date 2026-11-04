@@ -201,7 +201,7 @@ try {
   near(metrics.nested.handle.left, 20, "handle left = group indent + 2"); near(metrics.nested.handle.top, 0, "handle top");
   near(metrics.nested.handle.bottomGap, 4, "handle bottom 4px"); near(metrics.nested.handle.width, 18, "handle width"); assert.equal(metrics.nested.handle.radius, "5px");
   assert.equal(metrics.nested.names[0], "Fork one Forked from Parent session", "child accessible name carries the sr-only lineage");
-  assert.equal(await mainButton(F1).evaluate(node => getComputedStyle(node.querySelector(".source-sr-only")).position), "absolute");
+  assert.equal(await mainButton(F1).evaluate(node => getComputedStyle(node.querySelector(".sr-only")).position), "absolute");
   checks.push("Forked threads render in a df-accordion-guide run directly after their parent with 38px inset, 30.875px/13px/1.25px elbow, fold handle and sr-only 'Forked from' text");
 
   // c80a67939 g/_/b/x: the window items (Split view, New window) live inside the Open in submenu, so the top level has
@@ -262,12 +262,12 @@ try {
   //     (jK) and a running hidden child is a plain "{n} working" (ZF/oI: no dot, no accent).
   await mainButton(F2).click();
   await poll(async () => (await currentIds()).join() === F2, "F2 opened");
-  await page.getByRole("textbox", { name: "Message DeepSeek" }).fill("fixture:hold");
+  await page.getByRole("textbox", { name: /^(?:Prompt|Message DeepSeek)$/ }).fill("fixture:hold");
   await page.locator('[data-testid="code-prompt-send"]:not([inert] *)').click();
   await page.locator('[data-testid="code-prompt-stop"]:not([inert] *)').waitFor();
   await mainButton(F1).click();
   await poll(async () => (await currentIds()).join() === F1, "F1 opened");
-  await page.getByRole("textbox", { name: "Message DeepSeek" }).fill("Nested approval fixture");
+  await page.getByRole("textbox", { name: /^(?:Prompt|Message DeepSeek)$/ }).fill("Nested approval fixture");
   await page.locator('[data-testid="code-prompt-send"]:not([inert] *)').click();
   const approvalCard = page.locator('[data-approval-presentation="card"][data-approval-method="item/commandExecution/requestApproval"]');
   await approvalCard.waitFor();
@@ -588,7 +588,7 @@ try {
   }
   assert.equal(await row(M).count(), 0);
   await mainButton(P).click();
-  await page.getByRole("textbox", { name: "Message DeepSeek" }).fill("fixture:hold");
+  await page.getByRole("textbox", { name: /^(?:Prompt|Message DeepSeek)$/ }).fill("fixture:hold");
   await page.locator('[data-testid="code-prompt-send"]:not([inert] *)').click();
   await page.locator('[data-testid="code-prompt-stop"]:not([inert] *)').waitFor();
   await contextMenu(P);

@@ -11,7 +11,7 @@
 //              tool keeps its own name (project_knowledge_search → "Searched project knowledge", conversation_search →
 //              "Searched past chats").
 import { t } from '../electron/i18n/index.mjs';
-import { thinkingGroupLabel, thinkingBlockLabel } from './generated/chat-thinking/thinking-labels.mjs';
+import { thinkingGroupLabel } from './generated/chat-thinking/thinking-labels.mjs';
 import { toolGroupLabel, TOOL_KINDS } from './generated/chat-thinking/tool-group-label.mjs';
 
 /** The intl the originals take (`e.formatMessage(descriptor, values)`): the English defaultMessage through the host t(). */
@@ -29,10 +29,6 @@ export function chatThinkingLabel(items, intl = chatIntl) {
   return thinkingGroupLabel(intl, (Array.isArray(items) ? items : [items]).map(item => thinkingBlock(item)));
 }
 
-/** Wg: one thought's own duration label, undefined without both lifecycle times. */
-export function chatThinkingDuration(item, intl = chatIntl) {
-  return thinkingBlockLabel(intl, thinkingBlock(item));
-}
 
 // The rq kinds a Chat search reads as (uq's search labels); other tools keep the Code rows.
 export const CHAT_SEARCH_KINDS = Object.freeze(['web', 'web_fetch', 'project_knowledge', 'past_chats', 'drive_search']);

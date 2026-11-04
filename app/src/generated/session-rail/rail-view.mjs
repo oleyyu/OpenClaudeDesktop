@@ -6,6 +6,8 @@ import {
   useState as x,
   useRef as o,
   Fragment as f,
+  useEffectEvent as g,
+  useEffect as _,
   useLayoutEffect as m,
 } from "react";
 import {
@@ -37,6 +39,7 @@ import {
   CdsButton as T,
   CdsTooltip as M,
   memoStoreValueFirst3 as I3,
+  memoStoreValueFirst2 as I2,
   useCdsOwnerWindow as N,
   useCdsLayerAwareZIndex as W,
 } from "../view-tabs/shared-frame-6jtSkIit.js";
@@ -68,7 +71,6 @@ import {
   FormattedMessage as Q,
   RemoteControlRow as SM,
   RegionEntry as Gn,
-  GoalCardBody as vM,
   ProgressCardBody as sM,
   ArtifactOutputRow as KA,
   useFileIconSetEnabled as vd,
@@ -117,6 +119,9 @@ import {
 } from "./repo-name-chip.mjs";
 import { RailPathLabel as Hm } from "./rail-path-label.mjs";
 import { PathSegments as Ff } from "../files-changes/path-segments.mjs";
+import { a as $l } from "../cowork-scheduled/c1c6ea9ac-BDXpgHaF.mjs";
+import { isKeyboardClick as bo } from "../session-rail-kit/keyboard-click.mjs";
+import { RailRescuedShowMoreToggle as Qf } from "./show-more-toggle.mjs";
 import { di as Co } from "../mcp-app-card/shared-7.mjs";
 import {
   pathFileName as Qi,
@@ -1801,6 +1806,149 @@ function _M({ iterations: e, lastReason: t }) {
         id: "ZcT62cCbiZ",
         values: { count: e, reason: t },
       });
+}
+function vM(e) {
+  let $ = J9(51),
+    {
+      goal: t,
+      onShown: n,
+      cutWhenLastShown: r,
+      onCutMeasured: i,
+      onEdit: a,
+    } = e,
+    o = Yr(),
+    c = J1($, 0, n) ? K1($, 0, n, (e) => n?.(e)) : $[1],
+    l = g(c),
+    f = J2($, 2, t.setAt, l)
+      ? I2(
+          $,
+          2,
+          () => {
+            l(t.setAt);
+          },
+          t.setAt,
+          l,
+        )
+      : $[4],
+    p = J1($, 5, t.setAt) ? I1($, 5, [t.setAt], t.setAt) : $[6];
+  _(f, p);
+  let { editText: h } = t,
+    [v, y] = x(!1),
+    [b, S] = x(null),
+    [C, w] = x(null),
+    E = J1($, 7, v) ? K1($, 7, v, { axis: "y", frozen: v }) : $[8],
+    O = $l(b, t.condition, E),
+    k = $l(C, t, E),
+    A = O || k || r,
+    j =
+      J1($, 9, C) || J4($, 10, t.setAt, b, i, v)
+        ? I4(
+            $,
+            10,
+            Z1(
+              $,
+              9,
+              () => {
+                b !== null && C !== null && !v && i(t.setAt, bM(b) || bM(C));
+              },
+              C,
+            ),
+            t.setAt,
+            b,
+            i,
+            v,
+          )
+        : $[14],
+    M = g(j),
+    N = J1($, 15, M)
+      ? K1($, 15, M, () => {
+          M();
+        })
+      : $[16],
+    P = J5($, 17, k, C, O, b, v)
+      ? K5($, 17, k, C, O, b, v, [b, C, v, O, k])
+      : $[22];
+  m(N, P);
+  let F = !v && "line-clamp-2",
+    I = J1($, 23, F) ? K1($, 23, F, D("text-primary", F)) : $[24],
+    L = J2($, 25, t.condition, I)
+      ? I2(
+          $,
+          25,
+          s("bdi", { ref: S, className: I, children: t.condition }),
+          t.condition,
+          I,
+        )
+      : $[27],
+    R = !v && "line-clamp-2",
+    z = J1($, 28, R)
+      ? K1($, 28, R, D("text-footnote text-muted-as-secondary", R))
+      : $[29],
+    B = J1($, 30, t) ? K1($, 30, t, _M(t)) : $[31],
+    V = J2($, 32, z, B)
+      ? K2($, 32, z, B, s("bdi", { ref: w, className: z, children: B }))
+      : $[34],
+    H = J2($, 35, L, V)
+      ? K2(
+          $,
+          35,
+          L,
+          V,
+          u("div", {
+            dir: "auto",
+            className:
+              "flex min-w-0 flex-1 flex-col gap-0.5 text-body [overflow-wrap:anywhere]",
+            children: [L, V],
+          }),
+        )
+      : $[37],
+    U = J3($, 38, h, o, a)
+      ? K3(
+          $,
+          38,
+          h,
+          o,
+          a,
+          a !== void 0 &&
+            h !== void 0 &&
+            s(T, {
+              variant: "ghost",
+              size: "xs",
+              iconOnly: !0,
+              flush: "end",
+              icon: "Edit",
+              "aria-label": o.formatMessage({
+                defaultMessage: "Edit goal",
+                id: "KxIuTUvyOL",
+              }),
+              onClick: (e) => a(h, bo(e.nativeEvent)),
+              className:
+                "shrink-0 opacity-0 group-hover/railcard:opacity-100 group-has-[:focus-visible]/railcard:opacity-100 touch:opacity-100",
+            }),
+        )
+      : $[41],
+    W = J2($, 42, H, U)
+      ? K2(
+          $,
+          42,
+          H,
+          U,
+          u("div", {
+            className: "flex items-start gap-xs px-xs py-1",
+            children: [H, U],
+          }),
+        )
+      : $[44],
+    G = J2($, 45, A, v)
+      ? K2($, 45, A, v, A && s(Qf, { expanded: v, onToggle: () => y(yM) }))
+      : $[47];
+  return J2($, 48, W, G) ? K2($, 48, W, G, u(d, { children: [W, G] })) : $[50];
+}
+function yM(e) {
+  return !e;
+}
+function bM(e) {
+  return e.scrollHeight > e.clientHeight;
 }
 function xM(e) {
   let $ = J9(2),

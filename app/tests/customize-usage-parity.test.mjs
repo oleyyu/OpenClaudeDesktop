@@ -58,7 +58,7 @@ test('Skills: the header and the empty state hold the Add skill menu; the folder
   assert.match(form, /<form class="cz-dialog-form" aria-label="Create a skill"/);
   assert.match(form, /placeholder="Skill name"/);
   assert.match(form, /Creates ~\/\.codex\/skills\/&lt;name&gt;\/SKILL\.md and opens it\./);
-  assert.match(form, /<footer class="sdlg-footer[^"]*">.*?>Cancel<.*?<button disabled="" type="submit"[^>]*data-variant="primary"[^>]*>.*?>Create skill</);
+  assert.match(form, /<div class="sdlg-footer[^"]*">.*?>Cancel<.*?<button disabled="" type="submit"[^>]*data-variant="primary"[^>]*>.*?>Create skill</);
   assert.equal(M.skillOwnRoot(['<project>/.dsh/skills', '~/.dsh/skills']), '~/.dsh/skills');
 });
 
@@ -72,7 +72,7 @@ test('Add custom connector is the official dialog body: stacked placeholder-labe
   assert.match(form, /The HTTPS address where the server accepts MCP requests/);
   assert.match(form, /Advanced settings/);
   assert.match(form, /<p class="cz-dialog-note">Saved to ~\/\.codex\/config\.toml, shared with the Codex CLI\.<\/p>/);
-  assert.match(form, /<footer class="sdlg-footer[^"]*">.*?>Cancel<.*?<button disabled="" type="submit"[^>]*data-variant="primary"[^>]*>.*?>Add<\/span><\/button><\/footer>/);
+  assert.match(form, /<div class="sdlg-footer[^"]*">.*?>Cancel<.*?<button disabled="" type="submit"[^>]*data-variant="primary"[^>]*>.*?>Add<\/span><\/button><\/div>/);
   assert.doesNotMatch(form, /cz-field|cz-form|<h3/, 'no inline two-column card');
   const page = el(M.SourceCustomize, { section: 'customize-connectors', store: readyStore(), cwd: '/fixture', call: noBackend });
   assert.doesNotMatch(page, /cz-form/);

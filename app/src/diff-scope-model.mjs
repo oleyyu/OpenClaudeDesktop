@@ -124,14 +124,6 @@ export function branchNoteRow({ error = false, loaded = false, count = 0 } = {})
   return error && count === 0 ? { value: "diff-base-note", label: DIFF_SCOPE_LABELS.branchesFailed, disabled: true, searchable: false, note: "error" } : null;
 }
 
-/** H (cd5e3435c): rows whose string label contains the lower-cased query. A row whose label is not
- * text in the source (the "{n} older commits not shown" FormattedMessage) never matches a query:
- * `searchable: false` marks it here, where every label is a string. */
-export function filterSearchItems(items, query) {
-  const needle = String(query ?? "").toLowerCase();
-  return (items || []).filter((item) => needle === "" || (item.searchable !== false && typeof item.label === "string" && item.label.toLowerCase().includes(needle)));
-}
-
 /** 2.31226.0 cccc2cf0a C_ (readable :3166-3230) "Commits" submenu row: the hint is the picked
  * commit's shortSha (else its 7-character sha) under a commit scope, otherwise formatNumber of the
  * whole base..HEAD count; the search empty label names the 50-row window when older commits exist. */

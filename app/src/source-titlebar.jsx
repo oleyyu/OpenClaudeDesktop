@@ -12,7 +12,7 @@ import { Icon } from "./icons";
 import { ToolButton } from "./code-ui";
 import { SourceNavButtons } from "./source-nav-buttons";
 // R6: SourceCollapsedChrome's trigger is shared-21 gI, a CDS Tooltip around a CDS Button (main.jsx graph, not E41's).
-import { CdsButton, CdsIcon, CdsTooltip } from "./generated/view-tabs/index.js";
+import { CdsBadge, CdsButton, CdsIcon, CdsTextLink, CdsTooltip } from "./generated/view-tabs/index.js";
 // shared-19 Dj (shared-21 `xn as nx`): a held Enter / Space does not repeat the click.
 const suppressKeyRepeat = (event) => { event.repeat && (event.key === "Enter" || event.key === " ") && event.preventDefault(); };
 import { SourceTooltip, SourceTooltipGroup } from "./source-tooltip";
@@ -20,10 +20,26 @@ import { menuTriggerProps } from "./source-menu";
 import { SourceDialog } from "./source-dialog.jsx";
 import { SourceShortcut } from "./source-shortcut.jsx";
 import { ACTION_ERROR_COPY } from "./action-error-model.mjs";
-import { sessionMenuTriggerLabel, sessionMenuTriggerTooltip, titleTooltipContent, viewOptionsLabel } from "./session-title-menu-model.mjs";
+import { sessionMenuTriggerLabel, sessionMenuTriggerTooltip, titleOverflows, titleTooltipContent, viewOptionsLabel } from "./session-title-menu-model.mjs";
+// W14-code r8 fr8-03 (E84-2): the Code title button is c9543da06 Mp (cc43287c9 `contextMenuTrigger: p(sd, {ref, title, bleed:
+// Zs("panels") && w ? Fp : void 0, onStartEdit})`, bleed off with panels, so jp). Mp's closure (shared-4 rt title stop,
+// c4db265df Ze reading order, shared-18 px) is not sliced; its strings are copied verbatim: Ap(jp.pad, false) =
+// `${Mt} mx-outset h-control ${pad} rounded text-start bg-transparent border-0 hover:bg-fill-ghost-hover
+// focus-visible:outline-hidden hide-focus-ring focus-visible:shadow-focus cursor-text` with Mt = shared-6 ig
+// (generated titleTextClass) and jp = {pad: "px-xs", style: {"--cds-outset-x": "var(--cds-pad-xs)"}}.
+const CODE_TITLE_BUTTON_CLASS = `${titleTextClass} mx-outset h-control px-xs rounded text-start bg-transparent border-0 hover:bg-fill-ghost-hover focus-visible:outline-hidden hide-focus-ring focus-visible:shadow-focus cursor-text`;
+const CODE_TITLE_BUTTON_STYLE = { "--cds-outset-x": "var(--cds-pad-xs)" };
+// fr8-06: Mp's aria-label `i ?? _.formatMessage({defaultMessage: "{name}, rename session", id: "Z444Es4IIr"}, {name: u})`.
+const CODE_TITLE_RENAME_LABEL = { defaultMessage: "{name}, rename session", id: "Z444Es4IIr" };
 import { titlebarDraftTitle } from "./generated/code-current/titlebar-draft-title.mjs";
 import { TitlebarTitleSkeleton } from "./generated/code-current/titlebar-title-skeleton.mjs";
+import { titleLeadClass, titleSlotClass, titleTextClass } from "./generated/code-current/titlebar-lead-classes.mjs";
+import { titleDirection } from "./generated/code-current/titlebar-lead-parts.mjs";
+import { useStartIntl } from "./source-code-start-adapters.jsx";
 import { SourceTitlebarSpawnLead } from "./source-titlebar-spawn-lead.jsx";
+import { TitlebarOriginLabel, originPillStaticClass, originPillStaticPanelsClass } from "./generated/code-current/titlebar-spawn-lead.mjs";
+import { folderPillTriggerClass, folderPillTriggerPanelsClass } from "./generated/code-current/titlebar-folder-pill.mjs";
+import { useTitlebarPanelsScope } from "./generated/code-current/titlebar-panels-scope.mjs";
 import { useTitlebarFold, titlebarFoldLimits } from "./generated/code-current/titlebar-fold-measure.mjs";
 import { foldTitlebarToggles } from "./generated/code-current/titlebar-toggle-fold.mjs";
 import { CLOSE_PANE_SHORTCUT, CLOSE_PANE_KEYSHORTCUTS, foldedTogglesActive, titlebarControlClass, titlebarOwnerSpecs,
@@ -134,6 +150,15 @@ export function SourceCollapsedChrome({ onExpand, peekOpen = false, onPeekEnter,
 
 // Hp → Hf → kf/Bp/bp; shared-12 Wm/Km/Ym/qm/th.
 // See analysis/source-titlebar-batch1.md for source/version boundaries.
+// 3.6556.2 cc43287c9 rG (compact, panels off: w = vn() false): `v("div", { className: A, children: [M, I, C, L] })`, A = Fl
+// (shared-6 cg, titleLeadClass, no gap) holding M = `p("span", { className: Vl, children: j })` (sg, titleSlotClass: the
+// title or its edit field) and I, the CaretDown menu trigger; the folder pill sits outside it (c73f45bc3 ry gap-xs).
+function TitleLead({ wrap, children }) {
+  if (!wrap) return children;
+  const parts = React.Children.toArray(children);
+  return <div className={titleLeadClass}><span className={titleSlotClass}>{parts[0]}</span>{parts.slice(1)}</div>;
+}
+
 export function SourceTitlebar({
   surface = "code",
   activityOpen = false,
@@ -168,7 +193,8 @@ export function SourceTitlebar({
   travel,
   changesDirty = false,
   // Terminal pane toggle (cc70f2bdf Hc terminal item, icon CommandLinePrompt): shown when main.jsx can open the pane;
-  // terminalBusy draws the activity dot ("Terminal (command running)") while the pane is hidden.
+  // terminalBusy draws the activity dot while the pane is hidden; the name stays "Terminal" (c73f45bc3 pane items:
+  // `e("terminal", !!C, "Terminal" GE7Vqpsyct, …)`, `"Preview" GD2Vvn5YZe`; en-US has no "(command running)" form).
   terminalAvailable = false,
   terminalBusy = false,
   // Preview pane toggle (R4g-small SM1, D36: c73f45bc3 Rh's gate-off row, Play + "Preview" + ⇧⌘P on Code; other
@@ -223,6 +249,8 @@ export function SourceTitlebar({
   // Host guard: narrower than the lead's floor (glyph, a 32px title, the gap, the folder icon chip), the chip is
   // dropped instead of showing as a clipped sliver beside the actions.
   const [folderHidden, setFolderHidden] = useState(false);
+  // c73f45bc3 wy `x = Sr()`: inside the panels titlebar scope the folder pill takes the control-height sizes (Iv / Fv).
+  const titlebarPanels = useTitlebarPanelsScope();
   const input = useRef(null),
     titleButton = useRef(null),
     inner = useRef(null),
@@ -234,6 +262,9 @@ export function SourceTitlebar({
   const restoreTitleFocus = useRef(false),
     keyboardEntry = useRef(false);
   const errorId = useId();
+  // fr8-03: Mp `v = nn()` (shared-18 px: "auto" under RTL) and `_ = Ht()` for Z444Es4IIr.
+  const titleDir = titleDirection();
+  const intl = useStartIntl();
   const title = session?.name || session?.preview || t("Untitled");
   const folder =
     session?.cwd?.split(/[\\/]/).filter(Boolean).at(-1) || t("Workspace");
@@ -475,6 +506,7 @@ export function SourceTitlebar({
               </SourceTooltip>
             </span>}
             <div className="st-title-and-pill">
+              <TitleLead wrap={surface === "code" && !loading}>
               {editing ? (
                 <input
                   ref={input}
@@ -513,6 +545,32 @@ export function SourceTitlebar({
                 <TitlebarTitleSkeleton title={session.name || session.preview || undefined} titleRef={foldTitleRef} />
               ) : loading && !session.name && !session.preview ? (
                 <span className="st-title-skeleton" aria-hidden="true" />
+              ) : surface === "code" ? (
+                // W14-code r8 fr8-03: Mp. With onStartEdit it is the button (data-pane-title, dir, aria-label Z444Es4IIr
+                // "{name}, rename session" (fr8-06), Ap classes, jp style; a repeated Enter is swallowed) in a tooltip of
+                // the full title while truncated, "Rename" (FPJlgifNwD) otherwise; without it (no rename here) Mp is a
+                // span[data-pane-title] in Mt whose tooltip is only the truncated title. The F6 header stop (shared-4 rt
+                // kind "codeTitle", `p && t !== void 0`) is the host focus-region attributes.
+                <SourceTooltip content={() => onRename ? titleTooltipContent(titleButton.current, title) : titleOverflows(titleButton.current) ? title : undefined}>
+                {onRename ? <button
+                  ref={setTitleButton}
+                  type="button"
+                  data-focus-region="header" data-focus-region-ring="none" data-focus-region-order="pane"
+                  data-pane-title=""
+                  dir={titleDir}
+                  aria-label={intl.formatMessage(CODE_TITLE_RENAME_LABEL, { name: title })}
+                  className={CODE_TITLE_BUTTON_CLASS}
+                  style={CODE_TITLE_BUTTON_STYLE}
+                  onClick={beginEdit}
+                  onContextMenu={openSessionContextMenu}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" && event.repeat)
+                      event.preventDefault();
+                  }}
+                >
+                  {title}
+                </button> : <span ref={setTitleButton} data-pane-title="" dir={titleDir} className={titleTextClass} onContextMenu={openSessionContextMenu}>{title}</span>}
+                </SourceTooltip>
               ) : (
                 // c360a9e1c:7387-7420 mm: the title button sits in Zt (Nu defaults) and has no native title.
                 // c593f7513 vm (7270-7300): its content is the full title while it is truncated, "Rename" otherwise.
@@ -550,6 +608,7 @@ export function SourceTitlebar({
                 onClick={(event) => openSessionMenu(event, event.detail === 0 ? "first" : undefined)}>
                 <Icon name="CaretDown" size={16} />
               </ToolButton>}
+              </TitleLead>
               {/* c360a9e1c:6760-6810 Fp: Zt {content [environmentName, cwd,
                   repoNames].filter(Boolean).join(" · "), open:false while the
                   folder menu is open}. Local adaptation: there is no
@@ -560,15 +619,19 @@ export function SourceTitlebar({
                   the static Bg (`span … cursor-default`, no menu, no tooltip without an environment name), shown only
                   once the title is known (titleKnown); the local chip keeps its look and label there. */}
               {/* R4f-rail fix (w_ `pill: null`): neither pill in rail mode. */}
-              {surface === "code" && !railMode && loading && (session.name || session.preview) && <span className="st-folder cursor-default">
-                <Icon name="Folder" size={12} className="st-folder-glyph" />
-                <span className="st-folder-label" data-testid="epitaxy-origin-label">{folder}</span>
+              {/* W14-code frame fr-sb-09: c73f45bc3 wy `O.Trigger({className, onContextMenu, children: Bv})` has no
+                  aria-label, so the pill's accessible name is its own content (the folder label). */}
+              {/* W14-code r2 fr2-21: both pills are c73f45bc3 wy's own classes over its Bv content (glyph Ov
+                  `hidden group-data-[pills-compact]/lead:inline-flex`, label `truncate group-data-[pills-compact]/lead:sr-only`,
+                  so a compact pill keeps its accessible name): loading `${x ? Fv : Nv} cursor-default`, ready
+                  `O.Trigger({className: x ? Iv : Pv})`. st-folder is only the host fold's data-folder-hidden hook. */}
+              {surface === "code" && !railMode && loading && (session.name || session.preview) && <span className={`${titlebarPanels ? originPillStaticPanelsClass : originPillStaticClass} cursor-default st-folder`}>
+                <TitlebarOriginLabel label={folder} />
               </span>}
               {surface === "code" && !railMode && !loading && <SourceTooltip content={session.cwd || undefined} open={menuKind === "folder" ? false : undefined}>
               <button
                 type="button"
-                className="st-folder"
-                aria-label={t("Folder: {path}", { path: session.cwd || folder })}
+                className={`${titlebarPanels ? folderPillTriggerPanelsClass : folderPillTriggerClass} st-folder`}
                 aria-haspopup="menu"
                 aria-expanded={menuKind === "folder"}
                 data-popup-open={menuKind === "folder" ? "" : undefined}
@@ -578,13 +641,7 @@ export function SourceTitlebar({
                   onMenu?.("folder", event.currentTarget);
                 }}
               >
-                <Icon name="Folder" size={12} className="st-folder-glyph" />
-                <span
-                  className="st-folder-label"
-                  data-testid="epitaxy-origin-label"
-                >
-                  {folder}
-                </span>
+                <TitlebarOriginLabel label={folder} />
               </button>
               </SourceTooltip>}
               {/* F5's trigger (chat): `J {content: I}` over a ghost iconOnly CaretDown with aria-label F (w5), tooltip I. */}
@@ -593,18 +650,13 @@ export function SourceTitlebar({
                 aria-haspopup="menu" aria-expanded={menuKind === sessionMenuKind && !menuAtPointer} onClick={(event) => openSessionMenu(event)} />}
             </div>
             {renameError && (
-              <span id={errorId} className="st-visually-hidden" role="alert">
+              <span id={errorId} className="sr-only" role="alert">
                 {renameError}
               </span>
             )}
             {loading && (
-              <span className="st-visually-hidden" role="status">
+              <span className="sr-only" role="status">
                 {t("Loading session")}
-              </span>
-            )}
-            {saving && (
-              <span className="st-visually-hidden" role="status">
-                {t("Saving session name")}
               </span>
             )}
           </div>
@@ -630,16 +682,12 @@ export function SourceTitlebar({
             {onExitIncognito && <ToolButton label={t("Exit incognito")} icon="X" className={titlebarControlClass(false, "group draggable-none")}
               tooltip={{content:t("Exit incognito"), shortcut:"cmd+shift+i", side:"left", hoverable:false, automatic:false, open:menuKind ? false : undefined}}
               onClick={onExitIncognito} />}
-            {/* titlebar-release-notes.js:5238-5256 V: ghost text-accent button
-                only while `justUpdated || modalOpen` (whats-new-model.mjs). */}
+            {/* 3.6556.2 cb63ed069 V: `t(c, { variant: "ghost", onClick: () => a(!0), className: "text-accent", children: "What’s
+                new" m/7Y4kJLsg })` (c = the CDS Button), only while `justUpdated || modalOpen` (whats-new-model.mjs). */}
             {!session && section === "new" && showWhatsNew && (
-              <button
-                type="button"
-                className="st-whats-new"
-                onClick={onWhatsNew}
-              >
+              <CdsButton variant="ghost" onClick={onWhatsNew} className="text-accent">
                 {t("What’s new")}
-              </button>
+              </CdsButton>
             )}
             {(session || surface === "code") && section === "new" && (
               <>
@@ -662,14 +710,14 @@ export function SourceTitlebar({
                 {shown.has("terminal") && (
                   <ToolButton
                     ref={foldRef("terminal")}
-                    label={terminalBusy && !panes.has("terminal") ? t("Terminal (command running)") : t("Terminal")}
+                    label={t("Terminal")}
                     icon="CommandLinePrompt"
                     className={titlebarControlClass(panes.has("terminal"))}
                     active={panes.has("terminal")}
                     aria-pressed={panes.has("terminal")}
                     aria-keyshortcuts="Meta+J Control+`"
                     data-pane-toggle="terminal"
-                    tooltip={{ content: terminalBusy && !panes.has("terminal") ? t("Terminal (command running)") : t("Terminal"), shortcut: "cmd+j",
+                    tooltip={{ content: t("Terminal"), shortcut: "cmd+j",
                       side: "bottom", hoverable: true, automatic: false, open: menuKind ? false : undefined }}
                     onClick={() => onTogglePane?.("terminal")}
                   >
@@ -703,14 +751,14 @@ export function SourceTitlebar({
                 {shown.has("preview") && (
                   <ToolButton
                     ref={foldRef("preview")}
-                    label={surface !== "code" ? t("Browser") : previewRunning && !panes.has("preview") ? t("Preview (dev server running)") : t("Preview")}
+                    label={surface !== "code" ? t("Browser") : t("Preview")}
                     icon={previewIcon}
                     className={titlebarControlClass(panes.has("preview"))}
                     active={panes.has("preview")}
                     aria-pressed={panes.has("preview")}
                     aria-keyshortcuts="Meta+Shift+P"
                     data-pane-toggle="preview"
-                    tooltip={{ content: surface !== "code" ? t("Browser") : previewRunning && !panes.has("preview") ? t("Preview (dev server running)") : t("Preview"), shortcut: "cmd+shift+p",
+                    tooltip={{ content: surface !== "code" ? t("Browser") : t("Preview"), shortcut: "cmd+shift+p",
                       side: "bottom", hoverable: true, automatic: false, open: menuKind ? false : undefined }}
                     onClick={() => onTogglePane?.("preview")}
                   >
@@ -832,45 +880,62 @@ export { LOCAL_RELEASE_NOTE_VERSIONS };
 function ReleaseNoteText({ text }) {
   return releaseNoteSegments(text).map((segment, index) =>
     segment.type === "keys" ? <SourceShortcut key={index} keys={segment.value} />
-      : segment.type === "code" ? <code key={index} className="st-release-code">{segment.value}</code>
+      : segment.type === "code" ? <code key={index} className="rounded bg-alpha-1 px-1 py-0.5 text-code text-primary">{segment.value}</code>
         : <React.Fragment key={index}>{segment.value}</React.Fragment>);
 }
 
-// R (:5100-5131): one group per kind, omitted when the entry has none of that kind.
+// R (:5100-5131): one group per kind, omitted when the entry has none of that kind. W14-code r2 fr2-18: the classes
+// are 3.6556.2 cb63ed069 L's own strings (div "flex flex-col gap-xs", h5 "… text-muted-as-secondary", ul "flex
+// list-disc flex-col gap-xs ps-lg text-body text-secondary"); F's code span is "rounded bg-alpha-1 px-1 py-0.5 …".
 function ReleaseNoteGroup({ kind, items }) {
   const shown = items.filter((item) => item.kind === kind);
   if (!shown.length) return null;
   return (
-    <div className="st-release-group">
-      <h5>{t(RELEASE_NOTE_KIND_LABELS[kind])}</h5>
-      <ul>{shown.map((item, index) => <li key={index}><ReleaseNoteText text={item.text} /></li>)}</ul>
+    <div className="flex flex-col gap-xs">
+      <h5 className="text-caption font-medium uppercase tracking-wide text-muted-as-secondary">{t(RELEASE_NOTE_KIND_LABELS[kind])}</h5>
+      <ul className="flex list-disc flex-col gap-xs ps-lg text-body text-secondary">{shown.map((item, index) => <li key={index}><ReleaseNoteText text={item.text} /></li>)}</ul>
     </div>
   );
+}
+
+// cb63ed069 R / z: "… may be one release behind. See the <changelogLink>online changelog</changelogLink> for the latest."
+// (RlffS0HJJO); z is the external CDS TextLink to https://claude.com/docs/cowork/changelog, opened in the browser.
+const RELEASE_NOTES_CHANGELOG_URL = "https://claude.com/docs/cowork/changelog";
+function ReleaseNotesLagNote() {
+  const [before, label, after = ""] = t("These release notes are included with this version of the app and may be one release behind. See the <changelogLink>online changelog</changelogLink> for the latest.")
+    .split(/<changelogLink>(.*?)<\/changelogLink>/);
+  if (label === undefined) return before;
+  return <>{before}<CdsTextLink external href={RELEASE_NOTES_CHANGELOG_URL} rel="noopener"
+    onClick={(event) => { event.preventDefault(); void globalThis.desktop?.call?.("external", { url: RELEASE_NOTES_CHANGELOG_URL })?.catch?.(() => {}); }}>{label}</CdsTextLink>{after}</>;
 }
 
 // B (:5156-5236) WhatsNewModal: the shared Dialog at size md (initial focus on the popup, Escape/Close/outside
 // press dismiss it, exit transition kept by main.jsx useDialogRetention) with the 'What’s new' header (V3-w12b-settings-dialogs:
 // 3.6556.2 cb63ed069 B `E = t(u.Header, { showClose: !0, … "What’s new" })`, the standard Zc Header, not a bleed bar),
-// the lag note z (its changelog link has no counterpart for this local client, so only the first sentence
-// stays), then one section per bundled entry up to the running version, newest first: the h4 date beside a
-// neutral font-mono version Badge, then New / Improved / Fixed. The DeepSeek "Known limits" of an entry
-// follow as a muted footnote.
+// the lag note R (W14-code frame fr-sb-10: cb63ed069 R's own `p` classes, "pt-md text-caption text-muted-as-secondary
+// in-data-cds-fizzy:pt-0 in-data-cds-fizzy:pb-md"; W14-code r4 fr4-11 / E95: both sentences of RlffS0HJJO, the
+// <changelogLink> chunk is z, `t(f /* hu = CdsTextLink */, {external: !0, render: t(x, {href:
+// "https://claude.com/docs/cowork/changelog", desktopBehavior: "open-in-browser", …})})`, opened through the external
+// opener), then one section per bundled entry up to the running version, newest first: the h4 date beside a
+// neutral font-mono version Badge, then New / Improved / Fixed (H has nothing after the groups: the host-only
+// "Known limits" footnote is gone, E95). W14-code r2 fr2-18: the popup, scroll area,
+// empty line and entry H are cb63ed069 B / H's own class strings and the version is CdsBadge (shared-frame ad)
+// `{variant:"neutral", className:"font-mono"}` (it was a hand-copied span[data-cds=Badge]).
 export function LocalReleaseNotes({ open = true, onClose, onExited }) {
   const entries = useMemo(() => releaseNotesFor(clientVersion), []);
   return (
-    <SourceDialog open={open} onExited={onExited} onClose={onClose} size="md" title={t("What’s new")} className="st-release-notes">
-      <p className="st-release-note">{t("These release notes are included with this version of the app and may be one release behind.")}</p>
-      <div className="st-release-scroll">
+    <SourceDialog open={open} onExited={onExited} onClose={onClose} size="md" title={t("What’s new")} className="flex max-h-[min(720px,85vh)] flex-col">
+      <p className="pt-md text-caption text-muted-as-secondary in-data-cds-fizzy:pt-0 in-data-cds-fizzy:pb-md"><ReleaseNotesLagNote /></p>
+      <div className="-mx-pad-xl -mb-pad-xl flex min-h-0 flex-1 flex-col gap-lg overflow-y-auto px-xl pb-xl pt-md in-data-cds-fizzy:flex-none in-data-cds-fizzy:overflow-visible in-data-cds-fizzy:pt-0">
         {entries.length === 0
-          ? <p className="st-release-empty">{t("No release notes yet.")}</p>
+          ? <p className="p-lg text-center text-body text-secondary">{t("No release notes yet.")}</p>
           : entries.map((entry) => (
-            <section key={entry.version} className="st-release-entry">
-              <div className="st-release-date">
-                <h4>{releaseNoteDate(entry.date)}</h4>
-                <span className="st-release-version" data-cds="Badge" data-variant="neutral">{entry.version}</span>
+            <section key={entry.version} className="flex flex-col gap-md border-b pb-lg last:border-0 last:pb-0">
+              <div className="flex items-center justify-between gap-sm">
+                <h4 className="text-heading font-semibold text-primary">{releaseNoteDate(entry.date)}</h4>
+                <CdsBadge variant="neutral" className="font-mono">{entry.version}</CdsBadge>
               </div>
               {RELEASE_NOTE_KINDS.map((kind) => <ReleaseNoteGroup key={kind} kind={kind} items={entry.items} />)}
-              {entry.limits?.length > 0 && <p className="st-release-limits">{t("Known limits:")} {entry.limits.join(" ")}</p>}
             </section>
           ))}
       </div>

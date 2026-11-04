@@ -34,8 +34,13 @@ test('generator: the committed modules match the 3.6556.2 sources (check mode) a
   const byTarget = Object.fromEntries(manifest.modules.map((entry) => [entry.target, entry]));
   // R3-files adds the Files pane / Changes tree originals (tests/files-current-source.test.mjs covers them).
   assert.deepEqual(Object.keys(byTarget).filter((target) => ['diff-context-guard.mjs', 'diff-scope-memory.mjs', 'editable-target.mjs', 'menu-context-guard.mjs',
-    'owner-window.mjs', 'shimmer-text.mjs', 'worktree-checking.mjs'].includes(target)).sort(), ['diff-context-guard.mjs', 'diff-scope-memory.mjs', 'editable-target.mjs', 'menu-context-guard.mjs',
-    'owner-window.mjs', 'shimmer-text.mjs', 'worktree-checking.mjs']);
+    'owner-window.mjs', 'worktree-checking.mjs'].includes(target)).sort(), ['diff-context-guard.mjs', 'diff-scope-memory.mjs', 'editable-target.mjs', 'menu-context-guard.mjs',
+    'owner-window.mjs', 'worktree-checking.mjs']);
+  // W14-code r2 closeout-2 (DC-06): the unimported shimmer-text / coarse-pointer / error-text / attribute-escape are retired.
+  for (const retired of ['shimmer-text.mjs', 'coarse-pointer.mjs', 'error-text.mjs', 'attribute-escape.mjs']) {
+    assert.equal(byTarget[retired], undefined, retired);
+    assert.equal(fs.existsSync(path.join(ROOT, 'src/generated/files-changes', retired)), false, retired);
+  }
   // R3-files FT-16 adds the breadcrumb folder popover, its compact tree and their runtime (breadcrumb-current.test.mjs);
   // FT-14 / FT-18 the tree rows, the worktree start folder, the multi-selection Escape and the frontmatter view
   // (file-tree-current.test.mjs); FT-07 the Changes tree tooltip and path forms (changes-tree-current.test.mjs).
@@ -43,7 +48,7 @@ test('generator: the committed modules match the 3.6556.2 sources (check mode) a
   // pure frontmatter label (c3fde7009 Ki) out of the compiled view as file-frontmatter-label. W12 diff-scope-tree adds the
   // Changes tree memory (c44d00c7f Ta/Aa/Na), the pane body (shared-1 iC), c91a5e4a6 _ and the scope label (cccc2cf0a QS/iC);
   // W12 diff-cont the Compare against branch label (c5da7eb42 Zf, cccc2cf0a kc).
-  assert.equal(Object.keys(byTarget).length, 71);
+  assert.equal(Object.keys(byTarget).length, 67);
   assert.deepEqual(['diff-tree-memory.mjs', 'diff-pane-body.mjs', 'node-hidden.mjs', 'diff-scope-label.mjs', 'diff-scope-base-label.mjs'].map((target) => byTarget[target]?.source),
     ['c44d00c7f-Cr1FDL2F.js', 'shared-1-BJhqMmkf.js', 'c91a5e4a6-xMjQN7Gn.js', 'cccc2cf0a-DhZC33Gc.js', 'c5da7eb42-XijZdwf1.js']);
   assert.equal(byTarget['menu-context-guard.mjs'].source, 'ca5db7aaf-qq5selW3.js');
@@ -53,11 +58,7 @@ test('generator: the committed modules match the 3.6556.2 sources (check mode) a
   assert.equal(byTarget['diff-scope-memory.mjs'].source, 'c03935b01-yhcY34vt.js');
   assert.equal(byTarget['worktree-checking.mjs'].source, 'shared-46-BIbZBGFq.js');
   assert.deepEqual(byTarget['worktree-checking.mjs'].exports, { GD: 'WorktreeChecking' });
-  // The ShimmerText line is the view-tabs CdsShimmer itself (D1): re-exported, no second copy, no bindings of its own.
-  assert.equal(byTarget['shimmer-text.mjs'].reexport, 'view-tabs');
-  assert.deepEqual(byTarget['shimmer-text.mjs'].bindings, []);
-  assert.deepEqual(byTarget['shimmer-text.mjs'].imports,
-    [{ local: 'zF', from: '../view-tabs/shared-frame-6jtSkIit.js', name: 'CdsShimmer', via: 'shared-frame-6jtSkIit.js:zF', kind: 'view-tabs' }]);
+  // The ShimmerText line is the view-tabs CdsShimmer itself (D1): worktree-checking imports it, no second copy.
   assert.deepEqual(byTarget['worktree-checking.mjs'].imports.find((entry) => entry.local === 'V'),
     { local: 'V', from: '../view-tabs/shared-frame-6jtSkIit.js', name: 'CdsShimmer', via: 'shared-frame-6jtSkIit.js:_i', kind: 'view-tabs' });
   const official = (name) => fs.readFileSync(path.join(official3.ionSource, name), 'utf8');
@@ -143,20 +144,17 @@ function keyEvent(type, key, repeat = false) {
   return event;
 }
 
+// W14-code r8 (r8pa-02): the comment card is the official c82eca2bd st (generated/pierre-changes, Changes rows and the Files
+// editor alike), its field keydown ke's own: Escape → `let t = ee(e.currentTarget); t && pe(t)` (shared-25 up, shared-19 Gj =
+// pZ) before onCancel. Gj is run here on an owner window: the held Escape's repeats are swallowed until the key is released
+// or another key is pressed.
 test('FT-10 diffgit-16: Escape in a comment field cancels and swallows its auto-repeat until the key is released', async () => {
-  const { commentFieldKeyDown } = await server.ssrLoadModule('/src/source-file-comments.jsx');
+  const { Gj } = await server.ssrLoadModule('/src/generated/code-transcript/shared-19-DIKJVT7c.mjs');
+  const card = fs.readFileSync(path.resolve(import.meta.dirname, '../src/generated/pierre-changes/pierre-c82eca2bd-CImI7zNG.mjs'), 'utf8');
+  assert.match(card, /import \{ Gj as pe \} from "\.\.\/code-transcript\/shared-19-DIKJVT7c\.mjs";/);
+  assert.match(card, /let t = ee\(e\.currentTarget\);\s*t && pe\(t\);\s*\}\s*fe\(\);/);
   const view = new OwnerWindow();
-  const field = { nodeType: 1, ownerDocument: { nodeType: 9, defaultView: view } };
-  const calls = [];
-  const press = (key, extra = {}) => {
-    const event = { key, currentTarget: field, nativeEvent: {}, keyCode: 0, repeat: false, shiftKey: false, altKey: false, metaKey: false, ctrlKey: false,
-      prevented: false, stopped: false, preventDefault() { this.prevented = true; }, stopPropagation() { this.stopped = true; }, ...extra };
-    commentFieldKeyDown(event, { save: (...args) => calls.push(['save', ...args]), cancel: () => calls.push(['cancel']) });
-    return event;
-  };
-  const escape = press('Escape');
-  assert.deepEqual(calls, [['cancel']]);
-  assert.equal(escape.prevented, true);
+  Gj(view);
   const held = keyEvent('keydown', 'Escape', true);
   view.dispatchEvent(held);
   assert.equal(held.defaultPrevented, true, 'the held key repeats are swallowed');
@@ -164,17 +162,11 @@ test('FT-10 diffgit-16: Escape in a comment field cancels and swallows its auto-
   const after = keyEvent('keydown', 'Escape', true);
   view.dispatchEvent(after);
   assert.equal(after.defaultPrevented, false, 'released: nothing is swallowed any more');
-  // Enter saves once (⌘ submits); composing and held Enter do nothing.
-  press('Enter', { metaKey: true });
-  press('Enter', { repeat: true });
-  press('Enter', { nativeEvent: { isComposing: true } });
-  assert.deepEqual(calls, [['cancel'], ['save', true, true]]);
-  // Another key pressed while Escape is held stops the suppression too (dZ: any other keydown detaches).
-  press('Escape');
+  Gj(view);
   view.dispatchEvent(keyEvent('keydown', 'a'));
   const later = keyEvent('keydown', 'Escape', true);
   view.dispatchEvent(later);
-  assert.equal(later.defaultPrevented, false);
+  assert.equal(later.defaultPrevented, false, 'another key stops the suppression');
 });
 
 test('FT-10 diffgit-16: the selection chip hides on Escape and swallows the repeat; a text field or an open menu keeps Escape', async () => {

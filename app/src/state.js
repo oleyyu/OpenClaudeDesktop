@@ -84,6 +84,19 @@ export const HOOK_BLOCKED = "A {event} hook blocked this action.";
 export const HOOK_FAILED = "A {event} hook failed.";
 // HookEventName (camelCase) as the hook configs spell it: preToolUse → PreToolUse.
 const hookEventName = (name) => typeof name === "string" && name ? name[0].toUpperCase() + name.slice(1) : "hook";
+/**
+ * A completed hook run that blocked or failed (HookRunSummary): what it said (its status message, then its error /
+ * warning / stop / feedback entries), its event name and whether it blocked a prompt (UserPromptSubmit). null for a run
+ * that did neither. The notice band (threadNotices) and the Code transcript's hook_notice items (W14-code r3 R3T-NEW-02,
+ * source-code-transcript.jsx codeHookNotices) read the same outcome.
+ */
+export function hookRunOutcome(run) {
+  if (!run || typeof run.id !== "string" || !["blocked", "failed"].includes(run.status)) return null;
+  const entries = (Array.isArray(run.entries) ? run.entries : []).filter((entry) => ["error", "warning", "stop", "feedback"].includes(entry?.kind) && typeof entry.text === "string" && entry.text.trim()).map((entry) => entry.text.trim());
+  const details = [typeof run.statusMessage === "string" ? run.statusMessage.trim() : "", ...entries].filter(Boolean).join("\n") || null;
+  const event = hookEventName(run.eventName);
+  return { status: run.status, details, event, promptBlocked: run.status === "blocked" && event === "UserPromptSubmit" };
+}
 function threadNotice(method, p) {
   if (method === "guardianWarning") return typeof p.message === "string" && p.message ? { kind: "guardian", summary: p.message, details: null } : null;
   if (method === "autoApprovalReview/strictReviewRequired") return { kind: "strictReview", summary: STRICT_REVIEW_REQUIRED, details: null };
@@ -323,10 +336,6 @@ export function ownerThreadId(state, threadId) {
   return id;
 }
 
-export function isChildThread(state, threadId) {
-  return !!state.threadParents?.[threadId];
-}
-
 // Is a serverRequest waiting on this SESSION, including one raised by a
 // sub-agent running for it? A sub-agent thread is never a sidebar row and
 // never navigable, so its approval has to be attributed to the session that
@@ -342,19 +351,6 @@ export function hasPendingApproval(state, threadId) {
   return (state.approvals || []).some(
     (approval) => approval.params?.threadId && ownerThreadId(state, approval.params.threadId) === threadId,
   );
-}
-
-// Every descendant bucket of one session, nearest first.
-export function childThreadIds(state, threadId) {
-  const out = [], queue = [...(state.childThreads?.[threadId] || [])], seen = new Set();
-  while (queue.length) {
-    const id = queue.shift();
-    if (seen.has(id)) continue;
-    seen.add(id);
-    out.push(id);
-    queue.push(...(state.childThreads?.[id] || []));
-  }
-  return out;
 }
 
 function retainCompletedItemPhases(phases = {}) {
@@ -519,14 +515,29 @@ export function reduce(state, action) {
   if (e.method === "hook/started" || e.method === "hook/completed") {
     const run = p.run;
     if (!run || typeof run.id !== "string") return state;
-    let next = { ...state, hookRuns: { ...state.hookRuns, [id]: { ...state.hookRuns?.[id], [run.id]: { ...run, turnId: p.turnId ?? null } } } };
+    // W14-code r4 R4T-REG-01: a run the core sends without a turn (SessionStart and the like) belongs where it arrived —
+    // the running turn, else the session's last turn (c06cf64bb inserts the hook_notice in arrival order, M("assistant",
+    // …)); before any turn it stays null (the Code transcript puts it ahead of the first entry).
+    const lastTurnId = (state.items?.[id] || []).findLast((item) => typeof item?.turnId === "string" && item.turnId)?.turnId;
+    const turnId = p.turnId ?? state.hookRuns?.[id]?.[run.id]?.turnId ?? state.active?.[id] ?? lastTurnId ?? null;
+    let next = { ...state, hookRuns: { ...state.hookRuns, [id]: { ...state.hookRuns?.[id], [run.id]: { ...run, turnId } } } };
     // A hook that blocked or failed changed what the agent did: say so (its message, else its warnings and errors).
     if (e.method === "hook/completed" && ["blocked", "failed"].includes(run.status)) {
-      const entries = (Array.isArray(run.entries) ? run.entries : []).filter((entry) => ["error", "warning", "stop", "feedback"].includes(entry?.kind) && typeof entry.text === "string" && entry.text.trim()).map((entry) => entry.text.trim());
-      const details = [typeof run.statusMessage === "string" ? run.statusMessage.trim() : "", ...entries].filter(Boolean).join("\n") || null;
+      const { details } = hookRunOutcome(run);
       const list = next.threadNotices?.[id] || [];
+      // W14-code transcript-rest TA-2: a UserPromptSubmit hook that blocked the prompt is the transcript's own item in the
+      // Code transcript (c06cf64bb `{kind: "prompt_blocked", id, reason, originalPrompt}`, c96d752d0 sX "A hook blocked your
+      // prompt" / iX "Prompt blocked by a hook"), keyed by the turn; its notice (promptBlocked) stays for the other modes.
+      const promptBlocked = run.status === "blocked" && hookEventName(run.eventName) === "UserPromptSubmit";
+      if (promptBlocked) {
+        const turnId = typeof p.turnId === "string" && p.turnId ? p.turnId : null;
+        const prompt = turnId ? (state.items[id] || []).find((item) => item?.turnId === turnId && item.type === "userMessage") : null;
+        const originalPrompt = (prompt?.content || []).filter((part) => part?.type === "text" && typeof part.text === "string").map((part) => part.text).join("\n").trim();
+        next = { ...next, promptBlocks: { ...next.promptBlocks, [id]: { ...next.promptBlocks?.[id], [run.id]: { id: `prompt-blocked:${run.id}`, turnId,
+          reason: details ?? "", ...(originalPrompt ? { originalPrompt } : {}) } } } };
+      }
       next = { ...next, threadNotices: { ...next.threadNotices, [id]: appendNotice(list, { kind: run.status === "blocked" ? "hookBlocked" : "hookFailed",
-        summary: run.status === "blocked" ? HOOK_BLOCKED : HOOK_FAILED, details, values: { event: hookEventName(run.eventName) } }) } };
+        summary: run.status === "blocked" ? HOOK_BLOCKED : HOOK_FAILED, details, values: { event: hookEventName(run.eventName) }, ...(promptBlocked ? { promptBlocked: true } : {}) }) } };
     }
     return next;
   }
@@ -754,6 +765,4 @@ export function latestTurnError(state, threadId) {
     if (items[index]?.turnId) return errors[items[index].turnId] || null;
   return null;
 }
-export function userText(item) {
-  return (item.content || []).map((c) => c.text || c.path || "").join("\n");
-}
+// W14-code r5 cleanup R5DC-05: the unused userText export is gone (no caller, not even a test).

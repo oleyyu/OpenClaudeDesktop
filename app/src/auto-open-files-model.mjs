@@ -15,9 +15,6 @@
 //     reads autoOpenFilesEnabled(config).
 
 export const AUTO_OPEN_FILES_KEY = "launchAutoOpenFiles";
-// c71860c77-C3tXoNVw Or: `r ? NShGei0Ifc : 4uNKbBb+5S`, r = He() = shared-78 JT (GrowthBook
-// frontend_preview_external_domains). The host keeps that gate off (D36), so the Preview pane copy applies.
-export const AUTO_OPEN_FILES_DESCRIPTION = "HTML, images, PDFs, and videos Claude writes open in the Preview pane.";
 
 /** The saved preference read from a profile config: unset (or no config) reads as on, as the official default `!0`. */
 export function autoOpenFilesEnabled(config) {

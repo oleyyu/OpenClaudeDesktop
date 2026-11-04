@@ -28,8 +28,8 @@ test('keycap variant: cmd+enter on mac is two kbd caps with glyphs, spoken sr-on
   assert.equal(count(html, '<kbd'), 2);
   const kbds = html.match(/<kbd[^>]*>.*?<\/kbd>/g);
   assert.deepEqual(kbds, [
-    '<kbd class="scds-key scds-key-square"><span aria-hidden="true">⌘</span><span class="scds-sr">Command</span></kbd>',
-    '<kbd class="scds-key scds-key-square"><span aria-hidden="true">⏎</span><span class="scds-sr">Enter</span></kbd>',
+    '<kbd class="scds-key scds-key-square"><span aria-hidden="true">⌘</span><span class="sr-only select-none">Command</span></kbd>',
+    '<kbd class="scds-key scds-key-square"><span aria-hidden="true">⏎</span><span class="sr-only select-none">Enter</span></kbd>',
   ]);
 });
 
@@ -58,14 +58,14 @@ test('text variant: cmd+shift+d on mac is ⇧ ⌘ D bare kbds with spoken names;
   const html = render(S.SourceShortcut, { keys: 'cmd+shift+d', variant: 'text', mac: true, className: 'source-tooltip-shortcut' });
   assert.match(html, /^<span data-cds="Shortcut" data-variant="text" class="scds-shortcut scds-text source-tooltip-shortcut">/);
   assert.deepEqual(html.match(/<kbd[^>]*>.*?<\/kbd>/g), [
-    '<kbd class="scds-text-key"><span aria-hidden="true">⇧</span><span class="scds-sr">Shift</span></kbd>',
-    '<kbd class="scds-text-key"><span aria-hidden="true">⌘</span><span class="scds-sr">Command</span></kbd>',
+    '<kbd class="scds-text-key"><span aria-hidden="true">⇧</span><span class="sr-only select-none">Shift</span></kbd>',
+    '<kbd class="scds-text-key"><span aria-hidden="true">⌘</span><span class="sr-only select-none">Command</span></kbd>',
     '<kbd class="scds-text-key">D</kbd>',
   ]);
   assert.equal(count(html, 'scds-key'), 0, 'no keycap classes');
   assert.equal(count(html, 'scds-joiner'), 0, 'mac draws no "+" joiners');
   const enter = render(S.SourceShortcut, { keys: 'enter', variant: 'text', mac: true });
-  assert.match(enter, /<kbd class="scds-text-key"><span aria-hidden="true">⏎<\/span><span class="scds-sr">Enter<\/span><\/kbd>/);
+  assert.match(enter, /<kbd class="scds-text-key"><span aria-hidden="true">⏎<\/span><span class="sr-only select-none">Enter<\/span><\/kbd>/);
   assert.match(render(S.SourceShortcut, { keys: 'escape', variant: 'text', mac: true }), /<kbd class="scds-text-key">Esc<\/kbd>/);
   assert.match(render(S.SourceShortcut, { keys: 'p', variant: 'text', mac: true }), /<kbd class="scds-text-key">P<\/kbd>/);
 });
@@ -82,67 +82,75 @@ const command = { id: 7, method: 'item/commandExecution/requestApproval', bridge
   params: { threadId: 'T', turnId: 'turn', itemId: 'item', command: 'printf ok', reason: 'Fixture' } };
 const card = props => render(A.SourceApprovalCardView, { request: command, onAction: () => {}, ...props });
 
-test('approval card: single-file heading has two text-primary .sac-em spans and a clamp marker (approval-current.js:15399-15470)', () => {
+// V3-W14-approvals: the 3.6556.2 tool card (cc32965c2 Sv / Z_): the title is L in bL (cc32965c2 Lt), the tags b / meta
+// span.text-primary [unicode-bidi:plaintext] (ev…av), the span line-clamp-2 when clampTitle and a detail show, else a
+// [data-approval-value]; the decisions are shared-10 FS / IS (CDS Buttons, data-testid approval-action-<key>).
+const EM = '<span class="text-primary [unicode-bidi:plaintext]">';
+const actionOf = button => /data-testid="approval-action-([^"]+)"/.exec(button)?.[1];
+
+test('approval card: single-file heading has two text-primary spans and the line clamp (cc32965c2 L, EFOijHTneN)', () => {
   const request = { id: 9, method: 'item/fileChange/requestApproval', bridgeApproval: { connectionId: 'c', instanceId: 'f' },
     params: { threadId: 'T', turnId: 'turn', itemId: 'item' } };
   const html = card({ request, item: { changes: [{ path: '/w/src/created.ts', kind: { type: 'add' }, diff: '+x\n' }] } });
-  assert.match(html, /aria-label="Permission request: Allow DeepSeek to write created.ts\?"/);
-  assert.match(html, /<button type="button" class="sac-heading"[^>]*><span data-clamp="">Allow DeepSeek to <span class="sac-em">write<\/span> <span class="sac-em">created.ts<\/span>\?<\/span><\/button>/);
-  assert.equal(count(html, 'class="sac-em"'), 2);
+  // Sv Ii: "Permission request: {action}" with hg's action (no meta).
+  assert.match(html, /aria-label="Permission request: write"/);
+  assert.ok(html.includes(`<span class="text-body-semibold min-w-0 break-words"><span class="line-clamp-2">Allow DeepSeek to ${EM}write</span> ${EM}created.ts</span>?</span></span>`));
+  assert.equal(count(html, EM), 2);
   const multi = card({ request, item: { changes: [{ path: 'a.ts', kind: 'update' }, { path: 'b.ts', kind: 'update' }] } });
-  assert.match(multi, /<span>Allow DeepSeek to edit files\?<\/span><\/button>/);
-  assert.equal(count(multi, 'sac-em'), 0); assert.equal(count(multi, 'data-clamp'), 0);
-  assert.equal(count(card({}), 'data-clamp'), 0);
+  assert.ok(multi.includes(`<span data-approval-value="">Allow DeepSeek to ${EM}edit files</span>?</span>`));
+  assert.equal(count(multi, 'line-clamp-2'), 0);
+  // Bash without a description (cc32965c2 Wh Bash): "run", the command its detail, clampTitle.
+  assert.equal(count(card({}), 'line-clamp-2'), 1);
 });
 
-test('approval card: the reason is its own clamped block before the context, unlabelled until it scrolls (approval-current.js:15275-15284, cf6ae6197 bv)', () => {
+test('approval card: the reason is its own clamped block before the context, unlabelled until it scrolls (cc32965c2 Z_ ce, so + C_)', () => {
   const html = card({ request: { ...command, params: { ...command.params, reason: 'Needs danger-full-access: write /x', cwd: '/w' } } });
-  assert.match(html, /<div class="sac-content"><div class="sac-reason scroll-fade-y scroll-fade-size-\[8px\]">Needs danger-full-access: write \/x<\/div><p class="sac-context" data-context="cwd">Working directory: \/w<\/p>/);
+  assert.ok(html.includes('<div class="flex flex-col gap-[12px]"><div class="epitaxy-scroll-clamp scroll-fade-y focus-visible:outline-hidden focus-visible:shadow-focus text-body text-secondary select-text break-words max-h-[calc(3*var(--cds-leading-body))] overflow-y-auto [unicode-bidi:plaintext]">Needs danger-full-access: write /x</div><p data-context="cwd" class="text-body text-secondary select-text break-words [unicode-bidi:plaintext]">Working directory: /w</p>'));
   assert.equal(count(html, 'data-context="reason"'), 0);
   // The "Reason" label is only the accessible name of an overflowing (focusable) region: no visible text.
   assert.equal(count(html, '>Reason<'), 0);
   assert.equal(count(html, 'aria-label="Reason"'), 0);
-  assert.equal(count(card({ request: { ...command, params: { ...command.params, reason: null } } }), 'sac-reason'), 0);
+  assert.equal(count(card({ request: { ...command, params: { ...command.params, reason: null } } }), 'max-h-[calc(3*var(--cds-leading-body))]'), 0);
 });
 
 test('approval card: item headings draw the source verb spans; a meta-less heading has one', () => {
   const args = { description: 'Audit the parser', prompt: 'Read src/parse.js' };
   const agent = card({ item: { type: 'dynamicToolCall', id: 'item', tool: 'subagent', arguments: args } });
-  assert.match(agent, /aria-label="Permission request: Allow DeepSeek to run an agent Audit the parser\?"/);
-  // F07 Task/Agent (approval-current.js:14570-14579): no detail, so a plain div heading with no
-  // toggle (on purpose: was a button over the arguments JSON).
-  assert.match(agent, /<div class="sac-heading"><span>Allow DeepSeek to <span class="sac-em">run an agent<\/span> <span class="sac-em">Audit the parser<\/span>\?<\/span><\/div>/);
-  assert.equal(count(agent, 'class="sac-code"'), 0);
+  assert.match(agent, /aria-label="Permission request: run an agent"/);
+  // Task/Agent: no detail, so no clamp and no value block.
+  assert.ok(agent.includes(`<span data-approval-value="">Allow DeepSeek to ${EM}run an agent</span> ${EM}Audit the parser</span>?</span>`));
+  assert.equal(count(agent, 'bg-alpha-1 rounded-[5px] py-md px-lg text-code'), 0);
   assert.equal(count(agent, 'role="status" data-approval-announcement=""'), 1);
   const mcp = card({ item: { type: 'mcpToolCall', id: 'item', server: 'github', tool: 'create_issue', arguments: { title: 'Bug' } } });
-  assert.match(mcp, /Allow DeepSeek to <span class="sac-em">use create_issue \(github\)<\/span>\?<\/span>/);
-  assert.equal(count(mcp, 'class="sac-em"'), 1);
+  assert.ok(mcp.includes(`Allow DeepSeek to ${EM}use create issue (github)</span>?</span>`));
+  assert.equal(count(mcp, `>Allow DeepSeek to ${EM}`), 1);
   const bash = card({ item: { type: 'commandExecution', id: 'item', command: 'printf ok', description: 'Print ok' } });
-  assert.match(bash, /<span data-clamp="">Allow DeepSeek to <span class="sac-em">run<\/span> <span class="sac-em">Print ok<\/span>\?<\/span>/);
-  assert.match(card({}), /<span>Allow DeepSeek to run this command\?<\/span>/);
+  assert.ok(bash.includes(`<span class="line-clamp-2">Allow DeepSeek to ${EM}run</span> ${EM}Print ok</span>?</span>`));
+  assert.ok(card({}).includes(`<span class="line-clamp-2">Allow DeepSeek to ${EM}run</span>?</span>`));
 });
 
 test('approval card: sessionGrantable:false draws Deny and Allow once only', () => {
   const html = card({ request: { ...command, params: { ...command.params, sessionGrantable: false } } });
-  const actions = buttons(html).filter(button => button.includes('data-approval-action=')).map(button => /data-approval-action="([^"]+)"/.exec(button)[1]);
-  assert.deepEqual(actions, ['decline', 'accept']);
+  assert.deepEqual(buttons(html).map(actionOf).filter(Boolean), ['decline', 'accept']);
 });
 
 test('approval card: exactly one aria-hidden keycap, inside the primary Allow once; none on Deny or session allow', () => {
   const html = card({});
   assert.equal(count(html, 'data-cds="Shortcut"'), 1);
-  const all = buttons(html).filter(button => button.includes('data-approval-action='));
+  const all = buttons(html).filter(actionOf);
   const primary = all.filter(button => button.includes('data-approval-primary'));
   assert.equal(primary.length, 1);
-  assert.match(primary[0], /data-approval-action="accept"/);
-  assert.match(primary[0], /aria-keyshortcuts="Meta\+Enter Control\+Enter"/);
-  assert.match(primary[0], /<span class="sac-button-label">[^<]+<\/span><span aria-hidden="true" data-cds="Shortcut" data-variant="keycap" class="scds-shortcut scds-in-button scds-trailing">/);
+  assert.equal(actionOf(primary[0]), 'accept');
+  // SSR is the non-Mac platform: Ctrl.
+  assert.match(primary[0], /aria-keyshortcuts="Control\+Enter"/);
+  assert.match(primary[0], /<span class="min-w-0 \[unicode-bidi:plaintext\] truncate" data-approval-digit="3">Allow once<\/span><span aria-hidden="true" data-cds="Shortcut" data-variant="keycap"/);
   for (const button of all.filter(button => !button.includes('data-approval-primary'))) {
     assert.equal(count(button, 'data-cds="Shortcut"'), 0);
     assert.equal(count(button, '<kbd'), 0);
   }
-  assert.ok(all.some(button => /data-approval-action="decline"/.test(button)));
-  assert.ok(all.some(button => /data-approval-action="acceptForSession"/.test(button)));
+  // Card placement: Deny's esc and the session allow's ⇧⌘↵ are announced, not drawn (chordHintHidden).
+  assert.match(all.find(button => actionOf(button) === 'decline'), /aria-keyshortcuts="Escape"/);
+  assert.match(all.find(button => actionOf(button) === 'acceptForSession'), /aria-keyshortcuts="Control\+Shift\+Enter"/);
 });
 
 test('approval card: inactive, open menu, unsupported or unanswerable cards draw no keycap and no aria-keyshortcuts', () => {
@@ -152,11 +160,13 @@ test('approval card: inactive, open menu, unsupported or unanswerable cards draw
   }
 });
 
-test('approval card: busy keeps the primary cap (faded with its spinning label) so the busy action keeps its width', () => {
+test('approval card: busy keeps the primary cap inside the faded content span; the other decisions are held', () => {
   const html = card({ busy: true, busyAction: 'accept' });
-  assert.equal(count(html, 'aria-keyshortcuts'), 0);
   const primary = buttons(html).find(button => button.includes('data-approval-primary'));
-  assert.match(primary, /<span class="sac-button-label" data-busy="true">[^<]+<\/span><span aria-hidden="true" data-busy="true" data-cds="Shortcut"/);
+  assert.match(primary, /aria-busy="true"/);
+  assert.match(primary, /<span class="inline-flex min-w-0 items-center gap-1 opacity-0"><span class="min-w-0 \[unicode-bidi:plaintext\] truncate" data-approval-digit="3">Allow once<\/span><span aria-hidden="true" data-cds="Shortcut"/);
+  assert.match(primary, /data-cds="Spinner"/);
+  for (const button of buttons(html).filter(button => !button.includes('data-approval-primary'))) assert.match(button, /aria-disabled="true"/);
   const other = card({ busy: true, busyAction: 'decline' });
   assert.match(buttons(other).find(button => button.includes('data-approval-primary')), /<span aria-hidden="true" data-cds="Shortcut"/);
 });

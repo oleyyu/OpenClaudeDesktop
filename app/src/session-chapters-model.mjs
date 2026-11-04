@@ -87,12 +87,6 @@ export function chapterView(state, sessionId, id) {
   return { hidden: !!sessionId && session.hidden.includes(id), renamedTitle: sessionId ? session.renames[id] : undefined };
 }
 
-/** Owe: the pinned chapters anchored at `afterId`. */
-export function userChaptersAt(state, sessionId, afterId) {
-  if (!sessionId) return EMPTY_LIST;
-  const list = sessionChapterState(state, sessionId).userChapters.filter((chapter) => chapter.afterId === afterId);
-  return list.length ? list : EMPTY_LIST;
-}
 
 /** Kw: pinned chapters grouped by anchor (undefined when there are none). */
 export function chaptersByAnchor(userChapters) {

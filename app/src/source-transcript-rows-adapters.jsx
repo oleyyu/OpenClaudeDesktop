@@ -27,14 +27,18 @@
 //   FileMenuTrigger / FilePathMenuItems
 //                                c0cdf4a08 _ / c856385e2 Q: the file link's context menu and its items — the host's
 //                                delegated [data-file-ref] menu (source-transcript.jsx): the trigger carries the path.
-//   SessionRenameBody / InboxMessageBody
-//                                cb6930dae Vs / bs: bodies of desktop-only results (a rename's _meta record, a Slack
-//                                inbox message) no host core produces — nothing.
+//   InboxMessageBody             cb6930dae bs: the body of a desktop-only result (a Slack inbox message) no host core
+//                                produces — nothing.
+//   useSessionRenameMutation / logRenameUndone
+//                                c4ae8f050 M / c68c4283d Vd: the rename bc's "Undo rename" runs (the host's), its
+//                                telemetry (nothing).
 //   ToolOutputImages             cb6930dae Hu: the tool's output images — the host's image tiles.
 //   ToolAttachedFiles            cb6930dae iu: the files a tool attached — the host's deliverables of the item
 //                                (codeDesktop.artifacts, scope.renderAttachedFiles).
 //   useVerboseTranscript / useCompactTranscript / useShowThinking
 //                                cd4f82e77 _n / vn / yn: the transcript view store — the host's transcript view.
+//   bootAppFeatures              shared-78 cC: window.desktopBootFeatures, the main process's appFeatures — the host's
+//                                table (host-app-features.mjs).
 //   useQueuedBehindApproval      c5da7eb42 My: the request store's approval queue — the host shows one approval per
 //                                row, never a queued one behind another: false.
 //   useLiveOutputTask / LiveOutputButton
@@ -52,8 +56,9 @@ import React, { useContext } from "react";
 import { StartMessage, useStartIntl } from "./source-code-start-adapters.jsx";
 import { TranscriptHostScope } from "./transcript-host-scope.mjs";
 import { TranscriptToolScope } from "./transcript-tool-scope.mjs";
-import { hostGrowthBookFlag } from "./host-growthbook.mjs";
-import { t } from "../electron/i18n/index.mjs";
+import { HOST_GROWTHBOOK, growthBookFlagKey, hostGrowthBookFlag } from "./host-growthbook.mjs";
+import { HOST_APP_FEATURES } from "./host-app-features.mjs";
+import { dictionary, t } from "../electron/i18n/index.mjs";
 import { useSourceToasts } from "./source-toast.jsx";
 import { useCodeThemes } from "./code-theme-store.mjs";
 import { splitStore } from "./source-split-view.jsx";
@@ -61,7 +66,13 @@ import { TurnProposalGroup } from "./generated/proposal-group/index.mjs";
 export { sessionActivityEvents, sessionActivityStore, useTurnStartTime } from "./source-working-line-adapters.jsx";
 
 export const useIntl = useStartIntl;
-export const FormattedMessage = StartMessage;
+// W14-code r4 R4T-08h: a message whose English is shared with other contexts (cb6930dae bc's rename card "From" tD8/hN97ku /
+// "To" 2B7yxMSjT4 against the email headers' 来自 / 收件人) reads its own entry keyed "<English>|<message id>" first, as
+// source-chat-export-adapters.jsx does; without one the plain English entry applies as before.
+export function FormattedMessage(props) {
+  const table = dictionary(), key = `${props.defaultMessage}|${props.id}`;
+  return <StartMessage {...(table && props.id && Object.hasOwn(table, key) ? { ...props, defaultMessage: table[key] } : props)} />;
+}
 
 export function useSessionAwaitsRequest(sessionId) {
   const scope = useContext(TranscriptHostScope);
@@ -136,14 +147,41 @@ export function FileMenuTrigger({ trigger, children }) {
 export function FilePathMenuItems() {
   return null;
 }
-export function SessionRenameBody() {
-  return null;
+// W14-code r2 R2T-TS7: c4ae8f050 M, the session rename mutation (react-query's `{mutate, isPending}`) cb6930dae bc's
+// "Undo rename" runs: `mutate({ref: {id, type: "local"}, title, via: "undo"})` → the host's rename (SessionRenameContext:
+// `(sessionId, title) → Promise`, the Code transcript's host.renameSession). Without one nothing is renamed.
+export const SessionRenameContext = React.createContext(null);
+export function useSessionRenameMutation() {
+  const rename = useContext(SessionRenameContext);
+  const [isPending, setPending] = React.useState(false);
+  const mutateAsync = React.useCallback(async (variables) => {
+    if (typeof rename !== "function" || !variables?.ref?.id || typeof variables.title !== "string") return null;
+    setPending(true);
+    try { return (await rename(variables.ref.id, variables.title)) ?? null; } finally { setPending(false); }
+  }, [rename]);
+  const mutate = React.useCallback((variables, options) => {
+    mutateAsync(variables).then((data) => options?.onSuccess?.(data, variables), (error) => options?.onError?.(error, variables));
+  }, [mutateAsync]);
+  return { mutate, mutateAsync, isPending };
+}
+export function logRenameUndone() {}
+// W14-code r2 R2T-TS7: shared-25 ps → Ko, a feature's state. There is no GrowthBook client or payload here: a feature the
+// host table lists reads "on" / "off", any other one reads as an unknown feature does ("unknown", Ko's unknownFeature).
+export function useGrowthBookFeatureState(key) {
+  if (hostGrowthBookFlag(key)) return "on";
+  return Object.hasOwn(HOST_GROWTHBOOK, growthBookFlagKey(key)) ? "off" : "unknown";
 }
 export function InboxMessageBody() {
   return null;
 }
 
 const useToolScope = () => useContext(TranscriptToolScope);
+
+// W14-code r8 gates-r8-02: shared-78 cC (`window.desktopBootFeatures ?? null`, the boot value of the appFeatures store U).
+// The 3.6556.2 main process hands the renderer bIr's answer; this host's is its table (host-app-features.mjs).
+export function bootAppFeatures() {
+  return HOST_APP_FEATURES;
+}
 
 export function useEngineSurface() {
   return useToolScope().surface ?? null;

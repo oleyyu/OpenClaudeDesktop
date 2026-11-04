@@ -27,9 +27,15 @@ test('repeated Stop waits on one cancellation and retains partial answer without
   done({});await first;assert.equal(store.get('stop').status,'idle');assert.equal(store.get('stop').messages.at(-1).text,'partial');
   assert.equal(store.get('stop').error,null);assert.equal(store.get('stop').retry,null);
 });
-test('failed cancellation remains stoppable and cannot affect a newer request', async () => {
-  store.ask('fail','q','r');await controls.stopSideQuestion({threadId:'fail',rpc:async()=>{throw Error('stop failed');}});
-  assert.equal(store.get('fail').status,'thinking');assert.equal(store.get('fail').interrupting,false);assert.equal(store.get('fail').error,'stop failed');
+// W14-code r6-composer-06: cccc2cf0a's Stop only aborts the local request (`Uc.interrupt(m)`), no failure branch — a
+// failed cancel still settles the question with no error row and no Retry; the core's reason is never shown.
+test('failed cancellation still stops without an error row and cannot affect a newer request', async () => {
+  const warn=console.warn;console.warn=()=>{};
+  try{store.ask('fail','q','r');store.delta('fail','r','partial');await controls.stopSideQuestion({threadId:'fail',rpc:async()=>{throw Error('stop failed');}});}finally{console.warn=warn;}
+  assert.equal(store.get('fail').status,'idle');assert.equal(store.get('fail').interrupting,false);assert.equal(store.get('fail').error,null);
+  assert.equal(store.get('fail').retry,null);assert.equal(store.get('fail').messages.at(-1).text,'partial');
+  store.delta('fail','r','late');assert.equal(store.get('fail').messages.at(-1).text,'partial');
+  store.ask('fail','q2','r2');
   let done;const stop=controls.stopSideQuestion({threadId:'fail',rpc:()=>new Promise(resolve=>done=resolve)});
   store.clear('fail');store.ask('fail','next','next');done({});await stop;
   assert.equal(store.get('fail').requestId,'next');assert.equal(store.get('fail').status,'thinking');
@@ -114,4 +120,25 @@ test('a failed side question shows the official vF sentence, not the raw error',
   await controls.askSideQuestion({ threadId: 'none', question: 'q', rpc: async () => { throw Object.assign(Error('Method not found'), { code: -32601 }); }, subscribe: () => () => {} });
   assert.equal(store.get('none').error, 'Side chat isn’t supported in this session’s environment yet.');
   assert.equal(controls.sideQuestionErrorText('failed'), 'Couldn’t get an answer. Try again.');
+});
+
+// W14-code r6-composer-06: cccc2cf0a SF also maps no_answer → vF.noAnswer and not_connected → vF.unreachable (a host
+// session is never a bridge), and CF reads the result's `status`; rate_limited (needs scope / retryAfterSeconds) and
+// cancelled are not shown as their own sentence here.
+test('an unanswered result status shows the official SF sentence', async () => {
+  const official = fs.readFileSync(path.resolve(import.meta.dirname, '../../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/cccc2cf0a-DhZC33Gc.js'), 'utf8');
+  for (const feature of ['noAnswer:{defaultMessage:"No answer yet. Send a message in the main chat first, then ask again.",id:"jQHciEysHJ"}',
+    'unreachable:{defaultMessage:"Couldn\\u2019t connect to this session\\u2019s environment. Try again in a moment.",id:"SU6qywFoZy"}',
+    'case"no_answer":return n.formatMessage(r.noAnswer);case"not_connected":return n.formatMessage(i?r.unreachableHost:r.unreachable)',
+    'r.status==="answered"?']) assert.ok(official.includes(feature), feature);
+  assert.equal(controls.sideQuestionErrorText('no_answer'), 'No answer yet. Send a message in the main chat first, then ask again.');
+  assert.equal(controls.sideQuestionErrorText('not_connected'), 'Couldn’t connect to this session’s environment. Try again in a moment.');
+  assert.equal(controls.sideQuestionErrorText('rate_limited'), 'Couldn’t get an answer. Try again.');
+  store.clear('gone');
+  await controls.askSideQuestion({ threadId: 'gone', question: 'q', rpc: async () => ({ status: 'not_connected' }), subscribe: () => () => {} });
+  const state = store.get('gone');
+  assert.equal(state.status, 'idle'); assert.equal(state.error, 'Couldn’t connect to this session’s environment. Try again in a moment.'); assert.equal(state.retry, 'q');
+  store.clear('answered');
+  await controls.askSideQuestion({ threadId: 'answered', question: 'q', rpc: async () => ({ text: 'a' }), subscribe: () => () => {} });
+  assert.equal(store.get('answered').error, null); assert.equal(store.get('answered').messages.at(-1).text, 'a');
 });

@@ -1,6 +1,6 @@
 /* 2.2553.1 shared-22 cw/XC, shared-21 Av/Fv; body/control tokens remain CDS. */
-/* shared-frame yf: bg-backdrop (#0006 light, #00000080 dark) + backdrop-blur 2px. */
-.ss-backdrop { position:fixed; inset:0; z-index:500; display:flex; align-items:center; justify-content:center; background:var(--cds-backdrop); backdrop-filter:blur(2px); -webkit-app-region:no-drag; }
+/* 3.6556.2 shared-frame hy: bg-backdrop (#0006 light, #00000080 dark), no backdrop blur (2.2553.1 yf's blur-[2px] is gone). */
+.ss-backdrop { position:fixed; inset:0; z-index:500; display:flex; align-items:center; justify-content:center; background:var(--cds-backdrop); -webkit-app-region:no-drag; }
 .ss-dialog { position:relative; display:flex; width:calc(100vw - 32px); max-width:1024px; height:calc(100dvh - 88px); max-height:800px; min-height:0; overflow:hidden; border-radius:12px; background:var(--cds-surface-3); color:var(--cds-text-primary); box-shadow:inset 0 0 0 var(--cds-ring-inner) var(--cds-ring-color),0 0 0 var(--cds-ring-outer) var(--cds-ring-color),var(--cds-shadow-sm); font:400 var(--cds-font-size-body,14px)/var(--cds-leading-body,20px) var(--cds-font-sans,anthropic-sans),sans-serif; outline:none; }
 .ss-nav { display:flex; width:192px; flex-shrink:0; flex-direction:column; gap:var(--cds-gap-sm,8px); border-right:1px solid var(--cds-alpha-2); background:var(--cds-surface-1); }
 .ss-search { display:flex; min-width:0; height:32px; margin:12px 12px 0; padding:0 8px; gap:8px; align-items:center; border:1px solid var(--cds-alpha-2); border-radius:6px; color:var(--cds-text-muted); }
@@ -33,7 +33,6 @@
 .ss-connection-notice { margin:0 0 var(--cds-gap-md,12px); color:var(--cds-text-muted); }
 /* Search fields (the nav search, Customize's collapsible search) ring their wrapper instead; :where keeps the specificity. */
 .ss-dialog :is(button:not(.ss-switch):not(.source-settings-button),input:not(:where(.ss-search,.cz-search) input),select):focus-visible { outline:2px solid var(--cds-fill-accent); outline-offset:2px; }
-.ss-search-summary { margin:0 0 24px; color:var(--cds-text-muted); }
 /* Official shared-styles: :root[data-dyslexic-font] .cds-root[data-font=system]{--cds-font-sans:var(--font-ui-dyslexic)}.
    The local html element is itself the outer cds-root (portaled dialogs and menus inherit from it), so the same
    assignment is repeated at root level; .cds-root[data-font=system] in c6a992d55 supplies the System branch. */
@@ -71,15 +70,17 @@ html.cds-root[data-dyslexic-font][data-font=system] { --cds-font-sans:var(--font
 /* A column's forced mode wins over the application mode for token paint. */
 .ss-theme-preview[data-mode=light] .scb-code [data-code-token] { color:var(--sch-light); font-style:var(--sch-light-style); font-weight:var(--sch-light-weight); text-decoration:var(--sch-light-decoration); }
 .ss-theme-preview[data-mode=dark] .scb-code [data-code-token] { color:var(--sch-dark); font-style:var(--sch-dark-style); font-weight:var(--sch-dark-weight); text-decoration:var(--sch-dark-decoration); }
-html[data-local-transcript-size=s] .source-transcript-content { --chat-body:13px; }
-/* c6a992d55-C0zTICcS.css [data-chat-text-size=l] .epitaxy-transcript-typography: 15px over 1.46667 (Small keeps 1.42857). */
-html[data-local-transcript-size=l] .source-transcript-content { --chat-body:15px; --chat-leading:1.46667; }
-html[data-local-transcript-size=s] .source-message.source-message,html[data-local-transcript-size=l] .source-message.source-message { font-size:var(--chat-body); line-height:var(--chat-leading); --chat-item-gap:calc(var(--chat-body)*var(--chat-leading)*.5); --chat-turn-gap:calc(var(--chat-body)*var(--chat-leading)*.75); }
-html[data-local-transcript-width=m] { --local-transcript-width:960px; }
-html[data-local-transcript-width=l] { --local-transcript-width:1280px; }
-html[data-local-transcript-width] .source-transcript-content { padding-inline:max(32px,calc((100% - var(--local-transcript-width,768px))/2)); }
-html[data-local-transcript-width] .composer-zone { max-width:calc(var(--local-transcript-width,768px) + 64px); }
-@media(max-width:780px) { html[data-local-transcript-width] .source-transcript-content{padding-inline:20px;} }
+/* c6a992d55-Che1orl5.css [data-chat-text-size=s|l] .epitaxy-transcript-typography (html[data-chat-text-size], shared-20 Gh):
+   Small .8125rem, Large .9375rem over 1.46667 (Small keeps 1.42857), on the host transcript column. */
+html[data-chat-text-size=s] .source-transcript-content { --chat-body:calc(.8125rem * var(--cds-rem-scale,1)); }
+html[data-chat-text-size=l] .source-transcript-content { --chat-body:calc(.9375rem * var(--cds-rem-scale,1)); --chat-leading:1.46667; }
+html[data-chat-text-size=s] .source-message.source-message,html[data-chat-text-size=l] .source-message.source-message { font-size:var(--chat-body); line-height:var(--chat-leading); --chat-item-gap:calc(var(--chat-body)*var(--chat-leading)*.5); --chat-turn-gap:calc(var(--chat-body)*var(--chat-leading)*.75); }
+/* shared-6 Cg: [[data-transcript-width=m]_&] 960px, [[data-transcript-width=l]_&] 1280px (--chat-column-measure first). */
+html[data-transcript-width=m] { --local-transcript-width:var(--chat-column-measure,960px); }
+html[data-transcript-width=l] { --local-transcript-width:var(--chat-column-measure,1280px); }
+/* W14-code r2 css2-chat-gutter-shave: the column padding / composer max-width read --local-transcript-width themselves
+   (source-transcript.css, source-composer.css: shared-6 yg over the gutter variables). */
+/* W14-code css-main-02: the narrow gutter is the tile container's (source-transcript.css @container 560px → 16px). */
 /* Settings complete: shared-22:4548–4648, 3992–4245; shared-21 Av/Fv. */
 .ss-dialog{height:calc(100dvh - 32px);background:var(--cds-surface-2)}
 .ss-search{position:relative;height:var(--cds-h-control,24px);margin:var(--cds-pad-md,8px) var(--cds-pad-md,8px) 0;flex-shrink:0;background:var(--cds-fill-field);border:0;box-shadow:inset 0 0 0 1px var(--cds-fill-field-ring)}

@@ -92,17 +92,18 @@ test('extract-code-composer.mjs copies none of the seven: their readers import t
 test('main.jsx wraps the Code composer (renderMainComposer) in the view-tabs CdsRoot, with main.cds-root\'s density / font / platform and className "contents"', () => {
   const main = fs.readFileSync(path.join(app, 'src/main.jsx'), 'utf8');
   assert.equal(main.split('import { CdsRoot } from "./generated/view-tabs/index.js";').length - 1, 1);
-  const start = main.indexOf('const renderMainComposer = () => (');
+  const start = main.indexOf('const renderMainComposer = ({ notices = false } = {}) => ('); // r4 shell: the Code notice stack option
   const body = main.slice(start, main.indexOf('\n  );\n', start));
   // R4g-composer CP4 (X7-10): experimental is the Code pane's (generated shared-18 Ub), which the image tiles read.
-  assert.match(body, /^const renderMainComposer = \(\) => \(\n    <CdsRoot density=\{themeDensity\(boot\?\.config\)\} font=\{cdsFont\} platform="desktop" experimental=\{codePaneExperimental\} className="contents">\n    <SourceComposer\n/);
+  assert.match(body, /^const renderMainComposer = \(\{ notices = false \} = \{\}\) => \(\n    <CdsRoot density=\{themeDensity\(boot\?\.config\)\} font=\{cdsFont\} platform="desktop" experimental=\{codePaneExperimental\} className="contents">\n    <SourceComposer\n/);
   assert.equal(main.split('import { codePaneExperimental } from "./generated/code-composer/code-pane-experimental.mjs";').length - 1, 1);
   assert.ok(body.endsWith('    />\n    </CdsRoot>'), 'the root closes right after the composer');
   // No mode (the store follows html[data-mode]), no pageBackground (main.cds-root keeps .cds-root's --cds-page-bg).
   const open = body.slice(0, body.indexOf('>') + 1);
   for (const prop of ['mode=', 'pageBackground=', 'labels=']) assert.ok(!open.includes(prop), prop);
   // main.cds-root carries the same three attributes the root repeats.
-  assert.match(main, /className="workspace epitaxy-root cds-root"\n\s+data-density=\{themeDensity\(boot\?\.config\)\}\n\s+data-font=\{cdsFont\}\n\s+data-platform="desktop"/);
+  // W14-code r4 r4pa-c03 (c5638815a Ct / cccc2cf0a kT): a popped-out pane window's root adds epitaxy-pane-window.
+  assert.match(main, /className=\{"workspace epitaxy-root cds-root" \+ \(paneWindowPopout \? " epitaxy-pane-window" : ""\)\}\n\s+data-density=\{themeDensity\(boot\?\.config\)\}\n\s+data-font=\{cdsFont\}\n\s+data-platform="desktop"/);
   // Only main.jsx renders a CdsRoot among the host sources (the sidebar dialogs' generated ones aside), and, since
   // R4i-graph GR3, the /btw side-session pane around its composer (tests/composer-pane-drop.test.mjs pins it), and,
   // since w11-e31-terminal-cont, the terminal pane around its close confirmation (3.6556.2 cccc2cf0a Zx Ie: shared-frame
@@ -114,7 +115,11 @@ test('main.jsx wraps the Code composer (renderMainComposer) in the view-tabs Cds
   // the preview close-tabs dialog (3.6556.2 cf580efe9 va: `r(Pe,{children:r(E.Root,{open:f,…`, Pe = shared-18 Qd = fx).
   // w13-close-chat-surface (E77): and the incognito top bar's Exit incognito (3.6556.2 shared-20 Qg:
   // `i(ne,{mode:b,className:"contents",children:x})`, b the opposite of the resolved mode; source-incognito-shell.jsx).
-  const roots = { 'source-btw-pane.jsx': 1, 'source-terminal-pane.jsx': 1, 'source-side-chat.jsx': 1, 'source-file-editor.jsx': 1, 'source-preview-tabs.jsx': 1, 'source-incognito-shell.jsx': 1 };
+  // W14-code r6 git R6DC-03 (gen-final-6 syncs this pin): and the branch switch dialog (3.6556.2 cc43287c9 Jie wraps
+  // he.Root in ap = shared-18 fx: `m(Ce,{density:"compact",experimental:lx,className:"contents",children:t})`).
+  // W14-code r8 (r8pa-02): source-file-editor.jsx has two fx roots — the selection chip and, as cbd02b8f2 portals each
+  // comment widget (`n(oe,{children:n("div",{dir:Je,className:"font-sans whitespace-normal","data-file-comment-card":!0,…})})`), the comment cards.
+  const roots = { 'source-btw-pane.jsx': 1, 'source-terminal-pane.jsx': 1, 'source-side-chat.jsx': 1, 'source-file-editor.jsx': 2, 'source-preview-tabs.jsx': 1, 'source-incognito-shell.jsx': 1, 'source-branch-switch-dialog.jsx': 1 };
   for (const file of fs.readdirSync(path.join(app, 'src')).filter((f) => /\.(jsx|mjs|js)$/.test(f) && f !== 'main.jsx' && !(f in roots)))
     assert.doesNotMatch(fs.readFileSync(path.join(app, 'src', file), 'utf8'), /<CdsRoot\b|createElement\(CdsRoot|h\(CdsRoot/, file);
   for (const [file, count] of Object.entries(roots))

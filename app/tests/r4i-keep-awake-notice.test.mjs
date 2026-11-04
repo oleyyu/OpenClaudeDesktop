@@ -16,11 +16,15 @@ const once = (text, needles, label) => { for (const needle of needles) assert.eq
 
 const { createKeepAwakeNotice, KEPT_AWAKE_MIN_HELD_MS, KEPT_AWAKE_MIN_AWAY_MS, SAMPLE_INTERVAL_MS, KEEP_AWAKE_NOTICE_GATE } = require('../electron/keep-awake-notice.cjs');
 const { createDesktopSettings } = require('../electron/desktop-settings.cjs');
-const { KEEP_AWAKE_BAND_USED_KEY, KEPT_AWAKE_MESSAGES, keptAwakeDuration, keptAwakeShownFor, keptAwakeNotice, createKeptAwakeStore } = await import('../src/kept-awake-model.mjs');
+// W14-code r6 sleep lane: the renderer band is the sliced 3.6556.2 cf74bc599 dO (generated/session-rail/sleep-band.mjs:
+// lO copy, uO duration, pO card props, the visibility rule K) over the c73f45bc3 k_ card; the host's model keeps only the
+// window store (tests/w14-r6-sleep.test.mjs drives the sliced band).
+const { createKeptAwakeStore, keptAwakeStore, subscribeSendBegun } = await import('../src/kept-awake-model.mjs');
+const KEPT_AWAKE_COPY = ['Claude kept your computer awake for {duration}.', 'This lets long tasks finish. Your computer can sleep as usual now.', 'Only when plugged in', 'Don’t keep awake'];
 
 const MIN = 6e4;
 
-test('cov0-05 official: main muI2IV6k thresholds, gate, notice log and session-side noteKeptAwake; renderer cf74bc599 band', () => {
+test('cov0-05 official: main muI2IV6k thresholds, gate, notice log and session-side noteKeptAwake; renderer cf74bc599 band', async () => {
   const main = read(`${reference}asar/.vite/build/index.chunk-muI2IV6k.js`);
   once(main, ['Bvr=6e4,Vvr=6e5,Hvr=6e5,Uvr="1781903805";function GU(){return NU()&&gy(Uvr,!0)}',
     'n>=Vvr&&s.maxAwayMs>=Hvr&&(d={sessionId:e,heldMs:n,awayMs:Math.round(s.maxAwayMs)})',
@@ -38,8 +42,11 @@ test('cov0-05 official: main muI2IV6k thresholds, gate, notice log and session-s
     'onlyPluggedIn:{defaultMessage:"Only when plugged in",id:"RcWyvP8gI5"}', 'dontKeepAwake:{defaultMessage:"Don\\u2019t keep awake",id:"6/uGp8JWcE"}',
     'function ew(e,t){let n=Math.max(1,Math.round(t/6e4));return ht(e,{hours:Math.floor(n/60),minutes:n%60},{unitDisplay:"short",listType:"unit",listStyle:"narrow"})}',
     'qC=!1', 'icon:"CoffeeCup",message:u(X,{...$C.keptAwake'], 'cf74bc599');
-  assert.equal(KEEP_AWAKE_BAND_USED_KEY, 'epitaxy-keep-awake-band-used');
-  assert.equal(KEPT_AWAKE_MESSAGES.dontKeepAwake.defaultMessage, 'Don’t keep awake');
+  const sliced = read(`${root}src/generated/session-rail/sleep-band.mjs`);
+  // W14-code r6 gen-final-6: the band-used key is the slice's own (sO, cf74bc599 ZC); the host's unused copy is gone.
+  assert.ok(sliced.includes('var sO = "epitaxy-keep-awake-band-used";'));
+  assert.equal((await import('../src/kept-awake-model.mjs')).KEEP_AWAKE_BAND_USED_KEY, undefined);
+  for (const copy of KEPT_AWAKE_COPY) assert.ok(sliced.includes(JSON.stringify(copy).replace('’', '\\u2019')) || sliced.includes(JSON.stringify(copy)), copy);
 });
 
 function tracker({ idle = () => 0 } = {}) {
@@ -141,25 +148,8 @@ test('cov0-05 desktop-settings: archived, failed or still-running sessions, batt
   assert.deepEqual(slept.kept(), [], 'slept');
 });
 
-test('cov0-05 renderer model: ew duration, the W visibility rule, nw actions and the window store', () => {
-  assert.equal(keptAwakeDuration(72 * MIN, 'en-US'), '1 hr 12 min');
-  assert.equal(keptAwakeDuration(10 * MIN, 'en-US'), '10 min');
-  assert.equal(keptAwakeDuration(1000, 'en-US'), '1 min');
-  assert.equal(keptAwakeDuration(120 * MIN, 'en-US'), '2 hr');
+test('cov0-05 renderer store: the window\'s keptAwake copy; a turn start clears it and tells the send-begun listeners (c06cf64bb IE)', () => {
   const keptAwake = { heldMs: 72 * MIN, endedAt: 1000 };
-  assert.equal(keptAwakeShownFor({ keptAwake }), 1000);
-  for (const blocked of [{ running: true }, { archived: true }, { whileWorking: false }, { bandUsed: true }, { dismissedEndedAt: 1000 }, { keptAwake: null }])
-    assert.equal(keptAwakeShownFor({ keptAwake, ...blocked }), null, JSON.stringify(blocked));
-  const runs = [];
-  const notice = keptAwakeNotice({ keptAwake, shownFor: 1000, onBattery: true, locale: 'en-US', onBatteryOff: () => runs.push('battery'), onTurnOff: () => runs.push('off'), onDismiss: () => runs.push('dismiss') });
-  assert.equal(notice.summary, 'Claude kept your computer awake for 1 hr 12 min.');
-  assert.equal(notice.details, 'This lets long tasks finish. Your computer can sleep as usual now.');
-  assert.equal(notice.icon, 'CoffeeCup'); assert.equal(notice.dismissKey, 'kept-awake:1000');
-  assert.deepEqual(notice.actions.map((action) => action.label), ['Only when plugged in', 'Don’t keep awake']);
-  notice.actions.forEach((action) => action.run()); notice.onDismiss();
-  assert.deepEqual(runs, ['battery', 'off', 'dismiss']);
-  assert.deepEqual(keptAwakeNotice({ keptAwake, shownFor: 1000, onBattery: false, onBatteryOff() {}, onTurnOff() {} }).actions.map((action) => action.label), ['Don’t keep awake']);
-  assert.equal(keptAwakeNotice({ keptAwake, shownFor: null }), null);
   const store = createKeptAwakeStore(); let changes = 0; store.subscribe(() => changes++);
   store.observe({ kind: 'desktop-kept-awake', threadId: 't', keptAwake });
   assert.deepEqual(store.get('t'), keptAwake);
@@ -167,58 +157,29 @@ test('cov0-05 renderer model: ew duration, the W visibility rule, nw actions and
   store.observe({ method: 'turn/started', params: { threadId: 't' } });
   assert.equal(store.get('t'), null); assert.equal(changes, 2);
   store.observe({ kind: 'desktop-kept-awake', threadId: 't', keptAwake: null }); assert.equal(changes, 2);
+  // The window's store: dO's kh(h, de) hears the session's sends (uuid, synthetic) — here its turn starts.
+  const heard = [];
+  const stop = subscribeSendBegun('w', (uuid, synthetic) => heard.push([uuid, synthetic]));
+  keptAwakeStore.observe({ method: 'turn/started', params: { threadId: 'other' } });
+  keptAwakeStore.observe({ method: 'turn/started', params: { threadId: 'w' } });
+  stop(); keptAwakeStore.observe({ method: 'turn/started', params: { threadId: 'w' } });
+  assert.deepEqual(heard, [[undefined, false]]);
 });
 
-test('cov0-05 wiring: main.jsx feeds the store and lists the band among SourceSessionNotices; zh-CN carries the copy', async () => {
+test('cov0-05 wiring: main.jsx feeds the store and mounts the sliced bands with the notice stack; zh-CN carries the copy', async () => {
   const main = read(`${root}src/main.jsx`);
-  once(main, ['import { keptAwakeStore } from "./kept-awake-model.mjs";', 'import { useKeptAwakeNotice } from "./source-kept-awake-notice.jsx";',
-    '      keptAwakeStore.observe(e);', 'const keptAwakeNotice = useKeptAwakeNotice({ sessionId: current, running, archived: session?.archived === true, config: boot?.config,',
-    '...(keptAwakeNotice ? [keptAwakeNotice] : []),'], 'main.jsx');
-  const hook = read(`${root}src/source-kept-awake-notice.jsx`);
-  once(hook, ['usePersistedValue(KEEP_AWAKE_BAND_USED_KEY, false) === true', 'save({ keepAwakeOnBattery: false }); use(shownFor);', 'save({ keepAwake: false }); use(shownFor);'], 'source-kept-awake-notice.jsx');
-  // cov2-03 still holds: the band list itself names no slot.
+  once(main, ['import { keptAwakeStore, sleepInterruptionStore } from "./kept-awake-model.mjs";', '      keptAwakeStore.observe(e);',
+    'import { SourceCodeNoticeRegion, SourceSessionBands, SourceTailSessionNotice, useInlineBandNotices, useInlineBandSink, useSessionBandsScopeStore, useTailSessionNotice } from "./source-sleep-notice.jsx";',
+    // r6 sleep review fix: the region (cc43287c9 Ide) is Code's only; Chat / Cowork keep the host stack (w14-r6-sleep).
+    // W14-code r7 notices (E81): and only under __gb__100087145 / the rollback switch (w14-r7-notices); otherwise the bands
+    // draw inline (c227f4d5e oL) before the stack.
+    '<SourceCodeNoticeRegion session={current || null}>{bands}{stack}{approveOnce}</SourceCodeNoticeRegion>'], 'main.jsx');
+  assert.match(main, /<SourceSessionBands key=\{`\$\{current\}:bands`\} sessionId=\{current\} scopeStore=\{bandsScope\}/);
+  assert.equal(fs.existsSync(`${root}src/source-kept-awake-notice.jsx`), false, 'the host hook is gone with the slice');
+  // The band list itself names no host keptAwake entry: the band is a slot registration (c227f4d5e "keptAwake").
   assert.equal(count(read(`${root}src/source-session-notices.jsx`), 'keptAwake'), 0);
   const { default: zh } = await import('../electron/i18n/zh-CN/session.mjs');
-  for (const message of Object.values(KEPT_AWAKE_MESSAGES)) assert.equal(typeof zh[message.defaultMessage], 'string', message.defaultMessage);
-});
-
-test('cov0-05 hook under Vite SSR: the band shows for the composer session, then not once the band was used', async () => {
-  const { createServer } = await import('vite');
-  const { default: react } = await import('@vitejs/plugin-react');
-  const React = (await import('react')).default;
-  const { renderToStaticMarkup } = await import('react-dom/server');
-  const server = await createServer({ configFile: false, root, plugins: [react()], server: { middlewareMode: true, hmr: false, ws: false, watch: null }, appType: 'custom', logLevel: 'error' });
-  const storage = new Map();
-  const saved = Object.getOwnPropertyDescriptor(globalThis, 'localStorage');
-  Object.defineProperty(globalThis, 'localStorage', { configurable: true, value: { getItem: (k) => storage.has(k) ? storage.get(k) : null, setItem: (k, v) => storage.set(k, String(v)), removeItem: (k) => storage.delete(k) } });
-  try {
-    const model = await server.ssrLoadModule('/src/kept-awake-model.mjs');
-    const { useKeptAwakeNotice } = await server.ssrLoadModule('/src/source-kept-awake-notice.jsx');
-    const { SourceSessionNotices } = await server.ssrLoadModule('/src/source-session-notices.jsx');
-    model.keptAwakeStore.observe({ kind: 'desktop-kept-awake', threadId: 's1', keptAwake: { heldMs: 25 * MIN, endedAt: 5 } });
-    let captured = null;
-    function Probe(props) { const notice = useKeptAwakeNotice(props); captured = notice; return React.createElement(SourceSessionNotices, { notices: notice ? [notice] : [] }); }
-    const html = renderToStaticMarkup(React.createElement(Probe, { sessionId: 's1', config: {}, saveSettings() {} }));
-    assert.match(html, /Claude kept your computer awake for 25 min\./);
-    assert.match(html, /data-kind="keptAwake"/);
-    assert.match(html, />Only when plugged in</); assert.match(html, />Don’t keep awake</);
-    assert.equal(renderToStaticMarkup(React.createElement(Probe, { sessionId: 's1', running: true, config: {} })), '');
-    assert.equal(renderToStaticMarkup(React.createElement(Probe, { sessionId: 's2', config: {} })), '');
-    assert.equal(renderToStaticMarkup(React.createElement(Probe, { sessionId: 's1', config: { keepAwake: false } })), '');
-    const patches = [];
-    renderToStaticMarkup(React.createElement(Probe, { sessionId: 's1', config: { keepAwakeOnBattery: false }, saveSettings: (p) => patches.push(p) }));
-    assert.deepEqual(captured.actions.map((a) => a.label), ['Don’t keep awake']);
-    renderToStaticMarkup(React.createElement(Probe, { sessionId: 's1', config: {}, saveSettings: (p) => patches.push(p) }));
-    captured.actions[0].run();
-    assert.deepEqual(patches, [{ keepAwakeOnBattery: false }]);
-    assert.equal(storage.get(`persisted.${model.KEEP_AWAKE_BAND_USED_KEY}`), 'true');
-    // usePersistedValue's server snapshot is its fallback, so the used flag is read back through the same store.
-    const { readPersistedValue } = await server.ssrLoadModule('/src/source-files-changes-adapters.jsx');
-    const bandUsed = readPersistedValue(model.KEEP_AWAKE_BAND_USED_KEY, false) === true;
-    assert.equal(bandUsed, true);
-    assert.equal(model.keptAwakeShownFor({ keptAwake: model.keptAwakeStore.get('s1'), bandUsed }), null);
-  } finally {
-    if (saved) Object.defineProperty(globalThis, 'localStorage', saved); else delete globalThis.localStorage;
-    await server.close();
-  }
+  for (const message of KEPT_AWAKE_COPY) assert.equal(typeof zh[message], 'string', message);
+  // E83: the band names the running assistant (useBandIntl keys "Claude" as "DeepSeek").
+  assert.equal(typeof zh['DeepSeek kept your computer awake for {duration}.'], 'string');
 });

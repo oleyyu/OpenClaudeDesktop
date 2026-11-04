@@ -37,7 +37,7 @@ try{
  await page.screenshot({path:path.join(evidence,'packaged-home.png')});
  await page.getByRole('button',{name:'Account menu'}).click();await page.getByRole('menuitem',{name:/Settings/}).click();await page.getByRole('radio',{name:'Dark',exact:true}).click();await page.waitForFunction(()=>document.documentElement.dataset.mode==='dark');await page.getByRole('dialog',{name:'Settings',exact:true}).getByRole('button',{name:'Close',exact:true}).click();await page.screenshot({path:path.join(evidence,'packaged-dark.png')});
  await page.evaluate(theme=>window.desktop.call('settings',{theme}),'light');await page.waitForFunction(()=>document.documentElement.dataset.mode==='light');
- await page.getByRole('textbox',{name:'Message DeepSeek'}).fill('Reply with CODE_DESKTOP_PACKAGED_OK on the first line, then a fenced js code block containing exactly: const packaged = true; Do not use tools.');
+ await page.getByRole('textbox',{ name: /^(?:Prompt|Message DeepSeek)$/ }).fill('Reply with CODE_DESKTOP_PACKAGED_OK on the first line, then a fenced js code block containing exactly: const packaged = true; Do not use tools.');
  await page.locator('[data-testid="code-prompt-send"]:not([inert] *)').click();
  await page.waitForFunction(()=>document.querySelector('.assistant-message')?.textContent.includes('CODE_DESKTOP_PACKAGED_OK')&&!document.querySelector('.source-working'),{},{timeout:150000});
  const codeBlock=page.locator('.scb-block').filter({hasText:'const packaged = true;'});await codeBlock.waitFor();
@@ -51,7 +51,7 @@ try{
  await page.mouse.move(800,400);await page.getByRole('tooltip').waitFor({state:'detached'});
  await page.screenshot({path:path.join(evidence,'packaged-conversation.png')});
  await app.evaluate(({BrowserWindow})=>BrowserWindow.getAllWindows()[0].setSize(800,600));
- await page.getByRole("button", {name: "View options", exact: true}).click(); await page.getByRole("menuitemcheckbox", {name: "Files", exact: true}).click();await page.getByRole('textbox',{name:'Filter files',exact:true}).fill('ui-smoke');await page.locator('.sfs-result-row').getByRole('button',{name:'ui-smoke.txt',exact:true}).click();await page.locator('.source-file-preview').filter({hasText:'CODE_DESKTOP_SMOKE_OK'}).waitFor();await page.getByRole('button',{name:'Close panel'}).click();
+ await page.getByRole("button", {name: "View options", exact: true}).click(); await page.getByRole("menuitemcheckbox", {name: "Files", exact: true}).click();await page.getByRole('textbox',{name:'Filter files',exact:true}).fill('ui-smoke');await page.locator('.sfs-results [data-tree-row]').getByRole('button',{name:'ui-smoke.txt',exact:true}).click();await page.locator('.source-file-preview').filter({hasText:'CODE_DESKTOP_SMOKE_OK'}).waitFor();await page.getByRole('button',{name:'Close panel'}).click();
  // Source labels: sidebar-groups.js hw "Hide sidebar" / Nb "Show sidebar".
  await page.getByRole('button',{name:'Hide sidebar'}).click();const bounds=await page.getByRole('button',{name:'Show sidebar'}).boundingBox();assert.ok(bounds.x>=85);
  assert.deepEqual(errors,[]);assert.deepEqual(requests,[]);

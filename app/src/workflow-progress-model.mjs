@@ -30,11 +30,8 @@ export function workflowEvent(run,event,at){
  if(event.type==='slot-failure'&&typeof event.message==='string'&&event.message)next.slotFailures=[...(run.slotFailures||[]),event.message].slice(-100);
  // The result preview a finished agent's end event carries: a run that fails later still counts empty results right.
  if(event.type==='end'&&event.kind!=='human'&&event.id&&typeof event.resultPreview==='string'){const agent=agents.find(a=>a.id===event.id);if(agent&&agent.state==='done')agent.resultPreview=event.resultPreview;}
- // /workflows p: a paused run admits no new agents until resumed; settling ends the pause.
- if(event.type==='paused')next.paused=event.paused===true;
- // A runtime that can't pause (a core-hosted engine: the DeepSeek /workflow host) says so; its card has no Pause.
- if(event.type==='pausable'){if(event.pausable===false){next.pausable=false;delete next.paused;}else delete next.pausable;}
- if(event.type==='settled')delete next.paused;
+ // W14-code r5 gen-final-5 (R5DC-03 residue): the host no longer pauses runs (E95, R4T-08b: Tasks only has Stop), so
+ // no paused / pausable state.
  next.usage={totalTokens:progress.reduce((sum,p)=>sum+(p.tokens||0),0)};
  return next;
 }
@@ -76,12 +73,3 @@ export function workflowCells(agents,capacity){
  return groups.flatMap((g,i)=>Array.from({length:alloc[i]},()=>({displayState:g.displayState,label:t('{count} agents',{count:g.count})})));
 }
 
-// Claude shared-16 $O/tk: one decimal, remove .0, promote rounded thousands.
-export function workflowTokens(value){
- for(const [divisor,suffix,next] of [[1e9,'B','B'],[1e6,'M','B'],[1e3,'k','M']]){
-  if(value<divisor)continue;
-  const rounded=Number((value/divisor).toFixed(1));
-  return rounded>=1000&&divisor<1e9?Number((value/(divisor*1000)).toFixed(1))+next:rounded+suffix;
- }
- return String(value);
-}

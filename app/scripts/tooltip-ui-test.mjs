@@ -140,7 +140,7 @@ async function cdsHover(locator, label) {
 async function neutral({ cool = false } = {}) {
   await page.mouse.move(120, 700);
   await page
-    .getByRole("textbox", { name: "Message DeepSeek", exact: true })
+    .getByRole("textbox", { name: /^(?:Prompt|Message DeepSeek)$/ })
     .focus();
   await noTooltip();
   if (cool) await page.waitForTimeout(450);
@@ -361,7 +361,7 @@ try {
     return {
       variant: node.dataset.variant,
       glyphs: kbds.map((kbd) => (kbd.querySelector('[aria-hidden="true"]') ?? kbd).textContent),
-      spoken: kbds.map((kbd) => kbd.querySelector(".scds-sr")?.textContent ?? null),
+      spoken: kbds.map((kbd) => kbd.querySelector(".sr-only")?.textContent ?? null),
       fontSize: getComputedStyle(node).fontSize,
       ink: kbds.every((kbd) => getComputedStyle(kbd).color === muted),
       gap: getComputedStyle(node).columnGap,
@@ -479,12 +479,12 @@ try {
     true,
   );
   assert.equal(
-    await page.getByRole("menu", { name: "Session menu", exact: true }).count(),
+    await page.locator('[role="menu"]:not([aria-label]):not([aria-labelledby])').count(),
     0,
   );
   // Enter still performs the original button action, then Escape returns focus.
   await options.press("Enter");
-  await page.getByRole("menu", { name: "Session menu", exact: true }).waitFor();
+  await page.locator('[role="menu"]:not([aria-label]):not([aria-labelledby])').waitFor();
   assert.equal(await options.getAttribute("aria-expanded"), "true");
   await noTooltip();
   await escapeMenu(options);
@@ -507,7 +507,7 @@ try {
   );
   // c360a9e1c-GPs-MV9u.js mm (7387-7420) / Fp (6760-6810): since 0.2.114 the
   // title and folder pill use Zt CDS tooltips ("Rename" / cwd), not native titles.
-  assert.equal(await page.locator(".st-title").getAttribute("title"), null);
+  assert.equal(await page.locator(":is(.st-title,button[data-pane-title])").getAttribute("title"), null);
   // R4i-gui GU1: rail mode (source-titlebar.jsx:471/:475 gate .st-folder on !railMode) moves the folder to the rail's
   // Environment card, whose chip (repo-name-chip.mjs pLe) is a CdsButton under a CdsTooltip ("Working folder" + the
   // path), never a native title.
@@ -592,7 +592,7 @@ try {
   const send = page.locator('[data-testid="code-prompt-send"]:not([inert] *)');
   assert.equal(await send.count(), 0, "no Send in the presets card without a draft");
   await page
-    .getByRole("textbox", { name: "Message DeepSeek", exact: true })
+    .getByRole("textbox", { name: /^(?:Prompt|Message DeepSeek)$/ })
     .fill("fixture:scroll");
   await send.waitFor();
   // lM `ne`: the Send button sits in a div.flex under CdsTooltip; with fork on offer (y) the content is multiline rows.
@@ -698,7 +698,7 @@ try {
   // R05 (c099c328d :8870-8895 Tm rows; cc43287c9 :28620 stayOnDraftHint = Home draft): on Home the Send tooltip is
   // two rows, 'Send' ⏎ and 'Send and stay here' ⌘⏎ (no ⌘⌥⏎ fork row: thread/fork is unsupported).
   // R4i-gui GU1: the Home draft's presets card also shows Send only with a draft (lM sendOnDraftOnly).
-  await page.getByRole("textbox", { name: "Message DeepSeek", exact: true }).fill("home tooltip probe");
+  await page.getByRole("textbox", { name: /^(?:Prompt|Message DeepSeek)$/ }).fill("home tooltip probe");
   const homeSend = page.locator('[data-testid="code-prompt-send"]:not([inert] *)');
   await homeSend.waitFor();
   await page.mouse.move(120, 700);

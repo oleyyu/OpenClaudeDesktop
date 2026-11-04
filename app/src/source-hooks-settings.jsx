@@ -72,7 +72,7 @@ export function SourceHooksSettings({ boot, engine, customize, cwd, initialState
     { key: 'matcher', header: t('Matcher'), width: 20 },
     { key: 'command', header: t('Command') },
     { key: 'source', header: t('Source'), width: 32 },
-    ...(switchable ? [{ key: 'controls', header: <span className="cz-sr-only">{t('Actions')}</span>, width: 32 }] : []),
+    ...(switchable ? [{ key: 'controls', header: <span className="sr-only">{t('Actions')}</span>, width: 32 }] : []),
   ];
   return <div className="cz-page hk-page" data-cz-page="hooks" data-hooks-page="">
     <PageHeader title={t('Hooks')} searchLabel={t('Search hooks')} searchValue={query} onSearch={setQuery} actions={refresh} />

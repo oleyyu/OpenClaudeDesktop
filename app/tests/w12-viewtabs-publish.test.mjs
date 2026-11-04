@@ -13,7 +13,8 @@ import { ionSource } from '../scripts/official-3.6556.2.mjs';
 //   its Field wrapper), the Field parts and the Base UI Combobox parts code-routines / cowork-scheduled read.
 // - item 9: shared-frame yo / Sh / Ch / wh / Jg / Lo and shared-25 QV, so artifact-library, working-line, code-composer,
 //   transcript-rows and sessions-page import them instead of keeping copies; session-rail imports code-current's UV.
-// - item 10: cfe7c4b3b se / L / ie, so code-current terminal-tab-overflow.mjs re-exports instead of slicing.
+// - item 10: cfe7c4b3b se / L / ie, so code-current terminal-tab-overflow.mjs re-exports instead of slicing. W14-code r2
+//   closeout-2 (DC-03) retired that re-export; gen-final-2 unpublished L / ie (no reader left), se stays published.
 // Official chunks are read as text, never executed. SSR in middleware mode only.
 const root = path.resolve(import.meta.dirname, '..');
 const read = file => fs.readFileSync(path.join(root, file), 'utf8');
@@ -33,7 +34,6 @@ const published = {
   BaseComboboxEmpty: [VF, 'Nv', 'k'], BaseComboboxItem: [VF, 'Tv', 'P'], BaseComboboxItemIndicator: [VF, 'Ev', 'N'], BaseComboboxGroup: [VF, '_v', 'I'],
   BaseComboboxGroupLabel: [VF, 'vv', 'F'], BaseComboboxList: [VF, 'iv', 'V'], BaseComboboxPopup: [VF, 'mv', 'L'], BaseComboboxPositioner: [VF, 'fv', 'R'],
   BaseComboboxPortal: [VF, 'dv', 'z'],
-  viewTabRtlArrowKey: ['cfe7c4b3b-BF79K6ux.js', 'L'], viewTabOverflowTypeaheadResetKeys: ['cfe7c4b3b-BF79K6ux.js', 'ie'],
   // w12 viewtabs-cont: for the settings / diff / side-chat lanes.
   CdsTextInputField: [SF, 'eM', 'Oi'], CdsTextAreaField: [SF, 'tM', 'Di'], cdsCheckboxRowClass: [SF, 'DS', 'Fs'],
   cdsCheckboxTopAlignClass: [SF, 'OS', 'Ls'], cdsCheckboxDescriptionClass: [SF, 'kS', 'Is'], preventMultiClickSelection: [SF, 'Ks', '$u'],
@@ -90,8 +90,9 @@ test('pure helpers behave as the official ones', () => {
   assert.deepEqual([...vt.setToggle(new Set(['a']), 'b')], ['a', 'b']);
   assert.equal(vt.reducedMotionQuery, '(prefers-reduced-motion: reduce)');
   assert.equal(vt.reduceMotionAttribute, 'data-reduce-motion');
-  assert.equal(vt.viewTabRtlArrowKey('ArrowLeft'), 'ArrowRight');
-  assert.deepEqual([...vt.viewTabOverflowTypeaheadResetKeys], ['ArrowUp', 'ArrowDown', 'Home', 'End', 'ArrowRight', 'Delete']);
+  // W14-code r2 gen-final-2: L / ie are no longer published (their only reader, the code-current re-export, is retired).
+  assert.equal('viewTabRtlArrowKey' in vt, false);
+  assert.equal('viewTabOverflowTypeaheadResetKeys' in vt, false);
   assert.equal(vt.cdsIconAliases.Animation, 'PlayCircle');
   assert.ok(vt.cdsComboboxItemMatches({ label: 'Café', value: 'x' }, 'cafe'));
 });

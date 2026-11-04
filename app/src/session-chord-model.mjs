@@ -4,7 +4,9 @@
 // where S = !_&&!x (the session's metadata is loaded and it is one this account may act on), C = t?.isArchived,
 // pe = tn(e=>e.starredIds).includes(e.id) (pinned) and Gn(q)?.isWorking the row's working status. A chord that does
 // not apply leaves `r` unset, so the key is neither handled nor preventDefaulted: it reaches the page and the menus as
-// if no chord were bound. The whole block is gated by ccd_palette_session_actions (H), which B25 ports as on.
+// if no chord were bound. The whole block is gated by ccd_palette_session_actions (H). W14-code r5 gates-r5-01 (E81):
+// the gate is not in the desktop's Uon, so it is off and main.jsx leaves the chords unhandled on the Code surface
+// (shortcuts-dialog-model.mjs codeSessionActionsGate); this model is what runs once the gate is open.
 // Locally "working" is the core's active turn (state.active), a session operation still in flight (review, fork, …:
 // operationPending) or the sidebar's working state (sessionState === "working"); the same facts the ⌘⇧⌫ path
 // (source-sidebar.jsx archiveShortcut) and sessionAction("archive") already refuse.
@@ -91,19 +93,6 @@ function toArchivedIdSet(archivedIds, fallbackRowKey) {
   return set;
 }
 
-// Pure adjacent-key calculation (shared-16 Sh candidate order [...n.slice(r+1), ...n.slice(0,r).reverse()]).
-export function sessionChordArchiveNeighbour(keys = [], rowKey, archivedIds) {
-  if (!Array.isArray(keys) || !rowKey) return null;
-  const targetId = rowKeySessionId(rowKey);
-  const r = keys.findIndex((key) => sameRowKey(key, rowKey, targetId));
-  if (r === -1) return null;
-  const archived = toArchivedIdSet(archivedIds, rowKey);
-  const ordered = [...keys.slice(r + 1), ...keys.slice(0, r).reverse()];
-  return ordered.find((key) => {
-    const id = rowKeySessionId(key);
-    return (id === undefined || !archived.has(id)) && (key === undefined || !archived.has(key));
-  }) ?? null;
-}
 
 // shared-16 Sh(e, t): finds the adjacent button in tm("code").buttons when n[r] has data-selected === "focused".
 export function sessionChordAdjacentButton(buttons = [], rowKey, archivedIds) {
@@ -295,7 +284,8 @@ export function dispatchSessionChord(command, {
 
 // R4h-topbar K1 (Y1-R3-topbar-1, TT-03 2.42304.0 c73f45bc3 Vh): View options row list assembly — first the toggles the
 // titlebar folded away (jh(Rh(...), hiddenMainPaneCount).folded, in toggle order, each with icon, label, shortcut,
-// and checked: openPanes.has(kind)), then Background tasks and Plan.
+// and checked: openPanes.has(kind)), then Background tasks and Plan. W14-code cccc-20 (3.6556.2 c73f45bc3 j_): then Runs
+// (`y_(k, { icon: Is.runs, label: "Runs", checked: c.has("runs"), … })`, k = f_ the session a scheduled task started).
 export function titlebarViewOptionsItems({
   surface = "code",
   session = false,
@@ -306,6 +296,7 @@ export function titlebarViewOptionsItems({
   hiddenCount = 0,
   hasTasks = false,
   hasPlan = false,
+  hasRuns = false,
   onToggleTerminal,
   onTogglePane,
 } = {}) {
@@ -315,6 +306,7 @@ export function titlebarViewOptionsItems({
       .map((spec) => ({ kind: spec.pane, label: spec.label, icon: spec.icon, shortcut: spec.shortcut })),
     ...((hasTasks || open.has("tasks")) ? [{ kind: "tasks", label: "Background tasks", icon: "AgentsSimple" }] : []),
     ...((hasPlan || open.has("plan")) ? [{ kind: "plan", label: "Plan", icon: "Checklist" }] : []),
+    ...(hasRuns ? [{ kind: "runs", label: "Runs", icon: "Clock" }] : []),
   ].map((item) => ({
     ...item,
     checked: open.has(item.kind),

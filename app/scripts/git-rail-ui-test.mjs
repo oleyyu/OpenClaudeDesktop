@@ -69,7 +69,7 @@ async function verifySource() {
   assert.equal(current.sourceSha256, build.sourceSha256, "Build changed during this test");
   assert.equal(JSON.parse(await fs.readFile(path.join(root, "package.json"), "utf8")).version, build.version, "Package version must match build");
   for (const entry of build.sources) assert.equal(sha(await fs.readFile(path.join(root, entry.path))), entry.sha256, `Build is stale: ${entry.path}`);
-  for (const required of ["src/source-git-status.jsx", "src/source-git-status.css", "src/git-rail-model.mjs", "electron/git-status.cjs", "electron/main.cjs", "src/main.jsx"])
+  for (const required of ["src/source-git-status.jsx", "src/git-rail-model.mjs", "electron/git-status.cjs", "electron/main.cjs", "src/main.jsx"])
     assert.ok(build.sources.some(entry => entry.path === required), `Build does not identify ${required}`);
   const hashes = Object.fromEntries(await Promise.all(testSources.map(async file => [file, sha(await fs.readFile(path.join(root, file)))])));
   if (testSourceHashes) assert.deepEqual(hashes, testSourceHashes, "Test or fixture changed during this run");
@@ -85,7 +85,7 @@ const diffCalls = async () => { try { return (await fs.readFile(gitLog, "utf8"))
 // (Uc: [data-cds-disabled-reason-wrapper] with aria-describedby → the hidden [data-cds-disabled-reason] span).
 const RAIL_ROW = 'aside[aria-label="Session details"] nav[aria-label="Repository and pull request controls"] [data-rail-changes-row]';
 const railProbe = () => page.evaluate((selector) => { const el = document.querySelector(selector), action = [...(el?.querySelectorAll("button") ?? [])].find(button => button.textContent === "Commit changes");
-  return { sameNode: el === window.__railRow && document.contains(el), bands: document.querySelectorAll("nav.sg-status").length, disabled: action?.disabled ?? null, title: action?.getAttribute("title") ?? null,
+  return { sameNode: el === window.__railRow && document.contains(el), bands: document.querySelectorAll("nav:has(> .scroll-fade-y)").length, disabled: action?.disabled ?? null, title: action?.getAttribute("title") ?? null,
     reason: (() => { const wrap = action?.closest("[data-cds-disabled-reason-wrapper]"), id = wrap?.getAttribute("aria-describedby"); return id ? document.getElementById(id)?.textContent ?? null : null; })(), busy: action?.getAttribute("aria-busy") ?? null }; }, RAIL_ROW);
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 async function fixtureTurns() { return Object.values(JSON.parse(await fs.readFile(path.join(profile, "fixture-threads.json"), "utf8")).threads)[0].turns; }
@@ -110,9 +110,9 @@ try {
   // i.e. both feature commits (f1 +1, f2 +1) plus the dirty change.txt (+2 −1). DiffCounts (diff-counts.mjs Xe) animates
   // its numbers for 400ms, so wait for the settled values.
   await page.waitForFunction((selector) => { const el = document.querySelector(selector); return el?.querySelector(".text-git-added")?.textContent === "+4" && el.querySelector(".text-git-removed")?.textContent === "−1"; }, RAIL_ROW);
-  const band = await row.evaluate(el => ({ bands: document.querySelectorAll("nav.sg-status").length,
+  const band = await row.evaluate(el => ({ bands: document.querySelectorAll("nav:has(> .scroll-fade-y)").length,
     diffLabel: el.querySelector('button[aria-label^="Open changes, "]')?.getAttribute("aria-label") ?? null,
-    behind: el.querySelectorAll(".sg-behind").length }));
+    behind: el.querySelectorAll("[role=img][aria-label*=behind]").length }));
   metrics.band = band;
   assert.equal(band.bands, 0, "rail mode hides the band");
   assert.equal(band.diffLabel, "Open changes, 4 added, 1 removed");
@@ -157,8 +157,12 @@ try {
   assert.equal(git(cwd, "log", "--oneline").split("\n").filter(Boolean).length, 3, "the app itself never committed");
   await row.getByRole("button", { name: /^Open changes, / }).click();
   // F12: the default "All changes" scope lists the two feature commits' files plus change.txt.
-  await page.locator(".sdiff-file").first().waitFor();
-  await page.waitForFunction(() => document.querySelector(".sdiff-file-body") !== null);
+  // W14-code r6 pierre: the Changes body is c44d00c7f Ju (local_pierre_changes_body): a file is its header
+  // [data-diff-file-header="<path>"] (Xu, light DOM) and its rows live in the diffs-container shadow root ([data-line-type]);
+  // the host rows (.sdiff-file / .sdiff-file-body) are the switch's rollback side.
+  await page.locator(".sdiff-file, [data-diff-file-header]:not([data-diff-file-header=''])").first().waitFor();
+  await page.waitForFunction(() => document.querySelector(".sdiff-file-body") !== null
+    || [...document.querySelectorAll("diffs-container")].some((host) => host.shadowRoot?.querySelector("[data-line-type]")));
   const diffOpened = await diffCalls();
   assert.equal(diffOpened - diffBeforeClick, 1, "opening the Changes panel reads the diff once");
   await sleep(Math.max(0, 25000 - (Date.now() - clickedAt)));
@@ -168,7 +172,7 @@ try {
   assert.ok(pollCalls <= 4, `polling is ~10s, saw ${pollCalls} calls in 25s`);
   metrics.diffCallsWhilePolling = await diffCalls() - diffOpened;
   assert.equal(metrics.diffCallsWhilePolling, 0, "unchanged polls do not re-read the worktree diff");
-  assert.deepEqual(await page.locator(".sdiff-file").evaluateAll(nodes => nodes.map(node => node.dataset.filePath).sort()), ["change.txt", "f1.txt", "f2.txt"], "the branch diff stays on screen across polls");
+  assert.deepEqual(await page.locator(".sdiff-file, [data-diff-file-header]:not([data-diff-file-header=''])").evaluateAll(nodes => nodes.map(node => node.dataset.filePath ?? node.getAttribute("data-diff-file-header")).sort()), ["change.txt", "f1.txt", "f2.txt"], "the branch diff stays on screen across polls");
   const polled = await railProbe();
   assert.equal(polled.sameNode, true, "the rail Changes row stays mounted across polls"); assert.equal(polled.disabled, true); assert.equal(polled.reason, RESPONDING_REASON); assert.equal(polled.title, null); assert.equal(polled.busy, null);
   checks.push(`Commit sends "${COMMIT_TEXT}" as the only input; while responding the action is disabled with "${RESPONDING_REASON}" (no aria-busy, no spinner); rail Changes row node kept; no local git commit; ${pollCalls} status polls in 25s with 0 diff re-reads while the Changes panel is open`);
@@ -212,18 +216,18 @@ try {
   app = await electron.launch({ executablePath, args: [path.join(root, "tests/fixtures/composer-window.cjs")], env: fixtureEnv });
   page = await app.firstWindow(); page.setDefaultTimeout(15000);
   page.on("pageerror", error => rendererErrors.push(error.message));
-  const bandRow = page.locator('[data-fixture="band"] .sg-row').first();
+  const bandRow = page.locator('[data-fixture="band"] [class*="@container/branch-row"]').first();
   await bandRow.waitFor();
   await page.evaluate(() => document.fonts.ready);
 
   // 5. Behind indicator markup with showBehind forced on (fixture only).
-  const behindSpan = page.locator('[data-fixture="band"] .sg-row').first().locator(".sg-behind");
+  const behindSpan = page.locator('[data-fixture="band"] [class*="@container/branch-row"]').first().locator("[role=img][aria-label*=behind]");
   const behind = await behindSpan.evaluate(el => {
     const style = getComputedStyle(el), glyph = el.querySelector('[data-cds="Icon"]');
     return { role: el.getAttribute("role"), label: el.getAttribute("aria-label"), title: el.getAttribute("title"), height: el.getBoundingClientRect().height,
       control: getComputedStyle(document.documentElement).getPropertyValue("--cds-h-control").trim(), gap: style.columnGap, paddingLeft: style.paddingInlineStart, paddingRight: style.paddingInlineEnd,
       color: style.color, muted: getComputedStyle(document.documentElement).getPropertyValue("--cds-text-muted").trim(), glyphSize: glyph && getComputedStyle(glyph).fontSize,
-      count: el.querySelector(".sg-behind-count").textContent, numeric: getComputedStyle(el.querySelector(".sg-behind-count")).fontVariantNumeric,
+      count: el.querySelector(".tabular-nums").textContent, numeric: getComputedStyle(el.querySelector(".tabular-nums")).fontVariantNumeric,
       // Token probes resolve inside the same compact-density scope as the row.
       controlPx: (() => { const probe = document.createElement("div"); probe.style.height = "var(--cds-h-control)"; el.parentElement.append(probe); const px = probe.getBoundingClientRect().height; probe.remove(); return px; })() };
   });
@@ -234,22 +238,22 @@ try {
   assert.equal(behind.glyphSize, "16px"); assert.equal(behind.count, "1"); assert.equal(behind.numeric, "tabular-nums");
   const mutedRgb = await page.evaluate(() => { const probe = document.createElement("span"); probe.style.color = "var(--cds-text-muted)"; document.body.append(probe); const color = getComputedStyle(probe).color; probe.remove(); return color; });
   assert.equal(behind.color, mutedRgb);
-  const reserved = await page.locator('[data-fixture="band"] .sg-row').nth(1).locator(".sg-dismiss-reserved").evaluate(el => el.getBoundingClientRect());
+  const reserved = await page.locator('[data-fixture="band"] [class*="@container/branch-row"]').nth(1).locator("span.aspect-square.w-control.shrink-0").evaluate(el => el.getBoundingClientRect());
   assert.equal(reserved.width, 24); assert.equal(reserved.height, 24);
-  assert.equal(await page.locator('[data-fixture="band"] .sg-row').nth(1).locator(".sg-dismiss").count(), 0);
+  assert.equal(await page.locator('[data-fixture="band"] [class*="@container/branch-row"]').nth(1).locator("[aria-label=Dismiss]").count(), 0);
   checks.push("Fixture-only behind indicator: role=img, aria-label = tooltip, ArrowDown 16px + tabular count '1', height 24px (--cds-h-control), gap 3px, padding-inline 5px, text-muted; dismissReserved renders a 24px square");
 
   // 6. Uncounted dirty tree and the responding state of the band Commit (fixture only).
   await page.getByRole("button", { name: "Fixture: toggle uncounted" }).click();
   // Only the first (live) row follows the toggle; the dismiss-reserved row keeps its counted status.
-  await page.waitForFunction(() => document.querySelector('[data-fixture="band"] .sg-row')?.querySelector(".sg-diff") === null);
-  assert.equal(await bandRow.locator(".sg-diff").count(), 0, "uncounted dirty tree shows no +/- in the band");
+  await page.waitForFunction(() => document.querySelector('[data-fixture="band"] [class*="@container/branch-row"]')?.querySelector(".text-git-added") === null);
+  assert.equal(await bandRow.locator("button:has(.text-git-added)").count(), 0, "uncounted dirty tree shows no +/- in the band");
   await page.getByRole("button", { name: "Fixture: toggle responding" }).click();
-  const respondingBand = await bandRow.locator(".sg-action").evaluate(el => ({ disabled: el.disabled, title: el.getAttribute("title"), reason: (() => { const wrap = el?.closest(".source-tooltip-disabled-trigger"), id = wrap?.getAttribute("aria-describedby"); return id ? document.getElementById(id)?.textContent ?? null : null; })(), busy: el.getAttribute("aria-busy") }));
+  const respondingBand = await bandRow.getByRole("button", { name: "Commit changes", exact: true }).evaluate(el => ({ disabled: el.disabled, title: el.getAttribute("title"), reason: (() => { const wrap = el?.closest("[data-cds-disabled-reason-wrapper]"), id = wrap?.getAttribute("aria-describedby"); return id ? document.getElementById(id)?.textContent ?? null : null; })(), busy: el.getAttribute("aria-busy") }));
   metrics.respondingFixture = { band: respondingBand };
   assert.deepEqual(respondingBand, { disabled: true, title: null, reason: RESPONDING_REASON, busy: null });
   await page.getByRole("button", { name: "Fixture: toggle responding" }).click();
-  assert.equal(await bandRow.locator(".sg-action").getAttribute("title"), null); assert.equal(await bandRow.locator(".source-tooltip-disabled-trigger").count(), 0); assert.equal(await bandRow.locator(".sg-action").isDisabled(), false);
+  assert.equal(await bandRow.getByRole("button", { name: "Commit changes", exact: true }).getAttribute("title"), null); assert.equal(await bandRow.locator("[data-cds-disabled-reason-wrapper][aria-describedby]").count(), 0); assert.equal(await bandRow.getByRole("button", { name: "Commit changes", exact: true }).isDisabled(), false);
   await page.getByRole("button", { name: "Fixture: toggle uncounted" }).click();
   checks.push(`Uncounted dirty tree shows no +/- in the band; responding disables the band Commit with "${RESPONDING_REASON}", no native title and no busy state; it re-enables when the turn ends`);
   await page.screenshot({ path: path.join(directory, "band-fixture.png") });

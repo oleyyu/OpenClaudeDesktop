@@ -41,7 +41,9 @@ test('the generated graph is current (--check) and every mapping is accounted fo
   assert.equal(checked.referenceVersion, '3.6556.2');
   assert.equal(checked.referenceSnapshot, 'snapshots/claude-3.6556.2-20261025-192807');
   assert.deepEqual(Object.keys(checked.publicNames).sort(), Object.keys(page).sort());
-  assert.equal(Object.keys(checked.publicNames).length, 20);
+  // 21 since W14-code global (shared-08): c165c93f1 ie, the Code workspace trust dialog (WorkspaceTrustDialog); 23 since
+  // W14-code r7 css7-branch-picker-bl: cd2687f9f we / k (cc43287c9 bL / yL), the composer's branch chip.
+  assert.equal(Object.keys(checked.publicNames).length, 23);
   for (const { name } of checked.adapters) assert.ok(name in adapters, `adapter ${name} is exported`);
   for (const { name } of checked.sharedAdapters) assert.ok(name in sharedAdapters, `shared adapter ${name} is exported`);
   // Every unreachable branch replaced by an adapter is listed as a host difference with its reason.

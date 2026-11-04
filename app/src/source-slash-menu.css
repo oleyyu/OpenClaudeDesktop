@@ -15,7 +15,8 @@
 .slash-subtitle{margin-left:auto;flex-shrink:0;padding-left:8px;color:var(--cds-text-muted);font-size:var(--cds-font-size-caption,12px);line-height:var(--cds-leading-caption,16px);}
 .slash-header{padding:4px 8px;color:var(--cds-text-muted);font-size:var(--cds-font-size-footnote,12px);line-height:var(--cds-leading-footnote,15px);font-weight:500;}
 /* The active row's description is the view-tabs CDS Tooltip (3.6556.2 c17e03edc d via ccc334009 B), no local styles. */
-.slash-filter,.slash-argument{position:fixed;z-index:59;pointer-events:none;user-select:none;white-space:pre;font:400 14px/24px var(--font-ui);transform:translateY(-50%);color:var(--cds-text-muted)}.slash-filter{color:color-mix(in oklab,var(--cds-text-muted) 75%,transparent)}.slash-argument{opacity:.5;color:var(--cds-text-primary)}
+/* W14-code css/composer-prompt-text-size: the inline hints take the editor's size, c6a992d55 .epitaxy-root --prompt-text-size (13 / 14 / 15px with [data-chat-text-size]). */
+.slash-filter,.slash-argument{position:fixed;z-index:59;pointer-events:none;user-select:none;white-space:pre;font:400 var(--prompt-text-size,14px)/24px var(--font-ui);transform:translateY(-50%);color:var(--cds-text-muted)}.slash-filter{color:color-mix(in oklab,var(--cds-text-muted) 75%,transparent)}.slash-argument{opacity:.5;color:var(--cds-text-primary)}
 .slash-local-status{margin:16px 0;padding:16px;border:1px solid var(--cds-alpha-2,#0002);border-radius:8px;font-size:13px;}
 .slash-local-status header{display:flex;justify-content:space-between;align-items:center;}.slash-local-status h3{margin:0;font-size:14px}.slash-local-status button{background:none;border:0;color:inherit;}
 

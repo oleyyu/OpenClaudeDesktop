@@ -8,6 +8,7 @@ import { t } from "../electron/i18n/index.mjs";
 // suggestions', 280px wide and at most 280px tall, placed 24px below the caret line (above it when there is more
 // room there) and kept 16px inside the window; each option a menu row with the 14px emoji and ':name:' (truncate).
 // Its rows reuse the mention dropdown's menu-row styling (Wd = rn(), the same row class).
+const EMOJI_GLYPH_STYLE = Object.freeze({ fontSize: 14 });
 export function SourceEmojiDropdown({ options = [], highlighted = 0, caret, onSelect, onHover, onClose }) {
   const list = useRef(null);
   const [viewport, setViewport] = useState(() => ({ width: window.innerWidth, height: window.innerHeight }));
@@ -33,7 +34,9 @@ export function SourceEmojiDropdown({ options = [], highlighted = 0, caret, onSe
           <button key={option.name} type="button" role="option" aria-selected={index === highlighted} data-option-index={index}
             data-highlighted={index === highlighted ? "" : undefined} className="smd-option"
             onMouseDown={(event) => event.preventDefault()} onClick={() => onSelect(option)} onMouseEnter={() => onHover?.(index)}>
-            <span aria-hidden="true" className="sed-char">{option.char}</span>
+            {/* W14-code r8 css8-composer-leftover-handcopies: ceb864fac's glyph span, verbatim ("flex size-[14px] shrink-0
+                items-center justify-center leading-none", style {fontSize: 14}); the host .sed-char copy is gone. */}
+            <span className="flex size-[14px] shrink-0 items-center justify-center leading-none" style={EMOJI_GLYPH_STYLE}>{option.char}</span>
             <span className="smd-label">{`:${option.name}:`}</span>
           </button>
         ))}

@@ -442,7 +442,9 @@ test('W12c #27 official + generator: Sg reads He = shared-46 sL through Jr (the 
   assert.equal(count(generated('shared-78.mjs'), 'desktopBootFeatures'), 0);
   assert.ok(manifest.callSites.some((c) => c.raw && c.features.includes('te=Jr(ee),ne=e?.type==="local"?te:p!=="merged"')));
   assert.ok(manifest.importPins.some((p) => p.source === 'c73f45bc3-B7hbL7H9.js' && p.names.L === 'He'));
-  assert.equal(A.appFeaturesStore.getState().appFeatures.nestedArchiveKeepsFamily.status, 'unavailable');
+  // gates-r4-14 (E81): jPKPzV-P bIr settles the feature to nW(()=>QU("nestedArchiveKeepsFamily",vjr)); vjr = rjr()&&Fb("2631345040",!0)
+  // with rjr=Pb("2371478310") forced on in Hon, so the official answer is supported (the "unavailable" literal is only the sync initial value).
+  assert.equal(A.appFeaturesStore.getState().appFeatures.nestedArchiveKeepsFamily.status, 'supported');
   // The adapter: te is the store selecting sL once the host knows the family's loops / monitors, else held back.
   const adapters = fs.readFileSync(path.join(app, 'src/source-turn-box-adapters.jsx'), 'utf8');
   assert.equal(count(adapters, '? (host?.archiveFactsKnown?.(r) === true ? archiveHeldBack(t.sessions, r) : true) : undefined));'), 1);

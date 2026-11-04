@@ -146,14 +146,10 @@ const modules = [
   // ---- Step 1, 3.6556.2.
   // (owner-resize-observer.mjs is gone: 3.6556.2 view-tabs publishes shared-25 gf, the element window's ResizeObserver,
   // so cf74bc599 Ab imports it from there, D1.)
-  // cf74bc599 Ab: publish the element's bottom edge (plus an offset) on the transcript region as a CSS variable.
-  { target: 'transcript-region-edge.mjs', source: 'cf74bc599-CRYqipWN.js', version: V3,
-    exports: { Ab: 'useTranscriptRegionEdge', Ob: 'SUGGESTED_TASK_END', kb: 'STICKY_PROMPT_END', yC: 'SUGGESTED_TASK_EDGE_OFFSET' },
-    features: {
-      Ab: ['i?.closest("[data-epitaxy-transcript-region]") ??', 'i?.parentElement;', 'i.getBoundingClientRect().bottom - a.getBoundingClientRect().top + n',
-        'a.style.getPropertyValue(e) !== t && a.style.setProperty(e, t)', 'a.style.removeProperty(e)', '(a = [e, t, n]),'],
-      Ob: ['"--epitaxy-suggested-task-end"'], kb: ['"--epitaxy-sticky-prompt-end"'], yC: ['yC = 12'],
-    } },
+  // W14-code r2 closeout-2 (DC-06): transcript-region-edge.mjs (cf74bc599 Ab, the element's bottom edge published on the
+  // transcript region as a CSS variable) is retired. Its two official callers are the floating suggested task card
+  // (`xe=Ab(Ob,be,yC)`, not mounted with presets on, D10) and the sticky prompt bubble (`O=Ab(kb,D,0)`, under
+  // claudeai_cc_epitaxy_sticky_prompt, off on the desktop, E81), so nothing imported it.
   // c89efce1a Rs: freeze the header cells' min-width while the table streams; Ls the re-measure stride.
   { target: 'table-column-freeze.mjs', source: 'c89efce1a-C_nlrFif.js', version: V3, exports: { Rs: 'useTableColumnFreeze', Ls: 'tableRemeasureStride' },
     features: {

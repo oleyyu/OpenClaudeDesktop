@@ -32,7 +32,6 @@ export default {
   'tokens': '个 token',
   'Couldn’t update the working tree.': '无法更新工作树。',
   'Failed to process image. You can try again.': '图片处理失败，你可以重试。',
-  'Stop the running task before deleting it.': '请先停止正在运行的任务，再删除。',
   'More options for {name}': '“{name}”的更多选项',
   'Commit as WIP': '提交为 WIP',
   'Discard changes': '放弃更改',

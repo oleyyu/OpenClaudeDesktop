@@ -1,11 +1,10 @@
-import { t, tn } from "../electron/i18n/index.mjs";
+import { t } from "../electron/i18n/index.mjs";
 // Queued / steered messages (2.2553.1 cc43287c9 :28296-28345, :28980-29000;
 // cf74bc599 :3889-4240) over the real Codex 0.155.1 app-server queue:
 // thread/queue/add|list|update|delete|reorder|start, thread/queue/changed and
 // turn/steer. Lanes: Enter while a turn runs = "next" (turn/steer),
 // Cmd+Enter = "later" (thread/queue/add). Entries are QueuedSubmission
 // {id,input,clientUserMessageId}; the bar only renders what the server lists.
-export const QUEUE_LANES = Object.freeze({ next: "steer", later: "queued" });
 
 export function emptyQueue(threadId = null) {
   return { threadId, entries: [], lockedIds: [], revision: 0 };
@@ -93,9 +92,8 @@ export function previewText(input = []) {
   return parts.join(" ").replace(/\s+/g, " ").trim() || "…";
 }
 
-export function queuedCountLabel(count) {
-  return tn(count, "{count} message queued", "{count} messages queued");
-}
+// W14-code r7 r7c-01: the bar's count is the original's (cf74bc599 WE / GE: "{count, plural, one {# message queued}
+// other {# messages queued}}", ezsVmYezso); the host's queuedCountLabel is gone.
 
 export function lockEntry(queue, id) {
   if (!queue.entries.some((entry) => entry.id === id) || queue.lockedIds.includes(id)) return queue;

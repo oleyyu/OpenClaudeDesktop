@@ -62,12 +62,10 @@ test("bootEngine: a reported core wins; a failed start names the chosen core (el
   assert.equal(bootEngine({ connected: true, config: { core: "kimi" } }), "codex");
   assert.equal(bootEngine(null), "codex");
 });
-test("a failed Kimi start titles the sidebar connection menu after Kimi, not Codex (main.jsx engine = bootEngine(boot))", async () => {
-  const { connectionMenuHeader } = await import("../src/account-label-model.mjs");
-  const header = connectionMenuHeader(bootEngine({ connected: false, config: { core: "kimi" } }), false);
-  assert.match(header, /Kimi/); assert.doesNotMatch(header, /Codex/);
+// W14-code r4 复核 (E95): the sidebar footer's Connection settings menu (the former user of engine here) is gone, as
+// official hL df-footer-aux is empty in code mode; main.jsx still derives engine from bootEngine(boot).
+test("main.jsx derives the running engine from bootEngine(boot)", async () => {
   const fs = await import("node:fs/promises"), path = await import("node:path");
   const main = await fs.readFile(path.resolve(import.meta.dirname, "../src/main.jsx"), "utf8");
   assert.match(main, /const engine = bootEngine\(boot\);/);
-  assert.match(main, /connectionMenuHeader\(engine, !!boot\?\.connected\)/);
 });

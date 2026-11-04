@@ -9,12 +9,13 @@ import fs from 'node:fs';
 
 // SSR of the transcript pane states (approval-entry-current.js _d :1141-1190,
 // xu :4211-4217, Cl :4224-4233). Middleware mode only; no browser/Electron/Codex.
-let server, M, Status;
+let server, M, Status, Rows;
 before(async () => {
   server = await createServer({ configFile: false, root: path.resolve(import.meta.dirname, '..'), plugins: [react()],
     server: { middlewareMode: true, hmr: false, watch: null }, appType: 'custom', logLevel: 'error' });
   M = await server.ssrLoadModule('/src/source-transcript-states.jsx');
   ({ SourceTranscriptStatus: Status } = await server.ssrLoadModule('/src/source-transcript-status.jsx'));
+  Rows = await server.ssrLoadModule('/src/generated/working-line/turn-status-rows.mjs');
 });
 after(() => server?.close());
 const count = (html, needle) => html.split(needle).length - 1;
@@ -22,7 +23,7 @@ const count = (html, needle) => html.split(needle).length - 1;
 test('skeleton is Zw around k_: padding 48, hold none, bubble bar and O_ paragraphs in order', () => {
   const html = renderToStaticMarkup(React.createElement(M.SourceTranscriptSkeleton));
   assert.match(html, /^<div data-transcript-skeleton="" aria-hidden="true" class="h-full overflow-hidden \[scrollbar-gutter:stable_both-edges\]" style="padding-top:48px"><div class="w-full \[--msg-gap:0px\]">/);
-  // gd: {none:"handoff"} with turnStatusRows (GrowthBook __gb__2846116625, served on by the host), else {none:"route"}.
+  // 3.6556.2: {none:"handoff"} outright (c96d752d0 Att; W14-code r4 gates-r4-11, the gate is no longer served).
   assert.match(html, /data-cds="SkeletonGroup" data-motion="wave" data-hold="none" data-hold-reason="handoff" data-shown=""/);
   // 2.42304.0 Ob: overflow-hidden, and the fixed height (not fillColumn); gp does not pass decorative, so role=status.
   assert.match(html, /data-shown="" role="status" class="text-prose flex flex-col overflow-hidden fade-out-bottom h-\[calc\(100vh-12.5rem\)\]"><span class="sr-only" data-skeleton-label="true">Loading<\/span><div aria-hidden="true" class="contents">/);
@@ -89,7 +90,8 @@ test('SourceMessageSkeleton: fillColumn grows into the column; decorative drops 
 
 test('EmptyState u classes; load failure is role=alert with the source copy and a primary Retry', () => {
   const html = renderToStaticMarkup(React.createElement(M.SourceTranscriptLoadFailure, { onRetry() {} }));
-  assert.match(html, /^<div role="alert" class="flex h-full flex-col items-center justify-center gap-md px-lg py-lg text-center source-empty-state"><div class="flex flex-col items-center gap-1"><p class="max-w-\[36ch\] break-words text-body text-primary">Couldn’t load this session<\/p><p class="max-w-\[36ch\] break-words text-footnote text-muted">Something went wrong while loading earlier messages\.<\/p><\/div><div class="flex flex-wrap items-center justify-center gap-1"><button type="button" data-cds="Button" data-variant="primary"/);
+  assert.match(html, /^<div role="alert" class="flex h-full flex-col items-center justify-center gap-md px-lg py-lg text-center source-empty-state"><div class="flex flex-col items-center gap-1"><p class="max-w-\[36ch\] break-words text-body text-primary">Couldn’t load this session<\/p><p class="max-w-\[36ch\] break-words text-footnote text-muted">Something went wrong while loading earlier messages\.<\/p><\/div><div class="flex flex-wrap items-center justify-center gap-1"><button type="button" data-cds="Button" class="[^"]*"><span aria-hidden="true" class="[^"]*"><span data-cds-part="paint" class="[^"]* bg-fill-primary /);
+  // W14-code r6 R6DC-02: Retry is shared-frame CdsButton (primary paint), not the replica's data-variant.
   assert.match(html, />Retry<\/span><\/button><\/div><\/div>$/);
   assert.equal(M.LOAD_FAILURE_TITLE, 'Couldn’t load this session');
   assert.doesNotMatch(html, /fixture resume failure/);
@@ -126,12 +128,15 @@ test('skeleton bubble bar keeps the source content-box sizing over the local bor
 test('thinking status: no thinking label, chip or toggle in the working line while a thought streams or just ended', () => {
   const thinking = { id: 'r', turnId: 'turn', type: 'reasoning', summary: [] };
   const base = { sessionKey: 'a', turnId: 'turn', ready: true, connected: true, running: true, items: [thinking], itemPhases: { r: 'streaming' } };
-  const render = extra => renderToStaticMarkup(React.createElement(Status, { ...base, ...extra }));
+  // W14-code r4 gates-r4-11: the line sits in the Code session's TurnStatus rows (cf74bc599 Gn); the flag itself is not
+  // served, so U6 shows its "Thinking" chip while an open thought streams (working-line.test.mjs), never a toggle.
+  const render = extra => renderToStaticMarkup(React.createElement(Rows.TurnStatusRowsOverride, { value: true }, React.createElement(Status, { ...base, ...extra })));
   const now = Date.now();
-  for (const html of [render({ onToggleThinking() {} }), render({ onToggleThinking() {}, thinkingShown: true }), render({}),
-    render({ items: [{ ...thinking, startedAtMs: now - 4400, completedAtMs: now - 100 }], itemPhases: { r: 'completed' }, onToggleThinking() {} })]) {
+  const streamed = [render({ onToggleThinking() {} }), render({ onToggleThinking() {}, thinkingShown: true }), render({})];
+  const ended = render({ items: [{ ...thinking, startedAtMs: now - 4400, completedAtMs: now - 100 }], itemPhases: { r: 'completed' }, onToggleThinking() {} });
+  for (const html of [...streamed, ended]) {
     assert.match(html, /data-testid="code-working-line" data-turn-working="true"/);
-    assert.doesNotMatch(html, /Thinking|Thought for|<button/);
+    assert.doesNotMatch(html, html === ended ? /Thinking|Thought for|<button/ : /Thinking…|Thought for|<button/);
     assert.match(html, /role="status" aria-live="polite">Working…</);
   }
 });

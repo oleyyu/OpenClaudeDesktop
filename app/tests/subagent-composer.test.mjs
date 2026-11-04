@@ -2,8 +2,8 @@ import test, { before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import path from 'node:path';
 
-// The tasks pane's follow-up box for a continuable sub-agent (Thread.canAcceptDirectInput; the DeepSeek bridge sends
-// its messages through the subagent service). Server-rendered; effects do not run.
+// The tasks pane's sub-agent view (the host follow-up box was removed in W14-code r5pa-07, E95). Server-rendered;
+// effects do not run.
 const app = path.resolve(import.meta.dirname, '..');
 let server, React, render, pane, agentModel;
 before(async () => {
@@ -21,16 +21,28 @@ const state = { items: { parent: [spawn], 'child-1': [] }, threads: { 'child-1':
 const html = (props) => render(React.createElement(pane.SourceTasksPane, { state, sessionId: 'parent', views: [{ threadId: 'child-1', toolId: 'spawn-1', ownerId: 'parent', description: 'probe child' }],
   onLoad: async () => {}, onBack() {}, onClose() {}, onOpen() {}, renderItem: () => null, ...props }));
 
-test('a continuable sub-agent gets a follow-up box named after it; a one-shot one does not', () => {
-  const open = html({ onMessage: async () => {}, canMessage: () => true });
-  assert.match(open, /class="sag-composer"/);
-  assert.match(open, /placeholder="Message probe child…"/);
-  assert.match(open, /aria-label="Send"/);
-  assert.doesNotMatch(html({ onMessage: async () => {}, canMessage: () => false }), /sag-composer/);
+// W14-code r5pa-07 (E95): 3.6556.2 cccc2cf0a's sub-agent view has no composer and en-US has no "Message {name}…", so the
+// host's follow-up box is gone even for a continuable sub-agent (canAcceptDirectInput); the pane takes no onMessage.
+test('the sub-agent view has no host follow-up box (E95: official has none)', () => {
+  const out = html({ onMessage: async () => {}, canMessage: () => true });
+  assert.doesNotMatch(out, /sag-composer|Message probe child…|<textarea/);
   assert.doesNotMatch(html({}), /sag-composer/);
 });
 
-test('a one-shot refusal reads in the app’s words; other failures keep the core’s message', () => {
-  assert.equal(agentModel.subAgentMessageError(new Error('This sub-agent can’t take messages: it ran once and finished. Ask DeepSeek to start a new one.')), 'This sub-agent can’t take messages: it ran once and finished.');
-  assert.equal(agentModel.subAgentMessageError(new Error('Connection lost.')), 'Connection lost.');
+// W14-code r5 cleanup: the follow-up box's error wording (agent-model subAgentMessageError) left with the box.
+test('the follow-up error helper is gone with the host follow-up box', () => {
+  assert.equal('subAgentMessageError' in agentModel, false);
+});
+
+// W14-code pa2-08: 3.6556.2 cccc2cf0a bP / FP — the model line is the single ICU "Model <v>{model}</v>" in
+// p.text-footnote.text-muted-as-secondary (v: span.text-secondary), the stats footnote one ICU message (dAbHM3tAVv)
+// with tabular-nums; no host .sag-model-note / .sag-stats.
+test('subagent panel: bP model line and FP stats footnote are the official ICU sentences', () => {
+  const withModel = { ...state, threads: { 'child-1': { ...state.threads['child-1'], model: 'probe-model' } },
+    items: { ...state.items, 'child-1': [] }, usage: { 'child-1': { total: { totalTokens: 1 } } }, taskTurnFacts: { 'child-1': { durationMs: 2000 } } };
+  const out = render(React.createElement(pane.SourceTasksPane, { state: withModel, sessionId: 'parent', views: [{ threadId: 'child-1', toolId: 'spawn-1', ownerId: 'parent', description: 'probe child' }],
+    onLoad: async () => {}, onBack() {}, onClose() {}, onOpen() {}, renderItem: () => null }));
+  assert.match(out, /<p class="text-footnote text-muted-as-secondary">Model <span class="text-secondary">probe-model<\/span><\/p>/);
+  assert.match(out, /<p class="text-footnote text-muted-as-secondary tabular-nums" data-subagent-stats="">0 tool calls · 1 token · 2s<\/p>/);
+  assert.doesNotMatch(out, /sag-model-note|sag-stats/);
 });

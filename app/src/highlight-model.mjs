@@ -19,7 +19,6 @@ const EXTRA_ALIASES = Object.freeze({ env: "dotenv", fortran: "fortran-free-form
 export const PLAIN_LANGUAGES = Object.freeze(["text", "ansi"]);
 const bundled = new Map();
 for (const [id, ...names] of BUNDLED_LANGUAGES) { bundled.set(id, id); for (const name of names) bundled.set(name, id); }
-export const BUNDLED_LANGUAGE_IDS = Object.freeze(BUNDLED_LANGUAGES.map(([id]) => id));
 export function normalizeLanguage(language) {
   if (language != null && typeof language !== "string") return null;
   const label = (language ?? "").trim().toLowerCase() || "text";

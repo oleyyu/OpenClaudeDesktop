@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { retryingLabel, retryingStatus, transcriptSparkSize, transcriptStatusPresentation as status } from "../src/transcript-status-model.mjs";
+import { retryingLabel, retryingStatus, transcriptStatusPresentation as status } from "../src/transcript-status-model.mjs";
 import { emptyState, reduce } from "../src/state.js";
 
 const ready = { sessionKey: "thread-a", ready: true, connected: true };
@@ -100,26 +100,13 @@ test("a DeepSeek retry with counts reads \"{short error} · Retrying (n/max)\" (
   assert.deepEqual([odd.retrying["thread-a"].attempt, odd.retrying["thread-a"].maxRetries], [null, null]);
 });
 
-test("thread switching reads only the new owner's active state and text size is bounded", () => {
+test("thread switching reads only the new owner's active state", () => {
   const state = reduce(emptyState, { event: { method: "turn/started", params: { threadId: "thread-a", turn: { id: "turn-a" } } } });
   assert.equal(status({ ...ready, sessionKey: "thread-b", running: !!state.active["thread-b"] }).phase, "idle");
-  for (const [size, expected] of [["s", 16], ["m", 18], ["l", 20], ["unexpected", 18], ["__proto__", 18], ["constructor", 18]])
-    assert.equal(transcriptSparkSize(size), expected);
-});
-
-test("Y5 K tasks button copy follows the source plurals and hides without counts", async () => {
-  const { taskButtonLabel } = await import("../src/transcript-status-model.mjs");
-  assert.equal(taskButtonLabel(1, 0), "1 running task");
-  assert.equal(taskButtonLabel(3, 0), "3 running tasks");
-  assert.equal(taskButtonLabel(3, 2), "3 running tasks", "running wins over a held finished count");
-  assert.equal(taskButtonLabel(0, 1), "1 task finished");
-  assert.equal(taskButtonLabel(0, 2), "2 tasks finished");
-  assert.equal(taskButtonLabel(0, 0), null);
-  assert.equal(taskButtonLabel(), null);
 });
 
 test("Whe holds the last running count as finished for exactly 1500ms, then clears", async (t) => {
-  const { createFinishedTaskHold, FINISHED_TASK_HOLD_MS, taskButtonLabel } = await import("../src/transcript-status-model.mjs");
+  const { createFinishedTaskHold, FINISHED_TASK_HOLD_MS } = await import("../src/transcript-status-model.mjs");
   assert.equal(FINISHED_TASK_HOLD_MS, 1500);
   t.mock.timers.enable({ apis: ["setTimeout"] });
   let changes = 0;
@@ -129,12 +116,10 @@ test("Whe holds the last running count as finished for exactly 1500ms, then clea
   assert.equal(hold.finished(2, "a"), 0, "running counts are never reported as finished");
   assert.equal(hold.finished(0, "a"), 2, "the render where running drops reads the last non-zero count");
   hold.update(0, "a");
-  assert.equal(taskButtonLabel(0, hold.finished(0, "a")), "2 tasks finished");
   t.mock.timers.tick(FINISHED_TASK_HOLD_MS - 1);
   assert.equal(hold.finished(0, "a"), 2); assert.equal(changes, 0);
   t.mock.timers.tick(1);
   assert.equal(hold.finished(0, "a"), 0); assert.equal(changes, 1);
-  assert.equal(taskButtonLabel(0, hold.finished(0, "a")), null);
   // A restart cancels the pending clear; a different session never inherits the hold.
   hold.update(1, "a"); hold.update(0, "a"); t.mock.timers.tick(1000); hold.update(1, "a");
   t.mock.timers.tick(1000); assert.equal(hold.finished(0, "a"), 1); assert.equal(changes, 1);

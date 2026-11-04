@@ -253,6 +253,6 @@ export function SourceCodeBlock({ text = "", language = "text", isFrontier = fal
           : <RunOutput command={blockRun.command} output={kept.output || t("(no output)")} altScreen={false} error={kept.error ? t(kept.error) : null}
             onOpenInTerminal={live.tracked && actions ? () => actions.openInTerminal(runId) : null} />}
       </div>}
-    <span id={statusId} className="scb-status" role="status" aria-live="polite">{message}</span>
+    <span id={statusId} className="scb-status sr-only" role="status" aria-live="polite">{message}</span>
   </div>;
 }

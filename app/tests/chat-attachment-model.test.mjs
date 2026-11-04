@@ -45,14 +45,12 @@ test("the document block reads back whole, closing tags inside neutralized", () 
   assert.deepEqual(model.splitDocumentBlocks(two), { text: "Please compare", documents: [{ name: 'a "b".pdf', path: '/x/a "b" <c>.pdf', pages: 2 }, { name: "n.docx", path: "/x/n.docx" }] });
   assert.deepEqual(model.splitDocumentBlocks(`${block}\nmore text`).documents, [], "only trailing blocks are documents");
   assert.deepEqual(model.splitDocumentBlocks('quote: <document name="x" path="/y">\nno close'), { text: 'quote: <document name="x" path="/y">\nno close', documents: [] });
-  assert.equal(model.hasDocumentBlock(block.slice(2)), true, "a message that is only a document");
   assert.deepEqual(model.splitDocumentBlocks(42), { text: "", documents: [] });
 });
 
 test("G5 chatfn-attachments-05: a <document> block the user typed is text, not an attachment", () => {
   const typed = 'Here is the format:\n\n<document name="a.pdf" path="/x/a.pdf">\nbody\n</document>';
   assert.deepEqual(model.splitDocumentBlocks(typed), { text: typed, documents: [] });
-  assert.equal(model.hasDocumentBlock(typed.slice(typed.indexOf("<document"))), false);
   assert.deepEqual(model.previewWithoutDocuments(typed), { text: typed, names: [], cut: false });
   // Typed text before a real block: the typed one stays, the host's block reads back.
   const real = model.documentBlock({ name: "r.pdf", path: "/x/r.pdf", text: "real" });
@@ -122,12 +120,10 @@ test("official 3.6556.2 originals for the budget and the screenshot item", () =>
     "This chat has {count} of {max} images (including PDF pages). Consider starting a new chat.",
     "This chat has {max} or more images. If new images don\\u2019t send, start a new chat.",
     "This chat has {count} of {max} images. Consider starting a new chat."]) assert.ok(shared78.includes(`defaultMessage:"${text}"`), text);
-  assert.equal(model.SCREENSHOT_LABEL, "Take a screenshot");
-  assert.equal(model.SCREENSHOT_ERROR, "Could not capture screen.");
   assert.equal(model.SCREENSHOT_TESTID, "add-menu-screenshot");
   assert.equal(model.SCREENSHOT_ICON, "Camera");
   assert.ok(menu.includes(`screenshot:"${model.SCREENSHOT_TESTID}"`));
-  assert.ok(menu.includes(`defaultMessage:"${model.SCREENSHOT_LABEL}"`) && menu.includes(`defaultMessage:"${model.SCREENSHOT_ERROR}"`));
+  assert.ok(menu.includes('defaultMessage:"Take a screenshot"') && menu.includes('defaultMessage:"Could not capture screen."'));
   // ra's slot order: uploadFile, addPeople, googleDrive, addFolder, teach, screenshot.
   assert.ok(/uploadFile:\w+,addPeople:null,googleDrive:[^]{0,200}?addFolder:\w+,teach:\w+,screenshot:\w+,/.test(menu), "screenshot follows teach");
 });
@@ -142,7 +138,8 @@ test("main.jsx: Chat's Add menu has the item after Record a skill; staged files 
   assert.match(main, /call\("convert-document", \{ path: entry\.path \}\)/);
   assert.match(main, /pendingConversions\(attachments, \{ surface: mode, inFlight: conversionsInFlight\.current \}\)/);
   assert.match(main, /call\("capture-screenshot"\)/);
-  assert.match(main, /\.catch\(\(\) => setError\(t\("Could not capture screen\."\)\)\)/);
+  // W14-code r4-composer-07: c752b32f8 addError uGOETn5bfV — a danger toast in Code; Chat keeps the card (codeDanger).
+  assert.match(main, /\.catch\(\(error\) => \{ console\.warn\("Could not capture screen", error\); codeDanger\(t\("Could not capture screen\."\)\); \}\)/);
   assert.match(main, /imageLimitNotice\(conversationImageCount\(\{ items, entries: attachments \}\)\)/);
   assert.match(main, /attachmentInputs\(attachments, \{ fileMentions: coreTakesFileMentions\(boot\?\.core\) \}\)/, "the composer input call is unchanged (converted entries carry it)");
 });

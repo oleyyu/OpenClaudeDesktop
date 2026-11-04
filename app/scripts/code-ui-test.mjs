@@ -13,11 +13,10 @@ try{
  const page=await app.firstWindow();page.on('pageerror',e=>errors.push(e.message));
  await page.getByRole('button',{name:'Model',exact:true}).filter({hasText:'Test model'}).waitFor();await page.evaluate(()=>document.fonts.ready);
  await page.locator('.sc-pet-animation[data-ready] svg').waitFor();
- const metrics=await page.evaluate(()=>({iconFont:getComputedStyle(document.querySelector('.source-sidebar-nav-row [data-cds="Icon"]')).fontFamily,sidebar:document.querySelector('.app-sidebar').getBoundingClientRect().width,composer:document.querySelector('.sc-composer').getBoundingClientRect().width,stats:document.querySelector('[data-testid="epitaxy-stats-card"]')?.getBoundingClientRect().width??null,sidebarBackground:getComputedStyle(document.querySelector('.app-sidebar')).backgroundColor,composerPadding:getComputedStyle(document.querySelector('.sc-composer .sc-card')).padding,sends:document.querySelectorAll('[data-testid="code-prompt-send"]').length}));
+ const metrics=await page.evaluate(()=>({iconFont:getComputedStyle(document.querySelector('.source-sidebar-nav-row [data-cds="Icon"]')).fontFamily,sidebar:document.querySelector('.app-sidebar').getBoundingClientRect().width,composer:document.querySelector('.sc-composer').getBoundingClientRect().width,sidebarBackground:getComputedStyle(document.querySelector('.app-sidebar')).backgroundColor,composerPadding:getComputedStyle(document.querySelector('.sc-composer .sc-card')).padding,sends:document.querySelectorAll('[data-testid="code-prompt-send"]').length}));
  assert.match(metrics.iconFont,/Anthropicons/);assert.equal(metrics.sidebar,288);assert.equal(metrics.composer,768);// R4i-gui GU1: the Code composer is the presets card (source-composer.jsx .sc-composer around the shell's .sc-card; the
  // retired code-ui.jsx Composer's .composer and the host .sc-surface are gone) and lM shows no Send without a draft
- // (sendOnDraftOnly). The stats card is code-start's [data-testid="epitaxy-stats-card"]; its width and the card padding
- // are recorded for a runtime re-baseline.
+ // (sendOnDraftOnly). The card padding is recorded for a runtime re-baseline; the 2.x stats card is gone (R4DC-N2, E95).
  assert.equal(metrics.sends,0,'no Send on the empty presets card');
  checks.push('original font, glyph, Lottie load and measured home dimensions');
  // 0.2.113: no dictation control (hideDictation). R4i-gui GU1 (R4g-composer CP3, R4i-graph GR3): the presets card's + is
@@ -34,7 +33,7 @@ try{
  });
  assert.deepEqual({bar:metrics.chin.bar,voice:metrics.chin.voice,add:metrics.chin.addWidth!==null,addInBar:metrics.chin.addInBar,mode:metrics.chin.mode,place:metrics.chin.place,folder:metrics.chin.folder,contextRow:metrics.chin.contextRow},
   {bar:true,voice:0,add:true,addInBar:false,mode:true,place:true,folder:true,contextRow:0});
- const editor=page.getByRole('textbox',{name:'Message DeepSeek'});
+ const editor=page.getByRole('textbox',{ name: /^(?:Prompt|Message DeepSeek)$/ });
  await editor.fill(Array.from({length:30},(_,i)=>`Draft line ${i+1}`).join('\n'));
  // ca80fca8d yP editor maxHeight 'min(24rem, 40svh)' (B05): grows to 24rem, or 40% of the window height when that is less, before it scrolls.
  {const [height,cap]=await editor.evaluate(node=>[node.getBoundingClientRect().height,Math.min(384,innerHeight*0.4)]);assert.ok(Math.abs(height-cap)<1,`editor capped at ${cap}px, got ${height}px`);}
@@ -75,11 +74,8 @@ try{
   const popup=page.locator(name==='Permission mode'?'.sp-permission-menu':name==='Account menu'?'[role="menu"]':name==='Add'?'[role="menu"][aria-label="Add"]':'[role="dialog"][data-cds="Popover"]');await popup.waitFor();const box=await popup.boundingBox();const vp=await page.evaluate(()=>({w:innerWidth,h:innerHeight}));assert.ok(box.x>=0&&box.y>=0&&box.y+box.height<=vp.h&&box.x+box.width<=vp.w);await page.keyboard.press('Escape');
  }
  checks.push('popover collision placement and Escape');
- // code-home Kw: stats tabs are aria-hidden disabled buttons until the card is hovered/focused (deferred mount).
- await page.locator('[data-testid="epitaxy-stats-card"]').hover();await page.getByRole('tablist',{name:'Date range'}).waitFor();
- const heatmap=()=>page.locator('.activity-heatmap').innerHTML();const allHeatmap=await heatmap();await page.getByRole('tab',{name:'7d',exact:true}).click();assert.equal(await heatmap(),allHeatmap);checks.push('heatmap independent of aggregate range');
- // code-home cT: an empty range reads "No model usage in this range".
- await page.getByRole('tab',{name:'Models',exact:true}).click();await page.getByText('No model usage in this range').waitFor();await page.getByRole('tab',{name:'Overview',exact:true}).click();
+ // R4DC-N2 (E95): the presets home has no stats card (no Date range / Overview / Models tabs, no heatmap).
+ assert.equal(await page.locator('[data-testid="epitaxy-stats-card"]').count(),0);
  await page.getByRole('button',{name:'What’s new',exact:true}).click();const releaseNotes=page.getByRole('dialog',{name:'What’s new',exact:true});await releaseNotes.waitFor();/* R03: the shared Dialog's Header Close (titlebar-release-notes.js B; 3.6556.2 cb63ed069 B u.Header showClose). */await releaseNotes.getByRole('button',{name:'Close',exact:true}).click();await releaseNotes.waitFor({state:'detached'});checks.push('local release notes');
  await page.getByRole('button',{name:'Account menu'}).click();await page.getByRole('menuitem',{name:/Settings/}).click();await page.getByRole('radio',{name:'Dark',exact:true}).click();await page.waitForFunction(()=>document.documentElement.dataset.mode==='dark');assert.equal(await page.locator('html').getAttribute('data-mode'),'dark');await page.getByRole('dialog',{name:'Settings',exact:true}).getByRole('button',{name:'Close',exact:true}).click();await page.screenshot({path:path.join(evidence,'code-source-dark.png')});
  {const settingsDialog=page.getByRole('dialog',{name:'Settings',exact:true});if(await settingsDialog.count()){await page.keyboard.press('Escape');await settingsDialog.waitFor({state:'detached'});}}await page.evaluate(theme=>window.desktop.call('settings',{theme}),'light');await page.waitForFunction(()=>document.documentElement.dataset.mode==='light');/* no appearance items in the account menu (Claude parity) */

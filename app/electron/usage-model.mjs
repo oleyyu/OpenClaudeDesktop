@@ -323,11 +323,12 @@ export function planUsageSummary(limits, {locale, core, account} = {}) {
  const top = rows.filter(row => !row.description).reduce((best, row) => best === null || row.used > best.used ? row : best, null);
  return {windows: rows, credit: credits.find(entry => entry.name === null) ?? credits[0] ?? null, spend: spending.find(entry => entry.name === null) ?? null, resetCredits, notice, top, plan};
 }
-// hd fe: '{pct}% of 5-hour limit' for the session window, else '{limit}: {pct}%'.
+// 3.6556.2 c227f4d5e F3 (2.42304.0 hd fe): '{pct}% of session limit' (R/GumoF8us) for the session window, else '{limit}:
+// {pct}%' (HEmVVR1ITN). W14-code r8 r8c-03: 3.6556.2 dropped 2.42304.0's '{pct}% of 5-hour limit'.
 export function planWindowSummary(row) {
  if (!row) return null;
  const percent = Math.round(row.used);
- return row.minutes === 300 ? t('{percent}% of 5-hour limit', {percent}) : t('{limit}: {percent}%', {limit: row.label, percent});
+ return row.minutes === 300 ? t('{percent}% of session limit', {percent}) : t('{limit}: {percent}%', {limit: row.label, percent});
 }
 // shared-156 lU (2.42304.0 shared-5 sA): 'Resets in {minutes} min' within the hour, 'Resets in {hours} hr {minutes} min'
 // within the day, else cU; null once the reset has passed (3.6556.2 has no 'Resets soon').
@@ -388,14 +389,32 @@ export function composerUsageNotice(limits, {core = 'Codex', locale, now = Date.
   // plain-text form.
   return {kind: 'usage', level: limit.tone === 'info' ? 'info' : 'danger', summary, details: [lead, shown].filter(Boolean).join(' '),
    ...(shown ? {countdown: {resetsAtSeconds: fullest.window.resetsAt, absolute: shown, lead}} : {}),
-   dismissKey: `usage:${limit.kind}:${fullest?.window.resetsAt ?? ''}`, reset: limit.reset === true, nudge: limit.nudge ?? null};
+   dismissKey: `usage:${limit.kind}:${fullest?.window.resetsAt ?? ''}`, reset: limit.reset === true, nudge: limit.nudge ?? null,
+   // W14-code r8 r8c-01: credits in use is tL's active overage (`b = v.isActive && !v.isApproachingLimit`).
+   ...(limit.kind === 'credits_in_use' ? {activeOverage: true} : {})};
  }
  if (!fullest || fullest.window.usedPercent < COMPOSER_USAGE_THRESHOLD) return null;
  const percent = Math.min(100, Math.round(fullest.window.usedPercent));
  const summary = minutes === 300 ? t('Approaching session usage limit')
   : minutes === 10080 ? t('Approaching weekly usage limit')
   : t('Approaching usage limit');
- return {kind: 'usage', level: percent >= 90 ? 'danger' : 'warning', summary, details: reset, dismissKey: `usage:${fullest.slot}:${fullest.window.resetsAt ?? ''}`, reset: false};
+ // W14-code r8 r8c-02: the dismissal's window slot (tL `k` = the approaching window's name, "5h" / "7d"), the threshold
+ // it passed (tL `I` = Is(C), the window's surpassed threshold: here the band's own steps, 80 and the 90 where it turns
+ // danger) and how long a dismissal holds (tL `L` = the window's resets_at, seconds).
+ return {kind: 'usage', level: percent >= 90 ? 'danger' : 'warning', summary, details: reset, dismissKey: `usage:${fullest.slot}:${fullest.window.resetsAt ?? ''}`, reset: false,
+  window: minutes === 300 ? '5h' : minutes === 10080 ? '7d' : fullest.slot, threshold: percent >= 90 ? 90 : COMPOSER_USAGE_THRESHOLD, validUntil: finite(fullest.window.resetsAt) ? fullest.window.resetsAt : 0};
+}
+// W14-code r8 r8c-01 / r8c-02: where the Code usage band's dismissals persist. An approaching window's goes to
+// localStorage under c2ad44bb9 r's key (`epitaxy-usage-limit-approaching-dismissed-v3:${org ?? ""}`; no account here, so
+// the bare ":" suffix) as a map {[window]: {validUntil, threshold}} (tL `z((e) => ({...e, [k ?? ""]: {validUntil: L,
+// threshold: I}}))`); the active overage's ("Now using usage credits") is one sessionStorage flag (tL `Ze("epitaxy-usage-
+// limit-active-overage-dismissed", !1, …)`, shared-25 UG).
+export const USAGE_APPROACHING_DISMISSED_KEY = (org) => `epitaxy-usage-limit-approaching-dismissed-v3:${org ?? ''}`;
+export const USAGE_ACTIVE_OVERAGE_DISMISSED_KEY = 'epitaxy-usage-limit-active-overage-dismissed';
+// shared-3 m_ (tL `ws(R[k ?? ""], I, L)`): a dismissal holds while the threshold has not risen past the dismissed one and
+// the window has not moved past the dismissed reset.
+export function usageDismissalHolds(entry, threshold, validUntil) {
+ return entry !== undefined && entry !== null && threshold <= entry.threshold && validUntil <= entry.validUntil;
 }
 // A failed turn's usage-limit card (turn-error-model rate_limit): when the plan limit resets, from the base bucket's
 // full window (or the one Codex says it reached), and whether it is still in force (then 'Try again' can't help).

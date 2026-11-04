@@ -20,4 +20,8 @@ function E(e) {
     : $[5];
 }
 
-export { E as PreviewPlacementProvider };
+export {
+  E as PreviewPlacementProvider,
+  T as PreviewPlacementContext,
+  w as previewPlacementDefault,
+};

@@ -42,7 +42,7 @@ try {
     ["Allow once", "APPROVAL_ACCEPTED"],
   ]) {
     await page
-      .getByRole("textbox", { name: "Message DeepSeek" })
+      .getByRole("textbox", { name: /^(?:Prompt|Message DeepSeek)$/ })
       .fill("Test approval " + decision);
     await page
       .locator('[data-testid="code-prompt-send"]:not([inert] *)')
@@ -70,7 +70,7 @@ try {
   await page.getByRole("button", {name: "View options", exact: true}).click(); await page.getByRole("menuitemcheckbox", {name: "Files", exact: true}).click();
   await page.getByRole("treeitem", { name: "ui-smoke.txt", exact: true }).click();
   await page
-    .locator(".source-file-preview")
+    .locator("[data-file-viewer]")
     .filter({ hasText: "CODE_DESKTOP_SMOKE_OK" })
     .waitFor();
   await page.getByRole("button", { name: "Close panel" }).click();
@@ -85,7 +85,7 @@ try {
     .locator(".source-session-open")
     .filter({ hasText: "Renamed test" })
     .waitFor();
-  await page.getByRole("textbox", { name: "Message DeepSeek" }).fill("disconnect");
+  await page.getByRole("textbox", { name: /^(?:Prompt|Message DeepSeek)$/ }).fill("disconnect");
   await page.locator('[data-testid="code-prompt-send"]:not([inert] *)').click();
   await page
     .getByRole("alert")

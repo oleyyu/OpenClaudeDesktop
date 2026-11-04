@@ -71,7 +71,9 @@ test('Changes placement header follows aa: chevron svg, file-type icon, path too
   assert.match(html, /data-placement="changes"/);
   assert.doesNotMatch(header, /\stitle="/, 'no native title in a modified-file header');
   assert.doesNotMatch(html, /Copy patch|sdiff-copy|role="status"/);
-  assert.match(header, /<button type="button" class="sdiff-file-toggle aria-disabled:cursor-default" aria-expanded="true" aria-controls="[^"]+">/);
+  assert.match(header, /<button type="button" class="sdiff-file-toggle epitaxy-panel-subheader [^"]* aria-disabled:cursor-default" data-sticky="" style="background-color:light-dark\(var\(--code-theme-light-bg, var\(--cds-surface-2\)\), var\(--code-theme-dark-bg, var\(--cds-surface-2\)\)\)" aria-expanded="true" aria-controls="[^"]+">/);
+  // W14 diff: c44d00c7f Xu `${ma} aria-disabled:cursor-default`, ma over c82eca2bd Ce, style {backgroundColor: en}.
+  assert.ok(header.includes('class="sdiff-file-toggle epitaxy-panel-subheader flex items-center gap-[4px] shrink-0 px-md bg-alpha-1 h-[calc(2rem*var(--cds-rem-scale,1))] bg-[linear-gradient(var(--cds-alpha-1),var(--cds-alpha-1))] enabled:hover:bg-[linear-gradient(var(--cds-alpha-2),var(--cds-alpha-2))] w-full select-none text-left focus-visible:outline-hidden hide-focus-ring focus-visible:shadow-focus disabled:cursor-default aria-disabled:cursor-default"'));
   assert.match(header, /<span aria-hidden="true" class="sdiff-chevron flex items-center justify-center size-\[16px\] shrink-0 text-muted-as-secondary"><svg width="16" height="16" viewBox="0 0 16 16" class="transition-transform duration-fast motion-reduce:transition-none"><path d="M3\.47 5\.47a\.75\.75 0 0 1 1\.06 0L8 8\.94l3\.47-3\.47a\.75\.75 0 1 1 1\.06 1\.06l-4 4a\.75\.75 0 0 1-1\.06 0l-4-4a\.75\.75 0 0 1 0-1\.06" fill="currentColor"><\/path><\/svg><\/span>/);
   // aa: c280f9bbb wt (FileTypeIcon) for the path, size xs, text-muted-as-secondary (not the host fileKindIcon glyph).
   assert.match(header, /<\/svg><\/span><span data-cds="Icon" style="font-size:calc\(0\.75rem \* var\(--cds-rem-scale, 1\)\);[^"]*" class="shrink-0 text-muted-as-secondary" aria-hidden="true">[^<]*<\/span><span class="sdiff-path /);
@@ -79,7 +81,9 @@ test('Changes placement header follows aa: chevron svg, file-type icon, path too
   assert.match(header, /<span class="sdiff-path flex min-w-0 text-body text-secondary"><span dir="ltr" class="flex min-w-0 items-baseline gap-1 overflow-hidden whitespace-nowrap"><span class="max-w-full shrink-0 truncate">app\.js<\/span><span class="sdiff-path-directory flex min-w-0 text-footnote text-muted data-\[clipped\]:opacity-0"><span dir="ltr" class="flex min-w-0 overflow-hidden whitespace-nowrap"><span class="min-w-0 truncate">src<\/span><\/span><\/span><\/span><\/span>/);
   assert.match(header, /<span dir="ltr" class="sdiff-counts flex shrink-0 items-center gap-0\.5 text-body tabular-nums"><span class="text-git-added">\+1<\/span><span class="text-git-removed">−1<\/span><\/span><span aria-hidden="true" data-size="xs" class="w-control shrink-0"><\/span><\/button>/);
   assert.match(header, /<span class="sdiff-open-file absolute inset-y-0 end-0 flex items-center pe-md opacity-0 transition-opacity motion-reduce:transition-none group-hover\/diff-file:opacity-100 group-focus-within\/diff-file:opacity-100 pointer-coarse:opacity-100">/);
-  assert.match(header, /<button aria-label="Open file" type="button" data-cds="Button" data-variant="ghost"[^>]*data-size="xs" data-cds-icon-only=""/);
+  // W14-code r6 pierre (r6pa-04 / R6DC-02): Ze is c44d00c7f _a's shared-frame CDS Button (`n(T, {size: "xs", variant: "ghost",
+  // icon: "ArrowUpRight", iconOnly: !0, "aria-label": o, tooltipSide: "bottom", onClick: s})`), no longer the host replica.
+  assert.match(header, /<button type="button" data-cds="Button" data-cds-icon-only="" data-cds-ghost="" data-size="xs"[^>]*aria-label="Open file"/);
   assert.deepEqual(labelsOf(header), []);
 });
 
@@ -115,8 +119,9 @@ test('a Changes file without text hunks gets the aa no-body header: aria-disable
   const all = headers(html);
   assert.equal(all.length, sections.length);
   for (const header of all) {
-    assert.match(header, /<button type="button" class="sdiff-file-toggle aria-disabled:cursor-default" aria-disabled="true">/);
-    assert.doesNotMatch(header, /aria-expanded|aria-controls/);
+    assert.match(header, /<button type="button" class="sdiff-file-toggle epitaxy-panel-subheader [^"]* aria-disabled:cursor-default" data-sticky="" style="background-color:light-dark\(var\(--code-theme-light-bg, var\(--cds-surface-2\)\), var\(--code-theme-dark-bg, var\(--cds-surface-2\)\)\)" aria-disabled="true">/);
+    // The CDS Button's own classes name `[aria-expanded=true]` (group variants), so only the attributes are checked.
+    assert.doesNotMatch(header, /\saria-expanded=|\saria-controls=/);
     assert.match(header, /<span aria-hidden="true" class="sdiff-chevron flex items-center justify-center size-\[16px\] shrink-0 text-muted-as-secondary opacity-40"><svg width="16" height="16" viewBox="0 0 16 16" class="transition-transform duration-fast motion-reduce:transition-none -rotate-90 \[&amp;:where\(:root\[dir=rtl\]_:dir\(rtl\)\)\]:rotate-90">/);
   }
   assert.doesNotMatch(html, /sdiff-file-body|sdiff-metadata-only|No text hunks in this patch/);
@@ -129,7 +134,7 @@ test('a Changes file without text hunks gets the aa no-body header: aria-disable
   const [modified, fallback] = headers(mixed);
   assert.match(modified, /aria-expanded="true" aria-controls="[^"]+">/);
   assert.doesNotMatch(modified, /opacity-40|-rotate-90|aria-disabled="/);
-  assert.match(fallback, /<button type="button" class="sdiff-file-toggle aria-disabled:cursor-default" aria-expanded="true" aria-controls="[^"]+">/);
+  assert.match(fallback, /<button type="button" class="sdiff-file-toggle epitaxy-panel-subheader [^"]* aria-disabled:cursor-default" data-sticky="" style="background-color:light-dark\(var\(--code-theme-light-bg, var\(--cds-surface-2\)\), var\(--code-theme-dark-bg, var\(--cds-surface-2\)\)\)" aria-expanded="true" aria-controls="[^"]+">/);
   assert.doesNotMatch(fallback, /sdiff-counts/, 'diff-model leaves a fallback file\'s counts null (unknown)');
   assert.match(mixed, /No complete text hunks or change metadata\. Showing original patch\./);
 });
@@ -146,11 +151,12 @@ test('Open file and its reserve exist for a modified file and are absent for a d
   assert.doesNotMatch(bare, /Open file|w-control/);
 });
 
-test('the inline placement (approval FileChanges) keeps its existing header', () => {
+// W14-code pa2-04 (E84.3): the host-made inline placement (approval FileChanges header, Copy patch, metadata labels) had no
+// caller and no 3.6556.2 counterpart (ca7ba268c has only "{n} unmodified line(s)" / "Expand all"); it is gone.
+test('SourceDiff has only the Changes placement: no host inline header, Copy patch or metadata line', () => {
   const html = renderToStaticMarkup(React.createElement(SourceDiff, { value: ADDED }));
-  assert.match(html, /data-placement="inline"/);
-  assert.match(html, /<div class="sdiff-header"><button type="button" class="sdiff-file-toggle" aria-expanded="true" aria-controls="[^"]+" title="new\.txt · New file · Mode 100644">/);
-  assert.match(html, /<div class="sdiff-meta">New file · Mode 100644<\/div>/);
+  assert.match(html, /data-placement="changes"/);
+  assert.doesNotMatch(html, /data-placement="inline"|class="sdiff-meta"|sdiff-copy|Copy patch|No text hunks in this patch|title="new\.txt/);
 });
 
 // F12 "Hide whitespace changes" (gn/Tn, panes-diff-view-current.js:247-401): a re-indent-only file keeps its row
@@ -161,7 +167,7 @@ test('hideWhitespace: an indent-only file shows the "Whitespace only" label with
   const html = render(INDENT_ONLY + MIXED_WS, { hideWhitespace: true });
   const [indent, mixed] = headers(html);
   assert.deepEqual(labelsOf(indent), ['Whitespace only']);
-  assert.match(indent, /<button type="button" class="sdiff-file-toggle aria-disabled:cursor-default" aria-disabled="true">/);
+  assert.match(indent, /<button type="button" class="sdiff-file-toggle epitaxy-panel-subheader [^"]* aria-disabled:cursor-default" data-sticky="" style="background-color:light-dark\(var\(--code-theme-light-bg, var\(--cds-surface-2\)\), var\(--code-theme-dark-bg, var\(--cds-surface-2\)\)\)" aria-disabled="true">/);
   assert.match(indent, /<span class="text-git-added">\+1<\/span><span class="text-git-removed">−1<\/span>/, 'counts stay the file\'s real +/-');
   assert.doesNotMatch(html, /return 1;/, 'the indent-only body is gone');
   assert.deepEqual(labelsOf(mixed), []);

@@ -91,7 +91,8 @@ test('SendUserFile sends files inside the session folder only, as deliverables',
   const handler = tool(files, 'SendUserFile').handler;
   const result = await handler({ files: ['out/report.md', path.join(root, 'shot.png'), './out/report.md'], caption: 'The review' }, { cwd: root });
   assert.equal(result.content[0].text, 'Sent 2 files to the user: report.md, shot.png.');
-  assert.deepEqual(result.structuredContent, { deliverables: [{ path: path.join(root, 'out/report.md'), description: 'The review' }, { path: path.join(root, 'shot.png'), description: 'The review' }] });
+  // W14-code r2 R2T-TS8: each with its byte size (3.6556.2 c289d7154 D's attachment `size`).
+  assert.deepEqual(result.structuredContent, { deliverables: [{ path: path.join(root, 'out/report.md'), description: 'The review', size: 8 }, { path: path.join(root, 'shot.png'), description: 'The review', size: 3 }] });
   await assert.rejects(handler({ files: [path.join(outside, 'secret.txt')] }, { cwd: root }), /outside the session’s working folder/);
   await assert.rejects(handler({ files: ['link.txt'] }, { cwd: root }), /outside/, 'a link leading out of the folder is refused');
   await assert.rejects(handler({ files: ['out'] }, { cwd: root }), /not a file/);

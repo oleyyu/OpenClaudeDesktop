@@ -39,7 +39,7 @@ try{
  const page=await app.firstWindow();page.on('pageerror',e=>report.rendererErrors.push(e.message));
  await app.evaluate(({BrowserWindow})=>{for(const w of BrowserWindow.getAllWindows()){w.setOpacity(0);w.setIgnoreMouseEvents(true);}});
  await page.waitForFunction(()=>{const c=document.querySelector('[data-cds=ChatComposer]');return c&&!c.hasAttribute('data-disabled');},null,{timeout:20000});
- const input=page.getByRole('textbox',{name:'Message DeepSeek',exact:true});
+ const input=page.getByRole('textbox',{ name: /^(?:Prompt|Message DeepSeek)$/ });
  const send=async(text)=>{await fillComposer(page,input,text);await page.locator('[data-testid="code-prompt-send"]:not([inert] *)').click();};
  const steps=[
    {explanation:'Step one of two. This tooltip points at a spot near the top left of the screen.',next_preview:'Next: I\'ll read where the pointer is and wait a moment.',anchor:[300,200],

@@ -40,7 +40,11 @@
    File renderer's "h-full overflow-y-auto select-text" scroller. The file pane
    scroller reserves stable both-edges gutters (panes-tile-current.js:1728). The
    code takes the selected code theme's foreground and background (the
-   --code-theme-* variables main.jsx writes), as the Changes body does. */
+   --code-theme-* variables main.jsx writes), as the Changes body does.
+   W14-code r5 pierre: with local_pierre_file_viewer on (default) the body is 3.6556.2 pierre File in the official
+   utility classes (SourceFilePierreCode) and none of the .sfv-viewer / .sfv-scroller / .sfv-line / .sfv-number /
+   .sfv-plain-note / whitespace rules below apply; they style only the rollback body (switch off). Delete them with
+   the switch once the pierre body has passed the GUI check. */
 .sfv-viewer {
   display: flex;
   flex: 1;
@@ -149,16 +153,6 @@
 .sfv-prose > .source-markdown > :is(h1, h2, h3, h4, h5, h6):first-child {
   margin-top: 0;
 }
-/* EpitaxyCsvPreview: the table (the response Markdown table look) scrolls
-   inside its focusable region. */
-.sfv-csv-region:focus-visible {
-  outline: none;
-  box-shadow: var(--cds-focus-shadow);
-}
-/* Eye/Code toggle after the flex-1 breadcrumb. */
-.sfv-view-toggle {
-  flex: none;
-}
 /* The ji plain <pre>. (R3-files FT-18: the frontmatter <dl> is the generated c3fde7009 Ei; its dl/dd margins come from
    the official preflight, c6a992d55 @layer base `*{margin:0;padding:0}`, as in the source.) */
 .sfv-plain-source {
@@ -194,40 +188,6 @@
    max-width in source-code-start.css). */
 .sp-popup.sfv-folder-popover { max-height: revert-layer; }
 
-/* Xi: the find bar under the subheader (flex items-center gap-[4px] px-md, h-control field). */
-.sfv-find {
-  display: flex;
-  flex-shrink: 0;
-  align-items: center;
-  gap: 4px;
-  min-width: 0;
-  padding: 0 var(--cds-pad-md) 4px;
-}
-.sfv-find-input {
-  flex: 1 1 auto;
-  min-width: 0;
-  height: var(--cds-h-control, 24px);
-  padding: 0 var(--cds-pad-sm, 8px);
-  border: 0;
-  border-radius: var(--cds-radius, 6px);
-  background: var(--cds-fill-field, var(--cds-alpha-1));
-  box-shadow: inset 0 0 0 1px var(--cds-fill-field-ring);
-  color: var(--cds-text-primary);
-  font: inherit;
-  font-size: var(--cds-font-size-body);
-  outline: none;
-  caret-color: var(--cds-fill-accent);
-}
-.sfv-find-input:focus { box-shadow: var(--cds-focus-shadow); }
-.sfv-find-input::placeholder { color: var(--cds-text-muted); }
-.sfv-find-field { display: flex; align-items: center; flex: 1; min-width: 0; padding-right: 4px; border-radius: var(--cds-radius, 6px); background: var(--cds-fill-field, var(--cds-alpha-1)); box-shadow: inset 0 0 0 1px var(--cds-fill-field-ring); }
-.sfv-find-field:focus-within { box-shadow: var(--cds-focus-shadow); }
-.sfv-find-field .sfv-find-input { background: transparent; box-shadow: none; width: 0; }
-.sfv-find-options { display: flex; align-items: center; gap: var(--cds-gap-xs, 2px); flex: none; }
-.sfv-find-options .sfv-find-option { width: var(--cds-h-control--xs, 20px); height: var(--cds-h-control--xs, 20px); min-width: 0; font-size: var(--cds-font-size-caption, 12px); }
-.sfv-find-option[aria-pressed="true"] { background: var(--cds-bg-accent); color: var(--cds-text-accent); }
-.sfv-find-status { flex: none; color: var(--cds-text-muted); font-size: var(--cds-font-size-footnote); font-variant-numeric: tabular-nums; }
-.sfv-find-button:disabled { color: var(--cds-text-disabled); }
 .sfv-line[data-find-active] { background: rgba(255, 213, 0, .08); }
 /* R3-files (correcting FT-16): no host reduce-motion rule for the folder tree caret. The official motion-reduce:transition-none
    covers both the media query and the in-app setting (c6a992d55: `.motion-reduce\:transition-none:where([data-reduce-motion=true],
@@ -243,31 +203,4 @@
 
 /* 2.37337.1 CodeMirror file viewer: original ia theme owns editor paint. */
 .sfv-editor { flex: 1; min-height: 0; height: 100%; overflow: hidden; font: var(--cds-font-size-code) / var(--cds-leading-code) var(--cds-font-mono); background: light-dark(var(--code-theme-light-bg, transparent), var(--code-theme-dark-bg, transparent)); color: light-dark(var(--code-theme-light-fg, var(--cds-text-primary)), var(--code-theme-dark-fg, var(--cds-text-primary))); }
-.sfv-edit-error { display: flex; align-items: center; gap: 4px; padding: 5px 12px; background: var(--alpha-2, #8881); flex-shrink: 0; font-size: 12px; }
-.sfv-edit-error > span { flex: 1; }
-.sfv-go-to-line .sfv-find-input[aria-invalid="true"] { border-color: var(--cds-text-danger); }
 .sfv-editor-shell { position: relative; flex: 1; min-height: 0; height: 100%; }
-.sfv-editor-tab-hint { position: absolute; bottom: 8px; right: 12px; pointer-events: none; border-radius: 4px; border: .5px solid var(--cds-border-strong); background: var(--cds-surface-1); padding: 4px 8px; font-size: var(--cds-font-size-footnote); color: var(--cds-text-secondary); box-shadow: 0 1px 2px #0001; }
-.sfv-gutter-comment { position:absolute; left:1px; display:flex; align-items:center; justify-content:center; width:16px; height:16px; padding:0; border:0; border-radius:4px; color:var(--cds-on-accent); background:var(--cds-fill-accent); cursor:var(--cds-cursor-interactive,pointer); }
-.sfv-gutter-comment:hover { background:var(--cds-fill-accent-hover); }
-/* c82eca2bd H/U inline comment card. */
-.sfv-comment-wrap { padding:var(--cds-pad-xs,4px) var(--cds-pad-md,8px); font-family:var(--cds-font-sans); white-space:normal; }
-.sfv-comment-card { position:relative; isolation:isolate; display:flex; flex-direction:column; gap:var(--cds-gap-xs,4px); border-radius:5px; border:1px solid var(--diff-widget-border,var(--cds-border)); background:var(--diff-widget-bg,var(--cds-surface-3)); padding:10px var(--cds-pad-lg,12px); }
-.sfv-comment-card[data-active] { border-color:var(--cds-fill-accent); }
-.sfv-comment-label { color:var(--diff-widget-muted,var(--cds-text-muted)); font-size:var(--cds-font-size-footnote); line-height:var(--cds-leading-footnote); }
-.sfv-comment-label-row { display:flex; align-items:center; gap:6px; }
-.sfv-comment-badge { display:inline-flex; align-items:center; height:var(--cds-h-control-nested,16px); padding:0 var(--cds-pad-xs,4px); border-radius:4px; background:var(--cds-alpha-1); color:var(--cds-text-secondary); font-size:var(--cds-font-size-caption,10px); font-weight:var(--cds-font-weight-medium,500); white-space:nowrap; }
-.sfv-comment-row { display:flex; align-items:center; gap:4px; }
-.sfv-comment-row textarea,.sfv-comment-body { flex:1; min-width:0; border:0; margin:0; padding:0; background:transparent; resize:none; color:var(--diff-widget-fg,var(--cds-text-primary)); font:var(--cds-font-size-body)/var(--cds-leading-body) var(--cds-font-sans); }
-.sfv-comment-row textarea { field-sizing:content; outline:none; }
-.sfv-comment-row textarea::placeholder { color:var(--diff-widget-muted,var(--cds-text-muted)); }
-.sfv-comment-body { white-space:pre-wrap; overflow-wrap:break-word; cursor:text; border-radius:3px; }
-.sfv-comment-body:focus-visible { outline:none; box-shadow:var(--cds-focus-shadow); }
-.sfv-comment-actions { flex-shrink:0; height:24px; display:flex; align-items:center; align-self:flex-start; gap:3px; }
-.sfv-comment-card[data-editing] .sfv-comment-actions { align-self:flex-end; width:24px; justify-content:center; }
-.sfv-comment-actions button { display:flex; position:relative; border:0; border-radius:4px; padding:3px; background:transparent; color:var(--diff-widget-muted,var(--cds-text-muted)); }
-.sfv-comment-actions button:hover { background:var(--cds-fill-ghost-hover); color:var(--diff-widget-fg,var(--cds-text-primary)); }
-.sfv-comment-actions button[data-comment-delete]:hover { color:var(--cds-text-danger); }
-.sfv-comment-actions button:disabled { opacity:.4; }
-.sfv-comment-card:not([data-editing]) .sfv-comment-actions button { opacity:0; }
-.sfv-comment-card:hover .sfv-comment-actions button,.sfv-comment-card:focus-within .sfv-comment-actions button { opacity:1; }

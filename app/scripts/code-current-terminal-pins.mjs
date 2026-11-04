@@ -19,7 +19,10 @@
 // every pin now has `version: '3.6556.2'`. Their React Compiler cache helpers are view-tabs' E3 names (memo() below).
 // `reexport` pins slice nothing: the emit re-exports the declaration view-tabs publishes under that semantic name from
 // the concrete view-tabs file (R6/E2), and the pin checks the official declaration and the publication; a pin that
-// also slices bindings re-exports only the listed declarations (terminal-tab-overflow: viewTabSizes).
+// also slices bindings re-exports only the listed declarations.
+// W14-code r2 closeout-2 (DC-03): terminal-tab-overflow.mjs is retired. Its only importer was the orphan host menu
+// source-preview-tab-overflow.jsx (0 imports); the Preview and terminal strips' overflow menu is view-tabs ViewTabBar's
+// own ae (cfe7c4b3b), whose row se is view-tabs ViewTabOverflowItem, so the re-export had no reader.
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { parsers } from '../../tools/node_modules/prettier/plugins/babel.mjs';
@@ -280,54 +283,6 @@ export const terminalPins = {
         '"w-px my-[7px] bg-alpha-2 shrink-0 transition-opacity motion-reduce:transition-none group-hover/split:opacity-0 group-focus-within/split:opacity-0"',
         '"aria-keyshortcuts": r.shortcut', '? a(r.shortcut, p)', 'onMouseDown: c,', 'children: r.label,', 'iconOnly: !0,',
         'r.pressed === void 0 ? void 0 : "selected"', 'className: "text-secondary",', 'r.key,'],
-    },
-  },
-  // R3-terminal FT-15 (terminal-10, global-v01): the shared view-tab strip's overflow menu row (2.31226.0 I, which closed
-  // on ArrowRight/Delete/Backspace whatever the modifiers): a close key with Control, Meta or Alt is left alone, a held
-  // key's repeats only preventDefault, and after closing the key's repeats are swallowed on the row's window (shared-19
-  // ln = Uj, keyboard-repeat.mjs). The typeahead reset keys and the RTL key flip the menu applies come along. The Preview
-  // and terminal strips' overflow menu (source-preview-tab-overflow.jsx) renders this row.
-  // 3.6556.2 (cc-rest-terminal-b): cfe7c4b3b se/P/L/ie/ce (2.42304.0 ce/N/I/L, ce's `stopPropagation` callback hoisted to
-  // ce); se is React Compiler output and takes the new `arrowCloses` prop: ArrowRight (ArrowLeft in RTL) closes only
-  // with it, Delete/Backspace always. The menu ae passes `g = arrowCloses ?? true`, describes the rows by the arrow hint
-  // only then, shows that hint only then and resets typeahead on ArrowRight only then; ViewTabBar's overflowArrowCloses
-  // is false only on the side chat strip (cccc2cf0a qP), so the terminal and Preview strips keep it on. Since w10-trans-tab-overflow
-  // se's `_` is the official shared-frame Jo (view-tabs CdsDropdown) and the host menu renders the rows in a CdsDropdown
-  // Root/Popup as ae does. w12-viewtabs (D1): nothing is sliced any more. se, its RTL key flip L, the typeahead reset keys ie
-  // and the size table le (2.42304.0 R, now with basisChromePx: 52) are re-exported from the concrete view-tabs file as
-  // ViewTabOverflowItem / viewTabRtlArrowKey / viewTabOverflowTypeaheadResetKeys / viewTabSizes, so there is one se and one
-  // P = createContext("xs") lead-glyph context (the slice used to make a second instance). The features below still pin the
-  // official declarations, and `dependencies` the imports se reads inside view-tabs.
-  'terminal-tab-overflow.mjs': {
-    version: v3, source: 'cfe7c4b3b-BF79K6ux.js', roots: [], bindings: [],
-    dependencies: {
-      'shared-19-DIKJVT7c.js:ln': ['t.key===e&&t.repeat?(t.preventDefault(),t.stopPropagation()):i()', 't.addEventListener("keydown",n,!0)'],
-      [`${sharedFrame}:Jo`]: ['SearchablePopup:', 'PendingList:'],
-      // shared-frame ga (exported wd; 2.42304.0 aa, exported ou): the CDS size attribute se spreads on the close glyph's
-      // box (`closeSize`), view-tabs' cdsSizeAttributes inside the re-exported se; w10-cleanup-cc-public retired
-      // terminal-tab-size-attrs.mjs, the re-export it used to go through, and moved its feature here.
-      [`${sharedFrame}:wd`]: ['function ga(e){return e&&e!=="base"?{"data-size":e}:{}}'],
-    },
-    reexport: { se: 'ViewTabOverflowItem', L: 'viewTabRtlArrowKey', ie: 'viewTabOverflowTypeaheadResetKeys', le: 'viewTabSizes' },
-    features: {
-      P: ['P = f("xs")'], L: ['e === "ArrowLeft"', '? "ArrowRight"'], ie: ['"ArrowUp",', '"ArrowRight",', '"Delete",'],
-      se: [
-        'arrowCloses: o,', 'm = r.closable !== !1,', 'let t = u ? L(e.key) : e.key;', '!e.ctrlKey &&', '!e.metaKey &&', '!e.altKey &&',
-        '((o && t === "ArrowRight") || t === "Delete" || t === "Backspace")', 'if ((e.preventDefault(), e.stopPropagation(), e.repeat)) return;',
-        'let t = ne(e.currentTarget);', '(t && re(e.key, t), v());', 'm && e.button === 1 && (e.preventDefault(), v());', 'S = m ? i : void 0,',
-        '"aria-describedby": S,', 'className: "gap-sm",', 'n(P, { value: p.leadGlyph, children: r.icon })', 'onPointerDown: ce,', '...te(p.closeSize),',
-        '"grid shrink-0 cursor-interactive place-items-center rounded-sm text-muted-as-secondary hover:bg-fill-ghost-hover hover:text-primary"',
-        'n(ee, { name: "X", size: p.closeGlyph })', 'n(h, { delay: 700, hoverable: !1, children: r.label })', 'className: "text-caption text-muted-as-secondary",',
-        'n(_.Item, {',
-      ],
-      ce: ['return e.stopPropagation();'],
-      le: ['tabIconShed: "min-w-0 ps-[2px]"', 'tabNoIcon: "min-w-[6px] ps-[6px]"', 'basis: "basis-[192px]"', 'basisChromePx: 52,', 'closeGlyph: "xs"', 'closeInMenuRow: ""'],
-    },
-    uses: {
-      ae: ['g = d === void 0 || d,', 'let t = x ? L(e.key) : e.key;', 'ie.has(t) && (g || t !== "ArrowRight") && (w.current = !1)', 'hintIds: g ? `${b} ${c}` : c,',
-        'arrowCloses: g,', 'n(C, { delay: 700, children: k })', 'onKeyDownCapture: ne,'],
-      Re: ['overflowArrowCloses: S,', '_e = S === void 0 || S,', 'arrowCloses: _e,'],
-      de: ['return !e || t !== "comfortable"', '? le'],
     },
   },
 };

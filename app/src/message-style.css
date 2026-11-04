@@ -1,190 +1,9 @@
-.message {
-  margin: 22px 0;
-  line-height: 1.7;
-}
-.user-message {
-  display: flex;
-  justify-content: flex-end;
-}
-.user-message > div {
-  background: var(--cds-alpha-1, #efefed);
-  padding: 9px 15px;
-  border-radius: 12px;
-  max-width: 90%;
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-}
-.assistant-message {
-  position: relative;
-}
-.markdown {
-  font-size: 15px;
-  line-height: 1.75;
-  overflow-wrap: anywhere;
-}
-.markdown p {
-  margin: 8px 0 16px;
-}
-.markdown p:last-child {
-  margin-bottom: 0;
-}
-.markdown h1,
-.markdown h2,
-.markdown h3 {
-  font-size: 20px;
-  font-weight: 600;
-  margin: 22px 0 12px;
-}
-.markdown h3 {
-  font-size: 17px;
-}
-.markdown ul,
-.markdown ol {
-  padding-left: 22px;
-  margin: 12px 0;
-  list-style: revert;
-}
-.markdown li {
-  margin: 5px 0;
-}
-.markdown pre,
-.file-preview,
-.tool-card pre,
-.approval pre {
-  font-family: anthropic-mono, monospace;
-  font-size: 12px;
-  line-height: 1.7;
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-  background: var(--cds-alpha-1, #f1f1ef);
-  border-radius: 8px;
-  padding: 12px;
-  margin: 10px 0;
-  overflow: auto;
-}
-.markdown code {
-  font-family: anthropic-mono, monospace;
-  font-size: 13px;
-  background: var(--cds-alpha-1);
-  padding: 2px 4px;
-  border-radius: 3px;
-}
-.markdown pre code {
-  padding: 0;
-  background: none;
-}
-.markdown a {
-  color: var(--cds-text-accent);
-  text-decoration: underline;
-}
-.markdown blockquote {
-  border-left: 2px solid var(--app-line);
-  padding-left: 16px;
-  color: var(--cds-text-secondary);
-}
-.markdown table {
-  border-collapse: collapse;
-  width: 100%;
-  font-size: 13px;
-}
-.markdown th,
-.markdown td {
-  text-align: left;
-  padding: 8px;
-  border-bottom: 1px solid var(--app-line);
-}
-.copy-message {
-  opacity: 0;
-  margin-top: 7px;
-}
-.assistant-message:hover .copy-message,
-.copy-message:focus {
-  opacity: 1;
-}
-.tool-card {
-  border: 1px solid var(--app-line);
-  border-radius: 8px;
-  margin: 10px 0;
-  font-size: 12px;
-}
-.tool-card summary {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 9px 11px;
-  list-style: none;
-  color: var(--cds-text-secondary);
-}
-.tool-card summary > span {
-  flex: 1;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.tool-card small {
-  color: var(--app-muted);
-  font-size: 11px;
-}
-.tool-card pre {
-  margin: 0 7px 7px;
-  max-height: 280px;
-  border-radius: 4px;
-}
-.file-title {
-  padding: 7px 12px;
-  font-family: anthropic-mono;
-  font-size: 11px;
-}
-.thought {
-  margin-top: 18px;
-  color: var(--app-muted);
-  font-size: 12px;
-}
-.thought summary {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  list-style: none;
-}
-.thought[open] summary svg {
-  transform: rotate(90deg);
-}
-.thought .markdown {
-  font-size: 13px;
-  margin: 10px 0;
-  color: var(--cds-text-secondary);
-}
-.working {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--app-muted);
-  font-size: 12px;
-  padding: 15px 0;
-}
-.working-dot,
-.step-dot {
-  width: 7px;
-  height: 7px;
-  background: #b7b7b3;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-.working-dot,
-.pulsing {
-  animation: pulse 1.4s ease-in-out infinite;
-}
-/* Decorative pulse: held still under reduced motion (OS or in-app setting). */
-@media (prefers-reduced-motion: reduce) {
-  .working-dot,
-  .pulsing {
-    animation: none;
-  }
-}
-html[data-reduce-motion="true"] .working-dot,
-html[data-reduce-motion="true"] .pulsing {
-  animation: none;
-}
+/* W14-code css-main-04: the 0.1 message rules (.message / .user-message / .assistant-message) are gone with their
+   classes; Code messages are .source-message (source-session.css).
+   W14-code r2 (DC-01 / css2-dead-legacy-rules, E84 "no dead rules"): the rest of the 0.1 rules went too — .markdown*,
+   .copy-message, .tool-card*, .thought*, .working, .pulsing, .approval*, .primary, .question*, .file-path*, .file-list*,
+   .file-preview, .muted, .error-text: no className / querySelector / classList in src or electron names them, and 3.6556.2
+   has none of these classes. The Code composer banner is the official card (r2-composer-01); .inline-error stays for Chat/Cowork only. */
 /* desktop-layout.css:1033-1039 under :root[data-dframe] (index.html): a CDS TextLink drawn as a control
    (shared-frame-C_2npUJq.js:3562-3640 Fc -> span role=button.cds-text-link) keeps the pointer while enabled.
    Local TextLinks are <button data-cds="TextLink">, which the dframe `button` rule would make an arrow. */
@@ -198,15 +17,22 @@ html[data-reduce-motion="true"] .pulsing {
 :root[data-dframe] .stimg-button:not(:disabled) { cursor: zoom-in; }
 :root[data-dframe] .st-toolbar .st-title:not(:disabled):not([data-disabled]):not([aria-disabled="true"]) { cursor: text; }
 :root[data-dframe] .tiles-drag-handle { cursor: move; }
-/* The composer banner (main.jsx .inline-error.composer-error); the transcript has no raw alert (R08). */
+/* W14-code r2-composer-01: the composer error (main.jsx) is c3e34355f Hn's cb1a6e506 card ("w-fit min-w-[min(480px,100%)]
+   max-w-full"); its host wrapper only sits it in the composer column — W14-code r3 css3-band-column-width: the
+   .sc-zone.composer-zone column rules (source-composer.css), shared with .sqm-band and .ssn-list. */
+/* Chat/Cowork keep the host banner (main.jsx `mode !== "code"`, outside "Code only"): its pre-r2 rules, unchanged —
+   the 768px column (old style.css .composer-error) and the danger strip (old .inline-error). */
+.inline-error.composer-error {
+  width: calc(100% - 64px);
+  max-width: 768px;
+  align-self: center;
+}
 .inline-error {
   display: flex;
   align-items: center;
   gap: 8px;
   font-size: 12px;
   line-height: 1.5;
-  /* Danger tokens from the loaded CSS (light and dark variants) instead of
-     the legacy #b97d65/#a34b36 literals. */
   border: 1px solid var(--cds-border-danger);
   background: var(--cds-bg-danger);
   border-radius: var(--cds-radius);
@@ -218,174 +44,20 @@ html[data-reduce-motion="true"] .pulsing {
 .inline-error > span {
   flex: 1;
 }
-.approval {
-  border: 1px solid var(--app-line);
-  border-radius: 12px;
-  padding: 16px;
-  margin: 18px 0;
-  box-shadow: 0 2px 8px #00000005;
-}
-.approval header {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-}
-.approval p {
-  margin: 10px 0;
-  font-size: 13px;
-  color: var(--cds-text-secondary);
-}
-.approval pre {
-  max-height: 180px;
-}
-.approval footer,
-.rename-modal footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  margin-top: 14px;
-}
-.approval button,
-.rename-modal footer button {
-  border: 1px solid var(--app-line);
-  border-radius: 7px;
-  padding: 6px 12px;
-  font-size: 13px;
-}
-.primary {
-  background: var(--app-ink) !important;
-  color: var(--app-bg) !important;
-}
-.question label {
-  display: flex;
-  gap: 8px;
-  padding: 8px;
-  border: 1px solid var(--app-line);
-  margin: 6px 0;
-  border-radius: 7px;
-}
-.question small {
-  display: block;
-  color: var(--app-muted);
-  font-size: 11px;
-}
-.question > input {
-  width: 100%;
-  border: 1px solid var(--app-line);
-  background: var(--app-bg);
-  border-radius: 6px;
-  padding: 7px;
-}
+/* The side panes (source-file-panel detail-panel: files, preview, terminal, background tasks, side chat, runs) are a
+   flex column. The 0.1 width (340px) and the header's height / flex / padding / border are overridden by
+   .source-file-panel.detail-panel and .source-file-panel > .source-pane-header (source-session.css), so they are gone.
+   W14-code r3 css3-dead-rules ③: so are its flex-shrink and border-left — every panel sits in a .source-side-tile
+   (flex: 1, border-left: 0; source-tile-layout.css; the popout's too) or the block .section-surface (its own border).
+   The header's 13px stays: .source-pane-title inherits it. */
 .detail-panel {
-  width: 340px;
-  flex-shrink: 0;
-  border-left: 1px solid var(--app-line);
   display: flex;
   flex-direction: column;
   overflow: hidden;
 }
 .detail-panel > header {
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 14px;
-  border-bottom: 1px solid var(--app-line);
   font-size: 13px;
 }
 .detail-panel strong {
   font-weight: 500;
-}
-.file-path {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  height: 36px;
-  padding: 0 10px;
-  font-size: 11px;
-  color: var(--app-muted);
-}
-.file-path > span {
-  flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.file-path > button {
-  display: flex;
-  padding: 4px;
-}
-.file-list {
-  overflow: auto;
-  padding: 4px 8px;
-}
-.file-list > button {
-  width: 100%;
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  text-align: left;
-  border-radius: 5px;
-  padding: 6px;
-  font-size: 12px;
-}
-.file-list > button:hover {
-  background: var(--cds-alpha-1);
-}
-.file-list > button span {
-  flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.detail-panel .file-preview {
-  margin: 0;
-  border-radius: 0;
-  background: transparent;
-  flex: 1;
-  font-size: 11px;
-}
-.plan-list {
-  padding: 16px;
-  overflow: auto;
-}
-.plan-list > div {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  margin-bottom: 14px;
-  font-size: 13px;
-  line-height: 1.5;
-}
-.plan-list .step-dot {
-  margin-top: 6px;
-}
-.plan-list .done {
-  color: var(--app-muted);
-}
-.panel-empty,
-.muted {
-  color: var(--app-muted);
-  font-size: 12px;
-  line-height: 1.6;
-}
-.panel-empty {
-  padding: 18px;
-}
-.diff span {
-  display: block;
-  white-space: pre-wrap;
-}
-.diff .added {
-  background: #45824c12;
-  color: #4b8550;
-}
-.diff .removed {
-  background: #ad514a12;
-  color: #b15f58;
-}
-.error-text {
-  font-size: 12px;
-  color: #b15f58;
-  padding: 0 14px;
 }

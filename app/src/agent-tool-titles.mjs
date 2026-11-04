@@ -131,6 +131,10 @@ const TITLES = {
   chrome_form_input: (args) => ({ verbs: [t("Filling in a field"), t("Filled in a field"), t("Couldn’t fill in a field")], meta: str(args.ref) || null }),
   chrome_computer: (args) => ({ verbs: chromeActionVerbs(args), meta: chromeActionMeta(args) }),
   chrome_javascript_tool: (args) => ({ verbs: [t("Running page script"), t("Ran page script"), t("Page script failed")], meta: firstLine(args.code)?.slice(0, 80) ?? null }),
+  // The console and network reads: preview's read_console_messages / read_network_requests wording (below the chrome_
+  // prefix, as the batch steps map them).
+  chrome_read_console_messages: (args) => ({ verbs: [t("Reading console"), t("Read console"), t("Couldn’t read console")], meta: args.onlyErrors === true ? t("errors only") : clip(args.pattern, 60) }),
+  chrome_read_network_requests: (args) => ({ verbs: [t("Reading network activity"), t("Read network activity"), t("Couldn’t read network activity")], meta: clip(args.urlPattern, 60) }),
   chrome_tabs_context_mcp: () => ({ verbs: [t("Checking tabs"), t("Checked tabs"), t("Couldn’t check tabs")], meta: null }),
   chrome_tabs_create_mcp: (args) => ({ verbs: [t("Opening tab"), t("Opened tab"), t("Couldn’t open tab")], meta: str(args.url) ? host(args.url) : null }),
   chrome_browser_batch: (args) => ({ verbs: chromeBatchVerbs(args), meta: Array.isArray(args.actions) && args.actions.length ? tn(args.actions.length, "{count} step", "{count} steps") : null }),
@@ -165,7 +169,7 @@ function chromeActionMeta(args) {
 }
 // A batch row: its steps' verbs, each kind once, at most three and "+N" for the rest (2.42304.0 XI / AI, TI = 3).
 const CHROME_STEP_TITLES = { navigate: "chrome_navigate", read_page: "chrome_read_page", find: "chrome_find", form_input: "chrome_form_input", computer: "chrome_computer",
-  javascript_tool: "chrome_javascript_tool", tabs_context: "chrome_tabs_context_mcp", tabs_context_mcp: "chrome_tabs_context_mcp", tabs_create: "chrome_tabs_create_mcp", tabs_create_mcp: "chrome_tabs_create_mcp" };
+  javascript_tool: "chrome_javascript_tool", read_console_messages: "chrome_read_console_messages", read_network_requests: "chrome_read_network_requests", tabs_context: "chrome_tabs_context_mcp", tabs_context_mcp: "chrome_tabs_context_mcp", tabs_create: "chrome_tabs_create_mcp", tabs_create_mcp: "chrome_tabs_create_mcp" };
 function chromeBatchVerbs(args) {
   const steps = Array.isArray(args?.actions) ? args.actions : [];
   const verbs = (done) => {
@@ -260,10 +264,6 @@ export function chapterOf(item) {
   return { id: item.id, title, ...(summary ? { summary } : {}) };
 }
 
-/** The chapters of a transcript's items, in order. */
-export function transcriptChapters(items) {
-  return (Array.isArray(items) ? items : []).map(chapterOf).filter(Boolean);
-}
 
 /**
  * The open suggested tasks of a session's items (spawn_task calls that finished, newest first): {id, title, tldr,

@@ -54,7 +54,7 @@ export function downloadFailureToast(fileName, cause = 'undecodable', surface = 
 export function documentReadFailureCause(result) {
   switch (result?.unavailable) {
     case 'missing': return 'missing';
-    case 'outside_root': return 'outside';
+    case 'outside_root': case 'missing_outside': return 'outside';
     case 'read_error': return 'read_error';
     default: return result && typeof result === 'object' ? 'read_twice' : 'unknown';
   }

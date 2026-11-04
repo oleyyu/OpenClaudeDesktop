@@ -25,34 +25,25 @@ const poll=async(fn,label,ms=10000)=>{const end=Date.now()+ms;while(Date.now()<e
 async function launch(){app=await electron.launch({args:[root],executablePath:path.join(root,'node_modules/electron/dist/Electron.app/Contents/MacOS/Electron'),env,timeout:20000});page=await app.firstWindow();page.setDefaultTimeout(10000);page.on('pageerror',e=>report.rendererErrors.push(e.message));await app.evaluate(({BrowserWindow})=>BrowserWindow.getAllWindows()[0].setContentSize(1324,900));await page.waitForFunction(()=>{const c=document.querySelector('[data-cds=ChatComposer]');return c&&!c.hasAttribute('data-disabled')&&document.querySelector('[aria-label="Model"]')?.textContent.includes('Test model');});}
 try{
  await integrity();await launch();
- const input=page.getByRole('textbox',{name:'Message DeepSeek',exact:true});
+ const input=page.getByRole('textbox',{ name: /^(?:Prompt|Message DeepSeek)$/ });
  await fillComposer(page,input,'fixture:computer-use');await page.locator('[data-testid="code-prompt-send"]:not([inert] *)').click();
- // 1. The official docked strip (c5f921d63 W) while the session uses the computer (main's in-use signal, from the first
- //    computer-use step to the end of the turn): first in the conversation column, above the
- //    transcript; clay tint and border, the pulsing dot, "{core} is using your computer", a secondary xs Stop; no action.
- const banner=page.locator('[data-computer-use-banner]');await banner.waitFor();
- report.metrics.banner=await banner.evaluate(n=>{const r=n.getBoundingClientRect(),first=document.querySelector('[data-transcript-item-id]')?.getBoundingClientRect(),s=getComputedStyle(n),dot=getComputedStyle(n.querySelector('span'));
-  return {text:n.innerText.replace(/\s+/g,' ').trim(),bottom:r.bottom,firstItemTop:first?.top??null,borderBottom:s.borderBottomWidth,dot:[dot.width,dot.backgroundColor,dot.animationName],
-   stop:n.querySelector('[data-testid="cu-docked-stop"]')?.dataset.size??null,stopVariant:n.querySelector('[data-testid="cu-docked-stop"]')?.dataset.variant??null,thumb:!!n.querySelector('img')};});
- assert.equal(report.metrics.banner.text,'Codex is using your computer Stop');
- assert.ok(report.metrics.banner.firstItemTop===null||report.metrics.banner.bottom<=report.metrics.banner.firstItemTop+1,'the strip sits above the transcript');
- assert.equal(report.metrics.banner.borderBottom,'1px');
- assert.deepEqual(report.metrics.banner.dot,['8px','rgb(198, 97, 63)','pulse'],'the 8px clay dot pulses');
- assert.deepEqual([report.metrics.banner.stop,report.metrics.banner.stopVariant],['xs','secondary']);
- assert.equal(report.metrics.banner.thumb,false,'no screenshot in the strip');
- await page.screenshot({path:path.join(directory,'banner.png')});
- report.checks.push('While the session uses the computer, the official docked strip sits above the transcript: clay tint, the pulsing 8px clay dot, “Codex is using your computer”, a secondary xs Stop, no action or screenshot');
+ // 1. W14-code r4-shared-10 (E95): 3.6556.2 Code mounts no docked strip (c5f921d63's M is imported by c21f11e6d /
+ //    c10f0af0c alone, the Cowork / chat chunks); while a Code session uses the computer only the composer's Stop shows.
+ const banner=page.locator('[data-computer-use-banner]');await page.locator('[data-transcript-item-id]').first().waitFor();
+ report.metrics.banner={count:await banner.count()};
+ assert.equal(report.metrics.banner.count,0,'Code shows no computer-use strip');
+ report.checks.push('While a Code session uses the computer, no docked strip shows (official: Cowork / chat only)');
  // The screen glow (electron/computer-use/glow.cjs) is full-screen control's (official: it follows the display lock's
- // holder). These steps are background work with no lock, so it stays down while the strip is up (the target window
+ // holder). These steps are background work with no lock, so it stays down while the steps run (the target window
  // highlight, window-highlight.cjs, needs a real window: computer-use-window-highlight-live.mjs).
  const glow=()=>app.evaluate(({BrowserWindow})=>{const w=BrowserWindow.getAllWindows().find(x=>!x.isDestroyed()&&x.webContents.getURL().endsWith('/cu-glow.html'));
   return w?{visible:w.isVisible()}:null;});
  for(let i=0;i<10;i+=1){assert.notEqual((await glow())?.visible,true,'no screen glow without full-screen control');await new Promise(r=>setTimeout(r,60));}
  report.metrics.glow=await glow();
- report.checks.push('No screen glow for background steps: the glow is full-screen control’s (the display lock’s holder), the strip alone shows the session is using the computer');
- await banner.waitFor({state:'detached',timeout:8000});
+ report.checks.push('No screen glow for background steps: the glow is full-screen control’s (the display lock’s holder)');
+ assert.equal(await banner.count(),0);
  assert.notEqual((await glow())?.visible,true);
- report.checks.push('The strip goes away when the turn ends; the screen glow never came up');
+ report.checks.push('No strip at any point in Code; the screen glow never came up');
  // 2. The group: the original tool group over the five members.
  const group=page.locator('[data-tool-group]').last();await group.waitFor();
  await poll(async()=>/Used 5 tools/.test(await group.innerText()),'group summary');

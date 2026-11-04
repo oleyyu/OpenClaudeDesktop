@@ -67,5 +67,3 @@
 ::highlight(epitaxy-plan-selection) { color: highlighttext; background-color: highlight; }
 .source-plan-document mark[data-plan-comment-id] { color: inherit; }
 .spp-comment-popover textarea { padding: 0; font-family: inherit; letter-spacing: inherit; }
-/* Local extra: the comments can also go to the composer ('Add to prompt'). */
-.spp-comments-footer { margin-top: var(--cds-pad-lg, 16px); display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--cds-gap-sm, 8px); font-size: var(--cds-font-size-footnote, 12px); }

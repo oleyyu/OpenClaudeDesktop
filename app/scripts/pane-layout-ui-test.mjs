@@ -88,7 +88,7 @@ async function size(width, height = 852) {
 }
 async function open(id) {
   await page.locator(`[data-source-session-id="${id}"] .source-session-open`).click();
-  await page.locator(".st-title").waitFor();
+  await page.locator(":is(.st-title,button[data-pane-title])").waitFor();
   await page.locator(".loading-state").waitFor({ state: "detached" });
   await frames(4);
 }
@@ -109,7 +109,10 @@ async function closePane(kind) {
 // The arrange popup hangs off the Expand/Collapse button (official sa): a
 // right-click opens it without toggling Fill/Tile; picks are icon buttons.
 const arrangeTrigger = kind => pane(kind).locator("[data-pane-arrange-trigger]");
-const arrangePopup = () => page.locator('[role="menu"].spc-arrange');
+// W14-code r4 closeout R4DC-REG-01: since fr3-07 the popup is the CDS Popover (c4db265df mt/bt Popup
+// `className:"flex min-w-44 flex-col gap-xs"`), not a role=menu .spc-arrange; it is the popover holding the picks.
+const ARRANGE_POPUP = '.min-w-44:has([data-pane-arrange="fill"])';
+const arrangePopup = () => page.locator(ARRANGE_POPUP);
 async function paneMenu(kind, item) {
   await arrangeTrigger(kind).click({ button: "right" });
   const menu = arrangePopup();
@@ -133,7 +136,7 @@ async function dragHandle(kind, dx, dy, { steps = 8, before, cancel = false, rel
   if (release) { await page.mouse.up(); await frames(3); }
 }
 async function sendPlan() {
-  await page.getByRole("textbox", { name: "Message DeepSeek", exact: true }).fill("fixture:plan");
+  await page.getByRole("textbox", { name: /^(?:Prompt|Message DeepSeek)$/ }).fill("fixture:plan");
   await page.locator('[data-testid="code-prompt-send"]:not([inert] *)').click();
   await page.getByText("PLAN_FIXTURE_REPLY", { exact: true }).waitFor();
   await frames(4);
@@ -464,13 +467,14 @@ try {
   assert.equal(metrics.fill.collapse, true); assert.equal(metrics.fill.expand, false);
   const fillMenu = await paneMenu("plan", null);
   metrics.arrange = await fillMenu.evaluate(node => ({
-    name: node.getAttribute("aria-labelledby") ? document.getElementById(node.getAttribute("aria-labelledby"))?.getAttribute("aria-label") : null,
+    name: document.querySelector("[data-pane-arrange-trigger][data-popup-open]")?.getAttribute("aria-label") ?? null,
     minWidth: getComputedStyle(node).minWidth, width: node.getBoundingClientRect().width,
-    groups: [...node.querySelectorAll('[role="group"]')].map(group => ({ label: group.getAttribute("aria-label"), picks: [...group.querySelectorAll("button")].map(button => button.getAttribute("aria-label")) })),
-    popout: node.querySelector("[data-pane-popout] .spc-open-window-label")?.textContent ?? null,
+    // c4db265df q: each group is `div[role=presentation]` (the label) followed by `div.flex.px-1 > CdsButtonGroup`.
+    groups: [...node.querySelectorAll('[role="presentation"]')].map(label => ({ label: label.textContent, picks: [...(label.nextElementSibling?.querySelectorAll("button") ?? [])].map(button => button.getAttribute("aria-label")) })),
+    popout: node.querySelector("[data-pane-popout] span.truncate")?.textContent ?? null,
     popoutGlyph: node.querySelector("[data-pane-popout] [data-cds=Icon]")?.textContent.codePointAt(0) ?? null, separators: node.querySelectorAll('[role="separator"]').length,
   }));
-  assert.equal(metrics.arrange.name, "Collapse", "the popup is labelled by its Expand/Collapse trigger");
+  assert.equal(metrics.arrange.name, "Collapse", "the popup hangs off its Expand/Collapse trigger");
   assert.equal(metrics.arrange.minWidth, "176px"); assert.ok(metrics.arrange.width >= 176);
   assert.deepEqual(metrics.arrange.groups, [
     { label: "Move", picks: ["Move to left", "Move to right", "Move to top", "Move to bottom"] },
@@ -489,7 +493,6 @@ try {
   // hover-open 100 ms later, so the check names the clicked trigger, and the pointer then leaves.
   const collapsedTrigger = await arrangeTrigger("plan").getAttribute("id");
   assert.equal(await arrangeTrigger("plan").getAttribute("data-popup-open"), null, "a plain click toggles without opening the popup");
-  assert.equal(await page.locator(`[role="menu"].spc-arrange[aria-labelledby="${collapsedTrigger}"]`).count(), 0, "a plain click toggles without opening the popup");
   await page.mouse.move(400, 700);
   await arrangePopup().waitFor({ state: "detached" });
   assert.deepEqual(await layoutRoot(), tiled, "Collapse restores the exact prior layout JSON");
@@ -512,7 +515,7 @@ try {
   await arrangeTrigger("plan").focus();
   await page.keyboard.press("ArrowDown");
   await arrangePopup().waitFor();
-  assert.equal(await page.evaluate(() => document.activeElement?.getAttribute("role")), "menu", "keyboard open focuses the popup");
+  assert.equal(await page.evaluate((selector) => !!document.activeElement?.closest(selector), ARRANGE_POPUP), true, "keyboard open focuses the popup");
   await page.keyboard.press("ArrowDown");
   assert.equal(await page.evaluate(() => document.activeElement?.getAttribute("aria-label")), "Move to left");
   // The focused pick shows its tooltip; the local tooltip contract takes the
@@ -521,7 +524,7 @@ try {
   metrics.arrangeEscapes = 0;
   for (let attempt = 0; attempt < 2 && await arrangePopup().count(); attempt++) {
     await page.keyboard.press("Escape"); metrics.arrangeEscapes++;
-    await page.waitForFunction(() => !document.querySelector('[role="menu"].spc-arrange') || !document.querySelector('[role="tooltip"]'));
+    await page.waitForFunction((selector) => !document.querySelector(selector) || !document.querySelector('[role="tooltip"]'), ARRANGE_POPUP);
   }
   await arrangePopup().waitFor({ state: "detached" });
   assert.equal(await page.evaluate(() => document.activeElement?.getAttribute("aria-label")), "Expand", "Escape hands focus back to the trigger");
@@ -559,16 +562,16 @@ try {
   await tree.getByRole("button", { name: "deep.txt", exact: true }).waitFor();
   // 2.31226.0 go retains the tree while opening the first file. Keep the preview through its tab.
   await tree.getByRole("button", { name: "alpha.txt", exact: true }).click();
-  await pane("files").locator('.source-file-tab[data-file-path$="alpha.txt"][data-preview]').dblclick();
-  await pane("files").locator(".source-file-preview, .sfv-editor").filter({ hasText: "ALPHA_KEPT_FILE" }).waitFor();
+  await pane("files").locator('[data-view-tab-bar] [data-vtb-id$="alpha.txt"]:has(.italic)').dblclick();
+  await pane("files").locator("[data-file-viewer], .sfv-editor").filter({ hasText: "ALPHA_KEPT_FILE" }).waitFor();
   assert.equal(await tree.isVisible(), true, "2.31226.0 opening the first file retains the tree");
   // Explicitly commit the shown preference for the persistence checks below (peek alone must not persist).
   await pane("files").getByRole("button", { name: "Hide file tree", exact: true }).click();
   await pane("files").getByRole("button", { name: "Show file tree", exact: true }).click();
   await tree.waitFor();
   await tree.getByRole("button", { name: "beta.md", exact: true }).click();
-  await pane("files").locator(".source-file-preview, .sfv-editor").filter({ hasText: "BETA_PREVIEW_FILE" }).waitFor();
-  const tabsOf = () => pane("files").evaluate(node => [...node.querySelectorAll(".source-file-tab")].map(tab => ({ path: tab.dataset.filePath, preview: tab.dataset.preview === "true", selected: tab.querySelector('[role="tab"]').getAttribute("aria-selected") })));
+  await pane("files").locator("[data-file-viewer], .sfv-editor").filter({ hasText: "BETA_PREVIEW_FILE" }).waitFor();
+  const tabsOf = () => pane("files").evaluate(node => [...node.querySelectorAll("[data-view-tab-bar] [data-vtb-id]")].map(tab => ({ path: tab.dataset.vtbId, preview: !!tab.querySelector(".italic"), selected: tab.querySelector('[role="tab"]').getAttribute("aria-selected") })));
   const treeDivider = pane("files").getByRole("separator", { name: "Resize file tree", exact: true });
   await treeDivider.focus(); await page.keyboard.press("ArrowRight"); await page.keyboard.press("ArrowRight"); await frames(2);
   const stateA = { key: await layoutKey(), tabs: await tabsOf(), treeWidth: (await rect(pane("files").locator(".source-files-tree"))).width, treeVisible: await tree.isVisible(), nested: await tree.getByRole("button", { name: "deep.txt", exact: true }).count() };
@@ -577,7 +580,7 @@ try {
   assert.equal(await layoutKey(), "S[row](T:chat)", "session B has no panes");
   await open(A);
   await waitLayout(stateA.key, "session A layout restored");
-  await pane("files").locator(".source-file-preview, .sfv-editor").filter({ hasText: "BETA_PREVIEW_FILE" }).waitFor();
+  await pane("files").locator("[data-file-viewer], .sfv-editor").filter({ hasText: "BETA_PREVIEW_FILE" }).waitFor();
   const stateA2 = { key: await layoutKey(), tabs: await tabsOf(), treeWidth: (await rect(pane("files").locator(".source-files-tree"))).width, treeVisible: await tree.isVisible(), nested: await tree.getByRole("button", { name: "deep.txt", exact: true }).count() };
   assert.deepEqual(stateA2, stateA, "layout, tabs (order + preview flag), tree width/visibility and expanded folders restore");
   const storeBefore = await tilesStore();
@@ -589,7 +592,7 @@ try {
   tree = pane("files").getByRole("tree", { name: "Project files" });
   await open(A);
   await waitLayout(stateA.key, "relaunch restores the layout from localStorage code-desktop-tiles");
-  await pane("files").locator(".source-file-preview, .sfv-editor").filter({ hasText: "BETA_PREVIEW_FILE" }).waitFor();
+  await pane("files").locator("[data-file-viewer], .sfv-editor").filter({ hasText: "BETA_PREVIEW_FILE" }).waitFor();
   const stateA3 = { key: await layoutKey(), tabs: await tabsOf(), treeWidth: (await rect(pane("files").locator(".source-files-tree"))).width, treeVisible: await tree.isVisible(), nested: await tree.getByRole("button", { name: "deep.txt", exact: true }).count() };
   assert.deepEqual(stateA3, stateA, "relaunch restores tabs, preview flag, tree width and expanded folders");
   checks.push("Session switch A -> B -> A and a relaunch with the same profile restore layout JSON, ordered tabs with preview flags, tree width/visibility and expanded folders from localStorage code-desktop-tiles (<= 100 entries, no file contents)");
@@ -642,7 +645,7 @@ try {
   await page.keyboard.press("ArrowRight"); info = await rowInfo();
   assert.equal(info.name, "leaf.txt"); assert.equal(info.level, "3"); assert.equal(info.paddingLeft, "24px");
   await page.keyboard.press("Enter");
-  await pane("files").locator(".source-file-preview, .sfv-editor").filter({ hasText: "NESTED_LEAF_FILE" }).waitFor();
+  await pane("files").locator("[data-file-viewer], .sfv-editor").filter({ hasText: "NESTED_LEAF_FILE" }).waitFor();
   const opened = await tabsOf();
   // cccc2cf0a :5714 p(k, {keep: Vv(t)}) with Vv(e) = e.detail !== 1 (:4738): a keyboard Enter (a detail-0 click) keeps the tab;
   // only a single pointer click opens a preview.

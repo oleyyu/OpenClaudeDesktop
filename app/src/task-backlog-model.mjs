@@ -5,7 +5,6 @@ export const BACKLOG_LIMIT = 20; // l0: getTaskBacklog(folder, 20)
 export const BACKLOG_CHIPS = 3; // A0/O0: three rows, then 'See # more'
 export const TAKE_GUARD_MS = 500; // j0 S / y0: a second take or delete within 500ms is a double click
 const CHIP_WORDS = 8; // g0
-const DAY_MS = 864e5; // i0
 
 /** u0: the title, else the prompt's first line, else 'Untitled task'. */
 export function backlogTitle(item) {
@@ -26,10 +25,6 @@ export function chipLabel(title) {
   return words.length <= CHIP_WORDS ? title : `${words.slice(0, CHIP_WORDS).join(" ")}…`;
 }
 
-/** o0: whole days since the task was suggested. */
-export function ageDays(item, now = Date.now()) {
-  return Math.max(0, Math.floor((now - Number(item?.suggestedAt ?? now)) / DAY_MS));
-}
 
 /**
  * j0 C: the prompt goes into the message box. A blank box takes it as is (caret at the start); otherwise it is

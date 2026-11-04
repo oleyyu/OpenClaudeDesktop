@@ -45,7 +45,7 @@
 //   environment's id on the scope store as `editEnvironmentRequest` (`Sn`); SessionRailSaveEnvironment (c73f45bc3 pu)
 //   opens the host's saved environment dialog on it. `y` (PN, the scope store's cloud editor opener) is never set here.
 // Not followed (see the w6-rail-host report): `computer`, `addFolder` ("Add repository…", needs the meta query), the
-// goal, plan, artifacts and Nm's plan-drawn context.
+// plan, artifacts and Nm's plan-drawn context. W14-code r4 shell fr4-12a: the goal is followed now (host.goal, host.editGoal).
 import React, { createContext, useCallback, useContext, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { SessionRailDockedColumn, SessionRailOverlay, SessionRailOpener, RailShownStoreProvider, useRailShown } from "./generated/session-rail-kit/rail-shell.mjs";
 import { useRailFits, RAIL_CHAT_GEOMETRY_CLASS, RAIL_GUTTER_CLASS, RAIL_TITLEBAR_INSET_CLASS, RAIL_CONTAINER_CLASS,
@@ -60,7 +60,7 @@ import { railFolder, railExtraFolders, otherRepos, knownBranch, railBranch, rail
   environmentKind, environmentConnection, isSideSessionNotesFolder, remoteControlState, RAIL_PENDING_GIVE_UP_MS } from "./generated/session-rail/rail-derive.mjs";
 import { useRailPendingHold, useCheckoutInfo, useComposerMenuOpensRailSection } from "./generated/session-rail/rail-hooks.mjs";
 import { NAME_PENDING_GIVE_UP_MS } from "./generated/session-rail/rail-timing.mjs";
-import { SessionRailOutputsContext } from "./source-session-rail-adapters.jsx";
+import { SessionRailOutputsContext, railGoal } from "./source-session-rail-adapters.jsx";
 import { SessionRailSectionsHostContext, railServerRows, railTaskRows, railLoopRows } from "./source-session-rail-sections-adapters.jsx";
 import { SessionRailServers } from "./generated/session-rail-sections/servers-card.mjs";
 import { SessionRailBackgroundTasks } from "./generated/session-rail-sections/background-tasks-card.mjs";
@@ -77,9 +77,9 @@ import { loadLocalSessionRecord, railMetaFromRecord, railLazyPendingArgs, railRe
 import { monitorTasks } from "./background-tasks-model.mjs";
 import { taskRowsStore, dismissedTasksStore } from "./source-background-tasks.jsx";
 import { connectorRows, connectorLabel } from "./generated/session-rail/rail-derive.mjs";
-import { useSaveEnvironmentSetup, RailSaveEnvironmentLink, RailSaveEnvironmentRow } from "./generated/session-rail/save-environment.mjs";
+import { useSaveEnvironmentSetup, RailSaveEnvironmentLink, RailSaveEnvironmentRow, SessionStartLine, requestSaveEnvironment, recordSaveEnvironmentOutcome } from "./generated/session-rail/save-environment.mjs";
 import { RailEditEnvironmentButton, isRailEditableEnvironment } from "./generated/session-rail/environment-edit.mjs";
-import { setRailSavedEnvironments, setRailLocalSession, useSessionEnvironmentId } from "./source-session-rail-adapters.jsx";
+import { setRailSavedEnvironments, setRailLocalSession, useSessionEnvironmentId, useStartedSetupRecord, keepStartedSetup } from "./source-session-rail-adapters.jsx";
 import { sessionMcpCounts, heldMcpCounts, railConnectors, NO_SESSION_MCP_COUNTS, NO_MCP_TOOL_OPENER } from "./session-rail-connectors-model.mjs";
 import { SourceSavedEnvironmentDialog } from "./source-saved-environment-dialog.jsx";
 import { SessionRailContext } from "./generated/session-rail-context/context-card.mjs";
@@ -322,6 +322,7 @@ export function SessionRailSaveEnvironment({ scopeStore, host }) {
     initialSettings={r?.checkout ?? {}} environments={o} recentFolders={host.recentFolders ?? []} call={host.call}
     onVariables={host.openLocalEnvironment} onClose={close}
     onDelete={y && typeof host.deleteEnvironment === "function" ? (id) => host.deleteEnvironment(id) : undefined}
+    onDeleteAsk={y && typeof host.askDeleteEnvironment === "function" ? host.askDeleteEnvironment : undefined}
     onSave={async (value) => {
       if (y) { await host.updateEnvironment(y.id, value); return; }
       const created = await host.saveEnvironment(value);
@@ -355,6 +356,46 @@ export function SessionRailChatBody({ children }) {
     {an && !rail.onScreen && <SessionRailRaise sessionRef={an} scopeStore={rail.scopeStore} onRaise={rail.raise} />}
     {rail?.on && <SessionRailSaveEnvironment scopeStore={rail.scopeStore} host={host} />}
   </div>;
+}
+
+/**
+ * W14-code r4 shell fr4-08 (E95): the Code transcript's lead row, cf74bc599 dw's start line over this tile's rail scope:
+ * `So = Vx({scopeStore: r, environmentsOn: Tr, sessionId: Z, isLocal: xo, meta: w, occasion: "start", besideNamed: !0})`,
+ * `Co = dt ?? (!bo || So?.savedAs !== void 0 ? So : void 0)` (dt the scope's startedSetup, bo = ix: the saved environment
+ * the session started from) and `Co && !_o ? s(Mx, {setup: Co, onSave: () => Xx(r, Co, Z), onUpdated: () => Jx(r, Co,
+ * "updated"), onDeclined: () => Jx(r, Co, {declined: !0})})` (_o, Kx's move line, needs the change_directory tool: none
+ * here). Host: Tr is the presets gate (on, D10 / E92); `w` (the session meta) is the rail's record fallback, here the
+ * session's folder ({originCwd}); Save as environment opens the rail's save dialog (SessionRailSaveEnvironment, the scope
+ * store's saveEnvironmentRequest).
+ */
+export function SessionRailStartLine({ sessionId, cwd }) {
+  const mount = useMount();
+  const scope = mount?.rail?.scopeStore ?? NO_RAIL_SCOPE;
+  const host = mount?.host ?? {};
+  const isLocal = typeof sessionId === "string" && !!sessionId;
+  useLayoutEffect(() => { setRailSavedEnvironments(host.savedEnvironments); }, [host.savedEnvironments]);
+  // `w`: the rail's record fallback (session-rail-meta: originCwd, scratch, remote) once read, else the session's folder.
+  const record = mount?.record?.sessionId === sessionId ? mount.record.record : undefined;
+  const meta = useMemo(() => (record ? railMetaFromRecord(record) : typeof cwd === "string" && cwd ? { originCwd: cwd, isScratchWorkspace: false } : undefined), [record, cwd]);
+  const So = useSaveEnvironmentSetup({ scopeStore: scope, environmentsOn: mount?.rail?.on === true, sessionId, isLocal, meta, occasion: "start", besideNamed: true });
+  // W14-code r5-composer-03 / fr5-06: Aue's startedSetup for a start from a picked saved environment (`{target, settings:
+  // draftSettings(), ...u, occasion: "start", fromEnvironment}`, u the start line's setup: So here), recorded per session
+  // by main (source-session-rail-adapters recordStartedFromEnvironment) and loaded into this tile's scope store while the
+  // session shows; a setup the scope holds for another session goes back to its record first (Jx's outcome kept).
+  const recorded = useStartedSetupRecord(sessionId);
+  useLayoutEffect(() => {
+    if (scope === NO_RAIL_SCOPE) return;
+    const held = scope.getState().startedSetup;
+    if (held?.sessionId === sessionId || (!held && !recorded)) return;
+    if (held?.sessionId) keepStartedSetup(held.sessionId, held);
+    scope.setState({ startedSetup: recorded ? { ...So, ...recorded } : null });
+  }, [scope, sessionId, recorded]); // So is read when the record loads (its label / suggested name / start count)
+  const dt = useStore(scope, (state) => (state.startedSetup?.sessionId === sessionId ? state.startedSetup : null));
+  const bo = useNamedEnvironment(host, sessionId, true);
+  const Co = dt ?? (!bo || So?.savedAs !== undefined ? So : undefined);
+  if (!Co || mount?.rail?.on !== true) return null;
+  return <SessionStartLine setup={Co} onSave={() => requestSaveEnvironment(scope, Co, sessionId)}
+    onUpdated={() => recordSaveEnvironmentOutcome(scope, Co, "updated")} onDeclined={() => recordSaveEnvironmentOutcome(scope, Co, { declined: true })} />;
 }
 
 /** jre's `cn ? an ? bH : <div [data-epitaxy-rail-column] className=Gp ref=Wt/> : null`: the docked column (the draft
@@ -575,6 +616,7 @@ export function SessionRailHostView({ sessionRef: e, scopeStore: t, readOnly: o 
     // has no source for; no SSH host, runner, bridge computer or local environment details (`Zc` = c227f4d5e Dq: none).
     Me = NO_STEPS,
     Ne = _.formatMessage({ defaultMessage: "No folder", id: "OknGVA5bmf" });
+  const hostGoal = useMemo(() => railGoal(host.goal, { editable: typeof host.editGoal === "function" }), [host.goal, host.editGoal]);
   const Pe = useMemo(() => {
     if (!k) return { environment: A ? { label: null, kind: null } : null, folder: null, extraFolders: [], branch: null, worktree: null, goal: null, isLocal: x };
     // V3-w6-rail-host: TN's Mj adds `localIcon: tt ? void 0 : ua("local")` (tt = c73f45bc3 Gu: always undefined).
@@ -607,10 +649,11 @@ export function SessionRailHostView({ sessionRef: e, scopeStore: t, readOnly: o 
       startedWithWorktree: x ? k.startedWithWorktree : undefined,
       worktreeRemoved: x ? k.worktreeRemoved : undefined,
       worktreePending: lazyWorktreeState({ pending: R, remote: z, archived: B, leasedPath: V, leasedBranch: H.branch }),
-      goal: k.goal ?? null,
+      // W14-code r4 shell fr4-12a: TN `goal: L.goal ?? null`; the host's goal is the core's (railGoal maps its fields).
+      goal: hostGoal ?? k.goal ?? null,
       isLocal: x,
     };
-  }, [k, A, O?.branch, R, z, B, V, H.branch, P, E, F, D, ve, Me, K, Ne, ee, L.repoName, x, J, ae, pe, me, le, q, ue, de]);
+  }, [k, A, O?.branch, R, z, B, V, H.branch, P, E, F, D, ve, Me, K, Ne, ee, L.repoName, x, J, ae, pe, me, le, q, ue, de, hostGoal]);
   // fO's folder menus: `Re = Iu(e)(Pe.folder?.path)` (c227f4d5e fL maps a scratch folder to its folder on disk; the
   // path itself here), `ze`, `Be = zd(e)` (the meta's `{remote}`: the record fallback here), `Ve = wg(e, "session_rail")`.
   const Re = Pe.folder?.path,
@@ -684,6 +727,10 @@ export function SessionRailHostView({ sessionRef: e, scopeStore: t, readOnly: o 
     saveEnvironment={St && !o && (!K || St.savedAs !== undefined) ? <RailSaveEnvironmentRow scopeStore={t} sessionId={e.id} setup={St} /> : undefined}
     environmentSave={St && !o && c && !K ? <RailSaveEnvironmentLink scopeStore={t} sessionId={e.id} setup={St} /> : undefined}
     remoteControl={at}
+    // W14-code r4 shell fr4-12a: TN `onEditGoal: ct` (AA: `/goal ${editText}` into an empty composer) and `onGoalShown: lt`
+    // (telemetry only, none here).
+    onEditGoal={host.editGoal}
+    onGoalShown={undefined}
     controls={undefined}
     // R4i-rail RL3: fO `contextSection: o ? void 0 : u(cg, { scopeStore: t, sessionRef: e })` (c73f45bc3 iy over the
     // host's context source, SessionRailContextHostContext below).
@@ -744,7 +791,7 @@ function useSessionMcpCounts(sessionId, source, cwd) {
  * `backgroundSection`): the Preview pane's servers, the Background tasks pane's tasks plus the app's Monitor and schedule
  * feeds, and the host's real stops.
  * - Tasks with an unknown status (a lost connection) are left out: the official groups count every non-live task as
- *   finished, and the Tasks pane lists these under "Status unavailable" instead.
+ *   finished, and the Tasks pane lists these under Running (W14-code r5pa-05: no "Status unavailable" section).
  * - A task the host cannot stop (`stoppable: false`, or an agent run without a turn) refuses, so the row's stop shows the
  *   official failure; the Tasks pane hides Stop for them.
  */

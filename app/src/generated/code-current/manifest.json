@@ -152,22 +152,6 @@
     },
     {
       "referenceVersion": "3.6556.2",
-      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/vendor-frame-CnSY1sxv.js",
-      "sourceSha256": "7064f152d05f6a7f477fc13a4b24606b82cbd401336a7e3a59840236818699e6",
-      "target": "cds-merge-props.mjs",
-      "sha256": "57bab23c7b87650b38183d358b1f0b33e37ef89b22d7a29ac565dd876a18826d",
-      "bindings": []
-    },
-    {
-      "referenceVersion": "3.6556.2",
-      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-frame-6jtSkIit.js",
-      "sourceSha256": "22b990df9384da0621c5197a060f6c2c8fe1ccf5a79ee1f8c6e7a6cb033b259c",
-      "target": "cds-badge.mjs",
-      "sha256": "af4625feb73f8302dcfbb7dea531ef9dbf28b3816809316bed119322029bc57e",
-      "bindings": []
-    },
-    {
-      "referenceVersion": "3.6556.2",
       "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-3-BCEbd8Fv.js",
       "sourceSha256": "fc82785f5d40bc42d95be0d959e1c4b56c9365b6aaa921d6da06f2625b5ba7b2",
       "target": "sidebar-upgrade-badge.mjs",
@@ -221,6 +205,16 @@
       "bindings": [
         "pb",
         "hb"
+      ]
+    },
+    {
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-18-D3y8YMFN.js",
+      "sourceSha256": "ea0ef4b74193e2e73c04b942311076a0922533df2ddb3d333464d22003e3355b",
+      "target": "sidebar-row-control.mjs",
+      "sha256": "f83ab7b855e44ce7b6456e7b98d56813e22468d842a1e980fad01520a611636f",
+      "bindings": [
+        "iA"
       ]
     },
     {
@@ -404,7 +398,7 @@
       "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-18-D3y8YMFN.js",
       "sourceSha256": "ea0ef4b74193e2e73c04b942311076a0922533df2ddb3d333464d22003e3355b",
       "target": "sidebar-row-view.mjs",
-      "sha256": "2da9794524dbbd785f84ab9f3cd88b1ae3db05539f6e0053d7abdb94f537684a",
+      "sha256": "2e35ba749a927ea2b947afce5538f32083964d577d3937fee12a043a41360c8b",
       "bindings": [
         "yk",
         "xk",
@@ -1227,7 +1221,7 @@
       "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c73f45bc3-B7hbL7H9.js",
       "sourceSha256": "3ae666a35e6e0d28e1b13a2e5a64384cc114f4b6f51f87c88e8bc4712c146491",
       "target": "titlebar-spawn-lead.mjs",
-      "sha256": "7e68d7af9318881f6d5823c29aad5026b63319ed0255f73858d87042dd5dac2a",
+      "sha256": "a25ac6e38f6166d8019bf2dfd26a456e8cda03361176b9213271fd1020c7635a",
       "bindings": [
         "wv",
         "Tv",
@@ -1251,6 +1245,37 @@
     },
     {
       "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c73f45bc3-B7hbL7H9.js",
+      "sourceSha256": "3ae666a35e6e0d28e1b13a2e5a64384cc114f4b6f51f87c88e8bc4712c146491",
+      "target": "titlebar-folder-pill.mjs",
+      "sha256": "7df86dabde36c7d02cd9ac3f44564c011a6d60d38091b1bf82c301738eac12ae",
+      "bindings": [
+        "Mv",
+        "Pv",
+        "Iv"
+      ]
+    },
+    {
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/cc3b500c8-DUhT14Si.js",
+      "sourceSha256": "b75aec28d59cfa6a5f9c9e7acc2dbbbe4fab65a742e26db9c8a124b13177c8c9",
+      "target": "environment-delete-question.mjs",
+      "sha256": "a2d219e739ee62326990dce02bb4da2ca919adc5ef6fc7249c7057d69602d542",
+      "bindings": [
+        "h",
+        "g",
+        "_",
+        "y",
+        "b",
+        "x",
+        "w",
+        "T",
+        "E",
+        "D"
+      ]
+    },
+    {
+      "referenceVersion": "3.6556.2",
       "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c70925de4-SEtaxEBR.js",
       "sourceSha256": "4e289a00313948dc363aeedac915d2eb8df608f2dfafdef7d7979bb706310f1c",
       "target": "titlebar-focus-lost.mjs",
@@ -1267,6 +1292,19 @@
       "sha256": "e03fbe8bfcd1abccc40a32f83ab5427cb22bc4a7b524961a8dbbef531115c57e",
       "bindings": [
         "tt"
+      ]
+    },
+    {
+      "referenceVersion": "3.6556.2",
+      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c4db265df-fNhlkQCj.js",
+      "sourceSha256": "272a3558bcd643e745286681de1a2e78f1a2d90fc6854197d62c3e792f68f02f",
+      "target": "pane-layout-icons.mjs",
+      "sha256": "470d76a77a8b8f2f65496771dcfd08102863bb1a92fbc884943c92d229c934a0",
+      "bindings": [
+        "nt",
+        "rt",
+        "it",
+        "at"
       ]
     },
     {
@@ -2462,14 +2500,6 @@
         "u",
         "d"
       ]
-    },
-    {
-      "referenceVersion": "3.6556.2",
-      "source": "../../../../snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/cfe7c4b3b-BF79K6ux.js",
-      "sourceSha256": "dd140a37fbb2dd4a2e9276aecda1ed4659034e4bbeed47beaa117061340527db",
-      "target": "terminal-tab-overflow.mjs",
-      "sha256": "51f4be964edefca1f88ca91d42185b431b1fd7274fbf974b77b89d46a0b6f969",
-      "bindings": []
     },
     {
       "referenceVersion": "3.6556.2",

@@ -3,7 +3,8 @@
 import React, { Children, Fragment, cloneElement, createContext, isValidElement, useCallback, useContext, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { createIntl } from './generated/chat/vendor-intl-DYfox5Co.js';
 import { Icon } from './icons.jsx';
-import { SourceSettingsButton } from './source-settings-button.jsx';
+// W14-code r6 R6DC-02: cc43287c9 `B` is shared-frame Uu = CdsButton (E41 direct import); it draws its own tooltip.
+import { CdsButton } from './generated/view-tabs/shared-frame-6jtSkIit.js';
 import { SourceTooltip, SourceTooltipGroup } from './source-tooltip.jsx';
 import { SourcePopover, useSourcePopover } from './source-popover.jsx';
 import { backlogTitle, backlogDetail } from './task-backlog-model.mjs';
@@ -28,9 +29,10 @@ export function StartIcon({ size, ...props }) {
   const pixels = size === 'xs' ? 12 : 16;
   return <Icon {...props} size={pixels} style={{ fontSize: `calc(${pixels / 16}rem * var(--cds-rem-scale, 1))` }} />;
 }
-export function StartButton({ tooltip, ...props }) {
-  const button = <SourceSettingsButton {...props} iconSize="auto" />;
-  return tooltip ? <SourceTooltip content={tooltip}>{button}</SourceTooltip> : button;
+// _5's X (`B({variant:"ghost",icon:"X",iconOnly:!0,…,tooltip:m.tooltip??"Dismiss"})`): Uu shows an icon-only button's
+// string `tooltip` itself, so no host tooltip wrapper.
+export function StartButton(props) {
+  return <CdsButton {...props} />;
 }
 // qd/Q (react-intl useIntl/FormattedMessage) over the local catalog: the English message is looked up in zh-CN by t().
 // As in the official react-intl (vendor-intl Pt/Ft/Bt), a rich-text result (e.g. "<status>Blocked</status> {title}") and

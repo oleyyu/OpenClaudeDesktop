@@ -1,6 +1,5 @@
 import { t } from '../electron/i18n/index.mjs';
 import { commandText } from './shell-command-model.mjs';
-import { formatDuration } from './command-row-model.mjs';
 
 const count = value => Number.isSafeInteger(value) && value >= 0;
 const start = value => Number.isFinite(value) && value >= 0 ? value : null;
@@ -32,15 +31,9 @@ export function updateTurnUsage(previous, { turnId, tokenUsage }, activeTurnId) 
   return { ...record, baseline, lastUsage, uncertain: record.uncertain || regressed || undefined, outputTokens: baseline === null ? null : total - baseline };
 }
 
-// shared-14 aT/oT: one decimal, lowercase k, carry rounded 1000 into next unit.
-export function formatOutputTokens(tokens) {
-  if (!count(tokens)) return null;
-  const units = ['', 'k', 'M', 'B'];
-  let unit = tokens >= 1e9 ? 3 : tokens >= 1e6 ? 2 : tokens >= 1e3 ? 1 : 0;
-  if (!unit) return String(tokens);
-  if (unit < 3 && Number((tokens / 1000 ** unit).toFixed(1)) >= 1000) unit++;
-  return `${(tokens / 1000 ** unit).toFixed(1)}${units[unit]}`;
-}
+// W14-code r8 gen-final-8: formatOutputTokens and runtimeStatLabels drew the host side-chat status row's clock and
+// token stat (.sts-stat); r8 rows (css8-side-chat-status-handrow) moved that row to the generated WorkingLine (cccc2cf0a
+// _F → c96d752d0 U6, whose own clock / token labels are the slice's), leaving both without a reader.
 
 export function elapsedTurnSeconds(startedAt, nowMs) {
   return start(startedAt) === null || !Number.isFinite(nowMs) ? null : Math.max(0, Math.floor(nowMs / 1000 - startedAt));
@@ -148,14 +141,4 @@ export function turnActivity(turnId, items = [], phases = {}, seconds, thinking 
   if (live.some(item => tools.has(item.type))) return { kind: 'tools', label: t('Running tools…') };
   const label = thinkingLabel(thinking, seconds);
   return label ? { kind: 'thinking', label, thinking } : null;
-}
-export function turnActivityLabel(turnId, items = [], phases = {}, seconds, thinking) {
-  return turnActivity(turnId, items, phases, seconds, thinking)?.label ?? null;
-}
-
-export function runtimeStatLabels(seconds, tokens) {
-  if (!Number.isFinite(seconds) || seconds < 2) return [];
-  const labels = [formatDuration(seconds)];
-  if (count(tokens) && tokens > 0) labels.push(t('{tokens} tokens', { tokens: formatOutputTokens(tokens) }));
-  return labels;
 }

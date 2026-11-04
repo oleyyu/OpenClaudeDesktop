@@ -36,7 +36,6 @@ export const hasTopTierEffort = (levels) => Array.isArray(levels) && isTopTierEf
 // max, xhigh or high), not only the named ultra tier. isTopTierEffort keeps the ultracode semantics (main.jsx).
 export const isHighestEffort = (id, levels) => !!id && id !== "off" && (isTopTierEffort(id)
   || (Array.isArray(levels) && levels.length > 1 && effortId(levels.at(-1)) === id));
-export const hasHighestEffort = (levels) => Array.isArray(levels) && levels.length > 1 && isHighestEffort(effortId(levels.at(-1)), levels);
 
 // Ultracode (Claude Code 2.1.280: xhigh effort + standing dynamic-workflow orchestration, this session only). With
 // Dynamic workflows on, the purple top tier IS ultracode: a model's own top tier (Codex's 'ultra') keeps its id and
@@ -66,22 +65,8 @@ export function markDefaultEffort(levels, defaultEffort) {
     return entry.badge ? entry : { ...entry, badge: { message: t("Default"), variant: "neutral" } };
   });
 }
-/** The marked stop: the first level whose badge is not a warning (q/J), or null. */
-export function effortMark(options) {
-  const index = Array.isArray(options) ? options.findIndex((option) => option?.badge?.message && option.badge.variant !== "warning") : -1;
-  return index >= 0 ? { index, label: options[index].badge.message } : null;
-}
-/** K/ve: the stop's name ('Level {position} of {total}' for a nameless one), '{name} ({badge})' on the marked stop. */
-export function effortValueText(options, index, mark = effortMark(options)) {
-  const list = Array.isArray(options) ? options : [];
-  const name = list[index]?.name || t("Level {position} of {total}", { position: index + 1, total: list.length });
-  return mark && index === mark.index ? t("{name} ({badge})", { name, badge: mark.label }) : name;
-}
-/** Q/Ee: a warning-badged level's note (its tooltip, else the High usage copy); undefined otherwise. */
-export function effortWarning(option) {
-  if (option?.badge?.variant !== "warning") return undefined;
-  return option.tooltip?.content || t("DeepSeek thinks longer with Max effort and uses your limits faster than High.");
-}
+// (W14-code r6 gen-final-6: effortMark / effortValueText / effortWarning / hasHighestEffort fed the host's hand-drawn
+// effort slider, which r6-composer-02 replaced with the sliced c8e04f916 EffortControl; with no caller left they are gone.)
 
 /** The effort a core receives: ultracode runs at xhigh; every other level is the core's own. */
 export const coreEffort = (value) => value === ULTRACODE_EFFORT ? "xhigh" : value;

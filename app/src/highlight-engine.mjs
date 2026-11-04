@@ -9,8 +9,6 @@ import { grammarLoaders } from "./highlight-grammar-loaders.mjs";
 // JavaScript regex engine runs in forgiving mode, so a pattern it cannot
 // translate is skipped instead of failing the grammar (no WASM, no theme
 // directory).
-export const SUPPORTED_GRAMMARS = Object.freeze(Object.keys(grammarLoaders));
-
 let highlighter = null;
 export function getHighlighter() {
   return highlighter ??= createHighlighterCore({

@@ -9,7 +9,8 @@
 // expanding bodies are c425fb3cf F's `epitaxy-expanding-body` divs; the buttons are view-tabs CdsButton, the primary
 // dt's `je` (c30607cef i: CdsButton whose shortcut hides while the window is not attended, shared-10 Fx).
 import React, { useId, useLayoutEffect, useRef, useState } from "react";
-import { CdsButton, CdsIcon, CdsTextArea, CdsShortcut, CdsCheckboxIndicator, cdsClassNames } from "./generated/view-tabs/index.js";
+import { flushSync } from "react-dom";
+import { CdsButton, CdsIcon, CdsTextArea, CdsShortcut, CdsCheckboxIndicator, cdsCheckboxTopAlignClass, cdsClassNames } from "./generated/view-tabs/index.js";
 import { useApprovalDraft } from "./use-approval-draft.js";
 import {
   dismissQuestionPayload,
@@ -27,10 +28,22 @@ import {
   stopClickPropagation,
 } from "./generated/question-card/option-row.mjs";
 import { QuestionCardHeader, questionDisplayText } from "./generated/question-card/card-header.mjs";
+// W14-code r4 R4T-02: En's title is c2f6611a3 Nn → cb8c5a88f ii (`T(e, t, n || void 0, void 0, void 0, void 0, void 0, !0)`):
+// the question's links, inline code and paths drawn as the transcript draws prose.
+import { ii as questionRichText } from "./generated/code-transcript/cb8c5a88f-h6ooJ7Al.mjs";
 import { questionRowMouseDown, questionEndsDragSelect } from "./generated/question-card/row-pointer.mjs";
 import { questionDigitShortcuts } from "./generated/question-card/digit-shortcuts.mjs";
 import { QuestionPrimaryButton } from "./generated/question-card/primary-button.mjs";
-import { currentlyVisible } from "./source-approval-card.jsx";
+import {
+  QuestionAnswerOption,
+  QuestionRadioMark,
+  endsAnswerSelection,
+  answerOptionInset,
+  preventAnswerMouseDown,
+  stopAnswerClick,
+} from "./generated/question-card/answer-option.mjs";
+import { e as bidiPlaintext } from "./generated/question-card/c8187a2dc.mjs";
+import { ApprovalAllowArm, currentlyVisible } from "./source-approval-card.jsx";
 import { useCardHotkeys } from "./use-card-hotkeys.js";
 import { t } from "../electron/i18n/index.mjs";
 
@@ -54,7 +67,14 @@ function ExpandingBody({ expanded, children }) {
   return <div className={expanded ? "epitaxy-expanding-body flow-root" : "epitaxy-expanding-body"} hidden={!expanded}>{children}</div>;
 }
 
-export function SourceQuestionCard({
+// W14-code r3 R2T-TS6: cc32965c2 draws AskUserQuestion with `let e = We ? ho : xo` (`We = oo() !== "dock"`): the card
+// presentation's c2f6611a3 En (ho) or the dock's c9ed5627b dt (xo). The Code transcript's inline card passes
+// presentation "card" (main.jsx); every other surface keeps the dt structure below.
+export function SourceQuestionCard(props) {
+  return props.presentation === "card" ? <SourceQuestionCardEn {...props} /> : <SourceQuestionCardDt {...props} />;
+}
+
+export function SourceQuestionCardDt({
   runtime,
   request,
   getVisibleThreadId,
@@ -446,3 +466,238 @@ export function SourceQuestionCard({
   );
 }
 
+// ── The card presentation: c2f6611a3 En (exported `t`; cc32965c2 `ho`) ──────────────────────────────────────────────
+// En's rows are the originals (src/generated/question-card/answer-option.mjs: Tn answer row, cn radio mark, Sn, bn, xn,
+// Cn). En itself keeps its draft in module-level tables (c6dc54e94 ut / ct / ht / st, c8367fa19 Ne / Pe / Fe) and answers
+// with a Claude Code tool result through onSubmit; here the host's approval-draft runtime is that state (it already
+// follows En's question hook: a single-select question preselects options[0] (`_n`), Skip marks the page skipped and on
+// the last page goes to the first unanswered one or submits (`Mt`), Other with an empty field answers "Something else"),
+// so the card shell, header, rows and actions are En's structure and class strings written against that runtime
+// (E84 2: En's closure, c8367fa19 / ccbc7e432 / c16f2c953 / c6dc54e94 and the Claude Code engine-confirm path, is not
+// cut). Mapping: E (page) = draft.page, w[D].selected = the chosen rows (-1 Other), gn = isQuestionAnswered, P =
+// selectOption / selectOther, Dt = writeCustom, N = setPage, L = advance, Mt = runtime.skip, M = runtime.submit,
+// m (sending) = view.busy, Te (isPanelActive) = isActive, De = isFocusedPane, le (hasComposerPopup) = menuOpen.
+// En has no digit keys, arrows, collapse or dismiss button: the card answers by click, Tab and ⌘↵ (ccbc7e432 Le), and
+// it is dismissed through dismissRef (a message sent from the composer; main.jsx's dismissQuestionPayload).
+// Local only (no En counterpart, kept): a question without isOther draws no Other row (the protocol refuses a custom
+// answer there), a free-form question (no options) draws its text field outright, a secret question a password field,
+// and the runtime's error line.
+const EN_CARD = "epitaxy-question-card max-w-[480px] outline-none";
+// En H (r === null: no engine-confirm body) and U.
+const EN_HEADER = `bg-alpha-1 ${answerOptionInset} flex gap-md py-md items-center`;
+const EN_TITLE = `min-w-0 flex-1 text-body text-primary select-text break-words ${bidiPlaintext}`;
+// En V: the pager, drawn when there is more than one question.
+const EN_PAGER = "-my-xs -me-sm flex shrink-0 items-center gap-xs text-caption text-muted-as-secondary";
+// En rn: the Other row.
+const EN_OTHER_ROW = `epitaxy-answer-option relative grid grid-cols-[auto_1fr] items-start gap-x-md gap-y-sm ${answerOptionInset} py-lg`;
+const EN_OTHER_HIT = "absolute inset-0 focus-visible:outline-hidden hide-focus-ring focus-visible:shadow-focus";
+const EN_OTHER_LABEL = "pointer-events-none contents text-body text-primary";
+const EN_OTHER_FIELD = "relative col-start-2 row-start-2 w-full";
+// En En: the actions row.
+const EN_ACTIONS = `epitaxy-approval-actions flex items-center justify-end gap-sm ${answerOptionInset} pb-lg pt-md`;
+// The same strings for Codex's async question card in the Code transcript (source-async-questions.jsx), which follows
+// the question card of its surface.
+export const QUESTION_CARD_EN = Object.freeze({ shell: cdsClassNames(CARD_SHELL, "epitaxy-card-outline", EN_CARD), header: EN_HEADER,
+  title: EN_TITLE, pager: EN_PAGER, otherRow: EN_OTHER_ROW, otherHit: EN_OTHER_HIT, otherLabel: EN_OTHER_LABEL,
+  otherField: EN_OTHER_FIELD, otherFieldStyle: OTHER_FIELD_STYLE, actions: EN_ACTIONS, freeRow: `epitaxy-answer-option ${answerOptionInset} py-lg`,
+  error: `text-footnote text-danger ${answerOptionInset} pt-md` });
+
+function SourceQuestionCardEn(props) {
+  const {
+    runtime, request, getVisibleThreadId, respond, onResolved = () => {}, onError = () => {},
+    skipEnter = false, isActive = true, isFocusedPane = true, menuOpen = false,
+  } = props;
+  const { ticket, view } = useApprovalDraft(runtime, request);
+  const root = useRef(null), otherField = useRef(null), refocus = useRef(false);
+  const page = view?.draft.page;
+  // En Tt: a page change (N) that started with focus inside the card hands focus to the card root.
+  useLayoutEffect(() => {
+    if (!refocus.current) return;
+    refocus.current = false;
+    root.current?.focus({ preventScroll: true });
+  }, [page]);
+  // En Le(Bt) (ccbc7e432 `{ enabled: !m, active: Te && De, yieldWhenOffScreen: !0, hasComposerPopup: le, allowOnce: L }`):
+  // the document-level ⌘↵ advances from the empty composer or the page too (use-card-hotkeys).
+  const advanceKey = useRef(null);
+  useCardHotkeys(root, isActive && isFocusedPane && !menuOpen && view?.phase === "pending" && !view.busy, (key, event) => {
+    if (key === "escape" || !isQuestionInputSubmit(event)) return;
+    advanceKey.current?.(event);
+  }, currentlyVisible);
+  advanceKey.current = null;
+  if (!view || !["pending", "invalid"].includes(view.phase)) return null;
+  const question = view.schemaError ? null : view.questions[page];
+  // A request no card can answer keeps the host's error notice (En has no such state: `if (!O) return null`).
+  if (!question) return <SourceQuestionCardDt {...props} />;
+  const questions = view.questions, count = questions.length, last = page === count - 1;
+  const answers = view.draft.answers, answer = answers[question.id];
+  const answered = (index) => isQuestionAnswered(questions[index], answers[questions[index].id]); // En gn / T
+  const ready = last ? questions.every((_, index) => answered(index)) : answered(page); // En I (A ? j : T(D))
+  const firstOpen = questions.findIndex((item, index) => index !== page && !answered(index)); // En F
+  const reason = ready
+    ? undefined
+    : answered(page)
+      ? t("Question {n} is unanswered", { n: firstOpen + 1 }) /* W14-code r5 R5T-05: c2f6611a3 En FUhtZuza1v */
+      : t("Choose an option or skip this question");
+  const multi = question.multiSelect === true;
+  const hasOptions = question.options.length > 0;
+  const drawsOther = !hasOptions || question.isOther === true;
+  const otherOn = multi ? answer.otherSelected === true : ["other", "free"].includes(answer.choice?.kind); // En Qt
+  const optionSelected = (label) => multi
+    ? (answer.selected ?? []).includes(label)
+    : answer.choice?.kind === "option" && answer.choice.label === label;
+  const sending = view.busy; // En m
+  const inert = sending || !isActive;
+  const blocked = inert || menuOpen;
+  const settle = (result) => {
+    if (result.status === "answered") onResolved({ request, ticket: result.ticket });
+    else if (result.status === "error") onError({ request, ticket: result.ticket, message: result.message });
+  };
+  const focusInside = () => {
+    const card = root.current, active = card?.ownerDocument.activeElement;
+    return !!(card && active && card.contains(active));
+  };
+  // En N: remember whether focus was inside, then change the page.
+  const navigate = (next) => {
+    if (blocked || next < 0 || next >= count) return;
+    refocus.current = focusInside();
+    if (!runtime.setPage(ticket, next)) refocus.current = false;
+  };
+  // En L: the last page submits once every question is answered, an earlier one moves on once it is.
+  const advance = async () => {
+    if (blocked || !ready) return;
+    if (!last) { navigate(page + 1); return; }
+    settle(await runtime.submit(ticket, null, respond, { getVisibleThreadId }));
+  };
+  // En Mt (runtime.skip): a submitting skip first moves focus held by the Other field to the card.
+  const skip = async () => {
+    if (blocked) return;
+    const card = root.current, field = otherField.current;
+    if (last && field && field === card?.ownerDocument.activeElement) card.focus({ preventScroll: true });
+    refocus.current = focusInside();
+    const result = await runtime.skip(ticket, respond, { getVisibleThreadId });
+    if (result.status !== "page") refocus.current = false;
+    settle(result);
+  };
+  // En P: a row press selects it (single-select) or toggles it (multiSelect); -1 is Other.
+  const select = (index) => {
+    if (blocked) return;
+    if (index === -1) runtime.selectOther(ticket, question.id, { toggle: multi });
+    else runtime.selectOption(ticket, question.id, question.options[index].label);
+  };
+  // En kt: `n(() => P(-1)), Ot.current?.focus()` (flushSync, so the field exists to take focus).
+  const pressOther = () => {
+    if (blocked) return;
+    flushSync(() => select(-1));
+    otherField.current?.focus();
+  };
+  advanceKey.current = (event) => {
+    if (!ready) return;
+    event.preventDefault();
+    event.stopPropagation();
+    if (currentlyVisible(root.current)) void advance();
+  };
+  const identity = {
+    "data-approval-instance": ticket.bridgeApproval.instanceId,
+    "data-approval-connection": ticket.bridgeApproval.connectionId,
+    "data-approval-request-id": String(ticket.requestId),
+    "data-approval-request-id-type": typeof ticket.requestId,
+    "data-approval-presentation": "card",
+    "data-skip-approval-enter": skipEnter ? "" : undefined,
+  };
+  const title = questionDisplayText(question.question);
+  // En B: the Other row's mark, the CDS checkbox indicator (multiSelect) or cn, both with shared-frame OS.
+  const mark = (checked) => multi
+    ? <CdsCheckboxIndicator checked={checked} className={cdsCheckboxTopAlignClass} />
+    : <QuestionRadioMark checked={checked} className={cdsCheckboxTopAlignClass} />;
+  const fieldProps = {
+    ref: otherField,
+    value: answer.customText,
+    disabled: inert,
+    onChange: (event) => { if (!blocked) runtime.writeCustom(ticket, question.id, event.target.value); },
+    onClick: stopAnswerClick,
+    onKeyDown: (event) => {
+      if (!isQuestionInputSubmit(event) || !ready) return;
+      event.preventDefault();
+      event.stopPropagation();
+      if (currentlyVisible(root.current)) void advance();
+    },
+    "aria-label": hasOptions ? t("Other option") : question.header || title,
+    placeholder: hasOptions ? t("Type your own answer here") : t("Write your answer"),
+    autoComplete: "off",
+    spellCheck: !question.isSecret,
+  };
+  const field = question.isSecret
+    ? <input {...fieldProps} type="password" className={cdsClassNames(EN_OTHER_FIELD, "bg-transparent text-body text-primary outline-none")} />
+    : <CdsTextArea {...fieldProps} rows={1} autosize className={EN_OTHER_FIELD} style={OTHER_FIELD_STYLE} />;
+  const other = !drawsOther ? null : !hasOptions
+    ? <div className={QUESTION_CARD_EN.freeRow}>{field}</div>
+    : (
+      <div className={EN_OTHER_ROW}>
+        <button type="button" disabled={inert} aria-pressed={otherOn} aria-label={t("Other")} className={EN_OTHER_HIT}
+          onClick={(event) => { if (!endsAnswerSelection(event)) pressOther(); }} />
+        <div aria-hidden="true" className={EN_OTHER_LABEL}>
+          {mark(otherOn)}
+          <span aria-hidden="true">{t("Other")}</span>
+        </div>
+        {otherOn ? field : null}
+      </div>
+    );
+  return (
+    <div
+      ref={root}
+      className={cdsClassNames("source-message source-question-card", CARD_SHELL, "epitaxy-card-outline", EN_CARD)}
+      role="group"
+      tabIndex={-1}
+      aria-label={title}
+      aria-busy={sending || undefined}
+      {...identity}
+      data-approval-card-root=""
+      data-approval-question-id={question.id}
+      data-question-page={page}
+      onClick={stopAnswerClick}
+    >
+      <div className={EN_HEADER}>
+        <div className={EN_TITLE}>{questionRichText(title, page, undefined, undefined, undefined, undefined, undefined, true)}</div>
+        {count > 1 ? (
+          <span className={EN_PAGER}>
+            <CdsButton size="sm" variant="ghost" icon="CaretLeft" iconOnly disabled={sending || page === 0}
+              aria-label={t("Show previous question")} onMouseDown={preventAnswerMouseDown} onClick={() => navigate(page - 1)} />
+            {t("{position} of {count}", { position: page + 1, count }) /* W14-code r5 R5T-05: c2f6611a3 En GW+MSxzG18 */}
+            <CdsButton size="sm" variant="ghost" icon="CaretRight" iconOnly disabled={sending || last}
+              aria-label={t("Show next question")} onMouseDown={preventAnswerMouseDown} onClick={() => navigate(page + 1)} />
+          </span>
+        ) : null}
+      </div>
+      <ApprovalAllowArm>
+        <div className="flex flex-col">
+          {question.options.map((option, index) => (
+            <QuestionAnswerOption key={`${index}-${option.label}`} option={option} index={index}
+              isSelected={optionSelected(option.label)} isMultiSelect={multi} disabled={inert} onSelect={select} />
+          ))}
+          {other}
+        </div>
+      </ApprovalAllowArm>
+      {view.error && <p className={QUESTION_CARD_EN.error} role="alert">{view.error}</p>}
+      <div className={EN_ACTIONS}>
+        <ApprovalAllowArm>
+          <CdsButton variant="secondary" onMouseDown={preventAnswerMouseDown} onClick={() => void skip()} disabled={inert}>
+            {t("Skip")}
+          </CdsButton>
+          <QuestionPrimaryButton
+            variant="primary"
+            onMouseDown={preventAnswerMouseDown}
+            onClick={() => void advance()}
+            busy={sending}
+            // W14-code r5 R5T-05: c2f6611a3 En `un = !m && !I` (disabled while not ready) and `fn = Te ? "cmd+enter" : void 0`
+            // (the shortcut while the panel is active).
+            disabled={!sending && !ready}
+            disabledReason={sending ? undefined : reason}
+            shortcut={isActive ? "cmd+enter" : undefined}
+          >
+            {last ? t("Submit") : t("Next")}
+          </QuestionPrimaryButton>
+        </ApprovalAllowArm>
+      </div>
+    </div>
+  );
+}

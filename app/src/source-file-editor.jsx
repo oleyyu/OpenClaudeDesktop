@@ -2,8 +2,7 @@ import { createPortal } from 'react-dom';
 import { CdsRoot, useDirection } from './generated/view-tabs/index.js';
 import { SelectionActionBar } from './generated/code-current/terminal-action-bar.mjs';
 import { Icon } from './icons';
-import { FileCommentCard } from './source-file-comments.jsx';
-import { fileCommentsStore, fileCommentAttachmentKey } from './file-comments-store.mjs';
+import { useFileComments } from './source-file-comments.jsx';
 import { commentRangeHighlight, setCommentRange, rangeHighlightTheme, selectionActions, selectableLineNumbers, commentWidgets, setCommentSlots, hoveredEditorLine } from './generated/code-editor-current/wrapper.mjs';
 import { SourceMenu } from './source-menu.jsx';
 import { CONTEXT_MENU_ALIGN_OFFSET, CONTEXT_MENU_SIDE_OFFSET } from './menu-model.mjs';
@@ -32,18 +31,27 @@ const viewOptions = (settings, hintId) => [
   settings.indentGuides ? indentGuides() : [],
   tabIndentation(settings.tabIndents, hintId),
 ];
+// 3.6556.2 cbd02b8f2-u2AOwdpo.js: the Tab hint span (id I, data-shown Ze) and the gutter "Comment on line" button
+// `absolute left-px ${Et}`, Et = cda9b4504-DgNLQLRr.js e.
+// cbd02b8f2 Wa (qi's readOnly compartment): `e ? [L.readOnly.of(!0), O({ cursorBlinkRate: 0 })] : L.readOnly.of(!1)`, O = drawSelection;
+// a store with readOnly (source-file-viewer.jsx readOnlyFileEditor) is a local session's file it cannot write (cd2efac6e Lu).
+const stopEvent = event => event.stopPropagation();
+const readOnlyMode = on => on ? [EditorState.readOnly.of(true), drawSelection({ cursorBlinkRate: 0 })] : drawSelection();
+const TAB_HINT_CLASS = "pointer-events-none absolute bottom-2 right-3 rounded border-[0.5px] border-strong bg-surface-1 px-2 py-1 text-footnote text-secondary shadow-sm";
+const GUTTER_COMMENT_CLASS = "absolute left-px flex size-4 items-center justify-center rounded bg-fill-accent text-on-accent hover:bg-fill-accent-hover";
 export function SourceFileEditor({ editor, settings, line, endLine, scrollNonce, find, apiRef, onGoToLine, onAttachFile, onAttachSelection, onDownload, downloading = false, onSaveComment, onDeleteComment }) {
   const [menu, setMenu] = useState(null), [chip,setChip] = useState(null), [cards,setCards] = useState([]), [hover,setHover] = useState(null);
   const selectionController=useRef(null);
-  const comments=useMemo(()=>fileCommentsStore(editor.key),[editor.key]);
-  const commentState=useSyncExternalStore(comments.subscribe,comments.getSnapshot,comments.getSnapshot);
-  const commentEnabled=!!onSaveComment;
+  // r8pa-02: cd2efac6e Hu over the official store (source-file-comments.jsx), its card c82eca2bd st.
+  const comments=useFileComments({sessionId:editor.sessionId,filePath:editor.path,scope:editor.key,lang:fileHighlightLanguage(editor.path),
+    enabled:!!onSaveComment,onSaveComment:onSaveComment?(entry,options)=>onSaveComment(entry,options):undefined,onDeleteComment});
+  const commentEnabled=!!comments;
   const shell=useRef(null);
   const hintId = useId(), pointerUsed = useRef(false);
   const [showTabHint, setShowTabHint] = useState(false);
   const toasts = useSourceToasts();
   const actions = useRef(null);
-  actions.current = { onGoToLine, onAttachFile, onAttachSelection, onDownload, onSaveComment, onDeleteComment };
+  actions.current = { onGoToLine, onAttachFile, onAttachSelection, onDownload, addComment: comments?.addComment, commentSlots: comments?.slots ?? [] };
   const state = useSyncExternalStore(editor.subscribe, editor.getSnapshot, editor.getSnapshot);
   const host = useRef(null), view = useRef(null), findReveal = useRef(null);
   if (!findReveal.current) findReveal.current = createFindReveal(find);
@@ -69,13 +77,13 @@ export function SourceFileEditor({ editor, settings, line, endLine, scrollNonce,
     if(parent&&tooltipParent){tooltipParent.className='absolute left-0 top-0 size-0'; parent.append(tooltipParent);}
     const selections=selectionActions({
       getHandler:()=>actions.current.onAttachSelection ? (text,range)=>actions.current.onAttachSelection({text,...range}) : undefined,
-      getCommentHandler:()=>actions.current.onSaveComment ? (start,end,code)=>comments.create(start,end,code) : undefined,
+      getCommentHandler:()=>actions.current.addComment,
       onChipLifecycle:(event,value)=>setChip(current=>event==='mount'?value:current===value?null:current),tooltipParent,
     });
     selectionController.current=selections;
     const restored = restoreEditorView(editor.key, state.text);
     const cm = new EditorView({ dispatchTransactions: updateEditorTransactions, scrollTo: restored?.scroll, parent: host.current, state: EditorState.create({ doc: state.text, selection: restored?.selection, extensions: [
-      paint.current.of(theme), undoHistory.current.of([restoredHistory(restored), history()]), restoredFolds(true, restored?.folds), selectableLineNumbers(), drawSelection(), editorClipboardExtension,
+      paint.current.of(theme), undoHistory.current.of([restoredHistory(restored), history()]), restoredFolds(true, restored?.folds), selectableLineNumbers(), readOnlyMode(editor.readOnly === true), editorClipboardExtension,
       selections.extension, commentRangeHighlight, rangeHighlightTheme(), findMatchTheme,
       commentWidgets((event,value)=>setCards(current=>event==='mount'?[...current,value]:current.filter(item=>item!==value))),
       baseLanguageBehavior, detectedIndentation(true, editor.path), bracketIndentation(true), bracketJump(true), autoCloseBrackets(true), columnSelection(true),
@@ -88,7 +96,7 @@ export function SourceFileEditor({ editor, settings, line, endLine, scrollNonce,
       lineBreaks.current.of(EditorState.lineSeparator.of(state.text.includes('\r\n') ? '\r\n' : '\n')),
       EditorView.contentAttributes.of({ 'aria-label': t('File editor'), spellcheck: 'false' }),
       keymap.of([{ key: 'Ctrl-g', run: () => actions.current.onGoToLine?.() === true },
-        { key: 'Mod-s', run: () => { void editor.save(); return true; } }, ...editorKeymap, ...historyKeymap]),
+        { key: 'Mod-s', run: cm => { if (cm.state.readOnly) return false; void editor.save(); return true; } }, ...editorKeymap, ...historyKeymap]),
       options.current.of(viewOptions(settings, hintId)), marks.current.of([]), search.current.of([]),
       EditorView.domEventHandlers({ blur: () => { void editor.flushAutoSave(); } }),
       EditorView.updateListener.of(update => { if (update.docChanged) editor.change(update.state.sliceDoc()); }),
@@ -96,7 +104,7 @@ export function SourceFileEditor({ editor, settings, line, endLine, scrollNonce,
     view.current = cm;
     // A new view starts like a fresh Jo mount: Nr=t(x?.query) and the Pr effect runs once.
     findReveal.current = createFindReveal(find);
-    cm.dispatch({effects:setCommentSlots.of(commentEnabled?comments.getSnapshot().entries.map(entry=>({id:entry.id,line:entry.end})):[])});
+    cm.dispatch({effects:setCommentSlots.of(actions.current.commentSlots)});
     // Official Jo's [Zt] effect (on mount and after the grammar loads): reconfigure(Zt), then uo(e) force-parses near the viewport.
     settleEditorParse(cm);
     void loadEditorLanguage(editor.path).then(language => {
@@ -108,12 +116,13 @@ export function SourceFileEditor({ editor, settings, line, endLine, scrollNonce,
     const flush = () => { void editor.flushAutoSave(); };
     document.addEventListener('visibilitychange', hidden);
     document.defaultView.addEventListener('pagehide', flush);
-    return () => { flush(); document.removeEventListener('visibilitychange', hidden); document.defaultView.removeEventListener('pagehide', flush); rememberEditorView(editor.key, cm, {}); view.current = null; if (apiRef) apiRef.current = null; cm.destroy(); selectionController.current=null; tooltipParent?.remove(); comments.release(); };
+    return () => { flush(); document.removeEventListener('visibilitychange', hidden); document.defaultView.removeEventListener('pagehide', flush); rememberEditorView(editor.key, cm, {}); view.current = null; if (apiRef) apiRef.current = null; cm.destroy(); selectionController.current=null; tooltipParent?.remove(); };
   }, [editor]); // Initial text and options are subsequently updated without losing selection/history.
   useLayoutEffect(() => { view.current?.dispatch({effects:paint.current.reconfigure(theme)}); }, [theme]);
-  useLayoutEffect(()=>{view.current?.dispatch({effects:setCommentSlots.of(commentEnabled?commentState.entries.map(entry=>({id:entry.id,line:entry.end})):[])});},[commentState.entries,commentEnabled]);
+  const commentSlots=comments?.slots, commentRange=comments?.activeRange;
+  useLayoutEffect(()=>{view.current?.dispatch({effects:setCommentSlots.of(commentSlots??[])});},[commentSlots]);
   useLayoutEffect(()=>{if(chip)view.current?.requestMeasure();},[chip]);
-  useLayoutEffect(()=>{const entry=commentEnabled?commentState.entries.find(entry=>entry.id===commentState.active):null;view.current?.dispatch({effects:setCommentRange.of(entry&&entry.end>entry.start?{from:entry.start,to:Math.min(entry.end,entry.start+199)}:null)});},[commentState.active,commentState.entries,commentEnabled]);
+  useLayoutEffect(()=>{view.current?.dispatch({effects:setCommentRange.of(commentRange?{from:commentRange.from,to:Math.min(commentRange.to,commentRange.from+199)}:null)});},[commentRange]);
   useLayoutEffect(() => {
     const cm = view.current;
     if (cm && cm.state.sliceDoc() !== state.text) {
@@ -188,10 +197,10 @@ export function SourceFileEditor({ editor, settings, line, endLine, scrollNonce,
       onBlur={event => { setShowTabHint(false); if (!event.currentTarget.contains(event.relatedTarget)) pointerUsed.current = false; }}>
     <div ref={host} dir="ltr" className="sfv-editor" data-file-viewer="" data-word-wrap={settings.wordWrap} data-show-whitespace={settings.showWhitespace || undefined} data-scroll-past-end={settings.scrollPastEnd || undefined}
       onContextMenu={openMenu} onKeyDown={event => { if (event.key === 'ContextMenu' || event.key === 'F10' && event.shiftKey) openMenu(event); }} />
-    {settings.tabIndents && <span id={hintId} className={showTabHint ? "sfv-editor-tab-hint" : "sr-only"}>{t(typeof navigator !== 'undefined' && /Mac/.test(navigator.platform)
+    {settings.tabIndents && <span id={hintId} data-shown={showTabHint} className={showTabHint ? TAB_HINT_CLASS : "sr-only"}>{t(typeof navigator !== 'undefined' && /Mac/.test(navigator.platform)
       ? 'Tab inserts indentation. To move the focus with Tab, press Shift+Option+M first.'
       : 'Tab inserts indentation. To move the focus with Tab, press Control+M first.')}</span>}
-    {commentEnabled&&hover&&<button type="button" className="sfv-gutter-comment" aria-label={t('Comment on line {line}',{line:hover.line})} style={{top:hover.top+(hover.rowHeight-16)/2}} onMouseDown={event=>event.preventDefault()} onClick={()=>{const cm=view.current;if(!cm)return;const line=cm.state.doc.line(Math.min(hover.line,cm.state.doc.lines));comments.create(line.number,line.number,line.text);if(cm.state.selection.ranges.some(range=>!range.empty))cm.dispatch({selection:{anchor:line.from}});}}><Icon name="Add" size={12} weight="strong"/></button>}
+    {commentEnabled&&hover&&<button type="button" className={GUTTER_COMMENT_CLASS} aria-label={t('Comment on line {line}',{line:hover.line})} style={{top:hover.top+(hover.rowHeight-16)/2}} onMouseDown={event=>event.preventDefault()} onClick={()=>{const cm=view.current;if(!cm)return;const line=cm.state.doc.line(Math.min(hover.line,cm.state.doc.lines));comments.addComment(line.number,line.number,line.text);if(cm.state.selection.ranges.some(range=>!range.empty))cm.dispatch({selection:{anchor:line.from}});}}><Icon name="Add" size={12} weight="strong"/></button>}
     </div>
     {/* cbd02b8f2 li: `W !== null && Z.length > 0 ? p(n(oe, {children: n("div", {dir: Je, className: Ft ? "pointer-events-auto
         invisible" : "pointer-events-auto", children: n(le, {actions: Z})})}), W.dom) : null`. oe is shared-18 fx (shared-frame yd,
@@ -202,9 +211,11 @@ export function SourceFileEditor({ editor, settings, line, endLine, scrollNonce,
     {chip&&chipActions.length>0&&createPortal(<CdsRoot density="compact" experimental={CHIP_ROOT_EXPERIMENTAL} className="contents">
       <div dir={direction==='rtl'?'rtl':undefined} className={menu?'pointer-events-auto invisible':'pointer-events-auto'}><SelectionActionBar actions={chipActions}/></div>
     </CdsRoot>,chip.dom)}
-    {commentEnabled&&cards.map(card=>{const entry=commentState.entries.find(entry=>entry.id===card.id);return entry?createPortal(<FileCommentCard entry={entry} active={commentState.active===entry.id} store={comments}
-      onSave={(entry,options)=>onSaveComment({...entry,key:fileCommentAttachmentKey(editor.key,entry.id),source:'file'},options)}
-      onDelete={entry=>onDeleteComment?.({...entry,key:fileCommentAttachmentKey(editor.key,entry.id)})}/>,card.dom,card.seq):null;})}
+    {/* cbd02b8f2 (the comment widgets): per mounted widget, `createPortal(<oe><div dir={Je} className="font-sans whitespace-normal"
+        data-file-comment-card onContextMenu={Aa} onTouchStart={Aa}>{renderComment(id)}</div></oe>, dom)`, oe the compact CdsRoot. */}
+    {commentEnabled&&cards.map(card=><React.Fragment key={card.seq}>{createPortal(<CdsRoot density="compact" experimental={CHIP_ROOT_EXPERIMENTAL} className="contents">
+      <div dir={direction==='rtl'?'rtl':undefined} className="font-sans whitespace-normal" data-file-comment-card="" onContextMenu={stopEvent} onTouchStart={stopEvent}>{comments.renderComment(card.id)}</div>
+    </CdsRoot>,card.dom)}</React.Fragment>)}
     {menu && <SourceMenu.Popup anchor={menu.view.contentDOM} point={menu.point} trigger={null} side="bottom" align="start"
       sideOffset={CONTEXT_MENU_SIDE_OFFSET} alignOffset={CONTEXT_MENU_ALIGN_OFFSET} layer="contextmenu" dataCds="ContextMenu" contextMenuGuard
       label={t('File actions')} onClose={() => setMenu(null)} finalFocus={() => view.current?.contentDOM}>

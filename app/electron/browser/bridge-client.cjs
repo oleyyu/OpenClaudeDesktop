@@ -91,24 +91,39 @@ class ChromeBridgeClient extends EventEmitter {
     this.emit(message.method, message.params ?? {}, message.tool_use_id ?? null);
   }
 
-  request(method, params = {}, { timeoutMs = DEFAULT_TIMEOUT_MS, toolUseId = `toolu_bridge_${crypto.randomUUID()}` } = {}) {
+  /** signal: aborted, the request is given up (rejected as stopped) and the extension is told to stop it (cancel_tool). */
+  request(method, params = {}, { timeoutMs = DEFAULT_TIMEOUT_MS, toolUseId = `toolu_bridge_${crypto.randomUUID()}`, signal = null } = {}) {
     if (this.closed) return Promise.reject(new BridgeError("disconnected", "The Chrome extension disconnected."));
+    if (signal?.aborted) return Promise.reject(new BridgeError("stopped", "The turn was stopped."));
     return new Promise((resolve, reject) => {
-      const timer = setTimeout(() => {
-        this.pending.delete(toolUseId);
-        reject(new BridgeError("timeout", `The Chrome extension didn't answer within ${Math.round(timeoutMs / 1000)} s.`));
-      }, timeoutMs);
-      this.pending.set(toolUseId, { resolve, reject, timer });
+      // Timed out: the extension is told to stop too, so nothing more runs after the model hears the call failed.
+      const timer = setTimeout(() => this.cancel(toolUseId)?.reject(new BridgeError("timeout", `The Chrome extension didn't answer within ${Math.round(timeoutMs / 1000)} s. It was told to stop; steps it had begun may have run.`)), timeoutMs);
+      const stop = () => this.cancel(toolUseId)?.reject(new BridgeError("stopped", "The turn was stopped."));
+      const settled = (fn) => (value) => { signal?.removeEventListener?.("abort", stop); fn(value); };
+      this.pending.set(toolUseId, { resolve: settled(resolve), reject: settled(reject), timer });
+      signal?.addEventListener?.("abort", stop, { once: true });
       this.log(`electron→host ${method}${params?.name ? ` ${params.name}` : ""} [${toolUseId}]`);
       this.socket.write(encode({ method, params, tool_use_id: toolUseId }));
     });
   }
 
+  /** Stops waiting for a request (its answer is dropped) and tells the extension to stop it. → its pending entry, or null. */
+  cancel(toolUseId) {
+    const waiting = this.pending.get(toolUseId);
+    if (!waiting) return null;
+    this.pending.delete(toolUseId);
+    clearTimeout(waiting.timer);
+    this.log(`electron→host cancel_tool [${toolUseId}]`);
+    if (!this.closed) { try { this.socket.write(encode({ method: "cancel_tool", params: {}, tool_use_id: toolUseId })); } catch {} }
+    return waiting;
+  }
+
   getStatus(options) { return this.request("get_status", {}, options); }
-  /** options.allowedHosts: the sites the call may act on (the extension's sites.js); omitted, it isn't limited. */
+  /** options.allowedHosts: the sites the call may act on (the extension's sites.js); omitted, it isn't limited.
+   * options.writeHosts: the sites a javascript_tool write: true may run on in this call; omitted, none. */
   executeTool(name, args = {}, options = {}) {
-    const { allowedHosts, ...rest } = options;
-    return this.request("execute_tool", { name, args, ...(Array.isArray(allowedHosts) ? { allowedHosts } : {}) }, rest);
+    const { allowedHosts, writeHosts, ...rest } = options;
+    return this.request("execute_tool", { name, args, ...(Array.isArray(allowedHosts) ? { allowedHosts } : {}), ...(Array.isArray(writeHosts) ? { writeHosts } : {}) }, rest);
   }
   close() { this.socket.end(); }
 }

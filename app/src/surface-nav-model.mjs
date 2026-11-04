@@ -49,7 +49,6 @@ const ITEMS = [
   { id: "customize", label: "Customize", icon: "Tool", key: "customize" },
 ];
 
-export const SURFACE_NAV_ITEMS = ITEMS;
 
 /** bH's gate set for this host. Options exist so the official alternatives stay testable; defaults are the
  * desktop values documented above. */

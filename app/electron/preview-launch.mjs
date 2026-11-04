@@ -290,8 +290,6 @@ export function parseUserUrl(text, root, home = "") {
 // package.json scripts dev / start / serve / develop, run through the lockfile's package manager, on the framework's
 // default port. Pure: `files` is { read(relative) → text | null, exists(relative) → boolean }.
 export const DETECT_SCRIPT_NAMES = ["dev", "start", "serve", "develop"];
-// QHi: the frameworks a candidate may name (the start page captions all but "unknown").
-export const DETECT_FRAMEWORKS = ["next", "vite", "nuxt", "astro", "svelte", "angular", "remix", "gatsby", "unknown"];
 // $Hi: the first framework whose config file exists sets the framework and its port.
 const FRAMEWORK_FILES = [
   { files: ["next.config.js", "next.config.ts", "next.config.mjs"], framework: "next", port: 3000 },

@@ -613,8 +613,11 @@ test('section view menu (tO): Group by / Sort / Metadata / Reset write the secti
     [M.viewTabs.CdsDropdown.Popup, 'bottom', 'end', 4]);
   const groupBy = byType(f.tree, controls.SidebarOptionMenu)[0].props;
   assert.equal(groupBy.label, 'Group by');
-  assert.deepEqual(groupBy.options.map(([value]) => value), ['date', 'status', 'none']);
-  assert.equal(groupBy.value, current().groupBy === 'status' || current().groupBy === 'date' ? current().groupBy : 'none');
+  // W14-code r4 gates-r4-09 (E81 / E95 over D42): tO offers Status only behind is() (shared-46 SN, claudeai_session_state),
+  // which is not in Uon, so the 3P desktop lists Date / None.
+  assert.deepEqual(groupBy.options.map(([value]) => value), ['date', 'none']);
+  // tO: `t.groupBy === "date" || (t.groupBy === "status" && h)` — a stored status shows as None while is() is off.
+  assert.equal(groupBy.value, current().groupBy === 'date' ? current().groupBy : 'none');
   groupBy.onChange('date');
   assert.equal(current().groupBy, 'date');
   f = menu();
@@ -658,7 +661,9 @@ test('E38: the session-list Group and sort content is 3.6556.2 PJ\'s sessionList
   const controls = M['section-filter-controls'], X = M.viewTabs.CdsDropdown, View = M.filterView.CurrentSidebarFilterContent;
   let intl;
   html(h(function Probe() { intl = M.adapters.useIntl(); return null; }));
-  const routines = M.adapters.useSidebarRoutinesToggle();
+  // W14-code r4 sidebar-new fr4-06: useSidebarRoutinesToggle is shared-21 VJ (a hook now), so it is read inside a render.
+  let routines;
+  html(h(function RoutinesProbe() { routines = M.adapters.useSidebarRoutinesToggle(false); return null; }));
   const base = { intl, direction: 'ltr', groupOptions: [['date', 'Date'], ['none', 'None']], groupBy: 'date', onGroupBy() {},
     sortOptions: [['recency', 'Last activity'], ['alpha', 'Name']], sortBy: 'recency', onSortBy() {}, ascending: false, onAscending() {},
     metadata: true, onMetadata() {}, routinesToggle: routines, emptyGroups: false, onEmptyGroups() {}, resetAvailable: false, onReset() {} };
@@ -675,13 +680,14 @@ test('E38: the session-list Group and sort content is 3.6556.2 PJ\'s sessionList
   const [trigger, popup] = show.props.children;
   assert.deepEqual([trigger.type, trigger.props.children], [X.SubmenuTrigger, 'Show']);
   assert.deepEqual([popup.type, popup.props.side, popup.props.align], [X.Popup, 'right', 'start']);
-  // Show: Metadata, one Separator (Empty groups is available), the Routines toggle (HJ, host: not offered), Side chats
+  // Show: Metadata, one Separator (Empty groups is available), the Routines toggle (HJ; not offered while the routines
+  // section is hidden and no local routine run is live), Side chats
   // only when offered (E16: not here), Empty groups.
   const [metadata, separator, routinesItem, sideChats, emptyGroups] = popup.props.children;
   assert.deepEqual([metadata.type, metadata.props.checked, metadata.props.keepOpen, metadata.props.onClick, metadata.props.children.props.defaultMessage], [X.Item, true, true, base.onMetadata, 'Metadata']);
   assert.equal(separator.type, X.Separator);
   assert.deepEqual([routinesItem.type, routinesItem.props], [M.adapters.SidebarShowToggleItem, { ...routines }]);
-  assert.equal(html(routinesItem), '', 'the Routines toggle is not offered in this host');
+  assert.equal(html(routinesItem), '', 'the Routines toggle is not offered while the section is hidden and no routine runs');
   assert.equal(sideChats, false);
   assert.deepEqual([emptyGroups.type, emptyGroups.props.checked, emptyGroups.props.keepOpen, emptyGroups.props.onClick, emptyGroups.props.children], [X.Item, false, true, base.onEmptyGroups, 'Empty groups']);
   // Offered Side chats reads ae.sideChatRowsShown; with nothing offered or available the Separator goes too.

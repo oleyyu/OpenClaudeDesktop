@@ -216,9 +216,8 @@ const modelSpec = (target, refKey) => ({
   },
 });
 const rendererModules = [
-  // vendor-intl tn (exported `f`): react-intl defineMessages, the identity.
-  { target: 'define-messages.mjs', source: official.vendorIntl, exports: { tn: 'defineMessages' }, features: { tn: ['return e;'] } },
-  errorTextSpec('error-text.mjs'),
+  // W14-code r2 closeout-2 (DC-06): define-messages.mjs (vendor-intl tn), error-text.mjs (preload-helper e) and
+  // cds-helpers.mjs (shared-frame Ha / Uc) are retired: re-exports of view-tabs / app-switch copies that nothing imported.
   // vendor-all-0 v (exported `F`; old ee): zustand `create`, for the shared-21 new-section opener store (dG).
   { target: 'zustand.mjs', source: 'vendor-all-0-DXM0MGjZ.js', exports: { v: 'create' }, features: { v: [loose('(e) => (e ? _(e) : _)')] } },
   // vendor-all-0 fe (exported `w`; old ge): the debounced callback the header menu's Rename waits on (vw = 100ms).
@@ -226,9 +225,6 @@ const rendererModules = [
     features: { fe: ['flushOnUnmount', 'window.clearTimeout(l.current)'] } },
   // vendor-frame un (exported `Ia`; old Td): Base UI useDirection over the view-tabs DirectionContext.
   { target: 'direction.mjs', source: VF, exports: { un: 'useDirection' }, features: { un: ['?.direction ?? "ltr"'] } },
-  // shared-frame Ha (exported `Td`; old ja): the CDS density hook over the view-tabs CdsDensityContext; Uc the element guard.
-  { target: 'cds-helpers.mjs', source: SF, exports: { Ha: 'useCdsDensity', Uc: 'elementOrNull' },
-    features: { Ha: [loose('return J(ba)')], Uc: ['e?.nodeType === 1 ? e : null'] } },
   // shared-5 $L (exported `R`; old XA): dialog presence (mounted / open on the next frame / unmount after the exit).
   { target: 'dialog-presence.mjs', source: 'shared-5-Bg6ZMqvt.js', exports: { $L: 'useDialogPresence' },
     features: { $L: ['requestAnimationFrame', 'onOpenChangeComplete'] } },

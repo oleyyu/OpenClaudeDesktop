@@ -30,9 +30,6 @@ export function createSideChatStore({ now = () => Date.now() / 1000 } = {}) {
       if (state.requestId !== requestId || state.interrupting || state.status !== 'thinking') return false;
       set(id, { interrupting: true }); return true;
     },
-    interruptFailed(id, requestId, error) {
-      if (get(id).requestId === requestId) set(id, { interrupting: false, error });
-    },
     /** Q&A pairs before the pending question, for the next request's history. */
     history(id) {
       const out = [], messages = get(id).messages;

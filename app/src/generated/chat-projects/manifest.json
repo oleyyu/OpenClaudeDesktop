@@ -1688,7 +1688,7 @@
       "target": "cb4e4d5b7-JEa8C518.mjs",
       "source": "cb4e4d5b7-JEa8C518.js",
       "sourceSha256": "23cb64031727e9f6690f4d64d14386cbba408d79124ef2a929e68f28193f0e1a",
-      "sha256": "0dadbf48c9c6b656f72dabaa5e1a67bc3d3fbcf00a49b62f5e08457931128e1d",
+      "sha256": "1388659bcac9277ebc66758d8123b8531e2328358317fc2013de0b9ba5aeb73d",
       "referenceVersion": "3.6556.2",
       "bindings": [
         {
@@ -1960,9 +1960,9 @@
         },
         {
           "local": "h",
-          "from": "./shared-frame-6jtSkIit.mjs",
-          "name": "qf",
-          "kind": "generated",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "isDomNode",
+          "kind": "view-tabs",
           "via": "shared-frame-6jtSkIit.js#qf"
         },
         {
@@ -3864,7 +3864,7 @@
       "target": "shared-frame-6jtSkIit.mjs",
       "source": "shared-frame-6jtSkIit.js",
       "sourceSha256": "22b990df9384da0621c5197a060f6c2c8fe1ccf5a79ee1f8c6e7a6cb033b259c",
-      "sha256": "be3809838a1c6810d17c6149a5117c7185abf4306ac27942f4dc4246ebebdfbf",
+      "sha256": "01812cda42d18094ee372d8f223edc0a78e6b8c2f45c959a3d3e5860d6ee3598",
       "referenceVersion": "3.6556.2",
       "bindings": [
         {
@@ -3882,10 +3882,6 @@
         {
           "name": "Kf",
           "sha256": "741fbe31f98359ac8de8278ae1a36a762c1cffc25791b9219634c0d0bca0fe2f"
-        },
-        {
-          "name": "qf",
-          "sha256": "60b25eb3cb974487247104dc1d902005175b48b7bc419eae4ef63029d2c6bdf6"
         },
         {
           "name": "Jf",
@@ -4449,7 +4445,6 @@
   "viewTabsCopies": [
     "shared-frame-6jtSkIit.js#Jf",
     "shared-frame-6jtSkIit.js#Kf",
-    "shared-frame-6jtSkIit.js#Wf",
-    "shared-frame-6jtSkIit.js#qf"
+    "shared-frame-6jtSkIit.js#Wf"
   ]
 }

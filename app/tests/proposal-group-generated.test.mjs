@@ -184,7 +184,6 @@ test('P2 contract: proposal-group-model.mjs NM / IM / LM / PM / XM and the tool 
     assert.equal(Model.proposalTaskId(record), G.proposalTaskId(record), `pL ${record.id}`);
     assert.equal(Model.isProposingTool(record), G.isProposingTool(record), `hL ${record.id}`);
     assert.equal(Model.isPlacedProposal(record), G.isPlacedProposal(record), `gL ${record.id}`);
-    assert.equal(Model.proposalToolFailed(record), G.proposalToolFailed(record), `mL ${record.id}`);
   }
   for (const list of [records, records.slice(1, 3), []]) {
     const official = G.proposingTools([{ kind: 'tools', tools: list }]), host = Model.proposingTools(list);

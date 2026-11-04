@@ -52,7 +52,7 @@ export function SourceCodeThemePreview({ mode, theme }) {
   return <div ref={ref} className="ss-theme-preview cds-root" data-theme="claude" data-mode={mode} data-color-version="v2" data-code-theme={theme}
     data-highlighted={before && after ? "" : undefined}
     style={{ background: `var(--code-theme-${mode}-bg)`, color: `var(--code-theme-${mode}-fg)` }}>
-    <div className="source-diff diff sdiff-view ss-theme-preview-diff" aria-label={mode === "light" ? t("Light code theme preview") : t("Dark code theme preview")}>
+    <div className="source-diff sdiff-view ss-theme-preview-diff" aria-label={mode === "light" ? t("Light code theme preview") : t("Dark code theme preview")}>
       {ROWS.map((row, index) => <div key={index} className={`sdiff-row ${row.type}`} data-diff-row={row.type} data-kind={row.type}>
         <div className="sdiff-line-number" data-column-number="" aria-hidden="true"><span className="ss-theme-preview-number">{previewRowNumber(row)}</span></div>
         <div className="ss-theme-preview-line">

@@ -91,22 +91,25 @@ test('main.jsx mounts the window as split sides; only the focused side takes win
   // w13-close-main-jsx-tests (cross-red-03): other props (homeMode, localProjects, …) may come before windowActions.
   // w13-close-chat-surface (E77): the sidebar is also unmounted while the window is incognito (shared-78 vK,
   // frameShellMounted), and the workspace sits in the incognito shell (display: contents when not incognito).
-  assert.match(jsx, /\{side === 0 && !NO_SIDEBAR && frameShellMounted\(\{ isIncognito: incognitoShell \}\) && <SourceSidebarBoundary>\n\s+<SourceSidebar\n(?:\s+[^\n]*\n)*?\s+windowActions=\{windowActions\}/, 'the sidebar belongs to the primary side');
+  // W14-code r4 sidebar-new fr4-06: the Code sidebar's Routines host (SidebarRoutinesHost, shared-22 $N's app-level
+  // scheduled-task store) wraps the sidebar inside the same primary-side boundary.
+  assert.match(jsx, /\{side === 0 && !NO_SIDEBAR && frameShellMounted\(\{ isIncognito: incognitoShell \}\) && <SourceSidebarBoundary>\n(?:\s+\{\/\*[\s\S]*?\*\/\}\n)?\s+<SidebarRoutinesHost [^>]*?>\n\s+<SourceSidebar\n(?:\s+[^\n]*\n)*?\s+windowActions=\{windowActions\}/, 'the sidebar belongs to the primary side');
   // The primary pane's App hosts the grid; a narrow window parks the extra panes (no tab strip, no chrome of its own).
   assert.match(jsx, /<SourceSplitHost side=\{side\}>\n\s+<main\n\s+ref=\{mainRef\}/);
   // A secondary pane's titlebar has the Close pane X; the primary's has none (View › Split View, ⌃⌘W).
-  assert.match(jsx, /onCloseSplit=\{side !== 0 && splitView\.open \? \(\) => splitStore\.close\(side\) : undefined\}\n\s+popoutWindow=\{SESSION_POPOUT \? /);
+  // W14-code r2 fr2-02: closing a side asks about its unsent draft first (shared-16 bv → closeSplitSide).
+  assert.match(jsx, /onCloseSplit=\{side !== 0 && splitView\.open \? \(\) => void closeSplitSide\(side, splitStore\.close\) : undefined\}\n\s+popoutWindow=\{SESSION_POPOUT \? /);
   assert.match(jsx, /if \(split\) splitStore\.restore\(split, \{ known \}\);/);
   // Every extra pane (not only the second) opens the session it was created for.
   assert.match(jsx, /if \(side > 0 && initialSession && b\.connected\) navigate\(initialSession\);/);
   // The session header's ⋮ menu ends with this pane's move items and Close split view (shared-21 Qse).
   assert.match(jsx, /const items = paneMenuItems\(splitStore\.getState\(\), side\);/);
-  assert.match(jsx, /item\.kind === "close" \? splitStore\.close\(side\) : splitStore\.move\(side, item\.target\)/);
+  assert.match(jsx, /item\.kind === "close" \? void closeSplitSide\(side, splitStore\.close\) : splitStore\.move\(side, item\.target\)/);
   assert.match(jsx, /function key\(e\) \{\n\s+if \(!splitActiveRef\.current\) return;/);
   assert.match(jsx, /if \(MENU_COMMANDS\.has\(e\.kind\) && \(e\.kind === "open-search" \? side === 0 : splitActiveRef\.current\)\) menuCommandRef\.current\?\.\(e\);/);
   assert.match(jsx, /const chinNode = scope\(\)\.querySelector\("\.sc-chin"\);/);
   assert.match(jsx, /onOpen=\{openInFocusedSide\}/);
-  assert.match(jsx, /if \(splitView\.open\) \{ splitStore\.close\(side\); return; \}/, '⌘W closes the focused side first');
+  assert.match(jsx, /if \(splitView\.open\) \{ void closeSplitSide\(side, splitStore\.close\); return; \}/, '⌘W closes the focused side first (W14-code r2 fr2-02: asking about its draft)');
   assert.match(jsx, /const setSettings = side === 0 \? setSettingsState : \(value\) => \{ if \(!splitStore\.toPrimary\("settings", value\)\) setSettingsState\(value\); \};/);
   // Keys in pane components stand down in the side that is not focused.
   // 2026-10-18: the composer also takes its isPanelActive prop first (the /btw side-session composer passes false); the split
@@ -119,7 +122,7 @@ test('main.jsx mounts the window as split sides; only the focused side takes win
 test('every new English string has zh-CN with the same placeholders', () => {
   const zh = dictionary('zh-CN');
   const sources = ['src/source-split-view.jsx', 'electron/app-menu.cjs', 'src/shortcuts-dialog-model.mjs'];
-  const strings = new Set(['New Window', 'Close a window before opening another.', 'Open in split view', 'Close split view', 'Open in new window', 'Couldn’t open a new window.',
+  const strings = new Set(['New Window', 'Close a window before opening another.', 'Open in split view', 'Close split view', 'Open in new window',
     'Close pane', 'Split view', 'Open here', 'Swap', 'Move here', 'Move', 'New session below', 'New session']);
   for (const file of sources) for (const match of read(file).matchAll(/\bt\("((?:[^"\\]|\\.)+)"/g)) strings.add(match[1].replace(/\\(.)/g, '$1'));
   const missing = [...strings].filter((source) => typeof zh[source] !== 'string' || !zh[source].trim());

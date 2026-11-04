@@ -35,8 +35,6 @@ export function formatMoney(value, currency = "CNY", locale) {
   const code = typeof currency === "string" && /^[A-Z]{3}$/.test(currency) ? currency : "CNY";
   return CURRENCY_SYMBOLS[code] ? `${CURRENCY_SYMBOLS[code]}${number}` : `${number} ${code}`;
 }
-/** ¥ with 2 decimals, 4 below ¥0.01; null -> "—". */
-export const formatCny = (value, locale) => formatMoney(value, "CNY", locale);
 /** Exact count for titles/tooltips. */
 export const formatTokenCount = (value, locale) => new Intl.NumberFormat(locale).format(count(value));
 
@@ -142,8 +140,6 @@ export function usageCostPresentation(data, { todayKey, locale, days: rangeDays 
     usageUrl,
   };
 }
-/** The DeepSeek name for usageCostPresentation (older callers). */
-export const deepseekCostPresentation = usageCostPresentation;
 
 /**
  * A bare all-time spend a core reports beside the Codex fields (opencode-bridge `opencode: {costUsd}`): the first

@@ -21,9 +21,11 @@ import { SourceDisclosure } from './source-disclosure.jsx';
 import { SourceSelect } from './source-select.jsx';
 import { SourceConfirmationDialog, SourceDialog, SourceDialogFooter } from './source-dialog.jsx';
 import { useSourceToasts } from './source-toast.jsx';
+import { CdsSpinner } from './generated/view-tabs/index.js';
+import { WorkspaceTrustDialog } from './generated/code-routines/index.mjs';
 import { appsView, connectorPairs, connectorApprovalItems, connectorToolRows, pluginAppsNeedingAuth,
   CONNECTOR_TOASTS, MCP_STATUS_FILTERS, MCP_STATUS_LABELS, connectorDetailMessage, connectorDetailState, connectorsListView, customizeCore,
-  filterMcp, filterMcpByStatus, filterPlugins, mcpServerConfigValue, nativePluginActions, officialSubtitleFor, pluginChangeOutcome, pluginInstallStatus,
+  filterMcp, filterMcpByStatus, filterPlugins, mcpServerConfigValue, nativePluginActions, officialSubtitleFor, pluginFailureMessage, pluginInstallStatus, pluginUpdateToast,
   shortDate, skillAuthor, skillInvocable, skillTrigger, splitArguments, joinArguments, validateServerName,
 } from "./customize-model.mjs";
 import { getAssistantName, t, tn } from '../electron/i18n/index.mjs';
@@ -879,7 +881,7 @@ const MCP_COLUMNS = [
 function WarningStatus({ kind, status, children }) {
   const label = MCP_STATUS_LABELS[kind];
   return <span className="cz-status" data-status={status}><Icon name="Warning" size={16} className="cz-status-icon" aria-hidden="true" />
-    <SourceTooltip content={label}><span className="cz-status-action">{children}</span></SourceTooltip><span className="cz-sr-only">{label}</span></span>;
+    <SourceTooltip content={label}><span className="cz-status-action">{children}</span></SourceTooltip><span className="sr-only">{label}</span></span>;
 }
 
 // la (:2049-2275): unavailable → sa (:2010-2025) "—" plus sr-only "Not
@@ -888,9 +890,10 @@ function WarningStatus({ kind, status, children }) {
 function StatusCell({ row, busy, onReconnect, onSignIn }) {
   switch (row.kind) {
     case "connected":
-      return <span className="cz-status" data-status="connected"><Icon name="Check" size={16} aria-hidden="true" /><span className="cz-sr-only">{t("Connected")}</span></span>;
+      return <span className="cz-status" data-status="connected"><Icon name="Check" size={16} aria-hidden="true" /><span className="sr-only">{t("Connected")}</span></span>;
     case "connecting":
-      return <span role="status" className="cz-status" data-status="connecting"><span className="sc-spinner" aria-hidden="true" /><span className="cz-sr-only">{t("Connecting")}</span></span>;
+      // W14-code css2-spinner-attachment: ccea1f474-Ris4OBbA.js zo `i(C,{size:"sm"})` (shared-frame Ac Spinner).
+      return <span role="status" className="cz-status" data-status="connecting"><CdsSpinner size="sm" /><span className="sr-only">{t("Connecting")}</span></span>;
     case "unreachable":
       return <WarningStatus kind="unreachable" status="unreachable">
         <Button variant="secondary" size="sm" disabled={busy} onClick={(event) => { event.stopPropagation(); onReconnect(row); }}>{t("Reconnect")}</Button></WarningStatus>;
@@ -898,7 +901,7 @@ function StatusCell({ row, busy, onReconnect, onSignIn }) {
       return <WarningStatus kind="signIn" status="sign-in">
         <Button variant="secondary" size="sm" disabled={busy} onClick={(event) => { event.stopPropagation(); onSignIn(row); }}>{t("Sign in")}</Button></WarningStatus>;
     case "disabled":
-      return <span className="cz-status" data-status="disabled"><Dash /><span className="cz-sr-only">{t("Not available")}</span></span>;
+      return <span className="cz-status" data-status="disabled"><Dash /><span className="sr-only">{t("Not available")}</span></span>;
     default:
       return <span className="cz-status" data-status="not-started">
         <Button variant="secondary" size="sm" disabled={busy} onClick={(event) => { event.stopPropagation(); onReconnect(row); }}>{t("Connect")}</Button></span>;
@@ -1183,6 +1186,22 @@ function ConnectorToolSettings({ row, settings, busy, onSetting }) {
 function ConnectorDetail({ row, busy, menuItems, onAction, definition, settings = null, onSetting = null, onSampling = null, startupError = null, onDeveloper = null, onEditConfig = null }) {
   const state = connectorDetailState(row);
   const more = <MoreMenu label={t("More options for {name}", { name: row.title })} items={menuItems} hideWhenEmpty />;
+  // W14-code r2-shared-14: Trust workspace opens the official workspace trust dialog (c165c93f1 WorkspaceTrustDialog,
+  // "Trust workspace" 0L2liwSugy, "Execution allowed by:" PUtELeH1Zb listing the connector's launch), and only its
+  // accept trusts the folder, as every other Code workspace trust does (source-session-notices.jsx).
+  const [trustPrompt, setTrustPrompt] = useState(false);
+  // W14-code r6 sh6-04: c516e93ca v keeps the trust dialog open until the trust is saved (`await I(N.cwd, N.remote)`),
+  // ignores a second accept meanwhile (the z ref) and stays open after a failed save so it can be retried; onAction
+  // ("trust") answers false when it was not saved (act's busy guard or the save's catch).
+  const trustAccepting = useRef(false);
+  const acceptTrust = async () => {
+    if (trustAccepting.current) return;
+    trustAccepting.current = true;
+    let saved;
+    try { saved = await onAction("trust", row); } catch { saved = false; }
+    trustAccepting.current = false;
+    if (saved !== false) setTrustPrompt(false);
+  };
   // A project connector of an untrusted folder (Kimi loads them only once the folder is trusted): never run until then.
   if (state.view === "trust") return (
     <div className="relative flex flex-1 flex-col items-center justify-center gap-4" data-connector-view="trust">
@@ -1190,11 +1209,12 @@ function ConnectorDetail({ row, busy, menuItems, onAction, definition, settings 
       <div className="text-center flex flex-col gap-2 px-6 max-w-xl">
         <p className="font-large-bold text-primary [overflow-wrap:anywhere]">{t("{name} comes from this folder", { name: row.title })}</p>
         <p className="font-base text-muted">{t("{core} starts a folder’s own connectors only after you trust the folder. Trust it only if you trust everything this folder would run.", { core: getAssistantName() })}</p>
-        {row.trust?.launch && <code className="cz-trust-launch text-xs [overflow-wrap:anywhere]" data-trust-launch="">{row.trust.launch}</code>}
       </div>
       <div className="flex flex-wrap items-start justify-center gap-2">
-        <Button variant="primary" disabled={busy || state.disabled} onClick={() => onAction("trust", row)}>{state.label}</Button>
+        <Button variant="primary" disabled={busy || state.disabled} onClick={() => setTrustPrompt(true)}>{state.label}</Button>
       </div>
+      {trustPrompt && <WorkspaceTrustDialog isOpen workspace={row.trust?.cwd} isRemote={false} sources={row.trust?.launch ? [row.trust.launch] : []}
+        onAccept={acceptTrust} onDecline={() => setTrustPrompt(false)} />}
     </div>
   );
   // A connector the core won't load (row.blocked: Gemini's organization / settings / folder-trust rules).
@@ -1236,9 +1256,10 @@ function ConnectorDetail({ row, busy, menuItems, onAction, definition, settings 
   if (state.view === "checking") return (
     <div className="flex flex-1 flex-col items-center justify-center gap-4" data-connector-view="checking">
       <ConnectorTile size={56} />
-      <div role="status" className="cz-checking text-center flex flex-col items-center gap-3">
-        <span className="sc-spinner" aria-hidden="true" />
-        <p className="font-base text-muted">{t("Checking connection…")}</p>
+      {/* c08e79e85-BRY2KYvQ.js: `n(g,{size:"md"})` (g = shared-frame Ac Spinner) over `p.font-base text-muted-as-secondary`. */}
+      <div role="status" className="text-center flex flex-col items-center gap-3">
+        <CdsSpinner size="md" />
+        <p className="font-base text-muted-as-secondary">{t("Checking connection…")}</p>
       </div>
     </div>
   );
@@ -1296,10 +1317,13 @@ function ConnectorDetail({ row, busy, menuItems, onAction, definition, settings 
   );
 }
 
-function ConnectorsPage({ store, threadId, cwd, onOpenExternal, call, onNavigate, focus, copy, onEditConfig, mcpDefinitions, mcpServers, onHarnessCall, onRestartCore }) {
+function ConnectorsPage({ store, threadId, cwd, onOpenExternal, call, onNavigate, focus, copy, onEditConfig, mcpDefinitions, mcpServers, onHarnessCall }) {
   // The DeepSeek core (harnessProfile) can't write MCP config through the core, but the app overlay can
-  // (harness-profile.cjs mcp-add, the same Add server form as Settings › Harness): a restart connects it.
-  const [harnessAdding, setHarnessAdding] = useState(false), [harnessRestart, setHarnessRestart] = useState(false);
+  // (harness-profile.cjs mcp-add, the same Add server form as Settings › Harness). W14-code r5-shared-02: the core
+  // starts it on the next new session (main.cjs coreRestart restarts the idle core first), so the add is cf400e6a4's
+  // addSuccess "Custom connector added." (qHSHbuVFdy) and nothing else; the host's "The connector starts after DeepSeek
+  // restarts…" / "Restart DeepSeek" banner has no counterpart in 3.6556.2's Customize and is gone (E95).
+  const [harnessAdding, setHarnessAdding] = useState(false);
   const harnessAdd = !copy.mcpConfigWrite && copy.deepseek && typeof onHarnessCall === "function";
   const scrollMemory = useRef(new Map());
   const snapshot = useStore(store);
@@ -1343,8 +1367,10 @@ function ConnectorsPage({ store, threadId, cwd, onOpenExternal, call, onNavigate
   });
   // Trust the folder an untrusted project connector comes from (customize mcp-trust → codeDesktop/workspace/trust).
   const trustFolder = (row) => act(`trust:${row.name}`, async () => {
-    try { await call({ operation: "mcp-trust", cwd: row.trust?.cwd }); await store.loadMcp({ force: true }); }
-    catch (reason) { toasts?.add?.(reason?.message || t("The folder couldn’t be trusted."), { variant: "danger" }); }
+    // W14-code r6 sh6-04: answers whether the trust was saved (the dialog closes only then, c516e93ca v).
+    try { await call({ operation: "mcp-trust", cwd: row.trust?.cwd }); await store.loadMcp({ force: true }); return true; }
+    // W14-code r2-shared-14: the core's own reason, else nothing (the host's "The folder couldn’t be trusted." has no official counterpart).
+    catch (reason) { if (reason?.message) toasts?.add?.(reason.message, { variant: "danger" }); return false; }
   });
   // A connector setting (customize mcp-enable / mcp-tool): one at a time, a failure is a toast.
   const changeSetting = (operation, payload) => act(`setting:${current?.name}`, async () => {
@@ -1382,13 +1408,9 @@ function ConnectorsPage({ store, threadId, cwd, onOpenExternal, call, onNavigate
         <Button variant="primary" disabled={!!busy || harnessAdding} onClick={() => setHarnessAdding(true)}>{t("Add custom connector")}</Button>
       </>
       : <Button variant="secondary" disabled={!!busy || !onEditConfig} onClick={editConfig}>{t("Edit config")}</Button>} />;
-  const harnessBits = harnessAdd ? <>
-    {harnessRestart && <div className="cz-plugin-restart" role="status" data-connector-restart="">
-      <span>{t("The connector starts after DeepSeek restarts. Restarting stops sessions that are running.")}</span>
-      {onRestartCore && <Button size="sm" variant="secondary" onClick={async () => { await onRestartCore(); setHarnessRestart(false); }}>{t("Restart DeepSeek")}</Button>}
-    </div>}
-    {harnessAdding && <AddServerDialog onClose={() => setHarnessAdding(false)} onAdd={async (params) => { await onHarnessCall({ op: "mcp-add", ...params }); setHarnessRestart(true); }} />}
-  </> : null;
+  const harnessBits = harnessAdd && harnessAdding
+    ? <AddServerDialog description={null} onClose={() => setHarnessAdding(false)} onAdd={async (params) => { await onHarnessCall({ op: "mcp-add", ...params }); toasts?.add?.(t("Custom connector added."), { variant: "neutral" }); }} />
+    : null;
   // :3136-3147: G "error" renders the page header and so() alone. Mt retries
   // the catalog query; locally that is a forced mcpServerStatus/list.
   if (status === "error")
@@ -1601,14 +1623,33 @@ export function PluginIcon({ icon, size = "md" }) {
 // description). The trailing control is the bundle's on/off switch (setBundleEnabled);
 // the rest of the card opens its detail; the subtitle and byline name the running core
 // (officialSubtitleFor: off until turned on, on until turned off, or plain; officialBy). Exported for rendering tests.
+// c24c8737b plugin header switch (GrowthBook __gb__254483703 off: shared-78 F$ hints and the <label> branch): the
+// tooltip says what the switch does next (switchHintTurnOff "Disable plugin" FEEJsdW3QE / switchHintTurnOn "Enable
+// plugin" Ftw1T1s2Vd, side bottom), the switch's own name is always "Enable plugin" (qn), and the label wrapper is
+// "inline-flex cursor-interactive" — customize-plugin-result: `n("inline-flex", U.isForceEnabled || U.isRequired || Te || xt ?
+// "cursor-not-allowed" : "cursor-interactive")`, so a switch that can't be pressed (disabled here) shows not-allowed.
+function PluginSwitch({ enabled, disabled, onChange }) {
+  return <SourceTooltip content={t(enabled ? "Disable plugin" : "Enable plugin")} side="bottom">
+    <label className={disabled ? "inline-flex cursor-not-allowed" : "inline-flex cursor-interactive"}>
+      <Switch label={t("Enable plugin")} size="sm" checked={enabled} disabled={disabled} onChange={onChange} />
+    </label>
+  </SourceTooltip>;
+}
+// shared-130 (3.6556.2): a plugin turned on or off says so in a toast ("{pluginName} has been turned on." Bed6uf1ekM /
+// "{pluginName} has been turned off." z2P9aMdwUV); a failure is shared-78 y1's toast (pluginFailureMessage "toggle").
+function pluginToggleToast(toasts, name, enabled, outcome, reason) {
+  if (outcome?.ok) toasts?.add?.(t(enabled ? "{pluginName} has been turned on." : "{pluginName} has been turned off.", { pluginName: name }));
+  else if (outcome || reason) toasts?.add?.(pluginFailureMessage(outcome ? outcome.message : reason, "toggle"), { variant: "danger" });
+}
 export function OfficialPlugins({ rows, store, manage = false, onOpen, copy = DEFAULT_COPY }) {
-  const [busy, setBusy] = useState(""), [error, setError] = useState("");
+  const toasts = useSourceToasts();
+  const [busy, setBusy] = useState("");
   if (!rows.length) return null;
   async function toggle(row, enabled) {
     if (busy) return;
-    setBusy(row.id); setError("");
-    try { const outcome = await store.setPluginEnabled(row.pluginName, enabled); if (outcome && !outcome.ok) setError(outcome.message); }
-    catch (reason) { setError(reason?.message || t("The plugin could not be changed.")); }
+    setBusy(row.id);
+    try { pluginToggleToast(toasts, row.name, enabled, await store.setPluginEnabled(row.pluginName, enabled)); }
+    catch (reason) { pluginToggleToast(toasts, row.name, enabled, null, reason); }
     finally { setBusy(""); }
   }
   return <section className="cz-official" aria-label={t("Official")} data-cz-official="">
@@ -1624,7 +1665,7 @@ export function OfficialPlugins({ rows, store, manage = false, onOpen, copy = DE
           </div>
           {/* A plugin that can't run here gets no switch unless it is on, so it can still be turned off. */}
           {manage && row.manageable && (!row.unavailable || row.enabled) && <div className="cz-official-action">
-            <Switch label={t(row.enabled ? "Turn {name} off" : "Turn {name} on", { name: row.name })} size="sm" checked={row.enabled} disabled={!!busy} onChange={(value) => toggle(row, value)} />
+            <PluginSwitch enabled={row.enabled} disabled={!!busy} onChange={(value) => toggle(row, value)} />
           </div>}
         </div>
         {row.description && <p className="cz-official-description" title={row.description}>{row.description}</p>}
@@ -1635,7 +1676,6 @@ export function OfficialPlugins({ rows, store, manage = false, onOpen, copy = DE
         </div>}
       </li>)}
     </ul>
-    {error && <p className="cz-error" role="alert" data-official-error="">{error}</p>}
   </section>;
 }
 
@@ -1729,15 +1769,6 @@ export function PluginDetail({ plugin, detail, error, skills, view, onView, onBa
 // (marketplaces, install, uninstall, on/off). The source page has no install
 // flow for local bundles; this follows the Connectors page's inline add form.
 
-// The core loads plugin changes when it starts (its profile runs without hot reload).
-export function PluginRestartBanner({ onRestartCore }) {
-  const [busy, setBusy] = useState(false);
-  return <div className="cz-plugin-restart" role="status" data-plugin-restart="">
-    <span>{t("Plugin changes apply after DeepSeek restarts. Restarting stops sessions that are running.")}</span>
-    {onRestartCore && <Button size="sm" variant="secondary" busy={busy} disabled={busy} onClick={async () => { setBusy(true); try { await onRestartCore(); } finally { setBusy(false); } }}>{t("Restart DeepSeek")}</Button>}
-  </div>;
-}
-
 export const PLUGIN_REGISTRY_OPTIONS = [
   { value: "", label: "Automatic" },
   { value: "https://registry.npmjs.org/", label: "Official npm registry" },
@@ -1750,6 +1781,29 @@ export function AddPluginForm({ store, install, onClose, copy = DEFAULT_COPY }) 
   const running = install?.status === "running";
   const outcome = install?.outcome;
   const pending = outcome?.pendingBuilds?.length ? outcome.pendingBuilds : null;
+  // W14-code r2-shared-03: the install result is a toast, as c76f00e40/cdbe53168 `m(nn(f, p ? "readyInNewSession" :
+  // "ready"))` / `R(ke(…))`: success neutral with shared-104 WV "{pluginName} is installed and ready to use."
+  // (xXWaJd87yv), failure danger with pluginFailureMessage(…, "install") (shared-78 x1 "Plugin couldn’t be installed.
+  // Try again."). W14-code r4-shared-06 (E95 over E93): an install the core loads later is WV readyInNewSession
+  // "{pluginName} is installed. Start a new session to use it." (NHsmCWvJf8); the host's "Restart DeepSeek" banner has no
+  // counterpart in 3.6556.2's Customize and is gone. W14-code r5-shared-01: the sentence holds because main restarts the
+  // idle core before the next new session (electron/core-restart.cjs). An outcome already shown when the form mounts is
+  // not toasted again.
+  // W14-code r3 r3-shared-01: the form's own installs toast from the store when they settle (installPlugin `announce`,
+  // c76f00e40's mutation callback), so leaving Customize › Plugins mid-install still shows the result; an install started
+  // elsewhere (Built-in plugins) is toasted once by the form showing it, keyed on the store's `announced` flag rather than
+  // on what the form saw when it mounted.
+  const toasts = useSourceToasts();
+  const announce = (result, name) => {
+    const pluginName = result.bundle || name;
+    if (result.ok) toasts?.add?.(result.restartRequired ? t("{pluginName} is installed. Start a new session to use it.", { pluginName }) : t("{pluginName} is installed and ready to use.", { pluginName }), { variant: "neutral" });
+    else toasts?.add?.(pluginFailureMessage(result.message, "install"), { variant: "danger" });
+  };
+  useEffect(() => {
+    if (!outcome || outcome.announced || outcome.cancelled) return;
+    store.markPluginInstallAnnounced?.(install?.requestId);
+    announce(outcome, install?.spec);
+  }, [outcome]);
   async function submit(event) {
     event.preventDefault();
     if (running || checking || !spec.trim()) return;
@@ -1760,8 +1814,10 @@ export function AddPluginForm({ store, install, onClose, copy = DEFAULT_COPY }) 
       if (found?.status !== "accepted") { setError(found?.reason || t("This package cannot be installed.")); return; }
       if (found.bundle === false) { setError(copy.notPluginMessage); return; }
       setChecking(false);
-      await store.installPlugin(spec.trim(), { registry: registry || undefined });
-    } catch (reason) { setError(reason?.message || t("The plugin could not be installed.")); }
+      await store.installPlugin(spec.trim(), { registry: registry || undefined, announce });
+    // customize-plugin-result: a failed install is the same danger toast as a settled one (`R(ke(…))`, shared-78 T1 → C1:
+    // the cleaned reason, else x1), so the form draws no result line. A package refused before installing stays the field's error.
+    } catch (reason) { console.warn("Plugin install failed", reason); toasts?.add?.(pluginFailureMessage(reason, "install"), { variant: "danger" }); }
     finally { setChecking(false); }
   }
   const close = () => { store.clearPluginInstall(); onClose(); };
@@ -1780,12 +1836,10 @@ export function AddPluginForm({ store, install, onClose, copy = DEFAULT_COPY }) 
         <strong>{inspection.name}</strong>{inspection.version ? ` ${inspection.version}` : ""}{inspection.description ? ` — ${inspection.description}` : ""}</p>}
       {running && <p className="cz-muted" role="status">{checking ? t("Checking…") : pluginInstallStatus(install)}</p>}
       {install?.log && <SourceDisclosure label={t("Output")}><pre className="cz-plugin-log" tabIndex={0} aria-label={t("Install output")}>{install.log}</pre></SourceDisclosure>}
-      {outcome?.ok && <p className="cz-muted" role="status">{t(outcome.restartRequired ? "Installed {name}. Restart DeepSeek to load it." : "Installed {name}.", { name: outcome.bundle || install.spec })}</p>}
-      {outcome && !outcome.ok && !outcome.cancelled && <p className="cz-error" role="alert">{outcome.message}</p>}
       {outcome?.cancelled && <p className="cz-muted" role="status">{outcome.message}</p>}
       {pending && <div className="cz-plugin-builds" data-plugin-pending-builds="">
         <p>{richText(t("These packages want to run build scripts: {packages}. Build scripts run with your user permissions."), { packages: <strong>{pending.join(", ")}</strong> })}</p>
-        <Button size="sm" variant="secondary" onClick={() => store.installPlugin(install.spec, { approvedBuilds: pending, registry: install.registry || undefined })}>{t("Allow these scripts and retry")}</Button>
+        <Button size="sm" variant="secondary" onClick={() => store.installPlugin(install.spec, { approvedBuilds: pending, registry: install.registry || undefined, announce })}>{t("Allow these scripts and retry")}</Button>
       </div>}
       {error && <p className="cz-error" role="alert">{error}</p>}
       <div className="cz-form-actions">
@@ -1817,18 +1871,28 @@ export function PluginManageControls({ plugin, store, onRemoved, copy = DEFAULT_
   const [busy, setBusy] = useState(""), [confirm, setConfirm] = useState(false);
   async function run(kind, action) {
     setBusy(kind);
-    try { const outcome = await action(); if (!outcome.ok) toasts?.add?.(outcome.message, { variant: "danger" }); return outcome; }
-    catch (reason) { toasts?.add?.(reason?.message || t("The plugin change failed."), { variant: "danger" }); return null; }
+    try {
+      const outcome = await action();
+      if (kind === "toggle") pluginToggleToast(toasts, plugin.name, !plugin.enabled, outcome);
+      // outcome.message is already the per-operation copy (pluginChangeOutcome / nativePluginOutcome); E1 would turn a
+      // host management answer ("…cannot be removed.", like h1's policy copy) into the generic removal line.
+      else if (!outcome.ok) toasts?.add?.(outcome.message || pluginFailureMessage("", kind), { variant: "danger" });
+      return outcome;
+    }
+    catch (reason) {
+      if (kind === "toggle") pluginToggleToast(toasts, plugin.name, !plugin.enabled, null, reason);
+      else toasts?.add?.(pluginFailureMessage(reason, kind), { variant: "danger" });
+      return null;
+    }
     finally { setBusy(""); }
   }
   const items = [
-    ...(manager.canUpdate ? [{ label: t("Update"), disabled: !!busy, onClick: async () => { const outcome = await run("update", () => manager.update()); if (outcome?.ok) toasts?.add?.(t("Updated. New sessions use the new version."), { variant: "neutral" }); } }] : []),
+    ...(manager.canUpdate ? [{ label: t("Update"), disabled: !!busy, onClick: async () => { const outcome = await run("update", () => manager.update()); if (outcome?.ok) toasts?.add?.(pluginUpdateToast(outcome), { variant: "neutral" }); } }] : []),
     ...(manager.canRemove ? [{ label: t("Remove"), variant: "danger", disabled: !!busy, onClick: () => setConfirm(true) }] : []),
   ];
   return <div className="cz-plugin-manage" data-plugin-manage="">
     <MoreMenu label={t("More options for {name}", { name: plugin.name })} size={DIALOG_BUTTON_SIZE} items={items} hideWhenEmpty />
-    {manager.canToggle && <Switch label={t(plugin.enabled ? "Turn {name} off" : "Turn {name} on", { name: plugin.name })} size="sm" checked={plugin.enabled} disabled={!!busy}
-      onChange={(value) => run("toggle", () => manager.toggle(value))} />}
+    {manager.canToggle && <PluginSwitch enabled={plugin.enabled} disabled={!!busy} onChange={(value) => run("toggle", () => manager.toggle(value))} />}
     <SourceConfirmationDialog open={confirm} title={t("Remove {name}?", { name: plugin.name })} confirmLabel={t("Remove")} confirmVariant="danger" pending={busy === "remove"} layer={SETTINGS_CONFIRM_LAYER}
       body={copy.pluginRemoveBody}
       onCancel={() => setConfirm(false)} onConfirm={async () => { const outcome = await run("remove", () => manager.remove()); setConfirm(false); if (outcome?.ok) onRemoved?.(); }} />
@@ -1864,6 +1928,7 @@ export function PluginShareControls({ plugin, store }) {
 // install flows into the page's AddPluginForm (store.install) so progress and
 // output stay in one place. Exported for rendering tests.
 export function BuiltinPlugins({ entries, rows, store, onInstalled, copy = DEFAULT_COPY }) {
+  const toasts = useSourceToasts();
   const [busy, setBusy] = useState("");
   const [error, setError] = useState("");
   if (!entries.length) return null;
@@ -1877,17 +1942,20 @@ export function BuiltinPlugins({ entries, rows, store, onInstalled, copy = DEFAU
         return;
       }
       const outcome = await store.installPlugin(entry.spec);
+      // Install outcome = a danger toast like AddPluginForm (shared-78 C1; c76f00e40/cdbe53168 m(nn(…))/R(ke(…)));
+      // only the inspection rejection above stays inline.
       if (outcome?.ok) onInstalled?.(entry);
-      else if (outcome && !outcome.cancelled) setError(outcome.message);
+      else if (outcome && !outcome.cancelled) toasts?.add?.(pluginFailureMessage(outcome.message, "install"), { variant: "danger" });
     } catch (reason) {
-      setError(reason?.message || t("The plugin could not be installed."));
+      console.warn("Plugin install failed", reason);
+      toasts?.add?.(pluginFailureMessage(reason, "install"), { variant: "danger" });
     } finally { setBusy(""); }
   }
   async function toggle(entry, row, enabled) {
     if (busy) return;
     setBusy(entry.id); setError("");
-    try { const outcome = await store.setPluginEnabled(row.pluginName, enabled); if (outcome && !outcome.ok) setError(outcome.message); }
-    catch (reason) { setError(reason?.message || t("The plugin could not be changed.")); }
+    try { pluginToggleToast(toasts, entry.name, enabled, await store.setPluginEnabled(row.pluginName, enabled)); }
+    catch (reason) { pluginToggleToast(toasts, entry.name, enabled, null, reason); }
     finally { setBusy(""); }
   }
   return <section className="cz-builtin" aria-label={t("Built-in plugins")} data-cz-builtin="">
@@ -1905,8 +1973,7 @@ export function BuiltinPlugins({ entries, rows, store, onInstalled, copy = DEFAU
             </div>
             <div className="cz-builtin-action">
               {row
-                ? <Switch label={t(row.enabled ? "Turn {name} off" : "Turn {name} on", { name: entry.name })} size="sm" checked={row.enabled} disabled={!!busy}
-                    onChange={(value) => toggle(entry, row, value)} />
+                ? <PluginSwitch enabled={row.enabled} disabled={!!busy} onChange={(value) => toggle(entry, row, value)} />
                 : <Button variant="primary" size="sm" busy={busy === entry.id} disabled={!!busy} onClick={() => install(entry)}>{t("Install")}</Button>}
             </div>
           </li>
@@ -1977,18 +2044,21 @@ export function PluginAppsFollowUp({ plugin, apps, onUse, onOpenExternal, onDone
 // Native core: the plugins its marketplaces offer that are not installed (plugin/list), each with Install
 // (plugin/install). Drawn like the built-in list. Exported for rendering tests.
 export function AvailablePlugins({ rows, store, onOpenExternal = null, coreName = "" }) {
-  const [busy, setBusy] = useState(""), [error, setError] = useState(""), [followUp, setFollowUp] = useState(null);
+  // Install failures are danger toasts (shared-78 C1, as AddPluginForm / BuiltinPlugins), not an inline row.
+  const toasts = useSourceToasts();
+  const [busy, setBusy] = useState(""), [followUp, setFollowUp] = useState(null);
   if (!rows.length && !followUp) return null;
+  const failed = (reason) => toasts?.add?.(localizeBridgeText(pluginFailureMessage(reason, "install")), { variant: "danger" });
   async function install(row) {
     if (busy) return;
-    setBusy(row.id); setError(""); setFollowUp(null);
+    setBusy(row.id); setFollowUp(null);
     try {
       const outcome = row.installName ? await store.installPlugin(row.installName) : await store.installMarketplacePlugin({ marketplacePath: row.marketplacePath, pluginName: row.pluginName, remoteMarketplaceName: row.remoteMarketplaceName });
-      if (!outcome.ok) setError(outcome.message);
+      if (!outcome.ok) failed(outcome.message);
       else if (row.installName) void store.loadPluginCatalog?.({ force: true });
       else { const needs = pluginAppsNeedingAuth(outcome.result); if (needs.apps.length) setFollowUp({ plugin: row.name, ...needs }); }
     }
-    catch (reason) { setError(reason?.message || t("The plugin could not be installed.")); }
+    catch (reason) { console.warn("Plugin install failed", reason); failed(reason); }
     finally { setBusy(""); }
   }
   return <section className="cz-builtin" aria-label={t("Available")} data-cz-available="">
@@ -2010,7 +2080,6 @@ export function AvailablePlugins({ rows, store, onOpenExternal = null, coreName 
       </li>)}
     </ul>
     </>}
-    {error && <p className="cz-error" role="alert" data-available-error="">{localizeBridgeText(error)}</p>}
   </section>;
 }
 
@@ -2110,9 +2179,9 @@ function PluginListRow({ row, display, manager, copy, onOpen }) {
   }
   const items = [];
   if (manager?.canToggle) items.push({ key: "toggle", label: row.enabled ? t("Turn off") : t("Turn on"), disabled: !!busy,
-    onClick: async () => { const outcome = await run("toggle", () => manager.toggle(!row.enabled)); if (outcome && !outcome.ok) toasts?.add?.(outcome.message || t("The plugin change failed."), { variant: "danger" }); } });
+    onClick: async () => { const outcome = await run("toggle", () => manager.toggle(!row.enabled)); if (outcome) pluginToggleToast(toasts, row.name, !row.enabled, outcome); } });
   if (manager?.canUpdate) items.push({ key: "update", label: t("Check for updates"), disabled: !!busy,
-    onClick: async () => { const outcome = await run("update", () => manager.update()); toasts?.add?.(outcome?.ok ? t("Updated. New sessions use the new version.") : outcome?.message || t("The plugin change failed."), { variant: outcome?.ok ? "neutral" : "danger" }); } });
+    onClick: async () => { const outcome = await run("update", () => manager.update()); toasts?.add?.(outcome?.ok ? pluginUpdateToast(outcome) : pluginFailureMessage(outcome?.message, "update"), { variant: outcome?.ok ? "neutral" : "danger" }); } });
   if (items.length) items.push({ separator: true });
   items.push({ key: "remove", label: t("Remove"), icon: "Trash", variant: "danger", disabled: !manager?.canRemove || !!busy, onClick: manager?.canRemove ? () => setConfirm(true) : undefined });
   const facts = pluginRowFacts(row);
@@ -2140,7 +2209,7 @@ function PluginListRow({ row, display, manager, copy, onOpen }) {
   </ListRow>;
 }
 
-function PluginsPage({ store, threadId, cwd, call, focus, onUseSkill, onRevealPath, onNavigate, copy, onRestartCore, onOpenExternal }) {
+function PluginsPage({ store, threadId, cwd, call, focus, onUseSkill, onRevealPath, onNavigate, copy, onOpenExternal }) {
   const scrollMemory = useRef(new Map());
   const [ownedView, setOwnedView] = useState(null);
   const snapshot = useStore(store);
@@ -2150,8 +2219,7 @@ function PluginsPage({ store, threadId, cwd, call, focus, onUseSkill, onRevealPa
   const [adding,setAdding]=useState(false),[managing,setManaging]=useState(false);
   // c6a2a31c4 :5850-5934: the "Your plugins" Show filter (Yi: all / enabled / disabled) and sort (Oa).
   const [show,setShow]=useState("all"),[sort,setSort]=useState(DEFAULT_SORT);
-  const pluginOps=snapshot.pluginOps||{install:null,restartRequired:false};
-  const banner=copy.pluginManage&&pluginOps.restartRequired?<PluginRestartBanner onRestartCore={onRestartCore}/>:null;
+  const pluginOps=snapshot.pluginOps||{install:null};
   const [ownedDetail,setOwnedDetail]=useState(null),[ownedError,setOwnedError]=useState(null);
   const [skillPath,setSkillPath]=useState(focus?.skillPath||null),[toggling,setToggling]=useState(false),[toggleError,setToggleError]=useState('');
   const request = useRef(0);
@@ -2211,7 +2279,6 @@ function PluginsPage({ store, threadId, cwd, call, focus, onUseSkill, onRevealPa
   // Workspace sharing (a native core's local plugin) is a notice row below the header, never in the title row.
   const pluginNotices=current&&copy.nativePlugins&&(current.sourcePath||current.share)&&store.sharePlugin?<PluginShareControls plugin={current} store={store}/>:null;
   if(current)return <div className="cz-page" data-cz-page="plugins" data-detail="">
-    {banner}
     <PluginDetail plugin={current} manage={manageControls} notices={pluginNotices} detail={detail} error={detailError}
       skills={snapshot.skills.cwd===cwd&&snapshot.skills.status==='ready'?snapshot.skills.skills:[]}
       view={ownedView?.id===current.id?ownedView:null} onView={value=>setOwnedView({id:current.id,...value})}
@@ -2265,7 +2332,6 @@ function PluginsPage({ store, threadId, cwd, call, focus, onUseSkill, onRevealPa
       {header}
       {manageDialog}
       <PageBody memory={scrollMemory.current} scrollKey={JSON.stringify([cwd, query, listView.show, listView.sort])}>
-          {banner}
           {addForm}
           <OfficialPlugins rows={official} store={store} manage={!!copy.pluginManage} copy={copy} onOpen={openRow} />
           {builtin.length > 0 && <BuiltinPlugins entries={builtin} rows={rows} store={store} copy={copy} />}
@@ -2291,10 +2357,10 @@ function PluginsPage({ store, threadId, cwd, call, focus, onUseSkill, onRevealPa
 // pages keep the Codex copy and every control.
 // `mcpDefinitions` is desktop-settings-read's (command/url/args/env names) for
 // the connector drill's LocalConfig.
-export function SourceCustomize({ section, store, threadId, cwd, call, core, onUseSkill, onOpenExternal, onRevealPath, onEditConfig, onNavigate, focus, mcpDefinitions, mcpServers, onRestartCore, onHarnessCall, watchRecord = null }) {
+export function SourceCustomize({ section, store, threadId, cwd, call, core, onUseSkill, onOpenExternal, onRevealPath, onEditConfig, onNavigate, focus, mcpDefinitions, mcpServers, onHarnessCall, watchRecord = null }) {
   const copy = useMemo(() => customizeCore(core), [core]);
   if (section === "customize-skills") return <SkillsPage store={store} cwd={cwd} call={call} onUseSkill={onUseSkill} onRevealPath={onRevealPath} onNavigate={onNavigate} focus={focus} copy={copy} watchRecord={watchRecord} />;
-  if (section === "customize-connectors") return <ConnectorsPage store={store} threadId={threadId} cwd={cwd} onOpenExternal={onOpenExternal} call={call} onNavigate={onNavigate} focus={focus} copy={copy} onEditConfig={onEditConfig} mcpDefinitions={mcpDefinitions} mcpServers={mcpServers} onHarnessCall={onHarnessCall} onRestartCore={onRestartCore} />;
-  if (section === "customize-plugins") return <PluginsPage store={store} threadId={threadId} cwd={cwd} call={call} focus={focus} onUseSkill={onUseSkill} onRevealPath={onRevealPath} onNavigate={onNavigate} copy={copy} onRestartCore={onRestartCore} onOpenExternal={onOpenExternal} />;
+  if (section === "customize-connectors") return <ConnectorsPage store={store} threadId={threadId} cwd={cwd} onOpenExternal={onOpenExternal} call={call} onNavigate={onNavigate} focus={focus} copy={copy} onEditConfig={onEditConfig} mcpDefinitions={mcpDefinitions} mcpServers={mcpServers} onHarnessCall={onHarnessCall} />;
+  if (section === "customize-plugins") return <PluginsPage store={store} threadId={threadId} cwd={cwd} call={call} focus={focus} onUseSkill={onUseSkill} onRevealPath={onRevealPath} onNavigate={onNavigate} copy={copy} onOpenExternal={onOpenExternal} />;
   return null;
 }

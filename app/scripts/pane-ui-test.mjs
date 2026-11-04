@@ -238,13 +238,13 @@ async function releaseFileRead() {
   });
 }
 // 0.2.101: file tabs carry no native title (panes-tabs-current.js:333-491 he);
-// the tab's path is read from its .source-file-tab root instead.
+// the tab's path is read from its view-tab root ([data-vtb-id], cfe7c4b3b; W14-code r4 closeout R4DC-06) instead.
 async function focusedTab(name) {
   await page.waitForFunction((name) => {
     const node = document.activeElement;
     return (
       node?.getAttribute("role") === "tab" &&
-      node.closest(".source-file-tab")?.dataset.filePath === name
+      node.closest("[data-vtb-id]")?.dataset.vtbId === name
     );
   }, name);
 }
@@ -262,7 +262,7 @@ async function focusedTreeRow(name) {
 // located structurally inside the tab of that path, not by role and name.
 const closeTabButton = (panel, name) =>
   panel.locator(
-    `.source-file-tab[data-file-path=${JSON.stringify(name)}] > button[aria-label="Close file"][aria-hidden="true"]`,
+    `[data-view-tab-bar] [data-vtb-id=${JSON.stringify(name)}] button[aria-label="Close file"]`,
   );
 try {
   page = await app.firstWindow();
@@ -275,7 +275,7 @@ try {
   await page
     .locator(`[data-source-session-id="${id}"] .source-session-open`)
     .click();
-  await page.locator(".st-title").waitFor();
+  await page.locator(":is(.st-title,button[data-pane-title])").waitFor();
   await page.evaluate(() => document.fonts.ready);
   const closed = await geometry();
   assert.equal(closed.bottom, "9px");
@@ -352,19 +352,19 @@ try {
   assert.equal(metrics.emptyPreview.titleLeading, "19px");
   assert.equal(metrics.emptyPreview.bodySize, "12px");
   assert.equal(metrics.emptyPreview.bodyLeading, "15px");
+  // W14 diff: the divider and the edge are the official Ir/Lr (c44d00c7f) on
+  // the c219730b0 Sn hook. Both are [role=separator][aria-label="Resize file
+  // tree"] (data-cds="ResizeHandle"); the edge (Lr) sits in a
+  // "relative w-0 shrink-0" wrapper, the divider (Ir) does not. Keyboard step
+  // is shared-9 hm = 8px (Shift gm = 32px). With hiding allowed (Sn p = onShownChange),
+  // a plain click/Enter on the divider hides the tree (no double-click reset)
+  // and Ir has no Escape cancel, so those host-only checks are gone.
   await treeDivider.focus();
   await page.keyboard.press("ArrowRight");
   await settle();
-  near((await treeColumn.boundingBox()).width, 264);
-  await treeDivider.dblclick();
+  near((await treeColumn.boundingBox()).width, 248);
+  await page.keyboard.press("ArrowLeft");
   await settle();
-  near((await treeColumn.boundingBox()).width, 240);
-  await drag(treeDivider, -190, true);
-  assert.equal(
-    await treeColumn.isVisible(),
-    true,
-    "Empty-tree hide drag can be cancelled",
-  );
   near((await treeColumn.boundingBox()).width, 240);
   await treeDivider.focus();
   await page.keyboard.press("Enter");
@@ -373,14 +373,24 @@ try {
   await emptyPreview
     .getByText("Open files appear here", { exact: true })
     .waitFor();
-  await page.waitForFunction(() =>
-    document.activeElement?.classList.contains("source-tree-edge"),
-  );
+  // Sn ae: W(divider, edge) hands focus to the edge handle (Lr).
+  await page.waitForFunction(() => {
+    const node = document.activeElement;
+    return (
+      node?.matches('[role="separator"][aria-label="Resize file tree"]') &&
+      node.parentElement?.matches(".relative.w-0.shrink-0")
+    );
+  });
   await page.keyboard.press("Enter");
   await tree.waitFor();
-  await page.waitForFunction(() =>
-    document.activeElement?.classList.contains("source-tree-divider"),
-  );
+  // Sn edge onResizeEnd: W(edge, divider) hands focus back to the divider (Ir).
+  await page.waitForFunction(() => {
+    const node = document.activeElement;
+    return (
+      node?.matches('[role="separator"][aria-label="Resize file tree"]') &&
+      !node.parentElement?.matches(".relative.w-0.shrink-0")
+    );
+  });
   await panel
     .getByRole("button", { name: "Hide file tree", exact: true })
     .click();
@@ -550,12 +560,12 @@ try {
   near((await treeColumn.boundingBox()).width, 240);
   await tree.getByRole("button", { name: "alpha.txt", exact: true }).click();
   await page
-    .locator(".source-file-preview")
+    .locator("[data-file-viewer]")
     .filter({ hasText: "ALPHA_PREVIEW_CHANGED" })
     .waitFor();
   assert.equal(await page.locator(".source-files-tree").isVisible(), false);
   const tabMetrics = await page
-    .locator(".source-file-tab")
+    .locator("[data-view-tab-bar] [data-vtb-id]")
     .evaluate((node) => ({
       height: node.getBoundingClientRect().height,
       fontSize: getComputedStyle(node.querySelector('[role="tab"]')).fontSize,
@@ -573,14 +583,14 @@ try {
     .click();
   await tree.waitFor();
   await panel
-    .locator(".source-file-preview")
+    .locator("[data-file-viewer]")
     .filter({ hasText: "ALPHA_PREVIEW_CHANGED" })
     .waitFor();
   await panel
     .getByRole("button", { name: "Hide file tree", exact: true })
     .click();
   await panel
-    .locator(".source-file-preview")
+    .locator("[data-file-viewer]")
     .filter({ hasText: "ALPHA_PREVIEW_CHANGED" })
     .waitFor();
   assert.equal(
@@ -593,7 +603,7 @@ try {
     .click();
   await tree.getByRole("button", { name: "beta.md", exact: true }).click();
   await page
-    .locator(".source-file-preview")
+    .locator("[data-file-viewer]")
     .filter({ hasText: "BETA_PREVIEW" })
     .waitFor();
   assert.equal(
@@ -613,7 +623,7 @@ try {
     .getByRole("tab", { name: "beta.md , preview", exact: true })
     .dblclick();
   assert.equal(
-    await panel.locator(".source-file-tab[data-preview]").count(),
+    await panel.locator("[data-view-tab-bar] [data-vtb-id]:has(.italic)").count(),
     0,
     "Double-click keeps a preview tab",
   );
@@ -625,7 +635,7 @@ try {
   await treeDivider.focus();
   await page.keyboard.press("ArrowRight");
   await settle();
-  near((await page.locator(".source-files-tree").boundingBox()).width, 264);
+  near((await page.locator(".source-files-tree").boundingBox()).width, 248);
   await page.keyboard.press("End");
   await settle();
   const paneWidth = (await panel.boundingBox()).width;
@@ -633,13 +643,18 @@ try {
     (await page.locator(".source-files-tree").boundingBox()).width,
     Math.min(640, paneWidth - 160),
   );
-  await treeDivider.dblclick();
+  // Sn X: Home/End jump to Z.MIN/Z.MAX (160/640); no double-click reset while
+  // the divider can hide the tree.
+  await page.keyboard.press("Home");
   await settle();
-  near((await page.locator(".source-files-tree").boundingBox()).width, 240);
+  near((await page.locator(".source-files-tree").boundingBox()).width, 160);
   await drag(treeDivider, -190);
   assert.equal(await page.locator(".source-files-tree").isVisible(), false);
+  // The edge (Lr) carries the same label; tooltip "Show file tree" is not its name.
   await drag(
-    panel.getByRole("separator", { name: "Show file tree", exact: true }),
+    panel.locator(
+      '.relative.w-0.shrink-0 > [role="separator"][aria-label="Resize file tree"]',
+    ),
     180,
   );
   near((await page.locator(".source-files-tree").boundingBox()).width, 180);
@@ -648,18 +663,18 @@ try {
       .getByRole("button", { name: `file-${n}.txt`, exact: true })
       .dblclick();
     await page
-      .locator(".source-file-preview")
+      .locator("[data-file-viewer]")
       .filter({ hasText: `PINNED_FILE_${n}` })
       .waitFor();
     await page.waitForFunction(
       () =>
-        document.querySelectorAll(".source-file-tab[data-preview]").length ===
+        document.querySelectorAll("[data-view-tab-bar] [data-vtb-id]:has(.italic)").length ===
         0,
     );
   }
   // F11: tabs past the strip edge stay in the DOM but are invisible (behind "More files"),
   // so the cap is counted on the tab roots rather than on the visible tab roles.
-  assert.equal(await panel.locator(".source-file-tab").count(), 8);
+  assert.equal(await panel.locator("[data-view-tab-bar] [data-vtb-id]").count(), 8);
   assert.equal(
     await panel.getByRole("tab", { name: "beta.md", exact: true }).count(),
     0,
@@ -697,7 +712,7 @@ try {
     .waitFor();
   // An unrelated tab that is in view (tabs past the strip edge sit behind "More files").
   const unrelatedTab = await panel.evaluate((node) =>
-    [...node.querySelectorAll(".source-file-tab:not([data-selected]):not([data-overflowed])")].at(-1)?.dataset.filePath);
+    [...node.querySelectorAll("[data-view-tab-bar] [data-vtb-id]:not([data-selected]):not([data-vtb-hidden])")].at(-1)?.dataset.vtbId);
   assert.ok(unrelatedTab, "a visible inactive tab");
   await closeTabButton(panel, unrelatedTab).click();
   // HANDOFF 0.2.119: written when the close X was a focusable "Close <name>" button (clicking it put focus
@@ -713,7 +728,7 @@ try {
   );
   await releaseFileRead();
   await panel
-    .locator(".source-file-preview")
+    .locator("[data-file-viewer]")
     .filter({ hasText: "DELAYED_C_REAL_FILE_PREVIEW" })
     .waitFor();
   assert.equal(
@@ -723,7 +738,7 @@ try {
     "true",
   );
   assert.equal(
-    await panel.locator(`.source-file-tab[data-file-path=${JSON.stringify(unrelatedTab)}]`).count(),
+    await panel.locator(`[data-view-tab-bar] [data-vtb-id=${JSON.stringify(unrelatedTab)}]`).count(),
     0,
   );
   checks.push(
@@ -747,7 +762,7 @@ try {
   await releaseFileRead();
   await settle();
   assert.equal(
-    await panel.locator('.source-file-tab[data-file-path="slow-c.txt"]').count(),
+    await panel.locator('[data-view-tab-bar] [data-vtb-id="slow-c.txt"]').count(),
     0,
     "A delayed reread of a tab that was itself closed must not resurrect it",
   );
@@ -770,7 +785,7 @@ try {
     .getByRole("button", { name: "file-9.txt", exact: true })
     .dblclick();
   await panel
-    .locator(".source-file-preview")
+    .locator("[data-file-viewer]")
     .filter({ hasText: "PINNED_FILE_9" })
     .waitFor();
 
@@ -815,7 +830,7 @@ try {
     .getByRole("button", { name: "Hide file tree", exact: true })
     .click();
   await panel
-    .locator(".source-file-preview")
+    .locator("[data-file-viewer]")
     .filter({ hasText: "PINNED_FILE_9" })
     .waitFor();
   assert.equal(await treeColumn.isVisible(), false);
@@ -835,9 +850,9 @@ try {
     width: node.clientWidth,
     treeVisible: node.querySelector(".source-file-body").dataset.treeVisible,
     column: node.querySelector(".source-file-body").dataset.treeColumn,
-    preview: !!node.querySelector(".source-file-preview"),
-    tabs: [...node.querySelectorAll(".source-file-tab")].map((tab) => tab.dataset.filePath),
-    selected: node.querySelector(".source-file-tab[data-selected]")?.dataset.filePath ?? null,
+    preview: !!node.querySelector("[data-file-viewer]"),
+    tabs: [...node.querySelectorAll("[data-view-tab-bar] [data-vtb-id]")].map((tab) => tab.dataset.vtbId),
+    selected: node.querySelector("[data-view-tab-bar] [data-vtb-id][data-selected]")?.dataset.vtbId ?? null,
     filter: (({ value, selectionStart, selectionEnd }) => ({ value, selectionStart, selectionEnd }))(document.activeElement),
   }));
   metrics.narrowSearchFiles = narrowSearch;
@@ -852,7 +867,7 @@ try {
     .getByRole("button", { name: "Hide file tree", exact: true })
     .click();
   await panel
-    .locator(".source-file-preview")
+    .locator("[data-file-viewer]")
     .filter({ hasText: "PINNED_FILE_9" })
     .waitFor();
   assert.equal(await treeColumn.isVisible(), false);
@@ -928,7 +943,7 @@ try {
     .catch(() => {});
   // Failure evidence only (0.2.119): where focus actually was when an assertion stopped.
   metrics.failureFocus = await page
-    ?.evaluate(() => { const n = document.activeElement; return { tag: n?.tagName, role: n?.getAttribute("role"), label: n?.getAttribute("aria-label"), text: n?.textContent?.slice(0, 80), filePath: n?.closest?.(".source-file-tab")?.dataset.filePath ?? null, treeRow: n?.closest?.("[data-tree-row]") ? true : false, hasFocus: document.hasFocus() }; })
+    ?.evaluate(() => { const n = document.activeElement; return { tag: n?.tagName, role: n?.getAttribute("role"), label: n?.getAttribute("aria-label"), text: n?.textContent?.slice(0, 80), filePath: n?.closest?.("[data-vtb-id]")?.dataset.vtbId ?? null, treeRow: n?.closest?.("[data-tree-row]") ? true : false, hasFocus: document.hasFocus() }; })
     .catch((e) => ({ error: e.message }));
   await fs.writeFile(
     path.join(evidence, "pane-source-test.json"),

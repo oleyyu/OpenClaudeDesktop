@@ -294,7 +294,7 @@ try {
     });
     observer.observe(document.body, { subtree: true, childList: true, characterData: true });
   });
-  await fillComposer(page,page.getByRole("textbox",{name:"Message DeepSeek",exact:true}),"fixture:code-fence-stream");
+  await fillComposer(page,page.getByRole("textbox",{ name: /^(?:Prompt|Message DeepSeek)$/ }),"fixture:code-fence-stream");
   await page.locator("form.sc-composer .sc-input").press("Enter");
   const live = page.locator(".source-assistant-message").filter({ hasText: "CLOSED_PRIOR" });
   // The unfinished language line intentionally renders an empty, zero-height

@@ -8,10 +8,11 @@ import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
 import { appSheets, append, computed, declarations, element, find, loadCascade, parseMarkup } from './fixtures/transcript-css-cascade.mjs';
 
-// R3-terminal FT-09 (diffgit-01): the 2.42304.0 finding card (c44d00c7f ya) renders inside the Changes diff, whose root
-// is `.source-diff.diff.sdiff-view`. Its layout lives in the official @layer utilities (c6a992d55); message-style.css's
-// unlayered `.diff span { display: block; white-space: pre-wrap }` would beat it (D26's class of bug), so
-// source-pane-review.css reverts the card's spans to the layers. Resolved through every sheet the renderer loads.
+// R3-terminal FT-09 (diffgit-01): the 2.42304.0 finding card (c44d00c7f ya) renders inside the Changes diff
+// (`.source-diff.sdiff-view`). Its layout lives in the official @layer utilities (c6a992d55). W14-code css-main-03
+// removed message-style.css's legacy unlayered `.diff span { display: block; white-space: pre-wrap }` (and the `diff`
+// root class it matched), so the card's spans keep the utilities with no revert-layer release. Resolved through every
+// sheet the renderer loads.
 const ROOT = path.resolve(import.meta.dirname, '..');
 let server, D;
 before(async () => {
@@ -39,11 +40,10 @@ const hasClass = (node, name) => (node.attrs.class ?? '').split(/\s+/).includes(
 const asDisplay = (code) => code.replace(/(?<![\w-])(?:-webkit-)?app-region\s*:/g, '--r3t-app-region:').replace(/(?<![\w-])display\s*:/g, '-webkit-app-region:');
 const DISPLAY = '-webkit-app-region';
 const sheets = (replace = {}) => appSheets(ROOT, replace).map((sheet) => ({ ...sheet, code: asDisplay(sheet.code) }));
-const REVERT = '.diff .spr-card-slot span { display: revert-layer; white-space: revert-layer; }';
 
-test('real cascade: the card keeps its official layout inside the .diff root', () => {
+test('real cascade: the card keeps its official layout inside the Changes diff root', () => {
   const doc = tree();
-  assert.ok(find(doc, (n) => hasClass(n, 'diff') && hasClass(n, 'source-diff')), 'the card sits under the .source-diff.diff root');
+  assert.ok(find(doc, (n) => hasClass(n, 'sdiff-view') && hasClass(n, 'source-diff') && !hasClass(n, 'diff')), 'the card sits under the .source-diff root, which has no legacy diff class');
   const cascade = loadCascade(sheets());
   const badge = find(doc, (n) => n.tag === 'span' && n.attrs['data-cds'] === 'Badge');
   const claude = find(doc, (n) => n.tag === 'span' && hasClass(n, 'text-body-medium'));
@@ -55,17 +55,10 @@ test('real cascade: the card keeps its official layout inside the .diff root', (
   assert.equal(value(buttonLabel), 'inline-flex', 'the Fix this one button label');
   assert.notEqual(value(label), 'block', 'the line label stays inline in the header row');
   assert.notEqual(value(claude), 'block');
-  // The winning declaration is the revert; it resolves to the official utility below it.
-  assert.equal(declarations(cascade, badge, DISPLAY)[0].sheet, 'src/source-pane-review.css');
   const from = computed(cascade, badge, DISPLAY).from;
   assert.match(from?.sheet ?? '', /c6a992d55/, `the badge's display comes from the official utilities, not ${from?.sheet}`);
   assert.match(from?.layer?.join?.('.') ?? String(from?.layer), /utilities/);
-  // Without the revert, message-style.css's unlayered `.diff span` wins: this is what the rule is for.
-  const review = fs.readFileSync(path.join(ROOT, 'src/source-pane-review.css'), 'utf8');
-  assert.ok(review.includes(REVERT));
-  const without = loadCascade(sheets({ 'src/source-pane-review.css': review.replace(REVERT, '') }));
-  assert.equal(computed(without, badge, DISPLAY).value, 'block');
-  assert.equal(declarations(without, badge, DISPLAY)[0].sheet, 'src/message-style.css');
-  // white-space (also set by `.diff span`, to pre-wrap) is reverted by the same rule, for the same spans.
-  assert.match(fs.readFileSync(path.join(ROOT, 'src/message-style.css'), 'utf8'), /\.diff span \{\s*display: block;\s*white-space: pre-wrap;\s*\}/);
+  // No legacy rule or release is left.
+  assert.doesNotMatch(fs.readFileSync(path.join(ROOT, 'src/message-style.css'), 'utf8'), /\.diff (span|\.added|\.removed)\b/);
+  assert.doesNotMatch(fs.readFileSync(path.join(ROOT, 'src/source-pane-review.css'), 'utf8'), /revert-layer/);
 });

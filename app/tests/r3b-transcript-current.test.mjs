@@ -28,10 +28,9 @@ const raw = file => fs.readFileSync(path.join(reference, file), 'utf8');
 const sourceOf = entry => path.join(referenceOf(entry.referenceVersion === '3.6556.2' ? V3 : V2), entry.source);
 const occurrences = (text, needle) => text.split(needle).length - 1;
 
-let server, Region, Freeze, Row, Unavailable, Host, Table, Adapters, Expansion;
+let server, Freeze, Row, Unavailable, Host, Table, Adapters, Expansion;
 before(async () => {
   server = await createServer({ configFile: false, root: app, plugins: [react()], server: { middlewareMode: true, hmr: false, ws: false, watch: null }, appType: 'custom', logLevel: 'error' });
-  Region = await server.ssrLoadModule('/src/generated/r3b-transcript/transcript-region-edge.mjs');
   Freeze = await server.ssrLoadModule('/src/generated/r3b-transcript/table-column-freeze.mjs');
   Row = await server.ssrLoadModule('/src/generated/r3b-transcript/transcript-row-boundary.mjs');
   Unavailable = await server.ssrLoadModule('/src/generated/r3b-transcript/transcript-unavailable.mjs');
@@ -159,7 +158,7 @@ test('generator: the check passes; step 1 (w2-tr-r3b) and step 2 (w6-transcript-
   for (const entry of [...manifest.modules, ...manifest.callSites])
     assert.equal(entry.sourceSha256, sha(fs.readFileSync(sourceOf(entry))), entry.source);
   for (const m of manifest.modules) assert.equal(m.referenceSnapshot, m.referenceVersion === '3.6556.2' ? V3 : V2, m.target);
-  const step1 = ['transcript-region-edge.mjs', 'table-column-freeze.mjs', 'define-messages.mjs', 'row-crash-messages.mjs', 'chunk-load-error.mjs',
+  const step1 = ['table-column-freeze.mjs', 'define-messages.mjs', 'row-crash-messages.mjs', 'chunk-load-error.mjs',
     'error-stack.mjs', 'page-leave-state.mjs', 'document-teardown.mjs', 'render-error-boundary.mjs', 'row-part-boundary.mjs',
     'transcript-row-boundary.mjs', 'empty-state.mjs', 'prevent-mouse-down.mjs', 'transcript-unavailable.mjs'];
   assert.deepEqual(manifest.modules.filter(m => m.referenceVersion !== '3.6556.2').map(m => m.target), []);
@@ -210,47 +209,15 @@ test('transcript-03: presets on (D10), the floating suggested task card is not m
   assert.equal(fs.existsSync(path.join(app, 'src/source-suggested-tasks.jsx')), false);
   const hostFiles = fs.readdirSync(path.join(app, 'src')).filter(name => /\.(jsx|mjs|js)$/.test(name));
   assert.deepEqual(hostFiles.filter(name => fs.readFileSync(path.join(app, 'src', name), 'utf8').includes('SUGGESTED_TASK_END')), []);
-  assert.equal(Region.SUGGESTED_TASK_END, '--epitaxy-suggested-task-end');
-  assert.equal(Region.STICKY_PROMPT_END, '--epitaxy-sticky-prompt-end');
-  assert.equal(Region.SUGGESTED_TASK_EDGE_OFFSET, 12);
-  // The generated hook (Ab) stays for a later publisher (the sticky prompt bubble): what lb did with it, kept tested.
-  function Edge({ shown }) {
-    const ref = Region.useTranscriptRegionEdge(Region.SUGGESTED_TASK_END, shown, Region.SUGGESTED_TASK_EDGE_OFFSET);
-    return shown ? React.createElement('div', { ref, 'data-edge': '' }) : null;
-  }
-  await withDom(({ dom, container, root }) => {
-    container.rect = { top: 40, bottom: 640, left: 0, right: 800, width: 800, height: 600 };
-    act(() => root.render(React.createElement(Edge, { shown: true })));
-    const anchor = container.find(node => node.hasAttribute?.('data-edge'));
-    assert.ok(anchor, 'edge mounted');
-    // Ab's fallback region is the parent (no [data-epitaxy-transcript-region] in this host): bottom - top + 12, measured
-    // at once (the fake anchor has no box yet: 0 - 40 + 12).
-    assert.equal(container.style.getPropertyValue('--epitaxy-suggested-task-end'), '-28px');
-    const observer = dom.observers.find(o => o.targets.includes(anchor));
-    assert.ok(observer, 'the anchor is observed through its window ResizeObserver');
-    anchor.rect = { top: 52, bottom: 172, left: 0, right: 800, width: 800, height: 120 };
-    act(() => observer.callback([]));
-    assert.equal(container.style.getPropertyValue('--epitaxy-suggested-task-end'), '144px');
-    // The edge goes away: the variable is removed with its observer.
-    act(() => root.render(React.createElement(Edge, { shown: false })));
-    assert.equal(container.style.getPropertyValue('--epitaxy-suggested-task-end'), '');
-    assert.equal(observer.disconnected, true);
-  });
-  // A real region attribute wins over the parent.
-  await withDom(({ dom, container, root }) => {
-    container.setAttribute('data-epitaxy-transcript-region', '');
-    container.rect = { top: 100, bottom: 700, left: 0, right: 800, width: 800, height: 600 };
-    function Card() {
-      const ref = Region.useTranscriptRegionEdge(Region.STICKY_PROMPT_END, true, 0);
-      return React.createElement('div', null, React.createElement('div', { ref, 'data-card': '' }));
-    }
-    act(() => root.render(React.createElement(Card)));
-    const card = container.find(node => node.hasAttribute?.('data-card'));
-    card.rect = { top: 120, bottom: 160, left: 0, right: 10, width: 10, height: 40 };
-    act(() => dom.observers.find(o => o.targets.includes(card)).callback([]));
-    assert.equal(container.style.getPropertyValue('--epitaxy-sticky-prompt-end'), '60px');
-    assert.equal(card.parentElement.style.getPropertyValue('--epitaxy-sticky-prompt-end'), '');
-  });
+  // W14-code r2 closeout-2 (DC-06): the generated hook (transcript-region-edge.mjs, Ab with Ob / kb / yC) is retired.
+  // Its two official callers are the floating card above (`xe=Ab(Ob,be,yC)`, not mounted with presets on) and the sticky
+  // prompt bubble (`O=Ab(kb,D,0)`, under claudeai_cc_epitaxy_sticky_prompt, off on the desktop: E81), so nothing here
+  // would call it.
+  assert.equal(occurrences(xx, 'xe=Ab(Ob,be,yC)'), 1);
+  assert.equal(occurrences(xx, 'O=Ab(kb,D,0)'), 1);
+  assert.equal(occurrences(xx, 'claudeai_cc_epitaxy_sticky_prompt'), 1);
+  assert.equal(fs.existsSync(path.join(app, 'src/generated/r3b-transcript/transcript-region-edge.mjs')), false);
+  assert.ok(!manifest.modules.some(m => m.target === 'transcript-region-edge.mjs'));
 });
 
 test('cov1-06: the re-measure stride is min(16, max(1, floor(rows / 16)))', () => {
@@ -484,7 +451,8 @@ test('cov2-05 / transcript-v01: main.jsx mounts the row boundary on each message
   assert.equal(occurrences(main, 'setHistoryUnavailable((value) => historyMissing(history, known, r.thread) ? id : value === id ? null : value);'), 1);
   assert.equal(occurrences(main, ': historyUnavailable === current ? "unavailable"'), 1);
   assert.match(main, /\{emptyPane === "unavailable" && <SourceTranscriptUnavailable sessionId=\{current\} title=\{session\?\.name \?\? null\} isArchived=\{session\?\.archived === true\}/);
-  assert.match(main, /requestDelete=\{session \? \(\) => setConfirmDelete\(session\) : undefined\}/);
+  // W14-code r2 复核 (3.6556.2 c48ea26ad X): the delete asks the nested question first, then opens the confirm.
+  assert.match(main, /requestDelete=\{session \? \(\) => void requestSessionDelete\(session\) : undefined\}/);
 });
 
 // R4g-btw BT2 (X7-19, D34): 2.42304.0 wraps every feed row in u9 (Jit and uat, one call each in c96d752d0), and the /btw
@@ -546,7 +514,8 @@ test('X7-19: a throwing WorkflowRow, pending-send row or /btw child row is repla
 test('X7-19: main.jsx and the /btw pane mount the row boundary on workflow, pending-send and child rows', () => {
   const main = fs.readFileSync(path.join(app, 'src/main.jsx'), 'utf8');
   assert.equal(occurrences(main, 'if(item.workflowRun&&!item.turnId)return <SourceTranscriptRowBoundary key={item.id} sessionId={current} item={item}><WorkflowRow run={item.workflowRun}'), 1);
-  assert.equal(occurrences(main, '{item.workflowRun ? <SourceTranscriptRowBoundary sessionId={current} item={item} isStreaming={isItemStreaming(state, current, item)}><WorkflowRow run={item.workflowRun}'), 1);
+  // W14-code r4 ct-feed R4T-08b: a model-started run the renderer draws (c96d752d0 F$) has no host row; the rest keep it.
+  assert.equal(occurrences(main, '{item.workflowRun ? codeRendererDraws(item) ? null /* W14-code r4 R4T-08b: the renderer\'s F$ */ : <SourceTranscriptRowBoundary sessionId={current} item={item} isStreaming={isItemStreaming(state, current, item)}><WorkflowRow run={item.workflowRun}'), 1);
   assert.equal(occurrences(main, 'itemId:item.id}))}/></SourceTranscriptRowBoundary>'), 2);
   assert.equal(occurrences(main, 'return <SourceTranscriptRowBoundary key={`${current}:${row.id}`} sessionId={current} item={row}><Message item={row} sessionKey={current} isStreaming={false}'), 1);
   assert.equal(occurrences(main, '<WorkflowRow '), occurrences(main, '><WorkflowRow '), 'no transcript WorkflowRow outside a boundary');

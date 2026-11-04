@@ -102,9 +102,16 @@ test('findings bar markup: status, steppers, Apply fixes / Re-run review and Dis
   const found = parseCodexReview(codex, '/work');
   const bar = (props) => renderToStaticMarkup(React.createElement(R.SourceReviewFindingsBar, { findings: found, onStep() {}, onDismiss() {}, onApply() {}, onRerun() {}, ...props }));
   const html = bar({});
-  assert.match(html, /<div class="epitaxy-panel-subheader spr-bar" data-review-findings="">/);
-  assert.match(html, /role="status" class="spr-status">Finding 1 of 2</);
-  assert.match(html, /aria-label="Previous finding" disabled=""/);
+  // W14 diff: cccc2cf0a ES — the c82eca2bd z_ wrap bar (bg-alpha-1) and the text-muted-as-secondary status.
+  assert.match(html, /<div class="spr-bar epitaxy-panel-subheader flex items-center gap-\[4px\] shrink-0 px-md bg-alpha-1 flex-wrap min-h-\[calc\(2rem\*var\(--cds-rem-scale,1\)\)\] py-xs" data-review-findings="">/);
+  assert.match(html, /role="status" class="spr-status text-body text-muted-as-secondary whitespace-nowrap tabular-nums">Finding 1 of 2</);
+  // W14-code r5 cleanup css5-settings-button-replica: the buttons are ES's F (shared-frame Uu = CdsButton); its merged
+  // classes end with ES's `${TS} text-secondary` / `${TS} text-muted-as-secondary` (TS = rounded-[5px] text-footnote px-[6px]).
+  assert.match(html, /data-cds="Button"[^>]* class="[^"]* rounded-\[5px\] text-footnote px-\[6px\] text-secondary"[^>]*>(?:<[^>]+>)*Apply fixes</);
+  assert.match(html, /data-cds="Button"[^>]* class="[^"]* rounded-\[5px\] text-footnote px-\[6px\] text-muted-as-secondary"[^>]*>(?:<[^>]+>)*Dismiss</);
+  assert.doesNotMatch(html, /source-settings-button|spr-action|spr-step/);
+  // ES steppers: ghost icon-only Buttons with `rounded text-muted-as-secondary` and the label as disabledReason.
+  assert.match(html, /<button type="button" disabled="" data-cds="Button" data-cds-icon-only="" data-cds-ghost="" class="[^"]* rounded text-muted-as-secondary" aria-label="Previous finding"/);
   assert.match(html, /aria-label="Next finding"/);
   assert.match(html, />Apply fixes</);
   assert.match(html, />Dismiss</);

@@ -52,34 +52,18 @@ test('sidebar-17 source: oU draws Show › Routines from se = GH(routines shown)
   ]) assert.equal(count(shared21, needle), 1, needle);
   assert.equal(count(shared16, 'function Xf(e){W.getState().setSectionView(cn,{shown:e})}function Zf(){return[Yf().shown,Xf]}'), 1);
   assert.equal(count(shared52, 'function Uh(e){return G(t=>e!==void 0&&t.navHasCodeRoutinesByOrg[e]===!0)}'), 1);
-  // The host's copy of the sessionList branch is verbatim; the host does not offer it (no Code routines section yet).
-  // 3.6556.2 (w3-sidebar-sections-gen, E38): PJ's block draws Routines through HJ from VJ's state (`ie`), its Separator
-  // while `ie.offered || ce || X`; the host passes the adapter's not-offered toggle.
+  // The host's copy of the sessionList branch is verbatim. 3.6556.2 (w3-sidebar-sections-gen, E38): PJ's block draws
+  // Routines through HJ from VJ's state (`ie`), its Separator while `ie.offered || ce || X`. W14-code r4 sidebar-new
+  // fr4-06: VJ / HJ are the sliced originals (generated/sidebar-routines) and the host passes VJ(open) — PJ's own
+  // `ie = VJ(r)` with r the menu's open state, like shared-22 Kk `d = H_(r)`.
   const view = await read(path.join(app, 'src/generated/code-current/sidebar-filter-view.mjs'));
   assert.equal(count(view, 'routinesToggle: ie = { offered: false, checked: false }'), 1);
   assert.equal(count(view, 'Z1($, 401, (ie.offered || ce || X) && u(H.Separator, {}), ce)'), 1);
   assert.equal(count(view, 'u(HJ, { ...ie })'), 1);
   const host = await read(path.join(app, 'src/source-sidebar-filter-current.jsx'));
   assert.equal(count(host, 'routinesToggle={routinesToggle}'), 1);
-  assert.equal(count(host, 'const routinesToggle = useSidebarRoutinesToggle();'), 1);
+  assert.equal(count(host, 'const routinesToggle = useSidebarRoutinesToggle(open);'), 1);
   assert.equal(Filter.CODE_ROUTINES_SECTION_HOST, false);
-});
-
-test('sidebar-17 model: GH, the open latch and se, as oU computes them', () => {
-  const { routinesItemOffered: offered, nextRoutinesLatch: latch, routinesItemShown: shown } = Filter;
-  assert.equal(offered({ hasCodeRoutines: true }), true);
-  assert.equal(offered({ shown: true }), true, 'a shown section keeps its item');
-  assert.equal(offered({}), false);
-  assert.equal(offered({ codeEnabled: false, hasCodeRoutines: true }), false, 'Code off once the gate settled');
-  assert.equal(offered({ codeEnabled: false, gateSettled: false, hasCodeRoutines: true }), true, 'not settled yet');
-  // Open with the item offered: latched; unticking (no routines, section hidden) keeps it until the menu closes.
-  let latched = latch(true, true, false);
-  assert.equal(latched, true);
-  assert.equal(shown({ open: true, offered: false, latched }), true);
-  latched = latch(false, false, latched);
-  assert.equal(latched, false);
-  assert.equal(shown({ open: false, offered: false, latched }), false);
-  assert.equal(latch(true, false, false), false, 'never offered while open: no latch');
 });
 
 test('sidebar-18 source: sT draws the target icon only when not local in the session list (oe = !r || re !== "local")', async () => {

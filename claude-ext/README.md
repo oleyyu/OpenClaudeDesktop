@@ -22,11 +22,16 @@ OpenClaude Desktop 主进程 (app/electron/browser/bridge-client.cjs)
 | `tabs.js` | 选 tab（无 tabId 时用桥的当前 tab，否则用户最后聚焦窗口的激活 tab）、navigate、tabs_create / tabs_context、按需注入 content script |
 | `refs.js` | ref 的副本：发给了哪个 tab、哪一轮 read_page；判 `stale_ref` / `ref_wrong_tab` |
 | `content.js` | 注入到页面（隔离 world）：可访问性树、分配 ref、find、form_input、computer |
-| `script.js` | javascript_tool：经 `chrome.debugger` 只读求值 |
+| `script.js` | javascript_tool：经 `chrome.debugger` 求值，默认只读；`write: true` 时像 DevTools 控制台那样执行 |
+| `monitor.js` | read_console_messages / read_network_requests：按 tab 监听控制台与网络请求并缓存 |
+| `debugger.js` | 每个 tab 的 `chrome.debugger` 会话，javascript_tool 与监听共用；没人用了才断开 |
 
 content script **不在 manifest 里声明**，只在某个工具点名某个 tab 时用 `chrome.scripting` 注入那个 tab，
 扩展不会在后台遍历页面。为此扩展要 `<all_urls>` 的 host 权限，加载时 Chrome 会提示「读取和更改所有网站上的数据」。
-javascript_tool 还要 `debugger` 权限：每次调用期间 Chrome 顶部会出现「已开始调试此浏览器」提示条，调用结束即断开。
+javascript_tool、read_console_messages、read_network_requests 还要 `debugger` 权限（manifest 里早已声明，没有新增权限）：
+javascript_tool 调用期间 Chrome 顶部会出现「已开始调试此浏览器」提示条，调用结束即断开；控制台 / 网络监听开始后，
+这条提示会一直在，直到监听停止（见下）。同一个 tab 只有一个 debugger 会话，由 `debugger.js` 分给各方共用，
+javascript_tool 结束时不会把正在监听的 tab 断开。
 
 ## 工具（P1 起）
 
@@ -37,7 +42,9 @@ javascript_tool 还要 `debugger` 权限：每次调用期间 Chrome 顶部会�
 | `find` | `query`，`tabId?`，`limit?`（默认 20） | `{tabId, matches: [{ref, role, name, interactive, text}], total}` |
 | `form_input` | `ref`，`value`，`tabId?` | `{tabId, ref, role, name, value \| checked, events}`；密码回显成 `•` |
 | `computer` | `action`，`ref?`，`coordinate?`，`text?`，`modifiers?`，`scroll_direction?`，`scroll_amount?`，`tabId?` | 动作摘要；点击/按键引起整页导航时带 `navigated` |
-| `javascript_tool` | `code`，`tabId?`，`timeout_ms?`（默认 10000） | `{tabId, type, value}`；DOM 节点返回其描述 |
+| `javascript_tool` | `code`，`tabId?`，`timeout_ms?`（默认 10000，最多 60000），`write?`（默认 false） | `{tabId, type, value}`（`write` 时多一个 `write: true`）；DOM 节点返回其描述 |
+| `read_console_messages` | `tabId?`，`pattern?`（正则，不分大小写），`onlyErrors?`，`limit?`（默认 100），`clear?` | `{tabId, url, started, since, total, matched, messages: [{level, text, url, line, column, timestamp, source}]}`，旧的在前 |
+| `read_network_requests` | `tabId?`，`urlPattern?`（子串，如 `/api/`；`/…/` 里带正则元字符或后跟 flag 时按正则），`limit?`（默认 100），`clear?`，`includeHeaders?`，`requestId?` | `{tabId, url, started, since, total, matched, requests: [{requestId, method, url, type, status, statusText, mimeType, size, duration, failed, errorText, fromCache, initiator, pending?, headers?}]}`；给 `requestId` 时返回 `{request}`，带请求头、响应头和响应体 |
 | `browser_batch` | `actions: [{name, input}]`（最多 50 步） | `{steps: [{name, ok, result \| error}], completed, failed?}` |
 | `tabs_create` | `url?`（不给则 `about:blank`），`active?`（默认 false） | `{tabId, url, title, status, active}`；新 tab 成为当前 tab |
 | `tabs_context` | — | `{currentTabId, windows: [{windowId, tabs: [{tabId, url, title, active, current, openedByBridge, status}]}]}` |
@@ -68,6 +75,43 @@ CSS `:hover` 不会因合成事件生效；只认 `isTrusted` 的站点需要以
 走 debugger 也意味着页面的 CSP 挡不住求值。已知误判：Chrome 没把 `getElementById` 等方法标成无副作用，
 拒绝消息里会提示改用 `querySelector`。
 
+`write: true` 时像在 DevTools 控制台里敲代码一样执行：`Runtime.evaluate` 带 `replMode`（顶层 `await`，`let` / `const`
+跨调用可以重复声明）、`userGesture`、`includeCommandLineAPI`（`$`、`$$`、`$x`、`copy` 等），不做副作用检查，也不关 cookie。
+`replMode` 只等显式的顶层 `await`，代码以 promise 结尾时（`fetch(…).then(…)`、`Promise.resolve(42)`）返回的是 Promise 本身，
+扩展再用 `Runtime.awaitPromise` 等它的值（这点和 DevTools 不同：控制台会显示 `Promise {<pending>}`）。
+看起来是对象字面量的代码（`{a: 1}`）先用 `Runtime.compileScript` 试编译（它要求 Runtime 已开启，求值前统一开），能编译就像
+DevTools 那样加括号。超时同样是 `timeout_ms`：还在跑的脚本由 Chrome 停掉；一直不 settle 的 promise 到时放弃等待
+（它启动的工作可能仍会在页面里完成）。结果格式和只读一样，异常带消息和行号列号。
+扩展只在本次调用带的 `writeHosts` 里有这个 tab 的站点时才执行（`sites.js` `assertScriptSite`，Bypass 时为 `["*"]`），
+否则返回 `write_not_approved` 和 `{host, url, tabId}`；和 `allowedHosts` 不同，没带 `writeHosts` 的调用一律拒绝。
+站点授权（`allowedHosts`）先于这一步检查。`browser_batch` 里不允许 `write: true` 的步骤。
+
+只读和写两种形式都**在验过的那个文档里**执行：调用先按 tab 的地址做一遍站点检查（不通过就不必 attach），进入该 tab 的
+执行队列（同一 tab 一次只跑一个求值）后，再用 `Page.getFrameTree` 取主框架当前的 URL（浏览器给的，页面改不了）、
+`chrome.tabs.get` 取最新的 tab，重新做站点检查和写脚本检查；tab 正在跳往别的站点（`pendingUrl` 的 host 不同）时直接
+返回 `page_changed`。求值用该文档默认执行上下文的 `uniqueContextId`（来自 `Runtime.executionContextCreated`，
+`debugger.js` 按会话记录），中途页面一旦导航，上下文被销毁，求值失败（`page_changed`），不会落到新站点上。
+这样，排在一个「把 tab 导到别的站点」的脚本后面的调用，或者检查之后页面自己跳转了，都不会在用户没允许的站点上执行。
+
+`read_console_messages` / `read_network_requests`（`monitor.js`）：某个 tab 第一次调用其中任一个时才开始监听，
+之前什么都不记录。监听经 debugger 打开 `Runtime`（console 调用和未捕获异常；V8 会回放它还留着的消息，所以页面在此之前
+打的日志也能看到，异常同样）、`Log`（浏览器自己的条目：资源加载失败、CSP、安全提示等）和 `Network`（从此刻起的请求，
+之前的请求不知道）。每个 tab 各留最新的 1000 条消息和 1000 个请求；主框架导航到另一个 origin 时清空（只保留当前站点的，
+和官方一致），同 origin 的刷新 / 跳转保留。消息文本：参数按 DevTools 的样子拼成一行，`%s %d %i %f %o %O %c` 生效，
+对象按 V8 的预览压缩显示（`{a: 1, nested: {b: true}, …}`），单条最长 2000 字符；`source` 为 `console` / `exception` /
+`network` / `security` 等。工具输出里，消息自带的换行变成缩进的续行，页面没法借换行伪造别的条目或工具自己的提示行。
+请求不带响应体；请求头和响应头在收到时就打码并截断（每个请求最多 50 个头，每个值最多 500 字符），页面发巨大的头也撑不爆
+service worker 的内存；名字里含 cookie、authorization、token、secret、password、credential、session、csrf / xsrf、
+signature，或是 `auth`、`key`、`api-key` 这类片段的头（如 `x-api-key`、`x-auth-token`、`x-csrf-token`、
+`x-amz-security-token`），值都换成 `(redacted)`；`includeHeaders` 时附上这些头；`requestId` 用 `Network.getResponseBody` 取单个请求的响应体
+（文本最多 20000 字符，二进制只报大小；Chrome 已丢弃时说明原因）。
+监听在这些时候停止并断开 debugger（提示条随之消失）：tab 关闭、用户点掉提示条（`chrome.debugger.onDetach`）、
+10 分钟没有读取；之后再读会重新开始（Runtime 再次回放）。service worker 重启后监听状态不保留：新的 worker 启动时先把
+上一个 worker 留下的 debugger 附加断开（`chrome.debugger.getTargets`，提示条随之消失），attach 时遇到
+「Another debugger is already attached」也会先断开自己的旧附加再重试一次（别的扩展或 DevTools 的附加断不开，照常报
+`debugger_busy`）。javascript_tool 求值前会开启 Runtime；监听开始时若 Runtime 已被某次脚本调用开启，会先关再开，
+让 V8 照样回放旧消息。
+
 `browser_batch` 在扩展里依次执行各步，整批只与 App 往返一次；某步失败即停，后面的步骤不执行。不能嵌套 batch。
 
 ref 规则：
@@ -91,6 +135,8 @@ ref 规则：
 | `chrome_form_input` | form_input | Filling in a field，meta 为 ref |
 | `chrome_computer` | computer | 按 action：Clicking / Hovering / Typing / Pressing key / Scrolling down…，meta 为 ref、坐标、按键或文字 |
 | `chrome_javascript_tool` | javascript_tool | Running page script / Page script failed，meta 为代码首行 |
+| `chrome_read_console_messages` | read_console_messages | 沿用 preview 的 Reading console / Read console，meta 为 `errors only` 或 pattern |
+| `chrome_read_network_requests` | read_network_requests | 沿用 preview 的 Reading network activity，meta 为 urlPattern |
 | `chrome_browser_batch` | browser_batch | 各步骤动词去重、最多三个再加 +N（如 “Opened, read page, clicked +2”），meta 为步数 |
 | `chrome_tabs_create_mcp` | tabs_create | Opening tab |
 | `chrome_tabs_context_mcp` | tabs_context | Checking tabs |
@@ -103,6 +149,19 @@ ref 规则：
 - **站点授权**：每个会话第一次碰到某个站点时，弹出 "chrome-site" 审批卡（Bypass permissions 下不问）。允许后整个会话内有效；
   拒绝后本会话不再询问，也不会再碰那个站点。具体机制：扩展按调用里带的 `allowedHosts` 拦截，返回 `site_not_allowed`，
   主进程弹卡片，允许后重发；batch 只续跑还没执行的步骤。点击链接跳到新站点后，下一次在那个 tab 上操作时才会询问。
+  没有自己网址的页面（别的网站打开并写入的 about:blank、data: 等）没法授权，直接返回 `site_unknown`；blob: 页面按它所属的站点算，
+  只有扩展自己开的空白 tab 不受限。
+- **页面写脚本**（`chrome_javascript_tool` 带 `write: true`）：按会话 Mode 把关，和 NotebookEdit 一样。Plan、Ask 这类只读
+  Mode 直接拒绝（提示去掉 `write` 用只读形式）；Bypass permissions 不问直接执行；其余 Mode 在会话的审批卡上问，卡片类型
+  "chrome-script"，显示站点、网址和完整代码（代码最长 20000 字符，超出直接拒绝，保证用户看得到全部），按钮为
+  Allow once / Allow for this session / Deny。「本会话允许」只对该站点生效，之后同站点的写脚本不再询问；拒绝不会被记住，
+  下一个脚本照样问。流程：先过站点授权，扩展再回 `write_not_approved` 和 tab 的站点，`agent-tools/browser.mjs` 弹卡，
+  允许后把那个站点放进 `writeHosts`、固定那个 tabId 重发。`chrome_browser_batch` 里的写步骤直接拒绝（每个写脚本单独审批，
+  比在批里逐步弹卡简单可靠）。工具的 `readOnlyHint` 仍为 true：只读形式不需要 core 自己再弹审批，写形式由 handler 自己把关。
+  没有 core 连接能承载卡片时退回原生弹窗（只有 Allow once / Deny）；原生弹窗最多完整显示 4000 字符，更长的脚本不弹窗、
+  直接告诉模型缩短或拆开（用户只批准看得到全部的代码）。卡片没得到回答就结束（turn 结束、core 断开）时，告诉模型
+  「请求没有得到回答、什么都没执行」，而不是「用户拒绝了」。Bypass 只认会话的实际权限为 `danger-full-access`
+  （和 `main.cjs` 的 `agentToolAsk` 一致）：turn 声称 bypass 但没以完全访问运行、或用户已关掉 Bypass 时，照样弹卡。
 - 主进程服务：`app/electron/browser/chrome-bridge-service.cjs`。所有会话共用一条到 native host 的连接；扩展没连上时，
   模型会收到一条说明怎么装的错误。
 
@@ -155,6 +214,13 @@ cd app && npm run check:chrome-bridge -- p1
 - P5：真实的 agent-tools host 加 stdio MCP server：`chrome_` 工具要在 `load_tools` 之后才列出（deferred），然后依次调
   navigate → read_page → find → javascript_tool → form_input → computer → batch。站点只问一次，被拒的站点不会再问；
   最后打印这些调用对应的工具行。
+- P6：本地一个加载时打日志、报错、抛异常、发 fetch、请求不存在图片的页面。第一次 `read_console_messages` 回放早先的日志和
+  未捕获异常；`onlyErrors`、`pattern`、`clear`；网络请求只从监听开始记录，刷新（同 URL 的 navigate）后列出文档、脚本、fetch
+  和 404（404 也作为 `network` 来源的控制台条目出现），cookie 已打码，单个请求的响应体；换 origin（localhost）后清空。
+  `javascript_tool` `write: true`：没有 `writeHosts` 被拒，有了就能改 DOM、`await` 一个服务器计数的 fetch、重复声明 `let`，
+  它的 `console.log` 被收进控制台；只读形式照旧拒绝写；batch 里的写步骤被拒；不 settle 的 await 超时。最后走真实的
+  agent-tools host + MCP server：Plan 拒绝写脚本，"chrome-script" 卡片带站点和代码被问到（拒绝则页面不变、允许一次执行、
+  本会话允许后不再问），Bypass 不问直接执行。
 - P4：`tabs_create` 开两个后台 tab（用户的激活 tab 不变），新 tab 成为当前 tab；两个方向的 ref 都不串（`ref_wrong_tab`）；
   按 tabId 切回原 tab 后它的 ref 仍有效，另一个 tab 的 ref 也没被动到；不带 url 开 `about:blank`，`active: true` 开到前台。
 
@@ -181,5 +247,8 @@ cd app && npm run check:chrome-bridge -- session
 - [x] P4 tabs_create / tabs_context
 - [x] P5 注册进 agent-tools（group `browser`，默认 deferred），站点授权，工具行；会话级验收脚本已就绪，
   还没用真模型跑通（缺 DEEPSEEK_API_KEY，见上）
-- [x] 9 个工具名已补进 `harness/packages/acp-bridge/src/app-tools.js` 的 `APP_TOOL_NAMES`（Gemini 的 Plan 模式规则、
+- [x] 控制台 / 网络读取（`chrome_read_console_messages`、`chrome_read_network_requests`）与 `javascript_tool` 的 `write: true`
+  （按 Mode 把关、"chrome-script" 审批卡）；单测覆盖工具定义、格式、把关、卡片和扩展逻辑（假的 `chrome.debugger`），
+  真 Chrome 的验收在 P6，尚未在真 Chrome 里跑过
+- [x] 11 个工具名已补进 `harness/packages/acp-bridge/src/app-tools.js` 的 `APP_TOOL_NAMES`（Gemini 的 Plan 模式规则、
   Qwen 的工具列表都能看到它们），`tests/app-tool-names-sync.test.mjs` 恢复严格同步

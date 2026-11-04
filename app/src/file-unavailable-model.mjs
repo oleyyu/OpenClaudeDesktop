@@ -7,14 +7,23 @@ import { t } from "../electron/i18n/index.mjs";
 // the binary card (:4604-4612, title only, with Xo's xxs secondary "View as
 // text anyway" :4874-4897) and the empty card (:4336-4346, title only).
 // The reasons are the classified results of electron/files.cjs readFile.
-export const FILE_UNAVAILABLE_REASONS = Object.freeze(["missing", "outside_root", "too_large", "read_error", "binary", "empty"]);
+// 3.6556.2 cd2efac6e Hd adds, for a local session: missing_outside (missing, and main says the path is outside the
+// session's folders), missing_or_outside, unsupported (an "unreadable" read), load_failed (the read itself failed)
+// and generic (Hd's fallback for any other reason).
 export const VIEW_AS_TEXT_LABEL = t("View as text anyway");
 
 const COPY = Object.freeze({
   missing: { title: t("Couldn’t find this file"), body: t("It may have been deleted or moved."), role: "alert", showsPath: true },
+  // cd2efac6e Zd E (title) / O (body, switch on vv): dweLepI1ml + TbYsEkx0TW; FRHpsQyd2G + IcjhOvUX8s.
+  missing_outside: { title: t("This file is outside this session’s folders"), body: t("It can’t be opened here, but it may still exist on disk."), role: "alert", showsPath: true },
+  missing_or_outside: { title: t("Couldn’t find this file"), body: t("It may have been deleted, or it lives outside the working directory."), role: "alert", showsPath: true },
   outside_root: { title: t("This file is outside the working directory"), body: t("It can’t be opened here, but it may still exist on disk."), role: "alert", showsPath: true },
   too_large: { title: t("Preview isn’t available for this file"), body: t("It’s too large to preview here."), role: "alert", showsPath: true },
+  // 6tSBeh0FOe + 3YKfK9EAI3; j8M+lCyqY/ + 6TeNAJFY0m; hE1sTcPtPq + WNc6oHHaUN.
+  unsupported: { title: t("Preview isn’t available for this file"), body: t("This file can’t be previewed here."), role: "alert", showsPath: true },
+  load_failed: { title: t("Couldn’t load this file"), body: t("Something went wrong loading it. Try opening it again."), role: "alert", showsPath: true },
   read_error: { title: t("Couldn’t read this file"), body: t("It may be unreadable, or the session’s connection may have dropped."), role: "alert", showsPath: true },
+  generic: { title: t("Couldn’t read this file"), body: t("It may have been deleted or moved, or it lives outside the working directory."), role: "alert", showsPath: true },
   binary: { title: t("This file looks like binary data and can’t be previewed as text"), body: null, role: undefined, showsPath: false, action: "view-as-text" },
   empty: { title: t("This file is empty"), body: null, role: undefined, showsPath: false },
 });
@@ -43,7 +52,7 @@ export function fileMediaErrorCopy(kind) {
 export function fileTabReason(tab) {
   if (!tab) return null;
   if (FILE_MEDIA_KINDS.includes(tab.unavailable)) return tab.unavailable;
-  if (typeof tab.unavailable === "string") return Object.hasOwn(COPY, tab.unavailable) ? tab.unavailable : "read_error";
+  if (typeof tab.unavailable === "string") return Object.hasOwn(COPY, tab.unavailable) ? tab.unavailable : "generic";
   if (tab.text === "") return "empty";
   return null;
 }
@@ -63,9 +72,9 @@ export function filePreviewEmpty(kind, tab) {
   return text === "" || (tab.truncated !== true && text.trim() === "");
 }
 
-/** {title, body, role, showsPath, action} for a reason; unknown reasons read as read_error. */
+/** {title, body, role, showsPath, action} for a reason; unknown reasons read as generic (cd2efac6e Hd's fallback). */
 export function fileUnavailableCopy(reason) {
-  const copy = COPY[reason] ?? COPY.read_error;
+  const copy = COPY[reason] ?? COPY.generic;
   return { title: copy.title, body: copy.body, role: copy.role, showsPath: copy.showsPath, action: copy.action ?? null };
 }
 
@@ -101,6 +110,8 @@ export function offeredFolderLabel(folder, home) {
   return value === base ? value : `~${value.slice(base.length)}`;
 }
 
+// cd2efac6e Hv: the reasons that ask for a folder offer (outside_workspace is a remote reason).
+export const FOLDER_OFFER_REASONS = Object.freeze(["outside_root", "missing_outside", "missing_or_outside"]);
 /**
  * The card for a reason with its actions (pure). writable: the session can write files here (Fo); creatable: the
  * read's "parent folder exists" answer (Qo); canAskClaude: the session takes messages (Ld); folderOffer: the folder
@@ -110,9 +121,10 @@ export function offeredFolderLabel(folder, home) {
 export function fileCardPlan(reason, { path = "", writable = false, creatable, canAskClaude = false, folderOffer = null, canReveal = false, canViewAsText = false } = {}) {
   const copy = fileUnavailableCopy(reason);
   const missing = reason === "missing";
+  // cd2efac6e dy: Try again on every missing reason; by: Create file only on a plain missing one.
   const named = missing && writable && canCreateFileNamed(path);
-  const offer = reason === "outside_root" && typeof folderOffer === "string" && folderOffer !== "" ? folderOffer : null;
-  const plan = { ...copy, retry: missing, create: named && creatable === true, offer,
+  const offer = FOLDER_OFFER_REASONS.includes(reason) && typeof folderOffer === "string" && folderOffer !== "" ? folderOffer : null;
+  const plan = { ...copy, retry: missing || reason === "missing_outside" || reason === "missing_or_outside", create: named && creatable === true, offer,
     reveal: canReveal && (reason === "outside_root" || reason === "binary"),
     viewAsText: copy.action === "view-as-text" && canViewAsText };
   if (named && creatable === false && canAskClaude) plan.body = t("It can’t be created from here. Ask Claude to create it.");

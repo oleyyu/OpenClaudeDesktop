@@ -114,4 +114,4 @@ html[data-reduce-motion="true"] .spal-popup, html[data-reduce-motion="true"] .sp
 .spal-footer-hints { display: flex; align-items: center; gap: 20px; min-height: 20px; color: var(--cds-text-muted); font-size: 12px; line-height: 16px; }
 .spal-hint { display: flex; align-items: center; gap: 8px; }
 @media (pointer: coarse) { .spal-footer { display: none; } }
-.spal-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+/* W14-code r5 cleanup css5-sr-only-handcopies: the hand-copied sr-only rule is gone; the JSX uses the official c6a992d55 .sr-only. */

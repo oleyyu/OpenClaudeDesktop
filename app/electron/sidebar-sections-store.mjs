@@ -215,8 +215,6 @@ export function sectionViewPatch(view) {
   return Object.keys(patch).length ? patch : null;
 }
 
-/** The sidebar-state operations this module answers. */
-export const SIDEBAR_SECTION_OPERATIONS = Object.freeze(["create-group", "rename-group", "delete-group", "section-move", "section-view", "section-assign", "sections-seed"]);
 // `cg-${crypto.randomUUID()}` (shared-52 addCustomGroup).
 const PROPOSED_GROUP_ID = /^cg-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const groupList = (config) => Array.isArray(config.customGroups) ? config.customGroups : (config.customGroups = []);

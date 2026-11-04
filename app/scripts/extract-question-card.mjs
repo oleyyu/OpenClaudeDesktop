@@ -59,7 +59,11 @@ const linkedBindings = { 'proposal-group': ['shared-10-D6FXWZph.js#hx'], 'routin
 // W13 G11 (D1, cowork-approval pendingDedupe): bindings an auto (per-chunk) module of this graph cuts that another graph
 // reaches too are exported here as well, so that graph links this one copy: shared-2 c7 (the MCP app fullscreen store,
 // one store for both cards) and shared-156 eq. A listed binding the closure no longer cuts stops generation.
-const publishedAuto = { 'shared-2-TF8v67kg.js': ['c7'], 'shared-156-BLTosN8U.js': ['eq'] };
+// W14-code r8 R8DC-01 (D1): shared-5 NA (the question text's string coercion, `function NA(e){if(e==null)return"";…}`),
+// which card-header.mjs cuts for $A, is exported too, so the sidebar hover card links this copy instead of slicing its own.
+// A listed binding is published from whichever module of this graph cuts it (an auto module, or a named one like
+// card-header.mjs).
+const publishedAuto = { 'shared-2-TF8v67kg.js': ['c7'], 'shared-156-BLTosN8U.js': ['eq'], 'shared-5-Bg6ZMqvt.js': ['NA'] };
 const viewTabsDir = path.join(root, 'src/generated/view-tabs');
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
 const loose = official.looseFeature;
@@ -118,6 +122,23 @@ const targets = [
     features: { tt: [loose('titleNamesCard: a'), '"text-body text-muted-as-secondary"', '"shrink-0 self-center"', '"data-question-stop-name": l',
       '"text-body-semibold min-w-0 break-words"', '"flex items-start gap-xs min-w-0"', '"flex flex-1 min-w-0 flex-col gap-[2px]"',
       '"text-primary min-h-[24px] flex items-center gap-1"'], hr: [loose('keepLegibilityJoiners: !0')] } },
+  // W14-code r3 R2T-TS6: the card-presentation question card's rows (c2f6611a3 En, exported `t`, which cc32965c2 draws
+  // when `oo() !== "dock"`: `let e = We ? ho : xo`). Tn is En's answer row (a `button.epitaxy-answer-option` with the
+  // radio mark cn or the CDS checkbox indicator, the label `text-body text-primary` and the description `text-body
+  // text-secondary` through c53f67064 t; a click that ends a text selection inside the row (Sn) is no pick); Cn / wn its
+  // inset; bn the buttons' onMouseDown preventDefault, xn the Other field's click stop. En itself is not cut: its state
+  // is its own module-level draft tables (c6dc54e94, c8367fa19) and onSubmit's Claude Code tool answer, where the host
+  // card runs on approval-draft-model's runtime (source-question-card.jsx SourceQuestionCardEn).
+  { target: 'answer-option.mjs', source: 'c2f6611a3-DBT6B0Bq.js', internal: true,
+    exports: { Tn: 'QuestionAnswerOption', cn: 'QuestionRadioMark', Sn: 'endsAnswerSelection', Cn: 'answerOptionInset',
+      bn: 'preventAnswerMouseDown', xn: 'stopAnswerClick' },
+    features: {
+      Tn: [loose('option: n, index: r, isSelected: a, isMultiSelect: o, disabled: s, onSelect: c'), loose('Sn(e) || c(r)'),
+        '"flex min-w-0 flex-1 flex-col gap-xs select-text"', '`text-body text-primary ${K}`', '`text-body text-secondary ${K}`',
+        loose('"aria-pressed": a, className: wn')],
+      cn: ['`epitaxy-radio-mark ${r ?? ""}`', '"epitaxy-radio-mark-dot"'],
+      Sn: ['t.getRangeAt(0).intersectsNode(e.currentTarget)'], Cn: [loose('Cn = "px-lg"')],
+      bn: [loose('e.preventDefault()')], xn: [loose('e.stopPropagation()')] } },
 ];
 
 async function readSource(name, cache) {
@@ -315,8 +336,8 @@ export async function extractQuestionCard({ check = false } = {}) {
   }
   while (queue.length) { const [m, name] = queue.shift(); await add(m, name); }
   for (const [file, names] of Object.entries(publishedAuto)) {
-    const m = [...mods.values()].find(x => x.auto && x.source === file);
     for (const name of names) {
+      const m = [...mods.values()].find(x => x.source === file && x.selected.has(name)) ?? [...mods.values()].find(x => x.auto && x.source === file);
       if (!m?.selected.has(name)) throw Error(`publishedAuto: ${file}#${name} is no longer cut by this graph`);
       if (!m.roots.has(name)) m.roots.set(name, name);
     }

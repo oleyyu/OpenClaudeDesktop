@@ -110,7 +110,50 @@ function createSessionOperations({ getClient, getConfig, save, emit, verifyGit =
     pending.set(id, entry);
     return () => finish(entry, 'completed');
   }
+  // W14-code r4 fr4-01 / fr4-13b: callers waiting for a thread's running turn to end (stopForRemoval), by thread id.
+  const turnEndWaiters = new Map();
+  const settleTurnWaiters = (id) => {
+    const waiters = turnEndWaiters.get(id);
+    if (!waiters || active.has(id)) return;
+    turnEndWaiters.delete(id);
+    for (const resolve of waiters) resolve();
+  };
   function observe(event) {
+    observeEvent(event);
+    if (event.kind === 'connection' && !event.connected) for (const id of [...turnEndWaiters.keys()]) settleTurnWaiters(id);
+    else if (event.method === 'turn/completed' && typeof event.params?.threadId === 'string') settleTurnWaiters(event.params.threadId);
+  }
+  /**
+   * W14-code r4 fr4-01 / fr4-13b: archiving or deleting a session that is running stops it first, as the desktop does
+   * (3.6556.2 ce4f4374c $e: Archive / Delete carry no disabled state; shared-20 G1uB+fnj7o "…are still working and stop if
+   * you archive them too"; c6aeda0b7 M deletes an environment's running sessions with the rest). The running turn is
+   * interrupted (`interrupt(threadId, turnId)`), its turn/completed (or a dropped connection) awaited for at most
+   * `timeoutMs`, and then the usual check runs: a turn that did not end, or another operation still starting, refuses.
+   */
+  async function stopForRemoval(id, { interrupt, timeoutMs = 10000 } = {}) {
+    const turnId = active.get(id);
+    if (turnId && typeof interrupt === 'function') {
+      let timer, done;
+      const ended = new Promise((resolve) => {
+        done = resolve;
+        if (!turnEndWaiters.has(id)) turnEndWaiters.set(id, new Set());
+        turnEndWaiters.get(id).add(resolve);
+        timer = setTimeout(resolve, timeoutMs);
+        timer.unref?.();
+      });
+      try {
+        await interrupt(id, turnId);
+        await ended;
+      } finally {
+        clearTimeout(timer);
+        const waiters = turnEndWaiters.get(id);
+        waiters?.delete(done);
+        if (waiters && !waiters.size) turnEndWaiters.delete(id);
+      }
+    }
+    assertAvailable(id);
+  }
+  function observeEvent(event) {
     const p = event.params || {}, id = p.threadId;
     if (event.kind === 'connection' && !event.connected) {
       active.clear(); reviewing.clear();
@@ -161,13 +204,22 @@ function createSessionOperations({ getClient, getConfig, save, emit, verifyGit =
     const { operation, threadId, expected } = payload || {};
     if (!['compact', 'fork', 'review'].includes(operation)) throw new Error('Unknown session action.');
     const config = getConfig(), owner = getClient();
-    if (typeof threadId !== 'string' || !config.threadIds.includes(threadId) || config.archivedThreadIds.includes(threadId))
+    // W14-code fr7-02: an archived session forks too (official cd54a5401 forkDisabledReason and cf74bc599 WN's
+    // fork_code_session have no archived condition; the harness thread/fork reads an archived log as any other). Compact
+    // and review still need an active session; a core that cannot fork an archived thread fails through the fork toast.
+    const known = () => operation === 'fork' ? config.threadIds.includes(threadId) || config.archivedThreadIds.includes(threadId)
+      : config.threadIds.includes(threadId) && !config.archivedThreadIds.includes(threadId);
+    if (typeof threadId !== 'string' || !known())
       throw new Error('Open an active session first. Restore archived sessions before continuing.');
     const check = () => {
       if (owner !== getClient() || !connectionMatches(owner, expected)) throw coreError(owner, 'The {core} connection changed. Reopen the session before retrying.');
-      if (!config.threadIds.includes(threadId) || config.archivedThreadIds.includes(threadId)) throw new Error('This session is no longer active.');
+      if (!known()) throw new Error('This session is no longer active.');
     };
-    check(); assertAvailable(threadId);
+    // W14-code fr6-03: a running session forks (official cd54a5401 forkDisabledReason has no running reason; /btw forks a
+    // running parent too, btw-sessions.cjs), so a fork only waits for another operation still starting on the thread.
+    check();
+    if (operation === 'fork') { if (pending.has(threadId)) throw new Error('Wait for the current task to finish or stop it first.'); }
+    else assertAvailable(threadId);
     const entry = { threadId, operation, owner, expected, phase: 'starting' };
     pending.set(threadId, entry); publish(entry);
     let dispatched = false;
@@ -179,8 +231,8 @@ function createSessionOperations({ getClient, getConfig, save, emit, verifyGit =
       const recentTurns = await listRecentTurns(owner, threadId, thread);
       check();
       if (!recentTurns.length) throw new Error('This session has no saved conversation yet. Send a message first.');
-      if (active.has(threadId) || thread.status?.type === 'active' || recentTurns.some(turn => turn.status === 'inProgress'))
-        throw new Error('This session is still running. Wait or stop it first.');
+      const running = active.has(threadId) || thread.status?.type === 'active' || recentTurns.some(turn => turn.status === 'inProgress');
+      if (running && operation !== 'fork') throw new Error('This session is still running. Wait or stop it first.');
       const { PERMISSION_MODES, threadPermissionParams, validateBypassRequest } = await import('./permission-policy.mjs');
       if (!PERMISSION_MODES.includes(payload.permission) || !['chat', 'code', 'cowork'].includes(payload.mode)) throw new Error('Choose a valid permission mode.');
       // The mode hint goes only to a core with capabilities.permissionHints (the DeepSeek core); Codex never sees it.
@@ -191,7 +243,9 @@ function createSessionOperations({ getClient, getConfig, save, emit, verifyGit =
       if (operation === 'fork') {
         // 'Fork from here' (the transcript message menu) names a completed turn of this thread; otherwise the latest.
         const chosen = typeof payload?.lastTurnId === 'string' && payload.lastTurnId ? payload.lastTurnId : null;
-        const lastTurnId = chosen ?? recentTurns[0].id;
+        // W14-code fr6-03: while a turn runs, the fork goes through the newest turn that has ended (thread/fork's lastTurnId
+        // cannot be in progress); with none listed it names no turn, as /btw does, and the core cuts at its latest end.
+        const lastTurnId = chosen ?? (running ? recentTurns.find(turn => turn.status !== 'inProgress')?.id : recentTurns[0].id);
         // /cd <path>: the fork continues in another folder (Codex tui app/working_directory.rs: refused while background
         // terminals run, then fork_thread_at with the new cwd), relative paths from the session's folder.
         const cwd = payload?.cwd !== undefined ? await forkFolder(owner, thread, threadId, payload.cwd) : null;
@@ -199,7 +253,7 @@ function createSessionOperations({ getClient, getConfig, save, emit, verifyGit =
         dispatched = true; entry.dispatched = true;
         // excludeTurns keeps a paginated fork out of the deprecated path
         // (thread_processor.rs:4908); the new thread is hydrated on open.
-        const forkParams = decorateThread('thread/fork', { threadId, lastTurnId, ...overrides, ...(cwd ? { cwd } : {}),
+        const forkParams = decorateThread('thread/fork', { threadId, ...(lastTurnId ? { lastTurnId } : {}), ...overrides, ...(cwd ? { cwd } : {}),
           ...(thread.historyMode === 'legacy' ? {} : { excludeTurns: true }) }, owner);
         const result = await owner.request('thread/fork', forkParams);
         // onThreadCreated(params, thread): the agent tools bind the fork's start identity to the new thread (main.cjs).
@@ -265,7 +319,7 @@ function createSessionOperations({ getClient, getConfig, save, emit, verifyGit =
     }
   }
   // activeTurn (w13-close-main-process): the thread's running turn, for a Cowork rewind that stops it first (main.cjs cowork-rewind).
-  return { run, observe, assertAvailable, reserveMessage, isActive: id => active.has(id), activeTurn: id => active.get(id) ?? null,
+  return { run, observe, assertAvailable, stopForRemoval, reserveMessage, isActive: id => active.has(id), activeTurn: id => active.get(id) ?? null,
     isReviewing: id => typeof id === 'string' && (reviewing.has(id) || (pending.get(id)?.operation === 'review' && pending.get(id)?.dispatched === true)), snapshot: () => [...pending.values()].filter(e => e.operation !== 'message').map(e => ({ threadId:e.threadId, operation:e.operation, phase:e.phase, turnId:e.turnId || null, activeTurnId:e.activeTurnId || null, error:e.error || null })) };
 }
 module.exports = { createSessionOperations, connectionMatches, reviewTarget };

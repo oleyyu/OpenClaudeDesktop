@@ -59,9 +59,10 @@ test('native settings and approval buttons retain callbacks while installing pre
   busy.props.onKeyDown(event);
   assert.equal(writes.length, 4, 'busy keyboard activation does not measure or call the host');
   assert.equal(keyCalls, 1);
+  // V3-W14-approvals: an approval decision is shared-10 IS over the CDS Button, which owns its press geometry; the host
+  // hands IS the decision, whose click reaches the card's action.
   const approval = ActionButton({ action: { key: 'allow', label: 'Allow once' }, enabled: true, onAction: () => actions++ });
-  approval.props.onPointerDownCapture(event);
-  approval.props.onClick(event);
-  assert.equal(writes.length, 6);
+  approval.props.action.onClick(event);
+  assert.equal(writes.length, 4);
   assert.equal(actions, 1);
 });

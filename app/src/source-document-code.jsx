@@ -34,7 +34,7 @@ export function SourceDocumentCode({ text, className }) {
           <Icon name={state === 'copied' ? 'Check' : 'Copy'} size={16} aria-hidden="true" />
         </button>
       </SourceTooltip>
-      <span className="sdc-status" role="status">{state === 'copied' ? t('Copied') : ''}</span>
+      <span className="sr-only" role="status">{state === 'copied' ? t('Copied') : ''}</span>
     </div></div>
     {code.label && <div className="sdc-label">{code.label}</div>}
     <div className="sdc-scroll"><pre className="sdc-pre" data-wrap={code.wrap || undefined}>

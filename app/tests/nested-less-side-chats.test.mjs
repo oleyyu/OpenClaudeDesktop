@@ -10,8 +10,12 @@ import path from 'node:path';
 import { sideSessionsSupported, sideSessionNesting, projectThreadNotStarted, btwChildrenInParentTabs, withoutParentTabChildren } from '../src/generated/code-current/nested-session-parent-tabs.mjs';
 import { coordinatorSessionTag, isCoordinatorSession } from '../src/generated/code-current/sessions-page-coordinator.mjs';
 import { isListedSession, isCoordinatorSessionRow } from '../src/generated/code-current/sessions-page-model.mjs';
-import { hostSideSessionFeatures, hostSideSessionNesting, sideSessionRecord, sideSessionParents, parentTabChildIds, listedSidebarSessions } from '../src/nested-less-side-chats.mjs';
-import { sessionPageRows } from '../src/sessions-page-model.mjs';
+import { hostSideSessionFeatures, sideSessionRecord, sideSessionParents, parentTabChildIds, listedSidebarSessions } from '../src/nested-less-side-chats.mjs';
+// W14-code r8 gates-r8-02: appFeatures is the host's one table (host-app-features.mjs).
+import { HOST_APP_FEATURES } from '../src/host-app-features.mjs';
+import { sessionPageRows } from './fixtures/session-page-rows.mjs';
+// W14-code r4 closeout R4DC-N7: hostSideSessionNesting (test-only) left the module; it was this composition.
+const hostSideSessionNesting = (core, rowsShown = false) => sideSessionNesting(hostSideSessionFeatures(core, rowsShown));
 
 // R3-nested NBS-3: nested_less_side_chats. A live /btw child in its live parent's tabs is no sidebar row (3.6556.2
 // shared-21 vq !$S, old cH !Gb) and no Code Sessions page row (cbd6c85c8 ba, old ra), $S = ba = shared-11 pw (old pb).
@@ -110,8 +114,8 @@ test('Uf: nested_less_side_chats needs sideSessions and the tab strip without si
   // Uf reads only the snapshot: btwChildSessions decides through Ff's sideChatTabStripForRows, not by itself.
   assert.equal(sideSessionNesting({ appFeatures: { sideSessions: { status: 'supported' }, btwChildSessions: { status: 'supported' } } }), 'nested');
   assert.equal(sideSessionsSupported({}), false);
-  assert.deepEqual(hostSideSessionFeatures(btwOn), { appFeatures: { sideSessions: { status: 'supported' }, btwChildSessions: { status: 'supported' } }, sideChatRowsShown: false, sideChatTabStripForRows: true });
-  assert.deepEqual(hostSideSessionFeatures(btwOff), { appFeatures: { sideSessions: { status: 'supported' }, btwChildSessions: { status: 'unsupported' } }, sideChatRowsShown: false, sideChatTabStripForRows: false });
+  assert.deepEqual(hostSideSessionFeatures(btwOn), { appFeatures: { ...HOST_APP_FEATURES, btwChildSessions: { status: 'supported' } }, sideChatRowsShown: false, sideChatTabStripForRows: true });
+  assert.deepEqual(hostSideSessionFeatures(btwOff), { appFeatures: { ...HOST_APP_FEATURES, btwChildSessions: { status: 'unavailable' } }, sideChatRowsShown: false, sideChatTabStripForRows: false });
   assert.equal(hostSideSessionNesting(btwOn), 'nested_less_side_chats', 'Ff: r=Tf(e)||Af.read(), Tf is btwChildSessions');
   // The Af fallback (code-session-list:side-chat-tab-strip) is off here (E16): without btwChildSessions it nests.
   assert.equal(hostSideSessionNesting(btwOff), 'nested');
@@ -201,7 +205,9 @@ test('sidebar: with btwChildSessions the child is no row, no Pinned entry and no
   assert.match(cowork, /Session btw/); assert.match(cowork, /Session routine/);
   // The wiring is the one vq filter in the Code list, ahead of the sections and classic builders.
   const code = readFileSync(path.join(app, 'src/source-sidebar.jsx'), 'utf8');
-  assert.ok(code.includes('const listedSessions = useMemo(() => mode === "code" ? listedSidebarSessions(sourceSessions, sessionMetadata, engine) : sourceSessions, [mode, sourceSessions, sessionMetadata, engine]);'));
+  // W14-code r4 gen-final-4 (fr4-06): the routine runs' tasks (shared-11 pw's scheduledTaskId of a run the scheduler
+  // recorded) ride along as the fifth argument.
+  assert.ok(code.includes('const listedSessions = useMemo(() => mode === "code" ? listedSidebarSessions(sourceSessions, sessionMetadata, engine, sideChatRowsShown, routineRunTasks) : sourceSessions, [mode, sourceSessions, sessionMetadata, engine, sideChatRowsShown, routineRunTasks]);'));
   assert.ok(code.includes('buildSidebarSections({ sections: sectionsList, sessions: listedSessions,'));
   assert.ok(code.includes('buildSidebarGroups({ sessions: listedSessions,'));
 });
@@ -221,4 +227,25 @@ test('Sessions page: rows pass pw (ba) before the surface filter; the engine pro
   assert.match(renderAsClient(h(SourceSessionsPage, { sessions, metadata, engine: btwOff })), /Session btw/);
   const main = readFileSync(path.join(app, 'src/main.jsx'), 'utf8');
   assert.ok(main.includes('sessions={sidebarSessions} state={state} metadata={shownSessionMetadata} repoIdentities={repoIdentities} engine={boot?.core}'));
+});
+
+test('E81 Show › Side chats (shared-11 lf / Ef): rows shown turns nested_less_side_chats back into nested', () => {
+  // shared-11 Ef `e.sideChatTabStripForRows && !e.sideChatRowsShown`; lf reads the Sessions section's show.sideChats
+  // under the presets gate; shared-21 PJ offers the item only while X = QS().sideChatTabStripForRows.
+  const shared11 = readFileSync(path.join(app, '../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-11-_AVGLHEz.js'), 'utf8');
+  for (const text of ['return e.sideChatTabStripForRows&&!e.sideChatRowsShown', 'Qd(e,"sessions").show.sideChats)&&ef()', 'setSectionView(Xt,{show:{sideChats:e}})'])
+    assert.equal(shared11.split(text).length - 1, 1, text);
+  assert.deepEqual(hostSideSessionFeatures(btwOn, true), { appFeatures: { ...HOST_APP_FEATURES, btwChildSessions: { status: 'supported' } },
+    sideChatRowsShown: true, sideChatTabStripForRows: true });
+  assert.equal(hostSideSessionNesting(btwOn), 'nested_less_side_chats');
+  assert.equal(hostSideSessionNesting(btwOn, true), 'nested');
+  const sessions = [thread('parent'), thread('btw')], metadata = { btw: btwMeta('parent') };
+  assert.deepEqual(listedSidebarSessions(sessions, metadata, btwOn).map(session => session.id), ['parent']);
+  assert.deepEqual(listedSidebarSessions(sessions, metadata, btwOn, true).map(session => session.id), ['parent', 'btw']);
+  // The filter menu and the Sessions page read the same lf (source-sidebar-sections-adapters useSideChatRowsShown).
+  const filter = readFileSync(path.join(app, 'src/source-sidebar-filter-current.jsx'), 'utf8');
+  for (const text of ['sideChatsOffered={sideChatsOffered} sideChatRows={sideChatRows}', 'onSideChats={() => writeSideChatRows(!sideChatRowsShown)}'])
+    assert.ok(filter.includes(text), text);
+  assert.ok(readFileSync(path.join(app, 'src/source-sidebar.jsx'), 'utf8').includes('sideChatsOffered={hostSideSessionFeatures(engine).sideChatTabStripForRows}'));
+  assert.ok(readFileSync(path.join(app, 'src/source-sessions-page.jsx'), 'utf8').includes('sessionPageRecords(sessions,{state,metadata,repoIdentities,engine,sideChatRowsShown})'));
 });

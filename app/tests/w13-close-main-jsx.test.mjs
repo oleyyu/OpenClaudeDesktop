@@ -67,7 +67,9 @@ test('Exit incognito: shared-20 Iy in Fy\'s trailing slot, Qg\'s ghost X with th
   const on = trailing(render({ onExitIncognito() {} }));
   const button = on.match(/<button[^>]*aria-label="Exit incognito"[^>]*>/)?.[0];
   assert.ok(button, 'drawn while incognito');
-  assert.ok(on.indexOf('aria-label="Exit incognito"') < 200, 'first in the trailing slot');
+  // W14-code r2 frame (fr2-16): ToolButton now draws the CDS ghost Button (shared-frame Qg class list), so the label sits
+  // past a long class string; "first" is checked as the trailing slot's first button rather than by a character offset.
+  assert.equal(on.indexOf('<button'), on.indexOf(button), 'first in the trailing slot');
   assert.match(button, /class="[^"]*\bgroup draggable-none\b/);
   assert.doesNotMatch(trailing(render({})), /Exit incognito/);
   // main.jsx: only in Chat, on the incognito New chat page or in an incognito chat; the toggle is ⇧⌘I's.

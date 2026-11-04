@@ -37,7 +37,12 @@ test('RI3 Y3-W3: lateStartNote goes through the host FormattedMessage over the l
   assert.equal(count(late, 'nDcbd3DQ2C'), 1);
   assert.equal(count(late, 'mdtGtRCbfe'), 1);
   const adapters = read('src/source-routines-shared-adapters.jsx');
-  assert.equal(count(adapters, 'export const FormattedMessage = StartMessage;'), 1);
+  // W14-code r4 shell trust-dialog-persona (E83): FormattedMessage is no longer a bare alias of StartMessage; it swaps
+  // the persona text in for ids listed in PERSONA_MESSAGES only (c165c93f1 B VvhQDpcjjd, when the original matches) and
+  // otherwise renders StartMessage unchanged — so the lateStartNote ids still go through the local catalog as-is.
+  assert.match(adapters, /export function FormattedMessage\(props\) \{\n\s+const persona = PERSONA_MESSAGES\[props\.id\];\n\s+return persona && props\.defaultMessage === persona\.original \? <StartMessage \{\.\.\.props\} defaultMessage=\{persona\.text\} \/> : <StartMessage \{\.\.\.props\} \/>;/);
+  const personaIds = adapters.slice(adapters.indexOf('export const PERSONA_MESSAGES'), adapters.indexOf('export function FormattedMessage'));
+  for (const id of ['nDcbd3DQ2C', 'mdtGtRCbfe']) assert.equal(count(personaIds, id), 0, id);
   const { default: surfaces } = await import(join(root, 'electron/i18n/zh-CN/surfaces.mjs'));
   assert.ok(surfaces['Scheduled tasks set for {minute} can start several minutes late. Pick a time a few minutes earlier to start on time.']);
   assert.ok(surfaces['Routines set for {minute} can start several minutes late. Pick a time a few minutes earlier to start on time.']);

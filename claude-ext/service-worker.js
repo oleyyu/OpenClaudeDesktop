@@ -2,13 +2,15 @@
 // Holds the native messaging port to com.openclaude.chrome_bridge (app/electron/browser/native-host.cjs) and answers
 // the app's execute_tool requests. Messages are { method, params, tool_use_id } (see app/electron/browser/protocol.cjs).
 // An open native port keeps this worker alive; when it drops, the worker reconnects with backoff.
-// Tools: navigate, read_page, find, form_input, computer, javascript_tool, browser_batch, tabs_create, tabs_context
-// (tabs.js picks the tab and runs content.js in it; refs.js keeps the refs' copy).
+// Tools: navigate, read_page, find, form_input, computer, javascript_tool, read_console_messages, read_network_requests,
+// browser_batch, tabs_create, tabs_context (tabs.js picks the tab and runs content.js in it; refs.js keeps the refs'
+// copy; script.js and monitor.js use the tab's debugger session, debugger.js).
 import { ToolError } from "./errors.js";
-import { navigate, resolveTab, inPage, setCurrentTab, settleAfterAction, tabsCreate, tabsContext } from "./tabs.js";
+import { navigate, resolveTab, inPage, setCurrentTab, settleAfterAction, tabsCreate, tabsContext, assertTabSite } from "./tabs.js";
 import { withRefs, record, checkRef } from "./refs.js";
-import { runReadOnly } from "./script.js";
-import { assertSite } from "./sites.js";
+import { runReadOnly, runWrite } from "./script.js";
+import { readConsole, readNetwork } from "./monitor.js";
+import { assertScriptSite, hostOf } from "./sites.js";
 
 const HOST_NAME = "com.openclaude.chrome_bridge";
 const RETRY_MIN_MS = 1000;
@@ -43,11 +45,35 @@ async function inPageTool(tab, op, args) {
   return { tabId: tab.id, ...out.result };
 }
 
+function boolArg(value, name) {
+  if (value === undefined || value === null) return false;
+  if (typeof value !== "boolean") throw new ToolError("bad_request", `${name} is true or false.`);
+  return value;
+}
+/** A regular expression the model gives (case-insensitive), or null. */
+function patternArg(value, name) {
+  if (value === undefined || value === null || value === "") return null;
+  if (typeof value !== "string") throw new ToolError("bad_request", `${name} is a regular expression.`);
+  try { return new RegExp(value, "i"); } catch (error) { throw new ToolError("bad_request", `${name} isn't a valid regular expression (${error.message}).`); }
+}
+/** urlPattern: a substring of the URL ("/api/" is the path segment, as in Claude in Chrome), or a regular expression
+ * written /…/ with flags or with pattern characters inside (/\/v\d+\//, /api/i). → (url) => boolean, or null. */
+function urlMatcher(value) {
+  if (value === undefined || value === null || value === "") return null;
+  if (typeof value !== "string") throw new ToolError("bad_request", "urlPattern is text or /a regular expression/.");
+  const literal = /^\/(.+)\/([dgimsuvy]*)$/s.exec(value);
+  if (!literal || (!literal[2] && !/[\\^$.|?*+()[\]{}]/.test(literal[1]))) return (url) => url.includes(value);
+  let pattern;
+  try { pattern = new RegExp(literal[1], literal[2].replace(/[gy]/g, "")); } catch (error) { throw new ToolError("bad_request", `urlPattern isn't a valid regular expression (${error.message}).`); }
+  return (url) => pattern.test(url);
+}
+
 const MAX_BATCH = 50;
 const COMPUTER_ACTIONS = new Set(["left_click", "right_click", "double_click", "type", "key", "scroll", "hover"]);
 
 // Tools the app can run here, by name: async (args, ctx) → result (JSON); ctx.allowedHosts limits the sites they act on
-// (sites.js). A thrown error with .code becomes {error: {code, message, …data}}.
+// (sites.js), ctx.writeHosts the sites a write script may run on in this call (sites.js assertScriptSite), ctx.signal is
+// aborted when the app cancels the call. A thrown error with .code becomes {error: {code, message, …data}}.
 const tools = {
   async ping() {
     return { pong: true, extensionId: chrome.runtime.id, version: chrome.runtime.getManifest().version, at: Date.now() };
@@ -65,7 +91,7 @@ const tools = {
   // read_page(tabId?, filter?, depth?, ref_id?, max_chars?) → { tabId, title, url, tree, refCount, truncated }
   async read_page(args, ctx) {
     const tab = await resolveTab(args.tabId);
-    assertSite(tab.url, ctx);
+    await assertTabSite(tab, ctx);
     const filter = args.filter ?? "all";
     if (filter !== "all" && filter !== "interactive") throw new ToolError("bad_request", 'filter is "all" or "interactive".');
     const depth = intArg(args.depth, "depth", { min: 1, max: 100, fallback: 15 });
@@ -79,7 +105,7 @@ const tools = {
   async find(args, ctx) {
     if (typeof args.query !== "string" || !args.query.trim()) throw new ToolError("bad_request", "query is required.");
     const tab = await resolveTab(args.tabId);
-    assertSite(tab.url, ctx);
+    await assertTabSite(tab, ctx);
     const limit = intArg(args.limit, "limit", { min: 1, max: 100, fallback: 20 });
     return withPageRefs(tab, "find", { query: args.query, limit }, { replace: false });
   },
@@ -87,7 +113,7 @@ const tools = {
   // form_input(ref, value, tabId?) → { tabId, ref, role, name, value | checked, events }
   async form_input(args, ctx) {
     const tab = await resolveTab(args.tabId);
-    assertSite(tab.url, ctx);
+    await assertTabSite(tab, ctx);
     checkRef(tab.id, args.ref);
     if (args.value === undefined || args.value === null) throw new ToolError("bad_request", "value is required.");
     return inPageTool(tab, "form_input", { ref: args.ref, value: args.value });
@@ -98,7 +124,7 @@ const tools = {
   async computer(args, ctx) {
     if (!COMPUTER_ACTIONS.has(args.action)) throw new ToolError("bad_request", `action is one of ${[...COMPUTER_ACTIONS].join(", ")}.`);
     const tab = await resolveTab(args.tabId);
-    assertSite(tab.url, ctx);
+    await assertTabSite(tab, ctx);
     const ref = args.ref ?? null;
     if (ref !== null) checkRef(tab.id, ref);
     const coordinate = ref === null ? args.coordinate ?? null : null;
@@ -115,14 +141,48 @@ const tools = {
     return result;
   },
 
-  // javascript_tool(code, tabId?) → { tabId, type, value }: read-only, in the page's own context (script.js).
+  // javascript_tool(code, tabId?, timeout_ms?, write?) → { tabId, type, value }, in the page's own context (script.js):
+  // read-only, or with write: true as DevTools' console runs it, on a site the app approved for this call (writeHosts).
   async javascript_tool(args, ctx) {
     const tab = await resolveTab(args.tabId);
-    assertSite(tab.url, ctx);
+    await assertTabSite(tab, ctx);
     const timeoutMs = intArg(args.timeout_ms, "timeout_ms", { min: 100, max: 60_000, fallback: 10_000 });
-    const result = await runReadOnly(tab, args.code, { timeoutMs });
+    const write = boolArg(args.write, "write");
+    if (write) assertScriptSite(tab.url || tab.pendingUrl || "", ctx, tab.id);
+    // Checked again inside the tab's turn, on the document the script will run in (script.js pins it): the tab may
+    // have navigated while the call waited for another one on it. A navigation to another site under way is refused.
+    const verify = async (url) => {
+      const now = await resolveTab(tab.id);
+      if (now.pendingUrl && hostOf(now.pendingUrl) !== hostOf(url)) throw new ToolError("page_changed", `Tab ${tab.id} is navigating to ${hostOf(now.pendingUrl) ?? now.pendingUrl}, so the script didn't run. Wait for the page to load, then try again.`);
+      await assertTabSite({ ...now, url, pendingUrl: undefined }, ctx);
+      if (write) assertScriptSite(url, ctx, tab.id);
+    };
+    const result = write ? await runWrite(tab, args.code, { timeoutMs, verify }) : await runReadOnly(tab, args.code, { timeoutMs, verify });
     setCurrentTab(tab.id);
-    return { tabId: tab.id, ...result };
+    return { tabId: tab.id, ...(write ? { write: true } : {}), ...result };
+  },
+
+  // read_console_messages(tabId?, pattern?, onlyErrors?, limit?, clear?) → { tabId, url, started, since, total, matched,
+  // messages: [{level, text, url, line, column, timestamp, source}] } (monitor.js; monitoring starts on first use).
+  async read_console_messages(args, ctx) {
+    const tab = await resolveTab(args.tabId);
+    await assertTabSite(tab, ctx);
+    const options = { pattern: patternArg(args.pattern, "pattern"), onlyErrors: boolArg(args.onlyErrors, "onlyErrors"), limit: intArg(args.limit, "limit", { min: 1, max: 1000, fallback: 100 }), clear: boolArg(args.clear, "clear") };
+    const result = await readConsole(tab, options);
+    setCurrentTab(tab.id);
+    return result;
+  },
+
+  // read_network_requests(tabId?, urlPattern?, limit?, clear?, includeHeaders?, requestId?) → { tabId, url, started,
+  // since, total, matched, requests: [{requestId, method, url, type, status, …}] }, or { request } with its body.
+  async read_network_requests(args, ctx) {
+    const tab = await resolveTab(args.tabId);
+    await assertTabSite(tab, ctx);
+    if (args.requestId !== undefined && args.requestId !== null && (typeof args.requestId !== "string" || !args.requestId)) throw new ToolError("bad_request", "requestId is a request's id from an earlier read_network_requests.");
+    const options = { match: urlMatcher(args.urlPattern), limit: intArg(args.limit, "limit", { min: 1, max: 1000, fallback: 100 }), clear: boolArg(args.clear, "clear"), headers: boolArg(args.includeHeaders, "includeHeaders"), requestId: args.requestId ?? null };
+    const result = await readNetwork(tab, options);
+    setCurrentTab(tab.id);
+    return result;
   },
 
   // browser_batch(actions: [{name, input}]) runs the steps here, one after another, in a single round trip with the app.
@@ -134,10 +194,13 @@ const tools = {
     actions.forEach((step, index) => {
       if (!step || typeof step.name !== "string") throw new ToolError("bad_request", `Step ${index + 1} needs a name.`);
       if (step.name === "browser_batch" || step.name === "ping" || !Object.hasOwn(tools, step.name)) throw new ToolError("bad_request", `Step ${index + 1}: ${step.name} can't be run in a batch.`);
+      // A write script needs the user's approval for its own call: never inside a batch.
+      if (step.name === "javascript_tool" && step.input?.write === true) throw new ToolError("bad_request", `Step ${index + 1}: javascript_tool with write: true runs on its own, not in a batch.`);
     });
     const steps = [];
     for (const [index, step] of actions.entries()) {
       try {
+        if (ctx?.signal?.aborted) throw new ToolError("stopped", "The app stopped this call before this step.");
         steps.push({ name: step.name, ok: true, result: await tools[step.name](step.input ?? {}, ctx) });
       } catch (error) {
         const failure = { code: error?.code ?? "tool_error", message: error?.message ?? String(error), ...(error?.data ?? {}) };
@@ -154,14 +217,19 @@ function send(message) {
   try { port.postMessage(message); return true; } catch (error) { console.warn("[bridge] send failed:", error?.message); return false; }
 }
 
+const running = new Map(); // tool_use_id → AbortController: the app's cancel_tool aborts it (a batch runs no further steps)
+
 async function executeTool(message) {
-  const { name, args, allowedHosts } = message.params ?? {};
+  const { name, args, allowedHosts, writeHosts } = message.params ?? {};
   const tool = Object.hasOwn(tools, name) ? tools[name] : null;
   let params;
   if (!tool) params = { error: { code: "unknown_tool", message: `The extension has no tool named ${name}.` } };
   else {
-    try { params = { result: await tool(args ?? {}, { allowedHosts }) }; }
+    const controller = new AbortController();
+    running.set(message.tool_use_id, controller);
+    try { params = { result: await tool(args ?? {}, { allowedHosts, writeHosts, signal: controller.signal }) }; }
     catch (error) { params = { error: { code: error?.code ?? "tool_error", message: error?.message ?? String(error), ...(error?.data ?? {}) } }; }
+    finally { if (running.get(message.tool_use_id) === controller) running.delete(message.tool_use_id); }
   }
   send({ method: "tool_response", params, tool_use_id: message.tool_use_id });
 }
@@ -171,6 +239,7 @@ function onHostMessage(message) {
   if (!message || typeof message !== "object") return;
   console.debug("[bridge] host→ext", message.method, message.params?.name ?? "", message.tool_use_id ?? "");
   if (message.method === "execute_tool") { executeTool(message); return; }
+  if (message.method === "cancel_tool") { running.get(message.tool_use_id)?.abort(); return; }
   // tool_response: the app's answer to a permission_request (from P2 on).
 }
 

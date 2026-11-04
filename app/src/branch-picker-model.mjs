@@ -1,23 +1,18 @@
-import { t, tn } from "../electron/i18n/index.mjs";
+import { t } from "../electron/i18n/index.mjs";
 import { startBranchMissing } from "./generated/r4e-envbranch/start-branch-missing.mjs";
 
 // Composer branch picker, step 1 (2.2553.1 cc43287c9-BMbiZYzF.js:22009-22035
-// hT props, :12050-12071 branch order; cd2687f9f-CY3xvb9b.js N combobox).
+// hT props, :12050-12071 branch order). W14-code r7 css7-branch-picker-bl: the picker itself is now 3.6556.2 cc43287c9
+// Dle's bL (cd2687f9f we), whose own search (be: a Fuse index over the label) and Enter (the first enabled match of a
+// non-empty query) replaced this module's filterBranches / enterSelection.
 // - Default branch: the repo's defaultBranch (F). Locally that is origin/HEAD's
 //   target when the repo has it as a local branch, else main, else master
 //   (the source's own main/master fallback for the starting branch, :12057).
 // - Order (oe): the default branch first, the rest by localeCompare; a default
 //   missing from the list is prepended.
-// - Search: Y filters on input; Enter selects the first match (Q) when the
-//   query is non-empty; an empty result shows the Empty row "No branches match".
-//   The source ranks matches with a fuzzy index over the name after the last
-//   "/" (weight .7) and the full label (.3); locally a case-insensitive
-//   substring match on the label keeps the sorted order.
-// - Trigger label: the chosen branch or "—" (triggerLabel c ?? "—").
-
-export const BRANCH_SEARCH_PLACEHOLDER = t("Search branches…");
-export const BRANCH_EMPTY_MESSAGE = t("No branches match");
-export const BRANCH_TOOLTIP = t("Branch to start from");
+// W14-code r8 gen-final-8: the copy constants (BRANCH_SEARCH_PLACEHOLDER / BRANCH_EMPTY_MESSAGE / BRANCH_TOOLTIP) and
+// branchTriggerLabel served only the classic context row's bL split pill, deleted by r8 composer
+// (css8-classic-context-row-dead: 3P presets is always on, E92); no reader is left, so they are gone too.
 
 /** F: origin/HEAD ("origin/main" or "main") when it is a local branch, else main, else master, else null. */
 export function defaultBranch({ originHead = "", branches = [] } = {}) {
@@ -37,24 +32,6 @@ export function sortBranches(branches = [], preferred = null) {
     return left.localeCompare(right);
   });
   return preferred && !sorted.includes(preferred) ? [preferred, ...sorted] : sorted;
-}
-
-/** Y: every branch for an empty query, else the ones whose label contains it. */
-export function filterBranches(sorted = [], query = "") {
-  const needle = String(query ?? "").trim().toLowerCase();
-  if (!needle) return [...sorted];
-  return sorted.filter((label) => label.toLowerCase().includes(needle));
-}
-
-/** Enter in the search field: the first match, only for a non-empty query. */
-export function enterSelection(sorted = [], query = "") {
-  if (!String(query ?? "").trim()) return null;
-  return filterBranches(sorted, query)[0] ?? null;
-}
-
-/** triggerLabel: c ?? "—". */
-export function branchTriggerLabel(branch) {
-  return typeof branch === "string" && branch ? branch : "—";
 }
 
 // Branch step 2 (cc43287c9-BMbiZYzF.js:12084-12145 me/he/ge, :35132 branchChanged at spawn). With worktree on the
@@ -129,10 +106,9 @@ export function branchMissingValues({ branch, fallback, savedBranch }) {
   };
 }
 
-// UR (:15860-15912) and GR (:15920-16060) copy.
+// cc43287c9 qie (opbsFWGEr+) copy. The dialog's own labels and notes are formatted in source-branch-switch-dialog.jsx
+// (cc43287c9 Jie) through the official message descriptors.
 export const WORKING_TREE_ERROR = t("Couldn’t update the working tree.");
-export const BRANCH_SWITCH_MODES = Object.freeze(["stash", "commit", "discard"]);
-export const BRANCH_SWITCH_LABELS = Object.freeze({ stash: t("Stash changes"), commit: t("Commit as WIP"), discard: t("Discard changes") });
 
 // B34 RJ otherSessionCount (cc43287c9 :12373 I = Dp(h), shared-8 cp): the sessions that are not archived and whose
 // cwd is the folder being switched, without the session the switch is for (`exclude`).
@@ -145,10 +121,4 @@ export function otherSessionCount(sessions = [], folder, { exclude = null } = {}
     count++;
   }
   return count;
-}
-// RJ :17066-17078 (ETzdRE7DsE): the note under the description while other sessions share the folder.
-export function otherSessionsNote(count) {
-  if (!Number.isFinite(count) || count <= 0) return null;
-  return tn(count, "{count} other session is using this folder. Switching branches will affect it too.",
-    "{count} other sessions are using this folder. Switching branches will affect them too.");
 }

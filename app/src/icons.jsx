@@ -41,37 +41,5 @@ export function Icon({
     </span>
   );
 }
-const make = (name) => (props) => <Icon name={name} {...props} />;
-export const SidebarSimple = make("Sidebar"),
-  ArrowLeft = make("ArrowLeft"),
-  ArrowRight = make("ArrowRight"),
-  Plus = make("Add"),
-  Code = make("Code"),
-  ChatCircle = make("Chat"),
-  Folder = make("Folder"),
-  FolderOpen = make("FolderOpen"),
-  CaretDown = make("CaretDown"),
-  CaretRight = make("CaretRight"),
-  ArrowUp = make("ArrowUp"),
-  Stop = make("Stop"),
-  Check = make("Check"),
-  Terminal = make("CommandLine"),
-  FileText = make("File"),
-  X = make("X"),
-  MagnifyingGlass = make("Search"),
-  Gear = make("Settings"),
-  SquaresFour = make("Grid"),
-  Sun = make("Sun"),
-  Moon = make("Moon"),
-  Paperclip = make("Attachment"),
-  ArrowClockwise = make("ArrowClockwise"),
-  GitBranch = make("GitBranch"),
-  ShieldCheck = make("Trust"),
-  Copy = make("Copy"),
-  WarningCircle = make("WarningCircle"),
-  Monitor = make("Laptop"),
-  Files = make("Files"),
-  Clock = make("Clock"),
-  SignIn = make("User"),
-  ArrowsOutSimple = make("ArrowsOut"),
-  DotsThree = make("DotsHorizontal");
+// W14-code r5 cleanup R5DC-02: the 32 Phosphor-name wrappers (ArrowLeft … DotsThree) and their `make` factory are
+// gone; nothing imported them after closeout R4DC-N3. Callers use <Icon name="…" /> with the CDS glyph names.

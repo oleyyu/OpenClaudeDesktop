@@ -70,9 +70,6 @@ export function preventNativeMenu(event) {
   if (suppressNativeMenu(event, event.currentTarget)) event.preventDefault();
 }
 
-// c44d00c7f Rn = c82eca2bd Se `function Se(){return te(z)??!0}` with `z="__gb__2263689058"`: shared-0 Zo (te) answers
-// null when there is no GrowthBook client (qo `t ? … : null`), so the Enter pick is on. The host has no GrowthBook client.
-export const ENTER_PICK_GATE = "__gb__2263689058";
 export const ENTER_PICK_ENABLED = true;
 
 // c82eca2bd B (c44d00c7f er): once the Enter that picked a row comes back up (keyup Enter, capture, on the window), pick

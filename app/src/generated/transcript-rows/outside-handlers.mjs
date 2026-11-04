@@ -567,6 +567,10 @@ var Lc = {
   fontFeatureSettings: '"liga", "clig", "calt"',
 };
 var Rc = `letter-spacing: ${Lc.letterSpacing}; font-feature-settings: ${Lc.fontFeatureSettings};`;
+var zc = {
+  "--diffs-overflow-override": "clip",
+  "--diffs-scrollbar-gutter-override": "0px",
+};
 function Bc(e) {
   return { ...xc(e, "text"), cacheKey: void 0 };
 }
@@ -1489,18 +1493,43 @@ function Dg(e) {
 var Ag = T(!1);
 export {
   Dg as UserBashRun,
+  $c,
   Ag,
   Bc,
+  Bh,
+  Bm,
+  Fc,
+  Ic,
+  Jc,
+  Kc,
+  Lc,
   Lh,
+  Lm,
   Pc,
+  Qc,
   Rc,
   Tc,
   Tl,
   Uc,
+  Wc,
+  Xc,
   Xm,
+  Yc,
+  Zc,
+  _l,
+  el,
   fl,
+  gl,
+  hl,
   mh,
+  ml,
   ol,
+  pl,
+  qc,
+  tg,
   ul,
+  vg,
   wl,
+  yl,
+  zc,
 };

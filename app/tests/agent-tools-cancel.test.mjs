@@ -82,6 +82,20 @@ test('the core\'s notifications/cancelled reaches the call it names', async (t) 
   await first.done;
 });
 
+test('a call the relay times out is cancelled in the main process too', async (t) => {
+  const { host, started } = waitingHost();
+  await host.start();
+  t.after(() => host.stop());
+  const server = mcp({ ...host.launchEnv(), CODE_DESKTOP_AGENT_SESSION: 'thread-a', CODE_DESKTOP_AGENT_TOOLS_TIMEOUT_MS: '300' });
+  t.after(() => server.child.kill());
+  await server.request('initialize', {}).done;
+  const call = server.request('tools/call', { name: 'wait_for_user', arguments: {} });
+  const result = await call.done;
+  assert.deepEqual(result.result, { content: [{ type: 'text', text: 'The tool took too long.' }], isError: true });
+  await until(() => started[0]?.signal.aborted);
+  assert.equal(started[0].signal.aborted, true, 'the tool (and its approval card) stops with the error');
+});
+
 test('run_in_terminal: a turn stopped while the sheet is open types nothing, whatever the sheet answered', async () => {
   const controller = new AbortController();
   const folder = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'cancel-terminal-')));

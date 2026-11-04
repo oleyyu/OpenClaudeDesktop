@@ -40,21 +40,9 @@ export function gitRepoMenuItems({ openFolder = true, copyPath = true, openTermi
   return items;
 }
 
-const basename = (value = "") => value.split("/").filter(Boolean).pop() || value;
 const isCount = (value) => Number.isFinite(value) && value >= 0;
 
-/** `Oe = prMode === "commit" || prMode === "none"`: local-only presentation. */
-export function isLocalOnly(prMode) {
-  return prMode === "commit" || prMode === "none";
-}
-
-/** Collapsed badge ($i/ea + Xa): counted changes, uncounted "Changes", or "No changes". */
-export function railSignal(status) {
-  if (!status?.isRepo) return null;
-  const counted = isCount(status.added) && isCount(status.removed) && (status.added > 0 || status.removed > 0);
-  if (counted) return { kind: "changes", added: status.added, removed: status.removed };
-  return status.hasChanges ? { kind: "uncounted", text: t("Changes") } : { kind: "clean", text: t("No changes") };
-}
+// W14-code r5 cleanup R5DC-05: the test-only isLocalOnly helper is gone.
 
 /** cd5a31703 ORe (:36446): behind is only meaningful for a live checkout on a branch other than
  * its base, with a positive behind count (c5da7eb42 `behind_by > 0 ? {behind:{count, base}}`). The tooltip
@@ -65,55 +53,6 @@ export function behindIndicator(comparison, branch) {
   if (!isCount(comparison.behind) || comparison.behind <= 0) return null;
   const count = comparison.behind;
   return { count, base: comparison.base, tooltip: tn(count, "{count} commit behind {base}", "{count} commits behind {base}", { base: comparison.base }) };
-}
-
-/** Ii rail branch: `baseBranch: Oe || (c === undefined && A === j) ? undefined : A`. */
-export function visibleBaseBranch({ prMode, prState, baseBranch, branch }) {
-  if (isLocalOnly(prMode)) return undefined;
-  if (prState === undefined && baseBranch === branch) return undefined;
-  return baseBranch || undefined;
-}
-
-/** Facts group (na): Repository only with a PR link, Status only for PR states,
- * Base branch only when visible, Changes when counted. Gates/automation stay
- * empty without GitHub data. */
-export function buildGitRailModel({ status, comparison = null, prMode = "commit", prState, hideRepo = false, prLink = null, responding = false }) {
-  if (!status?.isRepo) return { visible: false, facts: [], gates: [], automation: [], signal: null, action: null };
-  const repoName = status.repoName || basename(status.cwd);
-  const branch = status.branch || status.head || "HEAD";
-  const signal = railSignal(status);
-  const behind = behindIndicator(comparison, status.detached ? null : status.branch);
-  const baseBranch = visibleBaseBranch({ prMode, prState, baseBranch: comparison?.base, branch: status.branch });
-  const facts = [];
-  if (prLink && !hideRepo) facts.push({ key: "repository", label: t("Repository"), value: repoName });
-  if (baseBranch) {
-    facts.push({ key: "base", label: t("Base branch"), hint: t("A pull request from this branch merges into {branch}.", { branch: baseBranch }),
-      hintDetail: behind?.tooltip, value: behind ? t("{branch} · {count} behind", { branch: baseBranch, count: behind.count }) : baseBranch });
-  }
-  if (signal?.kind === "changes") {
-    facts.push({ key: "changes", label: t("Changes"), added: signal.added, removed: signal.removed, action: t("View changes"),
-      hint: t("View changes"), hintDetail: baseBranch ? t("Lines added and removed compared with {branch}.", { branch: baseBranch }) : t("Lines added and removed on this branch.") });
-  }
-  const action = prMode === "commit" ? commitAction(status, { responding }) : null;
-  return {
-    visible: status.hasChanges === true,
-    title: hideRepo ? branch : `${repoName} · ${branch}`,
-    glyphLabel: t("Branch"),
-    signal, behind, baseBranch, facts, gates: [], automation: [], action,
-  };
-}
-
-/** Placeholder reservation (c936fcd42 Wi/Gi/Ki/qi): remembered px capped at
- * 360 with max(1, round(px / 28)) rows; otherwise 4 rows (5 with a PR) at
- * 28px each plus 4px gaps when this checkout showed a row before. */
-export function railReservation({ remembered, checkoutHadRow = false, hasPr = false }) {
-  if (Number.isFinite(remembered) && remembered > 0) {
-    const heightPx = Math.min(Math.round(remembered), 360);
-    return { heightPx, rows: Math.max(1, Math.round(heightPx / 28)), source: "memory" };
-  }
-  if (!checkoutHadRow) return { heightPx: 0, rows: 0, source: "none" };
-  const rows = hasPr ? 5 : 4;
-  return { heightPx: Math.min(rows * 28 + (rows - 1) * 4, 360), rows, source: "checkout" };
 }
 
 // Pull requests (git-status-card.js:4711 prMode 'create' for a repository with a GitHub origin; :4985-5020 the split
@@ -160,49 +99,8 @@ export function prBusyLabel(mode) {
   return mode === "create" || mode === "draft" || mode === "compose" ? t("Creating PR…") : undefined;
 }
 
-/** cd5a31703 bze (:38049-38059): an existing PR puts the band in merged / queued / view mode, else the create mode. */
-export function bandPrMode(pr, createMode) {
-  if (pr) return pr.state === "merged" ? "merged" : pr.state === "queued" ? "queued" : "view";
-  return createMode;
-}
-
-/** shared-18 jw/Mw: the PR state's name (state glyph tooltip, Action Center pills). */
-export function prStateLabel(state) {
-  switch (state) {
-    case "open": return t("Open");
-    case "draft": return t("Draft");
-    case "approved": return t("Approved");
-    case "changesRequested": return t("Changes requested");
-    case "conflicting": return t("Merge conflicts");
-    case "queued": return t("Queued");
-    case "merged": return t("Merged");
-    case "closed": return t("Closed");
-    default: return t("No pull request");
-  }
-}
-/** cd5a31703 AB/bLe (:33408-33426): the state glyph and its git tint; xLe: merged/queued tint the whole row. */
-export const PR_STATE_GLYPHS = Object.freeze({
-  open: { icon: "GitPullRequest", tint: "opened" },
-  draft: { icon: "GitPullRequestDraft", tint: "draft" },
-  merged: { icon: "GitMergedSimple", tint: "merged" },
-  closed: { icon: "GitPullRequestClosed", tint: "closed" },
-  approved: { icon: "CheckCircle", tint: "opened" },
-  changesRequested: { icon: "XCircle", tint: "closed" },
-  conflicting: { icon: "GitMergeConflict", tint: "conflicting" },
-  queued: { icon: "GitMergeQueue", tint: "queued" },
-});
-export const PR_ROW_ACCENT = Object.freeze({ merged: "purple", queued: "yellow" });
-/** cd5a31703 NB (:33447-33476): the CI glyph's accessible name. */
-export function ciStatusLabel(status) {
-  switch (status) {
-    case "failed": return t("CI: checks failing");
-    case "passed": return t("CI: all checks passed");
-    case "loading": case "pending": return t("CI: checks in progress");
-    case "skipped": return t("CI: all checks skipped");
-    case "unavailable": return t("CI: status unavailable");
-    default: return undefined;
-  }
-}
+// W14-code r7 css7-git-band-prbarrow: bandPrMode, prStateLabel, PR_STATE_GLYPHS, PR_ROW_ACCENT and ciStatusLabel served only the
+// host band row (SourceGitStatus); the band is the generated c96d752d0 EL now (its own hMe / Wc / kke / Ake / wL), so they are gone.
 
 /**
  * The branch's PR for the band: the GitHub CLI lookup (main.cjs workspace-pull-request) when it answered, else the

@@ -12,8 +12,8 @@ import { setLocale, DEFAULT_LOCALE } from '../electron/i18n/index.mjs';
 import { suggestedTasks } from '../src/agent-tool-titles.mjs';
 import {
   SPAWN_TASK_TOOL, TASK_ID_PATTERN, PROPOSAL_OUTCOMES, LEGACY_DISMISSED_TASKS_PREFIX,
-  proposalToolRecord, proposalTaskId, isProposingTool, isPlacedProposal, proposalToolFailed, proposingTools,
-  turnProposals, proposalAnchors, proposalCardToolIds, isProposalCardTool, transcriptTaskIds,
+  proposalToolRecord, proposalTaskId, isProposingTool, isPlacedProposal, proposingTools,
+  turnProposals, proposalAnchors, proposalCardToolIds, transcriptTaskIds,
   proposalOutcomes, sentHereTaskIds, startedTaskIds, backgroundTaskSuggestions, unplacedSuggestions,
   toOfficialPermissionMode, toHostPermissionMode, proposalSessions, legacyWithdrawnTaskIds,
 } from '../src/proposal-group-model.mjs';
@@ -129,7 +129,6 @@ test('the re-stated pL / hL / gL / mL / PPe answer as the original declarations 
     assert.equal(proposalTaskId(record), official.pL(record), `pL ${record.id}`);
     assert.equal(isProposingTool(record), official.hL(record), `hL ${record.id}`);
     assert.equal(isPlacedProposal(record), official.gL(record), `gL ${record.id}`);
-    assert.equal(proposalToolFailed(record), official.mL(record), `mL ${record.id}`);
   }
   assert.deepEqual(proposingTools(records), official.PPe([{ kind: 'tools', tools: records }]));
   assert.deepEqual(proposingTools([]), official.PPe([]));
@@ -174,7 +173,6 @@ test('proposalCardToolIds: every placed call with a turn is the card\'s; running
   assert.equal(count(c96, '...ee?{hostDrawsTurnSuggestions:ee}:{}'), 1);
   const items = [spawn({ id: 'h1' }), spawn({ id: 'h2', status: 'inProgress' }), spawn({ id: 'h3', status: 'failed' }), { ...spawn({ id: 'h4' }), turnId: undefined }, reply('r', 't1')];
   assert.deepEqual([...proposalCardToolIds(items)], ['h1']);
-  assert.deepEqual(items.map(isProposalCardTool), [true, false, false, false, false]);
   assert.deepEqual([...transcriptTaskIds(items)], [taskOf(items[0]), taskOf(items[3])]);
 });
 

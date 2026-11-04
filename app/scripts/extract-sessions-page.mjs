@@ -15,6 +15,9 @@
 //                          mcp-app-card, sidebar-sections), so plain node cannot load them (E42) and pure models must
 //                          not import them. code-current's sidebar-nested-caret.mjs imports pure-shared-78.mjs
 //                          (sidebarListMessages): renaming that module or export means regenerating that target too.
+//   messages-<chunk>.mjs   W14-code r8: message descriptors the official code writes inline (`l.formatMessage({
+//                          defaultMessage: …, id: "…"}, …)`, no binding to slice), picked by id from the chunk's AST.
+//                          Each id must occur with exactly one defaultMessage; the descriptor is emitted verbatim.
 //
 // Every import resolves to exactly one of (in this order): a module generated here; a React / ReactDOM export of
 // vendor-frame (official.reactAliases, each alias checked); a view-tabs public name (R3/R6: the compiler helpers and the
@@ -57,7 +60,7 @@ const PAGE = 'cbd6c85c8-D1xuycDy.js';
 const S0 = 'shared-0-DDOOdL6P.js', S2 = 'shared-2-TF8v67kg.js', S5 = 'shared-5-Bg6ZMqvt.js', S8 = 'shared-8-Db1QN4mf.js';
 const S11 = 'shared-11-_AVGLHEz.js', S16 = 'shared-16-ByfgAyLr.js', S18 = 'shared-18-D3y8YMFN.js', S20 = 'shared-20-mUr7IqZY.js';
 const S25 = 'shared-25-DOWZRSlq.js', S26 = 'shared-26-CGuBxVt9.js', S3 = 'shared-3-BCEbd8Fv.js', S52 = 'shared-52-uHFNjl7C.js';
-const S78 = 'shared-78-D5Fw2h0a.js', S104 = 'shared-104-CTONUSaz.js', S130 = 'shared-130-dWztbTO1.js', S156 = 'shared-156-BLTosN8U.js';
+const S22 = 'shared-22-Bwn3sJTG.js', S78 = 'shared-78-D5Fw2h0a.js', S104 = 'shared-104-CTONUSaz.js', S130 = 'shared-130-dWztbTO1.js', S156 = 'shared-156-BLTosN8U.js';
 const S182 = 'shared-182-BI1KJccu.js', INTL = official.vendorIntl, QUERY = 'vendor-query-DVJ0goAF.js';
 const MENU = 'cc18d27d7-Dym2_dzB.js', MOVE = 'cd540469d-BuzMFsy1.js';
 
@@ -179,6 +182,14 @@ const pure = [
   { target: 'pure-shared-52.mjs', source: S52, exports: { OT: 'useLatchedValue' }, features: { OT: ['t.mode === "latest"'] } },
   { target: 'pure-shared-78.mjs', source: S78, exports: { Sv: 'sidebarMessages', hv: 'sidebarListMessages', zy: 'useCoworkOnlyMode' },
     features: { Sv: [loose('return cp() ? xv : bv;')], hv: ['"Untitled"', '"Recents"'], zy: [loose('return (Ty(), !1);')] } },
+  // W14-code fr6-07: shared-22 CT, the Older bucket menu's messages (wT: `CT.olderBulkArchived` / `CT.olderBulkDeleted`
+  // toasts), for the Code sidebar's Older bulk Archive / Delete (source-sidebar.jsx runBulk). Not used by Hf.
+  { target: 'pure-shared-22.mjs', source: S22, exports: { CT: 'sidebarOlderMessages' },
+    features: { CT: ['"Bulk actions for older sessions"', '"mQXVaIKxH7"', '"Jnh2eh8Aex"'] } },
+  // W14-code fr7-04: c39a247c4 Bt, the multi-select Set model toasts (`i.formatMessage(Bt.bulkModelSet, {count: c})` /
+  // `Bt.bulkModelSetFailed`), for the sidebar's bulk Set model (source-sidebar.jsx runBulk). Not used by Hf.
+  { target: 'pure-c39a247c4.mjs', source: 'c39a247c4--WbIrj9D.js', exports: { Bt: 'sidebarBulkModelMessages' },
+    features: { Bt: ['"H9CZcZ7FTW"', '"72nFwMY5yl"', 'bulkModelSetFailed:'] } },
   { target: 'pure-shared-26.mjs', source: S26,
     exports: { EA: 'steadyOasisGateKey', wA: 'ServedSearchCursorInvalid', xA: 'ServedSearchUnavailable', TA: 'recentsRowRef', rE: 'attachedChatUuid' },
     features: { EA: ['"cai_steady_oasis"'], wA: ['"ServedSearchCursorInvalid"'], xA: ['"ServedSearchUnavailable"'], TA: ['kind: "code", id: e.session.id'], rE: ['"attachedChatUuid" in e'] } },
@@ -201,6 +212,21 @@ const pure = [
   { target: 'pure-cb5a8eb56.mjs', source: 'cb5a8eb56-B9qWyNr0.js', exports: { i: 'useSearchTelemetry' }, features: { i: ['searchVersion:'] } },
   { target: 'pure-ccd3f66ef.mjs', source: 'ccd3f66ef-DpchzIn2.js', exports: { b: 'artifactsStaleTime', W: 'hasChatArtifact' },
     features: { b: [loose('b = 6e4')], W: ['chat_conversation_uuid === t'] } },
+];
+// W14-code r8 (frame fr8-04 / fr8-05): inline descriptors (see messages-<chunk>.mjs above). Not used by Hf.
+const messageSets = [
+  // fr8-04: shared-22 QI, the warning toast after an archive kept a worktree with uncommitted changes (title / description /
+  // action; +OCoLbFBSb's folder list needs several worktrees for one toast, which the host never has).
+  { target: 'messages-shared-22.mjs', source: S22, exportName: 'archivedWithChangesMessages',
+    messages: { title: '97BfxO8deN', description: 'XtKbRXFQoE', action: 'JdaR4uyvoG' } },
+  // fr8-05: shared-20 IA, the nested-sessions confirm description (named / unnamed session × archive / delete, then the
+  // bound and working sentences).
+  { target: 'messages-shared-20.mjs', source: S20, exportName: 'nestedSessionsMessages',
+    messages: { archiveNamed: 'rRvonVlblb', deleteNamed: 'sRMUaFT32i', archiveUnnamed: 'RbpU5T0BsV', deleteUnnamed: 'ORGsUuPnMo',
+      bound: 'wCLSAv7FiB', working: 'G1uB+fnj7o' } },
+  // fr8-05: c48ea26ad X, the toast when nested sessions could not be moved to the top level.
+  { target: 'messages-c48ea26ad.mjs', source: 'c48ea26ad-DhTxpIFD.js', exportName: 'nestedMoveFailedMessages',
+    messages: { deleteFailed: '3A4UmmpZB2', archiveFailed: 'd8suG8Ad49' } },
 ];
 const page = { target: 'sessions-page-hf.mjs', source: PAGE, exports: { Hf: 'SessionsPageHf' },
   features: { Hf: ['codeRowLinkComponent:', 'reportsRecentsLoad:', 'renderCodeRowActions:', '"chats_load"', '"recents_load"', loose('let $ = J9(537)')] } };
@@ -313,6 +339,10 @@ async function holders() {
 }
 
 // ---------------------------------------------------------------- resolving one original import
+// W14-code r4 gen-final-4: the Code sidebar's routines section (extract-sidebar-routines.mjs) links this page's
+// pure-shared-11 (EC reconcileRows) the same way, so it is never imported from here either (no cycle, and the page does
+// not load the routines adapters).
+const NOT_IMPORTED_FROM = new Set(['code-transcript', 'sidebar-routines']);
 async function resolveImport({ self, file, alias, emitted, via }) {
   // vendor-frame: React / ReactDOM by alias; anything else (clsx `Ba`) only as a view-tabs public name below.
   if (file === VENDOR && official.reactAliases[alias]) {
@@ -334,7 +364,11 @@ async function resolveLocal({ self, file, local, emitted, via }) {
     assertFeatures(`adapter ${key}`, closureText(await readSource(file), local), entry.features);
     return { from: rel(self, adapterFile), name: entry.name, via, kind: 'adapter', original: key };
   }
-  const held = (await holders()).get(key)?.[0];
+  // W14-code gen-final: the Code transcript area (extract-code-transcript.mjs) links this page's small slices instead
+  // (its `linkedAreas`: pure-shared-52 / -78 / -182 / pure-vendor-query), so it is never imported from here: one direction
+  // only, and the page does not pull in the renderer's ~250-module closure through a copy that area also holds. It
+  // still counts as a holder for the D1 root check below.
+  const held = (await holders()).get(key)?.find(h => !NOT_IMPORTED_FROM.has(h.area));
   if (held) return { from: rel(self, held.file), name: held.name, via, kind: 'held', area: held.area, original: key };
   return null;
 }
@@ -450,6 +484,41 @@ async function sliceModule(spec, emitted) {
   };
 }
 
+// An object literal `{defaultMessage: <string>, id: <string>}` (other keys allowed, e.g. `description`) per requested id.
+async function messagesModule(spec) {
+  const src = await readSource(spec.source);
+  const found = new Map();
+  const literal = node => (node?.type === 'StringLiteral' ? node.value
+    : node?.type === 'TemplateLiteral' && node.expressions.length === 0 ? node.quasis[0].value.cooked : undefined);
+  src.program.traverse({
+    ObjectExpression(p) {
+      const props = new Map(p.node.properties.filter(q => q.type === 'ObjectProperty' && !q.computed)
+        .map(q => [q.key.type === 'Identifier' ? q.key.name : q.key.value, q.value]));
+      const id = literal(props.get('id')), defaultMessage = literal(props.get('defaultMessage'));
+      if (id === undefined || defaultMessage === undefined) return;
+      if (!found.has(id)) found.set(id, new Set());
+      found.get(id).add(defaultMessage);
+    },
+  });
+  const entries = Object.entries(spec.messages).map(([name, id]) => {
+    const texts = found.get(id);
+    if (!texts) throw Error(`${spec.target}: ${spec.source} has no descriptor ${id}`);
+    if (texts.size !== 1) throw Error(`${spec.target}: ${spec.source} descriptor ${id} has ${texts.size} defaultMessages`);
+    return { name, id, defaultMessage: [...texts][0] };
+  });
+  const header = `// Original Claude Desktop ${referenceVersion} message descriptors from ${spec.source}; generated by extract-sessions-page.mjs.\n// Edit the extractor, never this file.\n`;
+  const body = entries.map(e => `${JSON.stringify(e.name)}: { defaultMessage: ${JSON.stringify(e.defaultMessage)}, id: ${JSON.stringify(e.id)} }`).join(',\n');
+  const text = await format(`${header}const messages = {\n${body}\n};\nexport { messages as ${spec.exportName} };\n`, { parser: 'babel' });
+  return {
+    text,
+    record: {
+      target: spec.target, source: spec.source, sourceSha256: sha(src.bytes), sha256: sha(text), referenceVersion, kind: 'messages',
+      bindings: [], messages: entries.map(({ name, id, defaultMessage }) => ({ name, id, sha256: sha(defaultMessage) })), imports: [],
+      exports: { messages: spec.exportName },
+    },
+  };
+}
+
 export async function extractSessionsPage({ check = false } = {}) {
   official.assertCompilerHelpers((await readRaw(SF)).text);
   const manifest = {
@@ -459,6 +528,11 @@ export async function extractSessionsPage({ check = false } = {}) {
   const files = {}, emitted = [];
   for (const spec of modules) {
     const { text, record } = await sliceModule(spec, emitted);
+    files[spec.target] = text;
+    manifest.modules.push(record);
+  }
+  for (const spec of messageSets) {
+    const { text, record } = await messagesModule(spec);
     files[spec.target] = text;
     manifest.modules.push(record);
   }

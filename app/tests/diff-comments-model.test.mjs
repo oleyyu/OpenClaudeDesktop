@@ -1,9 +1,12 @@
 // B14 D4/D5: Changes-pane inline comments (c44d00c7f Ho/Vo/la/pa/Qa, caec4a2d4 In, cf56e4ee1 t).
-import test from 'node:test';
+import test, { after, before } from 'node:test';
 import assert from 'node:assert/strict';
+import path from 'node:path';
+import { createServer } from 'vite';
 import { parseUnifiedDiff } from '../src/diff-model.js';
-import { DIFF_COMMENTS_PREFIX, addCommentLabel, anchorDiffSpan, createDiffCommentsStore, diffCommentAttachmentKey, diffCommentKey, diffCommentOutdated,
-  diffLineIndex, diffSelectionSpan, diffSpanText, placeDiffComment, rowCommentTarget, selectionChipPosition } from '../src/diff-comments-model.mjs';
+import { DIFF_COMMENTS_IMPORTED_PREFIX, DIFF_COMMENTS_PREFIX, addCommentLabel, anchorDiffSpan, createAnnotationCommentsStore, diffCommentAttachmentKey, diffCommentKey,
+  diffCommentOutdated, diffCommentSession, diffLineIndex, diffSelectionSpan, diffSpanText, importLegacyDiffComments, legacyDiffCommentKeys, placeDiffComment,
+  rowCommentTarget, selectionChipPosition } from '../src/diff-comments-model.mjs';
 import { serializeLineComment } from '../src/inline-comments.mjs';
 import { addSnippet, makeSnippet, removeSnippetByKey, snippetText } from '../src/composer-attachments-model.mjs';
 
@@ -13,21 +16,34 @@ const patch = [
   '@@ -20,3 +21,3 @@', ' twenty', '-old21', '+new22', ' twentytwo', '',
 ].join('\n');
 const file = () => parseUnifiedDiff(patch).files[0];
+// W14-code r7 (r7pa-03): the comment store is the official cc8941b7b F (with P, its body texts), shared with the pierre
+// body; the host card store (createAnnotationCommentsStore) only reads and writes it. Loaded through vite (the generated
+// layer imports JSX adapters); each fixture uses its own session id.
+let server, F, P;
+before(async () => {
+  server = await createServer({ configFile: false, root: path.resolve(import.meta.dirname, '..'), server: { middlewareMode: true, hmr: false, watch: null },
+    appType: 'custom', logLevel: 'error' });
+  ({ useDiffAnnotationStore: F, P } = await server.ssrLoadModule('/src/generated/pierre-changes/pierre-cc8941b7b-DAgMZRvX.mjs'));
+});
+after(async () => { await server?.close(); });
+let sessions = 0;
 const fixture = () => {
-  const values = new Map();
-  const storage = { getItem: (k) => values.get(k) ?? null, setItem: (k, v) => values.set(k, v), removeItem: (k) => values.delete(k) };
-  return { storage, values, store: createDiffCommentsStore({ scope: 'session\0src/a.js', storage }) };
+  const sessionId = `model-${++sessions}`;
+  return { sessionId, store: createAnnotationCommentsStore({ sessionId, path: 'src/a.js', store: F, bodies: P }) };
 };
 
 test('cards are keyed by side and end line (Je), one per key; a saved comment reopens for editing', () => {
   assert.equal(diffCommentKey('additions', 4), 'additions:4');
-  const { store } = fixture();
+  const { store, sessionId } = fixture();
   assert.equal(store.create('additions', 5, 3, 'a\r\nb\n'), 'additions:5');
   const [entry] = store.getSnapshot().entries;
   assert.deepEqual([entry.start, entry.end, entry.code, store.getSnapshot().active], [3, 5, 'a\nb', 'additions:5']);
+  // The draft is F's (Ho openDraft → setDraft), keyed side:endLine, and is the session's active card.
+  assert.deepEqual(F.getState().draftsBySession[sessionId]['src/a.js']['additions:5'], { filePath: 'src/a.js', side: 'additions', startLine: 3, endLine: 5, snippet: 'a\nb' });
   assert.equal(store.create('deletions', 5, 5, 'x'), 'deletions:5', 'the other side of the same line is its own card');
   assert.deepEqual(store.getSnapshot().entries.map((e) => e.id), ['deletions:5', 'additions:5']);
   store.edit('additions:5', ' fix this ');
+  assert.equal(P.getState().bodiesBySession[sessionId]['src/a.js']['additions:5'], ' fix this ');
   assert.equal(store.create('additions', 4, 5, 'b'), 'additions:5', 'a new range at the key replaces the draft range');
   assert.deepEqual([store.getSnapshot().entries[1].start, store.getSnapshot().entries[1].body], [4, ' fix this ']);
   assert.equal(store.create('additions', 5, 5, 'b'), 'additions:5', 'a single line reopens the card at its key');
@@ -35,33 +51,58 @@ test('cards are keyed by side and end line (Je), one per key; a saved comment re
   const saved = store.save('additions:5');
   assert.equal(saved.savedBody, 'fix this');
   assert.equal(store.getSnapshot().active, null);
+  // c82eca2bd: a saved draft is addAnnotation({...draft, body}) + clearDraft; the snippet key rides on its id.
+  const [annotation] = F.getState().annotationsBySession[sessionId]['src/a.js'];
+  assert.deepEqual([annotation.body, annotation.startLine, annotation.endLine, annotation.snippet, saved.annotationId], ['fix this', 4, 5, 'b', annotation.id]);
+  assert.equal(F.getState().draftsBySession[sessionId]['src/a.js']['additions:5'], undefined);
   store.create('additions', 1, 5, 'other');
   assert.deepEqual([store.getSnapshot().active, store.getSnapshot().entries[1].start], ['additions:5', 4], 'a saved comment keeps its range');
-  store.edit('additions:5', 'changed'); store.cancel('additions:5');
+  store.edit('additions:5', 'changed');
+  assert.equal(P.getState().editBodiesBySession[sessionId][annotation.id], 'changed');
+  store.cancel('additions:5');
   assert.equal(store.getSnapshot().entries[1].body, 'fix this');
   store.cancel('deletions:5');
   assert.deepEqual(store.getSnapshot().entries.map((e) => e.id), ['additions:5'], 'cancelling an unsaved draft drops it');
+  // An edit saves through updateAnnotation; delete is removeAnnotation.
+  store.activate('additions:5'); store.edit('additions:5', 'again'); store.save('additions:5');
+  assert.equal(F.getState().annotationsBySession[sessionId]['src/a.js'][0].body, 'again');
+  store.remove('additions:5');
+  assert.deepEqual(F.getState().annotationsBySession[sessionId]['src/a.js'], []);
 });
 
-test('comments persist per scope; release drops abandoned empty drafts; storage events sync other windows', () => {
-  const { store, storage, values } = fixture();
+test('the pierre body and the host rows read one store; release drops abandoned empty drafts; legacy comments import once', () => {
+  const { store, sessionId } = fixture();
+  // A comment the official card wrote (cc8941b7b addAnnotation) is a host card too, and a host one is F's.
+  F.getState().addAnnotation(sessionId, { filePath: 'src/a.js', side: 'deletions', startLine: 3, endLine: 3, snippet: 'three', body: 'from pierre' });
+  assert.deepEqual(store.getSnapshot().entries.map((e) => [e.id, e.savedBody, e.code]), [['deletions:3', 'from pierre', 'three']]);
   store.create('additions', 2, 2, 'two'); store.edit('additions:2', 'keep');
-  store.create('deletions', 3, 3, 'three');
+  store.create('additions', 4, 4, 'four');
   store.release();
-  assert.deepEqual(store.getSnapshot().entries.map((e) => e.id), ['additions:2']);
-  let notify;
-  const other = createDiffCommentsStore({ scope: 'session\0src/a.js', storage, subscribeStorage: (fn) => { notify = fn; return () => {}; } });
-  assert.equal(other.getSnapshot().entries[0].body, 'keep');
-  store.save('additions:2'); notify({ key: DIFF_COMMENTS_PREFIX + 'session\0src/a.js' });
-  assert.equal(other.getSnapshot().entries[0].savedBody, 'keep');
-  store.remove('additions:2');
-  assert.equal(values.size, 0);
-  values.set(DIFF_COMMENTS_PREFIX + 'bad', '{"x":1}');
-  assert.deepEqual(createDiffCommentsStore({ scope: 'bad', storage }).getSnapshot().entries, []);
-  const denied = createDiffCommentsStore({ scope: 'x', storage: { getItem() { throw Error(); }, setItem() { throw Error(); } } });
-  denied.create('additions', 1, 1, ''); denied.edit('additions:1', 'ok');
-  assert.equal(denied.save('additions:1').body, 'ok');
-  assert.equal(createDiffCommentsStore({ scope: 'y', storage }).create('middle', 1, 1), null);
+  assert.deepEqual(store.getSnapshot().entries.map((e) => e.id), ['additions:2', 'deletions:3']);
+  assert.equal(store.getSnapshot().active, null);
+  // PR, Files-pane and finding annotations are not Changes line comments.
+  F.getState().addAnnotation(sessionId, { filePath: 'src/a.js', side: 'additions', startLine: 9, endLine: 9, body: 'pr', source: 'pr' });
+  assert.equal(store.getSnapshot().entries.length, 2);
+  assert.equal(createAnnotationCommentsStore({ sessionId, path: 'src/a.js', store: F, bodies: P }).create('middle', 1, 1), null);
+  // The scope → session (source-session.jsx commentScope JSON [sessionId, cwd]).
+  assert.equal(diffCommentSession('["s1","/repo"]'), 's1');
+  assert.equal(diffCommentSession('scope-a'), 'scope-a');
+  // Pre-r7 host comments (localStorage per scope and file) are imported once and kept under the imported prefix.
+  const values = new Map();
+  const storage = { getItem: (k) => values.get(k) ?? null, setItem: (k, v) => values.set(k, v), removeItem: (k) => values.delete(k),
+    get length() { return values.size; }, key: (i) => [...values.keys()][i] ?? null };
+  const legacy = `${DIFF_COMMENTS_PREFIX}["legacy-1","/repo"]\0src/b.js`;
+  const raw = JSON.stringify([{ side: 'additions', start: 1, end: 2, code: 'x', body: 'old', savedBody: 'old' }, { side: 'deletions', start: 4, end: 4, code: null, body: 'half' }]);
+  values.set(legacy, raw); values.set('other', '1');
+  assert.deepEqual(legacyDiffCommentKeys(storage), [legacy]);
+  assert.equal(importLegacyDiffComments({ storage, store: F, bodies: P, key: legacy }), 2);
+  const imported = createAnnotationCommentsStore({ sessionId: 'legacy-1', path: 'src/b.js', store: F, bodies: P }).getSnapshot();
+  assert.deepEqual(imported.entries.map((e) => [e.id, e.body, e.savedBody]), [['additions:2', 'old', 'old'], ['deletions:4', 'half', undefined]]);
+  assert.equal(imported.active, null, 'importing does not open a card');
+  assert.equal(values.get(legacy), undefined);
+  assert.equal(values.get(`${DIFF_COMMENTS_IMPORTED_PREFIX}["legacy-1","/repo"]\0src/b.js`), raw);
+  values.set(legacy, raw);
+  assert.equal(importLegacyDiffComments({ storage, store: F, bodies: P, key: legacy }), 0, 'already there: not twice');
 });
 
 test('rows comment on the old file only when removed (or in the split view\'s left column)', () => {

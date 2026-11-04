@@ -42,6 +42,43 @@ test('fork copies last saved boundary, persists owned child and folders, name fa
  const result=await s.controller.run({...s.payload,operation:'fork',name:'Branch copy'});
  assert.equal(result.thread.id,'b');assert.ok(result.warning);assert.ok(s.config.threadIds.includes('b'));assert.equal(s.config.sessionMetadata.b.forkedFrom,'a');assert.deepEqual(s.config.sessionMetadata.b.additionalFolders,['/extra']);assert.equal(s.requests.find(x=>x.method==='thread/fork').params.lastTurnId,'last');assert.equal(s.requests.find(x=>x.method==='thread/fork').params.excludeTurns,true);assert.equal(s.requests.find(x=>x.method==='thread/read').params.includeTurns,false);assert.equal(s.controller.snapshot().length,0);assert.ok(s.saves());
 });
+// W14-code fr6-03: official cd54a5401 forkDisabledReason (caec4a2d4 kn) has no running reason, and /btw already forks a
+// running parent (btw-sessions.cjs). A running session forks through its newest ended turn, or names no turn when none
+// has ended; compact and review still refuse while it runs.
+test('fr6-03: a running session forks through its newest ended turn (or none); compact and review still refuse',async()=>{
+ const running=[{id:'live',status:'inProgress',itemsView:'summary',items:[]},{id:'done',status:'completed',itemsView:'summary',items:[]}];
+ const s=setup(method=>method==='thread/turns/list'?{data:running,nextCursor:null,backwardsCursor:null}:method==='thread/read'?{thread:{id:'a',cwd:'/repo',name:'Original',status:{type:'active'},historyMode:'paginated',turns:[]}}:undefined);
+ s.controller.observe(event('turn/started','live'));
+ assert.equal(s.controller.isActive('a'),true);
+ const result=await s.controller.run({...s.payload,operation:'fork'});
+ assert.equal(result.thread.id,'b');
+ assert.equal(s.requests.find(x=>x.method==='thread/fork').params.lastTurnId,'done');
+ for(const operation of ['compact','review']){
+  await assert.rejects(s.controller.run({...s.payload,operation,target:{type:'uncommittedChanges'}}),/Wait for the current task to finish or stop it first\./);
+ }
+ const first=setup(method=>method==='thread/turns/list'?{data:[running[0]],nextCursor:null,backwardsCursor:null}:undefined);
+ first.controller.observe(event('turn/started','live'));
+ await first.controller.run({...first.payload,operation:'fork'});
+ assert.ok(!('lastTurnId' in first.requests.find(x=>x.method==='thread/fork').params));
+ const busy=setup(method=>method==='thread/turns/list'?{data:running,nextCursor:null,backwardsCursor:null}:undefined);
+ await assert.rejects(busy.controller.run({...busy.payload,operation:'compact'}),/This session is still running\. Wait or stop it first\./);
+});
+// W14-code fr7-02: official cd54a5401 forkDisabledReason and cf74bc599 WN fork_code_session have no archived condition
+// (the harness thread/fork reads an archived log as any other). An archived session — kept in archivedThreadIds, not
+// threadIds — forks into a new active session and stays archived; compact and review still refuse it, an unknown id too.
+test('fr7-02: an archived session forks; compact and review still refuse it',async()=>{
+ const s=setup();s.config.threadIds=[];s.config.archivedThreadIds=['a'];
+ const result=await s.controller.run({...s.payload,operation:'fork'});
+ assert.equal(result.thread.id,'b');assert.deepEqual(s.config.threadIds,['b']);assert.deepEqual(s.config.archivedThreadIds,['a']);
+ assert.equal(s.config.sessionMetadata.b.forkedFrom,'a');
+ for(const operation of ['compact','review'])
+  await assert.rejects(s.controller.run({...s.payload,operation,target:{type:'uncommittedChanges'}}),/Open an active session first\./);
+ await assert.rejects(s.controller.run({...s.payload,threadId:'foreign',operation:'fork'}),/Open an active session first\./);
+ // Deleted while the fork read the thread: no dispatch.
+ let gone;gone=setup(method=>{if(method==='thread/read'){gone.config.archivedThreadIds=[];}});gone.config.threadIds=[];gone.config.archivedThreadIds=['a'];
+ await assert.rejects(gone.controller.run({...gone.payload,operation:'fork'}),/no longer active/);
+ assert.ok(!gone.requests.some(x=>x.method==='thread/fork'));
+});
 test('known successful fork is persisted even when connection changes before response',async()=>{
  let s;s=setup(method=>{if(method==='thread/fork'){s.swap();return {thread:{id:'b',turns:[]}};}});
  const result=await s.controller.run({...s.payload,operation:'fork'});assert.equal(result.thread.id,'b');assert.ok(result.warning);assert.ok(s.config.threadIds.includes('b'));
@@ -177,4 +214,56 @@ test('/cd forks the session into another folder (relative to its own), refusing 
  await assert.rejects(s.controller.run({...s.payload,operation:'fork',cwd:'/'}),/filesystem root/);
  terminals=[{processId:'p1',status:'running'}];
  await assert.rejects(s.controller.run({...s.payload,operation:'fork',cwd:api}),/background terminals/);
+});
+// W14-code r4 fr4-01 / fr4-13b: 3.6556.2 ce4f4374c $e offers Archive / Delete on a running session (no disabled state) and
+// shared-20 G1uB+fnj7o says working sessions "stop if you archive them too": stopForRemoval interrupts the running turn,
+// waits for its turn/completed, and only then lets the archive / delete go on.
+test('stopForRemoval: a running turn is interrupted and its end awaited before the removal goes on', async () => {
+ const s = setup();
+ s.controller.observe(event('turn/started', 't1'));
+ assert.throws(() => s.controller.assertAvailable('a'), /Wait/);
+ const calls = []; let settled = false;
+ const done = s.controller.stopForRemoval('a', { interrupt: async (threadId, turnId) => { calls.push([threadId, turnId]); } }).then(() => { settled = true; });
+ await new Promise((resolve) => setImmediate(resolve));
+ assert.deepEqual(calls, [['a', 't1']], 'the running turn is interrupted');
+ assert.equal(settled, false, 'it waits for the turn to end');
+ s.controller.observe(event('turn/completed', 'other'));
+ await new Promise((resolve) => setImmediate(resolve));
+ assert.equal(settled, false, 'another turn ending does not release it');
+ s.controller.observe(event('turn/completed', 't1', 'interrupted'));
+ await done;
+ assert.equal(settled, true);
+ assert.equal(s.controller.isActive('a'), false);
+});
+test('stopForRemoval: an idle session goes on at once; a dropped connection releases the wait; a turn that never ends refuses', async () => {
+ const idle = setup(); let interrupted = 0;
+ await idle.controller.stopForRemoval('a', { interrupt: async () => { interrupted++; } });
+ assert.equal(interrupted, 0, 'nothing to stop');
+ const dropped = setup();
+ dropped.controller.observe(event('turn/started', 't2'));
+ const waiting = dropped.controller.stopForRemoval('a', { interrupt: async () => {} });
+ dropped.controller.observe({ kind: 'connection', connected: false });
+ await waiting;
+ const stuck = setup();
+ stuck.controller.observe(event('turn/started', 't3'));
+ await assert.rejects(stuck.controller.stopForRemoval('a', { interrupt: async () => {}, timeoutMs: 20 }), /Wait for the current task to finish or stop it first/);
+ const failing = setup();
+ failing.controller.observe(event('turn/started', 't4'));
+ await assert.rejects(failing.controller.stopForRemoval('a', { interrupt: async () => { throw new Error('no stop'); } }), /no stop/);
+ // A failed interrupt leaves no waiter behind: the next turn end does nothing odd.
+ failing.controller.observe(event('turn/completed', 't4'));
+ assert.equal(failing.controller.isActive('a'), false);
+});
+test('main.cjs: thread/archive and thread/delete stop a running session first (no more running refusal in the renderer)', async () => {
+ const { readFileSync } = await import('node:fs');
+ const main = readFileSync(new URL('../electron/main.cjs', import.meta.url), 'utf8');
+ assert.match(main, /if \(p\.method === "thread\/archive" \|\| p\.method === "thread\/delete"\) await sessionOperations\.stopForRemoval\(params\.threadId, \{ interrupt: \(threadId, turnId\) => \{/);
+ assert.match(main, /const sent = interruptTurn\(client, \{ threadId, turnId, expected: \{ connectionId: connection\?\.approvalConnectionId, connectionEpoch: connection\?\.approvalConnectionEpoch \},\s*\.\.\.\(activeGoals\.has\(threadId\) \? \{ pauseGoal: true \} : \{\}\) \}\);/);
+ assert.match(main, /if \(\['thread\/archive', 'thread\/delete'\]\.includes\(p\.method\)\) await sessionOperations\.stopForRemoval\(params\.threadId, \{ interrupt: \(threadId, turnId\) => coworkSessions\.request\('turn\/interrupt', \{ threadId, turnId \}\) \}\);/);
+ assert.doesNotMatch(main, /if \(p\.method === "thread\/archive"\) sessionOperations\.assertAvailable/);
+ const renderer = readFileSync(new URL('../src/main.jsx', import.meta.url), 'utf8');
+ assert.doesNotMatch(renderer, /Stop the running task before (archiving|deleting) it\./);
+ const official = readFileSync(new URL('../../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/ce4f4374c-BhSG0KEl.js', import.meta.url), 'utf8');
+ assert.ok(official.includes('shortcut:"a",onClick:l("archive",o)'), 'official Archive: no disabled');
+ assert.ok(/shortcut:"d",variant:"danger",onClick:l\("delete",c\)/.test(official), 'official Delete: no disabled');
 });

@@ -228,7 +228,7 @@ async function jump() {
 }
 async function send(text) {
   await page
-    .getByRole("textbox", { name: "Message DeepSeek", exact: true })
+    .getByRole("textbox", { name: /^(?:Prompt|Message DeepSeek)$/ })
     .fill(text);
   // B27 (c11959232 yd/Ed): switching between the same two sessions shows the split-view tip, a fixed 420px banner at
   // the bottom right (shared-frame wC) that sits over the Send button; dismiss it the way a user would.
@@ -492,7 +492,7 @@ try {
   // Space on the blank viewport (not a button-like target) is type-to-focus: the session pane listener prevents the
   // native page scroll and focusAndInsert puts the space in the composer (cc43287c9 :45166-45175, main.jsx paneKey).
   await page.keyboard.press("Space");
-  const spaceComposer = page.getByRole("textbox", { name: "Message DeepSeek", exact: true });
+  const spaceComposer = page.getByRole("textbox", { name: /^(?:Prompt|Message DeepSeek)$/ });
   await page.waitForFunction(() => !!document.activeElement?.closest('[data-cds="ChatComposerEditor"]'));
   await page.waitForTimeout(300);
   assert.ok(
@@ -518,8 +518,7 @@ try {
     delete node.dataset.transcriptKeepsPin;
   });
   const composerInput = page.getByRole("textbox", {
-    name: "Message DeepSeek",
-    exact: true,
+    name: /^(?:Prompt|Message DeepSeek)$/,
   });
   await composerInput.focus();
   await page.keyboard.press("Space");

@@ -249,23 +249,26 @@ try {
   const input = panel().getByRole("textbox", { name: "Filter files", exact: true });
   await input.fill("Needle");
   await panel().locator('.sfs-browser[data-search-phase="success"]').waitFor();
-  await panel().locator(".sfs-result-row").first().waitFor();
+  await panel().locator(".sfs-results [data-tree-row]").first().waitFor();
   metrics.results = await scroller(".sfs-results"); assertBothEdges("search results", metrics.results);
   await input.fill(""); await panel().locator('.sfs-results[hidden]').waitFor({ state: "attached" });
   await panel().locator('[data-tree-row-body]:has(> [data-tree-primary][data-file-path="kept/NeedleFile.txt"])').waitFor().catch(() => {});
   const fileRow = panel().locator("[data-tree-row-body]").filter({ hasText: "NeedleFile.txt" }).first();
   if (await fileRow.count() === 0) { await panel().locator("[data-tree-row-body]").filter({ hasText: "kept" }).first().click(); }
   await panel().locator("[data-tree-row-body]").filter({ hasText: "NeedleFile.txt" }).first().click();
-  await panel().locator(".source-file-preview").waitFor();
-  await page.waitForFunction(() => document.querySelector(".source-file-preview")?.textContent.includes("preview line 79"));
-  metrics.preview = await scroller(".source-file-preview"); assertBothEdges("file preview", metrics.preview);
+  await panel().locator("[data-file-viewer]").waitFor();
+  await page.waitForFunction(() => document.querySelector("[data-file-viewer]")?.textContent.includes("preview line 79"));
+  metrics.preview = await scroller("[data-file-viewer]"); assertBothEdges("file preview", metrics.preview);
   assert.ok(metrics.preview.overflowing, "preview fixture overflows vertically");
   await closeFiles();
   // R4i-gui GU1 (R4i-rail RL2): no band in rail mode; the rail Changes row's counts button (changes-row.mjs OLe,
   // "Open changes, {added} added, {removed} removed") opens the Changes pane (main.jsx sessionRailHost changes.onOpen).
   await page.locator('aside[aria-label="Session details"] nav[aria-label="Repository and pull request controls"] [data-rail-changes-row]').getByRole("button", { name: /^Open changes, / }).click();
-  await page.locator(".source-diff").filter({ hasText: "+replacement" }).waitFor();
-  metrics.changes = await scroller(".source-changes"); assertBothEdges("changes", metrics.changes);
+  // W14-code r6 pierre: with local_pierre_changes_body the Changes body is c44d00c7f Ju, whose scroller is the CodeView root
+  // (ca7ba268c Ha, the div under [data-diff-body-menu-trigger]) and whose rows are in the diffs-container shadow root
+  // (Playwright's text match pierces it); .source-diff / .source-changes are the switch's rollback side.
+  await page.locator(".source-diff, [data-pierre-changes-body]").filter({ hasText: "replacement" }).first().waitFor();
+  metrics.changes = await scroller(".source-changes, [data-pierre-changes-body] [data-diff-body-menu-trigger] > div"); assertBothEdges("changes", metrics.changes);
   await shot("changes-pane");
   await page.locator(".source-side-tile").getByRole("button", { name: "Close panel", exact: true }).click();
   await page.locator(".source-side-tile").waitFor({ state: "detached" }); await frames();

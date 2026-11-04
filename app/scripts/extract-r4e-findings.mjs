@@ -134,7 +134,8 @@ const modules = [
   // W13 G11 (D1): Pa is routines-shared's shared-0 copy (no imports, plain node); once.mjs re-exports it under the same
   // file name (code-editor side-chat links ./once.mjs by name).
   { target: 'once.mjs', source: 'shared-0-DDOOdL6P.js', exports: { Pa: 'once' }, routinesShared: 'shared-0-DDOOdL6P.mjs', features: { Pa: [loose('return () => ((n ||= ((t = e()), !0)), t);')] } },
-  { target: 'element-node.mjs', source: official.sharedFrame, exports: { Uc: 'elementNode' }, features: { Uc: [loose('return e?.nodeType === 1 ? e : null;')] } },
+  // W14-code r2 closeout-2 (DC-06): element-node.mjs (shared-frame Uc, a second copy of view-tabs asElementNode) is
+  // retired, nothing imported it.
   // shared-1 eC (exported du; 2.42304.0 cae42d46f a): the element has :focus-visible; uC (exported hu; h): whether focus
   // inside the element arrived by keyboard (the card hands focus to its next control only then).
   { target: 'focus-visible.mjs', source: 'shared-1-BJhqMmkf.js', exports: { eC: 'hasFocusVisible', uC: 'useKeyboardFocusWithin' },

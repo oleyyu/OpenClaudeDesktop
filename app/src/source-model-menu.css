@@ -14,10 +14,6 @@
 }
 .sm-model-digit { color: var(--cds-text-muted); font-size: var(--cds-font-size-footnote, 12px); line-height: var(--cds-leading-footnote, 15px); }
 .sm-model-empty { padding: 4px 8px; color: var(--cds-text-muted); }
-/* The search field of a long catalog: a borderless row on top, the popup's own surface. */
-.sm-model-search { display: flex; align-items: center; gap: 6px; margin: 0 0 4px; padding: 4px 8px; border-bottom: 1px solid var(--cds-border); color: var(--cds-text-muted); }
-.sm-model-search-input { flex: 1; min-width: 0; height: 24px; border: 0; outline: none; background: transparent; color: var(--cds-text-primary); font: inherit; }
-.sm-model-search-input::placeholder { color: var(--cds-text-muted); }
 @media (pointer: coarse) { .sm-model-digit { display: none; } }
 .sm-model-fast .ss-switch { --ss-switch-height: 16px; pointer-events: none; }
 /* shared-14 wS: "block min-w-0 whitespace-normal" copy, pS name row
@@ -34,6 +30,5 @@
   font-size: var(--cds-font-size-footnote, 12px);
   line-height: var(--cds-leading-footnote, 15px);
 }
-/* In a session: the pick is the session's own; Settings keeps the default for new sessions. */
-.sm-model-scope { margin-top: 4px; padding: 6px 8px 2px; border-top: 1px solid var(--cds-border); color: var(--cds-text-muted); font-size: var(--cds-font-size-footnote, 12px); line-height: 1.35; white-space: normal; }
+/* The role="none" wrapper a row's tooltip (shared-7 aw: catalog tooltip / notice text, a Fast tier's reason) sits on. */
 .sm-model-tip { display: block; width: 100%; }

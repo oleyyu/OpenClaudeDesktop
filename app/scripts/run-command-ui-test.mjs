@@ -122,7 +122,7 @@ async function collapse(id) {
   if (await trigger.getAttribute("aria-expanded") === "true") await trigger.click();
 }
 async function send(text) {
-  await page.getByRole("textbox", { name: "Message DeepSeek", exact: true }).fill(text);
+  await page.getByRole("textbox", { name: /^(?:Prompt|Message DeepSeek)$/ }).fill(text);
   await page.locator('[data-testid="code-prompt-send"]:not([inert] *)').click();
 }
 // Resolve a CDS token to the colour the renderer actually paints.
@@ -620,7 +620,7 @@ try {
   assert.equal(metrics.blockedHover.caretColor, metrics.classicColors.primary, "blocked caret group-hover primary");
   assert.equal(metrics.blockedHover.labelColor, metrics.classicColors.primary, "blocked verb group-hover primary");
   await page.mouse.move(2, 2);
-  const card = page.locator(".sac-card").first();
+  const card = page.locator("[data-approval-card-root]").first();
   await card.waitFor();
   await card.locator('[data-approval-action="decline"]').click();
   await poll(async () => await row(approvalId).getAttribute("data-state") === "denied", "the declined row settles");
@@ -679,25 +679,13 @@ try {
     {method:'item/started',params:{threadId:RC,turnId:statsTurn.id,item:{id:'stats-reasoning',type:'reasoning',summary:['Runtime stats fixture reasoning'],content:[]}}}
   ]);
   await poll(async()=>/Thinking|thinking/.test(await statsTail.locator('.sts-activity').textContent()),'reported reasoning phase');
-  // Y5/X5 (scroll-messages-current.js:58637-58668, 58760-58778): the active
-  // thinking label is a button that switches the transcript to Thinking and back.
-  const thinkingToggle=statsTail.locator('button.sts-thinking-toggle');
-  // The zhe ladder follows the turn's elapsed time ("Thinking more…" and so on).
-  assert.match(await thinkingToggle.getAttribute('aria-label'),/^(Thinking|Still thinking|Thinking more|Thinking some more|Almost done thinking)…, show in transcript$/);
-  await thinkingToggle.click();
-  await page.getByText('Switched transcript view to Thinking.',{exact:true}).waitFor();
-  await page.locator('[data-transcript-item-id="stats-reasoning"].source-reasoning').waitFor();
-  assert.match(await thinkingToggle.getAttribute('aria-label'),/, hide from transcript$/);
-  await thinkingToggle.click();
-  await page.getByText('Switched transcript view to Normal.',{exact:true}).waitFor();
-  await page.locator('[data-transcript-item-id="stats-reasoning"]').waitFor({state:'detached'});
-  // Clear both toasts so they cannot cover later rows (an unfocused window pauses their timers).
-  for(let i=0;i<4&&await page.locator('.source-toast-card[data-front="true"]').count();i++)await page.locator('.source-toast-card[data-front="true"] .source-toast-dismiss').click();
-  await page.locator('.source-toast-scope').waitFor({state:'detached'});
+  // W14-code r4-composer-03: 3.6556.2's working line has no thinking toggle (no onToggleThinking in any chunk; the
+  // "Switched transcript view to …" toasts are 2.2553.1 only), so the line holds no button.
+  assert.equal(await statsTail.locator('button.sts-thinking-toggle').count(),0,'no thinking toggle in the working line');
   await page.locator('[data-testid="code-prompt-stop"]:not([inert] *)').click();
   await poll(async()=>await statsTail.getAttribute('data-transcript-status')==='idle','completed turn clears runtime stats');
   assert.equal(await statsTail.locator('[data-runtime-stat]').count(),0);
-  checks.push('Classic runtime status: real Turn.startedAt, 287 output tokens without duplicate/late-turn inflation, plain stats and shimmer activity, 20px/16px geometry, source separators, tools to reasoning to stopped cleanup; the thinking label toggles the Thinking view with the source toasts');
+  checks.push('Classic runtime status: real Turn.startedAt, 287 output tokens without duplicate/late-turn inflation, plain stats and shimmer activity, 20px/16px geometry, source separators, tools to reasoning to stopped cleanup; no thinking toggle in the working line (3.6556.2)');
 
   // 11. Reduced motion removes the Copy reveal transition.
   await page.emulateMedia({ reducedMotion: "reduce" });

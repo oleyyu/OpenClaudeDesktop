@@ -1,9 +1,11 @@
 import { t } from "../electron/i18n/index.mjs";
 // Failed-turn presentation for Codex TurnError (work/codex-schema-0.155.1/ts/v2/
 // TurnError.ts {message, codexErrorInfo, additionalDetails, misalignment};
-// CodexErrorInfo.ts). Copy is the 2.2553.1 source category table
-// c1298b0ba-OvgggNMF.js Z (headline/markerLabel/hint/retryHelps) with its
-// message tables shared-18 _r/xr/Sr, c1298 Y/X and shared-9 Q/$ (usage limit).
+// CodexErrorInfo.ts). A Codex TurnError is a failed model request: the desktop's API error item (c96d752d0 G2e → pK,
+// classified by c70db48e3 Ve), not the result turn_error (K2e "Turn failed"). Copy is the 3.6556.2 category table
+// c70db48e3-DVXxzomO.js Y (headline/markerLabel/hint/hintWithoutRetry/hintWithoutComposer/hintNoRewind/retryHelps)
+// with its message tables c70db48e3 K/q, shared-14 He/st/ct/lt/H/B/V and shared-3 (usage limit); first ported from
+// the 2.2553.1 table c1298b0ba Z (W14-code transcript-rest TM-11 / TS-1..TS-4).
 // Pure: no clock, no request, no persistence.
 
 // Source categories reachable from Codex (billing only from DeepSeek failure
@@ -12,7 +14,8 @@ import { t } from "../electron/i18n/index.mjs";
 // source classifier (shared-9 NF) reads.
 export const TURN_ERROR_CATEGORIES = Object.freeze([
   "rate_limit", "server_rate_limit", "overloaded", "server_error", "network",
-  "auth", "context_length", "invalid_request", "billing", "output_token_limit", "misalignment", "safety_block", "session_budget", "unknown",
+  "auth", "context_length", "invalid_request", "billing", "output_token_limit", "misalignment", "safety_block", "session_budget",
+  "permission", "request_too_large", "unknown",
 ]);
 
 // DeepSeek Harness failure codes (LlmFailure.code) the bridge keeps in
@@ -56,9 +59,20 @@ export function classifyTurnError(info) {
     // sandboxError / threadRollbackFailed / other: no source category states the same cause.
     default: return "unknown";
   }
-  // Object variants carry {httpStatusCode}; every one is a transport failure.
-  if (info && typeof info === "object" && NETWORK_VARIANTS.some((key) => own(info, key))) return "network";
+  // Object variants carry {httpStatusCode}: a transport failure, unless the upstream answered with an HTTP error, which
+  // classifies by its status as the desktop's (shared-3 k3 → D3: 429 server_rate_limit, 529 overloaded, 5xx
+  // server_error, 401 auth, 402 billing, 403 permission, 413 request_too_large, other 4xx invalid_request).
+  if (info && typeof info === "object" && NETWORK_VARIANTS.some((key) => own(info, key))) {
+    const status = turnErrorStatus(info);
+    return status !== undefined && status >= 400 ? statusCategory(status) : "network";
+  }
   return "unknown";
+}
+// shared-3 D3: an API error's category by its HTTP status.
+export function statusCategory(status) {
+  return status === 429 ? "server_rate_limit" : status === 529 ? "overloaded" : status >= 500 ? "server_error"
+    : status === 401 ? "auth" : status === 402 ? "billing" : status === 403 ? "permission" : status === 413 ? "request_too_large"
+      : status >= 400 ? "invalid_request" : "unknown";
 }
 
 // shared-9 OF: rate_limit (and extra_usage_required) use the usage icon.
@@ -71,35 +85,46 @@ export const TURN_ERROR_ICONS = Object.freeze({
   usage: Object.freeze({ name: "UsageGaugeHigh", tone: "danger" }),
 });
 
-// Source table Z. Hints are the source's no-rewind branch (hintNoRewind); c1298 xe picks the rewind one when the
-// session can rewind (presentTurnError canRewind: the core serves thread/revert). Documented adaptations are marked
-// inline.
+// c70db48e3 Y. Hints are the no-rewind branch (hintNoRewind); Ve picks the rewind one when the session can rewind
+// (presentTurnError canRewind: the core serves thread/revert). hintWithoutRetry / hintWithoutComposer: the hint while
+// the card offers no Try again but the composer is there / when there is no composer either (c96d752d0 pK `nt`).
+// Documented adaptations are marked inline.
 const TABLE = Object.freeze({
   rate_limit: { headline: t("Usage limit reached"), // shared-9 Q.generic
     // $.generic: no reset time, TurnError carries no resetsAt.
     hint: t("You’ve reached your usage limit. Try again after your limit resets."), retryHelps: true },
   server_rate_limit: { headline: t("Server is temporarily limiting requests"), markerLabel: t("Server was temporarily limiting requests"),
-    hint: t("Too many requests right now — try again in a moment."), retryHelps: true },
+    hint: t("Too many requests right now. Try again in a moment."),
+    hintWithoutRetry: t("Too many requests right now. Wait a moment, then send a message to try again."),
+    hintWithoutComposer: t("Too many requests right now. This usually clears in a moment."), retryHelps: true },
+  // shared-14 st.overloaded / ct.overloaded / ct.overloadedWithoutRetry / lt.overloadedWithoutComposer.
   overloaded: { headline: t("Service is busy"), markerLabel: t("Service was busy"),
-    hint: t("Try again in a moment, or switch to a different model."), retryHelps: true },
-  // Sr.serverError continues "If it keeps happening, check {statusUrl}." — the
-  // Anthropic status page says nothing about the Codex backend, so it is cut.
+    hint: t("Try again in a moment, or switch to a different model."),
+    hintWithoutRetry: t("You can send a message to try again in a moment, or switch to a different model."),
+    hintWithoutComposer: t("This is usually temporary."), retryHelps: true },
+  // shared-14 lt.serverError (the variant without the Anthropic status page, which says nothing about the core's backend).
   server_error: { headline: t("Server error"),
     hint: t("The server returned an error while handling this message. It’s usually temporary."), retryHelps: true },
-  network: { headline: t("Connection problem"), hint: t("Check your internet connection, VPN, or proxy and try again."), retryHelps: true },
+  network: { headline: t("Connection problem"), hint: t("Check your internet connection, VPN, or proxy and try again."),
+    hintWithoutRetry: t("Check your internet connection, VPN, or proxy, then send a message to try again."),
+    hintWithoutComposer: t("Check your internet connection, VPN, or proxy."), retryHelps: true },
   auth: { headline: t("Authentication failed"), hint: t("Sign in again to continue."), retryHelps: false },
-  // X.contextLengthNoRewind; with rewind, CONTEXT_LENGTH_REWIND_HINT (X.contextLength).
+  // q.contextLengthNoRewind; with rewind, CONTEXT_LENGTH_REWIND_HINT (q.contextLength).
   context_length: { headline: t("Your context window is full"), markerLabel: t("Context window was full"),
     hint: t("This chat is too long to continue. Start a new chat."), retryHelps: false },
   invalid_request: { headline: t("Invalid request"), hint: t("The request couldn’t be completed."), retryHelps: false },
-  // Source billing (shared-18 _r.billing, c1298 X.billing "Add credits or
-  // update billing to continue."): the hint names the DeepSeek balance, the
-  // only billing a DeepSeek failure can mean.
-  billing: { headline: t("Billing issue"), hint: t("Add credits to your DeepSeek balance to continue."), retryHelps: false },
-  // Z.output_token_limit (shared-18 _r.outputTokenLimit, c1298 X.outputTokenLimit
-  // "Ask Claude to continue, …"): the hint names DeepSeek.
+  // shared-14 H.hint (an HTTP 402 of another provider); a DeepSeek failure code names the provider (H.hintNamingProvider,
+  // describeTurnError).
+  billing: { headline: t("Billing issue"), hint: t("Add credits or update billing to continue."), retryHelps: false },
+  // c70db48e3 q.outputTokenLimit "Ask Claude to continue, …": the assistant is named as the copy names it (E83: the
+  // source string's "DeepSeek" is the running core's assistant, electron/i18n named()).
   output_token_limit: { headline: t("Response exceeded the output limit"),
     hint: t("Ask DeepSeek to continue, or break the task into smaller steps."), retryHelps: true },
+  // shared-14 B.accessDenied / V.accessDenied (Y.permission; an HTTP 403).
+  permission: { headline: t("Access denied"), hint: t("You don’t have access to this resource — check your permissions."), retryHelps: false },
+  // shared-14 He.requestTooLarge, q.requestTooLarge / requestTooLargeNoRewind (an HTTP 413; Ve's ze: rewind helps).
+  request_too_large: { headline: t("Request is too large"), hint: t("An attachment is too large. Start a new session to continue."),
+    rewindHint: t("An attachment is too large. Rewind to remove it, then send your message again."), retryHelps: false },
   // Codex's precaution stop (tui chatwidget/misalignment_policy.rs MISALIGNMENT_POLICY_TITLE / _DESCRIPTION): only a
   // new chat, or an explicit acknowledgment of the findings when Codex offers one, continues.
   misalignment: { headline: t("Chat stopped as a precaution"), markerLabel: t("Chat stopped as a precaution"),
@@ -135,8 +160,8 @@ export function isBioSafetyBlock(message) {
 const DAYBREAK_UNAVAILABLE_MODELS = ["gpt-6-astra", "gpt-6-astra-wm"];
 const DAYBREAK_MODEL = "gpt-5.6-sol";
 
-// c70db48e3 X.contextLength: the hint when the card offers Compact session and Rewind.
-export const CONTEXT_LENGTH_REWIND_HINT = t("Compact it to summarize earlier messages and keep going, rewind to an earlier point, or start a new chat.");
+// c70db48e3 q.contextLength (j4gDC1/jbD): the hint when the card offers Compact session and Rewind.
+export const CONTEXT_LENGTH_REWIND_HINT = t("This chat is too long to continue. Compact it to summarize earlier messages and keep going, rewind to an earlier point, or start a new chat.");
 
 // shared-9 AF: an HTTP status named in the message text.
 function textStatus(message) {
@@ -158,6 +183,7 @@ export function presentTurnError(category, { message = "", canRewind = false } =
   const row = TABLE[key];
   let { hint, retryHelps } = row;
   if (key === "context_length" && canRewind) hint = CONTEXT_LENGTH_REWIND_HINT;
+  if (key === "request_too_large" && canRewind) hint = row.rewindHint;
   if (key === "unknown") {
     const status = textStatus(message);
     retryHelps = status === undefined || status === 429 || status >= 500;
@@ -166,10 +192,49 @@ export function presentTurnError(category, { message = "", canRewind = false } =
   // c1298 xe recovery flags: compactHelps for context_length, modelSwitchHelps
   // for overloaded (model_not_found / model_requires_strict_sandbox have no
   // Codex identity here).
-  // rewindHelps: the context is full and the session can go back to an earlier point (c3e34355f on() 'Rewind').
-  return Object.freeze({ category: key, headline: row.headline, markerLabel: row.markerLabel ?? row.headline, hint, retryHelps,
+  // rewindHelps: the context is full (or an attachment too large) and the session can go back to an earlier point
+  // (c70db48e3 ze; c3e34355f on() 'Rewind').
+  return Object.freeze({ category: key, headline: row.headline, markerLabel: row.markerLabel ?? row.headline, hint,
+    ...(row.hintWithoutRetry ? { hintWithoutRetry: row.hintWithoutRetry } : {}),
+    ...(row.hintWithoutComposer ? { hintWithoutComposer: row.hintWithoutComposer } : {}), retryHelps,
     compactHelps: key === "context_length", modelSwitchHelps: key === "overloaded", icon: turnErrorIcon(key),
-    ...(key === "context_length" && canRewind ? { rewindHelps: true } : {}) });
+    ...((key === "context_length" || key === "request_too_large") && canRewind ? { rewindHelps: true } : {}) });
+}
+
+/**
+ * c96d752d0 pK `nt = we.retryHelps && h && !tt.retried ? we.hint : ((L ? we.hintWithoutRetry : we.hintWithoutComposer)
+ * ?? we.hint)`: the card's hint for what it offers. retry: Try again is on the card (and not yet pressed); composer:
+ * the session can take a message.
+ */
+export function turnErrorHint(view, { retry = false, composer = true } = {}) {
+  if (!view) return "";
+  if (view.retryHelps && retry) return view.hint;
+  return (composer ? view.hintWithoutRetry : view.hintWithoutComposer) ?? view.hint;
+}
+
+/**
+ * W14-code r4 复核 (turn-cards): the category fix an official error card offers beside its recovery, by surface.
+ * - "turn": a failed turn's turn_error item (c96d752d0 K2e → U1 over vT): no category fix.
+ * - "session": the session's error card, c3e34355f Hn (Cowork's tail error, c10f0af0c `m(cI, {errorMessage, errorCategory,
+ *   …, onRetry, onDismiss, onAddConnection, …MC})`; the side pane's notice, cccc2cf0a `u(jy, {…, onAddConnection,
+ *   onDismiss})`). Its `gr` picks one: billingHelps → "View billing" (bp6E29TomA, primary, no size), usageSettingsHelps →
+ *   c74139e0c `l` "Open usage settings" (sLN5P3cZhl, primary, icon UsageGaugeMiddle), reauthHelps → "Sign in again"
+ *   (scfgdMgq4h, primary). newSessionHelps needs `onNewSession` (canStartNewSession), which neither caller passes, and
+ *   no host category is one of shared-14's newSessionHelps / helpLink rows (spawn_args_too_long, worktree_resume_refused,
+ *   bridge_*, session_folder_in_remote_dir), so New session and the help link never draw here.
+ * - "item": a session error item, c96d752d0 G2e → pK (c70db48e3 Ve): leadingActions `Ne` = $He reauth ("Sign in
+ *   again"), trailingActions `Ke` = the billing CTA (`we.category === "billing"`) or Bhe "Open usage settings" (`Ve =
+ *   we.usageSettingsHelps && !!h`, only beside a Try again).
+ * The host's categories map onto those rows: auth (with the core's own sign-in) = auth_error's reauth, billing =
+ * api_billing_error / pK's billing, rate_limit (a plan quota, so self-serve) = usageSettingsHelps.
+ * has: which host destinations exist {signIn, billing, usage, retry}. Returns "signIn" | "billing" | "usageSettings" | null.
+ */
+export function officialErrorFix(view, surface = "turn", { signIn = false, billing = false, usage = false, retry = false } = {}) {
+  if (!view || (surface !== "session" && surface !== "item")) return null;
+  if (view.category === "auth" && view.signIn && signIn) return "signIn";
+  if (view.category === "billing" && billing) return "billing";
+  if (view.category === "rate_limit" && usage && (surface === "session" || retry)) return "usageSettings";
+  return null;
 }
 
 // The category for a whole TurnError: a DeepSeek quota code is billing
@@ -226,12 +291,10 @@ export function describeTurnError(error, { canRewind = false, signIn = false, mo
   if (view.category === "auth" && DEEPSEEK_AUTH_CODES.includes(error?.additionalDetails))
     return Object.freeze({ ...view, hint: DEEPSEEK_AUTH_HINT, settingsPage: "models" });
   if (view.category === "auth" && signIn) return Object.freeze({ ...view, signIn: true });
-  // An empty DeepSeek balance: the card links to the Platform, where credits are added.
+  // An empty DeepSeek balance: shared-14 H.hintNamingProvider names the provider, and the card links to the Platform,
+  // where credits are added. Another core's balance (BILLING_DETAILS) keeps H.hint: the provider is the core's own.
   if (view.category === "billing" && DEEPSEEK_BILLING_CODES.includes(error?.additionalDetails))
-    return Object.freeze({ ...view, platformUrl: DEEPSEEK_PLATFORM_URL });
-  // Another core's balance: the provider is the core's own, so the hint names no DeepSeek balance.
-  if (view.category === "billing" && error?.additionalDetails === BILLING_DETAILS)
-    return Object.freeze({ ...view, hint: t("Add credits to your account balance to continue, then try again.") });
+    return Object.freeze({ ...view, hint: t("Add credits or update billing with {provider} to continue.", { provider: "DeepSeek" }), platformUrl: DEEPSEEK_PLATFORM_URL });
   return view;
 }
 

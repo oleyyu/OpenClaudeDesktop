@@ -54,16 +54,6 @@ export function insertFileTab(tabs, file, keepPath = null) {
   return next;
 }
 
-// lt (panes-tabs-current.js:1089-1095): Control/Meta+Shift+Arrow moves a tab one
-// slot; a move into a slot hidden behind "More files" is ignored.
-export function moveFileTab(tabs, path, delta, hiddenPaths = []) {
-  const from = tabs.findIndex((tab) => tab.path === path), to = from + delta;
-  if (from < 0 || to < 0 || to >= tabs.length || hiddenPaths.includes(tabs[to].path)) return tabs;
-  const next = tabs.slice();
-  const [moved] = next.splice(from, 1);
-  next.splice(to, 0, moved);
-  return next;
-}
 
 // dn(path, cwd): a path under the workspace becomes cwd-relative; anything else
 // (already relative, or outside the workspace) is kept as given.
@@ -81,22 +71,7 @@ export function tabDetail(path, cwd) {
   return index < 0 ? undefined : relative.slice(0, index) || "/";
 }
 
-// he te: content is the label only while there is a detail or the label is
-// clipped; the open tab menu / a pointer-down on the tab suppress both lines.
-export function tabTooltip({ label, detail, clipped = false, suppressed = false }) {
-  if (suppressed) return { content: null, detail: null };
-  return { content: detail === undefined && !clipped ? null : label, detail };
-}
 
-export function tabMenuItems({ preview = false, solo = false, hasTabsToRight = false } = {}) {
-  return [
-    preview && { action: "keep", label: FILE_TAB_LABELS.keepTab },
-    { action: "close", label: FILE_TAB_LABELS.closeTab },
-    !solo && { action: "close-others", label: FILE_TAB_LABELS.closeOtherTabs },
-    hasTabsToRight && { action: "close-right", label: FILE_TAB_LABELS.closeTabsToRight },
-    !solo && { action: "close-all", label: FILE_TAB_LABELS.closeAllTabs },
-  ].filter(Boolean);
-}
 
 // qa (cd2efac6e-CAi4fxTN.js): the Files pane ⋮ items for the active file, in this order — "Find in file" (with
 // the ⌘F shortcut), "Copy file contents", "Download file", "Reload file" (disabled while it reloads). An action

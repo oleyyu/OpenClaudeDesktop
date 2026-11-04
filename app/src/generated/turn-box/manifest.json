@@ -120,28 +120,6 @@
       "sharedExports": []
     },
     {
-      "target": "spinner.mjs",
-      "source": "shared-frame-6jtSkIit.js",
-      "sourceSha256": "22b990df9384da0621c5197a060f6c2c8fe1ccf5a79ee1f8c6e7a6cb033b259c",
-      "sha256": "7b8097f9578e413ecb14889d9259cf2c01910249396059c037b1ca0ffa632a61",
-      "referenceVersion": "3.6556.2",
-      "bindings": [],
-      "imports": [
-        {
-          "local": "Ac",
-          "from": "../view-tabs/shared-frame-6jtSkIit.js",
-          "name": "CdsSpinner",
-          "via": "shared-frame-6jtSkIit.js#Ac",
-          "kind": "view-tabs",
-          "original": "Ac"
-        }
-      ],
-      "exports": {
-        "Ac": "Spinner"
-      },
-      "sharedExports": []
-    },
-    {
       "target": "find-omitted.mjs",
       "source": "shared-15-BvlV43cI.js",
       "sourceSha256": "60b50b149da73e5f15e4c4d2a496a0203f105f9866e996d7c9c0523538557225",

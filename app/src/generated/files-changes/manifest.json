@@ -200,27 +200,6 @@
       }
     },
     {
-      "target": "shimmer-text.mjs",
-      "source": "shared-frame-6jtSkIit.js",
-      "sourceSha256": "22b990df9384da0621c5197a060f6c2c8fe1ccf5a79ee1f8c6e7a6cb033b259c",
-      "sha256": "ee48c793a049ea842b72465a715200434ebcc1e5a7d527a6664a9f5e1449ec45",
-      "referenceVersion": "3.6556.2",
-      "bindings": [],
-      "imports": [
-        {
-          "local": "zF",
-          "from": "../view-tabs/shared-frame-6jtSkIit.js",
-          "name": "CdsShimmer",
-          "via": "shared-frame-6jtSkIit.js:zF",
-          "kind": "view-tabs"
-        }
-      ],
-      "exports": {
-        "zF": "ShimmerText"
-      },
-      "reexport": "view-tabs"
-    },
-    {
       "target": "worktree-checking.mjs",
       "source": "shared-46-BIbZBGFq.js",
       "sourceSha256": "ab4d599f5c2e563a1365c06f58ef96edb025106aea10e73a9c329cac899e3540",
@@ -793,27 +772,6 @@
       }
     },
     {
-      "target": "coarse-pointer.mjs",
-      "source": "shared-frame-6jtSkIit.js",
-      "sourceSha256": "22b990df9384da0621c5197a060f6c2c8fe1ccf5a79ee1f8c6e7a6cb033b259c",
-      "sha256": "68fac3977857ed4793953d80892ca8591ae0e34284a2b93da70302e1004c917a",
-      "referenceVersion": "3.6556.2",
-      "bindings": [],
-      "imports": [
-        {
-          "local": "tn",
-          "from": "../view-tabs/shared-frame-6jtSkIit.js",
-          "name": "matchesCoarseOrHoverlessPointer",
-          "via": "shared-frame-6jtSkIit.js:tn",
-          "kind": "view-tabs"
-        }
-      ],
-      "exports": {
-        "tn": "isCoarsePointer"
-      },
-      "reexport": "view-tabs"
-    },
-    {
       "target": "file-context-drag.mjs",
       "source": "c052e27aa-DlzVwnbz.js",
       "sourceSha256": "1a2f9e5dd25c3943af0141e7f77e7854e947876e3f93088ca898a42b90354606",
@@ -882,27 +840,6 @@
         "d": "commitFileContextDrag",
         "o": "clearFileContextDrag"
       }
-    },
-    {
-      "target": "error-text.mjs",
-      "source": "preload-helper-D0dM6GpB.js",
-      "sourceSha256": "07e10a7d6381c359ad25382bea60b373312701162217c2ca372a3a04b889eaef",
-      "sha256": "a6fb8f8f58b41ad008d51f175dfca10389a8acfdfc8585fc185205564fd68f79",
-      "referenceVersion": "3.6556.2",
-      "bindings": [],
-      "imports": [
-        {
-          "local": "e",
-          "from": "../view-tabs/preload-helper-D0dM6GpB.js",
-          "name": "tagErrorText",
-          "via": "preload-helper-D0dM6GpB.js:e",
-          "kind": "view-tabs"
-        }
-      ],
-      "exports": {
-        "e": "withErrorText"
-      },
-      "reexport": "view-tabs"
     },
     {
       "target": "array-min.mjs",
@@ -1643,7 +1580,7 @@
       "target": "file-browser-query.mjs",
       "source": "vendor-query-DVJ0goAF.js",
       "sourceSha256": "012776c86e56c08cc79c30f99e2ffa54c5083a56939cc09c97c51047dbc41abc",
-      "sha256": "a6c0577c9726f427bb2f4ba3fdfe1913eac10fa2bd98d85234d9d56a55d600e9",
+      "sha256": "e2fca39c567bb07f726b1b880fe8e49a4dfa800845b2ec71c5a3f2b4d76c6a37",
       "referenceVersion": "3.6556.2",
       "bindings": [
         {
@@ -2023,14 +1960,17 @@
         "He": "QueryClientProvider",
         "J": "useQueryClient",
         "tt": "useQuery",
-        "nt": "queryOptions"
+        "nt": "queryOptions",
+        "q": "QueryClientContext",
+        "Ue": "IsRestoringContext",
+        "Ke": "QueryErrorResetBoundaryContext"
       }
     },
     {
       "target": "file-entry-order.mjs",
       "source": "shared-18-D3y8YMFN.js",
       "sourceSha256": "ea0ef4b74193e2e73c04b942311076a0922533df2ddb3d333464d22003e3355b",
-      "sha256": "9bde060795c8dae8806e3c005f575ca170d0099e0318fabd0a722473c9eda978",
+      "sha256": "7a356c885e9403bf72b09b9d2c6571e5a07a0767c82806c5c17ed7d77c3f43ba",
       "referenceVersion": "3.6556.2",
       "bindings": [
         {
@@ -2061,7 +2001,9 @@
       ],
       "exports": {
         "fU": "compareFileEntries",
-        "wU": "popoverCollisionPadding"
+        "wU": "popoverCollisionPadding",
+        "uU": "numericCollator",
+        "dU": "compareNames"
       }
     },
     {
@@ -2385,27 +2327,6 @@
       "imports": [],
       "exports": {
         "ni": "subscribeNever"
-      }
-    },
-    {
-      "target": "attribute-escape.mjs",
-      "source": "c36273108-nfRg0EqW.js",
-      "sourceSha256": "d4ae3ad37dbe62f3d4a15823f08fd0b09197b2612dc2ccf34e6f237417c87bde",
-      "sha256": "7d441910c1645b1acbb4be724220bd0d8aed49a823bbf4ddf7904b465b51f374",
-      "referenceVersion": "3.6556.2",
-      "bindings": [
-        {
-          "name": "e",
-          "sha256": "beb64e1d9f46451a55739fef5a5f411104159a89c23f1f3489c769617b90170a"
-        },
-        {
-          "name": "t",
-          "sha256": "25d272c27375120c64225424444d9cb03eae90c51024e091ae03ef720f84d7c0"
-        }
-      ],
-      "imports": [],
-      "exports": {
-        "t": "escapeAttribute"
       }
     },
     {
@@ -2829,9 +2750,17 @@
       "target": "diff-widget-background.mjs",
       "source": "c6e73333a-DjPHi7Jv.js",
       "sourceSha256": "6538e3514b920e602190fbd796ed8bbc7969cd323bce225e98562f64fc9fc788",
-      "sha256": "ece19d42203f7609c0e64b69e567cce7ef9da1a5e45033a07237fcdfe9523f8e",
+      "sha256": "5d08f011b3fb43a1b1a5bc3ae0bb02c763bf9918b043e40e01ab4811acdfac57",
       "referenceVersion": "3.6556.2",
       "bindings": [
+        {
+          "name": "y",
+          "sha256": "36901b9bdad983826731b59a9e48ba675a18b186c92b1e29ccf46f584ee67a05"
+        },
+        {
+          "name": "b",
+          "sha256": "0bab6a3f3b1a735b2d833cd26b2b4e053de59a7acec7a36e2d96b0006874ecd2"
+        },
         {
           "name": "C",
           "sha256": "14a503b23ba0a18f4cf5628982aa564d6751a096226d1542c45b8900bb52bf1c"
@@ -2839,7 +2768,8 @@
       ],
       "imports": [],
       "exports": {
-        "C": "diffWidgetBackground"
+        "C": "diffWidgetBackground",
+        "b": "codeBackground"
       }
     },
     {

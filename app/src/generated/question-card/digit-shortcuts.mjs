@@ -8,7 +8,7 @@ import { ownerWindowOrGlobal as m } from "../btw-pane/owner-window.mjs";
 import { tn as we } from "../proposal-group/shared-10-D6FXWZph.js";
 import { ownerWindow as h } from "../view-tabs/shared-25-DOWZRSlq.js";
 import { asElementNode as l } from "../view-tabs/shared-frame-6jtSkIit.js";
-import { $t as Ze } from "./c2f6611a3.mjs";
+import { $t as Ze } from "./answer-option.mjs";
 import {
   rq as _e,
   Cq as be,

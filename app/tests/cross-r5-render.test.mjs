@@ -20,7 +20,12 @@ before(async () => {
 after(() => server?.close());
 
 const noop = () => {};
-const buttons = (html) => [...html.matchAll(/<button[^>]*data-variant="(\w+)"[^>]*>(?:<[^>]+>)*([^<]+)/g)].map((match) => [match[2].trim(), match[1]]);
+// W14-code r6 R6DC-02: the card's buttons are shared-frame CdsButton (Uu), which has no data-variant attribute; the
+// variant reads from its paint (bg-fill-primary / -danger / -secondary) or data-cds-ghost.
+const variantOf = (button) => /data-cds-ghost=""/.test(button) ? 'ghost' : /data-cds-part="paint" class="[^"]* bg-fill-primary /.test(button) ? 'primary'
+  : /data-cds-part="paint" class="[^"]* bg-fill-danger /.test(button) ? 'danger' : 'secondary';
+const buttons = (html) => [...html.matchAll(/<button[^>]*data-cds="Button"[^>]*>(?:(?!<\/button>).)*?<span class="inline-flex min-w-0 items-center gap-1 ">(?:<[^>]+>)*([^<]+)/g)]
+  .map((match) => [match[1].trim(), variantOf(match[0])]);
 
 test('error card: Sign in to the core for an auth failure, settled as Signed in again after a later sign-in', async () => {
   const { SourceTurnError } = await load('/src/source-turn-error.jsx');

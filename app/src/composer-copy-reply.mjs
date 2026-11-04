@@ -18,8 +18,6 @@ import { clipboardEnvironment, writeClipboardPayload } from './clipboard-payload
 import { markdownToClipboardHtml } from './rich-copy-html.mjs';
 import { t, tn } from '../electron/i18n/index.mjs';
 
-// cc183b3ab E.copy (X7oz/QBPDV) and the copy-reply case's messages, in the official English (D23 keeps "Claude").
-export const COPY_REPLY_DESCRIPTION = 'Copy Claude’s latest reply, or /copy 2 or higher for an earlier one';
 export const COPY_REPLY_MESSAGES = Object.freeze({
   badArgument: 'That isn’t a reply number. Use /copy for Claude’s latest reply, or /copy 2 or higher for an earlier one.', // d6GVin8ZgF
   replying: 'Claude is still replying. Send /copy when the reply is done.', // iAkUwGZZtY

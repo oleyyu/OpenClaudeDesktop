@@ -5,12 +5,12 @@
 // - c44d00c7f Qa (3346-3372) the commented span of a text selection, yo (3564-3860) chip placement constants.
 // - caec4a2d4 In (308-310) the card key side:endLine (c44d00c7f Je), one card per key.
 // - cf56e4ee1 t: the 'Add comment on line(s)' aria-label.
-// Comments are kept per session and file (caec4a2d4 keeps them per sessionId + filePath) in the same storage shape
-// as the Files pane comments (file-comments-store.mjs), so they survive a remount, a reload and a popped-out window.
+// Comments are kept per session and file (caec4a2d4 keeps them per sessionId + filePath) in the official cc8941b7b store
+// (createAnnotationCommentsStore below, W14-code r7 r7pa-03), so they survive a remount, a reload and a popped-out window.
 import { t } from "../electron/i18n/index.mjs";
 
+/** The host's own pre-r7 comment storage (one localStorage list per scope and file), read only by the import below. */
 export const DIFF_COMMENTS_PREFIX = "epitaxy-diff-comments:";
-export const DIFF_SIDES = Object.freeze(["additions", "deletions"]);
 /** caec4a2d4 In / c44d00c7f Je: the card key. */
 export const diffCommentKey = (side, endLine) => `${side}:${endLine}`;
 /** The composer snippet a saved comment rides on (replaced on edit, removed on delete). */
@@ -25,73 +25,163 @@ function validEntries(value) {
 }
 const order = (a, b) => a.end - b.end || (a.side === b.side ? 0 : a.side === "deletions" ? -1 : 1);
 
-/** One file's diff comments. Entries: {id, side, start, end, code, body, savedBody?}; `active` is the card in edit. */
-export function createDiffCommentsStore({ scope, storage, subscribeStorage = () => () => {} }) {
-  const key = DIFF_COMMENTS_PREFIX + scope, listeners = new Set();
-  const read = () => { try { return validEntries(JSON.parse(storage?.getItem(key) ?? "[]")); } catch { return []; } };
-  let snapshot = { entries: read(), active: null };
-  const publish = (entries, active = snapshot.active) => {
-    snapshot = { entries, active };
-    try { entries.length ? storage?.setItem(key, JSON.stringify(entries)) : storage?.removeItem(key); } catch {}
-    for (const listener of listeners) listener();
+// W14-code r7 (r7pa-03): one comment store for both Changes bodies. 3.6556.2 keeps every Changes line comment in
+// cc8941b7b F (`h()(ee((e,t)=>({annotationsBySession:{},…}),{name:"diff-annotations",partialize:Oe}))`): the pierre body
+// (c44d00c7f Ju) and the per-file list (Md) Jd draws in a pop-out window or with the switch off read and write the same
+// store. The host per-file rows (FileDiff / useDiffComments) therefore read F too, through this adapter: saved comments
+// are F's annotations (annotationsBySession[session][path], source unset; their open edit text is P.editBodiesBySession),
+// drafts are F's draftsBySession[session][path][side:endLine] (their text P.bodiesBySession), the card in edit is
+// F.activeBySession[session]. Writes go through F's own actions, as the official card (c82eca2bd) calls them: a new
+// comment `addAnnotation(session, {...draft, body})` + `clearDraft`, an edit `updateAnnotation(session, path, id, body)` +
+// `setActive(session, null)`, delete `removeAnnotation`. The host entry shape (id = the card key side:endLine, start,
+// end, code, body, savedBody?) is kept for the cards; a saved entry also carries annotationId (the composer snippet key,
+// shared with the pierre body). store / bodies are cc8941b7b F and P (injected: this model stays free of the generated
+// layer, E42).
+const isLineComment = (annotation) => !!annotation && annotation.source !== "pr" && annotation.source !== "file" && annotation.source !== "finding";
+const validSpan = (item) => !!item && isSide(item.side) && Number.isInteger(item.startLine) && Number.isInteger(item.endLine) && item.startLine > 0 && item.endLine >= item.startLine;
+/** The session a Changes comment scope belongs to: the scope is JSON [sessionId, cwd] (source-session.jsx); any other
+ * string is its own session. F keys comments by session and file path. */
+export function diffCommentSession(scope) {
+  try { const value = JSON.parse(scope); if (Array.isArray(value) && typeof value[0] === "string" && value[0]) return value[0]; } catch {}
+  return String(scope);
+}
+/** One file's diff comments over F / P. Entries: {id, annotationId?, side, start, end, code, body, savedBody?}; `active`
+ * is the card in edit. */
+export function createAnnotationCommentsStore({ sessionId, path, store, bodies }) {
+  let inputs = null, snapshot = { entries: [], active: null };
+  const read = () => {
+    const state = store.getState(), texts = bodies.getState();
+    const next = [state.annotationsBySession?.[sessionId]?.[path], state.draftsBySession?.[sessionId]?.[path], state.activeBySession?.[sessionId],
+      texts.bodiesBySession?.[sessionId]?.[path], texts.editBodiesBySession?.[sessionId]];
+    if (inputs && next.every((value, index) => value === inputs[index])) return snapshot;
+    inputs = next;
+    const [saved, drafts, active, draftBodies, editBodies] = next;
+    const entries = [], keys = new Set();
+    for (const annotation of saved ?? []) {
+      if (!isLineComment(annotation) || !validSpan(annotation)) continue;
+      const key = diffCommentKey(annotation.side, annotation.endLine), body = typeof annotation.body === "string" ? annotation.body : "";
+      entries.push({ id: keys.has(key) ? annotation.id : key, annotationId: annotation.id, side: annotation.side, start: annotation.startLine, end: annotation.endLine,
+        code: typeof annotation.snippet === "string" ? annotation.snippet : null, body: editBodies?.[annotation.id] ?? body, savedBody: body });
+      keys.add(key);
+    }
+    for (const [key, draft] of Object.entries(drafts ?? {})) {
+      if (!isLineComment(draft) || !validSpan(draft) || keys.has(key)) continue;
+      keys.add(key);
+      entries.push({ id: key, side: draft.side, start: draft.startLine, end: draft.endLine, code: typeof draft.snippet === "string" ? draft.snippet : null,
+        body: typeof draftBodies?.[key] === "string" ? draftBodies[key] : "" });
+    }
+    entries.sort(order);
+    const current = active && active.filePath === path && !active.highlightOnly ? entries.find((entry) => entry.id === active.key) : null;
+    snapshot = { entries, active: current?.id ?? null };
+    return snapshot;
   };
-  const off = subscribeStorage((event) => {
-    if (event.key !== key && event.key !== null) return;
-    snapshot = { entries: read(), active: null };
-    for (const listener of listeners) listener();
-  });
+  const find = (id) => read().entries.find((entry) => entry.id === id);
+  const keyOf = (entry) => diffCommentKey(entry.side, entry.end);
+  const actions = () => store.getState();
+  const unsetActive = (entry) => {
+    const active = actions().activeBySession?.[sessionId];
+    if (active && active.filePath === path && active.key === keyOf(entry)) actions().setActive(sessionId, null);
+  };
   return {
-    getSnapshot: () => snapshot,
-    subscribe(fn) { listeners.add(fn); return () => listeners.delete(fn); },
-    /** Ho openDraft: an open draft or a saved comment at the key is reopened; otherwise a new draft. Returns the key.
-     * code is the commented lines' text, null when they are not all shown (never outdated, like a snippet-less draft). */
+    getSnapshot: read,
+    subscribe(fn) {
+      const offs = [store.subscribe(() => fn()), bodies.subscribe(() => fn())];
+      return () => { for (const off of offs) off(); };
+    },
+    /** Ho openDraft (c44d00c7f): an open draft or a saved comment at the key is reopened (setActive); otherwise a new
+     * draft (setDraft). code is the commented lines' text, null when they are not all shown (no snippet). */
     create(side, start, end, code = null) {
       if (!isSide(side) || !Number.isInteger(start) || !Number.isInteger(end) || start < 1 || end < 1) return null;
       [start, end] = [Math.min(start, end), Math.max(start, end)];
-      const id = diffCommentKey(side, end), existing = snapshot.entries.find((entry) => entry.id === id);
-      // A single line reopens whatever card is at its key; a saved comment is reopened for editing (zo).
-      if (existing && (existing.savedBody !== undefined || existing.start === start || start === end)) { publish(snapshot.entries, id); return id; }
-      // A draft at the same key over another range takes the new range (Ro replaces the draft) and keeps its text.
-      const next = existing
-        ? snapshot.entries.map((entry) => (entry.id === id ? { ...entry, start, code: code == null ? null : normalizeCode(code) } : entry))
-        : [...snapshot.entries, { id, side, start, end, code: code == null ? null : normalizeCode(code), body: "" }].sort(order);
-      publish(next, id);
+      const id = diffCommentKey(side, end), existing = find(id);
+      if (existing && (existing.savedBody !== undefined || existing.start === start || start === end)) {
+        actions().setActive(sessionId, { filePath: path, key: id });
+        return id;
+      }
+      // A draft at the same key over another range takes the new range; its text (P, by key) stays.
+      actions().setDraft(sessionId, { filePath: path, side, startLine: start, endLine: end, ...(code == null ? {} : { snippet: normalizeCode(code) }) });
       return id;
     },
-    activate(id) { if (snapshot.entries.some((entry) => entry.id === id)) publish(snapshot.entries, id); },
-    edit(id, body) { publish(snapshot.entries.map((entry) => (entry.id === id ? { ...entry, body: String(body) } : entry))); },
+    activate(id) { const entry = find(id); if (entry) actions().setActive(sessionId, { filePath: path, key: keyOf(entry) }); },
+    edit(id, body) {
+      const entry = find(id);
+      if (!entry) return;
+      if (entry.savedBody !== undefined) bodies.getState().setEditBody(sessionId, entry.annotationId, String(body));
+      else bodies.getState().setDraftBody(sessionId, path, entry.id, String(body));
+    },
     save(id) {
-      const entry = snapshot.entries.find((item) => item.id === id);
-      if (!entry?.body.trim()) return null;
-      const saved = { ...entry, body: entry.body.trim(), savedBody: entry.body.trim() };
-      publish(snapshot.entries.map((item) => (item.id === id ? saved : item)), null);
-      return saved;
+      const entry = find(id), text = entry?.body.trim();
+      if (!text) return null;
+      if (entry.savedBody !== undefined) {
+        actions().updateAnnotation(sessionId, path, entry.annotationId, text);
+        actions().setActive(sessionId, null);
+        return { ...entry, body: text, savedBody: text };
+      }
+      const draft = actions().draftsBySession?.[sessionId]?.[path]?.[entry.id];
+      const created = actions().addAnnotation(sessionId, { ...draft, body: text });
+      actions().clearDraft(sessionId, path, entry.id);
+      return { ...entry, annotationId: created.id, body: text, savedBody: text };
     },
     cancel(id) {
-      publish(snapshot.entries.flatMap((entry) => (entry.id !== id ? [entry] : entry.savedBody === undefined ? [] : [{ ...entry, body: entry.savedBody }])),
-        snapshot.active === id ? null : snapshot.active);
+      const entry = find(id);
+      if (!entry) return;
+      if (entry.savedBody === undefined) { actions().clearDraft(sessionId, path, entry.id); return; }
+      bodies.getState().clearEditBody(sessionId, entry.annotationId);
+      unsetActive(entry);
     },
-    remove(id) { publish(snapshot.entries.filter((entry) => entry.id !== id), snapshot.active === id ? null : snapshot.active); },
+    remove(id) {
+      const entry = find(id);
+      if (!entry) return;
+      if (entry.savedBody !== undefined) actions().removeAnnotation(sessionId, path, entry.annotationId);
+      else actions().clearDraft(sessionId, path, entry.id);
+    },
     /** Unmount: abandoned empty drafts go; saved comments and drafts with text stay. */
-    release() { publish(snapshot.entries.filter((entry) => entry.savedBody !== undefined || entry.body.trim()), null); },
-    dispose() { off(); listeners.clear(); },
+    release() {
+      for (const entry of read().entries) if (entry.savedBody === undefined && !entry.body.trim()) actions().clearDraft(sessionId, path, entry.id);
+      const active = actions().activeBySession?.[sessionId];
+      if (active && active.filePath === path) actions().setActive(sessionId, null);
+    },
+    dispose() {},
   };
 }
-const stores = new Map();
-export function diffCommentsStore(scope) {
-  if (!stores.has(scope)) {
-    let storage;
-    try { storage = globalThis.localStorage; } catch {}
-    stores.set(scope, createDiffCommentsStore({ scope, storage, subscribeStorage: (fn) => {
-      globalThis.addEventListener?.("storage", fn);
-      return () => globalThis.removeEventListener?.("storage", fn);
-    } }));
+
+/** The comments the host kept before r7pa-03 (localStorage `epitaxy-diff-comments:<scope>\0<path>`, one list per file),
+ * imported once into F: saved ones become annotations, unsaved ones drafts (the active card is left as it was). The old
+ * value is kept under DIFF_COMMENTS_IMPORTED_PREFIX, so nothing is lost and nothing is imported twice. Returns the count. */
+export const DIFF_COMMENTS_IMPORTED_PREFIX = "epitaxy-diff-comments-imported:";
+export function importLegacyDiffComments({ storage, store, bodies, key }) {
+  if (!storage || !key?.startsWith(DIFF_COMMENTS_PREFIX)) return 0;
+  let raw = null, entries = [];
+  try { raw = storage.getItem(key); } catch { return 0; }
+  if (raw == null) return 0;
+  try { entries = validEntries(JSON.parse(raw)); } catch { entries = []; }
+  const scoped = key.slice(DIFF_COMMENTS_PREFIX.length), split = scoped.indexOf("\0");
+  if (split < 0) return 0;
+  const sessionId = diffCommentSession(scoped.slice(0, split)), path = scoped.slice(split + 1);
+  const state = () => store.getState(), before = state().activeBySession?.[sessionId] ?? null;
+  let count = 0;
+  for (const entry of entries) {
+    const span = { filePath: path, side: entry.side, startLine: entry.start, endLine: entry.end, ...(entry.code == null ? {} : { snippet: entry.code }) };
+    if (entry.savedBody !== undefined) {
+      const same = (state().annotationsBySession?.[sessionId]?.[path] ?? []).some((annotation) => isLineComment(annotation)
+        && diffCommentKey(annotation.side, annotation.endLine) === entry.id && annotation.body === entry.savedBody);
+      if (!same) { state().addAnnotation(sessionId, { ...span, body: entry.savedBody }); count++; }
+    } else if (!state().draftsBySession?.[sessionId]?.[path]?.[entry.id]) {
+      state().setDraft(sessionId, span);
+      if (entry.body) bodies.getState().setDraftBody(sessionId, path, entry.id, entry.body);
+      count++;
+    }
   }
-  return stores.get(scope);
+  if (state().activeBySession?.[sessionId] !== before) state().setActive(sessionId, before);
+  try { storage.setItem(DIFF_COMMENTS_IMPORTED_PREFIX + scoped, raw); storage.removeItem(key); } catch {}
+  return count;
 }
-/** The comments of one file of a Changes comment scope (useDiffComments' store; R3-files FT-07 also reads it for the
- * per-file whitespace pause, c44d00c7f Ca). */
-export const diffFileCommentsStore = (scope, path) => diffCommentsStore(`${scope}\0${path}`);
+/** Every legacy key in a Storage (key(i) / length), for the import on load. */
+export function legacyDiffCommentKeys(storage) {
+  const keys = [];
+  try { for (let index = 0; index < (storage?.length ?? 0); index++) { const key = storage.key(index); if (key?.startsWith(DIFF_COMMENTS_PREFIX)) keys.push(key); } } catch {}
+  return keys;
+}
 
 /** The side/line a rendered diff row comments on: removed rows (and the split view's left column) on the old file,
  * everything else on the new file. column is "unified", "before" or "after". */

@@ -12,9 +12,6 @@ import React from "react";
 
 export const CodeBlockActionsContext = React.createContext(null);
 
-// Fence languages that hold shell commands (the official Play button shows for these only).
-const SHELL_LANGUAGES = new Set(["bash", "sh", "shell", "zsh", "console", "shellsession", "sh-session"]);
-export const isShellLanguage = (language) => SHELL_LANGUAGES.has(String(language ?? "").trim().toLowerCase());
 
 /**
  * The text a shell block types into the terminal: a console transcript's "$ " prompts dropped (lines without one are

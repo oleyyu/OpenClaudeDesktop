@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { turnEdits, undoTurnText, turnEditsLabel } from '../src/turn-edits-model.mjs';
+import { turnEdits, undoTurnText } from '../src/turn-edits-model.mjs';
 
 const change = (path, diff, kind = 'update') => ({ path, kind: { type: kind }, diff });
 test('turn edits card: files and counts per finished turn, Undo text as the source writes it', () => {
@@ -14,8 +14,6 @@ test('turn edits card: files and counts per finished turn, Undo text as the sour
   const edits = turnEdits(items, { activeTurnId: 't2' });
   assert.deepEqual([...edits.keys()], ['t1'], 'a running turn has no card yet');
   assert.deepEqual(edits.get('t1'), { files: [{ path: '/w/a.js', additions: 1, deletions: 1, calls: [{ id: 'f1' }] }, { path: '/w/b.txt', additions: 2, deletions: 0, calls: [{ id: 'f2' }] }], additions: 3, deletions: 1 });
-  assert.equal(turnEditsLabel(edits.get('t1')), 'Edited 2 files');
-  assert.equal(turnEditsLabel({ files: [{ path: '/w/a.js' }] }), 'Edited a.js');
   assert.equal(undoTurnText([{ path: '/w/a.js' }]), 'Undo the changes you made to `/w/a.js` in your last turn and restore it to its previous state.');
   assert.equal(undoTurnText([{ path: 'a' }, { path: 'b' }]), 'Undo the changes you made to these 2 files in your last turn and restore them to their previous state:\n- `a`\n- `b`');
 });

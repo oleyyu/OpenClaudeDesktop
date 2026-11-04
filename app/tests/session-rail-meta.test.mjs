@@ -9,7 +9,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { createRequire } from 'node:module';
 import {
-  RAIL_META_FIELDS, LOCAL_SESSION_RECORD_FIELDS, SESSION_RAIL_META_ACTION, localSessionRecord, railFolders, railRemote,
+  LOCAL_SESSION_RECORD_FIELDS, SESSION_RAIL_META_ACTION, localSessionRecord, railFolders, railRemote,
   railMetaFromRecord, railLazyPendingArgs, railRecordFacts, loadLocalSessionRecord,
 } from '../src/session-rail-meta-model.mjs';
 
@@ -40,6 +40,13 @@ const $E = original(rail, '$E');
 const ZE = original(rail, 'ZE');
 const XE = original(rail, 'XE', { YE: /[\\/]\.claude[\\/]worktrees[\\/]/, $E });
 
+// W14-code r4 closeout R4DC-N7: the host model's test-only RAIL_META_FIELDS export is gone; cf74bc599 gN (3.6556.2), the
+// session meta fields the rail reads in the original's order (`...Ip` spread in place), checked against the chunk below.
+const RAIL_META_FIELDS = ["originCwd", "workingDir", "additionalDirectories", "hasDesktopWorktree", "startedWithWorktree",
+  "worktreeRemoved", "folderTrees", "isScratchWorkspace", "pendingCwd", "remote", "environmentId", "environmentKind", "selfHostedPoolId",
+  "selfHostedPoolName", "selfHostedRunnerClientLabel", "sessionStatus", "isSlackOrigin", "git", "repoSlugs", "goal", "bridgeSessionUrl",
+  "remoteControlConnecting", "remoteControlAvailable", "startedViaRemoteControl", "isCloudRun", "sshConnectionRemoved"];
+
 test('3.6556.2: gN (with c227f4d5e nY spread in), the shared-8 M_ record, TN\'s record fallback and its other reads of the record', () => {
   const gN = /var gN=gn\(([^)]*)\)/.exec(railV3);
   assert.ok(gN);
@@ -52,8 +59,8 @@ test('3.6556.2: gN (with c227f4d5e nY spread in), the shared-8 M_ record, TN\'s 
   assert.deepEqual(JSON.parse(nY[1]), ['bridgeSessionUrl', 'remoteControlConnecting', 'remoteControlAvailable', 'startedViaRemoteControl', 'isCloudRun']);
   // against 2.42304.0 rO: the Remote Control fields stay (now through nY); isCloudRun and sshConnectionRemoved are new
   const rO = JSON.parse(`[${/var rO=kn\(([^)]*)\)/.exec(rail)[1]}]`);
-  assert.deepEqual(RAIL_META_FIELDS.filter((key) => !rO.includes(key)), ['isCloudRun', 'sshConnectionRemoved']);
-  assert.deepEqual(rO.filter((key) => !RAIL_META_FIELDS.includes(key)), []);
+  assert.deepEqual(fields.filter((key) => !rO.includes(key)), ['isCloudRun', 'sshConnectionRemoved']);
+  assert.deepEqual(rO.filter((key) => !fields.includes(key)), []);
   assert.match(v3('c227f4d5e-B-FYKrwT.js').slice(-20000), /\bnY as Ti\b/);
   for (const needle of ['Ti as Ip', 'D=Eu(t,gN)', 'P=go(t.type==="local"?t.id:null),I;bb0:{if(k){I=k;break bb0}', '_f as go', 'i as td', 'E as tn',
     'P!==void 0&&Rj({isLocal:E,cwd:P.cwd,originCwd:P.originCwd,worktreePath:P.worktreePath,harnessCwd:P.harnessCwd,branch:P.branch,startedWithWorktree:P.startedWithWorktree,worktreeRemoved:P.worktreeRemoved})',

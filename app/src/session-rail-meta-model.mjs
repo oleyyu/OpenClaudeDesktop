@@ -28,11 +28,6 @@
 
 export const SESSION_RAIL_META_ACTION = "session-rail-meta";
 
-/** cf74bc599 gN (3.6556.2): the session meta fields the rail reads, in the original's order (`...Ip` spread in place). */
-export const RAIL_META_FIELDS = Object.freeze(["originCwd", "workingDir", "additionalDirectories", "hasDesktopWorktree", "startedWithWorktree",
-  "worktreeRemoved", "folderTrees", "isScratchWorkspace", "pendingCwd", "remote", "environmentId", "environmentKind", "selfHostedPoolId",
-  "selfHostedPoolName", "selfHostedRunnerClientLabel", "sessionStatus", "isSlackOrigin", "git", "repoSlugs", "goal", "bridgeSessionUrl",
-  "remoteControlConnecting", "remoteControlAvailable", "startedViaRemoteControl", "isCloudRun", "sshConnectionRemoved"]);
 
 /** shared-8 M_ (2.42304.0 zh): the local session record's fields, in the original's order. */
 export const LOCAL_SESSION_RECORD_FIELDS = Object.freeze(["cwd", "originCwd", "worktreePath", "startedWithWorktree", "worktreeRemoved",

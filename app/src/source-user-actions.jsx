@@ -92,7 +92,7 @@ function UserActions({ identity, itemId, text, startedAtMs, interacted, rewind =
   return <div ref={root} className="sua-row" data-user-actions-id={itemId} data-testid={chat ? 'user-message-actions' : undefined}>
     {!mounted ? <div className="sua-deferred" data-find-omitted="">
       <span className="sua-placeholder" aria-hidden="true" />
-      <button type="button" className="sua-show-actions sua-sr-only" onFocusCapture={showActions}
+      <button type="button" className="sua-show-actions sr-only" onFocusCapture={showActions}
         onClick={showActions}>{t("Show message actions")}</button>
     </div> : <div className="sua-toolbar" data-cds="MessageActions" data-reveal="fade"
       role="toolbar" aria-label={t("Message actions")} tabIndex={-1}
@@ -137,7 +137,7 @@ function UserActions({ identity, itemId, text, startedAtMs, interacted, rewind =
           detail={t("Starts a new session from this point. This one stays as it is.")} onClick={onFork} />}
         {chatVersions && <ChatVersionSelector message={{ ...chatVersions, sender: 'human' }} changeDisplayedConversationPath={chat.onVersion} />}
       </SourceTooltipGroup>
-      <span id={statusId} className="sua-status sua-sr-only" role="status">{announcement}</span>
+      <span id={statusId} className="sua-status sr-only" role="status">{announcement}</span>
     </div>}
   </div>;
 }

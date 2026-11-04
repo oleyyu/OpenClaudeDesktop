@@ -66,9 +66,6 @@ html[data-reduce-motion="true"] .cz-search { transition: none; }
 .cz-name { display:flex; min-width:0; align-items:center; gap:var(--cds-gap-sm,12px); }
 .cz-truncate { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .cz-block { display:block; }
-.cz-warning { flex-shrink:0; color:var(--cds-text-danger,#bc3636); }
-.cz-row-error td { color:var(--cds-text-secondary); }
-.cz-mono { font-family:var(--cds-font-mono,monospace); font-size:12px; }
 /* Badge (shared-frame :1958-1975): h-control-nested, px-sm, rounded-chip
    (= nested/4), text-caption. data-size=xs re-maps those tokens through the
    loaded design system (.cds-root [data-size=xs]); under the dialog's
@@ -82,7 +79,7 @@ html[data-reduce-motion="true"] .cz-search { transition: none; }
 .cz-status-icon { flex-shrink:0; }
 .cz-status-action { display:inline-flex; min-width:0; }
 .cz-status[data-status=connected] { color:var(--cds-text-primary); }
-.cz-sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+/* W14-code r5 cleanup css5-sr-only-handcopies: the hand-copied sr-only rule is gone; the JSX uses the official c6a992d55 .sr-only. */
 /* Load failure (so() / Ie) fills the page below the fixed header; source h-full /
    flex-1 resolve against a full-height slot, the local page is a flex column. */
 .cz-page > .cz-load-error { flex:1 1 0; min-height:0; }
@@ -99,8 +96,6 @@ html[data-reduce-motion="true"] .cz-search { transition: none; }
    focus-visible:shadow-focus". */
 .cz-infotip { display:inline-flex; flex-shrink:0; align-items:center; justify-content:center; margin:-4px; padding:4px; border:0; border-radius:var(--cds-radius); background:transparent; color:var(--cds-text-muted); outline:none; transition:color var(--cds-dur-fast); }
 .cz-infotip:hover, .cz-infotip:focus-visible { color:var(--cds-text-secondary); }
-/* Connector drill: the Checking connection… spinner is md. */
-.cz-checking .sc-spinner { width:20px; height:20px; border-width:2px; }
 .cz-tool-list { margin:0; padding:0; list-style:none; }
 /* A native core's connector settings: the default approval row, then each tool's approval select and switch. */
 .cz-connector-setting { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:16px; padding:10px 0; border-bottom:1px solid var(--cds-border); }
@@ -131,7 +126,6 @@ html[data-reduce-motion="true"] .cz-search { transition: none; }
 .cz-skill-detail { min-width:0; }
 .cz-skill-actions { flex-shrink:0; }
 .cz-file-empty { margin:0; padding:var(--cds-pad-md,12px) 0; color:var(--cds-text-secondary); }
-.cz-file-body { margin:0; min-height:0; flex:1; overflow:auto; padding:var(--cds-pad-md,12px); border:1px solid var(--cds-alpha-1); border-radius:var(--cz-radius,8px); background:var(--cds-surface-3); color:var(--cds-text-primary); font-family:var(--cds-font-mono,monospace); font-size:12px; line-height:18px; white-space:pre-wrap; overflow-wrap:anywhere; }
 /* c36b3644c ye/_e + c26e90ba3 qt + c26958849 c, classic plugin drill. */
 .cz-plugin-detail { display:flex; min-width:0; flex-direction:column; }
 .cz-plugin-head { display:flex; align-items:center; justify-content:space-between; gap:var(--cds-gap-sm,12px); padding:var(--cds-pad-md,12px) var(--cds-pad-xl,24px); }
@@ -140,9 +134,6 @@ html[data-reduce-motion="true"] .cz-search { transition: none; }
 .cz-plugin-metadata:empty { display:none; }
 .cz-plugin-metadata>div { display:flex; min-width:0; flex-direction:column; gap:var(--cds-gap-xs,6px); color:var(--cds-text-secondary); font-size:var(--cds-font-size-body,14px); line-height:var(--cds-leading-body,20px); }
 .cz-plugin-metadata>div>span { color:var(--cds-text-muted); font-size:var(--cds-font-size-footnote,13px); line-height:var(--cds-leading-footnote,17px); }
-.cz-plugin-description { display:flex; flex-direction:column; gap:var(--cds-gap-sm,12px); padding:var(--cds-pad-lg,16px) var(--cds-pad-xl,24px); color:var(--cds-text-secondary); }
-.cz-plugin-description>span { font-size:var(--cds-font-size-caption,12px); line-height:var(--cds-leading-caption,16px); }
-.cz-plugin-description p { margin:0; font-size:var(--cds-font-size-body,14px); line-height:var(--cds-leading-body,20px); overflow-wrap:anywhere; }
 .cz-plugin-message { padding:12px 24px; }
 .cz-plugin-contents { display:flex; flex-direction:column; gap:12px; padding:16px 24px; }
 .cz-plugin-controls { display:flex; align-items:center; justify-content:space-between; gap:var(--cds-gap-sm,12px); min-width:0; }
@@ -189,8 +180,7 @@ button.cz-plugin-item:hover { background:var(--cds-surface-0); }
    transcript skeleton (source-transcript-states.css); restate it for the catalog skeleton only. */
 [data-cz-skeleton] .box-content { box-sizing:content-box; }
 
-/* Plugin management (DeepSeek core): restart notice, install output, build approval, detail controls. */
-.cz-plugin-restart { display:flex; align-items:center; justify-content:space-between; gap:var(--cds-gap-sm,12px); margin-bottom:12px; padding:10px 12px; border:1px solid var(--cds-alpha-2); border-radius:8px; background:var(--cds-surface-3); color:var(--cds-text-secondary); font-size:13px; line-height:18px; }
+/* Plugin management (DeepSeek core): install output, build approval, detail controls. */
 .cz-plugin-log { max-height:220px; overflow:auto; margin:4px 0 0; padding:8px; border-radius:6px; background:var(--cds-surface-1); color:var(--cds-text-secondary); font:12px/16px var(--cds-font-mono,ui-monospace,monospace); white-space:pre-wrap; overflow-wrap:anywhere; }
 .cz-plugin-builds { display:grid; gap:8px; justify-items:start; }
 .cz-plugin-builds p { margin:0; color:var(--cds-text-secondary); }
@@ -199,7 +189,6 @@ button.cz-plugin-item:hover { background:var(--cds-surface-0); }
 .cz-plugin-notices { display:flex; flex-direction:column; gap:var(--cds-gap-sm,12px); padding:var(--cds-pad-lg,16px) var(--cds-pad-xl,24px) var(--cds-pad-md,12px); }
 .cz-plugin-notices:empty { display:none; }
 .cz-plugin-notices .cz-plugin-message { padding:0; }
-.cz-form + .cz-list, .cz-plugin-restart + .cz-form { margin-top:12px; }
 .cz-badge[data-variant="danger"] { color:var(--cds-text-danger, var(--cds-text-warning)); }
 
 /* Built-in plugins (DeepSeek core): a bundle the app can install itself, above the installed table. */
@@ -224,7 +213,6 @@ button.cz-plugin-item:hover { background:var(--cds-surface-0); }
 .cz-section-head { display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 8px; margin:0 0 8px; }
 .cz-section-head h3 { margin:0; color:var(--cds-text-primary); font:600 13px/18px var(--cds-font-sans,anthropic-sans); }
 .cz-section-head span { color:var(--cds-text-muted); font-size:12px; line-height:16px; }
-.cz-section-head-table { margin-top:4px; }
 .cz-official { margin-bottom:20px; }
 .cz-official-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; margin:0; padding:0; list-style:none; }
 @media (max-width: 767px) { .cz-official-grid { grid-template-columns:minmax(0,1fr); } }
@@ -254,10 +242,6 @@ button.cz-plugin-item:hover { background:var(--cds-surface-0); }
 .cz-plugin-byline { margin:0; color:var(--cds-text-muted); font-size:12px; line-height:16px; overflow-wrap:anywhere; }
 .cz-registry-control { display:flex; max-width:100%; min-width:0; }
 /* Add custom connector › Advanced: env / header lines, styled like the inputs above. */
-.cz-advanced { display:flex; flex-direction:column; gap:8px; }
-.cz-advanced > summary { cursor:var(--cds-cursor-interactive, default); color:var(--cds-text-secondary); width:max-content; border-radius:4px; outline:none; }
-.cz-advanced > summary:focus-visible { box-shadow:var(--cds-focus-shadow); }
-.cz-advanced[open] > summary { margin-bottom:4px; }
 .cz-field textarea { min-height:44px; padding:5px 10px; border:1px solid var(--cds-alpha-2); border-radius:6px; background:var(--cds-surface-3); color:inherit; font:inherit; font-family:var(--cds-font-mono); font-size:var(--cds-font-size-code, 12px); min-width:0; resize:vertical; }
 .cz-field small { grid-column:2; }
 @media(max-width:780px) { .cz-field small { grid-column:1; } }
@@ -268,7 +252,6 @@ button.cz-plugin-item:hover { background:var(--cds-surface-0); }
 .cz-plugin-apps-list { display:flex; flex-direction:column; gap:6px; margin:0; padding:0; list-style:none; }
 .cz-plugin-apps-list > li { display:flex; align-items:center; justify-content:space-between; gap:8px; min-width:0; }
 .cz-marketplace-errors { display:flex; align-items:flex-start; gap:8px; margin-bottom:12px; padding:10px 12px; border-radius:var(--cds-radius--lg, 10px); color:var(--cds-text-warning); background:color-mix(in srgb, var(--cds-text-warning) 8%, transparent); }
-.cz-trust-launch { display:block; margin-top:4px; padding:6px 8px; border-radius:var(--cds-radius--sm, 6px); background:var(--cds-fill-ghost-hover); color:var(--cds-text-secondary); font-family:var(--cds-font-mono); }
 .cz-plugin-share{display:flex;flex-wrap:wrap;align-items:center;gap:var(--cds-gap-sm,8px)}
 .cz-plugin-share > .sselect{flex:none;width:220px;max-width:100%}
 /* ChatGPT Apps on Codex (AppsSection): one row per app with its icon, status and Connect / Manage and the on/off switch. */

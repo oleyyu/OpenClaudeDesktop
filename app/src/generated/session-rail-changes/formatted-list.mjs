@@ -24,5 +24,6 @@ function J(e) {
   };
   return ((n.displayName = Lt[e]), n);
 }
+var on = J("formatNumber");
 var sn = J("formatList");
-export { sn as FormattedList };
+export { sn as FormattedList, on as FormattedNumber };

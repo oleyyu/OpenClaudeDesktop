@@ -115,11 +115,13 @@ test('cf-02: the Changes state titles a folder without a repository like it', as
 
 test('cf-03: filename results are RT rows (file-tree row classes, FileTypeIcon, muted-as-secondary folder)', () => {
   const search = src('source-files-search.jsx');
-  assert.match(search, /className=\{treeRow \? fileTreeRowClassName\(\{ current: rowCurrent, selected: rowSelected \}\) : "sfs-result-row"\}/);
+  // r8pa-01: zT renders a content result's file as RT too, and its matches as BT on the same row classes (no sfs rows).
+  assert.match(search, /className=\{fileTreeRowClassName\(\{ current: rowCurrent, selected: rowSelected \}\)\}/);
+  assert.doesNotMatch(search, /sfs-result-row|sfs-content-/);
   assert.match(search, /<FileTypeIcon fileName=\{entry\.name\} size=\{fileTreeIconSize\(\)\} className=\{fileTreeIconClassName\(\{ openable: true \}\)\} \/>/);
   assert.match(search, /className="truncate text-footnote text-muted-as-secondary"/);
   assert.match(search, /hasNameMatches \? "truncate text-secondary" : "truncate text-primary"/);
-  assert.match(search, /className=\{treeRow \? fileTreeRowPrimary : undefined\}/);
+  assert.match(search, /className=\{fileTreeRowPrimary\}/);
 });
 
 test('cf-04: Go to file is CC on CdsCombobox', async () => {
@@ -161,8 +163,10 @@ test('cf-05 / cf-06 / cf-07 / cf-08: editor selection bar, editor menu, silent c
   assert.match(viewer, /toasts\?\.add\(t\("Copied to clipboard\."\), \{ variant: "neutral" \}\), \(\) => \{\}\);/);
   const css = src('source-file-viewer.css');
   assert.ok(!css.includes('.sfv-selection-'));
-  assert.match(css, /\.sfv-comment-actions button\[data-comment-delete\]:hover \{ color:var\(--cds-text-danger\); \}/);
-  assert.match(src('source-file-comments.jsx'), /data-comment-delete="" aria-label=\{t\('Delete comment'\)\}/);
+  // r8pa-02: the card is c82eca2bd st itself (Delete `e(d ? W : Oe, "hover:text-danger")`); the host .sfv-comment-* rules are gone.
+  assert.doesNotMatch(css, /\.sfv-comment-/);
+  assert.match(src('source-file-comments.jsx'), /import \{ st as DiffAnnotationCard \} from '\.\/generated\/pierre-changes\/pierre-c82eca2bd-CImI7zNG\.mjs';/);
+  assert.match(src('generated/pierre-changes/pierre-c82eca2bd-CImI7zNG.mjs'), /e\(d \? W : Oe, "hover:text-danger"\)/);
 });
 
 // W12c files-tabbar finished cf-09: the strip is the ViewTabBar itself, so these classes come from the generated

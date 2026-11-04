@@ -28,7 +28,7 @@ const report={at:new Date().toISOString(),directory,build:{version:build.version
 const step=name=>{phase=name;console.log('TRANSCRIPT-STATES '+name);};
 const poll=async(fn,label,ms=10000)=>{const end=Date.now()+ms;while(Date.now()<end){try{if(await fn())return;}catch{}await new Promise(r=>setTimeout(r,25));}throw Error('Timed out: '+label);};
 const env={...process.env,CODE_DESKTOP_DATA:profile,CODEX_HOME:path.join(profile,'codex-home'),CODEX_BINARY:path.join(root,'tests/fixtures/codex-server.cjs')};delete env.ELECTRON_RUN_AS_NODE;delete env.CODE_DESKTOP_DEV_URL;
-const composer=()=>page.getByRole('textbox',{name:'Message DeepSeek',exact:true});
+const composer=()=>page.getByRole('textbox',{ name: /^(?:Prompt|Message DeepSeek)$/ });
 const open=id=>page.locator(`[data-source-session-id="${id}"] .source-session-open`).click();
 const skeleton=()=>page.locator('[data-transcript-skeleton]');
 async function launch(){app=await electron.launch({args:[root],executablePath:path.join(root,'node_modules/electron/dist/Electron.app/Contents/MacOS/Electron'),env,timeout:20000});page=await app.firstWindow();page.setDefaultTimeout(10000);page.on('pageerror',e=>report.rendererErrors.push({phase,message:e.message}));

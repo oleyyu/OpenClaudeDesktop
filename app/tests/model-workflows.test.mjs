@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {isModelWorkflow,modelWorkflowRuns,withModelWorkflowRows,workflowTask,workflowKey,workflowMemberControls} from '../src/model-workflow-model.mjs';
+import {isModelWorkflow,modelWorkflowRuns,withModelWorkflowRows,workflowTask,workflowKey} from '../src/model-workflow-model.mjs';
 import {workflowPhases} from '../src/workflow-progress-model.mjs';
 
 // A workflow tool item as the DeepSeek core sends it (harness workflows.js).
@@ -52,8 +52,7 @@ test('a model run keeps its Tasks pane identity when the core renames it (call i
   assert.equal(workflowTask({id:'local-1',status:'running'}).id,'workflow:local-1');
 });
 
-test('Retry/Skip only for runs whose engine handles member controls',()=>{
-  assert.equal(workflowMemberControls({id:'local-1'}),true,'the local runner controls members');
-  assert.equal(workflowMemberControls({...run}),false,'a core run that does not declare it (Qwen, MiMo)');
-  assert.equal(workflowMemberControls({...run,memberControls:true}),true,'DeepSeek Harness declares it');
+// W14-code r4 ct-feed R4T-08b (E95): the Tasks pane's run is the desktop's N$ card, which has no member Retry / Skip.
+test('the member Retry / Skip gate went with the host card',async()=>{
+  assert.equal('workflowMemberControls' in await import('../src/model-workflow-model.mjs'),false);
 });

@@ -10,9 +10,6 @@
 export const FEED_LABEL = t("Chat messages"); // :63471 SCYmnElliz
 export const FEED_INSTRUCTIONS = t("Use the up and down arrow keys to move between messages."); // :61282 ps3R1JlOBy
 export const STREAMING_LABEL = t("Currently streaming message"); // :61239 QU+nmAt+Zt
-// The transcript copy names the assistant DeepSeek wherever the source says
-// Claude ("Stop DeepSeek’s response", "Where DeepSeek runs").
-export const ASSISTANT_NAME = "DeepSeek";
 // C2 persona: the visible copy reads the live assistant name (default "DeepSeek").
 import { assistantName } from "./persona-store.mjs";
 import { t } from "../electron/i18n/index.mjs";

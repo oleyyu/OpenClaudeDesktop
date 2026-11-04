@@ -69,6 +69,12 @@ const roots = {
     W: { name: 'LocalRoutineFormDialog', export: 'EpitaxyLocalRoutineFormDialog', features: ['K1($, 0, i, { kind: "edit", task: i })'] },
     K: { name: 'LocalRoutineCreateFormEmbed', export: 'EpitaxyLocalRoutineCreateFormEmbed', features: ['h = u === void 0 ? "epitaxy" : u,', 'nameCollisionError: m,'] },
   },
+  // W14-code global (shared-08): c165c93f1 ie, the Code workspace trust dialog ("Trust this workspace?" CFLhTeXdtP, "Trust
+  // workspace" 0L2liwSugy; the session trust gate c516e93ca T mounts it), which the host's folder-trust notice opens.
+  'c165c93f1-DO0V7qMe.js': {
+    // ie is `memo(ne)`; ne carries the dialog (data-testid "trust-dialog-rows", initialFocus "cancel", confirmLabel V).
+    ie: { name: 'WorkspaceTrustDialog', export: 'n', features: ['ie = i(ne)'] },
+  },
   'c0fd2fda3-CntNPbFi.js': {
     hn: { name: 'useLocalRoutineForm', export: 'n', features: ['surface: "code_local",', 'id: "Cox9P9F9a5",'] },
     Dt: { name: 'RoutineBranchField', export: 'c', features: ['? s.formatMessage(Y.noBranches)', ': s.formatMessage(Y.noBranchesMatch),'] },
@@ -83,6 +89,13 @@ const roots = {
     Et: { name: 'RoutineFolderField', export: 'f', features: ['{ cwd: o, handleSelectCwd: c, handleBrowseCwd: l, machine: u } = t,'] },
     qt: { name: 'ROUTINE_FORM_MESSAGES', export: 'o', features: ['clearsApprovals: {', 'id: "Ohdw+y7C3b",'] },
     cn: { name: 'clampRoutinePermissionChoice', export: 't', features: [': e === "auto" || e === "bypassPermissions"', '? H(e, t)'] },
+  },
+  // W14-code r7 css7-branch-picker-bl: cd2687f9f `export{k as i,we as n,…}` — the searchable pill select cc43287c9 imports
+  // as bL (`import{i as yL,n as bL}from"./cd2687f9f-BuSCKovQ.js"`) and renders for Dle's "Branch to start from" chip; the
+  // composer's classic context row renders it (source-composer.jsx, the branch / worktree pill inlined in its context row). c0fd2fda3 already reaches both.
+  'cd2687f9f-BuSCKovQ.js': {
+    we: { name: 'SearchablePillSelect', export: 'n', features: ['disabledWrapperClassName: De,', 'triggerChildren: M,', '"group/pill-popup flex flex-col max-h-[min(360px,var(--available-height))]",'] },
+    k: { name: 'identityItemLabel', export: 'i', features: ['return e;'] },
   },
 };
 // Lazy declarations kept with a rewritten specifier: key -> { target chunk: original export alias `pick` reads }.

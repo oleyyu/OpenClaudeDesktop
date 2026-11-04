@@ -70,7 +70,9 @@ test('Code keeps New above the scroller, with remaining navigation outside the s
   const html=renderToStaticMarkup(React.createElement(Sidebar.SourceSidebar,{sessions:[thread('pinned'),thread('normal')],sessionMetadata:{pinned:{pinned:true}},knownFolders:['/repo']}));
   const scroll=html.indexOf('<nav '),pins=html.indexOf('data-testid="nav-pin-rows"'),list=html.indexOf('class="df-session-list flex flex-col"');
   assert.ok(html.indexOf('df-search-field ') < html.indexOf('>New</span>'));
-  assert.ok(html.indexOf('>New</span>') < scroll && scroll < pins && pins < html.indexOf('>Projects</span>'));
+  // W14-code r8 fr8-07 (E95): Code's nav has no Projects row (shared-21 hH); Artifacts is the first pinned nav row.
+  assert.ok(html.indexOf('>New</span>') < scroll && scroll < pins && pins < html.indexOf('>Artifacts</span>'));
+  assert.equal(html.indexOf('>Projects</span>'), -1);
   assert.ok(html.indexOf('>Customize</span>') < list && list < html.indexOf('data-pinned-list=""'));
   assert.match(html,/<span[^>]*data-group-caret=""/);
   const css=readFileSync(new URL('../public/assets/v1/shared-styles-D_GJawPO.css',import.meta.url),'utf8');

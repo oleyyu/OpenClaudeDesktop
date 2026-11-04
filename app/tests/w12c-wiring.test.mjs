@@ -108,7 +108,12 @@ test('#7 usage band CTA: a member\'s limit asks the owner ("Request usage credit
   const owner = composerUsageNotice(limits('workspace_owner_usage_limit_reached'), { now, locale: 'en-US' });
   assert.equal(owner.nudge, null);
   assert.equal(owner.countdown.lead, 'You’ve reached your usage limit. Increase your limits to continue using Codex.', 'no NI counterpart: the body stays');
-  assert.match(main, /\.\.\.\(usageNotice \? \[\{ \.\.\.usageNotice, actions: usageNoticeActions \}\] : \[\]\),/);
+  // W14-code r6 r6-composer-05: the usage limit takes its official slot ("limit", c227f4d5e rI) — in Code only (r6 sleep
+  // review fix: the slot table is cc43287c9's Code column; Chat / Cowork keep the host order). W14-code r7 notices (E81):
+  // the slot only with the region (__gb__100087145 / local_code_notice_region); without it Code draws the band inline as
+  // c227f4d5e oL (tL → rL `u === null ? y(oL, {...r}) : null`) with the same actions (SourceInlineUsageBand).
+  assert.match(main, /\.\.\.\(usageNotice && !codeInline \? \[\{ \.\.\.usageNotice, \.\.\.\(codeNoticeSlots \? \{ slot: "limit" \} : \{\}\), actions: usageNoticeActions \}\] : \[\]\),/);
+  assert.ok(main.includes('<SourceInlineUsageBand key="usage" notice={usageNotice} actions={usageNoticeActions} />'));
   assert.match(main, /: usageNudgeState === "sent" \? \[\{ label: t\("Request sent to admin"\), disabled: true, run: \(\) => \{\} \}\]\n\s+: \[\{ label: t\("Request usage credits"\), busy: usageNudgeState === "busy"/);
   assert.match(main, /rpc\("account\/sendAddCreditsNudgeEmail", \{ creditType: usageNotice\.nudge \}\)/);
   assert.match(main, /!usageNotice\.nudge \? \[\{ label: t\("View usage"\), run: \(\) => setSettings\("usage"\) \}\]/);
@@ -120,7 +125,8 @@ test('#7 SSR: a sent request is a disabled action', async () => {
   const N = await server.ssrLoadModule('/src/source-session-notices.jsx');
   const html = renderToStaticMarkup(h(N.SourceSessionNotices, { notices: [{ kind: 'usage', level: 'danger', summary: 'Usage limit reached', details: '',
     actions: [{ label: 'Request sent to admin', disabled: true, run() {} }] }] }));
-  assert.match(html, /<button type="button" class="ssn-action" disabled="">Request sent to admin<\/button>/);
+  // W14 TR-H8: the action is FM's secondary CDS Button inside the notice's CDS Banner.
+  assert.match(html, /<div data-cds="Banner"[^]*?<button type="button" disabled="" data-cds="Button"[^>]*>(?:(?!<\/button>)[^])*Request sent to admin<\/span><\/button>/);
 });
 
 test('#8 account Learn more: external link first (trailing ArrowOutSquare), then the Separator, Keyboard shortcuts last', () => {

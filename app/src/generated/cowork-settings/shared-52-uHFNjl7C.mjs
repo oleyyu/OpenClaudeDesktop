@@ -45,9 +45,6 @@ function nD(e) {
 function rD(e) {
   return nD(e) && !tD(e);
 }
-function lD(e, t) {
-  throw Error(t ?? "Did not expect to get here");
-}
 function ND(e) {
   return e instanceof W
     ? eD({
@@ -67,4 +64,4 @@ function zD(e) {
       : void 0,
   );
 }
-export { eD, tD, nD, rD, lD, ND, zD };
+export { eD, tD, nD, rD, ND, zD };

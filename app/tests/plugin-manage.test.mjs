@@ -74,11 +74,13 @@ test('the store runs one install, follows its progress and output, and asks for 
   const outcome = await pending;
   assert.equal(outcome.ok, true);
   assert.equal(store.getSnapshot().pluginOps.install.status, 'done');
-  assert.equal(store.getSnapshot().pluginOps.restartRequired, true);
+  // W14-code r5-shared-01: the page keeps no restart state; main restarts the idle core before the next new session
+  // (electron/core-restart.cjs, tests/core-restart.test.mjs), as WV readyInNewSession "Start a new session to use it." says.
+  assert.equal(outcome.restartRequired, true);
+  assert.equal(Object.hasOwn(store.getSnapshot().pluginOps, 'restartRequired'), false);
   assert.ok(calls.filter((payload) => payload.operation === 'plugins').length >= 2, 'the list reloads after a change');
-  // A new core connection loaded the change.
   store.observe({ kind: 'connection', connected: true });
-  assert.equal(store.getSnapshot().pluginOps.restartRequired, false);
+  assert.equal(store.getSnapshot().pluginOps.install.status, 'done');
   store.clearPluginInstall();
   assert.equal(store.getSnapshot().pluginOps.install, null);
   assert.equal((await store.setPluginEnabled('dsh-plugin-x', true)).ok, true);
@@ -132,15 +134,16 @@ test('the add form, restart notice and detail controls render their states', () 
   assert.match(running, /Cancel install/);
   assert.match(running, /data-plugin-install="running"/);
   const blocked = renderToStaticMarkup(React.createElement(M.AddPluginForm, { store, install: { requestId: 'r', spec: 'p', status: 'failed', log: '', outcome: { ok: false, message: 'The package needs to run build scripts.', pendingBuilds: ['esbuild'] } }, onClose() {} }));
-  assert.match(blocked, /role="alert">The package needs to run build scripts\./);
+  // W14-code r2-shared-03: the result itself is a toast (c76f00e40/cdbe53168), so no inline alert; the build-script box stays.
+  assert.doesNotMatch(blocked, /role="alert">The package needs to run build scripts\./);
   assert.match(blocked, /<strong>esbuild<\/strong>/);
   assert.match(blocked, /Allow these scripts and retry/);
   const done = renderToStaticMarkup(React.createElement(M.AddPluginForm, { store, install: { requestId: 'r', spec: 'p', status: 'done', log: '', outcome: { ok: true, restartRequired: true, bundle: 'dsh-plugin-y' } }, onClose() {} }));
-  assert.match(done, /Installed dsh-plugin-y\. Restart DeepSeek to load it\./);
+  assert.doesNotMatch(done, /Installed dsh-plugin-y|is installed and ready/, 'the install result is a toast, not a paragraph');
   assert.match(done, />Close</);
-  const banner = renderToStaticMarkup(React.createElement(M.PluginRestartBanner, { onRestartCore() {} }));
-  assert.match(banner, /Plugin changes apply after DeepSeek restarts/);
-  assert.match(banner, /Restart DeepSeek/);
+  // W14-code r4-shared-06 (E95): 3.6556.2's Customize has no restart banner; the install toast says
+  // "{pluginName} is installed. Start a new session to use it." (shared-104 WV readyInNewSession) instead.
+  assert.equal(M.PluginRestartBanner, undefined);
   const [, x] = pluginRows(installed).sort((a, b) => (a.removable ? 1 : -1));
   const detail = renderToStaticMarkup(React.createElement(M.PluginDetail, { plugin: x, detail: { description: 'X' }, error: '', skills: [], view: null, onView() {}, onBack() {}, onSkill() {}, copy: customizeCore({ engine: 'deepseek', capabilities: { pluginManage: true } }), manage: React.createElement('span', { 'data-manage': '' }) }));
   assert.match(detail, /data-manage=""/);
@@ -246,7 +249,8 @@ test('native core (Codex): the store re-lists after a change; the page offers ma
   const added = await store.addMarketplace('owner/repo');
   assert.deepEqual([added.ok, added.result.marketplaceName], [true, 'demo-market']);
   assert.ok(calls.filter((op) => op === 'plugin-catalog').length >= 2 && calls.filter((op) => op === 'plugins').length >= 2, 'both lists reload');
-  assert.deepEqual(await store.uninstallPlugin('x@y'), { ok: false, message: 'plugin is not installed' });
+  // shared-78 E1: a removal never shows the raw reason ("plugin is not installed"), only S1.
+  assert.deepEqual(await store.uninstallPlugin('x@y'), { ok: false, message: 'Plugin couldn’t be removed. Try again.' });
 
   const rows = pluginRows({ marketplaces: [{ name: 'demo-market', path: '/m/.agents/plugins/marketplace.json', interface: { displayName: 'Demo Market' }, plugins: [codexList.marketplaces[0].plugins[1]] }] });
   const snapshot = { skills: { skills: [], errors: [], status: 'ready', cwd: '/r' }, plugins: { rows, status: 'ready', cwd: '/r' }, mcp: { rows: [], status: 'ready', cwd: '/r', threadId: null }, pluginOps: { install: null, restartRequired: false },
@@ -266,9 +270,10 @@ test('native core (Codex): the store re-lists after a change; the page offers ma
   assert.match(form, /Add a plugin marketplace to Codex from a git URL, owner\/repo or a local folder\./);
   assert.match(form, /aria-label="Marketplace source"/);
   assert.match(form, /<form class="cz-dialog-form" aria-label="Add marketplace"/);
-  assert.match(form, /<footer class="sdlg-footer[^"]*">.*?>Cancel<.*?>Add<\/span><\/button><\/footer>/);
+  assert.match(form, /<div class="sdlg-footer[^"]*">.*?>Cancel<.*?>Add<\/span><\/button><\/div>/);
   const controls = renderToStaticMarkup(React.createElement(M.PluginManageControls, { plugin: rows[0], store: pageStore, copy: customizeCore({ engine: 'codex' }), actions: { canToggle: true, canRemove: true, toggle() {}, remove() {} } }));
-  assert.match(controls, /role="switch" aria-label="Turn done off"/);
+  // W14 global fr-cu-01: c24c8737b — "Enable plugin" names the switch; the tooltip says Disable / Enable plugin.
+  assert.match(controls, /<label class="inline-flex cursor-interactive"><button[^>]*role="switch" aria-label="Enable plugin" aria-checked="true"/);
   assert.match(controls, /<div class="cz-plugin-manage" data-plugin-manage=""><button aria-label="More options for done" aria-haspopup="menu"[^>]*data-variant="ghost"/, 'the ⋯ menu comes before the switch');
 });
 

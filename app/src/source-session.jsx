@@ -26,7 +26,6 @@ import {createClipboardFeedback} from './clipboard-feedback.mjs';
 import {clipboardEnvironment,writeClipboardPayload} from './clipboard-payload.mjs';
 import {useSourceToasts} from './source-toast.jsx';
 import { downloadFileContents, fileDownloadPlan } from './file-download-model.mjs';
-import {SourceSettingsButton} from './source-settings-button.jsx';
 import {isGenericTool,observedGenericTool,genericToolLabel,genericToolBody} from './generic-tool-model.mjs';
 import {questionOutcome,questionReceipt,toolOutputImages} from './generic-tool-model.mjs';
 import {SourceQuestionReceipt,notePendingQuestion} from './source-question-receipt.jsx';
@@ -38,7 +37,8 @@ import { SourceMarkdownSelection } from './source-markdown-selection.jsx';
 import { remarkStreamingInline } from './streaming-inline.mjs';
 import { useResponseReveal, ResponseRevealScope, ResponseRevealSpan } from './source-response-reveal.jsx';
 import { SourceAgentTool } from "./source-agent.jsx";
-import { ActionButton, BusyAnnouncement, SourceApprovalCard, SourceApprovalCardView, currentlyVisible, useAllowArming, useHotkeyArming } from "./source-approval-card.jsx";
+import { APPROVAL_CARD_BODY, ApprovalDetailValue, ApprovalScriptFolds, BusyAnnouncement, DETAIL_NOTE, PLAIN_CARD_SHELL, SourceApprovalCard, SourceApprovalCardView, currentlyVisible, useHotkeyArming } from "./source-approval-card.jsx";
+import { QuestionCardHeader as PlanHandoffTitle } from "./generated/question-card/card-header.mjs";
 import { previewTooLarge } from "./approval-card-model.mjs";
 import { SourceQuestionCard } from "./source-question-card.jsx";
 import { SourceArtifacts, SourceDeliverables, itemDeliverables } from "./source-deliverables.jsx";
@@ -47,9 +47,8 @@ import { SourceClaudeChapter } from "./source-chapters.jsx";
 import { localizeBridgeNote } from "./bridge-text-model.mjs";
 import { ChatSurfaceAnswer } from "./source-chat-markdown.jsx"; // w13-chatui-markdown-code
 import { approvalIdentity, isPlanReviewRequest } from "./approval-draft-model.mjs";
-import { SourcePlanApprovalCard, planTargetOf, planAcceptOptions, PlanMoreOptions } from "./source-plan-card.jsx";
+import { SourcePlanApprovalCard, planTargetOf, planAcceptOptions, PlanDecisions } from "./source-plan-card.jsx";
 import { useCardHotkeys } from './use-card-hotkeys.js';
-import "./source-plan-card.css";
 import { userMessageContent, shownUserItem } from "./composer-attachments-model.mjs";
 import { demonstrationOf } from "./watch-record-model.mjs";
 import { SourceWatchRecordMessage } from "./source-watch-record.jsx";
@@ -87,10 +86,13 @@ import { fileContextMenu, multiFileContextMenu, fileCopyChoices, fileLinkLabel }
 import { CurrentSessionIdContext, useFileGone, inMultiSelection, openWhenChecked } from "./file-gone-menu.mjs"; // R3-files FT-05
 import { SourceSessionFileViewer, FILE_VIEWER_LABELS } from "./source-file-viewer.jsx";
 import { CONTEXT_MENU_ALIGN_OFFSET, CONTEXT_MENU_SIDE_OFFSET } from "./menu-model.mjs";
-import { SourceTaskEvent } from "./source-task-event.jsx";
+import { SourceTaskEvent, SourceTaskEventRow } from "./source-task-event.jsx";
 import { workflowTaskEvent } from "./task-event-model.mjs";
-import { useSourcePointerResize } from "./use-pointer-resize.js";
-import { SourcePaneControls, SourceFilesSearchButton } from "./source-pane-controls";
+// W14 diff: the Files tree column is cccc2cf0a KE's — c219730b0 Sn (lg) over the c44d00c7f Ir / Lr / Rr handles (Gp / Kp /
+// Yp), the same generated hook and handles the Changes column uses.
+import { useResizableDiffTree } from "./generated/sidebar-resize/diff-tree-column.mjs";
+import { DiffTreeEdgeHandle, DiffTreeResizeHandle, DiffTreeResizeShield } from "./generated/sidebar-resize/diff-tree-resize-handle.mjs";
+import { SourceFilesSearchButton } from "./source-pane-controls";
 import { SourceDiff } from "./source-diff";
 import { SourceDiffGoToFile } from "./source-pane-go-to-file.jsx";
 import { diffPayload } from './diff-context-model.mjs';
@@ -99,6 +101,7 @@ import { changesMenuSections } from "./changes-menu-model.mjs";
 import { SourceChangesState, SourcePlanEmpty, SourceFilesTreeState, SourceTreeErrorRow, SourceFilesEmptyPreview } from "./source-pane-states.jsx";
 import { SourceUserText } from "./source-user-text.jsx";
 import { parseSelectedElementMessage } from './generated/code-editor/preview-element-parser.mjs';
+import { Xe as withoutAttachMarkers } from "./generated/code-transcript/c4d199b75-D3cQB-UP.mjs"; // W14-code r4 R4T-08f
 import { SourceSelectedElementTranscript } from './source-selected-element.jsx';
 import { SourceUserActions } from "./source-user-actions.jsx";
 import { notDeliveredLabel } from "./pending-send-model.mjs";
@@ -114,12 +117,14 @@ import { SourceFilesSearch } from "./source-files-search";
 import { useFileTreeReveal } from "./use-file-tree-reveal";
 import { revealChild } from "./files-search-model.mjs";
 import { singleChildFolderChain, treeEntryOpenable, fileTreeGuideStyle, treeIndent, onEnterReleased,
-  fileTreeCoachmarkEligible, fileTreeNuxDismissed, dismissFileTreeNux } from "./file-tree-row-model.mjs";
+  fileTreeCoachmarkEligible, fileTreeNuxDismissed, dismissFileTreeNux,
+  diffFileListCoachmarkEligible, diffFileListNuxDismissed, dismissDiffFileListNux } from "./file-tree-row-model.mjs";
+import { parseUnifiedDiff } from "./diff-model";
 // R3-files FT-14: the tree's official classes and kept guides (file-tree-row-model.mjs over generated/files-changes),
 // its glyphs (CDS Icon, the c280f9bbb file-type icon), the multi-selection Escape (c856385e2 nt) and the worktree start folder.
 import { FILE_TREE_CONTAINER_CLASS, FILE_TREE_GUIDE_LAYER_CLASS, fileTreeRowClassName, fileTreeRowPrimary, fileTreeIconClassName,
   fileTreeNameClassName, fileTreeIconSize, applyKeptGuides } from "./file-tree-row-model.mjs";
-import { CdsIcon } from "./generated/view-tabs/index.js";
+import { CdsButton, CdsIcon, CdsTextLink, CdsTooltip, cdsClassNames, useCdsLayerAwareZIndex } from "./generated/view-tabs/index.js";
 import { FileTypeIcon } from "./generated/files-changes/file-type-icon.mjs";
 import { useMultiSelectionEscape } from "./generated/files-changes/file-selection-escape.mjs";
 import { FilesQueryScope, useTreeStartFolder, startRevealNonce } from "./file-tree-start-folder.jsx";
@@ -146,6 +151,7 @@ import { pathChoices } from "./file-tool-model.mjs";
 import "./source-session.css";
 import { getLocale, t, tn } from "../electron/i18n/index.mjs";
 import { formatTokenCount } from "./usage-cost-model.mjs";
+import { PaneWindowDragStrip, usePaneWindowHeaderProps } from "./pane-window-header.jsx";
 
 // Source chain and deliberate Codex adaptations: analysis/source-session-batch1.md.
 const desktopCall = (action, params) =>
@@ -157,19 +163,18 @@ const textOf = (value) =>
   typeof value === "string" ? value : JSON.stringify(value, null, 2);
 const errorMessage = (error) => error?.message || String(error);
 
-// nativeTitle={false}: a control inside a CDS SourceTooltip carries no native title.
-function SourceIconButton({ name, label, onClick, nativeTitle = true, ...props }) {
+// W14-code r4 css4-pane-toggle-icon-buttons: the host SourceIconButton (.source-icon-button) is gone; the pane header's
+// list toggles and fallback close are the CDS ghost iconOnly Button (cccc2cf0a F = shared-frame Uu).
+// The Files / Changes list toggles share the official composition (cccc2cf0a kD / AC): `u(ee,{content,shortcut,
+// side:"top",align}, u(F,{variant:"ghost",iconOnly:!0,icon:"ListBullet","aria-label",shortcut,pressed,
+// pressedVariant:"selected"}))`, ee = shared-frame Xm (CdsTooltip). className: kD `R("shrink-0", m)`, AC
+// `R("-ms-[var(--pane-title-step,4px)]", o)`, m / o = shared-18 Mb("rounded text-secondary") (panels off → as is).
+function PaneListToggle({ label, shortcut, pressed, className, onClick, buttonRef, ...rest }) {
   return (
-    <button
-      type="button"
-      className="source-icon-button"
-      aria-label={label}
-      title={nativeTitle ? label : undefined}
-      onClick={onClick}
-      {...props}
-    >
-      <Icon name={name} size={16} />
-    </button>
+    <CdsTooltip content={label} shortcut={shortcut} side="top" align="start">
+      <CdsButton ref={buttonRef} variant="ghost" iconOnly icon="ListBullet" className={className} aria-label={label} shortcut={shortcut}
+        pressed={pressed} pressedVariant="selected" onClick={onClick} {...rest} />
+    </CdsTooltip>
   );
 }
 
@@ -203,7 +208,7 @@ export function SourceRedactedSecret({ value, patternId, maskValue = maskSecret 
   const mask = useMemo(() => maskValue(value), [value, maskValue]);
   return <span data-redacted-secret="" className="smd-secret">
     <span className="smd-secret-value">{revealed ? value : <>
-      <span data-find-omitted="" className="source-sr-only smd-secret-sr">{t("Redacted {label}", { label })}</span>
+      <span data-find-omitted="" className="sr-only smd-secret-sr">{t("Redacted {label}", { label })}</span>
       <span aria-hidden="true">{mask}</span>
     </>}</span>
     <button type="button" className="smd-secret-toggle" aria-pressed={revealed} aria-label={t(revealed ? "Hide {label}" : "Reveal {label}", { label })}
@@ -475,7 +480,7 @@ function SourceStep({
           <Icon name="CaretRight" size={caretSize} className="source-step-caret" />
         )}
         {state === "busy" && (
-          <span className="source-sr-only">{t("In progress")}</span>
+          <span className="sr-only">{t("In progress")}</span>
         )}
       </div>
       {/* c425fb3cf:j - the body mounts on the first expansion and a later close
@@ -604,7 +609,8 @@ export function scheduledLabel(firedAt, now = Date.now()) {
 
 // A finished dynamic workflow's notification to the model (Claude Code's <task-notification>), shown as Claude's
 // task-event row (source-task-event.jsx): 'Background workflow completed · {name} · took {elapsed}', which focuses
-// the run in the Background tasks pane.
+// the run in the Background tasks pane. Each notice is its own transcript row (SourceTaskEventRow), so it keeps the
+// row gap from the row above it.
 function SourceWorkflowNotice({ item, onOpen = null }) {
   const notice = item.workflowNotification;
   // A workflow agent's blocking question (the main agent answers it) and a run waiting on its model provider: rows of
@@ -612,23 +618,23 @@ function SourceWorkflowNotice({ item, onOpen = null }) {
   if (notice?.kind === "escalation") {
     const label = notice.agent && notice.workflow ? t("{agent} in {workflow} has a question", { agent: notice.agent, workflow: notice.workflow })
       : notice.agent ? t("{agent} has a question", { agent: notice.agent }) : notice.workflow ? t("An agent in {workflow} has a question", { workflow: notice.workflow }) : t("A workflow agent has a question");
-    return <details className="source-task-event source-workflow-question" data-transcript-item-id={item.id} data-task-event-status="question">
+    return <SourceTaskEventRow><details className="source-task-event source-workflow-question" data-transcript-item-id={item.id} data-task-event-status="question">
       <summary className="stev-line"><span className="stev-label">{label}</span></summary>
       {notice.question && <p className="stev-question">{notice.question}</p>}
       {notice.context && <p className="stev-context">{notice.context}</p>}
-    </details>;
+    </details></SourceTaskEventRow>;
   }
   if (notice?.kind === "settings") {
-    return <div className="source-task-event" data-transcript-item-id={item.id} data-task-event-status="settings">
+    return <SourceTaskEventRow><div className="source-task-event" data-transcript-item-id={item.id} data-task-event-status="settings">
       <span className="stev-line"><span className="stev-label">{t("Changed the workflow’s settings")}</span>{notice.workflow && <span className="stev-description"><bdi>{`· ${notice.workflow}`}</bdi></span>}</span>
-    </div>;
+    </div></SourceTaskEventRow>;
   }
   if (notice?.kind === "stall") {
     const waited = Number.isFinite(notice.stalledMs) ? formatDuration(Math.round(notice.stalledMs / 1000)) : null;
     const label = notice.workflow ? t("{workflow} is waiting for the model provider", { workflow: notice.workflow }) : t("A workflow is waiting for the model provider");
-    return <div className="source-task-event" data-transcript-item-id={item.id} data-task-event-status="stalled">
+    return <SourceTaskEventRow><div className="source-task-event" data-transcript-item-id={item.id} data-task-event-status="stalled">
       <span className="stev-line"><span className="stev-label">{label}</span>{waited && <span className="stev-elapsed">{`· ${t("no reply for {duration}", { duration: waited })}`}</span>}</span>
-    </div>;
+    </div></SourceTaskEventRow>;
   }
   const event = workflowTaskEvent(notice);
   // A Monitor event (no status): the model reads it; the transcript shows no row, as Claude's.
@@ -643,8 +649,9 @@ function SourceUserDelivery({ delivery }) {
       </div>}
       {delivery?.status === "failed" && <div className="source-user-failed-send" data-testid="epitaxy-failed-send" data-find-omitted="">
         <span className="source-user-failed-note" role="alert"><Icon name="Warning" size={12} aria-hidden="true" />{notDeliveredLabel(delivery.sentAt)}</span>
-        {delivery.onRetry && <SourceSettingsButton variant="ghost" data-step="1" className="source-user-failed-button" onMouseDown={(event) => event.preventDefault()} onClick={delivery.onRetry}>{t("Retry")}</SourceSettingsButton>}
-        {delivery.onDiscard && <SourceSettingsButton variant="ghost" data-step="1" className="source-user-failed-button" onMouseDown={(event) => event.preventDefault()} onClick={delivery.onDiscard}>{t("Discard")}</SourceSettingsButton>}
+        {/* W14-code r6 css6-settings-button-code-callers: c96d752d0 `f(J,{variant:"ghost",size:"xxs",onMouseDown:Hv,…})` (Uu). */}
+        {delivery.onRetry && <CdsButton variant="ghost" size="xxs" className="source-user-failed-button" onMouseDown={(event) => event.preventDefault()} onClick={delivery.onRetry}>{t("Retry")}</CdsButton>}
+        {delivery.onDiscard && <CdsButton variant="ghost" size="xxs" className="source-user-failed-button" onMouseDown={(event) => event.preventDefault()} onClick={delivery.onDiscard}>{t("Discard")}</CdsButton>}
       </div>}
   </>;
 }
@@ -652,10 +659,13 @@ function SourceUserMessage({ item, turnStart, sessionKey, cwd = null, onOpenFile
   // The attachment note a core without file mentions gets ("[Attached file: P]", live or joined into Codex history)
   // leaves the bubble and shows as the file's card (composer-attachments-model userMessageContent).
   const content = useMemo(() => userMessageContent(item.content || []), [item.content]);
-  const rawText = content
+  const joinedText = content
     .filter((part) => part.type === "text" || part.text)
     .map((part) => part.text || "")
     .join("\n");
+  // W14-code r4 R4T-08f: a Code send's context snippets carry c4d199b75's `<!-- attach -->` marker lines; this row (the
+  // renderer's fallback) shows the text without them, as c4d199b75 Xe does (the quoted lines stay).
+  const rawText = joinedText.includes("<!-- attach") ? withoutAttachMarkers(joinedText) : joinedText;
   const selectedElements = useMemo(() => parseSelectedElementMessage(rawText), [rawText]);
   const text = selectedElements.text;
   const attachments = content.filter(
@@ -686,7 +696,7 @@ function SourceUserMessage({ item, turnStart, sessionKey, cwd = null, onOpenFile
   const chatSurface = useChatThinkingSurface(); // w13-close-chat-messages: true in a Chat conversation's transcript
   return (
     <article
-      className="source-message message user-message source-user-message"
+      className="source-message source-user-message"
       data-delivery-status={delivery?.status}
       data-transcript-item-id={item.id}
       data-cds="UserMessage"
@@ -745,8 +755,9 @@ function SourceCopyQuote({ text, variant = "hover" }) {
   const copied = state === "copied", label = copied ? t("Copied") : t("Copy as quote");
   const copy = () => { void controller.current?.copy().then(done => { if (done) toasts?.add(t("Copied")); }); };
   return <SourceTooltip content={label} hoverable={false}>
-    <SourceSettingsButton ref={button} variant="ghost" size={variant === "action" ? "xs" : undefined} iconOnly icon={copied ? "Check" : "Copy"}
-      iconSize={variant === "action" ? "auto-sm" : "auto"} className="source-reasoning-copy-button" aria-label={label}
+    {/* W14-code r6: c96d752d0 cXe `f(J,{variant:"ghost",size:"base",icon:c,"aria-label":l,…,iconOnly:!0})` (Uu); the host tooltip stays. */}
+    <CdsButton ref={button} variant="ghost" size={variant === "action" ? "xs" : undefined} iconOnly icon={copied ? "Check" : "Copy"}
+      tooltip={false} className="source-reasoning-copy-button" aria-label={label}
       onMouseDown={variant === "action" ? undefined : event => event.preventDefault()} onClick={copy} />
   </SourceTooltip>;
 }
@@ -821,6 +832,28 @@ function SourceOfficialToolMessage(props) {
   return <SourceToolRun items={[item]} host={host} rest={{ "data-transcript-item-id": item.id, "data-turn-start": props.turnStart || undefined }} />;
 }
 
+/**
+ * The host's own additions to an answer (Codex extensions, no desktop counterpart): memoryCitation's "Used memory" and
+ * the async questions (delivery 'async'). Drawn inside the host answer, and after the 3.6556.2 renderer's answer row in
+ * a Code transcript (W14-code r2 R2T-06, main.jsx's row callback), so neither is lost there.
+ */
+export function SourceAgentMessageExtras({ item, isStreaming = false }) {
+  if (isStreaming || item?.type !== "agentMessage" && item?.type !== "plan") return null;
+  const citations = Array.isArray(item.memoryCitation?.entries) && item.memoryCitation.entries.length > 0 ? item.memoryCitation.entries : null;
+  const questions = item.type === "agentMessage" && Array.isArray(item.questions) && item.questions.length > 0;
+  if (!citations && !questions) return null;
+  return <>
+    {/* AgentMessage.memoryCitation {entries[{path, lineStart, lineEnd, note}]}: Codex answered from its memories. */}
+    {citations && <p className="source-memory-citation">
+      <span>{t("Used memory")}</span>{" "}
+      {citations.slice(0, 5).map((entry, index) => <span key={index} className="source-memory-citation-entry" title={entry?.path ? `${entry.path}:${entry.lineStart ?? ""}` : undefined}>
+        {index > 0 ? " · " : ""}<bdi>{entry?.note || String(entry?.path || "").split("/").pop()}</bdi></span>)}
+    </p>}
+    {/* AgentMessage.questions (delivery 'async'): Codex asked without stopping; answered from here. */}
+    {questions && <SourceAsyncQuestions item={item} />}
+  </>;
+}
+
 export function SourceMessage({ isInterrupting = false, item, agentContext = null, agentNested = false, inToolGroup = false, turnStart = false, isStreaming = false, sessionKey = null, cwd = null, onOpenFileRef = null, onOpenChanges = null, transcriptView = "normal", pendingApprovalItemIds = NO_PENDING_APPROVALS, turnStartedAtMs = null, reasoningPlacement = "standalone", userActions = null, officialChecked = false, liveTail = false }) {
   // w13-chatui-thinking-search: in a Chat conversation a thought or a search is cc1aae219's timeline step (c05b96c7f Gg, shared-130 uq).
   const chatSurface = useChatThinkingSurface();
@@ -848,12 +881,14 @@ export function SourceMessage({ isInterrupting = false, item, agentContext = nul
     if (shown.workflowNotification) return <SourceWorkflowNotice item={shown} onOpen={agentContext?.onTaskEvent ?? null} />;
     return <SourceUserMessage agentNested={agentNested} item={shown} turnStart={turnStart} sessionKey={sessionKey} cwd={cwd} onOpenFileRef={onOpenFileRef} turnStartedAtMs={turnStartedAtMs} userActions={userActions} />;
   }
-  if (item.type === "agentMessage" || item.type === "plan") {
+  // W14-code r4 R4T-03 (E95): Codex review mode has no desktop row (c06cf64bb has no review item); the review is the
+  // reply's prose (code-transcript-entries, the same here in the renderer's fallback), enteredReviewMode shows nothing.
+  if (item.type === "agentMessage" || item.type === "plan" || (item.type === "exitedReviewMode" && typeof item.review === "string" && item.review.trim())) {
     // A bridge's own italic turn note (`_…_`, e.g. Gemini's turn-limit note) reads in the UI language.
-    const answerText = isStreaming ? item.text || "" : localizeBridgeNote(item.text || "");
+    const answerText = isStreaming ? (item.text ?? item.review) || "" : localizeBridgeNote((item.text ?? item.review) || "");
     return (
       <article
-        className="source-message message assistant-message source-assistant-message"
+        className="source-message source-assistant-message"
         data-transcript-item-id={item.id}
         data-cds="AssistantMessage"
         // w13-close-chat-messages (chatui-message-actions-01): r1's `L_ {"data-testid":"assistant-message","data-is-streaming":en}` in a Chat.
@@ -862,14 +897,7 @@ export function SourceMessage({ isInterrupting = false, item, agentContext = nul
       >
         {/* w13-chatui-markdown-code: a Chat transcript draws the answer as 3.6556.2 ChatMarkdown (source-chat-markdown.jsx); the Code transcript keeps SourceMarkdown. */}
         <ChatSurfaceAnswer text={answerText} fallback={<SourceMarkdown text={answerText} isStreaming={isStreaming} paceReveal={item.type === "agentMessage"} isInterrupting={isInterrupting} sessionKey={sessionKey} itemId={item.id} cwd={cwd} onOpenFileRef={onOpenFileRef} />} />
-        {/* AgentMessage.memoryCitation {entries[{path, lineStart, lineEnd, note}]}: Codex answered from its memories. */}
-        {!isStreaming && Array.isArray(item.memoryCitation?.entries) && item.memoryCitation.entries.length > 0 && <p className="source-memory-citation">
-          <span>{t("Used memory")}</span>{" "}
-          {item.memoryCitation.entries.slice(0, 5).map((entry, index) => <span key={index} className="source-memory-citation-entry" title={entry?.path ? `${entry.path}:${entry.lineStart ?? ""}` : undefined}>
-            {index > 0 ? " · " : ""}<bdi>{entry?.note || String(entry?.path || "").split("/").pop()}</bdi></span>)}
-        </p>}
-        {/* AgentMessage.questions (delivery 'async'): Codex asked without stopping; answered from here. */}
-        {!isStreaming && item.type === "agentMessage" && Array.isArray(item.questions) && item.questions.length > 0 && <SourceAsyncQuestions item={item} />}
+        <SourceAgentMessageExtras item={item} isStreaming={isStreaming} />
       </article>
     );
   }
@@ -1000,41 +1028,7 @@ export function SourceMessage({ isInterrupting = false, item, agentContext = nul
       </SourceStep>
     );
   }
-  if (item.type === "enteredReviewMode" || item.type === "exitedReviewMode")
-    return <SourceStep item={item} {...stepDefaults} label={item.type === "enteredReviewMode" ? t("Review started") : t("Review result")} state="done">
-      {item.review ? <SourceMarkdown text={item.review} sessionKey={sessionKey} itemId={item.id} cwd={cwd} onOpenFileRef={onOpenFileRef} /> : null}
-    </SourceStep>;
   return null;
-}
-
-export function SourceWorking({
-  stopping = false,
-  waiting = false,
-  elapsedSeconds,
-  label,
-}) {
-  const text =
-    label ||
-    (stopping
-      ? t("Stopping…")
-      : waiting
-        ? t("Waiting for your approval")
-        : t("Working…"));
-  return (
-    <div
-      className="source-message source-working"
-      role="status"
-      data-testid="code-working-line"
-      data-working-row
-    >
-      <span className={waiting ? "" : "source-shimmer"}>{text}</span>
-      {Number.isFinite(elapsedSeconds) && elapsedSeconds >= 2 && !waiting && (
-        <span className="source-working-time">
-          {t("{seconds}s", { seconds: Math.floor(elapsedSeconds) })}
-        </span>
-      )}
-    </div>
-  );
 }
 
 // Plan → implement handoff (approval-card-model planHandoff): a core without permission hints ends a Plan turn with
@@ -1064,7 +1058,6 @@ const composingKey = (event) => event.isComposing || event.nativeEvent?.isCompos
 export function SourcePlanHandoffCard({ handoffKey, target, bypassAvailable = false, acceptModes, captureHotkeys = false, busy = false, isActive = true, menuOpen = false, onImplement, onStay, onOpenPlan }) {
   const root = useRef(null), headingId = useId();
   const [pressed, setPressed] = useState(null);
-  const clickArmed = useAllowArming(root, handoffKey, isActive);
   const hotkeyArmed = useHotkeyArming(root, handoffKey, isActive);
   const mode = planTargetOf(target, { bypass: bypassAvailable });
   const actionable = isActive && typeof onImplement === "function";
@@ -1096,29 +1089,18 @@ export function SourcePlanHandoffCard({ handoffKey, target, bypassAvailable = fa
     act(key === 'submit-shift' && mode !== 'ask' ? 'accept' : 'primary');
   }, currentlyVisible);
   const { left, right, more } = planHandoffActions(mode, { bypass: bypassAvailable, acceptModes });
-  const button = (action) => <ActionButton key={action.key} action={action} busy={busy} busyAction={pressed}
-    enabled={actionable} onAction={act} keycap={keycapShown ? action.keycap : undefined}
-    shortcut={shortcutEnabled ? action.shortcut : undefined} />;
-  return <section ref={root} className="source-message sac-card spc-card" data-approval-presentation="card"
+  // V3-W14-approvals: the plan card's 3.6556.2 shell, title row and decision rows (cc32965c2 Fs, source-plan-card.jsx);
+  // the split lists the current target first, then the others (Fs `se.map`).
+  return <section ref={root} className={cdsClassNames("source-message", PLAIN_CARD_SHELL)} data-approval-presentation="card"
     data-approval-kind="plan-handoff" data-plan-handoff={handoffKey} role="group" aria-labelledby={headingId}
     aria-busy={busy || undefined} tabIndex={0} onKeyDown={keyDown} onClick={(event) => event.stopPropagation()}>
-    <div className="sac-body spc-body">
-      <div className="spc-heading">
-        <span className="spc-heading-copy"><span id={headingId} className="spc-title">{t("Implement this plan?")}</span></span>
-        {onOpenPlan && <span className="spc-trailing">
-          <button type="button" className="spc-open-plan" data-cds="TextLink" onClick={onOpenPlan}>{t("Open plan")}</button>
-        </span>}
-      </div>
+    <div className={APPROVAL_CARD_BODY}>
+      <PlanHandoffTitle titleNamesCard trailing={onOpenPlan ? <CdsTextLink className={cdsClassNames("text-footnote", "text-body")} onClick={onOpenPlan}>{t("Open plan")}</CdsTextLink> : undefined}>
+        <span id={headingId}>{t("Implement this plan?")}</span>
+      </PlanHandoffTitle>
     </div>
-    <footer className="spc-actions">
-      <div className="spc-left">{left.map(button)}</div>
-      <div className="spc-right" onClickCapture={(event) => {
-        if (!clickArmed()) { event.preventDefault(); event.stopPropagation(); }
-      }}>{right.map((action) => action.primary && more.length
-        ? <span key={action.key} className="spc-split" data-split="">{button(action)}
-            <PlanMoreOptions options={more} enabled={actionable} busy={busy} onChoose={(chosen) => act("primary", chosen)} /></span>
-        : button(action))}</div>
-    </footer>
+    <PlanDecisions left={left} right={right} items={more.length ? [{ mode, label: PLAN_HANDOFF_LABELS[mode] }, ...more] : []} armKey={handoffKey}
+      enabled={actionable} busy={busy} busyAction={pressed} keycaps={keycapShown} onAction={act} onChoose={(chosen) => act("primary", chosen)} />
     {busy && <BusyAnnouncement />}
   </section>;
 }
@@ -1138,19 +1120,17 @@ export function SourceApproval(props) {
           ? <ApprovalFileDetail detail={detail} meta={model.heading?.meta}
               sessionKey={props.sessionKey} cwd={props.cwd} onOpenFileRef={props.onOpenFileRef} itemId={props.item?.id ?? props.request.params?.itemId} />
           : detail.kind === "workflow" ? <WorkflowApprovalDetail detail={detail} />
-          : <pre className="sac-code" title={detail.raw}>{detail.text}</pre>} />;
+          // W14-code r7 r7pa-01: any other detail (a command, arguments, a URL…) is the card's own N_ + Y block.
+          : undefined} />;
 }
-// The "Run a dynamic workflow?" card's body (Claude Code 2.1.280's workflow permission dialog): the description and
-// phases, then the script itself — shown outright when meta lists no phases, else behind "View raw script".
+// The "Run a dynamic workflow?" card's body (Claude Code 2.1.280's workflow permission dialog): the phases in N_ + Y,
+// then the script as cc32965c2 a_'s folded detail ($_: "script · N lines", D_ numbered lines) — open when meta lists no
+// phases (W14-code r7 r7pa-02; the host "View raw script" toggle is gone).
 function WorkflowApprovalDetail({ detail }) {
-  const [open, setOpen] = useState(detail.scriptOpen === true);
-  const scriptId = useId();
   return <>
-    {detail.text && <pre className="sac-code">{detail.text}</pre>}
-    {detail.scriptOpen !== true && <button type="button" className="sac-feedback-toggle sac-script-toggle" aria-expanded={open} aria-controls={scriptId}
-      onClick={() => setOpen((value) => !value)}>{open ? t("Hide raw script") : t("View raw script")}</button>}
-    {open && <pre id={scriptId} className="sac-code sac-script" aria-label={t("Workflow script")}>{detail.script}</pre>}
-    {open && detail.scriptTruncated && <p className="sac-context">{t("The script is too long to be shown in full.")}</p>}
+    {detail.text ? <ApprovalDetailValue text={detail.text} /> : null}
+    <ApprovalScriptFolds script={detail.script} open={detail.scriptOpen === true} />
+    {detail.scriptTruncated && <p className={DETAIL_NOTE}>{t("The script is too long to be shown in full.")}</p>}
   </>;
 }
 // EM's file request (approval-current.js:15528-15552 U, :15596-15607 Kv + yce): the
@@ -1159,7 +1139,7 @@ function WorkflowApprovalDetail({ detail }) {
 // the preview limit gets no body; the card shows the fM sentence instead.
 function ApprovalFileDetail({ detail, meta, itemId, sessionKey, ...props }) {
   return <>
-    {detail.text && detail.text !== meta && <div className="sac-code sac-path">{detail.text}</div>}
+    {detail.text && detail.text !== meta && <ApprovalDetailValue text={detail.text} />}
     {detail.value.map((change, index) => previewTooLarge(change) || typeof change?.diff !== "string" ? null
       : <ApprovalFileChangeBody key={index} change={change} sessionKey={sessionKey} {...props}
           scopeKey={JSON.stringify([sessionKey, itemId, "approval", index])} isFrontier={false} />)}
@@ -1666,6 +1646,9 @@ function FilePane({
   worktreeOrigin = null,
 }) {
   const toasts = useSourceToasts();
+  // W14-code r4 r4pa-c03: in a Files / Changes / Plan window (c5638815a wt `isTopLeft: !0`) the header clears the
+  // traffic lights and drags the window.
+  const paneWindowHeader = usePaneWindowHeaderProps();
   const [diffPreferences, setDiffPreference] = useDiffViewPreferences();
   const [fileViewSettings, setFileViewSetting] = useFileViewSettings();
   const diffView = diffPayload(diff);
@@ -1690,7 +1673,24 @@ function FilePane({
   // body, so the column (and its Commits section) stays toggleable.
   const diffEmptyWithCommits = tab === "changes" && !diffError && !loading && !diffView.patch && diffCommits?.list?.length > 0;
   const diffListAvailable = tab === "changes" && !diffError && (loading || !!diffView.patch || (diffEmptyWithCommits && diffScope === "uncommitted")) && diffCanFitTree;
-  const toggleDiffTree = useCallback(() => setDiffShowTree((shown) => !shown), [setDiffShowTree]);
+  // W14-code r4 r4pa-02: the Changed files coachmark (c73f45bc3 Od) — "idle" until it shows, "shown" while open, "done"
+  // once accepted, closed or retired (persisted, so it shows once). c73f45bc3 kd: the button, ⇧⌘Y and the resize
+  // handle retire it (Dd); jd only when the handle really changes the list's visibility.
+  const [diffListNux, setDiffListNux] = useState(() => (diffFileListNuxDismissed() ? "done" : "idle"));
+  const diffListNuxState = useRef(diffListNux);
+  diffListNuxState.current = diffListNux;
+  const retireDiffListNux = useCallback(() => {
+    if (diffListNuxState.current === "done") return;
+    dismissDiffFileListNux("toggled");
+    setDiffListNux("done");
+  }, []);
+  const toggleDiffTree = useCallback(() => { retireDiffListNux(); setDiffShowTree((shown) => !shown); }, [setDiffShowTree, retireDiffListNux]);
+  const setDiffShowTreeByHandle = useCallback((shown) => {
+    if (shown !== diffShowTree) retireDiffListNux();
+    setDiffShowTree(shown);
+  }, [diffShowTree, setDiffShowTree, retireDiffListNux]);
+  const diffListToggleRef = useRef(null);
+  const [diffListAnchor, setDiffListAnchor] = useState(null);
   // ke failed shows no error detail; keep the raw reason in the console, once per message.
   const warnedDiffError = useRef("");
   useEffect(() => {
@@ -1756,8 +1756,6 @@ function FilePane({
       return 240;
     }
   });
-  const [dragTreeWidth, setDragTreeWidth] = useState(null);
-  const treeDragStart = useRef(null);
   const treeHandleFocus = useRef(false);
   // Search files (c_ -> focusFilesTreeFilter): the pending filter focus and a
   // tick that re-runs the focus effect when the tree was already visible.
@@ -1789,8 +1787,9 @@ function FilePane({
     return Promise.resolve()
       // B32: sessionId lets main read an outside-root file from one of the session's added folders.
       .then(() => call("file", { cwd, relative: path, ...(sessionId ? { sessionId } : {}), ...(asText ? { force: true } : {}) }))
+      // 3.6556.2 cd2efac6e: a read that itself failed (q.isError) is the load_failed card.
       .then((file) => (file && typeof file === "object" ? file : { unavailable: "read_error" }),
-        () => ({ unavailable: "read_error" }))
+        () => ({ unavailable: "load_failed" }))
       .then(async (file) => {
         if (typeof file.text === "string" && (!file.encoding || file.encoding === 'utf-8')) {
           const editable = await call("file:edit-read", { cwd, relative: path }).catch(() => null);
@@ -1958,22 +1957,30 @@ function FilePane({
   const treeNuxEligible = treeNux !== "done" && fileTreeCoachmarkEligible({ toggleShown: tab === "files" && !!cwd,
     hasFile: !!preview, canFit: treeCanFit, treeVisible, popout: !!pane.current?.closest(".popout-root") });
   useLayoutEffect(() => {
-    const anchor = treeNuxEligible ? pane.current?.querySelector(".source-pane-header > button[aria-pressed]") ?? null : null;
+    const anchor = treeNuxEligible ? pane.current?.querySelector(".source-pane-header > div > button[aria-pressed]") ?? null : null;
     setTreeToggleAnchor((current) => (current === anchor ? current : anchor));
     // ye cleanup: a coachmark that stops qualifying while open is closed for good ("interrupted").
     if (!treeNuxEligible && treeNux === "shown") setTreeNux("done");
   }, [treeNuxEligible, treeNux]);
-  const treeLimit = Math.max(160, Math.min(640, paneWidth - 160));
-  const visibleTreeWidth = Math.min(dragTreeWidth ?? treeWidth, treeLimit);
+  // r4pa-02 (cccc2cf0a AC M): the file count is the diff's (nv stats.fileCount), counted only while the rest qualifies.
+  const diffListNuxCandidate = nuxAllowed && diffListNux !== "done" && diffListAvailable && !loading && !diffShowTree && !!diffView.patch;
+  const diffFileCount = useMemo(() => (diffListNuxCandidate ? parseUnifiedDiff(diffView.patch).files.length : 0), [diffListNuxCandidate, diffView.patch]);
+  const diffListNuxEligible = diffListNuxCandidate && diffFileListCoachmarkEligible({ canFit: diffCanFitTree, bodyEmpty: false,
+    listShown: diffShowTree, fileCount: diffFileCount, popout: !!pane.current?.closest(".popout-root") });
+  useLayoutEffect(() => {
+    const anchor = diffListNuxEligible ? diffListToggleRef.current : null;
+    setDiffListAnchor((current) => (current === anchor ? current : anchor));
+    if (!diffListNuxEligible && diffListNux === "shown") setDiffListNux("done");
+  }, [diffListNuxEligible, diffListNux]);
+  // The Files body holds one ResizeHandle at a time: the divider while the tree is a column, else the edge.
+  const TREE_HANDLE_SELECTOR = '.source-file-body [data-cds="ResizeHandle"]';
   useLayoutEffect(() => {
     if (!treeHandleFocus.current || tab !== "files") return;
     treeHandleFocus.current = false;
     const target = pane.current?.querySelector(
-      treeIsColumn
-        ? ".source-tree-divider"
-        : !treeVisible && treeCanFit
-          ? ".source-tree-edge"
-          : ".source-pane-header > button[aria-pressed]",
+      treeIsColumn || (!treeVisible && treeCanFit)
+        ? TREE_HANDLE_SELECTOR
+        : ".source-pane-header > div > button[aria-pressed]",
     );
     target?.focus({ preventScroll: true });
   }, [treeVisible, treeIsColumn, treeCanFit, activePath, tab]);
@@ -1987,8 +1994,11 @@ function FilePane({
     observer.observe(element);
     return () => observer.disconnect();
   }, []);
+  // cccc2cf0a KE: `lg({width, onWidthChange, onShownChange, shown})` (c219730b0 Sn) owns the column width while dragging
+  // (on the column node), its 160 / 640 bounds and the CSS cap `min(640px, 100% - 160px)`, the hide below 80px, the
+  // edge drag / click that shows it, Home / End and the double-click reset; the width it settles on is stored here.
   function saveTreeWidth(value) {
-    const width = Math.max(160, Math.min(treeLimit, Math.round(value)));
+    const width = Math.max(160, Math.min(640, Math.round(value)));
     setTreeWidth(width);
     try {
       localStorage.setItem("code-desktop-files-tree-width", String(width));
@@ -1996,15 +2006,17 @@ function FilePane({
       /* optional preference */
     }
   }
+  const treeColumn = useResizableDiffTree({ width: treeWidth, onWidthChange: saveTreeWidth, defaultWidth: 240,
+    onShownChange: (shown) => setVisibleTree(shown), shown: treeVisible });
+  // KE ve = shared-frame se(5) (view-tabs useCdsLayerAwareZIndex): the handles' tooltip layer.
+  const treeHandleZIndex = useCdsLayerAwareZIndex(5);
   // B33 (c51596d2b Z): every way of toggling the tree but the coachmark's own action retires the tree coachmark.
   function setVisibleTree(shown, via) {
     if (via !== "coachmark" && treeNux !== "done") { dismissFileTreeNux("toggled"); setTreeNux("done"); }
     if (shown === treeVisible && !treePeek) return;
     setTreePeek(false);
     if (
-      pane.current?.ownerDocument.activeElement?.matches(
-        ".source-tree-divider, .source-tree-edge",
-      )
+      pane.current?.ownerDocument.activeElement?.matches(TREE_HANDLE_SELECTOR)
     )
       treeHandleFocus.current = true;
     if (preview) {
@@ -2042,84 +2054,6 @@ function FilePane({
     if (!input || input.disabled || input.closest("[hidden], [inert]")) return;
     if(searchFocusRef.current?.(filterFocus.current))filterFocus.current = false;
   }, [filterFocusTick, treeVisible, tab, activePath]);
-  function resizeTreeVisibility(shown) {
-    const start = treeDragStart.current;
-    // Hiding a tree-only view with open tabs activates its previous file. A
-    // drag back across the threshold must restore the original tree-only view.
-    if (shown && start.activePath === null && start.hadTabs)
-      setActivePath(null);
-    else setVisibleTree(shown);
-  }
-  function cancelTreeResize() {
-    const start = treeDragStart.current;
-    setActivePath(start.activePath);
-    setTreeShown(start.treeShown);
-    setTreePeek(start.treePeek);
-    setTreeHiddenWhileEmpty(start.hiddenWhileEmpty);
-    treeReturnPath.current = start.returnPath;
-    setDragTreeWidth(null);
-    treeHandleFocus.current = true;
-  }
-  function treeResizeSnapshot() {
-    return {
-      width: Math.min(treeWidth, treeLimit),
-      activePath,
-      hadTabs: fileTabs.length > 0,
-      treeShown,
-      treePeek,
-      hiddenWhileEmpty: treeHiddenWhileEmpty,
-      returnPath: treeReturnPath.current,
-    };
-  }
-  const treeResize = useSourcePointerResize({
-    onStart: () => {
-      treeDragStart.current = treeResizeSnapshot();
-    },
-    onMove: (delta) => {
-      const value = treeDragStart.current.width + delta;
-      setDragTreeWidth(Math.max(160, Math.min(treeLimit, value)));
-      resizeTreeVisibility(value >= 80);
-    },
-    onEnd: (delta) => {
-      const value = treeDragStart.current.width + delta;
-      if (value >= 80 && delta !== 0) saveTreeWidth(value);
-      resizeTreeVisibility(value >= 80);
-      setDragTreeWidth(null);
-    },
-    onCancel: cancelTreeResize,
-  });
-  const edgeResize = useSourcePointerResize({
-    onStart: () => {
-      treeDragStart.current = treeResizeSnapshot();
-    },
-    onMove: (delta) => {
-      resizeTreeVisibility(delta >= 80);
-      setDragTreeWidth(Math.max(160, Math.min(treeLimit, delta)));
-    },
-    onEnd: (delta) => {
-      const shown = Math.abs(delta) < 3 || delta >= 80;
-      resizeTreeVisibility(shown);
-      if (delta >= 80) saveTreeWidth(delta);
-      setDragTreeWidth(null);
-    },
-    onCancel: cancelTreeResize,
-  });
-  function resizeTreeKey(event) {
-    if (event.metaKey || event.altKey || event.ctrlKey) return;
-    const step = event.shiftKey ? 120 : 24;
-    let value;
-    if (event.key === "ArrowLeft") value = visibleTreeWidth - step;
-    else if (event.key === "ArrowRight") value = visibleTreeWidth + step;
-    else if (event.key === "Home") value = 160;
-    else if (event.key === "End") value = treeLimit;
-    else if (event.key === "Enter" || event.key === " ") {
-      event.preventDefault();
-      setVisibleTree(false);
-      return;
-    } else return;
-    event.preventDefault();
-    saveTreeWidth(value);
-  }
   useEffect(() => {
     mounted.current = true;
     return () => {
@@ -2302,14 +2236,14 @@ function FilePane({
       surface, root: cwd, path, directory, line, gone, // R3-files FT-05
       canAttach: !!fileActions?.onAttachFile,
       // The reveal IPC resolves inside the session folder only: no broken, external or looping link.
-      canShowInFinder: !!fileActions?.onRevealFile && unavailable !== "missing" && unavailable !== "outside_root" && (!linkState || linkState === "ok")
+      canShowInFinder: !!fileActions?.onRevealFile && unavailable !== "missing" && unavailable !== "missing_outside" && unavailable !== "outside_root" && (!linkState || linkState === "ok")
         // B32 ko → Jt/Ut: a breadcrumb's file segment outside the working directory still shows it in Finder (the
         // session reveal takes an outside regular file); an outside folder gets neither Open in nor the reveal.
         || (surface === "file_breadcrumb" && unavailable === "outside_root" && !directory && !!fileActions?.onShowSessionFile),
-      canRevealInTree: unavailable !== "missing",
+      canRevealInTree: unavailable !== "missing" && unavailable !== "missing_outside",
       // B32 ko: a breadcrumb folder outside the working directory has no Open in (openIn: h || !p).
-      editors: fileActions?.onOpenInEditor && unavailable !== "missing" && !(directory && unavailable === "outside_root") ? fileActions.editors : [],
-      canOpenTerminal: directory && !!fileActions?.onOpenInTerminal && unavailable !== "missing" && unavailable !== "outside_root" && (!linkState || linkState === "ok"),
+      editors: fileActions?.onOpenInEditor && unavailable !== "missing" && unavailable !== "missing_outside" && !(directory && unavailable === "outside_root") ? fileActions.editors : [],
+      canOpenTerminal: directory && !!fileActions?.onOpenInTerminal && unavailable !== "missing" && unavailable !== "missing_outside" && unavailable !== "outside_root" && (!linkState || linkState === "ok"),
     }),
     select: (item, path) => {
       if(item.disabled)return;
@@ -2381,9 +2315,6 @@ function FilePane({
       data-pane-kind={
         tab === "changes" ? "diff" : tab === "files" ? "file" : tab
       }
-      data-tree-resizing={
-        treeResize.dragging || edgeResize.dragging || undefined
-      }
       aria-label={t("{title} panel", { title })}
       aria-busy={
         (tab === "changes" && loading) ||
@@ -2400,23 +2331,8 @@ function FilePane({
         }
       }}
     >
-      <header className="source-pane-header" data-pane-header={tab}>
-        {tab === "files" && cwd && (
-          // Ut around the ListBullet (panes-tile-current.js:6716-6741): CDS
-          // tooltip "Show/Hide file tree" with the ⌘⇧Y keycap (uu("files")),
-          // side top / align start, not hoverable; no native title.
-          <SourceTooltip content={treeVisible ? t("Hide file tree") : t("Show file tree")} shortcut={treeToggleRef ? TREE_TOGGLE_SHORTCUT : undefined}
-            side="top" align="start" hoverable={false}>
-            <SourceIconButton
-              name="ListBullet"
-              label={treeVisible ? t("Hide file tree") : t("Show file tree")}
-              nativeTitle={false}
-              aria-pressed={treeVisible}
-              aria-keyshortcuts={treeToggleRef ? "Meta+Shift+Y" : undefined}
-              onClick={() => setVisibleTree(!treeVisible)}
-            />
-          </SourceTooltip>
-        )}
+      <header className="source-pane-header" data-pane-header={tab} {...paneWindowHeader}>
+        <PaneWindowDragStrip />
         {nuxAllowed && treeNuxEligible && treeToggleAnchor && (
           // cccc2cf0a Db (:7100-7125) Zu epitaxy_files_tree_nux under the tree toggle (be: side bottom, align start,
           // introDelay 0.5); its action shows the tree via "coachmark".
@@ -2428,47 +2344,53 @@ function FilePane({
             {t("Show the file tree to jump between files without leaving this pane. Files you open line up here as tabs.")}
           </SourceCoachmark>
         )}
-        {tab === "files" && fileTabs.length > 0 ? (
-          // W12c files-tabbar: cccc2cf0a ND `u(ey,{…})` (source-file-tabs.jsx) — the ViewTabBar with the pane's file
-          // actions: c03935b01 activateFileTab / keepFileTab / closeFileTab / closeOtherFileTabs / closeFileTabsToRight /
-          // closeAllFileTabs / reorderFileTab.
-          <SourceFileTabs tabs={fileTabs} cwd={cwd} activePath={activePath} previewTabs={fileViewSettings.previewTabs} fileMenu={fileMenu}
-            onActivate={selectFile} onKeep={keepFile} onClose={closeFile}
-            onCloseOthers={(path) => closeFiles(fileTabs.filter((value) => value.path !== path).map((value) => value.path), path)}
-            onCloseToRight={(path) => closeFiles(fileTabsToRight(fileTabs, path))}
-            onCloseAll={() => closeFiles(fileTabs.map((value) => value.path), null)}
-            onReorder={(path, toIndex) => setFileTabs((files) => reorderFileTab(files, path, toIndex))}
-            onFocusFile={(path) => setFileFocusRequest({ path, seq: opened.current.seq })} />
-        ) : tab === "changes" && (diffScopeControl || diffListAvailable) ? (
-          // dh (panes-tile-current.js:3640-3690): while uh, the ghost iconOnly
-          // ListBullet "Show files"/"Hide files" (pressed while shown;
-          // Ut side top / align start with the ⇧⌘Y keycap) comes before the F12 zm
-          // scope trigger (:2949-3110). The lu coachmark is not ported.
-          <>
-            {diffListAvailable && (
-              <SourceTooltip content={diffShowTree ? t("Hide files") : t("Show files")} shortcut={treeToggleRef ? TREE_TOGGLE_SHORTCUT : undefined}
-                side="top" align="start" hoverable={false}>
-                <SourceIconButton
-                  name="ListBullet"
-                  // 3.6556.2 ca9ee6f68 `os`: className h=ge(Ra) (shared-18 Mb, panels off) = "text-secondary", no -ml-[4px].
-                  className="source-icon-button text-secondary"
-                  data-diff-file-list-toggle=""
-                  label={diffShowTree ? t("Hide files") : t("Show files")}
-                  nativeTitle={false}
-                  aria-pressed={diffShowTree}
-                  aria-keyshortcuts={treeToggleRef ? "Meta+Shift+Y" : undefined}
-                  onClick={toggleDiffTree}
-                />
-              </SourceTooltip>
-            )}
-            {diffScopeControl || <span className="source-pane-title">{displayTitle}</span>}
-          </>
-        ) : (
+        {diffListNuxEligible && diffListAnchor && (
+          // W14-code r4 r4pa-02: c73f45bc3 Od `u(lo,{nuxId:"epitaxy_diff_file_list_nux",anchorRef,align,ariaLabel:"Changed files",
+          // title:"{count, plural, one {Browse the changed file} other {Browse all # changed files}}",body:"Open the file
+          // list to see everything this diff touches and jump between files.",actionLabel:"Show files",onAccept})`;
+          // onAccept is AC E `b("coachmark")`, which shows the list without retiring through Dd.
+          <SourceCoachmark anchor={diffListAnchor} align="start" introDelay={0.5} label={t("Changed files")}
+            title={tn(diffFileCount, "Browse the changed file", "Browse all {count} changed files")} actionLabel={t("Show files")}
+            onShown={() => { dismissDiffFileListNux("shown"); setDiffListNux("shown"); }}
+            onClose={() => { dismissDiffFileListNux("closed"); setDiffListNux("done"); }}
+            onAction={() => { dismissDiffFileListNux("accepted"); setDiffListNux("done"); setDiffShowTree(true); }}>
+            {t("Open the file list to see everything this diff touches and jump between files.")}
+          </SourceCoachmark>
+        )}
+        {(() => {
+          // 3.6556.2 c4db265df pane header: the leading button Q and a custom header o (the tab strip, the scope control) in
+          // Zt "z-[1] flex items-center flex-1 min-w-0 draggable-none" (gap-0.5 with Q); Q and the title in Xt "relative
+          // z-[2] flex items-center gap-0.5 min-w-0"; a title alone; the header itself is justify-between gap-sm.
+          const lead = tab === "files" && cwd ? (
+            // 3.6556.2 cccc2cf0a kD: "Show/Hide file tree" (GfxVY6vEHo / bljYQX0Hqq) with the ⌘⇧Y keycap (Vh("files")).
+            <PaneListToggle label={treeVisible ? t("Hide file tree") : t("Show file tree")} shortcut={treeToggleRef ? TREE_TOGGLE_SHORTCUT : undefined}
+              pressed={treeVisible} className="shrink-0 rounded text-secondary" onClick={() => setVisibleTree(!treeVisible)} />
+          ) : tab === "changes" && diffListAvailable ? (
+            // 3.6556.2 cccc2cf0a AC: "Show files" / "Hide files" (vuTg/99D1y / ZU8NF+Epvo), pressed while shown, with the
+            // ⇧⌘Y keycap (Vh("diff")), before the scope trigger; its Uh coachmark is below (W14-code r4 r4pa-02).
+            <PaneListToggle label={diffShowTree ? t("Hide files") : t("Show files")} shortcut={treeToggleRef ? TREE_TOGGLE_SHORTCUT : undefined}
+              pressed={diffShowTree} className="-ms-[var(--pane-title-step,4px)] rounded text-secondary" buttonRef={diffListToggleRef}
+              data-diff-file-list-toggle="" onClick={toggleDiffTree} />
+          ) : null;
+          const custom = tab === "files" && fileTabs.length > 0 ? (
+            // W12c files-tabbar: cccc2cf0a ND `u(ey,{…})` (source-file-tabs.jsx) — the ViewTabBar with the pane's file
+            // actions: c03935b01 activateFileTab / keepFileTab / closeFileTab / closeOtherFileTabs / closeFileTabsToRight /
+            // closeAllFileTabs / reorderFileTab.
+            <SourceFileTabs tabs={fileTabs} cwd={cwd} activePath={activePath} previewTabs={fileViewSettings.previewTabs} fileMenu={fileMenu}
+              onActivate={selectFile} onKeep={keepFile} onClose={closeFile}
+              onCloseOthers={(path) => closeFiles(fileTabs.filter((value) => value.path !== path).map((value) => value.path), path)}
+              onCloseToRight={(path) => closeFiles(fileTabsToRight(fileTabs, path))}
+              onCloseAll={() => closeFiles(fileTabs.map((value) => value.path), null)}
+              onReorder={(path, toIndex) => setFileTabs((files) => reorderFileTab(files, path, toIndex))}
+              onFocusFile={(path) => setFileFocusRequest({ path, seq: opened.current.seq })} />
+          ) : tab === "changes" && diffScopeControl ? diffScopeControl : null;
           // Mt/Tl (shared-12 vm "text-body text-secondary select-none truncate
           // pl-[4px]", panes-toggle-current.js:1428-1431): regular weight, no
           // native title; pl-0 right after the Files ListBullet (:6776).
-          <span className="source-pane-title" data-after-toggle={(tab === "files" && cwd) ? "" : undefined}>{displayTitle}</span>
-        )}
+          const title = custom ? null : <span className="source-pane-title" data-after-toggle={(tab === "files" && cwd) ? "" : undefined}>{displayTitle}</span>;
+          return custom ? <div className={lead ? "z-[1] flex items-center flex-1 min-w-0 draggable-none gap-0.5" : "z-[1] flex items-center flex-1 min-w-0 draggable-none"}>{lead}{custom}</div>
+            : lead ? <div className="relative z-[2] flex items-center gap-0.5 min-w-0">{lead}{title}</div> : title;
+        })()}
         {/* ka (panes-toggle-current.js:1614-1632) renders the tile's center drag
             handle o after the header/title content ([H, t, o], then trailing pe),
             so the absolute 44x16 handle paints above the position:relative tab
@@ -2483,7 +2405,8 @@ function FilePane({
           const search = tab === "files" && cwd ? <SourceFilesSearchButton onClick={() => focusFilesFilter("filter")} />
             : tab === "plan" && planDocument ? <SourcePlanCopyButton document={planDocument} />
             : tab === "changes" && !diffError && !loading && diffView.patch ? <SourceDiffGoToFile patch={diffView.patch} /> : null;
-          const close = <SourceIconButton name="X" label={t("Close panel")} onClick={onClose} />;
+          // The fallback close is the CDS ghost iconOnly Button labelled as c4db265df's "Close" (rbrahOGMC3), like SourcePaneControls.
+          const close = <CdsButton variant="ghost" iconOnly icon="X" aria-label={t("Close")} onClick={onClose} className="shrink-0 epitaxy-pane-close-control" />;
           return typeof paneControls === "function"
             ? paneControls({ menuSections, leading: search }) ?? <>{search}{close}</>
             : <>{search}{paneControls ?? close}</>;
@@ -2500,19 +2423,12 @@ function FilePane({
             data-tree-column={treeIsColumn}
           >
             <div
+              ref={treeColumn.columnRef}
               className="source-files-tree"
               hidden={!treeVisible}
-              style={
-                treeIsColumn
-                  ? {
-                      width: visibleTreeWidth,
-                      minWidth: "min(160px, 100% - 160px)",
-                      maxWidth: "min(640px, 100% - 160px)",
-                    }
-                  : undefined
-              }
+              style={treeIsColumn ? treeColumn.columnStyle : undefined}
             >
-              {treeRefreshing && entries !== null && <span className="source-sr-only" role="status">{t("Refreshing files")}</span>}
+              {treeRefreshing && entries !== null && <span className="sr-only" role="status">{t("Refreshing files")}</span>}
               <SourceFilesSearch
                 focusRef={searchFocusRef}
                 sessionId={sessionId}
@@ -2568,45 +2484,19 @@ function FilePane({
                 </SourceTree>
               )}
               </SourceFilesSearch>
+              {/* KE `H && B && ae && Gp`: the divider ("Resize file tree", tooltip "Hide file tree" while it can hide). */}
               {treeIsColumn && (
-                <div
-                  className="source-tree-divider"
-                  role="separator"
-                  tabIndex={0}
-                  aria-label={t("Resize file tree")}
-                  aria-orientation="vertical"
-                  aria-valuemin={160}
-                  aria-valuemax={treeLimit}
-                  aria-valuenow={Math.round(visibleTreeWidth)}
-                  onPointerDown={treeResize.onPointerDown}
-                  onDoubleClick={() => saveTreeWidth(240)}
-                  onKeyDown={resizeTreeKey}
-                >
-                  <span />
-                </div>
+                <DiffTreeResizeHandle handleProps={treeColumn.handleProps} label={t("Resize file tree")}
+                  actionLabel={treeColumn.hidesColumn ? t("Hide file tree") : undefined}
+                  shortcut={treeToggleRef ? TREE_TOGGLE_SHORTCUT : undefined} resizing={treeColumn.resizing} zIndex={treeHandleZIndex} />
               )}
             </div>
-            {treeCanFit && !treeVisible && (
-              <div
-                className="source-tree-edge"
-                role="separator"
-                tabIndex={0}
-                aria-label={t("Show file tree")}
-                aria-orientation="vertical"
-                aria-valuemin={0}
-                aria-valuemax={640}
-                aria-valuenow={0}
-                onPointerDown={edgeResize.onPointerDown}
-                onKeyDown={(event) => {
-                  if (["Enter", " ", "ArrowRight"].includes(event.key)) {
-                    event.preventDefault();
-                    setVisibleTree(true);
-                  }
-                }}
-              >
-                <span />
-              </div>
+            {/* KE `he && m && Kp` (the edge while the tree is hidden and fits, "Show file tree") and `Yp` (the drag shield). */}
+            {treeColumn.edgeHandleProps && treeCanFit && !treeVisible && (
+              <DiffTreeEdgeHandle handleProps={treeColumn.edgeHandleProps} label={t("Resize file tree")} actionLabel={t("Show file tree")}
+                shortcut={treeToggleRef ? TREE_TOGGLE_SHORTCUT : undefined} resizing={treeColumn.resizing} zIndex={treeHandleZIndex} />
             )}
+            <DiffTreeResizeShield active={treeColumn.resizing} />
             {preview && (() => {
               // Fu (panes-tile-current.js:6328-6352): the file viewer for the
               // file view, with the jump range of a chip request for this path.
@@ -2663,9 +2553,9 @@ function FilePane({
         // R10: SourceDiff lays the body out beside the Changed files column and
         // owns the .source-changes scroller (ChangesFileLayout). B15 (c44d00c7f cl emptyPlaceholder): with
         // commits, an empty comparison keeps the column (Commits section) beside the empty state.
-        <Diff value={diffView.patch || ""} emptyPlaceholder={<SourceChangesState state="empty" uncommittedOnly={diffScope === "uncommitted"} noRepo={diffNoRepo} />} completeContext={diffView.completeContext} patchesWithheld={diffView.patchesWithheld} comparisonFiles={Array.isArray(diff?.files) ? diff.files : undefined} scopeKey={JSON.stringify([sessionId, cwd, diffStale ? diffStale.scope : diffScope])} layout={diffPreferences.layout} wordWrap={diffPreferences.wordWrap} wordDiff={diffPreferences.wordDiff} hideWhitespace={diffPreferences.hideWhitespace} onCanFitSplitChange={setDiffCanFitSplit} foldAll={diffFoldAll} placement="changes" fileActions={diffFileActions} commentScope={sessionId ? JSON.stringify([sessionId, cwd]) : null}
+        <Diff value={diffView.patch || ""} emptyPlaceholder={<SourceChangesState state="empty" uncommittedOnly={diffScope === "uncommitted"} noRepo={diffNoRepo} />} completeContext={diffView.completeContext} patchesWithheld={diffView.patchesWithheld} comparisonFiles={Array.isArray(diff?.files) ? diff.files : undefined} scopeKey={JSON.stringify([sessionId, cwd, diffStale ? diffStale.scope : diffScope])} layout={diffPreferences.layout} wordWrap={diffPreferences.wordWrap} wordDiff={diffPreferences.wordDiff} hideWhitespace={diffPreferences.hideWhitespace} onCanFitSplitChange={setDiffCanFitSplit} foldAll={diffFoldAll} fileActions={diffFileActions} commentScope={sessionId ? JSON.stringify([sessionId, cwd]) : null}
           onIsLargeChange={setDiffIsLarge} review={diffReview} fileList={{ sessionId: sessionId || undefined, shown: diffShowTree, width: diffTreeWidth, tree: diffFileTree, groupByKind: diffGroupByKind,
-            onShownChange: setDiffShowTree, onWidthChange: setDiffTreeWidth, onCanFitChange: setDiffCanFitTree,
+            onShownChange: setDiffShowTreeByHandle, onWidthChange: setDiffTreeWidth, onCanFitChange: setDiffCanFitTree,
             // cccc2cf0a treeToggleShortcut (c73f45bc3 Id("diff")): ⇧⌘Y on the column handles' tooltip, as on the menu item.
             toggleShortcut: treeToggleRef ? TREE_TOGGLE_SHORTCUT : undefined }}
           stale={!!diffStale} commits={diffCommits ? { ...diffCommits, collapsed: diffCommitsCollapsed, onCollapsedChange: setDiffCommitsCollapsed } : null} />

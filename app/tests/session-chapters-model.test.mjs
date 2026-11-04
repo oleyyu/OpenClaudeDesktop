@@ -6,7 +6,7 @@ import {
   CHAPTERS_STORAGE_KEY, EMPTY_CHAPTER_STATE, SESSION_START_ID, activeChapterId, addUserChapter, chapterAnchorId, chapterView,
   chaptersByAnchor, createChapterStore, deferChapterSample, hasChapters, parseChapterState, pinnedChaptersForRow, removeUserChapter,
   renameChapter, reuseChapters, rowItemIds, rowSeedText, seedChapterTitle, serializeChapterState, sessionChapterState, sessionChapters,
-  setChapterHidden, turnPinAnchor, userChaptersAt,
+  setChapterHidden, turnPinAnchor,
 } from '../src/session-chapters-model.mjs';
 
 const ids = (() => { let n = 0; return () => `uch-${++n}`; })();
@@ -40,8 +40,6 @@ test('Hw reducers: a pin per anchor, rename rewrites a pin or records a Claude r
   assert.equal(chapterView(state, 's1', 'claude-1').hidden, true);
   state = setChapterHidden(state, 's1', 'claude-1', false);
   assert.equal(chapterView(state, 's1', 'claude-1').hidden, false);
-  assert.deepEqual(userChaptersAt(state, 's1', 'a1').map((chapter) => chapter.id), ['uch-x']);
-  assert.equal(userChaptersAt(state, 's2', 'a1').length, 0, 'sessions are separate');
   state = removeUserChapter(state, 's1', 'uch-x');
   assert.deepEqual(sessionChapterState(state, 's1').userChapters, []);
   assert.equal(removeUserChapter(state, 's1', 'missing'), state);

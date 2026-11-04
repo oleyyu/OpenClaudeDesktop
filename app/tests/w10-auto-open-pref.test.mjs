@@ -10,7 +10,7 @@ import path from 'node:path';
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import {
-  AUTO_OPEN_FILES_DESCRIPTION, AUTO_OPEN_FILES_KEY, autoOpenFilesEnabled, autoOpenFilesSettingRow, createAutoOpenFilesStore,
+  AUTO_OPEN_FILES_KEY, autoOpenFilesEnabled, autoOpenFilesSettingRow, createAutoOpenFilesStore,
 } from '../src/auto-open-files-model.mjs';
 import zh from '../electron/i18n/zh-CN/settings.mjs';
 import { closeWhenSettled } from './support/vite-ssr-settle.mjs';
@@ -24,6 +24,9 @@ const count = (text, needle) => text.split(needle).length - 1;
 const flush = () => new Promise(resolve => setImmediate(resolve));
 
 // ------------------------------------------------------------------------------------------------ official evidence
+// W14-code r4 closeout R4DC-N7: the test-only AUTO_OPEN_FILES_DESCRIPTION export is gone; the row's official description.
+const AUTO_OPEN_FILES_DESCRIPTION = 'HTML, images, PDFs, and videos Claude writes open in the Preview pane.';
+
 test('official: the preference key, its default and the readers this lane mirrors', () => {
   assert.equal(count(ion('c22d6171c-C3t7W9JR.js'), 'c=e("launchAutoOpenFiles",!0)'), 1);
   const main = asar('index.chunk-jPKPzV-P.js');

@@ -11,15 +11,19 @@ import fs from 'node:fs';
 // ke (2.2553.1 readable/panes-diff-states-current.js:54-92), rh
 // (tmp-shared-20-BrTrXIRV.js:2703-2717), EmptyState (cc0a875c8-B6xI6vLN.js) and kp
 // (panes-tile-current.js:1751-1766). Middleware mode only; no browser/Electron/Codex.
-let server, S, P;
+let server, S, P, D;
 before(async () => {
   server = await createServer({ configFile: false, root: path.resolve(import.meta.dirname, '..'), plugins: [react()],
     server: { middlewareMode: true, hmr: false, watch: null }, appType: 'custom', logLevel: 'error' });
   S = await server.ssrLoadModule('/src/source-session.jsx');
   P = await server.ssrLoadModule('/src/source-pane-states.jsx');
+  D = await server.ssrLoadModule('/src/source-diff.jsx');
 });
 after(() => server?.close());
-const panel = props => renderToStaticMarkup(React.createElement(S.SourceFilePanel, { sessionId: 's', cwd: '/tmp/work', tab: 'changes', ...props }));
+// W14-code r6 pierre: these states pin the host body rows (FileDiff), the rollback side of local_pierre_changes_body; with
+// the switch on the body is c44d00c7f Ju (client-rendered, tests/w14-r6-pierre.test.mjs).
+const panel = props => renderToStaticMarkup(React.createElement(D.PierreChangesBodyContext.Provider, { value: false },
+  React.createElement(S.SourceFilePanel, { sessionId: 's', cwd: '/tmp/work', tab: 'changes', ...props })));
 const body = html => html.slice(html.indexOf('</header>') >= 0 ? html.indexOf('</header>') : 0);
 const text = html => html.replace(/<[^>]+>/g, '');
 const EMPTY_ROOT = '<div class="flex h-full flex-col items-center justify-center gap-md px-lg py-lg text-center source-empty-state">';
@@ -34,13 +38,14 @@ test('loading: centered rh wrapper, status named "Loading changes", no visible t
 
 test('failed: role=alert EmptyState with the Warning icon, "Couldn’t load the changes" and a secondary "Try again" (cb61be3a2 ze/W)', () => {
   const html = panel({ diffError: 'Could not load repository diff: fatal: secret-detail', diffScope: 'uncommitted', onRefresh: () => {} });
-  assert.match(html, /<div data-diff-pane-body="" tabindex="-1" class="h-full w-full outline-none source-pane-state"><div role="alert" class="flex h-full flex-col items-center justify-center gap-md px-lg py-lg text-center source-empty-state"><span aria-hidden="true" data-cds="Icon" class="!size-7 text-muted" style="font-size:24px;font-weight:[\d.]+">.<\/span><div class="flex flex-col items-center gap-1"><p class="max-w-\[36ch\] break-words text-body text-primary">Couldn’t load the changes<\/p><\/div><div class="flex flex-wrap items-center justify-center gap-1"><button type="button" data-cds="Button" data-variant="secondary"[^>]*>(?:<[^>]+>)*Try again/);
+  assert.match(html, /<div data-diff-pane-body="" tabindex="-1" class="h-full w-full outline-none source-pane-state"><div role="alert" class="flex h-full flex-col items-center justify-center gap-md px-lg py-lg text-center source-empty-state"><span aria-hidden="true" data-cds="Icon" class="!size-7 text-muted" style="font-size:24px;font-weight:[\d.]+">.<\/span><div class="flex flex-col items-center gap-1"><p class="max-w-\[36ch\] break-words text-body text-primary">Couldn’t load the changes<\/p><\/div><div class="flex flex-wrap items-center justify-center gap-1"><button type="button" data-cds="Button" class="[^"]*"><span aria-hidden="true" class="[^"]*"><span data-cds-part="paint" class="[^"]* bg-fill-secondary [^"]*"><\/span><\/span><span class="inline-flex min-w-0 items-center gap-1 ">Try again/);
+  // W14-code r6 r6pa-04: shared-frame CdsButton (secondary = no data-variant, bg-fill-secondary paint), not the replica.
   assert.doesNotMatch(html, /aria-busy="true"/);
   assert.doesNotMatch(html, /secret-detail|fatal:|Could not load repository diff|Close and reopen/);
   assert.equal(P.CHANGES_FAILED_TITLE, 'Couldn’t load the changes');
   // While the refetch it started runs, the button is busy and named "Loading changes".
   const busy = panel({ diffError: 'boom', onRefresh: () => {}, diffRetrying: true });
-  assert.match(busy, /<button aria-label="Loading changes" type="button" data-cds="Button" data-variant="secondary" aria-busy="true"/);
+  assert.match(busy, /<button type="button" data-cds="Button" class="[^"]*" aria-busy="true" aria-disabled="true" aria-label="Loading changes"/);
   // Without a refetch handler there is no button (never a dead control).
   assert.doesNotMatch(panel({ diffError: 'boom' }), /Try again/);
 });
@@ -74,7 +79,7 @@ test('empty: data-diff-pane-body with "No uncommitted changes" (uncommitted scop
 test('plan empty: Checklist icon in the 28px box, "No plan yet" and the adapted body; tasks still render', () => {
   const html = panel({ tab: 'plan', plan: [] });
   assert.match(html, new RegExp(EMPTY_ROOT.replace(/[[\]().]/g, '\\$&') + '<span aria-hidden="true" data-cds="Icon" class="!size-7 text-muted" style="font-size:24px;font-weight:[\\d.]+">.</span>' +
-    '<div class="flex flex-col items-center gap-1"><p class="max-w-\\[36ch\\] break-words text-body text-primary">No plan yet</p><p class="max-w-\\[36ch\\] break-words text-footnote text-muted">DeepSeek writes the plan here as it works\\. Keep chatting\\.</p></div></div>'));
+    '<div class="flex flex-col items-center gap-1"><p class="max-w-\\[36ch\\] break-words text-body text-primary">No plan yet</p><p class="max-w-\\[36ch\\] break-words text-footnote text-muted">DeepSeek writes the plan here as it explores\\. Keep chatting\\.</p></div></div>'));
   assert.doesNotMatch(html, /The plan will appear here/);
   assert.equal(panel({ tab: 'plan' }).includes('No plan yet'), true);
   const tasks = panel({ tab: 'plan', plan: [{ step: 'Read the code', status: 'completed' }] });
@@ -91,7 +96,8 @@ test('plan tasks: kp/Op wrapper and the ZO/VT list (Check, spinner, Placeholder,
   const plan = body(html);
   // kp todos-only branch: scroller, 68ch column, Op section with the Nd caption heading.
   assert.match(plan, /<div class="h-full select-text overflow-y-auto \[contain:strict\] \[scrollbar-gutter:stable_both-edges\] p-lg source-plan"><div class="mx-auto max-w-\[68ch\]"><section class="mt-pad-lg source-plan-tasks">/);
-  assert.match(plan, /<h2 class="text-caption-medium uppercase tracking-wide text-muted mb-1\.25">Tasks<\/h2>/);
+  // r8pa-03: 3.6556.2 Gv (ca7d7d34d `c`) renders the Tasks heading in text-muted-as-secondary.
+  assert.match(plan, /<h2 class="text-caption-medium uppercase tracking-wide text-muted-as-secondary mb-1\.25">Tasks<\/h2>/);
   // ZO: ul gap-xs, li gap-1; only the completed row is struck through.
   assert.match(plan, /<ul class="flex flex-col gap-xs text-body select-text py-xs source-plan-list">/);
   const rows = [...plan.matchAll(/<li data-state="([^"]+)" class="([^"]+)">(.*?)<\/li>/g)].map(([, state, cls, inner]) => ({ state, cls, inner }));
@@ -104,7 +110,8 @@ test('plan tasks: kp/Op wrapper and the ZO/VT list (Check, spinner, Placeholder,
   const box = 'shrink-0 size-\\[calc\\(1rem\\*var\\(--cds-rem-scale,1\\)\\)\\] mt-\\[1px\\] flex items-center justify-center';
   assert.match(rows[0].inner, new RegExp(`^<span class="${box} text-primary"><span aria-hidden="true" data-cds="Icon" class="" style="font-size:16px;font-weight:[\\d.]+">.</span><span class="sr-only select-none">done</span></span>`));
   assert.match(rows[1].inner, new RegExp(`^<span class="${box} text-primary"><span data-cds="Spinner"[^>]*style="width:calc\\(0\\.75rem`));
-  assert.match(rows[2].inner, new RegExp(`^<span class="${box}"><span aria-hidden="true" data-cds="Icon" class="text-muted"`));
+  // r8pa-03 / gen-final-8: 3.6556.2 cb6930dae Ta — the CDS Icon Placeholder sm (rem-scaled), muted, aria-hidden.
+  assert.match(rows[2].inner, new RegExp(`^<span class="${box}"><span data-cds="Icon" style="font-size:calc\\(1rem \\* var\\(--cds-rem-scale, 1\\)\\);[^"]*" class="text-muted-as-secondary" aria-hidden="true">`));
   assert.deepEqual([...plan.matchAll(/<span class="sr-only select-none">([^<]*)<\/span>/g)].map(match => match[1]), ['done', 'in progress', 'not done']);
   assert.doesNotMatch(plan, /inProgress|CheckCircle|source-plan-pending/);
   assert.equal((plan.match(/data-cds="Spinner"/g) || []).length, 1);
@@ -138,14 +145,17 @@ test('header: ghost ListBullet "Show files" (aria-pressed, ⇧⌘Y) before the s
   const head = header(html);
   const button = head.match(/<button[^>]*aria-label="Show files"[^>]*>/)?.[0];
   assert.ok(button, head);
-  // 3.6556.2 ca9ee6f68 `os`: className h = "text-secondary" (no -ml-[4px]).
-  assert.match(button, /class="source-icon-button text-secondary"/);
+  // W14-code r4 css4-pane-toggle-icon-buttons: 3.6556.2 cccc2cf0a AC (the Code Changes header; ca9ee6f68 os is the PR
+  // review's xxs toggle) — the CDS ghost iconOnly Button, className R("-ms-[var(--pane-title-step,4px)]",
+  // Mb("rounded text-secondary")), shortcut + pressed + pressedVariant "selected", under the CDS Tooltip.
+  assert.match(button, /data-cds="Button" data-cds-icon-only="" data-cds-ghost=""/);
+  assert.match(button, / -ms-\[var\(--pane-title-step,4px\)\] rounded text-secondary"/);
   assert.match(button, /data-diff-file-list-toggle=""/);
   assert.match(button, /aria-pressed="false"/);
-  assert.match(button, /aria-keyshortcuts="Meta\+Shift\+Y"/);
-  assert.doesNotMatch(button, /title=/);
+  assert.match(button, /aria-keyshortcuts="(?:Meta|Control)\+Shift\+y"/i);
+  assert.doesNotMatch(button, /title=|source-icon-button/);
   assert.ok(head.indexOf('aria-label="Show files"') < head.indexOf('data-scope'), 'ListBullet precedes diffScopeControl');
-  assert.match(head, /aria-label="Show files"[^>]*><span aria-hidden="true" data-cds="Icon"/);
+  assert.match(head, /aria-label="Show files"[^>]*>(?:(?!<\/button>)[\s\S])*data-cds="Icon"/);
   // Shown (store diffShowTree true): "Hide files", pressed; no handle → no keycap.
   const shown = header(panel({ diff: twoFiles, diffTree: { diffShowTree: true, diffTreeWidth: 300, diffFileTree: true, diffGroupByKind: false }, onDiffTreeChange: () => {} }));
   const pressed = shown.match(/<button[^>]*aria-label="Hide files"[^>]*>/)?.[0];
@@ -157,7 +167,7 @@ test('header: ghost ListBullet "Show files" (aria-pressed, ⇧⌘Y) before the s
   assert.doesNotMatch(panel({ tab: 'plan', diff: twoFiles }), /aria-label="(?:Show|Hide) files"/);
   assert.match(header(panel({ loading: true })), /aria-label="Show files"/);
   const src = fs.readFileSync(path.resolve(import.meta.dirname, '../src/source-session.jsx'), 'utf8');
-  assert.match(src, /<SourceTooltip content=\{diffShowTree \? t\("Hide files"\) : t\("Show files"\)\} shortcut=\{treeToggleRef \? TREE_TOGGLE_SHORTCUT : undefined\}\s*side="top" align="start" hoverable=\{false\}>/);
+  assert.match(src, /<PaneListToggle label=\{diffShowTree \? t\("Hide files"\) : t\("Show files"\)\} shortcut=\{treeToggleRef \? TREE_TOGGLE_SHORTCUT : undefined\}\s*pressed=\{diffShowTree\}/);
 });
 
 test('file list column: hidden by default with the "Show files" edge; shown with the Changed files tree and its resize handle', () => {
@@ -169,7 +179,7 @@ test('file list column: hidden by default with the "Show files" edge; shown with
   // bm, "w-[3px] [&>*]:pointer-events-none start-0 end-auto"), labelled "Resize file list" (Mn) at z-index cu(5).
   assert.match(hidden, /<div class="relative w-0 shrink-0"><div aria-valuenow="0" aria-valuemin="0" aria-valuemax="640" aria-label="Resize file list" style="z-index:5" data-cds="ResizeHandle" role="separator" aria-orientation="vertical" tabindex="0" class="cds-reset group\/resize outline-none focus-visible:outline-hidden cursor-col-resize absolute inset-y-0 w-\[3px\] \[&amp;&gt;\*\]:pointer-events-none start-0 end-auto">/);
   // The scroller keeps its class and holds the diff view.
-  assert.match(hidden, /<div class="sdiff-changes-main"><div class="source-changes"><div data-layout="unified"/);
+  assert.match(hidden, /<div class="sdiff-changes-main"><div class="source-changes outline-none focus-visible:outline-hidden focus-visible:shadow-focus transition-shadow duration-fast" role="group" aria-label="Changes" tabindex="0"><div data-layout="unified"/);
   const html = body(panel({ diff: twoFiles, diffTree: { diffShowTree: true, diffTreeWidth: 300, diffFileTree: true, diffGroupByKind: false }, onDiffTreeChange: () => {} }));
   // R3-files FT-07: c44d00c7f's column edge is the logical border-e (the pane line marker too), the tree is wc's
   // `${A} h-full overflow-y-auto ${N} outline-none hide-focus-ring` (ca7840910 A = group/file-tree).
@@ -209,7 +219,7 @@ test('large diff: 5001 changed lines start every file collapsed under the banner
   const expanded = toggles(html).map(tag => tag.match(/aria-expanded="(\w+)"/)?.[1]);
   assert.deepEqual(expanded, ['false', 'false']);
   assert.doesNotMatch(html, /class="sdiff-file-body"/);
-  assert.match(body(html), new RegExp(`<div class="sdiff-changes-main"><div class="sdiff-large-banner shrink-0 px-md py-1\\.25 text-body text-muted-as-secondary">${BANNER.replace(/\./g, '\\.')}</div><div class="source-changes">`));
+  assert.match(body(html), new RegExp(`<div class="sdiff-changes-main"><div class="sdiff-large-banner shrink-0 px-md py-1\\.25 text-body text-muted-as-secondary">${BANNER.replace(/\./g, '\\.')}</div><div class="source-changes outline-none focus-visible:outline-hidden focus-visible:shadow-focus transition-shadow duration-fast" role="group" aria-label="Changes" tabindex="0">`));
   assert.match(html, /data-large-diff="true"/);
   const small = panel({ diff: filePatch('a.txt', 2500) + filePatch('b.txt', 2499) });
   assert.deepEqual(toggles(small).map(tag => tag.match(/aria-expanded="(\w+)"/)?.[1]), ['true', 'true']);

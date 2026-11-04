@@ -11,7 +11,7 @@
 // marketplace/add, plugin/install, plugin/uninstall and the on/off config write
 // re-list both.
 // Every dependency (call, timers) is injected so the logic is unit-testable.
-import { SKILLS_CHANGED_DEBOUNCE_MS, appendPluginLog, applySkillEnabled, availablePluginRows, marketplaceLoadErrors, mcpRows, nativePluginOutcome, patchMcpRow, pluginChangeOutcome, pluginRows, skillRows } from "./customize-model.mjs";
+import { SKILLS_CHANGED_DEBOUNCE_MS, appendPluginLog, applySkillEnabled, availablePluginRows, marketplaceLoadErrors, mcpRows, nativePluginOutcome, patchMcpRow, pluginChangeOutcome, pluginFailureMessage, pluginRows, skillRows } from "./customize-model.mjs";
 import { t } from "../electron/i18n/index.mjs";
 import { localizeBridgeText } from "./bridge-text-model.mjs";
 
@@ -31,9 +31,10 @@ export function createCustomizeStore({ call, setTimeout: schedule = globalThis.s
     marketplaces: { ...IDLE, rows: [] },
     // A core's own sub-agents (customize agents: Qwen) [{name, description, scope, path, tools, model}].
     agents: { ...IDLE, rows: [], cwd: undefined },
-    // install: {requestId, spec, status 'running'|'done'|'failed', phase, attempt, log, outcome};
-    // restartRequired: a change the running core loads only after a restart (Restart DeepSeek clears it).
-    pluginOps: { install: null, restartRequired: false },
+    // install: {requestId, spec, status 'running'|'done'|'failed', phase, attempt, log, outcome}. W14-code r5-shared-01: a
+    // change the running core loads only after a restart is main's to apply (electron/core-restart.cjs restarts the idle
+    // core before the next new session), so the page keeps no restart state.
+    pluginOps: { install: null },
   };
   const listeners = new Set();
   const inflight = { skills: null, plugins: null, mcp: null, catalog: null };
@@ -212,20 +213,27 @@ export function createCustomizeStore({ call, setTimeout: schedule = globalThis.s
   });
   function settleChange(result) {
     const outcome = pluginChangeOutcome(result);
-    if (outcome.ok && outcome.restartRequired) patch("pluginOps", { restartRequired: true });
     if (state.plugins.status !== "idle") loadPlugins({ force: true });
     return outcome;
   }
   // registry: a URL the install form picked (dsh-plugin-manager registries), or undefined for the core's order.
   const inspectPlugin = (spec, { registry } = {}) => pluginCall("plugin-inspect", { spec, ...(registry ? { registry } : {}) });
   const pluginRegistries = () => pluginCall("plugin-registries", {});
-  async function installPlugin(spec, { approvedBuilds, registry } = {}) {
+  // W14-code r3 r3-shared-01: `announce` is the caller's result toast, run here when the install settles, as 3.6556.2
+  // c76f00e40 toasts from the mutation callback (`m(nn(f, p ? "readyInNewSession" : "ready", {pluginName:t}))`) whether
+  // or not the form is still mounted. The outcome then carries `announced`, so a form mounting later does not toast it
+  // again; an outcome nobody announced yet is announced by the form that shows it (markPluginInstallAnnounced).
+  async function installPlugin(spec, { approvedBuilds, registry, announce } = {}) {
     if (state.pluginOps.install?.status === "running") throw new Error(t("Another plugin is being installed."));
     const requestId = newId();
     patch("pluginOps", { install: { requestId, spec, registry: registry || null, status: "running", phase: "installing", attempt: null, log: "", outcome: null } });
     let outcome;
     try { outcome = settleChange(await pluginCall("plugin-install", { spec, requestId, ...(approvedBuilds ? { approvedBuilds } : {}), ...(registry ? { registry } : {}) })); }
-    catch (error) { outcome = { ok: false, message: error?.message || t("The plugin could not be installed.") }; }
+    catch (error) { outcome = { ok: false, message: pluginFailureMessage(error, "install") }; }
+    if (typeof announce === "function" && !outcome.cancelled) {
+      outcome = { ...outcome, announced: true };
+      try { announce(outcome, spec); } catch {}
+    }
     if (state.pluginOps.install?.requestId === requestId)
       patch("pluginOps", { install: { ...state.pluginOps.install, status: outcome.ok ? "done" : "failed", outcome } });
     return outcome;
@@ -237,6 +245,11 @@ export function createCustomizeStore({ call, setTimeout: schedule = globalThis.s
     return pluginCall("plugin-cancel-install", { requestId: install.requestId });
   }
   const clearPluginInstall = () => { if (state.pluginOps.install?.status !== "running") patch("pluginOps", { install: null }); };
+  function markPluginInstallAnnounced(requestId) {
+    const install = state.pluginOps.install;
+    if (install?.requestId !== requestId || !install.outcome || install.outcome.announced) return;
+    patch("pluginOps", { install: { ...install, outcome: { ...install.outcome, announced: true } } });
+  }
   async function setPluginEnabled(pluginName, enabled) { return settleChange(await pluginCall("plugin-set-enabled", { pluginName, enabled })); }
   async function removePlugin(pluginName) { return settleChange(await pluginCall("plugin-remove", { pluginName })); }
   async function updatePlugin(pluginName) { return settleChange(await pluginCall("plugin-update", { pluginName })); }
@@ -246,7 +259,7 @@ export function createCustomizeStore({ call, setTimeout: schedule = globalThis.s
   async function nativeChange(operation, payload) {
     let outcome;
     try { outcome = nativePluginOutcome(await pluginCall(operation, payload)); }
-    catch (error) { outcome = nativePluginOutcome(null, error); }
+    catch (error) { outcome = nativePluginOutcome(null, error, operation); }
     if (outcome.ok) {
       if (state.plugins.status !== "idle") loadPlugins({ force: true });
       if (state.catalog.status !== "idle") loadPluginCatalog({ force: true });
@@ -283,8 +296,6 @@ export function createCustomizeStore({ call, setTimeout: schedule = globalThis.s
   }
 
   function observe(event) {
-    // A new core connection loaded every saved plugin change.
-    if (event?.kind === "connection" && event.connected === true && state.pluginOps.restartRequired) patch("pluginOps", { restartRequired: false });
     if (!event || typeof event.method !== "string") return;
     const install = state.pluginOps.install;
     if (event.method === "codeDesktop/plugin/installProgress" || event.method === "codeDesktop/plugin/installLog") {
@@ -308,7 +319,7 @@ export function createCustomizeStore({ call, setTimeout: schedule = globalThis.s
   function dispose() { cancel(skillsTimer); cancel(mcpTimer); listeners.clear(); }
 
   return { getSnapshot: () => state, subscribe, loadSkills, loadPlugins, loadMcp, setSkillEnabled, observe, dispose,
-    inspectPlugin, pluginRegistries, installPlugin, cancelPluginInstall, clearPluginInstall, setPluginEnabled, removePlugin, updatePlugin,
+    inspectPlugin, pluginRegistries, installPlugin, cancelPluginInstall, clearPluginInstall, markPluginInstallAnnounced, setPluginEnabled, removePlugin, updatePlugin,
     loadPluginCatalog, addMarketplace, installMarketplacePlugin, sharePlugin, unsharePlugin, uninstallPlugin, setNativePluginEnabled,
     loadMcpConfig, setMcpEnabled, setMcpTool, loadMarketplaces, removeMarketplace, upgradeMarketplace, loadAgents, writeAgent, removeAgent,
     get params() { return params; } };

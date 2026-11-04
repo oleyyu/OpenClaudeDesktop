@@ -13,4 +13,9 @@ function fU(e, t) {
       : 1;
 }
 var wU = { top: 48, right: 8, bottom: 8, left: 8 };
-export { fU as compareFileEntries, wU as popoverCollisionPadding };
+export {
+  fU as compareFileEntries,
+  wU as popoverCollisionPadding,
+  uU as numericCollator,
+  dU as compareNames,
+};

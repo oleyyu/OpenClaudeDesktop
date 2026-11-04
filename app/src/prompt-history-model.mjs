@@ -87,12 +87,6 @@ export function promptHistoryStep(previous = INITIAL_PROMPT_HISTORY, input = {})
   return done({ ...state, index: target, injected: value, nav: { index: target + 1, total: list.length, hasDraft } }, "recall", value);
 }
 
-// Screen-reader copy of the live status (c099c328d Em :8940-8965).
-export function promptHistoryStatus(nav) {
-  if (!nav) return "";
-  return `History ${nav.index}/${nav.total}${nav.hasDraft ? " ↓ to restore your draft" : ""}`;
-}
-
 // Ctrl+R reverse history search (c099c328d-CbkcmYSW.js:4516-4715 _d, header wm :8571-8608). Pure: the caller applies
 // `text` (caret "start" for a match or the restored draft on cancel, "end" on accept) without an undo step.
 // state: null while idle, else {query, prompts (newest first, deduplicated), index (-1 = none), draft, failed,
@@ -133,11 +127,16 @@ export function historySearchStep(state, event = {}) {
   if (key.length === 1 && !event.metaKey && !(event.ctrlKey && !event.altKey)) return searchFrom(state, query + key, Math.max(index, 0), 1);
   return { state, action: "swallow" };
 }
-// The sr-only live status (c099c328d :8940-8960): 'Search history: {query}', ' — match # of {total}' while a match is
-// shown, ' — no match' when nothing matches.
-export function historySearchStatus(search, translate = (text, values) => text.replace(/\{(\w+)\}/g, (_, name) => values?.[name] ?? "")) {
+// W14-code r2-composer-06: the sr-only live status is c227f4d5e Nt's one ICU message (MNU6kO4MFO) with
+// `values: {query, matchIndex, total, failed: String(failed)}`, formatted by the composer's intl (react-intl over the local
+// catalog). Without one (plain node) the English plural/select is spelled out the same way.
+export const HISTORY_SEARCH_STATUS = Object.freeze({
+  defaultMessage: "Search history: {query}{matchIndex, plural, =0 {} one { — match # of {total}} other { — match # of {total}}}{failed, select, true { — no match} other {}}",
+  id: "MNU6kO4MFO",
+});
+export function historySearchStatus(search, intl = null) {
   if (!search) return "";
-  return translate("Search history: {query}", { query: search.query })
-    + (search.matchIndex > 0 ? translate(" — match {index} of {total}", { index: search.matchIndex, total: search.total }) : "")
-    + (search.failed ? translate(" — no match") : "");
+  const values = { query: search.query, matchIndex: search.matchIndex, total: search.total, failed: String(!!search.failed) };
+  if (intl?.formatMessage) return intl.formatMessage(HISTORY_SEARCH_STATUS, values);
+  return `Search history: ${values.query}${values.matchIndex > 0 ? ` — match ${values.matchIndex} of ${values.total}` : ""}${values.failed === "true" ? " — no match" : ""}`;
 }

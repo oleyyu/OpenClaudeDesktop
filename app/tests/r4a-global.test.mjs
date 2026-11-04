@@ -73,7 +73,7 @@ test('global-02 account row: pw\'s ps-[var(--df-row-px)] pe-2 text-start class s
   const footer = append(append(documentRoot(), element('div', { class: 'desktop-app dframe-root' })), element('div', { class: 'df-bottom-tray shrink-0' }));
   const row = append(footer, element('div', { class: 'df-footer-row account-footer shrink-0 flex items-center gap-[var(--df-footer-gap)]' }));
   const button = append(append(row, element('div', { class: 'min-w-0 flex-1' })), element('button', { type: 'button', class: classes[0], 'data-testid': 'user-menu-button' }));
-  // A footer aux with content (the Connection settings control), so pw's own end padding is the one that applies.
+  // A footer aux with content (official hL's vL/yL/gL outside code mode), so pw's own end padding is the one that applies.
   append(append(row, element('div', { class: 'df-footer-aux ml-auto flex shrink-0 items-center' })), element('button', { type: 'button' }));
   for (const [property, value, utility] of [['padding-left', 'var(--df-row-px)', 'ps-'], ['padding-right', 'calc(var(--spacing) * 2)', 'pe-2'], ['text-align', 'start', 'text-start']]) {
     const resolved = computed(shipped(), button, property);
@@ -199,7 +199,6 @@ test('global-13 TextLink inheritColor: official vd rests at 35%; the local routi
 
   // (b) local, aligned part: the hand-written default links restate .cds-text-link's 60% rest / currentColor hover.
   for (const [rel, rest, hover] of [
-    ['src/source-plan-card.css', 'color: var(--cds-text-accent); --_text-link-line: color-mix(in srgb, currentColor, transparent 60%);', '.spc-open-plan:is(:hover, :focus-visible) { --_text-link-line: currentColor; }'],
     ['src/source-bypass-permission.css', 'color:var(--cds-text-accent);--_text-link-line:color-mix(in srgb,currentColor,transparent 60%);', '.source-bypass-dialog .source-bypass-link:is(:hover,:focus-visible){--_text-link-line:currentColor}'],
   ]) { once(local(rel), [rest, hover]); assert.equal(count(local(rel), 'transparent 35%'), 0, rel); }
   // (b) local, the routine form: the generated routine form (cowork-scheduled c97b955f1, 3.6556.2 La since

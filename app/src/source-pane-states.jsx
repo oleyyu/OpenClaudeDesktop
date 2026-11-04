@@ -2,7 +2,8 @@ import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { SourceEmptyState } from "./source-transcript-states.jsx";
 import "./source-pane-states.css";
 import { t } from "../electron/i18n/index.mjs";
-import { SourceSettingsButton } from "./source-settings-button.jsx";
+// W14-code r6 r6pa-04: c44d00c7f / cccc2cf0a Try again buttons are shared-frame Uu (E41 direct import).
+import { CdsButton } from "./generated/view-tabs/shared-frame-6jtSkIit.js";
 import { fileTreeRowStyle, FILE_TREE_ERROR_ROW_CLASS } from "./file-tree-row-model.mjs";
 
 // Changes/Plan pane body states (2.2553.1). Class strings are the source strings;
@@ -70,16 +71,16 @@ export function SourceChangesState({ state, uncommittedOnly = false, noRepo = fa
     <SourceEmptyState role={failed ? "alert" : undefined} icon={failed ? "Warning" : undefined}
       title={failed ? CHANGES_FAILED_TITLE : changesEmptyTitle(uncommittedOnly, noRepo)}
       body={state === "empty" && noRepo ? CHANGES_NO_REPO_BODY : undefined}
-      actions={failed && onRetry ? <SourceSettingsButton variant="secondary" busy={retrying} aria-label={retrying ? CHANGES_LOADING_LABEL : undefined}
-        onClick={onRetry}>{CHANGES_RETRY_LABEL}</SourceSettingsButton> : undefined} />
+      actions={failed && onRetry ? <CdsButton variant="secondary" busy={retrying} aria-label={retrying ? CHANGES_LOADING_LABEL : undefined}
+        onClick={onRetry}>{CHANGES_RETRY_LABEL}</CdsButton> : undefined} />
   </div>;
 }
 
 // kp (readable/panes-tile-current.js:1751-1766): no content and no todos ->
 // EmptyState {icon Checklist, "No plan yet", body}. Honest local adaptation of
-// the body: Codex, not Claude, writes the plan (turn/plan/updated) while it works.
+// the body. 3.6556.2 cccc2cf0a Hb tRF6CXCuTR "Claude writes the plan here as it explores. Keep chatting." (persona name).
 export const PLAN_EMPTY_TITLE = t("No plan yet");
-export const PLAN_EMPTY_BODY = t("DeepSeek writes the plan here as it works. Keep chatting.");
+export const PLAN_EMPTY_BODY = t("DeepSeek writes the plan here as it explores. Keep chatting.");
 // Jh (2.31226.0 cccc2cf0a :1361-1410) before the empty state: while the session's history loads (Os isPending /
 // backfilling / reading earlier) div[role=status].animate-placeholder-reveal.h-full keyed by the session around
 // EmptyState {Spinner md, "Loading…"}; when it failed, the role=alert EmptyState {Warning, "Couldn’t load earlier
@@ -155,7 +156,7 @@ export function SourceTreeRetry({ onRetry, failedLabel = FILES_FOLDER_ERROR, bus
     });
   };
   return <>
-    <SourceSettingsButton size="sm" busy={busy} aria-label={busy ? busyLabel : undefined} onClick={retry}>{FILES_TREE_RETRY_LABEL}</SourceSettingsButton>
+    <CdsButton size="sm" busy={busy} aria-label={busy ? busyLabel : undefined} onClick={retry}>{FILES_TREE_RETRY_LABEL}</CdsButton>
     <span role="status" className="sr-only">{failures > 0 && <span key={failures}>{failedLabel}</span>}</span>
   </>;
 }

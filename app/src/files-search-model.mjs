@@ -1,4 +1,4 @@
-import { t, tn } from "../electron/i18n/index.mjs";
+import { tn } from "../electron/i18n/index.mjs";
 
 // Source adapter for the async filename branch of Qh, panes-tile-current.js.
 // The official ready FileIndex branch is immediate; this backend has no index.
@@ -46,38 +46,15 @@ export function revealChild(relative, revealPath) {
   return revealPath.startsWith(prefix) ? revealPath.slice(prefix.length).split("/")[0] : undefined;
 }
 
-export function searchLimitMessage({ matches = [], truncationReasons = [] }) {
-  if (truncationReasons.length && truncationReasons.every(reason => reason === "result-limit"))
-    return tn(matches.length, "Only the first {count} result is shown. Keep typing to narrow.", "Only the first {count} results are shown. Keep typing to narrow.");
-  const enumerationLimits = new Set(["candidate-limit", "index-byte-limit", "git-output-limit", "entry-limit",
-    "directory-limit", "depth-limit", "unsupported-path", "workspace-changed"]);
-  if (truncationReasons.some(reason => enumerationLimits.has(reason)))
-    return t("Only part of this project was searched. Choose a smaller folder for a more complete search.");
-  if (truncationReasons.includes("result-output-limit")) return t("Some matching files could not be shown.");
-  return t("Search results are incomplete.");
+// 3.6556.2 cccc2cf0a _T: a cut local filename search has the one cap note, F8ftTrFYrH with the shown count, whatever
+// cut it ("Some entries may not be listed…", vxwIaQClXr, is the remote `partial` branch only).
+export function searchLimitMessage({ matches = [] }) {
+  return tn(matches.length, "Only the first {count} result is shown. Keep typing to narrow.", "Only the first {count} results are shown. Keep typing to narrow.");
 }
 
-// Build text nodes, never HTML. A match in either UTF-16 half lights the whole
-// code point, so paths containing emoji cannot be split into broken surrogates.
-export function pathSegments(text, positions = [], offset = 0) {
-  const marked = new Set(positions.filter(Number.isInteger));
-  const segments = [];
-  let position = offset;
-  for (const character of text) {
-    const lit = [...Array(character.length)].some((_, index) => marked.has(position + index));
-    const previous = segments.at(-1);
-    if (previous?.lit === lit) previous.text += character;
-    else segments.push({ text: character, lit });
-    position += character.length;
-  }
-  return segments;
-}
+// W14-code r8 gen-final-8: pathSegments (the host LitPath's [data-lit] runs) lost its last reader when r8 panes
+// (r8pa-01) moved the result rows to cccc2cf0a zT/BT, whose hits are drawn by the generated SessionsHighlight (c1ea8a271 r).
 
-export function rangePaths(matches, anchor, end) {
-  const from = Math.max(0, Math.min(anchor, end));
-  const to = Math.min(matches.length - 1, Math.max(anchor, end));
-  return matches.slice(from, to + 1).map(match => match.path);
-}
 
 export function resultNavigation(key, index, count, plain = true) {
   if (!count) return null;

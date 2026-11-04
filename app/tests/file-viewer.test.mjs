@@ -6,7 +6,7 @@ import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
 import fs from 'node:fs';
 import path from 'node:path';
-import { breadcrumbParts, fileViewerLines, fileViewerTooSlow, jumpRange } from '../src/file-preview-model.mjs';
+import { fileViewerLines, fileViewerTooSlow, jumpRange } from '../src/file-preview-model.mjs';
 import { withMemoCache } from './support/react-memo-cache.mjs';
 
 // Files pane file viewer (2.2553.1 cd2efac6e jo :2576-4674): Yo/Ma breadcrumb
@@ -22,7 +22,11 @@ before(async () => {
 after(() => server?.close());
 const h = React.createElement;
 const text = (markup) => markup.replace(/<[^>]+>/g, '');
-const panel = (props) => renderToStaticMarkup(h(S.SourceFilePanel, { sessionId: 's', cwd: '/tmp/work', tab: 'files', onViewChange: () => {}, ...props }));
+// W14-code r5 pierre: with the switch local_pierre_file_viewer on (default) the read-only text body is 3.6556.2 pierre
+// File (cd2efac6e `a(oi, …a(li, …))`, tests/w14-r5-pierre.test.mjs), whose rows exist only in its shadow root on the
+// client. These tests pin the rollback body (the host's numbered rows), so they render with the switch off.
+const legacy = (element) => h(V.PierreFileViewerContext.Provider, { value: false }, element);
+const panel = (props) => renderToStaticMarkup(legacy(h(S.SourceFilePanel, { sessionId: 's', cwd: '/tmp/work', tab: 'files', onViewChange: () => {}, ...props })));
 const filesView = (tab, extra = {}) => ({ fileTabs: [tab], activePath: tab.path, treeShown: false, treeHiddenWhileEmpty: false, ...extra });
 
 // R3-files FT-18 (files-26): Escape on a multi-selection is 2.42304.0 c856385e2 nt (generated file-selection-escape.mjs),
@@ -70,7 +74,13 @@ test('clearing a file-tree multiselection consumes held Escape until key release
 
 test('a text tab renders the breadcrumb subheader and two numbered rows (no Back to files, no location row, no pill)', () => {
   const markup = panel({ view: filesView({ path: 'src/app.js', text: 'a\nb\n' }) });
-  const viewer = markup.slice(markup.indexOf('<div data-file-viewer'));
+  // W14-code r5 pierre review: in a local session a text file it cannot write is cd2efac6e Lu — qi, the CodeMirror
+  // editor with readOnly: !Au (:8250-8310) — so the session panel shows the editor host; the numbered rows are the
+  // fl-false body (no session: V.SourceFileViewer), pinned here on the rollback switch.
+  assert.match(markup, /<div class="sfv-editor-shell"><div dir="ltr" class="sfv-editor" data-file-viewer="" data-word-wrap="true"><\/div><\/div>/);
+  assert.doesNotMatch(markup, /sfv-line/);
+  const bare = renderToStaticMarkup(legacy(h(V.SourceFileViewer, { file: { path: 'src/app.js', text: 'a\nb\n' }, displayPath: 'src/app.js', fullPath: '/tmp/work/src/app.js', scopeKey: 'k' })));
+  const viewer = bare.slice(bare.indexOf('<div data-file-viewer'));
   assert.match(viewer, /^<div data-file-viewer="" class="epitaxy-diff sfv-viewer">/);
   const rows = [...viewer.matchAll(/<div class="sfv-line" data-line="(\d+)"><span class="sfv-number" data-number="(\d+)" aria-hidden="true"><\/span><code class="scb-code source-diff-code">([^<]*)<\/code><\/div>/g)];
   assert.deepEqual(rows.map((row) => [row[1], row[2], row[3]]), [['1', '1', 'a\n'], ['2', '2', 'b\n']], 'exactly two numbered rows');
@@ -93,7 +103,7 @@ test('a text tab renders the breadcrumb subheader and two numbered rows (no Back
 
 test('a chip line range marks rows line..endLine with data-active and the scroller carries the range', () => {
   const tab = { path: 'src/app.js', text: Array.from({ length: 12 }, (_, index) => `line ${index + 1}`).join('\n') };
-  const markup = renderToStaticMarkup(h(V.SourceFileViewer, { file: tab, displayPath: 'src/app.js', fullPath: '/w/src/app.js', line: 3, endLine: 4, scrollNonce: 1, scopeKey: 'k' }));
+  const markup = renderToStaticMarkup(legacy(h(V.SourceFileViewer, { file: tab, displayPath: 'src/app.js', fullPath: '/w/src/app.js', line: 3, endLine: 4, scrollNonce: 1, scopeKey: 'k' })));
   const active = [...markup.matchAll(/<div class="sfv-line" data-line="(\d+)" data-active="">/g)].map((row) => row[1]);
   assert.deepEqual(active, ['3', '4']);
   assert.match(markup, /class="source-file-preview sfv-scroller select-text" data-word-wrap="true" data-active-line="3" data-active-end-line="4"/);
@@ -114,11 +124,17 @@ test('loading, unavailable, binary and empty bodies keep the breadcrumb subheade
   assert.match(missing, /class="source-file-breadcrumb" data-breadcrumb-lister=""/);
   const binary = panel({ view: filesView({ path: 'img.bin', unavailable: 'binary' }) });
   assert.match(text(binary), /This file looks like binary data and can’t be previewed as text/);
-  assert.match(binary, /<button data-step="1" type="button" data-cds="Button" data-variant="secondary"[^>]*>.*View as text anyway/);
+  // W14-code r5 cleanup: shared-frame Uu (CdsButton) size "xxs" → data-step="1" after data-cds (cd2efac6e T size:"xxs").
+  assert.match(binary, /<button type="button" data-cds="Button" data-step="1" class="[^"]*"[^>]*>.*View as text anyway/);
   assert.doesNotMatch(binary, /role="alert"/);
-  const empty = panel({ view: filesView({ path: 'blank.txt', text: '' }) });
+  // W14-code r5 pierre review: without a session (fl false) an empty text body is the empty card; in a local session it is
+  // Lu's read-only editor (cd2efac6e has no empty card before Lu outside the markdown/text previews and the sandbox).
+  const empty = renderToStaticMarkup(legacy(h(V.SourceFileViewer, { file: { path: 'blank.txt', text: '' }, displayPath: 'blank.txt', fullPath: '/tmp/work/blank.txt', scopeKey: 'k' })));
   assert.match(text(empty), /This file is empty/);
   assert.doesNotMatch(empty, /data-file-viewer/);
+  const sessionEmpty = panel({ view: filesView({ path: 'blank.txt', text: '' }) });
+  assert.doesNotMatch(text(sessionEmpty), /This file is empty/);
+  assert.match(sessionEmpty, /class="sfv-editor" data-file-viewer=""/);
   const outside = panel({ view: filesView({ path: '/etc/hosts', unavailable: 'outside_root' }) });
   assert.match(text(outside), /This file is outside the working directoryIt can’t be opened here, but it may still exist on disk\./);
   assert.match(outside, /class="source-file-breadcrumb" data-breadcrumb-lister=""/);
@@ -131,19 +147,16 @@ test('the plain-text notice appears only for a highlightable file above the high
   assert.equal(fileViewerTooSlow(long, 'text'), false, 'plain files are not "too slow"');
   assert.equal(fileViewerTooSlow('x'.repeat(1500), 'javascript'), true, 'a long line');
   assert.equal(fileViewerTooSlow('const a = 1;\n', 'javascript'), false);
-  const markup = renderToStaticMarkup(h(V.SourceFileViewer, { file: { path: 'big.js', text: long }, displayPath: 'big.js', fullPath: '/w/big.js', scopeKey: 'k' }));
+  const markup = renderToStaticMarkup(legacy(h(V.SourceFileViewer, { file: { path: 'big.js', text: long }, displayPath: 'big.js', fullPath: '/w/big.js', scopeKey: 'k' })));
   assert.match(markup, /<p role="note" class="sfv-plain-note">Shown as plain text: formatting this file would be too slow\.<\/p>/);
   assert.equal((markup.match(/class="sfv-line"/g) || []).length, 2100);
   assert.match(markup, /style="--sfv-number-width:4ch;/);
 });
 
-test('model helpers: rows, breadcrumb parts', () => {
+test('model helpers: rows', () => {
   assert.deepEqual(fileViewerLines(null, 'a\nb\n').map((row) => row[0].text), ['a', 'b']);
   assert.deepEqual(fileViewerLines(null, 'a\n\nb').map((row) => row[0].text), ['a', '', 'b']);
   assert.deepEqual(fileViewerLines(null, '\n').map((row) => row[0].text), ['']);
-  assert.deepEqual(breadcrumbParts('src/lib/app.js'), { lead: '', dirs: ['src', 'lib'], name: 'app.js' });
-  assert.deepEqual(breadcrumbParts('/etc/hosts'), { lead: '/', dirs: ['etc'], name: 'hosts' });
-  assert.deepEqual(breadcrumbParts('README.md'), { lead: '', dirs: [], name: 'README.md' });
 });
 
 test('source: the CSS Highlight line mark, the location row and the loading pill are gone', () => {
@@ -162,15 +175,18 @@ test('README without a line opens as the Markdown preview with a "View source" t
   const tab = { path: 'README.md', text: '# Read me\n\nBody text.\n\nline four\n' };
   const markup = panel({ view: filesView(tab) });
   const sub = markup.slice(markup.indexOf('<div class="epitaxy-panel-subheader sfv-subheader">'), markup.indexOf('<div class="sfv-body">'));
-  assert.match(sub, /<button type="button" class="source-icon-button sfv-view-toggle" aria-label="View source" data-view-toggle=""><span[^>]*data-cds="Icon"/);
+  // W14-code r4 css4-pane-toggle-icon-buttons: cd2efac6e `a(T,{size:"base",onClick:Zy,"aria-label":$y,icon:eb,variant:"ghost",
+  // iconOnly:!0})` — the CDS ghost iconOnly Button (size base), not the host .source-icon-button.sfv-view-toggle.
+  assert.match(sub, /<button type="button" data-cds="Button" data-cds-icon-only="" data-cds-ghost="" class="[^"]*" aria-label="View source" data-view-toggle=""[^>]*>(?:(?!<\/button>)[\s\S])*data-cds="Icon"/);
+  assert.doesNotMatch(sub, /source-icon-button|sfv-view-toggle/);
   assert.ok(sub.indexOf('source-file-breadcrumb') < sub.indexOf('View source'), 'the toggle follows the breadcrumb');
   assert.match(markup, /data-file-view="preview"/);
   const body = markup.slice(markup.indexOf('<div class="sfv-body">'));
   assert.match(body, /^<div class="sfv-body"><div data-file-viewer="" data-file-preview="markdown" class="flex-1 min-h-0 overflow-y-auto \[contain:strict\] \[scrollbar-gutter:stable_both-edges\] select-text p-lg source-file-preview sfv-preview"><div class="mx-auto max-w-\[860px\]"><div class="epitaxy-file-prose sfv-prose"><div class="source-markdown">/);
   assert.match(body, /<h1>Read me<\/h1>/);
   assert.doesNotMatch(body, /class="sfv-line"/);
-  const atLine = renderToStaticMarkup(h(V.SourceFileViewer, { file: tab, displayPath: 'README.md', fullPath: '/w/README.md', line: 3, scrollNonce: 1, scopeKey: 'k',
-    renderMarkdown: (value) => h('div', { className: 'probe-markdown' }, value) }));
+  const atLine = renderToStaticMarkup(legacy(h(V.SourceFileViewer, { file: tab, displayPath: 'README.md', fullPath: '/w/README.md', line: 3, scrollNonce: 1, scopeKey: 'k',
+    renderMarkdown: (value) => h('div', { className: 'probe-markdown' }, value) })));
   assert.match(atLine, /aria-label="Preview"/);
   assert.match(atLine, /data-file-view="source"/);
   const rows = [...atLine.matchAll(/<div class="sfv-line" data-line="(\d+)"/g)].map((row) => row[1]);
@@ -178,7 +194,7 @@ test('README without a line opens as the Markdown preview with a "View source" t
   assert.match(atLine, /<div class="sfv-line" data-line="3" data-active="">/);
   assert.doesNotMatch(atLine, /probe-markdown/);
   // Without a Markdown renderer there is no preview (and so no toggle).
-  const bare = renderToStaticMarkup(h(V.SourceFileViewer, { file: tab, displayPath: 'README.md', fullPath: '/w/README.md', scopeKey: 'k' }));
+  const bare = renderToStaticMarkup(legacy(h(V.SourceFileViewer, { file: tab, displayPath: 'README.md', fullPath: '/w/README.md', scopeKey: 'k' })));
   assert.doesNotMatch(bare, /sfv-view-toggle|data-file-preview/);
   assert.match(bare, /class="sfv-line" data-line="1"/);
 });
@@ -284,7 +300,7 @@ test('YAML frontmatter renders as the ki <dl> grid above the body, not as a head
   assert.doesNotMatch(odd, /<dl|<hr|key: a/);
   assert.match(odd, /<p>Body<\/p>/);
   // The source view keeps the frontmatter lines.
-  const source = renderToStaticMarkup(h(V.SourceFileViewer, { file: { path: 'SKILL.md', text: skill }, displayPath: 'SKILL.md', fullPath: '/w/SKILL.md', line: 1, scopeKey: 'k', renderMarkdown: () => null }));
+  const source = renderToStaticMarkup(legacy(h(V.SourceFileViewer, { file: { path: 'SKILL.md', text: skill }, displayPath: 'SKILL.md', fullPath: '/w/SKILL.md', line: 1, scopeKey: 'k', renderMarkdown: () => null })));
   assert.match(source, /data-line="2"><span class="sfv-number" data-number="2" aria-hidden="true"><\/span><code class="scb-code source-diff-code">name: demo-skill/);
 });
 
@@ -349,7 +365,7 @@ test('B13 source: the frame is sandboxed without same-origin, routes posted link
 
 // B32 (2.31226.0 cd2efac6e readable mp/bp/Cp :5181-5225 and :5565-5600, Gl :6735-6748, tp :5114-5135, cu :7179-7203).
 test('B32: the missing card offers Try again, and Create file only when the parent folder exists', () => {
-  const buttons = (markup) => [...markup.matchAll(/<button data-step="1"[^>]*data-card-action="([^"]+)"/g)].map((match) => match[1]);
+  const buttons = (markup) => [...markup.matchAll(/<button type="button"(?: disabled="")? data-cds="Button" data-step="1"[^>]*data-card-action="([^"]+)"/g)].map((match) => match[1]);
   const plain = panel({ view: filesView({ path: 'src/missing.js', unavailable: 'missing' }) });
   assert.deepEqual(buttons(plain), ['retry'], 'creatable unknown: no Create file');
   assert.match(text(plain), /src\/missing\.jsTry again$/m);

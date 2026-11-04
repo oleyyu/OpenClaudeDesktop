@@ -3,6 +3,21 @@ import {connectionInterrupted} from "./item-observation.mjs";
 import {agentTargets,agentView} from './agent-model.mjs';
 import {commandRowState} from './command-row-model.mjs';
 import {commandText} from './shell-command-model.mjs';
+import {carriesCredentials,summarizeCommand,touchesSensitivePath} from './command-summary.mjs';
+// Codex sends no description with a command, where Claude's Bash tool always writes one, so a card (cccc2cf0a hD: the
+// title is the description, break-words, never clamped) titled itself with the whole script. The title is the code
+// meta the transcript row shows for the same command (command-row-model: the Soe summary); with no summary, the
+// command's first line, unless the command names a credential or a sensitive path (Soe's own refusals). The whole
+// command stays in the expanded card's Command region (qE).
+export function commandTaskTitle(command){
+ const text=commandText(command);
+ if(!text)return '';
+ const summary=summarizeCommand(text);
+ if(summary)return summary;
+ if(carriesCredentials(text)||touchesSensitivePath(text))return '';
+ const lines=text.trim().split(/\r?\n/);
+ return lines.length>1?lines[0].trimEnd()+'\u2026':lines[0];
+}
 export function backgroundTasks(state,sessionId,{connected=true}={}) {
  const items=state.items?.[sessionId]||[],snapshot=state.background?.[sessionId]?.connectionId===state.approvalConnectionId?state.background?.[sessionId]:undefined,terminals=snapshot?.terminals||[],tasks=[];
  const spawns=items.filter(item=>item.type==='collabAgentToolCall'&&item.tool==='spawnAgent');
@@ -24,12 +39,14 @@ export function backgroundTasks(state,sessionId,{connected=true}={}) {
   const stoppable=record?.codeDesktop?.stoppable!==false;
   // codeDesktop.kind: what the core says the process is (a Monitor, a sub-agent…; Claude's taskType names work too).
   const taskType=typeof record?.codeDesktop?.kind==='string'?record.codeDesktop.kind:typeof item?.codeDesktop?.taskKind==='string'?item.codeDesktop.taskKind:null;
-  tasks.push({id:'bash:'+id,kind:'bash',...(taskType?{taskType}:{}),threadId:sessionId,itemId:id,processId:item?.processId||record?.processId,description:commandText(item?.command||record?.command)||t('Command'),command:item?.command||record?.command,output:item?.aggregatedOutput||'',status,...(stoppable?{}:{stoppable:false}),
+  tasks.push({id:'bash:'+id,kind:'bash',...(taskType?{taskType}:{}),threadId:sessionId,itemId:id,processId:item?.processId||record?.processId,description:commandTaskTitle(item?.command||record?.command)||t('Command'),command:item?.command||record?.command,output:item?.aggregatedOutput||'',status,...(stoppable?{}:{stoppable:false}),
    startedAt:Number.isFinite(item?.startedAtMs)?item.startedAtMs:null,completedAt:Number.isFinite(item?.completedAtMs)?item.completedAtMs:null,durationMs:item?.durationMs});
  }
  return tasks;
 }
-export function taskSections(tasks){const order=new Map(tasks.map((task,index)=>[task,index]));return {running:tasks.filter(t=>t.status==='running').sort((a,b)=>(a.startedAt??Infinity)-(b.startedAt??Infinity)),unknown:tasks.filter(t=>t.status==='unknown'),finished:tasks.filter(t=>['completed','failed','stopped'].includes(t.status)).sort((a,b)=>(b.completedAt??-Infinity)-(a.completedAt??-Infinity)||order.get(b)-order.get(a))};}
+// W14-code r5pa-05: 3.6556.2 cccc2cf0a lists Running (IM) and Finished (LM) only (RM: running/completed/stopped/failed);
+// a task whose state is unknown (e.g. a Monitor before its feed answers, a disconnected core) stays under Running.
+export function taskSections(tasks){const order=new Map(tasks.map((task,index)=>[task,index]));return {running:tasks.filter(t=>t.status==='running'||t.status==='unknown').sort((a,b)=>(a.startedAt??Infinity)-(b.startedAt??Infinity)),finished:tasks.filter(t=>['completed','failed','stopped'].includes(t.status)).sort((a,b)=>(b.completedAt??-Infinity)-(a.completedAt??-Infinity)||order.get(b)-order.get(a))};}
 // sC / lC (cccc2cf0a :11080-11129): past 8000 characters only the tail shows, cut at the first line break inside it
 // so it never starts mid-line, under "(Earlier output not shown)".
 export function earlierOutputCut(text){const newline=text.indexOf('\n');return newline>=0&&newline<text.length-1?text.slice(newline+1):text;}
@@ -86,7 +103,7 @@ export function previewServerTasks(state){return (state?.servers??[]).filter(ser
 
 // OpenClaude Desktop's own background sources (electron/monitor-service.cjs, schedule-service.cjs), pushed by main.
 /** A session's Monitor commands as Background tasks rows: Claude's monitor_mcp tasks (kind "Monitor", expandable output, Stop). */
-export function monitorTasks(list){return (Array.isArray(list)?list:[]).filter(entry=>entry&&typeof entry.id==='string').map(entry=>({id:'monitor:'+entry.id,monitorId:entry.id,kind:'bash',taskType:'monitor_mcp',description:entry.description||entry.command||t('Monitor'),command:entry.command,output:entry.output||'',
+export function monitorTasks(list){return (Array.isArray(list)?list:[]).filter(entry=>entry&&typeof entry.id==='string').map(entry=>({id:'monitor:'+entry.id,monitorId:entry.id,kind:'bash',taskType:'monitor_mcp',description:entry.description||commandTaskTitle(entry.command)||t('Monitor'),command:entry.command,output:entry.output||'',
  status:['running','completed','failed','stopped'].includes(entry.status)?entry.status:'unknown',...(entry.status==='running'&&Number.isFinite(entry.stopsAt)?{stopsAt:entry.stopsAt}:{}),startedAt:Number.isFinite(entry.startedAt)?entry.startedAt:null,completedAt:Number.isFinite(entry.startedAt)&&Number.isFinite(entry.durationMs)?entry.startedAt+entry.durationMs:null,durationMs:Number.isFinite(entry.durationMs)?entry.durationMs:undefined}));}
 /** Kb (panes-tile-current.js:15081-15190): a session's scheduled prompts as Loop / Once rows of the Running section. */
 export function scheduledLoops(list){return (Array.isArray(list)?list:[]).filter(entry=>entry&&typeof entry.id==='string').map(entry=>({id:entry.id,prompt:typeof entry.prompt==='string'&&entry.prompt?entry.prompt:null,recurring:entry.recurring!==false,cron:entry.cron??null,humanSchedule:entry.humanSchedule??null,

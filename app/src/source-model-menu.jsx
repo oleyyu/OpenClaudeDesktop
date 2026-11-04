@@ -3,7 +3,7 @@ import { Icon } from "./icons";
 import { SourceSwitch as SettingSwitch } from "./source-switch.jsx";
 import { SourceMenu } from "./source-menu";
 import { SourceTooltip } from "./source-tooltip";
-import { CdsBadge, CdsHiddenReasonText } from "./generated/view-tabs/index.js";
+import { CdsBadge, CdsHiddenReasonText, CdsTextInput } from "./generated/view-tabs/index.js";
 import { effortId, effortName, filterModels, isHighestEffort, modelMenuSections, shapeModelCatalog } from "./model-menu-model.mjs";
 import "./source-model-menu.css";
 import { t } from "../electron/i18n/index.mjs";
@@ -23,13 +23,11 @@ const modelName = (model) => model.displayName || model.name || modelKey(model);
  * Codex's Model type has no disabled/disabled_reason field, so no row is ever
  * disabled from the live catalog; the optional fields are read only if present.
  * The Fast section (ES) renders only for a model with a Fast tier.
- * Every core's menu reads like Code's Claude catalog (2.31226.0 shared-8 Mk/Rk with
- * Claude Code's chin catalog, which carries no descriptions): one-line rows, the
- * digit/Check slot, "More models", then the "Fast mode" header and switch rows.
- * Catalog descriptions (Codex model and service-tier descriptions) move to the
- * right-side multiline tooltip Mk/Ik use for tooltip content, and to
- * aria-description, instead of a second line. Several faster tiers (Codex Fast,
- * Ultrafast) are mutually exclusive switch rows under the same header.
+ * W14-code r2-composer-05: 3.6556.2 shared-7 ww / dw: `N = s?.showDescriptions !== !1` (no caller turns it off), so a
+ * main row's catalog description is its second line (`w = r ? t.description : void 0` → q.Item `description`); "More
+ * models" rows (fw) pass `showDescription: !1`. The row's tooltip (aw) is only `b || t.tooltip?.content || m` — the
+ * disabled reason, the catalog tooltip content or the notice text — and aria-description only the disabled reason.
+ * Several faster tiers (Codex Fast, Ultrafast) are mutually exclusive switch rows under the "Fast mode" header.
  */
 const hasText = (value) => typeof value === "string" && value.trim() !== "";
 const withTip = (content, item) => hasText(content)
@@ -102,12 +100,12 @@ function FastRow({ tier, label, checked, onToggle, unavailable, tooltipContent, 
     <div role="none" className="sm-model-tip">{item}{describedBy ? <CdsHiddenReasonText id={mirrorId} reason={content} /> : null}</div>
   </SourceTooltip>;
 }
-const tierLabel = (tier) => tier.key === "fast" ? t("Enable fast mode")
-  : tier.key === "ultrafast" ? t("Enable ultrafast mode")
-  : t("Enable {speed} mode", { speed: tier.name.toLowerCase() });
+// W14-code composer-14: shared-7 yw labels the switch row with the fast option's own name (`_w name: s.name`, the
+// catalog's text, under the block's Header); the host's is the core's tier name.
+const tierLabel = (tier) => tier.name || tier.key;
 export function SourceModelMenu({
   anchor, models = [], selected, onSelect, onClose, fastTier, fastMode = false, fastDisabled = false,
-  fastSaving = false, onFastModeChange, initialHighlight, scopeNote = null,
+  fastSaving = false, onFastModeChange, initialHighlight,
   // Several faster tiers (Fast, Ultrafast): one switch row each under "Fast mode", mutually exclusive.
   speedTiers = [], speed = "standard", onSpeedChange, defaultModel = null, onFastIntent,
   // effort {levels, value, onPick}: the environment bar folds the effort into the model trigger (x6 modelMenu "bar",
@@ -142,14 +140,17 @@ export function SourceModelMenu({
     const id = modelKey(model), active = id === selected, digit = main ? primaryDigits.get(id) : undefined;
     // lp c: the unsupported current model stays checked but disabled (Sk: no digit for a deprecated row).
     const disabled = !!model.disabled && (!active || !!model.unsupported);
-    const description = hasText(model.description) ? model.description : undefined;
+    const description = main && hasText(model.description) ? model.description : undefined;
+    // dw b / x: the disabled reason (the item's own disabledReason wrapper, XS), else the catalog tooltip or notice text, is the row's tooltip (aw).
+    const reason = disabled ? model.disabled_reason?.message || undefined : undefined;
+    const tip = reason || model.tooltip?.content || model.notice?.text || model.notice_text || undefined;
     const trailing = digit !== undefined
       ? <span className="sm-model-trailing" aria-hidden="true">{active
           ? <Icon name="Check" size={16} weight="strong" />
           : <span className="sm-model-digit">{digit}</span>}</span>
       : undefined;
-    return withTip(disabled ? undefined : description, <SourceMenu.Item key={id} className="sm-model-item" label={modelName(model)}
-      aria-description={description} disabled={disabled} disabledReason={disabled ? model.disabled_reason?.message : undefined}
+    return withTip(disabled ? undefined : tip, <SourceMenu.Item key={id} className="sm-model-item" label={modelName(model)} description={description}
+      aria-description={reason} disabled={disabled} disabledReason={reason}
       checked={digit !== undefined ? undefined : active} checkedRole="radio"
       {...(digit !== undefined ? { role: "menuitemradio", "aria-checked": active, "aria-keyshortcuts": String(digit) } : {})}
       data-model-id={id} digit={digit}
@@ -187,7 +188,6 @@ export function SourceModelMenu({
           tooltipContent={hasText(tier.description) ? tier.description : undefined} disabled={fastDisabled} busy={fastSaving} />;
       })}
     </>}
-    {scopeNote && <div className="sm-model-scope" data-model-scope="">{scopeNote}</div>}
   </SourceMenu.Popup>;
 }
 
@@ -240,12 +240,16 @@ function OverflowSearch({ overflow, row, pick, onClose }) {
     if (event.key === "Enter" && searching) { event.preventDefault(); if (shown[0]) { pick(shown[0]); onClose?.(); } }
     else if (event.key === "Escape" && query) { event.preventDefault(); event.stopPropagation(); setQuery(""); }
   };
-  return <SourceMenu.Popup label={t("More models")} dataCds="ModelSelector" className="sm-model-menu sm-model-submenu" initialHighlight={null} onKeyDown={keyDown}>
-    <div className="sm-model-search">
-      <Icon name="Search" size={14} aria-hidden="true" />
-      <input ref={searchRef} type="text" className="sm-model-search-input cds-reset" aria-label={t("Search models")} placeholder={t("Search models")}
-        value={query} spellCheck={false} autoComplete="off" onChange={(event) => setQuery(event.target.value)} />
-    </div>
+  // W14-code css/composer/model-overflow-search: shared-frame IT (SearchableMenuPopup)'s header — the CDS TextInput
+  // "!border-transparent !bg-transparent !shadow-none compact:!ps-2 comfortable:!ps-2.5" (no icon) over the
+  // gutter-wide rule "-mx-[var(--cds-menu-gutter,0.25rem)] mt-[var(--cds-menu-gutter,0.25rem)] mb-1 h-px bg-border".
+  const header = <>
+    <CdsTextInput ref={searchRef} aria-label={t("Search models")} placeholder={t("Search models")} value={query} spellCheck={false}
+      autoComplete="off" data-1p-ignore="true" onChange={(event) => setQuery(event.target.value)}
+      className="!border-transparent !bg-transparent !shadow-none compact:!ps-2 comfortable:!ps-2.5" />
+    <div className="-mx-[var(--cds-menu-gutter,0.25rem)] mt-[var(--cds-menu-gutter,0.25rem)] mb-1 h-px bg-border" />
+  </>;
+  return <SourceMenu.Popup label={t("More models")} dataCds="ModelSelector" className="sm-model-menu sm-model-submenu" initialHighlight={null} onKeyDown={keyDown} header={header}>
     {shown.length > 0
       ? <SourceMenu.Group>{shown.map((model) => row(model, false))}</SourceMenu.Group>
       : <div className="sm-model-empty" role="status">{t("No matches")}</div>}

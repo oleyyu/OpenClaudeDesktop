@@ -48,10 +48,9 @@ test('late old turn completion cannot idle the newer child run',()=>{
 });
 
 test('agent grouping counts spawn calls and preserves roll-up activity boundaries',async()=>{
- const {groupFileTools,fileGroupSummary}=await import('../src/file-tool-model.mjs');
+ const {groupFileTools}=await import('../src/file-tool-model.mjs');
  const items=[spawn,{id:'status',type:'subAgentActivity',kind:'started',agentThreadId:'C'}, {...spawn,id:'spawn2',receiverThreadIds:['D']}];
  assert.equal(groupFileTools(items).length,1);assert.equal(groupFileTools(items)[0].toolGroup.length,2);
- assert.equal(fileGroupSummary([spawn,{...spawn,id:'spawn2',status:'failed'}]).label,'Ran 2 agents (1 failed)');
 });
 
 // The DeepSeek core's own projection (harness bridge) feeding the reducer.

@@ -96,13 +96,19 @@ test('3.6556.2 compiled status hook V6 holds the waiting label on first render',
   const status = await fs.readFile(new URL('../src/generated/code-editor/side-chat-status.mjs', import.meta.url), 'utf8');
   assert.match(status, /import \{ EE \} from "\.\.\/working-line\/working-line\.mjs";/);
   assert.match(status, /reactMemoCache as J9/);
-  const props = { status: 'thinking', thinkingSince: Date.now(), progress: { stage: 'waiting' }, awaitingAnswer: true, assistantName: 'DeepSeek' };
+  // W14-code r8 css8-side-chat-status-handrow: cccc2cf0a _F draws Go = c96d752d0 U6 (generated WorkingLine) with
+  // waiting "model" ("Waiting for Claude…", the assistant's name per E83), no longer the host's .sts-* row.
+  const props = { status: 'thinking', thinkingSince: Date.now() / 1000, progress: { stage: 'waiting' }, awaitingAnswer: true };
   const html = renderToStaticMarkup(React.createElement(SourceSideChatStatus, props));
   assert.match(html, /data-side-status="running"/);
-  assert.match(html, /class="source-shimmer sts-activity">[^<]*DeepSeek[^<]*<\/span>/);
+  assert.match(html, /<span role="status" class="sr-only">Thinking…<\/span><div aria-hidden="true">/);
+  assert.match(html, /<div aria-hidden="true"><div class="flex flex-col" data-turn-working="true">[\s\S]*data-cds="Spark"/);
+  assert.match(html, /Waiting for [^<]+…/);
+  assert.doesNotMatch(html, /sts-(row|spark|label|activity|stat|separator)/);
   const idle = renderToStaticMarkup(React.createElement(SourceSideChatStatus, { ...props, status: 'idle' }));
   assert.match(idle, /data-side-status="idle"/);
-  assert.doesNotMatch(idle, /sts-activity/);
+  assert.match(idle, /<span role="status" class="sr-only"><\/span>/);
+  assert.doesNotMatch(idle, /Waiting for/);
 });
 test('3.6556.2 compiled selection hook mn renders no toolbar without a range', async () => {
   const { SourceTranscriptSelection } = await server.ssrLoadModule('/src/source-transcript-selection.jsx');

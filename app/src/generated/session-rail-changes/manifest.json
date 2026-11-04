@@ -8,7 +8,7 @@
       "target": "formatted-list.mjs",
       "source": "vendor-intl-DYfox5Co.js",
       "sourceSha256": "5fe49d3a34f7583ec9f95b03817a66af29352be20d8f4a49d742bd0758f6761e",
-      "sha256": "589afae653781197d7787669d72a9e1b9f7583869ae902713a84496eda5e903e",
+      "sha256": "5e4bafb38974ee4582b11a5b38edd20173396f3d1bc4e1b9f940ba021f97feb7",
       "referenceVersion": "3.6556.2",
       "bindings": [
         {
@@ -18,6 +18,10 @@
         {
           "name": "J",
           "sha256": "56808bfffa5c802a770e6cb5a25bc08a7ccf81e814909f97ef5bf698a8c245ba"
+        },
+        {
+          "name": "on",
+          "sha256": "9a4cebb2471b8fcacaf9780ef4126a25db7e70742373b4fe44e6ce22f47a5822"
         },
         {
           "name": "sn",
@@ -49,7 +53,8 @@
         }
       ],
       "exports": {
-        "sn": "FormattedList"
+        "sn": "FormattedList",
+        "on": "FormattedNumber"
       }
     },
     {
@@ -1272,7 +1277,7 @@
       "target": "branch-row-classes.mjs",
       "source": "shared-6-sd9jbJqs.js",
       "sourceSha256": "caf5dda5315ded77263c79a5cfa09006ee40381c9811c2c755535644be437ce8",
-      "sha256": "47860ebafa601c6b52b4fd1c7ea5d40e05450b43b49f163246fd78c782bb94d5",
+      "sha256": "a271c8898c71f5ff23633f2c440b128e5e3d735e4ff394b2e53313f521538475",
       "referenceVersion": "3.6556.2",
       "bindings": [
         {
@@ -1314,6 +1319,10 @@
         {
           "name": "P_",
           "sha256": "c2764da7531992724dd3182ce896345503e6cad3e122158f3a08010043b4acf4"
+        },
+        {
+          "name": "R_",
+          "sha256": "bb49188d9147034f6147cc95fdc2fcc9028bdff102cc44095c9c4d950586d160"
         }
       ],
       "imports": [],
@@ -1324,7 +1333,9 @@
         "N_": "branchChipClass",
         "P_": "branchChipNameClass",
         "j_": "BRANCH_ROW_GAP_CLASS",
-        "M_": "PR_NUMBER_CLASS"
+        "M_": "PR_NUMBER_CLASS",
+        "R_": "heldBranchRowClass",
+        "C_": "bandAccentClassName"
       }
     },
     {
@@ -1438,6 +1449,103 @@
       ],
       "exports": {
         "b": "DismissButton"
+      }
+    },
+    {
+      "target": "band-enter.mjs",
+      "source": "c0b46114c-Tzv34BiL.js",
+      "sourceSha256": "dfb7db087a7fd8773a5643d5ab635642f786a7e6f999b98545c25afe5ef05b59",
+      "sha256": "c5e0101c35131e1e08088ea6af186db0d1ec3146f1c0ad5108f45c0d0f650a16",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "f",
+          "sha256": "0f7b8c35edc5beb83607430879e44d852ac2392d0a59418998d1e83e2a8d436e"
+        },
+        {
+          "name": "p",
+          "sha256": "f661d061be198caae9f036483cfd85e043e5fec7890ad7b32d1363240088e958"
+        },
+        {
+          "name": "m",
+          "sha256": "7703f341e1da245ccd901b85d08c0692ed99f69922393330f377debef4af2809"
+        },
+        {
+          "name": "h",
+          "sha256": "5a19118911f87eed0ced0b121eebaa1a3902bb8a4acdb7d8460417146badfa50"
+        },
+        {
+          "name": "g",
+          "sha256": "ae0af1f61320a2ad0cb1f2a85357853fc4fa02283b49bbbf4257936a7ad693da"
+        }
+      ],
+      "imports": [
+        {
+          "local": "J9",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "reactMemoCache",
+          "via": "shared-frame-6jtSkIit.js:ip",
+          "kind": "view-tabs",
+          "original": "shared-frame-6jtSkIit.js:J9"
+        },
+        {
+          "local": "e",
+          "from": "react",
+          "name": "useRef",
+          "via": "vendor-frame-CnSY1sxv.js:Co",
+          "kind": "react"
+        },
+        {
+          "local": "J0",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoIsEmpty",
+          "via": "shared-frame-6jtSkIit.js:Zf",
+          "kind": "view-tabs",
+          "original": "shared-frame-6jtSkIit.js:J0"
+        },
+        {
+          "local": "K0",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore0",
+          "via": "shared-frame-6jtSkIit.js:ap",
+          "kind": "view-tabs",
+          "original": "shared-frame-6jtSkIit.js:K0"
+        },
+        {
+          "local": "J2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged2",
+          "via": "shared-frame-6jtSkIit.js:$f",
+          "kind": "view-tabs",
+          "original": "shared-frame-6jtSkIit.js:J2"
+        },
+        {
+          "local": "K3",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore3",
+          "via": "shared-frame-6jtSkIit.js:cp",
+          "kind": "view-tabs",
+          "original": "shared-frame-6jtSkIit.js:K3"
+        },
+        {
+          "local": "r",
+          "from": "react",
+          "name": "useLayoutEffect",
+          "via": "vendor-frame-CnSY1sxv.js:bo",
+          "kind": "react"
+        },
+        {
+          "local": "o",
+          "from": "../view-tabs/shared-25-DOWZRSlq.js",
+          "name": "ownerWindow",
+          "via": "shared-25-DOWZRSlq.js:up",
+          "kind": "view-tabs",
+          "original": "shared-25-DOWZRSlq.js:pf"
+        }
+      ],
+      "exports": {
+        "m": "useBandEnter",
+        "f": "BAND_ENTER_CLASS"
       }
     },
     {
@@ -2091,7 +2199,7 @@
       "target": "pr-rows.mjs",
       "source": "c96d752d0-CWv_7-n9.js",
       "sourceSha256": "f7d5200fa26eaa42b4fa9dbad4533222628692ca02e0bb73becfaa33d12a576c",
-      "sha256": "77bf52c08ad6e89e75be85c2c409e330873a82b6b9a7633fb3a31764cd9bc905",
+      "sha256": "ab282355230f3a75cb81476e5f7d8f971bb1a000eb9c45ab0e9c5ce403fc9405",
       "referenceVersion": "3.6556.2",
       "bindings": [
         {
@@ -2187,6 +2295,38 @@
           "sha256": "cc16eb4735e76f9956c546a070bc5e55c1497a9302acdaa18674274381bb7c92"
         },
         {
+          "name": "eAe",
+          "sha256": "9ccb95ed1e7b0e12801b2000034bd46781117442d8e5431651d012a1b7bbef70"
+        },
+        {
+          "name": "BL",
+          "sha256": "620694aeaf343caeeab0790e2dce41c6d9c93b48dcb1382d794a1588e1948b59"
+        },
+        {
+          "name": "nAe",
+          "sha256": "5272ca68ddcfb832b19a21fecdd3c99cfbe4a925269ab4fc805ff3a57b770d5c"
+        },
+        {
+          "name": "rAe",
+          "sha256": "fd7aeaef5d17ac6e903765c7d6dbd2cd5e3053a8094bb1c999690a752e0bce21"
+        },
+        {
+          "name": "VL",
+          "sha256": "0caec47e4ec1321b89e918eaebf714ce3bce43ff9b89e021d99fedba670751fd"
+        },
+        {
+          "name": "HL",
+          "sha256": "32f2ecb597e77f5530bec0e2624eb68f18b23188ec88f006f345898be29ca59a"
+        },
+        {
+          "name": "iAe",
+          "sha256": "f5f57d8dd920dbee65e13a444254b037f34885cb9d69927b5b0b9afc53991edc"
+        },
+        {
+          "name": "aAe",
+          "sha256": "4a46cff14c26bbd116de127ebb6f8002324b5e8df32b1c18a6b9340b2aa906eb"
+        },
+        {
           "name": "UL",
           "sha256": "a1637dbd90b80e74f67a8cd13c6b291aa9504426197fda1127ed6a293239f41c"
         },
@@ -2251,6 +2391,10 @@
           "sha256": "a6eb08149d4321304da26f9eeceeb8c4b756359fc78c50d0b6656632f0ae594c"
         },
         {
+          "name": "nR",
+          "sha256": "ffd54053df9e2137b82a2d0eaf8cf423f1e257c824993ed765ac05b559144b40"
+        },
+        {
           "name": "gR",
           "sha256": "e18b7e99c5447a1396e3fd7f73c6403627e13f6549b6ca35a48b4d6de8a41f26"
         },
@@ -2261,6 +2405,10 @@
         {
           "name": "bR",
           "sha256": "bf18a0da8fb04fffc188f6bedbe1d591ecd6441f4dc751450e5665a09f20028b"
+        },
+        {
+          "name": "vje",
+          "sha256": "4dc1af092b286d316bfc519dd3e5bad26eccf82afacdbd077a4caf331ae6d1f4"
         },
         {
           "name": "hMe",
@@ -3032,6 +3180,38 @@
           "via": "c96d752d0-CWv_7-n9.js:cL",
           "kind": "adapter",
           "original": "c96d752d0-CWv_7-n9.js:cL"
+        },
+        {
+          "local": "Mte",
+          "from": "./branch-row-classes.mjs",
+          "name": "heldBranchRowClass",
+          "via": "shared-6-sd9jbJqs.js:Dp",
+          "kind": "generated",
+          "original": "shared-6-sd9jbJqs.js:R_"
+        },
+        {
+          "local": "One",
+          "from": "../code-current/sidebar-pr-icon.mjs",
+          "name": "SidebarPrIcon",
+          "via": "shared-18-D3y8YMFN.js:lc",
+          "kind": "code-current",
+          "original": "shared-18-D3y8YMFN.js:jD"
+        },
+        {
+          "local": "rc",
+          "from": "./formatted-list.mjs",
+          "name": "FormattedNumber",
+          "via": "vendor-intl-DYfox5Co.js:i",
+          "kind": "generated",
+          "original": "vendor-intl-DYfox5Co.js:on"
+        },
+        {
+          "local": "gp",
+          "from": "./pr-mode-messages.mjs",
+          "name": "PR_MODE_MESSAGES",
+          "via": "cd4f82e77-CAMIsQ30.js:Q",
+          "kind": "generated",
+          "original": "cd4f82e77-CAMIsQ30.js:j"
         }
       ],
       "exports": {
@@ -3051,18 +3231,60 @@
         "hMe": "prBarMode",
         "gR": "historyRowKey",
         "bR": "repoRowId",
-        "yR": "repoRowIdKey"
+        "yR": "repoRowIdKey",
+        "aAe": "PrBarStaleRow",
+        "nR": "PR_BAR_ROWS_CLASS",
+        "vje": "PR_BAR_HOLD_CLASS"
       },
       "contexts": [
         "lL",
         "uL"
       ]
+    },
+    {
+      "target": "pr-bar-snapshot.mjs",
+      "source": "c03935b01-yhcY34vt.js",
+      "sourceSha256": "473ccdd15e417c375b938e853107ab23a30b5401a379fcc296d9c3f4e5d31be2",
+      "sha256": "58380c45295325d47747d76ef7481190272a2723fe76388308fcd74d4571a416",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "An",
+          "sha256": "92b5f72d88deaf59191ee03efc32889d7d7751fba9f27cbf1c15f31cf52911d9"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "An": "prBarRowSnapshot"
+      }
+    },
+    {
+      "target": "branch-row-ghost.mjs",
+      "source": "shared-46-BIbZBGFq.js",
+      "sourceSha256": "ab4d599f5c2e563a1365c06f58ef96edb025106aea10e73a9c329cac899e3540",
+      "sha256": "d8d1001de05288073ef941fc564b328df591c953f47612de43c5822c0bdc89d5",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "A_",
+          "sha256": "67af4e973356972fe769a8989104fd772cab8adfa35a1dc47dc307c772d97c19"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "A_": "BRANCH_ROW_GHOST_ATTR"
+      }
     }
   ],
   "publicNames": {
     "FormattedList": {
       "file": "vendor-intl-DYfox5Co.js",
       "local": "sn",
+      "target": "formatted-list.mjs"
+    },
+    "FormattedNumber": {
+      "file": "vendor-intl-DYfox5Co.js",
+      "local": "on",
       "target": "formatted-list.mjs"
     },
     "useMediaQuery": {
@@ -3240,10 +3462,30 @@
       "local": "M_",
       "target": "branch-row-classes.mjs"
     },
+    "heldBranchRowClass": {
+      "file": "shared-6-sd9jbJqs.js",
+      "local": "R_",
+      "target": "branch-row-classes.mjs"
+    },
+    "bandAccentClassName": {
+      "file": "shared-6-sd9jbJqs.js",
+      "local": "C_",
+      "target": "branch-row-classes.mjs"
+    },
     "DismissButton": {
       "file": "c0b46114c-Tzv34BiL.js",
       "local": "b",
       "target": "dismiss-button.mjs"
+    },
+    "useBandEnter": {
+      "file": "c0b46114c-Tzv34BiL.js",
+      "local": "m",
+      "target": "band-enter.mjs"
+    },
+    "BAND_ENTER_CLASS": {
+      "file": "c0b46114c-Tzv34BiL.js",
+      "local": "f",
+      "target": "band-enter.mjs"
     },
     "RAIL_DISCLOSURE_TRIGGER_CLASS": {
       "file": "c227f4d5e-B-FYKrwT.js",
@@ -3359,6 +3601,31 @@
       "file": "c96d752d0-CWv_7-n9.js",
       "local": "yR",
       "target": "pr-rows.mjs"
+    },
+    "PrBarStaleRow": {
+      "file": "c96d752d0-CWv_7-n9.js",
+      "local": "aAe",
+      "target": "pr-rows.mjs"
+    },
+    "PR_BAR_ROWS_CLASS": {
+      "file": "c96d752d0-CWv_7-n9.js",
+      "local": "nR",
+      "target": "pr-rows.mjs"
+    },
+    "PR_BAR_HOLD_CLASS": {
+      "file": "c96d752d0-CWv_7-n9.js",
+      "local": "vje",
+      "target": "pr-rows.mjs"
+    },
+    "prBarRowSnapshot": {
+      "file": "c03935b01-yhcY34vt.js",
+      "local": "An",
+      "target": "pr-bar-snapshot.mjs"
+    },
+    "BRANCH_ROW_GHOST_ATTR": {
+      "file": "shared-46-BIbZBGFq.js",
+      "local": "A_",
+      "target": "branch-row-ghost.mjs"
     }
   },
   "callSites": [

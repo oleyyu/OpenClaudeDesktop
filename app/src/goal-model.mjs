@@ -1,6 +1,6 @@
 // Codex goals (0.155.1 thread/goal/set|get|clear, thread/goal/updated|cleared; the TUI's /goal
 // '[<objective>|clear|edit|pause|resume]', goal_display.rs): the /goal command for a core that reports
-// capabilities.nativeGoals, and the goal strip's copy. ThreadGoal {objective, status, tokenBudget, tokensUsed,
+// capabilities.nativeGoals, and its result copy. ThreadGoal {objective, status, tokenBudget, tokensUsed,
 // timeUsedSeconds}; status active | paused | blocked | usageLimited | budgetLimited | complete.
 import { getAssistantName, t } from '../electron/i18n/index.mjs';
 
@@ -31,32 +31,8 @@ export const goalNeedsReplaceConfirmation = (goal) => !!goal && typeof goal.obje
 const STATUS = { active: 'Working on it', paused: 'Paused', blocked: 'Blocked', usageLimited: 'Paused by usage limits', budgetLimited: 'Token budget reached', complete: 'Complete' };
 // goal (optional): a DeepSeek goal paused only because the session restarted (codeDesktop.disarmed) says so.
 export const goalStatusLabel = (status, goal = null) => goal?.codeDesktop?.disarmed === true ? t('Paused after a restart') : t(STATUS[status] || 'Working on it');
-const finite = value => typeof value === 'number' && Number.isFinite(value) && value >= 0;
-export function goalElapsed(seconds) {
-  if (!finite(seconds)) return '';
-  const minutes = Math.floor(seconds / 60);
-  if (minutes < 1) return t('{seconds}s', { seconds: Math.floor(seconds) });
-  if (minutes < 60) return t('{minutes}m', { minutes });
-  return t('{hours}h {minutes}m', { hours: Math.floor(minutes / 60), minutes: minutes % 60 });
-}
-export function goalUsage(goal, locale) {
-  if (!goal) return '';
-  const format = value => new Intl.NumberFormat(locale, { notation: value >= 10000 ? 'compact' : 'standard', maximumFractionDigits: 1 }).format(value);
-  const tokens = finite(goal.tokensUsed) ? (finite(goal.tokenBudget) && goal.tokenBudget > 0
-    ? t('{used} of {budget} tokens', { used: format(goal.tokensUsed), budget: format(goal.tokenBudget) })
-    : t('{used} tokens', { used: format(goal.tokensUsed) })) : '';
-  // A goal continued in rounds up to a cap (DeepSeek's dsh-goal, Qwen's turn count): 'Round 3 of 256'.
-  const rounds = goal.codeDesktop && finite(goal.codeDesktop.rounds) && goal.codeDesktop.rounds > 0
-    ? (finite(goal.codeDesktop.maxRounds) && goal.codeDesktop.maxRounds > 0 ? t('Round {count} of {max}', { count: goal.codeDesktop.rounds, max: goal.codeDesktop.maxRounds }) : t('Round {count}', { count: goal.codeDesktop.rounds })) : '';
-  return [rounds, goalElapsed(goal.timeUsedSeconds), tokens].filter(Boolean).join(' · ');
-}
-/** Why a blocked goal stopped (DeepSeek: its blocker, e.g. the round cap), shown under the strip. */
-export function goalBlockedReason(goal) {
-  if (goal?.status !== 'blocked') return '';
-  const code = goal.codeDesktop?.blockedCode, reason = typeof goal.codeDesktop?.blockedReason === 'string' ? goal.codeDesktop.blockedReason.trim() : '';
-  if (code === 'round-limit') return t('It used all {max} of its rounds.', { max: goal.codeDesktop?.maxRounds ?? '?' });
-  return reason;
-}
+// W14-code r4 shell fr4-12a (E95): the goal strip's time / tokens / rounds line and blocked reason went with the strip;
+// the rail's Goal card (railGoal, source-session-rail-adapters.jsx) shows the official fields.
 // The toast after a /goal request: the goal it answered with, or that none is set.
 export function goalCommandResult(request, result) {
   const goal = result?.goal ?? null;

@@ -13,7 +13,8 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Icon } from "./icons";
 import { SourceDialog } from "./source-dialog.jsx";
-import { SourceSettingsButton } from "./source-settings-button.jsx";
+// W14-code r6 R6DC-02: shared-frame Uu (E41 direct import), not the host replica.
+import { CdsButton } from "./generated/view-tabs/shared-frame-6jtSkIit.js";
 import { SourceImageViewer } from "./source-image-viewer.jsx";
 import { actionLabel, demonstrationLead, demonstrationRows, startOutcome } from "./watch-record-model.mjs";
 import { t } from "../electron/i18n/index.mjs";
@@ -83,7 +84,7 @@ function PermissionRow({ label, description, granted, onRequest, kind }) {
       </div>
       <p className="text-xs text-muted-as-secondary">{description}</p>
     </div>
-    {granted ? null : <SourceSettingsButton variant="secondary" className="flex-shrink-0" onClick={onRequest}>{t("Request")}</SourceSettingsButton>}
+    {granted ? null : <CdsButton variant="secondary" className="flex-shrink-0" onClick={onRequest}>{t("Request")}</CdsButton>}
   </div>;
 }
 
@@ -105,7 +106,7 @@ export function WatchRecordPermissionsDialog({ open, call, onClose }) {
   const request = (kind) => { call?.("watch-record:request-permission", { kind }).then((next) => { if (next) setState(next); }, () => {}); };
   return <SourceDialog open={open} size="md" showClose={false} title={t(WATCH_RECORD_COPY.tccModalTitle)} description={t(WATCH_RECORD_COPY.tccModalBody)}
     onClose={() => onClose(false)} data-watch-record-permissions=""
-    footer={<SourceSettingsButton variant="primary" onClick={() => onClose(granted)}>{t(granted ? WATCH_RECORD_COPY.tccModalContinue : WATCH_RECORD_COPY.tccModalClose)}</SourceSettingsButton>}>
+    footer={<CdsButton variant="primary" onClick={() => onClose(granted)}>{t(granted ? WATCH_RECORD_COPY.tccModalContinue : WATCH_RECORD_COPY.tccModalClose)}</CdsButton>}>
     <div className="mt-3 border border-border-300 rounded-lg divide-y divide-border-300">
       <PermissionRow kind="accessibility" label={t("Accessibility")} description={t("Required for mouse and keyboard tracking and control.")}
         granted={state?.accessibility === true} onRequest={() => request("accessibility")} />

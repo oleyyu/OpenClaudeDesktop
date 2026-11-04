@@ -75,10 +75,15 @@ export function syncWorkflowSizeStore(store,tasks,picked){
 export function compactTokens(value,locale=getLocale()){
  try{return new Intl.NumberFormat(locale,{notation:'compact',maximumFractionDigits:1}).format(value);}catch{return String(value);}
 }
-/** Hq: the band's detail line for the axis it was drawn for. */
-export function workflowSizeDetail(warning,locale=getLocale()){
+/** Hq (3.6556.2 o6): the band's detail line for the axis it was drawn for. W14-code r8 r8c-04 / sh8-02: o6 `{drawn, named}`
+ * — with a named workflow (p6's "{name} is larger than most workflows." already says it) the agents and tokens lines
+ * are the short 1UIDTGel6A "Up to {agents} scheduled." / gkJGMhm9Rl "As many as {tokens} tokens projected."; "both"
+ * reads the same either way. */
+export function workflowSizeDetail(warning,locale=getLocale(),named=false){
  if(!warning)return '';
  const tokens=compactTokens(warning.projectedTokens,locale);
+ if(named&&warning.axis==='agents')return tn(warning.scheduledAgents,'Up to {count} agent scheduled.','Up to {count} agents scheduled.');
+ if(named&&warning.axis==='tokens')return t('As many as {tokens} tokens projected.',{tokens});
  if(warning.axis==='agents')return tn(warning.scheduledAgents,'Up to {count} agent scheduled, more than most workflows use.','Up to {count} agents scheduled, more than most workflows use.');
  if(warning.axis==='tokens')return t('As many as {tokens} tokens projected, more than most workflows use.',{tokens});
  return tn(warning.scheduledAgents,'Up to {count} agent scheduled, about {tokens} tokens projected.','Up to {count} agents scheduled, about {tokens} tokens projected.',{tokens});

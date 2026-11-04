@@ -96,7 +96,7 @@ function TurnFooter({ identity, turnId, text, completedAtMs, interacted, hovered
     onPointerEnter={() => setLatched(true)} onFocusCapture={() => setLatched(true)}>
     {!mounted ? <div className="stf-deferred" data-find-omitted="">
       <span className="stf-placeholder" aria-hidden="true" />
-      <button type="button" className="stf-show-actions stf-sr-only" onFocusCapture={showActions}
+      <button type="button" className="stf-show-actions sr-only" onFocusCapture={showActions}
         onClick={showActions}>{t("Show message actions")}</button>
     </div> : <div className={`stf-toolbar ${MESSAGE_ACTIONS_COLOR}`} data-cds="MessageActions" data-reveal="fade"
       role="toolbar" aria-label={t("Message actions")} tabIndex={-1}
@@ -149,7 +149,7 @@ function TurnFooter({ identity, turnId, text, completedAtMs, interacted, hovered
           <FeedbackButton kind="positive" pressed={rating.value === 'positive'} onRate={rating.onRate} />
           <FeedbackButton kind="negative" pressed={rating.value === 'negative'} onRate={rating.onRate} />
         </>}
-        <span id={statusId} className="stf-status stf-sr-only" role="status">{announcement}</span>
+        <span id={statusId} className="stf-status sr-only" role="status">{announcement}</span>
         {/* Z0 (scroll-messages-current.js:43193): the timestamp is the LAST
             toolbar element, after Copy, so it takes last:pe-0. */}
         {completedAtMs != null && <SourceTimestamp dateMs={completedAtMs} />}

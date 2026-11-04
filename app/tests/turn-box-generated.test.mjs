@@ -45,8 +45,10 @@ test('TB-1 generator: the emitted originals are current, closed and pinned to th
   assert.equal(manifest.referenceSnapshot, 'snapshots/claude-3.6556.2-20261025-192807');
   assert.equal(manifest.adapterModule, 'src/source-turn-box-adapters.jsx');
   const targets = manifest.modules.map(m => m.target);
-  for (const name of ['turn-box.mjs', 'turn-tail.mjs', 'epitaxy-session.mjs', 'todo-list.mjs', 'spinner.mjs', 'visible-window.mjs'])
+  for (const name of ['turn-box.mjs', 'turn-tail.mjs', 'epitaxy-session.mjs', 'todo-list.mjs', 'visible-window.mjs'])
     assert.ok(targets.includes(name), name);
+  // W14-code r2 closeout-2 (DC-06): the unimported spinner.mjs re-export is retired.
+  assert.ok(!targets.includes('spinner.mjs'));
   // Generated modules come before the modules importing them.
   assert.ok(targets.indexOf('turn-tail.mjs') < targets.indexOf('turn-box.mjs'));
   assert.ok(targets.indexOf('epitaxy-session.mjs') < targets.indexOf('turn-tail.mjs'));

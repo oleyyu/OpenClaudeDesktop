@@ -78,25 +78,19 @@ test("shapeModelCatalog badges the default model and appends the unsupported cur
   assert.deepEqual(ids(modelMenuSections({ models: [model("a"), { ...gone.at(-1) }], selected: "a" }).primary), ["a"], "a deprecated row shows only as the current model");
 });
 
-// B30 c8e04f916 C q/J/ve/Q + c2d9b9a76 mark: the first non-warning badge marks its stop; '{name} ({badge})'.
-test("effort slider badges: the default level is marked, value text names the badge, warning badges add the note", async () => {
-  const { markDefaultEffort, effortMark, effortValueText, effortWarning } = await import("../src/model-menu-model.mjs");
+// B30 c8e04f916 C q/J/ve/Q + c2d9b9a76 mark: the default level carries the 'Default' badge the official slider marks.
+// W14-code r6 gen-final-6: the host's own mark / value-text / warning helpers went with the host slider (r6-composer-02
+// slices c8e04f916 EffortControl, which computes q/J/ve/Q itself), so only the badge the host feeds it is pinned here.
+test("effort slider badges: the default level is marked with the official 'Default' badge", async () => {
+  const { markDefaultEffort } = await import("../src/model-menu-model.mjs");
+  const mod = await import("../src/model-menu-model.mjs");
+  for (const gone of ["effortMark", "effortValueText", "effortWarning", "hasHighestEffort"]) assert.equal(mod[gone], undefined, `${gone} is gone with the host slider`);
   const levels = [{ reasoningEffort: "low" }, { reasoningEffort: "medium" }, { reasoningEffort: "high" }];
   const marked = markDefaultEffort(levels, "medium");
   assert.deepEqual(marked[1].badge, { message: "Default", variant: "neutral" });
   assert.equal(marked[0], levels[0], "other levels are untouched");
   assert.deepEqual(markDefaultEffort(["low", "high"], "high")[1], { reasoningEffort: "high", badge: { message: "Default", variant: "neutral" } });
   assert.equal(markDefaultEffort(levels, ""), levels);
-  const options = marked.map((level) => ({ ...level, id: level.reasoningEffort, name: effortName(level.reasoningEffort) }));
-  assert.deepEqual(effortMark(options), { index: 1, label: "Default" });
-  assert.equal(effortValueText(options, 1), "Medium (Default)");
-  assert.equal(effortValueText(options, 2), "High");
-  assert.equal(effortValueText([{ id: "x" }, { id: "y" }], 1), "Level 2 of 2");
-  const warned = [{ id: "high", name: "High" }, { id: "max", name: "Max", badge: { message: "High usage", variant: "warning" } }];
-  assert.equal(effortMark(warned), null, "a warning badge is no mark");
-  assert.equal(effortWarning(warned[1]), "DeepSeek thinks longer with Max effort and uses your limits faster than High.");
-  assert.equal(effortWarning({ ...warned[1], tooltip: { content: "Own note" } }), "Own note");
-  assert.equal(effortWarning(warned[0]), undefined);
 });
 
 // ---- 3.6556.2 (w2-menus-host, menus:C6): the Fast row's `unavailable` forms (shared-7-DBAgAi5H yw → _w), host default

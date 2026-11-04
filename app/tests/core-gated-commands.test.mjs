@@ -29,10 +29,10 @@ test('side questions: a reported false wins; bridges serve the extension and a n
  assert.equal(sideQuestionsSupported(undefined),true,'no core yet: the other gates speak');
 });
 
-test('/btw is hidden and refused, naming the core, where side questions are missing',()=>{
+test('/btw is hidden and refused where side questions are missing (W14-code composer-04: xme o2F4dsMA6N)',()=>{
  const codex={...ready,coreName:'Codex',sideQuestions:false};
- assert.equal(commandUnavailable(btw,codex),'Not available with Codex yet');
- assert.equal(commandUnavailable(btw,{...ready,sideQuestions:false}),'Not available with this core yet');
+ assert.equal(commandUnavailable(btw,codex),'Side chat isn’t available in this session.');
+ assert.equal(commandUnavailable(btw,{...ready,sideQuestions:false}),'Side chat isn’t available in this session.');
  assert.equal(commandUnavailable(btw,{...ready,coreName:'DeepSeek Harness',sideQuestions:true}),'');
  assert.equal(matchCommands('bt',codex).some(r=>r.id==='btw'),false);
  assert.equal(matchCommands('bt',{...ready,sideQuestions:true})[0].id,'btw');
@@ -181,9 +181,9 @@ test('/compact offers [instructions] only on a core that takes them (capabilitie
  assert.match(main,/compactInstructions: coreSupports\(boot\?\.core, "compactInstructions"\)/);
 });
 
-test('/cd is unavailable on a core that reports forkCwd false; undeclared it stays',()=>{
+test('/cd is unavailable on a core that reports forkCwd false (Bhe 12XmfjC9XR); undeclared it stays',()=>{
  const cd=sessionCommands.find(c=>c.id==='cd');
- assert.equal(commandUnavailable(cd,{...ready,coreName:'Gemini CLI',forkCwd:false}),'Not available with Gemini CLI yet');
+ assert.equal(commandUnavailable(cd,{...ready,coreName:'Gemini CLI',forkCwd:false}),'Changing the directory isn’t available for this session.');
  assert.equal(commandUnavailable(cd,{...ready,forkCwd:true}),'');
  assert.equal(commandUnavailable(cd,{...ready}),'');
 });

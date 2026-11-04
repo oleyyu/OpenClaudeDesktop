@@ -225,6 +225,21 @@ function Qp(e, t) {
   }
   Te(n) !== void 0 && t.remove?.();
 }
+function AD(e) {
+  let t = 1;
+  for (
+    let n = e.indexOf(`
+`);
+    n !== -1;
+    n = e.indexOf(
+      `
+`,
+      n + 1,
+    )
+  )
+    t++;
+  return t;
+}
 var mM = /^[\\/]{2}(wsl\$|wsl\.localhost)(?=[\\/]|$)/i;
 function hM(e) {
   return mM.test(e);
@@ -526,23 +541,49 @@ function cF(e) {
   return e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey;
 }
 export {
+  AD,
   AM,
+  CM,
   DM,
+  EM,
   Fp,
   Gp,
   HM,
   JM,
+  JN,
   KN,
   QM,
+  Qp,
+  Rp,
+  Sp,
   TM,
   TN,
   WN,
+  Yp,
+  Z,
   ZM,
   _M,
+  _p,
+  ap,
   bN,
+  bp,
   cF,
+  cp,
+  dp,
+  gp,
+  ip,
   jM,
   kM,
+  lp,
+  nN,
+  op,
+  sp,
+  up,
+  vN,
+  vp,
+  wM,
+  xp,
   yM,
   yN,
+  yp,
 };

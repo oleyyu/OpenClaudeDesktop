@@ -54,14 +54,15 @@ const trigger = (html, className) => {
 };
 // 0.2.120 review: Mu → Qa text → po sorts modifiers by io (shared-frame-C_2npUJq.js:2136, :2206-2219), shift
 // before cmd, so the source tooltip reads ⇧⌘M (an earlier revision pinned the unsorted ⌘⇧M). Fidelity F02: the
-// tooltip takes the raw key spec (Ud triggerKey) and SourceTooltip draws the text variant; MODE_MENU_SHORTCUT is its caps.
+// tooltip takes the raw key spec (Ud triggerKey) and SourceTooltip draws the text variant.
 test('Mode tooltip carries the cmd+shift+m spec (caps ⇧⌘M, io modifier order); the Bypass copy differs from Mode; closed while a chin menu is open', () => {
   // B30 (ca80fca8d Kt/N$): Manual with Auto on offer reads the warning tooltip instead of the header.
   assert.deepEqual(C.modeTooltip({ permission: 'ask' }), { content: 'DeepSeek asks before making changes. Auto is recommended.', shortcut: 'cmd+shift+m', open: undefined });
   assert.deepEqual(C.modeTooltip({ permission: 'plan' }), { content: 'Mode', shortcut: 'cmd+shift+m', open: undefined });
   const bypass = C.modeTooltip({ permission: 'bypass' });
   assert.equal(bypass.content, 'DeepSeek can modify or delete files without asking');
-  assert.notEqual(bypass.content, 'Mode'); assert.equal(bypass.shortcut, 'cmd+shift+m'); assert.equal(C.MODE_MENU_SHORTCUT, '⇧⌘M');
+  assert.notEqual(bypass.content, 'Mode'); assert.equal(bypass.shortcut, 'cmd+shift+m');
+  // W14-code r4 (fr4-16): the test-only MODE_MENU_SHORTCUT export is gone; SourceTooltip formats the spec itself (⇧⌘M).
   assert.equal(C.modeTooltip({ permission: 'ask', menuKind: 'permission' }).open, false);
   assert.doesNotMatch(trigger(render({ permission: 'bypass' }), 'sc-permission'), /title=/, 'CDS tooltip, no native title');
 });

@@ -278,7 +278,8 @@ test('feedback details: iT’s "Submitting this report will send…" note stays 
 test('thinking: a Chat conversation reads as the Thinking view (no ctrl+o view, no toggle)', () => {
   const main = local('src/main.jsx');
   assert.match(main, /const transcriptView = mode === "chat" \? "thinking" : effectiveView\(sessionViews\[current\], prefs\.transcriptView, \{ hasThinking \}\);/);
-  assert.match(main, /onToggleThinking=\{current && mode !== "chat" /);
+  // W14-code r4-composer-03: 3.6556.2 has no working-line thinking toggle in any mode (no onToggleThinking in any chunk).
+  assert.doesNotMatch(main, /onToggleThinking=/);
 });
 
 test('thinking: a host tool group of one search kind is one step over its count; a step runs only while its own block does', async () => {

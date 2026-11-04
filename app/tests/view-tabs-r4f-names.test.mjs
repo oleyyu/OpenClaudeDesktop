@@ -82,8 +82,15 @@ test('every name published before R4f keeps its file and local; only new names a
   // Wave 11 added three roots after cdsSurfaceClass inside this block: CdsSurface (w11-e31-terminal-cont, shared-frame cg)
   // and the D1 move of cowork-scheduled's TextArea / Pictogram roots (w11-pictogram-d1, shared-frame nk, shared-156 KG).
   const wave11 = [['CdsSurface', 'cg', 'Dl'], ['CdsTextArea', 'nk', 'da'], ['CdsPictogram', 'KG', 'Hr']];
-  const d46 = [...block.matchAll(/name:'([\w$]+)'/g)].map(m => m[1]).filter(name => !contextBreakdown.includes(name) && !wave11.some(([n]) => n === name));
+  // W14-code r6 (R6T-02) published shared-frame Sv (exported `el`) inside this block as useCdsDialogFocusReturn, the dialog
+  // focus return the code transcript's image preview (cb1b78cfa ImagePreviewModal) reads; a new name, counted on its own.
+  const w14r6 = [['useCdsDialogFocusReturn', 'Sv', 'el']];
+  const d46 = [...block.matchAll(/name:'([\w$]+)'/g)].map(m => m[1]).filter(name => !contextBreakdown.includes(name) && !wave11.some(([n]) => n === name) && !w14r6.some(([n]) => n === name));
   assert.equal(d46.length, 207);
+  for (const [name, local, exportName] of w14r6) {
+    assert.equal(manifest.publicNames[name]?.local, local, name);
+    assert.equal(manifest.publicNames[name]?.export, exportName, name);
+  }
   for (const name of contextBreakdown) assert.equal(manifest.publicNames[name]?.local, 'bh', name);
   for (const [name, local, exportName] of wave11) {
     assert.equal(manifest.publicNames[name]?.local, local, name);
@@ -117,7 +124,7 @@ test('every name published before R4f keeps its file and local; only new names a
     ? [...source.slice(codeRoutinesStart, routinesEnd).matchAll(/name:'([\w$]+)'/g)].map(m => m[1]) : [];
   for (const name of codeRoutines) assert.ok(manifest.publicNames[name], name);
   assert.equal(manifest.publicNames.CdsTooltipImplContext?.local, 'Fl');
-  const known = new Set([...prior.map(([name]) => name), ...added.map(([name]) => name), ...r4g, ...d46, ...gr3, ...contextBreakdown, ...wave11.map(([name]) => name), ...accountAvatar, ...v3, ...routinesShared, ...codeRoutines]);
+  const known = new Set([...prior.map(([name]) => name), ...added.map(([name]) => name), ...r4g, ...d46, ...gr3, ...contextBreakdown, ...wave11.map(([name]) => name), ...w14r6.map(([name]) => name), ...accountAvatar, ...v3, ...routinesShared, ...codeRoutines]);
   assert.deepEqual(Object.keys(manifest.publicNames).filter(name => !known.has(name)), []);
   // The CdsRoot labels context (vn) is named only now that extract-code-composer.mjs no longer copies it.
   assert.equal(manifest.publicNames.CdsLabelsContext?.local, 'xn');

@@ -58,6 +58,29 @@ const previewHost = require("./r3b-preview-host.mjs");
 // R4f-preview-coords (F2): the point in the screenshot's pixels, checked against its frame and mapped (S4i, b4i).
 const { createPreviewCoordinateGuard, imageSize } = require("./r4e-preview-coordinates.mjs");
 
+// W14-code r4 r4pa-c04: 3.6556.2 asar index.chunk-jPKPzV-P.js Pdi / Idi — a page that can't load (or whose renderer
+// crashed) is replaced in its tab by this data: page (host, message, error), not a host overlay over the pane; the
+// message is "This site can't be reached" or, after a crash, "This page crashed" with "Reload to try again". The copy
+// is the main process's English, as in the original. Each page carries a counter comment so two pages differ.
+function previewErrorPageHtml(host, detail, message) {
+  const escape = (value) => String(value).replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#39;");
+  return `<!DOCTYPE html>\n<html><head><style>\n  :root { --bg:#f5f5f5; --fg:#444; --muted:#666; }\n  @media (prefers-color-scheme: dark) {\n    :root { --bg:#131312; --fg:#ccc; --muted:#888; }\n  }\n  body { margin:0; height:100vh; display:flex; align-items:center; justify-content:center;\n    flex-direction:column; gap:8px; background:var(--bg); color:var(--fg); font-family:system-ui; }\n  .host { font-size:15px; font-weight:600; max-width:80vw; overflow-wrap:anywhere; }\n  .msg { font-size:14px; }\n  .err { font-size:12px; color:var(--muted); }\n</style><title>${escape(host)}</title></head><body>\n  <div class="host">${escape(host)}</div>\n  <div class="msg">${escape(message)}</div>\n  <div class="err">${escape(detail)}</div>\n</body></html>`;
+}
+let previewErrorPageCount = 0;
+// Idi's MM(e)?.host ?? e; LF: the address without its user name and password.
+function previewPageAddress(url) {
+  try { const parsed = new URL(url); if (!parsed.username && !parsed.password) return url; parsed.username = ""; parsed.password = ""; return parsed.href; }
+  catch { return url; }
+}
+function previewErrorPage(url, detail, message = "This site can't be reached") {
+  let host = url;
+  try { host = new URL(url).host || url; } catch { /* the address itself */ }
+  previewErrorPageCount += 1;
+  return `data:text/html;charset=utf-8,${encodeURIComponent(`${previewErrorPageHtml(host, detail, message)}<!-- ${previewErrorPageCount} -->`)}`;
+}
+// r(e): only a web address gets the page (EI(e) !== null); a file:// page (isStaticHtml) does not.
+const errorPageAddress = (url) => /^https?:\/\//i.test(url ?? "");
+
 // Cookies and local storage of previewed pages (2.2553.1 legacy preview "Keep cookies"): by default an in-memory session
 // for this app run (EPHEMERAL_PARTITION); with Servers & settings › Keep cookies, the on-disk one, kept across restarts.
 // Either is shared by every session's preview.
@@ -67,12 +90,17 @@ const CONSOLE_LIMIT = 500;
 const NETWORK_LIMIT = 300;
 const LOG_LIMIT = 1000;
 const READY_TIMEOUT_MS = 180000;
-const EARLY_EXIT_MS = 3000;
 const PRESETS = Object.freeze({ mobile: { width: 375, height: 812 }, tablet: { width: 768, height: 1024 } });
 const COLOR_SCHEMES = new Set(["system", "light", "dark"]);
 const PLACEHOLDER = { dark: "#131312", light: "#f5f5f5" };
 // 2.2553.1 q_r: a hidden page is reaped after five minutes unseen.
 const REAP_HIDDEN_MS = 300000;
+// W14-code r5pa-02: 3.6556.2 asar index.chunk-jPKPzV-P.js Bdi / Vdi / Hdi — a page that can't load is tried again up to
+// five times (backing off 1s, 2s, 4s… up to 30s) before its error page shows; while its launched server is still starting
+// and refuses the connection (-102), the load is held (1s, 2s, 4s, then 5s) up to 48 more times.
+const LOAD_RETRY_MAX = 5;
+const LOAD_HOLD_DELAY_MAX_MS = 5000;
+const LOAD_HOLD_MAX = 48;
 // What the agent's console and network reads say after a reap (2.2553.1 preview tools, verbatim).
 const RECLAIMED_NOTE = "Preview view was reclaimed while hidden, so its earlier console and network output is gone. Interact with the preview (navigate or screenshot) and re-read to collect fresh entries.";
 // eslint-disable-next-line no-control-regex
@@ -92,11 +120,13 @@ function quarantine(file) {
 
 /**
  * The Preview pane chord a key press inside the previewed page stands for (an Electron before-input-event input), else
- * null: "sketch" ⇧⌘X (Annotate), "close" ⌘W (close the preview), "address" ⌘L (the address field). Ctrl stands in for
+ * null: "sketch" ⇧⌘X (Annotate), "close" ⌘W (close the preview), "address" ⌘L (the address field), "reload" ⌘R. Ctrl stands in for
  * ⌘ off macOS, as the pane's own keydown takes either.
  */
 function previewShortcut(input) {
   if (!input || input.type !== "keyDown" || input.isAutoRepeat || input.alt) return null;
+  // W14-code r2-shared-07: c518a31cc Ve lists "f5" for "Reload page in preview" off a Mac.
+  if (process.platform !== "darwin" && input.key === "F5" && !input.control && !input.meta && !input.shift) return "reload";
   const command = process.platform === "darwin" ? input.meta && !input.control : input.control && !input.meta;
   if (!command) return null;
   const key = String(input.key ?? "").toLowerCase();
@@ -105,6 +135,8 @@ function previewShortcut(input) {
   if (key === "w" && !input.shift) return "close";
   if (key === "l" && !input.shift) return "address";
   if (key === "t" && !input.shift) return "new-tab";
+  // jPKPzV-P wli `pQ(e,t,"r")`: ⌘R inside the page reloads the preview (c518a31cc Ve "Reload page in preview"), not the app.
+  if (key === "r" && !input.shift) return "reload";
   return null;
 }
 
@@ -246,14 +278,18 @@ function createPreviewService({ electron, getSession, spawnEnv = async () => ({ 
     const active = previews.get(sessionId);
     if (active && !createTab) return active;
     let entry;
-    const group = active?.group ?? { tabs: new Map(), subscribers: new Set(), approvedHosts: new Set(), declinedHosts: new Set(), asking: new Set(), approvedServers: new Set(), recentFiles: [] };
+    const group = active?.group ?? { tabs: new Map(), subscribers: new Set(), declinedHosts: new Set(), asking: new Set(), approvedServers: new Set(), recentFiles: [] };
     const known = getSession(sessionId);
     if (!known?.cwd) throw new Error("Unknown session.");
     entry = {
       id: sessionId, tabId: crypto.randomUUID(), group, placeholder: !createTab, faviconUrl: null, cwd: known.cwd, view: null, host: null, paneBounds: null, visible: false, occluded: false, subscribers: new Set(),
       url: "", title: "", loading: false, error: null, crashed: false,
       viewport: { preset: "responsive", width: null, height: null, colorScheme: "system", setByAgent: false },
-      console: [], network: [], requests: new Map(), approvedHosts: new Set(), debugger: false, notifyTimer: null, lastServer: null,
+      console: [], network: [], requests: new Map(), debugger: false, notifyTimer: null, lastServer: null,
+      // r4pa-c11: the outside site this tab may use after an Allow once (its host), until the tab leaves it.
+      siteGrant: null,
+      // r5pa-02 (jPKPzV-P): the failed-load retries of this tab — their count, the held ones while the server starts.
+      retryCount: 0, heldRetries: 0, heldForUrl: undefined, retryTimer: null, loadFailed: false,
       reapTimer: null, reclaimed: false,
       // Servers & settings › Files: the HTML files of the session folder this preview showed, newest first.
       recentFiles: [],
@@ -266,7 +302,7 @@ function createPreviewService({ electron, getSession, spawnEnv = async () => ({ 
       // The page's latest download: { file, state: "saving"|"completed"|"failed"|"cancelled", reason?, at }.
       download: null,
     };
-    for (const key of ['subscribers', 'approvedHosts', 'declinedHosts', 'asking', 'approvedServers', 'recentFiles'])
+    for (const key of ['subscribers', 'declinedHosts', 'asking', 'approvedServers', 'recentFiles'])
       Object.defineProperty(entry, key, { get: () => group[key], set: value => { group[key] = value; }, enumerable: true, configurable: true });
     group.tabs.set(entry.tabId, entry);
     if (!active) previews.set(sessionId, entry);
@@ -298,7 +334,7 @@ function createPreviewService({ electron, getSession, spawnEnv = async () => ({ 
     if (!reclaimable(view.webContents.getURL() || entry.url)) return;
     stopSelection(entry, true);
     try { if (entry.parent && !entry.parent.isDestroyed()) entry.parent.contentView.removeChildView(view); } catch { /* already gone */ }
-    Object.assign(entry, { view: null, parent: null, debugger: false, loading: false, crashed: false, reclaimed: true, console: [], network: [], requests: new Map() });
+    Object.assign(entry, { view: null, parent: null, debugger: false, loading: false, crashed: false, errorPage: null, errorPageLoading: false, reclaimed: true, console: [], network: [], requests: new Map() });
     try { view.webContents.close(); } catch { /* gone */ }
     logger.info?.(`preview: closed the hidden page of ${entry.id}; it reopens at ${entry.url} when shown`);
     notify(entry);
@@ -411,9 +447,23 @@ function createPreviewService({ electron, getSession, spawnEnv = async () => ({ 
 
   // ------------------------------------------------------------------ outside sites
   // B39 Allowed sites (preview-allowed-origins.mjs): an outside site on the saved list needs no approval, in any
-  // session; the session's own approvals (approvedHosts) still count as before.
+  // session.
+  // W14-code r4 r4pa-c11 (E95): the grant is 3.6556.2's browser:open_site (asar jPKPzV-P y2n → `{allowed: o !== "denied",
+  // always: o === "always"}`; cc32965c2 Wh allowInput `{url, scope: "once"}` / deviceSiteKeepInput `{scope: "site"}`):
+  // Allow once lets this tab use the site until it leaves it (siteGrant); Always allow also saves the site to this
+  // computer's allowed sites (Settings › Code › Browser › Allowed sites, where it can be removed). No session-wide grant.
   const savedAllows = (url) => { try { return allowedOrigins.originAllowed(getAllowedOrigins(), url); } catch { return false; } };
-  const siteAllowed = (entry, host, url) => entry.approvedHosts.has(host) || savedAllows(url);
+  const siteAllowed = (entry, host, url) => entry.siteGrant === host || savedAllows(url);
+  // The approval's answer: true (the one-button card, the native sheet) is Allow once; {approved, always} from the card.
+  const siteAnswer = (answer) => answer === true ? { approved: true, always: false }
+    : answer && typeof answer === "object" && answer.approved === true ? { approved: true, always: answer.always === true } : { approved: false, always: false };
+  async function grantSite(entry, host, url, always) {
+    if (entry) entry.siteGrant = host;
+    if (!always) return;
+    const outcome = allowedOrigins.addAllowedOrigin(getAllowedOrigins(), url);
+    if (outcome.result !== allowedOrigins.ALLOWED_ORIGIN_RESULTS.Ok) return;
+    try { await setAllowedOrigins(outcome.list); } catch (error) { logger.warn?.(`preview: could not save the allowed site: ${error.message}`); }
+  }
   const outsideHost = (url) => {
     try { const parsed = new URL(url); return /^https?:$/.test(parsed.protocol) && !launch.isLocalHost(parsed.hostname) ? parsed.host : null; } catch { return null; }
   };
@@ -449,14 +499,42 @@ function createPreviewService({ electron, getSession, spawnEnv = async () => ({ 
     if (entry.asking.has(host)) return;
     if (typeof entry.siteApproval !== "function") { entry.declinedHosts.add(host); return; }
     entry.asking.add(host);
-    let ok = false;
-    try { ok = (await entry.siteApproval({ kind: "preview-site", host, url })) === true; } catch { ok = false; }
+    let answer = { approved: false, always: false };
+    try { answer = siteAnswer(await entry.siteApproval({ kind: "preview-site", host, url })); } catch { answer = { approved: false, always: false }; }
     entry.asking.delete(host);
-    if (!ok) { entry.declinedHosts.add(host); if (entry.blocked?.host === host) entry.blocked = { ...entry.blocked, declined: true }; blockedFor(entry, host); return; }
-    entry.approvedHosts.add(host);
+    if (!answer.approved) { entry.declinedHosts.add(host); if (entry.blocked?.host === host) entry.blocked = { ...entry.blocked, declined: true }; blockedFor(entry, host); return; }
+    // A popup's site is granted to the tab it opens in (the window-open handler), not to its opener.
+    await grantSite(load ? entry : null, host, url, answer.always);
     entry.declinedHosts.delete(host);
     if (entry.blocked?.host === host) entry.blocked = null;
     if (load && alive(entry)) entry.view.webContents.loadURL(url).catch(() => {});
+    return true;
+  }
+
+  // r5pa-02: jPKPzV-P resetLoadRetryBudget — the user's own navigation or reload starts a fresh budget.
+  function resetLoadRetryBudget(entry) {
+    if (!entry) return;
+    if (entry.retryTimer) { clearTimeout(entry.retryTimer); entry.retryTimer = null; }
+    entry.retryCount = 0; entry.heldRetries = 0; entry.heldForUrl = undefined;
+  }
+  // jPKPzV-P launchedServerStatusFor: the status of the launched server a loopback address belongs to, else null.
+  function launchedServerStatusFor(entry, address) {
+    let url;
+    try { url = new URL(address); } catch { return null; }
+    if (!/^https?:$/.test(url.protocol) || !launch.isLocalHost(url.hostname)) return null;
+    const port = Number(url.port || (url.protocol === "https:" ? 443 : 80));
+    const server = [...servers.values()].find((other) => other.cwd === entry.cwd && Number(other.port) === port && (other.status === "running" || other.status === "starting"));
+    return server?.status ?? null;
+  }
+  // jPKPzV-P safeRetryUrl(n) === l: the failed address is one the preview tries again (a page of a local server).
+  const retriesLoad = (address) => { try { const url = new URL(address); return /^https?:$/.test(url.protocol) && launch.isLocalHost(url.hostname); } catch { return false; } };
+
+  function showErrorPage(entry, url, detail, message) {
+    if (!alive(entry) || !errorPageAddress(url)) return false;
+    const pageUrl = previewErrorPage(url, detail, message);
+    entry.errorPage = { pageUrl, url };
+    entry.errorPageLoading = true;
+    entry.view.webContents.loadURL(pageUrl).catch(() => {});
     return true;
   }
 
@@ -494,31 +572,72 @@ function createPreviewService({ electron, getSession, spawnEnv = async () => ({ 
       if (allowed.ok) setImmediate(async () => {
         try {
           const host = outsideHost(allowed.url);
+          // r4pa-c11: the site the opener may use (its Allow once) or the one just allowed comes along to the new tab.
+          let granted = !!host && entry.siteGrant === host;
           if (entry.agentDriven && host && !siteAllowed(entry, host, allowed.url)) {
             if (entry.declinedHosts.has(host) || !(await askOutside(entry, host, allowed.url, false))) return;
+            granted = true;
           }
           if (!alive(entry) || entry.group.tabs.get(entry.tabId) !== entry) return;
           const state = newTab(entry.id), next = tabEntry(entry.id, state.activeTabId);
           next.popup = true;
           next.agentDriven = entry.agentDriven; next.siteApproval = entry.siteApproval;
+          if (granted) next.siteGrant = host;
           await navigate(entry.id, allowed.url, { tabId: next.tabId });
         } catch (error) { logger.warn?.(`preview: could not open a tab: ${error.message}`); }
       });
       return { action: "deny" };
     });
-    contents.on("did-start-loading", mine(() => { stopSelection(entry);entry.loading = true; entry.error = null; notify(entry); }));
-    contents.on("did-stop-loading", mine(() => { entry.loading = false; notify(entry); }));
-    contents.on("did-navigate", mine((_event, url) => { entry.url = url; entry.title = contents.getTitle(); notify(entry); }));
+    contents.on("did-start-loading", mine(() => { stopSelection(entry);entry.loading = true; entry.loadFailed = false; if (entry.errorPageLoading) entry.errorPageLoading = false; else entry.error = null; notify(entry); }));
+    // r5pa-02 (jPKPzV-P did-stop-loading): a page that loaded ends its retries.
+    contents.on("did-stop-loading", mine(() => { entry.loading = false; if (!entry.loadFailed) resetLoadRetryBudget(entry); notify(entry); }));
+    // r4pa-c04 (n.errorPages): the tab keeps the address that failed while its error page shows.
+    contents.on("did-navigate", mine((_event, url) => {
+      if (entry.errorPage && entry.errorPage.pageUrl !== url) entry.errorPage = null;
+      // r4pa-c11: an Allow once ends when the tab commits a page on another site (an error page stands in for its address).
+      if (entry.siteGrant && !entry.errorPage) { let host = null; try { host = new URL(url).host; } catch { /* not a web page */ } if (host !== entry.siteGrant) entry.siteGrant = null; }
+      entry.url = entry.errorPage ? entry.errorPage.url : url; entry.title = contents.getTitle(); notify(entry);
+    }));
     contents.on("did-navigate-in-page", mine((_event, url, isMainFrame) => { if (isMainFrame) { stopSelection(entry);entry.url = url; notify(entry); } }));
     contents.on("page-favicon-updated", mine((_event, urls) => { entry.faviconUrl = (urls || []).find(url => /^https?:/i.test(url)) ?? null; notify(entry); }));
     contents.on("page-title-updated", mine((_event, title) => { entry.title = title; notify(entry); }));
     contents.on("did-fail-load", mine((_event, code, description, url, isMainFrame) => {
       if (!isMainFrame || code === -3) return; // -3: aborted by a newer navigation
-      entry.error = { code: String(code), description, url };
-      entry.url = url || entry.url;
+      if (entry.errorPage && url === entry.errorPage.pageUrl) return;
+      entry.loadFailed = true;
+      if (entry.retryTimer) { clearTimeout(entry.retryTimer); entry.retryTimer = null; }
+      const address = previewPageAddress(url || entry.url);
+      entry.error = { code: String(code), description, url: address };
+      entry.url = address || entry.url;
+      // r5pa-02: jPKPzV-P did-fail-load — h (held: the server is starting and refused the connection), g (the server it
+      // was held for is gone); past five retries (unless held), or once that server is gone, the error page shows.
+      const retries = retriesLoad(address), status = launchedServerStatusFor(entry, address), held = entry.heldRetries;
+      const hold = code === -102 && status === "starting" && held < LOAD_HOLD_MAX && retries;
+      const gone = held > 0 && entry.heldForUrl === address && status === null && retries;
+      if ((entry.retryCount >= LOAD_RETRY_MAX && !hold) || gone || !retries) {
+        if (retries) logger.warn?.(`preview: Max retries reached, giving up (${entry.retryCount} retries, ${held} held${gone ? ", server gone" : ""})`);
+        // jPKPzV-P did-fail-load → i(l, o): the error page with Chromium's description (e.g. ERR_CONNECTION_REFUSED).
+        showErrorPage(entry, address, description);
+        notify(entry);
+        return;
+      }
+      if (hold) { entry.heldRetries += 1; entry.heldForUrl = address; } else entry.retryCount += 1;
+      const delay = hold ? Math.min(1000 * 2 ** held, LOAD_HOLD_DELAY_MAX_MS) : Math.min(1000 * 2 ** (entry.retryCount - 1), 30000);
+      entry.retryTimer = setTimeout(() => {
+        entry.retryTimer = null;
+        if (entry.view === view && !contents.isDestroyed()) contents.loadURL(address).catch(() => {});
+      }, delay);
       notify(entry);
     }));
-    contents.on("render-process-gone", mine((_event, details) => { stopSelection(entry, true);entry.crashed = true; entry.error = { code: "crashed", description: details?.reason || "crashed", url: entry.url }; notify(entry); }));
+    contents.on("render-process-gone", mine((_event, details) => {
+      stopSelection(entry, true);entry.crashed = true; entry.error = { code: "crashed", description: details?.reason || "crashed", url: entry.url }; notify(entry);
+      // jPKPzV-P: a crash other than a clean exit shows "This page crashed" / "Reload to try again" once the page is idle.
+      if (details?.reason === "clean-exit") return;
+      setImmediate(() => {
+        if (entry.view !== view || contents.isDestroyed() || contents.isLoadingMainFrame() || entry.errorPage) return;
+        showErrorPage(entry, previewPageAddress(entry.url), "Reload to try again", "This page crashed");
+      });
+    }));
     contents.on("devtools-opened", () => notify(entry));
     contents.on("devtools-closed", () => notify(entry));
     // F6 / Ctrl+F6 leave the page for the app (the pane's skip link explains it). The pane's own chords also work
@@ -1031,6 +1150,7 @@ function createPreviewService({ electron, getSession, spawnEnv = async () => ({ 
     entry.group.lastTabClosed = false;
     ensureView(entry);
     entry.error = null;
+    resetLoadRetryBudget(entry);
     const contents = entry.view.webContents;
     const done = new Promise((resolve) => {
       let settled = false;
@@ -1040,8 +1160,17 @@ function createPreviewService({ electron, getSession, spawnEnv = async () => ({ 
       // A redirect to an outside site the user declined (holdOutside): the load ends there.
       const blocked = (host) => finish({ ok: false, code: "blocked", description: declinedText(host) });
       entry.blockWaiters.add(blocked);
-      const failed = (_event, code, description, _url, isMainFrame) => { if (isMainFrame && code !== -3) finish({ ok: false, code, description }); };
-      const timer = setTimeout(() => finish({ ok: true, slow: true }), 30000);
+      // r5pa-02 (jPKPzV-P loadResolvers): a failure the tab tries again doesn't end the load yet.
+      let lastFailure = null;
+      const failed = (_event, code, description, _url, isMainFrame) => {
+        if (!isMainFrame || code === -3) return;
+        if (!entry.retryTimer) finish({ ok: false, code, description }); else lastFailure = { code, description };
+      };
+      // W14-code r5 复核: jPKPzV-P waitForLoad timeout resolves `n.isLoaded&&!n.loadFailed` — a page still failing and being
+      // retried (or that failed and never loaded) isn't reported as shown; only a slow page with no failure is.
+      const timer = setTimeout(() => finish(lastFailure || entry.retryTimer || entry.loadFailed
+        ? { ok: false, code: lastFailure?.code ?? entry.error?.code ?? "failed", description: lastFailure?.description ?? entry.error?.description ?? "The page failed to load." }
+        : { ok: true, slow: true }), 30000);
       contents.on("did-finish-load", ok);
       contents.on("did-fail-load", failed);
       contents.on("destroyed", closed);
@@ -1052,7 +1181,8 @@ function createPreviewService({ electron, getSession, spawnEnv = async () => ({ 
     // cf580efe9 fa He: once the session shows a page again, the frame from before the restart is discarded.
     if (result.ok) discardFrame(entry.id);
     if (previews.get(entry.id)?.group.tabs.get(entry.tabId) === entry) { armReap(entry, true); notify(entry); }
-    return { ...result, url: contents.isDestroyed() ? entry.url : contents.getURL(), title: contents.isDestroyed() ? entry.title : contents.getTitle() };
+    const shown = contents.isDestroyed() ? entry.url : contents.getURL();
+    return { ...result, url: entry.errorPage && (shown === entry.errorPage.pageUrl || !result.ok) ? entry.errorPage.url : shown, title: contents.isDestroyed() ? entry.title : contents.getTitle() };
   }
   // An HTML file of the session folder the preview opened (file://), for Servers & settings › Files.
   function rememberFile(entry, url) {
@@ -1154,7 +1284,8 @@ function createPreviewService({ electron, getSession, spawnEnv = async () => ({ 
     const contents = entry.view.webContents;
     if (action === "back" && contents.navigationHistory.canGoBack()) contents.navigationHistory.goBack();
     else if (action === "forward" && contents.navigationHistory.canGoForward()) contents.navigationHistory.goForward();
-    else if (action === "reload") { if (entry.crashed) { entry.crashed = false; contents.loadURL(entry.url || "about:blank").catch(() => {}); } else contents.reload(); }
+    // r4pa-c04: Reload over an error page loads the address that failed again (the page itself is only its stand-in).
+    else if (action === "reload") { resetLoadRetryBudget(entry); if (entry.crashed || entry.errorPage) { const url = entry.errorPage?.url ?? entry.url; entry.crashed = false; entry.errorPage = null; contents.loadURL(url || "about:blank").catch(() => {}); } else contents.reload(); }
     else if (action === "stop") contents.stop();
     return true;
   }
@@ -1437,10 +1568,10 @@ function createPreviewService({ electron, getSession, spawnEnv = async () => ({ 
       if (siteAllowed(item, parsed.host, parsed.href)) return;
       // Asked once: a host the user declined in this session is refused without asking again.
       if (item.declinedHosts.has(parsed.host)) throw new Error(declinedText(parsed.host));
-      const ok = await ask({ kind: "preview-site", host: parsed.host, url: parsed.href });
+      const answer = siteAnswer(await ask({ kind: "preview-site", host: parsed.host, url: parsed.href }));
       if (stopped()) throw stopped();
-      if (!ok) { item.declinedHosts.add(parsed.host); throw new Error(declinedText(parsed.host)); }
-      item.approvedHosts.add(parsed.host);
+      if (!answer.approved) { item.declinedHosts.add(parsed.host); throw new Error(declinedText(parsed.host)); }
+      await grantSite(item, parsed.host, parsed.href, answer.always);
       item.declinedHosts.delete(parsed.host);
     };
     // A launch.json command runs outside the core's sandbox, as the user: the agent starts one only after the user
@@ -1706,7 +1837,7 @@ function createPreviewService({ electron, getSession, spawnEnv = async () => ({ 
       }
       old.group.tabs.clear();previews.delete(old.id);closedTabs.delete(old.id);
       const first = preview(old.id);
-      for (const key of ['subscribers', 'approvedHosts', 'declinedHosts', 'approvedServers', 'recentFiles']) first.group[key] = old.group[key];
+      for (const key of ['subscribers', 'declinedHosts', 'approvedServers', 'recentFiles']) first.group[key] = old.group[key];
       let selected = first;
       replay.forEach((item, index) => {
         const next = index === 0 ? first : preview(old.id, true);
@@ -1812,7 +1943,7 @@ function createPreviewService({ electron, getSession, spawnEnv = async () => ({ 
       case "preview-server-clear-logs": return clearLogs(id, p.name);
       // B39 Allowed sites (c25b1be4a PreviewAllowedSitesModal over getPreviewAllowedOrigins / addPreviewAllowedOrigin /
       // removePreviewAllowedOrigin / clearPreviewAllowedOrigins): app-wide, no session. Removing a site (or clearing
-      // the list) also drops the sessions' own approvals for it, so the agent asks again (TNn/ENn clear the grants).
+      // the list) also drops the tabs' Allow once grants for it, so the agent asks again (TNn/ENn clear the grants).
       case "preview-allowed-origins": return allowedOrigins.allowedOriginEntries(getAllowedOrigins());
       case "preview-allowed-origin-add": {
         const outcome = allowedOrigins.addAllowedOrigin(getAllowedOrigins(), p.origin, { schemeless: p.schemeless === true });
@@ -1826,12 +1957,12 @@ function createPreviewService({ electron, getSession, spawnEnv = async () => ({ 
         if (!outcome.removed) return false;
         await setAllowedOrigins(outcome.list);
         for (const entry of previews.values())
-          for (const host of [...entry.group.approvedHosts]) if (allowedOrigins.hostMatchesOrigin(host, outcome.origin)) entry.group.approvedHosts.delete(host);
+          for (const tab of entry.group.tabs.values()) if (tab.siteGrant && allowedOrigins.hostMatchesOrigin(tab.siteGrant, outcome.origin)) tab.siteGrant = null;
         return true;
       }
       case "preview-allowed-origins-clear": {
         await setAllowedOrigins([]);
-        for (const entry of previews.values()) entry.group.approvedHosts.clear();
+        for (const entry of previews.values()) for (const tab of entry.group.tabs.values()) tab.siteGrant = null;
         return true;
       }
       // Settings › Code › Browser › Keep cookies (c71860c77-DzP8HoeV Kr) reads and sets the same mode without a session.
@@ -1928,7 +2059,18 @@ function createPreviewService({ electron, getSession, spawnEnv = async () => ({ 
       default: throw new Error("Unknown operation.");
     }
   }
-  return { call, forSession, snapshot: (id) => snapshot(preview(id)), dispose, launchInfo, windowClosed, PARTITION, EPHEMERAL_PARTITION, _previews: previews, _servers: servers };
+  // W14-code r2-shared-07: jPKPzV-P dTi `Bhi() || X3n()` — View › Reload reloads the preview whose page has focus (zhi /
+  // xli: tabFocused; the pane chrome's ⌘R is the renderer's own keydown) and reports true, else the caller reloads the app.
+  function reloadFocused() {
+    for (const [id, entry] of previews) {
+      if (!alive(entry) || !onScreen(entry)) continue;
+      let focused = false;
+      try { focused = entry.view.webContents.isFocused(); } catch {}
+      if (focused) return history(id, "reload");
+    }
+    return false;
+  }
+  return { call, forSession, snapshot: (id) => snapshot(preview(id)), dispose, launchInfo, windowClosed, reloadFocused, PARTITION, EPHEMERAL_PARTITION, _previews: previews, _servers: servers };
 }
 
-module.exports = { createPreviewService, previewShortcut, PARTITION, EPHEMERAL_PARTITION, PRESETS, REAP_HIDDEN_MS, RECLAIMED_NOTE };
+module.exports = { createPreviewService, previewShortcut, previewErrorPage, previewErrorPageHtml, previewPageAddress, PARTITION, EPHEMERAL_PARTITION, PRESETS, REAP_HIDDEN_MS, RECLAIMED_NOTE };

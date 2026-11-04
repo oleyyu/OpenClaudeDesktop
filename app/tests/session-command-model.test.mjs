@@ -50,13 +50,16 @@ test('unsupported core methods disable fork, review and rewind first; the slash 
  const reason='Not available with DeepSeek Harness yet',unnamed='Not available with this core yet';
  assert.ok(commandUnavailable({id:'rewind',session:true,idle:true},{current:'t',connected:true,hasHistory:true,unsupportedMethods:['thread/revert']}));
  const deepseek={current:'t',connected:true,hasHistory:true,coreName:'DeepSeek Harness',unsupportedMethods:['thread/fork','review/start','thread/revert']};
+ // W14-code composer-04: fork and rewind take cc43287c9 Bhe's own sentence (5YjSObVA9A / ODHt3FQYSl); review keeps the
+ // host's core-named reason (no official counterpart).
+ const official={fork:'Fork isn’t available for this session.',rewind:'Rewind isn’t available for this session.'};
  for(const [id,method] of [['fork','thread/fork'],['review','review/start'],['rewind','thread/revert']]){
   const command=sessionCommands.find(c=>c.id===id);
-  assert.equal(commandUnavailable(command,{current:'t',connected:true,hasHistory:true,unsupportedMethods:[method]}),unnamed,id);
-  assert.equal(commandUnavailable(command,{current:'t',connected:true,hasHistory:true,coreName:'GLM Code',unsupportedMethods:[method]}),'Not available with GLM Code yet',id);
+  assert.equal(commandUnavailable(command,{current:'t',connected:true,hasHistory:true,unsupportedMethods:[method]}),official[id]??unnamed,id);
+  assert.equal(commandUnavailable(command,{current:'t',connected:true,hasHistory:true,coreName:'GLM Code',unsupportedMethods:[method]}),official[id]??'Not available with GLM Code yet',id);
   assert.equal(commandUnavailable(command,{...deepseek,unsupportedMethods:[]}),'',id+' with a capable core');
-  assert.equal(commandUnavailable(command,{unsupportedMethods:[method]}),unnamed,id+' is checked before the session gates');
-  assert.equal(unsupportedCommand(id,deepseek),reason);assert.equal(unsupportedCommand(id,{}),'');
+  assert.equal(commandUnavailable(command,{unsupportedMethods:[method]}),official[id]??unnamed,id+' is checked before the session gates');
+  assert.equal(unsupportedCommand(id,deepseek),official[id]??reason);assert.equal(unsupportedCommand(id,{}),'');
  }
  assert.deepEqual(matchCommands('rew',deepseek),[]);assert.equal(matchCommands('rew',ready)[0].id,'rewind');
  assert.deepEqual(matchCommands('fork',deepseek),[]);assert.deepEqual(matchCommands('review',deepseek),[]);

@@ -10,8 +10,8 @@ import { renderToStaticMarkup as renderServerMarkup } from 'react-dom/server';
 import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
 import { ionSource } from '../scripts/official-3.6556.2.mjs';
-import { chatsPageRows, filterChatsPageRows, searchChatsPageRows, chatsSelectionTargets, chatDeleteDialogCopy, deleteChats,
-  chatDeleteOutcomeToasts, selectionAfterRemoval, chatsPageHref, chatIdFromPageHref, CHATS_PAGE_FILTERS, CHATS_PAGE_DEFAULT_FILTER,
+import { chatsPageRows, filterChatsPageRows, chatsSelectionTargets, chatDeleteDialogCopy, deleteChats,
+  chatDeleteOutcomeToasts, selectionAfterRemoval, chatsPageHref, chatIdFromPageHref, CHATS_PAGE_DEFAULT_FILTER,
   CHATS_SEARCH_OPTIONS, CHATS_SEARCH_KEYS } from '../src/chats-page-model.mjs';
 
 const root = new URL('..', import.meta.url).pathname;
@@ -71,7 +71,6 @@ test('official: the chats route renders c623cddd3 H (ChatsPageClient) and the ch
 test('rows: Chat sessions only, once each, newest first; the Active / Archived / All filter (H xe, `_ !== "all"`)', () => {
   assert.equal(count(page, 'var xe="active"'), 1);
   assert.equal(count(page, 'if(B=ie.filter(Te),_!=="all"){let e=_==="archived"'), 1);
-  assert.deepEqual(CHATS_PAGE_FILTERS, ['active', 'archived', 'all']);
   assert.equal(CHATS_PAGE_DEFAULT_FILTER, 'active');
   const rows = chatsPageRows(sessions, { metadata });
   assert.deepEqual(rows.map(row => row.ref.id), ['a', 'b']);
@@ -88,12 +87,7 @@ test('search: H be over title 0.7 / summary 0.3 with c2b74c150 {threshold:.35}; 
   assert.equal(count(fuzzy, 'threshold:i?.threshold??.2,ignoreLocation:!0,includeScore:!0,includeMatches:!0,minMatchCharLength:1,shouldSort:!0'), 1);
   assert.deepEqual(CHATS_SEARCH_OPTIONS, { threshold: 0.35 });
   assert.deepEqual(CHATS_SEARCH_KEYS, [{ name: 'title', weight: 0.7 }, { name: 'summary', weight: 0.3 }]);
-  const rows = chatsPageRows(sessions, { metadata });
-  assert.deepEqual(searchChatsPageRows(rows, '  ').map(row => row.ref.id), ['a', 'b']);
-  // A title starting with the query sorts first; the summary match follows.
-  assert.deepEqual(searchChatsPageRows(rows, 'trip').map(row => row.ref.id), ['a', 'b']);
-  assert.deepEqual(searchChatsPageRows(rows, 'recipe').map(row => row.ref.id), ['b']);
-  assert.deepEqual(searchChatsPageRows(rows, 'zzzzqqq'), []);
+  // R4DC-N7: the host's test-only searchChatsPageRows is gone; the page searches with these options and keys.
 });
 
 test('search: the generated c2b74c150 `a` runs, since code-routines keeps c145fa5ca\'s Fuse statics (Q.config=D)', async () => {

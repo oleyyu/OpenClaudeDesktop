@@ -8,6 +8,7 @@ import {useStartIntl} from './source-code-start-adapters.jsx';
 import {sessionPageRecords,sessionPageHref,sessionIdFromPageHref} from './sessions-page-model.mjs';
 import {sessionsPagePathname,sessionsPageSearch,sessionsPageSurfaceFromHref,mirrorSessionsPageHistoryKey} from './sessions-page-navigation.mjs';
 import {menuTriggerProps} from './source-menu.jsx';
+import {useSideChatRowsShown} from './source-sidebar-sections-adapters.jsx';
 import './source-sessions-page.css';
 
 const keyboardEntry=event=>event?.detail===0?'first':undefined;
@@ -44,7 +45,9 @@ export function SourceSessionsPage({sessions=[],state={},metadata={},repoIdentit
   initialSurface='code',scopeKey='code',historyKey=null,onSurfaceChange,onOpen,onNew,onSessionMenu,menuSessionId,loadFailed=false}) {
   const intl=useStartIntl();
   const [surface,setSurface]=useState(initialSurface==='archived'?'archived':'code');
-  const records=useMemo(()=>sessionPageRecords(sessions,{state,metadata,repoIdentities,engine}),[sessions,state,metadata,repoIdentities,engine]);
+  // E81: Show › Side chats (shared-11 lf) lists /btw children as rows here too (gd `ra(e.source.data)` reads the same Ff).
+  const sideChatRowsShown=useSideChatRowsShown();
+  const records=useMemo(()=>sessionPageRecords(sessions,{state,metadata,repoIdentities,engine,sideChatRowsShown}),[sessions,state,metadata,repoIdentities,engine,sideChatRowsShown]);
   const byId=useMemo(()=>new Map(records.map(row=>[row.ref.id,row.hostSession])),[records]);
   const entryKey=historyKey==null?null:`${scopeKey}\u0000${historyKey}`;
   mirrorSessionsPageHistoryKey(entryKey);
@@ -65,7 +68,7 @@ export function SourceSessionsPage({sessions=[],state={},metadata={},repoIdentit
       {...menuTriggerProps({open:menuSessionId===data.id,onOpen:(entry,event)=>openRowMenu(data.id,event.currentTarget,entry)})}
       onClick={event=>openRowMenu(data.id,event.currentTarget,keyboardEntry(event))}/></SessionsActionsRail>;
   },[byId,intl,menuSessionId,onSessionMenu,openRowMenu]);
-  return <PageNavigation value={onOpen}><PageMenu value={onSessionMenu?openRowMenu:null}><div className="source-sessions-page" onClick={event=>{
+  return <PageNavigation value={onOpen}><PageMenu value={onSessionMenu?openRowMenu:null}><div className="source-sessions-page h-full overflow-auto [scrollbar-gutter:stable]" onClick={event=>{
     if(event.defaultPrevented)return;
     const anchor=event.target?.closest?.('a[href]');
     if(anchor&&NEW_SESSION_HREFS.has(anchor.getAttribute('href'))){event.preventDefault();onNew?.();}

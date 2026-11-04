@@ -46,7 +46,8 @@ test('cf580efe9 gr: without a launch.json the start page is the Globe, Browse wi
   assert.match(html, /class="flex w-full max-w-\[420px\] flex-col items-center gap-md text-center"/);
   assert.match(html, /<p class="m-0 max-w-\[36ch\] text-body text-primary">Browse with \S+<\/p>/);
   assert.match(html, /<p class="m-0 max-w-\[44ch\] text-footnote text-muted">Type a URL or ask \S+ to open a site\. \S+ can read, click, and type\.<\/p>/);
-  assert.match(html, /<span>Preview your app instead\?<\/span><button type="button" data-cds="Button" data-variant="ghost" data-size="xxs"[^>]*>(?:(?!<\/button>).)*<span class="ssb-content">Detect dev server<\/span><\/button>/);
+  // W14-code r5 cleanup css5-settings-button-replica: shared-frame CdsButton (cf580efe9 :853 g ghost xxs → data-cds-ghost, data-step="1").
+  assert.match(html, /<span>Preview your app instead\?<\/span><button type="button" data-cds="Button" data-cds-ghost="" data-step="1"[^>]*>(?:(?!<\/button>).)*<span class="inline-flex min-w-0 items-center gap-1 ">Detect dev server<\/span><\/button>/);
   assert.doesNotMatch(html, /Ask DeepSeek|Preview your app<|data-variant="primary"[^>]*>Detect/);
   // Si t.length === 0: a launch.json with no configurations is the same start page ("Use this" appends to it); one
   // that doesn't parse keeps the list view with its error.
@@ -86,7 +87,7 @@ test('cf580efe9 Or setting-off: the preview setting off shows Browser tools are 
   assert.match(html, /<p class="max-w-\[36ch\] text-pretty break-words text-body text-primary">Browser tools are turned off<\/p>/);
   assert.match(html, /<p class="max-w-\[36ch\] text-pretty break-words text-footnote text-muted-as-secondary">They let /);
   assert.match(html, /They let \S+ start your dev server and open pages here\./);
-  assert.match(html, /<button type="button" data-cds="Button" data-variant="secondary"[^>]*>(?:(?!<\/button>).)*<span class="ssb-content">Turn on Browser tools<\/span><\/button>/);
+  assert.match(html, /<button type="button" data-cds="Button" class="[^"]*"><span aria-hidden="true" class="[^"]*"><span data-cds-part="paint" class="[^"]* bg-fill-secondary [^"]*"><\/span><\/span><span class="inline-flex min-w-0 items-center gap-1 ">Turn on Browser tools<\/span><\/button>/);
   const configured = { ...base, launch: { ...base.launch, exists: true, configs: [{ name: 'web', port: 5173, url: 'http://localhost:5173', attach: false }] } };
   assert.match(render(configured, { agentUsesPreview: false }), /data-preview-start="setting-off"/);
 });
@@ -106,7 +107,7 @@ test('cf580efe9 fr / dr: detected servers, a blocked one, the save error and Bac
   assert.match(html, /Your choice is saved to \.claude\/launch\.json in this project\./);
   assert.match(html, /<button type="button" class="group inline-flex items-center gap-0\.75 border-0 bg-transparent p-0 text-footnote text-muted">.*Back to browsing<\/span><\/button>/);
   const busy = renderToStaticMarkup(React.createElement(P.PreviewServerDetection, { candidates, busy: true, addError: null, onUse() {}, onBack() {} }));
-  assert.match(busy, /<button disabled="" type="button" data-cds="Button" data-variant="secondary"[^>]*>(?:(?!<\/button>).)*<span class="ssb-content">Use this<\/span><\/button>/);
+  assert.match(busy, /<button type="button" disabled="" data-cds="Button" class="[^"]*">(?:(?!<\/button>).)* bg-fill-secondary (?:(?!<\/button>).)*<span class="inline-flex min-w-0 items-center gap-1 ">Use this<\/span><\/button>/);
   assert.doesNotMatch(busy, /role="alert"/);
   const prompt = renderToStaticMarkup(React.createElement(P.PreviewStartPrompt, { onSetUp() {}, detectionActive: true, detection: 'DETECTION' }));
   assert.doesNotMatch(prompt, /Browse with|Detect dev server/, 'detectionActive replaces the prompt');
@@ -138,9 +139,11 @@ test('a page: the URL shows host and path, the skip link explains F6, the start 
 
 test('a load failure, and a page another pane shows (an empty viewport, no notice — as 2.2553.1)', () => {
   const failed = render({ ...base, hasPage: true, url: 'http://localhost:3000/', error: { code: '-102', description: 'ERR_CONNECTION_REFUSED', url: 'http://localhost:3000/' } });
-  assert.match(failed, /role="alert"/);
-  assert.match(failed, /Couldn’t load this preview/);
-  assert.match(failed, /Nothing is answering at http:\/\/localhost:3000\//);
+  // W14-code r4 r4pa-c04 (E95): the failure is the main process's data: error page inside the tab (3.6556.2 jPKPzV-P
+  // Idi / Pdi, preview-service.cjs previewErrorPage), so the pane shows the page surface; the host overlay
+  // (.spv-error, Restart {serverName} / Reload) is gone.
+  assert.match(failed, /data-preview-surface="page"/);
+  assert.doesNotMatch(failed, /spv-error|Couldn’t load this preview|Nothing is answering|data-preview-restart/);
   const elsewhere = render({ ...base, hasPage: true, url: 'http://localhost:3000/', hostId: 'another-pane' });
   assert.match(elsewhere, /data-preview-surface="page"/);
   assert.match(elsewhere, /<span class="text-primary">localhost:3000<\/span>/, 'the header still drives the shared page');
@@ -158,7 +161,8 @@ test('header: Select element follows navigation and needs a page and a composer'
   const html = render(page, { onAttachElement: () => {} });
   assert.match(html, /aria-label="Select element"/);
   assert.ok(html.indexOf('aria-label="Forward"') < html.indexOf('aria-label="Select element"'));
-  assert.doesNotMatch(html.match(/<button[^>]*aria-label="Select element"[^>]*>/)[0], /disabled/);
+  // W14-code r6 R6DC-02: the button is CdsButton now, whose class list names aria-disabled / data-[disabled] variants.
+  assert.doesNotMatch(html.match(/<button[^>]*aria-label="Select element"[^>]*>/)[0], / disabled=""/);
   assert.match(render(page).match(/<button[^>]*aria-label="Select element"[^>]*>/)[0], /disabled=""/);
   assert.match(render(base, { onAttachElement: () => {} }).match(/<button[^>]*aria-label="Select element"[^>]*>/)[0], /disabled=""/);
 });
@@ -202,7 +206,9 @@ test('cf580efe9 yr: the start failure card — Warning, title, the meta and last
   assert.match(html, /<div class="flex w-full min-w-0 items-center gap-\[4px\] rounded bg-alpha-1 py-xs pl-md pr-xs text-left"><span class="min-w-0 flex-1 truncate text-code text-muted"><span class="font-sans text-footnote text-muted">Error details were sent to \S+ · <\/span>The dev server didn’t answer in time\.<\/span>/,
     'the agent\'s own preview_start failed: the meta, then the last line');
   assert.match(html, /aria-label="Copy error log"/);
-  assert.match(html, /data-variant="secondary"[^>]*>(?:(?!<\/button>).)*<span class="ssb-content">Try again<\/span>/);
+  assert.match(html, /<button type="button" data-cds="Button" class="[^"]*" data-preview-start-retry="">(?:(?!<\/button>).)* bg-fill-secondary (?:(?!<\/button>).)*<span class="inline-flex min-w-0 items-center gap-1 ">Try again<\/span>/);
+  // cf580efe9 :955-963: the copy chip is a size base ghost iconOnly g with className shrink-0.
+  assert.match(html, /<button type="button" data-cds="Button" data-cds-icon-only="" data-cds-ghost="" class="[^"]* shrink-0" aria-label="Copy error log"/);
   assert.doesNotMatch(html, /data-variant="primary"|Ask DeepSeek/);
   const held = render({ ...failed, servers: [{ ...failed.servers[0], error: { code: 'port-held', heldPort: 5173, message: 'x' } }] });
   assert.match(held, /<p class="m-0 text-footnote text-muted">Port 5173 is already in use by a dev server in another session\. Stop that server, then try again\.<\/p>/);
@@ -217,13 +223,13 @@ test('cf580efe9 mr: the stopped card (name row, Restart, caption) and its namele
   assert.match(html, /<div class="flex items-center gap-sm rounded bg-alpha-1 py-md ps-\[9px\] pe-md">/);
   assert.doesNotMatch(html, /pl-\[9px\]|text-muted">Stopped/);
   assert.match(html, /<span class="min-w-0 flex-1 truncate text-body text-secondary">web<\/span><span class="shrink-0 text-footnote text-muted-as-secondary">Stopped<\/span>/);
-  assert.match(html, /data-variant="secondary" data-size="xxs"[^>]*aria-label="Restart web"|aria-label="Restart web"[^>]*data-variant="secondary"/);
+  assert.match(html, /<button type="button" data-cds="Button" data-step="1" class="[^"]* shrink-0" aria-label="Restart web">(?:(?!<\/button>).)* bg-fill-secondary /);
   assert.match(html, /<p class="m-0 text-center text-caption text-muted-as-secondary">The dev server stopped\. Restart it, or close the preview\.<\/p>/);
   assert.doesNotMatch(html, /Show start page/);
   const nameless = renderToStaticMarkup(React.createElement(P.PreviewStoppedCard, { serverLabel: '', onClose() {} }));
   assert.match(nameless, />Preview server stopped</);
   assert.match(nameless, /Close and reopen the preview to start it again\./);
-  assert.match(nameless, /<span class="ssb-content">Close<\/span>/);
+  assert.match(nameless, /<span class="inline-flex min-w-0 items-center gap-1 ">Close<\/span>/);
 });
 
 test('cf580efe9 ri: the restored frame — grayscale image, backdrop, the stopped card on a panel with Show start page', () => {
@@ -233,7 +239,7 @@ test('cf580efe9 ri: the restored frame — grayscale image, backdrop, the stoppe
   assert.match(html, /<div aria-hidden="true" class="absolute inset-0 bg-backdrop"><\/div>/);
   assert.match(html, /class="flex w-full max-w-\[400px\] flex-col gap-sm rounded-card bg-surface-panel p-lg shadow-popover pb-md"/);
   assert.match(html, /Showing the page from before the app closed\./);
-  assert.match(html, /data-variant="ghost" data-size="xs"[^>]*>(?:(?!<\/button>).)*<span class="ssb-content">Show start page<\/span>/);
+  assert.match(html, /<button type="button" data-cds="Button" data-cds-ghost="" data-size="xs" class="[^"]* self-center">(?:(?!<\/button>).)*<span class="inline-flex min-w-0 items-center gap-1 ">Show start page<\/span>/);
   // The pane paints nothing for it until the frame is read (Pi loading).
   const pane = render({ ...base, lastFrame: { configName: 'web', savedAt: 1 } });
   assert.match(pane, /data-preview-surface="restored"/);
@@ -248,4 +254,46 @@ test('cf580efe9 bi / Or: a server the agent starts shows Setting up preview with
   assert.match(html, /<div role="status" class="flex items-center gap-xs text-body text-secondary">.*<span>Setting up preview<\/span>/);
   assert.doesNotMatch(html, /data-preview-start="servers"/, 'the list is replaced');
   assert.match(render(starting, { runningToolLabel: 'Starting preview web' }), /<span>Starting preview web<\/span>/);
+});
+
+// W14-code r5 cleanup css5-settings-button-replica (cf580efe9 :3257-3270 server action, :3382-3389 See all): both are the
+// shared-frame CdsButton with the official class lists; the host .spv-server-action / .spv-see-all restatements are gone.
+test('cf580efe9 ServerList: the row action and See all are CdsButtons with the official classes', () => {
+  const configs = Array.from({ length: 6 }, (_, i) => ({ name: `s${i}`, port: 3000 + i, url: `http://localhost:${3000 + i}`, attach: false }));
+  const html = render({ ...base, launch: { ...base.launch, exists: true, configs } });
+  const actions = html.match(/<button type="button" data-cds="Button" data-cds-icon-only="" data-size="sm" class="[^"]* min-w-8 shrink-0" aria-label="[^"]+"/g) ?? [];
+  assert.equal(actions.length, 5, 'five visible rows, one sm iconOnly action each');
+  assert.match(html, /<button type="button" data-cds="Button" data-cds-ghost="" data-step="1" class="[^"]* w-full text-muted hover:text-primary">(?:(?!<\/button>).)*>See all<\/span><\/button>/);
+  assert.doesNotMatch(html, /spv-server-action|spv-see-all/);
+});
+
+// W14-code r6 r6pa-05: the server list is 3.6556.2 cf580efe9 pa / fa in their own class strings (no .spv-* restatement);
+// css6-preview-focus-sentinel: the keyboard entry is the sr-only data-preview-focus-sentinel block before the viewport.
+test('cf580efe9 pa / fa: the server rows, the :port detail and the captions are the official class strings', async () => {
+  const fs = await import('node:fs');
+  const official = fs.readFileSync(path.resolve(import.meta.dirname, '../../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/cf580efe9-BFcQCjF9.js'), 'utf8');
+  for (const piece of ['v=`shrink-0 ${_?"text-secondary-control":"text-secondary"}`', 'b=`min-w-0 flex-1 truncate text-body ${_?"text-secondary-control":"text-secondary"}`',
+    'className:"shrink-0 text-footnote text-muted-as-secondary tabular-nums",children:t.detail',
+    'T=`flex items-center gap-sm border-b py-md ps-[9px] pe-md last:border-b-0 focus-visible:outline-1 focus-visible:-outline-offset-1 focus-visible:outline-fill-accent ${_?"hover:bg-alpha-2 has-[:focus-visible]:bg-alpha-2":""}`',
+    'className:"flex w-full flex-col rounded border max-h-[min(60vh,480px)] overflow-y-auto"', 'className:"m-0 max-w-[48ch] text-center text-footnote text-muted-as-secondary"',
+    'className:"flex min-w-0 flex-1 items-center gap-sm border-0 bg-transparent p-0 text-start outline-none hide-focus-ring"',
+    '"data-preview-focus-sentinel":"",className:"sr-only focus:not-sr-only focus:block focus:w-full focus:shrink-0 focus:bg-alpha-2 focus:text-start focus:text-caption focus:text-primary focus:shadow-focus"'])
+    assert.ok(official.includes(piece), piece);
+  const html = render({ ...base, launch: { ...base.launch, exists: true, configs: [{ name: 'web', port: 5173, url: 'http://localhost:5173', attach: false }, { name: 'api', port: 8080, url: 'http://localhost:8080', attach: false }] },
+    servers: [{ name: 'api', port: 8080, url: 'http://localhost:8080', status: 'running', error: null }] });
+  assert.match(html, /<div class="absolute inset-0" data-preview-start="servers"><div class="h-full w-full overflow-y-auto"><div class="flex min-h-full w-full flex-col items-center gap-lg p-lg"><div class="flex w-full flex-1 items-center justify-center"><div class="flex min-w-\[min\(400px,75%\)\] flex-col gap-sm">/);
+  assert.match(html, /<ul role="list" class="flex w-full flex-col rounded border max-h-\[min\(60vh,480px\)\] overflow-y-auto" aria-label="Servers">/);
+  // web is not running: secondary icon / name, no Open button; api runs: its row is the Open button, secondary-control.
+  assert.match(html, /<li tabindex="-1" data-status="[^"]*" class="flex items-center gap-sm border-b py-md ps-\[9px\] pe-md last:border-b-0 focus-visible:outline-1 focus-visible:-outline-offset-1 focus-visible:outline-fill-accent "><span [^>]*class="shrink-0 text-secondary"[^>]*>[^<]*<\/span><span class="min-w-0 flex-1 truncate text-body text-secondary">web<\/span><span class="shrink-0 text-footnote text-muted-as-secondary tabular-nums">:5173<\/span>/);
+  assert.match(html, /hover:bg-alpha-2 has-\[:focus-visible\]:bg-alpha-2"><button type="button" aria-label="Open api" class="flex min-w-0 flex-1 items-center gap-sm border-0 bg-transparent p-0 text-start outline-none hide-focus-ring"><span [^>]*class="shrink-0 text-secondary-control"[^>]*>[^<]*<\/span><span class="min-w-0 flex-1 truncate text-body text-secondary-control">api<\/span>/);
+  assert.equal((html.match(/<p class="m-0 max-w-\[48ch\] text-center text-footnote text-muted-as-secondary">/g) || []).length, 2);
+  assert.doesNotMatch(html, /spv-start-servers|spv-servers|spv-server|spv-start-caption/);
+  const css = fs.readFileSync(path.resolve(import.meta.dirname, '../src/source-preview-pane.css'), 'utf8').replace(/\/\*[^]*?\*\//g, '');
+  assert.doesNotMatch(css, /\.spv-start-servers|\.spv-servers|\.spv-server|\.spv-start-caption|\.spv-skip/);
+});
+
+test('cf580efe9 c: the preview focus sentinel is an sr-only block before the viewport, with the Preview page copy', () => {
+  const html = render({ ...base, hasPage: true, url: 'http://localhost:5173/' });
+  assert.match(html, /<button type="button" data-preview-focus-sentinel="" class="sr-only focus:not-sr-only focus:block focus:w-full focus:shrink-0 focus:bg-alpha-2 focus:text-start focus:text-caption focus:text-primary focus:shadow-focus">Preview page — press Enter to move into it\. Inside, press F6 or Ctrl\+F6 to move back out\.<\/button><div class="spv-body">/);
+  assert.doesNotMatch(html, /spv-skip/);
 });

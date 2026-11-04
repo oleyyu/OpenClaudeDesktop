@@ -46,10 +46,6 @@ export function detectedCandidates(result) {
     && candidate.validation && typeof candidate.validation.status === "string");
 }
 
-/** fr j: at least one candidate the user can use. */
-export function hasUsableCandidate(candidates) {
-  return candidates?.some((candidate) => candidate.validation?.status === "ok") ?? false;
-}
 
 /** ar lookup: the save error's message (unknown reasons read as write-failed). */
 export function addServerErrorText(reason) {

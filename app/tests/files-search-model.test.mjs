@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { createFileSearchController, isPlainSearchKey, isRelativeFilePath,
-  pathSegments, rangePaths, resultNavigation, revealRelation, searchLimitMessage } from "../src/files-search-model.mjs";
+  resultNavigation, revealRelation, searchLimitMessage } from "../src/files-search-model.mjs";
 
 function deferred() {
   let resolve, reject;
@@ -184,15 +184,12 @@ test("keyboard boundaries, modifiers and IME preserve input/navigation intent", 
   assert.equal(isPlainSearchKey({}), true);
   for (const event of [{ shiftKey: true }, { ctrlKey: true }, { altKey: true }, { metaKey: true }, { keyCode: 229 }, { nativeEvent: { isComposing: true } }])
     assert.equal(isPlainSearchKey(event), false);
-  assert.deepEqual(rangePaths([{ path: "a" }, { path: "b" }, { path: "c" }], 2, 0), ["a", "b", "c"]);
 });
 
-test("path highlighting preserves original Unicode and treats markup as text", () => {
-  assert.deepEqual(pathSegments("a😀<b>", [2, 4]), [
-    { text: "a", lit: false }, { text: "😀", lit: true }, { text: "<", lit: false },
-    { text: "b", lit: true }, { text: ">", lit: false },
-  ]);
-  assert.deepEqual(pathSegments("file.js", [4, 5], 4), [{ text: "fi", lit: true }, { text: "le.js", lit: false }]);
+// W14-code r8 gen-final-8: the host pathSegments is gone; r8pa-01 hit marks are the generated SessionsHighlight
+// (c1ea8a271 r, imported by cccc2cf0a as gl).
+test("the host path highlighter is gone (hits are the generated SessionsHighlight)", async () => {
+  assert.equal((await import("../src/files-search-model.mjs")).pathSegments, undefined);
 });
 
 test("follow reveal expands only actual path ancestors and never a prefix sibling", () => {
@@ -205,19 +202,13 @@ test("follow reveal expands only actual path ancestors and never a prefix siblin
   assert.equal(isRelativeFilePath("/absolute"), false);
 });
 
-test("limit messages distinguish result count, incomplete enumeration and output budget", () => {
+// 3.6556.2 cccc2cf0a _T: one cap note (F8ftTrFYrH, the shown count) for every cut of a local filename search.
+test("limit message is the one _T cap note with the shown count, whatever cut the search", () => {
   const rows = Array.from({ length: 50 }, () => ({}));
-  assert.equal(searchLimitMessage({ matches: rows, truncationReasons: ["result-limit"] }),
-    "Only the first 50 results are shown. Keep typing to narrow.");
+  for (const truncationReasons of [["result-limit"], ["directory-limit", "candidate-limit"], ["result-limit", "index-byte-limit"], ["result-output-limit"], ["future-limit"]])
+    assert.equal(searchLimitMessage({ matches: rows, truncationReasons }), "Only the first 50 results are shown. Keep typing to narrow.");
   assert.equal(searchLimitMessage({ matches: [{}], truncationReasons: ["result-limit"] }),
     "Only the first 1 result is shown. Keep typing to narrow.");
-  for (const truncationReasons of [["directory-limit", "candidate-limit"], ["result-limit", "index-byte-limit"]]) {
-    const message = searchLimitMessage({ matches: rows, truncationReasons });
-    assert.match(message, /Only part of this project was searched/);
-    assert.equal(message.includes("Keep typing"), false);
-  }
-  assert.equal(searchLimitMessage({ truncationReasons: ["result-output-limit"] }), "Some matching files could not be shown.");
-  assert.equal(searchLimitMessage({ truncationReasons: ["future-limit"] }), "Search results are incomplete.");
 });
 
 test('content mode uses 250ms debounce, carries options, invalidates stale requests and opens line context',async()=>{

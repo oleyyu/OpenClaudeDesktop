@@ -142,11 +142,12 @@ test('Rewind (B12, cc43287c9 J1/K1): the picker is a listbox of message labels; 
   assert.match(render(React.createElement(Actions.RewindPicker, { turns: [], onSelect() {}, onClose() {} })), /<li role="presentation" class="rewind-picker-empty">Nothing to rewind to yet<\/li>/);
   const confirm = render(React.createElement(Actions.RewindConfirmDialog, { targetText: '  Fix the bug  ', preview: { filesChanged: ['/a', '/b'], insertions: 3, deletions: 1 }, onConfirm: async () => {}, onClose() {} }));
   assert.match(confirm, /<h2[^>]*>Rewind to this message\?<\/h2>/);
-  assert.match(confirm, /<div class="rewind-confirm-quote"><span class="source-sr-only">You<\/span><p>Fix the bug<\/p><\/div>/);
+  assert.match(confirm, /<div class="rewind-confirm-quote"><span class="sr-only">You<\/span><p>Fix the bug<\/p><\/div>/);
   assert.match(confirm, /role="combobox" aria-label="Restore"[^>]*data-value="both"/);
   assert.match(confirm, /2 files · <span class="tabular-nums rewind-confirm-diff"/);
   assert.match(confirm, /Changes made through shell commands aren’t reverted\. Commits stay in place\./);
-  assert.match(confirm, /<footer class="sdlg-footer"><button[^>]*data-variant="secondary"[^>]*>.*Cancel.*<\/button><button[^>]*data-variant="primary"[^>]*>.*Rewind.*<\/button><\/footer>/s);
+  // W14-code r6 sh6-03: the footer buttons are shared-frame CdsButton (the variant is the paint: bg-fill-secondary / -primary).
+  assert.match(confirm, /<div class="sdlg-footer [^"]*"><button[^>]*data-cds="Button"[^>]*>(?:(?!<\/button>).)*bg-fill-secondary (?:(?!<\/button>).)*Cancel<\/span><\/button><button[^>]*data-cds="Button"[^>]*>(?:(?!<\/button>).)*bg-fill-primary (?:(?!<\/button>).)*Rewind<\/span><\/button><\/div>/s);
   const none = render(React.createElement(Actions.RewindConfirmDialog, { targetText: 'x', preview: 'none', onConfirm: async () => {}, onClose() {} }));
   assert.doesNotMatch(none, /combobox|rewind-confirm-files/, "preview 'none': no Restore choice and no file line");
   const pending = render(React.createElement(Actions.RewindConfirmDialog, { targetText: 'x', preview: 'pending', onConfirm: async () => {}, onClose() {} }));

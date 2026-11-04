@@ -58,7 +58,7 @@ function element({ matches = [], closest = {}, tabIndex = -1, scrollHeight = 0, 
 test("ownsKeys: editors, menus, options and an open approval card keep their keys; buttons and the body do not", () => {
   assert.equal(ownsKeys(element({ matches: ["textarea"] })), true);
   assert.equal(ownsKeys(element({ matches: ['[role="option"]'] })), true);
-  assert.equal(ownsKeys(element({ closest: { ".sac-card": {} } })), true);
+  assert.equal(ownsKeys(element({ closest: { ".epitaxy-approval-card": {} } })), true);
   assert.equal(ownsKeys(element()), false);
   assert.equal(ownsKeys(null), false);
 });

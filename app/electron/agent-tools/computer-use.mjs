@@ -769,7 +769,9 @@ export const tools = [
       const resolved = await cu.resolveApps(names);
       const apps = resolved.map((entry) => ({ ...entry, tier: entry.bundleId ? tierFor(entry.bundleId) : null,
         alreadyGranted: !!entry.bundleId && grants.has(entry.bundleId) }));
-      const asking = apps.filter((entry) => entry.installed && !entry.alreadyGranted);
+      // Settings › Computer use › Denied apps (official c71860c77 Bt: "automatically rejected"): never on the card.
+      const deniedByUser = (entry) => !!entry.bundleId && grants.denies?.(entry.bundleId) === true;
+      const asking = apps.filter((entry) => entry.installed && !entry.alreadyGranted && !deniedByUser(entry));
       const flagsHeld = grants.flags();
       const flagsAsking = FLAGS.filter((key) => flags[key] && !flagsHeld[key]);
       let answer = "accept";
@@ -794,6 +796,7 @@ export const tools = [
       for (const entry of apps) {
         const item = { app: entry.requested, ...(entry.bundleId ? { bundleId: entry.bundleId } : {}) };
         if (!entry.installed) denied.push({ ...item, reason: "not_installed" });
+        else if (deniedByUser(entry)) denied.push({ ...item, reason: "user_denied_list" });
         else if (grants.has(entry.bundleId)) granted.push({ ...item, name: entry.displayName, tier: grants.tierOf(entry.bundleId) });
         else denied.push({ ...item, reason: answer === "accept" ? "not_grantable" : "user_denied" });
       }

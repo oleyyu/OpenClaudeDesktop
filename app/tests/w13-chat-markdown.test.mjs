@@ -173,7 +173,9 @@ test('wiring: the transcript marks Chat rows for ChatMarkdown; Code rows keep th
   // Chat answer and the Code fallback read the same text, localized by localizeBridgeNote once the row has settled.
   const session = local('src/source-session.jsx');
   assert.match(session, /import \{ ChatSurfaceAnswer \} from "\.\/source-chat-markdown\.jsx";/);
-  assert.match(session, /const answerText = isStreaming \? item\.text \|\| "" : localizeBridgeNote\(item\.text \|\| ""\);/);
+  // W14-code r4 R4T-03 (E95): the renderer-failure fallback reads exitedReviewMode's review as the reply's prose too
+  // (c06cf64bb has no review row), hence `item.text ?? item.review`.
+  assert.match(session, /const answerText = isStreaming \? \(item\.text \?\? item\.review\) \|\| "" : localizeBridgeNote\(\(item\.text \?\? item\.review\) \|\| ""\);/);
   assert.match(session, /<ChatSurfaceAnswer text=\{answerText\} fallback=\{<SourceMarkdown text=\{answerText\} isStreaming=\{isStreaming\} paceReveal=\{item\.type === "agentMessage"\}/);
   assert.equal(session.match(/<SourceMarkdown text=\{[^}]*\}/g)?.filter(m => /item\.text|answerText/.test(m)).length, 1);
   // E41: the chat-graph host file takes concrete generated files, never the view-tabs facade.

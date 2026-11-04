@@ -107,7 +107,7 @@ export function environmentBucketTruncateAt(groupBy, bucket) {
 /**
  * Lays the Code list out by sections. Returns
  *   preferences: the sections layout's list preferences (sectionsPreferences);
- *   layout: [{kind: 'pinned' | 'manual' | 'sessions', section, key, label, buckets, ...}] in section order (manual
+ *   layout: [{kind: 'pinned' | 'routines' | 'manual' | 'sessions', section, key, label, buckets, ...}] in section order (manual
  *     sections KO does not show are left out);
  *   buckets: every row-holding bucket in list order (each row in exactly one), for truncation, selection order, the
  *     row registry and the drag targets. A bucket: the host bucket ({key, label, sessions, kind, ...}) plus
@@ -117,7 +117,7 @@ export function environmentBucketTruncateAt(groupBy, bucket) {
  */
 export function buildSidebarSections({
   sections = [], sessions = [], preferences, metadata = {}, customGroups = [], knownFolders = [], state = {}, fallbackCwd = '',
-  now = Date.now(), locale, pinnedOrder = [], repoIdentities = {}, projectOrder = [], keptWhileEmpty = [], held = false, statusGrouping = true,
+  now = Date.now(), locale, pinnedOrder = [], repoIdentities = {}, projectOrder = [], keptWhileEmpty = [], held = false, statusGrouping = false,
   savedEnvironments = [],
 } = {}) {
   const prefs = sectionsPreferences(preferences, sections);
@@ -151,6 +151,10 @@ export function buildSidebarSections({
       const bucket = pinnedBucket && { ...pinnedBucket, truncateAt: SECTIONS_TRUNCATE_AT.pinned, sectionId: section.id };
       if (bucket) buckets.push(bucket);
       layout.push({ kind: 'pinned', section, key: 'pinned', bucket });
+    } else if (section.kind === 'routines') {
+      // W14-code r4 fr4-06 (mount): the routines section's place in the list (shared-22 $N mounts p4 there); it holds no
+      // host rows — the section draws its own (source-sidebar-routines.jsx SidebarRoutinesSection).
+      layout.push({ kind: 'routines', section, key: 'routines' });
     } else if (section.kind === 'manual') {
       const index = manualSections.indexOf(section);
       if (index < 0) continue;
@@ -159,7 +163,9 @@ export function buildSidebarSections({
       const key = customGroupKey(section.id);
       const own = rest.filter(session => groupOf(session) === section.id);
       // oO / sO: date (or, with Status offered, status) sub-buckets; otherwise the section's own rows. Either way its
-      // rows follow the section's own sort and direction.
+      // rows follow the section's own sort and direction. W14-code r5 gates-r5-02: shared-22 sO `b = t.groupBy === "date" ||
+      // (t.groupBy === "status" && y)` with y = Ii() (shared-46 SN, claudeai_session_state — not in Uon, so off): a saved
+      // status section is flat unless the caller passes the gate's answer (statusGrouping defaults off).
       const by = subGroupBy(section);
       const view = { ...prefs, groupBy: by === 'state' && !statusGrouping ? 'none' : by ?? 'none', sortBy: section.sortBy, ascending: section.ascending };
       const grouped = buildSidebarGroups({ ...common, sessions: own, preferences: view });

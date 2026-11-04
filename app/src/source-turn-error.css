@@ -13,11 +13,6 @@
 }
 .ste-body { display: flex; flex-direction: column; gap: var(--cds-gap-xs, 6px); contain: inline-size; }
 .ste-header { display: flex; align-items: center; gap: var(--cds-gap-xs, 6px); }
-/* cb1a6e506 j Dismiss (3.6556.2): "text-muted-as-secondary hover:text-primary" are @layer utilities classes, which the
-   settings button's unlayered base colour (source-settings-button.css, color: --cds-text-primary) would outrank; restate
-   those two (.text-muted-as-secondary is color: var(--muted-as-secondary, var(--cds-text-muted))). */
-.ste-dismiss .source-settings-button[data-cds=Button] { color: var(--muted-as-secondary, var(--cds-text-muted)); }
-.ste-dismiss .source-settings-button[data-cds=Button]:hover { color: var(--cds-text-primary); }
 .ste-icon { flex-shrink: 0; }
 .ste-tone-danger { color: var(--cds-text-danger); }
 /* A settled failure (Signed in again): the quiet marker’s muted check. */
@@ -54,8 +49,8 @@
 .ste-details-text { white-space: pre-wrap; overflow-wrap: break-word; user-select: text; -webkit-user-select: text; }
 .ste-details-facts { display: flex; flex-direction: column; color: var(--cds-text-muted); word-break: break-all; user-select: text; -webkit-user-select: text; }
 .ste-details-copy { display: flex; }
-/* Lp: ghost sm, flush start (ms-outset, --cds-outset-x: pad-md), text-secondary hover:text-primary. */
-.ste-details-copy .ste-copy { margin-inline-start: calc(var(--cds-outset-x, 0px) * -1); color: var(--cds-text-secondary); }
+/* Lp: ghost sm, flush start (CdsButton flush="start" = ms-outset), text-secondary hover:text-primary. */
+.ste-details-copy .ste-copy { color: var(--cds-text-secondary); }
 .ste-details-copy .ste-copy:hover { color: var(--cds-text-primary); }
 /* "ml-auto flex min-w-0 max-w-full flex-wrap items-center justify-end gap-1 ps-md". */
 .ste-actions {

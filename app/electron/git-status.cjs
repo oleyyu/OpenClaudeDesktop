@@ -687,6 +687,56 @@ async function workspaceGitImage(cwd, { filePath, side, scope = 'branch', base, 
   return `data:${type};base64,${data.toString('base64')}`;
 }
 
+// W14-code r7 (r7pa-05): the two texts of one compared file, for expanding its unchanged lines (3.6556.2 cb61be3a2
+// `X = (t) => e(q, Y, t.filePath, t.rawFile.previous_filename ?? void 0)` over getDiffFileContent → {oldText, newText},
+// handed to c44d00c7f Jd as fetchFileLines and read by eu/fi). The same guards as workspaceGitImage: no absolute or ".."
+// path, the repository's own worktrees excluded, a revision never starting with "-", `show --no-textconv --no-ext-diff
+// <rev>:<path>` for a committed side, and the working-tree side only through safeFile (no symlink, a regular file under
+// the repository root). Only a file the scope's comparison lists is read: a numstat of that scope limited to the path
+// (and its previous path) must name it, or — in a working-tree scope — Git must list it as untracked. Each side is null
+// when it does not exist there, is not UTF-8 text, or passes the 5 MiB per-file cap; null overall when the file is not
+// listed or a path is unsafe.
+function decodeText(buffer) {
+  if (!buffer || buffer.length > FILE_PATCH_BYTES || buffer.includes(0)) return null;
+  try { return new TextDecoder('utf-8', { fatal: true }).decode(buffer); } catch { return null; }
+}
+async function revisionText(ctx, rev, filePath) {
+  if (rev === null || /^-/.test(rev)) return null;
+  const shown = await git(ctx, ['show', '--no-textconv', '--no-ext-diff', `${rev}:${filePath}`, '--'], { allowed: [0, 128], bytes: true, maxBuffer: FILE_PATCH_BYTES })
+    .catch((error) => (error.code === 'GIT_OUTPUT_LIMIT' ? null : Promise.reject(error)));
+  return shown && shown.code === 0 ? decodeText(shown.output) : null;
+}
+async function workspaceGitFileText(cwd, { filePath, previousPath, scope = 'branch', base, preferredBase, exec } = {}) {
+  const previous = previousPath === undefined || previousPath === null || previousPath === filePath ? undefined : previousPath;
+  if (unsafeRelativePath(filePath) || (previous !== undefined && unsafeRelativePath(previous))) return null;
+  if (typeof scope !== 'string' || !/^(branch|uncommitted|commit:[0-9a-fA-F]{7,64})$/.test(scope)) return null;
+  const ctx = await repository(cwd, undefined, exec);
+  if (!ctx || OWN_WORKTREES.test(filePath) || (previous !== undefined && OWN_WORKTREES.test(previous))) return null;
+  const before = await imageRevision(ctx, 'before', { scope, base, preferredBase });
+  const after = await imageRevision(ctx, 'after', { scope, base, preferredBase });
+  const from = before ?? (await git(ctx, ['hash-object', '-t', 'tree', '--stdin'], { input: '' })).output.trim();
+  if (after === null || /^-/.test(from) || (after !== undefined && /^-/.test(after))) return null;
+  const numstat = parseNumstat((await git(ctx, ['diff', ...DIFF_FLAGS, '--find-renames', '--ignore-submodules=none', '--numstat', '-z', from,
+    ...(after === undefined ? [] : [after]), '--', ...(previous !== undefined ? [previous] : []), filePath], { paths: true })).output);
+  let listed = numstat.some((record) => record.path === filePath && (previous === undefined || record.oldPath === previous));
+  if (!listed && after === undefined && previous === undefined) {
+    const untracked = await git(ctx, ['ls-files', '--others', '--exclude-standard', '-z', '--', filePath], { paths: true });
+    listed = untracked.output.split('\0').includes(filePath);
+  }
+  if (!listed) return null;
+  const oldText = before === null ? null : await revisionText(ctx, before, previous ?? filePath);
+  let newText = null;
+  if (after !== undefined) newText = await revisionText(ctx, after, filePath);
+  else {
+    const file = await safeFile(ctx, filePath).catch(() => false);
+    if (file && file.kind === 'file') {
+      const absolute = path.join(ctx.cwd, filePath);
+      if ((await fs.stat(absolute)).size <= FILE_PATCH_BYTES) newText = decodeText(await fs.readFile(absolute));
+    }
+  }
+  return { oldText, newText };
+}
+
 /** zm Commits submenu data: `log <baseRef>..HEAD`, newest first, at most `limit`
  * (51 = the 50 rows plus one to know that older ones exist), and `total` =
  * `rev-list --count <baseRef>..HEAD` (Oa lists them all; zm counts m.length − 50
@@ -719,7 +769,7 @@ async function workspaceGitBranches(cwd, { trace } = {}) {
   return listed.output.split('\n').map((line) => line.trim()).filter(validBranchName);
 }
 
-module.exports = { workspaceGitStatus, workspaceGitDiff, workspaceGitComparison, workspaceGitCommits, workspaceGitBranches, workspaceGitImage, workspaceGitFilePatch };
+module.exports = { workspaceGitStatus, workspaceGitDiff, workspaceGitComparison, workspaceGitCommits, workspaceGitBranches, workspaceGitImage, workspaceGitFilePatch, workspaceGitFileText };
 // R4i-files FI2: the budget pieces, for the fixture tests.
 module.exports.patchInclusion = patchInclusion;
 module.exports.patchBudget = patchBudget;

@@ -36,7 +36,7 @@ try {
   await page.getByRole('button', { name: 'Model', exact: true }).waitFor();
   await saveClipboard();
   await page.locator(`[data-source-session-id="${id}"] .source-session-open`).click();
-  await page.locator('.st-title').waitFor();
+  await page.locator(':is(.st-title,button[data-pane-title])').waitFor();
   await page.getByRole('button', { name: 'View options', exact: true }).click();
   await page.getByRole('menuitemcheckbox', { name: 'Files', exact: true }).click();
   const pane = page.locator('.source-side-tile[data-tile-id="files"]');
@@ -139,7 +139,7 @@ try {
   await content().fill('x '.repeat(2101));
   await page.keyboard.press('Meta+f'); await find.fill('x');
   await page.keyboard.press('Shift+Enter');
-  await page.waitForFunction(()=>document.querySelector('.sfv-find-status')?.textContent==='2,101 of 2,101');
+  await page.waitForFunction(()=>document.querySelector('[data-file-find] [aria-live]')?.textContent==='2,101 of 2,101');
   await pane.locator('.sfv-editor-find-current').waitFor();
   assert.equal(await pane.locator('.sfv-editor-find-current').count(),1);
   await page.keyboard.press('Escape');
@@ -226,9 +226,9 @@ try {
   assert.equal(await card().getByRole('button',{name:'Save comment',exact:true}).isDisabled(),true);
   await commentInput().fill('Please simplify these lines');await page.screenshot({path:path.join(directory,'comment-draft.png')});
   await commentInput().press('Enter');await card().getByRole('button',{name:'Edit comment',exact:true}).waitFor();
-  await page.waitForFunction(()=>document.activeElement?.getAttribute('aria-label')==='Message DeepSeek');
+  await page.waitForFunction(()=>['Prompt','Message DeepSeek'].includes(document.activeElement?.getAttribute('aria-label')));
   await card().getByRole('button',{name:'Edit comment',exact:true}).click();await commentInput().fill('discarded edit');await commentInput().press('Escape');
-  assert.equal(await card().locator('.sfv-comment-body').innerText(),'Please simplify these lines');
+  assert.equal(await card().locator('div[role="button"]').innerText(),'Please simplify these lines');
   await card().hover();await card().getByRole('button',{name:'Delete comment',exact:true}).click();await card().waitFor({state:'detached'});
   assert.equal(await page.locator('[data-kind="snippet"]').count(),2,'delete removes its staged comment only');
   await content().focus();await page.keyboard.press('Meta+a');await content().press('Shift+F10');
@@ -239,10 +239,10 @@ try {
   await page.waitForFunction(()=>localStorage.getItem('composer-draft:epitaxy-editor-session')?.includes('Please simplify these lines'));
   await page.reload();await page.getByRole('button',{name:'Model',exact:true}).waitFor();await page.locator(`[data-source-session-id="${id}"] .source-session-open`).click();
   if(await pane.getByRole('button',{name:'View source',exact:true}).isVisible())await pane.getByRole('button',{name:'View source',exact:true}).click();
-  await card().locator('.sfv-comment-body').waitFor();assert.equal(await card().locator('.sfv-comment-body').innerText(),'Please simplify these lines');
+  await card().locator('div[role="button"]').waitFor();assert.equal(await card().locator('div[role="button"]').innerText(),'Please simplify these lines');
   await page.screenshot({path:path.join(directory,'saved-comment.png')});
   report.checks.push('original gutter drag selects complete lines; settled split toolbar attaches context and dismisses; inline comment save/edit/cancel/delete synchronizes its single attachment and survives renderer reload');
-  const composer = page.getByRole('textbox', {name:'Message DeepSeek',exact:true});
+  const composer = page.getByRole('textbox', { name: /^(?:Prompt|Message DeepSeek)$/ });
   await composer.fill('Explain selected lines');await card().hover();await card().getByRole('button',{name:'Edit comment',exact:true}).click();
   await commentInput().fill('Simplify these selected lines');await commentInput().press('Meta+Enter');
 
@@ -313,7 +313,7 @@ try {
   assert.equal(await fs.readFile(path.join(workspace,'code.py'),'utf8'),'idle autosave');
   assert.equal(await pane.getByRole('button',{name:'Save',exact:true}).count(),0);
   await content().fill('blur autosave');
-  await page.getByRole('textbox',{name:'Message DeepSeek',exact:true}).focus(); await clean();
+  await page.getByRole('textbox',{ name: /^(?:Prompt|Message DeepSeek)$/ }).focus(); await clean();
   assert.equal(await fs.readFile(path.join(workspace,'code.py'),'utf8'),'blur autosave');
   await content().fill('navigation autosave'); await open('notes.txt');
   await pane.locator('.source-file-view[data-file-path="notes.txt"]').waitFor();
@@ -321,7 +321,7 @@ try {
   assert.equal(await page.getByRole('button',{name:'Discard',exact:true}).count(),0);
   await open('code.py'); await content().fill('retained conflict draft');
   await fs.writeFile(path.join(workspace,'code.py'),'external autosave conflict');
-  await page.getByRole('textbox',{name:'Message DeepSeek',exact:true}).focus();
+  await page.getByRole('textbox',{ name: /^(?:Prompt|Message DeepSeek)$/ }).focus();
   await pane.getByRole('button',{name:'Override',exact:true}).waitFor();
   assert.equal(await fs.readFile(path.join(workspace,'code.py'),'utf8'),'external autosave conflict');
   assert.equal(await content().innerText(),'retained conflict draft');

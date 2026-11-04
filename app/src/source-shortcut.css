@@ -16,10 +16,8 @@
 .scds-key-square { width: calc(1em + 6px); padding: 0; } /* Ga */
 .scds-key-wide { min-width: calc(1em + 6px); padding: 0 3px; } /* Ka */
 .scds-then { padding: 0 2px; color: var(--cds-shortcut-cap-ink); } /* Xa separator :2066-2070 */
-.scds-sr { /* sr-only select-none (design-system.css:4083-4093) */
-  position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden;
-  clip-path: inset(50%); white-space: nowrap; border-width: 0; user-select: none;
-}
+/* W14-code r5 cleanup css5-sr-only-handcopies: the spoken key name is shared-frame's own "sr-only select-none" (official
+   utilities), so the hand-copied .scds-sr rule is gone. */
 /* Ya.text + Ja (shared-frame-C_2npUJq.js:2039-2045, :2077-2084): bare glyphs in cap ink with a 0.15em gap,
    baseline-aligned; off mac the "+" joiner sits in the gap (mx-[-0.15em]). Callers set the size (Mu tooltip
    12px with muted ink, c_ menu text-footnote), as twMerge drops text-caption for theirs. */
@@ -27,7 +25,4 @@
 .scds-text-key { margin: 0; font-family: inherit; font-size: inherit; font-variation-settings: inherit; color: var(--cds-shortcut-cap-ink); }
 .scds-joiner { margin-inline: -.15em; color: var(--cds-shortcut-cap-ink); }
 /* Inside a CDS Button (ks :2936-2944): aria-hidden, `pointer-coarse:hidden ms-1`, and for an
-   unjoined button the trailing gs (:2716) end margin that re-centres the cap in the end padding. */
-.scds-shortcut.scds-in-button { margin-inline-start: 4px; }
-.scds-shortcut.scds-trailing { margin-inline-end: calc((var(--cds-h-control) - 1em - 6px) / 2 - var(--cds-pad-md)); }
-@media (pointer: coarse) { [data-cds="Shortcut"].scds-in-button { display: none; } } /* design-system.css:45342 */
+   unjoined button the trailing gs (:2716) end margin that re-centres the cap in the end padding. */ /* design-system.css:45342 */

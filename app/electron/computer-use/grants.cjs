@@ -7,6 +7,9 @@
 // Apps outside the grant list are not captured, clicked or typed into. Grants only come from the user's answer to
 // request_access (main process); nothing the renderer or the agent sends can add one. The app itself is never granted
 // (`refuse`): its windows — the screen glow over every display among them — stay out of every capture.
+// W14-code r2-shared-11: Settings › Computer use › Denied apps (official c71860c77 Bt, chicagoUserDeniedBundleIds: "Any
+// request Claude makes to access these apps is automatically rejected") is `denied`, read live: a denied app is never
+// granted, and one granted before it was denied stops counting as granted.
 const BROWSERS = new Set([
   "com.apple.Safari", "com.apple.SafariTechnologyPreview",
   "com.google.Chrome", "com.google.Chrome.beta", "com.google.Chrome.dev", "com.google.Chrome.canary", "org.chromium.Chromium",
@@ -41,9 +44,14 @@ const allows = (tier, op) => Boolean(ALLOWED[tier]?.has(op));
 
 const validBundleId = (value) => typeof value === "string" && /^[A-Za-z0-9][A-Za-z0-9.-]{0,254}$/.test(value);
 
-/** @param {{refuse?: Iterable<string>}} [options]  refuse: bundle ids never granted (the app's own). */
-function createGrants({ refuse = [] } = {}) {
+/**
+ * @param {{refuse?: Iterable<string>, denied?: () => Iterable<string>}} [options]  refuse: bundle ids never granted (the
+ *   app's own); denied: the user's deny list, read on every check.
+ */
+function createGrants({ refuse = [], denied = () => [] } = {}) {
   const refused = new Set(refuse);
+  const denies = (bundleId) => { try { return new Set(denied() ?? []).has(bundleId); } catch { return false; } };
+  const live = () => [...apps.values()].filter((record) => !denies(record.bundleId));
   const apps = new Map();   // bundleId → { bundleId, tier, displayName }
   const flags = { clipboardRead: false, clipboardWrite: false, systemKeyCombos: false };
   return {
@@ -52,7 +60,7 @@ function createGrants({ refuse = [] } = {}) {
       const added = [];
       for (const entry of entries) {
         const bundleId = typeof entry === "string" ? entry : entry?.bundleId;
-        if (!validBundleId(bundleId) || refused.has(bundleId)) continue;
+        if (!validBundleId(bundleId) || refused.has(bundleId) || denies(bundleId)) continue;
         const record = { bundleId, tier: tierFor(bundleId), displayName: typeof entry?.displayName === "string" ? entry.displayName : undefined };
         apps.set(bundleId, record);
         added.push(record);
@@ -62,11 +70,13 @@ function createGrants({ refuse = [] } = {}) {
     },
     revoke(bundleId) { return apps.delete(bundleId); },
     clear() { apps.clear(); for (const key of Object.keys(flags)) flags[key] = false; },
-    has: (bundleId) => apps.has(bundleId),
-    tierOf: (bundleId) => apps.get(bundleId)?.tier ?? null,
-    list: () => [...apps.values()].map((record) => ({ ...record })),
+    has: (bundleId) => apps.has(bundleId) && !denies(bundleId),
+    tierOf: (bundleId) => (denies(bundleId) ? null : apps.get(bundleId)?.tier ?? null),
+    /** Whether the user's deny list rejects this app (request_access answers it without a card). */
+    denies,
+    list: () => live().map((record) => ({ ...record })),
     /** Every granted app, any tier: read-tier apps are visible in screenshots too. */
-    allowedBundleIds: () => [...apps.keys()],
+    allowedBundleIds: () => live().map((record) => record.bundleId),
     flags: () => ({ ...flags }),
   };
 }

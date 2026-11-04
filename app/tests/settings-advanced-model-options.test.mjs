@@ -9,7 +9,9 @@ import { settingsPatch } from '../electron/preferences.mjs';
 import { pickCoreModel } from '../electron/prefs/core-model.mjs';
 import { stageFiles, imageRefusedNotice, IMAGE_MODEL_ERROR, IMAGE_OFF_ERROR, modelAcceptsImages } from '../src/composer-attachments-model.mjs';
 import { namedModels, bootModelsCoreId, modelNamesCoreId } from '../src/model-names-model.mjs';
-import { hasAdvancedRows, ADVANCED_PAGES } from '../src/settings-advanced-model.mjs';
+import { hasAdvancedRows } from '../src/settings-advanced-model.mjs';
+// W14-code r4 closeout R4DC-N7: the test-only ADVANCED_PAGES export is gone; the host's Advanced pages.
+const ADVANCED_PAGES = ['advanced', 'harness', 'customize-hooks', 'profiles'];
 import { settingsSearch } from '../src/settings-model.mjs';
 import { PALETTE_SETTINGS_SECTIONS, PALETTE_CUSTOMIZE_SECTIONS } from '../src/sidebar-palette-model.mjs';
 import { setLocale, DEFAULT_LOCALE, t } from '../electron/i18n/index.mjs';

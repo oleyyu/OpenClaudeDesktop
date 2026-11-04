@@ -2,7 +2,7 @@
 // panes-tile-current:15894–16155. No synthetic child transcript entries.
 import { describeVerb } from './description-verb-model.mjs';
 import { genericToolLabel } from './generic-tool-model.mjs';
-import { t, tn } from '../electron/i18n/index.mjs';
+import { t } from '../electron/i18n/index.mjs';
 import { compactTokens } from './context-usage-model.mjs';
 import { formatDuration } from './command-row-model.mjs';
 const TOOL_TYPES = new Set(['commandExecution','fileChange','mcpToolCall','dynamicToolCall','collabAgentToolCall','webSearch','imageView','imageGeneration','computerUse']);
@@ -102,10 +102,13 @@ export function agentConclusionStats(state, agent) {
   const tokens=state.usage?.[agent.id]?.total?.totalTokens, durationMs=state.taskTurnFacts?.[agent.id]?.durationMs;
   return Number.isFinite(tokens) && Number.isFinite(durationMs) ? { toolUses:agent.toolCallCount, tokens, durationMs } : null;
 }
-// dAbHM3tAVv: '{toolUses} tool calls · {tokens} tokens · {duration}' ('1 token' for exactly one).
-export function agentConclusionText(stats) {
-  if (!stats) return '';
-  return [tn(stats.toolUses,'{count} tool call','{count} tool calls'), stats.tokens===1 ? t('1 token') : t('{tokens} tokens',{tokens:compactTokens(stats.tokens)}), formatDuration(Math.round(stats.durationMs/1000))].join(' · ');
+// W14-code pa2-08: 3.6556.2 cccc2cf0a FP — one ICU message (dAbHM3tAVv) with `toolUses: r, tokenForm: t.tokens === 1 ?
+// "one" : "other", tokens: Na(t.tokens), duration: gs(n, t.durationMs)`; source-agent.jsx formats it (StartMessage).
+export const AGENT_CONCLUSION_MESSAGE = Object.freeze({ id: 'dAbHM3tAVv',
+  defaultMessage: '{toolUses, plural, one {# tool call} other {# tool calls}} \u00B7 {tokenForm, select, one {1 token} other {{tokens} tokens}} \u00B7 {duration}' });
+export function agentConclusionValues(stats) {
+  if (!stats) return null;
+  return { toolUses: stats.toolUses, tokenForm: stats.tokens === 1 ? 'one' : 'other', tokens: compactTokens(stats.tokens), duration: formatDuration(Math.round(stats.durationMs/1000)) };
 }
 export function agentPromptNeeded(items, prompt) {
   if (!prompt || items[0]?.type === 'userMessage') return false;
@@ -133,12 +136,4 @@ export function agentRowLabel(item, name, status) {
   return { label: t('Ran agent'), name: meta, described: false };
 }
 
-/**
- * A failed message to a sub-agent (the tasks pane's follow-up box): a one-shot child's refusal in the app's words,
- * else the core's own message.
- */
-export function subAgentMessageError(error) {
-  const message = error?.message || String(error ?? '');
-  if (error?.data?.codexErrorInfo === 'subAgentNotContinuable' || /ran once and finished/.test(message)) return t('This sub-agent can’t take messages: it ran once and finished.');
-  return message;
-}
+// W14-code r5 cleanup (r5-panes handoff): subAgentMessageError left with the host sub-agent follow-up box (r5pa-07, E95).

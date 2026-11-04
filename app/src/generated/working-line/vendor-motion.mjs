@@ -5483,6 +5483,12 @@ function al(e = !0) {
   let s = l(() => e && r && r(a), [a, r, e]);
   return !n && r ? [!1, s] : [!0];
 }
+function ol() {
+  return sl(d(C));
+}
+function sl(e) {
+  return e === null || e.isPresent;
+}
 var cl = (e) => e.key || "";
 function ll(e) {
   let t = [];
@@ -5606,6 +5612,26 @@ function Sl(e) {
   let t = xl();
   for (let n in e) t[n] = { ...t[n], ...e[n] };
   Jo(t);
+}
+function Cl({ children: n, features: r, strict: i = !1 }) {
+  let [, a] = _(!wl(r)),
+    o = e(void 0);
+  if (!wl(r)) {
+    let { renderer: e, ...t } = r;
+    ((o.current = e), Sl(t));
+  }
+  return (
+    f(() => {
+      wl(r) &&
+        r().then(({ renderer: e, ...t }) => {
+          (Sl(t), (o.current = e), a(!0));
+        });
+    }, []),
+    t(_l.Provider, { value: { renderer: o.current, strict: i }, children: n })
+  );
+}
+function wl(e) {
+  return typeof e == "function";
 }
 var El = g({});
 function Dl(e, t) {
@@ -5971,6 +5997,7 @@ function ou(e, t) {
         : (n.has(a) || n.set(a, nu(a, void 0, e, t)), n.get(a)),
   });
 }
+var su = ou();
 var cu = (e, t) =>
   (t.isSVG ?? Hl(e)) ? new fs(t) : new ss(t, { allowProjection: e !== a });
 var lu = class extends Qo {
@@ -6960,4 +6987,31 @@ function pd() {
   let [e] = _(Ho.current);
   return e;
 }
-export { C, En, F, G, K, M, N, Qr, S, Sn, Zc, fd, hn, pd, ul, un, vn, x };
+export {
+  C,
+  Cl,
+  En,
+  F,
+  G,
+  K,
+  M,
+  N,
+  Qr,
+  S,
+  Sn,
+  Yu,
+  Zc,
+  cu,
+  dd,
+  du,
+  fd,
+  hn,
+  ol,
+  pd,
+  su,
+  ud,
+  ul,
+  un,
+  vn,
+  x,
+};

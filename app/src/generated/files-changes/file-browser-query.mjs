@@ -2057,4 +2057,7 @@ export {
   J as useQueryClient,
   tt as useQuery,
   nt as queryOptions,
+  q as QueryClientContext,
+  Ue as IsRestoringContext,
+  Ke as QueryErrorResetBoundaryContext,
 };

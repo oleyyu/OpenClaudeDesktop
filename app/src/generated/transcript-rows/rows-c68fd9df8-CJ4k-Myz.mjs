@@ -1020,6 +1020,9 @@ async function Q({
     i
   );
 }
+function ve(e = Z) {
+  return e != null && !("then" in e);
+}
 function ye(e) {
   if (
     !(Z == null || "then" in Z) &&
@@ -1034,4 +1037,4 @@ async function xe(e) {
   await Q(e);
 }
 for (let e of _e.getThemes()) h.registerThemeIfAbsent(e.name, e.load);
-export { G, H, Q, U, g, xe, ye };
+export { G, H, Q, U, X, g, ve, xe, ye };

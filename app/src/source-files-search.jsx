@@ -13,46 +13,41 @@ import { useMultiSelectionEscape } from "./generated/files-changes/file-selectio
 import {SourceFileSearchOptions} from './source-file-viewer.jsx';
 import {contentResults,contentPreview} from './file-content-results.mjs';
 import {DEFAULT_SEARCH_OPTIONS} from './file-find-model.mjs';
-import { Icon } from "./icons";
-import { fileKindIcon } from "./file-kind-icon.mjs";
-import { CdsIcon } from "./generated/view-tabs/index.js";
+import { CdsButton, CdsIcon, CdsSpinner, CdsTextInput } from "./generated/view-tabs/index.js";
+import { SessionsHighlight } from "./generated/view-tabs/c1ea8a271-CHvO08g4.js";
 import { FileTypeIcon } from "./generated/files-changes/file-type-icon.mjs";
 import { LitText } from "./generated/files-changes/path-segments.mjs";
 import { fileTreeRowClassName, fileTreeRowPrimary, fileTreeIconClassName, fileTreeIconSize } from "./file-tree-row-model.mjs";
 import { treeIndent } from "./generated/code-current/file-tree-style.mjs";
 import { createFileSearchController, emptySearchState, isPlainSearchKey,
-  pathSegments, resultNavigation, searchLimitMessage } from "./files-search-model.mjs";
+  resultNavigation, searchLimitMessage } from "./files-search-model.mjs";
 import "./source-files-search.css";
 import { t, tn } from "../electron/i18n/index.mjs";
 
 const desktopCall = (action, params) => window.desktop?.call(action, params) ??
   Promise.reject(new Error(t("Open OpenClaude Desktop to search local filenames.")));
 
-function LitPath({ text, positions, offset = 0 }) {
-  return pathSegments(text, positions, offset).map((segment, index) => segment.lit
-    ? <span data-lit="" key={index}>{segment.text}</span> : segment.text);
-}
-function ContentSnippet({entry}){
+// r8pa-01: 3.6556.2 cccc2cf0a BT (a content match under zT): the line number k, then N, the ltr snippet of lead (rtl
+// clipped from the start) / hit / tail, the hit and tail through c1ea8a271 gl (variant mark: bg-accent marks).
+const CONTENT_LINE_CLASS = "shrink-0 min-w-[2.5ch] text-footnote text-muted-as-secondary tabular-nums text-end";
+// zT's "More matches in this file." row, at el(1) with a 2.5ch spacer under the line numbers.
+const CONTENT_MORE_CLASS = "flex items-center gap-1 h-control app-list-row pe-md text-footnote text-muted-as-secondary select-none";
+// zT keys the "more" row's id by its file group (`${w}-${t}`), and RT's describedBy points the file row at it.
+const groupHasMore = (rows, index) => { for (let i = index + 1; i < rows.length && rows[i].line; i++) if (rows[i].more) return true; return false; };
+const groupHeaderIndex = (rows, index) => { for (let i = index; i >= 0; i--) if (!rows[i].line) return i; return index; };
+export function ContentSnippet({entry}){
  const parts=contentPreview(entry);
- const highlight=(text,ranges)=>{const positions=(ranges??[]).flatMap(({start,end})=>Array.from({length:end-start},(_,i)=>start+i));return <LitPath text={text} positions={positions}/>;};
- return <><span className="sfs-content-line">{entry.line}</span><span className="sfs-content-snippet">
-  {parts.lead&&<span className="sfs-content-lead" dir="rtl"><span dir="ltr">{parts.lead}</span></span>}
-  {parts.hit&&<span className="sfs-content-hit">{highlight(parts.hit,parts.hitMatches)}</span>}
-  {parts.tail&&<span className="sfs-content-tail">{highlight(parts.tail,parts.tailMatches)}</span>}
+ return <><span className={CONTENT_LINE_CLASS}>{entry.line}</span><span dir="ltr" className="flex min-w-0 overflow-hidden whitespace-pre text-code text-primary">
+  {parts.lead&&<span dir="rtl" className="min-w-0 overflow-hidden text-ellipsis"><span dir="ltr">{parts.lead}</span></span>}
+  {parts.hit&&<span className="max-w-full shrink-0 overflow-hidden text-ellipsis"><SessionsHighlight text={parts.hit} matches={parts.hitMatches} /></span>}
+  {parts.tail&&<span className="min-w-[2ch] shrink-[9999] overflow-hidden text-ellipsis"><SessionsHighlight text={parts.tail} matches={parts.tailMatches} /></span>}
  </span></>;
 }
 
-function SearchingFiles() {
-  const [announce, setAnnounce] = useState(false);
-  useEffect(() => {
-    const timer = setTimeout(() => setAnnounce(true), 100);
-    return () => clearTimeout(timer);
-  }, []);
-  return <span role="status" className="sfs-loading-status">
-    <span data-cds="Spinner" className="sfs-spinner" aria-hidden="true"><span /><span /></span>
-    {announce && <span className="sfs-sr-only">{t("Searching files")}</span>}
-  </span>;
-}
+// 3.6556.2 cccc2cf0a WT (an empty or invalid note) and UT (the cap note, at the row indent el(0)).
+const EMPTY_NOTE_CLASS = "flex items-center justify-center px-lg py-1 text-body text-muted-as-secondary";
+const CAP_NOTE_CLASS = "py-1.5 pe-md text-footnote text-muted-as-secondary select-none";
+const keepFocus = event => event.preventDefault();
 
 /** Source adapter inside .source-files-tree, replacing its folder/Refresh
  * header. Existing tree/notices stay mounted as children while filtered.
@@ -97,7 +92,8 @@ export function SourceFilesSearch({ sessionId = null, searchPane = "main", cwd, 
   const hasQuery = query.trim().length > 0;
   const busy = state.phase === "debouncing" || state.phase === "loading";
   const stale = hasQuery && state.matchedQuery !== query.trim();
-  const resultId = `${ids}-results`, treeId = `${ids}-tree`, hintId = `${ids}-hint`, limitId = `${ids}-limit`;
+  const resultId = `${ids}-results`, treeId = `${ids}-tree`, hintId = `${ids}-hint`, limitId = `${ids}-limit`, invalidId = `${ids}-invalid`;
+  const invalidPattern = state.error?.code === 'INVALID_PATTERN';
 
   useLayoutEffect(() => {
     const resource = createFileSearchController({ sessionId, pane: searchPane, workspaceRoot: cwd,
@@ -299,27 +295,24 @@ export function SourceFilesSearch({ sessionId = null, searchPane = "main", cwd, 
     }
   }
   return <div className="sfs-browser" data-search-phase={state.phase} inert={!enabled ? true : undefined}>
-    <div className="sfs-filter-bar">
-      <div className="sfs-field" data-has-clear={Boolean(query)} onMouseDown={event => {
-        if (event.button !== 0 || event.target.closest("input, button") || !cwd) return;
-        event.preventDefault();
-        input.current?.focus();
-      }}>
-        <span className="sfs-start-slot">
-          {busy ? <SearchingFiles /> : <Icon name="Search" size={16} />}
-        </span>
-        <input ref={input} type="text" value={query} maxLength={content?256:64}
-          aria-label={t("Filter files")} placeholder={t("Filter, or ? to search in files")} spellCheck={false} autoComplete="off"
-          aria-invalid={state.error?.code==='INVALID_PATTERN'||undefined}
-          aria-controls={hasQuery ? resultId : treeId}
-          aria-describedby={`${hintId}${hasQuery && state.phase === "success" && state.truncated ? ` ${limitId}` : ""}`}
-          disabled={!cwd} onChange={event => change(event.target.value)} onKeyDown={inputKey}
-          onBlur={() => controller.current?.cancelEnter()} />
-        {content&&<SourceFileSearchOptions options={options} onToggle={toggleOption}/>}
-        {query && <span className="sfs-clear-slot"><button type="button" aria-label={t("Clear filter")}
-          onMouseDown={event => event.preventDefault()} onClick={clear}><Icon name="X" size={12} /></button></span>}
-      </div>
-      <p id={hintId} className="sfs-sr-only">{t("Results update as you type. Press Down Arrow to go to results, and Up Arrow on the first result to return here.")}</p>
+    {/* cccc2cf0a filter bar Dn "flex h-8 shrink-0 items-center px-md": the CdsTextInput ve (aria-describedby the hint
+        plus the invalid or cap note, slotStart the "grid size-4 shrink-0 place-items-center" Spinner sm "Searching files" /
+        Search icon, clearable unless the find options show; with them slotEnd is fv plus an sm ghost iconOnly X), then
+        the sr-only hint. */}
+    <div className="flex h-8 shrink-0 items-center px-md" data-files-filter="">
+      <CdsTextInput ref={input} value={query} maxLength={content?256:64}
+        onChange={event => change(event.target.value)} onKeyDown={inputKey} onBlur={() => controller.current?.cancelEnter()}
+        aria-controls={hasQuery ? resultId : treeId}
+        aria-describedby={`${hintId}${invalidPattern ? ` ${invalidId}` : hasQuery && state.phase === "success" && (state.truncated||grouped?.truncated) ? ` ${limitId}` : ""}`}
+        spellCheck={false} autoComplete="off" style={{ textOverflow: "ellipsis" }}
+        aria-label={t("Filter files")} placeholder={t("Filter, or ? to search in files")}
+        slotStart={<span className="grid size-4 shrink-0 place-items-center">{busy ? <CdsSpinner size="sm" label={t("Searching files")} /> : <CdsIcon name="Search" size="sm" />}</span>}
+        clearable={!content} clearLabel={t("Clear filter")} onClear={clear}
+        aria-invalid={invalidPattern || undefined}
+        slotEnd={content ? <><SourceFileSearchOptions options={options} onToggle={toggleOption} />
+          <CdsButton size="sm" variant="ghost" icon="X" iconOnly aria-label={t("Clear filter")} tooltip={false} onMouseDown={keepFocus} onClick={clear} /></> : undefined}
+        disabled={!cwd} />
+      <p id={hintId} className="sr-only">{t("Results update as you type. Press Down Arrow to go to results, and Up Arrow on the first result to return here.")}</p>
     </div>
     <div ref={keptTree} id={treeId} className="sfs-kept-tree" hidden={hasQuery} inert={hasQuery ? true : undefined}
       onKeyDown={event => {
@@ -344,11 +337,14 @@ export function SourceFilesSearch({ sessionId = null, searchPane = "main", cwd, 
       {shownMatches.map((entry, index) => {
         const slash = entry.path.lastIndexOf("/"), parent = slash >= 0 ? entry.path.slice(0, slash) : "";
         const hasNameMatches = entry.positions.some(position => position > slash);
-        // cccc2cf0a _T renders a filename result as RT (the tree's row, depth 0, showPath): the row is
-        // `R(de(), dw, W ? nl : ie ? fw : ol)` at el(0), the button pw. Content results (zT) keep the sfs rows.
-        const treeRow = !content, rowCurrent = activePath === entry.path, rowSelected = !content && selected.has(entry.path);
-        return <React.Fragment key={entry.key??entry.path}><div className={treeRow ? fileTreeRowClassName({ current: rowCurrent, selected: rowSelected }) : "sfs-result-row"}
-          style={treeRow ? treeIndent(0) : undefined} data-pressed={treeRow && menu?.entry===entry ? "" : undefined} role="treeitem" aria-level={entry.line?2:1}
+        // cccc2cf0a _T renders a filename result, and zT a content result's file, as RT (the tree's row, depth 0,
+        // showPath): the row is `R(de(), dw, W ? nl : ie ? fw : ol)` at el(0), the button pw. r8pa-01: a content match
+        // is BT, `R(de(), dw, ol)` at el(1) around the same pw button; the file row is described by its "more" row.
+        const treeRow = !entry.line, rowCurrent = treeRow && activePath === entry.path, rowSelected = !content && selected.has(entry.path);
+        const moreId = entry.header && groupHasMore(shownMatches, index) ? `${ids}-more-${index}` : undefined;
+        return <React.Fragment key={entry.key??entry.path}><div className={fileTreeRowClassName({ current: rowCurrent, selected: rowSelected })}
+          style={treeIndent(treeRow ? 0 : 1)} data-pressed={menu?.entry===entry ? "" : undefined} role="treeitem" aria-level={entry.line?2:1}
+          aria-describedby={moreId}
           data-content-match={entry.line||undefined}
           draggable={!entry.line&&!!fileMenu?.drag}
           onDragStart={event=>{
@@ -361,7 +357,7 @@ export function SourceFilesSearch({ sessionId = null, searchPane = "main", cwd, 
           aria-selected={content?undefined:selected.has(entry.path)} aria-current={(!content||entry.header)&&activePath === entry.path || undefined}
           data-tree-row="" data-row-index={index} tabIndex={-1}
           onFocus={() => { focused.current = { path: entry.key??entry.path, index }; }}>
-          <button type="button" tabIndex={-1} data-tree-primary="" className={treeRow ? fileTreeRowPrimary : undefined} aria-label={entry.line?`${entry.path}:${entry.line}`:entry.path}
+          <button type="button" tabIndex={-1} data-tree-primary="" className={fileTreeRowPrimary} aria-label={entry.line?`${entry.path}:${entry.line}`:entry.path}
             onClick={event => activate(index, event, event.detail!==1)} onDoubleClick={event => activate(index, event, true)}
             onMouseDown={event=>{if(event.button===1&&!entry.directory)event.preventDefault();}}
             onAuxClick={event=>{if(event.button===1&&!entry.directory){event.preventDefault();activate(index,event,true);}}}>
@@ -369,30 +365,26 @@ export function SourceFilesSearch({ sessionId = null, searchPane = "main", cwd, 
                 (FileTypeIcon), both $c() sized, `shrink-0 self-center text-muted-control`; the name
                 `truncate text-secondary|text-primary` (data-has-matches) and the folder `truncate text-footnote
                 text-muted-as-secondary`, their lit runs c784da984 l (Af). */}
-            {entry.line?<ContentSnippet entry={entry}/>:treeRow?<>{entry.directory
+            {entry.line?<ContentSnippet entry={entry}/>:<>{entry.directory
               ? <CdsIcon name="Folder" size={fileTreeIconSize()} className={fileTreeIconClassName({ openable: true })} />
               : <FileTypeIcon fileName={entry.name} size={fileTreeIconSize()} className={fileTreeIconClassName({ openable: true })} />}
             <span data-has-matches={hasNameMatches || undefined} className={hasNameMatches ? "truncate text-secondary" : "truncate text-primary"}>
               {entry.positions ? <LitText text={entry.name} positions={entry.positions} offset={slash + 1} /> : entry.name}
             </span>
-            {parent && <span className="truncate text-footnote text-muted-as-secondary">{entry.positions ? <LitText text={parent} positions={entry.positions} offset={0} /> : parent}</span>}</>
-            :<><Icon name={entry.directory?"Folder":fileKindIcon(entry.name)} size={12} />
-            <span className="sfs-result-name" data-has-matches={hasNameMatches || undefined}>
-              <LitPath text={entry.name} positions={entry.positions} offset={slash + 1} />
-            </span>
-            {parent && <span className="sfs-result-parent"><LitPath text={parent} positions={entry.positions} /></span>}</>}
+            {parent && <span className="truncate text-footnote text-muted-as-secondary">{entry.positions ? <LitText text={parent} positions={entry.positions} offset={0} /> : parent}</span>}</>}
           </button>
-        </div>{entry.more&&<div className="sfs-content-more">{t('More matches in this file.')}</div>}</React.Fragment>;
+        </div>{entry.more&&<div id={`${ids}-more-${groupHeaderIndex(shownMatches, index)}`} aria-hidden="true" className={CONTENT_MORE_CLASS} style={treeIndent(1)}>
+          <span className="shrink-0 min-w-[2.5ch]" /><span className="min-w-0 truncate">{t('More matches in this file.')}</span></div>}</React.Fragment>;
       })}
-      {content&&query.trim()==='?'&&<div className="sfs-notice">{t('Type after ? to search in files')}</div>}
-      {state.error?.code==='INVALID_PATTERN'?<div className="sfs-notice" role="alert">{t('Invalid regular expression')}</div>:state.phase === "error" && <div className="sfs-notice sfs-error" role="alert">
-        <span>{state.error?.message || t("Couldn’t search filenames.")}</span>
-        <button type="button" onClick={() => controller.current?.refresh()}>{t("Retry")}</button>
+      {/* _T / zT: WT "Type after ? to search in files", WT{id} "Invalid regular expression", and with no rows (a
+          failed local read included: _T has no error branch) WT "No matching files" / "No matches in file contents";
+          UT{id} the cap note, F8ftTrFYrH with the shown count (filenames) or 8//Rlb3ezL (contents). */}
+      {content&&query.trim()==='?'&&<div className={EMPTY_NOTE_CLASS}>{t('Type after ? to search in files')}</div>}
+      {invalidPattern?<div id={invalidId} className={EMPTY_NOTE_CLASS}>{t('Invalid regular expression')}</div>
+        :(state.phase === "error" || (state.phase === "success" && !state.matches.length)) && !(content&&query.trim()==='?') && <div className={EMPTY_NOTE_CLASS}>{t(content?"No matches in file contents":"No matching files")}</div>}
+      {state.phase === "success" && (state.truncated||grouped?.truncated) && <div id={limitId} className={CAP_NOTE_CLASS} style={treeIndent(0)} data-files-limit="">
+        {content?tn(grouped.shown,'Only {count} match is shown. Keep typing to narrow.','Only {count} matches are shown. Keep typing to narrow.'):searchLimitMessage(state)}
       </div>}
-      {state.phase === "success" && !state.matches.length && <div className="sfs-notice">{t(content?"No matches in file contents":"No matching files")}</div>}
-      {state.phase === "success" && (state.truncated||grouped?.truncated) && <p id={limitId} className="sfs-limit">
-        {content&&state.truncationReasons.every(reason=>reason==='result-limit')?tn(grouped.shown,'Only {count} match is shown. Keep typing to narrow.','Only {count} matches are shown. Keep typing to narrow.'):searchLimitMessage(state)}
-      </p>}
     </div>
     {menuEntries&&<SourceMenu.Popup anchor={menu.row} trigger={menu.row} point={menu.point} side="bottom" align="start"
       sideOffset={CONTEXT_MENU_SIDE_OFFSET} alignOffset={CONTEXT_MENU_ALIGN_OFFSET} layer="contextmenu" dataCds="ContextMenu" contextMenuGuard

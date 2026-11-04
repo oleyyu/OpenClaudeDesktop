@@ -56,24 +56,30 @@ test('agentToolCard: the terminal, preview and workflow cards read as Claude’s
   assert.deepEqual([terminal.heading.overrideDescription, terminal.heading.descriptionAsTooltip], ['In “/w”, in a tab named “dev”', true]);
   assert.deepEqual(terminal.allows.map((action) => action.key), ['accept'], 'no session grant for a command typed into the terminal');
   const site = card({ kind: 'preview-site', host: 'example.com', url: 'https://example.com/a' });
-  assert.equal(site.heading.action, 'use example.com in the preview');
+  // V3-W14-approvals / W14-code r4 r4pa-c11: cc32965c2 Wh browser:open_site — "act on" with the origin as meta, no detail.
+  assert.deepEqual([site.heading.action, site.heading.meta, site.detail], ['act on', 'https://example.com', null]);
   const server = card({ kind: 'preview-server', name: 'web', port: 3000, portMayReassign: false }, { command: 'npm run dev' });
   // 2.42304.0 c96d752d0 Kk preview_start: "start" + the name as meta, and wA's line from the port main passes on.
   assert.deepEqual([server.heading.action, server.heading.meta, server.detail.text], ['start', 'web', 'npm run dev']);
   assert.deepEqual(server.context.map((part) => part.text), ['Runs in /w on port 3000']);
-  // An approved site or server stays approved for the session (preview-service.cjs), and the button says so.
-  assert.deepEqual([site.allows.map((action) => action.label), server.allows.map((action) => action.label)], [['Allow for this session'], ['Allow for this session']]);
+  // An approved server stays approved for the session (preview-service.cjs), and the button says so; a site is Wh's
+  // Always allow / Allow once (W14-code r4 r4pa-c11).
+  assert.deepEqual([site.allows.map((action) => action.label), server.allows.map((action) => action.label)], [['Always allow', 'Allow once'], ['Allow for this session']]);
   const workflow = card({ kind: 'workflow', name: 'review', description: 'Review the diff', phases: [{ title: 'Scan' }, { title: 'Fix' }], always: true });
-  assert.deepEqual([workflow.heading.action, workflow.heading.meta], ['run a dynamic workflow', 'review']);
+  // V3-W14-approvals: cc32965c2 Wh Workflow — "run a workflow", the name its meta, the description its overrideDescription,
+  // the token warning box (showTokenWarning), the standard Deny / Allow once decisions.
+  assert.deepEqual([workflow.heading.action, workflow.heading.meta, workflow.heading.overrideDescription], ['run a workflow', 'review', 'Review the diff']);
   assert.match(workflow.detail.text, /1\. Scan\n2\. Fix/);
-  assert.match(workflow.reason, /Tasks pane/);
-  assert.deepEqual(workflow.allows.map((action) => [action.key, action.label]), [['acceptForSession', 'Yes, and don’t ask again for review'], ['accept', 'Yes, run it']]);
-  assert.equal(workflow.deny.label, 'No');
+  assert.equal(workflow.reason, null);
+  assert.equal(workflow.tokenWarning, true);
+  assert.deepEqual(workflow.allows.map((action) => [action.key, action.label]), [['acceptForSession', 'Allow for this session'], ['accept', 'Allow once']]);
+  assert.equal(workflow.deny.label, 'Deny');
   const inline = card({ kind: 'workflow', name: 'one-off', always: false });
   assert.deepEqual(inline.allows.map((action) => action.key), ['accept'], 'an inline script is never remembered');
-  // The script itself: shown outright without meta phases, behind "View raw script" with them (Claude's dialog).
+  // The script itself: shown outright without meta phases, folded with them (Claude's dialog; W14-code r7 r7pa-02: the
+  // card draws it as cc32965c2 a_'s "script · N lines" fold, scriptOpen its defaultOpen).
   const bare = card({ kind: 'workflow', name: 'one-off', description: 'Do it', script: 'export const meta={name:"one-off",description:"Do it"};\nreturn await agent("go")' });
-  assert.deepEqual([bare.detail.kind, bare.detail.scriptOpen, bare.detail.text], ['workflow', true, 'Do it']);
+  assert.deepEqual([bare.detail.kind, bare.detail.scriptOpen, bare.detail.text, bare.heading.overrideDescription], ['workflow', true, '', 'Do it']);
   assert.match(bare.detail.script, /agent\("go"\)/);
   const phased = card({ kind: 'workflow', name: 'review', phases: [{ title: 'Scan' }], script: 'x', scriptTruncated: true });
   assert.deepEqual([phased.detail.scriptOpen, phased.detail.scriptTruncated], [false, true]);

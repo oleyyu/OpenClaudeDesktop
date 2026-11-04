@@ -90,7 +90,7 @@ try{
  await removeConfirm.getByRole('button',{name:'Remove',exact:true}).click();
  await poll(async()=>!fsSync.existsSync(path.join(profile,'extensions/kimi')),'pack removed');
  await poll(async()=>(await readJson('preferences.json')).core==='deepseek','choice falls back');
- await page.getByRole('textbox',{name:'Message DeepSeek',exact:true}).waitFor({timeout:20000});
+ await page.getByRole('textbox',{ name: /^(?:Prompt|Message DeepSeek)$/ }).waitFor({timeout:20000});
  if(!await settings.count()){await page.keyboard.press('Meta+,');await settings.waitFor();}
  await settings.getByRole('navigation',{name:'Settings',exact:true}).getByRole('button',{name:'Cores',exact:true}).click();
  await settings.getByText('No extension packs yet',{exact:true}).waitFor();

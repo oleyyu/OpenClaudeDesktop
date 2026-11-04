@@ -190,8 +190,9 @@ const adapters = {
 // import from a chunk are exported under their original names as well.
 const modules = [
   { target: 'define-messages.mjs', source: official.vendorIntl },
-  // owner-window.mjs / spinner.mjs: 3.6556.2 view-tabs publishes these roots (ownerWindow, getResizeObserverClass,
-  // CdsSpinner), so they are re-exported from there (D1, never a second copy). R4: the files and names stay. No other
+  // owner-window.mjs: 3.6556.2 view-tabs publishes these roots (ownerWindow, getResizeObserverClass), so they are
+  // re-exported from there (D1, never a second copy). R4: the files and names stay. W14-code r2 closeout-2 (DC-06):
+  // spinner.mjs (shared-frame Ac re-exported as Spinner) is retired, nothing imported it. No other
   // generated area imports the turn box any more (session-rail slices its own shared-25 UH / DG since W5; session-rail-
   // context its own Spinner), so no E34 legacy names are written (tests/turn-box-compat.test.mjs pins importers = []).
   { target: 'owner-window.mjs', source: 'shared-25-DOWZRSlq.js',
@@ -200,9 +201,6 @@ const modules = [
   { target: 'visible-window.mjs', source: 'c26f8455e-YuRMuTDz.js',
     exports: { o: 'visibleTodoWindow' },
     features: { o: ['hiddenBefore: a,', 'openAfter: s.length - c(s),', 'hiddenCompleted: c(e) - c(o),', 'e.status === "completed"'] } },
-  { target: 'spinner.mjs', source: official.sharedFrame,
-    exports: { Ac: 'Spinner' },
-    features: { Ac: ['"data-cds": "Spinner",'] } },
   { target: 'find-omitted.mjs', source: 'shared-15-BvlV43cI.js' },
   { target: 'todo-list.mjs', source: 'cb6930dae-Dw_4c1QI.js',
     exports: { Ld: 'TodoList' },

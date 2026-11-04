@@ -15,30 +15,20 @@
 //     (__gb__320800483, off here: R15/D29), so the chord keeps cycling sessions.
 // Host differences: there is one session list (mode is recorded but every mode reads it); position 0 opens Home (r[c]
 // push) unless Home already shows a draft (`f`), there is no draft parked in a split pane (openDraftInPane) and no
-// telemetry (ni); the alt_arrow chord's GrowthBook gate (shared-16 Up: __gb__1817753866) is a host constant (D41).
+// telemetry (ni); the alt_arrow chord's GrowthBook gate (shared-16 Up: __gb__1817753866) reads the host table, where it
+// is not listed (W14-code r4 gates-r4-09: E81 / E95 over D41 — 1817753866 is not in the desktop's 3P defaults Uon, so it
+// is off and ⌥↑ / ⌥↓ do not cycle sessions, as on the 3P desktop).
 // R4i-sidebar SI1: a folded bucket's rows stay in bC's `hidden` container (source-sidebar-sections.jsx BucketRows), so
 // tm lists them and a step can enter a folded group: rm unfolds a drawsOpenRows one, the sidebar's yS the others.
 import { sessionCycleRepeatMs, isCycleModifierKey, cycleBlockedByFocus, sessionCycleChord } from './generated/code-current/session-cycle-chords.mjs';
 import { cycleRowKey, expandCycleGroup, openCycleButton, rowAliasAttribute } from './generated/code-current/session-cycle-rows.mjs';
 import { sessionCycleStep } from './generated/code-current/session-cycle-step.mjs';
+import { hostGrowthBookFlag } from './host-growthbook.mjs';
 
-export const CYCLE_REPEAT_MS = sessionCycleRepeatMs; // Wp
-// shared-16 Up() = D("__gb__1817753866") (GrowthBook on). No GrowthBook here: ⌥↑ / ⌥↓ is on by host decision (R3).
-export const SESSION_CYCLE_ALT_ARROW = true;
-
-/**
- * am on macOS (xt() true) without the ⌥↑↓ chord: the delta of the chords the Keyboard shortcuts dialog lists
- * (Ctrl+Tab / Ctrl+Shift+Tab, ⌘⇧] / ⌘⇧[ by key code; Alt never). The cycler itself calls the original am.
- */
-export function sessionCycleDelta(event) {
-  if (!event || event.altKey) return 0;
-  if (event.key === "Tab" && event.ctrlKey && !event.metaKey) return event.shiftKey ? -1 : 1;
-  if (event.metaKey && event.shiftKey && !event.ctrlKey) {
-    if (event.code === "BracketRight") return 1;
-    if (event.code === "BracketLeft") return -1;
-  }
-  return 0;
-}
+ // Wp
+// shared-16 Up() = D("__gb__1817753866") (3.6556.2 Tg: `function Tg(){return J("__gb__1817753866")}`). Uon (asar
+// jPKPzV-P) has no entry for it, so the 3P desktop answers off; the host table does not list it (gates-r4-09, E81).
+export const SESSION_CYCLE_ALT_ARROW = hostGrowthBookFlag("__gb__1817753866");
 
 /** The host list tm walks (`.dframe-recents-by-mode [data-kind="<mode>"]` officially). */
 export const SIDEBAR_CYCLE_LIST = ".source-sidebar .df-session-list";

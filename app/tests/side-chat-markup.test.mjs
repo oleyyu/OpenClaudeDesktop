@@ -150,7 +150,9 @@ test('SSR: HF user turns, VF answers straight in div.select-text, _F status and 
   const html = render({ threadId: 'markup-turns', onPopOut() {} });
   assert.match(html, new RegExp(`<div class="${esc(LIST)}"><div class="${esc(USER_TURN)}"><div data-cds="UserMessage" data-text-size="md" class="${esc(USER_ROW)}"><div class="${esc(BUBBLE)}"><div id="[^"]+" class=""><div class="cds-user-message-body"><div class="${esc(SEGMENTS)}"><p class="[^"]*">what\\?</p></div></div></div></div></div></div>`));
   assert.match(html, /<div class="select-text"><div class="source-markdown"><p>ANSWER_TEXT<\/p><\/div><\/div>/);
-  assert.match(html, /<div class="ssc-status" data-side-status="idle"><span role="status" class="sr-only"><\/span><div aria-hidden="true"><div class="source-transcript-status"><div class="sts-row">/);
+  // W14-code r8 css8-side-chat-status-handrow: _F's aria-hidden div holds Go (c96d752d0 U6, the generated WorkingLine) directly.
+  assert.match(html, /<div class="ssc-status" data-side-status="idle"><span role="status" class="sr-only"><\/span><div aria-hidden="true"><div class="flex flex-col"( data-turn-working="[^"]*")?>/);
+  assert.doesNotMatch(html, /source-transcript-status|sts-row/);
   assert.equal(html.split(`<p class="${ERROR}">Side question failed.</p>`).length - 1, 1);
   assert.match(html, /aria-label="Clear side chat"/);
   assert.match(html, /aria-label="Open in new window" data-side-chat-popout=""/);
@@ -193,4 +195,20 @@ test('SSR: snippet context renders cc\'s Attached context list of Xs quote chips
   const html = render({ threadId: 'markup-chips' });
   assert.match(html, new RegExp(`<div class="${esc(USER_TURN)}"><ul role="list" class="epitaxy-user-attachments flex flex-wrap max-w-full \\[\\.epitaxy-user-turn_&amp;\\]:justify-end gap-1" aria-label="Attached context"><li role="listitem"><button type="button" aria-label="const x = 1;" class="grid place-items-center w-10 h-10 rounded-sm focus-visible:outline-hidden border-0 p-0 hide-focus-ring focus-visible:shadow-focus bg-alpha-2 text-muted-as-secondary"[^>]*><span data-cds="Icon"`));
   assert.doesNotMatch(html, /sca-strip|data-kind="snippet"/);
+});
+
+// W14-code r5 gates-r5-03 (E81): cccc2cf0a HF `n = Po()` (c96d752d0 mP jt("ccd_user_message_lists_main"), not in the
+// desktop's Uon: off) — `i = a ? (n ? Jd(a) : [{ kind: "text", text: a }]) : []`: the side chat's user text is one plain
+// text segment (no <ol>/<ul>) unless the gate is open; the gate-on path keeps the sliced parser.
+test('gates-r5-03: side chat user text stays plain while ccd_user_message_lists_main is off', async () => {
+  const { SourceSideChatUserContent } = await server.ssrLoadModule('/src/source-side-chat-user-content.jsx');
+  const text = 'Intro\n\n1. first\n2. second';
+  const off = renderToStaticMarkup(React.createElement(SourceSideChatUserContent, { text }));
+  assert.match(off, /^<div class="flex flex-col gap-1\.25">/);
+  assert.doesNotMatch(off, /<ol|<ul/);
+  assert.match(off, /1\. first<br\/>2\. second/);
+  const on = renderToStaticMarkup(React.createElement(SourceSideChatUserContent, { text, userMessageLists: true }));
+  assert.match(on, /<ol dir="ltr" class="epitaxy-user-list [^"]*"><li>first<\/li><li>second<\/li><\/ol>/);
+  const official = await fs.readFile(new URL('cccc2cf0a-DhZC33Gc.js', sliced), 'utf8');
+  assert.ok(official.includes('i=a?n?Jd(a):[{kind:"text",text:a}]:[]'), 'HF gated parse');
 });

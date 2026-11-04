@@ -65,7 +65,10 @@ import {
   ChangesRowVerb as Fke,
 } from "./changes-verb.mjs";
 import { prWebUrl as Dc } from "../code-current/sidebar-pr-model.mjs";
-import { sidebarPrStateLabel as Wc } from "../code-current/sidebar-pr-icon.mjs";
+import {
+  sidebarPrStateLabel as Wc,
+  SidebarPrIcon as One,
+} from "../code-current/sidebar-pr-icon.mjs";
 import { jsx as f, jsxs as _, Fragment as v } from "react/jsx-runtime";
 import {
   openOnHostLabel as CC,
@@ -79,6 +82,7 @@ import {
   BRANCH_ROW_CHECKOUT_CLASS as bs,
   BRANCH_ROW_GAP_CLASS as Cs,
   BRANCH_ROW_LEADING_CLASS as Ts,
+  heldBranchRowClass as Mte,
 } from "./branch-row-classes.mjs";
 import { RowContextMenu as Yh } from "./row-context-menu.mjs";
 import { preventMouseDown as Hv } from "../session-rail-kit/prevent-mouse-down.mjs";
@@ -115,6 +119,8 @@ import {
   RAIL_DISCLOSURE_CARET_CLASS as K_,
   RAIL_DISCLOSURE_TRIGGER_CLASS as Ufe,
 } from "./rail-disclosure.mjs";
+import { FormattedNumber as rc } from "./formatted-list.mjs";
+import { PR_MODE_MESSAGES as gp } from "./pr-mode-messages.mjs";
 function gke(e) {
   let $ = J9(4),
     t = T(cL),
@@ -1441,6 +1447,273 @@ var EL = M((e) => {
       )
     : $[228];
 });
+var eAe = "data-prbar-stale";
+var BL = "opacity-60";
+var nAe = "+";
+var rAe = "\u2212";
+var VL =
+  "inline-flex h-control shrink-0 items-center whitespace-nowrap rounded text-body font-normal text-primary bg-fill-secondary shadow-field stacks:shadow-none";
+var HL =
+  "inline-flex h-control min-w-0 items-center px-1.25 text-body font-normal";
+function iAe(e) {
+  let $ = J9(13),
+    { row: t, accentText: n } = e;
+  if (t.action === "view" || t.action === "none") return null;
+  let r = gp[t.action],
+    i = J1($, 0, r) ? K1($, 0, r, f(Q, { ...r })) : $[1];
+  if (t.accent) {
+    let e = `shrink-0 ps-md text-body ${n}`;
+    return J2($, 2, i, e)
+      ? K2($, 2, i, e, f("span", { className: e, children: i }))
+      : $[4];
+  }
+  if (t.split) {
+    let e = J1($, 5, i)
+        ? K1(
+            $,
+            5,
+            i,
+            f("span", {
+              className: "inline-flex h-full items-center px-md",
+              children: i,
+            }),
+          )
+        : $[6],
+      t,
+      n;
+    return (
+      $[7] === J8
+        ? ((t = f("span", {
+            className: "relative w-px self-stretch",
+            children: f("span", {
+              className: "absolute inset-x-0 inset-y-1/4 bg-border",
+            }),
+          })),
+          (n = f("span", { className: "aspect-square w-control" })),
+          ($[7] = t),
+          ($[8] = n))
+        : ((t = $[7]), (n = $[8])),
+      J1($, 9, e)
+        ? K1($, 9, e, _("span", { className: VL, children: [e, t, n] }))
+        : $[10]
+    );
+  }
+  return J1($, 11, i)
+    ? K1($, 11, i, f("span", { className: `${VL} px-md`, children: i }))
+    : $[12];
+}
+function aAe(e) {
+  let $ = J9(65),
+    { row: t, order: n } = e,
+    r = t.accent ? (t.pr?.state === "queued" ? "yellow" : "purple") : void 0,
+    i = r === "yellow" ? "text-git-queued" : "text-git-merged",
+    a = r ? `${i} opacity-60` : "text-muted-as-secondary",
+    o = t.action === "commit" || t.action === "none",
+    s = t.repoName !== null,
+    c = J0($, 0) ? K0($, 0, { [eAe]: "" }) : $[0],
+    l = `${J1($, 1, r) ? K1($, 1, r, Mte(r)) : $[2]} pointer-events-none ${BL}`,
+    u = J1($, 3, n) ? K1($, 3, n, n === void 0 ? void 0 : { order: n }) : $[4],
+    d =
+      J2($, 5, r, i) || J1($, 7, t.pr)
+        ? I1(
+            $,
+            7,
+            Z2(
+              $,
+              5,
+              t.pr &&
+                _(v, {
+                  children: [
+                    f(One, {
+                      state: t.pr.state,
+                      size: 16,
+                      className: "shrink-0",
+                    }),
+                    f("span", {
+                      className: `min-w-0 truncate [direction:rtl] px-1.25 text-body tabular-nums ${r ? i : "text-muted-as-secondary"}`,
+                      children: f("bdi", {
+                        children: f(Q, {
+                          defaultMessage: "#{number}",
+                          id: "rj4hoKw+Qf",
+                          values: { number: t.pr.number },
+                        }),
+                      }),
+                    }),
+                  ],
+                }),
+              r,
+              i,
+            ),
+            t.pr,
+          )
+        : $[8],
+    p = J1($, 9, t.pr)
+      ? I1(
+          $,
+          9,
+          t.pr && f("span", { className: "w-[12px] min-w-0 shrink" }),
+          t.pr,
+        )
+      : $[10],
+    m =
+      J3($, 11, a, o, s) || J1($, 14, t.repoName)
+        ? I1(
+            $,
+            14,
+            Z3(
+              $,
+              11,
+              s &&
+                f("span", {
+                  className: `epitaxy-branch-repo ${HL} ${a} ${o ? "" : "max-w-[160px] shrink"}`,
+                  children: f("span", {
+                    className: "truncate",
+                    children: t.repoName,
+                  }),
+                }),
+              a,
+              o,
+              s,
+            ),
+            t.repoName,
+          )
+        : $[15],
+    h = r !== void 0,
+    g = J3($, 16, o, s, h)
+      ? K3($, 16, o, s, h, gs({ accent: h, localOnly: o, repoChip: s }))
+      : $[19],
+    y =
+      (J1($, 20, t.branchName)
+        ? I1($, 20, pL(t.branchName), t.branchName)
+        : $[21]) !== null,
+    b = `${HL} ${J2($, 22, s, y) ? K2($, 22, s, y, vs({ repoChip: s, middleEllipsis: y })) : $[24]} ${r ? i : "text-muted-as-secondary"}`,
+    x = J1($, 25, t.branchName)
+      ? I1(
+          $,
+          25,
+          f("span", {
+            dir: "ltr",
+            className: "truncate font-mono-ui",
+            children: t.branchName,
+          }),
+          t.branchName,
+        )
+      : $[26],
+    S = J2($, 27, b, x)
+      ? K2($, 27, b, x, f("span", { className: b, children: x }))
+      : $[29],
+    C = J2($, 30, S, g)
+      ? K2($, 30, S, g, f("span", { className: g, children: S }))
+      : $[32],
+    w = J2($, 33, C, m)
+      ? K2($, 33, C, m, _("div", { className: bs, children: [m, C] }))
+      : $[35],
+    T = J0($, 36) ? K0($, 36, f("span", { className: Cs })) : $[36],
+    E = J2($, 37, w, p)
+      ? K2($, 37, w, p, _("div", { className: bs, children: [p, w, T] }))
+      : $[39],
+    D = J2($, 40, E, d)
+      ? K2($, 40, E, d, _("div", { className: Ts, children: [d, E] }))
+      : $[42],
+    O = J1($, 43, t.diff)
+      ? I1(
+          $,
+          43,
+          t.diff &&
+            f("span", {
+              className: `${VL} gap-1 px-md`,
+              children: _("span", {
+                className: "contents tabular-nums text-body-medium",
+                children: [
+                  _("span", {
+                    className: "text-git-added",
+                    children: [nAe, f(rc, { value: t.diff.added })],
+                  }),
+                  _("span", {
+                    className: "text-git-removed",
+                    children: [rAe, f(rc, { value: t.diff.removed })],
+                  }),
+                ],
+              }),
+            }),
+          t.diff,
+        )
+      : $[44],
+    k = J1($, 45, t.comments)
+      ? I1(
+          $,
+          45,
+          t.comments !== void 0 &&
+            _("span", {
+              className: `${VL} gap-1 px-md`,
+              children: [
+                f(We, { name: "Chat", size: "sm", className: "text-accent" }),
+                f("span", {
+                  className: "tabular-nums text-body-medium",
+                  children: f(rc, { value: t.comments }),
+                }),
+              ],
+            }),
+          t.comments,
+        )
+      : $[46],
+    A = J1($, 47, t.ci)
+      ? I1(
+          $,
+          47,
+          t.ci &&
+            f("span", {
+              className: "h-control w-[56px] shrink-0 rounded bg-alpha-2",
+            }),
+          t.ci,
+        )
+      : $[48],
+    j = J2($, 49, i, t)
+      ? K2($, 49, i, t, f(iAe, { row: t, accentText: i }))
+      : $[51],
+    M = J1($, 52, t.dismissable)
+      ? I1(
+          $,
+          52,
+          t.dismissable &&
+            f("span", { className: "aspect-square w-control shrink-0" }),
+          t.dismissable,
+        )
+      : $[53],
+    N = J5($, 54, O, k, A, j, M)
+      ? K5(
+          $,
+          54,
+          O,
+          k,
+          A,
+          j,
+          M,
+          _("div", {
+            className: "epitaxy-branch-trailing contents",
+            children: [O, k, A, j, M],
+          }),
+        )
+      : $[59];
+  return J4($, 60, D, N, l, u)
+    ? K4(
+        $,
+        60,
+        D,
+        N,
+        l,
+        u,
+        _("div", {
+          ...c,
+          "aria-hidden": !0,
+          inert: !0,
+          className: l,
+          style: u,
+          children: [D, N],
+        }),
+      )
+    : $[64];
+}
 function UL(e) {
   return e !== "queued" && e !== "merged" && e !== "closed";
 }
@@ -1727,6 +2000,8 @@ function xAe(e) {
       )
     : $[21];
 }
+var nR =
+  "scroll-fade-y flex max-h-[50vh] flex-col overflow-y-auto overscroll-contain empty:hidden";
 function gR(e, t) {
   return `${e}#${t}`;
 }
@@ -1741,6 +2016,7 @@ function bR(e, t) {
     history: t,
   };
 }
+var vje = "flex shrink-0 flex-col overflow-hidden [&>*]:shrink-0";
 function hMe(e, t, n) {
   return e
     ? e.state === "merged"
@@ -1770,4 +2046,7 @@ export {
   gR as historyRowKey,
   bR as repoRowId,
   yR as repoRowIdKey,
+  aAe as PrBarStaleRow,
+  nR as PR_BAR_ROWS_CLASS,
+  vje as PR_BAR_HOLD_CLASS,
 };

@@ -1406,3 +1406,36 @@ test('app_bring_to_current_space (official §1.6.3): lock, arguments, ownership,
   const ungranted = setup({ native: bringNative({ lists: [[win()]] }) });
   assert.equal(ungranted.body(await ungranted.call('app_bring_to_current_space', { app: FINDER, window_id: 7 })).reasonCode, 'app_not_granted');
 });
+
+// W14-code r2-shared-11: Settings › Computer use › Denied apps (official c71860c77 Bt, chicagoUserDeniedBundleIds: "Any
+// request Claude makes to access these apps is automatically rejected").
+test('Denied apps: request_access rejects a denied app without the card; a grant held before the deny stops counting', async () => {
+  const { createGrants } = require('../electron/computer-use/grants.cjs');
+  let deny = [];
+  const grants = createGrants({ denied: () => deny });
+  grants.grant([{ bundleId: FINDER, displayName: 'Finder' }]);
+  assert.equal(grants.has(FINDER), true);
+  deny = [FINDER];
+  assert.equal(grants.has(FINDER), false);
+  assert.equal(grants.tierOf(FINDER), null);
+  assert.deepEqual(grants.list(), []);
+  assert.deepEqual(grants.allowedBundleIds(), []);
+  assert.deepEqual(grants.grant([FINDER]), [], 'a denied app is never granted');
+  deny = [];
+  assert.equal(grants.has(FINDER), true, 'taken off the list: the earlier grant counts again');
+
+  const service = createComputerUse({ native: fakeNative(), axHelper: fakeHelper(), image: fakeImage(), log: { log() {}, warn() {} }, wait: async () => {}, deniedBundleIds: () => [FINDER] });
+  const asked = [];
+  const host = createAgentToolsHost({
+    tmpRoot: fs.mkdtempSync(path.join(os.tmpdir(), 'cu-agent-tools-')), logger: { warn() {}, log() {} },
+    modules: [cu], isGroupEnabled: () => true, resolveSession: (id) => (id ? { id, cwd: '/work' } : null),
+  });
+  host.provide('computerUse', () => ({ service, resolveApps: (names) => resolver.resolveAll(names), listApps: fakeApps(),
+    ask: async (access) => { asked.push(access); return 'accept'; }, askTakeover: async () => 'accept' }));
+  const result = await host.call('thread-d', { name: 'request_access', arguments: { apps: ['Finder'], reason: 'List the windows' } });
+  const body = JSON.parse(result.content[0].text);
+  assert.equal(asked.length, 0, 'no card');
+  assert.deepEqual(body.granted, []);
+  assert.deepEqual(body.denied, [{ app: 'Finder', bundleId: FINDER, reason: 'user_denied_list' }]);
+  assert.equal(service.grantsFor('thread-d').has(FINDER), false);
+});

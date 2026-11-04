@@ -174,7 +174,7 @@
   background: linear-gradient(90deg, transparent, var(--cds-skeleton-sheen, var(--cds-alpha-1)), transparent);
   animation: cds-shimmer 2s linear infinite;
 }
-.smenu-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+/* W14-code r5 cleanup css5-sr-only-handcopies: the hand-copied sr-only rule is gone; the JSX uses the official c6a992d55 .sr-only. */
 @media (prefers-reduced-motion: reduce) { .smenu-skeleton::after { display: none; } }
 [data-reduce-motion="true"] .smenu-skeleton::after, html[data-local-motion="reduce"] .smenu-skeleton::after { display: none; }
 

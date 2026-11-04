@@ -9,6 +9,8 @@
 //                   backend: "pty"|"script", limited, busy: boolean|null, openedBy: "user"|"agent", userTyped, createdAt }
 
 export const TERMINAL_ID = /^term-[a-z0-9]{6,32}$/;
+// Tabs the agent's tools may leave open in one session (agent-tools/terminal.mjs). W14-code R6DC-05: the user's own tabs
+// have no cap, as in the official app (only remote hosts have a connection budget).
 export const MAX_TERMINALS_PER_OWNER = 12;
 export const MAX_INPUT_CHARS = 64 * 1024;
 export const MAX_TITLE_CHARS = 64;

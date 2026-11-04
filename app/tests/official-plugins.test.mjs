@@ -59,8 +59,8 @@ test('Official cards: Claude Directory card with icon, by DeepSeek · version, E
   assert.match(zcode, /<span class="cz-official-meta">by Z\.ai \(Zhipu\) · v0\.2\.0<\/span>/);
   assert.doesNotMatch(zcode, /DeepSeek/);
   assert.match(html, />Experimental</);
-  assert.match(html, /aria-label="Turn Auto review on"/);
-  assert.doesNotMatch(renderToStaticMarkup(React.createElement(M.OfficialPlugins, { rows, store, manage: false })), /Turn Auto review on|cz-official-open/, 'no switch without plugin management, no open button without onOpen');
+  assert.match(html, /aria-label="Enable plugin" aria-checked="false"/);
+  assert.doesNotMatch(renderToStaticMarkup(React.createElement(M.OfficialPlugins, { rows, store, manage: false })), /role="switch"|cz-official-open/, 'no switch without plugin management, no open button without onOpen');
   assert.equal(renderToStaticMarkup(React.createElement(M.OfficialPlugins, { rows: [], store })), '');
 });
 
@@ -97,7 +97,7 @@ test('the install form offers the Harness install sources on the DeepSeek core o
   // and placeholder come from the core's descriptor (plugins.format / plugins.placeholder).
   for (const [engine, format, placeholder] of [
     ['zcode', 'A local folder with .zcode-plugin/plugin.json, or name@marketplace.', '/path/to/plugin or name@marketplace'],
-    ['opencode', 'An npm package name or a file path to a plugin module.', 'package-name or /path/to/plugin.js'],
+    ['opencode', 'An npm package name or the path to a plugin folder.', 'package-name or /path/to/plugin-folder'],
     ['mimo', 'An npm package name or a file path to a plugin module.', 'package-name or /path/to/plugin.js'],
     ['kimi', 'A local plugin folder, a .zip URL, or a GitHub repository URL.', '/path/to/plugin or https://github.com/owner/repo']]) {
     const bridge = renderToStaticMarkup(React.createElement(M.AddPluginForm, { store: {}, install: null, onClose() {}, copy: customizeCore({ engine, capabilities: { pluginManage: true } }) }));
@@ -126,10 +126,10 @@ test('ZCode built-in plugins: Official, on by default, switchable, never removab
   const store = { setPluginEnabled() { throw Error('SSR'); } };
   const html = renderToStaticMarkup(React.createElement(M.OfficialPlugins, { rows: official, store, manage: true, copy: zcodeCopy }));
   assert.match(html, /<span>Ships with ZCode, on until you turn it off\.<\/span>/);
-  assert.match(html, /aria-label="Turn glm-search off"/);
-  assert.match(html, /aria-label="Turn glm-vision on"/);
+  assert.match(html, /data-official-plugin="[^"]*glm-search[^"]*"[^]*?aria-label="Enable plugin" aria-checked="true"/);
+  assert.match(html, /data-official-plugin="[^"]*glm-vision[^"]*"[^]*?aria-label="Enable plugin" aria-checked="false"/);
   const controls = renderToStaticMarkup(React.createElement(M.PluginManageControls, { plugin: search, store, copy: zcodeCopy }));
-  assert.match(controls, /aria-label="Turn glm-search off"/);
+  assert.match(controls, /aria-label="Enable plugin" aria-checked="true"/);
   assert.doesNotMatch(controls, />Remove</);
   // Mixed groups get the plain subtitle; the DeepSeek core's optional bundles keep "off until you turn it on".
   const mixed = renderToStaticMarkup(React.createElement(M.OfficialPlugins, { rows: [...official, { ...pluginRows(response).find(row => row.official) }], store, copy: zcodeCopy }));

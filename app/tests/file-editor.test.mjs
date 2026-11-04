@@ -59,3 +59,30 @@ test('read-only files are not replaced through a writable parent directory', asy
   assert.equal((await writeFile(root, 'readonly', 'changed', read.hash)).status, 'failed');
   assert.equal(await fs.readFile(target, 'utf8'), 'original');
 });
+
+// W14-code r4 r4pa-c08: 3.6556.2 asar index.chunk-DNPOm2Zc.js isHookManagerPackageJsonKeyChange — a package.json save that
+// changes a Git-hook tool key is refused with deniedReason "hook_manager_package_key" (cd2efac6e maps it to hook_denied).
+test('package.json saves that change a Git-hook tool key are refused (hook_manager_package_key); other edits save', async t => {
+  const { isHookManagerPackageJsonKeyChange, HOOK_MANAGER_PACKAGE_JSON_KEYS } = createRequire(import.meta.url)('../electron/file-editor.cjs');
+  assert.deepEqual(HOOK_MANAGER_PACKAGE_JSON_KEYS, ['lint-staged', 'husky', 'commitlint', 'pre-commit', 'precommit', 'gitHooks', 'nano-staged']);
+  const root = await fixture(t), target = path.join(root, 'package.json');
+  const base = '﻿' + JSON.stringify({ name: 'x', husky: { hooks: { 'pre-commit': 'lint' } } }, null, 2);
+  await fs.writeFile(target, base);
+  const read = await readEditableFile(root, 'package.json');
+  for (const next of [{ name: 'x' }, { name: 'x', husky: { hooks: { 'pre-commit': 'rm -rf /' } } }, { name: 'x', husky: { hooks: { 'pre-commit': 'lint' } }, 'lint-staged': {} }]) {
+    assert.deepEqual(await writeFile(root, 'package.json', JSON.stringify(next), read.hash), { status: 'denied', deniedReason: 'hook_manager_package_key' });
+    assert.equal(await fs.readFile(target, 'utf8'), base);
+  }
+  // Reformatting the same hook settings and editing other keys save; unparsable text is not refused by this check.
+  const same = JSON.stringify({ name: 'y', husky: { hooks: { 'pre-commit': 'lint' } } });
+  const saved = await writeFile(root, 'package.json', same, read.hash);
+  assert.equal(saved.status, 'saved');
+  assert.equal((await writeFile(root, 'package.json', '{ not json', saved.hash)).status, 'saved');
+  // A new package.json that adds a hook key is refused too (the missing file counts as {}); other files are never checked.
+  assert.equal((await writeFile(root, 'sub-package.json', JSON.stringify({ husky: {} }), null)).status, 'saved');
+  await fs.mkdir(path.join(root, 'pkg'));
+  assert.deepEqual(await writeFile(root, 'pkg/PACKAGE.JSON', JSON.stringify({ gitHooks: {} }), null), { status: 'denied', deniedReason: 'hook_manager_package_key' });
+  assert.equal(isHookManagerPackageJsonKeyChange(undefined, '[]'), false);
+  assert.equal(isHookManagerPackageJsonKeyChange('{"precommit":["a"]}', '{"precommit":["a"]}'), false);
+  assert.equal(isHookManagerPackageJsonKeyChange('{"nano-staged":1}', '{}'), true);
+});

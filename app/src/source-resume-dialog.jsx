@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import { ActionDialog } from "./source-session-actions.jsx";
 import { SourceDialogFooter } from "./source-dialog.jsx";
-import { SourceSettingsButton } from "./source-settings-button.jsx";
+// W14-code r6 R6DC-02: shared-frame Uu (E41 direct import), not the host replica.
+import { CdsButton } from "./generated/view-tabs/shared-frame-6jtSkIit.js";
 import { SourceSegments } from "./source-segments.jsx";
 import { getAssistantName, t } from "../electron/i18n/index.mjs";
 import "./source-resume-dialog.css";
@@ -75,9 +76,9 @@ export function SourceResumeDialog({ desktopCall, cwd = "", initialQuery = "", f
               {row.added && <span className="resume-badge">{t("In the sidebar")}</span>}
             </span>
           </button>)}
-      {cursor && rows?.length > 0 && <SourceSettingsButton size="sm" variant="ghost" className="resume-more" busy={loadingMore} disabled={loadingMore} onClick={() => void load({ more: true })}>{t("Show more")}</SourceSettingsButton>}
+      {cursor && rows?.length > 0 && <CdsButton size="sm" variant="ghost" className="resume-more" busy={loadingMore} disabled={loadingMore} onClick={() => void load({ more: true })}>{t("Show more")}</CdsButton>}
     </div>
     {error && <p role="alert" className="resume-error">{error}</p>}
-    <SourceDialogFooter><SourceSettingsButton disabled={!!busy} onClick={onClose}>{t("Cancel")}</SourceSettingsButton></SourceDialogFooter>
+    <SourceDialogFooter><CdsButton disabled={!!busy} onClick={onClose}>{t("Cancel")}</CdsButton></SourceDialogFooter>
   </ActionDialog>;
 }

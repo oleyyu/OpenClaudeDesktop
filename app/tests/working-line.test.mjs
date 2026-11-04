@@ -41,8 +41,11 @@ after(() => server?.close());
 
 const ready = { sessionKey: 'a', ready: true, connected: true };
 const view = state => Status.transcriptStatusPresentation({ ...ready, ...state });
+// W14-code r4 gates-r4-11: the line sits in the Code session's TurnStatus rows (cf74bc599 `s($m, {value: Gn})`, the host's
+// TranscriptRowsScope); the GrowthBook flag itself is not served.
+const inCode = (element) => React.createElement(Rows.TurnStatusRowsOverride, { value: true }, element);
 const render = (state, extra = {}, thinkingToggle = null) =>
-  renderToStaticMarkup(React.createElement(Line.SourceWorkingLine, { line: Model.workingLineProps(view(state), extra), thinkingToggle }));
+  renderToStaticMarkup(inCode(React.createElement(Line.SourceWorkingLine, { line: Model.workingLineProps(view(state), extra), thinkingToggle })));
 const CLOCK = s => `<span aria-hidden="true" class="shrink-0 text-muted tabular-nums">${s}</span>`;
 const DOT = '<span aria-hidden="true" class="shrink-0 text-muted tabular-nums select-none">·</span>';
 const TRAILING = '<span class="epitaxy-status-control inline-flex min-w-0 items-center gap-xs">';
@@ -230,19 +233,25 @@ test('no legacy segment (wave 7): no consumer of this area is left on 2.42304.0'
   assert.throws(() => workingLineManifestFor(manifest, '1.0.0'), /working-line is 3\.6556\.2, expected 1\.0\.0/);
 });
 
-test('gate wiring: the host GrowthBook serves turnStatusRows; Je (TurnStatusRowsProvider) provides it to the line', () => {
-  assert.equal(Line.WORKING_LINE_TURN_STATUS_ROWS, true);
+// W14-code r4 gates-r4-11 (E95): turnStatusRows is not in the desktop's Uon (c26fb8b6b Je reads `__gb__2846116625`, which
+// Uon does not list); the Code session provides it (cf74bc599 `Gn = eh() || Wn` → `s($m, {value: Gn})`).
+test('gate wiring: the host GrowthBook does not serve turnStatusRows; Je (TurnStatusRowsProvider) keeps the outer value', () => {
+  assert.equal('WORKING_LINE_TURN_STATUS_ROWS' in Line, false);
   assert.equal(Rows.TURN_STATUS_ROWS_FLAG, '__gb__2846116625');
   const Probe = () => String(Rows.useTurnStatusRows());
   assert.equal(renderToStaticMarkup(React.createElement(Probe)), 'false', 'no provider: Xe() ?? false');
   assert.equal(renderToStaticMarkup(React.createElement(Rows.TurnStatusRowsOverride, { value: true }, React.createElement(Probe))), 'true');
-  // Je (the GrowthBook provider) answers the host's GrowthBook: on for turnStatusRows, off for everything else.
-  assert.equal(renderToStaticMarkup(React.createElement(Rows.TurnStatusRowsProvider, null, React.createElement(Probe))), 'true');
-  assert.equal(Adapters.useGrowthBookFlag('__gb__2846116625'), true);
+  // Je (the GrowthBook provider) answers the host's GrowthBook (off for turnStatusRows) unless an outer value is given.
+  assert.equal(renderToStaticMarkup(React.createElement(Rows.TurnStatusRowsProvider, null, React.createElement(Probe))), 'false');
+  assert.equal(renderToStaticMarkup(React.createElement(Rows.TurnStatusRowsOverride, { value: true },
+    React.createElement(Rows.TurnStatusRowsProvider, null, React.createElement(Probe)))), 'true');
+  assert.equal(Adapters.useGrowthBookFlag('__gb__2846116625'), false);
   // E14: the clay mark's gate is gone from 3.6556.2 and from the host table.
   assert.equal(Adapters.useGrowthBookFlag('__gb__507049721'), false);
-  for (const flag of ['ccr_thinking_token_count', '__gb__1616707004', '__gb__2346508742']) assert.equal(Adapters.useGrowthBookFlag(flag), false, flag);
-  assert.equal(Adapters.useGrowthBookFlagWhen('__gb__2846116625', true), true);
+  for (const flag of ['ccr_thinking_token_count', '__gb__1616707004']) assert.equal(Adapters.useGrowthBookFlag(flag), false, flag);
+  // W14-code transcript-rest (E81, Uon `always !0`): the quill clay mark (shared-4 MS) is on.
+  assert.equal(Adapters.useGrowthBookFlag('__gb__2346508742'), true);
+  assert.equal(Adapters.useGrowthBookFlagWhen('__gb__2846116625', true), false);
   assert.equal(Adapters.useGrowthBookFlagWhen('__gb__2846116625', false), false);
   const source = fs.readFileSync(path.join(app, 'src/source-working-line.jsx'), 'utf8');
   assert.match(source, /<TurnStatusRowsProvider>\s*<WorkingLine \{\.\.\.line\} \/>/);
@@ -290,11 +299,16 @@ test('waiting phases (sending, model, tools, responding) show no text label; the
   assert.equal(Model.workingLineProps(view({ running: false, sending: true }), {}).waiting, 'sending');
 });
 
-test('thinking: with the flag served on, U6 shows no thinking text or chip (BSe only holds the row)', () => {
+// W14-code r4 gates-r4-11 (E95): U6's raw read `jt(Mpe)` (the turnStatusRows flag, not in the desktop's Uon) is off, so
+// an open, active thought shows U6's "Thinking" chip (`!le && a === void 0 && xe && !be && Se && Te === "stats" &&
+// w?.kind === "active" && w.open !== !1`); a closed or finished thought still shows no thinking text.
+test('thinking: with the flag not served, U6 shows the "Thinking" chip for an open, active thought only', () => {
   for (const thinking of [{ kind: 'active', open: true }, { kind: 'active', open: false }, { kind: 'done', seconds: 4 }]) {
     const html = render({ running: true }, { elapsed: 5, outputTokens: 3, thinking });
     assert.ok(html.includes(`${TRAILING}3 tokens</span>`));
-    assert.doesNotMatch(html, />Thinking<|Thinking…|Thought for/);
+    if (thinking.kind === 'active' && thinking.open) assert.ok(html.includes(`${TRAILING}<span>Thinking</span></span>`));
+    else assert.doesNotMatch(html, />Thinking<|Thinking…|Thought for/);
+    assert.doesNotMatch(html, /Thinking…|Thought for/);
   }
   assert.deepEqual(Model.workingLineThinking({ kind: 'active' }, true), { kind: 'active', open: true });
   assert.deepEqual(Model.workingLineThinking({ kind: 'active' }, false), { kind: 'active', open: false });
@@ -322,18 +336,18 @@ test('retry: counts take the official apiRetry branch over the API error type; a
   const retrying = { error: 'Rate limited', errorType: 'rate_limit', attempt: 1, maxRetries: 5, later: 'Next try at 9:00 PM', detail: 'Slow down', link: null };
   const line = Model.workingLineProps(view({ running: true, retrying }), { elapsed: 8, retrying });
   assert.deepEqual(line.apiRetry, { error: 'rate_limit', attempt: 1, maxRetries: 5 });
-  const counted = renderToStaticMarkup(React.createElement(Line.SourceWorkingLine, { line }));
+  const counted = renderToStaticMarkup(inCode(React.createElement(Line.SourceWorkingLine, { line })));
   assert.match(counted, />Rate limited · Retrying \(1\/5\)<\/span>/);
   assert.ok(counted.includes(CLOCK('8s'))); assert.doesNotMatch(counted, /tokens|Next try|Slow down/);
   // An unknown type reads ym's "Request failed".
   const unknown = Model.workingLineProps(view({ running: true, retrying: { error: 'Request failed', errorType: null, attempt: 2, maxRetries: 3 } }), { retrying: { errorType: null, attempt: 2, maxRetries: 3 } });
-  assert.match(renderToStaticMarkup(React.createElement(Line.SourceWorkingLine, { line: unknown })), />Request failed · Retrying \(2\/3\)</);
+  assert.match(renderToStaticMarkup(inCode(React.createElement(Line.SourceWorkingLine, { line: unknown }))), />Request failed · Retrying \(2\/3\)</);
   assert.equal(Status.apiErrorType('serverOverloaded'), 'overloaded'); assert.equal(Status.apiErrorType('unauthorized'), 'authentication_failed');
   assert.equal(Status.apiErrorType('usageLimitExceeded'), 'rate_limit'); assert.equal(Status.apiErrorType('other'), null);
   // No counts (Codex): the named-step slot with the host's "Retrying…" label (TurnStatus trims the busy ellipsis).
   const codex = Model.workingLineProps(view({ running: true, retrying: 'Overloaded' }), { elapsed: 8 });
   assert.equal(codex.apiRetry, null); assert.equal(codex.spawnLabel, 'Overloaded · Retrying…');
-  assert.match(renderToStaticMarkup(React.createElement(Line.SourceWorkingLine, { line: codex })), />Overloaded · Retrying<\/span>/);
+  assert.match(renderToStaticMarkup(inCode(React.createElement(Line.SourceWorkingLine, { line: codex }))), />Overloaded · Retrying<\/span>/);
 });
 
 // T2: the SDK's api_retry `no_response` (c06cf64bb CK → apiRetry.noResponse) reads "No response from the API" (ym), and
@@ -344,10 +358,10 @@ test('retry with no response: ym / xm name it; the model keeps CK\'s bounds', ()
   const line = Model.workingLineProps(view({ running: true, retrying }), { elapsed: 8, retrying });
   assert.deepEqual(line.apiRetry, { error: 'overloaded', attempt: 1, maxRetries: 5, noResponse: { waitedMs: 30000, retryWaitMs: 120000 } });
   assert.equal(line.apiRetrySshHost, undefined, 'no SSH sessions in the host (D37)');
-  assert.match(renderToStaticMarkup(React.createElement(Line.SourceWorkingLine, { line })), />No response from the API · Retrying \(1\/5\)<\/span>/);
+  assert.match(renderToStaticMarkup(inCode(React.createElement(Line.SourceWorkingLine, { line }))), />No response from the API · Retrying \(1\/5\)<\/span>/);
   const once = { ...retrying, maxRetries: 1 };
   const last = Model.workingLineProps(view({ running: true, retrying: once }), { elapsed: 8, retrying: once });
-  assert.match(renderToStaticMarkup(React.createElement(Line.SourceWorkingLine, { line: last })), />No response from the API · Trying once more, for up to 2 min<\/span>/);
+  assert.match(renderToStaticMarkup(inCode(React.createElement(Line.SourceWorkingLine, { line: last }))), />No response from the API · Trying once more, for up to 2 min<\/span>/);
   for (const bad of [{ waitedMs: 0, retryWaitMs: 1 }, { waitedMs: 1, retryWaitMs: 216e5 }, { waitedMs: 1 }, null]) {
     const r = { ...retrying, noResponse: bad };
     assert.deepEqual(Model.workingLineProps(view({ running: true, retrying: r }), { retrying: r }).apiRetry, { error: 'overloaded', attempt: 1, maxRetries: 5 });
@@ -377,8 +391,8 @@ test('tool label: U6 names the row with the running tool; the default is no labe
 });
 
 test('spawn steps from Home name the row (B29)', () => {
-  const html = renderToStaticMarkup(React.createElement(Line.SourceWorkingLine, {
-    line: Model.workingLineProps(Status.transcriptStatusPresentation({ sessionKey: null, spawnLabel: 'Refreshing origin…' }), { elapsed: 0 }) }));
+  const html = renderToStaticMarkup(inCode(React.createElement(Line.SourceWorkingLine, {
+    line: Model.workingLineProps(Status.transcriptStatusPresentation({ sessionKey: null, spawnLabel: 'Refreshing origin…' }), { elapsed: 0 }) })));
   assert.match(html, /data-state="busy"/); assert.match(html, />Refreshing origin<\/span>/);
 });
 
@@ -423,7 +437,7 @@ test('mark held by a tool row: W6 quiet / markHeld, the line steps back in the s
     held({ running: true, waiting: true })]) {
     assert.equal(line.quiet, false); assert.equal(line.markHeld, true);
   }
-  const html = renderToStaticMarkup(React.createElement(Line.SourceWorkingLine, { line: running }));
+  const html = renderToStaticMarkup(inCode(React.createElement(Line.SourceWorkingLine, { line: running })));
   assert.match(html, /^<div data-testid="code-working-line" data-quiet="true" data-turn-working="true" class="invisible flex min-h-control flex-col" aria-hidden="true">/);
   assert.doesNotMatch(html, /TurnStatusClayMark|TurnStatusLeftMark/);
   const status = fs.readFileSync(path.join(app, 'src/source-transcript-status.jsx'), 'utf8');
@@ -432,4 +446,16 @@ test('mark held by a tool row: W6 quiet / markHeld, the line steps back in the s
   // The held row's in-place remains (an empty `contents` home) make no box, so the tail does not move by its margin.
   const css = fs.readFileSync(path.join(app, 'src/source-transcript-status.css'), 'utf8');
   assert.ok(css.includes('.source-transcript-content > .source-message:has(> :only-child > [data-turn-mark-home]:only-child:empty) > * { display: contents; }'));
+});
+
+// W14-code r8 css8-side-chat-status-handrow: cccc2cf0a _F draws Go = c96d752d0 V (U6), the same generated working line;
+// the host's classic .sts-* row (SourceSpark + hand-copied rules) is gone.
+test('the side chat status draws the generated working line with _F props', async () => {
+  const { readFileSync } = await import('node:fs');
+  const status = readFileSync(new URL('../src/source-side-chat-status.jsx', import.meta.url), 'utf8');
+  assert.match(status, /<div aria-hidden=\{true\}><SourceWorkingLine line=\{line\} \/><\/div>/);
+  assert.match(status, /isCompacting: false, apiRetry: null,\n    elapsedSeconds: thinkingElapsedBucket\(elapsed\), turnStartTime, tokens: 0, thinking: null, markStandalone: true/);
+  assert.doesNotMatch(status, /SourceSpark|sts-/);
+  const css = readFileSync(new URL('../src/source-transcript-status.css', import.meta.url), 'utf8');
+  assert.doesNotMatch(css, /\.sts-/);
 });

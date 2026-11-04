@@ -365,13 +365,16 @@ test('the generated wrapper under a press: pr removes once per two frames and ha
 test('wiring: the Code shelf renders the tiles; paste / drop go through mb + aK; main.jsx hands the composer CdsRoot Ub', () => {
   const composer = fs.readFileSync(path.join(app, 'src/source-composer.jsx'), 'utf8');
   // W12b cf-01: cc43287c9 `onClickAnnotation: lg` rides along to the tiles (fs).
-  assert.equal(count(composer, '<ComposerAttachmentTiles entries={attachments} contextPills={contextPills} onRemove={onRemoveAttachment} onOpenFile={onOpenAttachmentFile} onClickAnnotation={onClickAnnotation} disabled={sending} />'), 1);
+  assert.equal(count(composer, '<ComposerAttachmentTiles entries={attachments} contextPills={contextPills} onRemove={onRemoveAttachment} onOpenFile={onOpenAttachmentFile} onClickAnnotation={onClickAnnotation} onEditHeldText={onEditHeldText} disabled={sending} />'), 1);
   // Chat / Cowork (SourceChatComposer) keep the host pills.
   assert.equal(count(composer, 'attachments={attachments.length > 0 || contextPills.length > 0 ? <SourceComposerAttachments entries={attachments}'), 1);
   assert.equal(count(composer, 'import { splitTransferItems } from "./generated/code-composer/composer-intake-split.mjs";'), 1);
   assert.equal(count(composer, 'import { routeComposerIntake } from "./generated/code-composer/composer-intake-route.mjs";'), 1);
   const main = fs.readFileSync(path.join(app, 'src/main.jsx'), 'utf8');
   assert.equal(count(main, 'experimental={codePaneExperimental}'), 1);
-  // The shell still gets no onFileDrop (the official Code card neither): no drop panel, no page scrim.
-  assert.equal(count(composer, 'onFileDrop='), 0);
+  // W14-code composer review: only the card fallback outside a pane zone hands the shell onFileDrop (its card-scope drop
+  // panel); inside a pane the zone takes the drop and the shell gets undefined, as the official Code card. Never the page scrim.
+  assert.equal(count(composer, 'onFileDrop='), 1);
+  assert.equal(count(composer, 'onFileDrop={cardFileDrop}'), 1);
+  assert.equal(count(composer, 'dropScope='), 0);
 });

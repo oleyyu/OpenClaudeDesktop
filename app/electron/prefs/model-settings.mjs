@@ -157,7 +157,6 @@ export function validate(value) {
   return { params, prices: prices && Object.keys(prices).length ? prices : null };
 }
 export const validateModelSettings = validate;
-export const normalizeModelSettings = normalize;
 
 /**
  * Catalog models with the user's default effort: an entry's

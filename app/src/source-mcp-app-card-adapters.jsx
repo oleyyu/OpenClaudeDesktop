@@ -330,11 +330,24 @@ export function useOpenConfirmedLink() {
 // ---- shared-3 fR (qs): the composer's send-text cleaner, gated by __gb__3182548365 (off: the text as written).
 export function cleanSendText(text) { return { text, removedCount: 0 }; }
 
-// ---- shared-7 jg (as): the appearance settings store (3.6556.2 moved it from shared-14); the card reads chatTextSize. The host has no chat text size
-// preference, so it answers the official default "m".
-const APPEARANCE = Object.freeze({ chatTextSize: 'm' });
-export function appearanceSettingsStore(selector) { return selector(APPEARANCE); }
-appearanceSettingsStore.getState = () => APPEARANCE;
+// ---- shared-7 jg (as): the appearance settings store (3.6556.2 moved it from shared-14); the card reads chatTextSize. The
+// host's transcript text size is html[data-chat-text-size] (appearance-root.mjs, as shared-20 Gh writes it), read here
+// live; jg's own default "m" when it is absent or unknown.
+const APPEARANCE = Object.freeze({ s: Object.freeze({ chatTextSize: 's' }), m: Object.freeze({ chatTextSize: 'm' }), l: Object.freeze({ chatTextSize: 'l' }) });
+const chatTextSizeNow = () => {
+  const size = typeof document === 'undefined' ? undefined : document.documentElement?.dataset?.chatTextSize;
+  return Object.hasOwn(APPEARANCE, size ?? '') ? size : 'm';
+};
+function subscribeChatTextSize(onChange) {
+  if (typeof document === 'undefined' || typeof MutationObserver === 'undefined') return () => {};
+  const observer = new MutationObserver(onChange);
+  observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-chat-text-size'] });
+  return () => observer.disconnect();
+}
+export function appearanceSettingsStore(selector) {
+  return selector(APPEARANCE[useSyncExternalStore(subscribeChatTextSize, chatTextSizeNow, () => 'm')]);
+}
+appearanceSettingsStore.getState = () => APPEARANCE[chatTextSizeNow()];
 
 // ---- c8748971a f (t): the resolved font stack of a theme token. Here the computed value of the host's own token on the
 // document root (the loaded official CSS defines --font-sans / --font-mono); without one the card leaves the widget's

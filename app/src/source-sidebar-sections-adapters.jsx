@@ -13,14 +13,15 @@
 // CDS Dropdown parts (source-sidebar-menu-kit.jsx). One CDS answer stays here, over the host SourceMenu:
 //   - SidebarSectionsMenu (shared-frame EC) for move-to-menu.mjs only: shared-20 wx is the row menu's Move to submenu,
 //     and the host row menu is SourceMenu.
-import React, { useCallback, useState, useSyncExternalStore } from 'react';
+import React, { useCallback, useSyncExternalStore } from 'react';
 import { SourceMenu } from './source-menu.jsx';
 // E41: this module is reached from the sidebar / menu graph, so it imports the view-tabs file by semantic name (not the
 // facade, which evaluates every view-tabs module and their host adapters).
-import { CdsContextMenu, CdsDropdown } from './generated/view-tabs/shared-frame-6jtSkIit.js';
+import { CdsContextMenu } from './generated/view-tabs/shared-frame-6jtSkIit.js';
 import { create } from './generated/sidebar-sections/zustand.mjs';
-import { sectionsStoreActions, selectCodeSidebar, customGroupKeyPrefix } from './generated/sidebar-sections/sections-model.mjs';
+import { sectionsStoreActions, selectCodeSidebar, customGroupKeyPrefix, sessionsSectionId } from './generated/sidebar-sections/sections-model.mjs';
 import { sidebarSectionsStoreSlice } from '../electron/sidebar-sections-store.mjs';
+import { hostGrowthBookFlag } from './host-growthbook.mjs';
 
 // ---------------------------------------------------------------- react-intl (vendor-intl q / Gt)
 // useIntl / FormattedMessage over the local catalog (English message looked up in zh-CN by t()).
@@ -116,21 +117,35 @@ const keptWhileEmpty = () => useSidebarSectionsStore.getState().groupsKeptWhileE
 export function useSectionsKeptWhileEmpty() {
   return useSyncExternalStore(useSidebarSectionsStore.subscribe, keptWhileEmpty, keptWhileEmpty);
 }
+// E81 (overrides E16): shared-11 lf(), Show › Side chats (Ff's sideChatRowsShown): `(e.activeGroupScope === null ?
+// _n("code-session-list:side-chats-v1") : Qd(e, "sessions").show.sideChats) && ef()`. The host store always has its
+// scope, ef is Tl() (the presets gate, D10: on), and uf writes the Sessions section's show.sideChats (writeSideChatRows).
+const sideChatRowsShown = () => sectionById(useSidebarSectionsStore.getState(), sessionsSectionId)?.show?.sideChats === true;
+export function useSideChatRowsShown() {
+  return useSyncExternalStore(useSidebarSectionsStore.subscribe, sideChatRowsShown, sideChatRowsShown);
+}
+// shared-11 uf (shared-21 NS): `J.getState().setSectionView(Xt, { show: { sideChats: e } })`.
+export function writeSideChatRows(shown) {
+  useSidebarSectionsStore.getState().setSectionView(sessionsSectionId, { show: { sideChats: shown === true } });
+}
 
 // ---------------------------------------------------------------- gates (GrowthBook / account), D10
 // shared-16 Pp (exported `et`): `{overlayEnabled: e || t, environments: e}` with e = the presets gate. D10: on.
 const overlayGate = Object.freeze({ overlayEnabled: true, environments: true });
 export function useSidebarOverlayGate() { return overlayGate; }
-// shared-11 rc (exported `Ya`): `claudeai_cc_epitaxy_session_presets_main` (latched). D10: on.
-export function usePresetsGate() { return true; }
+// shared-11 rc (exported `Ya`): `claudeai_cc_epitaxy_session_presets_main` (latched). D10: on (W14-code r2 gates-r2-01:
+// the host table's __gb__3264789062, the one answer every reader of the gate gets).
+export function usePresetsGate() { return hostGrowthBookFlag("claudeai_cc_epitaxy_session_presets_main"); }
 // shared-11 ic (exported `Ja`, shared-16 Oi under qf): the same gate read outside render (the Sessions writers ip / op / ap
 // skip the legacy groupByByMode / sortByByMode while it is on). D10: on.
 export function presetsGateNow() { return true; }
 // shared-25 ml (exported `Rm`): running inside the Claude desktop app. This host is the desktop app.
 export function useIsDesktopApp() { return true; }
-// shared-19 e2 (exported `wr`): GrowthBook `claudeai_session_state` && account `ccr_session_state_buckets` (default true).
-// The host groups by status (sidebar-model state buckets), so Status is offered.
-export function useStatusGrouping() { return true; }
+// shared-19 e2 (exported `wr`; 3.6556.2 shared-46 SN): GrowthBook `claudeai_session_state` (__gb__3858164079) && account
+// `ccr_session_state_buckets` (default true). W14-code r4 gates-r4-09 (E81 / E95 over D42): 3858164079 is not in the
+// desktop's 3P defaults (asar jPKPzV-P Uon), so the 3P desktop answers off and Group by has no Status; the host table does
+// not list it either. A stored "state" group-by falls back to Date (shared-21 rY E, source-sidebar-filter-current.jsx).
+export function useStatusGrouping() { return hostGrowthBookFlag("claudeai_session_state"); }
 // shared-19 qX: `!inPayload || on` for `__gb__873492543`; without GrowthBook the flag is not in the payload -> true.
 export function useArchiveAllEnabled() { return true; }
 // shared-25 Z (exported `lr`): the current account. There is no account here.
@@ -257,39 +272,27 @@ export const SidebarSectionsMenu = Object.freeze({ ...SourceMenu, Item: MenuItem
 export const SidebarContextMenu = CdsContextMenu;
 
 // ---------------------------------------------------------------- shared-21 HJ / VJ: the manual section view menu's extra Show items
-// 3.6556.2 shared-22 Kk adds, after Metadata, HJ (exported `br`: a Show toggle item, rendered only while offered or
-// already on) for Side chats and for VJ (exported `Tr`: the Routines toggle's state). Side chats is offered only with the
-// side-chat tab strip capability (E16: off in this host); the Routines toggle reads the routines navigation store and
-// telemetry, which the host does not have, so it is not offered. HJ's own body: a Separator (separatorBefore) and a
-// keepOpen checkbox Item of the CDS Dropdown.
-// w10-shell-sidebar-preset-menu (notdone 60): HJ's second test is not `checked`. 3.6556.2 shared-21 HJ:
-//   `s = mJ(!1, hJ()), c = cl(s); if (!t && !c) return null`
-// where cl (shared-78 zS = Cv: `[n] = useState(() => e)`) keeps the value of its first render, mJ(e, t) is
-// `(codeEnabled || !ccdGateSettled) && (Ma(org) || e || t)` (Ma = shared-52 mh/yv, navHasCodeRoutinesByOrg[org] === true)
-// and hJ() is `JK().some(gJ) && ys(selectedEnvironments, "local")` (JK: the session list's routine groups, one per
-// scheduled task, isRunning from its newest run; ys = shared-78 Dr/yQ `available.includes(t) && (e.length === 0 ||
-// e.includes(t))`). The host's answers (sidebarShowItemFacts): Code is on and its gate settled (this host is the Code
-// app), there is no organization (Ma(undefined) is false), the Code list has no routine groups
-// (sidebar-filter-current-model CODE_ROUTINES_SECTION_HOST: no scheduled-task bucket in sidebar-model), and local is the
-// only environment with no environment filter (ys(…, "local") true). So an item that is not offered is not drawn, even
-// while it is on.
-const sidebarShowItemFacts = Object.freeze({ codeEnabled: true, ccdGateSettled: true, orgHasCodeRoutines: false,
-  routineGroups: Object.freeze([]), localEnvironmentShown: true });
-/** shared-21 mJ(e, t). */
-export function sidebarShowItemOffered(own, extra, { codeEnabled, ccdGateSettled, orgHasCodeRoutines } = sidebarShowItemFacts) {
-  return Boolean((codeEnabled || !ccdGateSettled) && (orgHasCodeRoutines || own || extra));
-}
-/** shared-21 hJ() (gJ: `e.isRunning`). */
-export function sidebarRoutineRunning({ routineGroups, localEnvironmentShown } = sidebarShowItemFacts) {
-  return routineGroups.some(group => group.isRunning) && localEnvironmentShown;
-}
-export function SidebarShowToggleItem({ offered, checked, label, onToggle, separatorBefore = false }) {
-  const [shownAtFirstRender] = useState(() => sidebarShowItemOffered(false, sidebarRoutineRunning()));
-  if (!offered && !shownAtFirstRender) return null;
-  return <>{separatorBefore && <CdsDropdown.Separator />}<CdsDropdown.Item checked={checked} keepOpen onClick={onToggle}>{label}</CdsDropdown.Item></>;
-}
+// 3.6556.2 shared-22 Kk (and the session list's PJ) add, after Metadata, HJ (exported `br`: a Show toggle item, rendered
+// only while offered or latched) for Side chats and for VJ (exported `Tr`: the Routines toggle's state).
+// W14-code r4 sidebar-new fr4-06: both are the 3.6556.2 originals now, sliced by scripts/extract-sidebar-routines.mjs
+// (generated/sidebar-routines routines-section.mjs), since the Code sidebar has its Routines section
+// (source-sidebar-routines.jsx). HJ: `s = mJ(!1, hJ()), c = cl(s); if (!t && !c) return null` — cl keeps its first
+// render's value, mJ(e, t) is `(codeEnabled || !ccdGateSettled) && (Ma(org) || e || t)`, hJ() is
+// `JK().some(gJ) && ys(selectedEnvironments, "local")` over the routine runs SidebarRoutinesHost provides. VJ(open):
+// `[i, a] = Ex()` (the routines section's shown and its setSectionView writer), offered `mJ(i) || (open && latched)`,
+// label the routines copy's navLabel ("Routines" / "Scheduled"), onToggle `a(!i)` (its show_routines event: D17). Host
+// answers: Code on and settled, no organization (Ma false), so without an organization Show › Routines is offered while
+// the section is shown or a local routine run is live (the official 3P desktop's answer).
+// Rollback (host-growthbook local_sidebar_routines false): the toggle is never offered.
+export { SidebarShowToggleItem } from './generated/sidebar-routines/routines-section.mjs';
+import { useRoutinesShowToggle } from './generated/sidebar-routines/routines-section.mjs';
 const routinesToggleOff = Object.freeze({ offered: false, checked: false, label: '', onToggle() {} });
-export function useSidebarRoutinesToggle() { return routinesToggleOff; }
+export function useSidebarRoutinesToggle(open = false) {
+  const toggle = useRoutinesShowToggle(open);
+  return hostGrowthBookFlag('local_sidebar_routines') ? toggle : routinesToggleOff;
+}
+// W14-code r8 R8DC-04: the test-only plain-function copies of mJ / hJ (sidebarShowItemOffered, sidebarRoutineRunning and
+// their sidebarShowItemFacts) are gone; the toggle uses the generated originals above.
 
 // ---------------------------------------------------------------- shared-22 IE, W = "preset": a saved-environment bucket's menu
 // w10-shell-sidebar-preset-menu (notdone 85). 3.6556.2 shared-22 IE names a bucket "preset" when it carries an environment

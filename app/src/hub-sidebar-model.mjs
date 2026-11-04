@@ -25,7 +25,9 @@ export const HUB_GATES = Object.freeze({
   // shared-21 rJ = sR = shared-182 vR (`… return _R`, `var _R = !1`): the cowork Project option is not hidden (`y`).
   projectsHidden: false,
   // shared-21 is = shared-46 SN: GrowthBook claudeai_session_state && account ccr_session_state_buckets (default true);
-  // D10 on, as source-sidebar-sections-adapters.jsx useStatusGrouping.
+  // the Code list's reader (source-sidebar-sections-adapters.jsx useStatusGrouping) answers off since W14-code r4
+  // gates-r4-09 (claudeai_session_state is not in Uon, E81 / E95 over D42). W14-code changes the Code page only, so the
+  // Cowork menu keeps its D10 value here until the Chat / Cowork wave rules on it.
   stateGrouping: true,
 });
 

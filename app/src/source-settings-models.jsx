@@ -27,7 +27,7 @@ import { CdsCheckbox } from './generated/view-tabs/index.js';
 import { SettingsGroup, settingRow } from './source-settings-kit.jsx';
 import { effortName, filterModels, isHighestEffort, MODEL_SEARCH_THRESHOLD } from './model-menu-model.mjs';
 import { DEEPSEEK_KEYS_URL } from './account-settings-model.mjs';
-import { t, tn } from '../electron/i18n/index.mjs';
+import { t } from '../electron/i18n/index.mjs';
 import {
   normalize, parseNumberInput, setModelParam, modelParamsFor, effectivePrices, setPrice, addPrice, removePrice, resetPrices, priceEdited,
   PRICE_TIERS, PRICE_FIELDS, MAX_TOKENS_MIN, MAX_TOKENS_MAX, PROVIDER_PROTOCOLS, validateProvider,

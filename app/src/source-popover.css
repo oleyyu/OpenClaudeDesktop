@@ -52,4 +52,3 @@
 .sp-body[data-padding="lg"] { padding: var(--cds-pad-lg); }
 /* Popover.Title (Base UI <h2>): typography comes from the consumer. */
 .sp-title { margin: 0; font: inherit; }
-.sp-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }

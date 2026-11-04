@@ -67,9 +67,16 @@ export function createToastStore({now=()=>Date.now(),schedule=setTimeout,cancel=
 // [data-toast-safe-region] — that overlaps the toast region horizontally lifts it: --toast-clearance is the
 // region's distance from the viewport bottom (innerHeight - top), capped at innerHeight - 96, and the scope's
 // bottom offset is max(…, --toast-clearance) + 16px. Zero-size and disjoint regions do not count.
+// W14-code r5-composer-02 (shared-26-CGuBxVt9.js OP `rP.has(i) && window.innerHeight - a.bottom > eP`, eP = 200;
+// PP `t.nearWindowBottomOnly && rP.add(e)`): a region registered nearWindowBottomOnly — the Code dock column,
+// cc43287c9 `Ds(e, {nearWindowBottomOnly: !0})`, here [data-toast-safe-region="near-bottom"] — only lifts the toast
+// while its bottom edge is within 200px of the window bottom (a Code new-session composer mid-window does not).
 export const TOAST_CLEARANCE_FLOOR=96;
+export const TOAST_NEAR_BOTTOM_LIMIT=200;
 export function toastClearance(scopeRect,regionRects,innerHeight){
   let clearance=0;
-  for(const rect of regionRects){if(!rect||rect.width===0||rect.height===0||rect.right<=scopeRect.left||rect.left>=scopeRect.right)continue;const lift=innerHeight-rect.top;if(lift>0)clearance=Math.max(clearance,lift);}
+  for(const rect of regionRects){if(!rect||rect.width===0||rect.height===0||rect.right<=scopeRect.left||rect.left>=scopeRect.right)continue;
+    if(rect.nearWindowBottomOnly&&innerHeight-(rect.bottom??rect.top+rect.height)>TOAST_NEAR_BOTTOM_LIMIT)continue;
+    const lift=innerHeight-rect.top;if(lift>0)clearance=Math.max(clearance,lift);}
   return Math.min(clearance,Math.max(0,innerHeight-TOAST_CLEARANCE_FLOOR));
 }

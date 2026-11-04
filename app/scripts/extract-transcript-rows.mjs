@@ -40,7 +40,9 @@
 // the code theme pair (shared-7 Pg / Ig), datadog (shared-0 z / B / bN, D17), the toasts (shared-52 cB), the transcript
 // view store (cd4f82e77), "View live output" (PE / ME), telemetry (Nd, zE, B1e), the tool cards of features the host has
 // its own card for or no data for (lY, EQ, F$, EZe, W$, kQ, _Z, RQ, OQ, jZ, Q$, EZ, NZ, NQ, jQ, MZe, yz, bz, eX, tX, OH)
-// and the rows of desktop-only data (MI, kI, Y1e, yk, fX), the bodies of desktop-only results (cb6930dae bc, Qs). mQ
+// and the rows of desktop-only data (MI, kI, Y1e, yk, fX), the bodies of desktop-only results (cb6930dae Qs; bc, the
+// rename card under set_session_title, is sliced: W14-code r2 R2T-TS7 — only the Code renderer's entries carry the
+// `resultMcpMeta` it reads, code-transcript-entries.mjs). mQ
 // (TurnProposalGroup, drawn inline by Z1e under the pane context PZ) is generated/proposal-group's copy through the
 // adapter; PZ is exported (ProposalPaneContext) for the host's provider (source-proposal-host.jsx ProposalTranscriptScope).
 // kQ stays the host's side-session card: its inline branch (mQ / aZe) is for a cloud start_session hand-off (cb27dab29 Ye,
@@ -74,6 +76,9 @@ const adapters = {
   'shared-25-DOWZRSlq.js': {
     Yh: { name: 'useGrowthBookFlag', local: 'fs', features: ['.on;'] },
     rg: { name: 'useGrowthBookFlagWhen', local: 'hs', features: ['!t || !n?.growthbook', '.on;'] },
+    // W14-code r2 R2T-TS7: ps, a feature's state "on" / "off" / "unknown" (Ko over the evaluation; bc reads
+    // `R(vc) !== "off"`, vc = __gb__3085520803, for its Undo rename) from the host table (host-growthbook.mjs).
+    ng: { name: 'useGrowthBookFeatureState', local: 'ps', features: ['K1($, 2, t, Ko(t))'] },
   },
   'shared-0-DDOOdL6P.js': { Id: { name: 'reportError', local: 'bN', features: ['O11Y_INTERNALS'], also: { qw: ['.addError(typeof e == "function" ? e() : e, n)'] } }, Rv: { name: 'datadogRum', local: 'z', features: ['datadogRum:', 'rumEncoder.worker'] }, xv: { name: 'trackAction', local: 'B', features: ['O11Y_INTERNALS'], also: { Nv: ['attributesAtSend:', 'performance.timeOrigin'] } } },
   // shared-46 YC (exported Ja): the Shiki highlight worker (/assets/highlightWorker-*.js, an asset this host does not
@@ -90,7 +95,14 @@ const adapters = {
     ns: { name: 'useCodeThemeDark', local: 'Ig', features: ['return jg(Lg);'], also: { Lg: ['return e.codeThemeDark;'] } },
   },
   'c5da7eb42-XijZdwf1.js': { mr: { name: 'useQueuedBehindApproval', local: 'cC', features: ['requestsBySession[e]'] } },
-  'c68c4283d-CWbOoVxS.js': { $f: { name: 'logToolRowExpanded', local: 'Nd', features: ['"claudeai.epitaxy.tool_row.expanded"'] } },
+  'c68c4283d-CWbOoVxS.js': { $f: { name: 'logToolRowExpanded', local: 'Nd', features: ['"claudeai.epitaxy.tool_row.expanded"'] },
+    // W14-code r2 R2T-TS7: cb6930dae bc's "Undo rename" telemetry (D17: nothing is reported).
+    Vd: { name: 'logRenameUndone', local: 'ku', features: ['"claudeai.epitaxy.session.rename_undone"'] } },
+  // W14-code r2 R2T-TS7: c4ae8f050 M, the session rename mutation bc's "Undo rename" runs (`mutate({ref: {id, type:
+  // "local"}, title, via: "undo"})` over the session transport's rename, the bridge / scheduled task / trigger names and
+  // the claude.ai session queries). The host renames through its own thread/name/set (source-transcript-rows-adapters.jsx
+  // useSessionRenameMutation over SessionRenameContext).
+  'c4ae8f050-BYp3Tj26.js': { t: { name: 'useSessionRenameMutation', local: 'M', features: ['"No transport for session type"', 'await n.rename(t.ref.id, t.title)'] } },
   'c0cdf4a08-C69Ng1c8.js': { t: { name: 'FileMenuTrigger', local: 'g', features: ['nativeMenuWhen:', 'beforeOpen:', 'popupProps:'] } },
   'shared-52-uHFNjl7C.js': { ha: { name: 'useErrors', local: 'cB', features: ['Error("Must be called within ErrorsProvider")'] } },
   [CB6]: {
@@ -105,6 +117,11 @@ const adapters = {
   'cb1a6e506-CGO9mb0Y.js': { t: { name: 'ErrorCard', local: 'j', features: ['headline:', 'findOmittedDetails:', 'onDismiss:'] } },
 };
 const localAdapters = {
+  // W14-code r8 gates-r8-02: shared-78 cC, the boot value of the desktop's appFeatures store U (`sC =
+  // window.desktopBootFeatures ?? null`, the main process's bIr answer exposed by mainView.js). The host has no such
+  // global; bootAppFeatures answers its table (src/host-app-features.mjs), so Mw (sideSessions), Ew (ccdLandingTools)
+  // and the other `K()?.x?.status === "supported"` reads here and in generated/code-transcript follow it.
+  'shared-78-D5Fw2h0a.js#cC': { name: 'bootAppFeatures', features: ['window.desktopBootFeatures ?? null'] },
   [`${C96}#OE`]: { name: 'useEngineSurface', features: ['return e ? t : null;'] },
   [`${C96}#PE`]: { name: 'LiveOutputButton', features: ['defaultMessage: "View live output",'] },
   [`${C96}#ME`]: { name: 'useLiveOutputTask', features: ['.taskId : void 0'] },
@@ -142,7 +159,6 @@ const localAdapters = {
   [`${C96}#OH`]: { name: 'EnvironmentSetupSteps', features: ['OH = M(eRe)'] },
   ['shared-0-DDOOdL6P.js#z']: { name: 'datadogRum', features: ['datadogRum:', 'rumEncoder.worker'] },
   [`${CB6}#Qs`]: { name: 'InboxMessageBody', features: ['{ message: t }', '"shrink-0 whitespace-pre"'] },
-  [`${CB6}#bc`]: { name: 'SessionRenameBody', features: ['previousTitle:', 'previousTitleSource:'] },
   ['c856385e2-aEyDzrcK.js#Un']: { name: 'FilePathMenuItems', features: ['defaultMessage: "Attach as context",'] },
 };
 // Every other chunk the tool rows reach: one module each (rows-<chunk>.mjs).
@@ -171,16 +187,55 @@ const ROW_CHUNKS = [
   'shared-156-BLTosN8U.js', 'shared-18-D3y8YMFN.js', 'shared-182-BI1KJccu.js', 'shared-25-DOWZRSlq.js', 'shared-26-CGuBxVt9.js',
   'shared-28-DNYlf4wu.js', 'shared-3-BCEbd8Fv.js', 'shared-46-BIbZBGFq.js', 'shared-5-Bg6ZMqvt.js',
   'shared-78-D5Fw2h0a.js', 'shared-8-Db1QN4mf.js', 'shared-9-CM21XrJw.js', 'shared-frame-6jtSkIit.js', 'vendor-all-0-DXM0MGjZ.js',
-  'vendor-intl-DYfox5Co.js', 'vendor-markdown-CTRWgQFt.js', 'vendor-motion-DlXQpU4V.js', 'vendor-zod-fszujTq6.js',
+  'vendor-intl-DYfox5Co.js', 'vendor-markdown-CTRWgQFt.js', 'vendor-zod-fszujTq6.js',
+  // W14-code r6-composer-02 (D1): vendor-motion ol (useIsPresent), which turn-mark reads, is working-line's now (its
+  // presence-motion.mjs reaches it), so this area no longer slices vendor-motion.
+  // W14-code r5 pierre (css5-file-viewer-pierre-file): the Files viewer's read-only body is pierre File (c19e90103 Uc,
+  // exported Zn) in the c64baa838 _n scroller; these chunks hold what cd2efac6e builds around it (see ROW_EXTRAS).
+  'c82eca2bd-CImI7zNG.js', 'cc3bc2027-CqmDBxcX.js', 'cd2efac6e-Be7wcc4w.js',
+  'shared-12-Dro5Rhl0.js', // shared-15 qs (fc's find ranges) reads its P
 ];
 const ROW_EXTRAS = {
+  // W14-code r5 pierre (css5-file-viewer-pierre-file): cd2efac6e's read-only text body `Bh ? a(oi, {className: "h-full
+  // overflow-y-auto select-text", children: a(li, {file: Bh, options: Sh, metrics: Ph, style: Ch})})` (oi = c64baa838 _n,
+  // li = c19e90103 Uc). Its find, jump-range and reveal helpers work on the diffs-container shadow root: fc (the find bar's
+  // current line tint and ::highlight ranges), _c (the jumped line range's background), vc (centre a line). c82eca2bd ht
+  // (io: the metrics by density), ct (no: the ::selection rule of Sh's unsafeCSS); cc3bc2027 i (Pa: the gutter CSS).
+  'cd2efac6e-Be7wcc4w.js': { internal: true, exports: { fc: 'highlightFileFind', _c: 'highlightFileLines', vc: 'revealFileLine' },
+    features: { fc: ['CSS.highlights', '.Highlight()'], _c: ['document.createElement("style")', 'cancelAnimationFrame'],
+      vc: ['scrollIntoView({ behavior: "instant", block: "center" })', 'Number.parseInt'] } },
+  'c82eca2bd-CImI7zNG.js': { internal: true, exports: { ht: 'fileMetrics', ct: 'codeSelectionCss' },
+    features: { ht: ['t = "compact"'], ct: ['::selection { background-color: light-dark('] } },
+  // cc3bc2027 S (Na, exported f): the current match's ordinal among the matches on its line.
+  // W14-code r5 gen-final-5 (D1): i's layout tokens n (editor / gutter padding) and r (line-number column by compact) are
+  // exported too, and code-editor-current's layout-tokens.mjs re-exports this copy instead of slicing them again.
+  'cc3bc2027-CqmDBxcX.js': { internal: true, exports: { i: 'fileGutterCss', S: 'findLineOrdinal', n: 'editorLayout', r: 'lineNumberLayout' },
+    features: { i: ['[data-line-number-content]{min-width:max(calc('], S: ['return t - n;'], n: ['numberPadStart: "18px"'],
+      r: ['{ minWidth: "2rem", padEnd: "0px" }'] } },
+  // c476e9be4 b (pi: the language of a path) and c5d464fa3 F (hi: the light / dark code theme pair).
+  // Other areas already import these under their own names (sharedExports), so they stay linkExports.
+  'c476e9be4-DlarndnK.js': { linkExports: ['b'] },
+  'c5d464fa3-Bot02AbX.js': { linkExports: ['F', 'O'] },
+  // The jumped range's tint Fh: the theme's editor.lineHighlightBackground (c68fd9df8 X, exported a, resolves the theme;
+  // c5d464fa3 O, exported c, the bundled fallback) for the mode c0fbbe82d Rn (exported mt).
+  'c0fbbe82d-COsmfHJY.js': { linkExports: ['Rn'] },
+  // W14-code r4 ct-feed (r4-e90-gui crossLane, D1): ca7ba268c Ba (exported `t`: `Ba = u(za)`, the pierre CodeView), so a
+  // later Changes-body slice links this area's one copy instead of slicing ca7ba268c again.
+  'ca7ba268c-B3JMi1tw.js': { exports: { Ba: 'CodeView' } },
+  // W14-code r2 R2T-TM3: cea7057eb `L = t(new Map())`, the background task statuses by tool id (the provider component of
+  // cea7057eb fills it from the session's task store: `L.Provider, {value: o}`). c96d752d0 BOe reads it through Qhe (Ce):
+  // a Task / Agent call that completed while its background task still runs draws as running. The host provides it from
+  // its sub-agent threads (source-code-transcript.jsx, main.jsx).
+  'cea7057eb-De2BQu3K.js': { internal: true, exports: { L: 'BackgroundTaskStatusContext' }, features: { L: ['t(new Map())'] } },
   // Top-level statements the selected code relies on that assign to nothing it selects:
   // c64baa838: the diffs-container custom element (its shadow root adopts pierre's base stylesheet);
   // c68fd9df8: the oniguruma binding's static fields and the bundled themes registered into the highlighter;
   // vendor-markdown: property-information's Info prototypes (hast attribute metadata, read by hastToHtml; in c2a6d07ee
   // in 2.42304.0); c5d464fa3: the code themes registering themselves; vendor-zod: its global config and registry.
-  'c64baa838-cddTLIc9.js': { carryStatements: ['if(typeof HTMLElement<"u"&&customElements.get("diffs-container")==null)'] },
-  'c68fd9df8-CJ4k-Myz.js': { carryStatements: ['"LAST_ID",0),', '.registerThemeIfAbsent(e.name,e.load)'] },
+  // W14-code r5 pierre: _n (exported t) is the pierre virtualizer scroller (oi of cd2efac6e's read-only body).
+  'c64baa838-cddTLIc9.js': { carryStatements: ['if(typeof HTMLElement<"u"&&customElements.get("diffs-container")==null)'],
+    linkExports: ['_n'] },
+  'c68fd9df8-CJ4k-Myz.js': { carryStatements: ['"LAST_ID",0),', '.registerThemeIfAbsent(e.name,e.load)'], linkExports: ['X'] },
   'vendor-markdown-CTRWgQFt.js': { carryStatements: ['.prototype.normal={}', '.prototype.attribute=""', '.prototype.defined=!0'] },
   'c5d464fa3-Bot02AbX.js': { carryStatements: ['()=>Promise.resolve(structuredClone(', 'async()=>structuredClone((await t()).default)'] },
   'vendor-zod-fszujTq6.js': { carryStatements: ['__zod_globalConfig??', '__zod_globalRegistry??'] },
@@ -188,6 +243,8 @@ const ROW_EXTRAS = {
   // dU / fU strict parse, pU normalise, gU the normalised table, _U lookup, yU same connector) are exported under their own
   // names, so cowork-approval links this one copy.
   'shared-78-D5Fw2h0a.js': { linkExports: ['sH', 'lU', 'uU', 'dU', 'fU', 'pU', 'gU', '_U', 'yU'] },
+  // W14-code r5 pierre: shared-28 AD (fn: the line count cd2efac6e sizes the gutter by).
+  'shared-28-DNYlf4wu.js': { linkExports: ['AD'] },
 };
 const NAMED = { 'shared-15-BvlV43cI.js': 'find-omitted.mjs', 'c19e90103-BQFzF8EA.js': 'outside-handlers.mjs', 'shared-130-dWztbTO1.js': 'shared-130.mjs',
   'shared-6-sd9jbJqs.js': 'shared-6.mjs', 'shared-52-uHFNjl7C.js': 'shared-52.mjs', 'shared-2-TF8v67kg.js': 'shared-2.mjs' };
@@ -196,7 +253,9 @@ const NAMED = { 'shared-15-BvlV43cI.js': 'find-omitted.mjs', 'c19e90103-BQFzF8EA
 // `f(dfe, {command, output, error, runId, kept, commandOnly})` with dfe = c19e90103 Dg (exported `et`): the command in a
 // bash-highlighted fence and the 160px output box under it. Host: source-user-shell.jsx.
 const NAMED_ROOTS = {
-  'c19e90103-BQFzF8EA.js': { internal: true, exports: { Dg: 'UserBashRun' },
+  // W14-code r5 pierre: Uc (exported Zn, pierre File), fl (Kn: the contents with CR shown), Rc ($n: the letter-spacing
+  // rule of Sh's unsafeCSS), zc (er: the wrapped style Ch) for the Files viewer (source-file-viewer.jsx).
+  'c19e90103-BQFzF8EA.js': { internal: true, exports: { Dg: 'UserBashRun' }, linkExports: ['Uc', 'fl', 'Rc', 'zc'],
     features: { Dg: ['defaultMessage: "(no output)", id: "pndT4iky5F"', '"relative epitaxy-diff epitaxy-fence rounded-lg overflow-clip"',
       'overflow-clip max-h-[160px] overflow-y-auto px-md py-1.25', 'defaultMessage: "Running\\u2026", id: "Vebvte+Plj"'] } },
 };
@@ -230,6 +289,12 @@ const modules = [
   { target: 'c2a6d07ee-DkjXJxV2.js', source: 'c2a6d07ee-DkjXJxV2.js', internal: true, exports: { un: 'r' }, features: { un: ['createHighlighterCore: () =>', 'codeToHast: () =>'] } },
   ...ROW_CHUNKS.map(chunk => ({ target: `rows-${chunk.replace(/\.js$/, '')}.mjs`, source: chunk, ...ROW_EXTRAS[chunk] })),
 ];
+// W14-code renderer-core (E86, D1): the bindings this area slices that generated/code-transcript (the 3.6556.2
+// CodeTranscriptRenderer, scripts/extract-code-transcript.mjs) reaches too are exported under their own names, so that
+// area imports this one copy (scripts/code-transcript-links.json, keyed by chunk).
+const codeTranscriptLinks = JSON.parse(fs.readFileSync(path.join(import.meta.dirname, 'code-transcript-links.json'), 'utf8')).linkExports['transcript-rows'];
+for (const m of modules) if (codeTranscriptLinks[m.source] && !m.verbatim && !m.reexport)
+  m.linkExports = [...new Set([...(m.linkExports ?? []), ...codeTranscriptLinks[m.source]])];
 
 const stateCopies = {
   // The CDS Table's divider and section contexts (c51c45b79 O / X): the listing tables of a tool body are all this

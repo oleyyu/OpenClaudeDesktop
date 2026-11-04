@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { getFileEditor, fileEditGuards, guardFileEdits } from '../src/file-edit-store.mjs';
+import { getFileEditor, fileEditGuards, guardFileEdits, onDetachedSaveFailure, detachedSaveFailureKind } from '../src/file-edit-store.mjs';
 let id = 0;
 const create = save => getFileEditor({ key: `test-${++id}`, path: 'notes.txt', sessionId: `session-${id}`, text: 'one', hash: 'h1', save });
 test('keep editing retains draft; discard resumes the exact pending action', () => {
@@ -33,4 +33,28 @@ test('a remount retains dirty draft; stale props after save do not restore old c
   remount.change('unsaved');
   getFileEditor({ key: editor.key, path: editor.path, sessionId: editor.sessionId, text: 'disk', hash: 'h3', save: editor.saveFile });
   assert.equal(remount.getSnapshot().text, 'unsaved'); remount.discard();
+});
+
+// 3.6556.2 cd2efac6e Hy: only a save that fails after the viewer detached reports (the toast), by kind.
+test('a failed save reports to the detached-failure listeners only while no viewer is attached', async () => {
+  const seen = [], off = onDetachedSaveFailure(event => seen.push(event));
+  try {
+    const editor = create(async () => ({ status: 'conflict', currentHash: 'disk' }));
+    const detach = editor.attachView();
+    assert.equal(editor.attached, true);
+    editor.change('mine'); await editor.save();
+    assert.deepEqual(seen, [], 'a mounted viewer shows its own error bar');
+    detach(); detach();
+    assert.equal(editor.attached, false);
+    await editor.save({ override: true });
+    assert.equal(seen.length, 1);
+    assert.equal(seen[0].editor, editor);
+    assert.equal(seen[0].kind, 'conflict');
+    editor.discard();
+  } finally { off(); }
+  assert.equal(detachedSaveFailureKind({ status: 'conflict', currentHash: null }), 'missing');
+  assert.equal(detachedSaveFailureKind({ status: 'denied' }), 'denied');
+  assert.equal(detachedSaveFailureKind({ status: 'denied', deniedReason: 'hook_manager_package_key' }), 'hook_denied');
+  assert.equal(detachedSaveFailureKind({ status: 'failed' }), 'failed');
+  assert.equal(detachedSaveFailureKind(undefined), 'failed');
 });

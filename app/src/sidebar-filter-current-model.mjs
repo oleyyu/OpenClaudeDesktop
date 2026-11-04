@@ -1,5 +1,4 @@
 import {sidebarDescendingComparators,sidebarAscendingComparators} from './generated/code-current/sidebar-sort-order.mjs';
-import {sidebarCreatedTimestamp} from './generated/code-current/sidebar-sort-model.mjs';
 
 // Original comparators receive unified timestamps; adapt only local field names.
 export function sidebarSortRecord(session, updatedAt, createdAt) {
@@ -9,7 +8,6 @@ export function currentSidebarComparator(sortBy, ascending, record) {
   const compare=(ascending?sidebarAscendingComparators:sidebarDescendingComparators)[sortBy]??sidebarDescendingComparators.recency;
   return (a,b)=>compare(record(a),record(b));
 }
-export const currentSidebarCreatedAt=sidebarCreatedTimestamp;
 
 // R3-sections step 3 (WI-5): shared-21 oU in its sessionList layout (pure parts; source-sidebar-filter-current.jsx); 3.6556.2
 // (w4-sidebar-filter) shared-21 PJ, the same menu, whose locals are named in brackets.
@@ -170,20 +168,6 @@ export function frozenTriggerAnchor(element) {
 // fx().shown). The host has no Code routines section in its sidebar yet, so SessionListFilterMenu does not offer the
 // item (CODE_ROUTINES_SECTION_HOST): a toggle with nothing to show or hide would be a dead control.
 export const CODE_ROUTINES_SECTION_HOST=false;
-/** shared-21 GH(ne). */
-export function routinesItemOffered({codeEnabled=true,gateSettled=true,hasCodeRoutines=false,shown=false}={}) {
-  return (codeEnabled||!gateSettled)&&(hasCodeRoutines||shown);
-}
-/** oU's latch `ae` after a render: `r && ie && !ae` sets it, `!r && ae` clears it. */
-export function nextRoutinesLatch(open,offered,latched) {
-  if(open&&offered&&!latched) return true;
-  if(!open&&latched) return false;
-  return latched;
-}
-/** oU `se = ie || r && ae`. */
-export function routinesItemShown({open=false,offered=false,latched=false}={}) {
-  return offered||(open&&latched);
-}
 
 /**
  * shared-21 HQ({facts, onViewAll}) → KH: `value: i ? t : a` with i = LQ(facts, r) and a = RQ(facts, r) ? "loading" : null.

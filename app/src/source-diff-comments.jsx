@@ -2,23 +2,134 @@
 // Ported from 2.31226.0 c44d00c7f: ha/ga (readable 2732-2810) the saved/draft cards with the 'Tell Claude what to
 // change' placeholder, Ca (2925-2943) the gutter "+", Ho (4071-4145) openDraft/hoverAdd/selectionEnd, yo (3564-3860)
 // the selection chip (onMouseUp), its dismissal (selectionchange/Escape/wheel/scroll) and the body context menu
-// (onContextMenuCapture: Attach as context, Add comment, Copy). The card is the Files pane's c82eca2bd port
-// (FileCommentCard); a saved comment goes out with the next message as a keyed composer snippet, exactly as Files
-// comments do (main.jsx onSaveComment), or through the add-to-prompt relay in a popped-out pane window.
-import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import { FileCommentCard } from "./source-file-comments.jsx";
+// (onContextMenuCapture: Attach as context, Add comment, Copy). W14-code r8 (r8pa-02): the card is the official one, c44d00c7f
+// Fc (c82eca2bd st with the "Tell Claude what to change" placeholder), as Jd's per-file list (Md → Pc) draws it in a
+// pop-out window or with the pierre switch off; it reads and writes the cc8941b7b store itself. A comment the store saves
+// goes out with the next message as a keyed composer snippet, exactly as Files comments do (main.jsx onSaveComment), or
+// through the add-to-prompt relay in a popped-out pane window (useFileLineCommentBridge below).
+import React, { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { PierreChangesCommentCard } from "./generated/pierre-changes/pierre-changes.mjs";
 import { SourceMenu } from "./source-menu.jsx";
 // The selection chip (W12 diff-main): ceb49ada3 Tt over the view-tabs layer provider / layer-aware z-index.
 import { CdsLayerProvider, useCdsLayerAwareZIndex } from "./generated/view-tabs/index.js";
 import { SelectionActionBar } from "./generated/code-current/terminal-action-bar.mjs";
 import { CONTEXT_MENU_ALIGN_OFFSET, CONTEXT_MENU_SIDE_OFFSET } from "./menu-model.mjs";
 import { addToPrompt, serializeLineComment } from "./inline-comments.mjs";
-import { SELECTION_CHIP, addCommentLabel, anchorDiffSpan, diffCommentAttachmentKey, diffCommentOutdated, diffFileCommentsStore, diffLineIndex,
-  diffSelectionSpan, diffSpanText, placeDiffComment, selectionChipPosition } from "./diff-comments-model.mjs";
+import { SELECTION_CHIP, addCommentLabel, anchorDiffSpan, createAnnotationCommentsStore, diffCommentAttachmentKey, diffCommentKey, diffCommentOutdated, diffCommentSession,
+  diffLineIndex, diffSelectionSpan, diffSpanText, importLegacyDiffComments, legacyDiffCommentKeys, placeDiffComment, selectionChipPosition, DIFF_COMMENTS_PREFIX } from "./diff-comments-model.mjs";
+// W14-code r7 (r7pa-03): the official comment store (cc8941b7b F, its body texts P), shared with the pierre body.
+import { useDiffAnnotationStore, P as diffAnnotationBodies } from "./generated/pierre-changes/pierre-cc8941b7b-DAgMZRvX.mjs";
 import { t } from "../electron/i18n/index.mjs";
 import { suppressEscapeRepeat } from "./generated/code-editor-current/keyboard-repeat.mjs";
 import { preventContextMenu } from "./generated/files-changes/diff-context-guard.mjs";
 import { NO_PR_COMMENT_STOPS, prCommentComposing, prCommentMatch, prCommentShortcutsEnabled, prCommentStepIndex } from "./diff-pr-comment-nav-model.mjs";
+
+// W14-code r7 (r7pa-03): one file's comments over the official store (diff-comments-model createAnnotationCommentsStore),
+// whichever Changes body draws them; its comments imported once from the host's pre-r7 storage first.
+const commentStores = new Map();
+const hostStorage = () => { try { return globalThis.localStorage ?? null; } catch { return null; } };
+export function diffFileCommentsStore(scope, path) {
+  const key = `${scope}\0${path}`;
+  if (!commentStores.has(key)) {
+    importLegacyDiffComments({ storage: hostStorage(), store: useDiffAnnotationStore, bodies: diffAnnotationBodies, key: DIFF_COMMENTS_PREFIX + key });
+    commentStores.set(key, createAnnotationCommentsStore({ sessionId: diffCommentSession(scope), path, store: useDiffAnnotationStore, bodies: diffAnnotationBodies }));
+  }
+  return commentStores.get(key);
+}
+// F persists under "diff-annotations" (zustand persist, read once when the window loads). Two host adjustments in a
+// window (browser only; the server render has no persist):
+// - the host review store (review-findings-model.mjs) owns the review fields of the same key, so F writes back only its
+//   comment fields (annotationsBySession, sentPrIdsBySession) over what is stored, and a re-read takes only those;
+// - a write from another window (the pop-out Changes pane, or the main window) is read again here (the storage event),
+//   so both windows show the same comments, as the host store did. annotationStoreSyncing() is true during that read:
+//   comments arriving from another window are not this window's saves (the pierre bridge does not send them on).
+export const ANNOTATION_STORE_KEY = "diff-annotations";
+const COMMENT_FIELDS = ["annotationsBySession", "sentPrIdsBySession"];
+let syncing = 0;
+export const annotationStoreSyncing = () => syncing > 0;
+export function annotationCommentStorage(storage) {
+  const parse = (raw) => { try { const value = raw == null ? null : JSON.parse(raw); return value && typeof value === "object" ? value : null; } catch { return null; } };
+  return {
+    getItem: (name) => parse(storage.getItem(name)),
+    setItem: (name, value) => {
+      const stored = parse(storage.getItem(name))?.state;
+      const kept = stored && typeof stored === "object" && !Array.isArray(stored) ? stored : {};
+      const own = Object.fromEntries(COMMENT_FIELDS.filter((field) => value?.state?.[field] !== undefined).map((field) => [field, value.state[field]]));
+      storage.setItem(name, JSON.stringify({ ...value, state: { ...kept, ...own } }));
+    },
+    removeItem: (name) => storage.removeItem(name),
+  };
+}
+export const mergeAnnotationComments = (persisted, current) => ({ ...current,
+  ...Object.fromEntries(COMMENT_FIELDS.filter((field) => persisted?.[field] && typeof persisted[field] === "object").map((field) => [field, persisted[field]])) });
+if (typeof window !== "undefined" && useDiffAnnotationStore.persist) {
+  const storage = hostStorage();
+  if (storage) {
+    useDiffAnnotationStore.persist.setOptions({ storage: annotationCommentStorage(storage), merge: mergeAnnotationComments });
+    for (const key of legacyDiffCommentKeys(storage)) importLegacyDiffComments({ storage, store: useDiffAnnotationStore, bodies: diffAnnotationBodies, key });
+    window.addEventListener("storage", (event) => {
+      if (event.key !== ANNOTATION_STORE_KEY || (event.storageArea && event.storageArea !== storage)) return;
+      syncing++;
+      try { useDiffAnnotationStore.persist.rehydrate(); } finally { syncing--; }
+    });
+  }
+}
+
+// W14-code r8 (r8pa-02): the composer side of the official card on the host rows, per file. The card saves into F
+// (addAnnotation / updateAnnotation / removeAnnotation) and calls onSaved only after a keyboard save (`t.viaKeyboard &&
+// v?.({submit})`); as source-diff.jsx usePierreCommentBridge does for the pierre body, each line comment F saves, edits or
+// removes for this file is written to or taken out of the composer, and the keyboard save focuses / submits it.
+const isFileLineComment = (annotation) => !!annotation && annotation.source !== "pr" && annotation.source !== "file" && annotation.source !== "finding";
+export function fileLineComments(state, sessionId, filePath) {
+  const out = new Map();
+  for (const annotation of state.annotationsBySession?.[sessionId]?.[filePath] ?? []) if (isFileLineComment(annotation)) out.set(annotation.id, annotation);
+  return out;
+}
+export function lineCommentSnippet(annotation, { scope, filePath, path }) {
+  return { id: diffCommentKey(annotation.side, annotation.endLine), annotationId: annotation.id, side: annotation.side, start: annotation.startLine,
+    end: annotation.endLine, code: annotation.snippet ?? "", body: annotation.body, savedBody: annotation.body, path,
+    key: diffCommentAttachmentKey(scope, filePath, annotation.id) };
+}
+/** Calls onSaved(annotation) for each comment select(state) gains or changes (not while another window's write is read
+ * in), onRemoved(annotation) for each it loses; returns the unsubscribe. select returns a Map id → annotation. */
+export function subscribeCommentChanges(store, select, { onSaved, onRemoved, syncing = annotationStoreSyncing }) {
+  let known = select(store.getState());
+  return store.subscribe((state) => {
+    const next = select(state), saved = [], removed = [];
+    for (const [id, annotation] of next) if (known.get(id) !== annotation) saved.push(annotation);
+    for (const [id, annotation] of known) if (!next.has(id)) removed.push(annotation);
+    known = next;
+    for (const annotation of syncing() ? [] : saved) onSaved(annotation);
+    for (const annotation of removed) onRemoved(annotation);
+  });
+}
+function useFileLineCommentBridge({ enabled, scope, sessionId, filePath, path, fileActions }) {
+  const actions = useRef(fileActions);
+  actions.current = fileActions;
+  const lastSaved = useRef(null);
+  const where = useRef(null);
+  where.current = { scope, filePath, path };
+  const send = useCallback((annotation, options) => {
+    const entry = lineCommentSnippet(annotation, where.current);
+    if (actions.current?.onSaveComment) actions.current.onSaveComment(entry, options);
+    else if (!options.viaKeyboard) addToPrompt(serializeLineComment({ path: entry.path, start: entry.start, end: entry.end, side: entry.side, code: entry.code, text: entry.body }));
+  }, []);
+  useEffect(() => {
+    if (!enabled) return undefined;
+    // Comments read in from another window's write are that window's saves; a comment deleted there still leaves here.
+    return subscribeCommentChanges(useDiffAnnotationStore, (state) => fileLineComments(state, sessionId, filePath), {
+      onSaved: (annotation) => { lastSaved.current = annotation; send(annotation, { viaKeyboard: false, submit: false }); },
+      onRemoved: (annotation) => {
+        if (lastSaved.current?.id === annotation.id) lastSaved.current = null;
+        actions.current?.onDeleteComment?.(lineCommentSnippet(annotation, where.current));
+      },
+    });
+  }, [enabled, sessionId, filePath, send]);
+  return useCallback((options) => {
+    const annotation = lastSaved.current;
+    if (annotation && actions.current?.onSaveComment) send(annotation, { viaKeyboard: true, submit: options?.submit === true });
+  }, [send]);
+}
 
 const ROW = ".sdiff-row[data-comment-line]";
 const EMPTY = Object.freeze({ entries: [], active: null });
@@ -150,15 +261,21 @@ export function useDiffComments({ file, scope, menu: menuHost = false, shownHunk
     }
     return { byAnchor, unplaced };
   }, [state.entries, index, complete, file.status]);
-  const card = ({ entry, outdated }) => <div key={entry.id} className="sdiff-comment-row" data-line-annotation="" data-comment-key={entry.id}>
-    <FileCommentCard entry={entry} active={state.active === entry.id} store={store} placeholder={t("Tell Claude what to change")} outdated={outdated}
-      onSave={(saved, options) => {
-        const key = diffCommentAttachmentKey(scope, file.path, saved.id);
-        if (actions.current?.onSaveComment) actions.current.onSaveComment({ ...saved, path, key }, options);
-        else addToPrompt(serializeLineComment({ path, start: saved.start, end: saved.end, side: saved.side, code: saved.code ?? "", text: saved.body }));
-      }}
-      onDelete={(removed) => actions.current?.onDeleteComment?.({ ...removed, path, key: diffCommentAttachmentKey(scope, file.path, removed.id) })} />
-  </div>;
+  // r8pa-02: Pc's saved / draft branches of Fc (c44d00c7f): cardKey side:endLine, the F annotation or draft itself, isOutdated
+  // per la, onSaved the composer's keyboard path; instanceId is this list's (activation origin, Le registration).
+  const sessionId = enabled ? diffCommentSession(scope) : null;
+  const instanceId = useId();
+  const onSaved = useFileLineCommentBridge({ enabled, scope, sessionId, filePath: file.path, path, fileActions });
+  const card = ({ entry, outdated }) => {
+    const data = useDiffAnnotationStore.getState();
+    const annotation = entry.savedBody !== undefined ? data.annotationsBySession?.[sessionId]?.[file.path]?.find((item) => item.id === entry.annotationId) : undefined;
+    const draft = annotation ? undefined : data.draftsBySession?.[sessionId]?.[file.path]?.[entry.id];
+    if (!annotation && !draft) return null;
+    return <div key={annotation?.id ?? entry.id} className="sdiff-comment-row" data-line-annotation="" data-comment-key={entry.id} data-file-comment-card="">
+      <PierreChangesCommentCard sessionId={sessionId} filePath={file.path} cardKey={diffCommentKey(entry.side, entry.end)} instanceId={instanceId}
+        annotation={annotation} draft={draft} isOutdated={outdated} onSaved={onSaved} />
+    </div>;
+  };
   const renderCards = (anchors) => {
     if (!enabled || !state.entries.length) return null;
     const items = anchors.flatMap((anchor) => (anchor ? placed.byAnchor.get(`${anchor.side}:${anchor.line}`) ?? [] : []));

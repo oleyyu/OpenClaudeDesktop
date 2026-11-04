@@ -286,29 +286,12 @@ export function isLargeDiff(entries, { withheld, lazyPatches = false, singleList
     || files.length > LARGE_DIFF_FILES && files.some((file) => changed(file) && !patch(file)) && !files.some((file) => HUNK_HEADER.test(patch(file) ?? ""));
 }
 
-// La: selecting a file re-opens every collapsed folder above it.
-export function revealCollapsed(collapsed, path) {
-  if (path === null || path === undefined) return collapsed;
-  let next = null;
-  for (const folder of collapsed) if (path.startsWith(`${folder}/`)) { next ??= new Set(collapsed); next.delete(folder); }
-  return next ?? collapsed;
-}
 export function toggleCollapsed(collapsed, path) {
   const next = new Set(collapsed);
   if (next.has(path)) next.delete(path); else next.add(path);
   return next;
 }
-// Ia/Ba: a kind section is open by default only while it holds the active file;
-// after the user toggles it that choice stays, until a newly selected file inside
-// it opens it again (openKindSections).
-export function kindSectionOpen(stored, holdsActive) {
-  return stored === undefined ? holdsActive : stored;
-}
-export function openKindSections(stored, sections, activePath) {
-  if (activePath === null || activePath === undefined) return stored;
-  const section = sections.find((entry) => entry.paths.includes(activePath));
-  return !section || stored[section.kind] === true ? stored : { ...stored, [section.kind]: true };
-}
+// W14-code r5 cleanup R5DC-05: the test-only openKindSections helper is gone.
 
 // Ga row navigation: the index to focus for a key, from the focused row index
 // (-1 when the tree itself has focus; then the current row, else the first).
@@ -329,11 +312,6 @@ export function clampDiffFileListWidth(value, fallback = DIFF_FILE_LIST_WIDTH.DE
   return typeof value === "number" && Number.isFinite(value)
     ? Math.min(DIFF_FILE_LIST_WIDTH.MAX, Math.max(DIFF_FILE_LIST_WIDTH.MIN, Math.round(value)))
     : fallback;
-}
-// The width the column can take in a body `paneWidth` wide (columnStyle
-// maxWidth min(640px, 100% - 160px), never below MIN).
-export function diffFileListLimit(paneWidth) {
-  return Math.max(DIFF_FILE_LIST_WIDTH.MIN, Math.min(DIFF_FILE_LIST_WIDTH.MAX, (paneWidth || 0) - 160));
 }
 // uh/Nt: unmeasured (0) counts as fitting, like diffCanFitTree ?? true.
 export function diffFileListCanFit(paneWidth) {

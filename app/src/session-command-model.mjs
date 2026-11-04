@@ -14,7 +14,8 @@ export const sessionCommands = [
   // R3b-tasks /subtask <task> (2.42304.0 cc183b3ab: description 5B10ybRftQ, argumentHint "<task>", neverReachesCli,
   // enableGate "subtaskCommand", gate O(e) && canForkSession && subtaskCommand; cc43287c9 parses /^\/subtask(?:\s+(.*))?$/is,
   // so the task may span lines). r3b-tasks-subtask.mjs runs it: a fork that gets the task in the background while the
-  // composer stays here. Idle only, as /fork: the host's fork (session-operations) refuses a running session.
+  // composer stays here. Idle only, as /fork (the command's own `idle` flag; since W14-code r6 fr6-03 the host's fork,
+  // session-operations, no longer refuses a running session itself: the sidebar's Fork forks at the last completed turn).
   // context.subtaskCommand false (the official appFeatures.sideSessions gate closed) takes it out.
   {id:'subtask',label:t('Subtask'),description:t('Fork this session to work on a task while you stay here'),argumentHint:'<task>',session:true,idle:true,multiline:true},
   // Codex /cd (tui app/working_directory.rs): the session continues in another folder, as a fork that keeps its history.
@@ -150,11 +151,13 @@ export function parseSessionCommand(text, context={}) {
   const requested=match[1].toLowerCase(),command=findCommand(requested),id=command?.id||requested,args=value.slice(match[0].length).trim();
   const suggestion=command?null:commandSuggestion(requested);
   // 3.6556.2 cc43287c9 M / P: '…, then send it again.' (hH0Sho9AXl / cgTRRpTLBX).
-  let error=null;
-  if(!command)error=['feedback','bug','share','login','logout','ultrareview'].includes(requested)?t('/{command} isn’t available in the app.',{command:requested}):t('/{command} isn’t a command here.',{command:requested});
+  // W14-code composer-03: cc43287c9 shows "/x isn’t a command here." (AkYrZotkTi) as the composer's spawn notice with Ufe's
+  // "Use /{commandName}" (errorSurface "notice"), "/x isn’t available in the app." (G$ ueLxb+6Yj2) as an addError toast.
+  let error=null,errorSurface=null;
+  if(!command){const app=['feedback','bug','share','login','logout','ultrareview'].includes(requested);errorSurface=app?'toast':'notice';error=app?t('/{command} isn’t available in the app.',{command:requested}):t('/{command} isn’t a command here.',{command:requested});}
   else if(/[\r\n]/.test(value)&&!command.multiline)error=t('/{command} only works on a single line. Remove the extra lines, then send it again.',{command:requested});
   else if(args&&!command.argumentHint)error=t('/{command} doesn’t take arguments here. Remove the text after the command, then send it again.',{command:requested});
-  return {id,args,requested,command,suggestion,error};
+  return {id,args,requested,command,suggestion,error,errorSurface};
 }
 // /btw asks codeDesktop/sideQuestion. The OpenClaude Desktop cores (the built-in one and the bridges) serve the extension; on a
 // native core (Codex) main.cjs answers it with Codex's own side conversation, an ephemeral thread/fork
@@ -213,9 +216,33 @@ export function agentWorkflowPrompt(args='') {
 // cannot serve in initialize capabilities.unsupportedMethods (boot.core);
 // context.sideQuestions / context.workflows false: the core can't serve /btw or /workflow.
 const COMMAND_METHODS={fork:'thread/fork',subtask:'thread/fork',cd:'thread/fork',review:'review/start',rewind:'thread/revert',compact:'thread/compact/start'};
+// W14-code composer-04: 3.6556.2 cc43287c9 refuses these per command, as a danger toast (addError): before the session
+// starts (xme vEGwpw5DVX / oa0lDdXjJz / 4L30v86pL1 / jy4Q9es/t+ / wXW+WSzrNZ, Bhe 5YjSObVA9A / ODHt3FQYSl / 12XmfjC9XR) and
+// for a session that can't run them (xme o2F4dsMA6N, Bhe 5YjSObVA9A / ODHt3FQYSl / 12XmfjC9XR, wXW+WSzrNZ). /status
+// before the session starts (l/OHmmZiGA) or during a turn (1MzjWBPc0U) is Bhe's Wd.show spawn notice instead: main.jsx
+// shows those two in the composer's warning row (commandRefusal surface "notice").
+const BEFORE_SESSION={
+  btw:()=>t('Side chat is available once this session starts. Send your first message to start it.'),
+  diff:()=>t('The changes view works once this session starts. Send your first message to start it.'),
+  tasks:()=>t('Tasks work once this session starts. Send your first message to start it.'),
+  rename:()=>t('Start a session before renaming it.'),
+  export:()=>t('Export isn’t available for this session.'),
+  status:()=>t('Session info is available once the session starts.'),
+  fork:()=>t('Fork isn’t available for this session.'),
+  rewind:()=>t('Rewind isn’t available for this session.'),
+  cd:()=>t('Changing the directory isn’t available for this session.'),
+};
+const FOR_SESSION={
+  btw:()=>t('Side chat isn’t available in this session.'),
+  fork:()=>t('Fork isn’t available for this session.'),
+  rewind:()=>t('Rewind isn’t available for this session.'),
+  cd:()=>t('Changing the directory isn’t available for this session.'),
+  export:()=>t('Export isn’t available for this session.'),
+};
 export function unsupportedCommand(id, context={}) {
   const unsupported=context.unsupportedMethods?.includes(COMMAND_METHODS[id])||((id==='btw'||id==='recap')&&context.sideQuestions===false)||(id==='workflow'&&context.workflows===false)||(id==='import'&&context.claudeImport!==true)||(id==='cd'&&context.forkCwd===false&&context.moveCwd!==true);
   if(!unsupported)return '';
+  if(Object.hasOwn(FOR_SESSION,id))return FOR_SESSION[id]();
   // context.coreName: the running core's display name (core-registry coreName).
   return typeof context.coreName==='string'&&context.coreName?t('Not available with {core} yet',{core:context.coreName}):t('Not available with this core yet');
 }
@@ -225,10 +252,10 @@ export function commandUnavailable(command, context={}) {
   if(command.id==='workflow'&&context.dynamicWorkflows!==true)return t('Enable Dynamic workflows in Code settings first');
   // R3b-tasks: cc43287c9 Enaro/mK/n, the official refusal of /subtask where subtasks don't run.
   if(command.id==='subtask'&&context.subtaskCommand===false)return t('Subtasks aren’t available for this session.');
-  if(command.id==='status'&&context.running)return t('Session info is available when DeepSeek finishes this turn.');
   if(command.id==='fast'&&context.fastAvailable===false)return t('Fast mode is not available for this model');
   if(command.id==='effort'&&context.effortAvailable===false)return t('Reasoning effort is not available for this model');
-  if((command.session||command.hasSession)&&!context.current)return t('Open a session first');
+  if((command.session||command.hasSession)&&!context.current)return Object.hasOwn(BEFORE_SESSION,command.id)?BEFORE_SESSION[command.id]():t('Open a session first');
+  if(command.id==='status'&&context.current&&context.running)return t('Session info is available when DeepSeek finishes this turn.');
   if(command.session&&context.archived)return t('Restore this archived session first');
   if((command.session||command.connected)&&!context.connected)return t('Reconnect to DeepSeek first');
   if((command.session||command.idle)&&context.loading)return t('Wait for the session to load');
@@ -236,10 +263,18 @@ export function commandUnavailable(command, context={}) {
   if(['compact','fork','subtask','cd','review','rewind','recap'].includes(command.id)&&!context.hasHistory)return t('Send a message first');
   return '';
 }
-export function slashQuery(text) {
-  const value=String(text);
-  return value.startsWith('/')&&!/^\/\s/.test(value)&&value.length<=51&&!/[\r\n]/.test(value)?value.slice(1):null;
+/** Where a refusal shows: /status's two are the composer's spawn notice (cause "session" clears once a session is open,
+ *  "turn" once the turn is over); every other refusal is a danger toast. */
+export function commandRefusal(command, context={}) {
+  const text=commandUnavailable(command,context);
+  if(!text)return null;
+  if(command.id==='status'&&!context.current)return {text,surface:'notice',cause:'session'};
+  if(command.id==='status'&&context.running&&!unsupportedCommand(command.id,context))return {text,surface:'notice',cause:'turn'};
+  // W14-code r4-composer-06: only /btw's refusal (cc43287c9 o2F4dsMA6N / vEGwpw5DVX) carries `timeout: nT` (8e3, c03935b01
+  // Oi); the other refusals (oa0lDdXjJz, 4L30v86pL1, jy4Q9es/t+, wXW+WSzrNZ, 5YjSObVA9A, ODHt3FQYSl, 12XmfjC9XR) take none.
+  return command.id==='btw'?{text,surface:'toast',timeout:REFUSAL_TIMEOUT}:{text,surface:'toast'};
 }
+export const REFUSAL_TIMEOUT=8e3;
 // The '/' suggestion under the caret, anywhere in the draft (2.31226.0 shared-5 mS/yS 'slash-command-suggestion', the
 // tiptap Suggestion with char '/', allowSpaces, allowedPrefixes [' '], startOfLine false; ca80fca8d :15416-15424 the
 // Code composer sets midMessageNeedsName). The text run is the text before the caret back to `boundary` (the start of

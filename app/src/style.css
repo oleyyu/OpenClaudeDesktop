@@ -77,11 +77,9 @@ body {
    rule or a (0,1,1) one from a sheet the bundle orders before this one, keep that disabled colour: same specificity,
    same place in the bundle, so their cascade is the old one. tests/style-control-reset-layer.test.mjs derives the
    list from the JSX and the sheets; official classes on every other control are no longer overridden. */
-button:where(.code-icon-button, .icon-button, .hac-main, .msx-image-chip, .sac-button, .sac-feedback-toggle,
-  .sc-usage-compact, .sc-usage-row, .sca-remove, .session-title, .sg-button, .sgs-action, .sh-retry, .slp-option,
-  .sob-agent, .sob-chip, .sob-preset, .source-icon-button, .ssn-action, .sua-copy, .suc-show-more):disabled,
-:where(.session-operation-status, .sfs-error, .sfv-comment-actions, .swf-member-controls) button:disabled,
-:where(.sfs-clear-slot, .sfs-result-row) > button:disabled {
+button:where(.msx-image-chip, .sac-feedback-toggle,
+  .sca-remove, .session-title, .slp-option,
+  .sob-agent, .sob-chip, .sob-preset, .sua-copy, .suc-show-more):disabled {
   color: var(--cds-text-disabled);
 }
 /* end D26 control resets */
@@ -90,11 +88,6 @@ button:where(.code-icon-button, .icon-button, .hac-main, .msx-image-chip, .sac-b
    rule here would override it. ToolButtons are the CDS ghost icon Button,
    whose focus is focus-visible:shadow-focus (shared-frame-C_2npUJq.js:2689
    rs, :2714-2718 outline-hidden). */
-.code-icon-button:focus-visible,
-.icon-button:focus-visible {
-  outline: none;
-  box-shadow: var(--cds-focus-shadow);
-}
 input:focus,
 textarea:focus {
   outline: none;
@@ -110,9 +103,7 @@ textarea:focus {
   font-size: 13px;
   background: var(--app-bg);
   --df-sidebar-left: 0px;
-  --df-row-h: 26px;
-  --df-row-font: 13px;
-  --df-header-h: 46px;
+  /* W14-code r2 DC-11: --df-row-h / --df-row-font are shared-styles' own .dframe-root defaults (26px / 13px). */
 }
 .window-drag {
   -webkit-app-region: drag;
@@ -125,12 +116,8 @@ textarea:focus {
   flex-direction: column;
   width: var(--df-sidebar-width);
   height: 100%;
-  background: color-mix(
-    in srgb,
-    var(--cds-surface-0) 50%,
-    var(--cds-surface-1)
-  );
-  border-right: 0.5px solid var(--app-line);
+  /* W14-code r2 DC-11: no background / end border here; shared-styles' (0,4,0) `.dframe-root[data-variant=web]:not(
+     [data-collapsed]) .dframe-sidebar{border-inline-end:…;background-color:var(--df-web-sidebar-bg)…}` always won. */
   border-radius: 0;
   box-shadow: none;
   /* The source .dframe-sidebar card does not clip (its body clips itself,
@@ -156,33 +143,9 @@ textarea:focus {
 [data-fullscreen] .traffic-space {
   display: none;
 }
-.code-icon-button,
-.icon-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  border-radius: 5px;
-  color: var(--cds-text-secondary);
-  flex-shrink: 0;
-  transition: background-color 60ms;
-}
-.code-icon-button:hover:not(:disabled),
-.icon-button:hover:not(:disabled) {
-  background: var(--cds-fill-ghost-hover);
-  color: var(--cds-text-primary);
-}
-.code-icon-button:disabled {
-  opacity: 0.4;
-}
-/* Menu trigger while its popup is open (Base UI data-popup-open; shared-frame
-   :11152 aria-expanded:bg-fill-ghost-hover, :13912 icon-only text-secondary). */
-.code-icon-button[data-popup-open],
-.code-icon-button[aria-haspopup="menu"][aria-expanded="true"] {
-  background: var(--cds-fill-ghost-hover);
-  color: var(--cds-text-secondary);
-}
+/* W14-code r3 fr3-01 / R3DC-01: no .code-icon-button / .icon-button rules. ToolButton is the CDS ghost iconOnly Button
+   (code-ui.jsx), whose hover / open wash is its paint layer's (shared-frame-6jtSkIit ju ghost), and the last
+   .code-icon-button (the Chat / Cowork row More) and main.jsx's dead IconButton (.icon-button) are gone. */
 /* W12b-FTS-2: the sidebar titlebar holds no code-icon-button any more (Hide sidebar is shared-21 Pz, a CdsButton
    df-chrome-btn like Cm's Back / Forward), so the 24x28 host sizing rule is gone. */
 .sidebar-toolbar [data-cds="Icon"] {
@@ -190,193 +153,11 @@ textarea:focus {
 }
 /* R2-appswitch: the titlebar mode switch is the original df-app-switch + CDS SegmentedControl
    (source-app-switch.jsx); its sizes and colours are the loaded shared-styles-Bl9zqrv-.css rules. */
-.dframe-sidebar-body {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-  padding: 8px 8px 0;
-  gap: 0;
-  overflow: hidden;
-}
-.sidebar-primary {
-  flex-shrink: 0;
-}
-.sidebar-nav-row {
-  width: 100%;
-  height: 26px;
-  display: flex;
-  align-items: center;
-  padding: 0 10px;
-  gap: 10px;
-  border-radius: 6px;
-  text-align: left;
-  color: var(--cds-text-secondary);
-  font-size: 13px;
-  line-height: 20px;
-}
-.sidebar-nav-row.selected {
-  background: var(--cds-alpha-1);
-  color: var(--cds-text-primary);
-}
-.sidebar-nav-row:hover {
-  background: var(--cds-alpha-1);
-}
-.sidebar-nav-row kbd {
-  display: none;
-  margin-left: auto;
-  font-family: inherit;
-  color: var(--app-muted);
-  font-size: 11px;
-}
-.sidebar-nav-row:hover kbd {
-  display: inline;
-}
-.sidebar-routines {
-  padding: 22px 10px 10px;
-  flex-shrink: 0;
-}
-.sidebar-routines button {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  color: var(--cds-text-muted);
-  font-size: 12px;
-  line-height: 20px;
-}
-.session-list {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  padding: 0 0 16px;
-  scrollbar-width: none;
-}
-.session-list:hover {
-  scrollbar-width: thin;
-}
-.project-heading {
-  height: 36px;
-  display: flex;
-  align-items: center;
-  padding: 10px 0 0 10px;
-  gap: 2px;
-  color: var(--cds-text-muted);
-  font-size: 12px;
-}
-.project-heading > button:first-child {
-  display: flex;
-  align-items: center;
-  text-align: left;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  overflow: hidden;
-  min-width: 0;
-  flex: 1;
-  font-size: 12px;
-  font-weight: 400;
-}
-.project-heading .code-icon-button {
-  height: 24px;
-  width: 24px;
-  color: var(--cds-text-secondary);
-}
-.session-row {
-  position: relative;
-  display: flex;
-  height: 27px;
-  border-radius: 6px;
-  min-width: 0;
-}
-.session-row:hover,
-.session-row.active {
-  background: var(--cds-alpha-1);
-}
-.session-open {
-  padding: 0 6px 0 13px;
-  gap: 12px;
-  display: flex;
-  align-items: center;
-  min-width: 0;
-  flex: 1;
-  text-align: left;
-  color: var(--cds-text-secondary);
-  font-size: 13px;
-  line-height: 20px;
-}
-.session-open > span:nth-child(2) {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.session-dot {
-  width: 5px;
-  height: 5px;
-  border: 0.7px solid var(--cds-text-muted);
-  border-radius: 50%;
-  flex-shrink: 0;
-  opacity: 0.55;
-}
-.session-more {
-  display: none;
-  position: absolute;
-  right: 0;
-  top: 1px;
-  background: var(--cds-surface-0);
-}
-.session-row:hover .session-more,
-.session-row:focus-within .session-more {
-  display: flex;
-}
-.session-row:hover .session-open {
-  padding-right: 27px;
-}
-.session-search-wrap {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  background: var(--cds-surface-3);
-  border: 1px solid var(--app-line);
-  border-radius: 6px;
-  padding: 3px 4px 3px 7px;
-  margin: 0 4px 4px;
-}
-.session-search-wrap input {
-  border: 0;
-  background: transparent;
-  min-width: 0;
-  flex: 1;
-  font-size: 12px;
-}
-.sidebar-empty {
-  padding: 16px 10px;
-  color: var(--app-muted);
-  font-size: 12px;
-}
-.sidebar-empty > span {
-  display: block;
-  margin-top: 6px;
-  font-size: 11px;
-}
-.sidebar-empty button {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--cds-text-secondary);
-}
-/* Account footer (sidebar-groups.js:5225-5310 pw in sidebar-main.js:14187-14202
-   hL, inside the :14970-14976 df-bottom-tray). The button's metrics are pw's
-   own utilities (28px, --df-radius-pill, --df-row-px / pr-2, --df-row-gap,
-   --df-hover, shadow-focus) and the loaded shared-styles copy of
-   desktop-layout.css supplies the tray hairline (:602-611), the web 8px footer
-   row padding (:1945-1947), the .df-footer-suffix mask / 12px (:1012-1015) and
-   the web suffix font calc(--df-row-font - 2px) (:1957-1959). Only the tray
-   margin is local: the source body's gap-2 / pb-1.5 (sidebar-main.js:14925)
-   absorb the tray's -8px top / -6px bottom (:587-593), while this body has
-   gap 0 and no bottom padding (.dframe-sidebar-body above), so only the -8px
-   sides apply. */
-.source-sidebar .df-bottom-tray {
-  margin: 0 -8px;
-}
+/* W14-code r2 fr2-05: the sidebar body is shared-22 GI's own utility string (source-sidebar.jsx SIDEBAR_BODY_CLASS). */
+/* Account footer (sidebar-groups.js:5225-5310 pw in sidebar-main.js:14187-14202 hL, inside the df-bottom-tray). The
+   button's metrics are pw's own utilities and the loaded shared-styles copy of desktop-layout.css supplies the tray
+   (margin -8px -8px -6px against GI's gap-2 / pb-1.5, hairline, footer row padding, suffix mask and font); W14-code r2
+   fr2-05 removed the local side-margin stand-in now that the body is GI's. */
 /* Sidebar resize handle (sidebar-groups.js uw -> shared-19 Os): geometry,
    ring and pill come from Os's utility classes; the loaded shared-styles copy
    of desktop-layout.css supplies :1462-1468 (z-index 25, clip-path inset(0 0
@@ -392,12 +173,11 @@ textarea:focus {
    --app-content-height,100dvh);…;top:-10px;transform:translate(-4px)}`, 46px band and spacer offset on the macOS
    desktop), the peek bridge, the peek-mode switch in the band and the no-drag strip. The only host rule left undoes
    this file's own expanded aside (.app-sidebar.dframe-sidebar above: an in-flow column, position relative, height
-   100%, a 0.5px end border) back to the official pill's box: base `.dframe-sidebar{…position:absolute;…}` with no
-   height of its own and no border while collapsed. */
+   100%) back to the official pill's box: base `.dframe-sidebar{…position:absolute;…}` with no height of its own (W14-code
+   r2 DC-11: the aside has no local border any more, so nothing is undone there). */
 .dframe-root[data-collapsed] .app-sidebar.dframe-sidebar {
   position: absolute;
   height: auto;
-  border-right: 0;
 }
 .workspace {
   flex: 1;
@@ -433,15 +213,6 @@ textarea:focus {
   display: flex;
   gap: 4px;
 }
-.panel-toggles .is-selected {
-  background: var(--cds-alpha-1);
-}
-.workspace-body {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  position: relative;
-}
 .conversation {
   flex: 1;
   min-width: 0;
@@ -469,288 +240,6 @@ textarea:focus {
   display: flex;
   flex-direction: column;
   gap: 6px;
-}
-.context-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  height: 26px;
-  min-width: 0;
-}
-.context-chip,
-.branch-worktree {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  height: 24px;
-  padding: 0 6px;
-  border: 0.5px solid var(--cds-border);
-  box-shadow: 0 1px 2px #00000005;
-  border-radius: 5px;
-  font-size: 12px;
-  line-height: 20px;
-  color: var(--cds-text-secondary);
-  background: transparent;
-  white-space: nowrap;
-  min-width: 0;
-}
-.context-chip:hover {
-  background: var(--cds-alpha-1);
-}
-.folder-chip {
-  max-width: 42%;
-}
-.folder-chip > span:last-child {
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.branch-worktree {
-  gap: 0;
-  padding: 0 5px;
-}
-.branch-chip {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  max-width: 150px;
-  min-width: 0;
-}
-.branch-chip > span:last-child {
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.branch-worktree label {
-  display: flex;
-  align-items: center;
-  gap: 3px;
-  margin-left: 7px;
-  font-size: 12px;
-}
-.branch-worktree input {
-  appearance: none;
-  width: 11px;
-  height: 11px;
-  border: 0.5px solid var(--cds-border-strong);
-  border-radius: 2px;
-  margin: 0;
-}
-.branch-worktree input:checked {
-  background: var(--cds-text-primary);
-  box-shadow: inset 0 0 0 2px var(--cds-surface-1);
-}
-.context-row > .code-icon-button {
-  height: 24px;
-  width: 26px;
-  border: 0.5px solid var(--cds-border);
-  border-radius: 5px;
-}
-.composer {
-  position: relative;
-  isolation: isolate;
-  min-height: 42px;
-  border-radius: 12px;
-}
-.composer > [data-surface] {
-  border-radius: inherit;
-  overflow: hidden;
-}
-.composer-input-row {
-  display: flex;
-  align-items: flex-end;
-  padding: 10px 10px 10px 12px;
-  gap: 5px;
-  min-height: 42px;
-}
-.composer textarea {
-  flex: 1;
-  min-width: 0;
-  min-height: 22px;
-  max-height: 190px;
-  border: 0;
-  padding: 0;
-  margin: 0;
-  resize: none;
-  background: transparent;
-  font-family: var(--cds-font-sans, anthropic-sans);
-  font-size: 14px;
-  line-height: 22px;
-  color: var(--cds-text-primary);
-}
-.composer textarea::placeholder {
-  color: var(--cds-text-muted);
-}
-.send-button {
-  height: 22px;
-  width: 22px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  border-radius: 5px;
-  color: var(--cds-text-secondary);
-}
-.send-button:disabled {
-  opacity: 0.4;
-  color: var(--cds-text-muted);
-}
-.send-button:hover:not(:disabled) {
-  background: var(--cds-alpha-1);
-  color: var(--cds-text-primary);
-}
-.composer-footer {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  min-height: 26px;
-  padding-bottom: 6px;
-  flex-shrink: 0;
-  color: var(--cds-text-secondary);
-  font-size: 12px;
-}
-.composer-footer > .code-icon-button {
-  height: 22px;
-  width: 28px;
-}
-.dictation-controls {
-  display: flex;
-  align-items: center;
-  gap: 0;
-}
-.dictation-controls .code-icon-button {
-  width: 20px;
-  height: 22px;
-}
-.dictation-controls > button:last-child {
-  height: 22px;
-  width: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--cds-text-muted);
-}
-.permission-button {
-  height: 22px;
-  padding: 0 6px;
-  border-radius: 4px;
-}
-.permission-button:hover,
-.model-controls > button:hover {
-  background: var(--cds-alpha-1);
-}
-.model-controls {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  margin-left: auto;
-  min-width: 0;
-}
-.model-controls > button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  white-space: nowrap;
-  height: 22px;
-  padding: 0 4px;
-  border-radius: 4px;
-  color: var(--cds-text-secondary);
-  font-size: 12px;
-}
-.model-controls .model-trigger {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 210px;
-}
-.model-controls .usage-trigger,
-.model-controls .fast-trigger {
-  padding: 0;
-  width: 20px;
-  color: var(--cds-text-muted);
-}
-.effort-bars {
-  height: 12px;
-  display: inline-flex;
-  align-items: flex-end;
-  gap: 1.5px;
-}
-.effort-bars i {
-  width: 2px;
-  background: var(--cds-text-disabled);
-  height: 3px;
-}
-.effort-bars i:nth-child(2) {
-  height: 5px;
-}
-.effort-bars i:nth-child(3) {
-  height: 8px;
-}
-.effort-bars i:nth-child(4) {
-  height: 11px;
-}
-.effort-bars .filled {
-  background: var(--cds-text-secondary);
-}
-.attachments {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-  padding: 0 12px 8px;
-}
-.attachments > span {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  background: var(--cds-alpha-1);
-  border-radius: 5px;
-  padding: 4px 6px;
-  font-size: 11px;
-}
-.attachments button {
-  display: flex;
-  align-items: center;
-}
-.composer-error {
-  width: calc(100% - 64px);
-  max-width: 768px;
-  align-self: center;
-}
-.account-menu-heading {
-  padding: 8px;
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-.account-menu-heading > span:last-child {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-.account-menu-heading small {
-  font-size: 11px;
-  color: var(--cds-text-muted);
-}
-.usage-summary {
-  padding: 6px 8px 10px;
-  font-size: 12px;
-}
-.usage-summary > div {
-  display: flex;
-  justify-content: space-between;
-}
-.usage-summary strong {
-  font-size: 12px;
-  font-weight: 500;
-}
-.usage-bar {
-  height: 5px;
-  background: var(--cds-alpha-1);
-  border-radius: 3px;
-  margin: 10px 0 16px;
-  overflow: hidden;
-}
-.usage-bar i {
-  height: 100%;
-  background: var(--cds-text-accent);
 }
 /* Home key / sign-in cards (main.jsx): the Lw outline card (code-home.js:13752-13754, .sh-card.is-outline
    in source-home.css: 480px, 8/12/12 padding, radius 8, 1px border ring, gap 20) with Jw's text-body
@@ -780,116 +269,6 @@ textarea:focus {
   justify-content: flex-end;
   gap: 8px;
 }
-.preferences {
-  display: flex;
-  width: 780px;
-  height: 590px;
-  max-height: calc(100vh - 64px);
-  max-width: calc(100vw - 64px);
-  background: var(--cds-surface-1);
-  border: 0.5px solid var(--cds-border-strong);
-  border-radius: 14px;
-  box-shadow: 0 20px 60px #0003;
-  overflow: hidden;
-  font-size: 13px;
-}
-.preferences > aside {
-  width: 190px;
-  flex-shrink: 0;
-  padding: 24px 12px;
-  background: var(--cds-surface-0);
-  border-right: 0.5px solid var(--cds-border);
-}
-.preferences h2 {
-  font-size: 18px;
-  font-weight: 500;
-  line-height: 24px;
-  margin: 0 0 24px;
-}
-.preferences > aside h2 {
-  padding: 0 12px;
-}
-.preferences > aside button {
-  display: block;
-  width: 100%;
-  text-align: left;
-  padding: 8px 12px;
-  border-radius: 6px;
-  margin-bottom: 3px;
-}
-.preferences > aside .selected {
-  background: var(--cds-alpha-1);
-}
-.preferences-content {
-  flex: 1;
-  min-width: 0;
-  padding: 24px;
-  overflow: auto;
-  position: relative;
-  display: flex;
-  flex-direction: column;
-}
-.preferences-content > header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-}
-.preference-block {
-  margin-bottom: 24px;
-}
-.preference-block h3 {
-  font-size: 14px;
-  font-weight: 500;
-  margin: 0 0 10px;
-}
-.preference-block p {
-  color: var(--cds-text-muted);
-  font-size: 12px;
-  line-height: 1.6;
-  margin-bottom: 14px;
-}
-.preference-block label {
-  display: flex;
-  flex-direction: column;
-  gap: 9px;
-  font-size: 12px;
-  color: var(--cds-text-secondary);
-}
-.preference-block input,
-.rename-session-form input {
-  border: 1px solid var(--cds-border);
-  background: var(--cds-surface-3);
-  border-radius: 7px;
-  padding: 8px;
-  font-size: 13px;
-  color: var(--cds-text-primary);
-}
-.theme-options {
-  display: flex;
-  gap: 8px;
-}
-.theme-options button {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  min-width: 95px;
-  height: 75px;
-  border: 1px solid var(--cds-border);
-  border-radius: 8px;
-  font-size: 12px;
-}
-.theme-options .selected {
-  border-color: var(--cds-text-primary);
-  background: var(--cds-alpha-1);
-}
-.preferences-content > footer {
-  margin-top: auto;
-  padding-top: 24px;
-  color: var(--cds-text-muted);
-  font-size: 11px;
-}
 .secondary-button {
   display: inline-flex;
   align-items: center;
@@ -900,27 +279,8 @@ textarea:focus {
   padding: 5px 10px;
   font-size: 12px;
 }
-.setting-row {
-  display: flex;
-  justify-content: space-between;
-  padding: 10px 0;
-  margin-bottom: 12px;
-}
-.folder-setting {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  word-break: break-all;
-}
-/* The rename dialog's surface, title and footer are the shared Dialog's (source-dialog.css). */
-.rename-session-form input {
-  width: 100%;
-}
-.primary {
-  background: var(--cds-text-primary) !important;
-  color: var(--cds-surface-1) !important;
-}
+/* The rename dialog's surface, title and footer are the shared Dialog's (source-dialog.css); its field is the CDS
+   TextInput (W14-code r3 css3-dialog-text-fields, main.jsx). */
 .section-surface {
   max-width: 840px;
   width: 100%;
@@ -948,100 +308,14 @@ textarea:focus {
   border: 1px solid var(--app-line);
   margin-top: 24px;
 }
-.command-history {
-  padding: 12px;
-  overflow: auto;
-  font-size: 12px;
-  color: var(--cds-text-muted);
-}
-.working {
-  padding: 10px 0;
-  font-size: 12px;
-}
-.message {
-  margin: 20px 0;
-}
-.markdown {
-  font-size: 14px;
-  line-height: 1.7;
-}
-.user-message > div {
-  padding: 9px 12px;
-  border-radius: 10px;
-  background: var(--cds-alpha-1);
-}
-.copy-message {
-  width: 24px;
-  height: 24px;
-}
-.detail-panel {
-  width: 360px;
-}
-.file-list [data-cds="Icon"] {
-  font-size: 16px;
-}
-.spinner {
-  height: 13px;
-  width: 13px;
-  border: 1.5px solid var(--cds-text-muted);
-  border-top-color: transparent;
-  border-radius: 50%;
-  animation: spin 0.7s linear infinite;
-}
-@keyframes pulse {
-  50% {
-    opacity: 0.3;
-  }
-}
 @keyframes spin {
   to {
     transform: rotate(360deg);
   }
 }
-/* CDS Spinner: motion-reduce:animate-none (shared-frame-C_2npUJq.js:2341-2343). */
-@media (prefers-reduced-motion: reduce) {
-  .spinner {
-    animation: none;
-  }
-}
-html[data-reduce-motion="true"] .spinner {
-  animation: none;
-}
 @media (max-width: 1000px) {
-  .detail-panel {
-    position: absolute;
-    right: 0;
-    top: 0;
-    bottom: 0;
-    background: var(--app-bg);
-    z-index: 100;
-    box-shadow: -8px 0 24px #0000000a;
-  }
-  .model-controls .model-trigger {
-    max-width: 145px;
-  }
-  .preferences {
-    width: 700px;
-  }
   .traffic-space {
     width: calc(var(--df-traffic-light-spacer, 74px) - 6px);
-  }
-}
-@media (max-width: 780px) {
-  .model-controls {
-    gap: 0;
-  }
-  .composer-zone {
-    padding: 0 20px;
-  }
-  .transcript {
-    padding: 0 20px;
-  }
-  .model-controls .model-trigger {
-    max-width: 120px;
-  }
-  .fast-trigger {
-    display: none !important;
   }
 }
 /* Reduced motion has no blanket kill (the source has none): each local

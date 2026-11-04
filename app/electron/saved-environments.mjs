@@ -67,6 +67,9 @@ export function createSavedEnvironments({ file, approveFolder = value => value, 
     const row = current.environments.find(row => row.id === request.id);
     if (!row) throw new Error('This environment no longer exists.');
     if (request.op === 'get') return clone(row);
+    // W14-code r2-composer-04: cc43287c9 bue's probe (`ln.listDirectory(folder)).missing === !0`) for the start page's
+    // "can't start" line: only the saved folder of a stored environment, never a renderer-given path.
+    if (request.op === 'probe') return { missing: !(await fs.stat(row.target.cwd).catch(() => null))?.isDirectory() };
     if (request.op === 'select') {
       const folders = [row.target.cwd, ...(row.target.additionalFolders ?? [])];
       if (Object.keys(row.target.folderSettings ?? {}).length) throw new Error('Separate checkouts for additional folders are not available.');

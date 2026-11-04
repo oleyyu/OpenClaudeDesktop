@@ -1,19 +1,11 @@
 // Sidebar width model (pure). shared-2-C6aD8DvJ.js Km {MIN:200,
 // MAX:420, DEFAULT:288}, qm clamp and Xm (innerWidth - 330 content floor,
 // clamped); exported as lm/dm/gm (sidebar-groups.js imports lm/gm as Po/Do).
-// shared-22-Cz3C_T8d.js:13960 TL(e,t) = e >= t/2 (the drag keeps the sidebar
-// while the raw width reaches half the minimum) and :14029 HL = 3 (the same
-// threshold as shared-19-CjdiaR4X.js Os ws = 3: a move of |dx| <= 3 is a click).
+// (W14-code r5 cleanup R5DC-05: the test-only HL drag threshold DRAG_THRESHOLD is
+// gone; the sidebar row drag reads its own DRAG_THRESHOLD from sidebar-drag-model.)
 export const SIDEBAR_WIDTH = Object.freeze({ MIN: 200, MAX: 420, DEFAULT: 288 });
-export const DRAG_THRESHOLD = 3;
-// shared-19-CjdiaR4X.js Os Ts = 8 / Es = 32 (Shift) keyboard steps.
-export const KEYBOARD_STEP = 8, KEYBOARD_STEP_LARGE = 32;
 
 export const clampSidebarWidth = (width) => Math.min(SIDEBAR_WIDTH.MAX, Math.max(SIDEBAR_WIDTH.MIN, width));
-export const sidebarMaxWidth = (innerWidth) => clampSidebarWidth(Math.floor(innerWidth) - 330);
-// TL(r, minWidth): uw hides below half of its minWidth (the sidebar floor).
-export const dragHidesSidebar = (width, minWidth = SIDEBAR_WIDTH.MIN) => !(width >= minWidth / 2);
-export const isResizeDrag = (delta) => Math.abs(delta) > DRAG_THRESHOLD;
 // shared-2 $m: a stored number is clamped with qm, anything else is DEFAULT.
 export const storedSidebarWidth = (value) => typeof value === "number" && Number.isFinite(value) ? clampSidebarWidth(value) : SIDEBAR_WIDTH.DEFAULT;
 
@@ -24,15 +16,6 @@ export const storedSidebarWidth = (value) => typeof value === "number" && Number
 // aside border.
 export const sidebarFloorWidth = (chromeWidth) => clampSidebarWidth(Math.ceil(Number.isFinite(chromeWidth) ? chromeWidth : 0));
 export const effectiveSidebarWidth = (width, floor = SIDEBAR_WIDTH.MIN) => Math.max(width, floor);
-
-// sidebar-groups.js:5140-5149 uw onResize: r = startW + delta; hidden when
-// canHide and TL(r, minWidth) fails; otherwise clamp(r, minWidth, maxW).
-// A hidden frame keeps the previous width (currentW is left untouched).
-export function sidebarDragFrame({ startW, maxW, canHide = true, minWidth = SIDEBAR_WIDTH.MIN }, delta) {
-  const raw = startW + delta;
-  if (canHide && dragHidesSidebar(raw, minWidth)) return { hidden: true, width: null };
-  return { hidden: false, width: Math.max(minWidth, Math.min(maxW, raw)) };
-}
 
 // titlebar-shared-21.js:1339-1365 _v (gv = 74): outside full screen the
 // traffic-light spacer is round(74 / min(zoomFactor, 1)) CSS px, so zoomed

@@ -23,6 +23,7 @@
 // per-session turnBox flag (main process `jt=n.Au()&&…`, GrowthBook 2371478310) is on (turn-plan: the ccd_turn tools);
 // hT's GrowthBook flag (`__gb__1785002156`) is off.
 import { hostGrowthBookFlag } from "./host-growthbook.mjs";
+import { HOST_APP_FEATURES } from "./host-app-features.mjs";
 import React, { createContext, startTransition, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { EMPTY_TURN_TAIL } from "./generated/turn-box/turn-tail.mjs";
 import { evaluateNextActionRules, firingNextActionRules, keepShownChips, retireShownChips, chipStateKey, namedRuleChip,
@@ -85,9 +86,10 @@ export function useSessionRequestInTurn(sessionId) {
   const host = useContext(TurnBoxHost);
   return sessionId !== null && host?.requestInTurn?.(sessionId) === true;
 }
-// shared-11 Qo (exported do): claudeai_cc_epitaxy_session_presets_main. D10: the host takes the "on" branch.
+// shared-11 Qo (exported do): claudeai_cc_epitaxy_session_presets_main. D10: the host takes the "on" branch (W14-code r2
+// gates-r2-01: the host table's __gb__3264789062, the one answer every reader of the gate gets).
 export function usePresetsGate() {
-  return true;
+  return hostGrowthBookFlag("claudeai_cc_epitaxy_session_presets_main");
 }
 
 // shared-8 og (exported Df; 2.42304.0 Q / Wd): the sessions store, called with a selector over {sessions}. ub / lj look
@@ -114,9 +116,13 @@ export function useSessionStatus(sessionId) {
 // shared-78 W (exported vb; ui in shared-46, W12c #27): the desktop's appFeatures store (zustand over
 // window.desktopBootFeatures). The turn box reaches it only through shared-46 aL, which reads
 // `ui.getState().appFeatures?.nestedArchiveKeepsFamily` for an "archive" family walk; sL's cL walks without one, so aL
-// answers false before reading it. The host value is the 3.6556.2 main process's for that feature with GrowthBook off
-// (index.chunk-jPKPzV-P `nestedArchiveKeepsFamily:{status:"unavailable"}`, D29 / D31).
-const APP_FEATURES_STATE = Object.freeze({ appFeatures: Object.freeze({ nestedArchiveKeepsFamily: Object.freeze({ status: "unavailable" }) }) });
+// answers false before reading it. The host value is the 3.6556.2 main process's settled answer (W14-code r4 closeout
+// gates-r4-14, E81): index.chunk-jPKPzV-P's `nestedArchiveKeepsFamily:{status:"unavailable"}` is only the sync initial
+// value; bIr then sets `nW(()=>QU("nestedArchiveKeepsFamily",vjr))` with `function vjr(){return rjr()&&Fb("2631345040",!0)}`,
+// `rjr=()=>Pb("2371478310")` and Hon `2371478310:{rule:"forced",value:!0}`, so nW answers {status:"supported"}.
+// W14-code r8 gates-r8-02: the value is the host's one appFeatures table (host-app-features.mjs), as transcript rows'
+// shared-78 store reads it.
+const APP_FEATURES_STATE = Object.freeze({ appFeatures: HOST_APP_FEATURES });
 export function appFeaturesStore(selector) {
   return typeof selector === "function" ? selector(APP_FEATURES_STATE) : APP_FEATURES_STATE;
 }

@@ -23,9 +23,16 @@
  *                    metadata.sub_parts) is an item of its own, id `<part id>:<seq>`
  *   contextCompaction  a compaction part (thread/compact/start, auto-compaction)
  *   enteredReviewMode / exitedReviewMode  a review/start turn (the bridge marks it)
+ *
+ * OpenCode 2.x (Projector api 'v2'): its history comes as 1.x-shaped entries (v2/history.js), in the server's order;
+ * turns are grouped by position (v2/history.js attributeTurns), outcomes come from its idle messages and its fixed
+ * error types (errorInfoOfV2); its tools are shell / subagent / patch (an `execute` call, which the bridge's sessions
+ * never make with Code Mode off by v2/rules.js, is a plain tool row), and edit / patch report FileDiff {file, patch,
+ * status}. Its live events reach the same entries through v2/live.js.
  */
 import path from 'node:path'
 import { SESSION_ARG } from './app-tools.js'
+import { attributeTurns, beforeRevert } from './v2/history.js'
 
 const seconds = (ms) => (Number.isFinite(ms) ? Math.floor(ms / 1000) : null)
 const EDIT_TOOLS = new Set(['edit', 'write', 'apply_patch', 'patch', 'multiedit', 'notebook_edit'])
@@ -76,7 +83,11 @@ function errorText(state) {
   // OpenCode's DeniedError appends the whole matching ruleset as JSON (permission/index.ts): the sentence alone is shown.
   return typeof text === 'string' ? text.replace(/\s*Here are some of the relevant rules\s*[[{][\s\S]*$/, '') : text
 }
-const declined = (state) => /reject|denied|permission|dismissed|declin/i.test(errorText(state) ?? '') && /user|permission|rule/i.test(errorText(state) ?? '')
+// OpenCode 2.x says why (state.errorType, set by v2/history.js only): a rule's or the user's rejection, with feedback or
+// not, is permission.rejected; a card turned down with nothing to say is aborted 'The user declined this tool call'.
+const declined = (state) => typeof state?.errorType === 'string'
+  ? state.errorType === 'permission.rejected' || (state.errorType === 'aborted' && /declin/i.test(errorText(state) ?? ''))
+  : /reject|denied|permission|dismissed|declin/i.test(errorText(state) ?? '') && /user|permission|rule/i.test(errorText(state) ?? '')
 
 function statusOf(state, { failed = 'failed' } = {}) {
   if (state?.status === 'completed') return 'completed'
@@ -90,8 +101,16 @@ function durationOf(state) {
   return Number.isFinite(start) && Number.isFinite(end) ? Math.max(0, end - start) : null
 }
 
-function changesOf(tool, input, metadata, cwd, askDiff) {
+function changesOf(tool, input, metadata, cwd, askDiff, api = 'v1') {
   const abs = (file) => (typeof file === 'string' && file && !path.isAbsolute(file) && cwd ? path.resolve(cwd, file) : file)
+  // OpenCode 2.x's FileDiff.Info: {file (relative to the location, or absolute outside it), patch, status}.
+  if (api === 'v2' && Array.isArray(metadata?.files) && metadata.files.length) {
+    return metadata.files.filter((file) => typeof file?.file === 'string').map((file) => ({
+      path: abs(file.file),
+      kind: file.status === 'added' ? { type: 'add' } : file.status === 'deleted' ? { type: 'delete' } : { type: 'update', move_path: null },
+      diff: typeof file.patch === 'string' ? file.patch : '',
+    }))
+  }
   if (Array.isArray(metadata?.files) && metadata.files.length) {
     return metadata.files.map((file) => ({
       path: abs(file.movePath ?? file.filePath ?? file.relativePath),
@@ -216,7 +235,7 @@ export function toolItem(part, context) {
   }
   if (EDIT_TOOLS.has(tool)) {
     const diagnostics = diagnosticsOf(metadata)
-    return { type: 'fileChange', id, changes: changesOf(tool, input, metadata, cwd, context.askDiffs?.get(part.callID)), status: statusOf(state, { failed: 'declined' }),
+    return { type: 'fileChange', id, changes: changesOf(tool, input, metadata, cwd, context.askDiffs?.get(part.callID), context.api), status: statusOf(state, { failed: 'declined' }),
       ...(diagnostics.length ? { codeDesktop: { diagnostics } } : {}) }
   }
   if (WEB_TOOLS.has(tool)) {
@@ -226,6 +245,24 @@ export function toolItem(part, context) {
       type: 'webSearch', id, query: url ?? query ?? tool,
       action: url ? { type: 'openPage', url } : { type: 'search', query, queries: query ? [query] : null },
       ...(state.status === 'completed' || state.status === 'error' ? { status: statusOf(state) } : { status: 'inProgress' }),
+    }
+  }
+  // OpenCode 2.x's `subagent` {agent, description, prompt, model?: 'provider/model#variant', background?}: metadata
+  // {sessionID, status} names the child session from the start; a background one completes at once with status running,
+  // and how the child ended comes later in the parent's history (context.subagentOutcome), running until then.
+  if (context.api === 'v2' && tool === 'subagent') {
+    const child = str(metadata.sessionID) ?? context.children?.get(part.id) ?? null
+    const background = state.status === 'completed' && metadata.status === 'running'
+    const agentState = !child ? null : background ? context.subagentOutcome?.(child, part.messageID) ?? { status: 'running', message: null } : {
+      status: state.status === 'completed' ? 'completed' : state.status === 'error' ? 'errored' : 'running',
+      message: state.status === 'completed' ? output : state.status === 'error' ? errorText(state) : null,
+    }
+    return {
+      type: 'collabAgentToolCall', id, tool: 'spawnAgent', status: state.status === 'completed' ? 'completed' : state.status === 'error' ? 'failed' : 'inProgress',
+      senderThreadId: threadId, receiverThreadIds: child ? [child] : [], prompt: str(input.prompt), model: str(input.model)?.split('#')[0] ?? null,
+      reasoningEffort: null, agentsStates: child ? { [child]: agentState } : {},
+      ...(typeof input.description === 'string' ? { description: input.description } : {}),
+      ...(typeof input.agent === 'string' ? { agentRole: input.agent } : {}),
     }
   }
   const actorOp = tool === 'actor' ? (input.operation ?? input) : null
@@ -614,6 +651,38 @@ export function errorInfoOf(error) {
   return { message: String(message).slice(0, 4000), codexErrorInfo, additionalDetails: name || null, misalignment: null }
 }
 
+// OpenCode 2.x's usage-limit error types (session/to-session-error.ts): a plan or budget used up, not throttling.
+const V2_USAGE_LIMITS = new Set(['provider.quota', 'provider.free-limit', 'provider.go-limit', 'provider.budget-limit', 'provider.model-budget-limit', 'provider.chatgpt-limit'])
+// A stop, never an error: the user's interrupt, or a compaction cut short by one.
+const V2_STOPS = new Set(['aborted', 'compaction.interrupted'])
+
+/** Whether an OpenCode 2.x SessionError is an interruption (no turn error). */
+export const v2Interrupted = (error) => V2_STOPS.has(error?.type)
+
+/**
+ * An OpenCode 2.x SessionError {type, message, status?, retryAfterMs?} → Codex TurnError, by its type first (null for
+ * an interruption). additionalDetails is the type.
+ */
+export function errorInfoOfV2(error) {
+  if (!error || v2Interrupted(error)) return null
+  const type = typeof error.type === 'string' ? error.type : ''
+  const message = error.message || type || 'The turn failed.'
+  const status = Number.isInteger(error.status) ? error.status : null
+  let codexErrorInfo = 'other'
+  if (type === 'provider.auth' || status === 401 || status === 403) codexErrorInfo = 'unauthorized'
+  else if (V2_USAGE_LIMITS.has(type)) codexErrorInfo = 'usageLimitExceeded'
+  else if (type === 'provider.rate-limit' || status === 429) codexErrorInfo = 'rateLimitExceeded'
+  // 2.x compacts on an overflow itself: one that still fails says so only in its message.
+  else if (/context|too long|maximum context/i.test(message)) codexErrorInfo = 'contextWindowExceeded'
+  else if (status === 402) return { message: String(message).slice(0, 4000), codexErrorInfo: 'usageLimitExceeded', additionalDetails: 'BILLING', misalignment: null }
+  else if (status === 529 || (status === 503 && /overload/i.test(message))) codexErrorInfo = 'serverOverloaded'
+  else if (type === 'provider.internal' || (status !== null && status >= 500)) codexErrorInfo = 'internalServerError'
+  else if (type === 'provider.timeout' || status === 408) codexErrorInfo = { httpConnectionFailed: { httpStatusCode: 408 } }
+  else if (type === 'provider.transport') codexErrorInfo = { httpConnectionFailed: { httpStatusCode: status } }
+  else if (['provider.invalid-request', 'provider.unsupported-operation', 'provider.no-route', 'provider.invalid-output'].includes(type) || (status !== null && status >= 400)) codexErrorInfo = 'badRequest'
+  return { message: String(message).slice(0, 4000), codexErrorInfo, additionalDetails: type || null, misalignment: null }
+}
+
 /**
  * The thread's message store and its Codex view. `meta` carries the bridge's
  * own facts: steer message ids, remembered inputs, review turns.
@@ -622,8 +691,10 @@ export class Projector {
   /**
    * @param {{ threadId: string, cwd: string, meta?: object, mcpServers?: () => string[], askDiffs?: Map<string, string> }} options
    */
-  constructor({ threadId, cwd, meta = {}, mcpServers = () => [], askDiffs = new Map(), actor = null }) {
+  constructor({ threadId, cwd, meta = {}, mcpServers = () => [], askDiffs = new Map(), actor = null, api = 'v1' }) {
     this.threadId = threadId
+    // The agent's HTTP API generation: 'v2' (OpenCode 2.x) keeps its messages in the server's order and groups turns by it.
+    this.api = api
     // MiMo: the actor whose messages this view shows (null: the main agent's).
     this.actor = actor
     this.cwd = cwd
@@ -727,6 +798,8 @@ export class Projector {
   }
 
   ordered() {
+    // OpenCode 2.x: as listed (seq order; live messages are appended), a staged revert hiding its message and after.
+    if (this.api === 'v2') return beforeRevert([...this.messages.values()], this.revert)
     const list = [...this.messages.values()].filter((entry) => this.owns(entry.info))
     list.sort((a, b) => (a.info.time?.created ?? 0) - (b.info.time?.created ?? 0) || (a.info.id < b.info.id ? -1 : a.info.id > b.info.id ? 1 : 0))
     if (this.revert?.messageID) return list.filter((entry) => entry.info.id < this.revert.messageID)
@@ -736,8 +809,9 @@ export class Projector {
   context() {
     let tokens = null
     let starters = null
+    let subagents = null
     return {
-      threadId: this.threadId, cwd: this.cwd, mcpServers: this.mcpServers(), askDiffs: this.askDiffs, children: this.children,
+      threadId: this.threadId, cwd: this.cwd, mcpServers: this.mcpServers(), askDiffs: this.askDiffs, children: this.children, api: this.api,
       workflowStructures: this.workflowStructures,
       workflowRuns: this.workflowRuns, workflowTranscripts: this.workflowTranscripts, workflowResumed: this.workflowResumed,
       workflowLive: (runID) => (this.workflowLive ? this.workflowLive(runID) : undefined),
@@ -754,6 +828,7 @@ export class Projector {
         return tokens.get(actorID) ?? 0
       },
       actorOutcome: (actorID) => this.actorOutcome(actorID),
+      subagentOutcome: (childID, messageID) => { subagents ??= this.subagentOutcomes(); return subagents(childID, messageID) },
       firstSeen: (key) => { if (!this.workflowSeen.has(key)) this.workflowSeen.set(key, Date.now()); return this.workflowSeen.get(key) },
       workflowSequence: (key, run, floor) => {
         const body = JSON.stringify({ ...run, sequence: 0 })
@@ -791,6 +866,31 @@ export class Projector {
     return last.info.finish && last.info.finish !== 'tool-calls' && last.info.finish !== 'unknown' ? { status: 'completed', message: text } : null
   }
 
+  /**
+   * OpenCode 2.x: how a background sub-agent ended, as an agentsStates entry, from the synthetic message its end left in
+   * this session (subagent-completion.ts: metadata {source: 'subagent', childID, state}, text `<subagent sessionID=…
+   * state=…>\n{result}\n</subagent>`): the first one after the call's own message (a follow-up call to the same child
+   * waits for the next one), or null.
+   */
+  subagentOutcomes() {
+    const positions = new Map()
+    const ends = new Map()
+    this.ordered().forEach(({ info, parts }, index) => {
+      positions.set(info?.id, index)
+      const metadata = info?.type === 'synthetic' ? info.metadata : null
+      if (metadata?.source !== 'subagent' || typeof metadata.childID !== 'string') return
+      const text = (parts ?? []).filter((part) => part?.type === 'text' && typeof part.text === 'string').map((part) => part.text).join('\n')
+      const message = (/^<subagent\b[^>]*>\n?([\s\S]*?)\n?<\/subagent>\s*$/.exec(text)?.[1] ?? text).trim() || null
+      const status = metadata.state === 'completed' ? 'completed' : metadata.state === 'error' ? 'errored' : metadata.state === 'cancelled' ? 'interrupted' : null
+      if (status) ends.set(metadata.childID, [...(ends.get(metadata.childID) ?? []), { index, status, message }])
+    })
+    return (childID, messageID) => {
+      const after = positions.get(messageID) ?? -1
+      const end = (ends.get(childID) ?? []).find((candidate) => candidate.index > after)
+      return end ? { status: end.status, message: end.message } : null
+    }
+  }
+
   /** One part → its Codex item (null for parts with no item). */
   itemOf(part, message) {
     if (part.type === 'text') {
@@ -798,9 +898,19 @@ export class Projector {
       return { type: 'agentMessage', id: part.id, text: part.text ?? '', phase: null, memoryCitation: null, delivery: null, questions: null }
     }
     if (part.type === 'reasoning') return { type: 'reasoning', id: part.id, summary: part.text ? [part.text] : [], content: [] }
-    if (part.type === 'tool') return toolItem(part, this.context())
+    if (part.type === 'tool') return toolItem(this.api === 'v2' ? this.declinedV2(part) : part, this.context())
     if (part.type === 'compaction') return { type: 'contextCompaction', id: part.id }
     return null
+  }
+
+  /**
+   * OpenCode 2.x: a call the user turned down with nothing to say ended in an interrupt (v2/asks.js: v2's own decline
+   * would end the execution as a shutdown), 'Tool execution interrupted'; the thread's `declined` names it.
+   */
+  declinedV2(part) {
+    const declined = this.meta?.declined
+    if (part.state?.status !== 'error' || !Array.isArray(declined) || !declined.includes(part.id)) return part
+    return { ...part, state: { ...part.state, errorType: 'aborted', error: 'The user declined this tool call' } }
   }
 
   /** One part → its Codex items: MiMo's exec script, then each tool it called. */
@@ -817,6 +927,7 @@ export class Projector {
    * @returns {Array<{id, items, status, error, startedAt, completedAt, durationMs, assistant: any[]}>}
    */
   turns({ busy = false } = {}) {
+    if (this.api === 'v2') return this.turnsV2({ busy })
     const turns = []
     const byUser = new Map()
     const steer = new Set(this.meta.steers ?? [])
@@ -876,6 +987,73 @@ export class Projector {
     return turns
   }
 
+  /**
+   * OpenCode 2.x's turns (v2/history.js attributeTurns): a turn ends at its idle message, whose outcome is the turn's;
+   * without one (the last turn still running, a run cut off by a shutdown, a queued prompt delivered in the same run)
+   * its steps say how it ended, as on 1.x.
+   */
+  turnsV2({ busy = false } = {}) {
+    const reviews = this.meta.reviews ?? {}
+    const turns = attributeTurns(this.ordered(), { steers: this.meta.steers ?? [] }).map((group) => {
+      const startedMs = group.members[0]?.entry.info.time?.created ?? null
+      const turn = { id: group.id, kind: group.kind, items: [], status: 'completed', error: null, startedAt: seconds(startedMs), completedAt: null, durationMs: null, startedMs, assistant: [], review: reviews[group.id] ?? null, idle: group.idle, closed: group.closed }
+      let failure = null
+      for (const { entry, role } of group.members) {
+        const info = entry.info
+        if (role === 'prompt' || role === 'steer') {
+          turn.items.push(this.userItem(entry))
+          if (role === 'prompt' && turn.review) turn.items.push({ type: 'enteredReviewMode', id: `${info.id}-review`, review: turn.review.label ?? 'Review' })
+          continue
+        }
+        if (role === 'context') continue
+        turn.worked = true
+        if (role === 'compaction') {
+          if (group.kind === 'compaction') turn.compaction = true
+          for (const part of entry.parts) {
+            const item = this.itemOf(part, entry)
+            if (item && part.summary && info.status === 'completed') item.codeDesktop = { summary: part.summary }
+            if (item) turn.items.push(item)
+          }
+        } else {
+          if (role === 'step') turn.assistant.push(entry)
+          for (const part of entry.parts) turn.items.push(...this.itemsOf(part, entry))
+        }
+        if (info.time?.completed) turn.completedMs = Math.max(turn.completedMs ?? 0, info.time.completed)
+        // A step, compaction or shell still running ends the turn incomplete unless an idle message says otherwise.
+        else if (!info.error && (role !== 'compaction' || info.status === 'running') && (role !== 'shell' || entry.parts[0]?.state?.status === 'running')) turn.incomplete = true
+        // A failed step may be followed by one that went on: the last one decides.
+        if (role === 'step' || role === 'compaction') failure = info.error ?? (role === 'step' ? null : failure)
+      }
+      if (failure) { turn.status = v2Interrupted(failure) ? 'interrupted' : 'failed'; turn.error = errorInfoOfV2(failure) }
+      const idle = group.idle?.info
+      if (idle) {
+        turn.status = idle.outcome === 'failed' ? 'failed' : idle.outcome === 'interrupted' ? 'interrupted' : 'completed'
+        turn.error = turn.status === 'failed' ? errorInfoOfV2(idle.error ?? failure) ?? { message: 'The turn failed.', codexErrorInfo: 'other', additionalDetails: null, misalignment: null } : null
+        turn.incomplete = false
+        if (Number.isFinite(idle.time?.created)) turn.completedMs = Math.max(turn.completedMs ?? 0, idle.time.created)
+      }
+      return turn
+    })
+    const last = turns.at(-1)
+    for (const turn of turns) {
+      // The user's own command, still running (the server records its end; no execution, so busy says nothing): the
+      // last turn runs, an earlier one stays completed with its command item still running.
+      if (turn.closed && turn.incomplete) { if (turn === last) turn.status = 'inProgress' }
+      // Running here: the last turn, unless its run already ended (a new one has written nothing yet).
+      else if (turn === last && busy && !turn.idle && !turn.closed) { turn.status = 'inProgress'; turn.error = null }
+      // A reply the agent never finished (the core stopped mid-step), or a prompt that never got one.
+      else if (!turn.idle && turn.status === 'completed' && (turn.incomplete || !turn.worked)) turn.status = 'interrupted'
+      turn.completedAt = turn.status === 'inProgress' ? null : seconds(turn.completedMs ?? turn.startedMs)
+      turn.durationMs = turn.status === 'inProgress' || !turn.startedMs ? null : Math.max(0, (turn.completedMs ?? turn.startedMs) - turn.startedMs)
+      if (turn.review && turn.status !== 'inProgress') {
+        const text = [...turn.items].reverse().find((item) => item.type === 'agentMessage')?.text ?? ''
+        turn.items.push({ type: 'exitedReviewMode', id: `${turn.id}-review-done`, review: text })
+      }
+      if (turn.status !== 'inProgress' && !(turn.closed && turn.incomplete)) for (const item of turn.items) if (item.status === 'inProgress') item.status = turn.status === 'completed' ? 'completed' : 'failed'
+    }
+    return turns
+  }
+
   userItem(message) {
     const remembered = this.meta.inputs?.[message.info.id]
     // A scheduled prompt shows its text (synthetic) and says where it came from (codeDesktop.origin, read by the app).
@@ -899,13 +1077,15 @@ export class Projector {
     let last = null
     let lastTurnId = null
     let model = null
+    // OpenCode 2.x: a step names no user message; its turn is the one it was grouped into.
+    const turnOf = this.api === 'v2' ? new Map(this.turnsV2().flatMap((turn) => turn.assistant.map((entry) => [entry.info.id, turn.id]))) : null
     for (const message of this.ordered()) {
       if (message.info.role !== 'assistant' || !message.info.tokens) continue
       const breakdown = tokenBreakdown(message.info.tokens)
       if (!breakdown.totalTokens) continue
       addBreakdown(total, breakdown)
       last = breakdown
-      lastTurnId = message.info.parentID ?? null
+      lastTurnId = turnOf ? turnOf.get(message.info.id) ?? null : message.info.parentID ?? null
       model = message.info.providerID && message.info.modelID ? `${message.info.providerID}/${message.info.modelID}` : model
     }
     return { total, last, lastTurnId, model }

@@ -113,11 +113,15 @@ test('layout-05 official: closing a tile resets sidePane only when it is the cur
 test('layout-05 local: one tile per pane kind, no sidePane/lastDiffTile state, and closePaneTile removes only the closed tile', () => {
   // A single Changes tile: the persisted layout cannot hold official per-file "diff:<path>" tiles, so wa's
   // lastDiffTile → sidePane → last-of-kind choice never has more than one candidate here.
-  assert.deepEqual([...PANE_KINDS], ['files', 'changes', 'plan', 'tasks', 'terminal', 'preview', 'session']);
+  assert.deepEqual([...PANE_KINDS], ['files', 'changes', 'plan', 'tasks', 'terminal', 'preview', 'session', 'runs']);
   const persisted = sanitizeSessionEntry({ tileLayout: { root: { kind: 'stack', direction: 'row', id: 's1', flex: 1, children: [
     { kind: 'tile', tileId: 'chat', flex: 2 }, { kind: 'tile', tileId: 'changes', flex: 3 }, { kind: 'tile', tileId: 'diff:src/a.js', flex: 1 }] } } });
   assert.deepEqual([...tileIds(persisted.tileLayout)], ['chat', 'changes']);
-  for (const file of [...localFiles('src'), ...localFiles('electron')]) {
+  // W14-code gen-final: src/generated/code-transcript is the official 3.6556.2 renderer closure (E86); its c03935b01 slice
+  // carries the desktop pane store's own sidePane / lastDiffTile fields, but that store is the host adapter usePaneStore
+  // (source-code-transcript-adapters.jsx: an empty pane state), so no host layout state comes from it.
+  const official = file => path.relative(app, file).split(path.sep).join('/').startsWith('src/generated/code-transcript/');
+  for (const file of [...localFiles('src'), ...localFiles('electron')].filter(file => !official(file))) {
     const text = read(file);
     assert.doesNotMatch(text, /\blastDiffTile\b|\bsidePane\b|\bfocusedTile\b|\blastInputTile\b/, path.relative(app, file));
   }
@@ -196,13 +200,18 @@ test('layout-07 local: the tile config is official Tb with no divider, and the s
   assert.equal('divider' in TILE_CONFIG, false);
   const layout = local('src/source-tile-layout.jsx');
   assert.equal(count(layout, 'export function SourceTileLayout({ layout, onLayoutChange, tiles, renderTile, config = TILE_CONFIG,'), 1);
-  // The one mount (main.jsx) passes no config: main.jsx's only config= prop is the Settings dialog's.
+  // The one mount (main.jsx) keeps the default config in a window's frame; W14-code r4 r4pa-c03: a pane window (E90 /
+  // E95, c5638815a wt renders the pane with no tile container) passes PANE_WINDOW_TILE_CONFIG, Tb without the padding.
   const mounts = localFiles('src').filter(file => read(file).includes('<SourceTileLayout '));
   assert.deepEqual(mounts.map(file => path.relative(app, file)), ['src/main.jsx']);
   const main = local('src/main.jsx');
   assert.equal(count(main, '<SourceTileLayout '), 1);
-  assert.equal(count(main, ' config={'), 1);
-  assert.equal(count(main, '<SourceSettings open={!!settings} config={'), 1, 'main.jsx keeps the default tile config');
+  // W14-code r6 sleep (gen-final-6 syncs this count): the sliced sleep / kept-awake bands (cf74bc599 wO / dO) read the
+  // session settings through SourceSessionBands' own config prop, which is no tile config.
+  assert.equal(count(main, ' config={'), 3);
+  assert.equal(count(main, '<SourceSessionBands key={`${current}:bands`}') + count(main, 'config={boot?.config ?? null} saveSettings={saveBandSettings}'), 2);
+  assert.equal(count(main, '<SourceSettings open={!!settings} config={'), 1);
+  assert.equal(count(main, 'config={paneWindowPopout ? PANE_WINDOW_TILE_CONFIG : undefined}'), 1, 'main.jsx keeps the default tile config outside a pane window');
   const separator = fnBody(layout, 'function Separator(');
   assert.doesNotMatch(separator, /\bline\b/, 'no line prop');
   assert.equal(count(separator, 'style={{ zIndex: 1 + depth, '), 1, 'official (a?4:1)+l with a=false');
@@ -312,31 +321,22 @@ test('layout-11 official: the Dialog popup width subtracts the safe area; the ba
   assert.equal(evaluateCss(officialHeight, { height: 800, vars: { '--desktop-titlebar-inset': '28px' } }), 744);
 });
 
-test('layout-11 local: .sdlg-popup is calc(100vw - 2rem) with the official max height minus the safe-area term; no band header', () => {
-  const css = local('src/source-dialog.css');
-  const line = '  width: calc(100vw - 2rem); max-height: calc(100dvh - max(2rem, 2 * var(--desktop-titlebar-inset, 0px)));\n';
-  assert.equal(count(css, line), 1);
-  const popup = css.slice(css.indexOf('.sdlg-popup {'), css.indexOf('}', css.indexOf('.sdlg-popup {')));
-  assert.ok(popup.includes(line.trim()), 'the line is in the .sdlg-popup rule');
-  const localWidth = 'calc(100vw - 2rem)', localHeight = 'calc(100dvh - max(2rem, 2 * var(--desktop-titlebar-inset, 0px)))';
-  const officialWidth = 'calc(100vw - 2rem - 2*max(env(safe-area-inset-left,0px),env(safe-area-inset-right,0px)))';
-  const officialHeight = 'calc(100dvh - max(2rem,2*var(--desktop-titlebar-inset,0px)) - 2*max(env(safe-area-inset-top,0px),env(safe-area-inset-bottom,0px)))';
-  // Equal for every window size while env(safe-area-inset-*) is 0 (desktop Chromium/Electron windows report no
-  // safe area); a non-zero inset is the only case they would part (2 * the larger inset).
-  for (const width of [360, 520, 800, 1280, 1920]) for (const height of [400, 600, 800, 1200]) for (const titlebar of ['0px', '28px', '45px']) {
-    const vars = { '--desktop-titlebar-inset': titlebar };
-    assert.equal(evaluateCss(localWidth, { width, height, vars }), evaluateCss(officialWidth, { width, height, vars }), `w ${width}`);
-    assert.equal(evaluateCss(localHeight, { width, height, vars }), evaluateCss(officialHeight, { width, height, vars }), `h ${height} ${titlebar}`);
-  }
-  assert.equal(evaluateCss(localWidth, { width: 1280 }) - evaluateCss(officialWidth, { width: 1280, env: { 'safe-area-inset-right': '12px' } }), 24);
-  // Sizes: the five the local dialog offers carry the official Qg widths.
-  for (const [size, px] of [['sm', 400], ['md', 520], ['lg', 720], ['xl', 880], ['2xl', 1024]])
-    assert.equal(count(css, `.sdlg-popup[data-dialog-size="${size}"] { max-width: ${px}px; }`), 1, size);
+test('layout-11 local: the SourceDialog popup carries the official Xv width/max-height and wy sizes verbatim; no band header', () => {
+  // W14-code r2-shared-06 (3.6556.2 shared-frame-6jtSkIit.js Xv/Yv/wy): the host popup rule (calc(100vw - 2rem), the
+  // host max-height and the data-dialog-size widths) is gone; the popup renders the official utility classes.
+  const css = local('src/source-dialog.css'), dialog = local('src/source-dialog.jsx');
+  assert.doesNotMatch(css, /\.sdlg-popup \{|data-dialog-size|max-width:|\.sdlg-header/);
+  const width = 'w-[calc(100vw_-_2rem_-_2*max(env(safe-area-inset-left,0px),env(safe-area-inset-right,0px)))]';
+  const height = 'max-h-[calc(100dvh_-_max(2rem,2*var(--desktop-titlebar-inset,0px))_-_2*max(env(safe-area-inset-top,0px),env(safe-area-inset-bottom,0px)))]';
+  assert.equal(count(dialog, `const POPUP_VIEWPORT_MAX_HEIGHT = "${height}"; // Yv`), 1);
+  assert.equal(count(dialog, 'const POPUP_CLASS = `fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col ' + width + ' ${POPUP_VIEWPORT_MAX_HEIGHT} rounded-card bg-surface-3 shadow-panel shadow-panel-lg cds-reset text-body font-normal text-primary outline-none focus-visible:outline-hidden`; // Xv'), 1);
+  assert.equal(count(dialog, 'const POPUP_SIZES = { sm: "max-w-[400px]", md: "max-w-[520px]", lg: "max-w-[720px]", xl: "max-w-[880px]", "2xl": "max-w-[1024px]", "3xl": "max-w-[1152px]" }; // wy'), 1);
+  // With no safe-area inset (the desktop window) the official formulas reduce to 100vw - 2rem and 100dvh - max(2rem, 2*titlebar inset).
+  assert.equal(evaluateCss(fromClass(width, 'w'), { width: 1280 }), 1248);
+  assert.equal(evaluateCss(fromClass(height, 'max-h'), { height: 800, vars: { '--desktop-titlebar-inset': '28px' } }), 744);
   // Header: the plain mb-pad-md flex items-start gap-2 row, no band part.
-  assert.equal(count(css, '.sdlg-header { display: flex; flex-shrink: 0; align-items: flex-start; gap: 8px; margin: 0 0 var(--cds-pad-md); }'), 1);
-  const dialog = local('src/source-dialog.jsx');
+  assert.equal(count(dialog, '<div className="sdlg-header mb-pad-md flex items-start gap-2">'), 1);
   assert.doesNotMatch(dialog, /data-cds-part="band"|\bband\b|panels/);
-  assert.equal(count(dialog, 'className={`sdlg-popup cds-reset ${className}`.trim()}'), 1);
 });
 
 // ---- layout-12 -------------------------------------------------------------------------------------------------------
@@ -366,7 +366,10 @@ test('layout-12 local: the side chat composer and user bubble take no text size 
   assert.equal(count(sideChat, 'textSize'), 2);
   once(sideChat, ["const textSize = useCdsDensity() === 'compact' ? 'md' : undefined;", 'data-text-size={textSize}']);
   const composer = fnBody(sideChat, 'function SideChatComposer(');
-  assert.equal(count(composer, 'return <div className="ssc-composer shrink-0 px-md pb-md" data-approval-hotkey-scope={scope} data-mention-open={suggest.open || undefined}>'), 1);
+  // W14-code r3 css3-side-chat-composer: UF nt's row holds the main Code card (cccc2cf0a fp = c227f4d5e jF); the mention
+  // state the panel's Escape reads is the card's own data-mention-open (source-composer.jsx composer-zone).
+  assert.equal(count(composer, 'return <div className="ssc-composer shrink-0 px-md pb-md" data-approval-hotkey-scope={scope}>'), 1);
+  assert.equal(count(composer, '<SourceComposer embedded isPanelActive={false} codeLayout="side-session"'), 1);
   assert.doesNotMatch(composer, /style=/);
   const user = fnBody(sideChat, 'function SideChatUserMessage(');
   assert.equal(count(user, '<div className="cds-user-message-body"><SourceSideChatUserContent text={rest}/></div>'), 1);

@@ -33,8 +33,10 @@ const ROOTS = new Set();
 let savedWindow, savedDocument;
 before(async () => {
   savedWindow = globalThis.window; savedDocument = globalThis.document;
-  globalThis.document = { createElement: () => ({ relList: { supports: () => false } }), querySelector: () => null, documentElement: { getAttribute: () => null } };
-  globalThis.window = { document: globalThis.document, localStorage: undefined, addEventListener() {}, removeEventListener() {}, matchMedia: undefined };
+  globalThis.document = { createElement: () => ({ relList: { supports: () => false } }), querySelector: () => null, documentElement: { getAttribute: () => null, hasAttribute: () => false } };
+  // W14-code r6 r6pa-03 (review rerun): the rail's background-tasks pane draws c96d752d0 UQ from code-transcript, whose
+  // shared-25 router store reads window.location.pathname at load (in the app main.jsx already loads that graph).
+  globalThis.window = { document: globalThis.document, localStorage: undefined, addEventListener() {}, removeEventListener() {}, matchMedia: undefined, location: { pathname: '/' }, navigator: globalThis.navigator };
   server = await createServer({ configFile: false, root: app, plugins: [react()],
     server: { middlewareMode: true, hmr: false, ws: false, watch: null }, appType: 'custom', logLevel: 'error' });
   (await server.ssrLoadModule('/electron/i18n/index.mjs')).setLocale('en-US');

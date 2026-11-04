@@ -1,6 +1,7 @@
-/* Plain counterpart of current oi/Jr; not the generic .prose pre styling. */
-.source-markdown .scb-flow { min-width: 0; margin-block: .75em 0; }
-.source-markdown .scb-flow:first-child { margin-block-start: 0; }
+/* Plain counterpart of current oi/Jr; not the generic .prose pre styling. W14-code TR-H11: the block's margins are only
+   c19e90103's `>.epitaxy-codeblock` / `:is(li,td,th)>` bumps (source-session.css); nested elsewhere (a blockquote) it
+   has none. */
+.source-markdown .scb-flow { min-width: 0; }
 .scb-block {
   position: relative; width: fit-content; min-width: min(100%, 318px); max-width: 100%;
   --scb-control: var(--cds-h-control, 24px);
@@ -61,7 +62,7 @@
 .scb-reveal[aria-pressed="true"], .scb-reveal[aria-pressed="true"]:hover { background: var(--cds-fill-control); color: var(--cds-text-primary); }
 .scb-copy:focus-visible { outline: none; box-shadow: var(--cds-focus-shadow); }
 .source-markdown .scb-language-placeholder { margin: 0; padding: 0; border: 0; background: none; }
-.scb-status { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+/* W14-code r5 cleanup css5-sr-only-handcopies: the hand-copied sr-only rule is gone; the JSX uses the official c6a992d55 .sr-only. */
 @media (prefers-reduced-motion: reduce) { .scb-copy { transition: none; } }
 html[data-reduce-motion="true"] .scb-copy { transition: none; }
 

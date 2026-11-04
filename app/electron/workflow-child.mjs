@@ -10,8 +10,8 @@ import {startCodexSession} from '../third-party/codex-workflows-runner/src/codex
 import {joinSharedBudget} from '../third-party/codex-workflows-runner/src/shared-budget.js';
 import {outputSpent,subscribeMeter} from '../third-party/codex-workflows-runner/src/meter.js';
 let finishing=false,runtime,scriptFailure,outputText;
-// /workflows p: pause stops admitting agents (runtime.js setWorkflowPaused); a hosted engine has no pause.
-process.on('message',message=>{if(message?.control==='pause'){try{if(typeof runtime?.pause!=='function'){send({type:'pausable',pausable:false});return;}runtime.pause(message.paused===true);send({type:'paused',paused:message.paused===true});}catch(error){send({type:'log',message:error.message});}return;}if(message?.control)Promise.resolve(runtime?.controlMember(message.memberId,message.control)).catch(error=>send({type:'log',message:error.message}));});
+// W14-code r5 cleanup R5DC-03 (E95): no pause / member control messages any more; the service's member / pause entry
+// points left with the host run card's controls (the official Tasks card has Stop only, which ends the process).
 const send=event=>{if(process.connected)process.send({event,at:Date.now()});};
 // A stop cancels the run first (interrupts turns, removes clean worktrees, closes sessions), then the app-server goes.
 // It tells the service a cancel is under way, so the force-kill waits (bounded) for it to finish.
@@ -37,7 +37,8 @@ process.once('message',async options=>{
   const clientOptions={command:options.command,...(Array.isArray(options.commandArgs)?{args:options.commandArgs}:{}),clientInfo:{name:'code-desktop-workflows',title:'OpenClaude Desktop',version:options.version}};
   if(!options.plan){
    const client=await getClient(clientOptions);send({type:'connection',pid:client.pid});
-   const hosted=await runHarnessWorkflow(client,options,send,value=>{runtime=value;if(typeof value?.pause!=='function')send({type:'pausable',pausable:false});});
+   // W14-code r5 gen-final-5 (R5DC-03 residue): no pause / member control reaches a run any more, so no 'pausable' event.
+   const hosted=await runHarnessWorkflow(client,options,send,value=>{runtime=value;});
    if(hosted.supported){await publishResult(options.directory,hosted.value,hosted.outputFile);await close(0);return;}
   }
   // The access comes from the session's Mode at launch (permission-policy.mjs workflowAccess);

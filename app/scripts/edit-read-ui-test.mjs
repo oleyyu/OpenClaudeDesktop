@@ -105,7 +105,7 @@ async function collapse(id) {
   if (await trigger.getAttribute("aria-expanded") === "true") { await trigger.focus(); await trigger.press("Enter"); }
 }
 async function send(text) {
-  await page.getByRole("textbox", { name: "Message DeepSeek", exact: true }).fill(text);
+  await page.getByRole("textbox", { name: /^(?:Prompt|Message DeepSeek)$/ }).fill(text);
   await page.locator('[data-testid="code-prompt-send"]:not([inert] *)').click();
 }
 // Resolve a CDS token to the colour the renderer actually paints.
@@ -499,7 +499,7 @@ try {
   const approvalId=await poll(async()=> (await page.locator('.sft-step').evaluateAll(nodes=>nodes.map(n=>n.dataset.transcriptItemId))).find(id=>id.startsWith('file-tool-')),'file approval row');
   await poll(async()=>await row(approvalId).getAttribute('data-state')==='blocked','file item blocked');
   assert.equal(await row(approvalId).locator('.sft-counts').count(),0);
-  await page.locator('.sac-card [data-approval-action=decline]').click();
+  await page.locator('[data-approval-card-root] [data-approval-action=decline]').click();
   await poll(async()=>await row(approvalId).getAttribute('data-state')==='denied','file declined');
   checks.push('File approval blocks only its item, suppresses premature counts, and real decline settles Denied');
   await send('fixture:patch');

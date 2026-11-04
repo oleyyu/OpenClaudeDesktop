@@ -88,6 +88,8 @@ function createNativeSideChat({ getClient, emit, settings = () => ({}), decorate
     request.done = true;
     for (const [id, value] of requests) if (value === request) requests.delete(id);
     if (outcome.error) request.reject(outcome.error);
+    // W14-code r6-composer-06: an unanswered status in the official result shape (cccc2cf0a CF reads `r.status`).
+    else if (outcome.status) request.resolve({ status: outcome.status });
     else request.resolve({ text: request.text, ...(outcome.closed ? { closed: true } : {}) });
   }
   function progress(request, stage, activity = null) {
@@ -193,7 +195,8 @@ function createNativeSideChat({ getClient, emit, settings = () => ({}), decorate
   /** Every core event: true when it belongs to a side-chat fork (the renderer never sees those). */
   function observe(event) {
     if (event?.kind === "connection" && !event.connected) {
-      for (const request of [...requests.values()]) settle(request, { error: new Error(i18n.t("The connection closed before the side question was answered.")) });
+      // The core went away mid-question: SF's not_connected (vF.unreachable), not the generic failure.
+      for (const request of [...requests.values()]) settle(request, { status: "not_connected" });
       forks.clear(); forkParents.clear();
       return false;
     }

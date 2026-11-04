@@ -92,8 +92,6 @@ export function validSourceBranch(name) {
 // getJitterSecondsForTask). Sy("3300773012","dispatchJitterMaxMinutes",10,…) returns its default without GrowthBook.
 export const DISPATCH_JITTER_MAX_MINUTES = 10;
 const MINUTE = 6e4;
-// Official pra(): a timer that fires more than 5 minutes late is treated as a system wake.
-const WAKE_LATENESS = 3e5;
 
 /** Official ita(): the first 4 bytes of sha256(taskId), mod the limit in seconds. */
 export function jitterHash(taskId, limit) {

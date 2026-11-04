@@ -286,8 +286,15 @@ test('main.jsx: one boundary, at a fixed place inside the section "new" pane con
   const elements = homes[0].children.filter(c => c.type === 'JSXElement');
   assert.deepEqual(elements.map(jsxName), ['SourceSessionErrorBoundary'], 'the home column\'s only element child');
   const inside = name => findAll(boundary, n => jsxName(n) === name).length;
-  for (const name of ['SourceFindBar', 'SourceTranscript', 'ProposalFeedEnd', 'SourceGoalStrip', 'SourceSessionNotices', 'SourceAutoResumeStatus'])
+  // W14-code r4 shell: SourceGoalStrip is gone (the rail's Goal card); the notice stack is renderSessionNotices' (one JSX
+  // element, called inside the boundary for Chat / Cowork and through renderMainComposer / the archived zone for Code).
+  for (const name of ['SourceFindBar', 'SourceTranscript', 'ProposalFeedEnd', 'SourceAutoResumeStatus'])
     assert.equal(inside(name), 1, name);
+  assert.equal(inside('SourceGoalStrip'), 0);
+  // W14-code r8 r8c-05 (gen-final-8 sync): cc43287c9's archived branch `$n && Hn ? … p(Mu, {sessionRef: Hn}, …)` draws
+  // only the archived banner (no vie notices), so the archived zone no longer calls renderSessionNotices; only Chat /
+  // Cowork's call above the column is left inside the boundary.
+  assert.equal(findAll(boundary, n => n.type === 'CallExpression' && n.callee.name === 'renderSessionNotices').length, 1, 'Chat / Cowork above the column (Code\'s archived zone draws only the banner, r8c-05)');
   assert.equal(findAll(boundary, n => n.type === 'CallExpression' && n.callee.name === 'renderMainComposer').length, 1, 'the composer is inside');
   assert.equal(text(attr(findAll(boundary, n => jsxName(n) === 'SourceTranscript')[0], 'key').value.expression), 'current ?? "draft"');
   // The row boundary stays nested inside (per-row crashes are still caught by rows first).

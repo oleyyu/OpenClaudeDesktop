@@ -42,4 +42,3 @@ function part(name) {
 
 /** shared-16 `K` (shared-frame EC, exported `qa`): Item, Separator and Group, the parts au / cu / uu render. */
 export const SidebarMenuKit = Object.freeze({ Item: part('Item'), Separator: part('Separator'), Group: part('Group') });
-export { cdsRows as sidebarCdsMenuRows, sourceMenuRows as sidebarSourceMenuRows };

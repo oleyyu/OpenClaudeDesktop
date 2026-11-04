@@ -6,8 +6,9 @@
  * OpenCode runs one MCP server per folder for every session in it, so the server is registered once, in the bridge's
  * generated config layer (config.js overlay; the user's own config is never written), without a session of its own:
  * the plugin (plugin.js tool.execute.before) names the app thread on every call of one of its tools with the
- * SESSION_ARG argument, which the server strips before the tool sees it. The socket and token stay out of the config
- * file: {env:…} references, filled in from the agent server's environment. Without the variables: nothing.
+ * SESSION_ARG argument, which the server strips before the tool sees it (OpenCode 2.x drops it before the server: there
+ * the server reads the session from the call's _meta, src/v2/config.js appToolsEntryV2). The socket and token stay out
+ * of the config file: {env:…} references, filled in from the agent server's environment. Without the variables: nothing.
  */
 export const SESSION_ARG = '__code_desktop_session'
 

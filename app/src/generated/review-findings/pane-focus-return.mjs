@@ -24,4 +24,10 @@ function oC(e, t) {
     r?.isConnected && rC(r).focus({ preventScroll: !0 });
   }, 0);
 }
-export { nC as focusReturnRegion, aC as returnFocusSoon };
+export {
+  nC as focusReturnRegion,
+  aC as returnFocusSoon,
+  tC as paneRootOf,
+  rC as paneFocusTarget,
+  oC as returnFocusSoonTo,
+};

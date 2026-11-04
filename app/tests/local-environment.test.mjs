@@ -167,18 +167,25 @@ require('node:readline').createInterface({ input: process.stdin }).on('line', li
 test('main.cjs wires the store to every core spawn and to desktop:call local-environment', async () => {
   const main = await fs.readFile(path.join(root, 'electron/main.cjs'), 'utf8');
   assert.match(main, /require\("\.\/codex\.cjs"\)\.setLocalEnvironment\(\(\) => localEnvironment\.launchEnv\(\)\);/);
-  assert.match(main, /case "local-environment": return localEnvironment\.run\(p\);/);
+  // W14-code fr6-02 (c3f9f1667 Ne/Pe: no toast; the variables apply from the next new session): a changed save marks the
+  // core for core-restart.cjs's restart before the next thread/start, as harness-profile mcp-add does.
+  assert.match(main, /case "local-environment": \{ const owner = client, result = await localEnvironment\.run\(p\); if \(p\.op === "save" && result\?\.changed\) coreRestart\.mark\(owner\); return result; \}/);
   assert.match(main, /managedKeys: \(\) => \{ let tools = \{\}; try \{ tools = agentTools\.launchEnv\(\) \?\? \{\}; \} catch \{ tools = \{\}; \} return \[\.\.\.coreSecretEnvKeys\(\), \.\.\.Object\.keys\(tools\)\]; \}/);
 });
 
-test('local environment menu opens the real environment editor and persists through the host store', async () => {
+test('the environment editor opens from the Home picker and persists through the host store', async () => {
   const main = await fs.readFile(path.join(root, 'src/main.jsx'), 'utf8');
-  const local = main.slice(main.indexOf('      case "local": {'), main.indexOf('      case "home-folder":'));
-  assert.match(local, /const openEnvironment = \(\) => \{ closeMenu\(\); setLocalEnvOpen\(true\); \};/);
-  assert.match(local, /<SourceLocalEnvironmentMenu onOpenSettings=\{openEnvironment\} \/>/);
+  // W14-code r8 css8-classic-context-row-dead (E95): the classic Local pill's "local" menu (SourceLocalEnvironmentMenu)
+  // is gone with the classic context row; the presets picker's variables row opens the same editor.
+  assert.ok(!main.includes('case "local":') && !main.includes('SourceLocalEnvironmentMenu'));
+  assert.match(main, /onVariables=\{\(\) => \{ closeMenu\(\); setLocalEnvOpen\(true\); \}\}/);
   assert.match(main, /\{localEnvOpen && <SourceLocalEnvironmentDialog onClose=\{\(\) => setLocalEnvOpen\(false\)\}/);
   assert.match(main, /load=\{\(\) => call\("local-environment", \{ op: "get" \}\)\}/);
   assert.match(main, /save=\{\(variables\) => call\("local-environment", \{ op: "save", variables \}\)\}/);
+  // W14-code fr6-02: no host toast and no immediate reconnect after a save (official c3f9f1667 has neither).
+  const dialog = main.slice(main.indexOf('{localEnvOpen && <SourceLocalEnvironmentDialog'), main.indexOf('onError=', main.indexOf('{localEnvOpen && <SourceLocalEnvironmentDialog')));
+  assert.ok(!dialog.includes('onSaved'));
+  assert.ok(!main.includes('Environment saved. Reconnecting to apply it'));
 });
 
 test('c3f9f1667 Pe/Oe markup: the field, its hint and error, and the footer (SSR)', async (context) => {
@@ -190,61 +197,55 @@ test('c3f9f1667 Pe/Oe markup: the field, its hint and error, and the footer (SSR
     server: { middlewareMode: true, hmr: false, watch: null }, appType: 'custom', logLevel: 'error' });
   context.after(() => server.close());
   const D = await server.ssrLoadModule('/src/source-local-environment-dialog.jsx');
-  const { SourceLocalEnvironmentMenu } = await server.ssrLoadModule('/src/source-environment-menu.jsx');
+  const EnvironmentMenu = await server.ssrLoadModule('/src/source-environment-menu.jsx');
+  assert.equal(EnvironmentMenu.SourceLocalEnvironmentMenu, undefined, 'W14-code r8: the classic Local pill menu is gone');
   const { EnvironmentAction } = await server.ssrLoadModule('/src/generated/code-current/environment-menu-controls.mjs');
   const noop = () => {};
   const form = (props) => renderToStaticMarkup(React.createElement(D.EnvironmentForm, {
     loadedText: '', onDirtyChange: noop, onClose: noop, pending: false, setPending: noop, save: async () => ({}), ...props }));
   const html = form({ loadedText: 'NODE_ENV=production' });
   assert.match(html, /<form class="sle-form">/);
-  assert.match(html, /<label class="sle-label" for="[^"]+">Environment variables<\/label>/);
-  assert.match(html, /<textarea id="[^"]+" data-cds="TextArea" class="sle-textarea cds-reset" rows="8" placeholder="NODE_ENV=production\nGIT_AUTHOR_NAME=Your Name/);
+  // W14-code r5 cleanup fr5-04 (E84): the field is the shared-frame TextAreaField (Di = CdsTextAreaField) with c3f9f1667
+  // Z's props (dir ltr, rows 8, font-mono, fieldClassName gap-sm); no hand-copied .sle-* field markup.
+  assert.match(html, /<div data-cds="Field" class="flex flex-col font-sans gap-sm"><label [^>]*class="text-body font-medium leading-none text-primary">Environment variables<\/label>/);
+  assert.match(html, /<textarea data-cds="TextArea" rows="8" dir="ltr" placeholder="NODE_ENV=production\nGIT_AUTHOR_NAME=Your Name/);
+  assert.match(html, /<textarea [^>]*class="[^"]*cds-input[^"]* font-mono"/);
+  assert.doesNotMatch(html, /sle-(field|label|textarea|hint|link|error)/);
   assert.match(html, /autoComplete="off"|autocomplete="off"/);
   assert.match(html, /data-1p-ignore="true" data-lpignore="true"/);
   assert.match(html, />NODE_ENV=production<\/textarea>/);
-  assert.match(html, /<div class="sle-hint" id="[^"]+">In <a href="https:\/\/github\.com\/motdotla\/dotenv#[^"]+" class="sle-link">\.env format<\/a>\. These are stored securely and passed to your sessions\.<\/div>/);
-  assert.doesNotMatch(html, /sle-error/);
+  // W14-code r4 shell fr4-12c (E95): the link is c3f9f1667 Q's code.claude.com desktop docs anchor, verbatim from the chunk.
+  // The hint's link is c29df1c52 m: the CDS TextLink with external:!0 (opens-in-new-tab hint), opened in the browser.
+  assert.match(html, /<p id="[^"]+" class="text-footnote font-normal leading-snug [^"]*">In <a data-cds="TextLink" [^>]*href="https:\/\/code\.claude\.com\/docs\/en\/desktop#environment-configuration" target="_blank" rel="noopener" class="cds-reset cds-text-link[^"]*">\.env format<span [^>]*class="sr-only">\(opens in new tab\)<\/span><\/a>\. These are stored securely and passed to DeepSeek sessions\.<\/p>/);
+  assert.ok(require('node:fs').readFileSync(path.join(root, '../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c3f9f1667-DnyzRZCB.js'), 'utf8')
+    .includes(`href:"${D.ENV_FORMAT_DOCS_URL}"`));
+  assert.doesNotMatch(html, /text-danger/);
   assert.match(html, /<button type="submit" hidden="" aria-hidden="true" tabindex="-1"><\/button>/);
-  assert.match(html, /<div class="-mx-pad-xl mt-auto border-t px-xl pt-lg"><footer class="sdlg-footer mt-0"><button type="button" data-cds="Button" data-variant="secondary"[^>]*>.*?<span class="ssb-content">Cancel<\/span><\/button><button type="button" data-cds="Button" data-variant="primary"[^>]*>.*?<span class="ssb-content">Save changes<\/span><\/button><\/footer><\/div>/);
+  // W14-code r5 cleanup css5-settings-button-replica: the footer buttons are the shared-frame Button (Uu = CdsButton):
+  // secondary bg-fill-secondary paint, primary text-on-primary + bg-fill-primary paint (no host .ssb-* replica).
+  const footerButton = (variant, label) => `<button type="button"[^>]* data-cds="Button" class="[^"]*${variant === 'primary' ? 'text-on-primary' : 'text-primary font-normal'}[^"]*"[^>]*><span aria-hidden="true" class="[^"]*cds-btn-squish[^"]*"><span data-cds-part="paint" class="[^"]*bg-fill-${variant}[^"]*"></span></span><span class="inline-flex min-w-0 items-center gap-1 ">${label}</span></button>`;
+  assert.match(html, new RegExp(`<div class="-mx-pad-xl mt-auto border-t px-xl pt-lg"><div class="sdlg-footer [^"]* mt-0">${footerButton('secondary', 'Cancel')}${footerButton('primary', 'Save changes')}</div></div>`));
+  assert.doesNotMatch(html, /ssb-|source-settings-button/);
   // cc-rest-env-ui: 3.6556.2 c29df1c52 _ drops -mb-pad-sm and ends the body pb-lg.
   assert.match(html, /<div class="-mx-pad-xl flex min-h-\[6rem\] flex-1 flex-col gap-lg overflow-y-auto overflow-x-hidden scroll-fade-y px-xl pt-3 pb-lg supports-\[min-height:calc-size\(auto,size\)\]:min-h-\[calc-size\(min-content,min\(size,6rem\)\)\]">/);
   assert.doesNotMatch(html, /-mb-pad-sm|pt-3 pb-sm/);
   // A managed key: the error under the field (aria-invalid, described by it) and Save disabled.
   const invalid = form({ loadedText: 'PATH=/bin' });
   assert.match(invalid, /aria-invalid="true"/);
-  assert.match(invalid, /<div class="sle-error" id="[^"]+" role="alert">.*<span>&quot;PATH&quot; is managed by OpenClaude Desktop and cannot be overridden\.<\/span><\/div>/);
-  assert.match(invalid, /<button disabled="" type="button" data-cds="Button" data-variant="primary"/);
+  assert.match(invalid, /<div data-invalid="" id="[^"]+" class="flex items-start gap-1 text-footnote font-normal leading-snug text-danger[^"]*"><span data-cds="Icon"[^>]*class="mt-px shrink-0"[^>]*>[^<]*<\/span><span class="min-w-0">&quot;PATH&quot; is managed by OpenClaude Desktop and cannot be overridden\.<\/span><\/div>/);
+  assert.match(invalid, /<button type="button" disabled="" data-cds="Button" class="[^"]*text-on-primary/);
   // The bare key being typed shows no error, but Save waits for a value.
   const typing = form({ loadedText: 'A=1\nFOO' });
-  assert.doesNotMatch(typing, /sle-error/);
-  assert.match(typing, /<button disabled="" type="button" data-cds="Button" data-variant="primary"/);
+  assert.doesNotMatch(typing, /text-danger/);
+  assert.match(typing, /<button type="button" disabled="" data-cds="Button" class="[^"]*text-on-primary/);
   // Saving: both buttons disabled, Save busy.
   const pending = form({ loadedText: 'A=1', pending: true });
-  assert.match(pending, /<button disabled="" type="button" data-cds="Button" data-variant="secondary"/);
-  assert.match(pending, /<button disabled="" type="button" data-cds="Button" data-variant="primary"[^>]*aria-busy="true"|aria-busy="true"[^>]*data-variant="primary"/);
+  assert.match(pending, /<button type="button" disabled="" data-cds="Button" class="[^"]*text-primary font-normal/);
+  assert.match(pending, /<button type="button" disabled="" data-cds="Button" class="[^"]*text-on-primary[^"]*" aria-busy="true"/);
 
-  // Exercise the actual source controls through the host menu. Keyboard and
-  // pointer activation must open once, without selecting the enclosing row.
-  const savedDocument = Object.getOwnPropertyDescriptor(globalThis, 'document');
-  context.after(() => {
-    if (savedDocument) Object.defineProperty(globalThis, 'document', savedDocument);
-    else delete globalThis.document;
-  });
-  let opens = 0, stops = 0, prevents = 0;
+  // (W14-code r8: the host Local menu that wrapped c227f4d5e BK / HK is gone; the generated action itself is exercised.)
+  let opens = 0, stops = 0;
   const onOpenSettings = () => { opens += 1; };
-  for (const dir of ['ltr', 'rtl']) {
-    Object.defineProperty(globalThis, 'document', { value: { documentElement: { dir } }, configurable: true });
-    const menu = SourceLocalEnvironmentMenu({ onOpenSettings });
-    const html = renderToStaticMarkup(menu);
-    assert.match(html, /role="menuitemradio"[^>]*aria-checked="true"|aria-checked="true"[^>]*role="menuitemradio"/);
-    // 2.42304.0 c227f4d5e zK mutes the row actions as secondary text (2.37337.1 ca80fca8d tX: text-muted-control).
-    assert.match(html, /text-muted-as-secondary opacity-0/); assert.doesNotMatch(html, /text-muted-control/);
-    assert.match(html, /pointer-coarse:opacity-100/);
-    assert.ok(html.includes(`, environment settings, ${dir === 'rtl' ? 'left' : 'right'} arrow`));
-    const key = dir === 'rtl' ? 'ArrowLeft' : 'ArrowRight';
-    for (const pressed of ['ArrowUp', key]) menu.props.onKeyDown({ key: pressed, preventDefault() { prevents += 1; }, stopPropagation() { stops += 1; } });
-  }
-  assert.deepEqual({ opens, stops, prevents }, { opens: 2, stops: 2, prevents: 2 });
   // cc-rest-env-ui: 3.6556.2 c227f4d5e B$ is React Compiler output; call it under a one-shot dispatcher that answers
   // useMemoCache (R5, tests/support/react-memo-cache.mjs).
   const { withMemoCache } = await import('./support/react-memo-cache.mjs');
@@ -252,6 +253,6 @@ test('c3f9f1667 Pe/Oe markup: the field, its hint and error, and the footer (SSR
   let action;
   try { internals.H = withMemoCache({}); action = EnvironmentAction({ icon: 'Settings', onPress: onOpenSettings }); } finally { internals.H = previous; }
   action.props.onClick({ stopPropagation() { stops += 1; } });
-  assert.equal(opens, 3);
-  assert.equal(stops, 3);
+  assert.equal(opens, 1);
+  assert.equal(stops, 1);
 });

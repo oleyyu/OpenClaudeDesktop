@@ -93,7 +93,7 @@ function ToolGroupBody({ item, renderItem, pendingApprovalItemIds, transcriptVie
       {isAwaiting && !live && <span className="stg-warning">{t("Needs approval")}</span>}
       {state === 'unknown' && !live && <span>{t("Status unavailable")}</span>}
       </SourceMorphText>
-      {state === 'busy' && <span className="source-sr-only">{t("running")}</span>}
+      {state === 'busy' && <span className="sr-only">{t("running")}</span>}
       <Icon name="CaretRight" size={14} style={{fontSize:"calc(.875rem * var(--cds-rem-scale, 1))"}} className="stg-caret" />
     </button>
     {mounted && <div id={id} hidden={!open} className="stg-body"><div className="stg-list">

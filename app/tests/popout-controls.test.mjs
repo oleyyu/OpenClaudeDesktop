@@ -27,7 +27,7 @@ test('the pin follows Open in main window and reads Keep window on top with the 
   const list = buttons(render({ onToggleAlwaysOnTop() {} }));
   assert.deepEqual(list.map((button) => button.match(/aria-label="([^"]*)"/)[1]), ['Open in main window', 'Keep window on top']);
   const pin = list[1];
-  assert.match(pin, /aria-pressed="false"/); assert.match(pin, /data-popout-pin=""/); assert.match(pin, /class="source-icon-button spc-ghost"/);
+  assert.match(pin, /aria-pressed="false"/); assert.match(pin, /data-popout-pin=""/); assert.match(pin, /data-cds="Button" data-cds-icon-only="" data-cds-ghost=""/); // W14-code r2 fr2-19: the CDS ghost iconOnly Button
   assert.equal(glyph(pin), icons.Pin);
   assert.doesNotMatch(pin, /\stitle="/, 'a CDS tooltip, not a native title');
 });
@@ -36,8 +36,8 @@ test('while on top the pin is pressed, PinFilled and labelled Stop keeping windo
   const pin = buttons(render({ alwaysOnTop: true, onToggleAlwaysOnTop() {} }))[1];
   assert.match(pin, /aria-label="Stop keeping window on top"/); assert.match(pin, /aria-pressed="true"/);
   assert.equal(glyph(pin), icons.PinFilled);
-  const css = fs.readFileSync(path.join(app, 'src/source-pane-controls.css'), 'utf8');
-  assert.match(css, /\.spc-ghost\[aria-pressed="true"\],\s*\.spc-ghost\[aria-pressed="true"\]:hover:not\(:disabled\) \{\s*color: var\(--cds-text-accent/, 'ghost aria-pressed:text-accent');
+  // W14-code r2 fr2-19: pressed is the CDS Button's own `pressed` (ghost paint `aria-pressed:text-accent`).
+  assert.match(pin, /aria-pressed:text-accent/);
 });
 
 test('without a toggle (no pane window) there is no pin', () => {

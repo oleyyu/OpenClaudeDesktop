@@ -26,7 +26,6 @@
 const fs = require("node:fs");
 const path = require("node:path");
 
-const PREVIEW_TIMEOUT = 15000;
 const LIST_TIMEOUT = 15000;
 const CHARS_PER_TOKEN = 4;
 const APP_SERVER = "code_desktop";

@@ -17,7 +17,6 @@ import './commands-settings.css';
 // <globalDir || userData/commands>/*.md and <project>/.code-desktop/commands/*.md; the folders are
 // watched by the main process, so edits made in another editor show up here and in '/' on their own.
 
-const SAVE_ERROR = t('Couldn’t save the setting. Try again.');
 // Above Settings (.ss-backdrop z 500) and level with its stacked dialogs (520).
 const SETTINGS_LAYER = Object.freeze({ base: 520, z: 520 });
 const BUILTIN_IDS = sessionCommands.flatMap(entry => [entry.id, ...(entry.aliases || [])]);

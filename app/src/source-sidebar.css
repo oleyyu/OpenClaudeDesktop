@@ -1,28 +1,13 @@
 /* Classic sidebar structure: code-composer-shared.js:9143–9870.
    Tokens: desktop-layout.css:709–724. These selectors intentionally do not
    affect the alternate sessionList branch or unrelated transcript panels. */
+/* W14-code r2 DC-11: the row metrics are shared-styles' .dframe-root defaults (the sidebar is always data-density
+   compact), so only the host focus ring is declared here. */
 .source-sidebar {
-  --df-row-h: 26px;
-  --df-row-px: 2px;
-  --df-row-ctl: 20px;
-  --df-row-gap: 4px;
-  --df-row-font: 13px;
-  --df-group-font: 12px;
-  --df-icon-size: 16px;
-  --df-leading-slot: 24px;
-  --df-radius-pill: 6px;
-  --df-group-pt: 12px;
   --source-focus-ring: inset 0 0 0 1px var(--cds-fill-accent), 0 0 6px 0 color-mix(in srgb, var(--cds-fill-accent) 20%, transparent);
 }
-.source-sidebar .dframe-sidebar-body {
-  padding-top: 12px;
-}
-/* Current desktop-layout:1412 overrides pt-3 without a direct pills child.
-   sidebar-groups zP:12827 adds mt-1 to New; preserve that inset in our
-   flattened primary navigation instead of folding it into body padding. */
-.source-sidebar .dframe-sidebar-body:not(:has(> .df-pills)) {
-  padding-top: 4px;
-}
+/* The body's pt-3, and the 4px without a direct .df-pills child, are GI's class and shared-styles' own rule.
+   sidebar-groups zP:12827 adds mt-1 to New; preserve that inset in our flattened primary navigation. */
 .source-sidebar-primary { flex-shrink: 0; margin-top: 4px; }
 .source-sidebar-header { flex-shrink: 0; }
 /* Original iI utilities keep layout/geometry. Restore the properties that
@@ -92,7 +77,8 @@
   outline: none;
   box-shadow: var(--source-focus-ring);
 }
-.source-sidebar-nav-row kbd {
+/* The Chat New row's host keycap only; the Code New row's is shared-18 yk (CDS Shortcut, generated sidebar-row-view). */
+.source-sidebar-nav-row > kbd {
   margin-left: auto;
   margin-right: var(--df-radius-pill);
   font: inherit;
@@ -101,8 +87,8 @@
   color: var(--cds-text-muted);
   opacity: 0;
 }
-.source-sidebar-nav-row:hover kbd,
-.source-sidebar-nav-row:focus-visible kbd { opacity: 1; }
+.source-sidebar-nav-row:hover > kbd,
+.source-sidebar-nav-row:focus-visible > kbd { opacity: 1; }
 .source-session-list {
   position: relative;
   flex: 1;
@@ -181,7 +167,6 @@
 .source-session-group:hover .source-group-caret,
 .source-group-toggle:focus-visible .source-group-caret { opacity: 1; }
 .source-group-actions { display: flex; align-items: center; flex-shrink: 0; gap: 4px; }
-.source-group-actions > .code-icon-button { width: 24px; height: 24px; }
 .source-sidebar[data-code-list] .source-group-heading {
   padding-inline-start: calc(var(--df-row-px) + var(--df-iconless-pad, calc((var(--df-leading-slot) - var(--df-icon-size)) / 2)));
 }
@@ -205,7 +190,11 @@
 .source-session-row:is(:hover, :has(:focus-visible), [data-menu-open]) .source-session-name {
   mask-image: linear-gradient(to right, black calc(100% - 44px), transparent calc(100% - 20px));
 }
-.source-session-more.code-icon-button {
+/* W14-code r3 fr3-01: the Chat / Cowork row's More is ToolButton, the CDS ghost iconOnly Button (shared-frame-6jtSkIit ju
+   ghost `bg-transparent group-hover/btn:bg-fill-ghost-hover group-[[aria-haspopup][aria-expanded=true]]/btn:bg-fill-ghost-hover`
+   on its paint layer only), so it no longer carries .code-icon-button's second root wash; this rule only places it
+   (two classes, as before, so it still outranks the Button's own w-control / aspect-square utilities). */
+.source-session-row .source-session-more {
   position: absolute;
   right: calc((var(--df-row-h) - var(--df-row-ctl)) / 2);
   top: 50%;
@@ -216,10 +205,8 @@
   opacity: 0;
   pointer-events: none;
 }
-.source-sidebar[data-code-list] .source-session-more.code-icon-button {
-  right: auto;
-  inset-inline-end: var(--df-row-ctl-inset, calc((var(--df-row-h) - var(--df-row-ctl)) / 2));
-}
+/* W14-code r3 fr3-06 / R3DC-02 / css3-dead-rules ②: the [data-code-list] More rule is gone; data-code-list is set only
+   in Code (source-sidebar.jsx), whose row More is .source-current-session-more, so it never matched. */
 .source-session-row:hover .source-session-more,
 .source-session-row:has(:focus-visible) .source-session-more,
 .source-session-row[data-menu-open] .source-session-more {
@@ -303,60 +290,19 @@
 }
 /* Family rows are indented by padding on the row itself; the keycap follows the leading slot. */
 .source-nested.df-family > .source-session-row { --source-jump-shift: calc(var(--df-group-indent, 0px) + 20px); }
-.source-empty-group,
-.source-sidebar-no-match {
+.source-empty-group {
   margin: 0;
   padding: 8px 12px;
   font-size: 12px;
   color: var(--cds-text-muted);
 }
-/* Local: remembered sessions kept out of the list (session-engine-model). */
-.source-sidebar-hidden-notice { line-height: 16px; overflow-wrap: anywhere; }
+/* Local: remembered sessions kept out of the list (session-engine-model); spacing and type are UC's utilities. */
+.source-sidebar-hidden-notice { overflow-wrap: anywhere; }
 .source-sidebar-hidden-notice p { margin: 0; }
 .source-sidebar-hidden-actions { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 4px; }
 .source-sidebar-hidden-action { border: 0; background: transparent; padding: 0; font: inherit; color: var(--cds-text-secondary, inherit); text-decoration: underline; text-underline-offset: 2px; border-radius: 2px; }
 .source-sidebar-hidden-action:hover { color: var(--cds-text-primary, inherit); }
 .source-sidebar-hidden-action:focus-visible { outline: none; box-shadow: var(--cds-focus-shadow); }
-/* sidebar-groups.js:7721-7760 OO. filtered: flex flex-col items-center gap-2
-   px-4 py-6 text-center; no-sessions: flex h-full min-h-[200px] select-none
-   flex-col items-center justify-center gap-4 px-4 pb-10 text-center. The
-   source header sits outside the eO scroller (sidebar-rows.js:7948-7955) while
-   the local heading row is inside the nav, so the nav becomes a column only in
-   the no-sessions state and the block fills the rest (h-full equivalent)
-   instead of overflowing the scroller by the heading height. */
-.source-sidebar-empty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  padding: 24px 16px;
-  text-align: center;
-}
-.source-session-list:has(> .source-sidebar-empty[data-empty-variant="no-sessions"]) { display: flex; flex-direction: column; }
-.source-sidebar-empty[data-empty-variant="no-sessions"] {
-  flex: 1 0 auto;
-  min-height: 200px;
-  justify-content: center;
-  gap: 16px;
-  padding: 0 16px 40px;
-  user-select: none;
-}
-.source-sidebar-empty-text {
-  margin: 0;
-  font-size: var(--cds-font-size-footnote);
-  line-height: var(--cds-leading-footnote);
-  color: var(--cds-text-muted);
-}
-/* OO "Show all sessions": text-footnote text-secondary underline-offset-2
-   hover:text-primary hover:underline hide-focus-ring focus-visible:shadow-focus. */
-.source-sidebar-show-all {
-  font-size: var(--cds-font-size-footnote);
-  line-height: var(--cds-leading-footnote);
-  color: var(--cds-text-secondary);
-  text-underline-offset: 2px;
-}
-.source-sidebar-show-all:hover { color: var(--cds-text-primary); text-decoration-line: underline; }
-.source-sidebar .source-sidebar-show-all:focus-visible { outline: none; box-shadow: var(--cds-focus-shadow); }
 .source-create-group {
   display: flex;
   align-items: center;
@@ -476,24 +422,24 @@ html[data-reduce-motion="true"] .source-group-caret { transition: none; }
 .source-sidebar:not([data-code-list]) .df-session-list { --df-iconless-pad: 10px; }
 /* The Older bucket overflow button (bulk results are toasts, F08):
    opacity 0 → 60% on label-row hover/focus-within → 100% on hover/expanded. */
-.source-group-actions > .source-older-menu.code-icon-button {
+.source-group-actions > .source-older-menu {
   opacity: 0;
   transition: opacity var(--df-dur-fast, 120ms) var(--df-ease-out, ease-out);
 }
-.source-group-heading:hover .source-older-menu.code-icon-button,
-.source-group-heading:focus-within .source-older-menu.code-icon-button,
+.source-group-heading:hover .source-older-menu,
+.source-group-heading:focus-within .source-older-menu,
 /* R3-sections: the sections layout's headings are shared-18 uD label rows. */
-.source-sidebar [data-sidebar-group-label]:hover .source-older-menu.code-icon-button,
-.source-sidebar [data-sidebar-group-label]:focus-within .source-older-menu.code-icon-button { opacity: 0.6; }
-.source-group-actions > .source-older-menu.code-icon-button:hover,
-.source-group-actions > .source-older-menu.code-icon-button:focus-visible,
-.source-group-actions > .source-older-menu.code-icon-button[aria-expanded="true"] { opacity: 1; }
+.source-sidebar [data-sidebar-group-label]:hover .source-older-menu,
+.source-sidebar [data-sidebar-group-label]:focus-within .source-older-menu { opacity: 0.6; }
+.source-group-actions > .source-older-menu:hover,
+.source-group-actions > .source-older-menu:focus-visible,
+.source-group-actions > .source-older-menu[aria-expanded="true"] { opacity: 1; }
 /* Confirm dialogs: danger confirm button. */
 @media (prefers-reduced-motion: reduce) {
   .source-nested > .source-session-row::before, .source-nested > .source-session-row::after,
-  .source-group-actions > .source-older-menu.code-icon-button { transition: none; }
+  .source-group-actions > .source-older-menu { transition: none; }
 }
-html[data-reduce-motion="true"] .source-nested > .source-session-row::before, html[data-reduce-motion="true"] .source-nested > .source-session-row::after, html[data-reduce-motion="true"] .source-group-actions > .source-older-menu.code-icon-button { transition: none; }
+html[data-reduce-motion="true"] .source-nested > .source-session-row::before, html[data-reduce-motion="true"] .source-nested > .source-session-row::after, html[data-reduce-motion="true"] .source-group-actions > .source-older-menu { transition: none; }
 /* Custom group '+' (sidebar-groups.js:17392-17410 N in the code list): "opacity-0 transition-opacity
    duration-fast group-data-[focus-within]/section:opacity-100 group-data-[hover-within]/section:opacity-100
    touch:opacity-100 motion-reduce:transition-none" around cI (-my-1). */
@@ -508,57 +454,6 @@ html[data-reduce-motion="true"] .source-nested > .source-session-row::before, ht
 @media (hover: none) { .source-group-reveal { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .source-group-reveal { transition: none; } }
 html[data-reduce-motion="true"] .source-group-reveal { transition: none; }
-/* Bucket "Show {count} more" (sidebar-groups.js:7126-7135 kD/AD, VD
-   7177-7231; BD wrapper [overflow-anchor:none]): a row-height pill with row
-   padding/gap/font, text-muted → text-secondary with the row hover fill,
-   aria-disabled 70%; a leading-slot spacer aligns the label with row titles. */
-.source-show-more {
-  display: flex;
-  flex-shrink: 0;
-  align-items: center;
-  width: 100%;
-  min-width: 0;
-  height: var(--df-row-h);
-  padding: 0 var(--df-row-px);
-  gap: var(--df-row-gap);
-  border: 0;
-  border-radius: var(--df-radius-pill);
-  background: transparent;
-  font-size: var(--df-row-font);
-  font-weight: 400;
-  line-height: 20px;
-  text-align: left;
-  white-space: nowrap;
-  color: var(--cds-text-muted);
-  overflow-anchor: none;
-  outline: none;
-}
-.source-show-more:hover { background: var(--df-hover, var(--cds-alpha-1)); color: var(--cds-text-secondary); }
-.source-show-more:focus-visible { box-shadow: var(--source-focus-ring); }
-.source-show-more[aria-disabled="true"] { pointer-events: none; opacity: .7; }
-/* shared-21 V0: a held "Show less" (the open row is near the end) keeps its
-   tooltip reachable and drops the hover fill. */
-.source-show-more[aria-disabled="true"][data-held] { pointer-events: auto; }
-.source-show-more[data-held]:hover { background: transparent; color: var(--cds-text-muted); }
-/* shared-21 lK sidebar ErrorBoundary fallback: flex-1 min-h-0 flex flex-col
-   items-center justify-center gap-2 px-2 text-center; text-body text-secondary. */
-.source-sidebar-failed {
-  flex: 1 1 0%;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding-inline: 8px;
-  text-align: center;
-}
-.source-sidebar-failed-text {
-  margin: 0;
-  font-size: var(--cds-font-size-body);
-  line-height: var(--cds-leading-body);
-  color: var(--cds-text-secondary);
-}
 /* Row drag (shared-19 DY / LY, source-sidebar-drag.jsx). nx blockSelection + showCursor("grabbing") while a row is
    carried; custom group sections are the positioned box of their drop band (shared-22 SS De "relative isolate"). */
 html[data-sidebar-row-dragging],
@@ -567,32 +462,6 @@ html[data-sidebar-row-dragging] * { cursor: grabbing !important; -webkit-user-se
 /* shared-22 ZO: the empty Pinned list (group/section flex flex-col gap-px + df-pin-section-reveal from shared-styles,
    height 0 while data-stub) with the group header (nt) look. */
 .source-pinned-drop { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
-.source-pinned-drop-heading {
-  display: flex;
-  width: 100%;
-  align-items: center;
-  min-height: calc(var(--df-group-pt) + var(--df-row-h) - 8px + 4px);
-  padding: var(--df-group-pt) 1px 4px 12px;
-  color: var(--cds-text-muted);
-  font-size: var(--df-group-font);
-  line-height: 16px;
-}
-/* LY np Badge (variant accent, size xs): the number of rows a multi-selection drag carries. */
-.source-drag-count {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 16px;
-  height: 16px;
-  padding: 0 4px;
-  border-radius: 999px;
-  background: var(--cds-fill-accent);
-  color: var(--cds-on-accent, #fff);
-  font-size: 11px;
-  font-weight: 500;
-  line-height: 16px;
-  font-variant-numeric: tabular-nums;
-}
 /* 2.37337.1: the imported df-session-list rules own Code row geometry and
    the single family guide. Retire the old per-child L-shaped guides. */
 .source-sidebar[data-code-list] .source-nested > .source-session-row::before,

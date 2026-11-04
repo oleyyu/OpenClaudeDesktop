@@ -66,7 +66,9 @@ const loose = official.looseFeature;
 // Globals the original code reads from the host page.
 const hostGlobals = new Set(['performance', 'queueMicrotask', 'globalThis', 'Set', 'WeakMap', 'WeakSet', 'Date', 'Infinity',
   // shared-25 vv reads it only behind `typeof window < "u"`.
-  'window']);
+  'window',
+  // c227f4d5e uD's 400ms reveal timer and the click guard's weak document / event references (reveal-guard.mjs).
+  'setTimeout', 'clearTimeout', 'WeakRef']);
 // Emitted in dependency order; `exports` maps original local binding -> exported name (its keys are the roots), or
 // `byExport` names the roots by the chunk's export alias. `internal: true` allows roots the chunk does not export (A's
 // helpers are private to c9ed5627b); `alsoExports` adds such private roots (local -> exported name) to a byExport module.
@@ -116,6 +118,19 @@ const modules = [
       D: ['new WeakMap()'], it: [loose('place: t'), loose('onLeft: n'), loose('(n(e), null)')],
       nt: [loose('n.at === e.target'), '!e.repeat', loose('!(e.metaKey || e.ctrlKey || e.altKey)'), '>= 400'],
       rt: [loose('(t && (n.picked = !0), !0)')] } },
+  // W14-code r4 R4T-08i (review 补做): the inline approval host's reveal click guard. c96d752d0 tke imports
+  // c227f4d5e `Hc as Ng` (uD) and `zc as mpe` (ED) and spreads `mpe(Ng(key, !0))` on its outer div:
+  //   uD(key, nullSettled)  a key change starts a 400ms window (setTimeout) during which it returns false; a null key
+  //                         counts as settled when nullSettled.
+  //   ED(settled)           the outer div's capture handlers: inside the window wD swallows pointer clicks (a keyboard
+  //                         click, detail 0, passes) and arms a one-shot document listener on mousedown (vD / pD); once
+  //                         settled TD still swallows the click that a guarded press released within 100ms (fD / mD).
+  { target: 'reveal-guard.mjs', source: 'c227f4d5e-B-FYKrwT.js', byExport: { Hc: 'useRevealSettled', zc: 'revealClickGuard' },
+    features: { Hc: ['setTimeout(() => c(a), 400)', '(n && e === null) || s === a'], zc: [loose('return e ? TD : wD')],
+      wD: [loose('onClickCapture: xD'), loose('onMouseDownCapture: bD'), loose('onMouseUpCapture: CD')],
+      TD: [loose('onClickCapture: SD'), loose('onMouseUpCapture: CD')], fD: ['fD = 100'],
+      yD: ['e.nativeEvent.detail === 0'], vD: ['t.addEventListener("click", hD, !0)', 'releasedAt: null'],
+      hD: ['e.timeStamp - t <= fD'], dD: ['e.preventDefault()', 'e.stopPropagation()'] } },
 ];
 
 async function readSource(name, cache) {

@@ -1,8 +1,12 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { createTokenizer } from "../src/highlight-tokenizer.mjs";
-import { BUNDLED_LANGUAGE_IDS, HIGHLIGHT_LIMITS, normalizeLanguage, prepareHighlight, validateTokens, tokenCSS } from "../src/highlight-model.mjs";
-import { SUPPORTED_GRAMMARS, createGrammarLoader } from "../src/highlight-engine.mjs";
+import { HIGHLIGHT_LIMITS, normalizeLanguage, prepareHighlight, validateTokens, tokenCSS } from "../src/highlight-model.mjs";
+import { createGrammarLoader } from "../src/highlight-engine.mjs";
+// W14-code r4 closeout R4DC-N7: the test-only BUNDLED_LANGUAGE_IDS / SUPPORTED_GRAMMARS exports are gone; the tables they read.
+import { BUNDLED_LANGUAGES } from "../src/highlight-languages.mjs";
+import { grammarLoaders } from "../src/highlight-grammar-loaders.mjs";
+const BUNDLED_LANGUAGE_IDS = BUNDLED_LANGUAGES.map(([id]) => id), SUPPORTED_GRAMMARS = Object.keys(grammarLoaders);
 import { darkPalette } from "../src/highlight-themes.mjs";
 import { highlightKey } from "../src/highlight-model.mjs";
 import { normalizeColor } from "../src/highlight-tokenizer.mjs";

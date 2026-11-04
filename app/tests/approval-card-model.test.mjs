@@ -59,10 +59,10 @@ test("item headings follow the source per-tool copy (approval-current.js:14508-1
   assert.deepEqual(bash.context, []);
   // The item-less fallback keeps its local Working directory line.
   assert.deepEqual(approvalCardModel(command({ command: "ls", cwd: "/w" })).context.map(part => part.key), ["cwd"]);
-  // Without a description the generic title stays.
+  // V3-W14-approvals: without a description it is Bash's `action: "run"` with no meta (cc32965c2 Wh Bash).
   const plain = approvalCardModel(command({ command: "ls" }), { type: "commandExecution", command: "ls" });
-  assert.equal(plain.title, "Allow DeepSeek to run this command?");
-  assert.equal(plain.heading, undefined);
+  assert.equal(plain.title, "Allow DeepSeek to run?");
+  assert.deepEqual(plain.heading, { action: "run", meta: null });
 
   // DeepSeek subagent: "run an agent" + description and no detail at all (Task/Agent,
   // approval-current.js:14570-14579); the bridge's "<tool> <json>" command loses to the item.
@@ -99,8 +99,8 @@ test("item headings follow the source per-tool copy (approval-current.js:14508-1
   // MCP: "use tool (server)" + pretty JSON; any other tool: "use tool".
   const mcp = approvalCardModel(command({ command: "mcp__github__create_issue {}" }),
     { type: "mcpToolCall", server: "github", tool: "create_issue", arguments: { title: "Bug" } });
-  assert.equal(mcp.title, "Allow DeepSeek to use create_issue (github)?");
-  assert.deepEqual(mcp.heading, { action: "use create_issue (github)", meta: null });
+  assert.equal(mcp.title, "Allow DeepSeek to use create issue (github)?");
+  assert.deepEqual(mcp.heading, { action: "use create issue (github)", meta: null });
   assert.equal(mcp.detail.text, json({ title: "Bug" }));
   const other = approvalCardModel(command({ command: "send_message {}" }), { type: "dynamicToolCall", tool: "send_message", arguments: { to: "a1", text: "hi" } });
   assert.equal(other.title, "Allow DeepSeek to use send_message?");
@@ -110,8 +110,8 @@ test("item headings follow the source per-tool copy (approval-current.js:14508-1
   assert.equal(bare.detail, null);
   assert(!bare.context.some(part => part.key === "missing-detail"));
 
-  // No item: unchanged generic copy; stdin approvals keep theirs.
-  assert.equal(approvalCardModel(command({ command: "subagent {}" })).title, "Allow DeepSeek to run this command?");
+  // No item: Bash's "run" (V3-W14-approvals); stdin approvals keep theirs.
+  assert.equal(approvalCardModel(command({ command: "subagent {}" })).title, "Allow DeepSeek to run?");
   assert.equal(approvalCardModel(command({ command: "subagent {}" })).detail.text, "subagent {}");
   assert.match(approvalCardModel(command({ kind: "writeStdin" }), { type: "commandExecution", command: "cat", description: "Read input" }).title, /send input/);
 });
@@ -178,7 +178,7 @@ test("approvalAnnouncement follows pM (approval-current.js:14799-14905)", () => 
   assert.equal(approvalAnnouncement(agent), "Permission requested: run an agent, Say hello");
   // A headingless card announces its own phrase; a long detail is capped at 150 with ", truncated".
   const long = approvalCardModel(command({ command: "x".repeat(200) }));
-  assert.equal(approvalAnnouncement(long), `Permission requested: run this command. ${"x".repeat(150)}, truncated`);
+  assert.equal(approvalAnnouncement(long), `Permission requested: run. ${"x".repeat(150)}, truncated`);
   // The decision reason and the too-large sentence follow as extra blocks.
   const reasoned = approvalCardModel(file({ reason: "Needs workspace-write" }), { changes: [{ path: "/w/big.txt", kind: "add", diff: "x".repeat(200001) }] });
   assert.equal(approvalAnnouncement(reasoned), `Permission requested: write. /w/big.txt, big.txt. Needs workspace-write. ${PREVIEW_TOO_LARGE}`);
@@ -197,12 +197,13 @@ test("single-file change names the file: EM/SM 'Allow DeepSeek to {write|edit} {
   for (const changes of [[], [{ path: "a.ts", kind: "update" }, { path: "b.ts", kind: "update" }], [{ kind: { type: "add" } }], [{ path: " ", kind: "add" }]]) {
     const model = approvalCardModel(file({}), { changes });
     assert.equal(model.title, "Allow DeepSeek to edit files?");
-    assert.equal(model.heading, undefined);
+    // V3-W14-approvals: the same title as L's plain shape ("Allow Claude to <b>{action}</b>?").
+    assert.deepEqual(model.heading, { action: "edit files", meta: null });
     assert.equal(model.clampTitle, undefined);
   }
   assert.equal(approvalCardModel(file({ grantRoot: "/tmp" })).title, "Allow DeepSeek to edit files?");
-  assert.equal(approvalCardModel(command({ command: "true" })).title, "Allow DeepSeek to run this command?");
-  assert.equal(approvalCardModel(command({ command: "true" })).heading, undefined);
+  assert.equal(approvalCardModel(command({ command: "true" })).title, "Allow DeepSeek to run?");
+  assert.deepEqual(approvalCardModel(command({ command: "true" })).heading, { action: "run", meta: null });
   assert.equal(approvalCardModel(permissions({ permissions: {} })).title, "Allow DeepSeek to use these permissions?");
 });
 
@@ -334,15 +335,17 @@ test("Codex availableDecisions build the buttons: a prefix rule is 'Always allow
   const offered = ["accept", { acceptWithExecpolicyAmendment: { execpolicy_amendment: ["npm", "test"] } }, "cancel"];
   const model = approvalCardModel(command({ command: "npm test", availableDecisions: offered }));
   assert.deepEqual(model.allows.map(allow => allow.key), ["decision:1", "accept"]);
-  assert.equal(model.allows[0].label, "Always allow commands that start with “npm test”");
-  assert.match(model.allows[0].title, /every session and project/);
+  // V3-W14-approvals: cc32965c2 Sv pr "Always allow" (lr3QX/nctD), the S_ scope its tooltip, the prefix its description.
+  assert.equal(model.allows[0].label, "Always allow");
+  assert.equal(model.allows[0].title, "Saves to user settings (all projects)");
+  assert.equal(model.allows[0].description, "Commands that start with “npm test”");
   assert.equal(model.allows[0].persistent, true);
   assert.deepEqual(model.deny, { key: "cancel", label: "Deny", primary: false }, "decline isn't offered: Deny is cancel");
   // ⇧⌘↵ picks the persistent allow.
   assert.deepEqual(approvalKeyIntent(enter({ metaKey: true, shiftKey: true }), { target: "card", model }), { type: "action", action: "decision:1" });
   const host = approvalCardModel(command({ command: "curl x", availableDecisions: ["accept", "acceptForSession",
     { applyNetworkPolicyAmendment: { network_policy_amendment: { host: "registry.npmjs.org", action: "allow" } } }, "decline", "cancel"] }));
-  assert.deepEqual(host.allows.map(allow => [allow.key, allow.label]), [["decision:2", "Always allow registry.npmjs.org"], ["acceptForSession", "Allow for this session"], ["accept", "Allow once"]]);
+  assert.deepEqual(host.allows.map(allow => [allow.key, allow.label]), [["decision:2", "Always allow for this website"], ["acceptForSession", "Allow for this session"], ["accept", "Allow once"]]);
   assert.equal(host.deny.key, "decline");
   // No list (the bridges): the fixed set.
   assert.deepEqual(approvalCardModel(command({ command: "ls" })).allows.map(allow => allow.key), ["acceptForSession", "accept"]);
@@ -366,10 +369,12 @@ test("ZCode's dynamic workflow run: one card with the bridge's script summary an
   assert.equal(approvalCardModel(command({ command: "x" }), { type: "dynamicToolCall", tool: "Other", arguments: {} }).heading.action, "use Other");
 });
 
-test("preview site and dev server cards say the approval lasts for the session, and quote the server's name", () => {
+test("preview site cards offer Allow once / Always allow; dev server cards say the approval lasts for the session", () => {
   const request = (agentTool, extra = {}) => ({ method: "item/commandExecution/requestApproval", params: { threadId: "t", turnId: "", itemId: "i", cwd: "/w", codeDesktop: { agentTool }, ...extra } });
   const site = approvalCardModel(request({ kind: "preview-site", host: "example.org", url: "https://example.org/" }));
-  assert.deepEqual(site.allows.map((allow) => [allow.key, allow.label]), [["accept", "Allow for this session"]]);
+  // W14-code r4 r4pa-c11: cc32965c2 Wh browser:open_site + Sv — "Always allow" (persistent, ⇧⌘↵) and Allow once.
+  assert.deepEqual(site.allows.map((allow) => [allow.key, allow.label, allow.primary, !!allow.persistent]),
+    [["acceptForSession", "Always allow", false, true], ["accept", "Allow once", true, false]]);
   const server = approvalCardModel(request({ kind: "preview-server", name: "site" }, { command: "npm run dev" }));
   assert.deepEqual(server.allows.map((allow) => [allow.key, allow.label]), [["accept", "Allow for this session"]]);
   // 2.42304.0 c96d752d0 Kk preview_start: action "start" (zTylMMruGq) + meta name, clampTitle.
@@ -598,7 +603,10 @@ test("X7-16: the slot originals are generated from 3.6556.2 c9ed5627b / c6dc54e9
   assert.equal(inArea("wt=bo()&&ne!==void 0"), 1);
   assert.equal(inArea('Cn=Dt==="plan"||Dt==="computer_use_app_list"'), 1);
   const host = await fs.readFile(new URL("../src/source-approval-card.jsx", import.meta.url), "utf8");
-  assert.match(host, /export const APPROVAL_LANDING_FLAG = "__gb__1616707004";\nexport const APPROVAL_LANDING_ON = true;/);
+  // W14-code r4 gates-r4-05 (E81 / E95): the 3P desktop's Uon has no 1616707004, so the host reads it from its table (off).
+  assert.match(host, /export const APPROVAL_LANDING_FLAG = "__gb__1616707004";\nexport const APPROVAL_LANDING_ON = hostGrowthBookFlag\(APPROVAL_LANDING_FLAG\);/);
+  const { HOST_GROWTHBOOK } = await import("../src/host-growthbook.mjs");
+  assert.equal(Object.hasOwn(HOST_GROWTHBOOK, "__gb__1616707004"), false);
 });
 
 // ---- V3-w10-trans-approval-titles-host ------------------------------------------------------------------------------
@@ -696,19 +704,18 @@ test("titles-host SSR: the run_in_terminal card's title, tooltip and order; open
   const render = request => renderToStaticMarkup(React.createElement(card.SourceApprovalCardView, { request, armKey: "k", onAction: () => {} }));
   const terminal = render(agentTool({ kind: "terminal-command", tabTitle: "dev" }, { command: "npm run dev" }));
   // EFOijHTneN's no-meta shape wF6CuCZpBR: "Allow {name} to <b>{action}</b>?" with the <b> part span.text-primary.
-  assert.match(terminal, /<span data-clamp="">Allow DeepSeek to <span class="text-primary \[unicode-bidi:plaintext\]">run a command in your terminal<\/span>\?<\/span>/);
-  assert.equal(terminal.includes("sac-em"), false);
-  // Ie leads, then ie (the sr-only description), then the reason; the detail carries the description as its tooltip (le).
-  assert.match(terminal, /<div class="sac-content"><div id="[^"]+" class="sac-details" title="In “\/w”, in a tab named “dev”"><pre class="sac-code">npm run dev<\/pre><\/div><span data-testid="approval-hidden-sentence" class="sr-only select-none">In “\/w”, in a tab named “dev”<\/span><div class="sac-reason/);
+  assert.match(terminal, /<span class="line-clamp-2">Allow DeepSeek to <span class="text-primary \[unicode-bidi:plaintext\]">run a command in your terminal<\/span>\?<\/span>/);
+  // Ie leads, then ie (the sr-only description), then the reason; the detail value carries the description as its tooltip (le).
+  assert.ok(terminal.includes('<div class="flex flex-col gap-[12px]"><div class="flow-root"><div data-approval-value="" class="bg-alpha-1 rounded-[5px] py-md px-lg text-code text-secondary whitespace-pre-wrap break-words select-text [unicode-bidi:plaintext]" title="In “/w”, in a tab named “dev”">npm run dev</div></div><span data-testid="approval-hidden-sentence" class="sr-only select-none">In “/w”, in a tab named “dev”</span><div class="epitaxy-scroll-clamp'));
   const editor = render(agentTool({ kind: "open-path", action: "editor", path: "/w/src/app.js", editor: "Zed", line: 4 }));
   assert.match(editor, /Allow DeepSeek to <span class="text-primary \[unicode-bidi:plaintext\]">open<\/span> <span class="text-primary \[unicode-bidi:plaintext\]">app\.js<\/span>\?/);
   // j: so with w_ (ownProse), before the detail (We).
-  assert.match(editor, /<div class="sac-content"><div class="epitaxy-scroll-clamp scroll-fade-y focus-visible:outline-hidden focus-visible:shadow-focus text-body text-secondary select-text break-words \[unicode-bidi:plaintext\]">Opens in Zed at line 4\.<\/div><div id="[^"]+" class="sac-details"><pre class="sac-code">\/w\/src\/app\.js<\/pre><\/div><\/div>/);
+  assert.ok(editor.includes('<div class="flex flex-col gap-[12px]"><div class="epitaxy-scroll-clamp scroll-fade-y focus-visible:outline-hidden focus-visible:shadow-focus text-body text-secondary select-text break-words [unicode-bidi:plaintext]">Opens in Zed at line 4.</div><div class="flow-root"><div data-approval-value="" class="bg-alpha-1 rounded-[5px] py-md px-lg text-code text-secondary whitespace-pre-wrap break-words select-text [unicode-bidi:plaintext]">/w/src/app.js</div></div></div>'));
   // A value is text, never markup.
   const odd = render(agentTool({ kind: "open-path", action: "reveal", path: "/w/a<b>{action}.txt" }));
   assert.match(odd, /<span class="text-primary \[unicode-bidi:plaintext\]">a&lt;b&gt;\{action\}\.txt<\/span>\?/);
-  // Other headings keep their markup (core command cards: source-shortcut / approval-read-gate tests).
-  assert.match(render(agentTool({ kind: "preview-server", name: "web" }, { command: "npm run dev" })), /Allow DeepSeek to <span class="sac-em">start<\/span> <span class="sac-em">web<\/span>\?/);
+  // V3-W14-approvals: the host's own headings take the same rich messages.
+  assert.match(render(agentTool({ kind: "preview-server", name: "web" }, { command: "npm run dev" })), /Allow DeepSeek to <span class="text-primary \[unicode-bidi:plaintext\]">start<\/span> <span class="text-primary \[unicode-bidi:plaintext\]">web<\/span>\?/);
   const i18n = await import("../electron/i18n/index.mjs");
   const previous = i18n.getLocale();
   context.after(() => i18n.setLocale(previous));
@@ -719,5 +726,25 @@ test("titles-host SSR: the run_in_terminal card's title, tooltip and order; open
   context.after(() => ssrI18n.setLocale(ssrPrevious));
   ssrI18n.setLocale("zh-CN");
   assert.match(render(agentTool({ kind: "open-path", action: "editor", path: "/w/src/app.js", editor: "Zed", line: 4 })),
-    /<span data-clamp="">允许 DeepSeek <span class="text-primary \[unicode-bidi:plaintext\]">打开<\/span> <span class="text-primary \[unicode-bidi:plaintext\]">app\.js<\/span>？<\/span>/);
+    /<span class="line-clamp-2">允许 DeepSeek <span class="text-primary \[unicode-bidi:plaintext\]">打开<\/span> <span class="text-primary \[unicode-bidi:plaintext\]">app\.js<\/span>？<\/span>/);
+});
+
+// W14-code r6 r6pa-08: cc32965c2 `ur = q.suppressScopeTooltip || v || je || hn ? void 0 : (gn ?? "Don’t ask again for this
+// tool")` (AfvuXLj2mW) is pr's `{key:"always",…,tooltip:ur}`: an MCP tool approval's Always allow (Codex persist 'always')
+// has no saved scope, so its tooltip is that sentence (source-approval-card.jsx maps `title` to the button tooltip).
+test("r6pa-08: an MCP tool call's Always allow carries Don’t ask again for this tool; a plain confirm does not", async () => {
+  const request = (meta) => ({ id: 3, method: "mcpServer/elicitation/request", bridgeApproval: { connectionId: "c", instanceId: "i" },
+    params: { threadId: "t", turnId: "u", serverName: "probe", mode: "form", message: 'Allow the probe MCP server to run tool "x"?',
+      requestedSchema: { type: "object", properties: {} }, _meta: { persist: ["session", "always"], ...meta } } });
+  const tool = approvalCardModel(request({ codex_approval_kind: "mcp_tool_call", tool_params: {} }));
+  const always = tool.allows.find(allow => allow.key === "acceptAlways");
+  assert.equal(always.label, "Always allow");
+  assert.equal(always.title, "Don’t ask again for this tool");
+  const confirm = approvalCardModel(request({}));
+  assert.equal(confirm.allows.find(allow => allow.key === "acceptAlways").title, undefined);
+  const { readFile } = await import("node:fs/promises");
+  const card = await readFile(new URL("../src/source-approval-card.jsx", import.meta.url), "utf8");
+  assert.ok(card.includes("...(action.title ? { tooltip: action.title } : null)"));
+  const official = await officialChunk("cc32965c2-BQu1bA_w.js");
+  assert.ok(official.includes('ur=q.suppressScopeTooltip||v||je||hn?void 0:gn??tt.formatMessage({defaultMessage:"Don\\u2019t ask again for this tool",id:"AfvuXLj2mW"})'));
 });

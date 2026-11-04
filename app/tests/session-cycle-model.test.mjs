@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import path from 'node:path';
-import { CYCLE_REPEAT_MS, SESSION_CYCLE_ALT_ARROW, SIDEBAR_CYCLE_LIST, createSessionCycler, sessionCycleDelta, sidebarCycleButtons } from '../src/session-cycle-model.mjs';
+import { SESSION_CYCLE_ALT_ARROW, SIDEBAR_CYCLE_LIST, createSessionCycler, sidebarCycleButtons } from '../src/session-cycle-model.mjs';
 import { connectSessionCycleGroups, sessionCycleGroupStore } from '../src/session-cycle-adapters.mjs';
 import { cycleBlockedByFocus, isCycleModifierKey, sessionCycleChord, sessionCycleRepeatMs, cycleComposerSelector, cycleListboxSelector } from '../src/generated/code-current/session-cycle-chords.mjs';
 import { cycleButtonForRowKey, cycleExpandsGroupAttribute, cycleNeighbourButton, cycleResumePosition, cycleRowKey, expandCycleGroup, openCycleButton, recentsCycleButtons, rowAliasAttribute } from '../src/generated/code-current/session-cycle-rows.mjs';
@@ -139,7 +139,7 @@ test('the cycle pieces are 3.6556.2 originals (the step fragment 2.42304.0): man
   const rows = readFileSync(path.join(generated, 'session-cycle-rows.mjs'), 'utf8');
   assert.match(rows, /import \{ flushSync as c \} from "react-dom";/);
   assert.match(rows, /import \{ sessionCycleGroupStore as X \} from "\.\.\/\.\.\/session-cycle-adapters\.mjs";/);
-  assert.equal(sessionCycleRepeatMs, 50); assert.equal(CYCLE_REPEAT_MS, 50);
+  assert.equal(sessionCycleRepeatMs, 50);
   assert.equal(rowAliasAttribute, 'data-row-alias-of'); assert.equal(cycleExpandsGroupAttribute, 'data-cycle-expands-group');
   assert.equal(cycleComposerSelector, '[data-testid="chat-input"],[data-testid="code-prompt-input"]');
   assert.equal(cycleListboxSelector, 'select,[role="combobox"],[role="listbox"],[role="application"]');
@@ -175,15 +175,13 @@ test('am: ⌘⇧] / ⌘⇧[ by key code on macOS (Ctrl+Shift elsewhere), Ctrl+Ta
   assert.deepEqual(sessionCycleChord(CTRL_TAB, true), { dir: 1, chord: 'ctrl_tab' });
   for (const name of ['Control', 'Meta', 'Alt']) assert.equal(isCycleModifierKey(key({ key: name })), true, name);
   assert.equal(isCycleModifierKey(key({ key: 'Shift' })), false);
-  assert.equal(SESSION_CYCLE_ALT_ARROW, true, 'host gate for shared-16 Up()');
+  // W14-code r4 gates-r4-09 (E81 / E95 over D41): __gb__1817753866 is not in Uon (asar jPKPzV-P), so the 3P desktop
+  // answers shared-16 Up() / 3.6556.2 Tg() off and ⌥↑ / ⌥↓ do not cycle sessions; the host table does not list it.
+  assert.equal(SESSION_CYCLE_ALT_ARROW, false, 'host gate for shared-16 Up(): off, as Uon');
 });
 
-test('sessionCycleDelta is am`s macOS form without ⌥ (the chords the Keyboard shortcuts dialog lists)', () => {
-  onMac(true); globalThis.document = documentOf(h('body'));
-  for (const event of [NEXT, PREV, CTRL_TAB, CTRL_SHIFT_TAB, { ...NEXT, key: '}' }, ALT_DOWN, { ...NEXT, altKey: true }, { ...NEXT, ctrlKey: true }, { ...CTRL_TAB, metaKey: true }, key({ key: 'Tab' })])
-    assert.equal(sessionCycleDelta(event), sessionCycleChord(event, false)?.dir ?? 0, JSON.stringify(event));
-  assert.equal(sessionCycleDelta(undefined), 0);
-});
+// W14-code r4 gen-final-4: the test-only sessionCycleDelta / CYCLE_REPEAT_MS re-export are deleted (the cycler calls the
+// generated am, sessionCycleChord, directly).
 
 test('Yp: listboxes and selects keep every chord; text fields, menus and tabs keep ⌥↑↓; the composer only while its draft is not persisted or a popup claims the keys', () => {
   const select = h('select'), listbox = h('div', { role: 'listbox' }, h('div', { role: 'option' })), textarea = h('textarea'), tab = h('button', { role: 'tab' }), plain = h('div');

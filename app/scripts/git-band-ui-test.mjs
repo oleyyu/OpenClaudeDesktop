@@ -81,7 +81,7 @@ try{
  await page.locator('.loading-state').waitFor({state:'detached'});await page.evaluate(()=>document.fonts.ready);await page.mouse.move(700,160);
 
  step('band');
- assert.equal(await page.locator('nav.sg-status').count(),0,'rail mode hides the band (main.jsx railHidesBand)');
+ assert.equal(await page.locator('nav:has(> .scroll-fade-y)').count(),0,'rail mode hides the band (main.jsx railHidesBand)');
  // DiffCounts animates its counts (400ms, off under reduced motion); wait for the settled values.
  await poll(async()=>await row.locator('.text-git-added').textContent()==='+2'&&await row.locator('.text-git-removed').textContent()==='−1','rail Changes row settles on +2 −1');
  assert.equal(await diff.getAttribute('aria-label'),'Open changes, 2 added, 1 removed');
@@ -92,7 +92,7 @@ try{
  // F12 review (git-status-card.js:1116 `onMouseDown: Mn`): in the rail the Commit verb sits in changes-verb.mjs Qz
  // (PrActionFocusKeeper), whose span prevents the mouse down, so pressing Commit does not take focus from the composer.
  // The pointer is released away from the button, so no Commit turn is sent.
- step('commit-focus');const composer=page.getByRole('textbox',{name:'Message DeepSeek',exact:true});await composer.focus();
+ step('commit-focus');const composer=page.getByRole('textbox',{ name: /^(?:Prompt|Message DeepSeek)$/ });await composer.focus();
  assert.equal(await commit.isEnabled(),true,'Commit is enabled on the dirty idle session');const startsBeforeFocus=await turnStarts();
  const commitBox=await commit.boundingBox();await page.mouse.move(commitBox.x+commitBox.width/2,commitBox.y+commitBox.height/2);await page.mouse.down();
  report.metrics.commitMouseDown=await page.evaluate(()=>({onCommit:document.activeElement?.textContent==='Commit changes',tag:document.activeElement?.tagName??null}));
@@ -177,7 +177,7 @@ try{
  assert.equal(await clipboardText(),LONG);await shot('copy-branch-toast');await neutral();
  report.checks.push("With the rail branch menu open no tooltip shows; Copy branch name writes the full branch and raises one toast 'Branch name copied to clipboard.'");
 
- step('running');await page.getByRole('textbox',{name:'Message DeepSeek',exact:true}).fill('fixture:hold');await page.locator('[data-testid="code-prompt-send"]:not([inert] *)').click();
+ step('running');await page.getByRole('textbox',{ name: /^(?:Prompt|Message DeepSeek)$/ }).fill('fixture:hold');await page.locator('[data-testid="code-prompt-send"]:not([inert] *)').click();
  await poll(async()=>await commit.isDisabled(),'Commit disabled while responding');await neutral();
  // view-tabs CdsDisabledReason (Uc): the wrapper carries data-cds-disabled-reason-wrapper, tabIndex 0 and aria-describedby →
  // the hidden [data-cds-disabled-reason] span (Yc) holding the reason.
@@ -187,7 +187,7 @@ try{
  report.checks.push('During a held turn the disabled rail Commit sits in the CdsDisabledReason wrapper (tabindex 0, aria-describedby → hidden data-cds-disabled-reason) and hovering shows the reason');
  await neutral();await row.locator('[data-cds-disabled-reason-wrapper]').focus();assert.equal(await page.evaluate(()=>document.activeElement?.hasAttribute('data-cds-disabled-reason-wrapper')),true);await tooltip(RESPONDING_REASON);
  report.checks.push(`Keyboard focus on the disabled rail Commit wrapper shows '${RESPONDING_REASON}'`);
- await page.mouse.move(700,160);await page.getByRole('textbox',{name:'Message DeepSeek',exact:true}).focus();
+ await page.mouse.move(700,160);await page.getByRole('textbox',{ name: /^(?:Prompt|Message DeepSeek)$/ }).focus();
 
  // F12 (git-status-card 4725/4912-4960): commit the work on the branch; the rail row keeps +2 −1 for the branch
  // (merge-base with origin/main) and Commit is disabled with 'No changes to commit' (clean tree wins over responding).
@@ -207,7 +207,7 @@ try{
  await filterMenu.waitFor({state:'detached'});await page.locator(`[data-source-session-id="${SESSION_ARCHIVED}"] .source-session-open`).click();
  await page.getByRole('button',{name:'Restore session',exact:true}).waitFor();await page.waitForTimeout(500);
  const startsBeforeArchived=await turnStarts();
- report.metrics.archivedRail={changesRows:await changesNav().locator('[data-rail-changes-row]').count(),band:await page.locator('nav.sg-status').count(),errorBanners:await page.locator('.composer-error').count(),turnStarts:await turnStarts()-startsBeforeArchived};
+ report.metrics.archivedRail={changesRows:await changesNav().locator('[data-rail-changes-row]').count(),band:await page.locator('nav:has(> .scroll-fade-y)').count(),errorBanners:await page.locator('.composer-error').count(),turnStarts:await turnStarts()-startsBeforeArchived};
  assert.deepEqual(report.metrics.archivedRail,{changesRows:0,band:0,errorBanners:0,turnStarts:0});await shot('archived-read-only');
  report.checks.push('An archived (read-only) session shows no rail Changes row and no band, so no Commit can be sent from it');
 

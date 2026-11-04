@@ -81,12 +81,13 @@ test('current field and folder markup retains source layout and accessible name/
   assert.match(html, /class="flex min-h-7 max-w-max min-w-0 flex-\[72_1_0%\] items-center gap-xs"/);
   assert.doesNotMatch(html, /max-w-\[72%\]|flex min-h-7 min-w-0 flex-1 items-center text-body/);
   assert.match(html, /Environment variables apply to every local session/);
-  assert.match(html, /footer data-align="between" class="sdlg-footer mt-0"/);
+  assert.match(html, /div class="sdlg-footer [^"]* sm:justify-between mt-0"/);
   assert.doesNotMatch(html, /Permission mode|icon picker/);
   assert.match(html, /placeholder="My app"/);
   const duplicate = renderToStaticMarkup(React.createElement(Form, { environments: [record, { ...record, id: 'other' }] }));
   assert.match(duplicate, /Another environment has this name/); assert.match(duplicate, /aria-invalid="true"/);
-  assert.match(duplicate, /disabled="" type="submit"/);
+  // W14-code r6 R6DC-02: CdsButton renders type before disabled.
+  assert.match(duplicate, /type="submit" disabled=""/);
 });
 
 test('editing a name, dirty dismissal, Keep editing and Save use the real dialog handlers', async () => {
@@ -224,7 +225,8 @@ test('ca690a791 fn: a repository row picks from its branches; Worktree keeps the
   let { branch, worktree } = controlsOf(f.tree, 'app').props;
   assert.deepEqual({ value: branch.value, pick: branch.pick, none: branch.none, branches: branch.branches, typed: branch.typed },
     { value: 'main', pick: 'starts-worktree', none: { branch: 'trunk', mark: 'default' }, branches: ['main', 'feature', 'trunk'], typed: false });
-  assert.deepEqual([branch.searchLabel, branch.emptyMessage, worktree.checked], ['Search branches…', 'No branches', true]);
+  // ca690a791 I / Ht: emptyMessage "No matching branches" (ueb6I/aqiQ).
+  assert.deepEqual([branch.searchLabel, branch.emptyMessage, worktree.checked], ['Search branches…', 'No matching branches', true]);
   worktree.onChange(false); f.render();
   ({ branch } = controlsOf(f.tree, 'app').props);
   assert.deepEqual([branch.pick, branch.none], ['switches-folder', { branch: 'feature', mark: 'current' }], 'unchecked: the folder switches from its checkout');

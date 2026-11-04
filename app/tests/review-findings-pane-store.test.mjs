@@ -19,7 +19,7 @@ const raw = file => fs.readFileSync(path.join(reference, file), 'utf8');
 const occurrences = (text, needle) => text.split(needle).length - 1;
 const h = React.createElement;
 
-let server, Card, Pane, Adapters, Session, Model, FixText;
+let server, Card, Pane, Adapters, Session, Model, FixText, Diff;
 before(async () => {
   // ws: false — no WebSocket server, so the test listens on no port.
   server = await createServer({ configFile: false, root: app, plugins: [react()],
@@ -28,6 +28,7 @@ before(async () => {
   Pane = await server.ssrLoadModule('/src/source-pane-review.jsx');
   Adapters = await server.ssrLoadModule('/src/source-review-findings-adapters.jsx');
   Session = await server.ssrLoadModule('/src/source-session.jsx');
+  Diff = await server.ssrLoadModule('/src/source-diff.jsx');
   Model = await server.ssrLoadModule('/src/review-findings-model.mjs');
   FixText = await server.ssrLoadModule('/src/generated/r4e-findings/fix-findings-text.mjs');
 });
@@ -323,7 +324,7 @@ function hostFor(sessionKey, calls) {
 }
 const paneOf = container => container.find(node => node.getAttribute?.('data-surface') === 'pane');
 const cardOf = container => container.find(node => node.getAttribute?.('data-cds') === 'FindingsCard');
-const barStatus = pane => visible(pane.find(node => node.getAttribute?.('class') === 'spr-status') ?? { textContent: '' });
+const barStatus = pane => visible(pane.find(node => node.getAttribute?.('class')?.split(' ')[0] === 'spr-status') ?? { textContent: '' });
 const slots = pane => pane.findAll(node => node.hasAttribute?.('data-review-finding'));
 const slotIds = pane => slots(pane).map(node => node.getAttribute('data-review-finding'));
 const currentSlot = pane => slots(pane).filter(node => node.find(child => child.getAttribute?.('tabindex') === '-1')?.getAttribute('aria-current') === 'true')
@@ -593,9 +594,12 @@ test('SourceFilePanel wiring (SSR): the Changes pane reads the store\'s current 
   Adapters.reviewFindingsStore.markReviewFindingsFixing(sessionKey, ['finding-rf-ssr-0']);
   const patch = 'diff --git a/src/a.js b/src/a.js\n--- a/src/a.js\n+++ b/src/a.js\n@@ -10,3 +10,4 @@\n ten\n eleven\n+twelve\n thirteen\n'
     + 'diff --git a/lib/b.js b/lib/b.js\n--- a/lib/b.js\n+++ b/lib/b.js\n@@ -1,3 +1,3 @@\n one\n two\n-three\n+3\n';
-  const html = renderToStaticMarkup(h(Session.SourceFilePanel, { sessionId: sessionKey, cwd: '/w', tab: 'changes', diff: patch,
-    review: { items, active: false, onSend: async () => true, onRerun: () => {} } }));
-  assert.match(html, /role="status" class="spr-status">Finding 3 of 3</);
+  // W14-code r6 pierre: with local_pierre_changes_body on, the body is c44d00c7f Ju and each card is drawn on the client
+  // in pierre's annotation slot (source-pane-review.jsx PierreReviewFindingCard over the same review; tests/w14-r6-pierre).
+  // This server render pins the host rows (the switch's rollback side), where the same cards sit under their lines.
+  const html = renderToStaticMarkup(h(Diff.PierreChangesBodyContext.Provider, { value: false }, h(Session.SourceFilePanel, { sessionId: sessionKey, cwd: '/w', tab: 'changes', diff: patch,
+    review: { items, active: false, onSend: async () => true, onRerun: () => {} } })));
+  assert.match(html, /role="status" class="spr-status [^"]*">Finding 3 of 3</);
   assert.match(html, /data-review-finding="finding-rf-ssr-2"><div class="px-md py-xs"><div tabindex="-1" aria-current="true"/);
   assert.match(html, /data-review-finding="finding-rf-ssr-0"><div class="px-md py-xs"><div tabindex="-1" class=/);
   const at = html.indexOf('data-review-finding="finding-rf-ssr-0"');

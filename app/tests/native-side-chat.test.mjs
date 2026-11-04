@@ -164,7 +164,7 @@ test('replacement forks recover visible side history exactly once and a clear st
 test('reconnection restores history after the read-only boundary even when inject_items is unsupported',async()=>{
  let client=fakeClient(),side=createNativeSideChat({getClient:()=>client,emit:()=>{}});
  const first=side.ask({threadId:'main',question:'q',history:[],requestId:'first'});await new Promise(r=>setImmediate(r));
- const rejected=assert.rejects(first,/connection closed/);side.observe({kind:'connection',connected:false});await rejected;
+ side.observe({kind:'connection',connected:false});assert.deepEqual(await first,{status:'not_connected'}); // r6-composer-06: cccc2cf0a SF not_connected
  client=fakeClient({injectFails:true});
  const next=side.ask({threadId:'main',question:'continue',history:[{question:'old question',answer:'old answer'}],requestId:'next'});await new Promise(r=>setImmediate(r));
  const text=client.calls.find(c=>c.method==='turn/start').params.input[0].text;

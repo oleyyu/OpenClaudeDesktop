@@ -64,7 +64,7 @@ async function idle(){await page.locator(`${TAIL}[${STATE}="idle"]`).waitFor({st
 async function jump(){const b=page.getByTestId('jump-to-latest');if(await b.getAttribute('data-visible')==='true')await b.click();return tail();}
 async function wheelUp(){const r=await page.locator('.transcript').boundingBox();await page.mouse.move(r.x+r.width/2,r.y+r.height/2);await page.mouse.wheel(0,-530);await poll(snapshot,s=>s.following==='false'&&s.remaining>200,'Wheel releases following');await stable();return snapshot();}
 async function sameAnchor(before,label){await frames();const after=await snapshot();assert.equal(after.following,'false',label+': following');assert.equal(after.anchor,before.anchor,label+': item');near(after.offset,before.offset,label+': offset',2);return after;}
-async function send(text){await page.getByRole('textbox',{name:'Message DeepSeek'}).fill(text);await page.locator('[data-testid="code-prompt-send"]:not([inert] *)').click();}
+async function send(text){await page.getByRole('textbox',{ name: /^(?:Prompt|Message DeepSeek)$/ }).fill(text);await page.locator('[data-testid="code-prompt-send"]:not([inert] *)').click();}
 async function store(){return JSON.parse(await fs.readFile(path.join(profile,'fixture-threads.json'),'utf8'));}
 async function turnState(id){const t=(await store()).threads[id].turns.at(-1);return {id:t.id,status:t.status,text:t.items.filter(item=>item.type==='agentMessage').map(item=>item.text).join('\n')};}
 async function shot(name){const file=path.join(directory,name+'.png');await within(page.screenshot({path:file,timeout:4000}),'Screenshot',4500);screenshots.push(file);}
@@ -249,7 +249,7 @@ async function stopIdentity(){
  await stop.waitFor({state:'detached'});
  const pendingSlot=await page.locator('.sc-submit-layer:not([data-leaving]) .sc-submit-slot button').evaluate(n=>({label:n.getAttribute('aria-label'),disabled:n.disabled,busy:n.getAttribute('aria-busy')}));
  assert.deepEqual(pendingSlot,{label:'Send',disabled:true,busy:null},'Pending interrupt shows the disabled Send glyph instead of Stop');
- await page.getByRole('textbox',{name:'Message DeepSeek'}).focus();await page.keyboard.press('Escape');await page.keyboard.press('Escape');
+ await page.getByRole('textbox',{ name: /^(?:Prompt|Message DeepSeek)$/ }).focus();await page.keyboard.press('Escape');await page.keyboard.press('Escape');
  await open(IDS.longB);await idle();await assertIdle();assert.doesNotMatch(await page.locator('.conversation').innerText(),/Stopping/);
  await poll(()=>turnState(IDS.longA),s=>s.status==='interrupted','Delayed real interruption');
  const trace=(await fs.readFile(path.join(profile,'fixture-interrupts.jsonl'),'utf8')).trim().split('\n').map(JSON.parse).filter(e=>e.threadId===IDS.longA&&e.turnId===active.id);

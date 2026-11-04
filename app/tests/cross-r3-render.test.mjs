@@ -9,7 +9,7 @@ createRequire(path.join(app, 'package.json'))('react-dom').createPortal = childr
 globalThis.innerWidth = 1200;
 // D21: source-session.jsx reaches the view-tabs graph (R2-topbar TT-07 attachment name), whose preload-helper calls
 // document.createElement("link") when it is evaluated, so the stub has one.
-globalThis.document ??= { body: { nodeType: 1, style: {} }, documentElement: { dataset: {}, style: {}, getAttribute: () => null }, createElement: () => ({}) };
+globalThis.document ??= { body: { nodeType: 1, style: {} }, documentElement: { dataset: {}, style: {}, getAttribute: () => null, hasAttribute: () => false /* W14-code r4 R4T-02: the question card's cb8c5a88f ii pulls shared-52, which reads it at load */ }, createElement: () => ({}) };
 let server, React, render, load;
 before(async () => {
   React = (await import('react')).default;

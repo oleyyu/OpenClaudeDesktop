@@ -1,8 +1,11 @@
 // ctx.requestApproval for OpenClaude Desktop's agent tools (agent-tools-host.cjs): asks the user in a sheet on the
 // window that shows the session (else the main window) and resolves true only for an explicit Allow. One question
 // at a time per window; a window that closes, or a quit, answers no. Copy goes through the app's i18n.
-//   request.kind "preview-site"     { host, url }                    an outside site in the preview
+//   request.kind "preview-site"     { host, url }                    an outside site in the preview; answers
+//                                   {approved, always} (Allow once / Always allow)
 //   request.kind "chrome-site"      { host, url }                    a site the Chrome tools act on (agent-tools/browser.mjs)
+//   request.kind "chrome-script"    { host, url, code }              a write script chrome_javascript_tool runs on a page;
+//                                   one longer than a sheet shows in full answers {approved: false, tooLong} unasked
 //   request.kind "preview-server"   { name, command, args, cwd, env } a .claude/launch.json dev server the agent starts
 //   request.kind "terminal-command" { title?, detail?, command, cwd } a command typed into a terminal tab
 //   request.kind "workflow"         { name, description, phases, args?, always? } a dynamic workflow the model starts
@@ -71,10 +74,14 @@ function approvalCopy(request = {}, { t, assistant, session = null }) {
     };
   }
   if (request.kind === "preview-site") {
+    // W14-code r5pa-11: the sheet says what the card says (cc32965c2 Wh browser:open_site overrideDescription, G2uuEyevXT)
+    // and offers its decisions, Allow once (this tab, until it leaves the site) and Always allow (saved on this device).
     return {
       message: t("Let {assistant} use {host} in the preview?", values),
-      detail: withSession(t("{assistant} will be able to read this site and click and type on it in this session. Only allow sites you trust.", values), session, t),
-      allow: t("Allow"),
+      detail: withSession(t("Allow once applies to this page only. Always allow saves on this device (revoke in Settings). {assistant} won’t purchase, create accounts, or bypass captchas without asking.", values), session, t),
+      allow: t("Allow once"),
+      always: t("Always allow"),
+      deny: t("Don’t allow"),
     };
   }
   if (request.kind === "chrome-site") {
@@ -82,6 +89,16 @@ function approvalCopy(request = {}, { t, assistant, session = null }) {
       message: t("Let {assistant} use {host} in Chrome?", values),
       detail: withSession(t("{assistant} will be able to read this site and click and type on it in Chrome in this session. Only allow sites you trust.", values), session, t),
       allow: t("Allow"),
+    };
+  }
+  if (request.kind === "chrome-script") {
+    // The whole script: requestApproval doesn't ask about one longer than NATIVE_SCRIPT_CHARS.
+    const code = typeof request.code === "string" ? request.code : "";
+    return {
+      message: t("Let {assistant} run a script on {host} in Chrome?", values),
+      detail: withSession([typeof request.url === "string" ? request.url : "", code,
+        t("The script runs in the page as you, like code typed into Chrome’s DevTools console: it can change the page, use the site’s cookies and send requests as you. Only allow scripts you understand.")].filter(Boolean).join("\n\n"), session, t),
+      allow: t("Allow once"),
     };
   }
   if (request.kind === "preview-server") {
@@ -159,16 +176,22 @@ function approvalCopy(request = {}, { t, assistant, session = null }) {
  * @param {(sessionId: string) => object|null} o.windowFor   the window to ask in
  * @param {(session: {id, cwd}, window: object|null) => ({title?: string, folder?: string, shown?: boolean}|null)} [o.describeSession]
  */
+// A sheet shows this much of a Chrome write script at most; the user approves only a script they could read whole (the
+// session's card shows up to 20000 characters, agent-tools/browser.mjs MAX_WRITE_CODE).
+const NATIVE_SCRIPT_CHARS = 4000;
+
 function createAgentToolApproval({ dialog, windowFor, t, assistant = () => "DeepSeek", describeSession = () => null }) {
   const queues = new WeakMap();
   return async function requestApproval(session, request = {}, { signal } = {}) {
-    const declined = request.kind === "workflow" ? { approved: false, always: false } : false;
+    const declined = request.kind === "workflow" || request.kind === "preview-site" ? { approved: false, always: false } : false;
     if (signal?.aborted) return declined;
+    if (request.kind === "chrome-script" && typeof request.code === "string" && request.code.length > NATIVE_SCRIPT_CHARS) return { approved: false, tooLong: NATIVE_SCRIPT_CHARS };
     const window = windowFor(session?.id);
     let about = null;
     try { about = describeSession(session, window && !window.isDestroyed?.() ? window : null); } catch { about = null; }
     const copy = approvalCopy(request, { t, assistant: assistant(), session: about });
-    // A workflow asks Yes / Yes, and don't ask again / No and answers {approved, always}; every other request a boolean.
+    // A workflow asks Yes / Yes, and don't ask again / No and a preview site Allow once / Always allow / Don't allow, both
+    // answering {approved, always}; every other request a boolean.
     const buttons = copy.always ? [copy.allow, copy.always, copy.deny] : [copy.allow, copy.deny ?? t("Don’t allow")];
     const ask = async () => {
       if (signal?.aborted) return declined;
@@ -176,7 +199,7 @@ function createAgentToolApproval({ dialog, windowFor, t, assistant = () => "Deep
       const { response } = window && !window.isDestroyed() ? await dialog.showMessageBox(window, options) : await dialog.showMessageBox(options);
       // A sheet the stopped turn closed is a No whatever it reports.
       if (signal?.aborted) return declined;
-      if (request.kind === "workflow") return { approved: response === 0 || (!!copy.always && response === 1), always: !!copy.always && response === 1 };
+      if (request.kind === "workflow" || request.kind === "preview-site") return { approved: response === 0 || (!!copy.always && response === 1), always: !!copy.always && response === 1 };
       return response === 0;
     };
     if (!window) return ask().catch(() => declined);
@@ -187,4 +210,4 @@ function createAgentToolApproval({ dialog, windowFor, t, assistant = () => "Deep
   };
 }
 
-module.exports = { createAgentToolApproval, approvalCopy, shellLine, launchEnvSummary };
+module.exports = { createAgentToolApproval, approvalCopy, shellLine, launchEnvSummary, NATIVE_SCRIPT_CHARS };

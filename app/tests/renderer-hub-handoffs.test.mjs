@@ -23,7 +23,7 @@ before(async () => {
   // D21: source-session.jsx reaches the view-tabs graph (R2-topbar TT-07 attachment name), whose preload-helper calls
   // document.createElement("link") when it is evaluated, so the stub has one.
   // The transcript rows' code themes (generated c5d464fa3, over shared-4 kf) read html[data-cds-*] when evaluated.
-  globalThis.document ??= { body: { nodeType: 1, style: {} }, documentElement: { dataset: {}, style: {}, getAttribute: () => null }, createElement: () => ({}) };
+  globalThis.document ??= { body: { nodeType: 1, style: {} }, documentElement: { dataset: {}, style: {}, getAttribute: () => null, hasAttribute: () => false /* W14-code r4 R4T-02: the question card's cb8c5a88f ii pulls shared-52, which reads it at load */ }, createElement: () => ({}) };
   const { createServer } = await import("vite"), react = (await import("@vitejs/plugin-react")).default;
   server = await createServer({ configFile: false, root, plugins: [react()], server: { middlewareMode: true, hmr: false, watch: null }, appType: "custom", logLevel: "error" });
   React = (await import("react")).default;
@@ -116,8 +116,8 @@ test("parallel MCP calls: the approval card shows the request's own call, never 
   assert.equal(elicitationItem(request, items)?.id, "a1", "arguments equal to _meta.tool_params pick the call");
   assert.deepEqual([...pendingElicitationItemIds([request], items)], ["a1"]);
   const model = approvalCardModel(request, approvalItem(request, items));
-  assert.match(model.title, /delete_branch \(git\)/);
-  assert.doesNotMatch(model.title, /list_branches/);
+  assert.match(model.title, /delete branch \(git\)/);
+  assert.doesNotMatch(model.title, /list.branches/);
   assert.deepEqual(model.detail?.value, { name: "main" });
 
   // Same tool twice with different arguments (templated params, no fallback wording): no item, the request's _meta wins.
@@ -139,7 +139,7 @@ test("parallel MCP calls: the approval card shows the request's own call, never 
   assert.equal(elicitationItem(ask({ tool_params: { branch: "main" } }), [items[0]])?.id, "a1");
   // A core that sends no _meta still borrows the lone item's heading and arguments.
   const lone = approvalCardModel(bare, elicitationItem(bare, [items[1]]));
-  assert.match(lone.title, /list_branches \(git\)/);
+  assert.match(lone.title, /list branches \(git\)/);
   assert.equal(lone.detail, null, "empty arguments show no detail");
 });
 
@@ -177,7 +177,9 @@ test("the handoff card wears the plan card: Stay in Plan, Implement in Manual, t
   assert.equal(session.planHandoffActions("bypass").right.at(-1).label, "Implement and auto mode");
   assert.equal(session.planHandoffActions("bypass", { bypass: true }).right.at(-1).label, "Implement and bypass permissions");
   const html = renderToStaticMarkup(React.createElement(session.SourcePlanHandoffCard, { handoffKey: "a:t1", target: "acceptEdits", onImplement() {}, onStay() {}, onOpenPlan() {} }));
-  assert.match(html, /class="source-message sac-card spc-card"/);
+  // V3-W14-approvals: the plan card's 3.6556.2 shell (c2d1aeb56 V, card presentation) and decision rows (cc32965c2 Fs).
+  assert.match(html, /class="source-message epitaxy-approval-card [^"]*epitaxy-card-outline"/);
+  assert.match(html, /data-cds="SplitDropdownButton" role="group" aria-label="Implement and allow edits"/);
   assert.match(html, /data-approval-kind="plan-handoff"/);
   assert.match(html, /Implement this plan\?/);
   assert.match(html, /Implement and allow edits/);

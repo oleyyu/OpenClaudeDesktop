@@ -30,21 +30,6 @@ export function contextThreshold(pct) {
   return pct >= CONTEXT_CRITICAL_PCT ? "danger" : pct >= CONTEXT_WARNING_PCT ? "warning" : "accent";
 }
 export const contextRingStroke = (pct) => `var(--cds-fill-${contextThreshold(pct)})`;
-// _d icon Xr trackStroke: an.alpha[2].cssVar.
-export const CONTEXT_RING_TRACK = "var(--cds-alpha-2)";
-// 3.6556.2 c227f4d5e B3 draws the ring at 14 (`y(_f,{pct:s,trackStroke:m,stroke:c,size:14})`); its track
-// (`m=l?"var(--cds-alpha-3)":"var(--cds-alpha-2)"`) is source-composer-row-chin.jsx USAGE_RING_ROW_TRACK / USAGE_RING_TRACK.
-// The svg itself is the generated shared-8 KV (generated/code-composer/usage-ring.mjs).
-export const CONTEXT_RING_ROW_SIZE = 14;
-
-// shared-14 xT: size yT 12, stroke bT 2, r=(size-stroke)/2, C=2πr,
-// dashoffset C·(1−clamp(pct,0,100)/100).
-export const CONTEXT_RING_SIZE = 12, CONTEXT_RING_STROKE = 2;
-export function contextRingGeometry(pct, size = CONTEXT_RING_SIZE) {
-  const radius = (size - CONTEXT_RING_STROKE) / 2, circumference = 2 * Math.PI * radius;
-  return { size, stroke: CONTEXT_RING_STROKE, center: size / 2, radius, circumference,
-    offset: circumference * (1 - Math.max(0, Math.min(100, pct)) / 100) };
-}
 
 // shared-14 ST(used, max, allowOver=false). hd passes allowOver only when the
 // fetched report is fresh and live contextTokens is null (l===null&&v?.stale===!1);
@@ -63,7 +48,7 @@ export function contextSummary(used, max, allowOver = false) {
 // last.totalTokens, max = modelContextWindow. fresh = the composer has no
 // session yet (sessionRef null); locally the draft/New composer.
 // plan: the core's plan-limit window (usage-model planUsageSummary top, from account/rateLimits/read and its
-// account/rateLimits/updated merges): { summary: hd fe ('{pct}% of 5-hour limit' / '{limit}: {pct}%'), resets: hd T,
+// account/rateLimits/updated merges): { summary: c227f4d5e F3 ('{pct}% of session limit' / '{limit}: {pct}%'), resets: hd T,
 // percent }. With it the tooltip detail is [fe, T] and, without context, the ring shows the plan percent (hd le).
 export function usageTriggerCopy(usage, { fresh = false, plan = null } = {}) {
   const used = usage?.last?.totalTokens;
@@ -98,16 +83,6 @@ export function usagePanelCopy(usage, { fresh = false } = {}) {
 // 'Available when Claude finishes this turn' (the agent here is DeepSeek); otherwise the action is enabled. The
 // 'Compacts automatically at {pct}%' hint (Cw) needs the core's auto-compact threshold, which is unknown locally.
 export const COMPACT_MIN_PCT = 50;
-// The 'Compacts automatically at {pct}%' threshold: a core that reports its auto-compact token limit (thread/tokenUsage
-// codeDesktop.autoCompactTokens) against the context window, else Codex's own rule (protocol openai_models.rs
-// auto_compact_token_limit: 90% of the context window unless config.toml lowers it), else unknown (null).
-export function autoCompactPercent(core, usage) {
-  const window = usage?.modelContextWindow;
-  const limit = usage?.codeDesktop?.autoCompactTokens;
-  if (Number.isFinite(limit) && limit > 0 && Number.isFinite(window) && window > 0) return Math.max(1, Math.min(100, Math.round((limit / window) * 100)));
-  const engine = typeof core === "string" ? core : core?.engine;
-  return engine === "codex" || (!engine && core?.id === "codex") ? 90 : null;
-}
 // The usage popover's compact hint (ca80fca8d aH/oH :21799-21842, shown by dH in the compact row): the tokens left
 // before the core compacts on its own. nH's limit is the core's reported auto-compact token limit
 // (codeDesktop.autoCompactTokens), else Codex's rule (90% of the window), else none. Below rH (30,000 tokens) the

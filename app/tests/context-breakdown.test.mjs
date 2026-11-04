@@ -5,7 +5,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import { buildContextUsageReport, estimateTokens, estimateJsonTokens, CONTEXT_CATEGORY_ORDER } from '../src/context-breakdown-model.mjs';
+import { buildContextUsageReport, CONTEXT_CATEGORY_ORDER } from '../src/context-breakdown-model.mjs';
 import { flattenContextUsage, isFreeSpaceCategory, isBufferCategory, isDeferredCategory } from '../src/generated/session-rail-context/context-usage-shape.mjs';
 
 const app = path.resolve(import.meta.dirname, '..');
@@ -94,14 +94,7 @@ test('Autocompact buffer = window − threshold; Free space = window − used �
   assert.equal(tokensOf(buildContextUsageReport({ totalTokens: 1, window: 100, autoCompactThreshold: 100 }), 'Autocompact buffer'), undefined);
 });
 
-test('estimates: ceil(chars / 4), JSON for schemas', () => {
-  assert.equal(estimateTokens(''), 0);
-  assert.equal(estimateTokens('abcd'), 1);
-  assert.equal(estimateTokens('abcde'), 2);
-  assert.equal(estimateTokens(undefined), 0);
-  assert.equal(estimateJsonTokens({ a: 1 }), 2);
-  assert.equal(estimateJsonTokens(undefined), 0);
-});
+// W14-code r5 cleanup R5DC-05: the test-only estimateTokens helper and its case are gone.
 
 test('generator: J and its chart kit are sliced; the breakdown adapter is gone', () => {
   const targets = manifest.modules.map((m) => m.target);

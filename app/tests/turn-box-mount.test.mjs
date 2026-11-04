@@ -284,7 +284,7 @@ test('TB-3 wiring: main.jsx mounts the slot in the Code transcript tail and the 
   // transcript and before the main composer.
   assert.ok(slot > main.indexOf('<SourceTranscript\n') && slot < main.indexOf('</SourceTranscript>'));
   assert.ok(slot < main.indexOf('{recap && <SourceRecapCard'));
-  assert.ok(region > main.indexOf('</SourceTranscript>') && region < main.indexOf('{renderMainComposer()}\n                {!current && mode === \'cowork\''));
+  assert.ok(region > main.indexOf('</SourceTranscript>') && region < main.indexOf(': renderMainComposer({ notices: true })}\n                {!current && mode === \'cowork\'') /* r4 shell */); // W14-code r2: yu stands in for an archived Code session
   assert.ok(main.includes('const turnBoxSession = useMemo(() => codeTurnBoxSession(current, mode), [current, mode]);'));
   assert.deepEqual(M.codeTurnBoxSession('P', 'code'), { id: 'P', type: 'local' });
   assert.equal(M.codeTurnBoxSession('P', 'cowork'), null);

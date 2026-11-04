@@ -1,6 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { beginTurnStats, createThinkingReader, elapsedTurnSeconds, formatOutputTokens, runtimeStatLabels, subscribeThinkingClock, subscribeTurnClock, thinkingChangeAt, thinkingLabel, thinkingState, turnActivity, turnActivityLabel, updateTurnUsage } from '../src/transcript-runtime-stats.mjs';
+import * as stats from '../src/transcript-runtime-stats.mjs';
+import { beginTurnStats, createThinkingReader, elapsedTurnSeconds, subscribeThinkingClock, subscribeTurnClock, thinkingChangeAt, thinkingLabel, thinkingState, turnActivity, updateTurnUsage } from '../src/transcript-runtime-stats.mjs';
+// W14-code r4 closeout R4DC-N7: the test-only turnActivityLabel export is gone; it was turnActivity's label.
+const turnActivityLabel = (turnId, items = [], phases = {}, seconds, thinking) => turnActivity(turnId, items, phases, seconds, thinking)?.label ?? null;
 import { emptyState, reduce } from '../src/state.js';
 import { usageTriggerCopy } from '../src/context-usage-model.mjs';
 
@@ -56,11 +59,9 @@ test('real reducer hydrate respects active version and never adopts a previous t
 test('source clock and labels use reported start, two-second threshold, duration format and compact token boundaries', () => {
   assert.equal(elapsedTurnSeconds(null, 5000), null); assert.equal(elapsedTurnSeconds(3, 2500), 0);
   assert.equal(elapsedTurnSeconds(3, 5299), 2);
-  assert.deepEqual(runtimeStatLabels(1, 287), []);
-  assert.deepEqual(runtimeStatLabels(43, 287), ['43s', '287 tokens']);
-  assert.deepEqual(runtimeStatLabels(3661, 0), ['1h 1m 1s']);
-  assert.deepEqual(runtimeStatLabels(61, null), ['1m 1s']);
-  for (const [n,label] of [[999,'999'],[1000,'1.0k'],[999950,'1.0M'],[1e6,'1.0M'],[999950000,'1.0B'],[1e9,'1.0B']]) assert.equal(formatOutputTokens(n), label);
+  // W14-code r8 gen-final-8: runtimeStatLabels / formatOutputTokens (the host side-chat .sts-stat) are gone; the side
+  // chat draws the generated WorkingLine (cccc2cf0a _F → c96d752d0 U6) with its own clock and token labels.
+  assert.equal(stats.runtimeStatLabels, undefined); assert.equal(stats.formatOutputTokens, undefined);
   const timers = new Map(); let now = 1300, next = 0, calls = 0;
   const host = { Date: { now: () => now }, setTimeout(fn, delay) { timers.set(++next,{fn,delay}); return next; }, clearTimeout(id) { timers.delete(id); } };
   const dispose = subscribeTurnClock(0, () => calls++, host);

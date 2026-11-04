@@ -2,8 +2,8 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   CONTEXT_MENU_ALIGN_OFFSET, CONTEXT_MENU_LAYER_OFFSET, CONTEXT_MENU_SIDE_OFFSET, NESTED_SIDE_OFFSET, ROOT_SIDE_OFFSET,
-  SAFE_POLYGON_LINGER, SAFE_POLYGON_MIN_SPEED, SUBMENU_CLOSE_DELAY, SUBMENU_HOVER_DELAY, TYPEAHEAD_TIMEOUT, collisionInsets,
-  digitIndex, formatShortcut, menuLayer, moveHighlight, nestedAnchor, normalizeShortcut, pendingRows, pointInPolygon,
+  SAFE_POLYGON_LINGER, SAFE_POLYGON_MIN_SPEED, SUBMENU_HOVER_DELAY, TYPEAHEAD_TIMEOUT, collisionInsets,
+  menuLayer, moveHighlight, nestedAnchor, normalizeShortcut, pendingRows, pointInPolygon,
   positionMenu, restoreDecision, safePolygonPoints, safePolygonStep, sheetBranch, skeletonPlan, typeaheadMatch, typeaheadState,
 } from "../src/menu-model.mjs";
 
@@ -32,13 +32,6 @@ test("type-ahead accumulates within 500ms and matches after the current row, wra
   assert.equal(typeaheadMatch(labels, -1, "p"), 2);
   assert.equal(typeaheadMatch(labels, 0, "x"), null);
   assert.equal(typeaheadMatch([], 0, "a"), null);
-});
-
-test("digit shortcuts target the row carrying that digit", () => {
-  assert.equal(digitIndex([1, 2, undefined, 3], "3"), 3);
-  assert.equal(digitIndex([1, 2], "5"), null);
-  assert.equal(digitIndex([1, 2], "0"), null);
-  assert.equal(digitIndex([1, 2], "Enter"), null);
 });
 
 test("close reason decides focus restoration (Id/Cg)", () => {
@@ -117,9 +110,8 @@ test("cursor-anchored context menu: Base UI positioner defaults sideOffset -5 an
   assert.equal(positionMenu({ anchor: cursor, size: { width: 200, height: 120 }, viewport }).left, 300, "no alignOffset by default");
 });
 
-test("submenu hover contract: 100ms open delay/rest, closeDelay 0, safe-polygon buffer, linger and resting speed", () => {
+test("submenu hover contract: 100ms open delay/rest, safe-polygon buffer, linger and resting speed", () => {
   assert.equal(SUBMENU_HOVER_DELAY, 100);
-  assert.equal(SUBMENU_CLOSE_DELAY, 0);
   assert.equal(SAFE_POLYGON_LINGER, 40);
   assert.equal(SAFE_POLYGON_MIN_SPEED, 0.1);
   assert.equal(pointInPolygon(5, 5, [[0, 0], [10, 0], [10, 10], [0, 10]]), true);
@@ -183,21 +175,6 @@ test("shortcuts normalize to aria-keyshortcuts and render platform caps", () => 
   assert.equal(normalizeShortcut("cmd+shift+f"), "Meta+Shift+F");
   assert.equal(normalizeShortcut("cmd+,"), "Meta+,");
   assert.equal(normalizeShortcut("escape"), "Escape");
-  // formatShortcut delegates to the CDS Shortcut caps (shortcut-model.mjs po/ho): io modifier order ⌃⌥⇧⌘,
-  // ⏎ for Enter, single letters upper-cased.
-  assert.equal(formatShortcut("cmd+shift+f"), "⇧ ⌘ F");
-  assert.equal(formatShortcut("Meta+Shift+F"), "⇧ ⌘ F");
-  assert.equal(formatShortcut("cmd+shift+d"), "⇧ ⌘ D");
-  assert.equal(formatShortcut("shift+alt+ctrl+k"), "⌃ ⌥ ⇧ K");
-  assert.equal(formatShortcut("Meta+,"), "⌘ ,");
-  assert.equal(formatShortcut("Meta+N"), "⌘ N");
-  assert.equal(formatShortcut("Shift+Enter"), "⇧ ⏎");
-  assert.equal(formatShortcut("Escape"), "Esc");
-  assert.equal(formatShortcut("3"), "3");
-  assert.equal(formatShortcut("p"), "P");
-  assert.equal(formatShortcut("cmd+k g"), "⌘ K then G");
-  assert.equal(formatShortcut("cmd+shift+f", false), "Ctrl Shift F");
-  assert.equal(formatShortcut(undefined), "");
 });
 
 test("pending skeleton plan follows yc rows and R_ retained height", () => {

@@ -86,7 +86,7 @@ test('W12b-TR-3: the Recap card body is OLe plain text (qE: secrets masked, whit
   const html = card({ status: 'done', text: '## Status\n\n- Fixed **the bug**\n- Next: `npm test`', at: 1 });
   // qE = JE: secrets masked (session-messages yl), invisible characters stripped (stripInvisible), whitespace collapsed to
   // one space: one plain line, the text's own characters kept (no Markdown rendering).
-  assert.match(html, /<p dir="auto" class="src-recap-body"><bdi>## Status - Fixed \*\*the bug\*\* - Next: `npm test`<\/bdi><\/p>/);
+  assert.match(html, /<p dir="auto" class="src-recap-body break-words p-3 text-footnote italic text-secondary"><bdi>## Status - Fixed \*\*the bug\*\* - Next: `npm test`<\/bdi><\/p>/);
   assert.doesNotMatch(html, /<h2|<ul|<li|<code|<strong|src-recap-markdown/);
   assert.match(html, /aria-label="Dismiss recap"/);
   const long = card({ status: 'done', text: 'word '.repeat(200) });

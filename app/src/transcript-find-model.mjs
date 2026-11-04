@@ -37,7 +37,10 @@ const BLOCK_TAGS = new Set(
 );
 // Spec F10: aria-hidden subtrees and visually hidden (sr-only) text are not
 // searchable; neither is a [hidden] subtree (vo's later visibility filter).
-const SR_ONLY_CLASSES = ["sr-only", "source-sr-only", "sp-sr-only"];
+// W14-code r5 css5-usage-popover: the usage popover title is c227f4d5e V3's own "sr-only" now (no sp-sr-only).
+// W14-code r5 cleanup css5-sr-only-handcopies: every host hand-copy (source-sr-only, cz-/sch-/spal-/smenu-/sua-/stf-/…)
+// is the official c6a992d55 `.sr-only` now, so that one class is the whole exclusion.
+const SR_ONLY_CLASSES = ["sr-only"];
 
 // shared-18 q: a lower-casing that keeps every UTF-16 index in place (U+0130
 // and U+03A3 fold one unit at a time; surrogate pairs are left as they are).

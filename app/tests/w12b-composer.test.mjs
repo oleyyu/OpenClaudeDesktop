@@ -44,6 +44,7 @@ const noop = () => {};
 
 // ---- queue row context menu --------------------------------------------------------------------------------------
 
+// W14-code r7 r7c-01: the queue rows are the original BE (generated/queued-bar), no longer the host's restatement.
 test('official BE: a row with menu items is a CdsContextMenu trigger, without items a plain div', () => {
   const chunk = official('cf74bc599-CRYqipWN.js');
   assert.equal(count(chunk, 's(te.Trigger,{ref:k,role:"listitem","aria-busy":Y,"data-take-back-entry":t.id,style:ce,className:q,children:se})'), 1);
@@ -51,24 +52,19 @@ test('official BE: a row with menu items is a CdsContextMenu trigger, without it
   assert.equal(count(chunk, 'u(te.Root,{onOpenChange:I,children:[le,X]})'), 1);
   assert.match(official('shared-frame-6jtSkIit.js'), /kA as qi\b/);
   assert.match(official('shared-frame-6jtSkIit.js'), /var kA=\{Root:EA,Trigger:K,Popup:TA,Item:GT\.Item,Separator:GT\.Separator/);
-  const source = local('src/source-queued-messages.jsx');
-  assert.match(source, /import \{ CdsContextMenu, CdsTextLink \} from "\.\/generated\/view-tabs\/shared-frame-6jtSkIit\.js";/);
-  assert.doesNotMatch(source, /generated\/view-tabs\/index\.js/, 'E41: the composer graph takes the concrete file');
-  assert.match(source, /<CdsContextMenu\.Root onOpenChange=\{setMenuOpen\}>\s*<CdsContextMenu\.Trigger \{\.\.\.rowProps\}>\{body\}<\/CdsContextMenu\.Trigger>/);
-  assert.match(source, /<QueuedMenuItems Menu=\{CdsContextMenu\}/);
-  assert.match(source, /<QueuedMenuItems Menu=\{SourceMenu\}/, 'the ⋮ menu lists the same items');
+  const generated = local('src/generated/queued-bar/queued-bar.mjs');
+  assert.match(generated, /CdsContextMenu as te,/);
+  assert.ok(generated.includes('s(te.Trigger, {') && generated.includes('u(te.Root, { onOpenChange: I, children: [le, X] })'));
+  assert.doesNotMatch(local('src/source-queued-messages.jsx'), /generated\/view-tabs\/index\.js/, 'E41: the composer graph takes no facade');
 });
 
-test('SSR: the context-menu row keeps the listitem attributes; a locked row stays a plain div', () => {
-  const entry = { id: 'q2', preview: 'second' };
-  const withMenu = renderToStaticMarkup(React.createElement(Q.Row, { entry, locked: false, onCancel: noop, onEdit: noop, sortable: false, anyDragging: false }));
-  assert.match(withMenu, /^<div[^>]*role="listitem"[^>]*data-take-back-entry="q2"/);
-  assert.match(withMenu, /class="sqm-item /);
-  assert.match(withMenu, /aria-label="Queued message actions"/);
-  assert.doesNotMatch(withMenu, /data-cds="ContextMenu"/, 'the popup is not rendered while closed');
-  const locked = renderToStaticMarkup(React.createElement(Q.Row, { entry, locked: true, sortable: false, anyDragging: false }));
-  assert.match(locked, /^<div role="listitem" aria-busy="true" data-take-back-entry="q2" class="sqm-item /);
-  assert.doesNotMatch(locked, /Queued message actions/);
+test('SSR: the expanded list rows are BE (listitem, take-back id, the ⋮ "Queued message actions")', () => {
+  // GE renders collapsed first; the rows' own markup is the generated BE (its listitem trigger and the ⋮ label).
+  const generated = local('src/generated/queued-bar/queued-bar.mjs');
+  assert.ok(generated.includes('role: "listitem",') && generated.includes('"data-take-back-entry": t.id,'));
+  assert.ok(/defaultMessage: "Queued message actions",\s+id: "BTu5Yx926X"/.test(generated));
+  const html = renderToStaticMarkup(React.createElement(Q.SourceQueuedMessages, { entries: [{ id: 'q1', preview: 'a', input: [] }, { id: 'q2', preview: 'second', input: [] }], onCancel: noop }));
+  assert.match(html, /<button type="button" aria-expanded="false"/);
 });
 
 // ---- Clear all --------------------------------------------------------------------------------------------------
@@ -78,9 +74,11 @@ test('official GE: Clear all is CdsTextLink, disabled unless some entry is unloc
   assert.equal(count(chunk, 's(G,{onClick:F,onMouseDown:uh,disabled:!N.includes(!1),className:"text-footnote text-danger",children:s(Q,{defaultMessage:"Clear all",id:"QW+Q5NHmeF"})})'), 1);
   assert.match(official('shared-frame-6jtSkIit.js'), /_f as hu\b/);
   assert.match(local('src/generated/view-tabs/shared-frame-6jtSkIit.js'), /_f as CdsTextLink\b/);
-  const source = local('src/source-queued-messages.jsx');
-  assert.match(source, /<CdsTextLink onClick=\{clearAll\} onMouseDown=\{stopMouseDown\} disabled=\{!entries\.some\(\(entry\) => !locked\(entry\.id\)\)\}\s*className="text-footnote text-danger">\{t\("Clear all"\)\}<\/CdsTextLink>/);
-  assert.doesNotMatch(source + local('src/source-queued-messages.css'), /sqm-clear/);
+  // W14-code r7 r7c-01: GE itself (generated/queued-bar) draws it.
+  const generated = local('src/generated/queued-bar/queued-bar.mjs');
+  assert.match(generated, /CdsTextLink as G,/);
+  assert.ok(generated.includes('disabled: !N.includes(!1),') && generated.includes('className: "text-footnote text-danger",'));
+  assert.doesNotMatch(local('src/source-queued-messages.jsx') + local('src/source-queued-messages.css'), /sqm-clear/);
   const off = renderToStaticMarkup(React.createElement(VT.CdsTextLink, { onClick: noop, disabled: true, className: 'text-footnote text-danger' }, 'Clear all'));
   // CdsLinkPrimitive (shared-frame qu) renders a disabled action as span role=button aria-disabled.
   assert.match(off, /^<span data-cds="TextLink" data-disabled="" role="button" tabindex="-1" aria-disabled="true" class="[^"]*cursor-default opacity-disabled text-footnote text-danger">Clear all<\/span>$/);
@@ -142,14 +140,16 @@ test('queuedBandStep follows Jfe: remember the lone entry, exit only when it lan
 });
 
 test('SSR: an exiting band carries epitaxy-band-exit and inert', () => {
-  const entry = { id: 'q1', preview: 'run the tests' };
+  const entry = { id: 'q1', preview: 'run the tests', input: [] };
+  // W14-code r7 r7c-01: VE's own band (`${Kv} ${a ? "epitaxy-band-exit" : ""}`, inert, onAnimationEnd) inside the
+  // composer column's .sqm-band layout hook.
   const exiting = renderToStaticMarkup(React.createElement(Q.SourceQueuedMessages, { entries: [entry], exiting: true, onExited: noop }));
-  assert.match(exiting, /^<div class="sqm-band epitaxy-band-enter epitaxy-band-exit" inert="" data-queued-messages="" data-count="1">/);
+  assert.match(exiting, /^<div class="sqm-band" data-queued-messages="" data-count="1"><div class="epitaxy-band-enter epitaxy-band-exit" inert="">/);
   const live = renderToStaticMarkup(React.createElement(Q.SourceQueuedMessages, { entries: [entry], onCancel: noop }));
-  assert.match(live, /^<div class="sqm-band epitaxy-band-enter" data-queued-messages="" data-count="1">/);
-  const source = local('src/source-queued-messages.jsx');
-  assert.match(source, /onAnimationEnd=\{exiting \? \(event\) => \{ if \(event\.target === event\.currentTarget\) onExited\?\.\(\); \} : undefined\}/);
-  assert.match(source, /export function useQueuedBandExit\(entries, scope, landed\)/);
+  assert.match(live, /^<div class="sqm-band" data-queued-messages="" data-count="1"><div class="epitaxy-band-enter ">/);
+  const generated = local('src/generated/queued-bar/queued-bar.mjs');
+  assert.ok(generated.includes('e.target === e.currentTarget && i?.();'));
+  assert.match(local('src/source-queued-messages.jsx'), /export function useQueuedBandExit\(entries, scope, landed\)/);
 });
 
 // ---- Mode menu Bypass Enable row ----------------------------------------------------------------------------------

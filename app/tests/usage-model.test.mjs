@@ -71,7 +71,7 @@ test('composer plan usage: fullest base window, hd tooltip copy, countdown and s
  const limits={rateLimitsByLimitId:{codex:{planType:'plus',primary:window(45),secondary:window(80,10080),credits:{hasCredits:true,unlimited:false,balance:'12'}},model:{limitName:'Fast',primary:window(99)}}};
  const summary=planUsageSummary(limits);
  assert.equal(summary.top.label,'This week','the separate model limit never names the ring');assert.equal(summary.plan,'Plus');assert.equal(summary.credit.balance,'12 credits');
- assert.equal(planWindowSummary(summary.windows[0]),'45% of 5-hour limit');assert.equal(planWindowSummary(summary.top),'This week: 80%');assert.equal(planWindowSummary(null),null);
+ assert.equal(planWindowSummary(summary.windows[0]),'45% of session limit');/* W14-code r8 r8c-03: c227f4d5e F3 R/GumoF8us */assert.equal(planWindowSummary(summary.top),'This week: 80%');assert.equal(planWindowSummary(null),null);
  const now=Date.UTC(2026,9,5,12,0,0)/1000;
  assert.equal(usageResetCountdown(now+59*60,300,{now:now*1000}),'Resets in 59 min');
  assert.equal(usageResetCountdown(now+125*60,300,{now:now*1000}),'Resets in 2 hr 5 min');
@@ -179,7 +179,7 @@ test('usage copy is core-neutral and translated',async()=>{
   assert.match(usageResetLabel(1790035200,300,'zh-CN',1790035200*1000-3600e3),/^.+ 重置$/);assert.match(usageResetLabel(1790035200,300,'zh-CN',1790035200*1000-3*86400e3),/^.+ 重置$/);
   assert.equal(creditDisplay({hasCredits:true,unlimited:false,balance:'1250'},'en-US').value,'1,250 额度');
   assert.equal(usageLimitNotice({rateLimits:{rateLimitReachedType:'workspace_owner_credits_depleted'}},'Codex').body,'你的工作区额度已用完。添加额度后才能继续使用 Codex。');
-  assert.equal(planWindowSummary({used:45,minutes:300,label:'当前会话'}),'已用 5 小时限额的 45%');
+  assert.equal(planWindowSummary({used:45,minutes:300,label:'当前会话'}),'已用会话限额的 45%');
   assert.equal(resetCreditsPresentation({availableCount:1,credits:null}).options[0].title,'完全重置');
  }finally{setLocale('en-US');setAssistantName('DeepSeek');}
 });

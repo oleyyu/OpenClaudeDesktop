@@ -1,8 +1,9 @@
-import React, { useEffect, useId, useLayoutEffect, useRef } from "react";
+import React, { useId, useLayoutEffect, useRef } from "react";
 import {
   FEED_INSTRUCTIONS, FEED_LABEL, articleLabel, currentArticleIndex, feedArticles, feedKeyAction,
   isStreamingArticle, plainEscape, responseHeading,
 } from "./transcript-feed-nav.mjs";
+import { landTranscriptFocus } from "./generated/code-current/transcript-focus-landing.mjs";
 
 // Claude 2.2553.1 scroll-messages-current.js N9 (:60985-61288) for the local
 // non-virtualized transcript. The rows are rendered by many components
@@ -52,7 +53,7 @@ function escapeOwnedElsewhere(article) {
   return document.querySelector(OPEN_POPUP) !== null;
 }
 
-export function useTranscriptFeedNav({ viewportRef, contentRef, api, responding = false, enabled = true, resolveMessage, onEscape }) {
+export function useTranscriptFeedNav({ viewportRef, contentRef, api, responding = false, enabled = true, resolveMessage, onEscape, landsFocus = false }) {
   const instructionsId = useId();
   const activeKey = useRef(null);
   const state = useRef({ articles: [], current: -1 });
@@ -60,8 +61,10 @@ export function useTranscriptFeedNav({ viewportRef, contentRef, api, responding 
   const headings = useRef(new Map()); // element -> h2
   const pointerDownAt = useRef(-Infinity);
   const pointerFocus = useRef(false);
+  // DC-07: c96d752d0's `se` — the last pointer press anywhere in the transcript (f6 skips a focus that follows one).
+  const anyPointerDownAt = useRef(-Infinity);
   const latest = useRef({});
-  latest.current = { responding, enabled, resolveMessage, onEscape, api };
+  latest.current = { responding, enabled, resolveMessage, onEscape, api, landsFocus };
 
   function clearRow(element) {
     element.removeAttribute(ARTICLE);
@@ -214,6 +217,14 @@ export function useTranscriptFeedNav({ viewportRef, contentRef, api, responding 
     // N9 L: focusing anything inside an article makes it the roving stop; a
     // focus that follows a pointer press within 500ms disarms the arrows.
     onFocus(event) {
+      // W14-code r2 DC-07 (Code): c96d752d0's transcript onFocus — `f6(e, {scroller: e.currentTarget, pointerDownAt:
+      // se.current, tabPresses: _?.current, isPinned: o, scrollToTail: i, setPinned: a ?? Kit})`: while the transcript
+      // follows its tail, a focus that comes in from outside onto something out of view goes to the tail's last visible
+      // article (generated/code-current/transcript-focus-landing.mjs). No Tab-press tracker here (tabPresses null).
+      const { api: scrollApi, landsFocus: lands } = latest.current;
+      if (lands && scrollApi?.isPinned && event.currentTarget === viewportRef.current)
+        landTranscriptFocus(event, { scroller: event.currentTarget, pointerDownAt: anyPointerDownAt.current, tabPresses: null,
+          isPinned: scrollApi.isPinned, scrollToTail: () => { scrollApi.jumpToLatest?.(); }, setPinned: (value) => { if (!value) scrollApi.release?.(); } });
       const target = event.target?.nodeType === 1 ? event.target : null;
       const article = target?.closest?.(`[${ARTICLE}]`);
       if (!article || !viewportRef.current?.contains(article)) return;
@@ -227,6 +238,7 @@ export function useTranscriptFeedNav({ viewportRef, contentRef, api, responding 
       }
     },
     onPointerDownCapture(event) {
+      anyPointerDownAt.current = performance.now();
       const target = event.target?.nodeType === 1 ? event.target : event.target?.parentElement;
       pointerDownAt.current = target?.closest?.('[role="article"]') ? performance.now() : -Infinity;
     },

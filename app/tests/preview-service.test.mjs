@@ -133,8 +133,9 @@ test('the partition denies permissions and downloads, and file loads outside the
   assert.deepEqual(await subresource('http://localhost:5173/api'), { cancel: false });
   assert.deepEqual(await subresource('https://evil.example.com/', 'mainFrame'), { cancel: false }, 'navigations have their own gate (holdOutside)');
   assert.match(entry.console.at(-1).text, /blocked a request to evil\.example\.com/);
-  entry.approvedHosts.add('api.example.com');
-  assert.deepEqual(await subresource('https://api.example.com/v1'), { cancel: false }, 'a site allowed in this session');
+  // W14-code r4 r4pa-c11: the tab's Allow once grant (siteGrant) replaced the session-wide approvedHosts.
+  entry.siteGrant = 'api.example.com';
+  assert.deepEqual(await subresource('https://api.example.com/v1'), { cancel: false }, 'a site this tab was allowed');
   entry.agentDriven = false;
   assert.equal(view.options.webPreferences.nodeIntegration, false);
   assert.equal(view.options.webPreferences.contextIsolation, true);
@@ -500,6 +501,9 @@ test('previewShortcut: the pane chords pressed inside the page (⇧⌘X Annotate
   assert.equal(previewShortcut({ ...press('w'), type: 'keyUp' }), null);
   assert.equal(previewShortcut({ ...press('w'), isAutoRepeat: true }), null);
   assert.equal(previewShortcut(press('w', { meta: false, control: false })), null);
+  // W14-code r2-shared-07: jPKPzV-P wli pQ(e,t,"r") — ⌘R inside the page reloads the preview, not the app.
+  assert.equal(previewShortcut(press('r')), 'reload');
+  assert.equal(previewShortcut(press('r', { shift: true })), null);
 });
 
 test('a .claude/launch.json written while the pane is open reaches it without reopening the pane', async (t) => {
@@ -900,7 +904,7 @@ test('main.cjs lets Settings › Keep cookies read and set the storage mode with
 });
 
 // B39 Allowed sites (2.31226.0 launchPreviewAllowedOrigins): sites saved from the dialog need no approval in any session;
-// removing one (or Clear all) drops the sessions' own approvals for it, so the agent asks again.
+// removing one (or Clear all) drops the tabs' Allow once grants for it (W14-code r4 r4pa-c11), so the agent asks again.
 test('Allowed sites: a saved site needs no approval; remove and Clear all ask again', async (t) => {
   const cwd = project(null);
   let saved = ['https://docs.example'];
@@ -924,7 +928,7 @@ test('Allowed sites: a saved site needs no approval; remove and Clear all ask ag
   assert.equal(await instance.call(sender, 'preview-allowed-origin-add', { origin: 'http://localhost:5173' }), 'loopback');
   assert.equal(await instance.call(sender, 'preview-allowed-origin-add', { origin: 'mailto:x@example.com' }), 'invalid');
   assert.deepEqual(saved, ['https://docs.example', 'https://news.example']);
-  // A site allowed for this session only, then saved: removing it from the list revokes both.
+  // A site allowed once (this tab, r4pa-c11), then saved: removing it from the list revokes both.
   await agent.navigate('https://shop.example/');
   assert.deepEqual(asked, ['shop.example']);
   assert.equal(await instance.call(sender, 'preview-allowed-origin-add', { origin: 'https://shop.example' }), 'ok');
@@ -933,12 +937,12 @@ test('Allowed sites: a saved site needs no approval; remove and Clear all ask ag
   answer = false;
   await assert.rejects(agent.navigate('https://shop.example/'), /didn’t allow opening shop\.example/);
   assert.deepEqual(asked, ['shop.example', 'shop.example'], 'asked again');
-  // Clear all empties the list and the session approvals.
+  // Clear all empties the list and the tabs' Allow once grants.
   answer = true;
   await agent.navigate('https://blog.example/');
   assert.equal(await instance.call(sender, 'preview-allowed-origins-clear', {}), true);
   assert.deepEqual(saved, []);
-  assert.equal(instance._previews.get('s1').group.approvedHosts.size, 0);
+  assert.equal(instance._previews.get('s1').siteGrant, null);
   assert.equal(held('https://news.example/'), true, 'a cleared site is held again');
 });
 
@@ -956,4 +960,194 @@ test('the New session page owns a preview by its folder', async (t) => {
   await instance.call(sender, 'preview-navigate', { sessionId: owner, url: 'https://example.com/' });
   assert.equal(instance.snapshot(owner).url, 'https://example.com/', 'the user browses without an agent or approval');
   await assert.rejects(instance.call(sender, 'preview-state', { sessionId: 'home:/elsewhere' }), /Unknown session/);
+});
+
+// W14-code r4 r4pa-c04 (E95): a main-frame load failure or a renderer crash puts 3.6556.2's data: error page (asar
+// index.chunk-jPKPzV-P.js Pdi / Idi) in the tab; the tab keeps the failed address, and Reload loads that address again.
+test('a failed load or a crash shows the official data: error page in the tab; Reload goes back to the address', async (t) => {
+  const { previewErrorPage, previewErrorPageHtml, previewPageAddress } = require('../electron/preview-service.cjs');
+  const cwd = project(null);
+  const { fake, instance } = service(cwd);
+  t.after(() => { instance.dispose(); fs.rmSync(cwd, { recursive: true, force: true }); });
+  const sender = fake.sender();
+  await instance.call(sender, 'preview-navigate', { sessionId: 's1', url: 'http://localhost:3000/app' });
+  const contents = instance._previews.get('s1').view.webContents;
+  contents.isLoadingMainFrame = () => false;
+  const page = () => decodeURIComponent(contents.getURL().slice('data:text/html;charset=utf-8,'.length));
+  // W14-code r5pa-02 (jPKPzV-P Bdi = 5): a local page is tried again five times before its error page shows.
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  for (let attempt = 0; attempt < 5; attempt += 1) contents.emit('did-fail-load', {}, -102, 'ERR_CONNECTION_REFUSED', 'http://localhost:3000/app', true);
+  assert.doesNotMatch(contents.getURL(), /^data:/);
+  contents.emit('did-fail-load', {}, -102, 'ERR_CONNECTION_REFUSED', 'http://localhost:3000/app', true);
+  assert.match(contents.getURL(), /^data:text\/html;charset=utf-8,/);
+  assert.match(page(), /<title>localhost:3000<\/title><\/head><body>\n  <div class="host">localhost:3000<\/div>\n  <div class="msg">This site can&#39;t be reached<\/div>\n  <div class="err">ERR_CONNECTION_REFUSED<\/div>\n<\/body><\/html><!-- \d+ -->$/);
+  let state = await instance.call(sender, 'preview-state', { sessionId: 's1' });
+  assert.equal(state.url, 'http://localhost:3000/app', 'the tab keeps the address that failed');
+  assert.equal(state.error.description, 'ERR_CONNECTION_REFUSED');
+  assert.equal(state.hasPage, true);
+  // A sub-frame failure or an aborted load (-3) leaves the page alone.
+  const shown = contents.getURL();
+  contents.emit('did-fail-load', {}, -102, 'ERR_CONNECTION_REFUSED', 'http://localhost:3000/frame', false);
+  contents.emit('did-fail-load', {}, -3, 'ERR_ABORTED', 'http://localhost:3000/other', true);
+  assert.equal(contents.getURL(), shown);
+  await instance.call(sender, 'preview-history', { sessionId: 's1', action: 'reload' });
+  assert.equal(contents.getURL(), 'http://localhost:3000/app');
+  state = await instance.call(sender, 'preview-state', { sessionId: 's1' });
+  assert.equal(state.url, 'http://localhost:3000/app');
+  // A crash (not a clean exit) shows "This page crashed" / "Reload to try again" once the page is idle.
+  contents.emit('render-process-gone', {}, { reason: 'crashed' });
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.match(page(), /<div class="msg">This page crashed<\/div>\n  <div class="err">Reload to try again<\/div>/);
+  assert.equal((await instance.call(sender, 'preview-state', { sessionId: 's1' })).url, 'http://localhost:3000/app');
+  await instance.call(sender, 'preview-history', { sessionId: 's1', action: 'reload' });
+  assert.equal(contents.getURL(), 'http://localhost:3000/app');
+  // Pdi escapes the host, message and error; Idi numbers each page; LF drops credentials; a file:// page gets none.
+  assert.match(previewErrorPageHtml('<a>', '"x"', "it's"), /<div class="host">&lt;a&gt;<\/div>\n  <div class="msg">it&#39;s<\/div>\n  <div class="err">&quot;x&quot;<\/div>/);
+  assert.notEqual(previewErrorPage('http://a.test/', 'E'), previewErrorPage('http://a.test/', 'E'));
+  assert.equal(previewPageAddress('http://user:pw@a.test/x'), 'http://a.test/x');
+  await instance.call(sender, 'preview-navigate', { sessionId: 's1', url: 'http://localhost:3000/next' });
+  const file = `file://${path.join(cwd, 'index.html')}`;
+  contents.emit('did-fail-load', {}, -6, 'ERR_FILE_NOT_FOUND', file, true);
+  assert.doesNotMatch(contents.getURL(), /^data:/);
+});
+
+// W14-code r5pa-02: 3.6556.2 asar index.chunk-jPKPzV-P.js did-fail-load (Bdi = 5, Vdi = 5e3, Hdi = 48) — a local page
+// that can't load is loaded again after min(1000·2^(n-1), 30000) ms, up to five times; while its launched server is
+// still starting and refuses the connection (-102) it is held (min(1000·2^m, 5000) ms) up to 48 times; once the server
+// it was held for is gone, or past the retries, the error page shows. A page that loads, or the user's reload, resets it.
+test('a local page that fails to load is retried with backoff, held while its server starts, then shows the error page', async (t) => {
+  const cwd = project(null);
+  const { fake, instance } = service(cwd);
+  t.after(() => { instance.dispose(); fs.rmSync(cwd, { recursive: true, force: true }); });
+  const sender = fake.sender();
+  await instance.call(sender, 'preview-navigate', { sessionId: 's1', url: 'http://localhost:3000/app' });
+  const entry = instance._previews.get('s1'), contents = entry.view.webContents;
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  const loads = [];
+  const load = contents.loadURL.bind(contents);
+  contents.loadURL = async (url) => { loads.push(url); return load(url); };
+  const fail = (code = -102, url = 'http://localhost:3000/app') => contents.emit('did-fail-load', {}, code, 'ERR_CONNECTION_REFUSED', url, true);
+  // Retries back off 1s, 2s, 4s…
+  fail();
+  assert.equal(entry.retryCount, 1);
+  t.mock.timers.tick(999);
+  assert.deepEqual(loads, []);
+  t.mock.timers.tick(1);
+  assert.deepEqual(loads, ['http://localhost:3000/app']);
+  fail();
+  assert.equal(entry.retryCount, 2);
+  t.mock.timers.tick(1999);
+  assert.equal(loads.length, 1);
+  t.mock.timers.tick(1);
+  assert.equal(loads.length, 2);
+  // The user's reload starts a fresh budget.
+  await instance.call(sender, 'preview-history', { sessionId: 's1', action: 'reload' });
+  assert.equal(entry.retryCount, 0);
+  // Held while the launched server is starting: it doesn't use up the five retries.
+  instance._servers.set('held', { cwd, port: 3000, status: 'starting' });
+  for (let attempt = 0; attempt < 10; attempt += 1) fail();
+  assert.equal(entry.heldRetries, 10);
+  assert.equal(entry.retryCount, 0);
+  assert.equal(entry.heldForUrl, 'http://localhost:3000/app');
+  assert.doesNotMatch(contents.getURL(), /^data:/);
+  // The server it was held for is gone: the error page shows at once.
+  instance._servers.delete('held');
+  fail();
+  assert.match(contents.getURL(), /^data:text\/html;charset=utf-8,/);
+  // An outside site isn't retried.
+  await instance.call(sender, 'preview-navigate', { sessionId: 's1', url: 'https://example.com/' });
+  contents.emit('did-fail-load', {}, -105, 'ERR_NAME_NOT_RESOLVED', 'https://example.com/', true);
+  assert.match(contents.getURL(), /^data:text\/html;charset=utf-8,/);
+});
+
+// W14-code r5 复核 (r5pa-02 回退修复): 3.6556.2 asar jPKPzV-P waitForLoad — on timeout it resolves
+// `n.isLoaded&&!n.loadFailed`, so a page still failing and being retried isn't reported to the model as shown
+// (agent-tools/preview.mjs navigate: "… failed to load: ERR_CONNECTION_REFUSED (-102)"); a slow page with no failure is.
+test('navigate reports a page still failing (being retried) as failed when the wait times out; a slow page stays ok', async (t) => {
+  const cwd = project(null);
+  const { instance } = service(cwd);
+  t.after(() => { instance.dispose(); fs.rmSync(cwd, { recursive: true, force: true }); });
+  const agent = instance.forSession({ id: 's1', cwd }, { requestApproval: async () => true });
+  await agent.navigate('http://localhost:3000/app');
+  const entry = instance._previews.get('s1'), contents = entry.view.webContents;
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  contents.loadURL = async () => { contents.emit('did-start-loading'); };
+  const flush = () => new Promise((resolve) => setImmediate(resolve));
+  // Refused, retried once (the reload hangs): the 30 s wait ends as a failure with Chromium's code and description.
+  let pending = agent.navigate('http://localhost:3000/app');
+  await flush();
+  contents.emit('did-fail-load', {}, -102, 'ERR_CONNECTION_REFUSED', 'http://localhost:3000/app', true);
+  assert.ok(entry.retryTimer);
+  t.mock.timers.tick(30000);
+  let result = await pending;
+  assert.equal(result.ok, false);
+  assert.equal(result.code, -102);
+  assert.equal(result.description, 'ERR_CONNECTION_REFUSED');
+  // Still waiting on a retry when the wait ends: also a failure.
+  pending = agent.navigate('http://localhost:3000/app');
+  await flush();
+  contents.emit('did-fail-load', {}, -102, 'ERR_CONNECTION_REFUSED', 'http://localhost:3000/app', true);
+  contents.emit('did-fail-load', {}, -102, 'ERR_CONNECTION_REFUSED', 'http://localhost:3000/app', true);
+  t.mock.timers.tick(30000);
+  result = await pending;
+  assert.equal(result.ok, false);
+  // A slow page that never failed: ok, slow (as before r5pa-02).
+  pending = agent.navigate('http://localhost:3000/app');
+  await flush();
+  t.mock.timers.tick(30000);
+  result = await pending;
+  assert.equal(result.ok, true);
+  assert.equal(result.slow, true);
+  // A retry that then loads: ok.
+  contents.loadURL = async () => { contents.emit('did-start-loading'); setImmediate(() => { contents.emit('did-finish-load'); contents.emit('did-stop-loading'); }); };
+  pending = agent.navigate('http://localhost:3000/app');
+  await flush();
+  contents.emit('did-fail-load', {}, -102, 'ERR_CONNECTION_REFUSED', 'http://localhost:3000/app', true);
+  t.mock.timers.tick(1000);
+  result = await pending;
+  assert.equal(result.ok, true);
+  assert.equal(result.slow, undefined);
+});
+
+// W14-code r4 r4pa-c11 (E95): 3.6556.2 browser:open_site (asar jPKPzV-P y2n `{allowed, always}`, cc32965c2 Wh allowInput
+// scope "once" / deviceSiteKeepInput scope "site"): Allow once lets this tab use the site until it leaves it; Always
+// allow saves it to the allowed sites (revocable in Settings); no session-wide grant is left behind.
+test('outside sites: Allow once lasts while the tab stays on the site; Always allow saves it; removing it revokes', async (t) => {
+  const cwd = project(null);
+  const fake = fakeElectron();
+  let saved = [];
+  const instance = createPreviewService({ ...worldOptions(world), electron: fake.electron, getSession: (id) => (id === 's1' || id === 's2' ? { id, cwd } : null),
+    spawnEnv: async () => ({ ...process.env }), logger: { warn() {} }, getAllowedOrigins: () => saved, setAllowedOrigins: async (list) => { saved = list; } });
+  t.after(() => { instance.dispose(); fs.rmSync(cwd, { recursive: true, force: true }); });
+  const asked = [];
+  let answer = true;
+  const agent = instance.forSession({ id: 's1', cwd }, { requestApproval: async (request) => { asked.push(request.host); return answer; } });
+  await agent.navigate('https://docs.example/a');
+  assert.deepEqual(asked, ['docs.example']);
+  await agent.navigate('https://docs.example/b');
+  assert.deepEqual(asked, ['docs.example'], 'the tab is still on the site: no new question');
+  assert.deepEqual(saved, [], 'Allow once saves nothing');
+  await agent.navigate('http://localhost:3000/');
+  await agent.navigate('https://docs.example/c');
+  assert.deepEqual(asked, ['docs.example', 'docs.example'], 'after leaving the site it asks again');
+  // Always allow ({approved, always}, main.cjs agentToolCard for acceptForSession): saved, and every session uses it unasked.
+  answer = { approved: true, always: true };
+  await agent.navigate('https://shop.example/x');
+  assert.deepEqual(saved, ['https://shop.example']);
+  await agent.navigate('http://localhost:3000/');
+  await agent.navigate('https://shop.example/y');
+  const other = instance.forSession({ id: 's2', cwd }, { requestApproval: async (request) => { asked.push(`s2:${request.host}`); return false; } });
+  await other.navigate('https://shop.example/z');
+  assert.deepEqual(asked, ['docs.example', 'docs.example', 'shop.example']);
+  // Settings › Allowed sites › Remove: the next use asks again (and the tab's own grant goes with it).
+  const sender = fake.sender();
+  assert.equal(await instance.call(sender, 'preview-allowed-origin-remove', { origin: 'https://shop.example' }), true);
+  assert.deepEqual(saved, []);
+  answer = false;
+  await assert.rejects(agent.navigate('https://shop.example/again'), /didn’t allow opening shop\.example/);
+  assert.equal(asked.at(-1), 'shop.example');
+  // A declined answer object is a decline.
+  answer = { approved: false, always: true };
+  await assert.rejects(agent.navigate('https://other.example/'), /didn’t allow opening other\.example/);
+  assert.deepEqual(saved, []);
 });

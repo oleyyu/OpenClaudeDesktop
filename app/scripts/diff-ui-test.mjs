@@ -106,7 +106,7 @@ try {
   await page.getByRole("button", { name: "Model", exact: true }).filter({ hasText: "Test model" }).waitFor();
   await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].setContentSize(1468, 852));
   await page.locator(`[data-source-session-id="${threadId}"] .source-session-open`).click();
-  await page.locator(".st-title").waitFor();
+  await page.locator(":is(.st-title,button[data-pane-title])").waitFor();
   await page.evaluate(() => document.fonts.ready);
   // R4i-gui GU1 (R4i-rail RL2): rail mode hides the band (main.jsx railHidesBand); the session's git row is the rail
   // Changes card's (changes-row.mjs OLe, data-rail-changes-row).

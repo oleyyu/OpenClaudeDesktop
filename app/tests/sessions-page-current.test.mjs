@@ -8,9 +8,10 @@ import {renderToStaticMarkup as renderServerMarkup} from 'react-dom/server';
 import {createServer} from 'vite';
 import react from '@vitejs/plugin-react';
 import {sessionsPageRoute,isSessionsPageRoute,replaceSessionsPageSurface,sessionsPageSearch,sessionsPageSurfaceFromHref,mirrorSessionsPageHistoryKey} from '../src/sessions-page-navigation.mjs';
-import {readSessionsPageSearch,rememberSessionsPageSearch,clearSessionsPageSearches,registerSessionsPageReset,sessionsPageAccountScope} from '../src/sessions-page-search-state.mjs';
+import {clearSessionsPageSearches,registerSessionsPageReset,sessionsPageAccountScope} from '../src/sessions-page-search-state.mjs';
 import {buildSidebarGroups} from '../src/sidebar-model.js';
-import {sessionPageRows,sessionPageRecords,sessionIdFromPageHref,sessionPageHref} from '../src/sessions-page-model.mjs';
+import {sessionPageRecords,sessionIdFromPageHref,sessionPageHref} from '../src/sessions-page-model.mjs';
+import {sessionPageRows} from './fixtures/session-page-rows.mjs';
 import { withMemoCache } from './support/react-memo-cache.mjs';
 // w10-ccres-hf-host: the Code Sessions page renders the generated 3.6556.2 cbd6c85c8 Hf whole (src/generated/sessions-page,
 // re-exported by code-current/sessions-page-view.mjs) over SessionsPageHfHost; these tests drive the host's side of it.
@@ -144,7 +145,7 @@ test('tab events replace the route surface and the host keeps the Archived tab',
 });
 test('New session and row More forward host callbacks with keyboard entry',()=>{
   let newCount=0,opened;const f=fixture(Host.SourceSessionsPage,{sessions,onNew:()=>newCount++,onSessionMenu:(...args)=>opened=args});
-  const container=nodes(f.tree,n=>n.props?.className==='source-sessions-page')[0];let prevented=0;
+  const container=nodes(f.tree,n=>n.props?.className==='source-sessions-page h-full overflow-auto [scrollbar-gutter:stable]')[0];let prevented=0;
   const click=href=>container.props.onClick({target:{closest:()=>({getAttribute:()=>href})},preventDefault:()=>prevented++});
   click('/code');assert.equal(newCount,1);assert.equal(prevented,1);
   click('#code-session/live');assert.equal(newCount,1);assert.equal(prevented,1);
@@ -262,10 +263,8 @@ test('cov11-02: the history key mirror only touches __TSR_key',()=>{
   mirrorSessionsPageHistoryKey('k',undefined);
 });
 test('cov11-02: engine or account changes clear the host search store (be(() => ed.clear()))',()=>{
-  const key=sessionsPageRoute('code').key;rememberSessionsPageSearch(key,'kept','date','engine-a');
-  assert.deepEqual(readSessionsPageSearch(key,'engine-a'),{input:'kept',sortBy:'date',scope:'engine-a'});assert.equal(readSessionsPageSearch(key,'engine-b'),undefined);
-  rememberSessionsPageSearch(null,'lost','type','engine-a');assert.equal(readSessionsPageSearch(null,'engine-a'),undefined);
-  clearSessionsPageSearches();assert.equal(readSessionsPageSearch(key,'engine-a'),undefined);
+  // R4DC-N7: the host's duplicate search Map (test-only read/remember) is gone; the generated store clears through the registry.
+  let cleared=0;const off=registerSessionsPageReset(()=>{cleared++;});clearSessionsPageSearches();off();assert.equal(cleared,1);
   assert.equal(sessionsPageAccountScope({account:{type:'chatgpt',email:'user@example.test'}}),'chatgpt:user@example.test');
   assert.equal(sessionsPageAccountScope({account:{type:'apiKey'}}),'apiKey:');assert.equal(sessionsPageAccountScope(null),null);
   const code=fs.readFileSync(new URL('../src/main.jsx',import.meta.url),'utf8');

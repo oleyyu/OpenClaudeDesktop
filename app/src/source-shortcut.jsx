@@ -31,7 +31,7 @@ export function SourceShortcut({ keys, variant = "keycap", onFill = false, class
       {caps.map(({ label, spoken }, key) => <Fragment key={key}>
         {spell && key > 0 && <span className="scds-joiner">+</span>}
         <kbd className={text ? "scds-text-key" : capClass(label)}>
-          {spoken === undefined ? label : spell ? spoken : <><span aria-hidden="true">{label}</span><span className="scds-sr">{spoken}</span></>}
+          {spoken === undefined ? label : spell ? spoken : <><span aria-hidden="true">{label}</span><span className="sr-only select-none">{spoken}</span></>}
         </kbd>
       </Fragment>)}
     </Fragment>)}

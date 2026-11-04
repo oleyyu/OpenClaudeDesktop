@@ -13,10 +13,13 @@ import {
   memoStore3 as K3,
   memoStore4 as K4,
   memoStore5 as K5,
+  useCdsMergedRefs as S,
   useCdsRootRemPx as T,
   memoStoreDeps1 as Z1,
+  useCdsLabel as _,
   useCdsDensity as b,
   useFizzyLakePart as w,
+  useCdsIsoLayoutEffect as x,
   cdsClassNames as y,
 } from "../view-tabs/shared-frame-6jtSkIit.js";
 import { sn as E } from "./c2a6d07ee-DkjXJxV2.js";
@@ -47,13 +50,16 @@ import {
   be as Oe,
   ln as Pe,
   wt as Qe,
+  pn as Re,
   Y as Se,
   vt as Te,
   dn as Ue,
   jt as Ve,
   Mt as We,
   Dt as Xe,
+  Yt as Ye,
   yt as Ze,
+  V as _e,
   it as be,
   Ke as ce,
   ht as de,
@@ -65,6 +71,7 @@ import {
   R as ke,
   bt as le,
   Le as me,
+  pe,
   fn as qe,
   tt as se,
   pt as ue,
@@ -76,25 +83,33 @@ import {
 } from "./rows-c64baa838-cddTLIc9.mjs";
 import {
   G as W,
+  ve as ae,
   Q as ie,
   g as ne,
   ye as oe,
+  xe as re,
   U as te,
 } from "./rows-c68fd9df8-CJ4k-Myz.mjs";
 import { c as At, t as Ot, n as kt } from "./rows-c76ea0beb-CU4sD99o.mjs";
 import {
   E as A,
+  t as B,
   c as D,
   e as F,
   f as H,
   d as I,
+  C as L,
   T as M,
   y as N,
   u as O,
   b as P,
+  _ as R,
   l as U,
   w as V,
+  g as ee,
+  x as j,
   r as k,
+  S as z,
 } from "./rows-c93fb40ec-DqA5LwgW.mjs";
 import {
   a as K,
@@ -129,13 +144,24 @@ import {
 import { Ao as C, Wa as g, Nt as v } from "./rows-shared-frame-6jtSkIit.mjs";
 import {
   useContext as c,
+  memo as d,
   useRef as e,
+  useImperativeHandle as f,
   useMemo as h,
   useEffect as l,
   useLayoutEffect as o,
+  useState as p,
+  useSyncExternalStore as r,
   useCallback as s,
+  forwardRef as u,
 } from "react";
+import { createPortal as m, flushSync as n } from "react-dom";
 import { Fragment as a, jsxs as i, jsx as t } from "react/jsx-runtime";
+function Nt() {
+  return typeof window > "u" || typeof window.matchMedia != "function"
+    ? !1
+    : window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
 function Pt(e) {
   return e.map((e) => ({
     ...e,
@@ -6212,6 +6238,2155 @@ function ei(e, t) {
   let [n, r] = e.split(",").map(Number);
   return t === "split" ? r : n;
 }
+function ti(e, t) {
+  return e == null || t == null
+    ? e === t
+    : e.header !== t.header || e.footer !== t.footer
+      ? !1
+      : ni(e.items, t.items);
+}
+function ni(e, t) {
+  if (e == null || t == null) return e === t;
+  if (e.length !== t.length) return !1;
+  for (let n = 0; n < e.length; n++) {
+    let r = e[n],
+      i = t[n];
+    if (
+      r == null ||
+      i == null ||
+      r.id !== i.id ||
+      r.type !== i.type ||
+      r.element !== i.element ||
+      r.instance !== i.instance ||
+      r.version !== i.version
+    )
+      return !1;
+  }
+  return !0;
+}
+function ri(e, t, n) {
+  let r = document.createElement("div");
+  return (
+    (r.style.display = "flow-root"),
+    e === "header"
+      ? (r.setAttribute(ee, ""), t.before(r))
+      : (r.setAttribute(R, ""), t.after(r)),
+    n?.observe(r),
+    r
+  );
+}
+function Z(e) {
+  let t = window.devicePixelRatio ?? 1;
+  return Math.round(e * t) / t;
+}
+var ii = (e) =>
+  typeof e == "object" &&
+  !!e &&
+  e.nodeType === 1 &&
+  e.namespaceURI === "http://www.w3.org/2000/svg";
+var ai =
+  "theme.disableLineNumbers.overflow.themeType.disableFileHeader.disableVirtualizationBuffers.preferredHighlighter.useCSSClasses.useTokenTransformer.tokenizeMaxLineLength.tokenizeMaxLength.unsafeCSS.diffStyle.diffIndicators.disableBackground.expandUnchanged.loadDiffFiles.collapsedContextThreshold.lineDiffType.maxLineDiffLength.expansionLineCount.lineHoverHighlight.enableTokenInteractionsOnWhitespace.enableGutterUtility.__debugPointerEvents.enableLineSelection.controlledSelection.disableErrorHandling".split(
+    ".",
+  );
+var oi = [
+  "theme",
+  "disableLineNumbers",
+  "overflow",
+  "themeType",
+  "disableFileHeader",
+  "disableVirtualizationBuffers",
+  "preferredHighlighter",
+  "useCSSClasses",
+  "useTokenTransformer",
+  "tokenizeMaxLineLength",
+  "tokenizeMaxLength",
+  "unsafeCSS",
+  "lineHoverHighlight",
+  "enableTokenInteractionsOnWhitespace",
+  "enableGutterUtility",
+  "__debugPointerEvents",
+  "enableLineSelection",
+  "controlledSelection",
+  "disableErrorHandling",
+];
+var si = [
+  "renderCustomHeader",
+  "renderHeaderPrefix",
+  "renderHeaderFilenameSuffix",
+  "renderHeaderMetadata",
+  "renderAnnotation",
+  "renderGutterUtility",
+  "onPostRender",
+  "onGutterUtilityClick",
+  "onLineClick",
+  "onLineNumberClick",
+  "onLineEnter",
+  "onLineLeave",
+  "onTokenClick",
+  "onTokenEnter",
+  "onTokenLeave",
+];
+var ci = [
+  "onLineSelected",
+  "onLineSelectionStart",
+  "onLineSelectionChange",
+  "onLineSelectionEnd",
+];
+var li = Symbol("CodeView.itemOptionsState");
+function ui(e, t) {
+  Object.defineProperty(e, li, { configurable: !1, enumerable: !1, value: t });
+}
+function di(e) {
+  return e[li];
+}
+function Q(e, t, n) {
+  Object.defineProperty(e, t, {
+    configurable: !1,
+    enumerable: !0,
+    get() {
+      return n(this);
+    },
+  });
+}
+var fi = 120;
+var pi = 1;
+var mi = "--diffs-overflow-override";
+var hi = 12e6;
+var gi = 1e6;
+var _i = 2e6;
+var vi = 1e7;
+var yi = 11e6;
+function bi(e) {
+  if (e == null)
+    throw Error("CodeView: createEditor is required for items with edit: true");
+}
+var xi = (() => {
+  let { navigator: e } = globalThis,
+    t = e.userAgent,
+    n = /iP(?:hone|ad|od)/.test(t),
+    r = e.platform === "MacIntel" && e.maxTouchPoints > 1;
+  return (
+    (n || r) &&
+    /AppleWebKit/.test(t) &&
+    /Safari/.test(t) &&
+    !/(CriOS|FxiOS|EdgiOS|OPiOS)/.test(t)
+  );
+})();
+var Si = class e {
+  static __STOP = !1;
+  static __lastScrollPosition = 0;
+  type = "advanced";
+  config = {
+    overscrollSize: 200,
+    intersectionObserverMargin: 0,
+    resizeDebugging: !1,
+  };
+  items = [];
+  idToItem = new Map();
+  selectedLines = null;
+  itemEditors = new Map();
+  attachedEditors = new Set();
+  instanceToItem = new Map();
+  layoutDirtyIndex;
+  pendingLayoutReset;
+  renderOptionsRevision = 0;
+  slotCoordinator;
+  slotSnapshot;
+  scrollListeners = new Set();
+  scrollHeight = 0;
+  containerHeight = -1;
+  scrollTop = 0;
+  scrollPageOffset = 0;
+  scrollDirty = !0;
+  scrollInteractionFixTimer;
+  pointerEventsDisabled = !1;
+  codeOverflowFix = !1;
+  height = 0;
+  heightDirty = !0;
+  windowSpecs = { top: 0, bottom: 0 };
+  renderState = {
+    scrollTop: -1,
+    firstIndex: -1,
+    lastIndex: -1,
+    stickyHeight: 0,
+    stickyTop: -1,
+    stickyBottom: -1,
+  };
+  itemMetricsCache = j;
+  fileOptionsPrototype;
+  diffOptionsPrototype;
+  pendingScrollTarget;
+  pendingLayoutAnchor;
+  shouldFixContainerFocus = !1;
+  scrollAnimation;
+  root;
+  resizeObserver;
+  container = document.createElement("div");
+  stickyContainer = document.createElement("div");
+  stickyOffset = document.createElement("div");
+  header = { element: void 0, render: void 0, height: 0 };
+  footer = { element: void 0, render: void 0, height: 0 };
+  elementPool = [];
+  elementPoolVersion = 0;
+  elementPoolTracker = new WeakMap();
+  pendingElementPool = [];
+  options;
+  workerManager;
+  isReadySubscription;
+  pendingHighlighterTheme;
+  isContainerManaged;
+  constructor(e = { theme: H }, t, n = !1) {
+    ((this.options = e),
+      this.computeMetricsCache(e.itemMetrics),
+      (this.fileOptionsPrototype = this.createFileOptionsPrototype()),
+      (this.diffOptionsPrototype = this.createDiffOptionsPrototype()),
+      (this.workerManager = t),
+      (this.isContainerManaged = n),
+      (this.stickyOffset.style.contain = "layout size"),
+      (this.stickyContainer.style.position = "sticky"),
+      (this.stickyContainer.style.width = "100%"),
+      (this.stickyContainer.style.contain = "layout style inline-size"),
+      (this.stickyContainer.style.isolation = "isolate"),
+      (this.stickyContainer.style.display = "flex"),
+      (this.stickyContainer.style.flexDirection = "column"));
+  }
+  getLayout() {
+    return this.options.layout ?? z;
+  }
+  getItemTopOffset() {
+    return this.getLayout().paddingTop + this.header.height;
+  }
+  computeMetricsCache(e) {
+    return (
+      (this.itemMetricsCache = {
+        hunkLineCount: e?.hunkLineCount ?? j.hunkLineCount,
+        lineHeight: e?.lineHeight ?? j.lineHeight,
+        diffHeaderHeight: e?.diffHeaderHeight ?? j.diffHeaderHeight,
+        hunkSeparatorHeight: e?.hunkSeparatorHeight,
+        spacing: e?.spacing ?? j.spacing,
+        paddingTop: e?.paddingTop,
+        paddingBottom: e?.paddingBottom,
+      }),
+      this.itemMetricsCache
+    );
+  }
+  getSmoothScrollSettings() {
+    return this.options.smoothScrollSettings ?? L;
+  }
+  shouldDisablePointerEvents() {
+    return this.options.pointerEventsOnScroll !== !0;
+  }
+  shouldValidateItemHeights() {
+    return B && this.options.__devOnlyValidateItemHeights === !0;
+  }
+  validateRenderedItemHeight(e) {
+    if (!this.shouldValidateItemHeights() || e.element == null) return;
+    let t = e.instance.getAdvancedStickySpecs();
+    if (t == null) return;
+    let n = t.height,
+      r = e.element.getBoundingClientRect().height;
+    n !== r &&
+      console.error(
+        "CodeView: reconciled item height does not match DOM height",
+        {
+          id: e.item.id,
+          type: e.type,
+          index: e.index,
+          version: e.version,
+          expectedHeight: n,
+          actualHeight: r,
+          delta: r - n,
+          stickyTopOffset: t.topOffset,
+          virtualizedHeight: e.instance.getVirtualizedHeight(),
+          top: e.top,
+          scrollTop: this.getScrollTop(),
+          windowSpecs: { ...this.windowSpecs },
+          element: e.element,
+          instance: e.instance,
+        },
+      );
+  }
+  validateStickyContainerHeight() {
+    if (!this.shouldValidateItemHeights()) return;
+    let {
+      firstIndex: e,
+      lastIndex: t,
+      stickyHeight: n,
+      stickyTop: r,
+      stickyBottom: i,
+    } = this.renderState;
+    if (e === -1 || t === -1) return;
+    let a = this.stickyContainer.getBoundingClientRect().height;
+    Math.abs(a - n) < pi ||
+      console.error(
+        "CodeView: sticky container height does not match computed layout",
+        {
+          computedStickyHeight: n,
+          actualStickyHeight: a,
+          delta: a - n,
+          stickyTop: r,
+          stickyBottom: i,
+          firstIndex: e,
+          lastIndex: t,
+          firstStickySpecs: this.items[e]?.instance.getAdvancedStickySpecs(),
+          lastStickySpecs: this.items[t]?.instance.getAdvancedStickySpecs(),
+          scrollTop: this.getScrollTop(),
+          scrollPageOffset: this.scrollPageOffset,
+          windowSpecs: { ...this.windowSpecs },
+          stickyContainer: this.stickyContainer,
+        },
+      );
+  }
+  clearScrollInteractionTimer() {
+    this.scrollInteractionFixTimer != null &&
+      (clearTimeout(this.scrollInteractionFixTimer),
+      (this.scrollInteractionFixTimer = void 0));
+  }
+  suspendScrollInteractions() {
+    (this.clearScrollInteractionTimer(),
+      this.shouldDisablePointerEvents() &&
+        !this.pointerEventsDisabled &&
+        ((this.stickyContainer.style.pointerEvents = "none"),
+        (this.pointerEventsDisabled = !0)),
+      xi &&
+        !this.codeOverflowFix &&
+        (this.stickyContainer.style.setProperty(mi, "hidden"),
+        (this.codeOverflowFix = !0)),
+      (this.scrollInteractionFixTimer = setTimeout(
+        this.restoreScrollInteractions,
+        fi,
+      )));
+  }
+  restoreScrollInteractions = () => {
+    (this.clearScrollInteractionTimer(),
+      (this.pointerEventsDisabled &&=
+        (this.stickyContainer.style.removeProperty("pointer-events"), !1)),
+      (this.codeOverflowFix &&=
+        (this.stickyContainer.style.setProperty(mi, "auto"), !1)));
+  };
+  syncLayout() {
+    let { gap: e, paddingBottom: t, paddingTop: n } = this.getLayout();
+    ((this.stickyContainer.style.gap = `${e}px`),
+      this.container?.style.setProperty("margin-top", `${n}px`),
+      this.container?.style.setProperty("margin-bottom", `${t}px`));
+  }
+  reconcileHeaderFooterHosts() {
+    let e = this.reconcileHost("header"),
+      t = this.reconcileHost("footer");
+    return e || t;
+  }
+  reconcileHost(e) {
+    let { root: t, container: n } = this;
+    if (t == null || n == null) return !1;
+    let r = e === "header" ? this.header : this.footer,
+      i =
+        e === "header"
+          ? this.options.renderCodeViewHeader
+          : this.options.renderCodeViewFooter;
+    if (i == null)
+      return (
+        r.element != null &&
+        (this.resizeObserver?.unobserve(r.element),
+        r.element.remove(),
+        (r.element = void 0),
+        (r.render = void 0),
+        this.setHostHeight(r, 0),
+        !1)
+      );
+    if (r.element != null && i === r.render) return !1;
+    let a = r.element ?? ri(e, n, this.resizeObserver);
+    r.element = a;
+    let o = i();
+    return (
+      o == null
+        ? !this.isContainerManaged &&
+          a.children.length > 0 &&
+          (a.textContent = "")
+        : a.replaceChildren(o),
+      (r.render = i),
+      !0
+    );
+  }
+  setHostHeight(e, t) {
+    e.height !== t && ((e.height = t), (this.scrollDirty = !0));
+  }
+  measureMountedHosts() {
+    (this.header.element != null &&
+      this.setHostHeight(
+        this.header,
+        this.header.element.getBoundingClientRect().height,
+      ),
+      this.footer.element != null &&
+        this.setHostHeight(
+          this.footer,
+          this.footer.element.getBoundingClientRect().height,
+        ));
+  }
+  setup(t) {
+    if (this.root != null) throw Error("CodeView.setup: already setup");
+    (this.workerManager?.subscribeToThemeChanges(this),
+      (this.root = t),
+      (this.root.style.overflowAnchor = "none"),
+      this.root.hasAttribute("tabindex") || (this.root.tabIndex = -1),
+      (this.container ??= document.createElement("div")),
+      (this.container.style.contain = "layout style"),
+      this.syncLayout(),
+      this.container.appendChild(this.stickyOffset),
+      this.container.appendChild(this.stickyContainer),
+      this.root.appendChild(this.container),
+      (this.scrollDirty = !0),
+      (this.heightDirty = !0),
+      (this.resizeObserver = new ResizeObserver(this.handleResize)),
+      this.resizeObserver.observe(this.stickyContainer),
+      this.root.addEventListener("scroll", this.handleScroll, { passive: !0 }),
+      this.root.addEventListener("wheel", this.clearPendingScroll, {
+        passive: !0,
+      }),
+      this.root.addEventListener("touchstart", this.clearPendingScroll, {
+        passive: !0,
+      }),
+      this.root.addEventListener("pointerdown", this.clearPendingScroll, {
+        passive: !0,
+      }),
+      this.root.addEventListener("keydown", this.clearPendingScroll, {
+        passive: !0,
+      }),
+      this.resizeObserver.observe(this.root),
+      this.render(!0),
+      (window.__INSTANCE = this),
+      (window.__TOGGLE = () => {
+        e.__STOP
+          ? ((e.__STOP = !1),
+            this.scrollTo({
+              type: "position",
+              position: e.__lastScrollPosition,
+              behavior: "instant",
+            }))
+          : ((e.__lastScrollPosition = this.getScrollTop()), (e.__STOP = !0));
+      }));
+  }
+  reset() {
+    (Ae(this.computeRenderRangeAndEmit),
+      this.clearReadySubscription(),
+      this.restoreScrollInteractions());
+    for (let e of this.displacedRenderedItems ?? [])
+      e.element != null && this.releaseRenderedItem(e);
+    ((this.displacedRenderedItems = void 0), this.cleanAllRenderedItems());
+    let e = [...this.itemEditors.values()].map((e) => {
+      let t = this.idToItem.get(e.state.id);
+      return (
+        t != null && (e.state.removedItem = t.item),
+        { record: e, instance: t?.instance }
+      );
+    });
+    (this.itemEditors.clear(),
+      this.attachedEditors.clear(),
+      (this.selectedLines = null),
+      (this.items.length = 0),
+      this.idToItem.clear(),
+      this.instanceToItem.clear());
+    let t = !1,
+      n;
+    for (let { record: r, instance: i } of e)
+      try {
+        (r.editor.cleanUp("discard"), i?.cleanUp());
+      } catch (e) {
+        t || ((t = !0), (n = e));
+      }
+    if (
+      ((this.layoutDirtyIndex = void 0),
+      (this.pendingLayoutReset = void 0),
+      (this.stickyContainer.textContent = ""),
+      (this.stickyOffset.style.height = ""),
+      this.container?.style.removeProperty("height"),
+      (this.containerHeight = -1),
+      (this.windowSpecs = { top: 0, bottom: 0 }),
+      (this.pendingLayoutAnchor = void 0),
+      (this.shouldFixContainerFocus = !1),
+      (this.height = 0),
+      (this.scrollTop = 0),
+      (this.scrollPageOffset = 0),
+      (this.scrollHeight = 0),
+      (this.scrollDirty = !0),
+      (this.heightDirty = !0),
+      this.resetRenderState(),
+      this.isContainerManaged || this.flushSlotCoordinator(),
+      t)
+    )
+      throw n;
+  }
+  cleanUp() {
+    let e = !1,
+      t;
+    try {
+      this.reset();
+    } catch (n) {
+      ((e = !0), (t = n));
+    }
+    if (
+      (this.clearElementPool(),
+      this.restoreScrollInteractions(),
+      this.workerManager?.unsubscribeToThemeChanges(this),
+      this.resizeObserver?.disconnect(),
+      (this.resizeObserver = void 0),
+      this.root?.removeEventListener("scroll", this.handleScroll),
+      this.root?.removeEventListener("wheel", this.clearPendingScroll),
+      this.root?.removeEventListener("touchstart", this.clearPendingScroll),
+      this.root?.removeEventListener("pointerdown", this.clearPendingScroll),
+      this.root?.removeEventListener("keydown", this.clearPendingScroll),
+      this.root?.style.removeProperty("overflow-anchor"),
+      this.container?.remove(),
+      this.stickyOffset.remove(),
+      this.stickyContainer.remove(),
+      (this.stickyContainer.textContent = ""),
+      this.header.element?.remove(),
+      (this.header.element = void 0),
+      (this.header.render = void 0),
+      (this.header.height = 0),
+      this.footer.element?.remove(),
+      (this.footer.element = void 0),
+      (this.footer.render = void 0),
+      (this.footer.height = 0),
+      (this.root = void 0),
+      (this.container = void 0),
+      e)
+    )
+      throw t;
+  }
+  cleanAllRenderedItems() {
+    if (this.renderState.firstIndex !== -1)
+      for (
+        let e = this.renderState.firstIndex;
+        e <= this.renderState.lastIndex;
+        e++
+      ) {
+        let t = this.items[e];
+        if (t == null)
+          throw Error(
+            `CodeView.cleanAllRenderedItems: Item does not exist at index: ${e}`,
+          );
+        this.releaseRenderedItem(t);
+      }
+  }
+  primeScrollTarget(e) {
+    e.type !== "position" &&
+      this.idToItem.get(e.id)?.instance.primeHighlightCache();
+  }
+  getElementPoolLimit() {
+    let e = this.getHeight() + this.config.overscrollSize * 2,
+      { diffHeaderHeight: t } = this.itemMetricsCache;
+    return (
+      Math.max(8, Math.ceil(e / Math.max(t, 10)) + 1) *
+      (this.isContainerManaged ? 2 : 1)
+    );
+  }
+  acquireElement() {
+    this.promotePendingPooledElements();
+    let e = this.elementPool.pop();
+    for (; e != null && !this.isElementPoolGenerationCurrent(e); )
+      e = this.elementPool.pop();
+    return (
+      (e ??= document.createElement(F)),
+      this.markElementPoolGenerationCurrent(e),
+      e
+    );
+  }
+  releaseRenderedItem(e) {
+    let { element: t } = e;
+    (t != null &&
+      this.renderedItemOwnsFocus(t) &&
+      (this.shouldFixContainerFocus = !0),
+      e.instance.cleanUp(!0),
+      this.attachedEditors.delete(e.item.id),
+      (e.element = void 0),
+      t != null &&
+        (t.remove(), this.cleanElement(t), this.queueElementForPool(t)));
+  }
+  renderedItemOwnsFocus(e) {
+    let { activeElement: t } = e.ownerDocument;
+    return t === e || e.contains(t) || e.shadowRoot?.activeElement != null;
+  }
+  fixContainerFocus() {
+    this.shouldFixContainerFocus &&
+      ((this.shouldFixContainerFocus = !1),
+      this.root?.focus({ preventScroll: !0 }));
+  }
+  cleanElement(e) {
+    let { shadowRoot: t } = e;
+    if (t != null) for (let e of Array.from(t.children)) Oi(e) || e.remove();
+    this.isContainerManaged || e.replaceChildren();
+  }
+  queueElementForPool(e) {
+    let t = this.getElementPoolLimit();
+    !this.isElementPoolGenerationCurrent(e) ||
+      this.getElementPoolSize() >= t ||
+      (this.isElementClean(e)
+        ? this.elementPool.push(e)
+        : this.pendingElementPool.push(e));
+  }
+  promotePendingPooledElements() {
+    if (this.pendingElementPool.length === 0) return;
+    let { pendingElementPool: e } = this;
+    this.pendingElementPool = [];
+    let t = this.getElementPoolLimit();
+    for (let n of e)
+      this.isElementPoolGenerationCurrent(n) &&
+      this.isElementClean(n) &&
+      this.elementPool.length < t
+        ? this.elementPool.push(n)
+        : this.isElementPoolGenerationCurrent(n) &&
+          this.getElementPoolSize() < t &&
+          this.pendingElementPool.push(n);
+  }
+  isElementClean(e) {
+    return e.childNodes.length === 0;
+  }
+  getElementPoolSize() {
+    return this.elementPool.length + this.pendingElementPool.length;
+  }
+  clearElementPool() {
+    ((this.elementPool.length = 0), (this.pendingElementPool.length = 0));
+  }
+  invalidateElementPool() {
+    (this.elementPoolVersion++, this.clearElementPool());
+  }
+  markElementPoolGenerationCurrent(e) {
+    this.elementPoolTracker.set(e, this.elementPoolVersion);
+  }
+  isElementPoolGenerationCurrent(e) {
+    return this.elementPoolTracker.get(e) === this.elementPoolVersion;
+  }
+  resolveEffectiveScrollBehavior(e, t) {
+    return Nt()
+      ? "instant"
+      : e.behavior === "smooth-auto"
+        ? Math.abs(t - this.getScrollTop()) <= this.getHeight() * 10
+          ? "smooth"
+          : "instant"
+        : (e.behavior ?? "instant");
+  }
+  scrollTo(e) {
+    if (this.root == null) return;
+    let t = this.normalizeScrollTarget(e);
+    if (t == null) return;
+    let n = this.resolveScrollTargetTop(t);
+    n != null &&
+      (this.primeScrollTarget(t),
+      this.resolveEffectiveScrollBehavior(t, n) === "smooth"
+        ? (this.scrollAnimation ??= {
+            position: this.getScrollTop(),
+            velocity: 0,
+            lastTimestamp: performance.now(),
+          })
+        : (this.scrollAnimation = void 0),
+      this.suspendScrollInteractions(),
+      (this.pendingLayoutAnchor = void 0),
+      (this.pendingScrollTarget = t),
+      this.render());
+  }
+  setSelectedLines(e, t) {
+    this.applySelectedLines(e, t);
+  }
+  getSelectedLines() {
+    return this.selectedLines;
+  }
+  clearSelectedLines(e) {
+    this.applySelectedLines(null, e);
+  }
+  getItem(e) {
+    return this.idToItem.get(e)?.item;
+  }
+  getEditor(e) {
+    return this.itemEditors.get(e)?.editor;
+  }
+  updateItem(e) {
+    let t = this.idToItem.get(e.id);
+    return t == null
+      ? (console.error(`CodeView.updateItem: unknown item id "${e.id}"`), !1)
+      : this.syncItemRecord(t, e)
+        ? (this.markItemLayoutDirty(t),
+          (this.scrollDirty = !0),
+          this.render(),
+          this.syncItemEditors(),
+          this.syncSelection(),
+          !0)
+        : !1;
+  }
+  updateItemId(e, t) {
+    if (e === t) return !0;
+    let n = this.idToItem.get(e);
+    if (n == null)
+      return (
+        console.error(`CodeView.updateItemId: unknown item id "${e}"`),
+        !1
+      );
+    if (this.idToItem.has(t))
+      return (
+        console.error(`CodeView.updateItemId: duplicate item id "${t}"`),
+        !1
+      );
+    (this.idToItem.delete(e),
+      (n.item.id = t),
+      this.idToItem.set(t, n),
+      this.updateItemOptionsId(n.instance.options, t),
+      this.selectedLines?.id === e &&
+        ((this.selectedLines = { ...this.selectedLines, id: t }),
+        this.options.onSelectedLinesChange?.(this.selectedLines)));
+    let r = this.itemEditors.get(e);
+    return (
+      r != null &&
+        (this.itemEditors.delete(e),
+        this.itemEditors.set(t, r),
+        this.attachedEditors.delete(e) && this.attachedEditors.add(t)),
+      this.renamePendingScrollTarget(e, t),
+      this.renamePendingLayoutAnchor(e, t),
+      this.render(),
+      !0
+    );
+  }
+  addItem(e) {
+    this.addItems([e]);
+  }
+  addItems(e) {
+    (this.appendItemsInternal(e), this.syncItemEditors(), this.syncSelection());
+  }
+  removeItem(e) {
+    let t = this.idToItem.get(e);
+    if (t == null)
+      return (console.error(`CodeView.removeItem: unknown item id "${e}"`), !1);
+    let n = [];
+    for (let e of this.items) e !== t && n.push(e.item);
+    return (this.setItems(n), !0);
+  }
+  setItems(e) {
+    let t;
+    (this.items.length === 0
+      ? this.appendItemsInternal(e)
+      : this.tryAppendItems(e) || (t = this.reconcileItems(e)),
+      this.syncItemEditors(t),
+      this.syncSelection());
+  }
+  appendItemsInternal(e, t = !0) {
+    if (e.length === 0) return;
+    let n = this.getLayout(),
+      r = this.items.length === 0 ? 0 : this.scrollHeight + n.gap,
+      i = r;
+    for (let t = 0; t < e.length; t++) {
+      let i = e[t];
+      if (i == null)
+        throw Error("CodeView.appendItemsInternal: missing input item");
+      if (this.idToItem.has(i.id))
+        throw Error(`CodeView.addItem: duplicate id "${i.id}"`);
+      let a = this.createItem(i, this.items.length, r);
+      (this.items.push(a),
+        this.idToItem.set(a.item.id, a),
+        this.instanceToItem.set(a.instance, a),
+        (a.height = Ci(a)),
+        (r += a.height + n.gap));
+    }
+    ((this.scrollHeight = r - n.gap),
+      (this.scrollDirty = !0),
+      t &&
+        (this.canSkipRenderForAppend(i)
+          ? this.syncContainerHeight()
+          : this.render()));
+  }
+  canSkipRenderForAppend(e) {
+    return (
+      this.container != null &&
+      this.renderState.firstIndex !== -1 &&
+      this.pendingScrollTarget == null &&
+      this.scrollAnimation == null &&
+      this.layoutDirtyIndex == null &&
+      e > this.windowSpecs.bottom
+    );
+  }
+  onThemeChange() {
+    this.invalidateElementPool();
+  }
+  setOptions(e) {
+    if (e == null) return;
+    this.capturePendingLayoutAnchor();
+    let { options: t } = this,
+      n = this.getLayout(),
+      { itemMetricsCache: r } = this;
+    (wi(t, e) && this.invalidateElementPool(), (this.options = e));
+    let i = this.computeMetricsCache(e.itemMetrics),
+      a = !ge(r, i),
+      o = !ge(n, this.getLayout());
+    o && this.syncLayout();
+    let s = a || Ei(t, e);
+    if (s) {
+      let n = this.pendingLayoutReset;
+      this.pendingLayoutReset = {
+        metrics: a ? i : n?.metrics,
+        resetFileLayoutCache: !0,
+        resetDiffLayoutCache: !0,
+        includeEstimatedDiffHeights:
+          n?.includeEstimatedDiffHeights === !0 || a || Di(t, e),
+      };
+    }
+    ((o || s) && (this.markLayoutDirtyFromIndex(0), (this.scrollDirty = !0)),
+      Ge(t, e) || this.renderOptionsRevision++,
+      this.syncItemEditors());
+    let c =
+      t.renderCodeViewHeader !== e.renderCodeViewHeader ||
+      t.renderCodeViewFooter !== e.renderCodeViewFooter;
+    !this.isContainerManaged && (this.items.length > 0 || c) && this.render();
+  }
+  capturePendingLayoutAnchor(e = this.idToItem) {
+    this.root != null &&
+      this.items.length !== 0 &&
+      this.pendingScrollTarget == null &&
+      (this.pendingLayoutAnchor = this.getScrollAnchor(this.getScrollTop(), e));
+  }
+  render(t = !1) {
+    e.__STOP ||
+      (t
+        ? (Ae(this.computeRenderRangeAndEmit), this.computeRenderRangeAndEmit())
+        : ke(this.computeRenderRangeAndEmit));
+  }
+  isReady() {
+    let { workerManager: e } = this;
+    return e == null || e.getStats().workersFailed
+      ? this.isSharedHighlighterReady()
+      : e.isInitialized()
+        ? (this.clearReadySubscription(), !0)
+        : ((this.isReadySubscription ??= e.subscribeToStatChanges((e) => {
+            (e.managerState !== "initialized" && !e.workersFailed) ||
+              (this.clearReadySubscription(), this.render(!0));
+          })),
+          e.getStats().managerState === "waiting" &&
+            e.initialize().catch(() => {}),
+          !1);
+  }
+  clearReadySubscription() {
+    this.isReadySubscription != null &&
+      (this.isReadySubscription(),
+      (this.isReadySubscription = void 0),
+      (this.pendingHighlighterTheme = void 0));
+  }
+  isSharedHighlighterReady() {
+    let e =
+      this.workerManager?.getFileRenderOptions().theme ??
+      this.options.theme ??
+      H;
+    return ae() && W(e)
+      ? (this.clearReadySubscription(), !0)
+      : (tt(this.pendingHighlighterTheme, e) || this.clearReadySubscription(),
+        (this.isReadySubscription ??= (() => {
+          this.pendingHighlighterTheme = e;
+          let t = !1;
+          return (
+            re({
+              themes: te(e),
+              langs: [],
+              preferredHighlighter: this.options.preferredHighlighter,
+            }).then(
+              () => {
+                t || (this.clearReadySubscription(), this.render(!0));
+              },
+              (e) => {
+                t || (this.clearReadySubscription(), console.error(e));
+              },
+            ),
+            () => {
+              t = !0;
+            }
+          );
+        })()),
+        !1);
+  }
+  instanceChanged(e, t) {
+    let n = this.instanceToItem.get(e);
+    if (n == null)
+      throw Error(
+        "CodeView.instanceChanged: An instance has changed that is not registered",
+      );
+    (t && this.markItemLayoutDirty(n), this.render());
+  }
+  getWindowSpecs() {
+    return this.windowSpecs;
+  }
+  getContainerElement() {
+    return this.root;
+  }
+  getHeaderElement() {
+    return this.header.element;
+  }
+  getFooterElement() {
+    return this.footer.element;
+  }
+  getRenderedItems() {
+    let { firstIndex: e, lastIndex: t } = this.renderState;
+    if (e === -1 || t === -1 || t < e) return [];
+    let n = [];
+    for (let r = e; r <= t; r++) {
+      let e = this.items[r];
+      e?.element != null &&
+        (e.type === "diff"
+          ? n.push({
+              id: e.item.id,
+              type: "diff",
+              item: e.item,
+              version: e.version,
+              element: e.element,
+              instance: e.instance,
+            })
+          : n.push({
+              id: e.item.id,
+              type: "file",
+              item: e.item,
+              version: e.version,
+              element: e.element,
+              instance: e.instance,
+            }));
+    }
+    return n;
+  }
+  setSlotCoordinator(e) {
+    return (
+      e !== this.slotCoordinator &&
+      ((this.slotCoordinator = e), (this.slotSnapshot = void 0), !0)
+    );
+  }
+  getSlotSnapshot(e) {
+    return this.buildSlotSnapshot(e);
+  }
+  buildSlotSnapshot(e) {
+    let t = Pi(this.getRenderedItems(), e),
+      { element: n } = this.header,
+      { element: r } = this.footer;
+    if (t != null || n != null || r != null)
+      return { items: t, header: n, footer: r };
+  }
+  subscribeToScroll(e) {
+    return (
+      this.scrollListeners.add(e),
+      () => {
+        this.scrollListeners.delete(e);
+      }
+    );
+  }
+  getLocalTopForInstance(e) {
+    let t = this.instanceToItem.get(e);
+    if (t == null)
+      throw Error(
+        "CodeView.getLocalTopForInstance: unknown virtualized instance",
+      );
+    return t.top;
+  }
+  getTopForItem(e) {
+    let t = this.idToItem.get(e);
+    if (t != null) return t.top + this.getItemTopOffset();
+  }
+  createItem(e, t, n) {
+    let { itemMetricsCache: r } = this;
+    if (e.type === "diff") {
+      let i = new Vr(
+        this.createDiffOptions(e.id),
+        this,
+        r,
+        this.workerManager,
+        this.isContainerManaged,
+      );
+      return {
+        type: "diff",
+        item: e,
+        version: e.version,
+        index: t,
+        top: n,
+        height: 0,
+        element: void 0,
+        renderedOptionsRevision: this.renderOptionsRevision,
+        instance: i,
+      };
+    }
+    let i = new Ye(
+      this.createFileOptions(e.id),
+      this,
+      r,
+      this.workerManager,
+      this.isContainerManaged,
+    );
+    return {
+      type: "file",
+      item: e,
+      version: e.version,
+      index: t,
+      top: n,
+      height: 0,
+      element: void 0,
+      renderedOptionsRevision: this.renderOptionsRevision,
+      instance: i,
+    };
+  }
+  applySelectedLines(e, t) {
+    let { selectedLines: n } = this;
+    (e == null && n == null) ||
+      (e != null && n?.id === e.id && _e(n.range, e.range)) ||
+      (n != null &&
+        n.id !== e?.id &&
+        this.idToItem
+          .get(n.id)
+          ?.instance.setSelectedLines(null, { notify: !1 }),
+      (this.selectedLines = e),
+      this.idToItem
+        .get(e?.id ?? "")
+        ?.instance.setSelectedLines(e?.range ?? null, t));
+  }
+  syncSelection() {
+    if (this.selectedLines == null) return;
+    let e = this.idToItem.get(this.selectedLines.id);
+    if (e == null) {
+      ((this.selectedLines = null), this.options.onSelectedLinesChange?.(null));
+      return;
+    }
+    e.instance.setSelectedLines(this.selectedLines.range, { notify: !1 });
+  }
+  isItemInEditMode(e) {
+    return e.item.edit === !0 && e.item.collapsed !== !0;
+  }
+  attachItemEditor(e) {
+    let { id: t } = e.item,
+      { createEditor: n } = this.options;
+    if (
+      e.element == null ||
+      this.attachedEditors.has(t) ||
+      !this.isItemInEditMode(e)
+    )
+      return;
+    let r = this.itemEditors.get(t),
+      i;
+    try {
+      if (r == null) {
+        bi(n);
+        let r = di(e.instance.options);
+        if (r == null)
+          throw Error(
+            "CodeView.attachItemEditor: instance options are missing their state",
+          );
+        let a = (e) => {
+            let t = this.idToItem.get(r.id);
+            t != null && this.options.onItemEditChange?.(e, t.item);
+          },
+          o = this.options.getEditStateKey?.(e.item);
+        if (e.type === "diff") {
+          let s = n("file-diff", { onChange: a }, o);
+          ((i = s),
+            this.itemEditors.set(t, {
+              editor: s,
+              state: r,
+              dispose: s.edit(e.instance),
+            }));
+        } else {
+          let s = n("file", { onChange: a }, o);
+          ((i = s),
+            this.itemEditors.set(t, {
+              editor: s,
+              state: r,
+              dispose: s.edit(e.instance),
+            }));
+        }
+      } else r.dispose = (e.type, r.editor.edit(e.instance));
+      this.attachedEditors.add(t);
+    } catch (t) {
+      throw (i?.cleanUp(), this.releaseRenderedItem(e), t);
+    }
+  }
+  syncItemEditors(e) {
+    if (this.itemEditors.size === 0) return;
+    let t = [];
+    for (let [n, r] of this.itemEditors) {
+      let i = this.idToItem.get(n),
+        a = e?.get(n);
+      if (a == null && i != null) {
+        let { edit: e = !1, collapsed: t = !1 } = i.item;
+        if (e) {
+          t && this.attachedEditors.delete(n) && r.editor.cleanUp("recycle");
+          continue;
+        }
+      } else a != null && (r.state.removedItem = a.item);
+      (this.itemEditors.delete(n), this.attachedEditors.delete(n), t.push(r));
+    }
+    if (t.length === 0) return;
+    let n = !1,
+      r;
+    for (let e of t) {
+      try {
+        e.dispose();
+      } catch (e) {
+        n || ((n = !0), (r = e));
+      }
+      let t = this.idToItem.get(e.state.id);
+      t != null && this.markItemLayoutDirty(t);
+    }
+    if ((this.render(), n)) throw r;
+  }
+  requireItemFromState(e) {
+    let t = this.idToItem.get(e.id)?.item ?? e.removedItem;
+    if (t == null)
+      throw Error(`CodeView.onItemEditComplete: unknown item "${e.id}"`);
+    return t;
+  }
+  completeFileItemEdit(e, t) {
+    let n = this.requireItemFromState(e);
+    if (n.type !== "file")
+      throw Error(
+        `CodeView.onItemEditComplete: item "${e.id}" is not a file item`,
+      );
+    let r = {
+      ...n,
+      file: t.file,
+      annotations: t.lineAnnotations,
+      edit: !1,
+      version: (n.version ?? 0) + 1,
+    };
+    return (this.options.onItemEditComplete?.(t, n, r) ?? "reject") === "reject"
+      ? "reject"
+      : (this.idToItem.has(n.id) && this.updateItem(r), "accept");
+  }
+  completeDiffItemEdit(e, t) {
+    let n = this.requireItemFromState(e);
+    if (n.type !== "diff")
+      throw Error(
+        `CodeView.onItemEditComplete: item "${e.id}" is not a diff item`,
+      );
+    let r = {
+      ...n,
+      fileDiff: t.fileDiff,
+      annotations: t.lineAnnotations,
+      edit: !1,
+      version: (n.version ?? 0) + 1,
+    };
+    return (this.options.onItemEditComplete?.(t, n, r) ?? "reject") === "reject"
+      ? "reject"
+      : (this.idToItem.has(n.id) && this.updateItem(r), "accept");
+  }
+  renamePendingScrollTarget(e, t) {
+    let { pendingScrollTarget: n } = this;
+    n != null &&
+      n.type !== "position" &&
+      n.id === e &&
+      (this.pendingScrollTarget = { ...n, id: t });
+  }
+  renamePendingLayoutAnchor(e, t) {
+    this.pendingLayoutAnchor?.id === e && (this.pendingLayoutAnchor.id = t);
+  }
+  createFileOptionsPrototype() {
+    let e = {};
+    for (let t of oi) Q(e, t, () => this.options[t]);
+    (Q(e, "stickyHeader", () => this.options.stickyHeaders),
+      Q(e, "collapsed", (e) => {
+        let t = di(e);
+        if (t != null) return this.getItemOptions(t, "file")?.item.collapsed;
+      }),
+      Q(e, "onEditComplete", (e) => {
+        if (this.options.onItemEditComplete == null) return;
+        let t = di(e);
+        if (t != null) return (e) => this.completeFileItemEdit(t, e);
+      }));
+    for (let t of si) this.defineItemSharedCallback(e, "file", t);
+    for (let t of ci) this.defineItemSelectionCallback(e, "file", t);
+    return e;
+  }
+  createDiffOptionsPrototype() {
+    let e = {};
+    for (let t of ai) t !== "expandUnchanged" && Q(e, t, () => this.options[t]);
+    (Q(e, "expandUnchanged", (e) => {
+      let t = di(e);
+      return (
+        (t == null
+          ? void 0
+          : this.getItemOptions(t, "diff")?.item.expandUnchanged) ??
+        this.options.expandUnchanged
+      );
+    }),
+      Q(e, "stickyHeader", () => this.options.stickyHeaders),
+      Q(e, "hunkSeparators", () => this.options.hunkSeparators),
+      Q(e, "collapsed", (e) => {
+        let t = di(e);
+        if (t != null) return this.getItemOptions(t, "diff")?.item.collapsed;
+      }),
+      Q(e, "onEditComplete", (e) => {
+        if (this.options.onItemEditComplete == null) return;
+        let t = di(e);
+        if (t != null) return (e) => this.completeDiffItemEdit(t, e);
+      }));
+    for (let t of si) this.defineItemSharedCallback(e, "diff", t);
+    for (let t of ci) this.defineItemSelectionCallback(e, "diff", t);
+    return e;
+  }
+  createFileOptions(e) {
+    let t = Object.create(this.fileOptionsPrototype);
+    return (ui(t, { id: e }), t);
+  }
+  createDiffOptions(e) {
+    let t = Object.create(this.diffOptionsPrototype);
+    return (ui(t, { id: e }), t);
+  }
+  updateItemOptionsId(e, t) {
+    let n = di(e);
+    if (n == null) throw Error("CodeView.updateItemOptionsId: No valid state");
+    n.id = t;
+  }
+  getItemOptions(e, t) {
+    let n = this.idToItem.get(e.id);
+    if (n != null && n.type === t) return n;
+  }
+  defineItemSharedCallback(e, t, n) {
+    Q(e, n, (e) => {
+      if (this.options[n] == null) return;
+      let r = di(e);
+      if (r == null) return;
+      let i = (r.callbackCache ??= {}),
+        a = i[n];
+      return (
+        a ??
+          ((a = (...e) => {
+            let i = this.getItemOptions(r, t);
+            if (i == null) return;
+            let a = this.options[n];
+            return a?.(...e, i);
+          }),
+          (i[n] = a)),
+        a
+      );
+    });
+  }
+  defineItemSelectionCallback(e, t, n) {
+    Q(e, n, (e) => {
+      let r = di(e);
+      if (r == null) return;
+      let i = (r.callbackCache ??= {}),
+        a = i[n];
+      return (
+        a ??
+          ((a = (e) => {
+            let i = this.getItemOptions(r, t);
+            if (i == null) return;
+            let a = e == null ? null : { id: i.item.id, range: e };
+            (this.options.controlledSelection !== !0 &&
+              (e != null || this.selectedLines?.id === i.item.id) &&
+              this.applySelectedLines(a, { notify: !1 }),
+              this.options.onSelectedLinesChange?.(a));
+            let o = this.options[n];
+            return o?.(e, i);
+          }),
+          (i[n] = a)),
+        a
+      );
+    });
+  }
+  markLayoutDirtyFromIndex(e) {
+    this.layoutDirtyIndex = Math.min(this.layoutDirtyIndex ?? e, e);
+  }
+  markItemLayoutDirty(e) {
+    if (this.items[e.index] !== e)
+      throw Error(
+        `CodeView.markItemLayoutDirty: unknown item id "${e.item.id}"`,
+      );
+    this.markLayoutDirtyFromIndex(e.index);
+  }
+  tryAppendItems(e) {
+    if (e.length <= this.items.length) return !1;
+    for (let t = 0; t < this.items.length; t++) {
+      let n = this.items[t];
+      if (n == null)
+        throw Error("CodeView.tryAppendItems: missing existing item");
+      let r = e[t];
+      if (r == null || n.item.id !== r.id || n.type !== r.type) return !1;
+    }
+    for (let t = 0; t < this.items.length; t++) {
+      let n = this.items[t];
+      if (n == null)
+        throw Error("CodeView.tryAppendItems: missing existing item");
+      let r = e[t];
+      if (r == null)
+        throw Error(
+          "CodeView.tryAppendItems: append candidate missing prefix item",
+        );
+      this.syncItemRecord(n, r) && this.markLayoutDirtyFromIndex(t);
+    }
+    return (
+      this.appendItemsInternal(e.slice(this.items.length), !1),
+      (this.scrollDirty = !0),
+      this.render(),
+      !0
+    );
+  }
+  reconcileItems(e) {
+    let { items: t, idToItem: n } = this,
+      r = new Set(t),
+      i = [],
+      a = new Map(),
+      o = new Map(),
+      s = new Map(),
+      c;
+    for (let s = 0; s < e.length; s++) {
+      let l = e[s];
+      if (l == null) throw Error("CodeView.reconcileItems: missing input item");
+      if (a.has(l.id)) throw Error(`CodeView.setItems: duplicate id "${l.id}"`);
+      let u = n.get(l.id),
+        d = u != null && u.type === l.type ? u : this.createItem(l, s, 0);
+      ((d.index = s),
+        u != null && u.type === l.type
+          ? (r.delete(u),
+            this.syncItemRecord(d, l) && (c = Math.min(c ?? s, s)))
+          : (c = Math.min(c ?? s, s)),
+        t[s] !== d && (c = Math.min(c ?? s, s)),
+        i.push(d),
+        a.set(l.id, d),
+        o.set(d.instance, d));
+    }
+    if (c == null) {
+      if (r.size === 0) return;
+      c = Math.max(i.length - 1, 0);
+    }
+    this.capturePendingLayoutAnchor(a);
+    for (let e = 0; e < t.length; e++) {
+      let n = t[e];
+      if (n == null || !r.has(n)) continue;
+      (s.set(n.item.id, n), this.releaseRenderedItem(n));
+      let a = Math.max(i.length - 1, 0);
+      c = Math.min(c ?? a, a);
+    }
+    ((this.items = i),
+      (this.idToItem = a),
+      (this.instanceToItem = o),
+      this.renderState.firstIndex >= i.length
+        ? this.resetRenderState()
+        : this.renderState.lastIndex >= i.length &&
+          (this.renderState.lastIndex = i.length - 1));
+    let { firstIndex: l, lastIndex: u } = this.renderState;
+    return (
+      (this.displacedRenderedItems = i.filter(
+        (e) => e.element != null && (l === -1 || e.index < l || e.index > u),
+      )),
+      this.markLayoutDirtyFromIndex(c),
+      (this.scrollDirty = !0),
+      this.render(),
+      s.size > 0 ? s : void 0
+    );
+  }
+  syncItemRecord(e, t) {
+    if (e.type !== t.type)
+      throw Error(`CodeView.syncItemRecord: type mismatch for id "${t.id}"`);
+    return (
+      e.version !== t.version &&
+      ((e.item = t),
+      (e.version = t.version),
+      (e.renderedOptionsRevision = -1),
+      !0)
+    );
+  }
+  getMaxScrollTopForHeight(e) {
+    let { paddingBottom: t, paddingTop: n } = this.getLayout();
+    return Math.max(
+      n + this.header.height + e + this.footer.height + t - this.getHeight(),
+      0,
+    );
+  }
+  getMaxScrollTop() {
+    return this.getMaxScrollTopForHeight(this.getScrollHeight());
+  }
+  shouldRebaseScroll() {
+    return this.getMaxScrollTop() > yi;
+  }
+  getPagedScrollHeight() {
+    return this.shouldRebaseScroll()
+      ? Math.min(this.getScrollHeight(), hi)
+      : this.getScrollHeight();
+  }
+  getMaxPagedScrollTop() {
+    return this.getMaxScrollTopForHeight(this.getPagedScrollHeight());
+  }
+  clampPagedScrollTop(e) {
+    let t = this.getMaxPagedScrollTop();
+    return Math.max(0, Math.min(e, t));
+  }
+  clampScrollTop(e) {
+    let t = this.getMaxScrollTop();
+    return Math.max(0, Math.min(e, t));
+  }
+  getMaxScrollPageOffset() {
+    return Math.max(this.getMaxScrollTop() - this.getMaxPagedScrollTop(), 0);
+  }
+  clampScrollPageOffset(e) {
+    let t = this.getMaxScrollPageOffset();
+    return Math.max(0, Math.min(e, t));
+  }
+  resolveScrollPageWindow(e, t) {
+    let n = Z(this.clampPagedScrollTop(t)),
+      r = this.clampScrollPageOffset(e - n);
+    return (
+      (n = Z(this.clampPagedScrollTop(e - r))),
+      (r = this.clampScrollPageOffset(e - n)),
+      { pagedScrollTop: n, scrollPageOffset: r }
+    );
+  }
+  resolvePagedScrollPosition(e) {
+    if (!this.shouldRebaseScroll())
+      return {
+        pagedScrollTop: this.clampPagedScrollTop(e),
+        scrollPageOffset: 0,
+      };
+    let t = this.clampScrollPageOffset(this.scrollPageOffset),
+      n = e - t,
+      r = this.getMaxPagedScrollTop(),
+      i = this.getMaxScrollPageOffset(),
+      a = n > yi && t < i,
+      o = n < gi && t > 0;
+    return n < 0 || n > r || a || o
+      ? this.resolveScrollPageWindow(e, o ? Math.min(vi, r) : _i)
+      : { pagedScrollTop: Z(this.clampPagedScrollTop(n)), scrollPageOffset: t };
+  }
+  needsScrollPageUpdate(e) {
+    let t = Z(this.clampScrollTop(e)),
+      { scrollPageOffset: n } = this.resolvePagedScrollPosition(t);
+    return n !== this.scrollPageOffset;
+  }
+  getPagedLayoutTop(e) {
+    return this.shouldRebaseScroll()
+      ? Math.max(e - this.scrollPageOffset, 0)
+      : e;
+  }
+  getStickyHeaderOffset() {
+    return this.options.stickyHeaders === !0 &&
+      this.options.disableFileHeader !== !0
+      ? this.itemMetricsCache.diffHeaderHeight
+      : 0;
+  }
+  getScrollTargetRect(e) {
+    let t = this.idToItem.get(e.id);
+    if (t == null) {
+      console.warn(`CodeView.scrollTo: unknown item id "${e.id}"`);
+      return;
+    }
+    if (e.type === "item") return { top: t.top, height: t.height };
+    if (e.type === "range") {
+      let n = this.getRangeScrollPosition(t, e);
+      if (n == null) {
+        console.warn(
+          `CodeView.scrollTo: unable to resolve range ${ki(e.range)} for item "${e.id}"`,
+        );
+        return;
+      }
+      return { top: t.top + n.top, height: n.height };
+    }
+    let n = this.getLineScrollPosition(t, e);
+    if (n == null) {
+      console.warn(
+        `CodeView.scrollTo: unable to resolve line ${e.lineNumber} for item "${e.id}"`,
+      );
+      return;
+    }
+    return { top: t.top + n.top, height: n.height };
+  }
+  normalizeScrollTarget(e) {
+    if (e.type === "position" || e.align !== "nearest") return e;
+    let t = this.getScrollTargetRect(e);
+    if (t == null) return;
+    let n = e.offset ?? 0,
+      r = this.getItemTopOffset() + t.top,
+      i = r + t.height,
+      a = this.getScrollTop(),
+      o =
+        a +
+        (e.type === "line" || e.type === "range"
+          ? this.getStickyHeaderOffset()
+          : 0),
+      s = a + this.getHeight();
+    if (!(r - n <= o && i + n >= s)) {
+      if (r - n < o) return { ...e, align: "start" };
+      if (i + n > s) return { ...e, align: "end" };
+    }
+  }
+  resolveScrollTargetTop(e) {
+    if (e.type === "position") {
+      let t = this.clampScrollTop(e.position);
+      return t === e.position
+        ? this.clampScrollTop(e.position - this.getStickyHeaderOffset())
+        : t;
+    }
+    let t = this.idToItem.get(e.id);
+    if (t == null) {
+      console.warn(`CodeView.scrollTo: unknown item id "${e.id}"`);
+      return;
+    }
+    if (e.type === "item")
+      return this.clampScrollTop(
+        this.resolveAlignedScrollPosition(t.top, t.height, e.align, e.offset),
+      );
+    if (e.type === "range") {
+      let n = this.getRangeScrollPosition(t, e);
+      if (n == null) {
+        console.warn(
+          `CodeView.scrollTo: unable to resolve range ${ki(e.range)} for item "${e.id}"`,
+        );
+        return;
+      }
+      return this.clampScrollTop(
+        this.resolveAlignedScrollPosition(
+          t.top + n.top,
+          n.height,
+          e.align,
+          e.offset,
+          this.getStickyHeaderOffset(),
+        ),
+      );
+    }
+    let n = this.getLineScrollPosition(t, e);
+    if (n == null) {
+      console.warn(
+        `CodeView.scrollTo: unable to resolve line ${e.lineNumber} for item "${e.id}"`,
+      );
+      return;
+    }
+    return this.clampScrollTop(
+      this.resolveAlignedScrollPosition(
+        t.top + n.top,
+        n.height,
+        e.align,
+        e.offset,
+        this.getStickyHeaderOffset(),
+      ),
+    );
+  }
+  resolveAlignedScrollPosition(e, t, n, r = 0, i = 0) {
+    e += this.getItemTopOffset();
+    let a = this.getHeight();
+    return n === "center" && t + r < a
+      ? e - (a - t) / 2 + r
+      : n === "end"
+        ? e - (a - t) + r
+        : e - i - r;
+  }
+  getLineScrollPosition(e, t) {
+    return e.type === "diff"
+      ? e.instance.getLinePosition(t.lineNumber, t.side)
+      : e.instance.getLinePosition(t.lineNumber);
+  }
+  getRangeScrollPosition(e, t) {
+    let { range: n } = t,
+      r = this.getLineScrollPosition(e, {
+        type: "line",
+        id: t.id,
+        lineNumber: n.start,
+        side: n.side,
+      }),
+      i = this.getLineScrollPosition(e, {
+        type: "line",
+        id: t.id,
+        lineNumber: n.end,
+        side: n.endSide ?? n.side,
+      });
+    if (r == null || i == null) return;
+    let a = r.top,
+      o = a + r.height,
+      s = i.top,
+      c = s + i.height,
+      l = Math.min(a, s);
+    return { top: l, height: Math.max(o, c) - l };
+  }
+  computeTargetScrollTopForFrame(e, t) {
+    if (this.pendingScrollTarget == null) return e;
+    let n = this.resolveScrollTargetTop(this.pendingScrollTarget);
+    if (n == null) return e;
+    let { scrollAnimation: r } = this;
+    return r == null ? n : this.computeSpringStep(r, n, t).position;
+  }
+  computeSpringStep(e, t, n) {
+    let r = Math.max(0, n - e.lastTimestamp),
+      { omega: i } = this.getSmoothScrollSettings(),
+      a = Math.exp(-i * r),
+      o = e.position - t,
+      s = e.velocity + i * o;
+    return {
+      position: t + (o + s * r) * a,
+      velocity: (s * (1 - i * r) - i * o) * a,
+    };
+  }
+  advanceScrollAnimation(e, t) {
+    if (this.pendingScrollTarget == null) return;
+    let n = this.resolveScrollTargetTop(this.pendingScrollTarget);
+    if (n == null) {
+      ((this.pendingScrollTarget = void 0), (this.scrollAnimation = void 0));
+      return;
+    }
+    let r = this.scrollAnimation;
+    if (r == null) return n;
+    r.position += t;
+    let { position: i, velocity: a } = this.computeSpringStep(r, n, e);
+    ((r.lastTimestamp = e), (r.position = i), (r.velocity = a));
+    let { positionEpsilon: o, velocityEpsilon: s } =
+      this.getSmoothScrollSettings();
+    return Math.abs(n - i) <= o && Math.abs(a) <= s
+      ? ((r.position = n), (r.velocity = 0), (this.scrollAnimation = void 0), n)
+      : r.position;
+  }
+  computeRenderRangeAndEmit = (t = performance.now()) => {
+    if (e.__STOP || this.container == null || !this.isReady()) return;
+    let n = this.getHeight(),
+      r = this.getScrollTop(),
+      i = r,
+      a = this.pendingLayoutAnchor != null,
+      o = this.getScrollAnchor(i);
+    if (
+      (this.layoutDirtyIndex != null &&
+        (this.recomputeLayout(this.layoutDirtyIndex, this.pendingLayoutReset),
+        (this.layoutDirtyIndex = void 0),
+        (this.pendingLayoutReset = void 0),
+        (a = !0)),
+      a && o != null)
+    ) {
+      let e = this.resolveAnchoredScrollTop(o);
+      if (e != null) {
+        let t = e - i;
+        ((i = e),
+          this.scrollAnimation != null && (this.scrollAnimation.position += t));
+      }
+    }
+    a && ((i = this.clampScrollTop(i)), this.syncContainerHeight());
+    let s = this.computeTargetScrollTopForFrame(i, t),
+      c =
+        !a &&
+        (this.renderState.scrollTop === -1 ||
+          Math.abs(s - this.renderState.scrollTop) >
+            n + this.config.overscrollSize * 2);
+    (c && (o = void 0),
+      (this.windowSpecs = pe({
+        scrollTop: s - this.header.height,
+        height: n,
+        scrollHeight: this.getScrollHeight(),
+        fitPerfectly: c,
+        fitPerfectlyOverscroll: this.getFitPerfectlyOverscroll(),
+        overscrollSize: this.config.overscrollSize,
+      })));
+    let l = r;
+    ((this.pendingScrollTarget != null && s !== l) ||
+      this.needsScrollPageUpdate(s)) &&
+      (this.applyScrollFix(s, l, this.windowSpecs), (l = s));
+    let { top: u, bottom: d } = this.windowSpecs,
+      { firstIndex: f, lastIndex: p } = this.renderState;
+    if (f >= 0)
+      for (let e = f; e <= p; e++) {
+        let t = this.items[e];
+        if (t == null)
+          throw Error(
+            `CodeView.computeRenderRangeAndEmit: No item at index: ${e}`,
+          );
+        (t.top > u - t.height && t.top <= d) || this.releaseRenderedItem(t);
+      }
+    let m = this.reconcileHeaderFooterHosts(),
+      h,
+      g = new Set(),
+      _ = this.findFirstVisibleIndex(u),
+      v = this.findLastVisibleIndex(d);
+    for (let e of this.displacedRenderedItems ?? [])
+      e.element != null &&
+        (e.index < _ || e.index > v) &&
+        this.releaseRenderedItem(e);
+    this.displacedRenderedItems = void 0;
+    for (let e = _; e <= v; e++) {
+      let t = this.items[e];
+      if (t == null)
+        throw Error("CodeView.computeRenderRangeAndEmit: missing item");
+      let { instance: n } = t;
+      (t.element == null
+        ? ((t.element = this.acquireElement()),
+          Mi(this.stickyContainer, t.element, h),
+          n.virtualizedSetup(),
+          ji(t, t.element) &&
+            ((t.renderedOptionsRevision = this.renderOptionsRevision),
+            g.add(t)),
+          (h = t.element))
+        : (Mi(this.stickyContainer, t.element, h),
+          ji(
+            t,
+            void 0,
+            t.renderedOptionsRevision !== this.renderOptionsRevision,
+          ) &&
+            ((t.renderedOptionsRevision = this.renderOptionsRevision),
+            g.add(t)),
+          (h = t.element)),
+        t.item.edit === !0 && this.attachItemEditor(t));
+    }
+    ((this.renderState.firstIndex = _ <= v ? _ : -1),
+      (this.renderState.lastIndex = v),
+      this.flushSlotCoordinator(),
+      this.flushManagers(g),
+      m && this.measureMountedHosts(),
+      this.reconcileRenderedItems(g),
+      this.syncContainerHeight(),
+      this.updateStickyPositioning());
+    let y = o == null ? void 0 : this.resolveAnchoredScrollTop(o);
+    o === this.pendingLayoutAnchor && (this.pendingLayoutAnchor = void 0);
+    let b = y == null ? 0 : y - i,
+      x = s,
+      S = !1;
+    if (this.pendingScrollTarget != null) {
+      let e = this.advanceScrollAnimation(t, b);
+      e == null ? (x = i) : ((x = e), (S = !0));
+    } else x = y ?? s;
+    (x !== l && (this.applyScrollFix(x, l, this.windowSpecs), (l = x)),
+      S &&
+        this.pendingScrollTarget != null &&
+        this.isPendingTargetSettled(this.pendingScrollTarget) &&
+        ((this.pendingScrollTarget = void 0), (this.scrollAnimation = void 0)),
+      (this.renderState.scrollTop = Z(l)),
+      this.updateStickyPositioning(),
+      this.validateStickyContainerHeight(),
+      this.fixContainerFocus(),
+      (c || this.scrollAnimation != null) && this.render());
+  };
+  flushManagers(e) {
+    for (let t of e) t.instance.flushManagers();
+  }
+  syncContainerHeight() {
+    let e = this.getPagedScrollHeight();
+    this.container != null &&
+      this.containerHeight !== e &&
+      ((this.container.style.height = `${e}px`), (this.containerHeight = e));
+  }
+  getStickyBounds(e) {
+    let { firstIndex: t, lastIndex: n } =
+      e == null
+        ? this.renderState
+        : {
+            firstIndex: this.findFirstVisibleIndex(e.top),
+            lastIndex: this.findLastVisibleIndex(e.bottom),
+          };
+    if (t === -1 || n === -1 || t > n) return;
+    let r = this.items[t]?.instance.getAdvancedStickySpecs(e),
+      i = this.items[n]?.instance.getAdvancedStickySpecs(e);
+    if (r != null && i != null)
+      return {
+        stickyTop: this.getPagedLayoutTop(Math.max(r.topOffset, 0)),
+        stickyBottom: this.getPagedLayoutTop(i.topOffset + i.height),
+      };
+  }
+  applyStickyPositioning({ stickyTop: e, stickyBottom: t }) {
+    let n = this.getHeight(),
+      { itemMetricsCache: r } = this,
+      i = t - e;
+    ((this.renderState.stickyHeight = i),
+      (this.renderState.stickyTop = e),
+      (this.renderState.stickyBottom = t),
+      (this.stickyOffset.style.height = `${e}px`));
+    let a = ((Math.random() * r.lineHeight) >> 0) * -1,
+      o = -Math.max(i + a, 0) + n;
+    ((this.stickyContainer.style.top = `${o}px`),
+      (this.stickyContainer.style.bottom = `${o + r.diffHeaderHeight}px`));
+  }
+  syncPagedScrollScaffolding(e) {
+    this.syncContainerHeight();
+    let t = this.getStickyBounds(e);
+    if (t == null) {
+      this.stickyOffset.style.height = `${this.getPagedLayoutTop(e.top)}px`;
+      return;
+    }
+    this.applyStickyPositioning(t);
+  }
+  reconcileRenderedItems(e) {
+    let { firstIndex: t, lastIndex: n } = this.renderState;
+    if (t === -1) return;
+    let r = -1,
+      i = !1;
+    for (let a = t; a < this.items.length && !(!i && a > n); a++) {
+      let t = this.items[a];
+      if (t == null)
+        throw Error("CodeView.reconcileRenderedItems: Invalid item");
+      (r === -1
+        ? (r = t.top)
+        : t.top !== r &&
+          ((t.top = r), t.instance.syncVirtualizedTop(), (i = !0)),
+        (e == null ? a <= n : e.has(t)) &&
+          (t.instance.reconcileHeights() &&
+            ((i = !0), (t.height = t.instance.getVirtualizedHeight())),
+          this.validateRenderedItemHeight(t)),
+        (r += t.instance.getVirtualizedHeight()),
+        a < this.items.length - 1 && (r += this.getLayout().gap));
+    }
+    i && r != null && ((this.scrollDirty = !0), (this.scrollHeight = r));
+  }
+  updateStickyPositioning() {
+    let e = this.getStickyBounds();
+    if (e == null) {
+      this.renderState.firstIndex === -1 &&
+        (this.stickyOffset.style.height = "");
+      return;
+    }
+    let { stickyTop: t, stickyBottom: n } = e;
+    (n - t !== this.renderState.stickyHeight ||
+      t !== this.renderState.stickyTop ||
+      n !== this.renderState.stickyBottom) &&
+      this.applyStickyPositioning(e);
+  }
+  handleScroll = () => {
+    e.__STOP ||
+      (this.suspendScrollInteractions(),
+      (this.scrollDirty = !0),
+      this.notifyScroll(),
+      this.render());
+  };
+  clearPendingScroll = () => {
+    ((this.pendingScrollTarget = void 0),
+      (this.pendingLayoutAnchor = void 0),
+      (this.scrollAnimation = void 0));
+  };
+  handleResize = (e) => {
+    let t = !1;
+    for (let n of e)
+      if (n.target === this.stickyContainer) {
+        let e = n.borderBoxSize[0].blockSize;
+        if (Math.abs(e - this.renderState.stickyHeight) >= pi) {
+          let e = this.getScrollTop(),
+            n = this.getScrollAnchor(e);
+          (this.reconcileRenderedItems(), this.updateStickyPositioning());
+          let r = n == null ? void 0 : this.resolveAnchoredScrollTop(n);
+          if (r != null) {
+            let t = r - e;
+            (this.applyScrollFix(r, e, this.windowSpecs),
+              this.scrollAnimation != null &&
+                (this.scrollAnimation.position += t));
+          }
+          (this.pendingScrollTarget != null &&
+            this.isPendingTargetSettled(this.pendingScrollTarget) &&
+            ((this.pendingScrollTarget = void 0),
+            (this.scrollAnimation = void 0)),
+            (t = !0));
+        }
+      } else if (
+        n.target === this.header.element ||
+        n.target === this.footer.element
+      ) {
+        let e = n.target === this.header.element ? this.header : this.footer,
+          r = n.borderBoxSize[0].blockSize;
+        if (r !== e.height) {
+          let n = this.getScrollTop(),
+            i = this.getScrollAnchor(n);
+          this.setHostHeight(e, r);
+          let a = i == null ? void 0 : this.resolveAnchoredScrollTop(i);
+          if (a != null) {
+            let e = a - n;
+            (this.applyScrollFix(a, n, this.windowSpecs),
+              this.scrollAnimation != null &&
+                (this.scrollAnimation.position += e));
+          }
+          (this.pendingScrollTarget != null &&
+            this.isPendingTargetSettled(this.pendingScrollTarget) &&
+            ((this.pendingScrollTarget = void 0),
+            (this.scrollAnimation = void 0)),
+            (t = !0));
+        }
+      } else ((this.scrollDirty = !0), (this.heightDirty = !0), (t = !0));
+    t && this.render(!0);
+  };
+  getScrollAnchorViewportTop(e, t) {
+    return e < t ? t + this.getStickyHeaderOffset() : t;
+  }
+  getScrollAnchor(e, t = this.idToItem) {
+    let n,
+      { pendingLayoutAnchor: r } = this;
+    if (r != null) {
+      let e = this.idToItem.get(r.id);
+      if (e != null && t.get(r.id) === e) return r;
+      e != null && (n = e);
+    }
+    if (e <= 0) return;
+    let {
+      firstIndex: i,
+      lastIndex: a,
+      stickyTop: o,
+      stickyBottom: s,
+    } = this.renderState;
+    if (i === -1 || a === -1) return;
+    let c = this.getHeight();
+    if (o !== -1 && s !== -1) {
+      for (let r = i; r <= a; r++) {
+        let i = this.items[r];
+        if (i == null) continue;
+        let a = this.getItemTopOffset() + i.top;
+        if (a + i.height <= e) continue;
+        if (a >= e + c) break;
+        if (t.get(i.item.id) !== i) {
+          n ??= i;
+          continue;
+        }
+        if (a >= e)
+          return { type: "item", id: i.item.id, viewportOffset: a - e };
+        let o = this.getScrollAnchorViewportTop(a, e) - a,
+          s = i.instance.getNumericScrollAnchor(o);
+        if (s != null) {
+          let t = a + s.top;
+          return {
+            type: "line",
+            id: i.item.id,
+            lineNumber: s.lineNumber,
+            side: s.side,
+            viewportOffset: t - e,
+          };
+        }
+      }
+      if (n != null)
+        for (let e = n.index + 1; e < this.items.length; e++) {
+          let n = this.items[e];
+          if (n != null && t.get(n.item.id) === n)
+            return { type: "item", id: n.item.id, viewportOffset: 0 };
+        }
+    }
+  }
+  resolveAnchoredScrollTop(e) {
+    let t = this.idToItem.get(e.id);
+    if (t == null) return;
+    let n = this.getItemTopOffset();
+    if (e.type === "item") {
+      let r = n + t.top;
+      return this.clampScrollTop(r - e.viewportOffset);
+    }
+    let r =
+      t.type === "diff"
+        ? t.instance.getLinePosition(e.lineNumber, e.side)
+        : t.instance.getLinePosition(e.lineNumber);
+    if (r == null) return;
+    let i = n + t.top + r.top;
+    return this.clampScrollTop(i - e.viewportOffset);
+  }
+  applyScrollFix(e, t, n) {
+    if (this.root == null) return;
+    let r = Z(this.clampScrollTop(e)),
+      i = Z(t),
+      { scrollPageOffset: a } = this,
+      o = Z(this.clampPagedScrollTop(i - a)),
+      { pagedScrollTop: s, scrollPageOffset: c } =
+        this.resolvePagedScrollPosition(r),
+      l = s,
+      u = a !== c;
+    (r === this.renderState.scrollTop && r === i && l === o && !u) ||
+      (this.suspendScrollInteractions(),
+      (l !== o || u) &&
+        ((this.scrollPageOffset = c), this.syncPagedScrollScaffolding(n)),
+      l !== o && this.root.scrollTo({ top: l, behavior: "instant" }),
+      (this.renderState.scrollTop = r),
+      (this.scrollTop = r),
+      (this.scrollDirty = !1));
+  }
+  isPendingTargetSettled(e) {
+    let t = this.resolveScrollTargetTop(e);
+    return t == null || Z(this.getScrollTop()) === Z(t);
+  }
+  getScrollTop() {
+    if (!this.scrollDirty) return this.scrollTop;
+    this.scrollDirty = !1;
+    let e = this.root?.scrollTop ?? 0;
+    return (
+      (this.scrollTop = this.clampScrollTop(e + this.scrollPageOffset)),
+      this.scrollTop
+    );
+  }
+  getHeight() {
+    return this.heightDirty
+      ? ((this.heightDirty = !1),
+        (this.height = this.root?.getBoundingClientRect().height ?? 0),
+        this.height)
+      : this.height;
+  }
+  getScrollHeight() {
+    return this.scrollHeight;
+  }
+  flushSlotCoordinator() {
+    if (this.slotCoordinator == null) return;
+    let e = this.buildSlotSnapshot(this.slotCoordinator);
+    ti(this.slotSnapshot, e) ||
+      ((this.slotSnapshot = e), this.slotCoordinator.onSnapshotChange(e));
+  }
+  notifyScroll() {
+    if (this.scrollListeners.size === 0) return;
+    let e = this.getScrollTop();
+    for (let t of this.scrollListeners) t(e, this);
+  }
+  findFirstVisibleIndex(e) {
+    let t = 0,
+      n = this.items.length - 1,
+      r = this.items.length;
+    for (; t <= n; ) {
+      let i = (t + n) >> 1,
+        a = this.items[i];
+      if (a == null)
+        throw Error("CodeView.findFirstVisibleIndex: invalid item index");
+      a.top + a.height > e ? ((r = i), (n = i - 1)) : (t = i + 1);
+    }
+    return r;
+  }
+  findLastVisibleIndex(e) {
+    let t = 0,
+      n = this.items.length - 1,
+      r = -1;
+    for (; t <= n; ) {
+      let i = (t + n) >> 1,
+        a = this.items[i];
+      if (a == null)
+        throw Error("CodeView.findLastVisibleIndex: invalid item index");
+      a.top <= e ? ((r = i), (t = i + 1)) : (n = i - 1);
+    }
+    return r;
+  }
+  recomputeLayout(e = 0, t) {
+    if (this.items.length === 0) {
+      this.scrollHeight = 0;
+      return;
+    }
+    let n = this.getLayout(),
+      r = 0;
+    if (e > 0) {
+      let t = this.items[e - 1];
+      if (t == null)
+        throw Error("CodeView.recomputeLayout: invalid dirty index");
+      r = t.top + t.height + n.gap;
+    }
+    for (let i = e; i < this.items.length; i++) {
+      let e = this.items[i];
+      if (e == null)
+        throw Error("CodeView.recomputeLayout: invalid item index");
+      ((e.top = r),
+        (e.height =
+          e.type === "diff"
+            ? e.instance.updateCodeViewLayout(
+                e.item.fileDiff,
+                r,
+                t,
+                e.item.annotations ?? [],
+              )
+            : e.instance.updateCodeViewLayout(
+                e.item.file,
+                r,
+                t,
+                e.item.annotations ?? [],
+              )),
+        (r += e.height),
+        i < this.items.length - 1 && (r += n.gap));
+    }
+    (r !== this.scrollHeight && (this.scrollDirty = !0),
+      (this.scrollHeight = r));
+  }
+  resetRenderState() {
+    ((this.renderState.scrollTop = -1),
+      (this.renderState.firstIndex = -1),
+      (this.renderState.lastIndex = -1),
+      (this.renderState.stickyHeight = 0),
+      (this.renderState.stickyTop = -1),
+      (this.renderState.stickyBottom = -1));
+  }
+  getFitPerfectlyOverscroll() {
+    return this.getLayout().gap + this.itemMetricsCache.diffHeaderHeight;
+  }
+};
+function Ci(e) {
+  return (
+    e.instance.cleanUp(!0),
+    e.type === "diff"
+      ? e.instance.updateCodeViewLayout(
+          e.item.fileDiff,
+          e.top,
+          void 0,
+          e.item.annotations ?? [],
+        )
+      : e.instance.updateCodeViewLayout(
+          e.item.file,
+          e.top,
+          void 0,
+          e.item.annotations ?? [],
+        )
+  );
+}
+function wi(e, t) {
+  return (
+    !tt(e.theme ?? H, t.theme ?? H) ||
+    (e.themeType ?? "system") !== (t.themeType ?? "system") ||
+    e.unsafeCSS !== t.unsafeCSS
+  );
+}
+function Ti(e, t) {
+  return (e.loadDiffFiles != null) != (t.loadDiffFiles != null);
+}
+function Ei(e, t) {
+  return (
+    Ti(e, t) ||
+    (e.overflow ?? "scroll") !== (t.overflow ?? "scroll") ||
+    (e.disableLineNumbers ?? !1) !== (t.disableLineNumbers ?? !1) ||
+    (e.disableFileHeader ?? !1) !== (t.disableFileHeader ?? !1) ||
+    e.unsafeCSS !== t.unsafeCSS ||
+    (e.diffStyle ?? "split") !== (t.diffStyle ?? "split") ||
+    (e.diffIndicators ?? "bars") !== (t.diffIndicators ?? "bars") ||
+    (e.hunkSeparators ?? "line-info") !== (t.hunkSeparators ?? "line-info") ||
+    (e.expandUnchanged ?? !1) !== (t.expandUnchanged ?? !1) ||
+    (e.collapsedContextThreshold ?? 1) !== (t.collapsedContextThreshold ?? 1)
+  );
+}
+function Di(e, t) {
+  return (
+    Ti(e, t) ||
+    (e.disableFileHeader ?? !1) !== (t.disableFileHeader ?? !1) ||
+    (e.hunkSeparators ?? "line-info") !== (t.hunkSeparators ?? "line-info") ||
+    (e.expandUnchanged ?? !1) !== (t.expandUnchanged ?? !1) ||
+    (e.collapsedContextThreshold ?? 1) !== (t.collapsedContextThreshold ?? 1)
+  );
+}
+function Oi(e) {
+  return ii(e)
+    ? !0
+    : $e(e) &&
+        (e.hasAttribute("data-core-css") ||
+          e.hasAttribute("data-theme-css") ||
+          e.hasAttribute("data-unsafe-css"));
+}
+function ki(e) {
+  let t = Ai(e.start, e.side),
+    n = Ai(e.end, e.endSide ?? e.side);
+  return t === n ? t : `${t}-${n}`;
+}
+function Ai(e, t) {
+  return t == null ? `${e}` : `${t === "deletions" ? "D" : "A"}${e}`;
+}
+function ji(e, t, n = !1) {
+  return e.type === "diff"
+    ? e.instance.render({
+        deferManagers: !0,
+        fileContainer: t,
+        fileDiff: e.item.fileDiff,
+        forceRender: n,
+        lineAnnotations: e.item.annotations ?? [],
+      })
+    : e.instance.render({
+        deferManagers: !0,
+        fileContainer: t,
+        file: e.item.file,
+        forceRender: n,
+        lineAnnotations: e.item.annotations ?? [],
+      });
+}
+function Mi(e, t, n) {
+  if (n == null) {
+    e.firstChild !== t && e.prepend(t);
+    return;
+  }
+  n.nextSibling !== t && n.after(t);
+}
+function Ni(e) {
+  return (e.annotations?.length ?? 0) > 0;
+}
+function Pi(
+  e,
+  { hasHeaderRenderers: t, hasAnnotationRenderer: n, hasGutterRenderer: r },
+) {
+  if (e.length === 0) return;
+  if (t || r) return e;
+  if (!n) return;
+  let i = [];
+  for (let t of e) Ni(t.item) && i.push(t);
+  return i.length > 0 ? i : void 0;
+}
 function Fi({ hunkIndex: e, lineIndex: t, conflictIndex: n }) {
   return `merge-conflict-action-${e}-${t}-${n}`;
 }
@@ -6293,6 +8468,448 @@ function Bi(e, t, n, r, i) {
   for (let e = 0; e < n; e++) i(r[e]) === t && a++;
   return a === 0 ? t : `${t}#${a}`;
 }
+var Vi = typeof window > "u" ? l : o;
+function Hi(e) {
+  return {
+    instance: void 0,
+    items: void 0,
+    controlled: e,
+    managedOptions: void 0,
+    disableFlushSync: !1,
+    slotCoordinator: void 0,
+  };
+}
+function Ui(r, o) {
+  let {
+      className: s,
+      containerRef: l,
+      disableWorkerPool: u = !1,
+      editorOptions: d,
+      getEditStateKey: m,
+      initialItems: g,
+      items: _,
+      onItemEditChange: v,
+      onItemEditComplete: y,
+      onScroll: b,
+      onSelectedLinesChange: x,
+      options: S,
+      renderAnnotation: C,
+      renderCodeViewFooter: w,
+      renderCodeViewHeader: T,
+      renderCustomHeader: E,
+      renderGutterUtility: D,
+      renderHeaderFilenameSuffix: O,
+      renderHeaderMetadata: k,
+      renderHeaderPrefix: A,
+      selectedLines: j,
+      style: M,
+    } = r,
+    N = _ !== void 0,
+    P = Pe(),
+    F = c(Mt),
+    I = e(Hi(N)),
+    L = E != null,
+    R = C != null,
+    z = D != null,
+    B = L || A != null || O != null || k != null,
+    ee = B || R || z,
+    V = T != null,
+    H = w != null,
+    U = G((e) => {
+      x?.(e);
+    }),
+    te = j !== void 0,
+    ne = G((e, t, n) => {
+      if (P == null) throw Error("CodeView: EditContext is not attached");
+      return P(e, { ...d, ...t }, n);
+    }),
+    re = G((e, t) => {
+      v?.(e, t);
+    }),
+    ie = G((e, t, n) => y?.(e, t, n) ?? "reject"),
+    ae = h(
+      () =>
+        Yi({
+          options: S,
+          hasCustomHeader: L,
+          hasGutterRenderer: z,
+          hasCodeViewHeader: V,
+          hasCodeViewFooter: H,
+          onSelectedLinesChange: x == null ? void 0 : U,
+          controlledSelection: te,
+          getEditStateKey: m,
+          createEditor: P == null ? void 0 : ne,
+          onItemEditChange: v == null ? void 0 : re,
+          onItemEditComplete: y == null ? void 0 : ie,
+        }),
+      [P, te, ne, re, ie, U, H, V, L, z, m, v, y, x, S],
+    ),
+    [W] = p(() => Ji()),
+    [, oe] = p({}),
+    se = G((e) => {
+      (I.current.instance != null &&
+        (e == null || e !== I.current.instance.getContainerElement()) &&
+        (I.current.instance.cleanUp(), W.publish(void 0), (I.current = Hi(N))),
+        e != null &&
+          e !== I.current.instance?.getContainerElement() &&
+          ((I.current.instance = new Si(ae, u ? void 0 : F, !0)),
+          I.current.instance.setup(e)),
+        typeof l == "function" ? l(e) : l != null && (l.current = e));
+    }),
+    ce = G((e) => {
+      I.current.disableFlushSync
+        ? W.publish(e)
+        : n(() => {
+            W.publish(e);
+          });
+    }),
+    le = h(() => {
+      if (!(!B && !R && !z && !V && !H))
+        return {
+          hasHeaderRenderers: B,
+          hasAnnotationRenderer: R,
+          hasGutterRenderer: z,
+          onSnapshotChange: ce,
+        };
+    }, [ce, R, z, B, V, H]);
+  return (
+    Vi(() => (b == null ? void 0 : I.current.instance?.subscribeToScroll(b))),
+    Vi(() => {
+      let {
+        instance: e,
+        controlled: t,
+        items: n,
+        managedOptions: r,
+        slotCoordinator: i,
+      } = I.current;
+      if (e != null)
+        try {
+          I.current.disableFlushSync = !0;
+          let a = !1;
+          if (
+            (Ge(ae, r) ||
+              ((I.current.managedOptions = ae), e.setOptions(ae), (a = !0)),
+            t !== N)
+          ) {
+            console.error(
+              "CodeView: cannot switch between controlled and uncontrolled modes. Remount with a new key instead.",
+            );
+            return;
+          }
+          if (N)
+            _ !== n &&
+              (Ki(n, _)
+                ? (I.current.items = _)
+                : Gi(n, _)
+                  ? ((I.current.items = _), e.addItems(_.slice(n.length)))
+                  : ((I.current.items = _), e.setItems(_), (a = !0)));
+          else if (n == null) {
+            let t = g ?? [];
+            ((I.current.items = t), t.length > 0 && (e.setItems(t), (a = !0)));
+          }
+          j !== void 0 && e.setSelectedLines(j, { notify: !1 });
+          let o = e.setSlotCoordinator(le),
+            s = !1;
+          (le !== i &&
+            ((le == null || i == null) && (s = !0),
+            (I.current.slotCoordinator = le)),
+            (a || o) && e.render(!0),
+            o && le == null && W.publish(void 0),
+            s && oe({}));
+        } finally {
+          I.current.disableFlushSync = !1;
+        }
+    }),
+    f(
+      o,
+      () => ({
+        addItems(e) {
+          let { controlled: t, instance: n } = I.current;
+          (qi(t, "addItems"),
+            n == null
+              ? console.error(
+                  "CodeView.addItems: no valid instance to append items with",
+                  e,
+                )
+              : n.addItems(e));
+        },
+        getItem(e) {
+          let { instance: t } = I.current;
+          if (t == null) {
+            console.error("CodeView.getItem: no valid instance exists", e);
+            return;
+          }
+          return t.getItem(e);
+        },
+        removeItem(e) {
+          let { controlled: t, instance: n } = I.current;
+          return (
+            qi(t, "removeItem"),
+            n == null
+              ? (console.error(
+                  "CodeView.removeItem: no valid instance to remove item from",
+                  e,
+                ),
+                !1)
+              : n.removeItem(e)
+          );
+        },
+        updateItem(e) {
+          let { controlled: t, instance: n } = I.current;
+          return (
+            qi(t, "updateItem"),
+            n == null
+              ? (console.error(
+                  "CodeView.updateItem: no valid instance to update item with",
+                  e,
+                ),
+                !1)
+              : n.updateItem(e)
+          );
+        },
+        updateItemId(e, t) {
+          let { controlled: n, instance: r } = I.current;
+          return (
+            qi(n, "updateItemId"),
+            r == null
+              ? (console.error(
+                  "CodeView.updateItemId: no valid instance to update item id with",
+                  e,
+                  t,
+                ),
+                !1)
+              : r.updateItemId(e, t)
+          );
+        },
+        scrollTo(e) {
+          let { instance: t } = I.current;
+          t == null
+            ? console.error(
+                "CodeView.scrollTo: no valid instance to scroll with",
+                e,
+              )
+            : t.scrollTo(e);
+        },
+        setSelectedLines(e) {
+          let { instance: t } = I.current;
+          t == null
+            ? console.error(
+                "CodeView.setSelectedLines: no valid instance to update selection with",
+                e,
+              )
+            : (t.setSelectedLines(e, { notify: !1 }), U(e));
+        },
+        getSelectedLines() {
+          let { instance: e } = I.current;
+          return e == null
+            ? (console.error(
+                "CodeView.getSelectedLines: no valid instance exists",
+              ),
+              null)
+            : e.getSelectedLines();
+        },
+        clearSelectedLines() {
+          let { instance: e } = I.current;
+          e == null
+            ? console.error(
+                "CodeView.clearSelectedLines: no valid instance to update selection with",
+              )
+            : (e.clearSelectedLines({ notify: !1 }), U(null));
+        },
+        getEditor(e) {
+          let { instance: t } = I.current;
+          if (t == null) {
+            console.error("CodeView.getEditor: no valid instance exists", e);
+            return;
+          }
+          return t.getEditor(e);
+        },
+        getInstance() {
+          return I.current.instance;
+        },
+      }),
+      [U],
+    ),
+    i(a, {
+      children: [
+        t("div", { ref: se, className: s, style: M }),
+        (ee || V || H) &&
+          t(Xi, {
+            managedContentStore: W,
+            renderCustomHeader: E,
+            renderHeaderPrefix: A,
+            renderHeaderFilenameSuffix: O,
+            renderHeaderMetadata: k,
+            renderAnnotation: C,
+            renderGutterUtility: D,
+            renderCodeViewHeader: T,
+            renderCodeViewFooter: w,
+          }),
+      ],
+    })
+  );
+}
+var Wi = u(Ui);
+function Gi(e, t) {
+  if (e == null || t.length <= e.length) return !1;
+  if (e.length === 0) return !0;
+  for (let n = 0; n < e.length; n++) if (t[n] !== e[n]) return !1;
+  return !0;
+}
+function Ki(e, t) {
+  if (e == null || e.length !== t.length) return !1;
+  for (let n = 0; n < e.length; n++) if (e[n] !== t[n]) return !1;
+  return !0;
+}
+function qi(e, t) {
+  if (e)
+    throw Error(
+      `CodeView.${t} cannot be used when CodeView is controlled. Use initialItems for imperative item updates.`,
+    );
+}
+function Ji() {
+  let e,
+    t = new Set();
+  return {
+    getSnapshot() {
+      return e;
+    },
+    publish(n) {
+      if (!ti(e, n)) {
+        e = n;
+        for (let e of t) e();
+      }
+    },
+    subscribe(e) {
+      return (
+        t.add(e),
+        () => {
+          t.delete(e);
+        }
+      );
+    },
+  };
+}
+function Yi({
+  options: e,
+  hasCustomHeader: t,
+  hasGutterRenderer: n,
+  hasCodeViewHeader: r,
+  hasCodeViewFooter: i,
+  onSelectedLinesChange: a,
+  controlledSelection: o,
+  getEditStateKey: s,
+  createEditor: c,
+  onItemEditChange: l,
+  onItemEditComplete: u,
+}) {
+  let d = {
+    ...e,
+    controlledSelection: o,
+    onSelectedLinesChange: a,
+    createEditor: c,
+  };
+  return (
+    s != null && (d.getEditStateKey = s),
+    l != null && (d.onItemEditChange = l),
+    u != null && (d.onItemEditComplete = u),
+    t && (d.renderCustomHeader = Qi),
+    n && (d.renderGutterUtility = Qi),
+    r && (d.renderCodeViewHeader = Qi),
+    i && (d.renderCodeViewFooter = Qi),
+    d
+  );
+}
+var Xi = d(function ({
+  managedContentStore: e,
+  renderCustomHeader: t,
+  renderHeaderPrefix: n,
+  renderHeaderFilenameSuffix: o,
+  renderHeaderMetadata: s,
+  renderAnnotation: c,
+  renderGutterUtility: l,
+  renderCodeViewHeader: u,
+  renderCodeViewFooter: d,
+}) {
+  "use no memo";
+  let f = G((t) => e.subscribe(t)),
+    p = G(() => e.getSnapshot()),
+    g = r(f, p, p),
+    _ = "";
+  for (let e of g?.items ?? []) _ += `${e.id}:${e.version}:${e.type}`;
+  return i(a, {
+    children: [
+      h(
+        () =>
+          g?.items?.map((e) =>
+            m(
+              Zi({
+                renderedItem: e,
+                renderCustomHeader: t,
+                renderHeaderPrefix: n,
+                renderHeaderFilenameSuffix: o,
+                renderHeaderMetadata: s,
+                renderAnnotation: c,
+                renderGutterUtility: l,
+              }),
+              e.element,
+              e.id,
+            ),
+          ),
+        [t, n, o, s, c, l, _],
+      ),
+      h(
+        () => (u != null && g?.header != null ? m(u(), g.header) : null),
+        [u, g?.header],
+      ),
+      h(
+        () => (d != null && g?.footer != null ? m(d(), g.footer) : null),
+        [d, g?.footer],
+      ),
+    ],
+  });
+});
+function Zi({
+  renderedItem: e,
+  renderCustomHeader: t,
+  renderHeaderPrefix: n,
+  renderHeaderFilenameSuffix: r,
+  renderHeaderMetadata: i,
+  renderAnnotation: a,
+  renderGutterUtility: o,
+}) {
+  if (e.type === "diff") {
+    let { item: s, instance: c } = e;
+    return Ri({
+      fileDiff: s.fileDiff,
+      renderCustomHeader: t == null ? void 0 : () => t(s),
+      renderHeaderPrefix: n == null ? void 0 : () => n(s),
+      renderHeaderFilenameSuffix: r == null ? void 0 : () => r(s),
+      renderHeaderMetadata: i == null ? void 0 : () => i(s),
+      renderAnnotation: a == null ? void 0 : (e) => a(e, s),
+      lineAnnotations: s.annotations,
+      renderGutterUtility: o == null ? void 0 : (e) => o(e, s),
+      getHoveredLine: c.getHoveredLine,
+      getAnnotationSlotName: c.getAnnotationSlotName,
+    });
+  }
+  {
+    let { item: s, instance: c } = e;
+    return Re({
+      file: s.file,
+      renderCustomHeader: t == null ? void 0 : () => t(s),
+      renderHeaderPrefix: n == null ? void 0 : () => n(s),
+      renderHeaderFilenameSuffix: r == null ? void 0 : () => r(s),
+      renderHeaderMetadata: i == null ? void 0 : () => i(s),
+      renderAnnotation: a == null ? void 0 : (e) => a(e, s),
+      lineAnnotations: s.annotations,
+      renderGutterUtility: o == null ? void 0 : (e) => o(e, s),
+      getHoveredLine: c.getHoveredLine,
+      getAnnotationSlotName: c.getAnnotationSlotName,
+    });
+  }
+}
+function Qi() {}
 var $i = typeof window > "u" ? l : o;
 function ea({
   fileDiff: t,
@@ -6554,6 +9171,10 @@ function aa({
     ),
   });
 }
+var oa = { code: "Code" };
+var sa = "h-full overflow-y-auto";
+var ca =
+  "outline-none focus-visible:outline-hidden focus-visible:shadow-focus transition-shadow duration-fast";
 var la = { compact: 17, comfortable: 19 };
 var ua = {
   "--diffs-font-family": "var(--cds-font-mono)",
@@ -6872,4 +9493,216 @@ function Na(e) {
       )
     : $[42];
 }
-export { Na, an };
+function Pa(e) {
+  if (e !== void 0) return e.filter((e) => e.type === "diff");
+}
+var Fa = { "data-cds": "CodeView" };
+var Ia = (e) => {
+  (e?.setAttribute("data-cds", Fa["data-cds"]), e?.setAttribute("dir", "ltr"));
+};
+function La(e, t) {
+  (e.setAttribute("role", "group"),
+    e.setAttribute("aria-label", t),
+    (e.tabIndex = 0));
+}
+function Ra(e) {
+  let t = _("code", oa.code);
+  return e || t;
+}
+function za(e, n) {
+  let $ = J9(63),
+    r,
+    i,
+    a,
+    o,
+    s,
+    c,
+    l,
+    u,
+    d,
+    f,
+    m,
+    h,
+    g,
+    _,
+    v,
+    b,
+    C,
+    w,
+    T,
+    E,
+    D;
+  J1($, 0, e)
+    ? (({
+        metrics: c,
+        className: r,
+        style: E,
+        wrapColumn: D,
+        items: s,
+        initialItems: o,
+        containerRef: i,
+        scrollRegionLabel: w,
+        disableWorkerPool: a,
+        selectedLines: T,
+        onSelectedLinesChange: u,
+        onScroll: l,
+        renderCodeViewHeader: m,
+        renderCodeViewFooter: f,
+        renderAnnotation: d,
+        renderHeaderPrefix: b,
+        renderHeaderFilenameSuffix: _,
+        renderHeaderMetadata: v,
+        renderCustomHeader: h,
+        renderGutterUtility: g,
+        ...C
+      } = e),
+      K5(
+        $,
+        0,
+        e,
+        r,
+        i,
+        a,
+        o,
+        s,
+        c,
+        l,
+        u,
+        d,
+        f,
+        m,
+        h,
+        g,
+        _,
+        v,
+        b,
+        C,
+        w,
+        T,
+        E,
+        D,
+      ))
+    : ((r = $[1]),
+      (i = $[2]),
+      (a = $[3]),
+      (o = $[4]),
+      (s = $[5]),
+      (c = $[6]),
+      (l = $[7]),
+      (u = $[8]),
+      (d = $[9]),
+      (f = $[10]),
+      (m = $[11]),
+      (h = $[12]),
+      (g = $[13]),
+      (_ = $[14]),
+      (v = $[15]),
+      (b = $[16]),
+      (C = $[17]),
+      (w = $[18]),
+      (T = $[19]),
+      (E = $[20]),
+      (D = $[21]));
+  let O = C,
+    k,
+    A,
+    j;
+  if (J1($, 22, O)) {
+    let {
+      unsafeCSS: e,
+      disableBackground: t,
+      createEditor: n,
+      editorOptions: r,
+      getEditStateKey: i,
+      onItemEditChange: a,
+      onItemEditComplete: o,
+      disableFileHeader: s,
+      backgroundColor: c,
+      ...l
+    } = O;
+    ((j = s), (k = c), (A = l), K3($, 22, O, k, A, j));
+  } else ((k = $[23]), (A = $[24]), (j = $[25]));
+  let M = j !== void 0 && j,
+    {
+      hostStyle: N,
+      itemMetrics: P,
+      themeType: F,
+      injectedCSS: I,
+    } = ja(E, c, A.overflow, D, M, A.enableGutterUtility, k),
+    L = J1($, 26, s) ? K1($, 26, s, Pa(s)) : $[27],
+    R = J1($, 28, o) ? K1($, 28, o, Pa(o)) : $[29],
+    z = J2($, 30, R, L)
+      ? K2($, 30, R, L, L === void 0 ? { initialItems: R } : { items: L })
+      : $[32],
+    [B, ee] = p(null),
+    V = S(Ia, ee, i),
+    H = Ra(w),
+    U,
+    te;
+  (J2($, 33, H, B)
+    ? ((U = () => {
+        B !== null && La(B, H);
+      }),
+      (te = [B, H]),
+      K3($, 33, H, B, U, te))
+    : ((U = $[35]), (te = $[36])),
+    x(U, te));
+  let ne = n,
+    re = J1($, 37, r)
+      ? K1($, 37, r, y(sa, ca, "text-code text-primary font-normal", r))
+      : $[38],
+    ie = J4($, 39, I, P, A, F)
+      ? K4($, 39, I, P, A, F, {
+          ...A,
+          themeType: F,
+          itemMetrics: P,
+          unsafeCSS: I,
+        })
+      : $[43];
+  return J5($, 44, a, N, z, l, u, d, f, m, h, g, _, v, b, V, T, ie, ne, re)
+    ? K5(
+        $,
+        44,
+        a,
+        N,
+        z,
+        l,
+        u,
+        d,
+        f,
+        m,
+        h,
+        g,
+        _,
+        v,
+        b,
+        V,
+        T,
+        ie,
+        ne,
+        re,
+        t(Wi, {
+          ref: ne,
+          ...z,
+          className: re,
+          style: N,
+          containerRef: V,
+          disableWorkerPool: a,
+          selectedLines: T,
+          onSelectedLinesChange: u,
+          onScroll: l,
+          renderCodeViewHeader: m,
+          renderCodeViewFooter: f,
+          renderAnnotation: d,
+          renderHeaderPrefix: b,
+          renderHeaderFilenameSuffix: _,
+          renderHeaderMetadata: v,
+          renderCustomHeader: h,
+          renderGutterUtility: g,
+          options: ie,
+        }),
+      )
+    : $[62];
+}
+var Ba = u(za);
+export { Ba as CodeView, Na, an, fa };

@@ -105,7 +105,8 @@ export class McpToolCache {
 
   /** The tools of one server config: [{name, description, readOnly}] (empty on failure). */
   async tools(name, config) {
-    if (!config || config.enabled === false) return []
+    // Off: 1.x's enabled:false, 2.x's disabled:true.
+    if (!config || config.enabled === false || config.disabled === true) return []
     const id = key(config)
     const hit = this.cache.get(name)
     if (hit?.key === id) return hit.promise

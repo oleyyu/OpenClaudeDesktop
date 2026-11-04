@@ -2,7 +2,8 @@
 // hook and context serializer are extracted; the portal/layer host is local.
 import React, { useCallback, useLayoutEffect, useRef, useSyncExternalStore } from 'react';
 import { createPortal } from 'react-dom';
-import { SourceSettingsButton } from './source-settings-button.jsx';
+// W14-code r6 css6-settings-button-code-callers: the selection toolbar's ghost buttons are shared-frame Uu (E41 direct import).
+import { CdsButton } from './generated/view-tabs/shared-frame-6jtSkIit.js';
 import { useTranscriptSelection } from './generated/code-editor/transcript-selection.mjs';
 import { sideChatContextLimit, truncateSideChatContext } from './generated/code-editor/side-chat-context.mjs';
 import { sideChatStore } from './side-chat-store.mjs';
@@ -45,12 +46,12 @@ export function SourceTranscriptSelection({ containerRef, actions, hidden }) {
   const hide = useCallback(() => selection.hideTooltip(), [selection.hideTooltip]);
   if (!selection.range || hidden || (!canExplain && !canReply)) return null;
   return <SelectionToolbar range={selection.range} containerRef={containerRef} onHide={hide}>
-    {canExplain && <SourceSettingsButton variant="ghost" onMouseDown={event => event.preventDefault()} onClick={() => {
+    {canExplain && <CdsButton variant="ghost" onMouseDown={event => event.preventDefault()} onClick={() => {
       actions.onSideChatContext(truncateSideChatContext(selection.text, sideChatContextLimit));selection.clearSelection();
-    }}>{state.started ? t('Send to side chat') : t('Start a side chat')}</SourceSettingsButton>}
+    }}>{state.started ? t('Send to side chat') : t('Start a side chat')}</CdsButton>}
     {canExplain && canReply && <span className="source-selection-divider" aria-hidden="true"/>}
-    {canReply && <SourceSettingsButton variant="ghost" onMouseDown={event => event.preventDefault()} onClick={() => {
+    {canReply && <CdsButton variant="ghost" onMouseDown={event => event.preventDefault()} onClick={() => {
       const text = selection.text;selection.clearSelection();actions.onAttachText(text);
-    }}>{t('Reply')}</SourceSettingsButton>}
+    }}>{t('Reply')}</CdsButton>}
   </SelectionToolbar>;
 }

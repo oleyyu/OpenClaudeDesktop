@@ -14,7 +14,10 @@ import { fileTreeCompactRow, fileTreeRowCurrent, fileTreeRowIdle } from '../src/
 import { commandShortcut } from '../src/generated/session-rail-changes/command-shortcut.mjs';
 import { COMMITS_HEADER_ROW, COMMIT_META_CLASS, COMMIT_ROW_ACTIVE, COMMIT_ROW_CLASS, COMMIT_ROW_IDLE, COMMITS_PANEL_CLASS, NATIVE_MENU_TARGETS,
   OLDER_COMMITS_CLASS, SCOPE_ROW_CLASS, preventNativeMenu, suppressNativeMenu } from '../src/diff-commits-model.mjs';
-import { PR_COMMENT_KEYBOARD_GATE, prCommentKeyboardEnabled, prCommentShortcutsEnabled, prCommentStep, prCommentStepIndex } from '../src/diff-pr-comment-nav-model.mjs';
+import { PR_COMMENT_KEYBOARD_GATE, prCommentComposing, prCommentKeyboardEnabled, prCommentMatch, prCommentShortcutsEnabled, prCommentStepIndex } from '../src/diff-pr-comment-nav-model.mjs';
+// W14-code r4 gen-final-4: the model's test-only prCommentStep is deleted; the step is the match unless an IME composes
+// (c44d00c7f `onMatch:t=>{!t.isComposing&&t.keyCode!==229&&Lt(e)}`), as source-diff-comments.jsx combines the two.
+const prCommentStep = (event, options = {}) => { const delta = prCommentMatch(event, options); return delta && !prCommentComposing(event) ? delta : 0; };
 
 const ROOT = path.resolve(import.meta.dirname, '..');
 const official = (name) => fs.readFileSync(path.join(official3.ionSource, name), 'utf8');
@@ -179,7 +182,8 @@ test('PR-comment step (cc8941b7b nt) and Qn enabled; OpenClaude has none, so the
   assert.equal(prCommentShortcutsEnabled({ files: 2, open: 1, keyboard: false }), false);
   // Mounted in SourceDiff beside the change keys, with no PR comments.
   const diff = source('src/source-diff.jsx');
-  assert.match(diff, /usePrCommentShortcuts\(\{ rootRef: root, files: changes \? entries\.length : 0 \}\);/);
+  // W14-code pa2-04 (E84.3): the inline placement is gone; SourceDiff always renders the Changes body.
+  assert.match(diff, /usePrCommentShortcuts\(\{ rootRef: root, files: entries\.length \}\);/);
   assert.match(diff, /const NO_PR_COMMENTS = Object\.freeze\(\[\]\);/);
   const comments = source('src/source-diff-comments.jsx');
   assert.match(comments, /export function usePrCommentShortcuts\(/);

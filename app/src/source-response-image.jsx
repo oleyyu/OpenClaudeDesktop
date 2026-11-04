@@ -58,13 +58,13 @@ export function SourceResponseImage({src,alt='',cwd,call,fallback}) {
         onContextMenu={event=>{event.preventDefault();event.stopPropagation();const origin=contextMenuOrigin(event);openMenu(origin.point,origin.byKeyboard);}}
         onKeyDown={event=>{if(event.key==='ContextMenu'||event.key==='F10'&&event.shiftKey){event.preventDefault();event.stopPropagation();const rect=ref.current.getBoundingClientRect();openMenu({x:rect.left,y:rect.bottom},true);}}} />}
       {!ready && <span className="sri-placeholder" aria-hidden="true" />}
-      {!ready && alt && <span className="source-sr-only">{alt}</span>}
+      {!ready && alt && <span className="sr-only">{alt}</span>}
     </span>
     {menu && <SourceMenu.Popup anchor={ref.current} trigger={ref.current} point={menu.point} dataCds="ContextMenu" layer="contextmenu" label={t("Image actions")}
       initialHighlight={menu.byKeyboard?'first':undefined} onClose={()=>setMenu(null)}>
       <SourceMenu.Item onClick={()=>{void run('copy');}}>{t('Copy image')}</SourceMenu.Item>
       <SourceMenu.Item onClick={()=>{void run('save');}}>{t('Save image')}</SourceMenu.Item>
     </SourceMenu.Popup>}
-    {notice && <span role={notice.error?'alert':'status'} className={notice.error?'source-tool-error':'source-sr-only'}>{notice.text}</span>}
+    {notice && <span role={notice.error?'alert':'status'} className={notice.error?'source-tool-error':'sr-only'}>{notice.text}</span>}
   </>;
 }

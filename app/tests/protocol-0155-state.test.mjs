@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { emptyState, reduce, ownerThreadId, isChildThread, childThreadIds, isSubAgentThread, hasPendingApproval, hasLiveWork, isItemStreaming } from "../src/state.js";
+import { emptyState, reduce, ownerThreadId, isSubAgentThread, hasPendingApproval, hasLiveWork, isItemStreaming } from "../src/state.js";
 import { reasoningText } from "../src/transcript-item-visibility.mjs";
 
 const event = (method, params) => ({ event: { method, params } });
@@ -46,10 +46,9 @@ test("thread/started records sub-agent identity and the parent-child map", () =>
   s = reduce(s, event("thread/started", { thread: thread("grandchild", { parentThreadId: "child" }) }));
   assert.equal(ownerThreadId(s, "grandchild"), "parent");
   assert.equal(ownerThreadId(s, "parent"), "parent");
-  assert.equal(isChildThread(s, "grandchild"), true);
-  assert.equal(isChildThread(s, "parent"), false);
-  assert.deepEqual(childThreadIds(s, "parent"), ["child", "grandchild"]);
-  assert.deepEqual(childThreadIds(s, "grandchild"), []);
+  // W14-code r4 fr4-16: the test-only helpers isChildThread / childThreadIds are gone (no caller); the maps they read stay.
+  assert.deepEqual(s.threadParents, { child: "parent", grandchild: "child" });
+  assert.deepEqual(s.childThreads, { parent: ["child"], child: ["grandchild"] });
   // Repeating thread/started must not duplicate the child entry.
   s = reduce(s, event("thread/started", { thread: thread("child", { parentThreadId: "parent" }) }));
   assert.deepEqual(s.childThreads.parent, ["child"]);

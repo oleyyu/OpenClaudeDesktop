@@ -103,36 +103,10 @@ test('a workflow started by a scheduled prompt relays no earlier typed message; 
   } finally { fs.rmSync(root, { recursive: true, force: true }); }
 });
 
-test('pausing a run holds an agent already queued for a slot until Resume', { timeout: 60000 }, async () => {
-  const dir = tmp('cd-wf-pause-'), cwd = path.join(dir, 'ws'), home = path.join(dir, 'home');
-  fs.mkdirSync(cwd, { recursive: true }); fs.mkdirSync(home, { recursive: true }); fs.mkdirSync(path.join(dir, 'run'));
-  const env = { PATH: process.env.PATH, HOME: home, CODEX_HOME: path.join(home, '.codex'), CODE_DESKTOP_WORKFLOW_RUNNER: '1', CLAUDE_CODE_WORKFLOW_PREFIX_STAGGER_MS: '0', CLAUDE_CODE_WORKFLOW_MAX_CONCURRENT_AGENTS: '1' };
-  const source = 'export const meta={name:"p",description:"pause"};\nreturn await parallel([()=>agent("GUI",{label:"a1"}),()=>agent("GUI",{label:"a2"})]);';
-  const child = fork(path.resolve(import.meta.dirname, '../electron/workflow-child.mjs'), [], { cwd, stdio: ['ignore', 'ignore', 'pipe', 'ipc'], env });
-  let stderr = '';
-  child.stderr.on('data', (data) => { stderr += data; });
-  const events = [], t0 = Date.now();
-  let resumedAt = null;
-  const finished = new Promise((resolve) => child.on('exit', resolve));
-  child.on('message', (message) => { const event = message?.event ?? message; if (event?.type) events.push({ type: event.type, label: event.label, at: Date.now() - t0 }); });
-  try {
-    child.send({ directory: path.join(dir, 'run'), source, cwd, plan: false, access: 'read-only', resume: false, model: 'fixture', command: path.resolve(import.meta.dirname, 'fixtures/workflow-server.cjs'), version: 't', runId: 'wf_pausetest1', workflowScripts: false });
-    for (let i = 0; i < 200 && !events.some((event) => event.type === 'start'); i++) await new Promise((resolve) => setTimeout(resolve, 25));
-    child.send({ control: 'pause', paused: true });
-    for (let i = 0; i < 400 && !events.some((event) => event.type === 'end'); i++) await new Promise((resolve) => setTimeout(resolve, 25));
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    assert.equal(events.filter((event) => event.type === 'start').length, 1, 'a2 waits while paused');
-    resumedAt = Date.now() - t0;
-    child.send({ control: 'pause', paused: false });
-    await finished;
-    const second = events.filter((event) => event.type === 'start')[1];
-    assert.ok(second && second.at >= resumedAt, 'a2 starts only after Resume');
-    assert.ok(events.some((event) => event.type === 'result'));
-  } catch (error) { error.message += `\n${stderr.slice(-2000)}\n${JSON.stringify(events)}`; throw error; }
-  finally { child.kill(); fs.rmSync(dir, { recursive: true, force: true }); }
-});
+// W14-code r5 cleanup R5DC-03 (E95): the run's Pause / Resume went with the host run card (R4T-08b: the official Tasks
+// card cccc2cf0a wN → ds detailed has Stop only), so workflow-child.mjs takes no control messages and this case is gone.
 
-test('Qwen’s .qwen/workflows join the saved workflows (its folder first) and Save writes there', async () => {
+test('Qwen’s .qwen/workflows join the saved workflows (its folder first)', async () => {
   const tool = await import('../electron/workflow-tool-model.mjs');
   const root = tmp('cd-qwen-wf-'), home = path.join(root, 'home'), repo = path.join(root, 'repo');
   try {
@@ -149,8 +123,8 @@ test('Qwen’s .qwen/workflows join the saved workflows (its folder first) and S
     const found = tool.savedWorkflows({ cwd: repo, home, folders }).workflows;
     assert.deepEqual(found.map((entry) => [entry.name, entry.description]), [['mine', 'user qwen'], ['release-check', 'qwen copy']]);
     assert.equal(tool.findSavedWorkflow({ cwd: repo, home, name: 'release-check' }).workflow.description, 'claude copy', 'other cores keep .claude/workflows only');
-    assert.equal(tool.saveWorkflowTarget({ scope: 'project', cwd: repo, home, name: 'New One', folders }).file, path.join(repo, '.qwen', 'workflows', 'new-one.js'));
-    assert.equal(tool.saveWorkflowTarget({ scope: 'user', cwd: repo, home, name: 'x', folders }).file, path.join(home, '.qwen', 'workflows', 'x.js'));
+    // W14-code r5 cleanup R5DC-03 (E95): the run card's Save (saveWorkflowTarget) is gone with the card's controls.
+    assert.equal('saveWorkflowTarget' in tool, false);
     assert.deepEqual(tool.workflowFolders(['../evil', '.qwen/workflows']), ['.qwen/workflows', '.claude/workflows']);
   } finally { fs.rmSync(root, { recursive: true, force: true }); }
 });
@@ -185,10 +159,13 @@ test('the Bypass dialog links the running core’s own guidance, never Claude Co
   assert.doesNotMatch(source, /url: SECURITY_GUIDE_URL/);
 });
 
-test('Stop sends the goal pause to the core; quitting pauses working goals on a native core; pause/clear never resume first', () => {
+test('Stop leaves the goal alone; quitting pauses working goals on a native core; pause/clear never resume first', () => {
   const main = fs.readFileSync(new URL('../src/main.jsx', import.meta.url), 'utf8');
-  assert.match(main, /nativeGoals && state\.goals\?\.\[request\.threadId\]\?\.status === "active" \? \{ pauseGoal: true \}/);
-  assert.match(main, /if \(patch\?\.status === "active"\) await ensureResumed\(threadId\);/);
+  // W14-code r4 shell (review fix): 3.6556.2's Stop only interrupts the turn (its CLI goal has no paused state, cf74bc599
+  // vM shows no status) and the goal strip's Resume went with E95, so the renderer's stop() no longer sends pauseGoal.
+  assert.doesNotMatch(main, /pauseGoal/);
+  // fr4-12a (E95) removed the strip's Pause / Resume / Clear (goalAction); /goal pause and /goal clear keep the rule.
+  assert.match(main, /const quiet = request\.method === "thread\/goal\/clear" \|\| \(request\.method === "thread\/goal\/set" && request\.params\.status === "paused" && !request\.params\.objective\);\n\s*if \(!quiet\) await ensureResumed\(origin\);/);
   const electron = fs.readFileSync(new URL('../electron/main.cjs', import.meta.url), 'utf8');
   // w13 closeout: the incognito-chat sweep (w13-close-main-process) sits between the goal pause and the core stop.
   assert.match(electron, /await pauseActiveGoals\(\)\.catch\(\(\) => \{\}\);\n(?:    \/\/[^\n]*\n    await quitChatHistory\?\.quit\(\)\.catch\(\(\) => \{\}\);\n)?    await Promise\.all\(\[stopAllCodexClients\(\)/);
@@ -197,12 +174,29 @@ test('Stop sends the goal pause to the core; quitting pauses working goals on a 
   assert.match(electron, /if \(interrupted\) agentTools\.cancelThread\(e\.params\.threadId, "The turn was stopped\."\);\n    else if \(!coreKeepsBackgroundAgents\(\)\) agentTools\.cancelThread/);
 });
 
-test('an invalid tool call reads as a failed use of the attempted tool; the transcript link item is “Open in Preview”', async () => {
+// W14-code r7 R7T-03: the link item is 3.6556.2 c96d752d0 DA's "Open in Browser pane" (id vbISyh+BUD), no longer "Open in Preview".
+test('an invalid tool call reads as a failed use of the attempted tool; the transcript link item is “Open in Browser pane”', async () => {
   const { genericToolLabel } = await import('../src/generic-tool-model.mjs');
   const item = { type: 'dynamicToolCall', id: 'x', namespace: null, tool: 'frobnicate', status: 'failed', success: false, codeDesktop: { invalidTool: true } };
   assert.deepEqual(genericToolLabel(item, 'failed'), { label: 'Couldn’t use frobnicate', meta: null });
   const i18n = await import('../electron/i18n/index.mjs');
   try { i18n.setLocale('zh-CN'); assert.equal(genericToolLabel(item, 'failed').label, '无法使用 frobnicate'); } finally { i18n.setLocale('en-US'); }
   const menu = fs.readFileSync(new URL('../src/transcript-context-menu-model.mjs', import.meta.url), 'utf8');
-  assert.match(menu, /t\("Open in Preview"\)/);
+  assert.match(menu, /t\("Open in Browser pane"\)/);
+  assert.doesNotMatch(menu, /t\("Open in Preview"\)/);
+});
+
+// W14-code r8 R8T-01: 3.6556.2 c856385e2 bn — a transcript file link's Open in ▸ lists the installed editors (pn →
+// openInEditor at the reference's line) before Files pane and Default app (wn → openSessionFileInDefaultApp, locally
+// main's session-scoped open-tool-file).
+test('the transcript file menu opens in an installed editor or the default app', () => {
+  const transcript = fs.readFileSync(new URL('../src/source-transcript.jsx', import.meta.url), 'utf8');
+  assert.match(transcript, /editors: current\.onOpenInEditor \? current\.editors : \[\], canOpenDefault: !!current\.onOpenDefaultApp/);
+  assert.match(transcript, /case "open-default-app": current\.onOpenDefaultApp\?\.\(choices\?\.absolute\)/);
+  assert.match(transcript, /id\.startsWith\("open-in-editor:"\)\) current\.onOpenInEditor\?\.\(choices\?\.absolute, id\.slice\("open-in-editor:"\.length\), menu\.line\)/);
+  const main = fs.readFileSync(new URL('../src/main.jsx', import.meta.url), 'utf8');
+  const actions = main.slice(main.indexOf('const transcriptActions = {'), main.indexOf('resolveTurn: (itemId) =>', main.indexOf('const transcriptActions = {')));
+  assert.match(actions, /editors, onOpenInEditor: editors\.length \? openInEditor : null,/);
+  assert.match(actions, /onOpenDefaultApp: current \? \(absolute\) => call\("open-tool-file", \{ sessionId: current, path: absolute \}\)/);
+  assert.match(actions, /t\("Couldn’t open this file with the default app\."\)/);
 });

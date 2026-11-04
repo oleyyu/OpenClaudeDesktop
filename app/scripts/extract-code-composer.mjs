@@ -186,6 +186,21 @@ const modules = [
       Sc: [".split(\"+\")", { loose: "Ps(e) ? r.push(e) : i.push(e)" }],
       yc: ["Object.hasOwn(e, t) ? e[t] : void 0"],
     }, },
+  // W14-code composer-09: the keycap class Kbd sizes itself with (shared-frame ec, exported Yu: one character square, more
+  // padded wide) and the CDS Kbd itself (cbd6db52c r, exported t: data-cds "Kbd", text-caption), which c227f4d5e NA
+  // (the history hint, `Fp` from cbd6db52c) renders for ↑ / ↓ / esc and the "<kbd>↓</kbd> to restore your draft" value.
+  { target: "composer-keycap.mjs", source: "shared-frame-6jtSkIit.js",
+    exports: { ec: "keycapClass" },
+    officialExports: { ec: "Yu" },
+    features: {
+      ec: ["Array.from(e ?? \"\").length === 1"],
+    }, },
+  { target: "composer-kbd.mjs", source: "cbd6db52c-BMnXAopb.js",
+    exports: { r: "Kbd" },
+    officialExports: { r: "t" },
+    features: {
+      r: ["\"data-cds\": \"Kbd\"", "\"text-caption\"", "[--cds-shortcut-cap-ink:currentColor]"],
+    }, },
   // DROPPED: -
   { target: "transcript-surface.mjs", source: "c4a70913c-BfrWompY.js",
     exports: { d: "transcriptSurfaceClass" },
@@ -260,6 +275,19 @@ const modules = [
       { loose: "(e.repeat || Date.now() < Xr.current) &&" },
       { loose: "(e.metaKey || e.ctrlKey || zs())" },
     ], },
+  // W14-code r7 gen-final-7 (review fix, composer bL finalFocus): c227f4d5e K6 (exported y; cc43287c9 imports it as
+  // yte), the start card's popup finalFocus: Dle's `Qi = {onRequestComposerFocus: ht, isPanelActive: Mt, keyboardOnly:
+  // !0}, $i = yte(Qi)` goes to bL (and the env / folder popups) as `finalFocus: $i`. A close that leaves focus on the
+  // body or inside a menu / dialog hands it to the composer (on a fine-pointer host), and answers whether focus stayed.
+  // DROPPED: -
+  { target: "composer-final-focus.mjs", source: "c227f4d5e-B-FYKrwT.js",
+    exports: { K6: "useComposerFinalFocus" },
+    officialExports: { K6: "y" },
+    features: {
+      K6: ["{ onRequestComposerFocus: t, isPanelActive: n, keyboardOnly: r } = e,",
+        "'[role=\"menu\"], [role=\"dialog\"], [role=\"alertdialog\"]'",
+        { loose: "(t?.(), e.document.activeElement === r)" }, "return t ? s : void 0;"],
+    }, },
   // DROPPED: -
   { target: "composer-key-label.mjs", source: "c227f4d5e-B-FYKrwT.js",
     exports: { GM: "shortcutLabel" },
@@ -424,19 +452,22 @@ const modules = [
       pR: ["e.detail === 0", "!(\"pointerType\" in e && e.pointerType)"],
     }, },
   // DROPPED: -
-  { target: "chat-composer-react-version.mjs", source: "vendor-frame-CnSY1sxv.js", viewTabsSame: true, oneCopy: true,
-    exports: { ae: "bundledReactVersion" },
-    officialExports: { ae: "Do" },
-    features: {
-      ae: [{ loose: "re = \"19.2.4\"" }],
-    }, },
+  // W14-code r2 closeout-2 (DC-06): chat-composer-react-version.mjs (vendor-frame ae, the bundled React version
+  // string) is retired, nothing imported it.
   // DROPPED: Mt->Mt textStaysSecondaryClass (view-tabs cdsStaysSecondaryTextClass); Q->Ln useIsomorphicLayoutEffect (view-tabs useCdsIsoLayoutEffect); Jm->qh inertProps (view-tabs inertProps); Oo resolveIconSize (gone); Yn->Tr guardedMutationObserver (view-tabs useLazyMutationObserver); aa->ga sizeAttribute (view-tabs cdsSizeAttributes); bu->ud ownerResizeObserver (view-tabs elementResizeObserverClass); Jn->wr guardedResizeObserver (view-tabs useLazyObserver); Ya->so useRootOwnerWindow (view-tabs useCdsOwnerWindow); ph->fg useClickToFocus (view-tabs useClickToFocus); Z useCdsLabel (gone); ch surfaceFocusShadowStyle (gone); Dn useMergedRefCallback (gone); Ms->lc useIsMac (view-tabs useIsMacPlatform); vr useFizzyLakePart (gone); wn->On useEventCallbackRef (view-tabs useLatestCallback); lc->Uc elementOrNull (view-tabs asElementNode); Js->Dc ariaKeyShortcuts (view-tabs ariaKeyShortcuts); dd->af CdsSkeleton (view-tabs CdsSkeleton); ja useRootDensity (gone); Jd->Uf useLayerAwareZIndex (view-tabs useCdsLayerAwareZIndex); an subscribePointerMedia (view-tabs subscribeInputMediaChanges) and tn prefersTouch (view-tabs matchesCoarseOrHoverlessPointer), published by w2-routines-shared (D46); rn->If isFinePointerHost (view-tabs canFocusComposerOnClick, published by w3-code-routines; chat-composer-attachments imports it from there)
   // w12-viewtabs (D1): aa ownerWindowOf and wh prefersReducedMotion are view-tabs cdsNodeOwnerWindow / prefersReducedMotion
   // now (published in W12), so they are imported from there instead of rooted here.
+  // W14-code composer: shared-frame qf (the DOM node test) is view-tabs isDomNode since the W14 approvals lane published
+  // it (extract-view-tabs.mjs roots, D46), so the shell imports it by that name and this module no longer slices it.
   { target: "chat-composer-frame.mjs", source: "shared-frame-6jtSkIit.js", viewTabsSame: true, oneCopy: true,
-    exports: { Fn: "textDirectionOf", Pt: "afterFontsReady", sg: "useSurfaceFocusShadowStyle", Wo: "useResolvedIconSize", Jh: "isRenderable", Na: "useRootNaturalImageTiles", Dn: "useOptionalEventCallback", Xf: "isTextarea", Ao: "rootRemPx", qf: "isDomNode", Jf: "isHtmlElement", no: "isSurfaceToken", Zh: "afterAnimationsSettle", Ff: "dropScrimLayer", Qh: "isUnfocusedFrame", dn: "swallowEnterAfterFocusMove", Uh: "clickModifierSource", hn: "sanitizeLabelText", gn: "collapseControlText", _n: "isBlankLabelText", vn: "trimLeadingInvisible", yn: "tooltipSafeText" },
-    officialExports: { Fn: "vf", Pt: "Uf", sg: "Ol", Wo: "ld", Jh: "Pl", Na: "Md", Dn: "Cf", Xf: "iu", Ao: "dd", qf: "nu", Jf: "eu", no: "xd", Zh: "Nl", Ff: "au", Qh: "Ml", dn: "Nf", Uh: "Bl", hn: "jf", gn: "Af", _n: "Df", vn: "Mf", yn: "kf" },
+    // W14-code r6-composer-02: Wa (the CDS color mode, light unless CdsModeStoreContext answers dark), which the effort
+    // slider's lit overlay (c227f4d5e y$ `n = ne()`) reads, and Br (exported rf, the named lazy-chunk loader shared-5 Od
+    // starts the presence motion with) are exported for the effort-control area and the presence loader.
+    exports: { Fn: "textDirectionOf", Pt: "afterFontsReady", sg: "useSurfaceFocusShadowStyle", Wo: "useResolvedIconSize", Jh: "isRenderable", Na: "useRootNaturalImageTiles", Dn: "useOptionalEventCallback", Xf: "isTextarea", Ao: "rootRemPx", Jf: "isHtmlElement", no: "isSurfaceToken", Zh: "afterAnimationsSettle", Ff: "dropScrimLayer", Qh: "isUnfocusedFrame", dn: "swallowEnterAfterFocusMove", Uh: "clickModifierSource", hn: "sanitizeLabelText", gn: "collapseControlText", _n: "isBlankLabelText", vn: "trimLeadingInvisible", yn: "tooltipSafeText", Wa: "useCdsColorMode", Br: "loadNamedChunk" },
+    officialExports: { Fn: "vf", Pt: "Uf", sg: "Ol", Wo: "ld", Jh: "Pl", Na: "Md", Dn: "Cf", Xf: "iu", Ao: "dd", Jf: "eu", no: "xd", Zh: "Nl", Ff: "au", Qh: "Ml", dn: "Nf", Uh: "Bl", hn: "jf", gn: "Af", _n: "Df", vn: "Mf", yn: "kf", Br: "rf" },
     features: {
+      Wa: [{ loose: "return Ga() ?? \"light\";" }],
+      Br: [{ loose: "return Rr ? Promise.resolve(Rr(e, t)) : t();" }],
       Fn: ["/\\p{L}/u.exec(e)?.[0]", "? \"rtl\" : \"ltr\""], Pt: ["e?.fonts?.ready", "t.then(i, i)"],
       sg: ["\"--cds-focus-shadow\":", "\"--cds-focus-shadow-danger\":"], Wo: [{ loose: "t = e === void 0 ? Ho : e" }, { loose: "K2($, 0, t, n, Vo(t, n))" }],
       Jh: ["e != null && typeof e != \"boolean\""],
@@ -444,7 +475,6 @@ const modules = [
       Dn: ["return e === void 0 ? void 0 : n;"],
       Xf: ["e.localName === \"textarea\""],
       Ao: [{ loose: "typeof document > \"u\" ? 16 : mo(po())" }],
-      qf: ["typeof e?.nodeType == \"number\""],
       Jf: [{ loose: "return Zd(e) === Yd;" }],
       no: [{ loose: "return Wa.has(e);" }],
       Zh: ["Promise.allSettled(r.map((e) => e.finished))"],
@@ -493,12 +523,22 @@ const modules = [
       jd: ["in-data-cds-dock-masked:bg-page"],
     }, },
   // DROPPED: om usePresenceMotion (gone)
+  // W14-code r6-composer-02: the lazy presence motion is loaded, as in the desktop (shared-50 tD/nD start Od at boot,
+  // tier T1). Od (exported ql) fills bd through Br (`Je("cds_lazy_presence_motion", Dd)`); Dd's dynamic import of
+  // cb6c4b462 is the host loader (loadPresenceMotionChunk: working-line/presence-motion.mjs over its one vendor-motion).
+  // kd (exported Gl, `() => bd`) is the getter EffortControl's value label reads (`[ee] = useState(ae)`); the shell
+  // imports it from here instead of holding a copy.
   { target: "chat-composer-presence.mjs", source: "shared-5-Bg6ZMqvt.js", oneCopy: true,
-    exports: { Wd: "Presence", bd: "lazyPresenceMotion" },
-    officialExports: { Wd: "Hl" },
+    localAdapters: {
+      Dd: { name: 'loadPresenceMotionChunk', features: ['import("./cb6c4b462-Dl6QEgSL.js")'] },
+    },
+    exports: { Wd: "Presence", bd: "lazyPresenceMotion", kd: "presenceMotion", Od: "loadPresenceMotion" },
+    officialExports: { Wd: "Hl", kd: "Gl", Od: "ql" },
     features: {
       Wd: [{ loose: "Object.assign(gm, { Div: bm(\"div\"), Span: bm(\"span\") })" }, "Div:", "Span:"],
       bd: ["bd = null"],
+      kd: [{ loose: "kd = () => bd" }],
+      Od: ["\"cds_lazy_presence_motion\"", "e?.AnimatePresence !== void 0"],
     }, },
   // DROPPED: -
   { target: "chat-composer-layout.mjs", source: "shared-26-CGuBxVt9.js", oneCopy: true,
@@ -622,6 +662,30 @@ const modules = [
       { loose: "function Ki(e) {\n  let t = e.relativePath || e.fileName;\n  return Vt(t) ?? t;\n}" },
       { loose: "function qi(e) {\n  return e.file ? void 0 : e.relativePath;\n}" },
       { loose: "e.file !== void 0 && Ze.test(e.fileName) && Co.test(e.file.type)" },
+    ], },
+  // DROPPED: -
+  // W14-code composer-15: Go's Saved draft dialog (c0fbbe82d ca, with its body sa): the held text in a 3xl CDS Dialog, the
+  // Discard changes? and Remove saved draft? confirmations, Cancel / Save. sa's editor Hr is the lazily loaded
+  // EpitaxyCodeMirrorText (cbd02b8f2 ka, `Vr = Qe({entry: Ir, …})`, a dynamic import): the host has no CodeMirror, so Hr is
+  // a local adapter (ComposerHeldTextEditor) with ka's contract (getValue / focus / getContentElement, onDirty on the first
+  // change, Mod-Enter onSubmit, onUnmount with the text getter).
+  { target: "composer-held-text-dialog.mjs", source: "c0fbbe82d-COsmfHJY.js",
+    adapters: {
+      [official.vendorIntl]: { l: { name: 'ComposerMessage', module: tileAdapterModule, features: ['[React Intl]'] } },
+    },
+    localAdapters: {
+      Hr: { name: 'ComposerHeldTextEditor', module: tileAdapterModule, features: ['Hr = Vr.Component'] },
+    },
+    exports: { ca: "HeldTextDialog" },
+    features: {
+      ca: ["defaultMessage: \"Saved draft\", id: \"dxXfrwuTJF\"", { loose: "defaultMessage: \"Discard changes?\", id: \"41zpq3nBvm\"" },
+        { loose: "defaultMessage: \"Remove saved draft?\", id: \"Z6Mb9r9ele\"" }, { loose: "defaultMessage: \"This is the only copy of this text.\", id: \"tK3aS6EQE+\"" },
+        { loose: "size: \"3xl\"" }],
+    },
+    chunkFeatures: [
+      { loose: "defaultMessage: \"Saved draft text\", id: \"Ue/4lPBQAy\"" },
+      { loose: "className: \"flex max-h-64 flex-col overflow-hidden rounded border border-alpha-3\"" },
+      { loose: "pick: (e) => e.EpitaxyCodeMirrorText," },
     ], },
   // DROPPED: -
   { target: "code-pane-experimental.mjs", source: "shared-18-D3y8YMFN.js",
@@ -803,6 +867,15 @@ export async function extractCodeComposer({ check = false, dry = false } = {}) {
       seen.add(name);
       const owner = sibling(name);
       if (owner) { imports.set(name, { from: `./${owner.spec.target}`, name: owner.spec.exports[name], via: `${spec.source}:${name}`, kind: 'generated' }); return; }
+      // W14-code composer-15: a same-chunk binding the host answers (localAdapters), pinned to its own declaration text.
+      const localAdapter = spec.localAdapters?.[name];
+      if (localAdapter) {
+        const declared = src.program.scope.getBinding(name)?.path;
+        if (!declared || declared.isImportSpecifier()) throw Error(`${spec.target}: local adapter ${name} is not a declaration of ${spec.source}`);
+        assertFeatures(`${spec.target}: local adapter ${name}`, declarationText(src, declared), localAdapter.features);
+        imports.set(name, { from: localAdapter.module ?? adapterModule, name: localAdapter.name, via: `${spec.source}:${name}`, kind: 'adapter', original: name });
+        return;
+      }
       const binding = src.program.scope.getBinding(name);
       if (!binding) throw Error(`${spec.target}: unbound ${name}`);
       const p = binding.path;

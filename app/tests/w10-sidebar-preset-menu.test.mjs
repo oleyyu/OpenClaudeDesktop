@@ -102,19 +102,11 @@ test('60 source: 3.6556.2 HJ tests offered || cl(mJ(!1, hJ())), cl latches the f
   assert.equal(filter.CODE_ROUTINES_SECTION_HOST, false);
 });
 
-test('60 model: mJ and hJ over the host facts and over other facts', () => {
-  const { sidebarShowItemOffered: mJ, sidebarRoutineRunning: hJ } = M.adapters;
-  assert.equal(mJ(false, hJ()), false, 'host: no org routines, no running routine group');
-  assert.equal(hJ(), false);
-  const facts = { codeEnabled: true, ccdGateSettled: true, orgHasCodeRoutines: false };
-  assert.equal(mJ(false, true, facts), true);
-  assert.equal(mJ(true, false, facts), true);
-  assert.equal(mJ(false, false, { ...facts, orgHasCodeRoutines: true }), true);
-  assert.equal(mJ(false, true, { ...facts, codeEnabled: false }), false, 'Code off once the gate settled');
-  assert.equal(mJ(false, true, { ...facts, codeEnabled: false, ccdGateSettled: false }), true, 'gate not settled yet');
-  assert.equal(hJ({ routineGroups: [{ isRunning: false }, { isRunning: true }], localEnvironmentShown: true }), true);
-  assert.equal(hJ({ routineGroups: [{ isRunning: true }], localEnvironmentShown: false }), false, 'ys(e, "local") false');
-  assert.equal(hJ({ routineGroups: [], localEnvironmentShown: true }), false);
+// W14-code r8 R8DC-04: the host's plain-function copies of mJ / hJ (sidebarShowItemOffered / sidebarRoutineRunning) had no
+// caller; they are gone and the toggle runs the generated originals (pinned verbatim in '60 source' above).
+test('60 model: the adapters no longer carry test-only copies of mJ / hJ', () => {
+  for (const name of ['sidebarShowItemOffered', 'sidebarRoutineRunning']) assert.equal(name in M.adapters, false, name);
+  assert.equal(typeof M.adapters.useSidebarRoutinesToggle, 'function');
 });
 
 test('60 render: a Show item that is on but not offered is not drawn; an offered one is the keepOpen checkbox Item', () => {
@@ -265,4 +257,29 @@ test('zh-CN: the preset menu labels are translated', () => {
     assert.equal(M.i18n.t('Move up'), '上移');
     assert.equal(M.i18n.t('Move down'), '下移');
   } finally { M.i18n.setLocale(previous); }
+});
+
+// W14-code r8 R8DC-01 (D1): the sidebar hover card links question-card's shared-5 NA, Routines links cowork-scheduled's
+// shared-18 slice and composer-notices links its shared-1 slice. What stays twice is listed (not this round's: sessions-page
+// TC, mcp-app-card Cv, view-tabs' held shared-frame gh / _h, artifact-library xd; composer-notices keeps shared-26
+// DM / OM / kM because cowork-scheduled's OM reads its own copy of the composer layout context io).
+test('R8DC-01: hover card, Routines and composer notices link the slices other areas already hold', async () => {
+  const gen = path.join(app, 'src/generated');
+  const held = new Map();
+  for (const area of await fs.readdir(gen)) {
+    let manifest;
+    try { manifest = JSON.parse(await fs.readFile(path.join(gen, area, 'manifest.json'), 'utf8')); } catch { continue; }
+    for (const m of manifest.modules ?? []) for (const b of m.bindings ?? []) {
+      const key = `${path.basename(m.source ?? '')}#${typeof b === 'string' ? b : b.name}`;
+      held.set(key, [...(held.get(key) ?? []), area]);
+    }
+  }
+  const shared = (area) => [...held].filter(([, areas]) => areas.includes(area) && areas.some((a) => a !== area)).map(([key]) => key).sort();
+  assert.deepEqual(shared('sidebar-hover-card'), []);
+  assert.deepEqual(shared('sidebar-routines'), ['shared-11-_AVGLHEz.js#TC', 'shared-78-D5Fw2h0a.js#Cv', 'shared-frame-6jtSkIit.js#_h', 'shared-frame-6jtSkIit.js#gh']);
+  assert.deepEqual(shared('composer-notices'), ['shared-1-BJhqMmkf.js#xd', 'shared-26-CGuBxVt9.js#DM', 'shared-26-CGuBxVt9.js#OM', 'shared-26-CGuBxVt9.js#kM']);
+  const notices = await fs.readFile(path.join(gen, 'composer-notices/composer-notices.mjs'), 'utf8');
+  assert.match(notices, /import \{ ChatComposerLayoutContext as io \} from "\.\.\/code-composer\/chat-composer-layout\.mjs";/, 'OM reads the Code composer\'s io');
+  assert.match(notices, /export \{ RM as ChatComposerNotices, kM as ChatComposerBand \};/);
+  assert.match(await fs.readFile(path.join(gen, 'question-card/card-header.mjs'), 'utf8'), /export \{ bL as QuestionCardHeader, \$A as questionDisplayText, QA, ej, NA \};/);
 });

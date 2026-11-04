@@ -17,7 +17,7 @@ const header = (file, open) => {
 };
 
 test('side panel header renders the drag handle after the tabs/title and before trailing controls', () => {
-  const body = header('source-session.jsx', '<header className="source-pane-header" data-pane-header={tab}>');
+  const body = header('source-session.jsx', '<header className="source-pane-header" data-pane-header={tab}' /* W14-code r4 r4pa-c03: then {...paneWindowHeader} */);
   const handle = body.indexOf('{headerCenter}');
   assert.equal(body.split('{headerCenter}').length, 2, 'rendered once');
   // W12c files-tabbar: the strip is the ViewTabBar (<SourceFileTabs>, cccc2cf0a ND `ey`).
@@ -28,7 +28,7 @@ test('side panel header renders the drag handle after the tabs/title and before 
 });
 
 test('background tasks header renders the drag handle after its title and before controls', () => {
-  const body = header('source-agent.jsx', '<header className="source-pane-header" data-pane-header="tasks">');
+  const body = header('source-agent.jsx', '<header className="source-pane-header" data-pane-header="tasks"');
   const handle = body.indexOf('{headerCenter}');
   assert.ok(handle > body.indexOf('sag-pane-title'));
   // B21: rw "Clear finished tasks" leads the trailing controls through trailing(controls).

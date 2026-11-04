@@ -53,7 +53,11 @@ export const tools = [
         const file = sessionFile(entry, ctx?.cwd);
         if (seen.has(file)) continue;
         seen.add(file);
-        deliverables.push({ path: file, ...(caption ? { description: caption } : {}) });
+        // W14-code r2 R2T-TS8: the byte size, which 3.6556.2's attachment record carries (c289d7154 D: `size` a number,
+        // read by cb6930dae Xu's tiles under the tool row).
+        let size = null;
+        try { size = fs.statSync(file).size; } catch {}
+        deliverables.push({ path: file, ...(caption ? { description: caption } : {}), ...(Number.isFinite(size) ? { size } : {}) });
       }
       const names = deliverables.map((entry) => path.basename(entry.path));
       return {

@@ -126,7 +126,7 @@ function createWorkflowService({root,getConfig,emit,command:fixedCommand,args:fi
   const stop=()=>{if(stopRequested)return completion;stopRequested=true;try{process.kill(child.pid,'SIGTERM');}catch{}killTimer=setTimeout(kill,STOP_KILL_MS);return completion;};
   // quit: the app is closing (dispose) — unlike the user's Stop, the model hears about it on the next launch.
   const quit=()=>{if(!stopRequested)quitStop=true;return stop();};
-  running.set(id,{stop,quit,completion,pid:child.pid,member:(memberId,action)=>{child.send({control:action,memberId});return {accepted:true};},pause:paused=>{if(run.pausable===false)throw fail('This workflow can’t be paused.');child.send({control:'pause',paused});return {accepted:true,paused};}});
+  running.set(id,{stop,quit,completion,pid:child.pid});
   // engine 'codeDesktop': Settings chose OpenClaude Desktop's engine for a core that has its own, so the launcher script is
   // never handed to the core's engine (workflow-harness.mjs); structuredOutput false: schema agents ask for JSON.
   const scripts=engine==='codeDesktop'?{workflowScripts:false}:typeof launch.workflowScripts==='boolean'?{workflowScripts:launch.workflowScripts}:{};
@@ -140,15 +140,9 @@ function createWorkflowService({root,getConfig,emit,command:fixedCommand,args:fi
  async function orphans(threadId){await ready;return [...runs.values()].filter(run=>run.threadId===threadId&&run.origin==='tool'&&run.status!=='running'&&!running.has(run.id)&&(()=>{
    try{return JSON.parse(fs.readFileSync(path.join(root,run.id,ORPHAN_FILE),'utf8'))?.delivered===false;}catch{return false;}})()).sort((a,b)=>a.startedAt-b.startedAt);}
  function orphanDelivered(id){if(!idPattern.test(id)||!runs.has(id))return;try{fs.writeFileSync(path.join(root,id,ORPHAN_FILE),JSON.stringify({delivered:true}),{mode:0o600});}catch{}}
- // /workflows p: pause (no new agents start; running ones finish) or resume.
- async function pause(id,paused){await ready;trusted(id);const entry=running.get(id);if(!entry)throw fail('This workflow is no longer running.');return entry.pause(paused===true);}
- // /workflows s: the run's script to .claude/workflows (scope project) or ~/.claude/workflows (user), as <slug>.js.
- async function save(id,{scope='project',name,overwrite=false}={}){await ready;const run=trusted(id);const {saveWorkflowTarget}=await toolModel();
-  const source=fs.readFileSync(path.join(root,id,'source.workflow.js'),'utf8');const target=saveWorkflowTarget({scope:scope==='user'?'user':'project',cwd:run.cwd,home,name:name||run.name||run.description,folders:folders()});
-  fs.mkdirSync(target.dir,{recursive:true,mode:0o700});
-  try{fs.writeFileSync(target.file,source,{encoding:'utf8',mode:0o600,flag:overwrite?'w':'wx'});}catch(error){if(error.code==='EEXIST')throw new Error(i18n.t('Dynamic workflow "{name}" already exists at {path}. Use a different name or overwrite.',{name:target.slug,path:target.file}));throw error;}
-  return {path:target.file,name:target.slug};}
- async function member(id,memberId,action){await ready;const run=trusted(id);if(!['retry','skip'].includes(action)||!run.workflowProgress.some(p=>p.type==='workflow_agent'&&p.id===memberId&&p.state==='progress'))throw fail('Unknown active workflow member.');return running.get(id)?.member(memberId,action)??{accepted:false};}
+ // W14-code r5 cleanup R5DC-03 (E95): the host run card's member Retry / Skip, Pause / Resume and Save controls are gone
+ // (R4T-08b: the Tasks pane is the official cccc2cf0a wN → ds detailed card, onStop only), and their member / pause /
+ // save entry points with them. Stop stays.
  const get=id=>runs.get(id)??null;
  // The core threads every run's agents ran in (the journal's and result.json's agentId): never the user's sessions
  // ('Resume a session'). A settled run's set is read once.
@@ -160,6 +154,6 @@ function createWorkflowService({root,getConfig,emit,command:fixedCommand,args:fi
   for(const entry of run.workflowProgress||[])if(entry?.type==='workflow_agent')take(entry.agentId);
   agentCache.set(run.id,{status:run.status,ids});return ids;};
  const agentIds=()=>{const out=new Set();for(const run of runs.values())for(const id of runAgentIds(run))out.add(id);return out;};
- return {list,start,stop,member,pause,save,get,dispose,ready,agentIds,orphans,orphanDelivered};
+ return {list,start,stop,get,dispose,ready,agentIds,orphans,orphanDelivered};
 }
 module.exports={createWorkflowService,workflowCoreCommand};

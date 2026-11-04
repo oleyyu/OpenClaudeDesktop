@@ -37,7 +37,7 @@ const poll=async(fn,label,ms=10000)=>{const end=Date.now()+ms;while(Date.now()<e
 async function launch(){app=await electron.launch({args:[root],executablePath:path.join(root,'node_modules/electron/dist/Electron.app/Contents/MacOS/Electron'),env,timeout:20000});page=await app.firstWindow();page.setDefaultTimeout(12000);
  page.on('pageerror',e=>report.rendererErrors.push({phase,message:e.message}));await page.getByRole('button',{name:'Model',exact:true}).filter({hasText:'Test model'}).waitFor();await size(1280,820);}
 async function size(width,height){await app.evaluate(({BrowserWindow},s)=>BrowserWindow.getAllWindows()[0].setContentSize(s.width,s.height),{width,height});await page.waitForFunction(s=>innerWidth===s.width&&innerHeight===s.height,{width,height});await frames();}
-async function open(id){await page.locator(`[data-source-session-id="${id}"] .source-session-open`).click();await page.locator('.st-title').waitFor();await page.locator('.loading-state').waitFor({state:'detached'});await frames();}
+async function open(id){await page.locator(`[data-source-session-id="${id}"] .source-session-open`).click();await page.locator(':is(.st-title,button[data-pane-title])').waitFor();await page.locator('.loading-state').waitFor({state:'detached'});await frames();}
 const pane=()=>page.locator('.source-side-tile[data-tile-id="preview"]');
 const surface=()=>pane().locator('.spv-pane').getAttribute('data-preview-surface');
 // The preview's WebContentsView in the main window: {url, bounds, visible} or null when it is parked elsewhere.

@@ -395,7 +395,8 @@ test('toolcards-16: with turnStatusRows the tool group\'s held running key takes
   // fallHoldMs: 650}. The host serves the gate on (host-growthbook.mjs, user ruling): leaving "settled" is immediate and
   // settling waits 650 ms. The running candidate's runningIds hold is the generated XAe / ZM (transcript-rows).
   const states = fs.readFileSync(path.join(app, 'src/source-transcript-states.jsx'), 'utf8');
-  assert.match(states, /__gb__2846116625 gate \(cfc63964b b\(\), default false\) is on, else \{none:"route"\}\. The host serves the gate on/);
+  // W14-code r4 gates-r4-11: the gate is no longer served; 3.6556.2 holds "handoff" outright (c96d752d0 Att).
+  assert.match(states, /__gb__2846116625 gate \(cfc63964b b\(\), default false\) is on, else \{none:"route"\}\. 3\.6556\.2 holds "handoff" outright/);
   const group = fs.readFileSync(path.join(app, 'src/source-tool-group.jsx'), 'utf8');
   assert.match(group, /if \(rest && shown\.key === 'settled'\) \{ setShown\(\{ key, at: performance\.now\(\) \}\); return; \}/);
   assert.match(group, /const key = state === 'busy' && running \? running\.id : 'settled', heldKey = useHeldKey\(key, statusRows\);/);

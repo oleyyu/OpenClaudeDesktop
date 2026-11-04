@@ -287,7 +287,7 @@ try{
  await poll(async()=>!fsSync.existsSync(path.join(profile,'cores/codex')),'removed');
  await reloaded('Test model');
  report.metrics.afterRemove=(await readJson('preferences.json')).core;assert.equal(report.metrics.afterRemove,'deepseek');
- await page.getByRole('textbox',{name:'Message DeepSeek',exact:true}).waitFor();
+ await page.getByRole('textbox',{ name: /^(?:Prompt|Message DeepSeek)$/ }).waitFor();
  const afterCores=await openCores();await afterCores.locator('[data-core-status=deepseek]').waitFor();assert.match(await afterCores.evaluate(n=>n.innerText),/DeepSeek Harness[\s\S]*Running/);
  report.checks.push('Relaunch keeps Codex; Remove download on the running Codex asks first, deletes the copy, and the app reconnects onto the DeepSeek core and reloads');
  assert.deepEqual(report.rendererErrors,[]);await integrity();report.testSourceHashes=testHashes;report.passed=true;

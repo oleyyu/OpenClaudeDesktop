@@ -12,7 +12,17 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
 import { appSheets, append, computed, element, find, loadCascade, parseMarkup } from './fixtures/transcript-css-cascade.mjs';
-import { CONTEXT_RING_ROW_SIZE, CONTEXT_RING_TRACK, contextRingGeometry, contextRingStroke } from '../src/context-usage-model.mjs';
+import { contextRingStroke } from '../src/context-usage-model.mjs';
+// W14-code r4 closeout R4DC-N7: the model's test-only ring geometry / track / row-size exports are gone (the ring is the
+// generated shared-8 KV); the test keeps them as its oracle: xT 12px stroke 2, offset C·(1−clamp(pct)/100); _d track
+// alpha-2; c227f4d5e B3 draws it at 14.
+// W14-code r4 gen-final-4: the model's test-only CONTEXT_RING_SIZE / CONTEXT_RING_STROKE (xT size yT 12, stroke bT 2) moved here.
+const CONTEXT_RING_SIZE = 12, CONTEXT_RING_STROKE = 2;
+const CONTEXT_RING_TRACK = 'var(--cds-alpha-2)', CONTEXT_RING_ROW_SIZE = 14;
+function contextRingGeometry(pct, size = CONTEXT_RING_SIZE) {
+  const radius = (size - CONTEXT_RING_STROKE) / 2, circumference = 2 * Math.PI * radius;
+  return { size, stroke: CONTEXT_RING_STROKE, center: size / 2, radius, circumference, offset: circumference * (1 - Math.max(0, Math.min(100, pct)) / 100) };
+}
 
 const app = path.resolve(import.meta.dirname, '..');
 const reference = path.resolve(app, '../reference/installed-2.42304.0-20261017/ion-dist/assets/v1');
@@ -238,7 +248,8 @@ test('the trigger components hand their props to the view-tabs originals (onClic
   assert.equal(outside.type, ViewTabs.CdsTooltip, 'outside the row: no po slot');
   assert.deepEqual([outside.props.children.props.icon.props.size, outside.props.children.props.icon.props.trackStroke, outside.props.children.props.className], [14, 'var(--cds-alpha-2)', 'shrink-0 me-px']);
   // The env bar's place chip (h2's td) is the same CDS Tooltip.
-  assert.ok(fs.readFileSync(path.join(app, 'src/source-composer-environment-bar.jsx'), 'utf8').includes('import { CdsButton, CdsTooltip, cdsClassNames } from "./generated/view-tabs/shared-frame-6jtSkIit.js";'));
+  // W14-code r2-composer-04: CdsTextLink is the gone-environment line's <edit> (cc43287c9 Wue `p(Y, {inheritColor: !0, …})`).
+  assert.ok(fs.readFileSync(path.join(app, 'src/source-composer-environment-bar.jsx'), 'utf8').includes('import { CdsButton, CdsTextLink, CdsTooltip, cdsClassNames } from "./generated/view-tabs/shared-frame-6jtSkIit.js";'));
   for (const file of ['src/source-composer-row-chin.jsx', 'src/source-composer-environment-bar.jsx'])
     assert.doesNotMatch(fs.readFileSync(path.join(app, file), 'utf8'), /source-tooltip|SourceTooltip/, `${file}: no host tooltip`);
   const place = probes({ showContext: true, environmentMenu: true }).find((p) => p.content === 'Where DeepSeek runs');

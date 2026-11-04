@@ -1,8 +1,12 @@
 /* c49d7f557 Pierre word-alt decorations: a continuous range can contain
    multiple syntax tokens; the rounded emphasis belongs to the range. */
 .source-diff-code [data-diff-span] { box-decoration-break:clone;-webkit-box-decoration-break:clone;border-radius:3px; }
-[data-kind=added] .source-diff-code [data-diff-span] { background-color:light-dark(rgb(from var(--diffs-addition-color-override,var(--diffs-light-addition-color,#0dbe4e)) r g b / .15),rgb(from var(--diffs-addition-color-override,var(--diffs-dark-addition-color,#5ecc71)) r g b / .2)); }
-[data-kind=removed] .source-diff-code [data-diff-span] { background-color:light-dark(rgb(from var(--diffs-deletion-color-override,var(--diffs-light-deletion-color,#ff2e3f)) r g b / .15),rgb(from var(--diffs-deletion-color-override,var(--diffs-dark-deletion-color,#ff6762)) r g b / .2)); }
+/* [data-line-type=change-addition|deletion] [data-diff-span] { background-color: var(--diffs-bg-{addition,deletion}-emphasis) }:
+   the emphasis variables are the c49d7f557 :host ones (source-diff.css .sdiff-view), over the CDS FileDiff
+   --diffs-{addition,deletion}-color-override = --cds-text-git-{added,removed} (ca7ba268c ua). Outside .sdiff-view (the
+   transcript's file-tool cards, also CDS FileDiffs officially) the same formula stands in over those overrides. */
+[data-kind=added] .source-diff-code [data-diff-span] { background-color:var(--diffs-bg-addition-emphasis,light-dark(rgb(from var(--cds-text-git-added) r g b / .15),rgb(from var(--cds-text-git-added) r g b / .2))); }
+[data-kind=removed] .source-diff-code [data-diff-span] { background-color:var(--diffs-bg-deletion-emphasis,light-dark(rgb(from var(--cds-text-git-removed) r g b / .15),rgb(from var(--cds-text-git-removed) r g b / .2))); }
 
 /* Syntax and decoration spans must retain code whitespace, even in the
    Changes panel whose outer chrome uses inline-flex spans. */

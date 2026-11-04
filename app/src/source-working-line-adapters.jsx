@@ -28,10 +28,11 @@ export const useIntl = useStartIntl;
 export const FormattedMessage = StartMessage;
 
 // shared-25 fs (exported Yh) / hs (exported rg): GrowthBook flags. The host has no GrowthBook client; these are its
-// answers, by the user's rulings: `__gb__2846116625` (turnStatusRows) on — c26fb8b6b Je (TurnStatusRowsProvider)
-// provides it to Xe, and U6's raw read `jt(Mpe)` sees it on too, exactly as when the desktop's GrowthBook serves it.
-// Every other flag is off (D29 / D31), e.g. B6's ccr_thinking_token_count (tokens use the z6 count tween) and the
-// activity sprites' `__gb__2346508742` (shared-4 MS). 3.6556.2 has no clay mark gate (`__gb__507049721`, E14): the clay
+// answers: `__gb__2846116625` (turnStatusRows) is not served (W14-code r4 gates-r4-11: not in the desktop's Uon) — c26fb8b6b
+// Je (TurnStatusRowsProvider) keeps the Code session's outer value (TranscriptRowsScope), and U6's raw read `jt(Mpe)` is off.
+// Every other flag is the host table's (host-growthbook.mjs: off unless listed, D29 / D31; the desktop's Uon defaults,
+// E81), e.g. B6's ccr_thinking_token_count off (tokens use the z6 count tween) and the activity sprites' quill
+// `__gb__2346508742` (shared-4 MS) on (W14-code transcript-rest). 3.6556.2 has no clay mark gate (`__gb__507049721`, E14): the clay
 // mark always leads the line.
 export { HOST_GROWTHBOOK };
 export function useGrowthBookFlag(flag) {

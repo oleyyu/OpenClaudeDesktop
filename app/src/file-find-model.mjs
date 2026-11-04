@@ -28,10 +28,6 @@ export function searchInText(text, query, options = DEFAULT_SEARCH_OPTIONS, { pr
   return { matches, invalid: false, partial: found.resume !== undefined, hasLongLines: found.hasLongLines, found };
 }
 
-/** Literal default used by existing consumers; callers may impose a smaller display cap. */
-export function findInText(text, query, limit = FIND_LIMIT) {
-  return searchInText(text, query).matches.slice(0, limit);
-}
 
 /** The next active index after a step of delta (±1), wrapping; -1 when there are no matches. */
 export function stepFindIndex(index, delta, total) {
@@ -63,24 +59,4 @@ export function fileFindShortcut(event, { mac = true } = {}) {
   return null;
 }
 
-/**
- * Breadcrumb segments of a workspace-relative displayPath ("src/app/main.js"): {lead, dirs: [{label, dir}], name:
- * {label, dir}} where dir is the workspace-relative folder that segment lists ("" for the workspace root), or null
- * when the segment is outside the workspace (an absolute or ~ path).
- */
-export function breadcrumbFolders(displayPath) {
-  const value = String(displayPath ?? "");
-  const lead = /^\/+/.exec(value)?.[0] ?? "";
-  const outside = lead !== "" || /^(?:~|[A-Za-z]:[\\/])/.test(value);
-  const parts = value.slice(lead.length).split("/").filter((part) => part !== "");
-  const name = parts.pop() ?? value;
-  const dirs = parts.map((label, index) => ({ label, dir: outside ? null : parts.slice(0, index + 1).join("/") }));
-  return { lead, dirs, name: { label: name, dir: outside ? null : parts.join("/") } };
-}
 
-/** The last segment of a folder path, for "Files in {folder}" (the workspace root reads as rootLabel). */
-export function folderLabel(dir, rootLabel = "") {
-  const value = String(dir ?? "").replace(/\/+$/, "");
-  if (!value) return rootLabel;
-  return value.slice(value.lastIndexOf("/") + 1) || value;
-}

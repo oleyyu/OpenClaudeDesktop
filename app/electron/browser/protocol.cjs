@@ -7,7 +7,8 @@
 //   { method, params, tool_use_id }
 // method: execute_tool (Electron → extension) · tool_response (the answer, matched by tool_use_id; params {result} or
 // {error: {code, message}}) · get_status (Electron → host, answered by the host itself) · permission_request
-// (extension → Electron) · notification (extension → every Electron client; params.type "hello" names the extension).
+// (extension → Electron) · notification (extension → every Electron client; params.type "hello" names the extension) ·
+// cancel_tool (Electron → extension: stop the execute_tool with that tool_use_id; no answer comes back).
 "use strict";
 const os = require("node:os");
 const path = require("node:path");
@@ -15,7 +16,7 @@ const path = require("node:path");
 const HOST_NAME = "com.openclaude.chrome_bridge";
 // The ID Chrome derives from the public key in claude-ext/manifest.json ("key"): fixed so allowed_origins matches.
 const EXTENSION_ID = "gackkfbnmmbigiaafjakioegnbjakdef";
-const METHODS = new Set(["execute_tool", "get_status", "permission_request", "tool_response", "notification"]);
+const METHODS = new Set(["execute_tool", "get_status", "permission_request", "tool_response", "notification", "cancel_tool"]);
 // Chrome refuses a message from a host larger than 1 MB; one to a host may be up to 4 GB (we stop at 64 MB).
 const MAX_TO_EXTENSION = 1024 * 1024;
 const MAX_FRAME = 64 * 1024 * 1024;

@@ -99,10 +99,7 @@
   background: none;
   white-space: normal;
 }
-.source-user-attachments .sr-only {
-  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; border: 0;
-  overflow: hidden; clip-path: inset(50%); white-space: nowrap;
-}
+/* W14-code r5 cleanup css5-sr-only-handcopies: no second .sr-only here; c6a992d55's utility covers it. */
 /* Card (shared-7 Nl/Cl): rounded-card = radius + .25rem*scale, a hairline
    border-strong ring, surface-1 fill and the field drop shadow. */
 .source-user-attachment-card {
@@ -222,12 +219,12 @@ html[data-reduce-motion="true"] .source-user-attachment-picture { transition: no
 }
 .source-markdown :is(p,ul,ol,blockquote,pre,table,h1,h2,h3,h4,h5,h6) { margin:0; }
 .source-markdown :is(h1,h2,h3) { font-family:inherit; font-weight:var(--cds-font-weight-semibold,600); font-variation-settings:var(--cds-font-wght-semibold,normal); letter-spacing:-.01em; }
-.source-markdown h1 { font-size:1.14286em; line-height:1.25; margin-block:12px -4px; }
-.source-markdown h2 { font-size:1.07143em; line-height:1.33333; margin-block:10px -4px; }
+.source-markdown h1 { font-size:1.14286em; line-height:1.25; color:var(--cds-text-primary); margin-block:12px -4px; }
+.source-markdown h2 { font-size:1.07143em; line-height:1.33333; color:var(--cds-text-primary); margin-block:10px -4px; }
 .source-markdown h3 { font-size:1em; line-height:inherit; margin-block:7px -4px; }
 .source-markdown :is(h4,h5,h6) { font:inherit; font-weight:var(--cds-font-weight-medium,500); font-variation-settings:var(--cds-font-wght-medium,normal); }
-.source-markdown>:first-child { margin-top:0; }
-.source-markdown>:last-child { margin-bottom:0; }
+/* W14-code TR-H10: c19e90103 `.epitaxy-markdown :is(h1,h2,h3):first-child{margin-top:0}` (any depth); no last-child reset. */
+.source-markdown :is(h1,h2,h3):first-child { margin-top:0; }
 .source-markdown strong { font-weight:var(--cds-font-weight-medium,500); }
 [data-mode=dark] .source-markdown :is(strong a,b a,a strong,a b) { font-weight:var(--cds-font-weight-regular,400); }
 .source-markdown em { font-style:italic; }
@@ -247,7 +244,8 @@ html[data-reduce-motion="true"] .source-user-attachment-picture { transition: no
 .source-markdown a,.source-markdown .smd-file-link { color:var(--cds-text-accent); text-decoration:none; text-underline-offset:1px; border-radius:3px; }
 .source-markdown a:hover,.source-markdown .smd-file-link:hover { text-decoration:underline; }
 .source-markdown a:focus-visible,.source-markdown .smd-file-link:focus-visible { outline:none; box-shadow:var(--cds-focus-shadow); }
-.source-markdown .smd-file-link { display:inline-block;cursor:var(--cds-cursor-interactive,default); }
+/* W14-code TR-H4: c856385e2 Yn's "inline-block" loses to By()'s "inline box-decoration-clone" in twMerge. */
+.source-markdown .smd-file-link { display:inline; -webkit-box-decoration-break:clone; box-decoration-break:clone; cursor:var(--cds-cursor-interactive,default); }
 /* markdown-current.js:3713-3786 rc: hide-focus-ring inline rounded-sm bg-accent-muted box-decoration-clone
    px-1.5 text-accent hover:bg-accent focus-visible:shadow-focus focus-visible:outline-hidden (no underline). */
 .source-markdown a.smd-forge-ref { display:inline; border-radius:var(--radius-sm,.25rem); background-color:var(--cds-bg-accent-muted);
@@ -256,8 +254,9 @@ html[data-reduce-motion="true"] .source-user-attachment-picture { transition: no
 .source-markdown a.smd-forge-ref:focus-visible { outline:2px solid transparent; outline-offset:2px; box-shadow:var(--cds-focus-shadow); }
 .source-markdown blockquote { display:flex; flex-direction:column; gap:var(--chat-item-gap,10px); border-left:2px solid var(--cds-alpha-2); padding-left:var(--cds-pad-md,8px); color:var(--cds-text-secondary); }
 .source-markdown :not(pre)>code { font-family:var(--cds-font-mono);font-size:calc(var(--chat-body,var(--cds-font-size-body)) - 1px);line-height:1.4; padding:1px 2px; border-radius:4px; background:var(--cds-alpha-1); color:var(--code-chip-ink,var(--cds-text-primary)); }
-.source-markdown :is(a,button,[role=button])>code { color:var(--cds-text-accent); background:none; font:inherit; }
-.source-markdown :is(a,button,[role=button]):hover>code { background:color-mix(in srgb,var(--cds-fill-accent) 10%,transparent); }
+/* c19e90103: the link's code chip, also inside a word-reveal span (`>[data-wf]>code`, W14-code TR-H5). */
+.source-markdown :is(a,button,[role=button])>code,.source-markdown :is(a,button,[role=button])>[data-wf]>code { --code-chip-ink:var(--cds-text-accent); font-family:inherit; font-size:inherit; line-height:inherit; background:none; }
+.source-markdown :is(a,button,[role=button]):hover>code,.source-markdown :is(a,button,[role=button]):hover>[data-wf]>code { background:hsl(from var(--cds-fill-accent) h s l / 10%); }
 .source-markdown code code { font-size:inherit; background:none; padding:0; }
 .source-markdown pre { overflow:auto; font:var(--cds-font-size-code,12px)/var(--cds-leading-code,17px) var(--cds-font-mono); }
 .source-markdown pre code { font:inherit; white-space:pre; padding:0; background:none; }
@@ -282,23 +281,8 @@ html[data-reduce-motion="true"] .source-user-attachment-picture { transition: no
 .source-markdown :is(li,td,th)>.scb-flow { margin-block:4px; }
 .source-markdown :is(li,td,th)>:not([data-wf=""])~.scb-flow,
 .source-markdown :is(li,td,th)>.scb-flow+:is(p,ul,ol,blockquote) { margin-top:calc(var(--cds-pad-sm,6px) + 4px); }
-.source-icon-button {
-  width: 26px;
-  height: 26px;
-  border-radius: 6px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex: none;
-  color: var(--cds-text-secondary);
-}
-.source-icon-button:hover:not(:disabled) {
-  background: var(--cds-fill-ghost-hover, var(--cds-alpha-1));
-  color: var(--cds-text-primary);
-}
-.source-icon-button:active:not(:disabled) {
-  background: var(--cds-fill-ghost-hover);
-}
+/* W14-code r4 css4-pane-toggle-icon-buttons: the host .source-icon-button (26px, 6px radius, accent pressed paint) is gone;
+   the pane list toggles, the viewer Eye/Code, the tasks Back and the fallback close are CDS ghost iconOnly Buttons. */
 .source-step-trigger {
   display: flex;
   align-items: center;
@@ -444,11 +428,6 @@ html[data-reduce-motion="true"] .source-user-attachment-picture { transition: no
   padding: 3px 0;
   color: var(--cds-text-secondary);
 }
-.source-working-time {
-  font-size: 12px;
-  color: var(--cds-text-muted);
-  font-variant-numeric: tabular-nums;
-}
 .source-shimmer {
   --source-shimmer-base: var(--cds-text-secondary);
   background: linear-gradient(
@@ -480,14 +459,23 @@ html[data-reduce-motion="true"] .source-user-attachment-picture { transition: no
     13px/19px var(--cds-font-sans, anthropic-sans),
     sans-serif;
 }
+/* 3.6556.2 c4db265df: "relative flex items-center justify-between gap-sm h-[calc(2rem*…)] ps-[4px] pe-[4px] shrink-0";
+   the leading button and title (or the tab strip) are one group (source-session.jsx), gap-0.5 inside it. */
 .source-file-panel > .source-pane-header {
   display: flex;
-  gap: 4px;
+  gap: var(--cds-gap-sm, 8px);
+  justify-content: space-between;
   align-items: center;
   padding: 0 4px;
   height: 32px;
   min-height: 32px;
   border-bottom: 0;
+}
+/* W14-code r4 r4pa-c03: in a pane window the header is c4db265df N_'s `relative …` box holding the window-drag strip
+   (pane-window-header.jsx PaneWindowDragStrip, `absolute inset-0 -z-[1]`); a tile's header keeps its own box, so the tile
+   drag handle stays placed against the tile. */
+.source-file-panel > .source-pane-header[data-top-left] {
+  position: relative;
 }
 /* Mt/Tl pane title (shared-12-C91CUXSD.js vm "text-body text-secondary
    select-none truncate pl-[4px]", panes-toggle-current.js:1428-1431): regular
@@ -530,70 +518,6 @@ html[data-reduce-motion="true"] .source-user-attachment-picture { transition: no
   flex: 0 0 auto;
   border-right: 1px solid var(--cds-border);
 }
-.source-tree-divider,
-.source-tree-edge {
-  position: absolute;
-  z-index: 3;
-  top: 0;
-  bottom: 0;
-  right: -4px;
-  width: 8px;
-  cursor: col-resize;
-  touch-action: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  outline: none;
-  -webkit-app-region: no-drag;
-}
-.source-tree-edge {
-  right: auto;
-  left: 0;
-}
-.source-tree-divider > span,
-.source-tree-edge > span {
-  width: 2px;
-  height: 32px;
-  border-radius: 2px;
-  background: var(--cds-alpha-3);
-  opacity: 0;
-}
-.source-tree-divider:hover > span,
-.source-tree-edge:hover > span {
-  opacity: 1;
-}
-.source-tree-divider:focus-visible > span,
-.source-tree-edge:focus-visible > span {
-  opacity: 1;
-  background: var(--cds-fill-accent);
-}
-.source-file-panel[data-tree-resizing] {
-  user-select: none;
-}
-.source-file-panel[data-tree-resizing] .source-tree-divider > span,
-.source-file-panel[data-tree-resizing] .source-tree-edge > span {
-  opacity: 1;
-  background: var(--cds-fill-primary);
-}
-.source-file-panel[data-tree-resizing] * {
-  cursor: col-resize !important;
-}
-.source-tree-header {
-  min-height: 32px;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding-inline: 10px 4px;
-}
-.source-tree-header > span {
-  flex: 1;
-  min-width: 0;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  overflow: hidden;
-  font-size: 12px;
-  color: var(--cds-text-secondary);
-}
 /* R3-files FT-14 (files-08 / files-v03): the tree (2.42304.0 cccc2cf0a Nx), its rows (NS) and the subfolder error row
    (AS) carry the official classes (file-tree-row-model.mjs over generated/files-changes: ca7840910 A/j/N/I/F, shared-6
    _h/vh, shared-frame Cx, cccc2cf0a dx/fx/px), all @layer utilities rules of the loaded CSS; the hand-written
@@ -635,44 +559,8 @@ html[data-reduce-motion="true"] .source-user-attachment-picture { transition: no
      real scroller reserves the classic lane. */
   scrollbar-gutter: stable both-edges;
 }
-.source-diff {
-  overflow: auto;
-  font:
-    12px/17px var(--cds-font-mono, anthropic-mono),
-    monospace;
-  margin: 0;
-  padding: 4px 0;
-  white-space: pre;
-  user-select: text;
-}
-/* Legacy raw-patch rows only. The source diff renderer owns its gutters and
-   token spacing; applying these 8px insets to its nested spans widens every
-   preview line number and syntax token. */
-.source-diff:not(.sdiff-view) span {
-  display: block;
-  min-width: fit-content;
-  padding-inline: 8px;
-  white-space: pre;
-}
-.source-diff.diff .added {
-  color: var(--cds-text-git-added, #1e9e3c);
-  background: var(--cds-bg-git-added, #1e9e3c14);
-}
-.source-diff.diff .removed {
-  color: var(--cds-text-git-removed, #cd2054);
-  background: var(--cds-bg-git-removed, #cd205414);
-}
-.source-diff .hunk {
-  color: var(--cds-text-accent);
-  background: var(--cds-alpha-1);
-}
-.source-panel-empty {
-  padding: 12px;
-  margin: 0;
-  color: var(--cds-text-muted);
-  font-size: 13px;
-  line-height: 1.5;
-}
+/* W14 diff: the 2.x .source-diff rules (font, padding, raw-patch spans, .added / .removed fallbacks, .hunk) are gone —
+   every .source-diff is also .sdiff-view, styled by source-diff.css over the c49d7f557 variables. */
 .source-panel-error {
   color: var(--cds-text-danger);
   font-size: 12px;
@@ -680,14 +568,7 @@ html[data-reduce-motion="true"] .source-user-attachment-picture { transition: no
   padding: 8px 12px;
   margin: 0;
 }
-.source-sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-}
+/* W14-code r5 cleanup css5-sr-only-handcopies: .source-sr-only is gone; the JSX uses the official c6a992d55 .sr-only. */
 @container (max-width: 399px) {
   .source-file-body[data-has-preview="true"] .source-files-tree {
     display: none;
@@ -706,7 +587,11 @@ html[data-reduce-motion="true"] .source-user-attachment-picture { transition: no
 html[data-reduce-motion="true"] .source-shimmer { animation: none; background: none; -webkit-text-fill-color: currentColor; }
 html[data-reduce-motion="true"] .source-step-caret { transition: none; }
 
-/* Popped-out pane window: one tile filling the window under the 8px inset. */
+/* Popped-out pane window (Files / Changes / Plan): one tile filling the window. W14-code r4 r4pa-c03 (E90 / E95, GUI
+   check): with the frame's data-popout (main.jsx PopoutApp, cd377abb5 lr) the pane fills the window and its header
+   clears the traffic lights through shared-styles `.dframe-root[data-popout=traffic-lights] .epitaxy-pane-window
+   [data-top-left]`; the 36px drag band and 8px inset below are only the rollback switch's (local_popout_traffic_lights
+   closed) layout. */
 .popout-root {
   display: flex;
   height: 100vh;
@@ -719,6 +604,8 @@ html[data-reduce-motion="true"] .source-step-caret { transition: none; }
   min-width: 0;
   min-height: 0;
   flex-direction: column;
+}
+.popout-root:not([data-popout]) > .popout-workspace {
   padding: 8px;
   padding-top: 36px;
   -webkit-app-region: drag;
@@ -735,13 +622,17 @@ html[data-reduce-motion="true"] .source-step-caret { transition: none; }
   margin: 0 0 8px;
 }
 /* B27 pane window (main.jsx PANE_WINDOW: the Tasks or Terminal pane popped out, run by the session's App): its one tile
-   fills the window under the same 8px inset and traffic-light clearance as the pane popouts above. */
+   fills the window (c5638815a Ct `… epitaxy-pane-window … bg-surface-1`; main.jsx PANE_WINDOW_TILE_CONFIG, no container
+   padding) and its header clears the traffic lights as above. The rollback switch closed (no data-popout), the old
+   8px inset and 36px band come back. */
 .dframe-root[data-pane-window]:not([data-pane-window="side-chat"]) .workspace {
-  padding: 36px 8px 8px;
   background: var(--cds-surface-1);
+}
+.dframe-root[data-pane-window]:not([data-pane-window="side-chat"]):not([data-popout]) .workspace {
+  padding: 36px 8px 8px;
   -webkit-app-region: drag;
 }
-.dframe-root[data-pane-window]:not([data-pane-window="side-chat"]) .workspace > * {
+.dframe-root[data-pane-window]:not([data-pane-window="side-chat"]):not([data-popout]) .workspace > * {
   -webkit-app-region: no-drag;
 }
 /* The side chat window: the panel (source-side-chat.css [data-windowed]) is the whole window. */
@@ -750,7 +641,8 @@ html[data-reduce-motion="true"] .source-step-caret { transition: none; }
 }
 
 /* Pc/Kn/Bn: keyboard file chips in response Markdown; no link inside a link. */
-.source-markdown .smd-file-ref { display:inline-block; border-radius:4px; cursor:var(--cds-cursor-interactive,default); }
+/* W14-code TR-H4: By() chip "inline box-decoration-clone rounded-[4px]". */
+.source-markdown .smd-file-ref { display:inline; -webkit-box-decoration-break:clone; box-decoration-break:clone; border-radius:4px; cursor:var(--cds-cursor-interactive,default); }
 .source-markdown .smd-file-ref:focus-visible { outline:none; box-shadow:var(--cds-focus-shadow); }
 /* A Codex review finding's priority (::code-comment priority / '[P1]' title): P0 and P1 stand out, P2 and P3 stay quiet. */
 .source-markdown .smd-priority { display:inline-block; margin-right:2px; padding:0 5px; border-radius:4px; font-size:0.85em; font-weight:600; line-height:1.5; vertical-align:baseline;
@@ -773,18 +665,6 @@ html[data-reduce-motion="true"] .source-step-caret { transition: none; }
 }
 .smd-secret-toggle:hover { color: var(--cds-text-primary); }
 .smd-secret-toggle:focus-visible { outline: none; box-shadow: var(--cds-focus-shadow); }
-/* R09: a pressed CDS Button paints bg-accent behind text-accent, hovered or
-   not (shared-frame-C_2npUJq.js:2697 cs "group-aria-pressed/btn:bg-accent
-   group-hover/btn:group-aria-pressed/btn:bg-accent", :2723-2724 secondary and
-   ghost "aria-pressed:text-accent"): the Files ListBullet, the Changes file
-   list toggle, the popped-out pin and the arrange picks (ra is a pressed
-   ghost Button too, panes-toggle-current.js:964-998). */
-.source-icon-button[aria-pressed="true"],
-.source-icon-button[aria-pressed="true"]:not(:disabled),
-.source-icon-button[aria-pressed="true"]:hover:not(:disabled) {
-  color: var(--cds-text-accent);
-  background: var(--cds-bg-accent);
-}
 
 /* Codex imageGeneration / imageView / sleep / hookPrompt rows (media-item-model.mjs): the revised prompt or the
    hook's context as muted body text, a failure in the danger tone. */

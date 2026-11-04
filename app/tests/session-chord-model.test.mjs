@@ -8,7 +8,6 @@ import {
   sessionChordArchives,
   rowKeySessionId,
   buttonRowKey,
-  sessionChordArchiveNeighbour,
   sessionChordAdjacentButton,
   createSessionChordArchiveCommit,
   sidebarHasSelection,
@@ -98,15 +97,10 @@ test("the chord itself: ⌥⌘A (matched by code) is archive-session", () => {
   assert.notEqual(chord({ shiftKey: true }), "archive-session");
 });
 
-test("sessionChordArchiveNeighbour & sessionChordAdjacentButton: Sh picks the next unarchived row, else the previous in reverse", () => {
+test("sessionChordAdjacentButton: Sh picks the next unarchived row, else the previous in reverse", () => {
   assert.equal(rowKeySessionId("code:s2"), "s2");
   assert.equal(rowKeySessionId("s2"), "s2");
   const keys = ["s1", "s2", "s3", "s4"];
-  assert.equal(sessionChordArchiveNeighbour(keys, "s2", new Set(["s2"])), "s3", "picks next row first");
-  assert.equal(sessionChordArchiveNeighbour(keys, "s2", new Set(["s2", "s3"])), "s4", "skips cascade-archived next row");
-  assert.equal(sessionChordArchiveNeighbour(keys, "s2", new Set(["s2", "s3", "s4"])), "s1", "falls back to previous row in reverse");
-  assert.equal(sessionChordArchiveNeighbour(keys, "s2", new Set(["s1", "s2", "s3", "s4"])), null, "none left -> null");
-  assert.equal(sessionChordArchiveNeighbour(["code:s1", "code:s2", "code:s3"], "s2", new Set(["s2"])), "code:s3", "matches code: prefix");
 
   const b1 = makeFakeButton("s1");
   const b2 = makeFakeButton("s2", { selected: true, current: true });

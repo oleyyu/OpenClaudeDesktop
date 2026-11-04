@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   IMAGE_MAX_BYTES, IMAGE_TYPE_ERROR, IMAGE_SIZE_ERROR, IMAGE_PROCESS_ERROR, IMAGE_MODEL_ERROR, trimMessage, maxImagesMessage,
-  stageFiles, markReady, markFailed, removeAttachment, attachmentInputs, attachmentsReady, imageMime, modelAcceptsImages, skillChipInput,
+  stageFiles, markReady, markFailed, removeAttachment, attachmentInputs, imageMime, modelAcceptsImages, skillChipInput,
 } from "../src/composer-attachments-model.mjs";
 
 const makeId = (index) => `id-${index}`;
@@ -54,8 +54,9 @@ test("dedupe by path, removal, ready/failed transitions", () => {
   const ready = markReady(staged.entries, "id-0", { previewUrl: "blob:x" });
   assert.equal(ready[0].status, "ready");
   assert.equal(ready[0].previewUrl, "blob:x");
-  assert.equal(attachmentsReady(ready), true);
-  assert.equal(attachmentsReady(staged.entries), false);
+  // W14-code r4 gen-final-4: attachmentsReady (test-only; the composer computes its own readiness) is deleted.
+  assert.equal(ready.every((entry) => entry.status === "ready"), true);
+  assert.equal(staged.entries.every((entry) => entry.status === "ready"), false);
   const failed = markFailed(ready, "id-0");
   assert.deepEqual(failed.entries, []);
   assert.equal(failed.notice, IMAGE_PROCESS_ERROR);

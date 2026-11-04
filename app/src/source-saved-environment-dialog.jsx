@@ -1,6 +1,7 @@
 import React, { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { SourceDialog, SourceDialogFooter, SourceConfirmationDialog } from './source-dialog.jsx';
-import { SourceSettingsButton as Button } from './source-settings-button.jsx';
+// W14-code r6 R6DC-02: ca690a791's footer / confirm buttons are shared-frame Uu (E41 direct import), not the host replica.
+import { CdsButton as Button } from './generated/view-tabs/shared-frame-6jtSkIit.js';
 import { EnvironmentField as Field, EnvironmentLabel as Label, EnvironmentFieldError as FieldError, EnvironmentTextInput as TextInput } from './generated/code-current/environment-field-controls.mjs';
 import { EnvironmentFooter } from './generated/code-current/environment-form-layout.mjs';
 import { EnvironmentFolderField, EnvironmentFolderList, EnvironmentEmptyFolders, EnvironmentFolderRow, EnvironmentFolderControls, environmentAddFolderSelect } from './generated/code-current/environment-folder-view.mjs';
@@ -14,6 +15,8 @@ import { environmentFolderRoot, environmentGitInfo } from './saved-environment-m
 import { StartMessage, useStartIntl } from './source-code-start-adapters.jsx';
 import { EnvironmentSelect } from './source-environment-folder-adapters.jsx';
 import { t } from '../electron/i18n/index.mjs';
+// E41: the dialog is reached from the menu graph (source-environment-folder-adapters), so CDS comes from the view-tabs file.
+import { CdsTextLink } from './generated/view-tabs/shared-frame-6jtSkIit.js';
 import './source-saved-environment-dialog.css';
 
 // ca690a791 fn, local kind (2.42304.0), with folderCheckouts off (the host saves no per-folder checkouts) and saveScoped
@@ -21,9 +24,10 @@ import './source-saved-environment-dialog.css';
 // bindings; the native directory picker, persistence, the git info (workspace-info) and the menu/dialog primitives are
 // host boundaries. The Folders field's "+ Add" is the official Select props (cd8823d73 ge) over the host Select adapter:
 // the recent folders not yet listed (fn Er: basename labels, the parent folder as description when basenames collide),
-// "No recent folders" when there are none, and the "Choose…" footer action opening the native picker; with no folder the
-// field shows fn's empty box (cd8823d73 H without text, aria-hidden).
-export function SourceSavedEnvironmentDialog({ editing = null, initialTarget, initialSettings = {}, environments = [], recentFolders = [], call, onSave, onDelete, onClose, onVariables }) {
+// "No recent folders" / "No other recent folders" (Ln) when there are none, and the "Choose…" footer action opening the
+// native picker; with no folder the field shows I's empty box `t(ft, { children: Z })`, Z "Choose the folder the session
+// starts in." (fe35lQuqJN).
+export function SourceSavedEnvironmentDialog({ editing = null, initialTarget, initialSettings = {}, environments = [], recentFolders = [], call, onSave, onDelete, onDeleteAsk, onClose, onVariables }) {
   const [opening] = useState(() => environmentDraft(editing?.target ?? initialTarget, ['local'], editing?.settings ?? initialSettings, editing?.name));
   const [draft, setDraft] = useState(opening), [busy, setBusy] = useState(false), [error, setError] = useState('');
   const [confirm, setConfirm] = useState(null), [repository, setRepository] = useState(null);
@@ -52,7 +56,8 @@ export function SourceSavedEnvironmentDialog({ editing = null, initialTarget, in
     ...environmentBranchLabel(intl, { worktree, defaultBranch: environmentDefaultBranch(gitInfo, repo?.branches ?? [], 'local'), headBranch: gitInfo?.branch }),
     branches, typed: false,
     searchLabel: intl.formatMessage({ defaultMessage: 'Search branches…', id: 'NNBHaPuMiG' }),
-    emptyMessage: intl.formatMessage({ defaultMessage: 'No branches', id: 'clqEk9fhKZ' }),
+    // 3.6556.2 ca690a791 I / Ht: the branch picker's empty state.
+    emptyMessage: intl.formatMessage({ defaultMessage: 'No matching branches', id: 'ueb6I/aqiQ' }),
     onChange: value => changeSettings({ branch: value || undefined }),
   } : undefined;
   const worktreeBox = note !== undefined ? undefined : { checked: worktree, onChange: checked => changeSettings({ worktree: checked }) };
@@ -69,6 +74,19 @@ export function SourceSavedEnvironmentDialog({ editing = null, initialTarget, in
     try { await onSave({ name: name.trim(), target, settings: draft.settings }); onClose(); }
     catch (reason) { setError(reason.message); setConfirm(null); }
     finally { setBusy(false); }
+  };
+  // W14-code r2 closeout-2 (fr2-09): ca690a791 I `Ii`. With onDeleteAsk (cc43287c9 Wa → c6aeda0b7 runEnvironmentDelete)
+  // the Delete environment button is busy ("Checking sessions…", Pi === Mi.n) while it looks for sessions started from
+  // the environment; it answers true when it handled the delete (its own question, or a cancel), else the plain confirm
+  // (mr(!0)) follows. `Ei` invalidates the answer once the dialog goes (the effect cleanup `Ei.current += 1`).
+  const [checking, setChecking] = useState(false), askEpoch = useRef(0);
+  useEffect(() => () => { askEpoch.current += 1; }, []);
+  const askDelete = () => {
+    if (!editing || !onDeleteAsk) { setConfirm('delete'); return; }
+    const epoch = askEpoch.current, current = () => askEpoch.current === epoch;
+    setChecking(true);
+    const settle = handled => { if (!current()) return; setChecking(false); if (!handled) setConfirm('delete'); };
+    onDeleteAsk(editing, onClose, current).then(settle, () => settle(false));
   };
   const remove = async () => {
     if (busy) return;
@@ -107,6 +125,11 @@ export function SourceSavedEnvironmentDialog({ editing = null, initialTarget, in
       return { value: row.path, label, description: shared ? environmentParent(row.path) ?? undefined : undefined };
     });
   }, [recentFolders, draft.folder, draft.additionalFolders]);
+  // ca690a791 Ln(e, t, n, r) `if (!(e > 0)) return t > 0 ? n : r` with (addItems.length, draft.folder ?
+  // recentFolders.length : 0, "No other recent folders" zOtgVycaRs, "No recent folders" 3Y7pYU5W5A).
+  const addEmptyMessage = addItems.length > 0 ? undefined : draft.folder && recentFolders.length > 0
+    ? intl.formatMessage({ defaultMessage: 'No other recent folders', id: 'zOtgVycaRs' })
+    : intl.formatMessage({ defaultMessage: 'No recent folders', id: '3Y7pYU5W5A' });
   return <>
     <SourceDialog title={t(editing ? 'Edit environment' : 'New environment')} size="md" density="comfortable" className={`saved-environment-dialog ${environmentDialogClass}`}
       popupRef={setPopup} initialFocusRef={editing ? nameRef : undefined} onClose={requestClose} showClose={!busy}>
@@ -122,7 +145,7 @@ export function SourceSavedEnvironmentDialog({ editing = null, initialTarget, in
               <div className="-mx-pad-xl flex min-h-[6rem] flex-1 flex-col overflow-y-auto overflow-x-hidden scroll-fade-y px-xl pt-3 supports-[min-height:calc-size(auto,size)]:min-h-[calc-size(min-content,min(size,6rem))] -mt-3 mb-0 gap-md pb-lg">
                 <EnvironmentFolderField label={t('Folders')} labelClassName={environmentFolderLabelClass}
                   add={<EnvironmentSelect {...environmentAddFolderSelect} aria-label={intl.formatMessage({ defaultMessage: 'Add', id: '2/2yg+qAwp' })} items={addItems}
-                    onChange={path => { if (path !== null) void addFolder(path); }} emptyMessage={intl.formatMessage({ defaultMessage: 'No recent folders', id: '3Y7pYU5W5A' })}
+                    onChange={path => { if (path !== null) void addFolder(path); }} emptyMessage={addEmptyMessage}
                     footer={({ close }) => <EnvironmentSelect.FooterAction icon="Folder" aria-label={intl.formatMessage({ defaultMessage: 'Choose a folder', id: 'YjjTU9NztP' })}
                       onClick={() => { close(); void addFolder(); }}><StartMessage defaultMessage="Choose…" id="8tJfYE1sr+" /></EnvironmentSelect.FooterAction>} />}>
                   {draft.folder ? <EnvironmentFolderList>
@@ -130,13 +153,18 @@ export function SourceSavedEnvironmentDialog({ editing = null, initialTarget, in
                       end={<EnvironmentFolderControls label={environmentBasename(draft.folder)} note={note} branch={branch} worktree={worktreeBox} onRemove={() => removeFolder(0)} />} />
                     {draft.additionalFolders.map((folder, index) => <EnvironmentFolderRow key={folder} icon="Folder" name={folderName(folder)} title={folder}
                       end={<EnvironmentFolderControls label={folderName(folder)} onRemove={() => removeFolder(index + 1)} />} />)}
-                  </EnvironmentFolderList> : <EnvironmentEmptyFolders />}
+                  </EnvironmentFolderList> : <EnvironmentEmptyFolders>{intl.formatMessage({ defaultMessage: 'Choose the folder the session starts in.', id: 'fe35lQuqJN' })}</EnvironmentEmptyFolders>}
                 </EnvironmentFolderField>
-                <div className="pt-xs text-footnote text-muted-as-secondary" id={descriptionId}>{t('Environment variables apply to every local session.')} <button type="button" className="saved-environment-link df-link-btn" onClick={onVariables}>{t('Edit')}</button></div>
+                {/* ca690a791 Sn (localVariablesElsewhere: the host keeps its variables global): one rich-text p whose <link> is
+                    the CDS TextLink, in `empty:hidden`. */}
+                <div className="empty:hidden"><p className="pt-xs text-footnote text-muted-as-secondary" id={descriptionId}>{intl.formatMessage({
+                  defaultMessage: 'Environment variables apply to every local session. <link>Edit</link>', id: '/j5fP/x1iw' },
+                  { link: chunks => <CdsTextLink onClick={onVariables}>{chunks}</CdsTextLink> })}</p></div>
                 {error && <div className="text-footnote text-danger" role="alert">{error}</div>}
               </div>
               <EnvironmentFooter align={editing ? 'between' : 'end'}>
-                {editing && <Button variant="ghost" className="text-danger" disabled={busy} onClick={() => setConfirm('delete')}>{t('Delete environment')}</Button>}
+                {editing && <Button variant="ghost" className="text-danger" disabled={busy} busy={checking}
+                  busyLabel={intl.formatMessage({ defaultMessage: 'Checking sessions…', id: 'lWUSXi8ySN' })} onClick={askDelete}>{t('Delete environment')}</Button>}
                 <div className="flex gap-sm"><Button variant="secondary" disabled={busy} onClick={requestClose}>{t('Cancel')}</Button><Button variant="primary" busy={busy} disabled={!valid || busy} type="submit">{t(editing ? 'Save' : 'Create environment')}</Button></div>
               </EnvironmentFooter>
             </div>
@@ -146,9 +174,11 @@ export function SourceSavedEnvironmentDialog({ editing = null, initialTarget, in
     </SourceDialog>
     {confirm === 'delete' && <SourceConfirmationDialog title={t('Delete environment?')} body={t('“{name}” will be deleted. Sessions started from it are kept. This can’t be undone.', { name: editing.name })}
       confirmLabel={t('Delete environment')} confirmVariant="danger" pending={busy} onCancel={() => setConfirm(null)} onConfirm={remove} layer={{ base: 100, z: 180 }} />}
-    {confirm === 'discard' && <SourceDialog alert size="sm" density="compact" title={t(valid ? (editing ? 'Save changes?' : 'Add this environment?') : 'Discard unsaved changes?')}
+    {/* ca690a791 Ut: verb "create" asks "Create this environment?" (Cm1C4zvHZs) with "Create environment" (XAHe3+PZvG),
+        an edit "Save changes?" (oXIjcLZWxh) with "Save" (jvo0vs3nF0); without a valid save it is the Discard confirm. */}
+    {confirm === 'discard' && <SourceDialog alert size="sm" density="compact" title={t(valid ? (editing ? 'Save changes?' : 'Create this environment?') : 'Discard unsaved changes?')}
       description={valid ? undefined : t('Your changes haven’t been saved and will be lost.')} showClose={false} onClose={() => { if (!busy) setConfirm(null); }} layer={{ base: 100, z: 180 }}>
       <SourceDialogFooter align="between"><Button variant="danger" disabled={busy} onClick={onClose}>{t('Discard')}</Button><div className="flex items-center gap-sm"><Button variant="secondary" data-autofocus="" disabled={busy} onClick={() => setConfirm(null)}>{t('Keep editing')}</Button>
-        {valid && <Button variant="primary" busy={busy} disabled={busy} onClick={save}>{t(editing ? 'Save' : 'Add environment')}</Button>}</div></SourceDialogFooter></SourceDialog>}
+        {valid && <Button variant="primary" busy={busy} disabled={busy} onClick={save}>{t(editing ? 'Save' : 'Create environment')}</Button>}</div></SourceDialogFooter></SourceDialog>}
   </>;
 }

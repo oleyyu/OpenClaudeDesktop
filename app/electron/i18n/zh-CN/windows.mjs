@@ -28,7 +28,6 @@ export default {
   'Click': '点按',
   'Open here': '在此打开',
   'Open in new window': '在新窗口中打开',
-  'Couldn’t open a new window.': '无法打开新窗口。',
   // ⇧⌘N (File › New Session with Current Settings, the shortcuts dialog).
   'New Session with Current Settings': '使用当前设置新建会话',
   'New session with current settings': '使用当前设置新建会话',

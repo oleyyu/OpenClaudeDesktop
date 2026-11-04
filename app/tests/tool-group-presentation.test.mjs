@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {fileGroupPresentation,fileGroupSummary} from '../src/file-tool-model.mjs';
+import {fileGroupPresentation} from '../src/file-tool-model.mjs';
 import {createToolGroupExpansion,groupExpansionKey} from '../src/tool-group-expansion.mjs';
 const command=(id,status)=>({id,type:'commandExecution',status,command:'true'});
 const read=(id,status,path='/work/file.ts')=>({...command(id,status),commandActions:[{type:'read',path}]});
@@ -20,8 +20,6 @@ test('path retries follow latest observed outcomes, interrupted retries do not e
 });
 test('interruptions, denials and completed nonzero exit codes never count as tool failures',()=>{
  for(const status of ['interrupted','declined','completed']){const result=fileGroupPresentation([{...command('a',status),exitCode:1},command('b','completed')]);assert.equal(result.label,'Ran 2 commands');assert.equal(result.segments[0].isError,false);}
- // 0.2.72 user request: pure Read batches show unique files and repeated call count.
- assert.deepEqual(fileGroupSummary([read('a','completed'),read('b','completed')]),{label:'Read a file (2 reads)'});
 });
 test('expansion booleans survive remount subscriptions, isolate sessions, and do not collide at separators',()=>{
  const memory=createToolGroupExpansion(),a=groupExpansionKey('session:a','b'),b=groupExpansionKey('session','a:b');assert.notEqual(a,b);

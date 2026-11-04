@@ -3,7 +3,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   ADD_SERVER_ERRORS, CANDIDATE_PROBLEMS, FRAMEWORK_LABELS, addServerErrorText, candidateCommand, candidateRow, detectedCandidates,
-  detectionActive, detectionKey, hasUsableCandidate, serverTriggerVisible, shouldHandOffFocus,
+  detectionActive, detectionKey, serverTriggerVisible, shouldHandOffFocus,
 } from '../src/preview-detection-model.mjs';
 
 const ok = { name: 'dev', runtimeExecutable: 'pnpm', runtimeArgs: ['run', 'dev'], port: 5173, framework: 'vite', validation: { status: 'ok' } };
@@ -23,13 +23,10 @@ test('dr: a row shows framework · port, the command, and the reason only when b
   assert.equal(candidateRow({ ...ok, validation: undefined }).blocked, true);
 });
 
-test('detectedCandidates keeps well-formed candidates only; hasUsableCandidate needs an ok one', () => {
+test('detectedCandidates keeps well-formed candidates only', () => {
   assert.deepEqual(detectedCandidates(null), []);
   assert.deepEqual(detectedCandidates({ candidates: [ok] }), [], 'the old {candidates} shape is not a list');
   assert.deepEqual(detectedCandidates([ok, null, { name: 'x' }, blocked]), [ok, blocked]);
-  assert.equal(hasUsableCandidate([blocked]), false);
-  assert.equal(hasUsableCandidate([blocked, ok]), true);
-  assert.equal(hasUsableCandidate(null), false);
 });
 
 test('ar: a save error reads its message, anything unknown reads write-failed', () => {

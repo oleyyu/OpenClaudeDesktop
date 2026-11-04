@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { createRoot } from "react-dom/client";
-import { SourceGitStatus } from "../../src/source-git-status";
+import { SessionBandChanges } from "../../src/source-session-rail-changes-adapters.jsx";
 import { commitAction } from "../../src/git-rail-model.mjs";
 import "../../src/style.css";
 
@@ -24,10 +24,11 @@ function Fixture() {
   // Same density scope as the app's workspace <main> (main.jsx: cds-root + data-density="compact").
   return <div className="cds-root" data-density="compact" style={{ display: "flex", gap: 32, padding: 24, alignItems: "flex-start" }}>
     <div style={{ width: 768, display: "flex", flexDirection: "column", gap: 6 }} data-fixture="band">
-      <SourceGitStatus status={live} prMode="commit" behind={behind} showBehind
-        onOpenFolder={() => log.push("folder")} onCopyBranch={() => log.push("copy")} onOpenChanges={() => log.push("band:changes")}
-        onAction={() => log.push("band:commit")} actionLabel="Commit" actionDisabled={action.disabled} actionDisabledReason={action.disabledReason} />
-      <SourceGitStatus status={dirty} prMode="commit" dismissReserved onOpenChanges={() => log.push("band-reserved:changes")} />
+      {/* W14-code r7 css7-git-band-prbarrow: the band is the generated c96d752d0 EL (SessionBandChanges). */}
+      <SessionBandChanges status={live} behind={behind} repoMenuItems={[{ label: "Show in Finder", onSelect: () => log.push("folder") }]}
+        onOpenChanges={() => log.push("band:changes")} onToggleChanges={() => log.push("band:changes")}
+        verb={{ onClick: () => log.push("band:commit"), disabled: action.disabled, disabledReason: action.disabledReason }} />
+      <SessionBandChanges status={dirty} dismissReserved onOpenChanges={() => log.push("band-reserved:changes")} onToggleChanges={() => log.push("band-reserved:changes")} />
     </div>
     <div style={{ display: "flex", flexDirection: "column", gap: 4 }} data-fixture="controls">
       <button type="button" onClick={() => setUncounted((value) => !value)}>Fixture: toggle uncounted</button>

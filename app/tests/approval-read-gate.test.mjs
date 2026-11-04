@@ -147,7 +147,9 @@ const card = (request, snapshot) => {
   if (snapshot) store.set({ key: keyFor(request), ...snapshot });
   return renderToStaticMarkup(React.createElement(A.SourceApprovalCardView, { request, armKey: ARM, onAction: () => {}, readGateStore: store }));
 };
-const allowButtons = html => [...html.matchAll(/<button[^>]*data-approval-action="(accept[^"]*)"[^>]*>/g)].map(match => match[0]);
+// V3-W14-approvals: the decisions are shared-10 IS (CDS Buttons), named by data-testid approval-action-<key>.
+const allowButtons = html => [...html.matchAll(/<button[^>]*data-testid="approval-action-(accept[^"]*)"[^>]*>/g)].map(match => match[0]);
+const ROW = '<div class="flex flex-wrap gap-x-md gap-y-sm items-start epitaxy-approval-actions justify-end">';
 
 test('SSR, before any report: the rows sit in UDe and the q block, the allows open, the live region empty', () => {
   const html = card(toolApproval());
@@ -155,12 +157,12 @@ test('SSR, before any report: the rows sit in UDe and the q block, the allows op
   assert.match(html, /<div data-testid="approval-read-rows"><div class="flex flex-col gap-1 rounded bg-alpha-1 px-lg py-md"><div role="group" aria-label="What Claude sent" data-approval-value="" class="text-code text-secondary whitespace-pre-wrap break-words select-text \[unicode-bidi:plaintext\]">Text: hi<\/div><\/div><\/div>/);
   assert.equal(html.includes('sac-code'), false, 'the gated rows are not the local pre block');
   assert.equal(html.includes('aria-hidden="true" class="text-footnote text-muted-as-secondary"'), false, 'no held label');
-  assert.match(html, /<div class="flex flex-col gap-sm"><p aria-live="polite" class="sr-only"><\/p><footer class="sac-actions">/);
+  assert.ok(html.includes(`<div class="flex flex-col gap-sm"><p aria-live="polite" class="sr-only"></p>${ROW}`));
   assert.equal(html.includes('approval-read-hint'), false);
   const allows = allowButtons(html);
   assert.equal(allows.length, 3, 'Always allow, Allow for this session, Allow once');
   for (const button of allows) assert.doesNotMatch(button, / disabled=""/);
-  assert.equal(html.includes('source-tooltip-disabled-trigger'), false);
+  assert.equal(html.includes('data-cds-disabled-reason-wrapper'), false);
 });
 
 test('SSR, held (the card scroller cannot show the rows whole): every allow is disabled with the hint; Deny is not', () => {
@@ -168,18 +170,16 @@ test('SSR, held (the card scroller cannot show the rows whole): every allow is d
   assert.match(html, /<div class="flex flex-col gap-1 rounded bg-alpha-1 px-lg py-md"><span aria-hidden="true" class="text-footnote text-muted-as-secondary">What Claude sent<\/span><div role="group"/);
   // No aria-live replay while held; the hint line shows (not invisible).
   assert.equal(html.includes('aria-live'), false);
-  assert.match(html, /<p aria-hidden="true" data-testid="approval-read-hint" class="epitaxy-approval-read-hint text-footnote text-muted-as-secondary text-end text-balance">Scroll through what Claude sent to allow it\.<\/p><footer/);
+  assert.ok(html.includes(`<p aria-hidden="true" data-testid="approval-read-hint" class="epitaxy-approval-read-hint text-footnote text-muted-as-secondary text-end text-balance">Scroll through what Claude sent to allow it.</p>${ROW}`));
   const allows = allowButtons(html);
   assert.equal(allows.length, 3);
-  for (const button of allows) {
-    assert.match(button, / disabled=""/);
-    assert.match(button, /aria-disabled="true"/);
-  }
+  // cc32965c2 z_: `{ disabled, disabledReason }` — the CDS Button's disabled-reason wrapper around each held allow.
+  for (const button of allows) assert.match(button, / disabled=""/);
   // Rj Vt stays (disabled) beside Allow once while held — not hidden.
-  assert.match(html, /data-approval-action="acceptAlways"/);
-  assert.equal(html.split('class="source-tooltip-disabled-trigger"').length - 1, 3);
+  assert.match(html, /data-testid="approval-action-acceptAlways"/);
+  assert.equal(html.split('data-cds-disabled-reason-wrapper=""').length - 1, 3);
   assert.equal(html.split('data-cds-disabled-reason="">Scroll through what Claude sent to allow it.</span>').length - 1, 3);
-  assert.doesNotMatch(html.match(/<button[^>]*data-approval-action="decline"[^>]*>/)[0], / disabled=""/);
+  assert.doesNotMatch(html.match(/<button[^>]*data-testid="approval-action-decline"[^>]*>/)[0], / disabled=""/);
 });
 
 test('SSR, unlaid / read / other cards', () => {
@@ -210,8 +210,8 @@ test('the dev server card renders the original title and description line', () =
   const request = { id: 3, method: 'item/commandExecution/requestApproval', params: { threadId: 't', cwd: '/w', command: 'npm run dev',
     codeDesktop: { agentTool: { kind: 'preview-server', name: 'web', port: 5173, portMayReassign: false } } } };
   const html = renderToStaticMarkup(React.createElement(A.SourceApprovalCardView, { request, armKey: ARM, onAction: () => {} }));
-  assert.match(html, /<span data-clamp="">Allow DeepSeek to <span class="sac-em">start<\/span> <span class="sac-em">web<\/span>\?<\/span>/);
-  assert.match(html, /<p class="sac-context" data-context="description">Runs in \/w on port 5173<\/p>/);
+  assert.ok(html.includes('<span class="line-clamp-2">Allow DeepSeek to <span class="text-primary [unicode-bidi:plaintext]">start</span> <span class="text-primary [unicode-bidi:plaintext]">web</span>?</span>'));
+  assert.ok(html.includes('<p data-context="description" class="text-body text-secondary select-text break-words [unicode-bidi:plaintext]">Runs in /w on port 5173</p>'));
   assert.equal(html.includes('approval-read-rows'), false, 'a dev server card has no rows gate');
   // Kk preview_start (c96d752d0) and the main-process ask (index.chunk zIn / HIn) this mirrors.
   const official = fs.readFileSync(path.resolve(app, '../reference/installed-2.42304.0-20261017/ion-dist/assets/v1/c96d752d0-BOCqU7c2.js'), 'utf8');
@@ -229,13 +229,14 @@ test('source and CSS: the official strings, the generated component, no local co
     'epitaxy-approval-read-hint text-footnote text-muted-as-secondary text-end text-balance', 'aria-live="polite" className="sr-only"'])
     assert.ok(view.includes(text), text);
   const css = fs.readFileSync(path.join(app, 'src/source-approval-card.css'), 'utf8');
-  // The one official gate rule (c96d752d0 injected style "c9bddf7be"): the hint centres in the 420px card query.
-  // Comments are stripped so the provenance note does not count; the rule must sit in the card's 420px block, and
-  // nothing else may style the gate by hand.
+  // The one official gate rule: c2d1aeb56's injected style "c9bddf7be" (V3-W14-approvals: the whole injection, verbatim),
+  // whose last rule centres the hint in the 420px card query. Comments are stripped so the provenance note does not
+  // count; nothing else may style the gate by hand.
   const cssRules = css.replace(/\/\*[\s\S]*?\*\//g, '');
-  const narrow = cssRules.match(/@container source-approval \(width <= 420px\) \{((?:[^{}]|\{[^{}]*\})*)\}/);
-  assert.ok(narrow, 'the card 420px container block');
-  assert.match(narrow[1], /\n\s*\.epitaxy-approval-read-hint \{ text-align: center; \}\n/);
+  const frame = fs.readFileSync(path.resolve(app, '../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c2d1aeb56-BwMYdDs2.js'), 'utf8');
+  const injected = /\("c9bddf7be","([^"]+)"\)/.exec(frame)?.[1];
+  assert.ok(injected?.endsWith('@container (width<=420px){.epitaxy-approval-read-hint{text-align:center}}'), 'the official injection');
+  assert.ok(cssRules.includes(injected), 'the injection, verbatim');
   assert.equal(cssRules.match(/approval-read/g)?.length, 1, 'only the official hint rule names the gate');
   assert.equal(/held-look|What Claude/.test(cssRules), false, 'no hand-written gate styles');
   // The original wording in the 2.42304.0 chunk.

@@ -795,7 +795,7 @@ function MenuPendingList({ pending = false, loading = false, placeholderRows = 3
         : <div key={index} aria-hidden={entry.first ? undefined : true} className="smenu-skeleton-row">
             {entry.icon && <span className="smenu-skeleton" style={{ width: 20, height: 20 }} />}
             <span className="smenu-skeleton" style={{ width: entry.width, height: 16 }} role={entry.first ? "status" : undefined}>
-              {entry.first && <span className="smenu-sr-only">{t("Loading")}</span>}
+              {entry.first && <span className="sr-only">{t("Loading")}</span>}
             </span>
           </div>)}</div> : children}
     </div>

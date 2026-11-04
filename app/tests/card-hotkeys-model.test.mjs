@@ -66,7 +66,7 @@ test("approval, plan and question cards register the document hotkeys; a pending
   const [approval, plan, question, main] = await Promise.all(["source-approval-card.jsx", "source-plan-card.jsx", "source-question-card.jsx", "main.jsx"].map(read));
   assert.match(approval, /useCardHotkeys\(root, shortcutEnabled,/);
   assert.match(approval, /approvalKeyIntent\(event, \{ target: "content"/);
-  assert.match(plan, /useCardHotkeys\(root, shortcutEnabled && !revising,/);
+  assert.match(plan, /useCardHotkeys\(root, shortcutEnabled && !fieldOpen,/);
   assert.match(plan, /if \(key === "escape"\) \{ setRevising\(true\); return; \}/);
   // dt ep's `active: nn` with nn = w && T (isPanelActive && isFocusedPane).
   assert.match(question, /useCardHotkeys\(root, isActive && isFocusedPane && !menuOpen && !collapsed && view\?\.phase === "pending"/);

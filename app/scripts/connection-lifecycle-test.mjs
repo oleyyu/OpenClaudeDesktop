@@ -30,7 +30,8 @@ try{
  for(let i=0;i<100;i++){try{if(JSON.parse(await fs.readFile(path.join(profile,'starts.json'),'utf8')).length)break;}catch{}await new Promise(r=>setTimeout(r,30));}
  // F09 (cc43287c9 Zk): nothing replaces the home while the first core is still initializing (5 s):
  // no 'Connecting to DeepSeek…' connection card, and no lost-connection warning during the initial connect.
- await page.locator('header.source-greeting').waitFor();
+ // R4DC-N2 (E95): the code home is the presets start card in main.jsx's .welcome block (no greeting header).
+ await page.locator('.welcome').first().waitFor();
  const connecting=await page.evaluate(()=>({cards:document.querySelectorAll('.connection-card').length,warning:document.querySelectorAll('[data-cds-composer-warning]').length,text:document.body.innerText.includes('Connecting to DeepSeek')}));
  assert.deepEqual(connecting,{cards:0,warning:0,text:false});
  const replacement=await page.evaluate(()=>window.desktop.call('reconnect'));
@@ -48,10 +49,10 @@ try{
   const row=document.querySelector('[data-cds-composer-warning]');
   const alert=[...document.querySelectorAll('[role=alert].composer-error')].map(node=>node.textContent).join('\n');
   if(!row||!alert.includes(reason))return null;
-  return {cards:document.querySelectorAll('.connection-card').length,warning:row.querySelector('.sc-warning-text')?.textContent??null,retry:row.querySelector('button')?.textContent??null,connecting:document.body.innerText.includes('Connecting to DeepSeek'),greeting:!!document.querySelector('header.source-greeting')};
+  return {cards:document.querySelectorAll('.connection-card').length,warning:row.querySelector('.sc-warning-text')?.textContent??null,retry:row.querySelector('button')?.textContent??null,connecting:document.body.innerText.includes('Connecting to DeepSeek'),home:!!document.querySelector('.welcome')};
  },reason,{timeout:15000}).then(handle=>handle.jsonValue());
  // coreName(boot.core): the fixture reports no engine, read as Codex by core-registry coreForEngine.
- const lostState={cards:0,warning:'Connection to Codex lost.',retry:'Retry',connecting:false,greeting:true};
+ const lostState={cards:0,warning:'Connection to Codex lost.',retry:'Retry',connecting:false,home:true};
  const third=JSON.parse(await fs.readFile(path.join(profile,'starts.json'),'utf8')).at(-1);
  process.kill(third.pid,'SIGTERM');
  assert.deepEqual(await homeState('DeepSeek disconnected'),lostState,'after a disconnect: no connection card; the warning row with Retry and the disconnect reason');

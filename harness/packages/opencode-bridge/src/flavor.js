@@ -10,8 +10,13 @@
  *   3. a `cores/<id>/` segment of its path (this app's downloads);
  *   4. the bridge state folder (<userData>/cores/<id>/state);
  *   5. `<binary> --help` naming mimocode.
+ *
+ * Which HTTP API generation it speaks (flavor.api, 'v1' | 'v2') is decided once, before the server is spawned
+ * (detectApi): OpenCode 2.x replaced every route (/api/*), the event stream and the `serve` flags, so the bridge drives
+ * it through src/v2/*. MiMo is always v1.
  */
 import { execFile } from 'node:child_process'
+import fs from 'node:fs'
 import { basename } from 'node:path'
 
 export const FLAVORS = Object.freeze({
@@ -19,6 +24,8 @@ export const FLAVORS = Object.freeze({
     id: 'opencode',
     name: 'OpenCode',
     engine: 'opencode',
+    // The HTTP API generation until detectApi says otherwise (OpenCode 1.x: 'v1'; 2.x: 'v2', withApi).
+    api: 'v1',
     binary: 'opencode',
     envPrefix: 'OPENCODE',
     configFile: 'opencode.json',
@@ -43,6 +50,8 @@ export const FLAVORS = Object.freeze({
     id: 'mimo',
     name: 'MiMo Code',
     engine: 'mimo',
+    // MiMo stays on the OpenCode 1.x API (detectApi never asks its binary).
+    api: 'v1',
     binary: 'mimo',
     envPrefix: 'MIMOCODE',
     configFile: 'mimocode.json',
@@ -104,3 +113,53 @@ export async function detectFlavor({ env = process.env, binary } = {}) {
 
 /** The env var name of `suffix` for a flavor (OPENCODE_CONFIG_DIR, MIMOCODE_CONFIG_DIR …). */
 export const envName = (flavor, suffix) => `${flavor.envPrefix}_${suffix}`
+
+const API_OVERRIDES = new Set(['v1', 'v2'])
+/** path → {mtime, api, version}: one `--version` per binary file (a replaced binary has a new mtime). */
+const apiCache = new Map()
+
+/** The version a `--version` output names ('opencode v2.2.5' → {major: 2, …}), or null. */
+export function parseVersion(text) {
+  const match = /(\d+)\.(\d+)\.(\d+)/.exec(String(text ?? ''))
+  return match ? { major: Number(match[1]), minor: Number(match[2]), patch: Number(match[3]), text: match[0] } : null
+}
+
+/**
+ * Which HTTP API generation the agent speaks, before its server is spawned (the `serve` flags differ: 1.x has no
+ * --stdio). First match wins:
+ *   1. MiMo → 'v1', without running anything (whatever the override says);
+ *   2. CODE_DESKTOP_OPENCODE_API ('v1' | 'v2'), for tests and debugging;
+ *   3. `<binary> --version` (15 s): major ≥ 2 → 'v2', otherwise 'v1';
+ *   4. no binary, or an answer without a version → 'v1' (logged).
+ * The answer is cached per binary path and mtime.
+ * @returns {Promise<{ api: 'v1' | 'v2', version: string | null, source: string }>}
+ */
+export async function detectApi(flavor, binary, { env = process.env, runner = '', nodeBinary = process.execPath, log = () => {}, exec = execFile } = {}) {
+  if (flavor?.id === 'mimo') return { api: 'v1', version: null, source: 'mimo' }
+  const forced = env.CODE_DESKTOP_OPENCODE_API
+  if (API_OVERRIDES.has(forced)) return { api: forced, version: null, source: 'env' }
+  if (!binary) return { api: 'v1', version: null, source: 'default' }
+  let mtime = null
+  try { mtime = fs.statSync(binary).mtimeMs } catch {}
+  const cached = apiCache.get(binary)
+  if (cached && mtime !== null && cached.mtime === mtime) return { api: cached.api, version: cached.version, source: 'cache' }
+  const command = runner === 'node' ? nodeBinary : binary
+  const args = runner === 'node' ? [binary, '--version'] : ['--version']
+  const output = await new Promise((resolve) => exec(command, args, { timeout: 15000 }, (error, stdout, stderr) => resolve({ error, text: `${stdout ?? ''}${stderr ?? ''}` })))
+  const version = parseVersion(output.text)
+  if (!version) {
+    log(`${flavor?.name ?? 'agent'} --version gave no version (${output.error?.message ?? (output.text.trim().slice(0, 200) || 'no output')}): using the 1.x API`)
+    return { api: 'v1', version: null, source: 'default' }
+  }
+  const api = version.major >= 2 ? 'v2' : 'v1'
+  if (mtime !== null) apiCache.set(binary, { mtime, api, version: version.text })
+  log(`${flavor?.name ?? 'agent'} ${version.text}: ${api} API`)
+  return { api, version: version.text, source: 'version' }
+}
+
+/** The flavor with its API generation set (FLAVORS stay frozen 'v1' defaults). */
+export function withApi(flavor, api) {
+  if (!flavor || flavor.api === api) return flavor
+  if (flavor.id === 'mimo' && api !== 'v1') return flavor
+  return Object.freeze({ ...flavor, api })
+}

@@ -1,4 +1,4 @@
-import { t, tn } from "../electron/i18n/index.mjs";
+import { t } from "../electron/i18n/index.mjs";
 import { retryShortLabel } from "./turn-error-model.mjs";
 // `kind` tells apart the running presentations that share a phase (working, sending, spawn, retry); the working line
 // (working-line-model.mjs) maps each to its own input of the official w8.
@@ -103,26 +103,8 @@ export function transcriptStatusPresentation({
   return RUNNING;
 }
 
-export function transcriptSparkSize(textSize = "m") {
-  if (textSize === "s") return 16;
-  if (textSize === "l") return 20;
-  return 18;
-}
 
-// Classic Y5 passes state "thinking" to the Spark while working or stopping;
-// idle/approval rows keep the static mark (state undefined).
-export function sparkState(view) {
-  return view?.busy ? "thinking" : undefined;
-}
 
-// Classic Y5 running-tasks button (scroll-messages-current.js:58273-58327 K):
-// '{count, plural, one {# running task} other {# running tasks}}' while any
-// task runs, else the Whe-held finished count; null hides the button (P).
-export function taskButtonLabel(running = 0, finished = 0) {
-  if (running > 0) return tn(running, "{count} running task", "{count} running tasks");
-  if (finished > 0) return tn(finished, "{count} task finished", "{count} tasks finished");
-  return null;
-}
 
 // Whe :58132-58145 (Uhe = 1500): remember the last non-zero running count and
 // report it as the finished count for 1500ms after running drops to 0. Kept as

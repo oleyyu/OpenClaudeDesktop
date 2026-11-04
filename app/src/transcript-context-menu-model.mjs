@@ -1,12 +1,14 @@
 import { t } from "../electron/i18n/index.mjs";
 import { browserLabel } from "./default-browser-name.mjs";
+import { canOpenFileInEditor } from "./generated/files-changes/file-editor-path.mjs";
 // Transcript right-click menus. Pure: the caller resolves the DOM target.
 //
 // messageMenu: scroll-messages-current.js:33652-33818 CY. Items in order —
 // Copy (the selection, cmd+c); Copy code block / Copy path / Copy code over
 // code that is not inside a link; Open in default browser (http/https only),
-// Open in Preview (official: 'Open in Browser pane', :33727-33760; OpenClaude Desktop's pane is the Preview: a loopback http/https page while the
-// session has a Preview pane, canOpenInPreview) and Copy link over a link; a separator when anything came before the
+// Open in Browser pane (W14-code r7 R7T-03: 3.6556.2 c96d752d0 DA `defaultMessage: "Open in Browser pane", id: "vbISyh+BUD"`,
+// verbatim; OpenClaude Desktop's browser pane is the session's Preview pane: a loopback http/https page while the
+// session has one, canOpenInPreview) and Copy link over a link; a separator when anything came before the
 // message items; Copy message and Copy message as Markdown; a separator
 // before Attach selection as context (cmd+shift+l, a selection of at least 2
 // characters) or Attach message as context; Pin as chapter / Unpin chapter on
@@ -22,7 +24,13 @@ import { browserLabel } from "./default-browser-name.mjs";
 //
 // fileRefMenu: c856385e2-k3utJqnh.js Mn/Z for a transcript file reference —
 // Attach as context (with a composer), Copy ▸ Absolute path / Relative path /
-// Filename, a separator, Open in ▸ Files pane, Show in Finder.
+// Filename, a separator, Open in ▸ …, Show in Finder.
+// W14-code r8 R8T-01: 3.6556.2 c856385e2-aEyDzrcK.js Un → qn → bn: the Open in submenu ("Open in", 4nONiiddCv,
+// separatorBefore) lists hn's editors first (rn() installed editors, un, each "{editor.name}" → openInEditor with the
+// line; only for a path an editor can open, `w = !!c && (s || ee(c))`), then Un's extraTargets — Sn "Files pane"
+// (yVOLloVJYL) and wn "Default app" (MYiMgfwrcV, a path inside the session's folder, `inRoot`) — the first of them
+// with a separator before it when editors came first (`n === 0 && t.length > 0 ? { ...e, separatorBefore: !0 }`).
+// The submenu is left out when it would be empty (`t.length > 0 || i.length > 0 ? {…} : void 0`).
 
 const separator = Object.freeze({ type: "separator" });
 const item = (id, label, extra = {}) => ({ type: "item", id, label, ...extra });
@@ -65,7 +73,7 @@ export function messageMenu({ imageTarget = null, selectionText = null, codeTarg
     // V3-w12b-settings-dialogs: 3.6556.2 c96d752d0 DA `t?.canOpenInBrowser && f(Ke.Item, {…children: T})`, T = DC()
     // (c8ae173c6 p): "Open in {browserName}" once the default browser is known, else "Open in default browser".
     if (canOpenInBrowser) entries.push(item("open-link", browserLabel()));
-    if (canOpenInPreview) entries.push(item("open-in-preview", t("Open in Preview")));
+    if (canOpenInPreview) entries.push(item("open-in-preview", t("Open in Browser pane")));
     entries.push(item("copy-link", t("Copy link")));
   }
   const before = entries.length > 0;
@@ -84,7 +92,7 @@ export function messageMenu({ imageTarget = null, selectionText = null, codeTarg
   return entries;
 }
 
-export function fileRefMenu({ absolute = null, relative = null, filename, canAttach = false, canOpen = true, canReveal = false } = {}) {
+export function fileRefMenu({ absolute = null, relative = null, filename, canAttach = false, canOpen = true, canReveal = false, editors = [], canOpenDefault = false } = {}) {
   const entries = [];
   if (canAttach && absolute) entries.push(item("attach-file", t("Attach as context")));
   entries.push(item("copy", t("Copy"), { submenu: [
@@ -92,9 +100,18 @@ export function fileRefMenu({ absolute = null, relative = null, filename, canAtt
     ...(relative ? [item("copy-relative", t("Relative path"))] : []),
     item("copy-filename", t("Filename")),
   ] }));
-  if (canOpen) entries.push(separator, item("open-in", t("Open in"), { submenu: [item("open-files-pane", t("Files pane"))] }));
+  const editorItems = absolute && canOpenFileInEditor(absolute) && Array.isArray(editors)
+    ? editors.map((editor) => item(`open-in-editor:${editor.type}`, editor.name, { editor: editor.type })) : [];
+  const extraTargets = [
+    ...(canOpen ? [item("open-files-pane", t("Files pane"))] : []),
+    ...(canOpenDefault && absolute && relative ? [item("open-default-app", t("Default app"))] : []),
+  ];
+  const openIn = editorItems.length > 0 || extraTargets.length > 0;
+  if (openIn) entries.push(separator, item("open-in", t("Open in"), { submenu: [
+    ...editorItems, ...(editorItems.length > 0 && extraTargets.length > 0 ? [separator] : []), ...extraTargets,
+  ] }));
   if (canReveal && absolute) {
-    if (!canOpen) entries.push(separator);
+    if (!openIn) entries.push(separator);
     entries.push(item("reveal", t("Show in Finder")));
   }
   return entries;
@@ -106,14 +123,6 @@ export function quoteBlock(text) {
   const value = typeof text === "string" ? text.replace(/\s+$/, "") : "";
   if (!value.trim()) return "";
   return value.split("\n").map((line) => (line.length ? `> ${line}` : ">")).join("\n");
-}
-/** The draft after attaching: the existing draft, a blank line, the quote and
- * a blank line to type into, so several attachments keep their order. */
-export function draftWithQuote(draft, text) {
-  const quote = quoteBlock(text);
-  if (!quote) return typeof draft === "string" ? draft : "";
-  const head = typeof draft === "string" ? draft.replace(/\s+$/, "") : "";
-  return head ? `${head}\n\n${quote}\n\n` : `${quote}\n\n`;
 }
 
 /** A transcript row's message text for Copy message / Attach message: an

@@ -12,4 +12,4 @@ function Ce(e) {
 function we(e) {
   return Ce(e ? "add_repo_app_not_installed" : "add_repo_failed");
 }
-export { we };
+export { Ce, Se, we };

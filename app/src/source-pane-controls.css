@@ -8,82 +8,9 @@
   margin-left: auto;
 }
 
-/* Arrange popup (sa: side bottom / align end, min-w-44 = 176px, padding xs,
-   flex column with gap xs). */
-.spc-arrange {
-  min-width: 176px;
-}
-.spc-arrange > .smenu-body {
-  display: flex;
-  flex-direction: column;
-  gap: var(--cds-gap-xs, 6px);
-  padding: var(--cds-pad-xs, 4px);
-}
-.spc-group {
-  display: flex;
-  flex-direction: column;
-}
-.spc-group-label {
-  padding-top: 2px;
-  padding-bottom: 2px;
-}
-.spc-row {
-  display: flex;
-  align-items: center;
-  padding: 0 4px;
-}
-/* ra: ghost icon buttons; the current pick is pressed (accent) and inert,
-   the others read as secondary until hovered or focused. */
-.spc-pick {
-  color: var(--cds-text-secondary);
-}
-.spc-pick:hover,
-.spc-pick:focus-visible {
-  color: var(--cds-text-primary);
-}
-/* The pressed pick's bg-accent comes from the shared pressed-Button rule (source-session.css, R09). */
-.spc-pick[aria-pressed="true"],
-.spc-pick[aria-pressed="true"]:hover {
-  color: var(--cds-text-accent, var(--cds-fill-accent));
-}
-/* Ghost Button aria-pressed:text-accent (shared-frame-C_2npUJq.js:2724): the
-   popped-out window's pin while it keeps the window on top. */
-.spc-ghost[aria-pressed="true"],
-.spc-ghost[aria-pressed="true"]:hover:not(:disabled) {
-  color: var(--cds-text-accent, var(--cds-fill-accent));
-}
-.spc-glyph {
-  display: block;
-  width: 16px;
-  height: 16px;
-}
-/* Be.Close row: "Open in new window" with the WindowNew icon, menu-item
-   metrics and the ghost hover fill. */
-.spc-open-window {
-  display: flex;
-  align-items: center;
-  width: 100%;
-  min-width: 0;
-  gap: var(--cds-gap-xs, 6px);
-  padding: calc((var(--cds-h-control, 24px) - var(--cds-leading-body, 19px)) / 2) 8px;
-  border: 0;
-  border-radius: var(--cds-radius, 6px);
-  background: transparent;
-  color: var(--cds-text-primary);
-  font: inherit;
-  line-height: var(--cds-leading-body, 19px);
-  text-align: start;
-  cursor: default;
-}
-.spc-open-window:hover,
-.spc-open-window:focus-visible {
-  background: var(--cds-fill-ghost-hover, var(--cds-alpha-1));
-  outline: none;
-}
-.spc-open-window-label {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
+/* W14-code r3 fr3-07: the arrange popup is the CDS Popover with c4db265df yt's own `flex min-w-44 flex-col gap-xs` and
+   padding "xs" (source-pane-controls.jsx), so the .spc-arrange copies are gone. */
+/* W14-code r2 fr2-19: the pick groups and the "Open in new window" row are c4db265df q / bt's own classes
+   (source-pane-controls.jsx), so their .spc-group / .spc-row / .spc-open-window copies are gone. */
+/* W14-code r3 fr3-08: the preview, background-task and plan header buttons are CDS ghost iconOnly Buttons too, so the
+   .spc-ghost[aria-pressed] stand-in for Button's aria-pressed:text-accent is gone. */

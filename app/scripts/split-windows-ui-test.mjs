@@ -109,8 +109,8 @@ async function size(target, width, height = 900) {
   await frames(target);
 }
 const row = (id, target = page) => target.locator(`[data-source-session-id="${id}"] [data-row-main-button]`);
-const primaryTitle = (target = page) => target.locator(".split-pane-primary .st-title");
-const secondaryTitle = (target = page) => target.locator(".split-pane-secondary .st-title");
+const primaryTitle = (target = page) => target.locator(".split-pane-primary :is(.st-title,button[data-pane-title])");
+const secondaryTitle = (target = page) => target.locator(".split-pane-secondary :is(.st-title,button[data-pane-title])");
 const titleOf = async (locator) => (await locator.textContent())?.trim();
 // A label path: ["Open in", "Split view"] opens the Open in submenu (c80a67939 x) and picks its row.
 async function rowMenu(id, item, target = page) {
@@ -165,7 +165,7 @@ const terminalText = (scope) => terminalIn(scope).locator(".stp-host .stp-xterm"
 const previewViews = (id) => app.evaluate(({ BrowserWindow }, id) => BrowserWindow.fromId(id).contentView.children
   .filter((child) => child.webContents && child.webContents !== BrowserWindow.fromId(id).webContents).map((child) => child.webContents.getURL()), id);
 async function sendIn(scope, text) {
-  const box = scope.getByRole("textbox", { name: "Message DeepSeek", exact: true });
+  const box = scope.getByRole("textbox", { name: /^(?:Prompt|Message DeepSeek)$/ });
   await box.click();
   await box.fill(text);
   await scope.locator('[data-testid="code-prompt-send"]:not([inert] *)').click();
@@ -319,10 +319,10 @@ try {
   await poll(() => page.evaluate(() => !!document.activeElement?.closest?.(".split-pane-primary .ProseMirror")), "focus returns to the primary side's composer");
   assert.equal(await terminalIn(page.locator(".split-pane-secondary")).count(), 1);
   await page.keyboard.press("Meta+f");
-  const findBar = page.locator(".sfb-root:not(.stp-find)");
+  const findBar = page.locator("[role=search][data-find-provider-scope]");
   await findBar.waitFor();
   assert.equal(await findBar.count(), 1, "⌘F opens one find bar, the focused side's");
-  const findStatus = () => findBar.locator(".sfb-status").textContent();
+  const findStatus = () => findBar.getByRole("status").textContent();
   await findBar.getByRole("textbox", { name: "Find", exact: true }).fill("ANSWER_C");
   await poll(async () => (await findStatus()).trim() === "1/1", "the focused (primary) side's transcript is searched");
   await findBar.getByRole("textbox", { name: "Find", exact: true }).fill("ANSWER_A");
@@ -331,8 +331,8 @@ try {
   await page.keyboard.press("Escape");
   await findBar.waitFor({ state: "detached" });
   // Drafts: each side keeps its own composer text under its own session.
-  const primaryBox = page.locator(".split-pane-primary").getByRole("textbox", { name: "Message DeepSeek", exact: true });
-  const secondaryBox = page.locator(".split-pane-secondary").getByRole("textbox", { name: "Message DeepSeek", exact: true });
+  const primaryBox = page.locator(".split-pane-primary").getByRole("textbox", { name: /^(?:Prompt|Message DeepSeek)$/ });
+  const secondaryBox = page.locator(".split-pane-secondary").getByRole("textbox", { name: /^(?:Prompt|Message DeepSeek)$/ });
   await primaryBox.fill("PRIMARY_SIDE_DRAFT");
   // composer-draft-store.mjs persistDraft: localStorage "<DRAFT_STORAGE_PREFIX><draftKey>" (draftKey = "epitaxy-<session>").
   const stored = (key) => page.evaluate((key) => Object.keys(localStorage).filter((name) => name.endsWith(key)).map((name) => localStorage.getItem(name)).join("\n"), key);
@@ -498,17 +498,17 @@ try {
   step("approval-across-windows");
   await openRow(createdId);
   await sendIn(page, "fixture:command-card");
-  await page.locator('.sac-card[data-approval-kind="command"]').waitFor();
-  await second.locator('.sac-card[data-approval-kind="command"]').waitFor();
-  const cardState = (target) => target.evaluate(() => [...document.querySelectorAll(".sac-card")].map((node) => ({ kind: node.dataset.approvalKind, instance: node.dataset.approvalInstance, text: node.textContent.slice(0, 200) })));
+  await page.locator('[data-approval-card-root][data-approval-kind="command"]').waitFor();
+  await second.locator('[data-approval-card-root][data-approval-kind="command"]').waitFor();
+  const cardState = (target) => target.evaluate(() => [...document.querySelectorAll("[data-approval-card-root]")].map((node) => ({ kind: node.dataset.approvalKind, instance: node.dataset.approvalInstance, text: node.textContent.slice(0, 200) })));
   report.metrics.approvalBefore = { first: await cardState(page), second: await cardState(second) };
-  // A grant click within 400 ms of the card arming is ignored on purpose (source-approval-card.jsx useAllowArming).
+  // A grant click within 400 ms of the card arming is ignored on purpose (source-approval-card.jsx ApprovalAllowArm, shared-10 OS).
   await second.waitForTimeout(450);
-  await second.locator('.sac-card[data-approval-kind="command"] [data-approval-action="accept"]').click();
+  await second.locator('[data-approval-card-root][data-approval-kind="command"] [data-approval-action="accept"]').click();
   const responses = () => fs.readFile(path.join(profile, "fixture-responses.jsonl"), "utf8").catch(() => "");
   try {
-    await second.locator('.sac-card[data-approval-kind="command"]').waitFor({ state: "detached" });
-    await page.locator('.sac-card[data-approval-kind="command"]').waitFor({ state: "detached" });
+    await second.locator('[data-approval-card-root][data-approval-kind="command"]').waitFor({ state: "detached" });
+    await page.locator('[data-approval-card-root][data-approval-kind="command"]').waitFor({ state: "detached" });
   } catch (error) {
     report.metrics.approvalAfter = { first: await cardState(page), second: await cardState(second), responses: await responses(),
       secondErrors: await second.evaluate(() => [...document.querySelectorAll('[role="alert"], .sac-error')].map((node) => node.textContent)) };

@@ -84,7 +84,8 @@ test('body menu: cccc2cf0a iS kf (c0cdf4a08 g) around the terminal; Le needs a l
   assert.match(read('src/generated/session-rail-changes/row-context-menu.mjs'), /export \{ g as RowContextMenu \};$/m);
   const host = read('src/source-terminal-pane.jsx');
   assert.match(host, /import \{ RowContextMenu \} from "\.\/generated\/session-rail-changes\/row-context-menu\.mjs";/);
-  assert.match(host, /import \{ CdsConfirmationDialog, CdsContextMenu, CdsRoot \} from "\.\/generated\/view-tabs\/index\.js";/);
+  // W14-code r6 r6pa-04: Restart / Reload / New terminal are CdsButton too (cccc2cf0a Zx), from the same view-tabs import.
+  assert.match(host, /import \{ CdsButton, CdsConfirmationDialog, CdsContextMenu, CdsRoot \} from "\.\/generated\/view-tabs\/index\.js";/);
   assert.match(host, /<RowContextMenu\n\s+onContextMenu=\{\(event\) => \{\n\s+const term = viewRef\.current\?\.term;\n\s+if \(!term\) \{ event\.preventDefault\(\); return; \}\n\s+setBodySelection\(term\.getSelection\(\) \|\| ""\);/);
   assert.match(host, /trigger=\{<div ref=\{host\} className="stp-host"/);
   assert.match(host, /if \(term && terminalOwnsContextMenu\(term, event\.nativeEvent\)\) event\.preventDefault\(\);/);

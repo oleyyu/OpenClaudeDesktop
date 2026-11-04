@@ -308,4 +308,12 @@ function ay(e) {
       )
     : $[13];
 }
-export { ay as TitlebarSpawnLead };
+export {
+  ay as TitlebarSpawnLead,
+  Bv as TitlebarOriginLabel,
+  Nv as originPillStaticClass,
+  Fv as originPillStaticPanelsClass,
+  jv as originPillBase,
+  Tv as originPillSize,
+  Ev as originPillPanelsSize,
+};

@@ -3,7 +3,6 @@ import {terminalAttachmentText} from "./generated/code-current/terminal-selectio
 import {attachVisibleTerminalOutput} from "./generated/code-current/terminal-output.mjs";
 import {terminalOwnsContextMenu} from "./generated/code-current/terminal-mouse.mjs";
 import {installTerminalColorPolicy} from "./generated/code-current/terminal-colors.mjs";
-import {selectionBlocksTerminalLink} from "./generated/code-current/terminal-link-selection.mjs";
 import {TerminalIdleCursor} from "./generated/code-current/terminal-idle-cursor.mjs";
 import {TerminalClearItem, mountedTerminalViews} from "./generated/code-current/terminal-clear-item.mjs";
 import {routeTerminalKey,installTerminalCopyEvent} from "./terminal-event-routing.mjs";
@@ -15,14 +14,14 @@ import {installTerminalCopyOnSelect,terminalSelectionText} from './terminal-copy
 import React, { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 // w11-e31-terminal-cont: the close confirmation (cccc2cf0a Zx Ie) and the body menu (cS items) are view-tabs CDS parts
 // (R6 facade).
-import { CdsConfirmationDialog, CdsContextMenu, CdsRoot } from "./generated/view-tabs/index.js";
+// W14-code r6 r6pa-04: cccc2cf0a Zx "New terminal" / Restart / Reload are shared-frame Uu = CdsButton.
+import { CdsButton, CdsConfirmationDialog, CdsContextMenu, CdsRoot } from "./generated/view-tabs/index.js";
 // cccc2cf0a iS → c0cdf4a08 g (kf, the context menu around the terminal): session-rail-changes already slices it from
 // 3.6556.2 (RowContextMenu, with cd59309dc's open marker), so the pane imports that slice (D1) instead of a second one.
 import { RowContextMenu } from "./generated/session-rail-changes/row-context-menu.mjs";
 // cccc2cf0a cS: the Attach item's chord is `X("attachTerminalOutput", c)` (X = shared-46 iR, the keybinding table that
 // session-rail-changes slices as commandShortcut; c = shared-25 vh isDesktopClient, true in the host).
 import { commandShortcut } from "./generated/session-rail-changes/command-shortcut.mjs";
-import { SourceSettingsButton } from "./source-settings-button.jsx";
 import { useCodeThemes } from "./code-theme-store.mjs";
 import { useReducedMotion } from "./use-reduced-motion.js";
 import {SourceTerminalFind} from "./source-terminal-find.jsx";
@@ -46,9 +45,9 @@ import { ownerKeyOf, terminalStore } from "./terminal-store.mjs";
 // the code block run typed into this tab.
 import { terminalInlineErrors } from "./terminal-inline-error-store.mjs";
 import { startFailedTerminals, terminalPanes } from "./terminal-registry-host.mjs";
-import { MAX_TERMINALS_PER_OWNER } from "../electron/terminal-model.mjs";
 import { t, tn, getLocale } from "../electron/i18n/index.mjs";
 import "./source-terminal-pane.css";
+import { PaneWindowDragStrip, usePaneWindowHeaderProps } from "./pane-window-header.jsx";
 
 // Terminal pane. Host component standing in for the 3.6556.2 terminal pane (cccc2cf0a Zx strip + iS body, c6bf19e8f
 // ShellTerminal; w10-ccres-e31-terminal maps each piece in reports/W10/w10-ccres-e31-terminal.md). The strip is the
@@ -148,6 +147,8 @@ export function SourceTerminalPane({
   focusRequest = null, onAttachSelection = null, fileDragOwner = null,
 }) {
   const terminals = store();
+  // W14-code r4 r4pa-c03: in a pane window (c5638815a wt `isTopLeft: !0`) the header clears the traffic lights and drags the window.
+  const paneWindowHeader = usePaneWindowHeaderProps();
   const titles = terminalTitles();
   const titleState = useSyncExternalStore(titles.subscribe, titles.snapshot, titles.snapshot);
   const toasts = useSourceToasts();
@@ -602,13 +603,13 @@ export function SourceTerminalPane({
   const stripTabs = useMemo(() => terminalStripTabs(tabs, (tab) => titles.value(titleState, tab), (title) => titles.description(title)),
     [tabs, titleState, titles]);
   const locale = getLocale();
-  // cccc2cf0a Zx je: the strip's labels (newTabAtCap is the host's per-session cap, see createDisabled below).
+  // cccc2cf0a Zx je: the strip's labels. W14-code r5pa-08 (E95): Zx has no per-session cap and no newTabAtCap, so +
+  // stays enabled; the main process still refuses past its limit ("Too many terminals…" shows as the tab error).
   const stripLabels = useMemo(() => ({
     newTab: t("New terminal"), moreTabs: t("More terminals"), closeTab: t("Close terminal"), renameTab: t("Rename terminal"),
     closeOtherTabs: t("Close other terminals"), closeTabHint: t("press right arrow to close"), closeTabHintRtl: t("press left arrow to close"),
     closeTabDeleteHint: t("Press Delete or Backspace to close the terminal"),
     moveTabHint: t("Press Control+Shift+Left Arrow or Right Arrow to move the terminal"),
-    newTabAtCap: t("Up to {count} terminals per session", { count: MAX_TERMINALS_PER_OWNER }),
   }), [locale]); // eslint-disable-line react-hooks/exhaustive-deps
   // cccc2cf0a Zx z (Kx: the strip itself, not a tab, a button, or a tab being renamed): a primary press on the empty strip
   // keeps focus off it and goes to the active terminal; Jx/qx keep a middle press there from pasting (X11 primary).
@@ -631,10 +632,10 @@ export function SourceTerminalPane({
   const pendingConfirm = liveTerminalConfirm(confirm, tabs);
   return (
     <aside ref={pane} className="source-file-panel detail-panel stp-pane" aria-label={t("Terminal")} data-terminal-owner={owner || undefined}>
-      <header className="source-pane-header" data-pane-header="terminal">
+      <header className="source-pane-header" data-pane-header="terminal" {...paneWindowHeader}>
+        <PaneWindowDragStrip />
         {/* cccc2cf0a Zx: the strip wrapper (z, Jx, qx) around ViewTabBar with Zx's props. createMenu (Choose shell) needs
-            more than one shell from the main process (lx), which the host does not list, so there is none; the host's
-            per-session cap disables + (createDisabled, read out as newTabAtCap). */}
+            more than one shell from the main process (lx), which the host does not list, so there is none. */}
         <div role="presentation" className="relative flex items-center flex-1 min-w-0 gap-1"
           onMouseDown={(event) => {
             if (!stripTarget(event)) return;
@@ -645,12 +646,12 @@ export function SourceTerminalPane({
           onMouseUp={(event) => { if (event.button === 1 && stripTarget(event)) event.preventDefault(); }}>
           <SourceViewTabBar className="min-w-0 flex-1" aria-label={t("Terminal tabs")} tabs={stripTabs} activeId={activeId}
             onActivate={(id) => select(id, { focus: true })} onReselect={(id) => select(id, { focus: true })} onClose={close}
-            onCreate={() => void newTab()} createDisabled={!owner || !terminals.available || tabs.length >= MAX_TERMINALS_PER_OWNER}
+            onCreate={() => void newTab()} createDisabled={!owner || !terminals.available}
             createOnDoubleClick onRename={rename} onCloseOthers={closeOthers} onReorder={reorder}
             renderTabMenuItems={renderTerminalTabMenuItems} labels={stripLabels} />
         </div>
         {headerCenter}
-        {React.isValidElement(controls) ? React.cloneElement(controls, {menuSections:terminalViewMenu(viewSettings,viewSettingsStore.set)}) : controls}
+        {React.isValidElement(controls) ? React.cloneElement(controls, {menuSections:terminalViewMenu(viewSettings,viewSettingsStore.set,reducedMotion)}) : controls}
       </header>
       <div className="stp-body group/terminal" style={{ backgroundColor: theme.background }} data-exited={exited || undefined} {...dropHandlers}
         onKeyDown={(event) => { if (event.key === "Escape" && !event.nativeEvent.isComposing && findOpen) { event.preventDefault(); setFindOpen(false); focusTerminal(); } }}>
@@ -699,7 +700,7 @@ export function SourceTerminalPane({
         </RowContextMenu>
         {/* c6bf19e8f Ei: `B && !B.offscreen && g && !Z && n(Si, …)` (Z = the start error or the exited shell). */}
         {selectionAnchor&&!selectionAnchor.offscreen&&onAttachSelection&&!exited&&!coverError&&<TerminalSelectionAction anchor={selectionAnchor} onAttach={()=>handlers.current.attach(viewRef.current?.term.getSelection())}/>}
-        <span className="source-sr-only" role="status" aria-live="polite">{attached ? t("Terminal output attached to chat") : ""}</span>
+        <span className="sr-only" role="status" aria-live="polite">{attached ? t("Terminal output attached to chat") : ""}</span>
         {findOpen && <SourceTerminalFind ref={findRef} selectionSuppressed={searchSelecting} view={viewRef} onClose={() => { setFindOpen(false); focusTerminal(); }} />}
         {dropOver && !dropDisabled && <TerminalDropRing />}
         {/* c6bf19e8f pi (absolute inset-0 bg-surface-1 + EmptyState): the error or "Shell exited" covers the surface; Try
@@ -710,21 +711,21 @@ export function SourceTerminalPane({
             onMouseDown={(event) => { if (!event.defaultPrevented && !event.target.closest?.("button")) { event.preventDefault(); restartButton.current?.focus(); } }}>
             {/* cc-rest-terminal-b (3.6556.2 Ei): an error cover is role="alert"; needsNewerApp adds its body. */}
             <EmptyState role={cover.role} title={<span id={`${hintId}-exited`}>{cover.text}</span>} body={cover.body}
-              actions={cover.action && <SourceSettingsButton ref={restartButton} size="sm" variant="secondary" aria-describedby={`${hintId}-exited`}
-                data-initial-focus="" onClick={cover.retry}>{cover.action}</SourceSettingsButton>} />
+              actions={cover.action && <CdsButton ref={restartButton} size="sm" variant="secondary" aria-describedby={`${hintId}-exited`}
+                data-initial-focus="" onClick={cover.retry}>{cover.action}</CdsButton>} />
           </div>
         )}
         {/* cccc2cf0a Ay (ShellTerminalChunk's fallback): the terminal module (or the bridge) failed to load; Reload. */}
         {loadFailed && (
           <div className="stp-overlay">
             <EmptyState role="alert" icon="Warning" title={t("Couldn’t load the terminal")} body={t("Reload the page to try again.")}
-              actions={<SourceSettingsButton size="sm" variant="secondary" onClick={() => window.location.reload()}>{t("Reload")}</SourceSettingsButton>} />
+              actions={<CdsButton size="sm" variant="secondary" onClick={() => window.location.reload()}>{t("Reload")}</CdsButton>} />
           </div>
         )}
         {error && !exited && !loadFailed && (
           <div className="stp-error" role="alert">
             <span>{error}</span>
-            {terminals.available && owner && !tabs.length && <SourceSettingsButton size="sm" variant="secondary" onClick={() => void newTab()}>{t("New terminal")}</SourceSettingsButton>}
+            {terminals.available && owner && !tabs.length && <CdsButton size="sm" variant="secondary" onClick={() => void newTab()}>{t("New terminal")}</CdsButton>}
           </div>
         )}
         {/* c6bf19e8f pi → cf718f694 B (terminal-09): the dimmed idle cursor until a terminal's xterm is in place (hidden by

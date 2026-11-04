@@ -8,7 +8,7 @@
       "target": "pane-focus-return.mjs",
       "source": "shared-1-BJhqMmkf.js",
       "sourceSha256": "07582bbc557071f2d83db84a7356eec7847d108771b043f876d26dfda38e4388",
-      "sha256": "7b51a664769c1496fd479bce50172a9db15fa73e740dd28de7e7c164df69e966",
+      "sha256": "a72c0455066b0e514abb8c24c910da92b137ac69de31cf1175c02cb5d6f05878",
       "referenceVersion": "3.6556.2",
       "bindings": [
         {
@@ -35,7 +35,10 @@
       "imports": [],
       "exports": {
         "nC": "focusReturnRegion",
-        "aC": "returnFocusSoon"
+        "aC": "returnFocusSoon",
+        "tC": "paneRootOf",
+        "rC": "paneFocusTarget",
+        "oC": "returnFocusSoonTo"
       }
     },
     {

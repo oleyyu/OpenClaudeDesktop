@@ -1,7 +1,8 @@
 // Bundled release notes for the What’s new dialog (titlebar-release-notes.js:4184-4200 j(surface) over the
 // versioned `releases` list: {version, date, entries: [{surface, kind, text}]}, newest first). This client has a
-// single surface, so an entry is {version, date, items: [{kind, text}]}; `limits` is the local "Known limits"
-// footnote. Text may hold [[keys]] (keycaps) and `code` spans (I, :5071-5094).
+// single surface, so an entry is {version, date, items: [{kind, text}]} (W14-code r4 fr4-11 / E95: cb63ed069 H renders
+// only the groups, so the host-only "Known limits" footnote and its `limits` field are gone). Text may hold [[keys]]
+// (keycaps) and `code` spans (I, :5071-5094).
 // OpenClaude Desktop is a frame for many agent cores, so the notes are core-neutral: DeepSeek Harness appears only as
 // the built-in core (a product name), never as "the assistant" every user runs.
 // Every shipped version needs its entry (scripts/verify-release-notes.mjs fails the build otherwise), or the What’s new
@@ -49,14 +50,6 @@ export const RELEASE_NOTES = Object.freeze([
       { kind: "improvement", text: "While the assistant thinks, the status line can show its reasoning in the transcript, and reads “Thought for Ns” when a thought ends." },
       { kind: "improvement", text: "Reasoning reads as plain text with Copy as quote; thinking before tool calls is an open Thought process step." },
       { kind: "improvement", text: "The Plan pane lists tasks as done, in progress or not done, and stays after a session is reopened." },
-    ],
-    limits: [
-      "Some commands, such as /fork, /review and /rewind, depend on the running core; the slash menu says when one isn’t available.",
-      "Sessions started outside OpenClaude Desktop, or before you switched cores, don’t appear in the sidebar.",
-      "Removing a session hides it here only, unless the core can delete its own history.",
-      "Some cores can’t add MCP servers or turn skills on or off from Settings; use that core’s own configuration.",
-      "Usage counts and cost estimates come from records on this Mac, not from your provider’s bill.",
-      "Writing to an added folder may need an extra permission step.",
     ],
   },
 ]);

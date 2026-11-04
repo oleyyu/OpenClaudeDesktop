@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {compactTokens,contextThreshold,contextRingStroke,contextRingGeometry,contextSummary,usageTriggerCopy,CONTEXT_RING_TRACK} from '../src/context-usage-model.mjs';
+import {compactTokens,contextThreshold,contextRingStroke,contextSummary,usageTriggerCopy} from '../src/context-usage-model.mjs';
 test('compactTokens follows shared-14 oT/sT (trailing .0 dropped, k→M→B rollover)',()=>{
  assert.equal(compactTokens(45200),'45.2k');assert.equal(compactTokens(258000),'258k');assert.equal(compactTokens(128000),'128k');
  assert.equal(compactTokens(1000),'1k');assert.equal(compactTokens(999),'999');assert.equal(compactTokens(100),'100');assert.equal(compactTokens(0),'0');
@@ -20,14 +20,6 @@ test('thresholds are dT (75 warning / 90 critical) on the pT fill variables',()=
  assert.equal(contextThreshold(0),'accent');assert.equal(contextThreshold(74),'accent');assert.equal(contextThreshold(75),'warning');
  assert.equal(contextThreshold(89),'warning');assert.equal(contextThreshold(90),'danger');assert.equal(contextThreshold(100),'danger');
  assert.equal(contextRingStroke(18),'var(--cds-fill-accent)');assert.equal(contextRingStroke(80),'var(--cds-fill-warning)');assert.equal(contextRingStroke(95),'var(--cds-fill-danger)');
- assert.equal(CONTEXT_RING_TRACK,'var(--cds-alpha-2)');
-});
-test('ring geometry is xT: 12px, stroke 2, r 5, offset C·(1−clamp(pct)/100)',()=>{
- const zero=contextRingGeometry(0),C=2*Math.PI*5;
- assert.deepEqual({size:zero.size,stroke:zero.stroke,center:zero.center,radius:zero.radius},{size:12,stroke:2,center:6,radius:5});
- assert.ok(Math.abs(zero.circumference-C)<1e-9);assert.ok(Math.abs(zero.offset-C)<1e-9);
- assert.ok(Math.abs(contextRingGeometry(50).offset-C/2)<1e-9);assert.equal(contextRingGeometry(100).offset,0);
- assert.equal(contextRingGeometry(140).offset,0);assert.ok(Math.abs(contextRingGeometry(-5).offset-C)<1e-9);
 });
 test('usageTriggerCopy mirrors c360a9e1c hd ge/Se/le',()=>{
  assert.deepEqual(usageTriggerCopy(null),{tooltip:'Usage',ariaLabel:'Usage',ringPct:0,contextPct:null,detail:null});
@@ -74,11 +66,11 @@ test('compactAction: hidden below 50% or while compacting, disabled while replyi
 // its reset; without context the ring shows the plan percent and the label is the plain list (no 'Usage:' prefix).
 test("usage trigger names the plan window in its detail, and the ring shows plan usage without context", async () => {
   const { usageTriggerCopy } = await import("../src/context-usage-model.mjs");
-  const plan = { summary: "45% of 5-hour limit", resets: "Resets in 2 hr 3 min", percent: 45 };
+  const plan = { summary: "45% of session limit", resets: "Resets in 2 hr 3 min", percent: 45 };
   assert.deepEqual(usageTriggerCopy({ last: { totalTokens: 64000 }, modelContextWindow: 128000 }, { plan }),
-    { tooltip: "Context 64k / 128k (50%)", ariaLabel: "Usage: Context 64k / 128k (50%), 45% of 5-hour limit, Resets in 2 hr 3 min", ringPct: 50, contextPct: 50, detail: "45% of 5-hour limit · Resets in 2 hr 3 min" });
+    { tooltip: "Context 64k / 128k (50%)", ariaLabel: "Usage: Context 64k / 128k (50%), 45% of session limit, Resets in 2 hr 3 min", ringPct: 50, contextPct: 50, detail: "45% of session limit · Resets in 2 hr 3 min" });
   assert.deepEqual(usageTriggerCopy(null, { plan }),
-    { tooltip: "Usage", ariaLabel: "Usage, 45% of 5-hour limit, Resets in 2 hr 3 min", ringPct: 45, contextPct: null, detail: "45% of 5-hour limit · Resets in 2 hr 3 min" });
+    { tooltip: "Usage", ariaLabel: "Usage, 45% of session limit, Resets in 2 hr 3 min", ringPct: 45, contextPct: null, detail: "45% of session limit · Resets in 2 hr 3 min" });
   assert.deepEqual(usageTriggerCopy(null), { tooltip: "Usage", ariaLabel: "Usage", ringPct: 0, contextPct: null, detail: null }, "no plan: unchanged");
   assert.equal(usageTriggerCopy(null, { plan: { summary: "This week: 80%", resets: null, percent: 80 } }).detail, "This week: 80%");
 });

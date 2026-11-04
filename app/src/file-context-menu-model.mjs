@@ -31,7 +31,6 @@ export const FILE_MENU_LABELS = Object.freeze({
   openIn: t("Open in"),
   openInTerminal: t("Open in terminal"),
 });
-export const FILE_MENU_SURFACES = Object.freeze(["file_browser", "file_tab", "file_viewer", "file_breadcrumb"]);
 
 // Rg/zg (readable/panes-tile-current.js:5572-5588): the symlink mark's alt and
 // the tree row tooltip detail; "Symbolic link" when the target is unknown.
@@ -169,19 +168,3 @@ export function changedFileMenu({ root, path, canAttach = false, canOpenFile = f
   return entries;
 }
 
-// B32 Zs/qs (cd2efac6e readable :2157-2199): the target of each breadcrumb segment's context menu — a folder segment
-// is that folder, the name segment is the file. Inside the working directory the paths stay cwd-relative; a path
-// shown absolute keeps its absolute prefixes; a "~" path (not absolute) has no menu.
-export function breadcrumbSegmentTargets(displayPath) {
-  const value = String(displayPath ?? "");
-  if (!value || /^~(?:$|[\\/])/.test(value)) return { dirs: [], name: null };
-  const lead = /^[A-Za-z]:[\\/]/.exec(value)?.[0] ?? /^\/+/.exec(value)?.[0] ?? "";
-  const outside = lead !== "";
-  const parts = value.slice(lead.length).split(/[\\/]/).filter((part) => part !== "");
-  if (!parts.length) return { dirs: [], name: null };
-  const join = (count) => lead + parts.slice(0, count).join("/");
-  return {
-    dirs: parts.slice(0, -1).map((label, index) => ({ label, path: join(index + 1), directory: true, outside })),
-    name: { label: parts.at(-1), path: join(parts.length), directory: false, outside },
-  };
-}

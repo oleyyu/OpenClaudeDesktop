@@ -132,10 +132,11 @@ test('GJ in the host menu: Date first, Folder, Environment (the host buckets by 
   assert.equal(M.model.SAVED_ENVIRONMENT_GROUPS_HOST, true);
   assert.deepEqual(M.model.sessionListGroupOptions(all), all);
   assert.deepEqual(M.model.sessionListGroupOptions(all, { savedEnvironmentGroups: false }), [['date', 'Date'], ['state', 'Status'], ['project', 'Folder'], ['none', 'None']]);
-  // Rendered through the real host adapters (overlay gate on: no Custom; status grouping on).
+  // Rendered through the real host adapters (overlay gate on: no Custom). W14-code r4 gates-r4-09 (E81 / E95 over D42):
+  // status grouping off, as the 3P desktop (shared-46 SN's claudeai_session_state is not in Uon), so GJ has no Status.
   const f = fixture(M.filter.SessionListFilterMenu, { handle: {}, open: true, onOpenChange() {}, preferences: { groupBy: 'date' } });
   const content = f.tree.props.children.props.children.props;
-  assert.deepEqual(content.groupOptions, all);
+  assert.deepEqual(content.groupOptions, all.filter(([value]) => value !== 'state'));
   assert.equal(content.groupBy, 'date');
   // Environment stays the shown radio (normalizeSidebarPreferences keeps it; the classic menu does not offer it).
   const g = fixture(M.filter.SessionListFilterMenu, { handle: {}, open: true, onOpenChange() {}, preferences: { groupBy: 'environment' } });
@@ -222,7 +223,9 @@ test('Group by › Environment: shared-22 OE buckets by saved environment (SE / 
   // main passes its saved environments to the sidebar, which hands them to the sections layout.
   const main = await read('src/main.jsx'), sidebar = await read('src/source-sidebar.jsx');
   assert.match(main, /savedEnvironments=\{savedEnvironments\.environments\}\n\s+onSaveAsEnvironment|sidebarSections=\{sidebarSections\}\n(?:\s*\/\/.*\n)?\s+savedEnvironments=\{savedEnvironments\.environments\}/);
-  assert.match(sidebar, /held: loading, savedEnvironments \}\) : null,/);
+  // W14-code r5 复核 (gates-r5-02): the call also hands over statusGrouping (shared-22 sO `t.groupBy === "status" && y`,
+  // y = claudeai_session_state), so the source now ends with it.
+  assert.match(sidebar, /held: loading, savedEnvironments, statusGrouping \}\) : null,/);
 });
 
 test('one copy of the controls: code-current re-exports the sidebar-sections slice (_J, qJ, JJ, KJ, UJ, WJ, NJ, OG, nY)', () => {

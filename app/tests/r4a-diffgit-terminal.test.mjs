@@ -211,7 +211,8 @@ test('diffgit-08 local: isLargeDiff is $e branch for branch; patches_withheld re
   assert.equal(count(local('src/source-session.jsx'), 'patchesWithheld={diffView.patchesWithheld}'), 1);
   const diff = local('src/source-diff.jsx');
   assert.equal(count(diff, 'const lazyPatches = typeof fileActions?.fetchFilePatch === "function";'), 1);
-  assert.equal(count(diff, 'const large = changes && isLargeDiff(entries, { withheld: patchesWithheld, lazyPatches, singleList: false });'), 1);
+  // W14-code pa2-04 (E84.3): the inline placement is gone; SourceDiff always renders the Changes body.
+  assert.equal(count(diff, 'const large = isLargeDiff(entries, { withheld: patchesWithheld, lazyPatches, singleList: false });'), 1);
   // Every branch agrees with the transcription of the chunk.
   const raw = (changes, patch) => ({ additions: changes, deletions: 0, rawFile: { changes, patch } });
   const cases = [

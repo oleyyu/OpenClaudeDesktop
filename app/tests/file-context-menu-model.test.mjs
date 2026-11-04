@@ -115,8 +115,7 @@ test('Changes file menu: without Open file the renderFileMenuItems group starts 
 // B13 im (2.31226.0 cd2efac6e readable :5945-6030, the no-selection branch): a preview body's menu is the
 // file_viewer items (no Reveal in file tree, no Open in terminal), then Copy file contents and Download file.
 test('file_viewer body menu: file items, separator, Copy file contents, Download file', async () => {
-  const { fileViewerMenu, FILE_MENU_SURFACES } = await import('../src/file-context-menu-model.mjs');
-  assert.ok(FILE_MENU_SURFACES.includes('file_viewer'));
+  const { fileViewerMenu } = await import('../src/file-context-menu-model.mjs');
   const items = fileContextMenu({ surface: 'file_viewer', root: '/w', path: 'docs/README.md', canAttach: true, canShowInFinder: true, canRevealInTree: true,
     editors: [{ name: 'VS Code', type: 'vscode' }] });
   const menu = fileViewerMenu(items, { canCopyContents: true, canDownload: true });
@@ -129,8 +128,6 @@ test('file_viewer body menu: file items, separator, Copy file contents, Download
 
 // B32 ko (cd2efac6e readable :1354-1400) over Jt (c856385e2 :644-720) and Zt (:829-860).
 test('B32 file_breadcrumb: a folder segment ends with Open in terminal, then Reveal in file tree as "dir/"', async () => {
-  const { breadcrumbSegmentTargets, FILE_MENU_SURFACES } = await import('../src/file-context-menu-model.mjs');
-  assert.ok(FILE_MENU_SURFACES.includes('file_breadcrumb'));
   const editors = [{ name: 'VS Code', type: 'vscode' }];
   const folder = fileContextMenu({ surface: 'file_breadcrumb', root: '/work/space', path: 'src/lib', directory: true, canAttach: true,
     canShowInFinder: true, canRevealInTree: true, editors, canOpenTerminal: true });
@@ -145,12 +142,6 @@ test('B32 file_breadcrumb: a folder segment ends with Open in terminal, then Rev
   assert.deepEqual(shape(outside), [['Copy', ['Absolute path', 'Filename']]], 'no relative path, no tree item outside the root');
   assert.deepEqual(shape(fileContextMenu({ surface: 'file_tab', root: '/w', path: 'd', directory: true, canOpenTerminal: true })), [['Copy', ['Absolute path', 'Relative path', 'Filename']]],
     'other surfaces are unchanged');
-  // Zs/qs: the segment targets.
-  assert.deepEqual(breadcrumbSegmentTargets('src/lib/a.js'), {
-    dirs: [{ label: 'src', path: 'src', directory: true, outside: false }, { label: 'lib', path: 'src/lib', directory: true, outside: false }],
-    name: { label: 'a.js', path: 'src/lib/a.js', directory: false, outside: false } });
-  assert.deepEqual(breadcrumbSegmentTargets('/etc/hosts').dirs, [{ label: 'etc', path: '/etc', directory: true, outside: true }]);
-  assert.deepEqual(breadcrumbSegmentTargets('~/notes.md'), { dirs: [], name: null }, 'a "~" path is not absolute: no menu');
 });
 
 // R3-files FT-05 (files-11 / files-v01): 2.42304.0 c856385e2 xn — `d = n.openIn !== false && n.gone !== true` gates gn

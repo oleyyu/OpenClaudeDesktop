@@ -17,7 +17,10 @@ import React, { createContext, useContext } from "react";
 import { useIntl } from "./source-session-rail-kit-adapters.jsx";
 import { GhHint } from "./source-git-status.jsx";
 import { PrBarRow, RailPrRows, PrBarLayoutContext, railRowsShape, useRailRowsControls, useReportRailPrCount, prBarMode,
-  repoRowId, repoRowIdKey } from "./generated/session-rail-changes/pr-rows.mjs";
+  repoRowId, repoRowIdKey, PrBarStaleRow, PR_BAR_ROWS_CLASS, PR_BAR_HOLD_CLASS } from "./generated/session-rail-changes/pr-rows.mjs";
+import { prBarRowSnapshot } from "./generated/session-rail-changes/pr-bar-snapshot.mjs";
+import { BRANCH_ROW_GHOST_ATTR } from "./generated/session-rail-changes/branch-row-ghost.mjs";
+import { renderMenuItems } from "./generated/session-rail/menu-items.mjs";
 import { RAIL_PR_BAR_NAV_CLASS, prBarRowShown } from "./generated/session-rail-changes/pr-bar-rail.mjs";
 import { useAnnouncement } from "./generated/session-rail-sections/announcement.mjs";
 
@@ -96,31 +99,8 @@ export function RailPrListItem({ primary, hidden, children }) {
 
 // ---- host stand-in for the rail PR bar --------------------------------------------------------------------------------
 
-// The props c96d752d0 EL's rail branch gives Ike for one repo without a pull request, from the local git status
-// ({ isRepo, cwd, repoName, branch, hasChanges, added, removed, comparison }, git-status.cjs workspaceGitStatus).
-// - shown: cMe(pr, stats, branchPushed, localTree) with no PR and a local working tree, i.e. the stats' hasChanges
-//   (Zje's row gate; no dismiss in this host).
-// - diff: Zje `Zt`, only when the diff can open and the counts are known and non-zero (`? { added: Yt, removed: Xt }`).
-// - branchTitle: Zje `Rn = i.currentBranch || i.branch` (the ⋮ menu's "More options for {title}").
-// - repoName: Sje hides it for a single repo (`hideRepo: n || (w === "rail" && de.length <= 1)`); else the repo name or
-//   the folder's basename (Ike then labels its ⋮ "More options for {repo} on {branch}", C2-2).
-// - baseBranch: EL `he || (n === void 0 && x === C) ? void 0 : x` (only the stacked layout shows it).
-export function railChangesRowProps({ status, diffOpenable = false, hideRepo = true, prMode = "commit" } = {}) {
-  if (!status?.isRepo) return null;
-  if (!prBarRowShown(undefined, { hasChanges: status.hasChanges === true }, undefined, true)) return null;
-  const added = Number.isFinite(status.added) ? status.added : undefined;
-  const removed = Number.isFinite(status.removed) ? status.removed : undefined;
-  const diff = diffOpenable && added !== undefined && removed !== undefined && (added > 0 || removed > 0) ? { added, removed } : undefined;
-  const branchTitle = status.currentBranch || status.branch || undefined;
-  const localOnly = prMode === "commit" || prMode === "none";
-  const base = status.comparison?.base || undefined;
-  return {
-    branchTitle,
-    repoName: hideRepo ? undefined : status.repoName || undefined,
-    baseBranch: localOnly || base === branchTitle ? undefined : base,
-    diff,
-  };
-}
+// W14-code r8 R8DC-04: the test-only railChangesRowProps (Ike's no-PR props) is gone; the rail's rows are railPrEntries /
+// railPrRow (Zje's rail EL props) and the band's bandPrRowProps.
 
 // The PR states EL knows (kke's keys; Hje's prState, jc's answer without "none"). git-pull-request.cjs prState answers
 // the same names from gh.
@@ -173,7 +153,7 @@ export function railPrEntries({ intl, status, pr = null, prAction = null, verb =
     { label: intl.formatMessage({ defaultMessage: "Create draft PR", id: "LugtSxHcwh" }), checked: create.mode === "draft", checkedRole: "radio",
       onSelect: () => { create.onSelectMode?.("draft"); create.onPrimary?.("draft"); } },
     { label: intl.formatMessage({ defaultMessage: "Manually create PR", id: "rQcYK3TGb8" }), checked: create.mode === "compose", checkedRole: "radio",
-      separatorBefore: true, disabled: false, onSelect: () => create.onSelectMode?.("compose") },
+      separatorBefore: true, disabled: !create.repo, onSelect: () => create.onSelectMode?.("compose") }, // c96d752d0 Zje `bt = !i.repo`
   ] : undefined;
   const ln = commit ? (verb?.onClick ?? undefined) : create ? () => create.onPrimary?.(create.mode) : undefined;
   const repoName = status.repoName || (status.cwd ? status.cwd.split(/[\\/]/).filter(Boolean).pop() : "") || "";
@@ -260,4 +240,91 @@ export function SessionRailChanges({ status, pr = null, prAction = null, diffOpe
 // EL props with layout "rail" and the chord YL hands over.
 export function railPrRow(entry, diffOpenHasChord) {
   return <PrBarRow {...entry.row} layout="rail" diffOpenHasChord={diffOpenHasChord} />;
+}
+
+// ---- the composer band (W14-code r7 css7-git-band-prbarrow) ----------------------------------------------------------
+
+// Sje's band branch (c96d752d0, `w = r === void 0 ? "band" : r`): `lL.Provider value "band"` around
+// `nav[aria-label="Repository and pull request controls"].flex.flex-col.has-[>*:empty]:hidden.gap-xs > div.{nR}.gap-xs`
+// holding, per repo, Zje's `!O && (T ? W && T.has(n) : dt) && f(EL, { order: T?.get(n), ...or })` — the same EL as the rail
+// row, without layout "rail", so EL draws its band layout (repo chip dL with the repo menu, branch chip gL, behind, counts,
+// CI, the GitHub CLI hint, the mode verb or split button). The host's one repository is the session folder; `or` comes
+// from railPrEntries (the rail's EL props over the same local data) plus Zje's band-only props: repoTooltip
+// `Zn = i.repo || i.cwd`, repoMenu `st` (mke over the repo menu items, host: source-session-rail.jsx railRepoMenuItems,
+// the Vz port), branchMenuItems `ut = [Open in terminal]`, branchUrl `$n` and behind `pn` (git-rail-model
+// behindIndicator: {count, tooltip}). Sje hides a single repo's name only in the rail (`w === "rail" && de.length <= 1`).
+// onMeasured reports the live band's height, which the stale hold below reserves.
+export function bandPrRowProps({ intl, status, pr = null, prAction = null, verb = null, onOpenChanges, onToggleChanges, warning, hint,
+  onOpenPr, repoMenuItems, branchMenuItems, branchUrl, behind } = {}) {
+  const [entry] = railPrEntries({ intl, status, pr, prAction, verb, diffOpenable: !!(onOpenChanges || onToggleChanges), hideRepo: false,
+    onOpenChanges, onToggleChanges, warning, hint, onOpenPr });
+  if (!entry) return null;
+  // repoMenuItems: the items, or (intl) => items (railRepoMenuItems reads the intl).
+  const repoItems = typeof repoMenuItems === "function" ? repoMenuItems(intl) : repoMenuItems;
+  return {
+    ...entry.row,
+    repoTooltip: status.repo || status.cwd || undefined,
+    repoMenu: repoItems?.length ? renderMenuItems(repoItems) : undefined,
+    branchMenuItems: branchMenuItems?.length ? branchMenuItems : undefined,
+    branchUrl: branchUrl || undefined,
+    behind: behind && Number.isFinite(behind.count) && behind.count > 0 && behind.tooltip ? { count: behind.count, tooltip: behind.tooltip } : undefined,
+  };
+}
+export function SessionBandChanges({ status, pr = null, prAction = null, verb = null, onOpenChanges, onToggleChanges, warning, hint = null, onOpenPr,
+  repoMenuItems, branchMenuItems, branchUrl, behind, dismissReserved, onMeasured }) {
+  const intl = useIntl();
+  const nav = React.useRef(null);
+  const hintNode = React.useMemo(() => hint?.cause
+    ? <GhHint cause={hint.cause} onRunInTerminal={hint.onRunInTerminal ?? null} onInstall={hint.onInstall ?? null} />
+    : undefined, [hint?.cause, hint?.onRunInTerminal, hint?.onInstall]);
+  const row = bandPrRowProps({ intl, status, pr, prAction, verb, onOpenChanges, onToggleChanges, warning, hint: hintNode, onOpenPr,
+    repoMenuItems, branchMenuItems, branchUrl, behind });
+  const shown = !!row;
+  React.useEffect(() => {
+    const node = nav.current;
+    if (!shown || !node || !onMeasured || typeof ResizeObserver !== "function") return undefined;
+    const report = () => onMeasured(Math.round(node.getBoundingClientRect().height));
+    report();
+    const observer = new ResizeObserver(report);
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [shown, onMeasured]);
+  if (!status?.isRepo) return null;
+  return <PrBarLayoutContext.Provider value="band">
+    <nav ref={nav} aria-label={intl.formatMessage({ defaultMessage: "Repository and pull request controls", id: "NHI5eIky7V" })}
+      className="flex flex-col has-[>*:empty]:hidden gap-xs">
+      {/* Zje `dismissReserved: ue` (EL's aspect-square w-control spacer when another row of the bar can be dismissed). */}
+      <div className={`${PR_BAR_ROWS_CLASS} gap-xs`}>{row && <PrBarRow {...row} dismissReserved={dismissReserved} />}</div>
+    </nav>
+  </PrBarLayoutContext.Provider>;
+}
+
+// The stale hold (Sje with gje's hold `ct`): while a revisited session's status loads, its last band row is shown from its
+// snapshot — Zje's `wm({id, prState, prNumber, prUrl, repoName, hideRepo, branchName, diff, comments, ci, prMode, chooser,
+// dismissable})` (c03935b01 An, pr-bar-snapshot.mjs) — as sAe's aAe (PrBarStaleRow: data-prbar-stale, aria-hidden, inert,
+// pointer-events-none opacity-60), in `div[data-epitaxy-branch-row-ghost].{vje}.gap-xs` of the remembered height, inside
+// the nav (aria-hidden while no live row is held: `bt = ct && ct.liveOrder.size === 0`; no has-[>*:empty]:hidden).
+// The host remembers the status the band last drew (main.jsx gitBandMemo) and its height; nothing about the PR is held.
+export function bandHoldSnapshot(status, { verbShown = true } = {}) {
+  if (!status?.isRepo) return null;
+  const repoName = status.repoName || (status.cwd ? status.cwd.split(/[\\/]/).filter(Boolean).pop() : "") || "";
+  const branchName = status.currentBranch || status.branch || "";
+  const added = Number.isFinite(status.added) ? status.added : undefined, removed = Number.isFinite(status.removed) ? status.removed : undefined;
+  return prBarRowSnapshot({ id: repoRowId({ cwd: status.cwd, repo: repoName, branch: branchName }, null), prState: undefined, prNumber: undefined,
+    prUrl: undefined, repoName, hideRepo: false, branchName, diff: added !== undefined && removed !== undefined && (added > 0 || removed > 0) ? { added, removed } : undefined,
+    comments: undefined, ci: false, prMode: verbShown ? "commit" : "none", chooser: false, dismissable: false });
+}
+export function SessionBandHold({ status, heightPx, verbShown = true }) {
+  const intl = useIntl();
+  const row = bandHoldSnapshot(status, { verbShown });
+  if (!row) return null;
+  return <PrBarLayoutContext.Provider value="band">
+    <nav aria-label={intl.formatMessage({ defaultMessage: "Repository and pull request controls", id: "NHI5eIky7V" })} aria-hidden={true}
+      className="flex flex-col  gap-xs">
+      <div {...{ [BRANCH_ROW_GHOST_ATTR]: "" }} className={`${PR_BAR_HOLD_CLASS} gap-xs`}
+        style={{ height: Number.isFinite(heightPx) && heightPx > 0 ? heightPx : undefined }}>
+        <PrBarStaleRow row={row} order={1} />
+      </div>
+    </nav>
+  </PrBarLayoutContext.Provider>;
 }

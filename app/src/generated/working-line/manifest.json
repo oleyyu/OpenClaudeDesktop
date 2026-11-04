@@ -2193,7 +2193,7 @@
       "target": "shared-2.mjs",
       "source": "shared-2-TF8v67kg.js",
       "sourceSha256": "d30345487454935271d15e07a03026f8965584d83c9fcc4f5d7f9175687a14fc",
-      "sha256": "2f99b429f05ae1b8475d71b50f360b89ece7f4da3705e26dd2d0dca422c99b69",
+      "sha256": "978649c799e8fd74b904effc36d0d88bff7bac7cdc360fb0a21217ebc2026669",
       "referenceVersion": "3.6556.2",
       "bindings": [
         {
@@ -2646,11 +2646,13 @@
       "exports": {},
       "sharedExports": [
         "R6",
-        "S3"
+        "S3",
+        "x6"
       ],
       "heldByViewTabs": [],
       "linkExports": [
-        "R6"
+        "R6",
+        "x6"
       ]
     },
     {
@@ -4483,7 +4485,7 @@
       "target": "vendor-motion.mjs",
       "source": "vendor-motion-DlXQpU4V.js",
       "sourceSha256": "8d944147b2d72857f7cf1212dee13999b086c3cfc0aec4aa7dd6a1c0f5da9224",
-      "sha256": "b327b1c71f662a5f909ba39444c0b7e9ee949d4cb2369c9223111b2026c5117c",
+      "sha256": "7f76bc63e8458dad74e7fce55a550c198e6ef538421a0524bd56dd7c118b8fd8",
       "referenceVersion": "3.6556.2",
       "bindings": [
         {
@@ -6435,6 +6437,14 @@
           "sha256": "5b6417bfd33349fdadf5a5d16aba68a88aab2368e2e2730c4954372e2a1f4121"
         },
         {
+          "name": "ol",
+          "sha256": "e469d6c6eeabe610110c5accc078f4f9e4d817ea06d20591a8ab27ad46ff0b98"
+        },
+        {
+          "name": "sl",
+          "sha256": "dd1fb3d3cda2f450d7cb2784e6bd6f78d77333e2d857d46852dcb23f2de00b7a"
+        },
+        {
           "name": "cl",
           "sha256": "3c604303f969b434da2abec8a5673b0dbe138518ebb2a3cafb979dbcd19ff03d"
         },
@@ -6469,6 +6479,14 @@
         {
           "name": "Sl",
           "sha256": "1cadee50e5a2e2393a60b1c6118e5b0391b6345b85751b397e373f769efe2065"
+        },
+        {
+          "name": "Cl",
+          "sha256": "1e511c315a3e690e36807814995ed1f9797cf01da7cf081da539313504c37cbf"
+        },
+        {
+          "name": "wl",
+          "sha256": "d3d93f5b7a225144c2c357b8e3a7f82c1c478e6bdbc99eea765675c61e54836c"
         },
         {
           "name": "El",
@@ -6609,6 +6627,10 @@
         {
           "name": "ou",
           "sha256": "09b93d77d6d347dc4c5b170b79dd0f9af4a00325fd6abc72ac7b83134f8a30ee"
+        },
+        {
+          "name": "su",
+          "sha256": "0ac206375905de6520ca5bbc9fcc8271d74cca6c2e6d520337bc2ce7677ceb25"
         },
         {
           "name": "cu",
@@ -7000,6 +7022,7 @@
       "exports": {},
       "sharedExports": [
         "C",
+        "Cl",
         "En",
         "F",
         "G",
@@ -7009,10 +7032,17 @@
         "Qr",
         "S",
         "Sn",
+        "Yu",
         "Zc",
+        "cu",
+        "dd",
+        "du",
         "fd",
         "hn",
+        "ol",
         "pd",
+        "su",
+        "ud",
         "ul",
         "un",
         "vn",
@@ -7021,6 +7051,7 @@
       "heldByViewTabs": [],
       "linkExports": [
         "C",
+        "Cl",
         "En",
         "F",
         "G",
@@ -7033,12 +7064,141 @@
         "Zc",
         "fd",
         "hn",
+        "ol",
         "pd",
+        "su",
         "ul",
         "un",
         "vn",
         "x"
       ]
+    },
+    {
+      "target": "presence-motion.mjs",
+      "source": "cb6c4b462-Dl6QEgSL.js",
+      "sourceSha256": "01fbdc91a95be587ad84e7b37ea6b9c6b7d554e30b4a9d27f32b86f6a4bcbc90",
+      "sha256": "67831d53fabedfbc405e315faf789aac41a56827cdf1bc4bef7c5e05c114ad65",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "d",
+          "sha256": "faaea64d45905e83d59fc3c06e504b4fd6650ae705be5affbf508fc79d85bde7"
+        },
+        {
+          "name": "f",
+          "sha256": "3a00e831f9a5d6880a42d327bedd03f3b94463f3211d822e39d70b0114904a4f"
+        },
+        {
+          "name": "p",
+          "sha256": "70a4985a843d55c0455ff1f48307ba2fedc5f3438dc6134b60babcbfcb56eca4"
+        }
+      ],
+      "initializers": [],
+      "imports": [
+        {
+          "local": "J3",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged3",
+          "via": "shared-frame-6jtSkIit.js:ep",
+          "kind": "view-tabs",
+          "original": "J3"
+        },
+        {
+          "local": "J4",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged4",
+          "via": "shared-frame-6jtSkIit.js:tp",
+          "kind": "view-tabs",
+          "original": "J4"
+        },
+        {
+          "local": "J9",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "reactMemoCache",
+          "via": "shared-frame-6jtSkIit.js:ip",
+          "kind": "view-tabs",
+          "original": "J9"
+        },
+        {
+          "local": "K3",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore3",
+          "via": "shared-frame-6jtSkIit.js:cp",
+          "kind": "view-tabs",
+          "original": "K3"
+        },
+        {
+          "local": "K4",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore4",
+          "via": "shared-frame-6jtSkIit.js:lp",
+          "kind": "view-tabs",
+          "original": "K4"
+        },
+        {
+          "local": "a",
+          "from": "./vendor-motion.mjs",
+          "name": "ol",
+          "via": "vendor-motion-DlXQpU4V.js:h",
+          "kind": "generated"
+        },
+        {
+          "local": "c",
+          "from": "./vendor-motion.mjs",
+          "name": "ud",
+          "via": "vendor-motion-DlXQpU4V.js:o",
+          "kind": "generated"
+        },
+        {
+          "local": "e",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-CnSY1sxv.js:Ha",
+          "kind": "react"
+        },
+        {
+          "local": "l",
+          "from": "./vendor-motion.mjs",
+          "name": "Yu",
+          "via": "vendor-motion-DlXQpU4V.js:s",
+          "kind": "generated"
+        },
+        {
+          "local": "n",
+          "from": "./vendor-motion.mjs",
+          "name": "dd",
+          "via": "vendor-motion-DlXQpU4V.js:a",
+          "kind": "generated"
+        },
+        {
+          "local": "o",
+          "from": "./vendor-motion.mjs",
+          "name": "cu",
+          "via": "vendor-motion-DlXQpU4V.js:l",
+          "kind": "generated"
+        },
+        {
+          "local": "r",
+          "from": "./vendor-motion.mjs",
+          "name": "du",
+          "via": "vendor-motion-DlXQpU4V.js:c",
+          "kind": "generated"
+        },
+        {
+          "local": "u",
+          "from": "./vendor-motion.mjs",
+          "name": "su",
+          "via": "vendor-motion-DlXQpU4V.js:u",
+          "kind": "generated"
+        }
+      ],
+      "exports": {
+        "d": "domMax",
+        "f": "PresenceElement",
+        "p": "HidingPresenceElement"
+      },
+      "sharedExports": [],
+      "heldByViewTabs": []
     },
     {
       "target": "morph.mjs",

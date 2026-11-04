@@ -39,13 +39,7 @@ export const MESSAGES_CATEGORY = Object.freeze({ name: "Messages", color: "purpl
 export const AUTOCOMPACT_BUFFER_CATEGORY = Object.freeze({ name: "Autocompact buffer", color: "inactive" });
 export const FREE_SPACE_CATEGORY = Object.freeze({ name: "Free space", color: "promptBorder" });
 
-// The token estimate the host uses where no core reports a real count: ceil(characters / 4) over the exact text (or the
-// JSON of a tool schema) the model is sent. Simple and reproducible; reports mark such rows `estimated`.
-export function estimateTokens(text) {
-  if (typeof text !== "string" || text.length === 0) return 0;
-  return Math.ceil(text.length / 4);
-}
-export const estimateJsonTokens = (value) => (value === undefined ? 0 : estimateTokens(JSON.stringify(value)));
+// W14-code r5 cleanup R5DC-05: the test-only estimateTokens helper is gone (its last caller left in round 4).
 
 const count = (value) => (Number.isFinite(value) && value > 0 ? Math.round(value) : 0);
 // CLI Fer: the row's kind.

@@ -787,6 +787,11 @@
       "file": "shared-frame-6jtSkIit.js",
       "local": "bv"
     },
+    "useCdsDialogFocusReturn": {
+      "file": "shared-frame-6jtSkIit.js",
+      "local": "Sv",
+      "export": "el"
+    },
     "isNewBrowsingContextTarget": {
       "file": "shared-frame-6jtSkIit.js",
       "local": "pi",
@@ -1676,14 +1681,6 @@
       "local": "QV",
       "export": "Zn"
     },
-    "viewTabRtlArrowKey": {
-      "file": "cfe7c4b3b-BF79K6ux.js",
-      "local": "L"
-    },
-    "viewTabOverflowTypeaheadResetKeys": {
-      "file": "cfe7c4b3b-BF79K6ux.js",
-      "local": "ie"
-    },
     "CdsTextInputField": {
       "file": "shared-frame-6jtSkIit.js",
       "local": "eM",
@@ -1823,6 +1820,30 @@
       "file": "ce802b15a-C7eXhKeI.js",
       "local": "Mo",
       "export": "t"
+    },
+    "CdsShrinkWrapMemoryContext": {
+      "file": "shared-frame-6jtSkIit.js",
+      "local": "Pa"
+    },
+    "FieldItemContext": {
+      "file": "vendor-frame-CnSY1sxv.js",
+      "local": "uh",
+      "export": "jt"
+    },
+    "FormContext": {
+      "file": "vendor-frame-CnSY1sxv.js",
+      "local": "Hm",
+      "export": "Lt"
+    },
+    "createGenericEventDetails": {
+      "file": "vendor-frame-CnSY1sxv.js",
+      "local": "Aa",
+      "export": "Si"
+    },
+    "isDomNode": {
+      "file": "shared-frame-6jtSkIit.js",
+      "local": "qf",
+      "export": "nu"
     }
   },
   "pendingNames": {},
@@ -1831,7 +1852,7 @@
     {
       "source": "cfe7c4b3b-BF79K6ux.js",
       "sourceSha256": "dd140a37fbb2dd4a2e9276aecda1ed4659034e4bbeed47beaa117061340527db",
-      "sha256": "fcc9c116df3eb6889896d723d1e2d747a848505d077bf65cfaa461f7b1b4d088",
+      "sha256": "ee9bbd341f694b378cbb921718a3733649339468f9a0f6ee273e68c495cfa805",
       "bindings": [
         "N",
         "P",
@@ -1895,7 +1916,7 @@
     {
       "source": "shared-frame-6jtSkIit.js",
       "sourceSha256": "22b990df9384da0621c5197a060f6c2c8fe1ccf5a79ee1f8c6e7a6cb033b259c",
-      "sha256": "e095cd9328da01f7f001010c8c6ae983abd6903582a4d94d8354470dd8f0a58a",
+      "sha256": "83a3b9c280b9efa689572a4d6ce235f8f2724326724ac7a8ff743bc907924bed",
       "bindings": [
         "J9",
         "J8",
@@ -3447,7 +3468,7 @@
     {
       "source": "vendor-frame-CnSY1sxv.js",
       "sourceSha256": "7064f152d05f6a7f477fc13a4b24606b82cbd401336a7e3a59840236818699e6",
-      "sha256": "b66618593c37204b5b5b20c763c97bbaf0c5fd9f455375cc2451a6fb530eda2c",
+      "sha256": "ac05a7c80ad8da7239484a8b2291947c1de552bd55e6facae7773c1e67c9868d",
       "bindings": [
         "s",
         "u",

@@ -1,13 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {FILE_TAB_LABELS,tabDetail,tabRelativePath,tabTooltip,tabMenuItems,insertFileTab,moveFileTab,fileTabsToRight} from '../src/file-tab-menu-model.mjs';
-const labels=options=>tabMenuItems(options).map(item=>item.label);
-test('tab menu items follow he popup order (panes-tabs-current.js:470-485)',()=>{
- assert.deepEqual(labels({preview:true,solo:false}),['Keep open','Close file','Close other files','Close all files']);
- assert.deepEqual(labels({preview:false,solo:false}),['Close file','Close other files','Close all files']);
- assert.deepEqual(labels({preview:false,solo:true}),['Close file']);
- assert.deepEqual(labels({preview:true,solo:true}),['Keep open','Close file']);
- assert.deepEqual(tabMenuItems({preview:true}).map(item=>item.action),['keep','close','close-others','close-all']);
+import {FILE_TAB_LABELS,tabDetail,tabRelativePath,insertFileTab,fileTabsToRight} from '../src/file-tab-menu-model.mjs';
+// W14-code r4 closeout R4DC-N7: the test-only tabMenuItems / tabTooltip / moveFileTab exports are gone (the Files tab strip
+// is the generated panes-tabs-current he / te / lt).
+test('file tab labels',()=>{
  assert.equal(FILE_TAB_LABELS.closeTab,'Close file');assert.equal(FILE_TAB_LABELS.previewTabHint,'preview');
 });
 test('tab detail is the workspace-relative directory (panes-tile-current.js:6656-6668 ce)',()=>{
@@ -19,12 +15,6 @@ test('tab detail is the workspace-relative directory (panes-tile-current.js:6656
  assert.equal(tabDetail('/a.txt','/elsewhere'),'/');
  assert.equal(tabDetail('/other/x/y.txt','/work/space'),'/other/x');
  assert.equal(tabRelativePath('/work/spacey/a.txt','/work/space'),'/work/spacey/a.txt');
-});
-test('tooltip content only when there is a detail or the label is clipped; suppressed while the menu is open',()=>{
- assert.deepEqual(tabTooltip({label:'README.md',detail:undefined,clipped:false}),{content:null,detail:undefined});
- assert.deepEqual(tabTooltip({label:'README.md',detail:undefined,clipped:true}),{content:'README.md',detail:undefined});
- assert.deepEqual(tabTooltip({label:'deep.txt',detail:'nested'}),{content:'deep.txt',detail:'nested'});
- assert.deepEqual(tabTooltip({label:'deep.txt',detail:'nested',suppressed:true}),{content:null,detail:null});
 });
 test('overflow and reorder labels (panes-tile-current.js:6669-6710 le)',()=>{
  assert.equal(FILE_TAB_LABELS.moreTabs,'More files');
@@ -47,20 +37,10 @@ test('insertFileTab follows F (panes-state-current.js:1596-1616)',()=>{
  const restored=[{path:'r',preview:false},...eight.slice(1)];
  assert.deepEqual(insertFileTab(restored,ninth).map(t=>t.path)[0],'f1','a tab without openSequence (restored) goes first');
 });
-test('moveFileTab moves one slot, never into a hidden slot',()=>{
- const tabs=['a','b','c','d'].map(path=>({path}));
- assert.deepEqual(moveFileTab(tabs,'b',1).map(t=>t.path),['a','c','b','d']);
- assert.deepEqual(moveFileTab(tabs,'b',-1).map(t=>t.path),['b','a','c','d']);
- assert.equal(moveFileTab(tabs,'a',-1),tabs);assert.equal(moveFileTab(tabs,'d',1),tabs);
- assert.equal(moveFileTab(tabs,'c',1,['d']),tabs,'d is behind More files');
-});
-
 test('close-right follows the current tab order, hides at the last tab and ignores missing tabs',()=>{
  const tabs=['a','b','c'].map(path=>({path}));
  assert.deepEqual(fileTabsToRight(tabs,'b'),['c']);
- assert.deepEqual(fileTabsToRight(moveFileTab(tabs,'c',-1),'c'),['b']);
+ assert.deepEqual(fileTabsToRight([tabs[0],tabs[2],tabs[1]],'c'),['b']);
  assert.deepEqual(fileTabsToRight(tabs,'c'),[]);
  assert.deepEqual(fileTabsToRight(tabs,'missing'),[]);
- assert.deepEqual(labels({hasTabsToRight:true}),['Close file','Close other files','Close files to the right','Close all files']);
- assert.ok(!labels({hasTabsToRight:false}).includes('Close files to the right'));
 });

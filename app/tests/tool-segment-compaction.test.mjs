@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {groupFileTools,fileGroupSummary,coalesceFileRuns} from '../src/file-tool-model.mjs';
+import {groupFileTools,coalesceFileRuns} from '../src/file-tool-model.mjs';
 import {isHiddenTranscriptItem} from '../src/transcript-item-visibility.mjs';
 import {buildTurnCopyFooters} from '../src/turn-copy-model.mjs';
 const read=(id,path='/fixture/deploy.log',turnId='t')=>({id,type:'commandExecution',turnId,status:'completed',commandActions:[{type:'read',path}],aggregatedOutput:id});
@@ -10,16 +10,13 @@ test('hidden reasoning and empty text do not fragment repeated read batches; all
  const calls=Array.from({length:6},(_,i)=>read('r'+i));
  const input=calls.flatMap((call,i)=>[call,thinking('q'+i),{id:'empty'+i,type:'agentMessage',turnId:'t',text:' \n'}]);
  const before=JSON.stringify(input),rows=groupFileTools(input),shown=visible(rows);
- assert.equal(shown.length,1);assert.deepEqual(shown[0].toolGroup,calls);assert.equal(fileGroupSummary(calls).label,'Read a file (6 reads)');
+ assert.equal(shown.length,1);assert.deepEqual(shown[0].toolGroup,calls);
  assert.deepEqual(coalesceFileRuns(calls)[0].fileRun,calls);assert.equal(rows.length,13);assert.equal(JSON.stringify(input),before);
- assert.equal(fileGroupSummary([read('a','/a'),read('b','/b'),read('c','/c')]).label,'Read 3 files');
- assert.equal(fileGroupSummary([read('a','/a'),read('b','/b'),read('c','/a')]).label,'Read 2 files (3 reads)');
 });
 test('command, search, listing, web and generic batches share the same visibility-aware segmentation',()=>{
  const tools=[{...read('command'),commandActions:[]},{...read('search'),commandActions:[{type:'search',query:'needle'}]},{...read('list'),commandActions:[{type:'listFiles',path:'/fixture'}]},{id:'web',type:'webSearch',turnId:'t'},{id:'mcp',type:'mcpToolCall',turnId:'t'},{id:'dynamic',type:'dynamicToolCall',turnId:'t'}];
  const rows=visible(groupFileTools(tools.flatMap((item,i)=>[item,thinking('q'+i)])));
  assert.equal(rows.length,1);assert.deepEqual(rows[0].toolGroup,tools);
- assert.equal(fileGroupSummary(tools).label,'Ran a command, searched code, listed files, browsed the web, used 2 tools');
 });
 test('visible prose, turns and local surfaces remain boundaries; thinking/verbose retain real reasoning',()=>{
  const a=read('a'),b=read('b');

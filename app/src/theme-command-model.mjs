@@ -22,8 +22,6 @@ export function parseThemeCommand(args, localized = localizedThemeWords()) {
   const theme = THEME_ARGUMENTS.get(word) ?? localized?.get(word);
   return theme ? { set: theme } : { open: "appearance" };
 }
-// shared-7 xh "Appearance set to …" toast names.
-export const THEME_LABELS = Object.freeze({ light: t("Light"), dark: t("Dark"), system: t("System") });
 
 // shared-7 Bh: follow-system resolves through prefers-color-scheme; an
 // explicit choice is used as is. Anything unknown follows the system, which is

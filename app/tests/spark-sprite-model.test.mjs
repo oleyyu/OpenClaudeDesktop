@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { isOnceState, resolveSparkRendering, sparkBox, sparkKeyframes, sparkTiming, validateSparkStrip } from "../src/spark-sprite-model.mjs";
-import { sparkState, transcriptStatusPresentation } from "../src/transcript-status-model.mjs";
+import { transcriptStatusPresentation } from "../src/transcript-status-model.mjs";
 
 const strip = JSON.parse(readFileSync(new URL("../src/generated/spark-thinking.json", import.meta.url), "utf8"));
 
@@ -46,11 +46,3 @@ test("rendering resolution: idle static, busy fallback while reduced/loading/fai
   assert.equal(resolveSparkRendering({ state: "thinking", strip }), "sprite");
 });
 
-test("classic row passes thinking only while running or stopping", () => {
-  const base = { sessionKey: "t", ready: true, connected: true };
-  assert.equal(sparkState(transcriptStatusPresentation({ ...base, running: true })), "thinking");
-  assert.equal(sparkState(transcriptStatusPresentation({ ...base, running: true, stopping: true })), "thinking");
-  assert.equal(sparkState(transcriptStatusPresentation(base)), undefined);
-  assert.equal(sparkState(transcriptStatusPresentation({ ...base, running: true, waiting: true })), undefined);
-  assert.equal(sparkState(transcriptStatusPresentation({ ...base, running: true, connected: false })), undefined);
-});

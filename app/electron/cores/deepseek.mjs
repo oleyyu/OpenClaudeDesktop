@@ -1,7 +1,7 @@
 // DeepSeek Harness: the bridge in harness/packages/codex-app-server around the dsh runtime (run with Node).
 export default Object.freeze({
   id: "deepseek",
-  // How the UI names the assistant while this core runs ("Message DeepSeek", "DeepSeek needs your approval").
+  // How the UI names the assistant while this core runs ("Stop DeepSeek’s response", "DeepSeek needs your approval").
   assistant: "DeepSeek",
   // Logo key (src/brand-logos.mjs) and the one plain sentence setup shows under the name.
   brand: "deepseek",

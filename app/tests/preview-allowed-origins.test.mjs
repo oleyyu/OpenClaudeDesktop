@@ -4,7 +4,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { ALLOWED_ORIGIN_RESULTS as R, addAllowedOrigin, allowedOriginEntries, allowedOriginList, hostMatchesOrigin, normalizeAllowedOrigin, originAllowed, removeAllowedOrigin } from '../electron/preview-allowed-origins.mjs';
-import { allowedSiteError, allowedSiteLabel, orderedAllowedSites, removeFocusTarget } from '../src/preview-allowed-sites-model.mjs';
+import { allowedSiteError } from '../src/preview-allowed-sites-model.mjs';
 
 test('mP: an address normalises to its origin', () => {
   assert.equal(normalizeAllowedOrigin('https://Example.com/path?q=1#x'), 'https://example.com');
@@ -64,13 +64,5 @@ test('c25b1be4a p / c36734a81 g, D and the remove focus order', () => {
   assert.equal(allowedSiteError('ok'), null);
   assert.equal(allowedSiteError('declined'), null);
   assert.equal(allowedSiteError('invalid', (text) => `zh:${text}`), 'zh:Enter a valid web address.');
-  assert.equal(allowedSiteLabel({ origin: 'https://example.com:8443' }), 'example.com:8443');
-  assert.equal(allowedSiteLabel({ origin: 'https://%2A.printer.local' }), '*.printer.local');
-  assert.equal(allowedSiteLabel({ origin: 'https://a.example', label: 'Docs' }), 'Docs');
-  const entries = [{ origin: 'b', builtin: true }, { origin: 'a' }, { origin: 'c' }];
-  assert.deepEqual(orderedAllowedSites(entries).map((entry) => entry.origin), ['a', 'c', 'b']);
-  const removing = { origin: 'b', successors: ['c', 'd'], predecessors: ['a'] };
-  assert.equal(removeFocusTarget(removing, [{ origin: 'a' }, { origin: 'c' }, { origin: 'd' }]), 'c', 'the next row');
-  assert.equal(removeFocusTarget(removing, [{ origin: 'a' }]), 'a', 'else the previous one');
-  assert.equal(removeFocusTarget(removing, []), null, 'else nothing (the field or Done)');
+  // W14-code r4 gen-final-4: allowedSiteLabel / orderedAllowedSites / removeFocusTarget (test-only) are deleted.
 });

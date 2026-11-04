@@ -14,7 +14,17 @@ test("every CodexErrorInfo variant maps to a source category (c1298b0ba Z)", () 
   };
   for (const [info, category] of Object.entries(expected)) assert.equal(classifyTurnError(info), category, info);
   for (const key of ["httpConnectionFailed", "responseStreamConnectionFailed", "responseStreamDisconnected", "responseTooManyFailedAttempts"])
-    assert.equal(classifyTurnError({ [key]: { httpStatusCode: 502 } }), "network", key);
+  {
+    // W14-code TM-11: a transport failure with an HTTP error status classifies by it (shared-3 k3 → D3).
+    assert.equal(classifyTurnError({ [key]: { httpStatusCode: null } }), "network", key);
+    assert.equal(classifyTurnError({ [key]: {} }), "network", key);
+    assert.equal(classifyTurnError({ [key]: { httpStatusCode: 502 } }), "server_error", key);
+    assert.equal(classifyTurnError({ [key]: { httpStatusCode: 429 } }), "server_rate_limit", key);
+    assert.equal(classifyTurnError({ [key]: { httpStatusCode: 529 } }), "overloaded", key);
+    assert.equal(classifyTurnError({ [key]: { httpStatusCode: 403 } }), "permission", key);
+    assert.equal(classifyTurnError({ [key]: { httpStatusCode: 413 } }), "request_too_large", key);
+    assert.equal(classifyTurnError({ [key]: { httpStatusCode: 404 } }), "invalid_request", key);
+  }
   assert.equal(classifyTurnError({ activeTurnNotSteerable: { turnKind: "review" } }), "unknown");
   for (const value of [null, undefined, "", "__proto__", 42, {}, []]) assert.equal(classifyTurnError(value), "unknown");
 });
@@ -23,9 +33,19 @@ test("presentation copies the source strings and retry/icon rules", () => {
   assert.deepEqual({ ...presentTurnError("rate_limit") }, { category: "rate_limit", headline: "Usage limit reached", markerLabel: "Usage limit reached",
     hint: "You’ve reached your usage limit. Try again after your limit resets.", retryHelps: true, compactHelps: false, modelSwitchHelps: false, icon: "usage" });
   assert.deepEqual({ ...presentTurnError("overloaded") }, { category: "overloaded", headline: "Service is busy", markerLabel: "Service was busy",
-    hint: "Try again in a moment, or switch to a different model.", retryHelps: true, compactHelps: false, modelSwitchHelps: true, icon: "warning" });
+    hint: "Try again in a moment, or switch to a different model.", hintWithoutRetry: "You can send a message to try again in a moment, or switch to a different model.",
+    hintWithoutComposer: "This is usually temporary.", retryHelps: true, compactHelps: false, modelSwitchHelps: true, icon: "warning" });
   assert.equal(presentTurnError("server_rate_limit").markerLabel, "Server was temporarily limiting requests");
-  assert.equal(presentTurnError("server_rate_limit").hint, "Too many requests right now — try again in a moment.");
+  // c70db48e3 q.serverRateLimit (03EBy1LRit) and its WithoutRetry / WithoutComposer variants (TS-1, TS-3).
+  assert.equal(presentTurnError("server_rate_limit").hint, "Too many requests right now. Try again in a moment.");
+  assert.equal(presentTurnError("server_rate_limit").hintWithoutRetry, "Too many requests right now. Wait a moment, then send a message to try again.");
+  assert.equal(presentTurnError("server_rate_limit").hintWithoutComposer, "Too many requests right now. This usually clears in a moment.");
+  assert.equal(presentTurnError("network").hintWithoutRetry, "Check your internet connection, VPN, or proxy, then send a message to try again.");
+  // TS-2: q.contextLength (j4gDC1/jbD) is the whole sentence.
+  assert.equal(presentTurnError("context_length", { canRewind: true }).hint,
+    "This chat is too long to continue. Compact it to summarize earlier messages and keep going, rewind to an earlier point, or start a new chat.");
+  assert.deepEqual([presentTurnError("permission").headline, presentTurnError("permission").retryHelps], ["Access denied", false]);
+  assert.equal(presentTurnError("request_too_large", { canRewind: true }).hint, "An attachment is too large. Rewind to remove it, then send your message again.");
   assert.equal(presentTurnError("context_length").hint, "This chat is too long to continue. Start a new chat.");
   assert.equal(presentTurnError("context_length").markerLabel, "Context window was full");
   assert.equal(presentTurnError("context_length").retryHelps, false);
@@ -56,7 +76,7 @@ test("details join message and additionalDetails; status comes only from the var
 test("DeepSeek failure codes: quota is the billing card, a key problem names the DeepSeek key", () => {
   const billing = describeTurnError({ message: "Insufficient Balance", codexErrorInfo: "usageLimitExceeded", additionalDetails: "QUOTA" });
   assert.deepEqual({ ...billing }, { category: "billing", headline: "Billing issue", markerLabel: "Billing issue",
-    hint: "Add credits to your DeepSeek balance to continue.", retryHelps: false, compactHelps: false, modelSwitchHelps: false, icon: "warning", platformUrl: "https://platform.deepseek.com/usage" });
+    hint: "Add credits or update billing with DeepSeek to continue.", retryHelps: false, compactHelps: false, modelSwitchHelps: false, icon: "warning", platformUrl: "https://platform.deepseek.com/usage" });
   assert.equal(describeTurnError({ message: "x", codexErrorInfo: "usageLimitExceeded", additionalDetails: "ACCOUNT_QUOTA" }).category, "billing");
   assert.equal(describeTurnError({ message: "x", codexErrorInfo: null, additionalDetails: "QUOTA" }).category, "billing");
   // A Codex plan limit (no DeepSeek code) keeps the usage-limit card.
@@ -288,6 +308,6 @@ test("a signed-out request's 401 is an auth failure with Sign in, not a network 
   assert.equal(turnErrorCategory({ message: "x", codexErrorInfo: { httpConnectionFailed: { httpStatusCode: 401 } } }), "auth");
   assert.equal(describeTurnError(stream, { signIn: true }).signIn, true);
   // Other transport failures keep their category.
-  assert.equal(turnErrorCategory({ message: "stream closed", codexErrorInfo: { responseStreamDisconnected: { httpStatusCode: 502 } } }), "network");
+  assert.equal(turnErrorCategory({ message: "stream closed", codexErrorInfo: { responseStreamDisconnected: { httpStatusCode: null } } }), "network");
   assert.equal(turnErrorCategory({ message: "boom", codexErrorInfo: "other" }), "unknown");
 });

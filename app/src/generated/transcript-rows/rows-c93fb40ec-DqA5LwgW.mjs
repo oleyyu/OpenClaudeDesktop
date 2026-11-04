@@ -2,6 +2,13 @@
 // Edit the extractor or src/source-transcript-rows-adapters.jsx, never this file.
 
 var e = "diffs-container";
+var t = (() => {
+  try {
+    return !1;
+  } catch {
+    return !1;
+  }
+})();
 var n = /(?=^diff --git)/gm;
 var r = /(?<=\n)/;
 var i = /^(---|\+\+\+)\s+([^\t\r\n]+)/;
@@ -16,10 +23,43 @@ var f = { dark: "pierre-dark", light: "pierre-light" };
 var p = "data-theme-css";
 var m = "data-unsafe-css";
 var h = "data-diffs-scrollbar-measure";
+var g = "data-diffs-code-view-header";
+var _ = "data-diffs-code-view-footer";
 var v = "--diffs-scrollbar-gutter-measured";
 var y = 1e5;
 var b = { hunkLineCount: 50, lineHeight: 20, diffHeaderHeight: 44, spacing: 8 };
+var x = { ...b, hunkLineCount: 1 };
+var S = { paddingTop: 8, paddingBottom: 8, gap: 8 };
+var C = { omega: 0.015, positionEpsilon: 0.5, velocityEpsilon: 0.05 };
 var w = Object.freeze({ fromStart: 0, fromEnd: 0 });
 var T = { startingLine: 0, totalLines: 1 / 0, bufferBefore: 0, bufferAfter: 0 };
 var E = { startingLine: 0, totalLines: 0, bufferBefore: 0, bufferAfter: 0 };
-export { E, T, a, b, c, d, e, f, h, i, l, m, n, o, p, r, s, u, v, w, y };
+export {
+  C,
+  E,
+  S,
+  T,
+  _,
+  a,
+  b,
+  c,
+  d,
+  e,
+  f,
+  g,
+  h,
+  i,
+  l,
+  m,
+  n,
+  o,
+  p,
+  r,
+  s,
+  t,
+  u,
+  v,
+  w,
+  x,
+  y,
+};

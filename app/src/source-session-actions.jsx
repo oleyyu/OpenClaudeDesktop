@@ -3,10 +3,13 @@ import { Icon } from './icons';
 import { rateLimitRows } from './session-command-model.mjs';
 import { planLabel, planUsageSummary } from './usage-model.mjs';
 import { SourceDialog, SourceDialogFooter } from './source-dialog.jsx';
-import { SourceSettingsButton } from './source-settings-button.jsx';
 import { SourceSelect } from './source-select.jsx';
+import { CdsTextArea, CdsTextInput } from './generated/view-tabs/index.js';
+// W14-code r6 sh6-03: the dialog footers / help links are shared-frame Uu (E41 direct import), not the host replica.
+import { CdsButton } from './generated/view-tabs/shared-frame-6jtSkIit.js';
 import { SourceShortcut } from './source-shortcut';
 import { shortcutsDialogSections } from './shortcuts-dialog-model.mjs';
+import { hostGrowthBookFlag } from './host-growthbook.mjs';
 import './source-session-actions.css';
 import { getAssistantName, getLocale, t, tn } from '../electron/i18n/index.mjs';
 import { coreCapabilities } from '../electron/core-registry.mjs';
@@ -34,16 +37,22 @@ export function ActionDialog({ title, onClose, children, className = '', showClo
 // Me's Ne body off Code (shortcuts-dialog-model.mjs).
 // w13-close-main-jsx-tests: `sidebarChord` (main.jsx: the window has the sidebar, whose app switch binds ⌥⌘←/→) lists
 // c518a31cc Te's sidebar tab rows, swapped under RTL like Te's `n() === "rtl"`.
-export function KeyboardShortcutsDialog({ fastMode = false, sideChat = false, rewind = true, surface = 'code', route = null, sidebarChord = false, onClose, ...dialog }) {
+// W14-code r3 r3-shared-02: `presets` is c518a31cc Ee's `a = L()`, the claudeai_cc_epitaxy_session_presets_main gate
+// (host-growthbook.mjs, D10 / E92 on), which lists Select environment / New environment.
+export function KeyboardShortcutsDialog({ fastMode = false, sideChat = false, rewind = true, surface = 'code', route = null, sidebarChord = false,
+  presets = hostGrowthBookFlag('claudeai_cc_epitaxy_session_presets_main'), onClose, ...dialog }) {
   const rtl = typeof document !== 'undefined' && document.documentElement?.dir === 'rtl';
   return <ActionDialog {...dialog} title={t("Keyboard shortcuts")} size="md" density="comfortable" className="shortcuts-dialog" onClose={onClose}>
-    <div role="region" aria-label={t("Keyboard shortcuts")} tabIndex={0} className="shortcuts-region">
-      {shortcutsDialogSections({ fastMode, sideChat, rewind, surface, route, sidebarChord, rtl }).map(section => <div key={section.title}>
-        <div className="shortcuts-section">{section.title}</div>
-        {section.rows.map(row => <div key={row.command} className="shortcuts-row" data-command={row.command}>
-          <span className="shortcuts-label">{row.label}</span>
-          <span className="shortcuts-keys">{row.keys.map((keys, index) => <React.Fragment key={keys}>
-            {index > 0 && <span aria-hidden="true" className="shortcuts-or">{t("or")}</span>}
+    {/* W14-code r4 r4-shared-03 (E84): c518a31cc's own class strings — ge's region, Z's section title (`first` adds the
+        fizzy reset, as Ne / Ce pass it to General), Q's row, label, keycap group and "or" — not host classes over hand-copied
+        rules (those lacked .font-base's font-variation-settings and drew the focus ring as a box-shadow). */}
+    <div role="region" aria-label={t("Keyboard shortcuts")} tabIndex={0} className="-mx-pad-xl -mb-pad-xl min-h-0 flex-1 overflow-y-auto rounded-b-[inherit] px-xl pb-xl in-data-cds-fizzy:flex-none in-data-cds-fizzy:overflow-visible focus-visible:outline-hidden focus-visible:-outline-offset-2 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-fill-accent">
+      {shortcutsDialogSections({ fastMode, sideChat, rewind, surface, route, sidebarChord, rtl, presets }).map((section, sectionIndex) => <div key={section.title}>
+        <div className={sectionIndex === 0 ? "font-base mt-5 py-2 in-data-cds-fizzy:mt-0 in-data-cds-fizzy:pt-0" : "font-base mt-5 py-2"}>{section.title}</div>
+        {section.rows.map(row => <div key={row.command} className="flex items-center justify-between py-2 border-b-0.5 last:border-0" data-command={row.command}>
+          <span className="flex items-center gap-2 text-sm text-secondary">{row.label}</span>
+          <span className="flex items-center gap-2">{row.keys.map((keys, index) => <React.Fragment key={keys}>
+            {index > 0 && <span aria-hidden="true" className="text-xs text-muted-as-secondary">{t("or")}</span>}
             <SourceShortcut keys={keys} />
           </React.Fragment>)}</span>
         </div>)}
@@ -89,16 +98,19 @@ export function ReviewDialog({ initialInstructions='', workspaceInfo, core, perm
         <SourceSelect label={t("Review target")} value={type} disabled={busy} className="session-action-select" triggerProps={{ 'data-autofocus': '' }}
           onChange={next=>{setType(next);setValue('');setError('');}}
           items={reviewTargetItems({ isRepo: !!workspaceInfo?.isRepo, pullRequests })} /></div>
-      {type==='baseBranch' && <label>{t("Base branch")}<input aria-label={t("Base branch")} list="review-branches" placeholder="main" value={value} disabled={busy} onChange={e=>setValue(e.target.value)}/><datalist id="review-branches">{workspaceInfo?.branches?.map(branch=><option key={branch} value={branch}/>)}</datalist></label>}
-      {type==='commit' && <label>{t("Commit")}<input aria-label={t("Commit")} placeholder={t("Commit SHA or reference")} value={value} disabled={busy} onChange={e=>setValue(e.target.value)}/></label>}
-      {type==='pullRequest' && <label>{t("Pull request")}<input aria-label={t("Pull request")} placeholder={t("Number or URL, e.g. 42")} value={value} disabled={busy} onChange={e=>setValue(e.target.value)}/>
+      {/* W14-code r3 css3-dialog-text-fields: the fields are the CDS TextInput / TextArea (shared-frame vs / TextArea:
+          "cds-input cds-reset" … bg-fill-field shadow-field-ring, enabled:[&:hover:not(:focus):not([data-invalid])]:shadow-field-hover),
+          not native controls under a hand-copied field ring; the target stays the SourceSelect Combobox. */}
+      {type==='baseBranch' && <label>{t("Base branch")}<CdsTextInput aria-label={t("Base branch")} list="review-branches" placeholder="main" value={value} disabled={busy} onChange={e=>setValue(e.target.value)}/><datalist id="review-branches">{workspaceInfo?.branches?.map(branch=><option key={branch} value={branch}/>)}</datalist></label>}
+      {type==='commit' && <label>{t("Commit")}<CdsTextInput aria-label={t("Commit")} placeholder={t("Commit SHA or reference")} value={value} disabled={busy} onChange={e=>setValue(e.target.value)}/></label>}
+      {type==='pullRequest' && <label>{t("Pull request")}<CdsTextInput aria-label={t("Pull request")} placeholder={t("Number or URL, e.g. 42")} value={value} disabled={busy} onChange={e=>setValue(e.target.value)}/>
         <small className="session-action-hint">{t("{core} reads the pull request with the GitHub CLI (gh), which must be installed and signed in.", { core: getAssistantName() })}</small></label>}
-      {type==='custom' && <label>{t("Review instructions")}<textarea aria-label={t("Review instructions")} rows={5} maxLength={12000} value={value} disabled={busy} onChange={e=>setValue(e.target.value)}/></label>}
+      {type==='custom' && <label>{t("Review instructions")}<CdsTextArea aria-label={t("Review instructions")} rows={5} maxLength={12000} value={value} disabled={busy} onChange={e=>setValue(e.target.value)}/></label>}
       {!workspaceInfo?.isRepo && type!=='custom' && <p>{t("Select custom instructions, or open a session in a Git repository.")}</p>}
       {error && <p role="alert" className="session-action-error">{error}</p>}
       {/* Qf footer with CDS Buttons: busy keeps Start review in place with its spinner (ks busy). */}
-      <SourceDialogFooter><SourceSettingsButton onClick={onClose}>{t("Cancel")}</SourceSettingsButton><SourceSettingsButton type="submit" variant="primary" busy={busy}
-        disabled={(type!=='custom'&&!workspaceInfo?.isRepo) || (type!=='uncommittedChanges'&&!value.trim())}>{t("Start review")}</SourceSettingsButton></SourceDialogFooter>
+      <SourceDialogFooter><CdsButton onClick={onClose}>{t("Cancel")}</CdsButton><CdsButton type="submit" variant="primary" busy={busy}
+        disabled={(type!=='custom'&&!workspaceInfo?.isRepo) || (type!=='uncommittedChanges'&&!value.trim())}>{t("Start review")}</CdsButton></SourceDialogFooter>
     </form>
   </ActionDialog>;
 }
@@ -173,8 +185,8 @@ export function FeedbackShareDialog({ text, onConfirm, onClose, ...dialog }) {
   return <ActionDialog {...dialog} alert size="sm" title={t("Share feedback with DeepSeek?")} showClose={false} onClose={()=>!busy&&onClose()}>
     <p>{t("Your feedback and this session so far are uploaded to DeepSeek: your prompts, file contents the agent read, command output and the working folder, with an anonymous ID.")}</p>
     {text && <blockquote className="feedback-share-text">{text}</blockquote>}
-    <SourceDialogFooter><SourceSettingsButton data-autofocus disabled={busy} onClick={onClose}>{t("Cancel")}</SourceSettingsButton>
-      <SourceSettingsButton variant="primary" busy={busy} onClick={async()=>{setBusy(true);try{await onConfirm();}finally{setBusy(false);}}}>{t("Share feedback")}</SourceSettingsButton></SourceDialogFooter>
+    <SourceDialogFooter><CdsButton data-autofocus disabled={busy} onClick={onClose}>{t("Cancel")}</CdsButton>
+      <CdsButton variant="primary" busy={busy} onClick={async()=>{setBusy(true);try{await onConfirm();}finally{setBusy(false);}}}>{t("Share feedback")}</CdsButton></SourceDialogFooter>
   </ActionDialog>;
 }
 // The running core's assistant is passed as {name}: the assistant-word rewrite skips "by DeepSeek" and 由…管理.
@@ -189,11 +201,11 @@ export function SlashHelp({onClose,commands=[],coreLabel='',docsUrl=null,onShort
       <dl>{commands.map(command=><div key={`${command.kind??'app'}:${command.id}`}><dt>/{command.id}{command.argumentHint?<span className="slash-help-hint"> {command.argumentHint}</span>:null}</dt><dd>{command.description||command.label||''}</dd></div>)}</dl>
     </section>}
     <div className="slash-help-links">
-      {onShortcuts&&<SourceSettingsButton size="sm" variant="secondary" onClick={go(onShortcuts)}>{t("Keyboard shortcuts")}</SourceSettingsButton>}
-      {onSettings&&<SourceSettingsButton size="sm" variant="secondary" onClick={go(()=>onSettings('cores'))}>{t("Cores settings")}</SourceSettingsButton>}
-      {onSettings&&<SourceSettingsButton size="sm" variant="secondary" onClick={go(()=>onSettings('models'))}>{t("Models settings")}</SourceSettingsButton>}
-      {onWhatsNew&&<SourceSettingsButton size="sm" variant="secondary" onClick={go(onWhatsNew)}>{t("What’s new")}</SourceSettingsButton>}
-      {docsUrl&&onOpenLink&&<SourceSettingsButton size="sm" variant="secondary" onClick={()=>onOpenLink(docsUrl)}>{coreLabel?t("{core} documentation",{core:coreLabel}):t("Documentation")}</SourceSettingsButton>}
+      {onShortcuts&&<CdsButton size="sm" variant="secondary" onClick={go(onShortcuts)}>{t("Keyboard shortcuts")}</CdsButton>}
+      {onSettings&&<CdsButton size="sm" variant="secondary" onClick={go(()=>onSettings('cores'))}>{t("Cores settings")}</CdsButton>}
+      {onSettings&&<CdsButton size="sm" variant="secondary" onClick={go(()=>onSettings('models'))}>{t("Models settings")}</CdsButton>}
+      {onWhatsNew&&<CdsButton size="sm" variant="secondary" onClick={go(onWhatsNew)}>{t("What’s new")}</CdsButton>}
+      {docsUrl&&onOpenLink&&<CdsButton size="sm" variant="secondary" onClick={()=>onOpenLink(docsUrl)}>{coreLabel?t("{core} documentation",{core:coreLabel}):t("Documentation")}</CdsButton>}
     </div>
   </ActionDialog>;
 }
@@ -237,7 +249,7 @@ export function RewindConfirmDialog({targetText,preview,restoreItems,onConfirm,o
  return <ActionDialog {...dialog} size="sm" showClose={false} title={t("Rewind to this message?")} className="rewind-confirm" initialFocusRef={cancel}
   onClose={()=>{if(!busy)onClose();}}>
   <div className="rewind-confirm-body">
-   <div className="rewind-confirm-quote"><span className="source-sr-only">{t("You")}</span><p>{rewindTargetText(targetText)}</p></div>
+   <div className="rewind-confirm-quote"><span className="sr-only">{t("You")}</span><p>{rewindTargetText(targetText)}</p></div>
    {preview!=='none'&&<>
     <SourceSelect label={t("Restore")} items={items} value={choice} onChange={value=>{if(value!==null)setChoice(value);}} searchable={false} disabled={busy||pending}/>
     <div className="rewind-confirm-files" data-hidden={ready&&choice==='conversation'||undefined} aria-live="polite">
@@ -248,8 +260,8 @@ export function RewindConfirmDialog({targetText,preview,restoreItems,onConfirm,o
    </>}
   </div>
   <SourceDialogFooter>
-   <SourceSettingsButton ref={cancel} variant="secondary" disabled={busy} data-initial-focus="" onClick={onClose}>{t("Cancel")}</SourceSettingsButton>
-   <SourceSettingsButton variant="primary" disabled={pending} busy={busy} aria-label={busy?t("Rewinding…"):undefined} onClick={confirm}>{t("Rewind")}</SourceSettingsButton>
+   <CdsButton ref={cancel} variant="secondary" disabled={busy} data-initial-focus="" onClick={onClose}>{t("Cancel")}</CdsButton>
+   <CdsButton variant="primary" disabled={pending} busy={busy} aria-label={busy?t("Rewinding…"):undefined} onClick={confirm}>{t("Rewind")}</CdsButton>
   </SourceDialogFooter>
  </ActionDialog>;
 }

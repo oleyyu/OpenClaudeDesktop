@@ -23,6 +23,9 @@ import { appSheets, append, bundleOrder, computed, declarations, element, find, 
 // so it was redundant); and without it over the old unlayered reset (the root cause: the reset wins again).
 const ROOT = path.resolve(import.meta.dirname, '..');
 const OFFICIAL = 'public/assets/v1/c6a992d55-Che1orl5.css';
+// Host buttons that copy an official button's class list verbatim (W13 closeout): c623cddd3 ye, Move to project's rows.
+const V1_ASSETS = path.join(path.dirname(new URL(import.meta.url).pathname), '../../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1');
+const OFFICIAL_BUTTON_REPLICAS = [{ file: 'src/source-chats-page.jsx', chunk: 'c623cddd3-' }];
 const read = (rel) => fs.readFileSync(path.join(ROOT, rel), 'utf8');
 const START = '/* D26 (R3-style)', END = '/* end D26 control resets */';
 // The unlayered reset step 1 replaced, verbatim (R3 snapshot src/style.css:42-64).
@@ -108,12 +111,8 @@ const WORKAROUNDS = {
   border: revert-layer; border-radius: revert-layer; text-align: revert-layer; cursor: revert-layer;
 }
 `, 'after'),
-  composerEnvMenu: at('src/source-composer.css', '.smenu-popup.sc-env-menu { min-width: 200px; }\n', `/* Current ca80fca8d tX owns the action utilities. Release the host button reset. */
-.source-env-menu-row button {
-  font: revert-layer; color: revert-layer; padding: revert-layer; background: revert-layer;
-  border: revert-layer; border-radius: revert-layer; text-align: revert-layer;
-}
-`, 'after'),
+  // (W14-code r8 css8-classic-context-row-dead, E95: composerEnvMenu — the classic Local pill menu's .source-env-menu-row
+  // release — went with that menu, SourceLocalEnvironmentMenu.)
   sidebarRows: at('src/source-sidebar.css', '.source-session-row.source-current-session-host { height: auto; }\n', `/* The host reset is unlayered; release these properties to official utilities. */
 .source-current-filter-button,
 .source-current-session-host :is(button, input) {
@@ -166,10 +165,10 @@ const WORKAROUNDS = {
   border-radius: revert-layer;
 }
 ` },
-  savedEnvInput: at('src/source-saved-environment-dialog.css', '.saved-environment-dialog .source-settings-button.text-danger { color: revert-layer; }', `/* Undo the host's unlayered native-control font/color reset for the original tx. */
+  savedEnvInput: at('src/source-saved-environment-dialog.css', "/* he's SearchablePopup (shared-frame yC", `/* Undo the host's unlayered native-control font/color reset for the original tx. */
 .saved-environment-dialog input[data-cds="TextInput"] { font: revert-layer; color: revert-layer; }
 `, 'before'),
-  savedEnvButton: at('src/source-saved-environment-dialog.css', '.saved-environment-dialog .saved-environment-link {', `/* cd8823d73 he: the branch trigger is the original CDS Button (view-tabs CdsButton). Release style.css's unlayered
+  savedEnvButton: at('src/source-saved-environment-dialog.css', "/* he's SearchablePopup (shared-frame yC", `/* cd8823d73 he: the branch trigger is the original CDS Button (view-tabs CdsButton). Release style.css's unlayered
    button reset so its own utilities (px-md, min-w-0 shrink, text-muted-as-secondary) apply; the host X button keeps
    source-settings-button's rules. */
 .saved-environment-dialog button[data-cds="Button"]:not(.source-settings-button) {
@@ -411,8 +410,10 @@ test('TT-04 footer: no .stf-copy colour release; the pressed accent wins over th
     const opacity = resolve(shipped, b[name], 'opacity');
     assert.equal(opacity.value, 'var(--cds-opacity-disabled)'); assert.equal(opacity.from.sheet, OFFICIAL); assert.equal(opacity.from.layer, 'utilities');
     assert.equal(resolve(shipped, b[name], 'pointer-events').value, 'none');
-    // The step-1 keep rule (stf-copy listed) is what used to win.
-    const kept = resolve(loadCascade(appSheets(ROOT, { 'src/style.css': style.split('.ssn-action, .sua-copy').join('.ssn-action, .stf-copy, .sua-copy') })), b[name], 'color');
+    // The step-1 keep rule (stf-copy listed) is what used to win. (W14-code gen-final: the anchor moved to
+    // .source-icon-button once the dead .ssn-action left the list; the notices are CDS Banners now. W14-code r4: and to
+    // .sob-preset once .source-icon-button left it — those buttons are CDS ghost iconOnly Buttons, cccc2cf0a kD / AC.)
+    const kept = resolve(loadCascade(appSheets(ROOT, { 'src/style.css': style.split('.sob-preset, .sua-copy').join('.sob-preset, .stf-copy, .sua-copy') })), b[name], 'color');
     assert.equal(kept.value, 'var(--cds-text-disabled)'); assert.equal(kept.from.sheet, 'src/style.css');
     b[name].attrs['aria-busy'] = 'true';
     assert.equal(resolve(shipped, b[name], 'opacity').value, '1', `${name} busy: not dimmed`);
@@ -432,10 +433,12 @@ test('.df-user-menu-btn: the source\'s ps-/pe-2/text-start class string, and no 
   const sidebar = (props) => mount(renderToStaticMarkup(React.createElement(SourceSidebar, { sessions: [{ id: 's1', name: 'Session s1', cwd: '/fixture/work', createdAt: now, updatedAt: now }],
     knownFolders: ['/fixture/work'], displayName: 'Fixture Person', accountLabel: 'plus', ...props })), 'desktop-app dframe-root');
   const userButton = (host) => find(host, (n) => n.tag === 'button' && n.attrs['data-testid'] === 'user-menu-button');
-  // With the core down the footer aux holds Connection settings, so pw's own end padding applies; a healthy core leaves
-  // the aux empty and desktop-layout.css's unlayered .df-footer-row:has(.df-footer-aux:empty) .df-user-menu-btn
-  // (0,4,0) sets padding-inline-end for every variant alike.
-  const host = sidebar({ connectionIssue: true });
+  // With content in the footer aux (official hL holds vL/yL/gL outside code mode) pw's own end padding applies; the
+  // code-mode aux is empty and desktop-layout.css's unlayered .df-footer-row:has(.df-footer-aux:empty) .df-user-menu-btn
+  // (0,4,0) sets padding-inline-end for every variant alike. W14-code r4 复核 (E95): the host's Connection settings
+  // control that used to fill the aux is gone (en-US has no such string), so the test fills it with a bare button.
+  const host = sidebar({});
+  append(find(host, (n) => hasClass(n, 'df-footer-aux')), element('button', { type: 'button' }));
   const btn = userButton(host);
   assert.equal(btn.attrs.class, official.replace('df-user-menu-btn', 'df-user-menu-btn account-button'), 'pw class for class (+ the host account-button hook)');
   removed('userMenu');
@@ -511,7 +514,7 @@ test('source-code-start.css: the start card\'s official rows, in the card and in
 
 // ---- source-composer.css ---------------------------------------------------------------------------------------------
 
-test('source-composer.css: the Send cell, the environment-bar chips and the environment-menu row actions need no revert-layer release', async (t) => {
+test('source-composer.css: the Send cell and the environment-bar chips need no revert-layer release', async (t) => {
   const C = await server.ssrLoadModule('/src/source-composer.jsx');
   const markup = renderToStaticMarkup(React.createElement(C.SourceComposer, { draft: 'hello', setDraft: noop, onSubmit: noop, onMenu: noop, onStop: noop, running: false, sending: false,
     permission: 'auto', model: { model: 'fixture', displayName: 'Fixture', supportedReasoningEfforts: [{ reasoningEffort: 'low' }, { reasoningEffort: 'high' }] },
@@ -523,14 +526,8 @@ test('source-composer.css: the Send cell, the environment-bar chips and the envi
   const chips = official.filter((n) => bar && find(bar, (x) => x === n));
   assert.ok(send, 'presets Send cell'); assert.ok(chips.length >= 2, 'environment bar chips');
   report(t, 'Send cell + environment bar', threeWay({ nodes: [send, ...chips], names: ['composerSend', 'composerEnvBar'], states: [[], ['hover']] }));
-  // tX / zK row actions inside a .source-env-menu-row (SourceLocalEnvironmentMenu renders SourceMenu.Item on its own).
-  withDocument(t);
-  const { SourceLocalEnvironmentMenu } = await server.ssrLoadModule('/src/source-environment-menu.jsx');
-  const menu = mount(renderToStaticMarkup(SourceLocalEnvironmentMenu({ onOpenSettings: noop })), { class: 'smenu-popup cds-root', role: 'menu' });
-  const row = find(menu, (n) => hasClass(n, 'source-env-menu-row'));
-  const actions = all(row, (n) => n.tag === 'button');
-  assert.ok(actions.length >= 1, 'environment settings action');
-  report(t, 'environment menu row', threeWay({ nodes: actions, names: ['composerEnvMenu'], states: [[], ['hover']], properties: RESET_PROPS.filter((p) => p !== 'cursor') }));
+  // (W14-code r8 css8-classic-context-row-dead, E95: the classic Local pill menu, SourceLocalEnvironmentMenu, and its
+  // .source-env-menu-row actions are gone with the classic context row.)
 });
 
 // ---- source-sidebar.css ----------------------------------------------------------------------------------------------
@@ -640,9 +637,12 @@ test('source-saved-environment-dialog.css: the original TextInputs and CDS Butto
     return React.createElement(React.Fragment, null, dialog.props.children);
   }
   const html = renderToStaticMarkup(React.createElement(Form));
-  // SourceDialog's portal: .sdlg-portal > .sdlg-backdrop > section.sdlg-popup.saved-environment-dialog.
-  const body = portal(html, { class: 'sdlg-portal cds-root', 'data-cds-portal': '', 'data-density': 'comfortable' }, { class: 'sdlg-backdrop', role: 'presentation' },
-    { tag: 'section', role: 'dialog', 'aria-modal': 'true', 'data-cds': 'Dialog', 'data-dialog-size': 'md', 'data-open': '', class: `sdlg-popup cds-reset ${dialogProps.className}` });
+  // SourceDialog's portal (W14-code r2-shared-06, shared-frame qy): .sdlg-portal > section.sdlg-popup > div (Zv body). The popup's
+  // official Xv text utilities (text-body font-normal text-primary) are left off: this test proves what the old style.css reset
+  // decided, and those inherited values equal the reset's, which would hide the proof (the shipped result is the same).
+  const body = portal(html, { class: 'sdlg-portal cds-root relative', 'data-cds-portal': '', 'data-density': 'comfortable' },
+    { tag: 'section', role: 'dialog', 'aria-modal': 'true', 'data-cds': 'Dialog', 'data-open': '', class: `sdlg-popup cds-reset ${dialogProps.className}` },
+    { class: 'isolate flex min-h-0 flex-1 flex-col overflow-y-auto scroll-fade-y rounded-[inherit] p-xl break-words' });
   const inputs = all(body, (n) => n.tag === 'input' && n.attrs['data-cds'] === 'TextInput');
   const cds = all(body, (n) => n.tag === 'button' && n.attrs['data-cds'] === 'Button' && !hasClass(n, 'source-settings-button'));
   assert.ok(inputs.length >= 1, `TextInputs: ${inputs.length}`); assert.ok(cds.length >= 1, `CDS Buttons: ${cds.length}`);
@@ -662,37 +662,36 @@ test('source-saved-environment-dialog.css: the original TextInputs and CDS Butto
   const search = all(frame, (n) => n.tag === 'input');
   assert.equal(search.length, 1, 'branch search field');
   report(t, 'branch search field', threeWay({ nodes: search, names: ['savedEnvBranchInput'], properties: ['font-family', 'font-size', 'font-weight', 'line-height', 'color'] }));
-  // Not D26: SourceSettingsButton's own unlayered colour (source-settings-button.css) still needs the text-danger /
-  // text-secondary releases, and the min/max width ones are SourceMenu.Popup / SourceDialog sizes.
+  // W14-code r6 R6DC-02: the dialog's buttons are CdsButton now, so the text-danger / text-secondary releases over the
+  // host replica's unlayered colour are gone; the min/max width one is SourceMenu.Popup's size and stays.
   const css = read('src/source-saved-environment-dialog.css');
-  for (const keep of ['.saved-environment-dialog .source-settings-button.text-danger { color: revert-layer; }', '.saved-environment-dialog .source-settings-button.text-secondary { color: revert-layer; }',
-    '.smenu-popup.saved-environment-branch-popup { min-width: revert-layer; max-width: revert-layer; }', '.saved-environment-dialog { max-height: revert-layer; }']) assert.ok(css.includes(keep), keep);
+  assert.ok(!css.includes('.source-settings-button'), 'no rule over the host replica');
+  assert.ok(css.includes('.smenu-popup.saved-environment-branch-popup { min-width: revert-layer; max-width: revert-layer; }'));
+  // W14-code r3 r3-shared-03 (E84 step 3): the max-height release went with r2-shared-06's unlayered .sdlg-popup max-height
+  // (shared-frame Xv sets none; Yv / environmentDialogClass size the popup in one layer), so it is gone.
+  assert.ok(!css.includes('.saved-environment-dialog { max-height: revert-layer; }'));
 });
 
 // ---- not D26: source-turn-error.css ----------------------------------------------------------------------------------
 
-test('source-turn-error.css: the .ste-dismiss colour rules are still needed — SourceSettingsButton\'s own unlayered colour, not the reset, beats text-muted-as-secondary', async () => {
+// W14-code r6 R6DC-02 / css6-settings-button-code-callers: the Dismiss is the original CdsButton (shared-frame Uu) now, as
+// cb1a6e506 j's `variant:"ghost",iconOnly:!0,size:"sm",icon:"X",…,className:"text-muted-as-secondary hover:text-primary"`,
+// so its utilities decide the colour in one layer and the two .ste-dismiss restatements over the host replica are gone.
+test('source-turn-error.css: the Dismiss is CdsButton and its utilities colour it without .ste-dismiss restatements', async () => {
   const E = await server.ssrLoadModule('/src/source-turn-error.jsx');
   const html = renderToStaticMarkup(React.createElement(E.SourceTurnError, { error: { message: 'x' }, turnId: 't', onDismiss: noop }));
   const host = mount(html, 'source-transcript-content');
   const dismiss = find(host, (n) => n.tag === 'button' && n.attrs['aria-label'] === 'Dismiss');
-  assert.ok(dismiss && hasClass(dismiss, 'source-settings-button') && hasClass(dismiss, 'text-muted-as-secondary') && !hasClass(dismiss, 'text-muted') && hasClass(dismiss, 'hover:text-primary'),
-    '3.6556.2 cb1a6e506 j Dismiss: "text-muted-as-secondary hover:text-primary"');
+  assert.ok(dismiss && dismiss.attrs['data-cds'] === 'Button' && hasClass(dismiss, 'cds-reset') && !hasClass(dismiss, 'source-settings-button')
+    && hasClass(dismiss, 'text-muted-as-secondary') && !hasClass(dismiss, 'text-muted') && hasClass(dismiss, 'hover:text-primary'),
+    '3.6556.2 cb1a6e506 j Dismiss: CdsButton "text-muted-as-secondary hover:text-primary"');
   const css = read('src/source-turn-error.css');
-  const RULES = ['.ste-dismiss .source-settings-button[data-cds=Button] { color: var(--muted-as-secondary, var(--cds-text-muted)); }\n', '.ste-dismiss .source-settings-button[data-cds=Button]:hover { color: var(--cds-text-primary); }\n'];
-  for (const rule of RULES) assert.ok(css.includes(rule), rule);
+  assert.ok(!css.includes('.ste-dismiss .source-settings-button'), 'no restatement over the host replica');
   const shipped = cascade();
-  for (const [state, want] of [[[], 'var(--muted-as-secondary, var(--cds-text-muted))'], [['hover'], 'var(--cds-text-primary)']]) {
+  for (const [state, want] of [[[], /muted-as-secondary/], [['hover'], /text-primary/]]) {
     clearState(dismiss); if (state.length) setState(dismiss, state);
     const r = resolve(shipped, dismiss, 'color');
-    assert.equal(r.value, want); assert.equal(r.from.sheet, 'src/source-turn-error.css');
-  }
-  // Without them, over either reset, the settings button's unlayered (0,2,0) colour decides: the cause is the host
-  // primitive (source-settings-button.css), which D26 does not touch.
-  for (const reset of ['layered', 'unlayered']) {
-    clearState(dismiss);
-    const r = resolve(cascade({ reset, drop: { 'src/source-turn-error.css': RULES } }), dismiss, 'color');
-    assert.equal(r.value, 'var(--cds-text-primary)'); assert.equal(r.from.sheet, 'src/source-settings-button.css'); assert.equal(r.from.layer, null);
+    assert.match(String(r.value), want, `${state} ${r.value} ${where(r.from)}`); assert.notEqual(r.from?.sheet, 'src/source-turn-error.css');
   }
   clearState(dismiss);
 });
@@ -747,8 +746,19 @@ const controls = () => (scan ??= hostControls());
 test('hand-written host controls keep their disabled colour: the keep rule covers every button whose own colour lost to the old button:disabled', (t) => {
   const { controls: list, skipped } = controls();
   if (skipped.length) t.diagnostic(`unparsed (mid-edit?) files skipped: ${skipped.join(', ')}`);
-  const buttons = list.filter((c) => c.tag === 'button' && c.canDisable);
-  assert.ok(buttons.length > 50, `${buttons.length} disableable host buttons`);
+  // W13 closeout: a host button whose class list is an official 3.6556.2 button's, verbatim, renders as the official one
+  // does (its own text colour at disabled:opacity-50, no base button:disabled colour), so it is held to the official
+  // chunk rather than to the old reset. Each entry names the chunk the string is read from (parsed, never run).
+  const officialReplicas = OFFICIAL_BUTTON_REPLICAS.map(({ file, chunk }) => {
+    const name = fs.readdirSync(V1_ASSETS).find((entry) => entry.startsWith(chunk) && entry.endsWith('.js'));
+    assert.ok(name, chunk);
+    return { file, text: fs.readFileSync(path.join(V1_ASSETS, name), 'utf8') };
+  });
+  const isOfficialReplica = (control) => officialReplicas.some(({ file, text }) => control.at.startsWith(`${file}:`)
+    && text.includes(`className:"${control.classes.join(' ')}"`));
+  const buttons = list.filter((c) => c.tag === 'button' && c.canDisable && !isOfficialReplica(c));
+  // A sanity floor (W14-code r4: host buttons keep leaving for official ones, e.g. the goal strip's four with E95).
+  assert.ok(buttons.length > 40, `${buttons.length} disableable host buttons`);
   const old = cascade({ reset: 'unlayered' }), shipped = cascade(), nokeep = cascade({ reset: 'nokeep' });
   const needed = new Set();
   for (const control of buttons) {

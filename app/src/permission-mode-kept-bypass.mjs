@@ -21,8 +21,6 @@
 
 /** cef1e6037 `$t`: the GrowthBook kill switch. The host has no GrowthBook, so `s($t)` is false and the feature is on. */
 export const KEPT_BYPASS_KILL_SWITCH = '__gb__3409701119';
-/** cef1e6037 `en` / `tn`: the resend's confirm and session-read timeouts (official only: the host never resends). */
-export const KEPT_BYPASS_CONFIRM_MS = 12e4, KEPT_BYPASS_SESSION_READ_MS = 1e4;
 /** cc0051c10 w_.bypassKeptRow (RvbwIvF4xv) and w_.bypassKeptToast (00YMYeBYsv). */
 export const BYPASS_KEPT_ROW = 'Turns on when Claude finishes working.';
 export const BYPASS_KEPT_TOAST = 'Bypass permissions turns on when Claude finishes working.';

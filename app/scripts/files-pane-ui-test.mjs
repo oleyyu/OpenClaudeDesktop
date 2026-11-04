@@ -47,7 +47,7 @@ const itemsOf=locator=>locator.evaluate(m=>[...m.querySelectorAll('[role^="menui
 async function saveClipboard(){assert.equal(await app.evaluate(()=>!!globalThis.offscreenClipboard),true,'the Files pane copies require the offscreen in-memory clipboard');
  await app.evaluate(async({clipboard,ClipboardItem})=>{const originals=await clipboard.read();globalThis.filesPaneClipboard=await Promise.all(originals.map(async item=>new ClipboardItem(Object.fromEntries(await Promise.all(item.types.map(async type=>[type,await item.getType(type)]))))));});report.clipboardSaved=true;report.clipboardRestored=false;}
 async function restoreClipboard(){await app.evaluate(async({clipboard})=>{const saved=globalThis.filesPaneClipboard;if(!saved)throw Error('Clipboard backup unavailable');if(saved.length)await clipboard.write(saved);else await clipboard.clear();delete globalThis.filesPaneClipboard;});report.clipboardRestored=true;}
-async function open(){await page.locator(`[data-source-session-id="${A}"] .source-session-open`).click();await page.locator('.st-title').waitFor();await page.locator('.loading-state').waitFor({state:'detached'});await frames();}
+async function open(){await page.locator(`[data-source-session-id="${A}"] .source-session-open`).click();await page.locator(':is(.st-title,button[data-pane-title])').waitFor();await page.locator('.loading-state').waitFor({state:'detached'});await frames();}
 async function openFiles(){await page.getByRole('button',{name:'View options',exact:true}).click();await page.getByRole('menuitemcheckbox',{name:'Files',exact:true}).click();await pane().waitFor();await tree().getByRole('button',{name:'README.md',exact:true}).waitFor();await frames();}
 async function shot(name){await page.screenshot({path:path.join(directory,name+'.png')});}
 // Every rendered treeitem: its primary button holds exactly one 12px icon in --cds-text-muted and a --cds-text-primary name.
@@ -294,7 +294,7 @@ try{
  const trailing=await pane().locator('.source-pane-header .spc-controls').evaluate(n=>[...n.querySelectorAll('button')].map(b=>b.getAttribute('aria-label')));
  report.metrics.searchFilesTrailing=trailing;assert.deepEqual(trailing.slice(0,2),['Go to file or search','Files settings'],'Go to file or search precedes the Files settings menu');
  assert.equal(trailing.at(-1),'Close panel');assert.ok(trailing.indexOf('Expand')>1||trailing.indexOf('Collapse')>1,'Expand/Collapse after the settings menu');
- assert.deepEqual(await searchButton.evaluate(b=>({title:b.getAttribute('title'),ghost:b.classList.contains('spc-ghost'),icons:b.querySelectorAll('[data-cds="Icon"]').length,text:b.textContent.length})),{title:null,ghost:true,icons:1,text:1});
+ assert.deepEqual(await searchButton.evaluate(b=>({title:b.getAttribute('title'),ghost:b.dataset.cds==='Button'&&b.hasAttribute('data-cds-ghost'),icons:b.querySelectorAll('[data-cds="Icon"]').length,text:b.textContent.length})),{title:null,ghost:true,icons:1,text:1});
  await searchButton.hover();await page.locator('.source-tooltip-popup').filter({hasText:'Go to file or search'}).waitFor();await page.mouse.move(2,2);await page.waitForFunction(()=>!document.querySelector('.source-tooltip-popup'));
  const paneState=()=>pane().evaluate(n=>{const body=n.querySelector('.source-file-body'),tree=n.querySelector('.source-files-tree');return {treeVisible:body.dataset.treeVisible,column:body.dataset.treeColumn,treeShown:!!tree&&!tree.hidden&&tree.getClientRects().length>0,
   preview:n.querySelector('[data-file-breadcrumb]')?.textContent??null,selected:n.querySelector('[data-view-tab-bar] [data-vtb-id][data-selected]')?.dataset.vtbId??null,tabs:[...n.querySelectorAll('[data-view-tab-bar] [data-vtb-id]')].map(t=>t.dataset.vtbId),paneWidth:n.querySelector('.source-file-panel').clientWidth};});
@@ -471,7 +471,7 @@ try{
  const contentRows=()=>pane().locator('[data-content-match]');
  const queryContent=async text=>{await contentFilter.fill(text);await pane().locator('.sfs-browser[data-search-phase="success"]').waitFor();};
  await queryContent('?needle');assert.equal(await contentRows().count(),5);
- const contentOptions=pane().locator('.sfs-field').getByRole('group',{name:'Search options',exact:true});
+ const contentOptions=pane().locator('[data-files-filter]').getByRole('group',{name:'Search options',exact:true});
  await contentOptions.getByRole('button',{name:'Match case',exact:true}).click();await poll(async()=>await contentRows().count()===3,'case-sensitive content matches');
  await contentOptions.getByRole('button',{name:'Match whole word',exact:true}).click();await poll(async()=>await contentRows().count()===2,'whole-word content matches');
  await contentOptions.getByRole('button',{name:'Use regular expression',exact:true}).click();await queryContent('?^Needle$');assert.equal(await contentRows().count(),1);
@@ -487,7 +487,7 @@ try{
  await pane().getByRole('button',{name:'content-a.txt:4',exact:true}).click();
  await pane().locator('.source-file-view[data-file-path="content-a.txt"] .cm-content').waitFor();
  assert.equal(await pane().getByRole('textbox',{name:'Find in file',exact:true}).inputValue(),'needle');
- await poll(async()=>/3 of 4/.test(await pane().locator('.sfv-find-status').innerText()),'content hit selects the requested line in original file find');
+ await poll(async()=>/3 of 4/.test(await pane().locator('[data-file-find] [aria-live]').innerText()),'content hit selects the requested line in original file find');
  await shot('content-search-open-line');
  assert.equal((await tabsNow()).find(t=>t.path==='content-a.txt').preview,true,'single-click content result is a preview');
  step('search-result-actions');
@@ -550,7 +550,7 @@ try{
  const side=page.getByRole('complementary',{name:'Side chat',exact:true});await side.waitFor();
  assert.equal(await side.locator('.epitaxy-user-turn').innerText(),'In content-a.txt at line 4: `needle` — explain what this does and where it’s used.');
  await side.getByText('CUSTOMIZE_FIXTURE_REPLY',{exact:true}).waitFor();
- await poll(async()=>await side.locator('.ssc-input').evaluate(n=>n===document.activeElement),'side question receives keyboard focus');
+ await poll(async()=>await side.locator('.ssc-composer .sc-input').evaluate(n=>n===document.activeElement),'side question receives keyboard focus');
  assert.deepEqual(JSON.parse(await fs.readFile(path.join(profile,'fixture-threads.json'),'utf8')).threads[A].turns,beforeQuestion,'side question leaves the parent conversation untouched');
  await shot('content-search-side-question');
  step('side-chat-geometry');
@@ -577,31 +577,31 @@ try{
  await poll(()=>app.evaluate(({Menu,BrowserWindow})=>{const find=menu=>{for(const item of menu.items){if(item.label==='Show Side Chat'&&item.enabled)return item;const child=item.submenu&&find(item.submenu);if(child)return child;}};const item=find(Menu.getApplicationMenu());if(!item)return false;item.click(item,BrowserWindow.getAllWindows()[0]);return true;}),'reopen side chat via actual menu');
  await side.waitFor();near(await panelRect(),savedSide,'reopening preserves panel geometry');
  assert.equal(await side.locator('.epitaxy-user-turn').count(),1,'reopening retains messages without sending again');
- await side.locator('.ssc-input').fill('unsent side draft');
- await side.locator('.ssc-input').press('Escape');await side.waitFor({state:'hidden'});
+ await side.locator('.ssc-composer .sc-input').fill('unsent side draft');
+ await side.locator('.ssc-composer .sc-input').press('Escape');await side.waitFor({state:'hidden'});
  await poll(()=>app.evaluate(({Menu,BrowserWindow})=>{const find=menu=>{for(const item of menu.items){if(item.label==='Show Side Chat'&&item.enabled)return item;const child=item.submenu&&find(item.submenu);if(child)return child;}};const item=find(Menu.getApplicationMenu());if(!item)return false;item.click(item,BrowserWindow.getAllWindows()[0]);return true;}),'reopen after Escape');
- await side.waitFor();assert.equal(await side.locator('.ssc-input').evaluate(n=>n.value),'unsent side draft');await side.locator('.ssc-input').fill('');
+ await side.waitFor();assert.equal(await side.locator('.ssc-composer .sc-input').evaluate(n=>n.value),'unsent side draft');await side.locator('.ssc-composer .sc-input').fill('');
  await shot('side-chat-moved-resized');
  report.metrics.sideChatGeometry={initial:initialSide,moved:movedSide,saved:savedSide};
  report.checks.push('Current original side-chat geometry: 320px initial width, eight handles, header drag, southeast and northwest resize, 280×160 minimum, opposite-edge anchoring, viewport rebasing, outside-click persistence and close/Escape/reopen preserving messages, draft and geometry');
  step('side-chat-controls');
- const questionInput=()=>side.locator('.ssc-input');
+ const questionInput=()=>side.locator('.ssc-composer .sc-input');
  const showSide=()=>poll(()=>app.evaluate(({Menu,BrowserWindow})=>{const find=menu=>{for(const item of menu.items){if(item.label==='Show Side Chat'&&item.enabled)return item;const child=item.submenu&&find(item.submenu);if(child)return child;}};const item=find(Menu.getApplicationMenu());if(!item)return false;item.click(item,BrowserWindow.getAllWindows()[0]);return true;}),'show side chat');
  const requests=async()=>{const data=await fs.readFile(path.join(profile,'fixture-requests.jsonl'),'utf8');return data.trim().split('\n').map(line=>JSON.parse(line));};
  const starts=async()=>(await requests()).filter(call=>call.method==='turn/start').length;
  // A real fixture stream exercises renderer → IPC → fork → turn/interrupt.
  for(const via of ['button','escape']){
-   await side.evaluate(node=>{window.__sideStatusTrace=[];const read=()=>{const row=node.querySelector('.ssc-status');if(!row)return;const state={phase:row.dataset.sideStatus,announcement:row.querySelector('[role=status]').textContent,clock:row.querySelector('[data-runtime-stat=elapsed]')?.textContent??null,visual:row.querySelector('.sts-label').textContent};const previous=window.__sideStatusTrace.at(-1);if(JSON.stringify(state)!==JSON.stringify(previous))window.__sideStatusTrace.push(state);};window.__sideStatusObserver=new MutationObserver(read);window.__sideStatusObserver.observe(node,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:['data-side-status']});read();});
+   await side.evaluate(node=>{window.__sideStatusTrace=[];const read=()=>{const row=node.querySelector('.ssc-status');if(!row)return;const state={phase:row.dataset.sideStatus,announcement:row.querySelector('[role=status]').textContent,clock:null,visual:row.querySelector(':scope > [aria-hidden=true]').textContent};const previous=window.__sideStatusTrace.at(-1);if(JSON.stringify(state)!==JSON.stringify(previous))window.__sideStatusTrace.push(state);};window.__sideStatusObserver=new MutationObserver(read);window.__sideStatusObserver.observe(node,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:['data-side-status']});read();});
    await questionInput().fill('fixture:hold');await questionInput().press('Enter');
    await side.getByRole('button',{name:'Stop response',exact:true}).waitFor();
    await poll(async()=>await side.locator('[data-pane-root] .flex-1.min-h-0.overflow-y-auto > .select-text').last().innerText().then(text=>text.includes('HOLD_CHUNK_')),'partial side reply');
    assert.equal(await questionInput().isDisabled(),true,'current source disables input during a response');
    assert.equal(await side.evaluate(n=>getComputedStyle(n).outlineStyle),'none','source frame is outline-none even while focused');
-   await side.locator('.ssc-status[data-side-status=running] [data-runtime-stat=elapsed]').waitFor();
+   await side.locator('.ssc-status[data-side-status=running] [data-turn-working=true]').waitFor();
    assert.equal(await side.locator('.ssc-status [role=status]').innerText(),'Thinking…','live announcement continues after text begins');
    assert.equal(await side.locator('.ssc-status [data-cds=Spark]').getAttribute('data-spark-state'),'thinking');
    await side.locator('.ssc-status').scrollIntoViewIfNeeded();
-   const statusGeometry=await side.locator('.ssc-status .sts-row').evaluate(row=>{const css=getComputedStyle(row),spark=row.querySelector('[data-cds=Spark]').getBoundingClientRect();return {height:row.getBoundingClientRect().height,gap:parseFloat(css.gap),sparkWidth:spark.width,sparkHeight:spark.height};});
+   const statusGeometry=await side.locator('.ssc-status [data-turn-working] > div').first().evaluate(row=>{const css=getComputedStyle(row),spark=row.querySelector('[data-cds=Spark]').getBoundingClientRect();return {height:row.getBoundingClientRect().height,gap:parseFloat(css.gap),sparkWidth:spark.width,sparkHeight:spark.height};});
    assert.deepEqual(statusGeometry,{height:20,gap:16,sparkWidth:18,sparkHeight:18},'classic current Ta row geometry');
    await shot('side-chat-streaming-'+via);
    if(via==='button')await side.getByRole('button',{name:'Stop response',exact:true}).click();else{await side.focus();await page.keyboard.press('Escape');}
@@ -715,11 +715,11 @@ try{
  await shot('side-chat-file-mentions');
  await questionInput().press('Enter');await sideSuggestions.waitFor({state:'hidden'});
  await questionInput().locator('[data-mention="README.md"]').waitFor();assert.equal(await starts(),startsBeforeMention,'Enter picks a file without submitting');
- assert.equal(await page.locator('.sc-input:not(.ssc-input) [data-mention="README.md"]').count(),0,'side file picks do not touch the main draft');
+ assert.equal(await page.locator('.sc-input:not(.ssc-composer .sc-input) [data-mention="README.md"]').count(),0,'side file picks do not touch the main draft');
  await side.getByRole('button',{name:'Close side chat',exact:true}).click();await showSide();
  await questionInput().locator('[data-mention="README.md"]').waitFor();
  // File chips share the same copy/open/delete menu; Escape must not close the side panel.
- await questionInput().locator('.sc-mention-chip').click();
+ await questionInput().locator('[data-mention] > span').click();
  const mentionActionsMenu=page.getByRole('menu',{name:'Mention actions',exact:true});await mentionActionsMenu.waitFor();
  assert.equal(await mentionActionsMenu.evaluate(n=>{const r=n.getBoundingClientRect();return n.contains(document.elementFromPoint(r.left+r.width/2,r.top+r.height/2));}),true,'file chip actions sit above the side panel');
  await page.keyboard.press('Escape');await mentionActionsMenu.waitFor({state:'hidden'});assert.equal(await side.isVisible(),true);
@@ -744,7 +744,7 @@ try{
  const forksBeforeTools=(await requests()).filter(call=>call.method==='thread/fork').length;
  await questionInput().fill('fixture:side-tools');await questionInput().press('Enter');
  await sideStatus().getByRole('status').getByText('Reading README.md',{exact:true}).waitFor();
- await sideStatus().locator('.sts-activity').getByText('Running tools…',{exact:true}).waitFor();assert.equal(await side.locator('.ssc-title').innerText(),'Side chat');
+ await sideStatus().locator(':scope > [aria-hidden=true]').getByText('Running tools…',{exact:true}).waitFor();assert.equal(await side.locator('.ssc-title').innerText(),'Side chat');
  await sideStatus().getByRole('status').getByText('Searching for needle',{exact:true}).waitFor();await shot('side-chat-tool-activity');
  await sideStatus().getByRole('status').getByText('Finding files',{exact:true}).waitFor();
  await side.locator('.ssc-status[data-side-stage="waiting"]').waitFor();assert.equal(await sideStatus().getByRole('status').innerText(),'Thinking…');
@@ -855,8 +855,8 @@ try{
  await questionInput().fill('Background lifecycle warmup');await questionInput().press('Enter');await side.getByText('CUSTOMIZE_FIXTURE_REPLY',{exact:true}).waitFor();await poll(async()=>!(await questionInput().isDisabled()),'background fork ready');
  await questionInput().fill('fixture:hold');await questionInput().press('Enter');
  await poll(async()=>(await scrollSnapshot()).lastChunk>=2,'stream before leaving session');
- await poll(async()=>parseInt(await side.locator('.ssc-status [data-runtime-stat=elapsed]').textContent().catch(()=>''),10)>=2,'background clock reaches two seconds');
- const beforeLeavingClock=await side.locator('.ssc-status [data-runtime-stat=elapsed]').innerText();
+ await poll(async()=>parseInt((await side.locator('.ssc-status > [aria-hidden=true]').textContent().catch(()=>'')).match(/(\d+)s\b/)?.[1]??'',10)>=2,'background clock reaches two seconds');
+ const beforeLeavingClock=(await side.locator('.ssc-status > [aria-hidden=true]').innerText()).match(/\d+s\b/)?.[0]; // U6's N6 clock (no data-runtime-stat hook)
  const beforeLeaving=await scrollSnapshot();await page.getByRole('button',{name:'New',exact:true}).click();
  await poll(async()=>await page.locator('.ssc-root').count()===0,'side panel completely unmounts on New');
  // Wait on actual fork traffic, rather than a wall-clock guess, while no panel exists.
@@ -883,8 +883,8 @@ try{
  // Mount a second session App. Its hidden side panel must not subscribe to and duplicate A's stream.
  await page.locator(`[data-source-session-id="${B}"] .source-session-open`).click({button:'right'});
  await page.getByRole('menuitem',{name:'Open in',exact:true}).click();await page.getByRole('menu',{name:'Open in',exact:true}).getByRole('menuitem',{name:'Split view',exact:true}).click();
- await page.locator('.split-pane-secondary .st-title').waitFor();assert.equal(await page.locator('.ssc-root').count(),2);
- const beforeSplit=(await scrollSnapshot()).lastChunk;await poll(async()=>(await scrollSnapshot()).lastChunk>=beforeSplit+3,'stream with two mounted side panels');await assertContinuous();assert.ok(parseInt(await side.locator('.ssc-status [data-runtime-stat=elapsed]').innerText(),10)>=parseInt(beforeLeavingClock,10),'request clock survives complete view unmount and split mounting');await shot('side-chat-split-stream');
+ await page.locator('.split-pane-secondary :is(.st-title,button[data-pane-title])').waitFor();assert.equal(await page.locator('.ssc-root').count(),2);
+ const beforeSplit=(await scrollSnapshot()).lastChunk;await poll(async()=>(await scrollSnapshot()).lastChunk>=beforeSplit+3,'stream with two mounted side panels');await assertContinuous();assert.ok(parseInt((await side.locator('.ssc-status > [aria-hidden=true]').innerText()).match(/(\d+)s\b/)?.[1]??'',10)>=parseInt(beforeLeavingClock,10),'request clock survives complete view unmount and split mounting');await shot('side-chat-split-stream');
  await app.evaluate(({Menu,BrowserWindow})=>{const view=Menu.getApplicationMenu().items.find(i=>i.label==='View'),split=view.submenu.items.find(i=>i.label==='Split View'),close=split.submenu.items.find(i=>i.label==='Close Split View');close.click(close,BrowserWindow.getAllWindows()[0]);});
  await page.locator('.split-pane-secondary').waitFor({state:'detached'});await page.locator(`[data-source-session-id="${A}"] .source-session-open`).click();await page.locator('.loading-state').waitFor({state:'detached'});if(!await side.isVisible())await showSide();await side.waitFor();
  await assertContinuous();await side.getByRole('button',{name:'Stop response',exact:true}).click();await poll(async()=>!(await questionInput().isDisabled()),'background stream stops');

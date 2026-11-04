@@ -23,4 +23,4 @@ var p = d(l);
 function h(e, t, n) {
   n !== "unmount" && p(e);
 }
-export { c, h, s };
+export { c, d, h, l, s };

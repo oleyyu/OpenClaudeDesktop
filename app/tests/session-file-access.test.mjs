@@ -67,5 +67,7 @@ test('files.cjs: a missing file is creatable only in an existing in-root folder'
   assert.deepEqual(await readFile(work, 'src/a.txt/new.md'), { path: 'src/a.txt/new.md', unavailable: 'missing', creatable: false });
   await fs.symlink(path.join(work, 'gone'), path.join(work, 'src', 'dangling.md'));
   assert.equal((await readFile(work, 'src/dangling.md')).creatable, false, 'a dangling link is never replaced');
-  assert.equal((await readFile(work, '../outside.md')).unavailable, 'outside_root');
+  // W14-code pane-03 (cd2efac6e Hd): a missing path that leaves the folder is missing_outside; main.cjs still looks it up
+  // in the session's added folders before the card says so.
+  assert.equal((await readFile(work, '../outside.md')).unavailable, 'missing_outside');
 });

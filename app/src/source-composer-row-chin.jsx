@@ -29,7 +29,7 @@
 // (the official row folds it into the CDS ModelSelector) and takes the row's DK like the selector it belongs to.
 import React, { useId } from "react";
 // E41: in the chat / composer import graph, so view-tabs comes from the concrete file by semantic name, not the facade.
-import { CdsButton, CdsTooltip, cdsClassNames } from "./generated/view-tabs/shared-frame-6jtSkIit.js";
+import { CdsButton, CdsSpinner, CdsTooltip, cdsClassNames } from "./generated/view-tabs/shared-frame-6jtSkIit.js";
 import { ModeTriggerLabel, rowModelTriggerClass } from "./generated/code-composer/composer-row-chin.mjs";
 import { UsageRing } from "./generated/code-composer/usage-ring.mjs";
 import { composerChinTrailingClass, composerRingSlotClass, composerRowControlClass, composerRowLeadingClass, composerRowTrailingInsetClass } from "./generated/code-composer/composer-tokens.mjs";
@@ -88,7 +88,8 @@ export function ModeTriggerLoadingLabel({ label, name }) {
 export function ComposerModelTrigger({ row = false, name, fastLabel = null, effortLabel = null, effortTop = false, loading = false, loadingLabel, className, ...props }) {
   return <CdsButton variant="ghost" data-cds="ModelSelector" className={cdsClassNames(MODEL_PILL_CLASS, row && rowModelTriggerClass, className)} {...props}>
     {loading
-      ? <span className={MODEL_PILL_LOADING_CLASS}><span className="sc-spinner" aria-hidden="true" /><span className="truncate">{loadingLabel}</span></span>
+      // W14-code css/composer/model-pill-spinner: shared-7's pill `i.loading && h(se, { size: "sm" })`, the CDS Spinner.
+      ? <span className={MODEL_PILL_LOADING_CLASS}><CdsSpinner size="sm" /><span className="truncate">{loadingLabel}</span></span>
       : <span className="truncate">{name}{fastLabel ? <span className={cdsClassNames(MODEL_PILL_FAST_CLASS, "sc-fast-label")}>{" "}{fastLabel}</span> : null}{effortLabel ? <span className={cdsClassNames(effortTop ? MODEL_PILL_TOP_EFFORT_CLASS : MODEL_PILL_FAST_CLASS, "sc-effort-tail")} data-top-tier={effortTop ? "" : undefined}>{" "}{effortLabel}</span> : null}</span>}
   </CdsButton>;
 }

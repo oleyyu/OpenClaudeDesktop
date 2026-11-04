@@ -9,7 +9,8 @@ import React from 'react';
 import { renderToStaticMarkup as renderServerMarkup } from 'react-dom/server';
 import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
-import { sessionPageRows, sessionPageHref } from '../src/sessions-page-model.mjs';
+import { sessionPageHref } from '../src/sessions-page-model.mjs';
+import { sessionPageRows } from './fixtures/session-page-rows.mjs';
 import { ionSource, referenceSnapshot } from '../scripts/official-3.6556.2.mjs';
 
 const root = new URL('..', import.meta.url).pathname;

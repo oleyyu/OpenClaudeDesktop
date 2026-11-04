@@ -31,11 +31,12 @@ const TODOS = [{ step: 'Inspect the parser', status: 'completed' }, { step: 'Fix
 test('document and todos: the Markdown heading renders in the Prose column before the "Tasks" h2', () => {
   const markup = panel({ plan: TODOS, planDocument: DOCUMENT });
   const body = markup.slice(markup.indexOf('</header>'));
-  assert.match(body, /<div class="h-full select-text overflow-y-auto \[contain:strict\] \[scrollbar-gutter:stable_both-edges\] p-lg source-plan" data-plan-document="" data-epitaxy-plan-scroll=""><div class="mx-auto max-w-\[68ch\]">(?:<div class="mb-\[var\(--chat-item-gap\)\] flex items-center gap-1 text-caption text-muted spp-comment-hint"[^>]*>.*?<\/div>)?<div data-cds="Prose" data-prose-font="sans" data-size="sm" class="prose source-plan-document"><div class="source-markdown">/);
+  assert.match(body, /<div class="h-full select-text overflow-y-auto \[contain:strict\] \[scrollbar-gutter:stable_both-edges\] p-lg source-plan" data-plan-document="" data-epitaxy-plan-scroll=""><div class="mx-auto max-w-\[68ch\]">(?:<div class="mb-\[var\(--chat-item-gap\)\] flex items-center gap-1 text-caption text-muted-as-secondary"[^>]*>.*?<\/div>)?<div data-cds="Prose" data-prose-font="sans" data-size="sm" class="prose source-plan-document"><div class="source-markdown">/);
   const heading = body.indexOf('<h1>Plan heading</h1>'), tasks = body.indexOf('>Tasks</h2>');
   assert.ok(heading > 0, 'the document heading renders');
   assert.ok(tasks > heading, 'Tasks follows the document');
-  assert.match(body, /<section class="mt-pad-lg source-plan-tasks"><h2 class="text-caption-medium uppercase tracking-wide text-muted mb-1\.25">Tasks<\/h2>/);
+  // r8pa-03: 3.6556.2 Gv (ca7d7d34d) is text-muted-as-secondary; kb's hint likewise (cccc2cf0a :1611).
+  assert.match(body, /<section class="mt-pad-lg source-plan-tasks"><h2 class="text-caption-medium uppercase tracking-wide text-muted-as-secondary mb-1\.25">Tasks<\/h2>/);
   assert.match(text(body), /Inspect the parser, then fix it\./);
   assert.doesNotMatch(body, /No plan yet/);
 });
@@ -56,14 +57,16 @@ test('"Copy plan": a ghost icon-only Copy button leads the Plan trailing control
   const header = markup.slice(markup.indexOf('<header'), markup.indexOf('</header>'));
   const button = header.match(/<button[^>]*aria-label="Copy plan"[^>]*>/)?.[0];
   assert.ok(button, 'Copy plan in the header');
-  assert.match(button, /class="source-icon-button spc-ghost"/);
+  // W14-code r3 fr3-08: 3.6556.2 cccc2cf0a `u(F,{variant:"ghost",size:"base",iconOnly:!0,icon:E,"aria-label":D,…})`, the CDS Button.
+  assert.match(button, /<button type="button" data-cds="Button" data-cds-icon-only="" data-cds-ghost=""/);
+  assert.doesNotMatch(button, /source-icon-button|spc-ghost/);
   assert.doesNotMatch(button, /title=/);
   assert.ok(header.indexOf('class="spc-controls"') < header.indexOf('aria-label="Copy plan"'), 'inside the trailing cluster');
-  assert.ok(header.indexOf('aria-label="Copy plan"') < header.indexOf('aria-label="Close panel"'));
+  assert.ok(header.indexOf('aria-label="Copy plan"') < header.indexOf('aria-label="Close"')); // W14-code r2 fr2-19: c4db265df "Close" rbrahOGMC3
   assert.doesNotMatch(panel({ plan: TODOS, planDocument: null }), /Copy plan/, 'no document, no Copy plan (Mp returns null)');
   assert.deepEqual(P.PLAN_COPY_LABELS, { copy: 'Copy plan', copied: 'Copied' });
   const src = fs.readFileSync(path.resolve(import.meta.dirname, '../src/source-plan-pane.jsx'), 'utf8');
-  assert.match(src, /<Icon name=\{copied \? "Check" : "Copy"\} size=\{16\} \/>/);
+  assert.match(src, /<CdsButton variant="ghost" size="base" iconOnly icon=\{copied \? "Check" : "Copy"\} aria-label=\{label\}/);
   assert.match(src, /controller\.current\?\.setText\(document \?\? ""\)/);
 });
 
@@ -89,9 +92,10 @@ test('wiring: planDocs gate the Plan row, /plan and the popout sync; the pane ga
 
 // B22 A3 (2.31226.0 cccc2cf0a zh/Lh/Wh/Xh): the comment hint follows plan-mode gating; a saved comment is an
 // accent-underlined mark[data-plan-comment-id] around a role=button span in the plan text; pre is skipped.
-test('plan comments: hint gating, inline marks for saved comments, the Add to prompt footer', () => {
+test('plan comments: hint gating, inline marks for saved comments, no footer (3.6556.2 cccc2cf0a zb)', () => {
   const enabled = panel({ plan: [], planDocument: DOCUMENT, planCommentsEnabled: true });
-  assert.match(enabled, /<span aria-hidden="true" data-cds="Icon"[^>]*>[^<]*<\/span><span>Select any text to leave a comment for DeepSeek<\/span>/);
+  // r8pa-03: kb's glyph is the CDS Icon ChatSimple size xs (3.6556.2 cccc2cf0a :1612): 0.75rem.
+  assert.match(enabled, /<span data-cds="Icon" style="font-size:calc\(0\.75rem \* var\(--cds-rem-scale, 1\)\)[^"]*" aria-hidden="true">[^<]*<\/span>Select any text to leave a comment for DeepSeek<\/div>/); // gen-final-8: kb children [icon, message], no span
   assert.match(enabled, /data-comments-enabled=""/);
   const disabled = panel({ plan: [], planDocument: DOCUMENT });
   assert.match(disabled, /You can comment on the plan in plan mode, or when DeepSeek asks you to approve it\./);
@@ -102,7 +106,7 @@ test('plan comments: hint gating, inline marks for saved comments, the Add to pr
     const markup = panel({ plan: [], planDocument: doc, planCommentsEnabled: true });
     assert.match(markup, /<mark data-plan-comment-id="[^"]+" class="rounded-\[2px\] text-inherit underline decoration-\[var\(--cds-fill-accent\)\] decoration-2 underline-offset-2 bg-\[hsl\(from_var\(--cds-fill-accent\)_h_s_l\/10%\)\] px-0"><span role="button" tabindex="0" class="text-inherit rounded-\[2px\] focus-visible:outline-hidden hide-focus-ring focus-visible:shadow-focus">the parser<\/span><\/mark>/);
     assert.match(markup, /<div data-plan-comment-skip="">/, 'code blocks sit in a skip wrapper');
-    assert.match(markup, /data-plan-comments-footer=""[^>]*>.*Add to prompt/);
+    assert.doesNotMatch(markup, /data-plan-comments-footer|Add to prompt|Sent with Revise/, 'zb has no comments footer');
     assert.doesNotMatch(markup, /spp-comments"|data-plan-comment=""/, 'no comment card list');
   } finally { I.planCommentsStore.clear('s'); }
 });

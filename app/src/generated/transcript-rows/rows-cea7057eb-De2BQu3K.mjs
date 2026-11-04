@@ -20,4 +20,4 @@ function Ce(e) {
 function Q() {
   return n(L);
 }
-export { Ce, Q, he };
+export { L as BackgroundTaskStatusContext, Ce, Q, he };

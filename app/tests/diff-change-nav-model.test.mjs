@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { diffChangeCommand, diffChangeHeaderOffset, diffChangeShortcuts, diffChangeTargets, pickDiffChange, pierreDiffHunks, sameDiffChange } from '../src/diff-change-nav-model.mjs';
+import { diffChangeCommand, diffChangeHeaderOffset, diffChangeShortcuts, diffChangeTargets, pickDiffChange, pierreDiffHunks } from '../src/diff-change-nav-model.mjs';
 import { adjacentChange, changeAnchors } from '../src/generated/files-changes/diff-change-nav.mjs';
 import fs from 'node:fs';
 import { parseUnifiedDiff } from '../src/diff-model.js';
@@ -55,7 +55,7 @@ test('ei: steps from the last change while visible, else from the topmost visibl
   assert.equal(pickDiffChange(targets, order, { viewport: { id: 'b.txt', side: 'additions', lineNumber: 0 } }, 1), targets[3]);
   assert.equal(pickDiffChange(targets, order, { viewport: { id: 'b.txt', side: 'additions', lineNumber: 0 } }, -1), targets[2]);
   assert.equal(pickDiffChange([], order, {}, 1), null);
-  assert.equal(sameDiffChange(targets[0], { ...targets[0] }), true);
+  // W14-code r4 gen-final-4: sameDiffChange (test-only wrapper of the generated mi) is deleted.
 });
 
 test('m6 bindings: F7 / ⇧F7 everywhere, ⌥F5 / ⇧⌥F5 off Linux; other modifiers and IME input never match', () => {
@@ -94,7 +94,6 @@ test('pi over the host hunks: change runs between context runs, an empty side st
   const model = fs.readFileSync(new URL('../src/diff-change-nav-model.mjs', import.meta.url), 'utf8');
   assert.match(model, /return adjacentChange\(targets, order, \{ last, viewport \}, direction\);/);
   assert.equal(pickDiffChange(targets, order, { last: targets[0] }, 1), adjacentChange(targets, order, { last: targets[0], viewport: null }, 1));
-  assert.equal(sameDiffChange(null, targets[0]), false);
 });
 
 test('hi belowPane: an anchor line below the pane keeps the change that starts at it ahead', () => {

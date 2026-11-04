@@ -25,4 +25,9 @@ function kG(e) {
   return DG(e).replace(TG(), "");
 }
 
-export { UH as useStableArray, DG as stripInvisible, kG as displayPath };
+export {
+  UH as useStableArray,
+  DG as stripInvisible,
+  kG as displayPath,
+  BH as arraysShallowEqual,
+};

@@ -29,8 +29,6 @@ export function treeEntryOpenable(entry) {
 // geometry starting at the centre of the root's xs (12px) icon. The icon size is E(): "sm" only when the
 // fizzy-lake "panels" part is on (shared-4 jf), which this build never enables (Ef=Cf=[]), so it stays "xs".
 // fileTreeRowStyle is V (= L + B), the style the original error row Ll(depth) and kept rows use.
-export const FILE_TREE_PAD = 8;
-export const FILE_TREE_INDENT = 10;
 export { fileTreeGuideStyle, treeIndent, fileTreeRowStyle } from './generated/code-current/file-tree-style.mjs';
 
 // ---- R3-files FT-14 (files-08 / files-v03): the tree's official classes. ----
@@ -135,4 +133,20 @@ export function fileTreeNuxDismissed(storage = globalThis.localStorage) {
 }
 export function dismissFileTreeNux(outcome = "closed", storage = globalThis.localStorage) {
   try { storage?.setItem(NUX_STORAGE_KEY, String(outcome)); } catch { /* optional preference */ }
+}
+
+// W14-code r4 r4pa-02: c73f45bc3 Td / Ed / Od (the epitaxy_diff_file_list_nux NUX item) under the Changes ListBullet,
+// cccc2cf0a AC `M = w && y && !m && p.fileCount >= 2 && !s`: w = Ky() (c8190f70d, !gate 3789421990 — not in Uon, so
+// true), y = the list can fit and the body is not empty, m = the list is hidden, s = a pop-out window. Every way of
+// toggling the list but the coachmark's own action retires it (c73f45bc3 kd: `t !== "coachmark" && Dd()`).
+export const DIFF_FILE_LIST_NUX_ID = "epitaxy_diff_file_list_nux";
+const DIFF_NUX_STORAGE_KEY = `code-desktop-nux:${DIFF_FILE_LIST_NUX_ID}`;
+export function diffFileListCoachmarkEligible({ canFit, bodyEmpty, listShown, fileCount, popout = false }) {
+  return !!canFit && bodyEmpty === false && !listShown && fileCount >= 2 && !popout;
+}
+export function diffFileListNuxDismissed(storage = globalThis.localStorage) {
+  try { return storage?.getItem(DIFF_NUX_STORAGE_KEY) != null; } catch { return false; }
+}
+export function dismissDiffFileListNux(outcome = "closed", storage = globalThis.localStorage) {
+  try { storage?.setItem(DIFF_NUX_STORAGE_KEY, String(outcome)); } catch { /* optional preference */ }
 }

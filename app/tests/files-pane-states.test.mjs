@@ -45,9 +45,10 @@ test('root tree states: Yg spinner with no visible text, fixed error copy, "Fold
 test('root read error with onRetry is Oy: the error copy, then a sm "Try again" (Jm) and an empty sr-only status', () => {
   const markup = html(P.SourceFilesTreeState, { state: 'error', onRetry: async () => false });
   assert.ok(markup.startsWith(`<div class="flex flex-col items-center gap-sm source-files-tree-retry"><div class="${JG}" data-tree-state="error">Couldn’t read this folder.</div>`));
-  assert.match(markup, /<button[^>]*data-cds="Button" data-variant="secondary"[^>]*data-size="sm"[^>]*>.*Try again.*<\/button>/);
+  // W14-code r6 r6pa-04: shared-frame CdsButton (secondary: no data-variant, bg-fill-secondary paint), not the replica.
+  assert.match(markup, /<button type="button" data-cds="Button" data-size="sm" class="[^"]*">(?:(?!<\/button>).)*bg-fill-secondary .*Try again.*<\/button>/);
   assert.match(markup, /<span role="status" class="sr-only"><\/span><\/div>$/);
-  assert.doesNotMatch(markup, /aria-busy/);
+  assert.doesNotMatch(markup, / aria-busy="/);
   assert.equal(P.FILES_TREE_RETRY_BUSY, 'Listing this folder');
   // No retry handler (subfolder rows, older callers): the bare Jg row as before.
   assert.equal(html(P.SourceFilesTreeState, { state: 'empty', onRetry: () => {} }), `<div class="${JG}" data-tree-state="empty">Folder is empty</div>`);
@@ -85,13 +86,19 @@ test('pane titles are span.source-pane-title (regular weight, text-secondary, no
 test('ListBullet: CDS tooltip with ⌘⇧Y, aria-keyshortcuts, no native title; tree labelled "Project files"', () => {
   const markup = panel({ treeToggleRef: { current: null }, view: { treeHiddenWhileEmpty: false }, onViewChange: () => {} });
   const button = markup.match(/<button[^>]*aria-label="(?:Show|Hide) file tree"[^>]*>/)[0];
-  assert.match(button, /aria-keyshortcuts="Meta\+Shift\+Y"/);
+  // W14-code r4 css4-pane-toggle-icon-buttons: cccc2cf0a kD — the CDS ghost iconOnly Button (className
+  // R("shrink-0", Mb("rounded text-secondary"))) with shortcut + pressed + pressedVariant "selected", under the CDS
+  // Tooltip (side top, align start); the Button's shortcut is its aria-keyshortcuts (platform modifier).
+  assert.match(button, /data-cds="Button" data-cds-icon-only="" data-cds-ghost=""/);
+  assert.match(button, / shrink-0 rounded text-secondary"/);
+  assert.match(button, /aria-keyshortcuts="(?:Meta|Control)\+Shift\+y"/i);
   assert.match(button, /aria-pressed="true"/);
-  assert.doesNotMatch(button, /title=/);
+  assert.doesNotMatch(button, /title=|source-icon-button/);
   // Without main.jsx's handle (popout, artifacts) there is no shortcut to announce.
   assert.doesNotMatch(panel({}).match(/<button[^>]*aria-label="(?:Show|Hide) file tree"[^>]*>/)[0], /aria-keyshortcuts|title=/);
   const src = fs.readFileSync(path.resolve(import.meta.dirname, '../src/source-session.jsx'), 'utf8');
-  assert.match(src, /<SourceTooltip content=\{treeVisible \? t\("Hide file tree"\) : t\("Show file tree"\)\} shortcut=\{treeToggleRef \? TREE_TOGGLE_SHORTCUT : undefined\}\s*side="top" align="start" hoverable=\{false\}>/);
+  assert.match(src, /<PaneListToggle label=\{treeVisible \? t\("Hide file tree"\) : t\("Show file tree"\)\} shortcut=\{treeToggleRef \? TREE_TOGGLE_SHORTCUT : undefined\}\s*pressed=\{treeVisible\} className="shrink-0 rounded text-secondary"/);
+  assert.match(src, /<CdsTooltip content=\{label\} shortcut=\{shortcut\} side="top" align="start">\s*<CdsButton ref=\{buttonRef\} variant="ghost" iconOnly icon="ListBullet" className=\{className\} aria-label=\{label\} shortcut=\{shortcut\}\s*pressed=\{pressed\} pressedVariant="selected"/);
   assert.match(src, /const TREE_TOGGLE_SHORTCUT = "cmd\+shift\+y";/);
   assert.match(src, /shortcut: treeToggleRef \? TREE_TOGGLE_SHORTCUT : undefined, onSelect: \(\) => setVisibleTree\(!treeVisible\)/);
   assert.match(src, /aria-label=\{t\("Project files"\)\}/);
@@ -173,10 +180,10 @@ test('Go to file or search: ghost icon-only button first in the trailing control
   assert.ok(at('Go to file or search') > 0);
   assert.ok(at('Go to file or search') < at('Files settings'), 'before the settings menu');
   assert.ok(at('Files settings') < at('Expand'), 'settings before Expand');
-  assert.ok(at('Expand') < at('Close panel'), 'Expand before Close');
+  assert.ok(at('Expand') < at('Close'), 'Expand before Close'); // W14-code r2 fr2-19: c4db265df "Close" rbrahOGMC3
   assert.ok(header.indexOf('class="spc-controls"') < at('Go to file or search'), 'inside the trailing cluster');
   const button = header.match(/<button[^>]*aria-label="Go to file or search"[^>]*>/)[0];
-  assert.match(button, /class="source-icon-button spc-ghost"/);
+  assert.match(button, /data-cds="Button" data-cds-icon-only="" data-cds-ghost=""/); // W14-code r2 fr2-19: CDS ghost iconOnly Button
   assert.doesNotMatch(button, /title=/);
   assert.equal(header.split('aria-label="Go to file or search"').length, 2);
   const none = panel({ cwd: '' });
@@ -184,7 +191,9 @@ test('Go to file or search: ghost icon-only button first in the trailing control
   assert.doesNotMatch(panel({ tab: 'changes' }), /Go to file or search/);
   // Without a paneControls render function the button still leads the fallback Close.
   const bare = panel({ paneControls: null });
-  assert.ok(bare.indexOf('aria-label="Go to file or search"') < bare.indexOf('aria-label="Close panel"'));
+  // source-session.jsx's own fallback close: W14-code r4, the CDS ghost iconOnly "Close" (c4db265df rbrahOGMC3).
+  assert.ok(bare.indexOf('aria-label="Go to file or search"') < bare.indexOf('aria-label="Close"'));
+  assert.match(bare.match(/<button[^>]*aria-label="Close"[^>]*>/)[0], /data-cds="Button" data-cds-icon-only="" data-cds-ghost=""/);
   const src = fs.readFileSync(path.resolve(import.meta.dirname, '../src/source-pane-controls.jsx'), 'utf8');
   assert.match(button, /aria-keyshortcuts="Meta\+P"/);
   const main = fs.readFileSync(path.resolve(import.meta.dirname, '../src/main.jsx'), 'utf8');
@@ -200,15 +209,16 @@ test('Go to file or search focuses and selects Filter files after temporary tree
   assert.match(fn, /`\.source-files-tree input\[aria-label="\$\{t\("Filter files"\)\}"\]`/);
 });
 
-// R09: a pressed CDS Button paints bg-accent + text-accent, hovered or not (shared-frame-C_2npUJq.js:2697 cs,
-// :2723-2724); the ListBullet (aria-pressed while the tree shows) is a .source-icon-button.
-test('pressed paint: .source-icon-button[aria-pressed="true"] is text-accent on bg-accent, also while hovered', () => {
-  const css = fs.readFileSync(path.resolve(import.meta.dirname, '../src/source-session.css'), 'utf8');
-  const at = css.indexOf('.source-icon-button[aria-pressed="true"],');
-  assert.ok(at > 0, 'the pressed rule exists');
-  const rule = css.slice(at, css.indexOf('}', at) + 1);
-  assert.match(rule, /^\.source-icon-button\[aria-pressed="true"\],\n\.source-icon-button\[aria-pressed="true"\]:not\(:disabled\),\n\.source-icon-button\[aria-pressed="true"\]:hover:not\(:disabled\) \{\n  color: var\(--cds-text-accent\);\n  background: var\(--cds-bg-accent\);\n\}$/);
-  assert.ok(at > css.indexOf('.source-icon-button:hover:not(:disabled)'), 'after the ghost hover rule');
+// R09 → W14-code r4 css4-pane-toggle-icon-buttons: the ListBullet is the CDS ghost iconOnly Button itself, so its pressed
+// paint is the Button's own (shared-frame Uu: "aria-pressed:text-accent", paint "group-aria-pressed/btn:bg-accent
+// group-hover/btn:group-aria-pressed/btn:bg-accent"); the host .source-icon-button rules are gone.
+test('pressed paint: the pressed CDS ListBullet carries the Button\'s own accent paint; no .source-icon-button rules', () => {
+  const css = fs.readFileSync(path.resolve(import.meta.dirname, '../src/source-session.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+  assert.doesNotMatch(css, /\.source-icon-button/);
   const markup = panel({ view: { treeHiddenWhileEmpty: false }, onViewChange: () => {} });
-  assert.match(markup.match(/<button[^>]*aria-label="Hide file tree"[^>]*>/)[0], /class="source-icon-button"[^>]*aria-pressed="true"/);
+  const at = markup.indexOf('aria-label="Hide file tree"');
+  const button = markup.slice(markup.lastIndexOf('<button', at), markup.indexOf('</button>', at));
+  assert.match(button, /aria-pressed="true"/);
+  assert.match(button, /aria-pressed:text-accent/);
+  assert.match(button, /group-aria-pressed\/btn:bg-accent group-hover\/btn:group-aria-pressed\/btn:bg-accent/);
 });

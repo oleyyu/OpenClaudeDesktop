@@ -33,6 +33,9 @@ function P_({ repoChip: e, middleEllipsis: t }) {
       : "@max-[3.25em]/branch-chip:hidden"
     : "";
 }
+function R_(e) {
+  return `${D_(e)} shrink-0`;
+}
 export {
   D_ as branchRowClass,
   O_ as BRANCH_ROW_LEADING_CLASS,
@@ -41,4 +44,6 @@ export {
   P_ as branchChipNameClass,
   j_ as BRANCH_ROW_GAP_CLASS,
   M_ as PR_NUMBER_CLASS,
+  R_ as heldBranchRowClass,
+  C_ as bandAccentClassName,
 };

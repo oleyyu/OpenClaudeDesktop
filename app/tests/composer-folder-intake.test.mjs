@@ -7,7 +7,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { createServer } from "vite";
 import react from "@vitejs/plugin-react";
 import {
-  splitClipboardFolders, isOutsideFolder, planFolderIntake, planFolderPaste, folderGrantError, stageFiles, IMAGE_TYPE_ERROR,
+  isOutsideFolder, planFolderIntake, planFolderPaste, folderGrantError, stageFiles, IMAGE_TYPE_ERROR,
 } from "../src/composer-attachments-model.mjs";
 import { setLocale } from "../electron/i18n/index.mjs";
 
@@ -15,16 +15,8 @@ import { setLocale } from "../electron/i18n/index.mjs";
 const file = (name, type = "") => ({ name, type });
 const item = (value, isDirectory = false) => ({ kind: "file", getAsFile: () => value, webkitGetAsEntry: () => ({ isDirectory }) });
 
-test("kk: clipboard items split into folders and files; strings and empty items are skipped", () => {
-  const folder = file("src"), doc = file("notes.pdf", "application/pdf"), shot = file("a.png", "image/png");
-  const items = [item(folder, true), item(doc), { kind: "string", getAsFile: () => null }, item(shot), { kind: "file", getAsFile: () => null }];
-  assert.deepEqual(splitClipboardFolders(items, [folder, doc, shot]), { folders: [folder], files: [doc, shot] });
-  // An item without webkitGetAsEntry is a file.
-  assert.deepEqual(splitClipboardFolders([{ kind: "file", getAsFile: () => doc }], [doc]), { folders: [], files: [doc] });
-  // No item list: every File is a file.
-  assert.deepEqual(splitClipboardFolders(undefined, [doc, shot]), { folders: [], files: [doc, shot] });
-  assert.deepEqual(splitClipboardFolders(null, null), { folders: [], files: [] });
-});
+// W14-code r4 gen-final-4: the host splitClipboardFolders (test-only) is deleted; the composer uses the generated
+// shared-50 kk (src/generated/code-composer/composer-intake-split.mjs).
 
 test("cB: outside unless the folder is the working folder or below it", () => {
   assert.equal(isOutsideFolder("/w/app", "/w/app"), false);

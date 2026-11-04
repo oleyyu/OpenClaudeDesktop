@@ -160,7 +160,7 @@ function githubIssues() {
   return githubIssuesInstance;
 }
 const { recordActivity, readableLedger, ledgerStats, statsShape, statsCoreKey, keptCodeStats } = require("./activity.cjs");
-const { workspaceGitStatus, workspaceGitDiff, workspaceGitComparison, workspaceGitCommits, workspaceGitBranches, workspaceGitImage, workspaceGitFilePatch } = require("./git-status.cjs");
+const { workspaceGitStatus, workspaceGitDiff, workspaceGitComparison, workspaceGitCommits, workspaceGitBranches, workspaceGitImage, workspaceGitFilePatch, workspaceGitFileText } = require("./git-status.cjs");
 const { porcelainEntries, wouldBranchSwitchConflict } = require("./branch-switch.cjs");
 app.setName("OpenClaude Desktop");
 if (process.env.CODE_DESKTOP_DATA)
@@ -396,8 +396,9 @@ const agentToolApproval = createAgentToolApproval({ dialog, t: (source, values) 
 // Settings › Code › Preview: "Let DeepSeek use the preview" (unset reads as on).
 // Code › Dynamic workflows: the Workflow tool only while workflows are on and the running core uses OpenClaude Desktop's engine.
 // R4g-mcp MA-2: the built-in visualize tools (agent-tools/visualize.mjs, official GrowthBook 3444158716) are on by D35 (unset reads as on).
-// computer-use: Settings › System › Computer use (config.agentComputerUse; unset reads as on).
-const agentToolGroupEnabled = (group) => group === "past-chats" ? config?.chatMemory?.referenceChats !== false : group === "computer-use" ?config?.agentComputerUse !== false : group === "workflow" ? (() => { try { return workflowSettings().enabled && currentWorkflowEngine() === "codeDesktop"; } catch { return false; } })() : group === "visualize" ? config?.agentVisualize !== false : group !== "preview" || config?.agentPreview !== false;
+// computer-use: Settings › System › Computer use (config.agentComputerUse; W14-code r4 shell r4-shared-11, E95: unset reads
+// as off, as c71860c77 Zt `v = g && (t.chicagoEnabled ?? !1)`; a saved true / false is kept).
+const agentToolGroupEnabled = (group) => group === "past-chats" ? config?.chatMemory?.referenceChats !== false : group === "computer-use" ?config?.agentComputerUse === true : group === "workflow" ? (() => { try { return workflowSettings().enabled && currentWorkflowEngine() === "codeDesktop"; } catch { return false; } })() : group === "visualize" ? config?.agentVisualize !== false : group !== "preview" || config?.agentPreview !== false;
 // R4g-mcp MA-4: the MCP App bridge (desktop:call mcp-app:*): the built-in visualize server directly, the core's servers
 // through Codex's mcpServerStatus/list and mcpServer/resource/read (or a core reporting "mcpApps"); other cores: core_unsupported.
 const mcpAppsHost = require("./mcp-apps-host.cjs").createMcpAppsHost({ client: () => client, session: agentToolSession,
@@ -478,6 +479,8 @@ const computerUseClickThrough = require("./computer-use/click-through.cjs").crea
   restorer: (window) => (computerUseTeachOverlay?.owns(window) ? () => computerUseTeachOverlay?.afterAction() : undefined),
 });
 const computerUse = require("./computer-use/service.cjs").createComputerUse({ native: computerUseNative, selfBundleIds: computerUseSelfBundleIds,
+  // Settings › Computer use › Denied apps (W14-code r2-shared-11; official chicagoUserDeniedBundleIds), read live.
+  deniedBundleIds: () => (Array.isArray(config?.computerUseDeniedBundleIds) ? config.computerUseDeniedBundleIds : []),
   axHelper: computerUseAxHelper, image: computerUseImage, fullControl: computerUseFullControl, clickThrough: computerUseClickThrough,
   // read_clipboard / write_clipboard and type's paste use Electron's clipboard, text only (official rPr).
   clipboard: { readText: () => clipboard.readText(), writeText: (text) => clipboard.writeText(text) },
@@ -677,7 +680,7 @@ function computerUseSyncGlow(sessions = computerUseInUse.sessions()) {
 // Claude Code does). The session's Mode is the one its last turn ran with (workflow-tool-service.cjs sessionAccess).
 // A Monitor command, a scheduled prompt and a web page WebFetch reads ask the same way (agent-tools/monitor.mjs,
 // schedule.mjs, web.mjs).
-const BYPASS_KINDS = new Set(["terminal-command", "preview-site", "chrome-site", "preview-server", "monitor", "schedule", "web-fetch", "notebook-edit", "open-path"]);
+const BYPASS_KINDS = new Set(["terminal-command", "preview-site", "chrome-site", "chrome-script", "preview-server", "monitor", "schedule", "web-fetch", "notebook-edit", "open-path"]);
 async function agentToolAsk(session, request, options = {}) {
   // w13-coworkfn-approvals (cwf-32, O-39 V7t): a tool that always asks (approval-policy.mjs managedAsk) asks in Bypass too.
   if (BYPASS_KINDS.has(request?.kind) && typeof session?.id === "string" && !require("./cowork-runtime/approval-policy.mjs").managedAsk(request)) {
@@ -697,12 +700,14 @@ const cardText = (value, max = 4000) => typeof value === "string" ? (value.lengt
 async function agentToolCard(session, request = {}, { signal, call } = {}) {
   const owner = client;
   if (!owner || typeof owner.localApproval !== "function" || typeof session?.id !== "string" || !config?.threadIds?.includes(session.id)) return undefined;
-  const kind = ["terminal-command", "preview-site", "chrome-site", "preview-server", "workflow", "monitor", "schedule", "web-fetch", "notebook-edit", "open-path"].includes(request.kind) ? request.kind : "other";
+  const kind = ["terminal-command", "preview-site", "chrome-site", "chrome-script", "preview-server", "workflow", "monitor", "schedule", "web-fetch", "notebook-edit", "open-path"].includes(request.kind) ? request.kind : "other";
   const { shellLine, launchEnvSummary } = require("./agent-tool-approval.cjs");
   const command = kind === "terminal-command" || kind === "monitor" ? cardText(String(request.command ?? "")) : kind === "preview-server" ? cardText(shellLine(request.command, request.args)) : undefined;
   const tool = { kind };
   if (kind === "terminal-command") Object.assign(tool, { title: cardText(request.title, 200), tabTitle: cardText(request.tabTitle ?? request.tab, 200), detail: cardText(request.detail) });
   if (kind === "preview-site" || kind === "chrome-site") Object.assign(tool, { host: cardText(request.host, 300), url: cardText(request.url, 2000) });
+  // A write script for a Chrome page (agent-tools/browser.mjs chrome_javascript_tool write: true): the site and the code.
+  if (kind === "chrome-script") Object.assign(tool, { host: cardText(request.host, 300), url: cardText(request.url, 2000), code: cardText(request.code, 20000) });
   // The configuration's env is part of what is approved (preview-service fingerprints it): the card shows it, and names
   // the variables that change which program runs (PATH, NODE_OPTIONS, DYLD_*, …).
   // R3-toolcards TT-09: the launch.json port and whether it may be reassigned (c96d752d0 Kk preview_start: "Runs in {cwd} on port {port}").
@@ -732,17 +737,27 @@ async function agentToolCard(session, request = {}, { signal, call } = {}) {
     // turnId: the session's running turn, so the turn's end expires the card (approval-transport.cjs expireTurn).
     threadId: session.id, turnId: liveWork.turnOf(session.id) ?? "", itemId: typeof call?.itemId === "string" ? call.itemId : `code-desktop-tool-${require("node:crypto").randomUUID()}`, startedAtMs: Date.now(),
     ...(command ? { command } : {}), ...(typeof (request.cwd ?? session.cwd) === "string" ? { cwd: request.cwd ?? session.cwd } : {}),
-    sessionGrantable: (kind === "workflow" && tool.always) || kind === "web-fetch" || !!coworkCard.task, codeDesktop: { agentTool: tool, ...(coworkCard.declineFeedback ? { declineFeedback: true } : {}) },
+    sessionGrantable: (kind === "workflow" && tool.always) || kind === "chrome-script" || kind === "web-fetch" || !!coworkCard.task, codeDesktop: { agentTool: tool, ...(coworkCard.declineFeedback ? { declineFeedback: true } : {}) },
   };
   // w13-coworkfn-approvals: a Cowork WebFetch card the same request asks again is dismissed (coworkCard.signal, Dl8 Superseded).
   const result = await owner.localApproval("item/commandExecution/requestApproval", params, { signal: coworkCard.signal(signal), outlivesTurn: agentToolCallOutlivesTurn(call, owner) });
   if (result === undefined) return undefined;
+  // A Chrome site or script card that ended without an answer (the core disconnected, the turn ended) isn't a refusal:
+  // null, so chrome-bridge-service.cjs doesn't keep the site declined for the session, and a script's call (agent-tools/
+  // browser.mjs) doesn't tell the model the user declined it.
+  if (result === null && (kind === "chrome-site" || kind === "chrome-script")) return null;
   const decision = result?.decision;
   const approved = !signal?.aborted && (decision === "accept" || decision === "acceptForSession");
   if (coworkCard.cowork) await coworkCard.settle({ result, approved, grantFolders: (id, dirs, options) => localRoutines.grantFolders(id, dirs, options) });
   if (kind === "workflow") return { approved, always: approved && decision === "acceptForSession" && tool.always };
   // WebFetch: "Allow for this session" lets the site's pages be read again without asking (agent-tools/web.mjs).
   if (kind === "web-fetch") return { approved, always: approved && decision === "acceptForSession" };
+  // A Chrome page script: "Allow for this session" lets later write scripts run on that site without asking.
+  if (kind === "chrome-script") return { approved, always: approved && decision === "acceptForSession" };
+  // W14-code r4 r4pa-c11: an outside site in the preview is 3.6556.2's browser:open_site ({allowed, always}): "accept" is
+  // Allow once (this tab, until it leaves the site), "acceptForSession" Always allow (saved to the allowed sites,
+  // preview-service.cjs grantSite).
+  if (kind === "preview-site") return { approved, always: approved && decision === "acceptForSession" };
   return approved;
 }
 /**
@@ -992,11 +1007,13 @@ agentTools.provide("layout", (session) => ({ run: (command) => runAgentLayoutCom
 // Computer use (agent-tools/computer-use.mjs): the session's grants and windows live in `computerUse` above;
 // The Claude in Chrome equivalent (agent-tools/browser.mjs): the OpenClaude Desktop Bridge extension in the user's
 // Chrome, reached through its native host (electron/browser/). One connection for every session; each session allows
-// sites one at a time on its approval card (the "chrome-site" kind; Bypass permissions allows them without asking).
+// sites one at a time on its approval card (the "chrome-site" kind; Bypass permissions allows them without asking), and
+// each chrome_javascript_tool write: true on the "chrome-script" kind.
 const chromeBridge = require("./browser/chrome-bridge-service.cjs").createChromeBridgeService();
 agentTools.provide("chromeBridge", (session, ctx) => ({
-  call: (name, args) => chromeBridge.call(session.id, name, args, {
-    signal: ctx?.signal ?? null,
+  // options.writeHosts: the sites a write script was approved on (the "chrome-script" card, asked by browser.mjs).
+  call: (name, args, options = {}) => chromeBridge.call(session.id, name, args, {
+    signal: ctx?.signal ?? null, writeHosts: Array.isArray(options?.writeHosts) ? options.writeHosts : null,
     approve: ({ host, url }) => agentToolAsk(session, { kind: "chrome-site", host, url }, { signal: ctx?.signal, call: ctx?.call }),
   }),
 }));
@@ -1302,15 +1319,9 @@ const allowed = new Set([
   // sent with the turn/start permission params; bypass is validated like turn/start below.
   "codeDesktop/thread/permissions",
   // DeepSeek bridge extension (capabilities.modelWorkflows): stop a run of the model's `workflow` tool.
+  // (W14-code r5 cleanup R5DC-03, E95: member / pause / resume / artifact / settings left with the host run card's
+  // controls; the official Tasks card (cccc2cf0a wN → ds detailed) has Stop only.)
   "codeDesktop/workflow/stop",
-  "codeDesktop/workflow/member",
-  // A model run's pause (Qwen's workflow-action) and a settled run's resume (ZCode's resumeWorkflowRun).
-  "codeDesktop/workflow/pause",
-  "codeDesktop/workflow/resume",
-  // A run's published deliverable, read from the core's store (ZCode's artifact.*: capabilities.workflowArtifacts).
-  "codeDesktop/workflow/artifact",
-  // A running run's sub-agent model and agent limit (ZCode's run card Configure: capabilities.workflowRunSettings).
-  "codeDesktop/workflow/settings",
   // DeepSeek bridge extension: the /btw side chat (side-question.js), read-only, plus its cancel.
   "codeDesktop/sideQuestion",
   "codeDesktop/sideQuestion/cancel",
@@ -1503,6 +1514,14 @@ function menuEmit(e, target) {
   if (e?.kind === "zoom") return applyZoom(e);
   if (e?.kind === "show-main-window") return showMainWindow();
   if (e?.kind === "show-logs") return void showLogs().catch(() => {});
+  // W14-code r2-shared-07: View › Reload (jPKPzV-P lTi click dTi): the focused preview page (Bhi), else the window the
+  // menu acted on (X3n), as the reload role did.
+  if (e?.kind === "reload") {
+    if (previewService?.reloadFocused()) return;
+    const window = target && !target.isDestroyed() ? target : BrowserWindow.getFocusedWindow();
+    if (liveContents(window)) window.webContents.reload();
+    return;
+  }
   if (e?.kind === "toggle-full-screen") {
     const window = target && !target.isDestroyed() ? target : BrowserWindow.getFocusedWindow();
     if (window && window.isFullScreenable()) window.setFullScreen(!window.isFullScreen());
@@ -1526,8 +1545,11 @@ function menuEmit(e, target) {
   if (window) windowRegistry.send(window, e);
 }
 // Pane windows keep their own traffic-light origin, scaled like the main one
-// (index.chunk-ChZ67Jhw.js sun/cun: run(base, zoomFactor) per window).
-const POPOUT_TRAFFIC_LIGHTS = Object.freeze({ x: 14, y: 12 });
+// (index.chunk-ChZ67Jhw.js sun/cun: run(base, zoomFactor) per window). W14-code r4 r4pa-c03 (E90 / E95, GUI check):
+// 3.6556.2 cd377abb5 `Nr = 12, Pr = {x: 14, y: 8 + Math.round((32 - Nr) / 2)}; function Fr(e) {return {x: Pr.x, y:
+// Math.round(e - Nr / 2)}}` with the pane window's header centre (c5638815a / cd377abb5 `C(xe("panels") ? Ie : 16)`):
+// the lights sit in the 32px header row at the window's top, y = 16 - 6 = 10 (was 12, centred in the old 36px band).
+const POPOUT_TRAFFIC_LIGHTS = Object.freeze({ x: 14, y: 10 });
 const liveContents = (window) => window && !window.isDestroyed() && !window.webContents.isDestroyed();
 const mainZoomLevel = () => liveContents(win) ? win.webContents.getZoomLevel() : 0;
 const zoomFactorOf = (window) => clampZoomFactor(liveContents(window) ? window.webContents.getZoomFactor() : 1);
@@ -2564,7 +2586,6 @@ app.whenReady().then(async () => {
     pinnedOrder: [],
     // Fidelity F08: persisted Folder/Custom section order (sidebar-groups.js:19700-19728).
     projectOrder: [],
-    rememberedActionCenterCounts: { sessions: 0, projects: 0, prs: 0 },
     worktreeBases: {},
     // Per-session turned-off tools (prefs/tool-profiles.mjs), keyed by thread id.
     threadTools: {},
@@ -2827,7 +2848,8 @@ app.whenReady().then(async () => {
     const project = applyProjectContext(config, p.method, params, surface);
     await (await import('./chat-context.mjs')).applyChatContext(config, p.method, params, surface, { dataDir: app.getPath('userData'), project }); // w13-chatfn-context: chat-context/*.mjs contributors
     if (p.method !== 'thread/start' && ![...config.threadIds, ...config.archivedThreadIds].includes(params.threadId)) throw new Error('Unknown Cowork session.');
-    if (['thread/archive', 'thread/delete'].includes(p.method)) sessionOperations.assertAvailable(params.threadId);
+    // W14-code r4 fr4-01: a running Cowork session stops before it is archived or deleted too (requestRpc's comment).
+    if (['thread/archive', 'thread/delete'].includes(p.method)) await sessionOperations.stopForRemoval(params.threadId, { interrupt: (threadId, turnId) => coworkSessions.request('turn/interrupt', { threadId, turnId }) });
     const release = p.method === 'turn/start' ? sessionOperations.reserveMessage(params.threadId) : null;
     let result;
     try { result = await coworkSessions.request(p.method, params); } finally { release?.(); }
@@ -2930,6 +2952,29 @@ app.whenReady().then(async () => {
     deleteSession: (id) => requestRpc({ method: "thread/delete", params: { threadId: id } }, undefined, client),
     onProgress: (done, total) => emit({ kind: "code-cleanup-progress", done, total }),
   });
+  // W14-code r5-shared-01 / r5-shared-02 (core-restart.cjs): a plugin change or a profile connector the running core loads
+  // only when it starts makes the next new session restart the core first, when nothing runs on it — official "Start a new
+  // session to use it." (NHsmCWvJf8) with no restart control. The restart is the Reconnect path (case "reconnect").
+  const coreRestart = require("./core-restart.cjs").createCoreRestart({ getClient: () => client,
+    idle: async (owner) => !liveWork.sessions().size && !computerUseActiveTurns.size && !activeGoals.size && !sessionOperations.snapshot().length
+      && !(await require("./quit-guard.cjs").backgroundSessions({ client: owner, ids: liveWork.touchedSessions() })).length,
+    restart: async (owner) => {
+      if (owner !== client) return;
+      switchToken = null; bypassCarry = null;
+      receive({ kind: "connection", connected: false });
+      client.invalidateApprovals("manual_reconnect");
+      client.removeAllListeners();
+      client.stop();
+      client = new CodexClient();
+      client.on("event", receive);
+      const next = client;
+      client.on("status", (s) => {
+        if (!s.connected) initial = null;
+        receive(connectionEvent(next, s));
+      });
+      initial = null;
+      await connect();
+    } });
   // Shared by interactive messages and durable local scheduled tasks.
   async function requestRpc(p, sender, expectedOwner) {
         const expectedConnection = p.expected ? client.connection : null;
@@ -2949,6 +2994,8 @@ app.whenReady().then(async () => {
           return requestCowork(p);
         }
         if (coworkStartRequest && !COWORK_ENABLED) throw new Error(i18n.t(COWORK.reasonMessage.text, COWORK.reasonMessage.values));
+        // W14-code r5-shared-01: a new session from a window loads the changes waiting for a restart (coreRestart above).
+        if (p.method === "thread/start" && !expectedOwner && !p.expected) await coreRestart.beforeNewSession();
         if (expectedOwner && expectedOwner !== client) throw new Error("The core connection changed. Try again.");
         await client.start();
         assertExpectedConnection();
@@ -3013,7 +3060,7 @@ app.whenReady().then(async () => {
           // dynamicWorkflows false: the bridge withholds its own workflow tool (off, or OpenClaude Desktop's engine chosen).
           params.codeDesktop = { ...params.codeDesktop, dynamicWorkflows: workflowsOn && currentWorkflowEngine() === "native" };
         }
-        if (["codeDesktop/workflow/stop", "codeDesktop/workflow/member", "codeDesktop/workflow/pause", "codeDesktop/workflow/resume", "codeDesktop/workflow/artifact", "codeDesktop/workflow/settings"].includes(p.method) && (typeof params.threadId !== "string" || !config.threadIds.includes(params.threadId))) throw new Error("Unknown session.");
+        if (p.method === "codeDesktop/workflow/stop" && (typeof params.threadId !== "string" || !config.threadIds.includes(params.threadId))) throw new Error("Unknown session.");
         if (p.method === "codeDesktop/sideQuestion" && (typeof params.threadId !== "string" || ![...config.threadIds, ...config.archivedThreadIds].includes(params.threadId))) throw new Error("Unknown session.");
         if (p.method === "codeDesktop/sideQuestion" && nativeSideQuestions()) return nativeSideChat.ask(params);
         if (p.method === "codeDesktop/sideQuestion/cancel" && nativeSideQuestions()) return nativeSideChat.cancel(params);
@@ -3195,11 +3242,18 @@ app.whenReady().then(async () => {
         if (p.method === "thread/start" || p.method === "thread/resume") {
           params.approvalPolicy = params.approvalPolicy || "on-request";
         }
-        if (p.method === "thread/archive") sessionOperations.assertAvailable(params.threadId);
-        if (p.method === "thread/delete") {
-          if (typeof params.threadId !== "string" || ![...config.threadIds, ...config.archivedThreadIds].includes(params.threadId)) throw new Error("Unknown session.");
-          sessionOperations.assertAvailable(params.threadId);
-        }
+        if (p.method === "thread/delete" && (typeof params.threadId !== "string" || ![...config.threadIds, ...config.archivedThreadIds].includes(params.threadId))) throw new Error("Unknown session.");
+        // W14-code r4 fr4-01 / fr4-13b: a running session is stopped before it is archived or deleted (3.6556.2 ce4f4374c
+        // $e has no disabled Archive / Delete; shared-20 G1uB+fnj7o "stop if you archive them too"; c6aeda0b7 M deletes an
+        // environment's running sessions too): its turn is interrupted as Stop does (pausing an active goal, closing its
+        // tool sheets) and its turn/completed awaited (session-operations.cjs stopForRemoval) before the core is asked.
+        if (p.method === "thread/archive" || p.method === "thread/delete") await sessionOperations.stopForRemoval(params.threadId, { interrupt: (threadId, turnId) => {
+          const connection = client.connection;
+          const sent = interruptTurn(client, { threadId, turnId, expected: { connectionId: connection?.approvalConnectionId, connectionEpoch: connection?.approvalConnectionEpoch },
+            ...(activeGoals.has(threadId) ? { pauseGoal: true } : {}) });
+          if (config.threadIds.includes(threadId)) agentTools.cancelThread(threadId);
+          return sent;
+        } });
         // The Workflow tool's launch text tells the model to edit a run's saved script and re-run it with scriptPath:
         // that folder (<userData>/sessions/<id>/workflows/scripts) is writable for the session's workspace-write
         // sandbox, as the session folder is (else a sandboxed edit fails with EPERM outside Bypass).
@@ -3388,6 +3442,22 @@ app.whenReady().then(async () => {
     if (action === "watch-record:request-permission") return requestWatchRecordPermission(p?.kind);
     if (action === "watch-record:take") return computerUseWatchRecord ? computerUseWatchRecord.take(e.sender.id) : null;
     if (action === "watch-record:dismiss-pill") { if (Number.isInteger(p?.holdEpoch)) computerUseWatchRecord?.dismissPill(p.holdEpoch); return null; }
+    // W14-code r2-shared-11: Settings › Computer use. Denied apps' Add app menu (official de.listInstalledApps) and the
+    // permission rows' Open System Settings (official de.openSystemSettings("Privacy_Accessibility" | "Privacy_ScreenCapture")).
+    if (action === "computer-use:installed-apps") {
+      const apps = [];
+      for (let cursor, page = 0; page < 50; page += 1) {
+        const listed = await computerUseApps.list({ runningFirst: false, limit: 500, ...(cursor === undefined ? {} : { cursor }) });
+        for (const app of listed.apps) apps.push({ bundleId: app.bundleId, displayName: app.name });
+        if (!(cursor = listed.nextCursor)) break;
+      }
+      return { apps };
+    }
+    if (action === "computer-use:open-system-settings") {
+      if (!Object.hasOwn(WATCH_RECORD_SETTINGS, p?.kind)) throw new Error("Unknown permission.");
+      await shell.openExternal(`x-apple.systempreferences:com.apple.preference.security?${WATCH_RECORD_SETTINGS[p.kind]}`);
+      return true;
+    }
     if (typeof action === "string" && action.startsWith("computer-use:")) {
       // Settings › Computer use reads and revokes across sessions: no session of its own (a revoke may still name one).
       const global = action === "computer-use:probe" || action === "computer-use:all-grants" || (action === "computer-use:revoke" && p?.sessionId === undefined);
@@ -3545,7 +3615,7 @@ app.whenReady().then(async () => {
           if (owner !== client) throw coreError(owner, "The {core} connection changed. Reconnect to continue.");
           return {
             ...status,
-            host: { home: os.homedir(), platform: process.platform },
+            host: { home: os.homedir(), platform: process.platform, osVersion: process.getSystemVersion?.() ?? os.release(), arch: process.arch } /* W14-code r5 R5T-01: Session info "Desktop app" (jPKPzV-P getSystemInfo os_version / arch) */,
             account: accountOperations.accountSnapshot(),
             config,
             fullScreen: (windowRegistry.windowForSender(e.sender) ?? win).isFullScreen(),
@@ -3567,7 +3637,7 @@ app.whenReady().then(async () => {
         } catch (error) {
           return {
             connected: false,
-            host: { home: os.homedir(), platform: process.platform },
+            host: { home: os.homedir(), platform: process.platform, osVersion: process.getSystemVersion?.() ?? os.release(), arch: process.arch } /* W14-code r5 R5T-01: Session info "Desktop app" (jPKPzV-P getSystemInfo os_version / arch) */,
             error: error.message,
             extensionCores: extensionPacks.descriptors(),
             config,
@@ -3649,7 +3719,8 @@ app.whenReady().then(async () => {
         if (p.op === "detach") return btwSessions.detach(p); // R3-nested NBS-4: 2.42304.0 detachFromParent (/btw tab menu).
         throw new Error("Unknown side session action.");
       }
-      case "customize": return customizeOperations.run(p);
+      // W14-code r5-shared-01: a plugin change the running core loads only after a restart waits for the next new session.
+      case "customize": { const owner = client; return coreRestart.noteCustomize(p.operation, await customizeOperations.run(p), owner); }
       // V3-w10-shell-plugin-settings: shared-130 LE / BE (getPluginOptions(id, {mode:"ccd"}), setPluginOptions(id, values, …)).
       case "plugin-options": pluginOptions.gestures.track(e.sender); return p?.op === "set" ? pluginOptions.set(p.pluginId, p.values, p.pluginContext, { pressed: pluginOptions.gestures.pressed(e.sender), cwd: p.cwd }) : pluginOptions.get(p?.pluginId, p?.pluginContext, { cwd: p?.cwd });
       case "codex-features": return codexFeatures.run(p);
@@ -3777,6 +3848,8 @@ app.whenReady().then(async () => {
         if (typeof p.agentComputerUse === "boolean") config.agentComputerUse = p.agentComputerUse;
         // Settings › Computer use › Unhide apps when Claude finishes (official chicagoAutoUnhide; unset reads as on).
         if (typeof p.computerUseAutoUnhide === "boolean") config.computerUseAutoUnhide = p.computerUseAutoUnhide;
+        // Settings › Computer use › Denied apps (W14-code r2-shared-11; official chicagoUserDeniedBundleIds): bundle ids only.
+        if (Array.isArray(p.computerUseDeniedBundleIds)) config.computerUseDeniedBundleIds = [...new Set(p.computerUseDeniedBundleIds.filter(require("./computer-use/grants.cjs").validBundleId))].slice(0, 500);
         // The Preview pane's "Open links in preview" (src/preview-links-model.mjs), for every window of the profile.
         if (typeof p.previewLinks === "boolean") config.previewLinks = p.previewLinks;
         if (typeof p.previewLinksChooserSeen === "boolean") config.previewLinksChooserSeen = p.previewLinksChooserSeen;
@@ -3803,12 +3876,6 @@ app.whenReady().then(async () => {
         if (p.sessionMetadata && typeof p.sessionMetadata === "object")
           config.sessionMetadata = p.sessionMetadata;
         if (Array.isArray(p.customGroups)) config.customGroups = p.customGroups;
-        if (p.rememberedActionCenterCounts && typeof p.rememberedActionCenterCounts === "object") {
-          // Placeholder shape for the next launch (official Kk/$i remembered counts, cc43287c9 ez/tz actionCenterPrs).
-          // Projects have no local source and stay zero; PRs count the sessions' active pull requests (B08).
-          const count = (value) => { const number = Number(value); return Number.isInteger(number) && number >= 0 ? Math.min(number, 999) : 0; };
-          config.rememberedActionCenterCounts = { sessions: count(p.rememberedActionCenterCounts.sessions), projects: 0, prs: count(p.rememberedActionCenterCounts.prs) };
-        }
         try { save(); } catch (error) { config = previous; throw error; }
         if (config.allowBypassPermissions !== true) switchToken = bypassCarry = null;
         // xh setThemeMode → setThemeMode(e){nativeTheme.themeSource=e}.
@@ -3879,9 +3946,9 @@ app.whenReady().then(async () => {
         return sidebarSnapshot();
       }
       case "home-shape":
-        // Read before Codex connects (official Ti/Kk local store + preferred name):
-        // the greeting and the loading placeholder never wait for the catalog.
-        return { rememberedActionCenterCounts: config.rememberedActionCenterCounts || { sessions: 0, projects: 0, prs: 0 }, displayName: config.displayName || "" };
+        // Read before Codex connects (official Ti/Kk local store + preferred name): the greeting never waits for the
+        // catalog. W14-code R5DC-07: the Action Center is gone, so its remembered counts are no longer kept or returned.
+        return { displayName: config.displayName || "" };
       case "stats": {
         // The original stats object (readCodeStats). A failed read without a kept result is
         // an actual failure (official $O: query error without cached data → no card). The
@@ -3988,6 +4055,15 @@ app.whenReady().then(async () => {
         const scope = p.scope === undefined || p.scope === null ? "branch" : p.scope;
         if (scope !== "branch" && scope !== "uncommitted") throw new Error("Invalid diff scope.");
         return workspaceGitFilePatch(cwd, { filePath: p.path, previousPath: typeof p.previousPath === "string" ? p.previousPath : undefined, scope,
+          base: typeof p.base === "string" ? p.base : undefined, preferredBase: sessionBaseBranch(p.sessionId, cwd) });
+      }
+      // W14-code r7 (r7pa-05; cb61be3a2 getDiffFileContent → c44d00c7f fetchFileLines): the old and new text of one file the
+      // shown scope's comparison lists, {oldText, newText} (either null) or null (git-status.cjs workspaceGitFileText).
+      case "workspace-git-file-text": {
+        const cwd = workspaceQueryRoot(p.cwd);
+        const scope = p.scope === undefined || p.scope === null ? "branch" : p.scope;
+        if (typeof scope !== "string" || !/^(branch|uncommitted|commit:[0-9a-fA-F]{7,64})$/.test(scope)) throw new Error("Invalid diff scope.");
+        return workspaceGitFileText(cwd, { filePath: p.path, previousPath: typeof p.previousPath === "string" ? p.previousPath : undefined, scope,
           base: typeof p.base === "string" ? p.base : undefined, preferredBase: sessionBaseBranch(p.sessionId, cwd) });
       }
       // B34 (cccc2cf0a Gb getDiffFileImage, heavyWorkWorker j_): one side ('before' | 'after') of a changed image in
@@ -4110,7 +4186,8 @@ app.whenReady().then(async () => {
         const dir = typeof p.worktree === "string" ? (config.worktreeDirectories || []).find((entry) => path.resolve(entry) === path.resolve(p.worktree)) : null;
         if (!dir) return { removed: false };
         const users = [...config.threadIds, ...config.archivedThreadIds].filter((id) => path.resolve(config.threadMetadata[id]?.cwd || "") === path.resolve(dir) && config.threadIds.includes(id));
-        if (users.length) return { removed: false };
+        // inUse: a live session works there (shared-46 Mo's "busy" outcome for the archived banner's Discard changes).
+        if (users.length) return { removed: false, inUse: true };
         const removed = await worktrees.removeWorktree(run, dir);
         if (removed) { worktrees.forgetWorktree(config, dir); save(); }
         return { removed };
@@ -4196,10 +4273,7 @@ app.whenReady().then(async () => {
         const structuredMode = runnerStructuredOutput(), structured = structuredMode === undefined ? {} : { structuredOutput: structuredMode };
         return workflowService.start({...options,access,cwd:workspaceQueryRoot(p.cwd),engine:currentWorkflowEngine(),...structured,origin:"user"});
       }
-      case "workflow-member": return workflowService.member(p.id,p.memberId,p.action);
-      case "workflow-pause": return workflowService.pause(p.id,p.paused===true);
-      case "workflow-save": return workflowService.save(p.id,{scope:p.scope==="user"?"user":"project",name:typeof p.name==="string"?p.name.slice(0,200):undefined,overwrite:p.overwrite===true});
-      case "workflow-settings": return workflowSettings();
+      // W14-code r5 cleanup R5DC-03 (E95): workflow-member / -pause / -save / -settings left with the host run card.
       case "workflow-stop": return workflowService.stop(p.id);
       case "background-read": return backgroundOperations.read(p);
       case "background-terminate": return backgroundOperations.terminate(p);
@@ -4229,8 +4303,9 @@ app.whenReady().then(async () => {
         const core=resolveCore(),info=client.serverInfo,logs=[];
         for(const name of ['logs','crashDumps'])try{logs.push(app.getPath(name));}catch{}
         const coreName=coreNameOf(info?(info.engine??'codex'):core.kind==='override'?'codex':core.kind);
-        // sessionStore: where the running core keeps a session (its descriptor), so its own history is told from the rest.
-        const sessionStore=info?coreForEngine(info.engine??'codex').sessionStore??null:null;
+        // sessionStore: where the running core keeps a session (what it reports, else its descriptor: OpenCode 2.x's own
+        // database below the bridge's state folder), so its own history is told from the rest. storageReport checks it.
+        const sessionStore=info?info.capabilities?.sessionStore??coreForEngine(info.engine??'codex').sessionStore??null:null;
         return storageReport({userData:app.getPath('userData'),logs,dshHome:info?.codexHome,coreRoot:storageCoreRoot(core),coreName,
           threadIds:[...config.threadIds,...config.archivedThreadIds],worktreeDirs:config.worktreeDirectories||[],sessionStore,userHome:os.homedir()});
       }
@@ -4242,7 +4317,8 @@ app.whenReady().then(async () => {
       case "desktop-edit-config": {
         const error=await shell.openPath(editConfigTarget(client.serverInfo));if(error)throw Error(error);return true;
       }
-      case "harness-profile": return harnessProfile.run(p);
+      // W14-code r5-shared-02: a connector added to the DeepSeek profile overlay starts with the next new session.
+      case "harness-profile": { const owner = client, result = await harnessProfile.run(p); if (p.op === "mcp-add" && coreSupports(owner?.serverInfo, "harnessProfile")) coreRestart.mark(owner); return result; }
       // Import from Claude Code on Codex (codex slash_command.rs Import; tui external_agent_config_migration): detect
       // what can come over (AGENTS.md from CLAUDE.md, config, skills, MCP servers, hooks, commands, sessions…), then
       // import the items the user kept. Only items this window detected are sent back.
@@ -4323,7 +4399,9 @@ app.whenReady().then(async () => {
       }
       case "model-settings": return modelSettings.run(p);
       // Code › Local › "Edit local environment": get / save the variables (applied when the core next starts).
-      case "local-environment": return localEnvironment.run(p);
+      // W14-code fr6-02: official c3f9f1667 Ne/Pe only closes the dialog; the variables apply from the next new session,
+      // so a changed save marks the core for the restart before the next thread/start, when idle (core-restart.cjs).
+      case "local-environment": { const owner = client, result = await localEnvironment.run(p); if (p.op === "save" && result?.changed) coreRestart.mark(owner); return result; }
       case "saved-environments": return savedEnvironments.run(p);
       // w13-chatui-message-actions: Chat Good / Bad response kept in userData/chat-feedback.json, never uploaded.
       case "chat-feedback": return (chatFeedbackStore ??= (await import("./chat-feedback.mjs")).createChatFeedbackStore({ dataDir: () => app.getPath("userData") })).run(p);
@@ -4393,20 +4471,6 @@ app.whenReady().then(async () => {
         if (!fs.existsSync(target)) throw new Error("The file no longer exists.");
         shell.showItemInFolder(target);
         return true;
-      }
-      // The effort popover's Plan mode row (a core with collaboration modes and no permission hints: Codex): read the
-      // Plan effort (configured, else the preset's) and save it as Codex's own plan_mode_reasoning_effort (null clears).
-      case "plan-effort": {
-        if (client.serverInfo?.capabilities?.permissionHints === true || !coreSupports(client.serverInfo, "collaborationModes")) throw new Error("Unsupported operation.");
-        const owner = client;
-        await owner.start();
-        if (p.op === "write") {
-          if (p.value !== null && (typeof p.value !== "string" || !/^[a-z]{1,16}$/.test(p.value))) throw new Error("Unsupported operation.");
-          await owner.request("config/value/write", { keyPath: "plan_mode_reasoning_effort", value: p.value, mergeStrategy: "replace" });
-        }
-        const configured = await owner.request("config/read", { includeLayers: false }, 5000).then((result) => result?.config?.plan_mode_reasoning_effort ?? null, () => null);
-        const preset = typeof configured === "string" && configured ? null : (await planModeEffort(owner, null)) ?? null;
-        return { configured: typeof configured === "string" && configured ? configured : null, preset };
       }
       // Settings › Models › Responses (Codex): model_reasoning_summary and model_verbosity in Codex's own config, as the
       // CLI keeps them; null clears the key.
@@ -4721,7 +4785,8 @@ app.whenReady().then(async () => {
         }
         // cc43287c9-BMbiZYzF.js:21955-21962 / :21983-21990 (ta(title)): 'Select folder for local session' for
         // the session folder, 'Add folder to session' for an additional one; macOS shows the message line.
-        const title = p.additional ? i18n.t("Add folder to session") : i18n.t("Select folder for local session");
+        // W14-code composer-07: /cd without a path (c227f4d5e Lz browseFolder "Change working directory", SoyaAWkbuR).
+        const title = p.purpose === "cd" ? i18n.t("Change working directory") : p.additional ? i18n.t("Add folder to session") : i18n.t("Select folder for local session");
         const r = await dialog.showOpenDialog(win, {
           title,
           message: title,
@@ -4829,11 +4894,16 @@ app.whenReady().then(async () => {
         // B32: a file outside the working folder but inside one of the session's added folders (the outside-root
         // card's Add folder, /add-dir) reads from that folder, as the original reads every session folder.
         const added = typeof p.sessionId === "string" ? config.sessionMetadata?.[p.sessionId]?.additionalFolders : null;
-        const absolute = result?.unavailable === "outside_root" && Array.isArray(added) ? sessionFileAccess.requestedAbsolute(root, p.relative) : null;
+        // W14-code review fix: a missing path outside the working folder (files.cjs missing_outside) is looked up in the
+        // added folders too; it is only "outside" (cd2efac6e Hd outsideByMain) when no session folder holds it.
+        const outside = result?.unavailable === "outside_root" || result?.unavailable === "missing_outside";
+        const absolute = outside && Array.isArray(added) ? sessionFileAccess.requestedAbsolute(root, p.relative) : null;
         // Added folders are stored as real paths (main 'folder'), so a path through a link such as /tmp → /private/tmp
-        // is matched by its real path too.
+        // is matched by its real path too (a missing file by its parent folder's real path).
+        const realParent = async () => { const dir = await fs.promises.realpath(path.dirname(absolute)).catch(() => null); return dir ? path.join(dir, path.basename(absolute)) : ""; };
         const hit = absolute ? sessionFileAccess.sessionFolderFor(absolute, added)
-          ?? sessionFileAccess.sessionFolderFor(await fs.promises.realpath(absolute).catch(() => ""), added) : null;
+          ?? sessionFileAccess.sessionFolderFor(await fs.promises.realpath(absolute).catch(() => ""), added)
+          ?? (result.unavailable === "missing_outside" ? sessionFileAccess.sessionFolderFor(await realParent(), added) : null) : null;
         if (!hit) return result;
         const inner = await readFile(hit.folder, hit.relative, readOptions);
         return { ...inner, path: p.relative, ...(inner.unavailable === "missing" ? { creatable: false } : {}) };

@@ -234,8 +234,5 @@ export function SourcePopover({
   );
 }
 
-/** Popover.Close (Base UI): runs its handler, then closes the popover with focus back on the trigger. */
-export function SourcePopoverClose({ onClick, children, ...props }) {
-  const popover = useContext(PopoverContext);
-  return <button type="button" {...props} onClick={(event) => { onClick?.(event); if (!event.defaultPrevented) popover?.close("close-press"); }}>{children}</button>;
-}
+// (W14-code r6 gen-final-6: SourcePopoverClose, a host <button> standing in for Popover.Close, lost its last caller when the
+// usage panel's See detailed breakdown became c2d611398 Ne's CDS button; callers close through useSourcePopover().close.)

@@ -5,47 +5,13 @@ import { stripAnsi } from "./ansi-model.mjs";
 import { commandRowLabel } from "./command-row-model.mjs";
 import { genericToolLabel, isGenericTool } from "./generic-tool-model.mjs";
 
-export const PREVIEW_PANE = "preview";
 export const VIEWPORT_PRESETS = Object.freeze([
   { value: "responsive", label: "Responsive" },
   { value: "mobile", label: "Mobile", size: "375 × 812" },
   { value: "tablet", label: "Tablet", size: "768 × 1024" },
 ]);
-export const COLOR_SCHEMES = Object.freeze([
-  { value: "system", label: "System", icon: "Computer" },
-  { value: "light", label: "Light", icon: "Sun" },
-  { value: "dark", label: "Dark", icon: "Moon" },
-]);
 export const LOGS_HEIGHT = Object.freeze({ initial: 200, min: 80, maxRatio: 0.6 });
 export const ADD_SERVER_PROMPT = "Detect this project's dev servers, write them to .claude/launch.json, then call preview_start.";
-
-/** The URL field's two tones: host (and port) in secondary, the rest in muted (Vv). */
-export function urlParts(url) {
-  if (typeof url !== "string" || !url || url === "about:blank") return { host: "", rest: "" };
-  try {
-    const parsed = new URL(url);
-    if (parsed.protocol === "file:") {
-      const file = decodeURIComponent(parsed.pathname);
-      const slash = file.lastIndexOf("/");
-      return { host: slash >= 0 ? file.slice(slash + 1) : file, rest: "" };
-    }
-    const rest = `${parsed.pathname === "/" ? "" : parsed.pathname}${parsed.search}${parsed.hash}`;
-    return { host: parsed.host, rest };
-  } catch {
-    return { host: url, rest: "" };
-  }
-}
-
-/** A server row's status text and tone. */
-export function serverStatus(server) {
-  switch (server?.status) {
-    case "running": return { label: t("Running"), tone: "running" };
-    case "starting": return { label: t("Starting…"), tone: "starting" };
-    case "stopping": return { label: t("Stopping…"), tone: "starting" };
-    case "failed": return { label: t("Failed to start"), tone: "failed" };
-    default: return { label: t("Not running"), tone: "stopped" };
-  }
-}
 
 /** Server rows for the start page and the menu: every configuration, with its live server when there is one. */
 export function serverRows(state) {
@@ -67,7 +33,6 @@ export function serverMenuRows(state) {
     ...server, running: server.status === 'running', busy: server.status === 'starting' || server.status === 'stopping',
   }))];
 }
-export const anyServerRunning = (state) => (state?.servers ?? []).some((server) => server.status === "running" || server.status === "starting");
 
 /** The server whose problem the pane shows: the last one started that failed. */
 export function failedServer(state, lastStarted) {
@@ -131,8 +96,6 @@ export const SKETCH_AWAIT_CAPTURE_MS = 20000;
 
 // preview-13 (2.42304.0 c224804cc-CT77R4xB U, imported by cf580efe9 as lr): createDisabled from the ninth tab.
 export const previewTabCapReached = (count) => count > 8;
-// cfe7c4b3b-CP-IQXj8 oe.newTabAtCap.
-export const PREVIEW_TAB_CAP_TEXT = "Tab limit reached. Close a tab to open a new one.";
 
 // ca80fca8d xq: the port another session's dev server holds (the start-failed card then says so instead of sending the
 // error to the agent). Locally main sets error.heldPort with code "port-held" (preview-service.cjs spawnServer).
@@ -163,30 +126,13 @@ export function startFailurePrompt(text) {
   return `The dev server failed to start with the following error:\n\n\`\`\`\n${text}\n\`\`\`\n\nFix, then call preview_start to start the server.`;
 }
 
-/** Log line tint (Jv): danger for errors, warning for warnings. */
-export function logTone(line) {
-  if (/\bERROR\b|\bERR!|\bFATAL\b|\bFAIL(?:ED|URE)?\b/i.test(line)) return "danger";
-  if (/\bWARN(ING)?\b/i.test(line)) return "warning";
-  return null;
-}
-
-/** The page error a load failure shows, or null. */
-export function pageError(state) {
-  const error = state?.error;
-  if (!error) return null;
-  if (error.code === "blocked") return { title: t("Couldn’t open this address"), body: error.description ? t(error.description) : "" };
-  if (error.code === "crashed") return { title: t("The page stopped working"), body: t("Reload to try again.") };
-  const refused = /CONNECTION_REFUSED|ERR_CONNECTION_RESET|ADDRESS_UNREACHABLE/.test(error.description ?? "");
-  return { title: t("Couldn’t load this preview"), body: refused ? t("Nothing is answering at {url}. Is the dev server running?", { url: error.url || state.url }) : t("{reason} ({url})", { reason: error.description || t("The page failed to load."), url: error.url || state.url }) };
-}
-
 const LOOPBACK = new Set(["localhost", "127.0.0.1", "[::1]", "::1", "0.0.0.0"]);
 /**
  * The dev server of this folder the page comes from (its origin is the server's: same port, same or loopback host),
- * else null. records: only servers OpenClaude Desktop started (state.servers); configs: also launch.json configurations
- * that aren't running here (status "stopped"), for a Restart on a page that no longer answers.
+ * else null: only servers OpenClaude Desktop started (state.servers). (W14-code r4 r4pa-c04: the launch.json-config
+ * fallback fed the host error overlay's Restart {serverName}, which is gone with the overlay.)
  */
-export function pageServer(state, { configs = false } = {}) {
+export function pageServer(state) {
   let page;
   try { page = new URL(state?.url ?? ""); } catch { return null; }
   if (!/^https?:$/.test(page.protocol)) return null;
@@ -197,10 +143,7 @@ export function pageServer(state, { configs = false } = {}) {
       return portOf(url) === portOf(page) && (url.hostname === page.hostname || (LOOPBACK.has(url.hostname) && LOOPBACK.has(page.hostname)));
     } catch { return !!port && String(port) === portOf(page) && LOOPBACK.has(page.hostname); }
   };
-  const server = (state.servers ?? []).find((entry) => !entry.attach && at(entry.url, entry.port));
-  if (server || !configs) return server ?? null;
-  const config = (state.launch?.configs ?? []).find((entry) => !entry.attach && at(entry.url, entry.port));
-  return config ? { name: config.name, port: config.port, url: config.url, status: "stopped" } : null;
+  return (state.servers ?? []).find((entry) => !entry.attach && at(entry.url, entry.port)) ?? null;
 }
 /** The page's dev server when it has stopped or failed (the page shown is from before), else null. */
 export function stoppedServer(state) {
@@ -222,7 +165,6 @@ export function previewSurface(state, { starting = null, lastStarted = null, hol
   if (failedServer(state, lastStarted) && !state.hasPage) return "failed";
   // 2.2553.1 Xv pv: the page's dev server stopped (Stop, a crash): "Stopped" with Restart covers the old page.
   if (stoppedServer(state)) return "stopped";
-  if (state.hasPage && pageError(state)) return "error";
   if (state.hasPage) return "page";
   // cf580efe9 bi: a server starting replaces the start page with a spinner (and keeps it 1.5 s once it runs).
   if (settling || startingServer(state)) return "starting";
@@ -324,4 +266,42 @@ export function viewportRows(viewport) {
 export function clampLogsHeight(height, paneHeight) {
   const max = Math.max(LOGS_HEIGHT.min, Math.round((paneHeight || 0) * LOGS_HEIGHT.maxRatio));
   return Math.min(max, Math.max(LOGS_HEIGHT.min, Math.round(height)));
+}
+
+/**
+ * W14-code r4 r4pa-c05: cf580efe9 Hr's start-failed card always says "Error details were sent to Claude" — the pane
+ * sends a failed Run's error to the session by itself (Rr / zr submitToChat). Here the send can find the session busy
+ * (loading, another message being sent) or not connected yet, so the report waits per session and goes out once a
+ * sender is there and the session takes it: on each flush (a new sender, the pane showing that session again), at most
+ * FAILURE_REPORT_ATTEMPTS calls, spaced FAILURE_REPORT_BACKOFF_MS doubling. A later Run of the server (ok or failed)
+ * replaces it.
+ */
+export const FAILURE_REPORT_ATTEMPTS = 5;
+export const FAILURE_REPORT_BACKOFF_MS = 2000;
+export function createFailureReports({ now = () => Date.now() } = {}) {
+  const pending = new Map(), inFlight = new Set();
+  return {
+    queue(sessionId, report) { if (sessionId && report?.text) pending.set(sessionId, { ...report, attempts: 0, notBefore: 0 }); },
+    drop(sessionId, name) { const report = pending.get(sessionId); if (report && (name === undefined || report.name === name)) pending.delete(sessionId); },
+    pending: (sessionId) => pending.get(sessionId) ?? null,
+    /** Resolves {sent, retryIn}: whether it went out, and the delay before the next try (null: nothing more to try). */
+    async flush(sessionId, send) {
+      const report = pending.get(sessionId);
+      if (!report || typeof send !== "function") return { sent: false, retryIn: null };
+      // A call already out decides; look again shortly in case the caller that made it has gone.
+      if (inFlight.has(sessionId)) return { sent: false, retryIn: 250 };
+      const wait = report.notBefore - now();
+      if (wait > 0) return { sent: false, retryIn: wait };
+      inFlight.add(sessionId);
+      try {
+        report.attempts += 1;
+        const sent = (await Promise.resolve().then(() => send(report.text)).catch(() => false)) === true;
+        if (pending.get(sessionId) !== report) return { sent, retryIn: null };
+        if (sent || report.attempts >= FAILURE_REPORT_ATTEMPTS) { pending.delete(sessionId); return { sent, retryIn: null }; }
+        const delay = FAILURE_REPORT_BACKOFF_MS * 2 ** (report.attempts - 1);
+        report.notBefore = now() + delay;
+        return { sent: false, retryIn: delay };
+      } finally { inFlight.delete(sessionId); }
+    },
+  };
 }

@@ -22,7 +22,7 @@ const starts=async()=>(await log('fixture-history.jsonl')).filter(x=>x.method===
 async function launch(){app=await electron.launch({args:[root],executablePath:path.join(root,'node_modules/electron/dist/Electron.app/Contents/MacOS/Electron'),env,timeout:20000});page=await app.firstWindow();page.setDefaultTimeout(10000);page.on('pageerror',e=>report.rendererErrors.push(e.message));await app.evaluate(({BrowserWindow})=>BrowserWindow.getAllWindows()[0].setContentSize(1324,768));await page.waitForFunction(()=>innerWidth===1324&&innerHeight===768);await page.waitForFunction(()=>{const c=document.querySelector('[data-cds=ChatComposer]');return c&&!c.hasAttribute('data-disabled')&&document.querySelector('[aria-label="Model"]')?.textContent.includes('Test model');});}
 try{
  await integrity();await launch();
- const input=()=>page.getByRole('textbox',{name:'Message DeepSeek',exact:true});
+ const input=()=>page.getByRole('textbox',{ name: /^(?:Prompt|Message DeepSeek)$/ });
  const toolsMenu=()=>page.getByRole('menu',{name:'Tools',exact:true});
  const openTools=async()=>{await page.getByRole('button',{name:'Add',exact:true}).click();const trigger=page.getByTestId('add-tools');await trigger.waitFor();await trigger.click();await toolsMenu().waitFor();await poll(async()=>await toolsMenu().getByRole('menuitemcheckbox',{name:'write',exact:true}).count()===1,'tool rows loaded');};
  const closeMenus=async()=>{for(let i=0;i<3&&await page.getByRole('menu').count();i++)await page.keyboard.press('Escape');await poll(async()=>await page.getByRole('menu').count()===0,'menus closed');};

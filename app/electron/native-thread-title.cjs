@@ -31,7 +31,7 @@ const FEATURES_OFF = Object.freeze({
   "features.multi_agent_v2": false, "features.plugins": false, "features.request_permissions_tool": false, "features.shell_snapshot": false,
   "features.shell_tool": false, "features.standalone_web_search": false, "features.token_budget": false, "features.tool_suggest": false,
   "features.unified_exec": false, "features.view_image": false, "orchestrator.skills.enabled": false, "skills.include_instructions": false,
-  "token_budget.use_history_notes_extension": false, "tools.experimental_request_user_input.enabled": false, "tools.update_plan.enabled": false,
+  "tools.experimental_request_user_input.enabled": false, "tools.update_plan.enabled": false,
   web_search: "disabled",
 });
 

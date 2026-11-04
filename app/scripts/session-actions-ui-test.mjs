@@ -23,8 +23,16 @@ const hashes=async()=>Object.fromEntries(await Promise.all(['scripts/session-act
 const report={passed:false,startedAt:new Date().toISOString(),build,appPath:appPath||null,profile,checks:[],sourceHashes:await hashes()},errors=[];
 let app,page;
 const trace=async()=>String(await fs.readFile(path.join(profile,'action-trace.jsonl'))).trim().split('\n').map(JSON.parse);
-async function command(text){const input=page.getByRole('textbox',{name:'Message DeepSeek'});await fillComposer(page,input,text);await input.press('Enter');if(await page.getByRole('menu',{name:'Slash commands',exact:true}).count()===0 && await input.evaluate(node=>node.value)===text+' ')await input.press('Enter');}
-async function idle(){await page.locator('[data-testid="code-prompt-stop"]:not([inert] *)').waitFor({state:'detached'});await page.waitForFunction(()=>!document.querySelector('.sc-spinner'));}
+async function command(text){const input=page.getByRole('textbox',{ name: /^(?:Prompt|Message DeepSeek)$/ });await fillComposer(page,input,text);await input.press('Enter');if(await page.getByRole('menu',{name:'Slash commands',exact:true}).count()===0 && await input.evaluate(node=>node.value)===text+' ')await input.press('Enter');}
+async function idle(){await page.locator('[data-testid="code-prompt-stop"]:not([inert] *)').waitFor({state:'detached'});await page.waitForFunction(()=>!document.querySelector('[data-testid="code-prompt-send"][aria-busy="true"]'));}
+// W14-code r3 css3-operation-status-band: 3.6556.2 Code draws no session-action strip (main.jsx renders
+// .session-operation-status, the old [data-operation][data-phase], only outside Code: compaction progress is the working
+// line's 'Compacting session…' (c96d752d0 W6), a review is its transcript turn, a stopped one leaves no toast
+// (session-operation-toast.mjs OPERATION_STOPPED)). A compact / review is read from the isolated fixture core instead:
+// its request in action-trace.jsonl and its turn's final status in action-fixture.json (saved before it notifies).
+const until=async(check,label,ms=12000)=>{const end=Date.now()+ms;while(Date.now()<end){try{if(await check())return;}catch{}await new Promise(r=>setTimeout(r,25));}throw Error('Timed out: '+label);};
+const coreTurns=async id=>JSON.parse(await fs.readFile(path.join(profile,'action-fixture.json'))).threads[id]?.turns??[];
+async function coreTurnEnds(id,before,status,label){await until(async()=>{const turns=await coreTurns(id);return turns.length>before&&turns.at(-1).status===status;},label);await idle();}
 // Fidelity F02: every action dialog is the shared CDS Dialog (source-dialog.jsx; shared-frame-C_2npUJq.js:5561-5574,
 // :5738-5869): surface-3 popup, bg-backdrop + 2px blur, a data-starting-style first frame (recorded when the portal
 // is inserted) and the CloseButton named 'Close'. Paint is read once the enter transition has settled.
@@ -40,7 +48,7 @@ try{
  app=await electron.launch({executablePath:appPath?path.join(appPath,'Contents/MacOS/OpenClaude Desktop'):path.join(root,'node_modules/electron/dist/Electron.app/Contents/MacOS/Electron'),args:appPath?[]:[root],env});
  page=await app.firstWindow();page.setDefaultTimeout(12000);page.on('pageerror',error=>errors.push(error.message));await page.getByRole('button',{name:'Model',exact:true}).filter({hasText:'Action test model'}).waitFor();
  const runtimeBuild=await page.evaluate(async()=>await(await fetch('./build-info.json')).json());assert.equal(runtimeBuild.sourceSha256,build.sourceSha256);
- const editor=page.getByRole('textbox',{name:'Message DeepSeek'});
+ const editor=page.getByRole('textbox',{ name: /^(?:Prompt|Message DeepSeek)$/ });
  await editor.fill('/');await page.getByRole('menu',{name:'Slash commands',exact:true}).waitFor();assert.equal(await page.getByRole('menuitem',{name:'compact',exact:true}).count(),0);
  await editor.press('Escape');assert.equal(await page.getByRole('menu',{name:'Slash commands',exact:true}).count(),0);
  await command('/unknown-command');await page.getByRole('alert').filter({hasText:'isn’t a command here'}).waitFor();assert.equal((await trace()).filter(m=>m.method==='turn/start').length,0);
@@ -67,7 +75,7 @@ try{
  assert.deepEqual(report.shortcutsDialog.content,{focus:true,width:520,sections:['General','Panes','Composer'],changes:['⇧','⌘','D'],density:'comfortable',header:'rgba(0, 0, 0, 0)',bleed:false});
  assert.equal(await region.getAttribute('tabindex'),'0');
  // R01 (shared-21-D098Wd--.js zR :15017-15060, :15173-15178, :15200-15206): every bound chord has its row, in zR order.
- report.shortcutsDialog.rows=await shortcuts.evaluate(n=>[...n.querySelectorAll('.shortcuts-row')].map(row=>[row.dataset.command,row.querySelector('.shortcuts-label').textContent,[...row.querySelectorAll('kbd')].map(k=>(k.querySelector('[aria-hidden="true"]')??k).textContent).join('')]));
+ report.shortcutsDialog.rows=await shortcuts.evaluate(n=>[...n.querySelectorAll('[data-command]')].map(row=>[row.dataset.command,row.querySelector(':scope > span').textContent,[...row.querySelectorAll('kbd')].map(k=>(k.querySelector('[aria-hidden="true"]')??k).textContent).join('')]));
  const dialogRow=command=>report.shortcutsDialog.rows.find(row=>row[0]===command);
  assert.deepEqual(['close-session','reopen-closed','jump-session','archive-session','transcript-view','file-list'].map(dialogRow),[
   ['close-session','Close tab, pane, or session','⌘W'],['reopen-closed','Reopen closed session','⇧⌘T'],['jump-session','Jump to session','⌘1…9'],
@@ -105,10 +113,10 @@ try{
  await page.keyboard.press('Control+O');await page.waitForFunction(id=>JSON.parse(localStorage.getItem('code-desktop-transcript-view-by-session')??'{}')[id]===undefined,original);
  assert.equal(await page.locator('.source-toast-message').filter({hasText:'Switched transcript view'}).count(),0);
  report.checks.push('Control+O cycles the open session\'s transcript view Normal -> Verbose -> Normal (Thinking unavailable without reasoning), stored per session, without editing the draft or a toast');
- await command('/compact');await page.locator('[data-operation="compact"][data-phase="starting"]').waitFor();assert.equal(await page.getByText('Conversation compacted',{exact:true}).count(),0);
+ const compactBase=(await coreTurns(original)).length;await command('/compact');await until(async()=>(await trace()).some(m=>m.method==='thread/compact/start'),'thread/compact/start reached the core');assert.equal(await page.locator('.session-operation-status').count(),0,'Code shows no session-action strip');assert.equal(await page.getByText('Conversation compacted',{exact:true}).count(),0);
  // Main process also rejects direct concurrent actions, independent of disabled UI.
  const blocked=await page.evaluate(async id=>{const b=await window.desktop.call('init');try{await window.desktop.call('session-action',{operation:'fork',threadId:id,permission:'plan',mode:'code',expected:{connectionId:b.approvalSnapshot.connectionId,connectionEpoch:b.approvalSnapshot.connectionEpoch}});return false;}catch{return true;}},original);assert.equal(blocked,true);
- await page.locator('[data-operation="compact"][data-phase="completed"]').waitFor();await idle();assert.equal((await trace()).filter(m=>m.method==='thread/compact/start').length,1);
+ await coreTurnEnds(original,compactBase,'completed','compact turn completed');assert.equal((await trace()).filter(m=>m.method==='thread/compact/start').length,1);
  await command('/status');await page.locator('[data-local-command="status"]').waitFor();assert.match(await page.locator('.session-status-details').innerText(),/120 \/ 128,000/);await page.getByRole('button',{name:'Dismiss session status',exact:true}).click();
  report.checks.push('compact ack remains pending, duplicate IPC refused, terminal notification completes; actual context telemetry');
  // cc183b3ab fork [prompt]: the argument starts a turn in the new thread, not a title.
@@ -118,22 +126,23 @@ try{
  let db=JSON.parse(await fs.readFile(path.join(profile,'action-fixture.json')));assert.equal(db.threads[original].turns.length,2);assert.equal(db.threads[fork].turns.length,4);assert.equal(db.threads[fork].turns[2].items[0].content[0].text,'Forked test');
  report.checks.push('fork gets new persisted ID, copies history, and subsequent messages leave source unchanged');
  // B09: the title bar's View options menu (cf74bc599 ZT) holds no session commands; /review opens the same dialog.
- await command('/review');
+ let reviewBase=(await coreTurns(fork)).length;await command('/review');
  await page.getByRole('dialog',{name:'Review code',exact:true}).waitFor();report.reviewDialog=await dialogPaint('Review code');assert.equal(report.reviewDialog.closeButtons,1);await chooseSetting(page,'Review target','baseBranch');await page.getByLabel('Base branch',{exact:true}).fill('--help');await page.getByRole('button',{name:'Start review'}).click();await page.getByRole('alert').filter({hasText:'Invalid Git reference'}).waitFor();assert.equal((await trace()).filter(m=>m.method==='review/start').length,0);
- await page.getByLabel('Base branch',{exact:true}).fill('main');await page.getByRole('button',{name:'Start review'}).click();await page.getByRole('dialog',{name:'Review code',exact:true}).waitFor({state:'detached'});await page.locator('[data-operation="review"][data-phase="completed"]').waitFor();
- await page.getByRole('button').filter({hasText:'Review result'}).click();await page.getByText('ACTION_REVIEW_RESULT: no issues in the isolated fixture.',{exact:true}).waitFor();await page.screenshot({path:path.join(profile,'review-result.png')});
+ await page.getByLabel('Base branch',{exact:true}).fill('main');await page.getByRole('button',{name:'Start review'}).click();await page.getByRole('dialog',{name:'Review code',exact:true}).waitFor({state:'detached'});await coreTurnEnds(fork,reviewBase++,'completed','review turn completed');
+ // W14-code r4 R4T-03: the review is the reply's prose (no "Review result" step to open).
+ await page.getByText('ACTION_REVIEW_RESULT: no issues in the isolated fixture.',{exact:true}).waitFor();await page.screenshot({path:path.join(profile,'review-result.png')});
  const review=(await trace()).find(m=>m.method==='review/start');assert.deepEqual(review.params.target,{type:'baseBranch',branch:'main'});assert.equal(review.params.delivery,'inline');
  report.checks.push('/review dialog validates references and dispatches inline base-branch review; review result rendered');
- await command('/review');await page.getByRole('button',{name:'Start review'}).click();await page.getByRole('dialog',{name:'Review code',exact:true}).waitFor({state:'detached'});await page.locator('[data-operation="review"][data-phase="completed"]').waitFor();
+ await command('/review');await page.getByRole('button',{name:'Start review'}).click();await page.getByRole('dialog',{name:'Review code',exact:true}).waitFor({state:'detached'});await coreTurnEnds(fork,reviewBase++,'completed','review turn completed');
  assert.equal((await trace()).filter(m=>m.method==='review/start').at(-1).params.target.type,'uncommittedChanges');
- await command('/review');await chooseSetting(page,'Review target','commit');await page.getByRole('textbox',{name:'Commit',exact:true}).fill('HEAD');await page.getByRole('button',{name:'Start review'}).click();await page.getByRole('dialog',{name:'Review code',exact:true}).waitFor({state:'detached'});await page.locator('[data-operation="review"][data-phase="completed"]').waitFor();
+ await command('/review');await chooseSetting(page,'Review target','commit');await page.getByRole('textbox',{name:'Commit',exact:true}).fill('HEAD');await page.getByRole('button',{name:'Start review'}).click();await page.getByRole('dialog',{name:'Review code',exact:true}).waitFor({state:'detached'});await coreTurnEnds(fork,reviewBase++,'completed','review turn completed');
  const expectedSha=execFileSync('git',['-C',workspace,'rev-parse','HEAD'],{encoding:'utf8'}).trim();assert.deepEqual((await trace()).filter(m=>m.method==='review/start').at(-1).params.target,{type:'commit',sha:expectedSha});
  report.checks.push('uncommitted review and commit UI; main resolves HEAD to actual commit SHA');
  await command('/model');await page.getByRole('menu',{name:'Models',exact:true}).waitFor();await page.keyboard.press('Escape');
  await command('/permissions');await page.getByRole('menu',{name:'Mode',exact:true}).waitFor();await page.keyboard.press('Escape');
  await command('/plan');await page.getByRole('button',{name:'Permission mode',exact:true}).filter({hasText:'Plan'}).waitFor();assert.equal(JSON.parse(await fs.readFile(path.join(profile,'preferences.json'))).permission,'plan');
  // cc43287c9 rename argument directly dispatches the title update.
- await command('/rename Renamed fork');await page.locator('.st-title').filter({hasText:'Renamed fork'}).waitFor();assert.equal(await page.getByRole('dialog',{name:'Rename session'}).count(),0);
+ await command('/rename Renamed fork');await page.locator(':is(.st-title,button[data-pane-title])').filter({hasText:'Renamed fork'}).waitFor();assert.equal(await page.getByRole('dialog',{name:'Rename session'}).count(),0);
  await command('/diff');await page.getByRole('button',{name:'Close panel',exact:true}).waitFor();await page.getByRole('button',{name:'Close panel',exact:true}).click();
  await fs.writeFile(path.join(profile,'rates-unavailable.marker'),'isolated');await command('/usage');await page.getByRole('dialog',{name:'Usage',exact:true}).getByRole('alert').filter({hasText:'Rate limits temporarily unavailable'}).waitFor();assert.equal(await page.locator('.session-limit').count(),0);assert.equal(await page.getByRole('dialog',{name:'Usage',exact:true}).getByRole('meter').count(),0);await page.keyboard.press('Escape');
  // The dialog stays mounted with #root inert through its exit transition (use-modal-presence.js/modal-inert.mjs); typing
@@ -144,10 +153,10 @@ try{
  await command('/review HOLD');await page.getByRole('button',{name:'Start review'}).click();await page.locator('[data-testid="code-prompt-stop"]:not([inert] *)').waitFor();
  // Official status is deferred during a running turn, never a fabricated live card.
  await command('/status');await page.getByRole('alert').filter({hasText:'Session info is available when DeepSeek finishes this turn.'}).waitFor();await fillComposer(page,editor,'');await page.getByRole('button',{name:'Dismiss error'}).click();
- await page.locator('[data-testid="code-prompt-stop"]:not([inert] *)').click();await page.locator('[data-operation="review"][data-phase="failed"]').filter({hasText:'Task stopped'}).waitFor();await idle();
+ await page.locator('[data-testid="code-prompt-stop"]:not([inert] *)').click();await coreTurnEnds(fork,reviewBase++,'interrupted','held review interrupted');assert.equal(await page.locator('.source-toast-message').filter({hasText:'Task stopped'}).count(),0,'the user\'s own Stop raises no toast');
  await command('/review FAIL');await page.getByRole('button',{name:'Start review'}).click();await page.getByRole('dialog',{name:'Review code',exact:true}).getByRole('alert').filter({hasText:'Review failed'}).waitFor();await page.keyboard.press('Escape');
  report.checks.push('status deferred during running review, real interrupt exact turn, failed review keeps retryable form');
- await command('/review DISCONNECT');await page.getByRole('button',{name:'Start review'}).click();await page.locator('[data-operation="review"][data-phase="failed"]').waitFor();await page.keyboard.press('Escape');
+ await command('/review DISCONNECT');await page.getByRole('button',{name:'Start review'}).click();await page.getByRole('dialog',{name:'Review code',exact:true}).getByRole('alert').waitFor();await page.keyboard.press('Escape');
  const denied=await page.evaluate(async id=>{try{await window.desktop.call('session-action',{operation:'fork',threadId:id,permission:'plan',mode:'code',expected:{connectionId:'old',connectionEpoch:1}});return false;}catch{return true;}},fork);assert.equal(denied,true);
  report.checks.push('disconnect ends pending UI and stale connection mutation rejected');
  assert.deepEqual(errors,[]);report.passed=true;report.threadIds=[original,fork];report.trace=await trace();

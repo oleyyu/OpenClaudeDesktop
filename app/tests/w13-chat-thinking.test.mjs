@@ -8,7 +8,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
 import { closeWhenSettled } from './support/vite-ssr-settle.mjs';
-import { chatIntl, chatSearchKind, chatSearchLabel, chatThinkingDuration, chatThinkingLabel, chatThinkingRow, thinkingBlock } from '../src/chat-thinking-model.mjs';
+import { chatIntl, chatSearchKind, chatSearchLabel, chatThinkingLabel, chatThinkingRow, thinkingBlock } from '../src/chat-thinking-model.mjs';
 
 // w13-chatui-thinking-search (research/w13-chatui.md chatui-C9/C10): the Chat conversation's thought and search labels from
 // the 3.6556.2 originals (scripts/extract-chat-thinking.mjs → src/generated/chat-thinking), the pure model, the
@@ -77,8 +77,6 @@ test('model: Gg / Bs / Wg over the host reasoning item, uq by the rq kind', () =
   // Without both lifecycle times (streaming, replayed) or under half a second: "Thought process".
   assert.equal(chatThinkingLabel([{ startedAtMs: 1_000 }]), 'Thought process');
   assert.equal(chatThinkingLabel([{ startedAtMs: 1_000, completedAtMs: 1_400 }]), 'Thought process');
-  assert.equal(chatThinkingDuration(thought), 'Thought for 12s');
-  assert.equal(chatThinkingDuration({}), undefined);
   assert.equal(chatSearchKind(search), 'web');
   assert.equal(chatSearchKind({ type: 'webSearch', action: { type: 'openPage', url: 'https://example.com' } }), 'web_fetch');
   assert.equal(chatSearchKind({ type: 'dynamicToolCall', tool: 'project_knowledge_search' }), 'project_knowledge');

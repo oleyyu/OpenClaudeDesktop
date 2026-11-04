@@ -1,4 +1,5 @@
 import { chipPathOpenable, normalizeHttpUrl } from './user-inline-model.mjs';
+import { t } from '../electron/i18n/index.mjs';
 
 const decodeUri = text => { try { return decodeURI(text); } catch { return text; } };
 const unc = text => /^(?:[\\/]{2}|[\\/]\?\?[\\/])/.test(text);
@@ -117,8 +118,11 @@ export function forgeRefLabel(href, ref, sameRepo) {
     if (tail.rest.length > 0) detail = FORGE_DETAILS.has(tail.rest[0]) ? tail.rest[0] : null;
     else detail = FORGE_HASH_DETAILS.find(([pattern]) => pattern.test(tail.hash))?.[1] ?? null;
   }
-  return detail ? `${short} (${detail})` : short;
+  return detail ? t(FORGE_DETAIL_LABELS[detail], { ref: short }) : short;
 }
+// c19e90103 Hv / Wv (57GAFzx/pK, YqdISDo0z0, HkLD3UV/tV, ZG4cO9soIo, aNmw4VDSAZ): the deep link's label, translated.
+const FORGE_DETAIL_LABELS = Object.freeze({ files: '{ref} (files)', commits: '{ref} (commits)', checks: '{ref} (checks)',
+  comment: '{ref} (comment)', review: '{ref} (review)' });
 /** En() comparison: the session repo slug ('owner/repo', lowercased) names this reference's repo. */
 export function forgeRefSameRepo(ref, repoSlug) {
   return !!repoSlug && repoSlug === `${ref.owner}/${ref.repo}`.toLowerCase();

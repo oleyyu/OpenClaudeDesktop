@@ -97,7 +97,10 @@ test("an open session's presets card: uM's root (Hc) > the shell (data-cds ChatC
   assert.equal(cls(ghost), 'invisible pointer-events-none select-none max-w-full self-start break-words', 'columnReservesTrailing: the column already reserves the trailing actions (reserveTrailing: !ue)');
   assert.equal(find(wrap, (n) => 'data-composer-placeholder' in n.attrs), null, 'a draft hides the placeholder span (cm fe && W)');
   assert.equal(input.attrs['data-focus-region'], 'composer');
-  assert.equal(input.attrs['aria-label'], 'Message DeepSeek');
+  // W14-code r4 (r4-composer-01): c227f4d5e wF names the Code editor formatMessage("Prompt", iWKE8shLIt) with
+  // enterkeyhint:"enter" (was the host's 'Message DeepSeek').
+  assert.equal(input.attrs['aria-label'], 'Prompt');
+  assert.equal(input.attrs.enterkeyhint ?? input.attrs.enterKeyHint, 'enter');
   // Actions: the in-card + leads, lM is the send slot.
   const actions = byCds(row, 'ChatComposerActions');
   assert.equal(cls(actions), 'contents');
@@ -321,7 +324,7 @@ test('the history hint sits in the Header part (Jd + Presence), the shell row th
 });
 
 // ---------------------------------------------------------------- styles
-test("every class the shell draws is in the loaded official sheet; local rules touch only the host's editor, + and drag ring", () => {
+test("every class the shell draws is in the loaded official sheet; local rules touch only the host's editor and +", () => {
   const sheets = ['shared-frame-CegduNQ2.css', 'shared-styles-D_GJawPO.css', 'c6a992d55-Che1orl5.css', 'c8e31bf58-C7gq8dUF.css', 'c3fde7009-BszyXGym.css']
     // w2-composer-gen: the shell is 3.6556.2 output now, so only the official sheets count (no compatibility layer).
     .map((f) => fs.readFileSync(path.join(app, 'public/assets/v1', f), 'utf8')).join('\n');
@@ -339,16 +342,20 @@ test("every class the shell draws is in the loaded official sheet; local rules t
   for (const gone of ['.sc-zone[data-code-layout="presets"]', '.sc-composer.composer', '.sc-input-cell', '.sc-placeholder-fit-probe', '.sc-suggestion-ghost',
     '.sc-history-header-grid', '.sc-history-header-clip', '.sc-history-header {', '.sc-bash-badge', '.sc-composer[data-bash-mode]', '.sc-zone .sc-chin {', '.sc-chin-leading', '.sc-chin-trailing'])
     assert.ok(!css.includes(gone), `${gone} is replaced by the shell's own classes`);
-  // The side chat keeps the host row (.sc-surface > .sc-input-row > .sc-input), so the editor box rules are scoped to it.
-  assert.match(css, /\.sc-composer \.sc-input-row \.sc-input \{ display: block;/);
+  // W14-code r3 css3-side-chat-composer: the side chat's host row (.sc-surface > .sc-input-row > .sc-input) is gone with
+  // its rules; it renders this Code card too (cccc2cf0a UF fp = c227f4d5e jF).
+  assert.ok(!/\.sc-surface|\.sc-input-row/.test(css), 'no side chat host card rules');
   // R4i-graph GR3: the shell's editor has no data-placeholder (cm's span), so the rules that placed its ::before inside the
   // editor box are gone, the host placeholder ::before needs [data-placeholder] (the side chat's editor), and the .sc-add
   // sizes went with the host + (both + are the official Oj trigger now).
   assert.ok(!css.includes('[data-cds="ChatComposerEditor"] > .sc-input.ProseMirror[data-empty=true]::before'), 'no shell-box placeholder rule');
   assert.ok(!/\.sc-add(?:\s*\{|\s+\[)/.test(css), 'no .sc-add rule');
   const editorCss = fs.readFileSync(path.join(app, 'src/source-composer-editor.css'), 'utf8');
-  assert.match(editorCss, /\.sc-composer \.sc-input\.ProseMirror\[data-empty=true\]\[data-placeholder\]::before\{content:attr\(data-placeholder\);/);
-  assert.match(css, /\.sc-composer\[data-drag-over\] \[data-cds="ChatComposer"\] > \.sc-card \{/);
+  // W14-code r3 gen-final-3: the side chat's editor (the last one with data-placeholder) is the shell's card now
+  // (cccc2cf0a UF fp = c227f4d5e jF), so that host ::before rule is dead and deleted.
+  assert.doesNotMatch(editorCss, /\[data-placeholder\]::before/);
+  // W14-code composer review: the host drag ring is gone; a card drop outside a pane is the shell's ChatComposerDropPanel.
+  assert.ok(!css.includes('.sc-composer[data-drag-over] [data-cds="ChatComposer"] > .sc-card'), 'no host drag ring');
 });
 
 const HTML_ATTRS = Object.fromEntries([...(/<html\b([^>]*)>/.exec(fs.readFileSync(path.join(app, 'index.html'), 'utf8'))[1]).matchAll(/([\w-]+)="([^"]*)"/g)].map((m) => [m[1], m[2]]));
@@ -555,10 +562,40 @@ test("Af's drop hook stays idle without onFileDrop (the host card's own drop han
   const source = fs.readFileSync(path.join(app, 'src/source-composer.jsx'), 'utf8');
   const shell = source.slice(source.indexOf('<SourceComposerShell '), source.indexOf('</SourceComposerShell>'));
   assert.ok(shell.length > 1000);
-  assert.doesNotMatch(shell.slice(0, shell.indexOf('editor={{')), /onFileDrop|dropScope/, 'the host never hands the shell a drop handler');
+  // W14-code composer review: the host hands the shell a drop handler only as the card fallback outside a pane zone
+  // (cardFileDrop is undefined with the pane zone), and never a page scope.
+  assert.match(shell.slice(0, shell.indexOf('editor={{')), /onFileDrop=\{cardFileDrop\}/);
+  assert.doesNotMatch(shell.slice(0, shell.indexOf('editor={{')), /dropScope/, 'the card scope only');
   // R4g-composer CP1: the shell's CDS contexts are view-tabs instances and main.jsx wraps the Code composer in CdsRoot
   // (tests/composer-cds-root.test.mjs); the shell itself renders none.
   assert.doesNotMatch(source, /<CdsRoot\b|createElement\(CdsRoot|h\(CdsRoot/, 'source-composer.jsx');
+});
+
+test("W14-code composer review: with onFileDrop the drop hook (Uf) listens on the window's body for the off-target / on-target state", (t) => {
+  const w = fakeWorld();
+  const listeners = [], handlers = {};
+  w.doc.body.addEventListener = (type, fn, capture) => { listeners.push(`${type}${capture ? ':capture' : ''}`); if (capture) handlers[type] = fn; };
+  withDom(t, w.globals);
+  // The owner window (shared-frame za → aa: the node's ownerDocument.defaultView) whose document body Uf listens on.
+  const owner = new Map([[ViewTabs.CdsOwnerWindowContext, { ownerDocument: { defaultView: { document: w.doc } } }]]);
+  const f = hookFixture(() => Shell.ChatComposerShell.render({ dropScope: 'card', onFileDrop: noop, editor: { draftStoreKey: 'k', hasDraftText: () => false, trailingNotch: 'float', focus: noop, render: () => null } }, null), owner);
+  const out = f.render();
+  assert.deepEqual(listeners.sort(), ['dragend:capture', 'dragleave:capture', 'dragover:capture', 'drop', 'drop:capture']);
+  // Idle until a drag arrives: no panel yet.
+  assert.equal(elements(out).some((e) => e.props['data-cds'] === 'ChatComposerDropPanel'), false);
+  // A Finder drag anywhere in the window but off the card: "off-target" — vm's panel with qf's dashed accent border shown,
+  // Kf's ring and Jf's glow (with Xd's fade-in) hidden.
+  handlers.dragover({ dataTransfer: { types: ['Files'] }, target: {}, preventDefault: noop });
+  const panel = elements(f.render()).find((e) => e.props['data-cds'] === 'ChatComposerDropPanel');
+  assert.ok(panel, 'the drop panel');
+  assert.equal(panel.props.className, 'pointer-events-none absolute inset-0 z-[1] rounded-[inherit]');
+  const layers = panel.props.children.map((c) => c.props.className);
+  assert.equal(layers[0], 'absolute inset-0 rounded-[inherit] transition-opacity duration-fast opacity-100 border border-dashed border-[color:var(--cds-fill-accent)]');
+  assert.equal(layers[1], 'absolute inset-0 rounded-[inherit] transition-opacity duration-fast opacity-0 shadow-[inset_0_0_0_2px_var(--cds-fill-accent)]');
+  assert.match(layers[2], /opacity-0 shadow-\[inset_0_0_24px_0_color-mix\(in_srgb,var\(--cds-fill-accent\)_20%,transparent\)\] motion-safe:animate-\[cds-fade-in_0\.2s/);
+  // The drag leaves the window (relatedTarget null): idle again, no panel.
+  handlers.dragleave({ dataTransfer: { types: ['Files'] }, relatedTarget: null, target: {} });
+  assert.equal(elements(f.render()).some((e) => e.props['data-cds'] === 'ChatComposerDropPanel'), false);
 });
 
 // ---------------------------------------------------------------- the host half: yp and cm's box

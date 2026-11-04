@@ -1,7 +1,8 @@
 /* Shared Av below slot/gap-sm and existing CDS buttons; account content is a Codex adapter. */
 .ss-account-controls{display:flex;flex-wrap:wrap;justify-content:flex-end;align-items:center;gap:var(--cds-gap-sm,8px)}
 .ss-account-confirm{display:flex;flex-direction:column;gap:var(--cds-gap-sm,8px)}
-.ss-account-confirm p,.ss-account-error{margin:0;font:inherit}
+.ss-account-confirm p,.ss-account-error,.ss-account-notice{margin:0;font:inherit}
+.ss-account-notice{color:var(--cds-text-secondary);overflow-wrap:anywhere}
 .ss-account-error{color:var(--cds-text-danger);overflow-wrap:anywhere}
 .ss-account-code{display:block;width:fit-content;font-family:var(--cds-font-mono);user-select:text;color:var(--cds-text-primary)}
 .ss-row-below{display:flex;flex-direction:column;gap:var(--cds-gap-sm,8px);margin-top:var(--cds-gap-sm,8px)}

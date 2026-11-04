@@ -1,8 +1,7 @@
-import { buttonPressHandlers } from './button-press.mjs';
 // The shared runtime owns submission, identity and draft lifetime.
 import React, { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useApprovalDraft } from "./use-approval-draft.js";
-import { approvalActionIndex, approvalAnnouncement, approvalCardModel, approvalHasVisibleIntersection, approvalKeyIntent, changeGroupsSigned, changeLineParts, changeRowsGated, changeRowsGateKey, createApprovalHotkeyArming, detailsOverflow, elicitationFormContent, elicitationInitialValues, exactLineText, scrollRegionProps } from "./approval-card-model.mjs";
+import { approvalActionIndex, approvalAnnouncement, approvalAriaAction, approvalCardModel, autoSwitchApplies, approvalHasVisibleIntersection, approvalKeyIntent, changeGroupsSigned, changeLineParts, changeRowsGated, changeRowsGateKey, createApprovalHotkeyArming, detailsOverflow, exactLineText, scrollRegionProps } from "./approval-card-model.mjs";
 import { createReadGateStore, nextReadGateReplay, readGateAllowIntent, readGateKey, readGateView, recordReadState, recordRowsFit } from "./approval-read-gate-model.mjs";
 import { ApprovalReadRows } from "./generated/code-current/approval-read-gate.mjs";
 // w11-sweep-ccres (w10-ccres-approval-card review item 2): the card's display escapes, one copy each from approval-titles
@@ -10,15 +9,24 @@ import { ApprovalReadRows } from "./generated/code-current/approval-read-gate.mj
 // as \uXXXX) and shared-18 `G as J` (nq: control and invisible characters escaped, rendered text kept).
 import { LO as Y } from "./generated/approval-titles/shared-9-CM21XrJw.mjs";
 import { nq as J } from "./generated/approval-titles/shared-18-D3y8YMFN.mjs";
-import { SourceTooltip } from "./source-tooltip.jsx";
-import { SourceShortcut } from "./source-shortcut.jsx";
-import { SourceSelect } from "./source-select.jsx";
+// V3-W14-approvals: the 3.6556.2 card pieces, one copy each (D1). The decision row and its buttons are shared-10 FS / IS
+// (cc32965c2 `Ot as fr`, the row its tool card Sv renders), sliced by extract-cowork-approval.mjs; IS draws each decision
+// as the CDS Button (shortcut keycap, busy spinner, disabled-reason tooltip). OS is the allow arming kS wraps (cc32965c2
+// `Ft as ir`). The title is shared-5 bL (cc32965c2 `tt as Lt`), sliced by extract-question-card.mjs.
+import { FS as ApprovalActions, IS as ApprovalActionButton, OS as useApprovalAllowArm } from "./generated/cowork-approval/shared-10-D6FXWZph.mjs";
+import { QuestionCardHeader as ApprovalTitle } from "./generated/question-card/card-header.mjs";
+import { CdsButton, CdsCard, CdsCollapsible, CdsTextLink, cdsClassNames } from "./generated/view-tabs/index.js";
+import { ElicitationField, ElicitationForm, elicitationInitialValues as formInitialValues, readElicitationForm } from "./generated/approval-elicitation/index.mjs";
+import { useIntl } from "./source-routines-shared-adapters.jsx";
+import { useSourceToasts } from "./source-toast.jsx";
 import { Icon } from "./icons";
 import { usePersona } from "./use-persona.js";
 import { useCardHotkeys } from "./use-card-hotkeys.js";
-import { approvalIdentity, isPlanReviewRequest, visibleApprovals } from "./approval-draft-model.mjs";
+import { approvalIdentity, isPlanReviewRequest, queuedApprovals, visibleApprovals } from "./approval-draft-model.mjs";
 import { useApprovalCardLanding } from "./generated/approval-landing/card-landing.mjs";
+import { revealClickGuard, useRevealSettled } from "./generated/approval-landing/reveal-guard.mjs";
 import { assistantName } from "./persona-store.mjs";
+import { hostGrowthBookFlag } from "./host-growthbook.mjs";
 import { ComputerUseAccessList, ComputerUseAccessNote, ComputerUseAccessTitle, ComputerUseTakeoverTitle, ComputerUseTeachCardBody } from "./computer-use-approval-card.jsx";
 import { computerUseAccessRequest, computerUseTakeoverRequest, computerUseTeachRequest } from "./computer-use-model.mjs";
 import "./source-approval-card.css";
@@ -49,76 +57,55 @@ function useOverflowFocus(ref, contentKey) {
   return overflow;
 }
 
-// approval-actions-current Xo: allow clicks are armed after 400 ms; window
-// activation / visibility changes rearm. Deny remains immediately available.
-export function useAllowArming(root, armKey, active) {
-  const at = useRef(Date.now());
-  useLayoutEffect(() => { at.current = Date.now(); }, [armKey, active]);
-  useLayoutEffect(() => {
-    const document = root.current?.ownerDocument;
-    const window = document?.defaultView;
-    if (!document || !window) return;
-    let hadFocus = document.hasFocus();
-    const rearm = () => { at.current = Date.now(); };
-    const checkFocus = () => {
-      const focused = document.hasFocus();
-      if (focused && !hadFocus) rearm();
-      hadFocus = focused;
-    };
-    const onFocus = () => { if (!hadFocus) rearm(); checkFocus(); };
-    const visible = () => { if (document.visibilityState === "visible") rearm(); };
-    const timer = window.setInterval(checkFocus, 250);
-    window.addEventListener("focus", onFocus);
-    window.addEventListener("blur", checkFocus);
-    document.addEventListener("visibilitychange", visible);
-    return () => {
-      window.clearInterval(timer);
-      window.removeEventListener("focus", onFocus);
-      window.removeEventListener("blur", checkFocus);
-      document.removeEventListener("visibilitychange", visible);
-    };
-  }, [root]);
-  return () => Date.now() - at.current >= 400;
+// V3-W14-approvals: a decision as shared-10 IS takes it (cc32965c2 Sv's cr / pr / Ti / yi objects). In the card
+// placement only Allow once shows its keycap (yi `shortcut: "cmd+enter"`); Deny ("esc"), the session allow and Always
+// allow ("cmd+shift+enter") carry `chordHintHidden: Kn !== "dock"`, so IS gives them aria-keyshortcuts instead. While a
+// decision is sending its button is busy (CDS Button spinner) and the others are held (aria-disabled, inert click: IS
+// `held`); an allow the read gate holds is disabled with the gate's hint as its disabledReason (z_).
+// `shortcut` is the chord a host card listens for (an aria-keyshortcuts value such as "Meta+Enter Control+Enter", or
+// IS's keycap form "cmd+enter"); `keycap` is the chord drawn on the button (the card's ⌘↵ / plan keycaps), else the
+// chord is only announced.
+const CHORD_KEYS = { Meta: "cmd", Control: "ctrl", Shift: "shift", Alt: "alt", Enter: "enter", Escape: "esc", Period: "." };
+export function chordOf(shortcut) {
+  if (typeof shortcut !== "string" || !shortcut) return undefined;
+  if (!/^[A-Z]/.test(shortcut)) return shortcut;
+  return shortcut.split(" ")[0].split("+").map(key => CHORD_KEYS[key] ?? key.toLowerCase()).join("+");
 }
-
-// keycap: approval-current.js:15846-15854 gives only Allow once `shortcut: "cmd+enter"`
-// (deny/persistent allows carry chordHintHidden in card placement, approval-actions-current.js
-// :3181-3183); CDS Button ks (shared-frame :2936-2944) draws it after the label inside the
-// gap-1 content span, which Button busy fades with the label (the cap keeps its width).
-// disabledReason: an allow the read gate holds (2.42304.0 c96d752d0 Rj Cj `{disabled: bt, disabledReason: Dt}`): the
-// CDS Button stays natively disabled inside the DisabledReasonTooltip wrapper (shared-frame Tl/Uc/Yc: a focusable
-// span described by the hidden reason), here SourceTooltip's disabledReason path.
-export function ActionButton({ action, busy, busyAction, enabled, onAction, shortcut, keycap, disabledReason }) {
+export function approvalDecision(action, { busy = false, busyAction = null, enabled = true, onAction, shortcut, keycap, disabledReason } = {}) {
   const spinning = busy && busyAction === action.key;
   const held = typeof disabledReason === "string" ? disabledReason !== "" : disabledReason != null;
-  const off = !enabled || held;
-  const button = <button type="button" className="sac-button" data-cds="Button"
-    data-variant={action.primary ? "primary" : "secondary"}
-    data-approval-primary={action.primary ? "" : undefined}
-    data-approval-action={action.key} disabled={off && !busy}
-    aria-disabled={busy || off || undefined} aria-busy={spinning || undefined}
-    aria-keyshortcuts={shortcut} title={action.title || undefined}
-    onClick={event => {
-      if (busy || off) { event.preventDefault(); event.stopPropagation(); return; }
-      onAction(action.key);
-    }}
-    {...buttonPressHandlers}>
-    <span className="sac-button-backdrop" aria-hidden="true"><span data-cds-part="paint" /></span>
-    <span className="sac-button-label" data-busy={spinning || undefined}>{action.label}</span>
-    {keycap && <SourceShortcut keys={keycap} aria-hidden="true" data-busy={spinning || undefined}
-      className="scds-in-button scds-trailing" />}
-    {spinning && <span className="sac-button-spinner" aria-hidden="true"><span data-cds="Spinner"><i /><i /></span></span>}
-  </button>;
-  return held && !busy ? <SourceTooltip disabledReason={disabledReason}>{button}</SourceTooltip> : button;
+  const chord = keycap ?? chordOf(shortcut);
+  return {
+    key: action.key, label: action.label, variant: action.primary ? "primary" : "secondary",
+    onClick: () => { if (!busy && enabled && !held) onAction?.(action.key); },
+    ...(spinning ? { busy: true } : busy ? { held: true } : null),
+    ...(!enabled && !busy ? { disabled: true } : held ? { disabled: true, disabledReason } : null),
+    ...(chord ? { shortcut: chord, chordHintHidden: keycap === undefined } : null),
+    ...(action.persistent ? { persistent: true } : null),
+    ...(action.title ? { tooltip: action.title } : null),
+    ...(action.description ? { description: action.description } : null),
+    testId: `approval-action-${action.key}`,
+  };
+}
+// The host cards' single decision button (the plan cards, the teach card, a link): IS for one decision.
+export function ActionButton(props) {
+  return <ApprovalActionButton action={approvalDecision(props.action, props)} chordHints />;
+}
+// cc32965c2 `Ft as ir` (shared-10 kS): the allow buttons of a card that is not a tool card sit in this click arming span.
+export function ApprovalAllowArm({ armKey, children }) {
+  const realmRef = useRef(null);
+  const onClickCapture = useApprovalAllowArm({ armKey, realmRef });
+  return <span ref={realmRef} className="contents" data-approval-allow="" onClickCapture={onClickCapture}>{children}</span>;
 }
 
+// cc43287c9 (JBp1lgty6k): the sr-only "Sending response…" while a decision is on its way.
 export function BusyAnnouncement() {
   const [ready, setReady] = useState(false);
   useEffect(() => {
     const timer = setTimeout(() => setReady(true), 100);
     return () => clearTimeout(timer);
   }, []);
-  return <span className="sac-visually-hidden" role="status">{ready ? t("Sending response") : ""}</span>;
+  return <span className="sr-only" role="status">{ready ? t("Sending response…") : ""}</span>;
 }
 
 // NM (approval-current.js:15959-16006): an sr-only role=status span. A new request
@@ -142,7 +129,8 @@ function ApprovalAnnouncement({ identity, text }) {
     }, 50);
     return () => window.clearTimeout(timer);
   }, [identity, text]);
-  return <span ref={ref} className="sac-visually-hidden" role="status" data-approval-announcement="" />;
+  // cc32965c2 Mv: `n("span", { ref: de, role: "status", className: "sr-only select-none" })`.
+  return <span ref={ref} className="sr-only select-none" role="status" data-approval-announcement="" />;
 }
 
 export function currentlyVisible(element) {
@@ -201,59 +189,10 @@ export function useHotkeyArming(root, armKey, active) {
   return () => clock.current.isArmed();
 }
 
-// mcpServer/elicitation/request form mode: one control per primitive field of the
-// requested schema (approval-card-model.mjs elicitationFields). Values live only in
-// the card; Submit sends them through the same ticket as any approval.
-const TEXT_INPUT_TYPE = { email: "email", uri: "url", date: "date" };
-// The CDS checkbox mark (composer worktree, question card): a native input for form semantics and
-// validation focus, painted as the Claude box with an accent fill and a Check when checked.
-function ElicitationCheckbox(props) {
-  return <span className="sac-field-checkbox-box">
-    <input {...props} type="checkbox" className="sac-field-checkbox" />
-    <Icon name="Check" size={16} weight="strong" style={{ fontSize: 12 }} />
-  </span>;
-}
-function ElicitationField({ field, value, disabled, invalid, onChange, idPrefix }) {
-  const id = `${idPrefix}-${field.id}`, hintId = field.description ? `${id}-hint` : undefined;
-  const label = <span className="sac-field-label">{field.label}
-    {field.required && <span className="sac-field-required">{t("Required")}</span>}</span>;
-  const hint = field.description && <span id={hintId} className="sac-field-hint">{field.description}</span>;
-  const common = { id, disabled, "aria-describedby": hintId, "aria-invalid": invalid || undefined,
-    "aria-required": field.required || undefined, "data-elicitation-field": field.id };
-  if (field.type === "boolean")
-    return <div className="sac-field sac-field-check">
-      <ElicitationCheckbox {...common} checked={value === true} onChange={event => onChange(event.target.checked)} />
-      <label htmlFor={id}>{label}</label>{hint}
-    </div>;
-  if (field.type === "multiselect")
-    return <fieldset className="sac-field sac-field-set" disabled={disabled} aria-describedby={hintId}
-      aria-invalid={invalid || undefined} data-elicitation-field={field.id}>
-      <legend>{label}</legend>{hint}
-      {field.options.map((option, index) => <label key={option.value} className="sac-field-option">
-        <ElicitationCheckbox id={index === 0 ? id : undefined}
-          checked={Array.isArray(value) && value.includes(option.value)}
-          onChange={event => onChange(event.target.checked
-            ? [...(value ?? []), option.value] : (value ?? []).filter(entry => entry !== option.value))} />
-        <span>{option.label}</span>
-      </label>)}
-    </fieldset>;
-  return <div className="sac-field">
-    <label htmlFor={id}>{label}</label>{hint}
-    {field.type === "select"
-      // The app's own popover select (Settings' SourceSelect), not the OS menu; its trigger keeps the field's id,
-      // hint, invalid and data-elicitation-field so validation can focus it.
-      ? <SourceSelect className="sac-field-select" label={field.label} value={value ?? ""} disabled={disabled} triggerProps={common}
-          items={[...(!field.required || field.default == null ? [{ value: "", label: t("Choose…") }] : []),
-            ...field.options.map(option => ({ value: option.value, label: option.label }))]}
-          onChange={onChange} />
-      : <input {...common} className="sac-field-control" value={value ?? ""} onChange={event => onChange(event.target.value)}
-          type={field.type === "number" || field.type === "integer" ? "number" : TEXT_INPUT_TYPE[field.format] ?? "text"}
-          step={field.type === "integer" ? 1 : field.type === "number" ? "any" : undefined}
-          min={field.minimum ?? undefined} max={field.maximum ?? undefined}
-          maxLength={field.maxLength ?? undefined} autoComplete="off" spellCheck={false} />}
-  </div>;
-}
-
+// mcpServer/elicitation/request form mode: the 3.6556.2 form (generated/approval-elicitation): cd359c6df b (cc32965c2 oa),
+// one c9e77b76c A (Wr) per requested property with its label, control, hint and submit-time error, seeded by ce3d4614c a
+// (Do) and read and validated on submit by ce3d4614c o (Eo).
+const NO_INVALID = new Set();
 function openExternalLink(url) {
   return window.desktop?.call?.("external", { url }) ?? Promise.reject(new Error(t("Could not open the link.")));
 }
@@ -262,6 +201,30 @@ function openExternalLink(url) {
 // (exported as s), which c96d752d0's tool card puts on its frame (`className:Us("gap-[24px]",SCe,Ot==="card"&&"w-full max-w-[480px]")`).
 // When qj lands on the card, Zw adds Yw (focus-visible:outline-none plus the ::after ring) and the outline yields to it.
 export const CARD_FOCUS_OUTLINE = "focus-visible:outline-1 focus-visible:outline-fill-accent focus-visible:outline-offset-2";
+// V3-W14-approvals: the 3.6556.2 card shell, c2d1aeb56 q (cc32965c2 `a as ao`) in the card presentation (c2d1aeb56 A,
+// the transcript placement these cards use here; the official Code session's own placement is the approval dock): V,
+// then `w = d === "card" && !f && "epitaxy-card-outline"`, then the caller's className. No backdrop (B is the dock's)
+// and queue depth 0 (`x = p ? 0 : s`). c16f2c953 o (variant "host") draws it as one div with these classes.
+export const APPROVAL_CARD_SHELL = "epitaxy-approval-card relative isolate flex flex-col rounded-card p-[12px] gap-[12px] max-h-[60vh] origin-top @container animate-code-approval-promote group-data-[skip-approval-enter]/approval-dock:animate-none motion-reduce:animate-none";
+export const APPROVAL_CARD_OUTLINE = "epitaxy-card-outline";
+// c2d1aeb56 Y (cc32965c2 `r as lo`) over J (`i as so`): the body, a scroll clamp that is a focusable "Request details"
+// group while it scrolls.
+export const APPROVAL_CARD_BODY = "epitaxy-scroll-clamp scroll-fade-y focus-visible:outline-hidden focus-visible:shadow-focus epitaxy-approval-body flex min-h-0 flex-col gap-[12px] overflow-y-auto -mx-[12px] px-[12px] -mt-[4px] pt-[4px] -mb-[8px] pb-[8px] [&>*]:shrink-0";
+// cc32965c2 Sv: the tool card's className `oa = y("gap-[24px]", co, Kn === "card" && "w-full max-w-[480px]")` and its
+// body `a(lo, { className: "gap-[24px]" })` (tailwind-merge: gap-[24px] replaces V's and Y's gap-[12px]).
+export const TOOL_CARD_SHELL = cdsClassNames(APPROVAL_CARD_SHELL, APPROVAL_CARD_OUTLINE, "gap-[24px]", CARD_FOCUS_OUTLINE, "w-full max-w-[480px]");
+export const TOOL_CARD_BODY = cdsClassNames(APPROVAL_CARD_BODY, "gap-[24px]");
+// The elicitation and plan cards (bs / Ss / Fs: `a(ao, { … })` with no className, `a(lo, …)`): V's gap-[12px].
+export const PLAIN_CARD_SHELL = cdsClassNames(APPROVAL_CARD_SHELL, APPROVAL_CARD_OUTLINE);
+// cc32965c2 uo (c2d1aeb56 K): the elicitation actions stack in a narrow card.
+const NARROW_STACK = "[@container_(max-width:420px)]:flex-col [@container_(max-width:420px)]:items-stretch";
+// cc32965c2 N_: a tool's detail value; C_ / w_ / T_: the clamped, whole and footnote text blocks.
+const DETAIL_VALUE = "bg-alpha-1 rounded-[5px] py-md px-lg text-code text-secondary whitespace-pre-wrap break-words select-text [unicode-bidi:plaintext]";
+const SCROLL_CLAMP = "epitaxy-scroll-clamp scroll-fade-y focus-visible:outline-hidden focus-visible:shadow-focus";
+const BODY_CLAMPED = "text-body text-secondary select-text break-words max-h-[calc(3*var(--cds-leading-body))] overflow-y-auto [unicode-bidi:plaintext]";
+const BODY_WHOLE = "text-body text-secondary select-text break-words [unicode-bidi:plaintext]";
+// A launch.json environment block: eight code lines, then it scrolls.
+const ENV_STYLE = { maxHeight: "calc(8 * var(--cds-leading-code) + 2 * var(--cds-pad-md))" };
 
 // V3-w10-ccres-approval-card: the 3.6556.2 change card's blocks (cc32965c2-BQu1bA_w.js, readable :11099-11240 and the
 // card body :11660-11970), for the fields approvalChangeCard sets. Icons are CDS size "sm" (16px).
@@ -286,6 +249,35 @@ function ChangeLineText({ text }) {
     : part.tag === "sr" ? <span key={index} className="sr-only">{Y(part.text)}</span>
     : <React.Fragment key={index}>{Y(part.text)}</React.Fragment>);
 }
+
+// W14-code r7 r7pa-01/02: cc32965c2 We's value block (`n("div",{title,"data-approval-value":"",className:N_,children:
+// Y(e)})`), for the card's own detail and for the host detail bodies source-session.jsx draws (a file request's path).
+export function ApprovalDetailValue({ text, title }) {
+  return <div data-approval-value="" className={DETAIL_VALUE} title={title}>{Y(text)}</div>;
+}
+// W14-code r7 r7pa-02: cc32965c2 $_ — one folded detail: CDS Collapsible (shared-frame xa = fO) with the footnote label
+// trigger, and in its panel either D_'s numbered lines (`lined`) or the bidi-override pre, both through Y.
+export function ApprovalFold({ label, text, open, lined }) {
+  return <CdsCollapsible.Root defaultOpen={open === true}>
+    <CdsCollapsible.Trigger><span className="text-footnote text-muted-control">{label}</span></CdsCollapsible.Trigger>
+    <CdsCollapsible.Panel>{lined
+      ? <div className="mt-1 overflow-hidden rounded-[5px] bg-alpha-1"><ApprovalExactLines script={text} /></div>
+      : <pre dir="ltr" className="mt-1 bg-alpha-1 rounded-[5px] py-md px-lg text-code text-secondary whitespace-pre-wrap break-all select-text [unicode-bidi:bidi-override]">{Y(text)}</pre>}
+    </CdsCollapsible.Panel>
+  </CdsCollapsible.Root>;
+}
+// cc32965c2 Ae: the folds column (`n("div",{"data-testid":"approval-folds",className:"flex flex-col gap-1",children:
+// i.foldedDetail?.map($_)})`); a_'s script fold is labelled `Cm.foldLines` over `Cm.script` with Yg's line count, and
+// is `lined` (D_). The workflow card's script is that fold (open when there is nothing else to read, Claude's dialog).
+const FOLD_LINES = { defaultMessage: "{label} · {lines, plural, one {# line} other {# lines}}", id: "ei+6nE6ZLb" };
+const SCRIPT_LABEL = { defaultMessage: "script", id: "HHGY4M5mrS" };
+export function ApprovalScriptFolds({ script, open }) {
+  const intl = useIntl();
+  const label = intl.formatMessage(FOLD_LINES, { label: intl.formatMessage(SCRIPT_LABEL), lines: script.replace(/\n$/, "").split("\n").length });
+  return <div data-testid="approval-folds" className="flex flex-col gap-1"><ApprovalFold label={label} text={script} open={open} lined /></div>;
+}
+// T_: the detail note's footnote text (approval-detail-note).
+export const DETAIL_NOTE = "text-footnote text-muted-as-secondary select-text break-words [unicode-bidi:plaintext]";
 
 // D_: exact lines as a numbered ltr pre (each line a block span whose ::before draws its number).
 export function ApprovalExactLines({ script }) {
@@ -400,7 +392,7 @@ export function richTitle(template, values, tags = TITLE_TAGS) {
     : piece ? [piece] : []);
   const out = [];
   let last = 0, count = 0;
-  for (const match of template.matchAll(/<(b|meta|glued)>([\s\S]*?)<\/\1>/g)) {
+  for (const match of template.matchAll(/<(b|meta|glued|link)>([\s\S]*?)<\/\1>/g)) {
     out.push(...fill(template.slice(last, match.index), `t${count}-`));
     out.push(tags[match[1]](fill(match[2], `c${count}-`), `tag${count}`));
     last = match.index + match[0].length;
@@ -432,13 +424,11 @@ function ApprovalDescription({ heading }) {
 
 export function SourceApprovalCardView({ request, item, busy = false, busyAction = null,
   error = "", onAction, enabled = true, isActive = true, menuOpen = false,
-  armKey, renderDetails, className = "", readGateStore, model: givenModel }) {
+  armKey, renderDetails, className = "", readGateStore, model: givenModel, onOpenTasks, autoSwitch = null, hotkeys = true }) {
   usePersona(); // C2: re-render the title when the assistant name changes
   // model: a card model a source already built (approvalChangeCard); otherwise the request's own.
   const model = givenModel ?? approvalCardModel(request, item);
-  const [expanded, setExpanded] = useState(true);
   const root = useRef(null), body = useRef(null), actions = useRef(null), reason = useRef(null);
-  const detailsId = useId();
   const identity = armKey ?? request?.bridgeApproval?.instanceId ?? request;
   // toolcards-01 read gate (approval-read-gate-model.mjs; 2.42304.0 c96d752d0 Rj): ApprovalReadRows (UDe) reports
   // into the card's own store (wj, or one handed in); the allows are held / replay the hint from it.
@@ -456,19 +446,23 @@ export function SourceApprovalCardView({ request, item, busy = false, busyAction
   // Rj pn: the click arming key gains "held-look" while held (a hold that lifts re-arms the 400 ms grace); the
   // hotkey clock (Cp armKey ut) does not.
   const clickArmKey = useMemo(() => readGate.held ? { identity, look: "held" } : identity, [identity, readGate.held]);
-  const clickArmed = useAllowArming(root, clickArmKey, isActive);
   const hotkeyArmed = useHotkeyArming(root, identity, isActive);
-  const overflow = useOverflowFocus(body, `${expanded}:${model.detail?.text ?? ""}:${model.reason ?? ""}:${JSON.stringify(model.context)}:${JSON.stringify([model.servedText, model.changeTarget, model.changeGroups, model.footnote])}`);
+  const overflow = useOverflowFocus(body, `${model.detail?.text ?? ""}:${model.reason ?? ""}:${JSON.stringify(model.context)}:${JSON.stringify([model.servedText, model.changeTarget, model.changeGroups, model.footnote])}`);
   const reasonOverflow = useOverflowFocus(reason, model.reason ?? "");
-  const fields = model.elicitation?.mode === "form" ? model.elicitation.fields : null;
-  const [formValues, setFormValues] = useState(() => elicitationInitialValues(fields));
-  const [formError, setFormError] = useState(null);
+  // cc32965c2 bs: the requested schema with its required booleans taken out of `required` (`b = y.filter(e => !_(e))`,
+  // `x = {...h, required: b}`) and kept apart (`S = y.filter(_)`, each sent as false when left unchecked); Do's values.
+  const intl = useIntl();
+  const requested = model.elicitation?.mode === "form" ? model.elicitation.schema : null;
+  const form = useMemo(() => {
+    if (!requested) return null;
+    const isBoolean = name => requested.properties[name]?.type === "boolean";
+    const required = Array.isArray(requested.required) ? requested.required : [];
+    const schema = { ...requested, required: required.filter(name => !isBoolean(name)) };
+    return { schema, booleans: required.filter(isBoolean), initial: formInitialValues(schema), names: Object.keys(requested.properties) };
+  }, [requested]);
+  const [invalidFields, setInvalidFields] = useState(NO_INVALID);
   const formId = useId();
-  useLayoutEffect(() => {
-    setExpanded(true);
-    setFormValues(elicitationInitialValues(fields));
-    setFormError(null);
-  }, [identity]); // eslint-disable-line react-hooks/exhaustive-deps -- a new request starts a new draft
+  useLayoutEffect(() => { setInvalidFields(NO_INVALID); }, [identity]); // eslint-disable-line react-hooks/exhaustive-deps -- a new request starts a new draft
   const actionable = enabled && isActive && typeof onAction === "function" && model.supported;
   // Deny with feedback (model.declineFeedback): an optional note the core continues with instead.
   const [feedbackOpen, setFeedbackOpen] = useState(false), [feedback, setFeedback] = useState("");
@@ -498,16 +492,9 @@ export function SourceApprovalCardView({ request, item, busy = false, busyAction
       onAction(action, { feedback: feedback.trim() });
       return;
     }
-    if (fields && action === "accept") {
-      const result = elicitationFormContent(fields, formValues);
-      if (result.error) {
-        setFormError(result);
-        const control = root.current?.querySelector(`[data-elicitation-field="${CSS.escape(result.fieldId)}"]`);
-        (control?.matches("fieldset") ? control.querySelector("input") : control)?.focus();
-        return;
-      }
-      setFormError(null);
-      onAction(action, { content: result.content });
+    // The form answers through its own submit (bs O), which ⌘↵ requests like the Submit button.
+    if (form && action === "accept") {
+      root.current?.querySelector(`form[id="${CSS.escape(formId)}"]`)?.requestSubmit();
       return;
     }
     onAction(action);
@@ -518,11 +505,12 @@ export function SourceApprovalCardView({ request, item, busy = false, busyAction
     Promise.resolve().then(() => openExternalLink(model.elicitation.url))
       .catch(() => setLinkError(t("Could not open the link.")));
   };
-  const shortcutEnabled = actionable && !busy && !menuOpen;
+  // hotkeys false: a card outside the session (the sidebar hover card, ca0409d7c / cf74bc599 AD: isPanelActive and
+  // isFocusedPane false) answers clicks only — no chords and no keycaps.
+  const shortcutEnabled = actionable && !busy && !menuOpen && hotkeys;
   // The ⌘⏎ keycap follows the same active/menu gate but survives busy (faded, ks :2886 opacity-0),
   // so the stable-size busy action keeps its width.
-  const primaryKeycap = actionable && !menuOpen ? "cmd+enter" : undefined;
-  const primaryShortcut = "Meta+Enter Control+Enter";
+  const primaryKeycap = actionable && !menuOpen && hotkeys ? "cmd+enter" : undefined;
 
   // The allow the shifted chord picks (approvalKeyIntent): the persistent one, else the session one.
   const shiftedAllow = model.allows?.find(allow => allow.persistent)?.key ?? "acceptForSession";
@@ -560,27 +548,23 @@ export function SourceApprovalCardView({ request, item, busy = false, busyAction
     event.stopPropagation();
     if (intent.type === "action" && currentlyVisible(root.current)) submit(intent.action, "keyboard");
   }, currentlyVisible);
-  // approval-current.js:15399-15470 EM B: with t.meta the title is "Allow Claude to <b>{action}</b>
-  // <meta>{metaText}</meta>?", both parts span.text-primary [unicode-bidi:plaintext], inside a span
-  // that is line-clamp-2 when t.clampTitle && y (:15254 y = detail !== meta || foldedDetail; the
-  // local detail is the changes block); without meta it is "Allow Claude to <b>{action}</b>?".
-  // The ev header around B is already text-primary (cf6ae6197 ev), so only the spans are added.
-  // The plain title stays the aria-label.
+  // 3.6556.2 cc32965c2 Z_ L (readable :12030-12100): the title span (line-clamp-2 when clampTitle and the card shows its
+  // detail, else a [data-approval-value]) in bL (cc32965c2 Lt) — one rich message per heading shape, every shape through
+  // the same TITLE_TEMPLATES (V3-W14-approvals: the host's own headings too, so no fragment of a sentence is translated
+  // on its own).
   // A computer-use request_access: its own title variants (computer-use-approval-card.jsx, official ZEe).
   const title = model.access ? <ComputerUseAccessTitle title={model.access.title} name={assistantName()} />
     : model.takeover ? <ComputerUseTakeoverTitle takeover={model.takeover} name={assistantName()} />
     // 3.6556.2 cc32965c2 L: a card with its own heading (approvalChangeCard) shows it as the whole title.
-    : model.ownHeading ? <span className="text-primary [unicode-bidi:plaintext]">{model.ownHeading}</span>
-    // V3-w10-trans-approval-titles-host: a title builder's heading reads as the 3.6556.2 rich message.
-    : model.heading?.official ? <OfficialHeadingTitle heading={model.heading} name={assistantName()} />
-    : model.heading
-    ? <>{t("Allow {name} to", { name: assistantName() })} <span className="sac-em">{model.heading.action}</span>{model.heading.meta
-      ? <> <span className="sac-em">{model.heading.meta}</span></> : null}{t("?")}</>
+    : model.ownHeading ? <span className="text-primary [unicode-bidi:plaintext]">{Y(model.ownHeading)}</span>
+    : model.heading ? <OfficialHeadingTitle heading={model.heading} name={assistantName()} />
     : model.title;
-  const clamp = model.clampTitle && model.detail ? "" : undefined;
+  const clamped = model.clampTitle && !!model.detail;
   // le (readable :11577): the description shown as a tooltip sits on the detail, else the reason, else the title.
   const descriptionTip = model.heading?.descriptionAsTooltip ? model.heading.overrideDescription : undefined;
   const tipOn = descriptionTip === undefined ? null : model.detail ? "detail" : model.reason ? "reason" : "title";
+  const titleRow = <ApprovalTitle><span className={clamped ? "line-clamp-2" : undefined} data-approval-value={clamped ? undefined : ""}
+    title={tipOn === "title" ? descriptionTip : undefined}>{title}</span></ApprovalTitle>;
   // c96d752d0 Mj (2.42304.0): the gated rows sit in `q`, "flex flex-col gap-1 rounded bg-alpha-1 px-lg py-md", with
   // the aria-hidden "What Claude sent" footnote while held (`K !== void 0 && h`), wrapped in UDe keyed by the rows.
   // The rows themselves stay the local arguments text in vj's type (the original's rpe row list is not migrated yet).
@@ -604,111 +588,194 @@ export function SourceApprovalCardView({ request, item, busy = false, busyAction
       </ApprovalReadRows>
     : changeBlock;
   const looseFootnote = changeGated ? null : footnote;
-  // We / Ie: the detail block, after the body's other blocks or (detailFirst) before them.
-  const details = model.detail ? <div id={detailsId} className="sac-details" hidden={!expanded} title={tipOn === "detail" ? descriptionTip : undefined}>
-      {gatedRows ?? (renderDetails ? renderDetails(model.detail, model) : <pre className="sac-code" title={model.detail.raw}>{model.detail.text}</pre>)}
+  // We / Ie (z, readable :12220-12240): the detail block, `div.flow-root` around Ne — the value in N_ (its title the
+  // description tooltip, le "detail"), or the host's own detail body (a file change, a workflow script).
+  // W14-code r7 r7pa-01: a host body is drawn only when renderDetails returns one (a file change, a workflow script);
+  // undefined (a command, arguments, a URL…) falls back to N_ + Y as We draws it.
+  const hostDetails = model.detail && !gatedRows && renderDetails ? renderDetails(model.detail, model) : undefined;
+  const details = model.detail ? <div className="flow-root">
+      {gatedRows ?? (hostDetails !== undefined
+        ? <div className="contents" title={tipOn === "detail" ? descriptionTip : undefined}>{hostDetails}</div>
+        : <ApprovalDetailValue text={model.detail.text} title={tipOn === "detail" ? descriptionTip : model.detail.raw} />)}
     </div> : null;
   const footnoteAfterDetails = !!gatedRows && model.rowsTrail !== true;
-  const footer = model.supported ? <footer ref={actions} className="sac-actions">
-      <span className="sac-deny">
-        <ActionButton action={model.declineFeedback && feedbackOpen && feedback.trim() ? { ...model.deny, label: t("Deny with feedback") } : model.deny} busy={busy} busyAction={busyAction} enabled={actionable}
-          shortcut={shortcutEnabled ? "Escape" : undefined} onAction={submit} />
-        {model.declineFeedback && !feedbackOpen && <button type="button" className="sac-feedback-toggle" disabled={!actionable || busy}
-          onClick={() => setFeedbackOpen(true)}>{t("Add feedback")}</button>}
-      </span>
-      <div className="sac-allows" onClickCapture={event => {
-        if (!clickArmed()) { event.preventDefault(); event.stopPropagation(); }
-      }}>
-        {model.allows.map(action => <ActionButton key={action.key} action={action}
-          busy={busy} busyAction={busyAction} enabled={actionable} onAction={submit}
-          disabledReason={readGate.allowDisabled ? readGate.disabledReason : undefined}
-          keycap={action.primary ? primaryKeycap : undefined}
-          shortcut={shortcutEnabled ? action.primary ? primaryShortcut
-            : action.key === shiftedAllow ? "Meta+Shift+Enter Control+Shift+Enter" : undefined : undefined} />)}
-      </div>
-    </footer> : null;
+  // The decisions in shared-10 FS (cc32965c2 Sv `na = n(fr, { … className: y($i, Kn !== "dock" && "justify-end"),
+  // armKey: Ji, deny: cr, allows: Mi, hideHintsAfterFrameFocus: !0 })`); the allows' click arming is FS's own (OS, 400 ms).
+  const decision = (action, extra) => approvalDecision(action, { busy, busyAction, enabled: actionable, onAction: submit, ...extra });
+  const denyDecision = model.supported ? decision(model.declineFeedback && feedbackOpen && feedback.trim() ? { ...model.deny, label: t("Deny with feedback") } : model.deny,
+    { shortcut: shortcutEnabled ? "esc" : undefined }) : null;
+  // appr-05: cc32965c2 Sv `ii` / `ui(di)` — with the session's Auto offer (`ye`: cc43287c9 _4, handed in as autoSwitch) and
+  // the card's own gate (autoSwitchApplies, `Cr`), Allow once is the split button whose "More allow options" menu holds
+  // "Allow and switch to Auto"; picking it goes through ye.allowAndSwitchToAuto, then answers Allow once whatever the
+  // Auto confirmation said (`ye.allowAndSwitchToAuto((i) => { …, $n("once", !1) })`).
+  const autoSwitchOffered = !!autoSwitch && actionable && !readGate.held && autoSwitchApplies(model);
+  const switchToAuto = action => () => {
+    if (!actionable || busy) return;
+    autoSwitch.allowAndSwitchToAuto(() => submit(action.key));
+  };
+  const allowDecisions = model.supported ? model.allows.map(action => ({ ...decision(action, {
+    disabledReason: readGate.allowDisabled ? readGate.disabledReason : undefined,
+    keycap: action.primary ? primaryKeycap : undefined,
+    shortcut: shortcutEnabled && !action.primary && action.key === shiftedAllow ? "cmd+shift+enter" : undefined }),
+    ...(autoSwitchOffered && action.primary && { menuLabel: t("More allow options"), dropdown: [{ label: t("Allow and switch to Auto"),
+      description: t("Auto reviews the rest of this session."), onSelect: switchToAuto(action) }] }) })) : [];
+  // Deny with feedback (OpenCode's declineFeedback, no official counterpart): the toggle leads the row (FS endDecisions).
+  const feedbackToggle = model.declineFeedback && !feedbackOpen
+    ? <button type="button" className="sac-feedback-toggle" disabled={!actionable || busy} onClick={() => setFeedbackOpen(true)}>{t("Add feedback")}</button> : null;
+  const footer = model.supported ? <ApprovalActions actionsRef={actions} className="epitaxy-approval-actions justify-end" armKey={clickArmKey}
+      deny={denyDecision} allows={allowDecisions} hideHintsAfterFrameFocus
+      endDecisions={feedbackToggle ? { lead: feedbackToggle } : undefined} /> : null;
+  const shell = (props, children) => <section ref={root} data-approval-presentation="card" data-approval-card-root=""
+    data-approval-instance={request?.bridgeApproval?.instanceId} data-approval-method={request?.method} data-approval-kind={model.kind}
+    role="group" aria-label={t("Permission request: {action}", { action: approvalAriaAction(model) })} aria-busy={busy || undefined}
+    tabIndex={0} onKeyDown={keyDown} onClick={event => event.stopPropagation()} {...props}>{children}</section>;
+  const tail = <>
+    {busy && <BusyAnnouncement />}
+    {model.supported && <ApprovalAnnouncement identity={identity} text={approvalAnnouncement(model)} />}
+  </>;
   // request_teach_access: the official teach card (ca31fdde5 Ua) — its own shell "mb-4 overflow-hidden rounded-card border
   // bg-surface-panel shadow-lg" and body (computer-use-approval-card.jsx), Deny (⌘.) then Start guide (⌘↵, armed like
   // every allow). The keys, the landing and the answer stay this card's.
   if (model.teach) {
     const teachActions = <>
       <ActionButton action={model.deny} busy={busy} busyAction={busyAction} enabled={actionable} onAction={submit}
-        keycap={actionable && !menuOpen ? "cmd+." : undefined} shortcut={shortcutEnabled ? "Meta+Period Control+Period Escape" : undefined} />
-      <span className="contents" onClickCapture={event => { if (!clickArmed()) { event.preventDefault(); event.stopPropagation(); } }}>
+        keycap={actionable && !menuOpen ? "cmd+." : undefined} />
+      <ApprovalAllowArm armKey={clickArmKey}>
         {model.allows.map(action => <ActionButton key={action.key} action={action} busy={busy} busyAction={busyAction} enabled={actionable} onAction={submit}
-          keycap={action.primary ? primaryKeycap : undefined} shortcut={shortcutEnabled && action.primary ? primaryShortcut : undefined} />)}
-      </span>
+          keycap={action.primary ? primaryKeycap : undefined} />)}
+      </ApprovalAllowArm>
     </>;
-    return <section ref={root} className={`source-message mb-4 overflow-hidden rounded-card border bg-surface-panel shadow-lg ${CARD_FOCUS_OUTLINE} ${className}`.trim()}
-      data-approval-root="" data-approval-presentation="card" data-approval-card-root="" data-computer-use-teach=""
-      data-approval-instance={request?.bridgeApproval?.instanceId} data-approval-method={request?.method} data-approval-kind={model.kind}
-      role="group" aria-label={t("Permission request: {title}", { title: model.title })} aria-busy={busy || undefined}
-      tabIndex={0} onKeyDown={keyDown} onClick={event => event.stopPropagation()}>
+    return shell({ className: `source-message mb-4 overflow-hidden rounded-card border bg-surface-panel shadow-lg ${CARD_FOCUS_OUTLINE} ${className}`.trim(),
+      "data-approval-root": "", "data-computer-use-teach": "" }, <>
       <ComputerUseTeachCardBody teach={model.teach} name={assistantName()} actions={teachActions} />
       {error && <p role="alert" className="sac-error">{error}</p>}
-      {busy && <BusyAnnouncement />}
-      {model.supported && <ApprovalAnnouncement identity={identity} text={approvalAnnouncement(model)} />}
-    </section>;
+      {tail}
+    </>);
   }
-  return <section ref={root} className={`source-message sac-card ${CARD_FOCUS_OUTLINE} ${className}`.trim()} data-approval-presentation="card"
-    data-approval-card-root=""
-    data-approval-instance={request?.bridgeApproval?.instanceId} data-approval-method={request?.method}
-    data-approval-kind={model.kind}
-    role="group" aria-label={t("Permission request: {title}", { title: model.title })} aria-busy={busy || undefined}
-    tabIndex={0} onKeyDown={keyDown} onClick={event => event.stopPropagation()}>
-    <div ref={body} className="sac-body" tabIndex={overflow ? 0 : undefined}
-      role={overflow ? "group" : undefined} aria-label={overflow ? t("Request details") : undefined}>
-      <div className="sac-description">
-        {model.detail
-          ? <button type="button" className="sac-heading" aria-expanded={expanded}
-              aria-controls={detailsId} onClick={() => setExpanded(value => !value)}><span data-clamp={clamp} title={tipOn === "title" ? descriptionTip : undefined}>{title}</span></button>
-          : <div className="sac-heading"><span data-clamp={clamp} title={tipOn === "title" ? descriptionTip : undefined}>{title}</span></div>}
-        {(model.reason || model.message || model.context.length > 0 || model.detail || fields || model.access || model.elicitation?.mode === "url" || model.elicitation?.mode === "toolSuggestion"
-          || model.servedText || model.changeGroups?.length > 0 || model.footnote?.length > 0 || model.heading?.overrideDescription) && <div className="sac-content">
-          {/* Ge [V, Ie, …]: a builder's detailFirst detail (Ie) leads the body. */}
-          {model.detailFirst && details}
-          {/* 3.6556.2 cc32965c2 Ge order: the served text (se) and the change block (Re) come before the reason (ze). */}
-          <ApprovalServedText servedText={model.servedText} />
-          {changeArea}
-          {/* j, ie: the description (or its sr-only sentence) between the change block and the reason. */}
-          <ApprovalDescription heading={model.heading} />
-          {/* approval-current.js:15275-15284 D, before the other content blocks: the decision
-              reason in a 3-line scroll clamp (wM) whose "Reason" label is its accessible name
-              while it scrolls (cf6ae6197 bv); no visible label. */}
-          {model.reason && <div ref={reason} className="sac-reason scroll-fade-y scroll-fade-size-[8px]"
-            title={tipOn === "reason" ? descriptionTip : undefined}
-            {...scrollRegionProps(t("Reason"), reasonOverflow)}>{model.reason}</div>}
-          {/* request_access: the capabilities and apps asked for (official JEe: under the header, above the actions). */}
-          {/* Official JEe: Background mode's line, or that other windows will be hidden, above the rows. */}
-          {model.access && <ComputerUseAccessNote note={model.access.note ?? null} name={assistantName()} />}
-          {model.access && <ComputerUseAccessList rows={model.access.rows} />}
-          {/* An MCP elicitation's own message (server text, shown as written). */}
-          {model.message && <p className="sac-message">{model.message}</p>}
-          {model.context.map(part => <p key={part.key} className="sac-context" data-context={part.key}>{part.text}</p>)}
-          {!footnoteAfterDetails && looseFootnote}
-          {!model.detailFirst && details}
-          {footnoteAfterDetails && looseFootnote}
-          {(model.elicitation?.mode === "url" || model.elicitation?.mode === "toolSuggestion") && model.elicitation.openable && <div className="sac-link">
-            <ActionButton action={{ key: "open-link", label: model.elicitation.mode === "toolSuggestion" ? t("Open install page") : t("Open link"), primary: false }} busy={false}
-              enabled={actionable && !busy} onAction={openLink} />
-          </div>}
-          {linkError && <p role="alert" className="sac-error">{linkError}</p>}
-          {fields && <div className="sac-form" role="group" aria-label={t("Requested information")}>
-            {fields.map(field => <ElicitationField key={field.id} field={field} idPrefix={formId}
-              value={formValues[field.id]} disabled={!actionable || busy} invalid={formError?.fieldId === field.id}
-              onChange={value => { setFormError(null); setFormValues(values => ({ ...values, [field.id]: value })); }} />)}
-          </div>}
-        </div>}
+  // mcpServer/elicitation/request in url / form mode: cc32965c2 Ss / bs, cards of their own (`a(ao, { queueDepth,
+  // children: [body, caution, actions] })`): the title row, the link or the fields in the body, the muted caution line
+  // under it, then Decline and the arming span around the allows ("[@container_(max-width:420px)]" stacking, uo).
+  const elicitationMode = model.elicitation?.mode;
+  if (elicitationMode === "url" || elicitationMode === "form") {
+    const url = elicitationMode === "url";
+    const message = model.message ? Y(model.message) : null;
+    // bs / Ss decide through the card's runtime: while one answer is on its way the form and every button are off (bs
+    // `disabled: d`); Ss shows the pressed one busy ("Sending…", ff2VGLJm3K) and the other disabled.
+    const off = !actionable;
+    const pressed = key => busy && busyAction === key;
+    const press = key => () => { if (!busy) submit(key); };
+    // bs O: the form's own submit — read and validate (Eo); with nothing invalid, the required booleans default to false.
+    const onFormSubmit = event => {
+      event.preventDefault();
+      if (!actionable || busy) return;
+      const { data, invalidFields: invalid } = readElicitationForm(event.currentTarget, form.schema, intl);
+      if (invalid.size !== 0) return;
+      for (const name of form.booleans) if (data[name] === undefined) data[name] = false;
+      onAction("accept", { content: data });
+    };
+    return shell({ className: cdsClassNames("source-message", PLAIN_CARD_SHELL, className), "data-elicitation-mode": elicitationMode }, <>
+      <div ref={body} className={APPROVAL_CARD_BODY} {...scrollRegionProps(t("Request details"), overflow)}>
+        {url ? <>
+          <ApprovalTitle titleNamesCard>{model.title}</ApprovalTitle>
+          {model.elicitation.url ? <CdsCard size="sm" data-testid="epitaxy-elicitation-link">
+            {model.elicitation.host ? <span className="text-body min-w-0 [overflow-wrap:anywhere] [unicode-bidi:plaintext] font-medium text-primary">{model.elicitation.host}</span> : null}
+            <span className="text-body min-w-0 [overflow-wrap:anywhere] [unicode-bidi:plaintext] text-secondary">{Y(model.elicitation.url)}</span>
+          </CdsCard> : null}
+          {message ? <p className="text-body min-w-0 [overflow-wrap:anywhere] [unicode-bidi:plaintext] text-secondary whitespace-pre-wrap">{message}</p> : null}
+          {model.context.map(part => <p key={part.key} className={BODY_WHOLE} data-context={part.key}>{part.text}</p>)}
+        </> : <>
+          <ApprovalTitle subtitle={message ? <span className="whitespace-pre-wrap [overflow-wrap:anywhere] [unicode-bidi:plaintext]">{message}</span> : undefined}>{model.title}</ApprovalTitle>
+          <ElicitationForm id={formId} size="sm" submitOnModEnter={false} disabled={busy || off}
+            onSubmitCapture={event => setInvalidFields(readElicitationForm(event.currentTarget, form.schema, intl).invalidFields)}
+            onSubmit={onFormSubmit} data-testid="epitaxy-elicitation-form" data-owns-typing-and-pastes="">
+            {form.names.map(name => form.schema.properties[name] === undefined ? null : <ElicitationField key={name} fieldName={name}
+              fieldSchema={form.schema.properties[name]} isRequired={form.schema.required?.includes(name) ?? false}
+              initialValue={Object.hasOwn(form.initial, name) ? form.initial[name] : undefined} hasSubmitError={invalidFields.has(name)}
+              clearSubmitError={field => setInvalidFields(current => {
+                if (!current.has(field)) return current;
+                const next = new Set(current);
+                next.delete(field);
+                return next;
+              })} />)}
+          </ElicitationForm>
+        </>}
       </div>
+      <p className="text-body text-muted-as-secondary" data-testid="epitaxy-elicitation-caution">
+        {/* D23: the original wording keeps "Claude" (the app the site opens outside of). */}
+        {url ? t("This opens a site outside Claude.") : t("Don’t enter passwords or verification codes here.")}</p>
+      {(linkError || error) && <p role="alert" className="sac-error">{linkError || error}</p>}
+      <div ref={actions} className={`epitaxy-approval-actions flex flex-wrap justify-end gap-x-md gap-y-sm ${NARROW_STACK}`}>
+        {url ? <>
+          <CdsButton type="button" variant="secondary" data-approval-action={model.deny.key} busy={pressed(model.deny.key)} busyLabel={t("Sending…")}
+            disabled={off || (busy && !pressed(model.deny.key))} onClick={press(model.deny.key)}>{model.deny.label}</CdsButton>
+          <ApprovalAllowArm armKey={clickArmKey}>
+            {model.allows.map(action => <CdsButton key={action.key} type="button" variant="secondary" data-approval-action={action.key}
+              busy={pressed(action.key)} busyLabel={t("Sending…")} disabled={off || (busy && !pressed(action.key))} onClick={press(action.key)}>{action.label}</CdsButton>)}
+            {model.elicitation.openable ? <CdsButton type="button" variant="primary" data-approval-action="open-link" data-approval-primary=""
+              disabled={off || busy} onClick={openLink}>{t("Open link")}</CdsButton> : null}
+          </ApprovalAllowArm>
+        </> : <>
+          <CdsButton type="button" variant="secondary" data-approval-action={model.deny.key} disabled={off || busy} onClick={press(model.deny.key)}>{model.deny.label}</CdsButton>
+          <ApprovalAllowArm armKey={clickArmKey}>
+            <CdsButton type="submit" form={formId} variant="primary" data-approval-action="accept" data-approval-primary="" disabled={off || busy}>{t("Submit")}</CdsButton>
+          </ApprovalAllowArm>
+        </>}
+      </div>
+      {tail}
+    </>);
+  }
+  // The tool card: cc32965c2 Sv `a(ao, { className: oa, children: [da, fa, pa] })` — the body (lo, gap-[24px]) holding
+  // Z_ (`div.flex.flex-col.gap-[10px]` > [title row, `div.flex.flex-col.gap-[12px]` > blocks], or the title row alone),
+  // then the decisions, under the read gate's live line and hint when it holds them (pa).
+  const blocks = [
+    // Ge [V, Ie, …]: a builder's detailFirst detail (Ie) leads the body.
+    model.detailFirst && details ? <React.Fragment key="details">{details}</React.Fragment> : null,
+    // 3.6556.2 cc32965c2 Ge order: the served text (se) and the change block (Re) come before the reason (ze).
+    model.servedText ? <ApprovalServedText key="served" servedText={model.servedText} /> : null,
+    model.changeGroups?.length ? <React.Fragment key="change">{changeArea}</React.Fragment> : null,
+    // j, ie: the description (or its sr-only sentence) between the change block and the reason.
+    model.heading?.overrideDescription ? <ApprovalDescription key="description" heading={model.heading} /> : null,
+    // ze (readable :11706-11716): the decision reason in so, C_ (three lines, scrolling), "Reason" its name while it scrolls.
+    model.reason ? <div key="reason" ref={reason} className={cdsClassNames(SCROLL_CLAMP, BODY_CLAMPED)}
+      title={tipOn === "reason" ? descriptionTip : undefined} {...scrollRegionProps(t("Reason"), reasonOverflow)}>{Y(model.reason)}</div> : null,
+    // request_access: the capabilities and apps asked for (official JEe: under the header, above the actions), after
+    // Background mode's line, or that other windows will be hidden.
+    model.access ? <ComputerUseAccessNote key="access-note" note={model.access.note ?? null} name={assistantName()} /> : null,
+    model.access ? <ComputerUseAccessList key="access" rows={model.access.rows} /> : null,
+    // An MCP request's own message (server text, shown as written), then the host's context lines (w_ prose; a
+    // launch.json environment as a value block, its warning in the danger ink).
+    model.message ? <p key="message" className={`${BODY_WHOLE} whitespace-pre-wrap`}>{Y(model.message)}</p> : null,
+    ...model.context.map(part => part.key === "env"
+      ? <div key={part.key} data-context={part.key} className={`${DETAIL_VALUE} overflow-y-auto`} style={ENV_STYLE}>{part.text}</div>
+      // Z_ ke: the too-large sentence is `p.text-body.text-secondary.select-text.break-words`.
+      : <p key={part.key} data-context={part.key} className={part.key === "env-warning" ? "text-body text-danger select-text break-words [unicode-bidi:plaintext]"
+          : part.key === "too-large" ? "text-body text-secondary select-text break-words" : BODY_WHOLE}>{part.text}</p>),
+    !footnoteAfterDetails && model.footnote?.length && looseFootnote ? <React.Fragment key="footnote">{looseFootnote}</React.Fragment> : null,
+    // Z_ I (readable :11989-12010): a workflow's token warning box; its "tasks pane" link opens the Tasks pane where the
+    // card has one to open (Te: plain text otherwise, as the original without side panes).
+    model.tokenWarning ? <div key="token-warning" className="rounded-lg bg-alpha-1 px-lg py-2.5 text-body text-secondary select-text break-words">
+      {richTitle(t("Dynamic workflows run many subagents in parallel and can use a lot of your usage limit. Stop them any time from the <link>tasks pane</link>."), {},
+        { link: (chunks, key) => onOpenTasks ? <CdsTextLink key={key} onClick={onOpenTasks}>{chunks}</CdsTextLink> : <React.Fragment key={key}>{chunks}</React.Fragment> })}
+    </div> : null,
+    !model.detailFirst && details ? <React.Fragment key="details">{details}</React.Fragment> : null,
+    footnoteAfterDetails && model.footnote?.length && looseFootnote ? <React.Fragment key="footnote">{looseFootnote}</React.Fragment> : null,
+    elicitationMode === "toolSuggestion" && model.elicitation.openable ? <div key="link" className="flex flex-wrap gap-sm">
+      <ActionButton action={{ key: "open-link", label: t("Open install page"), primary: false }} enabled={actionable && !busy} onAction={openLink} />
+    </div> : null,
+    linkError ? <p key="link-error" role="alert" className="sac-error">{linkError}</p> : null,
+  ].filter(block => block !== null && block !== false && block !== undefined);
+  return shell({ className: cdsClassNames("source-message", TOOL_CARD_SHELL, className) }, <>
+    <div ref={body} className={TOOL_CARD_BODY} {...scrollRegionProps(t("Request details"), overflow)}>
+      {blocks.length ? <div className="flex flex-col gap-[10px]">{titleRow}<div className="flex flex-col gap-[12px]">{blocks}</div></div> : titleRow}
     </div>
-    {(formError?.error || error) && <p role="alert" className="sac-error">{formError?.error || error}</p>}
+    {error && <p role="alert" className="sac-error">{error}</p>}
     {model.declineFeedback && feedbackOpen && <div className="sac-feedback">
-      <label htmlFor={feedbackId} className="sac-visually-hidden">{t("What should {name} do instead?", { name: assistantName() })}</label>
+      <label htmlFor={feedbackId} className="sr-only">{t("What should {name} do instead?", { name: assistantName() })}</label>
       <textarea ref={feedbackRef} id={feedbackId} rows={2} maxLength={4000} value={feedback} disabled={!actionable || busy}
         placeholder={t("Tell {name} what to do instead (optional)", { name: assistantName() })} onChange={event => setFeedback(event.target.value)} />
     </div>}
-    {/* Rj (2.42304.0): with a read gate the actions sit in "flex flex-col gap-sm" under the sr-only aria-live replay
-        (only while not held) and the aria-hidden hint line (At; "invisible" unless unread). */}
+    {/* pa: with a read gate the actions sit in "flex flex-col gap-sm" under the sr-only aria-live replay (only while not
+        held) and the aria-hidden hint line ("invisible" unless unread). */}
     {footer && readGate.gated
       ? <div className="flex flex-col gap-sm">
           {readGate.liveRegion && <p aria-live="polite" className="sr-only">{readGate.liveText}</p>}
@@ -717,14 +784,17 @@ export function SourceApprovalCardView({ request, item, busy = false, busyAction
           {footer}
         </div>
       : footer}
-    {busy && <BusyAnnouncement />}
-    {model.supported && <ApprovalAnnouncement identity={identity} text={approvalAnnouncement(model)} />}
-  </section>;
+    {tail}
+  </>);
 }
 
 export function SourceApprovalCard({ runtime, request, item, getVisibleThreadId,
   respond, onResolved = () => {}, onError = () => {}, ...presentation }) {
   const { ticket, view } = useApprovalDraft(runtime, request);
+  // V3-W14-approvals (pane-09): c5da7eb42 KS Ce — a decision that fails to send is an error toast (`addError(n, …)`, n =
+  // Sc(l, e) ?? "Failed to send response. You can try again." aMbb8XQr/h), the card staying as it was. W14-code r4
+  // pane-09-toast: the card has no error line for it (KS draws none), so nothing falls back into the card.
+  const toasts = useSourceToasts();
   if (!approvalCardModel(request, item).supported)
     return <SourceApprovalCardView {...presentation} request={request} item={item} enabled={false} />;
   if (!ticket || !view || view.phase !== "pending") return null;
@@ -732,11 +802,10 @@ export function SourceApprovalCard({ runtime, request, item, getVisibleThreadId,
   const submit = async (action, extra) => {
     const result = await runtime.submit(ticket, action, respond, { getVisibleThreadId, ...(extra && { response: extra }) });
     if (result.status === "answered") onResolved({ request, ticket: result.ticket });
-    else if (result.status === "error") onError({ request, ticket: result.ticket, message: result.message });
+    else if (result.status === "error") { toasts?.add?.(result.message, { variant: "danger" }); onError({ request, ticket: result.ticket, message: result.message }); }
   };
   return <SourceApprovalCardView {...presentation} key={ticket.key} armKey={ticket.key}
-    request={request} item={item} busy={view.busy} busyAction={view.busyAction}
-    error={view.error} onAction={submit} />;
+    request={request} item={item} busy={view.busy} busyAction={view.busyAction} onAction={submit} />;
 }
 
 // R4g-btw BT4 (X7-16): the approval area's card slot, shared by the main session and the /btw side pane (2.42304.0
@@ -748,17 +817,19 @@ export function SourceApprovalCard({ runtime, request, item, getVisibleThreadId,
 //   and renders [Ct, Lt (the watch), ot === null ? null : div{ ref: at ? It : void 0, style: { display: "contents" } }].
 // qj, its watch Kj, the landing Hj / Zw and the window guard Gj are the generated originals
 // (scripts/extract-approval-landing.mjs), now from 3.6556.2: c9ed5627b A / it / E / k with c6dc54e94 I (the area that
-// mounts A is cc32965c2: `wt=bo()&&ne!==void 0`, the same card / takesFocus / chordActsAnywhere). The host answers
-// __gb__1616707004 (c9ed5627b et) "on": R2 already shipped this slot's hand-back half (the composer takes focus when a
-// keyboard decision leaves it nowhere), and the off branch would take that away; the flag's ruling is recorded as a
-// follow-up in R4g-btw-BT4.md.
+// mounts A is cc32965c2: `wt=bo()&&ne!==void 0`, the same card / takesFocus / chordActsAnywhere).
+// W14-code r4 gates-r4-05 (E81 / E95, D43 is UI): __gb__1616707004 (c9ed5627b `function et(){return p("__gb__1616707004")}`)
+// is not in the desktop's Uon, so the 3P desktop runs A with `at` false — no landing on the next card, no hand-back to the
+// composer, no Gj window guard (A gets `card: void 0`, so `f === null`: no watch, no slot ref). The host answers it from
+// its GrowthBook table (src/host-growthbook.mjs; not listed = off). Rollback switch: list `__gb__1616707004: true` there.
+// `landing` is that answer; tests of the on branch pass it explicitly.
 // HS-11 / E23: 3.6556.2 k lets a deliberate Enter through on the landed card once the card marked a deliberate digit or
 // arrow pick (c9ed5627b rt, generated as markCardPick). The AskUserQuestion card calls it as the original dt does,
 // `!rt(e.nativeEvent, E)` before its own digit / arrow handler (source-question-card.jsx questionCardKeyDown,
 // w10-trans-question-keys). The tool card's arrows move between its action buttons (approvalKeyIntent "navigate"), not
 // an option pick, so this card calls nothing and keeps the landing's Enter guard.
 export const APPROVAL_LANDING_FLAG = "__gb__1616707004";
-export const APPROVAL_LANDING_ON = true;
+export const APPROVAL_LANDING_ON = hostGrowthBookFlag(APPROVAL_LANDING_FLAG);
 // $j's card variant `st` for the local requests: the question card is AskUserQuestion's, the bridge's plan review (and
 // the local Plan handoff card, given as `extraCard`) the ExitPlanMode "plan" card, every other request the "tool" card.
 export function approvalLandingVariant(request) {
@@ -794,18 +865,50 @@ export function approvalCardDrawn(runtime, request) {
 }
 const subscribeNothing = () => () => {};
 const noDraft = () => false;
+// W14-code r2 R2T-TA6: `renderQueued(requests)` draws the requests waiting behind a pending card (c96d752d0 tke `n && s.length
+// > 0`: "Also waiting" and one collapsed tool row each; source-approval-queue.jsx), after the slot's card.
+// W14-code r4 R4T-08i: a slot given `renderQueued` is the Code session's inline approval host, c96d752d0 tke
+// (EpitaxyInlineApprovalHost, mounted by cc43287c9 Spe with `presentation: js ? "card" : "dock"`): one div around the
+// approval area and the "Also waiting" block, `className: n ? "flex w-full flex-col gap-[var(--chat-turn-gap)]
+// pt-[var(--chat-turn-gap)]" : "contents"` (n = cardPending), with `"data-skip-approval-enter": g || void 0` where
+// `g = p && !m` and `p && !n && !m && h(!0)` (card presentation: the enter animation is skipped until the host has once
+// been without a pending card). The reveal click guard is tke's `O = mpe(x)` spread on that div, `x = Ng(key, !0)`
+// (c227f4d5e uD / ED, src/generated/approval-landing/reveal-guard.mjs): for 400ms after the key changes, pointer clicks
+// inside the host are swallowed (inlineHostRevealKey gives the key).
+export const INLINE_APPROVAL_HOST_PENDING = "flex w-full flex-col gap-[var(--chat-turn-gap)] pt-[var(--chat-turn-gap)]";
+// tke's guard key: r === null ? (u === y ? null : u) : the template ${r}:${v}:${d}, with r = occupant (cc43287c9 y4: the cluster's
+// head tool id while it is live), v = the queued ids (nke `e.id`, joined by ","), d = revealNonce. Spe passes neither
+// dockedCard (u = null, so the null branch is null) nor revealNonce (d = 0). The local occupant is the drawn head
+// request, else the plan card the slot is given.
+export function inlineHostRevealKey({ head = null, extraCard = null, queued = [] } = {}) {
+  const occupant = head ? head.id : extraCard !== null ? `plan:${extraCard}` : null;
+  return occupant === null ? null : `${occupant}:${queued.map(request => request.id).join(",")}:${0}`;
+}
 export function SourceApprovalSlot({ runtime = null, requests = [], renderRequest, extraCard = null, hasDraft = noDraft,
-  toComposer, row = null, children }) {
+  toComposer, row = null, renderQueued = null, landing = APPROVAL_LANDING_ON, children }) {
   useSyncExternalStore(runtime?.subscribe ?? subscribeNothing, () => runtime?.revision ?? 0, () => 0);
   const shown = approvalSlotRequests(runtime, requests);
   const head = shown.find(request => approvalCardDrawn(runtime, request));
   const variant = head ? approvalLandingVariant(head) : extraCard !== null ? "plan" : null;
   const card = head ? `${variant}:${head.bridgeApproval?.instanceId ?? head.id}` : extraCard !== null ? `plan:${extraCard}` : undefined;
-  const on = APPROVAL_LANDING_ON && toComposer !== undefined;
+  const on = landing === true && toComposer !== undefined;
   const { setSlot, watch } = useApprovalCardLanding({ card: on ? card : undefined, ...approvalLandingOptions(variant),
     hasDraft, row, toComposer });
-  return <>
+  const inlineHost = typeof renderQueued === "function";
+  // tke n (cc43287c9 y4 inline, no dialog occupant: clusterLive, a pending card the cluster draws).
+  const cardPending = !!head || extraCard !== null;
+  const [settled, setSettled] = useState(false);
+  if (inlineHost && !cardPending && !settled) setSettled(true);
+  const queued = head ? queuedApprovals((requests ?? []).filter(request => !settledPhases.has(viewOf(runtime, request)?.phase))) : [];
+  const revealed = useRevealSettled(inlineHost ? inlineHostRevealKey({ head, extraCard, queued }) : null, true);
+  const area = <>
     {watch}
     <div ref={on ? setSlot : undefined} style={{ display: "contents" }}>{renderRequest ? shown.map(renderRequest) : null}{children}</div>
   </>;
+  if (!inlineHost) return area;
+  return <div data-skip-approval-enter={!settled || undefined} {...revealClickGuard(revealed)}
+    className={cardPending ? INLINE_APPROVAL_HOST_PENDING : "contents"}>
+    {area}
+    {head ? renderQueued(queued) : null}
+  </div>;
 }

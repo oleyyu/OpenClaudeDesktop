@@ -37,7 +37,9 @@ test('the compiled sheet lets h\'s outline-none win over the card outline, and t
   assert.doesNotMatch(local, /\.sac-card:focus-visible/, 'no local outline rule');
   const card = read(path.join(app, 'src/source-approval-card.jsx'));
   assert.equal(count(card, 'export const CARD_FOCUS_OUTLINE = "focus-visible:outline-1 focus-visible:outline-fill-accent focus-visible:outline-offset-2";'), 1);
-  assert.equal(count(card, 'className={`source-message sac-card ${CARD_FOCUS_OUTLINE} ${className}`.trim()}'), 1);
-  // The card is position: relative, so the landing takes h (the ::after ring) rather than m.
-  assert.match(local, /\.sac-card \{\n  position: relative;/);
+  // V3-W14-approvals: the tool card's className is cc32965c2 Sv oa, G (co) after V's relative / isolate.
+  assert.equal(count(card, 'export const TOOL_CARD_SHELL = cdsClassNames(APPROVAL_CARD_SHELL, APPROVAL_CARD_OUTLINE, "gap-[24px]", CARD_FOCUS_OUTLINE, "w-full max-w-[480px]");'), 1);
+  assert.equal(count(card, 'shell({ className: cdsClassNames("source-message", TOOL_CARD_SHELL, className) }'), 1);
+  // The card is position: relative (V), so the landing takes h (the ::after ring) rather than m.
+  assert.match(card, /export const APPROVAL_CARD_SHELL = "epitaxy-approval-card relative isolate /);
 });

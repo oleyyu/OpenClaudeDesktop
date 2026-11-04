@@ -108,8 +108,8 @@ const modules = [
       Zn: 'rememberDiffScope', Un: 'branchDiffScope', Wn: 'uncommittedDiffScope', Gn: 'diffScopeKey', Kn: 'sameDiffScope',
     },
     signature: ['"epitaxy-diff-uncommitted-sessions"', '[...r.slice(-49), e]', '{ kind: "uncommitted" }'] },
-  // shared-frame zF (old Aj): CDS ShimmerText, which view-tabs publishes as CdsShimmer.
-  { target: 'shimmer-text.mjs', source: frame, viewTabs: true, exports: { zF: 'ShimmerText' } },
+  // W14-code r2 closeout-2 (DC-06): shimmer-text.mjs (shared-frame zF = view-tabs CdsShimmer re-exported) is retired:
+  // nothing imported it (worktree-checking reads CdsShimmer from view-tabs itself).
   // shared-46 GD (old shared-19 jY, panes §1.6 moved): the "Checking for uncommitted changes…" line of the worktree confirms.
   { target: 'worktree-checking.mjs', source: 'shared-46-BIbZBGFq.js', exports: { GD: 'WorktreeChecking' },
     signature: ['id: "iJ0f0MP5kz"', '"text-footnote text-muted-as-secondary"', '"reserve"', '"animate-placeholder-reveal"'] },
@@ -160,17 +160,16 @@ const modules = [
   { target: 'file-tree-pointer.mjs', source: 'cccc2cf0a-DhZC33Gc.js', exports: { Ww: 'isBlankTreeTarget', Gw: 'isBlankTreePress' },
     signature: ['t.closest("[data-tree-row]") === null', 'getComputedStyle(e).direction === "rtl"'] },
   // shared-frame tn (old Qt, exported `Rf`): coarse-pointer / no-hover media query, which turns the in-window drag off.
-  // view-tabs publishes it (matchesCoarseOrHoverlessPointer), so this module re-exports that copy (D1) and c052e27aa
-  // imports it from view-tabs directly.
-  { target: 'coarse-pointer.mjs', source: frame, viewTabs: true, exports: { tn: 'isCoarsePointer' } },
+  // view-tabs publishes it (matchesCoarseOrHoverlessPointer) and c052e27aa imports it from view-tabs directly; W14-code
+  // r2 closeout-2 (DC-06) retired the unimported coarse-pointer.mjs re-export.
   // c052e27aa (old cd06fb298, panes §1.6 moved): the in-window file-context drag; s adds `!coarsePointer()` to the
   // "__gb__3508862586" rollout (no GrowthBook locally: value undefined, so on). The mapper's missing `h` is d here
   // (`let e = a; ((a = null), e?.attach());`).
   { target: 'file-context-drag.mjs', source: 'c052e27aa-DlzVwnbz.js',
     exports: { i: 'fileContextDragType', s: 'fileContextDragEnabled', c: 'beginFileContextDrag', l: 'isFileContextDrag', u: 'draggedFilePaths', d: 'commitFileContextDrag', o: 'clearFileContextDrag' },
     signature: ['var r = "__gb__3508862586"', '"application/x-claude-file-context"', '(r) !== !1;', 'e?.attach());'] },
-  // preload-helper e (exported `n`): tags an error with its o11y text; view-tabs publishes it as tagErrorText.
-  { target: 'error-text.mjs', source: 'preload-helper-D0dM6GpB.js', viewTabs: true, exports: { e: 'withErrorText' } },
+  // W14-code r2 closeout-2 (DC-06): error-text.mjs (preload-helper e = view-tabs tagErrorText re-exported) is retired,
+  // nothing imported it.
   // cf80fba0c e (exported `t`): Math.min over an iterable (NaN-, -0-aware), the frontmatter block indent.
   { target: 'array-min.mjs', source: 'cf80fba0c-CT5qqVq9.js', exports: { e: 'iterableMin' },
     signature: ['(n < t || (Object.is(n, -0) && t === 0)) && (t = n);'] },
@@ -243,11 +242,16 @@ const modules = [
   // vendor-query (TanStack Query v5, identical): QueryClient Ve, QueryClientProvider He, useQueryClient J, useQuery tt
   // and queryOptions nt, with the cache / observer / focus / online / notify runtime they close over.
   { target: 'file-browser-query.mjs', source: 'vendor-query-DVJ0goAF.js',
-    exports: { Ve: 'QueryClient', He: 'QueryClientProvider', J: 'useQueryClient', tt: 'useQuery', nt: 'queryOptions' },
+    // q / Ue / Ke (the QueryClient, is-restoring and error-reset contexts) are exported too: code-transcript's TanStack
+    // Query code reads these contexts directly, so it imports this one copy (W14-code gen-final, D1: one context each).
+    exports: { Ve: 'QueryClient', He: 'QueryClientProvider', J: 'useQueryClient', tt: 'useQuery', nt: 'queryOptions',
+      q: 'QueryClientContext', Ue: 'IsRestoringContext', Ke: 'QueryErrorResetBoundaryContext' },
     signature: ['throw Error("No QueryClient set, use QueryClientProvider to set one");', 'return et(e, U, t);',
       'e.mount(),', '(t.refetchOnReconnect = t.networkMode !== "always")'] },
   // shared-18 fU (old PR, folders first, then a numeric collator) and wU (old GR, the popover's collisionPadding).
-  { target: 'file-entry-order.mjs', source: 'shared-18-D3y8YMFN.js', exports: { fU: 'compareFileEntries', wU: 'popoverCollisionPadding' },
+  // W14-code r6 gen-final-6 (D1): uU / dU (the numeric collator and the name order) exported too, for the pierre Changes
+  // body (generated/pierre-changes links this module instead of slicing them a second time).
+  { target: 'file-entry-order.mjs', source: 'shared-18-D3y8YMFN.js', exports: { fU: 'compareFileEntries', wU: 'popoverCollisionPadding', uU: 'numericCollator', dU: 'compareNames' },
     signature: ['(e.name, t.name)', '(() => new Intl.Collator(void 0, { numeric: !0 }))', '{ top: 48, right: 8, bottom: 8, left: 8 }'] },
   // shared-26 OS/jS (old Gb/Jb): UNC / device-namespace prefixes, and "drive letter or UNC".
   { target: 'windows-path-kinds.mjs', source: 'shared-26-CGuBxVt9.js', exports: { OS: 'uncPathPattern', jS: 'isWindowsRootedPath' },
@@ -279,9 +283,8 @@ const modules = [
   // shared-25 ni (old _i): a subscribe that never notifies (the file-type icon while its icon set is off).
   { target: 'subscribe-never.mjs', source: 'shared-25-DOWZRSlq.js', exports: { ni: 'subscribeNever' },
     signature: ['function ni() {\n  return ri;\n}', 'function ri() {}'] },
-  // c36273108 t (byte-identical): SVG attribute escaping (the icon set's markup).
-  { target: 'attribute-escape.mjs', source: 'c36273108-nfRg0EqW.js', exports: { t: 'escapeAttribute' },
-    signature: ['return t.replace(/[&<>"\']/g, (t) => e[t]);', '"\'": "&#39;"'] },
+  // W14-code r2 closeout-2 (DC-06): attribute-escape.mjs (c36273108 t, SVG attribute escaping) is retired, nothing
+  // imported it.
   // c280f9bbb B (exported `t`): the file-type icon. Its colored icon set (fetched JSON) is behind GrowthBook
   // "__gb__2954460583"; without GrowthBook that gate is off and B renders the CDS icon of shared-9 nw.
   { target: 'file-type-icon.mjs', source: 'c280f9bbb-CutcMso2.js', exports: { B: 'FileTypeIcon' },
@@ -289,9 +292,10 @@ const modules = [
   // c30c42d34 p (old f, exported `t`): the inline Try again button (focus kept on unmount, an sr-only failure status).
   { target: 'retry-button.mjs', source: 'c30c42d34-B0SRB643.js', exports: { p: 'RetryButton' },
     signature: ['defaultMessage: "Try again", id: "FazwRldA7z"'] },
-  // c6e73333a C (old w): the diff-widget surface the popover paints.
-  { target: 'diff-widget-background.mjs', source: 'c6e73333a-DjPHi7Jv.js', exports: { C: 'diffWidgetBackground' },
-    signature: ['C = "var(--diff-widget-bg, var(--cds-surface-3))"'] },
+  // c6e73333a C (old w): the diff-widget surface the popover paints. W14 diff: b = y("var(--cds-surface-2)"), the code
+  // background the Changes file header paints (c44d00c7f `{ backgroundColor: en }`, en = c6e73333a n = b).
+  { target: 'diff-widget-background.mjs', source: 'c6e73333a-DjPHi7Jv.js', exports: { C: 'diffWidgetBackground', b: 'codeBackground' },
+    signature: ['C = "var(--diff-widget-bg, var(--cds-surface-3))"', 'b = y("var(--cds-surface-2)")'] },
   // shared-18 sk / ok (exported `Ms` / `js`; old ca7840910 te / U with H, the binding map's moves): a tree row's key
   // handling for its context menu. ok opens the row's menu from the ContextMenu key or ⇧F10 (a synthetic contextmenu at
   // the row's start edge, nk / ik) and from Ctrl+Enter on macOS (rk / ak); sk keeps a held Enter on a menu item from

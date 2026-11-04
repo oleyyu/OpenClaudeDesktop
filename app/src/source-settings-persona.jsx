@@ -3,13 +3,14 @@ import { createManualTextSave } from './manual-text-save.mjs';
 import { SourceSettingsButton } from './source-settings-button.jsx';
 import { SourceSegments } from './source-segments.jsx';
 import { PersonaSparkGlyph } from './source-spark.jsx';
-import { assistantNameError, normalizePersona, personaGreetingError, PERSONA_DEFAULT, ASSISTANT_NAME_MAX, GREETING_MAX } from '../electron/prefs/persona.mjs';
+import { assistantNameError, normalizePersona, PERSONA_DEFAULT, ASSISTANT_NAME_MAX } from '../electron/prefs/persona.mjs';
 import { getAssistantName, t } from '../electron/i18n/index.mjs';
 import './source-profile-setting.css';
 import './persona-settings.css';
 
 // C2 persona rows on the Preferences page, directly after Profile. Renderer copy
-// only: the assistant name, the home greeting template and the assistant icon.
+// only: the assistant name and the assistant icon. (W14-code r5 cleanup R5DC-01: the "Home greeting" row is gone —
+// nothing read persona.greeting after R4DC-N2, and official 3.6556.2 shows no Code home greeting under D10 / E92.)
 // Every save sends the whole persona object (read-modify-write over config).
 
 export const PERSONA_ICON_OPTIONS = Object.freeze([
@@ -29,10 +30,10 @@ export function isDefaultPersona(persona) {
 }
 
 /** Manual-save text field (SourceProfileSetting pattern) for one persona string. */
-export function PersonaTextField({ label, value, placeholder, maxLength, validate, onSave, help }) {
+export function PersonaTextField({ label, value, placeholder, maxLength, validate, onSave }) {
   const [draft, setDraft] = useState(value), [status, setStatus] = useState({ saving: false, error: '' });
   const latest = useRef({ value, onSave }), edited = useRef(false), owner = useRef(null), input = useRef(null), composing = useRef(false);
-  const errorId = useId(), helpId = useId(); latest.current = { value, onSave };
+  const errorId = useId(); latest.current = { value, onSave };
   useLayoutEffect(() => {
     const controller = createManualTextSave({ save: text => latest.current.onSave(text), validate: text => { const error = validate(text); if (error) throw new Error(error); }, onState: setStatus });
     owner.current = controller; return () => { controller.dispose(); owner.current = null; };
@@ -42,11 +43,10 @@ export function PersonaTextField({ label, value, placeholder, maxLength, validat
   return <form className="ss-profile-setting persona-field" onSubmit={event => { event.preventDefault(); event.stopPropagation(); if (!composing.current && dirty) void owner.current?.submit(draft); }}>
     <input ref={input} data-cds="TextInput" className="cds-input cds-reset" aria-label={label} value={draft} maxLength={maxLength} placeholder={placeholder}
       aria-invalid={status.error ? true : undefined} data-invalid={status.error ? '' : undefined}
-      aria-describedby={[status.error ? errorId : '', help ? helpId : ''].filter(Boolean).join(' ') || undefined}
+      aria-describedby={status.error ? errorId : undefined}
       onChange={event => { edited.current = status.saving || event.currentTarget.value !== latest.current.value; setDraft(event.currentTarget.value); owner.current?.edit(); }}
       onCompositionStart={() => { composing.current = true; }} onCompositionEnd={() => { composing.current = false; }}
       onKeyDown={event => { if ((composing.current || event.nativeEvent.isComposing || event.nativeEvent.keyCode === 229) && (event.key === 'Enter' || event.key === 'Escape')) { event.preventDefault(); event.stopPropagation(); } }} />
-    {help && <span id={helpId} className="persona-help">{help}</span>}
     {status.error && <span id={errorId} className="ss-error" role="alert">{status.error}</span>}
     {dirty && <div className="ss-profile-actions" data-size="sm">
       <SourceSettingsButton type="submit" variant="primary" size="sm" busy={status.saving}>{t('Save')}</SourceSettingsButton>
@@ -113,15 +113,11 @@ export function personaGroup({ config = {}, onSave, desktopCall }) {
     row('persona-name', t('Assistant name'), t('Shown in approval titles, notifications and the transcript.'), null,
       <PersonaTextField label={t('Assistant name')} value={persona.assistantName} placeholder={getAssistantName()} maxLength={ASSISTANT_NAME_MAX}
         validate={assistantNameError} onSave={saveField('assistantName')} />),
-    row('persona-greeting', t('Home greeting'), t('The heading on the home page.'), null,
-      <PersonaTextField label={t('Home greeting')} value={persona.greeting} placeholder={t('What’s up next, {name}?')} maxLength={GREETING_MAX}
-        validate={personaGreetingError} onSave={saveField('greeting')}
-        help={<>{t('Use')} <code>{'{name}'}</code> {t('for your first name. Leave empty for the default greeting.')}</>} />),
     // The picker is wider than a compact control, so it sits in the row's below slot (shared-21 Av) like the text
-    // fields above it, and the description keeps the full row width.
-    row('persona-icon', t('Assistant icon'), t('Replaces the spark in the sidebar, the home page and while it works.'), null,
+    // field above it, and the description keeps the full row width.
+    row('persona-icon', t('Assistant icon'), t('Replaces the spark in the sidebar and while it works.'), null,
       <PersonaIconControl persona={persona} onSave={savePersona} desktopCall={desktopCall} />),
-    row('persona-reset', t('Reset persona'), t('Restore the default name, greeting and icon.'),
+    row('persona-reset', t('Reset persona'), t('Restore the default name and icon.'),
       <ResetPersonaButton persona={persona} onSave={savePersona} />),
   ] };
 }

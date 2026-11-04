@@ -247,10 +247,6 @@ export function fileGroupPresentation(items) {
     ...(fileSegment&&categories.size===fileCategories.length&&!fileSegment.isError&&fileSegment.meta===fileBasename(sharedPath)?{path:sharedPath}:{}),segments};
 }
 
-export function fileGroupSummary(items) {
-  const {segments,...summary}=fileGroupPresentation(items);
-  return summary;
-}
 export function pathChoices(value, cwd) {
   if (typeof value !== 'string' || !value || value.includes('\0')) return null;
   const normalize = path => { const parts = []; for (const part of path.split('/')) { if (part === '..') parts.pop(); else if (part && part !== '.') parts.push(part); } return '/' + parts.join('/'); };

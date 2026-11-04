@@ -137,7 +137,7 @@ export function FileToolMessage({ item, Step, pendingApprovalItemIds, defaultOpe
   return <Step item={item} classic caretSize={14} defaultOpen={defaultOpen} forcedOpen={forcedOpen} sessionKey={props.sessionKey} label={summary.label} state={state} className="sft-step" after={after}
     metaTitle={summary.path} meta={summary.meta && <ToolPath path={summary.path} preferDiff={preferDiff} {...props} />}
     trailing={settled && (counts.added || counts.removed) ? <span className="sft-counts">
-      <span className="source-sr-only">{t("{added} added, {removed} removed", { added: counts.added, removed: counts.removed })}</span>
+      <span className="sr-only">{t("{added} added, {removed} removed", { added: counts.added, removed: counts.removed })}</span>
       <span aria-hidden="true" className="sft-added">+{counts.added}</span><span aria-hidden="true" className="sft-removed">-{counts.removed}</span>
     </span> : null}>
     {items.map(member => {

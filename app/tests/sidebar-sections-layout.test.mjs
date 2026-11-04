@@ -86,7 +86,8 @@ function fixture(component, props = {}) {
 function nodes(tree, predicate) {
   if (!tree || typeof tree !== 'object') return [];
   if (Array.isArray(tree)) return tree.flatMap((child) => nodes(child, predicate));
-  return [...(predicate(tree) ? [tree] : []), ...nodes(tree.props?.children, predicate)];
+  // W14-code r4 fr4-07 (mount): a Code row is the hover card's `row` (shared-22 pC `o(Wu, {row: Z, …})`), so look there too.
+  return [...(predicate(tree) ? [tree] : []), ...nodes(tree.props?.row, predicate), ...nodes(tree.props?.children, predicate)];
 }
 const node = (tree, predicate) => nodes(tree, predicate)[0];
 
@@ -97,7 +98,9 @@ test('the layout follows the section list: Pinned, the manual sections KO shows,
   const sections = sectionsOf(config);
   const result = Layout.buildSidebarSections({ sections, sessions: ['s1', 's2', 's3', 's4'].map((id) => thread(id)), preferences: config.sidebarPreferences, metadata, customGroups: groups });
   // Bp: the "ccg::" order; KO: g2 has no member and is not kept, g3's only member is pinned (still listed, empty).
-  assert.deepEqual(result.layout.map((entry) => [entry.kind, entry.key]), [['pinned', 'pinned'], ['manual', 'custom-g3'], ['manual', 'custom-g1'], ['sessions', 'sessions']]);
+  // W14-code r4 fr4-06 (mount): the section list's routines entry (sections-model lm, between Pinned and the manual
+  // sections) keeps its place in the layout, where SidebarSectionsList draws shared-22 $N's p4.
+  assert.deepEqual(result.layout.map((entry) => [entry.kind, entry.key]), [['pinned', 'pinned'], ['routines', 'routines'], ['manual', 'custom-g3'], ['manual', 'custom-g1'], ['sessions', 'sessions']]);
   assert.deepEqual([...result.shownIds].sort(), ['g1', 'g3']);
   assert.deepEqual(result.buckets.map((bucket) => [bucket.key, bucket.sessions.map((s) => s.id)]),
     [['pinned', ['s2']], ['custom-g3', []], ['custom-g1', ['s1']], ['sessions', ['s3', 's4']]], 'a deleted group files nothing');
@@ -137,6 +140,13 @@ test('Sessions groups, sorts and shows from its own section; a manual section su
     assert.deepEqual([bucket.heading, bucket.truncateAt, bucket.drawsOpenRows, bucket.flushHeading, bucket.parentKey, bucket.ownSection, bucket.sortBy], ['group', undefined, true, index === 0, 'custom-g1', true, 'alpha']);
   }
   assert.deepEqual(manual.rows.map((s) => s.id).sort(), ['a', 'b']);
+  // W14-code r5 gates-r5-02: shared-22 sO `t.groupBy === "status" && y` (y = Ii(), claudeai_session_state, off under Uon) —
+  // a saved status section is flat unless the caller passes statusGrouping (defaults off).
+  const byStatus = Model.setSectionView(base, 'g1', { groupBy: 'status' });
+  const statusOff = Layout.buildSidebarSections({ sections: byStatus, sessions, preferences: {}, metadata, customGroups: groups });
+  assert.equal(statusOff.layout.find((e) => e.kind === 'manual').subgrouped, false);
+  const statusOn = Layout.buildSidebarSections({ sections: byStatus, sessions, preferences: {}, metadata, customGroups: groups, statusGrouping: true });
+  assert.equal(statusOn.layout.find((e) => e.kind === 'manual').subgrouped, true);
   // A flat manual section sorts by its own view (oO's dv / Pu providers): Name ascending puts Alpha first.
   const flat = Layout.buildSidebarSections({ sections: Model.setSectionView(base, 'g1', { sortBy: 'alpha' }), sessions, preferences: {}, metadata, customGroups: groups });
   assert.deepEqual(flat.buckets.find((b) => b.key === 'custom-g1').sessions.map((s) => s.id), ['b', 'a']);
@@ -390,7 +400,7 @@ test('SourceSidebar: seeds once, folds go to the section or collapsedGroups, the
     const list = node(f.tree, (n) => n.type === M.sections.SidebarSectionsList);
     assert.ok(list, 'the Code list renders the sections layout');
     let { host, model } = list.props;
-    assert.deepEqual(model.layout.map((e) => e.key), ['pinned', 'custom-g1', 'sessions']);
+    assert.deepEqual(model.layout.map((e) => e.key), ['pinned', 'routines', 'custom-g1', 'sessions']); // W14-code r4 fr4-06: the routines slot
     // Effects: the store is hydrated from the snapshot, the bridge connected, and main's record seeded once (ex()).
     f.flush();
     assert.deepEqual(sectionCalls, [['seed', {}]]);

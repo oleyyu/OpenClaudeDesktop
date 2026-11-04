@@ -42,6 +42,8 @@ export function useAccountSettings({snapshot,auth,connected,busy,engine,onLogin,
   const signInBusy=working==='chatgpt',deviceBusy=working==='chatgptDeviceCode';
   const message=auth?.error||error;
   const alert=message?<p role="alert" className="ss-account-error">{message}</p>:null;
+  // What a sign-out left signed in (account-operations notice, e.g. OpenCode 2.x's Claude Code): shown until the next operation.
+  const notice=!message&&auth?.notice?<p role="status" className="ss-account-notice">{auth.notice}</p>:null;
   const refreshButton=<Button size="sm" busy={refreshing} disabled={!connected||!onRefreshAccount||!!((working||active)&&!refreshing)} onClick={()=>run(onRefreshAccount,'refresh')}>{t('Refresh')}</Button>;
   // DeepSeek core: one key row (Refresh, Manage keys); no ChatGPT sign-in, sign-out or device code.
   const plan=accountSettingsPlan(snapshot,{engine});
@@ -55,7 +57,7 @@ export function useAccountSettings({snapshot,auth,connected,busy,engine,onLogin,
   const accountRow=(description,searchText,showAlert=true)=>({id:'account',label:t('Account'),description,searchText,control:<div className="ss-account-controls">
     {refreshButton}
     {account&&onAccountAction&&<Button ref={signoutRef} size="sm" disabled={disabled||busy||confirm} onClick={()=>setConfirm(true)}>{t('Sign out')}</Button>}
-  </div>,below:<>{account&&confirm&&<div className="ss-account-confirm"><p>{signOutConfirmText(engine)}</p><div className="ss-account-controls"><Button ref={cancelRef} size="sm" disabled={!!working||signingOut} onClick={()=>setConfirm(false)}>{t('Cancel')}</Button><Button size="sm" variant="primary" busy={signingOut} disabled={!!(working&&!signingOut)||busy||!connected} onClick={async()=>{if(await run(()=>onAccountAction({operation:'logout',confirmed:true}),'logout'))setConfirm(false);}}>{t('Confirm sign out')}</Button></div></div>}{showAlert&&alert}</>});
+  </div>,below:<>{notice}{account&&confirm&&<div className="ss-account-confirm"><p>{signOutConfirmText(engine)}</p><div className="ss-account-controls"><Button ref={cancelRef} size="sm" disabled={!!working||signingOut} onClick={()=>setConfirm(false)}>{t('Cancel')}</Button><Button size="sm" variant="primary" busy={signingOut} disabled={!!(working&&!signingOut)||busy||!connected} onClick={async()=>{if(await run(()=>onAccountAction({operation:'logout',confirmed:true}),'logout'))setConfirm(false);}}>{t('Confirm sign out')}</Button></div></div>}{showAlert&&alert}</>});
   // An API key (descriptor login.apiKey): a key type when there are several, the write-only field and Get a key.
   const keyId=(entry,index)=>entry.template??String(index);
   const apiKeyRow=keys=>{

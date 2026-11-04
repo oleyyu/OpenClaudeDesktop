@@ -100,6 +100,7 @@ test("Codex's Always allow prefix drops the -lc wrapper and is not offered for a
   assert.match(wrapped.persistent[0].label, /“echo hi > manual-cmd\.txt”/);
   assert.doesNotMatch(wrapped.persistent[0].label, /zsh/);
   assert.match(wrapped.persistent[0].title, /\/bin\/zsh -lc echo hi/);
+  assert.equal(wrapped.persistent[0].prefix, "echo hi > manual-cmd.txt");
   const multiline = offeredDecisions(["accept", { acceptWithExecpolicyAmendment: { execpolicy_amendment: ["/bin/zsh", "-lc", "cd x\nnpm test"] } }, "cancel"]);
   assert.deepEqual(multiline.persistent, []);
   assert.match(offeredDecisions([{ acceptWithExecpolicyAmendment: { execpolicy_amendment: ["npm", "test"] } }]).persistent[0].label, /“npm test”/);

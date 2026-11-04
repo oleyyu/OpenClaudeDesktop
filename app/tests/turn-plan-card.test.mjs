@@ -207,8 +207,10 @@ test('the LocalSessions bridge: setAvailableNextActions goes to the main process
   const calls = [];
   globalThis.window = { desktop: { call: async (action, params) => { calls.push([action, params]); return true; } } };
   try {
-    const { localSessionsBridge } = await import('../src/turn-plan-bridge.mjs');
-    assert.equal(globalThis['claude.web'].LocalSessions, localSessionsBridge);
+    // W14-code r4 closeout R4DC-N7: the module's test-only localSessionsBridge alias is gone; the bridge is the global.
+    await import('../src/turn-plan-bridge.mjs');
+    const localSessionsBridge = globalThis['claude.web'].LocalSessions;
+    assert.equal(typeof localSessionsBridge?.setAvailableNextActions, 'function');
     assert.equal(await localSessionsBridge.setAvailableNextActions('P', ['archive']), true);
     await localSessionsBridge.setAvailableNextActions('P', undefined);
     assert.deepEqual(calls, [['turn-plan:available-next-actions', { sessionId: 'P', actions: ['archive'] }], ['turn-plan:available-next-actions', { sessionId: 'P', actions: null }]]);

@@ -71,7 +71,7 @@ async function collapse(id) {
   if (await trigger.getAttribute("aria-expanded") === "true") { await trigger.focus(); await trigger.press("Enter"); }
 }
 async function send(text) {
-  await page.getByRole("textbox", { name: "Message DeepSeek", exact: true }).fill(text);
+  await page.getByRole("textbox", { name: /^(?:Prompt|Message DeepSeek)$/ }).fill(text);
   await page.locator('[data-testid="code-prompt-send"]:not([inert] *)').click();
 }
 // Resolve a CDS token to the colour the renderer actually paints.
@@ -103,7 +103,7 @@ try {
   await page.mouse.move(100, 700);
   await page.locator(`[data-source-session-id="${RC}"] .source-session-open`).click();
   const sendPhase=async phase=>{
-    const composer=page.getByRole('textbox',{name:'Message DeepSeek',exact:true});
+    const composer=page.getByRole('textbox',{ name: /^(?:Prompt|Message DeepSeek)$/ });
     await composer.fill(`fixture:agent-phase:${phase}`);
     await composer.press('Enter');
     await poll(async()=>await composer.evaluate(node=>node.value)==='','steer accepted by real composer transport');
@@ -129,10 +129,10 @@ try {
   assert.equal(await pane.locator('.sag-pane-title').textContent(),'nova · reviewer');
   // panes-tile-current:16235: tasks now has a real root list, so one child view can return to it.
   assert.equal(await pane.getByRole('button',{name:'Back',exact:true}).count(),1);
-  assert.equal(await pane.locator('.sag-thinking').evaluate(node=>node.getBoundingClientRect().height),20);
-  assert.equal(await pane.locator('.sag-thinking').textContent(),'Thinking…');
+  assert.equal(await pane.locator('.sag-transcript div[role="status"].min-h-5').evaluate(node=>node.getBoundingClientRect().height),20);
+  assert.equal(await pane.locator('.sag-transcript div[role="status"].min-h-5').textContent(),'Thinking…');
   await poll(async()=>await pane.locator('[data-cds="Spark"]').getAttribute('data-spark-rendering')==='sprite','thinking sprite loads');
-  const spark=pane.locator('.sag-thinking [data-cds="Spark"]');
+  const spark=pane.locator('.sag-transcript div[role="status"].min-h-5 [data-cds="Spark"]');
   assert.deepEqual(await spark.evaluate(node=>({width:node.getBoundingClientRect().width,height:node.getBoundingClientRect().height,overflow:getComputedStyle(node).overflow})),{width:18,height:18,overflow:'hidden'});
   await page.emulateMedia({reducedMotion:'reduce'});
   await poll(async()=>await spark.getAttribute('data-spark-rendering')!=='sprite','reduced motion uses static spark');
@@ -193,7 +193,7 @@ try {
   assert.equal(await agent.locator('.sag-model').textContent(),'gpt-6-astra');
   assert.equal(await agent.locator('.sag-model').evaluate(n=>getComputedStyle(n).color),await expectedColor('--cds-text-muted'));
   await pane.getByText('CHILD_FINAL_RESULT',{exact:true}).waitFor();
-  assert.equal(await pane.locator('.sag-thinking').count(),0);
+  assert.equal(await pane.locator('.sag-transcript div[role="status"].min-h-5').count(),0);
   const calls=(await fs.readFile(path.join(profile,'fixture-history.jsonl'),'utf8')).trim().split('\n').map(line=>JSON.parse(line));
   assert.ok(calls.some(call=>call.method==='thread/turns/list' && call.params.threadId===childId),'child uses real paginated history RPC');
   assert.equal(calls.some(call=>call.method==='thread/read' && call.params.threadId===childId && call.params.includeTurns===true),false);
@@ -208,7 +208,7 @@ try {
     await poll(async()=>await newest.getAttribute('data-agent-state')===status,'child terminal state');
     assert.ok((await newest.textContent()).includes(word));
     await pane.getByText(`No result — task ${status}`,{exact:true}).waitFor();
-    assert.equal(await pane.locator('.sag-thinking').count(),0);
+    assert.equal(await pane.locator('.sag-transcript div[role="status"].min-h-5').count(),0);
     if(status==='failed')assert.equal(await newest.locator('.sag-verb').evaluate(n=>getComputedStyle(n).color),await expectedColor('--cds-text-danger'));
   }
   checks.push('Real interrupted and failed child turns show Stopped/Failed to run agent and exact no-result states; thinking sprite is 18px clipped and static under reduced motion');
@@ -218,9 +218,9 @@ try {
   await emptyAgent.locator('.sag-trigger').click();
   await sendPhase('empty');
   await poll(async()=>await emptyAgent.getAttribute('data-agent-state')==='completed','empty child completes');
-  assert.equal(await pane.locator('.sag-thinking').count(),1,'Ex retains Thinking for the real completion/result race');
+  assert.equal(await pane.locator('.sag-transcript div[role="status"].min-h-5').count(),1,'Ex retains Thinking for the real completion/result race');
   await pane.getByText('No result — task ended',{exact:true}).waitFor();
-  assert.equal(await pane.locator('.sag-thinking').count(),0);
+  assert.equal(await pane.locator('.sag-transcript div[role="status"].min-h-5').count(),0);
   checks.push('Completed child with no result keeps the 2500ms wait then shows No result — task ended');
   // F07 oO/Ie (approval-current.js:4271-4296, :16921-16934, :17112-17126): a DeepSeek delegation
   // with a description reads it in the row's tense instead of 'Running agent'/'Ran agent' + name.

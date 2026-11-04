@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { SourceTooltip } from "./source-tooltip";
 import { t } from "../electron/i18n/index.mjs";
 import {
-  CHAT_TILE_ID, TILE_CONFIG, adjustFlexes, chatContentInset, cloneNode, coveredWidth, distributeFlex, findStack, findTilePath, layoutsEqual, minSize, moveTile, nodeKey,
+  CHAT_TILE_ID, TILE_CONFIG, adjustFlexes, chatContentInset, chatGutters, cloneNode, coveredWidth, distributeFlex, findStack, findTilePath, layoutsEqual, minSize, moveTile, nodeKey,
   orderedTileIds, parentAtPath, resolveLayout, withChatMinimum,
 } from "./tile-layout-model.mjs";
 import { createDragSnapshot, hitTest, indicatorOutset } from "./tile-drop-zones.mjs";
@@ -107,7 +107,7 @@ function Separator({ direction, isActive, isDropTarget, isDisabled, size, depth,
   );
 }
 
-function TileWrap({ node, flex, config, minWidthSize, edgeHandles, engine, tileById, hosts, isTop }) {
+function TileWrap({ node, flex, config, minWidthSize, edgeHandles, engine, tileById, hosts, isTop, gutters }) {
   const tile = tileById(node.tileId);
   const overflowMin = tile?.overflowMin ?? null;
   const target = engine.feedback.target;
@@ -148,6 +148,9 @@ function TileWrap({ node, flex, config, minWidthSize, edgeHandles, engine, tileB
       ref={wrapRef}
       data-pane-root="" className={`tiles-tile-wrap ${node.tileId === "chat" ? "source-chat-tile" : "source-side-tile shadow-panel-sm"}`}
       data-tile-id={node.tileId}
+      // W14-code r2 css2-chat-gutter-shave: cc43287c9 Fbe's chat tile `"data-chat-gutter-start": m, "data-chat-gutter-end": h`.
+      data-chat-gutter-start={node.tileId === "chat" ? gutters?.start : undefined}
+      data-chat-gutter-end={node.tileId === "chat" ? gutters?.end : undefined}
       // ca1d33d05 Et (codeTile, focus-region-model.mjs tileRegion): each side pane is a stop placed by its pane and its
       // tile's reading order; the chat tile's are its title ("header") and composer.
       data-focus-region={node.tileId === "chat" ? undefined : tileRegion(node.tileId)} data-focus-region-instance={node.tileId === "chat" ? undefined : node.tileId}
@@ -176,13 +179,13 @@ function resizeLabel(node, index, tileById) {
   const named = left !== null && right !== null && left !== right;
   return t("Resize {left} and {right}", { left: named ? left : index + 1, right: named ? right : index + 2 });
 }
-function Stack({ node, depth, config, engine, resolved, tileById, hosts, parentDirection, edgeHandles, topTileId }) {
+function Stack({ node, depth, config, engine, resolved, tileById, hosts, parentDirection, edgeHandles, topTileId, gutters }) {
   const info = resolved.get(nodeKey(node));
   const flex = info?.resolvedFlex ?? node.flex;
   const rowMin = info?.rowMin ?? 0;
   if (node.kind === "tile") {
     if (!tileById(node.tileId)) return null;
-    return <TileWrap node={node} flex={flex} config={config} minWidthSize={rowMin} edgeHandles={edgeHandles} engine={engine} tileById={tileById} hosts={hosts} isTop={topTileId === node.tileId} />;
+    return <TileWrap node={node} flex={flex} config={config} minWidthSize={rowMin} edgeHandles={edgeHandles} engine={engine} tileById={tileById} hosts={hosts} isTop={topTileId === node.tileId} gutters={gutters} />;
   }
   const target = engine.feedback.target;
   const isRow = node.direction === "row";
@@ -216,7 +219,7 @@ function Stack({ node, depth, config, engine, resolved, tileById, hosts, parentD
       {node.children.map((child, index) => (
         <React.Fragment key={nodeKey(child)}>
           <Stack node={child} depth={depth + 1} config={config} engine={engine} resolved={resolved} tileById={tileById} hosts={hosts}
-            parentDirection={node.direction} edgeHandles={childHandles(index)} topTileId={topTileId} />
+            parentDirection={node.direction} edgeHandles={childHandles(index)} topTileId={topTileId} gutters={gutters} />
           {index < node.children.length - 1 && (
             <Separator
               direction={node.direction}
@@ -699,6 +702,19 @@ export function SourceTileLayout({ layout, onLayoutChange, tiles, renderTile, co
     for (const tile of tiles) if (!visibleIds.includes(tile.id)) hosts.release(tile.id);
   }, [tiles, visibleIds, hosts]);
   const canDrag = visibleTiles.length > 1;
+  // W14-code r2 css2-chat-gutter-shave: the chat tile's gutter sides (cc43287c9 Ne / Pe, tile-layout-model chatGutters).
+  // W14-code r4 fr4-13 (E95, official geometry): every layout sets them, the chat-only one included, and "bleed" is
+  // written as is: cc43287c9 `tt = je ? 0 : Ve.padding, nt = Qe > 0 ? tt + Qe : je ? 0 : void 0` gives the container
+  // no end padding while chat is the top-trailing tile (je), and the chat column takes --tiles-padding back through
+  // shared-6 vg `[[data-chat-gutter-end=bleed]_&]:[--chat-column-gutter-end:var(--chat-gutter-end,calc(var(--chat-gutter)
+  // +var(--tiles-padding)))]` (source-transcript.css / source-composer.css). The chat-only container keeps the start
+  // padding (cf53e1812 t: `left: e.paddingStart ?? e.padding`), so its column starts 8 + 32px in; its top and bottom stay
+  // the host's verified chat-only geometry (source-tile-layout.css). fitOpened keeps the plain padding at the end
+  // (cc43287c9 `at = {...Ve, paddingTop: et, paddingEnd: Ve.padding + Qe}`).
+  const gutters = useMemo(() => chatGutters(layout), [layout]);
+  const containerPadding = hasPane
+    ? { paddingTop: config.padding, paddingRight: gutters.end === "bleed" ? 0 : config.padding, paddingBottom: config.padding, paddingLeft: config.padding }
+    : { paddingLeft: config.padding };
   const engine = useMemo(() => ({
     feedback, dragVisualTileId: dragVisual, isDraggingTile, activeBoundaries, registerNodeEl, getHandleProps, getCornerProps,
   }), [feedback, dragVisual, isDraggingTile, activeBoundaries, registerNodeEl, getHandleProps, getCornerProps]);
@@ -714,9 +730,9 @@ export function SourceTileLayout({ layout, onLayoutChange, tiles, renderTile, co
       data-tile-layout={serialized}
       {...dataAttributes}
     >
-      <div ref={containerRef} className="tiles-container" style={{ padding: hasPane ? config.padding : undefined, "--tiles-gap": `${config.gap}px`, "--tiles-padding": `${config.padding}px` }}>
+      <div ref={containerRef} className="tiles-container" style={{ ...containerPadding, "--tiles-gap": `${config.gap}px`, "--tiles-padding": `${config.padding}px` }}>
         <Stack node={layout.root} depth={0} config={config} engine={engine} resolved={resolved} tileById={tileById} hosts={hosts}
-          parentDirection={undefined} edgeHandles={NO_HANDLES} topTileId={visibleIds[0]} />
+          parentDirection={undefined} edgeHandles={NO_HANDLES} topTileId={visibleIds[0]} gutters={gutters} />
       </div>
       {visibleTiles.map((tile) => createPortal(
         renderTile(tile.id, {
@@ -729,10 +745,10 @@ export function SourceTileLayout({ layout, onLayoutChange, tiles, renderTile, co
         hosts.host(tile.id),
         tile.id,
       ))}
-      <span id={instructionsId} className="source-sr-only">
+      <span id={instructionsId} className="sr-only">
         {t("Arrow keys move the tile. Perpendicular arrows preview a split; press Enter to commit or Escape to cancel.")}
       </span>
-      <span role="status" className="source-sr-only" data-tiles-status="">
+      <span role="status" className="sr-only" data-tiles-status="">
         {keyboardPreview
           ? SIDE_STATUS[keyboardPreview.side]
           : lastKeyboardMove && <span key={lastKeyboardMove.seq}>{t("Tile moved to position {position} of {total}", { position: lastKeyboardMove.position, total: lastKeyboardMove.total })}</span>}

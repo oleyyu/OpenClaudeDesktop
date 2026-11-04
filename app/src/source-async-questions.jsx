@@ -3,13 +3,19 @@
 // as an ordinary message (steered into the running turn, or as the next turn); Skip dismisses it. There is no official
 // counterpart (Codex-only), so it wears the question card's 3.6556.2 dt structure (source-question-card.jsx): the
 // c2d1aeb56 shell / body classes, shared-5 bL's title row with dt's n/m pill, c9ed5627b ut option rows, the Other row
-// with CdsTextArea, and Back / Skip / primary CdsButtons. No digit shortcuts or approval plumbing.
+// with CdsTextArea, and Back / Skip / primary CdsButtons. No digit shortcuts or approval plumbing. In the Code transcript
+// (context.presentation "card") it wears c2f6611a3 En's structure instead, like the question card there.
 import React, { createContext, useContext, useId, useRef, useState } from "react";
 import { CdsButton, CdsTextArea, cdsClassNames } from "./generated/view-tabs/index.js";
 import { asyncAnswerText, asyncQuestionsOf } from "./async-questions-model.mjs";
 import { QuestionOptionRow, selectedRowClass, preventMouseDown, otherFieldArrowKeys, stopClickPropagation } from "./generated/question-card/option-row.mjs";
 import { QuestionCardHeader, questionDisplayText } from "./generated/question-card/card-header.mjs";
+// W14-code r4 R4T-02: the En title's rich text (c2f6611a3 Nn → cb8c5a88f ii), as source-question-card.jsx.
+import { ii as questionRichText } from "./generated/code-transcript/cb8c5a88f-h6ooJ7Al.mjs";
 import { questionRowMouseDown, questionEndsDragSelect } from "./generated/question-card/row-pointer.mjs";
+import { QuestionAnswerOption, QuestionRadioMark, endsAnswerSelection, preventAnswerMouseDown, stopAnswerClick } from "./generated/question-card/answer-option.mjs";
+import { cdsCheckboxTopAlignClass } from "./generated/view-tabs/index.js";
+import { QUESTION_CARD_EN } from "./source-question-card.jsx";
 import "./source-async-questions.css";
 import { t } from "../electron/i18n/index.mjs";
 
@@ -62,6 +68,63 @@ export function SourceAsyncQuestions({ item }) {
     const checked = choice?.kind === "option" && choice.label === option;
     setChoices((all) => ({ ...all, [at]: checked ? undefined : { kind: "option", label: option } }));
   };
+  // W14-code r3 R2T-TS6: in the Code transcript the question card is c2f6611a3 En (source-question-card.jsx), so this
+  // card wears En's structure there too: the bg-alpha-1 header with the "‹ n of m ›" pager in place of Back, Tn rows
+  // with the radio mark, the Other row whose field shows once Other is chosen, Skip / primary in En's actions row.
+  // Its own behaviour stays (no preselection, a second press clears a choice, the answer goes out as a message).
+  if (context.presentation === "card") {
+    const otherField = (
+      <CdsTextArea rows={1} autosize className={QUESTION_CARD_EN.otherField} style={QUESTION_CARD_EN.otherFieldStyle} value={texts[at] ?? ""}
+        disabled={unavailable} aria-label={hasOptions ? t("Other option") : question.title}
+        placeholder={hasOptions ? t("Type your own answer here") : t("Write your answer")} autoComplete="off" spellCheck onClick={stopAnswerClick}
+        onChange={(event) => { const value = event.target.value; setTexts((all) => ({ ...all, [at]: value })); }} />
+    );
+    return (
+      <div className={cdsClassNames("source-async-questions", QUESTION_CARD_EN.shell)} role="group" aria-label={questionDisplayText(question.title)}
+        data-async-questions={item.id} onClick={stopAnswerClick}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" && (event.metaKey || event.ctrlKey) && !event.repeat) { event.preventDefault(); void submit(); }
+        }}>
+        <div className={QUESTION_CARD_EN.header}>
+          <div id={questionId} className={QUESTION_CARD_EN.title}>{questionRichText(questionDisplayText(question.title), at, undefined, undefined, undefined, undefined, undefined, true)}</div>
+          {questions.length > 1 ? (
+            <span className={QUESTION_CARD_EN.pager}>
+              <CdsButton size="sm" variant="ghost" icon="CaretLeft" iconOnly disabled={busy || at === 0} aria-label={t("Show previous question")}
+                onMouseDown={preventAnswerMouseDown} onClick={() => setPage(at - 1)} />
+              {t("{position} of {count}", { position: at + 1, count: questions.length }) /* W14-code r5 R5T-05: c2f6611a3 En GW+MSxzG18 */}
+              <CdsButton size="sm" variant="ghost" icon="CaretRight" iconOnly disabled={busy || last} aria-label={t("Show next question")}
+                onMouseDown={preventAnswerMouseDown} onClick={() => setPage(at + 1)} />
+            </span>
+          ) : null}
+        </div>
+        <div className="flex flex-col">
+          {question.options.map((option, index) => (
+            <QuestionAnswerOption key={`${index}-${option}`} option={{ label: option }} index={index}
+              isSelected={choice?.kind === "option" && choice.label === option} isMultiSelect={false} disabled={unavailable} onSelect={pick} />
+          ))}
+          {hasOptions ? (
+            <div className={QUESTION_CARD_EN.otherRow}>
+              <button type="button" disabled={unavailable} aria-pressed={custom} aria-label={t("Other")} className={QUESTION_CARD_EN.otherHit}
+                onClick={(event) => { if (!endsAnswerSelection(event) && !unavailable) setChoices((all) => ({ ...all, [at]: { kind: "other" } })); }} />
+              <div aria-hidden="true" className={QUESTION_CARD_EN.otherLabel}>
+                <QuestionRadioMark checked={custom} className={cdsCheckboxTopAlignClass} />
+                <span aria-hidden="true">{t("Other")}</span>
+              </div>
+              {custom ? otherField : null}
+            </div>
+          ) : <div className={QUESTION_CARD_EN.freeRow}>{otherField}</div>}
+        </div>
+        {error && <p className={QUESTION_CARD_EN.error} role="alert">{error}</p>}
+        <div className={QUESTION_CARD_EN.actions}>
+          <CdsButton variant="secondary" onMouseDown={preventAnswerMouseDown} disabled={busy} onClick={() => context.skip(item.id)}>{t("Skip")}</CdsButton>
+          <CdsButton variant="primary" onMouseDown={preventAnswerMouseDown} busy={busy} disabled={!busy && (unavailable || (last && !text))}
+            onClick={() => { if (!busy) void submit(); }}>
+            {last ? t("Send answer") : t("Next")}
+          </CdsButton>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className={cdsClassNames("source-async-questions", CARD_SHELL, "epitaxy-card-outline", "outline-none")} role="group"
       aria-labelledby={questionId} data-async-questions={item.id}

@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { attachableSelection, draftWithQuote, fileRefMenu, linkTarget, messageItemText, messageMenu, quoteBlock } from "../src/transcript-context-menu-model.mjs";
+import { attachableSelection, fileRefMenu, linkTarget, messageItemText, messageMenu, quoteBlock } from "../src/transcript-context-menu-model.mjs";
 
 const shape = (entries) => entries.map((entry) => entry.type === "separator" ? "---"
   : entry.submenu ? `${entry.label} ▸ ${entry.submenu.map((child) => child.label).join(" / ")}`
@@ -55,6 +55,23 @@ test("file reference menu (c856385e2 Mn): Attach, Copy ▸, separator, Open in �
     "without an absolute path there is nothing to attach or reveal");
 });
 
+// W14-code r8 R8T-01: 3.6556.2 c856385e2 bn — Open in ▸ hn's installed editors, a separator, then Un's extraTargets
+// Sn "Files pane" and wn "Default app" (a path inside the session folder); an empty submenu is left out.
+test("file reference menu (c856385e2 bn): Open in ▸ editors, separator, Files pane, Default app", () => {
+  const editors = [{ type: "cursor", name: "Cursor" }, { type: "vscode", name: "VS Code" }];
+  const menu = fileRefMenu({ absolute: "/w/src/app.js", relative: "src/app.js", filename: "app.js", canReveal: true, editors, canOpenDefault: true });
+  assert.deepEqual(shape(menu), ["Copy ▸ Absolute path / Relative path / Filename", "---", "Open in ▸ Cursor / VS Code /  / Files pane / Default app", "Show in Finder"]);
+  const submenu = menu.find((entry) => entry.id === "open-in").submenu;
+  assert.deepEqual(submenu.map((entry) => entry.type === "separator" ? "---" : entry.id),
+    ["open-in-editor:cursor", "open-in-editor:vscode", "---", "open-files-pane", "open-default-app"]);
+  assert.deepEqual(shape(fileRefMenu({ absolute: "/elsewhere/a.js", relative: null, filename: "a.js", editors, canOpenDefault: true })),
+    ["Copy ▸ Absolute path / Filename", "---", "Open in ▸ Cursor / VS Code /  / Files pane"], "Default app only inside the folder (wn inRoot)");
+  assert.deepEqual(shape(fileRefMenu({ absolute: "/w/a.js", relative: "a.js", filename: "a.js", canOpen: false, editors: [], canReveal: true })),
+    ["Copy ▸ Absolute path / Relative path / Filename", "---", "Show in Finder"], "nothing to open in: no submenu, the reveal item keeps its separator");
+  assert.deepEqual(shape(fileRefMenu({ filename: "a.js", editors })), ["Copy ▸ Filename", "---", "Open in ▸ Files pane"],
+    "no absolute path, no editor");
+});
+
 test("message text: agent/plan Markdown, user text parts joined as the bubble; other rows have none", () => {
   assert.equal(messageItemText({ type: "agentMessage", text: "**hi**" }), "**hi**");
   assert.equal(messageItemText({ type: "plan", text: "1. step" }), "1. step");
@@ -65,13 +82,9 @@ test("message text: agent/plan Markdown, user text parts joined as the bubble; o
   assert.equal(messageItemText(undefined), undefined);
 });
 
-test("attach quotes the text as Markdown after the existing draft, keeping order", () => {
+test("attach quotes the text as Markdown", () => {
   assert.equal(quoteBlock("one\n\ntwo  \n"), "> one\n>\n> two");
   assert.equal(quoteBlock("   "), "");
-  assert.equal(draftWithQuote("", "line"), "> line\n\n");
-  assert.equal(draftWithQuote("Explain this:  \n", "a\nb"), "Explain this:\n\n> a\n> b\n\n");
-  assert.equal(draftWithQuote(draftWithQuote("", "first"), "second"), "> first\n\n> second\n\n");
-  assert.equal(draftWithQuote("keep", " "), "keep");
 });
 
 test("TI Pin as chapter / Unpin chapter: after Attach, before the Rewind / Fork section; only with message text", () => {

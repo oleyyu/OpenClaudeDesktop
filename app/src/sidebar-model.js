@@ -1,7 +1,7 @@
 // Classic Code sidebar branch: desktop-sidebar.js xF/SF, Ck, rA/oA.
 // Keep this model free of UI/browser state so Codex records remain the source.
 import { hasPendingApproval, latestTurnError } from "./state.js";
-import { t, tn } from "../electron/i18n/index.mjs";
+import { t } from "../electron/i18n/index.mjs";
 import {orderSidebarFamilies,splitSidebarFamilies} from './generated/code-current/sidebar-family-sort.mjs';
 import {currentSidebarDateGroups} from './generated/code-current/sidebar-date-groups.mjs';
 import { currentSidebarComparator,sidebarSortRecord,savedEnvironmentGroups } from './sidebar-filter-current-model.mjs';

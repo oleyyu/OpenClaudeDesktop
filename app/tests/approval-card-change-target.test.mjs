@@ -128,8 +128,9 @@ const render = (model, snapshot) => {
 
 test('SSR: the change block and the footnote read together inside ApprovalReadRows, before the reason', () => {
   const html = render(approvalChangeCard(base(), built()));
-  assert.match(html, /<div class="sac-heading"><span><span class="text-primary \[unicode-bidi:plaintext\]">Update environment\?<\/span><\/span><\/div>/);
-  const gated = html.match(/<div data-testid="approval-read-rows"><div class="flex flex-col gap-md">([\s\S]*?)<\/div><\/div><div class="sac-reason/);
+  // V3-W14-approvals: the title row is bL (cc32965c2 Lt) around L's span with the heading's own text-primary span.
+  assert.ok(html.includes('<span class="text-body-semibold min-w-0 break-words"><span data-approval-value=""><span class="text-primary [unicode-bidi:plaintext]">Update environment?</span></span></span>'));
+  const gated = html.match(/<div data-testid="approval-read-rows"><div class="flex flex-col gap-md">([\s\S]*?)<\/div><\/div><div class="epitaxy-scroll-clamp/);
   assert.ok(gated, 'the gated block precedes the reason');
   const block = gated[1];
   assert.match(block, /^<div class="flex flex-col gap-md rounded-lg border border-alpha-2 p-md"><span class="sr-only">Environment staging, personal<\/span><div aria-hidden="true" class="flex items-start gap-md text-body">/);
@@ -144,25 +145,25 @@ test('SSR: the change block and the footnote read together inside ApprovalReadRo
   assert.match(block, /<\/div><p class="text-body text-secondary select-text break-words \[unicode-bidi:plaintext\]">Applies to new sessions\. Shared with your organization\.<\/p>$/);
   assert.equal(count(html, 'Applies to new sessions.'), 1, 'the footnote is not repeated outside the gate');
   // The gated footer and one once allow with the builder's label.
-  assert.match(html, /<div class="flex flex-col gap-sm"><p aria-live="polite" class="sr-only"><\/p><footer class="sac-actions">/);
-  assert.deepEqual([...html.matchAll(/data-approval-action="(accept[^"]*)"/g)].map(match => match[1]), ['accept']);
-  assert.match(html, /<span class="sac-button-label">Update<\/span>/);
+  assert.ok(html.includes('<div class="flex flex-col gap-sm"><p aria-live="polite" class="sr-only"></p><div class="flex flex-wrap gap-x-md gap-y-sm items-start epitaxy-approval-actions justify-end">'));
+  assert.deepEqual([...html.matchAll(/data-testid="approval-action-(accept[^"]*)"/g)].map(match => match[1]), ['accept']);
+  assert.match(html, /<span class="min-w-0 \[unicode-bidi:plaintext\] truncate" data-approval-digit="2">Update<\/span>/);
 });
 
 test('SSR: held, the once allow carries the hint; Deny stays open', () => {
   const html = render(approvalChangeCard(base(), built()), { state: 'unread', hinted: true, fits: false });
-  assert.match(html, /<button[^>]*data-approval-action="accept" disabled=""[^>]*aria-disabled="true"/);
+  assert.match(html, /<button type="button" disabled=""[^>]*data-testid="approval-action-accept"/);
   assert.match(html, /data-testid="approval-read-hint" class="epitaxy-approval-read-hint text-footnote text-muted-as-secondary text-end text-balance">Scroll through what Claude sent to allow it\.<\/p>/);
-  assert.doesNotMatch(html.match(/<button[^>]*data-approval-action="decline"[^>]*>/)[0], / disabled=""/);
+  assert.doesNotMatch(html.match(/<button[^>]*data-testid="approval-action-decline"[^>]*>/)[0], / disabled=""/);
 });
 
 test('SSR: a switch shows its served text group, no gate; a plain card\'s footnote sits before its detail', () => {
   const served = render(approvalChangeCard(base(), { heading: 'Move this session?', servedText: { label: 'Settings', body: 'env: x\nhosts: none' }, footnote: ['Later.'], allowLabel: 'Move' }, { rowsGate: false }));
-  assert.match(served, /<div class="sac-content"><div role="group" aria-label="Settings" class="rounded bg-alpha-1 px-lg py-md text-body select-text break-words"><p class="whitespace-pre-wrap text-secondary \[unicode-bidi:plaintext\]">env: x\nhosts: none<\/p><\/div>/);
+  assert.match(served, /<div class="flex flex-col gap-\[12px\]"><div role="group" aria-label="Settings" class="rounded bg-alpha-1 px-lg py-md text-body select-text break-words"><p class="whitespace-pre-wrap text-secondary \[unicode-bidi:plaintext\]">env: x\nhosts: none<\/p><\/div>/);
   assert.equal(served.includes('approval-read-rows'), false);
   assert.match(served, /<p class="text-body text-secondary select-text break-words \[unicode-bidi:plaintext\]">Later\.<\/p>/);
   const plain = render({ ...base(), footnote: ['Runs every hour.'] });
-  assert.match(plain, /<p class="text-body text-secondary select-text break-words \[unicode-bidi:plaintext\]">Runs every hour\.<\/p><div id="[^"]+" class="sac-details">/);
+  assert.match(plain, /<p class="text-body text-secondary select-text break-words \[unicode-bidi:plaintext\]">Runs every hour\.<\/p><div class="flow-root">/);
   const none = render(base());
   assert.equal(none.includes('approval-change-target'), false);
   assert.equal(none.includes('Runs every hour.'), false);
@@ -177,9 +178,9 @@ test('SSR: a loose footnote follows gated rows (Be, Ve) and precedes trailing ro
   assert.equal(count(card, 'Be=i.rowsLead||i.rowsTrail?null:ve,Ve=F===void 0?xe:null'), 1);
   const gated = { ...base(), rowsReadGate: { hint: 'Scroll through what Claude sent to allow it.' }, footnote: ['After the rows.'] };
   const after = render(gated);
-  assert.match(after, /class="sac-details"[^>]*><div data-testid="approval-read-rows">[\s\S]*?<\/div><\/div><\/div><\/div><p class="text-body text-secondary select-text break-words \[unicode-bidi:plaintext\]">After the rows\.<\/p>/);
+  assert.match(after, /class="flow-root"><div data-testid="approval-read-rows">[\s\S]*?<\/div><\/div><\/div><\/div><p class="text-body text-secondary select-text break-words \[unicode-bidi:plaintext\]">After the rows\.<\/p>/);
   const trailing = render({ ...gated, rowsTrail: true, footnote: ['Before the rows.'] });
-  assert.match(trailing, /<p class="text-body text-secondary select-text break-words \[unicode-bidi:plaintext\]">Before the rows\.<\/p><div id="[^"]+" class="sac-details"[^>]*><div data-testid="approval-read-rows">/);
+  assert.match(trailing, /<p class="text-body text-secondary select-text break-words \[unicode-bidi:plaintext\]">Before the rows\.<\/p><div class="flow-root"><div data-testid="approval-read-rows">/);
   assert.equal(count(after, 'After the rows.'), 1);
   assert.equal(count(trailing, 'Before the rows.'), 1);
 });

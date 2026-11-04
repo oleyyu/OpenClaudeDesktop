@@ -193,7 +193,9 @@ const question = (fields = {}) => ({ id: 'q1', question: 'Which database?', head
 
 function setup(Q, q) {
   const runtime = fakeRuntime(q);
-  const card = mount(Q.SourceQuestionCard, { runtime, request: { id: 'r1' }, respond: async () => {}, isActive: true });
+  // W14-code r3 R2T-TS6: SourceQuestionCard picks the presentation (cc32965c2 `We ? ho : xo`); these keys are dt's, so
+  // the hand dispatcher drives the dt card itself (the card presentation, c2f6611a3 En, has no digit / arrow keys).
+  const card = mount(Q.SourceQuestionCardDt, { runtime, request: { id: 'r1' }, respond: async () => {}, isActive: true });
   const { win, element } = fakeWindow();
   const rootElement = element('section'), otherElement = element('textarea');
   rootElement.matches = otherElement.matches = () => false;

@@ -4,7 +4,6 @@ import {
   createTranscriptCache,
   identityMatches,
   isUpwardWheel,
-  isUpNavigationKey,
   navigationDirection,
   isUserScrollMovement,
   transcriptKeyIntent,
@@ -82,16 +81,17 @@ test("horizontal code scrolling and pinch/zoom gestures do not release vertical 
   assert.equal(isUpwardWheel({ deltaY: 20, deltaX: 0, ctrlKey: false }), false);
 });
 
+// W14-code r4 gen-final-4: the test-only isUpNavigationKey wrapper is deleted; the classifier is navigationDirection.
 test("only backward navigation keys signal reading upward", () => {
   for (const key of ["ArrowUp", "PageUp", "Home"])
-    assert.equal(isUpNavigationKey({ key }), true);
-  assert.equal(isUpNavigationKey({ key: " ", shiftKey: true }), true);
+    assert.equal(navigationDirection({ key }), "up");
+  assert.equal(navigationDirection({ key: " ", shiftKey: true }), "up");
   // c7f8992b4 C (the classifier) reads Shift+Tab as "up"; only its consumer stops releasing on it (TT-05 below).
-  assert.equal(isUpNavigationKey({ key: "Tab", shiftKey: true }), true);
+  assert.equal(navigationDirection({ key: "Tab", shiftKey: true }), "up");
   for (const modifier of ["ctrlKey", "altKey", "metaKey"])
-    assert.equal(isUpNavigationKey({ key: "Home", [modifier]: true }), false);
+    assert.notEqual(navigationDirection({ key: "Home", [modifier]: true }), "up");
   for (const key of ["Enter", "ArrowDown", "End", "a", " "])
-    assert.equal(isUpNavigationKey({ key }), false);
+    assert.notEqual(navigationDirection({ key }), "up");
 });
 
 test("downward keys also carry user intent during simultaneous content resizing", () => {

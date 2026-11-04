@@ -4,10 +4,192 @@
   "generator": "scripts/extract-question-card.mjs",
   "modules": [
     {
+      "target": "answer-option.mjs",
+      "source": "c2f6611a3-DBT6B0Bq.js",
+      "sourceSha256": "d50efc855d7b80d1d2dae8e35be33ddae125003320fb86c17cc3185303d2b24b",
+      "sha256": "658b6cd9933ac56450ca8da0bf7fab4b10d1d531fada05e1d809c9322d72ba20",
+      "bindings": [
+        {
+          "name": "K",
+          "sha256": "2e499b7cee3e70ceab707bb15ef8d611c1dc0ff5c1eee2a088db0a904b6daa5e"
+        },
+        {
+          "name": "q",
+          "sha256": "e3be98d0509b601870225ab5cf1e1d2284478e63ddd89f249b106233bee39ac7"
+        },
+        {
+          "name": "$t",
+          "sha256": "0cf06f75ff1023779b24f506a65635bb5d8c781b70f2f87e67ad28607c009ec3"
+        },
+        {
+          "name": "cn",
+          "sha256": "9522ad7193bd5376eb806214c47dfce3dd0af2aa26d4f89973efec85bb102770"
+        },
+        {
+          "name": "bn",
+          "sha256": "2816374f644251b5597b56608f7daedb5f880b5264a0bec0db6d9953bc810612"
+        },
+        {
+          "name": "xn",
+          "sha256": "570349b1a1f1690b6f5ad3949efddfdd88cecda97b830fe439e649654fd8e6be"
+        },
+        {
+          "name": "Sn",
+          "sha256": "c4bd57d23d4f0e2531c6304b0eb6626675c84166d88027dd3e7b229797bb1a2d"
+        },
+        {
+          "name": "Cn",
+          "sha256": "0e240c50b15c8c6debfa97f84e29db82fad341705859c7805d6591f8abb3efa2"
+        },
+        {
+          "name": "wn",
+          "sha256": "1f84e44ec463d635fbbc9b2f37d76567e884ceb72db110853a7e698bad312cd9"
+        },
+        {
+          "name": "Tn",
+          "sha256": "9841c60451a3dec0115ba749897d8d5fd0abdf8a80ee8f1d683fcd086e387b87"
+        }
+      ],
+      "imports": [
+        {
+          "local": "bt",
+          "from": "./c53f67064.mjs",
+          "name": "a",
+          "via": "c53f67064-BlORnHtP.js:t",
+          "kind": "generated",
+          "original": "a"
+        },
+        {
+          "local": "ge",
+          "from": "./card-header.mjs",
+          "name": "QA",
+          "via": "shared-5-Bg6ZMqvt.js:gr",
+          "kind": "generated",
+          "original": "QA"
+        },
+        {
+          "local": "i",
+          "from": "react/jsx-runtime",
+          "name": "jsxs",
+          "via": "vendor-frame-CnSY1sxv.js:Ua",
+          "kind": "react"
+        },
+        {
+          "local": "I1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStoreValueFirst1",
+          "via": "shared-frame-6jtSkIit.js:Kf",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "Ie",
+          "from": "./c8187a2dc.mjs",
+          "name": "e",
+          "via": "c8187a2dc-Dp9Zia_4.js:t",
+          "kind": "generated",
+          "original": "e"
+        },
+        {
+          "local": "J1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged1",
+          "via": "shared-frame-6jtSkIit.js:Qf",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "J2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged2",
+          "via": "shared-frame-6jtSkIit.js:$f",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "J4",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged4",
+          "via": "shared-frame-6jtSkIit.js:tp",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "J5",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged5",
+          "via": "shared-frame-6jtSkIit.js:np",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "J9",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "reactMemoCache",
+          "via": "shared-frame-6jtSkIit.js:ip",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "K1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore1",
+          "via": "shared-frame-6jtSkIit.js:op",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "K2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore2",
+          "via": "shared-frame-6jtSkIit.js:sp",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "K4",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore4",
+          "via": "shared-frame-6jtSkIit.js:lp",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "K5",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore5",
+          "via": "shared-frame-6jtSkIit.js:up",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "ne",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "CdsCheckboxIndicator",
+          "via": "shared-frame-6jtSkIit.js:Rs",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "t",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-CnSY1sxv.js:Ha",
+          "kind": "react"
+        },
+        {
+          "local": "te",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "cdsCheckboxTopAlignClass",
+          "via": "shared-frame-6jtSkIit.js:Ls",
+          "kind": "view-tabs"
+        }
+      ],
+      "exports": {
+        "Tn": "QuestionAnswerOption",
+        "cn": "QuestionRadioMark",
+        "Sn": "endsAnswerSelection",
+        "Cn": "answerOptionInset",
+        "bn": "preventAnswerMouseDown",
+        "xn": "stopAnswerClick",
+        "K": "K",
+        "$t": "$t"
+      }
+    },
+    {
       "target": "card-header.mjs",
       "source": "shared-5-Bg6ZMqvt.js",
       "sourceSha256": "ab6ce985aae8269c3afca209ee59140a7f61b47dd5004bacc3f1fe94cda6dbe6",
-      "sha256": "4f65f9d1a0f59b54aa0a361934b5ca1dda6f2eb62afb20a1b056ad9293768aaf",
+      "sha256": "046d5e171fd020b27fef5e635afd4f434d9c162171596984812fe2de7cbf36d7",
       "bindings": [
         {
           "name": "NA",
@@ -105,14 +287,15 @@
         "bL": "QuestionCardHeader",
         "$A": "questionDisplayText",
         "QA": "QA",
-        "ej": "ej"
+        "ej": "ej",
+        "NA": "NA"
       }
     },
     {
       "target": "digit-shortcuts.mjs",
       "source": "c9ed5627b-BSPWYeYQ.js",
       "sourceSha256": "75f81439acefd29267214df7c0561beae0f567491ae03243b826bdb56e89a40f",
-      "sha256": "00fb24ef4119139436a0f588e2fcd8be776d3f1cd3ee1d7bf56f5aa9796c2e16",
+      "sha256": "f869590db1d62cbd20ba7c22a06cfed52dd256b995f9c829aa885d71dd6d10de",
       "bindings": [
         {
           "name": "tt",
@@ -289,7 +472,7 @@
         },
         {
           "local": "Ze",
-          "from": "./c2f6611a3.mjs",
+          "from": "./answer-option.mjs",
           "name": "$t",
           "via": "c2f6611a3-DBT6B0Bq.js:a",
           "kind": "generated",
@@ -308,7 +491,7 @@
       "target": "option-row.mjs",
       "source": "c9ed5627b-BSPWYeYQ.js",
       "sourceSha256": "75f81439acefd29267214df7c0561beae0f567491ae03243b826bdb56e89a40f",
-      "sha256": "930e06094c480e0417ed72d87c7f299a32e08b1df25079de2c58cc2975b1e47c",
+      "sha256": "ed0684fa77e3cd68d710d2b3808cb70e00add01d1e8e60f1ea88d135ef56f2cb",
       "bindings": [
         {
           "name": "at",
@@ -465,7 +648,7 @@
         },
         {
           "local": "w",
-          "from": "./c2f6611a3.mjs",
+          "from": "./answer-option.mjs",
           "name": "K",
           "via": "c2f6611a3-DBT6B0Bq.js:c",
           "kind": "generated",
@@ -579,48 +762,6 @@
       "exports": {
         "questionRowMouseDown": "questionRowMouseDown",
         "questionEndsDragSelect": "questionEndsDragSelect"
-      }
-    },
-    {
-      "target": "c2f6611a3.mjs",
-      "source": "c2f6611a3-DBT6B0Bq.js",
-      "sourceSha256": "d50efc855d7b80d1d2dae8e35be33ddae125003320fb86c17cc3185303d2b24b",
-      "sha256": "8f5514f02f6a1b79a8104dc5353474c6ab1efabb6fd36fc0f00c62964f857c4b",
-      "bindings": [
-        {
-          "name": "K",
-          "sha256": "2e499b7cee3e70ceab707bb15ef8d611c1dc0ff5c1eee2a088db0a904b6daa5e"
-        },
-        {
-          "name": "q",
-          "sha256": "e3be98d0509b601870225ab5cf1e1d2284478e63ddd89f249b106233bee39ac7"
-        },
-        {
-          "name": "$t",
-          "sha256": "0cf06f75ff1023779b24f506a65635bb5d8c781b70f2f87e67ad28607c009ec3"
-        }
-      ],
-      "imports": [
-        {
-          "local": "ge",
-          "from": "./card-header.mjs",
-          "name": "QA",
-          "via": "shared-5-Bg6ZMqvt.js:gr",
-          "kind": "generated",
-          "original": "QA"
-        },
-        {
-          "local": "Ie",
-          "from": "./c8187a2dc.mjs",
-          "name": "e",
-          "via": "c8187a2dc-Dp9Zia_4.js:t",
-          "kind": "generated",
-          "original": "e"
-        }
-      ],
-      "exports": {
-        "K": "K",
-        "$t": "$t"
       }
     },
     {

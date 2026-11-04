@@ -54,16 +54,28 @@ export function forgetTranscriptScroll(key) {
   return cache.forget(key);
 }
 
+// W14-code r6 review fix R6T-01 = gates-r6-01: the Code transcript's official scroller (source-code-feed.jsx
+// useOfficialFeedScroll, c4a9ee384 Hp's follow engine) keeps this controller's reading positions — the same LRU, the
+// same row anchors — so a session restores the same way in either scroller.
+export function openTranscriptScroll(key) {
+  return cache.open(key);
+}
+export function saveTranscriptScroll(key, expectedGeneration, snapshot) {
+  return cache.save(key, expectedGeneration, snapshot);
+}
+export function measureTranscriptScroll(viewport, content, following) {
+  return measure(viewport, content, following);
+}
+export function transcriptScrollVisible(viewport) {
+  return visible(viewport);
+}
+
 export function isUpwardWheel(event) {
   return (
     !event.ctrlKey &&
     event.deltaY < 0 &&
     Math.abs(event.deltaY) > Math.abs(event.deltaX)
   );
-}
-
-export function isUpNavigationKey(event) {
-  return navigationDirection(event) === "up";
 }
 
 // The key classifier (2.42304.0 c7f8992b4-BX_ywd4_.js C, exported n): Shift+Tab classifies as "up", as in the source.
@@ -223,6 +235,8 @@ export function useTranscriptScroll({ sessionKey, ready }) {
     // Feed keyboard navigation (N9 setPinned(false)) and the find bar's match
     // reveal (G9 B: cancel the in-flight scroll, unpin, then centre).
     release: () => controller.current?.release(),
+    // W14-code r2 DC-07: whether the transcript follows its tail (c96d752d0 f6's isPinned).
+    isPinned: () => controller.current?.isPinned() ?? false,
     reveal: (rect) => controller.current?.reveal(rect) ?? false,
     getContent: () => contentRef.current,
     getViewport: () => viewportRef.current,
@@ -605,6 +619,7 @@ export function useTranscriptScroll({ sessionKey, ready }) {
         return true;
       },
       release,
+      isPinned: () => following,
       keyScroll(name) {
         if (!live() || !visible(viewport) || viewport.scrollHeight <= viewport.clientHeight) return false;
         const delta = keyScrollDelta(name, { clientHeight: viewport.clientHeight, scrollPaddingBottom: scrollPaddingBottom(viewport) });

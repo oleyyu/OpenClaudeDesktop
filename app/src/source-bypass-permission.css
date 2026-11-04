@@ -1,9 +1,8 @@
 /* shared-frame rp on the shared Dialog (source-dialog.css): sm 400px, rounded-card/surface-3/shadow-panel-lg,
    p-xl, alert title -2px, Qf footer and the bg-backdrop + 2px blur backdrop. The body copy is the dialog's own. */
 .source-bypass-dialog{overflow-wrap:anywhere}
-.source-bypass-dialog p{margin:4px 0 0;line-height:var(--cds-leading-body)}
-.source-bypass-dialog .source-bypass-workspace{margin-top:12px;font-family:var(--cds-font-mono);font-size:var(--cds-font-size-code);color:var(--cds-text-primary);word-break:break-all}
-.source-bypass-dialog .source-bypass-note{margin-top:12px;color:var(--cds-text-muted);font-size:var(--cds-font-size-footnote,12px)}
+.source-bypass-dialog p:first-of-type{margin:4px 0 0;line-height:var(--cds-leading-body)}
+.source-bypass-dialog p{margin-block-end:0}
 /* The footnote's securityLink: CDS TextLink (cds-text-link cds-text-link-underline) inline in the muted footnote. */
 .source-bypass-dialog .source-bypass-link{display:inline;margin:0;padding:0;border:0;border-radius:2px;background:none;outline:none;font:inherit;color:var(--cds-text-accent);--_text-link-line:color-mix(in srgb,currentColor,transparent 60%);text-decoration-line:underline;text-underline-offset:3px;text-decoration-color:var(--_text-link-line,currentColor);transition:color var(--cds-dur-fast,60ms) var(--cds-ease-out),text-decoration-color var(--cds-dur-fast,60ms) var(--cds-ease-out)}
 .source-bypass-dialog .source-bypass-link:is(:hover,:focus-visible){--_text-link-line:currentColor}

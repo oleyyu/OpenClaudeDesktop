@@ -622,10 +622,11 @@ test('the This computer "+" starts the sidebar New session (no tooltip); its men
   const place = model.layout.at(-1).buckets.at(-1);
   assert.equal(place.key, 'project:kind::local');
   assert.equal(place.plainHeading, true, 'IE FE mark "plainHeading" on the place bucket');
-  const plus = nodes(host.trailing(place, { first: false }), (n) => n.props?.label === 'New session in This computer');
+  // W14-code r2 fr2-22: H7's section "+" is shared-18 iA (SidebarRowControl, no tooltip of its own) over fe Add.
+  const plus = nodes(host.trailing(place, { first: false }), (n) => n.props?.['aria-label'] === 'New session in This computer');
   assert.equal(plus.length, 1, 'GC: one "+" for the place bucket');
-  assert.equal(plus[0].props.tooltip, false, 'no target, so no tooltip');
-  assert.equal(plus[0].props.icon, 'Add');
+  assert.equal(plus[0].props.tooltip, undefined, 'no target, so no tooltip');
+  assert.equal(plus[0].props.children.props.name, 'Add');
   plus[0].props.onClick();
   assert.deepEqual(actions, ['new'], 'the "+" is the same Z as the menu: v(undefined, undefined, null)');
   const menu = host.folderMenu(place);
@@ -634,7 +635,7 @@ test('the This computer "+" starts the sidebar New session (no tooltip); its men
   // A folder bucket keeps its own "+" (onProject with its folder), not the place one.
   const alpha = model.layout.at(-1).buckets.find((bucket) => bucket.cwd === '/w/alpha');
   assert.ok(alpha && alpha.plainHeading === undefined, 'folder buckets are not plainHeading');
-  nodes(host.trailing(alpha, { first: false }), (n) => n.props?.label === 'New session in alpha')[0].props.onClick();
+  nodes(host.trailing(alpha, { first: false }), (n) => n.props?.['aria-label'] === 'New session in alpha')[0].props.onClick();
   assert.deepEqual(actions, ['new', ['project', '/w/alpha']]);
 });
 
@@ -760,7 +761,8 @@ const sectionsWith = (groupBy) => Layout.buildSidebarSections({
     { id: 'g1', kind: 'manual', order: 1, name: 'Research', groupBy, members: ['code:a1', 'code:a2'], v: 2 },
     { id: 'sessions', kind: 'sessions', order: 2, groupBy }] }),
   sessions: [thread('a1'), thread('a2'), thread('s1'), thread('s2', { cwd: '/w/beta' })], customGroups: [{ id: 'g1', name: 'Research' }],
-  metadata: { a1: { customGroupId: 'g1' }, a2: { customGroupId: 'g1' } }, preferences: {}, knownFolders: [] });
+  // W14-code r5 gates-r5-02: shared-22 sO only sub-groups a status section with Ii() on; this fixture pins the gate-on shape.
+  metadata: { a1: { customGroupId: 'g1' }, a2: { customGroupId: 'g1' } }, preferences: {}, knownFolders: [], statusGrouping: true });
 const plainHost = (extra = {}) => ({ renderRows: () => null, shiftStyle: () => undefined, toggle() {}, folded: new Set(), dropTargets: false, headerControls: null,
   trailing: () => null, ...extra });
 

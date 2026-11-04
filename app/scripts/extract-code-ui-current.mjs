@@ -22,9 +22,12 @@
 //   nested-session-*                                            w2-sidebar-resize-nested (nested-session-parts:
 //                                                               w10-ccres-nested-parts)
 //   file-* / breadcrumb-* / path-tooltip (mapped ones)          w2-files (path-tooltip: composer map cc5c56f5c, E39)
-//   terminal-*                                                  cc-rest-terminal-a/-b (terminal-tab-overflow:
-//                                                               w10-trans-tab-overflow)
+//   terminal-*                                                  cc-rest-terminal-a/-b
 //   sidebar-running-mark                                        w12b-frame-titlebar-sidebar
+//   pane-layout-icons                                           W14-code frame
+//   titlebar-folder-pill                                        W14-code r2 frame (fr2-21)
+//   sidebar-row-control                                         W14-code r2 frame (fr2-22)
+//   environment-delete-question                                 W14-code r2 closeout-2 (fr2-09)
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -232,12 +235,10 @@ async function extractHelpers({ check = false, only = null } = {}) {
     return `${helper.name} as ${local}`;
   }).join(',')}} from '../view-tabs/${official.sharedFrame}';`;
   await emit('shared-18', 'sidebar-row-primitive.mjs', ['bk','kk','_k'], `import {jsx as m} from 'react/jsx-runtime'; ${sidebarMemo('J9 J1 K1 J5 K5')}`, 'export {bk as sidebarFocusClass,kk as SidebarRowButton,_k as sidebarHitRowClass};', v3Source);
-  // R2-sidebar SG-2: no second CDS copy. Base UI mergeProps (vendor-frame Kt) and clsx (ge, which the sidebar chunks
-  // import as their class joiner; not the twMerge cdsClassNames X) and the 2.42304.0 density context (la), Badge (cs)
-  // and Pulse (eN) are re-exported from view-tabs, so the sidebar Badge reads the same context as CdsButton.
-  // 3.6556.2: the sidebar chunks still join classes with vendor-frame clsx (`ve`, exported Ba), not CDS twMerge.
-  await emit(official.vendorFrame, 'cds-merge-props.mjs', [], '', `export {mergeProps as mergeCdsProps,clsx as cdsClassNames} from '../view-tabs/${official.vendorFrame}';`, v3Source);
-  await emit(official.sharedFrame, 'cds-badge.mjs', [], '', `export {CdsDensityContext as CdsBadgeDensity,CdsBadge as CurrentCdsBadge,CdsPulse as CurrentPulse} from '../view-tabs/${official.sharedFrame}';`, v3Source);
+  // R2-sidebar SG-2: no second CDS copy. Base UI mergeProps and clsx (vendor-frame, the sidebar chunks' class joiner; not
+  // the twMerge cdsClassNames X), the density context, Badge and Pulse are view-tabs', so the sidebar Badge reads the same
+  // context as CdsButton. W14-code r2 closeout-2 (DC-06): the cds-merge-props / cds-badge re-export shims had no importer
+  // (every reader imports view-tabs directly) and are retired.
   // R2-sidebar: pure renames (binding-map-code-current.json, every binding identical) moved these to 2.42304.0. Export names
   // stay; only minified locals and import aliases change. CDS pieces come straight from view-tabs semantic names.
   // 3.6556.2 shared-3 LR (old CP), shared-21 CQ/TQ/EQ/DQ/OQ (old AG/MG/NG/PG/FG): compiler rewrites only, same copy.
@@ -264,6 +265,12 @@ async function extractHelpers({ check = false, only = null } = {}) {
   // section badge also reads (Nj: awaiting 0, error 1, ready 2, running 3, idle 4); the PR overlay is unchanged.
   await emit('shared-26', 'sidebar-session-priority.mjs', ['Nj','Ij'], '', 'export {Ij as resolveSessionStatePriority,Nj as sessionStatePriorities};', v3Source);
   await emit('shared-8', 'sidebar-session-state.mjs', ['pb','hb'], "import {resolveSessionStatePriority as ms} from './sidebar-session-priority.mjs';", 'export {pb as resolveSessionDisplayState,hb as sessionNeedsAttention};', v3Source);
+  // W14-code r2 frame fr2-22: shared-18 iA (shared-21 imports it as hm), the sidebar row control a section header's '+'
+  // draws: button "df-row-control size-6 flex items-center justify-center rounded-md text-secondary hover:text-primary
+  // hover:bg-[var(--df-hover)]" + bk, tabIndex -1, data-row-action, a click that does not reach the row. shared-21 H7's
+  // default kind "section" with panels off (E12) is `u(hm, {onClick: c, "aria-label": p, children: u(fe, {size:"auto",
+  // name:"Add"})})` in span "-my-1".
+  await emit('shared-18', 'sidebar-row-control.mjs', ['iA'], `import {jsx as m} from 'react/jsx-runtime'; import {clsx as f} from '../view-tabs/${official.vendorFrame}'; import {sidebarFocusClass as bk} from './sidebar-row-primitive.mjs'; ${sidebarMemo('J9 J0 K0 J1 K1 J3 K3')}`, 'export {iA as SidebarRowControl};', v3Source);
   await emit('shared-18', 'sidebar-pr-model.mjs', ['yO','bO','SO','CO','DO','OO','FO'], '', 'export {yO as resolvePrState,bO as prStateOrder,CO as prWebUrl,OO as aggregatePullRequests,FO as pullRequestEntries};', v3Source);
   // 3.6556.2 ED/DD/OD/jD/wU (old Yw/Xw/Zw/eT/GR): the "none" state reads the muted-as-secondary token (TD).
   await emit('shared-18', 'sidebar-pr-icon.mjs', ['TD','ED','DD','OD','jD','wU'], `
@@ -363,7 +370,7 @@ async function extractHelpers({ check = false, only = null } = {}) {
     import {SourceShortcut as X} from '../../source-shortcut.jsx';
     import {SidebarRenameEnhancer as b_,SidebarCdsIcon as _e} from '../../source-sidebar-current-adapters.jsx';
     ${sidebarMemo('J8 J9 J0 K0 J1 K1 J2 K2 J3 K3 J4 K4 J5 K5')}
-  `, 'export {Ak as CurrentSidebarRow,Ek as sidebarRowClasses,Dk as useSidebarRename,Ok as SidebarRenameInput,Xk as SidebarWideDecoration,rA as SidebarRowMoreControl};', v3Source);
+  `, 'export {Ak as CurrentSidebarRow,Ek as sidebarRowClasses,Dk as useSidebarRename,Ok as SidebarRenameInput,Xk as SidebarWideDecoration,rA as SidebarRowMoreControl,yk as SidebarRowShortcut};', v3Source);
   // R2-sessions NBS-8: the Code Sessions page (2.42304.0 in R2: cbd6c85c8 page gd, old Du). Minified names are reused
   // across versions (old gu/_u/vu/yu/bu were copy; the new ones are the bulk-action gate and actions), so every module
   // exports semantic names.
@@ -1013,13 +1020,48 @@ async function extractHelpers({ check = false, only = null } = {}) {
     import {originRowClass as en,originBoxClass as nn,panelsNoOriginClass as an,panelsOriginBoxClass as dn} from './titlebar-origin-classes.mjs';
     import {LEAD_NO_ORIGIN_CLASS as hn} from '../session-rail-kit/rail-column.mjs';
     import {RAIL_REPO_ICON as fl} from '../session-rail-kit/rail-repo-icon.mjs';
-  `, 'export {ay as TitlebarSpawnLead};', v3Source);
+  `, 'export {ay as TitlebarSpawnLead,Bv as TitlebarOriginLabel,Nv as originPillStaticClass,Fv as originPillStaticPanelsClass,jv as originPillBase,Tv as originPillSize,Ev as originPillPanelsSize};', v3Source);
+  // W14-code r2 frame fr2-21: the ready folder pill is c73f45bc3 wy's `O.Trigger({className: x ? Iv : Pv, children:
+  // i(Bv, …)})`, Pv = Mv(jv(Tv, "text-secondary-control")) / Iv = Mv(jv(Ev, …)); the loading pill is `${x ? Fv : Nv}
+  // cursor-default` over the same Bv (label `truncate group-data-[pills-compact]/lead:sr-only`, glyph Ov). jv / Tv / Ev
+  // / Bv / Nv / Fv stay in titlebar-spawn-lead.mjs (D1); only Mv and its two products are sliced here.
+  await titlebarPin('titlebar-folder-pill.mjs', 'c73f45bc3', { bindings: ['Mv','Pv','Iv'],
+    features: { Mv: ['border-0 focus-visible:outline-hidden hide-focus-ring focus-visible:shadow-focus hover:before:bg-alpha-3 aria-[expanded=true]:before:bg-alpha-3'],
+      Pv: [looseFeature('Mv(jv(Tv,"text-secondary-control"))')], Iv: [looseFeature('Mv(jv(Ev,"text-secondary-control"))')] } });
+  await emit('c73f45bc3', 'titlebar-folder-pill.mjs', ['Mv','Pv','Iv'], "import {originPillBase as jv,originPillSize as Tv,originPillPanelsSize as Ev} from './titlebar-spawn-lead.mjs';", 'export {Pv as folderPillTriggerClass,Iv as folderPillTriggerPanelsClass};', v3Source);
+  // W14-code r2 closeout-2 (fr2-09): the "Delete environment?" question c6aeda0b7 runEnvironmentDelete asks when sessions
+  // were started from the environment (cc3b500c8 r = b, the question store _, its host t = x and the dialog w over the
+  // CDS alert dialog Yc, copy h / g). cc3b500c8's services half (S / C / v: intl, toasts, account and closeSessionViews for
+  // the runner) is not sliced: the host runner (environment-delete-model.mjs, main.jsx) holds those. u is shared-78 QW,
+  // of which w reads only the cancel message; d / f are react-intl defineMessages / useIntl (the local catalog's).
+  await titlebarPin('environment-delete-question.mjs', 'cc3b500c8', { roots: ['x', 'b', 'g'], bindings: ['h','g','_','y','b','x','w','T','E','D'],
+    exports: { r: 'b', t: 'x' },
+    imports: { e: 'vendor-frame-CnSY1sxv.js:Co', t: 'vendor-frame-CnSY1sxv.js:Ha', n: 'vendor-frame-CnSY1sxv.js:Ua', r: 'vendor-frame-CnSY1sxv.js:ho',
+      i: 'vendor-frame-CnSY1sxv.js:so', a: 'vendor-frame-CnSY1sxv.js:wo', o: 'shared-frame-6jtSkIit.js:Eu', s: 'shared-frame-6jtSkIit.js:Yc',
+      u: 'shared-78-D5Fw2h0a.js:Ls', d: 'vendor-intl-DYfox5Co.js:f', f: 'vendor-intl-DYfox5Co.js:p', p: 'vendor-all-0-DXM0MGjZ.js:F',
+      ...memoOf('J9','J0','K0','J1','K1','J2','K2','J4','K4'), I1: 'shared-frame-6jtSkIit.js:Kf', Z1: 'shared-frame-6jtSkIit.js:dp' },
+    features: { h: ['defaultMessage:"Delete environment?",id:"1sJ0FTOE0U"', 'id:"IIpJ1jFO64"', 'id:"kugbTkJydH"', 'id:"r9AKc06q/T"'],
+      g: ['o.join(" ")'], b: ['_.getState().pending?.resolve(null)'], w: ['m("environmentOnly")', 'm("withSessions")', 'variant:"danger"', 'align:"between"', 'size:"md"', 'showClose:!1', '"data-initial-focus":""'] } });
+  await emit('cc3b500c8', 'environment-delete-question.mjs', ['h','g','_','y','b','x','w','T','E','D'], `
+    import {useRef as e,useEffect as r,memo as i,useState as a} from 'react';
+    import {jsx as t,jsxs as n} from 'react/jsx-runtime';
+    import {reactMemoCache as J9,memoIsEmpty as J0,memoStore0 as K0,memoChanged1 as J1,memoStore1 as K1,memoChanged2 as J2,memoStore2 as K2,memoChanged4 as J4,memoStore4 as K4,memoStoreValueFirst1 as I1,memoStoreDeps1 as Z1,CdsButton as o,CdsAlertDialog as s} from '../view-tabs/shared-frame-6jtSkIit.js';
+    import {useStartIntl as f} from '../../source-code-start-adapters.jsx';
+    import {create as p} from '../sidebar-sections/zustand.mjs';
+    const d = messages => messages;
+    const u = {cancel: {defaultMessage: "Cancel", id: "47FYwba+bI"}};
+  `, 'export {x as EnvironmentDeleteQuestionHost,b as askEnvironmentDelete,g as environmentDeleteQuestionText,h as environmentDeleteQuestionMessages};', v3Source);
   // cc43287c9 hands focus on when a keyboard-focused toggle folds away, once the document has lost it (c4db265df tt
   // over c70925de4 t; `e` there is shared-25 ap = hf, the same ownerDocument as the generated owner-document.mjs).
   await titlebarPin('titlebar-focus-lost.mjs', 'c70925de4', { roots: ['t'], bindings: ['t'], exports: { t: 't' }, imports: { e: 'shared-25-DOWZRSlq.js:ap' }, features: { t: [looseFeature('r===null||r===n.body')] } });
   await emit('c70925de4', 'titlebar-focus-lost.mjs', ['t'], "import {ownerDocument as e} from './owner-document.mjs';", 'export {t as focusLost};', v3Source);
   await titlebarPin('titlebar-focus-orphaned.mjs', 'c4db265df', { roots: ['tt'], bindings: ['tt'], exports: { p: 'tt' }, imports: { Je: 'c70925de4-SEtaxEBR.js:t' }, features: { tt: [looseFeature('Je(e)||e.activeElement?.isConnected===!1')] } });
   await emit('c4db265df', 'titlebar-focus-orphaned.mjs', ['tt'], "import {focusLost as Je} from './titlebar-focus-lost.mjs';", 'export {tt as focusOrphaned};', v3Source);
+  // W14-code frame (css/frame/frame-04): the pane arrange popup's layout glyphs (c4db265df lt). With fizzy-lake's
+  // "icons" part off (E12) lt's `Ee(ct[t])` (shared-9 yw) is undefined, so every pick draws the custom icon `it[t]`
+  // (nt frame + region path via rt), and Tile ("split") draws it.split under at at opacity-50 (st: the PaneSplit
+  // master is not in the icon font data).
+  await emit('c4db265df', 'pane-layout-icons.mjs', ['nt','rt','it','at'], '', 'export {it as paneLayoutIcons,at as paneLayoutSplitOtherPane};', v3Source);
   // cc-rest-transcript (3.6556.2; research/code-current-rest.md §2/§3 P0, data/code-current-rest-map.json): owner-window,
   // the tab-focus trio, display-text, attachment-file-name, visible-box, approval-read-gate and dev-server-description.
   // Each pin checks the new chunk before (or, for the targets emitted above in their manifest positions, right after) its
@@ -1536,21 +1578,9 @@ async function extractHelpers({ check = false, only = null } = {}) {
     ${sidebarMemo('J9 J0 K0 J1 K1 J2 K2 J3 K3')}
     import {useContextMenuOpenInWindow as s} from '../session-rail-changes/context-menu-marker.mjs';
   `, 'export { u as SelectionActionBar };', v3Source);
-  // R3-terminal FT-15 (terminal-10, global-v01): the shared view-tab strip's overflow menu row, with its compact size
-  // table, typeahead reset keys and RTL key flip (replaced extract-code-editor.mjs's patched 2.31226.0
-  // preview-tab-overflow.mjs; 2.42304.0 cfe7c4b3b ce/R/L/I).
-  // cc-rest-terminal-b (3.6556.2): cfe7c4b3b se/P/L/ie/ce (2.42304.0 ce/N/I/L); ne / re are shared-25 up
-  // (owner-window.mjs) and shared-19 ln (keyboard-repeat.mjs). te is shared-frame wd (ga), view-tabs' cdsSizeAttributes,
-  // and the size table le is view-tabs' viewTabSizes: both imported from the concrete view-tabs files (R6/E2, never the
-  // facade). w10-cleanup-cc-public retired terminal-tab-size-attrs.mjs, which only re-exported cdsSizeAttributes for it.
-  // w10-trans-tab-overflow (L125): _ is the official one again, shared-frame Jo = view-tabs CdsDropdown (the pin checks
-  // that publication), so se.Item is the CDS dropdown's Base UI item and the host overflow menu
-  // (source-preview-tab-overflow.jsx) renders the rows in a CdsDropdown Root/Popup, as ae does.
-  // w12-viewtabs (D1): the pin slices nothing; se / L / ie / le are re-exported from the concrete view-tabs file
-  // (ViewTabOverflowItem, viewTabRtlArrowKey, viewTabOverflowTypeaheadResetKeys, viewTabSizes; the pin checks each
-  // publication), so the overflow row and its P lead-glyph context exist once. Export names stay.
-  await emit('cfe7c4b3b-BF79K6ux.js', 'terminal-tab-overflow.mjs', await terminalPinV3('terminal-tab-overflow.mjs'), '',
-    "export { ViewTabOverflowItem as TabOverflowItem, viewTabSizes as tabOverflowSizes, viewTabOverflowTypeaheadResetKeys as tabOverflowTypeaheadResetKeys, viewTabRtlArrowKey as tabOverflowRtlKey } from '../view-tabs/cfe7c4b3b-BF79K6ux.js';", v3Source);
+  // W14-code r2 closeout-2 (DC-03): terminal-tab-overflow.mjs (cfe7c4b3b se/L/ie/le re-exported from view-tabs) is
+  // retired. Its only importer was the orphan host menu source-preview-tab-overflow.jsx; the strips' overflow menu is
+  // view-tabs ViewTabBar's own ae, whose row is view-tabs ViewTabOverflowItem (one se, D1).
   await emit('shared-28', 'composer-composition.mjs', await (await import('./code-current-composer-pins.mjs')).pinComposerHelper('composer-composition.mjs', v3Source, selected('composer-composition.mjs')), `
     import {Plugin as lf, PluginKey as pf, TextSelection as df, Selection as hf} from 'prosemirror-state';
     // Only Tiptap extension registration and telemetry are host adapters.

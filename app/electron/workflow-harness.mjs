@@ -45,7 +45,6 @@ export async function runHarnessWorkflow(client, options, send, onRuntime) {
     for (const entry of buffered.splice(0)) if (entry.runId === runId && entry.attemptId === attemptId) send(entry.event);
     await writeFile(statePath, JSON.stringify({ threadId, runId, attemptId }), { mode: 0o600, flush: true });
     onRuntime({
-      controlMember: (id, action) => client.request('codeDesktop/workflow/member', { threadId, runId, attemptId, seq: Number(id), action }),
       // A stop releases the run too: the child exits right after (workflow-child.mjs close).
       cancel: async () => { try { await client.request('codeDesktop/workflow/stop', { threadId, runId, attemptId }); } finally { await release(); } },
     });

@@ -126,6 +126,14 @@ var ar = [
   "violet",
   "magenta",
 ];
+var Rr;
+function Br(e, t) {
+  try {
+    return Rr ? Promise.resolve(Rr(e, t)) : t();
+  } catch (e) {
+    return Promise.reject(e instanceof Error ? e : Error(String(e)));
+  }
+}
 var Ca = {
   setElement: () => void 0,
   subscribe: () => () => void 0,
@@ -228,9 +236,6 @@ function Kf(e) {
   let t = e;
   return t?.nodeType === 1 ? t.namespaceURI : void 0;
 }
-function qf(e) {
-  return typeof e?.nodeType == "number";
-}
 function Jf(e) {
   return Kf(e) === Wf;
 }
@@ -310,7 +315,6 @@ export {
   Dn as useOptionalEventCallback,
   Xf as isTextarea,
   Ao as rootRemPx,
-  qf as isDomNode,
   Jf as isHtmlElement,
   no as isSurfaceToken,
   Zh as afterAnimationsSettle,
@@ -323,4 +327,6 @@ export {
   _n as isBlankLabelText,
   vn as trimLeadingInvisible,
   yn as tooltipSafeText,
+  Wa as useCdsColorMode,
+  Br as loadNamedChunk,
 };

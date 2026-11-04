@@ -39,13 +39,14 @@ test('rows say which side and line they comment on; the gutter "+" reads Add com
   assert.match(split, /data-side="before"[^>]*data-comment-side="deletions" data-comment-line="1" data-column="before"/, 'the left column comments on the old file');
 });
 
-test('without a comment scope (the inline approval placement, or no session) there are no comment controls', () => {
+test('without a comment scope (no session) there are no comment controls', () => {
   // yo menuEnabled is independent of comments: a Changes body with no session keeps Attach as context / Copy.
   const noSession = render({});
   assert.doesNotMatch(noSession, /sdiff-gutter-add|data-commentable/);
   assert.match(noSession, /class="sdiff-file-body"[^>]*data-diff-body-menu-trigger=""/);
   assert.match(noSession, /class="sdiff-row removed"[^>]*data-comment-side="deletions" data-comment-line="2"/, 'rows still name their side/line for the menu');
-  assert.doesNotMatch(renderToStaticMarkup(React.createElement(SourceDiff, { value: PATCH, commentScope: 'x' })), /sdiff-gutter-add|data-comment-line|data-diff-body-menu-trigger/);
+  // W14-code pa2-04 (E84.3): the inline placement is gone; SourceDiff always renders the Changes body.
+  assert.match(renderToStaticMarkup(React.createElement(SourceDiff, { value: PATCH, commentScope: 'x' })), /data-placement="changes"[\s\S]*sdiff-gutter-add/);
 });
 
 test('an old-file comment ending on an unchanged line sits under that row in both layouts', () => {
@@ -73,7 +74,8 @@ test('saved, draft and outdated comments render as cards under their row', () =>
   const removedRow = html.indexOf('data-comment-side="deletions" data-comment-line="2"'), removedCard = html.indexOf('data-comment-key="deletions:2"');
   const addedRow = html.indexOf('data-comment-side="additions" data-comment-line="2"');
   assert.ok(removedRow < removedCard && removedCard < addedRow);
-  assert.match(html, /data-comment-key="additions:2"[\s\S]*?Lines 1–2<span class="sfv-comment-badge"[^>]*>Outdated</);
+  // r8pa-02: c44d00c7f Fc / c82eca2bd st — the label row `flex items-center gap-1.5` with the CDS Badge neutral xs.
+  assert.match(html, /data-comment-key="additions:2"[\s\S]*?<span class="flex items-center gap-1\.5">Lines 1–2<span data-cds="Badge" data-size="xs"[^>]*><span[^>]*>Outdated</);
   assert.doesNotMatch(html.slice(removedCard, addedRow), /Outdated/);
   assert.match(html, /data-comment-key="additions:3"[\s\S]*?<textarea aria-label="Comment on line 3" placeholder="Tell Claude what to change"/);
   assert.match(html, /aria-label="Edit comment"/);
@@ -91,9 +93,13 @@ test('a comment on a line the diff no longer shows moves to the last row (outdat
 test('the comment field and the selection chip are wired to the 2.42304.0 Escape handling; the body menu blocks the native menu', async () => {
   const fsm = await import('node:fs');
   const read = (file) => fsm.readFileSync(path.resolve(import.meta.dirname, '..', file), 'utf8');
-  const card = read('src/source-file-comments.jsx'), body = read('src/source-diff-comments.jsx');
-  assert.match(card, /onKeyDown=\{event=>commentFieldKeyDown\(event,\{save,cancel\}\)\}/);
-  assert.match(card, /else if\(event\.key==='Escape'\)\{event\.preventDefault\(\);const view=ownerWindow\(event\.currentTarget\);if\(view\)suppressEscapeRepeat\(view\);cancel\(\);\}/);
+  // r8pa-02: the card is the official c82eca2bd st (generated/pierre-changes); its field's Escape is ke's own
+  // (`let t = ee(e.currentTarget); t && pe(t);` — shared-25 up + shared-19 pZ, the 2.42304.0 handling).
+  const card = read('src/generated/pierre-changes/pierre-c82eca2bd-CImI7zNG.mjs'), body = read('src/source-diff-comments.jsx');
+  assert.match(card, /\} else if \(e\.key === "Escape"\) \{/);
+  assert.match(card, /let t = ee\(e\.currentTarget\);\s*t && pe\(t\);/);
+  assert.match(card, /import \{ Gj as pe \} from "\.\.\/code-transcript\/shared-19-DIKJVT7c\.mjs";/);
+  assert.match(body, /<PierreChangesCommentCard sessionId=\{sessionId\}/);
   assert.match(body, /const key = selectionChipEscape\(doc, hide\);/);
   assert.match(body, /onContextMenu=\{preventContextMenu\}/);
   const html = render({ commentScope: 'scope-wiring' });

@@ -8,7 +8,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { createServer } from "vite";
 import react from "@vitejs/plugin-react";
 import { digitFor, moveToGroupRows, multiHotkeys, multiMenuState, openSessionLast, pinTargets,
-  BULK_DELETE_FALLBACK, bulkDeleteConfirmCopy, bulkFamilyPlan, connectNestedFamilies, couldntCheckConfirm, nestedFamilyProvider, runAskingFamilies } from "../src/sidebar-bulk-model.mjs";
+  BULK_DELETE_FALLBACK, bulkDeleteConfirmCopy, bulkFamilyPlan, connectNestedFamilies, couldntCheckConfirm, runAskingFamilies } from "../src/sidebar-bulk-model.mjs";
 import { bulkNestedFamilies } from "../src/generated/code-current/sidebar-bulk-family.mjs";
 import { worktreeConfirmReady } from "../src/worktree-dispose-model.mjs";
 import { dictionary } from "../electron/i18n/index.mjs";
@@ -114,7 +114,7 @@ test("IX / LY / AY / NY are the 3.6556.2 shared-46 originals (LO / tO / WD / qD)
 
 test("IX: with no nested sessions flow every target is bulk; a family whose nested sessions are not all selected is asked about, deepest first", () => {
   const p = { id: "p" }, c = { id: "c" }, d = { id: "d" }, g = { id: "g" }, x = { id: "x" };
-  assert.equal(nestedFamilyProvider(), null);
+  // W14-code r4 fr4-16: nothing connected yet (the nestedFamilyProvider export, only this test read it, is gone).
   assert.deepEqual(bulkFamilyPlan("archive", [p, x]), { bulk: [p, x], asking: [] });
   const families = { g: { nested: ["p", "c", "d"], canStay: ["p", "c", "d"] }, p: { nested: ["c", "d"], canStay: ["c", "d"] } };
   const asked = [];
@@ -135,10 +135,9 @@ test("IX: with no nested sessions flow every target is bulk; a family whose nest
   const records = (session) => ({ ref: { kind: "code", id: session.id }, codeRef: { type: "local", id: session.id } });
   assert.deepEqual(bulkNestedFamilies({ nestedSessionsToAsk: (ref) => families[ref.id] ?? null }, "archive", [x, p], records).bulk, [x]);
   const off = connectNestedFamilies(provider);
-  assert.equal(nestedFamilyProvider(), provider);
   assert.equal(bulkFamilyPlan("archive", [p]).asking.length, 1, "the connected flow is the default");
   off();
-  assert.equal(nestedFamilyProvider(), null);
+  assert.deepEqual(bulkFamilyPlan("archive", [p]), { bulk: [p], asking: [] }, "disconnected: every target is bulk again");
 });
 
 test("LX: asked families run one at a time; the open session, a failed or called-off one and families nesting them are held back", async () => {
@@ -214,8 +213,8 @@ test("SourceSidebar runs the bulk flow through IX / LX, asks LY's confirmation a
   // R4i-sidebar SI2: the flow (IX, the 8-wide bulk part with {bulk: true}, LX, YX's counts) is runBulkSessions, whose
   // behaviour tests are tests/sidebar-bulk-flow.test.mjs; runBulk hands it onSessionAction and the session list.
   assert.match(sidebar, /const \{ results, done, failed \} = await runBulkSessions\(action, targets, payload, \{ current, run: onSessionAction,/);
-  assert.match(sidebar, /const copy = bulkDeleteConfirmCopy\(intl, \{ count, archivedCount: sessions\.filter\(sessionArchived\)\.length \}\);/);
-  assert.match(sidebar, /deleteConfirmCopy\(targets, \{ engine, intl \}\)/);
+  assert.match(sidebar, /if \(count > 1 && intl\) return bulkDeleteConfirmCopy\(intl, \{ count, archivedCount: sessions\.filter\(sessionArchived\)\.length \}\);/);
+  assert.match(sidebar, /deleteConfirmCopy\(targets, \{ intl \}\)/); // W14-code r4 fr4-12b: no core-history copy, so no engine
   assert.match(sidebar, /initialFocus=\{shownConfirm\.value\.initialFocus\}/);
   assert.match(sidebar, /export function SourceConfirmDialog\(\{ title, body, confirmLabel, danger = false, initialFocus = "confirm",/);
   const main = readFileSync(path.join(app, "src/main.jsx"), "utf8");

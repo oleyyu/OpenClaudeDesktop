@@ -12,7 +12,7 @@ import react from "@vitejs/plugin-react";
 import {
   WorktreeDisposalCancelled, isWorktreeDisposalCancelled, bulkResultFailed, bulkOutcome, bulkActionPayload, worktreeDisposalPlan,
   connectWorktreeConfirmQueue, confirmCouldntCheck, worktreeConfirmVariant, runBulkSessions, runAskingFamilies, mapConcurrent,
-  sessionWorktreeGate, worktreeGatedAction, settleWorktreeQueue,
+  sessionWorktreeGate, worktreeGatedAction, settleWorktreeQueue, familyUnknownRead,
 } from "../src/sidebar-bulk-model.mjs";
 import { dictionary } from "../electron/i18n/index.mjs";
 
@@ -139,7 +139,19 @@ test("Y1-R3-sidebar2-7: main.jsx sessionWorktree's decision (worktreeDisposalPla
   // main.jsx hands its call / queue push to the model's gate (behaviour: the end-to-end test below).
   const main = readFileSync(path.join(app, "src/main.jsx"), "utf8");
   assert.equal(count(main, "    return sessionWorktreeGate(action, target, payload, worktreeGateHost);"), 1);
-  assert.equal(count(main, `if (!await worktreeGatedAction(action, target, payload, { ...worktreeGateHost, perform: () => rpc("thread/delete", { threadId: target.id }) })) return false;`), 1);
+  // W14-code r2 复核 (c48ea26ad X): the nested "only" move runs as prepare, after the worktree confirm, before thread/delete.
+  // W14-code r5 R5DC-06: the gate takes `gated` (the payload, or the "Delete all" family's own read of the session).
+  assert.equal(count(main, `if (!await worktreeGatedAction(action, target, gated, { ...worktreeGateHost, prepare: typeof nested === "function" ? nested : undefined, perform: () => rpc("thread/delete", { threadId: target.id }) })) return false;`), 1);
+  // W14-code r5 R5DC-06: c48ea26ad Be — a "Delete all" member's unreadable worktree is not asked on its own (mergeUnknown);
+  // familyUnknownRead picks it for the one yY confirm.
+  assert.equal(worktreeDisposalPlan("delete", wt({ unknown: true }), { mergeUnknown: true }), "keep");
+  assert.equal(worktreeDisposalPlan("delete", wt({ changes: 2 }), { mergeUnknown: true }), "ask", "dirty still asks (K's x(e, \"delete\"))");
+  assert.deepEqual([wt({ unknown: true }), wt({ changes: 0 }), wt({ changes: 2 }), wt({ unknown: true, shared: true }), null, { unknown: true }].map(familyUnknownRead),
+    [true, false, false, false, false, false]);
+  const be = readFileSync(path.join(app, "../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c48ea26ad-DhTxpIFD.js"), "utf8");
+  assert.equal(count(be, 'let t=a.filter(e=>o.get(e.id)?.read==="unknown");if(t.some(e=>!c.has(e.id))){let e=t.map(e=>G(i,W(e.id)));if(!await ne(e,a.length,r))return null;'), 1);
+  assert.equal(count(main, `if (unknown.length && !await confirmCouldntCheck(unknown.map((member) => member.name?.trim() || t("A session")), members.length + 1)) return false;`), 1);
+  assert.equal(count(main, `const gated = typeof nested === "function" && "worktree" in nested ? { ...payload, worktreeChecked: true, worktree: nested.worktree } : payload;`), 1);
 });
 
 // R4i-sidebar 复核修复 (-7): main.jsx's delete path (sessionWorktreeGate / worktreeGatedAction / settleWorktreeQueue,
@@ -284,4 +296,99 @@ test("Y1-R3-sidebar2-8: zh-CN plural copy selects =1 for one session and other o
   assert.equal(format(keys.short, { count: 1 }), "此会话将被永久删除。");
   assert.equal(format(keys.archived, { count: 1 }), "此已归档会话将被永久删除。此操作无法撤销。");
   assert.equal(format(keys.group, { count: 1, groupName: "想法" }), "删除“想法”中的 1 个会话？");
+});
+
+// W14-code r5 fr5-05: shared-46 KE / GE (5 s) probes, c6b8adeaf's archive (`known` dirty asks; otherwise archive now and
+// settle the read after: s?.then(…dirty → lateDirty, Ue)) and shared-22 QI's warning toast copy.
+test("fr5-05: an archive asks only on a dirty read already in; a late read disposes a clean worktree or keeps a dirty one", async () => {
+  const { createWorktreeProbes, archiveWorktreeGate, lateArchiveWorktree, WORKTREE_PROBE_FRESH_MS } = await import("../src/sidebar-bulk-model.mjs");
+  let clock = 1_000;
+  const reads = [];
+  const answers = { dirty: { worktree: "/wt/d", changes: 2 }, clean: { worktree: "/wt/c", changes: 0 } };
+  const call = (channel, { threadId }) => { reads.push(threadId); return Promise.resolve(answers[threadId] ?? null); };
+  const probes = createWorktreeProbes({ now: () => clock });
+  const asked = [];
+  const host = { probes, call, enqueue: async (entry) => { asked.push(entry.status); return true; }, now: () => clock };
+  // No probe yet: the archive goes on at once; the read settles later.
+  const first = await archiveWorktreeGate({ id: "dirty" }, {}, host);
+  assert.equal(first.worktree, null);
+  assert.deepEqual(await first.late, answers.dirty);
+  assert.equal(lateArchiveWorktree(await first.late), "kept-dirty");
+  assert.equal(asked.length, 0, "nothing asked: the dirty worktree is kept and the QI toast warns");
+  // The menu-open probe (aD) settled before Archive: a dirty read asks (Re → mK).
+  probes.prefetch(["dirty", "clean"], call);
+  await Promise.resolve(); await new Promise((resolve) => setTimeout(resolve, 0));
+  const second = await archiveWorktreeGate({ id: "dirty" }, {}, host);
+  assert.deepEqual([second.worktree, second.late, asked], [answers.dirty, null, [answers.dirty]]);
+  const clean = await archiveWorktreeGate({ id: "clean" }, {}, host);
+  assert.deepEqual([clean.worktree, clean.late], [answers.clean, null]);
+  // A cancelled confirm calls the archive off.
+  assert.equal(await archiveWorktreeGate({ id: "dirty" }, {}, { ...host, enqueue: async () => false }), false);
+  // GE: a read older than 5 s is stale, so the next archive starts over (late again).
+  const before = reads.length;
+  clock += WORKTREE_PROBE_FRESH_MS;
+  const stale = await archiveWorktreeGate({ id: "dirty" }, {}, host);
+  assert.ok(stale.late && reads.length === before + 1);
+  // The nested flow's own read is kept (worktreeChecked).
+  assert.deepEqual(await archiveWorktreeGate({ id: "x" }, { worktreeChecked: true, worktree: answers.clean }, host), { worktree: answers.clean, late: null });
+  assert.equal(lateArchiveWorktree(answers.clean), "dispose");
+  assert.equal(lateArchiveWorktree({ worktree: "/wt/u", unknown: true }), "keep");
+  assert.equal(lateArchiveWorktree(null), "keep");
+  assert.equal(lateArchiveWorktree({ worktree: "/wt/s", shared: true, changes: 3 }), "keep");
+  // aD caps the menu-open probes at 8.
+  const many = [];
+  createWorktreeProbes().prefetch(Array.from({ length: 12 }, (_, index) => `s${index}`), (channel, { threadId }) => { many.push(threadId); return Promise.resolve(null); });
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  assert.equal(many.length, 8);
+  // main.jsx / source-sidebar.jsx wiring and the official copy.
+  const main = readFileSync(path.join(app, "src/main.jsx"), "utf8");
+  const sidebar = readFileSync(path.join(app, "src/source-sidebar.jsx"), "utf8");
+  assert.ok(main.includes("useEffect(() => connectWorktreeProbes(call), []);"));
+  assert.ok(main.includes('if (outcome === "kept-dirty") warnArchivedWithChanges(target);'));
+  assert.ok(main.includes('}, { variant: "warning", key: "archived-uncommitted" });'));
+  assert.ok(sidebar.includes('if (mode === "code") prefetchWorktreeProbes(multi ? [...selectionRef.current.selectedKeys] : [session.id]);'));
+  const snapshot = (file) => readFileSync(path.join(app, "../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1", file), "utf8");
+  const qi = snapshot("shared-22-Bwn3sJTG.js");
+  for (const needle of ['variant:"warning"', '"{count, plural, one {Session} other {# sessions}} archived with uncommitted changes"',
+    '"{count, plural, one {The worktree is still on disk. Unarchive the session to keep working in it.} other {The worktrees are still on disk. Unarchive the sessions to keep working in them.}}"',
+    '"{count, plural, one {Unarchive} other {Unarchive all}}"']) assert.ok(qi.includes(needle), needle);
+  assert.ok(snapshot("c6b8adeaf-bLEQVSWL.js").includes('n==="dirty"&&(r?.lateDirty(),qe(t)&&Ue(t,Ge(i)))'));
+  // W14-code r8 fr8-04: QI's own descriptors (generated messages-shared-22.mjs) formatted with intl, not host tn pairs.
+  assert.ok(main.includes('title: intl.formatMessage(archivedWithChangesMessages.title, { count }),'));
+  assert.ok(main.includes('action: { label: intl.formatMessage(archivedWithChangesMessages.action, { count }), onClick'));
+  for (const key of ["{count, plural, one {Session} other {# sessions}} archived with uncommitted changes",
+    "{count, plural, one {The worktree is still on disk. Unarchive the session to keep working in it.} other {The worktrees are still on disk. Unarchive the sessions to keep working in them.}}",
+    "{count, plural, one {Unarchive} other {Unarchive all}}"]) assert.ok(dictionary("zh-CN")[key], key);
+});
+
+// W14-code r5 复核 (fr5-05 补做): cc43287c9's header session menu probes on open (`onMenuOpen:nn`, nn = `()=>{t&&da([t])}`),
+// c9c63e0ed probes the open local session (`W=()=>{U&&l([{id:H,type:"local"}])}`, deps [H,U]), and QI's "Unarchive all"
+// runs shared-22 d: 8 at a time, silent unarchives, one bulkRestored toast (timeout 3 s) and one bulkRestoreFailed toast.
+test("fr5-05 补做: header-menu / open-session probes and QI's bulk unarchive copy", async () => {
+  const snapshot = (file) => readFileSync(path.join(app, "../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1", file), "utf8");
+  assert.ok(snapshot("cc43287c9-Me-M2ucD.js").includes("nn=J1($,139,t)?K1($,139,t,()=>{t&&da([t])})"));
+  assert.ok(snapshot("cc43287c9-Me-M2ucD.js").includes("onMenuOpen:nn"));
+  assert.ok(snapshot("c9c63e0ed-BcKt-ChI.js").includes('W=()=>{U&&l([{id:H,type:"local"}])},G=[H,U]'));
+  const qi = snapshot("shared-22-Bwn3sJTG.js");
+  assert.ok(qi.includes("Al(e,8,async e=>vi(e)?(await t.unarchive(e,{skipListInvalidate:!0}),!0):!1)"));
+  assert.ok(qi.includes("r>0&&a(l.formatMessage(ha.bulkRestored,{count:r}),{timeout:3e3})"));
+  assert.ok(qi.includes("c(n,e=>l.formatMessage(ha.bulkRestoreFailed,{count:e})"));
+  const main = readFileSync(path.join(app, "src/main.jsx"), "utf8");
+  assert.ok(main.includes('useEffect(() => { if (mode === "code" && current) prefetchWorktreeProbes([current]); }, [current, mode]);'));
+  assert.ok(main.includes('if (kind === "session-title" && mode === "code" && data?.id && !(menu?.kind === kind && menu.anchor === anchor && !point && entry === undefined)) prefetchWorktreeProbes([data.id]);'));
+  // The probe connection comes before the open-session probe (effects run in order).
+  assert.ok(main.indexOf("useEffect(() => connectWorktreeProbes(call), []);") < main.indexOf("prefetchWorktreeProbes([current])"));
+  assert.ok(main.includes("void unarchiveKeptDirty(ids);"));
+  assert.ok(main.includes('await mapConcurrent(rows, 8, async (row) => sessionArchived(row) ? (await sessionAction("unarchive", row, { silent: true }), true) : false)'));
+  assert.ok(main.includes('toasts.add(intl.formatMessage(sidebarListMessages.bulkRestored, { count: restored }), { variant: "neutral", timeout: 3000 })'));
+  assert.ok(main.includes("toasts.add(intl.formatMessage(sidebarListMessages.bulkRestoreFailed, { count: failed.length }), { variant: \"danger\" })"));
+  assert.ok(!/sessionAction\("unarchive", row\)\.catch/.test(main), "no per-session keyed toast from Unarchive all");
+  const { sidebarListMessages } = await import("../src/generated/sessions-page/pure-shared-78.mjs");
+  assert.deepEqual([sidebarListMessages.bulkRestored.id, sidebarListMessages.bulkRestoreFailed.id], ["ONUBGyrHFE", "1kRanlGAB8"]);
+  for (const message of [sidebarListMessages.bulkRestored, sidebarListMessages.bulkRestoreFailed]) assert.ok(dictionary("zh-CN")[message.defaultMessage], message.defaultMessage);
+  // The ICU copy formats per count through the intl main uses.
+  const { createIntl } = await import("../src/generated/chat/vendor-intl-DYfox5Co.js");
+  const intl = createIntl({ locale: "en", messages: {} });
+  assert.equal(intl.formatMessage(sidebarListMessages.bulkRestored, { count: 1 }), "Unarchived 1 session");
+  assert.equal(intl.formatMessage(sidebarListMessages.bulkRestoreFailed, { count: 2 }), "2 sessions couldn’t be unarchived. Try again.");
 });

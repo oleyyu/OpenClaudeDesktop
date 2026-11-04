@@ -6,12 +6,6 @@ export function isComposingEvent(event) {
   return !!(event?.isComposing || event?.nativeEvent?.isComposing || event?.key === "Process" || event?.keyCode === 229);
 }
 
-export function keyKind(event) {
-  if (isComposingEvent(event)) return "ime";
-  if (["Shift", "Control", "Alt", "Meta"].includes(event?.key)) return "modifier";
-  if (event?.metaKey || (event?.ctrlKey && !event?.altKey)) return "shortcut";
-  return "text";
-}
 
 // Escape inside the focused editor:
 //  - "swallow": during IME composition, preventDefault+stopPropagation only.

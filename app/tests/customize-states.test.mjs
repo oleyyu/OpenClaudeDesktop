@@ -140,10 +140,10 @@ test('connectors Status cells, Type column and the stopped-working card follow c
   const warning = String.fromCodePoint(57609), connectorsGlyph = String.fromCodePoint(57429);
   for (const [status, label, action] of [['unreachable', 'Server not responding', 'Reconnect'], ['sign-in', 'Sign-in required', 'Sign in']]) {
     const cell = two.match(new RegExp(`<span class="cz-status" data-status="${status}">(.*?)</td>`))[1];
-    assert.match(cell, new RegExp(`^<span aria-hidden="true" data-cds="Icon" class="cz-status-icon" style="font-size:16px;[^"]*">${warning}</span><span class="cz-status-action"><button type="button" data-cds="Button" data-variant="secondary" data-size="sm"[^>]*>.*<span class="ssb-content">${action}</span></button></span><span class="cz-sr-only">${label}</span></span>$`));
-    assert.equal(count(cell, label), 1, `${label} only inside .cz-sr-only`);
+    assert.match(cell, new RegExp(`^<span aria-hidden="true" data-cds="Icon" class="cz-status-icon" style="font-size:16px;[^"]*">${warning}</span><span class="cz-status-action"><button type="button" data-cds="Button" data-variant="secondary" data-size="sm"[^>]*>.*<span class="ssb-content">${action}</span></button></span><span class="sr-only">${label}</span></span>$`));
+    assert.equal(count(cell, label), 1, `${label} only inside .sr-only`);
   }
-  assert.match(two, /<span class="cz-status" data-status="connected"><span aria-hidden="true" data-cds="Icon"[^>]*>[^<]*<\/span><span class="cz-sr-only">Connected<\/span><\/span>/, 'connected unchanged');
+  assert.match(two, /<span class="cz-status" data-status="connected"><span aria-hidden="true" data-cds="Icon"[^>]*>[^<]*<\/span><span class="sr-only">Connected<\/span><\/span>/, 'connected unchanged');
   // Ca :2644-2750: 24px connector tile (not a Warning), name + secondary reason, Retry for unreachable.
   const card = two.match(/<section class="cz-broken"[^]*?<\/section>/)[0];
   assert.match(card, new RegExp(`<li data-broken-name="fx-unreachable-0"><span aria-hidden="true" class="cz-connector-tile"><span aria-hidden="true" data-cds="Icon" class="" style="font-size:16px;[^"]*">${connectorsGlyph}</span></span><div class="cz-broken-text"><span class="cz-broken-name">fx-unreachable-0</span><span class="cz-broken-reason">Server not responding</span></div><div class="cz-broken-action"><button type="button" data-cds="Button" data-variant="secondary" data-size="sm"[^>]*>.*?<span class="ssb-content">Retry</span></button></div></li>`));
@@ -177,7 +177,7 @@ test('connectors Status cells, Type column and the stopped-working card follow c
   }
   assert.doesNotMatch(all, /MCP server|\d tools|cz-row-icon/);
   const status = Object.fromEntries(rows.map(row => [row.name, row.cells[2]]));
-  assert.equal(status['fx-disabled-1'], '<span class="cz-status" data-status="disabled"><span aria-hidden="true">—</span><span class="cz-sr-only">Not available</span></span>');
+  assert.equal(status['fx-disabled-1'], '<span class="cz-status" data-status="disabled"><span aria-hidden="true">—</span><span class="sr-only">Not available</span></span>');
   assert.match(status['fx-notStarted-2'], /^<span class="cz-status" data-status="not-started"><button type="button" data-cds="Button" data-variant="secondary" data-size="sm"[^>]*>.*<span class="ssb-content">Connect<\/span><\/button><\/span>$/);
   assert.doesNotMatch(all, />Disabled<|>Not started</);
   // G :555: rows are named "View {name}".
@@ -235,7 +235,7 @@ test('F13 connector drill-in replaces the list with the page-shell drill and c08
   assert.match(reauth, /Connection issue/); assert.match(reauth, /Your connection to reauth stopped working\. Reconnect to continue\./);
   assert.deepEqual(primary(reauth), [['Reconnect', false]]);
   // Connecting: the 56px tile over a role=status spinner and "Checking connection…".
-  assert.match(drill('wait'), /data-connector-view="checking"><span aria-hidden="true" class="cz-connector-tile cz-connector-tile-lg">.*<div role="status" class="cz-checking text-center flex flex-col items-center gap-3"><span class="sc-spinner" aria-hidden="true"><\/span><p class="font-base text-muted">Checking connection…<\/p><\/div>/);
+  assert.match(drill('wait'), /data-connector-view="checking"><span aria-hidden="true" class="cz-connector-tile cz-connector-tile-lg">.*<div role="status" class="text-center flex flex-col items-center gap-3"><span[^>]*data-cds="Spinner"[^>]*>.*?<\/span><p class="font-base text-muted-as-secondary">Checking connection…<\/p><\/div>/);
   // The Codex core's ⋮ holds Remove connector; a DeepSeek core's holds Edit config (both open as menus, so SSR shows the trigger only).
   assert.match(drill('down'), /<div class="absolute top-3 right-6"><button aria-label="More options for down"/);
   assert.match(drill('gh', { core: deepseekCore, onEditConfig() {} }), /aria-label="More options for GitHub"/);

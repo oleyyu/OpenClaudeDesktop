@@ -287,8 +287,11 @@ test('call sites: the local menus of those Popups opt in; menus without an offic
   assert.match(source('generated/code-editor/preview-pane-menu.mjs'), /function P\(e\) \{\n\s+y\(e\.target\) \|\| e\.preventDefault\(\);\n\s+\}/);
   assert.match(source('generated/code-editor/preview-pane-menu.mjs'), /onContextMenu: P,/);
   assert.match(source('generated/code-editor/preview-server-menu.mjs'), /onContextMenu: ai,/);
-  assert.match(source('source-preview-tab-overflow.jsx'), /<CdsDropdown\.Popup [^\n]*\n\s+onContextMenu=\{preventDefault\} onKeyDownCapture=\{onKeyDownCapture\}>/);
-  assert.doesNotMatch(source('source-preview-tab-overflow.jsx'), /contextMenuGuard/);
+  // W14-code r2 closeout-2 (DC-03): the orphan host copy source-preview-tab-overflow.jsx is gone; the strips' overflow
+  // menu is view-tabs ViewTabBar's own ae (3.6556.2 cfe7c4b3b), whose popup prevents with I.
+  assert.ok(source('generated/view-tabs/cfe7c4b3b-BF79K6ux.js').includes('n(_.Popup,{side:"bottom",align:"end",onContextMenu:I,onKeyDownCapture:ne,children:re})'));
+  assert.ok(source('generated/view-tabs/cfe7c4b3b-BF79K6ux.js').includes('function I(e){e.preventDefault()}'));
+  assert.ok(!fs.existsSync(path.join(ROOT, 'src', 'source-preview-tab-overflow.jsx')));
   // Official menus without a handler (model, permission, account, sidebar …) stay without one.
   for (const file of ['source-model-menu.jsx', 'source-permission-menu.jsx', 'source-sidebar.jsx', 'source-sidebar-sections-adapters.jsx', 'source-git-status.jsx'])
     assert.doesNotMatch(source(file), /contextMenuGuard/, file);
@@ -362,7 +365,8 @@ test('contextMenuGuard call-site components render role="menu" with the expected
       sections: [{ items: [{ label: 'Word wrap', checked: true, onSelect() {} }] }],
     },
     (tree) => {
-      const btn = find(tree, (el) => el.type === 'button' && el.props?.['data-pane-settings'] === '');
+      // W14-code r2 fr2-19: the trigger is the CDS ghost iconOnly Button (ca5db7aaf H), not a native button.
+      const btn = find(tree, (el) => el.props?.['data-pane-settings'] === '');
       btn.props.onClick({ detail: 1 });
     },
   );

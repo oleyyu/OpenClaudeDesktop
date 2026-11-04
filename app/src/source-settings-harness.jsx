@@ -17,7 +17,11 @@ import { coreSupports } from '../electron/core-registry.mjs';
 
 const TRANSPORTS = [{ value: 'stdio', label: t('Local command (stdio)') }, { value: 'streamable-http', label: t('Remote URL (HTTP)') }];
 
-export function AddServerDialog({ onClose, onAdd }) {
+// W14-code r5 gen-final-5: Customize › Connectors passes description={null} — there the core restarts itself before the
+// next new session (r5-shared-02, electron/core-restart.cjs), so "Restart the core to connect it." no longer holds.
+// W14-code sh6-05: Settings › Harness adds through the same main.cjs harness-profile mcp-add (coreRestart.mark), so it has
+// no description either; en-US.json has no such line (the official wording, NHsmCWvJf8, names an installed plugin).
+export function AddServerDialog({ onClose, onAdd, description = null }) {
   const [draft, setDraft] = useState({ serverName: '', transport: 'stdio', command: '', args: '', env: '', url: '', headers: '', cwd: '', timeout: '' });
   const [busy, setBusy] = useState(false), [error, setError] = useState('');
   const set = key => event => setDraft(current => ({ ...current, [key]: event.target.value }));
@@ -37,7 +41,7 @@ export function AddServerDialog({ onClose, onAdd }) {
     try { await onAdd(params); onClose(); } catch (failure) { setError(failure.message); setBusy(false); }
   };
   const ready = draft.serverName.trim() && (draft.transport === 'stdio' ? draft.command.trim() : draft.url.trim());
-  return <SourceDialog title={t('Add server')} description={t('The server starts with the core. Restart the core to connect it.')} onClose={busy ? undefined : onClose} className="hs-dialog">
+  return <SourceDialog title={t('Add server')} description={description} onClose={busy ? undefined : onClose} className="hs-dialog">
     <form className="hs-form" onSubmit={submit}>
       <label className="hs-field"><span>{t('Name')}</span>
         <input data-autofocus data-cds="TextInput" className="cds-input cds-reset" aria-label={t('Server name')} placeholder="github" maxLength={32} value={draft.serverName} onChange={set('serverName')} disabled={busy}/></label>

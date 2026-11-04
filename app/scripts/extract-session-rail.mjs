@@ -101,7 +101,6 @@ const adapters = {
   [`${RAIL}:ZA`]: { name: 'useSessionOutputPaths', features: ['{ sessionRef: t, checkouts: n, copyOf: r, folders: i } = e,', 'return fe(u);'] },
   [`${RAIL}:zA`]: { name: 'useGoneOutputPaths', features: ['o = Ge?.resolveSessionFile !== void 0,', 'c.length === 0'] },
   [`${RAIL}:SM`]: { name: 'RemoteControlRow', features: ['{ remoteControl: t, icon: n } = e,', 't.lockedByRemoteClient', 'defaultMessage: "Remote Control options",'] },
-  [`${RAIL}:vM`]: { name: 'GoalCardBody', features: ['cutWhenLastShown: r,', 'children: t.condition', 'defaultMessage: "Edit goal",'] },
   [`${RAIL}:sM`]: { name: 'ProgressCardBody', features: ['disableCommentAttachment: !0,'] },
   [`${RAIL}:KA`]: { name: 'ArtifactOutputRow', features: ['{ artifact: t, onOpen: n } = e,', 'defaultMessage: "Updated {when}",', 'defaultMessage: "Artifact", id: "PpIQsaWAR2"'] },
   // The stores and creators of the rail's Save environment (save-environment.mjs: Vx / Xx).
@@ -121,6 +120,40 @@ const adapters = {
     features: ['ou=iu.handle', 'id:"epitaxy_new_preset_dialog"', 'pick:e=>e.EpitaxyEnvironmentDialog'] },
   'cc5b397c6-BgWEcD7A.js:l': { name: 'cloudEnvironmentDialogHandle', closure: true,
     features: ['l=a.handle', 'id:"epitaxy_environment_dialogs"', 'pick:e=>e.EpitaxyEditEnvironmentDialog'] },
+  // W14-code r6 sleep lane: what cf74bc599 wO (sleep band) / dO (kept-awake band) read of the desktop, answered from the
+  // host's session state by src/source-sleep-notice.jsx SourceSessionBands (SessionBandsHostContext). Cloud
+  // continuation, the teleport and cloud environments are claude.ai services (E59) and refuse.
+  'shared-52-uHFNjl7C.js:cB': { name: 'useBandErrors', features: ['Must be called within ErrorsProvider'] },
+  'c227f4d5e-B-FYKrwT.js:Q0': { name: 'previewStateHook', features: ['return Dt(() => !1, !1);'] },
+  'c5da7eb42-XijZdwf1.js:QI': { name: 'useSessionBandFields', features: ['{ select: t, passive: r, enabled: i }'] },
+  'c5da7eb42-XijZdwf1.js:aL': { name: 'useSessionBandRunning', features: ['select: iL,', 'return i ?? !1;'] },
+  'c06cf64bb-CdJdJuVd.js:aO': { name: 'useSessionBandInputWaiting', features: ['return X(e, oO);'] },
+  'c06cf64bb-CdJdJuVd.js:IE': { name: 'subscribeSessionSendBegun', features: ['FE.set(e, n)', 'n.add(t),'] },
+  'c6b8adeaf-bLEQVSWL.js:So': { name: 'useStopSessionMutation', features: ['"Couldn\\u2019t stop the response \\u2014 check your connection and try again."', 'mutationFn: u,'] },
+  'c6b8adeaf-bLEQVSWL.js:Xa': { name: 'useBandSend', features: ['sendWithOutcome: y,'] },
+  [`${RAIL}:aO`]: { name: 'useCanContinueInCloud', features: ['canContinueInCloud: u, settled: d'] },
+  'caec4a2d4-6hekX2da.js:Ir': { name: 'useCloudEnvironments', features: ['e?.environments?.filter(Lr)'] },
+  'shared-104-CTONUSaz.js:du': { name: 'useCloudEnvironmentList', features: ['env_list_stale_ms'] },
+  'cc53cbea3-rBkNppou.js:b': { name: 'useCloudResumeOn', features: ['return o(y) !== "off";'] },
+  'cc53cbea3-rBkNppou.js:C': { name: 'clearTeleportMarker', features: ['delete n[e]'] },
+  'cc53cbea3-rBkNppou.js:M': { name: 'CloudResumeBanner', features: ['{ sessionRef: n, source: i, paused: a, onResume: o } = e,'] },
+  'caec4a2d4-6hekX2da.js:fo': { name: 'TeleportToCloudDialog', features: ['var fo = f(uo);'] },
+  'shared-25-DOWZRSlq.js:ps': { name: 'useBandFeatureState', features: ['K1($, 2, t, Ko(t))'] },
+  'c1e585df0-xuGOMujX.js:o': { name: 'useKeepAwakeSettingLoaded', closure: true, features: ['o=n.useHasKey', 'n=t("ccKeepAwakeWhileWorking",!0)'] },
+  'c1e585df0-xuGOMujX.js:i': { name: 'useKeepAwakeWhileWorking', closure: true, features: ['i=n.useEnabled', 'n=t("ccKeepAwakeWhileWorking",!0)'] },
+  'c1e585df0-xuGOMujX.js:a': { name: 'useKeepAwakeOnBattery', closure: true, features: ['a=r.useEnabled', 'r=t("ccKeepAwakeOnBattery",!0)'] },
+  'c1e585df0-xuGOMujX.js:c': { name: 'useWriteKeepAwakeSetting', features: ['c.write(n)'] },
+  'shared-78-D5Fw2h0a.js:K': { name: 'useDesktopAppFeatures', features: ['return U(fw);'] },
+  'shared-28-DNYlf4wu.js:Kp': { name: 'useBandPersistedPreference', features: ['a = n?.scope === "account",'] },
+  'shared-28-DNYlf4wu.js:Mp': { name: 'useAccountPreferencesReady', features: ['return e && t?.uuid !== void 0;'] },
+  'shared-1-BJhqMmkf.js:wE': { name: 'useSessionScopeHidden', features: ['return ss(x(yE), CE);'] },
+  'shared-1-BJhqMmkf.js:TE': { name: 'useOnSessionScopeHiddenChange', features: ['SE(t, (e) => {'] },
+  // (c227f4d5e oL, the inline band c73f45bc3 Qg draws outside the Code notice region, is sliced as inline-band.mjs since
+  // W14-code r7 notices; code-band.mjs reaches it through its own adapter, below.)
+  // shared-4 bk (exported at; c227f4d5e imports it as Ea): whether a hub tool approval body is showing (vk's `{body}`
+  // store, set by the hub's tool approval surface yk). oL reads it to let a band that stands in for the composer speak
+  // as a note. The host has no hub tool approval surface: never.
+  'shared-4-DUB1Oi0O.js:bk': { name: 'useHubToolApprovalBodyShown', features: ['return vk(xk);'] },
   // c68c4283d _f (exported Bd): rail section telemetry (D17: nothing is sent; the kit's adapter).
   'c68c4283d-CWbOoVxS.js:_f': { name: 'logRailSectionEvent', module: kitAdapterModule, features: ['d("claudeai.epitaxy.session_rail.section_moved", { section: t });'] },
 };
@@ -141,6 +174,19 @@ const duplicates = {
   // shared-25 wG: the lazily built invisible-character pattern DG strips with (w8-turn-plan-renderer: turn-plan shared-25.mjs
   // slices it for shared-11 qE, which the plain-node turn tail reads, so it cannot import this area's copy, E42).
   'shared-25-DOWZRSlq.js:wG': 'lazily built RegExp, no other state',
+  // W14-code r4 shell fr4-12a: c227f4d5e kB, the "Show more" / "Show less" toggle cf74bc599 vM (the Goal card's body) puts
+  // under a clamped goal; session-rail-kit rail-rows.mjs (RailLimitedList's MB) and code-transcript slice it without
+  // exporting it. kB holds only a per-instance ref (vb scrolls it into view), no module state.
+  'c227f4d5e-B-FYKrwT.js:kB': 'stateless component (a per-instance ref, no module state)',
+  // W14-code r6 sleep lane: shared-3 Ky / qy (wO's ai: a flag that turns true `t` ms after `e` holds, keyed; qy is
+  // `return !1`; code-transcript and cowork-live slice them without exporting them). (W14-code r6 gen-final-6, D1:
+  // shared-52 OT, the latched value wO reads as vt, is the Sessions page's one copy — sessions-page/pure-shared-52.mjs
+  // exports it as useLatchedValue — and is imported from there, see importableAreas; no second slice.)
+  'shared-3-BCEbd8Fv.js:Ky': 'stateless hook (a per-instance state and timer, no module state)', 'shared-3-BCEbd8Fv.js:qy': 'pure function (no state)',
+  // (W14-code r7 notices listed shared-2 B5 and shared-6 C_ / x_ / S_ here; gen-final-7 (D1) imports their one copy
+  // instead — cowork-session-states' shared-2 B5, session-rail-changes' bandAccentClassName — so no second slice.)
+  // (W14-code gen-final: shared-25 BH and c5304ebdb T / w are exported by stable-array.mjs / preview-placement.mjs now;
+  // code-transcript imports them, so neither the shallow-equality helper nor the placement context has a second copy.)
 };
 /** The other areas' slices of `file:local` that `duplicates` does not allow (one copy per binding). */
 export function unlistedSlices(key, elsewhere) {
@@ -162,7 +208,7 @@ const members = {
 // Generated areas whose exported roots this generator may import (one copy), in order of preference. Composer-owned
 // areas (code-composer) are never imported. The sibling rail areas (session-rail-sections / -changes / -context) moved to
 // 3.6556.2 in waves 3–4 and are importable now (their one copy of a shared original is reused instead of refused).
-const importableAreas = ['session-rail-kit', 'code-current', 'files-changes', 'r3b-transcript', 'r4e-findings', 'r4e-envbranch', 'r4e-plugin',
+const importableAreas = ['session-rail-kit', 'composer-notices', 'code-current', 'files-changes', 'r3b-transcript', 'r4e-findings', 'r4e-envbranch', 'r4e-plugin',
   'sidebar-sections', 'review-findings', 'session-load-error', 'retry-decision', 'app-switch', 'r3b-settings', 'r3b-tasks', 'btw-pane', 'sidebar-resize',
   'turn-box', 'routines-shared', 'sidebar-reorder', 'mcp-app-card', 'session-rail-sections', 'session-rail-changes', 'session-rail-context',
   // cowork-home (3.6556.2, W10) exports its shared-52 copy of mJ (plugin display name); the rail imports it (D1,
@@ -175,7 +221,14 @@ const importableAreas = ['session-rail-kit', 'code-current', 'files-changes', 'r
   'cowork-progress',
   // cowork-scheduled (3.6556.2, W12) holds the CDS coachmark shared-frame Sj (its module imports only view-tabs and React);
   // coachmark.mjs re-exports that copy (D1, w13-close-rail-regen cwui-46).
-  'cowork-scheduled'];
+  'cowork-scheduled',
+  // W14-code r6 gen-final-6 (D1): the Sessions page's small pure slices (sessions-page/pure-*.mjs: shared-52 OT
+  // useLatchedValue, which the sleep band wO reads as vt). code-transcript, cowork-live and chat-projects import that one
+  // copy too; the Sessions page never imports this area, so there is no cycle.
+  'sessions-page',
+  // W14-code r7 gen-final-7 (D1): cowork-session-states' shared-2 module (B5 "data-composer-stand-in", exported, no
+  // imports), which the inline band frame c0b46114c _ reads; no host adapter of the Cowork graph is reached (E41).
+  'cowork-session-states'];
 
 // Emitted in dependency order. `exports` maps original local binding -> exported name; its keys are the roots and
 // `features` pins each root to strings of its original (prettier-formatted) text, `closureFeatures` to the raw text of its
@@ -192,8 +245,9 @@ const modules = [
   // c4db265df Ze: the region reading order Gj hands the navigation region (`readingOrder`; nothing provides it here).
   { target: 'region-reading-order.mjs', source: 'c4db265df-fNhlkQCj.js', exports: { Ze: 'RegionReadingOrderContext' }, features: { Ze: ['var Ze = l([]);'] } },
   // shared-25 UH (IH over HH): an array kept while its items are the same (QA); DG / kG: the shown output path.
-  { target: 'stable-array.mjs', source: 'shared-25-DOWZRSlq.js', exports: { UH: 'useStableArray', DG: 'stripInvisible', kG: 'displayPath' },
-    features: { UH: ['return IH(e, HH);'], DG: ['.replace(wG(), "");'], kG: ['return DG(e).replace(TG(), "");'] },
+  // BH (shallow array equality) is exported too: code-transcript's fork rows import it from here (W14-code gen-final, D1).
+  { target: 'stable-array.mjs', source: 'shared-25-DOWZRSlq.js', exports: { UH: 'useStableArray', DG: 'stripInvisible', kG: 'displayPath', BH: 'arraysShallowEqual' },
+    features: { UH: ['return IH(e, HH);'], DG: ['.replace(wG(), "");'], kG: ['return DG(e).replace(TG(), "");'], BH: ['if (e.length !== t.length) return !1;', 'Object.is(e[n], t[n])'] },
     closureFeatures: { UH: ['comparedWith:e,stable:e'], kG: ['\\p{Default_Ignorable_Code_Point}'] } },
   // shared-46 tM: swallow the click that ends a pointer drag (sj's onDragStart); WL / GL: the folder's parent, `~` for home.
   { target: 'drag-click-guard.mjs', source: 'shared-46-BIbZBGFq.js', exports: { tM: 'swallowNextClick', WL: 'homeRelativeParent' },
@@ -208,8 +262,10 @@ const modules = [
   { target: 'repo-name-chip.mjs', source: 'c96d752d0-CWv_7-n9.js', exports: { dL: 'RepoNameChip', uL: 'RepoNameChipSlotContext' },
     features: { dL: ['var dL = M(vke);'], uL: ['var uL = N(!1);'] }, closureFeatures: { dL: ['(uL.Provider,{value:!0,children:'] } },
   // c5304ebdb E: the preview card placement the Outputs list sets (`placement: "beside-start"`).
-  { target: 'preview-placement.mjs', source: 'c5304ebdb-C8vzSQK_.js', exports: { E: 'PreviewPlacementProvider' },
-    features: { E: ['{ placement: n, popupClassName: r, children: i } = e,', 't(T.Provider, { value: a, children: i })'] } },
+  // T / w (the placement context and its default) are exported too: code-transcript's preview cards read this one
+  // context instead of a second copy (W14-code gen-final, D1: a context is instantiated once).
+  { target: 'preview-placement.mjs', source: 'c5304ebdb-C8vzSQK_.js', exports: { E: 'PreviewPlacementProvider', T: 'PreviewPlacementContext', w: 'previewPlacementDefault' },
+    features: { E: ['{ placement: n, popupClassName: r, children: i } = e,', 't(T.Provider, { value: a, children: i })'], T: ['(w)'], w: ['placement: "below"'] } },
   // ccc47c03f I: the Slack logo (an environment that started in Slack).
   { target: 'slack-logo.mjs', source: 'ccc47c03f-nDk6qfjU.js', exports: { I: 'SlackLogo' }, features: { I: ['viewBox: "0 0 123 123",', 'fill: "#E01E5A",'] } },
   // shared-52 Ro / hJ / Gc: "plugin:<plugin>:<connector>" names, the plugin's display name, an "owner/name" repo slug.
@@ -294,6 +350,10 @@ const modules = [
       'o && o !== s.branch ? { ...s, branch: o } : s'],
       mN: ['let i = n ? pN[n.menu] : void 0;', 'if (i === "settings" && r) {', '(i !== "environment" && e.setHidden(i, !1), e.setOpen(t, i, !0));'] } },
 
+  // ---- W14-code r4 shell fr4-12a: c227f4d5e kB, the "Show more" / "Show less" toggle under a clamped goal (vM's Qf) ----
+  { target: 'show-more-toggle.mjs', source: 'c227f4d5e-B-FYKrwT.js', exports: { kB: 'RailRescuedShowMoreToggle' },
+    features: { kB: ['y("div", { ref: t, children: y(OB, { ...e }) })'] } },
+
   // ---- cf74bc599: the rail view ----
   { target: 'rail-view.mjs', source: RAIL,
     exports: { Zj: 'SessionRail', Gj: 'SessionRailAside', sj: 'RailCardStack', ij: 'RailCardSlot', uM: 'RailFolderRows', dM: 'RailExtraFolderBranch',
@@ -347,7 +407,11 @@ const modules = [
     features: { v: ['let e = t.lastActivityAt ?? t.createdAt ?? 0;', 'return o ? d(o, t, a) : null;'] } },
   { target: 'save-environment.mjs', source: RAIL,
     exports: { Vx: 'useSaveEnvironmentSetup', Qx: 'RailSaveEnvironmentLink', $x: 'RailSaveEnvironmentRow', Xx: 'requestSaveEnvironment',
-      Jx: 'recordSaveEnvironmentOutcome', Yx: 'saveEnvironmentCheckout', Bx: 'environmentFolderName', Nx: 'SaveAsEnvironmentLabel' },
+      Jx: 'recordSaveEnvironmentOutcome', Yx: 'saveEnvironmentCheckout', Bx: 'environmentFolderName', Nx: 'SaveAsEnvironmentLabel',
+      // W14-code r4 shell fr4-08 (E95): the transcript's start line (dw `So = Vx({…occasion: "start", besideNamed: !0})`,
+      // `Co = dt ?? (!bo || So?.savedAs !== void 0 ? So : void 0)`, `s(Mx, {setup: Co, onSave, onUpdated, onDeclined})` as the
+      // feed's lead), its sentence Fx and the "Not now" label Px.
+      Mx: 'SessionStartLine', Fx: 'SessionStartSentence', Px: 'NotNowLabel' },
     features: {
       Vx: ['besideNamed: c,', 'defaultMessage: "Folder", id: "ukQpDs7M+0"'],
       Qx: ['"data-testid": "rail-save-environment-link",', 'defaultMessage: "Save as environment",', 'defaultMessage: "Save", id: "fs11ci1KNs"', '() => Xx(t, r, n)',
@@ -356,6 +420,11 @@ const modules = [
       Xx: ['saveEnvironmentRequest: { setup: t, checkout: Yx(e, t, n), onSaved: r },', 'Jx(e, t, { savedAs: r.name })'],
       Jx: ['"updated"', 'moveLineOutcome:'], Yx: ['worktree: '],
       Bx: ['.slice(0, zx) || t'], Nx: ['defaultMessage: "Save as environment", id: "9klNTvm9bE"'],
+      Mx: ['"data-testid": "epitaxy-save-start-line",', 'className: "text-footnote text-muted-as-secondary",', '(dv.getState().quietStartedPlace(t.target), r());',
+        'defaultMessage: "Started on {place} \\u00B7 saved as environment \\u201C{name}\\u201D",', 's(G, { inheritColor: !0, onClick: n, children: s(Nx, {}) }),'],
+      Fx: ['defaultMessage: "Started on {place}", id: "K/3e3/SZAW"', 'defaultMessage: "Moving to {place} after this turn", id: "vP66xl03OZ"',
+        '"You often start on {place}; save it as an environment to start here in one click"'],
+      Px: ['defaultMessage: "Not now", id: "Z2iIsQBa+F"'],
     } },
   // ---- w10-ccres-rail-env-edit: TN's environmentAction (`kn`) over c73f45bc3 Zx (cf74bc599 M_) and fu (cf74bc599 n_) ----
   // Zx: the environment row's ghost, xs, icon-only "Settings" button ("Edit environment" for a local environment, "Edit
@@ -377,6 +446,53 @@ const modules = [
       '"Tip: you can drag {kind, select, code {sessions} cowork {tasks} other {chats}} here to pin them"',
       'dragToPin: { defaultMessage: "Drag to pin", id: "a6msxIE91i" },', 'dropHere: { defaultMessage: "Drop here", id: "Au4AP9NTeL" },',
       'letGo: { defaultMessage: "Let go", id: "9Z0I31VbJD" },'] } },
+  // W14-code r5 fr5-07: the sleep band's copy (cf74bc599 wO / DO / OO read it): yO the CTA labels, bO the band and notice
+  // lines, xO the resume line per state (expected / resumed / needed) and _O the 75s grace after the wake. The host's wO
+  // (src/source-sleep-notice.jsx, kept-awake-model.mjs sleepNotice) formats these instead of a hand-copied table.
+  { target: 'sleep-band-messages.mjs', source: RAIL, exports: { yO: 'sleepBandActions', bO: 'sleepBandMessages', xO: 'sleepResumeMessages', _O: 'SLEEP_RESUME_GRACE_MS' },
+    features: { yO: ['id: "86Xy/2TTz8"', '"Keep computer awake"', '"Staying awake"'],
+      bO: ['"Your computer went to sleep while Claude was working."', 'id: "c65akfV5QK"', '"Claude couldn\\u2019t pick up where it left off."'],
+      xO: ['expected: bO.willPickUp', 'needed: bO.couldNot'], _O: ['75e3'] } },
+  // W14-code r6 sleep lane: what wO reads as ai (shared-3 Ky, a flag that turns true `t` ms after `e` holds, keyed), and
+  // the k_ band (c73f45bc3 Qg exported as ht: inside the Code notice region a `{kind: "custom", render → $g → e_}`
+  // registration under its slot, with the card's test id `code-<slot>-card`; e_ the card: shared-6 kT with the words
+  // class, the icon and up to two secondary buttons). wO's vt (shared-52 OT, a value latched `{when, mode: "first" |
+  // "latest", key}`) is not sliced here: gen-final-6 (D1) imports the Sessions page's copy (sessions-page/pure-shared-52.mjs).
+  { target: 'elapsed-flag.mjs', source: 'shared-3-BCEbd8Fv.js', exports: { Ky: 'useElapsedFlag' },
+    features: { Ky: ['let n = setTimeout(() => i(!0), t);'] } },
+  // W14-code r7 notices (r7c-02 / sh7-04 / gates-r7-01, E81): c227f4d5e oL (exported zs), the band Qg / rL / cc43287c9 h6
+  // draw inline where the column mounts them when there is no Code notice region (__gb__100087145 is off on the 3P
+  // desktop): c0b46114c _ (Fb, the band frame: the icon, the words and actions row, the dismiss slot), y (Nb, an action
+  // cell), the CDS Button / text link / icon, the usage gauge glyphs for "approaching" / "exceeded" / "overage".
+  // (W14-code r7 gen-final-7, D1: the frame's accent classes shared-6 C_ (x_ / S_) are session-rail-changes'
+  // branch-row-classes.mjs copy, exported as bandAccentClassName; its stand-in attribute shared-2 B5 is
+  // cowork-session-states' shared-2 copy. Both are imported — see importableAreas — not sliced a second time.)
+  { target: 'band-frame-classes.mjs', source: 'shared-6-sd9jbJqs.js', exports: { T_: 'BAND_ROW_ALIGN_CLASS' },
+    features: { T_: ['T_ = "items-start py-[calc((40px-1lh)/2)]"'] } },
+  { target: 'band-frame.mjs', source: 'c0b46114c-Tzv34BiL.js', exports: { _: 'BandFrame', y: 'BandActionCell' },
+    features: { _: ['standsInForComposer: y,', '"flex min-w-0 flex-1 flex-wrap gap-x-sm gap-y-sm"', 'a(c(r), s, "text-body", f, u)'],
+      y: ['className: "flex h-[1lh] shrink-0 items-center"'] } },
+  { target: 'inline-band.mjs', source: 'c227f4d5e-B-FYKrwT.js', exports: { oL: 'InlineBand' },
+    features: { oL: ['standsInForComposer: w,', 'I = k ? "note" : "status",', 'name: t === "approaching" ? "UsageGaugeMiddle" : "UsageGaugeHigh",',
+      'className: "flex flex-wrap items-baseline gap-x-2.5 gap-y-0.75",'] } },
+  { target: 'code-band.mjs', source: 'c73f45bc3-B7hbL7H9.js', exports: { Qg: 'CodeBand', e_: 'CodeBandCard' },
+    features: { Qg: ['kind: "custom",', 'testId: `code-${a}-card`', '{ id: t, perOpening: !0, content: e }', 'Oo(a, l, !0),'],
+      e_: ['wordsClassName: "flex flex-wrap items-baseline gap-x-2.5 gap-y-0.75",', '"flex min-w-0 flex-wrap items-center gap-xs"', '...(u ? { "aria-disabled": !0 } : void 0),'] },
+    // c227f4d5e oL (exported zs), which Qg draws outside the Code notice region: the host's InlineCodeBand hands the band
+    // to the Chat / Cowork stack's sink when one is provided and otherwise draws the sliced oL (inline-band.mjs).
+    adapters: { 'c227f4d5e-B-FYKrwT.js:oL': { name: 'InlineCodeBand', features: ['standsInForComposer: w,'] } } },
+  // W14-code r6 sleep lane (r6-composer-03 / fr6-01 / sh6-01 / css6-sleep-band / gates-r6-10 / R6T-03): cf74bc599 wO (the
+  // sleep band: EO → DO "rework" / OO "legacy" over k_ slot "sleep"; inTranscript without a keep-awake offer, the
+  // turn-tail session notice Ie through Wm(r, "sleepNotice")) and dO (the kept-awake band: pO over k_ slot "keptAwake";
+  // inTranscript, Wm(r, "keepAwakeNotice")). E83: their copy names Claude as the assistant, so this module's intl swaps
+  // the persona in as the host's sleep band did (useBandIntl / BandMessage).
+  { target: 'sleep-band.mjs', source: RAIL, exports: { wO: 'SleepBand', dO: 'KeptAwakeBand' },
+    features: { wO: ['Wm(r, "sleepNotice", Ie)', 'version: "rework",', 'version: "legacy",'] },
+    closureFeatures: { wO: ['slot:"sleep",id:"sleep"', 'vO="ccd_sleep_band_keep_awake_main"'], dO: ['slot:"keptAwake",id:"kept-awake"', 'icon:"CoffeeCup"'] },
+    adapters: {
+      'vendor-intl-DYfox5Co.js:q': { name: 'useBandIntl', features: ['return (Mt(e), e);'] },
+      'vendor-intl-DYfox5Co.js:Gt': { name: 'BandMessage', features: ['var Gt = c(Wt, Ut);'] },
+    } },
   // shared-frame Sj (exported Fi): the CDS coachmark aM opens (open, introDelay seconds before it shows, accent variant,
   // showClose keeps it open on outside press / focus out / Escape). cowork-scheduled holds and exports the one copy; it is
   // re-exported here under a semantic name for the sidebar host (src/source-drag-pin-hint.jsx).
@@ -657,7 +773,8 @@ export async function extractSessionRail({ check = false, explore = null } = {})
   // Resolves the original binding file:local to an import, or null when it is to be sliced (same chunk only).
   const resolveBinding = async (spec, file, local, via) => {
     const self = path.join(output, spec.target);
-    const adapter = adapters[`${file}:${local}`];
+    // spec.adapters: a module's own stand-ins, checked like the area's (W14-code r6: the sleep band's intl, E83).
+    const adapter = spec.adapters?.[`${file}:${local}`] ?? adapters[`${file}:${local}`];
     if (adapter) {
       const dep = await readSource(file);
       const original = dep.top.get(local);
@@ -802,7 +919,9 @@ export async function extractSessionRail({ check = false, explore = null } = {})
       'globalThis', 'setTimeout', 'clearTimeout', 'setInterval', 'clearInterval', 'parseFloat', 'parseInt', 'Date', 'Intl', 'undefined', 'Infinity',
       'WeakMap', 'WeakSet', 'Boolean', 'window', 'document', 'console', 'MutationObserver', 'requestAnimationFrame', 'cancelAnimationFrame',
       'TypeError', 'Reflect', 'navigator', 'queueMicrotask', 'performance', 'getComputedStyle', 'NaN', 'isNaN', 'isFinite', 'Element', 'HTMLElement',
-      'Node', 'reportError', 'ResizeObserver', 'URL', 'Event', 'KeyboardEvent', 'arguments', 'SVGElement', 'Image', 'decodeURIComponent']);
+      'Node', 'reportError', 'ResizeObserver', 'URL', 'Event', 'KeyboardEvent', 'arguments', 'SVGElement', 'Image', 'decodeURIComponent',
+      // W14-code r6 sleep lane: wO's continue send carries a crypto.randomUUID() (the send's uuid).
+      'crypto']);
     const unbound = globals.filter(name => !allowed.has(name));
     if (unbound.length) throw Error(`${spec.target}: unbound ${unbound.join(', ')}`);
     files[spec.target] = text;

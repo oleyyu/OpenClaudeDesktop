@@ -1,80 +1,29 @@
 /* Session chapters (source-chapters.jsx). */
 
-/* mark_chapter (d2, cd5a31703 :43529-43578): an h2 text-body-semibold text-primary, scroll-mt-[56px]. (Moved here from
-   the retired source-suggested-tasks.css, R4f-proposal P5.) */
-.source-chapter { margin: 0; color: var(--cds-text-primary); font-size: var(--cds-font-size-body, 13px); line-height: var(--cds-leading-body, 19px);
-  font-weight: var(--cds-font-weight-semibold, 600); font-variation-settings: var(--cds-font-wght-semibold, normal); scroll-margin-top: 56px; user-select: text; overflow-wrap: break-word; }
-
-/* CX editing (cd5a31703 :60458-60476): min-w-0 max-w-full rounded-[3px] border-0 bg-transparent p-0 outline
-   outline-[1.5px] outline-fill-accent outline-offset-[1px] [field-sizing:content], in the h2's own type. */
-.source-chapter-input {
-  min-width: 0; max-width: 100%; box-sizing: content-box; margin: 0; padding: 0; border: 0; border-radius: 3px;
-  background: transparent; color: inherit; font: inherit; font-variation-settings: inherit; letter-spacing: inherit;
-  outline: 1.5px solid var(--cds-fill-accent); outline-offset: 1px; field-sizing: content;
-}
-.source-chapter[aria-hidden="true"] { min-height: 0; }
+/* W14-code r8 css8-chapter-heading-handcopy: the chapter h2 and its rename input are 3.6556.2 c96d752d0 GY's own utility
+   class strings (source-chapters.jsx); the hand-copied .source-chapter / .source-chapter-input rules are gone. */
 
 /* M9 (shared-21 :30502-30560) with the shared-styles grapheme keyframes: 90ms per grapheme, 30ms apart. */
-.sch-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+/* W14-code r5 cleanup css5-sr-only-handcopies: the hand-copied sr-only rule is gone; the JSX uses the official c6a992d55 .sr-only. */
 .sch-reveal { display: inline-flex; }
 @keyframes sch-grapheme-reveal { 0% { opacity: 0; filter: blur(6px); } }
 [data-revealing] > .sch-grapheme { animation: 90ms cubic-bezier(.215, .61, .355, 1) both sch-grapheme-reveal; animation-delay: calc(var(--i, 0) * 30ms); }
 @media (prefers-reduced-motion: reduce) { [data-revealing] > .sch-grapheme { animation: none; } }
 html[data-reduce-motion="true"] [data-revealing] > .sch-grapheme { animation: none; }
 
-/* tb (cf74bc599 :3360-3420): epitaxy-toc absolute top-[20px] bottom-[32px] left-0 z-[11] pointer-events-none,
-   invisible until the active chapter is known, then epitaxy-toc-fade-in (.18s ease-out .12s). */
-.sch-toc { --chat-gutter: 32px; position: absolute; top: 20px; bottom: 32px; left: 0; z-index: 11; pointer-events: none; visibility: hidden; }
-.sch-toc[data-shown] { visibility: visible; animation: .18s ease-out .12s both epitaxy-toc-fade-in; }
+/* W14-code r6 css6-toc-position-gutter: the TOC root, nav, rail and popover are 3.6556.2 cf74bc599 NC's own utility class
+   strings (source-chapters.jsx: -start-[var(--session-rail-band-start,0px)], no left:0 / fixed --chat-gutter). The
+   gutter is the .epitaxy-root default (c6a992d55: --chat-gutter:32px).
+   shared-6 gg on the nav (`[.epitaxy-chat-panel_&]:[@container_tile-slot_(max-width:560px)]:[--chat-gutter:16px]`):
+   the host has no .epitaxy-chat-panel / tile-slot names, so it is the same narrow-tile container query the transcript
+   column uses (source-transcript.css css-main-02), not the old 780px window query. */
+@container (max-width: 560px) { .sch-toc-nav { --chat-gutter: 16px; } }
+/* c96d752d0's inline stylesheet c2e28a737 (injected at runtime by the official chunk, not in the shipped CSS files):
+   the root's fade-in once the active chapter is known. */
 @keyframes epitaxy-toc-fade-in { 0% { opacity: 0; } to { opacity: 1; } }
-@media (prefers-reduced-motion: reduce) { .sch-toc[data-shown] { animation-duration: 1ms; } }
-html[data-reduce-motion="true"] .sch-toc[data-shown] { animation-duration: 1ms; }
-/* Jn: a narrow chat column keeps a 16px gutter (the local transcript's narrow padding is 20px). */
-@media (max-width: 780px) { .sch-toc { --chat-gutter: 16px; } }
+.epitaxy-toc-fade-in { animation: .18s ease-out .12s both epitaxy-toc-fade-in; }
+@media (prefers-reduced-motion: reduce) { .epitaxy-toc-fade-in { animation-duration: 1ms; } }
+html[data-reduce-motion="true"] .epitaxy-toc-fade-in { animation-duration: 1ms; }
 
-/* Gy: relative h-full w-[var(--chat-gutter)] focus-visible:outline-hidden focus-visible:shadow-focus. */
-.sch-toc-nav { position: relative; height: 100%; width: var(--chat-gutter); outline: none; border-radius: 4px; }
-.sch-toc-nav:focus-visible { box-shadow: var(--cds-focus-shadow); }
-
-/* The rail: max-h-full flex flex-col py-1.25 pl-[calc(var(--chat-gutter)*3/16)] overflow-hidden pointer-events-auto;
-   li h-[8px]; the line w-[calc(var(--chat-gutter)*3/8+2px)] h-[2px] rounded-full origin-left, scale-x-[9/14]
-   bg-alpha-3 (qy) or bg-alpha-8 (Jy, current), transition-[scale,background-color] duration-200. */
-.sch-toc-rail { box-sizing: border-box; max-height: 100%; display: flex; flex-direction: column; margin: 0; padding: 5px 0 5px calc(var(--chat-gutter) * 3 / 16);
-  list-style: none; overflow: hidden; pointer-events: auto; }
-.sch-toc-tick { height: 8px; display: flex; align-items: center; }
-.sch-toc-line { display: block; height: 2px; width: calc(var(--chat-gutter) * 3 / 8 + 2px); border-radius: 9999px; transform-origin: left;
-  scale: calc(9 / 14) 1; background: var(--cds-alpha-3); transition: scale 200ms, background-color 200ms; }
-.sch-toc-line[data-active] { scale: 1 1; background: var(--cds-alpha-8); }
-@media (prefers-reduced-motion: reduce) { .sch-toc-line { transition: background-color 200ms; } }
-html[data-reduce-motion="true"] .sch-toc-line { transition: background-color 200ms; }
-
-/* The list: absolute left-0 top-0 isolate popover surface rounded-lg w-[232px] max-h-full flex flex-col py-sm,
-   transition-[opacity,transform,visibility] duration-150 ease-out; closed invisible opacity-0 -translate-x-1. */
-.sch-toc-popover { position: absolute; left: 0; top: 0; isolation: isolate; box-sizing: border-box; width: 232px; max-height: 100%;
-  display: flex; flex-direction: column; padding-block: var(--cds-pad-sm, 6px); border-radius: 8px; background: var(--cds-surface-3);
-  box-shadow: inset 0 0 0 var(--cds-ring-inner, 0px) var(--cds-ring-color, transparent), 0 0 0 var(--cds-ring-outer, 0px) var(--cds-ring-color, transparent), var(--cds-shadow-popover);
-  color: var(--cds-text-primary); font-family: var(--cds-font-sans, anthropic-sans), sans-serif;
-  visibility: hidden; opacity: 0; transform: translateX(-4px); pointer-events: none;
-  transition: opacity 150ms ease-out, transform 150ms ease-out, visibility 150ms ease-out; }
-.sch-toc-popover[data-open] { visibility: visible; opacity: 1; transform: none; pointer-events: auto; }
-@media (prefers-reduced-motion: reduce) { .sch-toc-popover { transition: none; } }
-html[data-reduce-motion="true"] .sch-toc-popover { transition: none; }
-.sch-toc-list { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 3px; margin: 0; padding: 0 var(--cds-pad-xs, 4px); list-style: none; overflow-y: auto; }
-
-/* nb: w-full flex items-center gap-sm px-1.25 h-control rounded-[5px] text-left hover:bg-fill-ghost-hover, text-secondary
-   (hover/current text-primary); the mark w-[9px] bg-alpha-3 (group hover bg-alpha-5) or w-[14px] bg-alpha-8. */
-.sch-toc-entry { box-sizing: border-box; width: 100%; display: flex; align-items: center; gap: var(--cds-gap-sm, 8px); padding: 0 5px;
-  height: var(--cds-h-control, 24px); border-radius: 5px; }
-.sch-toc-button { margin: 0; border: 0; background: transparent; text-align: left; color: var(--cds-text-secondary); font: inherit;
-  font-size: var(--cds-font-size-body, 13px); line-height: var(--cds-leading-body, 19px); cursor: var(--cds-cursor-interactive, default); }
-.sch-toc-button:hover { background: var(--cds-fill-ghost-hover); color: var(--cds-text-primary); }
-.sch-toc-button[data-active] { color: var(--cds-text-primary); }
-.sch-toc-button:focus-visible { outline: none; box-shadow: var(--cds-focus-shadow); }
-.sch-toc-mark { display: block; height: 2px; width: 9px; border-radius: 9999px; flex-shrink: 0; background: var(--cds-alpha-3); transition: background-color 150ms; }
-.sch-toc-button:hover .sch-toc-mark { background: var(--cds-alpha-5); }
-.sch-toc-button[data-active] .sch-toc-mark { width: 14px; background: var(--cds-alpha-8); }
-.sch-toc-mark-edit { width: 10px; background: var(--cds-alpha-8); }
-.sch-toc-title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.sch-toc-input { flex: 1; min-width: 0; margin: 0; padding: 0; border: 0; background: transparent; color: var(--cds-text-primary); font: inherit;
-  font-size: var(--cds-font-size-body, 13px); line-height: var(--cds-leading-body, 19px); border-radius: 3px; outline: none; }
-.sch-toc-input:focus-visible { box-shadow: var(--cds-focus-shadow); }
+/* W14-code r6 review: the chapter rows (.sch-toc-entry / -button / -mark / -mark-edit / -title / -input) are FC's utility
+   class strings in source-chapters.jsx now; nothing restates them here. */

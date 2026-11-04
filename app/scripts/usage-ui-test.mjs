@@ -22,7 +22,7 @@ const poll=async(fn,label)=>{const end=Date.now()+10000;while(Date.now()<end){tr
 const exists=async file=>{try{await fs.stat(path.join(profile,file));return true;}catch{return false;}};
 try{
  await integrity();app=await electron.launch({args:[root],executablePath:path.join(root,'node_modules/electron/dist/Electron.app/Contents/MacOS/Electron'),env,timeout:20000});page=await app.firstWindow();page.setDefaultTimeout(10000);page.on('pageerror',e=>report.rendererErrors.push(e.message));
- await app.evaluate(({BrowserWindow})=>BrowserWindow.getAllWindows()[0].setContentSize(1324,768));await page.waitForFunction(()=>innerWidth===1324&&innerHeight===768);await page.getByRole('textbox',{name:'Message DeepSeek'}).waitFor();
+ await app.evaluate(({BrowserWindow})=>BrowserWindow.getAllWindows()[0].setContentSize(1324,768));await page.waitForFunction(()=>innerWidth===1324&&innerHeight===768);await page.getByRole('textbox',{ name: /^(?:Prompt|Message DeepSeek)$/ }).waitFor();
  // Opening before boot/account settle observes a deliberately disconnected snapshot.
  // init settles boot.account together with the model list (the footer no longer shows the plan: account-label-model).
  await page.waitForFunction(()=>{const composer=document.querySelector('[data-cds=ChatComposer]');return composer&&!composer.hasAttribute('data-disabled')&&document.querySelector('.sc-model-trigger')?.textContent.includes('Test model');});
@@ -34,7 +34,7 @@ try{
  const close=async()=>{await page.keyboard.press('Escape');await dialog.waitFor({state:'detached'});};
  const values=()=>usage.getByRole('meter').evaluateAll(nodes=>nodes.map(n=>Number(n.getAttribute('aria-valuenow'))));
  const refresh=async()=>{await usage.getByRole('button',{name:'Refresh usage',exact:true}).click();await ready();};
- {await page.getByRole('textbox',{name:'Message DeepSeek'}).focus();await page.keyboard.press('Meta+,');const settings=page.getByRole('dialog',{name:'Settings',exact:true});await settings.waitFor();const nav=settings.getByRole('navigation',{name:'Settings',exact:true});await nav.getByRole('button',{name:'General',exact:true}).waitFor();/* B23: shared-19 ZC lists Usage in the nav again (opened there, it stays in the Settings shell). */assert.equal(await nav.getByRole('button',{name:'Usage',exact:true}).count(),1,'Usage is listed in the nav');await page.keyboard.press('Escape');await settings.waitFor({state:'detached'});
+ {await page.getByRole('textbox',{ name: /^(?:Prompt|Message DeepSeek)$/ }).focus();await page.keyboard.press('Meta+,');const settings=page.getByRole('dialog',{name:'Settings',exact:true});await settings.waitFor();const nav=settings.getByRole('navigation',{name:'Settings',exact:true});await nav.getByRole('button',{name:'General',exact:true}).waitFor();/* B23: shared-19 ZC lists Usage in the nav again (opened there, it stays in the Settings shell). */assert.equal(await nav.getByRole('button',{name:'Usage',exact:true}).count(),1,'Usage is listed in the nav');await page.keyboard.press('Escape');await settings.waitFor({state:'detached'});
   await page.getByRole('button',{name:'Account menu',exact:true}).click();const items=await page.getByRole('menu',{name:'Account menu',exact:true}).locator('[role^="menuitem"]').evaluateAll(nodes=>nodes.map(node=>node.dataset.testid??node.dataset.label));assert.deepEqual(items.slice(0,2),['user-menu-settings','user-menu-usage']);await page.keyboard.press('Escape');await page.getByRole('menu',{name:'Account menu',exact:true}).waitFor({state:'detached'});
   report.checks.push('B23: the Settings nav lists Usage (shared-19 ZC); the account menu lists Usage right after Settings and opens the stacked Usage dialog');}
  await open();await ready();assert.deepEqual(await values(),[3,53,95,1]);assert.equal(await usage.locator('.su-heading>span').textContent(),'Pro');assert.equal(await dialog.getByRole('navigation').count(),0);
@@ -130,10 +130,10 @@ try{
   report.checks.push('Workspace member out of credits: notice with Notify owner sends exactly one nudge {creditType:credits} and reports \'Workspace owner notified.\'; No credits shown; resets disabled at 0');
   // The composer usage popover: 'Plan usage limits · Plus', the two windows with countdowns, the credits line, and the ring
   // tooltip's '{pct}% of 5-hour limit' detail; its arrow opens Usage.
-  await seed({'account/rateLimits/read':{result:reached}});await page.locator('.sc-chin .sc-usage-trigger').click();const popover=page.locator('.sc-usage-popover');await popover.locator('.sc-usage-plan').waitFor();
-  await poll(async()=>await popover.locator('.sc-usage-plan-header .sc-usage-muted').textContent()==='Plan usage limits · Pro','the popover refresh lands (the account plan, as on the page)');
-  await poll(async()=>JSON.stringify(await popover.locator('.sc-usage-plan-label').allTextContents())===JSON.stringify(['Current session','This week','Usage credits']),'the refreshed windows and credits line');
-  assert.match(await popover.locator('.sc-usage-plan-row[data-credits]').textContent(),/125 of 500 credits used.*1,250 credits/);
+  await seed({'account/rateLimits/read':{result:reached}});await page.locator('.sc-chin .sc-usage-trigger').click();const popover=page.locator('.sc-usage-popover');await popover.locator('.text-muted-as-secondary',{hasText:'Plan usage limits'}).waitFor();
+  await poll(async()=>await popover.locator('.text-muted-as-secondary',{hasText:'Plan usage limits'}).textContent()==='Plan usage limits · Pro','the popover refresh lands (the account plan, as on the page)');
+  await poll(async()=>JSON.stringify(await popover.locator('.text-footnote.text-primary.truncate').allTextContents())===JSON.stringify(['Current session','This week','Usage credits']),'the refreshed windows and credits line');
+  assert.match(await popover.locator('[data-credits]').textContent(),/125 of 500 credits used.*1,250 credits/);
   await poll(async()=>/100% of 5-hour limit/.test(await page.locator('.sc-chin .sc-usage-trigger').getAttribute('aria-label')),'ring label names the plan window');
   const popoverReads=(await requests()).filter(x=>x.method==='account/rateLimits/read'&&x.params?.excludeResetCreditDetails===true);assert.ok(popoverReads.length>=1,'opening the popover refreshes without reset details');
   await page.screenshot({path:path.join(directory,'usage-popover-plan-dark.png')});

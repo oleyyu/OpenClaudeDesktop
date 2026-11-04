@@ -8,19 +8,6 @@
   container-type: inline-size;
   container-name: spv;
 }
-.spv-icon {
-  color: var(--cds-text-secondary);
-  flex: none;
-}
-.spv-icon:disabled {
-  color: var(--cds-text-disabled);
-}
-/* Source ie hides secondary navigation below its 320px container breakpoint.
-   CDS Button's local display rule otherwise wins over the imported .hidden utility. */
-.spv-pane .source-settings-button.hidden { display: none; }
-@container (min-width: 320px) {
-  .spv-pane .source-settings-button.\@\[320px\]\:inline-flex { display: inline-flex; }
-}
 
 .spv-body {
   position: relative;
@@ -29,15 +16,16 @@
   display: flex;
   flex-direction: column;
 }
-/* Placeholder behind the page (official #f5f5f5 light, #131312 dark) and the surface for the DOM states. */
+/* The surface for the DOM states; behind a shown page the c9c84d68b C placeholder (#f5f5f5 light, #131312 dark) or the
+   page's own colour (inline). */
 .spv-viewport {
   position: relative;
   flex: 1 1 auto;
   min-height: 0;
   overflow: hidden;
-  background: #f5f5f5;
 }
-[data-mode="dark"] .spv-viewport { background: #131312; }
+.spv-viewport[data-placeholder] { background: #f5f5f5; }
+[data-mode="dark"] .spv-viewport[data-placeholder] { background: #131312; }
 .spv-capture {
   position: absolute;
   inset: 0;
@@ -56,23 +44,8 @@
   font-size: var(--cds-font-size-caption);
   pointer-events: none;
 }
-/* The skip link: invisible until focused, then a pill over the page area. */
-.spv-skip {
-  position: absolute;
-  top: 8px;
-  left: 8px;
-  z-index: 2;
-  max-width: calc(100% - 16px);
-  padding: 4px 8px;
-  border: 0;
-  border-radius: 6px;
-  background: var(--cds-fill-primary);
-  color: var(--cds-on-primary);
-  font-size: var(--cds-font-size-footnote);
-  clip-path: inset(50%);
-  opacity: 0;
-}
-.spv-skip:focus-visible { clip-path: none; opacity: 1; outline: none; box-shadow: var(--cds-focus-shadow); }
+/* W14-code r6 css6-preview-focus-sentinel: the keyboard entry is cf580efe9's data-preview-focus-sentinel button in its own
+   sr-only / focus:block utilities (source-preview-pane.jsx), so the host .spv-skip pill is gone. */
 
 .spv-center {
   position: absolute;
@@ -85,132 +58,12 @@
   padding: var(--cds-pad-lg, 16px);
   text-align: center;
 }
-.spv-center-text { color: var(--cds-text-secondary); font-size: var(--cds-font-size-body); }
-.spv-error-icon { color: var(--cds-text-warning); }
-.spv-error-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
-.spv-error-title { color: var(--cds-text-primary); font-size: var(--cds-font-size-body); font-weight: var(--cds-font-weight-medium); }
-.spv-error-body { max-width: 420px; color: var(--cds-text-secondary); font-size: var(--cds-font-size-footnote); line-height: var(--cds-leading-footnote); overflow-wrap: anywhere; }
 
-/* Start page (A_ / bv): the server list. Without a launch.json the start page is cf580efe9 gr / fr / dr in the
-   reference utility classes (source-preview-pane.jsx PreviewStartPrompt), positioned over the viewport. */
-.spv-start-caption { max-width: 360px; margin: 0; color: var(--cds-text-secondary); font-size: var(--cds-font-size-footnote); line-height: var(--cds-leading-footnote); }
+/* Start page: the server list is cf580efe9 pa / fa in their own utility classes (W14-code r6 r6pa-05; the 2.2553.1
+   .spv-start-servers* / .spv-servers / .spv-server* / .spv-start-caption restatements are gone). Without a launch.json
+   the start page is cf580efe9 gr / fr / dr (source-preview-pane.jsx PreviewStartPrompt). What is left is the host's
+   launch.json parse error above the list. */
 .spv-start-problem { max-width: 420px; margin: 0; color: var(--cds-text-danger); font-size: var(--cds-font-size-footnote); overflow-wrap: anywhere; }
-/* bv: the list column is min(400px, 75%) wide; the ul is a bordered rounded box that scrolls past min(60vh, 480px). */
-.spv-start-servers {
-  position: absolute;
-  inset: 0;
-  overflow-y: auto;
-}
-.spv-start-servers-inner {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--cds-gap-lg, 16px);
-  width: 100%;
-  min-height: 100%;
-  padding: var(--cds-pad-lg, 16px);
-  box-sizing: border-box;
-}
-.spv-start-servers-main {
-  display: flex;
-  flex: 1 1 auto;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  min-width: 0;
-}
-.spv-start-column {
-  display: flex;
-  flex-direction: column;
-  gap: var(--cds-gap-sm, 8px);
-  min-width: min(400px, 75%);
-  max-width: 100%;
-}
-.spv-start-captions { display: flex; flex-direction: column; align-items: center; }
-.spv-start-servers .spv-start-caption { max-width: 48ch; color: var(--cds-text-muted); text-align: center; }
-.spv-servers {
-  width: 100%;
-  max-height: min(60vh, 480px);
-  margin: 0;
-  padding: 0;
-  overflow-y: auto;
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  border: 1px solid var(--cds-border);
-  border-radius: var(--cds-radius);
-  box-sizing: border-box;
-}
-/* Server row (older yv; 2.37337.1 Ti; 2.42304.0 cf580efe9-b-DCvKJg Ri): flex items-center gap-sm border-b py-md ps-[9px] pe-md
-   last:border-b-0, with a text-start main button; a running row hovers alpha-2. */
-.spv-server {
-  display: flex;
-  align-items: center;
-  gap: var(--cds-gap-sm, 8px);
-  min-width: 0;
-  padding-block: var(--cds-pad-md);
-  padding-inline: 9px var(--cds-pad-md);
-  border-bottom: 1px solid var(--cds-border);
-  text-align: start;
-}
-.spv-server:last-child { border-bottom: 0; }
-.spv-server:focus-visible { outline: 1px solid var(--cds-fill-accent); outline-offset: -1px; }
-.spv-server[data-open]:is(:hover, :has(:focus-visible)) { background: var(--cds-alpha-2); }
-.spv-server-main {
-  flex: 1 1 auto;
-  min-width: 0;
-  display: flex;
-  align-items: center;
-  gap: var(--cds-gap-sm, 8px);
-  overflow: hidden;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  text-align: left;
-}
-button.spv-server-main { outline: none; }
-.spv-server-icon { color: var(--cds-text-secondary); flex: none; }
-.spv-server-name { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--cds-text-secondary); font-size: var(--cds-font-size-body); line-height: var(--cds-leading-body); }
-.spv-server-port { flex: none; color: var(--cds-text-muted); font-size: var(--cds-font-size-footnote); line-height: var(--cds-leading-footnote); font-variant-numeric: tabular-nums; }
-.spv-server-action { min-width: 2rem; flex: none; }
-.spv-see-all { width: 100%; color: var(--cds-text-muted); }
-.spv-see-all:hover { color: var(--cds-text-primary); }
-
-.spv-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  height: 28px;
-  padding: 0 12px;
-  border: 0;
-  border-radius: 6px;
-  font: inherit;
-  font-size: var(--cds-font-size-body);
-  white-space: nowrap;
-  background: var(--cds-alpha-2);
-  color: var(--cds-text-primary);
-}
-.spv-button[data-size="small"] { height: 24px; padding: 0 8px; font-size: var(--cds-font-size-footnote); }
-.spv-button[data-variant="primary"] { background: var(--cds-fill-primary); color: var(--cds-on-primary); }
-.spv-button[data-variant="danger"] { background: transparent; color: var(--cds-text-danger); box-shadow: inset 0 0 0 1px var(--cds-border); }
-.spv-button:hover:not(:disabled) { filter: brightness(0.96); }
-[data-mode="dark"] .spv-button:hover:not(:disabled) { filter: brightness(1.12); }
-.spv-button:disabled { opacity: 0.5; }
-.spv-button:focus-visible { outline: none; box-shadow: var(--cds-focus-shadow); }
-.spv-link {
-  border: 0;
-  padding: 0;
-  background: none;
-  color: var(--cds-text-muted);
-  font: inherit;
-  font-size: var(--cds-font-size-footnote);
-  text-decoration: underline;
-  text-underline-offset: 2px;
-}
-.spv-link:hover { color: var(--cds-text-secondary); }
-.spv-link:focus-visible { outline: none; box-shadow: var(--cds-focus-shadow); border-radius: 3px; }
 
 /* A download the page started (state.download): saved (Show in Finder), failed, or not started while the preview was
    off screen. A row under the page, in the pane's own surface. */

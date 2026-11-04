@@ -23,10 +23,10 @@ export const TILE_CONFIG = Object.freeze({
   dragLift: 24,
 });
 export const CHAT_TILE_ID = "chat";
-export const CHAT_OVERFLOW_MIN = Object.freeze({ width: 320, anchor: "left" });
 // Local pane kinds with real data. Official ids differ (file/diff/plan); the
 // side ratio rule keys them by kind name (panes-state-current.js:1552 ii).
-export const PANE_KINDS = Object.freeze(["files", "changes", "plan", "tasks", "terminal", "preview", "session"]);
+// W14-code cccc-20: "runs" (3.6556.2 cccc2cf0a Xk, the Runs pane of a session a scheduled task started).
+export const PANE_KINDS = Object.freeze(["files", "changes", "plan", "tasks", "terminal", "preview", "session", "runs"]);
 // "preview" is one of the official wide panes (panes-state-current.js:1554 ii): side 3 against chat 2.
 const WIDE_SIDE_KINDS = new Set(["files", "changes", "preview"]);
 
@@ -55,9 +55,6 @@ export function nodeKey(node) {
 }
 export function cloneNode(node) {
   return isTile(node) ? { ...node } : withChildren(node, node.children.map(cloneNode));
-}
-export function cloneLayout(layout) {
-  return { root: cloneNode(layout.root) };
 }
 
 // ---------------------------------------------------------------------------
@@ -120,10 +117,6 @@ export function parentAtPath(root, path) {
 export function findStack(root, stackId) {
   return locateStack(root, stackId)?.node ?? null;
 }
-export function parentOfStack(root, stackId) {
-  const hit = locateStack(root, stackId);
-  return hit ? (parentEntry(hit.trail)?.stack ?? null) : null;
-}
 export function parentOfTile(layout, tileId) {
   const hit = locateTile(layout.root, tileId);
   return hit ? (parentEntry(hit.trail)?.stack ?? null) : null;
@@ -185,6 +178,39 @@ export function hasTile(layout, tileId) {
   return locateTile(layout.root, tileId) !== null;
 }
 
+// W14-code r2 closeout-2 (css2-chat-gutter-shave): 3.6556.2 cf53e1812 Q / Z / te (cc43287c9 imports them as Ow / Aw /
+// Tw). Q: the tiles on the layout's leading edge (a row descends into its first child, a column into every child); Z:
+// the trailing edge (a row's last child); te: the top-trailing tile (a row's last child, a column's first).
+export function leadingEdgeTileIds(layout) {
+  const ids = new Set();
+  const walk = (node) => { if (isTile(node)) { ids.add(node.tileId); return; } if (node.children.length !== 0) node.direction === "row" ? walk(node.children[0]) : node.children.forEach(walk); };
+  walk(layout.root);
+  return ids;
+}
+export function trailingEdgeTileIds(layout) {
+  const ids = new Set();
+  const walk = (node) => { if (isTile(node)) { ids.add(node.tileId); return; } if (node.children.length !== 0) node.direction === "row" ? walk(node.children[node.children.length - 1]) : node.children.forEach(walk); };
+  walk(layout.root);
+  return ids;
+}
+export function topTrailingTileId(layout) {
+  let node = layout.root;
+  while (!isTile(node)) {
+    if (node.children.length === 0) return null;
+    node = node.direction === "row" ? node.children[node.children.length - 1] : node.children[0];
+  }
+  return node.tileId;
+}
+// cc43287c9: `Ee = Ow(we).has("chat")`, `je = Tw(Te) === "chat"`, `Ne = Ee ? void 0 : "shave"`,
+// `Pe = je ? "bleed" : Aw(we).has("chat") ? void 0 : "shave"`, the chat tile's data-chat-gutter-start / -end (Fbe).
+// `layout` is the tile layout (we), `effectiveLayout` the shown one (Te; locally the same tree).
+export function chatGutters(layout, effectiveLayout = layout) {
+  return {
+    start: leadingEdgeTileIds(layout).has(CHAT_TILE_ID) ? undefined : "shave",
+    end: topTrailingTileId(effectiveLayout) === CHAT_TILE_ID ? "bleed" : trailingEdgeTileIds(layout).has(CHAT_TILE_ID) ? undefined : "shave",
+  };
+}
+
 // Structural identity independent of stack ids and flexes.
 export function layoutKey(layout) {
   const key = (node) =>
@@ -198,13 +224,6 @@ export function layoutsEqual(a, b, { flex = true } = {}) {
     return x.direction === y.direction && x.children.length === y.children.length && x.children.every((child, index) => same(child, y.children[index]));
   };
   return same(a.root, b.root);
-}
-export function stripIds(layout) {
-  const strip = (node) =>
-    isTile(node)
-      ? { kind: "tile", tileId: node.tileId, flex: node.flex }
-      : { kind: "stack", direction: node.direction, flex: node.flex, children: node.children.map(strip) };
-  return strip(layout.root);
 }
 
 // ---------------------------------------------------------------------------

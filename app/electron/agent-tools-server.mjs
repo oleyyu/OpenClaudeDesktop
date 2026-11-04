@@ -14,9 +14,12 @@
 //   CODE_DESKTOP_AGENT_SESSION       which app session this server works for (a thread id, or a start token the
 //                                    main process binds to the thread once the core has created it); optional:
 //                                    a tools/call `_meta.threadId` (Codex sends it) is the fallback
+//   CODE_DESKTOP_OPENCODE_RUNTIME    OpenCode 2.x: the bridge's runtime folder, which maps the session a call's
+//                                    `_meta` names to its thread (agent-tools-opencode.mjs)
 import net from "node:net";
 import readline from "node:readline";
 import instructionsModule from "./agent-tools-instructions.cjs";
+import { opencodeThread } from "./agent-tools-opencode.mjs";
 
 const PROTOCOL_VERSIONS = ["2025-06-18", "2025-03-26", "2024-11-05"];
 const SERVER_INFO = { name: "code-desktop", title: "OpenClaude Desktop", version: "1.0.0" };
@@ -85,7 +88,12 @@ async function ask(method, params, timeout = CALL_TIMEOUT_MS, onId = null) {
   const id = ++seq;
   onId?.(id);
   return new Promise((resolve, reject) => {
-    const timer = setTimeout(() => { state.pending.delete(id); reject(new Error("The tool took too long.")); }, timeout);
+    // Timed out: the main process cancels it too, so the tool (and an approval card it waits on) stops with the error.
+    const timer = setTimeout(() => {
+      state.pending.delete(id);
+      if (!state.closed) { try { state.socket.write(JSON.stringify({ type: "cancel", id }) + "\n"); } catch { /* closed */ } }
+      reject(new Error("The tool took too long."));
+    }, timeout);
     state.pending.set(id, { resolve, reject, timer });
     try { state.socket.write(JSON.stringify({ id, method, params }) + "\n"); }
     catch (error) { clearTimeout(timer); state.pending.delete(id); reject(error); }
@@ -139,8 +147,9 @@ async function handle(message) {
       const args = params?.arguments && typeof params.arguments === "object" && !Array.isArray(params.arguments) ? { ...params.arguments } : {};
       const meta = params?._meta && typeof params._meta === "object" ? params._meta : {};
       // A core that runs one server for several sessions (OpenCode: one per folder) names the session per call: its
-      // plugin adds this argument, which never reaches the tool.
-      const named = typeof args.__code_desktop_session === "string" ? args.__code_desktop_session : null;
+      // plugin adds this argument, which never reaches the tool (OpenCode 1.x, MiMo); OpenCode 2.x drops such an
+      // argument itself and names the session in _meta instead.
+      const named = typeof args.__code_desktop_session === "string" ? args.__code_desktop_session : opencodeThread(meta);
       delete args.__code_desktop_session;
       try {
         // Codex names the call too (_meta.callId, _meta.itemId: its transcript item), so a workflow's card sits at its call.

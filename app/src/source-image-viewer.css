@@ -1,15 +1,10 @@
-/* ImagePreviewModal (2.2553.1 cb1b78cfa-DUGu0H_X.js). Popup: "fixed inset-0 grid place-items-center
-   p-4 md:p-10 bg-always-black/50 backdrop-brightness-75 outline-none" (design-system.css:15992,
-   :23702); frame "max-w-[40rem] w-full"; figure "relative w-fit mx-auto"; actions "absolute left-full
+/* ImagePreviewModal (2.2553.1 cb1b78cfa-DUGu0H_X.js). Popup: 3.6556.2 cb1b78cfa-VqsYNxqp.js l.Popup
+   "fixed inset-0 grid place-items-center p-4 sm:p-10 bg-black/62.5 outline-none" (the utilities on the element;
+   .siv-popup only keeps what the utilities do not carry); frame "max-w-[40rem] w-full"; figure "relative w-fit mx-auto"; actions "absolute left-full
    top-0 ml-1.5 flex flex-col gap-1.5" in dark mode; image wrapper "w-fit rounded-md overflow-hidden"
    with the cd5136de8 shadow; img "block max-w-full max-h-[calc(100vh-4rem)] w-auto h-auto"; caption
    "pt-1.5 text-center text-always-white break-words". The portal root is .sdlg-portal (MODAL_LAYER). */
-.siv-popup {
-  position: fixed; inset: 0; display: grid; place-items: center; box-sizing: border-box; padding: 1rem;
-  background-color: rgb(0 0 0 / .5); -webkit-backdrop-filter: brightness(75%); backdrop-filter: brightness(75%);
-  outline: none; -webkit-app-region: no-drag;
-}
-@media (min-width: 48rem) { .siv-popup { padding: 2.5rem; } }
+.siv-popup { box-sizing: border-box; -webkit-app-region: no-drag; }
 .siv-frame { width: 100%; max-width: 40rem; }
 .siv-figure { position: relative; width: fit-content; margin: 0 auto; }
 .siv-actions { position: absolute; left: 100%; top: 0; margin-left: 6px; display: flex; flex-direction: column; gap: 6px; }
@@ -22,4 +17,4 @@
   padding-top: 6px; text-align: center; color: #fff; overflow-wrap: break-word;
   text-shadow: 0 0 8px color-mix(in srgb, var(--cds-black, #000) 25%, transparent);
 }
-.siv-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; border: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+/* W14-code r5 cleanup css5-sr-only-handcopies: the hand-copied sr-only rule is gone; the JSX uses the official c6a992d55 .sr-only. */

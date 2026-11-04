@@ -23,7 +23,7 @@ const report={at:new Date().toISOString(),directory,build:{version:build.version
 const step=name=>{phase=name;console.log('TURN-ERRORS '+name);};
 const poll=async(fn,label,ms=10000)=>{const end=Date.now()+ms;while(Date.now()<end){try{if(await fn())return;}catch{}await new Promise(r=>setTimeout(r,25));}throw Error('Timed out: '+label);};
 const env={...process.env,CODE_DESKTOP_DATA:profile,CODEX_HOME:path.join(profile,'codex-home'),CODEX_BINARY:path.join(root,'tests/fixtures/codex-server.cjs')};delete env.ELECTRON_RUN_AS_NODE;delete env.CODE_DESKTOP_DEV_URL;
-const composer=()=>page.getByRole('textbox',{name:'Message DeepSeek',exact:true});
+const composer=()=>page.getByRole('textbox',{ name: /^(?:Prompt|Message DeepSeek)$/ });
 const glyphs=JSON.parse(await fs.readFile(path.join(root,'src/generated/icons.json'),'utf8'));
 async function launch(){app=await electron.launch({args:[root],executablePath:path.join(root,'node_modules/electron/dist/Electron.app/Contents/MacOS/Electron'),env,timeout:20000});page=await app.firstWindow();page.setDefaultTimeout(10000);page.on('pageerror',e=>report.rendererErrors.push({phase,message:e.message}));
  await app.evaluate(({BrowserWindow})=>BrowserWindow.getAllWindows()[0].setContentSize(1324,768));await page.waitForFunction(()=>innerWidth===1324);
@@ -123,11 +123,13 @@ try{
  assert.equal(report.metrics.compactButton.inActions,true);assert.equal(report.metrics.compactButton.cursor,'default');
  await shot('context-card-light');await compactButton.click();
  assert.equal(await contextCard.getByRole('button',{name:'Compact session'}).count(),0,'latchOnAction hides the action after one click');
- await page.locator('.session-operation-status[data-operation="compact"]').waitFor();
+ // W14-code r3 css3-operation-status-band: 3.6556.2 Code draws no session-action strip (main.jsx renders
+ // .session-operation-status only outside Code; compaction progress is the working line's 'Compacting session…',
+ // c96d752d0 W6), so the compact is observed where it lands: thread/compact/start in the fixture core's history.
  await poll(async()=>String(await fs.readFile(path.join(profile,'fixture-history.jsonl'))).includes('"method":"thread/compact/start"'),'thread/compact/start reached the core');
- report.metrics.compactPhase=await page.locator('.session-operation-status[data-operation="compact"]').getAttribute('data-phase').catch(()=>null);
+ assert.equal(await page.locator('.session-operation-status').count(),0,'Code shows no session-action strip');
  assert.equal(await contextCard.getByRole('button',{name:'Compact session'}).count(),0,'stays latched');
- report.checks.push('R08: contextWindowExceeded shows "Your context window is full" with a secondary sm Compact session in the actions slot (no Try again); one click latches it, the compact operation row appears and thread/compact/start reaches the core; the output-limit turn is now a marker without details');
+ report.checks.push('R08: contextWindowExceeded shows "Your context window is full" with a secondary sm Compact session in the actions slot (no Try again); one click latches it and thread/compact/start reaches the core with no session-action strip in Code; the output-limit turn is now a marker without details');
  step('relaunch');const persistedTurns=(await read('fixture-threads.json')).threads[RC].turns,persisted=persistedTurns.filter(t=>t.status==='failed');assert.equal(persisted.length,4);
  assert.equal(persistedTurns.filter(t=>t.status==='completed'&&t.error?.additionalDetails==='MAX_TOKENS').length,1,'the output-limit turn completed with its error');
  await app.close();app=null;const prefs=await read('preferences.json');await fs.writeFile(path.join(profile,'preferences.json'),JSON.stringify({...prefs,theme:'dark'}));

@@ -42,7 +42,7 @@ export const APP_TOOL_NAMES = Object.freeze([
   // agent-tools/browser.mjs: the Claude in Chrome tools, on pages in the user's own Chrome (chrome_ prefixed: preview
   // already has navigate / read_page / find on this server).
   'chrome_tabs_context_mcp', 'chrome_tabs_create_mcp', 'chrome_navigate', 'chrome_read_page', 'chrome_find', 'chrome_form_input',
-  'chrome_computer', 'chrome_javascript_tool', 'chrome_browser_batch',
+  'chrome_computer', 'chrome_javascript_tool', 'chrome_read_console_messages', 'chrome_read_network_requests', 'chrome_browser_batch',
   // agent-tools/project-knowledge.mjs (w13-chatfn-projects): a Chat or Cowork project's knowledge search.
   'project_knowledge_search',
   // agent-tools/chat-artifacts.mjs (w13-chatfn-artifacts): a Chat's artifacts (create / update / rewrite, versioned).

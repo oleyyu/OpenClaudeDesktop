@@ -50,7 +50,7 @@
 }
 .sua-copy:hover .sua-button-backdrop > [data-cds-part="paint"] { background: var(--cds-fill-ghost-hover); }
 .sua-copy:active .sua-button-backdrop { transform: scale(var(--cds-btn-press-sx, .975), var(--cds-btn-press-sy, .975)); transition: transform var(--cds-dur-fast, 60ms) ease-out; }
-.sua-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; border: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+/* W14-code r5 cleanup css5-sr-only-handcopies: the hand-copied sr-only rule is gone; the JSX uses the official c6a992d55 .sr-only. */
 @media (pointer: coarse), (hover: none) {
   .sua-toolbar[data-cds="MessageActions"][data-reveal] { --cds-message-actions-opacity: 1; transition: none; }
 }

@@ -1,11 +1,10 @@
 // B29 Home Action Center polish: the Git dialog copy (cc43287c9 nY/rY), the spawn step labels (_3) on the status row,
-// and the awaiting hover card body (shared-21 Vse, ca0409d7c ue/V).
+// (W14-code r4 sidebar-new: the awaiting hover card body moved to the 3.6556.2 sidebar hover card slice,
+// tests/sidebar-hover-card.test.mjs; the host Action Center's preview is gone, R4DC-N1).
 import test from "node:test";
 import assert from "node:assert/strict";
 import { GIT_FAILURE_MESSAGES, gitDialogCopy, gitDownloadUrl, gitFailureFromMessage, gitWarning } from "../src/git-dialog-model.mjs";
 import { spawnPhaseLabel, transcriptStatusPresentation } from "../src/transcript-status-model.mjs";
-import { awaitingPreview, hoverCardEnabled, PREVIEW_CHARS } from "../src/action-center-preview-model.mjs";
-import { ELICITATION } from "../src/approval-card-model.mjs";
 
 test("rY/nY: the composer line, the dialog per reason and platform, and main's rejection messages", () => {
   assert.equal(gitWarning("missing"), "Git is required to use a worktree.");
@@ -54,24 +53,4 @@ test("_3: spawn steps name the status row on Home; an unknown step reads Startin
   const view = transcriptStatusPresentation({ sessionKey: null, spawnLabel: "Refreshing origin…" });
   assert.deepEqual([view.phase, view.label, view.visible, view.busy], ["running", "Refreshing origin…", true, true]);
   assert.equal(transcriptStatusPresentation({ sessionKey: null }).visible, false, "Home without a spawn stays hidden");
-});
-
-test("Vse awaiting body: the pending approval, a question, or V's Awaiting input", () => {
-  assert.deepEqual(awaitingPreview([]), { kind: "waiting" });
-  const command = awaitingPreview([{ method: "item/commandExecution/requestApproval", params: { threadId: "t", command: "npm test", cwd: "/repo" } }]);
-  assert.equal(command.kind, "approval");
-  assert.match(command.title, /^Allow .+ to /);
-  assert.equal(command.more, 0);
-  const long = awaitingPreview([{ method: "item/commandExecution/requestApproval", params: { command: "x".repeat(400) } },
-    { method: "item/commandExecution/requestApproval", params: { command: "y" } }]);
-  assert.equal(long.detail.length, PREVIEW_CHARS + 1);
-  assert.equal(long.more, 1);
-  const question = awaitingPreview([{ method: ELICITATION, params: { threadId: "t", serverName: "x", mode: "form", message: "Which branch?", requestedSchema: { type: "object", properties: {} } } }]);
-  assert.equal(question.kind, "question");
-  assert.equal(question.text, "Which branch?");
-  assert.match(question.eyebrow, / asked$/);
-  assert.deepEqual(awaitingPreview([{ method: "unknown/request", params: {} }]), { kind: "waiting" });
-  assert.equal(hoverCardEnabled({ kind: "blocked" }), true);
-  assert.equal(hoverCardEnabled({ kind: "unread" }), false, "no summary text locally: disabled (!A && !S)");
-  assert.equal(hoverCardEnabled({ kind: "unread", summaryText: "Did the thing" }), true);
 });

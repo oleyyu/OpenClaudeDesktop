@@ -2,7 +2,7 @@
   "name": "@code-desktop/opencode-bridge",
   "version": "0.1.0",
   "private": true,
-  "description": "Codex app-server bridge for OpenCode and MiMo Code (opencode serve HTTP API + SSE). Zero dependencies.",
+  "description": "Codex app-server bridge for OpenCode (2.x /api + 1.x) and MiMo Code (opencode serve HTTP API + SSE). Zero dependencies.",
   "type": "module",
   "bin": { "opencode-bridge": "bin/app-server.mjs" },
   "main": "src/index.js",

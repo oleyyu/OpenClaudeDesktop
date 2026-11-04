@@ -30,7 +30,6 @@ export const AUTO_OPEN_FILE_PATTERN = /\.(html?|svg|png|jpe?g|gif|webp|avif|pdf|
 export const AUTO_OPEN_HTML_PATTERN = /\.html?$/i;
 // Gk, behind GrowthBook 2515400668.
 export const AUTO_OPEN_DESIGN_CANVAS_PATTERN = /\.dc\.html$/i;
-export const AUTO_OPEN_DESIGN_CANVAS_GATE = "2515400668";
 
 /** agentEditSessionState: "gone" (no such session, or archived), "hidden" (known not on screen), else "watched". */
 export function autoOpenSessionState({ known = false, archived = false, visible } = {}) {

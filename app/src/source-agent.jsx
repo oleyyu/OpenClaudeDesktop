@@ -1,18 +1,21 @@
 import React, {useEffect,useLayoutEffect,useRef,useState} from 'react';
 import {Icon} from './icons.jsx';
 import {SourceSpark} from './source-spark.jsx';
-import {agentTargets,agentView,agentOperationLabel,agentPromptNeeded,agentRowLabel,agentConclusionStats,agentConclusionText} from './agent-model.mjs';
+import {agentTargets,agentView,agentOperationLabel,agentPromptNeeded,agentRowLabel,agentConclusionStats,agentConclusionValues,AGENT_CONCLUSION_MESSAGE} from './agent-model.mjs';
+import {StartMessage} from './source-code-start-adapters.jsx';
 import {commandRowState} from './command-row-model.mjs';
 import {groupFileTools} from './file-tool-model.mjs';
 import {useMcpAppRowGrouping} from './source-mcp-app.jsx';
 import {reasoningPlacement} from './reasoning-model.mjs';
 import './source-agent.css';
-import {SourceSettingsButton} from './source-settings-button.jsx';
 import {t} from '../electron/i18n/index.mjs';
 import {createStickToBottom} from './task-output-follow.mjs';
 import {SourceClearFinishedTasks} from './source-background-tasks.jsx';
 import {attachTabFocusRelease} from './generated/code-current/tab-focus-release.mjs';
+import {f as EmptyState} from './generated/code-routines/cc0a875c8-Ba9KI-Fw.mjs';
+import {CdsButton} from './generated/view-tabs/shared-frame-6jtSkIit.js';
 import {classifyKeyScroll,keyScrollIntentMs} from './generated/code-current/tab-focus-key-scroll.mjs';
+import { PaneWindowDragStrip, usePaneWindowHeaderProps } from "./pane-window-header.jsx";
 
 /** The sub-agent view's key intent (R3-topbar TT-05; TT-05 / tasks-01). cccc2cf0a mO hands the follow hook c7f8992b4
  * C itself (`es({classifyKeyScroll:$o})`), and T reads every keydown on the scroller's document in the capture phase
@@ -84,17 +87,26 @@ export function SourceAgentTool({item,context,inGroup,Step,defaultOpen,forcedOpe
           <span className={`sag-verb ${running?'source-shimmer':''}`} data-described={row.described ? "" : undefined}>{row.label}</span>
           {row.name && <span className="sag-name" title={row.name}>{row.name}</span>}
           {agent.model && <span className="sag-model">{agent.model}</span>}
-          {running && agent.toolCallCount>0 && <span className="sag-activity">{agent.model?'· ':''}{agent.latestToolName} · {agent.toolCallCount}</span>}
+          {/* 3.6556.2 c96d752d0 BOe: the latest tool truncates ("text-body text-secondary truncate min-w-0") and its count
+              keeps its place ("text-body text-secondary shrink-0", " · N"). */}
+          {running && agent.toolCallCount>0 && <><span className="sag-activity">{agent.model?'· ':''}{agent.latestToolName}</span><span className="sag-activity-count">{' '}· {agent.toolCallCount}</span></>}
           {agent.status==='stopped' && <span className="sag-outcome">{t("Stopped")}</span>}
         </>}
-        {running && <span className="source-sr-only">{t("running")}</span>}
+        {running && <span className="sr-only">{t("running")}</span>}
         <Icon name="CaretRight" size={16} className="sag-caret"/>
       </div>
     </div>;
   });
 }
 
-function AgentTranscript({agent,item,ownerId=null,renderItem,loading,error,transcriptView,stats}) {
+// cccc2cf0a CP: "No activity yet" (aojEGT2eHI).
+const NO_ACTIVITY_MESSAGE={defaultMessage:"No activity yet",id:"aojEGT2eHI"};
+// cccc2cf0a yP: the model name in bP's sentence.
+const modelValue=(chunks)=><span className="text-secondary">{chunks}</span>;
+// W14-code r2 gates-r2-06: renderRows(rows, agentId) — the sub-agent's rows drawn as one transcript by the caller (the
+// Code transcript renderer: cccc2cf0a draws each entry with PP, `{entry, sessionRef, isStreaming: !1, isOwnedSession: !1,
+// font, smartQuotes: ws (__gb__2215170874)}`); without it every row is renderItem's.
+function AgentTranscript({agent,item,ownerId=null,renderItem,renderRows=null,loading,error,transcriptView,stats}) {
   const [now,setNow]=useState(Date.now());
   const until=agent.status==='completed' && !agent.items.length && !agent.result && agent.completedObservedAt ? agent.completedObservedAt+2500 : 0;
   useEffect(()=>{setNow(Date.now());if(until>Date.now()){const timer=setTimeout(()=>setNow(Date.now()),until-Date.now());return()=>clearTimeout(timer);}},[until]);
@@ -106,33 +118,33 @@ function AgentTranscript({agent,item,ownerId=null,renderItem,loading,error,trans
   const resultNeeded=agent.result && !visible.some(entry=>entry.type==='agentMessage' && entry.text===agent.result);
   const {scroller,content,handlers}=useSubagentFollow(agent.status==='running' && visible.length>0);
   return <div ref={scroller} className="sag-transcript" data-child-thread={agent.id} aria-busy={loading || undefined} {...handlers}><div ref={content} className="sag-entries">
-    {agent.model && <p className="sag-model-note">{t("Model")} <span>{agent.model}</span></p>}
+    {/* W14-code pa2-08: cccc2cf0a bP — p.text-footnote.text-muted-as-secondary, "Model <v>{model}</v>" (Rd/NrmZbJ4), v = yP. */}
+    {agent.model && <p className="text-footnote text-muted-as-secondary"><StartMessage defaultMessage="Model <v>{model}</v>" id="Rd/NrmZbJ4" values={{model:agent.model,v:modelValue}}/></p>}
+    {renderRows ? renderRows([...(agentPromptNeeded(visible,agent.prompt) ? [{id:`${item.id}-prompt`,type:'userMessage',content:[{type:'text',text:agent.prompt}]}] : []),
+      ...visible, ...(resultNeeded ? [{id:`${item.id}-result`,type:'agentMessage',text:agent.result}] : [])],agent.id) : <>
     {agentPromptNeeded(visible,agent.prompt) && renderItem({id:`${item.id}-prompt`,type:'userMessage',content:[{type:'text',text:agent.prompt}]},agent.id)}
     {groupRows(groupFileTools,visible,transcriptView).map((entry,index,rows)=><React.Fragment key={entry.id}>{renderItem(entry,agent.id,entry.type==='reasoning'?reasoningPlacement(rows,index,transcriptView):undefined)}</React.Fragment>)}
     {resultNeeded && renderItem({id:`${item.id}-result`,type:'agentMessage',text:agent.result},agent.id)}
-    {stats && !running && !loading && <p className="sag-stats" data-subagent-stats="">{agentConclusionText(stats)}</p>}
+    </>}
+    {/* cccc2cf0a FP: p.text-footnote.text-muted-as-secondary.tabular-nums with the single ICU message dAbHM3tAVv. */}
+    {stats && !running && !loading && <p className="text-footnote text-muted-as-secondary tabular-nums" data-subagent-stats=""><StartMessage {...AGENT_CONCLUSION_MESSAGE} values={agentConclusionValues(stats)}/></p>}
     {error && <p role="alert" className="source-tool-error">{error}</p>}
-    {running || loading ? <div role="status" className="sag-thinking"><SourceSpark size={18} state="thinking"/><span className="source-sr-only">{t("Thinking…")}</span></div> : !visible.length && !agent.result && <p className="sag-empty">{agent.status==='unknown'?t('No activity yet'):t(agent.status==='failed'?'No result — task failed':agent.status==='stopped'?'No result — task stopped':'No result — task ended')}</p>}
+    {/* W14-code r3 r3pa-01: cccc2cf0a SP — div[role=status] "flex items-center min-h-5" with the thinking spark (ce, 18) and
+        its sr-only "Thinking…" (P1QHV0AhYD); a settled sub-agent with nothing to show is xP — p "text-body
+        text-muted-as-secondary select-text", the one select ICU lEAPaAhXw3 — or, one never seen (no task), CP under the
+        prompt: p "text-body text-muted-as-secondary" "No activity yet" (aojEGT2eHI). */}
+    {running || loading ? <div role="status" className="flex items-center min-h-5"><SourceSpark size={18} state="thinking"/><span className="sr-only"><StartMessage defaultMessage="Thinking…" id="P1QHV0AhYD"/></span></div>
+      : !visible.length && !agent.result && (agent.status==='unknown'
+        ? <p className="text-body text-muted-as-secondary"><StartMessage {...NO_ACTIVITY_MESSAGE}/></p>
+        : <p className="text-body text-muted-as-secondary select-text"><StartMessage defaultMessage="No result — task {status, select, failed {failed} stopped {stopped} other {ended}}" id="lEAPaAhXw3" values={{status:agent.status}}/></p>)}
   </div></div>;
 }
-// A continuable sub-agent's follow-up box (the DeepSeek app's continuable conversations take follow-up prompts in
-// submission order while they run): sent as turn/start on the child's id; Stop stays where it is.
-function AgentComposer({name,onSend}) {
-  const [text,setText]=useState(''),[busy,setBusy]=useState(false),[error,setError]=useState('');
-  const label=t('Message {name}…',{name:name||t('sub-agent')});
-  const send=async()=>{const value=text.trim();if(!value||busy)return;setBusy(true);setError('');
-    try{await onSend(value);setText('');}catch(failure){setError(failure?.message||String(failure));}finally{setBusy(false);}};
-  return <form className="sag-composer" onSubmit={event=>{event.preventDefault();void send();}}>
-    <div className="sag-composer-box">
-      <textarea aria-label={label} placeholder={label} rows={1} value={text} disabled={busy} onChange={event=>setText(event.target.value)}
-        onKeyDown={event=>{if(event.key==='Enter'&&!event.shiftKey&&!event.nativeEvent.isComposing){event.preventDefault();void send();}}}/>
-      <SourceSettingsButton type="submit" size="sm" variant="primary" icon="ArrowUp" iconOnly aria-label={t('Send')} busy={busy} disabled={!text.trim()||busy}/>
-    </div>
-    {error&&<p role="alert" className="source-tool-error">{error}</p>}
-  </form>;
-}
-export function SourceTasksPane({transcriptView="normal",state,sessionId,views=[],onBack,onClose,onOpen,onLoad,onMessage,canMessage,renderItem,headerCenter,controls,background}) {
+// W14-code r5pa-07 (E95): 3.6556.2 cccc2cf0a's sub-agent view has no composer (en-US has no "Message {name}…"), so the
+// host's follow-up box for a continuable sub-agent (AgentComposer, onMessage / canMessage, .sag-composer) is gone.
+export function SourceTasksPane({transcriptView="normal",state,sessionId,views=[],onBack,onClose,onOpen,onLoad,renderItem,renderRows=null,headerCenter,controls,background}) {
   const current=views.at(-1),pane=useRef(null),load=useRef(onLoad);load.current=onLoad;
+  // W14-code r4 r4pa-c03: in a pane window (c5638815a wt `isTopLeft: !0`) the header clears the traffic lights and drags the window.
+  const paneWindowHeader=usePaneWindowHeaderProps();
   const [loadState,setLoadState]=useState({id:null,pending:false,error:null});
   useEffect(()=>{
     if(!current?.threadId)return;
@@ -151,14 +163,18 @@ export function SourceTasksPane({transcriptView="normal",state,sessionId,views=[
   return <aside ref={pane} className="source-file-panel detail-panel sag-pane" aria-label={t("Background tasks")} onKeyDown={event=>{
     if(event.key==='Escape' && !event.defaultPrevented && !event.target.closest('[role="menu"]')){event.preventDefault();event.stopPropagation();onClose();}
   }}>
-    <header className="source-pane-header" data-pane-header="tasks">
-      {views.length>0 && <button className="source-icon-button" aria-label={t("Back")} onClick={onBack}><Icon name="CaretLeft" size={16}/></button>}
+    <header className="source-pane-header" data-pane-header="tasks" {...paneWindowHeader}>
+      <PaneWindowDragStrip/>
+      {/* W14-code r4 css4-pane-toggle-icon-buttons: c4db265df's pane-header back button Q, `n(h,{variant:"ghost",iconOnly:!0,
+          icon:"CaretLeft","aria-label":pe??"Back" (cyR7KhiuaU),onClick:B,tooltip:me,className:"shrink-0"})` (h = the CDS Button). */}
+      {views.length>0 && <CdsButton variant="ghost" iconOnly icon="CaretLeft" aria-label={t("Back")} onClick={onBack} className="shrink-0"/>}
       <span className="sag-pane-title">{current?.description || t('Background tasks')}</span>{/* ka [H, t, o] then pe (panes-toggle-current.js:1627-1632): handle after the title */}{headerCenter}{trailing(controls)}
     </header>
-    {agent ? <AgentTranscript transcriptView={transcriptView} key={current.threadId} agent={agent} ownerId={sessionId} stats={agentConclusionStats(state,agent)} item={item||{}} renderItem={renderItem} loading={loadState.id===current.threadId && loadState.pending} error={loadState.id===current.threadId && loadState.error}/> : !current&&background ? background : <div className="sag-transcript">
-      {current ? <p className="sag-empty">{t("No activity yet")}</p> : spawns.map(item=><React.Fragment key={item.id}>{renderItem(item,sessionId)}</React.Fragment>)}
-      {!current && !spawns.length && <p className="sag-empty">{t("No activity yet")}</p>}
+    {agent ? <AgentTranscript transcriptView={transcriptView} key={current.threadId} agent={agent} ownerId={sessionId} stats={agentConclusionStats(state,agent)} item={item||{}} renderItem={renderItem} renderRows={renderRows} loading={loadState.id===current.threadId && loadState.pending} error={loadState.id===current.threadId && loadState.error}/> : !current&&background ? background : <div className="sag-transcript">
+      {/* W14-code r3 r3pa-01: cccc2cf0a CP without a prompt (`underPrompt: !1`) — the EmptyState (cc0a875c8 t, nd) titled
+          "No activity yet" (aojEGT2eHI). */}
+      {current ? <EmptyState title={<StartMessage {...NO_ACTIVITY_MESSAGE}/>}/> : spawns.map(item=><React.Fragment key={item.id}>{renderItem(item,sessionId)}</React.Fragment>)}
+      {!current && !spawns.length && <EmptyState title={<StartMessage {...NO_ACTIVITY_MESSAGE}/>}/>}
     </div>}
-    {agent && onMessage && canMessage?.(current.threadId) && <AgentComposer key={`composer-${current.threadId}`} name={agent.name} onSend={text=>onMessage(current.threadId,text)}/>}
   </aside>;
 }

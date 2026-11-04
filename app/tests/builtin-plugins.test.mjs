@@ -69,11 +69,11 @@ test('BuiltinPlugins renders Install while missing, the source link, and the ena
   const row = { id: 'profile:dsh-purge', pluginName: 'dsh-purge', name: 'dsh-purge', enabled: false };
   const off = renderToStaticMarkup(React.createElement(M.BuiltinPlugins, { entries: [entry], rows: [row], store }));
   assert.match(off, /data-builtin-state="disabled"/);
-  assert.match(off, /role="switch" aria-label="Turn dsh-purge on" aria-checked="false"/);
+  assert.match(off, /role="switch" aria-label="Enable plugin" aria-checked="false"/);
   assert.doesNotMatch(off, />Install</);
   const on = renderToStaticMarkup(React.createElement(M.BuiltinPlugins, { entries: [entry], rows: [{ ...row, enabled: true }], store }));
   assert.match(on, /data-builtin-state="enabled"/);
-  assert.match(on, /role="switch" aria-label="Turn dsh-purge off" aria-checked="true"/);
+  assert.match(on, /role="switch" aria-label="Enable plugin" aria-checked="true"/);
 });
 
 test('the Plugins page shows the built-in section on a managing core and hides it on Codex', () => {

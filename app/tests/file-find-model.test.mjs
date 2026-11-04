@@ -6,7 +6,10 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'node:path';
-import { breadcrumbFolders, fileFindShortcut, findInText, findStatus, firstMatchFrom, folderLabel, stepFindIndex, FIND_LIMIT } from '../src/file-find-model.mjs';
+import { fileFindShortcut, findStatus, firstMatchFrom, searchInText, stepFindIndex, FIND_LIMIT } from '../src/file-find-model.mjs';
+// W14-code r4 closeout R4DC-N7: the test-only findInText / breadcrumbFolders / folderLabel exports are gone; the viewer's
+// searchInText is what Find in file runs.
+const findInText = (text, query, limit = FIND_LIMIT) => searchInText(text, query).matches.slice(0, limit);
 import { fileViewerMenuItems } from '../src/file-tab-menu-model.mjs';
 
 let server, V;
@@ -48,14 +51,6 @@ test('find shortcuts: ⌘F opens, ⌘G / ⇧⌘G step, Ctrl off macOS', () => {
   assert.equal(fileFindShortcut({ key: 'f', metaKey: true, shiftKey: true }), null);
   assert.equal(fileFindShortcut({ key: 'f', ctrlKey: true }), null);
   assert.equal(fileFindShortcut({ key: 'f', ctrlKey: true }, { mac: false }), 'open');
-});
-
-test('breadcrumb folders: each folder lists itself, the file name lists its parent, outside paths list nothing', () => {
-  assert.deepEqual(breadcrumbFolders('src/app/main.js'), { lead: '', dirs: [{ label: 'src', dir: 'src' }, { label: 'app', dir: 'src/app' }], name: { label: 'main.js', dir: 'src/app' } });
-  assert.deepEqual(breadcrumbFolders('README.md'), { lead: '', dirs: [], name: { label: 'README.md', dir: '' } });
-  assert.deepEqual(breadcrumbFolders('/etc/hosts'), { lead: '/', dirs: [{ label: 'etc', dir: null }], name: { label: 'hosts', dir: null } });
-  assert.equal(folderLabel('src/app'), 'app');
-  assert.equal(folderLabel('', 'work'), 'work');
 });
 
 test('⋮ file items follow qa: Find in file (⌘F), Copy file contents, Download file, Reload file', () => {

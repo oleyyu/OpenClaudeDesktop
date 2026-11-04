@@ -38,7 +38,7 @@ test("omitted, aria-hidden, sr-only and hidden subtrees are not searched; data-f
     h("p", {}, "alpha one"),
     h("h2", { "data-find-omitted": "", class: "sr-only select-none" }, "You said: alpha"),
     h("span", { "aria-hidden": "true" }, "alpha glyph"),
-    h("span", { class: "source-sr-only" }, "alpha spoken"),
+    h("span", { class: "sr-only" }, "alpha spoken"),
     h("div", { hidden: "" }, "alpha collapsed"),
     h("div", { "data-gutter": "" }, "alpha 12"),
     h("div", { "data-find-omitted": "" }, "skip alpha", h("span", { "data-find-included": "" }, "alpha kept")),

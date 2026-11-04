@@ -7,13 +7,8 @@
 @media (prefers-reduced-motion: reduce) { .source-spark.persona-spark { animation: none !important; } }
 html[data-reduce-motion="true"] .source-spark.persona-spark,
 html[data-local-motion="reduce"] .source-spark.persona-spark { animation: none !important; }
-.claude-spark.persona-spark { width: 22px; height: 22px; }
 
 .persona-field { display: flex; flex-direction: column; gap: 8px; width: 100%; }
-.persona-field-input { display: flex; gap: 8px; align-items: center; }
-.persona-field-input > input { flex: 1 1 auto; min-width: 0; }
-.persona-help { color: var(--cds-text-secondary); font-size: calc(13px * var(--cds-rem-scale, 1)); }
-.persona-help code { font-family: var(--cds-font-mono, ui-monospace, monospace); }
 .persona-icon-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: flex-start; min-width: 0; max-width: 100%; }
 .persona-preview { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 6px; flex: none; }
 .persona-preview .source-spark { width: 24px; height: 24px; }

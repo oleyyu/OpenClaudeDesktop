@@ -1,5 +1,6 @@
 import React from "react";
 import { Icon } from "./icons";
+import { CdsIcon } from "./generated/view-tabs/shared-frame-6jtSkIit.js";
 import { SourceSpinner } from "./source-pane-states.jsx";
 import { SourceInlineRuns } from "./source-user-text.jsx";
 import "./source-plan-pane.css";
@@ -27,7 +28,10 @@ function PlanStepIcon({ status, state = null }) {
     return <span className={`${BOX} text-primary`}><Icon name="Check" size={16} /><span className="sr-only select-none">{t("done")}</span></span>;
   if (status === "in_progress")
     return <span className={`${BOX} text-primary`}><SourceSpinner size="sm" /><span className="sr-only select-none">{t("in progress")}</span></span>;
-  return <span className={BOX}><Icon name="Placeholder" size={16} className="text-muted" /><span className="sr-only select-none">{t("not done")}</span></span>;
+  // 3.6556.2 cb6930dae Ta (:629): Placeholder size sm, className "text-muted-as-secondary". W14-code r8 gen-final-8 (panes
+  // review low #2): the CDS Icon itself, `M{name:"Placeholder",size:"sm",className:"text-muted-as-secondary","aria-hidden":!0}`
+  // (sm is calc(1rem * --cds-rem-scale), not the host Icon's fixed 16px).
+  return <span className={BOX}><CdsIcon name="Placeholder" size="sm" className="text-muted-as-secondary" aria-hidden /><span className="sr-only select-none">{t("not done")}</span></span>;
 }
 
 export function SourcePlanChecklist({ plan, className = "" }) {

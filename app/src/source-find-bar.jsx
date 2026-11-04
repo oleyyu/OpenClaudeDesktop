@@ -18,6 +18,14 @@ import "./source-find-bar.css";
 // transcript) keeps the bar open, re-observes the new scope and searches the
 // query again.
 const FIND_Z = 9000; // shared-frame Qc (dp)
+// W14-code r5 cleanup css5-transcript-find-icons (E84): the bar is 3.6556.2 shared-23-BZ6ZY5fu.js SM, written with its
+// own class strings (no hand-copied .sfb-* rules): the root `o("fixed end-4 top-14","flex items-center gap-1",
+// "rounded-lg border-0.5 border-strong bg-surface-3 px-2 py-1.5","shadow-lg")` inside the portaled `c("div",{ref:S})`,
+// the input, the status span, and wM's buttons holding `c(ne,{name:"CaretUp",size:"sm"})` (shared-frame od: sm = 16px).
+const FIND_ROOT_CLASS = "fixed end-4 top-14 flex items-center gap-1 rounded-lg border-0.5 border-strong bg-surface-3 px-2 py-1.5 shadow-lg";
+const FIND_INPUT_CLASS = "w-48 min-w-0 border-0 bg-transparent outline-none text-body text-primary placeholder:text-muted hide-focus-ring";
+const FIND_STATUS_CLASS = "whitespace-nowrap text-footnote text-muted-as-secondary tabular-nums";
+const FIND_BUTTON_CLASS = "inline-flex size-6 items-center justify-center rounded text-muted-as-secondary hover:bg-surface-0 hover:text-primary can-focus disabled:pointer-events-none disabled:opacity-40";
 const ZERO = { activeIndex: 0, total: 0 };
 const isMac = () => typeof navigator === "undefined" || /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent || "");
 
@@ -227,10 +235,10 @@ export const SourceFindBar = forwardRef(function SourceFindBar({ enabled = true,
   if (!open || typeof document === "undefined") return null;
   const hasMatches = result.total > 0;
   return createPortal(
-    <div ref={rootRef} role="search" tabIndex={-1} data-find-provider-scope="" className="sfb-root" style={{ zIndex: FIND_Z }}>
+    <div><div ref={rootRef} role="search" tabIndex={-1} data-find-provider-scope="" className={FIND_ROOT_CLASS} style={{ zIndex: FIND_Z }}>
       <input
         ref={inputRef}
-        className="sfb-input hide-focus-ring"
+        className={FIND_INPUT_CLASS}
         value={query}
         spellCheck={false}
         autoComplete="off"
@@ -255,22 +263,22 @@ export const SourceFindBar = forwardRef(function SourceFindBar({ enabled = true,
           step(direction === "next");
         }}
       />
-      <span role="status" aria-atomic="true" className="sfb-status">{findStatusText(query, result)}</span>
+      <span role="status" aria-atomic="true" className={FIND_STATUS_CLASS}>{findStatusText(query, result)}</span>
       <FindButton label={FIND_LABELS.previous} icon="CaretUp" disabled={!hasMatches}
         onClick={() => { if (input.current.canStep()) step(false); }} />
       <FindButton label={FIND_LABELS.next} icon="CaretDown" disabled={!hasMatches}
         onClick={() => { if (input.current.canStep()) step(true); }} />
       <FindButton label={FIND_LABELS.close} icon="X" onClick={() => close("button")} />
-    </div>,
+    </div></div>,
     document.body,
   );
 });
 
-// sidebar-main.js:18119-18130 QB.
+// shared-23 wM, with `ne` size "sm" (16px).
 function FindButton({ label, icon, ...props }) {
   return (
-    <button type="button" className="sfb-button can-focus" aria-label={label} {...props}>
-      <Icon name={icon} size={20} />
+    <button type="button" aria-label={label} {...props} className={FIND_BUTTON_CLASS}>
+      <Icon name={icon} size={16} />
     </button>
   );
 }

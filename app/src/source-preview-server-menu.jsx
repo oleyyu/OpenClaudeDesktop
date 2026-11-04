@@ -2,7 +2,8 @@ import React, { useCallback, useLayoutEffect, useRef } from 'react';
 import { createPreviewMenuItems } from './generated/code-editor/preview-menu-items.mjs';
 import { createPreviewServerMenu } from './generated/code-editor/preview-server-menu.mjs';
 import { RoutineSourceMenu, useRoutineIntl } from './source-routine-adapters.jsx';
-import { SourceSettingsButton } from './source-settings-button.jsx';
+// W14-code r6 R6DC-02: the factory's Button is shared-frame Uu (E41 direct import); it passes `tooltip:!1` itself.
+import { CdsButton } from './generated/view-tabs/shared-frame-6jtSkIit.js';
 import { SourceTooltip } from './source-tooltip.jsx';
 import { SourceSpinner } from './source-pane-states.jsx';
 import { t } from '../electron/i18n/index.mjs';
@@ -16,7 +17,7 @@ function useOptionalStable(callback) {
   const stable = useStable(callback);
   return callback === undefined ? undefined : stable;
 }
-const Button = ({ tooltip, ...props }) => <SourceSettingsButton iconSize="auto" {...props} />;
+const Button = CdsButton;
 const Spinner = ({ size, ...props }) => <SourceSpinner size={size === 'sm' ? 16 : size} {...props} />;
 const MenuHost = {
   ...RoutineSourceMenu,

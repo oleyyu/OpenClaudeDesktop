@@ -323,7 +323,7 @@ export function StorageCleanupDialog({ open, call, onClose, onDone }) {
       </>}
     </div>
     {progress && <><p aria-hidden="true" className="ss-cleanup-progress">{cleanupProgressLabel(progress, verb)}</p>
-      <p role="status" className="ss-sr-only">{cleanupProgressLabel({ done: announcedProgress(progress), total: progress.total }, verb)}</p></>}
+      <p role="status" className="sr-only">{cleanupProgressLabel({ done: announcedProgress(progress), total: progress.total }, verb)}</p></>}
     {notice && <p role="status" className="ss-cleanup-notice">{notice}</p>}
   </SourceDialog>;
 }

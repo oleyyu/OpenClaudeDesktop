@@ -22,20 +22,19 @@ const manifest = JSON.parse(readFileSync(path.join(generated, 'manifest.json'), 
 const TARGETS = ['terminal-selection.mjs', 'terminal-description.mjs', 'terminal-commands.mjs', 'terminal-geometry.mjs', 'terminal-output.mjs', 'terminal-mouse.mjs', 'terminal-colors.mjs', 'terminal-link-selection.mjs',
   'terminal-errors.mjs', 'terminal-title-wellformed.mjs', 'terminal-title-invisibles.mjs', 'terminal-title-runs.mjs', 'terminal-title-text.mjs',
   'terminal-titles.mjs', 'terminal-idle-cursor.mjs', 'terminal-registry.mjs', 'terminal-clear-item.mjs',
-  // R3-terminal FT-15: the shared strip's overflow row (cfe7c4b3b ce). The CDS size attribute it spreads (shared-frame ga)
-  // is view-tabs' cdsSizeAttributes, imported directly since w10-cleanup-cc-public retired terminal-tab-size-attrs.mjs.
-  'terminal-tab-overflow.mjs',
+  // W14-code r2 closeout-2 (DC-03): terminal-tab-overflow.mjs (the overflow row re-exported from view-tabs) is retired;
+  // its only importer was the orphan host menu source-preview-tab-overflow.jsx.
   // w11-e31-terminal-cont: the selection action bar (ceb49ada3 u) that c6bf19e8f Si renders.
   'terminal-action-bar.mjs'];
 
-// cc-rest-terminal-a: these 15 read 3.6556.2; cc-rest-terminal-b: so do the last four (TERMINAL_B).
-const TERMINAL_B = ['terminal-errors.mjs', 'terminal-idle-cursor.mjs', 'terminal-clear-item.mjs', 'terminal-tab-overflow.mjs'];
+// cc-rest-terminal-a: these 15 read 3.6556.2; cc-rest-terminal-b: so do the last three (TERMINAL_B).
+const TERMINAL_B = ['terminal-errors.mjs', 'terminal-idle-cursor.mjs', 'terminal-clear-item.mjs'];
 const V3_TARGETS = ['terminal-selection.mjs', 'terminal-description.mjs', 'terminal-commands.mjs', 'terminal-geometry.mjs', 'terminal-output.mjs',
   'terminal-mouse.mjs', 'terminal-colors.mjs', 'terminal-link-selection.mjs', 'terminal-title-wellformed.mjs', 'terminal-title-invisibles.mjs',
   'terminal-title-runs.mjs', 'terminal-title-text.mjs', 'terminal-titles.mjs', 'terminal-registry.mjs', ...TERMINAL_B, 'terminal-action-bar.mjs'];
 // The SSR-only outputs (imported by .jsx hosts alone) that may import view-tabs or a .jsx adapter; every other output is
 // reached by a plain-node model (terminal-pane-model, terminal-titles, terminal-event-routing, ...), E42.
-const SSR_ONLY = ['terminal-idle-cursor.mjs', 'terminal-clear-item.mjs', 'terminal-tab-overflow.mjs', 'terminal-action-bar.mjs'];
+const SSR_ONLY = ['terminal-idle-cursor.mjs', 'terminal-clear-item.mjs', 'terminal-action-bar.mjs'];
 
 test('every terminal helper is generated from its pinned chunk with the pinned binding closure', async () => {
   assert.deepEqual(Object.keys(terminalPins).sort(), [...TARGETS].sort());
@@ -57,12 +56,13 @@ test('every terminal helper is generated from its pinned chunk with the pinned b
 
 test('cc-rest-terminal-a: the 3.6556.2 outputs, their stand-ins and the size attribute from view-tabs', () => {
   for (const target of V3_TARGETS) assert.match(read(`src/generated/code-current/${target}`), /^\/\/ Original Claude Desktop 3\.6556\.2 bindings/, target);
-  // shared-frame ga is view-tabs' cdsSizeAttributes, read by the overflow row inside view-tabs (w12-viewtabs: the row is
-  // re-exported, not sliced); no code-current re-export of it (w10-cleanup-cc-public retired terminal-tab-size-attrs.mjs).
-  assert.doesNotMatch(read('src/generated/code-current/terminal-tab-overflow.mjs'), /cdsSizeAttributes/);
-  assert.ok(!readdirSync(generated).includes('terminal-tab-size-attrs.mjs'), 'the retired re-export file is gone');
-  assert.ok(!manifest.modules.some((module) => module.target === 'terminal-tab-size-attrs.mjs'));
-  assert.ok(terminalPins['terminal-tab-overflow.mjs'].dependencies[`${'shared-frame-6jtSkIit.js'}:wd`].includes('function ga(e){return e&&e!=="base"?{"data-size":e}:{}}'));
+  // shared-frame ga is view-tabs' cdsSizeAttributes, read by the overflow row inside view-tabs; no code-current re-export
+  // of it (w10-cleanup-cc-public retired terminal-tab-size-attrs.mjs) nor of the row (W14-code r2 closeout-2 DC-03
+  // retired terminal-tab-overflow.mjs, whose only importer was the orphan source-preview-tab-overflow.jsx).
+  for (const retired of ['terminal-tab-size-attrs.mjs', 'terminal-tab-overflow.mjs']) {
+    assert.ok(!readdirSync(generated).includes(retired), `the retired re-export file ${retired} is gone`);
+    assert.ok(!manifest.modules.some((module) => module.target === retired), retired);
+  }
   const viewTabs = JSON.parse(read('src/generated/view-tabs/manifest.json'));
   assert.deepEqual([viewTabs.publicNames.cdsSizeAttributes.file, viewTabs.publicNames.cdsSizeAttributes.local], ['shared-frame-6jtSkIit.js', 'ga']);
   // The GrowthBook reads stay on locally under their 3.6556.2 import names (c6bf19e8f T, cf718f694 a/s).
@@ -85,7 +85,7 @@ test('cc-rest-terminal-a: the 3.6556.2 outputs, their stand-ins and the size att
   }
 });
 
-test('cc-rest-terminal-b: the 3.6556.2 errors, idle cursor, Clear terminal item and overflow row', () => {
+test('cc-rest-terminal-b: the 3.6556.2 errors, idle cursor, Clear terminal item and the view-tabs overflow row', () => {
   const official = readFileSync(path.join(v3Reference, 'c6bf19e8f-CgQ1_Jhf.js'), 'utf8');
   // c6bf19e8f ci: the copy the error cover shows, the needsNewerApp body, Try again; ui maps the spawn failure.
   for (const text of ['needsNewerApp:{defaultMessage:"Additional terminal tabs require a newer Claude desktop app",id:"UmCCqFiseY"}',
@@ -112,27 +112,19 @@ test('cc-rest-terminal-b: the 3.6556.2 errors, idle cursor, Clear terminal item 
   assert.match(read('src/source-terminal-adapters.jsx'), /^export \{ CdsContextMenu as TerminalMenu \} from "\.\/generated\/view-tabs\/index\.js";$/m);
   assert.doesNotMatch(read('src/source-terminal-adapters.jsx'), /SourceMenu/);
   // w10-trans-tab-overflow: the overflow row se renders the CDS dropdown item (shared-frame Jo); its size table is
-  // view-tabs' viewTabSizes (cfe7c4b3b le). w12-viewtabs (D1): the output slices nothing; se, L, ie and le are re-exported
-  // from the concrete view-tabs file (never the facade), so the row and its P lead-glyph context exist once.
-  const row = read('src/generated/code-current/terminal-tab-overflow.mjs');
-  assert.equal(row, '// Original Claude Desktop 3.6556.2 bindings; generated by extract-code-ui-current.mjs.\n\nexport {\n'
-    + '  ViewTabOverflowItem as TabOverflowItem,\n  viewTabSizes as tabOverflowSizes,\n'
-    + '  viewTabOverflowTypeaheadResetKeys as tabOverflowTypeaheadResetKeys,\n  viewTabRtlArrowKey as tabOverflowRtlKey,\n'
-    + '} from "../view-tabs/cfe7c4b3b-BF79K6ux.js";\n');
-  assert.deepEqual(terminalPins['terminal-tab-overflow.mjs'].bindings, []);
-  assert.deepEqual(terminalPins['terminal-tab-overflow.mjs'].reexport,
-    { se: 'ViewTabOverflowItem', L: 'viewTabRtlArrowKey', ie: 'viewTabOverflowTypeaheadResetKeys', le: 'viewTabSizes' });
+  // view-tabs' viewTabSizes (cfe7c4b3b le). The row and its P lead-glyph context exist once, in view-tabs (D1); W14-code
+  // r2 closeout-2 (DC-03) retired the code-current re-export, which only the orphan host menu read.
   const viewTabs = JSON.parse(read('src/generated/view-tabs/manifest.json'));
   assert.deepEqual(viewTabs.publicNames.viewTabSizes, { file: 'cfe7c4b3b-BF79K6ux.js', local: 'le' });
   assert.deepEqual(viewTabs.publicNames.ViewTabOverflowItem, { file: 'cfe7c4b3b-BF79K6ux.js', local: 'se' });
-  assert.deepEqual(viewTabs.publicNames.viewTabRtlArrowKey, { file: 'cfe7c4b3b-BF79K6ux.js', local: 'L' });
-  assert.deepEqual(viewTabs.publicNames.viewTabOverflowTypeaheadResetKeys, { file: 'cfe7c4b3b-BF79K6ux.js', local: 'ie' });
+  // W14-code r2 gen-final-2: with that re-export retired, view-tabs no longer publishes L / ie (se still reads them).
+  assert.equal(viewTabs.publicNames.viewTabRtlArrowKey, undefined);
+  assert.equal(viewTabs.publicNames.viewTabOverflowTypeaheadResetKeys, undefined);
   // The view-tabs copy is the official se: it renders the CDS dropdown item and takes arrowCloses.
   const vt = read('src/generated/view-tabs/cfe7c4b3b-BF79K6ux.js');
   assert.match(vt, /arrowCloses:o,/);
   assert.match(vt, /se as ViewTabOverflowItem/);
   assert.equal(vt.split('var P=f("xs");').length - 1, 1, 'the one P = createContext("xs") lead-glyph context');
-  assert.doesNotMatch(row, /createContext/);
   // ViewTabBar's overflowArrowCloses is off only on the side chat strip (cccc2cf0a), so the host strips keep the default.
   const pane = readFileSync(path.join(v3Reference, 'cccc2cf0a-DhZC33Gc.js'), 'utf8');
   assert.equal(pane.split('overflowArrowCloses:!1').length - 1, 1);
@@ -372,8 +364,12 @@ test('the pane and its helpers no longer read the 2.31226.0 terminal adapters', 
   const sources = readdirSync(path.join(app, 'src')).filter((name) => /^(source-terminal-|terminal-).*\.(m?js|jsx)$/.test(name));
   for (const name of sources) assert.doesNotMatch(read(`src/${name}`), /generated\/code-editor\/terminal-/, name);
   const pane = read('src/source-terminal-pane.jsx');
-  for (const module of ['terminal-output', 'terminal-mouse', 'terminal-colors', 'terminal-link-selection', 'terminal-idle-cursor', 'terminal-clear-item'])
+  for (const module of ['terminal-output', 'terminal-mouse', 'terminal-colors', 'terminal-idle-cursor', 'terminal-clear-item'])
     assert.match(pane, new RegExp(`from "\\./generated/code-current/${module}\\.mjs"`), module);
+  // W14-code r3 R3DC-04: the official Dn link guard (terminal-link-selection) is read where it decides, in
+  // terminal-pane-model; the pane no longer imports it unused.
+  assert.match(read('src/terminal-pane-model.mjs'), /import \{ selectionBlocksTerminalLink \} from "\.\/generated\/code-current\/terminal-link-selection\.mjs";/);
+  assert.doesNotMatch(pane, /terminal-link-selection\.mjs/);
   // The error kinds are read where they are mapped (terminal-pane-model: acquireTerminalView, restartTerminalTab,
   // terminalCoverState); the pane no longer imports them unused.
   assert.match(read('src/terminal-pane-model.mjs'), /from "\.\/generated\/code-current\/terminal-errors\.mjs";/);
@@ -406,12 +402,10 @@ test('zh-CN carries the terminal copy (2.42304.0 keys kept until W7; the 3.6556.
 });
 
 test('FT-15 (terminal-10, global-v01): the overflow row is the 3.6556.2 se (2.42304.0 ce); the patched 2.31226.0 adapter is gone', async () => {
-  const menu = read('src/source-preview-tab-overflow.jsx');
-  assert.match(menu, /from '\.\/generated\/code-current\/terminal-tab-overflow\.mjs'/);
-  assert.match(menu, /<TabOverflowItem tab=\{tab\} sizes=\{tabOverflowSizes\}/);
-  assert.match(menu, /<CdsTooltipProvider delay=\{700\}>/, 'se: the rows sit in the CDS tooltip provider at 700ms (T = kc)');
-  assert.match(menu, /useContext\(DirectionContext\)\?\.direction === 'rtl'/, 'se h: vendor-frame Td over DirectionContext');
-  assert.doesNotMatch(menu, /generated\/code-editor\/|createPreviewOverflowRow|OverflowText/);
+  // W14-code r2 closeout-2 (DC-03): the strips' overflow menu is view-tabs ViewTabBar's own ae (cfe7c4b3b), rows in the
+  // CDS tooltip provider at 700ms; the orphan host copy (source-preview-tab-overflow.jsx) is gone.
+  assert.ok(!readdirSync(path.join(app, 'src')).includes('source-preview-tab-overflow.jsx'));
+  assert.ok(read('src/generated/view-tabs/cfe7c4b3b-BF79K6ux.js').includes('n(C,{delay:700,children:k})'));
   // The old generator no longer emits (nor patches) the row; its output and manifest entry are gone.
   const old = read('scripts/extract-code-editor.mjs');
   assert.doesNotMatch(old, /replaceAll\('min-w-0 pl-\[2px\]'/);
@@ -420,8 +414,6 @@ test('FT-15 (terminal-10, global-v01): the overflow row is the 3.6556.2 se (2.42
   assert.ok(!oldManifest.adapters.some((entry) => entry.name === 'preview-tab-overflow.mjs'));
   assert.ok(!readdirSync(path.join(app, 'src/generated/code-editor')).includes('preview-tab-overflow.mjs'));
   // The size table (view-tabs viewTabSizes = 3.6556.2 cfe7c4b3b le) carries the logical class, no physical pl-[2px].
-  const row = read('src/generated/code-current/terminal-tab-overflow.mjs');
-  assert.doesNotMatch(row, /pl-\[2px\]|pl-\[6px\]/);
   const sizes = read('src/generated/view-tabs/cfe7c4b3b-BF79K6ux.js');
   assert.match(sizes, /tabIconShed:"min-w-0 ps-\[2px\]"/);
   assert.match(sizes, /basis:"basis-\[192px\]",basisChromePx:52/);

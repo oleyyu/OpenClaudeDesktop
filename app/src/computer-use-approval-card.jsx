@@ -17,22 +17,39 @@ function rich(template, values, parts) {
   return text.split(new RegExp(`${MARK}(\\w+)${MARK}`)).map((piece, index) => index % 2 ? <React.Fragment key={index}>{parts[piece]}</React.Fragment> : piece);
 }
 
+// V3-W14-approvals: cc32965c2 ls (readable :1593-1663): one ICU message per title, the tags rendered by os / ss
+// (`span.text-primary`), the app name in `span.[unicode-bidi:isolate]`: "Allow Claude to <b>use</b> <meta>{app}</meta>?"
+// (dXCzkuzvh2), "… <b>use</b> {count} apps?" (dTGOltnc/b), "… <b>use</b> these capabilities?", "… <b>use your
+// computer</b>?" (6WGtjNPGER). Claude reads as the session's assistant ({name}). The translation may move the tags.
+const TAGGED = /<(b|meta)>([\s\S]*?)<\/\1>/g;
+function tagged(template, values) {
+  const text = t(template, Object.fromEntries(Object.entries(values).filter(([, value]) => typeof value !== "object")));
+  const fill = (piece, key) => piece.split(/\{(\w+)\}/).map((part, index) => index % 2
+    ? <React.Fragment key={`${key}-${index}`}>{values[part] ?? `{${part}}`}</React.Fragment> : part);
+  const out = [];
+  let at = 0, count = 0;
+  for (const match of text.matchAll(TAGGED)) {
+    out.push(...fill(text.slice(at, match.index), `t${count}`));
+    out.push(<span key={`tag${count}`} className="text-primary">{fill(match[2], `c${count}`)}</span>);
+    at = match.index + match[0].length;
+    count++;
+  }
+  out.push(...fill(text.slice(at), "end"));
+  return out;
+}
 /**
- * ZEe: "Allow Claude to <b>use</b> …?": the verb, and for one app its name, in the primary color (sac-em); the rest
- * of the title keeps the heading's color.
  * @param {{title: {kind: "app" | "apps" | "capabilities" | "computer", app?: string, count?: number}, name: string}} props
  */
 export function ComputerUseAccessTitle({ title, name }) {
-  const use = <span className="sac-em">{t("use")}</span>;
-  if (title.kind === "computer") return <>{rich("Allow {name} to {useYourComputer}?", { name }, { useYourComputer: <span className="sac-em">{t("use your computer")}</span> })}</>;
-  if (title.kind === "app") return <>{rich("Allow {name} to {use} {app}?", { name }, { use, app: <span className="sac-em"><span className="[unicode-bidi:isolate]">{title.app}</span></span> })}</>;
-  if (title.kind === "apps") return <>{rich("Allow {name} to {use} {count} apps?", { name, count: title.count }, { use })}</>;
-  return <>{rich("Allow {name} to {use} these capabilities?", { name }, { use })}</>;
+  if (title.kind === "computer") return <>{tagged("Allow {name} to <b>use your computer</b>?", { name })}</>;
+  if (title.kind === "app") return <>{tagged("Allow {name} to <b>use</b> <meta>{app}</meta>?", { name, app: <span className="[unicode-bidi:isolate]">{title.app}</span> })}</>;
+  if (title.kind === "apps") return <>{tagged("Allow {name} to <b>use</b> {count} apps?", { name, count: title.count })}</>;
+  return <>{tagged("Allow {name} to <b>use</b> these capabilities?", { name })}</>;
 }
 
 /**
  * The takeover card's title (official wa / JEe takeoverFrom): "Take over the screen? …". Three variants, by whether
- * the preferred mode is Background and whether an app was named. The whole title is the heading color (no sac-em), as
+ * the preferred mode is Background and whether an app was named. The whole title is the heading color (no tagged span), as
  * the official card renders it in a plain semibold paragraph.
  * @param {{takeover: {becausePreferredBackground: boolean, appName: string | null}}} props
  */

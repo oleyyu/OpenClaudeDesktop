@@ -203,7 +203,7 @@ try{
    for(let i=0;i<50&&!win;i+=1){await sleep(100);win=(await native.call('listWindows',{bundleId:FINDER})).windows.find(w=>w.title===name)??null;}
    assert.ok(win,'the temp Finder window opened');
    report.states.finder={windowId:win.window_id,bounds:win.bounds,offSpace:win.is_off_space};
-   const input=page.getByRole('textbox',{name:'Message DeepSeek',exact:true});
+   const input=page.getByRole('textbox',{ name: /^(?:Prompt|Message DeepSeek)$/ });
    const send=async(text)=>{await fillComposer(page,input,text);await page.locator('[data-testid="code-prompt-send"]:not([inert] *)').click();};
    const requests=async()=>(await fs.readFile(path.join(profile,'fixture-requests.jsonl'),'utf8').catch(()=>'')).split('\n').filter(Boolean).map(l=>JSON.parse(l)).filter(e=>e.method==='mcp:tools/call').map(e=>e.params);
    const answered=async(tool,count)=>{const end=Date.now()+20000;while(Date.now()<end){const done=(await requests()).filter(c=>c.name===tool);if(done.length>=count)return done.at(-1);await sleep(100);}throw new Error(`no answer to ${tool}`);};

@@ -66,8 +66,10 @@ test('limit notice: reached state with the reset remedy, and a workspace member 
 test('composer usage popover: Plan usage limits header, windows with countdowns, credits line and View usage link', () => {
   const plan = planUsageSummary(limits, { locale: 'en-US' });
   const html = el(Composer.SourceUsagePanel, { usage: { last: { totalTokens: 64000 }, modelContextWindow: 128000 }, plan, onViewUsage() {}, onSeeDetails() {} });
-  assert.match(html, /Plan usage limits · Plus/); assert.match(html, /aria-label="View usage in Settings"/);
-  assert.deepEqual([...html.matchAll(/sc-usage-plan-label">([^<]*)</g)].map(m => m[1]), ['Current session', 'This week', 'Usage credits']);
+  // W14-code r6 复核修复: c1564829c g's header span is [sU, ' · ', aU] (three text children) and its rows' labels are
+  // y / v's 'text-footnote text-primary truncate'; the link is c0d8a9968 f's CDS ghost xxs UsageGaugeMiddle button.
+  assert.match(html, /<span class="text-footnote text-muted-as-secondary">Plan usage limits(?:<!-- -->)? · (?:<!-- -->)?Plus<\/span>/); assert.match(html, /aria-label="View usage in Settings"/);
+  assert.deepEqual([...html.matchAll(/text-footnote text-primary truncate">([^<]*)</g)].map(m => m[1]), ['Current session', 'This week', 'Usage credits']);
   assert.match(html, /<span>100%<\/span>/); assert.match(html, /125 of 500 credits used/); assert.match(html, /1,250 credits/);
   assert.equal((html.match(/role="progressbar"/g) || []).length, 4, 'context bar, two windows, the credit limit');
   assert.ok(html.indexOf('Context window') < html.indexOf('Plan usage limits') && html.indexOf('Plan usage limits') < html.indexOf('See detailed breakdown'));

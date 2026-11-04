@@ -6,7 +6,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { createRequire } from "node:module";
-import { ageDays, backlogDetail, backlogTitle, chipLabel, insertTakenPrompt, restoreItem, withoutItem } from "../src/task-backlog-model.mjs";
+import { backlogDetail, backlogTitle, chipLabel, insertTakenPrompt, restoreItem, withoutItem } from "../src/task-backlog-model.mjs";
 
 const require = createRequire(import.meta.url);
 const { createTaskBacklog, prune, validItem, folderKey, publicItem, PER_FOLDER, TOTAL, MAX_AGE_MS } = require("../electron/task-backlog.cjs");
@@ -78,8 +78,6 @@ test("chips: u0 title fallback, d0 tldr, _0 eight words, o0 age", () => {
   assert.equal(backlogDetail({}), "");
   assert.equal(chipLabel("one two three four five six seven eight"), "one two three four five six seven eight");
   assert.equal(chipLabel("one two three four five six seven eight nine"), "one two three four five six seven eight…");
-  assert.equal(ageDays({ suggestedAt: 0 }, 864e5 * 2.5), 2);
-  assert.equal(ageDays({ suggestedAt: 10 }, 0), 0);
 });
 
 test("j0 take: a blank box takes the prompt; otherwise it follows a blank line; never in bash mode", () => {

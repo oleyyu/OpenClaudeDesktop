@@ -18,7 +18,7 @@ import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from 
 // E41: this module sits in the sidebar / menu graph, so CDS comes by semantic name from the view-tabs file, not the facade.
 import { CdsDropdown, asElementNode } from './generated/view-tabs/shared-frame-6jtSkIit.js';
 import { useStartIntl } from './source-code-start-adapters.jsx';
-import { useSidebarOverlayGate, useStatusGrouping, useIsDesktopApp, useSidebarSectionsStore, useSidebarRoutinesToggle } from './source-sidebar-sections-adapters.jsx';
+import { useSidebarOverlayGate, useStatusGrouping, useIsDesktopApp, useSidebarSectionsStore, useSidebarRoutinesToggle, useSideChatRowsShown, writeSideChatRows } from './source-sidebar-sections-adapters.jsx';
 import { useLazyMenu, useOverflowMenuFlag, useCloseWhenSidebarHides } from './generated/sidebar-sections/menu-triggers.mjs';
 import { useDirection } from './generated/sidebar-sections/direction.mjs';
 import { groupByShown, writeSessionsGroupBy, writeSessionsSortBy, clearSessionsGroupBy } from './generated/sidebar-sections/group-mode.mjs';
@@ -73,7 +73,7 @@ function useMenuWheelGuard(open, anchor) {
  * which stays while the menu is open, so `held` stays false. The keyboard-regroup focus of 2.42304.0 (gU and its regroup
  * count) is gone in 3.6556.2 (SB-26).
  */
-export function SourceCodeSidebarFilter({ preferences, listRef }) {
+export function SourceCodeSidebarFilter({ preferences, listRef, sideChatsOffered = false }) {
   const { handle, hasBody, triggerProps } = useLazyMenu();
   const [state, setState] = useState(CLOSED_FILTER_STATE);
   const { open, triggerId, anchor, held } = state;
@@ -111,7 +111,7 @@ export function SourceCodeSidebarFilter({ preferences, listRef }) {
       {SidebarFilterTrigger({ handle, triggerProps: marked, open: mine, label: intl.formatMessage(sidebarFilterMessages.groupAndSort), held: mine && held, id })}
     </span>
     {hasBody && <SessionListFilterMenu handle={handle} open={open} onOpenChange={onOpenChange} triggerId={triggerId}
-      anchor={anchor ?? undefined} preferences={preferences} />}
+      anchor={anchor ?? undefined} preferences={preferences} sideChatsOffered={sideChatsOffered} />}
   </>;
 }
 const TRIGGER_SPAN_STYLE = Object.freeze({ scrollMarginBlock: 8 });
@@ -125,14 +125,18 @@ const TRIGGER_SPAN_STYLE = Object.freeze({ scrollMarginBlock: 8 });
  *   Xt  fC(l, _e): the effective Sessions group-by as the radios show it; Yt the desktop default (the reset target);
  *   f   the Sessions sort, De its stored ascending (Ut = xJ(f, De) is what the radios show);
  *   Te  Show › Metadata, Y Show › Empty groups (ce = true: code, sessionList);
- *   ie  VJ(open): Show › Routines (HJ); the host has no Code routines section to toggle (CODE_ROUTINES_SECTION_HOST),
- *       so the adapter's toggle is not offered (R4i-sidebar SI3, sidebar-17);
- *   X   QS().sideChatTabStripForRows: Show › Side chats; off in the host (E16), so it is not passed;
+ *   ie  VJ(open): Show › Routines (HJ), the 3.6556.2 originals (generated/sidebar-routines; W14-code r4 sidebar-new
+ *       fr4-06): offered while the routines section is shown, latched while this menu is open, or (HJ) while a local
+ *       routine run is live — the Code sidebar's Routines section (source-sidebar-routines.jsx) is what it shows;
+ *   X   QS().sideChatTabStripForRows: Show › Side chats (E81, overriding E16), `sideChatsOffered` from the sidebar
+ *       (nested-less-side-chats hostSideSessionFeatures: the core's btwChildSessions); ae.sideChatRowsShown is lf()
+ *       (useSideChatRowsShown) and Ft `NS(!ae.sideChatRowsShown)` (writeSideChatRows; its show_side_chats telemetry is
+ *       not sent, D17);
  *   Zt  "not at defaults" (UJ shows Reset disabled while !Zt), Qt the reset.
  * Vt is `Z(e)` (Cx; its `ee("active")` for Status is moot: the sections layout lists active sessions only); kt's and
  * Tt's telemetry (sidebar_settings.opened / changed) is not sent (D17).
  */
-export function SessionListFilterMenu({ handle, open, onOpenChange, triggerId, anchor, preferences }) {
+export function SessionListFilterMenu({ handle, open, onOpenChange, triggerId, anchor, preferences, sideChatsOffered = false }) {
   const prefs = normalizeSidebarPreferences(preferences);
   const intl = useStartIntl(), direction = useDirection();
   const { overlayEnabled } = useSidebarOverlayGate();
@@ -140,7 +144,9 @@ export function SessionListFilterMenu({ handle, open, onOpenChange, triggerId, a
   const options = useSidebarGroupByOptions();
   const groupOptions = useMemo(() => sessionListGroupOptions(options), [options]);
   const sortOptions = useSidebarSortOptions();
-  const routinesToggle = useSidebarRoutinesToggle();
+  const routinesToggle = useSidebarRoutinesToggle(open);
+  const sideChatRowsShown = useSideChatRowsShown();
+  const sideChatRows = useMemo(() => ({ sideChatRowsShown }), [sideChatRowsShown]);
   const { groupBy, sortBy, ascending, showMetadata: metadata, showEmptyGroups: emptyGroups } = prefs;
   const shown = groupByShown(groupBy, overlayEnabled);
   const fallback = groupByShown(defaultGroupBy('code', desktop), overlayEnabled);
@@ -163,7 +169,8 @@ export function SessionListFilterMenu({ handle, open, onOpenChange, triggerId, a
         sortOptions={sortOptions} sortBy={sortBy} onSortBy={onSortBy}
         ascending={sortAscendingShown(sortBy, ascending)} onAscending={onAscending}
         metadata={metadata} onMetadata={() => writeSessionsMetadata(!metadata)}
-        routinesToggle={routinesToggle} emptyGroupsAvailable emptyGroups={emptyGroups} onEmptyGroups={() => writeSessionsEmptyGroups(!emptyGroups)}
+        routinesToggle={routinesToggle} sideChatsOffered={sideChatsOffered} sideChatRows={sideChatRows}
+        onSideChats={() => writeSideChatRows(!sideChatRowsShown)} emptyGroupsAvailable emptyGroups={emptyGroups} onEmptyGroups={() => writeSessionsEmptyGroups(!emptyGroups)}
         resetAvailable={sessionListNotAtDefaults({ shown, fallback, sortBy, ascending, emptyGroups })} onReset={onReset} />
     </CdsDropdown.Popup>
   </CdsDropdown.Root>;

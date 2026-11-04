@@ -4,7 +4,8 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 import path from "node:path";
-import { accountFooter, accountIdentity, accountMenuLines, accountOrgLine, connectionMenuHeader } from "../src/account-label-model.mjs";
+import * as accountLabelModel from "../src/account-label-model.mjs";
+const { accountFooter, accountIdentity, accountMenuLines, accountOrgLine } = accountLabelModel;
 import { setAssistantName } from "../electron/i18n/index.mjs";
 import { coreName } from "../electron/core-registry.mjs";
 
@@ -45,12 +46,12 @@ test("account identity: the preferred name with 'DeepSeek API' (· API key), els
   assert.equal(accountIdentity("  Grace  ", null).identity, "Grace");
 });
 
-test("the Connection settings header names the running core", () => {
-  assert.equal(connectionMenuHeader("deepseek", true), "DeepSeek Harness connected");
-  assert.equal(connectionMenuHeader("deepseek", false), "DeepSeek Harness disconnected");
-  assert.equal(connectionMenuHeader("codex", true), "Codex connected");
-  assert.equal(connectionMenuHeader("codex", false), "Codex disconnected", "the Codex fixture text (approval-ui.mjs) is unchanged");
-  assert.equal(connectionMenuHeader(undefined, false), "Codex disconnected");
+// W14-code r4 复核 (E95): sidebar-main.js:14185-14235 hL df-footer-aux is empty in code mode and en-US has no
+// 'Connection settings', so the host's footer control, its 'connection' menu and that menu's header are gone.
+test("no footer Connection settings menu or header", async () => {
+  assert.equal(accountLabelModel.connectionMenuHeader, undefined);
+  const main = await fs.readFile(path.join(root, "src/main.jsx"), "utf8");
+  assert.doesNotMatch(main, /case "connection":|connectionMenuHeader|connectionIssue=|connectionMenuOpen=|label: "Connection settings"/);
 });
 
 test("main.jsx renders the IO identity in the header and footer, with no 'Local user' fallback", async () => {
@@ -60,7 +61,6 @@ test("main.jsx renders the IO identity in the header and footer, with no 'Local 
   assert.match(main, /data-testid="user-menu-header">\{accountLines\.identity\}</);
   assert.match(main, /\{accountLines\.orgPrimary && <span className="smenu-header-line smenu-header-secondary" data-testid="user-menu-header-org">\{accountOrgLine\(accountLines\)\}<\/span>\}/);
   assert.match(main, /displayName=\{accountButton\.name\}\s+accountLabel=\{accountButton\.plan\}\s+avatarName=\{accountButton\.avatarName\}/);
-  assert.match(main, /<SourceMenu\.Header>\{connectionMenuHeader\(engine, !!boot\?\.connected\)\}<\/SourceMenu\.Header>/);
   assert.doesNotMatch(main, /Local user/);
   assert.doesNotMatch(main, /\{accountLabel\} · DeepSeek/);
   assert.doesNotMatch(main, /planType \|\| "DeepSeek API"/);
@@ -77,7 +77,7 @@ test("account menu: 17rem popup, DeepSeek key row, View changelog, Learn more ho
   assert.match(css, /\.smenu-popup\.account-learn-more \{ min-width: 208px; \}/);
   assert.ok(css.indexOf(".smenu-popup.account-menu {") < css.indexOf(".smenu-popup.smenu-sheet {"), "the coarse sheet keeps its full width");
   const main = await fs.readFile(path.join(root, "src/main.jsx"), "utf8");
-  const account = main.slice(main.indexOf('case "account":'), main.indexOf('case "connection":'));
+  const account = main.slice(main.indexOf('case "account":'), main.indexOf("default:", main.indexOf('case "account":')));
   const order = ['t("Settings")}</SourceMenu.Item>', 't("Usage")}</SourceMenu.Item>', 't("Language")}</SourceMenu.Item>', 't("DeepSeek API key")}</SourceMenu.Item>', "<SourceMenu.Separator />",
     't("View changelog")}</SourceMenu.Item>', '<SourceMenu.SubmenuTrigger icon="Info">{t("Learn more")', 't("Keyboard shortcuts")}</SourceMenu.Item>'].map((needle) => account.indexOf(needle));
   assert.ok(order.every((index) => index > 0), `every item present: ${order}`);

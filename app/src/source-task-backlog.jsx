@@ -4,7 +4,8 @@
 // chips — the title (eight words at most; the full title and tldr in the tooltip) and an X — then 'See # more', which
 // opens the whole list. Taking a task puts its prompt in the message box and takes it off the list; X deletes it.
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { SourceSettingsButton } from "./source-settings-button.jsx";
+// W14-code r6 R6DC-02: cc43287c9 Hse / Bse / Gse buttons are shared-frame Uu (`B`), the chip is the joined ButtonGroup (`Oe`).
+import { CdsButton, CdsButtonGroup } from "./generated/view-tabs/shared-frame-6jtSkIit.js";
 import { SourceTooltip } from "./source-tooltip.jsx";
 import { SourceDialog } from "./source-dialog.jsx";
 import { BACKLOG_CHIPS, BACKLOG_LIMIT, TAKE_GUARD_MS, backlogDetail, backlogTitle, chipLabel, restoreItem, withoutItem } from "./task-backlog-model.mjs";
@@ -58,50 +59,49 @@ export function useTaskBacklog(folder, call, onError) {
   return { items, settled, remove };
 }
 
-/** v0: one joined chip — the title button (tooltip: full title + tldr) and Delete. */
+/** 3.6556.2 cc43287c9 Hse: one joined chip — the title button (tooltip: full title + tldr) and Delete. */
 function BacklogChip({ item, position, onTake, onDelete, onPointerFocus }) {
   const title = backlogTitle(item), detail = backlogDetail(item);
-  // v0 u: a chip focused by the pointer hands focus straight back to the message box (only the keyboard parks on it).
+  // Hse d: a chip focused by the pointer hands focus straight back to the message box (only the keyboard parks on it).
   const pointerFocus = (event) => { if (!event.currentTarget.matches(":focus-visible")) onPointerFocus?.(); };
+  // Hse: `Oe({"data-task-backlog-chip":"",variant:"joined",buttonVariant:"secondary",size:"xs","aria-label":k,
+  // className:"min-w-0 max-w-full shrink"})` > [ae tooltip > B("min-w-0 shrink") > span.truncate, B X tooltip "Delete"].
   return (
-    <div className="stb-chip" role="group" aria-label={title} data-task-backlog-chip="">
+    <CdsButtonGroup data-task-backlog-chip="" variant="joined" buttonVariant="secondary" size="xs" aria-label={title} className="min-w-0 max-w-full shrink">
       <SourceTooltip content={title} detail={detail || undefined}>
-        <SourceSettingsButton variant="secondary" size="xs" className="stb-chip-take"
-          aria-label={t("Put “{title}” in the message box", { title })} onFocus={pointerFocus}
+        <CdsButton className="min-w-0 shrink" onFocus={pointerFocus}
+          aria-label={t("Put “{title}” in the message box", { title })}
           onClick={(event) => { event.stopPropagation(); onTake(item, position, { keyboard: event.detail === 0 }); }}>
-          <span className="stb-chip-label">{chipLabel(title)}</span>
-        </SourceSettingsButton>
+          <span className="truncate">{chipLabel(title)}</span>
+        </CdsButton>
       </SourceTooltip>
-      <SourceTooltip content={t("Delete")} hoverable={false}>
-        <SourceSettingsButton variant="secondary" size="xs" iconOnly icon="X" iconSize="auto-sm" className="stb-chip-delete" data-task-backlog-delete=""
-          aria-label={t("Delete “{title}”", { title })} onFocus={pointerFocus}
-          onClick={(event) => { event.stopPropagation(); onDelete(item, position, { keyboard: event.detail === 0 }, event.currentTarget); }} />
-      </SourceTooltip>
-    </div>
+      <CdsButton icon="X" iconOnly data-task-backlog-delete="" onFocus={pointerFocus}
+        aria-label={t("Delete “{title}”", { title })} tooltip={t("Delete")}
+        onClick={(event) => { event.stopPropagation(); onDelete(item, position, { keyboard: event.detail === 0 }, event.currentTarget); }} />
+    </CdsButtonGroup>
   );
 }
 
-/** h0: a dialog row — the task (title, tldr) puts it in the message box; X deletes it. */
+/** 3.6556.2 cc43287c9 Bse: a dialog row — the task (title, tldr) puts it in the message box; X deletes it. */
 function BacklogRow({ item, position, onTake, onDelete }) {
   const title = backlogTitle(item), detail = backlogDetail(item);
   const detailId = `stb-detail-${item.id}`;
   return (
-    <li className="stb-row">
-      <SourceSettingsButton variant="ghost" flush className="stb-row-take" aria-label={t("Put “{title}” in the message box", { title })}
+    <li className="flex items-center gap-xs">
+      <CdsButton variant="ghost" flush className="h-auto min-h-control min-w-0 flex-1 justify-start whitespace-normal py-xs text-start"
+        aria-label={t("Put “{title}” in the message box", { title })}
         aria-describedby={detail ? detailId : undefined} onClick={(event) => onTake(item, position, { keyboard: event.detail === 0 })}>
-        <span className="stb-row-copy">
-          <span className="stb-row-title">{title}</span>
-          {detail ? <span id={detailId} className="stb-row-detail">{detail}</span> : null}
+        <span className="flex min-w-0 flex-col gap-0.5">
+          <span className="line-clamp-2 text-body text-primary [overflow-wrap:anywhere]">{title}</span>
+          {detail ? <span id={detailId} className="truncate text-body text-secondary">{detail}</span> : null}
         </span>
-      </SourceSettingsButton>
-      <SourceTooltip content={t("Delete")} hoverable={false}>
-        <SourceSettingsButton variant="ghost" size="sm" iconOnly icon="X" iconSize="auto" flush="end" className="stb-row-delete" data-task-backlog-delete=""
-          aria-label={t("Delete “{title}”", { title })}
-          onClick={(event) => {
-            const row = event.currentTarget.closest("li"), next = row?.nextElementSibling ?? row?.previousElementSibling;
-            if (onDelete(item, position, { keyboard: event.detail === 0 })) next?.querySelector("[data-task-backlog-delete]")?.focus();
-          }} />
-      </SourceTooltip>
+      </CdsButton>
+      <CdsButton variant="ghost" size="sm" icon="X" iconOnly flush="end" className="shrink-0" data-task-backlog-delete=""
+        aria-label={t("Delete “{title}”", { title })} tooltip={t("Delete")}
+        onClick={(event) => {
+          const row = event.currentTarget.closest("li"), next = row?.nextElementSibling ?? row?.previousElementSibling;
+          if (onDelete(item, position, { keyboard: event.detail === 0 })) next?.querySelector("[data-task-backlog-delete]")?.focus();
+        }} />
     </li>
   );
 }
@@ -160,19 +160,20 @@ export function SourceTaskBacklog({ folder, call, onTake, onFocusComposer, onErr
   if (!folder || list.length === 0) return null;
   return (
     <>
-      <div className="stb-chips" role="group" aria-label={t("Suggested tasks")} data-task-backlog="">
+      {/* Gse: `flex min-w-0 flex-wrap items-center gap-sm ${c}` with Jse's className "pr-[96px]"; stb-chips keeps the host slot's top gap. */}
+      <div className="stb-chips flex min-w-0 flex-wrap items-center gap-sm pr-[96px]" role="group" aria-label={t("Suggested tasks")} data-task-backlog="">
         {visible.map((item, position) => <BacklogChip key={item.id} item={item} position={position} onTake={chipTake} onDelete={chipDelete} onPointerFocus={onFocusComposer} />)}
         {more > 0 && (
-          <SourceSettingsButton ref={seeAll} variant="ghost" size="sm" className="stb-see-all" aria-haspopup="dialog" aria-expanded={open}
+          <CdsButton ref={seeAll} variant="ghost" size="sm" className="text-secondary" aria-haspopup="dialog" aria-expanded={open}
             onClick={(event) => { event.stopPropagation(); setOpenFor(folder); }}>
             {t("See {count} more", { count: more })}
-          </SourceSettingsButton>
+          </CdsButton>
         )}
       </div>
-      <SourceDialog open={open} onClose={() => setOpenFor(null)} title={t("Suggested tasks")} size="md" className="stb-dialog" initialFocusRef={firstRow}
+      <SourceDialog open={open} onClose={() => setOpenFor(null)} title={t("Suggested tasks")} size="md" className="epitaxy-root break-words" initialFocusRef={firstRow}
         // m0 finalFocus: back to 'See # more', or the message box when that button is gone (or a take already moved focus there).
         onExited={() => { if (!wasOpen.current) return; wasOpen.current = false; const active = document.activeElement; if (!active || active === document.body) onFocusComposer?.(); }}>
-        <ul ref={listRef} role="list" className="stb-list">
+        <ul ref={listRef} role="list" className="flex flex-col gap-0.5">
           {list.map((item, position) => <BacklogRow key={item.id} item={item} position={position} onTake={rowTake} onDelete={del} />)}
         </ul>
       </SourceDialog>

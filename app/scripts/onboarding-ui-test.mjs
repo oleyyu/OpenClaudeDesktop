@@ -97,7 +97,7 @@ try{
  assert.equal(saved.core,'deepseek','finishing Connect a model selects DeepSeek Harness over the core an earlier pick left selected');
  // The window started naming the core that pick left ("Codex") and reloads for DeepSeek's copy.
  await page.waitForFunction(()=>document.querySelector('[data-cds=ChatComposer]'),null,{timeout:20000});
- await poll(async()=>await page.getByRole('textbox',{name:'Message DeepSeek',exact:true}).count()===1,'composer names DeepSeek after the reload');
+ await poll(async()=>await page.getByRole('textbox',{ name: /^(?:Prompt|Message DeepSeek)$/ }).count()===1,'composer names DeepSeek after the reload');
  assert.equal(await setup().count(),0,'setup stays closed after the reload');
  report.checks.push('Test and continue saves the custom provider (providers.json without the key, encrypted key file), selects DeepSeek Harness over a core an earlier pick left selected, restarts the core and closes setup; onboarded persists and the saved model is one the running catalog lists, remembered for the DeepSeek core');
 

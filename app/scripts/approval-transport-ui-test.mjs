@@ -35,7 +35,7 @@ const card = (request) =>
   page.locator(
     `[data-approval-instance=${JSON.stringify(request.bridgeApproval.instanceId)}]`,
   );
-const cards = () => page.locator(".sac-card, .source-question-card");
+const cards = () => page.locator("[data-approval-card-root], .source-question-card");
 const custom = (request) => card(request).locator("[data-cds=\"TextArea\"], input[type=password]");
 async function call(action, params = {}) {
   return page.evaluate(

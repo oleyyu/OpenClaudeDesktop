@@ -572,4 +572,4 @@ function k(e) {
 function A(e) {
   return e.text;
 }
-export { D };
+export { D, E };

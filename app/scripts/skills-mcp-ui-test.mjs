@@ -128,7 +128,7 @@ async function waitTrace(predicate, label, timeout = 8000) {
   while (Date.now() < until) { const entries = await trace(); if (predicate(entries)) return entries; await new Promise(resolve => setTimeout(resolve, 40)); }
   throw new Error(`Timed out waiting for trace: ${label}`);
 }
-const composer = () => page.getByRole("textbox", { name: "Message DeepSeek" });
+const composer = () => page.getByRole("textbox", { name: /^(?:Prompt|Message DeepSeek)$/ });
 // Visible labels without the Icon glyph text nodes (src/icons.jsx renders a private-use codepoint as text).
 const labels = locator => locator.evaluateAll(items => items.map(item => { const clone = item.cloneNode(true); clone.querySelectorAll("[data-cds=Icon]").forEach(icon => icon.remove()); return clone.textContent.trim(); }));
 // shared-11 Enter selects; use the submit control for action routing checks.
@@ -657,14 +657,14 @@ try {
   assert.equal(listWithThread.params.threadId, T); assert.equal(listWithThread.params.detail, "toolsAndAuthOnly");
   const row = name => mcpTable.locator(`tr[data-mcp-name="${name}"]`);
   assert.equal(await row("fx-connected").locator(".cz-status [data-cds=Icon]").count(), 1, "Check icon (src/icons.jsx renders glyph spans, not svg)");
-  assert.equal(await row("fx-connected").locator(".cz-status .cz-sr-only").textContent(), "Connected");
-  assert.equal(await row("fx-starting").locator('.cz-status[role="status"] .cz-sr-only').textContent(), "Connecting");
+  assert.equal(await row("fx-connected").locator(".cz-status .sr-only").textContent(), "Connected");
+  assert.equal(await row("fx-starting").locator('.cz-status[role="status"] .sr-only').textContent(), "Connecting");
   // customize-connectors ca (:2027-2048): Warning sm + tooltip-wrapped action; the explanation is only the
   // tooltip content and span.sr-only, never visible text beside the button.
   for (const [name, status, label, action] of [["fx-failed", "unreachable", "Server not responding", "Reconnect"], ["fx-auth", "sign-in", "Sign-in required", "Sign in"]]) {
     const cell = row(name).locator(`.cz-status[data-status="${status}"]`);
-    assert.deepEqual(await cell.evaluate(node => [...node.children].map(child => child.dataset.cds === "Icon" ? `Icon:${child.getAttribute("aria-hidden")}` : child.className)), ["Icon:true", "cz-status-action", "cz-sr-only"]);
-    assert.equal(await cell.locator(".cz-sr-only").textContent(), label);
+    assert.deepEqual(await cell.evaluate(node => [...node.children].map(child => child.dataset.cds === "Icon" ? `Icon:${child.getAttribute("aria-hidden")}` : child.className)), ["Icon:true", "cz-status-action", "sr-only"]);
+    assert.equal(await cell.locator(".sr-only").textContent(), label);
     assert.deepEqual(await labels(cell.locator(".cz-status-action")), [action]);
     await cell.locator(".cz-status-action").getByRole("button", { name: action, exact: true }).waitFor();
   }

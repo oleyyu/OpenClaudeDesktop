@@ -5,7 +5,6 @@ import { Icon } from "./icons";
 import { SourcePreviewSettingsMenu, SourcePreviewClearDataDialog, useAutoOpenFilesMenuProps } from "./source-preview-settings-menu.jsx";
 import { SourcePreviewAllowedSites } from "./source-preview-allowed-sites.jsx";
 import { usePreviewCopyUrl } from "./source-preview-copy-url.jsx";
-import { SourceTooltip } from "./source-tooltip";
 import { SourceSpinner } from "./source-pane-states.jsx";
 // 3.6556.2 cf580efe9 `import { t as Zt } from "./cc0a875c8-Ba9KI-Fw.js"` (EmptyState): the generated slice.
 import { EmptyState } from "./generated/r3b-transcript/empty-state.mjs";
@@ -16,19 +15,22 @@ import { SourcePreviewAddress, SourcePreviewNavigation } from "./source-preview-
 import { SourcePreviewServerMenu } from "./source-preview-server-menu.jsx";
 import { SourcePreviewCloseTabsDialog, SourcePreviewTabs } from "./source-preview-tabs.jsx";
 import { ownsSelectedElement } from './preview-element-attachments.mjs';
-import { CdsButton, CdsConfirmationDialog } from "./generated/view-tabs/index.js";
+import { CdsButton, CdsConfirmationDialog, CdsIcon, CdsSpinner } from "./generated/view-tabs/index.js";
 import { devServerLogTone, devServerLogToneClasses } from "./generated/code-editor/preview-log-lines.mjs";
-import { SourceSettingsButton } from "./source-settings-button.jsx";
 import { SourcePreviewSketch } from "./source-preview-sketch.jsx";
 import { matchSketchCommand } from './generated/code-editor/preview-sketch-keys.mjs';
 import {
-  ADD_SERVER_PROMPT, anyServerRunning, LOGS_HEIGHT, SHOW_RETRY_MS, SERVER_SETTLE_MS, boundsOf, clampLogsHeight, failedServer, failureLogLine, heldPort, isOccluded,
+  ADD_SERVER_PROMPT, LOGS_HEIGHT, SHOW_RETRY_MS, SERVER_SETTLE_MS, boundsOf, clampLogsHeight, failedServer, failureLogLine, heldPort, isOccluded,
   logsServer, logsSourceLabel, PREVIEW_LOGS_EXPANDED_KEY, readLogsExpanded, serverStartHold, startFailurePrompt, startFailureText, writeLogsExpanded,
-  pageError, pageRefused, pageServer, previewSurface, stoppedServer, sameBounds, serverErrorText, serverRows, serverMenuRows, serverStatus, showsPage, viewportLabel, viewportRows,
-  launchEntryMissingText, noLaunchEntry, pickUnavailable, SKETCH_AWAIT_CAPTURE_MS,
+  pageRefused, previewSurface, stoppedServer, sameBounds, serverErrorText, serverRows, serverMenuRows, showsPage, viewportLabel, viewportRows,
+  launchEntryMissingText, noLaunchEntry, pickUnavailable, SKETCH_AWAIT_CAPTURE_MS, createFailureReports,
 } from "./preview-model.mjs";
 import { t } from "../electron/i18n/index.mjs";
 import "./source-preview-pane.css";
+
+// W14-code r4 r4pa-c05: a failed Run's error report waits here, per session, until the session takes it (preview-model
+// createFailureReports), so the start-failed card's "Error details were sent to {assistant}" is true.
+export const previewFailureReports = createFailureReports();
 
 // Current Preview tabs plus the original 2.31226.0 navigation row and address field.
 // Current source dev-server control is separate from preview settings in the tab header.
@@ -73,15 +75,11 @@ function useServerLogs(call, name, enabled, follow, version = null) {
   return name && logs.name === name ? logs.lines : [];
 }
 
-function GhostButton({ label, icon, shortcut, onClick, disabled = false, className = "", pressed, children, ...rest }) {
-  return (
-    <SourceTooltip content={label} shortcut={shortcut} side="bottom" hoverable={false}>
-      <button type="button" className={`source-icon-button spc-ghost spv-icon ${className}`.trim()} aria-label={label} aria-pressed={pressed} disabled={disabled}
-        onMouseDown={(event) => event.preventDefault()} onClick={onClick} {...rest}>
-        {children ?? <Icon name={icon} size={16} />}
-      </button>
-    </SourceTooltip>
-  );
+// c9c84d68b C(e), the scheme branch left to the sheet ("scheme").
+export function previewViewportBackground({ hasServer, hideForStartPage, isHtmlPreview, activeTabUsesBrowserDefaults, pageBackgroundColor }) {
+  if (!hasServer || hideForStartPage) return false;
+  if (pageBackgroundColor) return pageBackgroundColor;
+  return isHtmlPreview || activeTabUsesBrowserDefaults ? "#ffffff" : "scheme";
 }
 
 function DownloadNotice({ download, onReveal, onDismiss }) {
@@ -92,8 +90,10 @@ function DownloadNotice({ download, onReveal, onDismiss }) {
     <div className="spv-download" role="status" data-preview-download={download.state}>
       <Icon name={download.state === "completed" ? "Download" : "Warning"} size={16} className="spv-download-icon" />
       <span className="spv-download-text"><bdi>{text}</bdi></span>
-      {download.state === "completed" && download.canReveal && <button type="button" className="spv-button" data-variant="secondary" onClick={onReveal}>{t("Show in Finder")}</button>}
-      <GhostButton label={t("Dismiss")} icon="X" onClick={onDismiss} />
+      {download.state === "completed" && download.canReveal && <CdsButton size="sm" variant="secondary" onClick={onReveal}>{t("Show in Finder")}</CdsButton>}
+      {/* W14-code r3 fr3-08: the CDS ghost iconOnly Button, as 3.6556.2 draws pane controls (c4db265df `n(h,{variant:"ghost",
+          iconOnly:!0,icon:"X","aria-label":…})`); the host notice keeps its bottom tooltip. */}
+      <CdsButton variant="ghost" iconOnly icon="X" aria-label={t("Dismiss")} tooltipSide="bottom" onMouseDown={(event) => event.preventDefault()} onClick={onDismiss} />
     </div>
   );
 }
@@ -110,7 +110,7 @@ export function PreviewCandidateRow({ candidate, busy, onUse }) {
         <code className={row.blocked ? "block truncate text-code text-primary" : "block break-words text-code text-primary select-all"}>{row.command}</code>
         {row.problem && <div className="mt-[2px] text-footnote text-danger">{t(row.problem)}</div>}
       </div>
-      {row.blocked ? null : <SourceSettingsButton variant="secondary" disabled={busy} onClick={() => onUse(candidate)}>{t("Use this")}</SourceSettingsButton>}
+      {row.blocked ? null : <CdsButton variant="secondary" disabled={busy} onClick={() => onUse(candidate)}>{t("Use this")}</CdsButton>}
     </div>
   );
 }
@@ -154,7 +154,7 @@ export function PreviewStartPrompt({ onSetUp, detection = null, detectionActive 
           </div>
           {onSetUp && <p className="m-0 flex flex-wrap items-center justify-center gap-x-[3px] text-footnote text-muted">
             <span>{t("Preview your app instead?")}</span>
-            <SourceSettingsButton variant="ghost" size="xxs" onClick={onSetUp} onMouseDown={(event) => event.preventDefault()}>{t("Detect dev server")}</SourceSettingsButton>
+            <CdsButton variant="ghost" size="xxs" onClick={onSetUp} onMouseDown={(event) => event.preventDefault()}>{t("Detect dev server")}</CdsButton>
           </p>}
         </>}
         {detection}
@@ -209,7 +209,7 @@ export function PreviewBrowserToolsOff({ onTurnOn }) {
     <div className="absolute inset-0" data-preview-start="setting-off">
       <EmptyState role="status" icon="Globe" title={t("Browser tools are turned off")}
         body={t("They let {assistant} start your dev server and open pages here. Once they’re on, {assistant} can use them in new sessions on your computer.", { assistant })}
-        actions={onTurnOn ? <SourceSettingsButton variant="secondary" onClick={onTurnOn}>{t("Turn on Browser tools")}</SourceSettingsButton> : null} />
+        actions={onTurnOn ? <CdsButton variant="secondary" onClick={onTurnOn}>{t("Turn on Browser tools")}</CdsButton> : null} />
     </div>
   );
 }
@@ -228,58 +228,79 @@ function StartPage({ state, rows, onStart, onStop, onOpen, onSetUp, starting, ca
   return <ServerList launch={launch} rows={rows} starting={starting} onStart={onStart} onStop={onStop} onOpen={onOpen} />;
 }
 
-// 2.2553.1 bv / yv (panes-tile-current.js:10172-10365): a bordered rounded list (at most 5 rows until "See all"),
-// each row Cache icon · name (truncates) · muted tabular port · an icon-only Play (secondary) / Stop (danger). A
-// running server's row is itself the Open button. The two muted captions sit at the bottom of the pane; editing
-// .claude/launch.json lives in the Servers & settings menu, not on the caption.
+// shared-78 JT (frontend_preview_external_domains): off on this host, as titlebar-controls-model's C.
+const PREVIEW_OPENS_EXTERNAL_DOMAINS = false;
+
+// W14-code r6 r6pa-05 (E84): 3.6556.2 cf580efe9 pa (list) / fa (row) in their own utility class strings: a bordered
+// rounded list (at most 5 rows until "See all"), each row Cache icon · name (truncates) · the `:${port}` detail in
+// text-muted-as-secondary tabular-nums, an icon-only Play (secondary) / Stop (danger). A running server's row is itself
+// the Open button, and its icon and name read text-secondary-control. The two captions sit at the bottom of the pane.
+// W14-code r6 review (r6pa-05): pa's `ie = I || B` (readable 3300-3356) — a server starting (F = t.find(ma)), a pending
+// Run of a server not yet running (N.isRun), or the started server held da = 1500 ms once it runs (B; the pane's
+// serverStartHold, passed as `holding`) — replaces the list with a role=status lg spinner (Ac) and an sr-only
+// "Starting server" (rTAQSpY/q9), and drops the two captions (`!ie && …`).
 const VISIBLE_SERVERS = 5;
-function ServerList({ launch, rows, starting, onStart, onStop, onOpen }) {
+export function ServerList({ launch = {}, rows, starting = null, holding = false, startingName, onStart, onStop, onOpen }) {
   const [all, setAll] = useState(false);
+  const pendingRun = !!starting && !rows.some((row) => row.name === starting && row.running);
+  const spinner = holding || pendingRun || rows.some((row) => row.status === "starting");
   const firstHidden = useRef(null);
   const focusHidden = useRef(false);
   const showAll = all || rows.some((row, index) => index >= VISIBLE_SERVERS && (row.running || row.busy || row.name === starting));
   const shown = showAll ? rows : rows.slice(0, VISIBLE_SERVERS);
   useEffect(() => { if (showAll && focusHidden.current) { focusHidden.current = false; firstHidden.current?.focus(); } }, [showAll]);
   return (
-    <div className="spv-start-servers" data-preview-start="servers">
-      <div className="spv-start-servers-inner">
-        <div className="spv-start-servers-main">
-          <div className="spv-start-column">
-            {launch.error && <p className="spv-start-problem" role="alert">{launch.error}</p>}
-            {shown.length > 0 && (
-              <ul role="list" className="spv-servers" aria-label={t("Servers")}>
-                {shown.map((row, index) => {
-                  const open = row.running && !!row.port;
-                  const label = row.running ? t("Stop {serverName}", { serverName: row.name }) : t("Run {serverName}", { serverName: row.name });
-                  const body = <>
-                    <Icon name="Cache" size={16} className="spv-server-icon" />
-                    <span className="spv-server-name">{row.name}</span>
-                    {row.port ? <span className="spv-server-port">:{row.port}</span> : null}
-                  </>;
-                  return (
-                    <li key={row.name} ref={index === VISIBLE_SERVERS ? firstHidden : undefined} tabIndex={-1} className="spv-server" data-status={row.status}
-                      data-open={open || undefined} aria-busy={row.name === starting || undefined}>
-                      {open
-                        ? <button type="button" className="spv-server-main" aria-label={t("Open {name}", { name: row.name })} onClick={() => onOpen(row.url)}>{body}</button>
-                        : <span className="spv-server-main">{body}</span>}
-                      <SourceSettingsButton size="sm" variant={row.running ? "danger" : "secondary"} icon={row.running ? "Stop" : "Play"} iconSize="auto" iconOnly
-                        className="spv-server-action" aria-label={label} busy={row.busy || row.name === starting}
-                        disabled={!!starting && row.name !== starting} onMouseDown={(event) => event.preventDefault()}
-                        onClick={() => (row.running ? onStop(row.name) : onStart(row.name))} />
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-            {shown.length < rows.length && (
-              <SourceSettingsButton variant="ghost" size="xxs" className="spv-see-all" onMouseDown={(event) => event.preventDefault()}
-                onClick={(event) => { focusHidden.current = event.currentTarget === event.currentTarget.ownerDocument.activeElement; setAll(true); }}>{t("See all")}</SourceSettingsButton>
-            )}
+    <div className="absolute inset-0" data-preview-start="servers" data-preview-starting={spinner ? (startingName ?? starting ?? undefined) : undefined}>
+      <div className="h-full w-full overflow-y-auto">
+        <div className="flex min-h-full w-full flex-col items-center gap-lg p-lg">
+          <div className="flex w-full flex-1 items-center justify-center">
+            <div className="flex min-w-[min(400px,75%)] flex-col gap-sm">
+              {spinner ? (
+                <div role="status" className="flex w-full items-center justify-center py-lg"><CdsSpinner size="lg" /><span className="sr-only">{t("Starting server")}</span></div>
+              ) : <>
+              {/* Host: a launch.json that doesn't parse keeps the list view with its error. */}
+              {launch.error && <p className="spv-start-problem" role="alert">{launch.error}</p>}
+              {shown.length > 0 && (
+                <ul role="list" className="flex w-full flex-col rounded border max-h-[min(60vh,480px)] overflow-y-auto" aria-label={t("Servers")}>
+                  {shown.map((row, index) => {
+                    const open = row.running && !!row.port;
+                    const label = row.running ? t("Stop {serverName}", { serverName: row.name }) : t("Run {serverName}", { serverName: row.name });
+                    const tone = open ? "text-secondary-control" : "text-secondary";
+                    const body = <>
+                      <CdsIcon name="Cache" size="sm" className={`shrink-0 ${tone}`} />
+                      <span className={`min-w-0 flex-1 truncate text-body ${tone}`}>{row.name}</span>
+                      {row.port ? <span className="shrink-0 text-footnote text-muted-as-secondary tabular-nums">{`:${row.port}`}</span> : null}
+                    </>;
+                    return (
+                      <li key={row.name} ref={index === VISIBLE_SERVERS ? firstHidden : undefined} tabIndex={-1} data-status={row.status}
+                        aria-busy={row.name === starting || undefined}
+                        className={`flex items-center gap-sm border-b py-md ps-[9px] pe-md last:border-b-0 focus-visible:outline-1 focus-visible:-outline-offset-1 focus-visible:outline-fill-accent ${open ? "hover:bg-alpha-2 has-[:focus-visible]:bg-alpha-2" : ""}`}>
+                        {open
+                          ? <button type="button" aria-label={t("Open {name}", { name: row.name })} onClick={() => onOpen(row.url)}
+                            className="flex min-w-0 flex-1 items-center gap-sm border-0 bg-transparent p-0 text-start outline-none hide-focus-ring">{body}</button>
+                          : body}
+                        {/* cf580efe9 fa: size sm iconOnly g, className "min-w-8 shrink-0" (its aria-label is the tooltip). */}
+                        <CdsButton size="sm" variant={row.running ? "danger" : "secondary"} icon={row.running ? "Stop" : "Play"} iconOnly
+                          className="min-w-8 shrink-0" aria-label={label} busy={row.busy || row.name === starting}
+                          disabled={!!starting && row.name !== starting} onMouseDown={(event) => event.preventDefault()}
+                          onClick={() => (row.running ? onStop(row.name) : onStart(row.name))} />
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+              {shown.length < rows.length && (
+                // cf580efe9 pa: ghost xxs, "w-full text-muted hover:text-primary".
+                <CdsButton variant="ghost" size="xxs" className="w-full text-muted hover:text-primary" onMouseDown={(event) => event.preventDefault()}
+                  onClick={(event) => { focusHidden.current = event.currentTarget === event.currentTarget.ownerDocument.activeElement; setAll(true); }}>{t("See all")}</CdsButton>
+              )}
+              </>}
+            </div>
           </div>
-        </div>
-        <div className="spv-start-captions">
-          <p className="spv-start-caption">{rows.some((row) => row.running) ? t("Open a server to preview your app, or enter a URL.") : t("Run a server to preview your app, or enter a URL.")}</p>
-          <p className="spv-start-caption">{t("Edit this list in .claude/launch.json.")}</p>
+          {!spinner && <div className="flex flex-col items-center">
+            <p className="m-0 max-w-[48ch] text-center text-footnote text-muted-as-secondary">{rows.some((row) => row.running) ? t("Open a server to preview your app, or enter a URL.") : t("Run a server to preview your app, or enter a URL.")}</p>
+            <p className="m-0 max-w-[48ch] text-center text-footnote text-muted-as-secondary">{t("Edit this list in .claude/launch.json.")}</p>
+          </div>}
         </div>
       </div>
     </div>
@@ -314,7 +335,7 @@ export function PreviewStartFailedCard({ logLine, onCopyLog, actions = null, met
               {meta && <span className="font-sans text-footnote text-muted">{meta}{" ·"}{" "}</span>}
               {logLine}
             </span>
-            {onCopyLog && <SourceSettingsButton variant="ghost" icon={copied ? "Check" : "Copy"} iconOnly aria-label={copied ? t("Copied") : t("Copy error log")}
+            {onCopyLog && <CdsButton size="base" variant="ghost" icon={copied ? "Check" : "Copy"} iconOnly aria-label={copied ? t("Copied") : t("Copy error log")}
               className="shrink-0" onMouseDown={(event) => event.preventDefault()} onClick={() => void copy()} />}
           </div>
         )}
@@ -332,7 +353,7 @@ export function PreviewStoppedCard({ serverLabel, onRestart, restartPending = fa
   if (!serverLabel) {
     return (
       <EmptyState role="status" icon="Cache" title={t("Preview server stopped")} body={t("Close and reopen the preview to start it again.")}
-        actions={onClose ? <SourceSettingsButton variant="secondary" onClick={onClose}>{t("Close")}</SourceSettingsButton> : null} />
+        actions={onClose ? <CdsButton variant="secondary" onClick={onClose}>{t("Close")}</CdsButton> : null} />
     );
   }
   return (
@@ -342,11 +363,11 @@ export function PreviewStoppedCard({ serverLabel, onRestart, restartPending = fa
           <Icon name="Cache" size={16} className="shrink-0 text-secondary" />
           <span className="min-w-0 flex-1 truncate text-body text-secondary">{serverLabel}</span>
           <span className="shrink-0 text-footnote text-muted-as-secondary">{t("Stopped")}</span>
-          <SourceSettingsButton size="xxs" variant="secondary" busy={restartPending} aria-label={t("Restart {serverName}", { serverName: serverLabel })}
-            onClick={onRestart} onMouseDown={(event) => event.preventDefault()} className="shrink-0">{t("Restart")}</SourceSettingsButton>
+          <CdsButton size="xxs" variant="secondary" busy={restartPending} aria-label={t("Restart {serverName}", { serverName: serverLabel })}
+            onClick={onRestart} onMouseDown={(event) => event.preventDefault()} className="shrink-0">{t("Restart")}</CdsButton>
         </div>
         <p className="m-0 text-center text-caption text-muted-as-secondary">{caption ?? t("The dev server stopped. Restart it, or close the preview.")}</p>
-        {onDismiss && <SourceSettingsButton size="xs" variant="ghost" onClick={onDismiss} className="self-center">{t("Show start page")}</SourceSettingsButton>}
+        {onDismiss && <CdsButton size="xs" variant="ghost" onClick={onDismiss} className="self-center">{t("Show start page")}</CdsButton>}
       </div>
     </div>
   );
@@ -439,9 +460,6 @@ export function usePreviewSnapshot(sessionId, desktop = globalThis.desktop) {
   }, [sessionId, desktop]);
   return state?.sessionId === sessionId ? state : null;
 }
-export function usePreviewActivity(sessionId, desktop = globalThis.desktop) {
-  return anyServerRunning(usePreviewSnapshot(sessionId, desktop));
-}
 
 /**
  * @param {object} props
@@ -486,9 +504,18 @@ export function SourcePreviewPane({ sessionId, desktop = globalThis.desktop, hea
   const [restartFor, setRestartFor] = useState(null);
   const [hold, setHold] = useState(null);
   const restartPending = restartFor === sessionId;
-  // A start from this pane that failed: whether its error reached the agent (Rr / zr submitToChat).
-  const [failureNote, setFailureNote] = useState(null);
   const askAgent = useRef(onAskAgent); askAgent.current = onAskAgent;
+  // r4pa-c05: send a waiting error report whenever a sender is there (main.jsx gives none while disconnected or archived;
+  // a new one on each of its renders, e.g. when loading or sending ends), and again after the backoff.
+  const [failureRetry, setFailureRetry] = useState(0);
+  useEffect(() => {
+    if (!onAskAgent || !previewFailureReports.pending(sessionId)) return undefined;
+    let timer = null, live = true;
+    void previewFailureReports.flush(sessionId, onAskAgent).then(({ retryIn }) => {
+      if (live && retryIn !== null) timer = setTimeout(() => setFailureRetry((value) => value + 1), retryIn);
+    });
+    return () => { live = false; if (timer !== null) clearTimeout(timer); };
+  }, [sessionId, onAskAgent, failureRetry]);
   // cf580efe9 bi: the server whose start replaced the list with a spinner (held SERVER_SETTLE_MS once it runs).
   const [heldServer, setHeldServer] = useState(null);
   // cf580efe9 Pi: the page from before the app closed ({ key, value }; value null when there is no frame to show).
@@ -588,6 +615,16 @@ export function SourcePreviewPane({ sessionId, desktop = globalThis.desktop, hea
     return () => clearTimeout(timer);
   }, [startHold.settle]);
   const surface = previewSurface(state, { starting, lastStarted, hold: hold?.surface ?? null, settling: startHold.spinner });
+  // 3.6556.2 c9c84d68b C(e) (called from cf580efe9 with Me.pageBackgroundColor): with a server shown and not the start
+  // page, the viewport is the page's own colour, else #ffffff for an HTML preview or a tab on browser defaults, else the
+  // scheme placeholder (#131312 dark / #f5f5f5 light, data-placeholder in the sheet); otherwise it is not painted. Local
+  // previews are dev-server pages (no html-preview- tabs, no browser-defaults signal).
+  // W14-code DC-13: the main process never samples a page colour here, as officially on a 3P desktop: jPKPzV-P
+  // samplePageColors starts `if(!this.externalPreviewEnabled)return;` with externalPreviewEnabled = lP() = cP() && sP(),
+  // cP needing Pb("17519066") (eYn), which Uon does not list (E81: off). So pageBackgroundColor stays undefined, and
+  // C(e)'s first branch is kept only as the official renderer transcription.
+  const viewportBackground = previewViewportBackground({ hasServer: !!state?.hasPage, hideForStartPage: surface === "start" || surface === "restored",
+    isHtmlPreview: false, activeTabUsesBrowserDefaults: false, pageBackgroundColor: state?.pageBackgroundColor });
   const failure = surface === "failed" ? (hold?.surface === "failed" ? hold.failure : failedServer(state, lastStarted)) : null;
   // Keep the native surface painting until its replacement image is ready.
   // CDP can wait indefinitely for a fresh frame if a resized view is hidden first.
@@ -683,7 +720,7 @@ export function SourcePreviewPane({ sessionId, desktop = globalThis.desktop, hea
     setLastStarted(name);
     try {
       const result = await call("preview-server-start", { name });
-      if (result?.ok) { setFailureNote(null); return; }
+      if (result?.ok) { previewFailureReports.drop(sessionId, name); return; }
       // preview-05 (2.42304.0 cf580efe9-b-DCvKJg si / ui): no usable launch.json entry — refresh the configurations
       // (yn: the snapshot re-reads launch.json) and, while the session is still shown, the uV3BfEC8hz notice.
       if (noLaunchEntry(result)) {
@@ -694,12 +731,12 @@ export function SourcePreviewPane({ sessionId, desktop = globalThis.desktop, hea
       // Any other failure without a server entry is a notice; one with it shows the failure card.
       if (result?.code === "error") { report(new Error(serverErrorText(result, name))); return; }
       if (result?.code === "stopped") return;
-      // ca80fca8d / cf580efe9 Rr, zr: unless another session's server holds the port, the error goes to the agent.
-      if (heldPort(result) !== undefined || !askAgent.current) { setFailureNote({ name, sent: false }); return; }
-      setFailureNote({ name, sent: false });
+      // ca80fca8d / cf580efe9 Rr, zr: unless another session's server holds the port, the error goes to the agent —
+      // now, or (r4pa-c05) once the session can take it.
+      if (heldPort(result) !== undefined) { previewFailureReports.drop(sessionId, name); return; }
       const logs = await call("preview-server-logs", { name, lines: 500 }).catch(() => null);
-      const sent = await Promise.resolve(askAgent.current?.(startFailurePrompt(startFailureText(result, logs?.lines ?? [])))).catch(() => false);
-      setFailureNote((note) => (note?.name === name ? { name, sent: sent === true } : note));
+      previewFailureReports.queue(sessionId, { name, text: startFailurePrompt(startFailureText(result, logs?.lines ?? [])) });
+      setFailureRetry((value) => value + 1);
     } catch (error) { report(error); }
     finally { if (!inPlace) setStarting(null); }
   }, [call, report, onError, sessionId]);
@@ -817,6 +854,8 @@ export function SourcePreviewPane({ sessionId, desktop = globalThis.desktop, hea
     else if (action === "close") { if (state?.tabs?.length) void closeTab(state.activeTabId); else onClose?.(); }
     else if (action === "new-tab") createTab();
     else if (action === "address") focusAddress();
+    // W14-code r2-shared-07: jPKPzV-P wli `pQ(e,t,"r")` claims ⌘R inside the page; c518a31cc Ve lists it.
+    else if (action === "reload") history("reload");
   };
   // Pt: the annotated (or plain) capture goes to the composer and the sketch closes.
   const attachSketch = useCallback((file) => { onAttachScreenshot?.(file); closeSketch(); }, [onAttachScreenshot, closeSketch]);
@@ -836,23 +875,16 @@ export function SourcePreviewPane({ sessionId, desktop = globalThis.desktop, hea
   const failureText = failure ? startFailureText({ message: failureMessage }, failureLines) : "";
   const failureChip = !failure || failureHeld !== undefined ? undefined
     : failureLogLine(failure.error?.code === "identity" ? failureMessage : failureText, failure.error);
-  const ownFailure = !!failure && failureNote?.name === failure.name;
+  // cf580efe9 Hr: the meta is unconditional (r4pa-c05) — the agent's own preview_start got the error in its tool result,
+  // a start from here sends it (previewFailureReports) — except for a port another session's server holds.
   const failureMeta = !failure ? undefined
     : failureHeld !== undefined ? t("Port {port} is already in use by a dev server in another session. Stop that server, then try again.", { port: failureHeld })
-      // The agent's own preview_start got the error in its tool result; a start from here, once it was sent.
-      : !ownFailure || failureNote.sent ? t("Error details were sent to {assistant}", { assistant: assistantName() }) : undefined;
+      : t("Error details were sent to {assistant}", { assistant: assistantName() });
   const copyFailure = useCallback(async () => {
     try { await navigator.clipboard.writeText(failureText); return "written"; } catch { return "failed"; }
   }, [failureText]);
 
-  const error = surface === "error" ? pageError(state) : null;
   const stopped = surface === "stopped" ? (hold?.surface === "stopped" ? hold.server : stoppedServer(state)) : null;
-  // A connection-refused page whose address is one of this folder's servers that isn't running.
-  const refusedServer = (() => {
-    if (!error || !/CONNECTION_REFUSED|ERR_CONNECTION_RESET|ADDRESS_UNREACHABLE/.test(state?.error?.description ?? "")) return null;
-    const server = pageServer(state, { configs: true });
-    return server && server.status !== "running" && server.status !== "starting" && server.status !== "stopping" ? server : null;
-  })();
   const paneHeight = pane.current?.clientHeight ?? 0;
   return (
     <aside ref={pane} className="source-file-panel detail-panel spv-pane" aria-label={t("Preview")} data-preview-surface={surface} data-sketching={sketch ? "" : undefined} data-page-tools={toolsOpen ? '' : undefined}
@@ -869,7 +901,12 @@ export function SourcePreviewPane({ sessionId, desktop = globalThis.desktop, hea
           if (event.key.toLowerCase() === 'l') { event.preventDefault();event.stopPropagation();if (!event.repeat) focusAddress();return; }
           if (event.key.toLowerCase() === 't') { event.preventDefault();event.stopPropagation();if (!event.repeat) createTab();return; }
           if (event.key.toLowerCase() === 'w' && state?.tabs?.length) { event.preventDefault();event.stopPropagation();if (!event.repeat) void closeTab(state.activeTabId);return; }
+          // W14-code r2-shared-07: c518a31cc Ve "Reload page in preview" cmd+r (jPKPzV-P dTi: View › Reload reloads the
+          // preview whose chrome has focus, Bhi), taken here before the menu's CmdOrCtrl+R reloads the app.
+          if (event.key.toLowerCase() === 'r') { event.preventDefault();event.stopPropagation();if (!event.repeat) history('reload');return; }
         }
+        // Ve off a Mac: `i = n ? Be : "f5"` (k off: F5).
+        if (event.key === 'F5' && !event.metaKey && !event.ctrlKey && !event.altKey && !event.shiftKey && !/Mac/.test(navigator.platform)) { event.preventDefault();event.stopPropagation();if (!event.repeat) history('reload');return; }
         // toggleSketchMode (⇧⌘X) while focus is in this pane.
         const pageTool = matchSketchCommand(event, { isClaudeApp: true, commands: ['toggleSketchMode', 'toggleSelectionMode'] });
         if (pageTool) { event.preventDefault(); event.stopPropagation(); if (!event.repeat) { if (pageTool === 'toggleSketchMode') void toggleSketch(); else togglePick(); } }
@@ -890,7 +927,7 @@ export function SourcePreviewPane({ sessionId, desktop = globalThis.desktop, hea
           onShowAnnotationTools={() => setShowTools(true)} showAnnotationToolsDisabled={!state?.hasPage || !onAttachScreenshot}
           onOpenFile={() => call("preview-open-file").then(result => { if (result && !result.canceled && result.ok === false) report(new Error(result.description || t("The page didn’t load."))); }, report)}
           viewportItems={viewportRows(state?.viewport).map(row => ({ value: row.value, label: row.label, checked: row.checked, checkedRole: 'radio', hint: row.hint,
-            description: row.setByAgent ? t('Set by {assistant}', { assistant: t('DeepSeek') }) : undefined,
+            description: row.setByAgent ? t('Set by {assistant}', { assistant: assistantName() }) : undefined,
             onSelect: () => { if (!row.keep) call('preview-emulate', { preset: row.value }).catch(report); } }))}
           viewportHint={state?.viewport?.preset !== 'responsive' ? viewportLabel(state?.viewport) : undefined} viewportDisabled={!state?.hasPage}
           colorScheme={state?.viewport?.colorScheme ?? 'system'} onColorScheme={colorScheme => call('preview-emulate', { colorScheme }).catch(report)}
@@ -927,13 +964,21 @@ export function SourcePreviewPane({ sessionId, desktop = globalThis.desktop, hea
       <SourcePreviewCloseTabsDialog pending={tabClose ? { mode: tabClose.others ? 'others' : 'single', processes: tabClose.processes.map(({ name, port }) => ({ name, port })) } : null}
         onCancel={() => setTabClose(null)} onKeepRunning={() => { if (tabClose) void closeTab(tabClose.tabId, tabClose.others, 'keep'); }}
         onStopServer={() => { if (tabClose) void closeTab(tabClose.tabId, tabClose.others, 'stop'); }} />
+      {/* W14-code r6 css6-preview-focus-sentinel: cf580efe9 `c` — a block-level sr-only sentinel in the pane column before
+          the viewport body, with the "Browser page" copy when `I` (shared-78 JT: frontend_preview_external_domains, which
+          the host has no GrowthBook for — titlebar-controls-model C) and "Preview page" otherwise. */}
+      {wantsPage && (
+        <button ref={skip} type="button" data-preview-focus-sentinel=""
+          className="sr-only focus:not-sr-only focus:block focus:w-full focus:shrink-0 focus:bg-alpha-2 focus:text-start focus:text-caption focus:text-primary focus:shadow-focus"
+          onClick={() => call("preview-focus").catch(() => {})}>
+          {PREVIEW_OPENS_EXTERNAL_DOMAINS
+            ? t("Browser page — press Enter to move into it. Inside, press F6 or Ctrl+F6 to move back out.")
+            : t("Preview page — press Enter to move into it. Inside, press F6 or Ctrl+F6 to move back out.")}
+        </button>
+      )}
       <div className="spv-body">
-        <div ref={viewport} className="spv-viewport" data-page={pageVisible || undefined} data-covered={occlusion.covered || undefined}>
-          {wantsPage && (
-            <button ref={skip} type="button" className="spv-skip" onClick={() => call("preview-focus").catch(() => {})}>
-              {t("Preview page — press Enter to move into it. Inside, press F6 or Ctrl+F6 to move back out.")}
-            </button>
-          )}
+        <div ref={viewport} className="spv-viewport" data-page={pageVisible || undefined} data-covered={occlusion.covered || undefined}
+          data-placeholder={viewportBackground === "scheme" || undefined} style={viewportBackground && viewportBackground !== "scheme" ? { backgroundColor: viewportBackground } : undefined}>
           {wantsPage && occlusion.covered && occlusion.image && <img className="spv-capture" src={occlusion.image} alt="" draggable={false} />}
           {state?.viewport?.preset && state.viewport.preset !== "responsive" && wantsPage && <span className="spv-viewport-badge" aria-hidden="true">{viewportLabel(state.viewport)}</span>}
           {toolsOpen && <div className="spv-sketch-layer" data-drawing={sketch && sketch.backdrop !== undefined ? '' : undefined} data-preview-sketch="">
@@ -944,10 +989,12 @@ export function SourcePreviewPane({ sessionId, desktop = globalThis.desktop, hea
           {surface === "loading" && <div className="spv-center" role="status" aria-label={t("Loading preview")}><SourceSpinner size="lg" delay={400} /></div>}
           {surface === "start" && <StartPage state={state} rows={rows} starting={starting} onStart={start} onStop={stop} onOpen={navigate} call={call} sessionId={sessionId}
             agentUsesPreview={agentUsesPreview} onTurnOnAgentPreview={onTurnOnAgentPreview} onSetUp={onAskAgent ? () => onAskAgent(ADD_SERVER_PROMPT) : undefined} />}
-          {/* cf580efe9 bi: a start from this pane is a centred lg spinner with an sr-only "Starting server"; one the agent (or
-              another pane) began is Or's "Setting up preview" with the session's running tool. */}
+          {/* A start from this pane is pa's own `ie` branch (3.6556.2 cf580efe9 readable 3350: the list's lg spinner with an
+              sr-only "Starting server", in the start page's frame, captions dropped); one the agent (or another pane) began
+              is Or's "Setting up preview" with the session's running tool. */}
           {surface === "starting" && (starting || (heldServer !== null && heldServer === lastStarted)
-            ? <div className="spv-center" role="status" data-preview-starting={starting ?? heldServer}><SourceSpinner size="lg" /><span className="source-sr-only">{t("Starting server")}</span></div>
+            ? <ServerList launch={state?.launch} rows={rows} starting={starting} holding={startHold.spinner} startingName={starting ?? heldServer}
+              onStart={start} onStop={stop} onOpen={navigate} />
             : <div className="absolute inset-0"><PreviewSettingUp label={runningToolLabel} /></div>)}
           {surface === "restored" && restored && (restored.value
             ? <div className="absolute inset-0"><PreviewLastFrame jpegBase64={restored.value.jpegBase64} serverLabel={restored.value.configName ?? state?.lastFrame?.configName}
@@ -957,16 +1004,10 @@ export function SourcePreviewPane({ sessionId, desktop = globalThis.desktop, hea
           {surface === "failed" && failure && (
             <div className="absolute inset-0" data-preview-failure={failure.name}>
               <PreviewStartFailedCard meta={failureMeta} logLine={failureChip} onCopyLog={copyFailure}
-                actions={<>
-                  <SourceSettingsButton variant="secondary" busy={restartPending} onClick={() => restart(failure.name, { surface: "failed", failure })}>{t("Try again")}</SourceSettingsButton>
-                  {/* Sending the error didn't go through (a turn was running): it can be sent from here once the agent is free. */}
-                  {ownFailure && !failureNote.sent && failureHeld === undefined && onAskAgent && (
-                    <SourceSettingsButton variant="ghost" onClick={() => { void Promise.resolve(onAskAgent(startFailurePrompt(startFailureText(failure.error, failureLines))))
-                      .then((sent) => { if (sent === true) setFailureNote((note) => (note?.name === failure.name ? { name: failure.name, sent: true } : note)); }, () => {}); }}>
-                      {t("Ask {assistant} to fix it", { assistant: assistantName() })}
-                    </SourceSettingsButton>
-                  )}
-                </>} />
+                // W14-code pa2-09 (E93): cf580efe9 Hr's start-failed actions are only `r(g, {"data-preview-start-retry": "",
+                // variant: "secondary", …"Try again" (FazwRldA7z)})`; the error goes to the agent by itself (main.jsx onAskAgent
+                // queues it while a turn runs, as submitToChat does), so the host's ask-to-fix ghost button is gone.
+                actions={<CdsButton data-preview-start-retry="" variant="secondary" busy={restartPending} onClick={() => restart(failure.name, { surface: "failed", failure })}>{t("Try again")}</CdsButton>} />
             </div>
           )}
           {/* cf580efe9 mr (fa main pane 5916-5935): the page's dev server stopped; Restart starts it again and reopens the page. */}
@@ -976,18 +1017,9 @@ export function SourcePreviewPane({ sessionId, desktop = globalThis.desktop, hea
                 onRestart={() => restart(stopped.name, { surface: "stopped", server: stopped })} />
             </div>
           )}
-          {surface === "error" && error && (
-            <div className="spv-center spv-error" role="alert">
-              <Icon name="Warning" size={20} className="spv-error-icon" />
-              <div className="spv-error-title">{error.title}</div>
-              {error.body && <div className="spv-error-body">{error.body}</div>}
-              <div className="spv-error-actions">
-                {/* Nothing answering at a launch.json server's address: start that server again from here. */}
-                {refusedServer && <button type="button" className="spv-button" data-variant="primary" data-preview-restart={refusedServer.name} onClick={() => start(refusedServer.name)}>{t("Restart {serverName}", { serverName: refusedServer.name })}</button>}
-                <button type="button" className="spv-button" data-variant="secondary" onClick={() => history("reload")}>{t("Reload")}</button>
-              </div>
-            </div>
-          )}
+          {/* W14-code r4 r4pa-c04 (E95): a page that fails to load or crashes is the main process's data: error page in
+              the tab itself (3.6556.2 jPKPzV-P Idi / Pdi, electron/preview-service.cjs previewErrorPage); the host's
+              .spv-error overlay with its Restart {serverName} / Reload buttons is gone (the toolbar's Reload stays). */}
         </div>
         {toolsOpen && <div className="spv-sketch-reservation" />}
         {downloadNotice && <DownloadNotice download={downloadNotice} onReveal={() => call("preview-download-reveal").catch(report)} onDismiss={() => setDismissedDownload(downloadNotice.at)} />}

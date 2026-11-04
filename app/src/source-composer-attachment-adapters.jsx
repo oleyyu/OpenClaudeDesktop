@@ -2,7 +2,7 @@
 // generated composer-attachment-tiles.mjs (the 3.6556.2 c0fbbe82d tile wrappers Vi / Ui / Wi / Bi / Ri; 2.42304.0 hr / _r /
 // vr / mr / pr). Each export
 // names the original binding it stands in for.
-import React from 'react';
+import React, { useEffect, useImperativeHandle, useRef } from 'react';
 import { AttachmentFile, AttachmentImage, AttachmentQuote, AttachmentVideo } from './generated/code-composer/chat-composer-attachments.mjs';
 import { pathTooltipContent, pathTooltipPlacement } from './generated/code-composer/path-tooltip-placement.mjs';
 import { CdsTooltip } from './generated/view-tabs/index.js';
@@ -30,3 +30,33 @@ export function ComposerPathHoverCard({ path, trigger }) {
 
 // vendor-intl `l` (react-intl FormattedMessage): the local catalog, as every Code surface (source-code-start-adapters).
 export const ComposerMessage = StartMessage;
+
+// W14-code composer-15: c0fbbe82d Hr (`Vr.Component`, the lazily loaded cbd02b8f2 ka EpitaxyCodeMirrorText) for the
+// generated Saved draft dialog (composer-held-text-dialog.mjs sa). The host has no CodeMirror; this keeps ka's contract
+// and box: the root `div` with `cn("flex flex-col", className)`, the handle {getValue, focus, getContentElement}, the
+// content's aria-label, readOnly, autoFocus, onDirty on the first change only, Mod-Enter running onSubmit, and onUnmount
+// handed the text getter. Da's theme rides on the textarea: flex 1 1 0% with min-height 0, the mono font, 8px block and
+// 10px inline padding, wrapped lines (T.lineWrapping), tabindex 0.
+export function ComposerHeldTextEditor({ initialValue, readOnly = false, ariaLabel, autoFocus = false, onDirty, onSubmit, onUnmount, className, ref }) {
+  const area = useRef(null), dirty = useRef(false), latest = useRef({ onUnmount, initialValue });
+  latest.current = { onUnmount, initialValue };
+  useImperativeHandle(ref, () => ({
+    getValue: () => area.current?.value ?? latest.current.initialValue,
+    focus: () => area.current?.focus(),
+    getContentElement: () => area.current ?? null,
+  }), []);
+  useEffect(() => {
+    const element = area.current;
+    if (autoFocus) element?.focus();
+    return () => { const text = element?.value ?? latest.current.initialValue; latest.current.onUnmount?.(() => text); };
+  }, []);
+  return <div className={['flex flex-col', className].filter(Boolean).join(' ')}>
+    <textarea ref={area} defaultValue={initialValue} readOnly={readOnly} aria-label={ariaLabel} tabIndex={0} spellCheck={false}
+      data-held-text-editor=""
+      style={{ flex: '1 1 0%', minHeight: 0, height: '16rem', padding: '8px 10px', border: 0,
+        background: 'transparent', color: 'inherit', font: 'inherit', fontFamily: 'var(--cds-font-mono)', resize: 'none', outline: 'none',
+        whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}
+      onChange={() => { if (!dirty.current) { dirty.current = true; onDirty?.(); } }}
+      onKeyDown={(event) => { if (event.key === 'Enter' && (event.metaKey || event.ctrlKey) && !event.nativeEvent.isComposing) { event.preventDefault(); onSubmit?.(); } }} />
+  </div>;
+}

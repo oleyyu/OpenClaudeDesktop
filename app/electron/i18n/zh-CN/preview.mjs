@@ -32,13 +32,6 @@ export default {
   "The dev server exited during startup. Check its output below.": "开发服务器在启动时退出了。请查看下方的输出。",
   "The dev server didn’t answer in time.": "开发服务器未能及时响应。",
   "Couldn’t start the dev server.": "无法启动开发服务器。",
-  "Couldn’t open this address": "无法打开此地址",
-  "The page stopped working": "页面已停止响应",
-  "Reload to try again.": "重新加载以重试。",
-  "Couldn’t load this preview": "无法加载此预览",
-  "Nothing is answering at {url}. Is the dev server running?": "{url} 没有响应。开发服务器在运行吗？",
-  "{reason} ({url})": "{reason}（{url}）",
-  "The page failed to load.": "页面加载失败。",
   "Responsive": "自适应",
   "Mobile": "手机",
   "Tablet": "平板",
@@ -198,6 +191,8 @@ export default {
   // Preview Annotate mode (source-pane-sketch.jsx) and Servers & settings › Save screenshot.
   "Annotate": "标注",
   "Annotate page in preview": "在预览中标注页面",
+  // W14-code r2-shared-07: c518a31cc Ve (wld+KBThBq), the shortcuts dialog's ⌘R row.
+  "Reload page in preview": "在预览中重新加载页面",
   "The dev server stopped. Restart it, or close the preview.": "开发服务器已停止。请重新启动它，或关闭预览。",
   "Restart": "重新启动",
   "Restart {serverName}": "重新启动 {serverName}",

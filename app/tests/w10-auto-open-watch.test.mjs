@@ -11,7 +11,7 @@ import { createRequire } from 'node:module';
 import { pathToFileURL } from 'node:url';
 import { processWorld, worldOptions } from './fixtures/preview-r3b-world.mjs';
 import {
-  AUTO_OPEN_DESIGN_CANVAS_GATE, AUTO_OPEN_DESIGN_CANVAS_PATTERN, AUTO_OPEN_FILE_PATTERN, AUTO_OPEN_HTML_PATTERN,
+  AUTO_OPEN_DESIGN_CANVAS_PATTERN, AUTO_OPEN_FILE_PATTERN, AUTO_OPEN_HTML_PATTERN,
   agentWrittenFiles, autoOpenFileDecision, autoOpenSessionState, autoOpenTarget, resolveAutoOpenPath,
 } from '../src/auto-open-files-watch.mjs';
 
@@ -22,6 +22,9 @@ const local = file => fs.readFileSync(path.join(app, file), 'utf8');
 const count = (text, needle) => text.split(needle).length - 1;
 
 // ------------------------------------------------------------------------------------------------ official evidence
+// W14-code r4 closeout R4DC-N7: the test-only AUTO_OPEN_DESIGN_CANVAS_GATE export is gone; rA's Gk gate.
+const AUTO_OPEN_DESIGN_CANVAS_GATE = '2515400668';
+
 test('official: rA runs on Edit/Write/MultiEdit with the showable-file pattern, Gk behind its gate and Wk under auto verify', () => {
   assert.equal(count(official, 'if(d!=="Edit"&&d!=="Write"&&d!=="MultiEdit")return{};let f=u.tool_input?.file_path||"";'), 1);
   assert.equal(count(official, `if(Gk.test(f)&&!t.m0("${AUTO_OPEN_DESIGN_CANVAS_GATE}"))return{};`), 1);

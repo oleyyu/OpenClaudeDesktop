@@ -483,7 +483,9 @@ test('main.jsx: retryFailedTurn only wires retryFailedTurnFlow; both cards drop 
   const retries = findAll(mainAst, n => n.type === 'CallExpression' && n.callee.name === 'retryFailedTurn').map(text);
   // R4i-cowork (CW3, review fix): a Cowork session's Me (sessionCtx.retry) is this Try again of its last turn
   // (cowork-session-actions.mjs coworkSessionHost retryTurn).
-  assert.deepEqual(retries, ['retryFailedTurn(turnId, { thread: true })', 'retryFailedTurn(item.turnId)', 'retryFailedTurn(lastTurnId, { thread: true })']);
+  // W14-code r2 R2T-12: the Code renderer's turn_error card Try again (c227f4d5e PZ onRetry → pg onRetryLastTurn) retries the
+  // latest failed turn the renderer draws.
+  assert.deepEqual(retries, ['retryFailedTurn(turnId, { thread: true })', 'retryFailedTurn(failed[0])', 'retryFailedTurn(item.turnId)', 'retryFailedTurn(lastTurnId, { thread: true })']);
 });
 
 test('main.jsx: the autoResume timer keeps its arming and clock and fires runAutoResumeAfterLimit (never retryFailedTurn)', () => {
@@ -508,7 +510,8 @@ test('main.jsx: the autoResume timer keeps its arming and clock and fires runAut
   // Official cc43287c9: the sr-only span (ref A_) is followed by Nte, whose Mte draws the turn box region ahead of the
   // composer card; the host renders that region (R4g-turnbox TB-3) between the status and the composer.
   const after = mainSource.slice(index + text(status).length);
-  const composerAt = after.indexOf('{renderMainComposer()}');
+  // W14-code r2 css2-archived-note: the composer slot opens with the archived Code session's stand-in (c9543da06 yu).
+  const composerAt = after.search(/\{\/\* W14-code r2 css2-archived-note|\{renderMainComposer\(\)\}/);
   assert.ok(composerAt > 0);
   assert.match(after.slice(0, composerAt), /^\s*(\{\/\*[\s\S]*?\*\/\}\s*)?\{turnBoxSession && <SourceTurnBoxRegion [\s\S]*?\/>\}\s*$/);
 });

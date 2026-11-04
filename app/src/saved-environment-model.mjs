@@ -39,3 +39,23 @@ export function environmentWorkspace(repository, environment) {
   const check = !environment.settings?.worktree && typeof saved === 'string' && saved && saved !== repository.branch;
   return { ...repository, branch, checkedOut: repository.branch, ...(check ? { startBranchCheck: { branch: saved } } : {}) };
 }
+
+// W14-code r5-composer-03 / fr5-06: what a start from a picked saved environment changed, cc43287c9 $oe's place half
+// (`i.pin !== e.branch` → "branch", `s.worktree !== c.worktree` → "worktree") as Aue keeps it for the start line
+// (`l.fields.filter(jue)`, jue: branch | worktree; model / effort / fast mode are not start-line changes, and a local
+// environment here saves only place settings). `workspace` is the start's workspace info (the environment already
+// applied by environmentWorkspace, plus the user's picks) and `worktree` the start's worktree switch. Host: the
+// branch baseline is the branch applying the environment gives under the start's worktree switch (its saved branch,
+// else the default / checked-out branch: Pt), so an unpicked branch is no change. Fields come in $oe's order; `patch`
+// is what Update environment writes (captureDraftFor → patchEnvironmentSettings(id, FF(a).place)).
+export function environmentStartChanges(environment, workspace, worktree) {
+  const fields = [], patch = {};
+  if (!environment || !workspace?.isRepo) return { fields, patch };
+  const settings = environment.settings ?? {};
+  const branch = typeof workspace.branch === 'string' && workspace.branch ? workspace.branch : undefined;
+  const checkedOut = typeof workspace.checkedOut === 'string' ? workspace.checkedOut : branch;
+  const baseline = environmentWorkspace({ ...workspace, branch: checkedOut }, { settings: { ...settings, worktree: worktree === true } })?.branch;
+  if (branch !== undefined && branch !== baseline) { fields.push('branch'); patch.branch = branch; }
+  if ((settings.worktree === true) !== (worktree === true)) { fields.push('worktree'); patch.worktree = worktree === true; }
+  return { fields, patch };
+}

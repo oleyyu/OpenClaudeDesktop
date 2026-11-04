@@ -19,7 +19,6 @@ export const SPLIT_ROW = Object.freeze({ MIN: 0.15, MAX: 0.85, DEFAULT: 0.5 });
 export const SPLIT_CONSTRAINED_QUERY = "(max-width: 700px)";
 // Official Yt split-view commands (View › Split View, asar index.chunk Yxi), plus the ⌃⌘Arrow focus moves (B$).
 export const SPLIT_COMMANDS = Object.freeze(["new-right", "new-below", "focus-next", "focus-previous", "move-left", "move-right", "move-up", "move-down", "close"]);
-export const SPLIT_FOCUS_COMMANDS = Object.freeze(["focus-left", "focus-right", "focus-up", "focus-down"]);
 // The sidebar row drag (source-sidebar.jsx) → drop on the session area opens the session in split view.
 export const SESSION_DRAG_TYPE = "application/x-code-desktop-session";
 // shared-16 ta: the drop target left of the primary pane (insertLeftOfPrimary).
@@ -145,8 +144,6 @@ function promoteCandidate(entries, target, max) {
   }
   return null;
 }
-/** Ma: the primary's session can move to `target`. */
-export const canMovePrimary = (entries, target, max) => promoteCandidate(entries, target, max) !== null;
 // Na: the primary's session moves to `target`; the session there (or the first session pane) becomes the primary's.
 export function movePrimaryResult(entries, primary, target, max) {
   const candidate = promoteCandidate(entries, target, max);

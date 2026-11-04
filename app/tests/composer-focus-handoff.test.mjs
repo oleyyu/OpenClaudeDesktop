@@ -237,7 +237,8 @@ test('main.jsx hands each of the six sites to composer-focus-handoff (wiring onl
   assert.equal(count(/forkAutoSendFocus\(textarea\.current\)/g), 1);
   assert.equal(count(/createdSessionFocus\(\{ composer: \(\) => textarea\.current, stillCurrent: \(\) => currentRef\.current === id \}\)/g), 1);
   assert.equal(count(/restoredTextFocus\(\{composer:\(\)=>textarea\.current,stillCurrent:\(\)=>sequence===loadSeq\.current\}\)/g), 1);
-  assert.equal(count(/goalEditFocus\(\{ composer: \(\) => textarea\.current, event \}\)/g), 1);
+  // W14-code r4 shell fr4-12a: the rail Goal card's Edit goal (vM `a(h, bo(e.nativeEvent))` passes the keyboard flag).
+  assert.equal(count(/goalEditFocus\(\{ composer: \(\) => textarea\.current, event: \{ detail: keyboard \? 0 : 1 \} \}\)/g), 1);
   assert.equal(count(/selectionReplyFocus\(\{ composer: \(\) => textarea\.current \}\)/g), 1);
   // R4g-btw BT4 (X7-16): the area's one approval slot (generated qj) takes it as toComposer.
   assert.equal(count(/toComposer: \(\) => approvalHandBackFocus\(textarea\.current\)/g), 1);

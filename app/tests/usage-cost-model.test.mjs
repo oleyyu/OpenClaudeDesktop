@@ -1,14 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {COST_FOOTNOTE,DEEPSEEK_USAGE_URL,deepseekCostPresentation,formatCny,usageCostPresentation} from '../src/usage-cost-model.mjs';
+import {COST_FOOTNOTE,DEEPSEEK_USAGE_URL,usageCostPresentation} from '../src/usage-cost-model.mjs';
+// W14-code r4 closeout R4DC-N7: the test-only formatCny and the deepseekCostPresentation alias are gone.
+const deepseekCostPresentation=usageCostPresentation;
 import {accountTokenUsage,foldSession} from '../../harness/packages/codex-app-server/src/usage.js';
 // Local wall-clock times like the harness fold; the price tier is the same instant's Beijing time.
 const at=(day,hour)=>new Date(2026,8,day,hour).getTime();
 const reply=(time,model,usage)=>({type:'assistant/message',time,data:{turn:1,step:0,message:{role:'assistant',content:'ok',source:{model}},stream:[],usage}});
-test('¥ keeps 2 decimals, 4 below one fen, and unknown cost is a dash, never ¥0',()=>{
- assert.equal(formatCny(12.3456,'en-US'),'¥12.35');assert.equal(formatCny(1234.5,'en-US'),'¥1,234.50');assert.equal(formatCny(0,'en-US'),'¥0.00');
- assert.equal(formatCny(0.00421,'en-US'),'¥0.0042');assert.equal(formatCny(0.01,'en-US'),'¥0.01');
- for(const value of [null,undefined,NaN,-1,'3'])assert.equal(formatCny(value),'—');
+test('the cost footnote names the official prices and the platform bill',()=>{
  assert.match(COST_FOOTNOTE,/official peak and off-peak prices.*DeepSeek Platform bill/);
 });
 test('the bridge deepseek field becomes tiles, cost categories, models and newest-first days within 30 days',()=>{

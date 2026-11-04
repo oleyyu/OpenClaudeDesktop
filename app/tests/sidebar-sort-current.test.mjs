@@ -92,6 +92,11 @@ function fixture(component,props={},contexts=new Map()){
     useRef(initial){const i=cursor++;cells[i]??={value:{current:initial}};return cells[i].value;},
     useMemo(fn,deps){const i=cursor++;if(!cells[i]||!same(cells[i].deps,deps))cells[i]={value:fn(),deps};return cells[i].value;},
     useSyncExternalStore(_subscribe,snapshot,serverSnapshot){return(serverSnapshot??snapshot)();},
+    // W14-code r4 sidebar-new fr4-06: the menu's Show › Routines is shared-21 VJ now (useState for its open latch, the
+    // sections store's zustand selector hook through useCallback / useDebugValue).
+    useCallback(fn,deps){return hooks.useMemo(()=>fn,deps);},
+    useState(initial){const i=cursor++;if(!cells[i]){const cell={};cell.value=[typeof initial==='function'?initial():initial,next=>{cell.value=[typeof next==='function'?next(cell.value[0]):next,cell.value[1]];}];cells[i]=cell;}return cells[i].value;},
+    useDebugValue(){},
     useEffect(fn,deps){const i=cursor++;if(!cells[i]||!same(cells[i].deps,deps)){const old=cells[i];cells[i]={deps};effects.push(()=>{old?.cleanup?.();cells[i].cleanup=fn();});}},
   };
   const render=()=>{cursor=0;const internal=React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,old=internal.H;internal.H=withMemoCache(hooks);try{return tree=component(props);}finally{internal.H=old;}};
@@ -138,7 +143,8 @@ test('the session-list menu writes the Sessions section through the original wri
     const content=popup.props.children.props;
     assert.equal(popup.props.children.type,View.CurrentSidebarFilterContent);
     // w4-sidebar-filter (SB-02): GJ's order, Folder for project, Environment (the host buckets by saved environment, E17).
-    assert.deepEqual(content.groupOptions,[['date','Date'],['state','Status'],['project','Folder'],['environment','Environment'],['none','None']],'Custom hidden (overlay on, D10)');
+    // W14-code r4 gates-r4-09: no Status (shared-46 SN's claudeai_session_state is not in Uon, the 3P desktop answers off).
+    assert.deepEqual(content.groupOptions,[['date','Date'],['project','Folder'],['environment','Environment'],['none','None']],'Custom hidden (overlay on, D10)');
     // 3.6556.2 PJ (w3-sidebar-sections-gen, E38): Routines is the toggle state routinesToggle (VJ through HJ), not offered here.
     assert.deepEqual([content.groupBy,content.sortBy,content.ascending,content.metadata,content.emptyGroups,content.routinesToggle.offered,content.resetAvailable],
       ['project','alpha',true,false,true,false,true]);
@@ -247,7 +253,9 @@ test('GJ (3.6556.2): Date first, Folder for project, the new Environment, None l
   let options;
   const Probe=()=>{options=Group.useSidebarGroupByOptions();return null;};
   renderToStaticMarkup(React.createElement(Probe));
-  assert.deepEqual(options,[['date','Date'],['state','Status'],['project','Folder'],['environment','Environment'],['none','None']]);
+  // W14-code r4 gates-r4-09 (E81 / E95 over D42): is() = shared-46 SN reads claudeai_session_state (__gb__3858164079),
+  // not in Uon (asar jPKPzV-P), so the 3P desktop's GJ has no Status.
+  assert.deepEqual(options,[['date','Date'],['project','Folder'],['environment','Environment'],['none','None']]);
   const text=await (await import('node:fs/promises')).readFile(new URL('../src/generated/code-current/sidebar-group-options.mjs',import.meta.url),'utf8');
   assert.match(text,/^\/\/ Original Claude Desktop 3\.6556\.2 bindings/);
   assert.match(text,/const aw = \(\) => useSidebarOverlayGate\(\)\.overlayEnabled;/);

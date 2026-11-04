@@ -23,17 +23,16 @@ test("loadStats() starts in the mount effect beside init() and home-shape, not a
 
 // F09: the card renders the original stats object only (no account/ledger mixing),
 // and its hold skeleton's reveal counts from the home mount (Zk Lo startedAt).
-test("presets home uses saved environments; the standalone stats renderer still uses core stats", async () => {
+test("presets home uses saved environments; the unmounted stats renderer is gone", async () => {
   const main = await fs.readFile(path.join(root, "src/main.jsx"), "utf8");
   const start = main.slice(main.indexOf('<SourceCodeStart'), main.indexOf('<SourceCodeStart') + 600);
   assert.match(start, /ready=\{sessionsLoaded && recentFolderFields !== null && detectedProjects !== null && savedEnvironments.ready\}/);
   assert.match(start, /savedEnvironments=\{savedEnvironments.environments\}/);
   assert.match(start, /onSelectEnvironment=\{selectSavedEnvironment\}/);
-  assert.match(main, /const homeStartedAt = useHomeStartedAt\(section === "new" && !current\);/);
+  // W14-code r4 closeout R4DC-N2 (E95): the unmounted stats card and its hold-skeleton clock (useHomeStartedAt) are gone.
+  assert.doesNotMatch(main, /useHomeStartedAt|homeStartedAt/);
   assert.doesNotMatch(main, /readAccountUsage=|accountIdentity=|accountPending=/);
-  const home = await fs.readFile(path.join(root, "src/source-home.jsx"), "utf8");
-  assert.doesNotMatch(home, /useHomeAccountUsage|accountActivity|sh-account-source|aggregateLedger/);
-  assert.match(home, /aggregateStats\(stats, range, today\)/);
+  await assert.rejects(fs.access(path.join(root, "src/source-home.jsx")), "source-home.jsx is deleted");
   for (const removed of ["src/use-home-account-usage.jsx", "src/home-account-usage.mjs"])
     await assert.rejects(fs.access(path.join(root, removed)), `${removed} is deleted`);
 });

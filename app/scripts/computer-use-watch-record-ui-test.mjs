@@ -125,7 +125,7 @@ try{
  report.checks.push('Done sends the recording to a new session titled "Recorded demonstration (N.Ns)" as one turn (the demonstration text, pictures as localImage parts) and shows the official card: lead, steps, captions, pictures; the pill goes');
 
  // 5. Customize › Skills › Add.
- await fillComposer(page,page.getByRole('textbox',{name:'Message DeepSeek',exact:true}),'/skills');
+ await fillComposer(page,page.getByRole('textbox',{ name: /^(?:Prompt|Message DeepSeek)$/ }),'/skills');
  await page.locator('[data-testid="code-prompt-send"]:not([inert] *)').click();
  const settings=page.getByRole('dialog',{name:'Settings',exact:true});
  await settings.waitFor({timeout:10000});

@@ -71,7 +71,7 @@ function TableDialog({ store, state }) {
       setPresentation(tablePresentation(source));
     });
     for (let node = snapshot.source; node; node = node.parentElement) observer.observe(node, {
-      attributes: true, attributeFilter: ['style', 'class', 'data-density', 'data-font', 'data-mode', 'data-theme', 'data-platform', 'data-local-transcript-size'],
+      attributes: true, attributeFilter: ['style', 'class', 'data-density', 'data-font', 'data-mode', 'data-theme', 'data-platform', 'data-chat-text-size'],
     });
     return () => observer.disconnect();
   }, [snapshot, doc, view]);
@@ -97,7 +97,8 @@ function TableDialog({ store, state }) {
       if (focused && focused !== doc.body && !root.current?.contains(focused)) return;
       if (previous?.isConnected && !previous.closest('[inert]')) previous.focus({ preventScroll: true });
       else {
-        const composer = doc.querySelector(`[aria-label="Message DeepSeek"], [aria-label="${t('Message DeepSeek')}"]`);
+        // The composer's ProseMirror host (its box carries data-cds; the Code editor is named "Prompt", c227f4d5e wF).
+        const composer = doc.querySelector('[data-cds="ChatComposerEditor"][role="textbox"], [data-cds="ChatComposerEditor"] [role="textbox"]');
         if (composer && !composer.closest('[inert]')) composer.focus({ preventScroll: true });
       }
     };
@@ -126,7 +127,7 @@ function TableDialog({ store, state }) {
     <section ref={root} className="smd-table-dialog" tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby={title}
       data-open={open && entered} style={presentation.typography} onKeyDown={keyDown}
       onTransitionEnd={event => { if (event.target === event.currentTarget && event.propertyName === 'opacity' && !open) store.release(version); }}>
-      <header><h2 id={title} className={snapshot.heading ? '' : 'source-sr-only'}>{snapshot.heading || t('Table')}</h2><button type="button" className="smd-table-button" aria-label={t("Close")} onClick={() => store.close()}><Icon name="X" size={16}/></button></header>
+      <header><h2 id={title} className={snapshot.heading ? '' : 'sr-only'}>{snapshot.heading || t('Table')}</h2><button type="button" className="smd-table-button" aria-label={t("Close")} onClick={() => store.close()}><Icon name="X" size={16}/></button></header>
       <div className="source-markdown"><div className="source-table-scroll" dir={snapshot.props.dir}><table {...snapshot.props}>{snapshot.rows}</table></div></div>
     </section>
   </div>, doc.body);

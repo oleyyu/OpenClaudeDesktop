@@ -102,11 +102,12 @@ async function readFile(root, relative, { force = false, documentBytes = false }
     target = await scopedPath(root, relative);
   } catch (error) {
     if (error?.code === "ENOENT" || error?.code === "ENOTDIR") {
-      // A missing path that lexically leaves the workspace is still refused as outside.
+      // A missing path that lexically leaves the workspace is still refused, as main's "outside" verdict on a missing
+      // file: 3.6556.2 cd2efac6e Hd `nullReadClass === "missing" && outsideByMain` -> missing_outside.
       let creatable;
       try {
         const realRoot = await fs.realpath(root), lexical = path.resolve(realRoot, relative);
-        if (lexical !== realRoot && !lexical.startsWith(realRoot + path.sep)) return { path: requested, unavailable: "outside_root" };
+        if (lexical !== realRoot && !lexical.startsWith(realRoot + path.sep)) return { path: requested, unavailable: "missing_outside" };
         creatable = await missingCreatable(realRoot, lexical);
       } catch { return { path: requested, unavailable: "read_error" }; }
       return { path: requested, unavailable: "missing", creatable };

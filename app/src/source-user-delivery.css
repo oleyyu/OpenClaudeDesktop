@@ -16,7 +16,6 @@
   display: flex; align-items: center; gap: 3px;
   font-size: var(--cds-font-size-footnote, 12px); line-height: var(--cds-leading-footnote, 16px); color: var(--cds-text-danger);
 }
-.source-user-failed-send .source-user-failed-button.source-settings-button { font-size: var(--cds-font-size-footnote, 12px); line-height: var(--cds-leading-footnote, 16px); }
 @media (prefers-reduced-motion: reduce) {
   .source-user-message[data-delivery-status] .source-user-group { transition: none; }
 }

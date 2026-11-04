@@ -2,8 +2,8 @@ import React, { useEffect, useId, useLayoutEffect, useRef, useState } from "reac
 import { createPortal } from "react-dom";
 import { menuLayer, positionMenu } from "./menu-model.mjs";
 import { POPOVER_LAYER_OFFSET } from "./source-popover.jsx";
-import { SourceSettingsButton } from "./source-settings-button.jsx";
-import { Icon } from "./icons";
+// W14-code r6 R6DC-02: shared-frame CoachMark close / action are Uu with a `us` icon (E41 direct import).
+import { CdsButton, CdsIcon } from "./generated/view-tabs/shared-frame-6jtSkIit.js";
 import { t } from "../electron/i18n/index.mjs";
 import "./source-coachmark.css";
 
@@ -109,14 +109,16 @@ function SourceCoachmarkPopup({ anchor, side, align, sideOffset, label, title, a
           <div className="scm-content">
             <div className="scm-head">
               {title && <h2 id={titleId} className="scm-title">{title}</h2>}
-              {onClose && <span className="scm-close-slot">
-                <SourceSettingsButton variant="ghost" size="xs" iconOnly icon={<Icon name="X" size={12} />} aria-label={t("Dismiss")}
-                  className="scm-close" onClick={() => onClose("closed")} />
+              {/* shared-frame CoachMark (accent): `b(Uu,{variant:"ghost",size:"xs",iconOnly:!0,icon:b(us,{name:"X",size:"xs"}),
+                  tooltip:!1,"aria-label":m??j,className:\`shrink-0 ${yj.accent}\`})` in the ml-auto size-[1lh] slot. */}
+              {onClose && <span className="ml-auto [&:where(:root[dir=rtl]_:dir(rtl))]:me-0 [&:where(:root[dir=rtl]_:dir(rtl))]:ms-auto flex size-[1lh] shrink-0 items-center justify-center">
+                <CdsButton variant="ghost" size="xs" iconOnly icon={<CdsIcon name="X" size="xs" />} tooltip={false} aria-label={t("Dismiss")}
+                  className="shrink-0 !text-on-accent [--cds-fill-ghost-hover:rgb(255_255_255/0.15)]" onClick={() => onClose("closed")} />
               </span>}
             </div>
             {children}
             {actionLabel && <div className="scm-actions cds-dark-scope" data-mode="dark">
-              <SourceSettingsButton size="sm" variant="primary" onClick={() => onAction?.()}>{actionLabel}</SourceSettingsButton>
+              <CdsButton size="sm" variant="primary" onClick={() => onAction?.()}>{actionLabel}</CdsButton>
             </div>}
           </div>
         </div>

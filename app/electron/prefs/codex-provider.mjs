@@ -93,8 +93,6 @@ export function normalizeCodexProvider(value) {
   catch { return { ...CODEX_PROVIDER_DEFAULT, models: [] }; }
 }
 
-/** Whether a custom endpoint has been saved (the provider table is then always defined). */
-export const codexEndpointSaved = state => !!normalizeCodexProvider(state).baseURL;
 
 /** The provider a resumed or forked thread runs on, or null when nothing was saved (Codex's own default). */
 export function codexThreadProvider(state) {

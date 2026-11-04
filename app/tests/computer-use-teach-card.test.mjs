@@ -68,7 +68,7 @@ test('markup: the official card shell and body, the app rows (Hi), Deny ⌘. the
   const html = render(React.createElement(A.SourceApprovalCardView, { request, onAction: () => {} }));
   assert.match(html, /^<section[^>]*class="source-message mb-4 overflow-hidden rounded-card border bg-surface-panel shadow-lg [^"]*"[^>]*data-approval-root=""/);
   assert.match(html, /data-computer-use-teach=""/);
-  assert.doesNotMatch(html, /sac-card|sac-heading/, 'not the generic card');
+  assert.doesNotMatch(html, /epitaxy-approval-card/, 'not the generic card');
   assert.match(html, /<div class="p-md"><div class="mb-1 flex items-start gap-2">/);
   assert.match(html, /<span class="font-semibold text-body text-secondary">Let [^<]+ guide you step by step\?<\/span>/);
   // The GraduationCap glyph (icons.json 57475) in the header icon, Warning (57609) in the risk lines.
@@ -84,9 +84,10 @@ test('markup: the official card shell and body, the app rows (Hi), Deny ⌘. the
   assert.match(html, /data-cua-app="com\.apple\.finder"[^]*?<span class="pb-\[0\.05em\]">Already allowed<\/span>/);
   // Buttons: Deny then Start guide, inside ms-7 flex gap-sm, with their keycaps.
   const buttons = /<div class="ms-7 flex gap-sm">([^]*)<\/div><\/div>/.exec(html)?.[1] ?? '';
-  const labels = [...buttons.matchAll(/data-approval-action="([^"]+)"[^]*?class="sac-button-label"[^>]*>([^<]+)</g)].map((match) => [match[1], match[2]]);
+  // V3-W14-approvals: each decision is shared-10 IS (the CDS Button), the allow in the kS arming span.
+  const labels = [...buttons.matchAll(/data-testid="approval-action-([^"]+)"[^]*?<span class="min-w-0 \[unicode-bidi:plaintext\] truncate"[^>]*>([^<]+)</g)].map((match) => [match[1], match[2]]);
   assert.deepEqual(labels, [['decline', 'Deny'], ['acceptForSession', 'Start guide']]);
-  assert.match(buttons, /data-variant="secondary"[^]*data-variant="primary"/);
+  assert.match(buttons, /data-approval-variant="secondary"[^]*<span class="contents" data-approval-allow="">[^]*data-approval-variant="primary"/);
   assert.equal((buttons.match(/data-cds="Shortcut"/g) || []).length, 2, 'both buttons show their shortcut');
   // No capability rows: teach grants no clipboard or system-key flags.
   assert.doesNotMatch(html, /data-cua-capability/);

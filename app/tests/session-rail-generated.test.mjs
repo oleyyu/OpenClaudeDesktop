@@ -144,7 +144,9 @@ test('one copy rule: a binding another area also slices is refused unless duplic
   const stable = manifest.modules.find(m => m.target === 'stable-array.mjs');
   assert.deepEqual(stable.bindings.map(b => b.name ?? b).sort(), ['BH', 'DG', 'HH', 'TG', 'UH', 'kG', 'wG']);
   assert.match(generated('stable-array.mjs'), /import \{ useStableValue as IH \} from "\.\.\/session-rail-sections\/stable-value\.mjs";/);
-  assert.match(generated('stable-array.mjs'), /export \{ UH as useStableArray, DG as stripInvisible, kG as displayPath \};/);
+  // W14-code gen-final: BH is exported too (code-transcript's fork rows import this copy, D1).
+  assert.match(generated('stable-array.mjs'), /export \{\s*UH as useStableArray,\s*DG as stripInvisible,\s*kG as displayPath,\s*BH as arraysShallowEqual,?\s*\};/);
+  assert.match(generated('preview-placement.mjs'), /export \{\s*E as PreviewPlacementProvider,\s*T as PreviewPlacementContext,\s*w as previewPlacementDefault,?\s*\};/);
 });
 
 test('feature strings: each pinned string is in the original chunk (counted) and in the generated module', () => {
@@ -204,7 +206,9 @@ test('one copy: view-tabs and the kit by public names, dnd-kit and the rail cont
   for (const area of fs.readdirSync(path.join(app, 'src/generated'))) {
     if (area === 'session-rail' || area === 'sidebar-reorder') continue;
     const file = path.join(app, 'src/generated', area, 'manifest.json');
-    if (fs.existsSync(file)) assert.ok(!fs.readFileSync(file, 'utf8').includes('c09f6b4e5'), `${area} slices dnd-kit`);
+    // W14-code r7 r7c-01: an area that imports dnd-kit through session-rail's re-exports (generated/queued-bar, cf74bc599
+    // GE / BE) names c09f6b4e5 only in its imports' `via`; what is checked is that no module of it slices that chunk.
+    if (fs.existsSync(file)) assert.ok(!(JSON.parse(fs.readFileSync(file, 'utf8')).modules ?? []).some(m => String(m.source).startsWith('c09f6b4e5')), `${area} slices dnd-kit`);
   }
   const reorder = JSON.parse(fs.readFileSync(path.join(app, 'src/generated/sidebar-reorder/manifest.json'), 'utf8'));
   assert.deepEqual(reorder.modules.filter(m => m.source === DND).map(m => [m.target, m.kind]), [['dnd-kit.mjs', 'copy']]);
@@ -228,12 +232,25 @@ test('one copy: view-tabs and the kit by public names, dnd-kit and the rail cont
     { mT: 'GT.Separator', pT: 'GT.Submenu', fT: 'GT.SubmenuTrigger', cT: 'GT.Popup', dT: 'GT.Item' });
   // Adapters stand for these originals (each feature-checked by the generator).
   const adapted = new Set(manifest.modules.flatMap(m => m.imports.filter(i => i.kind === 'adapter').map(i => i.original)));
-  assert.deepEqual([...adapted].sort(), [`${RAIL}:KA`, `${RAIL}:SM`, `${RAIL}:ZA`, `${RAIL}:sM`, `${RAIL}:vM`, `${RAIL}:zA`,
+  assert.deepEqual([...adapted].sort(), [`${RAIL}:KA`, `${RAIL}:SM`, `${RAIL}:ZA`, `${RAIL}:sM`, `${RAIL}:zA`, // r4 shell fr4-12a: vM is sliced now
     'c280f9bbb-CutcMso2.js:L', 'c68c4283d-CWbOoVxS.js:_f', 'c73f45bc3-B7hbL7H9.js:Vb', 'c73f45bc3-B7hbL7H9.js:du', 'c856385e2-aEyDzrcK.js:rr',
     // w10-ccres-rail-env-edit: the lazy environment dialog handles Zx preloads (null here).
     'c73f45bc3-B7hbL7H9.js:ou', 'cc5b397c6-BgWEcD7A.js:l',
-    'cd0cf5b5e-BCzJmEwZ.js:z', 'cecbf1aa5-BT0v8IlE.js:l', 'shared-11-_AVGLHEz.js:_m', 'shared-4-DUB1Oi0O.js:Sk', 'shared-46-BIbZBGFq.js:IL',
-    'shared-8-Db1QN4mf.js:og', 'vendor-intl-DYfox5Co.js:Gt', 'vendor-intl-DYfox5Co.js:q'].sort());
+    'cd0cf5b5e-BCzJmEwZ.js:z', 'cecbf1aa5-BT0v8IlE.js:l', 'shared-11-_AVGLHEz.js:_m', 'shared-4-DUB1Oi0O.js:Sk', 'shared-4-DUB1Oi0O.js:bk', 'shared-46-BIbZBGFq.js:IL',
+    'shared-8-Db1QN4mf.js:og', 'vendor-intl-DYfox5Co.js:Gt', 'vendor-intl-DYfox5Co.js:q',
+    // W14-code r6 sleep lane: what cf74bc599 wO / dO (sleep-band.mjs) read of the desktop — the session view's fields, its
+    // running / waiting input / send-begun state, Stop and the continue send, the keep-awake settings, the toasts, the
+    // preview hook, the persisted "band used" flag, the scope hidden state, the feature state; the cloud continuation and
+    // teleport (cc53cbea3 b / C / M, caec4a2d4 Ir / fo, shared-104 du, cf74bc599 aO) refuse (E59); c227f4d5e oL is the
+    // inline band k_ (code-band.mjs) draws outside the Code notice region (W14-code r7 notices: the host's InlineCodeBand
+    // feeds the Chat / Cowork sink or draws the sliced oL, inline-band.mjs, whose shared-4 bk — the hub tool approval body
+    // — is never shown here).
+    'c06cf64bb-CdJdJuVd.js:IE', 'c06cf64bb-CdJdJuVd.js:aO', 'c1e585df0-xuGOMujX.js:a', 'c1e585df0-xuGOMujX.js:c', 'c1e585df0-xuGOMujX.js:i',
+    'c1e585df0-xuGOMujX.js:o', 'c227f4d5e-B-FYKrwT.js:Q0', 'c227f4d5e-B-FYKrwT.js:oL', 'c5da7eb42-XijZdwf1.js:QI', 'c5da7eb42-XijZdwf1.js:aL',
+    'c6b8adeaf-bLEQVSWL.js:So', 'c6b8adeaf-bLEQVSWL.js:Xa', 'caec4a2d4-6hekX2da.js:Ir', 'caec4a2d4-6hekX2da.js:fo', 'cc53cbea3-rBkNppou.js:C',
+    'cc53cbea3-rBkNppou.js:M', 'cc53cbea3-rBkNppou.js:b', `${RAIL}:aO`, 'shared-1-BJhqMmkf.js:TE', 'shared-1-BJhqMmkf.js:wE',
+    'shared-104-CTONUSaz.js:du', 'shared-25-DOWZRSlq.js:ps', 'shared-28-DNYlf4wu.js:Kp', 'shared-28-DNYlf4wu.js:Mp', 'shared-52-uHFNjl7C.js:cB',
+    'shared-78-D5Fw2h0a.js:K'].sort());
   // 3.6556.2: the skeletons, the layer-aware z-index and the text link are view-tabs' generated CDS (no stand-ins), and the
   // connector icon is mcp-app-card's one copy of shared-7 Hk.
   for (const [local, name] of [['U', 'CdsLoadingSkeleton'], ['ne', 'CdsSkeleton'], ['W', 'useCdsLayerAwareZIndex'], ['G', 'CdsTextLink']])
@@ -546,7 +563,7 @@ test('adapters: the skeleton is the CDS one, the file reference, and the refusal
     h(Adapters.SessionFileRef, { fileRef: { path: '/r/a.md' }, className: 'x', fallback: h('b', null, 'fallback') }, 'a.md')));
   assert.equal(ref, '<span role="button" tabindex="0" class="inline-block aria-busy:cursor-progress aria-busy:opacity-60 x">a.md</span>');
   assert.equal(render(h(Adapters.SessionFileRef, { fileRef: { path: '/r/a.md' }, fallback: h('b', null, 'fallback') }, 'a.md')), '<b>fallback</b>');
-  for (const Part of [Adapters.RemoteControlRow, Adapters.GoalCardBody, Adapters.ProgressCardBody, Adapters.ArtifactOutputRow, Adapters.addRemoteEnvironment])
+  for (const Part of [Adapters.RemoteControlRow, /* r4 shell: no GoalCardBody stand-in (vM sliced) */ Adapters.ProgressCardBody, Adapters.ArtifactOutputRow, Adapters.addRemoteEnvironment])
     assert.throws(() => render(h(Part, {})), /not available in this host/);
   // Gj only reaches SM for a Remote Control session object, which the host never passes; "pending" is a skeleton row.
   assert.throws(() => rail({ session: localSession, remoteControl: { active: true } }), /Remote Control row/);
@@ -582,4 +599,27 @@ test('dnd-kit: the sortable pieces DE composes are the original library (arrayMo
     { x: 0, y: -12, scaleX: 1, scaleY: 1 });
   assert.equal(typeof Dnd.KeyboardSensor.activators[0].handler, 'function', 'the static activators are initialised');
   assert.deepEqual(Dnd.PointerSensor.activators.map(a => a.eventName), ['onPointerDown']);
+});
+
+// W14-code r4 shell fr4-12a (E95): the Goal card is cf74bc599 Gj's goal section with vM sliced (no host strip): title Goal,
+// _M's summary, the condition in a two-line clamp, its own summary line, and Edit goal (ghost xs icon-only, hover-shown).
+test('r4 shell: the Goal card (Gj id "goal" → vM) over railGoal\'s mapping of a core goal', () => {
+  assert.equal(manifest.modules.find(m => m.target === 'rail-view.mjs').bindings.some(b => b.name === 'vM'), true);
+  assert.deepEqual(manifest.modules.find(m => m.target === 'show-more-toggle.mjs').exports, { kB: 'RailRescuedShowMoreToggle' });
+  const goal = Adapters.railGoal({ objective: 'make all tests pass', status: 'active', codeDesktop: { rounds: 3 } }, { editable: true });
+  assert.deepEqual(goal, { condition: 'make all tests pass', iterations: 3, setAt: 'make all tests pass', editText: 'edit make all tests pass' });
+  assert.equal(Adapters.railGoal(null), null);
+  assert.equal(Adapters.railGoal({ objective: 'x', status: 'complete' }, { editable: true }).editText, undefined, 'a complete goal has no Edit');
+  assert.equal(Adapters.railGoal({ objective: 'x', status: 'active' }).editText, undefined, 'no editor, no Edit');
+  assert.deepEqual(Adapters.railGoal({ objective: 'x', status: 'blocked', codeDesktop: { blockedReason: ' round cap ' } }), { condition: 'x', iterations: 0, lastReason: 'round cap', setAt: 'x' });
+  const html = rail({ session: { ...localSession, goal }, sessionKey: 'local_goal', onEditGoal() {} });
+  assert.match(html, /data-rail-card="goal"/);
+  assert.match(html, />Goal</);
+  assert.match(html, />3 turns</);
+  assert.match(html, /<bdi class="text-primary line-clamp-2">make all tests pass<\/bdi>/);
+  assert.match(html, /<div dir="auto" class="flex min-w-0 flex-1 flex-col gap-0\.5 text-body \[overflow-wrap:anywhere\]">/);
+  assert.match(html, /aria-label="Edit goal"/);
+  const fresh = rail({ session: { ...localSession, goal: Adapters.railGoal({ objective: 'y', status: 'active' }) }, sessionKey: 'local_goal2' });
+  assert.match(fresh, />Not checked yet</);
+  assert.doesNotMatch(fresh, /aria-label="Edit goal"/, 'no onEdit / editText: no button');
 });

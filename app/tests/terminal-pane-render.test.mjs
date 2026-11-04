@@ -140,7 +140,9 @@ test('titlebar: the Terminal toggle with ⌘J, pressed while open, a running dot
   assert.match(button, /aria-keyshortcuts="Meta\+J Control\+`"/);
   assert.ok(html.indexOf('data-pane-toggle="terminal"') < html.indexOf('aria-label="Changes"'), 'before Changes');
   html = render({ terminalAvailable: true, terminalBusy: true, panes: new Set(['chat']) });
-  assert.match(html, /aria-label="Terminal \(command running\)"[^>]*data-pane-toggle="terminal"/);
+  // c73f45bc3 pane items keep the name "Terminal" (GE7Vqpsyct) while busy; only the indicator dot shows it.
+  assert.match(html, /aria-label="Terminal"[^>]*data-pane-toggle="terminal"/);
+  assert.doesNotMatch(html, /command running/);
   assert.match(html, /data-pane-toggle="terminal"[^>]*>(?:(?!<\/button>).)*st-indicator-dot/);
   html = render({ terminalAvailable: true, terminalBusy: true, panes: new Set(['chat', 'terminal']) });
   assert.match(html.match(/<button[^>]*data-pane-toggle="terminal"[^>]*>/)[0], /aria-pressed="true"/);

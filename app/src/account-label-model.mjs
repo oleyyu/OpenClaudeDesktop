@@ -82,13 +82,6 @@ export function accountFooter(displayName, accountRead, core) {
   return { avatarName: full || email || provider, name, plan: plan === name ? "" : plan };
 }
 
-/** The footer 'Connection settings' menu header (a retained local control) names the running core. */
-export function connectionMenuHeader(engine, connected) {
-  // engine: a core id or boot.core (core-registry.mjs).
-  const name = coreName(engine);
-  return connected ? t("{name} connected", { name }) : t("{name} disconnected", { name });
-}
-
 /**
  * The Home card and composer warning that ask to sign in to the running core, or null. Shown when account/read
  * reports no account and the core's descriptor lists sign-in options (core-registry `login`), unless the core runs

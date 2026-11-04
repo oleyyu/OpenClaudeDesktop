@@ -55,23 +55,6 @@
       }
     },
     {
-      "target": "element-node.mjs",
-      "source": "shared-frame-6jtSkIit.js",
-      "sourceSha256": "22b990df9384da0621c5197a060f6c2c8fe1ccf5a79ee1f8c6e7a6cb033b259c",
-      "sha256": "700c18d3d9a50b898344bb76c854d5443bf69663bc71e69cfbd44548803e9397",
-      "referenceVersion": "3.6556.2",
-      "bindings": [
-        {
-          "name": "Uc",
-          "sha256": "3e69aa46342ca808ed5f14d11d71766da2516387c80ac818d2118410967f7aa7"
-        }
-      ],
-      "imports": [],
-      "exports": {
-        "Uc": "elementNode"
-      }
-    },
-    {
       "target": "focus-visible.mjs",
       "source": "shared-1-BJhqMmkf.js",
       "sourceSha256": "07582bbc557071f2d83db84a7356eec7847d108771b043f876d26dfda38e4388",

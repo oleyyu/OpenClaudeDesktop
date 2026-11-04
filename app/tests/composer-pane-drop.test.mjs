@@ -207,7 +207,8 @@ test('wiring: main.jsx wraps the session pane box in the zone, the Code composer
   const composer = fs.readFileSync(path.join(app, 'src/source-composer.jsx'), 'utf8');
   assert.equal(count(composer, 'const paneDrop = mode === "code" && !!dropRef;'), 1);
   assert.equal(count(composer, 'dropRef.current = acceptsFiles ? (split) => { intake(split, "drop"); editor.current?.focus?.(); } : null;'), 1);
-  assert.equal(count(composer, '{...(paneDrop ? {} : {'), 1, 'the card drop handlers only without the pane zone');
+  assert.equal(count(composer, '{...(paneDrop ? {} : mode === "code" ? {'), 1, 'the card drop handlers only without the pane zone');
+  assert.equal(count(composer, 'const cardFileDrop = mode === "code" && !paneDrop && acceptsFiles ?'), 1, 'the shell drop panel only without the pane zone');
 });
 
 test('/btw: the side-session composer sits in CdsRoot (density, platform desktop, the Code pane experimental, contents)', () => {

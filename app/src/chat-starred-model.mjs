@@ -48,16 +48,8 @@ export const CHAT_DELETE_MESSAGES = Object.freeze({
   confirm: { defaultMessage: "Delete", id: "K3r6DQW7h+" },
 });
 
-/** The starred section heading: c71dee58b Zl `b ? Pi.pinned : "Starred"`. */
-export const STARRED_SECTION_MESSAGES = Object.freeze({
-  pinned: { defaultMessage: "Pinned", id: "A8GDlh2QW4" },
-  starred: { defaultMessage: "Starred", id: "V7cUPvWFo3" },
-});
-
 /** A chat session is starred when its metadata is pinned (shared-22 onStarred → "pin" / "unpin"). */
 export const chatSessionStarred = (metadata) => metadata?.pinned === true;
-
-export const starredSectionMessage = (desktopFrame = DESKTOP_FRAME) => desktopFrame ? STARRED_SECTION_MESSAGES.pinned : STARRED_SECTION_MESSAGES.starred;
 
 /**
  * fm's single-row entries for a Chat session, in fm's order. Each item carries the official message, icon, hotkey,

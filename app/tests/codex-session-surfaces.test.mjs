@@ -2,7 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { mediaItemRow, generatedImageSource, localImageSource, isMediaItem } from '../src/media-item-model.mjs';
 import { composerUsageNotice, usageLimitReset, limitEntries, usagePresentation } from '../electron/usage-model.mjs';
-import { goalCommandRequest, goalCommandResult, goalUsage, goalStatusLabel, goalNeedsReplaceConfirmation } from '../src/goal-model.mjs';
+import { goalCommandRequest, goalCommandResult, goalStatusLabel, goalNeedsReplaceConfirmation } from '../src/goal-model.mjs';
+import * as goalModel from '../src/goal-model.mjs';
 import { reasoningText } from '../src/transcript-item-visibility.mjs';
 import { setLocale, DEFAULT_LOCALE, t } from '../electron/i18n/index.mjs';
 
@@ -84,7 +85,8 @@ test('/goal on Codex: show, set, pause, resume and clear map to thread/goal/*', 
   assert.deepEqual(goalCommandRequest('clear', 't'), { method: 'thread/goal/clear', params: { threadId: 't' } });
   const goal = { objective: 'ship', status: 'budgetLimited', tokensUsed: 12000, tokenBudget: 50000, timeUsedSeconds: 3725 };
   assert.equal(goalStatusLabel('budgetLimited'), 'Token budget reached');
-  assert.equal(goalUsage(goal, 'en-US'), '1h 2m · 12K of 50K tokens');
+  // W14-code r4 shell fr4-12a (E95): the strip's usage line is gone with SourceGoalStrip (the rail's Goal card is official).
+  assert.equal(goalModel.goalUsage, undefined);
   assert.equal(goalCommandResult(goalCommandRequest('', 't'), { goal: null }), 'No goal is set for this session.');
   assert.equal(goalCommandResult(goalCommandRequest('', 't'), { goal }), 'Goal: ship (Token budget reached)');
   assert.equal(goalCommandResult(goalCommandRequest('clear', 't'), {}), 'Goal cleared');
@@ -108,7 +110,7 @@ test('every new notice, goal and media string has a zh-CN entry', (context) => {
   context.after(() => setLocale(DEFAULT_LOCALE));
   setLocale('zh-CN');
   for (const key of ['Generating image', 'Generated image', 'Viewed image', 'Waited {seconds}s', 'Hook added context', 'Approaching session usage limit',
-    'Approaching weekly usage limit', 'Approaching usage limit', 'Resets {time}', 'Session limit reached', 'Weekly limit reached', 'Token budget reached', 'Goal cleared', 'Trust this folder', 'Dismiss notice', 'Auto-review approved', 'Used memory'])
+    'Approaching weekly usage limit', 'Approaching usage limit', 'Resets {time}', 'Session limit reached', 'Weekly limit reached', 'Token budget reached', 'Goal cleared', 'Trust this folder', 'Trust workspace', 'Auto-review approved', 'Used memory'])
     assert.notEqual(t(key), key, key);
 });
 

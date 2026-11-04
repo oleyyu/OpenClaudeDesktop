@@ -1,10 +1,10 @@
 import {fileRunState} from "../src/file-tool-model.mjs";
 import test from 'node:test';import assert from 'node:assert/strict';
-import {backgroundTasks,taskSections,taskOutput,dismissedTasks,earlierOutputCut,createDismissedTasksStore,DISMISSED_TASKS_KEY,stopsInDuration,stopsInLabel,monitorTasks} from '../src/background-tasks-model.mjs';
+import {backgroundTasks,taskSections,taskOutput,dismissedTasks,earlierOutputCut,createDismissedTasksStore,DISMISSED_TASKS_KEY,stopsInDuration,stopsInLabel,monitorTasks,commandTaskTitle} from '../src/background-tasks-model.mjs';
 import {reduce,emptyState} from '../src/state.js';import background from '../electron/background-tasks.cjs';
 const terminal={itemId:'cmd',processId:'42',command:'sleep 30',cwd:'/tmp'};
 const state=(item)=>({...emptyState,approvalConnectionId:'c',items:{parent:item?[item]:[]},background:{parent:{connectionId:'c',terminals:[terminal],knownTerminals:{cmd:terminal}}}});
-test('tasks use actual process membership, timestamps and status; missing terminal remains unknown, not completed',()=>{let s=state();let tasks=backgroundTasks(s,'parent');assert.equal(tasks[0].status,'running');assert.equal(tasks[0].startedAt,null);s.background.parent.terminals=[];tasks=backgroundTasks(s,'parent');assert.equal(tasks[0].status,'unknown');assert.equal(taskSections(tasks).finished.length,0);assert.equal(taskSections(tasks).unknown.length,1);s=state({id:'cmd',type:'commandExecution',processId:'42',command:'false',status:'completed',exitCode:1,durationMs:3});assert.equal(backgroundTasks(s,'parent')[0].status,'completed');assert.equal(backgroundTasks(s,'parent')[0].durationMs,3);assert.equal(backgroundTasks(state(),'parent',{connected:false})[0].status,'unknown');});
+test('tasks use actual process membership, timestamps and status; missing terminal remains unknown, not completed',()=>{let s=state();let tasks=backgroundTasks(s,'parent');assert.equal(tasks[0].status,'running');assert.equal(tasks[0].startedAt,null);s.background.parent.terminals=[];tasks=backgroundTasks(s,'parent');assert.equal(tasks[0].status,'unknown');assert.equal(taskSections(tasks).finished.length,0);assert.deepEqual(taskSections(tasks).running.map(t=>t.status),['unknown'],'W14-code r5pa-05: cccc2cf0a has no Status unavailable section; an unknown task stays under Running');s=state({id:'cmd',type:'commandExecution',processId:'42',command:'false',status:'completed',exitCode:1,durationMs:3});assert.equal(backgroundTasks(s,'parent')[0].status,'completed');assert.equal(backgroundTasks(s,'parent')[0].durationMs,3);assert.equal(backgroundTasks(state(),'parent',{connected:false})[0].status,'unknown');});
 test('child tasks are isolated, usage stays absent until reported and live turn identity enables stop',()=>{const s={...emptyState,items:{parent:[{id:'spawn',type:'collabAgentToolCall',tool:'spawnAgent',receiverThreadIds:['child'],agentsStates:{child:{status:'running'}}}],other:[{id:'x',type:'commandExecution',processId:'foreign',status:'inProgress'}]},active:{child:'turn-c'},usage:{child:{total:{totalTokens:19}}},taskTurnFacts:{child:{startedAt:20}}};const tasks=backgroundTasks(s,'parent');assert.equal(tasks.length,1);assert.equal(tasks[0].turnId,'turn-c');assert.equal(tasks[0].tokens,19);assert.equal(tasks[0].toolUses,null);assert.equal(tasks[0].startedAt,20000);assert.equal(backgroundTasks(s,'other').length,1);});
 test('background snapshots are tied to connection and retain missing terminal metadata for unknown state',()=>{let s={...emptyState,approvalConnectionId:'c'};assert.equal(reduce(s,{type:'backgroundSnapshot',id:'p',connectionId:'stale',snapshot:{terminals:[terminal]}}),s);s=reduce(s,{type:'backgroundSnapshot',id:'p',connectionId:'c',snapshot:{terminals:[terminal],children:[]}});s=reduce(s,{type:'backgroundSnapshot',id:'p',connectionId:'c',snapshot:{terminals:[],children:[]}});assert.equal(backgroundTasks(s,'p')[0].description,'sleep 30');assert.equal(backgroundTasks(s,'p')[0].status,'unknown');});
 test('dismissal is bounded, new running work reappears, output tail is exact',()=>{const map=Object.fromEntries(Array.from({length:120},(_,i)=>['s'+i,['old']]));const next=dismissedTasks(map,'active',Array.from({length:1200},(_,i)=>String(i)),['1199']);assert.equal(Object.keys(next).length,100);assert.equal(next.active.length,1000);assert.equal(next.active.includes('1199'),false);assert.equal(taskOutput('a'.repeat(8001)),'(Earlier output not shown)\n'+'a'.repeat(8000));});
@@ -178,7 +178,11 @@ test('a running agent card shows its last tool as the transcript running verb',a
 });
 // B35 (cccc2cf0a zw, c5da7eb42 _p): a completed sub-agent's stats footnote.
 test('a completed sub-agent transcript ends with tool calls, tokens and duration once all are known',async()=>{
- const {agentConclusionStats,agentConclusionText}=await import('../src/agent-model.mjs');
+ const {agentConclusionStats,agentConclusionValues,AGENT_CONCLUSION_MESSAGE}=await import('../src/agent-model.mjs');
+ // W14-code pa2-08: 3.6556.2 cccc2cf0a FP formats one ICU message (dAbHM3tAVv); the panel renders it through StartMessage.
+ const {icuFormat}=await import('../src/approval-card-model.mjs');
+ const agentConclusionText=(stats)=>icuFormat(AGENT_CONCLUSION_MESSAGE.defaultMessage,agentConclusionValues(stats));
+ assert.equal(AGENT_CONCLUSION_MESSAGE.defaultMessage,'{toolUses, plural, one {# tool call} other {# tool calls}} \u00B7 {tokenForm, select, one {1 token} other {{tokens} tokens}} \u00B7 {duration}');
  const s={items:{child:[]},usage:{child:{total:{totalTokens:12345}}},taskTurnFacts:{child:{durationMs:65000}}};
  assert.deepEqual(agentConclusionStats(s,{id:'child',status:'completed',toolCallCount:3}),{toolUses:3,tokens:12345,durationMs:65000});
  assert.equal(agentConclusionText({toolUses:3,tokens:12345,durationMs:65000}),'3 tool calls · 12.3k tokens · 1m 5s');
@@ -186,4 +190,20 @@ test('a completed sub-agent transcript ends with tool calls, tokens and duration
  assert.equal(agentConclusionStats(s,{id:'child',status:'running',toolCallCount:3}),null);
  assert.equal(agentConclusionStats({...s,taskTurnFacts:{}},{id:'child',status:'completed',toolCallCount:3}),null,'unknown duration');
  assert.equal(agentConclusionStats({...s,items:{}},{id:'child',status:'completed',toolCallCount:0}),null,'transcript not loaded');
+});
+
+test('a command task is titled like its transcript row, never with the whole script; the full command stays on the task',()=>{
+ const script="python3 -u - <<'PY'\nimport json,urllib.request\nprint('result',flush=True)\nPY";
+ const wrapped=`/bin/zsh -lc "${script}"`;
+ assert.equal(commandTaskTitle(wrapped),'python3\u2026');
+ const s={...emptyState,approvalConnectionId:'c',items:{parent:[{id:'cmd',type:'commandExecution',command:wrapped,processId:'42',status:'inProgress'}]},background:{parent:{connectionId:'c',terminals:[{...terminal,command:wrapped}],knownTerminals:{}}}};
+ const [task]=backgroundTasks(s,'parent');
+ assert.equal(task.description,'python3\u2026');assert.equal(task.command,wrapped);
+ // No summary (a && chain): the one-line command itself; several lines: the first, marked as cut.
+ assert.equal(commandTaskTitle('sleep 30 && echo hi'),'sleep 30 && echo hi');
+ assert.equal(commandTaskTitle('sleep 30 && echo hi\necho done'),'sleep 30 && echo hi\u2026');
+ // Soe's refusals hold here too: a command that names a credential falls back to the plain label.
+ assert.equal(commandTaskTitle("curl -H 'Authorization: Bearer abc' https://x && echo"),'');
+ assert.equal(monitorTasks([{id:'m',command:script,status:'running'}])[0].description,'python3\u2026');
+ assert.equal(monitorTasks([{id:'m',description:'Watch logs',command:script,status:'running'}])[0].description,'Watch logs');
 });

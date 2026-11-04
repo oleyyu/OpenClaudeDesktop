@@ -1,49 +1,9 @@
-/* QueuedMessageBar (cf74bc599 :4053-4240 + shared-styles .epitaxy-band-enter):
-   band enters from opacity 0 / translate 0 6px over var(--cds-dur-snap)=120ms
-   with --cds-ease-out (none under reduced motion). Rows: min-h-10 (40px),
-   px-lg (12px compact), gap-1.25 (5px), rounded-card (radius 6 + 4 = 10px),
-   bg-alpha-1 (hover bg-alpha-2 on the collapsed button); count text-body-medium
-   text-primary; preview truncate text-body text-muted; ghost base (24px)
-   Edit/X. Expanded list role=list max-h min(40vh,22rem) p-xs divide-y; rows
-   p-1.25 gap-1.25 rounded line-clamp-2; Reorder handle h-5 w-5; Clear all
-   is view-tabs CdsTextLink (text-footnote text-danger, cursor-default opacity-disabled when off) in px-lg py-sm. */
-.sqm-band { width: calc(100% - 64px); max-width: 768px; align-self: center; flex-shrink: 0; transition-property: opacity, translate, background-color, color; transition-duration: var(--cds-dur-snap, .12s); transition-timing-function: var(--cds-ease-out, cubic-bezier(.165, .84, .44, 1)); font-family: var(--cds-font-sans, anthropic-sans), sans-serif; font-size: var(--cds-font-size-body, 13px); line-height: var(--cds-leading-body, 19px); color: var(--cds-text-primary); }
-@starting-style { .sqm-band { opacity: 0; translate: 0 6px; } }
-@media (prefers-reduced-motion: reduce) { .sqm-band { transition: none; } }
-html[data-local-motion="reduce"] .sqm-band { transition: none; }
-.sqm-row { display: flex; align-items: center; gap: 5px; width: 100%; min-width: 0; min-height: 40px; padding-inline: var(--cds-pad-lg, 12px); box-sizing: border-box; user-select: none; }
-.sqm-single, .sqm-collapsed { border-radius: calc(var(--cds-radius, 6px) + 4px); background: var(--cds-alpha-1); }
-.sqm-collapsed { border: 0; margin: 0; color: inherit; font: inherit; text-align: left; cursor: default; outline: none; }
-.sqm-collapsed:hover { background: var(--cds-alpha-2); }
-.sqm-collapsed:focus-visible { box-shadow: var(--cds-focus-shadow); }
-.sqm-count { flex-shrink: 0; font-weight: var(--cds-font-weight-medium, 500); color: var(--cds-text-primary); }
-.sqm-count--grow { flex: 1; min-width: 0; }
-.sqm-preview { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--cds-text-muted); }
-.sqm-caret { display: grid; place-items: center; flex-shrink: 0; width: var(--cds-h-control, 24px); height: var(--cds-h-control, 24px); color: var(--cds-text-muted); }
-.sqm-ghost { color: var(--cds-text-muted); }
-.sqm-ghost:hover:not(:disabled) { color: var(--cds-text-primary); }
-.sqm-ghost .sc-spinner { width: 13px; height: 13px; }
-.sqm-expanded { display: flex; flex-direction: column; width: 100%; border-radius: calc(var(--cds-radius, 6px) + 4px); background: var(--cds-alpha-1); overflow: clip; user-select: none; }
-.sqm-expanded > * + * { border-top: 1px solid var(--cds-border); }
-.sqm-list { display: flex; flex-direction: column; max-height: min(40vh, 22rem); overflow-y: auto; overscroll-behavior: contain; padding: var(--cds-pad-xs, 4px); }
-.sqm-divider { border-top: 1px solid var(--cds-border); }
-.sqm-item { position: relative; display: flex; align-items: flex-start; gap: 5px; min-width: 0; padding: 5px; border-radius: var(--cds-radius, 6px); }
-.sqm-item--dragging { background: var(--cds-alpha-2); opacity: .8; }
-.sqm-item-text { flex: 1; min-width: 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; user-select: text; color: var(--cds-text-primary); }
-.sqm-item-text--muted { color: var(--cds-text-muted); }
-.sqm-mask-wide.sqm-mask-on, .sqm-item:hover .sqm-mask-wide.sqm-mask-hover { mask-image: linear-gradient(to right, black calc(100% - 120px), transparent calc(100% - 48px)); }
-.sqm-mask-narrow.sqm-mask-on, .sqm-item:hover .sqm-mask-narrow.sqm-mask-hover { mask-image: linear-gradient(to right, black calc(100% - 76px), transparent calc(100% - 28px)); }
-.sqm-item-actions { position: absolute; right: 5px; top: 50%; display: flex; align-items: center; gap: 2px; translate: 0 -50%; }
-.sqm-reveal { opacity: 0; }
-.sqm-item:hover .sqm-reveal, .sqm-reveal:focus-within { opacity: 1; }
-.sqm-hide { opacity: 0; pointer-events: none; }
-@media (pointer: coarse) { .sqm-reveal { opacity: 1; } }
-.sqm-handle { display: grid; place-items: center; flex-shrink: 0; width: 20px; height: 20px; padding: 0; margin: 0; border: 0; border-radius: 5px; background: transparent; color: var(--cds-text-muted); cursor: grab; touch-action: none; }
-.sqm-handle:hover { color: var(--cds-text-primary); }
-.sqm-handle:active, .sqm-handle--grabbing { cursor: grabbing; color: var(--cds-text-primary); }
-.sqm-handle:focus-visible { outline: none; box-shadow: var(--cds-focus-shadow); }
-.sqm-footer { display: flex; justify-content: flex-end; padding: var(--cds-pad-sm, 6px) var(--cds-pad-lg, 12px); }
-.sqm-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; border: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-/* Split-view tip (2.2553.1 epitaxy-split-suggestion): one line, its action and a dismiss X in the band's row. */
-.sqm-tip-text { color: var(--cds-text-secondary); }
-.sqm-tip-action { color: var(--cds-text-primary); }
+/* QueuedMessageBar: W14-code r7 r7c-01 — the bar is the original cf74bc599 VE (generated/queued-bar), drawn with its own
+   utility classes; the hand-copied .sqm-* rules of the host's restatement are gone. Its entry is shared-styles' own
+   `.epitaxy-root [data-band-enter] .epitaxy-band-enter` (opacity 0 / translate 0 6px over --cds-dur-snap,
+   --cds-ease-out, none under reduced motion), under the composer column's data-band-enter (main.jsx useBandEnter,
+   cc43287c9 Zre). Width, measure and gutters are the composer column's (`.sqm-band` in source-composer.css). */
+/* W14-code r3 review fix: shared-styles only stills the band entry under @media (prefers-reduced-motion); the local
+   "reduce motion" preference (html[data-local-motion=reduce]) keeps stilling it, on the official selector so the queued
+   bar and the archived banner both stop animating. */
+html[data-local-motion="reduce"] .epitaxy-root [data-band-enter] .epitaxy-band-enter { transition: none; }

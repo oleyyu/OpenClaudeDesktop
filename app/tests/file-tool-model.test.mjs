@@ -41,26 +41,21 @@ test('path menu exposes relative only inside cwd, does not authorize filesystem 
 });
 
 test('classic file group keeps prose boundaries and unique paths per category',async()=>{
- const {groupFileTools,fileGroupSummary}=await import('../src/file-tool-model.mjs');
+ const {groupFileTools}=await import('../src/file-tool-model.mjs');
  const tools=[edit('create','add','a'),read('read','a'),edit('update','update','a'),edit('create2','add','b')];
- assert.deepEqual(fileGroupSummary(tools),{label:'Created 2 files, read a file, edited a file'});
  const grouped=groupFileTools([...tools,{id:'answer',type:'agentMessage',turnId:'t',text:'done'},read('after','b')]);
  assert.equal(grouped.length,3);assert.deepEqual(grouped[0].toolGroup.map(i=>i.id),tools.map(i=>i.id));
  assert.equal(grouped[1].id,'answer');
- // Sk:16616–16702 summary text includes shared basename metadata.
- assert.deepEqual(fileGroupSummary([read('a','/w/a.ts'),edit('b')]),{label:'Read and edited a.ts',path:'/w/a.ts'});
 });
 
 // Pure commands must group too (classic Npe :53865–54010). A nonzero
 // process exit alone is not a protocol failure, nor is an interruption.
 test('command groups count actual items and failures, never merge repeated commands',async()=>{
- const {groupFileTools,fileGroupSummary}=await import('../src/file-tool-model.mjs');
+ const {groupFileTools}=await import('../src/file-tool-model.mjs');
  const tools=Array.from({length:8},(_,i)=>({id:`cmd${i}`,turnId:'t',type:'commandExecution',command:'echo same',status:i===5?'failed':'completed',exitCode:i===3?1:0}));
- assert.equal(fileGroupSummary(tools).label,'Ran 8 commands (1 failed)');
  const group=groupFileTools(tools);assert.equal(group.length,1);assert.equal(group[0].toolGroup.length,8);
  assert.equal(coalesceFileRuns(tools).length,8);
  assert.equal(groupFileTools([tools[0],{...tools[1],turnId:'another'}]).length,2);
- assert.equal(fileGroupSummary([{...tools[0],status:'interrupted'},tools[3]]).label,'Ran 2 commands');
 });
 test('DeepSeek read and glob shapes render clean contents and the searched pattern',()=>{
  // harness projection: one `N: text` line per structured read line, no footer.
@@ -68,19 +63,6 @@ test('DeepSeek read and glob shapes render clean contents and the searched patte
  assert.equal(readContents('1: hello\n2: world\n\n(End of file - total 2 lines)'),'1: hello\n2: world\n\n(End of file - total 2 lines)','a footer defeats the all-or-nothing strip, so the bridge drops it');
  const glob={id:'g',turnId:'t',type:'commandExecution',status:'completed',commandActions:[{type:'search',command:'Glob **/*.md',query:'**/*.md',path:null}]};
  assert.deepEqual(fileToolSummary([glob],'done'),{label:'Searched **/*.md'});
-});
-
-// R06: the group label of a DeepSeek turn (b12 live capture: two todo_write calls and a command).
-test('fileGroupSummary reads Harness categories and glob searches in the source words', async () => {
- const { fileGroupSummary: summary } = await import('../src/file-tool-model.mjs');
- const todo = id => ({ id, type: 'dynamicToolCall', namespace: null, tool: 'todo_write', arguments: { todos: [] }, status: 'completed' });
- const cmd = { id: 'c', type: 'commandExecution', status: 'completed', command: 'ls', commandActions: [{ type: 'unknown', command: 'ls' }] };
- assert.deepEqual(summary([todo('a'), todo('b'), cmd]), { label: 'Updated todos, ran a command' });
- const readA = { id: 'r', type: 'commandExecution', status: 'completed', command: 'Read a.ts', commandActions: [{ type: 'read', path: '/w/a.ts' }] };
- assert.equal(summary([readA, { id: 'p', type: 'dynamicToolCall', namespace: null, tool: 'exit_plan_mode', arguments: {}, status: 'completed' }]).label, 'Read a.ts, proposed a plan');
- assert.equal(summary([{ id: 'x', type: 'dynamicToolCall', namespace: null, tool: 'run_code', arguments: {}, status: 'completed' }]).label, 'Ran code');
- assert.equal(summary([{ ...cmd, commandActions: [{ type: 'search', query: '*.md', tool: 'glob' }] }]).label, 'Found files');
- assert.equal(summary([{ ...todo('f'), status: 'failed' }]).label, 'Updated todos (1 failed)');
 });
 
 test('an exec-backed list step names the command that ran only when it reports no arguments, pattern or path',()=>{

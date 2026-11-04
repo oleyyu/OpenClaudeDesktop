@@ -1,7 +1,6 @@
 import { parseCsvPreview as currentCsvPreview } from './generated/code-current/csv-parser.mjs';
 import { HIGHLIGHT_LIMITS, isPlainLanguage, normalizeLanguage } from './highlight-model.mjs';
 import { FILE_EXTENSION_LANGUAGES, LOCKFILE_LANGUAGES } from './highlight-languages.mjs';
-import { t, tn } from '../electron/i18n/index.mjs';
 
 // Highlight tokens describe complete fragments; split without dropping empty
 // lines, CRs, or a token that spans multiple lines. No HTML is interpreted.
@@ -78,22 +77,6 @@ export function filePreviewKind(path = '') {
   if (/\.tsv$/i.test(value)) return { kind: 'csv', delimiter: '\t' };
   if (/\.csv$/i.test(value)) return { kind: 'csv', delimiter: ',' };
   if (/\.(md|mdx|markdown)$/i.test(value)) return { kind: 'markdown', delimiter: null };
-  return null;
-}
-// nr/ir (cd2efac6e :2672-2673): je = shared-4 Jh (the last extension,
-// lowercased, among png jpg jpeg gif bmp webp avif; no svg) shows an <img>;
-// ye = shared-11 gh, video (mp4 webm mov m4v ogv) or audio (mp3 m4a aac wav
-// flac opus ogg oga), shows a <video> or, for audio (we), an <audio>.
-// electron/files.cjs classifies the same lists without reading the bytes.
-const IMAGE_EXTENSIONS = new Set(['png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp', 'avif']);
-export function fileMediaKind(path = '') {
-  const value = String(path), at = value.lastIndexOf('.');
-  if (IMAGE_EXTENSIONS.has(at < 0 ? '' : value.slice(at + 1).toLowerCase())) return 'image';
-  if (/\.(mp4|webm|mov|m4v|ogv)$/i.test(value)) return 'video';
-  if (/\.(mp3|m4a|aac|wav|flac|opus|ogg|oga)$/i.test(value)) return 'audio';
-  // B13: a PDF shows in Chromium's built-in viewer from its file:// URL (the
-  // local stand-in for the desktop native preview, c6e1d8764 On).
-  if (/\.pdf$/i.test(value)) return 'pdf';
   return null;
 }
 // The composer's file:// preview URL (main.jsx filePreviewUrl), the same
@@ -193,16 +176,6 @@ export function externalLinkWarnings(href) {
 export function parseCsvPreview(contents, delimiter) {
   return currentCsvPreview(String(contents ?? ''), delimiter);
 }
-// cd5fd9055 l: the truncation caption above the table (ICU plural/number
-// messages rendered for en-US).
-export function csvTruncationCaption({ rowCount, columnCount, rowsTruncated, colsTruncated, cellsTruncated }) {
-  const cells = cellsTruncated ? t(' Long cells are shortened.') : '';
-  const rowsText = tn(rowCount, '{count} row', '{count} rows');
-  if (rowsTruncated && colsTruncated) return t('Showing the first {rows} and {columns} columns.{cells} Switch to Source to see more.', { rows: rowsText, columns: columnCount.toLocaleString('en-US'), cells });
-  if (rowsTruncated) return t('Showing the first {rows}.{cells} Switch to Source to see more.', { rows: rowsText, cells });
-  if (colsTruncated) return tn(columnCount, 'Showing the first {count} column.{cells} Switch to Source to see more.', 'Showing the first {count} columns.{cells} Switch to Source to see more.', { cells });
-  return t('Long cells are shortened. Switch to Source to see more.');
-}
 
 // Files pane viewer (source-file-viewer.jsx). The rows of a file: a terminal LF
 // ends the last line and adds no numbered row, as in the Read rows.
@@ -226,14 +199,6 @@ export function fileViewerTooSlow(text, language) {
   return lines.length > HIGHLIGHT_LIMITS.maxLines || lines.some((line) => line.length > HIGHLIGHT_LIMITS.maxLineUnits);
 }
 
-// ja (cd2efac6e :1690-1711) without a lister: the leading slash(es), the
-// directory segments and the file name of the displayed path.
-export function breadcrumbParts(displayPath = '') {
-  const value = String(displayPath);
-  const at = value.lastIndexOf('/', value.endsWith('/') ? value.length - 2 : value.length - 1);
-  const directory = at < 0 ? '' : value.slice(0, at + 1), name = at < 0 ? value : value.slice(at + 1);
-  return { lead: /^\/+/.exec(directory)?.[0] ?? '', dirs: directory.split('/').filter(Boolean), name };
-}
 
 // ua (cd2efac6e :1519-1528): the active range covers line..endLine, at most
 // 200 rows (la); a single line when endLine is missing or not after line.

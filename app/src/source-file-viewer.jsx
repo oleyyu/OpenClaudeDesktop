@@ -5,13 +5,12 @@ import { readFileView, rememberFileView } from './generated/code-current/file-vi
 import { suppressKeyRepeat } from './generated/code-editor-current/keyboard-repeat.mjs';
 import { imagePng } from './response-image-model.mjs';
 import { fileDownloadPlan } from './file-download-model.mjs';
-import { SourceFileGoToLine } from "./source-file-go-to-line.jsx";
+import { PANE_SUBHEADER_CLASS, SourceFileGoToLine } from "./source-file-go-to-line.jsx";
 import { SourceFileEditor } from "./source-file-editor.jsx";
 import { getFileEditor } from "./file-edit-store.mjs";
 import { DEFAULT_FILE_VIEW_SETTINGS, scrollPastEndPadding, whitespaceTheme } from "./file-view-settings.mjs";
 import React, { startTransition, useCallback, useDeferredValue, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { Icon } from "./icons";
-import { SourceTooltip } from "./source-tooltip";
 import { fileFindShortcut, searchInText, findStatus, firstMatchFrom, getSearchOptions, rememberSearchOptions, stepFindIndex } from "./file-find-model.mjs";
 import { useSettledHighlight } from "./use-settled-highlight.mjs";
 import { SourceHighlightedLine } from "./source-diff-code.jsx";
@@ -19,10 +18,9 @@ import { SourceEmptyState } from "./source-transcript-states.jsx";
 import { SourceLoadingPane, SourceSpinner } from "./source-pane-states.jsx";
 import { MARKDOWN_FIRST_CHUNK_CHARS, MARKDOWN_PROGRESSIVE_CHARS, markdownChunkHeight, markdownFilePlan, releaseMarkdownFilePlan } from "./file-markdown-model.mjs";
 import { Frontmatter } from "./generated/files-changes/file-frontmatter-view.mjs";
-import { SourceSettingsButton } from "./source-settings-button.jsx";
 import { externalLinkWarnings, fileHighlightLanguage, filePreviewKind, filePreviewUrl, fileViewerLines, fileViewerTooSlow, jumpRange, previewFrameLink, previewLinkWritten, svgPreviewUrl } from "./file-preview-model.mjs";
 import { SourceDialog } from "./source-dialog.jsx";
-import { FILE_MEDIA_KINDS, FILE_CARD_LABELS, addFolderFailedMessage, createFileFailedMessage, fileCardPlan, fileMediaErrorCopy, filePreviewEmpty, fileTabReason, offeredFolderLabel, VIEW_AS_TEXT_LABEL } from "./file-unavailable-model.mjs";
+import { FILE_MEDIA_KINDS, FILE_CARD_LABELS, addFolderFailedMessage, createFileFailedMessage, fileCardPlan, fileMediaErrorCopy, FOLDER_OFFER_REASONS, filePreviewEmpty, fileTabReason, offeredFolderLabel, VIEW_AS_TEXT_LABEL } from "./file-unavailable-model.mjs";
 import { CodeBlockLabelContext, CodeBlockOverflowContext } from "./code-block-layout-model.mjs";
 import { fileViewerMenu } from "./file-context-menu-model.mjs";
 import { SourceMenu } from "./source-menu.jsx";
@@ -32,7 +30,26 @@ import { useSourceToasts } from "./source-toast.jsx";
 import { WebLinkContext } from "./web-link-context.mjs";
 import "./highlight-tokens.css";
 import "./source-file-viewer.css";
+import { CdsButton, CdsTextInput, CdsTooltipProvider } from "./generated/view-tabs/index.js";
+import { hasReplacementLoss } from "./generated/code-current/file-text-decoding.mjs";
 import { t } from "../electron/i18n/index.mjs";
+import { hostGrowthBookFlag } from "./host-growthbook.mjs";
+import { useCdsDensity } from "./generated/view-tabs/index.js";
+import { compileSearch } from "./generated/code-editor/search.mjs";
+import { Uc as PierreFile, fl as pierreContents, Rc as pierreLetterSpacing, zc as pierreWrapStyle } from "./generated/transcript-rows/outside-handlers.mjs";
+import { _n as PierreScroller } from "./generated/transcript-rows/rows-c64baa838-cddTLIc9.mjs";
+import { b as fileLanguage } from "./generated/transcript-rows/rows-c476e9be4-DlarndnK.mjs";
+import { F as useCodeTheme, O as bundledThemeColor } from "./generated/transcript-rows/rows-c5d464fa3-Bot02AbX.mjs";
+import { X as resolveCodeTheme } from "./generated/transcript-rows/rows-c68fd9df8-CJ4k-Myz.mjs";
+import { Rn as useCodeThemeMode } from "./generated/transcript-rows/rows-c0fbbe82d-COsmfHJY.mjs";
+import { AD as lineCount } from "./generated/transcript-rows/rows-shared-28-DNYlf4wu.mjs";
+import { fileMetrics, codeSelectionCss } from "./generated/transcript-rows/rows-c82eca2bd-CImI7zNG.mjs";
+import { fileGutterCss, findLineOrdinal } from "./generated/transcript-rows/rows-cc3bc2027-CqmDBxcX.mjs";
+import { highlightFileFind, highlightFileLines, revealFileLine } from "./generated/transcript-rows/rows-cd2efac6e-Be7wcc4w.mjs";
+// W14-code r5 pierre: the rollback switch of the pierre File body (host-growthbook.mjs).
+export const PIERRE_FILE_VIEWER_SWITCH = "local_pierre_file_viewer";
+// Read once from the host table; a provider can pin either body (the rollback path stays testable under SSR).
+export const PierreFileViewerContext = React.createContext(hostGrowthBookFlag(PIERRE_FILE_VIEWER_SWITCH));
 
 // Files pane file viewer (2.2553.1 ion-dist/assets/v1/cd2efac6e-CAi4fxTN.js,
 // prettier-formatted, jo :2576-4674). Mounted by FilePane for the active tab.
@@ -65,37 +82,39 @@ export const FILE_VIEWER_LABELS = Object.freeze({
   tryAgain: t("Try again"),
   fileActions: t("File actions"),
 });
-export const copyPathLabel = (path) => t("Copy path {path}", { path });
 
-// 2.31226.0 io/ro: find bar with the original three option buttons; the "Find in file…" field, "{current} of {total}" or "No results" (aria-live,
-// text-footnote text-muted tabular-nums), then the ghost Previous match (ArrowUp) / Next match (ArrowDown) /
-// Close find bar (X, esc) buttons.
-export function SourceFileSearchOptions({options,onToggle}) { return (
-    <span role="group" aria-label={t("Search options")} className="sfv-find-options">
-      {[["matchCase", "Aa", "Match case"], ["wholeWord", "ab", "Match whole word"], ["regexp", ".*", "Use regular expression"]].map(([key, text, label]) => <SourceTooltip key={key} content={t(label)} hoverable={false}>
-        <button type="button" className="source-icon-button sfv-find-option" aria-label={t(label)} aria-pressed={options[key]} onMouseDown={event => event.preventDefault()} onClick={() => onToggle(key)}><span aria-hidden="true" style={key === "wholeWord" ? { textDecoration: "underline" } : undefined}>{text}</span></button>
-      </SourceTooltip>)}
-    </span>
-); }
-function SourceFileFindBar({ query, status, options, result, inputRef, onToggle, onQuery, onNext, onPrev, onClose }) {
+// 3.6556.2 cd2efac6e Gs: the three search options, xs ghost iconOnly CdsButtons (pressed, aria-label as their tooltip,
+// onMouseDown oa keeps the focus) whose glyph is a caption span ("text-caption underline" for whole word), in a
+// span[role=group] "flex items-center gap-xs" labelled "Search options".
+const SEARCH_OPTIONS = [["matchCase", "Aa", "Match case"], ["wholeWord", "ab", "Match whole word"], ["regexp", ".*", "Use regular expression"]];
+const keepFocus = (event) => event.preventDefault();
+export function SourceFileSearchOptions({ options, onToggle }) {
+  return <span role="group" aria-label={t("Search options")} className="flex items-center gap-xs">
+    {SEARCH_OPTIONS.map(([key, text, label]) => <CdsButton key={key} size="xs" variant="ghost" pressed={options[key]} aria-label={t(label)}
+      icon={<span aria-hidden={true} className={key === "wholeWord" ? "text-caption underline" : "text-caption"}>{text}</span>}
+      iconOnly onClick={() => onToggle(key)} onMouseDown={keepFocus} />)}
+  </span>;
+}
+// 3.6556.2 cd2efac6e Js: eo{role "search", ownsEscape} around a CdsTooltipProvider (ql) of the CdsTextInput (vs,
+// fullWidth false, "min-w-0 flex-1", slotEnd Gs), the aria-live status "text-footnote text-muted-as-secondary
+// tabular-nums" and the base ghost iconOnly Previous match (ArrowUp) / Next match (ArrowDown) / Close find bar (X, esc,
+// className shared-18 Mb("text-secondary")) CdsButtons.
+export function SourceFileFindBar({ query, status, options, result, inputRef, onToggle, onQuery, onNext, onPrev, onClose }) {
   const has = status.total > 0;
   const total = status.capped || result.partial || result.hasLongLines ? `${status.total.toLocaleString()}+` : status.total.toLocaleString();
-  const button = (label, icon, onClick, disabled, shortcut) => <SourceTooltip content={label} shortcut={shortcut} hoverable={false}>
-    <button type="button" className="source-icon-button sfv-find-button" aria-label={label} disabled={disabled} onMouseDown={(event) => event.preventDefault()} onClick={onClick}
-      onKeyDown={icon === 'X' ? event => { if (event.key === 'Enter') suppressKeyRepeat('Enter', event.currentTarget.ownerDocument.defaultView); } : undefined}>
-      <Icon name={icon} size={16} />
-    </button>
-  </SourceTooltip>;
-  return <div role="search" className="sfv-find" data-file-find=""
+  return <div role="search" data-pane-editor="" className={PANE_SUBHEADER_CLASS} data-file-find=""
     onKeyDown={(event) => { if (event.key === "Escape" && !event.nativeEvent.isComposing) { event.preventDefault(); event.stopPropagation(); suppressKeyRepeat('Escape', event.currentTarget.ownerDocument.defaultView); onClose(); } }}>
-    <div className="sfv-find-field"><input ref={inputRef} className="sfv-find-input" aria-invalid={result.invalid || undefined} value={query} spellCheck={false} autoComplete="off" aria-label={t("Find in file")} placeholder={t("Find in file…")}
-      onChange={(event) => onQuery(event.target.value)}
-      onKeyDown={(event) => { if (event.key === "Enter" && !event.nativeEvent.isComposing && event.keyCode !== 229) { event.preventDefault(); if (event.shiftKey) onPrev(); else onNext(); } }} />
-    <SourceFileSearchOptions options={options} onToggle={onToggle} /></div>
-    <span aria-live="polite" className="sfv-find-status">{query.length === 0 ? "" : result.invalid ? t("Invalid regular expression") : has ? t("{current} of {total}", { current: status.current.toLocaleString(), total }) : result.partial ? t("Search paused. Select Next match to continue.") : result.hasLongLines ? t("Long lines not searched") : t("No results")}</span>
-    {button(t("Previous match"), "ArrowUp", onPrev, !has, "cmd+shift+g")}
-    {button(t("Next match"), "ArrowDown", onNext, !has && !result.partial, "cmd+g")}
-    {button(t("Close find bar"), "X", onClose, false, "esc")}
+    <CdsTooltipProvider>
+      <CdsTextInput ref={inputRef} value={query} onChange={(event) => onQuery(event.target.value)}
+        onKeyDown={(event) => { if (event.nativeEvent.isComposing || event.keyCode === 229) return; if (event.key === "Enter") { event.preventDefault(); if (event.shiftKey) onPrev(); else onNext(); } }}
+        spellCheck={false} autoComplete="off" aria-label={t("Find in file")} placeholder={t("Find in file…")} fullWidth={false} className="min-w-0 flex-1"
+        aria-invalid={result.invalid || undefined} slotEnd={<SourceFileSearchOptions options={options} onToggle={onToggle} />} />
+      <span aria-live="polite" className="text-footnote text-muted-as-secondary tabular-nums">{query.length === 0 ? "" : result.invalid ? t("Invalid regular expression") : has ? t("{current} of {total}", { current: status.current.toLocaleString(), total }) : result.partial ? t("Search paused. Select Next match to continue.") : result.hasLongLines ? t("Long lines not searched") : t("No results")}</span>
+      <CdsButton size="base" icon="ArrowUp" aria-label={t("Previous match")} shortcut="cmd+shift+g" onClick={onPrev} onMouseDown={keepFocus} disabled={!has} variant="ghost" iconOnly />
+      <CdsButton size="base" icon="ArrowDown" aria-label={t("Next match")} shortcut="cmd+g" onClick={onNext} onMouseDown={keepFocus} disabled={!has && !result.partial} variant="ghost" iconOnly />
+      <CdsButton size="base" icon="X" aria-label={t("Close find bar")} shortcut="esc" onClick={onClose} onMouseDown={keepFocus}
+        onKeyDown={(event) => { if (event.key === 'Enter') suppressKeyRepeat('Enter', event.currentTarget.ownerDocument.defaultView); }} variant="ghost" iconOnly className="text-secondary" />
+    </CdsTooltipProvider>
   </div>;
 }
 
@@ -104,15 +123,14 @@ function SourceFileFindBar({ query, status, options, result, inputRef, onToggle,
 function SourceCardReveal({ path, onShowFile }) {
   const toasts = useSourceToasts();
   const [refused, setRefused] = useState(null);
-  if (refused === path) return <SourceTooltip disabledReason={FILE_CARD_LABELS.revealFailed}>
-    <SourceSettingsButton variant="secondary" data-step="1" disabled data-card-action="reveal">{FILE_CARD_LABELS.showInFinder}</SourceSettingsButton>
-  </SourceTooltip>;
+  // cd2efac6e :6610-6617: the reason rides on the button's own disabledReason (shared-frame Uu → pu).
+  if (refused === path) return <CdsButton variant="secondary" size="xxs" disabled disabledReason={FILE_CARD_LABELS.revealFailed} data-card-action="reveal">{FILE_CARD_LABELS.showInFinder}</CdsButton>;
   const reveal = () => {
     void Promise.resolve().then(() => onShowFile()).then((shown) => {
       if (shown === false) throw new Error("not shown");
     }).catch(() => { setRefused(path); toasts?.add(FILE_CARD_LABELS.revealFailed, { variant: "danger" }); });
   };
-  return <SourceSettingsButton variant="secondary" data-step="1" onClick={reveal} data-card-action="reveal">{FILE_CARD_LABELS.showInFinder}</SourceSettingsButton>;
+  return <CdsButton variant="secondary" size="xxs" onClick={reveal} data-card-action="reveal">{FILE_CARD_LABELS.showInFinder}</CdsButton>;
 }
 
 // B32 ge(setBusy, run) (cd2efac6e :5583/:5598): a card button's busy state lasts as long as its action.
@@ -142,7 +160,7 @@ function SourceFileUnavailable({ reason, path, creatable, onViewAsText, cardActi
   // tp/ep: the folder offer for an outside-root file, asked once per path (staleTime Infinity) and again after an add.
   const [offer, setOffer] = useState({ key: null, value: null });
   const [offerNonce, setOfferNonce] = useState(0);
-  const offerKey = reason === "outside_root" && cardActions?.suggestFolder && cardActions?.onAddFolder ? `${path}\u0000${offerNonce}` : null;
+  const offerKey = FOLDER_OFFER_REASONS.includes(reason) && cardActions?.suggestFolder && cardActions?.onAddFolder ? `${path}\u0000${offerNonce}` : null;
   useEffect(() => {
     if (!offerKey) return undefined;
     let live = true;
@@ -192,18 +210,18 @@ function SourceFileUnavailable({ reason, path, creatable, onViewAsText, cardActi
   const body = plan.offer
     ? <>{offerBefore}<span className="select-text break-all" title={plan.offer}>{folderLabel}</span>{offerAfter}</>
     : plan.body && <>{plan.body}{plan.showsPath && <><br /><span className="select-text break-all">{path}</span></>}</>;
-  // xxs secondary CDS Button: the xxs size is data-step="1" (shared-frame :2976).
-  const button = (label, onClick, extra = {}) => <SourceSettingsButton variant="secondary" data-step="1" onClick={onClick} {...extra}>{label}</SourceSettingsButton>;
+  // xxs secondary CDS Button (shared-frame Uu: size "xxs" renders data-step="1").
+  const button = (label, onClick, extra = {}) => <CdsButton variant="secondary" size="xxs" onClick={onClick} {...extra}>{label}</CdsButton>;
   const revealButton = plan.reveal && <SourceCardReveal path={path} onShowFile={cardActions.onShowFile} />;
   const addKey = plan.offer ? `${path}\u0000${plan.offer}` : null;
   const actions = <>
     {plan.retry && button(FILE_CARD_LABELS.tryAgain, () => void runRetry(retry),
-      { busy: retrying, "aria-label": retrying ? FILE_CARD_LABELS.tryingAgain : undefined, disabled: creating, "data-card-action": "retry" })}
+      { busy: retrying, busyLabel: FILE_CARD_LABELS.tryingAgain, disabled: creating, "data-card-action": "retry" })}
     {plan.create && button(FILE_CARD_LABELS.createFile, () => void runCreate(create),
-      { busy: creating, "aria-label": creating ? FILE_CARD_LABELS.creatingFile : undefined, disabled: retrying, "data-card-action": "create" })}
+      { busy: creating, busyLabel: FILE_CARD_LABELS.creatingFile, disabled: retrying, "data-card-action": "create" })}
     {plan.offer && (addRefused === addKey
-      ? <SourceTooltip disabledReason={addFolderFailedMessage(plan.offer)}>{button(FILE_CARD_LABELS.addFolder, undefined, { disabled: true, "data-card-action": "add-folder" })}</SourceTooltip>
-      : button(FILE_CARD_LABELS.addFolder, () => void runAdd(addFolder), { busy: adding, "aria-label": adding ? FILE_CARD_LABELS.addingFolder : undefined, "data-card-action": "add-folder" }))}
+      ? button(FILE_CARD_LABELS.addFolder, undefined, { disabled: true, disabledReason: addFolderFailedMessage(plan.offer), "data-card-action": "add-folder" })
+      : button(FILE_CARD_LABELS.addFolder, () => void runAdd(addFolder), { busy: adding, busyLabel: FILE_CARD_LABELS.addingFolder, "data-card-action": "add-folder" }))}
     {revealButton}
     {plan.viewAsText && button(VIEW_AS_TEXT_LABEL, onViewAsText)}
   </>;
@@ -321,6 +339,90 @@ function SourceFileCode({ path, text, line, endLine, scrollNonce, scopeKey, find
         </div>;
       })}
     </div>
+  </div>;
+}
+
+// W14-code r5 pierre (css5-file-viewer-pierre-file, E95; switch local_pierre_file_viewer): 3.6556.2 cd2efac6e's
+// read-only text body. The F.Trigger `[data-file-viewer]` "epitaxy-diff flex-1 min-h-0 [contain:strict]" (style Mh:
+// `--diffs-tab-size`) holds `a(oi, {className: "h-full overflow-y-auto select-text", children: a(li, {file: Bh, options:
+// Sh, metrics: Ph, style: Ch})})` — oi = c64baa838 _n (the pierre virtualizer scroller), li = c19e90103 Uc (pierre File).
+//   Bh = {name: r, contents: ci(Y.contents), lang: pi(r), cacheKey: `file:${lang}:${Y.hash ?? Y.contents}`} (ci = fl,
+//     pi = c476e9be4 b);
+//   Sh = {theme: fh, disableFileHeader: !0, overflow: Je ? "wrap" : "scroll", unsafeCSS: `${no}[data-file] { ${si} }${bh}`}
+//     (fh = c5d464fa3 F's theme; no = c82eca2bd ct; si = Rc; bh = Pa(Pu, String(fn(contents)).length), Pa = cc3bc2027 i,
+//     Pu the code-folding setting — the host has none, so false; fn = shared-28 AD);
+//   Ch = Je ? ui : void 0 (ui = zc); Ph = io(void 0, P()) (io = c82eca2bd ht, P = shared-frame Ha useCdsDensity).
+// The jumped line (u..d): Kh centres u once per `${u}:${scrollNonce}` (vc, up to 60 frames); Jh tints the range (_c) with
+// Fh, the theme's editor.lineHighlightBackground (c68fd9df8 X resolved for c0fbbe82d Rn's mode, else c5d464fa3 O).
+// The find bar (dh): Xh runs fc on the current match's line `lh` with its ordinal `uh` (Na = cc3bc2027 S) and the
+// compiled query (za = cc3bc2027 y, compileSearch), retrying while the line is still off the virtualized window.
+// showWhitespace and scrollPastEnd are the CodeMirror editor's options (qi); the pierre body has neither. This body is the
+// non-Lu branch only (cd2efac6e :8318-8330, fl false: no local session); a local session's read-only text reads in the
+// CodeMirror editor with readOnly (Lu, :8250-8310 — SourceSessionFileViewer's readOnlyFileEditor below).
+function SourceFilePierreCode({ path, text, hash, line, endLine, scrollNonce, find = null, settings = DEFAULT_FILE_VIEW_SETTINGS }) {
+  const viewer = useRef(null);
+  const { theme } = useCodeTheme();
+  const mode = useCodeThemeMode();
+  const density = useCdsDensity();
+  const wrap = settings.wordWrap !== false;
+  const lineDigits = String(lineCount(text)).length;
+  const options = useMemo(() => ({ theme, disableFileHeader: true, overflow: wrap ? "wrap" : "scroll",
+    unsafeCSS: `${codeSelectionCss}[data-file] { ${pierreLetterSpacing} }${fileGutterCss(false, lineDigits)}` }), [theme, wrap, lineDigits]);
+  const metrics = useMemo(() => fileMetrics(undefined, density), [density]);
+  const pierreFile = useMemo(() => {
+    const lang = fileLanguage(path);
+    return { name: path, contents: pierreContents(text), lang, cacheKey: `file:${lang}:${hash ?? text}` };
+  }, [path, text, hash]);
+  const tabStyle = settings.tabSize === undefined ? undefined : { "--diffs-tab-size": settings.tabSize };
+  const [rangeColor, setRangeColor] = useState(undefined);
+  useEffect(() => {
+    let stale = false;
+    const done = (resolved) => { if (!stale) setRangeColor(resolved?.colors?.["editor.lineHighlightBackground"] ?? bundledThemeColor(mode, "editor.lineHighlightBackground")); };
+    try { const resolved = resolveCodeTheme(theme[mode]); resolved instanceof Promise ? resolved.then(done).catch(() => done(undefined)) : done(resolved); } catch { done(undefined); }
+    return () => { stale = true; };
+  }, [theme, mode]);
+  const jumped = useRef(undefined);
+  useEffect(() => { if (line == null) jumped.current = undefined; }, [line]);
+  useEffect(() => {
+    const node = viewer.current, view = node?.ownerDocument.defaultView;
+    if (line == null || !node || !view) return undefined;
+    const key = `${line}:${scrollNonce}`;
+    if (jumped.current === key) return undefined;
+    let frame = 0, tries = 0;
+    const step = () => { if (revealFileLine(node, line) || ++tries > 60) { jumped.current = key; return; } frame = view.requestAnimationFrame(step); };
+    frame = view.requestAnimationFrame(step);
+    return () => view.cancelAnimationFrame(frame);
+  }, [line, scrollNonce, pierreFile]);
+  useEffect(() => {
+    const node = viewer.current;
+    if (!node || line == null) return undefined;
+    return highlightFileLines(node, line, endLine, rangeColor);
+  }, [line, endLine, pierreFile, rangeColor]);
+  const activeMatch = find && find.index >= 0 && find.index < find.matches.length ? find.matches[find.index] : undefined;
+  const activeLine = activeMatch?.line;
+  const ordinal = activeMatch === undefined ? undefined : findLineOrdinal(find.matches.map((match) => match.line), find.index);
+  useEffect(() => {
+    const node = viewer.current, view = node?.ownerDocument.defaultView;
+    if (!node || !view) return undefined;
+    const matcher = find?.query ? compileSearch(find.query, find.options) : null;
+    if ((highlightFileFind(node, activeLine, matcher, ordinal), activeLine === undefined)) return undefined;
+    let frame = 0, tries = 0;
+    const wait = () => {
+      if (revealFileLine(node, activeLine)) {
+        let passes = 0, moved = false;
+        const settle = () => { const again = highlightFileFind(node, activeLine, matcher, ordinal); passes += 1; if ((again || moved) && passes < 5) { moved = again; frame = view.requestAnimationFrame(settle); } };
+        frame = view.requestAnimationFrame(settle);
+        return;
+      }
+      if (++tries <= 60) frame = view.requestAnimationFrame(wait);
+    };
+    frame = view.requestAnimationFrame(wait);
+    return () => view.cancelAnimationFrame(frame);
+  }, [find?.query, find?.options, find?.scrollNonce, activeLine, ordinal, pierreFile]); // eslint-disable-line react-hooks/exhaustive-deps
+  return <div ref={viewer} data-file-viewer="" className="epitaxy-diff flex-1 min-h-0 [contain:strict]" style={tabStyle}>
+    <PierreScroller className="h-full overflow-y-auto select-text">
+      <PierreFile file={pierreFile} options={options} metrics={metrics} style={wrap ? pierreWrapStyle : undefined} />
+    </PierreScroller>
   </div>;
 }
 
@@ -448,7 +550,7 @@ function SourceFileMedia({ kind, path, url, onViewAsText, onShowFile = null, onI
         actions={onViewAsText || onShowFile ? <>
           {/* B32 cu(uc, …) (cd2efac6e :6605-6611): Br's reveal item first. */}
           {onShowFile && <SourceCardReveal path={path} onShowFile={onShowFile} />}
-          {onViewAsText && <SourceSettingsButton variant="secondary" data-step="1" onClick={onViewAsText}>{VIEW_AS_TEXT_LABEL}</SourceSettingsButton>}
+          {onViewAsText && <CdsButton variant="secondary" size="xxs" onClick={onViewAsText}>{VIEW_AS_TEXT_LABEL}</CdsButton>}
         </> : null} />
     </div>;
   }
@@ -477,8 +579,8 @@ function SourceFileMedia({ kind, path, url, onViewAsText, onShowFile = null, onI
 function SourceFramePreviewError({ onViewSource, onRetry }) {
   return <div className="contents" data-file-preview-error="">
     <SourceEmptyState role="alert" title={FILE_VIEWER_LABELS.frameError} actions={<>
-      {onViewSource && <SourceSettingsButton variant="primary" data-step="1" onClick={onViewSource}>{FILE_VIEWER_LABELS.viewSource}</SourceSettingsButton>}
-      {onRetry && <SourceSettingsButton variant="secondary" data-step="1" onClick={onRetry}>{FILE_VIEWER_LABELS.tryAgain}</SourceSettingsButton>}
+      {onViewSource && <CdsButton variant="primary" size="xxs" onClick={onViewSource}>{FILE_VIEWER_LABELS.viewSource}</CdsButton>}
+      {onRetry && <CdsButton variant="secondary" size="xxs" onClick={onRetry}>{FILE_VIEWER_LABELS.tryAgain}</CdsButton>}
     </>} />
   </div>;
 }
@@ -561,8 +663,8 @@ function SourceExternalLinkDialog({ href, onClose, onConfirm }) {
   return <SourceDialog alert size="md" showClose={false} title={t("Open external link")} description={t("You’re leaving Claude to visit an external link:")}
     initialFocusRef={cancel} onClose={onClose}
     footer={<>
-      <SourceSettingsButton ref={cancel} variant="secondary" onClick={onClose}>{t("Cancel")}</SourceSettingsButton>
-      <SourceSettingsButton variant="primary" disabled={!armed} onClick={() => { if (armed) onConfirm(); }}>{t("Open link")}</SourceSettingsButton>
+      <CdsButton ref={cancel} variant="secondary" onClick={onClose}>{t("Cancel")}</CdsButton>
+      <CdsButton variant="primary" disabled={!armed} onClick={() => { if (armed) onConfirm(); }}>{t("Open link")}</CdsButton>
     </>}>
     <div className="mt-3 max-h-40 overflow-y-scroll break-all rounded-lg border bg-surface-1 px-4 py-3 text-primary">{href}</div>
     {warnings.hasUserinfo && warning(t("This link contains embedded credentials, which may be an attempt to disguise its destination. You will actually be sent to:"), warnings.host)}
@@ -585,17 +687,14 @@ function SourceFileSvg({ path, text, onViewSource, onImageReady }) {
   </div>;
 }
 
-// The Eye/Code subheader button (:4169-4186): ghost iconOnly base, labelled
-// "Preview" (Eye) while the source shows, otherwise "View source" (Code); an
-// iconOnly Button shows its aria-label as the CDS tooltip.
+// The Eye/Code subheader button: 3.6556.2 cd2efac6e `a(T,{size:"base",onClick:Zy,"aria-label":$y,icon:eb,variant:"ghost",
+// iconOnly:!0})` (T = the CDS Button), labelled "Preview" (GD2Vvn5YZe, Eye) while the source shows, otherwise
+// "View source" (khjKGjoVqR, Code); the iconOnly Button shows its aria-label as its own CDS tooltip.
+// W14-code r4 css4-pane-toggle-icon-buttons: the host .source-icon-button.sfv-view-toggle + SourceTooltip are gone.
 function SourceViewToggle({ showingSource, onToggle }) {
   const label = showingSource ? FILE_VIEWER_LABELS.preview : FILE_VIEWER_LABELS.viewSource;
-  return <SourceTooltip content={label} hoverable={false}>
-    <button type="button" className="source-icon-button sfv-view-toggle" aria-label={label} data-view-toggle=""
-      onClick={onToggle} onMouseDown={(event) => event.preventDefault()}>
-      <Icon name={showingSource ? "Eye" : "Code"} size={16} />
-    </button>
-  </SourceTooltip>;
+  return <CdsButton size="base" onClick={onToggle} aria-label={label} icon={showingSource ? "Eye" : "Code"} variant="ghost" iconOnly
+    data-view-toggle="" onMouseDown={(event) => event.preventDefault()} />;
 }
 
 /**
@@ -610,17 +709,48 @@ export function SourceSessionFileViewer({ file, scopeKey, sessionId, onSaveFile,
   const editor = useMemo(() => file.editHash ? getFileEditor({ key: scopeKey, path: file.path, sessionId,
     text: file.text, hash: file.editHash, save: onSaveFile }) : null, [scopeKey, file.editHash]);
   if (editor) editor.saveFile = onSaveFile;
+  // W14-code r5 pierre review fix — cd2efac6e `fl = Wi(L, dl)` (c0fbbe82d Xr: Wr(e) = e.type === "local" &&
+  // !!writeSessionFile), `Lu = fl && !!Y && X === null && !vu` (:5022): in a local session every text body is qi, the
+  // CodeMirror editor, with `readOnly: !Au` (:8250-8310) — pierre File is only its Suspense fallback. So a file this
+  // session cannot write (no editHash: outside the session folders, or no hash) reads in the editor, read-only, keeping
+  // showWhitespace, scrollPastEnd, comments and attach-selection; pierre (SourceFilePierreCode) stays the fl-false body.
+  const readOnly = useMemo(() => !file.editHash && sessionId ? readOnlyFileEditor({ key: scopeKey, path: file.path, sessionId }) : null,
+    [scopeKey, file.path, file.editHash, sessionId]);
+  readOnly?.sync(file.text);
   const viewKey = scopeKey ?? props.memoryKey ?? file.path;
   return editor ? <EditableFileViewer key={viewKey} {...props} file={file} scopeKey={scopeKey} editor={editor} />
-    : <SourceFileViewer key={viewKey} {...props} file={file} scopeKey={scopeKey} />;
+    : <SourceFileViewer key={viewKey} {...props} file={file} scopeKey={scopeKey} editor={readOnly} />;
+}
+// The editor store shape SourceFileEditor reads (file-edit-store.mjs getFileEditor), for a body that never changes:
+// `readOnly` turns on qi's Wa (EditorState.readOnly + drawSelection cursorBlinkRate 0); nothing is dirty, saved or
+// auto-saved, and it is not in the edit guards' map. sync() takes the re-read text (idempotent, during render).
+export function readOnlyFileEditor({ key, path, sessionId }) {
+  let state = { text: "", baseText: "", baseHash: null, saving: false, error: null };
+  const resolved = () => Promise.resolve();
+  return {
+    key, path, sessionId, readOnly: true, readHash: null, saveFile: null, autoSave: false, attached: false, dirty: false,
+    sync(text) { if (typeof text === "string" && text !== state.text) state = { ...state, text, baseText: text }; },
+    getSnapshot: () => state, subscribe: () => () => {}, attachView: () => () => {},
+    setAutoSave() {}, change() {}, reset() {}, discard() {}, flushAutoSave: resolved, save: resolved,
+  };
 }
 function EditableFileViewer({ editor, file, onEdit, ...props }) {
   const state = useSyncExternalStore(editor.subscribe, editor.getSnapshot, editor.getSnapshot);
   useLayoutEffect(() => { if (editor.dirty) onEdit?.(); }, [editor, state, onEdit]);
-  return <SourceFileViewer {...props} file={{ ...file, text: state.text }} editor={editor} editState={state} />;
+  // cd2efac6e Hy: while this view is mounted its own error bar shows a failed save; once it detaches, a failed
+  // auto-save toasts (source-file-edit-guard.jsx).
+  useEffect(() => editor.attachView(), [editor]);
+  // cd2efac6e Su = vd(Y.contents, Y.fileSize): the read text (not the draft) is not valid UTF-8.
+  const invalidUtf8 = typeof file.text === "string" && hasReplacementLoss(file.text, file.size);
+  return <SourceFileViewer {...props} file={{ ...file, text: state.text }} editor={editor} editState={state} invalidUtf8={invalidUtf8} />;
 }
-export function SourceFileViewer({ file, presentation = "pane", displayPath, fullPath, line, endLine, scrollNonce, scopeKey, onCopyPath, onViewAsText, renderMarkdown, findRequest = null, contentFind = null, lister = null, showHeader = true, viewMode, onViewModeChange, defaultView, memoryKey = null, settings = DEFAULT_FILE_VIEW_SETTINGS, editor = null, editState = null, onAttachFile, onAttachSelection, onDownload, downloading = false, canLoadDocument = false, onCopyImage, onSaveComment, onDeleteComment, fileMenu = null, previewFrame = null, cardActions = null }) {
+export function SourceFileViewer({ file, presentation = "pane", displayPath, fullPath, line, endLine, scrollNonce, scopeKey, onCopyPath, onViewAsText, renderMarkdown, findRequest = null, contentFind = null, lister = null, showHeader = true, viewMode, onViewModeChange, defaultView, memoryKey = null, settings = DEFAULT_FILE_VIEW_SETTINGS, editor = null, editState = null, invalidUtf8 = false, onAttachFile, onAttachSelection, onDownload, downloading = false, canLoadDocument = false, onCopyImage, onSaveComment, onDeleteComment, fileMenu = null, previewFrame = null, cardActions = null }) {
   const dirty = !!editor?.dirty;
+  const pierreBody = React.useContext(PierreFileViewerContext);
+  // cd2efac6e qu = Ku && !Su: a file that is not valid UTF-8 never auto-saves (Ju: its Save/Cancel show while dirty).
+  // qi with readOnly (cbd02b8f2 `F = ze && !O`): no Tab indentation (nor its hint) in a read-only editor.
+  const editorSettings = editor?.readOnly ? { ...settings, autoSave: false, tabIndents: false }
+    : invalidUtf8 && settings.autoSave !== false ? { ...settings, autoSave: false } : settings;
   const reason = fileTabReason(file);
   const media = FILE_MEDIA_KINDS.includes(reason) ? reason : null;
   // Xt (:2649): a file kind with a preview. en (:2655): the source shows first
@@ -668,7 +798,8 @@ export function SourceFileViewer({ file, presentation = "pane", displayPath, ful
   }, [searchable, onViewModeChange]);
   const closeFind = useCallback(() => {
     setFind(value => ({ ...value, open: false, query: "", index: -1, nonce: 0 }));
-    root.current?.querySelector(".cm-content, .sfv-scroller")?.focus?.({ preventScroll: true });
+    // cd2efac6e zm: the focus goes back to the viewer root (the pierre body has no focusable scroller of its own).
+    (root.current?.querySelector(".cm-content, .sfv-scroller") ?? root.current)?.focus?.({ preventScroll: true });
   }, []);
   const stepFind = useCallback((delta) => {
     let result = searchResult;
@@ -768,11 +899,14 @@ export function SourceFileViewer({ file, presentation = "pane", displayPath, ful
             ? <SourceFileMarkdown text={file.text} renderMarkdown={renderMarkdown} typography={presentation === "pane" ? "epitaxy" : "document"} />
             : preview?.kind === "csv"
               ? <SourceFileCsv text={file.text} delimiter={preview.delimiter} presentation={presentation === "pane" ? "pane" : "document"} truncatedUpstream={!!file.truncated} />
-              : editor ? <SourceFileEditor onSaveComment={onSaveComment} onDeleteComment={onDeleteComment} apiRef={editorApi} onGoToLine={openGoToLine} onAttachFile={onAttachFile} onAttachSelection={onAttachSelection} onDownload={downloadAvailable ? onDownload : null} downloading={downloading} editor={editor} settings={settings} line={line} endLine={endLine} scrollNonce={scrollNonce} find={findProps} />
-              : <SourceFileCode path={file.path} text={file.text} line={line} endLine={endLine} scrollNonce={scrollNonce} scopeKey={scopeKey} find={findProps} settings={settings} />;
+              : editor ? <SourceFileEditor onSaveComment={onSaveComment} onDeleteComment={onDeleteComment} apiRef={editorApi} onGoToLine={openGoToLine} onAttachFile={onAttachFile} onAttachSelection={onAttachSelection} onDownload={downloadAvailable ? onDownload : null} downloading={downloading} editor={editor} settings={editorSettings} line={line} endLine={endLine} scrollNonce={scrollNonce} find={findProps} />
+              : pierreBody
+                ? <SourceFilePierreCode path={file.path} text={file.text} hash={file.editHash ?? file.hash} line={line} endLine={endLine} scrollNonce={scrollNonce} find={findProps} settings={settings} />
+                : <SourceFileCode path={file.path} text={file.text} line={line} endLine={endLine} scrollNonce={scrollNonce} scopeKey={scopeKey} find={findProps} settings={settings} />;
   return <div ref={root} tabIndex={-1} onMouseDown={(event) => {
     // Keep keyboard Find scoped to the file after clicking its read-only code.
-    if (event.button === 0 && event.target.closest?.('.sfv-scroller')) event.currentTarget.focus({ preventScroll: true });
+    // Not inside the CodeMirror editor (its host also carries data-file-viewer): the editor keeps its own focus.
+    if (event.button === 0 && event.target.closest?.('.sfv-scroller, [data-file-viewer]') && !event.target.closest('.cm-editor')) event.currentTarget.focus({ preventScroll: true });
   }} className="source-file-view" data-file-path={file.path} data-pane-editor={dirty || undefined} data-file-state={reason ?? (typeof file.text === "string" ? "text" : "loading")}
     data-file-view={preview ? "preview" : canToggle ? "source" : undefined}
     onKeyDown={(event) => {
@@ -787,24 +921,41 @@ export function SourceFileViewer({ file, presentation = "pane", displayPath, ful
         Jo puts the actions after the Yo lead. */}
     {showHeader && <div className="epitaxy-panel-subheader sfv-subheader">
       <SourceFileBreadcrumb displayPath={displayPath} fullPath={fullPath} onCopyPath={onCopyPath} lister={lister} segmentMenu={segmentMenu} />
-      {dirty && (!settings.autoSave || editState.error) && <><SourceSettingsButton size="xxs" variant="ghost" disabled={editState.saving} onClick={() => editor.discard()}>{t('Cancel')}</SourceSettingsButton>
-        <SourceSettingsButton size="xxs" variant="secondary" busy={editState.saving} disabled={!!editState.error} onClick={() => void editor.save()}>{t('Save')}</SourceSettingsButton></>}
+      {dirty && (!editorSettings.autoSave || editState.error) && <><CdsButton size="xxs" variant="ghost" disabled={editState.saving} onClick={() => editor.discard()}>{t('Cancel')}</CdsButton>
+        <CdsButton size="xxs" variant="secondary" busy={editState.saving} disabled={!!editState.error} onClick={() => void editor.save()}>{t('Save')}</CdsButton></>}
       {canToggle && <SourceViewToggle showingSource={showSource} onToggle={() => { setShowSource(!showSource); onViewModeChange?.(showSource ? "preview" : "source"); }} />}
     </div>}
+    {/* cd2efac6e Zd children after the subheader: xb (the UTF-8 banner), wb (Js, find), Tb (Qs, go to line), Eb (the
+        save error), then the body. xb: tm = Su && Au && Lu && $p && !(U && Ii !== null), role=status pb, the copy by
+        the auto-save setting (Ku). */}
+    {invalidUtf8 && editor && !preview && !reason && typeof file.text === "string" && !(dirty && editState?.error) &&
+      <div role="status" className="shrink-0 px-md py-1.25 bg-alpha-2 text-body text-primary">{settings.autoSave !== false
+        ? t("This file isn’t valid UTF-8, so it’s saved only when you press Save. A save writes each {replacement} to the file, and the original characters are lost.", { replacement: "\uFFFD" })
+        : t("This file isn’t valid UTF-8. A save writes each {replacement} to the file, and the original characters are lost.", { replacement: "\uFFFD" })}</div>}
+    {find.open && searchable && <SourceFileFindBar query={find.query} options={find.options} result={searchResult} onToggle={toggleFindOption} status={findStatus(matches, index)} inputRef={findInput}
+      onQuery={(query) => setFind((value) => ({ ...value, query, index: 0, scrollNonce: value.scrollNonce + 1 }))}
+      onNext={() => stepFind(1)} onPrev={() => stepFind(-1)} onClose={closeFind} />}
     {goTo && <SourceFileGoToLine caret={goTo} onGo={(line, column) => { setGoTo(null); editorApi.current?.go(line, column); }}
       onClose={focus => { setGoTo(null); if (focus) editorApi.current?.focus(); }} />}
-    {editState?.error && <div role="alert" className="sfv-edit-error"><span>{t(editState.error.status === 'denied'
+    {/* Eb: `U && Ii &&` div[role=alert] mb with the "flex-1 text-body text-primary" message, the xxs ghost Discard and
+        (not denied) the xxs secondary Try again / Save anyway / Override, both disabled while saving (Vi).
+        W14-code r4 r4pa-c08: a save refused for a Git-hook tool key (deniedReason "hook_manager_package_key",
+        electron/file-editor.cjs) shows 2e/xV1HXgZ, and while auto-save runs (qu = Ku && !Su) the xxs secondary "Save"
+        (jvo0vs3nF0, Uy) that writes the current text again. */}
+    {dirty && editState?.error && <div role="alert" className="shrink-0 px-md py-1.25 bg-alpha-2 flex items-center gap-1" data-file-save-error="">
+      <span className="flex-1 text-body text-primary">{t(editState.error.status === 'denied' && editState.error.deniedReason === 'hook_manager_package_key'
+      ? 'This edit changes Git-hook tool settings in package.json (lint-staged, husky, commitlint, …), which can’t be saved from this panel. Make that change in your editor or terminal; other package.json edits save normally.'
+      : editState.error.status === 'denied'
       ? 'This file can’t be saved. Its path is outside the working directory, or this is a remote session.'
       : editState.error.status === 'conflict' ? editState.error.currentHash === null
         ? 'This file was deleted on disk since you started editing.' : 'This file changed on disk since you started editing.'
         : 'Couldn’t save this file.')}</span>
-      <SourceSettingsButton size="xxs" variant="ghost" disabled={editState.saving} onClick={() => editor.discard()}>{t('Discard')}</SourceSettingsButton>
-      {editState.error.status !== 'denied' && <SourceSettingsButton size="xxs" busy={editState.saving} onClick={() => void editor.save({ override: true })}>
-        {t(editState.error.status !== 'conflict' ? 'Try again' : editState.error.currentHash === null ? 'Save anyway' : 'Override')}</SourceSettingsButton>}
+      <CdsButton size="xxs" variant="ghost" disabled={editState.saving} onMouseDown={keepFocus} onClick={() => editor.discard()}>{t('Discard')}</CdsButton>
+      {editState.error.status !== 'denied' && <CdsButton size="xxs" variant="secondary" disabled={editState.saving} onMouseDown={keepFocus} onClick={() => void editor.save({ override: true })}>
+        {t(editState.error.status !== 'conflict' ? 'Try again' : editState.error.currentHash === null ? 'Save anyway' : 'Override')}</CdsButton>}
+      {settings.autoSave !== false && !invalidUtf8 && editState.error.deniedReason === 'hook_manager_package_key' &&
+        <CdsButton size="xxs" variant="secondary" disabled={editState.saving} onMouseDown={keepFocus} onClick={() => void editor.save({ override: true })}>{t('Save')}</CdsButton>}
     </div>}
-    {find.open && searchable && <SourceFileFindBar query={find.query} options={find.options} result={searchResult} onToggle={toggleFindOption} status={findStatus(matches, index)} inputRef={findInput}
-      onQuery={(query) => setFind((value) => ({ ...value, query, index: 0, scrollNonce: value.scrollNonce + 1 }))}
-      onNext={() => stepFind(1)} onPrev={() => stepFind(-1)} onClose={closeFind} />}
     <div ref={bodyRef} className="sfv-body" data-popup-open={bodyMenu ? "" : undefined} onContextMenu={fileMenu ? openBodyMenu : undefined} onKeyDown={fileMenu ? openBodyMenu : undefined}>{body}</div>
     {bodyMenuEntries?.length > 0 && <SourceMenu.Popup anchor={bodyRef.current} point={bodyMenu.point} trigger={null} side="bottom" align="start"
       sideOffset={CONTEXT_MENU_SIDE_OFFSET} alignOffset={CONTEXT_MENU_ALIGN_OFFSET} layer="contextmenu" dataCds="ContextMenu" contextMenuGuard

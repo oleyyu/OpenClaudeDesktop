@@ -1,8 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
-  DRAG_THRESHOLD, KEYBOARD_STEP, KEYBOARD_STEP_LARGE, SIDEBAR_WIDTH, clampSidebarWidth, dragHidesSidebar,
-  effectiveSidebarWidth, isResizeDrag, sidebarDragFrame, sidebarFloorWidth, sidebarMaxWidth, storedSidebarWidth,
+  SIDEBAR_WIDTH, clampSidebarWidth,
+  effectiveSidebarWidth, sidebarFloorWidth, storedSidebarWidth,
   NARROW_VIEWPORT_MIN_WIDTH, narrowViewportMaxWidth, narrowViewportQuery,
 } from "../src/sidebar-width-model.mjs";
 
@@ -17,46 +17,8 @@ test("Km bounds and qm clamp", () => {
   assert.equal(clampSidebarWidth(900), 420);
 });
 
-test("Xm max width from innerWidth: qm(floor(w) - 330)", () => {
-  assert.equal(sidebarMaxWidth(1000), 420);
-  assert.equal(sidebarMaxWidth(750), 420);
-  assert.equal(sidebarMaxWidth(749.9), 419);
-  assert.equal(sidebarMaxWidth(600), 270);
-  assert.equal(sidebarMaxWidth(600.8), 270);
-  assert.equal(sidebarMaxWidth(400), 200);
-  assert.equal(sidebarMaxWidth(0), 200);
-});
-
-test("TL hide threshold at MIN/2 and the HL drag threshold", () => {
-  assert.equal(dragHidesSidebar(99), true);
-  assert.equal(dragHidesSidebar(99.9), true);
-  assert.equal(dragHidesSidebar(100), false);
-  assert.equal(dragHidesSidebar(288), false);
-  assert.equal(dragHidesSidebar(-20), true);
-  assert.equal(dragHidesSidebar(114, 230), true, "TL against a 230px floor hides below 115");
-  assert.equal(dragHidesSidebar(115, 230), false);
-  assert.equal(DRAG_THRESHOLD, 3);
-  assert.equal(isResizeDrag(3), false);
-  assert.equal(isResizeDrag(-3), false);
-  assert.equal(isResizeDrag(3.5), true);
-  assert.equal(isResizeDrag(-4), true);
-  assert.deepEqual([KEYBOARD_STEP, KEYBOARD_STEP_LARGE], [8, 32]);
-});
-
-test("uw onResize frames: clamp to MIN..maxW, hide below MIN/2 unless canHide is off", () => {
-  const drag = { startW: 288, maxW: 420 };
-  assert.deepEqual(sidebarDragFrame(drag, -38), { hidden: false, width: 250 });
-  assert.deepEqual(sidebarDragFrame(drag, -150), { hidden: false, width: 200 });
-  assert.deepEqual(sidebarDragFrame(drag, -188), { hidden: false, width: 200 }, "raw 100 keeps the sidebar at MIN");
-  assert.deepEqual(sidebarDragFrame(drag, -189), { hidden: true, width: null }, "raw 99 hides");
-  assert.deepEqual(sidebarDragFrame(drag, 400), { hidden: false, width: 420 });
-  assert.deepEqual(sidebarDragFrame({ startW: 288, maxW: 270 }, 40), { hidden: false, width: 270 }, "maxW from a narrow window");
-  assert.deepEqual(sidebarDragFrame({ ...drag, canHide: false }, -250), { hidden: false, width: 200 });
-  const floored = { startW: 288, maxW: 420, minWidth: 230 };
-  assert.deepEqual(sidebarDragFrame(floored, -100), { hidden: false, width: 230 }, "clamped at the floor, not MIN");
-  assert.deepEqual(sidebarDragFrame(floored, -173), { hidden: false, width: 230 }, "raw 115 = floor/2 keeps it");
-  assert.deepEqual(sidebarDragFrame(floored, -174), { hidden: true, width: null });
-});
+// W14-code r4 gen-final-4: the test-only dragHidesSidebar (TL) is deleted; r5 cleanup R5DC-05 deletes the test-only
+// HL threshold DRAG_THRESHOLD as well.
 
 test("wL floor: qm(ceil(chrome width)) and Qg max(sidebarWidth, floor)", () => {
   assert.equal(sidebarFloorWidth(229.2), 230);

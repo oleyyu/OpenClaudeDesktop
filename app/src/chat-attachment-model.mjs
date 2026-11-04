@@ -15,11 +15,8 @@
 import { t } from "../electron/i18n/index.mjs";
 
 export const CONVERTIBLE_EXTENSIONS = Object.freeze(["pdf", "docx", "doc", "rtf", "html", "htm", "odt"]);
-export const SCREENSHOT_LABEL = "Take a screenshot";
 export const SCREENSHOT_ICON = "Camera";
 export const SCREENSHOT_TESTID = "add-menu-screenshot";
-export const SCREENSHOT_ERROR = "Could not capture screen.";
-export const PDF_CONVERTED = "PDF converted to text";
 export const IMAGE_LIMITS = Object.freeze({ max: 100, approaching: 80 });
 export const IMAGE_PAGES_GATE = "claudeai_image_cap_client_precheck";
 // Model-facing, never translated (like the attachment note): the block's tag and the cut marker.
@@ -118,9 +115,6 @@ export function splitDocumentBlocks(text) {
   return { text: value, documents: [] };
 }
 
-export function hasDocumentBlock(text) {
-  return splitDocumentBlocks(text).documents.length > 0;
-}
 
 /** A thread preview cut anywhere inside the blocks: the text before them (cut), and the documents' names that are whole. */
 export function previewWithoutDocuments(preview) {

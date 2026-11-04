@@ -6,9 +6,7 @@ import { t } from "../electron/i18n/index.mjs";
 import { selectionBlocksTerminalLink } from "./generated/code-current/terminal-link-selection.mjs";
 import { terminalErrorMessages, terminalStartError, loadFailedError, TerminalLoadFailed, terminalErrorText } from "./generated/code-current/terminal-errors.mjs";
 
-export const TERMINAL_PANE = "terminal";
 export const FOLDER_GONE = "The session folder no longer exists.";
-export const SCROLLBACK_LINES = 10000;
 export const MINIMUM_CONTRAST_RATIO = 3;
 export const MAX_CACHED_TERMINALS = 16;
 // Auto-close (official): a shell that exits with 0, or within 2s of the user pressing Enter (typed `exit`), closes its tab.
@@ -303,22 +301,6 @@ export function findLinks(text) {
     links.push({ kind: "file", start, end, text: match[0], path, line, column });
   }
   return links.sort((a, b) => a.start - b.start);
-}
-/** A clicked file path relative to the session folder (what the Files pane opens), or null outside it. */
-export function relativeToFolder(path, folder, home = null) {
-  if (typeof path !== "string" || !path || typeof folder !== "string" || !folder.startsWith("/")) return null;
-  let absolute = path;
-  if (path.startsWith("~/")) { if (!home) return null; absolute = `${home.replace(/\/$/, "")}/${path.slice(2)}`; }
-  else if (!path.startsWith("/")) absolute = `${folder.replace(/\/$/, "")}/${path}`;
-  const parts = [];
-  for (const part of absolute.split("/")) {
-    if (!part || part === ".") continue;
-    if (part === "..") { if (!parts.length) return null; parts.pop(); } else parts.push(part);
-  }
-  const normal = `/${parts.join("/")}`, root = folder.replace(/\/+$/, "") || "/";
-  if (normal === root) return null;
-  if (!normal.startsWith(root === "/" ? "/" : `${root}/`)) return null;
-  return normal.slice(root === "/" ? 1 : root.length + 1);
 }
 
 // ---------------------------------------------------------------------------

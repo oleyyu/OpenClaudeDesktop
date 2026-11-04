@@ -302,3 +302,30 @@ export function sdkToolOf(item) {
   const name = sdkToolName(item);
   return name === null ? null : { name, input: sdkToolInput(item) };
 }
+
+/**
+ * W14-code r4 R4T-08e (E95): a Codex plan item (ThreadItem {type: "plan", text}) as the desktop's ExitPlanMode call —
+ * `input.plan` is what the official row reads (turn-mark's plan body `t.input.plan`; c52b02f3f "Proposed plan"), and
+ * c96d752d0 rolls it up "stands-alone". null for an empty plan.
+ */
+export function codexPlanTool(item) {
+  const plan = str(item?.text);
+  if (!plan.trim()) return null;
+  const flags = sdkToolStatus(item);
+  return [{ ...flags, id: str(item.id), name: "ExitPlanMode", input: { plan }, hostItem: item }];
+}
+
+/**
+ * W14-code r4 R4T-08b: a host workflow run row (model-workflow-model withModelWorkflowRows: `{id, turnId, workflowRun}`)
+ * as the desktop's Workflow call. Its input is what c7226f7ba reads for the run's name (`name`, else `scriptPath`); the
+ * call itself completed once the run launched (the run's own state is the background task's, which c96d752d0 F$ reads
+ * by tool id: Wx), so only an approval still pending keeps it open. The run rides on hostItem (not enumerable in the
+ * entry, see code-transcript-entries) for the host's adapters.
+ */
+export function workflowRunTool(row, { awaiting = false } = {}) {
+  const run = record(row?.workflowRun) ? row.workflowRun : null;
+  if (!run) return null;
+  const name = str(run.name) || str(run.title) || str(run.description);
+  const input = { ...(name ? { name } : {}), ...(str(run.scriptPath) ? { scriptPath: run.scriptPath } : {}) };
+  return [{ status: awaiting ? "awaiting_approval" : "completed", isError: false, id: str(row.id), name: "Workflow", input, hostItem: row }];
+}

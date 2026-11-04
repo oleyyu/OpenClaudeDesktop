@@ -1,7 +1,7 @@
 // R4a test lock (moved from tests-r4a/ at the R4g/R4h gate), audit group A-composer-home (official 2.42304.0): home-09, composer-11, composer-12, composer-14, cov2-03.
 // Each test pins (a) the official 2.42304.0 strings that decide the behaviour (count(official(...), text)) and (b) the
 // local counterpart: the local .mjs models run on fixtures, and for JSX closures the exact source lines that decide it.
-// Two official pure functions (cc43287c9 aK, shared-52 mb, c8eb45883 d, cc43287c9 SU) are evaluated from their shipped
+// Official pure functions (cc43287c9 aK, shared-52 mb, c8eb45883 d; cc43287c9 SU no longer, R5DC-01) are evaluated from their shipped
 // text so the local models are compared against the originals, not against a paraphrase. Nothing renders, no vite.
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -9,11 +9,10 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { setLocale } from '../electron/i18n/index.mjs';
-import { greetingName, greetingText } from '../src/home-model.mjs';
-import { greetingFor } from '../src/persona-store.mjs';
-import { PERSONA_DEFAULT } from '../electron/prefs/persona.mjs';
 import { clawdClassName, clawdReplayButtonClassName } from '../src/generated/code-start/pet.mjs';
-import { IMAGE_TYPES, IMAGE_TYPE_ERROR, planFolderPaste, splitClipboardFolders, stageFiles } from '../src/composer-attachments-model.mjs';
+import { IMAGE_TYPES, IMAGE_TYPE_ERROR, planFolderPaste, stageFiles } from '../src/composer-attachments-model.mjs';
+// W14-code r4 gen-final-4: the host splitClipboardFolders is deleted; the composer's split is the generated nP (mb),
+// imported below.
 import { DRAFT_STORAGE_PREFIX, persistDraft, readPersistedDraft, saveDraft, takeDraft } from '../src/composer-draft-store.mjs';
 import { routeComposerIntake } from '../src/generated/code-composer/composer-intake-route.mjs';
 import { splitTransferItems, composerImageMimeTypes } from '../src/generated/code-composer/composer-intake-split.mjs';
@@ -76,36 +75,24 @@ test('home-09 official: jU is the only greeting header (22px spark + h1, no cent
   once(gates, ['Zo="claudeai_cc_epitaxy_session_presets_main"', 'function Qo(){return N(Zo)}', 'Qo as do', 'Th as N'], 'shared-11');
 });
 
-test('home-09 local: SourceGreeting matches jU (22px spark + h1, landingClear copy, SU name) and, as in jU under D10, the code draft does not mount it', () => {
-  const session = official('cc43287c9-DAfOi8yP.js');
-  // SU(CU=true, preferred, fullName) from the shipped text against home-model greetingName (the persona store's input).
-  const SU = new Function(`${between(session, 'function SU(e,t,n){', 'var CU=!0;')}; return SU;`)();
-  for (const name of ['  Fixture ', 'a.b@example.com', 'Ada Lovelace', '', '   ', undefined, 'not@an@email'])
-    assert.equal(greetingName(name), SU(true, name, 'Full Name'), JSON.stringify(name));
-  // jU's four messages follow landingClear and the name; the default persona (no custom greeting) shows exactly them.
-  const copy = { 'true:Ada': 'What’s up next, Ada?', 'true:': 'What’s up next?', 'false:Ada': 'Welcome back, Ada', 'false:': 'Welcome back' };
-  for (const landingClear of [true, false]) for (const displayName of ['Ada', undefined]) {
-    const expected = copy[`${landingClear}:${displayName ?? ''}`];
-    assert.equal(greetingText(greetingName(displayName), landingClear), expected);
-    assert.equal(greetingFor({ displayName, landingClear }, PERSONA_DEFAULT), expected);
-  }
-  const home = local('src/source-home.jsx');
-  once(home, [
-    'export function SourceGreeting({ displayName, landingClear = true, shimmerOnMount = true }) {',
-    '<header className="welcome-heading source-greeting">',
-    'alt="" width="22" height="22" />',
-    '<PersonaSparkGlyph persona={persona} size={22} className={"claude-spark" + (pulse ? " source-spark-pulse" : "")} />',
-    '<h1>{greetingFor({ displayName, landingClear }, persona)}</h1>',
-  ], 'source-home.jsx');
+test('home-09 local: as in jU under D10, the code draft mounts no greeting, and nothing keeps a greeting model or setting', () => {
+  // W14-code r5 cleanup R5DC-01: under D10 / E92 the official code draft never shows jU (`!ie&&`), so the host greeting
+  // model (home-model greetingName / greetingText / landingClear, persona-store greetingFor / fillGreeting) and the
+  // Settings › Persona "Home greeting" row that fed it are deleted; nothing read persona.greeting after R4DC-N2.
+  assert.equal(count(local('src/home-model.mjs'), 'export function greeting'), 0);
+  assert.equal(count(local('src/persona-store.mjs'), 'export function greetingFor'), 0);
+  assert.equal(count(local('src/source-settings-persona.jsx'), 'persona-greeting'), 0);
+  // W14-code r4 closeout R4DC-N2 (E95): the unmounted SourceGreeting (and source-home.jsx with it) is deleted; under D10
+  // the official code draft never shows jU (`!ie&&`), so only the greeting model above stays. source-home.css keeps the
+  // Lw outline card the key / sign-in cards use, and no greeting rules.
+  assert.equal(fs.existsSync(path.join(app, 'src/source-home.jsx')), false);
   const css = local('src/source-home.css');
-  for (const text of [home, css]) assert.equal(count(text, 'centered'), 0);
-  // _g: full width, flex row, items-center, gap-1.5 (6px), pt 12 / pb 24; jg: shrink-0 translate-y-px; h1 text-title.
-  assert.equal(cssBlock(css, '.welcome-heading'), '.welcome-heading {\n  display: flex;\n  flex-direction: row;\n  align-items: center;\n  gap: 6px;\n  width: 100%;\n  padding: 12px 0 24px;\n  margin: 0;\n}');
-  assert.equal(cssBlock(css, '.claude-spark'), '.claude-spark {\n  width: 22px;\n  height: 22px;\n  flex-shrink: 0;\n  transform: translateY(1px);\n}');
-  assert.match(cssBlock(css, '.welcome-heading h1'), /font-size: var\(--cds-font-size-title, 20px\);/);
+  for (const gone of ['.welcome-heading', '.claude-spark', '.source-spark-pulse', 'centered']) assert.equal(count(css, gone), 0, gone);
+  assert.match(css, /\.sh-card\.is-outline \{ box-shadow: 0 0 0 1px var\(--cds-border\); \}/);
   // D10 takes claudeai_cc_epitaxy_session_presets_main "on": the code draft shows the start card, never a greeting
-  // (official: `!ie&&` hides jU). SourceGreeting stays imported but unmounted.
-  assert.equal(count(local('src/source-r3b-transcript-adapters.jsx'), 'export const HOST_GATES = Object.freeze({ claudeai_cc_epitaxy_session_presets_main: true });'), 1);
+  // (official: `!ie&&` hides jU).
+  // W14-code r2 gates-r2-01: the gate is read from the one host table (__gb__3264789062, Uon sessionsRunOnThisComputer: on).
+  assert.equal(count(local('src/source-r3b-transcript-adapters.jsx'), 'export const HOST_GATES = Object.freeze({ claudeai_cc_epitaxy_session_presets_main: hostGrowthBookFlag("claudeai_cc_epitaxy_session_presets_main") });'), 1);
   const main = local('src/main.jsx');
   assert.equal(count(main, '<SourceGreeting'), 0);
   // The welcome block holds the start card only (no SourceGreeting). Since the R4 integration it is mounted by session/draft
@@ -244,7 +231,7 @@ test('composer-12 local: paste and drop run the original mb and aK (generated), 
     [[], [png]],
   ];
   for (const [items, files] of fixtures) {
-    const mine = splitClipboardFolders(items, files), theirs = split(items, files);
+    const mine = splitTransferItems(items, files), theirs = split(items, files);
     assert.deepEqual([names(mine.folders), names(mine.files)], [names(theirs.folders), names(theirs.files)]);
   }
   // Image detection: the same four MIME types as gj (shared-52 Dy).
@@ -436,14 +423,26 @@ test('cov2-03 official: the 14-slot card stack exists only behind GrowthBook __g
   once(flags, ['function ec(e,t){let n=ks();return!t||!n?.growthbook?!1:As(n,I(e)).on}', 'ec as Nh'], 'shared-25');
 });
 
-test('cov2-03 local: no GrowthBook, so the closed branch: SourceSessionNotices is the band list above the composer, no slot table or cards', () => {
+test('cov2-03 local: SourceSessionNotices is cc43287c9 Rde over the c227f4d5e slot table (W14-code r6 sleep lane), no host slot names', () => {
   const notices = local('src/source-session-notices.jsx');
   once(notices, [
-    'if (!shown.length && !extra) return null;',
-    'return <div className="ssn-list" role="region" aria-label={t("Notices")}>',
-    'return <div key={key} className="ssn-notice" data-kind={notice.kind} data-level={notice.level || undefined} role="status">',
+    // W14 TR-H8: the band list is the 3.6556.2 stack (cc43287c9 Rde → shared-26 RM ChatComposerNotices).
+    // W14-code R5DC-07: no caller passed `extra`, so the slot is gone.
+    // W14-code r7 r7c-03 (gen-final-7 updated this pin): cc43287c9 Rde draws its ref'd div whenever the notice region is
+    // there (zde only checks JE()), so inside the Code region the stack renders with no item; outside it, none.
+    'if (!inRegion && !items.length && !trustPrompt) return null;',
+    // W14-code r4 shell css4-ssn-list-geometry: Code's stack (inColumn) is Rde's div with only shared-6 Jg.
+    'return <div ref={setStack} className={inColumn ? NOTICE_STACK_CLASS : `ssn-list ${NOTICE_STACK_CLASS}`} data-cds-dock-group="" data-code-column-notices="">',
+    // W14-code r6 sleep lane (r6-composer-03 / sh6-01): Rde reads the sliced slot table (HD = c227f4d5e mI) in rI's order
+    // (VE = c227f4d5e rI) and its onDismiss finds the slot entry first.
+    'const { entries, setRegionMounted } = useCodeNoticeSlotEntries();',
+    'const slotItems = CODE_NOTICE_SLOT_ORDER.flatMap((slot) => {',
+    // r7c-03: in the region RM (and its live region) is always mounted, as in Rde.
+    '{(inRegion || items.length > 0) && <ChatComposerNotices items={items} onDismiss={onDismiss} />}',
   ], 'source-session-notices.jsx');
-  for (const slot of ['acorn', 'keptAwake', 'credentialNudge', '__gb__100087145']) assert.equal(count(notices, slot), 0, slot);
+  for (const slot of ['acorn', 'keptAwake', 'credentialNudge']) assert.equal(count(notices, slot), 0, slot);
+  // W14-code r7 notices (E81) names __gb__100087145 in comments (main.jsx reads it); the stack itself never reads the gate.
+  assert.equal(count(notices, 'hostGrowthBookFlag("__gb__100087145")'), 0);
   assert.equal(count(local('src/main.jsx'), '<SourceSessionNotices'), 1);
   // The host has no GrowthBook client: the adapters that mention it document the missing ks()?.growthbook.
   assert.match(local('src/source-sessions-adapters.jsx'), /OpenClaude has no GrowthBook client/);

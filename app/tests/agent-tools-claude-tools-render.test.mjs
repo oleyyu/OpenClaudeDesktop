@@ -10,7 +10,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'node:path';
-import { appToolLabel, appToolStandsAlone, chapterOf, transcriptChapters, suggestedTasks } from '../src/agent-tool-titles.mjs';
+import { appToolLabel, appToolStandsAlone, chapterOf, suggestedTasks } from '../src/agent-tool-titles.mjs';
 import { questionReceipt, questionOutcome, genericToolLabel, genericToolBody } from '../src/generic-tool-model.mjs';
 import { groupFileTools } from '../src/file-tool-model.mjs';
 import { reportedFindings, reportedFindingsReview, latestReviewFindings, parseBridgeReview } from '../src/review-findings-model.mjs';
@@ -98,11 +98,10 @@ test('mark_chapter is a chapter heading; a failed one is a row', () => {
   const item = call('mark_chapter', { title: 'Test verification', summary: 'Run the suites' }, { id: 'ch1' });
   assert.deepEqual(chapterOf(item), { id: 'ch1', title: 'Test verification', summary: 'Run the suites' });
   assert.equal(chapterOf({ ...item, status: 'failed' }), null);
-  assert.deepEqual(transcriptChapters([item, call('screenshot', {})]).map((chapter) => chapter.title), ['Test verification']);
   const html = renderToStaticMarkup(React.createElement(S.SourceMessage, { item, sessionKey: 's1' }));
   // CX (cd5a31703 :60429-60494): the h2 is addressed as epitaxy-ch-<id> for the Session chapters rail, which carries the
   // summary as its entry's title; the heading itself has none.
-  assert.match(html, /^<h2 id="epitaxy-ch-ch1" class="source-message source-chapter" data-chapter="" data-chapter-source="claude" data-transcript-item-id="ch1">Test verification<\/h2>$/);
+  assert.match(html, /^<h2 id="epitaxy-ch-ch1" class="source-message text-body-semibold text-primary select-text scroll-mt-\[56px\]" data-chapter="" data-chapter-source="claude" data-transcript-item-id="ch1">Test verification<\/h2>$/);
 });
 
 test('suggested tasks: newest first, withdrawn by dismiss_task or the user; the inline proposal card takes over their rows', () => {

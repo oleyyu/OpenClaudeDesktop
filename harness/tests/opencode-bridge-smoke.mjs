@@ -3,9 +3,13 @@
 // (work/agents/opencode-bridge/<flavor>/bin) against a local scripted Anthropic-Messages
 // model server configured as a Settings › Models custom provider. Every home is a temp folder.
 //
-// Usage: node tests/opencode-bridge-smoke.mjs [opencode|mimo|both] [--from-packs]   (exit 0 = all checks passed)
+// Usage: node tests/opencode-bridge-smoke.mjs [opencode|mimo|both] [--from-packs] [--opencode <1.x binary>]
+//   (exit 0 = all checks passed)
 //   --from-packs imports work/agents/opencode-bridge/packs/<id>.zip with the app's extension-packs.cjs and runs the
 //   bridge from the installed pack folder (run work/agents/opencode-bridge/make-pack.mjs first).
+//   --opencode (or CODE_DESKTOP_OPENCODE_V1_BINARY): this is the bridge's 1.x path (CODE_DESKTOP_OPENCODE_API=v1), so it
+//   needs an OpenCode 1.x binary (1.18.34). The default work/agents/opencode-bridge/opencode/bin/opencode now holds the
+//   pinned 2.x release, which tests/opencode-bridge-v2-smoke.mjs drives; a 2.x binary here is refused up front.
 import { createRequire } from 'node:module'
 import assert from 'node:assert/strict'
 import fs from 'node:fs'
@@ -28,9 +32,11 @@ childProcess.spawn = (...args) => {
 const { CodexClient } = require('../../app/electron/codex.cjs')
 const bridgeScript = path.join(root, 'packages/opencode-bridge/bin/app-server.mjs')
 const fromPacks = process.argv.includes('--from-packs')
-const which = process.argv.slice(2).find((arg) => !arg.startsWith('--')) ?? 'both'
+const optionAt = process.argv.indexOf('--opencode')
+const v1Binary = (optionAt > 0 ? process.argv[optionAt + 1] : '') || process.env.CODE_DESKTOP_OPENCODE_V1_BINARY || ''
+const which = process.argv.slice(2).find((arg, index, args) => !arg.startsWith('--') && args[index - 1] !== '--opencode') ?? 'both'
 const flavors = which === 'both' ? ['opencode', 'mimo'] : [which]
-const BINARIES = { opencode: path.join(repo, 'work/agents/opencode-bridge/opencode/bin/opencode'), mimo: path.join(repo, 'work/agents/opencode-bridge/mimo/bin/mimo') }
+const BINARIES = { opencode: v1Binary ? path.resolve(v1Binary) : path.join(repo, 'work/agents/opencode-bridge/opencode/bin/opencode'), mimo: path.join(repo, 'work/agents/opencode-bridge/mimo/bin/mimo') }
 
 let total = 0
 let failures = 0
@@ -231,6 +237,10 @@ const portFree = (port) => new Promise((resolve) => { const probe = http.createS
 async function runFlavor(flavor) {
   const binary = BINARIES[flavor]
   if (!fs.existsSync(binary)) throw new Error(`missing ${binary}`)
+  if (flavor === 'opencode') {
+    const version = String(spawnSync(binary, ['--version'], { encoding: 'utf8' }).stdout ?? '').trim()
+    if (!/^1\./.test(version)) throw new Error(`${binary} reports ${JSON.stringify(version)}: the 1.x smoke needs an OpenCode 1.x binary (--opencode <path>); 2.x is tests/opencode-bridge-v2-smoke.mjs`)
+  }
   const P = flavor === 'mimo' ? 'MIMOCODE' : 'OPENCODE'
   const home = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), `cd-${flavor}-smoke-`)))
   const workspace = path.join(home, 'workspace')
@@ -267,6 +277,8 @@ async function runFlavor(flavor) {
   const env = {
     HOME: home, XDG_CONFIG_HOME: path.join(home, '.config'), XDG_DATA_HOME: path.join(home, '.local/share'), XDG_STATE_HOME: path.join(home, '.local/state'), XDG_CACHE_HOME: path.join(home, '.cache'),
     CODE_DESKTOP_AGENT_BINARY: binary, CODE_DESKTOP_AGENT_RUNNER: '', CODE_DESKTOP_AGENT_VERSION: '', CODE_DESKTOP_BRIDGE_STATE: path.join(home, 'state'),
+    // The bridge's 1.x path, whatever --version detection would pick (MiMo is always 1.x).
+    ...(flavor === 'opencode' ? { CODE_DESKTOP_OPENCODE_API: 'v1' } : {}),
     CODE_DESKTOP_PROVIDERS_FILE: providersFile, CODE_DESKTOP_PROVIDER_KEY_FAKE: 'sk-fake-smoke',
     // agent.plan.model: OpenCode's plan agent runs its own model (the bridge must not override it with the thread's).
     CODE_DESKTOP_OPENCODE_CONFIG_EXTRA: JSON.stringify({ model: 'fake/fake-model', small_model: 'fake/fake-model', agent: { plan: { model: 'fake/fake-plan' } } }),

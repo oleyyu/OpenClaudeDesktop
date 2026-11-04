@@ -56,12 +56,13 @@ test('SSR: thinking before tools is an open "Thought process" step; other thinki
   assert.match(step, /aria-expanded="true"[^>]*><span class="source-step-label ">Thought process<\/span>/);
   // Plain text body (no Markdown, its emphasis markers dropped), beside the "Thinking actions" toolbar with Copy as quote.
   assert.match(step, /<div class="source-reasoning-step-text"><bdi>Look at this\n\nthen go<\/bdi><\/div>/);
-  assert.match(step, /<div class="source-step-actions" role="toolbar" aria-label="Thinking actions"><button aria-label="Copy as quote"/);
+  assert.match(step, /<div class="source-step-actions" role="toolbar" aria-label="Thinking actions"><button type="button" data-cds="Button" data-cds-icon-only="" data-cds-ghost="" data-size="xs" [^>]*aria-label="Copy as quote"/);
   assert.doesNotMatch(step, /<strong>|source-markdown/);
   const block = render({});
   assert.match(block, /^<div class="source-message source-reasoning source-reasoning-block" data-transcript-item-id="r"><div class="source-reasoning-text">Look at this\n\nthen go<\/div>/);
-  assert.match(block, /<div class="source-reasoning-copy"><button aria-label="Copy as quote" type="button" data-cds="Button" data-variant="ghost" data-cds-icon-only=""/);
-  assert.doesNotMatch(block, /TurnStatusStep|aria-expanded|<strong>|source-markdown/);
+  assert.match(block, /<div class="source-reasoning-copy"><button type="button" data-cds="Button" data-cds-icon-only="" data-cds-ghost="" class="[^"]* source-reasoning-copy-button" aria-label="Copy as quote"/);
+  // W14-code r6: shared-frame CdsButton (c96d752d0 cXe `f(J,{variant:"ghost",size:"base",icon:c,…,iconOnly:!0})`), not the replica.
+  assert.doesNotMatch(block, /TurnStatusStep| aria-expanded="|<strong>|source-markdown/);
   // Normal view hides both; Verbose forces the step open.
   assert.equal(render({ transcriptView: 'normal', reasoningPlacement: 'preceding-tools' }), '');
   assert.equal(render({ transcriptView: 'normal' }), '');

@@ -16,7 +16,9 @@
  * codeDesktop/plugin/changed (plugin-manager/changed). A ChangeResult's
  * `application` says whether the running core already uses the change
  * ('applied') or needs a restart ('restart-required': this profile runs
- * without HMR).
+ * without HMR). OpenClaude Desktop restarts the core before the next new
+ * session once nothing runs on it (app/electron/core-restart.cjs), so a
+ * restart-required change is ready in a new session.
  */
 import { randomUUID } from 'node:crypto'
 import { RpcError, invalidParams } from './transport.js'

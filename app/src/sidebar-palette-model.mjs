@@ -5,9 +5,9 @@
 import { folderName, sessionArchived, sessionName, sessionUpdatedAt } from "./sidebar-model.js";
 import { t } from "../electron/i18n/index.mjs";
 import { shortcutLabels } from "./shortcut-model.mjs";
+import { hostGrowthBookFlag } from "./host-growthbook.mjs";
 import { hideAllNestedSessionsCopy, showAllNestedSessionsCopy, nestedSessionsSearchHints } from "./generated/code-current/nested-session-palette-copy.mjs";
 
-export const PALETTE_MODES = Object.freeze(["default", "search", "actions"]);
 // wu: type options (the code list's Sessions and Projects; this app has no searchable chats, tasks or
 // artifacts) and the active-date options.
 export const PALETTE_TYPES = Object.freeze([["session", "Sessions"], ["project", "Projects"]]);
@@ -179,9 +179,13 @@ export function sessionCommandLabels(title) {
  *   between fork_code_session and new_code_session_from_current as the shared-1 registry orders them.
  * hiddenFromCommandPalette commands (search_palette, settings, btw_side_chat, toggle_read_code_session,
  * open_code_session_pr, archive_code_session_chord …) are left out; copy_code_session_link needs a claude.ai URL.
+ * W14-code r5 gates-r5-01 (E81): `sessionActions` is cf74bc599's `K = ve("ccd_palette_session_actions")` (rename / pin / unpin /
+ * fork are `$e(id, K && … ? fn : void 0)`; archive, delete and unarchive are not gated) and `promptJump` the jump rows'
+ * promptJumpEnabled (`T = i && !s`, `skip: !T`, ccd_prompt_jump). Neither is in the desktop's Uon, so both default off.
  */
 export function paletteActions({ onNew, setSection, onToggleSidebar, onOpenSettings, jumps = [], onJump,
-  session = null, panes = null, onTogglePane, onClosePane, prompts = null, onShortcuts, onFileUpload, nested = null, coworkEnabled = true } = {}) {
+  session = null, panes = null, onTogglePane, onClosePane, prompts = null, onShortcuts, onFileUpload, nested = null, coworkEnabled = true,
+  sessionActions = hostGrowthBookFlag("ccd_palette_session_actions"), promptJump = hostGrowthBookFlag("ccd_prompt_jump") } = {}) {
   const rows = [];
   const push = (row) => rows.push({ hints: [], ...row });
   if (onNew) push({ id: "new-session", group: "navigation", label: t("New session"), icon: "Add", shortcut: "⌘N", run: onNew });
@@ -199,11 +203,11 @@ export function paletteActions({ onNew, setSection, onToggleSidebar, onOpenSetti
     if (session.canArchive && !session.archived) push({ id: "archive_code_session", group: "session", label: named.archive ?? t("Archive session"), icon: "Archive", hints: [hide], run: act("archive") });
     if (session.canDelete) push({ id: "delete_code_session", group: "session", label: named.delete ?? t("Delete session"), icon: "Trash", hints: [remove, trash], run: act("delete") });
     if (session.canArchive && session.archived && !session.unarchiving) push({ id: "unarchive_code_session", group: "session", label: named.unarchive ?? t("Unarchive session"), icon: "Archive", hints: [t("restore")], run: act("unarchive") });
-    if (session.canRename !== false) push({ id: "rename_code_session", group: "session", label: named.rename ?? t("Rename session"), icon: "Edit", shortcut: capsOf("cmd+alt+r"), run: act("rename") });
-    push(session.pinned
+    if (sessionActions && session.canRename !== false) push({ id: "rename_code_session", group: "session", label: named.rename ?? t("Rename session"), icon: "Edit", shortcut: capsOf("cmd+alt+r"), run: act("rename") });
+    if (sessionActions) push(session.pinned
       ? { id: "unpin_code_session", group: "session", label: named.unpin ?? t("Unpin session"), icon: "PinSlash", shortcut: capsOf("cmd+alt+p"), hints: [t("star"), t("favorite")], run: act("pin") }
       : { id: "pin_code_session", group: "session", label: named.pin ?? t("Pin session"), icon: "Pin", shortcut: capsOf("cmd+alt+p"), hints: [t("star"), t("favorite")], run: act("pin") });
-    if (session.canFork) push({ id: "fork_code_session", group: "session", label: named.fork ?? t("Fork session"), icon: "ArrowSplitRight", shortcut: capsOf("cmd+alt+o"), hints: [t("duplicate"), t("clone")], run: act("fork") });
+    if (sessionActions && session.canFork) push({ id: "fork_code_session", group: "session", label: named.fork ?? t("Fork session"), icon: "ArrowSplitRight", shortcut: capsOf("cmd+alt+o"), hints: [t("duplicate"), t("clone")], run: act("fork") });
   }
   if (nested?.anyShown && nested.onHideAll) push({ id: "hide_all_nested_sessions", group: "session", label: t(hideAllNestedSessionsCopy.description.defaultMessage),
     icon: "Collapse", hints: [t(nestedSessionsSearchHints.collapse.defaultMessage), t(nestedSessionsSearchHints.fold.defaultMessage)], run: nested.onHideAll });
@@ -225,7 +229,7 @@ export function paletteActions({ onNew, setSection, onToggleSidebar, onOpenSetti
     pane("sideChat", "toggle_side_chat", t("Show side chat"), t("Hide side chat"), "Chats", "cmd+;", [t("btw"), t("question")]);
   }
   if (onClosePane) push({ id: "close_side_pane", group: "session", label: t("Close pane"), icon: "X", shortcut: capsOf("cmd+\\"), hints: [t("panel")], run: onClosePane });
-  if (prompts?.onJump && prompts.available) {
+  if (promptJump && prompts?.onJump && prompts.available) {
     const scroll = [t("scroll back message history")];
     push({ id: "jump_prev_prompt", group: "session", label: t("Jump to previous prompt"), icon: "CaretUpDown", shortcut: capsOf("cmd+alt+up"), hints: scroll, run: () => prompts.onJump(-1) });
     push({ id: "jump_next_prompt", group: "session", label: t("Jump to next prompt"), icon: "CaretUpDown", shortcut: capsOf("cmd+alt+down"), hints: scroll, run: () => prompts.onJump(1) });

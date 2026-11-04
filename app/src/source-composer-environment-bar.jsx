@@ -17,16 +17,20 @@
 //   - trailing = model, effort and the usage ring, each in a c0 group (x6 rail `modelEffort` + `barRing`).
 // Host differences: the mode / model / effort / ring controls are the composer's own triggers (R3-composer
 // composer-row-chin: the official tQ / ModelSelector pill / EffortControl / yZ triggers of source-composer-row-chin.jsx, the
-// ring 14px in the row slot like the 3.6556.2 bar's `inComposerRow: !0` (c73f45bc3); their x6 bar variants and menus are home-env's StartCard rail work), the bar's line / note portal (`lineEl`) is not wired (the host's notices
-// and the draft-group chip stay above the card), and an extra folder is not folded into the folder label (its official
-// "+N" copy is a secret catalog message): it keeps its chip above the card and joins the folder's paths here.
+// ring 14px in the row slot like the 3.6556.2 bar's `inComposerRow: !0` (c73f45bc3); their x6 bar variants and menus are home-env's StartCard rail work), its line (`line` / `lineEl`)
+// carries only the gone-environment block (r2-composer-04; the host's notices stay above the card), and its note (Dae `note`,
+// drawn in the line host while there is no line) is the draft group's i7 line form (W14-code r4, cc43287c9 `note: Aa`,
+// Aa = xle(ka); source-composer.jsx DraftGroupNotice). W14-code composer-02: an extra folder is folded into the folder chip as
+// 3.6556.2 hse does (`Ce` the "+{count}" tail bJpae0eVNj, `Te` the "{folder} +{count}, folder: {value}" kIIspeB92o
+// aria-label, `xe` the ~ paths); the folder menu lists it under "Also included" (source-composer-folder-menu.jsx).
 import React, { useContext } from "react";
 import { EnvironmentBar, EnvironmentChip, EnvironmentChipGroup, EnvironmentIconOnlyContext, EnvironmentTriggerLabel, environmentTriggerClass } from "./generated/code-composer/environment-bar.mjs";
 import { pathTooltipContent } from "./generated/code-composer/path-tooltip-placement.mjs";
 import { homeRelativePath } from "./generated/code-start/home-path.mjs";
 // h2's td is the CDS Tooltip (cc43287c9 `Oc as td`), the view-tabs original since R3 (D24).
 // E41: in the chat / composer import graph, so view-tabs comes from the concrete file by semantic name, not the facade.
-import { CdsButton, CdsTooltip, cdsClassNames } from "./generated/view-tabs/shared-frame-6jtSkIit.js";
+import { CdsButton, CdsTextLink, CdsTooltip, cdsClassNames } from "./generated/view-tabs/shared-frame-6jtSkIit.js";
+import { useStartIntl } from "./source-code-start-adapters.jsx";
 import { menuTriggerProps } from "./source-menu";
 import { t } from "../electron/i18n/index.mjs";
 
@@ -46,13 +50,15 @@ const TOP_EFFORT_TONE = "text-pro font-medium";
  * (effort text-muted-control, fast text-muted-as-secondary), under zg.Trigger's tooltip "Model" with the openModelMenu
  * chord. The effort is folded in here (its menu is the model menu's Effort submenu, x6 `showEffortSection: !0`).
  * Host adapters: the menu is the composer's SourceModelMenu (menuTriggerProps), and the trigger keeps the host hook
- * class and the accessible name "Model" the chin chords and local automation read (official: "Model: {value}").
+ * class. W14-code composer-13: its accessible name is cc43287c9's "Model: {value}" (/BH9qS3xcc, value = the name and the
+ * tail words joined by spaces); the chin chords find it by its class.
  */
 export function EnvironmentModelTrigger({ name, fastLabel = null, effortLabel = null, effortTop = false, loading = false, loadingLabel, tooltip, shortcut, tooltipOpen, className, ...props }) {
   const tail = environmentModelTail({ fastLabel, effortLabel, loading });
+  const ariaLabel = t("Model: {value}", { value: [loading ? loadingLabel : name, ...tail.map(({ word }) => word)].filter(Boolean).join(" ") });
   return <CdsTooltip content={tooltip} shortcut={shortcut} open={tooltipOpen}>
     <CdsButton variant="ghost" className={cdsClassNames(environmentTriggerClass(true, true), className)} data-testid="environment-row-model"
-      aria-busy={loading || undefined} {...props}>
+      aria-busy={loading || undefined} {...props} aria-label={ariaLabel}>
       <EnvironmentTriggerLabel overridden={false} label={loading ? loadingLabel : name} givesWay
         tail={tail.map(({ field, word }) => <span key={field} className={`shrink-0 whitespace-pre ${field === "effort" && effortTop ? TOP_EFFORT_TONE : TAIL_TONE[field]}`}
           data-top-tier={field === "effort" && effortTop ? "" : undefined}>{" "}{word}</span>)} />
@@ -74,9 +80,12 @@ export function environmentBarChips({ workdir = "", environmentName = null, addi
   const folderLabel = workdir ? folderRowLabel : t("Choose…");
   // pe: the folder and the extra folders, ~-relative (Gr = shared-19 F7), comma-joined.
   const paths = workdir ? [workdir, ...additionalFolders].map(homeRelativePath).join(", ") : undefined;
+  const extra = workdir ? additionalFolders.length : 0;
   return {
     place: { label: placeLabel, ariaLabel: t("Environment: {value}", { value: placeLabel }) },
-    folder: { label: folderLabel, title: paths, tooltipText: paths ?? folderLabel, ariaLabel: t("Folder: {value}", { value: paths ?? folderRowLabel }) },
+    folder: { label: folderLabel, tail: extra > 0 ? t("+{count}", { count: extra }) : undefined, title: paths, tooltipText: paths ?? folderLabel,
+      ariaLabel: extra > 0 ? t("{folder} +{count}, folder: {value}", { folder: folderRowLabel, count: extra, value: paths })
+        : t("Folder: {value}", { value: paths ?? folderRowLabel }) },
   };
 }
 
@@ -98,8 +107,21 @@ export function EnvironmentFolderChip({ copy, folderMenu, open, onMenu, onBrowse
     ? { onClick: (event) => onMenu?.(kind, event.currentTarget),
       ...menuTriggerProps({ open, onOpen: (entry, event) => onMenu?.(kind, event.currentTarget, undefined, entry) }) }
     : { onClick: () => onBrowse?.() };
-  return <EnvironmentChip icon="Folder" label={copy.label} data-testid="environment-bar-folder" title={copy.title}
+  return <EnvironmentChip icon="Folder" label={copy.label} tail={copy.tail} data-testid="environment-bar-folder" title={copy.title}
     tooltip={copy.title ? pathTooltipContent(copy.title) : copy.tooltipText} aria-label={copy.ariaLabel} {...trigger} />;
+}
+
+/**
+ * W14-code r2-composer-04: cc43287c9 Wue `ya = pr ? gr && L ? {kind: "gone", name: pr.name, at: xa(L)} : …`, `Sa` the rich
+ * message j9ML5nKNoc whose <edit> is `p(Y, {inheritColor: !0, onClick: _a, children})` (Y = the CDS TextLink, _a opens the
+ * environment's editor), and `ka = Sa ? {kind: "blocking", content: Sa}` — the bar's line (Dae `line`), drawn text-danger
+ * by l0 into the line host. xa = shared-46 GL, the ~ path (generated/code-start/home-path.mjs). The host has no RTL locale,
+ * so the path is never wrapped in Ut's <bdi dir="ltr">.
+ */
+export function EnvironmentGoneLine({ name, folder, onEdit }) {
+  const intl = useStartIntl();
+  return intl.formatMessage({ defaultMessage: "{name} can’t start: {path} no longer exists. <edit>Edit environment</edit>", id: "j9ML5nKNoc" },
+    { name, path: homeRelativePath(folder), edit: (chunks) => <CdsTextLink inheritColor onClick={onEdit}>{chunks}</CdsTextLink> });
 }
 
 /**
@@ -107,7 +129,7 @@ export function EnvironmentFolderChip({ copy, folderMenu, open, onMenu, onBrowse
  * (the sr-only Fast mode status) follow the bar inside the host scope.
  */
 export function SourceComposerEnvironmentBar({ workdir, environmentName, environmentMenu = true, folderMenu = true, additionalFolders = [],
-  menuKind, onMenu, onBrowseFolder, mode = null, model = null, effort = null, ring = null, children }) {
+  menuKind, onMenu, onBrowseFolder, mode = null, model = null, effort = null, ring = null, line = null, lineEl = null, note = null, children }) {
   const copy = environmentBarChips({ workdir, environmentName, additionalFolders });
   // The host wrapper keeps the composer chin scope (.sc-chin, display: contents): main.jsx's Mode / Model / Effort chords
   // (chin-shortcuts.mjs) and /effort, /model, /permissions find their triggers here (the same CDS triggers as the row chin).
@@ -115,7 +137,7 @@ export function SourceComposerEnvironmentBar({ workdir, environmentName, environ
     <EnvironmentBar
       place={environmentMenu ? <EnvironmentPlaceChip copy={copy.place} open={menuKind === ENVIRONMENT_BAR_MENUS.place} menuKind={menuKind} onMenu={onMenu} /> : null}
       second={<EnvironmentFolderChip copy={copy.folder} folderMenu={folderMenu} open={menuKind === ENVIRONMENT_BAR_MENUS.folder} onMenu={onMenu} onBrowse={onBrowseFolder} />}
-      mode={mode} line={null} lineEl={null} note={null}
+      mode={mode} line={line} lineEl={lineEl} note={note}
       trailing={<>
         {model && <EnvironmentChipGroup>{model}</EnvironmentChipGroup>}
         {effort && <EnvironmentChipGroup>{effort}</EnvironmentChipGroup>}

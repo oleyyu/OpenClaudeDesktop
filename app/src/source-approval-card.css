@@ -1,158 +1,25 @@
-/* Current 2.2553.1 non-dock jM -> Xp/Vp + EM + CDS Button source adapter.
-   The card itself is the 420px query container; threshold measures content width. */
-.sac-card {
-  position: relative; isolation: isolate; display: flex; flex-direction: column;
-  container-type: inline-size; container-name: source-approval;
-  box-sizing: border-box; width: 100%; max-width: 480px; max-height: 60vh;
-  gap: 24px; padding: var(--cds-pad-lg, 12px); border: 0;
-  border-radius: calc(var(--cds-radius, 6px) + 4px);
-  box-shadow: 0 0 0 1px var(--cds-border);
-  color: var(--cds-text-primary); background: transparent;
-  font-family: var(--cds-font-sans); outline: none; transform-origin: top;
-  animation: sac-inline-enter 160ms ease-out;
-}
-/* R4i-transcript TR2: the card's own focus outline is the official utility string on the element (source-approval-card.jsx
-   CARD_FOCUS_OUTLINE, 2.42304.0 c12c146ad R), not a rule here: the landing ring c227f4d5e Zw adds (Yw) carries
-   focus-visible:outline-none, which the compiled sheet orders after focus-visible:outline-1, so a landed card shows
-   only the ::after ring, as the original does. A local rule here would draw the outline under that ring as well. */
-.sac-body {
-  display: flex; flex-direction: column; gap: 24px; min-height: 0;
-  overflow-y: auto; overscroll-behavior: contain;
-  margin-inline: -12px; padding-inline: 12px;
-  margin-top: -4px; padding-top: 4px; margin-bottom: -8px; padding-bottom: 8px;
-}
-.sac-body > * { flex-shrink: 0; }
-.sac-body:focus-visible { outline: none; box-shadow: var(--cds-focus-shadow); }
-.sac-description { display: flex; flex-direction: column; gap: 10px; }
-.sac-heading {
-  display: flex; align-items: center; gap: 4px; min-height: 24px; width: 100%;
-  box-sizing: border-box; margin: 0; padding: 0; border: 0; border-radius: 0;
-  text-align: start; white-space: normal; overflow-wrap: break-word;
-  background: transparent; color: var(--cds-text-primary); outline: none;
-  font-family: inherit; font-size: var(--cds-font-size-body, 13px);
-  font-weight: var(--cds-font-weight-semibold, 580); line-height: var(--cds-leading-body, 19px);
-  --cds-font-axis-wght: var(--cds-font-axis-wght-semibold);
-  font-variation-settings: var(--font-opsz-axis,) var(--cds-font-axis-wght,) "GRAD" var(--cds-font-grad, 0);
-  unicode-bidi: plaintext;
-}
-button.sac-heading { cursor: var(--cds-cursor-interactive, default); }
-.sac-heading > span { flex: 1; min-width: 0; }
-/* approval-current.js:15399-15470 EM B: line-clamp-2 wrapper; b/meta span.text-primary [unicode-bidi:plaintext]. */
-.sac-heading > span[data-clamp] { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.sac-em { color: var(--cds-text-primary); unicode-bidi: plaintext; }
-button.sac-heading:focus-visible { box-shadow: var(--cds-focus-shadow); }
-.sac-content { display: flex; flex-direction: column; gap: 12px; }
-.sac-context {
-  margin: 0; color: var(--cds-text-secondary); user-select: text;
-  white-space: pre-wrap; overflow-wrap: anywhere; unicode-bidi: plaintext;
-  font-size: var(--cds-font-size-body, 13px); line-height: var(--cds-leading-body, 19px);
-}
-/* A dev server's launch.json environment (approval-card-model preview-server): one variable per line, in the code
-   font; a variable that changes what runs is called out in the danger color. */
-.sac-context[data-context="env"] { font-family: var(--cds-font-mono, ui-monospace, monospace); font-size: var(--cds-font-size-footnote, 12px); max-height: calc(8 * var(--cds-leading-body, 19px)); overflow-y: auto; }
-.sac-context[data-context="env-warning"] { color: var(--cds-text-danger); }
-/* approval-current.js:15235-15236 wM + cf6ae6197 bv: text-body text-secondary select-text break-words
-   max-h-[calc(3*var(--cds-leading-body))] overflow-y-auto [unicode-bidi:plaintext]; focusable only while
-   it overflows (scroll-fade-y scroll-fade-size-[8px] come from the original stylesheet). */
-.sac-reason {
-  margin: 0; color: var(--cds-text-secondary); user-select: text; overflow-wrap: break-word;
-  max-height: calc(3 * var(--cds-leading-body, 19px)); overflow-y: auto; unicode-bidi: plaintext;
-  font-size: var(--cds-font-size-body, 13px); line-height: var(--cds-leading-body, 19px); outline: none;
-}
-.sac-reason:focus-visible { box-shadow: var(--cds-focus-shadow); }
-.sac-details[hidden] { display: none; }
-/* mcpServer/elicitation/request: the server's message, a url-mode link and a form-mode form
-   (field chrome is this file's own; the question card's sq-* field it once followed went with source-question-card.css in W12). */
-.sac-message {
-  margin: 0; color: var(--cds-text-primary); user-select: text;
-  white-space: pre-wrap; overflow-wrap: anywhere; unicode-bidi: plaintext;
-  font-size: var(--cds-font-size-body, 13px); line-height: var(--cds-leading-body, 19px);
-}
-.sac-link { display: flex; flex-wrap: wrap; gap: var(--cds-gap-sm, 8px); }
-.sac-form { display: flex; flex-direction: column; gap: var(--cds-gap-md, 12px); }
-.sac-field { display: flex; flex-direction: column; gap: 4px; min-width: 0; margin: 0; padding: 0; border: 0; }
-.sac-field > label, .sac-field > legend { padding: 0; color: var(--cds-text-primary); font-size: var(--cds-font-size-body, 13px); line-height: var(--cds-leading-body, 19px); }
-.sac-field-label { display: inline-flex; flex-wrap: wrap; align-items: baseline; gap: 6px; unicode-bidi: plaintext; overflow-wrap: anywhere; }
-.sac-field-required, .sac-field-hint { color: var(--cds-text-secondary); font-size: var(--cds-font-size-footnote, 12px); line-height: var(--cds-leading-footnote, 16px); }
-.sac-field-hint { overflow-wrap: anywhere; unicode-bidi: plaintext; }
-.sac-field-control {
-  box-sizing: border-box; width: 100%; min-width: 0; min-height: calc(1lh + 2 * var(--cds-pad-sm, 6px));
-  margin: 0; border: 0; border-radius: var(--cds-radius, 6px); padding: var(--cds-pad-sm, 6px) var(--cds-pad-md, 8px);
-  background: var(--cds-fill-field); box-shadow: inset 0 0 0 1px var(--cds-fill-field-ring); outline: none;
-  font: inherit; font-weight: 400; color: var(--cds-text-primary); color-scheme: light dark;
-  transition: box-shadow var(--cds-dur-fast);
-}
-.sac-field-control:enabled:hover:not(:focus) { box-shadow: inset 0 0 0 1px var(--cds-border-strong); }
-.sac-field-control:focus-visible, .sac-field-checkbox:focus-visible { box-shadow: var(--cds-focus-shadow); }
-.sac-field-control[aria-invalid="true"], .sac-field-set[aria-invalid="true"] .sac-field-checkbox { box-shadow: inset 0 0 0 1px var(--cds-text-danger); }
-.sac-field-control:disabled, .sac-field-set:disabled, .sac-field-checkbox:disabled { opacity: var(--cds-opacity-disabled, .5); }
-.sac-field-check { flex-direction: row; flex-wrap: wrap; align-items: center; column-gap: 8px; }
-.sac-field-check > .sac-field-hint { flex-basis: 100%; }
-.sac-field-option { display: flex; align-items: center; gap: 8px; color: var(--cds-text-primary); font-size: var(--cds-font-size-body, 13px); line-height: var(--cds-leading-body, 19px); }
-/* CDS checkbox mark (shared-frame xh/Th, as .sc-worktree and .sq-checkbox-mark): strong border, accent fill + Check. */
-.sac-field-checkbox-box { position: relative; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
-  width: var(--cds-checkbox, 16px); height: var(--cds-checkbox, 16px); }
-.sac-field-checkbox { appearance: none; position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; box-sizing: border-box;
-  border: 1px solid var(--cds-border-strong); border-radius: var(--cds-checkbox-radius, 4px); background: transparent; outline: none; }
-.sac-field-checkbox:checked { border: 0; background: var(--cds-fill-accent); }
-.sac-field-checkbox + [data-cds="Icon"] { position: relative; pointer-events: none; color: var(--cds-on-accent); opacity: 0; }
-.sac-field-checkbox:checked + [data-cds="Icon"] { opacity: 1; }
-.sac-field-checkbox:checked:disabled + [data-cds="Icon"] { opacity: var(--cds-opacity-disabled, .5); }
-.sac-field-select:has(.sselect-trigger[aria-invalid="true"]) { box-shadow: inset 0 0 0 1px var(--cds-text-danger); }
-.sac-code {
-  margin: 0; padding: var(--cds-pad-md, 8px) var(--cds-pad-lg, 12px);
-  border: 0; border-radius: 5px; background: var(--cds-alpha-1); color: var(--cds-text-secondary);
-  font-family: var(--cds-font-mono); font-size: var(--cds-font-size-code, 12px);
-  font-weight: 400; line-height: var(--cds-leading-code, 17px);
-  white-space: pre-wrap; overflow-wrap: break-word; user-select: text; unicode-bidi: plaintext;
-}
-.sac-actions {
-  display: flex; flex-shrink: 0; flex-wrap: wrap; align-items: flex-start; justify-content: space-between;
-  column-gap: var(--cds-gap-md, 12px); row-gap: var(--cds-gap-sm, 8px);
-}
-/* code-approval.js:9255-9282: the footer's '[&>div]:grow' and the inner 'flex flex-wrap justify-end' keep wrapped
-   allow buttons right-aligned, Allow once last, when Deny plus a long "Always allow …" overflow one row. */
-.sac-allows { display: flex; flex-grow: 1; min-width: 0; flex-wrap: wrap; align-items: flex-start; justify-content: flex-end; gap: var(--cds-gap-sm, 8px); }
-.sac-button {
-  position: relative; isolation: isolate; display: inline-flex; flex-shrink: 0; align-items: center; justify-content: center;
-  box-sizing: border-box; max-width: 100%; min-width: 0; height: var(--cds-h-control, 24px);
-  margin: 0; padding: 0 var(--cds-pad-md, 8px); border: 0; border-radius: var(--cds-radius, 6px);
-  outline: none; background: transparent; color: var(--cds-text-primary);
-  font-family: var(--cds-font-sans); font-size: var(--cds-font-size-body, 13px);
-  font-weight: 400; line-height: var(--cds-leading-body, 19px); white-space: nowrap;
-  user-select: none; cursor: var(--cds-cursor-interactive, default); transition: box-shadow var(--cds-dur-fast) ease-out;
-}
-.sac-button[data-variant="primary"] { color: var(--cds-on-primary); font-weight: var(--cds-font-weight-medium, 500); }
-.sac-button-backdrop { position: absolute; inset: 0; z-index: -1; border-radius: inherit; pointer-events: none; transform-origin: 50%; transition: transform var(--cds-dur-slow) var(--cds-btn-spring); }
-.sac-button:active:not(:disabled):not([aria-disabled="true"]) .sac-button-backdrop { transform: scale(var(--cds-btn-press-sx, .975), var(--cds-btn-press-sy, .975)); transition: transform var(--cds-dur-fast) ease-out; }
-.sac-button[data-variant="primary"] .sac-button-backdrop { inset: .5px; }
-.sac-button [data-cds-part="paint"] {
-  position: absolute; inset: 0; border-radius: inherit; background: var(--cds-fill-secondary);
-  box-shadow: inset 0 0 0 1px var(--cds-fill-secondary-ring), 0 1px 2px 0 #0000000d;
-  transition: background-color var(--cds-dur-fast) ease-out, box-shadow var(--cds-dur-fast) ease-out, color var(--cds-dur-fast) ease-out;
-}
-.sac-button[data-variant="primary"] [data-cds-part="paint"] { background: var(--cds-fill-primary); box-shadow: none; }
-.sac-button:hover:not(:disabled):not([aria-disabled="true"]) [data-cds-part="paint"] { background: var(--cds-fill-secondary-hover); }
-.sac-button[data-variant="primary"]:hover:not(:disabled):not([aria-disabled="true"]) [data-cds-part="paint"] { background: var(--cds-fill-primary-hover); }
-.sac-button:focus-visible { box-shadow: var(--cds-focus-shadow); }
-.sac-button:focus-visible [data-cds-part="paint"] { box-shadow: inset 0 0 0 1px var(--cds-page-bg); }
-.sac-button:disabled { opacity: var(--cds-opacity-disabled, .5); pointer-events: none; }
-.sac-button[aria-disabled="true"] { cursor: default; }
-.sac-button-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; unicode-bidi: plaintext; }
-.sac-button-label[data-busy] { opacity: 0; }
-/* ks content span `inline-flex min-w-0 items-center gap-1` (shared-frame :2886) holds label + Shortcut;
-   the spinner/backdrop are absolute, so the gap only separates those two. Primary ink is currentColor (_s :2722). */
-.sac-button { gap: 4px; }
-.sac-button[data-variant="primary"] { --cds-shortcut-cap-ink: currentColor; }
-.sac-button > [data-cds="Shortcut"][data-busy] { opacity: 0; }
-.sac-button-spinner { position: absolute; inset: 0; display: grid; place-items: center; line-height: 0; pointer-events: none; }
-.sac-button-spinner > span { position: relative; display: inline-block; width: 12px; height: 12px; }
-.sac-button-spinner i { position: absolute; inset: 0; border-radius: 50%; }
-.sac-button-spinner i:first-child { border: 1.5px solid color-mix(in srgb, currentColor 25%, transparent); }
-.sac-button-spinner i:last-child { background: conic-gradient(transparent 40%, currentColor); mask: radial-gradient(farthest-side, transparent calc(100% - 1.5px), #000 calc(100% - 1px)); animation: sac-spin 1s linear infinite; }
+/* V3-W14-approvals: the approval cards wear the 3.6556.2 utility classes (source-approval-card.jsx APPROVAL_CARD_SHELL /
+   TOOL_CARD_SHELL / APPROVAL_CARD_BODY, the shared-10 FS decision row and IS / CDS buttons). This sheet holds the two
+   style injections the original card modules make at load, verbatim and unlayered as they inject them, then the rules
+   for what has no official counterpart here (Deny with feedback and the error line).
+
+   c2d1aeb56 (cc32965c2 `ao`'s module) injects "c9bddf7be": in a narrow card the decision row and its allow group
+   stack, and the buttons and split buttons fill the width; the read-gate hint centres. */
+@container (width<=420px){.epitaxy-approval-actions,.epitaxy-approval-actions>div{flex-direction:column;align-items:stretch}.epitaxy-approval-actions>div>span>button,.epitaxy-approval-actions>div>span>span>button,.epitaxy-approval-actions>div>[data-cds=SplitDropdownButton],.epitaxy-approval-actions>div>span>[data-cds=SplitDropdownButton]{width:100%}.epitaxy-approval-actions>div>[data-cds=SplitDropdownButton]>[data-cds-segment]:first-child button,.epitaxy-approval-actions>div>span>[data-cds=SplitDropdownButton]>[data-cds-segment]:first-child button{flex:auto}}.epitaxy-approval-actions-inline{justify-content:flex-end}@container (width<=420px){.epitaxy-approval-read-hint{text-align:center}}
+/* cb6930dae injects "c031798b2"; its approval card rules: a card-presented card fades in over 160 ms (this, not the
+   animate-code-approval-promote utility, is what an inline card shows: unlayered over the utilities layer), and takes
+   the card padding and radius. (The rest of that injection styles the question receipt and the answer rows, which are
+   source-question-receipt.jsx's / source-question-card.jsx's.) */
+@keyframes epitaxy-approval-inline-enter{0%{opacity:0}to{opacity:1}}.epitaxy-root .epitaxy-approval-card[data-approval-presentation]{animation:.16s ease-out epitaxy-approval-inline-enter}.epitaxy-root [data-skip-approval-enter] .epitaxy-approval-card[data-approval-presentation],.epitaxy-root .epitaxy-approval-card[data-approval-presentation][data-skip-approval-enter]{animation:none}.epitaxy-root .epitaxy-approval-card[data-approval-presentation=card]{--approval-card-pad-l:var(--cds-pad-lg);--approval-card-pad-r:var(--cds-pad-lg);border-radius:calc(var(--cds-radius) + calc(.25rem * var(--cds-rem-scale,1)));padding:var(--cds-pad-lg) var(--approval-card-pad-r) var(--cds-pad-lg) var(--approval-card-pad-l)}@media (prefers-reduced-motion:reduce){.epitaxy-root .epitaxy-approval-card[data-approval-presentation]{animation:none}}.epitaxy-root .epitaxy-approval-card.epitaxy-question-card{gap:0;max-height:none;padding:0;overflow:clip}
+html[data-reduce-motion="true"] .epitaxy-root .epitaxy-approval-card[data-approval-presentation] { animation: none; }
+/* W14-code r3 R2T-TS6: the rest of c031798b2 that the card presentation (source-question-card.jsx SourceQuestionCardEn,
+   c2f6611a3 En) wears: a divider between answer rows (Tn and the Other row), and cn's radio mark. Its question receipt
+   rules are source-question-receipt.css's. */
+.epitaxy-root .epitaxy-answer-option+.epitaxy-answer-option{border-top:1px solid var(--cds-border)}.epitaxy-root .epitaxy-radio-mark{width:var(--cds-checkbox,1rem);height:var(--cds-checkbox,1rem);border:1px solid var(--cds-border-strong);background:0 0;border-radius:9999px;flex-shrink:0;justify-content:center;align-items:center;display:flex}.epitaxy-root .epitaxy-radio-mark[data-checked]{background:var(--cds-fill-accent);border:0}.epitaxy-root .epitaxy-radio-mark-dot{width:calc(var(--cds-checkbox,1rem) - calc(.625rem * var(--cds-rem-scale,1)));height:calc(var(--cds-checkbox,1rem) - calc(.625rem * var(--cds-rem-scale,1)));background:var(--cds-on-accent);border-radius:9999px}
+
 .sac-error { margin: 0; flex-shrink: 0; color: var(--cds-text-danger); font-size: var(--cds-font-size-body, 13px); line-height: var(--cds-leading-body, 19px); overflow-wrap: anywhere; }
-.sac-deny { display: inline-flex; align-items: center; gap: var(--cds-gap-sm, 8px); min-width: 0; }
-/* Deny with feedback: a quiet text control beside Deny, then a two-line field above the actions. */
+/* Deny with feedback (OpenCode's declineFeedback): a quiet text control leading the decision row, then a two-line
+   field above it. */
 .sac-feedback-toggle { border: 0; padding: 0 2px; border-radius: 3px; background: none; color: var(--cds-text-secondary); font: inherit; font-size: var(--cds-font-size-footnote, 12px); line-height: var(--cds-leading-footnote, 16px); cursor: default; }
 .sac-feedback-toggle:hover:not(:disabled) { color: var(--cds-text-primary); text-decoration: underline; text-underline-offset: 2px; }
 .sac-feedback-toggle:focus-visible { outline: none; box-shadow: var(--cds-focus-shadow); }
@@ -160,32 +27,6 @@ button.sac-heading:focus-visible { box-shadow: var(--cds-focus-shadow); }
 .sac-feedback textarea { width: 100%; box-sizing: border-box; resize: vertical; min-height: 44px; max-height: 160px; padding: 6px 8px; border: 1px solid var(--cds-border); border-radius: var(--cds-radius, 6px); background: var(--cds-surface-1); color: var(--cds-text-primary); font: inherit; font-size: var(--cds-font-size-body, 13px); line-height: var(--cds-leading-body, 19px); }
 .sac-feedback textarea::placeholder { color: var(--cds-text-muted); }
 .sac-feedback textarea:focus-visible { outline: none; box-shadow: var(--cds-focus-shadow); }
-.sac-visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
-@container source-approval (width <= 420px) {
-  .sac-actions, .sac-allows { flex-direction: column; align-items: stretch; }
-  .sac-allows > .sac-button { width: 100%; }
-  /* An allow the read gate holds sits in SourceTooltip's disabled-reason wrapper (Rj Cj disabledReason): it
-     stretches with the stacked allows too. */
-  .sac-allows > .source-tooltip-disabled-trigger, .sac-allows > .source-tooltip-disabled-trigger > .sac-button { width: 100%; }
-  /* Deny sits in .sac-deny (beside Add feedback): stretch it with the stacked allows. */
-  .sac-deny { display: flex; }
-  .sac-deny > .sac-button { flex: 1 1 auto; }
-  /* 2.42304.0 c96d752d0 injected style "c9bddf7be", verbatim:
-     @container (width<=420px){.epitaxy-approval-read-hint{text-align:center}} — the read-gate hint line (Rj At) is
-     centred in a narrow card. Unlayered like the official injection, so it wins over the hint's .text-end utility. */
-  .epitaxy-approval-read-hint { text-align: center; }
-}
-@keyframes sac-inline-enter { from { opacity: 0; } to { opacity: 1; } }
-@keyframes sac-spin { to { transform: rotate(360deg); } }
-@media (prefers-reduced-motion: reduce) {
-  .sac-card, .sac-button-spinner i:last-child { animation: none; }
-  .sac-button, .sac-button [data-cds-part="paint"], .sac-button-backdrop, .sac-field-control { transition: none; }
-  .sac-button:active .sac-button-backdrop { transform: none; }
-}
-html[data-reduce-motion="true"] .sac-card, html[data-reduce-motion="true"] .sac-button-spinner i:last-child { animation: none; }
-html[data-reduce-motion="true"] .sac-button, html[data-reduce-motion="true"] .sac-button [data-cds-part="paint"], html[data-reduce-motion="true"] .sac-button-backdrop { transition: none; }
-html[data-reduce-motion="true"] .sac-button:active .sac-button-backdrop { transform: none; }
-html[data-reduce-motion="true"] .sac-field-control { transition: none; }
-/* The workflow card's raw script (Claude's "View raw script"): scrolls inside the card. */
-.sac-script-toggle { align-self: flex-start; margin-top: var(--cds-gap-xs, 4px); }
-.sac-script { max-height: 240px; overflow: auto; margin-top: var(--cds-gap-xs, 4px); white-space: pre; overflow-wrap: normal; }
+/* W14-code r7 r7pa-01/02: the detail bodies source-session.jsx draws (a file request's path, a workflow's phases and
+   script) are cc32965c2 N_ / $_ / D_ in their utility classes (source-approval-card.jsx ApprovalDetailValue /
+   ApprovalFold), so the host .sac-code / .sac-path / .sac-context / .sac-script rules are gone. */

@@ -271,9 +271,9 @@ function paneMenuItems({ panes, closePane }, emit, otherFocused = false) {
   const live = !otherFocused;
   const pane = (kind, show, hide, accelerator) => {
     const { enabled, open } = panes[kind];
-    return { label: live && enabled && open ? hide : show, accelerator, enabled: live && enabled, click: dispatch(emit, { kind: "toggle-pane", pane: kind }) };
+    return { label: live && enabled && open ? hide : show, ...(accelerator ? { accelerator } : {}), enabled: live && enabled, click: dispatch(emit, { kind: "toggle-pane", pane: kind }) };
   };
-  // bNr's order: Terminal, Changes, Preview, Files, Side Chat, then Close Pane.
+  // bNr's order: Terminal, Changes, Preview, Files, Side Chat, the page item (Session Rail), then Close Pane.
   return [
     // _Nr("Command+J"): Show/Hide Terminal (the built-in terminal pane; ⌃` toggles it too), once the renderer reports it.
     ...(panes.terminal ? [pane("terminal", t("Show Terminal"), t("Hide Terminal"), "Command+J")] : []),
@@ -283,6 +283,9 @@ function paneMenuItems({ panes, closePane }, emit, otherFocused = false) {
     pane("files", t("Show Files"), t("Hide Files"), "CmdOrCtrl+Shift+F"),
     // Show/Hide Side Chat (CmdOrCtrl+;, the /btw card), reported only where the core serves side questions.
     ...(panes.sideChat ? [pane("sideChat", t("Show Side Chat"), t("Hide Side Chat"), "CmdOrCtrl+;")] : []),
+    // W14-code fr2-20: 3.6556.2 jPKPzV-P `...r.pageItem?[a({show:_Ti(r.pageItem.showLabel),hide:_Ti(r.pageItem.hideLabel),
+    // name:…},null,Q_.PageItem,r.pageItem)]:[]` — the renderer's labels (Show/Hide Session Rail), no accelerator.
+    ...(panes.pageItem ? [pane("pageItem", panes.pageItem.showLabel, panes.pageItem.hideLabel)] : []),
     { label: t("Close Pane"), accelerator: "CmdOrCtrl+\\", enabled: live && closePane.enabled, click: dispatch(emit, { kind: "close-pane" }) },
   ];
 }
@@ -307,7 +310,10 @@ function viewMenuItems({ sidebarOpen, zoomed, zoomLevel, fullScreen, allowDevToo
     SEPARATOR,
     ...zoomMenuItems({ zoomed, zoomLevel, emit }),
     SEPARATOR,
-    { role: "reload", ...roleLabel("Reload") },
+    // W14-code r2-shared-07: 3.6556.2 jPKPzV-P uTi `lTi("CmdOrCtrl+R")` = {label:"Reload" (m3GfpKD1WX), accelerator, click:dTi},
+    // not the reload role: dTi reloads the focused preview (zhi/xli: its page or chrome focused, then Bhi → g1), else the
+    // app (X3n). main.cjs menuEmit {kind:"reload"} does the same with preview-service reloadFocused.
+    { label: t("Reload"), accelerator: "CmdOrCtrl+R", click: (_item, window) => emit({ kind: "reload" }, window) },
     ...(allowDevTools ? [{ role: "toggleDevTools", ...roleLabel("Toggle Developer Tools") }] : []),
     SEPARATOR,
     { label: fullScreen ? t("Exit Full Screen") : t("Enter Full Screen"), accelerator: "Control+Command+F", click: (_item, window) => emit({ kind: "toggle-full-screen" }, window) },
@@ -407,12 +413,19 @@ function goMenuAreas(value) {
   return value.filter((area) => typeof area?.id === "string" && area.id && typeof area.label === "string" && AREA_ITEM_VALUES.has(area.items))
     .slice(0, MAX_GO_MENU_AREAS).map((area) => ({ id: area.id, label: area.label, selected: area.selected === true, items: area.items }));
 }
+const label = (value) => typeof value === "string" && value.length > 0 && value.length <= 200 ? value : null;
+function pageItem(value) {
+  const showLabel = label(value?.showLabel), hideLabel = label(value?.hideLabel), name = label(value?.name);
+  return showLabel && hideLabel && name ? { enabled: value.enabled === true, open: value.open === true, showLabel, hideLabel, name } : null;
+}
 function menuState(payload) {
   const pane = (value) => ({ enabled: value?.enabled === true, open: value?.open === true });
   return { ...(payload?.findInFiles ? {findInFiles:{enabled:payload.findInFiles.enabled === true}} : {}), panes: { changes: pane(payload?.panes?.changes), files: pane(payload?.panes?.files),
     ...(payload?.panes?.terminal ? { terminal: pane(payload.panes.terminal) } : {}),
     ...(payload?.panes?.preview ? { preview: pane(payload.panes.preview) } : {}),
-    ...(payload?.panes?.sideChat ? { sideChat: pane(payload.panes.sideChat) } : {}) }, closePane: { enabled: payload?.closePane?.enabled === true },
+    ...(payload?.panes?.sideChat ? { sideChat: pane(payload.panes.sideChat) } : {}),
+    // W14-code fr2-20: the renderer's pageItem (c11959232 am, cc43287c9 _V labels), kept only with all three labels.
+    ...(pageItem(payload?.panes?.pageItem) ? { pageItem: pageItem(payload.panes.pageItem) } : {}) }, closePane: { enabled: payload?.closePane?.enabled === true },
     session: { open: payload?.session?.open === true },
     reopenClosed: { available: payload?.reopenClosed?.available === true, enabled: payload?.reopenClosed?.enabled === true },
     goMenuAreas: goMenuAreas(payload?.goMenuAreas), closeMenuTarget: CLOSE_TARGETS.has(payload?.closeMenuTarget) ? payload.closeMenuTarget : null };

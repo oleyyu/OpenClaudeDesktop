@@ -5,7 +5,7 @@ import {
   terminalLines, trimOutput,
 } from '../electron/terminal-model.mjs';
 import {
-  CLAUDE_DARK, CLAUDE_LIGHT, findLinks, isTerminalToggle, opaqueColor, relativeToFolder, safeWebUrl, shouldAutoClose, tabLabel, terminalError,
+  CLAUDE_DARK, CLAUDE_LIGHT, findLinks, isTerminalToggle, opaqueColor, safeWebUrl, shouldAutoClose, tabLabel, terminalError,
   terminalFont, terminalFontSize, terminalKeyAction, terminalTheme, unseenData,
 } from '../src/terminal-pane-model.mjs';
 import { PANE_KINDS, openPane, sanitizeLayout, tileIds, CHAT_TILE_ID } from '../src/tile-layout-model.mjs';
@@ -155,12 +155,6 @@ test('links: http(s) URLs only and without credentials; path tokens with line an
   assert.equal(safeWebUrl('file:///etc/passwd'), null);
   assert.equal(safeWebUrl('https://a.b/c\\d'), null);
   assert.equal(safeWebUrl('http://localhost:5173/'), 'http://localhost:5173/');
-  assert.equal(relativeToFolder('/Users/u/proj/src/a.js', '/Users/u/proj'), 'src/a.js');
-  assert.equal(relativeToFolder('src/../b.js', '/Users/u/proj'), 'b.js');
-  assert.equal(relativeToFolder('../other/x.js', '/Users/u/proj'), null);
-  assert.equal(relativeToFolder('/Users/u/project-b/x.js', '/Users/u/proj'), null);
-  assert.equal(relativeToFolder('~/proj/x.js', '/Users/u/proj', '/Users/u'), 'x.js');
-  assert.equal(relativeToFolder('~/x.js', '/Users/u/proj'), null);
 });
 
 test('replay: output an attach already covered is skipped, a straddling chunk trimmed', () => {

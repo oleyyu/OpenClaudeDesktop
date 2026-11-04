@@ -45,5 +45,3 @@ export function browserLabel(browserName = name) {
   return browserName === null || browserName === undefined ? t("Open in default browser") : t("Open in {browserName}", { browserName });
 }
 
-/** Tests only: forget the name and any request in flight. */
-export function resetDefaultBrowserName() { name = null; pending = false; }

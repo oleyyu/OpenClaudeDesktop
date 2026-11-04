@@ -202,6 +202,62 @@
       }
     },
     {
+      "target": "pure-shared-22.mjs",
+      "source": "shared-22-Bwn3sJTG.js",
+      "sourceSha256": "7604d119a352d77d8d048a98d7f87103703f932ccdb06cf3dc88bf32041eaaf6",
+      "sha256": "b94de5388fa031c46c336c3da3dcadb84eba4ded790cdf39d1694d72d3f1c377",
+      "referenceVersion": "3.6556.2",
+      "kind": "slice",
+      "bindings": [
+        {
+          "name": "CT",
+          "sha256": "0c784956243de1b6d97783ede098a0c1fb807eb15bcab0950e28205f5cf4cd0b"
+        }
+      ],
+      "imports": [
+        {
+          "local": "Qs",
+          "from": "../app-switch/define-messages.mjs",
+          "name": "defineMessages",
+          "via": "vendor-intl-DYfox5Co.js:f",
+          "kind": "held",
+          "area": "app-switch",
+          "original": "vendor-intl-DYfox5Co.js:tn"
+        }
+      ],
+      "exports": {
+        "CT": "sidebarOlderMessages"
+      }
+    },
+    {
+      "target": "pure-c39a247c4.mjs",
+      "source": "c39a247c4--WbIrj9D.js",
+      "sourceSha256": "23e9805ed861f84fdfaf5ab76f0b673d4f4b76f19778048f5289850675ee59ea",
+      "sha256": "84a0a550c27c739892c25e02ce73d7b7ac67f8cfc28cb78833fb0b8777dabd24",
+      "referenceVersion": "3.6556.2",
+      "kind": "slice",
+      "bindings": [
+        {
+          "name": "Bt",
+          "sha256": "fc99e1e5c79d939ddad27340f03ec86ce4da0f508f35d2d21d2b8e507cc604ca"
+        }
+      ],
+      "imports": [
+        {
+          "local": "pe",
+          "from": "../app-switch/define-messages.mjs",
+          "name": "defineMessages",
+          "via": "vendor-intl-DYfox5Co.js:f",
+          "kind": "held",
+          "area": "app-switch",
+          "original": "vendor-intl-DYfox5Co.js:tn"
+        }
+      ],
+      "exports": {
+        "Bt": "sidebarBulkModelMessages"
+      }
+    },
+    {
       "target": "pure-shared-26.mjs",
       "source": "shared-26-CGuBxVt9.js",
       "sourceSha256": "ae470abead4f769bdf0661897b47c2b17f3a7f706c725e97b29f49e6060e57b3",
@@ -2711,6 +2767,106 @@
       ],
       "exports": {
         "Hf": "SessionsPageHf"
+      }
+    },
+    {
+      "target": "messages-shared-22.mjs",
+      "source": "shared-22-Bwn3sJTG.js",
+      "sourceSha256": "7604d119a352d77d8d048a98d7f87103703f932ccdb06cf3dc88bf32041eaaf6",
+      "sha256": "bbb9aff6a7e8c8a00e18182b61e7665d678aa530c7c1e93c3be2fde820c1a094",
+      "referenceVersion": "3.6556.2",
+      "kind": "messages",
+      "bindings": [],
+      "messages": [
+        {
+          "name": "title",
+          "id": "97BfxO8deN",
+          "sha256": "1edcffa7ca941b4209b600585dfc315c9612aefd83efab1700ee6c1c70fea814"
+        },
+        {
+          "name": "description",
+          "id": "XtKbRXFQoE",
+          "sha256": "687d486c9557a4e5e8adadda15148f42a3d1c64a8d287a9e18571028cf73af6e"
+        },
+        {
+          "name": "action",
+          "id": "JdaR4uyvoG",
+          "sha256": "c7ffb4d5ee3e7e3e0274c21b3ba46e382362280ac0a8c88cfe033ba9214ca979"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "messages": "archivedWithChangesMessages"
+      }
+    },
+    {
+      "target": "messages-shared-20.mjs",
+      "source": "shared-20-mUr7IqZY.js",
+      "sourceSha256": "2b4f336df2cf91517d50d2b22c3b4b6808bdb7b7512d800dcd1eceb8d9d08e7e",
+      "sha256": "1bb89f11550089bd400f6513ee85338936b312b1258d76f1bb96def12a132c96",
+      "referenceVersion": "3.6556.2",
+      "kind": "messages",
+      "bindings": [],
+      "messages": [
+        {
+          "name": "archiveNamed",
+          "id": "rRvonVlblb",
+          "sha256": "2aa4056576f600a7272812f082bff2ef2fe38e15c87d638763d98f5be3998d46"
+        },
+        {
+          "name": "deleteNamed",
+          "id": "sRMUaFT32i",
+          "sha256": "a426b22b5a97fbc67ba5be8ab65fd67a16286f0de2507d5b3796dde234c1e109"
+        },
+        {
+          "name": "archiveUnnamed",
+          "id": "RbpU5T0BsV",
+          "sha256": "0656df00b69bad5d2e5ac7f208c06f7e634e741a2ac8f97c34c8eb4c617d0772"
+        },
+        {
+          "name": "deleteUnnamed",
+          "id": "ORGsUuPnMo",
+          "sha256": "5c8cd81cdd616eb3d021b02beea4adeffba7556d504e853b0160235e5cee4370"
+        },
+        {
+          "name": "bound",
+          "id": "wCLSAv7FiB",
+          "sha256": "d77e92794c9bdf69a9ebf4352bdf534654d3a1fec79cb377f8b07e6ce93bc0cd"
+        },
+        {
+          "name": "working",
+          "id": "G1uB+fnj7o",
+          "sha256": "4fae63aab0bd5d33df5e1d7606420919aab6de32a17bcc89881e30bddd702e27"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "messages": "nestedSessionsMessages"
+      }
+    },
+    {
+      "target": "messages-c48ea26ad.mjs",
+      "source": "c48ea26ad-DhTxpIFD.js",
+      "sourceSha256": "712379afce80b5d6d591f974b4d67ad971e70acb08dbf645f46f6a160d248217",
+      "sha256": "91919f1ecc02cdfabbc482fb6e0d049cf3d87f4efd0d210bcd20e8c3bb639570",
+      "referenceVersion": "3.6556.2",
+      "kind": "messages",
+      "bindings": [],
+      "messages": [
+        {
+          "name": "deleteFailed",
+          "id": "3A4UmmpZB2",
+          "sha256": "7230da579ce4787a618d0fe1ce3649aa45b1c35f0ff1c23ce114c4898a68f56b"
+        },
+        {
+          "name": "archiveFailed",
+          "id": "d8suG8Ad49",
+          "sha256": "4e10412942bc237c71ad07c7e1bce60518f9db9f3fc40efa130946a0685ed1c3"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "messages": "nestedMoveFailedMessages"
       }
     }
   ]

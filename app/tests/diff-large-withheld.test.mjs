@@ -233,8 +233,9 @@ test('FileDiff starts the read when a pending row is expanded, and its pending b
   const source = fs.readFileSync(path.join(ROOT, 'src/source-diff.jsx'), 'utf8');
   const count = (needle) => source.split(needle).length - 1;
   assert.equal(count('useEffect(() => { if (expanded && pending) lazyPatch.load(); }, [expanded, pending, lazyPatch]);'), 1);
-  assert.equal(count('const hasBody = !changes || !!file.fallbackReason || file.hunks.length > 0 || pending;'), 1);
-  assert.equal(count(': pending ? null : <div className="sdiff-metadata-only">'), 1);
+  // W14-code pa2-04 (E84.3): the inline placement is gone; SourceDiff always renders the Changes body.
+  assert.equal(count('const hasBody = !!file.fallbackReason || file.hunks.length > 0 || pending;'), 1);
+  assert.equal(count('sdiff-metadata-only'), 0);
   // A small withheld-but-included diff (patches_withheld false) with a lazy row mounts it expanded and pending.
   const html = render({ value: header('a.js'), patchesWithheld: false, comparisonFiles: [stat('a.js', 2)], fileActions: { fetchFilePatch } });
   assert.equal(html.includes(BANNER), false);

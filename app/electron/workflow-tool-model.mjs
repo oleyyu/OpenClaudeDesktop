@@ -7,13 +7,10 @@ import path from "node:path";
 import crypto from "node:crypto";
 import { parseClaudeWorkflowScript } from "../third-party/codex-workflows-runner/src/claude-metadata.js";
 import { compileWorkflowBody } from "../third-party/codex-workflows-runner/src/workflow-compiler.js";
-import { SIZE_LIMITS } from "./prefs/workflow-settings.mjs";
 
 export const WORKFLOW_TOOL = "Workflow";
 export const MAX_SCRIPT_BYTES = 524288;
 export const RUN_ID = /^wf_[a-z0-9-]{6,}$/;
-const LEGACY_RUN_ID = /^[a-f0-9-]{36}$/;
-export const isRunId = (value) => typeof value === "string" && (RUN_ID.test(value) || LEGACY_RUN_ID.test(value));
 /** Claude: `wf_` + the first 12 characters of a UUID. */
 export const newRunId = () => `wf_${crypto.randomUUID().slice(0, 12)}`;
 /** Claude's local_workflow task id: "w" + 8 of [0-9a-z]. */
@@ -263,20 +260,7 @@ export function findSavedWorkflow({ cwd, home, name, nameOnly = false, folders }
   const match = workflows.find((entry) => entry.name === name);
   return match ? { workflow: match } : { error: `Workflow "${name}" not found. Available: ${workflows.map((entry) => entry.name).join(", ") || "(none)"}` };
 }
-/** Where /workflows › Save writes a run's script (Claude: user → ~/.claude/workflows, project → nearest existing folder, else git root, else cwd). */
-export function saveWorkflowTarget({ scope, cwd, home, name, folders: extraFolders }) {
-  const slug = workflowSlug(name), folders = workflowFolders(extraFolders);
-  let dir;
-  if (scope === "user") dir = folderPath(home, folders[0]);
-  else {
-    // The nearest folder level that has a workflows folder, in the core's own folder there (folders[0]), so the core's
-    // own engine finds the script too; else the git root, else cwd.
-    const levels = projectWorkflowDirs(cwd, home, [folders[0]]).map((candidate) => path.resolve(candidate, ...folders[0].split("/").map(() => "..")));
-    const level = levels.find((base) => folders.some((folder) => fs.existsSync(folderPath(base, folder))));
-    dir = folderPath(level ?? gitRoot(cwd) ?? cwd, folders[0]);
-  }
-  return { dir, file: path.join(dir, `${slug}.js`), slug };
-}
+// W14-code r5 cleanup R5DC-03 (E95): saveWorkflowTarget left with the run card's Save (workflow-service save).
 
 // --- Tool result and notification (Claude mapToolResultToToolResultBlockParam, gdn/ki).
 /**

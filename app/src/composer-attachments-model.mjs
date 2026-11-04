@@ -216,12 +216,53 @@ export function addSnippet(entries, snippet) {
 export function removeSnippetByKey(entries, key) {
   return (Array.isArray(entries) ? entries : []).filter((entry) => !(entry.kind === "snippet" && entry.key === key));
 }
-// be (c4d199b75): the snippets go first, each a Markdown quote, blank-line separated, then the message. The local
-// transcript shows user text as typed, so the quote goes without Claude's '<!-- attach: label -->' marker line.
-export function snippetText(entries) {
-  const quotes = (Array.isArray(entries) ? entries : []).filter((entry) => entry?.kind === "snippet" && typeof entry.text === "string" && entry.text.trim())
-    .map((entry) => (entry.sourceFile ? `${entry.sourceFile}\n\n${entry.text}` : entry.text).split("\n").map((line) => (line.length ? `> ${line}` : ">")).join("\n"));
+// be (c4d199b75): the snippets go first, each a Markdown quote, blank-line separated, then the message.
+// attachMarkers (W14-code r2 R2T-TA5; a Code session drawn by the 3.6556.2 renderer, whose c96d752d0 user row parses
+// them back into attachment tiles — c4d199b75 B over `Ne = /^<!-- attach(?:: (.*?))?(?: \| tab:(\S+))? -->\n((?:>(?: |$).*\n?)+)\n*/gm`):
+// each snippet is xe's `A(text, label, terminalTabId)` = `${C(label, tab)}\n${w(text)}` — C: `<!-- attach -->`, or
+// `<!-- attach: ${label} -->` / `… | tab:${tab} -->` with the label's line breaks made spaces and `-->` / `|` dropped;
+// w: every line `> ${line}`. (C / w first pass the text through shared-182 eh, which escapes `@` mentions for the tiptap
+// editor; the host draft is plain text, so nothing is escaped.) Without it (Chat, Cowork, the host's own rows, which show
+// the text as typed) the quote goes without the marker line.
+const LINE_BREAKS = /\r\n?|[\n\u2028\u2029]/g;
+function attachMarker(label, tab) {
+  if (!label && !tab) return "<!-- attach -->";
+  let name = label ? String(label).replace(LINE_BREAKS, " ") : undefined;
+  while (name !== undefined && /-->|\|/.test(name)) name = name.replace(/-->|\|/g, "");
+  name = name === undefined ? undefined : name.trim();
+  return `<!-- attach: ${[name, tab ? `tab:${tab}` : undefined].filter(Boolean).join(" | ")} -->`;
+}
+export function snippetText(entries, { attachMarkers = false } = {}) {
+  const snippets = (Array.isArray(entries) ? entries : []).filter((entry) => entry?.kind === "snippet" && typeof entry.text === "string" && entry.text.trim());
+  const quotes = attachMarkers
+    ? snippets.map((entry) => `${attachMarker(entry.label, entry.terminalTabId)}\n${String(entry.text).split(LINE_BREAKS).map((line) => `> ${line}`).join("\n")}`)
+    : snippets.map((entry) => (entry.sourceFile ? `${entry.sourceFile}\n\n${entry.text}` : entry.text).split("\n").map((line) => (line.length ? `> ${line}` : ">")).join("\n"));
   return quotes.length ? `${quotes.join("\n\n")}\n\n` : "";
+}
+
+// W14-code composer-15 (Saved draft): a message brought back into the composer whose text is longer than shared-1 WC
+// (1e6) characters (GC: `e.length > WC`) does not go into the editor; c227f4d5e tD makes it a held text pill
+// `{id, kind: "text", text}` and leaves the composer text empty, and Go renders that pill as the "Saved draft" tile.
+// At send, c4d199b75 xe puts each non-empty held text before the composer text, the parts joined by a blank line.
+// Host difference: tD's Hl (shared-182 oh) escapes the text's @ mentions for the tiptap editor; the host draft is
+// plain text with no mention escaping, so the held text is kept as is.
+export const HELD_TEXT_MAX = 1e6;
+export function isHeldText(text) {
+  return typeof text === "string" && text.length > HELD_TEXT_MAX;
+}
+let heldSeq = 0;
+export function makeHeldText(text, { id } = {}) {
+  return { id: id ?? (globalThis.crypto?.randomUUID?.() || `held-${Date.now().toString(36)}-${heldSeq++}`), kind: "text", status: "ready", text: String(text ?? "") };
+}
+/** xe's text half: the held texts (non-empty), then the composer text when it is not empty, joined by a blank line. */
+export function withHeldText(entries, text) {
+  const parts = (Array.isArray(entries) ? entries : []).filter((entry) => entry?.kind === "text" && typeof entry.text === "string" && entry.text !== "").map((entry) => entry.text);
+  if (text !== "") parts.push(text);
+  return parts.join("\n\n");
+}
+/** Go's onEditSnippetText: the dialog's Save replaces the held text. */
+export function editHeldText(entries, id, text) {
+  return (Array.isArray(entries) ? entries : []).map((entry) => (entry.id === id && entry.kind === "text" ? { ...entry, text } : entry));
 }
 
 export function removeAttachment(entries, id) {
@@ -240,10 +281,6 @@ export function skillChipInput(text, skill) {
   const rest = value.slice(token.length);
   if (rest && !/^\s/.test(rest)) return null;
   return { text: rest.replace(/^[ \u00a0]/, ""), item: { type: "skill", name: skill.name, path: skill.path } };
-}
-
-export function attachmentsReady(entries) {
-  return entries.every((entry) => entry.status === "ready" && !!entry.path);
 }
 
 // A file mention reaches the model only where the core translates it: the
@@ -440,22 +477,6 @@ export function attachmentViewerState(viewer, entries = []) {
   if (!viewer) return null;
   const entry = entries.find((candidate) => candidate.id === viewer.id);
   return entry && attachmentOpenAction(entry) === "view" ? { ...viewer, src: entry.previewUrl, alt: entry.name } : null;
-}
-
-// ── Folder intake (B01) ─────────────────────────────────────────────────────────────────────────────────────
-// shared-50 kk (exported to cc43287c9 as Go): a paste/drop DataTransfer split into folder Files (an item whose
-// webkitGetAsEntry() reports isDirectory) and plain Files; without an item list every File counts as a file.
-export function splitClipboardFolders(items, files) {
-  const folders = [], plain = [];
-  if (!items) return { folders, files: Array.from(files ?? []) };
-  for (let index = 0; index < items.length; index++) {
-    const item = items[index];
-    if (item?.kind !== "file") continue;
-    const file = item.getAsFile?.();
-    if (!file) continue;
-    (item.webkitGetAsEntry?.()?.isDirectory ? folders : plain).push(file);
-  }
-  return { folders, files: plain };
 }
 
 // cc43287c9 cB: a folder is "outside" the working folder unless it is that folder or below it (separators

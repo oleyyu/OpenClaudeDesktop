@@ -2,7 +2,8 @@ import React, { createContext, useContext, useCallback, useLayoutEffect, useRef,
 import { createPreviewSettingsMenu } from './generated/code-editor/preview-settings-menu.mjs';
 import { createPreviewPaneMenu } from './generated/code-editor/preview-pane-menu.mjs';
 import { SourceMenu, menuTriggerProps } from './source-menu.jsx';
-import { SourceSettingsButton } from './source-settings-button.jsx';
+// W14-code r6 R6DC-02: the factory's Button is shared-frame Uu (E41 direct import); it passes `tooltip:!1` itself.
+import { CdsButton } from './generated/view-tabs/shared-frame-6jtSkIit.js';
 import { SourceTooltip } from './source-tooltip.jsx';
 import { CdsConfirmationDialog } from './generated/view-tabs/index.js';
 import { useRoutineIntl } from './source-routine-adapters.jsx';
@@ -38,7 +39,7 @@ function useOptionalStable(callback) {
   const stable = useCallback((...args) => latest.current?.(...args), []);
   return callback === undefined ? undefined : stable;
 }
-const Button = ({ tooltip, ...props }) => <SourceSettingsButton iconSize="auto" {...props} />;
+const Button = CdsButton;
 const MenuHost = { ...SourceMenu, Root, Trigger, Popup, Submenu };
 // 3.6556.2 ca5db7aaf H: the sections sit in a Fragment and the popups use the official menu collision padding (shared-18
 // Sn), so the factory no longer takes Provider / collisionPadding.

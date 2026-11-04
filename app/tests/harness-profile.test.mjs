@@ -285,7 +285,9 @@ test('main: preferences.json is read before config loads; Codex and old cores ar
 test('Settings › Harness page: Codex notice, unsupported notice, groups, Required rows, pending banner and recovery', async () => {
   const appRoot = path.resolve(import.meta.dirname, '..');
   require(path.join(appRoot, 'node_modules/react-dom')).createPortal = children => children;
-  globalThis.document ??= { body: { nodeType: 1 }, documentElement: { dataset: {} } };
+  // W14-code r6 gen-final-6: SourceDialog's close / footer buttons are the view-tabs CdsButton now (r6 panes R6DC-02), so the
+  // page's module graph loads shared-frame, whose preload helper probes document.createElement("link").relList at load.
+  globalThis.document ??= { body: { nodeType: 1 }, documentElement: { dataset: {} }, createElement: () => ({}) };
   const React = (await import('react')).default;
   const { renderToStaticMarkup: render } = await import('react-dom/server');
   const { createServer } = await import('vite'), react = (await import('@vitejs/plugin-react')).default;

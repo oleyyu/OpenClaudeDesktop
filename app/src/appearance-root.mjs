@@ -13,7 +13,12 @@ export const cdsFontFor = (prefs) => (prefs?.interfaceFont === "anthropic" ? "sa
  * Returns the code theme pair in effect.
  */
 export function applyAppearanceRoot(root, prefs, { setThemes, colors }) {
-  for (const key of ["motion", "transcriptSize", "transcriptWidth"]) root.dataset["local" + key[0].toUpperCase() + key.slice(1)] = prefs[key];
+  root.dataset.localMotion = prefs.motion;
+  // shared-20 Gh (3.6556.2): html carries the transcript text size and width as data-chat-text-size / data-transcript-width
+  // (s / m / l), which the loaded CSS keys on (c6a992d55 [data-chat-text-size=s] .epitaxy-root --prompt-text-size, Cg's
+  // [[data-transcript-width=m]_&]:[--max-content-width…], the session rail measure) and the host's own rules follow.
+  root.dataset.chatTextSize = prefs.transcriptSize;
+  root.dataset.transcriptWidth = prefs.transcriptWidth;
   // scroll-shared-10-current.js:17688-17708 CM/DM: the in-app Reduce motion setting is html[data-reduce-motion="true"],
   // which the loaded CSS's motion-reduce variants and local reduce rules key on; data-local-motion stays as an alias
   // for the older local rules.

@@ -63,6 +63,7 @@ function fileHeading(changes) {
 }
 
 const singleLine = value => nonempty(value)?.replace(/\s+/g, " ").trim() ?? null;
+const supportedKind = kind => kind === "command" || kind === "file" || kind === "permissions";
 // approval-current.js:14121-14133 Xj: a change over 200,000 characters gets no preview.
 export const PREVIEW_LIMIT = 200000;
 export const PREVIEW_TOO_LARGE = t("Preview unavailable \u2014 this change is too large to show here (over 200,000 characters). The full change appears in the conversation after it runs.");
@@ -122,13 +123,13 @@ function itemHeading(item, command) {
       // command is the script summary.
       if (["CreateWorkflow", "AmendWorkflow", "ResumeWorkflowRun", "Workflow", "RunWorkflow", "workflow"].includes(tool) && nonempty(command))
         return { heading: { action: t("run a dynamic workflow"), meta: null }, detail: commandDetail(command) };
-      return { heading: { action: t("use {tool}", { tool }), meta: null }, detail: argumentsDetail(item.arguments) };
+      // cc32965c2 Wh O(): "use {label}" (VJ6z/l9Cq2) with the tool's own name as the label.
+      return { heading: { action: t("use {label}", { label: tool }), meta: null }, detail: argumentsDetail(item.arguments) };
     }
     case "mcpToolCall": {
       const tool = nonempty(item.tool);
       if (!tool) return null;
-      const server = nonempty(item.server);
-      return { heading: { action: server ? t("use {tool} ({server})", { tool, server }) : t("use {tool}", { tool }), meta: null }, detail: argumentsDetail(item.arguments) };
+      return { heading: { action: t("use {label}", { label: mcpToolLabel(tool, serverDisplayName(item.server)) }), meta: null }, detail: argumentsDetail(item.arguments) };
     }
     case "webSearch":
       return item.action?.type === "openPage"
@@ -208,57 +209,9 @@ export function elicitationFields(schema) {
   const fields = Object.entries(properties).map(([id, property]) => elicitationField(id, property, required.has(id)));
   return fields.length && !fields.includes(null) ? fields : null;
 }
-/** The draft each field starts with (memory only, owned by the card). */
-export function elicitationInitialValues(fields) {
-  return Object.fromEntries((fields ?? []).map(field => [field.id,
-    field.type === "boolean" ? field.default ?? false
-      : field.type === "multiselect" ? [...field.default]
-      : field.default == null ? "" : String(field.default)]));
-}
-const EMAIL = /^[^\s@]+@[^\s@]+$/, DATE = /^\d{4}-\d{2}-\d{2}$/;
-function fieldError(field, raw) {
-  const name = field.label;
-  if (field.type === "boolean") return typeof raw === "boolean" ? { value: raw } : { error: t("{field} is required.", { field: name }) };
-  if (field.type === "multiselect") {
-    const chosen = Array.isArray(raw) ? field.options.filter(option => raw.includes(option.value)).map(option => option.value) : [];
-    if (!chosen.length && !field.required && field.minItems == null) return {};
-    if (field.required && !chosen.length) return { error: t("{field} is required.", { field: name }) };
-    if (field.minItems != null && chosen.length < field.minItems) return { error: tn(field.minItems, "Choose at least {count} option for {field}.", "Choose at least {count} options for {field}.", { field: name }) };
-    if (field.maxItems != null && chosen.length > field.maxItems) return { error: tn(field.maxItems, "Choose at most {count} option for {field}.", "Choose at most {count} options for {field}.", { field: name }) };
-    return { value: chosen };
-  }
-  const text = typeof raw === "string" ? raw : "";
-  if (!text.trim()) return field.required ? { error: t("{field} is required.", { field: name }) } : {};
-  if (field.type === "select")
-    return field.options.some(option => option.value === text) ? { value: text } : { error: t("Choose an available option for {field}.", { field: name }) };
-  if (field.type === "number" || field.type === "integer") {
-    const number = Number(text.trim());
-    if (!Number.isFinite(number)) return { error: t("{field} must be a number.", { field: name }) };
-    if (field.type === "integer" && !Number.isInteger(number)) return { error: t("{field} must be a whole number.", { field: name }) };
-    if (field.minimum != null && number < field.minimum) return { error: t("{field} must be at least {min}.", { field: name, min: field.minimum }) };
-    if (field.maximum != null && number > field.maximum) return { error: t("{field} must be at most {max}.", { field: name, max: field.maximum }) };
-    return { value: number };
-  }
-  const length = [...text].length;
-  if (field.minLength != null && length < field.minLength) return { error: t("{field} must be at least {min} characters.", { field: name, min: field.minLength }) };
-  if (field.maxLength != null && length > field.maxLength) return { error: t("{field} must be at most {max} characters.", { field: name, max: field.maxLength }) };
-  if (field.format === "email" && !EMAIL.test(text.trim())) return { error: t("{field} must be an email address.", { field: name }) };
-  if (field.format === "uri") { try { new URL(text.trim()); } catch { return { error: t("{field} must be a URL.", { field: name }) }; } }
-  if (field.format === "date" && !DATE.test(text.trim())) return { error: t("{field} must be a date (YYYY-MM-DD).", { field: name }) };
-  if (field.format === "date-time" && Number.isNaN(Date.parse(text.trim()))) return { error: t("{field} must be a date and time.", { field: name }) };
-  return { value: text };
-}
-/** {content} ready for an accept response, or {error, fieldId} for the first invalid field.
- * Empty optional fields are left out, as the TUI's field_value does. */
-export function elicitationFormContent(fields, values = {}) {
-  const content = {};
-  for (const field of fields ?? []) {
-    const result = fieldError(field, values[field.id]);
-    if (result.error) return { error: result.error, fieldId: field.id };
-    if (result.value !== undefined) content[field.id] = result.value;
-  }
-  return { content };
-}
+// V3-W14-approvals: the form itself, its initial values and its validation are the 3.6556.2 originals
+// (generated/approval-elicitation, source-approval-card.jsx); elicitationFields above only decides which schemas the card
+// can show (the shapes main's respond-approval.cjs checks the answer against).
 // Codex's own wording when no template names the action (core mcp_tool_call.rs
 // build_mcp_tool_approval_fallback_message): 'Allow <actor> to run tool "<tool>"?'.
 const FALLBACK_TOOL = /^Allow .+ to run tool "(.+)"\?$/s;
@@ -340,18 +293,31 @@ export function changeRowsGateKey(identity, model) {
   return `${id}\nrows\n${JSON.stringify([model.changeTarget, model.changeGroups, model.footnote])}`;
 }
 /** The elicitation's presentation: mode, copy, fields and the actions it offers. */
+// V3-W14-approvals: cc32965c2 bs / Ss name the server as `L(Nn(r))` (shared-130 xz: underscores read as spaces). A
+// request without a name (the protocol requires one) takes the catalog's own nameless sentences ("A connector …",
+// en-US 2gTAbGLfyu / T3jOuRasEE) rather than a host name put in {serverName}.
+const serverDisplayName = value => nonempty(value)?.replace(/_+/g, " ") ?? null;
+// V3-W14-approvals: cc32965c2 Wh `f.startsWith("mcp__")`: one "use {label}" (VJ6z/l9Cq2), the whole action in <b> with no
+// meta, the label `${toolName.replace(/_+/g, " ")}${h ? ` (${h})` : ""}` (h the server's Nn name; a connector's display
+// name the same way).
+const mcpToolLabel = (tool, server) => `${tool.replace(/_+/g, " ")}${server ? ` (${server})` : ""}`;
 export function elicitationModel(params, item) {
   const meta = plainObject(params?._meta) ?? {};
-  const server = nonempty(params?.serverName) ?? t("An MCP server");
+  const named = serverDisplayName(params?.serverName);
+  const server = named ?? t("An MCP server");
   const message = nonempty(params?.message);
   const persist = elicitationPersistModes(meta);
   const who = assistantName();
   const decline = label => ({ key: "decline", label, primary: false });
+  // cc32965c2 Ss: "{serverName} wants to open a URL" (nfymUJgaww), the link's host (font-medium text-primary) over its
+  // address, Decline, then "I’m done, continue" (d91uaN3SMw) and the primary "Open link" (lFHiMpKnp3, the card's own).
   if (params?.mode === "url") {
     const url = nonempty(params.url);
-    return { mode: "url", server, message, url, openable: !!url && openableUrl(url),
-      title: t("{server} wants you to open a link", { server }),
-      deny: decline(t("Decline")), allows: url ? [{ key: "accept", label: t("Done"), primary: true }] : [] };
+    let host = null;
+    try { host = url ? new URL(url).host || null : null; } catch { host = null; }
+    return { mode: "url", server, message, url, host, openable: !!url && openableUrl(url),
+      title: named ? t("{serverName} wants to open a URL", { serverName: named }) : t("A connector wants to open a URL"),
+      deny: decline(t("Decline")), allows: url ? [{ key: "accept", label: t("I’m done, continue"), primary: false }] : [] };
   }
   // A Codex tool suggestion (_meta.codex_approval_kind 'tool_suggestion', tui bottom_pane/mcp_server_elicitation.rs
   // parse_tool_suggestion_request): Codex suggests installing or turning on an app (connector) or plugin for this
@@ -377,8 +343,11 @@ export function elicitationModel(params, item) {
   if (params?.mode === "form" && isMessageOnlySchema(params.requestedSchema)) {
     const tool = meta.codex_approval_kind === "mcp_tool_call";
     // _meta.persist 'always' (Codex's MCP tool approval 'Always allow', tui mcp_server_elicitation.rs): Claude's
-    // persistent 'Always allow' (⇧⌘↵, "Don’t ask again for this tool").
-    const allows = [...(persist.has("always") ? [{ key: "acceptAlways", label: t("Always allow"), primary: false, persistent: true }] : []),
+    // persistent 'Always allow' (⇧⌘↵). W14-code r6 r6pa-08: cc32965c2 `ur = q.suppressScopeTooltip || v || je || hn ? void 0 :
+    // (gn ?? "Don’t ask again for this tool")` on pr's `{key:"always",…,tooltip:ur}`: a tool call has no saved scope (gn),
+    // so its tooltip is the fallback sentence (source-approval-card.jsx turns `title` into the button tooltip).
+    const allows = [...(persist.has("always") ? [{ key: "acceptAlways", label: t("Always allow"), primary: false, persistent: true,
+      ...(tool ? { title: t("Don’t ask again for this tool") } : null) }] : []),
       ...(persist.has("session") ? [{ key: "acceptForSession", label: t("Allow for this session"), primary: false }] : []),
       { key: "accept", label: tool ? t("Allow once") : t("Allow"), primary: true }];
     if (!tool) return { mode: "confirm", server, message, title: t("{server} is asking for your approval", { server }), deny: decline(t("Deny")), allows };
@@ -421,7 +390,7 @@ export function elicitationModel(params, item) {
     const fromItem = item?.type === "mcpToolCall" ? itemHeading(item) : null;
     const fallback = message?.match(FALLBACK_TOOL)?.[1] ?? null;
     const toolName = nonempty(meta.tool_title) ?? fallback;
-    const heading = toolName ? { action: t("use {tool} ({server})", { tool: toolName, server }), meta: null } : fromItem?.heading ?? null;
+    const heading = toolName ? { action: t("use {label}", { label: mcpToolLabel(toolName, named) }), meta: null } : fromItem?.heading ?? null;
     const metaParams = "tool_params" in meta || Array.isArray(meta.tool_params_display);
     const detail = metaParams ? toolParamsDetail(meta) : fromItem?.detail ?? null;
     return { mode: "approval", server, message: fallback ? null : message, heading,
@@ -429,7 +398,8 @@ export function elicitationModel(params, item) {
       toolDescription: nonempty(meta.tool_description), detail, ...(detail && { rowsReadGate: rowsReadGate() }), deny: decline(t("Deny")), allows };
   }
   const fields = params?.mode === "form" ? elicitationFields(params.requestedSchema) : null;
-  if (fields) return { mode: "form", server, message, fields, title: t("{server} is asking for information", { server }),
+  // cc32965c2 bs: "{serverName} requests your input" (8+GEYEqcFF) over the message, the fields, then the caution line.
+  if (fields) return { mode: "form", server, message, fields, schema: params.requestedSchema, title: named ? t("{serverName} requests your input", { serverName: named }) : t("A connector requests your input"),
     deny: decline(t("Decline")), allows: [{ key: "accept", label: t("Submit"), primary: true }] };
   // openai/form, a schema with non-primitive fields, or an unknown mode: declinable only.
   return { mode: "unsupported", server, message, title: t("{server} sent a request that can’t be shown here", { server }),
@@ -460,7 +430,9 @@ export function offeredDecisions(list) {
     // A bridge's project-scoped rule (ZCode 'Always allow in this project': codeDesktop.scope 'project') says so.
     if (prefix && !/[\r\n]/.test(prefix) && !persistent.some(action => action.rule === "prefix"))
       // Worded as Codex's TUI words it: the rule is a prefix, so longer commands that start with it run unasked too.
+      // (The Cowork card reads this wording as its hint; the Code card relabels the offer, approvalCardModel below.)
       persistent.push({ key: `decision:${index}`, rule: "prefix", primary: false, persistent: true,
+        scope: value.codeDesktop?.scope === "project" ? "project" : "user", prefix,
         label: value.codeDesktop?.scope === "project" ? t("Always allow commands that start with “{prefix}” in this project", { prefix: clipped(prefix) }) : t("Always allow commands that start with “{prefix}”", { prefix: clipped(prefix) }),
         title: value.codeDesktop?.scope === "project" ? t("Saved for this project: commands that start with “{prefix}” will run without asking.", { prefix: rawPrefix }) : t("Saved for every session and project: commands that start with “{prefix}” will run without asking.", { prefix: rawPrefix }) });
     const network = plainObject(value.applyNetworkPolicyAmendment?.network_policy_amendment);
@@ -468,6 +440,18 @@ export function offeredDecisions(list) {
       persistent.push({ key: `decision:${index}`, rule: "host", label: t("Always allow {host}", { host: clipped(network.host) }), title: network.host, primary: false, persistent: true });
   });
   return { strings, persistent };
+}
+// V3-W14-approvals: the Code card's persistent offers as cc32965c2 Sv words them. A prefix rule is pr: "Always allow"
+// (lr3QX/nctD) with the save scope as its tooltip (S_): Codex's execpolicy is the user's ("Saves to user settings (all
+// projects)", yew/eTvhGh), a bridge's codeDesktop.scope "project" rule the project's ("Saves to project settings",
+// l8BwmnfrED); the prefix it saves stays readable as the button's description (IS aria-describedby). A host rule is the
+// site keep ki: "Always allow for this website" (IqIbyB46Wa), the host its tooltip.
+function cardPersistentOffer(offer) {
+  if (offer.rule === "prefix") return { ...offer, label: t("Always allow"),
+    title: offer.scope === "project" ? t("Saves to project settings") : t("Saves to user settings (all projects)"),
+    description: t("Commands that start with “{prefix}”", { prefix: offer.prefix }) };
+  if (offer.rule === "host") return { ...offer, label: t("Always allow for this website") };
+  return offer;
 }
 export function approvalCardModel(request, item) {
   const params = request?.params ?? {};
@@ -552,17 +536,20 @@ export function approvalCardModel(request, item) {
     else add("missing-detail", t("Permission details were not provided."));
   } else add("method", nonempty(method) ?? t("The request type was not provided."));
 
-  const heading = kind === "file" ? fileHeading(detail?.value) : derived?.heading ?? null;
+  // V3-W14-approvals: every card title is one of cc32965c2 L's messages ("Allow Claude to <b>{action}</b> …?"): a
+  // command without an item description is Bash's `action: "run"` with the command as its detail (clampTitle), and the
+  // other requests name their action the same way (no sentence is assembled from pieces).
+  const heading = kind === "file" ? fileHeading(detail?.value) ?? (supportedKind(kind) ? { action: t("edit files"), meta: null } : null)
+    : derived?.heading ?? (kind === "command"
+      ? params.kind === "writeStdin" ? { action: t("send input to this terminal"), meta: null } : { action: t("run"), meta: null }
+      : kind === "permissions" ? { action: t("use these permissions"), meta: null } : null);
   // EM y (approval-current.js:15254): a detail equal to the meta (a bare file name) is no
   // detail at all, so the card has no path box, no preview (:15596-15607) and no toggle.
   if (detail?.kind === "path" && heading?.meta && detail.text === heading.meta) detail = null;
-  const clampTitle = kind === "file" ? !!heading : !!derived?.clampTitle;
+  const clampTitle = kind === "file" ? !!heading?.meta : derived ? !!derived.clampTitle : kind === "command" && params.kind !== "writeStdin" && detail !== null;
   const who = assistantName(); // C2 persona; "DeepSeek" by default
   const title = heading ? t("Allow {name} to {action}?", { name: who, action: `${heading.action}${heading.meta ? ` ${heading.meta}` : ""}` })
-    : kind === "command"
-      ? params.kind === "writeStdin" ? t("Allow {name} to send input to this terminal?", { name: who }) : t("Allow {name} to run this command?", { name: who })
-      : kind === "file" ? t("Allow {name} to edit files?", { name: who })
-      : kind === "permissions" ? t("Allow {name} to use these permissions?", { name: who }) : t("Unsupported approval request");
+    : t("Unsupported approval request");
   const supported = kind !== "unsupported";
   const offered = kind === "command" || kind === "file" ? offeredDecisions(params.availableDecisions) : null;
   const deny = !supported ? null : kind === "permissions" ? { key: "deny", label: t("Deny"), primary: false }
@@ -572,7 +559,7 @@ export function approvalCardModel(request, item) {
   // grant, e.g. a full-access file escalation (source disableAlwaysAllow).
   const allows = !supported ? [] : kind === "permissions"
     ? [{ key: "allow", label: t("Allow for this turn"), primary: true }]
-    : offered ? [...offered.persistent,
+    : offered ? [...offered.persistent.map(cardPersistentOffer),
         ...(offered.strings.has("acceptForSession") ? [{ key: "acceptForSession", label: t("Allow for this session"), primary: false }] : []),
         { key: "accept", label: t("Allow once"), primary: true }]
     : [...(params.sessionGrantable === false ? [] : [{ key: "acceptForSession", label: t("Allow for this session"), primary: false }]),
@@ -695,8 +682,8 @@ const EDITOR_TYPES = Object.freeze({ "vs code": "vscode", "visual studio code": 
 // The tools whose card is the 3.6556.2 title builder's (V3-w10-trans-approval-titles-host): run_in_terminal (terminal
 // server, nd) and reveal_path / open_in_editor (ccd_host, _u). The rest are OpenClaude Desktop's own tools that no
 // official server has — preview-site / chrome-site / preview-server (preview), monitor, schedule (CronCreate, not the
-// scheduled-tasks server's create_scheduled_task: no taskId or description), notebook-edit, web-fetch, workflow — and
-// keep the official 2.2553.1-era wording: 'preview this page', 'run a dynamic workflow {name}' with the token warning
+// scheduled-tasks server's create_scheduled_task: no taskId or description), workflow — and
+// keep the official 2.2553.1-era wording (notebook-edit and web-fetch take Wh's NotebookEdit / WebFetch headings below): 'preview this page', 'run a dynamic workflow {name}' with the token warning
 // and its Tasks pane pointer. The session tools (agent-tools/sessions.mjs, session.mjs) ask nothing, so the
 // ccd_session_mgmt titles have no local card.
 function agentToolCard(params) {
@@ -723,18 +710,42 @@ function agentToolCard(params) {
     add("note", tool.detail);
     return card({ action: t("run a command in your terminal"), meta: null }, { detail: exactCommandDetail(params.command), reason: t("It runs in your own shell, outside the sandbox, and keeps running after this turn. You can watch it and stop it in the Terminal pane.") });
   }
-  // An approved site or dev server stays approved for the rest of the session (preview-service.cjs approvedHosts /
-  // approvedServers), so the one allow button says so.
+  // An approved Chrome site or dev server stays approved for the rest of the session (chrome-bridge-service.cjs,
+  // preview-service.cjs approvedServers), so the one allow button says so.
   const forSession = [{ key: "accept", label: t("Allow for this session"), primary: true }];
   if (tool.kind === "preview-site") {
-    const host = nonempty(tool.host) ?? nonempty(tool.url);
-    return card({ action: t("use {host} in the preview", { host: host ?? "" }).trim(), meta: null }, { detail: nonempty(tool.url) ? { kind: "url", text: tool.url, value: tool.url } : null,
-      reason: t("{assistant} will be able to read this site and click and type on it in this session. Only allow sites you trust.", { assistant: who }), allows: forSession });
+    // W14-code r4 r4pa-c11 (E95): cc32965c2 Wh `case "browser:open_site": return { action: "act on" (GdSkjKAsw8), meta:
+    // m("origin") ?? m("domain"), overrideDescription: "Allow once applies to this page only. Always allow saves on this
+    // device (revoke in Settings). Claude won’t purchase, create accounts, or bypass captchas without asking."
+    // (G2uuEyevXT), suppressScopeTooltip: !0 }` — no detail block, and no scope tooltip (the host draws none); jPKPzV-P y2n asks with `{ origin: t, domain: a }`.
+    // Sv's decisions: Allow once (primary) and the persistent "Always allow" (lr3QX/nctD, ⇧⌘↵). The grant is the panes
+    // lane's (preview-service.cjs siteGrant / allowedOrigins; main.cjs maps "acceptForSession" to always). The
+    // financial (IVwjjSRxjO) and private-network (Vbzwu2zoa1) wordings need m("reason") / p.privateNetwork, which the
+    // local preview does not classify.
+    let origin = null;
+    try { origin = nonempty(tool.url) ? new URL(tool.url).origin : null; } catch {}
+    if (origin === "null") origin = null;
+    return card({ action: t("act on"), meta: origin ?? nonempty(tool.host) ?? null,
+      overrideDescription: t("Allow once applies to this page only. Always allow saves on this device (revoke in Settings). {assistant} won’t purchase, create accounts, or bypass captchas without asking.", { assistant: who }) }, {
+      allows: [{ key: "acceptForSession", label: t("Always allow"), primary: false, persistent: true }, { key: "accept", label: t("Allow once"), primary: true }] });
   }
   if (tool.kind === "chrome-site") {
     const host = nonempty(tool.host) ?? nonempty(tool.url);
-    return card({ action: t("use {host} in Chrome", { host: host ?? "" }).trim(), meta: null }, { detail: nonempty(tool.url) ? { kind: "url", text: tool.url, value: tool.url } : null,
+    // V3-W14-approvals: cc32965c2 ep / Wh: a site grant with no single action is "Allow Claude to <b>access</b>
+    // <meta>{site}</meta>?" (ep.access kyd4+h3ZoV, ikkcVRCGjr).
+    return card({ action: t("access"), meta: host ?? null }, { detail: nonempty(tool.url) ? { kind: "url", text: tool.url, value: tool.url } : null,
       reason: t("{assistant} will be able to read this site and click and type on it in Chrome in this session. Only allow sites you trust.", { assistant: who }), allows: forSession });
+  }
+  // chrome_javascript_tool write: true (agent-tools/browser.mjs): the page's site, its address and the code, once or for
+  // the rest of the session on that site (as WebFetch's card offers). The heading is the site grant's form above:
+  // cc32965c2 ep.script "Allow Claude to <b>execute JavaScript on</b> <meta>{site}</meta>?" (xrHcSLTDKP, 9GzsLomfX+).
+  if (tool.kind === "chrome-script") {
+    const host = nonempty(tool.host) ?? nonempty(tool.url);
+    add("url", nonempty(tool.url));
+    const code = nonempty(tool.code);
+    return card({ action: t("execute JavaScript on"), meta: host ?? null }, { detail: code ? { kind: "arguments", text: code, value: code } : null,
+      reason: t("The script runs in the page as you, like code typed into Chrome’s DevTools console: it can change the page, use the site’s cookies and send requests as you. Allow it for this session to let {assistant} run scripts on this site without asking.", { assistant: who }),
+      allows: [{ key: "acceptForSession", label: t("Allow for this session"), primary: false }, { key: "accept", label: t("Allow once"), primary: true }] });
   }
   if (tool.kind === "preview-server") {
     // c96d752d0 Kk (2.42304.0) preview_start branch: `overrideDescription: wA(e, p("cwd"), port, f.portMayReassign === !0)`
@@ -783,40 +794,43 @@ function agentToolCard(params) {
     if (Number.isInteger(tool.line)) add("line", t("At line {line}", { line: tool.line }));
     return card({ action, meta: null }, { detail: file ? { kind: "arguments", text: file, value: file } : null });
   }
-  // NotebookEdit (agent-tools/notebook.mjs): which notebook, which cell, and the new source.
+  // NotebookEdit (agent-tools/notebook.mjs). V3-W14-approvals: cc32965c2 Wh `case "NotebookEdit": { action: "edit"
+  // (+vj0U3cN/c), ...x_(m("notebook_path")) }`, x_ = `{ meta: be(path), detail: J(path, { singleLine: !0 }), clampTitle: !0 }`:
+  // the notebook's name as meta and its path as the one-line detail, whatever the cell or edit mode.
   if (tool.kind === "notebook-edit") {
-    const file = nonempty(tool.path);
-    const name = file ? file.split("/").pop() : "";
-    add("cwd", tool.cellId ? t("Cell {cell}", { cell: tool.cellId }) : null);
-    const source = tool.mode === "delete" ? null : nonempty(tool.source);
-    return card({ action: tool.mode === "delete" ? t("delete a cell in {file}", { file: name }) : tool.mode === "insert" ? t("add a cell to {file}", { file: name }) : t("edit {file}", { file: name }), meta: null },
-      { detail: source ? { kind: "arguments", text: source, value: source } : null, reason: file && file !== name ? file : null });
+    const file = pathText(tool.path);
+    return card({ action: t("edit"), meta: file ? file.split("/").pop() || null : null }, { detail: file ? { kind: "arguments", text: file, value: file } : null, clampTitle: !!file });
   }
-  // WebFetch (agent-tools/web.mjs): a site's page, once or for the rest of the session.
+  // WebFetch (agent-tools/web.mjs): a site's page, once or for the rest of the session. V3-W14-approvals: cc32965c2 Wh T
+  // (`case "WebFetch"`): `action: "fetch"` (afBTrbaItm), `meta: J(url, { singleLine: !0 })`, `detail: prompt` when the
+  // call has one.
   if (tool.kind === "web-fetch") {
-    const host = nonempty(tool.host) ?? nonempty(tool.url) ?? "";
-    return card({ action: t("fetch {host}", { host }), meta: null }, { detail: nonempty(tool.url) ? { kind: "url", text: tool.url, value: tool.url } : null,
+    const url = singleLine(tool.url) ?? nonempty(tool.host);
+    const prompt = nonempty(tool.prompt);
+    return card({ action: t("fetch"), meta: url ?? null }, { detail: prompt ? { kind: "arguments", text: prompt, value: prompt } : null,
       reason: t("{assistant} will read this page’s content. Allow it for this session to let {assistant} read other pages from this site without asking.", { assistant: who }),
       allows: [{ key: "acceptForSession", label: t("Allow for this session"), primary: false }, { key: "accept", label: t("Allow once"), primary: true }] });
   }
   if (tool.kind === "workflow") {
     const phases = Array.isArray(tool.phases) ? tool.phases.filter(phase => nonempty(phase?.title)) : [];
-    const lines = [nonempty(tool.description)];
-    if (phases.length) lines.push("", t("This dynamic workflow will spin up multiple subagents across the following phases:"), ...phases.map((phase, index) => `${index + 1}. ${phase.title}${nonempty(phase.detail) ? ` — ${phase.detail}` : ""}`));
+    // V3-W14-approvals: cc32965c2 Wh "Workflow": `action: "run a workflow"` (+dTxnpark1), the name as meta, the
+    // description as overrideDescription and `showTokenWarning: !0` (Z_ I: the eFJU0SPXS3 box), on the standard Deny /
+    // Allow once decisions. The phases and arguments are the detail.
+    const lines = [];
+    if (phases.length) lines.push(...phases.map((phase, index) => `${index + 1}. ${phase.title}${nonempty(phase.detail) ? ` — ${phase.detail}` : ""}`));
     if (nonempty(tool.args)) lines.push("", t("Arguments: {args}", { args: tool.args }));
     if (nonempty(tool.note)) lines.push("", tool.note);
     const text = lines.filter((line, index, all) => line !== null && (line || (index > 0 && all[index - 1]))).join("\n").trim();
     const name = nonempty(tool.name);
-    // Claude's dialog: the raw script shown outright when meta has no phases (all there is to read about the run),
-    // else behind "View raw script" (source-session.jsx WorkflowApprovalDetail).
+    // The script sits in cc32965c2 a_'s fold ("script · N lines", source-session.jsx WorkflowApprovalDetail, r7pa-02):
+    // open when meta has no phases (all there is to read about the run), else folded.
     const script = nonempty(tool.script);
     const detail = script ? { kind: "workflow", text, value: text, script, scriptOpen: !phases.length, scriptTruncated: tool.scriptTruncated === true }
       : text ? { kind: "arguments", text, value: text } : null;
-    return card({ action: t("run a dynamic workflow"), meta: name }, {
-      detail,
-      reason: t("Dynamic workflows can use a lot of tokens quickly by running many subagents in parallel — which counts against your usage limit. Stop a running workflow at any time in the Tasks pane, or turn off Dynamic workflows in Settings."),
-      deny: { key: "decline", label: t("No"), primary: false },
-      allows: [...(tool.always === true && name ? [{ key: "acceptForSession", label: t("Yes, and don’t ask again for {name}", { name }), primary: false }] : []), { key: "accept", label: t("Yes, run it"), primary: true }],
+    const description = nonempty(tool.description);
+    return card({ action: t("run a workflow"), meta: name, ...(description && { overrideDescription: description }) }, {
+      detail, tokenWarning: true,
+      allows: [...(tool.always === true && name ? [{ key: "acceptForSession", label: t("Allow for this session"), primary: false }] : []), { key: "accept", label: t("Allow once"), primary: true }],
     });
   }
   add("note", tool.detail);
@@ -827,7 +841,36 @@ function agentToolCard(params) {
 // code points with ", truncated".
 function announceText(text) {
   const line = text.replace(/\s+/g, " ").trim(), chars = [...line];
-  return chars.length <= 150 ? line : t("{text}, truncated", { text: chars.slice(0, 150).join("") });
+  return chars.length <= 150 ? line : t("{head}, truncated", { head: chars.slice(0, 150).join("") });
+}
+// The card's action phrase without "Allow … to" and "?": its own heading, the heading's action (with a tail it runs
+// into), else the plain title's phrase.
+function cardAction(model) {
+  const heading = model.heading;
+  return nonempty(model.ownHeading) ? model.ownHeading : heading ? (heading.tail && !heading.meta ? `${heading.action} ${heading.tail}` : heading.action)
+    : model.title.replace(new RegExp(`^Allow ${escapeRegExp(assistantName())} to `), "").replace(/^Allow DeepSeek to /, "").replace(/[?？]$/, "");
+}
+/** cc32965c2 Sv Ii: the card's accessible name "Permission request: {action}" (Uyfuf4HKh8) takes hg's action — the
+ * heading's own (whole) or the action phrase capped at 150 code points with ", truncated" (pg). */
+// V3-W14-approvals (appr-05): cc32965c2 Sv `gr` / `Cr` — Allow once carries the "More allow options" menu (neJ+WAvag5)
+// with "Allow and switch to Auto" (OE8niFqRMN, "Auto reviews the rest of this session." /AOfoeDoA3) only on the tool card's
+// own Allow once (`q.onceLabel === void 0`, `q.allowWithheld === void 0`), outside the
+// config cards (`!Ag(r.name)`: an approvalChangeCard's own heading) and the cards that are not Sv's (the computer-use
+// access / take-over / teach cards, a url / form / confirm elicitation). The session half (`ye`, cc43287c9 _4 over
+// c227f4d5e's liveAutoSwitchOffered) is the caller's. `!ln` is the connector thread grant (c5da7eb42 `H = ue && …`,
+// connectorThreadGrant), which no Code card has: a Codex "Allow for this session" is the session-scoped lasting answer
+// (S_ "session"), as Always allow is, and does not withdraw the offer.
+export function autoSwitchApplies(model) {
+  if (!model?.supported || model.ownHeading || model.access || model.takeover || model.teach) return false;
+  if (model.elicitation && model.elicitation.mode !== "approval") return false;
+  const allows = Array.isArray(model.allows) ? model.allows : [];
+  const primary = allows.find(allow => allow.primary);
+  return primary?.key === "accept" && primary.label === t("Allow once");
+}
+export function approvalAriaAction(model) {
+  if (!model) return "";
+  const action = cardAction(model).replace(/\s+/g, " ").trim();
+  return nonempty(model.ownHeading) ? action : announceText(action);
 }
 /** pM (approval-current.js:14799-14905): the live-region text for a new request,
  * "Permission requested: {action}. {detail}, {meta}" from the card copy (oM action,
@@ -837,8 +880,7 @@ function announceText(text) {
 export function approvalAnnouncement(model) {
   if (!model) return "";
   const heading = model.heading;
-  const action = announceText(nonempty(model.ownHeading) ? model.ownHeading : heading ? heading.action
-    : model.title.replace(new RegExp(`^Allow ${escapeRegExp(assistantName())} to `), "").replace(/^Allow DeepSeek to /, "").replace(/[?？]$/, ""));
+  const action = announceText(nonempty(model.ownHeading) ? model.ownHeading : heading ? heading.action : cardAction(model));
   const meta = heading?.meta ? announceText(heading.meta) : null;
   const detail = model.detail?.text && model.detail.text !== heading?.meta ? announceText(model.detail.text) : null;
   let text = detail && meta ? t("Permission requested: {action}. {detail}, {meta}", { action, detail, meta })

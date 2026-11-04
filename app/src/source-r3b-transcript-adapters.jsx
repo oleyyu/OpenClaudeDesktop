@@ -117,8 +117,9 @@ export { CdsBanner } from './generated/view-tabs/index.js';
 export const TurnEditsHost = createContext(null);
 
 // shared-11 gc (exported us; 2.42304.0 Qo): the claudeai_cc_epitaxy_session_presets_main gate. Decision D10: this host
-// takes its "on" branch, so the card shows the 'See all' form (B0e `x = hd()`).
-export const HOST_GATES = Object.freeze({ claudeai_cc_epitaxy_session_presets_main: true });
+// takes its "on" branch, so the card shows the 'See all' form (B0e `x = hd()`). W14-code r2 gates-r2-01: read from the
+// one host table (host-growthbook.mjs __gb__3264789062, Uon sessionsRunOnThisComputer), as every other reader of it.
+export const HOST_GATES = Object.freeze({ claudeai_cc_epitaxy_session_presets_main: hostGrowthBookFlag("claudeai_cc_epitaxy_session_presets_main") });
 export function useSessionPresetsMain() {
   return HOST_GATES.claudeai_cc_epitaxy_session_presets_main === true;
 }

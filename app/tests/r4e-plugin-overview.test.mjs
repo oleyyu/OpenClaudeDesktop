@@ -5,7 +5,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'node:path';
-import { pluginDetailTabList, pluginDetailTabs, pluginDetailView, pluginOverview, pluginToolPermissionServers } from '../src/plugin-detail-model.mjs';
+import { pluginDetailTabList, pluginDetailTabs, pluginDetailView, pluginOverview } from '../src/plugin-detail-model.mjs';
 import { withMemoCache } from './support/react-memo-cache.mjs';
 
 // R4e-plugin (settings-14): the 3.6556.2 plugin page tab list (c24c8737b ol; 2.42304.0 pc Kt) and the Overview
@@ -66,11 +66,6 @@ test('settings-14 Kt / xs: Tool permissions is pushed only for a non-empty resol
   assert.deepEqual(pluginDetailTabList([], { permissionServers: [] }).map(tab => tab.id), ['overview']);
   const content = pluginDetailTabs({ skills: [{ name: 's' }] }, 'p');
   assert.deepEqual(pluginDetailTabList(content, { permissionServers: servers }).map(tab => tab.id), ['overview', 'permissions', 'skills']);
-  // xs: host servers count only with unifiedPluginsUi (GrowthBook __gb__2406162393, closed on the host).
-  assert.deepEqual(pluginToolPermissionServers({ hostToolPermissionsServers: servers }), []);
-  assert.deepEqual(pluginToolPermissionServers({ unifiedPluginsUi: true, hostToolPermissionsServers: [] }), []);
-  assert.equal(pluginToolPermissionServers({ unifiedPluginsUi: true, hostToolPermissionsServers: servers }), servers);
-  assert.deepEqual(pluginToolPermissionServers(), []);
 });
 
 test('settings-14 ni / ae: the Overview data is plugin/read’s description and one Connectors & tools row per server, in its order', () => {

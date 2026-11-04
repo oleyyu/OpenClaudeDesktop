@@ -29,7 +29,7 @@ const report={at:new Date().toISOString(),directory,build:{version:build.version
 const step=name=>{phase=name;console.log('SIDEBAR-CHROME '+name);};
 const poll=async(fn,label,ms=10000)=>{const end=Date.now()+ms;while(Date.now()<end){if(await fn())return;await new Promise(r=>setTimeout(r,25));}throw Error('Timed out: '+label);};
 const env={...process.env,CODE_DESKTOP_DATA:profile,CODEX_HOME:path.join(profile,'codex-home'),CODEX_BINARY:path.join(root,'tests/fixtures/codex-server.cjs')};delete env.ELECTRON_RUN_AS_NODE;delete env.CODE_DESKTOP_DEV_URL;
-const composer=()=>page.getByRole('textbox',{name:'Message DeepSeek',exact:true});
+const composer=()=>page.getByRole('textbox',{ name: /^(?:Prompt|Message DeepSeek)$/ });
 const hideButton=()=>page.getByRole('button',{name:'Hide sidebar',exact:true}),showButton=()=>page.getByRole('button',{name:'Show sidebar',exact:true});
 const row=id=>page.locator(`[data-source-session-id="${id}"] [data-row-main-button]`);
 async function launch(){app=await electron.launch({args:[root],executablePath:path.join(root,'node_modules/electron/dist/Electron.app/Contents/MacOS/Electron'),env,timeout:20000});page=await app.firstWindow();page.setDefaultTimeout(10000);page.on('pageerror',e=>report.rendererErrors.push({phase,message:e.message}));
@@ -78,14 +78,14 @@ const selectedRows=()=>sidebar().evaluate(root=>[...root.querySelectorAll('[data
 const onlySelected=async(expected,label)=>{let last;try{await poll(async()=>JSON.stringify(last=await selectedRows())===JSON.stringify([expected]),label);}catch(error){error.message+=' '+JSON.stringify(last);throw error;}};
 const filterButton=()=>page.getByRole('button',{name:/^Filter(?: \(active\))?$/}),filterMenu=()=>page.getByRole('menu',{name:'Filter sessions',exact:true});
 const savedSidebar=async()=>(await read('preferences.json')).sidebarPreferences||{};
-const sidebarNav=name=>page.locator('.sidebar-toolbar > .source-nav-buttons').getByRole('button',{name,exact:true}),titleNav=name=>page.locator('.st-toolbar .df-collapsed-chrome > .df-collapsed-nav > .source-nav-buttons').getByRole('button',{name,exact:true});
+const sidebarNav=name=>page.locator('.sidebar-toolbar').getByRole('button',{name,exact:true}),titleNav=name=>page.locator('.df-collapsed-chrome > .df-collapsed-nav').getByRole('button',{name,exact:true});
 const goMenu=()=>app.evaluate(({Menu})=>{const menu=Menu.getApplicationMenu(),labels=menu.items.map(item=>item.label||String(item.role)),go=menu.items.find(item=>item.label==='Go');
  return {labels,items:go.submenu.items.map(item=>item.type==='separator'?'---':({label:item.label,accelerator:item.accelerator,id:item.id||null,visible:item.visible,registerAccelerator:item.registerAccelerator,enabled:item.enabled}))};});
 const goState=()=>app.evaluate(({Menu})=>{const menu=Menu.getApplicationMenu();return [menu.getMenuItemById('go-back').enabled,menu.getMenuItemById('go-forward').enabled];});
 const expectGo=async(expected,label)=>{let last;try{await poll(async()=>JSON.stringify(last=await goState())===JSON.stringify(expected),label);}catch(error){error.message+=' '+JSON.stringify(last);throw error;}};
 const clickGo=index=>app.evaluate(({Menu},index)=>{Menu.getApplicationMenu().items.find(item=>item.label==='Go').submenu.items[index].click();},index);
 const buttonState=button=>button.evaluate(node=>({ariaDisabled:node.getAttribute('aria-disabled'),disabled:node.hasAttribute('disabled'),title:node.getAttribute('title'),keys:node.getAttribute('aria-keyshortcuts'),pointerEvents:getComputedStyle(node).pointerEvents,childOpacity:getComputedStyle(node.firstElementChild).opacity}));
-const titleText=()=>page.locator('.st-toolbar .st-title').textContent();
+const titleText=()=>page.locator('.st-toolbar :is(.st-title,button[data-pane-title])').textContent();
 const expectOpen=async(id,title,label)=>{await poll(async()=>(await row(id).getAttribute('aria-current'))==='page',label+' row');await poll(async()=>(await titleText().catch(()=>null))===title,label+' title');};
 try{
  await integrity();await launch();
@@ -223,7 +223,7 @@ try{
  // R4i-gui GU1 (R4f-rail SR-7/SR-8): rail mode has no titlebar folder pill (source-titlebar.jsx:471/:475); the folder chip is the rail
  // Environment card's (rail-view.mjs gD → repo-name-chip.mjs pLe: CdsTooltip {content 'Working folder', detail: the path, open: !menuOpen && undefined}).
  const railTipSelector='[data-cds="Tooltip"] [role="tooltip"]',railTips=()=>page.evaluate(sel=>[...document.querySelectorAll(sel)].map(node=>node.textContent),railTipSelector);
- const titleButton=page.locator('.st-toolbar .st-title'),folderPill=page.getByRole('complementary',{name:'Session details',exact:true}).locator('section[data-rail-section]').filter({has:page.locator('h3',{hasText:/^Environment/})}).getByRole('button',{name:path.basename(workspace),exact:true});
+ const titleButton=page.locator('.st-toolbar :is(.st-title,button[data-pane-title])'),folderPill=page.getByRole('complementary',{name:'Session details',exact:true}).locator('section[data-rail-section]').filter({has:page.locator('h3',{hasText:/^Environment/})}).getByRole('button',{name:path.basename(workspace),exact:true});
  assert.equal(await page.locator('.st-toolbar .st-folder').count(),0,'rail mode: no titlebar folder pill');
  await titleButton.hover();await page.locator(tipSelector).filter({hasText:'Rename'}).waitFor();const renameTips=await liveTips();const titleBox=await titleButton.boundingBox();
  report.metrics.renameTooltip={tips:renameTips,title:titleBox};assert.equal(renameTips.length,1);assert.equal(renameTips[0].text,'Rename');assert.equal(renameTips[0].side,'bottom','Nu default top flips below at the window top');assert.ok(renameTips[0].top>=titleBox.y+titleBox.height);await shot('titlebar-rename-tooltip');
@@ -249,9 +249,10 @@ try{
  await page.keyboard.press('Escape');await navSettings.waitFor({state:'detached'});await expectOpen(ids[1],'Chrome session B','still B after Settings');await expectGo([true,false],'unchanged after Settings');
  report.checks.push('While Settings is open neither Meta+[ nor Go > Back navigates');
  step('nav-collapsed');await composer().focus();await page.keyboard.press('Meta+B');await expectState(true,'collapse for nav');
- const order=await page.locator('.st-toolbar .df-collapsed-chrome').evaluate(node=>[...node.querySelectorAll('button')].map(button=>({label:button.getAttribute('aria-label'),nav:!!button.closest('.df-collapsed-nav')})));report.metrics.collapsedOrder=order;
+ const order=await page.locator('.df-collapsed-chrome').evaluate(node=>[...node.querySelectorAll('button')].map(button=>({label:button.getAttribute('aria-label'),nav:!!button.closest('.df-collapsed-nav')})));report.metrics.collapsedOrder=order;
  assert.deepEqual(order,[{label:'Show sidebar',nav:false},{label:'Back',nav:true},{label:'Forward',nav:true}]);
- assert.equal(await page.locator('.st-toolbar .df-collapsed-chrome > .code-icon-button + .df-collapsed-nav').count(),1);
+ // W14-code r3 gen-final-3: the trigger is the CDS ghost Button df-compact-trigger (shared-21 gI), no .code-icon-button since fr2-16.
+ assert.equal(await page.locator('.df-collapsed-chrome > .df-compact-trigger + .df-collapsed-nav').count(),1);
  const boxes={show:await showButton().boundingBox(),back:await titleNav('Back').boundingBox(),forward:await titleNav('Forward').boundingBox()};report.metrics.collapsedBoxes=boxes;
  assert.ok(boxes.back.x>=boxes.show.x+boxes.show.width-0.5&&boxes.forward.x>=boxes.back.x+boxes.back.width-0.5,'Show sidebar, Back, Forward left to right');assert.ok(Math.abs(boxes.back.y-boxes.show.y)<=2);
  assert.equal(await page.locator('.df-collapsed-nav').evaluate(node=>getComputedStyle(node).webkitAppRegion??getComputedStyle(node).getPropertyValue('-webkit-app-region')),'no-drag');
@@ -516,22 +517,22 @@ try{
  for(const [i,id] of older.entries())db.threads[id]=thread(id,'Older session '+String(i).padStart(2,'0'),31*86400+i*60);
  await fs.writeFile(path.join(profile,'fixture-threads.json'),JSON.stringify(db));const seeded=await read('preferences.json');
  await fs.writeFile(path.join(profile,'preferences.json'),JSON.stringify({...seeded,threadIds:[...ids,...older],sidebarPreferences:{...(seeded.sidebarPreferences||{}),groupBy:'date'}}));
- await launch();const olderGroup=page.locator('[data-group-key="older"]'),olderRows=olderGroup.locator('.source-session-row'),showMore=olderGroup.locator('.source-show-more');
+ await launch();const olderGroup=page.locator('[data-group-key="older"]'),olderRows=olderGroup.locator('.source-session-row'),showMore=olderGroup.locator('[data-drag-key^="label:showmore:"] > button');
  const rowOrder=()=>olderRows.evaluateAll(nodes=>nodes.map(node=>node.dataset.sourceSessionId));
  const expectRows=async(count,label)=>{await poll(async()=>await olderRows.count()===count,label);assert.deepEqual(await rowOrder(),older.slice(0,count));};
  await poll(async()=>await olderRows.count()>0,'older bucket');await expectRows(20,'20 older rows');
  assert.equal(await olderGroup.locator('[data-group-toggle] span').first().textContent(),'Older');
- assert.equal(await showMore.count(),1);assert.equal((await showMore.textContent()).trim(),'Show 20 more');assert.equal(await showMore.getAttribute('aria-label'),'Show 20 more in Older');
+ assert.equal(await showMore.count(),1);assert.equal((await showMore.textContent()).trim(),'Show more');assert.equal(await showMore.getAttribute('aria-label'),'Show 20 more in Older');
  const geometry=await showMore.evaluate(node=>{const style=getComputedStyle(node),scope=getComputedStyle(node.closest('.source-sidebar')),probe=document.createElement('span');probe.style.color='var(--cds-text-muted)';node.parentElement.append(probe);const muted=getComputedStyle(probe).color;probe.remove();
-  const range=document.createRange();range.selectNodeContents([...node.childNodes].find(child=>child.nodeType===3&&child.textContent.trim()));const text=range.getBoundingClientRect(),title=document.querySelector('[data-group-key="older"] .source-session-title').getBoundingClientRect(),slot=node.querySelector('.source-leading-slot').getBoundingClientRect();
+  const range=document.createRange();range.selectNodeContents(node.querySelector(':scope > span')??[...node.childNodes].find(child=>child.nodeType===3&&child.textContent.trim()));const text=range.getBoundingClientRect(),title=document.querySelector('[data-group-key="older"] .source-session-title').getBoundingClientRect();
   return {height:style.height,rowH:scope.getPropertyValue('--df-row-h').trim(),fontSize:style.fontSize,rowFont:scope.getPropertyValue('--df-row-font').trim(),radius:style.borderTopLeftRadius,pill:scope.getPropertyValue('--df-radius-pill').trim(),
-   paddingLeft:style.paddingLeft,rowPx:scope.getPropertyValue('--df-row-px').trim(),gap:style.columnGap,rowGap:scope.getPropertyValue('--df-row-gap').trim(),color:style.color,muted,slotWidth:slot.width,leadingSlot:scope.getPropertyValue('--df-leading-slot').trim(),textLeft:Math.round(text.left),titleLeft:Math.round(title.left),overflowAnchor:style.overflowAnchor,last:[...node.parentElement.children].filter(el=>!el.hidden&&el.getAttribute('role')!=='status').at(-1)===node};});
+   paddingLeft:style.paddingLeft,rowPx:scope.getPropertyValue('--df-row-px').trim(),gap:style.columnGap,rowGap:scope.getPropertyValue('--df-row-gap').trim(),color:style.color,muted,textLeft:Math.round(text.left),titleLeft:Math.round(title.left),overflowAnchor:getComputedStyle(node.parentElement).overflowAnchor,last:[...node.parentElement.children].filter(el=>!el.hidden&&el.getAttribute('role')!=='status').at(-1)===node};});
  // shared-21 H0 (21342-21356): the button is followed by its hidden description span and the S0 role=status announcer.
  report.metrics.showMore=geometry;assert.equal(geometry.height,geometry.rowH);assert.equal(geometry.fontSize,geometry.rowFont);assert.equal(geometry.radius,geometry.pill);assert.equal(geometry.paddingLeft,geometry.rowPx);assert.equal(geometry.gap,geometry.rowGap);
- assert.equal(geometry.color,geometry.muted);assert.equal(geometry.slotWidth+'px',geometry.leadingSlot);assert.equal(geometry.textLeft,geometry.titleLeft);assert.equal(geometry.overflowAnchor,'none');assert.equal(geometry.last,true);
+ assert.equal(geometry.color,geometry.muted);assert.equal(geometry.textLeft,geometry.titleLeft);assert.equal(geometry.overflowAnchor,'none');assert.equal(geometry.last,true);
  await shot('show-more-truncated-dark');
- report.checks.push('45 Older threads (group by date, code mode) render 20 rows then "Show 20 more" (aria-label "Show 20 more in Older"): row height/font/radius/padding/gap from --df-* tokens, text-muted, a leading-slot spacer aligning the label with row titles');
- step('truncate-reveal');await showMore.click();await expectRows(40,'40 older rows');assert.equal((await showMore.textContent()).trim(),'Show 5 more');assert.equal(await showMore.getAttribute('aria-label'),'Show 5 more in Older');
+ report.checks.push('45 Older threads (group by date, code mode) render 20 rows then "Show more" (aria-label "Show 20 more in Older"; shared-21 gX oX inside the presets list): row height/font/radius/padding/gap from --df-* tokens, text-muted, the label (lm) aligned with row titles, [overflow-anchor:none] on the mX wrapper');
+ step('truncate-reveal');await showMore.click();await expectRows(40,'40 older rows');assert.equal((await showMore.textContent()).trim(),'Show more');assert.equal(await showMore.getAttribute('aria-label'),'Show 5 more in Older');
  // shared-21 H0 + xg showFewerRows 'collapse' (28248-28303): revealed to the end, the same button reads Show less.
  const showsLess=async()=>{assert.equal(await showMore.count(),1);assert.equal((await showMore.textContent()).trim(),'Show less');assert.equal(await showMore.getAttribute('aria-label'),'Show less in Older');};
  await showMore.click();await expectRows(45,'45 older rows');await showsLess();

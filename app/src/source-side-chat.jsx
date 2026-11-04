@@ -20,13 +20,8 @@ import {
 } from './generated/code-editor/side-chat-chrome.mjs';
 // shared-156 Ln = "data-escape-owner" (cccc2cf0a imports it as Oi; proposal-group slices it as the official export Ln).
 import { Ln as escapeOwnerAttribute } from './generated/proposal-group/shared-156-BLTosN8U.js';
-import { SourceSettingsButton } from './source-settings-button.jsx';
-import { SourceTooltip } from './source-tooltip.jsx';
-import { SourceMentionDropdown } from './source-mention-dropdown.jsx';
-import { useSideChatMentions } from './use-side-chat-mentions.jsx';
-import { SourceComposerEditor } from './source-composer-editor.jsx';
-import './source-composer.css';
-import { SourceComposerAttachments } from './source-composer-attachments.jsx';
+import { SourceComposer } from './source-composer.jsx';
+import { ComposerAttachmentTiles } from './source-composer-tiles.jsx';
 import { makeSnippet } from './composer-attachments-model.mjs';
 import { useShrinkWrap } from './use-shrink-wrap.js';
 import { messageAttachmentsClass, messageContextChipItem } from './generated/code-editor/side-chat-attachments.mjs';
@@ -52,42 +47,27 @@ const SIDE_CHAT_BOUNDS_STYLE = { zIndex: 440 };
 // UF passes N_ `style: {flex: 1, minHeight: 0}` in both branches.
 const PANE_STYLE = { flex: 1, minHeight: 0 };
 const ESCAPE_OWNER = { [escapeOwnerAttribute]: '' };
-// Current kT/lo disables input while answering; Escape and the stop control interrupt.
-function SideChatComposer({ threadId, busy, interrupting, value, onChange, placeholder, onSubmit, onStop, inputRef, stagedContext, onRemoveContext, open, searchFiles, mentions, mentionActions, portalRef }) {
-  const suggest = useSideChatMentions({ inputRef, searchFiles, scope: threadId, enabled: open && !busy, onPick: option => sideChatStore.rememberMention(threadId, option) });
+// W14-code r3 css3-side-chat-composer: cccc2cf0a UF `tt = u(fp, {ref: L, onChange: J, draftPersisted: Qe,
+// <follows-transcript text size>: !0, onSubmit: xe, attachmentStrip: Je, disabled: $e, busy: Ce, interrupting: A, onStop: Te,
+// placeholder: Ve, isPanelActive: !1, …})` — fp is c227f4d5e tc = jF, the main Code composer itself (cc43287c9 nk), so the
+// side chat's card is SourceComposer's Code card (the CDS ChatComposer shell, its editor box and the composer-send-cell
+// Send / Stop), embedded with no chin, no slash menu (no commandContext / onCommand) and no history. $e: the editor is
+// disabled while an answer streams; isPanelActive !1: Escape belongs to the panel (side-chat-keyboard), not the card.
+// The follows-transcript text size flag only applies under the fizzy-lake "type" part (shared-7 kR `e && di("type")`), which is off,
+// so the card keeps the composer's own size. Je is the staged selection's tiles (Rp in the shell's Attachments part).
+function SideChatComposer({ threadId, busy, interrupting, value, onChange, placeholder, onSubmit, onStop, inputRef, stagedContext, onRemoveContext, searchFiles, mentions, mentionActions, portalRef }) {
   const scope = useId();
   const submit = () => { const text = value.trim(); if (!text || busy) return; onChange(''); onSubmit(text); };
-  // UF nt: the composer sits in `div.shrink-0 px-md pb-md` with data-approval-hotkey-scope (R = useId); ssc-composer is a
-  // host hook for the mention dropdown state.
-  return <div className="ssc-composer shrink-0 px-md pb-md" data-approval-hotkey-scope={scope} data-mention-open={suggest.open || undefined}>
-    <div className="ssc-field sc-composer">
-      <div className="sc-surface">
-        <SourceComposerAttachments previewLayerBase={440} entries={stagedContext === null ? [] : [makeSnippet(maskSecrets(stagedContext), { id: "side-chat-staged-selection" })].filter(Boolean)} disabled={busy}
-          onRemove={() => { onRemoveContext(); inputRef.current?.focus(); }}/>
-        <div className="sc-input-row">
-        <SourceComposerEditor scope={`side-${threadId}`} inputRef={node => { inputRef.current = node; }}
-          className="ssc-input sc-input" value={value} mentions={mentions} mentionActions={mentionActions}
-          onChange={event => { onChange(event.target.value); suggest.update(true); }} disabled={busy}
-          aria-autocomplete="list" aria-expanded={suggest.open}
-          onClick={() => suggest.update()} onKeyUp={event => { if (['ArrowLeft', 'ArrowRight'].includes(event.key)) suggest.update(); }}
-          placeholder={placeholder} aria-label={placeholder} aria-busy={busy || undefined}
-          onKeyDown={event => {
-            if (suggest.keyDown(event)) return;
-            if (event.key !== 'Enter') return;
-            if (event.isComposing || event.keyCode === 229) { event.preventDefault(); return; }
-            if (event.shiftKey || event.altKey) return;
-            event.preventDefault(); if (!event.repeat) submit();
-          }}/>
-        {busy && !interrupting ? <SourceTooltip content={t('Stop')} shortcut="escape" hoverable={false}>
-          <SourceSettingsButton variant="ghost" size="sm" className="ssc-submit" icon="Stop" iconSize={16} iconOnly aria-label={t('Stop response')}
-            aria-keyshortcuts="Escape" onClick={onStop}/>
-          </SourceTooltip>
-          : <SourceSettingsButton variant="ghost" size="sm" className="ssc-submit" icon="ArrowReturn" iconSize={16} iconOnly aria-label={t('Send')}
-            aria-keyshortcuts="Enter" disabled={busy || !value.trim()} onClick={submit}/> }
-      </div></div>
-    </div>
-    {suggest.open && open && !busy && <SourceMentionDropdown options={suggest.menu.options} highlighted={suggest.menu.highlighted} caret={suggest.menu.caret}
-      onSelect={suggest.select} onClose={suggest.close} container={portalRef.current}/>}
+  const snippet = stagedContext === null ? null : makeSnippet(maskSecrets(stagedContext), { id: "side-chat-staged-selection" });
+  const strip = snippet ? <ComposerAttachmentTiles previewLayerBase={440} entries={[snippet]} disabled={busy}
+    onRemove={() => { onRemoveContext(); inputRef.current?.focus(); }}/> : null;
+  // UF nt: the composer sits in `div.shrink-0 px-md pb-md` with data-approval-hotkey-scope (R = useId).
+  return <div className="ssc-composer shrink-0 px-md pb-md" data-approval-hotkey-scope={scope}>
+    <SourceComposer embedded isPanelActive={false} codeLayout="side-session" commandScope={`side-${threadId}`} draft={value}
+      setDraft={next => onChange(typeof next === 'function' ? next(value) : next)} textarea={inputRef} attachmentStrip={strip}
+      onSubmit={submit} onStop={onStop} running={busy} stopping={interrupting} editable={!busy} placeholder={placeholder} folderMenu={false}
+      searchFiles={searchFiles} onMention={option => sideChatStore.rememberMention(threadId, option)} mentions={mentions}
+      mentionActions={mentionActions} mentionContainer={portalRef.current ?? undefined}/>
   </div>;
 }
 
@@ -231,7 +211,7 @@ export function SourceSideChat({ threadId, open, onClose, rpc, assistantName = '
   const body = <div className="flex flex-col flex-1 min-h-0">
     <SideChatMessages cwd={cwd} onOpenFileRef={onOpenFileRef} assistantName={assistantName} threadId={threadId} messages={messages} status={status} interrupting={state.interrupting} thinkingSince={state.thinkingSince} progress={state.progress}/>
     {error && <p className="px-lg pb-1.25 text-footnote text-danger select-text shrink-0">{error}</p>}
-    <SideChatComposer open={open} searchFiles={searchFiles} mentions={state.draftMentions} mentionActions={{ ...mentionActions, layerBase: 440 }} portalRef={root} stagedContext={state.stagedContext} onRemoveContext={() => sideChatStore.clearStagedContext(threadId)} threadId={threadId} inputRef={input} busy={thinking} interrupting={state.interrupting} value={state.draft}
+    <SideChatComposer searchFiles={searchFiles} mentions={state.draftMentions} mentionActions={{ ...mentionActions, layerBase: 440 }} portalRef={root} stagedContext={state.stagedContext} onRemoveContext={() => sideChatStore.clearStagedContext(threadId)} threadId={threadId} inputRef={input} busy={thinking} interrupting={state.interrupting} value={state.draft}
       onChange={draft => sideChatStore.setDraft(threadId, draft)} onStop={() => void stopSideQuestion({ rpc, threadId })} placeholder={messages.length ? t('Follow up…') : t('Ask a quick question…')}
       onSubmit={question => void askSideQuestion({ rpc, threadId, question, useStagedContext: true })}/>
   </div>;

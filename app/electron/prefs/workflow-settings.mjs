@@ -53,7 +53,6 @@ const ENV = Object.freeze({
   workflowSizeWarningAgents: "CLAUDE_CODE_WORKFLOW_SIZE_WARNING_AGENTS",
   workflowSizeWarningTokens: "CLAUDE_CODE_WORKFLOW_SIZE_WARNING_TOKENS",
 });
-export const WORKFLOW_ENV = ENV;
 const MAX_RULES = 200;
 
 /** Claude's default concurrency: min(16, max(2, availableParallelism − 2)). */

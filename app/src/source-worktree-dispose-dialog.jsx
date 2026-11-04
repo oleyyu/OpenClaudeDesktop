@@ -3,6 +3,8 @@ import { SourceConfirmationDialog } from "./source-dialog.jsx";
 import { t } from "../electron/i18n/index.mjs";
 import { createWorktreeDisposeCheck, worktreeChangeList, worktreeConfirmCopy, worktreeConfirmReady, worktreeProbe } from "./worktree-dispose-model.mjs";
 import { WorktreeChecking } from "./generated/files-changes/worktree-checking.mjs";
+import { worktreeConfirmCopyOf } from "./generated/code-current/sidebar-bulk-worktree-copy.mjs";
+import { useStartIntl } from "./source-code-start-adapters.jsx";
 
 /*
  * Archive / delete confirms for a session in its own worktree (2.31226.0 shared-19-DmuztgN-.js, readable
@@ -86,8 +88,14 @@ export function SourceSessionDeleteDialog({ open, onExited, title, body, confirm
  * (yK resolve), which then archives / deletes outside the dialog, as SK's x(!0) does.
  */
 export function SourceWorktreeDirtyDialog({ open, onExited, action, status, more = false, guardSince = 0, openedAt = 0, onConfirm, onClose }) {
+  const intl = useStartIntl();
   const probe = worktreeProbe(status), phase = probe.status === "dirty" ? "dirty" : "unknown";
-  const copy = worktreeConfirmCopy(action === "archive" ? "archive" : "delete", phase, probe.count);
+  // W14-code r6 git css6-archived-discard: the archived banner's Discard changes asks shared-46 jD(e, "discard") through
+  // this queue; its copy is WD's discard branch (generated worktreeConfirmCopyOf: "Discard uncommitted changes?",
+  // "Discard", D3+woiajtN / /C3pL7sWM/), counted over the worktree's changes (`s = r.length`).
+  const copy = action === "discard"
+    ? worktreeConfirmCopyOf(intl, "discard", phase, { changes: Array.from({ length: probe.count }, (_, index) => probe.changes[index] ?? "") })
+    : worktreeConfirmCopy(action === "archive" ? "archive" : "delete", phase, probe.count);
   return <SourceConfirmationDialog open={open} onExited={onExited} className="source-confirm-dialog" descriptionClassName="source-confirm-body"
     title={copy.title} body={copy.description} confirmLabel={copy.confirmLabel} confirmVariant="danger" initialFocus="cancel"
     onCancel={onClose}

@@ -33,5 +33,9 @@ test("/theme opens Preferences on the Theme row; the large-workflow limits are p
   const main = await src("main.jsx");
   assert.match(main, /if\(parsed\.open\)\{setSettings\("preferences#theme"\);break;\}/);
   assert.doesNotMatch(main, /setWorkflowWarningLimits/);
-  assert.equal((main.match(/warningLimits=\{workflowWarningLimits\}/g) || []).length, 3);
+  // W14-code r4 ct-feed R4T-08b (E95): the Tasks pane no longer draws the host WorkflowCard; it is the official
+  // N$ detailed card — cccc2cf0a wN `u(ds,{task:r,variant:"detailed",sessionRef:i,onStop:a,stopping:…,nested:…,ownLine:…})`,
+  // which takes no warning limits. Only the two host WorkflowRow sites keep them (the size band reads them separately).
+  assert.equal((main.match(/warningLimits=\{workflowWarningLimits\}/g) || []).length, 2);
+  assert.match(main, /pickWorkflowSizeWarning\(tasks, workflowSizeEntries, workflowWarningLimits\)/);
 });

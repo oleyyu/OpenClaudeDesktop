@@ -11,8 +11,8 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
 import * as official3 from '../scripts/official-3.6556.2.mjs';
-import { ENTER_PICK_ENABLED, ENTER_PICK_GATE, commitsAltIgnored, enterPick, pickOnEnterKeyUp } from '../src/diff-commits-model.mjs';
-import { prCommentComposing, prCommentMatch, prCommentStep } from '../src/diff-pr-comment-nav-model.mjs';
+import { ENTER_PICK_ENABLED, commitsAltIgnored, enterPick, pickOnEnterKeyUp } from '../src/diff-commits-model.mjs';
+import { prCommentComposing, prCommentMatch } from '../src/diff-pr-comment-nav-model.mjs';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
 const official = (name) => fs.readFileSync(path.join(official3.ionSource, name), 'utf8');
@@ -48,7 +48,7 @@ test('official 3.6556.2 keys: Ci / Oi / rs, the Rn gate, requestDiffFocus, share
   for (const feature of ['Ze=J2($,64,Xe,r)?K2($,64,Xe,r,()=>Xe(r)):$[66]', 'function YO(e){return e.requestDiffFocus}',
     `HO='[role="group"][tabindex="0"]',UO={preventScroll:!0,focusVisible:!1}`]) assert.ok(tile.includes(feature), feature);
   assert.ok(official('shared-18-D3y8YMFN.js').includes(`function sk(e){rk(e)&&K(e.target)?.matches('[role^="menuitem"]')===!0&&e.preventDefault()}`));
-  assert.equal(ENTER_PICK_GATE, '__gb__2263689058');
+  // W14-code r4 gen-final-4: the test-only ENTER_PICK_GATE constant is deleted; the gate name is pinned above.
   assert.equal(ENTER_PICK_ENABLED, true, 'no GrowthBook client: Zo answers null, so Se is true');
 });
 
@@ -192,7 +192,6 @@ test('ca6e98a55 / Qn: a ⌥F9 match is prevented even while an IME composes; onl
   assert.equal(prCommentMatch(key({ isComposing: true }), { mac: true, linux: false }), 1);
   assert.equal(prCommentComposing(key({ isComposing: true })), true);
   assert.equal(prCommentComposing(key({ keyCode: 229 })), true);
-  assert.equal(prCommentStep(key({ isComposing: true }), { mac: true, linux: false }), 0);
   assert.equal(prCommentMatch(key({}), { mac: true, linux: false, hidden: true }), 0, 'not while the window is hidden');
   assert.equal(prCommentMatch(key({ defaultPrevented: true }), { mac: true, linux: false }), 0);
   const hook = source('src/source-diff-comments.jsx');

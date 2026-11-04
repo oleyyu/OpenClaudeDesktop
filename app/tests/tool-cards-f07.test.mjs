@@ -41,7 +41,10 @@ function approval(changes, extra = {}) {
 
 test('file request: full-path box, then the in-card diff body per change; no local FileChanges header', () => {
   const html = approval([created]);
-  assert.match(html, /class="sac-details"><div class="sac-code sac-path">\/w\/created\.ts<\/div><div class="sft-outer" data-in-card=""><header class="sft-header"/);
+  // V3-W14-approvals: the detail sits in Z_'s `div.flow-root` (the host's file detail body inside it).
+  // W14-code r7 r7pa-02: the path box is cc32965c2 N_ (`div[data-approval-value]`, Y-escaped), not the host .sac-code.
+  assert.match(html, /<div class="flow-root"><div class="contents"><div data-approval-value="" class="bg-alpha-1 rounded-\[5px\] py-md px-lg text-code text-secondary whitespace-pre-wrap break-words select-text \[unicode-bidi:plaintext\]">\/w\/created\.ts<\/div><div class="sft-outer" data-in-card=""><header class="sft-header"/);
+  assert.doesNotMatch(html, /sac-code|sac-path/);
   assert.equal(count(html, 'class="sft-outer" data-in-card=""'), 1);
   assert.doesNotMatch(html, /source-file-change|data-placement="changes"/);
   // YO pure side: '+ 1' in the gutter, no separate sign column.
@@ -51,15 +54,15 @@ test('file request: full-path box, then the in-card diff body per change; no loc
   assert.equal(count(html, 'role="status" data-approval-announcement=""'), 1);
   // Two changes list both paths and render two bodies; the paired edit keeps its sign column.
   const many = approval([created, edited]);
-  assert.match(many, /<div class="sac-code sac-path">\/w\/created\.ts\n\/w\/fixture\.txt<\/div>/);
+  assert.match(many, /<div data-approval-value="" class="bg-alpha-1 rounded-\[5px\] py-md px-lg text-code text-secondary whitespace-pre-wrap break-words select-text \[unicode-bidi:plaintext\]">\/w\/created\.ts\n\/w\/fixture\.txt<\/div>/);
   assert.equal(count(many, 'class="sft-outer" data-in-card=""'), 2);
   assert.equal(count(many, 'class="sft-sign"'), 2);
 });
 
 test('file request over 200,000 characters shows the fM sentence and no preview', () => {
   const html = approval([{ path: '/w/big.txt', kind: { type: 'add' }, diff: `+${'x'.repeat(200001)}\n` }]);
-  assert.ok(html.includes(`<p class="sac-context" data-context="too-large">${PREVIEW_TOO_LARGE}</p>`));
-  assert.match(html, /<div class="sac-code sac-path">\/w\/big\.txt<\/div><\/div>/);
+  assert.ok(html.includes(`<p data-context="too-large" class="text-body text-secondary select-text break-words">${PREVIEW_TOO_LARGE}</p>`));
+  assert.match(html, /<div data-approval-value="" class="bg-alpha-1 rounded-\[5px\] py-md px-lg text-code text-secondary whitespace-pre-wrap break-words select-text \[unicode-bidi:plaintext\]">\/w\/big\.txt<\/div><\/div><\/div>/);
   assert.equal(count(html, 'sft-outer'), 0);
 });
 
@@ -181,31 +184,31 @@ function planReview(extra = {}) {
   runtime.reconcile([request]);
   return render(SourceApproval, { runtime, request, respond: async () => ({}), getVisibleThreadId: () => 'T', ...extra });
 }
-const labels = html => [...html.matchAll(/<span class="sac-button-label"[^>]*>([^<]*)<\/span>/g)].map(match => match[1]);
-const caps = html => [...html.matchAll(/data-approval-action="([^"]+)"[^>]*>(?:(?!<\/button>).)*?data-cds="Shortcut"/g)].map(match => match[1]);
+// V3-W14-approvals: cc32965c2 Fs — the CDS Buttons' content spans, and the buttons drawing a keycap.
+const labels = html => [...html.matchAll(/<span class="inline-flex min-w-0 items-center gap-1 ">([^<]*)/g)].map(match => match[1]).filter(Boolean);
+const caps = html => html.split('<button').slice(1).filter(button => button.slice(0, button.indexOf('</button>')).includes('data-cds="Shortcut"'))
+  .map(button => /data-approval-action="([^"]+)"/.exec(button)?.[1] ?? 'split');
 
 test('R07 plan review renders the plan card: heading, Open plan, Reject / Revise… left, Accept / trust-forward primary right', () => {
   const html = planReview({ planTarget: 'acceptEdits', onOpenPlan: () => {} });
-  assert.match(html, /class="source-message sac-card spc-card"[^>]*data-approval-kind="plan"/);
-  assert.match(html, /<span id="[^"]+" class="spc-title">DeepSeek proposed a plan<\/span>/);
-  assert.match(html, /<span class="spc-trailing"><button type="button" class="spc-open-plan" data-cds="TextLink">Open plan<\/button><\/span>/);
-  assert.doesNotMatch(html, /sq-card|sq-option|Approve this plan/);
+  assert.match(html, /<section class="source-message epitaxy-approval-card [^"]* gap-\[12px\] [^"]*epitaxy-card-outline"[^>]*data-approval-kind="plan"/);
+  // $e: Lt titleNamesCard with "Claude proposed a plan" (uwYMasx1yw, the session's assistant) and the Open plan text link.
+  assert.match(html, /<span data-question-stop-name="" class="text-body-semibold min-w-0 break-words"><span id="[^"]+">DeepSeek proposed a plan<\/span><\/span>/);
+  assert.match(html, /<span class="shrink-0 self-center"><span data-cds="TextLink"[^>]*>Open plan<\/span><\/span>/);
+  assert.doesNotMatch(html, /sq-card|sq-option|Approve this plan|sac-|spc-/);
   assert.deepEqual(labels(html), ['Reject', 'Revise…', 'Accept', 'Accept and allow edits']);
-  assert.match(html, /<div class="spc-left">.*data-approval-action="reject".*data-approval-action="revise-open".*<\/div><div class="spc-right">.*data-approval-action="accept".*data-approval-action="primary"/);
-  assert.deepEqual(caps(html), ['revise-open', 'accept', 'primary']);
-  assert.match(html, /data-approval-action="primary" aria-keyshortcuts="Meta\+Enter Control\+Enter"/);
-  assert.match(html, /data-variant="primary" data-approval-primary="" data-approval-action="primary"/);
-  assert.equal(count(html, 'data-approval-primary=""'), 1);
-  // xee: the primary is a split button whose caret opens 'More accept options' (the other trust-forward modes).
-  assert.match(html, /<span class="spc-split" data-split="">.*data-approval-action="primary".*aria-label="More accept options"[^>]*aria-haspopup="menu"/);
+  assert.match(html, /<div class="epitaxy-approval-actions flex flex-wrap justify-between gap-x-1 gap-y-\[8px\] \[&amp;&gt;div\]:grow"><div class="flex gap-\[8px\]">.*data-approval-action="reject".*data-approval-action="revise-open".*<\/div><div class="flex flex-wrap justify-end gap-\[8px\]"><span class="contents" data-approval-allow="">.*data-approval-action="accept".*data-cds="SplitDropdownButton"/);
+  assert.deepEqual(caps(html), ['revise-open', 'accept', 'split']);
+  // Yi: the primary is a split button (every accept option, `se.map`) whose caret opens 'More accept options'.
+  assert.match(html, /data-cds="SplitDropdownButton" role="group" aria-label="Accept and allow edits"/);
+  assert.match(html, /aria-label="More accept options"[^>]*aria-haspopup="menu"/);
   assert.doesNotMatch(html, /Plan feedback|textarea/);
-  // Mk labels follow the target; Manual leaves one primary 'Accept'; Bypass shows only while it is available.
+  // Ps labels follow the target; Manual keeps the split labelled 'Accept'; Bypass shows only while it is available.
   assert.deepEqual(labels(planReview({ planTarget: 'auto' })), ['Reject', 'Revise…', 'Accept', 'Accept and auto mode']);
   assert.deepEqual(labels(planReview({ planTarget: 'bypass' })), ['Reject', 'Revise…', 'Accept', 'Accept and auto mode']);
   assert.deepEqual(labels(planReview({ planTarget: 'bypass', bypassAvailable: true })), ['Reject', 'Revise…', 'Accept', 'Accept and bypass permissions']);
   assert.deepEqual(labels(planReview({ planTarget: 'ask' })), ['Reject', 'Revise…', 'Accept']);
-  assert.match(planReview({ planTarget: 'ask' }), /data-variant="primary" data-approval-primary="" data-approval-action="primary"[^>]*>.*Accept/);
-  assert.deepEqual(labels(planReview({ planTarget: 'bypass' })), ['Reject', 'Revise…', 'Accept', 'Accept and auto mode']);
+  assert.match(planReview({ planTarget: 'ask' }), /data-cds="SplitDropdownButton" role="group" aria-label="Accept"/);
   assert.doesNotMatch(planReview({}), /Open plan/, 'no plan item, no link');
   // Inactive: no keycaps; a malformed review keeps the question card's error notice.
   assert.deepEqual(caps(planReview({ planTarget: 'auto', isActive: false })), []);

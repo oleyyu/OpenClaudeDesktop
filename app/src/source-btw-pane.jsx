@@ -3,12 +3,13 @@
 // supplies the multiple side-chat tabs in the header, with the LO tab menu (Unpin, Detach to top level).
 import React, { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { SourceTranscript } from './source-transcript.jsx';
-import { SourceTranscriptEmpty, SourceTranscriptLoadFailure } from './source-transcript-states.jsx';
-import { SourceLoadingPane } from './source-pane-states.jsx';
+import { SourceEmptyState, SourceTranscriptEmpty, SourceTranscriptLoadFailure } from './source-transcript-states.jsx';
+import { SourceSpinner } from './source-pane-states.jsx';
 import { SourceMessage, SourceApproval, SourcePlanHandoffCard } from './source-session.jsx';
 import { SourceComposer } from './source-composer.jsx';
 import { SourceViewTabBar } from './source-view-tabs.jsx';
-import { SourceQueuedMessages } from './source-queued-messages.jsx';
+import { QUEUED_COUNT_CLASS, QUEUED_PREVIEW_CLASS, QUEUED_ROW_CLASS, SourceQueuedMessages } from './source-queued-messages.jsx';
+import { BAND_ENTER_CLASS } from './generated/session-rail-changes/band-enter.mjs'; // W14-code r4 R4DC-03: c0b46114c f
 import { lastDequeueable } from './queued-messages-model.mjs';
 import { btwDrafts } from './use-btw-pane.jsx';
 import { ownBtwItems } from './btw-pane-controller.mjs';
@@ -36,6 +37,7 @@ import { ApprovalCardWatch } from './generated/approval-landing/card-landing.mjs
 import { CdsContextMenu, CdsRoot } from './generated/view-tabs/index.js';
 import { codePaneExperimental } from './generated/code-composer/code-pane-experimental.mjs';
 import './source-btw-pane.css';
+import { PaneWindowDragStrip, usePaneWindowHeaderProps } from "./pane-window-header.jsx";
 // R4g-btw BT4 (X7-16): the watch over the card slot (3.6556.2 c9ed5627b it over shared-1 useFocusHandBack mC;
 // 2.42304.0 c96d752d0 Kj / ccf527892 o) and the approval area's slot (c9ed5627b A with its next-card landing and the k
 // window guard; 2.42304.0 qj / Gj) are the shared originals: the generated ApprovalCardWatch and
@@ -116,6 +118,26 @@ export function SourceBtwTabs({ tabs, activeId, state, pending, onSelect, onClos
 }
 
 const NO_CLOSING = new Set();
+// 3.6556.2 cccc2cf0a kA over cd96b5fdc p / x (pm, gm): in a /btw child, "/btw …" (or "/side …") asks the parent's side
+// chat instead of this child; OA's question is the command's argument. A refusal is kA's error toast, by status.
+const BTW_COMMAND = /^\/btw(?:[\s:,.]\s*(.*))?$/is, SIDE_COMMAND = /^\/side(?:\s+(.*))?$/is;
+export function btwSideChatQuestion(text) {
+  const match = text.match(BTW_COMMAND) ?? text.match(SIDE_COMMAND);
+  return match ? (match[1] ?? '').trim() : undefined;
+}
+export function btwSideChatRefusal(status) {
+  return status === 'alone' ? t('A side chat in its own window can’t open another one, so nothing was sent. You can remove the command to ask in the same side chat.')
+    : status === 'busy' ? t('Another side chat is still starting, so a new one didn’t open. Try again in a moment.')
+      : t('A new side chat can’t open from this one, so nothing was sent. You can remove the command to ask in this side chat.');
+}
+// cccc2cf0a NA: the approval scope that takes the focus back after a keyboard Dismiss is a role=group named by PA's
+// footName ("Claude proposed a plan" while an ExitPlanMode review is pending) until it loses the focus.
+function nameFocusRescue(node, label) {
+  const off = () => { node.removeEventListener('blur', blur); node.removeAttribute('role'); node.removeAttribute('aria-label'); };
+  const blur = () => { if (node.ownerDocument.activeElement !== node) off(); };
+  node.setAttribute('role', 'group'); node.setAttribute('aria-label', label); node.addEventListener('blur', blur);
+  return off;
+}
 // c73f45bc3 bh = Tf → wf: `pf=1e4` (stop deadline), `hf=5` close attempts, each waiting `mf=1e3` for the archive (Cf over
 // shared-8 Kd = Pg, the optimistic archive set).
 const STOP_DEADLINE_MS = 10000, CLOSE_ATTEMPTS = 5, CLOSE_WAIT_MS = 1000;
@@ -129,6 +151,8 @@ export function SourceBtwPane(props) {
   const { sessionId, meta, tabs, state, pending = {}, tabPending = pending, stopping = {}, density, onStop, onSelect, onCloseTab,
     tabMenu = null, onUnpinTab, onDetachTab, onYieldTab, onCreateTab, createBusy = false, headerCenter, controls, onError } = props;
   const root = useRef(null), input = useRef(null), running = !!state.active[sessionId];
+  // W14-code r4 r4pa-c03: in a pane window (c5638815a wt `isTopLeft: !0`) the header clears the traffic lights and drags the window.
+  const paneWindowHeader = usePaneWindowHeaderProps();
   // 3.6556.2 cccc2cf0a qP oe (onClose) with c73f45bc3 bh (Tf/wf). `closing` is uf (L), `live` the store reads wf's check
   // makes, `waiters` Cf's subscriptions (run after each render, as the session store's subscribers run on each update).
   const [closing, setClosing] = useState(NO_CLOSING);
@@ -191,7 +215,8 @@ export function SourceBtwPane(props) {
       event.stopPropagation();
       if (running && !stopping[sessionId]) { event.preventDefault(); if (!event.repeat) void onStop(sessionId).catch(error => onError(error.message)); }
     }}>
-    <header className="source-pane-header" data-pane-header="session">
+    <header className="source-pane-header" data-pane-header="session" {...paneWindowHeader}>
+      <PaneWindowDragStrip/>
       <SourceBtwTabs density={density} tabs={tabs} activeId={sessionId} state={state} pending={tabPending} onSelect={onSelect}
         onClose={closeTab} closing={closing} onCreate={onCreateTab} createBusy={createBusy}
         // 3.6556.2 cccc2cf0a qP J: `let t=N.current?.closest("[data-pane-root]");t&&(cu(e),P_(t)?.focus())`. cu = c03935b01 Yr
@@ -211,7 +236,7 @@ export function SourceBtwPane(props) {
 export function SourceBtwContent({ sessionId, meta, thread, state, connected, pending = {}, stopping = {}, root, input, density,
   queueEnabled = false, queueState, queueEpoch, queues,
   planAnswered, planBusy = false, onImplementPlan, onStayPlan, permissionHints = false,
-  onLoad, onSend, onStop, approvalRuntime, respond, onOpenFile, onError, onOpenLink, onOpenSettings, onEditConfig }) {
+  onLoad, onSend, onStop, approvalRuntime, respond, onOpenFile, onError, onSideChat, onSignIn, onViewUsage, onOpenLink }) {
   const draftRef = useRef(false), load = useRef(onLoad); load.current = onLoad;
   const draft = useSyncExternalStore(btwDrafts.subscribe, () => btwDrafts.get(sessionId), () => '');
   draftRef.current = !!draft.trim();
@@ -269,7 +294,8 @@ export function SourceBtwContent({ sessionId, meta, thread, state, connected, pe
   const current = btwSessionNotice({ threadError: state.errors?.[sessionId] });
   const notice = current && dismissals.get(sessionId) !== current.key ? current : null;
   const noticeKey = useRef(null); noticeKey.current = notice?.key ?? null;
-  const dismissedFrom = useRef(null), [dismissRevision, setDismissRevision] = useState(0);
+  const dismissedFrom = useRef(null), [dismissRevision, setDismissRevision] = useState(0), rescueName = useRef(undefined);
+  useEffect(() => () => rescueName.current?.(), []);
   const dismissNotice = event => {
     // nT m with c73f45bc3 Km (xd): only a keyboard Dismiss (the button focused and :focus-visible) restores focus.
     const control = event.currentTarget;
@@ -289,7 +315,13 @@ export function SourceBtwContent({ sessionId, meta, thread, state, connected, pe
     // swallows the dismissing key's stray Enter and takes focus, else a keyboard focus intent waits for its next mount;
     // focus still on the body lands on the approval scope itself.
     focusBtwSessionComposer(sessionId, performance.now(), { afterKeyPress: true });
-    if (from.scope && doc.activeElement === doc.body) { from.scope.tabIndex = -1; from.scope.focus(); }
+    if (from.scope && doc.activeElement === doc.body) {
+      from.scope.tabIndex = -1;
+      rescueName.current?.();
+      rescueName.current = planReview ? nameFocusRescue(from.scope, t('DeepSeek proposed a plan')) : undefined;
+      from.scope.focus();
+      if (doc.activeElement !== from.scope) rescueName.current?.();
+    }
   }, [dismissRevision]);
   // jT N (onFocusHandBack, qj's toComposer): `m.current?.focusPreservingSelection(), m.current?.ignoreStrayEnter()` on
   // this child's composer, the editor element's c227f4d5e OP API (composer-focus-api.mjs); the editor's own keydown then
@@ -305,7 +337,15 @@ export function SourceBtwContent({ sessionId, meta, thread, state, connected, pe
   const queueAction = action => void action().catch(error => onError(error.message));
   const editQueued = id => queueAction(async () => { await queues.remove(sessionId, id, true); input.current?.focus(); });
   const submit = async options => {
-    const text = btwDrafts.get(sessionId).trim(); if (!text || composerHidden || pending[sessionId] || (running && !queueEnabled)) return;
+    const text = btwDrafts.get(sessionId).trim(); if (!text || composerHidden) return;
+    // kA take: the parent's side chat answers "/btw …" here; "started" clears this composer, a refusal toasts.
+    const question = onSideChat ? btwSideChatQuestion(text) : undefined;
+    if (question !== undefined) {
+      const status = onSideChat(question || undefined);
+      if (status === 'started') btwDrafts.set(sessionId, ''); else onError(btwSideChatRefusal(status));
+      return;
+    }
+    if (pending[sessionId] || (running && !queueEnabled)) return;
     btwDrafts.set(sessionId, '');
     const before = noticeKey.current;
     try { await onSend(sessionId, text, options); }
@@ -318,7 +358,8 @@ export function SourceBtwContent({ sessionId, meta, thread, state, connected, pe
   return <div className="flex h-full min-h-0 flex-col">
       <div className="min-h-0 flex-1">
         {readError && !rows.length ? <SourceTranscriptLoadFailure onRetry={() => setRetry(value => value + 1)}/>
-          : reading && !rows.length ? <SourceLoadingPane label={t('Loading session')}/>
+          // c4ea84cb3 ui: a pending transcript (R) is the status EmptyState, md Spinner, "Connecting to session…".
+          : reading && !rows.length ? <SourceEmptyState role="status" icon={<SourceSpinner size="md" />} title={t('Connecting to session…')}/>
           : !rows.length ? <SourceTranscriptEmpty/>
           : <SourceTranscript sessionKey={`btw:${sessionId}`} responding={running} ready={!reading}>
             {rows.map((item, index) => {
@@ -334,13 +375,13 @@ export function SourceBtwContent({ sessionId, meta, thread, state, connected, pe
                   pendingApprovalItemIds={pendingItems} liveTail={toolRunLiveTail(rows, index, state.active[sessionId] ?? null)} onOpenFileRef={onOpenFile}/></SourceTranscriptRowBoundary>
                 {/* R4i-transcript TR2: the error card is an item of the reply in 2.42304.0 (c96d752d0 `case"error":g(s,VK(n.id,u,"error",`),
                     so it sits in its own row boundary with the reply's copy (D34). Only the card draws actions: the marker
-                    gets no callbacks, as the main transcript's does not. The card's own, session-independent actions are the
-                    official TW ones (links, settings, and the host's Open config); model is the child's own model (the turn
-                    it ran used metadata.model, use-btw-pane send), so the cyber notice names the child's model. */}
+                    gets no callbacks, as the main transcript's does not. The child takes no recovery (TW: no retry or
+                    compact), so the official card has no actions (r4, E95); model is the child's own model (the turn it ran
+                    used metadata.model, use-btw-pane send), which picks the card's headline and hint. */}
                 {failure && <SourceTranscriptRowBoundary key={`${sessionId}:${item.turnId}:${variant}`} sessionId={sessionId} item={item} kind="reply">
+                  {/* W14-code r4 btw-error-card (E95): the main session's official card (cb1a6e506 j); no host actions. */}
                   <SourceTurnError key={`${sessionId}:${item.turnId}:${variant}`} error={turnErrors[item.turnId]} turnId={item.turnId} variant={variant}
-                  onOpenSettings={variant === 'card' ? onOpenSettings : undefined} onOpenLink={variant === 'card' ? onOpenLink : undefined}
-                  onEditConfig={variant === 'card' ? onEditConfig : undefined} model={meta?.model || ''}/></SourceTranscriptRowBoundary>}
+                  official model={meta?.model || ''}/></SourceTranscriptRowBoundary>}
               </React.Fragment>;
             })}
             {/* F_ is the session transcript in the pane too, so the child's turn has the same working line (w8) as the
@@ -352,11 +393,12 @@ export function SourceBtwContent({ sessionId, meta, thread, state, connected, pe
           </SourceTranscript>}
       </div>
       <div className="flex shrink-0 flex-col gap-xs px-sm pb-sm pt-xs" data-approval-hotkey-scope={`btw:${sessionId}`}>
-        {/* R4g-btw BT1 (X7-17): c3e34355f draws helpLink as its own link (`a(ye,{href:bn,external:"with-icon"`) and
-            billing through the router (`Yt("/settings/billing")`, Yt=ke()), neither from nT's props; the local card's link
-            and settings buttons need onOpenLink / onOpenSettings, so the child pane passes the main session's two. */}
+        {/* W14-code r4 btw-error-card (E95): the session notice is the official card too (cb1a6e506 j with Dismiss); the
+            host card's settings and config buttons (R4g-btw BT1) are gone with it. r4 复核: it is c3e34355f Hn (cccc2cf0a
+            `u(jy, {errorMessage, errorCategory, …, onAddConnection, onDismiss})`, no onRetry), so it keeps Hn's category
+            fix: Sign in again, View billing, Open usage settings (officialSurface "session"). */}
         {notice && <SourceTurnError key={`${sessionId}:${notice.key}`} error={notice.error} turnId={notice.turnId} variant="card" onDismiss={dismissNotice}
-          onOpenSettings={onOpenSettings} onOpenLink={onOpenLink} onEditConfig={onEditConfig} model={meta?.model || ''}/>}
+          official officialSurface="session" onSignIn={onSignIn} onViewUsage={onViewUsage} onOpenLink={onOpenLink} model={meta?.model || ''}/>}
         <CardComposerContext.Provider value={composer}>
           {/* R4g-btw BT4 (X7-16): one slot for the area ($j's qj), so the card after a decided one is where focus lands. */}
           <SourceBtwApprovalSlot runtime={approvalRuntime} requests={ownedApprovals} extraCard={handoff ? handoff.turnId : null}
@@ -370,9 +412,10 @@ export function SourceBtwContent({ sessionId, meta, thread, state, connected, pe
           </SourceBtwApprovalSlot>
         </CardComposerContext.Provider>
         <div className={composerHidden ? 'hidden' : 'contents'} data-btw-composer-hidden={composerHidden ? 'true' : undefined}>
-        {pendingSteers.length > 0 && <div className="sqm-band epitaxy-band-enter" data-pending-steers="" data-count={pendingSteers.length} role="status">
-          <div className="sqm-row sqm-single"><span className="sqm-count">{tn(pendingSteers.length, 'Sending after the next step', '{count} messages sending after the next step', { count: pendingSteers.length })}</span>
-            <span className="sqm-preview">{pendingSteers.map(entry => entry.preview).join(' · ')}</span></div>
+        {pendingSteers.length > 0 && <div className={`sqm-band ${BAND_ENTER_CLASS}`} data-pending-steers="" data-count={pendingSteers.length} role="status">
+          {/* W14-code r7 r7c-01: the row is cf74bc599 WE's (source-queued-messages.jsx QUEUED_*_CLASS). */}
+          <div className={QUEUED_ROW_CLASS}><span className={QUEUED_COUNT_CLASS}>{tn(pendingSteers.length, 'Sending after the next step', '{count} messages sending after the next step', { count: pendingSteers.length })}</span>
+            <span className={QUEUED_PREVIEW_CLASS}>{pendingSteers.map(entry => entry.preview).join(' · ')}</span></div>
         </div>}
         {queued && <SourceQueuedMessages key={sessionId} entries={queued.entries} lockedIds={queueView.busy ? queued.entries.map(entry => entry.id) : []}
           steeringId={queueView.steeringId} onCancel={connected && !thread?.archived && !queueView.busy ? id => queueAction(() => queues.remove(sessionId, id)) : undefined}

@@ -1,6 +1,6 @@
 // A draft outlives its viewer: temporary pane/split remounts must not lose edits.
 // Explicit navigation runs the same discard intent used by the original pane.
-const editors = new Map(), listeners = new Set();
+const editors = new Map(), listeners = new Set(), detachedFailures = new Set();
 let intent = null, navigation = 0;
 const emit = () => { if (intent) intent = { ...intent }; listeners.forEach(fn => fn()); };
 export const fileEditGuards = {
@@ -36,6 +36,17 @@ export function guardFileEdits(run, { sessionId, key, paths, leavesSession = fal
   }
   intent = { run, editors: dirty, leavesSession }; emit(); return true;
 }
+// 3.6556.2 cd2efac6e Hy: a draft whose viewer is gone (Ru.current is null after the view detaches) still auto-saves;
+// a failed write then reports through an error toast, by kind: conflict, missing (changed on disk to deleted), denied,
+// hook_denied (deniedReason "hook_manager_package_key") or failed. Listeners get { editor, kind }.
+export function onDetachedSaveFailure(fn) { detachedFailures.add(fn); return () => detachedFailures.delete(fn); }
+export function detachedSaveFailureKind(result) {
+  const status = result?.status;
+  if (status === 'conflict') return result.currentHash === null ? 'missing' : 'conflict';
+  if (status === 'missing') return 'missing';
+  if (status === 'denied') return result.deniedReason === 'hook_manager_package_key' ? 'hook_denied' : 'denied';
+  return 'failed';
+}
 export function getFileEditor({ key, path, sessionId, text, hash, save }) {
   let editor = editors.get(key);
   if (editor) {
@@ -44,7 +55,7 @@ export function getFileEditor({ key, path, sessionId, text, hash, save }) {
     return editor;
   }
   let state = { text, baseText: text, baseHash: hash, saving: false, error: null };
-  let autoSave = false, timer = null, pending = null;
+  let autoSave = false, timer = null, pending = null, views = 0;
   const clearTimer = () => { if (timer !== null) clearTimeout(timer); timer = null; };
   const schedule = () => {
     clearTimer();
@@ -55,6 +66,9 @@ export function getFileEditor({ key, path, sessionId, text, hash, save }) {
   editor = {
     key, path, sessionId, readHash: hash, saveFile: save,
     get autoSave() { return autoSave; },
+    // A mounted viewer of this draft; returns its detach.
+    attachView() { views++; let attached = true; return () => { if (attached) { attached = false; views--; } }; },
+    get attached() { return views > 0; },
     setAutoSave(enabled) { if (autoSave === enabled) return; autoSave = enabled; clearTimer(); emit(); if (enabled) void editor.save(); },
     flushAutoSave() { clearTimer(); return autoSave ? editor.save() : Promise.resolve(); },
     get dirty() { return state.text !== state.baseText || state.saving; },
@@ -74,7 +88,10 @@ export function getFileEditor({ key, path, sessionId, text, hash, save }) {
         let result;
         try { result = await editor.saveFile(sent, expectedHash); } catch { result = { status: 'failed' }; }
         if (result?.status === 'saved') update({ saving: false, baseText: sent, baseHash: result.hash, error: null });
-        else update({ saving: false, error: result ?? { status: 'failed' } });
+        else {
+          update({ saving: false, error: result ?? { status: 'failed' } });
+          if (views === 0) { const kind = detachedSaveFailureKind(result); detachedFailures.forEach(fn => fn({ editor, kind })); }
+        }
         pending = null;
         // Original Bp/u: retain the newest draft during a write and chain against its returned hash.
         if (autoSave && result?.status === 'saved' && state.text !== state.baseText) return editor.save();

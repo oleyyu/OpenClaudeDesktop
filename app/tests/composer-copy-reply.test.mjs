@@ -9,7 +9,9 @@ import path from 'node:path';
 import { parseCopyReplyCount } from '../src/generated/code-composer/copy-reply-arg.mjs';
 import { copyReplyTranscript, copyableReplies } from '../src/generated/code-composer/copy-reply-replies.mjs';
 import { isUserTurnEntry, endsFinishedReply } from '../src/generated/code-composer/transcript-replies.mjs';
-import { COPY_REPLY_DESCRIPTION, COPY_REPLY_MESSAGES, copyReplyEntries, copyReplyDecision, runCopyReply, writeReplyToClipboard } from '../src/composer-copy-reply.mjs';
+import { COPY_REPLY_MESSAGES, copyReplyEntries, copyReplyDecision, runCopyReply, writeReplyToClipboard } from '../src/composer-copy-reply.mjs';
+// W14-code r4 closeout R4DC-N7: the model's test-only COPY_REPLY_DESCRIPTION export is gone; the official cc183b3ab copy description.
+const COPY_REPLY_DESCRIPTION = 'Copy Claude’s latest reply, or /copy 2 or higher for an earlier one';
 import { executeCopyCommand } from '../src/r4h-glue-decisions.mjs';
 import { parseAst } from 'rolldown/parseAst';
 import { sessionCommands, matchCommands, parseSessionCommand, commandUnavailable } from '../src/session-command-model.mjs';

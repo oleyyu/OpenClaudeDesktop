@@ -92,9 +92,6 @@ export default {
   'Run this workflow? Its agents will run without asking for approval.': '要运行此工作流吗？它的智能体运行时不会再请求批准。',
   'Run a dynamic workflow? It runs many agents in parallel, which can use a lot of tokens quickly.': '要运行动态工作流吗？它会并行运行多个智能体，可能很快用掉大量 token。',
   'run a dynamic workflow': '运行动态工作流',
-  'View raw script': '查看原始脚本',
-  'Hide raw script': '隐藏原始脚本',
-  'Workflow script': '工作流脚本',
   'The script is too long to be shown in full.': '脚本太长，无法完整显示。',
   // OS notifications
   'Dynamic workflow “{name}” completed': '动态工作流“{name}”已完成',
@@ -212,8 +209,19 @@ export default {
   "As many as {tokens} tokens projected, more than most workflows use.": "预计多达 {tokens} 个 Token，超过大多数工作流的用量。",
   "Up to {count} agent scheduled, about {tokens} tokens projected.": "已安排多达 {count} 个智能体，预计约 {tokens} 个 Token。",
   "Up to {count} agents scheduled, about {tokens} tokens projected.": "已安排多达 {count} 个智能体，预计约 {tokens} 个 Token。",
+  // W14-code r8 r8c-04 / sh8-02: a named workflow's band (cc43287c9 p6 BlmlO/YC5d, o6 named 1UIDTGel6A / gkJGMhm9Rl).
+  "{name} is larger than most workflows.": "{name} 比大多数工作流都大。",
+  "Up to {count} agent scheduled.": "已安排多达 {count} 个智能体。",
+  "Up to {count} agents scheduled.": "已安排多达 {count} 个智能体。",
+  "As many as {tokens} tokens projected.": "预计多达 {tokens} 个 Token。",
   // B35: a finished sub-agent's stats footnote (cccc2cf0a zw).
   "1 token": "1 个 Token",
+  // W14-code pa2-08: the subagent panel's model line and stats footnote as single ICU messages (cccc2cf0a bP Rd/NrmZbJ4,
+  // FP dAbHM3tAVv).
+  "Model <v>{model}</v>": "模型 <v>{model}</v>",
+  // W14-code r3 r3pa-01: a settled sub-agent with nothing to show, one select ICU (cccc2cf0a xP lEAPaAhXw3).
+  "No result — task {status, select, failed {failed} stopped {stopped} other {ended}}": "没有结果 — 任务{status, select, failed {失败} stopped {已停止} other {已结束}}",
+  "{toolUses, plural, one {# tool call} other {# tool calls}} · {tokenForm, select, one {1 token} other {{tokens} tokens}} · {duration}": "{toolUses, plural, other {# 次工具调用}} · {tokenForm, select, one {1 个 Token} other {{tokens} 个 Token}} · {duration}",
   // V3-w3-code-routines (R9/E29): copy of the 3.6556.2 Code Routines graph (src/generated/code-routines) with no zh-CN
   // entry yet: the SSH connection failure taxonomy (c4b59efdf, unreachable here: no SSH places, D37), the workspace trust
   // dialog (c165c93f1), the folder browser (c6a930826), the Run now / scope copy of cbd6c85c8 and RC-07 (cfc18e0f4).
@@ -231,6 +239,7 @@ export default {
   "{distro} (WSL)": "{distro}（WSL）",
   "Trust this workspace?": "信任此工作区？",
   "Claude Code may read, write, or execute files in this folder. Only proceed if you trust this workspace.": "Claude Code 可能会读取、写入或执行此文件夹中的文件。仅在你信任此工作区时继续。",
+  "DeepSeek may read, write, or execute files in this folder. Only proceed if you trust this workspace.": "DeepSeek 可能会读取、写入或执行此文件夹中的文件。仅在你信任此工作区时继续。",
   "Trust workspace": "信任工作区",
   "{count, plural, one {{count, number, ::group-off} more character not shown} other {{count, number, ::group-off} more characters not shown}}": "{count, plural, one {另有 {count, number, ::group-off} 个字符未显示} other {另有 {count, number, ::group-off} 个字符未显示}}",
   "{count, plural, one {{count, number, ::group-off} more character} other {{count, number, ::group-off} more characters}}": "{count, plural, one {另有 {count, number, ::group-off} 个字符} other {另有 {count, number, ::group-off} 个字符}}",

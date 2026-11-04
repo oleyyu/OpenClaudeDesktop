@@ -1,6 +1,6 @@
 // Chrome bridge acceptance, phase by phase:
 //   npm run check:chrome-bridge            every phase
-//   npm run check:chrome-bridge -- p5      one phase (p0 … p5)
+//   npm run check:chrome-bridge -- p6      one phase (p0 … p6)
 //   npm run check:chrome-bridge -- session a real Codex session chains the tools (spends a model turn; not in the default run)
 // Runs in Electron's main process (no window, Dock icon hidden) with the same bridge-client.cjs the app uses. It starts
 // a headless Chrome for Testing (Playwright's, or CHROME_PATH) on a throwaway profile with claude-ext/ loaded, registers
@@ -28,6 +28,18 @@
 //    load_tools (deferred), then navigate → read_page → find → javascript_tool → form_input → computer → batch run
 //    against this Chrome; the site is asked once, a declined site is refused and never asked again; the transcript
 //    rows those calls get are printed.
+// P6 console, network and write scripts on a local page that logs, throws and fetches while it loads: the first
+//    read_console_messages replays the early log and the uncaught exception; onlyErrors / pattern / clear; network
+//    requests show up only from then on, so after a reload (navigate to the same URL) the document, its script, its
+//    fetch and a 404 are listed with status, type and size, the 404 also as a console entry; headers redact cookies;
+//    one request's response body; another origin starts over. javascript_tool write: true is refused without
+//    writeHosts, then changes the DOM, awaits a fetch the server counts, redeclares let across calls, and its
+//    console.log is captured; read-only still refuses writes; a write step is refused in a batch; a never-settling
+//    await times out. On a tab no monitor holds: an object literal, Promise.resolve(42) and an un-awaited fetch chain
+//    give their values; a script queued behind one that sends the tab to another site doesn't run there. Then through
+//    the real agent-tools host: Plan refuses a write script, the chrome-script card is asked with the site and the
+//    code (declined: nothing changes; allowed once: it runs; for the session: not asked again), Bypass runs without
+//    asking, and a Bypass the session's access doesn't have asks.
 import fs from "node:fs";
 import http from "node:http";
 import os from "node:os";
@@ -156,11 +168,25 @@ addEventListener("DOMContentLoaded", () => {
 });`;
 const beacons = { count: 0 };
 
+// A page that logs, warns, errors and throws while it loads, fetches /api/data and asks for an image that isn't there.
+const CONSOLE_PAGE = `<!doctype html><html><head><title>Console</title><meta charset="utf-8"><script src="/console.js"></script></head><body>
+<h1 id="heading">Console fixture</h1><img src="/missing.png" alt=""></body></html>`;
+const CONSOLE_JS = `console.log("early boot", { stage: 1, list: [1, 2] });
+console.warn("careful: %s", "deprecated thing");
+console.error("early failure");
+fetch("/api/data").then((response) => response.json()).then((data) => console.info("data", data.items.length));
+setTimeout(() => { throw new Error("boom-uncaught"); }, 0);`;
+const echoes = { count: 0 };
+
 function serveFixtures() {
   const server = http.createServer((request, response) => {
     const url = new URL(request.url, "http://127.0.0.1");
     if (url.pathname === "/beacon") { beacons.count++; response.writeHead(204); response.end(); return; }
     if (url.pathname === "/app.js") { response.writeHead(200, { "content-type": "text/javascript" }); response.end(SCRIPTED_JS); return; }
+    if (url.pathname === "/console") { response.writeHead(200, { "content-type": "text/html; charset=utf-8", "set-cookie": "sid=topsecret; Path=/" }); response.end(CONSOLE_PAGE); return; }
+    if (url.pathname === "/console.js") { response.writeHead(200, { "content-type": "text/javascript" }); response.end(CONSOLE_JS); return; }
+    if (url.pathname === "/api/data") { response.writeHead(200, { "content-type": "application/json" }); response.end(JSON.stringify({ items: [1, 2, 3] })); return; }
+    if (url.pathname === "/api/echo") { echoes.count++; response.writeHead(200, { "content-type": "application/json" }); response.end(JSON.stringify({ count: echoes.count })); return; }
     if (url.pathname === "/scripted") {
       response.writeHead(200, { "content-type": "text/html; charset=utf-8", "set-cookie": "session=topsecret; Path=/", "content-security-policy": "default-src 'self'; script-src 'self'" });
       response.end(SCRIPTED);
@@ -556,6 +582,179 @@ const phases = {
       say(`approvals asked: ${approvals.join(", ")}`);
       say(`transcript rows:\n${rows.map((line) => `  ${line}`).join("\n")}`);
       void login;
+    } finally {
+      child.kill();
+      host.stop();
+      service.close();
+      fs.rmSync(tmpRoot, { recursive: true, force: true });
+    }
+  },
+
+  async p6({ client, base, socketFile }) {
+    const tool = (name, args = {}, options = {}) => client.executeTool(name, args, { timeoutMs: 30_000, ...options });
+    const { tabId } = await tool("navigate", { url: `${base}/console` });
+    await wait(500); // the page's timer throws, its fetch logs
+
+    // The first read starts watching and replays what the page logged before.
+    const first = await tool("read_console_messages", { tabId });
+    say(`read_console_messages (first) → started ${first.started}, ${first.total} message(s):\n${first.messages.map((m) => `  [${m.level} · ${m.source}] ${m.text}`).join("\n")}`);
+    assert.equal(first.started, true);
+    assert.ok(first.messages.some((m) => m.level === "log" && /^early boot \{stage: 1, list: /.test(m.text)), "the early log, replayed, with its object previewed");
+    assert.ok(first.messages.some((m) => m.level === "warn" && m.text === "careful: deprecated thing"), "format specifiers applied");
+    assert.ok(first.messages.some((m) => m.source === "exception" && /boom-uncaught/.test(m.text) && m.line), "the uncaught exception, with its line");
+    const errors = await tool("read_console_messages", { tabId, onlyErrors: true });
+    assert.ok(errors.messages.length >= 2 && errors.messages.every((m) => m.level === "error"), "onlyErrors: errors only");
+    assert.deepEqual((await tool("read_console_messages", { tabId, pattern: "EARLY\\s+FAIL" })).messages.map((m) => m.text), ["early failure"], "pattern, case-insensitive");
+
+    // Network: nothing from before monitoring began; after a reload, the page load's requests.
+    const before = await tool("read_network_requests", { tabId });
+    assert.equal(before.started, false, "the console read started the tab's monitor already");
+    assert.equal(before.requests.filter((r) => r.url.endsWith("/console.js")).length, 0, "the first load's requests aren't known");
+    await tool("navigate", { url: `${base}/console`, tabId });
+    await wait(500);
+    const loaded = await tool("read_network_requests", { tabId, includeHeaders: true });
+    say(`read_network_requests after a reload →\n${loaded.requests.map((r) => `  #${r.requestId} ${r.method} ${r.url} → ${r.failed ? `failed ${r.errorText}` : r.status} ${r.type} ${r.mimeType ?? ""} ${r.size ?? "?"} B ${r.duration ?? "?"} ms`).join("\n")}`);
+    const find = (suffix) => loaded.requests.find((r) => r.url.endsWith(suffix));
+    assert.deepEqual([find("/console")?.status, find("/console")?.type], [200, "Document"]);
+    assert.deepEqual([find("/console.js")?.status, find("/console.js")?.type], [200, "Script"]);
+    assert.deepEqual([find("/api/data")?.status, find("/api/data")?.mimeType], [200, "application/json"]);
+    assert.equal(find("/missing.png")?.status, 404);
+    assert.ok(Number.isFinite(find("/console.js").size) && Number.isFinite(find("/console.js").duration));
+    assert.ok(!JSON.stringify(loaded).includes("topsecret"), "cookie values are redacted");
+    const setCookie = Object.entries(find("/console").headers.response).find(([name]) => /^set-cookie$/i.test(name));
+    if (setCookie) assert.equal(setCookie[1], "(redacted)");
+    const body = await tool("read_network_requests", { tabId, requestId: find("/api/data").requestId });
+    assert.deepEqual(JSON.parse(body.request.body), { items: [1, 2, 3] }, "one request's response body");
+    const afterReload = await tool("read_console_messages", { tabId });
+    assert.ok(afterReload.messages.filter((m) => m.text.startsWith("early boot")).length >= 2, "same origin: the messages from before the reload are kept");
+    assert.ok(afterReload.messages.some((m) => m.source === "network" && /404/.test(m.text)), "the 404, as the browser logs it");
+    assert.equal((await tool("read_console_messages", { tabId, clear: true })).cleared, true);
+    assert.equal((await tool("read_console_messages", { tabId, pattern: "early boot" })).matched, 0, "cleared");
+    say("console: replay, onlyErrors, pattern, clear · network: after reload, 404, headers redacted, body");
+
+    // Write scripts: refused without writeHosts; with them, like the console.
+    assert.equal(await failsWith(tool("javascript_tool", { tabId, code: "document.title = 'x'", write: true })), "write_not_approved");
+    assert.equal(await failsWith(tool("javascript_tool", { tabId, code: "document.title = 'x'" })), "not_read_only", "read-only still refuses writes");
+    const wrote = await tool("javascript_tool", { tabId, write: true, code: "document.querySelector('#heading').textContent = 'changed';\nconst response = await fetch('/api/echo', { method: 'POST' });\n(await response.json()).count" }, { writeHosts: ["*"] });
+    say(`javascript_tool write: true → ${JSON.stringify(wrote)}; echoes ${echoes.count}`);
+    assert.deepEqual([wrote.write, wrote.value], [true, 1]);
+    assert.equal(echoes.count, 1, "the awaited fetch reached the server");
+    assert.equal((await tool("javascript_tool", { tabId, code: "document.querySelector('#heading').textContent" })).value, "changed", "the DOM changed");
+    assert.equal((await tool("javascript_tool", { tabId, write: true, code: "let n = 1; n" }, { writeHosts: ["*"] })).value, 1);
+    assert.equal((await tool("javascript_tool", { tabId, write: true, code: "let n = 2; n" }, { writeHosts: ["*"] })).value, 2, "replMode: let redeclared");
+    assert.deepEqual((await tool("javascript_tool", { tabId, write: true, code: "{ a: 1 }" }, { writeHosts: ["*"] })).value, { a: 1 }, "an object literal, as the console reads it");
+    await tool("javascript_tool", { tabId, write: true, code: "console.log('from write')" }, { writeHosts: ["*"] });
+    assert.equal((await tool("read_console_messages", { tabId, pattern: "from write" })).matched, 1, "the script's console.log is captured");
+    // An error says where in the code it was thrown, whatever V8's path: a throw after an await (V8 gives that 1-based),
+    // the console's object-literal parentheses (a character before the code), read-only's wrapping (a line before it).
+    await assert.rejects(tool("javascript_tool", { tabId, write: true, code: "await null;\nthrow new Error('bad')" }, { writeHosts: ["*"] }), (error) => error.code === "js_error" && /^Error: bad\n/.test(error.message) && /\(line 2, column 7\)$/.test(error.message));
+    await assert.rejects(tool("javascript_tool", { tabId, write: true, code: "{ a: nowhere }" }, { writeHosts: ["*"] }), (error) => error.code === "js_error" && /nowhere is not defined/.test(error.message) && /\(line 1, column 6\)$/.test(error.message));
+    await assert.rejects(tool("javascript_tool", { tabId, code: "const a = 1;\nnowhere.b" }), (error) => error.code === "js_error" && /nowhere is not defined/.test(error.message) && /\(line 2, column 1\)$/.test(error.message));
+    assert.equal(await failsWith(tool("javascript_tool", { tabId, write: true, code: "await new Promise(() => {})", timeout_ms: 500 }, { writeHosts: ["*"] })), "timeout");
+    assert.equal(await failsWith(tool("javascript_tool", { tabId, write: true, code: "1" }, { writeHosts: ["example.com"] })), "write_not_approved", "only on the approved site");
+    assert.equal(await failsWith(tool("browser_batch", { actions: [{ name: "javascript_tool", input: { tabId, code: "1", write: true } }] }, { writeHosts: ["*"] })), "bad_request");
+
+    // A tab no monitor holds (Runtime isn't on there yet): an object literal still reads as the console reads it, and
+    // a promise the code ends with is awaited.
+    const { tabId: freshTab } = await tool("navigate", { url: `${base}/console` });
+    assert.deepEqual((await tool("javascript_tool", { tabId: freshTab, write: true, code: "{ a: 1 }" }, { writeHosts: ["*"] })).value, { a: 1 }, "an object literal on an unmonitored tab");
+    assert.equal((await tool("javascript_tool", { tabId: freshTab, write: true, code: "Promise.resolve(42)" }, { writeHosts: ["*"] })).value, 42, "a trailing promise, awaited");
+    assert.deepEqual((await tool("javascript_tool", { tabId: freshTab, write: true, code: "fetch('/api/data').then((response) => response.json())" }, { writeHosts: ["*"] })).value, { items: [1, 2, 3] }, "an un-awaited fetch chain, awaited");
+    // The site is checked again in the tab's turn, and the script pinned to that document: one queued behind a script
+    // that sends the tab to another site (after both passed the first check) doesn't run on that site. The promise it
+    // waits on is kept reachable (window.leave): one nothing refers to may be garbage-collected, which ends the wait
+    // early (a timeout) instead of the navigation ending it.
+    const here = new URL(base).host;
+    const there = base.replace("127.0.0.1", "localhost");
+    const leaving = failsWith(tool("javascript_tool", { tabId: freshTab, write: true, code: `setTimeout(() => { location.href = ${JSON.stringify(`${there}/console`)}; }, 400); await new Promise((resolve) => { window.leave = resolve; })`, timeout_ms: 5000 }, { allowedHosts: [here], writeHosts: [here] })).catch(() => "succeeded");
+    await wait(100);
+    const behind = await failsWith(tool("javascript_tool", { tabId: freshTab, write: true, code: "document.title = 'pwned'; document.title" }, { allowedHosts: [here], writeHosts: [here] })).catch(() => "succeeded");
+    say(`a script that navigated away → ${await leaving}; the one queued behind it → ${behind}`);
+    assert.equal(await leaving, "page_changed", "the navigation ended the first script's document");
+    assert.ok(["site_not_allowed", "page_changed"].includes(behind), "the queued script was refused on the new site");
+    await wait(300);
+    assert.equal((await tool("javascript_tool", { tabId: freshTab, code: "document.title" })).value, "Console", "nothing ran on the other site");
+
+    // Another origin (localhost instead of 127.0.0.1) starts over.
+    const other = base.replace("127.0.0.1", "localhost");
+    await tool("navigate", { url: `${other}/console`, tabId });
+    await wait(500);
+    const moved = await tool("read_network_requests", { tabId });
+    assert.ok(moved.requests.length && moved.requests.every((r) => r.url.startsWith(other)), "only the new origin's requests");
+    assert.ok(!(await tool("read_console_messages", { tabId })).messages.some((m) => m.text === "from write"), "only the new origin's messages");
+    say(`write scripts: DOM changed, fetch awaited (echoes ${echoes.count}), let redeclared, refused without approval / in a batch · ${other}: started over`);
+
+    // Through the app: the real agent-tools host and MCP server, the session's Mode and the chrome-script card.
+    const asked = [];
+    let mode = { access: "read-only", permission: "plan" };
+    let answer = false;
+    const service = createChromeBridgeService({ connect: () => ChromeBridgeClient.connect({ file: socketFile }) });
+    const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), "ocb-tools-"));
+    const host = createAgentToolsHost({ toolsDir: path.join(root, "electron", "agent-tools"), tmpRoot, command: process.execPath, runAsNode: true,
+      resolveSession: (id, meta) => ((id ?? meta?.threadId) === "thread-6" ? { id: "thread-6", cwd: root } : null),
+      isGroupEnabled: (group) => group === "browser", logger: { warn() {}, log() {} },
+      requestApproval: async (session, request) => { asked.push(request); return typeof answer === "function" ? answer(request) : answer; } });
+    host.provide("access", () => ({ get: async () => mode }));
+    host.provide("chromeBridge", (session, ctx) => ({
+      call: (name, args, options = {}) => service.call(session.id, name, args, { signal: ctx?.signal ?? null, writeHosts: Array.isArray(options.writeHosts) ? options.writeHosts : null, approve: async () => true }),
+    }));
+    await host.start();
+    const child = spawn(process.execPath, [path.join(root, "electron", "agent-tools-server.mjs")], { env: { PATH: process.env.PATH, ELECTRON_RUN_AS_NODE: "1", ...host.launchEnv(), CODE_DESKTOP_AGENT_SESSION: "thread-6" }, stdio: ["pipe", "pipe", "ignore"] });
+    const pending = new Map();
+    let seq = 0;
+    readline.createInterface({ input: child.stdout }).on("line", (line) => { const message = JSON.parse(line); pending.get(message.id)?.(message); pending.delete(message.id); });
+    const request = (method, params) => new Promise((resolve) => { const id = ++seq; pending.set(id, resolve); child.stdin.write(JSON.stringify({ jsonrpc: "2.0", id, method, params }) + "\n"); });
+    const call = async (name, args = {}) => {
+      const result = (await request("tools/call", { name, arguments: args })).result;
+      return { text: result.content.filter((part) => part.type === "text").map((part) => part.text).join("\n"), isError: result.isError === true };
+    };
+    try {
+      await request("initialize", { protocolVersion: "2025-06-18" });
+      const listed = (await request("tools/list", {})).result.tools.map((entry) => entry.name);
+      for (const name of ["chrome_read_console_messages", "chrome_read_network_requests"]) assert.ok(listed.includes(name), `${name} listed`);
+      const opened = await call("chrome_navigate", { url: `${base}/console` });
+      const appTab = Number(/^Tab (\d+):/.exec(opened.text)[1]);
+      const heading = async () => (await call("chrome_javascript_tool", { tabId: appTab, code: "document.querySelector('#heading').textContent" })).text;
+      const write = (text) => call("chrome_javascript_tool", { tabId: appTab, write: true, code: `document.querySelector('#heading').textContent = ${JSON.stringify(text)}; 'ok'` });
+
+      const consoleText = (await call("chrome_read_console_messages", { tabId: appTab })).text;
+      assert.match(consoleText, /\[log\] early boot/);
+      const refused = await write("plan");
+      assert.equal(refused.isError, true);
+      assert.match(refused.text, /read-only mode \(Plan or Ask\)/);
+      assert.equal(asked.length, 0, "Plan: not even asked");
+
+      mode = { access: "workspace-write", permission: "auto" };
+      answer = false;
+      const declined = await write("declined");
+      assert.match(declined.text, /declined running this script on 127\.0\.0\.1:\d+/);
+      assert.deepEqual([asked.length, asked[0].kind, asked[0].host.replace(/:\d+$/, ":port")], [1, "chrome-script", "127.0.0.1:port"]);
+      assert.match(asked[0].code, /textContent = "declined"/);
+      assert.equal(await heading(), '"Console fixture"', "declined: unchanged");
+      answer = true; // Allow once
+      assert.equal((await write("once")).text, '"ok"');
+      assert.equal(await heading(), '"once"');
+      answer = { approved: true, always: true }; // Allow for this session
+      await write("session");
+      answer = false;
+      assert.equal((await write("again")).text, '"ok"', "allowed for the session: not asked again");
+      assert.equal(asked.length, 3);
+      const batch = await call("chrome_browser_batch", { actions: [{ name: "javascript_tool", input: { tabId: appTab, code: "1", write: true } }] });
+      assert.match(batch.text, /can't run in a batch/);
+
+      mode = { access: "danger-full-access", permission: "bypass" };
+      const fresh = await call("chrome_navigate", { url: `${other}/console` });
+      const bypassTab = Number(/^Tab (\d+):/.exec(fresh.text)[1]);
+      assert.equal((await call("chrome_javascript_tool", { tabId: bypassTab, write: true, code: "document.title = 'bypass'; document.title" })).text, '"bypass"');
+      assert.equal(asked.length, 3, "Bypass permissions: not asked");
+      // A Bypass the session's access doesn't have (the turn didn't run with full access, or Bypass was turned off) asks.
+      mode = { access: "workspace-write", permission: "bypass" };
+      assert.match((await call("chrome_javascript_tool", { tabId: bypassTab, write: true, code: "document.title = 'downgraded'" })).text, /declined running this script/);
+      assert.equal(asked.length, 4, "downgraded Bypass: asked");
+      mode = { access: "danger-full-access", permission: "bypass" };
+      const network = await call("chrome_read_network_requests", { tabId: bypassTab, urlPattern: "/api/" });
+      assert.match(network.text, /Started recording/);
+      say(`app path: Plan refused · card asked ${asked.length}× (declined, once, for the session, downgraded Bypass) · Bypass ran without asking`);
     } finally {
       child.kill();
       host.stop();

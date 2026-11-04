@@ -107,6 +107,9 @@ for (const file of (await fs.readdir(path.join(root, "src/generated"), { recursi
   for (const m of (await fs.readFile(path.join(root, "src/generated", file), "utf8")).matchAll(/"assets\/v1\/([\w-]+\.css)"/g))
     if (!files.includes(m[1])) lazySheets.add(m[1]);
 }
+// W14-code renderer-core (E86): the stylesheets of the chunks the Code transcript renderer is sliced from, which
+// source-code-transcript.jsx links (CODE_TRANSCRIPT_SHEETS) as the desktop loads them with those chunks.
+for (const name of ["c4a9ee384-Br-fzuOs.css", "c19e90103-CuNz46ca.css"]) if (!files.includes(name)) lazySheets.add(name);
 for (const file of [...files, ...[...lazySheets].sort()]) {
   const raw = await fs.readFile(path.join(designSource, file), "utf8");
   for (const m of raw.matchAll(/url\(["']?\/assets\/v1\/([^\s)"']+)/g)) {

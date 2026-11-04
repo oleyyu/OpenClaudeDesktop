@@ -105,7 +105,7 @@ async function rename(id, name, commit = true) {
 }
 async function create(name) {
   await page.getByRole("button", { name: /^New(?:\s*⌘ N)?$/, exact: false }).first().click();
-  await page.getByRole("textbox", { name: "Message DeepSeek" }).fill(`fixture:complete ${name}`);
+  await page.getByRole("textbox", { name: /^(?:Prompt|Message DeepSeek)$/ }).fill(`fixture:complete ${name}`);
   await page.locator('[data-testid="code-prompt-send"]:not([inert] *)').click();
   await page.locator(".assistant-message").filter({ hasText: "Fixture response" }).waitFor();
   await page.locator('[data-testid="code-prompt-stop"]:not([inert] *)').waitFor({ state: "detached" });
@@ -149,11 +149,11 @@ try {
   const alpha = await create("Alpha task");
   await page.locator(".source-sidebar-nav-row").filter({ hasText: "New" }).click();
   await app.evaluate(({ dialog }, folder) => { dialog.showOpenDialog = async () => ({ canceled: false, filePaths: [folder] }); }, folderB);
-  await page.locator(".sc-folder-chip").click();
+  await page.locator("[data-testid=\"environment-bar-folder\"]").click();
   // Fidelity F03: the composer folder chip opens the lH Recent picker (cc43287c9 :21638-21850); browsing is its
   // trailing 'Open folder…' row (was the local 'Choose a folder…').
   await page.getByRole("menuitem", { name: "Open folder…", exact: true }).click();
-  await page.locator(".sc-folder-chip").filter({ hasText: "second-project" }).waitFor();
+  await page.locator("[data-testid=\"environment-bar-folder\"]").filter({ hasText: "second-project" }).waitFor();
   const beta = await create("Beta task");
   report.ids = { zeta, alpha, beta };
   report.checks.push("three independent fixture:complete threads created through UI in two selected folders");
@@ -245,7 +245,7 @@ try {
   report.checks.push("pin/unpin, no duplicated rows, mark unread/read, opening session clears local unread metadata");
   // F08 automatic unread (kR / serverUnread && !paneSelected): beta's turn completes while zeta is open.
   await row(beta).locator(".source-session-open").click();
-  await page.getByRole("textbox", { name: "Message DeepSeek" }).fill("fixture:complete delayed-start background reply");
+  await page.getByRole("textbox", { name: /^(?:Prompt|Message DeepSeek)$/ }).fill("fixture:complete delayed-start background reply");
   await page.locator('[data-testid="code-prompt-send"]:not([inert] *)').click();
   await row(zeta).locator(".source-session-open").click();
   const unreadGlyph = row(beta).locator('.source-leading-slot [role="status"][aria-label="Unread response"] .status-dot[data-kind="ready"]');
@@ -279,8 +279,8 @@ try {
   await poll(async () => await researchPlus.evaluate((node) => getComputedStyle(node.closest(".source-group-reveal")).opacity) === "1", "'+' revealed on section hover");
   await researchPlus.click();
   await page.locator('.source-sidebar-nav-row[aria-current="page"]').waitFor();
-  await page.locator(".sc-folder-chip").filter({ hasText: "second-project" }).waitFor();
-  await page.getByRole("textbox", { name: "Message DeepSeek" }).fill("fixture:complete group plus");
+  await page.locator("[data-testid=\"environment-bar-folder\"]").filter({ hasText: "second-project" }).waitFor();
+  await page.getByRole("textbox", { name: /^(?:Prompt|Message DeepSeek)$/ }).fill("fixture:complete group plus");
   await page.locator('[data-testid="code-prompt-send"]:not([inert] *)').click();
   await page.locator(".assistant-message").filter({ hasText: "Fixture response" }).waitFor();
   await page.locator('[data-testid="code-prompt-stop"]:not([inert] *)').waitFor({ state: "detached" });
@@ -387,7 +387,7 @@ try {
   await row(alpha).locator(".source-session-open").click();
   await page.getByRole("button", { name: "Restore session", exact: true }).click();
   await page.getByRole("button", { name: "Restore session", exact: true }).waitFor({ state: "detached" });
-  await page.getByRole("textbox", { name: "Message DeepSeek" }).fill("fixture:complete after archived read and restore");
+  await page.getByRole("textbox", { name: /^(?:Prompt|Message DeepSeek)$/ }).fill("fixture:complete after archived read and restore");
   await page.locator('[data-testid="code-prompt-send"]:not([inert] *)').click();
   await poll(async () => {
     const restored = (await readThreads()).threads[alpha];

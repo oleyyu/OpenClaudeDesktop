@@ -8,6 +8,6 @@
    ([.epitaxy-chat-panel_&]:[@container_tile-slot_(max-width:560px)]:[--chat-gutter:16px]). */
 .btw-pane { container-type: inline-size; container-name: btw-tile-slot; }
 @container btw-tile-slot (max-width: 560px) {
-  /* Above html[data-local-transcript-width] .source-transcript-content (0,2,1). */
+  /* Above html[data-transcript-width] .source-transcript-content (0,2,1). */
   .btw-pane.btw-pane .source-transcript-content { padding-inline: 16px; }
 }

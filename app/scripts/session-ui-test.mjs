@@ -172,7 +172,7 @@ async function responses() {
 }
 async function send(text) {
   await page
-    .getByRole("textbox", { name: "Message DeepSeek", exact: true })
+    .getByRole("textbox", { name: /^(?:Prompt|Message DeepSeek)$/ })
     .fill(text);
   await page.locator('[data-testid="code-prompt-send"]:not([inert] *)').click();
   await page.locator("[data-approval-presentation=card]").waitFor();
@@ -194,7 +194,7 @@ async function decide(prompt, button, result, inspect) {
   const card = page.locator("[data-approval-presentation=card]");
   if (inspect) await inspect(card);
   // Source Allow actions arm 400 ms after a new card becomes active.
-  if (await card.locator(".sac-allows").count()) await page.waitForTimeout(450);
+  if (await card.locator("[data-approval-allow]").count()) await page.waitForTimeout(450);
   await card.getByRole("button", { name: button, exact: true }).click();
   await card.waitFor({ state: "detached" });
   await page.waitForFunction(
@@ -420,7 +420,7 @@ try {
   const findStatus = () => page.locator('[role="search"] [role="status"]').textContent();
   const waitFindStatus = (value) => page.waitForFunction((value) =>
     document.querySelector('[role="search"] [role="status"]')?.textContent === value, value);
-  await page.getByRole("textbox", { name: "Message DeepSeek", exact: true }).click();
+  await page.getByRole("textbox", { name: /^(?:Prompt|Message DeepSeek)$/ }).click();
   await page.waitForFunction(() => document.activeElement?.classList.contains("sc-input"));
   await page.keyboard.press("Meta+f");
   await page.waitForFunction(() => document.activeElement?.matches('input[aria-label="Find"]'));
@@ -711,7 +711,7 @@ try {
   await tree.getByRole("button", { name: "nested", exact: true }).click();
   await tree.getByRole("button", { name: "deep.txt", exact: true }).click();
   await page
-    .locator(".source-file-preview, .sfv-editor")
+    .locator("[data-file-viewer], .sfv-editor")
     .filter({ hasText: "NESTED_FILE_PREVIEW" })
     .waitFor();
   // Preview tab name carries the sr-only ", preview" hint (panes-tabs-current.js:436-441).
@@ -723,7 +723,7 @@ try {
   await page.locator(".source-pane-header").getByRole("button", { name: "Show file tree", exact: true }).click();
   await tree.getByRole("button", { name: "alpha.txt", exact: true }).click();
   await page
-    .locator(".source-file-preview, .sfv-editor")
+    .locator("[data-file-viewer], .sfv-editor")
     .filter({ hasText: "FIRST_FILE_PREVIEW" })
     .waitFor();
   assert.equal(
@@ -735,15 +735,15 @@ try {
   );
   await page.getByRole("tab", { name: "deep.txt", exact: true }).click();
   await page
-    .locator(".source-file-preview, .sfv-editor")
+    .locator("[data-file-viewer], .sfv-editor")
     .filter({ hasText: "NESTED_FILE_PREVIEW" })
     .waitFor();
   // pe close button: aria-hidden, label "Close file" (panes-tile-current.js:6671).
   await page
-    .locator('.source-file-tab[data-file-path="nested/deep.txt"] > button[aria-label="Close file"][aria-hidden="true"]')
+    .locator('[data-view-tab-bar] [data-vtb-id="nested/deep.txt"] button[aria-label="Close file"]')
     .click();
   await page
-    .locator(".source-file-preview, .sfv-editor")
+    .locator("[data-file-viewer], .sfv-editor")
     .filter({ hasText: "FIRST_FILE_PREVIEW" })
     .waitFor();
   await fs.writeFile(
@@ -783,7 +783,7 @@ try {
   const findStatusText = () => page.locator('[role="search"] [role="status"]').textContent();
   const waitStatus = (value) => page.waitForFunction((value) =>
     document.querySelector('[role="search"] [role="status"]')?.textContent === value, value);
-  await page.getByRole("textbox", { name: "Message DeepSeek", exact: true }).click();
+  await page.getByRole("textbox", { name: /^(?:Prompt|Message DeepSeek)$/ }).click();
   await page.waitForFunction(() => document.activeElement?.classList.contains("sc-input"));
   await page.keyboard.press("Meta+f");
   await page.waitForFunction(() => document.activeElement?.matches('input[aria-label="Find"]'));
@@ -816,7 +816,7 @@ try {
   assert.equal(await page.getByRole("menuitemcheckbox", { name: "Plan", exact: true }).count(), 0, "no plan, no Plan row");
   await page.keyboard.press("Escape");
   await page.getByRole("menuitemcheckbox", { name: "Files", exact: true }).waitFor({ state: "detached" });
-  await page.getByRole("textbox", { name: "Message DeepSeek", exact: true }).fill("fixture:plan-document");
+  await page.getByRole("textbox", { name: /^(?:Prompt|Message DeepSeek)$/ }).fill("fixture:plan-document");
   await page.locator('[data-testid="code-prompt-send"]:not([inert] *)').click();
   await page.getByText("PLAN_FIXTURE_REPLY", { exact: true }).waitFor();
   await page.getByRole("button", { name: "View options", exact: true }).click();

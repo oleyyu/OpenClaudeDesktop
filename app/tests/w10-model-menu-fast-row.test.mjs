@@ -188,12 +188,13 @@ test('composer-model-selector-extras: R$ fastModeUnavailableRow / onFastModeCta 
 test('composer-model-selector-extras: effortSliderOverlay and modelFallback sit outside the model menu popup', () => {
   const view = raw('c227f4d5e-B-FYKrwT.js');
   // P$ → y$ lit overlay goes to the separate Effort control (shared-8 effort.sliderOverlay → shared-7 jw → lazy
-  // c8e04f916 EffortControl), already the host's effort popover (source-composer.jsx EffortLitOverlay).
+  // c8e04f916 EffortControl). W14-code r6-composer-02: the host's effort popover is that sliced EffortControl, and passes
+  // the sliced P$ (generated/effort-control/lit-overlay.mjs) by R$'s rule (source-composer.jsx effortSliderOverlay).
   once(view, 'function P$(e){return y("span",{className:"epitaxy-root text-body text-primary break-words contents",children:y(y$,{lit:e.atMax})})}');
   once(view, 'J=Dd(re?.thinking?.effort_options?.at(-1)?.id)?P$:void 0');
   assert.ok(raw('shared-8-Db1QN4mf.js').includes('sliderOverlay:e.effortSliderOverlay'));
   assert.ok(raw('shared-7-DBAgAi5H.js').includes('h(jw,{label:u,open:d,defaultOpen:s,onOpenChange:C,sliderOverlay:f,'));
-  assert.ok(fs.readFileSync(path.join(ROOT, 'src/source-composer.jsx'), 'utf8').includes('<EffortLitOverlay lit={atMax} />'));
+  assert.ok(fs.readFileSync(path.join(ROOT, 'src/source-composer.jsx'), 'utf8').includes('options.at(-1)?.id === ULTRACODE_EFFORT ? EffortSliderOverlay : undefined'));
   // modelFallback is the session's refusal fallback (cc43287c9 `D=Cj(...)`, c06cf64bb `e?.refusalFallback??e?.restoredRefusalFallback`)
   // marked on the TRIGGER (L$, "This session switched to {fallback} after …safeguards flagged a message"), not the popup.
   once(view, 'function F$(e,t,n){return t.unsupported?Xt(e):n??t.name}');

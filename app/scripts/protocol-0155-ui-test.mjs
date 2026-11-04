@@ -133,7 +133,7 @@ async function open(id, lastItem) {
   await page.locator(".loading-state").waitFor({ state: "detached" });
 }
 async function send(text) {
-  await page.getByRole("textbox", { name: "Message DeepSeek", exact: true }).fill(text);
+  await page.getByRole("textbox", { name: /^(?:Prompt|Message DeepSeek)$/ }).fill(text);
   await page.locator('[data-testid="code-prompt-send"]:not([inert] *)').click();
 }
 try {
@@ -332,7 +332,7 @@ try {
 
   // 14. A sub-agent's approval is answerable from the session that owns it.
   await send("fixture:subagent-approval");
-  const card = page.locator(".sac-card").first();
+  const card = page.locator("[data-approval-card-root]").first();
   await card.waitFor();
   const approvalChild = Object.values((await readThreads()).threads).filter(entry => entry.parentThreadId === PAG).at(-1);
   assert.ok(approvalChild, "the fixture really created the sub-agent that asks for approval");

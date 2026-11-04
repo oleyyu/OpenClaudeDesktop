@@ -19,7 +19,7 @@ try {
   const page = await app.firstWindow();
   const errors = [];
   page.on("pageerror", (e) => errors.push(e.message));
-  await page.getByRole("textbox", { name: "Message DeepSeek" }).waitFor();
+  await page.getByRole("textbox", { name: /^(?:Prompt|Message DeepSeek)$/ }).waitFor();
   await page.waitForFunction(
     () =>
       document.querySelector('.model-trigger')?.textContent !== 'Default model' && !!document.querySelector('.model-trigger'),

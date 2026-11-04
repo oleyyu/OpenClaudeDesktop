@@ -7,7 +7,8 @@ import { SourceAppSwitch } from "./source-app-switch.jsx";
 import { surfaceNavRows } from "./surface-nav-model.mjs";
 import { SourceTooltip, textOverflows } from "./source-tooltip";
 import { SourceSpark } from "./source-spark.jsx";
-import { CdsAvatar, CdsButton, CdsTooltip } from "./generated/view-tabs/index.js";
+import { CdsAvatar, CdsButton, CdsIcon, CdsTooltip } from "./generated/view-tabs/index.js";
+import { SidebarRowControl } from "./generated/code-current/sidebar-row-control.mjs";
 import { staticComposerBootFade } from "./generated/app-switch/boot-fade.mjs";
 import { hostGrowthBookFlag } from "./host-growthbook.mjs";
 import { SourceMenu, menuTriggerProps } from "./source-menu";
@@ -22,7 +23,7 @@ import {
 // A sub-agent's approval is attributed to the session that owns it: the
 // sub-agent thread is never a sidebar row, so a bare threadId match would
 // leave a blocked session with no "awaiting input" state at all.
-import { hasPendingApproval, latestTurnError } from "./state.js";
+import { hasPendingApproval, latestTurnError, ownerThreadId } from "./state.js";
 import { describeTurnError } from "./turn-error-model.mjs";
 import { archiveBlockedByField, archiveChord, archiveNeighbour, collectJumpRows, createJumpHints, isTypingTarget } from "./sidebar-jump-model.mjs";
 import { connectSessionCycleGroups } from "./session-cycle-adapters.mjs";
@@ -31,17 +32,20 @@ import { useSidebarRowDrag, SidebarDragGhost, PinnedDropRow } from "./source-sid
 import { DragPinHintCoachmark, dragPinHintStore } from "./source-drag-pin-hint.jsx"; // w13-close-rail-regen cwui-46 (shared-22 aM)
 import { dragRowStyle, pinnedOrderAfterDrop } from "./sidebar-drag-model.mjs";
 import { sessionPaneDropHost, splitStore, useSplitSides } from "./source-split-view.jsx";
-import { useStartIntl } from './source-code-start-adapters.jsx';
+import { createStartIntl, useStartIntl } from './source-code-start-adapters.jsx';
+import { sidebarGroupMessages } from './generated/code-current/sidebar-group-copy.mjs';
 import { nestedSessionLabel, nestedStatusLabels, nestedRevealLabel } from './generated/code-current/nested-session-copy.mjs';
 import { NestedStatusSeparator } from './generated/code-current/nested-session-separator.mjs';
 import { NestedStatusDot, NestedErrorIcon, nestedFocusClass, sidebarHitRowMainClass } from './generated/code-current/nested-session-parts.mjs';
 import { SidebarSearchField } from './generated/code-current/sidebar-search.mjs';
-import { CdsDensityContext as CdsBadgeDensity } from './generated/view-tabs/index.js';
-import { SidebarNavBadge } from './generated/code-current/sidebar-nav-badge.mjs';
 import { SidebarRunningMark } from './generated/code-current/sidebar-running-mark.mjs';
+import { SectionStatusGlyph } from './generated/sidebar-sections/section-badge.mjs';
 import { useNewPageActivity } from './source-new-page-activity.jsx';
 import { currentSidebarSession } from './sidebar-session-current-model.mjs';
 import { SourceCodeSidebarRow, SidebarCurrentMenuHost, SourceSidebarRowMore } from './source-code-sidebar-row.jsx';
+// W14-code r4 frame-sidebar (fr4-07 / fr4-06 mount): sidebar-new's 3.6556.2 hover card (shared-20 QO) and Routines section (shared-21 p4).
+import { SidebarHoverCardHost, SidebarSessionHoverCard, sidebarHoverCardData, sidebarHoverCardState } from './source-sidebar-hover-card.jsx';
+import { SidebarRoutinesSection, useRoutineRunTasks } from './source-sidebar-routines.jsx';
 import { SourceCodeSidebarFilter, sidebarNestedCommands } from './source-sidebar-filter-current.jsx';
 import { currentSidebarDetails } from './sidebar-details-current-model.mjs';
 import { SidebarSearchContext } from './source-sidebar-current-adapters.jsx';
@@ -50,16 +54,18 @@ import { SidebarOrderedMenu } from './generated/code-current/sidebar-menu-order.
 import { SidebarListContext, SidebarGroupViewItems } from './generated/code-current/sidebar-group-view.mjs';
 // R4g-sidebar SB3 (X7-06): those rows are CDS Dropdown parts (shared-16 K) unless they sit in a host SourceMenu body.
 import { SourceMenuRows } from './source-sidebar-menu-kit.jsx';
-import { listedSidebarSessions } from './nested-less-side-chats.mjs';
+import { listedSidebarSessions, hostSideSessionFeatures } from './nested-less-side-chats.mjs';
+import { SidebarRowShortcut } from './generated/code-current/sidebar-row-view.mjs';
+import { SidebarGroupLabel } from './generated/sidebar-sections/group-label.mjs';
 // R3-sections (sidebar-sections-layout, D10): the Code list is the 2.42304.0 sections layout (Pinned → manual sections → Sessions).
 import { buildSidebarSections, folderBucketMenu, foldingSection, sectionFoldTarget, sectionsFoldedKeys, sectionsPreferences, sectionsRowRegistry, sessionsSectionId,
   sessionsViewPatch, sidebarSectionsList, withLegacyListFields } from './sidebar-sections-layout.mjs';
 import { SidebarBlankArea, SidebarSectionsList, bulkArchiveConfirmCopy, useSidebarSectionsHost, usePendingSectionFolds } from './source-sidebar-sections.jsx';
-import { usePresetsGate, useSectionsKeptWhileEmpty, useSidebarSectionsStore, presetBucketMenu, sessionsBucketOrderKeys } from './source-sidebar-sections-adapters.jsx';
+import { usePresetsGate, useSectionsKeptWhileEmpty, useSidebarSectionsStore, presetBucketMenu, sessionsBucketOrderKeys, useSideChatRowsShown, useStatusGrouping } from './source-sidebar-sections-adapters.jsx';
 import { CreateGroupDialog } from './generated/sidebar-sections/group-dialog.mjs';
 import { sectionMessages } from './generated/sidebar-sections/group-copy.mjs';
 import { digitFor, moveToGroupRows, multiHotkeys, multiMenuState, pinTargets,
-  bulkDeleteConfirmCopy, runBulkSessions } from "./sidebar-bulk-model.mjs";
+  bulkDeleteConfirmCopy, runBulkSessions, prefetchWorktreeProbes, BULK_DELETE_FALLBACK } from "./sidebar-bulk-model.mjs";
 import {
   clearSelection, createSelection, isSelected, pruneSelection, selectRange, setSelection as replaceSelection, toggleSelection,
 } from "./sidebar-selection.mjs";
@@ -67,7 +73,6 @@ import { SIDEBAR_WIDTH, sidebarFloorWidth } from "./sidebar-width-model.mjs";
 import { SidebarResizeHandle as OriginalSidebarResizeHandle } from "./generated/sidebar-resize/sidebar-resize-handle.mjs";
 import { useSidebarResizeHost } from "./source-sidebar-resize-adapters.jsx";
 import { SourceConfirmationDialog, SourceDialog, SourceDialogFooter, useDialogRetention } from "./source-dialog.jsx";
-import { SourceSettingsButton } from "./source-settings-button.jsx";
 import { SourceSwitch } from "./source-switch.jsx";
 import { hiddenSessionsNotice } from "./session-engine-model.mjs";
 import { SourceSidebarPalette } from "./source-sidebar-palette.jsx";
@@ -80,9 +85,12 @@ import { HUB_MESSAGES, coworkGroupBy, coworkListPreferences, hubBulkActions, hub
 import { paletteActions } from "./sidebar-palette-model.mjs";
 import { JUMP_COMMANDS } from "./focus-region-model.mjs";
 import { jumpToRegions, regionJumpAvailable } from "./use-focus-regions.js";
+import { sidebarListMessages } from "./generated/sessions-page/pure-shared-78.mjs";
+import { sidebarOlderMessages } from "./generated/sessions-page/pure-shared-22.mjs";
+import { sidebarBulkModelMessages } from "./generated/sessions-page/pure-c39a247c4.mjs";
 import "./source-sidebar.css";
 import { getAssistantName, t, tn } from "../electron/i18n/index.mjs";
-import { coreForEngine, coreName, coreSupports } from "../electron/core-registry.mjs";
+import { coreName } from "../electron/core-registry.mjs";
 // shared-22 GI `e = i("draggable-none", Ys, _ && "flex")` (desktop) wraps each titlebar control; shared-19 Dj (nx) drops
 // Enter/Space key repeat on the Hide sidebar button.
 const TITLEBAR_CHROME_CLASS = `draggable-none ${staticComposerBootFade} flex`;
@@ -176,10 +184,12 @@ const EDITABLE_SELECTOR = 'input, textarea, select, [contenteditable]:not([conte
 // right-click) highlights nothing and focuses the popup ("popup", source-menu.jsx), so the highlight follows the
 // pointer and ArrowDown starts at the first row. The arrow keys pass "first" / "last" (menuTriggerProps).
 export const keyboardEntry = (event) => (event?.detail === 0 ? "first" : undefined);
-// Bulk result toasts: the composed English ("Archived {count} older sessions",
-// "{count} session couldn’t be removed. Try again.") is the dictionary key.
-const bulkDoneMessage = (verb, count, noun) => tn(count, `${verb} {count} ${noun}`, `${verb} {count} ${noun}s`);
-const bulkFailedMessage = (verb, count) => tn(count, `{count} session couldn’t be ${verb}. Try again.`, `{count} sessions couldn’t be ${verb}. Try again.`);
+// W14-code fr6-07: bulk Archive / Unarchive / Delete toasts are the official message tables (c39a247c4 zt over shared-78
+// hv; the Older bucket's shared-22 CT olderBulkArchived / olderBulkDeleted), formatted with intl.
+const BULK_TOASTS = {
+  archive: { success: sidebarListMessages.bulkArchived, older: sidebarOlderMessages.olderBulkArchived, failure: sidebarListMessages.bulkArchiveFailed },
+  delete: { success: sidebarListMessages.bulkDeleted, older: sidebarOlderMessages.olderBulkDeleted, failure: sidebarListMessages.bulkDeleteFailed },
+};
 
 /**
  * Session row menu (sidebar-session-items.js M single / N multi). Letter keys
@@ -307,11 +317,12 @@ export function SourceSidebarSessionMenu({
   // ce4f4374c Oe (:837-870) / shared-21 vV openPr: the session's PR (core binding or the band's gh lookup) opens first, g.
   const prUrl = [session.prInfo?.url, session.prLink, session.codeDesktop?.pr?.url].find((value) => typeof value === "string" && /^https:\/\//i.test(value)) ?? null;
   const busy = sessionState(session, state) === "working" || hasPendingApproval(state, session.id);
-  const running = !!state.active?.[session.id];
-  const canArchive = !running;
   const archived = sessionArchived(session);
-  // forkUnavailable: the core cannot fork at all (unsupportedCommand, session-command-model).
-  const forkReason = forkUnavailable || (running ? t("Stop the running task before forking it.") : archived ? t("Restore this session before forking it.") : undefined);
+  // forkUnavailable: the core cannot fork at all (unsupportedCommand, session-command-model). W14-code fr6-03: no running
+  // reason — cd54a5401 `forkDisabledReason: Qt` (caec4a2d4 kn) only knows unsupported / requires_server /
+  // background_unavailable / host_offline, and a running session forks through its newest ended turn (session-operations).
+  // W14-code fr7-02: no archived reason either (Qt has none; an archived session forks, session-operations.cjs).
+  const forkReason = forkUnavailable || undefined;
   const pinnedAt = pinnedSiblings && metadata.pinned ? pinnedSiblings.indexOf(session.id) : -1;
   const reorder = (direction) => {
     const ids = movePinned(pinnedSiblings, session.id, direction);
@@ -320,11 +331,12 @@ export function SourceSidebarSessionMenu({
   hotkeys.current = new Map([
     ...(!header ? [["p", () => act(metadata.pinned ? "unpin" : "pin")]] : []),
     ["r", () => { onClose(); onRename(); }],
-    ...(canArchive && !(archived && unarchiving) ? [["a", () => act(archived ? "unarchive" : "archive")]] : []),
+    ...(!(archived && unarchiving) ? [["a", () => act(archived ? "unarchive" : "archive")]] : []),
     ...(!busy && !header ? [["u", () => act(metadata.unread ? "mark-read" : "mark-unread")]] : []),
     ...(onFork && !forkReason ? [["f", () => { onClose(); onFork(session); }]] : []),
-    ...(onDelete && canArchive ? [["d", () => { onClose(); onDelete(session); }]] : []),
-    ...(!running ? [["e", () => act("export")]] : []),
+    ...(onDelete ? [["d", () => { onClose(); onDelete(session); }]] : []),
+    // W14-code r5 fr5-01: ce4f4374c `if (z) { …Z.set("e", { name: "export" }) }` — Export does not wait for the turn.
+    ["e", () => act("export")],
     ...(shareable && session.codeDesktop?.shareUrl ? [["c", () => act("copy-share-link")]] : []),
     ...(prUrl ? [["g", () => act("open-pr", { url: prUrl })]] : []),
   ]);
@@ -358,7 +370,11 @@ export function SourceSidebarSessionMenu({
     </>}
     <SourceMenu.Group>
     {!header && <Choice shortcut="p" onClick={() => act(metadata.pinned ? "unpin" : "pin")}>{metadata.pinned ? t("Unpin") : t("Pin")}</Choice>}
-    {!busy && !header && <Choice shortcut="u" onClick={() => act(metadata.unread ? "mark-read" : "mark-unread")}>{metadata.unread ? t("Mark as read") : t("Mark as unread")}</Choice>}
+    {/* W14-code r5 fr5-02: ce4f4374c jn `V && e(R, { shortcut: V.inProgress && H ? void 0 : "u", disabled: V.inProgress, disabledReason:
+        "This session is still working or needs your input." (+G6/w5tqeq) })` — shown greyed while the session runs or awaits
+        approval (cd54a5401 inProgress); with no Mark as completed (H) the u label stays, the hotkey is left out above. */}
+    {!header && <Choice shortcut="u" disabled={busy} disabledReason={t("This session is still working or needs your input.")}
+      onClick={() => act(metadata.unread ? "mark-read" : "mark-unread")}>{metadata.unread ? t("Mark as read") : t("Mark as unread")}</Choice>}
     <Choice shortcut="r" onClick={() => { onClose(); onRename(); }}>{t("Rename")}</Choice>
     {!header && projectItems}
     {onFork && <Choice shortcut="f" disabled={!!forkReason} disabledReason={forkReason} onClick={() => { onClose(); onFork(session); }}>{t("Fork")}</Choice>}
@@ -373,8 +389,9 @@ export function SourceSidebarSessionMenu({
       <Choice shortcut="c" onClick={() => act("copy-share-link")}>{t("Copy link")}</Choice>
       <Choice onClick={() => act("unshare")}>{t("Stop sharing")}</Choice>
     </>}
-    <Choice shortcut="e" disabled={running} disabledReason={running ? t("Available when {assistant} finishes this turn", { assistant: getAssistantName() }) : undefined}
-      onClick={() => act("export")}>{t("Export")}</Choice>
+    {/* W14-code r5 fr5-01: ce4f4374c qe `z && e(R, { shortcut: "e", onClick: X("export", Y) })` — no disabled state; a running
+        session exports what is already on disk (main.jsx export reads readFullHistory). */}
+    <Choice shortcut="e" onClick={() => act("export")}>{t("Export")}</Choice>
     </SourceMenu.Group>
     {hasOrganize && <><Divider /><SourceMenu.Group>
     {pinnedAt > 0 && !header && <Choice onClick={() => reorder("up")}>{t("Move up")}</Choice>}
@@ -403,11 +420,12 @@ export function SourceSidebarSessionMenu({
     </>}
     <Divider />
     <SourceMenu.Group>
-    <Choice shortcut="a" disabled={!canArchive || (archived && unarchiving)} onClick={() => act(archived ? "unarchive" : "archive")}>
+    {/* W14-code r4 fr4-01: ce4f4374c $e `e(R,{shortcut:"a",onClick:l("archive",o)…})` / `e(R,{shortcut:"d",variant:"danger",
+        onClick:l("delete",c)…})` carry no disabled state: a running session is stopped first (main.cjs stopForRemoval). */}
+    <Choice shortcut="a" disabled={archived && unarchiving} onClick={() => act(archived ? "unarchive" : "archive")}>
       {archived ? (unarchiving ? t("Unarchiving…") : t("Unarchive")) : t("Archive")}
     </Choice>
-    {onDelete && <Choice shortcut="d" variant="danger" disabled={!canArchive} disabledReason={canArchive ? undefined : t("Stop the running task before deleting it.")}
-      onClick={() => { onClose(); onDelete(session); }}>{t("Delete")}</Choice>}
+    {onDelete && <Choice shortcut="d" variant="danger" onClick={() => { onClose(); onDelete(session); }}>{t("Delete")}</Choice>}
     </SourceMenu.Group>
   </div>;
 }
@@ -528,17 +546,20 @@ function GroupNameDialog({ switchesToCustom = false, onSubmit, onClose, open, on
       {switchesToCustom && <p className="source-group-switch-note">{t("The list will switch to Custom groups to show it.")}</p>}
       {error && <p role="alert">{error}</p>}
       <SourceDialogFooter>
-        <SourceSettingsButton disabled={pending} onClick={close}>{t("Cancel")}</SourceSettingsButton>
-        <SourceSettingsButton type="submit" variant="primary" busy={pending} disabled={!name.trim()}>{switchesToCustom ? t("Create and group by custom") : t("Create group")}</SourceSettingsButton>
+        {/* W14-code r5 cleanup css5-settings-button-replica: the shared-frame Button (Uu = CdsButton) here and below. */}
+        <CdsButton disabled={pending} onClick={close}>{t("Cancel")}</CdsButton>
+        <CdsButton type="submit" variant="primary" busy={pending} disabled={!name.trim()}>{switchesToCustom ? t("Create and group by custom") : t("Create group")}</CdsButton>
       </SourceDialogFooter>
     </form>
   </SourceDialog>;
 }
 
-/** yD deleteBody (sidebar-rows.js:7097-7140) for a custom group holding `count` sessions. */
-export function deleteGroupCopy(groupName, count) {
-  const rest = count === 0 ? t("Nothing is in it.") : tn(count, "The {count} item in it will no longer be grouped.", "The {count} items in it will no longer be grouped.");
-  return { title: t("Delete group?"), body: t("“{name}” will be removed. {rest}", { name: groupName, rest }), confirmLabel: t("Delete"), danger: true };
+/** The custom-group delete confirm for a group holding `count` sessions. W14-code r8 fr8-06: shared-18 ck (generated
+ * sidebar-group-copy.mjs) deleteTitle "Delete group?" (ji3zTDJwY0) and deleteBody (4D7Ot0hBpY, the plural ICU message)
+ * instead of the host's composed "“{name}” will be removed. {rest}". */
+export function deleteGroupCopy(groupName, count, intl = createStartIntl()) {
+  return { title: intl.formatMessage(sidebarGroupMessages.deleteTitle), body: intl.formatMessage(sidebarGroupMessages.deleteBody, { groupName, count }),
+    confirmLabel: t("Delete"), danger: true };
 }
 
 /** Confirm dialog for destructive sidebar actions: the shared ConfirmationDialog (shared-frame rp,
@@ -557,56 +578,38 @@ export function SourceConfirmDialog({ title, body, confirmLabel, danger = false,
   </SourceConfirmationDialog>;
 }
 
-// A core with capabilities.deleteHistory deletes its own history with the
-// session (the DeepSeek core: its Harness sessions folder, codex-app-server
-// deleteSessionFiles; a bridge: the agent's own session store), so its dialogs
-// say so and name that core. engine is boot.core, a core id or an engine name.
-const deletesCoreHistory = (engine) => coreSupports(engine, "deleteHistory");
-// Where that history lives, in copy: the core's name, plus the folder it keeps
-// it in (a "~/..." path): what the running core reports
-// (capabilities.historyLocation), else its descriptor's historyLocation (the
-// DeepSeek core's: the Harness sessions folder its bridge deletes from).
-const locationText = (value) => typeof value === "string" && value.trim() && value.length <= 200 ? value.trim() : null;
-function coreHistory(engine) {
-  const descriptor = coreForEngine(typeof engine === "string" ? engine : engine?.engine);
-  const name = descriptor.name || descriptor.id;
-  const reported = engine && typeof engine === "object" ? engine.capabilities?.historyLocation : null;
-  const location = locationText(reported) ?? locationText(descriptor.historyLocation);
-  return { name, place: location ? `${name} (${location})` : name };
-}
-
-/** sidebar-session.js:13885-13924 delete confirm copy; a core that deletes its own history names it too. */
-export function deleteConfirmCopy(sessions, { engine, intl } = {}) {
-  const count = sessions.length, history = deletesCoreHistory(engine) ? coreHistory(engine) : null;
+/** sidebar-session.js:13885-13924 delete confirm copy. W14-code r4 fr4-12b (E95): the official sentences only — shared-20
+ * fO "“{sessionTitle}” will be permanently deleted. This can’t be undone." (hcpszlrtjU) for one session, and the bulk
+ * confirmation's own copy (sidebar-bulk-model bulkDeleteConfirmCopy) for several; the host's "… and its history in
+ * {place} …" sentences (the deleting core named with its history folder) are gone. */
+export function deleteConfirmCopy(sessions, { intl } = {}) {
+  const count = sessions.length;
   // R3-sidebar2 (sidebar-15): a bulk delete is VY's bulk confirmation (2.42304.0 shared-19 KY over LY, sidebar-bulk-model):
-  // "Delete # sessions", the archived lines, Cancel focused. The host's own core-history sentence stays as the body.
-  if (count > 1 && intl) {
-    const copy = bulkDeleteConfirmCopy(intl, { count, archivedCount: sessions.filter(sessionArchived).length });
-    return history ? { ...copy, body: t("These {count} sessions and their history in {place} will be permanently deleted. This can’t be undone.", { count, place: history.place }) } : copy;
-  }
+  // "Delete # sessions", the archived lines, Cancel focused.
+  if (count > 1 && intl) return bulkDeleteConfirmCopy(intl, { count, archivedCount: sessions.filter(sessionArchived).length });
+  // W14-code r8 fr8-06: the official descriptors, not host keys — KY's fallbacks (kT5Jg7Fz/u, 4RK/3dvxuB) and, for one
+  // session, shared-46 fO's hcpszlrtjU.
+  const messages = intl ?? createStartIntl();
   return {
-    title: tn(count, "Delete session?", "Delete {count} sessions?"),
-    body: count === 1
-      ? history ? t("“{name}” and its history in {place} will be permanently deleted. This can’t be undone.", { name: sessionName(sessions[0]), place: history.place })
-        : t("“{name}” will be permanently deleted. This can’t be undone.", { name: sessionName(sessions[0]) })
-      : history ? t("These {count} sessions and their history in {place} will be permanently deleted. This can’t be undone.", { count, place: history.place })
-        : t("These {count} sessions will be permanently deleted. This can’t be undone.", { count }),
+    title: messages.formatMessage(BULK_DELETE_FALLBACK.title, { count }),
+    body: count === 1 ? messages.formatMessage(SESSION_DELETE_BODY, { sessionTitle: sessionName(sessions[0]) })
+      : messages.formatMessage(BULK_DELETE_FALLBACK.description, { count }),
     confirmLabel: t("Delete"), danger: true,
   };
 }
+// shared-46 fO (exported to shared-20 as the single-session delete body): verbatim; no generated slice holds fO.
+const SESSION_DELETE_BODY = { defaultMessage: "“{sessionTitle}” will be permanently deleted. This can’t be undone.", id: "hcpszlrtjU" };
 
-/** sidebar-groups.js:18641-18669 Older bucket confirm copy (a core that deletes its own history names it). */
-export function olderConfirmCopy(action, count, { engine } = {}) {
+/** sidebar-groups.js:18641-18669 Older bucket confirm copy (W14-code r4 fr4-12b: without the host's history sentence). */
+export function olderConfirmCopy(action, count) {
   if (action === "archive") return {
     title: t("Archive older sessions?"),
     body: tn(count, "This will archive {count} session older than a week. Pinned sessions aren’t affected.", "This will archive {count} sessions older than a week. Pinned sessions aren’t affected."),
     confirmLabel: t("Archive all"), danger: false,
   };
-  const history = deletesCoreHistory(engine) ? coreHistory(engine) : null;
   return {
     title: t("Delete older sessions?"),
-    body: history ? tn(count, "This will permanently delete {count} session older than a week, including its history in {place}. Pinned sessions aren’t affected. This can’t be undone.", "This will permanently delete {count} sessions older than a week, including their history in {place}. Pinned sessions aren’t affected. This can’t be undone.", { place: history.place })
-      : tn(count, "This will permanently delete {count} session older than a week. Pinned sessions aren’t affected. This can’t be undone.", "This will permanently delete {count} sessions older than a week. Pinned sessions aren’t affected. This can’t be undone."),
+    body: tn(count, "This will permanently delete {count} session older than a week. Pinned sessions aren’t affected. This can’t be undone.", "This will permanently delete {count} sessions older than a week. Pinned sessions aren’t affected. This can’t be undone."),
     confirmLabel: t("Delete all"), danger: true,
   };
 }
@@ -628,42 +631,43 @@ let emptyPictoPath = null;
 const emptyPictogramPath = () => (emptyPictoPath ??= EMPTY_PICTO_RECTS.map(([x, y, w, h]) => `M${x} ${y}h${w}v${h}h${-w}z`).join("")
   + pictoCells(EMPTY_PICTO_CHECKER, (row, col) => (row + col) % 2 === 0) + pictoCells(EMPTY_PICTO_SPARSE, (row, col) => row % 2 === 0 && col % 2 === 0));
 
-/** sidebar-groups.js:7688-7699 xO (scale .55 from OO) + 7721-7760 OO: the
- * filtered variant offers "Show all sessions" when a handler exists
- * (sidebar-main.js:13774-13778 onShowAllSessions, code mode only). */
+/** shared-21 bK (exported as Hr; shared-22 `o(vg, {variant: ao, onShowAllSessions: Di})`): the filtered variant offers
+ * "Show all sessions" when a handler exists (code mode only); the pictogram is oK at scale .55. W14-code r8
+ * css8-sidebar-empty-states-handcopy (E84): the class strings are bK's verbatim (they replace the host's hand-copied
+ * .source-sidebar-empty* / .source-sidebar-show-all rules); data-empty-variant is only a hook. */
 export function SourceSidebarEmpty({ variant, onShowAllSessions, onRetry }) {
   if (variant === "load-failed") return <SourceSidebarLoadFailed onRetry={onRetry} />;
-  if (variant === "filtered") return <div className="source-sidebar-empty" data-empty-variant="filtered">
-    <p className="source-sidebar-empty-text">{t("No sessions match the current filters")}</p>
-    {onShowAllSessions && <button type="button" className="source-sidebar-show-all hide-focus-ring" onClick={onShowAllSessions}>{t("Show all sessions")}</button>}
+  if (variant === "filtered") return <div className="flex flex-col items-center gap-2 px-4 py-6 text-center" data-empty-variant="filtered">
+    <p className="text-footnote text-muted-as-secondary">{t("No sessions match the current filters")}</p>
+    {onShowAllSessions && <button type="button" onClick={onShowAllSessions}
+      className="text-footnote text-secondary underline-offset-2 hover:text-primary hover:underline hide-focus-ring focus-visible:shadow-focus">{t("Show all sessions")}</button>}
   </div>;
   const scale = 0.55;
-  return <div className="source-sidebar-empty" data-empty-variant="no-sessions">
-    <p className="source-sidebar-empty-text">{t("Sessions you start will show up here")}</p>
+  return <div className="flex min-h-[200px] select-none flex-col last:flex-1 items-center justify-center gap-4 px-4 pb-10 text-center" data-empty-variant="no-sessions">
+    <p className="text-footnote text-muted-as-secondary">{t("Sessions you start will show up here")}</p>
     <div aria-hidden="true"><svg width={150 * scale} height={140 * scale} viewBox="0 0 150 140" fill="none" xmlns="http://www.w3.org/2000/svg">
       <path d={emptyPictogramPath()} fill="hsl(var(--pictogram-200))" />
     </svg></div>
   </div>;
 }
 
-/** shared-21 YQ (readable 18199-18225): "Couldn’t load your sessions" as an
- * alert with a small Try again that stays busy until the reload settles (kp +
- * nb refetch; locally onRetry reads the list again or reconnects the core). */
+/** shared-21 xK: "Couldn’t load your sessions" as an alert with a small Try again that stays busy until the reload
+ * settles (au + Zy refetch; locally onRetry reads the list again or reconnects the core). Class strings verbatim (r8 css8). */
 function SourceSidebarLoadFailed({ onRetry }) {
   const [busy, setBusy] = useState(false);
   const mounted = useRef(true);
   useEffect(() => () => { mounted.current = false; }, []);
-  return <div className="source-sidebar-empty" data-empty-variant="load-failed">
-    <p role="alert" className="source-sidebar-empty-text">{t("Couldn’t load your sessions")}</p>
-    {onRetry && <SourceSettingsButton size="sm" busy={busy} onClick={() => {
+  return <div className="flex flex-col items-center gap-2 px-4 py-6 text-center" data-empty-variant="load-failed">
+    <p role="alert" className="text-footnote text-muted-as-secondary">{t("Couldn’t load your sessions")}</p>
+    {onRetry && <CdsButton size="sm" busy={busy} onClick={() => {
       setBusy(true);
       Promise.resolve().then(onRetry).catch(() => {}).finally(() => { if (mounted.current) setBusy(false); });
-    }}>{t("Try again")}</SourceSettingsButton>}
+    }}>{t("Try again")}</CdsButton>}
   </div>;
 }
 
-/** shared-21 lK (readable 14548-14571), the FrameSidebarNav ErrorBoundary
- * fallback (shared-22 15368-15373): "Sidebar failed to load." and a secondary
+/** shared-21 Yz (exported as ma), the FrameSidebarNav ErrorBoundary
+ * fallback (class strings verbatim, r8 css8): "Sidebar failed to load." and a secondary
  * Try again that remounts. The source boundary wraps only the nav; the local
  * list state lives in SourceSidebar itself, so main.jsx wraps the whole
  * sidebar and this fallback keeps the aside frame (toolbar strip and body). */
@@ -677,18 +681,22 @@ export class SourceSidebarBoundary extends React.Component {
     if (!this.state.failed) return <React.Fragment key={this.state.attempt}>{this.props.children}</React.Fragment>;
     return <aside className="app-sidebar dframe-sidebar source-sidebar cds-root" aria-label={t("Sidebar")} data-variant="web" data-density="compact" data-platform="desktop">
       <div className="sidebar-toolbar df-titlebar window-drag"><div className="traffic-space" /></div>
-      <div className="dframe-sidebar-body source-sidebar-failed" data-testid="sidebar">
-        <p className="source-sidebar-failed-text">{t("Sidebar failed to load.")}</p>
-        <SourceSettingsButton variant="secondary" onClick={() => {
+      {/* W14-code r2 fr2-05: the fallback sits inside shared-22 GI's body (po FrameSidebarNav fallback). */}
+      <div className={SIDEBAR_BODY_CLASS} data-testid="sidebar"><div className="flex-1 min-h-0 flex flex-col items-center justify-center gap-2 px-2 text-center">
+        <p className="text-body text-secondary">{t("Sidebar failed to load.")}</p>
+        <CdsButton variant="secondary" onClick={() => {
           try { this.props.onReset?.(); } finally { this.setState((state) => ({ failed: false, attempt: state.attempt + 1 })); }
-        }}>{t("Try again")}</SourceSettingsButton>
-      </div>
+        }}>{t("Try again")}</CdsButton>
+      </div></div>
     </aside>;
   }
 }
 
 /** shared-21 y0/x0/S0 (readable 21120-21144): a polite status span whose text
  * clears after 4s; the nonce toggles a zero-width space so a repeat is read again. */
+// W14-code r2 fr2-05: shared-22 GI `i("dframe-sidebar-body flex flex-col flex-1 min-h-0 gap-2 px-2 pt-3 pb-1.5 [overflow:clip]",
+// l && "bg-[hsl(var(--df-surface-primary))] border-0.5")`; shared-styles drops pt to 4px without a direct .df-pills child.
+const SIDEBAR_BODY_CLASS = "dframe-sidebar-body flex flex-col flex-1 min-h-0 gap-2 px-2 pt-3 pb-1.5 [overflow:clip]";
 const ANNOUNCEMENT_MS = 4000;
 function useSidebarAnnouncement() {
   const [announcement, setAnnouncement] = useState({ nonce: 0, text: "" });
@@ -711,21 +719,46 @@ const swallowGuardedMultiClick = (event) => {
   if (performance.now() < multiClickGuardUntil && event.nativeEvent.detail > 1) { event.stopPropagation(); event.preventDefault(); }
 };
 
-/** shared-21 H0 (readable 21209-21357) for a local bucket: "Show {count} more"
- * while rows are hidden, "Show less" once revealed to the end (xg
- * showFewerRows "collapse"), or a held Show less (aria-disabled, data-held,
- * described by "You have something open near the end of this list.", CDS
- * tooltip lazy/delay 350/right/multiline) when folding would hide the open row.
- * Each action is announced in a role=status span (S0). A click inside a row
- * hands focus to the button first so folding never drops it (T). */
-export function SourceShowMoreButton({ bucketLabel, count = 0, fewer, onShowMore, onShowLess }) {
+/** shared-21 rX: the sidebar's link-like rows (Show more, View all) — Np Ss (the focus ring) + mp Ds (hit-row-main) and the
+ * row classes; iX / oX / sX add the padding of their context. */
+const sidebarLinkRowClass = `${nestedFocusClass} ${sidebarHitRowMainClass} flex h-[var(--df-row-h)] w-full shrink-0 items-center gap-[var(--df-row-gap)] rounded-[var(--df-radius-pill)] text-start text-[length:var(--df-row-font)] text-muted hover:bg-[var(--df-hover)] hover:text-secondary aria-disabled:pointer-events-none aria-disabled:opacity-70`;
+// W14-code fr7-03: shared-21 gX `B = (_ ? cX : x ? oX : iX) + hX`. iX = rX + px; oX = rX + bm (shared-18 xk, the row indent)
+// + pe, for a Show more inside the presets session list (x = wp() !== null: shared-18 KO, which shared-20 sC provides for
+// the Code list while the presets gate is on). cX (the "Load more sessions" face, count 0 with loadSessionsFace) has no
+// local counterpart: every session is loaded, so a bucket's Show more always has a count.
+const showMoreHeldClass = " aria-disabled:data-[held]:pointer-events-auto data-[held]:hover:bg-transparent data-[held]:hover:text-muted";
+const showMoreRowClass = sidebarLinkRowClass + " px-[var(--df-row-px)]" + showMoreHeldClass;
+const showMoreListRowClass = sidebarLinkRowClass + " ps-[calc(var(--df-row-px)+var(--df-row-indent,0px))] pe-[var(--df-row-px)]" + showMoreHeldClass;
+// gX H: inside the list the label sits in lm (shared-18 Sk, the iconless pad) instead of after a df-leading-slot.
+const showMoreListLabelClass = "ps-[var(--df-iconless-pad,calc((var(--df-leading-slot)-var(--df-icon-size))/2))]";
+// W14-code r8 fr8-01: gX W, the trailing seat inside the list (`x && c !== void 0 && u("span", {className: …})`).
+const showMoreTrailingClass = "me-[calc(var(--df-row-ctl-inset,calc((var(--df-row-h)-var(--df-row-ctl))/2))-var(--df-row-px))] ms-auto flex size-[var(--df-row-ctl)] shrink-0 items-center justify-center";
+
+/** shared-21 gX (mX's button; readable 18292-18480) for a local bucket: "Show {count} more" while rows are hidden ("Show
+ * more" inside the presets list, gX P `t > 0 && !y`), "Show less" once revealed to the end (xg showFewerRows "collapse"),
+ * or a held Show less (aria-disabled, data-held, described by "You have something open near the end of this list.", CDS
+ * tooltip lazy/delay 350/right/multiline) when folding would hide the open row. aria-label z: "Show {count} more in
+ * {bucketLabel}" (Qqm1d4ZUyL) / "Show less in {bucketLabel}". Each action is announced in a role=status span (dv). A click
+ * inside a row hands focus to the button first so folding never drops it; after Show less the button scrolls into view
+ * (gX A / T: the effect on onShowLess). `inList`: gX x (wp() !== null). W14-code r8: `trailing` is gX's c (W: only inside
+ * the list, in the ms-auto row-control span; shared-22 GC passes MQ awaiting when a hidden row awaits input, fr8-01), and
+ * `dragging` stands in for mo(): gX's onClickCapture uX swallows the click a drag ends with (fr8-02). */
+export function SourceShowMoreButton({ bucketLabel, count = 0, fewer, inList = false, trailing, dragging = false, onShowMore, onShowLess }) {
   const { announcement, announce } = useSidebarAnnouncement();
   const describedBy = useId();
+  const buttonRef = useRef(null), scrollAfterLess = useRef(false);
   const showLess = fewer !== undefined, held = fewer === "held";
   const heldText = held ? t("You have something open near the end of this list.") : undefined;
-  const button = <button type="button" className="source-show-more" data-row="" data-roving-item=""
+  useEffect(() => {
+    if (scrollAfterLess.current) { scrollAfterLess.current = false; buttonRef.current?.scrollIntoView({ block: "nearest" }); }
+  }, [onShowLess]);
+  const label = showLess ? t("Show less") : count > 0 && !inList ? t("Show {count} more", { count }) : t("Show more");
+  const button = <button ref={buttonRef} type="button"
     aria-disabled={held || undefined} aria-describedby={held ? describedBy : undefined} data-held={held ? "" : undefined}
-    aria-label={showLess ? t("Show less in {bucketLabel}", { bucketLabel }) : t("Show {count} more in {group}", { count, group: bucketLabel })}
+    onClickCapture={(event) => { if (dragging) { event.stopPropagation(); event.preventDefault(); } }}
+    data-row="" data-roving-item=""
+    aria-label={showLess ? t("Show less in {bucketLabel}", { bucketLabel }) : t("Show {count} more in {bucketLabel}", { count, bucketLabel })}
+    className={inList ? showMoreListRowClass : showMoreRowClass}
     onClick={(event) => {
       if (held) return;
       if (event.detail > 1) return;
@@ -733,6 +766,7 @@ export function SourceShowMoreButton({ bucketLabel, count = 0, fewer, onShowMore
         const active = event.currentTarget.ownerDocument.activeElement;
         const scope = event.currentTarget.closest(".dframe-sidebar") ?? event.currentTarget.ownerDocument;
         if (active && scope.contains(active) && active.closest("[data-row-key]")) event.currentTarget.focus({ preventScroll: true });
+        scrollAfterLess.current = true;
         onShowLess?.();
         announce(t("Showing less in {bucketLabel}", { bucketLabel }));
         if (event.detail > 0) guardMultiClick(500);
@@ -741,14 +775,15 @@ export function SourceShowMoreButton({ bucketLabel, count = 0, fewer, onShowMore
       onShowMore?.(event);
       if (count > 0) announce(t("Showing {count} more in {bucketLabel}", { count, bucketLabel }));
     }}>
-    <span className="source-leading-slot df-leading-slot" aria-hidden="true" />{showLess ? t("Show less") : t("Show {count} more", { count })}
+    {!inList && <span className="df-leading-slot" />}{inList ? <span className={showMoreListLabelClass}>{label}</span> : label}
+    {inList && trailing !== undefined && <span className={showMoreTrailingClass}>{trailing}</span>}
   </button>;
   // H0 always wraps the button in Sh (empty content = no tooltip) and always renders the hidden description, so
   // the button is not remounted (and keeps focus) when the held state comes or goes.
   return <>
     <SourceTooltip content={heldText} delay={350} side="right" multiline closeOnClick={false}>{button}</SourceTooltip>
     <span id={describedBy} hidden>{heldText}</span>
-    <span className="source-sr-only" role="status">{announcement.text}{announcement.nonce % 2 === 1 ? "\u200B" : ""}</span>
+    <span className="sr-only" role="status">{announcement.text}{announcement.nonce % 2 === 1 ? "\u200B" : ""}</span>
   </>;
 }
 
@@ -756,7 +791,7 @@ export function SourceShowMoreButton({ bucketLabel, count = 0, fewer, onShowMore
  * (lX pFK6bJU0EM) in sX = rX (Np Ss + mp Ds + the row classes) + the iconless +2px padding, inside _o (df-drag-shiftable,
  * shiftKey label:viewall:{bucket}); uX swallows the click a drag ends with. fX = Ie("/chats") only preloads the route
  * on intent (no local router), so the button carries no href. */
-const sidebarViewAllRowClass = `${nestedFocusClass} ${sidebarHitRowMainClass} flex h-[var(--df-row-h)] w-full shrink-0 items-center gap-[var(--df-row-gap)] rounded-[var(--df-radius-pill)] text-start text-[length:var(--df-row-font)] text-muted hover:bg-[var(--df-hover)] hover:text-secondary aria-disabled:pointer-events-none aria-disabled:opacity-70 pe-[var(--df-row-px)] ps-[calc(var(--df-row-px)+var(--df-iconless-pad,calc((var(--df-leading-slot)-var(--df-icon-size))/2+2px)))]`;
+const sidebarViewAllRowClass = `${sidebarLinkRowClass} pe-[var(--df-row-px)] ps-[calc(var(--df-row-px)+var(--df-iconless-pad,calc((var(--df-leading-slot)-var(--df-icon-size))/2+2px)))]`;
 export function SourceSidebarViewAllRow({ bucketKey, onViewAll, dragging = false, style }) {
   const shiftKey = `label:viewall:${bucketKey ?? "recents"}`;
   return <div className="df-drag-shiftable" data-drag-key={shiftKey} style={style?.(shiftKey)}>
@@ -803,8 +838,8 @@ const SELECTION_SAFE_SELECTOR = '[data-row], [data-cds-portal], [role="menu"], [
 
 export function SourceSidebar({
   collapsed, onCollapse, onCollapsedChange, historyAt = 0, historyLength = 1, travel, mode = "code", onMode,
-  onNew, onViewAllSessions, groups = [], sessions, current, state = {}, onOpen, onProject, onMenu, onAccount, accountMenuOpen = false, connectionMenuOpen = false,
-  displayName = t("Local user"), accountLabel, avatarName, search = "", setSearch, showSearch, setShowSearch, searchMatches = null,
+  onNew, onViewAllSessions, groups = [], sessions, current, state = {}, onOpen, onProject, onMenu, onAccount, accountMenuOpen = false,
+  displayName = t("Local user"), accountLabel, avatarName, approvalRuntime, onRespondApproval, search = "", setSearch, showSearch, setShowSearch, searchMatches = null,
   onFolder, sidebarWidth = 288, setSidebarWidth, section, setSection, sidebarFloor = SIDEBAR_WIDTH.MIN, onSidebarFloor, fullScreen = false,
   trafficLightSpacer, cdsFont = "sans",
   sidebarPreferences, onSidebarPreferencesChange, sessionMetadata = {}, customGroups = [], pinnedOrder = [],
@@ -843,8 +878,6 @@ export function SourceSidebar({
   // () => the open session's and its panes' palette commands (main.jsx: sidebar-palette-model.mjs paletteActions'
   // session / panes / prompts / onShortcuts / onFileUpload / onTogglePane / onClosePane), called while the palette is open.
   paletteCommands = null,
-  // The footer aux control shows only while the core is not connected (source aux slot is empty in code mode).
-  connectionIssue = false,
   // ce4f4374c Ne: the model catalog (main.jsx models) the multi-selection's 'Set model for {count}' lists.
   models = null,
   // w13-surfaces-modes: the Home segment's mode, 3.6556.2 shared-21 rT (main.jsx: app-switch-model.mjs homeModeFor).
@@ -942,16 +975,22 @@ export function SourceSidebar({
   const sourceSessions = useMemo(() => sessions ?? groups.flatMap(([, items]) => items), [sessions, groups]);
   // R3-nested NBS-3: the Code list keeps a row only when shared-21 cH's Gb (shared-11 pb) holds, so a /btw child shown in
   // its parent's tabs (nested_less_side_chats) is no row, Pinned entry or family member (nested-less-side-chats.mjs).
-  const listedSessions = useMemo(() => mode === "code" ? listedSidebarSessions(sourceSessions, sessionMetadata, engine) : sourceSessions, [mode, sourceSessions, sessionMetadata, engine]);
+  // E81: Show › Side chats (shared-11 lf) lists them as rows again (Ef: strip && !sideChatRowsShown).
+  const sideChatRowsShown = useSideChatRowsShown();
+  // W14-code r4 gen-final-4 (fr4-06): a routine run is no Sessions row (pw's scheduledTaskId; JK groups or hides it).
+  const routineRunTasks = useRoutineRunTasks();
+  const listedSessions = useMemo(() => mode === "code" ? listedSidebarSessions(sourceSessions, sessionMetadata, engine, sideChatRowsShown, routineRunTasks) : sourceSessions, [mode, sourceSessions, sessionMetadata, engine, sideChatRowsShown, routineRunTasks]);
   const folders = useMemo(() => knownFolders ?? groups.map(([cwd]) => cwd), [knownFolders, groups]);
   // The list itself is never filtered by text: what is typed searches in the ⌘K palette (source-sidebar-palette.jsx).
   // R3-sections: groupsKeptWhileEmpty (KO keeps a new, still empty section listed) lives in the sections store only.
   const keptWhileEmpty = useSectionsKeptWhileEmpty();
   // shared-22 IE `environmentsOn` (the list's `k = Up()`, shared-11 gc presets gate; D10 on): gates Save as environment (SB-06).
   const environmentsOn = usePresetsGate();
+  // W14-code r5 gates-r5-02: shared-22 sO `y = Ii()` (claudeai_session_state, off under Uon) — a saved status section stays flat.
+  const statusGrouping = useStatusGrouping();
   const sectionsModel = useMemo(() => sectionsList ? buildSidebarSections({ sections: sectionsList, sessions: listedSessions, preferences: legacyPreferences,
-    metadata: sessionMetadata, customGroups, knownFolders: folders, state, fallbackCwd, pinnedOrder, repoIdentities, projectOrder, keptWhileEmpty, held: loading, savedEnvironments }) : null,
-  [sectionsList, listedSessions, legacyPreferences, sessionMetadata, customGroups, folders, state, fallbackCwd, pinnedOrder, repoIdentities, projectOrder, keptWhileEmpty, loading, savedEnvironments]);
+    metadata: sessionMetadata, customGroups, knownFolders: folders, state, fallbackCwd, pinnedOrder, repoIdentities, projectOrder, keptWhileEmpty, held: loading, savedEnvironments, statusGrouping }) : null,
+  [sectionsList, listedSessions, legacyPreferences, sessionMetadata, customGroups, folders, state, fallbackCwd, pinnedOrder, repoIdentities, projectOrder, keptWhileEmpty, loading, savedEnvironments, statusGrouping]);
   // w13-close-cowork-sidebar (G12): the Cowork list's own view (shared-52 groupByByMode.cowork / sortByByMode.cowork, default
   // grouping none) laid out as shared-22 bD renders it (source-hub-sidebar.jsx coworkDisplayedGroups); Chat keeps Date.
   // The facts fw / iw read of a row (hub-sidebar-model coworkStateKey). A local thread is listed once its first turn
@@ -1010,9 +1049,11 @@ export function SourceSidebar({
   const revealed = revealState.epoch === revealEpoch ? revealState.byKey : EMPTY_REVEALED;
   // R3-sections: Cj truncateAt 5 (manual) / Sr 5 grouped, 20 flat / qk 20 (Pinned); a sub-grouped section is never cut.
   const truncateAtFor = useCallback((group) => sectionsModel ? group.truncateAt : group.kind === "pinned" || mode === "code" ? SOURCE_TRUNCATE_AT : undefined, [mode, sectionsModel]);
-  // bF keep-visible rows: the open session, selected rows and rows awaiting input.
-  const keepVisibleIds = useMemo(() => new Set([...openNestedIds, ...selection.selectedKeys, ...sourceSessions.filter(needsInput).map((session) => session.id)].filter(Boolean)),
-    [openNestedIds, selection.selectedKeys, sourceSessions, needsInput]);
+  // Keep-visible rows: the open session and selected rows. W14-code r8 fr8-01: 3.6556.2 shared-21 e7 extends the cut only
+  // for paneOpenKeys / revealRowKey / fetchFloorKeys / landedKeys, never for awaiting rows (2.42304 bF kept them); a hidden
+  // awaiting row shows as the Show more trailing MQ instead (shared-22 GC `X && Me > 0 && lg(we, Re)`).
+  const keepVisibleIds = useMemo(() => new Set([...openNestedIds, ...selection.selectedKeys].filter(Boolean)),
+    [openNestedIds, selection.selectedKeys]);
   const truncatedByGroup = useMemo(() => new Map(displayed.map((group) => [group.key, truncateRuns(runsByGroup.get(group.key)?.runs || [], {
     truncateAt: truncateAtFor(group), extraRevealed: revealed.get(group.key) || 0, keepVisibleIds, shownRows: (run) => splitRun(run).kept,
   })])), [displayed, runsByGroup, truncateAtFor, revealed, keepVisibleIds, splitRun]);
@@ -1230,26 +1271,37 @@ export function SourceSidebar({
   // 'Model couldn’t be set for …' for failures.
   const runBulk = async (action, targets, payload, { older = false } = {}) => {
     // R3-sidebar2 (sidebar-15): 2.42304.0 shared-19 YX → IX. Families whose nested sessions must be asked about leave the
-    // bulk part and go one by one afterwards (LX); with no nested sessions flow connected IX asks nothing. A bulk delete
+    // bulk part and go one by one afterwards (LX); W14-code r2 fr2-01: main.jsx connects the nested sessions flow. A bulk delete
     // tells the worktree check it is one (c6b8adeaf de `bulk`: an unreadable worktree is kept). R4i-sidebar SI2
     // (Y1-R3-sidebar2-3/-7): the flow and YX's S / C counts (a cancelled worktree confirm is neither) are
     // sidebar-bulk-model runBulkSessions, tested there.
     const { results, done, failed } = await runBulkSessions(action, targets, payload, { current, run: onSessionAction,
       present: (id) => sessionById.has(id), archived: (id) => sessionArchived(sessionById.get(id)) });
-    if (done > 0 && (action === "archive" || action === "delete")) notify(bulkDoneMessage(action === "archive" ? "Archived" : "Deleted", done, older ? "older session" : "session"),
+    // W14-code fr6-07: c39a247c4 `i.formatMessage(zt[e].success, {count: x})` … `s(y, t => i.formatMessage(zt[e].failure,
+    // {count: t}))`; the Older bucket (shared-22 wT) says `CT.olderBulkArchived` / `CT.olderBulkDeleted` and fails with
+    // `ha.bulkArchiveFailed` / `ha.bulkDeleteFailed`, uniqueKey "archive-older-bulk" / "delete-older-bulk".
+    const toasts = BULK_TOASTS[action];
+    if (done > 0 && toasts) notify(intl.formatMessage(older ? toasts.older : toasts.success, { count: done }),
       { variant: "neutral", key: older ? `${action}-older-bulk` : `group-bulk-${action}`, timeout: 3000 });
-    if (action === "set-model") {
+    // W14-code r5 gen-final-5: c39a247c4 `zt = {…, unarchive: {success: R.bulkRestored, failure: R.bulkRestoreFailed}}` —
+    // the Code bulk unarchive (each session silent, bulkActionPayload) says it once: `a(t, {timeout: 3e3})` / the failure count.
+    if (action === "unarchive" && mode === "code") {
+      if (done > 0) notify(intl.formatMessage(sidebarListMessages.bulkRestored, { count: done }), { variant: "neutral", key: "group-bulk-unarchive", timeout: 3000 });
+      if (failed > 0) notify(intl.formatMessage(sidebarListMessages.bulkRestoreFailed, { count: failed }), { variant: "danger" });
+    } else if (action === "set-model") {
       const changed = results.filter((result) => result.status === "fulfilled" && result.value?.changed !== false).length;
-      if (changed > 0) notify(tn(changed, "Model set for {count} session", "Model set for {count} sessions"), { variant: "neutral", key: "bulk-set-model", timeout: 3000 });
-      if (failed > 0) notify(tn(failed, "Model couldn’t be set for {count} session. Try again.", "Model couldn’t be set for {count} sessions. Try again."), { variant: "danger" });
-    } else if (failed > 0) notify(action === "archive" || action === "delete"
-      ? bulkFailedMessage(action === "archive" ? "archived" : "deleted", failed)
-      : results.find((result) => result.status === "rejected")?.reason?.message || t("Some sessions could not be updated."), { variant: "danger" });
+      // W14-code fr7-04: c39a247c4 `c > 0 && a(i.formatMessage(Bt.bulkModelSet, {count: c}), {timeout: 3e3})` and the
+      // partial failure `i.formatMessage(Bt.bulkModelSetFailed, {count: e})`.
+      if (changed > 0) notify(intl.formatMessage(sidebarBulkModelMessages.bulkModelSet, { count: changed }), { variant: "neutral", key: "bulk-set-model", timeout: 3000 });
+      if (failed > 0) notify(intl.formatMessage(sidebarBulkModelMessages.bulkModelSetFailed, { count: failed }), { variant: "danger" });
+    } else if (failed > 0) notify(toasts ? intl.formatMessage(toasts.failure, { count: failed })
+      // Another bulk action names its first refusal; without one, the official generic c39a247c4 /8e0dnRw0I copy.
+      : results.find((result) => result.status === "rejected")?.reason?.message || t("Something went wrong. Try again in a moment."), { variant: "danger" });
     setSelectionState(clearSelection);
   };
   // A single Delete goes straight to the session action (the open session is
   // allowed and navigates home); bulk Delete skips the open session like archive.
-  const requestDelete = (targets) => targets.length === 1 && onConfirmDelete ? onConfirmDelete(targets[0]) : setConfirm({ ...deleteConfirmCopy(targets, { engine, intl }),
+  const requestDelete = (targets) => targets.length === 1 && onConfirmDelete ? onConfirmDelete(targets[0]) : setConfirm({ ...deleteConfirmCopy(targets, { intl }),
     onConfirm: targets.length === 1 ? () => onSessionAction("delete", targets[0]) : () => runBulk("delete", targets) });
   // shared-22 4276-4285 U: toggleGroupCollapsed(key) on the persisted store.
   // hY clicks all current toggles in one event; accumulate their updates
@@ -1308,7 +1360,7 @@ export function SourceSidebar({
   };
   // R3-sections step 3 (WI-5): the Code list's Group and sort is 2.42304.0 shared-21 _U / vU / aU / oU (sessionList) over
   // the CDS Dropdown (source-sidebar-filter-current.jsx); the classic Filter below stays the chat list's.
-  const headerControls = mode === "code" ? <SourceCodeSidebarFilter preferences={preferences} listRef={navRef} /> : <>
+  const headerControls = mode === "code" ? <SourceCodeSidebarFilter preferences={preferences} listRef={navRef} sideChatsOffered={hostSideSessionFeatures(engine).sideChatTabStripForRows} /> : <>
     {/* sidebar-groups.js:5352-5377 _w: aria-label and Kl content "Search" with the
         search_palette shortcut (⇧⌘K), hoverable false; it opens the command palette in
         search mode (DF("search"), source-sidebar-palette.jsx). */}
@@ -1372,6 +1424,9 @@ export function SourceSidebar({
   const openRowMenu = (session, extra) => {
     if (!onSessionAction) return;
     const multi = selectionRef.current.selectedKeys.size > 1 && isSelected(selectionRef.current, session.id);
+    // W14-code r5 fr5-05: shared-21 row menu open `e && … ho(e.length > 1 ? e.map(rte) : [n])` (shared-46 aD): probe the
+    // worktrees of the rows it acts on, so an Archive chosen once a dirty read is in asks first (c6b8adeaf `known`).
+    if (mode === "code") prefetchWorktreeProbes(multi ? [...selectionRef.current.selectedKeys] : [session.id]);
     setMenu({ kind: "session", session, multi, ...extra });
   };
   const pinnedIds = displayed.find((group) => group.kind === "pinned")?.sessions.map((session) => session.id) || [];
@@ -1419,6 +1474,10 @@ export function SourceSidebar({
   const shiftStyle = (key) => dragRowStyle(drag, key);
   // kJ: a single row that can pin is being dragged (opens the empty Pinned stub and its drop row).
   const pinDropOpen = !!drag?.canPin && drag.keys.length === 1;
+  // W14-code r4 fr4-07 (mount): the session's pending approvals (state.approvals it owns, in arrival order: oldest first),
+  // the hover card host's requestsFor.
+  const hoverCardRequestsFor = useCallback((id) => (state.approvals || []).filter((approval) => approval?.params?.threadId
+    && ownerThreadId(state, approval.params.threadId) === id), [state]);
   const renderRow = (session, { nested = null, parent = null, childCount = 0, pinned = false, group } = {}) => {
     // The open session's row is selected only while the main view shows it (section "new"), not while Artifacts or
     // Routines replaces it: then their nav row is the one selected, and clicking the session row goes back to it.
@@ -1431,10 +1490,14 @@ export function SourceSidebar({
     if (!code && renaming === session.id) return <RenameRow key={session.id} label={shownName(session)} glyph={glyph} selected={selected} nested={nested} iconless={iconless}
       onCommit={(name) => commitSessionRename(session, name)} onClose={(refocus) => closeRename(session.id, refocus)} />;
     const kind = nested ? lineageKind(session, sessionMetadata) : null;
-    const lineage = kind === "fork" ? t("Forked from {name}", { name: sessionName(parent) }) : kind ? t("Started by {assistant} from {name}", { assistant: getAssistantName(), name: sessionName(parent) }) : null;
+    // W14-code r8 fr8-06: shared-21 D$ `case "fork"`: "Forked from {title}" (FuqQarRedf); the other kinds keep the persona
+    // wording (E83).
+    const lineage = kind === "fork" ? t("Forked from {title}", { title: sessionName(parent) }) : kind ? t("Started by {assistant} from {name}", { assistant: getAssistantName(), name: sessionName(parent) }) : null;
     const hint = jumpHints?.[session.id];
     const MoreButton = code ? SourceSidebarRowMore : ToolButton;
-    const more = <MoreButton label={t("More options for {name}", { name: shownName(session) })} icon={code ? "DotsHorizontal" : "DotsVertical"} className={code ? "source-current-session-more" : "source-session-more code-icon-button"}
+    // W14-code r8 gen-final-8 (frame review low #1): the Code row ⋯ is shared-21 i0 rKQPgfPvWS "More options for {label}"
+    // (zh-CN app.mjs, same as the title-bar ⋯); Chat / Cowork keep their key.
+    const more = <MoreButton label={code ? t("More options for {label}", { label: shownName(session) }) : t("More options for {name}", { name: shownName(session) })} icon={code ? "DotsHorizontal" : "DotsVertical"} className={code ? "source-current-session-more" : "source-session-more"}
       tooltip={false} tabIndex={-1} data-row-action=""
       {...menuTriggerProps({ open: menu?.session?.id === session.id, onOpen: (entry, event) => {
         if (onSessionAction) openRowMenu(session, { anchor: event.currentTarget, entry });
@@ -1445,11 +1508,11 @@ export function SourceSidebar({
         if (menu?.session?.id === session.id && !menu.point) setMenu(null);
         else openRowMenu(session, { anchor: event.currentTarget, entry: keyboardEntry(event) });
       }} />;
-    const title = <><span className="source-session-title">{shownName(session)}</span>{lineage && <span className="source-sr-only"> {lineage}</span>}</>;
+    const title = <><span className="source-session-title">{shownName(session)}</span>{lineage && <span className="sr-only"> {lineage}</span>}</>;
     if (code) {
       const details = currentSidebarDetails(session, view, { preferences: group?.showMetadata === undefined ? preferences : { ...preferences, showMetadata: group.showMetadata }, group, pinned, nested: !!nested, repoIdentity: repoIdentities?.[session.cwd] });
       const rowMenuOpen = menu?.session?.id === session.id;
-      return <div key={session.id} className="source-session-row source-current-session-host df-drag-shiftable" data-source-session-id={session.id}
+      const rowElement = <div key={session.id} className="source-session-row source-current-session-host df-drag-shiftable" data-source-session-id={session.id}
         data-selected={selected ? 'focused' : undefined} data-menu-open={rowMenuOpen || undefined}
         data-iconless={iconless || undefined} data-status-mark={view.mark || undefined}
         data-unread={sessionMetadata[session.id]?.unread || undefined} data-archived={view.archived || undefined}
@@ -1468,7 +1531,7 @@ export function SourceSidebar({
           // presets gate too. The Pinned list (no wC) and nested rows draw no caret. g1 toggles one family (nS, "row_caret").
           nestedHead={environmentsOn && !nested && !pinned && childCount > 0 ? { id: session.id, hidden: collapsedNested.has(session.id),
             onToggle: () => toggleNested(session.id), guard: guardMultiClick } : undefined}
-          title={<><span className="source-session-title">{shownName(session)}</span>{lineage && <span className="source-sr-only"> {lineage}</span>}</>}
+          title={<><span className="source-session-title">{shownName(session)}</span>{lineage && <span className="sr-only"> {lineage}</span>}</>}
           menu={<SidebarCurrentMenuHost>{more}</SidebarCurrentMenuHost>}
           menuOpen={rowMenuOpen} anyMenuOpen={!!menu} contextMenuOpen={rowMenuOpen && !!menu.point} dragging={!!drag}
           renameRequested={renaming === session.id} onRenameStarted={() => setRenaming(null)}
@@ -1485,6 +1548,14 @@ export function SourceSidebar({
             moves it to the row end, hides the row decoration / df-tail-mark and tucks described rows' keycaps down. */}
         {hint && <kbd aria-hidden="true" className={JUMP_HINT_CLASS}>{hint}</kbd>}
       </div>;
+      // W14-code r4 fr4-07 (mount): shared-22 pC `o(Wu, {row: Z, title: S, data: ce, awaiting: Q, summaryText: de, disabled:
+      // he})` — the row (Z, the div[data-row-key] around the main button) is the 3.6556.2 hover card's trigger (shared-20 QO,
+      // source-sidebar-hover-card.jsx). `Q = !ce.isArchived && t.pendingPermissions > 0`, `he = L || !Q` with L shared-21
+      // V1 (`selectedKeys.size > 1`); the host has no task summary (`de`). Rollback: host-growthbook local_sidebar_hover_card.
+      const hoverData = sidebarHoverCardData(session, { requests: hoverCardRequestsFor(session.id), archived: !!view.archived });
+      const hoverState = sidebarHoverCardState(hoverData, { suspended: selection.selectedKeys.size > 1 });
+      return <SidebarSessionHoverCard key={session.id} row={rowElement} title={shownName(session)} data={hoverData}
+        awaiting={hoverState.awaiting} disabled={hoverState.disabled} />;
     }
     // sidebar-groups.js:17202-17213: rows carry data-row-key and data-jump-hint-row for the pj hints.
     return <div key={session.id} className="source-session-row df-drag-shiftable group" data-row="" data-source-session-id={session.id}
@@ -1594,11 +1665,9 @@ export function SourceSidebar({
       return { epoch: revealEpoch, byKey };
     });
   };
-  // shared-21 xg K (readable 28293-28295) showFewerRows: the bucket folds back to the keep-visible floor (the open,
-  // selected and awaiting-input rows stay shown); H0 T then scrolls the button into view (block nearest).
-  const pendingShowLessScroll = useRef(null);
+  // shared-21 xg K (readable 28293-28295) showFewerRows: the bucket folds back to the keep-visible floor (the open and
+  // selected rows stay shown); gX T then scrolls the button into view (block nearest, its own effect).
   const showLess = (group, floor) => {
-    pendingShowLessScroll.current = group.key;
     setRevealState((previous) => {
       const byKey = new Map(previous.epoch === revealEpoch ? previous.byKey : []);
       byKey.set(group.key, floor);
@@ -1610,11 +1679,6 @@ export function SourceSidebar({
     if (id) {
       pendingRevealFocus.current = null;
       document.querySelector(`[data-source-session-id="${CSS.escape(id)}"] [data-row-main-button]`)?.focus();
-    }
-    const key = pendingShowLessScroll.current;
-    if (key) {
-      pendingShowLessScroll.current = null;
-      navRef.current?.querySelector(`[data-group-key="${CSS.escape(key)}"] .source-show-more`)?.scrollIntoView({ block: "nearest" });
     }
     // yS second effect: once the bucket is unfolded, the open row scrolls into view (block nearest).
     const opened = pendingOpenRowScroll.current;
@@ -1633,18 +1697,26 @@ export function SourceSidebar({
       {(truncated?.runs || entry.runs).map((run) => run.parentId === null
         ? run.rows.map((session) => renderRow(session, { childCount: childCounts.get(session.id) || 0, pinned: group.kind === 'pinned', group }))
         : renderNested(run, group))}
-      {/* sidebar-groups.js:17516-17525 BD / 7177-7231 VD: after the rows while
-          rows are hidden; AD classes with a df-leading-slot spacer. shared-21 H0
-          (21209-21357): once revealed to the end it becomes Show less (xg showFewerRows). */}
+      {/* shared-21 mX / gX: after the rows while rows are hidden; once revealed to the end it becomes Show less
+          (xg showFewerRows). */}
       {(() => {
         if (!truncated) return null;
         const floorOf = () => truncateRuns(entry.runs, { truncateAt: truncateAtFor(group), extraRevealed: 0, keepVisibleIds, shownRows: (run) => splitRun(run).kept }).extraRevealed;
         const fewer = truncated.hiddenCount === 0 ? showFewerRows({ total: truncated.total, truncateAt: truncateAtFor(group), extraRevealed: truncated.extraRevealed,
           hiddenCount: 0, floor: truncated.extraRevealed > 0 ? floorOf() : 0 }) : undefined;
         if (truncated.hiddenCount === 0 && !fewer) return null;
-        // og shiftKey label:showmore:{key}: the button moves with the rows while a drag opens a gap above it.
-        return <div key="show-more" className="df-drag-shiftable" data-drag-key={`label:showmore:${group.key}`} style={shiftStyle(`label:showmore:${group.key}`)}>
-          <SourceShowMoreButton bucketLabel={group.label} count={truncated.revealCount} fewer={fewer}
+        // og shiftKey label:showmore:{key}: the button moves with the rows while a drag opens a gap above it. W14-code
+        // fr7-03: shared-21 mX `u(_o, {shiftKey: n, className: "[overflow-anchor:none]"})` (shared-46 oj: df-drag-shiftable + it).
+        // W14-code r8 fr8-01: shared-22 GC `trailing: X && Me > 0 && lg(we, Re) ? o(q_, {kind: "awaiting"}) : void 0` — inside
+        // the presets list, a row behind Show more that awaits input (shared-21 kQ `e.some((e) => !n.has(e) && xl(e))`) puts
+        // the MQ awaiting glyph (shared-21 MQ = generated SectionStatusGlyph) at the button's end.
+        const inList = mode === "code" && environmentsOn;
+        const rowsOf = (run) => run.parentId === null ? run.rows : splitRun(run).kept;
+        const visibleIds = inList && truncated.hiddenCount > 0 ? new Set(truncated.runs.flatMap((run) => rowsOf(run).map((row) => row.id))) : null;
+        const hiddenAwaiting = !!visibleIds && entry.runs.some((run) => rowsOf(run).some((row) => !visibleIds.has(row.id) && needsInput(row)));
+        return <div key="show-more" className="df-drag-shiftable [overflow-anchor:none]" data-drag-key={`label:showmore:${group.key}`} style={shiftStyle(`label:showmore:${group.key}`)}>
+          <SourceShowMoreButton bucketLabel={group.label} count={truncated.revealCount} fewer={fewer} inList={inList}
+            trailing={hiddenAwaiting ? <SectionStatusGlyph kind="awaiting" /> : undefined} dragging={!!drag}
             onShowMore={(event) => showMore(group, truncated, event)} onShowLess={() => showLess(group, floorOf())} />
         </div>;
       })()}
@@ -1653,8 +1725,7 @@ export function SourceSidebar({
   const olderTargets = (group, action) => bulkTargets(group.bulkScope ?? group.sessions, { metadata: sessionMetadata, currentId: current, state, action });
   // sidebar-groups.js:18919-18921 Vz: the Older bucket overflow button exists
   // only while at least one session is archivable or deletable; an open menu
-  // closes with it. (The 2.2553.1 row hover card is disabled for every row
-  // that is not awaiting input and flag-gated, so no summary card is rendered.)
+  // closes with it.
   const olderGroup = preferences.groupBy === "date" && onSessionAction ? displayed.find((group) => group.key === "older") : null;
   const olderCounts = olderGroup ? { archive: olderTargets(olderGroup, "archive").length, delete: olderTargets(olderGroup, "delete").length } : { archive: 0, delete: 0 };
   const olderMenuAvailable = olderCounts.archive > 0 || olderCounts.delete > 0;
@@ -1673,7 +1744,7 @@ export function SourceSidebar({
   // XB I(): the delete confirm counts the sessions assigned to the group (Zv over the assignments).
   const requestGroupDelete = (group) => {
     const count = sourceSessions.filter((session) => sessionMetadata[session.id]?.customGroupId === group.customGroupId).length;
-    setConfirm({ ...deleteGroupCopy(shownGroupLabel(group), count), onConfirm: () => onGroupAction("delete", group) });
+    setConfirm({ ...deleteGroupCopy(shownGroupLabel(group), count, intl), onConfirm: () => onGroupAction("delete", group) });
   };
   // Mz (sidebar-groups.js:18411-18427): a new session for the group, prefilled with the folder its
   // sessions share (Ez), and filed into the group once it starts.
@@ -1695,13 +1766,15 @@ export function SourceSidebar({
     {group.viewProject && onViewProject && <CoworkViewProjectButton onClick={() => onViewProject(group.viewProject)} />}
     {/* sidebar-groups.js:13871-13907 cI: project buckets have no target, so no tooltip.
         :19866-19880: the Other bucket has no cwd, so no '+'. */}
-    {group.cwd && onProject && <ToolButton label={t("New session in {name}", { name: group.label })} icon="Add" tooltip={false} onClick={() => onProject(group.cwd)} />}
+    {/* W14-code r2 fr2-22: shared-21 H7 (kind "section", panels off) is `span "-my-1" > hm {onClick, "aria-label"} > fe
+        {size:"auto", name:"Add"}`, hm = shared-18 iA (generated sidebar-row-control.mjs: tabIndex -1, data-row-action). */}
+    {group.cwd && onProject && <span className="-my-1"><SidebarRowControl aria-label={t("New session in {group}", { group: group.label })} onClick={() => onProject(group.cwd)}><CdsIcon size="auto" name="Add" /></SidebarRowControl></span>}
     {/* w11-sweep-shell-a: 3.6556.2 shared-22 GC draws shared-21 H7 whenever IE hands it an onNewSession
         (`x?o(Ah,{groupLabel:n,onNewSession:x,target:w,…})`, label V7.newSessionIn with no target, so no tooltip). IE sets
         it for the local place bucket ("This computer", `if(U||!oe)`: no prefill, de = null) and for a preset bucket
         (`Q = v(U, void 0, de)`, de = N.id); only Other and an unknown / remote place without a prefill get none. */}
-    {(sessionsPlaceNewSession(group) || sessionsPresetNewSession(group)) && <ToolButton label={t("New session in {name}", { name: group.label })} icon="Add" tooltip={false}
-      onClick={() => (sessionsPlaceNewSession(group) || sessionsPresetNewSession(group))()} />}
+    {(sessionsPlaceNewSession(group) || sessionsPresetNewSession(group)) && <span className="-my-1"><SidebarRowControl aria-label={t("New session in {group}", { group: group.label })}
+      onClick={() => (sessionsPlaceNewSession(group) || sessionsPresetNewSession(group))()}><CdsIcon size="auto" name="Add" /></SidebarRowControl></span>}
     {/* sidebar-groups.js:17392-17410 / :18560-18590 / :19895-19905: a custom group's '+' (cI with the
         Dz target: the folder its sessions share, else none) is labelled with the target and the group,
         with the target tooltip and an 'Added to {group}' detail; in the code list it is the xs glyph in
@@ -1710,9 +1783,9 @@ export function SourceSidebar({
     {group.customGroupId && onGroupAction && (() => {
       const name = shownGroupLabel(group), folders = new Set(group.sessions.map((session) => session.cwd).filter(Boolean));
       const target = folders.size === 1 ? folderName([...folders][0]) : null;
-      const content = target === null ? t("New session with no folder picked") : t("New session in {name}", { name: target });
+      const content = target === null ? t("New session with no folder picked") : t("New session in {folder}", { folder: target });
       return <span className="source-group-reveal">
-        <ToolButton label={target === null ? t("New session with no folder picked, added to {group}", { group: name }) : t("New session in {name}, added to {group}", { name: target, group: name })}
+        <ToolButton label={target === null ? t("New session with no folder picked, added to {group}", { group: name }) : t("New session in {folder}, added to {group}", { folder: target, group: name })}
           tooltip={{ content, detail: t("Added to {group}", { group: name }), side: "right", hoverable: false }} onClick={() => newSessionInGroup(group)}>
           <Icon name="Add" size={12} />
         </ToolButton>
@@ -1720,13 +1793,17 @@ export function SourceSidebar({
     })()}
     {/* sidebar-groups.js:18925-18933 Vz trigger: tooltip:false. */}
     {group === olderGroup && olderMenuAvailable && <ToolButton label={t("Bulk actions for older sessions")} icon="DotsVertical" tooltip={false}
-      className="source-older-menu code-icon-button" active={menu?.kind === "older"}
+      className="source-older-menu" active={menu?.kind === "older"}
       {...menuTriggerProps({ open: menu?.kind === "older", onOpen: (entry, event) => setMenu({ kind: "older", anchor: event.currentTarget, group, entry }) })}
       onClick={(event) => setMenu(menu?.kind === "older" ? null : { kind: "older", anchor: event.currentTarget, group, entry: keyboardEntry(event) })} />}
     {withHeaderControls && headerControls}
   </>;
   // R3-sections: what the sections layout (source-sidebar-sections.jsx) takes from this list.
   const sectionsHost = sectionsModel && {
+    // W14-code r4 fr4-06 (mount): shared-22 $N's p4 for Code at the sections layout's routines section (sections-model
+    // routinesSectionId, between Pinned and Sessions; source-sidebar-routines.jsx). It draws only while Show › Routines
+    // shows the section. Rollback: host-growthbook local_sidebar_routines.
+    routinesSection: mode === "code" ? <SidebarRoutinesSection /> : null,
     renderRows: renderGroupRows, shiftStyle, toggle: toggleGroup, folded: closed, drag, dropTargets: !!onSessionAction, headerControls, canCreate: !!onCreateGroup,
     trailing: (group, { first }) => first || (group.cwd && onProject) || sessionsPlaceNewSession(group) || sessionsPresetNewSession(group) || (group.customGroupId && onGroupAction) || (group === olderGroup && olderMenuAvailable) ? groupActions(group, first) : null,
     // R3-sections (WI-4): a Sessions folder bucket's header menu is the original shared-20 yx as a worked-out group (sT → bC,
@@ -1760,8 +1837,11 @@ export function SourceSidebar({
     viewAll: { onViewAll: onViewAllSessions ? () => onViewAllSessions() : undefined, listSettled: !listLoading, archivedInHand: listedSessions.some(sessionArchived) },
   };
   // pw u (sidebar-groups.js:5241): the whole IO identity (main.jsx accountIdentity), ellipsized by CSS.
+  // W14-code r8 fr8-07 (E95): shared-21 hH `{id:"projects",modes:["chat","cowork"]}` and Code's only projects row
+  // `{id:"epitaxy-projects",gate:"epitaxy-projects",modes:["code"]}`, which bH adds only when Ll() (shared-26
+  // `e && W("amber_tributary_osprey")`, Uon always !1 on the 3P desktop): Code has no Projects row.
   const primaryRows = mode === 'code'
-    ? [["New", "Add", "new"], ["Projects", "Projects", "projects"], ["Artifacts", "Artifacts", "artifacts"], ["Routines", "Clock", "routines"], ["Customize", "Tool", "customize"]]
+    ? [["New", "Add", "new"], ["Artifacts", "Artifacts", "artifacts"], ["Routines", "Clock", "routines"], ["Customize", "Tool", "customize"]]
     // w13-surfaces-nav: shared-21 bH/hH (surface-nav-model.mjs). homeMode is rT: "cowork" exactly when Cowork is
     // available, and then mY has no chat surface, so a chat session on the merged home keeps the cowork rows.
     : surfaceNavRows(homeMode === 'cowork' ? 'cowork' : mode, { coworkEnabled: homeMode === 'cowork' });
@@ -1789,10 +1869,12 @@ export function SourceSidebar({
         : <span className="source-leading-slot"><Icon name={icon} size={16} /></span>}
       {/* l5: `q&&u(GY,{label:"Terminal or browser active on the New session page"})` after the title, and Xm's
           `shortcut: q || !O ? void 0 : T`, so the running mark replaces the ⌘N keycap (aria-keyshortcuts stays). */}
-      {mode === 'code' ? <span className="flex min-w-0 flex-1 items-center"><span>{t(label)}</span>{key === 'projects' && <CdsBadgeDensity.Provider value="compact"><SidebarNavBadge badge="beta" /></CdsBadgeDensity.Provider>}
+      {mode === 'code' ? <span className="flex min-w-0 flex-1 items-center"><span className="min-w-0 truncate">{t(label)}</span>
         {newPageMark && <SidebarRunningMark label={t("Terminal or browser active on the New session page")} />}</span>
         : <span>{t(label)}</span>}
-      {key === "new" && !newPageMark && <kbd aria-hidden="true">⌘ N</kbd>}
+      {/* shared-21 l5 → shared-18 Ak `[De, m(yk, { keys: D })]` with T = bX(isClaudeApp) = "cmd+n": yk is the CDS
+          Shortcut (text, onFill) in "ms-1 me-[var(--df-radius-pill)] … opacity-0 group-hover:opacity-100". */}
+      {key === "new" && !newPageMark && (mode === "code" ? <SidebarRowShortcut keys="cmd+n" /> : <kbd aria-hidden="true">⌘ N</kbd>)}
     </button>;
   };
   const accountName = displayName;
@@ -1832,10 +1914,13 @@ export function SourceSidebar({
     </div>}
     {/* sidebar-main.js:14918-14925: the body is the peek card while collapsed (id = the trigger's
         aria-controls); it is inert while the card is hidden. */}
-    <div className="dframe-sidebar-body" data-testid="sidebar" id="frame-peek-popover" data-focus-region={collapsed ? "navigation" : undefined} data-focus-region-holds={collapsed ? "contains" : undefined} inert={collapsed && !peekOpen ? true : undefined}
+    <div className={collapsed ? `${SIDEBAR_BODY_CLASS} bg-[hsl(var(--df-surface-primary))] border-0.5` : SIDEBAR_BODY_CLASS} data-testid="sidebar" id="frame-peek-popover" data-focus-region={collapsed ? "navigation" : undefined} data-focus-region-holds={collapsed ? "contains" : undefined} inert={collapsed && !peekOpen ? true : undefined}
       onPointerEnter={collapsed ? onPeekEnter : undefined} onPointerLeave={collapsed ? onPeekLeave : undefined}>
       {/* R2-appswitch W2: shared-22 DN `ae` puts the same switch at the top of the peek card while collapsed. */}
       {collapsed && <SourceAppSwitch placement="peek" mode={mode} homeMode={homeMode} onMode={onMode} chord />}
+      {/* W14-code r2 fr2-05: GI's FrameSidebarNav child is shared-18 vA, one `flex flex-col flex-1 min-h-0` column holding
+          the shrink-0 header and the nav scroller, so the body's gap-2 falls between it, the banner slot and the tray. */}
+      <div className="flex flex-col flex-1 min-h-0">
       <div className="source-sidebar-header">
       {mode === 'code' ? <SidebarSearchContext.Provider value={{open: entry => setShowSearch?.(entry), shortcut: 'cmd+k'}}>
         <SidebarSearchField/>
@@ -1858,6 +1943,9 @@ export function SourceSidebar({
           session-only token scope, so it keeps the default 26px row height. */}
       {/* dframe-nav-scroll: the loaded shared-styles copy of desktop-layout.css:799-801
           masks the top 12px while data-scrolled is set. */}
+      {/* W14-code r4 fr4-07 (mount): the hover cards' host (source-sidebar-hover-card.jsx SidebarHoverCardHost): the rows'
+          approvals, main.jsx's approval runtime and respondApproval. */}
+      <SidebarHoverCardHost requestsFor={hoverCardRequestsFor} runtime={approvalRuntime} respond={onRespondApproval}>
       <nav ref={navRef} className="source-session-list dframe-nav-scroll" aria-label={t("Sessions")} aria-busy={listLoading}
         data-scrolled={scrolled || undefined} data-pin-dragging={drag ? "" : undefined}
         onPointerDownCapture={swallowGuardedMultiClick} onMouseDownCapture={swallowGuardedMultiClick}
@@ -1915,8 +2003,9 @@ export function SourceSidebar({
         <SidebarBlankArea enabled={mode === "code" && !!onSessionAction} showCreateGroup={!!onCreateGroup} onNewSession={onNew} onNewEnvironment={onCreateEnvironment}>
         <div className="df-session-list flex flex-col">
         {/* Local notice (no source counterpart): remembered sessions loadSessions
-            kept out of the list, i.e. the other core's or unreadable ones. */}
-        {hiddenNotice && <div className="source-sidebar-no-match source-sidebar-hidden-notice" data-sidebar-notice="hidden-sessions">
+            kept out of the list, i.e. the other core's or unreadable ones. Its type is the list's empty hint's (shared-22
+            UC: df-label-inset … py-1 pe-[var(--df-row-px)] text-caption text-muted-as-secondary), as a block. */}
+        {hiddenNotice && <div className="source-sidebar-hidden-notice df-label-inset py-1 pe-[var(--df-row-px)] text-caption text-muted-as-secondary" data-sidebar-notice="hidden-sessions">
           <p>{hiddenNotice} {tn(hiddenSessions?.missing || 0, "Its files were deleted or can’t be read by {core}.", "Their files were deleted or can’t be read by {core}.", { core: coreName(engine) })}</p>
           {(onRetryHidden || onForgetHidden) && <span className="source-sidebar-hidden-actions">
             {onRetryHidden && <button type="button" className="source-sidebar-hidden-action" onClick={() => onRetryHidden()}>{t("Try again")}</button>}
@@ -1928,7 +2017,8 @@ export function SourceSidebar({
             row that can pin is dragged, holding XO's drop row. */}
         {canDragRows && !displayed.some((group) => group.kind === "pinned") && <section className="source-pinned-drop df-pin-section-reveal" data-pinned-list=""
           data-stub={pinDropOpen ? undefined : ""} inert={pinDropOpen ? undefined : true}>
-          <div className="source-pinned-drop-heading" data-sidebar-group-label=""><span>{t("Pinned")}</span></div>
+          {/* ZO's label is shared-18 ul (SidebarGroupLabel, lA's df-label-inset group header classes). */}
+          <SidebarGroupLabel>{t("Pinned")}</SidebarGroupLabel>
           <div className="source-group-rows flex flex-col gap-px" data-pinned-rows=""><PinnedDropRow hot={drag?.slotIdx != null} dragging={pinDropOpen} /></div>
         </section>}
         {sectionsModel ? <SidebarSectionsList model={sectionsModel} host={sectionsHost} createRef={sectionDialog} /> : displayed.map((group, index) => <section key={group.key} className="source-session-group" data-group-key={group.key}
@@ -1988,18 +2078,22 @@ export function SourceSidebar({
         </SidebarBlankArea>
         <div ref={laneSentinel} aria-hidden="true" className="source-session-list-lane-sentinel" />
       </nav>
+      </SidebarHoverCardHost>
+      </div>
       {/* sidebar-main.js:14970-14976 df-bottom-tray > hL (:14187-14202)
           df-footer-row: LC = pw (sidebar-groups.js:5225-5310, hideSuffix false) in
-          min-w-0 flex-1, then df-footer-aux. */}
-      <div className="df-bottom-tray shrink-0">
+          min-w-0 flex-1, then df-footer-aux. W14-code r3 fr3-05: shared-22 GI `It = … i(Ys, "df-bottom-tray shrink-0")`,
+          Ys = shared-5 pS "static-composer-boot-fade". */}
+      <div className={`${staticComposerBootFade} df-bottom-tray shrink-0`}>
         <div className="df-footer-row account-footer shrink-0 flex items-center gap-[var(--df-footer-gap)]">
           <div className="min-w-0 flex-1">
             <button type="button" data-testid="user-menu-button" aria-label={t("Account menu")}
               className="df-user-menu-btn account-button cds-reset flex h-[max(28px,var(--df-footer-btn-size))] max-w-full items-center gap-[var(--df-row-gap)] rounded-[var(--df-radius-pill)] ps-[var(--df-row-px)] pe-2 text-start outline-none hover:bg-[var(--df-hover)] focus-visible:shadow-focus"
               {...menuTriggerProps({ open: accountMenuOpen, onOpen: (entry, event) => onAccount?.(event, entry) })} onClick={(event) => onAccount?.(event, keyboardEntry(event))}>
               {/* shared-19 E0 avatar slot: C0 = CDS Avatar pp{name, src, size:"sm", aria-hidden} while __gb__496524976
-                  (S0) is on (host-growthbook, user ruling: on; no image source, so the name's initials); off, T0's
-                  static Spark at 16. */}
+                  (S0) is on; off, T0's static Spark at 16. W14-code r4 gates-r4-06 (E95): the desktop's Uon does not
+                  serve 496524976, so host-growthbook leaves it off and the slot is the static Spark, as on the 3P
+                  desktop; E0's own S0 read stays, as in shared-19. */}
               <span className="df-on-rail relative flex w-[var(--df-leading-slot)] shrink-0 items-center justify-center">{hostGrowthBookFlag("__gb__496524976")
                 ? <CdsAvatar name={avatarName ?? accountName} size="sm" aria-hidden />
                 : <SourceSpark size={16} className="shrink-0" />}</span>
@@ -2016,21 +2110,19 @@ export function SourceSidebar({
               {accountName !== "" && <Icon name="CaretDown" size={12} className="df-user-menu-trailing shrink-0 text-muted-as-secondary" />}
             </button>
           </div>
-          {/* sidebar-main.js:14185-14235 hL df-footer-aux (vL/yL/gL) is empty in code mode. Locally it holds a
-              Connection settings control only while the core is not connected (neutral Disconnect glyph, CDS
-              tooltip, no native title); it opens main.jsx 'connection' (Header + Reconnect / Settings). */}
-          <div className="df-footer-aux ml-auto flex shrink-0 items-center">
-            {connectionIssue && <ToolButton label={t("Connection settings")} icon="Disconnect" tooltip={{ hoverable: false, open: connectionMenuOpen ? false : undefined }}
-              {...menuTriggerProps({ open: connectionMenuOpen, onOpen: (entry, event) => onMenu?.("connection", event.currentTarget, undefined, entry) })}
-              onClick={(event) => onMenu?.("connection", event.currentTarget, undefined, keyboardEntry(event))} />}
-          </div>
+          {/* sidebar-main.js:14185-14235 hL df-footer-aux (vL/yL/gL) is empty in code mode. W14-code r4 复核 (E95):
+              the host's Connection settings control (en-US has no such string) is gone; reconnecting stays on the
+              session-list error's Retry (onRetryLoad), the composer's "Connection to {core} lost." Reconnect and Settings' Reconnect. */}
+          <div className="df-footer-aux ml-auto flex shrink-0 items-center" />
         </div>
       </div>
     </div>
     {setSidebarWidth && <SidebarResizeHandle width={sidebarWidth} minWidth={sidebarFloor} collapsed={collapsed} onCommit={setSidebarWidth} onCollapse={onCollapse} onCollapsedChange={onCollapsedChange} />}
     <SidebarDragGhost drag={drag} />
     {menu && <SidebarListContext.Provider value={{getList:()=>navRef.current}}><SourceSidebarMenu key={menu.token} anchor={menu.anchor} point={menu.point} kind={menu.kind} initialHighlight={menu.entry ?? "popup"}
-      label={t(menu.kind === "filter" ? "Filter sessions" : menu.kind === "group" ? "Group options" :menu.kind === "older" ? "Older sessions" : menu.kind === "whitespace" ? "Sessions list options" : "Session options")}
+      // The official sidebar menus (CDS Dropdown / ContextMenu popups: shared-21 PJ, shared-20 group menu, _B) carry no
+      // aria-label of their own, and en-US has none of the host's former names for them.
+      label={undefined}
       onClose={() => setMenu(null)}>
       {menu.kind === "filter" && mode !== "cowork" && <SourceSidebarFilterMenu showMetadataOption={false} preferences={preferences} onChange={updatePreferences} onClose={() => setMenu(null)} knownFolders={folders} customGroups={customGroups} />}
       {/* w13-close-cowork-sidebar: the Cowork list's menu is shared-21 PJ's cowork branch (Group by, Sort by, Show empty groups). */}
@@ -2132,7 +2224,7 @@ export function SourceSidebar({
         const archivable = olderTargets(menu.group, "archive"), deletable = olderTargets(menu.group, "delete");
         return <>
           {archivable.length > 0 && <Choice onClick={() => setConfirm({ ...olderConfirmCopy("archive", archivable.length), onConfirm: () => runBulk("archive", archivable, undefined, { older: true }) })}>{t("Archive all ({count})", { count: archivable.length })}</Choice>}
-          {deletable.length > 0 && <Choice variant="danger" onClick={() => setConfirm({ ...olderConfirmCopy("delete", deletable.length, { engine }), onConfirm: () => runBulk("delete", deletable, undefined, { older: true }) })}>{t("Delete all ({count})", { count: deletable.length })}</Choice>}
+          {deletable.length > 0 && <Choice variant="danger" onClick={() => setConfirm({ ...olderConfirmCopy("delete", deletable.length), onConfirm: () => runBulk("delete", deletable, undefined, { older: true }) })}>{t("Delete all ({count})", { count: deletable.length })}</Choice>}
         </>;
       })()}
     </SourceSidebarMenu></SidebarListContext.Provider>}
@@ -2162,4 +2254,3 @@ export function SourceSidebar({
   </aside>;
 }
 
-export { SourceSidebar as Sidebar, RenameRow as SourceSidebarRenameRow };

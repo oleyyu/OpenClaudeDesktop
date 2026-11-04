@@ -603,6 +603,123 @@
         "nt": "deliberateCardKey",
         "rt": "markCardPick"
       }
+    },
+    {
+      "target": "reveal-guard.mjs",
+      "source": "c227f4d5e-B-FYKrwT.js",
+      "sourceSha256": "2c0354bdee6fb13985d759692e43f0ef91f15991b8adb68cb3ab576561d9bc28",
+      "sha256": "59664a8d710e337416ecee409748fec0a36c58f29a324f4f0d20d2d9135dd8a9",
+      "bindings": [
+        {
+          "name": "uD",
+          "sha256": "c51bf8fab66fc27ab8785597d61ffc4e47c9154f9c4c6b254d56ceced48ae5a1"
+        },
+        {
+          "name": "dD",
+          "sha256": "4acff82f7382b043573c81edc64eda7f20d45e4e9a3c884549383990de4554ee"
+        },
+        {
+          "name": "fD",
+          "sha256": "925a8ca0c20b3fda31e77e8ca73be12bee6f06114a2a54b9e5b0da143d2ae035"
+        },
+        {
+          "name": "pD",
+          "sha256": "9701f80f0ffbeea05d454802d9f0355a4ea05a58db465e9652c524d112aa6970"
+        },
+        {
+          "name": "mD",
+          "sha256": "da18f3373903ecdec488010c36e180de0521258a27bacf5bccc747815278a858"
+        },
+        {
+          "name": "hD",
+          "sha256": "331124af237cfa2f0464619aa3aa20e409829aa0e2c0d47348cbb2270daa26cd"
+        },
+        {
+          "name": "gD",
+          "sha256": "e7f91f0f25316023e1f7d155d25df971d92eaade9006eceac0e399dbaa5b257e"
+        },
+        {
+          "name": "_D",
+          "sha256": "6754497896597704d856f6a71111d2b8890e40a7857789079a094c6c9c54cec8"
+        },
+        {
+          "name": "vD",
+          "sha256": "5ea3e3ee38f07771af38c88c7ddcf7a81ea81ad2bed3a4e9a16a499398a2cf5c"
+        },
+        {
+          "name": "yD",
+          "sha256": "093ac7315b0b5b0382e20e914efb441f43dedd35f7eb0ea26fa95b18ef02ea64"
+        },
+        {
+          "name": "bD",
+          "sha256": "67466f62e7b25ac218125a249d591f36f93b1614a4463eaf1652f5b4858df8a4"
+        },
+        {
+          "name": "xD",
+          "sha256": "b63e4ed22982c6587bf64e7ef543b141dc053d149fc0d1300a0a26aea9fce0e5"
+        },
+        {
+          "name": "SD",
+          "sha256": "315a03079b549c1d3b828f3b4d08b6a2ed93b39a96ccf54872c0513b42c135d6"
+        },
+        {
+          "name": "CD",
+          "sha256": "9c00032a713e05baa9e622072eb82bb0742c0684398c4e9f632e0dfa7b72a51c"
+        },
+        {
+          "name": "wD",
+          "sha256": "3591e4ab27646cef117570b58006cdff8501fb83dae8f2400f5aba2e5edfcb54"
+        },
+        {
+          "name": "TD",
+          "sha256": "a0450a8f6cc7b70e2b68e489ee1087c675aaa326a096caafdb962456f0498d48"
+        },
+        {
+          "name": "ED",
+          "sha256": "9f00ccc1c08c2046d616943845fd407ae9fe6f6a60329e3952685a690216620c"
+        }
+      ],
+      "imports": [
+        {
+          "local": "R",
+          "from": "react",
+          "name": "useEffect",
+          "via": "vendor-frame-CnSY1sxv.js:ho",
+          "kind": "react"
+        },
+        {
+          "local": "W",
+          "from": "react",
+          "name": "useState",
+          "via": "vendor-frame-CnSY1sxv.js:wo",
+          "kind": "react"
+        },
+        {
+          "local": "J1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged1",
+          "via": "shared-frame-6jtSkIit.js:Qf",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "J9",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "reactMemoCache",
+          "via": "shared-frame-6jtSkIit.js:ip",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "K2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore2",
+          "via": "shared-frame-6jtSkIit.js:sp",
+          "kind": "view-tabs"
+        }
+      ],
+      "exports": {
+        "uD": "useRevealSettled",
+        "ED": "revealClickGuard"
+      }
     }
   ]
 }

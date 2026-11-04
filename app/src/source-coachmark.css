@@ -49,13 +49,6 @@ html[data-reduce-motion="true"] .scm-popup { transition: none; }
   font-weight: var(--cds-font-weight-semibold, 600);
   overflow-wrap: break-word;
 }
-/* E: ml-auto flex size-[1lh] shrink-0 items-center justify-center around the ghost xs X (dT.accent ink). */
-.scm-close-slot { display: flex; flex-shrink: 0; align-items: center; justify-content: center; width: 1lh; height: 1lh; margin-left: auto; }
-.scm-close-slot .source-settings-button.scm-close {
-  width: calc(1.25rem * var(--cds-rem-scale, 1)); height: calc(1.25rem * var(--cds-rem-scale, 1));
-  color: var(--cds-on-accent);
-  --cds-fill-ghost-hover: rgb(255 255 255 / .15);
-}
 /* mt-xs flex justify-end, a cds-dark-scope (uT: the page bg is the accent fill). */
 .scm-actions {
   display: flex; justify-content: flex-end; margin-top: var(--cds-pad-xs);

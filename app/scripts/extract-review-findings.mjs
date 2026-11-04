@@ -67,7 +67,9 @@ const adapters = {
   },
 };
 const modules = [
-  { target: 'pane-focus-return.mjs', source: 'shared-1-BJhqMmkf.js', exports: { nC: 'focusReturnRegion', aC: 'returnFocusSoon' },
+  // W14-code r6 gen-final-6 (D1): tC / rC / oC exported too, for the pierre Changes body (generated/pierre-changes links
+  // this module instead of slicing shared-1's focus-return helpers a second time).
+  { target: 'pane-focus-return.mjs', source: 'shared-1-BJhqMmkf.js', exports: { nC: 'focusReturnRegion', aC: 'returnFocusSoon', tC: 'paneRootOf', rC: 'paneFocusTarget', oC: 'returnFocusSoonTo' },
     features: {
       nC: [loose('return e?.closest(\'[data-diff-pane-body], [role="dialog"]\') ?? tC(e);')], tC: ['?.closest("[data-pane-root]") ?? null;'],
       rC: ['.querySelector("[data-diff-pane-body]") ??'], aC: [loose('oC(e, tC(e));')],

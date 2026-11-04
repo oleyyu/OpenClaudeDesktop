@@ -171,6 +171,7 @@ function dragReadback(result) {
 /**
  * highlight: {target({sessionId, bundleId, windowId}), released({sessionId, windowId})}, optional (see the header).
  * selfBundleIds: the app's own bundle ids, which no session can grant (grants.cjs `refuse`).
+ * deniedBundleIds: () => the user's deny list (grants.cjs `denied`), never granted.
  * axHelper: ax-helper.cjs (focus, menus; native by default). image: {crop({dataUrl, rect, width, height}) → Promise<{dataUrl}>} for app_zoom.
  * pointer: {beforeClick({windowId} | {scope: "display"}), clicked(point), moved(point), restore({windowId}),
  *   released({windowId})} with point {sessionId, bundleId, windowId, x, y} in global screen points (cursor.cjs), optional.
@@ -178,7 +179,7 @@ function dragReadback(result) {
  *   through (official executor NG) and input bursts (official beginInputBurst), optional.
  * focusGuard: focus-guard.cjs createFocusGuard() (tests pass one with their own clock); by default one on `native`.
  */
-function createComputerUse({ native = createNative(), axHelper = createAxHelper({ native }), image = null, pointer = null, highlight = null, log = console, wait, decide, selfBundleIds = [], fullControl = createFullControl(), overlayWindowIds = () => [], onDisplaySelected = () => {}, withOwnEscape = (run) => run(), clipboard = null, subGates = {}, clickThrough = null, savePanel = null, focusGuard = null } = {}) {
+function createComputerUse({ native = createNative(), axHelper = createAxHelper({ native }), image = null, pointer = null, highlight = null, log = console, wait, decide, selfBundleIds = [], fullControl = createFullControl(), overlayWindowIds = () => [], onDisplaySelected = () => {}, withOwnEscape = (run) => run(), clipboard = null, subGates = {}, clickThrough = null, savePanel = null, focusGuard = null, deniedBundleIds = () => [] } = {}) {
   const pause = wait ?? ((ms) => new Promise((resolve) => setTimeout(resolve, ms)));
   // Official executor NG: a click / press / release / drag / scroll runs with the app's windows near it letting it through.
   const throughOwnWindows = (points, run) => (typeof clickThrough?.around === "function" ? clickThrough.around(points.filter(Boolean), run) : run());
@@ -257,7 +258,8 @@ function createComputerUse({ native = createNative(), axHelper = createAxHelper(
   };
   const grantsFor = (sessionId) => {
     if (typeof sessionId !== "string" || !sessionId) throw coded("invalid_params", "sessionId is required.");
-    if (!sessions.has(sessionId)) sessions.set(sessionId, createGrants({ refuse: selfBundleIds }));
+    // deniedBundleIds: Settings › Computer use › Denied apps (main.cjs config.computerUseDeniedBundleIds), read live.
+    if (!sessions.has(sessionId)) sessions.set(sessionId, createGrants({ refuse: selfBundleIds, denied: deniedBundleIds }));
     return sessions.get(sessionId);
   };
   const granted = (sessionId, bundleId) => {

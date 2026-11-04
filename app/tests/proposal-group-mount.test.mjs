@@ -441,7 +441,9 @@ test('main.jsx: the floating card is gone; Lb is wired; the card mounts after a 
   assert.match(host.renderMarkdown, /<SourceMarkdown text=\{text\}/);
   assert.ok(hook.start < findAll(ast, n => n.type === 'VariableDeclarator' && n.id.name === 'toolRuns')[0].start, 'before the rows are built');
   // ProposalTurnCard: once, inside the shownRows map, after the turn's edits card and before its task events.
-  const rowsMap = findAll(ast, n => n.type === 'CallExpression' && text(n.callee) === 'shownRows.map')[0];
+  // W14-code renderer-core (E86): the row callback goes through codeTranscriptRows(shownRows, …) (rows.map in Chat /
+  // Cowork and the renderer's fallback; the Code renderer's host rows and after-row content otherwise).
+  const rowsMap = findAll(ast, n => n.type === 'CallExpression' && text(n.callee) === 'codeTranscriptRows' && text(n.arguments[0]) === 'shownRows')[0];
   const [card] = jsx('ProposalTurnCard');
   assert.equal(jsx('ProposalTurnCard').length, 1);
   assert.ok(card.start > rowsMap.start && card.end < rowsMap.end, 'inside the row loop');
@@ -455,7 +457,9 @@ test('main.jsx: the floating card is gone; Lb is wired; the card mounts after a 
   const [end] = jsx('ProposalFeedEnd');
   assert.equal(jsx('ProposalFeedEnd').length, 1);
   assert.equal(text(end), '<ProposalFeedEnd cards={proposalCards} />');
-  const pending = calls('pendingUserRow')[0];
+  // W14-code r2 R2T-07: the Code renderer takes the sends as its entries (codeTranscriptRows' localSends, a pendingUserRow
+  // call inside the rows); the host's own optimistic rows (Chat / Cowork / the fallback) are the last call.
+  const pending = calls('pendingUserRow').at(-1);
   assert.ok(rowsMap.end < end.start && end.end < pending.start);
   // w10-trans-proposal-inline: the pane context (cf74bc599 uo) around the rows, the turn's cards and the feed end.
   const [scope] = jsx('ProposalTranscriptScope');
@@ -469,7 +473,7 @@ test('main.jsx: the floating card is gone; Lb is wired; the card mounts after a 
   assert.ok(source.includes(JSON.stringify(H.CODE_DEVELOPER_INSTRUCTIONS)));
 });
 
-test('retired: the floating card\'s files; mark_chapter\'s base style moved to source-chapters.css', () => {
+test('retired: the floating card\'s files; mark_chapter\'s heading is GY\'s class string', () => {
   for (const file of ['src/source-suggested-tasks.jsx', 'src/source-suggested-tasks.css']) assert.equal(fs.existsSync(path.join(app, file)), false, file);
   const session = fs.readFileSync(path.join(app, 'src/source-session.jsx'), 'utf8');
   assert.doesNotMatch(session, /source-suggested-tasks/);
@@ -477,9 +481,10 @@ test('retired: the floating card\'s files; mark_chapter\'s base style moved to s
   const chapters = fs.readFileSync(path.join(app, 'src/source-chapters.jsx'), 'utf8');
   assert.match(chapters, /import "\.\/source-chapters\.css";/);
   const css = fs.readFileSync(path.join(app, 'src/source-chapters.css'), 'utf8');
-  assert.match(css, /\.source-chapter \{ margin: 0; color: var\(--cds-text-primary\); font-size: var\(--cds-font-size-body, 13px\); line-height: var\(--cds-leading-body, 19px\);\n  font-weight: var\(--cds-font-weight-semibold, 600\); font-variation-settings: var\(--cds-font-wght-semibold, normal\); scroll-margin-top: 56px; user-select: text; overflow-wrap: break-word; \}/);
-  assert.ok(css.indexOf('.source-chapter {') < css.indexOf('.source-chapter[aria-hidden="true"]'));
-  assert.equal(occurrences(css, '.source-chapter {'), 1);
+  // W14-code r8 css8-chapter-heading-handcopy: the heading is 3.6556.2 c96d752d0 GY's class string in the JSX; the
+  // hand-copied .source-chapter rules are gone.
+  assert.match(chapters, /const CHAPTER_HEADING_CLASS = "text-body-semibold text-primary select-text scroll-mt-\[56px\]";/);
+  assert.doesNotMatch(css, /\.source-chapter(?:-input)?\s*(?:\{|\[|,)/);
 });
 
 test('a streaming transcript does not rebuild the card\'s inputs; a newly placed call does', () => {

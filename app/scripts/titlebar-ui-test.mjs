@@ -104,7 +104,7 @@ async function openSession(id) {
   await page
     .locator(`[data-source-session-id="${id}"] .source-session-open`)
     .click();
-  await page.locator(".st-title").waitFor();
+  await page.locator(":is(.st-title,button[data-pane-title])").waitFor();
 }
 // R4i-gui GU1: the rail's Environment card. rail-view.mjs rD renders aside[aria-label="Session details"]; each card is
 // rail-card.mjs Xv, a section[data-rail-section] labelled by its h3 ("Environment" + the summary). The rail is shown by
@@ -136,8 +136,8 @@ try {
       innerHeight: inner.getBoundingClientRect().height,
       topPadding: s.paddingTop,
       innerTop: inner.getBoundingClientRect().top,
-      titleFont: getComputedStyle(node.querySelector(".st-title")).fontSize,
-      controlHeight: node.querySelector(".st-title").getBoundingClientRect()
+      titleFont: getComputedStyle(node.querySelector(":is(.st-title,button[data-pane-title])")).fontSize,
+      controlHeight: node.querySelector(":is(.st-title,button[data-pane-title])").getBoundingClientRect()
         .height,
       // R4i-gui GU1: in rail mode (main.jsx railMode={sessionRail.railMode}, c73f45bc3 w_ `origin: null, pill: null`)
       // the Code lead has no origin glyph and no folder pill; source-titlebar.jsx:372 renders the empty
@@ -158,7 +158,7 @@ try {
     "Code header 40px = 8px top inset + 32px inner, title13px/control24px; rail mode drops the origin glyph and folder pill (the rail's Environment card carries the folder)",
   );
 
-  const title = page.locator(".st-title"),
+  const title = page.locator(":is(.st-title,button[data-pane-title])"),
     input = page.getByRole("textbox", { name: "Session name", exact: true });
   await title.focus();
   await title.press("Enter");
@@ -186,7 +186,7 @@ try {
   await input.press("Enter");
   await page.waitForFunction(
     () =>
-      document.querySelector(".st-title")?.textContent ===
+      document.querySelector(":is(.st-title,button[data-pane-title])")?.textContent ===
       "Renamed through actual Codex protocol",
   );
   assert.equal(
@@ -206,7 +206,7 @@ try {
   await input.fill("Never submitted to second session");
   await input.press("Escape");
   await openSession(secondId);
-  assert.equal(await page.locator(".st-title").innerText(), secondTitle);
+  assert.equal(await page.locator(":is(.st-title,button[data-pane-title])").innerText(), secondTitle);
   assert.equal((await requests()).length, 1);
   checks.push("Cancelled draft does not leak when selecting another session");
 
@@ -223,7 +223,7 @@ try {
   await openSession(secondId);
   // Let the source component consume the intentionally delayed stale response.
   await page.waitForTimeout(1400);
-  assert.equal(await page.locator(".st-title").innerText(), secondTitle);
+  assert.equal(await page.locator(":is(.st-title,button[data-pane-title])").innerText(), secondTitle);
   assert.equal(await page.locator(".st-title-input").count(), 0);
   assert.equal(
     (await readDb()).threads[firstId].name,
@@ -241,7 +241,7 @@ try {
   await input.fill(initialTitle);
   await input.press("Enter");
   await page.waitForFunction(
-    (name) => document.querySelector(".st-title")?.textContent === name,
+    (name) => document.querySelector(":is(.st-title,button[data-pane-title])")?.textContent === name,
     initialTitle,
   );
   await app.evaluate(({ BrowserWindow }) =>
@@ -251,7 +251,7 @@ try {
   // R4i-gui GU1: rail mode has no folder pill to compact (source-titlebar.jsx:471/:475), so the narrow check is the
   // title against the trailing controls only.
   metrics.narrow = await page.locator(".st-toolbar").evaluate((node) => {
-    const title = node.querySelector(".st-title"),
+    const title = node.querySelector(":is(.st-title,button[data-pane-title])"),
       controls = node.querySelector(".st-trailing");
     return {
       viewport: innerWidth,
@@ -488,7 +488,7 @@ try {
   await openSession(firstId);
   await page.getByRole("button", { name: "New", exact: true }).click();
   await page.locator(".st-trailing").waitFor({ state: "attached" });
-  await page.locator(".st-title").waitFor({ state: "detached" });
+  await page.locator(":is(.st-title,button[data-pane-title])").waitFor({ state: "detached" });
   assert.equal(await whatsNew.count(), 0);
   await page.reload();
   await page
@@ -497,7 +497,7 @@ try {
     .waitFor();
   await page.getByRole("button", { name: "New", exact: true }).click();
   await page.locator(".st-trailing").waitFor({ state: "attached" });
-  await page.locator(".st-title").waitFor({ state: "detached" });
+  await page.locator(":is(.st-title,button[data-pane-title])").waitFor({ state: "detached" });
   assert.equal(await whatsNew.count(), 0);
   await page.screenshot({
     path: path.join(evidence, "titlebar-source-whats-new-seen.png"),

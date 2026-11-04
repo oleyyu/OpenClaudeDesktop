@@ -5254,5 +5254,38 @@
       "name": "defineMessage"
     }
   ],
-  "pendingDedupe": []
+  "pendingDedupe": [
+    {
+      "original": "shared-0-DDOOdL6P.js#xn",
+      "heldBy": "code-transcript"
+    },
+    {
+      "original": "shared-78-D5Fw2h0a.js#DU",
+      "heldBy": "code-transcript"
+    },
+    {
+      "original": "shared-156-BLTosN8U.js#wB",
+      "heldBy": "code-transcript"
+    },
+    {
+      "original": "shared-156-BLTosN8U.js#XK",
+      "heldBy": "code-transcript"
+    },
+    {
+      "original": "shared-156-BLTosN8U.js#QK",
+      "heldBy": "code-transcript"
+    },
+    {
+      "original": "shared-156-BLTosN8U.js#$K",
+      "heldBy": "code-transcript"
+    },
+    {
+      "original": "shared-156-BLTosN8U.js#tq",
+      "heldBy": "code-transcript"
+    },
+    {
+      "original": "shared-2-TF8v67kg.js#th",
+      "heldBy": "code-transcript"
+    }
+  ]
 }

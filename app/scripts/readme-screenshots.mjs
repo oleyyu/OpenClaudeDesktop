@@ -279,7 +279,7 @@ try{
 
  // A command waiting for approval.
  await openSession(D.deps[0]);await send(D.deps[1]);
- await page.locator('.sac-card').first().waitFor();await settle(800);
+ await page.locator('[data-approval-card-root]').first().waitFor();await settle(800);
  await shot('approval.png');
 
  // A Dynamic Workflow running in the Background tasks pane (expanded: phases, agents, tokens).

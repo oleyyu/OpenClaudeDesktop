@@ -30,6 +30,11 @@ const { Canvas } = createPreviewSketchCanvas({ useToken, useIntl: useRoutineIntl
 const noTextTargets = { textTargets: undefined, handleTextTargetRedacted() {}, textRedactionCount: () => 0, resetTextRedactionCount() {} };
 const { useSketch, colors, widths, black } = createPreviewSketchState({ usePlatform: () => true,
   // The OCR detector chunk (cb22b036c) is not shipped: the official "skip text detection" gate stays on, as before.
+  // W14-code r4 closeout gates-r4-13: 3P has __gb__2978899829 off (not in Uon) and lazy-loads cb22b036c, but c23255574 z
+  // only detects under the redact tool (`F(y("__gb__2978899829")?void 0:n,l==="redact")`), and redact needs a userFile /
+  // remoteExternal source (shared-1 qC; otherwise it becomes pen). The preview pane never passes `source`, so there is
+  // no visible difference. When a source is wired, slice cb22b036c / c23255574 from the vendor and read this gate
+  // through hostGrowthBookFlag instead.
   useGate: key => key === '__gb__2978899829', useTextTargets: () => noTextTargets,
   isTextInput, matchCommand: matchSketchCommand, shortcut: sketchShortcut });
 const ErrorContext = createContext(null);

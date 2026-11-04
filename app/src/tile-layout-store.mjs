@@ -13,7 +13,9 @@ const ALLOWED_TILES = new Set([CHAT_TILE_ID, ...PANE_KINDS]);
 export function emptySessionEntry() {
   return {
     taskViews: [],
-    finishedExpanded: false,
+    // null until the person toggles Finished (cccc2cf0a finishedExpandedBySession[id] is undefined until then); the
+    // list then opens it by default when nothing runs (W14-code r4 r4pa-01, EN `j ?? (w || F)`).
+    finishedExpanded: null,
     tileLayout: null,
     baseLayout: null,
     expandedTile: null,
@@ -50,7 +52,7 @@ export function sanitizeSessionEntry(value) {
     entry.baseLayout = null;
   }
   if (!entry.expandedTile) entry.baseLayout = null;
-  entry.finishedExpanded = value.finishedExpanded === true;
+  entry.finishedExpanded = typeof value.finishedExpanded === "boolean" ? value.finishedExpanded : null;
   entry.btwSessionId = typeof value.btwSessionId === 'string' && value.btwSessionId ? value.btwSessionId : null;
   entry.taskViews = Array.isArray(value.taskViews) ? value.taskViews.filter(view => view && view.kind === 'subagent' && typeof view.threadId === 'string' && typeof view.toolId === 'string').slice(-32).map(({kind,threadId,toolId,description,ownerId})=>({kind,threadId,toolId,description:typeof description==='string'?description:'Agent',ownerId:typeof ownerId==='string'?ownerId:null})) : [];
   entry.fileTabs = sanitizeTabs(value.fileTabs);

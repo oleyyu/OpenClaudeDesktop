@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { INITIAL_PROMPT_HISTORY, promptHistoryStep, promptHistoryStatus, humanPrompts, isEmptyComposerText } from "../src/prompt-history-model.mjs";
+import { INITIAL_PROMPT_HISTORY, promptHistoryStep, humanPrompts, isEmptyComposerText } from "../src/prompt-history-model.mjs";
 
 const PROMPTS = ["first prompt", "second prompt"];
 // A tiny driver: keeps the model state and the editor text like SourceComposer does.
@@ -30,7 +30,8 @@ test("ArrowUp enters only from an empty editor and recalls the newest prompt fir
   assert.equal(step.action, "recall");
   assert.equal(step.text, "second prompt");
   assert.deepEqual(step.nav, { index: 2, total: 2, hasDraft: false });
-  assert.equal(promptHistoryStatus(step.nav), "History 2/2");
+  // W14-code r3 R3DC-05: the status line is the composer's inline t("History {index}/{total}") (3.6556.2 c099c328d Vj
+  // navState), so the host promptHistoryStatus helper is gone; nav carries what it reads.
   // Paragraph-only documents count as empty (tiptap isEmpty / Rj).
   assert.equal(isEmptyComposerText("\n\n"), true);
   assert.equal(isEmptyComposerText(" "), false);
@@ -74,7 +75,6 @@ test("hasDraft is false for an empty draft and follows a non-empty stash", () =>
   const carried = { ...INITIAL_PROMPT_HISTORY, resetKey: "k", length: 2, index: 1, draft: "draft", injected: "second prompt", nav: { index: 2, total: 2, hasDraft: true } };
   const step = promptHistoryStep(carried, { resetKey: "k", key: "ArrowUp", atStart: true, text: "second prompt", prompts: PROMPTS });
   assert.deepEqual(step.nav, { index: 1, total: 2, hasDraft: true });
-  assert.equal(promptHistoryStatus(step.nav), "History 1/2 ↓ to restore your draft");
   const down = promptHistoryStep(step.state, { resetKey: "k", key: "ArrowDown", atEnd: true, text: "first prompt", prompts: PROMPTS });
   const back = promptHistoryStep(down.state, { resetKey: "k", key: "ArrowDown", atEnd: true, text: "second prompt", prompts: PROMPTS });
   assert.equal(back.action, "restore");

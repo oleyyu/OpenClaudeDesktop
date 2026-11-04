@@ -84,12 +84,12 @@ export const CLOSE_PANE_SHORTCUT = "cmd+ctrl+w";
 export const CLOSE_PANE_KEYSHORTCUTS = "Control+Meta+w";
 
 // lW / Zh / DW and the Close pane Button add `rm("text-secondary")` (shared-18 Mb: "text-secondary" while fizzy
-// `panels` is off, the local case). ToolButton's className replaces its default, so the local code-icon-button
-// and the pressed is-selected classes are kept beside the official one. R4f-rail SR-6 topbar-09: a pressed one
-// (aria-pressed) paints the official default pressed look, bg-accent under text-accent; source-titlebar.css says why
-// pressedVariant "selected" changes nothing in 2.42304.0.
-export function titlebarControlClass(active = false, extra = "") {
-  return `code-icon-button${extra ? ` ${extra}` : ""} text-secondary${active ? " is-selected" : ""}`;
+// `panels` is off, the local case). W14-code r2 fr2-16: ToolButton is the CDS ghost iconOnly Button, so the class is
+// only the official one (plus the caller's own); a pressed toggle (aria-pressed) paints the Button's default pressed
+// look, bg-accent under text-accent (pressedVariant "selected" changes nothing while fizzy "color" is off). `active` no
+// longer adds a host is-selected wash.
+export function titlebarControlClass(_active = false, extra = "") {
+  return `${extra ? `${extra} ` : ""}text-secondary`;
 }
 
 // R4f-rail SR-6 (2.42304.0 cc43287c9 wW): the session rail toggle. A railToggle is jre's model

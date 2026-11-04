@@ -302,14 +302,15 @@ test('SSR: railMode — the lead drops the origin glyph and the folder pill for 
   // Not in rail mode (the default): the origin glyph and the folder pill, as before.
   const plain = leadOf(renderTitlebar());
   assert.match(plain, /data-testid="epitaxy-origin-indicator"/);
-  assert.match(plain, /<button type="button" class="st-folder"/);
+  assert.match(plain, /<button type="button" class="[^"]* st-folder"/);
   assert.equal(count(plain, slot), 0);
   // Rail mode, ready: the slot first, then the title and its caret; no origin, no pill.
   const rail = leadOf(renderTitlebar({ railMode: true }));
   assert.equal(count(rail, slot), 1);
   assert.doesNotMatch(rail, /st-origin|epitaxy-origin-indicator|st-folder|epitaxy-origin-label/);
-  assert.ok(rail.indexOf(slot) < rail.indexOf('class="session-title st-title"'), 'the slot leads');
-  assert.match(rail, /class="session-title st-title"[^>]*>A title<\/button>/);
+  // W14-code r8 fr8-03: the Code title button is c9543da06 Mp (data-pane-title + Ap classes), not the host st-title.
+  assert.ok(rail.indexOf(slot) < rail.indexOf('data-pane-title=""'), 'the slot leads');
+  assert.match(rail, /<button[^>]*data-pane-title=""[^>]*class="truncate text-body font-medium font-control text-primary select-none mx-outset[^"]*"[^>]*>A title<\/button>/);
   assert.match(rail, /st-session-caret/);
   // Rail mode, loading with a known title: the skeleton title, still no static pill; the Loading session status stays.
   const loading = leadOf(renderTitlebar({ railMode: true, loading: true }));
@@ -422,24 +423,25 @@ test('topbar-09: pressed titlebar toggles end on bg-accent / text-accent, hovere
   const clear = (node) => { node.state.clear(); node.children.forEach(clear); };
   const byAttr = (name, value) => find(tree, (node) => node.tag === 'button' && node.attrs[name] === value);
   const pressed = { terminal: byAttr('data-pane-toggle', 'terminal'), pin: byAttr('data-popout-pin', '') };
+  const paintOf = (button) => find(button, (node) => node.attrs['data-cds-part'] === 'paint');
   const unpressed = byAttr('data-pane-toggle', 'preview');
   for (const [name, node] of Object.entries(pressed)) {
     assert.equal(node.attrs['aria-pressed'], 'true', name);
     for (const hover of [false, true]) {
       clear(tree);
       if (hover) setState(node, ['hover']);
-      const fill = computed(cascade, node, 'background-color');
+      // W14-code r2 fr2-16: ToolButton is the CDS ghost Button, so the fill is its own paint layer's (gc on
+      // span[data-cds-part=paint]) and the ink its own class (Il aria-pressed:text-accent), both from the official sheet.
+      const fill = computed(cascade, paintOf(node), 'background-color');
       const ink = computed(cascade, node, 'color');
       assert.equal(fill.value, 'var(--cds-bg-accent)', `${name}${hover ? ':hover' : ''} fill from ${fill.from?.sheet}`);
       assert.equal(ink.value, 'var(--cds-text-accent)', `${name}${hover ? ':hover' : ''} text from ${ink.from?.sheet}`);
-      assert.equal(fill.from.sheet, 'src/source-titlebar.css');
+      assert.equal(fill.from.sheet, UTILITIES);
     }
   }
   clear(tree);
   assert.equal(computed(cascade, unpressed, 'color').value, 'var(--cds-text-secondary)');
-  assert.notEqual(computed(cascade, unpressed, 'background-color').value, 'var(--cds-bg-accent)');
-  setState(unpressed, ['hover']);
-  assert.equal(computed(cascade, unpressed, 'background-color').value, 'var(--cds-fill-ghost-hover)');
+  assert.notEqual(computed(cascade, paintOf(unpressed), 'background-color').value, 'var(--cds-bg-accent)');
   // The values are the official utilities' own (the rail toggle, an official Button, gets them from these rules).
   const sheet = read(UTILITIES);
   pin(sheet, [

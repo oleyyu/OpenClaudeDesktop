@@ -3,10 +3,11 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs/promises";
+import { readFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { createRequire } from "node:module";
-import { approvalAnnouncement, approvalCardModel, approvalKeyIntent, elicitationFields, elicitationFormContent, elicitationInitialValues } from "../src/approval-card-model.mjs";
+import { approvalAnnouncement, approvalCardModel, approvalKeyIntent, elicitationFields } from "../src/approval-card-model.mjs";
 import { approvalIdentity, createApprovalDraftRuntime, visibleApprovals } from "../src/approval-draft-model.mjs";
 const require = createRequire(import.meta.url);
 const { approvalResponse, respondToApproval } = require("../electron/respond-approval.cjs");
@@ -38,8 +39,8 @@ test("an MCP tool-call approval is a tool card: Deny, Allow for this session (pe
   const model = approvalCardModel(toolApproval());
   assert.equal(model.kind, "elicitation");
   assert.equal(model.supported, true);
-  assert.equal(model.title, "Allow DeepSeek to use write_note (probe)?");
-  assert.deepEqual(model.heading, { action: "use write_note (probe)", meta: null });
+  assert.equal(model.title, "Allow DeepSeek to use write note (probe)?");
+  assert.deepEqual(model.heading, { action: "use write note (probe)", meta: null });
   // Codex's fallback wording is the heading already; it is not repeated as a message.
   assert.equal(model.message, null);
   assert.deepEqual(model.detail, { kind: "arguments", text: "Text: hi", value: [{ name: "text", value: "hi", display_name: "Text" }] });
@@ -51,7 +52,7 @@ test("an MCP tool-call approval is a tool card: Deny, Allow for this session (pe
   assert.deepEqual(model.allows.map(allow => allow.key), ["acceptAlways", "acceptForSession", "accept"]);
   assert.equal(model.allows.find(allow => allow.persistent).label, "Always allow");
   assert.equal(model.allows.find(allow => allow.primary).label, "Allow once");
-  assert.equal(approvalAnnouncement(model), "Permission requested: use write_note (probe). Text: hi");
+  assert.equal(approvalAnnouncement(model), "Permission requested: use write note (probe). Text: hi");
   // No session persist offered → no session button; the ⌘⇧⏎ chord is suppressed.
   const once = approvalCardModel(toolApproval({ persist: undefined }));
   assert.deepEqual(once.allows.map(allow => allow.key), ["accept"]);
@@ -63,7 +64,7 @@ test("tool approval copy: the request's own tool and arguments, a correlated ite
   const item = { type: "mcpToolCall", server: "probe", tool: "other_tool", arguments: { text: "from item" } };
   // The request's _meta describes the exact call being approved; an item never overrides it.
   const fromMeta = approvalCardModel(toolApproval(), item);
-  assert.equal(fromMeta.title, "Allow DeepSeek to use write_note (probe)?");
+  assert.equal(fromMeta.title, "Allow DeepSeek to use write note (probe)?");
   assert.equal(fromMeta.detail.text, "Text: hi");
   // A request without tool _meta or fallback wording borrows the correlated item's heading and arguments.
   const bare = toolApproval({ tool_params: undefined, tool_params_display: undefined });
@@ -71,7 +72,7 @@ test("tool approval copy: the request's own tool and arguments, a correlated ite
   delete bare.params._meta.tool_params_display;
   bare.params.message = "May I?";
   const fromItem = approvalCardModel(bare, item);
-  assert.equal(fromItem.title, "Allow DeepSeek to use other_tool (probe)?");
+  assert.equal(fromItem.title, "Allow DeepSeek to use other tool (probe)?");
   assert.equal(fromItem.detail.kind, "arguments");
   assert.match(fromItem.detail.text, /from item/);
   const titled = approvalCardModel(toolApproval({ tool_title: "Write a note", tool_description: "Saves a note." }));
@@ -105,14 +106,19 @@ test("a message-only server request asks for approval; url, form and unknown mod
   assert.equal(link.elicitation.mode, "url");
   assert.equal(link.elicitation.openable, true);
   assert.deepEqual(link.detail, { kind: "url", text: "https://probe.example.invalid/authorize", value: "https://probe.example.invalid/authorize" });
-  assert.deepEqual([link.deny.label, ...link.allows.map(allow => allow.label)], ["Decline", "Done"]);
+  // V3-W14-approvals: cc32965c2 Ss — "{serverName} wants to open a URL", Decline, "I’m done, continue" (the card adds the
+  // primary Open link), the link's host over its address.
+  assert.equal(link.title, "probe wants to open a URL");
+  assert.equal(link.elicitation.host, "probe.example.invalid");
+  assert.deepEqual([link.deny.label, ...link.allows.map(allow => allow.label)], ["Decline", "I’m done, continue"]);
   const script = approvalCardModel(url("javascript:alert(1)"));
   assert.equal(script.elicitation.openable, false);
   assert.deepEqual(script.context.map(part => part.key), ["url-unopenable"]);
 
   const fields = approvalCardModel(form());
   assert.equal(fields.elicitation.mode, "form");
-  assert.equal(fields.title, "probe is asking for information");
+  // cc32965c2 bs: "{serverName} requests your input" (8+GEYEqcFF).
+  assert.equal(fields.title, "probe requests your input");
   assert.deepEqual([fields.deny.key, ...fields.allows.map(allow => allow.label)], ["decline", "Submit"]);
 
   for (const params of [{ mode: "openai/form", message: "x", requestedSchema: {} },
@@ -126,23 +132,18 @@ test("a message-only server request asks for approval; url, form and unknown mod
   }
 });
 
-test("form fields: every primitive schema shape, defaults, and validation before submit", () => {
+test("form fields: every primitive schema shape the card shows; the form, its defaults and validation are the original's", () => {
   const fields = elicitationFields(formSchema);
   assert.deepEqual(fields.map(field => [field.id, field.type, field.required]), [
     ["title", "text", true], ["count", "integer", true], ["notify", "boolean", false], ["tier", "select", false],
     ["legacy", "select", false], ["tags", "multiselect", false], ["email", "text", false]]);
   assert.deepEqual(fields.find(field => field.id === "legacy").options, [{ value: "a", label: "Alpha" }, { value: "b", label: "Beta" }]);
-  const values = elicitationInitialValues(fields);
-  assert.deepEqual(values, { title: "", count: "", notify: true, tier: "", legacy: "", tags: [], email: "" });
-  assert.deepEqual(elicitationFormContent(fields, values), { error: "Title is required.", fieldId: "title" });
-  assert.equal(elicitationFormContent(fields, { ...values, title: "x" }).error, "Title must be at least 2 characters.");
-  assert.equal(elicitationFormContent(fields, { ...values, title: "ok", count: "1.5" }).error, "Count must be a whole number.");
-  assert.equal(elicitationFormContent(fields, { ...values, title: "ok", count: "9" }).error, "Count must be at most 5.");
-  assert.equal(elicitationFormContent(fields, { ...values, title: "ok", count: "2", tags: ["unit", "ui"] }).error, "Choose at most 1 option for Tags.");
-  assert.equal(elicitationFormContent(fields, { ...values, title: "ok", count: "2", email: "nope" }).error, "email must be an email address.");
-  assert.deepEqual(elicitationFormContent(fields, { ...values, title: "ok", count: "2", tier: "pro", tags: ["ui"] }),
-    { content: { title: "ok", count: 2, notify: true, tier: "pro", tags: ["ui"] } });
   assert.equal(elicitationFields({ type: "object", properties: { n: { type: "number" }, bad: { type: "string", enum: [1] } } }), null);
+  // V3-W14-approvals: the card hands the schema to the generated 3.6556.2 form (cc32965c2 bs: oa / Wr / Do / Eo).
+  assert.equal(approvalCardModel(form()).elicitation.schema, formSchema);
+  const generated = readFileSync(new URL("../src/generated/approval-elicitation/c9e77b76c-BbGxr8n3.mjs", import.meta.url), "utf8");
+  for (const text of ['defaultMessage: "This field is required."', 'defaultMessage: "Must be a whole number."', 'defaultMessage: "Enter a valid email address."'])
+    assert.ok(generated.includes(text), text);
 });
 
 test("the draft runtime accepts elicitation identities and maps each action to its payload", async () => {
@@ -192,9 +193,8 @@ test("main-process mapping: McpServerElicitationRequestResponse per mode, with p
   assert.deepEqual(approvalResponse(unsupported, { elicitation: { action: "decline" } }), { action: "decline" });
 
   const request = form();
-  const fields = elicitationFields(formSchema);
-  const { content } = elicitationFormContent(fields, { ...elicitationInitialValues(fields), title: "ok", count: "3", legacy: "b", tags: ["unit"] });
-  // What the card builds is exactly what main accepts.
+  // What the form reads (ce3d4614c o: numbers as numbers, defaults kept, empty optional fields left out) main accepts.
+  const content = { title: "ok", count: 3, notify: true, legacy: "b", tags: ["unit"] };
   assert.deepEqual(approvalResponse(request, { elicitation: { action: "accept", content } }), { action: "accept", content });
   for (const bad of [{ title: "ok" }, { title: "ok", count: 3.5 }, { title: "ok", count: 9 }, { title: "ok", count: 2, tier: "gold" },
     { title: "ok", count: 2, tags: ["unit", "ui"] }, { title: "ok", count: 2, unknown: true }, { title: "x", count: 2 }, { title: "ok", count: "2" }])

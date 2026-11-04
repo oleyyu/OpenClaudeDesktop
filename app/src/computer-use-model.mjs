@@ -63,7 +63,8 @@ const VERBS = {
   find: () => [t("Finding in window"), t("Found in window"), t("Failed to find in window")],
   menu: () => [t("Using menu bar"), t("Used menu bar"), t("Failed to use menu bar")],
   focus: () => [t("Moving keyboard focus"), t("Moved keyboard focus"), t("Failed to move keyboard focus")],
-  release: () => [t("Releasing apps"), t("Released apps"), t("Failed to release apps")],
+  // c52b02f3f "Releasing app control" (FdUtnE7rin / cHh5wPOKkK; failed eVG5Aocyoj).
+  release: () => [t("Releasing app control"), t("Released app control"), t("Failed to release app control")],
   request_access: () => [t("Asking to use apps on your computer"), t("Asked to use apps on your computer"), t("Failed to ask to use apps")],
   read_clipboard: () => [t("Reading clipboard"), t("Read clipboard"), t("Failed to read clipboard")],
   write_clipboard: () => [t("Copying to clipboard"), t("Copied to clipboard"), t("Failed to copy to clipboard")],

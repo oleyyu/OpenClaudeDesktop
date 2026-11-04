@@ -94,7 +94,7 @@ test('tasks-05 command row: /subtask <task> parses (multi-line too), lists after
   const row = sessionCommands.find(command => command.id === 'subtask');
   assert.deepEqual({ argumentHint: row.argumentHint, description: row.description, session: row.session, idle: row.idle },
     { argumentHint: '<task>', description: 'Fork this session to work on a task while you stay here', session: true, idle: true });
-  assert.deepEqual(parseSessionCommand('/subtask Fix the parser'), { id: 'subtask', args: 'Fix the parser', requested: 'subtask', command: row, suggestion: null, error: null });
+  assert.deepEqual(parseSessionCommand('/subtask Fix the parser'), { id: 'subtask', args: 'Fix the parser', requested: 'subtask', command: row, suggestion: null, error: null, errorSurface: null });
   // cc43287c9 /is: the task may span lines; other commands still refuse extra lines.
   assert.equal(parseSessionCommand('/subtask Fix the parser\nthen add a test').args, 'Fix the parser\nthen add a test');
   assert.equal(parseSessionCommand('/subtask Fix the parser\nthen add a test').error, null);
@@ -205,7 +205,9 @@ test('tasks-05 zh-CN: the official strings are translated in the R3b-tasks block
 test('tasks-05 wiring: executeCommand runs /subtask through runSubtask on a fork that stays here', () => {
   const main = fs.readFileSync(path.join(app, 'src/main.jsx'), 'utf8');
   assert.equal(count(main, 'import { runSubtask } from "./r3b-tasks-subtask.mjs";'), 1);
-  assert.equal(count(main, 'async function performOperation(operation, extra = {}, { stay = false } = {}) {'), 1);
+  // W14-code r3 css3-operation-status-band: performOperation also takes autoSubmit (caec4a2d4 lr's "Forking session with
+  // your prompt…" toast for /fork <prompt>); stay is unchanged.
+  assert.equal(count(main, 'async function performOperation(operation, extra = {}, { stay = false, autoSubmit = false } = {}) {'), 1);
   assert.equal(count(main, 'if (!stay && sequence === loadSeq.current && expected.connectionId === stopLive.current.connectionId && stopLive.current.connected) {'), 1);
   const branch = main.slice(main.indexOf('else if (id === "subtask") {'), main.indexOf('else if (id === "fork") {'));
   assert.ok(branch.length > 0 && branch.length < 2400, 'the subtask branch sits before the fork branch');
@@ -221,7 +223,12 @@ test('tasks-05 wiring: executeCommand runs /subtask through runSubtask on a fork
   assert.match(operations, /const name = typeof payload\.name === 'string' && payload\.name\.trim\(\) \? payload\.name\.trim\(\)\.slice\(0, 120\)/);
 });
 
-test('D29: main.jsx keeps /subtask behind the official gate (closed for a non-Anthropic account)', () => {
+test('E81 (overrides D29): main.jsx opens /subtask as the 3.6556.2 desktop forces sideSessions on with no account', () => {
   const main = fs.readFileSync(new URL('../src/main.jsx', import.meta.url), 'utf8');
-  assert.equal(main.split('    subtaskCommand: false };').length - 1, 1);
+  assert.equal(main.split('    subtaskCommand: true };').length - 1, 1);
+  assert.equal(main.split('    subtaskCommand: false };').length - 1, 0);
+  // jPKPzV-P: Hon forces 2371478310 on and appFeatures.sideSessions reads it.
+  const desktop = fs.readFileSync(path.join(app, '../reference/snapshots/claude-3.6556.2-20261025-192807/asar/.vite/build/index.chunk-jPKPzV-P.js'), 'utf8');
+  for (const text of ['2371478310:{rule:"forced",value:!0}', 'QU("sideSessions",(()=>Pb("2371478310")))'])
+    assert.equal(desktop.split(text).length - 1, 1, text);
 });

@@ -83,20 +83,8 @@ test('Open links in preview is the profile preference; a device-only "off" moves
   assert.equal(items.has(PREVIEW_LINKS_KEY), false, 'a connected store never writes the device storage');
 });
 
-test('a run\'s deliverables: primary first, and board members as plain rows, tiles and columns', async () => {
-  const { workflowArtifacts, artifactView, fieldValue } = await import('../src/workflow-artifacts-model.mjs');
-  const run = { artifacts: [{ id: 'perf', kind: 'table' }, { id: 'report', kind: 'markdown', primary: true }, { id: 'x', kind: 'weird' }] };
-  assert.deepEqual(workflowArtifacts(run).map((entry) => entry.id), ['report', 'perf']);
-  assert.equal(fieldValue({ timing: { after: 3 } }, 'timing.after'), 3);
-  const table = artifactView('table', { columns: [{ field: 'name', label: 'Name' }, { field: 'ms', unit: 'ms' }], key: 'name' }, [{ name: 'a', ms: 1 }, { name: 'b', ms: 2 }, { name: 'a', ms: 5 }]);
-  assert.deepEqual(table, { type: 'table', columns: ['Name', 'ms'], rows: [['a', '5 ms'], ['b', '2 ms']] });
-  assert.deepEqual(artifactView('metrics', { metrics: [{ field: 'p95', label: 'p95' }, { field: 'none' }] }, [{ p95: 10 }, { p95: 12 }]),
-    { type: 'metrics', tiles: [{ label: 'p95', value: '12' }, { label: 'none', value: '—' }] });
-  const board = artifactView('board', { key: 'id', status: 'state', columns: ['todo', 'done'], cardTitle: 'title' }, [{ id: 1, state: 'todo', title: 'A' }, { id: 1, state: 'done', title: 'A' }, { id: 2, state: 'blocked', title: 'B' }]);
-  assert.deepEqual(board.columns.map((column) => [column.title, column.cards.map((card) => card.title)]), [['todo', []], ['done', ['A']], ['Other', ['B']]]);
-  assert.deepEqual(artifactView('chart', { x: { field: 't' }, y: [{ field: 'v' }] }, [{ t: 1, v: 2 }]), { type: 'table', columns: ['t', 'v'], rows: [['1', '2']] });
-  assert.deepEqual(artifactView('table', null, [{ a: 1 }, { b: 'x' }]), { type: 'table', columns: ['a', 'b'], rows: [['1', ''], ['', 'x']] });
-});
+// W14-code r4 ct-feed R4T-08b (E95): the deliverables model (workflow-artifacts-model.mjs) went with the host workflow card;
+// the Tasks pane's run is the desktop's N$ card (tests/code-transcript-r4-feed.test.mjs).
 
 test('ZCode stop reasons and agent errors read in the UI language', async () => {
   const { setLocale } = await import('../electron/i18n/index.mjs');

@@ -307,6 +307,17 @@ export function visibleApprovals(requests) {
     return true;
   });
 }
+// W14-code r2 R2T-TA6: the answerable requests waiting behind the shown one (visibleApprovals' hidden rest), oldest first —
+// c96d752d0 tke's `queued` ("Also waiting", each ike → iL `pendingCollapsed: !0` while a card is pending).
+export function queuedApprovals(requests) {
+  let head = false;
+  return (requests ?? []).filter((request) => {
+    if (!answerable(request)) return false;
+    if (head) return true;
+    head = true;
+    return false;
+  });
+}
 
 // DeepSeek plan review: exit_plan_mode's question (harness questions.js PLAN_REVIEW,
 // dsh-plan-mode APPROVE_LABEL / KEEP_PLANNING_LABEL), shown as Rse's plan card.
@@ -723,8 +734,10 @@ export function createApprovalDraftRuntime() {
             return { status: "stale", ticket };
           }
           if (code === "already_sending") return { status: "busy", ticket };
+          // V3-W14-approvals: c5da7eb42 KS Ce / vT — a more specific reason when there is one (Sc), else "Failed to
+          // send response. You can try again." (aMbb8XQr/h).
           throw new Error(
-            result.error?.message || t("Could not send the approval response."),
+            result.error?.message || t("Failed to send response. You can try again."),
           );
         }
         if (

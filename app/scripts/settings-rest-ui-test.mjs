@@ -112,7 +112,7 @@ const htmlFontState = () => page.evaluate(() => ({
   dyslexic: document.documentElement.hasAttribute("data-dyslexic-font"), system: document.documentElement.hasAttribute("data-system-font"),
   font: document.documentElement.dataset.font, mainFont: document.querySelector("main.workspace")?.dataset.font,
 }));
-const fontFamilies = () => page.evaluate(() => Object.fromEntries([[".ss-dialog", document.querySelector(".ss-dialog")], ["sidebar", document.querySelector(".source-sidebar")], ["composer", document.querySelector('[aria-label="Message DeepSeek"]')]]
+const fontFamilies = () => page.evaluate(() => Object.fromEntries([[".ss-dialog", document.querySelector(".ss-dialog")], ["sidebar", document.querySelector(".source-sidebar")], ["composer", document.querySelector('[aria-label="Prompt"],[aria-label="Message DeepSeek"]')]]
   .map(([key, node]) => [key, node ? getComputedStyle(node).fontFamily : null])));
 const functionTokenColor = () => page.evaluate(() => {
   const token = [...document.querySelectorAll('.transcript [data-transcript-item-id="sa-answer"] .scb-code [data-code-token]')].find((span) => span.textContent === "function");
@@ -156,7 +156,7 @@ async function setTheme(mode) {
 async function transcriptViewMenu(open = true) {
   // B09 (c593f7513 Om → Dm/xm): Transcript view is in the header session menu (the CaretDown beside the title).
   await page.locator(".st-toolbar").getByRole("button", { name: /^More options for / }).click();
-  const menu = page.getByRole("menu", { name: "Session menu", exact: true });
+  const menu = page.locator('[role="menu"]:not([aria-label]):not([aria-labelledby])');
   await menu.waitFor();
   const trigger = menu.getByRole("menuitem", { name: "Transcript view", exact: true });
   await trigger.waitFor();
@@ -177,7 +177,7 @@ try {
   assert.equal(metrics.manyFencesLight.length, MANY_FENCE_COUNT);
   assert.equal(await page.locator(".source-reasoning").count(), 0, "Normal (fresh profile) hides the seeded reasoning item");
   // Streamed reasoning through the protocol fixture also stays hidden under Normal.
-  const box = page.getByRole("textbox", { name: "Message DeepSeek" });
+  const box = page.getByRole("textbox", { name: /^(?:Prompt|Message DeepSeek)$/ });
   await box.fill("fixture:reasoning"); await box.press("Enter");
   await page.locator(".assistant-message").filter({ hasText: "REASONING_FIXTURE_REPLY" }).waitFor();
   await page.locator('[data-testid="code-prompt-stop"]:not([inert] *)').waitFor({ state: "detached" });

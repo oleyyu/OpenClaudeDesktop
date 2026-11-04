@@ -233,7 +233,10 @@
       if (matches.length >= limit) return;
       let ref = null;
       for (const [name, weak] of refs) if (weak.deref() === target) { ref = name; break; }
-      if (!ref) ref = assign(target, handedOut);
+      // A ref kept from before is handed out again too, so the service worker stamps it with the tab's current generation
+      // (a same-document navigation voids it there but keeps this map).
+      if (ref) handedOut[ref] = { role: roleOf(target), name: nameOf(target, roleOf(target)) };
+      else ref = assign(target, handedOut);
       const role = roleOf(target);
       matches.push({ ref, role: role ?? target.tagName.toLowerCase(), name: nameOf(target, role), interactive: isInteractive(target), text: clean(target.innerText ?? target.textContent, 200) });
     };

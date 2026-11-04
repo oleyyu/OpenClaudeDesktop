@@ -111,9 +111,38 @@ function yo(e, t = {}) {
       }
     : s;
 }
+var bo = 8e3;
 var So = null;
 var Co = !1;
 var wo = new Set();
+function To(e, t) {
+  for (let n of wo)
+    try {
+      n(e, t === void 0 ? {} : { end: t });
+    } catch {}
+}
+function Eo(e) {
+  return e.length > 1 && e.endsWith("/") ? e.slice(0, -1) : e;
+}
+function Do(e) {
+  let t = So;
+  t !== null &&
+    (clearTimeout(t.capTimer), t.readyCheck?.(), (So = null), To("ended", e));
+}
+function ko(e) {
+  typeof window > "u" ||
+    (So !== null && Do("superseded"),
+    (So = {
+      pathname: Eo(e),
+      committed: !1,
+      holders: 0,
+      capTimer: setTimeout(() => {
+        Do("capped");
+      }, bo),
+      readyCheck: null,
+    }),
+    To("begun"));
+}
 function Po() {
   return So === null ? "idle" : So.committed ? "committed" : "begun";
 }
@@ -694,23 +723,53 @@ export {
   $V,
   $r,
   AH,
+  CH,
+  Do,
+  EH,
+  Eo,
   FH,
   Fo,
+  Fv,
   Io,
+  Iv,
+  Lv,
+  Mv,
   NH,
+  Nv,
   Ob,
   Po,
+  Pv,
   Ro,
+  Rv,
+  SH,
+  So,
+  TH,
   Wi,
   XW,
+  _H,
+  aH,
+  bH,
   bv,
   cc,
   ei,
+  gH,
   hf,
+  iH,
   jH,
   kH,
   kb,
+  ko,
+  mH,
+  nH,
+  oH,
   os,
+  rH,
+  tH,
+  uH,
+  vH,
   vf,
+  wH,
+  wo,
+  yH,
   yo,
 };

@@ -229,19 +229,30 @@ test('SessionRailChanges: Sje / bAe / YL around the row, from the local git stat
   assert.doesNotMatch(named, /min-w-0 truncate text-muted-as-secondary/);
 });
 
-test('railChangesRowProps: fze, nze _n / Gn and iB baseBranch over the local status', () => {
-  const { railChangesRowProps } = Adapters;
-  assert.equal(railChangesRowProps({ status: { isRepo: false } }), null);
-  assert.equal(railChangesRowProps({ status: status({ hasChanges: false }) }), null, 'fze: no PR, no changes');
+// W14-code r8 R8DC-04: railChangesRowProps (test-only, no caller since HEAD) is gone; the rail's row judgement is pinned
+// on what the rail renders: railPrEntries (Zje's rail EL props over the local status) through railPrRow.
+test('railPrEntries / railPrRow: fze, Zje _n / Gn over the local status', () => {
+  const { railPrEntries, railPrRow } = Adapters;
+  const intl = { formatMessage: (message, values) => message.defaultMessage.replace(/\{(\w+)(?:, number)?\}/g, (_, name) => String(values?.[name] ?? '')) };
+  const row = (props) => railPrEntries({ intl, ...props })[0]?.row;
+  assert.deepEqual(railPrEntries({ intl, status: { isRepo: false } }), []);
+  assert.deepEqual(railPrEntries({ intl, status: status({ hasChanges: false }) }), [], 'fze: no PR, no changes');
   assert.equal(Rail.prBarRowShown({ number: 1 }, { hasChanges: false }, undefined, true), true, 'fze: a PR keeps the row');
   assert.equal(Rail.prBarRowShown(undefined, { hasChanges: true }, false, false), false, 'fze: an unpushed branch without a tree');
-  assert.deepEqual(railChangesRowProps({ status: status(), diffOpenable: true }),
-    { branchTitle: 'feature/rail', repoName: undefined, baseBranch: undefined, diff: { added: 12, removed: 3 } });
-  assert.equal(railChangesRowProps({ status: status({ added: 0, removed: 0 }), diffOpenable: true }).diff, undefined, 'zero counts');
-  assert.equal(railChangesRowProps({ status: status(), diffOpenable: false }).diff, undefined, 'ze false');
-  assert.equal(railChangesRowProps({ status: status(), prMode: 'create' }).baseBranch, 'main', 'outside commit mode the base shows');
-  assert.equal(railChangesRowProps({ status: status({ branch: 'main' }), prMode: 'create' }).baseBranch, undefined, 'the base is the branch');
-  assert.equal(railChangesRowProps({ status: status(), hideRepo: false }).repoName, 'claude-ui-lab');
+  const live = row({ status: status(), diffOpenable: true });
+  assert.equal(live.prMode, 'commit');
+  assert.equal(live.branchName, 'feature/rail');
+  assert.equal(live.hideRepo, true, 'Sje: a single repo hides its name in the rail');
+  assert.deepEqual(live.diff, { added: 12, removed: 3 });
+  assert.equal(row({ status: status({ added: 0, removed: 0 }), diffOpenable: true }).diff, undefined, 'zero counts');
+  assert.equal(row({ status: status(), diffOpenable: false }).diff, undefined, 'ze false');
+  assert.equal(row({ status: status(), hideRepo: false }).hideRepo, false);
+  assert.equal(row({ status: status({ repoName: '' }) }).repoName, 'claude-ui-lab', 'the folder basename stands in for the repo name');
+  const [entry] = railPrEntries({ intl, status: status(), diffOpenable: true });
+  const element = railPrRow(entry, true);
+  assert.equal(element.props.layout, 'rail');
+  assert.equal(element.props.diffOpenHasChord, true);
+  assert.equal(element.props.branchName, 'feature/rail');
 });
 
 // A hook dispatcher (as tests/sessions-page-current.test.mjs): renders one component level and returns its element tree,
@@ -347,7 +358,7 @@ test('R4i-rail fix: the GitHub CLI hint (Zje In = Oge) on the rail PR row, from 
   const row = hint => render(inRow(h(SessionRailChanges, { status: committed, diffOpenable: true, prAction, hint })));
   const missing = row({ cause: 'gh_unavailable', onInstall() {}, onRunInTerminal: null });
   assert.match(missing, /GitHub CLI unavailable/);
-  assert.match(missing, /class="[^"]*sg-gh-hint[^"]*"/);
+  assert.match(missing, /class="[^"]* shrink-0 text-muted hover:text-secondary @max-\[699px\]\/branch-row:hidden"[^>]* aria-haspopup="dialog"/, 'c219730b0 ii trigger (W14-code r8: no host hook class)');
   assert.match(missing, /aria-haspopup="dialog"/);
   assert.match(row({ cause: 'gh_signed_out', onRunInTerminal() {} }), /GitHub CLI signed out/);
   for (const none of [null, undefined, { cause: null }]) assert.doesNotMatch(row(none), /GitHub CLI/);

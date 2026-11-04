@@ -186,14 +186,18 @@ test('menus-04 fizzy-lake parts: the generated 2.42304.0 allowlist is empty, so 
   assert.equal(count(tree, `return ${treeGate[1]}("panels") ? "sm" : "xs";`), 1);
   // The view tabs the host draws are the current strip (cfe7c4b3b-CP-IQXj8.js is its legacy shim); it imports the current gate.
   assert.equal(count(local(`src/generated/view-tabs/${viewTabsViewFor(viewTabs, '3.6556.2').publicNames.ViewTabBar.file}`), 'import {lp as k} from "./shared-4-DUB1Oi0O.js";'), 1);
-  // Hand-written shapes are the non-fizzy branch: the shortcuts region scrolls, every section keeps mt-5 py-2, and
-  // nothing local sets the root parts attribute.
-  const css = local('src/source-session-actions.css');
-  const region = /\.shortcuts-region\{([^}]*)\}/.exec(css)[1];
-  assert.match(region, /^flex:1;min-height:0;overflow-y:auto;/);
-  assert.doesNotMatch(region, /flex:none|overflow:visible/);
-  assert.match(/\.shortcuts-section\{([^}]*)\}/.exec(css)[1], /^margin-top:20px;padding:8px 0;/);
-  assert.doesNotMatch(css, /\.shortcuts-section:first-child/);
+  // W14-code r4 r4-shared-03 (E84): the shortcuts dialog carries c518a31cc's own class strings (ge's region with its
+  // in-data-cds-fizzy:* branch, Z's section title — `first` only on General — and Q's row / label / keys / "or"), so the
+  // fizzy branch stays off with the root parts attribute unset; no hand-copied .shortcuts-* rule is left.
+  const c518 = v3('c518a31cc-Vw6f4MYp.js'), dialog = local('src/source-session-actions.jsx'), css = local('src/source-session-actions.css');
+  for (const cls of ['-mx-pad-xl -mb-pad-xl min-h-0 flex-1 overflow-y-auto rounded-b-[inherit] px-xl pb-xl in-data-cds-fizzy:flex-none in-data-cds-fizzy:overflow-visible focus-visible:outline-hidden focus-visible:-outline-offset-2 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-fill-accent',
+    'font-base mt-5 py-2', 'in-data-cds-fizzy:mt-0 in-data-cds-fizzy:pt-0', 'flex items-center justify-between py-2 border-b-0.5 last:border-0',
+    'flex items-center gap-2 text-sm text-secondary', 'text-xs text-muted-as-secondary']) {
+    assert.ok(c518.includes(`"${cls}"`), `official: ${cls}`);
+    assert.ok(dialog.includes(cls), `local: ${cls}`);
+  }
+  assert.doesNotMatch(css, /\.shortcuts-(?:region|section|row|label|keys|or)\b/);
+  assert.doesNotMatch(dialog, /className="shortcuts-(?:region|section|row|label|keys|or)"/);
   // (Comment lines may name the attribute, as source-app-switch-adapters.jsx does for its closed isFizzyLakePart.)
   const code = text => text.split('\n').filter(line => !/^\s*(\/\/|\*|\/\*)/.test(line)).join('\n');
   for (const [file, text] of handWritten()) assert.equal(count(code(text), 'data-cds-fizzy-lake'), 0, file);
@@ -369,9 +373,10 @@ test('menus-12 a child turn reports "turn_complete" only behind GrowthBook 23714
   assert.equal(count(local('electron/btw-sessions.cjs'), 'spawnedFrom: { sessionId: parentId, sideSession: true, userFork: true, btw: true,'), 1);
   for (const [file, text] of handWritten())
     for (const word of ['turnEndReportsToParent', 'emitsPostTurnSummary', 'turn_complete']) assert.equal(token(text, word), 0, `${file} ${word}`);
-  // The same GrowthBook gate (2371478310, appFeatures.sideSessions) is held closed locally: /subtask stays out of the list.
+  // The same GrowthBook gate (2371478310, appFeatures.sideSessions) is forced on by the 3.6556.2 desktop (E81): /subtask
+  // is listed; it is a user fork, which reports nothing to its parent either.
   const shell = local('src/main.jsx');
-  assert.equal(count(shell, '(main process GrowthBook 2371478310, "Ant only" badge), which the host has no source for, so the row stays out.\n    subtaskCommand: false };'), 1);
+  assert.equal(count(shell, '    subtaskCommand: true };'), 1);
 });
 
 // ------------------------------------------------------------------------------------------------------- cov9-09

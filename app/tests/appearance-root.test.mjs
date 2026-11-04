@@ -69,8 +69,10 @@ test('transcript text size Large is 15px over 1.46667, like the reference', () =
   const css = fs.readFileSync(path.resolve(import.meta.dirname, '../src/source-settings.css'), 'utf8');
   const official = fs.readFileSync(path.resolve(import.meta.dirname, '../public/assets/v1/c6a992d55-Che1orl5.css'), 'utf8');
   assert.ok(official.includes('[data-chat-text-size=l] .epitaxy-transcript-typography{--chat-body:calc(.9375rem * var(--cds-rem-scale,1));--chat-leading:1.46667}'));
-  assert.ok(css.includes('html[data-local-transcript-size=l] .source-transcript-content { --chat-body:15px; --chat-leading:1.46667; }'));
-  assert.ok(css.includes('html[data-local-transcript-size=s] .source-transcript-content { --chat-body:13px; }'));
+  // W14 css-main-01: the official html attribute (shared-20 Gh) and the official values.
+  assert.ok(css.includes('html[data-chat-text-size=l] .source-transcript-content { --chat-body:calc(.9375rem * var(--cds-rem-scale,1)); --chat-leading:1.46667; }'));
+  assert.ok(css.includes('html[data-chat-text-size=s] .source-transcript-content { --chat-body:calc(.8125rem * var(--cds-rem-scale,1)); }'));
+  assert.doesNotMatch(css, /data-local-transcript-(?:size|width)/);
   assert.ok(css.includes('{ font-size:var(--chat-body); line-height:var(--chat-leading); --chat-item-gap:calc(var(--chat-body)*var(--chat-leading)*.5); --chat-turn-gap:calc(var(--chat-body)*var(--chat-leading)*.75); }'));
   assert.doesNotMatch(css, /--chat-body:16px; \}/);
 });

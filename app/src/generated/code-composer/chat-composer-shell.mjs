@@ -49,6 +49,7 @@ import {
   memoStore5 as K5,
   elementResizeObserverClass as et,
   cdsNodeOwnerWindow as G,
+  isDomNode as We,
   CdsPortalRoot as W,
   CdsIcon as Ge,
   inertProps as Q,
@@ -73,7 +74,6 @@ import {
   rootRemPx as Ne,
   isTextarea as Re,
   isHtmlElement as Pe,
-  isDomNode as We,
   dropScrimLayer as Oe,
   isRenderable as he,
   useResolvedIconSize as Ve,
@@ -107,9 +107,8 @@ import {
 } from "./chat-composer-attachments.mjs";
 import {
   Presence as Wd,
-  lazyPresenceMotion as bd,
+  presenceMotion as kd,
 } from "./chat-composer-presence.mjs";
-var kd = () => bd;
 function Gd(e, t, n) {
   let $ = J9(7),
     r = n !== void 0 && n,

@@ -25,6 +25,4 @@ export const workflowKey = run => isModelWorkflow(run) && typeof run.itemId === 
 export const workflowTask = run => ({ id: 'workflow:' + workflowKey(run), kind: 'workflow', status: run.status, description: run.description,
   startedAt: run.startedAt, completedAt: run.completedAt, run });
 
-// Retry/Skip of one agent: the local runner always supports it; a core's run only
-// when it says so (run.memberControls: the bridge handles codeDesktop/workflow/member).
-export const workflowMemberControls = run => !isModelWorkflow(run) || run.memberControls === true;
+// (W14-code r4 R4T-08b, E95: the host card's member Retry / Skip and their workflowMemberControls gate are gone.)

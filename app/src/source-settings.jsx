@@ -30,7 +30,7 @@ import { holdModalInert } from './modal-inert.mjs';
 import { settingsSearch, settingsHeading, sandboxFacts, mcpStatus, desktopErrors, windowCore, normalizeSettingsQuery } from './settings-model.mjs';
 import { settingsCore, accountCore, accountGroupTitle, engineCopy } from './settings-core-copy.mjs';
 import { workflowSettingsGroup } from './source-settings-workflows.jsx';
-import { computerUseSettingsGroup, useComputerUseGrants, useComputerUsePreferredMode, useComputerUseTeachStatus } from './source-settings-computer-use.jsx';
+import { computerUseSettingsGroup, useComputerUseGrants, useComputerUseInstalledApps, useComputerUsePreferredMode, useComputerUseProbe } from './source-settings-computer-use.jsx';
 import { ListBadge } from './source-customize-list.jsx';
 import { coreName, coreForEngine, coreCapabilities, coreSupports } from '../electron/core-registry.mjs';
 import { SettingsSearchResults } from './source-settings-search.jsx';
@@ -43,7 +43,6 @@ import { SourceToolProfilesSettings } from './source-settings-tool-profiles.jsx'
 import { SourceCoresSettings } from './source-settings-cores.jsx';
 import { SourceThemeSettings } from './source-settings-theme.jsx';
 import { SourceModelsSettings } from './source-settings-models.jsx';
-import { withEffortDefaults } from '../electron/prefs/model-settings.mjs';
 import { personaGroup } from './source-settings-persona.jsx';
 import { SettingRow } from './source-settings-kit.jsx';
 import { SourceInstructionsSettings } from './source-settings-instructions.jsx';
@@ -143,7 +142,7 @@ const tabs = [
   {id:'customize-plugins',label:'Plugins',icon:'Plugin',group:'Customize',customize:true,keywords:['marketplace','extensions']},
   // Advanced (last in the nav; the official 2.42304.0 nav has no such group): the host's developer-facing pages and rows,
   // moved out of Code, This computer and Customize. Ids stay, so 'tab#row' anchors and the palette keep resolving.
-  // Core options holds the rows that tune the running core itself (settings-advanced-model.mjs ADVANCED_GROUP_TITLES).
+  // Core options holds the rows that tune the running core itself.
   {id:'advanced',label:'Core options',icon:'Wrench',group:'Advanced',keywords:['advanced','developer','experimental','beta features','timeout','sub-agents','permission profile','settings.json']},
   {id:'harness',label:'Harness',icon:'CommandLine',group:'Advanced',keywords:['cordis','profile','bundles','hooks','harness plugins','overlay','advanced'],page:SourceHarnessSettings},
   // The core's lifecycle hooks (hooks/list): Codex's /hooks review, trust and on/off; another core's, read-only. shell:
@@ -152,7 +151,6 @@ const tabs = [
   {id:'profiles',label:'Profiles',icon:'Tool',group:'Advanced',keywords:['tool profiles','tools','mcp','turn off tools','disable tools','advanced'],page:SourceToolProfilesSettings},
 ];
 const navGroups = ['Settings','This computer','Customize','Advanced'];
-export const SETTINGS_SECTIONS = tabs.map(t=>t.id);
 const baseNavTabs = settingsNavSections(tabs);
 // Shown labels; tabs keep the English copy, which settingsSearch also matches ('System' has its own heading entry).
 const navLabel = Object.fromEntries(tabs.map(section=>[section.id,settingsHeading(section.label)]));
@@ -369,7 +367,9 @@ function SettingsContent({ presence, config, model, effort, permission, boot, bu
   // System › Computer use: what sessions allowed right now, read while that page is open.
   const computerUseGrants=useComputerUseGrants(desktopCall,tab==='general');
   const computerUsePreferredMode=useComputerUsePreferredMode(desktopCall,tab==='general');
-  const computerUseTeachStatus=useComputerUseTeachStatus(desktopCall,tab==='general');
+  // W14-code r2-shared-11: one probe for the teach row and the Accessibility / Screen recording rows; Denied apps' installed apps.
+  const computerUseProbe=useComputerUseProbe(desktopCall,tab==='general'),computerUseTeachStatus=computerUseProbe.teachStatus;
+  const computerUseInstalledApps=useComputerUseInstalledApps(desktopCall,tab==='general');
   const linksInPreview=useSyncExternalStore(previewLinksStore.subscribe,previewLinksStore.getSnapshot,previewLinksStore.getSnapshot);
   // V3-w10-shell-auto-open-pref: c71860c77-C3tXoNVw Or's Auto-open row (auto-open-files-model.mjs). V3-w11-sweep-shell-b:
   // before the first read it is drawn as Or's `invisible` placeholder (`className: f ? void 0 : "invisible"`).
@@ -590,7 +590,7 @@ function SettingsContent({ presence, config, model, effort, permission, boot, bu
       row('storage',t('Storage'),t('See how much space Claude uses on this computer.'),<SourceSettingsButton size="sm" onClick={()=>setStorage(true)}>{t('Manage')}</SourceSettingsButton>),
     ]},
     // After the desktop snapshot, as System's own rows (no extra skeleton rows while it loads).
-    ...(desktop!==null?[computerUseSettingsGroup({row,shownValue,config,save,grants:computerUseGrants.apps,busy,revoke:bundleId=>commit('computer-use-allowed-apps',{},()=>computerUseGrants.revoke(bundleId)),teachStatus:computerUseTeachStatus,preferredMode:computerUsePreferredMode.mode,onPreferredMode:mode=>commit('computer-use-preferred-mode',{},()=>computerUsePreferredMode.setMode(mode))})]:[]),
+    ...(desktop!==null?[computerUseSettingsGroup({row,shownValue,config,save,grants:computerUseGrants.apps,busy,revoke:bundleId=>commit('computer-use-allowed-apps',{},()=>computerUseGrants.revoke(bundleId)),teachStatus:computerUseTeachStatus,permissions:computerUseProbe.permissions,installedApps:computerUseInstalledApps,onOpenSystemSettings:kind=>{void Promise.resolve(desktopCall('computer-use:open-system-settings',{kind})).catch(()=>{});},onLearnMore:url=>{void Promise.resolve(desktopCall('external',{url})).catch(()=>{});},preferredMode:computerUsePreferredMode.mode,onPreferredMode:mode=>commit('computer-use-preferred-mode',{},()=>computerUsePreferredMode.setMode(mode))})]:[]),
     {tab:'developer',title:'Local MCP servers',rows:[
       row('mcp-config',t('Configuration'),local.mcp,<button disabled={!boot?.connected} onClick={()=>action('mcp-config',()=>desktopCall('desktop-edit-config'))}>{t('Edit config')}</button>),
       ...(desktop?.servers||[]).map(server=>row('mcp-'+server.name,server.name,(server.toolsError&&t(server.toolsError))||`${tn(Object.keys(server.tools||{}).length,'{count} tool','{count} tools')} · ${server.authStatus}`,<span>{t(mcpStatus(server))}</span>)),
@@ -629,7 +629,7 @@ function SettingsContent({ presence, config, model, effort, permission, boot, bu
   const customizePage=activeTab?.customize&&customize ? <SourceCustomize key={JSON.stringify([tab,customize.cwd,customize.threadId])} section={tab} store={customize.store} threadId={customize.threadId} cwd={customize.cwd} call={customize.call}
     core={boot?.core} onEditConfig={boot?.connected?()=>desktopCall('desktop-edit-config'):undefined}
     onUseSkill={customize.onUseSkill} onOpenExternal={customize.onOpenExternal} onRevealPath={customize.onRevealPath} focus={focus} mcpDefinitions={desktop?.mcpDefinitions} mcpServers={desktop?.servers}
-    onRestartCore={customize.onRestartCore} watchRecord={customize.watchRecord ?? null} onHarnessCall={payload=>desktopCall('harness-profile',payload)}
+    watchRecord={customize.watchRecord ?? null} onHarnessCall={payload=>desktopCall('harness-profile',payload)}
     onNavigate={(section,target)=>{setFocus(target||null);setTab(section);setQuery('');}} /> : null;
   const closeSearch=()=>{setSearchOpen(false);setQuery('');setSearchIndex(0);setSearchExpanded(undefined);};
   // cc011544b _t: the field (icon + input, no clear button; Escape clears) focuses its input when clicked.

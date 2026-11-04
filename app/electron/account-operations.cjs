@@ -3,7 +3,7 @@ const {coreError}=require('./codex.cjs');
 const {coreForEngine,coreSupports}=require('./core-registry.mjs');
 const i18n=require('./i18n/index.mjs');
 function createAccountOperations({getClient,openExternal,onState=()=>{},onAccount=()=>{}}) {
-  let state={phase:'idle',login:null,error:''},attempt=null,epoch=0,readRevision=0,accountSnapshot=null;
+  let state={phase:'idle',login:null,error:'',notice:''},attempt=null,epoch=0,readRevision=0,accountSnapshot=null;
   const accountChanged=value=>{accountSnapshot=value;onAccount(value);};
   const publish=patch=>{state={...state,...patch};onState(state);return state;};
   const current=t=>attempt===t&&t.epoch===epoch&&t.owner===getClient();
@@ -36,7 +36,7 @@ function createAccountOperations({getClient,openExternal,onState=()=>{},onAccoun
     const owner=getClient();
     const mismatch=keyTypeMismatch(owner,options.codeDesktop?.template,apiKey);if(mismatch)throw mismatch;
     readRevision++;
-    publish({phase:'starting',login:null,error:''});
+    publish({phase:'starting',login:null,error:'',notice:''});
     try {
       await owner.start();
       await owner.request('account/login/start',{type:'apiKey',apiKey,...(options.codeDesktop&&typeof options.codeDesktop==='object'?{codeDesktop:options.codeDesktop}:{})});
@@ -75,7 +75,7 @@ function createAccountOperations({getClient,openExternal,onState=()=>{},onAccoun
     if(!['chatgpt','chatgptDeviceCode'].includes(type))throw Error('Unsupported sign-in method.');
     if(state.phase!=='idle'||attempt)throw Error('Finish or cancel the current account operation first.');
     const t={owner:getClient(),epoch,login:null,early:new Map()};attempt=t;readRevision++;
-    publish({phase:'starting',login:null,error:''});
+    publish({phase:'starting',login:null,error:'',notice:''});
     try {
       await t.owner.start();requireCurrent(t);
       // codeDesktop: a bridge core's sign-in option (e.g. which provider's browser sign-in, core descriptor `login`).
@@ -143,15 +143,17 @@ function createAccountOperations({getClient,openExternal,onState=()=>{},onAccoun
   async function logout(confirmed) {
     if(confirmed!==true)throw Error('Confirm sign out first.');
     if(state.phase!=='idle'||attempt)throw Error('Finish or cancel the current account operation first.');
-    const owner=getClient(),generation=epoch;readRevision++;publish({phase:'signingOut',error:''});
+    const owner=getClient(),generation=epoch;readRevision++;publish({phase:'signingOut',error:'',notice:''});
     try {
       await owner.start();if(owner!==getClient()||generation!==epoch)throw coreError(owner,'The {core} connection changed. Try again.');
-      await owner.request('account/logout',{});
+      const result=await owner.request('account/logout',{});
       if(owner!==getClient()||generation!==epoch)return state;
+      // codeDesktop.notice: what signing out here left signed in (OpenCode 2.x: Claude Code's own `claude auth logout`).
+      const notice=typeof result?.codeDesktop?.notice==='string'?result.codeDesktop.notice.slice(0,500):'';
       // The logout succeeded, but an environment-provided credential may remain.
       // Invalidate the old snapshot; only account/read determines the new identity.
       accountChanged(null);await refresh(owner);
-      if(owner===getClient()&&generation===epoch)publish({phase:'idle',login:null,error:''});
+      if(owner===getClient()&&generation===epoch)publish({phase:'idle',login:null,error:'',notice});
       return state;
     }catch(error){if(owner===getClient()&&generation===epoch)publish({phase:'idle',error:error.message});throw error;}
   }

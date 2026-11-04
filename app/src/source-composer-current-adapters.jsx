@@ -22,3 +22,12 @@ export function composerTextStore(read) {
 // 3.6556.2 (w2-composer-gen): the page drop scrim's CDS portal root (shared-frame hp, 2.42304.0 gf / `Fc`) is view-tabs
 // CdsPortalRoot now, so the generated shell imports it by that name; the throwing ComposerPageDropSurface stand-in is gone.
 // The scrim still renders only with `onFileDrop`, which the host card does not pass (it keeps its own drop handling).
+
+// W14-code r6-composer-02: shared-5 Dd (`() => d(() => import("./cb6c4b462-Dl6QEgSL.js"), …)`), the chunk the presence
+// loader Od reads through Br("cds_lazy_presence_motion", Dd). cb6c4b462 is working-line/presence-motion.mjs (domMax and
+// the two presence elements, sliced) plus its export statement's four re-exports of vendor-motion — ul AnimatePresence,
+// Cl LazyMotion, C PresenceContext, su `m` — which working-line exports under their own names (linkExports). The answer is
+// the chunk's namespace, the same seven names; Od keeps it when `AnimatePresence` is present.
+import { domMax, PresenceElement, HidingPresenceElement } from './generated/working-line/presence-motion.mjs';
+import { ul as AnimatePresence, Cl as LazyMotion, C as PresenceContext, su as motionComponents } from './generated/working-line/vendor-motion.mjs';
+export const loadPresenceMotionChunk = () => Promise.resolve({ AnimatePresence, HidingPresenceElement, LazyMotion, PresenceContext, PresenceElement, domMax, m: motionComponents });

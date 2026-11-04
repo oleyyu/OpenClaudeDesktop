@@ -1,34 +1,11 @@
-/* Changes pane review findings (source-pane-review.jsx). Bar: Cd wrap = "epitaxy-panel-subheader flex items-center
-   gap-[4px] shrink-0 px-md flex-wrap min-h-[calc(2rem*var(--cds-rem-scale,1))] py-xs"; status "text-body text-muted
-   whitespace-nowrap tabular-nums"; the steppers "rounded text-muted"; Dismiss ghost text-muted. */
-.spr-bar {
-  display: flex;
-  flex-shrink: 0;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 4px;
-  min-height: calc(2rem * var(--cds-rem-scale, 1));
-  padding: var(--cds-pad-xs, 4px) var(--cds-pad-md);
-}
-.spr-status {
-  color: var(--cds-text-muted);
-  font-size: var(--cds-font-size-body);
-  line-height: var(--cds-leading-body);
-  white-space: nowrap;
-  font-variant-numeric: tabular-nums;
-}
-.spr-step { color: var(--cds-text-muted); }
-.spr-grow { flex-grow: 1; }
-.spr-action { flex: none; }
-.spr-dismiss { color: var(--cds-text-muted); }
+/* Changes pane review findings bar (source-pane-review.jsx): the bar, the status and the buttons carry cccc2cf0a ES's own
+   layered classes; the buttons are the shared-frame CdsButton (W14-code r5 cleanup css5-settings-button-replica), so
+   the old .spr-step / .spr-action / .spr-dismiss restatements of the host replica button are gone. */
 
 /* The finding card is the original 2.42304.0 c44d00c7f ya (generated/review-findings/review-finding-card.mjs): its
    own classes (px-md py-xs slot, the --diff-widget-* skin, the header, badges, buttons and footer) come from the loaded
    official CSS. The slot here only sits in the local diff's row flow (DiffHunk renderAfter, inside pre-wrap rows):
    the official diff renders annotations in their own slot, outside the code text. */
 .spr-card-slot { white-space: normal; }
-/* Inside the Changes diff (root `.source-diff.diff`), message-style.css's unlayered `.diff span { display: block;
-   white-space: pre-wrap }` would beat the card's layered utilities (the CdsBadge's inline-flex, truncate's nowrap, the
-   CdsButton and CdsIcon spans), so the card's spans fall back to the layers — the revert source-diff.css applies to its
-   own header spans for the same rule. */
-.diff .spr-card-slot span { display: revert-layer; white-space: revert-layer; }
+/* W14-code css-main-03: the Changes diff root no longer carries the legacy `diff` class and message-style.css has no
+   `.diff span` rule, so the card's spans keep their layered utilities (CdsBadge inline-flex, truncate) unreleased. */

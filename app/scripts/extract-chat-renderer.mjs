@@ -119,6 +119,11 @@ const modules = [
   { target: 'ca129fbf3-CdfQB5sF.mjs', source: 'ca129fbf3-CdfQB5sF.js', exports: { at: 'rehypeKatexGuardedAndChecked', it: 'rehypeKatexChecked' } },
   { target: 'c6369e48b-Cz3VPKCm.mjs', source: 'c6369e48b-Cz3VPKCm.js', exports: { h: 'default' } },
 ];
+// W14-code renderer-core (E86, D1): the bindings generated/code-transcript reaches in this area (micromark of
+// vendor-markdown, shared-10's prose helpers, …) are exported under their own names, so that area imports this one copy
+// (scripts/code-transcript-links.json, keyed by chunk).
+const codeTranscriptLinks = JSON.parse(fs.readFileSync(path.join(import.meta.dirname, 'code-transcript-links.json'), 'utf8')).linkExports['chat-renderer'];
+for (const m of modules) if (codeTranscriptLinks[m.source]) m.linkExports = [...new Set([...(m.linkExports ?? []), ...codeTranscriptLinks[m.source]])];
 
 // Original text the host follows but does not import: how cc1aae219 feeds OR for a Chat text block, and the two
 // GrowthBook flags it reads for smartQuotes / letterDirection (off here: no GrowthBook, E49).

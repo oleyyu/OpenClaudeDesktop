@@ -390,4 +390,4 @@ function F(e) {
   for (let r of e.hunks) ((t += r.additionLines), (n += r.deletionLines));
   return { additions: t, deletions: n };
 }
-export { A, C, P, T };
+export { A, C, F, P, S, T, _, b, c, d, f, g, h, j, l, m, o, p, s, u, v, x, y };

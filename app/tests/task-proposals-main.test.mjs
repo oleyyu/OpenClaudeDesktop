@@ -214,7 +214,9 @@ test('main.cjs: one "task-proposals" dispatch inside desktop:call, over the conf
 });
 
 test('the launcher\'s requests (src/proposal-launch.mjs, R4f-proposal P3) are the ones this channel takes', async () => {
-  const { TASK_PROPOSALS_CHANNEL, PROPOSAL_OUTCOMES, proposalStartedRequest, proposalOutcomeRequest } = await import('../src/proposal-launch.mjs');
+  const { TASK_PROPOSALS_CHANNEL, proposalStartedRequest, proposalOutcomeRequest } = await import('../src/proposal-launch.mjs');
+  // W14-code r4 closeout R4DC-N7: the launcher's test-only PROPOSAL_OUTCOMES export is gone; the outcomes it writes.
+  const PROPOSAL_OUTCOMES = ['dismissed', 'sent_here', 'start_failed'];
   assert.equal(TASK_PROPOSALS_CHANNEL, 'task-proposals');
   const s = setup();
   await s.store.run(proposalStartedRequest({ parentId: 'parent', childId: 'child', taskId: TASK }));

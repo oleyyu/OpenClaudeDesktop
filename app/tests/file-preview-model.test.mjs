@@ -83,28 +83,24 @@ test('generated map keeps the generated header and the grammar loaders file unto
   assert.doesNotMatch(loaders, /FILE_EXTENSION_LANGUAGES|c41eb0199/);
 });
 
-test('preview kinds, media kinds and the file:// preview URL', async () => {
-  const { filePreviewKind, fileMediaKind, filePreviewUrl } = await import('../src/file-preview-model.mjs');
+test('preview kinds and the file:// preview URL', async () => {
+  const { filePreviewKind, filePreviewUrl } = await import('../src/file-preview-model.mjs');
   assert.deepEqual(filePreviewKind('docs/README.md'), { kind: 'markdown', delimiter: null });
   assert.deepEqual(filePreviewKind('a.MDX'), { kind: 'markdown', delimiter: null });
   assert.deepEqual(filePreviewKind('data.csv'), { kind: 'csv', delimiter: ',' });
   assert.deepEqual(filePreviewKind('data.tsv'), { kind: 'csv', delimiter: '\t' });
   assert.equal(filePreviewKind('app.js'), null);
-  for (const [file, kind] of [['photo.PNG', 'image'], ['a.jpeg', 'image'], ['b.avif', 'image'], ['c.svg', null], ['clip.mp4', 'video'], ['clip.MOV', 'video'],
-    ['song.mp3', 'audio'], ['x.oga', 'audio'], ['x.mkv', null], ['notes.txt', null]]) assert.equal(fileMediaKind(file), kind, file);
   assert.equal(filePreviewUrl('/w/a b/photo.png'), 'file:///w/a%20b/photo.png');
 });
 
 // B13 (2.31226.0 cd2efac6e Ql :6783-6799): .htm/.html and .svg take the sandbox arm; a PDF is shown like media.
 test('B13 preview kinds: html and svg previews, pdf media, the SVG image URL and the frame link message', async () => {
-  const { filePreviewKind, fileMediaKind, svgPreviewUrl, previewFrameLink, PREVIEW_FRAME_LINK } = await import('../src/file-preview-model.mjs');
+  const { filePreviewKind, svgPreviewUrl, previewFrameLink, PREVIEW_FRAME_LINK } = await import('../src/file-preview-model.mjs');
   assert.deepEqual(filePreviewKind('site/index.html'), { kind: 'html', delimiter: null });
   assert.deepEqual(filePreviewKind('OLD.HTM'), { kind: 'html', delimiter: null });
   assert.deepEqual(filePreviewKind('logo.SVG'), { kind: 'svg', delimiter: null });
   assert.equal(filePreviewKind('page.xhtml'), null);
   assert.equal(filePreviewKind('index.html.bak'), null);
-  assert.equal(fileMediaKind('docs/Spec.PDF'), 'pdf');
-  assert.equal(fileMediaKind('logo.svg'), null, 'svg is text with a preview, not media');
   assert.equal(svgPreviewUrl('<svg xmlns="http://www.w3.org/2000/svg"/>'), 'data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%2F%3E');
   assert.deepEqual(previewFrameLink({ type: PREVIEW_FRAME_LINK, href: 'https://example.com/a?b#c', metaKey: true, button: 0 }),
     { href: 'https://example.com/a?b#c', event: { button: 0, metaKey: true, ctrlKey: false, shiftKey: false, altKey: false } });
@@ -128,7 +124,7 @@ test('B13 review: the frame link "ask" checks (cd2efac6e za, cfdfec14c U/W)', as
 });
 
 test('CSV preview parse (c02d6193d p): header detection, quotes, delimiter sniffing and the limits', async () => {
-  const { parseCsvPreview, csvTruncationCaption } = await import('../src/file-preview-model.mjs');
+  const { parseCsvPreview } = await import('../src/file-preview-model.mjs');
   assert.deepEqual(parseCsvPreview('name,count\nalpha,1\n"b, c",2\n', ','),
     { kind: 'ok', parsed: { rows: [['name', 'count'], ['alpha', '1'], ['b, c', '2']], hasHeader: true, rowsTruncated: false, colsTruncated: false, cellsTruncated: false } });
   assert.equal(parseCsvPreview('a,b\n1,2\n', ',').parsed.hasHeader, true);
@@ -152,9 +148,4 @@ test('CSV preview parse (c02d6193d p): header detection, quotes, delimiter sniff
   assert.equal(many.parsed.rows[1][1].length, 301);
   const wide = parseCsvPreview(Array.from({ length: 70 }, (_, index) => `c${index}`).join(','), ',');
   assert.deepEqual([wide.parsed.rows[0].length, wide.parsed.colsTruncated], [64, true]);
-  assert.equal(csvTruncationCaption({ rowCount: 500, columnCount: 64, rowsTruncated: true, colsTruncated: true, cellsTruncated: true }),
-    'Showing the first 500 rows and 64 columns. Long cells are shortened. Switch to Source to see more.');
-  assert.equal(csvTruncationCaption({ rowCount: 1, columnCount: 2, rowsTruncated: true, colsTruncated: false, cellsTruncated: false }), 'Showing the first 1 row. Switch to Source to see more.');
-  assert.equal(csvTruncationCaption({ rowCount: 3, columnCount: 64, rowsTruncated: false, colsTruncated: true, cellsTruncated: false }), 'Showing the first 64 columns. Switch to Source to see more.');
-  assert.equal(csvTruncationCaption({ rowCount: 3, columnCount: 2, rowsTruncated: false, colsTruncated: false, cellsTruncated: true }), 'Long cells are shortened. Switch to Source to see more.');
 });

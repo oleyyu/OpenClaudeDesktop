@@ -26,7 +26,7 @@ const report={at:new Date().toISOString(),directory,build:{version:build.version
 const step=name=>{phase=name;console.log('TURN-TIMESTAMPS '+name);};
 const poll=async(fn,label,ms=10000)=>{const end=Date.now()+ms;while(Date.now()<end){try{if(await fn())return;}catch{}await new Promise(r=>setTimeout(r,25));}throw Error('Timed out: '+label);};
 const env={...process.env,CODE_DESKTOP_DATA:profile,CODEX_HOME:path.join(profile,'codex-home'),CODEX_BINARY:path.join(root,'tests/fixtures/codex-server.cjs')};delete env.ELECTRON_RUN_AS_NODE;delete env.CODE_DESKTOP_DEV_URL;
-const composer=()=>page.getByRole('textbox',{name:'Message DeepSeek',exact:true});
+const composer=()=>page.getByRole('textbox',{ name: /^(?:Prompt|Message DeepSeek)$/ });
 async function launch(){app=await electron.launch({args:[root],executablePath:path.join(root,'node_modules/electron/dist/Electron.app/Contents/MacOS/Electron'),env,timeout:20000});page=await app.firstWindow();page.setDefaultTimeout(10000);page.on('pageerror',e=>report.rendererErrors.push({phase,message:e.message}));
  await app.evaluate(({BrowserWindow})=>BrowserWindow.getAllWindows()[0].setContentSize(1324,768));await page.waitForFunction(()=>innerWidth===1324);
  await composer().waitFor();await page.locator(`[data-source-session-id="${RC}"] .source-session-open`).click();await page.getByText('SEEDED_OLD_ANSWER',{exact:true}).waitFor();await page.locator('.loading-state').waitFor({state:'detached'});}
@@ -39,7 +39,7 @@ async function reveal(hoverTarget,toolbar){await park();await hoverTarget.hover(
 const revealFooter=async(turnId,answer)=>{await reveal(page.locator(`[data-transcript-item-id="${answer}"]`),footer(turnId).locator('.stf-toolbar'));return footer(turnId);};
 const revealUser=async itemId=>{await reveal(page.locator(`.source-user-message[data-transcript-item-id="${itemId}"] .source-user-bubble`),userRow(itemId).locator('.sua-toolbar'));return userRow(itemId);};
 // Visible toolbar children in DOM order (the sr-only status span is not a control).
-const order=toolbar=>toolbar.evaluate(node=>[...node.children].filter(c=>!c.classList.contains('stf-sr-only')&&!c.classList.contains('sua-sr-only')).map(c=>c.tagName==='TIME'?'time':c.getAttribute('aria-label')??c.querySelector('[aria-label]')?.getAttribute('aria-label')??null));
+const order=toolbar=>toolbar.evaluate(node=>[...node.children].filter(c=>!c.classList.contains('sr-only')).map(c=>c.tagName==='TIME'?'time':c.getAttribute('aria-label')??c.querySelector('[aria-label]')?.getAttribute('aria-label')??null));
 const timeView=row=>row.locator('time').evaluate(node=>{const s=getComputedStyle(node),probe=(prop,value)=>{const p=document.createElement('span');p.style.cssText=`position:absolute;visibility:hidden;${prop}:${value}`;node.parentElement.append(p);const v=getComputedStyle(p)[prop.replace(/-(.)/g,(_,c)=>c.toUpperCase())];p.remove();return v;};
  return {text:node.textContent,dateTime:node.getAttribute('datetime'),cds:node.dataset.cds,tabindex:node.getAttribute('tabindex'),title:node.getAttribute('title'),display:s.display,alignItems:s.alignItems,height:node.getBoundingClientRect().height,
   paddingStart:s.paddingInlineStart,paddingEnd:s.paddingInlineEnd,fontSize:s.fontSize,lineHeight:s.lineHeight,fontWeight:s.fontWeight,color:s.color,numeric:s.fontVariantNumeric,userSelect:s.userSelect,

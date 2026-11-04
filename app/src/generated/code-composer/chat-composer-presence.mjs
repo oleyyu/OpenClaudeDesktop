@@ -26,9 +26,15 @@ import {
   memoSentinel as J8,
   useCdsMergedRefs as Ae,
 } from "../view-tabs/shared-frame-6jtSkIit.js";
-import { afterAnimationsSettle as de } from "./chat-composer-frame.mjs";
+import {
+  afterAnimationsSettle as de,
+  loadNamedChunk as Je,
+} from "./chat-composer-frame.mjs";
+import { loadPresenceMotionChunk as Dd } from "../../source-composer-current-adapters.jsx";
 var bd = null;
+var xd = null;
 var Sd = new Set();
+var Cd = new Set();
 function wd(e) {
   return (
     Sd.add(e),
@@ -39,6 +45,22 @@ function wd(e) {
 }
 var Td = () => bd !== null;
 var Ed = () => !1;
+function Od() {
+  return (
+    (xd ??= Je("cds_lazy_presence_motion", Dd).then(
+      (e) =>
+        e?.AnimatePresence !== void 0 &&
+        ((bd = e),
+        Sd.forEach((e) => e()),
+        Cd.forEach((t) => t(e)),
+        Cd.clear(),
+        !0),
+      () => !1,
+    )),
+    xd
+  );
+}
+var kd = () => bd;
 var Md = B(null);
 var Nd = B(null);
 function Pd(e) {
@@ -172,4 +194,9 @@ function Ud(e) {
   return ((t.displayName = `LazyPresence.${e === "div" ? "Div" : "Span"}`), t);
 }
 var Wd = Object.assign(zd, { Div: Ud("div"), Span: Ud("span") });
-export { Wd as Presence, bd as lazyPresenceMotion };
+export {
+  Wd as Presence,
+  bd as lazyPresenceMotion,
+  kd as presenceMotion,
+  Od as loadPresenceMotion,
+};

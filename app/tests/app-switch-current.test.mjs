@@ -430,14 +430,14 @@ test('zh-CN carries the activity-dot copy the original segment builder formats',
 test('W2 SSR: collapsed, the switch opens the peek card body (df-peek-mode-switch) and leaves the titlebar; open, only the titlebar has it', () => {
   const thread = { id: 's1', name: 'Session s1', cwd: '/fixture/work', createdAt: 1, updatedAt: 1 };
   const render = props => renderToStaticMarkup(React.createElement(SourceSidebar, { sessions: [thread], knownFolders: ['/fixture/work'], mode: 'code', onMode() {}, ...props }));
-  const bodyTag = /<div class="dframe-sidebar-body" data-testid="sidebar" id="frame-peek-popover"[^>]*>/;
+  const bodyTag = /<div class="dframe-sidebar-body[^"]*" data-testid="sidebar" id="frame-peek-popover"[^>]*>/;
   for (const peekOpen of [true, false]) {
     // w11-frame-root-cont (3.6556.2 shared-22 GI `l ? I ? null : o(Sy, …)`, children [pt, Ge, …, Ut]): collapsed, the
     // aside holds the peek bridge, then main.jsx's collapsed chrome in place of the titlebar, then the drawer body.
     const html = render({ collapsed: true, peekOpen, collapsedChrome: React.createElement('div', { className: 'df-collapsed-chrome flex items-center' }) });
     assert.doesNotMatch(html, /sidebar-toolbar|aria-label="Hide sidebar"/, 'no titlebar while collapsed');
     const aside = html.slice(html.indexOf('>') + 1);
-    assert.ok(aside.startsWith('<div class="dframe-peek-bridge" aria-hidden="true"></div><div class="df-collapsed-chrome flex items-center"></div><div class="dframe-sidebar-body"'), aside.slice(0, 200));
+    assert.ok(aside.startsWith('<div class="dframe-peek-bridge" aria-hidden="true"></div><div class="df-collapsed-chrome flex items-center"></div><div class="dframe-sidebar-body '), aside.slice(0, 200));
     const toolbar = html.slice(0, html.search(bodyTag));
     assert.doesNotMatch(toolbar, /df-app-switch|role="radiogroup"/, 'no titlebar switch while collapsed');
     const body = html.slice(html.search(bodyTag));

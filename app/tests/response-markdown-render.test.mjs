@@ -8,7 +8,7 @@ import path from 'node:path';
 
 // Node-only rendering of the actual application components. Middleware mode
 // does not launch/listen to a browser or Electron and does not call Codex.
-let server, SourceCodeFontSetting, SourceSegments, SourceSelect, SourceSkillFile, SkillSource, DeveloperServers, SourceTranscriptStatus, PluginDetail, SourceMessage, SourceDiff, SourceHighlightedLine, SourceCustomize, SourceTaskOutput, CommandOutput, SettingsSearchResults, SourceToolGroup, toolGroupExpansion, groupExpansionKey, toolRowExpansion, rowExpansionKey;
+let server, SourceCodeFontSetting, SourceSegments, SourceSelect, SourceSkillFile, SkillSource, DeveloperServers, SourceTranscriptStatus, TurnStatusRowsOverride, PluginDetail, SourceMessage, SourceDiff, SourceHighlightedLine, SourceCustomize, SourceTaskOutput, CommandOutput, SettingsSearchResults, SourceToolGroup, toolGroupExpansion, groupExpansionKey, toolRowExpansion, rowExpansionKey;
 before(async () => {
   server = await createServer({ configFile: false, root: path.resolve(import.meta.dirname, '..'), plugins: [react()],
     server: { middlewareMode: true, hmr: false, watch: null }, appType: 'custom', logLevel: 'error' });
@@ -18,6 +18,7 @@ before(async () => {
   ({ SourceSkillFile, SkillSource } = await server.ssrLoadModule('/src/source-skill-file.jsx'));
   ({ SourceMessage } = await server.ssrLoadModule('/src/source-session.jsx'));
   ({ SourceTranscriptStatus } = await server.ssrLoadModule('/src/source-transcript-status.jsx'));
+  ({ TurnStatusRowsOverride } = await server.ssrLoadModule('/src/generated/working-line/turn-status-rows.mjs'));
   ({ DeveloperServers } = await server.ssrLoadModule('/src/source-settings-pages.jsx'));
   ({ SourceDiff } = await server.ssrLoadModule('/src/source-diff.jsx'));
   ({ SourceHighlightedLine } = await server.ssrLoadModule('/src/source-diff-code.jsx'));
@@ -339,9 +340,14 @@ test('actual plugin detail replaces the list with back header and tabs, without 
 // Working line (turnStatusRows ruling, 2.42304.0 c96d752d0 w8 gate-on branch): these two pins moved from the classic Y5
 // row (sts-* spans, visible activity labels) to the official Het / CDS TurnStatus DOM. The intent they pin is unchanged:
 // only the owned turn's time and usage are shown, and the tasks button's placement in each state.
+// W14-code r4 ct-feed gates-r4-11 (E95): `__gb__2846116625` (turnStatusRows) is not in the desktop's Uon, so the host no
+// longer serves it; the Code session turns the rows on through cf74bc599 `Gn = eh() || Wn` → `s($m, {value: Gn})` ($m =
+// c26fb8b6b Ye, TurnStatusRowsOverride), which the app's TranscriptRowsScope provides (main.jsx statusRows={mode === "code"};
+// SourceTranscriptStatus is rendered inside it). These pins are about the Code line, so they render in that context.
+const inCode = element => React.createElement(TurnStatusRowsOverride, { value: true }, element);
 test('actual runtime status renders only owned tool activity and keeps time/usage absent when not established', () => {
  const props = { sessionKey:'a', turnId:'turn', ready:true, connected:true, running:true, items:[{id:'c',turnId:'turn',type:'commandExecution',status:'inProgress'}] };
- const renderStatus = extra => renderToStaticMarkup(React.createElement(SourceTranscriptStatus, {...props,...extra}));
+ const renderStatus = extra => renderToStaticMarkup(inCode(React.createElement(SourceTranscriptStatus, {...props,...extra})));
  const html = renderStatus({turnStats:{turnId:'other',startedAt:1,outputTokens:999}});
  // w8 shows no activity text in the stats state; the CDS status announces "Working…" and the row is busy.
  assert.match(html,/data-testid="code-working-line" data-turn-working="true"/); assert.match(html,/data-cds="TurnStatus" data-state="busy"/);
@@ -355,7 +361,7 @@ test('actual runtime status renders only owned tool activity and keeps time/usag
 
 test('Y5 running-tasks button sits after the stats, alone when idle, after Stopping, and stays reachable', () => {
  const props = { sessionKey:'a', turnId:'turn', ready:true, connected:true, running:true, items:[], turnStats:{turnId:'turn',startedAt:Date.now()/1000-30,outputTokens:287}, onToggleTasksPane(){} };
- const renderStatus = extra => renderToStaticMarkup(React.createElement(SourceTranscriptStatus, {...props,...extra}));
+ const renderStatus = extra => renderToStaticMarkup(inCode(React.createElement(SourceTranscriptStatus, {...props,...extra})));
  // w8 K: CdsButton ghost / xs / flush both with "text-inherit hover:text-accent before:…", pressed while the pane is open.
  const button = html => html.match(/<button[^>]*data-cds="Button"[^>]*>.*?<\/button>/)?.[0];
  const running = renderStatus({runningTaskCount:1});

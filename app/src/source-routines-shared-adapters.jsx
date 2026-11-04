@@ -24,7 +24,17 @@ const useHost = () => useContext(RoutinesSharedHost);
 // catalog holds no "secret:" (gated) messages — the desktop receives those in the account bootstrap (shared-23
 // gated_messages) — so shared-104 Ql answers them with the official fallback " " (host difference, see the RT0 report).
 export const useIntl = useStartIntl;
-export const FormattedMessage = StartMessage;
+// W14-code r4 shell trust-dialog-persona (E83 / E95): a message whose official text names Claude Code as the actor reads
+// with the assistant's name, as the host's own copy does (the English key says DeepSeek; electron/i18n named() swaps in the
+// running core's assistant). Keyed by id and applied only while the original text is the one below (c165c93f1 B).
+export const PERSONA_MESSAGES = Object.freeze({
+  VvhQDpcjjd: { original: "Claude Code may read, write, or execute files in this folder. Only proceed if you trust this workspace.",
+    text: "DeepSeek may read, write, or execute files in this folder. Only proceed if you trust this workspace." },
+});
+export function FormattedMessage(props) {
+  const persona = PERSONA_MESSAGES[props.id];
+  return persona && props.defaultMessage === persona.original ? <StartMessage {...props} defaultMessage={persona.text} /> : <StartMessage {...props} />;
+}
 
 // vendor-router Y (TanStack useRouter). This host has no TanStack router: null, so c9e1458cd Le (`j({ warn: !1 }) ?
 // i(ze, …) : null`) never mounts the navigation blocker.

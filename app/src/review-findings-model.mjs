@@ -309,7 +309,11 @@ export function createReviewFindingsStore({ storage = null } = {}) {
   const persist = () => {
     if (!storage || PERSISTED_FIELDS.every((field) => written[field] === state[field])) return;
     written = persistedReviewState(state);
-    try { storage.setItem(REVIEW_STORE_KEY, JSON.stringify({ state: written, version: 0 })); } catch { /* storage unavailable: kept for this window */ }
+    // W14-code r7 (r7pa-03): the key is shared with cc8941b7b F, whose comment fields (annotationsBySession,
+    // sentPrIdsBySession) the Changes bodies persist there too; they are kept, only the review fields are written.
+    let kept = {};
+    try { const stored = JSON.parse(storage.getItem(REVIEW_STORE_KEY) ?? 'null')?.state; if (plain(stored)) kept = stored; } catch { kept = {}; }
+    try { storage.setItem(REVIEW_STORE_KEY, JSON.stringify({ state: { ...kept, ...written }, version: 0 })); } catch { /* storage unavailable: kept for this window */ }
   };
   // zustand set(): a partial merged into the state; returning the state itself changes nothing.
   const e = (change) => {

@@ -42,11 +42,6 @@ export function prCommentMatch(event, { mac, linux, hidden = false } = {}) {
 export function prCommentComposing(event) {
   return !!event?.isComposing || event?.keyCode === 229;
 }
-/** The step a keydown takes: a match (prCommentMatch) that is not an IME composition. */
-export function prCommentStep(event, options = {}) {
-  const delta = prCommentMatch(event, options);
-  return delta && !prCommentComposing(event) ? delta : 0;
-}
 
 /** cc8941b7b nt({all, open}, from, delta, wrap): the index into `open` of the next stop. With no (or an unknown) last
  * stop, next is the first open comment and previous the last; otherwise it counts the open comments before the last

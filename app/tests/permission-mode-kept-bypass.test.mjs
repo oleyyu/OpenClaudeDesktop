@@ -11,7 +11,7 @@ import { createRoot } from 'react-dom/client';
 import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
 import {
-  BYPASS_KEPT_ROW, BYPASS_KEPT_TOAST, KEPT_BYPASS_CONFIRM_MS, KEPT_BYPASS_KILL_SWITCH, KEPT_BYPASS_SESSION_READ_MS,
+  BYPASS_KEPT_ROW, BYPASS_KEPT_TOAST, KEPT_BYPASS_KILL_SWITCH,
   dropBypassPick, hasBypassPick, keepBypassPick, keepsBypassPick, keptBypassEnabled, settleBypassPicks,
 } from '../src/permission-mode-kept-bypass.mjs';
 import zhSession from '../electron/i18n/zh-CN/session.mjs';
@@ -50,8 +50,6 @@ test('the shipped store, its gate, the pick path and the copy are pinned once ea
   assert.equal(count(copy, `bypassKeptRow:{defaultMessage:"${BYPASS_KEPT_ROW}",id:"RvbwIvF4xv"}`), 1);
   assert.equal(count(copy, `bypassKeptToast:{defaultMessage:"${BYPASS_KEPT_TOAST}",id:"00YMYeBYsv"}`), 1);
   assert.equal(KEPT_BYPASS_KILL_SWITCH, '__gb__3409701119');
-  assert.equal(KEPT_BYPASS_CONFIRM_MS, 120000);
-  assert.equal(KEPT_BYPASS_SESSION_READ_MS, 10000);
 });
 
 // w1-composer-pure (3.6556.2): the kept pick is unchanged — same store, kill switch, timeouts, keep/drop rules and copy;

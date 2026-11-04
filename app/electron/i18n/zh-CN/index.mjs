@@ -16,6 +16,8 @@ import preview from './preview.mjs';
 import workflows from './workflows.mjs';
 import agentTools from './agent-tools.mjs';
 import computerUse from './computer-use.mjs';
+import codeTranscript from './code-transcript.mjs'; // W14-code renderer-core: the Code transcript renderer's copy
+import transcriptRest from './transcript-rest.mjs'; // W14-code transcript-rest: the Code transcript's remaining rows
 
 // common.mjs is merged last: its wording wins where areas disagree.
-export default Object.freeze({ ...app, ...session, ...sidebar, ...customize, ...settings, ...panes, ...models, ...menus, ...terminal, ...windows, ...preview, ...workflows, ...agentTools, ...computerUse, ...surfaces, ...common });
+export default Object.freeze({ ...codeTranscript, ...transcriptRest, ...app, ...session, ...sidebar, ...customize, ...settings, ...panes, ...models, ...menus, ...terminal, ...windows, ...preview, ...workflows, ...agentTools, ...computerUse, ...surfaces, ...common });

@@ -1,11 +1,9 @@
 import React from "react";
-import { SourceSettingsButton } from "./source-settings-button.jsx";
+// W14-code r6 R6DC-02: shared-frame Uu (E41 direct import), not the host replica.
+import { CdsButton } from "./generated/view-tabs/shared-frame-6jtSkIit.js";
 import { Icon } from "./icons";
 import "./source-transcript-states.css";
 import { t } from "../electron/i18n/index.mjs";
-import { hostGrowthBookFlag } from "./host-growthbook.mjs";
-
-const TURN_STATUS_ROWS_FLAG = "__gb__2846116625";
 
 // Transcript pane states of approval-entry-current.js (2.2553.1):
 // _d :1141-1190 pending -> gd -> Zw skeleton, :4211-4217 xu load failure and
@@ -36,17 +34,33 @@ const Bar = ({ className, index }) => <div data-cds="Skeleton" className={classN
 // - nd's decorative: role={i ? void 0 : "status"}, "aria-hidden": i ? !0 : void 0, and no sr-only
 //   [data-skeleton-label] child; otherwise role=status with the "Loading" label. Either way the bars sit in
 //   <div aria-hidden class="contents">.
-// - The hold here is always an object ({none: reason}), never "delayed": nd renders data-hold="none",
-//   data-hold-reason and data-shown at once, the label already filled. The "delayed" reveal (data-hold="delayed",
-//   the label written on cds-placeholder-reveal, --cds-skel-elapsed) has no local caller and is not reproduced; nor
-//   is the onShown / onHidden bookkeeping or nd's onAnimationStart cross-document phase sync (one document).
+// - An object hold ({none: reason}): nd renders data-hold="none", data-hold-reason and data-shown at once, the label
+//   already filled. W14-code r5 gates-r5-05: the "delayed" hold (holdReason "delayed", 3.6556.2 shared-frame Kd `M`):
+//   data-hold="delayed" with no reason, not shown, the label empty; the design system's cds-placeholder-reveal (its
+//   delay --placeholder-reveal-delay 0.5s) shows it — onAnimationStart sets data-shown and writes the label, onAnimationEnd
+//   (qd) marks it settled (--cds-skel-settled 1e5ms, data-settled). Not reproduced: --cds-skel-elapsed (the time since
+//   the session opened, ~0 here: the skeleton mounts as it opens), the onShown / onHidden bookkeeping and nd's
+//   cross-document phase sync (one document).
 // The paragraph column's insets are Ob's logical ps-/pe- (pl-/pr- through 2.37337.1).
+function revealDelayed(event) {
+  if (event.animationName !== "cds-placeholder-reveal" || event.target !== event.currentTarget) return;
+  event.currentTarget.setAttribute("data-shown", "");
+  const label = event.currentTarget.querySelector("[data-skeleton-label]");
+  if (label !== null && label.textContent === "") label.textContent = t("Loading");
+}
+function settleDelayed(event) {
+  if (event.animationName !== "cds-placeholder-reveal" || event.target !== event.currentTarget) return;
+  event.currentTarget.style.setProperty("--cds-skel-settled", "100000ms");
+  event.currentTarget.setAttribute("data-settled", "");
+}
 export function SourceMessageSkeleton({ holdReason = "route", decorative = false, fillColumn = false }) {
   let index = 0;
-  return <div data-cds="SkeletonGroup" data-motion="wave" data-hold="none" data-hold-reason={holdReason} data-shown=""
-    role={decorative ? undefined : "status"} aria-hidden={decorative ? true : undefined}
+  const delayed = holdReason === "delayed";
+  return <div data-cds="SkeletonGroup" data-motion="wave" data-hold={delayed ? "delayed" : "none"} data-hold-reason={delayed ? undefined : holdReason}
+    data-shown={delayed ? undefined : ""} role={decorative ? undefined : "status"} aria-hidden={decorative ? true : undefined}
+    onAnimationStart={delayed ? revealDelayed : undefined} onAnimationEnd={delayed ? settleDelayed : undefined}
     className={`text-prose flex flex-col overflow-hidden fade-out-bottom ${fillColumn ? "min-h-0 grow basis-0 max-h-[calc(100vh-12.5rem)]" : "h-[calc(100vh-12.5rem)]"}`}>
-    {decorative ? null : <span className="sr-only" data-skeleton-label="true">{t("Loading")}</span>}
+    {decorative ? null : <span className="sr-only" data-skeleton-label="true">{delayed ? "" : t("Loading")}</span>}
     <div aria-hidden="true" className="contents">
       <div data-testid="chat-message-skeleton" className="contents">
         <div className="mt-[var(--msg-gap,1.5rem)] flex shrink-0 justify-end"><Bar className={BUBBLE_CLASS} index={index++} /></div>
@@ -66,12 +80,15 @@ export function SourceMessageSkeleton({ holdReason = "route", decorative = false
 // (2.2553.1 Zw, readable/shared-22-Cz3C_T8d.js:5356-5374) — an aria-hidden [data-transcript-skeleton] wrapper
 // (dp) with paddingTop 48 + (hasEarlier ? 40 : 0) around Cs = Ob({hold, onShown}): not decorative, no fillColumn.
 // gd (approval-entry-current.js:1126-1139) always passes an object hold: {none:"handoff"} when the
-// __gb__2846116625 gate (cfc63964b b(), default false) is on, else {none:"route"}. The host serves the gate on
-// (host-growthbook.mjs, user ruling), so the hold reason is "handoff". hasEarlier is false locally (no earlier-page indicator exists), so the top padding is 48. gp's inner
+// __gb__2846116625 gate (cfc63964b b(), default false) is on, else {none:"route"}. 3.6556.2 holds "handoff" outright: the
+// Code feed's skeleton `Att = {none: "handoff"}` (c96d752d0), Cowork's `UC = {none: "handoff"}` (shared-19), Chat's ty
+// `hold: {none: "handoff"}` (shared-23) — W14-code r4 gates-r4-11: the gate is no longer served, the reason stays "handoff".
+// W14-code r5 gates-r5-05: the Code session's skeleton is cf74bc599 fS's `tu({continuesShown})` (cacf551c6 m): "handoff"
+// while the session continues what was shown (the window's first session, cached rows), else "delayed" (main.jsx). hasEarlier is false locally (no earlier-page indicator exists), so the top padding is 48. gp's inner
 // column also carries the message-column class gs (shared-6 tp; 2.2553.1 f_ = shared-12 Km: mx-auto, 768px
 // measure, 32px gutters); the local .source-transcript-content already applies that column padding around it.
 // gp's mp context mount() for an object hold has no local counterpart.
-export function SourceTranscriptSkeleton({ hasEarlier = false, holdReason = hostGrowthBookFlag(TURN_STATUS_ROWS_FLAG) ? "handoff" : "route" }) {
+export function SourceTranscriptSkeleton({ hasEarlier = false, holdReason = "handoff" }) {
   return <div data-transcript-skeleton="" aria-hidden="true" className="h-full overflow-hidden [scrollbar-gutter:stable_both-edges]" style={{ paddingTop: 48 + (hasEarlier ? 40 : 0) }}>
     <div className="w-full [--msg-gap:0px]">
       <SourceMessageSkeleton holdReason={holdReason} />
@@ -101,7 +118,7 @@ export const LOAD_FAILURE_TITLE = t("Couldn’t load this session");
 export const LOAD_FAILURE_BODY = t("Something went wrong while loading earlier messages.");
 export function SourceTranscriptLoadFailure({ onRetry }) {
   return <SourceEmptyState role="alert" title={LOAD_FAILURE_TITLE} body={LOAD_FAILURE_BODY}
-    actions={<SourceSettingsButton variant="primary" onClick={onRetry}>{t("Retry")}</SourceSettingsButton>} />;
+    actions={<CdsButton variant="primary" onClick={onRetry}>{t("Retry")}</CdsButton>} />;
 }
 
 // approval-entry-current.js:4224-4233 Cl with only the title.

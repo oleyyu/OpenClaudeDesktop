@@ -231,9 +231,8 @@ test('saved workflows: ~/.claude/workflows, then project folders up to the git r
     assert.ok(warnings.some((line) => /bad\.js has invalid meta/.test(line)) && warnings.some((line) => /big\.js exceeds 524288 bytes \u2014 skipping/.test(line)));
     assert.equal(tool.findSavedWorkflow({ cwd: sub, home, name: 'shared' }).workflow.description, 'from pkg');
     assert.equal(tool.findSavedWorkflow({ cwd: sub, home, name: 'nope' }).error, 'Workflow "nope" not found. Available: only-user, shared');
-    const target = tool.saveWorkflowTarget({ scope: 'project', cwd: sub, home, name: 'My Flow' });
-    assert.equal(target.file, path.join(repo, 'pkg/.claude/workflows/my-flow.js'), 'the nearest existing project folder');
-    assert.equal(tool.saveWorkflowTarget({ scope: 'user', cwd: sub, home, name: 'x' }).file, path.join(home, '.claude/workflows/x.js'));
+    // W14-code r5 cleanup R5DC-03 (E95): the run card's Save target (saveWorkflowTarget) left with the card's controls.
+    assert.equal('saveWorkflowTarget' in tool, false);
   } finally { await fs.rm(root, { recursive: true, force: true }); }
 });
 

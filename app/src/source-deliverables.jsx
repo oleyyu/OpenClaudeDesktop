@@ -3,7 +3,9 @@
 // session's folder by main.cjs open-tool-file / reveal-tool-file).
 import React, { useState } from "react";
 import { Icon } from "./icons";
-import { SourceSettingsButton } from "./source-settings-button.jsx";
+// W14-code r7 R7DC-02 / css7-deliverables-settings-button: the CDS Button (shared-frame Uu, official Eu) straight from the
+// shared-frame file (E41), in place of the host settings-button copy.
+import { CdsButton } from "./generated/view-tabs/shared-frame-6jtSkIit.js";
 import { fileKindIcon } from "./file-kind-icon.mjs";
 import "./source-deliverables.css";
 import { t } from "../electron/i18n/index.mjs";
@@ -28,8 +30,8 @@ export function SourceDeliverables({ item, sessionKey, failed = false }) {
         <span className="sdl-description">{file.description || file.path}</span>
       </span>
       {!failed && sessionKey && <span className="sdl-actions">
-        <SourceSettingsButton size="sm" variant="secondary" onClick={() => act("open-tool-file", file.path)}>{t("Open")}</SourceSettingsButton>
-        <SourceSettingsButton size="sm" variant="ghost" icon="Folder" iconSize={16} iconOnly aria-label={t("Show {file} in Finder", { file: baseName(file.path) })}
+        <CdsButton size="sm" variant="secondary" onClick={() => act("open-tool-file", file.path)}>{t("Open")}</CdsButton>
+        <CdsButton size="sm" variant="ghost" icon="Folder" iconOnly aria-label={t("Show {file} in Finder", { file: baseName(file.path) })}
           onClick={() => act("reveal-tool-file", file.path)} />
       </span>}
     </div>)}
@@ -58,10 +60,10 @@ export function SourceArtifacts({ artifacts = [], sessionKey }) {
       </span>
       <span className="sdl-actions">
         {entry.url
-          ? <SourceSettingsButton size="sm" variant="secondary" onClick={() => act("external", { url: entry.url })}>{t("Open link")}</SourceSettingsButton>
+          ? <CdsButton size="sm" variant="secondary" onClick={() => act("external", { url: entry.url })}>{t("Open link")}</CdsButton>
           : sessionKey && <>
-            <SourceSettingsButton size="sm" variant="secondary" onClick={() => act("open-tool-file", { sessionId: sessionKey, path: entry.path })}>{t("Open")}</SourceSettingsButton>
-            <SourceSettingsButton size="sm" variant="ghost" icon="Folder" iconSize={16} iconOnly aria-label={t("Show {file} in Finder", { file: baseName(entry.path) })}
+            <CdsButton size="sm" variant="secondary" onClick={() => act("open-tool-file", { sessionId: sessionKey, path: entry.path })}>{t("Open")}</CdsButton>
+            <CdsButton size="sm" variant="ghost" icon="Folder" iconOnly aria-label={t("Show {file} in Finder", { file: baseName(entry.path) })}
               onClick={() => act("reveal-tool-file", { sessionId: sessionKey, path: entry.path })} />
           </>}
       </span>

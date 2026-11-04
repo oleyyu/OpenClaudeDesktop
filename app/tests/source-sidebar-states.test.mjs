@@ -63,7 +63,8 @@ test('New is selected only on the new route with no open session (zP y = _ && !v
   assert.match(openHtml, /data-source-session-id="s1" data-selected="focused"/);
   const fresh = newRow(render({ current: null, section: 'new' }));
   assert.match(fresh, /data-selected="focused"/); assert.match(fresh, /aria-current="page"/); assert.match(fresh, /aria-keyshortcuts="Meta\+n"/);
-  assert.match(render({ current: null, section: 'new' }), /<kbd aria-hidden="true">⌘ N<\/kbd>/);
+  // W14-code frame: the Code New row's ⌘N is shared-18 yk (CDS Shortcut text/onFill, generated sidebar-row-view).
+  assert.match(render({ current: null, section: 'new' }), /<span aria-hidden="true" data-cds="Shortcut" data-variant="text" class="scds-shortcut scds-text scds-on-fill ms-1 me-\[var\(--df-radius-pill\)\] leading-none text-muted-as-secondary opacity-0 group-hover:opacity-100">/);
   const customize = render({ current: null, section: 'customize' });
   assert.doesNotMatch(newRow(customize), /data-selected|aria-current/);
   assert.match(customize, /data-selected="focused"[^>]*>(?:(?!<\/button>).)*Customize/s);
@@ -72,8 +73,9 @@ test('New is selected only on the new route with no open session (zP y = _ && !v
 test('filtered empty variant: OO copy and Show all sessions button', () => {
   const html = render({ sessions: [thread('s1', { archived: true })], sidebarPreferences: { status: 'active' } });
   assert.match(html, /data-empty-variant="filtered"/);
-  assert.match(html, /<p class="source-sidebar-empty-text">No sessions match the current filters<\/p>/);
-  assert.match(html, /<button type="button" class="source-sidebar-show-all hide-focus-ring">Show all sessions<\/button>/);
+  // W14-code r8 css8-sidebar-empty-states-handcopy: shared-21 bK's class strings verbatim (no host .source-sidebar-empty*).
+  assert.match(html, /<div class="flex flex-col items-center gap-2 px-4 py-6 text-center" data-empty-variant="filtered"><p class="text-footnote text-muted-as-secondary">No sessions match the current filters<\/p>/);
+  assert.match(html, /<button type="button" class="text-footnote text-secondary underline-offset-2 hover:text-primary hover:underline hide-focus-ring focus-visible:shadow-focus">Show all sessions<\/button>/);
   assert.doesNotMatch(html, /No archived sessions|No sessions match these filters|Open a folder/);
   const archivedFilter = render({ sessions: [], sidebarPreferences: { status: 'archived' } });
   assert.match(archivedFilter, /data-empty-variant="no-sessions"/);
@@ -86,7 +88,8 @@ test('filtered empty variant: OO copy and Show all sessions button', () => {
 test('no-sessions empty variant: OO copy and the xO pictogram at scale .55', () => {
   const html = render({ sessions: [] });
   assert.match(html, /data-empty-variant="no-sessions"/);
-  assert.match(html, /Sessions you start will show up here/);
+  // r8 css8: shared-21 bK `flex min-h-[200px] select-none flex-col last:flex-1 …` (last:flex-1 replaces the host :has() rule).
+  assert.match(html, /<div class="flex min-h-\[200px\] select-none flex-col last:flex-1 items-center justify-center gap-4 px-4 pb-10 text-center" data-empty-variant="no-sessions"><p class="text-footnote text-muted-as-secondary">Sessions you start will show up here<\/p>/);
   assert.match(html, /<div aria-hidden="true"><svg width="82.5" height="77" viewBox="0 0 150 140" fill="none"/);
   const d = html.match(/<path d="([^"]+)" fill="hsl\(var\(--pictogram-200\)\)"/)[1];
   assert.equal(d.length, 29168, 'length of the reference bO() string (checked equal once against sidebar-groups.js:7645-7686)');
@@ -160,8 +163,11 @@ test('eO scroller inset: 4px start/top inset with matching negative margins and 
 test('New leading slot holds the df-new-circle Add glyph; no other nav row has it', () => {
   const html = render({ current: null, section: 'new' });
   const rows = [...html.matchAll(/<button[^>]*class="source-sidebar-nav-row group"[^>]*>(?:(?!<\/button>).)*<\/button>/gs)].map((match) => match[0]);
-  assert.deepEqual(rows.map((row) => row.match(/<span>([^<]+)<\/span>/)[1]), ['New', 'Projects', 'Artifacts', 'Routines', 'Customize']);
-  assert.match(rows[0], /<span class="source-leading-slot df-leading-slot"><span class="df-new-circle flex shrink-0 items-center justify-center rounded-full"><span aria-hidden="true" data-cds="Icon" class="text-secondary group-hover:text-primary group-data-\[selected=focused\]:text-primary" style="font-size:16px;font-weight:533.3">[^<]+<\/span><\/span><\/span><span class="flex min-w-0 flex-1 items-center"><span>New<\/span>/);
+  // shared-21 l5: the Code nav row's title span is `min-w-0 truncate`.
+  // W14-code r8 fr8-07 (E95): shared-21 hH gives projects modes ["chat","cowork"]; Code's epitaxy-projects needs Ll()
+  // (amber_tributary_osprey, Uon always !1), so the Code nav has no Projects row.
+  assert.deepEqual(rows.map((row) => row.match(/<span class="min-w-0 truncate">([^<]+)<\/span>/)[1]), ['New', 'Artifacts', 'Routines', 'Customize']);
+  assert.match(rows[0], /<span class="source-leading-slot df-leading-slot"><span class="df-new-circle flex shrink-0 items-center justify-center rounded-full"><span aria-hidden="true" data-cds="Icon" class="text-secondary group-hover:text-primary group-data-\[selected=focused\]:text-primary" style="font-size:16px;font-weight:533.3">[^<]+<\/span><\/span><\/span><span class="flex min-w-0 flex-1 items-center"><span class="min-w-0 truncate">New<\/span>/);
   for (const row of rows.slice(1)) {
     assert.doesNotMatch(row, /df-new-circle/);
     assert.match(row, /^<button[^>]*><span class="source-leading-slot"><span aria-hidden="true" data-cds="Icon" class="" style="font-size:16px/);
@@ -170,21 +176,25 @@ test('New leading slot holds the df-new-circle Add glyph; no other nav row has i
 });
 
 // sidebar-groups.js:5225-5310 pw inside sidebar-main.js:14187-14202 hL / :14970 df-bottom-tray.
-test('account footer is the pw df-user-menu-btn: df-on-rail CDS Avatar, name, muted dot + suffix, xs caret', () => {
-  const html = render({ displayName: 'Fixture', avatarName: 'Fixture Person', accountLabel: 'Plus', connectionIssue: true });
-  const tray = html.match(/<div class="df-bottom-tray shrink-0"><div class="df-footer-row account-footer shrink-0 flex items-center gap-\[var\(--df-footer-gap\)\]"><div class="min-w-0 flex-1">(<button[^>]*>)(.*?)<\/button><\/div><div class="df-footer-aux ml-auto flex shrink-0 items-center"><button[^>]*aria-label="Connection settings"/s);
-  assert.ok(tray, 'tray > footer row > min-w-0 flex-1 button, then the aux holding the local Connection settings control while the core is down');
-  // hL aux (sidebar-main.js:14185-14235) is empty in code mode: a healthy core shows no footer control.
-  assert.match(render({ displayName: 'Fixture Person' }), /<div class="df-footer-aux ml-auto flex shrink-0 items-center"><\/div>/);
+test('account footer is the pw df-user-menu-btn: df-on-rail static Spark, name, muted dot + suffix, xs caret', () => {
+  const html = render({ displayName: 'Fixture', avatarName: 'Fixture Person', accountLabel: 'Plus' });
+  // W14-code r3 fr3-05: shared-22 GI `i(Ys, "df-bottom-tray shrink-0")`, Ys = shared-5 pS "static-composer-boot-fade".
+  const tray = html.match(/<div class="static-composer-boot-fade df-bottom-tray shrink-0"><div class="df-footer-row account-footer shrink-0 flex items-center gap-\[var\(--df-footer-gap\)\]"><div class="min-w-0 flex-1">(<button[^>]*>)(.*?)<\/button><\/div><div class="df-footer-aux ml-auto flex shrink-0 items-center"><\/div><\/div>/s);
+  assert.ok(tray, 'tray > footer row > min-w-0 flex-1 button, then the empty aux');
+  // hL aux (sidebar-main.js:14185-14235) is empty in code mode. W14-code r4 复核 (E95): the host's Connection settings
+  // control (en-US has no such string) is gone, so a core that is down shows no footer control either.
+  for (const props of [{ displayName: 'Fixture Person' }, { displayName: 'Fixture Person', connectionIssue: true }])
+    assert.match(render(props), /<div class="df-footer-aux ml-auto flex shrink-0 items-center"><\/div>/);
+  assert.doesNotMatch(readFileSync(path.resolve(import.meta.dirname, '../src/source-sidebar.jsx'), 'utf8'), /Connection settings"\)|connectionIssue|connectionMenuOpen/);
   assert.doesNotMatch(readFileSync(path.resolve(import.meta.dirname, '../src/source-sidebar.jsx'), 'utf8'), /icon="Ant"/, 'no Anthropic-internal Ant glyph');
   const [, open, body] = tray;
   assert.match(open, /class="df-user-menu-btn account-button cds-reset flex h-\[max\(28px,var\(--df-footer-btn-size\)\)\] max-w-full items-center gap-\[var\(--df-row-gap\)\] rounded-\[var\(--df-radius-pill\)\] ps-\[var\(--df-row-px\)\] pe-2 text-start outline-none hover:bg-\[var\(--df-hover\)\] focus-visible:shadow-focus"/);
   assert.match(open, /type="button"/); assert.match(open, /data-testid="user-menu-button"/); assert.match(open, /aria-label="Account menu"/); assert.match(open, /aria-haspopup="menu"/);
-  // shared-19 E0 with __gb__496524976 on (host-growthbook, user ruling 2026-10-18): C0, the CDS Avatar (shared-frame si)
-  // at "sm", aria-hidden, no image source, so the full name's initials.
-  assert.match(body, /^<span class="df-on-rail relative flex w-\[var\(--df-leading-slot\)\] shrink-0 items-center justify-center"><span data-cds="Avatar" aria-hidden="true" class="inline-flex shrink-0 select-none items-center justify-center overflow-hidden rounded-full [^"]*size-\[var\(--cds-avatar-sm\)\][^"]*" role="img" aria-label="Fixture Person">FP<\/span><\/span>/);
-  assert.doesNotMatch(body, /data-cds="Spark"/);
-  assert.match(render({ displayName: 'Solo' }), /aria-label="Solo">S<\/span>/, 'without avatarName the shown name is the avatar name');
+  // W14-code r4 gates-r4-06 (E95): __gb__496524976 is not in the desktop's Uon (jPKPzV-P), so shared-19 S0 is off and E0
+  // draws T0's static Spark at 16 instead of the C0 initials avatar (formerly on by the 2026-10-18 host ruling).
+  assert.match(body, /^<span class="df-on-rail relative flex w-\[var\(--df-leading-slot\)\] shrink-0 items-center justify-center"><(?:svg|span)[^>]*data-cds="Spark"/);
+  assert.doesNotMatch(body, /data-cds="Avatar"|>FP<\/span>/);
+  assert.doesNotMatch(readFileSync(path.resolve(import.meta.dirname, '../src/host-growthbook.mjs'), 'utf8'), /__gb__496524976: true/);
   // W12b-FTS-1 shared-19 $N: the suffix span p("df-user-menu-trailing flex …","df-footer-suffix items-baseline"), the name
   // p("df-footer-name whitespace-nowrap text-secondary","max-w-full shrink-0") (no truncate), text-muted-as-secondary dot and
   // suffix, and the xs CaretDown "df-user-menu-trailing shrink-0 text-muted-as-secondary" as the button's last child.
@@ -195,36 +205,22 @@ test('account footer is the pw df-user-menu-btn: df-on-rail CDS Avatar, name, mu
   assert.match(bare, /<span class="df-footer-name whitespace-nowrap text-secondary max-w-full shrink-0">Fixture<\/span><\/span><span aria-hidden="true" data-cds="Icon" class="df-user-menu-trailing shrink-0 text-muted-as-secondary"/, 'no dot or suffix without a label');
 });
 
-// sidebar-session.js:13916/13924 and sidebar-groups.js:18641-18669 promise a
-// permanent delete, which is true for Codex. A core whose thread/delete also
-// removes its own history (capabilities.deleteHistory, implied or reported)
-// names that core, and the folder when it is known.
-test('delete confirm copy: Codex keeps the source strings; a core that deletes its own history names it', () => {
+// sidebar-session.js:13916/13924 and sidebar-groups.js:18641-18669 promise a permanent delete. W14-code r4 fr4-12b (E95):
+// every core gets the official sentences (shared-46 fO hcpszlrtjU "“{sessionTitle}” will be permanently deleted. This
+// can’t be undone."); the host's "… and its history in {place} …" variants for a core that deletes its own history are gone.
+test('delete confirm copy: the official sentences, whatever the core', () => {
   const one = [thread('s1', { name: 'Middle task' })], two = [thread('s1'), thread('s2')];
   assert.deepEqual(deleteConfirmCopy(one), { title: 'Delete session?', body: '“Middle task” will be permanently deleted. This can’t be undone.', confirmLabel: 'Delete', danger: true });
-  assert.deepEqual(deleteConfirmCopy(one, { engine: 'codex' }), deleteConfirmCopy(one));
+  assert.ok(officialAsset('shared-46-BIbZBGFq.js').includes('"\\u201C{sessionTitle}\\u201D will be permanently deleted. This can\\u2019t be undone.",id:"hcpszlrtjU"'));
   assert.equal(deleteConfirmCopy(two).body, 'These 2 sessions will be permanently deleted. This can’t be undone.');
-  // A core whose delete also removes its own history (capabilities.deleteHistory) says so and names
-  // that core — the boot.core object (main.jsx) or the core id (sidebar) — never another product.
-  // The DeepSeek core keeps telling users where its history lives (the Harness sessions folder).
-  const harness = 'DeepSeek Harness (~/.dsh/sessions)';
-  for (const [engine, core] of [['deepseek', harness], ['deepseek-harness', harness], [{ engine: 'deepseek-harness', capabilities: {} }, harness],
-    ['zcode', 'ZCode (~/.zcode/cli/db)'], [{ engine: 'zcode', capabilities: { deleteHistory: true } }, 'ZCode (~/.zcode/cli/db)'],
-    ['opencode', 'OpenCode (~/.local/share/opencode)'], ['mimo', 'MiMo Code (~/.local/share/mimocode)'],
-    // Reported capabilities count (boot.core): MiniMax doesn't imply deleteHistory, but its bridge reports it.
-    [{ engine: 'minimax', capabilities: { deleteHistory: true } }, 'MiniMax Code'],
-    // A folder the core reports itself is named too.
-    [{ engine: 'kimi', capabilities: { deleteHistory: true, historyLocation: '~/.kimi/sessions' } }, 'Kimi Code (~/.kimi/sessions)']]) {
-    const single = deleteConfirmCopy(one, { engine }), plural = deleteConfirmCopy(two, { engine });
-    assert.deepEqual(single, { title: 'Delete session?', body: `“Middle task” and its history in ${core} will be permanently deleted. This can’t be undone.`, confirmLabel: 'Delete', danger: true });
-    assert.deepEqual(plural, { title: 'Delete 2 sessions?', body: `These 2 sessions and their history in ${core} will be permanently deleted. This can’t be undone.`, confirmLabel: 'Delete', danger: true });
-    assert.equal(olderConfirmCopy('delete', 1, { engine }).body, `This will permanently delete 1 session older than a week, including its history in ${core}. Pinned sessions aren’t affected. This can’t be undone.`);
-    assert.equal(olderConfirmCopy('delete', 2, { engine }).body, `This will permanently delete 2 sessions older than a week, including their history in ${core}. Pinned sessions aren’t affected. This can’t be undone.`);
+  for (const engine of ['deepseek', { engine: 'zcode', capabilities: { deleteHistory: true } }, { engine: 'kimi', capabilities: { deleteHistory: true, historyLocation: '~/.kimi/sessions' } }]) {
+    assert.deepEqual(deleteConfirmCopy(one, { engine }), deleteConfirmCopy(one));
+    assert.deepEqual(deleteConfirmCopy(two, { engine }), deleteConfirmCopy(two));
   }
-  // A core that does not report deleteHistory keeps the plain copy (what it reports wins over what it implies).
-  assert.deepEqual(deleteConfirmCopy(one, { engine: { engine: 'opencode', capabilities: { deleteHistory: false } } }), deleteConfirmCopy(one));
   assert.deepEqual(olderConfirmCopy('delete', 3), { title: 'Delete older sessions?', body: 'This will permanently delete 3 sessions older than a week. Pinned sessions aren’t affected. This can’t be undone.', confirmLabel: 'Delete all', danger: true });
-  assert.deepEqual(olderConfirmCopy('archive', 2, { engine: 'deepseek' }), olderConfirmCopy('archive', 2));
+  assert.equal(olderConfirmCopy('delete', 1).body, 'This will permanently delete 1 session older than a week. Pinned sessions aren’t affected. This can’t be undone.');
+  const source = readFileSync(path.resolve(import.meta.dirname, '../src/source-sidebar.jsx'), 'utf8');
+  assert.doesNotMatch(source, /history in \{place\}|deletesCoreHistory|coreHistory\(/);
 });
 
 test('a nested sub-agent row names the running assistant, never a fixed one', () => {
@@ -244,12 +240,17 @@ test('hidden sessions: only load failures get a notice; other-core sessions stay
   for (const props of [{}, { hiddenSessions: null }, { engine: 'deepseek', hiddenSessions: { otherEngine: 10, missing: 0 } }]) assert.doesNotMatch(render(props), /data-sidebar-notice/);
 });
 
-test('row menu Fork: the core reason disables it before the running/archived reasons', () => {
+// W14-code fr7-02: cd54a5401 `forkDisabledReason: Qt` (caec4a2d4 kn) knows only unsupported / requires_server /
+// background_unavailable / host_offline — an archived session's Fork stays enabled (session-operations.cjs forks it).
+test('row menu Fork: only the core reason disables it; an archived session forks', () => {
   const menu = (props) => renderToStaticMarkup(React.createElement(SourceSidebarSessionMenu, { session: thread('s1'), onAction() {}, onClose() {}, onRename() {}, onFork() {}, onDelete() {}, ...props }));
   const fork = (html) => html.match(/<div role="none" class="smenu-reason"><div role="menuitem"[^>]*data-label="Fork"[^>]*>.*?<span id="[^"]+" hidden="" data-cds-disabled-reason="">([^<]+)<\/span><\/div>/)?.[1];
   assert.equal(fork(menu({ forkUnavailable: 'Not available with Codex yet' })), 'Not available with Codex yet');
   assert.equal(fork(menu({ forkUnavailable: 'Not available with Codex yet', session: thread('s1', { archived: true }) })), 'Not available with Codex yet');
-  assert.equal(fork(menu({ session: thread('s1', { archived: true }) })), 'Restore this session before forking it.');
+  const archived = menu({ session: thread('s1', { archived: true }) });
+  assert.equal(fork(archived), undefined);
+  assert.match(archived, /<div role="menuitem" tabindex="-1" aria-keyshortcuts="f" data-label="Fork" class="smenu-item">/);
+  assert.doesNotMatch(archived, /Restore this session before forking it\./);
   const enabled = menu({});
   assert.equal(fork(enabled), undefined);
   assert.match(enabled, /<div role="menuitem" tabindex="-1" aria-keyshortcuts="f" data-label="Fork" class="smenu-item">/);
@@ -271,19 +272,18 @@ test('the sidebar aside is a CDS root carrying data-density, data-platform and d
 // shared-frame-C_2npUJq.js:2722 primary Button text-on-primary, :2748-2749
 // bg-fill-primary (hover bg-fill-primary-hover). Fidelity F02: the group and
 // confirm dialogs sit on the shared Dialog (source-dialog.jsx) with CDS Buttons
-// (SourceSettingsButton) instead of hand-rolled sidebar dialog rules.
+// instead of hand-rolled sidebar dialog rules. W14-code r5 cleanup css5-settings-button-replica: the group dialog's
+// buttons are the shared-frame Button (Uu = CdsButton) itself, not the host replica.
 test('group and confirm dialogs use the shared Dialog with the CDS primary/danger Button', () => {
   const read = (file) => readFileSync(path.resolve(import.meta.dirname, '../src/' + file), 'utf8');
-  const css = read('source-sidebar.css'), jsx = read('source-sidebar.jsx'), button = read('source-settings-button.css');
+  const css = read('source-sidebar.css'), jsx = read('source-sidebar.jsx');
   const official = readFileSync(path.resolve(import.meta.dirname, '../public/assets/v1/c6a992d55-Che1orl5.css'), 'utf8');
   assert.doesNotMatch(css, /\.source-group-dialog(-backdrop)?\s*\{/);
   assert.doesNotMatch(css, /--cds-text-on-primary/);
   assert.match(jsx, /<SourceDialog open=\{open\} onExited=\{onExited\} size="sm" showClose=\{false\}/);
-  assert.match(jsx, /<SourceSettingsButton type="submit" variant="primary" busy=\{pending\}/);
+  assert.match(jsx, /<CdsButton type="submit" variant="primary" busy=\{pending\}/);
+  assert.doesNotMatch(jsx, /SourceSettingsButton/);
   assert.match(jsx, /<SourceConfirmationDialog [^>]*confirmVariant=\{danger \? "danger" : "primary"\}/s);
-  assert.match(button, /\.source-settings-button\[data-variant=primary\] \{ color:var\(--cds-on-primary\);/);
-  assert.match(button, /\.source-settings-button\[data-variant=primary\] \.ssb-paint \{ background:var\(--cds-fill-primary\); \}/);
-  assert.match(button, /\.source-settings-button\[data-variant=primary\]:is\(:hover,\[aria-haspopup\]\[aria-expanded=true\]\) \.ssb-paint \{ background:var\(--cds-fill-primary-hover\); \}/);
   for (const token of ['--cds-on-primary', '--cds-fill-primary', '--cds-fill-primary-hover', '--cds-on-danger', '--cds-fill-danger']) assert.match(official, new RegExp(token + ':'));
 });
 
@@ -318,12 +318,13 @@ test('rows carry the jump-hint attributes; the body is the peek card target', ()
   assert.match(html, /data-source-session-id="s1"[^>]*data-row-key="s1" data-jump-hint-row=""/);
   // ca1d33d05 jt / kt: the F6 "navigation" stop is the aside, or while collapsed the peek card.
   assert.match(html, /<aside [^>]*data-focus-region="navigation" data-focus-region-holds="contains">/);
-  assert.match(html, /<div class="dframe-sidebar-body" data-testid="sidebar" id="frame-peek-popover">/);
+  // W14-code r2 fr2-05: shared-22 GI's body class (collapsed adds `bg-[hsl(var(--df-surface-primary))] border-0.5`).
+  assert.match(html, /<div class="dframe-sidebar-body flex flex-col flex-1 min-h-0 gap-2 px-2 pt-3 pb-1\.5 \[overflow:clip\]" data-testid="sidebar" id="frame-peek-popover">/);
   const collapsed = render({ collapsed: true });
   assert.doesNotMatch(collapsed, /<aside [^>]*data-focus-region=/);
   assert.match(collapsed, /<div class="dframe-peek-bridge" aria-hidden="true"><\/div>/);
-  assert.match(collapsed, /<div class="dframe-sidebar-body" data-testid="sidebar" id="frame-peek-popover" data-focus-region="navigation" data-focus-region-holds="contains" inert="">/);
-  assert.match(render({ collapsed: true, peekOpen: true }), /<div class="dframe-sidebar-body" data-testid="sidebar" id="frame-peek-popover" data-focus-region="navigation" data-focus-region-holds="contains">/);
+  assert.match(collapsed, /<div class="dframe-sidebar-body flex flex-col flex-1 min-h-0 gap-2 px-2 pt-3 pb-1\.5 \[overflow:clip\] bg-\[hsl\(var\(--df-surface-primary\)\)\] border-0\.5" data-testid="sidebar" id="frame-peek-popover" data-focus-region="navigation" data-focus-region-holds="contains" inert="">/);
+  assert.match(render({ collapsed: true, peekOpen: true }), /<div class="dframe-sidebar-body flex flex-col flex-1 min-h-0 gap-2 px-2 pt-3 pb-1\.5 \[overflow:clip\] bg-\[hsl\(var\(--df-surface-primary\)\)\] border-0\.5" data-testid="sidebar" id="frame-peek-popover" data-focus-region="navigation" data-focus-region-holds="contains">/);
 });
 
 test('custom group headers: no DotsVertical trigger, the empty copy invites a drop; a plain folder row is in This computer, not Other', () => {
@@ -375,7 +376,7 @@ test('custom group headers get the "+" labelled with the target and the group; U
   const html = render({ sessions: [thread('s1'), thread('s2')], sessionMetadata: { s1: { customGroupId: 'g1' } },
     customGroups: [{ id: 'g1', name: 'Research' }, { id: 'g2', name: 'Empty' }], sidebarPreferences: { groupBy: 'custom', showEmptyGroups: true },
     onSessionAction() {}, onGroupAction() {}, onProject() {} });
-  assert.match(html, /<span class="source-group-reveal"><button type="button" class="code-icon-button" aria-label="New session in work, added to Research">/);
+  assert.match(html, /<span class="source-group-reveal"><button type="button" data-cds="Button" data-cds-icon-only="" data-cds-ghost="" class="[^"]*" aria-label="New session in work, added to Research"/);
   assert.match(html, /aria-label="New session with no folder picked, added to Empty"/);
   assert.equal((html.match(/class="source-group-reveal"/g) || []).length, 2, 'one per custom group, none for Ungrouped');
   assert.doesNotMatch(html, /New session in Ungrouped|added to Ungrouped/);
@@ -390,11 +391,13 @@ test('custom group headers get the "+" labelled with the target and the group; U
   assert.match(css, /@media \(hover: none\) \{ \.source-group-reveal \{ opacity: 1; \} \}/);
 });
 
+// W14-code r4 fr4-16: the SourceSidebarRenameRow export only this test read is gone; the inline rename row stays in the
+// sidebar (RenameRow, the Chat list's renaming row) and its markup is pinned from the source.
 test('inline rename keeps the row glyph and selected background; the field is labelled Rename', async () => {
-  const { SourceSidebarRenameRow, deleteGroupCopy } = await server.ssrLoadModule('/src/source-sidebar.jsx');
-  const html = renderToStaticMarkup(React.createElement(SourceSidebarRenameRow, { label: 'Session s1', selected: true,
-    glyph: React.createElement('span', { className: 'glyph-probe' }), onCommit() {}, onClose() {} }));
-  assert.match(html, /^<div class="source-session-row source-session-rename" data-row="" data-selected="focused"><span class="source-leading-slot"><span class="glyph-probe"><\/span><\/span><input type="text" maxLength="200" aria-label="Rename" class="hide-focus-ring source-session-rename-input" value="Session s1"\/><\/div>$/);
+  const { deleteGroupCopy } = await server.ssrLoadModule('/src/source-sidebar.jsx');
+  const sidebarSource = readFileSync(path.resolve(import.meta.dirname, '../src/source-sidebar.jsx'), 'utf8');
+  assert.doesNotMatch(sidebarSource, /SourceSidebarRenameRow/);
+  assert.match(sidebarSource, /<InlineRenameInput initial=\{label\} label=\{t\("Rename"\)\} maxLength=\{200\} className="source-session-rename-input"/);
   const css = readFileSync(path.resolve(import.meta.dirname, '../src/source-sidebar.css'), 'utf8');
   assert.doesNotMatch(css, /\.source-session-rename \{ box-shadow/);
   assert.deepEqual(deleteGroupCopy('Research', 0), { title: 'Delete group?', body: '“Research” will be removed. Nothing is in it.', confirmLabel: 'Delete', danger: true });
@@ -405,14 +408,17 @@ test('inline rename keeps the row glyph and selected background; the field is la
 test('row results are toasts, not inline status/error rows', () => {
   const source = readFileSync(path.resolve(import.meta.dirname, '../src/source-sidebar.jsx'), 'utf8');
   assert.doesNotMatch(source, /className="source-sidebar-(?:status|error)"|data-sidebar-status/);
-  assert.match(source, /older \? "older session" : "session"/);
+  // W14-code fr6-07: c39a247c4 zt (shared-78 hv) and shared-22 CT olderBulkArchived / olderBulkDeleted, not composed English.
+  assert.match(source, /intl\.formatMessage\(older \? toasts\.older : toasts\.success, \{ count: done \}\)/);
+  assert.match(source, /intl\.formatMessage\(toasts\.failure, \{ count: failed \}\)/);
+  assert.doesNotMatch(source, /bulkDoneMessage|bulkFailedMessage|Some sessions could not be updated/);
   assert.match(source, /key: older \? `\$\{action\}-older-bulk` : `group-bulk-\$\{action\}`, timeout: 3000/);
 });
 
 // B04: shared-21 HQ/YQ load-failed, VQ sticky failure, lK boundary, H0 Show less, tK hover reveal, ce4f4374c ke/Ae.
 test('load-failed variant (HQ/YQ): an alert with a small Try again instead of the no-sessions copy; skeleton while loading', () => {
   const failed = render({ sessions: [], loadFailed: true, onRetryLoad() {} });
-  assert.match(failed, /<div class="source-sidebar-empty" data-empty-variant="load-failed"><p role="alert" class="source-sidebar-empty-text">Couldn’t load your sessions<\/p><button[^>]*data-cds="Button" data-variant="secondary"[^>]*data-size="sm"[^>]*>.*Try again/s);
+  assert.match(failed, /<div class="flex flex-col items-center gap-2 px-4 py-6 text-center" data-empty-variant="load-failed"><p role="alert" class="text-footnote text-muted-as-secondary">Couldn’t load your sessions<\/p><button type="button" data-cds="Button" data-size="sm" class="[^"]*text-primary[^"]*"[^>]*>.*Try again/s);
   assert.doesNotMatch(failed, /Sessions you start will show up here|sidebar-rows-skeleton/);
   // VQ's state starts {failed: false}: a sidebar that mounts while a load is pending shows the skeleton; the held
   // failure during a Try again on a mounted sidebar is stickyListFailure (tests/sidebar-model.test.mjs).
@@ -436,7 +442,7 @@ test('sidebar error boundary (lK): "Sidebar failed to load." with a secondary Tr
   boundary.state = SourceSidebarBoundary.getDerivedStateFromError(new Error('bad metadata'));
   const html = renderToStaticMarkup(boundary.render());
   assert.match(html, /<aside class="app-sidebar dframe-sidebar source-sidebar cds-root" aria-label="Sidebar"/);
-  assert.match(html, /<div class="dframe-sidebar-body source-sidebar-failed" data-testid="sidebar"><p class="source-sidebar-failed-text">Sidebar failed to load\.<\/p><button type="button" data-cds="Button" data-variant="secondary"/);
+  assert.match(html, /<div class="dframe-sidebar-body flex flex-col flex-1 min-h-0 gap-2 px-2 pt-3 pb-1\.5 \[overflow:clip\]" data-testid="sidebar"><div class="flex-1 min-h-0 flex flex-col items-center justify-center gap-2 px-2 text-center"><p class="text-body text-secondary">Sidebar failed to load\.<\/p><button type="button" data-cds="Button" class="[^"]*"><span aria-hidden="true" class="[^"]*cds-btn-squish[^"]*"><span data-cds-part="paint" class="[^"]*bg-fill-secondary /);
   assert.match(html, /Try again<\/span>/);
   const ok = renderToStaticMarkup(React.createElement(SourceSidebarBoundary, null, React.createElement('span', null, 'list')));
   assert.equal(ok, '<span>list</span>');
@@ -478,23 +484,36 @@ test('persisted group collapse (shared-50 collapsedGroups): a folded key hides i
 test('Show more / Show less (H0): labels, held state and the status live region', async () => {
   const { SourceShowMoreButton } = await server.ssrLoadModule('/src/source-sidebar.jsx');
   const button = (props) => renderToStaticMarkup(React.createElement(SourceShowMoreButton, { bucketLabel: 'Today', count: 5, onShowMore() {}, onShowLess() {}, ...props }));
+  // W14-code fr7-03: shared-21 gX `B = (_ ? cX : x ? oX : iX) + hX` (rX = Np + mp + the row classes; iX adds px, oX the
+  // row indent bm + pe) and the aria-label Qqm1d4ZUyL "Show {count} more in {bucketLabel}"; no host .source-show-more.
+  const rX = 'hide-focus-ring focus-visible:outline-hidden focus-visible:shadow-[inset_0_0_0_1px_var(--cds-fill-accent),0_0_6px_0_color-mix(in_srgb,var(--cds-fill-accent)_20%,transparent)] hit-row [--cds-hit-gap-y:7px] hit-row-main flex h-[var(--df-row-h)] w-full shrink-0 items-center gap-[var(--df-row-gap)] rounded-[var(--df-radius-pill)] text-start text-[length:var(--df-row-font)] text-muted hover:bg-[var(--df-hover)] hover:text-secondary aria-disabled:pointer-events-none aria-disabled:opacity-70';
+  const hX = ' aria-disabled:data-[held]:pointer-events-auto data-[held]:hover:bg-transparent data-[held]:hover:text-muted';
+  const s21 = readFileSync(new URL('../../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-21-R7LldJ05.js', import.meta.url), 'utf8');
+  assert.ok(s21.includes(`hX="${hX}"`), 'official hX');
+  assert.ok(s21.includes('"Show {count} more in {bucketLabel}",id:"Qqm1d4ZUyL"'));
   const more = button({});
-  assert.match(more, /<button type="button" class="source-show-more" data-row="" data-roving-item="" aria-label="Show 5 more in Today">/);
+  const iX = `${rX} px-[var(--df-row-px)]${hX}`;
+  assert.ok(more.startsWith(`<button type="button" data-row="" data-roving-item="" aria-label="Show 5 more in Today" class="${iX}"><span class="df-leading-slot"></span>Show 5 more</button>`), more);
+  assert.doesNotMatch(more, /source-show-more/);
   // H0 always renders the tooltip wrapper's hidden description (empty unless held) and the S0 status span.
-  assert.match(more, /Show 5 more<\/button><span id="[^"]+" hidden=""><\/span><span class="source-sr-only" role="status"><\/span>/);
+  assert.match(more, /Show 5 more<\/button><span id="[^"]+" hidden=""><\/span><span class="sr-only" role="status"><\/span>/);
+  // Inside the presets session list (x = wp() !== null): oX, the label in lm (Sk) without the leading slot, "Show more".
+  const inList = button({ inList: true });
+  const oX = `${rX} ps-[calc(var(--df-row-px)+var(--df-row-indent,0px))] pe-[var(--df-row-px)]${hX}`;
+  assert.ok(inList.includes(`aria-label="Show 5 more in Today" class="${oX}"><span class="ps-[var(--df-iconless-pad,calc((var(--df-leading-slot)-var(--df-icon-size))/2))]">Show more</span></button>`), inList);
   const less = button({ fewer: 'collapse' });
   assert.match(less, /aria-label="Show less in Today"/);
   assert.match(less, />Show less<\/button>/);
-  assert.doesNotMatch(less, /aria-disabled|data-held/);
+  assert.doesNotMatch(less, / (aria-disabled|data-held)=/);
   const held = button({ fewer: 'held' });
-  assert.match(held, /aria-disabled="true" aria-describedby="([^"]+)" data-held="" aria-label="Show less in Today"/);
+  assert.match(held, /aria-disabled="true" aria-describedby="([^"]+)" data-held="" data-row="" data-roving-item="" aria-label="Show less in Today"/);
   const id = held.match(/aria-describedby="([^"]+)"/)[1];
   assert.ok(held.includes(`<span id="${id}" hidden="">You have something open near the end of this list.</span>`));
   // A whole bucket under the cut renders no button; 22 rows (two past the cut) get Show 2 more.
   const now22 = Array.from({ length: 22 }, (_, index) => thread('r' + index, { updatedAt: now - index }));
   const html = render({ sessions: now22, sidebarPreferences: { groupBy: 'none' } });
   assert.match(html, /aria-label="Show 2 more in Sessions"/);
-  assert.equal((render({ sessions: now22.slice(0, 21), sidebarPreferences: { groupBy: 'none' } }).match(/source-show-more/g) || []).length, 0);
+  assert.doesNotMatch(render({ sessions: now22.slice(0, 21), sidebarPreferences: { groupBy: 'none' } }), /aria-label="Show \d+ more in/);
 });
 
 test('Hide sidebar is shared-21 Pz (CdsButton df-chrome-btn in GI ms-0.5); the row menu separates Keep computer awake and shows Unarchiving…', () => {
@@ -567,6 +586,22 @@ test('current row menu separates editing, sharing, organization, settings and re
   const sections = html.split('<div role="separator" class="smenu-separator"></div>')
     .map(section => [...section.matchAll(/data-label="([^"]+)"/g)].map(match => match[1]));
   assert.deepEqual(sections, [['Open in'], ['Unpin', 'Mark as unread', 'Rename', 'Fork', 'Hide nested sessions'], ['Share', 'Export'], ['Move up', 'Move down', 'Move to group'], ['Keep computer awake'], ['Archive', 'Delete']]);
+});
+
+// W14-code r5 fr5-01 / fr5-02: ce4f4374c qe — Export (`z && e(R, { shortcut: "e" })`) has no disabled state; Mark as unread
+// (jn) stays listed while the session runs or awaits approval, disabled with +G6/w5tqeq's reason (V.inProgress).
+test('fr5-01 / fr5-02: a running session keeps Export enabled and shows Mark as unread disabled with the official reason', () => {
+  const menu = (state) => renderToStaticMarkup(React.createElement(SourceSidebarSessionMenu, { session: thread('s1'), onAction() {}, onClose() {}, onRename() {},
+    metadata: {}, state }));
+  const running = menu({ active: { s1: true }, statuses: { s1: 'working' } });
+  const item = (html, label) => html.match(new RegExp(`<div role="menuitem"[^>]*data-label="${label}"`))?.[0] ?? '';
+  assert.ok(item(running, 'Export'), 'Export listed');
+  assert.doesNotMatch(item(running, 'Export'), /aria-disabled="true"/);
+  assert.doesNotMatch(running, /finishes this turn/);
+  assert.match(item(running, 'Mark as unread'), /aria-disabled="true"/);
+  assert.match(running, /This session is still working or needs your input\./);
+  const idle = menu({});
+  assert.doesNotMatch(item(idle, 'Mark as unread'), /aria-disabled="true"/);
 });
 
 // B10: ce4f4374c Me (multi menu over c39a247c4 ve) and shared-22 ZO/XO + SS (drag targets in the list).
@@ -657,10 +692,10 @@ test('W12b-FTS-4: the Code New row shows shared-21 GY (running mark) instead of 
   assert.equal(blankBrowserTab('about:blank'), true); assert.equal(blankBrowserTab('https://example.com'), false);
   // Idle (no busy terminal or page): the New row keeps its ⌘N keycap and draws no mark.
   const html = render({ current: 's1', section: 'new' });
-  assert.match(html, /<kbd aria-hidden="true">⌘ N<\/kbd>/);
+  assert.match(html, /<span aria-hidden="true" data-cds="Shortcut" data-variant="text" class="scds-shortcut scds-text scds-on-fill ms-1 me-\[var\(--df-radius-pill\)\] leading-none text-muted-as-secondary opacity-0 group-hover:opacity-100">/);
   assert.doesNotMatch(html, /Terminal or browser active/);
   const source = sidebarSource();
   assert.match(source, /const newPageActivity = useNewPageActivity\(fallbackCwd, mode === "code" && !\(section === "new" && !current\)\);/);
   assert.match(source, /\{newPageMark && <SidebarRunningMark label=\{t\("Terminal or browser active on the New session page"\)\} \/>\}/);
-  assert.match(source, /\{key === "new" && !newPageMark && <kbd aria-hidden="true">⌘ N<\/kbd>\}/);
+  assert.ok(source.includes('{key === "new" && !newPageMark && (mode === "code" ? <SidebarRowShortcut keys="cmd+n" /> : <kbd aria-hidden="true">⌘ N</kbd>)}'));
 });

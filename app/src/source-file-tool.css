@@ -32,7 +32,7 @@
 .sft-outer[data-in-card]:hover .src-cmd-copy, .sft-outer[data-in-card]:focus-within .src-cmd-copy { opacity:1; }
 /* Classic NN, approval-current:16797–16805: body text, no DiffIndicator size scope. */
 .sft-counts { display:inline-flex;flex-shrink:0;align-items:center;gap:2px;height:auto;border-radius:0;overflow:visible;font:inherit;font-variant-numeric:tabular-nums; }
-.sft-counts > :not(.source-sr-only) { padding:0;background:none; }
+.sft-counts > :not(.sr-only) { padding:0;background:none; }
 .sft-added { color:var(--cds-text-git-added); }
 .sft-removed { color:var(--cds-text-git-removed); }
 .sft-card:hover .src-cmd-copy, .sft-card:focus-within .src-cmd-copy, .sft-details:hover .src-cmd-copy, .sft-details:focus-within .src-cmd-copy { opacity:1; }

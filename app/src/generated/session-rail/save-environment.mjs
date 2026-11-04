@@ -16,6 +16,8 @@ import {
   memoIsEmpty as J0,
   memoStore0 as K0,
   CdsTextLink as G,
+  memoStoreDeps1 as Z1,
+  memoStoreValueFirst2 as I2,
 } from "../view-tabs/shared-frame-6jtSkIit.js";
 import {
   useIntl as Yr,
@@ -38,7 +40,7 @@ import { recentTargetSettings as gv } from "./recent-target-settings.mjs";
 import { environmentBasename as _t } from "../../../electron/generated/environment-basename.mjs";
 import { Pa as Ve } from "../routines-shared/shared-0-DDOOdL6P.mjs";
 import { thisComputerLabel as Rt } from "./this-computer-label.mjs";
-import { jsx as s, jsxs as u } from "react/jsx-runtime";
+import { jsx as s, jsxs as u, Fragment as d } from "react/jsx-runtime";
 import { useContext as h } from "react";
 import { RailFlatContext as wi } from "../session-rail-kit/rail-layout.mjs";
 import {
@@ -47,6 +49,138 @@ import {
   RailRowIcon as Wf,
   RAIL_ROW_CLASS as rm,
 } from "../session-rail-kit/rail-rows.mjs";
+function Mx(e) {
+  let $ = J9(19),
+    { setup: t, onSave: n, onDeclined: r, onUpdated: i } = e,
+    a = Yr(),
+    o = !t.declined && (t.startCount ?? 0) >= 2,
+    c =
+      J1($, 0, r) || J1($, 1, t.target)
+        ? I1(
+            $,
+            1,
+            Z1(
+              $,
+              0,
+              () => {
+                (dv.getState().quietStartedPlace(t.target), r());
+              },
+              r,
+            ),
+            t.target,
+          )
+        : $[2],
+    l = t.fromEnvironment,
+    f = J1($, 3, l)
+      ? K1($, 3, l, (e) =>
+          l ? e.environments.find((e) => e.id === l.id) : void 0,
+        )
+      : $[4],
+    p = dv(f);
+  if (l && t.savedAs === void 0 && (p || l.updated)) {
+    let e = p?.name ?? l.name,
+      t = J2($, 5, l.changes, a)
+        ? I2(
+            $,
+            5,
+            a.formatList([...l.changes], { type: "conjunction" }),
+            l.changes,
+            a,
+          )
+        : $[7];
+    return J5($, 8, t, l, e, n, i)
+      ? K5(
+          $,
+          8,
+          t,
+          l,
+          e,
+          n,
+          i,
+          s("div", {
+            "data-testid": "epitaxy-save-start-line",
+            className: "text-footnote text-muted-as-secondary",
+            children: l.updated
+              ? s(Q, {
+                  defaultMessage:
+                    "Started from {name} \u00B7 updated with {changes}",
+                  id: "Ksg9OCY13C",
+                  values: { name: e, changes: t },
+                })
+              : u(d, {
+                  children: [
+                    s(Q, {
+                      defaultMessage: "Started from {name} with {changes}",
+                      id: "3TaspghKFf",
+                      values: { name: e, changes: t },
+                    }),
+                    " \u00B7 ",
+                    s(G, {
+                      inheritColor: !0,
+                      onClick: () => {
+                        (l.update(), i?.());
+                      },
+                      children: s(Q, {
+                        defaultMessage: "Update environment",
+                        id: "l2HNsMcNu2",
+                      }),
+                    }),
+                    " \u00B7 ",
+                    s(G, {
+                      inheritColor: !0,
+                      onClick: n,
+                      children: s(Q, {
+                        defaultMessage: "Save as new",
+                        id: "LNsXN7sSFW",
+                      }),
+                    }),
+                  ],
+                }),
+          }),
+        )
+      : $[13];
+  }
+  return J4($, 14, c, o, n, t)
+    ? K4(
+        $,
+        14,
+        c,
+        o,
+        n,
+        t,
+        s("div", {
+          "data-testid": "epitaxy-save-start-line",
+          className: "text-footnote text-muted-as-secondary",
+          children:
+            t.savedAs === void 0
+              ? u(d, {
+                  children: [
+                    s(Fx, { setup: t }),
+                    " \u00B7 ",
+                    s(G, { inheritColor: !0, onClick: n, children: s(Nx, {}) }),
+                    o &&
+                      u(d, {
+                        children: [
+                          " \u00B7 ",
+                          s(G, {
+                            inheritColor: !0,
+                            onClick: c,
+                            children: s(Px, {}),
+                          }),
+                        ],
+                      }),
+                  ],
+                })
+              : s(Q, {
+                  defaultMessage:
+                    "Started on {place} \u00B7 saved as environment \u201C{name}\u201D",
+                  id: "yv9r3DzY04",
+                  values: { place: t.label, name: t.savedAs },
+                }),
+        }),
+      )
+    : $[18];
+}
 function Nx() {
   let $ = J9(1);
   return J0($, 0)
@@ -56,6 +190,94 @@ function Nx() {
         s(Q, { defaultMessage: "Save as environment", id: "9klNTvm9bE" }),
       )
     : $[0];
+}
+function Px() {
+  let $ = J9(1);
+  return J0($, 0)
+    ? K0($, 0, s(Q, { defaultMessage: "Not now", id: "Z2iIsQBa+F" }))
+    : $[0];
+}
+function Fx(e) {
+  let $ = J9(11),
+    { setup: t } = e,
+    n = t.declined ? 0 : (t.startCount ?? 0);
+  return t.occasion === "moving"
+    ? J1($, 0, t.label)
+      ? I1(
+          $,
+          0,
+          s(Q, {
+            defaultMessage: "Moving to {place} after this turn",
+            id: "vP66xl03OZ",
+            values: { place: t.label },
+          }),
+          t.label,
+        )
+      : $[1]
+    : t.occasion === "move"
+      ? J1($, 2, n) || J1($, 3, t.label)
+        ? I1(
+            $,
+            3,
+            Z1(
+              $,
+              2,
+              n >= 2
+                ? s(Q, {
+                    defaultMessage: "Working in {place} again",
+                    id: "VKTlPW7Av9",
+                    values: { place: t.label },
+                  })
+                : s(Q, {
+                    defaultMessage: "Now working in {place}",
+                    id: "lvZ5BjKF1L",
+                    values: { place: t.label },
+                  }),
+              n,
+            ),
+            t.label,
+          )
+        : $[4]
+      : n >= 3
+        ? J1($, 5, t.label)
+          ? I1(
+              $,
+              5,
+              s(Q, {
+                defaultMessage:
+                  "You often start on {place}; save it as an environment to start here in one click",
+                id: "+9xmJFMi+u",
+                values: { place: t.label },
+              }),
+              t.label,
+            )
+          : $[6]
+        : n === 2
+          ? J1($, 7, t.label)
+            ? I1(
+                $,
+                7,
+                s(Q, {
+                  defaultMessage:
+                    "Second session on {place}; an environment keeps it one click away",
+                  id: "WhU65mZELT",
+                  values: { place: t.label },
+                }),
+                t.label,
+              )
+            : $[8]
+          : J1($, 9, t.label)
+            ? I1(
+                $,
+                9,
+                s(Q, {
+                  defaultMessage: "Started on {place}",
+                  id: "K/3e3/SZAW",
+                  values: { place: t.label },
+                }),
+                t.label,
+              )
+            : $[10];
 }
 var Lx = {};
 var Rx = Ve(() => /[\p{Cf}\p{Co}\p{Cn}\u2028\u2029]|[\p{Mn}\p{Me}]{4,}/gu);
@@ -329,4 +551,7 @@ export {
   Yx as saveEnvironmentCheckout,
   Bx as environmentFolderName,
   Nx as SaveAsEnvironmentLabel,
+  Mx as SessionStartLine,
+  Fx as SessionStartSentence,
+  Px as NotNowLabel,
 };

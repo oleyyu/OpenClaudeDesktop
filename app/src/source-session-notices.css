@@ -1,34 +1,10 @@
-/* Session notices above the composer (source-session-notices.jsx): the composer banner's geometry
-   (.inline-error.composer-error) in the warning tones, one row per notice. */
-.ssn-list {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  width: calc(100% - 64px);
-  max-width: 768px;
-  align-self: center;
-  margin: 6px 0;
-}
-.ssn-notice {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  font-size: 12px;
-  line-height: 1.5;
-  border: 1px solid var(--cds-border-warning);
-  background: var(--cds-bg-warning);
-  color: var(--cds-text-primary);
-  border-radius: var(--cds-radius);
-  padding: 8px 10px 8px 12px;
-}
-/* Informational notices (level 'info': recap, usage info, upsell, headline, buffering) are neutral, never warning-toned. */
-.ssn-notice[data-level="info"] {
-  border-color: var(--cds-border);
-  background: var(--cds-surface-1);
-}
-.ssn-icon { flex-shrink: 0; color: var(--cds-text-warning); margin-top: 1px; }
-.ssn-notice[data-level="info"] .ssn-icon { color: var(--cds-text-secondary); }
-.ssn-body { flex: 1; min-width: 0; }
+/* Session notices (source-session-notices.jsx): the 3.6556.2 Code notice stack (cc43287c9 Rde → shared-26 RM
+   ChatComposerNotices; each notice a CDS Banner, which draws its own tone, ring, padding, type, action and Dismiss
+   button). W14-code r4 shell css4-ssn-list-geometry: in Code the stack is inside the composer column with Rde's own class
+   only (no rule here); .ssn-list is Chat / Cowork's stack above their column, its width the column's (source-composer.css).
+   The rules below only lay out what a Codex notice adds inside the banner's text (details, code spans, a path, a Markdown
+   /recap answer). */
+.ssn-list { margin-top: 6px; }
 .ssn-summary, .ssn-details { margin: 0; overflow-wrap: anywhere; white-space: pre-wrap; }
 .ssn-details { color: var(--cds-text-secondary); }
 /* A code span in a notice (Codex's `model` / `config.key` / `path`): the reply's inline code chip. */
@@ -57,31 +33,3 @@
 }
 .ssn-markdown:focus-visible { outline: none; box-shadow: var(--cds-focus-shadow); }
 .ssn-path { font-family: var(--cds-font-code, anthropic-mono), monospace; font-size: 11px; }
-.ssn-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 4px; }
-.ssn-action {
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: var(--cds-text-accent, var(--cds-text-primary));
-  font: inherit;
-  font-weight: 500;
-}
-.ssn-action:disabled, .ssn-action[aria-disabled="true"] { opacity: .5; }
-.ssn-action:focus-visible, .ssn-dismiss:focus-visible { outline: none; box-shadow: var(--cds-focus-shadow); border-radius: 4px; }
-.ssn-dismiss {
-  flex-shrink: 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 20px;
-  height: 20px;
-  padding: 0;
-  border: 0;
-  border-radius: 4px;
-  background: transparent;
-  color: var(--cds-text-secondary);
-}
-.ssn-dismiss:hover { background: var(--cds-alpha-1, rgba(0, 0, 0, .05)); color: var(--cds-text-primary); }
-@media (prefers-reduced-motion: no-preference) {
-  .ssn-dismiss { transition: background-color 120ms ease; }
-}

@@ -11,9 +11,14 @@
   align-items: center;
   min-width: 0;
   flex: 1;
-  padding-right: 12px;
+  padding-right: var(--titlebar-end-inset, 12px);
   position: relative;
 }
+/* W14-code r2 closeout-2 review fix: shared-6 tg (exported mp; shared-19 Gb's Code epitaxy-titlebar `${ts}`)
+   `pe-[var(--titlebar-end-inset,12px)] [[data-chat-gutter-end=shave]_&]:pe-[var(--titlebar-end-inset,0px)]`.
+   shared-18 Rb only sets --titlebar-end-inset behind the fizzy-lake "panels" gate (closed here), so the
+   trailing padding is 12px, and 0 when the chat tile's end gutter is shaved. */
+[data-chat-gutter-end=shave] .st-toolbar .st-inner { padding-right: var(--titlebar-end-inset, 0px); }
 .st-lead {
   display: flex;
   align-items: center;
@@ -31,6 +36,9 @@
   height: calc(1.5rem * var(--cds-rem-scale, 1));
   flex: none;
 }
+/* W14-code r2 css2-chat-gutter-shave: shared-6 Wh (code-current titlebar-origin-classes originBoxClass)
+   `[[data-chat-gutter-start=shave]_&]:w-[var(--chat-gutter-start,calc(var(--chat-gutter)-(var(--tiles-gap)-var(--tiles-padding))))]`. */
+[data-chat-gutter-start=shave] .st-origin { width: var(--chat-gutter-start, calc(var(--chat-gutter) - (var(--tiles-gap) - var(--tiles-padding)))); }
 .st-origin-glyph {
   display: inline-flex;
   align-items: center;
@@ -74,7 +82,7 @@
   color: var(--cds-text-primary);
   cursor: default;
 }
-.st-toolbar :is(.st-title, .st-folder, .st-whats-new):focus-visible {
+.st-toolbar .st-title:focus-visible {
   outline: 0;
   box-shadow: var(--cds-focus-shadow);
 }
@@ -105,47 +113,10 @@
   flex: none;
   color: var(--cds-text-secondary);
 }
-.st-toolbar .st-folder {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  min-width: 0;
-  height: 20px;
-  padding: 0 5px;
-  font-size: var(--cds-font-size-footnote, 12px);
-  line-height: var(--cds-leading-footnote, 15px);
-  border-radius: var(--cds-radius, 6px);
-  background: var(--cds-alpha-2);
-  color: var(--cds-text-secondary);
-  border: 0;
-  user-select: none;
-}
-.st-folder-label {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.st-folder .st-folder-glyph {
-  display: none;
-}
-.st-lead[data-pills-compact] .st-folder {
-  flex-shrink: 0;
-  min-width: fit-content;
-}
-.st-lead[data-pills-compact] .st-folder-glyph {
-  display: inline-flex;
-}
-.st-lead[data-pills-compact] .st-folder-label {
-  display: none;
-}
+/* W14-code r2 fr2-21: the pill's look is c73f45bc3 Pv / Nv (titlebar-folder-pill.mjs, titlebar-spawn-lead.mjs); only the
+   host fold's floor guard stays. */
 .st-lead[data-folder-hidden] .st-folder {
   display: none;
-}
-/* R3-topbar TT-02: only the ready chip is a button; while the session loads it is the static Bg-style span
-   (cursor-default, no hover), never a disabled button. */
-.st-toolbar button.st-folder:hover,
-.st-folder[aria-expanded="true"] {
-  background: var(--cds-alpha-3);
 }
 .st-toolbar .st-trailing {
   margin-left: auto;
@@ -158,43 +129,17 @@
 }
 /* R3-topbar TT-03: no data-cramped rules. The official fold measure (cd54a5401 un) folds the toggles one by one
    into ⋮ View options (c73f45bc3 jh / Vh); the trailing keeps its 24px (zh ps-[24px]) at every width. */
-.st-toolbar .code-icon-button {
-  width: var(--cds-h-control, 24px);
-  height: var(--cds-h-control, 24px);
-  border-radius: var(--cds-radius, 6px);
-}
-/* R4f-rail SR-6 topbar-09 (2.42304.0 shared-frame $l Button): the titlebar's pressed ghost toggles (cc43287c9 lW pane
-   toggles, `pressed: e.active, pressedVariant: "selected"`; DW Keep window on top, `pressed: t`) take Button's default
-   pressed look. "selected" only switches the paint to the ghost-selected fill (_c) and the text to primary (vc) when
-   fizzy-lake's "color" part is on (`ue = le && F === "ghost" && S === void 0 && _r(ce, "color")`), and that never
-   happens: shared-4's allow-list is empty (`Cf=[]`) and the only explicit parts (c80ec48f8) are ["bubbles"]. So every
-   pressed ghost Button paints gc (`group-aria-pressed/btn:bg-accent group-hover/btn:group-aria-pressed/btn:bg-accent`,
-   hovered or not) under Il's ghost `aria-pressed:text-accent`. ToolButton has no paint layer and keeps its class list
-   (titlebarControlClass), so the two utilities' declarations from the loaded c6a992d55 sheet, `background-color:
-   var(--cds-bg-accent)` and `color: var(--cds-text-accent)`, sit on the button itself, over the local alpha-1 wash
-   (style.css .panel-toggles .is-selected) and the local hover. The rail toggle (EH) is the official Button already. */
-.st-toolbar .code-icon-button.text-secondary[aria-pressed="true"],
-.st-toolbar .code-icon-button.text-secondary[aria-pressed="true"]:hover:not(:disabled) {
-  background-color: var(--cds-bg-accent);
-  color: var(--cds-text-accent);
-}
-.st-toolbar .st-whats-new {
-  font-size: var(--cds-font-size-body, 13px);
-  line-height: var(--cds-leading-body, 19px);
-  height: var(--cds-h-control, 24px);
-  padding: 0 var(--cds-pad-md, 8px);
-  border-radius: var(--cds-radius, 6px);
-  color: var(--cds-text-accent);
-}
-.st-whats-new:hover {
-  background: var(--cds-fill-ghost-hover);
-}
+/* W14-code r2 fr2-16 / css2-toolbutton-cds: the titlebar controls are the CDS ghost iconOnly Button (code-ui.jsx
+   ToolButton), whose own `aspect-square w-control`, rounded radius and pressed paint (group-aria-pressed/btn:bg-accent
+   under aria-pressed:text-accent) replace the hand-copied code-icon-button size and pressed rules. */
 .st-toolbar .st-section-title {
   padding-left: var(--chat-gutter-start, 32px);
   color: var(--cds-text-primary);
   font-size: var(--cds-font-size-body, 13px);
   font-weight: 500;
 }
+/* shared-6 `ps-[var(--chat-gutter-start,32px)] [[data-chat-gutter-start=shave]_&]:ps-[var(--chat-gutter-start,calc(…))]`. */
+[data-chat-gutter-start=shave] .st-toolbar .st-section-title { padding-left: var(--chat-gutter-start, calc(var(--chat-gutter) - (var(--tiles-gap) - var(--tiles-padding)))); }
 .st-title-skeleton {
   height: 1lh;
   width: 24ch;
@@ -204,141 +149,13 @@
   border-radius: 3px;
   animation: st-title-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
-.st-visually-hidden {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-}
+/* W14-code r5 cleanup css5-sr-only-handcopies: the hand-copied sr-only rule is gone; the JSX uses the official c6a992d55 .sr-only. */
 
 /* B (titlebar-release-notes.js:5156-5236; 3.6556.2 cb63ed069 B): the shared Dialog (source-dialog.jsx) at size md with
    the standard Header 'What’s new'; the popup is `flex max-h-[min(720px,85vh)] flex-col`, so only the entry list scrolls
    (the list fills the popup to its side and bottom edges and takes the leftover height, so the popup has nothing to scroll). */
-.sdlg-popup.st-release-notes {
-  max-height: min(720px, 85vh);
-}
-/* z (:5133-5155): pt-md text-caption text-muted. */
-.st-release-note {
-  padding-top: var(--cds-pad-md);
-  margin: 0;
-  font-size: var(--cds-font-size-caption);
-  line-height: var(--cds-leading-caption);
-  color: var(--cds-text-muted);
-}
-/* V3-w12b-settings-dialogs: 3.6556.2 cb63ed069 B `-mx-pad-xl -mb-pad-xl flex min-h-0 flex-1 flex-col gap-lg
-   overflow-y-auto px-xl pb-xl pt-md`: the list bleeds to the popup's side and bottom edges, so its scrollbar sits at
-   the edge (the in-data-cds-fizzy variants do not apply: no fizzy root here). */
-.st-release-scroll {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  min-height: 0;
-  gap: var(--cds-gap-lg);
-  margin: 0 calc(-1 * var(--cds-pad-xl)) calc(-1 * var(--cds-pad-xl));
-  padding: var(--cds-pad-md) var(--cds-pad-xl) var(--cds-pad-xl);
-  overflow-y: auto;
-}
-/* "No release notes yet.": p-lg text-center text-body text-secondary. */
-.st-release-empty {
-  margin: 0;
-  padding: var(--cds-pad-lg);
-  text-align: center;
-  color: var(--cds-text-secondary);
-}
-/* Entry section: flex flex-col gap-md border-b pb-lg last:border-0 last:pb-0. */
-.st-release-entry {
-  display: flex;
-  flex-direction: column;
-  gap: var(--cds-gap-md);
-  padding-bottom: var(--cds-pad-lg);
-  border-bottom: 1px solid var(--cds-border);
-}
-.st-release-entry:last-child {
-  padding-bottom: 0;
-  border-bottom: 0;
-}
-/* flex items-center justify-between gap-sm; h4 text-heading font-semibold text-primary. */
-.st-release-date {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--cds-gap-sm);
-}
-.st-release-date h4 {
-  margin: 0;
-  font-size: var(--cds-font-size-heading);
-  line-height: var(--cds-leading-heading);
-  font-weight: var(--cds-font-weight-semibold);
-  color: var(--cds-text-primary);
-}
-/* x = Badge (shared-frame Pa, :1946-1999) variant neutral (Ea: bg-neutral text-secondary) with className
-   font-mono: inline-flex h-control-nested px-sm rounded-chip text-caption font-medium leading-[round(1.25em,1px)]. */
-.st-release-version {
-  display: inline-flex;
-  flex-shrink: 0;
-  align-items: center;
-  gap: 4px;
-  vertical-align: middle;
-  height: var(--cds-h-control-nested);
-  padding: 0 var(--cds-pad-sm);
-  border-radius: calc(var(--cds-h-control-nested) / 4);
-  white-space: nowrap;
-  background: var(--cds-bg-neutral);
-  color: var(--cds-text-secondary);
-  font-family: var(--cds-font-mono);
-  font-size: var(--cds-font-size-caption);
-  font-weight: var(--cds-font-weight-medium);
-  line-height: round(1.25em, 1px);
-}
-/* R (:5100-5131): flex flex-col gap-xs; h5 text-caption font-medium uppercase tracking-wide text-muted;
-   ul flex list-disc flex-col gap-xs pl-lg text-body text-secondary. */
-.st-release-group {
-  display: flex;
-  flex-direction: column;
-  gap: var(--cds-gap-xs);
-}
-.st-release-group h5 {
-  margin: 0;
-  font-size: var(--cds-font-size-caption);
-  line-height: var(--cds-leading-caption);
-  font-weight: var(--cds-font-weight-medium);
-  text-transform: uppercase;
-  letter-spacing: 0.025em;
-  color: var(--cds-text-muted);
-}
-.st-release-group ul {
-  display: flex;
-  flex-direction: column;
-  gap: var(--cds-gap-xs);
-  margin: 0;
-  padding: 0 0 0 var(--cds-pad-lg);
-  list-style: disc;
-  font-size: var(--cds-font-size-body);
-  line-height: var(--cds-leading-body);
-  color: var(--cds-text-secondary);
-}
-.st-release-group li {
-  margin: 0;
-}
-/* I (:5071-5094): `code` = rounded bg-alpha-1 px-1 py-0.5 text-code text-primary; [[keys]] = Shortcut keycaps. */
-.st-release-code {
-  padding: calc(var(--spacing) * 0.5) var(--spacing);
-  border-radius: var(--cds-radius);
-  background: var(--cds-alpha-1);
-  color: var(--cds-text-primary);
-  font-family: var(--cds-font-mono);
-  font-size: var(--cds-font-size-code);
-  line-height: var(--cds-leading-code);
-}
-/* Local: the DeepSeek "Known limits" of an entry, a muted footnote below its groups. */
-.st-release-limits {
-  margin: 0;
-  font-size: var(--cds-font-size-footnote);
-  line-height: var(--cds-leading-footnote);
-  color: var(--cds-text-muted);
-}
+/* W14-code r2 fr2-18: the What’s new popup, scroll area, entries, badge, groups and code spans are cb63ed069 B / H / L /
+   F's own utility classes (source-titlebar.jsx LocalReleaseNotes); the lag note is R's (fr-sb-10). */
 .archive-notice {
   display: flex;
   justify-content: center;

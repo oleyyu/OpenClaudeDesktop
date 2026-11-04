@@ -63,7 +63,7 @@ try {
   app=await electron.launch({executablePath,args:[root],env});page=await app.firstWindow();page.setDefaultTimeout(12000);page.on('pageerror',e=>rendererErrors.push(e.message));
   await app.evaluate(({BrowserWindow})=>BrowserWindow.getAllWindows()[0].setContentSize(1324,768));await page.waitForFunction(()=>innerWidth===1324&&innerHeight===768);
   await page.locator(`[data-source-session-id="${RC}"] .source-session-open`).click();await page.getByText('ORIGINAL_RESPONSE',{exact:true}).waitFor();
-  const editor=page.getByRole('textbox',{name:'Message DeepSeek'});await editor.fill('fixture:background-command');await page.locator('[data-testid="code-prompt-send"]:not([inert] *)').click();
+  const editor=page.getByRole('textbox',{ name: /^(?:Prompt|Message DeepSeek)$/ });await editor.fill('fixture:background-command');await page.locator('[data-testid="code-prompt-send"]:not([inert] *)').click();
   const command=page.locator('.source-step').filter({hasText:'sleep 30'}),commandTrigger=command.locator('.source-step-trigger');
   // Product correction (0.2.116): approval-current.js:17279 renders XM "View live output" in the row
   // heading (`ne ? GM{toolUseId}`), not in the KE running footer (:2894-2925); it opens the pane
@@ -96,13 +96,13 @@ try {
   await tasksButton.click();await pane.waitFor({state:'detached'});assert.equal(await tasksButton.getAttribute('aria-pressed'),'false');await page.mouse.move(1,1);
   checks.push('Status row shows "1 running task" after the stats middot in footnote/text-secondary (accent on hover), and toggles the Background tasks pane with aria-pressed');
   await live.click();await pane.waitFor();assert.equal(await commandTrigger.getAttribute('aria-expanded'),'false','heading View live output does not toggle the row');
-  assert.equal(await tasksButton.getAttribute('aria-pressed'),'true');const task=pane.locator('.sbt-card');await task.waitFor();
+  assert.equal(await tasksButton.getAttribute('aria-pressed'),'true');const task=pane.locator('[data-task-id][data-status] > div');await task.waitFor();
   // Background terminal inventory is fetched asynchronously (main poll 2s).
   // Wait for its actual running report before checking the settled card;
   // never infer running solely from the presence of a command row.
   await poll(async()=>await task.getAttribute('data-status')==='running','authoritative background inventory reports running');
   assert.equal(await task.getAttribute('data-status'),'running');const trigger=task.getByRole('button',{name:'Background task: sleep 30'});assert.equal(await trigger.getAttribute('aria-expanded'),'true');
-  await task.getByRole('region',{name:'Output for sleep 30'}).waitFor();metrics.geometry=await task.evaluate(el=>{const body=el.querySelector('.sbt-card-body'),out=el.querySelector('pre[aria-label^="Output"]'),content=el.closest('.sbt-content');return {radius:getComputedStyle(el).borderRadius,padding:getComputedStyle(body).padding,contentPadding:getComputedStyle(content).padding,maxHeight:getComputedStyle(out).maxHeight,font:getComputedStyle(out).fontSize,lineHeight:getComputedStyle(out).lineHeight};});assert.deepEqual(metrics.geometry,{radius:'8px',padding:'8px',contentPadding:'10px',maxHeight:'200px',font:'12px',lineHeight:'17px'});checks.push('Real background process opens the tasks pane from the heading View live output, expands and renders source card/output geometry');
+  await task.getByRole('region',{name:'Output for sleep 30'}).waitFor();metrics.geometry=await task.evaluate(el=>{const body=el.firstElementChild,out=el.querySelector('pre[aria-label^="Output"]'),content=el.closest('[class~="min-w-[220px]"]');return {radius:getComputedStyle(el).borderRadius,padding:getComputedStyle(body).padding,contentPadding:getComputedStyle(content).padding,maxHeight:getComputedStyle(out).maxHeight,font:getComputedStyle(out).fontSize,lineHeight:getComputedStyle(out).lineHeight};});assert.deepEqual(metrics.geometry,{radius:'8px',padding:'8px',contentPadding:'10px',maxHeight:'200px',font:'12px',lineHeight:'17px'});checks.push('Real background process opens the tasks pane from the heading View live output, expands and renders source card/output geometry');
   // cccc2cf0a zb + c7146e7f4: actual fixture output carries ANSI text;
   // selecting/reopening output never injects fake task DOM or output values.
   const output = task.getByRole('region', { name: 'Output for sleep 30' });
@@ -146,7 +146,7 @@ try {
   assert.deepEqual(JSON.parse(await fs.readFile(marker('list-held'))).data,[]);
   const race=await rpcStart('fixture:background-command'),raceId='bash:background-'+race.turn.id;
   const raceTask=pane.locator(`[data-task-id="${raceId}"]`);await raceTask.waitFor();
-  await page.evaluate(id=>{window.taskRaceStates=[];const record=()=>{const row=document.querySelector(`[data-task-id="${id}"]`);if(row)window.taskRaceStates.push(row.dataset.status);};window.taskRaceObserver=new MutationObserver(record);window.taskRaceObserver.observe(document.querySelector('.sbt-root'),{subtree:true,childList:true,attributes:true});record();},raceId);
+  await page.evaluate(id=>{window.taskRaceStates=[];const record=()=>{const row=document.querySelector(`[data-task-id="${id}"]`);if(row)window.taskRaceStates.push(row.dataset.status);};window.taskRaceObserver=new MutationObserver(record);window.taskRaceObserver.observe(document.querySelector('[class~="scroll-py-2.5"]'),{subtree:true,childList:true,attributes:true});record();},raceId);
   assert.equal(await raceTask.getAttribute('data-status'),'running');
   await fs.writeFile(marker('release-list'),'isolated');await poll(()=>exists(marker('list-released')),'old empty inventory released');
   await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
@@ -170,7 +170,8 @@ try {
   await fs.writeFile(marker('disconnect'),'isolated');
   await poll(async()=>await dropTask.getAttribute('data-status')==='unknown','connection loss reports unknown process status');
   assert.equal(await dropTask.getByRole('button',{name:'Stop this task'}).count(),0);
-  assert.equal(await dropTask.getByText('Status unavailable',{exact:true}).count(),1);
+  // W14-code r5pa-05: cccc2cf0a lists such a task under Running with no status word (no Status unavailable section).
+  assert.equal(await dropTask.getByText('Status unavailable',{exact:true}).count(),0);
   const disconnectedGroup=page.locator(`[data-tool-group="background-${dropped.turn.id}"]`);
   await poll(async()=>(await disconnectedGroup.locator('.stg-trigger').textContent()).includes('Status unavailable'),'collapsed batch reports unknown despite a completed neighbor');
   assert.deepEqual(await disconnectedGroup.locator('.stg-summary').evaluateAll(nodes=>nodes.filter(node=>!node.closest('[aria-hidden="true"]')).map(node=>node.textContent)),['Ran 2 commands']);

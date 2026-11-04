@@ -3,6 +3,8 @@
 // R3-sidebar2 (sidebar-15): plus the 2.42304.0 bulk archive / delete flow pieces at the end of this file.
 import { bulkNestedFamilies } from "./generated/code-current/sidebar-bulk-family.mjs";
 import { bulkDeleteCopy } from "./generated/code-current/sidebar-bulk-delete-copy.mjs";
+import { sideSessionDetachable } from "./generated/btw-pane/detach-eligibility.mjs";
+import { sideSessionRecord } from "./nested-less-side-chats.mjs";
 
 /** k / d(): the 1-9 digit of a numbered submenu row (none from the tenth on). */
 export const digitFor = (index) => (index < 9 ? String(index + 1) : undefined);
@@ -61,9 +63,9 @@ export function moveToGroupRows({ customGroups = [], currentGroupId, canCreate =
 // sessions flow (c48ea26ad q), which answers null for every session while the desktop has no detachFromParent: then
 // nothing is asked and every target stays in the bulk part. R4i-sidebar SI2 correction: the host now has the detach
 // bridge (R3-nested NBS-4, btw-detach-host.mjs detachFromParentAvailable), so officially q would ask for a session with
-// /btw children; what is still missing is the nested sessions question itself (c48ea26ad J / R / de / pe, shared-20
-// mA / hA / yA and ca674e66a NestedSessionsConfirmBody), which is also what `run` must be. Until that flow lands no
-// provider is connected and the bulk part is the whole list — a known gap, not the official no-bridge case.
+// /btw children. W14-code r2 fr2-01: the nested sessions question (shared-20 FA / IA / BA, ca674e66a
+// NestedSessionsConfirmBody: source-nested-sessions-confirm.jsx) now asks inside main.jsx sessionAction, and main.jsx
+// connects the provider below (nestedSessionsToAsk = nestedSessionFamily + nestedFamilyAsks, run = sessionAction).
 
 let nestedFamilies = null;
 /**
@@ -75,7 +77,56 @@ export function connectNestedFamilies(provider) {
   nestedFamilies = provider;
   return () => { if (nestedFamilies === provider) nestedFamilies = null; };
 }
-export const nestedFamilyProvider = () => nestedFamilies;
+
+// ---------------------------------------------------------------- W14-code r2 fr2-01 / r2-shared-01
+// 3.6556.2 c48ea26ad F(e, {action}) over the local session records: the family hangs off the side-session lineage
+// (`Te(e, …)`: spawnedFrom.sideSession → spawnedFrom.sessionId, none once lineageDetached), a delete counts archived
+// members and an archive only live ones (`(n || !e.isArchived)`). P walks it depth first, a member's own nested sessions
+// before it. `detachable` are the direct children shared-11 df can move to the top level (sideSessionDetachable: not
+// archived, not sharing the parent's checkout), `boundCount` the members under none of them (a shared checkout goes
+// with its parent), `canStay` the rest and `workingCount` the live, unbound members that are running. Y: an archive asks
+// when some member could stay (`n.nested.length > n.boundCount`), a delete when one can be detached.
+export function nestedSessionFamily(sessionId, action, { sessions = [], metadata = {}, isWorking = () => false } = {}) {
+  const records = sessions.filter((session) => session?.id).map((session) => sideSessionRecord(session, metadata));
+  const byId = new Map(records.map((record) => [record.sessionId, record]));
+  const children = new Map();
+  for (const record of records) {
+    const from = record.spawnedFrom;
+    const parent = record.lineageDetached || from?.sideSession !== true ? undefined : from.sessionId;
+    if (typeof parent !== "string" || parent === record.sessionId || !byId.has(parent)) continue;
+    if (action !== "delete" && record.isArchived) continue;
+    children.set(parent, [...(children.get(parent) ?? []), record]);
+  }
+  const walk = (id, seen = new Set([id])) => {
+    const out = [];
+    for (const child of children.get(id) ?? []) if (!seen.has(child.sessionId)) { seen.add(child.sessionId); out.push(...walk(child.sessionId, seen), child); }
+    return out;
+  };
+  const nested = walk(sessionId);
+  const detachable = (children.get(sessionId) ?? []).filter((child) => sideSessionDetachable(records, child.sessionId));
+  const free = new Set(detachable.flatMap((child) => [child.sessionId, ...walk(child.sessionId).map((member) => member.sessionId)]));
+  const bound = new Set(nested.filter((member) => !free.has(member.sessionId)).map((member) => member.sessionId));
+  return {
+    nested: nested.map((member) => member.sessionId),
+    detachable: detachable.map((child) => child.sessionId),
+    boundCount: bound.size,
+    canStay: nested.map((member) => member.sessionId).filter((id) => !bound.has(id)),
+    workingCount: nested.filter((member) => !member.isArchived && !bound.has(member.sessionId) && isWorking(member.sessionId)).length,
+  };
+}
+/** c48ea26ad Y's `asks`: whether `action` on the session must first ask about its nested sessions. */
+export function nestedFamilyAsks(family, action) {
+  return action === "archive" ? family.nested.length > family.boundCount : family.detachable.length > 0;
+}
+/**
+ * W14-code r4 fr4-05: what a single Code delete does after X's nested question (c48ea26ad Ze c, `!c.asked && !s && !(await
+ * m({…}))`): "cancel" when it was called off (null), "confirm" — the "Delete session?" confirm `m` — when nothing was asked
+ * (undefined), and "delete" (straight to the delete with the answer; only a dirty or unreadable worktree asks again,
+ * shared-46 jD `ask: "dirty"`) once the question was answered ("all" / "only").
+ */
+export function singleDeleteStep(nestedAnswer) {
+  return nestedAnswer === null ? "cancel" : nestedAnswer === undefined ? "confirm" : "delete";
+}
 
 /** The record IX reads for a sidebar session (YX passes its rows: {ref, codeRef}). Local sessions only. */
 const familyRecord = (session) => (session?.id ? { ref: { kind: "code", id: session.id }, codeRef: { type: "local", id: session.id } } : undefined);
@@ -163,8 +214,13 @@ export function bulkOutcome(action, results = [], asked = 0) {
   return { done, failed };
 }
 
-/** What runBulk hands each session's action: a bulk delete tells the worktree check it is one (c6b8adeaf de `bulk`). */
-export const bulkActionPayload = (action, payload) => (action === "delete" ? { ...payload, bulk: true } : payload);
+/**
+ * What runBulk hands each session's action: a bulk delete tells the worktree check it is one (c6b8adeaf de `bulk`).
+ * W14-code r5 gen-final-5: a bulk unarchive is silent (c39a247c4 gn `Ye({silent: !0})` → `unarchive: v`); the bulk bar
+ * says it once (zt.unarchive.success ha.bulkRestored), so no per-session "Session unarchived." toast.
+ */
+export const bulkActionPayload = (action, payload) => (action === "delete" ? { ...payload, bulk: true }
+  : action === "unarchive" ? { ...payload, silent: true } : payload);
 
 /**
  * main.jsx sessionWorktree's decision over main's worktree-status answer (shared-19 _Y / vY for the local check):
@@ -175,8 +231,18 @@ export const bulkActionPayload = (action, payload) => (action === "delete" ? { .
  */
 export function worktreeDisposalPlan(action, status, payload = {}) {
   if (!status?.worktree || status.shared) return "none";
-  if (status.changes > 0 || (status.unknown && action === "delete" && payload.bulk !== true)) return "ask";
+  // W14-code r5 R5DC-06: a "Delete all" family member (payload.mergeUnknown) is not asked about an unreadable worktree on
+  // its own — c48ea26ad Be gathers those (K → `read: "unknown"`) into one yY confirm (familyUnknownRead / confirmCouldntCheck).
+  if (status.changes > 0 || (status.unknown && action === "delete" && payload.bulk !== true && payload.mergeUnknown !== true)) return "ask";
   return status.unknown ? "keep" : "dispose";
+}
+/**
+ * W14-code r5 R5DC-06: c48ea26ad Be `a.filter((e) => o.get(e.id)?.read === "unknown")` — a family member whose own worktree
+ * could not be read (no uncommitted-changes count), which the "Delete all" flow lists in one "Couldn’t check…" confirm
+ * (`ne(t.map((e) => G(i, W(e.id))), a.length, r)`, G: the title, else "A session" CFi8auJXZp).
+ */
+export function familyUnknownRead(status) {
+  return !!status?.worktree && !status.shared && !!status.unknown && !(status.changes > 0);
 }
 
 // R4i-sidebar fix (复核 -7): main.jsx sessionWorktree / the delete case, with call / enqueue / perform injected, so the
@@ -188,7 +254,9 @@ export function worktreeDisposalPlan(action, status, payload = {}) {
  */
 export async function sessionWorktreeGate(action, target, payload = {}, { call, enqueue, now = Date.now }) {
   if (payload.worktreeChecked) return payload.worktree ?? null;
-  const status = await Promise.resolve().then(() => call("worktree-status", { threadId: target.id })).catch(() => null);
+  // payload.probed: the status the nested-sessions confirm's checkAll already read (familyWorktreeProbe), as c48ea26ad Be
+  // hands its probes (`m = l ?? g(p)`) to each member's K.
+  const status = await Promise.resolve().then(() => payload.probed ?? call("worktree-status", { threadId: target.id })).catch(() => null);
   const plan = worktreeDisposalPlan(action, status, payload);
   if (plan === "ask") return (await enqueue({ id: `${target.id}:${action}:${now()}`, action, status })) ? status : false;
   return plan === "dispose" ? status : null;
@@ -196,13 +264,42 @@ export async function sessionWorktreeGate(action, target, payload = {}, { call, 
 /**
  * The worktree-gated part of main.jsx's delete: gate, then `perform()` (thread/delete), then dispose an own worktree
  * (not awaited). Answers false when the confirm was cancelled (shared-19 uY's place), true when the action ran.
+ * `prepare(worktree)` runs once the confirm went through and before `perform`; its false calls the action off (W14-code r2
+ * 复核: c48ea26ad X "only" moves the nested sessions out after K's confirm, and a failed move stops the delete).
  */
-export async function worktreeGatedAction(action, target, payload, { call, enqueue, perform, now }) {
+export async function worktreeGatedAction(action, target, payload, { call, enqueue, perform, now, prepare }) {
   const worktree = await sessionWorktreeGate(action, target, payload, { call, enqueue, now });
   if (worktree === false) return false;
+  if (prepare && await prepare(worktree) === false) return false;
   await perform(worktree);
   if (worktree?.worktree && !worktree.shared) void Promise.resolve().then(() => call("worktree-remove", { worktree: worktree.worktree })).catch(() => {});
   return true;
+}
+/**
+ * W14-code r3 fr3-03: c48ea26ad X's delete checkAll, `() => (d = g(q(e, i))).done`: one worktree-status read for every
+ * member of the family (q: the nested sessions, then the session), at most `limit` at a time (Ve's 8). `done` settles
+ * once every read has; `statusFor(id)` is that member's read (null when it failed), for the member's own confirm.
+ */
+export function familyWorktreeProbe(ids, call, { limit = 8 } = {}) {
+  const reads = new Map(), waiting = [...new Set(ids)];
+  let running = 0, finish;
+  const done = new Promise((resolve) => { finish = resolve; });
+  const pump = () => {
+    while (running < limit && waiting.length) {
+      const id = waiting.shift();
+      running++;
+      const read = Promise.resolve().then(() => call("worktree-status", { threadId: id })).catch(() => null);
+      reads.set(id, read);
+      read.then(() => { running--; pump(); });
+    }
+    if (!running && !waiting.length) finish();
+  };
+  const order = [...waiting];
+  pump();
+  return {
+    done,
+    statusFor: (id) => reads.get(id) ?? (order.includes(id) ? done.then(() => reads.get(id)) : undefined),
+  };
 }
 /** main.jsx settleWorktreeConfirm's queue step (cK shift): the queue without `entry`, and whether the next head is guarded. */
 export function settleWorktreeQueue(queue, entry) {
@@ -230,6 +327,80 @@ export function confirmCouldntCheck(titles = [], count = titles.length, now = Da
 }
 /** EY's branch: "sessions" for a yY entry (NY lists titles), "changes" for the single-session confirms (MY). */
 export const worktreeConfirmVariant = (entry) => (entry?.sessions === undefined ? "changes" : "sessions");
+
+// ---------------------------------------------------------------- W14-code r5 fr5-05
+// shared-46 KE / GE (5 s) / nD / tD / oD / aD: the worktree probes an archive reads. A probe is a worktree-status read;
+// once settled it stays fresh for 5 s. The sidebar row menu starts one when it opens (shared-21 `e && … ho(e.length > 1 ?
+// e.map(rte) : [n])`, ho = aD: at most 8, the selected rows or the row), and the archive reads it (c6b8adeaf onMutate
+// `n = Oe(e.id)`, `d = n.known?.status === "dirty"`): a dirty read already in asks first; otherwise the session is
+// archived at once and a dirty read arriving later keeps the worktree and raises the "archived with uncommitted
+// changes" warning toast (shared-22 QI) instead.
+export const WORKTREE_PROBE_FRESH_MS = 5000;
+export function createWorktreeProbes({ now = Date.now } = {}) {
+  const probes = new Map();
+  const stale = (entry, at) => !!entry.settled && at - entry.settled.at >= WORKTREE_PROBE_FRESH_MS;
+  const fresh = (id) => { const entry = probes.get(id); return entry && !stale(entry, now()) ? entry : undefined; };
+  const start = (id, call) => {
+    const at = now();
+    for (const [key, entry] of probes) if (stale(entry, at)) probes.delete(key);
+    const entry = { result: Promise.resolve().then(() => call("worktree-status", { threadId: id })).catch(() => null) };
+    entry.result.then((status) => { entry.settled ??= { status, at: now() }; });
+    probes.set(id, entry);
+    return entry;
+  };
+  return {
+    /** aD: start a probe for each id that has no fresh one (at most `limit`). */
+    prefetch(ids, call, { limit = 8 } = {}) {
+      if (!call) return;
+      let started = 0;
+      for (const id of ids) {
+        if (started >= limit) return;
+        started++;
+        if (!fresh(id)) start(id, call);
+      }
+    },
+    /** oD: `{ result, known }` — the fresh probe (or a new one) and its status when it has already settled (else undefined). */
+    read(id, call) {
+      const entry = fresh(id) ?? start(id, call);
+      return { result: entry.result, known: entry.settled ? entry.settled.status : undefined };
+    },
+    clear: () => probes.clear(),
+  };
+}
+let worktreeProbeCall = null;
+export const worktreeProbes = createWorktreeProbes();
+/** main.jsx connects its IPC `call`, so the sidebar can start the menu-open probes (aD). Returns the disconnect. */
+export function connectWorktreeProbes(call) {
+  worktreeProbeCall = call;
+  return () => { if (worktreeProbeCall === call) worktreeProbeCall = null; };
+}
+/** shared-21 row menu open: probe the rows the menu acts on. */
+export function prefetchWorktreeProbes(ids) {
+  worktreeProbes.prefetch(ids, worktreeProbeCall);
+}
+/**
+ * c6b8adeaf's archive (onMutate + mutationFn) over a probe: `{ worktree, late }` — `worktree` the status to dispose after the
+ * archive (or null to keep / none), `late` the probe still in flight (the caller archives now and settles it after:
+ * lateArchiveWorktree), or false when the dirty confirm (Re → mK) was cancelled. A payload the nested flow already checked
+ * (worktreeChecked) keeps its read.
+ */
+export async function archiveWorktreeGate(target, payload = {}, { probes = worktreeProbes, call, enqueue, now = Date.now }) {
+  if (payload.worktreeChecked) return { worktree: payload.worktree ?? null, late: null };
+  const { result, known } = probes.read(target.id, call);
+  if (known === undefined) return { worktree: null, late: result };
+  const plan = worktreeDisposalPlan("archive", known, payload);
+  if (plan === "ask") return (await enqueue({ id: `${target.id}:archive:${now()}`, action: "archive", status: known })) ? { worktree: known, late: null } : false;
+  return { worktree: plan === "dispose" ? known : null, late: null };
+}
+/**
+ * `s?.then(({ status }) => status === "dirty" && (…, Ue(t, Ge(folders))))`: what a probe that settled after the archive
+ * means — "dispose" (clean: the worktree goes, as the transport's own clean-up would), "kept-dirty" (the worktree stays;
+ * the QI warning toast), or "keep" (no worktree, shared, or unreadable).
+ */
+export function lateArchiveWorktree(status) {
+  const plan = worktreeDisposalPlan("archive", status);
+  return plan === "dispose" ? "dispose" : plan === "ask" ? "kept-dirty" : "keep";
+}
 
 /** pv(items, 8, task): run `task` over `items`, `limit` at a time, settling each like Promise.allSettled. */
 export async function mapConcurrent(items, limit, task) {

@@ -40,4 +40,8 @@ function pw(e, t) {
   for (let e of n) if (t(e.replace(/[,;|&>]+$/, ""))) return !0;
   return !1;
 }
-export { ow, pw, sw };
+var IW = '[data-cds="Icon"]:not(svg)';
+function LW(e) {
+  return e.matches(IW);
+}
+export { LW, ow, pw, sw };

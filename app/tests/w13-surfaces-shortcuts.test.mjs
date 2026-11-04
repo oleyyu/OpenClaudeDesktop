@@ -75,7 +75,7 @@ test('every label of the chat/cowork dialog and palette is official copy (or the
 });
 
 // The dialog itself portals to document.body (source-dialog.jsx createPortal), which react-dom/server cannot render, so its
-// body is checked through the model it maps (one .shortcuts-section per section, one data-command row per row).
+// body is checked through the model it maps (one Z section title per section, one data-command row per row).
 test('dialog body: Ne\'s sections by surface and route; Code keeps Ce', () => {
   const titles = (props) => shortcutsDialogSections(props).map((section) => section.title);
   const commands = (props) => shortcutsDialogSections(props).flatMap((section) => section.rows.map((row) => row.command));
@@ -111,7 +111,8 @@ test('host wiring: main.jsx passes surface/route to the dialog, the sidebar pass
   const palette = sidebar.slice(sidebar.indexOf('<SourceSidebarPalette '), sidebar.indexOf('/>}', sidebar.indexOf('<SourceSidebarPalette ')));
   assert.equal(count(palette, 'surface={mode}'), 1);
   assert.match(read(path.join(app, 'src/source-sidebar-palette.jsx')), /const placeholder = palettePlaceholder\(mode, \{ surface \}\);/);
-  assert.match(read(path.join(app, 'src/source-session-actions.jsx')), /shortcutsDialogSections\(\{ fastMode, sideChat, rewind, surface, route, sidebarChord, rtl \}\)/);
+  // W14-code r3 r3-shared-02: plus c518a31cc Ee's presets gate (`a = L()`).
+  assert.match(read(path.join(app, 'src/source-session-actions.jsx')), /shortcutsDialogSections\(\{ fastMode, sideChat, rewind, surface, route, sidebarChord, rtl, presets \}\)/);
 });
 
 // w13-close-main-jsx-tests (surfaces-shortcuts-02): c518a31cc Te follows "Jump to session" (He) and "Jump to chat" (Ne).

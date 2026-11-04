@@ -16,7 +16,7 @@ import {
   memoStore5 as K5,
   CdsShortcut as u,
 } from "../view-tabs/shared-frame-6jtSkIit.js";
-import { K as w } from "./c2f6611a3.mjs";
+import { K as w } from "./answer-option.mjs";
 import { a as T } from "./c53f67064.mjs";
 import { memo as o } from "react";
 import { jsxs as n, jsx as t } from "react/jsx-runtime";

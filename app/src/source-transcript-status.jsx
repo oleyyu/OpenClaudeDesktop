@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useReducer, useState, useSyncExternalStore } from "react";
 import { createFinishedTaskHold, transcriptStatusPresentation } from "./transcript-status-model.mjs";
-import { SPARK_PATH } from "./source-spark.jsx";
 import "./source-transcript-status.css";
 import { createThinkingReader, elapsedTurnSeconds, subscribeThinkingClock, subscribeTurnClock, thinkingChangeAt, thinkingState, turnActivity } from './transcript-runtime-stats.mjs';
 import { turnWaiting, workingLineProps, workingLineThinking } from "./working-line-model.mjs";
@@ -10,8 +9,6 @@ import { TranscriptTail } from "./source-transcript-rows.jsx";
 // TurnMarkBroker), under its working-line semantic name.
 import { useTurnMarkHeld } from "./generated/working-line/morph.mjs";
 
-// The static path now lives in source-spark.jsx; re-exported for existing imports.
-export const TRANSCRIPT_SPARK_PATH = SPARK_PATH;
 
 const noElapsedOnServer = () => null;
 // Whe :58132-58145 over createFinishedTaskHold (the timer lives in the model); 2.42304.0 zet holds the same 1500 ms.
@@ -37,10 +34,8 @@ function useThinkingState(turnId, items, itemPhases, enabled) {
 // (working-line-model.mjs). The wrapper keeps the host's transcript placement (turn gap,
 // the `.source-transcript-content` sibling rules) and the `.source-working` busy marker the UI harnesses wait on.
 export function SourceTranscriptStatus({ textSize = "m", turnId, turnStats, items, itemPhases,
-  runningTaskCount = 0, tasksPaneOpen = false, onToggleTasksPane = null, ...rest }) {
-  // main.jsx still passes the classic row's onToggleThinking / thinkingShown / onOpenLink; the desktop's line has no
-  // thinking toggle and no retry link, so they are not part of the presentation input.
-  const { onToggleThinking: _toggle, thinkingShown: _shown, onOpenLink: _link, ...state } = rest;
+  runningTaskCount = 0, tasksPaneOpen = false, onToggleTasksPane = null, ...state }) {
+  // W14-code r4-composer-03: the desktop's line has no thinking toggle and no retry link, so main.jsx passes neither.
   const view = transcriptStatusPresentation(state);
   const finishedTaskCount = useFinishedTaskHold(runningTaskCount, state.sessionKey ?? null);
   const owned = turnId && turnStats?.turnId === turnId ? turnStats : null;

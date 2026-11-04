@@ -473,6 +473,121 @@
       }
     },
     {
+      "target": "composer-keycap.mjs",
+      "source": "shared-frame-6jtSkIit.js",
+      "sourceSha256": "22b990df9384da0621c5197a060f6c2c8fe1ccf5a79ee1f8c6e7a6cb033b259c",
+      "sha256": "4146e673b9debff39646e62270fe1d664d8dcc40d20467d97a5d816978ba5435",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "Zs",
+          "sha256": "7e70c3662f5282595f95c99b9274423e060d5bc786081d31281c4d7aae9542eb"
+        },
+        {
+          "name": "Qs",
+          "sha256": "f53504ce624784c61445f1679a25ddc01d3890ede9f0ac641a2a06df5fa8bb09"
+        },
+        {
+          "name": "$s",
+          "sha256": "1f13f066d697d4cd5c3a856c0d33d19f041085a0e4dd64dd5964bf995b214026"
+        },
+        {
+          "name": "ec",
+          "sha256": "6a64c8397e13d74f6d2d7c0fe2879d36741102109d410eb9ff5cfa8ef5ae546b"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "ec": "keycapClass"
+      },
+      "officialExports": {
+        "ec": "Yu"
+      }
+    },
+    {
+      "target": "composer-kbd.mjs",
+      "source": "cbd6db52c-BMnXAopb.js",
+      "sourceSha256": "43d6a1ffb90d47db1ce0c9ac9305eb1cab37ba95570641277982316ff94e65a5",
+      "sha256": "bfb16a7f160c25252c9870905673b3d64bd0d4996c85569b2765e45253912cf1",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "r",
+          "sha256": "27e83a287a82e99b8a81a0ee738b91637d1757e639657667f68b74140275ac48"
+        }
+      ],
+      "imports": [
+        {
+          "local": "e",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-CnSY1sxv.js:Ha",
+          "kind": "react"
+        },
+        {
+          "local": "J2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged2",
+          "via": "shared-frame-6jtSkIit.js:$f",
+          "kind": "view-tabs",
+          "original": "J2"
+        },
+        {
+          "local": "t",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "cdsClassNames",
+          "via": "shared-frame-6jtSkIit.js:Hf",
+          "kind": "view-tabs",
+          "original": "Q"
+        },
+        {
+          "local": "n",
+          "from": "./composer-keycap.mjs",
+          "name": "keycapClass",
+          "via": "shared-frame-6jtSkIit.js:Yu",
+          "kind": "generated"
+        },
+        {
+          "local": "K3",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore3",
+          "via": "shared-frame-6jtSkIit.js:cp",
+          "kind": "view-tabs",
+          "original": "K3"
+        },
+        {
+          "local": "J3",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged3",
+          "via": "shared-frame-6jtSkIit.js:ep",
+          "kind": "view-tabs",
+          "original": "J3"
+        },
+        {
+          "local": "J9",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "reactMemoCache",
+          "via": "shared-frame-6jtSkIit.js:ip",
+          "kind": "view-tabs",
+          "original": "J9"
+        },
+        {
+          "local": "K2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore2",
+          "via": "shared-frame-6jtSkIit.js:sp",
+          "kind": "view-tabs",
+          "original": "K2"
+        }
+      ],
+      "exports": {
+        "r": "Kbd"
+      },
+      "officialExports": {
+        "r": "t"
+      }
+    },
+    {
       "target": "transcript-surface.mjs",
       "source": "c4a70913c-BfrWompY.js",
       "sourceSha256": "d6f809550e55bc7f3d8d0f36aa20ff39534724367fea962960582933a3e815e1",
@@ -651,6 +766,83 @@
       "exports": {
         "NM": "editableFieldSelector",
         "PM": "focusBelongsElsewhere"
+      }
+    },
+    {
+      "target": "composer-final-focus.mjs",
+      "source": "c227f4d5e-B-FYKrwT.js",
+      "sourceSha256": "2c0354bdee6fb13985d759692e43f0ef91f15991b8adb68cb3ab576561d9bc28",
+      "sha256": "56a848ac3e35e597b2363f49d7f311634eba34a997f6b4a771488818ffbe1f63",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "K6",
+          "sha256": "5e28532c3f3598a5111b84d35f5a475d7d5de0849d229d9a05eda9ad6126a094"
+        }
+      ],
+      "imports": [
+        {
+          "local": "ae",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "cdsNodeOwnerWindow",
+          "via": "shared-frame-6jtSkIit.js:Bd",
+          "kind": "view-tabs",
+          "original": "aa"
+        },
+        {
+          "local": "de",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "useCdsOwnerWindowAnchor",
+          "via": "shared-frame-6jtSkIit.js:Id",
+          "kind": "view-tabs",
+          "original": "ao"
+        },
+        {
+          "local": "fe",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "canFocusComposerOnClick",
+          "via": "shared-frame-6jtSkIit.js:If",
+          "kind": "view-tabs",
+          "original": "rn"
+        },
+        {
+          "local": "J9",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "reactMemoCache",
+          "via": "shared-frame-6jtSkIit.js:ip",
+          "kind": "view-tabs",
+          "original": "J9"
+        },
+        {
+          "local": "K4",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore4",
+          "via": "shared-frame-6jtSkIit.js:lp",
+          "kind": "view-tabs",
+          "original": "K4"
+        },
+        {
+          "local": "J4",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged4",
+          "via": "shared-frame-6jtSkIit.js:tp",
+          "kind": "view-tabs",
+          "original": "J4"
+        },
+        {
+          "local": "$t",
+          "from": "../view-tabs/shared-0-DDOOdL6P.js",
+          "name": "useEventCallback",
+          "via": "shared-0-DDOOdL6P.js:LS",
+          "kind": "view-tabs",
+          "original": "ve"
+        }
+      ],
+      "exports": {
+        "K6": "useComposerFinalFocus"
+      },
+      "officialExports": {
+        "K6": "y"
       }
     },
     {
@@ -1842,30 +2034,10 @@
       }
     },
     {
-      "target": "chat-composer-react-version.mjs",
-      "source": "vendor-frame-CnSY1sxv.js",
-      "sourceSha256": "7064f152d05f6a7f477fc13a4b24606b82cbd401336a7e3a59840236818699e6",
-      "sha256": "7760724b6982b742a32bdcc1bac2c4d19e8303d0d68423e45aa639b7575d7c5c",
-      "referenceVersion": "3.6556.2",
-      "bindings": [
-        {
-          "name": "ae",
-          "sha256": "1ad3d43ae9d13115e5672dcd2888656de336a16915cbcd80179187dc19972927"
-        }
-      ],
-      "imports": [],
-      "exports": {
-        "ae": "bundledReactVersion"
-      },
-      "officialExports": {
-        "ae": "Do"
-      }
-    },
-    {
       "target": "chat-composer-frame.mjs",
       "source": "shared-frame-6jtSkIit.js",
       "sourceSha256": "22b990df9384da0621c5197a060f6c2c8fe1ccf5a79ee1f8c6e7a6cb033b259c",
-      "sha256": "7f45adf689f71c4865f75a8c82133f29c40df797b953edad32162e398ff97932",
+      "sha256": "4cf6664937da6e3b740ad160fc4dfdb2340a57d293eb1dccdb7222a5f8424000",
       "referenceVersion": "3.6556.2",
       "bindings": [
         {
@@ -1939,6 +2111,14 @@
         {
           "name": "ar",
           "sha256": "abfdc79d27d7619a4892a95da70757a90c799d6da1aaca1e18edf78f3beb5a79"
+        },
+        {
+          "name": "Rr",
+          "sha256": "7e914e06150b1f6c9521b189660f33d3227abe7e04823c320d1c911906e2a317"
+        },
+        {
+          "name": "Br",
+          "sha256": "93f29c38960692a3ab0661560c63f3f15574ddcfcac6451c8d4c8d5a5fe907aa"
         },
         {
           "name": "Ca",
@@ -2047,10 +2227,6 @@
         {
           "name": "Kf",
           "sha256": "0c233b6915aa100db74477e9d6cdb0b6b0d2e4495873b20d5e74a0e35fed317c"
-        },
-        {
-          "name": "qf",
-          "sha256": "f956871e19b3bf050e6251ba61893a0d45798c39cd2dd8321072590304499363"
         },
         {
           "name": "Jf",
@@ -2232,7 +2408,6 @@
         "Dn": "useOptionalEventCallback",
         "Xf": "isTextarea",
         "Ao": "rootRemPx",
-        "qf": "isDomNode",
         "Jf": "isHtmlElement",
         "no": "isSurfaceToken",
         "Zh": "afterAnimationsSettle",
@@ -2244,7 +2419,9 @@
         "gn": "collapseControlText",
         "_n": "isBlankLabelText",
         "vn": "trimLeadingInvisible",
-        "yn": "tooltipSafeText"
+        "yn": "tooltipSafeText",
+        "Wa": "useCdsColorMode",
+        "Br": "loadNamedChunk"
       },
       "officialExports": {
         "Fn": "vf",
@@ -2256,7 +2433,6 @@
         "Dn": "Cf",
         "Xf": "iu",
         "Ao": "dd",
-        "qf": "nu",
         "Jf": "eu",
         "no": "xd",
         "Zh": "Nl",
@@ -2268,7 +2444,8 @@
         "gn": "Af",
         "_n": "Df",
         "vn": "Mf",
-        "yn": "kf"
+        "yn": "kf",
+        "Br": "rf"
       }
     },
     {
@@ -3115,7 +3292,7 @@
       "target": "chat-composer-presence.mjs",
       "source": "shared-5-Bg6ZMqvt.js",
       "sourceSha256": "ab6ce985aae8269c3afca209ee59140a7f61b47dd5004bacc3f1fe94cda6dbe6",
-      "sha256": "17fab8ba4406823209fa5ce089b14906207908971755e98a04794851184a5e73",
+      "sha256": "3f4c99ba96742fd7ed375b7bd599c884cfb528ba1b0cb05fcc3eda0eccad6e07",
       "referenceVersion": "3.6556.2",
       "bindings": [
         {
@@ -3123,8 +3300,16 @@
           "sha256": "594aa8c09a20c1b5cc255f606e101daf8f512313f1abbf0c5c0a3888d8132b59"
         },
         {
+          "name": "xd",
+          "sha256": "ccd0dcfbf3b23ee9906a829bf8ac161c028712cb106ba2ce15e282e9f32acacc"
+        },
+        {
           "name": "Sd",
           "sha256": "c5e1e03d7860ece25eb69ad1276e5a03b549b7a842e3e81caf18aa5319b737bc"
+        },
+        {
+          "name": "Cd",
+          "sha256": "2e612298a1f3c9319dc797443c30749574cd43a802c21d0c15d60fa0054abf7c"
         },
         {
           "name": "wd",
@@ -3137,6 +3322,14 @@
         {
           "name": "Ed",
           "sha256": "f959f2ee86e7a48b022c41bfa30cfab67cbb3014b36e021858725e0c30d9960f"
+        },
+        {
+          "name": "Od",
+          "sha256": "4ebde7f0587eff995e470455432ab706af47d0e0ac29bb722f22bca5d8cf2486"
+        },
+        {
+          "name": "kd",
+          "sha256": "b01e6a4885b2256d267c4e7df9bd78bd37280fdcdc2a449b0d0cb804a59331bb"
         },
         {
           "name": "Md",
@@ -3363,14 +3556,33 @@
           "via": "shared-frame-6jtSkIit.js:bf",
           "kind": "view-tabs",
           "original": "jn"
+        },
+        {
+          "local": "Je",
+          "from": "./chat-composer-frame.mjs",
+          "name": "loadNamedChunk",
+          "via": "shared-frame-6jtSkIit.js:rf",
+          "kind": "generated"
+        },
+        {
+          "local": "Dd",
+          "from": "../../source-composer-current-adapters.jsx",
+          "name": "loadPresenceMotionChunk",
+          "via": "shared-5-Bg6ZMqvt.js:Dd",
+          "kind": "adapter",
+          "original": "Dd"
         }
       ],
       "exports": {
         "Wd": "Presence",
-        "bd": "lazyPresenceMotion"
+        "bd": "lazyPresenceMotion",
+        "kd": "presenceMotion",
+        "Od": "loadPresenceMotion"
       },
       "officialExports": {
-        "Wd": "Hl"
+        "Wd": "Hl",
+        "kd": "Gl",
+        "Od": "ql"
       }
     },
     {
@@ -3545,13 +3757,9 @@
       "target": "chat-composer-shell.mjs",
       "source": "shared-5-Bg6ZMqvt.js",
       "sourceSha256": "ab6ce985aae8269c3afca209ee59140a7f61b47dd5004bacc3f1fe94cda6dbe6",
-      "sha256": "f760e733f4507be2ee8d26438a09656c4655d0168b6aebf9bdaffab0f523a724",
+      "sha256": "5e93e3ab4f24e7688ba5c6c1cc4b5362bed078ea565dff1ce3454dc9ae54f076",
       "referenceVersion": "3.6556.2",
       "bindings": [
-        {
-          "name": "kd",
-          "sha256": "b01e6a4885b2256d267c4e7df9bd78bd37280fdcdc2a449b0d0cb804a59331bb"
-        },
         {
           "name": "Gd",
           "sha256": "5479cfd9baeca91007f6322d996d87919633f8ca266e3ad7854511fa3de2af16"
@@ -4562,10 +4770,11 @@
         },
         {
           "local": "We",
-          "from": "./chat-composer-frame.mjs",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
           "name": "isDomNode",
           "via": "shared-frame-6jtSkIit.js:nu",
-          "kind": "generated"
+          "kind": "view-tabs",
+          "original": "qf"
         },
         {
           "local": "ma",
@@ -4792,10 +5001,10 @@
           "original": "lc"
         },
         {
-          "local": "bd",
+          "local": "kd",
           "from": "./chat-composer-presence.mjs",
-          "name": "lazyPresenceMotion",
-          "via": "shared-5-Bg6ZMqvt.js:bd",
+          "name": "presenceMotion",
+          "via": "shared-5-Bg6ZMqvt.js:kd",
           "kind": "generated"
         },
         {
@@ -5280,6 +5489,252 @@
         "Bi": "attachmentTileAttributes",
         "Ri": "useTileRemove",
         "Ii": "tileFocusTarget"
+      }
+    },
+    {
+      "target": "composer-held-text-dialog.mjs",
+      "source": "c0fbbe82d-COsmfHJY.js",
+      "sourceSha256": "25e1b1af3deb2aba5f2fc9a2a6395ef3d5fc3ebd7bf98bff92f5fdb22c279b28",
+      "sha256": "8c82a1c736f8437081e9c4febb5fd58b772a2629b29efad91841d33c2332b911",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "sa",
+          "sha256": "ac47c0ccbf5424dcfb976f74149d515b30820a71fcd68cbcf3fad1d4656b7fb5"
+        },
+        {
+          "name": "ca",
+          "sha256": "bd4ad893224c5820bd0bd46d3ab68b98ffdcb98dfbd8cb872da2212f392a6697"
+        }
+      ],
+      "imports": [
+        {
+          "local": "r",
+          "from": "react",
+          "name": "useRef",
+          "via": "vendor-frame-CnSY1sxv.js:Co",
+          "kind": "react"
+        },
+        {
+          "local": "i",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-CnSY1sxv.js:Ha",
+          "kind": "react"
+        },
+        {
+          "local": "f",
+          "from": "react/jsx-runtime",
+          "name": "jsxs",
+          "via": "vendor-frame-CnSY1sxv.js:Ua",
+          "kind": "react"
+        },
+        {
+          "local": "_",
+          "from": "react",
+          "name": "useEffectEvent",
+          "via": "vendor-frame-CnSY1sxv.js:go",
+          "kind": "react"
+        },
+        {
+          "local": "v",
+          "from": "react",
+          "name": "useEffect",
+          "via": "vendor-frame-CnSY1sxv.js:ho",
+          "kind": "react"
+        },
+        {
+          "local": "S",
+          "from": "react",
+          "name": "useState",
+          "via": "vendor-frame-CnSY1sxv.js:wo",
+          "kind": "react"
+        },
+        {
+          "local": "J2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged2",
+          "via": "shared-frame-6jtSkIit.js:$f",
+          "kind": "view-tabs",
+          "original": "J2"
+        },
+        {
+          "local": "J1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged1",
+          "via": "shared-frame-6jtSkIit.js:Qf",
+          "kind": "view-tabs",
+          "original": "J1"
+        },
+        {
+          "local": "oe",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "CdsConfirmationDialog",
+          "via": "shared-frame-6jtSkIit.js:Xc",
+          "kind": "view-tabs",
+          "original": "ab"
+        },
+        {
+          "local": "k",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "CdsDialog",
+          "via": "shared-frame-6jtSkIit.js:Zc",
+          "kind": "view-tabs",
+          "original": "nb"
+        },
+        {
+          "local": "J0",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoIsEmpty",
+          "via": "shared-frame-6jtSkIit.js:Zf",
+          "kind": "view-tabs",
+          "original": "J0"
+        },
+        {
+          "local": "K0",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore0",
+          "via": "shared-frame-6jtSkIit.js:ap",
+          "kind": "view-tabs",
+          "original": "K0"
+        },
+        {
+          "local": "K3",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore3",
+          "via": "shared-frame-6jtSkIit.js:cp",
+          "kind": "view-tabs",
+          "original": "K3"
+        },
+        {
+          "local": "J3",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged3",
+          "via": "shared-frame-6jtSkIit.js:ep",
+          "kind": "view-tabs",
+          "original": "J3"
+        },
+        {
+          "local": "J9",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "reactMemoCache",
+          "via": "shared-frame-6jtSkIit.js:ip",
+          "kind": "view-tabs",
+          "original": "J9"
+        },
+        {
+          "local": "K4",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore4",
+          "via": "shared-frame-6jtSkIit.js:lp",
+          "kind": "view-tabs",
+          "original": "K4"
+        },
+        {
+          "local": "J5",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged5",
+          "via": "shared-frame-6jtSkIit.js:np",
+          "kind": "view-tabs",
+          "original": "J5"
+        },
+        {
+          "local": "K1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore1",
+          "via": "shared-frame-6jtSkIit.js:op",
+          "kind": "view-tabs",
+          "original": "K1"
+        },
+        {
+          "local": "K2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore2",
+          "via": "shared-frame-6jtSkIit.js:sp",
+          "kind": "view-tabs",
+          "original": "K2"
+        },
+        {
+          "local": "J4",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged4",
+          "via": "shared-frame-6jtSkIit.js:tp",
+          "kind": "view-tabs",
+          "original": "J4"
+        },
+        {
+          "local": "K5",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore5",
+          "via": "shared-frame-6jtSkIit.js:up",
+          "kind": "view-tabs",
+          "original": "K5"
+        },
+        {
+          "local": "Q",
+          "from": "../../source-composer-attachment-adapters.jsx",
+          "name": "ComposerMessage",
+          "via": "vendor-intl-DYfox5Co.js:l",
+          "kind": "adapter",
+          "original": "Gt"
+        },
+        {
+          "local": "ot",
+          "from": "../../source-composer-current-adapters.jsx",
+          "name": "useComposerIntl",
+          "via": "vendor-intl-DYfox5Co.js:p",
+          "kind": "adapter",
+          "original": "q"
+        },
+        {
+          "local": "t",
+          "from": "react",
+          "name": "Suspense",
+          "via": "vendor-frame-CnSY1sxv.js:$a",
+          "kind": "react"
+        },
+        {
+          "local": "p",
+          "from": "react/jsx-runtime",
+          "name": "Fragment",
+          "via": "vendor-frame-CnSY1sxv.js:Va",
+          "kind": "react"
+        },
+        {
+          "local": "E",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "CdsButton",
+          "via": "shared-frame-6jtSkIit.js:Eu",
+          "kind": "view-tabs",
+          "original": "Uu"
+        },
+        {
+          "local": "A",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "CdsLoadingSkeleton",
+          "via": "shared-frame-6jtSkIit.js:bu",
+          "kind": "view-tabs",
+          "original": "Kd"
+        },
+        {
+          "local": "I",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "CdsSkeleton",
+          "via": "shared-frame-6jtSkIit.js:vu",
+          "kind": "view-tabs",
+          "original": "af"
+        },
+        {
+          "local": "Hr",
+          "from": "../../source-composer-attachment-adapters.jsx",
+          "name": "ComposerHeldTextEditor",
+          "via": "c0fbbe82d-COsmfHJY.js:Hr",
+          "kind": "adapter",
+          "original": "Hr"
+        }
+      ],
+      "exports": {
+        "ca": "HeldTextDialog"
       }
     },
     {

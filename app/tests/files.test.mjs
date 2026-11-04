@@ -28,7 +28,7 @@ test("preview classifies missing, outside, large, binary and empty files and kee
     assert.deepEqual(await readFile(p, "missing.js"), { path: "missing.js", unavailable: "missing", creatable: true });
     assert.deepEqual(await readFile(p, "nested/missing.js"), { path: "nested/missing.js", unavailable: "missing", creatable: false }, "B32: no parent folder to create it in");
     assert.deepEqual(await readFile(p, "../outside.txt"), { path: "../outside.txt", unavailable: "outside_root" });
-    assert.deepEqual(await readFile(p, "../nope.txt"), { path: "../nope.txt", unavailable: "outside_root" }, "a missing path outside is still outside");
+    assert.deepEqual(await readFile(p, "../nope.txt"), { path: "../nope.txt", unavailable: "missing_outside" }, "a missing path outside is still refused (cd2efac6e Hd missing_outside)");
     assert.deepEqual(await readFile(p, path.join(root, "outside.txt")), { path: path.join(root, "outside.txt"), unavailable: "outside_root" });
     assert.deepEqual(await readFile(p, "link"), { path: "link", unavailable: "outside_root" }, "an escaping symlink is outside");
     assert.deepEqual(await readFile(p, "large"), { path: "large", unavailable: "too_large", size: 1024 * 1024 + 1 });
@@ -106,8 +106,16 @@ test("readFile classifies png/mp4/mp3 as media without a read; NUL text stays bi
   }
 });
 
-test("files.cjs media lists match the renderer's fileMediaKind (cd2efac6e je/ye)", async () => {
-  const { fileMediaKind } = await import("../src/file-preview-model.mjs");
+// W14-code r4 closeout R4DC-N7: the renderer's test-only fileMediaKind is gone; the oracle is cd2efac6e je (shared-4 Jh:
+// png jpg jpeg gif bmp webp avif, no svg) / ye (shared-11 gh: mp4 webm mov m4v ogv video; mp3 m4a aac wav flac opus ogg oga audio).
+const fileMediaKind = (name) => {
+  const at = name.lastIndexOf("."), ext = at < 0 ? "" : name.slice(at + 1).toLowerCase();
+  if (["png", "jpg", "jpeg", "gif", "bmp", "webp", "avif"].includes(ext)) return "image";
+  if (["mp4", "webm", "mov", "m4v", "ogv"].includes(ext)) return "video";
+  if (["mp3", "m4a", "aac", "wav", "flac", "opus", "ogg", "oga"].includes(ext)) return "audio";
+  return null;
+};
+test("files.cjs media lists match cd2efac6e je/ye", async () => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), "code-desktop-test-"));
   try {
     for (const name of ["a.png", "b.JPG", "c.jpeg", "d.gif", "e.bmp", "f.webp", "g.avif", "h.svg", "i.ico", "j.mp4", "k.webm", "l.MOV", "m.m4v", "n.ogv", "o.mkv",

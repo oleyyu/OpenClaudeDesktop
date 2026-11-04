@@ -33,8 +33,10 @@ let savedWindow, savedDocument;
 before(async () => {
   savedWindow = globalThis.window; savedDocument = globalThis.document;
   // view-tabs' preload helper creates a link element while it evaluates (D21).
-  globalThis.document = { createElement: () => ({ relList: { supports: () => false } }), querySelector: () => null, documentElement: { getAttribute: () => null } };
-  globalThis.window = { document: globalThis.document, localStorage: undefined, addEventListener() {}, removeEventListener() {}, matchMedia: undefined };
+  globalThis.document = { createElement: () => ({ relList: { supports: () => false } }), querySelector: () => null, documentElement: { getAttribute: () => null, hasAttribute: () => false } };
+  // W14-code r6 r6pa-03 (review rerun): the rail's background-tasks pane draws c96d752d0 UQ from code-transcript, whose
+  // shared-25 router store reads window.location.pathname at load (in the app main.jsx already loads that graph).
+  globalThis.window = { document: globalThis.document, localStorage: undefined, addEventListener() {}, removeEventListener() {}, matchMedia: undefined, location: { pathname: '/' }, navigator: globalThis.navigator };
   server = await createServer({ configFile: false, root: app, plugins: [react()],
     server: { middlewareMode: true, hmr: false, ws: false, watch: null }, appType: 'custom', logLevel: 'error' });
   (await server.ssrLoadModule('/electron/i18n/index.mjs')).setLocale('en-US');
@@ -565,7 +567,8 @@ test('main.jsx: the rail is wired into the chat tile (state, toggle, body row, p
   const jsxName = (node) => (node?.type === 'JSXElement' ? node.openingElement.name.name : null);
   const imports = ast.body.filter((node) => node.type === 'ImportDeclaration' && node.source.value === './source-session-rail.jsx');
   assert.deepEqual(imports.map((node) => node.specifiers.map((s) => s.imported.name)),
-    [['useSessionRail', 'useSessionRailHidesBand', 'SessionRailShownScope', 'SessionRailRow', 'SessionRailChatBody', 'SessionRailColumn']]);
+    [['useSessionRail', 'useSessionRailHidesBand', 'SessionRailShownScope', 'SessionRailRow', 'SessionRailChatBody', 'SessionRailColumn', 'SessionRailStartLine' /* r4 shell fr4-08 */,
+      'railRepoMenuItems' /* W14-code r7 css7-git-band-prbarrow: the band's repo menu (Zje st over the Vz port) */]]);
   assert.equal(count(main, 'const sessionRail = useSessionRail({ enabled: mode === "code" && !PANE_WINDOW, sessionId: section === "new" ? current : null,\n'
     + '    sessionNotFound: !!current && historyUnavailable === current, besidePane: openPanes.size > 1 });'), 1);
   assert.equal(count(main, 'const sessionRailToggle = sessionRail.railToggle;'), 1);
@@ -584,7 +587,8 @@ test('main.jsx: the rail is wired into the chat tile (state, toggle, body row, p
   assert.equal(jsxName(row), 'SessionRailRow');
   assert.deepEqual(row.openingElement.attributes.map((a) => [a.name.name, text(a.value.expression)]), [['rail', 'sessionRail'], ['host', 'sessionRailHost']]);
   const inside = elementsOf(row);
-  assert.match(text(inside[0]), /^<div className=\{`conversation \$\{!current && mode !== 'code' && section === 'new' \? homeScrollClass : ''\} \$\{sessionRail\.bandClassName\}`\}>/);
+  // W14-code r3 css3-archived-band-enter: the column also takes cc43287c9 Zre's ref (useBandEnter, data-band-enter).
+  assert.match(text(inside[0]), /^<div ref=\{bandEnterRef\} className=\{`conversation \$\{!current && mode !== 'code' && section === 'new' \? homeScrollClass : ''\} \$\{sessionRail\.bandClassName\}`\}>/);
   assert.equal(jsxName(inside.at(-1)), 'SessionRailColumn');
   // the chat panel body wraps the keyed transcript
   const panels = findAll(ast, (node) => jsxName(node) === 'SessionRailChatBody');
@@ -596,13 +600,15 @@ test('main.jsx: the rail is wired into the chat tile (state, toggle, body row, p
     'gitStatus: bandStatus', 'gitError: !!gitStatusError', 'diffOpenable: canViewChanges', 'hasChord: !openPanes.has("changes")', 'onClick: sendCommitTurn',
     'preview: { snapshot: previewSnapshot, available: previewAvailable }', 'openPane: openPaneTile', 'tasks, stopTask: stopBackgroundTask',
     'environmentId: current ? sessionMetadata[current]?.environmentId : undefined', 'savedEnvironments: savedEnvironments.environments'])
-    assert.ok(main.slice(main.indexOf('const sessionRailHost = {'), main.indexOf('const sessionRailHost = {') + 3600).includes(field), field);
+    assert.ok(main.slice(main.indexOf('const sessionRailHost = {'), main.indexOf('const sessionRailHost = {') + 4200).includes(field), field); // r4 shell: + goal / editGoal
   // Mte (R4i-rail RL2): the band yields to the rail's Changes card in rail mode, read from the scope store
   assert.equal(count(main, 'const railHidesBand = useSessionRailHidesBand(sessionRail);'), 1);
   // W13 G11 (assertion behind main.jsx): w13-close-chat-composer put the Chat image-limit band (shared-7 Cv) first in the
   // same beforeComposer slot; the Code band's guard is unchanged.
   assert.equal(count(main, "beforeComposer={mode === 'chat' ? <ChatImageLimitNotice"), 1);
-  assert.equal(count(main, ": mode === 'code' && current && !railHidesBand && (bandStatus ?"), 1);
+  // W14-code r4 shell: the Code slot also carries the notice stack first (cc43287c9 Bde before the composer and its chin).
+  assert.equal(count(main, ": mode === 'code' ? <>{notices && renderSessionNotices(true)"), 1);
+  assert.equal(count(main, "{current && !railHidesBand && (bandStatus ?"), 1);
   assert.equal(count(main, 'sessionRailHidesBand'), 0);
   // c5638815a lt: the session popout's own shown store, around the split root
   assert.equal(count(main, '<SessionRailShownScope popout={SESSION_POPOUT}><SourceSplitRoot renderSide={(side, secondary) => <App side={side} initialSession={secondary?.sessionId ?? null} />} /></SessionRailShownScope>'), 1);

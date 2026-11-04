@@ -41,7 +41,8 @@ test('GitCounts (shared-21 OV): sr-only unit list, aria-hidden +/− pair, first
   assert.equal(gitCountsLabel(1, 0), '1 addition, 0 deletions');
   assert.equal(gitCountsLabel(1200, 2), '1,200 additions, 2 deletions');
   const html = renderToStaticMarkup(React.createElement(GitCounts, { added: 12, removed: 0, className: 'sgr-counts' }));
-  assert.equal(html, '<span class="tabular-nums sgr-counts" data-git-counts=""><span class="sr-only">12 additions, 0 deletions</span><span aria-hidden="true" class="contents"><span class="sg-added">+12</span><span class="sg-removed">−0</span></span></span>');
+  assert.equal(html, '<span class="tabular-nums sgr-counts" data-git-counts=""><span class="sr-only">12 additions, 0 deletions</span><span aria-hidden="true" class="contents"><span class="text-git-added">+12</span><span class="text-git-removed">−0</span></span></span>');
+  // W14-code r7 gen-final-7: the default ink follows c60636ac6 Qe (text-git-added / text-git-removed); .sg-* is gone.
   // DV: 400ms, 1-(1-t)^3, skipped under reduced motion (the OS query or data-reduce-motion via useReducedMotion).
   const source = readFileSync(path.resolve(import.meta.dirname, '../src/source-git-counts.jsx'), 'utf8');
   assert.match(source, /COUNT_TWEEN_MS = 400/);

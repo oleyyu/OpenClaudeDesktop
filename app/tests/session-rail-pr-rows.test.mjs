@@ -90,7 +90,11 @@ test('3.6556.2 pins: EL / bAe / xAe, Hje\'s rail entries and Sje\'s rail shape, 
   // R4: the 2.42304.0 export names, on their 3.6556.2 originals.
   assert.deepEqual(Object.values(module.exports).sort(), ['CiStatusIcon', 'PR_STATE_ACCENTS', 'PR_STATE_GLYPHS', 'PrBarLayoutContext', 'PrBarRow', 'RailPrHistory',
     'RailPrRows', 'ciStatusLabel', 'historyRowKey', 'prBarMode', 'railRowsOverflow', 'railRowsShape', 'railShownRows', 'repoRowId', 'repoRowIdKey',
-    'useRailRowsControls', 'useReportRailPrCount'].sort());
+    'useRailRowsControls', 'useReportRailPrCount',
+    // W14-code r7 css7-git-band-prbarrow: the band's stale hold (aAe over eAe) and Sje's band / hold list classes (nR / vje).
+    // W14-code r8 R8DC-02: eAe (PR_BAR_STALE_ATTR) is no longer exported — nothing imports it; aAe reads it in the module.
+    'PrBarStaleRow', 'PR_BAR_ROWS_CLASS', 'PR_BAR_HOLD_CLASS'].sort());
+  assert.ok(!Object.values(module.exports).includes('PR_BAR_STALE_ATTR'));
   // YL is the host list item (the tile store is not sliced); cL is the session rail area's one instance.
   assert.equal(module.imports.find((i) => i.local === 'YL').name, 'RailPrListItem');
   assert.equal(module.imports.find((i) => i.local === 'cL').name, 'RailPrCountContext');
@@ -139,6 +143,9 @@ test('railPrEntries without a PR: the band\'s Create PR action (nze dn radio ite
   const items = entry.row.prMenuItems;
   assert.deepEqual(items.map((i) => [i.label, i.checked, i.checkedRole, i.separatorBefore === true]),
     [['Create PR', false, 'radio', false], ['Create draft PR', true, 'radio', false], ['Manually create PR', false, 'radio', true]]);
+  // r6 git: c96d752d0 `bt = !i.repo` — Manually create PR is disabled without the session's GitHub repo (main.jsx bandPr.repo).
+  assert.equal(items[2].disabled, true);
+  assert.equal(Adapters.railPrEntries({ intl, status: status(), prAction: { ...prAction, repo: 'https://github.com/a/b' } })[0].row.prMenuItems[2].disabled, false);
   items[0].onSelect(); items[2].onSelect(); entry.row.onPrClick();
   assert.deepEqual(calls, [['select', 'create'], ['primary', 'create'], ['select', 'compose'], ['primary', 'draft']]);
   // The lookup still runs: Create PR waits with its reason (pullRequestAction disabledReason).

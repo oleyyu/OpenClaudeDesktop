@@ -2,11 +2,20 @@ import React from "react";
 import { mergedTaskEvents, taskEventRow } from "./task-event-model.mjs";
 import "./source-task-event.css";
 
-// A background task's settled event in the transcript (aue/R2/L2, approval-current.js:44297-44440): one plain line,
-// 'Background {noun} {status}' (text-danger only when failed) · {description} · took {elapsed}, every part
-// text-body text-secondary that turns text-primary on hover. With a Background tasks pane to focus it is a button
-// (L2 finished: the pane opens on that task); otherwise the same line as a div. Several events read as one line
-// ('{count} background {noun} {status}, {n} failed, …', only the failed part in danger).
+// A background task's settled event in the transcript, as 3.6556.2 draws the turn's task_event card: c96d752d0
+// `case"task_event":` puts it in the reply as a "code.task_events" card, J4e mounts it in its own transcript row
+// (`${hf} flex min-w-0 flex-col empty:hidden`, hf = c8ba53634 ps-[var(--cds-assistant-message-text-inset,0px)]) and
+// fX / sXe draw one plain line, 'Background {noun} {status}' (text-danger only when failed) · {description} · took
+// {elapsed} (SLlmAvczvk), every part text-body text-secondary that turns text-primary on hover (group/tool). With a
+// Background tasks pane to focus it is dX's button ({[Lv]:""}, c0fbbe82d mi = data-transcript-keeps-pin; the pane
+// opens on that task); otherwise dX's div, the same line. Several events read as one line ('{count} background
+// {noun} {status}, {n} failed, …', only the failed part in danger). The detached step form (KBe / qBe) is only for an
+// event that lands between a turn's grouped tool steps (the tool-run builder's L(): "step"), which this host never
+// places. The row is a .source-message so it takes the transcript's row gap (source-session.css), as the card row does.
+export function SourceTaskEventRow({ children }) {
+  return <div className="source-message source-task-events">{children}</div>;
+}
+
 export function SourceTaskEvent({ events, itemId, onOpen }) {
   const list = (events || []).filter(Boolean);
   if (!list.length) return null;
@@ -34,5 +43,7 @@ export function SourceTaskEvent({ events, itemId, onOpen }) {
     </span></span>;
   }
   const props = { className: "source-task-event", "data-transcript-item-id": itemId, "data-task-event-status": list.length === 1 ? list[0].status : undefined, "data-failed": failed || undefined };
-  return open ? <button type="button" {...props} onClick={open}>{content}</button> : <div {...props}>{content}</div>;
+  return <SourceTaskEventRow>
+    {open ? <button type="button" {...props} data-transcript-keeps-pin="" onClick={open}>{content}</button> : <div {...props}>{content}</div>}
+  </SourceTaskEventRow>;
 }

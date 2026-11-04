@@ -128,10 +128,14 @@ test('main.jsx: the Cowork composer slot is wrapped; Code and Chat pass no sessi
   assert.ok(end > start && main.indexOf('</SourceCoworkSessionStates>', end + 1) === -1);
   // The slot: the auto-resume status, the turn box region, the composer and the Cowork home; the boundary closes after it.
   const slot = main.slice(start, end);
-  for (const piece of ['<SourceAutoResumeStatus ', '{turnBoxSession && <SourceTurnBoxRegion ', '{renderMainComposer()}', "{!current && mode === 'cowork' && <SourceCoworkHome "])
+  for (const piece of ['<SourceAutoResumeStatus ', '{turnBoxSession && <SourceTurnBoxRegion ', ': renderMainComposer({ notices: true })}' /* r4 shell */, "{!current && mode === 'cowork' && <SourceCoworkHome "])
     assert.equal(slot.split(piece).length - 1, 1, piece);
-  assert.match(main.slice(end), /^<\/SourceCoworkSessionStates>\n\s+<\/SourceSessionErrorBoundary>/);
-  assert.ok(main.includes(`{mode !== 'cowork' && session?.archived && <div className="archive-notice">{t("This session is archived.")}`));
+  // W14-code r5 复核 r5-composer-02: the slot sits in the dock column wrapper (cc43287c9 `v("div",{ref:at,…})`, Code's
+  // near-bottom toast safe region, display:contents off Code), which closes just before the boundary.
+  assert.match(main.slice(end), /^<\/SourceCoworkSessionStates>\n\s+<\/div>\n\s+<\/SourceSessionErrorBoundary>/);
+  // W14-code r2 css2-archived-note: Code puts c9543da06 yu (SourceArchivedBanner) in the composer's place; Chat keeps its line.
+  assert.ok(main.includes(`{mode === 'chat' && session?.archived && <div className="archive-notice">{t("This session is archived.")}`));
+  assert.ok(slot.includes('{mode === "code" && current && session?.archived\n                  ? <div className="composer-zone sc-zone"'));
 });
 
 test('a session that can take messages (or no Cowork session) renders the wrapped slot unchanged', () => {

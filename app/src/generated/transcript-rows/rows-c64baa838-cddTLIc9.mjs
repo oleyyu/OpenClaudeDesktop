@@ -51,6 +51,7 @@ import {
   useRef as e,
   useCallback as i,
   createContext as o,
+  useState as s,
 } from "react";
 import { jsxs as n, Fragment as r, jsx as t } from "react/jsx-runtime";
 var I = new Set();
@@ -101,6 +102,30 @@ function V(e, t) {
     e?.end === t?.end &&
     e?.side === t?.side &&
     e?.endSide === t?.endSide
+  );
+}
+function pe({
+  scrollTop: e,
+  scrollHeight: t,
+  height: n,
+  fitPerfectly: r = !1,
+  fitPerfectlyOverscroll: i = 0,
+  overscrollSize: a,
+}) {
+  let o = n + a * 2,
+    s = r ? n + i * 2 : o;
+  if (((t = Math.max(t, s)), o >= t || r)) {
+    let n = Math.max(e - i, 0),
+      r = Math.min(e + s, t);
+    return { top: n, bottom: Math.max(r, n) };
+  }
+  let c = e + n / 2 - o / 2,
+    l = c + o;
+  return (
+    c < 0 && (c = 0),
+    l > t && (l = t),
+    (c = Math.floor(Math.max(c, 0))),
+    { top: c, bottom: Math.ceil(Math.max(Math.min(l, t), c)) }
   );
 }
 function me() {
@@ -4799,6 +4824,443 @@ function Xt(e) {
       (t = Math.max(t ?? 0, n.getBoundingClientRect().height));
   return t;
 }
+function Zt(e, t) {
+  return e == null || t == null
+    ? e === t
+    : e.top === t.top && e.bottom === t.bottom;
+}
+var Qt = (e) =>
+  typeof e == "object" &&
+  !!e &&
+  e.nodeType === 1 &&
+  e.namespaceURI === "http://www.w3.org/1999/xhtml";
+var $t = 1e3;
+var en = $t * 4;
+var tn = [0, 1e-6, 0.99999, 1];
+var nn = {
+  overscrollSize: $t,
+  intersectionObserverMargin: en,
+  resizeDebugging: !1,
+};
+var rn = 0;
+var an = -1;
+var on = class e {
+  static __STOP = !1;
+  static __lastScrollPosition = 0;
+  __id = `virtualizer-${++an}`;
+  config;
+  type = "simple";
+  intersectionObserver;
+  scrollTop = 0;
+  height = 0;
+  scrollHeight = 0;
+  windowSpecs = { top: 0, bottom: 0 };
+  root;
+  contentContainer;
+  resizeObserver;
+  observers = new Map();
+  visibleInstances = new Map();
+  visibleInstancesDirty = !1;
+  instancesChanged = new Set();
+  reconcileQueue = new Set();
+  scrollDirty = !0;
+  heightDirty = !0;
+  scrollHeightDirty = !0;
+  renderedObservers = 0;
+  connectQueue = new Map();
+  constructor(e) {
+    this.config = { ...nn, ...e };
+  }
+  setup(t, n) {
+    if (this.root == null) {
+      ((this.root = t),
+        (this.resizeObserver = new ResizeObserver(this.handleContainerResize)),
+        (this.intersectionObserver = new IntersectionObserver(
+          this.handleIntersectionChange,
+          {
+            root: this.root,
+            threshold: tn,
+            rootMargin: `${this.config.intersectionObserverMargin}px 0px ${this.config.intersectionObserverMargin}px 0px`,
+          },
+        )),
+        t instanceof Document ? this.setupWindow() : this.setupElement(n),
+        (window.__INSTANCE = this),
+        (window.__TOGGLE = () => {
+          e.__STOP
+            ? ((e.__STOP = !1),
+              (this.getScrollContainerElement() ?? window).scrollTo({
+                top: e.__lastScrollPosition,
+              }),
+              R(this.computeRenderRangeAndEmit))
+            : ((e.__lastScrollPosition = this.getScrollTop()), (e.__STOP = !0));
+        }));
+      for (let [e, t] of this.connectQueue.entries()) this.connect(e, t);
+      (this.connectQueue.clear(),
+        this.markDOMDirty(),
+        R(this.computeRenderRangeAndEmit));
+    }
+  }
+  instanceChanged(e, t) {
+    (this.instancesChanged.add(e),
+      t && this.markDOMDirty(),
+      R(this.computeRenderRangeAndEmit));
+  }
+  requestHeightReconcile(e) {
+    (this.reconcileQueue.add(e), R(this.computeRenderRangeAndEmit));
+  }
+  getWindowSpecs() {
+    return (
+      this.windowSpecs.top === 0 &&
+        this.windowSpecs.bottom === 0 &&
+        (this.windowSpecs = pe({
+          scrollTop: this.getScrollTop(),
+          height: this.getHeight(),
+          scrollHeight: this.getScrollHeight(),
+          overscrollSize: this.config.overscrollSize,
+        })),
+      this.windowSpecs
+    );
+  }
+  getRoot() {
+    return this.root;
+  }
+  isInstanceVisible(e, t) {
+    let n = this.getScrollTop(),
+      r = this.getHeight(),
+      i = this.config.intersectionObserverMargin,
+      a = n - i,
+      o = n + r + i;
+    return !(e < a - t || e > o);
+  }
+  handleContainerResize = (e) => {
+    if (this.root == null) return;
+    let t = !1;
+    for (let n of e) {
+      let e = n.borderBoxSize[0].blockSize;
+      this.root instanceof Document
+        ? e !== this.scrollHeight &&
+          ((this.scrollHeightDirty = !0),
+          (t = !0),
+          this.config.resizeDebugging &&
+            (console.log("Virtualizer: content size change", this.__id, {
+              sizeChange: e - rn,
+              newSize: e,
+            }),
+            (rn = e)))
+        : n.target === this.root
+          ? e !== this.height && ((this.heightDirty = !0), (t = !0))
+          : n.target === this.contentContainer &&
+            ((this.scrollHeightDirty = !0),
+            (t = !0),
+            this.config.resizeDebugging &&
+              (console.log("Virtualizer: scroller size change", this.__id, {
+                sizeChange: e - rn,
+                newSize: e,
+              }),
+              (rn = e)));
+    }
+    t && R(this.computeRenderRangeAndEmit);
+  };
+  setupWindow() {
+    if (this.root == null || !(this.root instanceof Document))
+      throw Error("Virtualizer.setupWindow: Invalid setup method");
+    (window.addEventListener("scroll", this.handleWindowScroll, {
+      passive: !0,
+    }),
+      window.addEventListener("resize", this.handleWindowResize, {
+        passive: !0,
+      }),
+      this.resizeObserver?.observe(this.root.documentElement));
+  }
+  setupElement(e) {
+    if (this.root == null || this.root instanceof Document)
+      throw Error("Virtualizer.setupElement: Invalid setup method");
+    (this.root.addEventListener("scroll", this.handleElementScroll, {
+      passive: !0,
+    }),
+      this.resizeObserver?.observe(this.root),
+      (e ??= this.root.firstElementChild ?? void 0),
+      Qt(e) && ((this.contentContainer = e), this.resizeObserver?.observe(e)));
+  }
+  cleanUp() {
+    (z(this.computeRenderRangeAndEmit),
+      this.resizeObserver?.disconnect(),
+      (this.resizeObserver = void 0),
+      this.intersectionObserver?.disconnect(),
+      (this.intersectionObserver = void 0),
+      this.root?.removeEventListener("scroll", this.handleElementScroll),
+      window.removeEventListener("scroll", this.handleWindowScroll),
+      window.removeEventListener("resize", this.handleWindowResize),
+      (this.root = void 0),
+      (this.contentContainer = void 0),
+      this.observers.clear(),
+      this.visibleInstances.clear(),
+      this.instancesChanged.clear(),
+      this.reconcileQueue.clear(),
+      this.connectQueue.clear(),
+      (this.visibleInstancesDirty = !1),
+      (this.windowSpecs = { top: 0, bottom: 0 }),
+      (this.scrollTop = 0),
+      (this.height = 0),
+      (this.scrollHeight = 0),
+      (this.scrollDirty = !0),
+      (this.heightDirty = !0),
+      (this.scrollHeightDirty = !0));
+  }
+  getOffsetInScrollContainer(e) {
+    return this.getScrollTop() + Q(e, this.getScrollContainerElement());
+  }
+  connect(e, t) {
+    if (this.observers.has(e))
+      throw Error("Virtualizer.connect: instance is already connected...");
+    return (
+      this.intersectionObserver == null
+        ? this.connectQueue.set(e, t)
+        : (this.intersectionObserver.observe(e),
+          this.observers.set(e, t),
+          this.instancesChanged.add(t),
+          this.markDOMDirty(),
+          R(this.computeRenderRangeAndEmit)),
+      () => this.disconnect(e)
+    );
+  }
+  disconnect(e) {
+    let t = this.observers.get(e);
+    (this.connectQueue.delete(e),
+      t != null &&
+        (this.intersectionObserver?.unobserve(e),
+        this.observers.delete(e),
+        this.instancesChanged.delete(t),
+        this.reconcileQueue.delete(t),
+        this.visibleInstances.delete(e) && (this.visibleInstancesDirty = !0),
+        this.markDOMDirty(),
+        R(this.computeRenderRangeAndEmit)));
+  }
+  handleWindowResize = () => {
+    e.__STOP ||
+      window.innerHeight === this.height ||
+      ((this.heightDirty = !0), R(this.computeRenderRangeAndEmit));
+  };
+  handleWindowScroll = () => {
+    e.__STOP ||
+      this.root == null ||
+      !(this.root instanceof Document) ||
+      ((this.scrollDirty = !0), R(this.computeRenderRangeAndEmit));
+  };
+  handleElementScroll = () => {
+    e.__STOP ||
+      this.root == null ||
+      this.root instanceof Document ||
+      ((this.scrollDirty = !0), R(this.computeRenderRangeAndEmit));
+  };
+  computeRenderRangeAndEmit = () => {
+    if (e.__STOP) return;
+    let t = this.heightDirty || this.scrollHeightDirty,
+      n = this.instancesChanged.size > 0;
+    if (this.instancesChanged.size === 0) {
+      let e = pe({
+        scrollTop: this.getScrollTop(),
+        height: this.getHeight(),
+        scrollHeight: this.getScrollHeight(),
+        overscrollSize: this.config.overscrollSize,
+      });
+      if (
+        !t &&
+        Zt(this.windowSpecs, e) &&
+        this.renderedObservers === this.observers.size &&
+        !this.visibleInstancesDirty &&
+        this.reconcileQueue.size === 0
+      )
+        return;
+      this.windowSpecs = e;
+    }
+    ((this.visibleInstancesDirty = !1),
+      (this.renderedObservers = this.observers.size));
+    let r = this.getScrollAnchor(this.height),
+      i = new Set();
+    for (let e of t ? this.observers.values() : this.visibleInstances.values())
+      e.onRender(t) && i.add(e);
+    for (let e of this.instancesChanged)
+      i.has(e) || (e.onRender(t) && i.add(e));
+    this.scrollFix(r);
+    for (let e of i) (this.reconcileQueue.delete(e), e.reconcileHeights());
+    for (let e of this.reconcileQueue) e.reconcileHeights() && (n = !0);
+    (this.reconcileQueue.clear(),
+      (n ||= this.instancesChanged.size > 0),
+      n && this.markDOMDirty(),
+      (n || t) && R(this.computeRenderRangeAndEmit),
+      i.clear(),
+      this.instancesChanged.clear());
+  };
+  scrollFix(e) {
+    if (e == null) return;
+    let t = this.getScrollContainerElement(),
+      {
+        lineIndex: n,
+        lineOffset: r,
+        fileElement: i,
+        fileOffset: a,
+        fileTypeOffset: o,
+      } = e;
+    if (n != null && r != null) {
+      let e = i.shadowRoot?.querySelector(
+        `[data-line][data-line-index="${n}"]`,
+      );
+      if (Qt(e)) {
+        let n = Q(e, t);
+        if (n !== r) {
+          let e = n - r;
+          this.applyScrollFix(e);
+        }
+        return;
+      }
+    }
+    let s = Q(i, t);
+    if (o === "top") s !== a && this.applyScrollFix(s - a);
+    else {
+      let e = s + i.getBoundingClientRect().height;
+      e !== a && this.applyScrollFix(e - a);
+    }
+  }
+  applyScrollFix(e) {
+    (this.root == null || this.root instanceof Document
+      ? window.scrollTo({ top: window.scrollY + e, behavior: "instant" })
+      : this.root.scrollTo({
+          top: this.root.scrollTop + e,
+          behavior: "instant",
+        }),
+      this.markDOMDirty());
+  }
+  getScrollAnchor(e) {
+    let t = this.getScrollContainerElement(),
+      n;
+    for (let [r] of this.visibleInstances.entries()) {
+      let i = Q(r, t),
+        a = i + r.offsetHeight,
+        o,
+        s;
+      a <= 0 && !(r.offsetHeight === 0 && t != null && t.scrollTop <= 0)
+        ? ((o = a), (s = "bottom"))
+        : ((o = i), (s = "top"));
+      let c, l;
+      if (a > 0 && i < e)
+        for (let e of r.shadowRoot?.querySelectorAll(
+          "[data-line][data-line-index]",
+        ) ?? []) {
+          if (!Qt(e)) continue;
+          let n = e.dataset.lineIndex;
+          if (n == null) continue;
+          let r = Q(e, t);
+          if (!(r < 0)) {
+            ((c = n), (l = r));
+            break;
+          }
+        }
+      if (n?.lineOffset != null && l == null) continue;
+      let u = !1;
+      ((n == null ||
+        (l != null && (n.lineOffset == null || l < n.lineOffset)) ||
+        (l == null &&
+          n.lineOffset == null &&
+          ((o >= 0 && (n.fileOffset < 0 || o < n.fileOffset)) ||
+            (o < 0 && n.fileOffset < 0 && o > n.fileOffset)))) &&
+        (u = !0),
+        u &&
+          (n = {
+            fileElement: r,
+            fileTypeOffset: s,
+            fileOffset: o,
+            lineIndex: c,
+            lineOffset: l,
+          }));
+    }
+    return n;
+  }
+  handleIntersectionChange = (e) => {
+    this.scrollDirty = !0;
+    for (let { target: t, isIntersecting: n } of e) {
+      if (!Qt(t))
+        throw Error(
+          "Virtualizer.handleIntersectionChange: target not an HTMLElement",
+        );
+      let e = this.observers.get(t);
+      e != null &&
+        (n && !this.visibleInstances.has(t)
+          ? (e.setVisibility(!0),
+            this.visibleInstances.set(t, e),
+            (this.visibleInstancesDirty = !0))
+          : !n &&
+            this.visibleInstances.has(t) &&
+            (e.setVisibility(!1),
+            this.visibleInstances.delete(t),
+            (this.visibleInstancesDirty = !0)));
+    }
+    this.visibleInstancesDirty && R(this.computeRenderRangeAndEmit);
+  };
+  getScrollTop() {
+    if (!this.scrollDirty) return this.scrollTop;
+    this.scrollDirty = !1;
+    let e =
+      this.root == null
+        ? 0
+        : this.root instanceof Document
+          ? window.scrollY
+          : this.root.scrollTop;
+    return ((e = this.clampScrollTop(e)), (this.scrollTop = e), e);
+  }
+  scrollTo({ top: e, behavior: t = "auto" }) {
+    let { root: n } = this;
+    if (n == null) return;
+    let r = this.clampScrollTop(e);
+    (n instanceof Document
+      ? window.scrollTo({ top: r, behavior: t })
+      : n.scrollTo({ top: r, behavior: t }),
+      (this.scrollDirty = !0),
+      R(this.computeRenderRangeAndEmit));
+  }
+  clampScrollTop(e) {
+    return Math.max(0, Math.min(e, this.getScrollHeight() - this.getHeight()));
+  }
+  getScrollHeight() {
+    return this.scrollHeightDirty
+      ? ((this.scrollHeightDirty = !1),
+        (this.scrollHeight =
+          this.root == null
+            ? 0
+            : this.root instanceof Document
+              ? this.root.documentElement.scrollHeight
+              : this.root.scrollHeight),
+        this.scrollHeight)
+      : this.scrollHeight;
+  }
+  getHeight() {
+    return this.heightDirty
+      ? ((this.heightDirty = !1),
+        (this.height =
+          this.root == null
+            ? 0
+            : this.root instanceof Document
+              ? globalThis.innerHeight
+              : this.root.getBoundingClientRect().height),
+        this.height)
+      : this.height;
+  }
+  markDOMDirty() {
+    ((this.scrollDirty = !0),
+      (this.scrollHeightDirty = !0),
+      (this.heightDirty = !0));
+  }
+  getScrollContainerElement() {
+    return this.root == null || this.root instanceof Document
+      ? void 0
+      : this.root;
+  }
+};
+function Q(e, t) {
+  let n = e.getBoundingClientRect(),
+    r = t?.getBoundingClientRect().top ?? 0;
+  return n.top - r;
+}
 function sn(t) {
   let n = e(t);
   return (c(() => void (n.current = t)), i((...e) => n.current(...e), []));
@@ -4877,6 +5339,31 @@ function hn(e, i) {
     : t(r, { children: e });
 }
 var gn = o(void 0);
+function _n({
+  children: e,
+  config: n,
+  className: r,
+  style: a,
+  contentClassName: o,
+  contentStyle: c,
+}) {
+  let [l] = s(() => (typeof window < "u" ? new on(n) : void 0)),
+    u = i(
+      (e) => {
+        e == null ? l?.cleanUp() : l?.setup(e);
+      },
+      [l],
+    );
+  return t(gn.Provider, {
+    value: l,
+    children: t("div", {
+      className: r,
+      style: a,
+      ref: u,
+      children: t("div", { className: o, style: c, children: e }),
+    }),
+  });
+}
 function vn() {
   return a(gn);
 }
@@ -4896,11 +5383,13 @@ export {
   Ot,
   R,
   Tt,
+  V,
   Vt,
   X,
   Y,
   Yt,
   Ze,
+  _n,
   at,
   be,
   bt,
@@ -4916,6 +5405,7 @@ export {
   ln,
   nt,
   ot,
+  pe,
   pn,
   pt,
   rt,

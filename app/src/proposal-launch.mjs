@@ -25,7 +25,6 @@ import { GIT_FAILURE_MESSAGES } from './git-dialog-model.mjs';
 // spawnedFrom {sessionId: parent, taskId, proposal: true}; operation "outcome" records a proposal's dismissed / sent_here
 // / start_failed result under the parent.
 export const TASK_PROPOSALS_CHANNEL = 'task-proposals';
-export const PROPOSAL_OUTCOMES = Object.freeze(['dismissed', 'sent_here', 'start_failed']);
 // The outcomes the official renderer keeps in its results store (MQ) that the host persists through the IPC as they
 // are recorded. "dismissed" is persisted by the pop instead (official popById(…, false) → main's resolved "dismissed").
 const RECORDED_OUTCOMES = new Set(['sent_here', 'start_failed']);

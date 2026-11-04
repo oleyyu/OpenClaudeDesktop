@@ -15,18 +15,21 @@
 // the official text preview / new tab have no local counterpart); a snippet's press pins the host preview popover with its
 // text (SourcePopover, as the previous pill did) instead of the file-preview modal; the pills are Go's ko (agent / issue
 // SourceContextPill, element contexts SourceSelectedElementPill) under one strip intent in Ri's pill row; a saved line comment is
-// fs's annotation tile (a snippet that carries `annotation`, W12b cf-01); no saved drafts or the annotate / replace image flow
-// (the host has none); while the card sends, removal is held (the host takes the entries
+// fs's annotation tile (a snippet that carries `annotation`, W12b cf-01); a held text ({kind: "text"}, W14-code composer-15)
+// is Go's "Saved draft" ko pill with its generated dialog (composer-held-text-dialog.mjs ca) and Go's "Remove saved
+// draft?" confirmation; no annotate / replace image flow (the host has none); while the card sends, removal is held (the host takes the entries
 // for the send), as the previous pills' disabled remove did. Ki's project-files rename (c63c52947 Pt, /mnt/project-files/
 // paths) is remote-only: a host file shows `relativePath || name`.
 import React, { useRef, useState } from "react";
 import { ComposerFileTile, ComposerImageTile, ComposerQuoteTile, ComposerVideoTile, videoMimeTypePattern } from "./generated/code-composer/composer-attachment-tiles.mjs";
 import { videoFileNamePattern } from "./generated/code-composer/composer-video-types.mjs";
 import { annotationText, annotationWhere, attachmentLabel, attachmentOpenAction, attachmentViewerState } from "./composer-attachments-model.mjs";
-import { Icon } from "./icons";
 import { SourceImageViewer } from "./source-image-viewer.jsx";
 import { SourcePopover } from "./source-popover";
-import { SourceContextPill, SourceSelectedElementPill, attachmentStripHandlers, useAttachmentPreviewIntent } from "./source-selected-element.jsx";
+import { AttachmentPill, SourceContextPill, SourceSelectedElementPill, attachmentStripHandlers, useAttachmentPreviewIntent } from "./source-selected-element.jsx";
+import { HeldTextDialog } from "./generated/code-composer/composer-held-text-dialog.mjs";
+import { CdsConfirmationDialog, CdsContextMenu, CdsIcon } from "./generated/view-tabs/shared-frame-6jtSkIit.js";
+import { useRoutineIntl } from "./source-routine-adapters.jsx";
 import "./source-composer-attachments.css";
 import { t } from "../electron/i18n/index.mjs";
 
@@ -48,8 +51,13 @@ export function annotationWhereLabel(annotation) {
   const where = annotationWhere(annotation);
   return annotation.side === "deletions" ? t("{where} (before changes)", { where }) : where;
 }
-export function ComposerAttachmentTiles({ entries = [], contextPills = [], onRemove, onOpenFile, onClickAnnotation, disabled = false, previewLayerBase = 0 }) {
+export function ComposerAttachmentTiles({ entries = [], contextPills = [], onRemove, onOpenFile, onClickAnnotation, onEditHeldText, disabled = false, previewLayerBase = 0 }) {
   const [viewer, setViewer] = useState(null);
+  // Go's Saved draft state: Y / Me (the open dialog: id, text, open, the opening count that keys it) and Ie / Le (the
+  // pill whose removal waits on "Remove saved draft?").
+  const [held, setHeld] = useState(null);
+  const [removing, setRemoving] = useState(null);
+  const intl = useRoutineIntl();
   const [quote, setQuote] = useState(null);
   // Go's one preview intent for the whole pill group (600 / 200 ms; moving between pills switches at once).
   const intent = useAttachmentPreviewIntent();
@@ -66,10 +74,25 @@ export function ComposerAttachmentTiles({ entries = [], contextPills = [], onRem
   const snippets = entries.filter((entry) => entry.kind === "snippet" && !entry.annotation);
   const annotations = entries.filter((entry) => entry.kind === "snippet" && entry.annotation);
   const elements = entries.filter((entry) => entry.kind === "elementContext");
+  const heldTexts = entries.filter((entry) => entry.kind === "text");
+  // Go Pe: open the dialog on a held text (a new opening remounts it); Fe: close it, keeping its text for the exit.
+  const openHeld = (entry) => setHeld((open) => ({ id: entry.id, text: entry.text, open: true, opening: (open?.opening ?? 0) + 1 }));
+  const closeHeld = () => setHeld((open) => (open ? { ...open, open: false } : open));
+  // Go's text pill: ko {quiet, opensDialog, Note xs, wideLabel, "Saved draft", the 1ztYc4dAWB count label, Click to edit. /
+  // Click to view., the Edit menu item, onClick (close the preview intent, open), onRequestRemove (the confirmation)}.
+  const heldPill = (entry) => <AttachmentPill key={entry.id} value={entry.id} quiet opensDialog thumbnail={<CdsIcon name="Note" size="xs" />} wideLabel
+    label={intl.formatMessage({ defaultMessage: "Saved draft", id: "dxXfrwuTJF" })}
+    ariaLabel={intl.formatMessage({ defaultMessage: "Saved draft \u00B7 {count} {chars, plural, one {character} other {characters}}", id: "1ztYc4dAWB" },
+      { chars: entry.text.length, count: intl.formatNumber(entry.text.length, { notation: "compact", compactDisplay: "long", maximumFractionDigits: 1 }) })}
+    detail={onEditHeldText ? intl.formatMessage({ defaultMessage: "Click to edit.", id: "Z3sULMIWJx" }) : intl.formatMessage({ defaultMessage: "Click to view.", id: "UI5mDVwEZ2" })}
+    menuItems={<CdsContextMenu.Item onClick={() => openHeld(entry)}>{intl.formatMessage({ defaultMessage: "Edit", id: "wEQDC6Wv3/" })}</CdsContextMenu.Item>}
+    onPreviewIntent={intent.onPreviewIntent} onClick={() => { intent.close(true); openHeld(entry); }}
+    onRequestRemove={onRemove && !disabled ? () => setRemoving(entry.id) : undefined} onRemove={() => remove(entry.id)} />;
   // Ri `lt !== 0`: the pill group renders only when some pill exists.
-  const pills = contextPills.length + elements.length > 0
+  const pills = contextPills.length + heldTexts.length + elements.length > 0
     ? <div className={PILL_ROW_CLASS} {...attachmentStripHandlers(intent)}>
         {contextPills.map((pill) => <SourceContextPill key={pill.kind} pill={pill} intent={intent} disabled={disabled} />)}
+        {heldTexts.map(heldPill)}
         {elements.map((entry, index) => <SourceSelectedElementPill key={entry.id} entry={entry} intent={intent} anchorRef={index === 0 ? firstElementPill : undefined}
           onRemove={onRemove} disabled={disabled} />)}
       </div>
@@ -102,6 +125,15 @@ export function ComposerAttachmentTiles({ entries = [], contextPills = [], onRem
       {pills}
     </div>
     {shown && <SourceImageViewer key={shown.id} src={shown.src} alt={shown.alt} originRef={{ current: shown.origin }} onClose={() => setViewer(null)} />}
+    {/* Go Wt: ca keyed `${id}:${opening}` — Save hands the text to onEditSnippetText (readOnly without it), its own Remove
+        confirmation removes the pill; en: the pill's "Remove saved draft?" (danger Remove, closes on confirm). */}
+    {held && <HeldTextDialog key={`${held.id}:${held.opening}`} open={held.open} onOpenChange={(open) => { if (!open) closeHeld(); }} text={held.text}
+      onSave={(text) => onEditHeldText?.(held.id, text)} onClosed={() => setHeld(null)} onRemove={() => remove(held.id)} readOnly={!onEditHeldText} />}
+    <CdsConfirmationDialog open={removing !== null} onOpenChange={(open) => { if (!open) setRemoving(null); }}
+      title={intl.formatMessage({ defaultMessage: "Remove saved draft?", id: "Z6Mb9r9ele" })}
+      description={intl.formatMessage({ defaultMessage: "This is the only copy of this text.", id: "tK3aS6EQE+" })}
+      confirmLabel={intl.formatMessage({ defaultMessage: "Remove", id: "G/yZLul6P1" })} confirmVariant="danger" closeOnConfirm
+      onConfirm={() => { if (removing !== null) { remove(removing); closeHeld(); } }} />
     {quoted && quote.anchor && <SourcePopover anchor={quote.anchor} side="top" align="start" sideOffset={8} padding="none" label={quoted.label}
       dataCds="AttachmentPreview" layerBase={previewLayerBase} className="sca-preview" onClose={() => setQuote(null)}>
       <div className="sca-preview-body" tabIndex={0} role="group" aria-label={quoted.label} data-epitaxy-pill-preview="">

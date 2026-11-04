@@ -28,8 +28,6 @@ import { t } from "../electron/i18n/index.mjs";
 
 export const RUNNING_VERB = t("Running");
 export const DONE_VERB = t("Ran");
-/** :4152 - the meta when no summary can be produced. */
-export const PLAIN_META = t("a command");
 /** shared-2 LM :12279 - the output an interrupted tool call shows. */
 export const INTERRUPTED_OUTPUT = t("Tool execution was interrupted.");
 /** KE :2813 VE - the running footer only shows a duration from ten seconds on. */

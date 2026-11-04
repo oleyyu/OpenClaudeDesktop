@@ -271,10 +271,11 @@ function Shift({ dragKey, host, children, ...props }) {
   </div>;
 }
 
-/** A bucket's empty hint (the host's "No active sessions" in Sessions), or null. */
+/** A bucket's empty hint ("No active sessions" in Sessions), or null: shared-22 $E `o("p", { className: UC, … })`, UC being
+ * EMPTY_SECTION_HINT_CLASS (df-drag-shiftable is the host's drag shift marker). */
 function emptyHint(bucket, host, empty) {
   return bucket.sessions.length === 0 && empty !== undefined
-    ? <p className="source-empty-group df-drag-shiftable" data-drag-key={`label:hint:${bucket.key}`} style={host.shiftStyle(`label:hint:${bucket.key}`)}>{empty}</p> : null;
+    ? <p className={`${EMPTY_SECTION_HINT_CLASS} df-drag-shiftable`} data-drag-key={`label:hint:${bucket.key}`} style={host.shiftStyle(`label:hint:${bucket.key}`)}>{empty}</p> : null;
 }
 
 /**
@@ -467,6 +468,8 @@ export function SidebarSectionsList({ model, host, createRef }) {
   <SectionReorder sortableBucketKeys={reorder.sortableKeys} labelByBucketKey={reorder.labelByKey} onCommitDrag={onCommitDrag}><>{model.layout.map((entry) => {
     if (entry.kind === 'pinned') return entry.bucket && <HostBucket key="pinned" bucket={entry.bucket} host={host} folded={host.folded.has('pinned')} pinned label={t('Pinned')} />;
     if (entry.kind === 'manual') return <ManualSection key={entry.key} entry={entry} host={host} folded={host.folded.has(entry.key)} onMoveSection={onMoveSection} openCreate={openCreate} />;
+    // W14-code r4 fr4-06 (mount): shared-22 $N's p4 (Code) where the routines section sits; the host hands it in.
+    if (entry.kind === 'routines') return host.routinesSection ? <React.Fragment key="routines">{host.routinesSection}</React.Fragment> : null;
     if (entry.kind !== 'sessions') return null;
     // No rows left for Sessions: its heading alone, with the list's controls (Cj's Yi; foldable only while flat).
     if (entry.buckets.length === 0) return <div key="sessions" className={SECTION_CLASS} data-group-key="sessions" {...sectionHoverHandlers}>

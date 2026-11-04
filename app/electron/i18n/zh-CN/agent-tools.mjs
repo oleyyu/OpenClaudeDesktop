@@ -69,6 +69,9 @@ export default {
   "Once: {description}": "一次：{description}",
   "Next {countdown}": "下次 {countdown}",
   "Ends {days}d": "{days} 天后结束",
+  // W14-code r6 r6pa-06: cccc2cf0a eN / tN ICU (APhUc9212r / BIrz9yA5y+), <v> is the secondary-colour value.
+  "Next <v>{countdown}</v>": "下次 <v>{countdown}</v>",
+  "Ends <v>{days}d</v>": "<v>{days} 天</v>后结束",
   "Stop this loop": "停止此循环",
   "Stop this scheduled prompt": "停止此定时提示",
   // Preview: scroll / hover / find / preview_batch rows (2.2553.1 browser verbs).
@@ -233,6 +236,12 @@ export default {
   "use {host} in Chrome": "在 Chrome 中使用 {host}",
   "Let {assistant} use {host} in Chrome?": "允许 {assistant} 在 Chrome 中使用 {host} 吗？",
   "{assistant} will be able to read this site and click and type on it in Chrome in this session. Only allow sites you trust.": "在此会话中，{assistant} 将能够在 Chrome 中读取此网站并在上面点击和输入。请只允许你信任的网站。",
+  // chrome_read_console_messages with onlyErrors (row meta), and chrome_javascript_tool write: true (the chrome-script card).
+  "errors only": "仅错误",
+  "execute JavaScript on": "执行 JavaScript 于",
+  "Let {assistant} run a script on {host} in Chrome?": "允许 {assistant} 在 Chrome 中对 {host} 运行脚本吗？",
+  "The script runs in the page as you, like code typed into Chrome’s DevTools console: it can change the page, use the site’s cookies and send requests as you. Allow it for this session to let {assistant} run scripts on this site without asking.": "脚本会以你的身份在页面中运行，就像在 Chrome 开发者工具的控制台里输入代码一样：它可以修改页面、使用该网站的 Cookie，并以你的身份发送请求。选择在此会话中允许后，{assistant} 在此网站上运行脚本将不再询问。",
+  "The script runs in the page as you, like code typed into Chrome’s DevTools console: it can change the page, use the site’s cookies and send requests as you. Only allow scripts you understand.": "脚本会以你的身份在页面中运行，就像在 Chrome 开发者工具的控制台里输入代码一样：它可以修改页面、使用该网站的 Cookie，并以你的身份发送请求。请只允许你看得懂的脚本。",
   // V3-w6-transcript-rows: 3.6556.2 transcript rows (generated/transcript-rows, w6-transcript-rows-cont): the tool row labels of
   // c52b02f3f Hn and the cards / notices the 3.6556.2 tool rows reach (running / done / failed forms, MCP server states).
   "Abandoned merge": "已放弃合并",

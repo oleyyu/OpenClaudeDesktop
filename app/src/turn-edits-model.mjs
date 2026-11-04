@@ -1,6 +1,6 @@
-import { changePath, changeKind, changePreview, fileBasename } from "./file-tool-model.mjs";
+import { changePath, changeKind, changePreview } from "./file-tool-model.mjs";
 import { parseUnifiedDiff } from "./diff-model.js";
-import { t, tn } from "../electron/i18n/index.mjs";
+import { t } from "../electron/i18n/index.mjs";
 
 // The per-turn edits card (2.2553.1 approval-current.js:54158-54188 v8/Ipe, :54299-54517 Vpe 'turn_edits_card'):
 // every file a finished turn's completed edits touched, with its +/− counts. Here the edits are the turn's completed
@@ -88,11 +88,6 @@ export function undoTurnText(files) {
   return names.length === 1
     ? t("Undo the changes you made to {path} in your last turn and restore it to its previous state.", { path: names[0] })
     : [t("Undo the changes you made to these {count} files in your last turn and restore them to their previous state:", { count: names.length }), ...names.map((name) => `- ${name}`)].join("\n");
-}
-/** The row's label: 'Edited {file}' for one file, else 'Edited {n} files' (EQZTQdYSJR). */
-export function turnEditsLabel(edits) {
-  const files = edits?.files || [];
-  return files.length === 1 ? t("Edited {file}", { file: fileBasename(files[0].path) }) : tn(files.length, "Edited a file", "Edited {count} files");
 }
 
 // The card itself (its three rows before See all / Show {count} more, the folder hints of repeated names, the row

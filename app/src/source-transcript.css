@@ -22,8 +22,25 @@
   position: relative;
   display: flow-root;
   min-width: 0;
-  padding: 0 max(32px, calc((100% - 768px) / 2));
+  /* W14-code r2 css2-chat-gutter-shave: shared-6 vg / yg. The column gutters are --chat-column-gutter-start / -end
+     (`var(--chat-gutter-start,var(--chat-gutter,32px))`, --chat-gutter 32px on .epitaxy-root), shaved by the chat
+     tile's data-chat-gutter-start / -end (source-tile-layout.jsx); yg centres a box of the measure plus both gutters
+     (`mx-auto max-w-[calc(var(--max-content-width)+gutters)] ps-[start] pe-[end]`), which is this padding. The
+     measure is Cg's --max-content-width (768px, or html[data-transcript-width]'s --local-transcript-width). */
+  --chat-column-gutter-start: var(--chat-gutter-start, var(--chat-gutter, 32px));
+  --chat-column-gutter-end: var(--chat-gutter-end, var(--chat-gutter, 32px));
+  padding-block: 0;
+  padding-inline:
+    max(var(--chat-column-gutter-start), calc((100% - var(--local-transcript-width, 768px) + var(--chat-column-gutter-start) - var(--chat-column-gutter-end)) / 2))
+    max(var(--chat-column-gutter-end), calc((100% - var(--local-transcript-width, 768px) - var(--chat-column-gutter-start) + var(--chat-column-gutter-end)) / 2));
 }
+/* vg `[[data-chat-gutter-start=shave]_&]` / `[[data-chat-gutter-end=shave]_&]`: a chat tile off the window's leading /
+   trailing edge gives the tile gap's excess over the container padding back (32 - (12 - 8) = 28px). */
+[data-chat-gutter-start=shave] .source-transcript-content { --chat-column-gutter-start: var(--chat-gutter-start, calc(var(--chat-gutter) - (var(--tiles-gap) - var(--tiles-padding)))); }
+[data-chat-gutter-end=shave] .source-transcript-content { --chat-column-gutter-end: var(--chat-gutter-end, calc(var(--chat-gutter) - (var(--tiles-gap) - var(--tiles-padding)))); }
+/* W14-code r4 fr4-13: vg `[[data-chat-gutter-end=bleed]_&]`: a top-trailing chat tile has no container end padding
+   (source-tile-layout.jsx), so its end gutter takes --tiles-padding back (32 + 8 = 40px). */
+[data-chat-gutter-end=bleed] .source-transcript-content { --chat-column-gutter-end: var(--chat-gutter-end, calc(var(--chat-gutter) + var(--tiles-padding))); }
 /* Current Code host omits compact; both transcript engines default it false.
    V9 has ordinary 48px top/bottom reserve. No local history-page extra room
    or composer overlay is added: our composer already occupies flex height. */
@@ -33,11 +50,13 @@
 .source-transcript-content[data-transcript-spacing="regular"] > .source-message:first-child {
   margin-top: 0;
 }
-/* Preserve the existing local narrow-window rule. Official tile-container
-   gutters are a separate layout difference, outside this fade change. */
-@media (max-width: 780px) {
+/* W14-code css-main-02: shared-6 gg `[.epitaxy-chat-panel_&]:[@container_tile-slot_(max-width:560px)]:[--chat-gutter:16px]`
+   (the default --chat-gutter is 32px): the gutter follows the chat tile's width (the tile shell, source-tile-layout.css
+   .tiles-shell `container-type: inline-size`; the /btw pane its own), not the window's. r2 css2-chat-gutter-shave: gg
+   sets --chat-gutter itself, so the column gutters (and a shave, 16 - 4 = 12px) follow it. */
+@container (max-width: 560px) {
   .source-transcript-content {
-    padding-inline: 20px;
+    --chat-gutter: 16px;
   }
 }
 .source-transcript-end {
@@ -48,66 +67,6 @@
   height: 1px;
   pointer-events: none;
 }
-/* Classic chip (c360a9e1c-GPs-MV9u.js:3944-3978 od, the non-chatChrome branch;
-   scroll-shared-current.js:121-161 W/G): inline-flex h-[24px] px-xs rounded
-   bg-surface-panel text-secondary shadow-field, a fill-secondary-hover
-   gradient on hover, gap-xs, opacity over 150ms, absolute -top-[32px] above the
-   composer dock, i.e. 8px above this frame's bottom edge. The wrapper is
-   'contents' so it only forwards wheel events. */
-.source-transcript-jump-wrap { display: contents; }
-.source-transcript-jump {
-  position: absolute;
-  bottom: 8px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 1;
-  display: inline-flex;
-  align-items: center;
-  gap: var(--cds-gap-xs);
-  height: 24px;
-  padding: 0 var(--cds-pad-xs);
-  border: 0;
-  border-radius: var(--cds-radius);
-  color: var(--cds-text-secondary);
-  background: var(--cds-surface-panel);
-  box-shadow:
-    inset 0 0 0 1px var(--cds-fill-secondary-ring),
-    0 1px 2px #0000000d;
-  font-size: 12px;
-  line-height: 16px;
-  white-space: nowrap;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 150ms;
-  -webkit-app-region: no-drag;
-}
-.source-transcript-jump[data-visible="true"] {
-  opacity: 1;
-  pointer-events: auto;
-}
-.source-transcript-jump:hover {
-  background-image: linear-gradient(
-    var(--cds-fill-secondary-hover),
-    var(--cds-fill-secondary-hover)
-  );
-}
-.source-transcript-jump:focus-visible {
-  outline: none;
-  box-shadow: var(--cds-focus-shadow);
-}
-.source-transcript-input-dot {
-  flex-shrink: 0;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--cds-fill-accent);
-}
-@media (prefers-reduced-motion: reduce) {
-  .source-transcript-jump {
-    transition: none;
-  }
-}
-html[data-reduce-motion="true"] .source-transcript-jump { transition: none; }
 
 /* BY/w5 puts the completed-turn action toolbar 8px below its body. Keep all
    existing item anchors and intra-turn gaps; the footer is a sibling, not an item. */
@@ -117,7 +76,8 @@ html[data-reduce-motion="true"] .source-transcript-jump { transition: none; }
 .source-transcript-content > .stf-footer + .source-message:is(.source-user-message,[data-turn-start]) { margin-top: 15px; }
 
 /* Current ceb49ada3 split selection toolbar; cd5a31703 Eot positions its first line. */
-.source-selection-toolbar { position:fixed;left:0;top:0;z-index:455;display:flex;width:max-content;max-width:calc(100vw - 24px);isolation:isolate;will-change:transform;pointer-events:auto;-webkit-app-region:no-drag;border-radius:4px;background:var(--cds-surface-3);box-shadow:var(--cds-shadow-popover);color:var(--cds-text-primary); }
+/* W14-code TR-H6: ceb49ada3 `${r("popover")} !rounded` (c6a992d55 .rounded = var(--cds-radius)). */
+.source-selection-toolbar { position:fixed;left:0;top:0;z-index:455;display:flex;width:max-content;max-width:calc(100vw - 24px);isolation:isolate;will-change:transform;pointer-events:auto;-webkit-app-region:no-drag;border-radius:var(--cds-radius,6px);background:var(--cds-surface-3);box-shadow:var(--cds-shadow-popover);color:var(--cds-text-primary); }
 .source-selection-divider { width:1px;flex-shrink:0;margin:7px 0;background:var(--cds-alpha-2);transition:opacity .15s; }
 .source-selection-toolbar:hover .source-selection-divider,.source-selection-toolbar:focus-within .source-selection-divider { opacity:0; }
 @media (prefers-reduced-motion:reduce) { .source-selection-divider { transition:none; } }

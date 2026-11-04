@@ -1,7 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
-import { SourceSettingsButton } from "./source-settings-button.jsx";
-import { addToPrompt, planCommentsStore, serializePlanComments } from "./inline-comments.mjs";
+import { planCommentsStore } from "./inline-comments.mjs";
 import { PLAN_COMMENT_ID, PLAN_COMMENT_SKIP, PLAN_SCROLL, domPlanOffsets, planCommentOverlaps, planPopoverPlacement, rehypePlanComments } from "./plan-comments-model.mjs";
 import { Icon } from "./icons";
 import { SourceTooltip } from "./source-tooltip";
@@ -9,6 +8,8 @@ import { createClipboardFeedback } from "./clipboard-feedback.mjs";
 import { SourcePlanChecklist } from "./source-plan-checklist.jsx";
 import { suppressEscapeRepeat } from "./generated/code-editor-current/keyboard-repeat.mjs";
 import { ownerWindow } from "./generated/files-changes/owner-window.mjs";
+// E41: CDS by semantic name from the view-tabs file (the pane is imported by source-session's graph).
+import { CdsButton, CdsIcon } from "./generated/view-tabs/shared-frame-6jtSkIit.js";
 import "./source-plan-pane.css";
 import { t } from "../electron/i18n/index.mjs";
 
@@ -21,24 +22,29 @@ import { t } from "../electron/i18n/index.mjs";
 // path that no local core reports (the plan document is the plan item's text).
 // renderMarkdown(text, extension) is the pane's response renderer (SourceMarkdown with the comment marks extension).
 const SCROLLER = "h-full select-text overflow-y-auto [contain:strict] [scrollbar-gutter:stable_both-edges] p-lg";
+// r8pa-03: the heading is Gv (3.6556.2 ca7d7d34d `c`: cn("text-caption-medium uppercase tracking-wide",
+// "text-muted-as-secondary", className)) as h2 with className mb-1.25 (cccc2cf0a :1733).
 function SourcePlanTasks({ plan }) {
   return (
     <section className="mt-pad-lg source-plan-tasks">
-      <h2 className="text-caption-medium uppercase tracking-wide text-muted mb-1.25">{t("Tasks")}</h2>
+      <h2 className="text-caption-medium uppercase tracking-wide text-muted-as-secondary mb-1.25">{t("Tasks")}</h2>
       <SourcePlanChecklist plan={plan} />
     </section>
   );
 }
 
-// zh (:1229-1244): ChatSimple xs and the hint; with comments off, where they can be left (Xh o).
+// kb (3.6556.2 cccc2cf0a :1607-1632): the CDS Icon ChatSimple xs and the hint, "… text-caption text-muted-as-secondary";
+// with comments off, where they can be left (Xh o).
 export const PLAN_COMMENT_HINTS = Object.freeze({
   enabled: t("Select any text to leave a comment for DeepSeek"),
   disabled: t("You can comment on the plan in plan mode, or when DeepSeek asks you to approve it."),
 });
 function SourcePlanCommentHint({ enabled }) {
-  return <div className="mb-[var(--chat-item-gap)] flex items-center gap-1 text-caption text-muted spp-comment-hint" data-comments-enabled={enabled ? "" : undefined}>
-    <Icon name="ChatSimple" size={12} />
-    <span>{enabled ? PLAN_COMMENT_HINTS.enabled : PLAN_COMMENT_HINTS.disabled}</span>
+  return <div className="mb-[var(--chat-item-gap)] flex items-center gap-1 text-caption text-muted-as-secondary" data-comments-enabled={enabled ? "" : undefined}>
+    <CdsIcon name="ChatSimple" size="xs" />
+    {/* W14-code r8 gen-final-8 (panes review low #1): kb `h("div",{className:r,children:[i,a]})` — the message is a direct
+        child, no wrapper span. */}
+    {enabled ? PLAN_COMMENT_HINTS.enabled : PLAN_COMMENT_HINTS.disabled}
   </div>;
 }
 
@@ -68,7 +74,8 @@ const SKIP_ATTRIBUTES = Object.freeze({ [PLAN_COMMENT_SKIP]: "" });
 // saved comment, the Trash "Delete comment" button. Enter saves, Shift+Enter breaks the line, Escape and an outside
 // press with nothing typed (or nothing changed) close it, Tab cycles inside it. While a new selection is being
 // commented the range keeps its selection colour through the CSS Highlight API (epitaxy-plan-selection).
-const ICON_BUTTON = "rounded-sm p-0.75 text-muted hover:bg-fill-ghost-hover hover:text-primary disabled:opacity-40";
+// c82eca2bd De (3.6556.2 :108).
+const ICON_BUTTON = "rounded-sm p-0.75 text-muted-as-secondary hover:bg-fill-ghost-hover hover:text-primary disabled:opacity-40";
 const FIELD = "hide-focus-ring focus-visible:outline-hidden flex-1 min-w-0 resize-none border-none bg-transparent text-body";
 const HIGHLIGHT = "epitaxy-plan-selection";
 const rectsOf = (range) => {
@@ -308,7 +315,7 @@ function usePlanCommentLayer({ sessionId, canAdd, containerRef }) {
 
 // sessionId: plan comments (Gh/Rh). commentsEnabled (Xh o): a plan review is pending or the session is in Plan; the
 // hint says so, and existing marks still open their comments. The comments ride the plan review's Revise
-// (source-plan-card.jsx); 'Add to prompt' (a local extra) sends them to the composer instead.
+// (source-plan-card.jsx). 3.6556.2 cccc2cf0a zb is Bb[hint kb, Prose qa, after Vb] with no footer below the plan.
 export function SourcePlanPane({ plan, document = null, renderMarkdown = null, sessionId = null, commentsEnabled = false }) {
   const todos = Array.isArray(plan) && plan.length > 0 ? plan : null;
   const content = typeof document === "string" && document ? document : null;
@@ -334,10 +341,6 @@ export function SourcePlanPane({ plan, document = null, renderMarkdown = null, s
             {popover}
           </PlanCommentContext.Provider>
         )}
-        {comments.length > 0 && <div className="spp-comments-footer" data-plan-comments-footer="">
-          <span className="text-muted">{t("Sent with Revise on the plan card, or add them to your next message.")}</span>
-          <SourceSettingsButton size="sm" variant="secondary" onClick={() => { if (addToPrompt(serializePlanComments(comments))) planCommentsStore.clear(sessionId); }}>{t("Add to prompt")}</SourceSettingsButton>
-        </div>}
         {todos && <SourcePlanTasks plan={todos} />}
       </div>
     </div>
@@ -364,12 +367,10 @@ export function SourcePlanCopyButton({ document }) {
   useLayoutEffect(() => { controller.current?.setText(document ?? ""); }, [document]);
   const copied = state === "copied";
   const label = copied ? PLAN_COPY_LABELS.copied : PLAN_COPY_LABELS.copy;
+  // W14-code r3 fr3-08: the CDS Button itself, as 3.6556.2 cccc2cf0a draws it: `u(F,{variant:"ghost",size:"base",
+  // iconOnly:!0,icon:E,"aria-label":D,onMouseDown:em,onClick:O})` (E = o ? "Check" : "Copy"); the label is its own tooltip.
   return (
-    <SourceTooltip content={label} side="bottom" hoverable={false}>
-      <button type="button" className="source-icon-button spc-ghost" aria-label={label} data-plan-copy=""
-        onMouseDown={(event) => event.preventDefault()} onClick={() => { void controller.current?.copy(); }}>
-        <Icon name={copied ? "Check" : "Copy"} size={16} />
-      </button>
-    </SourceTooltip>
+    <CdsButton variant="ghost" size="base" iconOnly icon={copied ? "Check" : "Copy"} aria-label={label} data-plan-copy=""
+      onMouseDown={(event) => event.preventDefault()} onClick={() => { void controller.current?.copy(); }} />
   );
 }

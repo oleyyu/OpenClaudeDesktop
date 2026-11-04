@@ -61,9 +61,11 @@ test('main.jsx frame root writes each official variable once', () => {
 
 test('the root style evaluates to the official values (window, full screen, zoom)', () => {
   const expr = rootStyle();
-  const evaluate = new Function('effectiveSidebarWidth', 'sidebarWidth', 'sidebarFloor', 'fullScreen', 'trafficLightSpacer', 'zoomFactor', `return (${expr});`);
-  const at = ({ width = 288, floor = 200, fullScreen = false, zoom = 1 } = {}) =>
-    evaluate(effectiveSidebarWidth, width, floor, fullScreen, trafficLightSpacerWidth(zoom), zoom);
+  // W14-code r4 r4pa-c03 (E90): a popped-out pane window adds cd377abb5 lr's containerProps style (paneWindowPopout);
+  // the main window (and the rollback switch closed) passes null, so the five variables stay as they were.
+  const evaluate = new Function('effectiveSidebarWidth', 'sidebarWidth', 'sidebarFloor', 'fullScreen', 'trafficLightSpacer', 'zoomFactor', 'paneWindowPopout', `return (${expr});`);
+  const at = ({ width = 288, floor = 200, fullScreen = false, zoom = 1, popout = null } = {}) =>
+    evaluate(effectiveSidebarWidth, width, floor, fullScreen, trafficLightSpacerWidth(zoom), zoom, popout);
   const plain = at();
   // Exactly oR's five variables: the F08 --df-peek-top / -left / -bridge-top placement is gone with the F08 card.
   assert.deepEqual(Object.keys(plain), ['--df-sidebar-width', '--df-sidebar-floor', '--df-traffic-light-spacer', '--df-window-border', '--df-drag-ghost-z']);
@@ -83,6 +85,9 @@ test('the root style evaluates to the official values (window, full screen, zoom
   const full = at({ fullScreen: true, zoom: 0.8 });
   assert.equal(full['--df-traffic-light-spacer'], 'max(0px, calc(0px - 1000 * max(0px, var(--app-top-offset, 0px) - 48px)))');
   assert.equal(full['--df-window-border'], '0px');
+  const popped = at({ popout: { 'data-popout': 'traffic-lights', style: { '--df-popout-zoom-out': 0.8, isolation: 'isolate' } } });
+  assert.equal(popped['--df-popout-zoom-out'], 0.8);
+  assert.equal(popped.isolation, 'isolate');
 });
 
 test('the root carries the official draggable-none class (oR className "dframe-root draggable-none")', () => {
@@ -157,8 +162,11 @@ test('style.css: the F08 port is gone; one rule returns the host aside to the of
   // Every remaining [data-collapsed] rule is this one: the expanded .app-sidebar.dframe-sidebar (in-flow, relative,
   // 100% high, 0.5px border) back to base .dframe-sidebar position:absolute with no height or border.
   assert.deepEqual(css.match(/[^}]*\[data-collapsed\][^{]*\{[^}]*\}/g).map((rule) => rule.trim()),
-    ['.dframe-root[data-collapsed] .app-sidebar.dframe-sidebar {\n  position: absolute;\n  height: auto;\n  border-right: 0;\n}']);
-  assert.match(css, /\.app-sidebar\.dframe-sidebar \{\n  position: relative;[\s\S]*?height: 100%;[\s\S]*?border-right: 0\.5px solid var\(--app-line\);/);
+    ['.dframe-root[data-collapsed] .app-sidebar.dframe-sidebar {\n  position: absolute;\n  height: auto;\n}']);
+  // W14-code r2 DC-11: the expanded aside's background and end border were always beaten by shared-styles' (0,4,0)
+  // `.dframe-root[data-variant=web]:not([data-collapsed]) .dframe-sidebar{border-inline-end:…;background-color:…}`.
+  assert.match(css, /\.app-sidebar\.dframe-sidebar \{\n  position: relative;[\s\S]*?height: 100%;/);
+  assert.doesNotMatch(css.match(/\.app-sidebar\.dframe-sidebar \{[^}]*\}/)[0], /border-right|background/);
   // A popout or pane window has no sidebar; its titlebar keeps the traffic-light clearance.
   assert.match(css, /\[data-session-popout\]:not\(\[data-fullscreen\]\) \.workspace-toolbar,\n\[data-pane-window\]:not\(\[data-fullscreen\]\) \.workspace-toolbar \{\n  padding-left: calc\(var\(--df-traffic-light-spacer, 74px\) \+ 14px\);\n\}/);
 });

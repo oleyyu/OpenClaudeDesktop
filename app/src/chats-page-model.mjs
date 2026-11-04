@@ -16,8 +16,6 @@ import { sessionUpdatedAt, sessionArchived } from './sidebar-model.js';
 // its statics (`Q.config=D`, whose getFn `a` reads).
 import { a as createFuzzySearch } from './generated/code-routines/c2b74c150-BZSQ8_Os.mjs';
 
-// c623cddd3 `xe`: the filter the page opens on; the radio items of "Filter by" in their official order.
-export const CHATS_PAGE_FILTERS = Object.freeze(['active', 'archived', 'all']);
 export const CHATS_PAGE_DEFAULT_FILTER = 'active';
 // c2b74c150 `i`: the options `be` passes (R(n, keys, L)).
 export const CHATS_SEARCH_OPTIONS = Object.freeze({ threshold: 0.35 });
@@ -70,10 +68,6 @@ export function filterChatsPageRows(rows, filter = CHATS_PAGE_DEFAULT_FILTER) {
 export function createChatsSearch(rows, { keys = CHATS_SEARCH_KEYS, threshold = CHATS_SEARCH_OPTIONS.threshold } = {}) {
   const search = createFuzzySearch(rows.map(row => ({ row, title: row.title ?? '', summary: row.summary ?? '' })), keys, { threshold });
   return { search: query => search.search(String(query ?? '')).map(result => result.item.row) };
-}
-// c623cddd3 H: `e ? ve.search(e) : V` with e the trimmed query.
-export function searchChatsPageRows(rows, query) {
-  return createChatsSearch(rows).search(query);
 }
 
 // c623cddd3 H `Y`: a selected row is archivable / movable only when it is a Cowork task (`source.kind === "cowork"`,

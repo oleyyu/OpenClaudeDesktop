@@ -24,7 +24,7 @@ import { shellWrapper } from './sandbox.js'
 import { coreSettingsConfig } from './core-settings.js'
 import { appToolsServer, opencodeAppToolsEntry } from './app-tools.js'
 
-const ROUTE = /^[a-z0-9][a-z0-9-]{0,31}$/
+export const ROUTE = /^[a-z0-9][a-z0-9-]{0,31}$/
 const isRecord = (value) => !!value && typeof value === 'object' && !Array.isArray(value)
 
 export function writeAtomic(file, data, mode) {
@@ -42,7 +42,7 @@ export function readJson(file, fallback) {
 export const providerKeyEnv = (route) => `CODE_DESKTOP_PROVIDER_KEY_${String(route).toUpperCase().replace(/-/g, '_')}`
 
 /** A base URL with the version segment the AI SDK clients expect (they append /messages or /chat/completions). */
-function sdkBaseURL(api, baseURL) {
+export function sdkBaseURL(api, baseURL) {
   const url = String(baseURL).replace(/\/+$/, '')
   if (api === 'anthropic-messages') return /\/v\d+$/.test(url) ? url : `${url}/v1`
   return url

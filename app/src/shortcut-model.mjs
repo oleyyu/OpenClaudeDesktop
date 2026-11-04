@@ -42,5 +42,3 @@ export function shortcutCaps(chord, mac) { // po + ho
 }
 // go (:2255-2257): the visible labels of one chord.
 export const shortcutLabels = (chord, mac) => (chord ? shortcutCaps(chord, mac).map(({ label }) => label) : []);
-// c_ s_ (:8869-8872): a digit-only key spec is tabular.
-export const isDigitShortcut = keys => /^\d+$/.test(String(keys ?? ""));

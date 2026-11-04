@@ -274,8 +274,11 @@ test('h2 popup: the SearchablePopup (min-w-[260px]) with the search field fixed 
   const searchable = find(tree, node => node.type === Folder.EnvironmentSearchablePopup);
   assert.deepEqual([searchable.props.className, searchable.props.searchLabel, searchable.props.side, searchable.props.align, searchable.props.label],
     ['environment-picker-popup min-w-[260px]', 'Search environments…', 'bottom', 'start', 'Choose environment']);
-  const status = find(tree, node => node.props.role === 'status');
-  assert.deepEqual([status.type, status.props.className, status.props.children], ['span', 'sr-only', false]);
+  // W14-code r3 r3-shared-02: h2's xi status is a sibling of K.Root, outside the popup (cc43287c9 `return v(y, { children:
+  // [v(K.Root, …), …, xi] })`), so it is main.jsx's EnvironmentChordStatus, not part of this popup.
+  assert.ok(!elements(tree).some(node => node.props.role === 'status'));
+  const status = renderToStaticMarkup(React.createElement(Menu.EnvironmentChordStatus, { picked: null }));
+  assert.equal(status, '<span role="status" class="sr-only"></span>');
   // EnvironmentSearchablePopup: SourceMenu.Popup with yC's header (tx + rule), nothing highlighted, the rows below.
   const rendered = fixture(Folder.EnvironmentSearchablePopup, { ...searchable.props }).tree;
   assert.equal(rendered.props.initialHighlight, null); assert.equal(rendered.props.label, 'Choose environment');
@@ -292,8 +295,11 @@ test('h2 popup: the SearchablePopup (min-w-[260px]) with the search field fixed 
 
 test('main.jsx: the home environment menu opens the picker with its popup props instead of wrapping it', () => {
   const main = source('src/main.jsx');
-  assert.match(main, /case "home-environment":\n\s*\/\/ R3-home[^\n]*\n\s*return <SourceSavedEnvironmentMenu popup=\{\{ anchor: menu\.anchor, side: ENV_MENUS\[menu\.kind\]\.side, align: ENV_MENUS\[menu\.kind\]\.align, label: t\(ENV_MENUS\[menu\.kind\]\.label\), onClose: closeMenu \}\}/);
-  assert.match(main, /: menu\?\.kind === "home-environment" \? <React\.Fragment key=\{menu\.token \?\? menu\.kind\}>\{menuContent\(\)\}<\/React\.Fragment>\n\s*: ENV_MENUS\[menu\?\.kind\] \?/);
+  assert.match(main, /case "home-environment":\n\s*\/\/ R3-home[^\n]*\n\s*return <SourceSavedEnvironmentMenu popup=\{\{ anchor: menu\.anchor, side: ENV_MENUS\[menu\.kind\]\.side, align: ENV_MENUS\[menu\.kind\]\.align, label: t\(ENV_MENUS\[menu\.kind\]\.label\), onClose: closeMenu,\n\s*finalFocus: hostComposerFinalFocus\(composerFinalFocus, menu\.anchor\) \}\}/);
+  // W14-code r8 gen-final-8 review fix: cc43287c9 Dle hands `finalFocus: $i` (yte = c227f4d5e K6) to the picker, so the
+  // popup props now carry the K6 finalFocus through composer-final-focus-model.mjs (w14-r8-gen-final-8.test.mjs).
+  // W14-code composer-01: the home folder chip's menu (home-folder) is unwrapped the same way.
+  assert.match(main, /: menu\?\.kind === "home-environment" \|\| menu\?\.kind === "home-folder" \? <React\.Fragment key=\{menu\.token \?\? menu\.kind\}>\{menuContent\(\)\}<\/React\.Fragment>\n\s*: ENV_MENUS\[menu\?\.kind\] \?/);
   assert.match(main, /onStar=\{id => savedEnvironments\.run\(\{ op: 'star', id \}\)/);
 });
 
@@ -341,8 +347,9 @@ test('cd8823d73 ge "+ Add": the official Select trigger, recent folders with col
   const f = fixture(Dialog, { initialTarget: { kind: 'local', cwd: '' }, recentFolders, onClose: noop, onSave: noop, call });
   const form = f.tree.props.children[0];
   const html = renderToStaticMarkup(React.createElement('section', null, form.props.children));
-  // H with no text: the empty, aria-hidden box (fn `a(tt, {})`).
-  assert.match(html, /<div aria-hidden="true" class="box-content min-h-11 rounded border-b border-transparent outline-dashed[^"]*"><span class="px-1"><\/span><\/div>/);
+  // 3.6556.2 ca690a791 I: `M.folder ? … : t(ft, { children: Z })`, Z "Choose the folder the session starts in." (fe35lQuqJN);
+  // with text the box is not aria-hidden (cd8823d73 q `r = n === void 0 || void 0`).
+  assert.match(html, /<div class="box-content min-h-11 rounded border-b border-transparent outline-dashed[^"]*"><span class="px-1">Choose the folder the session starts in\.<\/span><\/div>/);
   assert.doesNotMatch(html, />Choose a folder</);
   // Ak select-mode trigger: data-cds Combobox, size sm, HO + outline + select + pe-sm, twMerged with ge's min-w-0 shrink; no caret.
   const trigger = html.match(/<div data-cds="Combobox" data-size="sm" class="([^"]+)"><button type="button" aria-label="Add" aria-haspopup="menu" aria-expanded="false" class="([^"]+)"><span id="[^"]+" class="min-w-0 flex-1 truncate"><span class="flex items-center gap-xs text-primary">(.*?)<\/span><\/span><\/button><\/div>/);
@@ -375,8 +382,12 @@ test('cd8823d73 ge "+ Add": the official Select trigger, recent folders with col
   assert.match(markup, new RegExp(`<span class="flex size-icon shrink-0 items-center justify-center"><span[^>]*data-cds="Icon"[^>]*>${glyph('Folder')}</span></span>Choose…</button>$`));
   action.props.onClick(); await tick();
   assert.deepEqual(calls.at(-1), ['folder', { additional: true }]);
-  // Every recent folder listed already: "No recent folders" in Ak's Empty (dk).
-  const empty = fixture(popup.type, { ...popup.props, items: [] }).tree;
+  // Nothing left to add: Ak's Empty (dk) shows ca690a791 Ln's message, which is none while there are items.
+  assert.equal(select.props.emptyMessage, undefined);
+  const emptyOf = props => find(fixture(Dialog, { onClose: noop, onSave: noop, call, ...props }).tree.props.children[0], node => node.type === Folder.EnvironmentSelect).props.emptyMessage;
+  assert.equal(emptyOf({ initialTarget: { kind: 'local', cwd: '' }, recentFolders: [] }), 'No recent folders');
+  assert.equal(emptyOf({ initialTarget: { kind: 'local', cwd: '/work/app' }, recentFolders: [{ path: '/work/app' }] }), 'No other recent folders');
+  const empty = fixture(popup.type, { ...popup.props, items: [], emptyMessage: 'No recent folders' }).tree;
   assert.equal(renderToStaticMarkup(elements(empty.props.children)[0]), `<div class="${Select.selectEmptyClassName}">No recent folders</div>`);
   assert.equal(Select.selectEmptyClassName, 'empty:hidden px-md py-1.5 text-body text-muted select-none');
 });

@@ -54,8 +54,11 @@ test('the result body and the file link are originals, sliced once', () => {
   const adapted = new Set(manifest.modules.flatMap(m => m.imports.filter(i => i.kind === 'adapter').map(i => i.name)));
   for (const name of ['HostToolResult', 'FileLink', 'useFileOpener', 'fileLanguage']) assert.ok(!adapted.has(name), name);
   for (const name of ['TranscriptMarkdown', 'useRequestStore', 'useOpenSettingsHref', 'FileMenuTrigger', 'FilePathMenuItems',
-    'SessionRenameBody', 'InboxMessageBody', 'useCodeThemeLight', 'useCodeThemeDark'])
+    'useSessionRenameMutation', 'InboxMessageBody', 'useCodeThemeLight', 'useCodeThemeDark'])
     assert.ok(adapted.has(name), name);
+  // W14-code r2 R2T-TS7: cb6930dae bc (the rename card under set_session_title, "Undo rename") is the original now; its
+  // rename mutation (c4ae8f050 M) is the host's.
+  assert.ok(!adapted.has('SessionRenameBody'));
   assert.ok(group.bindings.some(b => b.name === 'ROe'));
   // datadog / RUM never enter the area (D17): shared-0 z (the RUM client, read directly in 3.6556.2), B (trackAction) and
   // bN (reportError) are pinned adapters.

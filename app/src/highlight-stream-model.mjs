@@ -19,10 +19,6 @@ export function splitChunk(buffer, limit = STREAM_LIMITS.chunkUnits) {
   return { chunk: buffer.slice(0, size), rest: buffer.slice(size) };
 }
 
-export function acceptsUpdate(previousText, nextText, previousLanguage, nextLanguage) {
-  return typeof nextText === "string" && typeof previousText === "string"
-    && previousLanguage === nextLanguage && nextText.startsWith(previousText);
-}
 
 // Language/eligibility gate for opening a stream. Text limits are enforced
 // incrementally by createLimitTracker so growth never rescans the whole fence.
@@ -85,10 +81,6 @@ export function flattenTokens(lines) {
   const flat = [];
   for (const line of lines) for (const token of line) flat.push(token);
   return flat;
-}
-
-export function openLineTokenCount(lines) {
-  return lines.length ? lines[lines.length - 1].length : 0;
 }
 
 export function coveredLength(lines) {

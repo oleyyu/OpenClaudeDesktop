@@ -24,6 +24,13 @@ export function coreSettingDefs(flavor) {
     { key: 'dream.auto', type: 'boolean', default: false, kind: 'config' },
     { key: 'distill.auto', type: 'boolean', default: false, kind: 'config' },
   ]
+  // OpenCode 2.x: web search is its config `websearch` (false turns it off; Exa needs no key there, so it is on unless
+  // set), written to the overlay (v2/config.js) and reloaded without a restart; it no longer reads
+  // OPENCODE_ENABLE_EXA. Background sub-agents are always available there (the subagent tool's `background`), so that
+  // switch is not offered.
+  if (flavor?.api === 'v2') return [
+    { key: 'websearch.enabled', type: 'boolean', default: true, kind: 'config' },
+  ]
   return [
     // OpenCode's websearch tool exists only on OpenCode Zen / Go unless OPENCODE_ENABLE_EXA is set (tool/registry.ts);
     // with it, searches go to Exa's public endpoint. Off by default, as in OpenCode.
@@ -93,6 +100,8 @@ export function coreSettingsConfig(settings, flavor) {
 export function coreSettingsEnv(settings, flavor) {
   const stored = storedCoreSettings(settings, flavor)
   const env = {}
+  // OpenCode 2.x reads neither OPENCODE_ENABLE_EXA nor OPENCODE_EXPERIMENTAL_BACKGROUND_SUBAGENTS.
+  if (flavor?.api === 'v2') return env
   if (flavor?.id === 'mimo' && stored['privacy.usageStatisticsEnabled'] === false) env.MIMOCODE_ENABLE_ANALYSIS = 'false'
   if (flavor?.id !== 'mimo' && stored['websearch.enabled'] === true) env.OPENCODE_ENABLE_EXA = '1'
   if (flavor?.id !== 'mimo' && stored['subagents.background'] === true) env.OPENCODE_EXPERIMENTAL_BACKGROUND_SUBAGENTS = 'true'

@@ -2,7 +2,8 @@ import React, { useState } from "react";
 import "./source-auto-review.css";
 import { t } from "../electron/i18n/index.mjs";
 import { deniedActionSummary, guardianDenialEvent } from "./auto-review-model.mjs";
-import { SourceSettingsButton } from "./source-settings-button.jsx";
+// W14-code r6 R6DC-02: shared-frame Uu (E41 direct import), not the host replica.
+import { CdsButton } from './generated/view-tabs/shared-frame-6jtSkIit.js';
 
 // Codex's 'Approve for me' (approvalsReviewer auto_review): item/autoApprovalReview/started|completed name the item
 // they review (targetItemId); state.js keeps them per thread. Each shows as one muted line under that row:
@@ -39,12 +40,12 @@ function AutoReviewLine({ review, onApproveOnce }) {
   return <div className="sar-line" data-status={review.status} role="status">
     <span className={review.status === "inProgress" ? "sar-label source-shimmer" : "sar-label"}>{autoReviewLabel(review)}</span>
     {review.rationale && review.status !== "inProgress" && <span className="sar-rationale"><bdi>{review.rationale}</bdi></span>}
-    {approvable && phase === "idle" && <SourceSettingsButton size="sm" variant="ghost" className="sar-approve" onClick={() => setPhase("confirm")}>{t("Approve once")}</SourceSettingsButton>}
+    {approvable && phase === "idle" && <CdsButton size="sm" variant="ghost" className="sar-approve" onClick={() => setPhase("confirm")}>{t("Approve once")}</CdsButton>}
     {approvable && (phase === "confirm" || phase === "busy") && <div className="sar-confirm" role="group" aria-label={t("Approve once")}>
       <span>{t("Let this run once anyway?")} <code className="sar-action"><bdi>{deniedActionSummary(review.action)}</bdi></code></span>
       <span className="sar-confirm-actions">
-        <SourceSettingsButton size="sm" variant="secondary" disabled={phase === "busy"} onClick={() => { setPhase("idle"); setError(""); }}>{t("Cancel")}</SourceSettingsButton>
-        <SourceSettingsButton size="sm" variant="primary" busy={phase === "busy"} onClick={() => void approve()}>{t("Approve once")}</SourceSettingsButton>
+        <CdsButton size="sm" variant="secondary" disabled={phase === "busy"} onClick={() => { setPhase("idle"); setError(""); }}>{t("Cancel")}</CdsButton>
+        <CdsButton size="sm" variant="primary" busy={phase === "busy"} onClick={() => void approve()}>{t("Approve once")}</CdsButton>
       </span>
       {error && <span className="sar-error" role="alert">{error}</span>}
     </div>}

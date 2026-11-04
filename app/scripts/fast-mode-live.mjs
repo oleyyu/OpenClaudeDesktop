@@ -5,7 +5,7 @@ const profile=await fs.mkdtemp(path.join(evidence,'fast-live-')),pref=path.join(
 const build=JSON.parse(await fs.readFile(path.join(root,'dist/build-info.json'))),report={passed:false,realCodex:true,build,profile,scriptSha256:createHash('sha256').update(await fs.readFile(import.meta.filename)).digest('hex'),checks:[],cleanup:[],startedAt:new Date().toISOString()};
 const env={...process.env,CODE_DESKTOP_DATA:profile};delete env.CODEX_BINARY;delete env.ELECTRON_RUN_AS_NODE;delete env.CODE_DESKTOP_DEV_URL;let app,page;
 const prefs=async()=>JSON.parse(await fs.readFile(pref));
-async function slash(value){const editor=page.getByRole('textbox',{name:'Message DeepSeek'});await editor.fill(value);await editor.press('Enter');}
+async function slash(value){const editor=page.getByRole('textbox',{ name: /^(?:Prompt|Message DeepSeek)$/ });await editor.fill(value);await editor.press('Enter');}
 async function settled(marker){await page.locator('.assistant-message').filter({hasText:marker}).waitFor({timeout:180000});await page.locator('[data-testid="code-prompt-stop"]:not([inert] *)').waitFor({state:'detached',timeout:180000});}
 try{
  app=await electron.launch({executablePath:path.join(root,'node_modules/electron/dist/Electron.app/Contents/MacOS/Electron'),args:[root],env});page=await app.firstWindow();page.setDefaultTimeout(60000);await page.waitForFunction(()=>document.querySelector('.sc-model-trigger')&&!document.querySelector('.sc-model-trigger').disabled);

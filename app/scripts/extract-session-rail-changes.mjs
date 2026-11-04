@@ -136,8 +136,9 @@ const SIBLING_AREAS = [];
 // semantic names (E3), never sliced again. Export names are those of 2.42304.0 (R4/E7).
 const modules = [
   // vendor-intl sn = J("formatList"): react-intl's FormattedList (the counts' sr-only "N additions, M deletions").
-  { target: 'formatted-list.mjs', source: 'vendor-intl-DYfox5Co.js', exports: { sn: 'FormattedList' },
-    features: { sn: ['sn = J("formatList")'] } },
+  // W14-code r7: and on = J("formatNumber"), react-intl's FormattedNumber (the stale row aAe's held counts, rc), over the one J.
+  { target: 'formatted-list.mjs', source: 'vendor-intl-DYfox5Co.js', exports: { sn: 'FormattedList', on: 'FormattedNumber' },
+    features: { sn: ['sn = J("formatList")'], on: ['on = J("formatNumber")'] } },
   // shared-25 mi (exported I_): the media query hook (the counts' prefers-reduced-motion test).
   { target: 'media-query.mjs', source: 'shared-25-DOWZRSlq.js', exports: { mi: 'useMediaQuery' },
     features: { mi: ['let r = (t ?? window).matchMedia(e);', '() => (t ?? window).matchMedia(e).matches'] } },
@@ -205,13 +206,26 @@ const modules = [
   // shared-6: the branch row's class names (EL's band layout).
   { target: 'branch-row-classes.mjs', source: 'shared-6-sd9jbJqs.js',
     exports: { D_: 'branchRowClass', O_: 'BRANCH_ROW_LEADING_CLASS', k_: 'BRANCH_ROW_CHECKOUT_CLASS', N_: 'branchChipClass', P_: 'branchChipNameClass',
-      j_: 'BRANCH_ROW_GAP_CLASS', M_: 'PR_NUMBER_CLASS' },
-    features: { D_: ['return `${C_(e)} @container/branch-row`;'], O_: ['var O_ = "flex-1 flex items-center gap-0 min-w-0";'], k_: ['var k_ = "flex-1 flex items-center gap-0 min-w-0";'],
+      j_: 'BRANCH_ROW_GAP_CLASS', M_: 'PR_NUMBER_CLASS', R_: 'heldBranchRowClass',
+      // W14-code r7 gen-final-7 (D1): C_ (with its x_ / S_), the band accent classes c0b46114c _ (the session rail's inline
+      // band frame, band-frame.mjs) and cf74bc599 WE (queued-bar) read too; exported so they import this one copy.
+      C_: 'bandAccentClassName' },
+    features: { C_: ['return `${x_} ${S_[e]}`;'], D_: ['return `${C_(e)} @container/branch-row`;'], O_: ['var O_ = "flex-1 flex items-center gap-0 min-w-0";'], k_: ['var k_ = "flex-1 flex items-center gap-0 min-w-0";'],
       N_: ['let r = `${k_} @container/branch-chip text-body`;'], P_: ['"@max-[9em]/branch-chip:hidden"'], j_: ['"w-[32px] min-w-0 shrink [@container_branch-row_(max-width:320px)]:hidden";'],
-      M_: ['"min-w-0 truncate [direction:rtl] px-1.25 text-body tabular-nums"'] } },
+      M_: ['"min-w-0 truncate [direction:rtl] px-1.25 text-body tabular-nums"'],
+      // W14-code r7: R_ (exported Dp; the stale row aAe's Mte): the held row's class (the branch row, shrink-0).
+      R_: ['return `${D_(e)} shrink-0`;'] } },
   // c0b46114c b (exported n; EL's vxe): the band row's Dismiss button (C2-6: ink text-muted-as-secondary).
   { target: 'dismiss-button.mjs', source: 'c0b46114c-Tzv34BiL.js', exports: { b: 'DismissButton' },
     features: { b: ['s = o === void 0 ? "text-muted-as-secondary hover:text-primary" : o,', 'c.formatMessage({ defaultMessage: "Dismiss", id: "TDaF6JVgG6" })'] } },
+  // W14-code r3 css3-archived-band-enter / fr3-04: c0b46114c m (exported s; cc43287c9 Zre, `Ye = Zre(Je)` on the
+  // group/approval-dock container): the band-enter ref. Two frames after the element mounts with a non-null key, g sets
+  // data-band-enter (h: two requestAnimationFrames on the element's own window), and removes it when the key goes null or
+  // the element unmounts, so shared-styles' `.epitaxy-root [data-band-enter] .epitaxy-band-enter` entry transition only
+  // runs for bands that appear after the column settled. f (exported t) is the band class itself.
+  { target: 'band-enter.mjs', source: 'c0b46114c-Tzv34BiL.js', exports: { m: 'useBandEnter', f: 'BAND_ENTER_CLASS' },
+    features: { m: ['return p(e, g);'], f: ['var f = "epitaxy-band-enter";'] },
+    closureFeatures: { m: ['e.dataset.bandEnter=""', 'delete e.dataset.bandEnter', 'n.requestAnimationFrame(()=>{r=n.requestAnimationFrame(()=>{i=t()})})', '(s.current=o.current(e))'] } },
   // c227f4d5e SB / CB (xAe's Ufe / K_): the disclosure row trigger (2.42304.0 HL, its `group/disclosure` gone) and its
   // caret (no rotate-90 class; xAe rotates the icon by `rotate`).
   { target: 'rail-disclosure.mjs', source: 'c227f4d5e-B-FYKrwT.js', exports: { SB: 'RAIL_DISCLOSURE_TRIGGER_CLASS', CB: 'RAIL_DISCLOSURE_CARET_CLASS' },
@@ -241,7 +255,13 @@ const modules = [
   { target: 'pr-rows.mjs', source: TRANSCRIPT,
     exports: { EL: 'PrBarRow', bAe: 'RailPrRows', xAe: 'RailPrHistory', lL: 'PrBarLayoutContext', kke: 'PR_STATE_GLYPHS', Ake: 'PR_STATE_ACCENTS',
       CL: 'CiStatusIcon', wL: 'ciStatusLabel', mAe: 'railRowsShape', vAe: 'useRailRowsControls', gke: 'useReportRailPrCount', qL: 'railRowsOverflow',
-      JL: 'railShownRows', hMe: 'prBarMode', gR: 'historyRowKey', bR: 'repoRowId', yR: 'repoRowIdKey' },
+      JL: 'railShownRows', hMe: 'prBarMode', gR: 'historyRowKey', bR: 'repoRowId', yR: 'repoRowIdKey',
+      // W14-code r7 (css7-git-band-prbarrow): the band's stale hold (Sje's sAe over gje's held rows): aAe draws one held
+      // row snapshot (c03935b01 An's shape) inert at opacity-60 under eAe (data-prbar-stale); nR is the band rows' list
+      // class and vje the hold's (with shared-46 A_, branch-row-ghost.mjs, and the remembered height).
+      // W14-code r8 R8DC-02: eAe is no longer exported (PR_BAR_STALE_ATTR had no importer once SourceGitStatusStale went);
+      // aAe still reads it inside the module.
+      aAe: 'PrBarStaleRow', nR: 'PR_BAR_ROWS_CLASS', vje: 'PR_BAR_HOLD_CLASS' },
     features: {
       EL: ['ce = (t ?? se) === "rail",', 'if (n !== void 0 && xe) {', 'defaultMessage: "View pull request",', '{ defaultMessage: "#{number}", id: "rj4hoKw+Qf" }',
         'Te = s === void 0 && Ce === void 0 ? we : "live";', 'Te === "asks"', 'Te === "refused"', ' hover:decoration-current`',
@@ -261,7 +281,19 @@ const modules = [
       qL: ['return e.rows.length > 5;'], JL: ['return t || e.rows.length <= 5 ? e.rows : e.rows.slice(0, 5);'],
       hMe: ['e.state === "merged"', 'e.state === "queued"'], gR: ['return `${e}#${t}`;'], bR: ['repo: (e.repo.split("/").pop() ?? "").toLowerCase(),'],
       yR: ['return JSON.stringify([e.cwd, e.repo, e.branch, e.history]);'],
+      aAe: ['c = J0($, 0) ? K0($, 0, { [eAe]: "" }) : $[0],', 'l = `${J1($, 1, r) ? K1($, 1, r, Mte(r)) : $[2]} pointer-events-none ${BL}`,',
+        'f(iAe, { row: t, accentText: i })', '...c,', 'inert: !0,', 'style: u,'],
+      nR: ['"scroll-fade-y flex max-h-[50vh] flex-col overflow-y-auto overscroll-contain empty:hidden"'],
+      vje: ['"flex shrink-0 flex-col overflow-hidden [&>*]:shrink-0"'],
     } },
+  // W14-code r7 (css7-git-band-prbarrow): c03935b01 An (exported or; Zje's `wm(...)`): one band row's snapshot for the stale
+  // hold ({id, repoName, branchName, pr, diff, comments?, ci, action, split, accent, dismissable}); shared-46 A_ (exported
+  // Ws; Sje's `yi`): the hold's attribute (data-epitaxy-branch-row-ghost, which also keeps the rail card shown).
+  { target: 'pr-bar-snapshot.mjs', source: 'c03935b01-yhcY34vt.js', exports: { An: 'prBarRowSnapshot' },
+    features: { An: ['n = e.prState === "merged" || e.prState === "queued",', 'r = e.prMode === "merge" ? "none" : e.prMode;', 'repoName: e.hideRepo ? null : e.repoName,',
+      'split: !n && e.chooser && (r === "create" || r === "draft" || r === "compose"),'] } },
+  { target: 'branch-row-ghost.mjs', source: 'shared-46-BIbZBGFq.js', exports: { A_: 'BRANCH_ROW_GHOST_ATTR' },
+    features: { A_: ['A_ = "data-epitaxy-branch-row-ghost"'] } },
 ];
 
 // Original text the host wiring follows but cannot import (prettier form of the named top-level declaration).

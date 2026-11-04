@@ -79,12 +79,6 @@ export function pluginDetailTabs(detail, pluginId, knownSkills = [], { descripti
   return tabs;
 }
 
-// c24c8737b xs → uo: the Tool permissions servers. Only the unified plugins UI (shared-52 gk, GrowthBook
-// gate 2406162393) uses a host's servers (and only c76f00e40 gr, the directory connector record page, passes any);
-// otherwise uo is enabled for that UI only, so with the gate closed on the host the list is empty.
-export function pluginToolPermissionServers({ unifiedPluginsUi = false, hostToolPermissionsServers } = {}) {
-  return unifiedPluginsUi === true && Array.isArray(hostToolPermissionsServers) && hostToolPermissionsServers.length > 0 ? hostToolPermissionsServers : [];
-}
 
 // c24c8737b pc Kt: Overview first and unconditionally, Tool permissions next only when the resolved servers are
 // non-empty (`Ut === !0 && e.push({id:"permissions"…})`), then the content tabs in their own order. Not reproduced:

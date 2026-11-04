@@ -82,7 +82,7 @@ try {
   await app.evaluate(({app,powerSaveBlocker,powerMonitor})=>{let startup=false;app.getLoginItemSettings=()=>({openAtLogin:startup});app.setLoginItemSettings=({openAtLogin})=>{startup=openAtLogin;};app.dock.setBadge=()=>{};app.dock.bounce=()=>0;powerSaveBlocker.start=()=>1;powerSaveBlocker.stop=()=>{};powerMonitor.isOnBatteryPower=()=>false;});
   page=await app.firstWindow();page.setDefaultTimeout(12000);page.on('pageerror',e=>rendererErrors.push(e.message));
   await app.evaluate(({BrowserWindow})=>BrowserWindow.getAllWindows()[0].setContentSize(1324,768));await page.waitForFunction(()=>innerWidth===1324&&innerHeight===768);
-  await page.getByRole('textbox',{name:'Message DeepSeek'}).waitFor();await page.keyboard.press('Meta+,');const dialog=page.getByRole('dialog',{name:'Settings',exact:true});await dialog.waitFor();
+  await page.getByRole('textbox',{ name: /^(?:Prompt|Message DeepSeek)$/ }).waitFor();await page.keyboard.press('Meta+,');const dialog=page.getByRole('dialog',{name:'Settings',exact:true});await dialog.waitFor();
   // HANDOFF 0.2.119: useModalPresence commits data-open="true" only on the rAF after mount
   // (use-modal-presence.js:11-12); before it no transition exists, so the getAnimations()
   // wait below is vacuously true. The v119 chain run then clicked Close while data-open was

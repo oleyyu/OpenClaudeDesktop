@@ -1,8 +1,8 @@
 import test from 'node:test';import assert from 'node:assert/strict';
-import {slashQuery,commandArgumentHint,parseSessionCommand} from '../src/session-command-model.mjs';
+import {commandArgumentHint,parseSessionCommand} from '../src/session-command-model.mjs';
 import {withLocalCommandRows,rewindChoices,transcriptMarkdown} from '../src/slash-actions-model.mjs';
 test('trigger and argument hints enforce range and whitespace limits',()=>{
- assert.equal(slashQuery('/'),'');for(const input of ['x/','/ ','/foo\nbar','/'+ 'a'.repeat(51)])assert.equal(slashQuery(input),null);
+ // W14-code r4 gen-final-4: the test-only slashQuery is deleted (the composer's '/' trigger is the generated suggestion).
  assert.equal(commandArgumentHint('/fork '),'[prompt]');assert.equal(commandArgumentHint('/name '),'[new title]');assert.equal(commandArgumentHint('/fork x'),'');assert.equal(commandArgumentHint('/fork '+' '.repeat(129)),'');
  // /cd <path> is a command now (a fork into that folder, Codex's /cd): it parses with its path.
  assert.equal(parseSessionCommand('/cd ~/x').error,null);assert.equal(parseSessionCommand('/cd ~/x').args,'~/x');assert.match(parseSessionCommand('/feedback').error,/isn’t available/);

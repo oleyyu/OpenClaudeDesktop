@@ -5,7 +5,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { createServer } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "node:path";
-import { historySearchStep, historySearchStatus, isHistorySearchKey } from "../src/prompt-history-model.mjs";
+import { HISTORY_SEARCH_STATUS, historySearchStep, historySearchStatus, isHistorySearchKey } from "../src/prompt-history-model.mjs";
 import { emojiToken, emojiMatches, emoticonReplacement, insertEmoji, emojiPopupGeometry, EMOJI, EMOJI_RESULT_LIMIT } from "../src/emoji-model.mjs";
 import zh from "../electron/i18n/zh-CN/index.mjs";
 
@@ -107,7 +107,8 @@ test("prompt suggestion: bare ghost overlay, the placeholder cleared, no '(Tab t
 
 test("every new composer string has a zh-CN entry", () => {
   for (const key of ["bash", "Run as a shell command", "Enter a shell command", "Bash mode. Press Escape to return to chat.", "Chat mode",
-    "A shell command takes plain text only, so nothing was sent. Remove @-mentions, slash commands, and formatting.", "Search history:", "Search history: {query}",
-    " — match {index} of {total}", " — no match", "cycle", "cancel", "Emoji suggestions", "Click to preview", "Maximum of {max} images allowed."])
+    "A shell command takes plain text only, so nothing was sent. Remove @-mentions, slash commands, and formatting.", "Search history:",
+    // W14-code r2-composer-06: the status is c227f4d5e Nt's one ICU message MNU6kO4MFO (prompt-history-model HISTORY_SEARCH_STATUS).
+    HISTORY_SEARCH_STATUS.defaultMessage, "cycle", "cancel", "Emoji suggestions", "Click to preview", "Maximum of {max} images allowed."])
     assert.ok(typeof zh[key] === "string" && zh[key], key);
 });

@@ -61,10 +61,14 @@ async function verifySource() {
   else testSourceHashes = hashes;
 }
 const near = (actual, expected, label, tolerance = .5) => assert.ok(Math.abs(actual - expected) <= tolerance, `${label}: expected ${expected}, got ${actual}`);
-const menu = (name) => page.getByRole("menu", { name, exact: true });
+// W14-code r4 closeout (frame-sidebar fr4-03): the session / titlebar menu has no accessible name (shared-20 j.Popup has no
+// aria-label), so SESSION_MENU (null) means "the unnamed top-level menu".
+const SESSION_MENU = null, UNNAMED_MENU = '[role="menu"]:not([aria-label]):not([aria-labelledby])';
+const menu = (name) => name === null ? page.locator(UNNAMED_MENU) : page.getByRole("menu", { name, exact: true });
 const button = (name) => page.getByRole("button", { name, exact: true });
 const frames = (count = 2) => page.evaluate((count) => new Promise((resolve) => { const step = () => --count ? requestAnimationFrame(step) : resolve(); requestAnimationFrame(step); }), count);
 async function waitFocusIn(name) {
+  if (name === null) { await page.waitForFunction((selector) => !!document.activeElement?.closest(selector), UNNAMED_MENU); return; }
   // Initial focus lands on the next animation frame (retained local behavior);
   // keys sent before that boundary would test a race, not a user's press.
   await page.waitForFunction((name) => !!document.activeElement?.closest(`[role="menu"][aria-label="${name}"], [role="menu"][aria-labelledby]`)
@@ -76,8 +80,8 @@ async function noSheet() {
   assert.equal(await page.evaluate(() => document.querySelectorAll("[data-cds-sheet-tree], [data-cds-sheet-pending], .smenu-sheet").length), 0, "no sheet nodes on a fine pointer");
 }
 async function measurePopup(name, anchorSelector) {
-  return page.evaluate(({ name, anchorSelector }) => {
-    const popup = [...document.querySelectorAll('[role="menu"]')].find((node) => node.getAttribute("aria-label") === name
+  return page.evaluate(({ name, anchorSelector, unnamed }) => {
+    const popup = [...document.querySelectorAll('[role="menu"]')].find((node) => name === null ? node.matches(unnamed) : node.getAttribute("aria-label") === name
       || document.getElementById(node.getAttribute("aria-labelledby") || "")?.textContent === name);
     const anchor = document.querySelector(anchorSelector);
     const probe = (property) => {
@@ -106,7 +110,7 @@ async function measurePopup(name, anchorSelector) {
       portal: portal ? { density: portal.getAttribute("data-density"), mode: portal.getAttribute("data-mode"), z: getComputedStyle(portal).getPropertyValue("--cds-portal-z").trim(), layerBase: getComputedStyle(portal).getPropertyValue("--cds-layer-base").trim(), childZ: getComputedStyle(positioner).zIndex } : null,
       viewport: { width: innerWidth, height: innerHeight },
     };
-  }, { name, anchorSelector });
+  }, { name, anchorSelector, unnamed: UNNAMED_MENU });
 }
 function assertPopup(value, { dataCds = "Menu", maxWidth = 320, minWidth = 128, gap, gapSide, label }) {
   assert.equal(value.role, "menu", `${label}: role`);
@@ -217,8 +221,10 @@ try {
 
   // 1. Catalog loading lives on the trigger (shared-14 kS: disabled + spinner + "Loading models…").
   const loadingTrigger = page.locator('.sc-model-trigger[aria-busy="true"]');
+  // R4 closeout: the pill's loading spinner is shared-7's CDS Spinner (`<CdsSpinner size="sm" />`, data-cds="Spinner"
+  // aria-hidden; source-composer-row-chin.jsx ComposerModelTrigger); the host .sc-spinner markup no longer exists.
   await loadingTrigger.waitFor();
-  metrics.loading = await loadingTrigger.evaluate((node) => ({ disabled: node.disabled, text: node.textContent, spinner: !!node.querySelector(".sc-spinner"), expanded: node.getAttribute("aria-expanded"), popup: node.getAttribute("aria-haspopup") }));
+  metrics.loading = await loadingTrigger.evaluate((node) => ({ disabled: node.disabled, text: node.textContent, spinner: !!node.querySelector('[data-cds="Spinner"]'), expanded: node.getAttribute("aria-expanded"), popup: node.getAttribute("aria-haspopup") }));
   assert.equal(metrics.loading.disabled, true);
   assert.equal(metrics.loading.text, "Loading models…");
   assert.equal(metrics.loading.spinner, true);
@@ -700,11 +706,11 @@ try {
   // B09 (cf74bc599 ZT): the ⋮ is 'View options' — view items and Keep computer awake, no session commands.
   await button("View options").waitFor();
   await button("View options").click();
-  await menu("Session menu").waitFor(); await waitFocusIn("Session menu");
+  await menu(SESSION_MENU).waitFor(); await waitFocusIn(SESSION_MENU);
   await noSheet();
-  metrics.titlebar = await measurePopup("Session menu", '[aria-label="View options"]');
+  metrics.titlebar = await measurePopup(SESSION_MENU, '[aria-label="View options"]');
   assertPopup(metrics.titlebar, { gap: 6, gapSide: "below", label: "Titlebar session" });
-  const filesRow = menu("Session menu").getByRole("menuitemcheckbox", { name: "Files", exact: true });
+  const filesRow = menu(SESSION_MENU).getByRole("menuitemcheckbox", { name: "Files", exact: true });
   metrics.filesRow = await measureRow(filesRow);
   // HANDOFF 0.2.105/0.2.124: Files now carries its toggleBrowser ⌘⇧F (panes-toggle-current.js:3236-3253, main.jsx:1868),
   // so by source-menu.jsx:425 (bareCheck = check && !hint && !shortcut) its slot is not bare and keeps 0 margin on
@@ -716,8 +722,8 @@ try {
   assert.equal(metrics.filesRow.check.color, metrics.filesRow.check.accent);
   assert.equal(metrics.filesRow.height, 24);
   // The View options menu holds no command rows (zt clears them), so the walk only proves ArrowDown stays on enabled rows.
-  assert.equal(await menu("Session menu").locator('[role="menuitem"][data-label="Compact conversation"]').count(), 0, "no session commands in View options");
-  metrics.viewOptionsRows = await menu("Session menu").evaluate((node) => [...node.querySelectorAll('[role^="menuitem"]')].map((row) => row.dataset.label ?? row.textContent));
+  assert.equal(await menu(SESSION_MENU).locator('[role="menuitem"][data-label="Compact conversation"]').count(), 0, "no session commands in View options");
+  metrics.viewOptionsRows = await menu(SESSION_MENU).evaluate((node) => [...node.querySelectorAll('[role^="menuitem"]')].map((row) => row.dataset.label ?? row.textContent));
   const visited = [];
   for (let step = 0; step < 6; step++) {
     await page.keyboard.press("ArrowDown");
@@ -729,12 +735,12 @@ try {
   // Re-target race (titlebar): right-clicking the session title while the View options menu is open opens the
   // header session menu in the same task; it must stay open. shared-21 IV contextMenuTrigger: it is a ContextMenu at
   // the pointer (as the sidebar rows' context menu above), and the CaretDown stays collapsed.
-  const titleBox = await page.locator("button.st-title").boundingBox();
+  const titleBox = await page.locator("button:is(.st-title,[data-pane-title])").boundingBox();
   const titleCursor = { x: Math.round(titleBox.x + Math.min(20, titleBox.width / 2)), y: Math.round(titleBox.y + titleBox.height / 2) };
   await page.mouse.click(titleCursor.x, titleCursor.y, { button: "right" });
   await page.waitForTimeout(350);
   metrics.titleRace = await page.evaluate(() => {
-    const popup = document.querySelector('[role="menu"][aria-label="Session menu"]'), caret = document.querySelector(".st-session-caret");
+    const popup = document.querySelector('[role="menu"]:not([aria-label]):not([aria-labelledby])'), caret = document.querySelector(".st-session-caret");
     return popup ? { left: popup.getBoundingClientRect().left, top: popup.getBoundingClientRect().top, dataCds: popup.getAttribute("data-cds"),
       rows: popup.querySelectorAll('[role^="menuitem"]').length, caretExpanded: caret?.getAttribute("aria-expanded") ?? null } : null;
   });
@@ -753,9 +759,9 @@ try {
   await cdp.send("Emulation.setDeviceMetricsOverride", { width: 1000, height: 220, deviceScaleFactor: 0, mobile: false });
   await page.waitForFunction(() => innerHeight === 220);
   await page.locator(".st-toolbar").getByRole("button", { name: /^More options for / }).click();
-  await menu("Session menu").waitFor(); await waitFocusIn("Session menu");
+  await menu(SESSION_MENU).waitFor(); await waitFocusIn(SESSION_MENU);
   const readScrollBody = () => page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => {
-    const popup = document.querySelector('[role="menu"][aria-label="Session menu"]'), body = popup.querySelector(":scope > .smenu-body"), style = getComputedStyle(body);
+    const popup = document.querySelector('[role="menu"]:not([aria-label]):not([aria-labelledby])'), body = popup.querySelector(":scope > .smenu-body"), style = getComputedStyle(body);
     const read = (name) => style.getPropertyValue(name).trim();
     resolve({ classes: body.className, overflow: style.overflowY, scrollTop: body.scrollTop, scrollHeight: body.scrollHeight, clientHeight: body.clientHeight,
       popupMaxHeight: getComputedStyle(popup).maxHeight, availableHeight: popup.parentElement.style.getPropertyValue("--available-height"), viewportHeight: innerHeight,
@@ -774,7 +780,7 @@ try {
   assert.equal(metrics.scrollFadeTop.active, "1", "scroll timeline active");
   assert.equal(metrics.scrollFadeTop.topRaw, "0px", "no top fade at scrollTop 0");
   assert.equal(metrics.scrollFadeTop.bottomRaw, "28px", "full bottom fade at scrollTop 0");
-  await page.evaluate(() => { const body = document.querySelector('[role="menu"][aria-label="Session menu"] > .smenu-body'); body.scrollTop = body.scrollHeight; });
+  await page.evaluate(() => { const body = document.querySelector('[role="menu"]:not([aria-label]):not([aria-labelledby]) > .smenu-body'); body.scrollTop = body.scrollHeight; });
   metrics.scrollFadeBottom = await readScrollBody();
   assert.ok(metrics.scrollFadeBottom.scrollTop > 0);
   assert.equal(metrics.scrollFadeBottom.topRaw, "28px", "full top fade at the end of the scroll range");
@@ -841,7 +847,7 @@ try {
   page.setDefaultTimeout(15000);
   page.on("pageerror", (error) => rendererErrors.push(error.message));
   await isolateWindow();
-  await page.getByRole("textbox", { name: "Message DeepSeek" }).waitFor();
+  await page.getByRole("textbox", { name: /^(?:Prompt|Message DeepSeek)$/ }).waitFor();
   await page.waitForFunction(() => document.querySelector(".sc-model-trigger") && document.querySelector(".sc-model-trigger").getAttribute("aria-busy") !== "true");
   metrics.empty = await page.locator(".sc-model-trigger").evaluate((node) => ({ disabled: node.disabled, busy: node.getAttribute("aria-busy"), text: node.textContent }));
   assert.equal(metrics.empty.disabled, true); assert.equal(metrics.empty.busy, null); assert.equal(metrics.empty.text, "Default model");

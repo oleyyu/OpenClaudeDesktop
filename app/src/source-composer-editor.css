@@ -1,47 +1,26 @@
 .sc-composer .sc-input.ProseMirror{position:relative;white-space:pre-wrap;overflow-wrap:break-word;overflow-y:auto;}
 .sc-composer .sc-input.ProseMirror p{margin:0;min-height:20px;}
-/* The placeholder attribute lives on the editor; use its pseudo-element so
-   empty paragraph mutations never become document content. */
-/* One line inside the editor's padding box (left: its 4px start padding): a narrow composer (a split side, a pane
-   beside a small window) ellipsizes it instead of wrapping it past the one-line editor into scrollbars. */
-/* R4i-graph GR3: only an editor that carries its placeholder (the side chat's); the Code / side-session shell's editor has
-   none (cm's placeholder span), so its ProseMirror::before stays the official float notch (3.6556.2: the presets one-row
-   card passes trailingNotch "pad" instead, vm's pe-[var(--cmp-trail-w,0px)] column reserve, so no notch there). */
-.sc-composer .sc-input.ProseMirror[data-empty=true][data-placeholder]::before{content:attr(data-placeholder);pointer-events:none;position:absolute;left:4px;right:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;color:var(--cds-text-muted);}
-.sc-composer .sc-input.ProseMirror[aria-disabled=true]::before{color:var(--cds-text-disabled,var(--cds-text-muted));}
+/* W14-code r3 gen-final-3: no host placeholder ::before. Every .sc-composer editor is the Code / side-session shell's
+   (the side chat renders that card too since css3-side-chat-composer, cccc2cf0a UF fp = c227f4d5e jF), and the shell
+   clones it with placeholder undefined (cm's placeholder span draws the copy), so [data-placeholder] never matched.
+   W14-code r4 (css4-editor-disabled-before / R4DC-04): the aria-disabled ::before colour went too — the ::before is only
+   c6a992d55's empty `.ProseMirror:before{content:var(--tw-content)}` float notch, so a colour on it showed nothing. */
 .sc-input .ProseMirror-selectednode{outline:none;}
 .sc-input.ProseMirror-hideselection *::selection{background:transparent;}
 .sc-input.ProseMirror-hideselection{caret-color:transparent;}
 .sc-input img.ProseMirror-separator{display:inline!important;border:0!important;margin:0!important;}
-/* shared-14-BOJVa-jT.js:18295 'group/chip inline-flex relative cursor-pointer': an arrow under :root[data-dframe]. */
-.sc-command-chip{position:relative;display:inline-flex;cursor:var(--cds-cursor-interactive,default);color:var(--cds-text-accent);}
-.sc-command-chip-glow{position:absolute;top:-2px;bottom:-2px;left:-2px;right:-4px;border-radius:6px;pointer-events:none;}
-.sc-command-chip:is(:hover,[data-selected],[data-card-open]) .sc-command-chip-glow{background:var(--cds-bg-accent);}
-.sc-command-chip-label{position:relative;padding-left:8px;user-select:none;}
-.sc-command-chip-slash{position:absolute;top:50%;transform:translateY(-50%);left:0;display:flex;align-items:center;justify-content:center;width:8px;height:20px;opacity:.5;user-select:none;font-family:var(--cds-font-sans);font-size:var(--cds-font-size-body);font-weight:var(--cds-font-weight-medium);line-height:var(--cds-leading-body);}
+/* W14-code r4 (css4-skill-chip-card / css4-mention-chip-wrap): the skill chip, its hover card and the @ mention chip
+   draw the official shared-9 WS/VS/BS and shared-28 vS class strings (source-composer-editor.jsx); their hand-copied
+   2.42304.0 .sc-command-* / .sc-mention-chip* rules are gone. The node-view wrapper stays an inline box. */
 .sc-command-argument{display:inline;font:inherit;line-height:inherit;opacity:.5;pointer-events:none;user-select:none;}
-.sc-command-card{position:fixed;z-index:50;display:flex;flex-direction:column;gap:8px;width:178px;padding:8px;border-radius:12px;border:.5px solid var(--cds-border);background:var(--cds-surface-3);box-shadow:var(--cds-shadow-lg);font-family:var(--cds-font-sans);font-size:var(--cds-font-size-body);line-height:var(--cds-leading-body);font-weight:400;}
-.sc-command-card-description{padding:8px;border-radius:8px;background:var(--cds-surface-1);color:var(--cds-text-muted);font-size:var(--cds-font-size-caption);line-height:var(--cds-leading-caption);}
-.sc-command-card-description p{margin:0;display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden;}
-/* shared-13-Bl2X1oob.js:7882-7958 Aw: 'inline-flex relative cursor-interactive group/mention mx-0.5 text-accent'; the glow
-   '-inset-y-0.5 -left-0.5 -right-1 rounded-md' is bg-accent when the atom is selected, else fill-ghost-hover on hover. */
 .sc-mention-node{display:inline;}
-.sc-mention-chip{position:relative;display:inline-flex;margin-inline:calc(var(--spacing,.25rem) * .5);cursor:var(--cds-cursor-interactive,pointer);color:var(--cds-text-accent);}
-.sc-mention-chip-trigger{position:relative;display:inline-flex;}
-.sc-mention-chip-glow{position:absolute;top:-2px;bottom:-2px;left:-2px;right:-4px;border-radius:6px;pointer-events:none;}
-.sc-mention-chip:not([data-selected]):hover .sc-mention-chip-glow{background:var(--cds-fill-ghost-hover);}
-.sc-mention-chip[data-selected] .sc-mention-chip-glow{background:var(--cds-bg-accent);}
-.sc-mention-chip-label{position:relative;user-select:none;}
-.sc-mention-chip-label::selection{background:transparent;}
 /* The "ultracode" keyword while it opts the turn into a dynamic workflow (Claude Code highlights it in the prompt). */
 .sc-ultracode-keyword { color: var(--cds-text-pro); font-weight: 500; }
 /* B31: the composer's marks and code block (shared-5 :15975-16060: link, strike, inline code, CodeBlock yD
-   'code-block' > pre > code), the link bubble (ca80fca8d KM) and the Edit link dialog (qM). */
-.sc-composer .sc-input.ProseMirror a.sc-composer-link{color:var(--cds-text-accent);text-decoration:underline;text-decoration-color:color-mix(in oklab,currentColor 40%,transparent);text-underline-offset:2px;cursor:text;}
+   'code-block' > pre > code), the link bubble (ca80fca8d KM) and the Edit link dialog (qM). W14-code
+   css/composer-marks-code-link: the link, inline code and code block are the official shared-styles
+   `.epitaxy-root .ProseMirror a` / `div.ProseMirror :not(pre)>code` / `.code-block pre` rules (no local rule). */
 .sc-composer .sc-input.ProseMirror s{text-decoration:line-through;}
-.sc-composer .sc-input.ProseMirror code.sc-inline-code{padding:0 3px;border-radius:4px;background:var(--cds-alpha-2,rgba(0,0,0,.06));color:var(--cds-prose-code-color,var(--cds-text-danger,inherit));font-family:var(--font-code,var(--cds-font-mono,ui-monospace,monospace));font-size:.9em;}
-.sc-composer .sc-input.ProseMirror pre.sc-code-block{margin:4px 0;padding:6px var(--cds-pad-md,8px);border-radius:8px;background:var(--cds-alpha-2,rgba(0,0,0,.06));white-space:pre-wrap;overflow-wrap:anywhere;direction:ltr;font:400 var(--cds-font-size-code,12px)/var(--cds-leading-code,17px) var(--font-code,var(--cds-font-mono,ui-monospace,monospace));color:var(--cds-text-primary);}
-.sc-composer .sc-input.ProseMirror pre.sc-code-block code{font:inherit;background:none;padding:0;}
 .sc-link-bubble{position:fixed;z-index:50;isolation:isolate;display:flex;align-items:center;gap:4px;padding:var(--cds-pad-xs,4px);border-radius:var(--cds-radius--lg,8px);background:var(--cds-surface-3);box-shadow:inset 0 0 0 var(--cds-ring-inner,0px) var(--cds-ring-color,transparent),0 0 0 var(--cds-ring-outer,0px) var(--cds-ring-color,transparent),var(--cds-shadow-popover);color:var(--cds-text-primary);overflow-wrap:break-word;font:400 var(--cds-font-size-body,13px)/var(--cds-leading-body,19px) var(--cds-font-sans);}
 .sc-link-fields{display:flex;flex-direction:column;gap:12px;margin-top:8px;}
 .sc-link-field{display:flex;min-width:0;flex-direction:column;gap:var(--cds-gap-sm,4px);}
