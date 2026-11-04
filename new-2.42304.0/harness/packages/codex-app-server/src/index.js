@@ -1091,6 +1091,27 @@ export function apply(ctx, config) {
     }
   }
 
+  /**
+   * turn/interrupt names a turn that isn't running here: the client missed its turn/completed (a dropped event, a
+   * stale history turn), and its Stop waits for one that never comes, the session "working" for good. The client is
+   * told that turn is over: as it ended when the projection knows it, else interrupted. The running turn ends through
+   * the projection as before, and so does a live sub-agent's (stopChild).
+   */
+  function settleStaleTurn(id, thread, turnId) {
+    if (typeof turnId !== 'string' || !turnId) return
+    if (!thread && children.has(id)) return
+    const projector = thread?.projector
+    const running = projector?.activeTurn
+    if (running?.id === turnId) return
+    // A turn starting but not projected yet: its own turn/started and turn/completed follow.
+    if (thread && !running && (thread.agent.status === 'running' || thread.compaction)) return
+    const known = projector?.turns.find((turn) => turn.id === turnId)
+    const turn = known && known.status !== 'inProgress'
+      ? projector.snapshot(known, 'notLoaded')
+      : { id: turnId, items: [], itemsView: 'notLoaded', status: 'interrupted', error: null, startedAt: null, completedAt: null, durationMs: null }
+    notify('turn/completed', { threadId: id, turn })
+  }
+
   /** subagent/start for a child working (at any depth) for a live root thread. */
   function startChild(info) {
     const agent = ctx.agents.get?.(info?.id)
@@ -2187,6 +2208,7 @@ export function apply(ctx, config) {
           // A sub-agent (the client's Stop on its task): stop that child only.
           stopChild(id)
         }
+        settleStaleTurn(id, thread, params.turnId)
         return {}
       }
       case 'thread/compact/start': {

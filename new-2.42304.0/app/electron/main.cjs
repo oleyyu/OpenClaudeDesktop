@@ -26,7 +26,7 @@ const { respondToApproval } = require("./respond-approval.cjs");
 const { createNativeSideChat } = require("./native-side-chat.cjs");
 const { createNativeThreadTitles } = require("./native-thread-title.cjs");
 const { messageFeedbackParams } = require("./message-feedback.cjs");
-const { interruptTurn } = require("./interrupt-turn.cjs");
+const { interruptTurn, settleAfterStop } = require("./interrupt-turn.cjs");
 const { steerTurn } = require("./steer-turn.cjs");
 const { createSessionOperations, connectionMatches } = require("./session-operations.cjs");
 const { createBtwSessions, supportsBtwChildren } = require("./btw-sessions.cjs");
@@ -1638,59 +1638,88 @@ function withAppToolImages(e) {
 }
 let artifactIndex, artifactRead;
 const artifactIndexed = new WeakMap();
-function receive(e) {
-  e = withAppToolImages(e);
-  // R4g-routines RT6: a Code task run's command approval its task's rule covers is answered (accept, this call) before any card.
-  if (routineApprovals?.receive(e, client, respondToApproval)) return;
-  // A side-chat fork's events stay in main: the panel gets its deltas, the sidebar never sees the fork.
-  if (nativeSideChat.observe(e)) return;
-  if (nativeThreadTitles.observe(e)) return;
-  if (e.method === "externalAgentConfig/import/completed" && typeof e.params?.importId === "string") {
-    // Kept briefly too: the notification can arrive before the import call's own response.
-    if (pendingImports.has(e.params.importId)) pendingImports.get(e.params.importId)(e.params);
-    else { finishedImports.set(e.params.importId, e.params); setTimeout(() => finishedImports.delete(e.params.importId), 60000).unref?.(); }
+// Every observer below runs on its own: one that throws (save() on a full disk, a malformed event) is logged and
+// skipped, and the event still reaches the windows. An exception used to unwind into codex.cjs's line reader, which
+// dropped the whole event without a trace: a lost turn/completed left its session "working" for good.
+function observeSafely(label, e, run) {
+  try { return run(); }
+  catch (error) {
+    console.warn(`[events] ${label} failed on ${e?.method ?? e?.kind ?? "an event"}:`, error?.stack ?? error);
+    return undefined;
   }
-  if (e.kind === "connection" && !e.connected) { connectionNotices = []; activeGoals.clear(); }
-  if ((e.method === "configWarning" || e.method === "deprecationNotice" || (e.method === "warning" && !e.params?.threadId)) && connectionNotices.length < 50)
-    connectionNotices.push({ method: e.method, params: e.params });
-  if (e.method === "configWarning" && typeof e.params?.path === "string" && path.isAbsolute(e.params.path) && !e.params.path.includes("\0") && configWarningPaths.size < 200)
-    configWarningPaths.add(e.params.path);
-  sessionOperations.observe(e);
-  btwSessions.observe(e);
-  if (e.method === 'item/completed' && artifactIndex?.recordArtifactItem(config, e.params?.threadId, e.params?.item)) save();
-  liveWork.observe(e);
-  computerUseInUse.observe(e);
-  computerUseObserveTurns(e);
+}
+// The turn ends the core reported, newest last (turnEndSeq orders them): a Stop's settleAfterStop asks whether its turn
+// ended since the Stop, so a turn that ended as it should gets no second turn/completed.
+let turnEndSeq = 0;
+const turnEnds = new Map();
+function noteTurnEnd(e) {
+  if (e.method !== "turn/completed" || typeof e.params?.threadId !== "string" || typeof e.params?.turn?.id !== "string") return;
+  const key = `${e.params.threadId}\0${e.params.turn.id}`;
+  turnEnds.delete(key);
+  turnEnds.set(key, ++turnEndSeq);
+  while (turnEnds.size > 500) turnEnds.delete(turnEnds.keys().next().value);
+}
+const turnEndedSince = (threadId, turnId, mark) => (turnEnds.get(`${threadId}\0${turnId}`) ?? 0) > mark;
+function receive(e) {
+  const original = e;
+  e = observeSafely("app tool images", original, () => withAppToolImages(original)) ?? original;
+  const safely = (label, run) => observeSafely(label, e, run);
+  safely("turn ends", () => noteTurnEnd(e));
+  // R4g-routines RT6: a Code task run's command approval its task's rule covers is answered (accept, this call) before any card.
+  if (safely("routine approvals", () => routineApprovals?.receive(e, client, respondToApproval))) return;
+  // A side-chat fork's events stay in main: the panel gets its deltas, the sidebar never sees the fork.
+  if (safely("side chat", () => nativeSideChat.observe(e))) return;
+  if (safely("thread titles", () => nativeThreadTitles.observe(e))) return;
+  safely("connection notices", () => {
+    if (e.method === "externalAgentConfig/import/completed" && typeof e.params?.importId === "string") {
+      // Kept briefly too: the notification can arrive before the import call's own response.
+      if (pendingImports.has(e.params.importId)) pendingImports.get(e.params.importId)(e.params);
+      else { finishedImports.set(e.params.importId, e.params); setTimeout(() => finishedImports.delete(e.params.importId), 60000).unref?.(); }
+    }
+    if (e.kind === "connection" && !e.connected) { connectionNotices = []; activeGoals.clear(); }
+    if ((e.method === "configWarning" || e.method === "deprecationNotice" || (e.method === "warning" && !e.params?.threadId)) && connectionNotices.length < 50)
+      connectionNotices.push({ method: e.method, params: e.params });
+    if (e.method === "configWarning" && typeof e.params?.path === "string" && path.isAbsolute(e.params.path) && !e.params.path.includes("\0") && configWarningPaths.size < 200)
+      configWarningPaths.add(e.params.path);
+  });
+  safely("session operations", () => sessionOperations.observe(e));
+  safely("side sessions", () => btwSessions.observe(e));
+  safely("artifact index", () => { if (e.method === 'item/completed' && artifactIndex?.recordArtifactItem(config, e.params?.threadId, e.params?.item)) save(); });
+  safely("live work", () => liveWork.observe(e));
+  safely("computer use", () => computerUseInUse.observe(e));
+  safely("computer use turns", () => computerUseObserveTurns(e));
   // A turn ending (however it ended) hands the display back and lets go of the session's app windows, but keeps the
   // approval (official finishTurnCleanup → pw.release: the full-screen lock and every app lock); a dropped connection
   // drops both.
   // Official teachNonTeachAction: in teach mode, a tool call that isn't teach or a passive look (screenshot, wait, …)
   // fades the tooltip and brings the main window back.
-  if (e.method === "item/started" && computerUseTeach && typeof e.params?.threadId === "string" && computerUseTeach.activeSession() === e.params.threadId
-    && isNonTeachAction(e.params.item)) computerUseTeach.nonTeachAction(e.params.threadId);
+  safely("computer use teach", () => {
+    if (e.method === "item/started" && computerUseTeach && typeof e.params?.threadId === "string" && computerUseTeach.activeSession() === e.params.threadId
+      && isNonTeachAction(e.params.item)) computerUseTeach.nonTeachAction(e.params.threadId);
+  });
   if (e.method === "turn/completed" && typeof e.params?.threadId === "string") {
     // Official finishTurnCleanup: teach mode ends with the turn (before the lock is released).
-    computerUseTeach?.end(e.params.threadId, "idle");
-    computerUseFullControl.releaseTurn(e.params.threadId);
+    safely("computer use teach end", () => computerUseTeach?.end(e.params.threadId, "idle"));
+    safely("computer use release", () => computerUseFullControl.releaseTurn(e.params.threadId));
     // The app locks too (official pw.release): the windows' phantom cursors go, and the next turn starts clean — its
     // display-scope tools and clipboard aren't refused for windows a finished turn looked at.
     try { computerUse.release(e.params.threadId); } catch {}
     // Official onResult: what the clipboard guard put aside (a terminal / IDE was in front) goes back on the clipboard.
-    void computerUse.restoreClipboardStash(e.params.threadId).catch(() => {});
+    safely("clipboard stash", () => void computerUse.restoreClipboardStash(e.params.threadId).catch(() => {}));
     // Official onResult (chicagoAutoUnhide): the apps hidden before this turn's full-screen actions come back.
-    void computerUse.restoreHiddenApps?.(e.params.threadId, { autoUnhide: config?.computerUseAutoUnhide !== false }).catch(() => {});
+    safely("hidden apps", () => void computerUse.restoreHiddenApps?.(e.params.threadId, { autoUnhide: config?.computerUseAutoUnhide !== false }).catch(() => {}));
   }
-  if (e.kind === "connection" && !e.connected) {
+  if (e.kind === "connection" && !e.connected) safely("computer use disconnect", () => {
     computerUseFullControl.releaseAll();
     for (const threadId of computerUse.sessionsWithHiddenApps?.() ?? []) {
       void computerUse.restoreHiddenApps(threadId, { autoUnhide: config?.computerUseAutoUnhide !== false }).catch(() => {});
     }
-  }
-  observeGoal(e);
-  observeUsage(e);
-  workflowToolService?.observe(e);
-  turnPlanTools?.observe(e, { isSession: (id) => config.threadIds.includes(id) }).catch?.(() => {}); // turn-plan
-  localRoutines?.observe(e);
+  });
+  safely("goals", () => observeGoal(e));
+  safely("usage", () => observeUsage(e));
+  safely("workflow tool", () => workflowToolService?.observe(e));
+  safely("turn plan", () => turnPlanTools?.observe(e, { isSession: (id) => config.threadIds.includes(id) }).catch?.(() => {})); // turn-plan
+  safely("local routines", () => localRoutines?.observe(e));
   // A turn that ended, however it ended, cancels the OpenClaude Desktop tool calls it left waiting (Codex tells its MCP
   // servers neither about a stop nor about its own tool_timeout_sec giving up on a call): their approval cards close,
   // and Allow / Run can no longer start anything for a turn that is over and was told the call failed. Only the calls
@@ -1699,18 +1728,18 @@ function receive(e) {
   // A core whose agents keep background sub-agents or workflow agents working after the turn ends (DeepSeek, Kimi,
   // Qwen, OpenCode, …: coreKeepsBackgroundAgents) makes their calls as the session itself, still live: there only a
   // stopped turn cancels (the agent cancels an abandoned call itself, over MCP).
-  if (e.method === "turn/completed" && typeof e.params?.threadId === "string") {
+  if (e.method === "turn/completed" && typeof e.params?.threadId === "string") safely("agent tools", () => {
     const interrupted = e.params.turn?.status === "interrupted";
     if (interrupted) agentTools.cancelThread(e.params.threadId, "The turn was stopped.");
     else if (!coreKeepsBackgroundAgents()) agentTools.cancelThread(e.params.threadId, "The turn ended.");
-  }
-  accountOperations.observe(e);
-  desktopSettings?.observe(e);
+  });
+  safely("account", () => accountOperations.observe(e));
+  safely("desktop settings", () => desktopSettings?.observe(e));
   const p = e.params || {};
   const id = p.threadId;
-  if (recordActivity(config, e)) save();
+  safely("activity", () => { if (recordActivity(config, e)) save(); });
   // B29: a session whose turn failed is 'Needs input' on Home until acknowledged (session-attention.cjs).
-  if (typeof id === "string" && config.threadIds.includes(id)) {
+  if (typeof id === "string" && config.threadIds.includes(id)) safely("session attention", () => {
     const marked = sessionErrorPatch(config.sessionMetadata[id], e);
     if (marked) {
       config.sessionMetadata[id] = marked;
@@ -1718,11 +1747,13 @@ function receive(e) {
       save();
       emit({ kind: "sidebar-state", state: sidebarSnapshot() });
     }
-  }
-  if (id && config.threadIds.includes(id) && e.method === "turn/completed") pushCodeStats();
-  // A card hidden by a failed read comes back once the core is reachable again.
-  if (e.kind === "connection" && e.connected && statsFailed) pushCodeStats();
-  emit(e);
+  });
+  safely("code stats", () => {
+    if (id && config.threadIds.includes(id) && e.method === "turn/completed") pushCodeStats();
+    // A card hidden by a failed read comes back once the core is reachable again.
+    if (e.kind === "connection" && e.connected && statsFailed) pushCodeStats();
+  });
+  safely("windows", () => emit(e));
 }
 // Home stats card (cc43287c9-BMbiZYzF.js:3987-4004 $O getCodeStats; code-home.js:13711-13751
 // Iw ranges it). A core listing capabilities.codeStats (the DeepSeek bridge) folds every
@@ -3441,10 +3472,15 @@ app.whenReady().then(async () => {
           if (!config.threadIds.includes(p.threadId) || typeof p.turnId !== 'string') throw new Error('Unknown Cowork task.');
           return coworkSessions.request('turn/interrupt', p);
         }
-        const sent = interruptTurn(client, p);
+        const owner = client, stopMark = turnEndSeq;
+        const sent = interruptTurn(owner, p);
         // Stop closes the session's waiting OpenClaude Desktop tool sheets at once (the core's turn/completed follows): the
         // calls of the turn it stops (a Codex sub-agent's go on, as Codex keeps the sub-agent running).
         if (typeof p?.threadId === "string" && config.threadIds.includes(p.threadId)) agentTools.cancelThread(p.threadId);
+        // A turn the core isn't running (a dropped turn/completed, a stale history turn) gets no turn/completed from the
+        // core: once the stop settles and the thread reads as not running, the windows hear that turn is over.
+        void settleAfterStop(owner, p, sent, { report: (event) => emit(event), ended: () => turnEndedSince(p.threadId, p.turnId, stopMark) })
+          .catch((error) => console.warn("[stop] settling the stopped turn failed:", error?.message ?? error));
         return sent;
       }
       case "steer": {

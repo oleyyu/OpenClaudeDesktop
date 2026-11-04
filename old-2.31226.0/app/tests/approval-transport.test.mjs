@@ -299,6 +299,20 @@ test("turn completion expires only requests for its own turn", async t => {
   assert.equal(events.filter(event => event.kind === "resolved").at(-1).reason, "turn_completed");
 });
 
+test("a core's card that outlives its turn stays past that turn's end and closes when the core resolves it", async t => {
+  // The DeepSeek bridge raises a sub-agent's call on the root thread under the root's current turn; the sub-agent goes
+  // on (and waits for the answer) after that turn ends.
+  const { client, events, add } = await fixture(t);
+  const child = await add({ ...command("child", "thread-a", "root-turn"), params: { ...command("child", "thread-a", "root-turn").params, codeDesktop: { outlivesTurn: true } } });
+  const own = await add(command("own", "thread-a", "root-turn"));
+  await client.request("fixture/notify", { method: "turn/completed", params: { threadId: "thread-a", turn: { id: "root-turn" } } });
+  assert.equal(client.getApproval(child.id, child.bridgeApproval).bridgeApproval, child.bridgeApproval, "the sub-agent's card is still answerable");
+  assert.throws(() => client.getApproval(own.id, own.bridgeApproval), { code: "stale_request" }, "the turn's own card expires as before");
+  await client.request("fixture/notify", { method: "serverRequest/resolved", params: { threadId: "thread-a", requestId: "child" } });
+  assert.throws(() => client.getApproval(child.id, child.bridgeApproval), { code: "stale_request" });
+  assert.equal(events.filter(event => event.kind === "resolved").at(-1).reason, "server_resolved");
+});
+
 test("question IPC enforces this client's single-answer contract without changing the protocol's list shape", async t => {
   const { client, add, responses } = await fixture(t);
   const request = await add({

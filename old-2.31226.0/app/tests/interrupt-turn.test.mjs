@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
-const { interruptTurn } = createRequire(import.meta.url)('../electron/interrupt-turn.cjs');
+const { interruptTurn, settleAfterStop } = createRequire(import.meta.url)('../electron/interrupt-turn.cjs');
 const expected = { connectionId: 'connection-one', connectionEpoch: 3 };
 const payload = { threadId: 'thread-a', turnId: 'turn-1', expected };
 function harness(patch = {}) {
@@ -66,4 +66,48 @@ test('Stop of a session whose goal is working pauses the goal first, on the same
   // Without the flag, nothing but the interrupt.
   const plain = harness(); await interruptTurn(plain.owner, { ...payload, pauseGoal: 'yes' });
   assert.deepEqual(plain.calls.map((call) => call[0]), ['turn/interrupt']);
+});
+
+// settleAfterStop: a stopped turn the core isn't running gets the turn/completed the core never sends.
+function statusOwner(status, patch = {}) {
+  const calls = [], connection = { closed: false };
+  const owner = { connection, request(...args) { calls.push(args); return patch.read ?? Promise.resolve({ thread: { id: 'thread-a', status } }); } };
+  return { owner, connection, calls };
+}
+const settle = (owner, options = {}) => {
+  const reports = [];
+  const done = settleAfterStop(owner, payload, options.sent ?? Promise.resolve({}), { report: (event) => reports.push(event), wait: () => Promise.resolve(), ...options });
+  return { reports, done };
+};
+test('a stopped turn the core is not running is reported over once the thread reads idle', async () => {
+  for (const type of ['idle', 'notLoaded', 'systemError']) {
+    const { owner, connection, calls } = statusOwner({ type });
+    const { reports, done } = settle(owner, { sent: Promise.reject(new Error('no active turn')) });
+    assert.equal(await done, true, type);
+    assert.deepEqual(calls, [['thread/read', { threadId: 'thread-a', includeTurns: false }, 10000, connection]]);
+    assert.equal(reports.length, 1);
+    assert.equal(reports[0].method, 'turn/completed');
+    assert.deepEqual(reports[0].params, { threadId: 'thread-a', turn: { id: 'turn-1', items: [], itemsView: 'notLoaded', status: 'interrupted', error: null, startedAt: null, completedAt: null, durationMs: null } });
+  }
+});
+test('a stop whose turn ended, is still running, or lost its connection is left to the core', async () => {
+  // The core reported the turn's end since the Stop: no second turn/completed, no read.
+  let probe = statusOwner({ type: 'idle' });
+  let run = settle(probe.owner, { ended: () => true });
+  assert.equal(await run.done, false); assert.equal(probe.calls.length, 0); assert.equal(run.reports.length, 0);
+  // Still running (or a newer turn started): nothing is reported.
+  probe = statusOwner({ type: 'active', activeFlags: [] });
+  run = settle(probe.owner);
+  assert.equal(await run.done, false); assert.equal(run.reports.length, 0);
+  // The connection changed while waiting: the old connection's thread is never read.
+  probe = statusOwner({ type: 'idle' });
+  run = settle(probe.owner, { wait: async () => { probe.owner.connection = { closed: false }; } });
+  assert.equal(await run.done, false); assert.equal(probe.calls.length, 0);
+  // A failed read decides nothing.
+  probe = statusOwner(null, { read: Promise.reject(new Error('thread/read timed out.')) });
+  run = settle(probe.owner);
+  assert.equal(await run.done, false); assert.equal(run.reports.length, 0);
+  // Without a turn id there is no turn to settle.
+  probe = statusOwner({ type: 'idle' });
+  assert.equal(await settleAfterStop(probe.owner, { ...payload, turnId: '' }, Promise.resolve({}), { report: () => assert.fail('reported'), wait: () => Promise.resolve() }), false);
 });

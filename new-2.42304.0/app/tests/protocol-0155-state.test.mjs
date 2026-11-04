@@ -76,6 +76,31 @@ test("thread/status/changed records the runtime status per thread", () => {
   assert.equal(reduce(s, event("thread/status/changed", { threadId: "a" })), s, "a status-less notification is ignored");
 });
 
+test("a thread that reports no running turn ends a turn still shown running; a turn/completed that follows still settles it", () => {
+  const turn = (id, status = "inProgress") => ({ id, items: [], status, error: null });
+  let s = reduce(emptyState, event("turn/started", { threadId: "a", turn: turn("t1") }));
+  s = reduce(s, event("item/started", { threadId: "a", turnId: "t1", item: { type: "commandExecution", id: "c1", command: "ls", status: "inProgress" } }));
+  const version = s.activeVersions.a;
+  s = reduce(s, event("thread/status/changed", { threadId: "a", status: { type: "active", activeFlags: [] } }));
+  assert.equal(s.active.a, "t1", "an active status never ends the turn");
+  // The turn's turn/completed was missed: idle ends its running state (the working line and Stop follow active).
+  s = reduce(s, event("thread/status/changed", { threadId: "a", status: { type: "idle" } }));
+  assert.equal(s.active.a, null);
+  assert.equal(s.activeVersions.a, version + 1);
+  assert.equal(s.items.a[0].status, "inProgress", "the items wait for the turn's own outcome");
+  // A turn/completed that still follows (a core that reports the status first) settles them with the real outcome.
+  s = reduce(s, event("turn/completed", { threadId: "a", turn: turn("t1", "completed") }));
+  assert.equal(s.items.a[0].status, "completed");
+  assert.equal(s.active.a, null);
+  for (const type of ["notLoaded", "systemError"]) {
+    let other = reduce(emptyState, event("turn/started", { threadId: "b", turn: turn("t2") }));
+    other = reduce(other, event("thread/status/changed", { threadId: "b", status: { type } }));
+    assert.equal(other.active.b, null, type);
+  }
+  const quiet = reduce(emptyState, event("thread/status/changed", { threadId: "c", status: { type: "idle" } }));
+  assert.equal(quiet.active.c, undefined, "a thread with no running turn keeps its unknown active entry");
+});
+
 test("item/fileChange/patchUpdated replaces the whole change set", () => {
   const first = [{ path: "/w/one.txt", kind: "update", diff: "-one\n+ONE" }];
   const second = [...first, { path: "/w/two.txt", kind: "add", diff: "+two" }];

@@ -311,10 +311,20 @@ class CodexClient extends EventEmitter {
       connection.reader = readline.createInterface({ input: child.stdout });
       connection.reader.on("line", (line) => {
         if (this.connection !== connection || connection.closed) return;
+        let message;
         try {
-          this.receive(JSON.parse(line), connection);
+          message = JSON.parse(line);
         } catch (error) {
-          this.emit("protocolError", error.message);
+          // Nothing listens for protocolError in the app: say it in the log rather than nowhere.
+          if (!this.emit("protocolError", error.message)) console.warn(`[core] unreadable line from the core: ${error.message}`);
+          return;
+        }
+        // A listener that throws must not take this message down silently (it may be the turn/completed that ends a
+        // session's running state): the failure is logged, and the line reader goes on with the next message.
+        try {
+          this.receive(message, connection);
+        } catch (error) {
+          console.warn(`[core] handling ${typeof message?.method === "string" ? message.method : "a response"} failed:`, error?.stack ?? error);
         }
       });
       const result = await this.request("initialize", {

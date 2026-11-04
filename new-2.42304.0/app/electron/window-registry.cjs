@@ -237,7 +237,10 @@ function createWindowRegistry({ file = null, fs = nodeFs, timers = { setTimeout,
   }
   function send(window, event) {
     if (!live(window)) return false;
-    window.webContents.send(EVENT_CHANNEL, event);
+    // One window that can't take the event (a renderer going away mid-send, a value IPC can't clone) must not keep it
+    // from the windows after it in the broadcast.
+    try { window.webContents.send(EVENT_CHANNEL, event); }
+    catch (error) { console.warn(`[windows] couldn’t send ${event?.method ?? event?.kind ?? "an event"}:`, error?.message ?? error); return false; }
     return true;
   }
   function broadcast(event) {

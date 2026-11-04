@@ -23,7 +23,9 @@ contextBridge.exposeInMainWorld("desktop", {
   // Finder drops arrive as File objects; only the main process may stat them.
   pathForFile: (file) => { try { return webUtils.getPathForFile(file) || ""; } catch { return ""; } },
   onEvent: (handler) => {
-    const listener = (_e, event) => handler(event);
+    // Each subscriber on its own: ipcRenderer calls its listeners in turn, so one that threw would keep the event from
+    // every listener after it (the session reducer included) and the transcript would stop following the core.
+    const listener = (_e, event) => { try { handler(event); } catch (error) { console.error("desktop:event handler failed:", error); } };
     ipcRenderer.on("desktop:event", listener);
     return () => ipcRenderer.removeListener("desktop:event", listener);
   },

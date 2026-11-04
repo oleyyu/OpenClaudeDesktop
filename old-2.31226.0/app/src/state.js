@@ -219,6 +219,8 @@ function settleObservedItem(item, status) {
   return next;
 }
 
+// ThreadStatus types (Codex ts/v2/ThreadStatus.ts) under which a thread has no turn running.
+const NOT_RUNNING_STATUSES = new Set(["idle", "notLoaded", "systemError"]);
 function nextActiveVersion(state, id) {
   return { ...state.activeVersions, [id]: (state.activeVersions?.[id] || 0) + 1 };
 }
@@ -529,8 +531,17 @@ export function reduce(state, action) {
     state = { ...state, retrying: { ...state.retrying, [id]: null } };
   if (e.method === "thread/status/changed") {
     if (!p.status) return state;
-    return { ...state, threadStatus: { ...state.threadStatus, [id]: p.status },
+    const next = { ...state, threadStatus: { ...state.threadStatus, [id]: p.status },
       threads: { ...state.threads, [id]: { ...state.threads[id], id, status: p.status } } };
+    // The core runs no turn on this thread (ThreadStatus idle, notLoaded or systemError). A turn still shown running
+    // here missed its turn/completed (a dropped event, a stale history turn) and would read "working" for good, its
+    // Stop waiting for an event that never comes: it stops being active. Its items are left as they are, so a
+    // turn/completed that still follows (a core that reports the status first) settles them with the real outcome.
+    if (NOT_RUNNING_STATUSES.has(p.status.type) && state.active[id]) {
+      next.active = { ...state.active, [id]: null };
+      next.activeVersions = nextActiveVersion(state, id);
+    }
+    return next;
   }
   // FileChangePatchUpdatedNotification {threadId, turnId, itemId, changes}:
   // the server replaces the whole change set, it is not a delta.

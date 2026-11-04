@@ -93,6 +93,10 @@ class ApprovalLedger {
       // Raw resolved has no generation. Repeated same-thread wire IDs need an
       // upstream ordering guarantee before it is safe to identify a resolution.
       ambiguousResolution: previous > 0,
+      // A core's card for work that goes on past the turn it is shown in (the DeepSeek bridge's sub-agent calls, raised
+      // on the root thread under the root's turn): that turn's end must not drop it, or the core waits for an answer
+      // to a card nobody can see. The core closes it itself (serverRequest/resolved) when that work stops.
+      outlivesTurn: message.params?.codeDesktop?.outlivesTurn === true,
     };
     this.pending.set(message.id, entry);
     this.publish(event);

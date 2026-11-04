@@ -435,6 +435,9 @@ export async function preExecuteDecision({ permission, toolName, args, cwd }, re
  * transcript has no item for it, so the card shows the command (or, through
  * the bridge's `changes` field, the diff) instead of the parent's agent row.
  * A remembered Ask-mode grant of the root answers without a card.
+ * codeDesktop.outlivesTurn: turnId is the root's turn the card is shown in, but the call belongs to the sub-agent, which
+ * can go on (and keep waiting for the answer) after that turn ends. The client keeps the card past the root's
+ * turn/completed; the bridge drops it itself (serverRequest/resolved) when the sub-agent stops.
  * @param {{threadId: string, turnId: string, callId: string, toolName: string, args: unknown, item?: object, cwd: string, label?: string | null, grants: SessionGrants, now?: number}} input
  */
 export function childApproval({ threadId, turnId, callId, toolName, args, item, cwd, label, grants, now = Date.now() }) {
@@ -442,7 +445,7 @@ export function childApproval({ threadId, turnId, callId, toolName, args, item, 
   if (grants.has(grantKey)) return { kind: 'allow', grantKey }
   const grantable = grantKey !== null && sessionGrantable({ origin: 'ask', item })
   const reason = label ? `Requested by the “${label}” agent.` : 'Requested by a sub-agent.'
-  const base = { threadId, turnId, itemId: callId, startedAtMs: now, reason, sessionGrantable: grantable }
+  const base = { threadId, turnId, itemId: callId, startedAtMs: now, reason, sessionGrantable: grantable, codeDesktop: { outlivesTurn: true } }
   if (item?.type === 'fileChange') {
     return { kind: 'ask', grantKey, grantable, method: 'item/fileChange/requestApproval', params: { ...base, grantRoot: null, changes: item.changes } }
   }

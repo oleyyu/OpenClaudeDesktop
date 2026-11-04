@@ -406,8 +406,11 @@ test('childApproval puts the child call on the root card, by its own call id', (
   assert.equal(command.method, 'item/commandExecution/requestApproval')
   assert.deepEqual(command.params, {
     kind: 'command', threadId: 'root', turnId: 'turn-r', itemId: 'cc1', startedAtMs: 5, reason: 'Requested by the “Audit deps” agent.', sessionGrantable: true,
+    codeDesktop: { outlivesTurn: true },
     approvalId: null, environmentId: null, command: 'rm -rf build', cwd: '/w', commandActions: [{ type: 'unknown', command: 'rm -rf build' }],
   })
+  // The sub-agent outlives the root turn the card is shown in: the client must not expire the card with that turn.
+  assert.deepEqual(childApproval({ ...base, callId: 'cc6', toolName: 'write', args: { file_path: 'a.txt', content: 'x' }, item: toolItem({ callId: 'cc6', name: 'write', args: { file_path: 'a.txt', content: 'x' }, cwd: '/w' }) }).params.codeDesktop, { outlivesTurn: true })
   const writeArgs = { file_path: 'notes.txt', content: 'x' }
   const file = childApproval({ ...base, callId: 'cc2', toolName: 'write', args: writeArgs, item: toolItem({ callId: 'cc2', name: 'write', args: writeArgs, cwd: '/w' }), label: null })
   assert.equal(file.method, 'item/fileChange/requestApproval')
