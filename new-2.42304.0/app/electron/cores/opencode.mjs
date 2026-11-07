@@ -83,6 +83,8 @@ export default Object.freeze({
       assets: Object.freeze({
         arm64: Object.freeze({ name: "opencode-darwin-arm64.zip", size: 45538151, sha256: "8522b70f545184b3a8d97c5ca4f814093b2476d72aebfda8c48bcd072ec31d1b" }),
         x64: Object.freeze({ name: "opencode-darwin-x64.zip", size: 49165415, sha256: "66bf0638cffad3b65bd6648cc3947619e1dd71f4bfeee0a81e087ac036bb1088" }),
+        "win32-x64": Object.freeze({ name: "opencode-windows-x64.zip", size: 62158551, sha256: "8ec42ed1ad8db108052394b83ab69d0331398f761fbfff5fe50f91d65bdd3548" }),
+        "win32-arm64": Object.freeze({ name: "opencode-windows-arm64.zip", size: 60647128, sha256: "b738ae4e823c862eaba6d6bd6e1d35e01b46851d7160882c7bdb189f33a16447" }),
       }),
       url: "https://github.com/anomalyco/opencode/releases/download/{tag}/{name}",
     }),

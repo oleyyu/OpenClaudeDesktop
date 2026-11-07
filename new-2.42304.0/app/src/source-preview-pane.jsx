@@ -1,4 +1,5 @@
 import { previewDOMTabKey } from "../electron/preview-tab-shortcuts.mjs";
+import { revealInFileManagerLabel } from "./file-manager-labels.mjs";
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { previewLinksStore } from "./preview-links-model.mjs";
 import { Icon } from "./icons";
@@ -90,7 +91,7 @@ function DownloadNotice({ download, onReveal, onDismiss }) {
     <div className="spv-download" role="status" data-preview-download={download.state}>
       <Icon name={download.state === "completed" ? "Download" : "Warning"} size={16} className="spv-download-icon" />
       <span className="spv-download-text"><bdi>{text}</bdi></span>
-      {download.state === "completed" && download.canReveal && <button type="button" className="spv-button" data-variant="secondary" onClick={onReveal}>{t("Show in Finder")}</button>}
+      {download.state === "completed" && download.canReveal && <button type="button" className="spv-button" data-variant="secondary" onClick={onReveal}>{revealInFileManagerLabel()}</button>}
       <GhostButton label={t("Dismiss")} icon="X" onClick={onDismiss} />
     </div>
   );

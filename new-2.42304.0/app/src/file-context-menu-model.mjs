@@ -1,5 +1,6 @@
 // R3-files FT-05 (files-27): the 2.42304.0 editor-path rule (shared-28 Fk over shared-104 bP; extract-files-changes.mjs).
 import { canOpenFileInEditor } from "./generated/files-changes/file-editor-path.mjs";
+import { revealInFileManagerLabel } from "./file-manager-labels.mjs";
 // File items of the Files pane menus (2.2553.1). Mn
 // (ion-dist/assets/v1/c856385e2-k3utJqnh.js, prettier-formatted, :962-1060):
 // "Attach as context" while a composer exists, the "Copy" submenu (Absolute
@@ -16,8 +17,9 @@ import { canOpenFileInEditor } from "./generated/files-changes/file-editor-path.
 // terminal" (a tab in the built-in terminal pane in that folder; the 2.2553.1
 // release notes' "Right-click any folder in the file tree → Open in terminal")
 // when the caller can open one (canOpenTerminal).
-import { absoluteDiffPath, copyChoices, splitPosixPath, stripClipboardControls } from "./diff-file-header-model.mjs";
+import { absoluteDiffPath, copyChoices, stripClipboardControls } from "./diff-file-header-model.mjs";
 import { tabRelativePath } from "./file-tab-menu-model.mjs";
+import { pathBasename } from "./host-path-model.mjs";
 import { t } from "../electron/i18n/index.mjs";
 
 export const FILE_MENU_LABELS = Object.freeze({
@@ -26,7 +28,7 @@ export const FILE_MENU_LABELS = Object.freeze({
   absolutePath: t("Absolute path"),
   relativePath: t("Relative path"),
   filename: t("Filename"),
-  showInFinder: t("Show in Finder"),
+  showInFinder: revealInFileManagerLabel(),
   revealInTree: t("Reveal in file tree"),
   openIn: t("Open in"),
   openInTerminal: t("Open in terminal"),
@@ -52,7 +54,7 @@ const isAbsolute = (value) => /^(?:\/|[A-Za-z]:[\\/]|~(?:$|[\\/]))/.test(value);
 export function fileCopyChoices(root, path) {
   const relative = tabRelativePath(path, root);
   const absolute = absoluteDiffPath(root, relative);
-  const filename = splitPosixPath((absolute ?? relative).replace(/\/+$/, ""))[1];
+  const filename = pathBasename(absolute ?? relative);
   return {
     absolute: absolute ?? null,
     relative: relative && !isAbsolute(relative) ? relative : null,

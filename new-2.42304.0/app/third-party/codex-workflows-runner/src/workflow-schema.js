@@ -3,7 +3,7 @@
 var __commonJSMin = (cb, mod) => () => (mod || (cb((mod = { exports: {} }).exports, mod), cb = null), mod.exports);
 
 //#endregion
-//#region ../vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/compile/codegen/code.js
+//#region ../../../claude-ui-lab/vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/compile/codegen/code.js
 var require_code$1 = /* @__PURE__ */ __commonJSMin(((exports) => {
 	Object.defineProperty(exports, "__esModule", { value: true });
 	exports.regexpCode = exports.getEsmExportName = exports.getProperty = exports.safeStringify = exports.stringify = exports.strConcat = exports.addCodeArg = exports.str = exports._ = exports.nil = exports._Code = exports.Name = exports.IDENTIFIER = exports._CodeOrName = void 0;
@@ -139,7 +139,7 @@ var require_code$1 = /* @__PURE__ */ __commonJSMin(((exports) => {
 }));
 
 //#endregion
-//#region ../vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/compile/codegen/scope.js
+//#region ../../../claude-ui-lab/vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/compile/codegen/scope.js
 var require_scope = /* @__PURE__ */ __commonJSMin(((exports) => {
 	Object.defineProperty(exports, "__esModule", { value: true });
 	exports.ValueScope = exports.ValueScopeName = exports.Scope = exports.varKinds = exports.UsedValueState = void 0;
@@ -277,7 +277,7 @@ var require_scope = /* @__PURE__ */ __commonJSMin(((exports) => {
 }));
 
 //#endregion
-//#region ../vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/compile/codegen/index.js
+//#region ../../../claude-ui-lab/vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/compile/codegen/index.js
 var require_codegen = /* @__PURE__ */ __commonJSMin(((exports) => {
 	Object.defineProperty(exports, "__esModule", { value: true });
 	exports.or = exports.and = exports.not = exports.CodeGen = exports.operators = exports.varKinds = exports.ValueScopeName = exports.ValueScope = exports.Scope = exports.Name = exports.regexpCode = exports.stringify = exports.getProperty = exports.nil = exports.strConcat = exports.str = exports._ = void 0;
@@ -947,7 +947,7 @@ var require_codegen = /* @__PURE__ */ __commonJSMin(((exports) => {
 }));
 
 //#endregion
-//#region ../vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/compile/util.js
+//#region ../../../claude-ui-lab/vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/compile/util.js
 var require_util = /* @__PURE__ */ __commonJSMin(((exports) => {
 	Object.defineProperty(exports, "__esModule", { value: true });
 	exports.checkStrictMode = exports.getErrorPath = exports.Type = exports.useFunc = exports.setEvaluated = exports.evaluatedPropsToName = exports.mergeEvaluated = exports.eachItem = exports.unescapeJsonPointer = exports.escapeJsonPointer = exports.escapeFragment = exports.unescapeFragment = exports.schemaRefOrVal = exports.schemaHasRulesButRef = exports.schemaHasRules = exports.checkUnknownRules = exports.alwaysValidSchema = exports.toHash = void 0;
@@ -1089,7 +1089,7 @@ var require_util = /* @__PURE__ */ __commonJSMin(((exports) => {
 }));
 
 //#endregion
-//#region ../vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/compile/names.js
+//#region ../../../claude-ui-lab/vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/compile/names.js
 var require_names = /* @__PURE__ */ __commonJSMin(((exports) => {
 	Object.defineProperty(exports, "__esModule", { value: true });
 	const codegen_1 = require_codegen();
@@ -1115,7 +1115,7 @@ var require_names = /* @__PURE__ */ __commonJSMin(((exports) => {
 }));
 
 //#endregion
-//#region ../vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/compile/errors.js
+//#region ../../../claude-ui-lab/vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/compile/errors.js
 var require_errors = /* @__PURE__ */ __commonJSMin(((exports) => {
 	Object.defineProperty(exports, "__esModule", { value: true });
 	exports.extendErrors = exports.resetErrorsCount = exports.reportExtraError = exports.reportError = exports.keyword$DataError = exports.keywordError = void 0;
@@ -1212,7 +1212,7 @@ var require_errors = /* @__PURE__ */ __commonJSMin(((exports) => {
 }));
 
 //#endregion
-//#region ../vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/compile/validate/boolSchema.js
+//#region ../../../claude-ui-lab/vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/compile/validate/boolSchema.js
 var require_boolSchema = /* @__PURE__ */ __commonJSMin(((exports) => {
 	Object.defineProperty(exports, "__esModule", { value: true });
 	exports.boolOrEmptySchema = exports.topBoolOrEmptySchema = void 0;
@@ -1255,7 +1255,7 @@ var require_boolSchema = /* @__PURE__ */ __commonJSMin(((exports) => {
 }));
 
 //#endregion
-//#region ../vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/compile/rules.js
+//#region ../../../claude-ui-lab/vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/compile/rules.js
 var require_rules = /* @__PURE__ */ __commonJSMin(((exports) => {
 	Object.defineProperty(exports, "__esModule", { value: true });
 	exports.getRules = exports.isJSONType = void 0;
@@ -1314,7 +1314,7 @@ var require_rules = /* @__PURE__ */ __commonJSMin(((exports) => {
 }));
 
 //#endregion
-//#region ../vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/compile/validate/applicability.js
+//#region ../../../claude-ui-lab/vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/compile/validate/applicability.js
 var require_applicability = /* @__PURE__ */ __commonJSMin(((exports) => {
 	Object.defineProperty(exports, "__esModule", { value: true });
 	exports.shouldUseRule = exports.shouldUseGroup = exports.schemaHasRulesForType = void 0;
@@ -1335,7 +1335,7 @@ var require_applicability = /* @__PURE__ */ __commonJSMin(((exports) => {
 }));
 
 //#endregion
-//#region ../vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/compile/validate/dataType.js
+//#region ../../../claude-ui-lab/vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/compile/validate/dataType.js
 var require_dataType = /* @__PURE__ */ __commonJSMin(((exports) => {
 	Object.defineProperty(exports, "__esModule", { value: true });
 	exports.reportTypeError = exports.checkDataTypes = exports.checkDataType = exports.coerceAndCheckDataType = exports.getJSONTypes = exports.getSchemaTypes = exports.DataType = void 0;
@@ -1500,7 +1500,7 @@ var require_dataType = /* @__PURE__ */ __commonJSMin(((exports) => {
 }));
 
 //#endregion
-//#region ../vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/compile/validate/defaults.js
+//#region ../../../claude-ui-lab/vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/compile/validate/defaults.js
 var require_defaults = /* @__PURE__ */ __commonJSMin(((exports) => {
 	Object.defineProperty(exports, "__esModule", { value: true });
 	exports.assignDefaults = void 0;
@@ -1527,7 +1527,7 @@ var require_defaults = /* @__PURE__ */ __commonJSMin(((exports) => {
 }));
 
 //#endregion
-//#region ../vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/vocabularies/code.js
+//#region ../../../claude-ui-lab/vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/vocabularies/code.js
 var require_code = /* @__PURE__ */ __commonJSMin(((exports) => {
 	Object.defineProperty(exports, "__esModule", { value: true });
 	exports.validateUnion = exports.validateArray = exports.usePattern = exports.callValidateCode = exports.schemaProperties = exports.allSchemaProperties = exports.noPropertyInData = exports.propertyInData = exports.isOwnProperty = exports.hasPropFunc = exports.reportMissingProp = exports.checkMissingProp = exports.checkReportMissingProp = void 0;
@@ -1652,7 +1652,7 @@ var require_code = /* @__PURE__ */ __commonJSMin(((exports) => {
 }));
 
 //#endregion
-//#region ../vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/compile/validate/keyword.js
+//#region ../../../claude-ui-lab/vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/compile/validate/keyword.js
 var require_keyword = /* @__PURE__ */ __commonJSMin(((exports) => {
 	Object.defineProperty(exports, "__esModule", { value: true });
 	exports.validateKeywordUsage = exports.validSchemaType = exports.funcKeywordCode = exports.macroKeywordCode = void 0;
@@ -1759,7 +1759,7 @@ var require_keyword = /* @__PURE__ */ __commonJSMin(((exports) => {
 }));
 
 //#endregion
-//#region ../vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/compile/validate/subschema.js
+//#region ../../../claude-ui-lab/vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/compile/validate/subschema.js
 var require_subschema = /* @__PURE__ */ __commonJSMin(((exports) => {
 	Object.defineProperty(exports, "__esModule", { value: true });
 	exports.extendSubschemaMode = exports.extendSubschemaData = exports.getSubschema = void 0;
@@ -1827,7 +1827,7 @@ var require_subschema = /* @__PURE__ */ __commonJSMin(((exports) => {
 }));
 
 //#endregion
-//#region ../vendor/deepseek-harness/node_modules/.pnpm/fast-deep-equal@3.1.3/node_modules/fast-deep-equal/index.js
+//#region ../../../claude-ui-lab/vendor/deepseek-harness/node_modules/.pnpm/fast-deep-equal@3.1.3/node_modules/fast-deep-equal/index.js
 var require_fast_deep_equal = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 	module.exports = function equal(a, b) {
 		if (a === b) return true;
@@ -1858,7 +1858,7 @@ var require_fast_deep_equal = /* @__PURE__ */ __commonJSMin(((exports, module) =
 }));
 
 //#endregion
-//#region ../vendor/deepseek-harness/node_modules/.pnpm/json-schema-traverse@1.0.0/node_modules/json-schema-traverse/index.js
+//#region ../../../claude-ui-lab/vendor/deepseek-harness/node_modules/.pnpm/json-schema-traverse@1.0.0/node_modules/json-schema-traverse/index.js
 var require_json_schema_traverse = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 	var traverse = module.exports = function(schema, opts, cb) {
 		if (typeof opts == "function") {
@@ -1934,7 +1934,7 @@ var require_json_schema_traverse = /* @__PURE__ */ __commonJSMin(((exports, modu
 }));
 
 //#endregion
-//#region ../vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/compile/resolve.js
+//#region ../../../claude-ui-lab/vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/compile/resolve.js
 var require_resolve = /* @__PURE__ */ __commonJSMin(((exports) => {
 	Object.defineProperty(exports, "__esModule", { value: true });
 	exports.getSchemaRefs = exports.resolveUrl = exports.normalizeId = exports._getFullPath = exports.getFullPath = exports.inlineRef = void 0;
@@ -2064,7 +2064,7 @@ var require_resolve = /* @__PURE__ */ __commonJSMin(((exports) => {
 }));
 
 //#endregion
-//#region ../vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/compile/validate/index.js
+//#region ../../../claude-ui-lab/vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/compile/validate/index.js
 var require_validate = /* @__PURE__ */ __commonJSMin(((exports) => {
 	Object.defineProperty(exports, "__esModule", { value: true });
 	exports.getData = exports.KeywordCxt = exports.validateFunctionCode = void 0;
@@ -2484,7 +2484,7 @@ var require_validate = /* @__PURE__ */ __commonJSMin(((exports) => {
 }));
 
 //#endregion
-//#region ../vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/runtime/validation_error.js
+//#region ../../../claude-ui-lab/vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/runtime/validation_error.js
 var require_validation_error = /* @__PURE__ */ __commonJSMin(((exports) => {
 	Object.defineProperty(exports, "__esModule", { value: true });
 	var ValidationError = class extends Error {
@@ -2498,7 +2498,7 @@ var require_validation_error = /* @__PURE__ */ __commonJSMin(((exports) => {
 }));
 
 //#endregion
-//#region ../vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/compile/ref_error.js
+//#region ../../../claude-ui-lab/vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/compile/ref_error.js
 var require_ref_error = /* @__PURE__ */ __commonJSMin(((exports) => {
 	Object.defineProperty(exports, "__esModule", { value: true });
 	const resolve_1 = require_resolve();
@@ -2513,7 +2513,7 @@ var require_ref_error = /* @__PURE__ */ __commonJSMin(((exports) => {
 }));
 
 //#endregion
-//#region ../vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/compile/index.js
+//#region ../../../claude-ui-lab/vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/compile/index.js
 var require_compile = /* @__PURE__ */ __commonJSMin(((exports) => {
 	Object.defineProperty(exports, "__esModule", { value: true });
 	exports.resolveSchema = exports.getCompilingSchema = exports.resolveRef = exports.compileSchema = exports.SchemaEnv = void 0;
@@ -2728,7 +2728,7 @@ var require_compile = /* @__PURE__ */ __commonJSMin(((exports) => {
 }));
 
 //#endregion
-//#region ../vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/refs/data.json
+//#region ../../../claude-ui-lab/vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/refs/data.json
 var require_data = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 	module.exports = {
 		"$id": "https://raw.githubusercontent.com/ajv-validator/ajv/master/lib/refs/data.json#",
@@ -2744,7 +2744,7 @@ var require_data = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 }));
 
 //#endregion
-//#region ../vendor/deepseek-harness/node_modules/.pnpm/fast-uri@3.1.3/node_modules/fast-uri/lib/utils.js
+//#region ../../../claude-ui-lab/vendor/deepseek-harness/node_modules/.pnpm/fast-uri@3.1.3/node_modules/fast-uri/lib/utils.js
 var require_utils = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 	/** @type {(value: string) => boolean} */
 	const isUUID = RegExp.prototype.test.bind(/^[\da-f]{8}-[\da-f]{4}-[\da-f]{4}-[\da-f]{4}-[\da-f]{12}$/iu);
@@ -3120,7 +3120,7 @@ var require_utils = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 }));
 
 //#endregion
-//#region ../vendor/deepseek-harness/node_modules/.pnpm/fast-uri@3.1.3/node_modules/fast-uri/lib/schemes.js
+//#region ../../../claude-ui-lab/vendor/deepseek-harness/node_modules/.pnpm/fast-uri@3.1.3/node_modules/fast-uri/lib/schemes.js
 var require_schemes = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 	const { isUUID } = require_utils();
 	const URN_REG = /([\da-z][\d\-a-z]{0,31}):((?:[\w!$'()*+,\-.:;=@]|%[\da-f]{2})+)/iu;
@@ -3304,7 +3304,7 @@ var require_schemes = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 }));
 
 //#endregion
-//#region ../vendor/deepseek-harness/node_modules/.pnpm/fast-uri@3.1.3/node_modules/fast-uri/index.js
+//#region ../../../claude-ui-lab/vendor/deepseek-harness/node_modules/.pnpm/fast-uri@3.1.3/node_modules/fast-uri/index.js
 var require_fast_uri = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 	const { normalizeIPv6, removeDotSegments, recomposeAuthority, normalizePercentEncoding, normalizePathEncoding, escapePreservingEscapes, reescapeHostDelimiters, isIPv4, nonSimpleDomain } = require_utils();
 	const { SCHEMES, getSchemeHandler } = require_schemes();
@@ -3586,7 +3586,7 @@ var require_fast_uri = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 }));
 
 //#endregion
-//#region ../vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/runtime/uri.js
+//#region ../../../claude-ui-lab/vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/runtime/uri.js
 var require_uri = /* @__PURE__ */ __commonJSMin(((exports) => {
 	Object.defineProperty(exports, "__esModule", { value: true });
 	const uri = require_fast_uri();
@@ -3595,7 +3595,7 @@ var require_uri = /* @__PURE__ */ __commonJSMin(((exports) => {
 }));
 
 //#endregion
-//#region ../vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/core.js
+//#region ../../../claude-ui-lab/vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/core.js
 var require_core$1 = /* @__PURE__ */ __commonJSMin(((exports) => {
 	Object.defineProperty(exports, "__esModule", { value: true });
 	exports.CodeGen = exports.Name = exports.nil = exports.stringify = exports.str = exports._ = exports.KeywordCxt = void 0;
@@ -4165,7 +4165,7 @@ var require_core$1 = /* @__PURE__ */ __commonJSMin(((exports) => {
 }));
 
 //#endregion
-//#region ../vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/vocabularies/core/id.js
+//#region ../../../claude-ui-lab/vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/vocabularies/core/id.js
 var require_id = /* @__PURE__ */ __commonJSMin(((exports) => {
 	Object.defineProperty(exports, "__esModule", { value: true });
 	const def = {
@@ -4178,7 +4178,7 @@ var require_id = /* @__PURE__ */ __commonJSMin(((exports) => {
 }));
 
 //#endregion
-//#region ../vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/vocabularies/core/ref.js
+//#region ../../../claude-ui-lab/vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/vocabularies/core/ref.js
 var require_ref = /* @__PURE__ */ __commonJSMin(((exports) => {
 	Object.defineProperty(exports, "__esModule", { value: true });
 	exports.callRef = exports.getValidate = void 0;
@@ -4286,7 +4286,7 @@ var require_ref = /* @__PURE__ */ __commonJSMin(((exports) => {
 }));
 
 //#endregion
-//#region ../vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/vocabularies/core/index.js
+//#region ../../../claude-ui-lab/vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/vocabularies/core/index.js
 var require_core = /* @__PURE__ */ __commonJSMin(((exports) => {
 	Object.defineProperty(exports, "__esModule", { value: true });
 	const id_1 = require_id();
@@ -4305,7 +4305,7 @@ var require_core = /* @__PURE__ */ __commonJSMin(((exports) => {
 }));
 
 //#endregion
-//#region ../vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/vocabularies/validation/limitNumber.js
+//#region ../../../claude-ui-lab/vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/vocabularies/validation/limitNumber.js
 var require_limitNumber = /* @__PURE__ */ __commonJSMin(((exports) => {
 	Object.defineProperty(exports, "__esModule", { value: true });
 	const codegen_1 = require_codegen();
@@ -4350,7 +4350,7 @@ var require_limitNumber = /* @__PURE__ */ __commonJSMin(((exports) => {
 }));
 
 //#endregion
-//#region ../vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/vocabularies/validation/multipleOf.js
+//#region ../../../claude-ui-lab/vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/vocabularies/validation/multipleOf.js
 var require_multipleOf = /* @__PURE__ */ __commonJSMin(((exports) => {
 	Object.defineProperty(exports, "__esModule", { value: true });
 	const codegen_1 = require_codegen();
@@ -4375,7 +4375,7 @@ var require_multipleOf = /* @__PURE__ */ __commonJSMin(((exports) => {
 }));
 
 //#endregion
-//#region ../vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/runtime/ucs2length.js
+//#region ../../../claude-ui-lab/vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/runtime/ucs2length.js
 var require_ucs2length = /* @__PURE__ */ __commonJSMin(((exports) => {
 	Object.defineProperty(exports, "__esModule", { value: true });
 	function ucs2length(str) {
@@ -4398,7 +4398,7 @@ var require_ucs2length = /* @__PURE__ */ __commonJSMin(((exports) => {
 }));
 
 //#endregion
-//#region ../vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/vocabularies/validation/limitLength.js
+//#region ../../../claude-ui-lab/vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/vocabularies/validation/limitLength.js
 var require_limitLength = /* @__PURE__ */ __commonJSMin(((exports) => {
 	Object.defineProperty(exports, "__esModule", { value: true });
 	const codegen_1 = require_codegen();
@@ -4427,7 +4427,7 @@ var require_limitLength = /* @__PURE__ */ __commonJSMin(((exports) => {
 }));
 
 //#endregion
-//#region ../vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/vocabularies/validation/pattern.js
+//#region ../../../claude-ui-lab/vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/vocabularies/validation/pattern.js
 var require_pattern = /* @__PURE__ */ __commonJSMin(((exports) => {
 	Object.defineProperty(exports, "__esModule", { value: true });
 	const code_1 = require_code();
@@ -4461,7 +4461,7 @@ var require_pattern = /* @__PURE__ */ __commonJSMin(((exports) => {
 }));
 
 //#endregion
-//#region ../vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/vocabularies/validation/limitProperties.js
+//#region ../../../claude-ui-lab/vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/vocabularies/validation/limitProperties.js
 var require_limitProperties = /* @__PURE__ */ __commonJSMin(((exports) => {
 	Object.defineProperty(exports, "__esModule", { value: true });
 	const codegen_1 = require_codegen();
@@ -4487,7 +4487,7 @@ var require_limitProperties = /* @__PURE__ */ __commonJSMin(((exports) => {
 }));
 
 //#endregion
-//#region ../vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/vocabularies/validation/required.js
+//#region ../../../claude-ui-lab/vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/vocabularies/validation/required.js
 var require_required = /* @__PURE__ */ __commonJSMin(((exports) => {
 	Object.defineProperty(exports, "__esModule", { value: true });
 	const code_1 = require_code();
@@ -4555,7 +4555,7 @@ var require_required = /* @__PURE__ */ __commonJSMin(((exports) => {
 }));
 
 //#endregion
-//#region ../vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/vocabularies/validation/limitItems.js
+//#region ../../../claude-ui-lab/vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/vocabularies/validation/limitItems.js
 var require_limitItems = /* @__PURE__ */ __commonJSMin(((exports) => {
 	Object.defineProperty(exports, "__esModule", { value: true });
 	const codegen_1 = require_codegen();
@@ -4581,7 +4581,7 @@ var require_limitItems = /* @__PURE__ */ __commonJSMin(((exports) => {
 }));
 
 //#endregion
-//#region ../vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/runtime/equal.js
+//#region ../../../claude-ui-lab/vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/runtime/equal.js
 var require_equal = /* @__PURE__ */ __commonJSMin(((exports) => {
 	Object.defineProperty(exports, "__esModule", { value: true });
 	const equal = require_fast_deep_equal();
@@ -4590,7 +4590,7 @@ var require_equal = /* @__PURE__ */ __commonJSMin(((exports) => {
 }));
 
 //#endregion
-//#region ../vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/vocabularies/validation/uniqueItems.js
+//#region ../../../claude-ui-lab/vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/vocabularies/validation/uniqueItems.js
 var require_uniqueItems = /* @__PURE__ */ __commonJSMin(((exports) => {
 	Object.defineProperty(exports, "__esModule", { value: true });
 	const dataType_1 = require_dataType();
@@ -4655,7 +4655,7 @@ var require_uniqueItems = /* @__PURE__ */ __commonJSMin(((exports) => {
 }));
 
 //#endregion
-//#region ../vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/vocabularies/validation/const.js
+//#region ../../../claude-ui-lab/vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/vocabularies/validation/const.js
 var require_const = /* @__PURE__ */ __commonJSMin(((exports) => {
 	Object.defineProperty(exports, "__esModule", { value: true });
 	const codegen_1 = require_codegen();
@@ -4678,7 +4678,7 @@ var require_const = /* @__PURE__ */ __commonJSMin(((exports) => {
 }));
 
 //#endregion
-//#region ../vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/vocabularies/validation/enum.js
+//#region ../../../claude-ui-lab/vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/vocabularies/validation/enum.js
 var require_enum = /* @__PURE__ */ __commonJSMin(((exports) => {
 	Object.defineProperty(exports, "__esModule", { value: true });
 	const codegen_1 = require_codegen();
@@ -4723,7 +4723,7 @@ var require_enum = /* @__PURE__ */ __commonJSMin(((exports) => {
 }));
 
 //#endregion
-//#region ../vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/vocabularies/validation/index.js
+//#region ../../../claude-ui-lab/vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/vocabularies/validation/index.js
 var require_validation = /* @__PURE__ */ __commonJSMin(((exports) => {
 	Object.defineProperty(exports, "__esModule", { value: true });
 	const limitNumber_1 = require_limitNumber();
@@ -4760,7 +4760,7 @@ var require_validation = /* @__PURE__ */ __commonJSMin(((exports) => {
 }));
 
 //#endregion
-//#region ../vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/vocabularies/applicator/additionalItems.js
+//#region ../../../claude-ui-lab/vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/vocabularies/applicator/additionalItems.js
 var require_additionalItems = /* @__PURE__ */ __commonJSMin(((exports) => {
 	Object.defineProperty(exports, "__esModule", { value: true });
 	exports.validateAdditionalItems = void 0;
@@ -4813,7 +4813,7 @@ var require_additionalItems = /* @__PURE__ */ __commonJSMin(((exports) => {
 }));
 
 //#endregion
-//#region ../vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/vocabularies/applicator/items.js
+//#region ../../../claude-ui-lab/vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/vocabularies/applicator/items.js
 var require_items = /* @__PURE__ */ __commonJSMin(((exports) => {
 	Object.defineProperty(exports, "__esModule", { value: true });
 	exports.validateTuple = void 0;
@@ -4867,7 +4867,7 @@ var require_items = /* @__PURE__ */ __commonJSMin(((exports) => {
 }));
 
 //#endregion
-//#region ../vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/vocabularies/applicator/prefixItems.js
+//#region ../../../claude-ui-lab/vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/vocabularies/applicator/prefixItems.js
 var require_prefixItems = /* @__PURE__ */ __commonJSMin(((exports) => {
 	Object.defineProperty(exports, "__esModule", { value: true });
 	const items_1 = require_items();
@@ -4882,7 +4882,7 @@ var require_prefixItems = /* @__PURE__ */ __commonJSMin(((exports) => {
 }));
 
 //#endregion
-//#region ../vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/vocabularies/applicator/items2020.js
+//#region ../../../claude-ui-lab/vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/vocabularies/applicator/items2020.js
 var require_items2020 = /* @__PURE__ */ __commonJSMin(((exports) => {
 	Object.defineProperty(exports, "__esModule", { value: true });
 	const codegen_1 = require_codegen();
@@ -4911,7 +4911,7 @@ var require_items2020 = /* @__PURE__ */ __commonJSMin(((exports) => {
 }));
 
 //#endregion
-//#region ../vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/vocabularies/applicator/contains.js
+//#region ../../../claude-ui-lab/vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/vocabularies/applicator/contains.js
 var require_contains = /* @__PURE__ */ __commonJSMin(((exports) => {
 	Object.defineProperty(exports, "__esModule", { value: true });
 	const codegen_1 = require_codegen();
@@ -4997,7 +4997,7 @@ var require_contains = /* @__PURE__ */ __commonJSMin(((exports) => {
 }));
 
 //#endregion
-//#region ../vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/vocabularies/applicator/dependencies.js
+//#region ../../../claude-ui-lab/vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/vocabularies/applicator/dependencies.js
 var require_dependencies = /* @__PURE__ */ __commonJSMin(((exports) => {
 	Object.defineProperty(exports, "__esModule", { value: true });
 	exports.validateSchemaDeps = exports.validatePropertyDeps = exports.error = void 0;
@@ -5079,7 +5079,7 @@ var require_dependencies = /* @__PURE__ */ __commonJSMin(((exports) => {
 }));
 
 //#endregion
-//#region ../vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/vocabularies/applicator/propertyNames.js
+//#region ../../../claude-ui-lab/vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/vocabularies/applicator/propertyNames.js
 var require_propertyNames = /* @__PURE__ */ __commonJSMin(((exports) => {
 	Object.defineProperty(exports, "__esModule", { value: true });
 	const codegen_1 = require_codegen();
@@ -5117,7 +5117,7 @@ var require_propertyNames = /* @__PURE__ */ __commonJSMin(((exports) => {
 }));
 
 //#endregion
-//#region ../vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/vocabularies/applicator/additionalProperties.js
+//#region ../../../claude-ui-lab/vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/vocabularies/applicator/additionalProperties.js
 var require_additionalProperties = /* @__PURE__ */ __commonJSMin(((exports) => {
 	Object.defineProperty(exports, "__esModule", { value: true });
 	const code_1 = require_code();
@@ -5208,7 +5208,7 @@ var require_additionalProperties = /* @__PURE__ */ __commonJSMin(((exports) => {
 }));
 
 //#endregion
-//#region ../vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/vocabularies/applicator/properties.js
+//#region ../../../claude-ui-lab/vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/vocabularies/applicator/properties.js
 var require_properties = /* @__PURE__ */ __commonJSMin(((exports) => {
 	Object.defineProperty(exports, "__esModule", { value: true });
 	const validate_1 = require_validate();
@@ -5255,7 +5255,7 @@ var require_properties = /* @__PURE__ */ __commonJSMin(((exports) => {
 }));
 
 //#endregion
-//#region ../vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/vocabularies/applicator/patternProperties.js
+//#region ../../../claude-ui-lab/vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/vocabularies/applicator/patternProperties.js
 var require_patternProperties = /* @__PURE__ */ __commonJSMin(((exports) => {
 	Object.defineProperty(exports, "__esModule", { value: true });
 	const code_1 = require_code();
@@ -5312,7 +5312,7 @@ var require_patternProperties = /* @__PURE__ */ __commonJSMin(((exports) => {
 }));
 
 //#endregion
-//#region ../vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/vocabularies/applicator/not.js
+//#region ../../../claude-ui-lab/vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/vocabularies/applicator/not.js
 var require_not = /* @__PURE__ */ __commonJSMin(((exports) => {
 	Object.defineProperty(exports, "__esModule", { value: true });
 	const util_1 = require_util();
@@ -5341,7 +5341,7 @@ var require_not = /* @__PURE__ */ __commonJSMin(((exports) => {
 }));
 
 //#endregion
-//#region ../vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/vocabularies/applicator/anyOf.js
+//#region ../../../claude-ui-lab/vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/vocabularies/applicator/anyOf.js
 var require_anyOf = /* @__PURE__ */ __commonJSMin(((exports) => {
 	Object.defineProperty(exports, "__esModule", { value: true });
 	const def = {
@@ -5355,7 +5355,7 @@ var require_anyOf = /* @__PURE__ */ __commonJSMin(((exports) => {
 }));
 
 //#endregion
-//#region ../vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/vocabularies/applicator/oneOf.js
+//#region ../../../claude-ui-lab/vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/vocabularies/applicator/oneOf.js
 var require_oneOf = /* @__PURE__ */ __commonJSMin(((exports) => {
 	Object.defineProperty(exports, "__esModule", { value: true });
 	const codegen_1 = require_codegen();
@@ -5403,7 +5403,7 @@ var require_oneOf = /* @__PURE__ */ __commonJSMin(((exports) => {
 }));
 
 //#endregion
-//#region ../vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/vocabularies/applicator/allOf.js
+//#region ../../../claude-ui-lab/vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/vocabularies/applicator/allOf.js
 var require_allOf = /* @__PURE__ */ __commonJSMin(((exports) => {
 	Object.defineProperty(exports, "__esModule", { value: true });
 	const util_1 = require_util();
@@ -5430,7 +5430,7 @@ var require_allOf = /* @__PURE__ */ __commonJSMin(((exports) => {
 }));
 
 //#endregion
-//#region ../vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/vocabularies/applicator/if.js
+//#region ../../../claude-ui-lab/vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/vocabularies/applicator/if.js
 var require_if = /* @__PURE__ */ __commonJSMin(((exports) => {
 	Object.defineProperty(exports, "__esModule", { value: true });
 	const codegen_1 = require_codegen();
@@ -5488,7 +5488,7 @@ var require_if = /* @__PURE__ */ __commonJSMin(((exports) => {
 }));
 
 //#endregion
-//#region ../vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/vocabularies/applicator/thenElse.js
+//#region ../../../claude-ui-lab/vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/vocabularies/applicator/thenElse.js
 var require_thenElse = /* @__PURE__ */ __commonJSMin(((exports) => {
 	Object.defineProperty(exports, "__esModule", { value: true });
 	const util_1 = require_util();
@@ -5503,7 +5503,7 @@ var require_thenElse = /* @__PURE__ */ __commonJSMin(((exports) => {
 }));
 
 //#endregion
-//#region ../vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/vocabularies/applicator/index.js
+//#region ../../../claude-ui-lab/vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/vocabularies/applicator/index.js
 var require_applicator = /* @__PURE__ */ __commonJSMin(((exports) => {
 	Object.defineProperty(exports, "__esModule", { value: true });
 	const additionalItems_1 = require_additionalItems();
@@ -5545,7 +5545,7 @@ var require_applicator = /* @__PURE__ */ __commonJSMin(((exports) => {
 }));
 
 //#endregion
-//#region ../vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/vocabularies/format/format.js
+//#region ../../../claude-ui-lab/vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/vocabularies/format/format.js
 var require_format$1 = /* @__PURE__ */ __commonJSMin(((exports) => {
 	Object.defineProperty(exports, "__esModule", { value: true });
 	const codegen_1 = require_codegen();
@@ -5635,7 +5635,7 @@ var require_format$1 = /* @__PURE__ */ __commonJSMin(((exports) => {
 }));
 
 //#endregion
-//#region ../vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/vocabularies/format/index.js
+//#region ../../../claude-ui-lab/vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/vocabularies/format/index.js
 var require_format = /* @__PURE__ */ __commonJSMin(((exports) => {
 	Object.defineProperty(exports, "__esModule", { value: true });
 	const format = [require_format$1().default];
@@ -5643,7 +5643,7 @@ var require_format = /* @__PURE__ */ __commonJSMin(((exports) => {
 }));
 
 //#endregion
-//#region ../vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/vocabularies/metadata.js
+//#region ../../../claude-ui-lab/vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/vocabularies/metadata.js
 var require_metadata = /* @__PURE__ */ __commonJSMin(((exports) => {
 	Object.defineProperty(exports, "__esModule", { value: true });
 	exports.contentVocabulary = exports.metadataVocabulary = void 0;
@@ -5664,7 +5664,7 @@ var require_metadata = /* @__PURE__ */ __commonJSMin(((exports) => {
 }));
 
 //#endregion
-//#region ../vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/vocabularies/draft7.js
+//#region ../../../claude-ui-lab/vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/vocabularies/draft7.js
 var require_draft7 = /* @__PURE__ */ __commonJSMin(((exports) => {
 	Object.defineProperty(exports, "__esModule", { value: true });
 	const core_1 = require_core();
@@ -5684,7 +5684,7 @@ var require_draft7 = /* @__PURE__ */ __commonJSMin(((exports) => {
 }));
 
 //#endregion
-//#region ../vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/vocabularies/discriminator/types.js
+//#region ../../../claude-ui-lab/vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/vocabularies/discriminator/types.js
 var require_types = /* @__PURE__ */ __commonJSMin(((exports) => {
 	Object.defineProperty(exports, "__esModule", { value: true });
 	exports.DiscrError = void 0;
@@ -5696,7 +5696,7 @@ var require_types = /* @__PURE__ */ __commonJSMin(((exports) => {
 }));
 
 //#endregion
-//#region ../vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/vocabularies/discriminator/index.js
+//#region ../../../claude-ui-lab/vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/vocabularies/discriminator/index.js
 var require_discriminator = /* @__PURE__ */ __commonJSMin(((exports) => {
 	Object.defineProperty(exports, "__esModule", { value: true });
 	const codegen_1 = require_codegen();
@@ -5791,7 +5791,7 @@ var require_discriminator = /* @__PURE__ */ __commonJSMin(((exports) => {
 }));
 
 //#endregion
-//#region ../vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/refs/json-schema-draft-07.json
+//#region ../../../claude-ui-lab/vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/refs/json-schema-draft-07.json
 var require_json_schema_draft_07 = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 	module.exports = {
 		"$schema": "http://json-schema.org/draft-07/schema#",
@@ -5930,7 +5930,7 @@ var require_json_schema_draft_07 = /* @__PURE__ */ __commonJSMin(((exports, modu
 }));
 
 //#endregion
-//#region ../vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/ajv.js
+//#region ../../../claude-ui-lab/vendor/deepseek-harness/node_modules/.pnpm/ajv@8.20.0/node_modules/ajv/dist/ajv.js
 var require_ajv = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 	Object.defineProperty(exports, "__esModule", { value: true });
 	exports.MissingRefError = exports.ValidationError = exports.CodeGen = exports.Name = exports.nil = exports.stringify = exports.str = exports._ = exports.KeywordCxt = exports.Ajv = void 0;
@@ -6023,7 +6023,7 @@ var require_ajv = /* @__PURE__ */ __commonJSMin(((exports, module) => {
 }));
 
 //#endregion
-//#region ../vendor/deepseek-harness/packages/util/values/src/index.ts
+//#region ../../../claude-ui-lab/vendor/deepseek-harness/packages/util/values/src/index.ts
 var import_ajv = require_ajv();
 /** Whether a realm-owned intrinsic prototype has a native constructor matching this engine's representation. */
 function hasIntrinsicConstructor(prototype, name) {
@@ -6176,7 +6176,7 @@ function snapshotJsonValue(value) {
 }
 
 //#endregion
-//#region ../vendor/deepseek-harness/packages/llm/llm/src/error.ts
+//#region ../../../claude-ui-lab/vendor/deepseek-harness/packages/llm/llm/src/error.ts
 /**
 * Harness error base with a stable machine-routable code and chained cause.
 * Package errors extend it so tool results and replay can retain failure class.
@@ -6205,7 +6205,7 @@ const TOO_LARGE_FOR_CONTEXT = new RegExp(String.raw`\b(?:request|prompt|input|me
 const EXCEEDS_MODEL_CONTEXT = new RegExp(String.raw`\b(?:input|prompt|request|messages?)\b.{0,40}` + String.raw`\b(?:exceed(?:s|ed)?|overflows?|is\s+larger\s+than)\b.{0,40}` + String.raw`\b(?:the\s+)?(?:model(?:'s)?\s+)?context(?:\s+(?:length|window))?\b`, "i");
 
 //#endregion
-//#region ../vendor/deepseek-harness/packages/core/tools/src/json-schema.ts
+//#region ../../../claude-ui-lab/vendor/deepseek-harness/packages/core/tools/src/json-schema.ts
 /**
 * Enforced JSON Schema subset shared by tool outputs, generated PTC mode
 * types, subagents, and workflows. The subset accepts any JSON root, an
@@ -6233,7 +6233,7 @@ var JsonSchemaError = class extends HarnessError {
 };
 
 //#endregion
-//#region ../vendor/deepseek-harness/packages/subagent/subagent/src/output-schema-lint.ts
+//#region ../../../claude-ui-lab/vendor/deepseek-harness/packages/subagent/subagent/src/output-schema-lint.ts
 /** Reject the statically impossible property/item schemas checked by workflow admission. */
 function record(value) {
 	return value !== null && typeof value === "object" && !Array.isArray(value) ? value : void 0;
@@ -6323,7 +6323,7 @@ function assertUsableOutputSchema(root) {
 }
 
 //#endregion
-//#region ../vendor/deepseek-harness/packages/subagent/subagent/src/output-schema.ts
+//#region ../../../claude-ui-lab/vendor/deepseek-harness/packages/subagent/subagent/src/output-schema.ts
 /** Full object-rooted JSON Schema validation for delegated structured results. */
 /** Compile a detached schema without coercing output, fetching references, or enforcing formats.
 * @param value - untrusted schema at a workflow or subagent boundary.

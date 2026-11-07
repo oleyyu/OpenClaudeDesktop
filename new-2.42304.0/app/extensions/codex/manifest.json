@@ -48,7 +48,9 @@
         "tag": "rust-v0.162.1",
         "assets": {
           "arm64": { "name": "codex-aarch64-apple-darwin.tar.gz", "size": 98104184, "sha256": "b293a0fcdd871900a44c0a4f40a1aa401b31e02854f790ebdb8bd5d1177fd1fe" },
-          "x64": { "name": "codex-x86_64-apple-darwin.tar.gz", "size": 107055460, "sha256": "d68e39d8f62639f33f7d00656554cb9c3ef7809e664a3827e62ab3ace3c21b21" }
+          "x64": { "name": "codex-x86_64-apple-darwin.tar.gz", "size": 107055460, "sha256": "d68e39d8f62639f33f7d00656554cb9c3ef7809e664a3827e62ab3ace3c21b21" },
+          "win32-x64": { "name": "codex-x86_64-pc-windows-msvc.exe.tar.gz", "size": 111567537, "sha256": "a97c427a033b08d58902af3e52e8586ad2013267212112d306100223e2b12ec7" },
+          "win32-arm64": { "name": "codex-aarch64-pc-windows-msvc.exe.tar.gz", "size": 102384529, "sha256": "af96f909063ecfbb12e9d4e88bbc6c7cec3be1397f0dbff0267013cf7f388a8c" }
         },
         "url": "https://github.com/openai/codex/releases/download/{tag}/{name}"
       }

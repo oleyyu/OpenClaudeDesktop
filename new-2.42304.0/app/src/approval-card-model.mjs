@@ -1,6 +1,8 @@
 // Codex data adaptation for the current non-dock jM/EM approval-card branch.
 // This model does not grant permissions, hold request identities or invoke IPC.
 import { assistantName, escapeRegExp } from "./persona-store.mjs";
+import { pathBasename } from "./host-path-model.mjs";
+import { revealFileAction } from "./file-manager-labels.mjs";
 import { t, tn } from "../electron/i18n/index.mjs";
 import { computerUseAction, computerUseLabel, computerUseAccessRequest, computerUseAccessRows, computerUseAccessTitle, computerUseTakeoverRequest, computerUseTeachRequest } from "./computer-use-model.mjs";
 import { displayCommand } from "./shell-command-model.mjs";
@@ -612,15 +614,15 @@ function agentToolCard(params) {
   // reveal_path / open_in_editor (agent-tools/host.mjs): the resolved path the card shows, as Claude's does.
   if (tool.kind === "open-path") {
     const file = nonempty(tool.path) ?? "";
-    const name = file.split("/").pop() || file;
-    const action = tool.action === "editor" ? t("open {file} in {editor}", { file: name, editor: nonempty(tool.editor) ?? t("your editor") }) : t("show {file} in Finder", { file: name });
+    const name = pathBasename(file) || file;
+    const action = tool.action === "editor" ? t("open {file} in {editor}", { file: name, editor: nonempty(tool.editor) ?? t("your editor") }) : revealFileAction(name);
     if (Number.isInteger(tool.line)) add("line", t("At line {line}", { line: tool.line }));
     return card({ action, meta: null }, { detail: file ? { kind: "arguments", text: file, value: file } : null });
   }
   // NotebookEdit (agent-tools/notebook.mjs): which notebook, which cell, and the new source.
   if (tool.kind === "notebook-edit") {
     const file = nonempty(tool.path);
-    const name = file ? file.split("/").pop() : "";
+    const name = file ? pathBasename(file) : "";
     add("cwd", tool.cellId ? t("Cell {cell}", { cell: tool.cellId }) : null);
     const source = tool.mode === "delete" ? null : nonempty(tool.source);
     return card({ action: tool.mode === "delete" ? t("delete a cell in {file}", { file: name }) : tool.mode === "insert" ? t("add a cell to {file}", { file: name }) : t("edit {file}", { file: name }), meta: null },

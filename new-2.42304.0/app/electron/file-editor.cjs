@@ -3,8 +3,10 @@ const path = require('node:path');
 const { constants } = require('node:fs');
 const { createHash, randomUUID } = require('node:crypto');
 const { scopedPath } = require('./files.cjs');
+const { pathInside, samePath, renameRetry } = require('./fs-paths.cjs');
 const hash = bytes => createHash('sha256').update(bytes).digest('hex');
-const inside = (root, file) => file !== root && file.startsWith(root + path.sep);
+// Strictly inside (not the root itself); a root ending in a separator (D:\\) isn't doubled; Windows: case-insensitive.
+const inside = (root, file) => !samePath(root, file) && pathInside(root, file);
 const writes = new Map();
 
 // The viewer's baseline is read as bytes, so replacement decoding can never
@@ -62,7 +64,8 @@ async function writeFile(root, relative, text, expectedHash) {
       const latest = await current();
       if (latest.denied) return { status: 'denied' };
       if (latest.hash !== expectedHash) return { status: 'conflict', currentHash: latest.hash };
-      await fs.rename(temp, target);
+      // Windows: replacing a file an indexer / antivirus / editor holds open fails for a moment (EPERM / EBUSY).
+      await renameRetry(temp, target);
       return { status: 'saved', hash: hash(Buffer.from(text)), text };
     } catch { return { status: 'failed' }; }
     finally { if (temp) await fs.unlink(temp).catch(() => {}); }

@@ -113,6 +113,8 @@ export default {
   'Rename': '重命名',
   'Open in': '打开方式',
   'Finder': '访达',
+  'File Explorer': '文件资源管理器',
+  'File manager': '文件管理器',
   'Terminal': '终端',
   'Move up': '上移',
   'Move down': '下移',

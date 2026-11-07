@@ -64,3 +64,6 @@
 @media (forced-colors:none) { [data-mode="dark"] .ssc-root[data-windowed] .ssc-content { outline:none; } }
 .ssc-root[data-windowed] .ssc-header { height:40px;padding-left:76px;-webkit-app-region:drag; }
 .ssc-root[data-windowed] .ssc-header button { -webkit-app-region:no-drag; }
+/* Windows (html[data-platform="win32"], style.css --win-caption-width): no traffic lights on the left; the native
+   minimize / maximize / close overlay (40px, window-chrome.cjs) sits on the right, so the header's buttons end before it. */
+html[data-platform="win32"] .ssc-root[data-windowed] .ssc-header { padding-left:12px;padding-right:calc(var(--win-caption-width,138px) + 8px); }

@@ -4,6 +4,7 @@
 // Show in Finder opens its file, and a core library's workflow can be deleted and its earlier runs listed
 // ('saved-workflow-delete' / 'saved-workflow-runs'). Running one is /<name> in a session.
 import React, { useEffect, useState } from 'react';
+import { revealInFileManagerLabel } from "./file-manager-labels.mjs";
 import { t } from '../electron/i18n/index.mjs';
 import { SourceSettingsButton } from './source-settings-button.jsx';
 import { ActionDialog } from './source-session-actions.jsx';
@@ -53,7 +54,7 @@ export function SavedWorkflowsList({ desktopCall, cwd, connected = true, revisio
           <span className="ss-workflow-rule-name">/{entry.name}</span>
           <span className="ss-workflow-rule-kind">{entry.source === 'project' || entry.scope === 'project' ? t('Project') : t('All projects')}</span>
           <span className="ss-saved-workflow-actions">
-            {entry.path && <SourceSettingsButton size="sm" variant="ghost" disabled={!!busy} onClick={() => void act(`reveal:${id}`, () => desktopCall('saved-workflow-reveal', { path: entry.path }))}>{t('Show in Finder')}</SourceSettingsButton>}
+            {entry.path && <SourceSettingsButton size="sm" variant="ghost" disabled={!!busy} onClick={() => void act(`reveal:${id}`, () => desktopCall('saved-workflow-reveal', { path: entry.path }))}>{revealInFileManagerLabel()}</SourceSettingsButton>}
             {core && <SourceSettingsButton size="sm" variant="ghost" aria-expanded={!!shownRuns} busy={busy === `runs:${id}`} disabled={!!busy} onClick={() => toggleRuns(entry)}>{t('Runs')}</SourceSettingsButton>}
             {core && <SourceSettingsButton size="sm" variant="secondary" disabled={!!busy} aria-label={t('Delete {name}', { name: entry.name })} onClick={() => setConfirm(entry)}>{t('Delete')}</SourceSettingsButton>}
           </span>

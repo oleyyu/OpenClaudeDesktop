@@ -1,4 +1,5 @@
 import React, { useEffect, useSyncExternalStore } from 'react';
+import { pathBasename } from "./host-path-model.mjs";
 import { SourceConfirmationDialog } from './source-dialog.jsx';
 import { fileEditGuards } from './file-edit-store.mjs';
 import { t } from '../electron/i18n/index.mjs';
@@ -17,7 +18,7 @@ export function SourceFileEditGuard() {
     return () => { offFlush?.(); unsubscribe(); window.removeEventListener('beforeunload', protect); };
   }, []);
   if (!intent) return null;
-  const name = intent.editors.map(editor => editor.path.split('/').at(-1)).join(', ');
+  const name = intent.editors.map(editor => pathBasename(editor.path)).join(', ');
   return <SourceConfirmationDialog title={t('Discard unsaved changes?')}
     body={t(intent.leavesSession ? 'Your edits to {name} have not been saved. Leaving this session discards them.' : 'Your edits to {name} have not been saved. Leaving this tab discards them.', { name })}
     pending={intent.editors.some(editor => editor.getSnapshot().saving)} confirmLabel={t('Discard')} cancelLabel={t('Keep editing')} confirmVariant="danger" initialFocus="cancel"

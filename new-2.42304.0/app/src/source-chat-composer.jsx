@@ -1,4 +1,5 @@
 import React, { useCallback, useContext, useRef, useState } from 'react';
+import { folderName } from "./host-path-model.mjs";
 import { Rf as Composer, Wd as Actions, ef as Chin, tf as Overlay, yd as Layout, ai as editorClass, Br as editorStyle } from './generated/current-chat/shared-5-DXmEIvP_.js';
 import { Attachments } from './source-chat-adapters.jsx';
 import { ideaPreviewClass } from './generated/chat/shared-14-BOJVa-jT.js';
@@ -47,7 +48,7 @@ export function SourceChatComposer({ editorNode, attachments, draft, scope, curr
   const leading = <Button variant="ghost" size="xs" className="surface-folder-trigger" aria-label={t('Project or folder')}
     aria-haspopup="menu" aria-expanded={!!folderAnchor} disabled={sending}
     onClick={event => setFolderAnchor(folderAnchor ? null : event.currentTarget)}>
-    <span>{folderLabel || (workdir ? workdir.split('/').pop() : t('Project or folder'))}</span><Icon name="CaretDown" size={12} />
+    <span>{folderLabel || (workdir ? folderName(workdir) : t('Project or folder'))}</span><Icon name="CaretDown" size={12} />
   </Button>;
   return <>
     <Composer variant="default" form={current ? 'reply' : 'new'} busy={busy} disabled={disabled}

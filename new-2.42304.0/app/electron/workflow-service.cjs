@@ -2,6 +2,9 @@ const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypt
 const {pathToFileURL}=require('node:url');
 const i18n=require('./i18n/index.mjs');
 const {coreSupports}=require('./core-registry.mjs');
+const {killTree,windowsSpawn}=require('./process-tree.cjs');
+// The runner's own default core arguments (appServerClient.js connect), spelled out when Windows rewrites the command.
+const RUNNER_DEFAULT_ARGS=['app-server','--listen','stdio://'];
 // Thrown copy reaches the renderer as is: translate it here (the coreError pattern, codex.cjs).
 const fail=source=>new Error(i18n.t(source));
 // A stop first lets the runner cancel (core stop + release, interrupted turns, worktree cleanup):
@@ -46,7 +49,18 @@ function workflowLaunch(core){
 // workflow agents' model). onSettled(run): a run finished (the Workflow tool's notification). home: for saved workflows.
 // workflowFolders(): the running core's own saved-workflow folders (descriptor workflowFolders, Qwen's .qwen/workflows),
 // read and written beside .claude/workflows.
-function createWorkflowService({root,getConfig,emit,command:fixedCommand,args:fixedArgs,env:fixedEnv,core:currentCore,version,spawn=fork,enabled,runnerEnv=()=>({}),onSettled=()=>{},home=require('node:os').homedir(),workflowFolders=()=>[]}){
+// Windows (platform 'win32'): no process groups or POSIX signals. The runner is not detached (a detached process has no
+// console, so every program it starts would open a console window of its own) and runs hidden (windowsHide); a stop
+// closes its IPC channel, which it treats as SIGTERM (workflow-child.mjs 'disconnect': cancel, stop its core, exit),
+// and what is left after the grace ends as a tree (taskkill /T /F). The runner can't say "stopping" over a closed
+// channel, so the longer grace applies from the start.
+function createWorkflowService({root,getConfig,emit,command:fixedCommand,args:fixedArgs,env:fixedEnv,core:currentCore,version,spawn=fork,enabled,runnerEnv=()=>({}),onSettled=()=>{},home=require('node:os').homedir(),workflowFolders=()=>[],platform=process.platform,killProcessTree=killTree,execPath=process.execPath,spawnCommand=windowsSpawn}){
+ const windows=platform==='win32';
+ // This app's own executable as the core's Node (setup-requirements.cjs bundledNode: Windows without an installed Node).
+ // It must run as Node (codex.cjs sets ELECTRON_RUN_AS_NODE for the same launch), or it starts a second OpenClaude Desktop
+ // that the single-instance lock ends at once. Windows paths compare case-insensitively.
+ const appExecutable=command=>{if(typeof command!=='string'||!command||typeof execPath!=='string'||!execPath)return false;
+  return windows?path.win32.normalize(command).toLowerCase()===path.win32.normalize(execPath).toLowerCase():command===execPath;};
  const folders=()=>{try{const value=workflowFolders();return Array.isArray(value)?value:[];}catch{return [];}};
  const running=new Map(),runs=new Map();let disposed=false;
  const workflowsOn=()=>typeof enabled==='function'?enabled():getConfig().dynamicWorkflows!==false;
@@ -82,6 +96,8 @@ function createWorkflowService({root,getConfig,emit,command:fixedCommand,args:fi
    if(saved.workflow)file=saved.workflow.filePath;
    else if(nameOnly)throw new Error(saved.error);
    else{const dirs=[path.join(cwd,'.claude/workflows'),path.join(home,'.claude/workflows')];const match=dirs.flatMap(dir=>[file+'.js',file+'.workflow.js',file+'.mjs'].map(name=>path.join(dir,name))).find(f=>fs.existsSync(f));if(!match)throw new Error(saved.error);file=match;}}
+  // Windows: the model names this file; a UNC/device path is refused before realpath contacts that host.
+  if(typeof inline!=='string'&&require('./fs-paths.cjs').remotePathRefused(file,{base:cwd,roots:[cwd]}))throw fail('Select a workflow file on this computer.');
   const script=typeof inline==='string'?path.resolve(cwd,file):fs.realpathSync(path.resolve(cwd,file));
   if(typeof inline!=='string'&&(!/\.(?:m?js|cjs)$/.test(script)||fs.statSync(script).size>1048576))throw fail('Select a JavaScript workflow smaller than 1 MB.');
   const source=typeof inline==='string'?inline:fs.readFileSync(script,'utf8'),hash=crypto.createHash('sha256').update(source).update(args===undefined?'':JSON.stringify(args)).update(cwd).update(chosenModel||'').update(effort||'').update(access==='read-only'?'':access).digest('hex');
@@ -103,34 +119,47 @@ function createWorkflowService({root,getConfig,emit,command:fixedCommand,args:fi
   function record(event,at=Date.now()) {run=workflowEvent(run,event,at);runs.set(id,run);fs.appendFileSync(path.join(directory,'events.jsonl'),JSON.stringify({sequence:run.sequence,at,event})+'\n');persist(run);emit({kind:'workflow',run});}
   if(disposed){record({type:'settled',status:'failed',error:'Application is closing.'});return run;}
   // The core getter learns the run's session and access (a Codex core adds that session's sandbox settings).
-  const launch=typeof currentCore==='function'?currentCore({threadId,access,cwd})||{}:{command:fixedCommand,args:fixedArgs,env:fixedEnv},command=launch.command,commandArgs=launch.args;
+  const launch=typeof currentCore==='function'?currentCore({threadId,access,cwd})||{}:{command:fixedCommand,args:fixedArgs,env:fixedEnv};let command=launch.command,commandArgs=launch.args,commandOptions;
   // The Settings values reach the runner as Claude's variables. They are the resolved values (a valid variable in the
   // app's environment already decided them; an invalid one was ignored), so they replace the inherited ones: Settings
   // and the run always agree, and a stray MAX_STRUCTURED_OUTPUT_RETRIES=abc never fails every schema agent.
   // CODE_DESKTOP_WORKFLOW_RUNNER: the runner's own bridge core shares the app bridge's state folder; it keeps its threads,
   // usage and generated config apart (the bridges' runner role), so neither process overwrites the other's files and
   // workflow agents never become the user's sessions.
-  const env={...process.env,...(launch.env||{}),...(runnerEnv()||{}),ELECTRON_RUN_AS_NODE:'1',CODE_DESKTOP_WORKFLOW_RUNNER:'1',...(launch.env?.ELECTRON_RUN_AS_NODE?{CODE_DESKTOP_CORE_RUN_AS_NODE:'1'}:{})};for(const key of AGENT_TOOLS_ENV)delete env[key];
-  let child;try{child=spawn(path.join(__dirname,'workflow-child.mjs'),[],{cwd,detached:true,stdio:['ignore','ignore','pipe','ipc'],env});}catch(error){record({type:'settled',status:'failed',error:error.message});settle();return run;}
+  const env={...process.env,...(launch.env||{}),...(runnerEnv()||{}),ELECTRON_RUN_AS_NODE:'1',CODE_DESKTOP_WORKFLOW_RUNNER:'1',...(launch.env?.ELECTRON_RUN_AS_NODE||appExecutable(command)?{CODE_DESKTOP_CORE_RUN_AS_NODE:'1'}:{})};for(const key of AGENT_TOOLS_ENV)delete env[key];
+  // Windows: the runner spawns its core with a plain spawn(), which refuses a .cmd (npm's codex.cmd: EINVAL) and finds
+  // only .exe on PATH. The core is resolved here as codex.cjs resolves a session's (process-tree.cjs windowsSpawn: PATH ×
+  // PATHEXT, a .cmd through cmd.exe /d /s /c), with the environment and folder the runner starts it in; commandOptions
+  // (windowsVerbatimArguments, windowsHide) reach its spawn. A name that resolves to nothing is left to report ENOENT.
+  if(windows&&typeof command==='string'&&command){const resolved=spawnCommand(command,commandArgs??RUNNER_DEFAULT_ARGS,{env,cwd},{platform});
+   if(resolved&&typeof resolved.command==='string'){command=resolved.command;commandArgs=resolved.args;
+    const {windowsHide,windowsVerbatimArguments}=resolved.options||{};commandOptions={windowsHide:windowsHide!==false,...(windowsVerbatimArguments?{windowsVerbatimArguments:true}:{})};}}
+  let child;try{child=spawn(path.join(__dirname,'workflow-child.mjs'),[],windows?{cwd,detached:false,windowsHide:true,stdio:['ignore','ignore','pipe','ipc'],env}:{cwd,detached:true,stdio:['ignore','ignore','pipe','ipc'],env});}catch(error){record({type:'settled',status:'failed',error:error.message});settle();return run;}
   let stderr='',outcome=null,stopRequested=false,quitStop=false,killTimer=null;
   const completion=new Promise(resolve=>{
    child.stderr?.on('data',data=>{stderr=(stderr+data).slice(-8000);});
    child.on('message',message=>{if(message?.stopping){grace();return;}if(!message||!message.event)return;const event=message.event;if(event.type==='result'||event.type==='failure')outcome=event;else record(event,Number.isFinite(message.at)?message.at:Date.now());});
    child.once('error',error=>{outcome={type:'failure',error:error.message};});
-   child.once('close',(code,signal)=>{clearTimeout(killTimer);if(child.pid){try{process.kill(-child.pid,'SIGKILL');}catch{}}running.delete(id);const status=stopRequested?'stopped':code===0&&outcome?.type==='result'?'completed':'failed';if(quitStop&&run.origin==='tool')markOrphan(id);record({type:'settled',status,result:outcome?.result,error:status==='stopped'?'Stopped':outcome?.error|| (status==='failed'?`Runner exited (${signal||code}). ${stderr}`:undefined)});settle();resolve(run);});
+   // Windows' stop disconnects the IPC channel, after which Node never emits 'close' for the runner: its 'exit' (and the
+   // end of stderr, briefly waited for) settles the run there.
+   let closed=false;const finished=(code,signal)=>{if(closed)return;closed=true;clearTimeout(killTimer);if(child.pid&&!windows){try{process.kill(-child.pid,'SIGKILL');}catch{}}running.delete(id);const status=stopRequested?'stopped':code===0&&outcome?.type==='result'?'completed':'failed';if(quitStop&&run.origin==='tool')markOrphan(id);record({type:'settled',status,result:outcome?.result,error:status==='stopped'?'Stopped':outcome?.error|| (status==='failed'?`Runner exited (${signal||code}). ${stderr}`:undefined)});settle();resolve(run);};
+   child.once('close',finished);
+   if(windows)child.once('exit',(code,signal)=>{const end=()=>finished(code,signal);if(!child.stderr||child.stderr.destroyed||child.stderr.readableEnded)return end();child.stderr.once('close',end);setTimeout(end,500).unref?.();});
   });
   // SIGTERM the runner only, not its group: its core must stay up to answer the cancel
   // (codeDesktop/workflow/stop, releaseScript, turn/interrupt). The group goes on close or at the deadline.
-  const kill=()=>{try{process.kill(-child.pid,'SIGKILL');}catch{}};
+  const kill=()=>{if(windows){killProcessTree(child.pid,'SIGKILL',{platform});return;}try{process.kill(-child.pid,'SIGKILL');}catch{}};
   let graced=false;const grace=()=>{if(!stopRequested||graced)return;graced=true;clearTimeout(killTimer);killTimer=setTimeout(kill,STOP_GRACE_MS);};
-  const stop=()=>{if(stopRequested)return completion;stopRequested=true;try{process.kill(child.pid,'SIGTERM');}catch{}killTimer=setTimeout(kill,STOP_KILL_MS);return completion;};
+  const stop=()=>{if(stopRequested)return completion;stopRequested=true;
+   if(windows){try{if(child.connected)child.disconnect();else kill();}catch{kill();}graced=true;killTimer=setTimeout(kill,STOP_GRACE_MS);return completion;}
+   try{process.kill(child.pid,'SIGTERM');}catch{}killTimer=setTimeout(kill,STOP_KILL_MS);return completion;};
   // quit: the app is closing (dispose) — unlike the user's Stop, the model hears about it on the next launch.
   const quit=()=>{if(!stopRequested)quitStop=true;return stop();};
   running.set(id,{stop,quit,completion,pid:child.pid,member:(memberId,action)=>{child.send({control:action,memberId});return {accepted:true};},pause:paused=>{if(run.pausable===false)throw fail('This workflow can’t be paused.');child.send({control:'pause',paused});return {accepted:true,paused};}});
   // engine 'codeDesktop': Settings chose OpenClaude Desktop's engine for a core that has its own, so the launcher script is
   // never handed to the core's engine (workflow-harness.mjs); structuredOutput false: schema agents ask for JSON.
   const scripts=engine==='codeDesktop'?{workflowScripts:false}:typeof launch.workflowScripts==='boolean'?{workflowScripts:launch.workflowScripts}:{};
-  child.send({directory,source,cwd,...(args!==undefined?{args}:{}),plan:!!plan,access,resume:!!resumeId,model:chosenModel,effort,command,commandArgs,version,runId:id,...scripts,...(structuredOutput===false||structuredOutput==='outputSchema'?{structuredOutput}:{}),...(typeof userRequest==='string'&&userRequest.trim()?{userRequest}:{}),...(Number.isSafeInteger(budgetTotal)&&budgetTotal>0?{budgetTotal,...(Number.isSafeInteger(budgetSpent)&&budgetSpent>0?{budgetSpent}:{})}:{}),...(budgetPool?{budgetPool}:{}),...(folders().length?{workflowFolders:folders()}:{})});return run;
+  child.send({directory,source,cwd,...(args!==undefined?{args}:{}),plan:!!plan,access,resume:!!resumeId,model:chosenModel,effort,command,commandArgs,...(commandOptions?{commandOptions}:{}),version,runId:id,...scripts,...(structuredOutput===false||structuredOutput==='outputSchema'?{structuredOutput}:{}),...(typeof userRequest==='string'&&userRequest.trim()?{userRequest}:{}),...(Number.isSafeInteger(budgetTotal)&&budgetTotal>0?{budgetTotal,...(Number.isSafeInteger(budgetSpent)&&budgetSpent>0?{budgetSpent}:{})}:{}),...(budgetPool?{budgetPool}:{}),...(folders().length?{workflowFolders:folders()}:{})});return run;
   function settle(){try{onSettled(run);}catch(error){console.warn('Workflow settle hook failed:',error);}}
  }
  async function start(params){return startRun(params);}

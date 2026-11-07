@@ -9,6 +9,7 @@
 // the app-owned profile (harness/profile/cordis.patch.yml).
 
 import { t } from '../i18n/index.mjs';
+import { isAbsoluteFolder, trimFolder } from './host-paths.mjs';
 export const HARNESS_PROFILE_DEFAULT = Object.freeze({ overlayEnabled: true });
 const object = value => value !== null && typeof value === 'object' && !Array.isArray(value);
 
@@ -55,7 +56,8 @@ const ROW_ID = /^[A-Za-z0-9_.:-]{1,64}$/;
 const SERVER_NAME = /^[A-Za-z0-9_-]{1,32}$/;
 const ENV_NAME = /^[A-Za-z_][A-Za-z0-9_]{0,127}$/;
 const HEADER_NAME = /^[A-Za-z0-9!#$%&'*+.^_`|~-]{1,128}$/;
-const absolute = value => typeof value === 'string' && value.startsWith('/') && value.length <= 1024 && !value.includes('\0');
+// /… on macOS; C:\… / C:/… / \\server\share on Windows (host-paths.mjs, renderer-safe).
+const absolute = value => isAbsoluteFolder(value) && value.length <= 1024 && !value.includes('\0');
 const MAX_ROWS = 200, MAX_INSERTS = 50, MAX_DIRS = 32;
 
 export const EMPTY_OVERLAY = Object.freeze({ rows: Object.freeze({}), inserts: Object.freeze([]) });
@@ -186,7 +188,7 @@ export function hooksInsert(state, { format, configPath } = {}) {
 export function setSkillDirs(state, dirs) {
   const current = normalizeOverlay(state);
   if (!Array.isArray(dirs) || dirs.length > MAX_DIRS || dirs.some(dir => !absolute(dir))) throw new Error(t('Choose absolute skill folders.'));
-  const unique = [...new Set(dirs.map(dir => dir.replace(/\/+$/, '') || '/'))];
+  const unique = [...new Set(dirs.map(trimFolder))];
   const rows = { ...current.rows };
   const { config, ...rest } = rows[SKILL_ROW] ?? {};
   const nextConfig = { ...(object(config) ? config : {}) };

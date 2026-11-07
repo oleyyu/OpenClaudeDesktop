@@ -22,6 +22,7 @@
 const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
+const { samePath } = require("./fs-paths.cjs");
 const { normalizeInstructions, projectInstructionsFor } = require("./prefs/instructions.mjs");
 const { coreForEngine, coreName, coreSupports } = require("./core-registry.mjs");
 const i18n = require("./i18n/index.mjs");
@@ -61,7 +62,8 @@ function findProjectFile(cwd, { home = os.homedir(), fs: fsys = fs } = {}) {
   if (typeof cwd !== "string" || !path.isAbsolute(cwd)) return null;
   let dir = path.resolve(cwd);
   for (let level = 0; level < MAX_LEVELS; level++) {
-    if (dir === home || dir === path.parse(dir).root) return null;
+    // Windows: the home folder compares case-insensitively (c:\\users\\me is C:\\Users\\Me).
+    if (samePath(dir, home) || dir === path.parse(dir).root) return null;
     const candidate = path.join(dir, PROJECT_FILE);
     try { if (fsys.statSync(candidate).isFile()) return candidate; } catch {}
     const parent = path.dirname(dir);
@@ -288,7 +290,7 @@ function coreInstructionFiles(cwd, { home, env = process.env, fs: fsys = fs, eng
   let root = null;
   for (let dir = cwd; ; dir = path.dirname(dir)) {
     if (fsys.existsSync(path.join(dir, ".git"))) { root = dir; break; }
-    if (path.dirname(dir) === dir || dir === home) break;
+    if (path.dirname(dir) === dir || samePath(dir, home)) break;
   }
   const chain = [];
   for (let dir = cwd; ; dir = path.dirname(dir)) { chain.unshift(dir); if (dir === (root ?? cwd) || path.dirname(dir) === dir) break; }
@@ -424,7 +426,7 @@ function createInstructionsService({ getConfig, getClient, shell, knownCwd, home
         const target = projectFileTarget(prefs(), cwd, { home, fs: fsys });
         // findProjectFile never reads a file in the home folder or at the root, so none is created there.
         const folder = path.dirname(path.dirname(target));
-        if (folder === home || folder === path.parse(folder).root)
+        if (samePath(folder, home) || folder === path.parse(folder).root)
           throw new Error(i18n.t("Project instructions can’t live in your home folder or at the top of the disk. Open a project folder first."));
         fsys.mkdirSync(path.dirname(target), { recursive: true });
         try { fsys.writeFileSync(target, TEMPLATE, { flag: "wx" }); } catch (error) { if (error?.code !== "EEXIST") throw error; }

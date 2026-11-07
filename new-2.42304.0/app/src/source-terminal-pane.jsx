@@ -670,7 +670,7 @@ export function SourceTerminalPane({
               Promise.resolve(navigator.clipboard?.readText?.()).then((text) => { if (typeof text === "string" && text) term.paste(text); }, () => { try { document.execCommand("paste"); } catch {} });
             }}>{t("Paste")}</SourceMenu.Item>
             <SourceMenu.Separator />
-            <SourceMenu.Item shortcut="cmd+a" onClick={() => viewRef.current?.term.selectAll()}>{t("Select all")}</SourceMenu.Item>
+            <SourceMenu.Item shortcut={/Mac/.test(navigator.platform) ? "cmd+a" : "ctrl+shift+a"} onClick={() => viewRef.current?.term.selectAll()}>{t("Select all")}</SourceMenu.Item>
             <SourceMenu.Separator />
             <SourceMenu.Item onClick={() => { const view=viewRef.current;if(!view)return;view.term.clearSelection();view.term.clear();void handlers.current.clear(view.id); }}>{t('Clear terminal')}</SourceMenu.Item>
           </SourceMenu.Popup>

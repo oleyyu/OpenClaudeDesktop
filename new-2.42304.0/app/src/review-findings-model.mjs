@@ -20,7 +20,10 @@ import { fixFindingsText } from './generated/r4e-findings/fix-findings-text.mjs'
 const relative = (file, cwd) => {
   const value = String(file ?? '').trim().replaceAll('\\', '/');
   const base = typeof cwd === 'string' && cwd ? cwd.replace(/[\\/]+$/, '').replaceAll('\\', '/') : '';
-  return base && value.startsWith(`${base}/`) ? value.slice(base.length + 1) : value.replace(/^\.\//, '');
+  if (base && value.startsWith(`${base}/`)) return value.slice(base.length + 1);
+  // A Windows drive path compares case-insensitively (C:/Proj vs c:/proj).
+  if (/^[A-Za-z]:\//.test(base) && value.toLowerCase().startsWith(`${base.toLowerCase()}/`)) return value.slice(base.length + 1);
+  return value.replace(/^\.\//, '');
 };
 const finding = (index, fields) => ({ id: `finding-${index}`, category: null, detail: null, ...fields });
 

@@ -5,6 +5,22 @@
 const fs = require("node:fs");
 const path = require("node:path");
 const { t } = require("./i18n/index.mjs");
+const { comparable, realOr, pathInside } = require("./fs-paths.cjs");
+
+// Worktree folders compare resolved (macOS: exactly, as before). Windows: case-insensitively, "\\" and "/" alike, and
+// after realpath (8.3 short names, git's C:/… form, links), so a folder a session works in is never taken for an
+// unused one (Storage › Remove worktrees runs `git worktree remove --force` on those).
+function folderKey(dir, { platform = process.platform, realpath = fs.realpathSync.native } = {}) {
+  if (typeof dir !== "string" || !dir) return "";
+  if (platform !== "win32") return path.resolve(dir);
+  return comparable(realOr(path.win32.resolve(dir), { realpath }), { platform });
+}
+/** True when a and b are the same worktree folder (see folderKey). */
+function sameWorktreePath(a, b, options = {}) {
+  const left = folderKey(a, options);
+  return !!left && left === folderKey(b, options);
+}
+const findKey = (map, dir, options) => (Object.hasOwn(map, dir) ? dir : Object.keys(map).find((entry) => sameWorktreePath(entry, dir, options)));
 
 const GIT = (run, cwd, args, options = {}) => run("git", ["-C", cwd, ...args], { timeout: 20000, maxBuffer: 8 * 1024 * 1024, ...options });
 
@@ -22,8 +38,10 @@ async function excludeWorktreeRoot(run, repoCwd, base) {
   if (!top || !common) return null;
   // git reports the real top level; the folder may come through a link (/tmp, a linked project folder).
   let folder = path.resolve(base);
-  try { folder = fs.realpathSync(folder); } catch {}
-  const root = fs.realpathSync(top);
+  // Windows: realpath.native expands 8.3 short names on both sides (path.relative ignores case there).
+  const real = process.platform === "win32" ? fs.realpathSync.native : fs.realpathSync;
+  try { folder = real(folder); } catch {}
+  const root = real(top);
   const relative = path.relative(root, folder);
   if (!relative || relative.startsWith("..") || path.isAbsolute(relative)) return null;
   const pattern = `/${relative.split(path.sep).join("/")}/`;
@@ -46,7 +64,7 @@ async function worktreeStatus(run, dir) {
   if (typeof dir !== "string" || !fs.existsSync(dir)) return { exists: false, changes: 0, files: [] };
   try {
     const output = String((await GIT(run, dir, ["status", "--porcelain=v1", "--untracked-files=all"])).stdout);
-    const lines = output.split("\n").filter((line) => line.trim());
+    const lines = output.split("\n").map((line) => line.replace(/\r$/, "")).filter((line) => line.trim());
     return { exists: true, changes: lines.length, files: lines.slice(0, STATUS_FILE_LIMIT) };
   } catch { return { exists: true, changes: 0, files: [], unknown: true }; }
 }
@@ -56,25 +74,34 @@ async function worktreeStatus(run, dir) {
  * git no longer knows as a worktree is left alone (it may be the user's).
  * @returns {Promise<boolean>} whether the folder is gone
  */
-async function removeWorktree(run, dir) {
+async function removeWorktree(run, dir, options = {}) {
   if (typeof dir !== "string" || !path.isAbsolute(dir)) return false;
   if (!fs.existsSync(dir)) return true;
   let main = null;
   try {
     const listing = String((await GIT(run, dir, ["worktree", "list", "--porcelain"])).stdout);
-    main = /^worktree (.+)$/m.exec(listing)?.[1] ?? null;
+    main = /^worktree (.+?)\r?$/m.exec(listing)?.[1] ?? null;
   } catch { return false; }
-  if (!main || path.resolve(main) === path.resolve(dir)) return false;
+  // git lists the main checkout as C:/repo on Windows: compared case- and separator-insensitively there.
+  if (!main || sameWorktreePath(main, dir, options)) return false;
   try { await GIT(run, main, ["worktree", "remove", "--force", dir]); } catch { return false; }
   try { await GIT(run, main, ["worktree", "prune"]); } catch {}
   return !fs.existsSync(dir);
 }
 
 /** The worktree folders no session (open or archived) works in any more. */
-function unusedWorktrees(config) {
-  const used = new Set([...(config.threadIds || []), ...(config.archivedThreadIds || [])]
-    .map((id) => config.threadMetadata?.[id]?.cwd).filter((cwd) => typeof cwd === "string").map((cwd) => path.resolve(cwd)));
-  return (config.worktreeDirectories || []).filter((dir) => typeof dir === "string" && !used.has(path.resolve(dir)));
+function unusedWorktrees(config, options = {}) {
+  const cwds = [...(config.threadIds || []), ...(config.archivedThreadIds || [])]
+    .map((id) => config.threadMetadata?.[id]?.cwd).filter((cwd) => typeof cwd === "string" && cwd);
+  const used = new Set(cwds.map((cwd) => folderKey(cwd, options)));
+  const windows = (options.platform ?? process.platform) === "win32";
+  return (config.worktreeDirectories || []).filter((dir) => {
+    if (typeof dir !== "string") return false;
+    const key = folderKey(dir, options);
+    if (used.has(key)) return false;
+    // Windows, conservatively: a session working in a folder inside the worktree uses it too.
+    return !(windows && [...used].some((cwd) => pathInside(key, cwd, { platform: "win32" })));
+  });
 }
 
 // R4g-small SM3 (research-ext/X5-lazy-worktree.md X5-E1, D38): the branch prepare-worktree created, kept like the
@@ -91,13 +118,13 @@ function recordableBranch(branch) {
 // (worktreeDirectories: prepared, its session maybe not started yet) or an open or archived session still names it as
 // its cwd; anything else (its session was deleted after the folder was removed) is dropped. Run on every record and
 // forget, so the map never outgrows the app's worktrees plus its sessions.
-function pruneWorktreeBranches(config) {
+function pruneWorktreeBranches(config, options = {}) {
   const map = config?.worktreeBranches;
   if (!map || typeof map !== "object") return;
   const kept = new Set([...(Array.isArray(config.worktreeDirectories) ? config.worktreeDirectories : []),
     ...[...(config.threadIds || []), ...(config.archivedThreadIds || [])].map((id) => config.threadMetadata?.[id]?.cwd)]
-    .filter((dir) => typeof dir === "string" && dir).map((dir) => path.resolve(dir)));
-  for (const key of Object.keys(map)) if (!kept.has(path.resolve(key))) delete map[key];
+    .filter((dir) => typeof dir === "string" && dir).map((dir) => folderKey(dir, options)));
+  for (const key of Object.keys(map)) if (!kept.has(folderKey(key, options))) delete map[key];
 }
 /** prepare-worktree: remember the new worktree's branch (the caller saves the config). */
 function recordWorktreeBranch(config, dir, branch) {
@@ -110,20 +137,26 @@ function recordWorktreeBranch(config, dir, branch) {
 function recordedWorktreeBranch(config, dir) {
   const map = config?.worktreeBranches;
   if (!map || typeof map !== "object" || typeof dir !== "string") return undefined;
-  const key = Object.hasOwn(map, dir) ? dir : Object.keys(map).find((entry) => path.resolve(entry) === path.resolve(dir));
+  const key = findKey(map, dir);
   return key !== undefined && recordableBranch(map[key]) ? map[key] : undefined;
 }
 
 /** Drop a removed worktree from the app's lists. */
-function forgetWorktree(config, dir) {
-  config.worktreeDirectories = (config.worktreeDirectories || []).filter((entry) => path.resolve(entry) !== path.resolve(dir));
-  if (config.worktreeBases && Object.hasOwn(config.worktreeBases, dir)) delete config.worktreeBases[dir];
+function forgetWorktree(config, dir, options = {}) {
+  config.worktreeDirectories = (config.worktreeDirectories || []).filter((entry) => !sameWorktreePath(entry, dir, options));
+  const drop = (map) => {
+    if (!map || typeof map !== "object") return;
+    if (Object.hasOwn(map, dir)) delete map[dir];
+    // Windows: the same folder may be keyed as c:\… or C:/… there.
+    if ((options.platform ?? process.platform) === "win32") for (const key of Object.keys(map)) if (sameWorktreePath(key, dir, options)) delete map[key];
+  };
+  drop(config.worktreeBases);
   // Its sessions keep their own sessionMetadata.originCwd for the Recent folders list.
-  if (config.worktreeOrigins && Object.hasOwn(config.worktreeOrigins, dir)) delete config.worktreeOrigins[dir];
+  drop(config.worktreeOrigins);
   // X5-E1: the branch record outlives the folder while a session (open or archived) still names it as its cwd, as the
   // original's session keeps `branch` after its worktree was deleted; with no such session it goes too, and so does
   // any other record whose session has since been deleted (R4i-small SM3 pruneWorktreeBranches).
-  pruneWorktreeBranches(config);
+  pruneWorktreeBranches(config, options);
 }
 
 // B29 worktree start (asar index.chunk-BSJ_SW2t.js createWorktree: onInitStatus 'worktree_fetch' → refreshSourceRef,
@@ -275,6 +308,6 @@ function gitUnavailable(error) {
   return null;
 }
 
-module.exports = { excludeWorktreeRoot, worktreeStatus, removeWorktree, unusedWorktrees, forgetWorktree, recordWorktreeBranch, recordedWorktreeBranch, pruneWorktreeBranches, refreshedStartPoint, fetchableBranch, gitUnavailable,
+module.exports = { sameWorktreePath, folderKey, excludeWorktreeRoot, worktreeStatus, removeWorktree, unusedWorktrees, forgetWorktree, recordWorktreeBranch, recordedWorktreeBranch, pruneWorktreeBranches, refreshedStartPoint, fetchableBranch, gitUnavailable,
   readVettedTrackingRef, vetTrackingRef, trackingRefRefusal, WorktreeStartRefused,
   _resetSourceRefFetches: () => lastSourceRefFetch.clear() };

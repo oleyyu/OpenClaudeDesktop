@@ -10,6 +10,7 @@
  */
 
 import { spawn } from 'node:child_process'
+import { bridgeWatch, killTree, platformSpawn } from './win-process.js'
 import { EventEmitter } from 'node:events'
 import readline from 'node:readline'
 
@@ -52,10 +53,18 @@ export class ZCodeConnection extends EventEmitter {
 
   start() {
     const { command, args, env, cwd } = this.options
-    const child = spawn(command, args, { env, cwd, stdio: ['pipe', 'pipe', 'pipe'] })
+    // platformSpawn: Windows resolves PATHEXT / runs a .cmd through cmd.exe, no console; ZCode's Node, when it is the app's
+    // own Electron, runs as Node, and the agent's commands never inherit ELECTRON_RUN_AS_NODE otherwise.
+    const platform = this.options.platform ?? process.platform
+    const launch = platformSpawn(command, args, { env, cwd, stdio: ['pipe', 'pipe', 'pipe'] }, { platform })
+    const child = spawn(launch.command, launch.args, launch.options)
     this.child = child
+    // Windows: the app's TerminateProcess of the bridge runs no handler here; the sentinel ends ZCode's tree then.
+    const watch = platform === 'win32' ? (this.options.watch ?? bridgeWatch()) : null
+    watch?.watch(child.pid)
     child.on('error', (error) => this.fail(error))
     child.on('exit', (code, signal) => {
+      watch?.unwatch(child.pid)
       this.exitInfo = { code, signal }
       this.fail(new Error(`ZCode exited (${signal || code})${this.stderrTail() ? `: ${this.stderrTail()}` : ''}`))
     })
@@ -161,7 +170,9 @@ export class ZCodeConnection extends EventEmitter {
     if (this.exitInfo) return
     const exited = new Promise((resolve) => child.once('exit', resolve))
     try { child.stdin.end() } catch {}
-    child.kill('SIGTERM')
+    // Windows: no SIGTERM; ZCode's tree (its tools' processes, MCP servers) is ended with taskkill.
+    if ((this.options.platform ?? process.platform) === 'win32') killTree(child.pid)
+    else child.kill('SIGTERM')
     const timer = setTimeout(() => { try { child.kill('SIGKILL') } catch {} }, 3000)
     await exited
     clearTimeout(timer)

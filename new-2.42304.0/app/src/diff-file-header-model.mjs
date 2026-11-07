@@ -1,4 +1,5 @@
 import { t } from '../electron/i18n/index.mjs';
+import { isAbsolutePath, joinPath, normalizePath, splitPath } from './host-path-model.mjs';
 
 // Changes-pane file header facts, 2.2553.1 c219730b0-DMsvWaVJ.js (We/Ke/qe/W/Ue)
 // and c3e58cab4-BIx3-QB8.js (Copy submenu d/p). Pure: the parser file object in,
@@ -82,11 +83,11 @@ export function stripClipboardControls(value) {
 // c219730b0 $e resolveAbsolutePath (c856385e2 Wn -> $(root, path)): the diff
 // path is relative to the root the patch was produced in; an absolute patch
 // path stays as it is. null when no absolute root is known.
-export function absoluteDiffPath(root, value) {
+export function absoluteDiffPath(root, value, options) {
   if (typeof value !== 'string' || !value || value.includes('\0')) return null;
-  const normalize = (text) => { const parts = []; for (const part of text.split('/')) { if (part === '..') parts.pop(); else if (part && part !== '.') parts.push(part); } return '/' + parts.join('/'); };
-  if (value.startsWith('/')) return normalize(value);
-  return typeof root === 'string' && root.startsWith('/') ? normalize(`${root}/${value}`) : null;
+  // host-path-model: POSIX exactly as before; a Windows root (C:\…, C:/…) joins with '\\'.
+  if (isAbsolutePath(value, options)) return normalizePath(value, options);
+  return isAbsolutePath(root, options) ? joinPath(root, value, options) : null;
 }
 
 // c3e58cab4 p: Absolute path only when resolved, Relative path, then Filename
@@ -94,5 +95,5 @@ export function absoluteDiffPath(root, value) {
 export function copyChoices(root, value) {
   const absolute = absoluteDiffPath(root, value);
   const source = absolute ?? value;
-  return { absolute, relative: value, filename: splitPosixPath(source)[1] };
+  return { absolute, relative: value, filename: splitPath(source)[1] };
 }

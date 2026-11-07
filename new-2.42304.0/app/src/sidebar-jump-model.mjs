@@ -1,3 +1,5 @@
+// Platform defaults: ⌘ on macOS, Ctrl on Windows / Linux (pane-keys-model isMacPlatform; was mac = true everywhere).
+import { isMacPlatform } from "./pane-keys-model.mjs";
 // ⌘1–9 session jump and the held-modifier number hints of the classic sidebar.
 // Ported from sidebar-groups.js:9110-9302 (GA digits, $A/ej visible hint rows,
 // nj hint map, ij digit parsing, aj input guard, oj Ctrl+Shift / sj ⌘
@@ -12,7 +14,7 @@ export const JUMP_HINT_LIMIT = 9;
 export const JUMP_MODIFIER_KEYS = Object.freeze(new Set(["Shift", "Control", "Meta"]));
 
 /** sj: the platform jump modifier alone (⌘ on macOS, Ctrl elsewhere). */
-export function isMetaJumpChord(event, { mac = true } = {}) {
+export function isMetaJumpChord(event, { mac = isMacPlatform() } = {}) {
   const primary = mac ? event.metaKey : event.ctrlKey;
   const secondary = mac ? event.ctrlKey : event.metaKey;
   return !!primary && !secondary && !event.shiftKey && !event.altKey;
@@ -24,7 +26,7 @@ export function isCtrlShiftJumpChord(event) {
 }
 
 /** cj: a chord that keeps (or starts) the hints; ⌘ only when the meta hints are on. */
-export function isJumpHintChord(event, { metaHints = true, mac = true } = {}) {
+export function isJumpHintChord(event, { metaHints = true, mac = isMacPlatform() } = {}) {
   return isCtrlShiftJumpChord(event) || (metaHints && isMetaJumpChord(event, { mac }));
 }
 
@@ -89,7 +91,7 @@ export function hintedRowKey(map, digit) {
  * - setTimer(fn, ms) / clearTimer(id)
  */
 export function createJumpHints({ rows, blocked = () => false, typing = () => false, show, hide, open,
-  setTimer = setTimeout, clearTimer = clearTimeout, metaHints = true, mac = true } = {}) {
+  setTimer = setTimeout, clearTimer = clearTimeout, metaHints = true, mac = isMacPlatform() } = {}) {
   let timer = null, shown = null, last = null;
   const chord = (event) => isJumpHintChord(event, { metaHints, mac });
   const cancel = () => { if (timer !== null) { clearTimer(timer); timer = null; } };
@@ -162,7 +164,7 @@ export function createJumpHints({ rows, blocked = () => false, typing = () => fa
 
 // ⌘⇧⌫ Archive session (ion-dist shared-19-CjdiaR4X.js rg/ag/ig). ag: Backspace with Shift and the
 // platform modifier alone (⌘ on macOS, Ctrl elsewhere), never with ⌥. rg also drops repeats.
-export function archiveChord(event, { mac = true } = {}) {
+export function archiveChord(event, { mac = isMacPlatform() } = {}) {
   if (!event || event.key !== "Backspace" || !event.shiftKey || event.altKey || event.repeat) return false;
   const primary = mac ? event.metaKey : event.ctrlKey;
   const secondary = mac ? event.ctrlKey : event.metaKey;

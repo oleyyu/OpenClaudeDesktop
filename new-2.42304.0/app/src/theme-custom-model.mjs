@@ -5,6 +5,7 @@
 import { THEME_DEFAULT, normalizeTheme, validateTheme, isDefaultTheme, isFontFamily } from '../electron/prefs/theme.mjs';
 import { DEFAULT_CODE_THEMES, isTheme, themeLabel } from './code-theme-catalog.mjs';
 import { t } from '../electron/i18n/index.mjs';
+import { isWindowsHost } from './host-path-model.mjs';
 
 export const THEME_FILE_FORMAT = 'code-desktop-theme';
 export const THEME_FILE_VERSION = 1;
@@ -243,9 +244,16 @@ export function importThemeFile(input) {
 }
 
 // --- UI font list ---------------------------------------------------------------
-export const FALLBACK_FONTS = Object.freeze(['SF Pro', 'SF Pro Rounded', 'Helvetica Neue', 'Avenir Next', 'Avenir', 'Gill Sans', 'Optima',
+export const MAC_FALLBACK_FONTS = Object.freeze(['SF Pro', 'SF Pro Rounded', 'Helvetica Neue', 'Avenir Next', 'Avenir', 'Gill Sans', 'Optima',
   'PingFang SC', 'Hiragino Sans', 'Hiragino Sans GB', 'Noto Sans', 'Noto Sans SC', 'Inter', 'Source Sans 3', 'IBM Plex Sans',
   'Georgia', 'Charter', 'Iowan Old Style', 'Palatino', 'Menlo', 'Monaco', 'SF Mono', 'JetBrains Mono', 'Fira Code']);
+// Windows 10/11's own families (plus the CJK UI fonts it ships), for when queryLocalFonts is unavailable or refused.
+export const WINDOWS_FALLBACK_FONTS = Object.freeze(['Segoe UI', 'Segoe UI Variable', 'Arial', 'Calibri', 'Cambria', 'Candara',
+  'Corbel', 'Georgia', 'Palatino Linotype', 'Tahoma', 'Trebuchet MS', 'Verdana', 'Microsoft YaHei', 'Microsoft YaHei UI',
+  'SimSun', 'DengXian', 'Yu Gothic UI', 'Malgun Gothic', 'Noto Sans', 'Inter', 'Consolas', 'Cascadia Code', 'Cascadia Mono',
+  'Courier New', 'Lucida Console', 'JetBrains Mono', 'Fira Code']);
+export const fallbackFonts = (windows = isWindowsHost()) => (windows ? WINDOWS_FALLBACK_FONTS : MAC_FALLBACK_FONTS);
+export const FALLBACK_FONTS = fallbackFonts();
 /** Dedupes family names from window.queryLocalFonts() results; ≤limit, sorted. */
 export function fontFamilies(fonts, limit = 500) {
   const seen = new Set();

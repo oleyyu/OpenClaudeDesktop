@@ -10,7 +10,7 @@ const fs = require("node:fs");
 const net = require("node:net");
 const path = require("node:path");
 const { EventEmitter } = require("node:events");
-const { socketDir, encode, FrameReader, validMessage } = require("./protocol.cjs");
+const { socketDir, endpointOf, encode, FrameReader, validMessage } = require("./protocol.cjs");
 
 const DEFAULT_TIMEOUT_MS = 30_000;
 
@@ -64,7 +64,10 @@ class ChromeBridgeClient extends EventEmitter {
     return new Promise((resolve, reject) => {
       const attempt = (index) => {
         if (index >= candidates.length) { reject(new BridgeError("not_connected", "The Chrome extension isn't connected: no native host answered.")); return; }
-        const socket = net.createConnection(candidates[index].file);
+        // Windows: <pid>.sock names the host's named pipe (protocol.cjs endpointOf).
+        const target = endpointOf(candidates[index].file);
+        if (!target) { attempt(index + 1); return; }
+        const socket = net.createConnection(target);
         socket.once("connect", () => { socket.removeAllListeners("error"); log(`connected to ${candidates[index].file}`); resolve(new ChromeBridgeClient(socket, { log, file: candidates[index].file })); });
         socket.once("error", () => attempt(index + 1));
       };

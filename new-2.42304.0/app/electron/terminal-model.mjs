@@ -119,13 +119,17 @@ export function trimOutput(text, limit = OUTPUT_KEEP_CHARS) {
 // ---------------------------------------------------------------------------
 // Foreground process: busy when the PTY's foreground program is not the shell itself.
 
-const programName = (value) => String(value || "").split("/").pop().replace(/^-/, "").trim();
+// Either separator, and Windows' .exe (C:\\Windows\\System32\\cmd.exe → cmd).
+const programName = (value) => String(value || "").split(/[\\/]/).pop().replace(/^-/, "").replace(/\.exe$/i, "").trim();
 // `idle` is the foreground program seen while the shell printed its first prompt: /bin/sh on macOS runs as bash or
 // zsh, so the shell's path alone does not name it.
 // A shell in the foreground is the prompt waiting, whatever ran when the first output arrived (a login shell's
 // profile can be running /usr/libexec/path_helper then, which would otherwise read as busy for good).
 const SHELL_PROGRAMS = new Set(["sh", "bash", "zsh", "dash", "ksh", "mksh", "fish", "tcsh", "csh", "nu", "login"]);
-export function isBusyProcess(foreground, shell, idle = null) {
+// Windows: node-pty's ConPTY terminal reports only the program it started (the shell, for good), so the foreground
+// program can't be told: null (unknown), never false, so a tab closing asks and a sweep doesn't end a running command.
+export function isBusyProcess(foreground, shell, idle = null, { platform = globalThis.process?.platform } = {}) {
+  if (platform === "win32") return null;
   const name = programName(foreground);
   if (!name) return null;
   if (SHELL_PROGRAMS.has(name)) return false;

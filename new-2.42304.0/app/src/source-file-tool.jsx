@@ -1,4 +1,5 @@
 import React, { useRef, useState } from 'react';
+import { revealInFileManagerLabel } from "./file-manager-labels.mjs";
 import { SourceMenu } from './source-menu.jsx';
 import { CommandCopyButton, CommandOutput } from './source-command.jsx';
 import { useSettledHighlight } from './use-settled-highlight.mjs';
@@ -44,7 +45,7 @@ export function ToolPath({ path, cwd, sessionKey, onOpenFileRef, onOpenChanges, 
         <SourceMenu.Item onClick={() => run(() => navigator.clipboard.writeText(name))}>{t("Filename")}</SourceMenu.Item>
       </SourceMenu.Popup></SourceMenu.Submenu>
       <SourceMenu.Submenu><SourceMenu.SubmenuTrigger>{t("Open in")}</SourceMenu.SubmenuTrigger><SourceMenu.Popup label={t("Open in")}><SourceMenu.Item onClick={() => onOpenFileRef?.({ path: choices?.absolute || path })}>{t("Files pane")}</SourceMenu.Item></SourceMenu.Popup></SourceMenu.Submenu>
-      {choices?.relative && sessionKey && <SourceMenu.Item onClick={() => run(() => window.desktop.call('reveal-tool-file', { sessionId: sessionKey, path: choices.absolute }))}>{t("Reveal in Finder")}</SourceMenu.Item>}
+      {choices?.relative && sessionKey && <SourceMenu.Item onClick={() => run(() => window.desktop.call('reveal-tool-file', { sessionId: sessionKey, path: choices.absolute }))}>{revealInFileManagerLabel()}</SourceMenu.Item>}
     </SourceMenu.Popup>}
     {error && <span role="alert" className="source-tool-error">{error}</span>}
   </>;

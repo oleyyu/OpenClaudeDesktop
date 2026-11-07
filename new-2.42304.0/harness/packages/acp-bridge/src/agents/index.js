@@ -19,6 +19,7 @@ import gemini from './gemini.js'
 import qwen from './qwen.js'
 import kimi from './kimi.js'
 import minimax from './minimax.js'
+import { npmShimTarget, platformSpawn, resolveWindowsCommand } from '../win-process.js'
 
 export const ADAPTERS = [gemini, qwen, kimi, minimax]
 export const adapterById = (id) => ADAPTERS.find((adapter) => adapter.id === id) ?? null
@@ -38,8 +39,10 @@ export function owningPackage(file) {
   return null
 }
 
-function onPath(name, env) {
-  for (const dir of String(env.PATH ?? '').split(':').filter(Boolean)) {
+function onPath(name, env, platform = process.platform) {
+  // Windows: PATH is `;`-separated (and may be spelled Path), and a name means name + PATHEXT (gemini.cmd, kimi.exe).
+  if (platform === 'win32') return resolveWindowsCommand(name, { env })
+  for (const dir of String(env.PATH ?? '').split(path.delimiter).filter(Boolean)) {
     const file = path.join(dir, name)
     try { fs.accessSync(file, fs.constants.X_OK); if (fs.statSync(file).isFile()) return file } catch {}
   }
@@ -50,11 +53,17 @@ function onPath(name, env) {
  * The agent program from the environment: {binary, runner, node, version}.
  * @returns {{ binary: string | null, runner: string, node: string, version: string }}
  */
-export function agentProgram(env = process.env, adapter = null) {
+export function agentProgram(env = process.env, adapter = null, { platform = process.platform, shimTarget = npmShimTarget } = {}) {
   let binary = env.CODE_DESKTOP_AGENT_BINARY || null
-  if (!binary && adapter) for (const name of adapter.binaryNames) { binary = onPath(name, env); if (binary) break }
+  if (!binary && adapter) for (const name of adapter.binaryNames) { binary = onPath(name, env, platform); if (binary) break }
   const node = env.CODE_DESKTOP_NODE_BINARY || process.execPath
   let runner = env.CODE_DESKTOP_AGENT_RUNNER || ''
+  // Windows: an npm-installed agent is a .cmd shim; its script runs under Node directly (no cmd.exe in between, so the
+  // agent gets our stdin, its exit code reaches us and a stop's taskkill reaches it). Anything else runs through cmd.exe.
+  if (platform === 'win32' && binary && !runner && /\.cmd$/i.test(binary)) {
+    const target = shimTarget(binary)
+    if (target) { binary = target.file; if (target.node) runner = 'node' }
+  }
   // A .js/.mjs entry (an npm package) runs under Node even when the runner was not passed.
   if (!runner && binary && /\.(c|m)?js$/.test(binary)) runner = 'node'
   return { binary, runner, node, version: env.CODE_DESKTOP_AGENT_VERSION || '' }
@@ -71,7 +80,8 @@ export function detectAdapter(env = process.env) {
     const pkg = owningPackage(resolved)
     const byPackage = pkg && ADAPTERS.find((adapter) => adapter.packageNames.includes(pkg))
     if (byPackage) return byPackage
-    const base = path.basename(binary).replace(/\.(c|m)?js$/, '')
+    // Windows names: gemini.cmd, kimi.exe (path.win32.basename also splits on `\`).
+    const base = path.win32.basename(binary).replace(/\.(c|m)?js$/, '').replace(/\.(cmd|bat|exe)$/i, '')
     const byName = ADAPTERS.find((adapter) => adapter.binaryNames.includes(base))
     if (byName) return byName
     const byFolder = ADAPTERS.find((adapter) => resolved.split(path.sep).includes(adapter.id) && resolved.includes(`${path.sep}cores${path.sep}${adapter.id}${path.sep}`))
@@ -79,7 +89,8 @@ export function detectAdapter(env = process.env) {
     try {
       const program = agentProgram(env)
       const [file, args] = program.runner === 'node' ? [program.node, [binary, '--help']] : [binary, ['--help']]
-      const text = execFileSync(file, args, { timeout: 10000, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], env: { ...env, NO_COLOR: '1' } })
+      const launch = platformSpawn(file, args, { timeout: 10000, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], env: { ...env, NO_COLOR: '1' } })
+      const text = execFileSync(launch.command, launch.args, launch.options)
       const byHelp = ADAPTERS.find((adapter) => adapter.helpPattern.test(text))
       if (byHelp) return byHelp
     } catch {}
@@ -98,7 +109,8 @@ export function agentVersion(program, env) {
   if (!program.binary) return ''
   try {
     const { command, args } = commandLine(program, ['--version'])
-    return execFileSync(command, args, { timeout: 15000, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], env }).trim().split('\n')[0].replace(/^[^\d]*/, '').trim()
+    const launch = platformSpawn(command, args, { timeout: 15000, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], env })
+    return execFileSync(launch.command, launch.args, launch.options).trim().split('\n')[0].replace(/^[^\d]*/, '').trim()
   } catch {
     return ''
   }

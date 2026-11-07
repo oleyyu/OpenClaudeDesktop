@@ -16,6 +16,7 @@
 import { sessionCycleRepeatMs, isCycleModifierKey, cycleBlockedByFocus, sessionCycleChord } from './generated/code-current/session-cycle-chords.mjs';
 import { cycleRowKey, expandCycleGroup, openCycleButton, rowAliasAttribute } from './generated/code-current/session-cycle-rows.mjs';
 import { sessionCycleStep } from './generated/code-current/session-cycle-step.mjs';
+import { isMacPlatform } from './pane-keys-model.mjs';
 
 export const CYCLE_REPEAT_MS = sessionCycleRepeatMs; // Wp
 // shared-16 Up() = D("__gb__1817753866") (GrowthBook on). No GrowthBook here: ⌥↑ / ⌥↓ is on by host decision (R3).
@@ -25,10 +26,12 @@ export const SESSION_CYCLE_ALT_ARROW = true;
  * am on macOS (xt() true) without the ⌥↑↓ chord: the delta of the chords the Keyboard shortcuts dialog lists
  * (Ctrl+Tab / Ctrl+Shift+Tab, ⌘⇧] / ⌘⇧[ by key code; Alt never). The cycler itself calls the original am.
  */
-export function sessionCycleDelta(event) {
+export function sessionCycleDelta(event, { mac = isMacPlatform() } = {}) {
   if (!event || event.altKey) return 0;
   if (event.key === "Tab" && event.ctrlKey && !event.metaKey) return event.shiftKey ? -1 : 1;
-  if (event.metaKey && event.shiftKey && !event.ctrlKey) {
+  // am off macOS: Ctrl+Shift+] / Ctrl+Shift+[ (r = ctrlKey, i = metaKey).
+  const primary = mac ? event.metaKey : event.ctrlKey, other = mac ? event.ctrlKey : event.metaKey;
+  if (primary && event.shiftKey && !other) {
     if (event.code === "BracketRight") return 1;
     if (event.code === "BracketLeft") return -1;
   }

@@ -64,6 +64,9 @@ export default Object.freeze({
       assets: Object.freeze({
         arm64: Object.freeze({ name: "kimi-code-darwin-arm64.tar.gz", size: 62296524, sha256: "8c3bad99571b16abd113ab5d511a98a36b852c0d5493991842a67b8c2bc4ecd0" }),
         x64: Object.freeze({ name: "kimi-code-darwin-x64.tar.gz", size: 63561208, sha256: "f6dc0289112c24119d070f9203d44bcd53580e380819db25b58be65643b75bd4" }),
+        // Windows builds of the same release (GitHub release asset digests).
+        "win32-x64": Object.freeze({ name: "kimi-code-win32-x64.tar.gz", size: 57199340, sha256: "87756a53a9bb0915842d884eaf43f69a06b2e404bcbb05d41c519c12d4b410cb" }),
+        "win32-arm64": Object.freeze({ name: "kimi-code-win32-arm64.tar.gz", size: 53253558, sha256: "72bb17fef0d165a5f61905ede7e57c552791905d605a778967d054fe702873d4" }),
       }),
     }),
   }),

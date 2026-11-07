@@ -2,6 +2,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { spawn } = require('node:child_process');
 const { matchPath, compareMatches, orderFolderQuery } = require('./file-name-matcher.cjs');
+const { userGitConfig, safeDirectoryArgs } = require('./git-user-config.cjs');
 
 const FALLBACK_EXCLUDES = new Set(['.git', 'node_modules', '.DS_Store']);
 const vanished = error => ['ENOENT', 'ENOTDIR', 'ELOOP'].includes(error.code);
@@ -17,10 +18,18 @@ function gitEnvironment() {
   };
 }
 
-function git(root, args, maxBytes) {
+// Windows: the user's own system/global safe.directory entries (git-user-config.cjs; the environment above keeps
+// those files out), or a repository on a FAT32/exFAT drive or a share fails with "dubious ownership". Else none.
+async function hostArgs() {
+  if (process.platform !== 'win32') return [];
+  return safeDirectoryArgs(await userGitConfig({ platform: 'win32' }));
+}
+
+async function git(root, args, maxBytes) {
+  const host = await hostArgs();
   return new Promise((resolve, reject) => {
     const child = spawn('git', ['--no-pager', '-c', 'core.fsmonitor=false',
-      '-c', 'core.untrackedCache=false', '-c', 'core.hooksPath=/dev/null',
+      '-c', 'core.untrackedCache=false', '-c', 'core.hooksPath=/dev/null', ...host,
       ...args], { cwd: root, env: gitEnvironment(), stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true });
     const chunks = [];
     let bytes = 0, stderr = '', limited = false;

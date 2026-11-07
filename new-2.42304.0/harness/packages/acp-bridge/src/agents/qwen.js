@@ -28,6 +28,7 @@ import path from 'node:path'
 import { readJsonFile, normalizeMcpServer, scanSkills, writeJsonFile, pluginSummary, projectDirs } from '../catalog.js'
 import { pathsOf } from '../permissions.js'
 import { APP_TOOL_NAMES } from '../app-tools.js'
+import { execFilePlatform } from '../win-process.js'
 import { isQwenWorkflowCall, qwenWorkflowRun, workflowFromCall, applyWorkflowTask, workflowInterrupted, workflowLost, workflowApprovalTool } from './qwen-workflow.js'
 
 const DEFAULT_SYSTEM_SETTINGS = '/Library/Application Support/QwenCode/settings.json'
@@ -420,7 +421,7 @@ export function goalOf(goal) {
 
 function run(file, args, options) {
   return new Promise((resolve, reject) => {
-    const child = execFile(file, args, { timeout: 180000, maxBuffer: 4 << 20, ...options }, (error, stdout, stderr) => (error ? reject(Object.assign(error, { stdout, stderr })) : resolve({ stdout, stderr })))
+    const child = execFilePlatform(file, args, { timeout: 180000, maxBuffer: 4 << 20, ...options }, (error, stdout, stderr) => (error ? reject(Object.assign(error, { stdout, stderr })) : resolve({ stdout, stderr })))
     // Nobody can answer a prompt here: an extension that asks for a setting on install (extensionSettings.ts
     // promptForSetting, which --consent doesn't skip) gets end of input at once instead of waiting out the timeout.
     child.stdin?.end()

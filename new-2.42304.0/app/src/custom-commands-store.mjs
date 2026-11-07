@@ -1,3 +1,4 @@
+import { isInsidePath, pathStyle } from './host-path-model.mjs';
 // Per-cwd cache of the custom command folders (C3). load(cwd) asks the main process
 // (desktop.call('custom-commands', {op:'list', cwd})), and a 'custom-commands-changed'
 // desktop event (the folder watchers in electron/custom-commands.cjs) reloads the affected entries.
@@ -42,7 +43,8 @@ export function createCustomCommandsStore({ call, onEvent } = {}) {
     if (event.scope === 'project' && typeof event.cwd === 'string') {
       // A project watcher fires for its root; reload every cached cwd at or below that root.
       const root = event.cwd.replace(/\/$/, '');
-      for (const key of Object.keys(snapshot.entries)) if (key === root || key.startsWith(root + '/')) load(key, { force: true });
+      // isInsidePath: a Windows root (C:\proj) matches C:\proj\sub and c:/proj/sub too (host-path-model).
+      for (const key of Object.keys(snapshot.entries)) if (key === root || key.startsWith(root + '/') || (pathStyle(root) === 'win' && isInsidePath(root, key))) load(key, { force: true });
     } else reloadAll();
   }
   return {

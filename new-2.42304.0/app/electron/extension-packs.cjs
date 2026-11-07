@@ -24,6 +24,7 @@ const { execFile } = require("node:child_process");
 const { registerCores, releaseAsset } = require("./core-registry.mjs");
 const { releaseProblem } = require("./core-manager.cjs");
 const { cleanSessionStore } = require("./settings-pages.cjs");
+const { extractCommand } = require("./archive-extract.cjs");
 
 const FORMAT = 1;
 const ID = /^[a-z][a-z0-9-]{1,31}$/;
@@ -39,7 +40,7 @@ const capabilityValue = (key, value) => value === true || value === false || (Ob
   || (Object.hasOwn(LIST_CAPABILITIES, key) && Array.isArray(value) && value.length <= 64 && value.every((entry) => typeof entry === "string" && LIST_CAPABILITIES[key].test(entry)));
 
 const run = (file, args, options = {}) => new Promise((resolve, reject) => {
-  execFile(file, args, { timeout: 120000, maxBuffer: 1 << 20, ...options }, (error, stdout) => error ? reject(error) : resolve(String(stdout)));
+  execFile(file, args, { timeout: 120000, maxBuffer: 1 << 20, windowsHide: true, ...options }, (error, stdout) => error ? reject(error) : resolve(String(stdout)));
 });
 const text = (value, max) => (typeof value === "string" && value.trim() && value.length <= max && !/[\x00-\x1f\x7f]/.test(value) ? value.trim() : null);
 const inside = (root, relative) => {
@@ -127,7 +128,12 @@ function cleanPlugins(value) {
 // pack's code runs only as its bridge or its agent release, never as a "system" install.
 const MAX_SYSTEM_PATHS = 12;
 const SYSTEM_PATH = /^(~\/|\/)[^\x00-\x1f\x7f]{1,300}$/;
-const DEFAULT_DATA_DIR = path.join(os.homedir(), "Library", "Application Support", "OpenClaude Desktop");
+// Windows: "~\…" / "~/…" or a drive path ("C:\…", "C:/…"); never a UNC share (\\server\…), a rooted "\…" or a relative one.
+const SYSTEM_PATH_WIN32 = /^(~[\\/]|[A-Za-z]:[\\/])[^\x00-\x1f\x7f<>"|?*]{1,300}$/;
+const systemPathPattern = (platform = process.platform) => (platform === "win32" ? SYSTEM_PATH_WIN32 : SYSTEM_PATH);
+const DEFAULT_DATA_DIR = process.platform === "win32"
+  ? path.join(process.env.APPDATA || path.join(os.homedir(), "AppData", "Roaming"), "OpenClaude Desktop")
+  : path.join(os.homedir(), "Library", "Application Support", "OpenClaude Desktop");
 // The path with its longest existing ancestor resolved through symlinks, compared case-insensitively (APFS).
 function canonical(file) {
   let head = path.resolve(file), tail = [];
@@ -138,12 +144,14 @@ function canonical(file) {
   return path.join(head, ...tail).normalize("NFC").toLowerCase();
 }
 const within = (file, folder) => file === folder || file.startsWith(folder.endsWith(path.sep) ? folder : folder + path.sep);
-function cleanSystemPaths(value, forbidden) {
+function cleanSystemPaths(value, forbidden, platform = process.platform) {
   if (!Array.isArray(value)) return null;
-  const kept = value.filter((entry) => typeof entry === "string" && SYSTEM_PATH.test(entry)).slice(0, MAX_SYSTEM_PATHS);
+  const pattern = systemPathPattern(platform);
+  const kept = value.filter((entry) => typeof entry === "string" && pattern.test(entry)).slice(0, MAX_SYSTEM_PATHS);
   const folders = forbidden.filter(Boolean).map(canonical);
   for (const entry of kept) {
-    const file = canonical(entry.startsWith("~/") ? path.join(os.homedir(), entry.slice(2)) : entry);
+    const home = entry.startsWith("~/") || (platform === "win32" && entry.startsWith("~\\"));
+    const file = canonical(home ? path.join(os.homedir(), entry.slice(2)) : entry);
     if (folders.some((folder) => within(file, folder)))
       throw new Error("The extension pack’s agent.systemPaths can’t point into OpenClaude Desktop’s own folders or the pack itself.");
   }
@@ -221,8 +229,10 @@ function validatePack(root, { dataDir } = {}) {
   const binary = core.agent?.binary;
   if (binary != null && (typeof binary !== "string" || !binary || binary === "." || binary === ".." || /[\/\\\x00]/.test(binary)))
     throw new Error("The extension pack’s agent binary must be a plain file name.");
+  // Keys: a bare arch (a macOS build) or "<platform>-<arch>" (win32-x64): each is checked as the release it names.
   for (const arch of Object.keys(core.agent?.release?.assets ?? {})) {
-    const asset = releaseAsset(core, arch), problem = asset && releaseProblem(asset, core);
+    const [platform, cpu] = /^[a-z0-9]+-[a-z0-9]+$/.test(arch) ? arch.split("-") : ["darwin", arch];
+    const asset = releaseAsset(core, cpu, platform), problem = asset && releaseProblem(asset, core);
     if (problem) throw new Error(`The extension pack’s agent release for ${arch} can’t be installed: ${problem}.`);
   }
   return { manifest: { format: FORMAT, version: text(manifest.version, 40) ?? "0.0.0", description: text(manifest.description, 500) ?? "" }, core };
@@ -272,7 +282,11 @@ function createExtensionPacks({ dataDir, getConfig = () => ({}), save = () => {}
       let dir = path.join(temp, "pack");
       if (fs.statSync(target).isDirectory()) copyTree(target, dir);
       else if (/\.zip$/i.test(target)) {
-        await run("ditto", ["-x", "-k", target, dir]);
+        // ditto on macOS; Windows' own bsdtar (System32\tar.exe) there, which needs the folder to exist first.
+        fs.mkdirSync(dir, { recursive: true });
+        const unzip = extractCommand("zip", target, dir);
+        if (!unzip) throw new Error("This system can’t unpack a .zip extension pack.");
+        await run(unzip.file, unzip.args);
         // A zip of the folder itself: its single top-level folder is the pack.
         const top = fs.readdirSync(dir).filter((name) => !name.startsWith(".") && name !== "__MACOSX");
         if (!fs.existsSync(path.join(dir, "manifest.json")) && top.length === 1 && fs.statSync(path.join(dir, top[0])).isDirectory()) dir = path.join(dir, top[0]);

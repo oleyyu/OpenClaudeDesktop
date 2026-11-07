@@ -7,6 +7,7 @@ import { computerUseAction } from './computer-use-model.mjs';
 import { imageGenerationState } from './media-item-model.mjs';
 import { commandText } from './shell-command-model.mjs';
 import { t, tn, getLocale } from '../electron/i18n/index.mjs';
+import { isAbsolutePath, joinPath, normalizePath, relativeTo } from './host-path-model.mjs';
 
 // Contract: approval-current:4164–4238; cf6ae6197:6986–7031. Only protocol
 // actions classify a command. Never guess a tool from shell text.
@@ -249,10 +250,11 @@ export function fileGroupSummary(items) {
   const {segments,...summary}=fileGroupPresentation(items);
   return summary;
 }
-export function pathChoices(value, cwd) {
+// Absolute / workspace-relative / filename for a tool path. host-path-model: POSIX gives what it always did;
+// a Windows path (C:\…, C:/…, src\a.ts on Windows) resolves against a Windows cwd, case-insensitively.
+export function pathChoices(value, cwd, options) {
   if (typeof value !== 'string' || !value || value.includes('\0')) return null;
-  const normalize = path => { const parts = []; for (const part of path.split('/')) { if (part === '..') parts.pop(); else if (part && part !== '.') parts.push(part); } return '/' + parts.join('/'); };
-  const absolute = value.startsWith('/') ? normalize(value) : cwd?.startsWith('/') ? normalize(`${cwd}/${value}`) : null;
-  const root = cwd?.startsWith('/') ? normalize(cwd) : null;
-  return { absolute, relative: absolute && root && absolute.startsWith(root + '/') ? absolute.slice(root.length + 1) : null, filename: fileBasename(value) };
+  const absolute = isAbsolutePath(value, options) ? normalizePath(value, options) : isAbsolutePath(cwd, options) ? joinPath(cwd, value, options) : null;
+  const relative = absolute && isAbsolutePath(cwd, options) ? relativeTo(cwd, absolute, options) : null;
+  return { absolute, relative: relative || null, filename: fileBasename(value) };
 }

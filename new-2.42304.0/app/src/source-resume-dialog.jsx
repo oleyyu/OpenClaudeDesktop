@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { pathBasename } from "./host-path-model.mjs";
 import { ActionDialog } from "./source-session-actions.jsx";
 import { SourceDialogFooter } from "./source-dialog.jsx";
 import { SourceSettingsButton } from "./source-settings-button.jsx";
@@ -24,7 +25,7 @@ export function resumeActivityLabel(seconds, now = Date.now()) {
   return new Date(seconds * 1000).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
 }
 
-const folderName = (cwd) => (typeof cwd === "string" && cwd ? cwd.replace(/\/+$/, "").split("/").pop() || cwd : "");
+const folderName = (cwd) => (typeof cwd === "string" && cwd ? pathBasename(cwd) || cwd : "");
 
 // fullText: the core also searches what was said (Codex thread/search): a match shows the conversation snippet.
 export function SourceResumeDialog({ desktopCall, cwd = "", initialQuery = "", fullText = false, onOpened, onClose, ...dialog }) {

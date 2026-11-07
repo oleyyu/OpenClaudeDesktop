@@ -41,6 +41,8 @@ test.before(async () => {
 
 const TOOL_FILES = ['agent-tools-server.mjs', 'agent-tools-host.cjs', 'agent-tools-instructions.cjs', 'agent-tool-approval.cjs', 'agent-tools/preview.mjs', 'agent-tools/terminal.mjs',
   'preview-launch.mjs', 'terminal-model.mjs',
+  // agent-tools/terminal.mjs refuses Windows UNC paths with fs-paths.cjs assertLocalPath (R6).
+  'fs-paths.cjs',
   // preview-launch.mjs imports the official autoPort/port checks (R3b-preview, scripts/extract-r3b-preview.mjs).
   'generated/r3b-preview-launch-fields.mjs'];
 

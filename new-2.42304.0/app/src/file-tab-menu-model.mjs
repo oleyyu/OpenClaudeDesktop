@@ -1,4 +1,5 @@
 import { t } from "../electron/i18n/index.mjs";
+import { pathStyle, relativeTo } from "./host-path-model.mjs";
 
 // Files pane tab strip model (2.2553.1).
 // Tab model: readable/panes-tile-current.js:6656-6668 ce — id=path, label=mn(path)
@@ -64,10 +65,12 @@ export function moveFileTab(tabs, path, delta, hiddenPaths = []) {
 
 // dn(path, cwd): a path under the workspace becomes cwd-relative; anything else
 // (already relative, or outside the workspace) is kept as given.
-export function tabRelativePath(path, cwd) {
+export function tabRelativePath(path, cwd, options) {
   let value = String(path ?? "");
   const root = typeof cwd === "string" ? cwd.replace(/\/+$/, "") : "";
   if (root && value.startsWith(root + "/")) value = value.slice(root.length + 1);
+  // A Windows cwd (C:\…): either separator, any case (host-path-model); the rest comes back '/'-joined.
+  else if (root && pathStyle(root, options) === "win") { const rest = relativeTo(cwd, value, options); if (rest) value = rest; }
   while (value.startsWith("./")) value = value.slice(2);
   return value;
 }

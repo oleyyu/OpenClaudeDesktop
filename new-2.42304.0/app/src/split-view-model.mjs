@@ -1,3 +1,4 @@
+import { isMacPlatform } from "./pane-keys-model.mjs";
 // Split view: sessions side by side in one window, each pane its own App (transcript, composer, panes, model and
 // permission state); see source-split-view.jsx. Claude Desktop 2.31226.0 keeps the window's extra panes in the
 // pane store (shared-16 Q, "desktop-frame.paneStore.v1", lines 380-1135): the primary pane is fixed at column 0,
@@ -403,7 +404,19 @@ export function rowMovable(height, value) {
 // pane; ⌃⌘Arrow moves the focus to the neighbouring pane. source-split-view.jsx matches them first (preventDefault),
 // so the menu accelerators only fire for clicks (app-menu.cjs splitDispatch).
 const ARROWS = { ArrowLeft: "focus-left", ArrowRight: "focus-right", ArrowUp: "focus-up", ArrowDown: "focus-down" };
-export function splitShortcut(event) {
+// Off macOS (shared-23 u4 with Kf() false, shared-1 non-mac rows): Ctrl+] / Ctrl+[ focus, Ctrl+Alt+\ / Ctrl+Alt+- new
+// pane, Ctrl+Alt+W close, Ctrl+Alt+Arrow move the focus; an AltGr press (AltGraph) is no chord.
+export function splitShortcut(event, { mac = isMacPlatform() } = {}) {
+  if (!mac) {
+    if (!event || event.defaultPrevented || event.repeat || event.shiftKey || event.metaKey || !event.ctrlKey) return null;
+    if (!event.altKey && event.code === "BracketRight") return "focus-next";
+    if (!event.altKey && event.code === "BracketLeft") return "focus-previous";
+    if (!event.altKey || event.getModifierState?.("AltGraph")) return null;
+    if (event.code === "Backslash") return "new-right";
+    if (event.code === "Minus") return "new-below";
+    if (event.code === "KeyW") return "close";
+    return ARROWS[event.code] ?? null;
+  }
   if (!event || event.defaultPrevented || event.repeat || event.altKey || event.shiftKey || !event.ctrlKey) return null;
   if (!event.metaKey && event.code === "BracketRight") return "focus-next";
   if (!event.metaKey && event.code === "BracketLeft") return "focus-previous";

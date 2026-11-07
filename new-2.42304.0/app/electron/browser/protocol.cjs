@@ -22,10 +22,31 @@ const MAX_TO_EXTENSION = 1024 * 1024;
 const MAX_FRAME = 64 * 1024 * 1024;
 
 /** The folder the hosts' sockets live in (<pid>.sock each): /tmp/openclaude-chrome-bridge-<user>, like Claude's own
- * /tmp/claude-mcp-browser-bridge-<user>. OPENCLAUDE_CHROME_BRIDGE_DIR overrides it (the P0 check's own folder). */
-function socketDir(env = process.env) {
+ * /tmp/claude-mcp-browser-bridge-<user>. OPENCLAUDE_CHROME_BRIDGE_DIR overrides it (the P0 check's own folder).
+ * Windows: the per-user temp folder (%LOCALAPPDATA%\Temp) instead of /tmp. */
+function socketDir(env = process.env, platform = process.platform) {
   if (env.OPENCLAUDE_CHROME_BRIDGE_DIR) return env.OPENCLAUDE_CHROME_BRIDGE_DIR;
-  return path.join("/tmp", `openclaude-chrome-bridge-${os.userInfo().username}`);
+  let user = "user";
+  try { user = os.userInfo().username; } catch {}
+  return platform === "win32" ? path.join(os.tmpdir(), `openclaude-chrome-bridge-${user}`) : path.join("/tmp", `openclaude-chrome-bridge-${user}`);
+}
+
+// Windows can't listen on a file path: a host listens on a named pipe of a random name and <dir>/<pid>.sock is a small
+// file naming it, so the folder still lists the live hosts the same way. Elsewhere <pid>.sock is the socket itself.
+const PIPE_PREFIX = "\\\\.\\pipe\\";
+/** Where a host of this pid listens: { listen, record } (record: the <pid>.sock pointer file's content, or null). */
+function hostEndpoint(dir, pid, { platform = process.platform, random = () => require("node:crypto").randomBytes(8).toString("hex") } = {}) {
+  if (platform !== "win32") return { listen: path.join(dir, `${pid}.sock`), record: null };
+  const pipe = `${PIPE_PREFIX}openclaude-chrome-bridge-${pid}-${random()}`;
+  return { listen: pipe, record: pipe };
+}
+/** What a client connects to for a listed <pid>.sock: the file itself, or on Windows the pipe it names (null if none). */
+function endpointOf(file, { platform = process.platform, read = (name) => require("node:fs").readFileSync(name, "utf8") } = {}) {
+  if (platform !== "win32") return file;
+  try {
+    const pipe = String(read(file)).trim();
+    return pipe.startsWith(PIPE_PREFIX) && pipe.length < 256 && !/[\x00-\x1f]/.test(pipe) ? pipe : null;
+  } catch { return null; }
 }
 
 function encode(message) {
@@ -64,4 +85,4 @@ function validMessage(message) {
   return !!message && typeof message === "object" && !Array.isArray(message) && METHODS.has(message.method);
 }
 
-module.exports = { HOST_NAME, EXTENSION_ID, METHODS, MAX_TO_EXTENSION, MAX_FRAME, socketDir, encode, FrameReader, validMessage };
+module.exports = { HOST_NAME, EXTENSION_ID, METHODS, MAX_TO_EXTENSION, MAX_FRAME, socketDir, hostEndpoint, endpointOf, encode, FrameReader, validMessage };

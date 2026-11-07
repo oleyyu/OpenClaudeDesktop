@@ -6,15 +6,22 @@
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import fsPaths from "../fs-paths.cjs";
+
+const { assertLocalPath } = fsPaths;
 
 export const group = "host";
 
-/** A path the agent names (absolute, ~ or relative to the session folder) as a real path inside that folder. */
-export function sessionPath(requested, root) {
+/**
+ * A path the agent names (absolute, ~ or relative to the session folder) as a real path inside that folder. Windows: a
+ * UNC or device path is refused before any fs call (fs-paths.cjs remotePathRefused). platform: tests only.
+ */
+export function sessionPath(requested, root, { platform = process.platform } = {}) {
   if (typeof requested !== "string" || !requested.trim() || requested.includes("\0")) throw new Error("path is required.");
   if (typeof root !== "string" || !path.isAbsolute(root)) throw new Error("This session has no working folder.");
   const raw = requested.trim();
   const expanded = raw === "~" ? os.homedir() : raw.startsWith("~/") ? path.join(os.homedir(), raw.slice(2)) : raw;
+  assertLocalPath(expanded, { base: root, roots: [os.homedir()], platform }, raw);
   let real, realRoot;
   try { realRoot = fs.realpathSync(root); } catch { throw new Error("The session’s working folder doesn’t exist."); }
   try { real = fs.realpathSync(path.resolve(realRoot, expanded)); } catch { throw new Error(`${raw} doesn’t exist.`); }

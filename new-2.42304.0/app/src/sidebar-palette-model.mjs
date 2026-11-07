@@ -6,6 +6,7 @@ import { folderName, sessionArchived, sessionName, sessionUpdatedAt } from "./si
 import { foldCase } from "./transcript-find-model.mjs";
 import { t } from "../electron/i18n/index.mjs";
 import { shortcutLabels } from "./shortcut-model.mjs";
+import { isMacPlatform } from "./pane-keys-model.mjs";
 import { hideAllNestedSessionsCopy, showAllNestedSessionsCopy, nestedSessionsSearchHints } from "./generated/code-current/nested-session-palette-copy.mjs";
 
 export const PALETTE_MODES = Object.freeze(["default", "search", "actions"]);
@@ -126,7 +127,8 @@ const JUMP_LABELS = {
 export const PALETTE_ACTION_GROUPS = Object.freeze([
   ["other", null], ["navigation", "Navigation"], ["chat", "Chat"], ["session", "Session"], ["settings", "Settings"], ["general", "General"],
 ]);
-const capsOf = (spec) => spec ? shortcutLabels(spec, true).join("") : undefined;
+// The row's shortcut text: glyphs on macOS (⇧⌘N), "Ctrl+Shift+N" elsewhere (shortcut-model oo/co, "cmd" read as Ctrl).
+const capsOf = (spec, mac = isMacPlatform()) => spec ? shortcutLabels(spec, mac).join(mac ? "" : "+") : undefined;
 
 /** cf74bc599 wO prUrl (q(): the bound PR, else the repo's lookup) for a session row: its core's PR link, else the
  * git band's branch PR (git-rail-model.mjs branchPullRequest); only https links open. */
@@ -173,7 +175,7 @@ export function paletteActions({ onNew, setSection, onToggleSidebar, onOpenSetti
   session = null, panes = null, onTogglePane, onClosePane, prompts = null, onShortcuts, onFileUpload, nested = null } = {}) {
   const rows = [];
   const push = (row) => rows.push({ hints: [], ...row });
-  if (onNew) push({ id: "new-session", group: "navigation", label: t("New session"), icon: "Add", shortcut: "⌘N", run: onNew });
+  if (onNew) push({ id: "new-session", group: "navigation", label: t("New session"), icon: "Add", shortcut: capsOf("cmd+n"), run: onNew });
   if (setSection) {
     push({ id: "artifacts", group: "navigation", label: t("Artifacts"), icon: "Artifacts", run: () => setSection("artifacts") });
     push({ id: "routines", group: "navigation", label: t("Routines"), icon: "Clock", run: () => setSection("routines") });
@@ -205,7 +207,7 @@ export function paletteActions({ onNew, setSection, onToggleSidebar, onOpenSetti
       const entry = panes[kind];
       if (entry?.enabled) push({ id, group: "session", label: entry.shown ? hideLabel : show, icon, shortcut: capsOf(spec), hints, run: () => onTogglePane(kind) });
     };
-    pane("terminal", "toggle_terminal_pane", t("Show terminal"), t("Hide terminal"), "CommandLinePrompt", "cmd+j", [t("shell"), t("console")]);
+    pane("terminal", "toggle_terminal_pane", t("Show terminal"), t("Hide terminal"), "CommandLinePrompt", isMacPlatform() ? "cmd+j" : "ctrl+`", [t("shell"), t("console")]);
     pane("changes", "toggle_diff_pane", t("Show changes"), t("Hide changes"), "ChangesPlusMinus", "cmd+shift+d", [t("diff")]);
     pane("preview", "toggle_preview_pane", t("Show preview"), t("Hide preview"), "Play", "cmd+shift+p", [t("preview"), t("web")]);
     pane("files", "toggle_files_pane", t("Show files"), t("Hide files"), "Folder", "cmd+shift+f", [t("tree"), t("explorer")]);
@@ -214,13 +216,13 @@ export function paletteActions({ onNew, setSection, onToggleSidebar, onOpenSetti
   if (onClosePane) push({ id: "close_side_pane", group: "session", label: t("Close pane"), icon: "X", shortcut: capsOf("cmd+\\"), hints: [t("panel")], run: onClosePane });
   if (prompts?.onJump && prompts.available) {
     const scroll = [t("scroll back message history")];
-    push({ id: "jump_prev_prompt", group: "session", label: t("Jump to previous prompt"), icon: "CaretUpDown", shortcut: capsOf("cmd+alt+up"), hints: scroll, run: () => prompts.onJump(-1) });
-    push({ id: "jump_next_prompt", group: "session", label: t("Jump to next prompt"), icon: "CaretUpDown", shortcut: capsOf("cmd+alt+down"), hints: scroll, run: () => prompts.onJump(1) });
+    push({ id: "jump_prev_prompt", group: "session", label: t("Jump to previous prompt"), icon: "CaretUpDown", shortcut: capsOf(isMacPlatform() ? "cmd+alt+up" : "alt+up"), hints: scroll, run: () => prompts.onJump(-1) });
+    push({ id: "jump_next_prompt", group: "session", label: t("Jump to next prompt"), icon: "CaretUpDown", shortcut: capsOf(isMacPlatform() ? "cmd+alt+down" : "alt+down"), hints: scroll, run: () => prompts.onJump(1) });
   }
-  if (onToggleSidebar) push({ id: "toggle-sidebar", group: "general", label: t("Toggle sidebar"), icon: "Sidebar", shortcut: "⌘B", run: onToggleSidebar });
+  if (onToggleSidebar) push({ id: "toggle-sidebar", group: "general", label: t("Toggle sidebar"), icon: "Sidebar", shortcut: capsOf("cmd+b"), run: onToggleSidebar });
   if (onShortcuts) push({ id: "shortcuts_modal", group: "general", label: t("Keyboard shortcuts"), icon: "Keyboard", shortcut: capsOf("cmd+/"), run: onShortcuts });
   if (onOpenSettings) {
-    push({ id: "settings", group: "settings", label: t("Settings"), icon: "Settings", shortcut: "⌘,", run: () => onOpenSettings(true) });
+    push({ id: "settings", group: "settings", label: t("Settings"), icon: "Settings", shortcut: capsOf("cmd+,"), run: () => onOpenSettings(true) });
     for (const [id, label, icon] of PALETTE_SETTINGS_SECTIONS) push({ id: `settings:${id}`, group: "settings", label: t("Settings → {section}", { section: settingsSectionLabel(label) }), icon, run: () => onOpenSettings(id) });
     for (const [id, label, icon] of PALETTE_CUSTOMIZE_SECTIONS) push({ id: `settings:${id}`, group: "settings", label: t("Customize → {section}", { section: t(label) }), icon, run: () => onOpenSettings(id) });
   }

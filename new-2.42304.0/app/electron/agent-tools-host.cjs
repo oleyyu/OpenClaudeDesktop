@@ -2,6 +2,7 @@
 // sessions; agent-tools-server.mjs is the stdio relay a core starts).
 //
 //   core ──stdio MCP──▶ agent-tools-server.mjs ──unix socket (0700 dir, random token)──▶ this host ──▶ tool modules
+//   (Windows: a named pipe \\.\pipe\openclaude-tools-<random> instead of the socket, same token)
 //
 // Tool modules are app/electron/agent-tools/*.mjs, each exporting
 //   export const tools = [{ name, description, inputSchema, annotations?, title?, approval?, handler: async (args, ctx) => result }]
@@ -147,6 +148,7 @@ function createAgentToolsHost({
   runAsNode = !!process.versions.electron,
   modules = null,
   tmpRoot = os.tmpdir(),
+  platform = process.platform,
   logger = console,
 } = {}) {
   if (typeof resolveSession !== "function") throw new Error("resolveSession is required.");
@@ -513,18 +515,38 @@ function createAgentToolsHost({
     socket.on("error", drop);
   }
 
+  // One start at a time; a failed one leaves nothing behind (no socketPath, no server), so the next start() retries.
+  let starting = null;
   async function start() {
-    if (server) return { socketPath, token };
-    await ready();
-    // A unix socket path is limited to ~104 bytes: a long temp root falls back to /tmp (still a private 0700 dir).
-    const base = path.join(tmpRoot, "cd-tools-XXXXXX", "s").length <= 100 ? tmpRoot : (process.platform === "win32" ? os.tmpdir() : "/tmp");
-    dir = fs.mkdtempSync(path.join(base, "cd-tools-"));
-    fs.chmodSync(dir, 0o700);
-    socketPath = path.join(dir, "s");
-    server = net.createServer(serve);
-    await new Promise((resolve, reject) => { server.once("error", reject); server.listen(socketPath, () => { server.off("error", reject); resolve(); }); });
-    try { fs.chmodSync(socketPath, 0o600); } catch { /* best effort: the directory is 0700 */ }
-    return { socketPath, token };
+    if (server && socketPath) return { socketPath, token };
+    if (starting) return starting;
+    starting = (async () => {
+      await ready();
+      let where, made = null;
+      if (platform === "win32") {
+        // Windows has no filesystem unix sockets: a named pipe of a random name (the token still guards it).
+        where = `\\\\.\\pipe\\openclaude-tools-${crypto.randomBytes(12).toString("hex")}`;
+      } else {
+        // A unix socket path is limited to ~104 bytes: a long temp root falls back to /tmp (still a private 0700 dir).
+        const base = path.join(tmpRoot, "cd-tools-XXXXXX", "s").length <= 100 ? tmpRoot : "/tmp";
+        made = fs.mkdtempSync(path.join(base, "cd-tools-"));
+        fs.chmodSync(made, 0o700);
+        where = path.join(made, "s");
+      }
+      const candidate = net.createServer(serve);
+      try {
+        await new Promise((resolve, reject) => { candidate.once("error", reject); candidate.listen(where, () => { candidate.off("error", reject); resolve(); }); });
+      } catch (error) {
+        try { candidate.close(); } catch { /* never listened */ }
+        if (made) { try { fs.rmSync(made, { recursive: true, force: true }); } catch { /* best effort */ } }
+        throw error;
+      }
+      if (platform !== "win32") { try { fs.chmodSync(where, 0o600); } catch { /* best effort: the directory is 0700 */ } }
+      // Only a listening channel is handed to cores (launchEnv / codexArgs read socketPath).
+      server = candidate; dir = made; socketPath = where;
+      return { socketPath, token };
+    })();
+    try { return await starting; } finally { starting = null; }
   }
   function stop() {
     for (const { socket } of connections) socket.destroy();

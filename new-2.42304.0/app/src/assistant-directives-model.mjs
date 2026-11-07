@@ -1,3 +1,4 @@
+import { pathStyle, relativeTo } from './host-path-model.mjs';
 // Codex App directives in assistant markdown (codex-rs tui/src/assistant_directives.rs, git_action_directives.rs).
 // Review skills such as Codex Security write one `::code-comment{title body file start end priority}` per finding,
 // and git skills end with receipts such as `::git-create-pr{cwd branch url}`. The Codex TUI turns each code comment
@@ -74,7 +75,8 @@ export function codeCommentFinding(directive, cwd = null) {
   const stated = integer(directive.attributes.priority);
   const priority = titled ? Number(titled[1]) : stated !== null && stated >= 0 && stated <= 3 ? stated : null;
   const base = typeof cwd === 'string' && cwd ? cwd.replace(/[\\/]+$/, '') : null;
-  const display = (base && file.startsWith(`${base}/`) ? file.slice(base.length + 1) : file).replaceAll('\\', '/');
+  const windowsRest = base && pathStyle(base) === 'win' ? relativeTo(base, file) : null;
+  const display = (windowsRest || (base && file.startsWith(`${base}/`) ? file.slice(base.length + 1) : file)).replaceAll('\\', '/');
   return { title: titled ? title.slice(titled[0].length).trim() || title : title, body, file, display, start, end, priority };
 }
 

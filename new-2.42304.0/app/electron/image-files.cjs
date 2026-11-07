@@ -54,7 +54,9 @@ function createImageOperations({getRoot,clipboard,nativeImage,showSaveDialog}) {
     },
     save:async({dataUrl,name})=>{
       const {bytes,extension}=imageData(dataUrl);
-      const safeName=path.basename(typeof name==='string' && name?name:`image.${extension}`).replace(/[\0\r\n]/g,'').slice(0,180);
+      let safeName=path.basename(typeof name==='string' && name?name:`image.${extension}`).replace(/[\0\r\n]/g,'').slice(0,180);
+      // Windows refuses : ? * < > | " and control characters in a file name, and drops trailing dots and spaces.
+      if(process.platform==='win32')safeName=safeName.replace(/[<>:"|?*\x00-\x1f]/g,'_').replace(/[. ]+$/,'')||`image.${extension}`;
       const result=await showSaveDialog({title:'Save image',defaultPath:safeName,filters:[{name:'Image',extensions:[extension]}]});
       if(result.canceled || !result.filePath)return {saved:false,canceled:true};
       await fs.writeFile(result.filePath,bytes);return {saved:true};

@@ -11,6 +11,8 @@
  * binds to the thread id from the response.
  */
 import { createHmac } from 'node:crypto'
+import fs from 'node:fs'
+import path from 'node:path'
 
 export const SESSION_CONFIG_KEY = 'mcp_servers.code_desktop.env.CODE_DESKTOP_AGENT_SESSION'
 
@@ -83,21 +85,54 @@ export function sessionToken(secret, session) {
 }
 
 /** The ACP stdio mcpServers entry for one session (null without a server or a session to name). */
-export function acpAppToolsServer(server, session, { runAsNodeInCommand = false } = {}) {
+export function acpAppToolsServer(server, session, { runAsNodeInCommand = false, launcherDir = null, platform = process.platform } = {}) {
   let entry = appToolsLaunchEntry(server, session)
-  if (entry && runAsNodeInCommand) entry = withRunAsNodeInCommand(entry)
+  if (entry && runAsNodeInCommand) entry = withRunAsNodeInCommand(entry, platform, { launcherDir })
   return entry ? { ...entry, env: Object.entries(entry.env).map(([name, value]) => ({ name, value })) } : null
 }
 
 /**
  * An entry whose ELECTRON_RUN_AS_NODE rides in the command (/usr/bin/env ELECTRON_RUN_AS_NODE=1 <app> <script>), for an
  * agent that drops that variable from a server's env (adapter.mcpDropsRunAsNode: Gemini CLI's BLOCKED_EXECUTION_ENVS):
- * without it the app's own binary starts as a second OpenClaude Desktop, window and all. Unchanged on Windows.
+ * without it the app's own binary starts as a second OpenClaude Desktop, window and all. Windows has no /usr/bin/env:
+ * the command is a .cmd launcher in `launcherDir` that sets the variable and runs the app (the agent's MCP client
+ * spawns a .cmd through cmd.exe, cross-spawn style); without a launcherDir the entry is left as it is.
+ * The app's path reaches the launcher in the server's env (LAUNCHER_PROGRAM_ENV), never as text in the file: cmd.exe
+ * decodes a batch file in the console code page (936 on Chinese Windows), so a UTF-8 C:\Users\张三\… in it is garbled,
+ * while a variable keeps its Unicode value.
  */
-export function withRunAsNodeInCommand(entry, platform = process.platform) {
-  if (!entry?.env?.ELECTRON_RUN_AS_NODE || platform === 'win32') return entry
+export function withRunAsNodeInCommand(entry, platform = process.platform, { launcherDir = null, write = writeLauncher } = {}) {
+  if (!entry?.env?.ELECTRON_RUN_AS_NODE) return entry
   const { ELECTRON_RUN_AS_NODE: value, ...env } = entry.env
+  if (platform === 'win32') {
+    if (!launcherDir) return entry
+    let launcher
+    try { launcher = write(launcherDir, value) } catch { return entry }
+    return { ...entry, command: launcher, args: [...entry.args], env: { ...env, [LAUNCHER_PROGRAM_ENV]: entry.command } }
+  }
   return { ...entry, command: '/usr/bin/env', args: [`ELECTRON_RUN_AS_NODE=${value}`, entry.command, ...entry.args], env }
+}
+
+/** The variable that names the program the Windows launcher runs (set in the server's env, next to its other variables). */
+export const LAUNCHER_PROGRAM_ENV = 'CODE_DESKTOP_RUN_AS_NODE_PROGRAM'
+
+/**
+ * The Windows launcher: `set ELECTRON_RUN_AS_NODE=<value>` then the program LAUNCHER_PROGRAM_ENV names, with every
+ * argument. ASCII only (`%` doubled for cmd), the same for every app location; a missing variable fails loudly.
+ */
+export function runAsNodeLauncher(value = '1') {
+  const literal = (text) => String(text).replace(/[^\x20-\x7e]/g, '').replace(/%/g, '%%').replace(/"/g, '')
+  return ['@echo off', `if not defined ${LAUNCHER_PROGRAM_ENV} (echo ${LAUNCHER_PROGRAM_ENV} is not set. 1>&2 & exit /b 1)`,
+    `set "ELECTRON_RUN_AS_NODE=${literal(value)}"`, `"%${LAUNCHER_PROGRAM_ENV}%" %*`, ''].join('\r\n')
+}
+
+function writeLauncher(dir, value) {
+  const file = path.join(dir, 'code-desktop-run-as-node.cmd')
+  const text = runAsNodeLauncher(value)
+  let current = null
+  try { current = fs.readFileSync(file, 'utf8') } catch {}
+  if (current !== text) { fs.mkdirSync(dir, { recursive: true }); fs.writeFileSync(file, text) }
+  return file
 }
 
 /**

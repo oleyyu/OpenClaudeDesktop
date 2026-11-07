@@ -9,10 +9,13 @@ const {
 } = require("electron");
 const fs = require("node:fs");
 const path = require("node:path");
+const { hostPath } = require("./host-path.cjs");
 const os = require("node:os");
 const { execFile } = require("node:child_process");
 const { promisify } = require("node:util");
-const run = promisify(execFile);
+// git and the other helpers: never a console window on Windows (windowsHide; ignored elsewhere).
+const execFileAsync = promisify(execFile);
+const run = (file, args, options = {}) => execFileAsync(file, args, { windowsHide: true, ...options });
 const worktrees = require("./worktrees.cjs");
 const { CodexClient, stopAllCodexClients, resolveCore, setCoreChoice, setCodexLaunch, codexBinary, deepseekCoreScript, bridgeScript, nodeBinary, nodeResolver, coreError } = require("./codex.cjs");
 const { createSetupRequirements } = require("./setup-requirements.cjs");
@@ -133,7 +136,7 @@ function pullRequestLookup() {
     const proxy = process.env.CODEX_BINARY ? {} : await loginShellProxy().catch(() => ({}));
     const env = { ...process.env, ...proxyEnv(process.env, proxy) };
     for (const key of ["GH_TOKEN", "GITHUB_TOKEN", "GH_HOST", "GH_CONFIG_DIR"]) if (shell[key] && !env[key]) env[key] = shell[key];
-    env.PATH = [shell.PATH, "/opt/homebrew/bin", "/usr/local/bin", process.env.PATH].filter(Boolean).join(":");
+    env.PATH = hostPath([shell.PATH, "/opt/homebrew/bin", "/usr/local/bin", process.env.PATH]);
     return env;
   } });
   return pullRequestLookupInstance;
@@ -151,7 +154,7 @@ function githubIssues() {
       const proxy = process.env.CODEX_BINARY ? {} : await loginShellProxy().catch(() => ({}));
       const env = { ...process.env, ...proxyEnv(process.env, proxy) };
       for (const key of ["GH_TOKEN", "GITHUB_TOKEN", "GH_HOST", "GH_CONFIG_DIR"]) if (shell[key] && !env[key]) env[key] = shell[key];
-      env.PATH = [shell.PATH, "/opt/homebrew/bin", "/usr/local/bin", process.env.PATH].filter(Boolean).join(":");
+      env.PATH = hostPath([shell.PATH, "/opt/homebrew/bin", "/usr/local/bin", process.env.PATH]);
       return env;
     },
   });
@@ -163,6 +166,13 @@ const { porcelainEntries, wouldBranchSwitchConflict } = require("./branch-switch
 app.setName("OpenClaude Desktop");
 if (process.env.CODE_DESKTOP_DATA)
   app.setPath("userData", process.env.CODE_DESKTOP_DATA);
+// Windows / Linux: one app per data folder (the lock is keyed by userData, so a CODE_DESKTOP_DATA test launch has its
+// own). Closing the window only hides it there and there is no Dock "activate", so a second launch from the Start
+// menu or taskbar would otherwise start a second app with its own cores writing the same config; it hands over to
+// the running one instead ('second-instance' shows its window) and exits. macOS keeps its behaviour (LaunchServices
+// already reuses the running app; a dev run beside the installed app stays possible there).
+const singleInstance = process.platform === "darwin" || app.requestSingleInstanceLock();
+if (!singleInstance) app.exit(0);
 // Bridge cores read Settings › Models custom providers from here (codex.cjs resolveCore).
 process.env.CODE_DESKTOP_DATA_DIR = app.getPath("userData");
 // The main window focused last (windowRegistry has them all): dialogs, the menu bar, the tray and notifications act on it.
@@ -283,12 +293,14 @@ let workflowToolService;
 // Managed settings (an administrator's hard limits): {disableWorkflows: true} turns Dynamic workflows off for good
 // (Claude Code's managed disableWorkflows). CODE_DESKTOP_MANAGED_SETTINGS names another file (tests).
 const MANAGED_SETTINGS = process.env.CODE_DESKTOP_MANAGED_SETTINGS || (process.platform === "darwin" ? "/Library/Application Support/OpenClaude Desktop/managed-settings.json" : process.platform === "win32" ? path.join(process.env.ProgramData || "C:\\ProgramData", "OpenClaude Desktop", "managed-settings.json") : "/etc/code-desktop/managed-settings.json");
-let managedCache = { at: 0, value: {} };
+let managedCache = { at: 0, value: {}, error: null };
 function managedSettings() {
   if (Date.now() - managedCache.at < 5000) return managedCache.value;
-  let value = {};
-  try { const read = JSON.parse(fs.readFileSync(MANAGED_SETTINGS, "utf8")); if (read && typeof read === "object" && !Array.isArray(read)) value = read; } catch { /* none */ }
-  managedCache = { at: Date.now(), value };
+  // Decoded by BOM (PowerShell 5.1 writes UTF-8 with a BOM or UTF-16LE); a file that exists but can't be parsed fails
+  // closed (workflows off), logged once per distinct reason.
+  const { value, error } = require("./text-decode.cjs").readManagedSettings(MANAGED_SETTINGS);
+  if (error && error !== managedCache.error) console.warn(`[managed-settings] ${MANAGED_SETTINGS}: ${error}; Dynamic workflows stay off until it's fixed.`);
+  managedCache = { at: Date.now(), value, error };
   return value;
 }
 /** Settings › Code › Dynamic workflows in effect: the saved values, the environment (wins) and managed settings. */
@@ -328,7 +340,7 @@ const {createMenuBar,showWindow} = require("./menu-bar.cjs");
 const { windowOnScreen, raiseWindow } = require("./popout-r4f-window.cjs");
 const {appMenuTemplate,refreshZoomMenu,sidebarCollapsedPatch,navigationState,menuState,sameMenuState,closeAction,activateAction,splitMenuState} = require("./app-menu.cjs");
 const { menuZoomLevel, settleWindowZoom, applyWindowZoom, archiveParentCascade } = require("./r4h-main-glue.cjs");
-const {windowBackground,trafficLightPosition,scaleTrafficLights,zoomLevelAfter,clampZoomFactor,ZOOM_HINT_KEY,zoomFactorHint} = require("./window-chrome.cjs");
+const {windowBackground,trafficLightPosition,scaleTrafficLights,zoomLevelAfter,clampZoomFactor,ZOOM_HINT_KEY,zoomFactorHint,platformChrome,windowsTitleBarOverlay} = require("./window-chrome.cjs");
 const { preferredSystemLanguages } = require("./system-languages.cjs");
 const {contextMenuTemplate,externalLink} = require("./context-menu.cjs");
 const {DEFAULT_WINDOW_SIZE,WINDOW_STATE_FILE,loadWindowState,windowStateBounds,restoreWindowState,trackWindowState,windowStateFile,cascadeWindowState,forgetWindowState,placeOnDisplays,positionWindowState} = require("./window-state.cjs");
@@ -1180,7 +1192,7 @@ const localEnvironment = require("./local-environment.cjs").createLocalEnvironme
 require("./codex.cjs").setLocalEnvironment(() => localEnvironment.launchEnv());
 // Settings › Cores: which agent core runs, and the official releases this app downloads (core-manager.cjs).
 // First-run setup › Requirements: Node.js for the cores and Git, with their installers (setup-requirements.cjs).
-const setupRequirements = createSetupRequirements({ resolveNode: () => nodeResolver.resolve(), downloadsDir: () => path.join(app.getPath("userData"), "downloads"), openPath: (file) => shell.openPath(file) });
+const setupRequirements = createSetupRequirements({ resolveNode: () => nodeResolver.resolve(), downloadsDir: () => path.join(app.getPath("userData"), "downloads"), openPath: (file) => shell.openPath(file), openExternal: (url) => shell.openExternal(url).catch(() => {}) });
 const coreManager = createCoreManager({ dataDir: () => app.getPath("userData"), getConfig: () => config, save: () => save(), emit, setCoreChoice, deepseekScript: deepseekCoreScript, bridgeScript, nodeBinary });
 // Extension Packs (extension-packs.cjs): imported agent cores, registered with core-registry.mjs. A change re-points
 // codex.cjs (coreManager.apply) and tells the renderer, which registers the same descriptors.
@@ -1208,7 +1220,8 @@ function mirrorSections(task) {
 }
 // OS launchers behind one seam so isolated GUI suites can intercept them the
 // way they intercept shell.openPath; production always runs the real command.
-const externalOpeners = { terminal: (cwd) => run("open", ["-a", "Terminal", "--", cwd], { timeout: 10000 }) };
+// macOS: open -a Terminal; Windows: Windows Terminal, else a new cmd.exe console, at the folder (open-terminal.cjs).
+const externalOpeners = { terminal: (cwd) => require("./open-terminal.cjs").openTerminal(cwd) };
 globalThis.codeDesktopExternalOpeners = externalOpeners;
 const allowed = new Set([
   // Codex goals (ThreadGoalSet/Get/ClearParams {threadId, …}): /goal and the goal strip, for a known session only.
@@ -2049,6 +2062,7 @@ async function openPopout({ sessionId, pane, position, bounds: requestedBounds =
     // window the same level), so its lights start scaled.
     trafficLightPosition: scaleTrafficLights(POPOUT_TRAFFIC_LIGHTS, zoomFactorOf(win)),
     backgroundColor: windowBackground(nativeTheme.shouldUseDarkColors),
+    ...platformChrome(nativeTheme.shouldUseDarkColors),
     webPreferences: {
       preload: path.join(__dirname, "preload.cjs"),
       nodeIntegration: false,
@@ -2230,6 +2244,7 @@ function createMainWindow({ key = MAIN_WINDOW_KEY, layout = null, from = null, p
     // window shares one level).
     trafficLightPosition: trafficLightPosition(startZoom),
     backgroundColor: windowBackground(nativeTheme.shouldUseDarkColors),
+    ...platformChrome(nativeTheme.shouldUseDarkColors),
     webPreferences: {
       preload: path.join(__dirname, "preload.cjs"),
       nodeIntegration: false,
@@ -2280,6 +2295,10 @@ function createMainWindow({ key = MAIN_WINDOW_KEY, layout = null, from = null, p
     const action = closeAction({ quitting, fullScreen: window.isFullScreen() });
     if (action === "close") return;
     event.preventDefault();
+    // Windows / Linux have no Dock to bring a hidden window back: closing it hides it only while the tray icon
+    // (General › Menu bar) is there to restore it; otherwise it quits the app (through the quit guard, which may ask
+    // or cancel, leaving the window as it is).
+    if (process.platform !== "darwin" && !menuBar?.active()) { app.quit(); return; }
     const hide = () => { if (window.isDestroyed()) return; mainHidden = true; windowRegistry.setState(window, "hidden", true); window.hide(); };
     if (action === "leave-full-screen") { window.once("leave-full-screen", hide); window.setFullScreen(false); }
     else hide();
@@ -2361,6 +2380,7 @@ async function openSessionPopout({ sessionId = null, from = win, position = null
     titleBarStyle: "hidden",
     trafficLightPosition: trafficLightPosition(1),
     backgroundColor: windowBackground(nativeTheme.shouldUseDarkColors),
+    ...platformChrome(nativeTheme.shouldUseDarkColors),
     webPreferences: {
       preload: path.join(__dirname, "preload.cjs"),
       nodeIntegration: false,
@@ -2420,6 +2440,7 @@ async function dockTargetWindow() {
   return openMainWindow();
 }
 app.whenReady().then(async () => {
+  if (!singleInstance) return;
   require("electron").protocol.handle(FILE_PREVIEW_SCHEME, filePreviewFrames.handle);
   require("electron").protocol.handle(MCP_APP_SANDBOX_SCHEME, mcpAppSandbox.handle);
   // R4g review fix: the MCP App frames get no device permissions (2.42304.0 defaultSession handlers refuse them).
@@ -2568,7 +2589,10 @@ app.whenReady().then(async () => {
   // background with the resolved appearance (main and pane windows alike).
   nativeTheme.on("updated", () => {
     for (const window of BrowserWindow.getAllWindows())
-      if (!window.isDestroyed() && !computerUseOwnOverlay(window)) window.setBackgroundColor(windowBackground(nativeTheme.shouldUseDarkColors));
+      if (!window.isDestroyed() && !computerUseOwnOverlay(window)) {
+        window.setBackgroundColor(windowBackground(nativeTheme.shouldUseDarkColors));
+        if (process.platform === "win32") try { window.setTitleBarOverlay(windowsTitleBarOverlay(nativeTheme.shouldUseDarkColors)); } catch {}
+      }
   });
   if (!fs.existsSync(config.cwd)) config.cwd = workspace;
   approvedWorkspaceRoots.add(config.cwd);
@@ -2601,7 +2625,7 @@ app.whenReady().then(async () => {
       const shell = process.env.CODEX_BINARY ? {} : await loginShellVariables(["PATH"]).catch(() => ({}));
       const proxy = process.env.CODEX_BINARY ? {} : await loginShellProxy().catch(() => ({}));
       const env = { ...process.env, ...proxyEnv(process.env, proxy) };
-      env.PATH = [shell.PATH, path.join(os.homedir(), ".local/bin"), "/opt/homebrew/bin", "/usr/local/bin", process.env.PATH].filter(Boolean).join(":");
+      env.PATH = hostPath([shell.PATH, path.join(os.homedir(), ".local/bin"), "/opt/homebrew/bin", "/usr/local/bin", process.env.PATH]);
       // No app secrets or internals reach a dev server (the search key and every other CODE_DESKTOP_* variable included).
       for (const key of coreSecretEnvKeys()) delete env[key];
       for (const key of Object.keys(env)) if (key.startsWith("CODE_DESKTOP_") || key.startsWith("ELECTRON_")) delete env[key];
@@ -2610,7 +2634,11 @@ app.whenReady().then(async () => {
   });
   windowRegistry.onWindowClosed((window) => previewService?.windowClosed(window));
   try { await agentTools.start(); } catch (error) { console.warn(`Agent tools unavailable: ${error?.message ?? error}`); }
-  require("./codex.cjs").setAgentToolsLaunch(() => ({ env: agentTools.launchEnv(), codexArgs: agentTools.codexArgs() }));
+  // A failed start leaves no channel (agent-tools-host.cjs): each later core spawn tries again, so the next one has it.
+  require("./codex.cjs").setAgentToolsLaunch(() => {
+    if (!agentTools.socketPath && !quitting) agentTools.start().catch((error) => console.warn(`Agent tools unavailable: ${error?.message ?? error}`));
+    return { env: agentTools.launchEnv(), codexArgs: agentTools.codexArgs() };
+  });
   // The first spawn of any client (often the Home stats card's, before connect() runs) waits for Settings › Models'
   // launch: a saved Codex custom endpoint's -c args and the exported keys. Once: connect() refreshes it after that.
   let launchPrepared = null;
@@ -2789,6 +2817,15 @@ app.whenReady().then(async () => {
   // Settings › Storage › Clean up inactive sessions (code-cleanup.cjs; 2.31226.0 DeviceStorage previewCodeCleanup /
   // runCodeCleanup / cancelCodeCleanup). A session goes through the app's own thread/delete, so every window's
   // session list follows; worktrees go with git as Remove unused worktrees does.
+  // Windows keeps a folder locked while anything holds a handle in it (an fs.watch, a dev server's cwd), so
+  // `git worktree remove` fails there: let go of the folder first. macOS deletes open folders, nothing to do.
+  const releaseWorktree = async (dir) => {
+    if (process.platform !== "win32") return;
+    try { await previewService?.releaseFolder?.(dir); } catch {}
+    try { filesWatch.closeUnder(dir); } catch {}
+    try { customCommands.closeWatchersUnder?.(dir); } catch {}
+  };
+  const removeWorktreeReleased = async (dir) => { await releaseWorktree(dir); return worktrees.removeWorktree(run, dir); };
   codeCleanup = createCodeCleanup({
     getConfig: () => config, save, connected: () => !!client?.serverInfo,
     readThread: (id) => client.request("thread/read", { threadId: id, includeTurns: false }),
@@ -2796,7 +2833,7 @@ app.whenReady().then(async () => {
     inUse: async (id) => sessionOperations.isActive?.(id) === true || windowRegistry.windowsHolding(id).length > 0
       || await Promise.resolve(workflowService?.list?.(id)).then((runs) => (runs ?? []).some((run) => run?.status === "running"), () => true),
     isCowork: (id) => config.sessionMetadata?.[id]?.surface === "cowork" || coworkSessions.owns(id),
-    worktreeStatus: (dir) => worktrees.worktreeStatus(run, dir), removeWorktree: (dir) => worktrees.removeWorktree(run, dir),
+    worktreeStatus: (dir) => worktrees.worktreeStatus(run, dir), removeWorktree: (dir) => removeWorktreeReleased(dir),
     forgetWorktree: worktrees.forgetWorktree, directoryUsage,
     deleteSession: (id) => requestRpc({ method: "thread/delete", params: { threadId: id } }, undefined, client),
     onProgress: (done, total) => emit({ kind: "code-cleanup-progress", done, total }),
@@ -3890,18 +3927,18 @@ app.whenReady().then(async () => {
         if (typeof p.threadId !== "string" || !p.threadId) throw new Error("Unknown session.");
         if (![...config.threadIds, ...config.archivedThreadIds].includes(p.threadId)) return { worktree: null, changes: 0, shared: false };
         const cwd = config.threadMetadata[p.threadId]?.cwd;
-        const dir = typeof cwd === "string" ? (config.worktreeDirectories || []).find((entry) => path.resolve(entry) === path.resolve(cwd)) : null;
+        const dir = typeof cwd === "string" ? (config.worktreeDirectories || []).find((entry) => worktrees.sameWorktreePath(entry, cwd)) : null;
         if (!dir) return { worktree: null, changes: 0, shared: false };
-        const shared = [...config.threadIds, ...config.archivedThreadIds].some((id) => id !== p.threadId && !(p.leaving || []).includes(id) && path.resolve(config.threadMetadata[id]?.cwd || "") === path.resolve(dir));
+        const shared = [...config.threadIds, ...config.archivedThreadIds].some((id) => id !== p.threadId && !(p.leaving || []).includes(id) && worktrees.sameWorktreePath(config.threadMetadata[id]?.cwd || "", dir));
         return { worktree: dir, shared, ...(await worktrees.worktreeStatus(run, dir)) };
       }
       // After the session left: its worktree goes (git worktree remove --force; the branch stays), unless another uses it.
       case "worktree-remove": {
-        const dir = typeof p.worktree === "string" ? (config.worktreeDirectories || []).find((entry) => path.resolve(entry) === path.resolve(p.worktree)) : null;
+        const dir = typeof p.worktree === "string" ? (config.worktreeDirectories || []).find((entry) => worktrees.sameWorktreePath(entry, p.worktree)) : null;
         if (!dir) return { removed: false };
-        const users = [...config.threadIds, ...config.archivedThreadIds].filter((id) => path.resolve(config.threadMetadata[id]?.cwd || "") === path.resolve(dir) && config.threadIds.includes(id));
+        const users = [...config.threadIds, ...config.archivedThreadIds].filter((id) => worktrees.sameWorktreePath(config.threadMetadata[id]?.cwd || "", dir) && config.threadIds.includes(id));
         if (users.length) return { removed: false };
-        const removed = await worktrees.removeWorktree(run, dir);
+        const removed = await removeWorktreeReleased(dir);
         if (removed) { worktrees.forgetWorktree(config, dir); save(); }
         return { removed };
       }
@@ -3912,7 +3949,7 @@ app.whenReady().then(async () => {
           const status = await worktrees.worktreeStatus(run, dir);
           if (!status.exists) { worktrees.forgetWorktree(config, dir); continue; }
           if (status.changes > 0 || status.unknown) { kept++; continue; }
-          if (await worktrees.removeWorktree(run, dir)) { worktrees.forgetWorktree(config, dir); removed++; } else kept++;
+          if (await removeWorktreeReleased(dir)) { worktrees.forgetWorktree(config, dir); removed++; } else kept++;
         }
         save();
         return { removed, kept };
@@ -4428,7 +4465,7 @@ app.whenReady().then(async () => {
           return p.path;
         }
         if(p.additional && typeof p.path === "string") {
-          const expanded=p.path.startsWith("~/")?path.join(os.homedir(),p.path.slice(2)):p.path;
+          const expanded=(p.path.startsWith("~/")||(process.platform==="win32"&&p.path.startsWith("~\\")))?path.join(os.homedir(),p.path.slice(2)):p.path;
           const absolute=path.resolve(workspaceQueryRoot(p.cwd),expanded);
           const real=await fs.promises.realpath(absolute);
           if(!(await fs.promises.stat(real)).isDirectory())throw new Error("Choose a directory.");
@@ -4522,7 +4559,7 @@ app.whenReady().then(async () => {
         // B32: a file outside the working folder but inside one of the session's added folders (the outside-root
         // card's Add folder, /add-dir) reads from that folder, as the original reads every session folder.
         const added = typeof p.sessionId === "string" ? config.sessionMetadata?.[p.sessionId]?.additionalFolders : null;
-        const absolute = result?.unavailable === "outside_root" && Array.isArray(added) ? sessionFileAccess.requestedAbsolute(root, p.relative) : null;
+        const absolute = result?.unavailable === "outside_root" && Array.isArray(added) ? sessionFileAccess.requestedAbsolute(root, p.relative, { sessionFolders: added }) : null;
         // Added folders are stored as real paths (main 'folder'), so a path through a link such as /tmp → /private/tmp
         // is matched by its real path too.
         const hit = absolute ? sessionFileAccess.sessionFolderFor(absolute, added)
@@ -4585,8 +4622,11 @@ app.whenReady().then(async () => {
   // The window focused at the last quit comes back in front.
   const lastFocusedWindow = windowRegistry.byKey(restoredWindows.focused);
   if (otherWindows.length && lastFocusedWindow && lastFocusedWindow.isVisible()) lastFocusedWindow.focus();
-  menuBar = createMenuBar({Tray,Menu,nativeImage,app,iconPath:path.join(__dirname,"assets/TrayIconTemplate.png"),menuModel:await import("./tray-menu.mjs"),
-    getWindow:()=>win,getEnabled:()=>config.menuBarEnabled!==false,getAccount:()=>accountOperations.accountSnapshot(),getClient:()=>client});
+  // Windows: the colored app icon (.ico, 16/32 px and up); the black macOS template image vanishes on a dark taskbar.
+  // A left click there shows the app the way Show App does (showMainWindow recreates a window that is gone).
+  menuBar = createMenuBar({Tray,Menu,nativeImage,app,iconPath:path.join(__dirname,process.platform==="win32"?"assets/TrayIconWin.ico":"assets/TrayIconTemplate.png"),menuModel:await import("./tray-menu.mjs"),
+    getWindow:()=>win,getEnabled:()=>config.menuBarEnabled!==false,getAccount:()=>accountOperations.accountSnapshot(),getClient:()=>client,
+    platform:process.platform,showMain:showMainWindow});
   menuBar.update();
   void restorePopouts().catch((error) => console.warn("Pane windows:", error?.message ?? error));
 });
@@ -4645,6 +4685,10 @@ installShutdownHandler(app, {
 // a minimized main window when nothing is visible, shows a hidden one, or
 // recreates it when it no longer exists.
 app.on("window-all-closed", () => {});
+// Windows / Linux: with no window left and no tray icon to bring one back, the app quits (nothing could reach it).
+if (process.platform !== "darwin") app.on("window-all-closed", () => { if (!quitting && !menuBar?.active()) app.quit(); });
+// A second launch (Windows / Linux, requestSingleInstanceLock above): the running app comes to the front instead.
+app.on("second-instance", () => { if (!quitting && desktopReady) showMainWindow(); });
 app.on("activate", (_event, hasVisibleWindows) => {
   if (quitting || !desktopReady) return;
   const exists = liveContents(win);

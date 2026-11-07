@@ -1,6 +1,7 @@
 const { spawn } = require("node:child_process");
 const { EventEmitter } = require("node:events");
 const readline = require("node:readline");
+const { hostPath } = require("./host-path.cjs");
 const os = require("node:os");
 const path = require("node:path");
 const fs = require("node:fs");
@@ -8,6 +9,7 @@ const { randomUUID } = require("node:crypto");
 const { ApprovalLedger } = require("./approval-transport.cjs");
 const { proxyEnv, loginShellProxy, loginShellVariables, shellVariables } = require("./proxy-env.cjs");
 const { createNodeResolver } = require("./setup-requirements.cjs");
+const { killTree, windowsSpawn, resolveWindowsCommand } = require("./process-tree.cjs");
 
 // This registry contains only processes spawned by this module. A reconnect
 // replaces the client object, so keeping just the latest client loses children
@@ -85,7 +87,7 @@ const launchedBaseEnv = new Map();
  */
 function workflowCoreEnv(kind) {
   const base = launchedBaseEnv.get(kind) ?? {
-    PATH: [path.join(os.homedir(), ".local/bin"), "/opt/homebrew/bin", "/usr/local/bin", process.env.PATH].filter(Boolean).join(":"),
+    PATH: hostPath([path.join(os.homedir(), ".local/bin"), "/opt/homebrew/bin", "/usr/local/bin", process.env.PATH]),
     ...proxyEnv(process.env, {}),
   };
   return { ...base, ...currentLocalEnvironment() };
@@ -210,11 +212,32 @@ function coreError(client, source, values) {
   return new Error(i18n.t(source, { ...values, core: clientCoreName(client) }));
 }
 /** The Codex program the Codex core runs (this app's download, else the user's install), whichever core is chosen; null if none. */
-function codexBinary() {
-  // CODE_DESKTOP_CORE_SYSTEM_PATHS ("" for none) replaces the user-install fallbacks (core-manager.cjs).
-  const system = process.env.CODE_DESKTOP_CORE_SYSTEM_PATHS !== undefined ? process.env.CODE_DESKTOP_CORE_SYSTEM_PATHS.split(":").filter(Boolean)
-    : [path.join(os.homedir(), ".local/bin/codex"), "/opt/homebrew/bin/codex", "/usr/local/bin/codex"];
+function codexBinary({ platform = process.platform, env = process.env } = {}) {
+  // CODE_DESKTOP_CORE_SYSTEM_PATHS ("" for none, path.delimiter-separated) replaces the user-install fallbacks (core-manager.cjs).
+  if (env.CODE_DESKTOP_CORE_SYSTEM_PATHS !== undefined) {
+    const listed = env.CODE_DESKTOP_CORE_SYSTEM_PATHS.split(platform === "win32" ? ";" : ":").filter(Boolean);
+    return firstExisting([coreChoice.agents.codex?.path, ...listed]) || null;
+  }
+  // Windows: npm's global shim (%APPDATA%\npm\codex.cmd), a standalone codex.exe, or whatever PATH × PATHEXT finds.
+  if (platform === "win32") {
+    const appData = env.APPDATA || path.join(os.homedir(), "AppData", "Roaming");
+    return firstExisting([coreChoice.agents.codex?.path, path.win32.join(appData, "npm", "codex.cmd"), path.win32.join(os.homedir(), ".local", "bin", "codex.exe")])
+      || resolveWindowsCommand("codex", { env }) || null;
+  }
+  const system = [path.join(os.homedir(), ".local/bin/codex"), "/opt/homebrew/bin/codex", "/usr/local/bin/codex"];
   return firstExisting([coreChoice.agents.codex?.path, ...system]) || null;
+}
+
+/**
+ * Windows: PowerShell takes PSExecutionPolicyPreference as the Process-scope policy, so the core's PowerShell tool
+ * (the DeepSeek core's dsh-pwsh-local starts it without -ExecutionPolicy) can run npm/npx/pnpm's .ps1 shims under the
+ * default Restricted policy, as the bridges' own -ExecutionPolicy Bypass does. A value the user set (any key case)
+ * stays. Other platforms: unchanged. Mutates and returns env.
+ */
+function withPowerShellBypass(env, platform = process.platform) {
+  if (platform !== "win32" || !env || typeof env !== "object") return env;
+  if (!Object.keys(env).some((key) => key.toUpperCase() === "PSEXECUTIONPOLICYPREFERENCE")) env.PSExecutionPolicyPreference = "Bypass";
+  return env;
 }
 
 // The last meaningful stderr line, without URL queries or anything key-like, at most 300 characters.
@@ -286,8 +309,7 @@ class CodexClient extends EventEmitter {
       const shellEnv = readVariables ? await Promise.resolve().then(readVariables).catch(() => ({})) : {};
       if (this.connection !== connection) throw coreError(this, "{core} stopped.");
       const base = {
-        PATH: [path.join(os.homedir(), ".local/bin"), "/opt/homebrew/bin", "/usr/local/bin", process.env.PATH]
-          .filter(Boolean).join(":"),
+        PATH: hostPath([path.join(os.homedir(), ".local/bin"), "/opt/homebrew/bin", "/usr/local/bin", process.env.PATH]),
         ...proxyEnv(process.env, shellProxy),
         ...shellVariables(process.env, shellEnv, names.length ? names : Object.keys(shellEnv ?? {})),
       };
@@ -300,13 +322,20 @@ class CodexClient extends EventEmitter {
         ...core.env,
         ...this.options.env,
       };
-      const child = spawn(binary, args, {
+      // This app's own Node (setup-requirements.cjs bundledNode, Windows without an installed Node): Electron as Node.
+      if (binary === process.execPath) env.ELECTRON_RUN_AS_NODE = "1";
+      withPowerShellBypass(env, this.options.platform || process.platform);
+      // Windows: a .cmd core (npm's codex.cmd shim) runs through cmd.exe with escaped arguments, and no core opens
+      // a console window of its own (windowsHide; ignored elsewhere). macOS/Linux spawn exactly as before.
+      const launch = windowsSpawn(binary, args, {
         env,
         stdio: ["pipe", "pipe", "pipe"],
+        windowsHide: true,
         // App-server initialization must not enter a selected Documents/iCloud
         // workspace. Actual thread/turn cwd is explicitly carried by the RPCs.
         cwd: this.options.serverCwd || os.homedir(),
-      });
+      }, { platform: this.options.platform || process.platform });
+      const child = spawn(launch.command, launch.args, launch.options);
       connection.child = child;
       this.child = child;
       child.on("error", (error) => this.disconnect(connection, error));
@@ -506,8 +535,18 @@ class CodexClient extends EventEmitter {
     connection.terminating = true;
     const hardTimeout = duration(this.options.shutdownHardTimeout, 2500);
     const grace = Math.min(duration(this.options.shutdownTimeout, 1000), Math.max(0, hardTimeout - 1));
+    // Windows has no SIGTERM (child.kill is TerminateProcess of the bridge alone, orphaning the agent it started):
+    // the graceful stop closes the core's stdin (the cores and bridges exit on its end), the forced one ends the
+    // whole tree (taskkill /T /F).
+    const windows = (this.options.platform || process.platform) === "win32";
+    const endTree = this.options.killTree || killTree;
     const signal = (name) => {
       if (child.exitCode !== null || child.signalCode !== null) return;
+      if (windows) {
+        if (name === "SIGTERM") { try { child.stdin?.end(); } catch (error) { connection.killError = error.message; } }
+        else if (!endTree(child.pid, name, { platform: "win32" })) { try { child.kill(name); } catch (error) { connection.killError = error.message; } }
+        return;
+      }
       try { child.kill(name); } catch (error) { connection.killError = error.message; }
     };
     // A stuck app-server may not process SIGTERM; bound cleanup without ever
@@ -586,4 +625,4 @@ function stopAllCodexClients() {
   });
   return shutdownPromise;
 }
-module.exports = { CodexClient, stopAllCodexClients, resolveCore, coreKind, clientCoreName, reportedServerInfo, coreError, setCoreChoice, setCodexLaunch, codexBinary, stderrReason, deepseekCoreScript, bridgeScript, nodeBinary, nodeResolver, setAgentToolsLaunch, setBeforeSpawn, setLocalEnvironment, foreignCoreEnv, workflowCoreEnv };
+module.exports = { CodexClient, stopAllCodexClients, resolveCore, coreKind, clientCoreName, reportedServerInfo, coreError, setCoreChoice, setCodexLaunch, codexBinary, stderrReason, withPowerShellBypass, deepseekCoreScript, bridgeScript, nodeBinary, nodeResolver, setAgentToolsLaunch, setBeforeSpawn, setLocalEnvironment, foreignCoreEnv, workflowCoreEnv };

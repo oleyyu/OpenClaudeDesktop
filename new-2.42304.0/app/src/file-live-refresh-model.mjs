@@ -11,6 +11,7 @@
 // Local cores report edits as Codex fileChange items ({changes: [{path, kind}]}, kind.move_path for a rename) and
 // NotebookEdit as an app tool call (agent-tool-titles.mjs appToolCall, arguments.notebook_path).
 import { appToolCall } from "./agent-tool-titles.mjs";
+import { isAbsolutePath, pathStyle, relativeTo } from "./host-path-model.mjs";
 
 /** El's staleTime for a local file read (cd2efac6e xl = 5e3, :3252). */
 export const FILE_STALE_MS = 5000;
@@ -62,8 +63,14 @@ export function editInvalidation(state, sessionId, items) {
 const trimRoot = (cwd) => String(cwd).replace(/[\\/]+$/, "");
 const normalize = (value) => String(value).replace(/\\/g, "/").replace(/^\.\//, "").replace(/\/{2,}/g, "/");
 /** A tool path as the Files pane names it: relative to cwd when inside it; null when it is outside the workspace. */
-export function tabPathForEdit(path, cwd) {
+export function tabPathForEdit(path, cwd, options) {
   if (typeof path !== "string" || !path) return null;
+  // A Windows path (C:\…, C:/…, \\server\share): inside cwd case-insensitively, either separator (host-path-model).
+  if (pathStyle(path, options) === "win" && isAbsolutePath(path, options)) {
+    if (typeof cwd !== "string" || !cwd) return null;
+    const rest = relativeTo(cwd, path, options);
+    return rest ? rest : null;
+  }
   const value = normalize(path);
   if (!value.startsWith("/")) return value.split("/").includes("..") ? null : value;
   if (typeof cwd !== "string" || !cwd) return null;
@@ -72,10 +79,12 @@ export function tabPathForEdit(path, cwd) {
 }
 
 /** Open tabs (paths) that an edit of `paths` touched. */
-export function tabsForEdits(tabs, paths, cwd) {
+export function tabsForEdits(tabs, paths, cwd, options) {
+  // Windows file names are case-insensitive: fold both sides when the workspace is a Windows path.
+  const fold = typeof cwd === "string" && pathStyle(cwd, options) === "win" ? (value) => value.toLowerCase() : (value) => value;
   const wanted = new Set();
-  for (const path of paths || []) { const tabPath = tabPathForEdit(path, cwd); if (tabPath) wanted.add(tabPath); }
-  return (tabs || []).filter((tab) => wanted.has(normalize(tab.path))).map((tab) => tab.path);
+  for (const path of paths || []) { const tabPath = tabPathForEdit(path, cwd, options); if (tabPath) wanted.add(fold(tabPath)); }
+  return (tabs || []).filter((tab) => wanted.has(fold(normalize(tab.path)))).map((tab) => tab.path);
 }
 
 /** Open tabs that sit in folder `dir` ("" = root) under one of the changed `names` (no names = any child). */

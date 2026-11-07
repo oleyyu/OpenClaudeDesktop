@@ -6,6 +6,7 @@
  * streamable-HTTP POSTs for a remote server. Failures leave the list empty.
  */
 import { spawn } from 'node:child_process'
+import { killTree, platformSpawn } from './win-process.js'
 import { createHash } from 'node:crypto'
 
 const TIMEOUT_MS = 15000
@@ -16,7 +17,11 @@ const key = (config) => createHash('sha256').update(JSON.stringify(config ?? nul
 
 async function listStdio(config, signal) {
   const [command, ...args] = config.command
-  const child = spawn(command, args, { cwd: config.cwd, env: { ...process.env, ...(config.environment ?? {}) }, stdio: ['pipe', 'pipe', 'ignore'] })
+  // Windows: npx / uvx-style .cmd shims run through cmd.exe, without a console window (win-process.js).
+  const launch = platformSpawn(command, args, { cwd: config.cwd, env: { ...process.env, ...(config.environment ?? {}) }, stdio: ['pipe', 'pipe', 'ignore'] })
+  const child = spawn(launch.command, launch.args, launch.options)
+  // Windows: the server under cmd.exe goes with it (the tree), not just cmd.exe.
+  const end = (signal) => { if (process.platform === 'win32' && child.pid) killTree(child.pid); else try { child.kill(signal) } catch {} }
   const pending = new Map()
   let buffer = ''
   let seq = 0
@@ -42,7 +47,7 @@ async function listStdio(config, signal) {
     child.stdin.write(JSON.stringify({ jsonrpc: '2.0', id, method, params }) + '\n')
     return Promise.race([new Promise((resolve, reject) => pending.set(String(id), { resolve, reject })), exited])
   }
-  const onAbort = () => { try { child.kill('SIGKILL') } catch {} }
+  const onAbort = () => end('SIGKILL')
   signal.addEventListener('abort', onAbort, { once: true })
   try {
     await request('initialize', { protocolVersion: PROTOCOL, capabilities: {}, clientInfo: CLIENT })
@@ -58,7 +63,8 @@ async function listStdio(config, signal) {
     return tools
   } finally {
     signal.removeEventListener('abort', onAbort)
-    try { child.stdin.end(); child.kill('SIGTERM') } catch {}
+    try { child.stdin.end() } catch {}
+    end('SIGTERM')
   }
 }
 

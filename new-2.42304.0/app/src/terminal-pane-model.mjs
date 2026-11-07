@@ -2,6 +2,7 @@
 // auto-close). Independent implementation of the behavior traced from the 2.2553.1 terminal pane (c6bf19e8f ShellTerminal,
 // cccc2cf0a pane + tab strip, cf718f694 code theme → xterm theme, c5d464fa3 palettes, shared-21 aR toggleTerminal).
 import { t } from "../electron/i18n/index.mjs";
+import { isAbsolutePath, isWindowsHost, joinPath, pathStyle, relativeTo } from "./host-path-model.mjs";
 import { selectionBlocksTerminalLink } from "./generated/code-current/terminal-link-selection.mjs";
 import { terminalErrorMessages, terminalStartError, loadFailedError } from "./generated/code-current/terminal-errors.mjs";
 import { ownerWindow } from "./generated/code-current/owner-window.mjs";
@@ -257,9 +258,19 @@ export function isTerminalToggle(event) {
  *   "line-start" / "line-end"   ⌘← / ⌘→ (Ctrl-A / Ctrl-E)    "word-left" / "word-right"     ⌥← / ⌥→
  *   null         xterm handles it (or the app, for other ⌘ chords: xterm leaves those alone)
  */
+// Off macOS Ctrl+K / Ctrl+F / Ctrl+A / Ctrl+G belong to the shell (kill line, forward char, line start, …), so the
+// terminal's own chords take Shift as well, like Windows Terminal: Ctrl+Shift+K clear, Ctrl+Shift+F find, Ctrl+Shift+A
+// select all, F3 / Shift+F3 find next / previous, Ctrl+Shift+L attach (⇧⌘L read with Ctrl).
 export function terminalKeyAction(event,{bufferType="normal",mac=true}={}) {
   if (!event || event.type !== "keydown" || event.isComposing) return null;
   if (isTerminalToggle(event)) return "toggle";
+  if (!mac) {
+    const ctrl = !!event.ctrlKey, alt = !!event.altKey, shift = !!event.shiftKey;
+    if (event.metaKey) return null;
+    if (event.code === "F3" && !ctrl && !alt) return shift ? "find-previous" : "find-next";
+    if (!ctrl || !shift || alt) return null;
+    return { KeyK: "clear", KeyF: "find", KeyA: "select-all", KeyL: "attach-selection" }[event.code] ?? null;
+  }
   const meta = !!event.metaKey, ctrl = !!event.ctrlKey, alt = !!event.altKey, shift = !!event.shiftKey;
   if (meta && !ctrl && !alt) {
     if (!shift && event.code === "KeyK") return "clear";
@@ -357,8 +368,11 @@ export function safeWebUrl(text) {
 }
 // A file path token: absolute, ./ ../ ~/ relative, or dir/name, or name.ext; optional :line[:col] or (line,col).
 const PATH_PATTERN = /(?<![\w./~-])((?:~|\.{1,2})?\/?(?:[\w@+.-]+\/)*[\w@+-][\w@+.-]*\.[A-Za-z][\w]{0,11}|(?:~|\.{1,2})?\/(?:[\w@+.-]+\/)*[\w@+.-]+|(?:[\w@+.-]+\/)+[\w@+.-]+)(?::(\d{1,7})(?::(\d{1,5}))?|\((\d{1,7}),(\d{1,5})\))?/g;
+// Windows (findLinks windows): also drive paths (C:\Users\me\a.ts, C:/x/a.ts), UNC-free backslash relatives
+// (src\a.ts, .\a.ts, ..\a.ts, ~\a.ts) and tsc's `src\a.ts(12,5)`, before the POSIX forms (tools print '/' too).
+const WIN_PATH_PATTERN = /(?<![\w./\\~:-])([A-Za-z]:[\\/](?:[\w@+.$-]+[\\/])*[\w@+.$-]+|(?:(?:~|\.{1,2})\\)?(?:[\w@+.$-]+\\)+[\w@+.$-]+|(?:~|\.{1,2})\\[\w@+.$-]+|(?:~|\.{1,2})?\/?(?:[\w@+.-]+\/)*[\w@+-][\w@+.-]*\.[A-Za-z][\w]{0,11}|(?:~|\.{1,2})?\/(?:[\w@+.-]+\/)*[\w@+.-]+|(?:[\w@+.-]+\/)+[\w@+.-]+)(?::(\d{1,7})(?::(\d{1,5}))?|\((\d{1,7}),(\d{1,5})\))?/g;
 /** Links on one line of terminal text: [{ kind: "web"|"file", start, end, text, url? , path?, line?, column? }]. */
-export function findLinks(text) {
+export function findLinks(text, { windows = isWindowsHost() } = {}) {
   if (typeof text !== "string" || !text) return [];
   const links = [];
   const taken = [];
@@ -368,18 +382,26 @@ export function findLinks(text) {
     links.push({ kind: "web", start: match.index, end: match.index + match[0].length, text: match[0], url });
     taken.push([match.index, match.index + match[0].length]);
   }
-  for (const match of text.matchAll(PATH_PATTERN)) {
+  for (const match of text.matchAll(windows ? WIN_PATH_PATTERN : PATH_PATTERN)) {
     const start = match.index, end = start + match[0].length;
     if (taken.some(([a, b]) => start < b && end > a)) continue;
     const path = match[1];
     if (path.length < 3 || /^\d+(?:\.\d+)+$/.test(path) || /^\.+\/?$/.test(path) || path.includes("//")) continue;
+    if (windows && (/^\.+\\?$/.test(path) || path.includes("\\\\"))) continue;
     const line = Number(match[2] ?? match[4]) || null, column = Number(match[3] ?? match[5]) || null;
     links.push({ kind: "file", start, end, text: match[0], path, line, column });
   }
   return links.sort((a, b) => a.start - b.start);
 }
 /** A clicked file path relative to the session folder (what the Files pane opens), or null outside it. */
-export function relativeToFolder(path, folder, home = null) {
+export function relativeToFolder(path, folder, home = null, options) {
+  // A Windows folder (C:\…): either separator, case-insensitive, '/'-joined result (host-path-model).
+  if (typeof path === "string" && path && typeof folder === "string" && pathStyle(folder, options) === "win") {
+    let target = path;
+    if (/^~[\\/]/.test(target)) { if (!home) return null; target = joinPath(home, target.slice(2), options); }
+    const rest = relativeTo(folder, isAbsolutePath(target, options) ? target : joinPath(folder, target, options), options);
+    return rest || null;
+  }
   if (typeof path !== "string" || !path || typeof folder !== "string" || !folder.startsWith("/")) return null;
   let absolute = path;
   if (path.startsWith("~/")) { if (!home) return null; absolute = `${home.replace(/\/$/, "")}/${path.slice(2)}`; }

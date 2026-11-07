@@ -2,6 +2,7 @@ import { parseCsvPreview as currentCsvPreview } from './generated/code-current/c
 import { HIGHLIGHT_LIMITS, isPlainLanguage, normalizeLanguage } from './highlight-model.mjs';
 import { FILE_EXTENSION_LANGUAGES, LOCKFILE_LANGUAGES } from './highlight-languages.mjs';
 import { t, tn } from '../electron/i18n/index.mjs';
+import { toFileUrl } from './host-path-model.mjs';
 
 // Highlight tokens describe complete fragments; split without dropping empty
 // lines, CRs, or a token that spans multiple lines. No HTML is interpreted.
@@ -98,7 +99,8 @@ export function fileMediaKind(path = '') {
 }
 // The file:// URL of a local path: the composer's previews, the transcript's image tiles and the Files viewer's
 // <img>/<video>/<audio>. encodeURI leaves '#' and '?' alone, which would cut the path into a fragment or query.
-export const filePreviewUrl = (filePath) => encodeURI(`file://${filePath}`).replace(/[#?]/g, encodeURIComponent);
+// host-path-model toFileUrl: unchanged for POSIX paths; a Windows path becomes file:///C:/… (forward slashes).
+export const filePreviewUrl = (filePath, options) => toFileUrl(filePath, options);
 // The drawn SVG: the shown text as an image (the app CSP allows data: images),
 // so the graphic follows the text the viewer holds and its scripts never run.
 export const svgPreviewUrl = (text) => `data:image/svg+xml;charset=utf-8,${encodeURIComponent(String(text ?? ''))}`;

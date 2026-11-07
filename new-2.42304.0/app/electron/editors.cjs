@@ -32,10 +32,32 @@ const EDITORS = Object.freeze([
   { type: "androidStudio", name: "Android Studio", apps: ["Android Studio.app"] },
 ]);
 
+// Windows: each editor's per-user and machine-wide install (the exe the installer puts there). JetBrains IDEs and the
+// Mac-only editors are not looked for there.
+const WINDOWS_EXES = Object.freeze({
+  vscode: ["Programs/Microsoft VS Code/Code.exe", "@Microsoft VS Code/Code.exe"],
+  vscodeInsiders: ["Programs/Microsoft VS Code Insiders/Code - Insiders.exe", "@Microsoft VS Code Insiders/Code - Insiders.exe"],
+  cursor: ["Programs/cursor/Cursor.exe", "Programs/Cursor/Cursor.exe"],
+  windsurf: ["Programs/Windsurf/Windsurf.exe"],
+  zed: ["Programs/Zed/Zed.exe", "@Zed/Zed.exe"],
+  sublime: ["@Sublime Text/sublime_text.exe", "@Sublime Text 3/sublime_text.exe"],
+});
+function windowsEditorExe(editor, { home = os.homedir(), exists = fs.existsSync, env = process.env } = {}) {
+  const local = env.LOCALAPPDATA || path.win32.join(home, "AppData", "Local");
+  for (const entry of WINDOWS_EXES[editor.type] || []) {
+    const candidates = entry.startsWith("@")
+      ? [env.ProgramFiles, env["ProgramFiles(x86)"]].filter(Boolean).map((dir) => path.win32.join(dir, entry.slice(1)))
+      : [path.win32.join(local, entry)];
+    const found = candidates.find((file) => exists(file));
+    if (found) return found;
+  }
+  return null;
+}
 const searchDirs = (home) => ["/Applications", path.join(home, "Applications"), path.join(home, "Applications", "JetBrains Toolbox"), "/Applications/Setapp"];
 
 /** Where an editor's app bundle is, or null. exists: injectable for tests. */
-function editorApp(editor, { home = os.homedir(), exists = fs.existsSync } = {}) {
+function editorApp(editor, { home = os.homedir(), exists = fs.existsSync, platform = process.platform } = {}) {
+  if (platform === "win32") return windowsEditorExe(editor, { home, exists });
   for (const dir of searchDirs(home)) for (const app of editor.apps) {
     const candidate = path.join(dir, app);
     if (exists(candidate)) return candidate;
@@ -61,6 +83,15 @@ async function openInEditor(target, type, { home = os.homedir(), exists = fs.exi
   if (info.isFile() && Number.isInteger(line) && line > 0 && EDITOR_URL_SCHEMES[type]) {
     const uri = editorLocationURI(EDITOR_URL_SCHEMES[type], target, line, column);
     await (openExternal ?? require("electron").shell.openExternal)(uri);
+    return true;
+  }
+  if (process.platform === "win32") {
+    // The editor's own exe with the path: it opens a window of the running editor, or starts it.
+    const { spawn } = require("node:child_process");
+    await new Promise((resolve, reject) => {
+      const child = spawn(app, [target], { detached: true, stdio: "ignore", windowsHide: false });
+      child.once("error", reject); child.once("spawn", () => { child.unref(); resolve(); });
+    });
     return true;
   }
   await new Promise((resolve, reject) => run("/usr/bin/open", ["-a", app, target], { timeout: 15000 }, (error) => error ? reject(error) : resolve()));

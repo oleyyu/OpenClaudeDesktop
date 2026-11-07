@@ -934,6 +934,11 @@ html[data-reduce-motion="true"] .source-step-caret { transition: none; }
   padding-top: 36px;
   -webkit-app-region: drag;
 }
+/* Windows: the band clears the 40px caption-button overlay (window-chrome.cjs WINDOWS_OVERLAY_HEIGHT), not the
+   macOS traffic lights' 36px. */
+html[data-platform="win32"] .popout-workspace {
+  padding-top: 40px;
+}
 .popout-tile {
   display: flex;
   flex: 1;
@@ -951,6 +956,9 @@ html[data-reduce-motion="true"] .source-step-caret { transition: none; }
   padding: 36px 8px 8px;
   background: var(--cds-surface-1);
   -webkit-app-region: drag;
+}
+html[data-platform="win32"] .dframe-root[data-pane-window]:not([data-pane-window="side-chat"]) .workspace {
+  padding-top: 40px;
 }
 .dframe-root[data-pane-window]:not([data-pane-window="side-chat"]) .workspace > * {
   -webkit-app-region: no-drag;

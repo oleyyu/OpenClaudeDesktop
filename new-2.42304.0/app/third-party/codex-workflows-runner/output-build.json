@@ -1,10 +1,10 @@
 {
   "output": "src/workflow-output.js",
-  "sha256": "b34570a65ae34055d09e71020d57e3434cdf9fc46e399a4587b4c5723eaf8170",
+  "sha256": "cfd31cf1cb7f42331c4095b16a53dbb370b17f309a9c9b6df8ea128a0591586f",
   "dependencies": {},
   "sources": [
     {
-      "path": "vendor/deepseek-harness/packages/workflow/workflow-ptc/src/output.ts",
+      "path": "../../claude-ui-lab/vendor/deepseek-harness/packages/workflow/workflow-ptc/src/output.ts",
       "sha256": "ee3a64a0e2ca2a94a7765a28bf57c1cce602786faf6ab8602b1db897d1980fe5"
     }
   ],

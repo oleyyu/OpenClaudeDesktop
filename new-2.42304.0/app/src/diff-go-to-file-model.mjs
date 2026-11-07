@@ -1,3 +1,4 @@
+import { isMacPlatform, macChordView } from "./pane-keys-model.mjs";
 // The Changes pane "Go to file" combobox (2.2553.1 panes-tile-current.js nh :3189-3390): the changed paths ranked
 // for a query (Zm over a FileIndex), at most 100 rows (th), the rest counted for the "Keep typing to narrow." footer.
 // FileIndex is a native fuzzy matcher; this is a subsequence ranker with the same shape of result (the matched
@@ -75,6 +76,8 @@ export function goToFileSide(rect, viewportHeight, padding = 8) {
 }
 
 /** ⌘P (goToDiffFile, shared-21-D098Wd--.js:14268): Meta+P with no other modifier, not while composing. */
-export function isGoToFileShortcut(event) {
+export function isGoToFileShortcut(event, { mac = isMacPlatform() } = {}) {
+  // Off macOS: Ctrl+P (pane-keys-model macChordView).
+  event = macChordView(event, { mac });
   return !!event && event.metaKey && !event.shiftKey && !event.ctrlKey && !event.altKey && !event.isComposing && (event.code === "KeyP" || event.key === "p");
 }

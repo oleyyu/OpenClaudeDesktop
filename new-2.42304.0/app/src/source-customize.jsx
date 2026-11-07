@@ -1,4 +1,5 @@
 import { AddServerDialog } from "./source-settings-harness.jsx";
+import { revealInFileManagerLabel } from "./file-manager-labels.mjs";
 import React, { useEffect, useId, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { bindCustomizeScroll } from './customize-scroll.mjs';
 import { BUILTIN_PLUGINS, builtinPluginRow, filterBuiltinPlugins } from './builtin-plugins.mjs';
@@ -811,7 +812,7 @@ export function AgentsSection({ store, cwd, query = "", onRevealPath, copy }) {
           <span className="cz-builtin-source" title={agent.path || undefined}>{scopeLabel(agent.scope)}</span>
         </div>
         {(agent.path && onRevealPath || writable && agent.removable) && <div className="cz-builtin-action">
-          {agent.path && onRevealPath && <Button variant="ghost" size="sm" onClick={() => onRevealPath(agent.path)}>{t("Show in Finder")}</Button>}
+          {agent.path && onRevealPath && <Button variant="ghost" size="sm" onClick={() => onRevealPath(agent.path)}>{revealInFileManagerLabel()}</Button>}
           {writable && agent.removable && <Button variant="ghost" size="sm" aria-label={t("Delete {name}", { name: agent.name })} onClick={() => { setError(""); setDeleting(agent); }}>{t("Delete")}</Button>}
         </div>}
       </li>)}

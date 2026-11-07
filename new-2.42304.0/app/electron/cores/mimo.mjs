@@ -90,6 +90,8 @@ export default Object.freeze({
       assets: Object.freeze({
         arm64: Object.freeze({ name: "mimocode-darwin-arm64.zip", size: 33820063, sha256: "9805686d8e14a5bff091833ec021aba0e7f7d41361cebf90152482e5c38e40b3" }),
         x64: Object.freeze({ name: "mimocode-darwin-x64.zip", size: 36144793, sha256: "42a3f0416dbcfb8590ae504538d27a0414e9625a7b766b2512aeafe7b8b35cad" }),
+        "win32-x64": Object.freeze({ name: "mimocode-windows-x64.zip", size: 48122871, sha256: "c9b8a1bb12b4e621098b622629982715cc8423587c2640d8c2fa0113d3c09511" }),
+        "win32-arm64": Object.freeze({ name: "mimocode-windows-arm64.zip", size: 46379932, sha256: "46d12eb7642ff0ae5277cfb69b60b52b3e4d4ddc4d0b9b19e0dae221753eb72a" }),
       }),
       url: "https://github.com/XiaomiMiMo/MiMo-Code/releases/download/{tag}/{name}",
     }),

@@ -1,3 +1,4 @@
+import { isMacPlatform, macChordView } from "./pane-keys-model.mjs";
 // Composer chin chords. sidebar-rows.js:14191-14200 (= shared-21-D098Wd--.js aR rows): openModeMenu
 // "cmd+shift+m" code KeyM (when isClaudeApp) and "cmd+alt+m" KeyM; openModelMenu "cmd+shift+i" KeyI;
 // openEffortMenu "cmd+shift+e" KeyE; toggleFastMode "cmd+alt+f" KeyF. shared-21 uR (:14326-14346) matches
@@ -24,7 +25,10 @@ export const MODEL_MENU_KEYS = "cmd+shift+i";
 export const CHIN_MENU_KINDS = Object.freeze({ mode: "permission", model: "model", effort: "effort" });
 export const chinKindOfMenu = (menuKind) => Object.keys(CHIN_MENU_KINDS).find((kind) => CHIN_MENU_KINDS[kind] === menuKind) ?? null;
 
-export function chinShortcutCommand(event) {
+// Off macOS "cmd" is Ctrl (pane-keys-model macChordView; an AltGr Ctrl+Alt is no chord): Ctrl+Shift+M / Ctrl+Alt+M,
+// Ctrl+Shift+I, Ctrl+Shift+E, Ctrl+Alt+F.
+export function chinShortcutCommand(event, { mac = isMacPlatform() } = {}) {
+  event = macChordView(event, { mac });
   if (!event || !event.metaKey || event.ctrlKey || event.isComposing) return null;
   return CHORDS.find((chord) => chord.code === event.code && chord.shift === !!event.shiftKey && chord.alt === !!event.altKey)?.command ?? null;
 }

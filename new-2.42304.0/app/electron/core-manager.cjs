@@ -42,15 +42,29 @@ const path = require("node:path");
 const crypto = require("node:crypto");
 const { execFile } = require("node:child_process");
 const { offeredCores, coreById, releaseAsset } = require("./core-registry.mjs");
+const { windowsSpawn, resolveWindowsCommand } = require("./process-tree.cjs");
+const { extractCommand } = require("./archive-extract.cjs");
+const { batchPath, batchFile } = require("./batch-file.cjs");
 // Messages reach Settings › Cores as given, so they go through the main-process t() (core names stay as written).
 const { t } = require("./i18n/index.mjs");
 const fail = (source, values) => new Error(t(source, values));
 
-const run = (file, args, options = {}) => new Promise((resolve, reject) => {
-  execFile(file, args, { timeout: 15000, maxBuffer: 1 << 20, ...options }, (error, stdout, stderr) => error ? reject(Object.assign(error, { stderr })) : resolve(String(stdout)));
+// No console window on Windows (windowsHide), where a .cmd (npm's shim of a user-installed agent) also runs through
+// cmd.exe (windowsSpawn); elsewhere the program runs as given.
+const run = (file, args, options = {}, platform = process.platform) => new Promise((resolve, reject) => {
+  const launch = windowsSpawn(file, args, { timeout: 15000, maxBuffer: 1 << 20, windowsHide: true, ...options }, { platform });
+  execFile(launch.command, launch.args, launch.options, (error, stdout, stderr) => error ? reject(Object.assign(error, { stderr })) : resolve(String(stdout)));
 });
-const expand = (file, home) => (file.startsWith("~/") ? path.join(home, file.slice(2)) : file);
-const executable = (file) => { try { const stat = fs.statSync(file); return stat.isFile() && (stat.mode & 0o111) !== 0; } catch { return false; } };
+const expand = (file, home) => (file.startsWith("~/") || file.startsWith("~\\") ? path.join(home, file.slice(2)) : file);
+// Windows has no exec bit (mode & 0o111 is always 0 there): a program is a file with an extension Windows runs.
+const WINDOWS_PROGRAM = /\.(exe|cmd|bat|com)$/i;
+const executable = (file, platform = process.platform) => {
+  try {
+    const stat = fs.statSync(file);
+    if (!stat.isFile()) return false;
+    return platform === "win32" ? WINDOWS_PROGRAM.test(file) : (stat.mode & 0o111) !== 0;
+  } catch { return false; }
+};
 const exists = (file) => { try { return fs.statSync(file).isFile(); } catch { return false; } };
 
 // The folder a bridge keeps its own data in, beside the downloaded versions; never a version name.
@@ -166,18 +180,23 @@ async function unpackDmg(archive, unpacked, extractPaths, signal) {
   }
 }
 
-/** The agent binary inside an unpacked release: `<name>` or `<name>-<target triple>`, at any shallow depth. */
-function findBinary(dir, name) {
+/**
+ * The agent binary inside an unpacked release: `<name>` or `<name>-<target triple>`, at any shallow depth. On Windows
+ * `<name>.exe` or `<name>-<arch>-pc-windows-msvc.exe` (Codex's naming), compared case-insensitively.
+ */
+function findBinary(dir, name, platform = process.platform) {
   const found = [];
   // The name is a pack's agent.binary: matched literally, never as a pattern.
   const literal = String(name).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const triple = new RegExp(`^${literal}-(aarch64|x86_64|arm64|x64)-(apple-darwin|darwin)$`);
+  const windows = platform === "win32";
+  const triple = windows ? new RegExp(`^${literal}(-(aarch64|x86_64|arm64|x64)-(pc-windows-msvc|windows|win32))?\\.exe$`, "i")
+    : new RegExp(`^${literal}-(aarch64|x86_64|arm64|x64)-(apple-darwin|darwin)$`);
   const walk = (current, depth) => {
     if (depth > 4) return;
     for (const entry of fs.readdirSync(current, { withFileTypes: true })) {
       const full = path.join(current, entry.name);
       if (entry.isDirectory()) walk(full, depth + 1);
-      else if (entry.isFile() && (entry.name === name || triple.test(entry.name))) found.push(full);
+      else if (entry.isFile() && ((!windows && entry.name === name) || triple.test(entry.name))) found.push(full);
     }
   };
   walk(dir, 0);
@@ -185,7 +204,10 @@ function findBinary(dir, name) {
 }
 
 function createCoreManager({ dataDir, getConfig, save, emit = () => {}, setCoreChoice = () => {}, deepseekScript = () => null, bridgeScript = () => null,
-  nodeBinary = () => process.execPath, fetchImpl = (...args) => fetch(...args), arch = process.arch, home = os.homedir(), env = process.env }) {
+  nodeBinary = () => process.execPath, fetchImpl = (...args) => fetch(...args), arch = process.arch, home = os.homedir(), env = process.env, platform = process.platform }) {
+  const windows = platform === "win32";
+  const exec = (file, args, options = {}) => run(file, args, options, platform);
+  const runnable = (file) => executable(file, platform);
   const coresDir = () => path.join(dataDir(), "cores");
   const coreDir = (id) => path.join(coresDir(), id);
   // id → {controller, phase, received, total}: list() reports it, so Settings can poll progress.
@@ -198,14 +220,35 @@ function createCoreManager({ dataDir, getConfig, save, emit = () => {}, setCoreC
       const value = JSON.parse(fs.readFileSync(path.join(coreDir(id), "manifest.json"), "utf8"));
       if (!validVersion(value.version) || !insideRelative(value.binary)) return null;
       const binary = path.join(coreDir(id), value.version, value.binary);
-      return (value.runner === "node" ? exists(binary) : executable(binary)) ? { ...value, path: binary } : null;
+      return (value.runner === "node" ? exists(binary) : runnable(binary)) ? { ...value, path: binary } : null;
     } catch { return null; }
   }
-  const systemPaths = (core) => (env.CODE_DESKTOP_CORE_SYSTEM_PATHS !== undefined ? env.CODE_DESKTOP_CORE_SYSTEM_PATHS.split(":").filter(Boolean) : core.agent?.systemPaths ?? []);
+  // CODE_DESKTOP_CORE_SYSTEM_PATHS is a PATH-style list (";" on Windows, ":" elsewhere).
+  const systemPaths = (core) => (env.CODE_DESKTOP_CORE_SYSTEM_PATHS !== undefined ? env.CODE_DESKTOP_CORE_SYSTEM_PATHS.split(windows ? ";" : ":").filter(Boolean)
+    : windows ? windowsSystemPaths(core) : core.agent?.systemPaths ?? []);
+  // Windows: the descriptor's POSIX folders (/opt/homebrew, /usr/local) don't exist. Its "~/…" entries are tried with
+  // .exe/.cmd (a Node script entry as written), then npm's global shims (%APPDATA%\npm\<name>.cmd) and whatever
+  // PATH × PATHEXT finds for the binary name.
+  function windowsSystemPaths(core) {
+    const out = [];
+    for (const entry of core.agent?.systemPaths ?? []) {
+      if (typeof entry !== "string" || entry.startsWith("/")) continue;
+      if (nodeScript(entry) || WINDOWS_PROGRAM.test(entry)) out.push(entry);
+      else out.push(`${entry}.exe`, `${entry}.cmd`);
+    }
+    const name = core.agent?.binary;
+    if (typeof name === "string" && /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/.test(name)) {
+      const appData = env.APPDATA || path.join(home, "AppData", "Roaming");
+      out.push(path.join(appData, "npm", `${name}.cmd`));
+      const found = resolveWindowsCommand(name, { env });
+      if (found) out.push(found);
+    }
+    return out;
+  }
   function systemInstall(core) {
     for (const candidate of systemPaths(core)) {
       const file = expand(candidate, home);
-      if (nodeScript(file) ? exists(file) : executable(file)) return file;
+      if (nodeScript(file) ? exists(file) : runnable(file)) return file;
     }
     return null;
   }
@@ -217,7 +260,7 @@ function createCoreManager({ dataDir, getConfig, save, emit = () => {}, setCoreC
         if (entry) return { name: `${core.id}.${entry.type === "zip" ? "zip" : entry.type === "binary" ? "bin" : "tar.gz"}`, type: "tar.gz", ...entry };
       } catch {}
     }
-    return releaseAsset(core, archKey);
+    return releaseAsset(core, archKey, platform);
   }
   /** The agent this app or the user installed: {path, runner, version, source}, or null. */
   function agentOf(core) {
@@ -268,7 +311,7 @@ function createCoreManager({ dataDir, getConfig, save, emit = () => {}, setCoreC
   const folderSize = (file) => { try { const stat = fs.lstatSync(file); return stat.isDirectory() ? dirSize(file) : stat.size; } catch { return 0; } };
 
   async function versionOf(file, runner = "", args = ["--version"], signal) {
-    try { return (await (runner === "node" ? run(nodeBinary(), [file, ...args], { signal }) : run(file, args, { signal }))).trim().split("\n")[0].slice(0, 120); } catch { return null; }
+    try { return (await (runner === "node" ? exec(nodeBinary(), [file, ...args], { signal, ...(nodeBinary() === process.execPath ? { env: { ...env, ELECTRON_RUN_AS_NODE: "1" } } : {}) }) : exec(file, args, { signal }))).trim().split(/\r?\n/)[0].slice(0, 120); } catch { return null; }
   }
 
   async function list() {
@@ -313,9 +356,11 @@ function createCoreManager({ dataDir, getConfig, save, emit = () => {}, setCoreC
 
   async function unpack(asset, archive, unpacked, signal) {
     const type = asset.type ?? "tar.gz";
-    if (type === "tar.gz" || type === "tgz") await run("tar", ["-xzf", archive, "-C", unpacked], { timeout: 180000, signal });
-    else if (type === "zip") await run("ditto", ["-x", "-k", archive, unpacked], { timeout: 180000, signal });
+    // tar / ditto on macOS; Windows' own bsdtar (System32\tar.exe) for both archive kinds there (archive-extract.cjs).
+    const extract = type === "tar.gz" || type === "tgz" || type === "zip" ? extractCommand(type, archive, unpacked, { platform, env }) : null;
+    if (extract) await exec(extract.file, extract.args, { timeout: 180000, signal });
     else if (type === "binary") fs.copyFileSync(archive, path.join(unpacked, asset.binaryName ?? path.basename(archive)));
+    else if (type === "dmg" && windows) throw fail("This release is a macOS disk image, which can’t be installed on Windows.");
     else if (type === "dmg") await unpackDmg(archive, unpacked, asset.extractPaths, signal);
     else throw fail("Unsupported release type {type}.", { type });
   }
@@ -325,7 +370,7 @@ function createCoreManager({ dataDir, getConfig, save, emit = () => {}, setCoreC
     if (!core || !core.agent || core.available === false) throw fail("This core can’t be downloaded.");
     if (downloads.has(id)) throw fail("That core is already downloading.");
     const asset = assetFor(core);
-    if (!asset?.url) throw fail("There is no release of this core for this Mac.");
+    if (!asset?.url) throw fail(windows ? "There is no Windows release of this core yet. Install it yourself and OpenClaude Desktop will find it." : "There is no release of this core for this Mac.");
     // Checked before anything is fetched or removed: the release decides paths under <userData>/cores/<id>.
     const problem = releaseProblem(asset, core);
     if (problem) throw fail("This release of {name} can’t be installed: {problem}.", { name: core.name, problem: t(problem) });
@@ -400,12 +445,14 @@ function createCoreManager({ dataDir, getConfig, save, emit = () => {}, setCoreC
         fs.renameSync(unpacked, staged);
         relative = asset.binaryPath;
       } else {
-        const found = asset.binaryPath ? path.join(unpacked, asset.binaryPath) : findBinary(unpacked, core.agent.binary);
+        const found = asset.binaryPath ? path.join(unpacked, asset.binaryPath) : findBinary(unpacked, core.agent.binary, platform);
         if (!found) throw fail("The release has no {binary} binary.", { binary: core.agent.binary });
         // The real file is moved, never a symlink to it (a link moved into staged could point anywhere).
         const real = insideRelease(found, asset.binaryPath ?? core.agent.binary);
         fs.mkdirSync(staged);
-        relative = core.agent.binary;
+        // Windows runs a program by its extension: the entry keeps the one it was found with (codex.exe).
+        const extension = windows && WINDOWS_PROGRAM.test(found) ? path.extname(found).toLowerCase() : "";
+        relative = core.agent.binary + (extension && !core.agent.binary.toLowerCase().endsWith(extension) ? extension : "");
         const destination = path.resolve(staged, relative);
         // releaseProblem already refused an agent.binary that isn't a plain file name; checked again before the move.
         if (!plainName(relative) || path.dirname(destination) !== path.resolve(staged)) throw fail("The release’s {path} points outside it.", { path: relative });
@@ -414,7 +461,7 @@ function createCoreManager({ dataDir, getConfig, save, emit = () => {}, setCoreC
       const entry = path.join(staged, relative);
       // A symlinked entry must not lead out of the release (chmod and --version follow it).
       if (!within(fs.realpathSync(entry), fs.realpathSync(staged))) throw fail("The release’s {path} points outside it.", { path: relative });
-      if (asset.runner !== "node") fs.chmodSync(entry, 0o755);
+      if (asset.runner !== "node" && !windows) fs.chmodSync(entry, 0o755);
       const version = await versionOf(entry, asset.runner ?? "", asset.versionArgs ?? ["--version"], signal);
       checkCancel();
       if (!version) throw fail("The downloaded {binary} didn’t start.", { binary: core.agent.binary ?? path.basename(relative) });
@@ -506,9 +553,24 @@ function createCoreManager({ dataDir, getConfig, save, emit = () => {}, setCoreC
     }
     try { fs.mkdirSync(dir, { recursive: true, mode: 0o700 }); } catch { return null; }
     const quote = (value) => `'${String(value).replace(/'/g, `'\\''`)}'`;
+    // Windows: a `<name>.cmd` batch shim (cmd.exe and PowerShell both find it through PATHEXT); %* passes the arguments
+    // on. ELECTRON_RUN_AS_NODE only when the Node is this app's Electron binary, set inside setlocal so it doesn't
+    // leak into the terminal session that ran the shim.
+    const shimName = (name) => (windows ? `${name}.cmd` : name);
+    // R10: cmd.exe reads a batch file in the console code page, so a non-ASCII path (C:\Users\张三\…) is written
+    // through %APPDATA%/%USERPROFILE%, or else run under chcp 65001 (batch-file.cjs).
+    const cmdQuote = (value) => batchPath(value, env);
+    const windowsShim = (name, installed) => {
+      const lines = ["@echo off", `rem OpenClaude Desktop: the ${name} it installed${installed.runner === "node" ? ", under its own Node" : ""}.`, "setlocal"];
+      if (installed.runner === "node") {
+        if (process.versions.electron && nodeBinary() === process.execPath) lines.push("set ELECTRON_RUN_AS_NODE=1");
+        lines.push(`${cmdQuote(nodeBinary())} ${cmdQuote(installed.path)} %*`);
+      } else lines.push(`${cmdQuote(installed.path)} %*`);
+      return batchFile(lines);
+    };
     for (const [name, installed] of wanted) {
-      const file = path.join(dir, name);
-      const body = installed.runner === "node"
+      const file = path.join(dir, shimName(name));
+      const body = windows ? windowsShim(name, installed) : installed.runner === "node"
         ? `#!/bin/sh\n# OpenClaude Desktop: the ${name} it installed, under its own Node.\nELECTRON_RUN_AS_NODE=1 exec ${quote(nodeBinary())} ${quote(installed.path)} "$@"\n`
         : `#!/bin/sh\n# OpenClaude Desktop: the ${name} it installed.\nexec ${quote(installed.path)} "$@"\n`;
       try {
@@ -518,7 +580,8 @@ function createCoreManager({ dataDir, getConfig, save, emit = () => {}, setCoreC
       } catch {}
     }
     // A shim for an agent no longer installed by the app goes.
-    try { for (const entry of fs.readdirSync(dir)) if (!wanted.has(entry)) { try { fs.rmSync(path.join(dir, entry), { force: true }); } catch {} } } catch {}
+    const shims = new Set([...wanted.keys()].map(shimName));
+    try { for (const entry of fs.readdirSync(dir)) if (!shims.has(entry)) { try { fs.rmSync(path.join(dir, entry), { force: true }); } catch {} } } catch {}
     return dir;
   }
 

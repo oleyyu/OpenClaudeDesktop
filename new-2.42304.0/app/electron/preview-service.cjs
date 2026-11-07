@@ -42,6 +42,10 @@ const os = require("node:os");
 const path = require("node:path");
 const crypto = require("node:crypto");
 const { spawn, execFile } = require("node:child_process");
+// Windows: npm / pnpm / yarn are .cmd shims (spawn needs cmd.exe for them), and a dev server's tree has no process
+// group to signal (taskkill /T /F ends npm → node → vite).
+const { killTree, windowsSpawn } = require("./process-tree.cjs");
+const { pathInside } = require("./fs-paths.cjs");
 const { previewTabKeyCommand } = require("./preview-tab-shortcuts.mjs");
 const { closedTabsPerSession, closedTabSessions, beginSyntheticInput, endSyntheticInput } = require("./generated/preview-tab-shortcuts.mjs");
 const scripts = require("./preview-page-scripts.cjs");
@@ -81,7 +85,16 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const push = (list, entry, limit) => { list.push(entry); if (list.length > limit) list.splice(0, list.length - limit); };
 // A file the preview downloaded from the web carries macOS's quarantine flag (Gatekeeper checks it before it opens),
 // as a browser's download would; one the file already has is kept.
+// Windows: Chromium normally marks a download with the Mark of the Web itself; one it didn't mark gets the Internet
+// zone here (an NTFS Zone.Identifier stream), so SmartScreen / Office Protected View check it before it opens.
 function quarantine(file) {
+  if (process.platform === "win32") {
+    try { if (!fs.lstatSync(file).isFile()) return; } catch { return; }
+    const stream = `${file}:Zone.Identifier`;
+    try { fs.statSync(stream); return; } catch { /* not marked yet */ }
+    try { fs.writeFileSync(stream, "[ZoneTransfer]\r\nZoneId=3\r\nHostUrl=about:internet\r\n", { flag: "wx" }); } catch { /* FAT / exFAT: no streams */ }
+    return;
+  }
   if (process.platform !== "darwin") return;
   try { if (!fs.lstatSync(file).isFile()) return; } catch { return; }
   execFile("/usr/bin/xattr", ["-p", "com.apple.quarantine", file], { timeout: 5000 }, (missing) => {
@@ -128,7 +141,7 @@ function portAnswers(port, host, timeout = 600, netApi = net) {
  * @param {(event: object) => void} [options.broadcast] an app-wide event (every window)
  * @param {string|null} [options.frameDir]   where each session's last dev-server page frame is kept across a restart
  */
-function createPreviewService({ electron, getSession, spawnEnv = async () => ({ ...process.env }), broadcast = () => {}, logger = console, home = process.env.HOME || "", hostWindow = null, reapHiddenMs = REAP_HIDDEN_MS,
+function createPreviewService({ electron, getSession, spawnEnv = async () => ({ ...process.env }), broadcast = () => {}, logger = console, home = process.env.HOME || os.homedir() || "", hostWindow = null, reapHiddenMs = REAP_HIDDEN_MS,
   keepCookies = () => false, setKeepCookies = () => {}, getStorageMode = () => undefined, setStorageMode = () => {}, isCoworkSession = () => false, getStoredPartitions = () => [], setStoredPartitions = () => {},
   frameDir = null, getAllowedOrigins = () => [], setAllowedOrigins = () => {},
   // R3b-preview seams (tests pass stand-ins; no real port, process or lsof): the sockets the port policy and readiness
@@ -225,7 +238,7 @@ function createPreviewService({ electron, getSession, spawnEnv = async () => ({ 
       const owner = allPreviews().find((preview) => preview.view && !preview.view.webContents.isDestroyed() && preview.view.webContents.id === details.webContentsId);
       if (/^file:/i.test(details.url)) {
         let file = "";
-        try { file = decodeURIComponent(new URL(details.url).pathname); } catch { /* invalid */ }
+        file = launch.fileUrlPath(details.url) || ""; // C:\… on Windows (the URL's pathname is /C:/…)
         callback({ cancel: !owner || !launch.insideFolderReal(owner.cwd, file) });
         return;
       }
@@ -399,6 +412,10 @@ function createPreviewService({ electron, getSession, spawnEnv = async () => ({ 
       tab.view = null;tab.host = null;
     }
     preview(sessionId).group.lastTabClosed = lastTabClosed;
+    if (lastTabClosed && process.platform === "win32") {
+      const cwd = preview(sessionId).cwd;
+      if (!folderWatched(cwd, (entry) => [...entry.group.tabs.values()].some((tab) => !tab.placeholder))) closeLaunchWatcher(cwd);
+    }
     notify(preview(sessionId), true);
     return { ...snapshot(preview(sessionId)), lastTabClosed };
   }
@@ -923,6 +940,29 @@ function createPreviewService({ electron, getSession, spawnEnv = async () => ({ 
     if (!record.folder) record.folder = watch(cwd, (name) => name === path.dirname(launch.LAUNCH_FILE));
     watchClaude();
   }
+  // A watcher holds its folder open: on Windows that folder (a worktree, the project) can't be renamed or removed
+  // while it lives. So a folder's watchers close once no pane is subscribed to a preview of it (a window that went
+  // away), on Windows also when its last preview tab closes, and on request (closeWatchersUnder) before a folder is
+  // removed. The next pane request for that folder (state / attach) watches it again.
+  function closeLaunchWatcher(cwd) {
+    const record = launchWatchers.get(cwd);
+    if (!record) return;
+    clearTimeout(record.timer);
+    for (const watcher of [record.folder, record.claude]) { try { watcher?.close(); } catch { /* closed */ } }
+    launchWatchers.delete(cwd);
+  }
+  const folderWatched = (cwd, keep) => [...previews.values()].some((entry) => entry.cwd === cwd && keep(entry));
+  function releaseLaunchWatchers() {
+    for (const cwd of [...launchWatchers.keys()]) {
+      if (!folderWatched(cwd, (entry) => [...entry.subscribers].some((sender) => !sender.isDestroyed?.()))) closeLaunchWatcher(cwd);
+    }
+  }
+  /** Close the preview's watchers of `dir` and every folder inside it (e.g. before a worktree is removed); the count. */
+  function closeWatchersUnder(dir) {
+    let closed = 0;
+    for (const cwd of [...launchWatchers.keys()]) if (pathInside(dir, cwd)) { closeLaunchWatcher(cwd); closed += 1; }
+    return closed;
+  }
 
   // ------------------------------------------------------------------ pane requests
   function subscribe(entry, sender) {
@@ -936,6 +976,7 @@ function createPreviewService({ electron, getSession, spawnEnv = async () => ({ 
           active.subscribers.delete(sender);
           for (const tab of active.group.tabs.values()) if (tab.host?.sender === sender) { tab.host = null; place(tab); }
         }
+        releaseLaunchWatchers();
       };
       subscriberCleanup.set(sender, cleanup);sender.once("destroyed", cleanup);
     }
@@ -1269,7 +1310,8 @@ function createPreviewService({ electron, getSession, spawnEnv = async () => ({ 
       if (halted()) return stopped;
       let child;
       try {
-        child = spawnProcess(config.command, args, { cwd: config.cwd, env: { ...env, FORCE_COLOR: "1", ...config.env, PORT: String(port) }, detached: process.platform !== "win32", stdio: ["ignore", "pipe", "pipe"] });
+        const spawned = windowsSpawn(config.command, args, { cwd: config.cwd, env: { ...env, FORCE_COLOR: "1", ...config.env, PORT: String(port) }, detached: process.platform !== "win32", windowsHide: true, stdio: ["ignore", "pipe", "pipe"] });
+        child = spawnProcess(spawned.command, spawned.args, spawned.options);
       } catch (error) {
         return fail("spawn", `Couldn’t start \`${config.command}\`: ${error.message}`);
       }
@@ -1336,10 +1378,12 @@ function createPreviewService({ electron, getSession, spawnEnv = async () => ({ 
     return server;
   }
   // A dev server runs in its own process group (spawnServer detached): a signal goes to the whole group, so the
-  // programs npm or a shell started for it get it too.
+  // programs npm or a shell started for it get it too. Windows has no groups: taskkill /T /F ends the tree (the
+  // signal name doesn't matter there; killing only cmd.exe / npm left vite holding the port).
   function signalGroup(child, name) {
     if (!child?.pid) return;
-    try { if (process.platform !== "win32") process.kill(-child.pid, name); else child.kill(name); } catch { try { child.kill(name); } catch { /* gone */ } }
+    if (process.platform === "win32") { if (!killTree(child.pid, name)) { try { child.kill(); } catch { /* gone */ } } return; }
+    try { process.kill(-child.pid, name); } catch { try { child.kill(name); } catch { /* gone */ } }
   }
   function stopProcess(server) {
     const child = server.child;
@@ -1368,6 +1412,17 @@ function createPreviewService({ electron, getSession, spawnEnv = async () => ({ 
     }
     server.status = "stopped";
     notifyFolder(server.cwd);
+  }
+  /**
+   * Stop the dev servers started in `dir` or a folder inside it and close the preview's watchers there: on Windows a
+   * running server's working folder (and a watched folder) can't be removed, so main calls this before a worktree
+   * goes. Resolves to the number of servers stopped.
+   */
+  async function releaseFolder(dir) {
+    const inside = [...servers.values()].filter((server) => typeof server.cwd === "string" && pathInside(dir, server.cwd) && !server.attach);
+    await Promise.all(inside.map((server) => haltServer(server)));
+    closeWatchersUnder(dir);
+    return inside.length;
   }
   function serverLogs(sessionId, name, { lines = 200, ansi = true } = {}) {
     const entry = preview(sessionId);
@@ -1894,7 +1949,7 @@ function createPreviewService({ electron, getSession, spawnEnv = async () => ({ 
       default: throw new Error("Unknown operation.");
     }
   }
-  return { call, forSession, snapshot: (id) => snapshot(preview(id)), dispose, launchInfo, windowClosed, PARTITION, EPHEMERAL_PARTITION, _previews: previews, _servers: servers };
+  return { call, forSession, snapshot: (id) => snapshot(preview(id)), dispose, launchInfo, windowClosed, closeWatchersUnder, releaseFolder, _launchWatchers: launchWatchers, PARTITION, EPHEMERAL_PARTITION, _previews: previews, _servers: servers };
 }
 
 module.exports = { createPreviewService, previewShortcut, PARTITION, EPHEMERAL_PARTITION, PRESETS, REAP_HIDDEN_MS, RECLAIMED_NOTE };

@@ -4,15 +4,17 @@
 // On the DeepSeek core a non-empty global text IS the whole system prompt (customSystemPrompt);
 // empty keeps the built-in prompt. Codex appends it to its own prompt instead.
 import { t } from '../i18n/index.mjs';
+import { folderContains, isAbsoluteFolder, isWindowsPath, trimFolder } from './host-paths.mjs';
 export const INSTRUCTIONS_MAX_CHARS = Infinity;
 export const INSTRUCTIONS_MAX_PROJECTS = 64;
 export const INSTRUCTIONS_MAX_PATH = 1024;
 export const INSTRUCTIONS_DEFAULT = Object.freeze({ enabled: true, global: '', projects: Object.freeze({}) });
 
 const cleanText = (value) => String(value).replace(/\r\n?/g, '\n');
-const validPath = (key) => typeof key === 'string' && key.startsWith('/') && key.length <= INSTRUCTIONS_MAX_PATH && !key.includes('\0');
-// A trailing slash (other than "/") does not make a different project.
-const projectKey = (key) => (key.length > 1 ? key.replace(/\/+$/, '') || '/' : key);
+// An absolute folder: /… on macOS, C:\… / C:/… / \\server\share on Windows.
+const validPath = (key) => isAbsoluteFolder(key) && key.length <= INSTRUCTIONS_MAX_PATH && !key.includes('\0');
+// A trailing slash (other than "/" or a drive root "C:\") does not make a different project.
+const projectKey = (key) => trimFolder(key);
 
 /** Lenient read: always returns a valid object (never throws). */
 export function normalizeInstructions(value) {
@@ -59,10 +61,10 @@ export function validateInstructions(value) {
 
 /** The settings entry for cwd: the longest key equal to cwd or one of its parents. */
 export function projectInstructionsFor(prefs, cwd) {
-  if (typeof cwd !== 'string' || !cwd.startsWith('/')) return null;
+  if (!isAbsoluteFolder(cwd)) return null;
   let best = null;
   for (const key of Object.keys(prefs?.projects || {})) {
-    const within = key === '/' || cwd === key || cwd.startsWith(key + '/');
+    const within = folderContains(key, cwd); // Windows: case-insensitive, \ and / alike
     if (within && (!best || key.length > best.length)) best = key;
   }
   return best ? { root: best, ...prefs.projects[best] } : null;
@@ -80,7 +82,11 @@ export function withProjectInstructions(prefs, root, entry) {
 /** Folders offered on the Instructions page: cwd first, then session folders (unique, ≤20). */
 export function instructionsProjectList(cwd, threadMetadata) {
   const seen = new Set(), list = [];
-  const add = (value) => { if (typeof value === 'string' && value.startsWith('/') && !seen.has(value) && list.length < 20) { seen.add(value); list.push(value); } };
+  const add = (value) => {
+    if (!isAbsoluteFolder(value) || list.length >= 20) return;
+    const key = isWindowsPath(value) ? trimFolder(value).replace(/\//g, '\\').toLowerCase() : value;
+    if (!seen.has(key)) { seen.add(key); list.push(value); }
+  };
   add(cwd);
   for (const meta of Object.values(threadMetadata && typeof threadMetadata === 'object' ? threadMetadata : {})) add(meta?.cwd);
   return list;

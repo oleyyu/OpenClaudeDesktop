@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { folderName, pathBasename } from "./host-path-model.mjs";
 import { Icon } from './icons';
 import { Px as ProgressSection, Fx as EmptyOutputs } from './generated/current-chat/c21f11e6d-CxD82rYo.js';
 import { j as Panel, N as Section, m as MergedContext, v as LayoutContext, _ as flatLayout, y as row } from './generated/current-chat/cc5a62f6f-BgHG1Ree.js';
@@ -62,10 +63,10 @@ export function SourceCoworkProgress({ plan, items, cwd, running, sessionId, onO
           disableTodoCommentAttachment maxContentHeight="24rem" />
         <Section title={t('Outputs')} isExpanded={outputsOpen} onToggle={() => setOutputsOpen(value => !value)} maxContentHeight="24rem">
           {files.length ? files.map(file => <button key={file.path} className={row.button} onClick={() => onOpenFile(file.path)} title={file.path}>
-            <span className={row.glyph}><Icon name="File" size={20} /></span><span className={row.name}>{file.path.split('/').pop()}</span>
+            <span className={row.glyph}><Icon name="File" size={20} /></span><span className={row.name}>{pathBasename(file.path)}</span>
           </button>) : <EmptyOutputs />}
           {cwd && <button className={row.button} onClick={onOpenFolder} title={cwd} aria-label={t('Working folder')}>
-            <span className={row.glyph}><Icon name="Folder" size={20} /></span><span className={row.name}>{cwd.split('/').pop()}</span>
+            <span className={row.glyph}><Icon name="Folder" size={20} /></span><span className={row.name}>{folderName(cwd)}</span>
           </button>}
         </Section>
       </Panel>

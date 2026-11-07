@@ -45,6 +45,7 @@ import { agentView, subAgentMessageError } from "./agent-model.mjs";
 import { ADD_TO_PROMPT_EVENT, promptAdditions, serializeLineComment } from "./inline-comments.mjs";
 import { paneComposers, relayPanePrompt } from "./popout-r4f-relay.mjs";
 import { groupFileTools, pathChoices } from "./file-tool-model.mjs";
+import { folderName, isInsidePath, pathBasename } from "./host-path-model.mjs";
 // R4g-mcp MA-7: MCP App rows (KBe "mcp_app") stand alone in the tool grouping; widgets fill the composer (onPrefillComposer).
 import { useMcpAppTranscript, noteMcpAppSendContext } from "./source-mcp-app.jsx";
 import { messageItemText, quoteBlock } from "./transcript-context-menu-model.mjs";
@@ -330,7 +331,36 @@ import { paneKeyAction, paneKeyContext } from "./pane-keys-model.mjs";
 import { useFocusRegionNavigation } from "./use-focus-regions.js";
 import { WATCH_RECORD_COPY, useWatchRecord } from "./source-watch-record.jsx";
 import { demonstrationDuration, demonstrationTitle } from "./watch-record-model.mjs";
-import { isMacPlatform } from "./pane-keys-model.mjs";
+import { isMacPlatform, macChordView } from "./pane-keys-model.mjs";
+const MAC_KEYS = isMacPlatform();
+// Windows build: <html data-platform="win32"> keeps the native window controls' corner free and drops the
+// traffic lights' spacer (style.css); macOS keeps its titlebar as is.
+const HOST_PLATFORM = typeof navigator !== "undefined" && /Win/i.test(navigator.platform || "") ? "win32" : "darwin";
+if (typeof document !== "undefined") document.documentElement.dataset.platform = HOST_PLATFORM;
+// The titlebar under the caption buttons is whichever header reaches the window's top-right corner (side panes are
+// inset cards, 8px from the edge): the session
+// toolbar, or a side pane's header (terminal, preview, files…) once a pane sits to its right, in any tile layout
+// or split. That one header gets data-win-caption and ends before the buttons (style.css).
+if (HOST_PLATFORM === "win32" && typeof window !== "undefined" && typeof MutationObserver !== "undefined") {
+  const HEADERS = ".workspace-toolbar.st-toolbar, .source-pane-header";
+  let queued = false;
+  const mark = () => {
+    queued = false;
+    const width = document.documentElement.clientWidth;
+    for (const header of document.querySelectorAll(HEADERS)) {
+      const box = header.getBoundingClientRect();
+      const corner = box.width > 0 && box.top < 40 && box.bottom > 0 && box.right >= width - 24;
+      if (corner !== header.hasAttribute("data-win-caption")) header.toggleAttribute("data-win-caption", corner);
+    }
+  };
+  const schedule = () => { if (!queued) { queued = true; requestAnimationFrame(mark); } };
+  window.addEventListener("resize", schedule);
+  const start = () => {
+    new MutationObserver(schedule).observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["style", "class", "data-tile-layout", "data-has-pane"] });
+    schedule();
+  };
+  if (document.body) start(); else document.addEventListener("DOMContentLoaded", start, { once: true });
+}
 const api = window.desktop;
 // index.html ships data-mode="system" (the loaded CSS resolves it through
 // prefers-color-scheme, which nativeTheme.themeSource drives). Before the first
@@ -1503,13 +1533,13 @@ function App({ side = 0, initialSession = null }) {
       pendingFileOpen.current = picked;
       navigate(null);
       setCwd(picked.folder);
-      toasts?.add(t("Send a message to start a session in {folder}. {file} opens in Files when it starts.", { folder: picked.folder.split("/").pop() || picked.folder, file: picked.path.split("/").pop() }));
+      toasts?.add(t("Send a message to start a session in {folder}. {file} opens in Files when it starts.", { folder: folderName(picked.folder), file: pathBasename(picked.path) }));
     } catch (error) { setError(error.message); }
   }
   useEffect(() => {
     const pending = pendingFileOpen.current;
     if (!pending || !current || !workdir || !session) return;
-    if (pending.path !== workdir && !pending.path.startsWith(`${workdir}/`)) return;
+    if (!isInsidePath(workdir, pending.path)) return;
     pendingFileOpen.current = null;
     const timer = setTimeout(() => openFileRef({ path: pathChoices(pending.path, workdir)?.relative || pending.path }), 0);
     return () => clearTimeout(timer);
@@ -3251,7 +3281,9 @@ function App({ side = 0, initialSession = null }) {
   // A reconnect onto a core without side questions closes an open card.
   useEffect(() => { if (!commandContext.sideQuestions) setSideChat(value => value.open ? { open: false, pending: null } : value); }, [commandContext.sideQuestions]);
   useEffect(() => {
-    const toggle = (event) => {
+    const toggle = (keyEvent) => {
+      // toggle_side_chat: ⌘; on macOS, Ctrl+; elsewhere (official non-mac row): macChordView reads Ctrl as ⌘ off macOS.
+      const event = macChordView(keyEvent, { mac: MAC_KEYS });
       if (event.repeat || event.isComposing || !event.metaKey || event.shiftKey || event.altKey || event.ctrlKey || event.key !== ";") return;
       if (!currentRef.current || settings || !splitActiveRef.current) return;
       // A core without side questions (Codex) leaves ⌘; alone; an open card still closes.
@@ -6351,7 +6383,7 @@ function App({ side = 0, initialSession = null }) {
     onSend: (text) => sendFixedTurn(text, [], { queueWhileRunning: true }) });
   const turnBoxComposer = useTurnBoxComposerHandle({ element: () => textarea.current, text: () => liveComposer.current?.text ?? draft, setText: setDraft,
     bashMode: () => shellModeActive(liveComposer.current?.text ?? draft, boot?.core, shellOptions) });
-  const trafficLightSpacer = trafficLightSpacerWidth(zoomFactor);
+  const trafficLightSpacer = HOST_PLATFORM === "win32" ? 12 : trafficLightSpacerWidth(zoomFactor);
   // B4 (cc43287c9 :26515, H4 start): a suggested task read to the end of its preview starts as its own session while
   // the Home draft stays — send()'s 'Send and stay here' path with the task's prompt (stayOnDraft + besideDraft).
   // 'busy' while an earlier background start is in flight; 'blocked' when Home can't send now (the start card then puts

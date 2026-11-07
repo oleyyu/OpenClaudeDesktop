@@ -7,6 +7,8 @@ export function responseImageTarget(src,cwd) {
   let path=src;
   if(/^file:/i.test(src)) {
     try {const url=new URL(src);if(url.hostname)return {kind:'unsupported'};path=decodeURIComponent(url.pathname);}catch{return {kind:'unsupported'};}
+    // file:///C:/a.png names C:/a.png (the URL path keeps a slash before the drive letter).
+    if(/^\/[A-Za-z]:\//.test(path))path=path.slice(1);
   } else {
     if(/^[a-z][a-z0-9+.-]*:|^\/\//i.test(src))return {kind:'unsupported'};
     try {path=decodeURI(src);}catch{}
