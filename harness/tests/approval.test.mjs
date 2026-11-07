@@ -370,7 +370,7 @@ test('index.js gates its Ask-mode pre-execute through preExecuteDecision and a c
   const { readFile } = await import('node:fs/promises')
   const source = await readFile(new URL('../packages/codex-app-server/src/index.js', import.meta.url), 'utf8')
   const hook = source.slice(source.indexOf("ctx.on('tools/pre-execute'"), source.indexOf("ctx.on('approval/request'"))
-  assert.match(hook, /preExecuteDecision\(\{ permission: thread\.permission, toolName: exec\.name, args: parseArguments\(exec\.arguments\), cwd: thread\.cwd \}\)/)
+  assert.match(hook, /preExecuteDecision\(\{ permission: thread\.permission, toolName: exec\.name, args: parseArguments\(exec\.arguments\), cwd: thread\.cwd, \.\.\.shell \}\)/)
   assert.match(hook, /root\.permission\.mode !== 'acceptEdits'/)
   assert.match(hook, /acceptsEdit\(\{ permission: root\.permission, toolName: exec\.name, args: parseArguments\(exec\.arguments\), cwd, root: root\.cwd \}\)/)
   // A failing path check asks rather than letting the call through.

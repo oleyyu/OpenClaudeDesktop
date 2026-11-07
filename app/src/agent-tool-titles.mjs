@@ -3,6 +3,7 @@
 // preview" / "Started preview" / "Couldn’t start preview", …). A core reports a call as an mcpToolCall with
 // server "code_desktop" (Codex, the DeepSeek core, ACP agents), or with the tool prefixed "code_desktop_" (OpenCode).
 import { t, tn } from "../electron/i18n/index.mjs";
+import { pathBasename } from "./host-path-model.mjs";
 
 export const APP_TOOL_SERVER = "code_desktop";
 const str = (value) => (typeof value === "string" ? value : "");
@@ -13,7 +14,7 @@ const firstLine = (value) => { const line = str(value).split("\n").find((part) =
 const workflowName = (args) => str(args.name) || (/\bmeta\s*=\s*\{[\s\S]*?\bname\s*:\s*(["'`])([^"'`\n]{1,120})\1/.exec(str(args.script))?.[2] ?? null) || (str(args.scriptPath) ? str(args.scriptPath).split("/").pop() : null);
 
 const resultText = (item) => (Array.isArray(item?.result?.content) ? item.result.content : []).filter((part) => part?.type === "text" && typeof part.text === "string").map((part) => part.text).join("\n");
-const baseName = (file) => str(file).split("/").filter(Boolean).pop() || str(file);
+const baseName = (file) => pathBasename(str(file)) || str(file);
 const sentFiles = (args) => (Array.isArray(args.files) ? args.files : typeof args.files === "string" ? [args.files] : []).filter((file) => typeof file === "string" && file.trim());
 const clip = (value, max = 80) => { const line = firstLine(value); return line ? (line.length > max ? `${line.slice(0, max - 1)}…` : line) : null; };
 

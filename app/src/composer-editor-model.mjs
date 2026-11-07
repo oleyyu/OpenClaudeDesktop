@@ -1,4 +1,5 @@
 import {Schema,Slice} from 'prosemirror-model';
+import { pathBasename } from "./host-path-model.mjs";
 import {TextSelection,NodeSelection,Plugin} from 'prosemirror-state';
 // shared-5 :15975-16060 (the composer's Tiptap extensions) + ca80fca8d :15427 (bold/italic only with emphasisMarks,
 // which Code sessions leave off): paragraphs and a code block ($A CodeBlock, exitOnTripleEnter false), the link mark
@@ -32,7 +33,7 @@ export const composerSchema=new Schema({nodes:{
 }});
 export const ATOM_NODES=Object.freeze(['command_chip','mention']);
 export const leafText=node=>node.isText?node.text:node.type.name==='command_chip'?'/'+node.attrs.id:node.type.name==='mention'?'@'+node.attrs.path:node.type.name==='hard_break'?'\n':'';
-export const mentionLabel=path=>String(path||'').split('/').filter(Boolean).pop()||String(path||'');
+export const mentionLabel=path=>pathBasename(String(path||''))||String(path||'');
 // ---- Markdown of the marks and the code block (shared-175 Ty/wy/dy/ty/Qv, the composer's serializer) ----
 export const LINK_PROTOCOL=/^(https?|mailto|tel):/i; // ca80fca8d zM
 const LINK_SAFE=/^(?:https?:\/\/|mailto:|tel:)[\w\-.~:/?#[\]@!$&'*+,;=%{}|^]+$/i,LINK_PARENS=/^(?:https?:\/\/|mailto:|tel:)[\w\-.~:/?#[\]@!$&'()*+,;=%{}|^]+$/i;

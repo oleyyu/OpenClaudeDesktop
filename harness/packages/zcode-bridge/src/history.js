@@ -11,7 +11,11 @@
 
 import { childSessionIdOf, isRecord, planItem, todoPlan, toolItem } from './items.js'
 import { stripInstructions } from './instructions.js'
+import { fileURLToPath } from 'node:url'
 import { applyWorkflowToolResult, isWorkflowRunTool, workflowNoticeItems, workflowRunOf, workflowState, workflowSettingsNotice } from './workflows.js'
+
+// file:///C:/x is C:\x on Windows (fileURLToPath); a URL it refuses keeps the earlier reading.
+const fileUrlPath = (url) => { try { return fileURLToPath(url) } catch { return decodeURIComponent(url.slice(7)) } }
 
 const seconds = (ms) => (Number.isFinite(ms) ? Math.floor(ms / 1000) : null)
 const count = (value) => (Number.isFinite(value) ? value : 0)
@@ -30,9 +34,10 @@ export function userContent(message, recorded) {
     if (part.type === 'text' && !part.synthetic && !part.ignored) content.push({ type: 'text', text: stripInstructions(part.text ?? ''), text_elements: [] })
     else if (part.type === 'file') {
       const url = String(part.url ?? '')
-      const local = url.startsWith('file://') ? decodeURIComponent(url.slice(7)) : url.startsWith('/') ? url : null
+      // fileURLToPath: file:///C:/x is C:\x on Windows (url.slice(7) would be /C:/x); the same path on macOS.
+      const local = url.startsWith('file://') ? fileUrlPath(url) : url.startsWith('/') || /^[A-Za-z]:[\\/]/.test(url) ? url : null
       if (String(part.mime ?? '').startsWith('image/')) content.push(local ? { type: 'localImage', path: local } : { type: 'image', url })
-      else if (local) content.push({ type: 'mention', name: part.filename ?? local.split('/').pop(), path: local })
+      else if (local) content.push({ type: 'mention', name: part.filename ?? local.split(/[\\/]/).pop(), path: local })
     }
   }
   return content.length ? content : [{ type: 'text', text: '', text_elements: [] }]

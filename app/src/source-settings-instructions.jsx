@@ -1,4 +1,6 @@
 import React, { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
+import { pathBasename } from "./host-path-model.mjs";
+import { revealInFileManagerLabel } from "./file-manager-labels.mjs";
 import { createManualTextSave } from './manual-text-save.mjs';
 import { SourceSettingsButton } from './source-settings-button.jsx';
 import { SourceSwitch } from './source-switch.jsx';
@@ -18,7 +20,7 @@ import { coreCapabilities, coreForEngine, coreName, coreSupports } from '../elec
 
 // Counts follow the UI language (getLocale), read at render so a language switch applies.
 const countLabel = n => Number.isFinite(INSTRUCTIONS_MAX_CHARS) ? `${n.toLocaleString(getLocale())} / ${INSTRUCTIONS_MAX_CHARS.toLocaleString(getLocale())}` : tn(n, '{count} character', '{count} characters', { count: n.toLocaleString(getLocale()) });
-const baseName = p => (p === '/' ? '/' : p.split('/').filter(Boolean).at(-1) || p);
+const baseName = p => (p === '/' ? '/' : pathBasename(p) || p);
 // Paths read ~-abbreviated, as on the Commands and Cores pages (the full path stays in the title).
 const homePath = p => String(p || '').replace(/^\/Users\/[^/]+(?=\/|$)/, '~');
 // 'AGENTS.md and CLAUDE.md' / 'GEMINI.md': the distinct file names a core reads, joined in the UI language.
@@ -215,7 +217,7 @@ export function SourceInstructionsSettings({ config = {}, boot = null, engine, d
         {file && <span className="ins-file-actions">
           {file.exists
             ? <><SourceSettingsButton size="sm" busy={fileBusy === 'open-file'} onClick={() => fileOp('open-file')}>{t('Open file')}</SourceSettingsButton>
-              <SourceSettingsButton size="sm" variant="ghost" busy={fileBusy === 'reveal-file'} onClick={() => fileOp('reveal-file')}>{t('Show in Finder')}</SourceSettingsButton></>
+              <SourceSettingsButton size="sm" variant="ghost" busy={fileBusy === 'reveal-file'} onClick={() => fileOp('reveal-file')}>{revealInFileManagerLabel()}</SourceSettingsButton></>
             : <SourceSettingsButton size="sm" busy={fileBusy === 'create-file'} onClick={() => fileOp('create-file')}>{t('Create file')}</SourceSettingsButton>}
         </span>}
       </div> }),
@@ -264,7 +266,7 @@ export function SourceInstructionsSettings({ config = {}, boot = null, engine, d
         <span className="ss-control-status">{file.exists ? sizeLabel(file.bytes) : t('Not created')}</span>
         {file.exists
           ? <><SourceSettingsButton size="sm" busy={coreFileBusy === `core-file-open:${file.path}`} onClick={() => void coreFileOp('core-file-open', file)}>{t('Open file')}</SourceSettingsButton>
-            <SourceSettingsButton size="sm" variant="ghost" busy={coreFileBusy === `core-file-reveal:${file.path}`} onClick={() => void coreFileOp('core-file-reveal', file)}>{t('Show in Finder')}</SourceSettingsButton></>
+            <SourceSettingsButton size="sm" variant="ghost" busy={coreFileBusy === `core-file-reveal:${file.path}`} onClick={() => void coreFileOp('core-file-reveal', file)}>{revealInFileManagerLabel()}</SourceSettingsButton></>
           : file.scope === 'global' && <SourceSettingsButton size="sm" busy={coreFileBusy === `core-file-create:${file.path}`} onClick={() => void coreFileOp('core-file-create', file)}>{t('Create file')}</SourceSettingsButton>}
       </span>))} />}
     {deepseek

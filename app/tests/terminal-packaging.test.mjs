@@ -84,7 +84,7 @@ test('a production-like app.asar loads node-pty from the unpacked prebuild and r
       fs.chmodSync(path.join(stage, relative), stat.mode);
     };
     await copy('node_modules/node-pty');
-    for (const file of ['terminal-service.cjs', 'terminal-model.mjs', 'proxy-env.cjs', 'terminal-shell-integration.cjs', 'generated/terminal-shell.cjs']) await copy(path.join('electron', file));
+    for (const file of ['terminal-service.cjs', 'terminal-model.mjs', 'proxy-env.cjs', 'terminal-shell-integration.cjs', 'generated/terminal-shell.cjs', 'process-tree.cjs', 'fs-paths.cjs']) await copy(path.join('electron', file));
     assert.ok(!fs.existsSync(path.join(stage, 'node_modules/node-pty/src')));
     fs.writeFileSync(path.join(stage, 'package.json'), JSON.stringify({ name: 'probe', main: 'probe.cjs' }));
     fs.writeFileSync(path.join(stage, 'probe.cjs'), `

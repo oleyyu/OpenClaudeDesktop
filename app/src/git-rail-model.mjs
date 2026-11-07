@@ -1,4 +1,5 @@
 import { t, tn } from "../electron/i18n/index.mjs";
+import { pathBasename } from "./host-path-model.mjs";
 
 // Pure model for the rail layout of the repository row (git-status-card.js Ii
 // rail branch 1128-1200, Zi 1633-1760, $i/ea 1762-1865, na 1867-2075, rs
@@ -40,7 +41,7 @@ export function gitRepoMenuItems({ openFolder = true, copyPath = true, openTermi
   return items;
 }
 
-const basename = (value = "") => value.split("/").filter(Boolean).pop() || value;
+const basename = (value = "") => pathBasename(value) || value;
 const isCount = (value) => Number.isFinite(value) && value >= 0;
 
 /** `Oe = prMode === "commit" || prMode === "none"`: local-only presentation. */

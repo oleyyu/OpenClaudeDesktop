@@ -73,7 +73,7 @@ function refKey(ref) {
 /** The run a dispatch tool call starts. Until ZCode names the run, its id is the call's. */
 export function workflowRunOf({ callId, tool, input, time = Date.now() }) {
   const args = isRecord(input) ? input : {}
-  const fromPath = text(args.path) ? text(args.path).split('/').pop().replace(/\.[^.]+$/, '') : null
+  const fromPath = text(args.path) ? text(args.path).split(/[\\/]/).pop().replace(/\.[^.]+$/, '') : null
   const name = text(args.name) ?? text(isRecord(args.saved) ? args.saved.name : args.saved) ?? fromPath ?? 'workflow'
   const runId = tool === 'ResumeWorkflowRun' ? text(args.run_id) : null
   return {

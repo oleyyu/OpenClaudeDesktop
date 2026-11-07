@@ -18,6 +18,28 @@ const SCROLL_KEYS = new Set(["ArrowUp", "ArrowDown", "PageUp", "PageDown"]);
 export const isMacPlatform = (nav = globalThis.navigator) =>
   !nav || /Mac|iPhone|iPad/.test(nav.platform || nav.userAgent || "");
 
+// Windows / Linux chords. The app's ⌘ chords are Ctrl there (metaKey is the Windows key, which the OS keeps for
+// itself and which is never a chord modifier); the official bindings' "non-mac" rows say the same (shared-1 Wy:
+// cmd → ctrl). primaryModifier is ⌘ on macOS and Ctrl elsewhere.
+export const primaryModifier = (event, { mac = isMacPlatform() } = {}) => !!(mac ? event?.metaKey : event?.ctrlKey);
+/**
+ * A Mac-written chord matcher's view of `event`: on macOS the event itself; elsewhere a copy with Ctrl read as ⌘ and
+ * the Windows key as ⌃, so a ⌘X matcher matches Ctrl+X and a ⌃-only matcher (⌃O, ⌃`) never matches a Ctrl chord by
+ * accident (callers bind those explicitly). An AltGr chord (Ctrl+Alt with AltGraph, which types a character on many
+ * layouts) loses its Ctrl, as the official split keys do (shared-23 u4 getModifierState("AltGraph")).
+ */
+export function macChordView(event, { mac = isMacPlatform() } = {}) {
+  if (mac || !event) return event;
+  const altGraph = !!event.ctrlKey && !!event.altKey && !!event.getModifierState?.("AltGraph");
+  return {
+    type: event.type, key: event.key, code: event.code, keyCode: event.keyCode, repeat: event.repeat,
+    isComposing: event.isComposing, shiftKey: !!event.shiftKey, altKey: !!event.altKey, target: event.target,
+    defaultPrevented: event.defaultPrevented, metaKey: !!event.ctrlKey && !altGraph, ctrlKey: !!event.metaKey,
+    getModifierState: (key) => !!event.getModifierState?.(key),
+    preventDefault: () => event.preventDefault?.(), stopPropagation: () => event.stopPropagation?.(),
+  };
+}
+
 // jZ (Vy): Ctrl+Home / Ctrl+End name Home / End; on macOS Option+↑ / Option+↓ are Page Up / Page Down; any other
 // Ctrl, ⌘ or Option chord is not a pane key. Shift is kept (Shift+letter types its capital).
 export function paneKeyName(event, { mac = isMacPlatform() } = {}) {

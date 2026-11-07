@@ -1,4 +1,5 @@
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { revealInFileManagerLabel } from "./file-manager-labels.mjs";
 import { Vi as ArtifactLibrary } from './generated/current-chat/c230724a2-BxatGObJ.js';
 import { HostMenuButton, HostButton } from './source-chat-adapters.jsx';
 import { fileKindIcon } from './file-kind-icon.mjs';
@@ -34,7 +35,7 @@ export function SourceArtifactLibrary({ call, onCreate, onSession, onPreviewChan
       menu: ({ contextMenuTrigger } = {}) => contextMenuTrigger ?? <HostMenuButton variant="ghost" size="sm" iconOnly icon="DotsHorizontal" aria-label={t('Artifact options')} items={[
         { label: t('Open'), icon: 'Eye', onSelect: () => open(record) },
         { label: t('Open in default app'), icon: 'ArrowUpRight', onSelect: () => act('open-tool-file', { sessionId: record.threadId, path: record.path }) },
-        { label: t('Show in Finder'), icon: 'Folder', onSelect: () => act('reveal-tool-file', { sessionId: record.threadId, path: record.path }) },
+        { label: revealInFileManagerLabel(), icon: 'Folder', onSelect: () => act('reveal-tool-file', { sessionId: record.threadId, path: record.path }) },
         { label: t('Open conversation'), icon: 'Chat', onSelect: () => onSession(record.threadId) },
       ]} />,
     })), [records, query, call, onSession]);

@@ -9,6 +9,7 @@ import {codexAgent,getClient,shutdownClient} from '../third-party/codex-workflow
 import {startCodexSession} from '../third-party/codex-workflows-runner/src/codexSession.js';
 import {joinSharedBudget} from '../third-party/codex-workflows-runner/src/shared-budget.js';
 import {outputSpent,subscribeMeter} from '../third-party/codex-workflows-runner/src/meter.js';
+import processTree from './process-tree.cjs';
 let finishing=false,runtime,scriptFailure,outputText,pendingPause;
 // /workflows p: pause stops admitting agents (runtime.js setWorkflowPaused); a hosted engine has no pause.
 // A pause before the runtime exists (its core still starting) is held and applied when the runtime arrives.
@@ -36,7 +37,12 @@ process.once('message',async options=>{
   const sharedBudget=options.budgetPool?joinSharedBudget(options.budgetPool):undefined;
   if(sharedBudget){const baseline=outputSpent();subscribeMeter(()=>sharedBudget.record(Math.max(0,outputSpent()-baseline)));}
   // commandArgs: the core's arguments (the DeepSeek bridge script + app-server --stdio); absent = the runner's Codex default.
-  const clientOptions={command:options.command,...(Array.isArray(options.commandArgs)?{args:options.commandArgs}:{}),clientInfo:{name:'code-desktop-workflows',title:'OpenClaude Desktop',version:options.version}};
+  // commandOptions: Windows spawn options workflow-service resolved with the command (a .cmd core runs through cmd.exe:
+  // windowsVerbatimArguments, windowsHide). terminate: on Windows a stop ends the core's whole tree (taskkill /T /F) —
+  // killing cmd.exe or a Node core alone would leave codex.exe / the bridge's programs running.
+  const windows=process.platform==='win32';
+  const spawnOptions=options.commandOptions&&typeof options.commandOptions==='object'?{...(options.commandOptions.windowsHide?{windowsHide:true}:{}),...(options.commandOptions.windowsVerbatimArguments?{windowsVerbatimArguments:true}:{})}:null;
+  const clientOptions={command:options.command,...(Array.isArray(options.commandArgs)?{args:options.commandArgs}:{}),...(spawnOptions?{spawnOptions}:{}),...(windows?{terminate:child=>processTree.killTree(child.pid,'SIGKILL',{platform:'win32'})}:{}),clientInfo:{name:'code-desktop-workflows',title:'OpenClaude Desktop',version:options.version}};
   if(!options.plan){
    const client=await getClient(clientOptions);send({type:'connection',pid:client.pid});
    const hosted=await runHarnessWorkflow(client,options,send,value=>{adopt(value);if(typeof value?.pause!=='function')send({type:'pausable',pausable:false});});

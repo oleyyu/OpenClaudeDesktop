@@ -5,6 +5,7 @@
 // else 3000 for a command). Pure: the caller reads the file and spawns (insideFolderReal only resolves symlinks).
 import fs from "node:fs";
 import path from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
 // preview-04: 2.42304.0 X0.parseConfiguration's "autoPort" / "port" type checks and its localhost-url port error,
 // verbatim (scripts/extract-r3b-preview.mjs).
 import { launchPortFields, launchUrlPortMismatch } from "./generated/r3b-preview-launch-fields.mjs";
@@ -246,11 +247,25 @@ export function insideFolderReal(root, file, realpath = fs.realpathSync.native) 
 }
 
 /**
+ * The local path a file: URL names, by this host's rules (Windows: `file:///C:/a%20b` → `C:\\a b`, `file://server/share`
+ * → a UNC path; macOS: a host other than localhost, or an encoded "/", is refused). null when it names none.
+ * `decodeURIComponent(url.pathname)` gave `/C:/…` on Windows, which is no path at all.
+ */
+export function fileUrlPath(value, { platform = process.platform } = {}) {
+  try { return fileURLToPath(value instanceof URL ? value : new URL(String(value)), { windows: platform === "win32" }); } catch { return null; }
+}
+
+/** The file: URL of a local path, by this host's rules (Windows drive letters and backslashes included). */
+export function fileUrlOf(file, { platform = process.platform } = {}) {
+  return pathToFileURL(file, { windows: platform === "win32" }).href;
+}
+
+/**
  * What the preview may show: http(s) anywhere, about:blank, and file:// only inside the session's folder (symlinks
  * followed: insideFolderReal).
  * @returns {{ok: true, url: string} | {ok: false, reason: string}}
  */
-export function navigationAllowed(value, root) {
+export function navigationAllowed(value, root, { platform = process.platform } = {}) {
   let url;
   try { url = new URL(String(value)); } catch { return { ok: false, reason: "That isn’t a valid address." }; }
   if (url.protocol === "http:" || url.protocol === "https:") {
@@ -259,8 +274,8 @@ export function navigationAllowed(value, root) {
   }
   if (url.href === "about:blank") return { ok: true, url: url.href };
   if (url.protocol === "file:") {
-    let file;
-    try { file = decodeURIComponent(url.pathname); } catch { return { ok: false, reason: "That isn’t a valid address." }; }
+    const file = fileUrlPath(url, { platform });
+    if (file === null) return { ok: false, reason: "That isn’t a valid address." };
     if (!insideFolderReal(root, file)) return { ok: false, reason: "The preview opens files from this session’s folder only." };
     return { ok: true, url: url.href };
   }
@@ -271,15 +286,20 @@ export function navigationAllowed(value, root) {
  * The address the URL field means: a full URL as is, localhost / 127.0.0.1 / host:port over http, a path inside the
  * folder (absolute, ~/ or ./) as a file, a bare domain over https, anything else as a web search.
  */
-export function parseUserUrl(text, root, home = "") {
+export function parseUserUrl(text, root, home = "", { platform = process.platform } = {}) {
   const value = String(text ?? "").trim();
   if (!value) return null;
   if (/^[a-z][a-z0-9+.-]*:\/\//i.test(value) || /^about:blank$/i.test(value)) return value;
   if (/^(localhost|127\.0\.0\.1|0\.0\.0\.0|\[::1\])(:\d+)?(\/.*)?$/i.test(value)) return `http://${value}`;
   if (/^:\d{2,5}(\/.*)?$/.test(value)) return `http://localhost${value}`;
-  if (value.startsWith("/") || value.startsWith("~/") || value.startsWith("./") || value.startsWith("../")) {
-    const file = value.startsWith("~/") ? path.join(home || "/", value.slice(2)) : path.resolve(root || "/", value);
-    return `file://${file.split(path.sep).map(encodeURIComponent).join("/")}`;
+  // Windows also takes C:\…, C:/…, \\server\share, \… and .\ ..\ ~\ (either separator).
+  const win = platform === "win32", hostPathApi = win ? path.win32 : path.posix;
+  const homeRelative = win ? /^~[\\/]/ : /^~\//;
+  if (win ? (path.win32.isAbsolute(value) || homeRelative.test(value) || /^\.\.?[\\/]/.test(value))
+    : (value.startsWith("/") || value.startsWith("~/") || value.startsWith("./") || value.startsWith("../"))) {
+    const fallback = win ? (root || home || "C:\\") : "/";
+    const file = homeRelative.test(value) ? hostPathApi.join(home || fallback, value.slice(2)) : hostPathApi.resolve(root || fallback, value);
+    return fileUrlOf(file, { platform });
   }
   if (!/\s/.test(value) && /^[\w-]+(\.[\w-]+)+(:\d+)?(\/.*)?$/.test(value)) return `https://${value}`;
   if (!/\s/.test(value) && /^[\w-]+:\d{2,5}(\/.*)?$/.test(value)) return `http://${value}`;

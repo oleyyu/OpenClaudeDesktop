@@ -9,7 +9,8 @@
 // from inside the packaged app and must not load anything else.
 //
 // Environment:
-//   CODE_DESKTOP_AGENT_TOOLS_SOCKET  the main process's unix socket (in a 0700 temp dir of this app run)
+//   CODE_DESKTOP_AGENT_TOOLS_SOCKET  the main process's unix socket (in a 0700 temp dir of this app run); on Windows a
+//                                    named pipe path (\\.\pipe\openclaude-tools-…), which net.createConnection takes as is
 //   CODE_DESKTOP_AGENT_TOOLS_TOKEN   the random secret that socket requires before anything else
 //   CODE_DESKTOP_AGENT_SESSION       which app session this server works for (a thread id, or a start token the
 //                                    main process binds to the thread once the core has created it); optional:

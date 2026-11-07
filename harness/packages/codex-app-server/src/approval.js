@@ -30,8 +30,9 @@
  */
 
 import { realpath } from 'node:fs/promises'
-import { basename, dirname, isAbsolute, join, resolve, sep } from 'node:path'
+import { basename, dirname, isAbsolute, join, resolve, sep, win32 } from 'node:path'
 import { permissionHint } from './questions.js'
+import { SHELL_TOOLS } from './jobs.js'
 
 // dsh-sandbox approveEscalation: reason `escalate sandbox to <mode>: <why>`,
 // displayReason.en `Allow this operation with <mode> permissions: <why>`.
@@ -62,6 +63,48 @@ const MAX_DELEGATION_WALK = 8
 
 // The file-editing tools Accept edits lets through (dsh tool-fs write.ts / edit.ts).
 const EDIT_TOOLS = new Set(['write', 'edit'])
+
+// Windows runs shell commands unconfined (sandbox-shell.js confine), so the read-only sandbox (Plan, chat, a review
+// turn, a read-only workflow agent) cannot hold a pwsh/bash command there: each one asks the user instead (as the
+// OpenCode bridge's UNSANDBOXED_READ_ONLY), and where nobody can be asked (approval policy 'never') it is refused.
+// The file tools keep their own read-only fence (sandbox-fs.js); workspace-write is unchanged (sandbox-shell.js).
+export const UNSANDBOXED_READ_ONLY_REASON = 'Commands can’t be sandboxed read-only on Windows: confirm this one.'
+export const UNSANDBOXED_READ_ONLY_REFUSAL = 'This session is read-only, and on Windows a command can’t be sandboxed read-only, so it would need your confirmation, which nobody can give here. The command was not run; use the read, glob and grep tools instead.'
+
+// Windows: a UNC or device path (\\host\share, //host/share, \\?\UNC\…, \\.\…). Opening one, even to resolve it, makes
+// Windows authenticate to that host as the user (SMB, then WebDAV): the NTLM hash leaves before any check can refuse.
+const UNC_PATH = /^[\\/]{2}/
+// The Harness file tools' path arguments (dsh tool-fs read/write/edit file_path, tool-fs-search glob/grep path and the
+// glob pattern; a grep pattern is a regex, where a leading \\ is an escaped backslash).
+const FILE_TOOL_PATHS = { read: ['file_path'], read_image: ['file_path'], write: ['file_path'], edit: ['file_path'], glob: ['path', 'pattern'], grep: ['path'] }
+export const REMOTE_PATH_REFUSAL = 'Network and device paths (\\\\server\\share) aren’t opened from a session on Windows: opening one would sign in to that server with your Windows account. Copy the file into the session folder instead.'
+
+/**
+ * The UNC or device path a Harness file tool call names, which the bridge refuses before the tool resolves it (on
+ * Windows only); null when there is none. A session folder that is itself on a share keeps its own files.
+ * @param {{toolName?: string, args?: object, cwd?: string, platform?: string}} input
+ */
+export function remotePathArgument({ toolName, args, cwd, platform = process.platform } = {}) {
+  if (platform !== 'win32' || !args || typeof args !== 'object' || !Object.hasOwn(FILE_TOOL_PATHS, toolName)) return null
+  for (const key of FILE_TOOL_PATHS[toolName]) {
+    const value = args[key]
+    if (typeof value !== 'string' || !UNC_PATH.test(value.trim())) continue
+    if (typeof cwd === 'string' && UNC_PATH.test(cwd)) {
+      const base = win32.resolve(cwd).toLowerCase(), target = win32.resolve(value.trim()).toLowerCase()
+      if (target === base || target.startsWith(base.endsWith('\\') ? base : `${base}\\`)) continue
+    }
+    return value
+  }
+  return null
+}
+
+/**
+ * Whether a call is a shell command that would run unconfined in a read-only sandbox: on Windows only.
+ * @param {{platform?: string, sandbox?: string, toolName?: string}} input sandbox is the call's effective sandbox mode
+ */
+export function unsandboxedReadOnly({ platform = process.platform, sandbox, toolName } = {}) {
+  return platform === 'win32' && sandbox === 'read-only' && SHELL_TOOLS.has(toolName)
+}
 
 /** The sandbox mode an escalation asks for; null when the request is not one. */
 export function escalationModeOf(request) {
@@ -361,11 +404,14 @@ export async function livePermissions(live, params, apply) {
  *            never offered
  *   allow    a write/edit escalation inside the extra roots, or a remembered grant
  *   ask      a card, with its origin, reason and session grant
- * @param {{request: {callId: string, toolName: string, reason?: string, displayReason?: object}, askedCalls: Set<string>, permission: {mode?: string, extraRoots: string[]}, item?: object, args?: object, cwd?: string, grants: SessionGrants}} input
+ * A Windows shell command in a read-only sandbox (unsandboxedReadOnly) is the exception: the bridge's own ask for it
+ * is the only guard left, so Plan and a review turn show its card too (an escalation is still refused).
+ * @param {{request: {callId: string, toolName: string, reason?: string, displayReason?: object}, askedCalls: Set<string>, permission: {mode?: string, extraRoots: string[]}, item?: object, args?: object, cwd?: string, grants: SessionGrants, platform?: string}} input
  */
-export async function approvalDecision({ request, askedCalls, permission, item, args, cwd, grants }, resolveReal = realpath) {
+export async function approvalDecision({ request, askedCalls, permission, item, args, cwd, grants, platform = process.platform }, resolveReal = realpath) {
   const origin = askedCalls.delete(request.callId) ? 'ask' : 'escalation'
-  if (permission.mode === 'plan' || permission.mode === 'review' || permission.approvalPolicy === 'never') return { kind: 'reject', origin }
+  const unconfined = origin === 'ask' && permission.approvalPolicy !== 'never' && unsandboxedReadOnly({ platform, sandbox: permission.sandbox, toolName: request.toolName })
+  if (!unconfined && (permission.mode === 'plan' || permission.mode === 'review' || permission.approvalPolicy === 'never')) return { kind: 'reject', origin }
   const mode = origin === 'escalation' ? escalationModeOf(request) : null
   // A folder the client declared writable needs no card for a file write
   // (Harness workspace-write only knows cwd). Only a recognised sandbox
@@ -373,7 +419,7 @@ export async function approvalDecision({ request, askedCalls, permission, item, 
   if (mode && await writesInsideRoots({ item, args, cwd }, permission.extraRoots, resolveReal)) return { kind: 'allow', origin, via: 'extra-root' }
   const grantKey = grantKeyFor({ origin, toolName: request.toolName, item, mode })
   if (grants.has(grantKey)) return { kind: 'allow', origin, via: 'session-grant' }
-  return { kind: 'ask', origin, mode, reason: reasonFor(request, origin), grantKey, grantable: grantKey !== null && sessionGrantable({ origin, mode, item }) }
+  return { kind: 'ask', origin, mode, reason: unconfined ? UNSANDBOXED_READ_ONLY_REASON : reasonFor(request, origin), grantKey, grantable: grantKey !== null && sessionGrantable({ origin, mode, item }) }
 }
 
 /**
@@ -412,19 +458,24 @@ export function rootThreadFor(agent, threads, headerOf = () => undefined) {
  * A sub-agent's pre-execute gate. Harness pins children to approval 'never'
  * (an 'ask' would be auto-rejected), so under an Ask-mode root the bridge asks
  * the client itself for every call that may change something.
- * @returns {'ask-client' | 'next'}
+ * A Windows shell command in a read-only sandbox (unsandboxedReadOnly; sandbox is the child's effective mode) asks
+ * under any root that can ask, and is refused ('deny') under a root that never asks or with no live root.
+ * @returns {'ask-client' | 'next' | 'deny'}
  */
-export function childDecision({ rootPolicy, toolName }) {
+export function childDecision({ rootPolicy, toolName, platform = process.platform, sandbox }) {
+  if (unsandboxedReadOnly({ platform, sandbox, toolName })) return rootPolicy === undefined || rootPolicy === 'never' ? 'deny' : 'ask-client'
   return rootPolicy === 'untrusted' && !READ_ONLY_TOOLS.has(toolName) && !isAppTool(toolName) && !SESSION_STATE_TOOLS.has(toolName) && !CHILD_QUIET_TOOLS.has(toolName) ? 'ask-client' : 'next'
 }
 
 /**
  * The Ask-mode pre-execute gate of a root thread's own call: 'next' lets it run
  * (any policy but 'untrusted', a read-only tool, or a workspace edit under
- * Accept edits), 'ask' raises the bridge's card.
- * @returns {Promise<'ask' | 'next'>}
+ * Accept edits), 'ask' raises the bridge's card. A Windows shell command in a read-only sandbox (unsandboxedReadOnly;
+ * sandbox defaults to the thread's own) asks under every policy that can ask and is refused ('deny') under 'never'.
+ * @returns {Promise<'ask' | 'next' | 'deny'>}
  */
-export async function preExecuteDecision({ permission, toolName, args, cwd }, resolveReal = realpath) {
+export async function preExecuteDecision({ permission, toolName, args, cwd, platform = process.platform, sandbox = permission?.sandbox }, resolveReal = realpath) {
+  if (unsandboxedReadOnly({ platform, sandbox, toolName })) return permission?.approvalPolicy === 'never' ? 'deny' : 'ask'
   if (permission?.approvalPolicy !== 'untrusted' || READ_ONLY_TOOLS.has(toolName) || SESSION_STATE_TOOLS.has(toolName) || isAppTool(toolName)) return 'next'
   return await acceptsEdit({ permission, toolName, args, cwd }, resolveReal) ? 'next' : 'ask'
 }

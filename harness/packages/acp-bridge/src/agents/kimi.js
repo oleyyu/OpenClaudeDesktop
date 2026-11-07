@@ -27,7 +27,7 @@
  *                    from the coding plan's /usages
  */
 
-import { execFileSync, spawn } from 'node:child_process'
+import { execFileSync } from 'node:child_process'
 import crypto, { randomBytes } from 'node:crypto'
 import fs from 'node:fs'
 import net from 'node:net'
@@ -38,6 +38,7 @@ import { createOverlay, settleOverlay, tomlWithDisabledTools, tomlToolsLists, to
 import { appToolsServer } from '../app-tools.js'
 import { realPath as realPathOf } from '../permissions.js'
 import { withoutBrowser } from '../no-browser.js'
+import { platformSpawn, spawnPlatform } from '../win-process.js'
 
 export const BUILTIN_TOOLS = [
   ['Read', 'Reads a file.'], ['Write', 'Writes a file.'], ['Edit', 'Edits a file.'], ['Grep', 'Searches file contents.'], ['Glob', 'Finds files by pattern.'],
@@ -1430,7 +1431,7 @@ async function withKimiServer(ctx, { launch = null, cwd = null, ensureDirs = [] 
     // collided with outgoing connections: EADDRINUSE).
     const port = await freeLoopbackPort()
     const { command, args } = ctx.commandLine(['web', '--no-open', '--port', String(port)])
-    child = spawn(command, args, { env: withoutBrowser({ ...ctx.env, ...(launch?.env ?? {}), KIMI_CODE_HOME: path.join(dir, 'home'), NO_COLOR: '1' }), cwd: cwd || os.homedir(), stdio: ['ignore', 'pipe', 'pipe'] })
+    child = spawnPlatform(command, args, { env: withoutBrowser({ ...ctx.env, ...(launch?.env ?? {}), KIMI_CODE_HOME: path.join(dir, 'home'), NO_COLOR: '1' }), cwd: cwd || os.homedir(), stdio: ['ignore', 'pipe', 'pipe'] })
     const base = await new Promise((resolve, reject) => {
       let text = ''
       const timer = setTimeout(() => reject(new Error(`Kimi Code's local server did not start.${text ? ` ${text.trim().slice(-300)}` : ''}`)), 30000)
@@ -2105,7 +2106,7 @@ export default {
     const where = typeof cwd === 'string' && path.isAbsolute(cwd) && fs.existsSync(cwd) ? cwd : os.homedir()
     await new Promise((resolve, reject) => {
       let text = ''
-      const child = spawn(command, args, { env: withoutBrowser({ ...ctx.env, NO_COLOR: '1' }), cwd: where, stdio: ['ignore', 'pipe', 'pipe'] })
+      const child = spawnPlatform(command, args, { env: withoutBrowser({ ...ctx.env, NO_COLOR: '1' }), cwd: where, stdio: ['ignore', 'pipe', 'pipe'] })
       const timer = setTimeout(() => { child.kill('SIGKILL'); reject(new Error('Kimi Code took too long to export the session.')) }, 5 * 60000)
       child.stdout.on('data', (chunk) => { text += String(chunk) })
       child.stderr.on('data', (chunk) => { text += String(chunk) })
@@ -2133,7 +2134,8 @@ export default {
     let output = ''
     try {
       const { command, args } = ctx.commandLine(['doctor', 'config', file])
-      output = execFileSync(command, args, { env: withoutBrowser({ ...ctx.env, NO_COLOR: '1' }), timeout: 10000, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] })
+      const launch = platformSpawn(command, args, { env: withoutBrowser({ ...ctx.env, NO_COLOR: '1' }), timeout: 10000, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] })
+      output = execFileSync(launch.command, launch.args, launch.options)
     } catch (error) { output = `${error?.stdout ?? ''}\n${error?.stderr ?? ''}` }
     const issue = kimiDoctorIssue(output)
     if (!issue) return null
@@ -2180,7 +2182,7 @@ export default {
       // `kimi login` opens the device page itself (utils/open-url.ts runs `open <url>`), and OpenClaude Desktop opens the
       // verificationUrl it returns: a no-op `open` first on PATH keeps the app the only opener (one tab, not two).
       const env = withoutBrowser({ ...ctx.env, NO_COLOR: '1' })
-      const child = spawn(command, args, { env, stdio: ['ignore', 'pipe', 'pipe'] })
+      const child = spawnPlatform(command, args, { env, stdio: ['ignore', 'pipe', 'pipe'] })
       let text = ''
       let answered = false
       const scan = (chunk) => {
@@ -2334,7 +2336,7 @@ export default {
   async runMigration(ctx, { configOnly = false } = {}) {
     const { command, args } = ctx.commandLine(['migrate', '--run', ...(configOnly ? ['--config-only'] : [])])
     return new Promise((resolve, reject) => {
-      const child = spawn(command, args, { env: withoutBrowser({ ...ctx.env, NO_COLOR: '1' }), cwd: ctx.env.HOME || os.homedir(), stdio: ['ignore', 'pipe', 'pipe'] })
+      const child = spawnPlatform(command, args, { env: withoutBrowser({ ...ctx.env, NO_COLOR: '1' }), cwd: ctx.env.HOME || os.homedir(), stdio: ['ignore', 'pipe', 'pipe'] })
       let output = ''
       const keep = (chunk) => { output = (output + String(chunk)).slice(-20000) }
       child.stdout.on('data', keep)

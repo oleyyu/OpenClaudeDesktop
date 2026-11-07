@@ -1,5 +1,6 @@
 const { spawn } = require('node:child_process');
 const path = require('node:path');
+const { killTree } = require('./process-tree.cjs');
 
 const DEFAULT_LIMITS = Object.freeze({
   maxResults: 50, maxCandidates: 10000, maxEntries: 25000,
@@ -45,9 +46,13 @@ function invalid(request) {
  * Main-process-only service. A trusted caller supplies the session cwd and a
  * scope tied to the sender/pane. The renderer must not select arbitrary roots.
  * Each active request owns a separate Node process group; no shell is used.
+ * Windows has no process groups: the worker is not detached there and its tree (worker → git) is ended with
+ * taskkill /T /F (process-tree.cjs killTree).
  */
 function createFileNameSearch(options = {}) {
   const limits = limitsFrom(options.limits);
+  const platform = options.platform || process.platform;
+  const spawnWorker = options.spawn || spawn, killWorkerTree = options.killTree || killTree;
   const active = new Set(), pending = [], latest = new Map();
   let generation = 0, closed = false;
 
@@ -69,6 +74,11 @@ function createFileNameSearch(options = {}) {
     if (!job.child) { finish(job, job.result); return; }
     // This negative PID is only the fresh detached group created below. Git,
     // when used, remains in this group. No global process matching or pkill.
+    // Windows: no group; taskkill /T /F ends the worker and the git it started.
+    if (platform === 'win32') {
+      if (!killWorkerTree(job.child.pid, 'SIGKILL', { platform })) { try { job.child.kill('SIGKILL'); } catch { /* gone */ } }
+      return;
+    }
     try { process.kill(-job.child.pid, 'SIGKILL'); }
     catch (error) { if (error.code !== 'ESRCH') job.child.kill('SIGKILL'); }
   }
@@ -77,10 +87,10 @@ function createFileNameSearch(options = {}) {
     active.add(job);
     let child;
     try {
-      child = spawn(process.execPath, [path.join(__dirname, 'file-name-search-worker.cjs')], {
+      child = spawnWorker(process.execPath, [path.join(__dirname, 'file-name-search-worker.cjs')], {
         // __dirname may be virtual (inside app.asar). The executable's physical
         // parent always exists; the worker accesses all project paths explicitly.
-        cwd: path.dirname(process.execPath), detached: true, windowsHide: true,
+        cwd: path.dirname(process.execPath), detached: platform !== 'win32', windowsHide: true,
         env: { ...process.env, ELECTRON_RUN_AS_NODE: '1', NODE_OPTIONS: '' },
         stdio: ['ignore', 'ignore', 'ignore', 'ipc'],
       });
@@ -116,10 +126,9 @@ function createFileNameSearch(options = {}) {
 
   function search(request) {
     const problem = invalid(request);
-    if (problem || closed || process.platform === 'win32') return Promise.resolve({
+    if (problem || closed) return Promise.resolve({
       ...envelope(request), generation: ++generation, elapsedMs: 0,
-      error: { code: closed ? 'CLOSED' : process.platform === 'win32' ? 'UNSUPPORTED_PLATFORM' : 'INVALID_REQUEST',
-        message: closed ? 'Filename search is closed.' : process.platform === 'win32' ? 'Filename search requires macOS or POSIX process groups.' : problem },
+      error: { code: closed ? 'CLOSED' : 'INVALID_REQUEST', message: closed ? 'Filename search is closed.' : problem },
     });
     // Supersede both running and waiting jobs for this trusted scope. The old
     // promise still settles with its own identifier; it cannot replace the new.

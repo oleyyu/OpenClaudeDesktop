@@ -41,6 +41,7 @@ import { UsageLedger, addUsage, normalizeUsage, threadTokenUsage, localDayKey } 
 import { toAcpPrompt, restrictBlocks, inputText } from './input.js'
 import { permissionOf, sandboxFor, decide, realPath, pathsOf, outcomeForDecision, optionFor, selected, afterPlanPermission, planTargetOf, sandboxPolicyOf, SessionGrants, isReadOnlyMode, usesAgentPlanMode, insideRoots } from './permissions.js'
 import { wrapLaunch, sandboxAvailable } from './sandbox.js'
+import { killTree, platformSpawn, windowsShell } from './win-process.js'
 import { ClientServices } from './client-services.js'
 import { commandSkills, mcpTable, coreSettingsView, coreSettingValue, withSetting, settingAt, readJsonFile, writeJsonFile } from './catalog.js'
 import { probeMcpServer, mcpServerStatus, clearMcpCache, getMcpPrompt, parsePromptArgs, promptText } from './mcp-probe.js'
@@ -125,7 +126,7 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
   const sessionMcpServers = (thread, session) => {
     // An agent that got the server in its launch config (adapter.appToolsInLaunch: MiniMax's mcp.json) gets none here.
     if (thread?.appToolsInLaunch) return []
-    const entry = (thread?.tools?.disabledServers ?? []).includes(appTools?.name) ? null : acpAppToolsServer(appTools, session, { runAsNodeInCommand: adapter?.mcpDropsRunAsNode === true })
+    const entry = (thread?.tools?.disabledServers ?? []).includes(appTools?.name) ? null : acpAppToolsServer(appTools, session, { runAsNodeInCommand: adapter?.mcpDropsRunAsNode === true, launcherDir: stateDir })
     return entry ? [entry] : []
   }
   // The server as the agent's own config declares it, for an adapter that takes it at launch (appToolsInLaunch): named
@@ -2043,7 +2044,8 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
     const launch = adapter.launch(ctx, config)
     const wrapped = wrapLaunch(commandLine(program, own.args), { profile: sandboxFor('plan'), writable: config.writable, agentPaths: [...adapter.agentPaths(agentEnv), stateDir, config.threadDir], profileFile: path.join(config.threadDir, 'review.sb'), ...sandboxExtras() })
     return new Promise((resolve, reject) => {
-      const child = spawn(wrapped.command, wrapped.args, { env: { ...agentEnv, ...launch.env }, cwd: thread.cwd, stdio: ['ignore', 'pipe', 'pipe'] })
+      const spawned = platformSpawn(wrapped.command, wrapped.args, { env: { ...agentEnv, ...launch.env }, cwd: thread.cwd, stdio: ['ignore', 'pipe', 'pipe'] })
+      const child = spawn(spawned.command, spawned.args, spawned.options)
       let stdout = ''
       let stderr = ''
       // Decoded as one stream each, so a character split across two reads stays whole.
@@ -2051,7 +2053,7 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
       child.stderr.setEncoding('utf8')
       child.stdout.on('data', (chunk) => { stdout += chunk })
       child.stderr.on('data', (chunk) => { stderr = (stderr + chunk).slice(-8000) })
-      const timer = setInterval(() => { if (state.cancelled && child.exitCode === null) child.kill('SIGTERM') }, 250)
+      const timer = setInterval(() => { if (state.cancelled && child.exitCode === null) { if (process.platform === 'win32') killTree(child.pid); else child.kill('SIGTERM') } }, 250)
       child.on('error', (error) => { clearInterval(timer); reject(error) })
       child.on('exit', (code) => {
         clearInterval(timer)
@@ -2292,7 +2294,7 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
    */
   async function commandShell(thread, command, line) {
     const turn = thread.projector.activeTurn
-    const item = { type: 'commandExecution', id: `command-${randomUUID()}`, pluginId: null, scriptPath: null, command: line, cwd: thread.cwd, processId: null, source: 'agent', status: 'inProgress', commandActions: [{ type: 'unknown', command: line }], aggregatedOutput: null, exitCode: null, durationMs: null, shell: 'bash', description: `/${command.name}` }
+    const item = { type: 'commandExecution', id: `command-${randomUUID()}`, pluginId: null, scriptPath: null, command: line, cwd: thread.cwd, processId: null, source: 'agent', status: 'inProgress', commandActions: [{ type: 'unknown', command: line }], aggregatedOutput: null, exitCode: null, durationMs: null, shell: process.platform === 'win32' ? 'powershell' : 'bash', description: `/${command.name}` }
     const settle = (patch) => {
       Object.assign(item, patch)
       if (turn) thread.projector.replaceItem(turn, { ...item })
@@ -2321,18 +2323,20 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
       }
     }
     const started = Date.now()
-    const wrapped = wrapLaunch({ command: '/bin/sh', args: ['-c', line] }, { profile, writable: roots, agentPaths: [], profileFile: path.join(store.threadDir(thread.id), 'command.sb') })
+    // Windows: PowerShell, as the agent's own terminal commands run there (client-services.js, win-process.js windowsShell).
+    const shellLine = process.platform === 'win32' ? windowsShell(line) : { command: '/bin/sh', args: ['-c', line] }
+    const wrapped = wrapLaunch(shellLine, { profile, writable: roots, agentPaths: [], profileFile: path.join(store.threadDir(thread.id), 'command.sb') })
     const result = await new Promise((resolve) => {
       let output = ''
       let child
-      try { child = spawn(wrapped.command, wrapped.args, { cwd: thread.cwd, env: agentEnv, stdio: ['ignore', 'pipe', 'pipe'] }) } catch (error) { resolve({ output: String(error?.message ?? error), exitCode: 127 }); return }
+      try { const spawned = platformSpawn(wrapped.command, wrapped.args, { cwd: thread.cwd, env: agentEnv, stdio: ['ignore', 'pipe', 'pipe'] }); child = spawn(spawned.command, spawned.args, spawned.options) } catch (error) { resolve({ output: String(error?.message ?? error), exitCode: 127 }); return }
       const take = (chunk) => { if (output.length < 256 * 1024) output += chunk }
       // Decoded as one stream each, so a character split across two reads stays whole.
       child.stdout.setEncoding('utf8')
       child.stderr.setEncoding('utf8')
       child.stdout.on('data', take)
       child.stderr.on('data', take)
-      const timer = setTimeout(() => child.kill('SIGTERM'), 120000)
+      const timer = setTimeout(() => { if (process.platform === 'win32') killTree(child.pid); else child.kill('SIGTERM') }, 120000)
       child.on('error', (error) => { clearTimeout(timer); resolve({ output: output + String(error?.message ?? error), exitCode: 127 }) })
       child.on('close', (code) => { clearTimeout(timer); resolve({ output, exitCode: code }) })
     })

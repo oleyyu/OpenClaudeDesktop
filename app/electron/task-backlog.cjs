@@ -6,6 +6,7 @@
 const fs = require("node:fs");
 const path = require("node:path");
 const { randomBytes } = require("node:crypto");
+const { renameRetry } = require("./fs-paths.cjs");
 
 const SOURCES = new Set(["dismissed", "evicted", "orphaned"]);
 const ID = /^todo_[0-9a-f]{12}$/;
@@ -110,7 +111,7 @@ function createTaskBacklog({ dataDir, now = Date.now, platform = process.platfor
     await fs.promises.mkdir(path.dirname(target), { recursive: true });
     const temp = `${target}.${process.pid}.${Date.now().toString(36)}.tmp`;
     await fs.promises.writeFile(temp, JSON.stringify({ version: 1, items }), { mode: 0o600 });
-    await fs.promises.rename(temp, target);
+    await renameRetry(temp, target, { platform }); // Windows: EPERM / EBUSY while the file is held open, retried
   }
   function mutate(change) {
     const run = queue.then(async () => {

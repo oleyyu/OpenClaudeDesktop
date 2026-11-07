@@ -291,10 +291,22 @@ export function sessionCore(meta) {
   return null;
 }
 
-/** The release asset of a core's agent program for a CPU architecture ("arm64" | "x64"), or null. */
-export function releaseAsset(core, arch = "arm64") {
+/**
+ * The release asset of a core's agent program for a CPU architecture ("arm64" | "x64") on an OS (process.platform
+ * names: "darwin" | "win32" | "linux"), or null. A descriptor's assets are keyed "<platform>-<arch>" (win32-x64) or,
+ * as every core was first written, by the bare arch, which is a macOS build. Off macOS a bare-arch asset is used only
+ * when it is platform-independent (a Node package run by runner "node", never a disk image), so Windows never
+ * downloads a Mac binary: a core without a release for this OS has none (null).
+ */
+export function releaseAsset(core, arch = "arm64", platform = globalThis.process?.platform ?? "darwin") {
   const release = core?.agent?.release;
-  const asset = release?.assets?.[arch];
+  const assets = release?.assets;
+  let asset = assets?.[`${platform}-${arch}`];
+  if (!asset) {
+    const bare = assets?.[arch];
+    const portable = bare && bare.runner === "node" && (bare.type ?? release.type ?? "tar.gz") !== "dmg";
+    if (bare && (platform === "darwin" || portable)) asset = bare;
+  }
   if (!asset) return null;
   const url = asset.url ?? String(release.url ?? "").replaceAll("{tag}", release.tag ?? "").replaceAll("{name}", asset.name).replaceAll("{version}", release.version ?? "");
   return { ...asset, type: asset.type ?? release.type ?? "tar.gz", version: release.version, tag: release.tag, url };

@@ -1,4 +1,5 @@
 import { sidebarComposerFocus } from './sidebar-open-model.mjs';
+import { fileManagerName, hostPlatform } from "./file-manager-labels.mjs";
 import React, { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Icon } from "./icons";
 import { ToolButton, SIDEBAR_TOGGLE_TOOLTIP } from "./code-ui";
@@ -321,7 +322,7 @@ export function SourceSidebarSessionMenu({
   const openInTargets = session.cwd ? [
     ...editors.map((editor) => ({ key: `editor:${editor.type}`, label: editor.name, run: () => act("open-in-editor", { type: editor.type }) })),
     { key: "terminal", label: t("Terminal"), run: () => act("open-terminal") },
-    { key: "finder", label: t("Finder"), run: () => act("reveal-folder") },
+    { key: "finder", label: hostPlatform() === "darwin" ? t("Finder") : fileManagerName(), run: () => act("reveal-folder") },
   ] : [];
   const openInRow = (entry, index) => <SourceMenu.Item key={entry.key} data-testid={entry.testId} shortcut={digitFor(index)} digit={digitFor(index)}
     onClick={entry.run}>{entry.label}</SourceMenu.Item>;

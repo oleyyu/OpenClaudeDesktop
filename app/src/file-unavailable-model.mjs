@@ -1,5 +1,6 @@
 import { t } from "../electron/i18n/index.mjs";
 
+import { revealInFileManagerLabel } from "./file-manager-labels.mjs";
 // Files pane viewer cards for files that open without a text body (2.2553.1
 // ion-dist/assets/v1/cd2efac6e-CAi4fxTN.js, prettier-formatted): the jo
 // unavailable card To/Un (:3602-3740, role "alert" unless the typed
@@ -79,7 +80,7 @@ export const FILE_CARD_LABELS = Object.freeze({
   creatingFile: t("Creating file…"),
   addFolder: t("Add folder"),
   addingFolder: t("Adding folder…"),
-  showInFinder: t("Show in Finder"),
+  showInFinder: revealInFileManagerLabel(),
   revealFailed: t("Couldn’t show this file in its folder."),
 });
 export const createFileFailedMessage = (name) => t("Couldn’t create {name}. You can select Create file again or ask Claude to create it.", { name });

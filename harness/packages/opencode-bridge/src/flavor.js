@@ -13,6 +13,7 @@
  */
 import { execFile } from 'node:child_process'
 import { basename } from 'node:path'
+import { execFilePlatform } from './win-process.js'
 
 export const FLAVORS = Object.freeze({
   opencode: Object.freeze({
@@ -96,7 +97,7 @@ export async function detectFlavor({ env = process.env, binary } = {}) {
   const id = flavorFromPath(binary ?? env.CODE_DESKTOP_AGENT_BINARY) ?? flavorFromPath(env.CODE_DESKTOP_BRIDGE_STATE)
   if (id) return FLAVORS[id]
   if (binary) {
-    const help = await new Promise((resolve) => execFile(binary, ['--help'], { timeout: 15000 }, (error, stdout, stderr) => resolve(`${stdout ?? ''}${stderr ?? ''}`)))
+    const help = await new Promise((resolve) => execFilePlatform(binary, ['--help'], { timeout: 15000 }, (error, stdout, stderr) => resolve(`${stdout ?? ''}${stderr ?? ''}`)))
     if (/mimocode|\bmimo\b/i.test(help)) return FLAVORS.mimo
   }
   return FLAVORS.opencode

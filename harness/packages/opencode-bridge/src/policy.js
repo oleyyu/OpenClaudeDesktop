@@ -127,6 +127,9 @@ export function sandboxPolicy(permission, { cwd, tmp = [], slashTmp = ['/tmp', '
 }
 
 const rule = (name, action, pattern = '*') => ({ permission: name, pattern, action })
+/** Whether the agent's shell commands run in the Seatbelt sandbox (sandbox.js): macOS only, no sandbox on Windows. */
+export const SHELL_SANDBOXED = process.platform !== 'win32'
+const UNSANDBOXED_READ_ONLY = Object.freeze({ action: 'ask', reason: 'Commands can’t be sandboxed read-only on Windows: confirm this one.' })
 /** Secrets stay behind a card, as OpenCode's own defaults do. */
 const secretRules = () => [rule('read', 'ask', '*.env'), rule('read', 'ask', '*.env.*'), rule('read', 'allow', '*.env.example')]
 
@@ -136,10 +139,11 @@ const secretRules = () => [rule('read', 'ask', '*.env'), rule('read', 'ask', '*.
  * @param {object} permission
  * @param {string[]} roots - extra writable roots (outside the workspace) the mode may use
  */
-export function modeGrantRules(permission, roots = []) {
+export function modeGrantRules(permission, roots = [], { sandboxed = SHELL_SANDBOXED } = {}) {
   const mode = permission?.mode
   if (mode === 'bypass') return [rule('*', 'allow')]
-  if (READ_ONLY_MODES.has(mode)) return [rule('bash', 'allow')] // in the read-only sandbox
+  // In the read-only sandbox; Windows has none (sandbox.js), so a command there is not pre-approved.
+  if (READ_ONLY_MODES.has(mode)) return sandboxed ? [rule('bash', 'allow')] : []
   const out = []
   // Auto: every tool runs (shell commands in the workspace sandbox); paths outside the
   // workspace, secrets and repeated calls still ask.
@@ -279,8 +283,8 @@ function externalPaths(request) {
  *   (a workflow runner's agent, whatever approvalPolicy it last sent)
  * @returns {{ action: 'allow' | 'ask' | 'reject', reason?: string }}
  */
-export function decide(permission, request, { tool, readTools, cwd, grants = [], planDirs = [], agentDirs = [], readOnlyTool = false, noUser = false }) {
-  const decision = decideMode(permission, request, { tool, readTools, cwd, planDirs, agentDirs, readOnlyTool })
+export function decide(permission, request, { tool, readTools, cwd, grants = [], planDirs = [], agentDirs = [], readOnlyTool = false, noUser = false, sandboxed = SHELL_SANDBOXED }) {
+  const decision = decideMode(permission, request, { tool, readTools, cwd, planDirs, agentDirs, readOnlyTool, sandboxed })
   // An "Allow for this session" grant answers what would otherwise ask, only in a mode that
   // may act at all (never Plan / chat / review), and never a repeated-call (doom loop) warning.
   if (decision.action === 'ask' && !READ_ONLY_MODES.has(permission.mode) && request?.permission !== 'doom_loop' && request?.permission !== 'bash_delete' && grantCovers(grants, request)) return { action: 'allow', reason: 'Allowed for this session.' }
@@ -294,7 +298,7 @@ export function decide(permission, request, { tool, readTools, cwd, grants = [],
 /** Whether a thread may never put a card in front of a person (approvalPolicy "never"; Bypass allows everything anyway). */
 export const neverAsks = (permission) => permission?.approvalPolicy === 'never' && permission?.mode !== 'bypass'
 
-function decideMode(permission, request, { tool, readTools, cwd, planDirs = [], agentDirs = [], readOnlyTool = false }) {
+function decideMode(permission, request, { tool, readTools, cwd, planDirs = [], agentDirs = [], readOnlyTool = false, sandboxed = SHELL_SANDBOXED }) {
   const mode = permission.mode
   const kind = request?.permission
   if (mode === 'bypass') return { action: 'allow' }
@@ -316,7 +320,7 @@ function decideMode(permission, request, { tool, readTools, cwd, planDirs = [], 
     // The plan file (outside the workspace in a folder without git): writable in every mode, Plan included.
     const planned = externalPaths(request)
     if (planned.length && planned.every((file) => withinRoots(file, planDirs))) return { action: 'allow' }
-    if (readOnly) return toolName === 'bash' ? { action: 'allow' } : { action: 'reject', reason: 'This mode cannot change files.' }
+    if (readOnly) return toolName === 'bash' ? (sandboxed ? { action: 'allow' } : UNSANDBOXED_READ_ONLY) : { action: 'reject', reason: 'This mode cannot change files.' }
     // agentDirs: the folders the agent itself allows outside the workspace (its external_directory allow rules:
     // `references` folders, skill folders, tool output, its tmp dir), which the bridge's `* → ask` ruleset would
     // otherwise turn into an 'Access outside the workspace' card.
@@ -331,7 +335,10 @@ function decideMode(permission, request, { tool, readTools, cwd, planDirs = [], 
     return { action: 'ask', reason: 'Ask permissions mode is on.' }
   }
   if (kind === 'bash') {
-    // Commands run in the session's Seatbelt sandbox (read-only in Plan/chat/review).
+    // Commands run in the session's Seatbelt sandbox (read-only in Plan/chat/review). Windows has no sandbox: a
+    // read-only mode asks for every command instead (nothing else would keep it read-only); Auto runs them, as the
+    // DeepSeek core's pwsh tool does there.
+    if (readOnly && !sandboxed) return UNSANDBOXED_READ_ONLY
     if (readOnly || mode === 'auto') return { action: 'allow' }
     return { action: 'ask', reason: 'Ask permissions mode is on.' }
   }

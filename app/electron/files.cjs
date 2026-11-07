@@ -1,10 +1,20 @@
 const fs = require("node:fs/promises");
 const path = require("node:path");
-async function scopedPath(root, relative = "") {
+const { pathInside, remotePathRefused } = require("./fs-paths.cjs");
+// Containment of real paths (both sides realpath'd: links and Windows 8.3 short names expanded). A root that already
+// ends in a separator ("/", "D:\\") isn't given a second one; Windows compares case-insensitively (fs-paths.cjs).
+const within = (child, parent) => pathInside(parent, child);
+// The renderer's workspace-relative paths are "/"-joined on every host (a Windows listing gave "src\\a.ts").
+const relativeJoin = (relative, name) => process.platform === "win32" ? path.posix.join(String(relative).replace(/\\/g, "/"), name) : path.join(relative, name);
+// Windows: a relative that is (or resolves to) a UNC or device path (\\host\share, //host/share, \\?\UNC\…) is
+// refused before any fs call, which would already contact that host with the user's credentials (fs-paths.cjs
+// remotePathRefused); a workspace that is itself on a share keeps its own files. platform: tests only.
+async function scopedPath(root, relative = "", { platform = process.platform } = {}) {
+  if (remotePathRefused(String(relative), { base: root, platform })) throw new Error("File is outside the selected workspace.");
   const realRoot = await fs.realpath(root);
   const requested = path.resolve(realRoot, relative);
   const resolved = await fs.realpath(requested);
-  if (resolved !== realRoot && !resolved.startsWith(realRoot + path.sep))
+  if (!within(resolved, realRoot))
     throw new Error("File is outside the selected workspace.");
   return resolved;
 }
@@ -20,7 +30,7 @@ async function linkInfo(realRoot, full) {
   try {
     const resolved = await fs.realpath(full);
     const stat = await fs.stat(resolved);
-    const inside = resolved === realRoot || resolved.startsWith(realRoot + path.sep);
+    const inside = within(resolved, realRoot);
     return { directory: stat.isDirectory(), link: { target, state: inside ? "ok" : "external" } };
   } catch (error) {
     return { directory: false, link: { target, state: error?.code === "ELOOP" ? "cycle" : "dangling" } };
@@ -37,7 +47,7 @@ async function listFiles(root, relative = "", { includeChild } = {}) {
     .map(async (e) => {
       const entry = {
         name: e.name,
-        path: path.join(relative, e.name),
+        path: relativeJoin(relative, e.name),
         directory: e.isDirectory(),
         symlink: e.isSymbolicLink(),
       };
@@ -49,7 +59,7 @@ async function listFiles(root, relative = "", { includeChild } = {}) {
   // This bounds the response at 500; it does not bypass exclusions or fabricate
   // a path that was not present in the actual directory snapshot.
   const validHint = typeof includeChild === "string" && includeChild.length > 0 &&
-    includeChild.length <= 4096 && !includeChild.includes("/") && !includeChild.includes("\0") &&
+    includeChild.length <= 4096 && !includeChild.includes("/") && !(process.platform === "win32" && includeChild.includes("\\")) && !includeChild.includes("\0") &&
     includeChild !== "." && includeChild !== "..";
   if (validHint) {
     const index = sorted.findIndex(entry => entry.name === includeChild);
@@ -91,7 +101,7 @@ async function missingCreatable(realRoot, lexical) {
   if (await fs.lstat(lexical).then(() => true, () => false)) return false;
   try {
     const parent = await fs.realpath(path.dirname(lexical));
-    if (parent !== realRoot && !parent.startsWith(realRoot + path.sep)) return false;
+    if (!within(parent, realRoot)) return false;
     return (await fs.stat(parent)).isDirectory();
   } catch { return false; }
 }
@@ -106,7 +116,7 @@ async function readFile(root, relative, { force = false, documentBytes = false }
       let creatable;
       try {
         const realRoot = await fs.realpath(root), lexical = path.resolve(realRoot, relative);
-        if (lexical !== realRoot && !lexical.startsWith(realRoot + path.sep)) return { path: requested, unavailable: "outside_root" };
+        if (!within(lexical, realRoot)) return { path: requested, unavailable: "outside_root" };
         creatable = await missingCreatable(realRoot, lexical);
       } catch { return { path: requested, unavailable: "read_error" }; }
       return { path: requested, unavailable: "missing", creatable };
@@ -140,9 +150,13 @@ async function readFile(root, relative, { force = false, documentBytes = false }
 // Opening a session file in its default app (a deliverable or artifact card's Open): the checks of 2.2553.1's
 // openSessionFileInDefaultApp (index.chunk-cH2hnEce.js; lists b9t / x9t / S9t in index.chunk-ChZ67Jhw.js), so an
 // agent can't get code run outside its sandbox by sending a launcher the user then opens with one click.
-// Always refused: installers, disk images, bundles. Refused for open: scripts and launchers macOS runs on open.
-const BLOCKED_TYPES = new Set([".exe", ".com", ".msi", ".scr", ".pif", ".cpl", ".bin", ".app", ".dmg", ".pkg", ".mpkg", ".sparsebundle", ".sparseimage", ".iso", ".img", ".cdr", ".toast", ".vhd", ".vhdx", ".prefpane", ".saver", ".jar"]);
-const BLOCKED_OPEN_TYPES = new Set(".sh,.bash,.zsh,.command,.tool,.terminal,.fileloc,.inetloc,.webloc,.bat,.cmd,.ps1,.vb,.vbs,.vbe,.jse,.wsf,.wsh,.wsc,.hta,.lnk,.reg,.msc,.url,.wsb,.jnlp,.js,.pl,.py,.pyw,.pyz,.pyzw,.rb,.scpt,.scptd,.applescript,.workflow,.action,.osax,.smi,.term,.ftploc,.afploc,.vncloc,.mobileconfig,.chm,.xll,.application,.appref-ms,.settingcontent-ms,.search-ms,.library-ms,.diagcab,.appinstaller,.desktop".split(","));
+// Always refused: installers, disk images, bundles. Refused for open: scripts and launchers macOS or Windows runs on
+// open. Windows: Explorer's default action runs installers (.msi/.msix/.appx/.msp/.mst/.msu), PowerShell modules and
+// data files, .inf (Install), .scf (Explorer commands), .gadget, .xbap, .website and Windows Script (.ws/.sct) files.
+const BLOCKED_TYPES = new Set([".exe", ".com", ".msi", ".scr", ".pif", ".cpl", ".bin", ".app", ".dmg", ".pkg", ".mpkg", ".sparsebundle", ".sparseimage", ".iso", ".img", ".cdr", ".toast", ".vhd", ".vhdx", ".prefpane", ".saver", ".jar",
+  ".msix", ".msixbundle", ".appx", ".appxbundle", ".msp", ".mst", ".msu", ".vsix", ".vsto"]);
+const BLOCKED_OPEN_TYPES = new Set((".sh,.bash,.zsh,.command,.tool,.terminal,.fileloc,.inetloc,.webloc,.bat,.cmd,.ps1,.vb,.vbs,.vbe,.jse,.wsf,.wsh,.wsc,.hta,.lnk,.reg,.msc,.url,.wsb,.jnlp,.js,.pl,.py,.pyw,.pyz,.pyzw,.rb,.scpt,.scptd,.applescript,.workflow,.action,.osax,.smi,.term,.ftploc,.afploc,.vncloc,.mobileconfig,.chm,.xll,.application,.appref-ms,.settingcontent-ms,.search-ms,.library-ms,.diagcab,.appinstaller,.desktop"
+  + ",.psm1,.psd1,.ps1xml,.ps2,.ps2xml,.psc1,.psc2,.msh,.msh1,.msh2,.mshxml,.msh1xml,.msh2xml,.inf,.scf,.gadget,.xbap,.website,.ws,.sct,.shs,.shb,.hlp,.ins,.isp,.its,.ade,.adp,.mde,.accde,.mam,.mdz,.iqy,.slk").split(","));
 // Documents that may carry the executable bit (a file copied off a FAT drive) and still open as documents.
 const DOCUMENT_TYPES = new Set(".pdf,.txt,.md,.rtf,.doc,.docx,.xls,.xlsx,.csv,.tsv,.ppt,.pptx,.pages,.numbers,.key,.png,.jpg,.jpeg,.gif,.bmp,.tif,.tiff,.webp,.svg,.heic,.heif,.ico,.psd,.mp3,.m4a,.wav,.aac,.flac,.aiff,.mp4,.m4v,.mov,.avi,.webm,.zip,.tar,.gz,.tgz,.bz2,.html,.htm,.css,.json,.xml,.yaml,.yml,.epub,.ics,.vcf,.eml,.log".split(","));
 /** A path's type as 2.2553.1 reads it (xA): its extension, or a dotfile's whole name, NFKC-folded and lower-cased. */
@@ -164,6 +178,7 @@ async function openBlockReason(requested, resolved) {
   let stat;
   try { stat = await fs.lstat(resolved); } catch { return "File not found."; }
   if (stat.isSymbolicLink() || !stat.isFile()) return "Only files can be opened from here. Use Show in Finder instead.";
+  // Windows reports no executable bits (mode & 0o111 is always 0 there): the type lists above are the only guard.
   if ((stat.mode & 0o111) && !DOCUMENT_TYPES.has(path.extname(resolved).toLowerCase())) return "OpenClaude Desktop doesn’t open apps, scripts or installers from a session. Use Show in Finder instead.";
   return null;
 }
@@ -189,7 +204,10 @@ async function revealFolderTarget(folder) {
 // additional folders in its metadata (main.cjs `file:gone`); the walk is an lstat per component instead of the
 // original's native no-follow opens; there is no GrowthBook, so the main-side kill switch ("3736295273") is off.
 const PATH_GONE_DEADLINE_MS = 2000, MAX_PATH_GONE_ASKS = 2, MAX_PATH_GONE_CHARS = 4096;
-const pathWithin = (child, parent) => child === parent || child.startsWith(parent.endsWith(path.sep) ? parent : parent + path.sep);
+// Windows: case-insensitive, either separator (fs-paths.cjs pathInside); macOS: exactly as before.
+const pathWithin = (child, parent) => pathInside(parent, child);
+// Windows device names (NUL, CON, COM1, LPT1… with any extension) name no file in any folder.
+const WINDOWS_DEVICE = /(?:^|[\\/])(?:con|prn|aux|nul|com[0-9¹²³]|lpt[0-9¹²³]|conin\$|conout\$)(?:\.[^\\/]*)?$/i;
 /** qB: "present", "through_link", "absent" or "unreadable" for an absolute path, never following a link. */
 async function pathPresence(absolute) {
   const { root } = path.parse(absolute);
@@ -206,7 +224,7 @@ async function pathPresence(absolute) {
 async function judgeSessionPathGone({ root, sessionFolders = [], filePath, home = require("node:os").homedir() }) {
   if (typeof root !== "string" || !path.isAbsolute(root)) return "outside";
   // requestedPath: "~" is the home folder; a network (UNC) spelling is never judged.
-  const requested = filePath === "~" || filePath.startsWith("~/") ? path.join(home, filePath.slice(1)) : filePath;
+  const requested = filePath === "~" || filePath.startsWith("~/") || (process.platform === "win32" && filePath.startsWith("~\\")) ? path.join(home, filePath.slice(1)) : filePath;
   if (/^(?:\\\\|\/\/)/.test(requested)) return "outside";
   const absolute = path.resolve(root, requested);
   const spelled = [root, ...sessionFolders].filter((folder) => typeof folder === "string" && path.isAbsolute(folder));
@@ -214,6 +232,7 @@ async function judgeSessionPathGone({ root, sessionFolders = [], filePath, home 
   for (const folder of spelled) { const resolved = await fs.realpath(folder).catch(() => null); if (resolved) real.push(resolved); }
   if (!real.some((folder) => pathWithin(absolute, folder))) return spelled.some((folder) => pathWithin(absolute, folder)) ? "link_spelled" : "outside";
   if (/^\/dev(\/|$)/.test(absolute)) return "refused";
+  if (process.platform === "win32" && WINDOWS_DEVICE.test(absolute)) return "refused";
   const presence = await pathPresence(absolute);
   return presence === "absent" ? "gone" : presence;
 }

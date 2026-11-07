@@ -84,12 +84,12 @@ import { configReadResponse, fiberPhase, latestThreadIn, mcpClientEntries, mcpSe
 import { goalMutate, goalViewOf, setGoal, threadGoal } from './goals.js'
 import { coreSettingsRead, coreSettingsWrite } from './core-settings.js'
 import { exportSessionLog, sessionLogExportReady } from './session-log-export.js'
-import { SessionGrants, acceptsEdit, applyPermissions as applyThreadPermissions, applyPreset as applyThreadPreset, approvalAnswer, approvalDecision, childApproval, childDecision, livePermissions, preExecuteDecision, rootThreadFor, syncPlanMode, updatePermission } from './approval.js'
+import { REMOTE_PATH_REFUSAL, SessionGrants, UNSANDBOXED_READ_ONLY_REASON, UNSANDBOXED_READ_ONLY_REFUSAL, acceptsEdit, applyPermissions as applyThreadPermissions, applyPreset as applyThreadPreset, approvalAnswer, approvalDecision, childApproval, childDecision, livePermissions, preExecuteDecision, remotePathArgument, rootThreadFor, syncPlanMode, unsandboxedReadOnly, updatePermission } from './approval.js'
 import { sourceFilter, threadLineage } from './subagents.js'
 import { afterPlanPermission, approvedAfterPlan, codexQuestions, harnessAnswer, isPlanApproval, questionFailure, questionItemId } from './questions.js'
 import { DEEPSEEK_KEY_REF, accountReadResponse, providerAccountResponse } from './account.js'
 import { UsageCache, accountTokenUsage, codeStats, localDayKey, sessionUsageSummaries } from './usage.js'
-import { CacheRevisions, cachedValues, coldRow, descendantIds, matchesSearch, mustStayLoaded, ownsRunningJob, readColdThread, registerListProjection, seedable, titleOf } from './list.js'
+import { CacheRevisions, cachedValues, coldRow, cwdKey, descendantIds, matchesSearch, mustStayLoaded, ownsRunningJob, readColdThread, registerListProjection, seedable, titleOf } from './list.js'
 import { installLogParams, pluginRequest } from './plugins.js'
 import { attachDeveloperInstructions, attachStructuredOutput, developerInstructionsOf, hideWorkflowTool, outputSchemaOf, workflowsAllowedBy } from './structured.js'
 import { createCustomRef, applyCustomization, installCustomization } from './customization.js'
@@ -100,7 +100,7 @@ import { contextUsageCounts } from './context-usage.js'
 import { profileReadResponse } from './profile.js'
 import { runSideQuestion, sessionTranscript, sideQuestionPrompt } from './side-question.js'
 import { ALIASES as PRICE_ALIASES, DEEPSEEK_PRICES, PEAK_WINDOWS, PRICING_URL } from './pricing.js'
-import { backgroundTerminal, chunkText, isLiveJobStatus, pageOf } from './jobs.js'
+import { SHELL_TOOLS, backgroundTerminal, chunkText, isLiveJobStatus, pageOf } from './jobs.js'
 import { forkBoundary } from './fork.js'
 import { rewindAppends, rewindBoundary, rewindRuns } from './rewind.js'
 import { REVIEW_FIELD, reviewRequest } from './review.js'
@@ -891,11 +891,12 @@ export function apply(ctx, config) {
     }
   })
 
-  // Harness's bash tool requires a UI `description`; some models (deepseek-flash) leave it out, and every command then
-  // fails schema validation ("missing required property \"description\"") until the model gives up. Before validation,
-  // a bash call with a command but no description gets the command's first line, shortened, as its description.
+  // Harness's shell tools require a UI `description` (bash, and pwsh on Windows); some models (deepseek-flash) leave it
+  // out, and every command then fails schema validation ("missing required property \"description\"") until the model
+  // gives up. Before validation, a shell call with a command but no description gets the command's first line,
+  // shortened, as its description.
   ctx.on('tools/prepare-input', (candidate) => {
-    if (candidate.name !== 'bash') return
+    if (!SHELL_TOOLS.has(candidate.name)) return
     const value = candidate.arguments
     const args = typeof value === 'string' ? (() => { try { return JSON.parse(value) } catch { return null } })() : value
     if (!args || typeof args !== 'object' || Array.isArray(args) || typeof args.command !== 'string' || !args.command.trim()) return
@@ -903,6 +904,19 @@ export function apply(ctx, config) {
     const line = args.command.trim().split('\n')[0]
     candidate.replaceArguments({ ...args, description: line.length > 60 ? `${line.slice(0, 59)}…` : line })
   })
+
+  // The platform the shell sandbox serves (sandbox-shell.js platform: internals.platform in tests) and, on Windows, a
+  // call's effective sandbox mode: the agent session's own (dsh-sandbox-policy resolve, what its pwsh call runs under)
+  // or its thread's, read-only when either is (a child keeps the mode it was created with; its root may have moved
+  // to Plan since). Elsewhere the thread's own mode; unsandboxedReadOnly is false there whatever it is.
+  const shellPlatform = () => ctx.get('sandbox')?.platform ?? process.platform
+  function shellGate(agent, thread) {
+    const platform = shellPlatform()
+    if (platform !== 'win32') return { platform, sandbox: thread?.permission.sandbox }
+    let mode
+    try { mode = ctx.get('sandboxPolicy')?.resolve({ session: agent?.session })?.mode } catch {}
+    return { platform, sandbox: mode === 'read-only' || thread?.permission.sandbox === 'read-only' ? 'read-only' : mode ?? thread?.permission.sandbox }
+  }
 
   // Ask mode: every mutating tool call asks first; Accept edits lets a
   // workspace write/edit through (approval.js preExecuteDecision). A sub-agent's
@@ -913,6 +927,10 @@ export function apply(ctx, config) {
     // sub-agent's call is refused here on its root thread's selection.
     const owner = thread ?? rootThreadFor(exec.agent, threads, headerOf)
     if (owner && isToolDenied(exec.name, owner.tools?.current)) return Promise.resolve({ kind: 'deny', reason: 'This tool is turned off for this session in OpenClaude Desktop.' })
+    // Windows: a file tool's UNC path is refused before the tool resolves it (no card: even a read would authenticate
+    // to that host, approval.js remotePathArgument).
+    if (shellPlatform() === 'win32' && remotePathArgument({ toolName: exec.name, args: parseArguments(exec.arguments), cwd: exec.agent?.session?.header?.cwd ?? owner?.cwd, platform: 'win32' }))
+      return Promise.resolve({ kind: 'deny', reason: REMOTE_PATH_REFUSAL })
     // Native spellings too (Workflow, its RunWorkflow alias): a delegated sub-agent keeps the tool in its schema.
     if (!thread && (exec.name === 'mcp__code_desktop__Workflow' || isWorkflowTool(exec.name))) return Promise.resolve({ kind: 'deny', reason: 'A sub-agent can’t start a dynamic workflow. Report back to the main agent instead.' })
     // The task list and the next-step box are the main conversation's (2.42304.0 index.chunk-CFJssAFf: a PreToolUse with
@@ -920,7 +938,10 @@ export function apply(ctx, config) {
     if (!thread && SUBAGENT_TURN_TOOLS.has(exec.name)) return Promise.resolve({ kind: 'deny', reason: SUBAGENT_TURN_TOOL_REFUSAL })
     if (!thread) {
       const root = rootThreadFor(exec.agent, threads, headerOf)
-      if (!root || childDecision({ rootPolicy: root.permission.approvalPolicy, toolName: exec.name }) !== 'ask-client') return next()
+      const shell = shellGate(exec.agent, root)
+      const gate = childDecision({ rootPolicy: root?.permission.approvalPolicy, toolName: exec.name, ...shell })
+      if (gate === 'deny') return Promise.resolve({ kind: 'deny', reason: UNSANDBOXED_READ_ONLY_REFUSAL })
+      if (!root || gate !== 'ask-client') return next()
       const ask = () => next().then((decision) => {
         if (decision !== undefined && decision.kind !== 'allow' && decision.kind !== 'ask') return decision
         return askChild(root, exec)
@@ -936,11 +957,16 @@ export function apply(ctx, config) {
       if (decision !== undefined && decision.kind !== 'allow' && decision.kind !== 'ask') return decision
       return askWorkflow(thread, exec)
     })
-    if (thread.permission.approvalPolicy !== 'untrusted') return next()
-    return preExecuteDecision({ permission: thread.permission, toolName: exec.name, args: parseArguments(exec.arguments), cwd: thread.cwd })
-      .catch(() => 'ask').then((gate) => gate === 'next' ? next() : next().then((decision) => {
+    // Windows: a shell command in a read-only sandbox runs unconfined (sandbox-shell.js), so it asks under any policy
+    // (Plan, chat, a review turn) and is refused under 'never' (approval.js unsandboxedReadOnly).
+    const shell = shellGate(exec.agent, thread)
+    const unconfined = unsandboxedReadOnly({ ...shell, toolName: exec.name })
+    if (thread.permission.approvalPolicy !== 'untrusted' && !unconfined) return next()
+    return preExecuteDecision({ permission: thread.permission, toolName: exec.name, args: parseArguments(exec.arguments), cwd: thread.cwd, ...shell })
+      .catch(() => 'ask').then((gate) => gate === 'next' ? next() : gate === 'deny' ? { kind: 'deny', reason: UNSANDBOXED_READ_ONLY_REFUSAL } : next().then((decision) => {
         if (decision?.kind !== 'allow' && decision !== undefined) return decision
         if (exec.callId !== undefined) thread.askedCalls.add(exec.callId)
+        if (unconfined) return { kind: 'ask', reason: `Read-only on Windows: confirm ${exec.name}`, displayReason: { en: UNSANDBOXED_READ_ONLY_REASON } }
         return { kind: 'ask', reason: `Ask mode: confirm ${exec.name}`, displayReason: { en: 'Ask permissions mode is on.' } }
       }))
   })
@@ -1003,6 +1029,7 @@ export function apply(ctx, config) {
     const item = turn?.items.find((candidate) => candidate.id === request.callId)
     const decision = await approvalDecision({
       request, askedCalls: thread.askedCalls, permission: thread.permission, item, args: call?.args, cwd: thread.cwd, grants: thread.sessionGrants,
+      platform: shellPlatform(),
     })
     if (decision.kind === 'reject') return 'rejected'
     if (decision.kind === 'allow') return 'allowed-once'
@@ -1327,7 +1354,8 @@ export function apply(ctx, config) {
       throw new RpcError(-32600, 'Wait for the current turn to finish before starting a review.', { codexErrorInfo: 'activeTurnNotSteerable' })
     const message = createUserMessage({ content: [{ type: 'text', text: request.prompt }], source: { kind: 'user', [REVIEW_FIELD]: request.label } })
     const previous = thread.permission.mode === 'review' ? thread.beforeReview ?? null : { ...thread.permission, extraRoots: [...thread.permission.extraRoots] }
-    // on-request: the read-only sandbox is the guard, so no Ask-mode card stops the review's git commands.
+    // on-request: the read-only sandbox is the guard, so no Ask-mode card stops the review's git commands (on Windows,
+    // where nothing confines them, each command asks: approval.js unsandboxedReadOnly).
     Object.assign(thread.permission, { approvalPolicy: 'on-request', sandbox: 'read-only', mode: 'review', extraRoots: [] })
     const review = { turnId: `turn-${message.id}`, messageId: message.id, dshTurn: undefined, previous }
     thread.review = review
@@ -2506,7 +2534,8 @@ export function apply(ctx, config) {
     let headers
     if (query) headers = (await query.listSessions()).map((record) => record.header)
     else headers = (await ctx.sessionPersistence.list()).map((snapshot) => snapshot.header)
-    const cwdFilter = params.cwd === undefined || params.cwd === null ? null : new Set([params.cwd].flat())
+    // cwdKey: on Windows a folder matches whatever its case and slashes (list.js); elsewhere the exact string.
+    const cwdFilter = params.cwd === undefined || params.cwd === null ? null : new Set([params.cwd].flat().map((cwd) => cwdKey(cwd)))
     const wantArchived = params.archived === true
     // subAgent* kinds list sub-agent children (origin 'subagent'); a fork is interactive.
     const wantSource = sourceFilter(params.sourceKinds)
@@ -2516,7 +2545,7 @@ export function apply(ctx, config) {
       if (meta.deleted || meta.workflowAgent) return false
       if (!wantSource(header)) return false
       if (Boolean(meta.archived) !== wantArchived) return false
-      if (cwdFilter && !cwdFilter.has(header.cwd)) return false
+      if (cwdFilter && !cwdFilter.has(cwdKey(header.cwd))) return false
       return true
     })
     // Rows without a projector here come from the projection cache (list.js):

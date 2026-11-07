@@ -4,12 +4,13 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import fs from 'node:fs'
 import path from 'node:path'
+import { SHELL_TOOLS } from '../packages/codex-app-server/src/jobs.js'
 
 const source = fs.readFileSync(path.join(import.meta.dirname, '../packages/codex-app-server/src/index.js'), 'utf8')
 const start = source.indexOf("ctx.on('tools/prepare-input'")
 const body = source.slice(start, source.indexOf('\n  })\n', start) + 5)
 const handlers = []
-new Function('ctx', body)({ on: (name, fn) => handlers.push([name, fn]) })
+new Function('ctx', 'SHELL_TOOLS', body)({ on: (name, fn) => handlers.push([name, fn]) }, SHELL_TOOLS)
 const [[name, hook]] = handlers
 const run = (toolName, args) => {
   let replaced
@@ -22,6 +23,8 @@ test('a missing or empty description becomes the command, shortened', () => {
   assert.deepEqual(run('bash', { command: 'pwd && ls -la | head -40' }), { command: 'pwd && ls -la | head -40', description: 'pwd && ls -la | head -40' })
   assert.equal(run('bash', { command: 'x'.repeat(80), description: ' ' }).description, `${'x'.repeat(59)}…`)
   assert.equal(run('bash', { command: 'echo a\necho b' }).description, 'echo a')
+  // Windows' shell tool (dsh-tool-pwsh) has the same required description.
+  assert.deepEqual(run('pwsh', { command: 'Get-ChildItem' }), { command: 'Get-ChildItem', description: 'Get-ChildItem' })
 })
 test('a call that has a description, no command or another tool is left alone', () => {
   assert.equal(run('bash', { command: 'ls', description: 'List files' }), undefined)

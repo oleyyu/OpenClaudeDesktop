@@ -14,7 +14,7 @@
 
 import fs from 'node:fs'
 import path from 'node:path'
-import { pathToFileURL } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 
 const MIME = { png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', webp: 'image/webp' }
 const EMBED_MAX = 256 * 1024
@@ -104,12 +104,18 @@ export async function toAcpPrompt(input, { prompt = {}, skillPrompt, imageLinks 
   return blocks
 }
 
+/** A file: URI's path (fileURLToPath: decoded, and C:\… on Windows, never /C:/…); another URI's URL path. */
+export function uriPath(uri) {
+  try { if (String(uri).startsWith('file:')) return fileURLToPath(uri) } catch {}
+  try { return new URL(uri).pathname } catch { return String(uri) }
+}
+
 /** Only the block types an agent accepts (MiniMax takes text and resource_link only). */
 export function restrictBlocks(blocks, { image, embeddedContext, resourceLink = true }) {
   return blocks.flatMap((block) => {
     if (block.type === 'image' && !image) return [{ type: 'text', text: '[image omitted: this agent does not accept images]' }]
-    if (block.type === 'resource' && !embeddedContext) return resourceLink ? [{ type: 'resource_link', uri: block.resource.uri, name: path.basename(new URL(block.resource.uri).pathname) }] : [{ type: 'text', text: `@${new URL(block.resource.uri).pathname}` }]
-    if (block.type === 'resource_link' && !resourceLink) return [{ type: 'text', text: `@${block.uri.startsWith('file:') ? new URL(block.uri).pathname : block.uri}` }]
+    if (block.type === 'resource' && !embeddedContext) return resourceLink ? [{ type: 'resource_link', uri: block.resource.uri, name: path.basename(uriPath(block.resource.uri)) }] : [{ type: 'text', text: `@${uriPath(block.resource.uri)}` }]
+    if (block.type === 'resource_link' && !resourceLink) return [{ type: 'text', text: `@${block.uri.startsWith('file:') ? uriPath(block.uri) : block.uri}` }]
     return [block]
   })
 }

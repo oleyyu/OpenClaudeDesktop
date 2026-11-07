@@ -19,6 +19,7 @@ import path from 'node:path'
 import { RpcError, INVALID_PARAMS } from './transport.js'
 import { insideRoots, isReadOnlyMode, realPath } from './permissions.js'
 import { SANDBOX_EXEC, sandboxAvailable, seatbeltProfile } from './sandbox.js'
+import { killTree, platformSpawn, windowsShell } from './win-process.js'
 
 const OUTPUT_LIMIT = 1024 * 1024
 
@@ -114,9 +115,13 @@ export class ClientServices {
     const thread = this.options.thread()
     const workdir = typeof cwd === 'string' && cwd ? cwd : thread?.cwd ?? process.cwd()
     const extraEnv = Object.fromEntries((Array.isArray(env) ? env : []).filter((entry) => entry?.name).map((entry) => [entry.name, String(entry.value ?? '')]))
-    // A bare command line (no args) runs through the shell, as agents send it.
-    let file = args.length ? command : '/bin/bash'
-    let argv = args.length ? args : ['-lc', command]
+    // A bare command line (no args) runs through the shell, as agents send it: bash on macOS, PowerShell on Windows
+    // (win-process.js windowsShell: the shell Gemini CLI, Qwen Code and DeepSeek's own pwsh tool run commands in there,
+    // and it understands the common ls / cat / rm / cp spellings an agent writes, which cmd.exe does not).
+    const platform = this.options.platform ?? process.platform
+    const shell = platform === 'win32' && !args.length ? windowsShell(command) : null
+    let file = shell ? shell.command : args.length ? command : '/bin/bash'
+    let argv = shell ? shell.args : args.length ? args : ['-lc', command]
     const mode = thread?.permission?.mode ?? 'auto'
     const profile = mode === 'bypass' ? 'none' : isReadOnlyMode(mode) ? 'read-only' : 'workspace-write'
     if (profile !== 'none' && sandboxAvailable()) {
@@ -128,7 +133,9 @@ export class ClientServices {
     const id = `term-${process.pid}-${++this.seq}`
     // OpenClaude Desktop's launch variables (its tools channel secret among them) never reach the agent's commands.
     const baseEnv = Object.fromEntries(Object.entries(process.env).filter(([key]) => !key.startsWith('CODE_DESKTOP_') && key !== 'ELECTRON_RUN_AS_NODE'))
-    const child = spawn(file, argv, { cwd: workdir, env: { ...baseEnv, ...extraEnv }, stdio: ['ignore', 'pipe', 'pipe'], detached: true })
+    // Windows: no process group (taskkill /T stops the tree), no console window, a .cmd program through cmd.exe.
+    const launch = platformSpawn(file, argv, { cwd: workdir, env: { ...baseEnv, ...extraEnv }, stdio: ['ignore', 'pipe', 'pipe'], ...(platform === 'win32' ? {} : { detached: true }) }, { platform })
+    const child = spawn(launch.command, launch.args, launch.options)
     const limit = Number.isInteger(outputByteLimit) && outputByteLimit > 0 ? outputByteLimit : OUTPUT_LIMIT
     const term = { id, command: args.length ? [command, ...args].join(' ') : command, cwd: workdir, child, output: '', truncated: false, exit: null, startedAtMs: Date.now(), pid: child.pid }
     term.done = new Promise((resolve) => {
@@ -162,6 +169,7 @@ export class ClientServices {
 
   kill(term) {
     if (term.exit) return
+    if ((this.options.platform ?? process.platform) === 'win32') { killTree(term.child.pid, 'SIGKILL', { platform: 'win32' }); return }
     try { process.kill(-term.child.pid, 'SIGTERM') } catch { try { term.child.kill('SIGTERM') } catch {} }
     // The whole group, even once the shell itself has exited: a child that ignored SIGTERM would outlive it.
     setTimeout(() => { try { process.kill(-term.child.pid, 'SIGKILL') } catch {} }, 2000).unref?.()

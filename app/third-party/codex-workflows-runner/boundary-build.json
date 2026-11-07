@@ -1,10 +1,10 @@
 {
   "output": "src/workflow-boundary.js",
-  "sha256": "78ef8d636ef7a34af5996706c962b366052602c11af794920dadfd87c63c6ae2",
+  "sha256": "37fc6178d19c70b269800514d23bc0a378a672eb5189f221db6d48395e7d9d9d",
   "dependencies": {},
   "sources": [
     {
-      "path": "vendor/deepseek-harness/packages/workflow/workflow-ptc/src/boundary.ts",
+      "path": "../../claude-ui-lab/vendor/deepseek-harness/packages/workflow/workflow-ptc/src/boundary.ts",
       "sha256": "c75032ec765df0e110adf6d7fb08e277e345e75aabb79f148f2f97809f233fd9"
     }
   ],

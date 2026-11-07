@@ -49,4 +49,16 @@ const TRAFFIC_LIGHT_ORIGIN = Object.freeze({ x: 33 / 2, y: 33 / 2 });
 function trafficLightPosition(zoom = 1) {
   return scaleTrafficLights(TRAFFIC_LIGHT_ORIGIN, zoom);
 }
-module.exports = { WINDOW_BACKGROUND, windowBackground, ZOOM_FACTOR, clampZoomFactor, ZOOM_LEVEL, clampZoomLevel, ZOOM_STEP, zoomLevelAfter, ZOOM_HINT_KEY, zoomFactorHint, TRAFFIC_LIGHT_SIZE, scaleTrafficLights, trafficLightPosition };
+// Windows has no traffic lights: a hidden title bar there keeps the native minimize / maximize / close buttons as a
+// Window Controls Overlay in the top-right corner, painted in the window background, as tall as the 40px titlebar
+// (source-titlebar.css). The renderer leaves that corner free (html[data-platform="win32"], style.css).
+const WINDOWS_OVERLAY_HEIGHT = 40;
+const WINDOWS_SYMBOL = Object.freeze({ light: "#3d3d3a", dark: "#e8e6dc" });
+function windowsTitleBarOverlay(dark) {
+  return { color: windowBackground(dark), symbolColor: dark ? WINDOWS_SYMBOL.dark : WINDOWS_SYMBOL.light, height: WINDOWS_OVERLAY_HEIGHT };
+}
+/** BrowserWindow options for this platform's chrome: the overlay on Windows, nothing extra elsewhere. */
+function platformChrome(dark, platform = process.platform) {
+  return platform === "win32" ? { titleBarOverlay: windowsTitleBarOverlay(dark), autoHideMenuBar: true } : {};
+}
+module.exports = { windowsTitleBarOverlay, platformChrome, WINDOWS_OVERLAY_HEIGHT, WINDOW_BACKGROUND, windowBackground, ZOOM_FACTOR, clampZoomFactor, ZOOM_LEVEL, clampZoomLevel, ZOOM_STEP, zoomLevelAfter, ZOOM_HINT_KEY, zoomFactorHint, TRAFFIC_LIGHT_SIZE, scaleTrafficLights, trafficLightPosition };

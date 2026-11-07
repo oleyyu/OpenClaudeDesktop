@@ -10,6 +10,7 @@
 const { spawn } = require("node:child_process");
 const crypto = require("node:crypto");
 const path = require("node:path");
+const { killTree } = require("./process-tree.cjs");
 
 const LINE_MAX = 500;
 const BATCH_MAX = 3000;
@@ -83,11 +84,22 @@ function lineBatcher(onBatch, { schedule = (fn) => { const timer = setTimeout(fn
  * @param {(threadId: string, notification: string) => (void|Promise<void>)} o.deliver  a <task-notification> for the session
  * @param {(event: object) => void} [o.emit]   {kind: "monitors", sessionId, monitors} as a session's list changes
  * @param {() => object} [o.env]               the environment commands run with (the app's, without core secrets)
- * @param {string} [o.shell]                   the login shell that runs them
+ * @param {string} [o.shell]                   the login shell that runs them (Windows: the terminal's choice, pwsh →
+ *                                             Windows PowerShell → cmd.exe, terminal-service.cjs resolveWindowsShell)
  * @param {() => number} [o.now]
+ * @param {string} [o.platform]                process.platform (tests)
  */
-function createMonitorService({ deliver, emit = () => {}, env = () => process.env, shell = process.env.SHELL || "/bin/zsh", now = Date.now, spawnProcess = spawn, schedule = undefined } = {}) {
+function createMonitorService({ deliver, emit = () => {}, env = () => process.env, shell = undefined, now = Date.now, spawnProcess = spawn, schedule = undefined,
+  platform = process.platform, killProcessTree = killTree } = {}) {
   if (typeof deliver !== "function") throw new Error("deliver is required.");
+  const windows = platform === "win32";
+  // Resolved at each start on Windows (the user may install PowerShell 7 while the app runs); terminal-service.cjs is
+  // loaded only there.
+  const shellFor = (environment) => {
+    if (!windows) return shell || process.env.SHELL || "/bin/zsh";
+    return shell || require("./terminal-service.cjs").resolveWindowsShell({ env: environment });
+  };
+  const shellArgs = (program, command) => (windows ? require("./terminal-service.cjs").windowsShellArgs(program, command) : ["-lc", command]);
   const monitors = new Map(); // id → record
   const view = (record) => ({ id: record.id, description: record.description, command: record.command, cwd: record.cwd, status: record.status, startedAt: record.startedAt,
     // OC "Stops in {duration}": when a running monitor's deadline ends it.
@@ -144,7 +156,11 @@ function createMonitorService({ deliver, emit = () => {}, env = () => process.en
     record.batcher = batcher;
     let child;
     try {
-      child = spawnProcess(shell, ["-lc", command], { cwd, env: env(), stdio: ["ignore", "pipe", "pipe"], detached: process.platform !== "win32" });
+      const environment = env();
+      const program = shellFor(environment);
+      // windowsHide: no console window for the shell on Windows (ignored elsewhere); detached gives it its own group
+      // off Windows, where kill() signals that group.
+      child = spawnProcess(program, shellArgs(program, command), { cwd, env: environment, stdio: ["ignore", "pipe", "pipe"], detached: !windows, windowsHide: true });
     } catch (error) { throw new Error(`The monitor couldn’t start: ${error?.message || error}`); }
     record.child = child;
     child.stdout?.setEncoding?.("utf8");
@@ -173,7 +189,13 @@ function createMonitorService({ deliver, emit = () => {}, env = () => process.en
     if (!child) return;
     // The shell can exit while what it put in the background still runs (and holds stdout, so no 'close' yet): the
     // group is signalled either way; only the shell itself is skipped once it is gone.
-    const group = process.platform !== "win32" && child.pid;
+    // Windows: no groups or signals; taskkill /T /F ends the shell and everything it started.
+    if (windows) {
+      if (child.exitCode !== null && child.exitCode !== undefined) return;
+      if (!killProcessTree(child.pid, "SIGKILL", { platform })) { try { child.kill(); } catch { /* gone */ } }
+      return;
+    }
+    const group = child.pid;
     if (!group && child.exitCode !== null && child.exitCode !== undefined) return;
     try { if (group) process.kill(-child.pid, "SIGTERM"); else child.kill("SIGTERM"); } catch { try { child.kill("SIGTERM"); } catch { /* gone */ } }
     const hard = setTimeout(() => { try { if (group) process.kill(-child.pid, "SIGKILL"); else child.kill("SIGKILL"); } catch { /* gone */ } }, 3000);

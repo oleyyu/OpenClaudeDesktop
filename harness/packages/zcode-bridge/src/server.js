@@ -29,7 +29,7 @@
  *                         workflow's agents without approvals, so outside Bypass each run asks once (one card)
  */
 
-import { execFile } from 'node:child_process'
+import { execFilePlatform, spawnPlatform } from './win-process.js'
 import { randomUUID } from 'node:crypto'
 import fs from 'node:fs'
 import os from 'node:os'
@@ -309,7 +309,7 @@ export async function main() {
 
   function agentVersion(target) {
     return new Promise((resolve, reject) => {
-      execFile(target.command, [...target.prefix, '--version'], { timeout: 15000, env: { ...env, HOME: home } }, (error, stdout) => {
+      execFilePlatform(target.command, [...target.prefix, '--version'], { timeout: 15000, env: { ...env, HOME: home } }, (error, stdout) => {
         if (error) reject(error)
         else resolve(String(stdout).trim().split('\n')[0].replace(/^zcode\s+/, ''))
       })
@@ -1921,13 +1921,12 @@ export async function main() {
       await ensureAgent()
       const family = params.codeDesktop?.provider === 'bigmodel' ? 'bigmodel' : 'zai'
       const loginId = randomUUID()
-      const { spawn } = await import('node:child_process')
       const loginEnv = { ...env }
       for (const key of Object.keys(loginEnv)) if (key.startsWith('CODE_DESKTOP_')) delete loginEnv[key]
       if (located?.builtinConfig) { loginEnv.ZCODE_BUILTIN_PROVIDER_CONFIG_FILE = located.builtinConfig; loginEnv.ZCODE_PERSONAL_PROVIDER_CONFIG_FILE = paths.personalProviders }
       // Test hook: a local stand-in for the ZCode platform (OAuth endpoints), never set in normal use.
       if (env.CODE_DESKTOP_ZCODE_PLATFORM_ORIGIN) loginEnv.ZCODE_BASE_URL = env.CODE_DESKTOP_ZCODE_PLATFORM_ORIGIN
-      const child = spawn(located.command, [...located.prefix, 'login', family, '--no-browser', '--json'], { env: loginEnv, cwd: home, stdio: ['ignore', 'pipe', 'pipe'] })
+      const child = spawnPlatform(located.command, [...located.prefix, 'login', family, '--no-browser', '--json'], { env: loginEnv, cwd: home, stdio: ['ignore', 'pipe', 'pipe'] })
       let output = ''
       let errors = ''
       const authUrl = await new Promise((resolve, reject) => {
@@ -1992,7 +1991,7 @@ export async function main() {
   async function logout() {
     accounts.removeApiKeyProviders(paths.personalProviders)
     mirror?.syncPersonal()
-    if (located?.command) await new Promise((resolve) => execFile(located.command, [...located.prefix, 'logout'], { env: { ...env }, timeout: 15000 }, () => resolve()))
+    if (located?.command) await new Promise((resolve) => execFilePlatform(located.command, [...located.prefix, 'logout'], { env: { ...env }, timeout: 15000 }, () => resolve()))
     await pushAccountOverlay().catch(() => {})
     modelCache = null
     notify('account/updated', { authMode: null })

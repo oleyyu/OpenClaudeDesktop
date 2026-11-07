@@ -61,7 +61,9 @@ function withLinkScript(html) {
 
 const encodePath = (relative) => relative.split(path.sep).map(encodeURIComponent).join("/");
 
-function createFilePreviewFrames() {
+// platform: tests only (scopedPath refuses a Windows UNC or device sub-resource, e.g. /%5C%5Chost%5Cshare%5Cx.png, before
+// any fs call would authenticate to that host: fs-paths.cjs remotePathRefused).
+function createFilePreviewFrames({ platform = process.platform } = {}) {
   const frames = new Map();
   /** {root, relative, text} -> {url}: the frame URL of the HTML file at `relative` inside `root`, showing `text`. */
   async function register({ root, relative, text } = {}) {
@@ -69,7 +71,7 @@ function createFilePreviewFrames() {
     if (typeof text !== "string" || text.length > MAX_TEXT) throw new Error("This file is too large to preview.");
     if (!isHtml(relative)) throw new Error("Only HTML files have a rendered preview.");
     const realRoot = await fs.realpath(root);
-    const resolved = await scopedPath(realRoot, relative);
+    const resolved = await scopedPath(realRoot, relative, { platform });
     const rel = path.relative(realRoot, resolved);
     if (!rel || rel.startsWith("..")) throw new Error("File is outside the selected workspace.");
     const token = crypto.randomBytes(16).toString("hex");
@@ -94,7 +96,7 @@ function createFilePreviewFrames() {
     const headers = { "Content-Type": contentType(relative), "X-Content-Type-Options": "nosniff", "Cache-Control": "no-store", "Referrer-Policy": "no-referrer" };
     if (relative === frame.rel) return new Response(withLinkScript(frame.text), { headers: { ...headers, "Content-Security-Policy": FRAME_CSP } });
     try {
-      const target = await scopedPath(frame.root, relative);
+      const target = await scopedPath(frame.root, relative, { platform });
       const stat = await fs.stat(target);
       if (!stat.isFile() || stat.size > MAX_RESOURCE) return notFound();
       const bytes = await fs.readFile(target);

@@ -28,6 +28,12 @@
   config:
     exitCodePolicy: claude-code
 
+# Windows' shell (dsh-base mounts pwsh-sandbox there instead of bash-sandbox, with no config): the same 10-minute
+# default command timeout dsh-base gives bash-sandbox, so a long build does not stop at pwsh-local's 2 minutes.
+- id: pwsh-sandbox
+  config:
+    timeoutMs: 600000
+
 - id: tool-jobs
   config:
     claudeCodeTaskStop: true

@@ -71,9 +71,12 @@ function codexPrefs() {
   try { return codexModule = require("./prefs/codex-provider.mjs"); } catch { return null; }
 }
 // `codex debug models --bundled`: offline, writes nothing but CODEX_HOME/tmp.
-function bundledCatalog(command, env) {
+// Windows: no console window, and npm's codex.cmd shim runs through cmd.exe (process-tree.cjs windowsSpawn).
+function bundledCatalog(command, env, { platform = process.platform } = {}) {
   return new Promise((resolve, reject) => {
-    require("node:child_process").execFile(command, ["debug", "models", "--bundled"], { env, timeout: 5000, maxBuffer: 32 * 1024 * 1024, cwd: require("node:os").homedir() },
+    const launch = require("./process-tree.cjs").windowsSpawn(command, ["debug", "models", "--bundled"],
+      { env, timeout: 5000, maxBuffer: 32 * 1024 * 1024, cwd: require("node:os").homedir(), windowsHide: true }, { platform });
+    require("node:child_process").execFile(launch.command, launch.args, launch.options,
       (error, stdout) => { if (error) return reject(error); try { resolve(JSON.parse(stdout)); } catch (parse) { reject(parse); } });
   });
 }
@@ -543,4 +546,4 @@ function createModelSettings({ getConfig, getClient, app, getHarnessProfile = ()
   return { decorate, decorateThread, run, codexLaunch, codexCustomModels, coworkConnection, ready, dispose: () => relayProxy.stop() };
 }
 
-module.exports = { createModelSettings };
+module.exports = { createModelSettings, bundledCatalog };

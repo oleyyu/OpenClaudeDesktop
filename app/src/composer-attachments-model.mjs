@@ -412,7 +412,9 @@ export function splitClipboardFolders(items, files) {
 export function isOutsideFolder(folder, root) {
   if (!root) return false;
   const normal = (value) => String(value).replace(/\\/g, "/").replace(/\/+$/, "");
-  const child = normal(folder), parent = normal(root);
+  // A Windows drive path compares case-insensitively (C:\Proj vs c:/proj).
+  const fold = (value) => (/^[A-Za-z]:(?:\/|$)/.test(value) ? value.toLowerCase() : value);
+  const child = fold(normal(folder)), parent = fold(normal(root));
   return child !== parent && !child.startsWith(parent + "/");
 }
 

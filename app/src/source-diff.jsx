@@ -7,6 +7,7 @@ import { SourceHighlightedLine } from './source-diff-code.jsx';
 import { splitDiffRows, observeDiffSplitFit } from './diff-view-model.mjs';
 import { diffSeparators } from './diff-separator-model.mjs';
 import { contextRegions, expandContext, visibleContext } from './diff-context-model.mjs';
+import { isInsidePath, pathStyle } from './host-path-model.mjs';
 import { absoluteDiffPath, headerTooltip, pathParts, renamedFrom, renamedFromDisplay, rowLabels, splitPosixPath } from './diff-file-header-model.mjs';
 import { changedFileMenu } from './file-context-menu-model.mjs';
 import { fileKindIcon } from './file-kind-icon.mjs';
@@ -273,11 +274,12 @@ function ChangedFileMenuEntries({ entries, onSelect }) {
 function changedFileEntries(actions, path, { removed = false, directory = false } = {}) {
   const absolute = absoluteDiffPath(actions?.root, path);
   const root = typeof actions?.revealRoot === 'string' ? actions.revealRoot.replace(/\/+$/, '') : '';
+  // isInsidePath: '/'-prefix rule on POSIX; on Windows either separator and any case (C:\Proj vs c:/proj).
   return changedFileMenu({ root: actions?.root, path,
     canAttach: !removed && (directory ? !!actions?.onAttachFiles : !!actions?.onAttachFile),
     canOpenFile: !removed && !directory && !!actions?.onOpenFile,
     editors: !removed && actions?.onOpenInEditor ? actions.editors : [],
-    canShowInFinder: !removed && !!actions?.onRevealFile && !!absolute && !!root && (absolute === root || absolute.startsWith(`${root}/`)) });
+    canShowInFinder: !removed && !!actions?.onRevealFile && !!absolute && !!root && (absolute === root || absolute.startsWith(`${root}/`) || (pathStyle(root) === 'win' && isInsidePath(root, absolute))) });
 }
 function runChangedFileAction(actions, entry, { directory = false } = {}) {
   if (entry.action === 'attach') {

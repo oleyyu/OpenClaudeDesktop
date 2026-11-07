@@ -122,7 +122,8 @@ test('main.cjs records the worktree origin, answers the Recent IPC and saves a R
   assert.match(main, /case "detected-projects": \{/);
   assert.match(main, /if\(!p\.additional && typeof p\.path === "string"\) \{[\s\S]{0,900}else config\.cwd = p\.path;[\s\S]{0,120}save\(\);/);
   const worktrees = fs.readFileSync(path.join(root, 'electron/worktrees.cjs'), 'utf8');
-  assert.match(worktrees, /delete config\.worktreeOrigins\[dir\]/);
+  // forgetWorktree drops the origin (and on Windows its c:\… / C:/… spellings) with the same helper as worktreeBases.
+  assert.match(worktrees, /delete map\[dir\];[\s\S]{0,400}drop\(config\.worktreeOrigins\);/);
   const renderer = fs.readFileSync(path.join(root, 'src/main.jsx'), 'utf8');
   assert.match(renderer, /<SourceRecentFolderMenu rows=\{recentFolderList\.rows\} onSelect=\{pickRecentFolder\}/);
   assert.match(renderer, /call\("folder", \{ surface, path: dir \}\)/);

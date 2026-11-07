@@ -6,6 +6,7 @@
 const fs = require("node:fs");
 const path = require("node:path");
 const { t } = require("./i18n/index.mjs");
+const { pathInside, renameRetry } = require("./fs-paths.cjs");
 
 const NAME = /^[a-z0-9][a-z0-9_-]{0,63}$/i;
 const MAX_BYTES = 64 * 1024;
@@ -19,7 +20,8 @@ function commandName(value, label = "name") {
     throw new Error(label === "name" ? "Use letters, numbers, - or _ for the command name (up to 64 characters)." : "Invalid command name.");
   return value;
 }
-const absolute = (value) => typeof value === "string" && value.startsWith("/") && value.length <= 1024 && !value.includes("\0");
+// This host's absolute paths (Windows: C:\…, C:/…, \\server\share).
+const absolute = (value) => typeof value === "string" && path.isAbsolute(value) && value.length <= 1024 && !value.includes("\0");
 function settings(config) {
   const value = config?.customCommands;
   return { globalDir: absolute(value?.globalDir) ? value.globalDir : "", projectEnabled: value?.projectEnabled !== false };
@@ -149,12 +151,13 @@ function createCustomCommands({ app, shell, dialog, getConfig, emit = () => {}, 
     if ((!previousName || renaming) && !sameFile && await exists(target)) throw new Error(`A command named /${name} already exists.`);
     if (renaming) {
       const old = path.join(dir, `${previousName}.md`);
-      if (await exists(old)) await fs.promises.rename(old, target);
+      if (await exists(old)) await renameRetry(old, target);
     }
     const tmp = path.join(dir, `.${name}.md.${process.pid}.${Date.now().toString(36)}.tmp`);
     try {
       await fs.promises.writeFile(tmp, text, "utf8");
-      await fs.promises.rename(tmp, target);
+      // Windows: replacing a file an indexer / antivirus holds open fails for a moment (EPERM / EBUSY): retried.
+      await renameRetry(tmp, target);
     } catch (error) {
       await fs.promises.rm(tmp, { force: true }).catch(() => {});
       throw error;
@@ -200,6 +203,18 @@ function createCustomCommands({ app, shell, dialog, getConfig, emit = () => {}, 
       watchers.clear();
     },
     watcherCount: () => [...watchers.values()].filter((entry) => entry.watcher).length,
+    /**
+     * Close the watchers of folders inside `dir` (a project's, which may watch the project folder itself while it has
+     * no .code-desktop folder): a watched folder can't be removed or renamed on Windows. The next list re-arms them.
+     */
+    closeWatchersUnder(dir) {
+      let closed = 0;
+      for (const [key, entry] of [...watchers]) {
+        if (!entry.watcher || !(pathInside(dir, entry.watched || entry.dir) || pathInside(dir, entry.dir))) continue;
+        closeEntry(entry); watchers.delete(key); closed += 1;
+      }
+      return closed;
+    },
   };
 }
 

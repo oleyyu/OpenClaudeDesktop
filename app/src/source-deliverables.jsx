@@ -2,6 +2,8 @@
 // client/ui-deliverables cards): one card per file, Open in its default app and Show in Finder (scoped to the
 // session's folder by main.cjs open-tool-file / reveal-tool-file).
 import React, { useState } from "react";
+import { pathBasename } from "./host-path-model.mjs";
+import { revealFileLabel } from "./file-manager-labels.mjs";
 import { Icon } from "./icons";
 import { SourceSettingsButton } from "./source-settings-button.jsx";
 import { fileKindIcon } from "./file-kind-icon.mjs";
@@ -10,7 +12,7 @@ import { t } from "../electron/i18n/index.mjs";
 import { itemDeliverables } from "./deliverable-records.mjs";
 export { itemDeliverables } from "./deliverable-records.mjs";
 
-const baseName = (file) => String(file ?? "").split("/").filter(Boolean).pop() || String(file ?? "");
+const baseName = (file) => pathBasename(String(file ?? "")) || String(file ?? "");
 
 
 export function SourceDeliverables({ item, sessionKey, failed = false }) {
@@ -29,7 +31,7 @@ export function SourceDeliverables({ item, sessionKey, failed = false }) {
       </span>
       {!failed && sessionKey && <span className="sdl-actions">
         <SourceSettingsButton size="sm" variant="secondary" onClick={() => act("open-tool-file", file.path)}>{t("Open")}</SourceSettingsButton>
-        <SourceSettingsButton size="sm" variant="ghost" icon="Folder" iconSize={16} iconOnly aria-label={t("Show {file} in Finder", { file: baseName(file.path) })}
+        <SourceSettingsButton size="sm" variant="ghost" icon="Folder" iconSize={16} iconOnly aria-label={revealFileLabel(baseName(file.path))}
           onClick={() => act("reveal-tool-file", file.path)} />
       </span>}
     </div>)}
@@ -61,7 +63,7 @@ export function SourceArtifacts({ artifacts = [], sessionKey }) {
           ? <SourceSettingsButton size="sm" variant="secondary" onClick={() => act("external", { url: entry.url })}>{t("Open link")}</SourceSettingsButton>
           : sessionKey && <>
             <SourceSettingsButton size="sm" variant="secondary" onClick={() => act("open-tool-file", { sessionId: sessionKey, path: entry.path })}>{t("Open")}</SourceSettingsButton>
-            <SourceSettingsButton size="sm" variant="ghost" icon="Folder" iconSize={16} iconOnly aria-label={t("Show {file} in Finder", { file: baseName(entry.path) })}
+            <SourceSettingsButton size="sm" variant="ghost" icon="Folder" iconSize={16} iconOnly aria-label={revealFileLabel(baseName(entry.path))}
               onClick={() => act("reveal-tool-file", { sessionId: sessionKey, path: entry.path })} />
           </>}
       </span>

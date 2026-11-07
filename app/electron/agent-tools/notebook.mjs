@@ -8,17 +8,24 @@
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
+import fsPaths from "../fs-paths.cjs";
+
+const { assertLocalPath } = fsPaths;
 
 export const group = "notebook";
 export const native = "NotebookEdit";
 export const MAX_NOTEBOOK_BYTES = 50 * 1024 * 1024;
 
-/** A notebook path the agent names, as a real .ipynb file inside the session folder. */
-export function notebookFile(requested, root) {
+/**
+ * A notebook path the agent names, as a real .ipynb file inside the session folder. Windows: a UNC or device path is
+ * refused before any fs call (fs-paths.cjs remotePathRefused). platform: tests only.
+ */
+export function notebookFile(requested, root, { platform = process.platform } = {}) {
   if (typeof requested !== "string" || !requested.trim() || requested.includes("\0")) throw new Error("notebook_path is required.");
   if (typeof root !== "string" || !path.isAbsolute(root)) throw new Error("This session has no working folder.");
   const raw = requested.trim();
   if (path.extname(raw).toLowerCase() !== ".ipynb") throw new Error("File must be a Jupyter notebook (.ipynb file). For editing other file types, use your file edit tool.");
+  assertLocalPath(raw, { base: root, platform }, raw);
   let real, realRoot;
   try { realRoot = fs.realpathSync(root); } catch { throw new Error("The session’s working folder doesn’t exist."); }
   try { real = fs.realpathSync(path.resolve(realRoot, raw)); } catch { throw new Error(`Notebook file does not exist: ${raw}`); }

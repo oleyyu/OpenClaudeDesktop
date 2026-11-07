@@ -8,6 +8,7 @@
 // isMetaJumpChord/jumpDigit, archiveChord) or the menus' 1-9 digit keys (source-menu.jsx
 // data-number-key, chin-shortcuts.mjs modeMenuDigit).
 import { MODE_MENU_KEYS } from "./chin-shortcuts.mjs";
+import { isMacPlatform } from "./pane-keys-model.mjs";
 import { diffChangeShortcuts } from "./diff-change-nav-model.mjs";
 import { t } from "../electron/i18n/index.mjs";
 
@@ -45,11 +46,11 @@ const GENERAL = [
   // (new_session_pane_right and new_session_pane_below, View › Split View's chords: split-view-model.mjs splitShortcut) and the
   // focus_next_pane / focus_previous_pane / close rows.
   { command: "split-open", label: t("Open session in split view"), keys: ["alt+click"] },
-  { command: "split-new-right", label: t("New session on the right"), keys: ["ctrl+cmd+\\"] },
-  { command: "split-new-below", label: t("New session below"), keys: ["ctrl+cmd+-"] },
+  { command: "split-new-right", label: t("New session on the right"), keys: ["ctrl+cmd+\\"], otherKeys: ["ctrl+alt+\\"] },
+  { command: "split-new-below", label: t("New session below"), keys: ["ctrl+cmd+-"], otherKeys: ["ctrl+alt+-"] },
   { command: "split-focus-next", label: t("Focus next split view"), keys: ["ctrl+]"] },
   { command: "split-focus-previous", label: t("Focus previous split view"), keys: ["ctrl+["] },
-  { command: "split-close", label: t("Close split view"), keys: ["ctrl+cmd+w"] },
+  { command: "split-close", label: t("Close split view"), keys: ["ctrl+cmd+w"], otherKeys: ["ctrl+alt+w"] },
   // Ce h block (ccd_palette_session_actions): ⌥⌘P/R/A/U/G/O on the open session. Archive keeps the sidebar's
   // ⌘⇧⌫ (shared-19 rg) as a second chord since this app still binds it.
   { command: "pin-session", label: t("Pin / unpin session"), keys: ["cmd+alt+p"] },
@@ -60,8 +61,8 @@ const GENERAL = [
   { command: "open-session-pr", label: t("Open session PR"), keys: ["cmd+alt+g"] },
   { command: "fork-session", label: t("Fork session"), keys: ["cmd+alt+o"] },
   // Ce p (ccd_prompt_jump): jumpPrevPrompt / jumpNextPrompt "cmd+alt+up" / "cmd+alt+down".
-  { command: "jump-prev-prompt", label: t("Jump to previous prompt"), keys: ["cmd+alt+up"] },
-  { command: "jump-next-prompt", label: t("Jump to next prompt"), keys: ["cmd+alt+down"] },
+  { command: "jump-prev-prompt", label: t("Jump to previous prompt"), keys: ["cmd+alt+up"], otherKeys: ["alt+up"] },
+  { command: "jump-next-prompt", label: t("Jump to next prompt"), keys: ["cmd+alt+down"], otherKeys: ["alt+down"] },
   // cycleTranscriptMode = "ctrl+o".
   { command: "transcript-view", label: t("Transcript view"), keys: ["ctrl+o"] },
   { command: "stop", label: t("Stop DeepSeek’s response"), keys: ["esc"] },
@@ -98,7 +99,7 @@ const PANES = [
   // attachTerminalOutput "cmd+shift+l": the transcript selection as composer context (source-transcript.jsx).
   { command: "attach-selection", label: t("Attach selection as context"), keys: ["cmd+shift+l"] },
   // toggleTerminal ctrl+` / cmd+j (terminal-pane-model.mjs isTerminalToggle, View › Show Terminal ⌘J).
-  { command: "terminal", label: t("Toggle terminal"), keys: ["ctrl+`", "cmd+j"] },
+  { command: "terminal", label: t("Toggle terminal"), keys: ["ctrl+`", "cmd+j"], otherKeys: ["ctrl+`"] },
   { command: "close-pane", label: t("Close pane"), keys: ["cmd+\\"] },
   // toggleExpandPane = "cmd+shift+\\".
   { command: "expand-pane", label: t("Expand or collapse pane"), keys: ["cmd+shift+\\"] },
@@ -106,7 +107,7 @@ const PANES = [
   // (session-command-model.mjs sideQuestionsSupported).
   { command: "side-chat", label: t("Toggle side chat"), keys: ["cmd+;"], sideChatOnly: true },
   // backgroundTasks "ctrl+b" (matchBy key): the Tasks pane's background list; left to a focused text field.
-  { command: "background-tasks", label: t("Background tasks"), keys: ["ctrl+b"] },
+  { command: "background-tasks", label: t("Background tasks"), keys: ["ctrl+b"], otherKeys: ["ctrl+shift+b"] },
 ];
 const COMPOSER = [
   { command: "mode", label: t("Open mode menu"), keys: [MODE_MENU_KEYS] },
@@ -126,9 +127,11 @@ const COMPOSER = [
 ];
 
 /** Ce's General / Panes / Composer sections, filtered to this app's bindings. */
-export function shortcutsDialogSections({ fastMode = false, sideChat = false, rewind = true } = {}) {
+// otherKeys: the row's chords off macOS where they are not just "cmd" read as Ctrl (globalShortcutCommand's
+// nonMacShortcutCommand, split-view-model splitShortcut, terminal-pane-model isTerminalToggle).
+export function shortcutsDialogSections({ fastMode = false, sideChat = false, rewind = true, mac = isMacPlatform() } = {}) {
   const rows = (list) => list.filter((row) => (!row.fastOnly || fastMode) && (!row.sideChatOnly || sideChat) && (!row.rewindOnly || rewind))
-    .map(({ fastOnly, sideChatOnly, rewindOnly, ...row }) => row);
+    .map(({ fastOnly, sideChatOnly, rewindOnly, otherKeys, ...row }) => (!mac && otherKeys ? { ...row, keys: otherKeys } : row));
   return [
     { title: t("General"), rows: rows(GENERAL) },
     { title: t("Panes"), rows: rows(PANES) },
@@ -144,8 +147,9 @@ export function shortcutsDialogSections({ fastMode = false, sideChat = false, re
 // :14357-14360, fR: the typed character, else KeyW) and ⇧⌘T reopenClosed (matchBy "char"), both
 // Meta only; ⌃O is cycleTranscriptMode (code KeyO), Control only.
 const typedChar = (event, letter, code) => (/^[ -~]$/.test(event.key ?? "") ? event.key.toLowerCase() === letter : event.code === code);
-export function globalShortcutCommand(event) {
+export function globalShortcutCommand(event, { mac = isMacPlatform() } = {}) {
   if (!event) return null;
+  if (!mac) return nonMacShortcutCommand(event);
   const meta = !!event.metaKey, ctrl = !!event.ctrlKey, alt = !!event.altKey, shift = !!event.shiftKey;
   if ((meta || ctrl) && event.key === ",") return "settings";
   const plainMeta = meta && !ctrl && !alt && !shift && !event.isComposing;
@@ -172,6 +176,42 @@ export function globalShortcutCommand(event) {
   if ((meta || ctrl) && !shift && event.key?.toLowerCase() === "k") return "search";
   // ⌥⌘ session chords: matched by code (⌥ turns event.key into another character on a Mac).
   if (meta && alt && !ctrl && !shift && !event.isComposing) {
+    const chord = { KeyP: "pin-session", KeyR: "rename-session", KeyA: "archive-session", KeyU: "unread-session", KeyO: "fork-session", KeyG: "open-session-pr" }[event.code];
+    if (chord) return chord;
+  }
+  return null;
+}
+
+// Windows / Linux (the official "non-mac" rows, shared-1 Wy: cmd → ctrl). The Windows key (metaKey) is never part of a
+// chord. Collisions with the Ctrl-only Mac chords, resolved deliberately:
+// - Ctrl+B is toggle_sidebar (official non-mac binding, View › Show/Hide Sidebar CmdOrCtrl+B); Background tasks
+//   (⌃B on the Mac) moves to Ctrl+Shift+B, which nothing else binds here.
+// - Ctrl+O stays cycleTranscriptMode (the official binding has no platform; Claude Code's own Ctrl+O). Where the
+//   renderer leaves it unhandled (no session view) File › Open File… (CmdOrCtrl+O) still applies, as on the Mac with ⌃O.
+// - ⌘[ / ⌘] (Back / Forward) are Alt+← / Alt+→ (the Windows convention; Ctrl+[ / Ctrl+] focus split panes).
+// - ⌥⌘ chords are Ctrl+Alt; an AltGr press (Ctrl+Alt with AltGraph, which types a character) is no chord.
+// - ⌘⌥↑ / ⌘⌥↓ (previous / next prompt) are Alt+↑ / Alt+↓ (official jump_prev_prompt non-mac).
+function nonMacShortcutCommand(event) {
+  const ctrl = !!event.ctrlKey, alt = !!event.altKey, shift = !!event.shiftKey;
+  if (event.metaKey || event.isComposing) return null;
+  if (ctrl && alt && event.getModifierState?.("AltGraph")) return null;
+  if (ctrl && !alt && event.key === ",") return "settings";
+  const plain = ctrl && !alt && !shift;
+  if (plain && event.code === "KeyB") return "toggle-sidebar";
+  if (alt && !ctrl && !shift && (event.key === "ArrowLeft" || event.key === "ArrowRight")) return event.key === "ArrowLeft" ? "back" : "forward";
+  if (plain && typedChar(event, "p", "KeyP")) return "go-to-file";
+  if (plain && event.code === "Slash") return "shortcuts";
+  if (ctrl && shift && !alt && event.code === "KeyK") return "search-palette";
+  if (ctrl && !alt && !shift && event.key?.toLowerCase() === "n") return "new-session";
+  if (ctrl && !alt && event.code === "Backslash") return shift ? "expand-pane" : "close-pane";
+  if (ctrl && !alt && typedChar(event, "w", "KeyW")) return shift ? null : "close-session";
+  if (ctrl && shift && !alt && typedChar(event, "t", "KeyT")) return "reopen-closed";
+  if (plain && event.code === "KeyO") return "transcript-view";
+  if (ctrl && shift && !alt && event.code === "KeyB") return "background-tasks";
+  if (plain && event.code === "KeyU") return "file-upload";
+  if (alt && !ctrl && !shift && (event.key === "ArrowUp" || event.key === "ArrowDown")) return event.key === "ArrowUp" ? "jump-prev-prompt" : "jump-next-prompt";
+  if (plain && event.key?.toLowerCase() === "k") return "search";
+  if (ctrl && alt && !shift) {
     const chord = { KeyP: "pin-session", KeyR: "rename-session", KeyA: "archive-session", KeyU: "unread-session", KeyO: "fork-session", KeyG: "open-session-pr" }[event.code];
     if (chord) return chord;
   }

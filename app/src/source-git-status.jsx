@@ -1,4 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
+import { pathBasename } from "./host-path-model.mjs";
+import { revealInFileManagerLabel } from "./file-manager-labels.mjs";
 import { Icon } from "./icons";
 import { SourceMenu } from "./source-menu.jsx";
 import { SourceTooltip, textOverflows } from "./source-tooltip.jsx";
@@ -9,7 +11,7 @@ import { gitRepoMenuItems, prStateLabel, ciStatusLabel, PR_STATE_GLYPHS, PR_ROW_
 import "./source-git-status.css";
 import { t } from "../electron/i18n/index.mjs";
 
-const basename = (path = "") => path.split("/").filter(Boolean).pop() || path;
+const basename = (path = "") => pathBasename(path) || path;
 // cfb0234e3 m/g: the #number link's tooltip "Open on {host}", github.com named "GitHub".
 const prHost = (url) => { try { const host = new URL(url).hostname; return host === "github.com" ? "GitHub" : host; } catch { return "GitHub"; } };
 
@@ -191,7 +193,7 @@ export function SourceGitStatus({
       label={menu.kind === "folder" ? t("Repository options") : t("Branch options")} onClose={() => setMenu(null)}>
       {menu.kind === "folder" && repoMenu.map((item) => <React.Fragment key={item.label}>
         {item.separatorBefore && <SourceMenu.Separator />}
-        <SourceMenu.Item onClick={repoActions[item.label]}>{t(item.label)}</SourceMenu.Item>
+        <SourceMenu.Item onClick={repoActions[item.label]}>{item.label === "Show in Finder" ? revealInFileManagerLabel() : t(item.label)}</SourceMenu.Item>
       </React.Fragment>)}
       {menu.kind === "branch" && branchMenu.map((item) => <React.Fragment key={item.key}>
         {item.separatorBefore && <SourceMenu.Separator />}

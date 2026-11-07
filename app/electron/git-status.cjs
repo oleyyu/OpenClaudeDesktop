@@ -1,6 +1,7 @@
 const { execFile } = require('node:child_process');
 const fs = require('node:fs/promises');
 const path = require('node:path');
+const { userGitConfig, safeDirectoryArgs, coreArgs, CORE_KEYS } = require('./git-user-config.cjs');
 
 const MAX_OUTPUT = 16 * 1024 * 1024;
 const MAX_FILES = 10000;
@@ -15,6 +16,9 @@ function failure(message, code) {
 function environment() {
   // Parent Git context must not redirect a workspace query to another index or
   // object database. No command below contacts a remote or updates the index.
+  // System and global configuration stay out (a user's core.fsmonitor, filters, external diff, pager or display
+  // settings would run programs or change the output the parsers read); on Windows the few settings Git needs
+  // there are passed back explicitly (git-user-config.cjs, hostConfig below).
   const env = Object.fromEntries(Object.entries(process.env).filter(([key]) => !key.startsWith('GIT_')));
   return { ...env, GIT_CONFIG_NOSYSTEM: '1', GIT_CONFIG_GLOBAL: '/dev/null', GIT_OPTIONAL_LOCKS: '0',
     GIT_NO_REPLACE_OBJECTS: '1', GIT_LITERAL_PATHSPECS: '1', LC_ALL: 'C' };
@@ -77,26 +81,46 @@ function empty(cwd) {
     added: 0, removed: 0, files: 0, binaryFiles: 0, untrackedCount: 0, diffBase: null, scopeBase: null, fileDetails: [], comparison: null };
 }
 
-async function repository(cwd, trace, exec) {
+// Windows (docs/windows-bugs.md R7): the user's system/global safe.directory entries, before Git opens the repository
+// (a FAT32/exFAT drive, a share, another account's folder: "dubious ownership" otherwise). host.userConfig: test seam
+// ({ core, safeDirectories }); host.platform: test seam. macOS/Linux: nothing changes.
+async function hostConfig(ctx, host = {}) {
+  if ((host.platform || process.platform) !== 'win32') return null;
+  const user = host.userConfig || await userGitConfig({ platform: 'win32' });
+  ctx.config.push(...safeDirectoryArgs(user));
+  return user;
+}
+const CORE_PATTERN = `^(${CORE_KEYS.map((key) => key.replace('.', '\\.')).join('|')})$`;
+// Windows: the user's core.autocrlf / eol / safecrlf / longpaths / fscache (Git for Windows' installer sets autocrlf=true
+// system-wide; without it every CRLF file reads as changed), unless the repository's own config sets the key.
+async function inheritCore(ctx, user) {
+  if (!user || !Object.keys(user.core || {}).length) return;
+  const local = await git(ctx, ['config', '--null', '--name-only', '--get-regexp', CORE_PATTERN], { allowed: [0, 1], paths: true });
+  ctx.config.push(...coreArgs(user, local.output.split('\0').filter(Boolean)));
+}
+
+async function repository(cwd, trace, exec, host) {
   if (typeof cwd !== 'string' || !cwd.trim()) throw new TypeError('A workspace directory is required.');
   const requested = path.resolve(cwd);
   let directory;
   try { directory = await fs.realpath(requested); if (!(await fs.stat(directory)).isDirectory()) return null; }
   catch (error) { if (['ENOENT', 'ENOTDIR'].includes(error.code)) return null; throw error; }
   const ctx = context(directory, trace, exec);
+  const user = await hostConfig(ctx, host);
   const top = await git(ctx, ['rev-parse', '--show-toplevel'], { allowed: [0, 128], paths: true });
   if (top.code === 128) {
     if (/not a git repository|must be run in a work tree/.test(top.stderr)) return null;
     throw failure(`Cannot inspect workspace repository: ${top.stderr.trim().slice(0, 500)}`, 'GIT_QUERY_FAILED');
   }
   // Remove exactly the protocol's terminating newline, not valid path spaces.
-  ctx.cwd = await fs.realpath(top.output.replace(/\n$/, ''));
+  ctx.cwd = await fs.realpath(top.output.replace(/\r?\n$/, ''));
   // Clean/process filters can otherwise run programs even with --no-ext-diff.
   // Disable configured filter commands before asking status/diff to read files.
   const filters = await git(ctx, ['config', '--null', '--name-only', '--get-regexp', '^filter\\..*\\.(clean|smudge|process|required)$'], { allowed: [0, 1], paths: true });
   for (const key of filters.output.split('\0').filter(Boolean)) {
     ctx.config.push('-c', `${key}=${key.endsWith('.required') ? 'false' : ''}`);
   }
+  await inheritCore(ctx, user);
   const head = await git(ctx, ['rev-parse', '--verify', '--quiet', 'HEAD^{commit}'], { allowed: [0, 1, 128] });
   if (head.code === 128) throw failure('Repository HEAD cannot be read.', 'GIT_QUERY_FAILED');
   ctx.head = head.code === 0 ? head.output.trim() : null;
@@ -274,8 +298,8 @@ async function mapLimited(items, callback) {
 }
 
 const OWN_WORKTREES = /^(?:.*\/)?\.code\/worktrees(?:\/|$)/;
-async function snapshot(cwd, trace, exec) {
-  const ctx = await repository(cwd, trace, exec);
+async function snapshot(cwd, trace, exec, host) {
+  const ctx = await repository(cwd, trace, exec, host);
   if (!ctx) return null;
   const response = await git(ctx, ['status', '--porcelain=v1', '-z', '--untracked-files=all', '--ignore-submodules=none'], { paths: true });
   // OpenClaude Desktop's own worktrees inside the repository (.code/worktrees, main.cjs prepare-worktree) are never the main
@@ -376,8 +400,8 @@ async function currentBranch(ctx) {
 }
 
 /** Base branch and ahead/behind for a workspace; null for a non-repository. */
-async function workspaceGitComparison(cwd, { preferredBase, trace } = {}) {
-  const ctx = await repository(cwd, trace);
+async function workspaceGitComparison(cwd, { preferredBase, trace, platform, userConfig } = {}) {
+  const ctx = await repository(cwd, trace, undefined, { platform, userConfig });
   if (!ctx) return null;
   return comparison(ctx, await currentBranch(ctx), preferredBase);
 }
@@ -389,8 +413,8 @@ async function workspaceGitComparison(cwd, { preferredBase, trace } = {}) {
  * gate is workingTreeDirty = any porcelain record (shared-16 wu
  * isWorkingTreeDirty). A repository without a remote compares against its own
  * branch, i.e. the HEAD diff. */
-async function workspaceGitStatus(cwd, { preferredBase, trace } = {}) {
-  const state = await snapshot(cwd, trace);
+async function workspaceGitStatus(cwd, { preferredBase, trace, platform, userConfig } = {}) {
+  const state = await snapshot(cwd, trace, undefined, { platform, userConfig });
   if (!state) return empty(path.resolve(cwd));
   const { ctx, records } = state;
   const byPath = new Map(records.map((record) => [record.path, record]));
@@ -545,8 +569,8 @@ async function budgetedDiff(ctx, records, { completeContext, scope, base, prefer
  * heavyWorkWorker ka: `<sha>^..<sha>` (the first-parent patch, so a merge commit
  * is not a combined diff), the empty tree for a root commit. `base` is an
  * explicit "Compare against" branch; an invalid one falls back to the inferred base. */
-async function workspaceGitDiff(cwd, { completeContext = false, scope = 'branch', base, preferredBase, includePatches, inlinePatchesMaxChangedLines, exec } = {}) {
-  const state = await snapshot(cwd, undefined, exec);
+async function workspaceGitDiff(cwd, { completeContext = false, scope = 'branch', base, preferredBase, includePatches, inlinePatchesMaxChangedLines, exec, platform, userConfig } = {}) {
+  const state = await snapshot(cwd, undefined, exec, { platform, userConfig });
   if (!state) return completeContext ? { patch: '', completeContext: false } : '';
   const { ctx, records } = state;
   const options = { scope, base, preferredBase, exec };
@@ -603,11 +627,11 @@ function unsafeRelativePath(value) {
   return typeof value !== 'string' || !value || value.includes('\0') || value.startsWith('/') || value.startsWith('\\')
     || /^[a-zA-Z]:/.test(value) || value.split(/[/\\]/).some((part) => part === '..');
 }
-async function workspaceGitFilePatch(cwd, { filePath, previousPath, scope = 'branch', base, preferredBase, exec } = {}) {
+async function workspaceGitFilePatch(cwd, { filePath, previousPath, scope = 'branch', base, preferredBase, exec, platform, userConfig } = {}) {
   const previous = previousPath === undefined || previousPath === null || previousPath === filePath ? undefined : previousPath;
   if (unsafeRelativePath(filePath) || (previous !== undefined && unsafeRelativePath(previous))) return null;
   if (scope !== 'branch' && scope !== 'uncommitted') return null;
-  const ctx = await repository(cwd, undefined, exec);
+  const ctx = await repository(cwd, undefined, exec, { platform, userConfig });
   if (!ctx || OWN_WORKTREES.test(filePath)) return null;
   const limited = (error) => (error.code === 'GIT_OUTPUT_LIMIT' ? '' : null);
   if (ctx.head) {
@@ -656,12 +680,12 @@ async function imageRevision(ctx, side, { scope = 'branch', base, preferredBase 
   if (!ctx.head) return null;
   return scope === 'uncommitted' ? ctx.head : (await scopeBase(ctx, await currentBranch(ctx), { preferredBase, base })).diffBase;
 }
-async function workspaceGitImage(cwd, { filePath, side, scope = 'branch', base, preferredBase } = {}) {
+async function workspaceGitImage(cwd, { filePath, side, scope = 'branch', base, preferredBase, platform, userConfig } = {}) {
   if (side !== 'before' && side !== 'after') throw new TypeError('An image side is required.');
   const dot = typeof filePath === 'string' ? filePath.lastIndexOf('.') : -1;
   const type = dot < 0 ? undefined : IMAGE_TYPES.get(filePath.slice(dot + 1).toLowerCase());
   if (!type || unsafeImagePath(filePath)) return null;
-  const ctx = await repository(cwd);
+  const ctx = await repository(cwd, undefined, undefined, { platform, userConfig });
   if (!ctx) return null;
   const rev = await imageRevision(ctx, side, { scope, base, preferredBase });
   if (rev === null) return null;
@@ -690,8 +714,8 @@ async function workspaceGitImage(cwd, { filePath, side, scope = 'branch', base, 
  * `rev-list --count <baseRef>..HEAD` (Oa lists them all; zm counts m.length − 50
  * older commits, so the hidden count stays real without fetching every row).
  * Empty without a resolvable base or with an unborn HEAD. */
-async function workspaceGitCommits(cwd, { preferredBase, base, limit = 51, trace } = {}) {
-  const ctx = await repository(cwd, trace);
+async function workspaceGitCommits(cwd, { preferredBase, base, limit = 51, trace, platform, userConfig } = {}) {
+  const ctx = await repository(cwd, trace, undefined, { platform, userConfig });
   if (!ctx) return { base: null, commits: [], total: 0 };
   const scope = await scopeBase(ctx, await currentBranch(ctx), { preferredBase, base });
   if (!ctx.head || !scope.baseRef) return { base: scope.baseRef ? scope.base : null, commits: [], total: 0 };
@@ -710,8 +734,8 @@ async function workspaceGitCommits(cwd, { preferredBase, base, limit = 51, trace
 }
 
 /** za getLocalBranches: the local branch names for "Compare against". */
-async function workspaceGitBranches(cwd, { trace } = {}) {
-  const ctx = await repository(cwd, trace);
+async function workspaceGitBranches(cwd, { trace, platform, userConfig } = {}) {
+  const ctx = await repository(cwd, trace, undefined, { platform, userConfig });
   if (!ctx) return [];
   const listed = await git(ctx, ['for-each-ref', '--format=%(refname:lstrip=2)', 'refs/heads/'], { paths: true });
   return listed.output.split('\n').map((line) => line.trim()).filter(validBranchName);
@@ -747,6 +771,9 @@ function parseRemoteUrl(url) {
     try { route = decodeURIComponent(parsed.pathname); } catch { route = parsed.pathname; }
     if (parsed.protocol === 'file:') return { host: null, owner: null, name: remoteRepoName(route) };
     host = parsed.hostname || null;
+  } else if (/^[A-Za-z]:[\\/]/.test(value) || /^\\\\/.test(value)) {
+    // A Windows path (C:\\repos\\x.git, \\\\server\\share\\x.git) is local: not scp-style host "C".
+    return { host: null, owner: null, name: remoteRepoName(value) };
   } else {
     const scp = /^(?:[^@/\s]+@)?([^:/\s]+):(?!\/)(.+)$/.exec(value);
     if (!scp) return { host: null, owner: null, name: remoteRepoName(value) };
@@ -758,14 +785,22 @@ function parseRemoteUrl(url) {
   return { host, owner: parts.length > 1 ? parts.slice(0, -1).join('/') : null, name };
 }
 
-function tildePath(value, home) {
+function tildePath(value, home, platform = process.platform) {
   if (!home) return value;
   const root = home.replace(/[/\\]+$/, '');
+  if (platform === 'win32') {
+    // Windows: the home folder compares case-insensitively, "\\" and "/" alike.
+    const fold = (text) => text.replace(/\//g, '\\').toLowerCase(), folded = fold(value), base = fold(root);
+    return folded === base ? '~' : folded.startsWith(base + '\\') ? '~' + value.slice(root.length) : value;
+  }
   return value === root ? '~' : value.startsWith(root + path.sep) ? '~' + value.slice(root.length) : value;
 }
+// A folder without its trailing separators, except a root ("/", "C:\\") that has nothing else ("C:" would be the
+// current folder of drive C).
+const trimFolder = (value) => { const trimmed = value.replace(/[/\\]+$/, ''); return !trimmed || /^[A-Za-z]:$/.test(trimmed) ? (path.parse(value).root || value) : trimmed; };
 
-async function resolveRepoIdentity(cwd, { home, trace } = {}) {
-  const requested = path.resolve(cwd).replace(/[/\\]+$/, '') || '/';
+async function resolveRepoIdentity(cwd, { home, trace, platform, userConfig } = {}) {
+  const requested = trimFolder(path.resolve(cwd)) || '/';
   const parentDir = path.dirname(requested);
   const parent = tildePath(parentDir === requested ? requested : parentDir, home);
   const none = { isRepo: false, toplevel: null, owner: null, name: null, parent };
@@ -774,9 +809,12 @@ async function resolveRepoIdentity(cwd, { home, trace } = {}) {
   catch { return none; }
   const ctx = context(directory, trace);
   try {
+    await hostConfig(ctx, { platform, userConfig });
     const top = await git(ctx, ['rev-parse', '--show-toplevel'], { allowed: [0, 128], paths: true });
     if (top.code !== 0) return none;
-    const toplevel = top.output.replace(/\n$/, '');
+    let toplevel = top.output.replace(/\r?\n$/, '');
+    // Windows: git prints C:/Users/…; the Files pane compares native real paths (C:\\Users\\…), as repository() does.
+    if (process.platform === 'win32') toplevel = await fs.realpath(toplevel).catch(() => path.win32.normalize(toplevel));
     const origin = await git(ctx, ['config', '--get', 'remote.origin.url'], { allowed: [0, 1] });
     const remote = origin.code === 0 ? parseRemoteUrl(origin.output) : null;
     // host: where the origin lives (github.com unlocks the band's pull request action).
@@ -787,7 +825,7 @@ async function resolveRepoIdentity(cwd, { home, trace } = {}) {
 /** Cached repo identity of a workspace folder; never throws (an unreadable folder is not a repo). */
 function repoIdentity(cwd, options = {}) {
   if (typeof cwd !== 'string' || !path.isAbsolute(cwd)) return Promise.resolve(null);
-  const key = cwd.replace(/[/\\]+$/, '') || cwd;
+  const key = trimFolder(cwd) || cwd;
   // fresh: read it again (the folder became a repository, or its origin changed).
   if (options.fresh) repoIdentityCache.delete(key);
   if (!repoIdentityCache.has(key)) {
@@ -800,3 +838,5 @@ function repoIdentity(cwd, options = {}) {
 module.exports.repoIdentity = repoIdentity;
 module.exports.parseRemoteUrl = parseRemoteUrl;
 module.exports.clearRepoIdentityCache = () => repoIdentityCache.clear();
+module.exports.tildePath = tildePath;
+module.exports.hostConfig = hostConfig; // test seam: what a Windows query adds before Git opens the repository

@@ -1,3 +1,4 @@
+import { isAbsolutePath, pathStyle, relativeTo } from "./host-path-model.mjs";
 import { changePath, changeKind, changePreview, fileBasename } from "./file-tool-model.mjs";
 import { parseUnifiedDiff } from "./diff-model.js";
 import { t, tn } from "../electron/i18n/index.mjs";
@@ -35,6 +36,8 @@ export function turnEdits(items, { activeTurnId = null } = {}) {
 // is plain file contents (add/delete) becomes a whole-file hunk. Paths inside cwd are made relative to it so the pane's
 // open/attach actions resolve them against the workspace. Pure; '' when nothing is showable.
 function relativePath(path, cwd) {
+  // A Windows cwd (C:\…): inside it case-insensitively, either separator, '/'-joined (host-path-model).
+  if (typeof cwd === "string" && pathStyle(cwd) === "win" && isAbsolutePath(path)) return relativeTo(cwd, path) || path;
   if (typeof cwd !== "string" || !cwd.startsWith("/") || !path.startsWith("/")) return path.replace(/^\.\//, "");
   const root = cwd.replace(/\/+$/, "");
   return path.startsWith(`${root}/`) ? path.slice(root.length + 1) : path;

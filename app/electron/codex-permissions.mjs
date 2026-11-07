@@ -6,6 +6,7 @@
 // sandbox of Auto, Manual and Accept edits: a chosen (or configured) custom profile replaces it, as Codex's own
 // /permissions does; without one, the user's configured writable roots and network access are kept instead of being
 // replaced by the session folder alone. Pure: main.cjs reads the config and the profiles.
+import { isAbsoluteFolder } from './prefs/host-paths.mjs';
 export const BUILTIN_PROFILES = Object.freeze([':read-only', ':workspace', ':danger-full-access']);
 export const PROFILE_ID = /^[A-Za-z0-9_.:-]{1,128}$/;
 const builtin = (id) => BUILTIN_PROFILES.includes(id);
@@ -31,7 +32,8 @@ export function validateProfileChoice(value) {
   if (typeof value !== 'string' || !PROFILE_ID.test(value) || builtin(value)) throw new Error('Invalid permission profile.');
   return value;
 }
-const absolute = (value) => typeof value === 'string' && value.startsWith('/') && !value.includes('\0');
+// /… on macOS; C:\… / C:/… / \\server\share on Windows (renderer-safe: preferences.mjs imports this module).
+const absolute = (value) => isAbsoluteFolder(value) && !value.includes('\0');
 /**
  * Applies them to a thread/start, thread/resume or turn/start request in place. Only a workspace-write request is
  * touched: sandbox 'workspace-write' (thread) or sandboxPolicy {type:'workspaceWrite'} (turn).

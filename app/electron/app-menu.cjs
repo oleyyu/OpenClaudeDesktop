@@ -19,7 +19,10 @@ const SEPARATOR = Object.freeze({ type: "separator" });
 // with ⌘ held, the chord reached the menu because the page did not take it
 // (the renderer owns ⌘⇧D/⌘⇧F/⌘\/⌘⇧[/⌘⇧]/⌘⇧K/⌘/ and preventDefaults them when
 // it acts), so the click is not dispatched again. Mouse clicks always are.
-const rendererOwned = (event) => event?.triggeredByAccelerator === true && event.metaKey === true;
+// Windows / Linux: CmdOrCtrl is Ctrl there, so RZ's "cmd" test reads ctrlKey (the renderer's chords are Ctrl chords,
+// src/shortcuts-dialog-model.mjs nonMacShortcutCommand).
+const IS_MAC = process.platform === "darwin";
+const rendererOwned = (event, mac = IS_MAC) => event?.triggeredByAccelerator === true && (mac ? event.metaKey : event.ctrlKey) === true;
 const dispatch = (emit, payload) => (_item, window, event) => { if (!rendererOwned(event)) emit(payload, window); };
 // hNr(n, "ctrl") for the Split View items: their ⌃ chords are matched by the renderer (source-split-view.jsx,
 // official OR), so a click that came through its own accelerator with ⌃ held is not dispatched twice.
@@ -28,7 +31,7 @@ const splitDispatch = (emit, command) => (_item, window, event) => { if (!render
 // Gtr: About, Settings… (KK shows the main window first, then navigates),
 // Services, Hide / Hide Others / Show All, Quit. The update items (Wtr) have
 // no local updater.
-function appSubmenu(emit) {
+function appSubmenu(emit, mac = IS_MAC) {
   return {
     label: "OpenClaude Desktop",
     submenu: [
@@ -36,12 +39,15 @@ function appSubmenu(emit) {
       SEPARATOR,
       { label: t("Settings…"), accelerator: "CommandOrControl+,", click: (_item, window) => emit({ kind: "open-settings" }, window) },
       SEPARATOR,
-      { role: "services", ...roleLabel("Services") },
-      SEPARATOR,
-      { role: "hide", ...roleLabel("Hide {appName}", { appName: APP_NAME }) },
-      { role: "hideOthers", ...roleLabel("Hide Others") },
-      { role: "unhide", ...roleLabel("Show All") },
-      SEPARATOR,
+      // Services / Hide / Hide Others / Show All are macOS roles (no action on Windows / Linux).
+      ...(mac ? [
+        { role: "services", ...roleLabel("Services") },
+        SEPARATOR,
+        { role: "hide", ...roleLabel("Hide {appName}", { appName: APP_NAME }) },
+        { role: "hideOthers", ...roleLabel("Hide Others") },
+        { role: "unhide", ...roleLabel("Show All") },
+        SEPARATOR,
+      ] : []),
       { role: "quit", ...roleLabel("Quit {appName}", { appName: APP_NAME }) },
     ],
   };
@@ -138,19 +144,21 @@ function editMenuItems(emit = () => {}, findInFiles) {
 // dispatchCycleSession) and, after another separator, Search…
 // (Command+Shift+K, RZ → dispatchOpenCommandPalette(true)). Cwr's area
 // checkboxes need at least two areas, so they never appear here.
-function goMenuItems({ canGoBack, canGoForward, emit }) {
-  const back = { label: t("Back"), accelerator: "Command+[", click: () => emit({ kind: "navigate", delta: -1 }) };
-  const forward = { label: t("Forward"), accelerator: "Command+]", click: () => emit({ kind: "navigate", delta: 1 }) };
+// Windows / Linux: ⌘[ / ⌘] are Alt+Left / Alt+Right (Ctrl+[ / Ctrl+] focus split panes), the session cycle and Search…
+// read ⌘ as Ctrl (main.jsx / shortcuts-dialog-model.mjs nonMacShortcutCommand match the same chords).
+function goMenuItems({ canGoBack, canGoForward, emit, mac = IS_MAC }) {
+  const back = { label: t("Back"), accelerator: mac ? "Command+[" : "Alt+Left", click: () => emit({ kind: "navigate", delta: -1 }) };
+  const forward = { label: t("Forward"), accelerator: mac ? "Command+]" : "Alt+Right", click: () => emit({ kind: "navigate", delta: 1 }) };
   return [
     { ...back, visible: false },
     { ...back, id: "go-back", registerAccelerator: false, enabled: canGoBack === true },
     { ...forward, visible: false },
     { ...forward, id: "go-forward", registerAccelerator: false, enabled: canGoForward === true },
     SEPARATOR,
-    { label: t("Previous Session"), accelerator: "Command+Shift+[", click: dispatch(emit, { kind: "cycle-session", delta: -1 }) },
-    { label: t("Next Session"), accelerator: "Command+Shift+]", click: dispatch(emit, { kind: "cycle-session", delta: 1 }) },
+    { label: t("Previous Session"), accelerator: mac ? "Command+Shift+[" : "Ctrl+Shift+[", click: dispatch(emit, { kind: "cycle-session", delta: -1 }) },
+    { label: t("Next Session"), accelerator: mac ? "Command+Shift+]" : "Ctrl+Shift+]", click: dispatch(emit, { kind: "cycle-session", delta: 1 }) },
     SEPARATOR,
-    { label: t("Search…"), accelerator: "Command+Shift+K", click: dispatch(emit, { kind: "open-search" }) },
+    { label: t("Search…"), accelerator: mac ? "Command+Shift+K" : "Ctrl+Shift+K", click: dispatch(emit, { kind: "open-search" }) },
   ];
 }
 // index.chunk-ChZ67Jhw.js dNr replaces the zoom roles: Actual Size (id
@@ -189,7 +197,7 @@ const refreshZoomMenu = (window, Menu) => bindZoomMenu(window, { Menu }).refresh
 // Side Chat have none), labelled Hide only while the pane is enabled and open,
 // enabled from the renderer's sessionPanes report, then Close Pane
 // (CmdOrCtrl+\, enabled from closePane). Clicks go through RZ.
-function paneMenuItems({ panes, closePane }, emit) {
+function paneMenuItems({ panes, closePane }, emit, mac = IS_MAC) {
   const pane = (kind, show, hide, accelerator) => {
     const { enabled, open } = panes[kind];
     return { label: enabled && open ? hide : show, accelerator, enabled, click: dispatch(emit, { kind: "toggle-pane", pane: kind }) };
@@ -197,7 +205,7 @@ function paneMenuItems({ panes, closePane }, emit) {
   // bNr's order: Terminal, Changes, Preview, Files, Side Chat, then Close Pane.
   return [
     // _Nr("Command+J"): Show/Hide Terminal (the built-in terminal pane; ⌃` toggles it too), once the renderer reports it.
-    ...(panes.terminal ? [pane("terminal", t("Show Terminal"), t("Hide Terminal"), "Command+J")] : []),
+    ...(panes.terminal ? [pane("terminal", t("Show Terminal"), t("Hide Terminal"), mac ? "Command+J" : "Ctrl+`")] : []),
     pane("changes", t("Show Changes"), t("Hide Changes"), "CmdOrCtrl+Shift+D"),
     // Show/Hide Preview, CmdOrCtrl+Shift+P (the source's Preview mode accelerator), once the renderer reports it.
     ...(panes.preview ? [pane("preview", t("Show Preview"), t("Hide Preview"), "CmdOrCtrl+Shift+P")] : []),
@@ -217,33 +225,36 @@ function paneMenuItems({ panes, closePane }, emit) {
 // CmdOrCtrl+R) and Enter/Exit Full Screen (Control+Command+F, xNr toggles the
 // focused window). Developer tools live in the source's hidden Developer
 // menu; locally Toggle Developer Tools stays in View for unpackaged builds.
-function viewMenuItems({ sidebarOpen, zoomed, zoomLevel, fullScreen, allowDevTools, state, splitState, emit }) {
+function viewMenuItems({ sidebarOpen, zoomed, zoomLevel, fullScreen, allowDevTools, state, splitState, emit, mac = IS_MAC }) {
   return [
     { label: t("Command Palette…"), accelerator: "CmdOrCtrl+K", click: dispatch(emit, { kind: "open-search", toggle: true }) },
-    { label: sidebarOpen ? t("Hide Sidebar") : t("Show Sidebar"), accelerator: "CmdOrCtrl+B", click: () => emit({ kind: "toggle-sidebar" }) },
+    { label: sidebarOpen ? t("Hide Sidebar") : t("Show Sidebar"), accelerator: "CmdOrCtrl+B",
+      // Windows / Linux: the renderer takes Ctrl+B itself (shortcuts-dialog-model.mjs), so its accelerator is not dispatched twice.
+      click: mac ? () => emit({ kind: "toggle-sidebar" }) : dispatch(emit, { kind: "toggle-sidebar" }) },
     SEPARATOR,
-    ...paneMenuItems(state, emit),
+    ...paneMenuItems(state, emit, mac),
     SEPARATOR,
-    splitViewSubmenu(splitMenuState(splitState), emit),
+    splitViewSubmenu(splitMenuState(splitState), emit, mac),
     SEPARATOR,
     ...zoomMenuItems({ zoomed, zoomLevel, emit }),
     SEPARATOR,
     { role: "reload", ...roleLabel("Reload") },
     ...(allowDevTools ? [{ role: "toggleDevTools", ...roleLabel("Toggle Developer Tools") }] : []),
     SEPARATOR,
-    { label: fullScreen ? t("Exit Full Screen") : t("Enter Full Screen"), accelerator: "Control+Command+F", click: (_item, window) => emit({ kind: "toggle-full-screen" }, window) },
+    { label: fullScreen ? t("Exit Full Screen") : t("Enter Full Screen"), accelerator: mac ? "Control+Command+F" : "F11", click: (_item, window) => emit({ kind: "toggle-full-screen" }, window) },
   ];
 }
 // Yxi (2.31226.0 asar index.chunk): View › Split View with Jxi's accelerators, enabled from the focused window's
 // report (official reportSplitViewMenuState; src/split-view-model.mjs splitMenuState). Each click is
 // {kind:"split-view", command} for that window.
-function splitViewSubmenu(state, emit) {
+// Windows / Linux: ⌃⌘ is Ctrl+Alt (official new_session_pane_right / _below non-mac rows; src/split-view-model.mjs).
+function splitViewSubmenu(state, emit, mac = IS_MAC) {
   const item = (label, command, enabled, accelerator) => ({ label, ...(accelerator ? { accelerator } : {}), enabled: enabled === true, click: splitDispatch(emit, command) });
   return {
     label: t("Split View"),
     submenu: [
-      item(t("New Session on the Right"), "new-right", state.newRight, "Control+Command+\\"),
-      item(t("New Session Below"), "new-below", state.newBelow, "Control+Command+-"),
+      item(t("New Session on the Right"), "new-right", state.newRight, mac ? "Control+Command+\\" : "Ctrl+Alt+\\"),
+      item(t("New Session Below"), "new-below", state.newBelow, mac ? "Control+Command+-" : "Ctrl+Alt+-"),
       SEPARATOR,
       item(t("Focus Next Split View"), "focus-next", state.split, "Control+]"),
       item(t("Focus Previous Split View"), "focus-previous", state.split, "Control+["),
@@ -253,22 +264,22 @@ function splitViewSubmenu(state, emit) {
       item(t("Move Split View Up"), "move-up", state.moveUp),
       item(t("Move Split View Down"), "move-down", state.moveDown),
       SEPARATOR,
-      item(t("Close Split View"), "close", state.split, "Control+Command+W"),
+      item(t("Close Split View"), "close", state.split, mac ? "Control+Command+W" : "Ctrl+Alt+W"),
     ],
   };
 }
 // kNr: Minimize, Zoom, Show Main Window (KK), Bring All to Front.
-function windowMenu(emit) {
+function windowMenu(emit, mac = IS_MAC) {
   return {
     role: "window",
     label: t("Window"),
     submenu: [
       { role: "minimize", label: t("Minimize") },
-      { role: "zoom", label: t("Zoom") },
+      // Zoom and Bring All to Front are macOS roles.
+      ...(mac ? [{ role: "zoom", label: t("Zoom") }] : []),
       SEPARATOR,
       { label: t("Show Main Window"), click: () => emit({ kind: "show-main-window" }) },
-      SEPARATOR,
-      { role: "front", label: t("Bring All to Front") },
+      ...(mac ? [SEPARATOR, { role: "front", label: t("Bring All to Front") }] : []),
     ],
   };
 }
@@ -276,26 +287,27 @@ function windowMenu(emit) {
 // and Troubleshooting ▸ Show Logs in Finder (Ejr/njr). Claude Help and Get
 // Support open Anthropic web resources and are omitted; so are the
 // Claude-only troubleshooting rows.
-function helpMenu(emit) {
+function helpMenu(emit, mac = IS_MAC) {
   return {
     role: "help",
     label: t("Help"),
     submenu: [
       { label: t("Keyboard Shortcuts"), accelerator: "CmdOrCtrl+/", click: dispatch(emit, { kind: "open-shortcuts" }) },
       SEPARATOR,
-      { label: t("Troubleshooting"), submenu: [{ label: t("Show Logs in Finder"), click: () => emit({ kind: "show-logs" }) }] },
+      { label: t("Troubleshooting"), submenu: [{ label: mac ? t("Show Logs in Finder") : t("Show in Explorer"), click: () => emit({ kind: "show-logs" }) }] },
     ],
   };
 }
-function appMenuTemplate({ sidebarOpen, canGoBack = false, canGoForward = false, zoomed = false, zoomLevel, fullScreen = false, allowDevTools = false, menuState: state = menuState(), splitState, newWindow = true, emit }) {
+function appMenuTemplate({ sidebarOpen, canGoBack = false, canGoForward = false, zoomed = false, zoomLevel, fullScreen = false, allowDevTools = false, menuState: state = menuState(), splitState, newWindow = true, emit, platform = process.platform }) {
+  const mac = platform === "darwin";
   return [
-    appSubmenu(emit),
+    appSubmenu(emit, mac),
     { label: t("File"), submenu: fileMenuItems({ closePane: state.closePane.enabled, session: state.session, reopenClosed: state.reopenClosed, newWindow, emit }) },
     { label: t("Edit"), submenu: editMenuItems(emit, state.findInFiles) },
-    { label: t("View"), submenu: viewMenuItems({ sidebarOpen, zoomed, zoomLevel, fullScreen, allowDevTools, state, splitState, emit }) },
-    { label: t("Go"), submenu: goMenuItems({ canGoBack, canGoForward, emit }) },
-    windowMenu(emit),
-    helpMenu(emit),
+    { label: t("View"), submenu: viewMenuItems({ sidebarOpen, zoomed, zoomLevel, fullScreen, allowDevTools, state, splitState, emit, mac }) },
+    { label: t("Go"), submenu: goMenuItems({ canGoBack, canGoForward, emit, mac }) },
+    windowMenu(emit, mac),
+    helpMenu(emit, mac),
   ];
 }
 // shared-2 Hm "dframe-store" persists Zm {collapsed:false, sidebarWidth:288}:

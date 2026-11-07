@@ -12,7 +12,9 @@ function showWindow(window) {
   else window.show();
 }
 
-function createMenuBar({ Tray, Menu, nativeImage, app, iconPath, menuModel, getWindow, getEnabled, getAccount, getClient }) {
+// Windows (platform "win32"): a left click is how a tray app is restored there, so it shows the app as Show App does,
+// through showMain when given (main.cjs showMainWindow, which also recreates a window that is gone).
+function createMenuBar({ Tray, Menu, nativeImage, app, iconPath, menuModel, getWindow, getEnabled, getAccount, getClient, platform = process.platform, showMain = null }) {
   let tray = null, disposed = false;
   // Last successful account/rateLimits/read for one client + identity. The
   // sparse account/rateLimits/updated notification is not merged; each menu
@@ -24,9 +26,10 @@ function createMenuBar({ Tray, Menu, nativeImage, app, iconPath, menuModel, getW
   };
   const owns = (client, key) => cache.client === client && cache.key === key;
 
-  function showApp() { showWindow(getWindow()); }
+  function showApp() { if (platform === "win32" && typeof showMain === "function") showMain(); else showWindow(getWindow()); }
   // pji fallback when no Quick Entry window is shown: show and focus.
   function click() {
+    if (platform === "win32" && typeof showMain === "function") { showMain(); return; }
     const window = getWindow();
     if (!window || window.isDestroyed()) return;
     if (window.isMinimized()) window.restore(); else window.show();

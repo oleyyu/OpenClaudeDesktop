@@ -48,10 +48,15 @@ export class AppServerClient extends EventEmitter {
     const args = this.options.args ?? ["app-server", "--listen", "stdio://"];
     const cwd = this.options.cwd ?? process.cwd();
 
+    // Local: spawnOptions — the host's platform spawn options for this command (Code Desktop on Windows: a .cmd core
+    // runs through cmd.exe with windowsVerbatimArguments, and windowsHide). Only those two are taken.
+    const extra = this.options.spawnOptions ?? {};
     this.#child = spawn(command, args, {
       cwd,
       env: sanitizeEnv(process.env, cwd),
       stdio: "pipe",
+      ...(extra.windowsHide ? { windowsHide: true } : {}),
+      ...(extra.windowsVerbatimArguments ? { windowsVerbatimArguments: true } : {}),
     });
 
     this.#child.stdout.on("data", (chunk) => {
@@ -104,7 +109,10 @@ export class AppServerClient extends EventEmitter {
     } catch {}
     const child=this.#child;this.#child=undefined;
     if(child&&child.exitCode===null&&child.signalCode===null){
-      await new Promise(resolve=>{const timer=setTimeout(()=>{child.kill("SIGKILL");},1000);child.once("exit",()=>{clearTimeout(timer);resolve();});child.kill("SIGTERM");});
+      // Local: terminate(child) — the host's own stop (Code Desktop on Windows: the core's whole process tree), in place of SIGTERM.
+      const terminate = typeof this.options.terminate === "function" ? this.options.terminate : null;
+      const end = signal => { if (terminate) { try { terminate(child, signal); return; } catch {} } child.kill(signal); };
+      await new Promise(resolve=>{const timer=setTimeout(()=>{end("SIGKILL");},1000);child.once("exit",()=>{clearTimeout(timer);resolve();});end("SIGTERM");});
     }
   }
 

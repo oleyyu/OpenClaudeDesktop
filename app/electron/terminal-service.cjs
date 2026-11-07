@@ -19,6 +19,8 @@ const crypto = require("node:crypto");
 const { spawn, execFile } = require("node:child_process");
 const model = require("./terminal-model.mjs");
 const {prepareTerminalShell,cleanupTerminalShell}=require("./terminal-shell-integration.cjs");
+const { killTree } = require("./process-tree.cjs");
+const { withTrailingSeparator, remotePathRefused } = require("./fs-paths.cjs");
 const { proxyEnv, loginShellProxy } = require("./proxy-env.cjs");
 
 const FLUSH_MS = 8;
@@ -63,12 +65,38 @@ function isExecutableFile(file) {
   try { return fs.statSync(file).isFile() && (fs.accessSync(file, fs.constants.X_OK), true); } catch { return false; }
 }
 /** The user's login shell: an override (tests), $SHELL, the account's shell, else zsh/bash/sh. Always absolute. */
-function resolveShell({ override = null, env = process.env } = {}) {
+function resolveShell({ override = null, env = process.env, platform = process.platform } = {}) {
+  if (platform === "win32") return resolveWindowsShell({ override, env });
   let account = null;
   try { account = os.userInfo().shell; } catch {}
   for (const candidate of [override, env.SHELL, account, "/bin/zsh", "/bin/bash", "/bin/sh"])
     if (typeof candidate === "string" && path.isAbsolute(candidate) && !candidate.includes("\0") && isExecutableFile(candidate)) return candidate;
   return "/bin/sh";
+}
+// Windows: an override, PowerShell 7 (pwsh) on PATH, Windows PowerShell, then %ComSpec% (cmd.exe).
+function resolveWindowsShell({ override = null, env = process.env } = {}) {
+  const exists = (file) => { try { return fs.statSync(file).isFile(); } catch { return false; } };
+  if (typeof override === "string" && path.isAbsolute(override) && exists(override)) return override;
+  const root = env.SystemRoot || env.SYSTEMROOT || "C:\\Windows";
+  const onPath = (name) => String(env.Path || env.PATH || "").split(";").filter(Boolean).map((dir) => path.join(dir, name)).find(exists);
+  return [onPath("pwsh.exe"), path.join(env.ProgramFiles || "C:\\Program Files", "PowerShell", "7", "pwsh.exe"),
+    path.join(root, "System32", "WindowsPowerShell", "v1.0", "powershell.exe"), env.ComSpec || env.COMSPEC,
+    path.join(root, "System32", "cmd.exe")].find((file) => typeof file === "string" && exists(file)) || "cmd.exe";
+}
+// The bridges' UTF-8 preamble (harness/packages/*/src/win-process.js POWERSHELL_PREAMBLE, copied: no cross-package
+// import). Without it PowerShell and the programs it runs write the OEM code page (CP936 on Chinese Windows).
+const POWERSHELL_UTF8_PREAMBLE = "[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); $OutputEncoding = [System.Text.UTF8Encoding]::new($false); ";
+/**
+ * Arguments for a Windows shell: an interactive tab, or one command (a composer '!command' run, a Monitor).
+ * One command: UTF-8 output (the Monitor decodes its pipe as UTF-8), and for PowerShell -ExecutionPolicy Bypass, so
+ * `npm`/`npx` resolve to their .ps1 shims under the default Restricted policy as they do for the bridges. An
+ * interactive tab is left as the user's own PowerShell/cmd would start: their policy, their code page.
+ */
+function windowsShellArgs(shell, runCommand) {
+  const cmd = /(^|[\\/])cmd(\.exe)?$/i.test(shell);
+  if (typeof runCommand !== "string") return cmd ? [] : ["-NoLogo"];
+  return cmd ? ["/d", "/s", "/c", `chcp 65001>nul & ${runCommand}`]
+    : ["-NoLogo", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", `${POWERSHELL_UTF8_PREAMBLE}${runCommand}`];
 }
 /**
  * The terminal's environment: the app's own (a Finder launch's launchd environment) with the PATH additions and the
@@ -82,11 +110,20 @@ function terminalEnv(base = process.env, { shellProxy = {}, version = "", strip 
   const stripped = new Set(Array.isArray(strip) ? strip.filter((key) => typeof key === "string") : []);
   for (const [key, value] of Object.entries(base || {}))
     if (typeof value === "string" && !value.includes("\0") && !/^(?:ELECTRON_|CODE_DESKTOP_)/.test(key) && !stripped.has(key)) env[key] = value;
+  if (process.platform === "win32") {
+    // Windows keeps PATH as "Path"; one key, joined with ";" (C:\ paths carry a colon).
+    const key = Object.keys(env).find((name) => name.toUpperCase() === "PATH") || "Path";
+    const parts = String(env[key] || "").split(";").filter(Boolean);
+    const tail = (Array.isArray(appendPath) ? appendPath : []).filter((entry) => typeof entry === "string" && path.isAbsolute(entry) && !entry.includes(";") && !parts.includes(entry));
+    for (const name of Object.keys(env)) if (name.toUpperCase() === "PATH") delete env[name];
+    env[key] = [...parts, ...tail].join(";");
+  } else {
   const extra = [path.join(env.HOME || os.homedir(), ".local/bin"), "/opt/homebrew/bin", "/usr/local/bin"];
   const parts = (env.PATH || "/usr/bin:/bin:/usr/sbin:/sbin").split(":").filter(Boolean);
   // appendPath: the app's own command shims (the agents it installed), after everything else on PATH.
   const tail = (Array.isArray(appendPath) ? appendPath : []).filter((entry) => typeof entry === "string" && path.isAbsolute(entry) && !entry.includes(":") && !parts.includes(entry));
   env.PATH = [...extra.filter((entry) => !parts.includes(entry)), ...parts, ...tail].join(":");
+  }
   Object.assign(env, proxyEnv(env, shellProxy));
   env.TERM = "xterm-256color";
   env.COLORTERM = "truecolor";
@@ -119,7 +156,10 @@ function createTerminalService(options = {}) {
     processTable = null,
     killProcess = null,
     onChange = () => {},
+    platform = process.platform,
   } = options;
+  // Windows: no lsof / ps, no process groups or signals; busy can't be read from ConPTY (terminal-model isBusyProcess).
+  const windowsHost = platform === "win32";
   const records = new Map();
   const ownerSubscribers = new Map(); // owner → Set<webContents>
   const everyone = new Set(); // windows that talk to this service: state and agent-open notices
@@ -194,7 +234,8 @@ function createTerminalService(options = {}) {
     const shell = shellPath();
     record.shell = shell;
     let env = record.env;
-    let args = typeof record.runCommand === "string" ? ["-lc", record.runCommand] : ["-l"];
+    const windows = process.platform === "win32";
+    let args = windows ? windowsShellArgs(shell, record.runCommand) : typeof record.runCommand === "string" ? ["-lc", record.runCommand] : ["-l"];
     cleanupTerminalShell(record.shellIntegration);
     record.shellIntegration=null;
     try {
@@ -226,7 +267,8 @@ function createTerminalService(options = {}) {
       record.backend = "pty";
       record.error = null;
       record.proc = { pid: proc.pid, write: (data) => proc.write(data), resize: (c, r) => proc.resize(c, r),
-        kill: (signal) => proc.kill(signal), foreground: () => proc.process };
+        // node-pty's Windows terminal takes no signal (it throws on one): every stop there ends the ConPTY session.
+        kill: (signal) => windows ? proc.kill() : proc.kill(signal), foreground: () => proc.process };
       record.idleProgram = null;
       proc.onData((data) => {
         if (record.generation !== generation) return;
@@ -234,6 +276,13 @@ function createTerminalService(options = {}) {
         append(record, data);
       });
       proc.onExit(({ exitCode, signal }) => exited(exitCode, signal));
+      return;
+    }
+    if (windows) {
+      record.backend = "pty";
+      record.error = pty.error ?? "node-pty could not start a ConPTY terminal.";
+      append(record, `\r\n${record.error}\r\n`);
+      exited(null, null);
       return;
     }
     // /usr/bin/script fallback: a pseudo-terminal of fixed size. script refuses a socket on stdin (Node's stdio pipes
@@ -304,6 +353,8 @@ function createTerminalService(options = {}) {
     record.signal = null;
     record.busy = false;
     startProcess(record, size);
+    // Windows: unknown from the start (a sweep in the first poll interval must not take it for an idle shell).
+    if (windowsHost && record.status === "running") record.busy = null;
     ensureTimers();
     return true;
   }
@@ -413,6 +464,8 @@ function createTerminalService(options = {}) {
   // script's child (wrapper → … → script → the shell). macOS: lsof's cwd; Linux: /proc/<pid>/cwd.
   async function shellCwd(record) {
     if (!record.proc?.pid || record.status !== "running") return null;
+    // Windows: no lsof, and nothing cheap reads another process's current folder; the session folder is used.
+    if (windowsHost) return null;
     const run = (file, args) => new Promise((resolve) => execFile(file, args, { timeout: 1500, maxBuffer: 4 << 20 }, (error, stdout) => resolve(error ? "" : String(stdout))));
     let pid = String(record.proc.pid);
     if (record.backend === "script") {
@@ -444,7 +497,7 @@ function createTerminalService(options = {}) {
   function foregroundBusy(record) {
     if (!record.proc || record.status !== "running") return false;
     if (record.proc.foreground) {
-      try { return model.isBusyProcess(record.proc.foreground(), record.shell, record.idleProgram); } catch { return null; }
+      try { return model.isBusyProcess(record.proc.foreground(), record.shell, record.idleProgram, { platform }); } catch { return null; }
     }
     return record.busy;
   }
@@ -544,6 +597,9 @@ function createTerminalService(options = {}) {
       return null;
     }
     if (record.backend !== "pty") return null;
+    // Windows: no ps and no process groups: unknown (the interrupt then waits for the run's shell to exit, and ends
+    // its process tree with taskkill when it doesn't).
+    if (windowsHost) return null;
     return new Promise((resolve) => {
       execFile("/bin/ps", ["-o", "pgid=", "-o", "tpgid=", "-p", String(pid)], { timeout: 1500 }, (error, stdout) => {
         resolve(error ? null : parseForegroundProcessGroup(stdout));
@@ -583,6 +639,8 @@ function createTerminalService(options = {}) {
       }
       return true;
     }
+    // Windows: the "group" is the shell's pid (no probe there); taskkill /T /F ends the shell and what it runs.
+    if (windowsHost) return killTree(pgid, signal, { platform });
     process.kill(-pgid, signal);
     return true;
   }
@@ -677,6 +735,8 @@ function createTerminalService(options = {}) {
         let start = cwd;
         if (params.cwd !== undefined && params.cwd !== null) {
           if (typeof params.cwd !== "string" || !path.isAbsolute(params.cwd) || params.cwd.includes("\0")) throw new Error("That folder isn’t in this session’s folder.");
+          // Windows: a UNC/device path is refused before realpath touches it (it would authenticate to that host).
+          if (remotePathRefused(params.cwd, { base: cwd, roots: [cwd] })) throw new Error("That folder isn’t in this session’s folder.");
           let root, real;
           try { root = fs.realpathSync(cwd); real = fs.realpathSync(params.cwd); } catch { throw new Error("That folder isn’t in this session’s folder."); }
           if (real !== root && !real.startsWith(root + path.sep)) throw new Error("That folder isn’t in this session’s folder.");
@@ -832,12 +892,14 @@ function createTerminalService(options = {}) {
         const bases = [...new Set([shell, root].filter(Boolean))];
         return Promise.all(list.map(async (candidate) => {
           if (typeof candidate !== "string" || !candidate || candidate.length > 1024 || candidate.includes("\0")) return null;
-          const expanded = candidate.startsWith("~/") ? path.join(os.homedir(), candidate.slice(2)) : candidate;
+          const expanded = candidate.startsWith("~/") || (windowsHost && candidate.startsWith("~\\")) ? path.join(os.homedir(), candidate.slice(2)) : candidate;
           for (const base of bases) {
+            // Windows: terminal output is untrusted (a `cat` can print \\host\x); never realpath a UNC/device path.
+            if (remotePathRefused(expanded, { base, roots: [root] })) break;
             try {
               const real = await fs.promises.realpath(path.resolve(base, expanded));
-              if (!real.startsWith(root + path.sep)) continue;
-              if ((await fs.promises.stat(real)).isFile()) return path.relative(root, real);
+              if (!real.startsWith(withTrailingSeparator(root))) continue;
+              if ((await fs.promises.stat(real)).isFile()) return path.relative(root, real).split(path.sep).join("/"); // the renderer opens "a/b"
             } catch { /* not there: the next folder */ }
             if (path.isAbsolute(expanded)) break;
           }
@@ -943,4 +1005,4 @@ function createTerminalService(options = {}) {
     get size() { return records.size; } };
 }
 
-module.exports = { createTerminalService, resolveShell, terminalEnv, loadNodePty, parseForegroundProcessGroup };
+module.exports = { createTerminalService, resolveShell, resolveWindowsShell, windowsShellArgs, terminalEnv, loadNodePty, parseForegroundProcessGroup };

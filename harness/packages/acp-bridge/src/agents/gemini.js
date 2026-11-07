@@ -36,6 +36,7 @@ import { RpcError, SERVER_ERROR } from '../transport.js'
 import { geminiToolName, loadGeminiPolicies, policyDecision } from '../gemini-policy.js'
 import { appToolsServer } from '../app-tools.js'
 import { APP_TOOL_NAMES } from '../app-tools.js'
+import { execFilePlatform, killTree } from '../win-process.js'
 
 const CONTEXT_WINDOW = 1048576
 
@@ -561,6 +562,8 @@ function trackBackground(thread, update) {
 
 /** Stops a recorded background command and everything in its process group. */
 function stopProcessGroup(pid) {
+  // Windows: no groups and no signals; taskkill /T /F ends the command's whole tree.
+  if (process.platform === 'win32') return killTree(pid)
   const signal = (name) => { try { process.kill(-pid, name); return true } catch { try { process.kill(pid, name); return true } catch { return false } } }
   const sent = signal('SIGTERM')
   if (sent) setTimeout(() => { if (alive(pid)) signal('SIGKILL') }, 2000).unref?.()
@@ -725,7 +728,7 @@ export function geminiAppToolsBlock(env, cwd, name) {
 }
 
 /** A command name from its file path below the commands folder (sub/dir/name.toml → sub:dir:name). */
-const commandName = (relative) => relative.slice(0, -5).split('/').map((segment) => {
+const commandName = (relative) => relative.slice(0, -5).split(/[\\/]/).map((segment) => { // path.relative: `\` on Windows
   const clean = segment.replace(/[^a-zA-Z0-9_\-.]/g, '_')
   return clean.length > 50 ? `${clean.slice(0, 47)}...` : clean
 }).join(':')
@@ -796,7 +799,7 @@ function mcpOAuthTokens(env) {
 }
 
 function run(file, args, options) {
-  return new Promise((resolve, reject) => execFile(file, args, { timeout: 180000, maxBuffer: 4 << 20, ...options }, (error, stdout, stderr) => (error ? reject(Object.assign(error, { stdout, stderr })) : resolve({ stdout, stderr }))))
+  return new Promise((resolve, reject) => execFilePlatform(file, args, { timeout: 180000, maxBuffer: 4 << 20, ...options }, (error, stdout, stderr) => (error ? reject(Object.assign(error, { stdout, stderr })) : resolve({ stdout, stderr }))))
 }
 
 /**
@@ -1679,7 +1682,7 @@ export default {
     for (const name of ['xdg-open']) fs.symlinkSync(path.join(dir, 'open'), path.join(dir, name))
     const { AgentHost } = await import('../agent-host.js')
     const line = ctx.commandLine(['--acp'])
-    const host = new AgentHost({ ...line, env: { ...ctx.env, GEMINI_CLI_NO_RELAUNCH: 'true', ...NO_OWN_SANDBOX, PATH: `${dir}:${ctx.env.PATH ?? ''}`, BROWSER: path.join(dir, 'open') }, cwd: dir, clientCapabilities: {}, log: ctx.log, label: 'gemini-login', stopSignal: 'SIGKILL' })
+    const host = new AgentHost({ ...line, env: { ...ctx.env, GEMINI_CLI_NO_RELAUNCH: 'true', ...NO_OWN_SANDBOX, PATH: `${dir}${path.delimiter}${ctx.env.PATH ?? ''}`, BROWSER: path.join(dir, 'open') }, cwd: dir, clientCapabilities: {}, log: ctx.log, label: 'gemini-login', stopSignal: 'SIGKILL' })
     // A host that never answered initialize (exited, or timed out still running) is stopped and its folder removed.
     try { await host.start() } catch (error) {
       await host.stop().catch(() => {})

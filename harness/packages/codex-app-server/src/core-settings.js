@@ -11,7 +11,8 @@ import { RpcError } from './transport.js'
 const INT = 'integer'
 export const CORE_SETTING_FIELDS = Object.freeze([
   // The core's sandboxed shell (bash-sandbox: dsh shell executor): a command's default timeout, the longest one it may
-  // ask for, and the output kept per stream.
+  // ask for, and the output kept per stream. On Windows the shell is pwsh (dsh-base mounts pwsh-sandbox there instead,
+  // with the same three fields): the rows keep the name the app's labels know and read / write that entry (shellNs).
   { ns: 'bash-sandbox', key: 'timeoutMs', type: INT, min: 1000, max: 86_400_000, unit: 'ms' },
   { ns: 'bash-sandbox', key: 'maxTimeoutMs', type: INT, min: 1000, max: 86_400_000, unit: 'ms' },
   { ns: 'bash-sandbox', key: 'maxOutputBytes', type: INT, min: 1024, max: 64 * 1024 * 1024, unit: 'bytes' },
@@ -25,6 +26,11 @@ export const CORE_SETTING_FIELDS = Object.freeze([
   { ns: 'web-search-deepseek', key: 'baseURL', type: 'url' },
 ])
 
+/** The profile entry a field lives in: Windows' pwsh-sandbox for the shell rows there (dsh-base mounts no bash-sandbox). */
+export function sourceNs(field, platform = process.platform) {
+  return field.ns === 'bash-sandbox' && platform === 'win32' ? 'pwsh-sandbox' : field.ns
+}
+
 function schemaDefault(schema, key) {
   // A Schemastery-style dump: {uid, refs: {id: {type, meta, dict}}}; the root's dict maps field → ref id.
   const refs = schema && typeof schema === 'object' ? schema.refs ?? {} : {}
@@ -34,11 +40,11 @@ function schemaDefault(schema, key) {
 }
 
 /** {writable, settings: [{ns, key, type, unit?, min?, max?, value, default, overridden}]}: the fields the profile serves. */
-export function coreSettingsRead(settings) {
+export function coreSettingsRead(settings, { platform = process.platform } = {}) {
   const forms = settings.describe({ redactSecrets: true })
   const out = []
   for (const field of CORE_SETTING_FIELDS) {
-    const form = forms.find((entry) => entry.ns === field.ns)
+    const form = forms.find((entry) => entry.ns === sourceNs(field, platform))
     if (!form) continue
     const value = form.value && typeof form.value === 'object' ? form.value[field.key] : undefined
     const user = form.user && typeof form.user === 'object' ? form.user[field.key] : undefined
@@ -52,7 +58,7 @@ export function coreSettingsRead(settings) {
 }
 
 /** One field set ({ns, key, value}) or reset to its default ({ns, key, value: null}); returns the fresh read. */
-export async function coreSettingsWrite(settings, params = {}) {
+export async function coreSettingsWrite(settings, params = {}, { platform = process.platform } = {}) {
   const field = CORE_SETTING_FIELDS.find((entry) => entry.ns === params.ns && entry.key === params.key)
   if (!field) throw new RpcError(-32602, 'Unknown setting.')
   if (settings.writable !== true) throw new RpcError(-32600, 'The DeepSeek profile can’t be changed from here.')
@@ -67,13 +73,14 @@ export async function coreSettingsWrite(settings, params = {}) {
     if (!url || !/^https?:$/.test(url.protocol) || url.username || url.password) throw new RpcError(-32602, 'Enter an http(s) URL.')
     value = text || null
   }
-  const form = settings.describe({ redactSecrets: true }).find((entry) => entry.ns === field.ns)
+  const ns = sourceNs(field, platform)
+  const form = settings.describe({ redactSecrets: true }).find((entry) => entry.ns === ns)
   if (!form) throw new RpcError(-32602, 'Unknown setting.')
   try {
-    await settings.mutate(field.ns, [value === null ? { op: 'unset', path: [field.key] } : { op: 'set', path: [field.key], value }], form.revision)
+    await settings.mutate(ns, [value === null ? { op: 'unset', path: [field.key] } : { op: 'set', path: [field.key], value }], form.revision)
   } catch (error) {
     if (error?.code === 'SETTINGS_CONFLICT') throw new RpcError(-32600, 'The setting changed meanwhile. Try again.')
     throw new RpcError(-32000, String(error?.message ?? error))
   }
-  return coreSettingsRead(settings)
+  return coreSettingsRead(settings, { platform })
 }

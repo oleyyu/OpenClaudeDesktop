@@ -1,4 +1,5 @@
 import React, { createContext, useCallback, useContext, useMemo, useRef, useState } from 'react';
+import { pathBasename } from "./host-path-model.mjs";
 import { dm } from './generated/chat/shared-19-CjdiaR4X.js';
 import { useNativeFieldControlProps } from './source-field-adapters.jsx';
 import { RoutineContext, sourceRoutine, useRoutineIntl } from './source-routine-adapters.jsx';
@@ -111,7 +112,7 @@ export function FormFolderPicker({ controlledSelection, labelledBy, disabled, pl
     catch (error) { host.error(error.message); }
   };
   return <Button variant="ghost" icon="Folder" disabled={disabled} aria-labelledby={labelledBy} onClick={choose}>
-    {controlledSelection.selectedFolders[0]?.split('/').at(-1) || placeholder}
+    {(controlledSelection.selectedFolders[0] ? pathBasename(controlledSelection.selectedFolders[0]) : '') || placeholder}
   </Button>;
 }
 export function FormNotice({ children, variant, ...props }) {

@@ -33,6 +33,7 @@ import {SourceQuestionReceipt,notePendingQuestion} from './source-question-recei
 import {SourceToolImages} from './source-tool-images.jsx';
 import { isMediaItem, mediaItemRow } from './media-item-model.mjs';
 import { filePreviewUrl } from './file-preview-model.mjs';
+import { isAbsolutePath, joinPath, pathBasename, pathStyle, relativeTo } from './host-path-model.mjs';
 import {computerUseAction} from './computer-use-model.mjs';
 import {SourceComputerUseStep} from './source-computer-use.jsx';
 import { SourceMarkdownSelection } from './source-markdown-selection.jsx';
@@ -533,7 +534,7 @@ function Diff({ value = "", scopeKey, ...props }) {
 // measurement; the row is mounted only for real copyable text.
 const IMAGE_URL = /^(?:https?:|data:image\/)/i;
 function attachmentSource(part) {
-  if (typeof part.path === "string" && part.path.startsWith("/"))
+  if (typeof part.path === "string" && isAbsolutePath(part.path))
     return filePreviewUrl(part.path);
   const url = part.imageUrl || part.url || part.image_url;
   return typeof url === "string" && IMAGE_URL.test(url) ? url : null;
@@ -581,7 +582,8 @@ function UserFileCard({ part }) {
 
 // Errors a language server found after an edit: a muted list of location and message (no motion).
 export function SourceDiagnostics({ diagnostics, cwd = null }) {
-  const relative = (file) => (cwd && typeof file === "string" && file.startsWith(`${cwd}/`) ? file.slice(cwd.length + 1) : file);
+  const relative = (file) => (cwd && typeof file === "string" && file.startsWith(`${cwd}/`) ? file.slice(cwd.length + 1)
+    : cwd && typeof file === "string" && pathStyle(cwd) === "win" ? relativeTo(cwd, file) || file : file);
   return <div className="source-diagnostics" role="group" aria-label={t("Diagnostics")} data-diagnostics="">
     <div className="source-diagnostics-title">{tn(diagnostics.length, "{count} error from the language server", "{count} errors from the language server")}</div>
     <ul>{diagnostics.map((entry, index) => <li key={index}>
@@ -854,7 +856,7 @@ export function SourceMessage({ isInterrupting = false, item, agentContext = nul
         {!isStreaming && Array.isArray(item.memoryCitation?.entries) && item.memoryCitation.entries.length > 0 && <p className="source-memory-citation">
           <span>{t("Used memory")}</span>{" "}
           {item.memoryCitation.entries.slice(0, 5).map((entry, index) => <span key={index} className="source-memory-citation-entry" title={entry?.path ? `${entry.path}:${entry.lineStart ?? ""}` : undefined}>
-            {index > 0 ? " · " : ""}<bdi>{entry?.note || String(entry?.path || "").split("/").pop()}</bdi></span>)}
+            {index > 0 ? " · " : ""}<bdi>{entry?.note || pathBasename(String(entry?.path || ""))}</bdi></span>)}
         </p>}
         {/* AgentMessage.questions (delivery 'async'): Codex asked without stopping; answered from here. */}
         {!isStreaming && item.type === "agentMessage" && Array.isArray(item.questions) && item.questions.length > 0 && <SourceAsyncQuestions item={item} />}
@@ -2938,7 +2940,8 @@ function FilePane({
               // Fu (panes-tile-current.js:6328-6352): the file viewer for the
               // file view, with the jump range of a chip request for this path.
               const relative = tabRelativePath(preview.path, cwd);
-              const full = cwd && !/^(?:\/|[A-Za-z]:[\\/]|~)/.test(relative) ? `${String(cwd).replace(/\/+$/, "")}/${relative}` : preview.path;
+              // A Windows cwd joins with '\' (C:\p\src\a.ts), not C:\p/src/a.ts (host-path-model joinPath).
+              const full = cwd && !/^(?:\/|[A-Za-z]:[\\/]|~)/.test(relative) ? (pathStyle(cwd) === "win" ? joinPath(cwd, relative) : `${String(cwd).replace(/\/+$/, "")}/${relative}`) : preview.path;
               return <SourceSessionFileViewer
                 onSaveComment={fileActions?.onSaveComment ? (entry,options)=>fileActions.onSaveComment({...entry,path:relative},options) : null}
                 onDeleteComment={fileActions?.onDeleteComment}

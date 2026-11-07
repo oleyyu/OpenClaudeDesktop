@@ -1,4 +1,5 @@
 import { t } from "../electron/i18n/index.mjs";
+import { revealInFileManagerLabel } from "./file-manager-labels.mjs";
 // Transcript right-click menus. Pure: the caller resolves the DOM target.
 //
 // messageMenu: scroll-messages-current.js:33652-33818 CY. Items in order —
@@ -92,7 +93,7 @@ export function fileRefMenu({ absolute = null, relative = null, filename, canAtt
   if (canOpen) entries.push(separator, item("open-in", t("Open in"), { submenu: [item("open-files-pane", t("Files pane"))] }));
   if (canReveal && absolute) {
     if (!canOpen) entries.push(separator);
-    entries.push(item("reveal", t("Show in Finder")));
+    entries.push(item("reveal", revealInFileManagerLabel()));
   }
   return entries;
 }

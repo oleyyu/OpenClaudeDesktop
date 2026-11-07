@@ -6,14 +6,21 @@
 // preview-service launch watcher, and answered on the subscriber's own webContents as desktop:event
 // {kind: "files-dir-changed", watchId, cwd, dir, names}. A renderer that goes away releases its subscriptions.
 const fs = require("node:fs");
+const path = require("node:path");
 const { scopedPath } = require("./files.cjs");
+const { pathInside } = require("./fs-paths.cjs");
 
 const DEBOUNCE_MS = 150;
 const MAX_DIRS = 256;
 // The same names listFiles leaves out: a change to them never changes a listing.
 const IGNORED_NAMES = new Set([".git", "node_modules", ".DS_Store"]);
 
-function createFilesWatch({ watch = fs.watch, resolveDir = scopedPath, debounceMs = DEBOUNCE_MS, maxDirs = MAX_DIRS } = {}) {
+// Windows: a watch handle keeps its folder open, so a deleted folder stays "delete pending" (a `mkdir` of the same
+// name fails with EPERM) and a folder that holds one can't be renamed or removed (a worktree). A watcher is closed as
+// soon as it has no subscriber (as on macOS), the moment its folder is found gone there, and on request
+// (closeUnder) before a folder is removed; the renderer's next files:watch arms it again.
+function createFilesWatch({ watch = fs.watch, resolveDir = scopedPath, debounceMs = DEBOUNCE_MS, maxDirs = MAX_DIRS, platform = process.platform, exists = fs.existsSync } = {}) {
+  const windows = platform === "win32";
   const subscriptions = new Map(); // `${sender.id}\0${watchId}` -> {sender, watchId, cwd, dirs: Map(abs -> relative)}
   const watchers = new Map(); // abs -> {handle, subscribers: Set(key), timer, names: Set}
   const senders = new Set();
@@ -47,6 +54,11 @@ function createFilesWatch({ watch = fs.watch, resolveDir = scopedPath, debounceM
       try {
         record.handle = watch(abs, { persistent: false }, (_event, name) => {
           const value = name == null ? "" : String(name);
+          if (windows) {
+            // The folder itself went: let go of it now. A watched child folder that went: let go of that one.
+            if (!exists(abs)) { close(abs); return; }
+            if (value) { const child = path.win32.join(abs, value); if (watchers.has(child) && !exists(child)) close(child); }
+          }
           if (value && IGNORED_NAMES.has(value)) return;
           if (value) record.names.add(value);
           clearTimeout(record.timer);
@@ -110,7 +122,13 @@ function createFilesWatch({ watch = fs.watch, resolveDir = scopedPath, debounceM
     subscriptions.clear();
     generations.clear();
   }
-  return { set, dispose, watchedCount: () => watchers.size };
+  /** Close every watcher of `dir` and the folders inside it (before that folder is removed or renamed); the count. */
+  function closeUnder(dir) {
+    let closed = 0;
+    for (const abs of [...watchers.keys()]) if (pathInside(dir, abs, { platform })) { close(abs); closed += 1; }
+    return closed;
+  }
+  return { set, dispose, closeUnder, watchedCount: () => watchers.size };
 }
 
 module.exports = { createFilesWatch, IGNORED_NAMES };

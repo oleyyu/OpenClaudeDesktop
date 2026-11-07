@@ -199,7 +199,7 @@ function turnStatusOf(reason) {
   }
 }
 
-/** Parse bash's `[exit code: N]` / signal footer when no structured view exists. */
+/** Parse a shell tool's (bash / pwsh) `[exit code: N]` / signal footer when no structured view exists. */
 function parseExitFooter(text) {
   const match = /\n?\[exit code: (-?\d+)\]\s*$/.exec(text)
   if (!match) return { output: text, exitCode: null }
@@ -324,7 +324,7 @@ export function toolItem({ callId, name, args, cwd, definition, threadId, time =
   }
   const absolute = (path) => (typeof path === 'string' && path && !isAbsolute(path) && cwd ? resolve(cwd, path) : path)
 
-  if (view?.card === 'terminal' || (name === 'bash' && typeof args?.command === 'string')) {
+  if (view?.card === 'terminal' || (SHELL_TOOLS.has(name) && typeof args?.command === 'string')) {
     const command = view?.title ?? args?.command ?? ''
     return {
       type: 'commandExecution',
@@ -493,7 +493,8 @@ export function completeToolItem(item, { name, args, result, definition, cwd, du
           : view.files.flatMap((file) => file.matches.map((match) => `${file.path}:${match.lineNumber}:${match.line}`)).join('\n')
         return { ...item, status: 'completed', aggregatedOutput: body || text, exitCode: 0, durationMs }
       }
-      const parsed = name === 'bash' ? parseExitFooter(text) : { output: text, exitCode: null }
+      // dsh-tool-pwsh ends a failed command with the same `[exit code: N]` marker as bash.
+      const parsed = SHELL_TOOLS.has(name) ? parseExitFooter(text) : { output: text, exitCode: null }
       const exitCode = parsed.exitCode ?? (failed ? 1 : 0)
       return { ...item, status: failed || (!semanticShellExit && exitCode !== 0) ? 'failed' : 'completed', aggregatedOutput: parsed.output, exitCode, durationMs }
     }

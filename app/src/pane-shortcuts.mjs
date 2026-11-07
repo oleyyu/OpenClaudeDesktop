@@ -1,3 +1,4 @@
+import { isMacPlatform, macChordView } from "./pane-keys-model.mjs";
 // shared-21-D098Wd--.js:14145-14187 aR (desktop isClaudeApp rows): toggleDiff
 // "cmd+shift+d" code KeyD, toggleBrowser "cmd+shift+f" code KeyF (the Files pane,
 // panes-toggle-current.js:3236-3253 F("toggleBrowser")). Matched by e.code like the
@@ -7,12 +8,14 @@
 // routes 'file-list' with fileListRoute below.
 // togglePreview "cmd+shift+p" (shared-21-D098Wd--.js:14146-14207, the app's Preview mode).
 const PANE_CODES = { KeyD: "changes", KeyF: "files", KeyY: "file-list", KeyP: "preview" };
-export function paneShortcutKind(event) {
+// Off macOS "cmd" is Ctrl (pane-keys-model macChordView): Ctrl+Shift+D / F / Y / P.
+export function paneShortcutKind(event, { mac = isMacPlatform() } = {}) {
+  event = macChordView(event, { mac });
   if (!event || !event.metaKey || !event.shiftKey || event.ctrlKey || event.altKey || event.isComposing) return null;
   return PANE_CODES[event.code] ?? null;
 }
-export function paneShortcut(event) {
-  const kind = paneShortcutKind(event);
+export function paneShortcut(event, options) {
+  const kind = paneShortcutKind(event, options);
   return kind && !event.repeat ? kind : null;
 }
 // Where ⇧⌘Y goes (c936fcd42 ei/ti/$r; code-workspace.js:2230-2241 z/de;

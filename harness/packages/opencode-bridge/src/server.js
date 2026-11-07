@@ -11,7 +11,9 @@
 import { spawn } from 'node:child_process'
 import { randomBytes } from 'node:crypto'
 import net from 'node:net'
+import os from 'node:os'
 import { envName } from './flavor.js'
+import { bridgeWatch, killTree, platformSpawn } from './win-process.js'
 
 const HEALTH_TIMEOUT_MS = 60000
 const MAX_RESTARTS = 5
@@ -84,7 +86,11 @@ export class AgentServer {
     const args = ['serve', '--port', String(port), '--hostname', '127.0.0.1']
     const command = this.runner === 'node' ? this.nodeBinary : this.binary
     const argv = this.runner === 'node' ? [this.binary, ...args] : args
-    const child = spawn(command, argv, { env, stdio: ['ignore', 'pipe', 'pipe'], cwd: env.HOME || process.cwd() })
+    // platformSpawn: Windows resolves an npm .cmd shim (cmd.exe) and opens no console; a node runner that is the app's
+    // own Electron runs as Node (ELECTRON_RUN_AS_NODE), and no other agent inherits that variable. HOME is not set on
+    // Windows: the user's profile folder (os.homedir) then.
+    const launch = platformSpawn(command, argv, { env, stdio: ['ignore', 'pipe', 'pipe'], cwd: env.HOME || os.homedir() || process.cwd() })
+    const child = spawn(launch.command, launch.args, launch.options)
     this.child = child
     this.url = null
     const keep = (chunk) => {
@@ -121,7 +127,8 @@ export class AgentServer {
       } catch {}
       await new Promise((resolve) => setTimeout(resolve, 150))
     }
-    try { child.kill('SIGKILL') } catch {}
+    if (process.platform === 'win32') killTree(child.pid)
+    else try { child.kill('SIGKILL') } catch {}
     throw new Error(`${this.flavor.name} did not start: ${this.stderr.join('').slice(-800) || 'no output'}`)
   }
 
@@ -129,10 +136,17 @@ export class AgentServer {
    * A tiny `sh` that outlives this process only to stop the server: it blocks reading a pipe from us, and when we die
    * (even by SIGKILL, which runs no exit handler: a workflow runner's 1 s budget) the pipe closes and it sends the
    * server SIGTERM, then SIGKILL. Without it a killed bridge leaves `opencode serve` running for good. Killed with the
-   * server when that exits on its own. None on Windows.
+   * server when that exits on its own. Windows: the same job by the bridge's Node sentinel (taskkill /T /F).
    */
-  watchParent(child) {
-    if (process.platform === 'win32' || !child?.pid) return null
+  watchParent(child, platform = process.platform) {
+    if (!child?.pid) return null
+    if (platform === 'win32') {
+      // Windows: the bridge's Node sentinel (win-process.js parentWatch) ends the server's tree with taskkill once we die
+      // (the app's stop is TerminateProcess: no exit handler runs). An object with kill() like the sh one's.
+      const watch = this.parentWatch ?? bridgeWatch()
+      watch.watch(child.pid)
+      return { kill: () => watch.unwatch(child.pid) }
+    }
     try {
       const script = 'read _ ; kill -TERM "$1" 2>/dev/null ; sleep 2 ; kill -KILL "$1" 2>/dev/null'
       const sentinel = spawn('/bin/sh', ['-c', script, 'code-desktop-watch', String(child.pid)], { stdio: ['pipe', 'ignore', 'ignore'] })
@@ -230,6 +244,8 @@ export class AgentServer {
     await new Promise((resolve) => {
       const timer = setTimeout(() => { try { child.kill('SIGKILL') } catch {} resolve() }, 2000)
       child.once('exit', () => { clearTimeout(timer); resolve() })
+      // Windows: no SIGTERM (TerminateProcess would stop only cmd.exe for a shim, leaving the server on its port).
+      if (process.platform === 'win32') { if (!killTree(child.pid)) { clearTimeout(timer); resolve() } return }
       try { child.kill('SIGTERM') } catch { clearTimeout(timer); resolve() }
     })
   }

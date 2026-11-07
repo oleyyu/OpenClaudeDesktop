@@ -12,6 +12,7 @@
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
+import { npmShimTarget, resolveWindowsCommand } from './win-process.js'
 
 const exists = (file) => { try { return fs.statSync(file).isFile() } catch { return false } }
 
@@ -24,7 +25,9 @@ export const SYSTEM_CANDIDATES = Object.freeze([
 
 const expand = (file, home) => (file.startsWith('~/') ? path.join(home, file.slice(2)) : file)
 
-function onPath(name, env) {
+function onPath(name, env, platform = process.platform) {
+  // Windows: `;`-separated PATH (or Path) and name + PATHEXT (zcode.cmd, zcode.exe).
+  if (platform === 'win32') return resolveWindowsCommand(name, { env })
   for (const dir of String(env.PATH ?? '').split(path.delimiter).filter(Boolean)) {
     const file = path.join(dir, name)
     if (exists(file)) return file
@@ -48,6 +51,8 @@ export function locateAgent(env = process.env, home = os.homedir()) {
   if (!binary) return { binary: null, command: null, prefix: [], version: env.CODE_DESKTOP_AGENT_VERSION ?? '', builtinConfig: null, source: 'missing' }
   let real = binary
   try { real = fs.realpathSync(binary) } catch {}
+  // Windows: an npm `zcode.cmd` shim's script runs under Node directly (no cmd.exe between the bridge and the agent).
+  if (process.platform === 'win32' && /\.cmd$/i.test(real)) { const target = npmShimTarget(real); if (target) real = target.file }
   const node = env.CODE_DESKTOP_NODE_BINARY?.trim() || process.execPath
   const script = env.CODE_DESKTOP_AGENT_RUNNER === 'node' || /\.(c|m)?js$/.test(real) || isNodeScript(real)
   return {

@@ -1,21 +1,21 @@
 {
   "output": "src/claude-metadata.js",
-  "sha256": "7798ca59a79f9636dfb7f5c0e7507807ab9a406bd30af19eb7281ea4883e5f0a",
+  "sha256": "e51f0ac5d13dde22f6759726e6809ab6edd98ec14cef942bd39d79b1d51f46f2",
   "dependencies": {
     "acorn": "8.17.0",
     "json5": "2.2.3"
   },
   "sources": [
     {
-      "path": "vendor/deepseek-harness/node_modules/.pnpm/acorn@8.17.0/node_modules/acorn/dist/acorn.mjs",
+      "path": "../../claude-ui-lab/vendor/deepseek-harness/node_modules/.pnpm/acorn@8.17.0/node_modules/acorn/dist/acorn.mjs",
       "sha256": "1cbcbf252a5800e496dc505c706f309a9dd4e1789392e12963c77ae9497ff6f7"
     },
     {
-      "path": "vendor/deepseek-harness/packages/workflow/tool-workflow/src/claude-metadata.ts",
+      "path": "../../claude-ui-lab/vendor/deepseek-harness/packages/workflow/tool-workflow/src/claude-metadata.ts",
       "sha256": "8fe75859bd529cf3f263a7f75902053ffb2fd37d8c703bb8631c6aa40807dfed"
     },
     {
-      "path": "vendor/deepseek-harness/packages/workflow/tool-workflow/src/claude-script.ts",
+      "path": "../../claude-ui-lab/vendor/deepseek-harness/packages/workflow/tool-workflow/src/claude-script.ts",
       "sha256": "163ad1387ad547ee89adf2f1beb95e0df7477c3c48fd4bc5c41cd79c1bc097c6"
     }
   ],

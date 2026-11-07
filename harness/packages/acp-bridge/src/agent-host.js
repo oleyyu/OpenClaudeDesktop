@@ -16,6 +16,7 @@ import { spawn } from 'node:child_process'
 import { EventEmitter } from 'node:events'
 import fs from 'node:fs'
 import { LineTransport, RpcError, METHOD_NOT_FOUND } from './transport.js'
+import { bridgeWatch, killTree, platformSpawn } from './win-process.js'
 
 export const ACP_PROTOCOL_VERSION = 1
 const STDERR_KEEP = 16 * 1024
@@ -52,13 +53,21 @@ export class AgentHost extends EventEmitter {
     this.ready = (async () => {
       const { command, args, env, cwd } = this.options
       // Its own process group: a stop reaches what the agent started (Gemini's relaunched child, MCP servers).
-      const child = spawn(command, args, { env, cwd, stdio: ['pipe', 'pipe', 'pipe'], detached: true })
+      // Windows has no groups (detached there would open a console of its own): a stop ends the tree with taskkill,
+      // and an npm .cmd shim runs through cmd.exe (win-process.js platformSpawn).
+      const platform = this.options.platform ?? process.platform
+      const launch = platformSpawn(command, args, { env, cwd, stdio: ['pipe', 'pipe', 'pipe'], ...(platform === 'win32' ? {} : { detached: true }) }, { platform })
+      const child = spawn(launch.command, launch.args, launch.options)
       this.child = child
+      // Windows: the app stops the bridge with TerminateProcess (no exit handler runs here): the bridge's sentinel ends
+      // the agent's tree then (win-process.js parentWatch). Nothing elsewhere.
+      const watch = platform === 'win32' ? (this.options.watch ?? bridgeWatch()) : null
+      watch?.watch(child.pid)
       child.on('error', (error) => {
         this.stderr += `\n${error?.message ?? error}`
         this.onExit(null, null, error)
       })
-      child.on('exit', (code, signal) => this.onExit(code, signal))
+      child.on('exit', (code, signal) => { watch?.unwatch(child.pid); this.onExit(code, signal) })
       child.stderr.on('data', (chunk) => {
         this.stderr = (this.stderr + String(chunk)).slice(-STDERR_KEEP)
       })
@@ -172,6 +181,14 @@ export class AgentHost extends EventEmitter {
   async stop(graceMs = 3000) {
     this.stopped = true
     if (!this.child || this.exited) return
+    if ((this.options.platform ?? process.platform) === 'win32') {
+      // No signals on Windows (SIGTERM is TerminateProcess of the one process, cmd.exe for a shim): the whole tree goes.
+      killTree(this.child.pid, 'SIGKILL', { platform: 'win32', run: this.options.taskkill })
+      const hard = setTimeout(() => { try { this.child.kill('SIGKILL') } catch {} }, graceMs)
+      await this.exit
+      clearTimeout(hard)
+      return
+    }
     const signal = (name) => { try { process.kill(-this.child.pid, name) } catch { try { this.child.kill(name) } catch {} } }
     signal(this.options.stopSignal ?? 'SIGTERM')
     const hard = setTimeout(() => signal('SIGKILL'), graceMs)

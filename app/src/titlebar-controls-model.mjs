@@ -2,6 +2,7 @@
 // c73f45bc3 Zh). Pure values so source-titlebar.jsx and its tests share them.
 import { foldTitlebarToggles } from "./generated/code-current/titlebar-toggle-fold.mjs";
 import { RAIL_TOGGLE_ICON } from "./generated/session-rail-kit/rail-icon-name.mjs";
+import { isMacPlatform } from "./pane-keys-model.mjs";
 
 // R3-topbar TT-03 (2.42304.0 c73f45bc3 Rh): the titlebar's pane toggles in their official order. A session lists
 // Terminal, Changes, Preview/Browser, (iOS, Android: no local simulator), then Files; the landing (the Code New session
@@ -20,7 +21,7 @@ import { RAIL_TOGGLE_ICON } from "./generated/session-rail-kit/rail-icon-name.mj
 export function titlebarToggleSpecs({ surface = "code", session = false, terminalAvailable = false, previewAvailable = false, filesAvailable = false, panes = new Set() } = {}) {
   const code = surface === "code";
   const spec = (pane, shown, icon, label, shortcut) => (shown ? [{ pane, icon, label, shortcut, active: panes.has(pane) }] : []);
-  const terminal = spec("terminal", code && terminalAvailable, "CommandLinePrompt", "Terminal", "cmd+j");
+  const terminal = spec("terminal", code && terminalAvailable, "CommandLinePrompt", "Terminal", TITLEBAR_MAC ? "cmd+j" : "ctrl+`");
   const preview = spec("preview", previewAvailable, code ? "Play" : "Globe", code ? "Preview" : "Browser", "cmd+shift+p");
   const files = spec("files", code && (session || filesAvailable), "Folder", "Files", "cmd+shift+f");
   return session
@@ -43,10 +44,12 @@ export function foldedTogglesActive(folded, { previewRunning = false, terminalBu
 // cc43287c9 wW `je = Dh(Ni())` (shared-20 UO): the Close pane Button's shortcut is "cmd+ctrl+w" on macOS
 // ("ctrl+alt+w" elsewhere). The local chord is split-view-model.mjs splitShortcut "close" (⌃⌘W, Meta required),
 // so the macOS spec is the one that names a working key.
-export const CLOSE_PANE_SHORTCUT = "cmd+ctrl+w";
+// Off macOS splitShortcut binds Ctrl+Alt+W, the "ctrl+alt+w" spec ("cmd+ctrl+w" would read Ctrl+Ctrl+W there).
+const TITLEBAR_MAC = isMacPlatform();
+export const CLOSE_PANE_SHORTCUT = TITLEBAR_MAC ? "cmd+ctrl+w" : "ctrl+alt+w";
 // shared-frame Button: `"aria-keyshortcuts": c && !u ? Js(c, me) : void 0`. Js sorts the modifiers in Fs order
 // (ctrl, alt, shift, cmd), names cmd "Meta" on macOS and keeps a single-letter key as written.
-export const CLOSE_PANE_KEYSHORTCUTS = "Control+Meta+w";
+export const CLOSE_PANE_KEYSHORTCUTS = TITLEBAR_MAC ? "Control+Meta+w" : "Control+Alt+w";
 
 // lW / Zh / DW and the Close pane Button add `rm("text-secondary")` (shared-18 Mb: "text-secondary" while fizzy
 // `panels` is off, the local case). ToolButton's className replaces its default, so the local code-icon-button

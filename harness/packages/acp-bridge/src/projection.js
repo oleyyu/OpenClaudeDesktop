@@ -108,7 +108,9 @@ export function toolItem(call, { cwd, threadId, classify } = {}) {
     return {
       type: 'commandExecution', id, pluginId: null, scriptPath: null, command, cwd: absolute(firstString(args.dir_path, args.directory, args.cwd, args.workdir)) ?? cwd ?? '',
       processId: null, source: 'agent', status: 'inProgress', commandActions: [{ type: 'unknown', command }], aggregatedOutput: null, exitCode: null, durationMs: null,
-      ...(firstString(args.description) ? { description: args.description } : {}), shell: 'bash',
+      // The card's Bash / PowerShell title: on Windows the agents (Gemini CLI, Qwen Code) and the bridge's own terminals
+      // run commands in PowerShell (client-services.js).
+      ...(firstString(args.description) ? { description: args.description } : {}), shell: process.platform === 'win32' ? 'powershell' : 'bash',
     }
   }
   if (type === 'edit' || type === 'delete' || type === 'move') {
@@ -234,7 +236,7 @@ export function findingsReview(args, cwd) {
     out.push(`**${severity}** (${list.length})`, '')
     for (const finding of list) {
       const file = typeof finding.file === 'string' && finding.file ? finding.file : null
-      const where = file ? `\`${(cwd && file.startsWith(cwd + '/') ? file.slice(cwd.length + 1) : file)}${Number.isInteger(finding.line) ? `:${finding.line}` : ''}\`` : null
+      const where = file ? `\`${(cwd && (file.startsWith(cwd + '/') || file.startsWith(cwd + '\\')) ? file.slice(cwd.length + 1) : file)}${Number.isInteger(finding.line) ? `:${finding.line}` : ''}\`` : null
       const summary = String(finding.summary ?? finding.shortSummary ?? '').trim()
       const outcome = typeof finding.outcome === 'string' && finding.outcome ? ` _(${finding.outcome.replace(/_/g, ' ')})_` : ''
       out.push(`- ${[where, summary].filter(Boolean).join(' — ')}${outcome}`)

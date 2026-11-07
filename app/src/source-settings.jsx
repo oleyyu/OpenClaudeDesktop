@@ -1,4 +1,6 @@
 import {SourceProfileSetting} from './source-profile-setting.jsx';
+import { hostPlatform } from "./file-manager-labels.mjs";
+const SETTINGS_PLATFORM = hostPlatform();
 import {useAccountSettings} from './source-account-settings.jsx';
 import { SourceSwitch as SettingSwitch } from './source-switch.jsx';
 import { SourceSettingsButton } from './source-settings-button.jsx';
@@ -402,7 +404,7 @@ function SettingsContent({ presence, config, model, effort, permission, boot, bu
       levelRow('questionNotifications',t('Questions'),t('DeepSeek is asking you to choose between options.')),
       levelRow('completeNotifications',t('Task complete'),t('DeepSeek finished and is waiting for your input.')),
       row('notificationSound',t('Notification sound'),t('Played when an OS banner is shown.'),<SourceSelect label={t('Notification sound')} align="end" className="sselect-width-160" value={shownValue('notificationSound',config.notificationSound)||'system'} onChange={value=>save('notificationSound',value)} items={[{value:'system',label:t('System sound')},{value:'none',label:t('None')}]}/>),
-      booleanRow('drawAttention',t('Draw attention on notifications'),t('Bounce the Dock icon when DeepSeek needs your attention and the app isn’t focused.'),{disabled:drawAttentionDisabled({permissionNotifications:level('permissionNotifications'),questionNotifications:level('questionNotifications')})}),
+      booleanRow('drawAttention',t('Draw attention on notifications'),SETTINGS_PLATFORM==='darwin'?t('Bounce the Dock icon when DeepSeek needs your attention and the app isn’t focused.'):t('Flash the taskbar button when DeepSeek needs your attention and the app isn’t focused.'),{disabled:drawAttentionDisabled({permissionNotifications:level('permissionNotifications'),questionNotifications:level('questionNotifications')})}),
       ...keepAwake,
       // c71860c77-DzP8HoeV cr (:877-899), right after keep-awake (:1201-1202): listed where the running core suggests a
       // next prompt (capabilities.promptSuggestion); main.jsx hides the composer suggestion when it is off.
@@ -569,11 +571,13 @@ function SettingsContent({ presence, config, model, effort, permission, boot, bu
     {tab:'general',title:'System',skeleton:desktop===null,rows:[
       ...(build?.version?[row('version',t('Desktop app version'),'',<span className="ss-version">{build.version}</span>)]:[]),
       row('startup',t('Run on startup'),t('Automatically start OpenClaude Desktop when you log in to your computer.'),<SettingSwitch label={t('Run on startup')} checked={shownValue('runOnStartup',desktop?.desktop?.runOnStartup)===true} disabled={!desktop?.desktop} onChange={enabled=>commit('startup',{runOnStartup:enabled},async()=>{const value=await desktopCall('desktop-startup',{enabled});setDesktop(current=>current?.desktop?{...current,desktop:{...current.desktop,runOnStartup:value===true}}:current);setDesktopRevision(n=>n+1);})}/>),
-      booleanRow('menuBarEnabled',t('Menu bar'),t('Show OpenClaude Desktop in the menu bar.')),
+      // Windows / Linux: the same switch is the notification-area (system tray) icon (main.cjs Tray).
+      booleanRow('menuBarEnabled',SETTINGS_PLATFORM==='darwin'?t('Menu bar'):t('System tray'),SETTINGS_PLATFORM==='darwin'?t('Show OpenClaude Desktop in the menu bar.'):t('Show OpenClaude Desktop in the system tray.')),
       row('storage',t('Storage'),t('See how much space OpenClaude Desktop uses on this computer.'),<SourceSettingsButton size="sm" onClick={()=>setStorage(true)}>{t('Manage')}</SourceSettingsButton>),
     ]},
     // After the desktop snapshot, as System's own rows (no extra skeleton rows while it loads).
-    ...(desktop!==null?[computerUseSettingsGroup({row,shownValue,config,save,grants:computerUseGrants.apps,busy,revoke:bundleId=>commit('computer-use-allowed-apps',{},()=>computerUseGrants.revoke(bundleId)),teachStatus:computerUseTeachStatus,preferredMode:computerUsePreferredMode.mode,onPreferredMode:mode=>commit('computer-use-preferred-mode',{},()=>computerUsePreferredMode.setMode(mode))})]:[]),
+    // Computer use drives macOS apps (Accessibility / Screen Recording grants, the native helper): macOS only.
+    ...(desktop!==null&&SETTINGS_PLATFORM==='darwin'?[computerUseSettingsGroup({row,shownValue,config,save,grants:computerUseGrants.apps,busy,revoke:bundleId=>commit('computer-use-allowed-apps',{},()=>computerUseGrants.revoke(bundleId)),teachStatus:computerUseTeachStatus,preferredMode:computerUsePreferredMode.mode,onPreferredMode:mode=>commit('computer-use-preferred-mode',{},()=>computerUsePreferredMode.setMode(mode))})]:[]),
     {tab:'developer',title:'Local MCP servers',rows:[
       row('mcp-config',t('Configuration'),local.mcp,<button disabled={!boot?.connected} onClick={()=>action('mcp-config',()=>desktopCall('desktop-edit-config'))}>{t('Edit config')}</button>),
       ...(desktop?.servers||[]).map(server=>row('mcp-'+server.name,server.name,(server.toolsError&&t(server.toolsError))||`${tn(Object.keys(server.tools||{}).length,'{count} tool','{count} tools')} · ${server.authStatus}`,<span>{t(mcpStatus(server))}</span>)),

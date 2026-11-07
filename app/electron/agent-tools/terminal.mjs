@@ -17,6 +17,7 @@
 import path from "node:path";
 import fs from "node:fs";
 import os from "node:os";
+import fsPaths from "../fs-paths.cjs";
 import { READ_DEFAULT_LINES, READ_MAX_LINES, READ_MAX_WAIT_MS, MAX_TERMINALS_PER_OWNER, commandProblem, cleanTitle } from "../terminal-model.mjs";
 
 export const group = "terminal";
@@ -45,12 +46,14 @@ async function approved(ctx, request) {
 /**
  * A start folder the agent names: absolute, ~ or relative to the session folder, and inside that folder. Returned with
  * every symlink resolved: the card shows the folder the shell really starts in, and the terminal service refuses to
- * start there if it is no longer that real folder (a link swapped in while the card was open).
+ * start there if it is no longer that real folder (a link swapped in while the card was open). Windows: a UNC or device
+ * path is refused before any fs call (fs-paths.cjs remotePathRefused). platform: tests only.
  */
-function startFolder(requested, root) {
+export function startFolder(requested, root, { platform = process.platform } = {}) {
   const given = requested === undefined || requested === null || requested === "" ? null : requested;
   if (given !== null && (typeof given !== "string" || given.includes("\0"))) throw new Error("cwd must be a path.");
   const expanded = given === null ? root : given === "~" ? os.homedir() : given.startsWith("~/") ? path.join(os.homedir(), given.slice(2)) : given;
+  if (given !== null) fsPaths.assertLocalPath(expanded, { base: root, roots: [os.homedir()], platform }, given);
   const resolved = path.resolve(root, expanded);
   let real, realRoot;
   try { real = fs.realpathSync(resolved); realRoot = fs.realpathSync(root); } catch { throw new Error(given === null ? "The session’s working folder doesn’t exist." : `The folder ${given} doesn’t exist.`); }

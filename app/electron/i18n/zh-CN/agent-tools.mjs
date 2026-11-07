@@ -122,6 +122,8 @@ export default {
   "Failed to open in editor": "用编辑器打开失败",
   "open {file} in {editor}": "用 {editor} 打开 {file}",
   "show {file} in Finder": "在访达中显示 {file}",
+  "show {file} in Explorer": "在资源管理器中显示 {file}",
+  "show {file} in the file manager": "在文件管理器中显示 {file}",
   "your editor": "你的编辑器",
   "At line {line}": "第 {line} 行",
   "Let {assistant} open {file} in {editor}?": "允许 {assistant} 用 {editor} 打开 {file}？",

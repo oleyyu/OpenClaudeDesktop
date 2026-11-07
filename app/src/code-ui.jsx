@@ -1,4 +1,5 @@
 import React from "react";
+import { pathBasename } from "./host-path-model.mjs";
 import { Icon } from "./icons";
 import { SourceTooltip } from "./source-tooltip";
 import { t } from "../electron/i18n/index.mjs";
@@ -8,7 +9,7 @@ export const SIDEBAR_TOGGLE_TOOLTIP = {
   show: { content: t("Show sidebar"), shortcut: "cmd+b", hoverable: false },
 };
 export const basename = (p) =>
-  p?.split("/").filter(Boolean).pop() || "Select folder";
+  (p ? pathBasename(p) : "") || "Select folder";
 export function ToolButton({
   label,
   icon,

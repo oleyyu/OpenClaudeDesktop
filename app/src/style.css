@@ -1155,3 +1155,15 @@ html[data-reduce-motion="true"] .spinner {
    (the in-app setting; data-local-motion=reduce is its older alias), next to
    the loaded CSS's motion-reduce variants and its global animation clamp
    (design-system.css:1423-1428). */
+
+/* Windows build (main.jsx sets html[data-platform="win32"]): the native minimize / maximize / close buttons are a
+   Window Controls Overlay in the top-right corner (electron/window-chrome.cjs, 40px tall). Its width comes from the
+   titlebar-area env() values (138px at 100% when they are missing), and the titlebars that reach that corner end
+   before it. */
+html[data-platform="win32"] {
+  --win-caption-width: calc(100vw - env(titlebar-area-x, 0px) - env(titlebar-area-width, calc(100vw - 138px)));
+}
+html[data-platform="win32"] .workspace-toolbar.st-toolbar[data-win-caption] .st-inner,
+html[data-platform="win32"] .source-pane-header[data-win-caption] {
+  padding-right: calc(var(--win-caption-width) + 8px);
+}

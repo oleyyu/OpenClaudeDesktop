@@ -1,3 +1,4 @@
+import { isMacPlatform } from "./pane-keys-model.mjs";
 // Composer keystroke classification (2.2553.1 c099c328d :7822-7832 hh key
 // kinds, :7878 isSubmitKeystroke, :9345-9400 editor keydown, :8441 window
 // Escape). Pure: takes a plain description of the event and the composer
@@ -96,10 +97,13 @@ export function strayEnterSwallowed({ event, until = -Infinity, now = Date.now()
 //  - "submit-later": Cmd/Ctrl+Enter (priority "later" while running).
 //  - "popup": a suggestion popup owns Enter.
 //  - "submit-fork": Cmd+Alt+Enter, 'Send in a forked session' (zR :15370-15382).
-export function enterAction({ event, popupOwnsEnter = false }) {
+export function enterAction({ event, popupOwnsEnter = false, mac = isMacPlatform() }) {
   if (event?.key !== "Enter") return "none";
   const meta = !!(event.metaKey || event.ctrlKey);
-  if (event.altKey && event.metaKey && !event.shiftKey && !event.ctrlKey && !event.repeat && !isComposingEvent(event) && !popupOwnsEnter) return "submit-fork";
+  // ⌘⌥⏎ is Ctrl+Alt+Enter off macOS (not an AltGr press).
+  const forkChord = mac ? event.altKey && event.metaKey && !event.ctrlKey
+    : event.altKey && event.ctrlKey && !event.metaKey && !event.getModifierState?.("AltGraph");
+  if (forkChord && !event.shiftKey && !event.repeat && !isComposingEvent(event) && !popupOwnsEnter) return "submit-fork";
   if (event.shiftKey || event.altKey) return "newline";
   if (event.repeat) return "ignore";
   if (isComposingEvent(event)) return "ignore";

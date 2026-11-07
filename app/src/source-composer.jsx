@@ -1,4 +1,5 @@
 import {acceptsFileContextDrag,dropFileContextDrag} from "./file-context-drag.mjs";
+import { pathBasename } from "./host-path-model.mjs";
 import React, { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Icon } from "./icons";
 import { SourceChatComposer } from "./source-chat-composer.jsx";
@@ -32,6 +33,9 @@ import { bashModeRingClass, placeholderShapeResetClass, shelfStartInset, shelfSt
 import { CdsBadge, cdsClassNames } from "./generated/view-tabs/shared-frame-BfjMqbuN.js";
 import { MODE_MENU_KEYS, MODEL_MENU_KEYS } from "./chin-shortcuts.mjs";
 import { shortcutCaps, useMacShortcuts } from "./source-shortcut";
+import { isMacPlatform } from "./pane-keys-model.mjs";
+// The workflow keyword hint names ⌥W; off macOS the same key reads Alt+W (the zh-CN copy keeps its ⌥W too).
+const altGlyph = (text) => (isMacPlatform() ? text : String(text).replaceAll("⌥W", "Alt+W"));
 import { INITIAL_PROMPT_HISTORY, promptHistoryStep, promptHistoryStatus, historySearchStep, historySearchStatus, isHistorySearchKey, HISTORY_SEARCH_HINT_DELAY } from "./prompt-history-model.mjs";
 import "./source-shortcut.css";
 import { usageTriggerCopy, usagePanelCopy, contextRingStroke, CONTEXT_RING_ROW_SIZE, compactAction, autoCompactHintText } from "./context-usage-model.mjs";
@@ -54,7 +58,7 @@ import { SourceSelect } from "./source-select.jsx";
 import { t, getAssistantName, getLocale } from "../electron/i18n/index.mjs";
 
 // lH (cc43287c9-BMbiZYzF.js:21699): the folder chip reads the basename, or 'Select folder…' with none chosen.
-const basename = (path) => path?.split("/").filter(Boolean).pop() || t("Select folder\u2026");
+const basename = (path) => (path ? pathBasename(path) : "") || t("Select folder\u2026");
 // dH (cc43287c9 :20979-20985, :22047-22050, :22076-22081): the env pill, worktree label and Add folder
 // tooltips are hoverable:false with collisionPadding {top:48, right:8, bottom:8, left:8}.
 const ENV_TOOLTIP = { hoverable: false, collisionPadding: { top: 48, right: 8, bottom: 8, left: 8 } };
@@ -68,7 +72,9 @@ export const WORKTREE_TOOLTIP = t("Work in an isolated copy of the repository");
 // honest adaptation of the same string). No chipLevel description exists locally, so other modes fall back to
 // the header 'Mode'. Closed while a chin menu is open (local menuKind, like Add/usage).
 // The visible caps (⇧⌘M) of that spec.
-export const MODE_MENU_SHORTCUT = shortcutCaps(MODE_MENU_KEYS, true).map(cap => cap.label).join("");
+// Off macOS the same spec reads "Ctrl+Shift+M" (shortcut-model oo, "cmd" as Ctrl).
+const MAC_SHORTCUTS = isMacPlatform();
+export const MODE_MENU_SHORTCUT = shortcutCaps(MODE_MENU_KEYS, MAC_SHORTCUTS).map(cap => cap.label).join(MAC_SHORTCUTS ? "" : "+");
 // Manual (ca80fca8d Kt :20107-20116, N$ :28909-28914): with Auto on offer (every local core offers it) the Manual
 // mode's chin label is text-warning and its tooltip (and hidden aria-description) reads 'Claude asks before making
 // changes. Auto is recommended.', the assistant being the running core's; the bypass danger copy still wins (_t ?? vt).
@@ -872,7 +878,7 @@ export function SourceComposer({
         // Claude Code's prompt-input notices: the keyword's (30s there, while it's in the draft here) and ultracode's status.
         <div className="sc-warning-row sc-workflow-notice" role="status" data-tone="workflow" data-pet={showPet || undefined} data-workflow-notice={workflowKeyword ? (workflowKeyword.ignored ? "ignored" : "keyword") : "ultracode"}>
           <span className="sc-warning-text">{workflowKeyword
-            ? (workflowKeyword.ignored ? t("Ultracode keyword ignored for this prompt · ⌥W to undo") : t("Dynamic workflow requested for this turn · ⌥W to ignore"))
+            ? altGlyph(workflowKeyword.ignored ? t("Ultracode keyword ignored for this prompt · ⌥W to undo") : t("Dynamic workflow requested for this turn · ⌥W to ignore"))
             : <><span className="sc-ultracode-word">{t("ultracode")}</span>{" · "}{t("xhigh effort + dynamic workflows for maximum thoroughness")}</>}</span>
         </div>
       )}

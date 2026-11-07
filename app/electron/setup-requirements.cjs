@@ -32,7 +32,27 @@ function meetsMinimum(version, minimum = MIN_NODE) {
 
 // Where a Node can live on a Mac: CODE_DESKTOP_NODE, Homebrew, the official installer, ~/.local, Volta, then
 // nvm's versions newest first. A GUI app's PATH holds none of these, so a bare "node" is the last resort only.
-function nodeCandidates({ env = process.env, home = os.homedir(), readdir = (dir) => fs.readdirSync(dir) } = {}) {
+// Windows: CODE_DESKTOP_NODE, the official installer (Program Files), nvm-windows, Volta, Scoop, fnm, then every
+// node.exe on PATH (a GUI launch on Windows does get the user's PATH).
+function windowsNodeCandidates({ env = process.env, home = os.homedir(), readdir = (dir) => fs.readdirSync(dir) } = {}) {
+  const versions = (dir) => { try { return readdir(dir).filter((name) => parseVersion(name))
+    .sort((a, b) => { const x = parseVersion(a), y = parseVersion(b); return y[0] - x[0] || y[1] - x[1] || y[2] - x[2]; })
+    .map((name) => path.win32.join(dir, name, "node.exe")); } catch { return []; } };
+  const local = env.LOCALAPPDATA || path.win32.join(home, "AppData", "Local");
+  const roaming = env.APPDATA || path.win32.join(home, "AppData", "Roaming");
+  const onPath = String(env.Path || env.PATH || "").split(";").filter(Boolean).map((dir) => path.win32.join(dir.trim(), "node.exe"));
+  return [env.CODE_DESKTOP_NODE,
+    path.win32.join(env.ProgramFiles || "C:\\Program Files", "nodejs", "node.exe"),
+    path.win32.join(local, "Programs", "nodejs", "node.exe"),
+    env.NVM_SYMLINK && path.win32.join(env.NVM_SYMLINK, "node.exe"),
+    ...versions(env.NVM_HOME || path.win32.join(roaming, "nvm")),
+    path.win32.join(local, "Volta", "bin", "node.exe"),
+    path.win32.join(home, "scoop", "apps", "nodejs", "current", "node.exe"),
+    path.win32.join(home, "scoop", "apps", "nodejs-lts", "current", "node.exe"),
+    ...onPath].filter(Boolean).filter((file, index, all) => all.findIndex((other) => other.toLowerCase() === file.toLowerCase()) === index);
+}
+function nodeCandidates({ env = process.env, home = os.homedir(), readdir = (dir) => fs.readdirSync(dir), platform = process.platform } = {}) {
+  if (platform === "win32") return windowsNodeCandidates({ env, home, readdir });
   let nvm = [];
   try {
     const dir = path.join(env.NVM_DIR || path.join(home, ".nvm"), "versions/node");
@@ -46,7 +66,13 @@ function nodeCandidates({ env = process.env, home = os.homedir(), readdir = (dir
 // The Node the cores run on: the first candidate new enough, else the first one found (too old, so check()
 // reports its version), else null. Only a usable Node is remembered: once the user installs one, the next
 // spawn or check finds it without a restart.
-function createNodeResolver({ candidates = () => nodeCandidates(), exists = (file) => fs.existsSync(file),
+// Windows only: with no usable Node installed, the cores run on this app's own Node (Electron as Node,
+// ELECTRON_RUN_AS_NODE=1, set by codex.cjs for every spawn of process.execPath), so an unzipped build works at once.
+function bundledNode({ platform = process.platform } = {}) {
+  if (platform !== "win32" || !process.versions.electron || !meetsMinimum(process.versions.node)) return null;
+  return { path: process.execPath, version: `v${process.versions.node}`, ok: true, bundled: true };
+}
+function createNodeResolver({ candidates = () => nodeCandidates(), exists = (file) => fs.existsSync(file), bundled = () => bundledNode(),
   versionOf = (file) => { try { return String(execFileSync(file, ["-v"], { timeout: 5000 })).trim(); } catch { return null; } } } = {}) {
   let usable = null;
   function resolve() {
@@ -59,7 +85,8 @@ function createNodeResolver({ candidates = () => nodeCandidates(), exists = (fil
       if (version && meetsMinimum(version)) return (usable = { path: file, version, ok: true });
       fallback ??= { path: file, version, ok: false };
     }
-    return fallback;
+    // Not remembered: a Node the user installs later takes over at the next spawn.
+    return bundled() || fallback;
   }
   return { resolve, forget: () => { usable = null; } };
 }
@@ -70,11 +97,19 @@ const run = (file, args, options = {}) => new Promise((resolve, reject) => {
 
 function createSetupRequirements({ resolveNode, downloadsDir, openPath, fetchImpl = (...args) => fetch(...args), exec = run,
   exists = (file) => fs.existsSync(file), launch = (file, args) => spawn(file, args, { detached: true, stdio: "ignore" }).unref(),
-  sources = NODE_SOURCES }) {
+  sources = NODE_SOURCES, platform = process.platform, env = process.env, openExternal = null }) {
+  const windows = platform === "win32";
   // The one Node download: {phase: 'download' | 'verify' | 'installer' | 'failed', version, received, total, error}.
   let nodeInstall = null;
 
   async function gitStatus() {
+    if (windows) {
+      const onPath = String(env.Path || env.PATH || "").split(";").filter(Boolean).map((dir) => path.win32.join(dir.trim(), "git.exe"));
+      for (const file of [path.win32.join(env.ProgramFiles || "C:\\Program Files", "Git", "cmd", "git.exe"),
+        path.win32.join(env.LOCALAPPDATA || path.win32.join(os.homedir(), "AppData", "Local"), "Programs", "Git", "cmd", "git.exe"), ...onPath])
+        if (exists(file)) return { ok: true, path: file };
+      return { ok: false, path: null };
+    }
     for (const file of ["/opt/homebrew/bin/git", "/usr/local/bin/git"]) if (exists(file)) return { ok: true, path: file };
     try {
       const dir = (await exec("/usr/bin/xcode-select", ["-p"])).trim();
@@ -99,8 +134,9 @@ function createSetupRequirements({ resolveNode, downloadsDir, openPath, fetchImp
     if (!response.ok) throw new Error(`${base} answered ${response.status}`);
     const releases = await response.json();
     // The installer is universal (arm64 and x64); a release without one (none so far) is skipped.
-    const release = (Array.isArray(releases) ? releases : []).find((entry) => entry?.lts && meetsMinimum(entry.version) && (entry.files || []).includes("osx-x64-pkg"));
-    if (!release) throw new Error(`${base} lists no Node.js LTS release for macOS`);
+    const wanted = windows ? (process.arch === "arm64" ? "win-arm64-msi" : "win-x64-msi") : "osx-x64-pkg";
+    const release = (Array.isArray(releases) ? releases : []).find((entry) => entry?.lts && meetsMinimum(entry.version) && (entry.files || []).includes(wanted));
+    if (!release) throw new Error(`${base} lists no Node.js LTS release for ${windows ? "Windows" : "macOS"}`);
     return release.version;
   }
 
@@ -115,7 +151,7 @@ function createSetupRequirements({ resolveNode, downloadsDir, openPath, fetchImp
 
   async function download(base) {
     const version = await latestLts(base);
-    const file = `node-${version}.pkg`;
+    const file = windows ? `node-${version}-${process.arch === "arm64" ? "arm64" : "x64"}.msi` : `node-${version}.pkg`;
     const sha = await expectedSha(base, version, file);
     nodeInstall = { phase: "download", version, received: 0, total: 0, error: null };
     const response = await fetchImpl(`${base}/${version}/${file}`);
@@ -162,7 +198,8 @@ function createSetupRequirements({ resolveNode, downloadsDir, openPath, fetchImp
   async function runOp(p = {}) {
     if (p.op === "check") return check();
     if (p.op === "install-git") {
-      // Apple's installer dialog takes over; check() sees the tools once it finishes.
+      // Windows: Git for Windows' download page; macOS: Apple's installer dialog takes over. check() sees git once it finishes.
+      if (windows) { if (typeof openExternal === "function") openExternal("https://git-scm.com/download/win"); return check(); }
       launch("/usr/bin/xcode-select", ["--install"]);
       return check();
     }
@@ -179,4 +216,4 @@ function createSetupRequirements({ resolveNode, downloadsDir, openPath, fetchImp
   return { run: runOp, check };
 }
 
-module.exports = { MIN_NODE, NODE_SOURCES, parseVersion, meetsMinimum, nodeCandidates, createNodeResolver, createSetupRequirements };
+module.exports = { bundledNode, MIN_NODE, NODE_SOURCES, parseVersion, meetsMinimum, nodeCandidates, windowsNodeCandidates, createNodeResolver, createSetupRequirements };

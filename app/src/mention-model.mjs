@@ -1,3 +1,4 @@
+import { pathBasename } from "./host-path-model.mjs";
 // "@" file mentions inside a plain textarea (2.2553.1 c099c328d :3320-3360
 // ccd-files options, :8772-8786 mention insertion, :8211 renderedText
 // serialization; shared-frame :13107-13300 dropdown geometry). The textarea
@@ -96,7 +97,7 @@ export function sessionMentionTitle(session) {
   const title = raw.replace(/[[\]]/g, "").replace(/\s+/g, " ").trim();
   return title.length > 120 ? `${title.slice(0, 119).trimEnd()}\u2026` : title;
 }
-const folderName = (cwd) => (typeof cwd === "string" ? cwd.replace(/\/+$/, "").split("/").filter(Boolean).pop() ?? "" : "");
+const folderName = (cwd) => (typeof cwd === "string" ? pathBasename(cwd) : "");
 /**
  * vN fetchOptions: the user's other sessions (not archived, not this one, with a title), most recently active first;
  * a query matches the title, the title without spaces or the branch. Description: folder · branch.
@@ -185,7 +186,7 @@ export function sessionMentionsBlock(text, picked = [], { current = null, isLive
   return `<system-reminder>\n${map}\n${body}\n</system-reminder>`;
 }
 
-export function mentionInputs(text, mentions = [], { name = (path) => path.split("/").filter(Boolean).pop() || path, resolvePath = (path) => path } = {}) {
+export function mentionInputs(text, mentions = [], { name = (path) => pathBasename(path) || path, resolvePath = (path) => path } = {}) {
   const ranges = mentionRanges(text, mentions);
   const text_elements = ranges.map((range) => ({
     byteRange: { start: utf8Length(text.slice(0, range.start)), end: utf8Length(text.slice(0, range.end)) },

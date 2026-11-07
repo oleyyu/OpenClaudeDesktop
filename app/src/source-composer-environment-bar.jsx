@@ -21,6 +21,7 @@
 // and the draft-group chip stay above the card), and an extra folder is not folded into the folder label (its official
 // "+N" copy is a secret catalog message): it keeps its chip above the card and joins the folder's paths here.
 import React, { useContext } from "react";
+import { pathBasename } from "./host-path-model.mjs";
 import { EnvironmentBar, EnvironmentChip, EnvironmentChipGroup, EnvironmentIconOnlyContext, EnvironmentTriggerLabel, environmentTriggerClass } from "./generated/code-composer/environment-bar.mjs";
 import { pathTooltipContent } from "./generated/code-composer/path-tooltip-placement.mjs";
 import { homeRelativePath } from "./generated/code-start/home-path.mjs";
@@ -61,7 +62,7 @@ export function EnvironmentModelTrigger({ name, fastLabel = null, effortLabel = 
 
 // h2's td around the place trigger (readable :23259-23266).
 export const ENVIRONMENT_PLACE_TOOLTIP = Object.freeze({ hoverable: false, collisionPadding: Object.freeze({ top: 48, right: 8, bottom: 8, left: 8 }) });
-const basename = (path) => (typeof path === "string" ? path.split("/").filter(Boolean).pop() : "") || path || "";
+const basename = (path) => (typeof path === "string" ? pathBasename(path) : "") || path || "";
 
 // The two menus the chips open; side bottom / align start like A2 and H6 (popupSide "bottom", popupAlign "start").
 export const ENVIRONMENT_BAR_MENUS = Object.freeze({ place: "home-environment", folder: "home-folder" });

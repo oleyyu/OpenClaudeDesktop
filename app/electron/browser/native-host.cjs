@@ -11,12 +11,14 @@
 const fs = require("node:fs");
 const net = require("node:net");
 const path = require("node:path");
-const { EXTENSION_ID, MAX_TO_EXTENSION, socketDir, encode, FrameReader, validMessage } = require("./protocol.cjs");
+const { EXTENSION_ID, MAX_TO_EXTENSION, socketDir, hostEndpoint, encode, FrameReader, validMessage } = require("./protocol.cjs");
 
 const VERSION = "0.1.0";
 const MAX_LOG_BYTES = 1024 * 1024;
 const dir = socketDir();
 const socketPath = path.join(dir, `${process.pid}.sock`);
+// Windows: a named pipe, with socketPath the file naming it (protocol.cjs hostEndpoint).
+const endpoint = hostEndpoint(dir, process.pid);
 const logPath = path.join(dir, "host.log");
 const origin = process.argv.find((arg) => arg.startsWith("chrome-extension://")) ?? null;
 
@@ -136,9 +138,10 @@ try {
     });
   });
   server.on("error", (error) => { log(`socket error: ${error.message}`); shutdown("socket error"); });
-  server.listen(socketPath, () => {
+  server.listen(endpoint.listen, () => {
+    if (endpoint.record) { try { fs.writeFileSync(socketPath, endpoint.record, { mode: 0o600 }); } catch (error) { log(`can't record the pipe: ${error.message}`); } }
     try { fs.chmodSync(socketPath, 0o600); } catch {}
-    log(`listening on ${socketPath} for ${origin ?? "an unnamed origin"}${origin && origin !== `chrome-extension://${EXTENSION_ID}/` ? " (not the bridge extension's ID)" : ""}`);
+    log(`listening on ${endpoint.listen} for ${origin ?? "an unnamed origin"}${origin && origin !== `chrome-extension://${EXTENSION_ID}/` ? " (not the bridge extension's ID)" : ""}`);
   });
 } catch (error) {
   log(`can't start: ${error.message}`);

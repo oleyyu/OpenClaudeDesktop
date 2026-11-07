@@ -150,7 +150,7 @@ export function parseJsonc(text) {
 
 /** Shells the agents never run their shell tool in (OpenCode's Shell META `deny`, MiMo's BLACKLIST): they fall back. */
 const TERMINAL_ONLY_SHELLS = new Set(['fish', 'nu'])
-/** The agents' fallback shell on macOS (Shell fallback()). */
+/** The agents' fallback shell on macOS (Shell fallback()). Only the macOS wrapper uses it: Windows gets no wrapper. */
 export const FALLBACK_SHELL = '/bin/zsh'
 
 /** An executable file, by absolute path or on PATH (Shell resolve()). */
@@ -196,8 +196,10 @@ function merge(target, source) {
 
 export class BridgeConfig {
   /** @param {{ flavor: any, stateDir: string, env?: Record<string, string | undefined> }} options */
-  constructor({ flavor, stateDir, env = process.env }) {
+  constructor({ flavor, stateDir, env = process.env, platform = process.platform }) {
     this.flavor = flavor
+    // Windows has no Seatbelt: no shell wrapper there (sandbox.js), the agent runs its own shell as it would anyway.
+    this.platform = platform
     this.stateDir = stateDir
     this.env = env
     // The workflow runner's own bridge (CODE_DESKTOP_WORKFLOW_RUNNER=1, app/electron/workflow-service.cjs) shares this
@@ -211,7 +213,7 @@ export class BridgeConfig {
 
   get configPath() { return path.join(this.configDir, this.flavor.configFile) }
   /** The wrapper, named like the user's shell: the agent picks that shell's arguments (rc files) by the name. */
-  get shellPath() { return path.join(this.runtimeDir, 'shell', path.basename(this.userShell())) }
+  get shellPath() { return this.platform === 'win32' ? null : path.join(this.runtimeDir, 'shell', path.basename(this.userShell())) }
 
   homeDir() { return this.env.HOME || os.homedir() }
 
@@ -270,6 +272,8 @@ export class BridgeConfig {
 
   /** Write the sandbox wrapper for the user's shell; returns its path. */
   writeShell() {
+    // Windows: no sandbox-exec to wrap the shell in, and a `#!/bin/sh` file is no program there.
+    if (this.platform === 'win32') return null
     const shell = this.userShell()
     const file = path.join(this.runtimeDir, 'shell', path.basename(shell))
     writeAtomic(file, shellWrapper({ shell }), 0o755)
@@ -314,7 +318,8 @@ export class BridgeConfig {
     // public share page and keep it in sync (share/session.ts create); 'manual' stops that and still lets the session
     // menu's Share link (codeDesktop/thread/share → POST /session/:id/share) publish one session on request. The overlay
     // is the highest-precedence config layer, so it wins over the user's files.
-    let config = { autoupdate: false, share: 'manual', ...(this.flavor.id === 'opencode' ? { shell: this.shellPath } : {}) }
+    // Windows: no wrapper, so no `shell` override either (the user's own config, else OpenCode's Windows default).
+    let config = { autoupdate: false, share: 'manual', ...(this.flavor.id === 'opencode' && this.platform !== 'win32' ? { shell: this.shellPath } : {}) }
     const provider = providerOverlay(this.providers(), this.env)
     if (Object.keys(provider).length) config.provider = provider
     if (Object.keys(servers).length) config.mcp = servers
@@ -349,7 +354,7 @@ export class BridgeConfig {
     return {
       [`${this.flavor.envPrefix}_CONFIG_DIR`]: this.configDir,
       CODE_DESKTOP_OPENCODE_STATE: this.stateDir,
-      SHELL: shell,
+      ...(shell ? { SHELL: shell } : {}),
       ...appTools,
     }
   }

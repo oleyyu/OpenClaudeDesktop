@@ -31,7 +31,7 @@
  *                    these apply there, and permissionWarning says so
  */
 
-import { execFile, execFileSync, spawn } from 'node:child_process'
+import { execFileSync } from 'node:child_process'
 import fs from 'node:fs'
 import { createRequire } from 'node:module'
 import os from 'node:os'
@@ -41,7 +41,8 @@ import { createOverlay } from '../overlay.js'
 import { withoutBrowser } from '../no-browser.js'
 import { threadConfigYaml, threadPermissionFile, AGENT_TOOL_IDS, topLevelBlocks, parseYamlBlock, withTopLevel, writeYamlBlock } from './minimax-config.js'
 import { settingAt, withSetting } from '../catalog.js'
-import { pathToFileURL } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
+import { execFilePlatform, platformSpawn, spawnPlatform } from '../win-process.js'
 
 export const SQLITE_VERSION = '12.11.1'
 export const RIPGREP_VERSION = '1.18.0'
@@ -225,7 +226,8 @@ export function minimaxLogin(home) {
   return null
 }
 
-const STATE_SCRIPT = path.join(path.dirname(new URL(import.meta.url).pathname), 'minimax-state.cjs')
+// fileURLToPath, not URL.pathname: that keeps %20 for a space ("OpenClaude Desktop.app") and is /C:/… on Windows.
+const STATE_SCRIPT = fileURLToPath(new URL('./minimax-state.cjs', import.meta.url))
 const stateDb = (home) => path.join(home, 'v2', 'sqlite', 'runtime-state.sqlite')
 
 /** The better-sqlite3 build mcode runs with (the bridge's native copy, else the one an npm install of mcode has). */
@@ -247,7 +249,9 @@ export function minimaxState(ctx, request) {
   if (!module || !ctx.program?.node) return null
   const env = { ...ctx.env }
   delete env.NODE_OPTIONS
-  const out = execFileSync(ctx.program.node, [STATE_SCRIPT, module, JSON.stringify(request)], { env, timeout: 15000, maxBuffer: 4 << 20, encoding: 'utf8' })
+  // platformSpawn: the app's own Electron as mcode's Node runs as Node (ELECTRON_RUN_AS_NODE), not as a second app.
+  const launch = platformSpawn(ctx.program.node, [STATE_SCRIPT, module, JSON.stringify(request)], { env, timeout: 15000, maxBuffer: 4 << 20, encoding: 'utf8' })
+  const out = execFileSync(launch.command, launch.args, launch.options)
   return JSON.parse(out)
 }
 
@@ -290,7 +294,7 @@ export function minimaxStateAsync(ctx, request) {
   if (!module || !ctx.program?.node) return Promise.resolve(null)
   const env = { ...ctx.env }
   delete env.NODE_OPTIONS
-  return new Promise((resolve, reject) => execFile(ctx.program.node, [STATE_SCRIPT, module, JSON.stringify(request)], { env, timeout: 15000, maxBuffer: 4 << 20, encoding: 'utf8' }, (error, stdout) => {
+  return new Promise((resolve, reject) => execFilePlatform(ctx.program.node, [STATE_SCRIPT, module, JSON.stringify(request)], { env, timeout: 15000, maxBuffer: 4 << 20, encoding: 'utf8' }, (error, stdout) => {
     if (error) { reject(error); return }
     try { resolve(JSON.parse(stdout)) } catch (parseError) { reject(parseError) }
   }))
@@ -755,7 +759,7 @@ export function minimaxFeedbackUrl({ classification = 'bug', reason = null, vers
 }
 
 function run(file, args, options) {
-  return new Promise((resolve, reject) => execFile(file, args, { timeout: 300000, maxBuffer: 8 << 20, ...options }, (error, stdout, stderr) => (error ? reject(Object.assign(error, { stdout, stderr })) : resolve({ stdout, stderr }))))
+  return new Promise((resolve, reject) => execFilePlatform(file, args, { timeout: 300000, maxBuffer: 8 << 20, ...options }, (error, stdout, stderr) => (error ? reject(Object.assign(error, { stdout, stderr })) : resolve({ stdout, stderr }))))
 }
 
 /** better-sqlite3 resolvable from a file (Node's own resolution: an npm install has it). */
@@ -763,7 +767,7 @@ function resolvesFrom(file, name = 'better-sqlite3') {
   try { createRequire(file).resolve(name); return true } catch { return false }
 }
 const sqliteFrom = (dir) => resolvesFrom(path.join(dir, 'package.json'))
-const HOOK = path.join(path.dirname(new URL(import.meta.url).pathname), 'minimax-native-hook.mjs')
+const HOOK = fileURLToPath(new URL('./minimax-native-hook.mjs', import.meta.url))
 
 // ------------------------------------------------------------------ config.yaml settings and skill sources
 
@@ -955,7 +959,7 @@ export default {
       const node = ctx.program.node
       const npm = [path.join(path.dirname(node), 'npm'), '/opt/homebrew/bin/npm', '/usr/local/bin/npm'].find((file) => fs.existsSync(file))
       if (!npm) throw new Error('MiniMax Code needs its SQLite module; npm was not found to install it.')
-      await run(npm, ['install', `better-sqlite3@${SQLITE_VERSION}`, `@vscode/ripgrep@${RIPGREP_VERSION}`, '--ignore-scripts=false', '--no-audit', '--no-fund', '--registry', 'https://registry.npmjs.org/'], { cwd: dir, env: { ...ctx.env, PATH: `${path.dirname(node)}:${ctx.env.PATH ?? ''}` } })
+      await run(npm, ['install', `better-sqlite3@${SQLITE_VERSION}`, `@vscode/ripgrep@${RIPGREP_VERSION}`, '--ignore-scripts=false', '--no-audit', '--no-fund', '--registry', 'https://registry.npmjs.org/'], { cwd: dir, env: { ...ctx.env, PATH: `${path.dirname(node)}${path.delimiter}${ctx.env.PATH ?? ''}` } })
     }
     // The release imports better-sqlite3 statically (ESM ignores NODE_PATH): a resolve hook maps it to this copy.
     const options = [ctx.env.NODE_OPTIONS, `--import="${pathToFileURL(HOOK).href}"`].filter(Boolean).join(' ')
@@ -1341,7 +1345,7 @@ export default {
   startLogin(ctx, { onDone }) {
     return new Promise((resolve, reject) => {
       const { command, args } = ctx.commandLine(['login', '--no-browser'])
-      const child = spawn(command, args, { env: { ...ctx.env, ...(ctx.nativeEnv ?? {}), NO_COLOR: '1' }, stdio: ['ignore', 'pipe', 'pipe'] })
+      const child = spawnPlatform(command, args, { env: { ...ctx.env, ...(ctx.nativeEnv ?? {}), NO_COLOR: '1' }, stdio: ['ignore', 'pipe', 'pipe'] })
       let text = ''
       let answered = false
       const scan = (chunk) => {

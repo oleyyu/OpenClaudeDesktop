@@ -17,7 +17,20 @@
  * revision before serving a row ({@link CacheRevisions}).
  */
 import { z } from 'zod'
+import { win32 } from 'node:path'
 import { requireSession } from './errors.js'
+
+/**
+ * A folder as thread/list's cwd filter compares it. Windows paths are case-insensitive and come spelled both ways (the
+ * app may send `c:/Users/me/proj`, the session header holds `C:\Users\me\proj`): one key for both, so the sidebar's
+ * project still lists its sessions. Elsewhere the exact string, as before.
+ */
+export function cwdKey(cwd, platform = process.platform) {
+  if (typeof cwd !== 'string' || platform !== 'win32') return cwd
+  const normal = win32.normalize(cwd)
+  const trimmed = normal.length > 3 && /[\\]$/.test(normal) ? normal.slice(0, -1) : normal
+  return trimmed.toLowerCase()
+}
 
 /** Projection keys a cold row reads from the cache. */
 export const LIST_PROJECTION_KEYS = ['title', 'sessionListMetadata']

@@ -10,6 +10,7 @@
  */
 
 import { spawn } from 'node:child_process'
+import { killTree, platformSpawn } from './win-process.js'
 import readline from 'node:readline'
 
 const PROTOCOL = '2025-06-18'
@@ -37,12 +38,16 @@ function probeStdio(server, timeoutMs, requests = [TOOLS_LIST]) {
       if (settled) return
       settled = true
       clearTimeout(timer)
-      try { child?.kill('SIGTERM') } catch {}
+      // Windows: the probe's cmd.exe (an npx shim) would leave the server itself running; the tree goes.
+      if (process.platform === 'win32' && child?.pid) killTree(child.pid)
+      else try { child?.kill('SIGTERM') } catch {}
       resolve(result)
     }
     const timer = setTimeout(() => done({ runtimeStatus: 'failed', error: 'The server did not answer in time.' }), timeoutMs)
     try {
-      child = spawn(server.command, server.args ?? [], { cwd: server.cwd || process.cwd(), env: { ...Object.fromEntries(Object.entries(process.env).filter(([key]) => !key.startsWith('CODE_DESKTOP_') && key !== 'ELECTRON_RUN_AS_NODE')), ...(server.env ?? {}) }, stdio: ['pipe', 'pipe', 'pipe'] })
+      // Windows: `npx` / `uvx`-style commands are .cmd shims (cmd.exe), and no console window opens (win-process.js).
+      const launch = platformSpawn(server.command, server.args ?? [], { cwd: server.cwd || process.cwd(), env: { ...Object.fromEntries(Object.entries(process.env).filter(([key]) => !key.startsWith('CODE_DESKTOP_') && key !== 'ELECTRON_RUN_AS_NODE')), ...(server.env ?? {}) }, stdio: ['pipe', 'pipe', 'pipe'] })
+      child = spawn(launch.command, launch.args, launch.options)
     } catch (error) {
       done({ runtimeStatus: 'failed', error: error?.message ?? String(error) })
       return

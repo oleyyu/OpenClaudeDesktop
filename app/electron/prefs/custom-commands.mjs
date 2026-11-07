@@ -3,9 +3,11 @@
 // <project>/.code-desktop/commands/*.md); only the folder choice and the
 // project switch are preferences.
 import { t } from '../i18n/index.mjs';
+import { isAbsoluteFolder } from './host-paths.mjs';
 export const CUSTOM_COMMANDS_DEFAULT = Object.freeze({ globalDir: '', projectEnabled: true });
 const object = value => value !== null && typeof value === 'object' && !Array.isArray(value);
-const absolute = value => typeof value === 'string' && value.startsWith('/') && value.length <= 1024 && !/[\x00]/.test(value);
+// /… on macOS; C:\… / C:/… / \\server\share on Windows.
+const absolute = value => isAbsoluteFolder(value) && value.length <= 1024 && !/[\x00]/.test(value);
 
 export function normalizeCustomCommands(value) {
   if (!object(value)) return { ...CUSTOM_COMMANDS_DEFAULT };

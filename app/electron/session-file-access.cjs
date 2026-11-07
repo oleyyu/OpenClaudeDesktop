@@ -7,16 +7,23 @@ const fs = require("node:fs/promises");
 const path = require("node:path");
 const os = require("node:os");
 const { scopedPath } = require("./files.cjs");
+const { pathInside, remotePathRefused, samePath } = require("./fs-paths.cjs");
 
 // SI: control and format characters never name a path we act on.
 const UNUSUAL = /[\p{Cc}\p{Cf}\p{Zl}\p{Zp}]/u;
-const within = (child, parent) => child === parent || child.startsWith(parent.endsWith(path.sep) ? parent : parent + path.sep);
+// macOS: exactly as before. Windows: case-insensitive, either separator, a root (C:\\) keeps its one separator.
+const within = (child, parent) => pathInside(parent, child);
 const insideAny = (child, folders) => folders.some((folder) => typeof folder === "string" && folder && within(child, folder));
 
-/** The requested path made absolute against the session's primary folder (requestedPath + resolve). */
-function requestedAbsolute(root, filePath) {
+/**
+ * The requested path made absolute against the session's primary folder (requestedPath + resolve). Windows: null for a
+ * UNC or device path outside the session's own folders, before anything touches it (an lstat or realpath of
+ * \\host\share already authenticates to that host: fs-paths.cjs remotePathRefused). platform: tests only.
+ */
+function requestedAbsolute(root, filePath, { sessionFolders = [], platform = process.platform } = {}) {
   if (typeof filePath !== "string" || !filePath || filePath.includes("\0") || UNUSUAL.test(filePath)) return null;
-  const expanded = filePath === "~" || filePath.startsWith("~/") ? path.join(os.homedir(), filePath.slice(1)) : filePath;
+  const expanded = filePath === "~" || filePath.startsWith("~/") || (process.platform === "win32" && filePath.startsWith("~\\")) ? path.join(os.homedir(), filePath.slice(1)) : filePath;
+  if (remotePathRefused(expanded, { base: root, roots: [os.homedir(), ...sessionFolders], platform })) return null;
   return path.resolve(root, expanded);
 }
 
@@ -24,8 +31,8 @@ function requestedAbsolute(root, filePath) {
  * resolveSessionFileForReveal: a regular file (lstat, so not a link) at the requested path, inside or outside the
  * session folders; its real path, or null. showSessionFileInFolder then shows it and answers true, else false.
  */
-async function resolveFileForReveal(root, filePath) {
-  const absolute = requestedAbsolute(root, filePath);
+async function resolveFileForReveal(root, filePath, { platform = process.platform } = {}) {
+  const absolute = requestedAbsolute(root, filePath, { platform });
   if (!absolute) return null;
   // resolveSessionFilePaths first: a file inside the working folder, links resolved and kept inside it.
   const inside = await scopedPath(root, path.relative(root, absolute)).catch(() => null);
@@ -71,13 +78,15 @@ const lowerEq = (a, b) => (process.platform === "linux" ? a === b : a.toLowerCas
  * the file is a regular, single-link file outside every session folder, the folder is a real directory (not a link)
  * whose real path is the same place (kI, allowing macOS's /private alias), and the file really lives in it.
  */
-async function suggestFolderForFile({ root, sessionFolders = [], filePath, home = os.homedir() }) {
+async function suggestFolderForFile({ root, sessionFolders = [], filePath, home = os.homedir(), platform = process.platform }) {
   try {
-    const absolute = requestedAbsolute(root, filePath);
+    const absolute = requestedAbsolute(root, filePath, { sessionFolders: sessionFolders.filter((folder) => typeof folder === "string"), platform });
     if (!absolute) return null;
     const folders = [root, ...sessionFolders].filter((value) => typeof value === "string" && value);
     const realFolders = [...folders, ...(await Promise.all(folders.map((folder) => fs.realpath(folder).catch(() => null)))).filter(Boolean)];
     if (insideAny(absolute, realFolders)) return null;
+    // Windows: the path may be spelled with 8.3 short names (C:\\PROGRA~1); its real path counts too.
+    if (process.platform === "win32") { const realAbsolute = await fs.realpath(absolute).catch(() => null); if (realAbsolute && insideAny(realAbsolute, realFolders)) return null; }
     const realHome = await fs.realpath(home).catch(() => home);
     const homes = realHome === home ? [home] : [home, realHome];
     const folder = path.dirname(absolute);
@@ -89,7 +98,7 @@ async function suggestFolderForFile({ root, sessionFolders = [], filePath, home 
     const folderStat = await fs.lstat(folder).catch(() => null);
     if (!folderStat?.isDirectory() || folderStat.isSymbolicLink()) return null;
     const realFolder = await fs.realpath(folder), realFile = await fs.realpath(absolute);
-    if (realFolder !== folder && realFolder !== `/private${folder}`) return null;
+    if (!samePath(realFolder, folder) && realFolder !== `/private${folder}`) return null;
     if (!within(realFile, realFolder) || insideAny(realFolder, realFolders)) return null;
     if (folderVerdict(realFolder, { homes, sessionFolders: realFolders }) === "withhold") return null;
     return folder;

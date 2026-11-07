@@ -12,6 +12,7 @@
  */
 
 import { spawn } from 'node:child_process'
+import { killTree, platformSpawn } from './win-process.js'
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
@@ -401,8 +402,11 @@ export async function listMcpTools(server, { cwd, timeoutMs = 8000 } = {}) {
     return listed.json?.result?.tools ?? []
   }
   return await new Promise((resolve, reject) => {
-    const child = spawn(server.command, server.args ?? [], { cwd: server.cwd ? path.resolve(cwd ?? process.cwd(), server.cwd) : cwd, env: { ...Object.fromEntries(Object.entries(process.env).filter(([key]) => !key.startsWith('CODE_DESKTOP_') && key !== 'ELECTRON_RUN_AS_NODE')), ...(server.env ?? {}) }, stdio: ['pipe', 'pipe', 'ignore'] })
-    const timer = setTimeout(() => { child.kill(); reject(new Error('The MCP server did not list its tools in time.')) }, timeoutMs)
+    // Windows: an `npx` / `uvx` server is a .cmd shim (cmd.exe, no console window), stopped with its tree (win-process.js).
+    const launch = platformSpawn(server.command, server.args ?? [], { cwd: server.cwd ? path.resolve(cwd ?? process.cwd(), server.cwd) : cwd, env: { ...Object.fromEntries(Object.entries(process.env).filter(([key]) => !key.startsWith('CODE_DESKTOP_') && key !== 'ELECTRON_RUN_AS_NODE')), ...(server.env ?? {}) }, stdio: ['pipe', 'pipe', 'ignore'] })
+    const child = spawn(launch.command, launch.args, launch.options)
+    const end = () => { if (process.platform === 'win32' && child.pid) killTree(child.pid); else child.kill() }
+    const timer = setTimeout(() => { end(); reject(new Error('The MCP server did not list its tools in time.')) }, timeoutMs)
     let buffer = ''
     child.on('error', (error) => { clearTimeout(timer); reject(error) })
     // A server that closes its stdin early fails our writes with EPIPE; the timer reports it.
@@ -420,7 +424,7 @@ export async function listMcpTools(server, { cwd, timeoutMs = 8000 } = {}) {
           child.stdin.write(JSON.stringify(request(2, 'tools/list', {})) + '\n')
         } else if (message.id === 2) {
           clearTimeout(timer)
-          child.kill()
+          end()
           resolve(message.result?.tools ?? [])
         }
       }

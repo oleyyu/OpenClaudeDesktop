@@ -25,6 +25,7 @@
  *   enteredReviewMode / exitedReviewMode  a review/start turn (the bridge marks it)
  */
 import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { SESSION_ARG } from './app-tools.js'
 
 const seconds = (ms) => (Number.isFinite(ms) ? Math.floor(ms / 1000) : null)
@@ -527,7 +528,10 @@ export function parseActorThreadId(id) {
 }
 
 const fileUrlPath = (url) => {
-  try { return url.startsWith('file://') ? decodeURIComponent(new URL(url).pathname) : null } catch { return null }
+  if (!url.startsWith('file://')) return null
+  // fileURLToPath: C:\… on Windows (the URL path is /C:/…); the same decoded path on macOS.
+  try { return fileURLToPath(url) } catch {}
+  try { return decodeURIComponent(new URL(url).pathname) } catch { return null }
 }
 
 /** A user message's parts → Codex UserInput[]. */
