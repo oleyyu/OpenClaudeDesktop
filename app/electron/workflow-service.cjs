@@ -100,7 +100,10 @@ function createWorkflowService({root,getConfig,emit,command:fixedCommand,args:fi
   let run={id,threadId,after:typeof after==='string'?after:undefined,identity:hash,file:script,cwd,...(args!==undefined?{args}:{}),model:chosenModel,effort,plan:!!plan,access,description:path.basename(script),status:'running',startedAt:Date.now(),sequence:0,workflowProgress:[],
    origin:origin==='tool'?'tool':'user',transcriptDir:directory,...(typeof taskId==='string'?{taskId}:{}),...(typeof toolUseId==='string'?{toolUseId}:{}),...(typeof scriptPath==='string'?{scriptPath}:{}),...(resumeId?{resumedFrom:resumeId}:{})};
   runs.set(id,run);fs.writeFileSync(path.join(directory,'origin.json'),JSON.stringify(run));persist(run);emit({kind:'workflow',run});
-  function record(event,at=Date.now()) {run=workflowEvent(run,event,at);runs.set(id,run);fs.appendFileSync(path.join(directory,'events.jsonl'),JSON.stringify({sequence:run.sequence,at,event})+'\n');persist(run);emit({kind:'workflow',run});}
+  // The run's state in memory comes first: a run folder that can't be written (a full disk, a removed data folder)
+  // must not throw out of the runner's message / close handlers in the main process, nor keep a finished run from
+  // settling (its notification to the model, Stop's answer).
+  function record(event,at=Date.now()) {run=workflowEvent(run,event,at);runs.set(id,run);try{fs.appendFileSync(path.join(directory,'events.jsonl'),JSON.stringify({sequence:run.sequence,at,event})+'\n');persist(run);}catch(error){console.warn('Workflow run not saved:',error?.message??error);}emit({kind:'workflow',run});}
   if(disposed){record({type:'settled',status:'failed',error:'Application is closing.'});return run;}
   // The core getter learns the run's session and access (a Codex core adds that session's sandbox settings).
   const launch=typeof currentCore==='function'?currentCore({threadId,access,cwd})||{}:{command:fixedCommand,args:fixedArgs,env:fixedEnv},command=launch.command,commandArgs=launch.args;
@@ -115,9 +118,12 @@ function createWorkflowService({root,getConfig,emit,command:fixedCommand,args:fi
   let stderr='',outcome=null,stopRequested=false,quitStop=false,killTimer=null;
   const completion=new Promise(resolve=>{
    child.stderr?.on('data',data=>{stderr=(stderr+data).slice(-8000);});
-   child.on('message',message=>{if(message?.stopping){grace();return;}if(!message||!message.event)return;const event=message.event;if(event.type==='result'||event.type==='failure')outcome=event;else record(event,Number.isFinite(message.at)?message.at:Date.now());});
-   child.once('error',error=>{outcome={type:'failure',error:error.message};});
-   child.once('close',(code,signal)=>{clearTimeout(killTimer);if(child.pid){try{process.kill(-child.pid,'SIGKILL');}catch{}}running.delete(id);const status=stopRequested?'stopped':code===0&&outcome?.type==='result'?'completed':'failed';if(quitStop&&run.origin==='tool')markOrphan(id);record({type:'settled',status,result:outcome?.result,error:status==='stopped'?'Stopped':outcome?.error|| (status==='failed'?`Runner exited (${signal||code}). ${stderr}`:undefined)});settle();resolve(run);});
+   child.on('message',message=>{if(message?.stopping){grace();return;}if(!message||!message.event)return;const event=message.event;if(event.type==='result'||event.type==='failure')outcome=event;else{try{record(event,Number.isFinite(message.at)?message.at:Date.now());}catch(error){console.warn('Workflow event not recorded:',error?.message??error);}}});
+   // on, not once: a second 'error' (a failed send after a failed spawn) with no listener would throw in the main process.
+   child.on('error',error=>{if(outcome?.type!=='result')outcome={type:'failure',error:error.message};});
+   child.once('close',(code,signal)=>{clearTimeout(killTimer);if(child.pid){try{process.kill(-child.pid,'SIGKILL');}catch{}}running.delete(id);const status=stopRequested?'stopped':code===0&&outcome?.type==='result'?'completed':'failed';if(quitStop&&run.origin==='tool')markOrphan(id);
+    // Whatever happens while recording it, the run settles: its notification goes out and Stop / quit stop waiting.
+    try{record({type:'settled',status,result:outcome?.result,error:status==='stopped'?'Stopped':outcome?.error|| (status==='failed'?`Runner exited (${signal||code}). ${stderr}`:undefined)});}catch(error){console.warn('Workflow settlement not recorded:',error?.message??error);}settle();resolve(run);});
   });
   // SIGTERM the runner only, not its group: its core must stay up to answer the cancel
   // (codeDesktop/workflow/stop, releaseScript, turn/interrupt). The group goes on close or at the deadline.

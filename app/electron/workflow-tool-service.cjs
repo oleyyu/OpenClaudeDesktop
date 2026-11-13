@@ -179,6 +179,14 @@ function createWorkflowToolService({ workflowService, getConfig, updateConfig, s
   }
 
   function observe(event) {
+    // The core's connection dropped (a crash, a restart, a core switch): its running turns ended with it and no
+    // turn/completed follows. No session is busy any more — else a finished workflow's notification would wait for a
+    // turn that never ends. Nothing is started while the core is away; what waits goes out once it is back.
+    if (event?.kind === "connection") {
+      if (event.connected === false) { for (const [threadId, entry] of turns) if (entry.active) turns.set(threadId, { ...entry, active: false }); }
+      else if (event.connected === true) { for (const [threadId, list] of pending) if (list.length) void flush(threadId).catch(() => {}); }
+      return;
+    }
     const p = event?.params;
     if (!p || typeof p.threadId !== "string") return;
     // The user message a turn shows: a queued message the core started as a turn by itself, or a steer, never passes
