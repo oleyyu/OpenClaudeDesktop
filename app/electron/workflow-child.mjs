@@ -13,7 +13,11 @@ process.on('message',message=>{if(message?.control==='pause'){try{if(typeof runt
 const send=event=>{if(process.connected)process.send({event,at:Date.now()});};
 // A stop cancels the run first (interrupts turns, removes clean worktrees, closes sessions), then the app-server goes.
 // It tells the service a cancel is under way, so the force-kill waits (bounded) for it to finish.
-async function close(code){if(finishing)return;finishing=true;try{if(code!==0&&runtime?.cancel){if(process.connected)process.send({stopping:true});await runtime.cancel();}}catch{}try{await shutdownClient();}finally{process.exit(code);}}
+// The run's last messages (its result or failure, the events before it) may still be queued on the IPC pipe: exiting
+// then drops them, and a finished run is recorded as failed ("Runner exited (0)"). One more message with a callback
+// waits for everything sent before it (bounded; nothing to wait for once the app is gone).
+const flushed=()=>new Promise(resolve=>{if(!process.connected){resolve();return;}const timer=setTimeout(resolve,2000);try{process.send({flushed:true},()=>{clearTimeout(timer);resolve();});}catch{clearTimeout(timer);resolve();}});
+async function close(code){if(finishing)return;finishing=true;try{if(code!==0&&runtime?.cancel){if(process.connected)process.send({stopping:true});await runtime.cancel();}}catch{}try{await shutdownClient();}catch{}try{await flushed();}finally{process.exit(code);}}
 async function publishResult(directory,result,outputFile){
  const encoded=JSON.stringify(result);
  if(outputFile)await fs.copyFile(outputFile,path.join(directory,'result.json'));

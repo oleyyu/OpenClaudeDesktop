@@ -43,7 +43,7 @@ Regression tests: `app/tests/workflow-runner-fixes.test.mjs` (fixture `app/tests
 Regression tests: `app/tests/workflow-config.test.mjs`, `app/tests/workflow-tool-service.test.mjs` (fixture `app/tests/fixtures/workflow-runner-server.cjs`, whose prompts may now arrive framed).
 
 - **Concurrency from the environment** (`runtime.js` `concurrencyCap`). `CLAUDE_CODE_WORKFLOW_MAX_CONCURRENT_AGENTS` (an integer 1–256) sets the agent pool; otherwise `min(16, max(2, availableParallelism − 2))` (Claude's floor of 2, was 1). Code Desktop passes its Settings value through the same variable.
-- **Stall watchdog 180s** (`runtime.js` `STALL_MS`, was 600s); still up to 5 restarts, `opts.stallMs` overrides.
+- **Stall watchdog** (`runtime.js` `STALL_MS`): set to Claude's 180s here, back to 600s on 2026-11-13 (see below); still up to 5 restarts, `opts.stallMs` overrides.
 - **Pause/resume** (`runtime.js` `setWorkflowPaused`, runtime `pause`). While paused, queued agents are not admitted; running agents finish. Used by Code Desktop's Tasks pane (/workflows "p").
 - **Prompt provenance** (new `provenance.js`, `codexAgent.js`). With `CLAUDE_CODE_WORKFLOW_PROMPT_PROVENANCE` unset or truthy, an agent's prompt is sent inside Claude's "[Workflow harness — computed task]" frame with every line indented two spaces; `runtime.js` passes `framePrompt` and reports `promptFramed` accordingly. Journal identity still uses the unframed prompt. An isolated worktree adds Claude's worktree note after the prompt.
 - **Same-prefix stagger** (`provenance.js` `PrefixStagger`, applied in `codexAgent.js`). Agents sharing a prompt-cache prefix (model, effort, agent type, schema, folder) wait up to `CLAUDE_CODE_WORKFLOW_PREFIX_STAGGER_MS` (default 5000; 0 with `DISABLE_PROMPT_CACHING`) for the first one's first response; a prefix stays warm for 270s. Injected `runAgent` seams are not staggered.
@@ -52,3 +52,10 @@ Regression tests: `app/tests/workflow-config.test.mjs`, `app/tests/workflow-tool
 - **Synchronous VM slice 30s** (`runWorkflow.js`, was 1s), as in Claude.
 - **JSON fallback for cores without the StructuredOutput tool** (new `jsonAgent.js`, hook in `codexAgent.js` `runOneTurn`). With `opts.structuredOutput === false` (no structured output: ZCode, the ACP agents) or `'outputSchema'` (turn/start outputSchema only: the DeepSeek Harness, OpenCode/MiMo — the wire schema is also sent), a schema agent gets the author's JSON Schema in its prompt, its reply is parsed (strict, fenced or embedded JSON: `checkSchemaResult`) and validated with `schemaValidate.js`, and an invalid reply is answered in the same thread with the errors, up to `MAX_STRUCTURED_OUTPUT_RETRIES` failed replies (default 5).
 - **Subagent model** (`app/electron/workflow-child.mjs`, not this package): `CLAUDE_CODE_SUBAGENT_MODEL` (unless `inherit`) is the default agent model; `CLAUDE_CODE_SUBAGENT_MODEL_FORCE` pins it over per-call `opts.model`.
+
+## Local modifications (2026-11-13 reliability)
+
+Regression tests: `app/tests/workflow-reliability.test.mjs`.
+
+- **Stall window 600s again** (`runtime.js` `stallWindowMs`). Claude Code's 180s assumes an API stream that always reports (thinking deltas, pings). An app-server core reports nothing while its model thinks without a summary, so 180s restarted healthy agents from scratch (13 restarts across 46 agents in recorded runs; a sixth stall fails the call). `CODE_DESKTOP_WORKFLOW_STALL_MS` (whole milliseconds, 0 = never) replaces the default.
+- **Broken pipe is a lost connection** (`appServerClient.js` `connect`). The server's stdin/stdout/stderr have `error` listeners: a request written while the server dies (EPIPE) rejects what waits and marks the client disconnected, instead of ending the runner process as an unhandled stream error. Agents then retry on a fresh server, as for any other transport failure.
