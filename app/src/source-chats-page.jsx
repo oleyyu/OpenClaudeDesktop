@@ -3,10 +3,12 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 // composer / menu graph, E41).
 import { CdsBadge, CdsButton, CdsConfirmationDialog, CdsDialog, CdsIcon, CdsRelativeTime, CdsSelectableTable, SessionsActionsRail, SessionsMoreButton,
   SessionsRowRail, useRowSelection } from './generated/view-tabs/index.js';
-// cd75b47e6 l (official export t): the list page frame c623cddd3 H renders into (`I`), one copy via chat-projects (D1).
-import { GalleryPageLayout } from './generated/chat-projects/index.mjs';
-// shared-78 Sv: the sidebar copy table; with the hub look off (app-switch useHubLook) it is gv, the chat copy.
-import { sidebarMessages } from './generated/sessions-page/pure-shared-78.mjs';
+// cd75b47e6 l (official export t): the list page frame c623cddd3 H renders into (`I`), one copy via chat-projects (D1);
+// 4.16336.0 cd75b47e6-BcflIwff C through chat-projects-v4 (code-routines-v4 holds it), the same layout the Projects page renders.
+import { GalleryPageLayout } from './generated/chat-projects-v4/index.mjs';
+// The sidebar copy table: 4.16336.0 shared-123-1Hc1RTKl Ah (3.6556.2 shared-78 Sv) through sessions-page-v4, `id() ? kh : Oh`;
+// with the hub look off (cds-core HubLookContext, no provider in this host) it is Oh, the chat copy.
+import { sidebarMessages } from './generated/sessions-page-v4/index.mjs';
 import { useStartIntl } from './source-code-start-adapters.jsx';
 import { menuTriggerProps } from './source-menu.jsx';
 import { useSourceToasts } from './source-toast.jsx';

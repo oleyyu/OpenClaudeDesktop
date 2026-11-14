@@ -13,28 +13,33 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
 import { appSheets, append, computed, element, find, loadCascade, parseMarkup } from './fixtures/transcript-css-cascade.mjs';
+import { readFileSync } from 'node:fs';
 import { withMemoCache } from './support/react-memo-cache.mjs';
+import { designEntryStylesheets, legacyGlobalStylesheets } from '../scripts/current-design-assets.mjs';
 
 const app = path.resolve(import.meta.dirname, '..');
 const readable = path.resolve(app, '../analysis/code-ui-unpack-20261017/readable');
-const OFFICIAL = 'public/assets/v1/c6a992d55-Che1orl5.css';
+// The official c6a992d55 utilities entry sheet index.html loads (current-design-assets: 4.16336.0 c6a992d55-_JRfOmTh).
+const OFFICIAL = `public/assets/v1/${designEntryStylesheets.find((name) => name.startsWith('c6a992d55-'))}`;
 const h = React.createElement;
 const noop = () => {};
-let server, C, Host, Shell, Layout, Tokens, Card, Adapters, ViewTabs, AddMenu, Glyph, AddGen, Padding, SourceMenuModule;
+let Core, server, C, Host, Shell, Layout, Tokens, Card, Adapters, ViewTabs, AddMenu, Glyph, AddGen, Padding, SourceMenuModule;
 before(async () => {
   server = await createServer({ configFile: false, root: app, plugins: [react()], server: { middlewareMode: true, hmr: false, ws: false, watch: null }, appType: 'custom', logLevel: 'error' });
   C = await server.ssrLoadModule('/src/source-composer.jsx');
   Host = await server.ssrLoadModule('/src/source-composer-shell.jsx');
-  Shell = await server.ssrLoadModule('/src/generated/code-composer/chat-composer-shell.mjs');
-  Layout = await server.ssrLoadModule('/src/generated/code-composer/chat-composer-layout.mjs');
-  Tokens = await server.ssrLoadModule('/src/generated/code-composer/composer-tokens.mjs');
-  Card = await server.ssrLoadModule('/src/generated/code-composer/composer-card-tokens.mjs');
+  Shell = await server.ssrLoadModule('/src/generated/code-composer-v4/chat-composer-shell.mjs');
+  Layout = await server.ssrLoadModule('/src/generated/code-composer-v4/chat-composer-layout.mjs');
+  Tokens = await server.ssrLoadModule('/src/generated/code-composer-v4/composer-tokens.mjs');
+  Card = await server.ssrLoadModule('/src/generated/code-composer-v4/composer-card-tokens.mjs');
   Adapters = await server.ssrLoadModule('/src/source-composer-current-adapters.jsx');
   ViewTabs = await server.ssrLoadModule('/src/generated/view-tabs/shared-frame-6jtSkIit.js');
+  // surfaces-prod-3 composer (host cutover): the host's shell subtree draws cds-core components (src/cds-core.mjs).
+  Core = await server.ssrLoadModule('/src/cds-core.mjs');
   AddMenu = await server.ssrLoadModule('/src/source-composer-add-menu.jsx');
-  Glyph = await server.ssrLoadModule('/src/generated/code-composer/composer-glyph.mjs');
-  AddGen = await server.ssrLoadModule('/src/generated/code-composer/composer-add-menu.mjs');
-  Padding = await server.ssrLoadModule('/src/generated/code-composer/menu-collision-padding.mjs');
+  Glyph = await server.ssrLoadModule('/src/generated/code-composer-v4/composer-glyph.mjs');
+  AddGen = await server.ssrLoadModule('/src/generated/code-composer-v4/composer-add-menu.mjs');
+  Padding = await server.ssrLoadModule('/src/generated/code-composer-v4/menu-collision-padding.mjs');
   SourceMenuModule = await server.ssrLoadModule('/src/source-menu.jsx');
 });
 after(() => server?.close());
@@ -84,7 +89,7 @@ test("an open session's presets card: uM's root (Hc) > the shell (data-cds ChatC
   // R4g-composer CP2 (X7-08): no compact copy, so uM's fit is "grow": cm stacks one placeholder ghost with the editor in
   // the box's grid (eo), even with a draft (the box keeps the placeholder's height).
   assert.equal(cls(box), Layout.editorClass({ startInset: 'none', disabled: false, settled: false,
-    className: ViewTabs.cdsClassNames(Layout.proseMirrorContentClass, Layout.stackedEditorClass, 'epitaxy-prompt-input') }));
+    className: Core.cdsClassNames(Layout.proseMirrorContentClass, Layout.stackedEditorClass, 'epitaxy-prompt-input') }));
   assert.equal(box.attrs.style, 'max-height:min(24rem, 40svh)');
   const input = kids(box)[0];
   assert.equal(input.attrs.role, 'textbox');
@@ -94,7 +99,9 @@ test("an open session's presets card: uM's root (Hc) > the shell (data-cds ChatC
   assert.equal(input.attrs['data-doc-empty'], 'false');
   const ghost = kids(box).find((n) => 'data-composer-placeholder-ghost' in n.attrs);
   assert.equal(ghost.attrs['data-composer-placeholder-ghost'], 'Describe a task or ask a question', 'SourceComposer fallback copy (no placeholder prop)');
-  assert.equal(cls(ghost), 'invisible pointer-events-none select-none max-w-full self-start break-words', 'columnReservesTrailing: the column already reserves the trailing actions (reserveTrailing: !ue)');
+  // 4.16336.0 shared-26 Hp: the ghost also carries the composer type size / leading (bp) before break-words (Vp).
+  assert.equal(cls(ghost), 'invisible pointer-events-none select-none max-w-full self-start text-[length:var(--cmp-type-size)] leading-[var(--cmp-leading)] font-normal break-words', 'columnReservesTrailing: the column already reserves the trailing actions (reserveTrailing: !ue)');
+  assert.equal(cls(ghost), Layout.placeholderGhostProps({ text: 'x', multiline: false, reserveTrailing: false }).className, 'the generated Hp itself');
   assert.equal(find(wrap, (n) => 'data-composer-placeholder' in n.attrs), null, 'a draft hides the placeholder span (cm fe && W)');
   assert.equal(input.attrs['data-focus-region'], 'composer');
   // W14-code r4 (r4-composer-01): c227f4d5e wF names the Code editor formatMessage("Prompt", iWKE8shLIt) with
@@ -105,9 +112,10 @@ test("an open session's presets card: uM's root (Hc) > the shell (data-cds ChatC
   const actions = byCds(row, 'ChatComposerActions');
   assert.equal(cls(actions), 'contents');
   const [leading, trailing] = kids(actions);
-  assert.ok(cls(leading).startsWith('absolute bottom-0 start-0 flex shrink-0 items-center gap-xs'), '3.6556.2: logical start-0');
+  // surfaces-prod-3 composer: the 4.16336.0 shell's columns (shared-5-u8kha2eH _m; tests/curchat-composer-v3 pins the literals).
+  assert.ok(cls(leading).startsWith('absolute bottom-0 start-0 flex shrink-0 items-center gap-xs pe-[var(--cds-gap-xs)]'), '4.16336.0: logical start-0');
   assert.equal(find(leading, (n) => n.tag === 'button').attrs['aria-label'], 'Add');
-  assert.ok(cls(trailing).startsWith('absolute bottom-0 end-0 flex max-w-[calc(100%_-_var(--cmp-lead-w))] shrink-0 items-center justify-end gap-xs'), '3.6556.2: logical end-0, capped by the lead width');
+  assert.ok(cls(trailing).startsWith('absolute bottom-0 end-0 flex pointer-events-none max-w-[min(100%,calc(100%_-_var(--cmp-lead-w)_+_2*var(--cds-gap-xs)))] shrink-0 items-center justify-end gap-xs'), '4.16336.0: logical end-0, capped by the lead width');
   assert.ok(find(trailing, (n) => n.attrs['data-testid'] === 'code-prompt-send-cell'));
   // The chin is uM's last child: inside the shell root, after the card (Kd with bQ's row class Ua).
   assert.equal(chin.attrs['data-cds'], 'ChatComposerChin');
@@ -138,7 +146,7 @@ test('the classic layout: no in-card +, so the editor starts at the text inset (
   assert.ok(!cls(card).includes('[shape-outside:none]'), 'no shape-outside reset (3.6556.2 deleted nM)');
   const box = byCds(card, 'ChatComposerEditor');
   assert.equal(cls(box), Layout.editorClass({ startInset: 'text', disabled: false, settled: false,
-    className: ViewTabs.cdsClassNames(Layout.proseMirrorContentClass, Layout.stackedEditorClass, 'epitaxy-prompt-input') }));
+    className: Core.cdsClassNames(Layout.proseMirrorContentClass, Layout.stackedEditorClass, 'epitaxy-prompt-input') }));
   const [first] = kids(byCds(card, 'ChatComposerActions'));
   assert.ok(cls(first).startsWith('absolute bottom-0 end-0'), 'only the trailing (send) cluster (3.6556.2: logical end-0)');
   const chin = byCds(shell, 'ChatComposerChin');
@@ -167,13 +175,24 @@ test("2.42304.0: the presets card's + is cc43287c9's actionsLeading (c73f45bc3 p
   // uM's ft (icon "Attachment") only leads a composer with no chin and no actionsLeading: `leading: Oe ?? ft`.
   assert.equal(occurrences('c227f4d5e-Ba-r--Rl.js', 'ft=De==null&&Se!==void 0?D(Oj,{onAddFiles:Se,supportsFileAttachments:Ce,plusMenuItems:we,side:"top",isPanelActive:!1,icon:"Attachment",size:"base"}):void 0'), 1);
   assert.equal(occurrences('c227f4d5e-Ba-r--Rl.js', 'leading:Oe??ft,'), 1);
-  assert.deepEqual({ ...AddMenu.CARD_ADD_TRIGGER }, { size: 'base', dockGlyph: true, glyphSize: 'md', glyphBoxClassName: 'flex scale-90' });
+  // surfaces-prod-3 composer (4.16336.0): the card's + is c73f45bc3-C7dtUSq8's `r(Ts, {…, side: "top", isPanelActive: s,
+  // ...Ll, glyphSize: "md"})` (Ll = cfca6870a r, the dock glyph props): no glyph box any more, and wJ (c227f4d5e Jn) draws
+  // the glyph as `x ? p(je, { name: le, ...b, className: hx }) : le`, b = { size: glyphSize }.
+  const REFERENCE4 = path.resolve(app, '../reference/snapshots/claude-4.16336.0-20261104/ion-dist/assets/v1');
+  const occurrences4 = (file, needle) => fs.readFileSync(path.join(REFERENCE4, file), 'utf8').split(needle).length - 1;
+  assert.equal(occurrences4('c73f45bc3-C7dtUSq8.js', 'plusMenuScopeKey:o,side:"top",isPanelActive:s,...Ll,glyphSize:"md"})'), 1);
+  assert.equal(occurrences4('c73f45bc3-C7dtUSq8.js', 'import{r as Ll}from"./cfca6870a-CdqZXIck.js"'), 1);
+  assert.equal(occurrences4('c73f45bc3-C7dtUSq8.js', 'glyphBoxClassName'), 0);
+  assert.equal(occurrences4('c227f4d5e-DGDdGBTz.js', 'x?p(je,{name:le,...b,className:hx}):le'), 1);
+  assert.equal(occurrences4('c227f4d5e-DGDdGBTz.js', 'flex scale-90'), 0);
+  assert.deepEqual({ ...AddMenu.CARD_ADD_TRIGGER }, { ...Glyph.dockGlyphProps, glyphSize: 'md' });
+  assert.deepEqual({ ...AddMenu.CARD_ADD_TRIGGER }, { size: 'base', dockGlyph: true, glyphSize: 'md' });
 });
 
-test("the presets card's + (SSR): Oj's trigger — CdsTooltip 'Add' > ghost base iconOnly CdsButton, the md Add glyph in 'flex scale-90', shrink-0", () => {
-  const expected = renderToStaticMarkup(h(ViewTabs.CdsTooltip, { content: 'Add' },
-    h(ViewTabs.CdsButton, { variant: 'ghost', size: 'base', iconOnly: true,
-      icon: h('span', { className: 'flex scale-90' }, h(ViewTabs.CdsIcon, { name: 'Add', size: 'md', className: Glyph.dockGlyphIconClass })),
+test("the presets card's + (SSR): wJ's trigger — CdsTooltip 'Add' > ghost base iconOnly CdsButton, the md Add glyph (no box), shrink-0", () => {
+  const expected = renderToStaticMarkup(h(Core.CdsTooltip, { content: 'Add' },
+    h(Core.CdsButton, { variant: 'ghost', size: 'base', iconOnly: true,
+      icon: h(Core.CdsIcon, { name: 'Add', size: 'md', className: Glyph.dockGlyphIconClass }),
       'aria-label': 'Add', tooltip: false, className: 'shrink-0', 'aria-haspopup': 'menu', 'aria-expanded': false })));
   // The tooltip trigger id is useId's (it differs with the position in the tree); everything else is byte-equal.
   const unid = (markup) => markup.replace(/ id="_R_[^"]*_"/g, ' id=""');
@@ -191,10 +210,9 @@ test("the presets card's + (SSR): Oj's trigger — CdsTooltip 'Add' > ghost base
   assert.equal(button.attrs.title, undefined, 'tooltip false: no native title, no built-in tooltip');
   assert.ok(cls(button).split(/\s+/).includes('shrink-0'));
   assert.ok(!/\bsc-(add|button|icon-button)\b/.test(cls(button)), 'no host button classes');
-  const box = kids(kids(button)[1])[0];
-  assert.equal(cls(box), 'flex scale-90');
-  const icon = kids(box)[0];
-  assert.equal(icon.attrs['data-cds'], 'Icon');
+  const icon = kids(kids(button)[1])[0];
+  assert.equal(icon.attrs['data-cds'], 'Icon', '4.16336.0: the glyph sits right in the button label, no "flex scale-90" box');
+  assert.equal(find(button, (n) => cls(n) === 'flex scale-90'), null);
   assert.ok(cls(icon).endsWith(Glyph.dockGlyphIconClass), cls(icon));
   // Oj never disables the Code trigger (a plus-menu scope): not while a turn/start is in flight either.
   assert.equal(find(kids(byCds(tree(render({ ...session, sending: true })), 'ChatComposerActions'))[0], (n) => n.tag === 'button').attrs.disabled, undefined);
@@ -210,10 +228,10 @@ test('the + trigger under controlled events: a press opens the Add menu at the b
   const calls = [];
   const element = (open = false) => {
     const tooltip = AddMenu.ComposerAddTrigger({ ...AddMenu.CARD_ADD_TRIGGER, open, onOpen: (entry, event) => calls.push([entry, event]) });
-    assert.equal(tooltip.type, ViewTabs.CdsTooltip);
+    assert.equal(tooltip.type, Core.CdsTooltip);
     assert.equal(tooltip.props.content, 'Add');
     const button = tooltip.props.children;
-    assert.equal(button.type, ViewTabs.CdsButton);
+    assert.equal(button.type, Core.CdsButton);
     return button;
   };
   const target = { id: 'add-button' };
@@ -324,10 +342,28 @@ test('the history hint sits in the Header part (Jd + Presence), the shell row th
 });
 
 // ---------------------------------------------------------------- styles
+// 4.16336.0 design assets (current-design-assets): index.html links the 4.16336.0 entry sheets, the legacy global sheet the
+// 3.6556.2 regions still need, then the generated compatibility layer. A class the 4.16336.0 sheets dropped is styled only
+// through legacy-utilities.css, and only as a registered legacy-region dependency (style-compatibility.json keeps its
+// 3.6556.2 rule and names the generated region that draws it).
+function loadedStyles(appRoot) {
+  const read = (file) => readFileSync(path.join(appRoot, file), 'utf8');
+  const names = [...designEntryStylesheets, ...legacyGlobalStylesheets];
+  assert.deepEqual([...read('index.html').matchAll(/<link\s+rel="stylesheet"\s+href="([^"]+)"/g)].map((m) => m[1]),
+    [...names.map((name) => `/assets/v1/${name}`), '/assets/legacy-utilities.css'], 'index.html stylesheet links');
+  const registry = JSON.parse(read('public/style-compatibility.json'));
+  return {
+    official: names.map((name) => read(`public/assets/v1/${name}`)).join('\n'),
+    compat: read('public/assets/legacy-utilities.css'),
+    legacyRegions: (token) => (registry.rules.some((rule) => rule.baselineVersion === '3.6556.2' && rule.references.some((ref) => ref.className === token))
+      ? registry.legacyDebt.owners.filter((owner) => owner.kind === 'region' && owner.classes.includes(token)).map((owner) => owner.area) : []),
+  };
+}
+
 test("every class the shell draws is in the loaded official sheet; local rules touch only the host's editor and +", () => {
-  const sheets = ['shared-frame-CegduNQ2.css', 'shared-styles-D_GJawPO.css', 'c6a992d55-Che1orl5.css', 'c8e31bf58-C7gq8dUF.css', 'c3fde7009-BszyXGym.css']
-    // w2-composer-gen: the shell is 3.6556.2 output now, so only the official sheets count (no compatibility layer).
-    .map((f) => fs.readFileSync(path.join(app, 'public/assets/v1', f), 'utf8')).join('\n');
+  // w2-composer-gen: the shell is 3.6556.2 output, so only the official sheets the app loads count; 4.16336.0 (design
+  // assets): a class those sheets dropped counts only as a registered legacy-region dependency of the shell's regions.
+  const { official: sheets, compat, legacyRegions } = loadedStyles(app);
   const html = [render({ ...session }), render({ ...session, codeLayout: 'classic' }), render({ ...session, draft: '!x', shellMode: 'core' }),
     render({ ...session, draft: '', suggestion: 'S' }), render({ ...session, running: true, draft: '', queueEnabled: true }), render({ draft: '', showContext: true })].join('');
   const shells = [];
@@ -337,7 +373,9 @@ test("every class the shell draws is in the loaded official sheet; local rules t
   for (const s of shells) (function walk(n) { for (const t of cls(n).split(/\s+/)) if (t && !t.startsWith('sc-') && !t.startsWith('stacks:')) tokens.add(t.replaceAll('&amp;', '&')); kids(n).forEach(walk); })(s);
   assert.ok(tokens.size > 150, String(tokens.size));
   const escape = (token) => '.' + token.replace(/[^a-zA-Z0-9_-]/g, (c) => '\\' + c);
-  assert.deepEqual([...tokens].filter((t) => !['{', ':', ',', '[', ' ', '>', ')', '.'].some((next) => sheets.includes(escape(t) + next))), []);
+  const styled = (text, t) => ['{', ':', ',', '[', ' ', '>', ')', '.'].some((next) => text.includes(escape(t) + next));
+  const missing = [...tokens].filter((t) => !styled(sheets, t));
+  assert.deepEqual(missing.filter((t) => !(styled(compat, t) && legacyRegions(t).includes('code-composer'))), []);
   const css = fs.readFileSync(path.join(app, 'src/source-composer.css'), 'utf8');
   for (const gone of ['.sc-zone[data-code-layout="presets"]', '.sc-composer.composer', '.sc-input-cell', '.sc-placeholder-fit-probe', '.sc-suggestion-ghost',
     '.sc-history-header-grid', '.sc-history-header-clip', '.sc-history-header {', '.sc-bash-badge', '.sc-composer[data-bash-mode]', '.sc-zone .sc-chin {', '.sc-chin-leading', '.sc-chin-trailing'])
@@ -577,7 +615,7 @@ test("W14-code composer review: with onFileDrop the drop hook (Uf) listens on th
   w.doc.body.addEventListener = (type, fn, capture) => { listeners.push(`${type}${capture ? ':capture' : ''}`); if (capture) handlers[type] = fn; };
   withDom(t, w.globals);
   // The owner window (shared-frame za → aa: the node's ownerDocument.defaultView) whose document body Uf listens on.
-  const owner = new Map([[ViewTabs.CdsOwnerWindowContext, { ownerDocument: { defaultView: { document: w.doc } } }]]);
+  const owner = new Map([[Core.CdsOwnerWindowContext, { ownerDocument: { defaultView: { document: w.doc } } }]]);
   const f = hookFixture(() => Shell.ChatComposerShell.render({ dropScope: 'card', onFileDrop: noop, editor: { draftStoreKey: 'k', hasDraftText: () => false, trailingNotch: 'float', focus: noop, render: () => null } }, null), owner);
   const out = f.render();
   assert.deepEqual(listeners.sort(), ['dragend:capture', 'dragleave:capture', 'dragover:capture', 'drop', 'drop:capture']);
@@ -623,12 +661,15 @@ test('SourceComposerShell (yp): fills in focus / storeCaret / trailingNotch "flo
   assert.deepEqual(hookFixture(() => [Shell.chatComposerFormPlaceholder('new'), Shell.chatComposerFormPlaceholder('reply')]).render(), [undefined, 'Reply']);
 });
 
+// surfaces-prod-3 composer: 4.16336.0 moved the layout context out of shared-26 into cds-core (shared-26 Mp), which the
+// host shell reads (src/cds-core.mjs ChatComposerLayoutContext); the v4 layout module exports no such context.
 test("ComposerShellEditor (gp / cm's box): the layout context's start inset, settled after a frame, the content report and the measure target", (t) => {
+  assert.equal(Layout.ChatComposerLayoutContext, undefined);
   const frames = [];
   withDom(t, { requestAnimationFrame: (cb) => { frames.push(cb); return frames.length; }, cancelAnimationFrame: noop });
   const reports = [], measured = [], seen = [];
   const node = h('div', { className: 'sc-input', 'data-cds': 'ChatComposerEditor', placeholder: 'Describe a task', inputRef: (el) => seen.push(el) });
-  const contexts = new Map([[Layout.ChatComposerLayoutContext, { multiline: false, startInset: 'text', endInset: 'actions', glideArmed: true, columnReservesTrailing: false }],
+  const contexts = new Map([[Core.ChatComposerLayoutContext, { multiline: false, startInset: 'text', endInset: 'actions', glideArmed: true, columnReservesTrailing: false }],
     [Layout.SendPinContext, (v) => reports.push(v)]]);
   const ref = { current: null };
   const props = { node, className: 'epitaxy-prompt-input', maxHeight: 'min(24rem, 40svh)', disabled: false, hasText: true, onMeasureTarget: (el) => measured.push(el), extraEditorAttributes: { 'aria-label': 'Prompt', title: undefined } };
@@ -638,7 +679,7 @@ test("ComposerShellEditor (gp / cm's box): the layout context's start inset, set
   const [placeholderSpan, box] = out.props.children;
   assert.equal(placeholderSpan, null, 'a draft: no placeholder span');
   assert.equal(box.props['data-cds'], 'ChatComposerEditor');
-  assert.equal(box.props.className, Layout.editorClass({ startInset: 'text', disabled: false, settled: false, className: ViewTabs.cdsClassNames(Layout.proseMirrorContentClass, 'epitaxy-prompt-input') }));
+  assert.equal(box.props.className, Layout.editorClass({ startInset: 'text', disabled: false, settled: false, className: Core.cdsClassNames(Layout.proseMirrorContentClass, 'epitaxy-prompt-input') }));
   assert.match(box.props.className, /transition-none motion-safe:transition-none/, 'not settled before the first frame');
   assert.deepEqual(box.props.style, { maxHeight: 'min(24rem, 40svh)' });
   const [editor, ghosts] = box.props.children;
@@ -667,7 +708,7 @@ test("ComposerShellEditor (gp / cm's box): the layout context's start inset, set
 test("ComposerShellEditor placeholder: cm's span and grow ghost (clamp: one truncated line, no ghost), hidden by a draft", (t) => {
   withDom(t, { requestAnimationFrame: () => 1, cancelAnimationFrame: noop });
   const node = h('div', { className: 'sc-input', placeholder: 'stale copy', inputRef: noop });
-  const layout = (value) => new Map([[Layout.ChatComposerLayoutContext, { multiline: false, startInset: 'text', endInset: 'actions', glideArmed: true, columnReservesTrailing: false, ...value }],
+  const layout = (value) => new Map([[Core.ChatComposerLayoutContext, { multiline: false, startInset: 'text', endInset: 'actions', glideArmed: true, columnReservesTrailing: false, ...value }],
     [Layout.SendPinContext, noop]]);
   const renderEditor = (props, value) => hookFixture(() => Host.ComposerShellEditor.render({ node, className: 'epitaxy-prompt-input', maxHeight: 'min(24rem, 40svh)', disabled: false, hasText: false, ...props }, { current: null }), layout(value)).render();
   // grow (uM: no compact copy, or bash mode)

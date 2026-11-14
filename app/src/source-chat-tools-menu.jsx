@@ -14,9 +14,9 @@ import React from 'react';
 // separate tools menu (c9b54eb90 pe is the org/project tools hook; Extended thinking is a model-selector thinking mode,
 // shared-50 thinking_mode_extended_title) and a style picker (shared-28 sends `has_personalized_style:!1`; "Style"
 // GQM96kFSM3 is voice mode's, "Choose a style" AU4HcqqKpC is Code's output-style dialog cc43287c9 efe).
-// E41: this module is in the composer graph (source-chat-composer.jsx imports it), so view-tabs comes from the concrete
-// shared-frame file by semantic name, not the facade.
-import { CdsButton, CdsTooltip } from './generated/view-tabs/shared-frame-6jtSkIit.js';
+// 4.16336.0 (composer host cutover): ChatAddTrigger renders inside the v4 shell's Actions (generated/code-composer-v4),
+// whose CDS contexts are cds-core's, so the Button / Tooltip are cds-core's too (one graph inside the shell).
+import { CdsButton, CdsTooltip } from './cds-core.mjs';
 import { chatAddMenu, chatAddMenuMessages } from './generated/chat-composer-menus/add-menu.mjs';
 import { splitAddMenuSlots, withAddMenuTestIds } from './generated/chat-composer-menus/add-menu-slots.mjs';
 import { SourceMenu } from './source-menu.jsx';
@@ -75,8 +75,13 @@ export function chatAddMenuSlots({ attach, attachShortcut, screenshot, project, 
  * lN's mapper: Js passes `h = (e, t) => p && ur.has(e) ? nr(t, m) : t`, which swaps a row for its org-locked state when
  * an admin policy locks that slot; this host has no org policy, so the mapper is lN's identity default (undefined).
  */
+// 4.16336.0 lN (Xj) takes a sixth argument, Js's `y = ge(nn())`: shared-8 kN, true only inside the offered-files context
+// (DN) with its gate (Bd) on. It fills the artifactFile / artifactDrive rows (b.computer / b.drive of the remote files
+// service) and drops designSystem (Yj). This host has neither that context nor that service, so the flag is the value
+// kN gives outside it, false, and no artifactFile / artifactDrive slot is passed (regions-chat report, open item).
+const ARTIFACT_FILE_ROWS = false;
 export function chatAddMenuEntries(slots, { agentMode = false, onSessionHost = false, perChatToolsUnavailable = false } = {}) {
-  const [base, tools, modes] = splitAddMenuSlots(withAddMenuTestIds(slots), agentMode, undefined, onSessionHost, perChatToolsUnavailable);
+  const [base, tools, modes] = splitAddMenuSlots(withAddMenuTestIds(slots), agentMode, undefined, onSessionHost, perChatToolsUnavailable, ARTIFACT_FILE_ROWS);
   const { separators } = chatAddMenu;
   return [
     ...base,

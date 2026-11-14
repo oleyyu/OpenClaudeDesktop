@@ -15,13 +15,18 @@ import { extractChatProjects } from '../scripts/extract-chat-projects.mjs';
 const app = path.resolve(import.meta.dirname, '..');
 const v1 = path.resolve(app, '../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1');
 const official = name => fs.readFileSync(path.join(v1, name), 'utf8');
+// Since the round-3 switch S6 the host page composes the 4.16336.0 parts (src/generated/chat-projects-v4); its SSR markup is
+// checked against that release's chunks.
+const v4 = path.resolve(app, '../reference/snapshots/claude-4.16336.0-20261104/ion-dist/assets/v1');
+const official4 = name => fs.readFileSync(path.join(v4, name), 'utf8');
 const local = rel => fs.readFileSync(path.join(app, rel), 'utf8');
 const count = (text, needle) => text.split(needle).length - 1;
 const h = React.createElement;
 const text = html => html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
 
-globalThis.document ??= { body: { nodeType: 1 }, head: { appendChild() {} }, createElement: () => ({ relList: { supports: () => false }, setAttribute() {}, style: {} }),
-  querySelector: () => null, querySelectorAll: () => [], addEventListener() {}, removeEventListener() {}, documentElement: { dataset: {}, getAttribute: () => null } };
+// W8-M9 stub contract (round4 integration, stub fields only): cds-core 9203795f reads these at load (official 4.16336.0): document.cookie.
+globalThis.document ??= { cookie: '' /* W8-M9: shared-0 CQ / Wo document.cookie */, body: { nodeType: 1 }, head: { appendChild() {} }, createElement: () => ({ relList: { supports: () => false }, setAttribute() {}, style: {} }),
+  querySelector: () => null, querySelectorAll: () => [], addEventListener() {}, removeEventListener() {}, documentElement: { dataset: {}, style: {}, getAttribute: () => null, hasAttribute: () => false } };
 globalThis.window ??= { document: globalThis.document, navigator: { userAgent: 'Mozilla/5.0 (Macintosh)' }, location: { pathname: '/projects', search: '', hash: '', href: 'app://local/projects' },
   addEventListener() {}, removeEventListener() {},
   matchMedia: () => ({ matches: false, addEventListener() {}, removeEventListener() {} }) };
@@ -109,11 +114,12 @@ test('the official 3.6556.2 evidence: empty state, header pin labels, space card
   assert.equal(count(official('cf8745532-5Ehsv_zP.js'), 'absolute right-3 top-3'), 0);
 });
 
-test('the host page imports only 3.6556.2 parts (no current-chat), view-tabs through the facade', () => {
+test('the host page imports only 4.16336.0 parts (round-3 switch S6; no current-chat, no 3.6556.2 graph), view-tabs through the facade', () => {
   const source = local('src/source-projects.jsx');
   assert.doesNotMatch(source, /generated\/current-chat\//);
   assert.doesNotMatch(source, /generated\/chat\//);
-  assert.match(source, /from '\.\/generated\/chat-projects\/index\.mjs';/);
+  assert.match(source, /\} from '\.\/generated\/chat-projects-v4\/index\.mjs';/);
+  assert.doesNotMatch(source, /from '\.\/generated\/chat-projects\//);
   assert.match(source, /from '\.\/generated\/view-tabs\/index\.js';/);
   assert.ok(source.includes("import { CdsTextArea as TextArea } from './generated/cowork-scheduled/index.mjs';"));
   assert.doesNotMatch(source, /band="tall-frame"|primaryActionCompactIcon/);
@@ -141,25 +147,32 @@ test('SSR: loading paints the official skeleton; an empty list the projects empt
   assert.doesNotMatch(error, /<button/);
 });
 
-test('SSR: projects render as 3.6556.2 space cards in the cr grid, pinned first, with the folder chip and pin mark', () => {
+test('SSR: projects render as 4.16336.0 space cards (cf8745532-CfAsJsxA u over shared-frame Card) in the cr grid, pinned first, with the folder chip and pin mark', () => {
+  const card = official4('cf8745532-CfAsJsxA.js');
+  for (const needle of ['e("group h-full gap-xs",g)', 'e("min-w-0 truncate text-body font-medium text-primary","[scroll-margin-top:var(--list-header-scroll-offset)]","df-link-card")',
+    't(i.Link,{dir:y,href:c,"data-primary":!0,className:b,children:l})', 'n(i,{"data-grid-cell":"",className:v,children:[S,C,E,D]})'])
+    assert.equal(count(card, needle), 1, needle);
+  assert.equal(count(official4('shared-frame-CJdE5Ria.js'), 'Ph="cds-reset outline-none after:absolute after:inset-0 after:rounded-card after:content-[\'\']"'), 1);
   const html = list([project('a', { updatedAt: new Date(now - 864e5).toISOString() }), project('b', { isStarred: true })]);
   assert.match(html, /<ul id="[^"]+" role="list" aria-label="Projects" class="grid grid-cols-1 gap-x-3 md:grid-cols-2 md:gap-x-6">/);
   assert.equal(count(html, '<li class="row-span-2 mb-3 grid grid-rows-subgrid md:mb-6">'), 2);
   assert.ok(html.indexOf('>Project b</a>') < html.indexOf('>Project a</a>'), 'pinned first');
-  assert.match(html, /<a href="\/space\/b" data-primary="true" class="min-w-0 truncate text-body font-medium text-primary outline-none [^"]*df-link-card">Project b<\/a>/);
+  assert.match(html, /<a data-cds="CardLink" data-primary="true" href="\/space\/b" class="cds-reset outline-none after:absolute after:inset-0 after:rounded-card after:content-\[&#x27;&#x27;\] min-w-0 truncate text-body font-medium text-primary \[scroll-margin-top:var\(--list-header-scroll-offset\)\] df-link-card">Project b<\/a>/);
   assert.equal(count(html, 'class="ms-2 shrink-0 text-muted-as-secondary"'), 1, 'only the pinned card has the pin mark');
   assert.equal(count(html, 'class="flex justify-between text-footnote text-muted-as-secondary mt-auto items-center"'), 2);
   assert.equal(count(html, 'data-cds="RelativeTime"'), 2);
   assert.match(html, /<span aria-hidden="true" class="truncate">a<\/span><span class="sr-only">\/Users\/me\/work\/a<\/span>/);
-  assert.match(html, /<div data-grid-cell="" class="group relative flex h-full flex-col gap-xs rounded-card bg-surface-1 p-lg shadow-card-ring/);
+  assert.match(html, /<div data-cds="Card" data-grid-cell="" class="group\/card relative isolate flex flex-col rounded-card [^"]* group h-full gap-xs">/);
 });
 
 // w13-chatui-project-detail review fix: the classic page Up renders its own header c71dee58b Eu (id is the hub page jp's).
 test('SSR: the project detail header is c71dee58b Eu (h1, project menu, pin toggle, description), without share or subtitle', () => {
+  // 4.16336.0 c71dee58b-CV9X9s_h: the description is text-body-regular (3.6556.2 had font-base), line-clamped when collapsed.
+  assert.equal(count(official4('c71dee58b-CV9X9s_h.js'), 's("text-secondary text-body-regular break-words",N&&"line-clamp-2")'), 1);
   const pinned = detail({ isStarred: true });
   assert.match(pinned, /<div class="mb-3"><div class="mb-2 flex items-start gap-3"><h1 class="mt-0\.5 min-w-0 font-heading text-secondary gap-1\.5 text-start line-clamp-2 break-words">Project a<\/h1><div class="h-8 flex items-center gap-1"><\/div><div class="flex items-center gap-1 ms-auto">/);
   assert.match(pinned, /aria-label="Unpin project"/);
-  assert.match(pinned, /<div class="text-secondary font-base break-words line-clamp-2">About a<\/div>/);
+  assert.match(pinned, /<div class="text-secondary text-body-regular break-words line-clamp-2">About a<\/div>/);
   assert.doesNotMatch(text(pinned), /\bShare\b|Private|Shared with/);
   assert.doesNotMatch(pinned, /font-small text-muted-as-secondary/);
   const unpinned = detail({ isStarred: false });

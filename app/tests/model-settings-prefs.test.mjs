@@ -192,3 +192,17 @@ test('a model’s context window is stored, validated against max output tokens 
   assert.deepEqual(validate({ params: { m: { contextWindow: 200000 } } }).params, { m: { contextWindow: 200000 } });
   assert.deepEqual(normalize({ params: { m: { contextWindow: 10 } } }).params, {}, 'an out-of-range stored value is dropped');
 });
+
+test('providerForModel / providerWithoutModel: remove one model a custom provider added', async () => {
+  const { providerForModel, providerWithoutModel } = await import('../electron/prefs/model-settings.mjs');
+  const glm = { route: 'glm', api: 'openai-completions', baseURL: 'https://open.bigmodel.cn/api/paas/v4', models: ['glm-5.3', 'glm-5.3-flash'], imageModels: ['glm-5.3'], contextWindows: { 'glm-5.3': 200000 } };
+  const kimi = { route: 'kimi', api: 'openai-completions', baseURL: 'https://api.moonshot.cn/v1', models: ['kimi-k3'] };
+  assert.deepEqual(providerForModel([kimi, glm], { model: 'glm/glm-5.3-flash' }), { provider: glm, id: 'glm-5.3-flash' });
+  assert.deepEqual(providerForModel([kimi, glm], { model: 'kimi-k3', provider: 'kimi' }), { provider: kimi, id: 'kimi-k3' });
+  assert.equal(providerForModel([kimi, glm], { model: 'deepseek-flash', provider: 'deepseek' }), null);
+  assert.equal(providerForModel([glm], { model: 'glm/glm-9' }), null);
+  const { contextWindows, ...rest } = glm;
+  assert.deepEqual(providerWithoutModel(glm, 'glm-5.3'), { ...rest, models: ['glm-5.3-flash'], imageModels: [] });
+  assert.deepEqual(providerWithoutModel(glm, 'glm-5.3-flash').contextWindows, { 'glm-5.3': 200000 });
+  assert.equal(providerWithoutModel(kimi, 'kimi-k3'), null);
+});

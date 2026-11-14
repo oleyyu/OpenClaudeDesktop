@@ -12,6 +12,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
 import { emptyState, reduce } from '../src/state.js';
+import { designEntryStylesheets } from '../scripts/current-design-assets.mjs';
 
 const app = path.resolve(import.meta.dirname, '..');
 const reference = path.resolve(app, '../reference/installed-2.42304.0-20261017/ion-dist/assets/v1');
@@ -241,7 +242,11 @@ const DT_CLASS = 'flex flex-col gap-1 p-4 [&:has(+[data-turn-next]_button:not([h
 const dtHidden = (html) => { const tree = parse(html); const dt = descendants(tree).find((d) => d.attrs.get('class') === DT_CLASS); assert.ok(dt, 'DT rendered'); return ruleButton(dt) || ruleText(dt); };
 
 test('TB-5 the loaded stylesheet carries both DT rules as display:none', () => {
-  const css = fs.readFileSync(path.join(app, 'public/assets/v1/c6a992d55-Che1orl5.css'), 'utf8');
+  // The loaded stylesheet is the current design's c6a992d55 entry sheet (current-design-assets.mjs), linked by index.html.
+  const sheet = designEntryStylesheets.find((name) => name.startsWith('c6a992d55-'));
+  assert.ok(sheet, 'the current design pins a c6a992d55 utilities sheet');
+  assert.equal(count(fs.readFileSync(path.join(app, 'index.html'), 'utf8'), `<link rel="stylesheet" href="/assets/v1/${sheet}" />`), 1);
+  const css = fs.readFileSync(path.join(app, 'public/assets/v1', sheet), 'utf8');
   const rule = '.\\[\\&\\:has\\(\\+\\[data-turn-next\\]_button\\:not\\(\\[hidden\\]_button\\)\\:not\\(\\[data-turn-dismiss\\]_button\\)\\)\\]\\:hidden:has(+[data-turn-next] button:not([hidden] button):not([data-turn-dismiss] button)),'
     + '.\\[\\&\\:has\\(\\+\\[data-turn-next\\]_p\\:not\\(\\[hidden\\]_p\\)\\)\\]\\:hidden:has(+[data-turn-next] p:not([hidden] p)){display:none}';
   assert.equal(count(css, rule), 1);

@@ -57,7 +57,8 @@ test("MC2 status quo: resource-src keeps assets.claude.ai (generated from cd9b7f
   const html = await fs.readFile(path.join(here, "../index.html"), "utf8");
   const csp = /http-equiv="Content-Security-Policy"\s+content="([^"]+)"/.exec(html)[1];
   assert.doesNotMatch(csp, /assets\.claude\.ai|https:/);
-  assert.match(csp, /frame-src 'self' oc-file-preview: oc-mcp-sandbox:;/);
+  // U-2: the only other frame source is claude-media: (the Files viewer's PDF of a file main minted).
+  assert.match(csp, /frame-src 'self' oc-file-preview: oc-mcp-sandbox: claude-media:;/);
 });
 
 const MALICIOUS = [

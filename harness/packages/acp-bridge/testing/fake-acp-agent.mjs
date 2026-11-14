@@ -456,6 +456,8 @@ const transport = new LineTransport(process.stdin, process.stdout, {
     log(method, params)
     switch (method) {
       case 'initialize':
+        // $FAKE_ACP_INIT_DELAY=<ms>: a slow cold start (an agent loading its runtime before it answers).
+        if (Number(process.env.FAKE_ACP_INIT_DELAY) > 0) await new Promise((resolve) => setTimeout(resolve, Number(process.env.FAKE_ACP_INIT_DELAY)))
         // $FAKE_ACP_NO_RESUME=1: no session/resume (Gemini CLI): a reopen goes through session/load.
         return { protocolVersion: 1, agentCapabilities: { loadSession: true, promptCapabilities: { image: false, embeddedContext: false }, sessionCapabilities: { ...(process.env.FAKE_ACP_NO_RESUME === '1' ? {} : { resume: {} }), close: {} } } }
       case 'session/new':

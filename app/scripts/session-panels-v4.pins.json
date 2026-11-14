@@ -1,0 +1,158 @@
+{
+  "referenceVersion": "4.16336.0",
+  "referenceSnapshot": "snapshots/claude-4.16336.0-20261104",
+  "sources": {
+    "shared-20-DUEo90UF.js": "28c50cf76aa77031056343ebb0dcd4505ffe22671779d25852ebc47ff0cbfccc",
+    "c9543da06-DHwxxZai.js": "c97c773e6a48b039ebcf2adad48cda03a0ad9eaf268e1fa32304a3951e53de40",
+    "c4db265df-CHyZjtsm.js": "fcf338553d4fe5524b8d704f1b6758df8f63737570f7775e34aaea8817bd76f7",
+    "c03935b01-BylKMWqe.js": "06c24651eed1ef552312ccd252ff25b57a4d52792d12a5973844f698d53007c4",
+    "c12ca901f-BRGahymY.js": "0a29f280b80f821a1e32337eae6b5b4bbf71c4e081760d14be89d193359e897d",
+    "c41956fd9-C7ZoiXta.js": "4bcaf26a3a42e2de3b4f0f34e32ccdcf91ebfb6d39a199302f1fe7517cd91788",
+    "c5d464fa3-D1V4bYI5.js": "165d8cde1d2f8d592e2578628137cbb52d89109c2e3ff0d8ad340c5c5642bb4c",
+    "c68c4283d-FxwfdZSA.js": "fbe03390e9787cace99c44f0514d61dd19a36c441c87cafbcd68e45c9c798f0b",
+    "c6e73333a-LnS4e_bw.js": "2ec51e6065867a2c904d0b5dcb1e6898bde6500112ab91dfca7ccc01f236425e",
+    "c7037f09e-DXK8RSre.js": "4fe14ff803f12eb58322892592f580478fe618d6be942f7ee396834dfd3fd247",
+    "c70925de4-QmzvmFns.js": "2617af8bbd7ad72f53dd3ee10e4e7207f528dd51f2fd3e566a5e709c3d8972a9",
+    "c9bc99274-DZ8dxmGP.js": "725637008492d55ddbfc6ea439d4ed47d2d89c0cf8a56bc44a25bb4adbe6e113",
+    "ca5db7aaf-C8dMH-IH.js": "571acd2f82ff3922f6c828bfb4557f08f30b06483eab70c12ffb35d782e9b659",
+    "cb50b3202-wMiGsFCo.js": "5eccca6d93e2054fb48ad7304d854cad1e6b50d52c1aaaec562b0c1db9eb0493",
+    "cc44b66a7-CBE7MOEW.js": "366a23532a76d2778bc6ad83e0e06f7faa23f1188d9c6d6232a8d929592e05c2",
+    "cd12ec3aa-zQrJQqot.js": "27de58f05590769290312058f31789a2c5f16e78d4c54fc7727f26d58835fea9",
+    "cd1d8a6ac-cRrts978.js": "893befb873d34e86d6388e0506b840e895632c6456a9b3bf922b118729a74626",
+    "cf53e1812-B98_08tN.js": "eb2a35f21f702926b3b3be1b2242db489c2e2124ee96ced34ae565f17f3c6b50",
+    "shared-0-CnnWnVrT.js": "eb5fb89d8b47627c28969bd1df41f25a49a3e1d6ed91c5af2d980d5847d78ae1",
+    "shared-1-D1bGaTaN.js": "bc66aa8473c6bb2c7f6c179732a63f6cb9b8b69572abc2ebaf7c1e31d5eeb0ea",
+    "shared-18-Cfqwgjc5.js": "6828aa7109628e08360fd1e7b4ddc2ff022f5f369a297ce690cd4b19e4205436",
+    "shared-183-B2N6Zy4J.js": "ef19933e2d466d6f2024d69a025682fee0a0ce82c175d4afd30b1109920e4001",
+    "shared-19-UalAfDtn.js": "17a7839fb39b22485dcb90f549bcdc92f115afbefa43e73d08d98e7bea4220f1",
+    "shared-31-C9BqSSuD.js": "7b554823056e9df24d9b258e505fd0d0a2fc1e3bdd8e35d9bcf8c16fdaf0ef7d",
+    "shared-38-DyF0_Fim.js": "7e4b9829ff53d9a2e0917de5fd1c2590bb54bca631c955f72b79905203f99f39",
+    "shared-39-ZCs0lAwB.js": "fbbdc3e3589752233fbb792abb01ef80fc15de2662c5a79456d7d44a766e7c4b",
+    "shared-55-BRv2XBP7.js": "84e184eeb3f901dcf2ae406c08be9dc7d96b8119e493b026f8f5d80f4537844e",
+    "shared-62-DoCqVpIq.js": "15a90aabd711c4209050f53ef48b2754661e19b090936fdc6d37346bd4cf4e56",
+    "shared-frame-CJdE5Ria.js": "b6a5f61e0f243a48215fab7f3d65958d693d715e565f57af4e0ff35ae14697bc"
+  },
+  "roots": {
+    "tileShellStyle": {
+      "file": "shared-20-DUEo90UF.js",
+      "local": "h_",
+      "export": "Vc",
+      "declarationSha256": "2edb4bf2d001c84a56d93ee8e25395895d1f894e1bdbcd61093d9aca156f25f9",
+      "features": [
+        "\"--tiles-padding\": \"8px\",",
+        "\"--tile-shell-ground\": m_(r),"
+      ]
+    },
+    "isChatOrSessionTile": {
+      "file": "shared-20-DUEo90UF.js",
+      "local": "l_",
+      "export": "zc",
+      "declarationSha256": "4e786e5a5b63f7320aaf1ac459fc94eeab66c50fc50e14d59cd2198c66d8d283",
+      "features": [
+        "return e === \"chat\" || e === \"session\";"
+      ]
+    },
+    "paneTileStandsOnPage": {
+      "file": "shared-20-DUEo90UF.js",
+      "local": "fb",
+      "export": "Cs",
+      "declarationSha256": "818336c26c14b8833ce565f34360f4a3fec72df6e9690a0e6ae6b3dd49717327",
+      "features": [
+        "let t = e.split(\":\", 1)[0];",
+        "return Object.hasOwn(db, t) && db[t];"
+      ]
+    },
+    "WIDE_TITLE_ROW_H": {
+      "file": "shared-20-DUEo90UF.js",
+      "local": "Qy",
+      "export": "Os",
+      "declarationSha256": "b3637f4599414be18643791c6148cfc94cf1b6eefc1713a102fbd02e310e4295",
+      "features": [
+        "Qy = \"var(--wide-title-row-h)\""
+      ]
+    },
+    "TILE_REACH_BACK": {
+      "file": "c9543da06-DHwxxZai.js",
+      "local": "Os",
+      "export": null,
+      "declarationSha256": "310ff6d9eb2aadacd87801d6944a3225630b48e194d1997ad9bd4f38eb34b5a5",
+      "features": [
+        "Os = \"var(--tile-reach-back, 0px)\""
+      ]
+    },
+    "TILE_AFTER_LINE_X_STYLE": {
+      "file": "c9543da06-DHwxxZai.js",
+      "local": "ks",
+      "export": null,
+      "declarationSha256": "08af0aea463cb50d119ce0e74da53cb7da372c001c0bcb500459042a227b09b2",
+      "features": [
+        "ks = { width: `calc(100% + ${Os})` }"
+      ]
+    },
+    "TILE_AFTER_LINE_Y_STYLE": {
+      "file": "c9543da06-DHwxxZai.js",
+      "local": "As",
+      "export": null,
+      "declarationSha256": "d0f608c5fccd32a2a3b6c45ab5b6edb55603abd5ada65c24e0e5f5d4bc70bf16",
+      "features": [
+        "As = { height: `calc(100% + ${Os})` }"
+      ]
+    },
+    "TILE_STYLES": {
+      "file": "c9543da06-DHwxxZai.js",
+      "local": "vs",
+      "export": null,
+      "declarationSha256": "478d871913a176e41c1c309616c1322d866bf985de8a11d3ce185ccac8ce85f6",
+      "features": [
+        "gridTemplateRows: \"minmax(0, 1fr)\",",
+        "transform: \"translateZ(2px)\","
+      ]
+    },
+    "PaneFrame": {
+      "file": "c4db265df-CHyZjtsm.js",
+      "local": "Tn",
+      "export": "t",
+      "declarationSha256": "44c7d59c43df9a3ad2553043cbcb76091c617ce0f0a3b223c753f65b345c5229",
+      "features": [
+        "\"data-pane-root\": M,",
+        "r ? void 0 : te(\"side_pane\")",
+        "\"data-pane-header-line\": me,",
+        "Ye = o(ot),",
+        "Xe = o(fe),",
+        "ht = Pe();"
+      ]
+    },
+    "PaneInTileContext": {
+      "file": "c4db265df-CHyZjtsm.js",
+      "local": "ot",
+      "export": "D",
+      "declarationSha256": "049f460e78ec1362c348d7b3fc73140a4e6e0870dacda9dc611713f09bd5cc09",
+      "features": [
+        "ot = c(!1)"
+      ]
+    },
+    "PaneReadingOrderContext": {
+      "file": "c4db265df-CHyZjtsm.js",
+      "local": "at",
+      "export": "E",
+      "declarationSha256": "cec27f4ee13712cb0371cb18916bbcf4f49f6d7fe6a65a8537b1cdea57797ed7",
+      "features": [
+        "at = c([])"
+      ]
+    },
+    "PaneStandsOnPageContext": {
+      "file": "shared-20-DUEo90UF.js",
+      "local": "ub",
+      "export": "xs",
+      "declarationSha256": "e7572d9e6912d96b586ff4e8b3e4b454c2827dd129ecfa80b28ba74a3e0e825e",
+      "features": [
+        "ub = g(!1)"
+      ]
+    }
+  },
+  "also": {},
+  "cdsCore": {
+    "manifestSha256": "06d2026939e5c8992713c2a0dda1b1abc9adffe7a0c223fe3c1e79eecd08d62c",
+    "adapterSha256": "7d63624afd6a3e7eaa2c42803aacdcf1a74ca479ffbed4d9c1f40c60e233ff1e"
+  }
+}

@@ -23,19 +23,23 @@ import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
 import { withPreviewDom, reactProps } from './fixtures/preview-r3b-dom.mjs';
 import { appSheets, append, computed, element, find, loadCascade, parseMarkup, setState } from './fixtures/transcript-css-cascade.mjs';
-import { TITLEBAR_RAIL_SEPARATOR, createRailFoldFocus, railToggleSelect, titlebarRailMenuItems, titlebarRailToggleFoldable } from '../src/titlebar-controls-model.mjs';
+import { TITLEBAR_LIFTED, TITLEBAR_RAIL_SEPARATOR, titlebarRailRuleShown, createRailFoldFocus, railToggleSelect, titlebarRailMenuItems, titlebarRailToggleFoldable } from '../src/titlebar-controls-model.mjs';
 import { LEAD_NO_ORIGIN_CLASS } from '../src/generated/session-rail-kit/rail-column.mjs';
 import { ionSource } from '../scripts/official-3.6556.2.mjs';
+import { designEntryStylesheets } from '../scripts/current-design-assets.mjs';
+// design-production (4.16336.0): the loaded c6a992d55 entry sheet, named by current-design-assets.
+const UTILITIES_CSS = designEntryStylesheets.find(name => name.startsWith('c6a992d55-'));
 
 const app = path.resolve(import.meta.dirname, '..');
 const v1 = path.resolve(app, '../reference/installed-2.42304.0-20261017/ion-dist/assets/v1');
 const official = (name) => fs.readFileSync(path.join(v1, name), 'utf8');
 const official3 = (name) => fs.readFileSync(path.join(ionSource, name), 'utf8');
+const official4 = (name) => fs.readFileSync(path.resolve(app, '../reference/snapshots/claude-4.16336.0-20261104/ion-dist/assets/v1', name), 'utf8');
 const read = (rel) => fs.readFileSync(path.join(app, rel), 'utf8');
 const count = (text, needle) => text.split(needle).length - 1;
 const pin = (text, needles, expected = 1) => { for (const needle of needles) assert.equal(count(text, needle), expected, needle); };
 const h = React.createElement;
-const UTILITIES = 'public/assets/v1/c6a992d55-Che1orl5.css';
+const UTILITIES = `public/assets/v1/${UTILITIES_CSS}`;
 
 // The titlebar's fold measure (generated cd54a5401 un) needs a laid-out row; this server swaps only its hook for one
 // the test drives (hiddenCount) and that records what the titlebar asks of it. titlebarFoldLimits (en) stays the
@@ -71,7 +75,9 @@ const SESSION = { id: 'a', name: 'A title', cwd: '/tmp/work' };
 const baseProps = { section: 'new', session: SESSION, onRename() {}, terminalAvailable: true, previewAvailable: true };
 const model = (over = {}) => ({ onScreen: false, raises: false, panelId: 'rail-panel', onToggle() {}, ...over });
 const renderTitlebar = (props = {}) => renderToStaticMarkup(h(T.SourceTitlebar, { ...baseProps, ...props }));
-const trailingOf = (html) => html.slice(html.indexOf('st-trailing'));
+// surfaces wave 3 (titlebar frame): the Code titlebar is the 4.16336.0 frame; its lead is RX's gt box (`group/lead relative z-[1] …`)
+// and its actions the frame's cluster box (`relative z-[1] epitaxy-titlebar-end …`), not .st-lead / .st-trailing.
+const trailingOf = (html) => html.includes('epitaxy-titlebar-end') ? html.slice(html.indexOf('epitaxy-titlebar-end')) : html.slice(html.indexOf('st-trailing'));
 
 // ---------------------------------------------------------------------------------------------------------------
 test('official 3.6556.2: oG places TH (unseen until ae) + Fne before the toggles; TH\'s fixed "Session rail" label', () => {
@@ -106,14 +112,27 @@ test('official 3.6556.2: oG places TH (unseen until ae) + Fne before the toggles
   ]);
   pin(official3('cd1531e2e-DJSqbgrp.js'), ['e("span",{role:"separator","aria-orientation":"vertical",className:"h-4 w-px shrink-0 bg-border"})']);
   assert.deepEqual(TITLEBAR_RAIL_SEPARATOR, { role: 'separator', 'aria-orientation': 'vertical', className: 'h-4 w-px shrink-0 bg-border' });
-  // The host passes TH the official unseen and gates the rule on the same ae (source-titlebar.jsx railSeen).
+  // The host passes TH the official unseen; the rule follows 4.16336.0 RX (integration-4): `se && !Te && p(Nie, {})` with
+  // Te = !lifted, lifted from shared-20 ob / sb `children(Kp(eligible) !== null)`. The host titlebar is never lifted.
   const host = read('src/source-titlebar.jsx');
   pin(host, [
     // w10-shell-titlebar: G / ae come from titlebarSessionState (N included, w10-titlebar-starting.test.mjs).
     'const railSeen = sessionState.seen;',
     'inert={!sessionState.live} unseen={!railSeen} />',
-    '{railSeen && <span {...TITLEBAR_RAIL_SEPARATOR} />}',
+    '{titlebarRailRuleShown(railSeen) && <span {...TITLEBAR_RAIL_SEPARATOR} />}',
   ]);
+  pin(official4('cc43287c9-dzfX-J5i.js'), [
+    'p(KK,{model:b,buttonRef:x,onUnmountFocused:ot,inert:!G,unseen:!se}),se&&!Te&&p(Nie,{})',
+    ',Te=!F,',
+    'F=T!==void 0&&T,',
+    'isSessionNotFound:C,lifted:T,safetyPillHidden:E',
+    'e=>p(UX,{lifted:e,',
+  ]);
+  pin(official4('shared-20-DUEo90UF.js'), ['p=Kp(t),m=p!==null', 'K2($,18,u,m,u(m))']);
+  assert.equal(TITLEBAR_LIFTED, false);
+  assert.equal(titlebarRailRuleShown(true), false, 'the host titlebar is not lifted: no rule');
+  assert.equal(titlebarRailRuleShown(true, true), true, 'a seen rail on a lifted titlebar draws it');
+  assert.equal(titlebarRailRuleShown(false, true), false, 'unseen: never');
   // The generated TH is the 3.6556.2 one, and zh-CN has its label.
   const shell = read('src/generated/session-rail-kit/rail-shell.mjs');
   pin(shell, ['var CH = { opacity: 0 };', 'unseen: a', 'defaultMessage: "Session rail", id: "FUvHAfJy+j"', 'TH as SessionRailToggle']);
@@ -231,15 +250,15 @@ test('SSR: no rail model, no toggle (no session rail: another surface, the landi
   assert.doesNotMatch(renderTitlebar({ section: 'routines', sectionLabel: 'Routines', railToggle: model() }), /session rail/i);
 });
 
-test('SSR: TH heads the cluster, Fne follows it, then the pane toggles; "Session rail", pressed, flat style, overlay-only aria-expanded', () => {
+test('SSR: TH heads the cluster, then the pane toggles (no rule: the host titlebar is not lifted); "Session rail", pressed, flat style, overlay-only aria-expanded', () => {
   const off = trailingOf(renderTitlebar({ railToggle: model() }));
   const toggle = off.match(/<button[^>]*aria-label="Session rail"[^>]*>/)?.[0];
   assert.ok(toggle, 'the rail toggle');
   const rule = '<span role="separator" aria-orientation="vertical" class="h-4 w-px shrink-0 bg-border"></span>';
   const group = '<div class="flex items-center gap-1 empty:hidden">';
-  assert.ok(off.indexOf(toggle) < off.indexOf(rule) && off.indexOf(rule) < off.indexOf(group), 'EH, TI, then the toggle group');
-  assert.equal(count(off, rule), 1);
-  assert.equal(off.slice(off.indexOf(toggle), off.indexOf(rule)).match(/<\/button>/g).length, 1, 'only the toggle between');
+  assert.ok(off.indexOf(toggle) >= 0 && off.indexOf(toggle) < off.indexOf(group), 'KK, then the toggle group');
+  assert.equal(count(off, rule), 0, '4.16336.0 RX `se && !Te`: Te = !lifted, and the host titlebar is never lifted');
+  assert.equal(off.slice(off.indexOf(toggle), off.indexOf(group)).match(/<\/button>/g).length, 1, 'only the toggle between');
   // The official Button: ghost, icon-only, text-secondary (shared-18 Mb with panels off), pressed with the "selected"
   // variant (inert, see topbar-09), and TH under the flat rail (D10).
   assert.match(toggle, /data-cds="Button" data-cds-icon-only="" data-cds-ghost=""/);
@@ -262,13 +281,13 @@ test('SSR: TH heads the cluster, Fne follows it, then the pane toggles; "Session
   assert.match(closed, /aria-expanded="false"/);
   assert.doesNotMatch(closed, / aria-controls=/);
   // A held (loading) session keeps it in place, inert (oG `inert: !G`), like the toggle group; a host session's kind
-  // is known (oG ie), so it stays seen (no opacity 0) and the rule stays.
+  // is known (oG ie), so it stays seen (no opacity 0); still no rule (not lifted).
   const heldHtml = trailingOf(renderTitlebar({ loading: true, railToggle: model() }));
   const held = heldHtml.match(/<button[^>]*aria-label="Session rail"[^>]*>/)[0];
   assert.match(held, /\sinert=""/);
   assert.doesNotMatch(held, /\sdisabled(=|\s|>)/);
   assert.doesNotMatch(held, /opacity:0/);
-  assert.equal(count(heldHtml, rule), 1);
+  assert.equal(count(heldHtml, rule), 0);
 });
 
 test('SSR: unseen (oG `unseen: !ae`) — a held session behind a spawn draws TH at opacity 0, inert, without the rule', () => {
@@ -280,10 +299,10 @@ test('SSR: unseen (oG `unseen: !ae`) — a held session behind a spawn draws TH 
   assert.match(toggle, /style="--cds-bg-accent:var\(--cds-fill-ghost-selected\);--cds-text-accent:var\(--titlebar-text-primary, var\(--cds-text-primary\)\);opacity:0"/);
   assert.match(toggle, /\sinert=""/);
   assert.equal(count(html, rule), 0, 'ae && !Ee && Fne');
-  // Ready (G), the spawn no longer hides it: seen, not inert, with the rule.
+  // Ready (G), the spawn no longer hides it: seen, not inert; no rule on a titlebar that is not lifted (4.16336.0 RX).
   const ready = trailingOf(renderTitlebar({ spawning: true, railToggle: model() }));
   assert.doesNotMatch(ready.match(/<button[^>]*aria-label="Session rail"[^>]*>/)[0], /opacity:0|\sinert=/);
-  assert.equal(count(ready, rule), 1);
+  assert.equal(count(ready, rule), 0);
 });
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -298,28 +317,43 @@ test('SSR: railMode — the lead drops the origin glyph and the folder pill for 
   pin(official('shared-15-Cc9xvKlF.js'), ['function xn(){return f(bn)===!0}']);
   assert.equal(LEAD_NO_ORIGIN_CLASS, 'w-[max(0px,calc(1rem-var(--tiles-padding,0px)-var(--tiles-border,1px)))] shrink-0');
   const slot = `<span class="${LEAD_NO_ORIGIN_CLASS}"></span>`;
-  const leadOf = (html) => html.slice(html.indexOf('st-lead'), html.indexOf('st-trailing'));
+  // verify:titlebar: the Code New titlebar is the 4.16336.0 frame, where the panels scope is on: c73f45bc3 Qb
+  // `t === null ? r("span", {className: l ? bi : Ci})` with l = Ei() (shared-120 qe) true, bi = shared-38 gn "ps-md shrink-0"
+  // (pinned in tests/titlebar-frame-v4.test.mjs); the session popout keeps the host header, outside the frame: Ci (Ih above).
+  const panelsSlot = '<span class="ps-md shrink-0"></span>';
+  const popout = { popoutWindow: { alwaysOnTop: false, onDock() {}, onTogglePin() {} } };
+  const leadOf = (html) => html.includes('<div class="group/lead') ? html.slice(html.indexOf('<div class="group/lead'), html.indexOf('<div class="relative z-[1] epitaxy-titlebar-end')) : html.slice(html.indexOf('<div class="st-lead'), html.indexOf('<div class="st-trailing'));
   // Not in rail mode (the default): the origin glyph and the folder pill, as before.
   const plain = leadOf(renderTitlebar());
   assert.match(plain, /data-testid="epitaxy-origin-indicator"/);
   assert.match(plain, /<button type="button" class="[^"]* st-folder"/);
   assert.equal(count(plain, slot), 0);
-  // Rail mode, ready: the slot first, then the title and its caret; no origin, no pill.
+  assert.equal(count(plain, panelsSlot), 0);
+  // Outside the frame (the popout): the Ci slot, no origin, no pill.
+  const railPopout = leadOf(renderTitlebar({ railMode: true, ...popout }));
+  assert.equal(count(railPopout, slot), 1);
+  assert.equal(count(railPopout, panelsSlot), 0);
+  assert.doesNotMatch(railPopout, /st-origin|epitaxy-origin-indicator|st-folder|epitaxy-origin-label/);
+  assert.ok(railPopout.indexOf(slot) < railPopout.indexOf('data-pane-title=""'), 'the slot leads (popout)');
+  // Rail mode, ready, in the frame: the panels slot first, then the title and its caret; no origin, no pill.
   const rail = leadOf(renderTitlebar({ railMode: true }));
-  assert.equal(count(rail, slot), 1);
+  assert.equal(count(rail, panelsSlot), 1);
+  assert.equal(count(rail, slot), 0);
   assert.doesNotMatch(rail, /st-origin|epitaxy-origin-indicator|st-folder|epitaxy-origin-label/);
   // W14-code r8 fr8-03: the Code title button is c9543da06 Mp (data-pane-title + Ap classes), not the host st-title.
-  assert.ok(rail.indexOf(slot) < rail.indexOf('data-pane-title=""'), 'the slot leads');
+  assert.ok(rail.indexOf(panelsSlot) < rail.indexOf('data-pane-title=""'), 'the slot leads');
   assert.match(rail, /<button[^>]*data-pane-title=""[^>]*class="truncate text-body font-medium font-control text-primary select-none mx-outset[^"]*"[^>]*>A title<\/button>/);
   assert.match(rail, /st-session-caret/);
   // Rail mode, loading with a known title: the skeleton title, still no static pill; the Loading session status stays.
   const loading = leadOf(renderTitlebar({ railMode: true, loading: true }));
-  assert.equal(count(loading, slot), 1);
+  assert.equal(count(loading, panelsSlot), 1);
+  assert.equal(count(loading, slot), 0);
   assert.doesNotMatch(loading, /st-folder|epitaxy-origin/);
   assert.match(loading, /data-pane-title=""/);
   assert.match(loading, /role="status">Loading session</);
   // Another surface has no origin box or pill to drop.
   assert.equal(count(renderTitlebar({ surface: 'cowork', railMode: true }), slot), 0);
+  assert.equal(count(renderTitlebar({ surface: 'cowork', railMode: true }), panelsSlot), 0);
 });
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -351,7 +385,8 @@ test('mounted: maxHidden 6 → 7 and the sample ref with a rail; the first fold 
       assert.equal(foldCalls.at(-1).maxHidden, 7, 'with a foldable rail toggle: 7');
       assert.equal(foldCalls.at(-1).sampleRef, railToggleRef, 'wW sampleRef: b');
       const toggle = button('Session rail');
-      assert.ok(toggle && rule(), 'EH and TI are inline');
+      assert.ok(toggle, 'KK is inline');
+      assert.equal(rule(), null, 'no rule: the host titlebar is not lifted (4.16336.0 RX se && !Te)');
       assert.equal(railToggleRef.current, toggle, 'jre\'s ref holds the toggle');
       assert.notEqual(more().getAttribute('aria-label'), null);
       reactProps(toggle).onClick({ detail: 0 });
@@ -364,7 +399,7 @@ test('mounted: maxHidden 6 → 7 and the sample ref with a rail; the first fold 
       act(() => root.render(h(T.SourceTitlebar, props({ railToggle: rail }))));
       assert.equal(button('Session rail'), null, 'folded away');
       assert.equal(rule(), null, 'TI goes with it');
-      assert.ok(host.find((node) => node.getAttribute?.('data-pane-toggle') === 'terminal'), 'the pane toggles stay (hiddenMainPanes 0)');
+      assert.ok(button('Terminal'), 'the pane toggles stay (hiddenMainPanes 0)');
       assert.equal(railToggleRef.current, more(), '⋮ holds the ref while folded (Zh te)');
       assert.equal(dom.document.activeElement, more(), 'focus moved to ⋮ (wW Oe/ke)');
       assert.deepEqual(reports, [false, true], 'main.jsx is told, so ⋮ lists the rail row');
@@ -372,7 +407,7 @@ test('mounted: maxHidden 6 → 7 and the sample ref with a rail; the first fold 
       // The second fold takes the first inactive pane toggle.
       foldHidden = 2;
       act(() => root.render(h(T.SourceTitlebar, props({ railToggle: rail }))));
-      assert.equal(host.find((node) => node.getAttribute?.('data-pane-toggle') === 'terminal'), null);
+      assert.equal(button('Terminal'), null);
 
       // Room again: the toggle comes back; ⋮ gives the ref back; focus stays where it is.
       foldHidden = 0;
@@ -422,9 +457,10 @@ test('topbar-09: pressed titlebar toggles end on bg-accent / text-accent, hovere
   const cascade = loadCascade(sheets);
   const clear = (node) => { node.state.clear(); node.children.forEach(clear); };
   const byAttr = (name, value) => find(tree, (node) => node.tag === 'button' && node.attrs[name] === value);
-  const pressed = { terminal: byAttr('data-pane-toggle', 'terminal'), pin: byAttr('data-popout-pin', '') };
+  // surfaces wave 2 (titlebar): the pane toggles are 4.16336.0 SY (named by aria-label; no host data-pane-toggle).
+  const pressed = { terminal: byAttr('aria-label', 'Terminal'), pin: byAttr('data-popout-pin', '') };
   const paintOf = (button) => find(button, (node) => node.attrs['data-cds-part'] === 'paint');
-  const unpressed = byAttr('data-pane-toggle', 'preview');
+  const unpressed = byAttr('aria-label', 'Preview');
   for (const [name, node] of Object.entries(pressed)) {
     assert.equal(node.attrs['aria-pressed'], 'true', name);
     for (const hover of [false, true]) {
@@ -440,7 +476,8 @@ test('topbar-09: pressed titlebar toggles end on bg-accent / text-accent, hovere
     }
   }
   clear(tree);
-  assert.equal(computed(cascade, unpressed, 'color').value, 'var(--cds-text-secondary)');
+  // SY has no className (4.16336.0 dropped lW's rm("text-secondary")): an unpressed toggle keeps the ghost Button's own ink.
+  assert.equal(computed(cascade, unpressed, 'color').value, 'var(--cds-text-primary)');
   assert.notEqual(computed(cascade, paintOf(unpressed), 'background-color').value, 'var(--cds-bg-accent)');
   // The values are the official utilities' own (the rail toggle, an official Button, gets them from these rules).
   const sheet = read(UTILITIES);

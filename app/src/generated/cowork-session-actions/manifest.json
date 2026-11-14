@@ -1,26 +1,27 @@
 {
-  "referenceVersion": "3.6556.2",
-  "referenceSnapshot": "snapshots/claude-3.6556.2-20261025-192807",
+  "referenceVersion": "4.16336.0",
+  "referenceSnapshot": "snapshots/claude-4.16336.0-20261104",
   "generator": "scripts/extract-cowork-session-actions.mjs",
+  "rootMatch": "looseFeature, unique per chunk",
   "adapterModule": "src/source-cowork-session-actions-adapters.jsx",
   "modules": [
     {
       "target": "refusal.mjs",
-      "source": "shared-0-DDOOdL6P.js",
-      "sourceSha256": "6e8dd35d06f3483ca7a164d358560e34bdd02a0c4d4e67fec5e71e45c1009f61",
-      "sha256": "e29635c51ca3fe85fd681f63c4a574c276973d5a34d1b71acbb5d236208d135f",
+      "source": "shared-0-CnnWnVrT.js",
+      "sourceSha256": "eb5fb89d8b47627c28969bd1df41f25a49a3e1d6ed91c5af2d980d5847d78ae1",
+      "sha256": "0775dcb22454b6105f9279eb44e66793a2c2d20e6f62c94ef017cee4aa23404c",
       "bindings": [
         {
-          "name": "dx",
-          "sha256": "cc50970e787dd9537a7614ba2403021272015f9e363f4afe38952251d6a8e311"
+          "name": "jee",
+          "sha256": "6fa0692a5cfb3d3a62168d9ed016419b24cb38644f30c9690f9c861eb7763643"
         }
       ],
       "imports": [],
       "exports": {
-        "dx": "LocalRewindRefusal"
+        "jee": "LocalRewindRefusal"
       },
       "features": {
-        "dx": [
+        "jee": [
           "e.Dead = \"dead\"",
           "e.NoText = \"no_text\"",
           "e.Unsupported = \"unsupported\"",
@@ -30,9 +31,9 @@
     },
     {
       "target": "error-text.mjs",
-      "source": "preload-helper-D0dM6GpB.js",
-      "sourceSha256": "07e10a7d6381c359ad25382bea60b373312701162217c2ca372a3a04b889eaef",
-      "sha256": "5247b8b6182b72e8a04aeffe5f2750c9f39aab3a4b65692f54f4f23d503df712",
+      "source": "preload-helper-BBljBeZo.js",
+      "sourceSha256": "eaca89d983d210116ad54e23c289ba7e36d993ab760a62264603d744601fa614",
+      "sha256": "795f5131ff02bd72f66f667f98648aa3c668873424116012a6d7aa08f2b3e9f2",
       "bindings": [
         {
           "name": "e",
@@ -52,21 +53,21 @@
     },
     {
       "target": "rewind-bridge.mjs",
-      "source": "cb1e253a0-DgeDleLc.js",
-      "sourceSha256": "9e0bfa7f6ac110838c39c3c48212b2db708bc15e3d751d0899775a2dd138d04a",
-      "sha256": "ed02e93076e7bf530dec0bcfcdb78eab6ca6b5c303c51376c5657fd9d46eb404",
+      "source": "cb1e253a0-Ct0IcfPp.js",
+      "sourceSha256": "3858c618d9e83798462473a91058efbb0f8be2c4ca449a0335e20e7c36e756c4",
+      "sha256": "e74607a2714b76b7865609a6e0095d2b9f602e0ec9b07b0c84902ec4daae47fa",
       "bindings": [
         {
-          "name": "eh",
-          "sha256": "6c71719a325f57f6e90849853911d1fd72e7d296e05b69276b43a5b5e9df24d6"
+          "name": "vg",
+          "sha256": "995bd852e01a09bc335fa26d10250eb9e0ca4cc0bfa6518a2e143b27b4820055"
         },
         {
-          "name": "nh",
-          "sha256": "771bc273cb0363827d0b947adac86e591362e340d96e717e450e1b18c5afb519"
+          "name": "bg",
+          "sha256": "9b97a47bcd1d287bea95487d58d5ee6d19f637fec85750de9d37b79e7909aeda"
         },
         {
-          "name": "rh",
-          "sha256": "3d3e64c07871d9361ffae5a5d17398d4dc4455d654b4538e5640ad0fd11ea87b"
+          "name": "xg",
+          "sha256": "f52402d30204f86fd3c3fe5589842a5f525a3d940927016246ba93098d5aa7a6"
         }
       ],
       "imports": [
@@ -74,28 +75,28 @@
           "local": "c",
           "from": "./error-text.mjs",
           "name": "withErrorText",
-          "via": "preload-helper-D0dM6GpB.js:n",
+          "via": "preload-helper-BBljBeZo.js:n",
           "kind": "generated",
           "original": "e"
         },
         {
-          "local": "Me",
+          "local": "V",
           "from": "./refusal.mjs",
           "name": "LocalRewindRefusal",
-          "via": "shared-0-DDOOdL6P.js:cg",
+          "via": "shared-0-CnnWnVrT.js:Ug",
           "kind": "generated",
-          "original": "dx"
+          "original": "jee"
         }
       ],
       "exports": {
-        "nh": "hasRewindBridge",
-        "rh": "rewindLocalSession"
+        "bg": "hasRewindBridge",
+        "xg": "rewindLocalSession"
       },
       "features": {
-        "nh": [
+        "bg": [
           "e?.rewindV2 ?? e?.rewind"
         ],
-        "rh": [
+        "xg": [
           "await e.rewindV2(t, n)",
           "!eh.has(i) ? Me.Unknown : i",
           "await e.rewind(t, n)",
@@ -106,50 +107,50 @@
     },
     {
       "target": "rewind-messages.mjs",
-      "source": "c21f11e6d-Cyd8_HO8.js",
-      "sourceSha256": "6ed66dcf3b2f5aa49f7e9e77c41ade6fb31bce367fabbaf61c11a2bb6e6ffbdb",
-      "sha256": "d1f77c15220928f8b1e1fb35e9ee775e1cf9f1fc3866fff165503233cb518af7",
+      "source": "c21f11e6d-Cyj5xu_D.js",
+      "sourceSha256": "447d453f1060221fbc7dba61a01b4b2ecff7fc10d1fbcd7a060e2a7269045145",
+      "sha256": "fdf1a319ea67908f30573933d5641cf166013cc6d2183e2e472b173be8f198fa",
       "bindings": [
         {
-          "name": "iN",
-          "sha256": "6835d4fbeb34631c2b14ecc213779259abfcabc5dbb1ba4e9f39eeb197e8aa59"
+          "name": "eP",
+          "sha256": "0cef56d96455e67c308931400d595032284e07b712eccb4654f329f3580269e7"
         },
         {
-          "name": "aN",
-          "sha256": "8d8eadda65c2e53f555ced39a44c4271c784b6e815d49e8642ce81ffe278efdf"
+          "name": "tP",
+          "sha256": "41e17bf5980220029c1a829cd3d3263f9e8699b13f0d9fdbe524dbab1e0c1071"
         },
         {
-          "name": "oN",
-          "sha256": "d690abd2b844bcd773d8e51aa415c29293579a0589f03d30d953a4c1419620d0"
+          "name": "nP",
+          "sha256": "bf7dd907cb054db3227dabd9b3afce6164efa36ba01b14c9133514a338679e14"
         },
         {
-          "name": "sN",
-          "sha256": "f066e90ec3fdcd530a8daacd7e894bfa4f20052c072908fedaa03a18b763ae1d"
+          "name": "rP",
+          "sha256": "baa8d87120167a4d10bd2c172358c1d773efd639876c9e3ba037730fcc377cb9"
         },
         {
-          "name": "LP",
-          "sha256": "3816c9139d814bb7f2f7a8788eb3546ee293b69a34961e2f13b0d725e2c6ea43"
+          "name": "zF",
+          "sha256": "0ece4c5a5d288aff9a506416ad6eb89d0c64f353f2f8f11fd4eefa1bf7bf10f9"
         }
       ],
       "imports": [
         {
-          "local": "Et",
+          "local": "ke",
           "from": "./refusal.mjs",
           "name": "LocalRewindRefusal",
-          "via": "shared-0-DDOOdL6P.js:cg",
+          "via": "shared-0-CnnWnVrT.js:Ug",
           "kind": "generated",
-          "original": "dx"
+          "original": "jee"
         }
       ],
       "exports": {
-        "iN": "remoteRewindRejectionMessage",
-        "aN": "localRewindRefusalMessage",
-        "oN": "rewindFailureMessage",
-        "sN": "rewindOutcomeToast",
-        "LP": "lastHumanBubbleWhenRewindable"
+        "eP": "remoteRewindRejectionMessage",
+        "tP": "localRewindRefusalMessage",
+        "nP": "rewindFailureMessage",
+        "rP": "rewindOutcomeToast",
+        "zF": "lastHumanBubbleWhenRewindable"
       },
       "features": {
-        "iN": [
+        "eP": [
           "case \"turn running\":",
           "case \"commands queued\":",
           "case \"stale target\":",
@@ -162,15 +163,15 @@
           "id: \"TW8yay5oV+\"",
           "id: \"pcv56liZj9\""
         ],
-        "aN": [
-          "case Et.Dead:",
+        "tP": [
+          "case ke.Dead:",
           "case Et.NoText:",
           "case Et.Unsupported:",
           "id: \"YmzbNCp+kq\"",
           "id: \"/FZxzzWOs5\"",
           "id: \"SC1NI+O8Y4\""
         ],
-        "oN": [
+        "nP": [
           "case \"restart\":",
           "case \"refusal_retry\":",
           "case \"edit\":",
@@ -178,7 +179,7 @@
           "id: \"EMw1vE8dOU\"",
           "id: \"fUE4seXTv0\""
         ],
-        "sN": [
+        "rP": [
           "let { surface: r } = t",
           "case \"sent\":",
           "case \"timeout\":",
@@ -190,10 +191,10 @@
           "id: \"kvjiUWTVfc\"",
           "t.isRemoteSession",
           "\"CoworkSessionView edit rewind timeout\"",
-          "iN(e.error.reason, n)",
-          "aN(e.refusal, n)"
+          "eP(e.error.reason, n)",
+          "tP(e.refusal, n)"
         ],
-        "LP": [
+        "zF": [
           "e.canRewindToMessage",
           "e.findLastHumanBubble()"
         ]

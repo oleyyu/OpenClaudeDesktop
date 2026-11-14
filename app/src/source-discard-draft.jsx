@@ -13,7 +13,8 @@
 // that owns the draft, as bv reads any pane's draft from the shared draft store (Na).
 import React, { useRef, useSyncExternalStore } from "react";
 import { SourceDialog, SourceDialogFooter } from "./source-dialog.jsx";
-import { CdsButton } from "./generated/view-tabs/index.js";
+// host-wiring/chat (4.16336.0): the dialog's Buttons are the cds-core graph's (shared-frame-CJdE5Ria Xu → Id).
+import { CdsButton } from "./cds-core.mjs";
 import { t } from "../electron/i18n/index.mjs";
 
 let pending = null;

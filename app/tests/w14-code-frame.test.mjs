@@ -32,7 +32,10 @@ test('frame-04: the arrange popup draws c4db265df lt\'s custom layout icons (fiz
 test('frame-03: the Code title and its caret share rG\'s cg lead (no gap); the pill stays outside it', () => {
   assert.equal(count(official('cc43287c9-Me-M2ucD.js'), 'A=Zs(`panels`)&&w?$f:w?_l:Fl'.replaceAll('`', '"')), 1);
   const titlebar = local('src/source-titlebar.jsx');
-  assert.ok(titlebar.includes('return <div className={titleLeadClass}><span className={titleSlotClass}>{parts[0]}</span>{parts.slice(1)}</div>;'));
+  // verify:titlebar: 4.16336.0 cc43287c9 FX `A = w ? Df : jf` (w = jb() = shared-120 qe): outside the titlebar frame the group
+  // stays cg (titleLeadClass); inside it is shared-18 Bw (titleGroupPanelsClass, pinned in tests/titlebar-frame-v4.test.mjs).
+  assert.ok(titlebar.includes('return <div className={titlebarPanels ? titleGroupPanelsClass : titleLeadClass}><span className={titleSlotClass}>{parts[0]}</span>{parts.slice(1)}</div>;'));
+  assert.ok(titlebar.includes('const titlebarPanels = useTitlebarPanelsScope();\n  if (!wrap) return children;'));
   assert.ok(titlebar.includes('<TitleLead wrap={surface === "code" && !loading}>'));
 });
 

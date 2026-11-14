@@ -16,13 +16,22 @@
 import React, { createContext, useContext } from "react";
 import { useIntl } from "./source-session-rail-kit-adapters.jsx";
 import { GhHint } from "./source-git-status.jsx";
-import { PrBarRow, RailPrRows, PrBarLayoutContext, railRowsShape, useRailRowsControls, useReportRailPrCount, prBarMode,
+import { PrBarRow, PrBarLayoutContext, prBarMode,
   repoRowId, repoRowIdKey, PrBarStaleRow, PR_BAR_ROWS_CLASS, PR_BAR_HOLD_CLASS } from "./generated/session-rail-changes/pr-rows.mjs";
 import { prBarRowSnapshot } from "./generated/session-rail-changes/pr-bar-snapshot.mjs";
 import { BRANCH_ROW_GHOST_ATTR } from "./generated/session-rail-changes/branch-row-ghost.mjs";
 import { renderMenuItems } from "./generated/session-rail/menu-items.mjs";
-import { RAIL_PR_BAR_NAV_CLASS, prBarRowShown } from "./generated/session-rail-changes/pr-bar-rail.mjs";
+import { prBarRowShown } from "./generated/session-rail-changes/pr-bar-rail.mjs";
 import { useAnnouncement } from "./generated/session-rail-sections/announcement.mjs";
+// 4.16336.0 rail cutover (2026-11-13): the rail's Changes card content renders inside the 4.16336.0 session rail
+// (cf74bc599 sN, source-session-rail.jsx), whose card provides the 4.16336.0 contexts (the PR count `kl`, the chip face
+// `bc`, the row layout `$s`). So the rail branch below (SessionRailChanges, railPrRow) draws the 4.16336.0 c96d752d0 rows
+// (src/generated/session-rail-changes-v4: vMe / hje / EL / lL, the same official bindings at their new chunk); the
+// composer band (SessionBandChanges / SessionBandHold) stays on the 3.6556.2 rows it lives with. The pure helpers
+// (railRowsShape's input, prBarMode, repoRowId / repoRowIdKey, prBarRowShown) are shared.
+import { PrBarRow as PrBarRowV4, RailPrRows as RailPrRowsV4, PrBarLayoutContext as PrBarLayoutContextV4, railRowsShape as railRowsShapeV4,
+  useRailRowsControls as useRailRowsControlsV4, useReportRailPrCount as useReportRailPrCountV4, RAIL_PR_BAR_NAV_CLASS as RAIL_PR_BAR_NAV_CLASS_V4 }
+  from "./generated/session-rail-changes-v4/index.mjs";
 
 // vendor-intl q / Gt (useIntl / FormattedMessage) and shared-52 cB (the ErrorsProvider): the session rail kit's
 // adapters (source-session-rail-kit-adapters.jsx), so the rail reads one intl and one toast sink.
@@ -221,25 +230,25 @@ export function SessionRailChanges({ status, pr = null, prAction = null, diffOpe
   const entries = railPrEntries({ intl, status, pr, prAction, verb, diffOpenable, hideRepo, onOpenChanges, onToggleChanges,
     diffOpenHasChord, warning, hint: hintNode, onOpenPr });
   // Sje `ze = mAe(t)` over the reported entries (rebuilt here every render, as the host has no row reports to hold).
-  const ze = railRowsShape(entries);
-  const Be = useRailRowsControls(ze);
+  const ze = railRowsShapeV4(entries);
+  const Be = useRailRowsControlsV4(ze);
   const { announcement: Ve } = useAnnouncement();
-  useReportRailPrCount(status?.isRepo ? ze.prCount : null);
+  useReportRailPrCountV4(status?.isRepo ? ze.prCount : null);
   if (!status?.isRepo) return null;
-  return <PrBarLayoutContext.Provider value="rail">
+  return <PrBarLayoutContextV4.Provider value="rail">
     <RailDiffOpenHasChordContext.Provider value={diffOpenHasChord === true}>
       <nav aria-label={intl.formatMessage({ defaultMessage: "Repository and pull request controls", id: "NHI5eIky7V" })}
-        className={RAIL_PR_BAR_NAV_CLASS}>
-        <RailPrRows shape={ze} controls={Be} announcement={Ve} renderRow={railPrRow} />
+        className={RAIL_PR_BAR_NAV_CLASS_V4}>
+        <RailPrRowsV4 shape={ze} controls={Be} announcement={Ve} renderRow={railPrRow} />
       </nav>
     </RailDiffOpenHasChordContext.Provider>
-  </PrBarLayoutContext.Provider>;
+  </PrBarLayoutContextV4.Provider>;
 }
 
 // Sje's renderRow (`St = (e, t) => f(TR, { …, railRowKey: n, railDiffOpenHasChord: t })` -> Zje's rail EL): the entry's
-// EL props with layout "rail" and the chord YL hands over.
+// EL props with layout "rail" and the chord YL hands over (4.16336.0 EL, see the import above).
 export function railPrRow(entry, diffOpenHasChord) {
-  return <PrBarRow {...entry.row} layout="rail" diffOpenHasChord={diffOpenHasChord} />;
+  return <PrBarRowV4 {...entry.row} layout="rail" diffOpenHasChord={diffOpenHasChord} />;
 }
 
 // ---- the composer band (W14-code r7 css7-git-band-prbarrow) ----------------------------------------------------------

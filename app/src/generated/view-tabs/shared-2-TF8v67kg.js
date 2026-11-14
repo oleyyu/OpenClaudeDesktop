@@ -33,6 +33,7 @@ function n6(e){return q3.add(e),q3.size===1&&(Y3=setInterval(()=>{$3();for(let e
 var r6="\u2014";
 var i6=[["year",31536e3],["month",2592e3],["week",604800],["day",86400],["hour",3600],["minute",60]];
 var a6=new Map;
+var o6;
 var s6=()=>o6??=/^[+\u2212\p{Pd}]/u;
 function c6(e,t){if(t!=="narrow")return t;let n=a6.get(e);if(n!==void 0)return n;let r=V3([()=>l6(e)],void 0);return r===void 0?e===void 0?"narrow":c6(void 0,t):(a6.set(e,r),r)}
 function l6(e){let t=new Intl.RelativeTimeFormat(e,{numeric:"always",style:"narrow"});return i6.some(([e])=>s6().test(t.format(-5,e).trim()))?"short":"narrow"}
@@ -45,4 +46,4 @@ var g6=()=>void 0;
 var _6=()=>g6;
 function v6(e){let t=e===void 0||e;return p(t?n6:_6,t?e6:t6,t6)}
 function y6(e){let $=J9(40),t,n,r,i,a,o,s,c,l,d,f;J1($,0,e)?({date:r,locale:a,justNowLabel:i,absoluteAfterHours:o,absoluteFormat:s,relativeFormat:c,numeric:l,tooltipSide:f,tooltipTimeZone:d,className:t,...n}=e,K5($,0,e,t,n,r,i,a,o,s,c,l,d,f)):(t=$[1],n=$[2],r=$[3],i=$[4],a=$[5],o=$[6],s=$[7],c=$[8],l=$[9],d=$[10],f=$[11]);let p=o===void 0?168:o,m=s===void 0?"date":s,h=c===void 0?"long":c,g=l===void 0?"auto":l,_=d===void 0||d,v=je(),y=a??v,b=v6(),x=J1($,12,r)?K1($,12,r,r instanceof Date?r:new Date(r)):$[13],[S,C]=J1($,14,x)?K1($,14,x,V3([()=>{let e=x.getTime();return[e,Number.isNaN(e)?void 0:x.toISOString()]}],[NaN,void 0])):$[15],w=b??S,T=J4($,16,C,y,x,_)?K4($,16,C,y,x,_,C?u(h6,{target:x,locale:y,timeZone:_}):void 0):$[20],E=(C?Math.abs(w-S)/36e5:0)>=p,D;J5($,21,m,C,i,w,g,h,y,E,x)?(D=C===void 0?r6:E?f6(x,w,y,m):p6(x,w,y,{justNowLabel:i,relativeFormat:h,numeric:g}),K5($,21,m,C,i,w,g,h,y,E,x,D)):D=$[30];let O=D,k=J4($,31,t,n,C,O)?K4($,31,t,n,C,O,u("time",{...n,"data-cds":"RelativeTime",dateTime:C,className:t,children:O})):$[35];return J3($,36,T,k,f)?K3($,36,T,k,f,u(N,{content:T,side:f,hoverable:!1,children:k})):$[39]}
-export {y6,v6,n6,q3,$3,Q3,Y3,_6,g6,e6,X3,t6,V3,B3,R3,z3,h6,G3,W3,H3,U3,r6,f6,d6,p6,u6,c6,a6,l6,i6,s6,J9,J1,K5,je,p,K1,xe,J4,K4,u,J3,K3,h,J5,N,y6 as CdsRelativeTime};
+export {y6,v6,n6,q3,Y3,$3,X3,Q3,_6,g6,e6,t6,V3,B3,R3,z3,h6,G3,W3,H3,U3,r6,f6,d6,p6,u6,c6,a6,l6,i6,s6,o6,J9,J1,K5,je,p,K1,xe,J4,K4,u,J3,K3,h,J5,N,y6 as CdsRelativeTime};

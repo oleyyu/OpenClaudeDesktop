@@ -35,8 +35,9 @@ before(async () => {
   // view-tabs' preload helper creates a link element while it evaluates (D21); the kit's section store persists through
   // shared-52's guarded localStorage (a Map stub here).
   const storage = new Map();
-  globalThis.document = { createElement: () => ({ relList: { supports: () => false } }), querySelector: () => null, documentElement: { getAttribute: () => null } };
-  globalThis.window = { localStorage: { getItem: key => storage.get(key) ?? null, setItem: (key, value) => { storage.set(key, String(value)); }, removeItem: key => { storage.delete(key); } }, matchMedia: undefined };
+  // W8-M9 stub contract (round4 integration, stub fields only): cds-core 9203795f reads these at load (official 4.16336.0): document.cookie, window.location, documentElement.hasAttribute.
+  globalThis.document = { cookie: '' /* W8-M9: shared-0 CQ / Wo document.cookie */, createElement: () => ({ relList: { supports: () => false } }), querySelector: () => null, documentElement: { hasAttribute: () => false /* W8-M9: shared-92 cS / Ib */, getAttribute: () => null } };
+  globalThis.window = { location: { pathname: '/', search: '', hash: '', href: 'app://localhost/' } /* W8-M9: shared-25 router store */, addEventListener() {}, removeEventListener() {}, localStorage: { getItem: key => storage.get(key) ?? null, setItem: (key, value) => { storage.set(key, String(value)); }, removeItem: key => { storage.delete(key); } }, matchMedia: undefined };
   server = await createServer({ configFile: false, root: app, plugins: [react()], server: { middlewareMode: true, hmr: false, ws: false, watch: null }, appType: 'custom', logLevel: 'error' });
   I18n = await server.ssrLoadModule('/electron/i18n/index.mjs');
   I18n.setLocale('en-US');

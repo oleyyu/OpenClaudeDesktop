@@ -1,0 +1,2816 @@
+{
+  "referenceVersion": "4.16336.0",
+  "referenceSnapshot": "snapshots/claude-4.16336.0-20261104",
+  "generator": "scripts/extract-transcript-rows-v4.mjs",
+  "steps": [
+    "tr-0",
+    "tr-1",
+    "tr-2",
+    "tr-3",
+    "tr-4",
+    "tr-5"
+  ],
+  "previous": {
+    "generator": "scripts/extract-transcript-rows.mjs",
+    "output": "src/generated/transcript-rows",
+    "referenceVersion": "3.6556.2"
+  },
+  "sharedGraph": {
+    "area": "cds-core",
+    "manifestSha256": "06d2026939e5c8992713c2a0dda1b1abc9adffe7a0c223fe3c1e79eecd08d62c"
+  },
+  "roots": [
+    {
+      "file": "cea7057eb-BrXukOIp.js",
+      "local": "L",
+      "name": "BackgroundTaskStatusContext",
+      "step": "tr-0",
+      "exports": [],
+      "constraint": "toolStatusProvider",
+      "shapeAlternatives": 2,
+      "declarationSha256": "223d9075919c145c90d2eec650bf3dd19df181571aa4ff1eda5be8b2bb2a8d62",
+      "pinned": true
+    },
+    {
+      "file": "cd96b5fdc-HvwFILuF.js",
+      "local": "g",
+      "name": "SessionScopeContext",
+      "step": "tr-0",
+      "exports": [],
+      "declarationSha256": "607ac89ce8df675a627ed2ad96b6e5c1864a81f8546330f0a234b059a43d527d",
+      "pinned": true
+    },
+    {
+      "file": "c856385e2-Cqx37C-b.js",
+      "local": "Nt",
+      "name": "PathResolverProvider",
+      "step": "tr-0",
+      "exports": [
+        "d"
+      ],
+      "constraint": "pathResolverContext",
+      "shapeAlternatives": 17,
+      "declarationSha256": "0a1975b81fb96358c5e8ab6ac26b0c5b01ed974e6abcf58a6eed73960728660d",
+      "pinned": true
+    },
+    {
+      "file": "c856385e2-Cqx37C-b.js",
+      "local": "It",
+      "name": "usePathResolver",
+      "step": "tr-0",
+      "exports": [
+        "lt"
+      ],
+      "declarationSha256": "961588544ea4786720ae48b523e35d4a2c2d0472570d947cc307c2699c13a20d",
+      "pinned": true
+    },
+    {
+      "file": "c96d752d0-D9VB6ArX.js",
+      "local": "aV",
+      "name": "ProposalPaneContext",
+      "step": "tr-0",
+      "exports": [
+        "Ai"
+      ],
+      "declarationSha256": "e4bb0bf460ae56e42ed905c43531a302503cef84e9a3ac8243f97ed844642767",
+      "pinned": true
+    },
+    {
+      "file": "c96d752d0-D9VB6ArX.js",
+      "local": "SH",
+      "name": "ThoughtProcessStep",
+      "step": "tr-4",
+      "exports": [],
+      "declarationSha256": "d105498b3f6ba582b1adff5ea60d3c6d4d83c411b37fb5496604270624f4d9d4",
+      "pinned": true
+    },
+    {
+      "file": "c96d752d0-D9VB6ArX.js",
+      "local": "Ize",
+      "name": "RunningToolRow",
+      "step": "tr-4",
+      "exports": [],
+      "constraint": "runningToolRowCaller",
+      "shapeAlternatives": 3,
+      "declarationSha256": "f60f8ee18ada62cb50e592b8a9bd35ab576a77d69573207a4caed32de98c220b",
+      "pinned": true
+    },
+    {
+      "file": "c5a058668-CqAY_lyZ.js",
+      "local": "o",
+      "name": "bundledLanguages",
+      "step": "tr-1",
+      "exports": [
+        "t"
+      ],
+      "declarationSha256": "0d451a0620ffb267efd319a35beb5a6078bb10cd3ec1b965a68773c67355b5f3",
+      "pinned": true
+    },
+    {
+      "file": "c68fd9df8-DaT0MWbj.js",
+      "local": "ee",
+      "name": "bundledThemes",
+      "step": "tr-1",
+      "exports": [],
+      "declarationSha256": "011b7059cb1ee24691cb11c817cc2379577839921e9c9ee7c056a04c176ae40d",
+      "pinned": true
+    },
+    {
+      "file": "c68fd9df8-DaT0MWbj.js",
+      "local": "ge",
+      "name": "pierreThemeLoaders",
+      "step": "tr-1",
+      "exports": [],
+      "declarationSha256": "119abeadbbd89a8c460611ca1ea1b885a94bef79d6155177c14ee72050c18728",
+      "pinned": true
+    },
+    {
+      "file": "c68fd9df8-DaT0MWbj.js",
+      "local": "X",
+      "name": "resolveCodeTheme",
+      "step": "tr-2",
+      "exports": [
+        "a"
+      ],
+      "declarationSha256": "9478d00da54a61f6d1f5a64a8a076753bb9c0e186936a4976fe29f7679a286e4",
+      "pinned": true
+    },
+    {
+      "file": "c19e90103-BKPMSRL2.js",
+      "local": "Xl",
+      "name": "PierreFile",
+      "step": "tr-2",
+      "exports": [
+        "or"
+      ],
+      "declarationSha256": "674fd0536492d9016eb25702e7e94f679b23e7aa6cd86ab87de6b3ddad75373f",
+      "pinned": true
+    },
+    {
+      "file": "c19e90103-BKPMSRL2.js",
+      "local": "gu",
+      "name": "pierreContents",
+      "step": "tr-2",
+      "exports": [
+        "ir"
+      ],
+      "declarationSha256": "d6f79ee5706f836624d7310ab92823ba49034022a14c7aeb25e2ada4c99741bc",
+      "pinned": true
+    },
+    {
+      "file": "c19e90103-BKPMSRL2.js",
+      "local": "Gl",
+      "name": "pierreLetterSpacing",
+      "step": "tr-2",
+      "exports": [
+        "cr"
+      ],
+      "declarationSha256": "646ffed9068ffd550cdb860e41b731494a13edf63d14b3e17faa7a8f08703c9c",
+      "pinned": true
+    },
+    {
+      "file": "c19e90103-BKPMSRL2.js",
+      "local": "Kl",
+      "name": "pierreWrapStyle",
+      "step": "tr-2",
+      "exports": [
+        "lr"
+      ],
+      "declarationSha256": "69f88f32276a9cd0a465b6ea8dc4864640fef492da797f1ed4ec45c0c4fb4755",
+      "pinned": true
+    },
+    {
+      "file": "c19e90103-BKPMSRL2.js",
+      "local": "k_",
+      "name": "UserBashRun",
+      "step": "tr-3",
+      "exports": [
+        "ft"
+      ],
+      "declarationSha256": "deab66c1bfa73662d981b1a8952412d54ecd58a35551e0698b6b5a38be542599",
+      "pinned": true
+    },
+    {
+      "file": "c64baa838-C55z5EpT.js",
+      "local": "xn",
+      "name": "PierreScroller",
+      "step": "tr-2",
+      "exports": [
+        "t"
+      ],
+      "declarationSha256": "409a76d1688b8fcb49dfb197f90fe7fe5eec74df6b9a3cb4a143e2b12acfdc09",
+      "pinned": true
+    },
+    {
+      "file": "c476e9be4-C5Gc087T.js",
+      "local": "O",
+      "name": "fileLanguage",
+      "step": "tr-2",
+      "exports": [
+        "i"
+      ],
+      "declarationSha256": "1bd619acb86f44adf2ab69139df1d89ef073c7f49838759ad2105aac2f9f9b80",
+      "pinned": true
+    },
+    {
+      "file": "c5668a722-BOceV_tq.js",
+      "local": "t",
+      "name": "useCodeThemeMode",
+      "step": "tr-2",
+      "exports": [
+        "n"
+      ],
+      "declarationSha256": "b1a5f94af640074216c2bc1e521b0837d4244681fe3f950fecfac8b03fc7406c",
+      "pinned": true
+    },
+    {
+      "file": "shared-2-CsjIBQD8.js",
+      "local": "sZ",
+      "name": "lineCount",
+      "step": "tr-2",
+      "exports": [
+        "Ci"
+      ],
+      "declarationSha256": "485ef578ecbe8fedf5b2fb607976beceb0e6b1246b9838eb5c7d247fc57ff9ed",
+      "pinned": true
+    },
+    {
+      "file": "c5d464fa3-D1V4bYI5.js",
+      "local": "K",
+      "name": "useCodeTheme",
+      "step": "tr-2",
+      "exports": [
+        "t"
+      ],
+      "declarationSha256": "49910359e1b8a436baffbf1bbcda5e5142eb47cc3e3e75d8dbd0eb333d62cce0",
+      "pinned": true
+    },
+    {
+      "file": "c86240138-DxzS7b0F.js",
+      "local": "n",
+      "name": "TASK_LINK_CLASS",
+      "step": "tr-2",
+      "exports": [
+        "n"
+      ],
+      "declarationSha256": "818bb7cb795a1c7a2e609afd57dcf384fac96fec1ac1f1379d8c9e52d416f886",
+      "pinned": true
+    },
+    {
+      "file": "c69eb6b8e-zIq9-pn-.js",
+      "local": "Pt",
+      "name": "highlightFileFind",
+      "step": "tr-3",
+      "exports": [],
+      "declarationSha256": "5f927397623456f995fb5dbdf188f153fd3fdfb1589050a9b6792c427d4cfe15",
+      "pinned": true
+    },
+    {
+      "file": "c69eb6b8e-zIq9-pn-.js",
+      "local": "Bt",
+      "name": "highlightFileLines",
+      "step": "tr-3",
+      "exports": [
+        "c"
+      ],
+      "declarationSha256": "d89ea75854d6ae3849394f86c469f2d08c8eaf56e8ecd94bc5527b8f9bd543c2",
+      "pinned": true
+    },
+    {
+      "file": "c69eb6b8e-zIq9-pn-.js",
+      "local": "Vt",
+      "name": "revealFileLine",
+      "step": "tr-3",
+      "exports": [
+        "s"
+      ],
+      "declarationSha256": "dcb5037fd785cfda918db60bd5576c0be27dcf6c0c70681338d74254a42258f6",
+      "pinned": true
+    },
+    {
+      "file": "c82eca2bd-B-5ZNoqx.js",
+      "local": "l",
+      "name": "codeSelectionCss",
+      "step": "tr-3",
+      "exports": [
+        "i"
+      ],
+      "declarationSha256": "34b19175532cfd8c09628758c69c8b664c9d7d8b9f08ce74ed0ac6af0239a14e",
+      "pinned": true
+    },
+    {
+      "file": "c82eca2bd-B-5ZNoqx.js",
+      "local": "m",
+      "name": "fileMetrics",
+      "step": "tr-3",
+      "exports": [
+        "n"
+      ],
+      "declarationSha256": "3d249e7ea9cbc9c4fc9202896c9b388c75671b4d5c0b8e9142677460cbbe5e08",
+      "pinned": true
+    },
+    {
+      "file": "cc3bc2027-C1f7RNlI.js",
+      "local": "n",
+      "name": "fileGutterCss",
+      "step": "tr-3",
+      "exports": [
+        "s"
+      ],
+      "declarationSha256": "b3e1d74e2b7d61de30deadaa13acd78777f7f9a64955da62c171dda060d02b07",
+      "pinned": true
+    },
+    {
+      "file": "c5fbdc8eb-D_9kA6bR.js",
+      "local": "x",
+      "name": "findLineOrdinal",
+      "step": "tr-3",
+      "exports": [
+        "l"
+      ],
+      "declarationSha256": "ba192084d9a44248d10f1ec6209109b65d494c7a7ca95b13ea918653d737c367",
+      "pinned": true
+    },
+    {
+      "file": "cb6930dae-DPu57U90.js",
+      "local": "Xu",
+      "name": "TranscriptLiveScopeContext",
+      "step": "tr-4",
+      "exports": [],
+      "constraint": "liveScopeContext",
+      "shapeAlternatives": 1,
+      "declarationSha256": "df7b1d518879157573b18ae4334f5caa7246ea60378cc94d7a52cd51e86f2a21",
+      "pinned": true
+    },
+    {
+      "file": "cb6930dae-DPu57U90.js",
+      "local": "Eu",
+      "name": "TurnMarkOutlet",
+      "step": "tr-3",
+      "exports": [
+        "ot"
+      ],
+      "declarationSha256": "21bc93899745c84cfc7f069656e5014e1fd4b97e38e2b2f21c570a759cb67372",
+      "pinned": true
+    }
+  ],
+  "linkedAreas": [
+    {
+      "area": "working-line-v4",
+      "modules": [
+        "morph.mjs",
+        "preload-helper.mjs",
+        "turn-status.mjs",
+        "working-line.mjs",
+        "clipboard.mjs",
+        "shared-2.mjs"
+      ]
+    },
+    {
+      "area": "code-editor-current-v4",
+      "modules": [
+        "c74f29bd2.mjs",
+        "c5d464fa3.mjs",
+        "layout-tokens.mjs"
+      ]
+    },
+    {
+      "area": "settings-pages-v4",
+      "modules": [
+        "editor-prefs.mjs",
+        "code-theme-vars.mjs"
+      ]
+    }
+  ],
+  "pendingRoots": [
+    {
+      "binding": "c96d752d0-D9VB6ArX.js#wz",
+      "name": "ToolRow",
+      "step": "tr-4",
+      "previous": "c96d752d0-CWv_7-n9.js#iL",
+      "why": "wz = hP($Ke, e => e.epitaxyEngineToolRow, …): its closure reaches the tool card registry; the 4.16336.0 host adapter boundary of the 3.6556.2 tool rows (iL / Uz) is not pinned yet"
+    },
+    {
+      "binding": "c96d752d0-D9VB6ArX.js#qW",
+      "name": "ToolGroupRows",
+      "step": "tr-4",
+      "previous": "c96d752d0-CWv_7-n9.js#i1",
+      "why": "qW = hP(F1e, e => e.withEngineSurfaceScope, …) renders t1e (the tool group: coalesced runs, Fze, the members through ToolRow); pending with ToolRow"
+    }
+  ],
+  "adapters": {
+    "module": "src/source-transcript-rows-v4-adapters.jsx",
+    "entries": [
+      {
+        "original": "vendor-intl-BJgYK7RA.js#q",
+        "name": "useIntl",
+        "hostAdapter": "src/source-transcript-rows-adapters.jsx",
+        "previous": "vendor-intl-DYfox5Co.js#q",
+        "previousDeclarationSha256": "8592f6b7aeb3407203cdcb4120133a3df82941fc520335506e13f65a7079f0ee",
+        "declarationSha256": "edf793bc7b87ae9a38cea39d25d752a5bcfef1d492e06a2219e120311feaaec0",
+        "pinned": true
+      },
+      {
+        "original": "cd4f82e77-Cuw99s6A.js#_r",
+        "name": "useVerboseTranscript",
+        "hostAdapter": "src/source-transcript-rows-adapters.jsx",
+        "previous": "cd4f82e77-CAMIsQ30.js#Nn",
+        "previousDeclarationSha256": "6e84372e49b2408c6f285d56a9fa3f65f3c94de9989bc8486edd06e93d575f23",
+        "declarationSha256": "ef491f2b7350989d2a9e4ac1bf067e29c88943af43503d95207674444120da83",
+        "pinned": true
+      },
+      {
+        "original": "c06cf64bb-CoZso5N4.js#Zc",
+        "name": "sessionActivityEvents",
+        "hostAdapter": "src/source-transcript-rows-adapters.jsx",
+        "previous": "c06cf64bb-CdJdJuVd.js#a_",
+        "previousDeclarationSha256": "3c44850cf2ae84d1bb2bff204104a0782aee084e08cfc1b730090b440c96242d",
+        "declarationSha256": "55e045d2eb0fb8f7ce247c48cbc9e44ba84f7070dc682db181e07a41f1e05f11",
+        "pinned": true
+      },
+      {
+        "original": "c06cf64bb-CoZso5N4.js#K",
+        "name": "sessionActivityStore",
+        "hostAdapter": "src/source-transcript-rows-adapters.jsx",
+        "previous": "c06cf64bb-CdJdJuVd.js#K",
+        "previousDeclarationSha256": "258e6e13c90c246531f429674090e332343ce37b47cd5de49401b5c1340e37bf",
+        "declarationSha256": "aa301e1dfd5829122a9840728a116c9ba6adec69da1e7926c87b6ee3255fadc3",
+        "pinned": true
+      },
+      {
+        "original": "shared-39-ZCs0lAwB.js#lb",
+        "name": "useSessionAwaitsRequest",
+        "hostAdapter": "src/source-transcript-rows-adapters.jsx",
+        "previous": "shared-11-_AVGLHEz.js#P_",
+        "previousDeclarationSha256": "78b163c153649157b7a81d365beb5e27be7a28dae164a3c6eccf677a6d1df049",
+        "declarationSha256": "325f37e5decd118ac66fea1e160732e98c63e3b5d3075d27fb57cf143beadf7a",
+        "pinned": true
+      },
+      {
+        "original": "shared-62-DoCqVpIq.js#rP",
+        "name": "useErrors",
+        "hostAdapter": "src/source-transcript-rows-adapters.jsx",
+        "previous": "shared-52-uHFNjl7C.js#cB",
+        "previousDeclarationSha256": "58c88a3ae251ccba2651d1836024748c9b5bed6a0498494b0408d41d11ff6473",
+        "declarationSha256": "8cc2e61ff0e38fe5049f326f836c21d0376246138aa501f16e392a882f9a8129",
+        "pinned": true
+      },
+      {
+        "original": "ca41b3815-k7z3sa_r.js#X",
+        "name": "useTerminalInlineRunStore",
+        "hostAdapter": "src/source-transcript-rows-adapters.jsx",
+        "previous": "ca41b3815-CD1z-rIH.js#X",
+        "previousDeclarationSha256": "acac1aa7928ad5d489f3b1fac9e5a7604174468842157fa365422089d04daf35",
+        "declarationSha256": "4d67abbca82d29c95197b796d5e7b351e224f4b428d99f37dc71a9500a46296b",
+        "pinned": true
+      },
+      {
+        "original": "shared-55-BRv2XBP7.js#TT",
+        "name": "createHighlightWorker",
+        "hostAdapter": "src/source-transcript-rows-adapters.jsx",
+        "previous": "shared-46-BIbZBGFq.js#YC",
+        "previousDeclarationSha256": "427a883227145b32e383fa093d90ee8c53cbb39a757425cb9fcb54e5898c6f14",
+        "declarationSha256": "59da49c3e903f49fd61e6deaa78cc60e23815280bf2d86534155c32386f6c889",
+        "pinned": true
+      }
+    ]
+  },
+  "callSites": [
+    {
+      "binding": "c96d752d0-D9VB6ArX.js#t1e",
+      "previous": "c96d752d0-CWv_7-n9.js#Z1e",
+      "declarationSha256": "777965bfa7b2c0bb9e8d28e248f9a6c477085156f6c8337b022dcc34edda4c4b"
+    },
+    {
+      "binding": "c96d752d0-D9VB6ArX.js#mM",
+      "previous": "c96d752d0-CWv_7-n9.js#ak",
+      "declarationSha256": "2aad7a52e6c737cb7a4cc0e8ed170b3bee15d23d212422cf40b3d1f5e9da8797"
+    },
+    {
+      "binding": "c96d752d0-D9VB6ArX.js#SH",
+      "previous": "c96d752d0-CWv_7-n9.js#gX",
+      "declarationSha256": "d105498b3f6ba582b1adff5ea60d3c6d4d83c411b37fb5496604270624f4d9d4"
+    },
+    {
+      "binding": "c96d752d0-D9VB6ArX.js#JW",
+      "previous": "c96d752d0-CWv_7-n9.js#_X",
+      "declarationSha256": "55c207df4886c2c94ccffd0d98f0e5626d5c44cad7458d85529da7b47cacf03f"
+    },
+    {
+      "binding": "c96d752d0-D9VB6ArX.js#lCt",
+      "previous": "c96d752d0-CWv_7-n9.js#R7",
+      "declarationSha256": "13bc0669f3f0a8e604f4189562c0d7e010f9b8e334e7c1065683a3999de9dde1"
+    },
+    {
+      "binding": "cb6930dae-DPu57U90.js#id",
+      "previous": "cb6930dae-Dw_4c1QI.js#Ho",
+      "declarationSha256": "73f3f5af3cc217425554cede507c69db3d541e270afa2943d00f536a29d29d37"
+    },
+    {
+      "binding": "c96d752d0-D9VB6ArX.js#twt",
+      "previous": "c96d752d0-CWv_7-n9.js#Aat",
+      "declarationSha256": "b3ae2b94f9059b1092469f3e8cb260d5e85443388d7f3511170bf42303a417aa"
+    }
+  ],
+  "gate": {
+    "flag": "__gb__2846116625",
+    "name": "turnStatusRows",
+    "chunk": "ca7b95e24-BFvFgBI_.js",
+    "owner": "working-line-v4",
+    "target": "turn-status-rows.mjs",
+    "bindings": {
+      "l": "TURN_STATUS_ROWS_FLAG",
+      "u": null,
+      "d": "TurnStatusRowsProvider",
+      "f": "TurnStatusRowsOverride",
+      "p": "useTurnStatusRows"
+    },
+    "hostAdapter": "src/source-working-line-adapters.jsx",
+    "hostTable": "src/host-growthbook.mjs",
+    "served": "not served (off; the Code session provides the rows value itself)",
+    "slicedReaders": [],
+    "pinnedReaders": [
+      "c96d752d0-D9VB6ArX.js#t1e (Rv = ca7b95e24-BFvFgBI_.js#p)",
+      "c96d752d0-D9VB6ArX.js#mM (Rv = ca7b95e24-BFvFgBI_.js#p)",
+      "c96d752d0-D9VB6ArX.js#JW (Rv = ca7b95e24-BFvFgBI_.js#p)"
+    ],
+    "forcedOn": "c96d752d0-D9VB6ArX.js#twt (Lv = ca7b95e24-BFvFgBI_.js#f)"
+  },
+  "computedImports": {
+    "from": "c96d752d0-D9VB6ArX.js",
+    "modules": 3862,
+    "holders": 12,
+    "declarations": [
+      "c0c1c41fc-wv_Zf24W.js#km",
+      "c0c1c41fc-wv_Zf24W.js#Ly",
+      "c1e35bcba-B4DNYuKp.js#n",
+      "c1f8dc276-DXrisJhu.js#e",
+      "c2719cf1b-BG2-TsMx.js#rd",
+      "c35e966ba-DpiZ7sq9.js#n",
+      "c44ad1c2b-RYD36ooj.js#n",
+      "c8db79ef1-KEWjY8bA.js#o",
+      "ccce997fe-BiS7ni6M.js#e",
+      "cde7c3a92-BfGz_xGT.js#E",
+      "cde9b9ed7-92vv8GoH.js#n",
+      "ce381804e-1PL9yGKK.js#u",
+      "shared-26-B-POtn5S.js#Id",
+      "shared-26-B-POtn5S.js#hp"
+    ],
+    "inThisGraph": 0
+  },
+  "verbatim": {
+    "pins": "scripts/transcript-rows-v4.verbatim-pins.json",
+    "pinsSha256": "8d9aaa5e480f41c7619d2cd5b938abc2a5a3d736cf2f19e6d9c536df37d7bec8",
+    "importers": [
+      "c5a058668-CqAY_lyZ.js",
+      "c68fd9df8-DaT0MWbj.js"
+    ],
+    "emitted": 249,
+    "identical": 247,
+    "sameFamily": [
+      {
+        "previous": "cb3185f0d-DbwU4CWx.js",
+        "file": "cb3185f0d-BQp1BLps.js"
+      },
+      {
+        "previous": "cd14a9327-CTFVY5Uy.js",
+        "file": "cd14a9327-B9PBTVtf.js"
+      }
+    ],
+    "deferred": []
+  },
+  "imports": [
+    {
+      "module": "rows-cea7057eb.mjs",
+      "local": "t",
+      "kind": "react",
+      "from": "react",
+      "name": "createContext",
+      "via": "vendor-frame-BckkO60Y.js:no"
+    },
+    {
+      "module": "rows-cd96b5fdc.mjs",
+      "local": "e",
+      "kind": "react",
+      "from": "react",
+      "name": "createContext",
+      "via": "vendor-frame-BckkO60Y.js:no"
+    },
+    {
+      "module": "rows-shared-frame.mjs",
+      "local": "Je",
+      "kind": "react",
+      "from": "react/compiler-runtime",
+      "name": "c",
+      "via": "vendor-frame-BckkO60Y.js:ko"
+    },
+    {
+      "module": "rows-shared-frame.mjs",
+      "local": "ts",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "ts",
+      "via": "shared-frame-CJdE5Ria.js#ts"
+    },
+    {
+      "module": "rows-c856385e2.mjs",
+      "local": "Mt",
+      "kind": "shared-graph",
+      "from": "../cds-core/c856385e2.mjs",
+      "name": "Mt",
+      "via": "c856385e2-Cqx37C-b.js#Mt"
+    },
+    {
+      "module": "rows-vendor-all.mjs",
+      "local": "c",
+      "kind": "react",
+      "from": "react",
+      "name": "default",
+      "via": "vendor-frame-BckkO60Y.js:lo"
+    },
+    {
+      "module": "rows-cc6e9624e.mjs",
+      "local": "f",
+      "kind": "shared-graph",
+      "from": "../cds-core/cc6e9624e.mjs",
+      "name": "f",
+      "via": "cc6e9624e-QSsNXeYh.js#f"
+    },
+    {
+      "module": "rows-cc6e9624e.mjs",
+      "local": "t",
+      "kind": "react",
+      "from": "react",
+      "name": "useContext",
+      "via": "vendor-frame-BckkO60Y.js:po"
+    },
+    {
+      "module": "rows-ce046217f.mjs",
+      "local": "e",
+      "kind": "react",
+      "from": "react",
+      "name": "useEffect",
+      "via": "vendor-frame-BckkO60Y.js:go"
+    },
+    {
+      "module": "rows-ce046217f.mjs",
+      "local": "n",
+      "kind": "react",
+      "from": "react",
+      "name": "useContext",
+      "via": "vendor-frame-BckkO60Y.js:po"
+    },
+    {
+      "module": "rows-ce046217f.mjs",
+      "local": "r",
+      "kind": "shared-graph",
+      "from": "../cds-core/ce046217f.mjs",
+      "name": "r",
+      "via": "ce046217f-k8kVATJC.js#r"
+    },
+    {
+      "module": "rows-cb6930dae.mjs",
+      "local": "Nu",
+      "kind": "linked",
+      "from": "../working-line-v4/morph.mjs",
+      "name": "noSubscription",
+      "via": "cb6930dae-DPu57U90.js#Nu"
+    },
+    {
+      "module": "rows-cb6930dae.mjs",
+      "local": "Pu",
+      "kind": "linked",
+      "from": "../working-line-v4/morph.mjs",
+      "name": "neverHeld",
+      "via": "cb6930dae-DPu57U90.js#Pu"
+    },
+    {
+      "module": "rows-cb6930dae.mjs",
+      "local": "_",
+      "kind": "react",
+      "from": "react",
+      "name": "useId",
+      "via": "vendor-frame-BckkO60Y.js:vo"
+    },
+    {
+      "module": "rows-cb6930dae.mjs",
+      "local": "a",
+      "kind": "react",
+      "from": "react-dom",
+      "name": "createPortal",
+      "via": "vendor-frame-BckkO60Y.js:Ia"
+    },
+    {
+      "module": "rows-cb6930dae.mjs",
+      "local": "b",
+      "kind": "react",
+      "from": "react",
+      "name": "useLayoutEffect",
+      "via": "vendor-frame-BckkO60Y.js:xo"
+    },
+    {
+      "module": "rows-cb6930dae.mjs",
+      "local": "c",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "Fragment",
+      "via": "vendor-frame-BckkO60Y.js:Wa"
+    },
+    {
+      "module": "rows-cb6930dae.mjs",
+      "local": "d",
+      "kind": "react",
+      "from": "react",
+      "name": "use",
+      "via": "vendor-frame-BckkO60Y.js:do"
+    },
+    {
+      "module": "rows-cb6930dae.mjs",
+      "local": "du",
+      "kind": "linked",
+      "from": "../working-line-v4/morph.mjs",
+      "name": "TurnMarkBrokerContext",
+      "via": "cb6930dae-DPu57U90.js#du"
+    },
+    {
+      "module": "rows-cb6930dae.mjs",
+      "local": "h",
+      "kind": "react",
+      "from": "react",
+      "name": "useContext",
+      "via": "vendor-frame-BckkO60Y.js:po"
+    },
+    {
+      "module": "rows-cb6930dae.mjs",
+      "local": "i",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "jsx",
+      "via": "vendor-frame-BckkO60Y.js:Ga"
+    },
+    {
+      "module": "rows-cb6930dae.mjs",
+      "local": "m",
+      "kind": "react",
+      "from": "react",
+      "name": "createContext",
+      "via": "vendor-frame-BckkO60Y.js:no"
+    },
+    {
+      "module": "rows-cb6930dae.mjs",
+      "local": "n",
+      "kind": "react",
+      "from": "react",
+      "name": "useSyncExternalStore",
+      "via": "vendor-frame-BckkO60Y.js:Eo"
+    },
+    {
+      "module": "rows-cb6930dae.mjs",
+      "local": "o",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "jsxs",
+      "via": "vendor-frame-BckkO60Y.js:Ka"
+    },
+    {
+      "module": "rows-cb6930dae.mjs",
+      "local": "r",
+      "kind": "shared-graph",
+      "from": "../cds-core/vendor-frame.mjs",
+      "name": "clsx",
+      "via": "vendor-frame-BckkO60Y.js:Fa"
+    },
+    {
+      "module": "rows-cb6930dae.mjs",
+      "local": "s",
+      "kind": "react",
+      "from": "react",
+      "name": "useState",
+      "via": "vendor-frame-BckkO60Y.js:To"
+    },
+    {
+      "module": "rows-cb6930dae.mjs",
+      "local": "v",
+      "kind": "react",
+      "from": "react",
+      "name": "useRef",
+      "via": "vendor-frame-BckkO60Y.js:wo"
+    },
+    {
+      "module": "rows-shared-0.mjs",
+      "local": "Ac",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-0.mjs",
+      "name": "Ac",
+      "via": "shared-0-CnnWnVrT.js#Ac"
+    },
+    {
+      "module": "rows-shared-0.mjs",
+      "local": "Fc",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-0.mjs",
+      "name": "Fc",
+      "via": "shared-0-CnnWnVrT.js#Fc"
+    },
+    {
+      "module": "rows-shared-0.mjs",
+      "local": "Hc",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-0.mjs",
+      "name": "Hc",
+      "via": "shared-0-CnnWnVrT.js#Hc"
+    },
+    {
+      "module": "rows-shared-0.mjs",
+      "local": "Pc",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-0.mjs",
+      "name": "Pc",
+      "via": "shared-0-CnnWnVrT.js#Pc"
+    },
+    {
+      "module": "rows-shared-0.mjs",
+      "local": "Vc",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-0.mjs",
+      "name": "Vc",
+      "via": "shared-0-CnnWnVrT.js#Vc"
+    },
+    {
+      "module": "rows-shared-0.mjs",
+      "local": "YN",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-0.mjs",
+      "name": "YN",
+      "via": "shared-0-CnnWnVrT.js#YN"
+    },
+    {
+      "module": "rows-shared-0.mjs",
+      "local": "bV",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-0.mjs",
+      "name": "bV",
+      "via": "shared-0-CnnWnVrT.js#bV"
+    },
+    {
+      "module": "rows-shared-0.mjs",
+      "local": "b_",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-0.mjs",
+      "name": "b_",
+      "via": "shared-0-CnnWnVrT.js#b_"
+    },
+    {
+      "module": "rows-shared-0.mjs",
+      "local": "gh",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-0.mjs",
+      "name": "gh",
+      "via": "shared-0-CnnWnVrT.js#gh"
+    },
+    {
+      "module": "rows-shared-0.mjs",
+      "local": "jc",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-0.mjs",
+      "name": "jc",
+      "via": "shared-0-CnnWnVrT.js#jc"
+    },
+    {
+      "module": "rows-shared-0.mjs",
+      "local": "xV",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-0.mjs",
+      "name": "xV",
+      "via": "shared-0-CnnWnVrT.js#xV"
+    },
+    {
+      "module": "rows-shared-62.mjs",
+      "local": "Cf",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-62.mjs",
+      "name": "Cf",
+      "via": "shared-62-DoCqVpIq.js#Cf"
+    },
+    {
+      "module": "rows-shared-62.mjs",
+      "local": "Df",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-62.mjs",
+      "name": "Df",
+      "via": "shared-62-DoCqVpIq.js#Df"
+    },
+    {
+      "module": "rows-shared-62.mjs",
+      "local": "Ef",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-62.mjs",
+      "name": "Ef",
+      "via": "shared-62-DoCqVpIq.js#Ef"
+    },
+    {
+      "module": "rows-shared-62.mjs",
+      "local": "Hf",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-62.mjs",
+      "name": "Hf",
+      "via": "shared-62-DoCqVpIq.js#Hf"
+    },
+    {
+      "module": "rows-shared-62.mjs",
+      "local": "Kf",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-62.mjs",
+      "name": "Kf",
+      "via": "shared-62-DoCqVpIq.js#Kf"
+    },
+    {
+      "module": "rows-shared-62.mjs",
+      "local": "Of",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-62.mjs",
+      "name": "Of",
+      "via": "shared-62-DoCqVpIq.js#Of"
+    },
+    {
+      "module": "rows-shared-62.mjs",
+      "local": "Tf",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-62.mjs",
+      "name": "Tf",
+      "via": "shared-62-DoCqVpIq.js#Tf"
+    },
+    {
+      "module": "rows-shared-62.mjs",
+      "local": "Uf",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-62.mjs",
+      "name": "Uf",
+      "via": "shared-62-DoCqVpIq.js#Uf"
+    },
+    {
+      "module": "rows-shared-62.mjs",
+      "local": "Wf",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-62.mjs",
+      "name": "Wf",
+      "via": "shared-62-DoCqVpIq.js#Wf"
+    },
+    {
+      "module": "rows-shared-62.mjs",
+      "local": "Yf",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-62.mjs",
+      "name": "Yf",
+      "via": "shared-62-DoCqVpIq.js#Yf"
+    },
+    {
+      "module": "rows-shared-62.mjs",
+      "local": "ZS",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-62.mjs",
+      "name": "ZS",
+      "via": "shared-62-DoCqVpIq.js#ZS"
+    },
+    {
+      "module": "rows-shared-62.mjs",
+      "local": "np",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-62.mjs",
+      "name": "np",
+      "via": "shared-62-DoCqVpIq.js#np"
+    },
+    {
+      "module": "rows-shared-62.mjs",
+      "local": "vf",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-62.mjs",
+      "name": "vf",
+      "via": "shared-62-DoCqVpIq.js#vf"
+    },
+    {
+      "module": "rows-shared-62.mjs",
+      "local": "xf",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-62.mjs",
+      "name": "xf",
+      "via": "shared-62-DoCqVpIq.js#xf"
+    },
+    {
+      "module": "rows-shared-92.mjs",
+      "local": "Ap",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-92.mjs",
+      "name": "Ap",
+      "via": "shared-92-BOgyxePb.js#Ap"
+    },
+    {
+      "module": "rows-shared-92.mjs",
+      "local": "Bh",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-92.mjs",
+      "name": "Bh",
+      "via": "shared-92-BOgyxePb.js#Bh"
+    },
+    {
+      "module": "rows-shared-92.mjs",
+      "local": "Ch",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-92.mjs",
+      "name": "Ch",
+      "via": "shared-92-BOgyxePb.js#Ch"
+    },
+    {
+      "module": "rows-shared-92.mjs",
+      "local": "Cp",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-92.mjs",
+      "name": "Cp",
+      "via": "shared-92-BOgyxePb.js#Cp"
+    },
+    {
+      "module": "rows-shared-92.mjs",
+      "local": "Dp",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-92.mjs",
+      "name": "Dp",
+      "via": "shared-92-BOgyxePb.js#Dp"
+    },
+    {
+      "module": "rows-shared-92.mjs",
+      "local": "Ef",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-92.mjs",
+      "name": "Ef",
+      "via": "shared-92-BOgyxePb.js#Ef"
+    },
+    {
+      "module": "rows-shared-92.mjs",
+      "local": "Hp",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-92.mjs",
+      "name": "Hp",
+      "via": "shared-92-BOgyxePb.js#Hp"
+    },
+    {
+      "module": "rows-shared-92.mjs",
+      "local": "I",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-0.mjs",
+      "name": "H",
+      "via": "shared-0-CnnWnVrT.js:ry"
+    },
+    {
+      "module": "rows-shared-92.mjs",
+      "local": "Jo",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-92.mjs",
+      "name": "Jo",
+      "via": "shared-92-BOgyxePb.js#Jo"
+    },
+    {
+      "module": "rows-shared-92.mjs",
+      "local": "Mh",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-92.mjs",
+      "name": "Mh",
+      "via": "shared-92-BOgyxePb.js#Mh"
+    },
+    {
+      "module": "rows-shared-92.mjs",
+      "local": "Mm",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-92.mjs",
+      "name": "Mm",
+      "via": "shared-92-BOgyxePb.js#Mm"
+    },
+    {
+      "module": "rows-shared-92.mjs",
+      "local": "Mo",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-92.mjs",
+      "name": "Mo",
+      "via": "shared-92-BOgyxePb.js#Mo"
+    },
+    {
+      "module": "rows-shared-92.mjs",
+      "local": "Nm",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-92.mjs",
+      "name": "Nm",
+      "via": "shared-92-BOgyxePb.js#Nm"
+    },
+    {
+      "module": "rows-shared-92.mjs",
+      "local": "Np",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-92.mjs",
+      "name": "Np",
+      "via": "shared-92-BOgyxePb.js#Np"
+    },
+    {
+      "module": "rows-shared-92.mjs",
+      "local": "Oh",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-92.mjs",
+      "name": "Oh",
+      "via": "shared-92-BOgyxePb.js#Oh"
+    },
+    {
+      "module": "rows-shared-92.mjs",
+      "local": "Om",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-92.mjs",
+      "name": "Om",
+      "via": "shared-92-BOgyxePb.js#Om"
+    },
+    {
+      "module": "rows-shared-92.mjs",
+      "local": "Op",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-92.mjs",
+      "name": "Op",
+      "via": "shared-92-BOgyxePb.js#Op"
+    },
+    {
+      "module": "rows-shared-92.mjs",
+      "local": "Pm",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-92.mjs",
+      "name": "Pm",
+      "via": "shared-92-BOgyxePb.js#Pm"
+    },
+    {
+      "module": "rows-shared-92.mjs",
+      "local": "Po",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-92.mjs",
+      "name": "Po",
+      "via": "shared-92-BOgyxePb.js#Po"
+    },
+    {
+      "module": "rows-shared-92.mjs",
+      "local": "Sh",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-92.mjs",
+      "name": "Sh",
+      "via": "shared-92-BOgyxePb.js#Sh"
+    },
+    {
+      "module": "rows-shared-92.mjs",
+      "local": "Tp",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-92.mjs",
+      "name": "Tp",
+      "via": "shared-92-BOgyxePb.js#Tp"
+    },
+    {
+      "module": "rows-shared-92.mjs",
+      "local": "bh",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-92.mjs",
+      "name": "bh",
+      "via": "shared-92-BOgyxePb.js#bh"
+    },
+    {
+      "module": "rows-shared-92.mjs",
+      "local": "dp",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-92.mjs",
+      "name": "dp",
+      "via": "shared-92-BOgyxePb.js#dp"
+    },
+    {
+      "module": "rows-shared-92.mjs",
+      "local": "ea",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-62.mjs",
+      "name": "cf",
+      "via": "shared-62-DoCqVpIq.js:Z_"
+    },
+    {
+      "module": "rows-shared-92.mjs",
+      "local": "fs",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-92.mjs",
+      "name": "fs",
+      "via": "shared-92-BOgyxePb.js#fs"
+    },
+    {
+      "module": "rows-shared-92.mjs",
+      "local": "gd",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-92.mjs",
+      "name": "gd",
+      "via": "shared-92-BOgyxePb.js#gd"
+    },
+    {
+      "module": "rows-shared-92.mjs",
+      "local": "jm",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-92.mjs",
+      "name": "jm",
+      "via": "shared-92-BOgyxePb.js#jm"
+    },
+    {
+      "module": "rows-shared-92.mjs",
+      "local": "jp",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-92.mjs",
+      "name": "jp",
+      "via": "shared-92-BOgyxePb.js#jp"
+    },
+    {
+      "module": "rows-shared-92.mjs",
+      "local": "kp",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-92.mjs",
+      "name": "kp",
+      "via": "shared-92-BOgyxePb.js#kp"
+    },
+    {
+      "module": "rows-shared-92.mjs",
+      "local": "lp",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-92.mjs",
+      "name": "lp",
+      "via": "shared-92-BOgyxePb.js#lp"
+    },
+    {
+      "module": "rows-shared-92.mjs",
+      "local": "ms",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-92.mjs",
+      "name": "ms",
+      "via": "shared-92-BOgyxePb.js#ms"
+    },
+    {
+      "module": "rows-shared-92.mjs",
+      "local": "ng",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-92.mjs",
+      "name": "ng",
+      "via": "shared-92-BOgyxePb.js#ng"
+    },
+    {
+      "module": "rows-shared-92.mjs",
+      "local": "od",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-92.mjs",
+      "name": "od",
+      "via": "shared-92-BOgyxePb.js#od"
+    },
+    {
+      "module": "rows-shared-92.mjs",
+      "local": "om",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-92.mjs",
+      "name": "om",
+      "via": "shared-92-BOgyxePb.js#om"
+    },
+    {
+      "module": "rows-shared-92.mjs",
+      "local": "up",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-92.mjs",
+      "name": "up",
+      "via": "shared-92-BOgyxePb.js#up"
+    },
+    {
+      "module": "rows-shared-92.mjs",
+      "local": "us",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-92.mjs",
+      "name": "us",
+      "via": "shared-92-BOgyxePb.js#us"
+    },
+    {
+      "module": "rows-shared-92.mjs",
+      "local": "wp",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-92.mjs",
+      "name": "wp",
+      "via": "shared-92-BOgyxePb.js#wp"
+    },
+    {
+      "module": "rows-shared-92.mjs",
+      "local": "xh",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-92.mjs",
+      "name": "xh",
+      "via": "shared-92-BOgyxePb.js#xh"
+    },
+    {
+      "module": "rows-shared-92.mjs",
+      "local": "zh",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-92.mjs",
+      "name": "zh",
+      "via": "shared-92-BOgyxePb.js#zh"
+    },
+    {
+      "module": "rows-shared-92.mjs",
+      "local": "zp",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-92.mjs",
+      "name": "zp",
+      "via": "shared-92-BOgyxePb.js#zp"
+    },
+    {
+      "module": "group-status.mjs",
+      "local": "FM",
+      "kind": "linked",
+      "from": "../working-line-v4/working-line.mjs",
+      "name": "useNeedsYourInputLabel",
+      "via": "c96d752d0-D9VB6ArX.js#FM"
+    },
+    {
+      "module": "group-status.mjs",
+      "local": "IM",
+      "kind": "linked",
+      "from": "../working-line-v4/working-line.mjs",
+      "name": "useSpinnerWord",
+      "via": "c96d752d0-D9VB6ArX.js#IM"
+    },
+    {
+      "module": "group-status.mjs",
+      "local": "Ir",
+      "kind": "linked",
+      "from": "../working-line-v4/clipboard.mjs",
+      "name": "J$",
+      "via": "shared-1-D1bGaTaN.js:Ei"
+    },
+    {
+      "module": "group-status.mjs",
+      "local": "LM",
+      "kind": "linked",
+      "from": "../working-line-v4/working-line.mjs",
+      "name": "spinnerWord",
+      "via": "c96d752d0-D9VB6ArX.js#LM"
+    },
+    {
+      "module": "group-status.mjs",
+      "local": "Mh",
+      "kind": "adapter",
+      "from": "../../source-transcript-rows-v4-adapters.jsx",
+      "name": "useVerboseTranscript",
+      "via": "cd4f82e77-Cuw99s6A.js:r"
+    },
+    {
+      "module": "group-status.mjs",
+      "local": "Ob",
+      "kind": "adapter",
+      "from": "../../source-transcript-rows-v4-adapters.jsx",
+      "name": "sessionActivityEvents",
+      "via": "c06cf64bb-CoZso5N4.js:$a"
+    },
+    {
+      "module": "group-status.mjs",
+      "local": "PM",
+      "kind": "linked",
+      "from": "../working-line-v4/working-line.mjs",
+      "name": "useTurnClock",
+      "via": "c96d752d0-D9VB6ArX.js#PM"
+    },
+    {
+      "module": "group-status.mjs",
+      "local": "RM",
+      "kind": "linked",
+      "from": "../working-line-v4/working-line.mjs",
+      "name": "spinnerMode",
+      "via": "c96d752d0-D9VB6ArX.js#RM"
+    },
+    {
+      "module": "group-status.mjs",
+      "local": "Sf",
+      "kind": "adapter",
+      "from": "../../source-transcript-rows-v4-adapters.jsx",
+      "name": "useSessionAwaitsRequest",
+      "via": "shared-39-ZCs0lAwB.js:rr"
+    },
+    {
+      "module": "group-status.mjs",
+      "local": "Vu",
+      "kind": "adapter",
+      "from": "../../source-transcript-rows-v4-adapters.jsx",
+      "name": "useIntl",
+      "via": "vendor-intl-BJgYK7RA.js:p"
+    },
+    {
+      "module": "group-status.mjs",
+      "local": "bu",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-2.mjs",
+      "name": "m7",
+      "via": "shared-2-CsjIBQD8.js:t"
+    },
+    {
+      "module": "group-status.mjs",
+      "local": "f",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "jsx",
+      "via": "vendor-frame-BckkO60Y.js:Ga"
+    },
+    {
+      "module": "group-status.mjs",
+      "local": "j",
+      "kind": "react",
+      "from": "react",
+      "name": "useContext",
+      "via": "vendor-frame-BckkO60Y.js:po"
+    },
+    {
+      "module": "group-status.mjs",
+      "local": "k",
+      "kind": "react",
+      "from": "react",
+      "name": "createContext",
+      "via": "vendor-frame-BckkO60Y.js:no"
+    },
+    {
+      "module": "group-status.mjs",
+      "local": "op",
+      "kind": "linked",
+      "from": "../working-line-v4/turn-status.mjs",
+      "name": "TurnStatus",
+      "via": "c734f318c-CGzPyTBU.js:t"
+    },
+    {
+      "module": "group-status.mjs",
+      "local": "qb",
+      "kind": "adapter",
+      "from": "../../source-transcript-rows-v4-adapters.jsx",
+      "name": "sessionActivityStore",
+      "via": "c06cf64bb-CoZso5N4.js:qn"
+    },
+    {
+      "module": "group-status.mjs",
+      "local": "rE",
+      "kind": "linked",
+      "from": "../working-line-v4/working-line.mjs",
+      "name": "activityMark",
+      "via": "c96d752d0-D9VB6ArX.js#rE"
+    },
+    {
+      "module": "group-status.mjs",
+      "local": "u",
+      "kind": "react",
+      "from": "react",
+      "name": "useSyncExternalStore",
+      "via": "vendor-frame-BckkO60Y.js:Eo"
+    },
+    {
+      "module": "group-status.mjs",
+      "local": "us",
+      "kind": "adapter",
+      "from": "../../source-transcript-rows-v4-adapters.jsx",
+      "name": "useErrors",
+      "via": "shared-62-DoCqVpIq.js:zl"
+    },
+    {
+      "module": "group-status.mjs",
+      "local": "v",
+      "kind": "react",
+      "from": "react",
+      "name": "useState",
+      "via": "vendor-frame-BckkO60Y.js:To"
+    },
+    {
+      "module": "group-status.mjs",
+      "local": "w",
+      "kind": "react",
+      "from": "react",
+      "name": "memo",
+      "via": "vendor-frame-BckkO60Y.js:co"
+    },
+    {
+      "module": "rows-c5a058668.mjs",
+      "local": "t",
+      "kind": "shared-graph",
+      "from": "../cds-core/browser-preload-helper.mjs",
+      "name": "s",
+      "via": "preload-helper-BBljBeZo.js:t"
+    },
+    {
+      "module": "rows-ce8acc63b.mjs",
+      "local": "a",
+      "kind": "shared-graph",
+      "from": "../cds-core/ce8acc63b.mjs",
+      "name": "a",
+      "via": "ce8acc63b--p2KTarf.js#a"
+    },
+    {
+      "module": "rows-vendor-markdown.mjs",
+      "local": "Sr",
+      "kind": "shared-graph",
+      "from": "../cds-core/vendor-markdown.mjs",
+      "name": "Sr",
+      "via": "vendor-markdown-CoTLcoVs.js#Sr"
+    },
+    {
+      "module": "rows-c2a6d07ee.mjs",
+      "local": "Cn",
+      "kind": "shared-graph",
+      "from": "../cds-core/c2a6d07ee.mjs",
+      "name": "Cn",
+      "via": "c2a6d07ee-DMz3SVeU.js#Cn"
+    },
+    {
+      "module": "rows-c2a6d07ee.mjs",
+      "local": "gr",
+      "kind": "shared-graph",
+      "from": "../cds-core/c2a6d07ee.mjs",
+      "name": "gr",
+      "via": "c2a6d07ee-DMz3SVeU.js#gr"
+    },
+    {
+      "module": "rows-c2a6d07ee.mjs",
+      "local": "lr",
+      "kind": "shared-graph",
+      "from": "../cds-core/c2a6d07ee.mjs",
+      "name": "lr",
+      "via": "c2a6d07ee-DMz3SVeU.js#lr"
+    },
+    {
+      "module": "rows-c2a6d07ee.mjs",
+      "local": "ur",
+      "kind": "shared-graph",
+      "from": "../cds-core/c2a6d07ee.mjs",
+      "name": "ur",
+      "via": "c2a6d07ee-DMz3SVeU.js#ur"
+    },
+    {
+      "module": "rows-c2ad856dc.mjs",
+      "local": "e",
+      "kind": "shared-graph",
+      "from": "../cds-core/browser-preload-helper.mjs",
+      "name": "s",
+      "via": "preload-helper-BBljBeZo.js:t"
+    },
+    {
+      "module": "rows-c2ad856dc.mjs",
+      "local": "h",
+      "kind": "shared-graph",
+      "from": "../cds-core/c2ad856dc.mjs",
+      "name": "h",
+      "via": "c2ad856dc-B_6w0rdo.js#h"
+    },
+    {
+      "module": "rows-ce7d378c5.mjs",
+      "local": "At",
+      "kind": "shared-graph",
+      "from": "../cds-core/ce7d378c5.mjs",
+      "name": "At",
+      "via": "ce7d378c5-DW6-PXsP.js#At"
+    },
+    {
+      "module": "rows-ce7d378c5.mjs",
+      "local": "Dt",
+      "kind": "shared-graph",
+      "from": "../cds-core/ce7d378c5.mjs",
+      "name": "Dt",
+      "via": "ce7d378c5-DW6-PXsP.js#Dt"
+    },
+    {
+      "module": "rows-ce7d378c5.mjs",
+      "local": "En",
+      "kind": "shared-graph",
+      "from": "../cds-core/ce7d378c5.mjs",
+      "name": "En",
+      "via": "ce7d378c5-DW6-PXsP.js#En"
+    },
+    {
+      "module": "rows-ce7d378c5.mjs",
+      "local": "Et",
+      "kind": "shared-graph",
+      "from": "../cds-core/ce7d378c5.mjs",
+      "name": "Et",
+      "via": "ce7d378c5-DW6-PXsP.js#Et"
+    },
+    {
+      "module": "rows-ce7d378c5.mjs",
+      "local": "Nt",
+      "kind": "shared-graph",
+      "from": "../cds-core/ce7d378c5.mjs",
+      "name": "Nt",
+      "via": "ce7d378c5-DW6-PXsP.js#Nt"
+    },
+    {
+      "module": "rows-ce7d378c5.mjs",
+      "local": "Ot",
+      "kind": "shared-graph",
+      "from": "../cds-core/ce7d378c5.mjs",
+      "name": "Ot",
+      "via": "ce7d378c5-DW6-PXsP.js#Ot"
+    },
+    {
+      "module": "rows-ce7d378c5.mjs",
+      "local": "Te",
+      "kind": "shared-graph",
+      "from": "../cds-core/ce7d378c5.mjs",
+      "name": "Te",
+      "via": "ce7d378c5-DW6-PXsP.js#Te"
+    },
+    {
+      "module": "rows-ce7d378c5.mjs",
+      "local": "an",
+      "kind": "shared-graph",
+      "from": "../cds-core/ce7d378c5.mjs",
+      "name": "an",
+      "via": "ce7d378c5-DW6-PXsP.js#an"
+    },
+    {
+      "module": "rows-ce7d378c5.mjs",
+      "local": "cn",
+      "kind": "shared-graph",
+      "from": "../cds-core/ce7d378c5.mjs",
+      "name": "cn",
+      "via": "ce7d378c5-DW6-PXsP.js#cn"
+    },
+    {
+      "module": "rows-ce7d378c5.mjs",
+      "local": "de",
+      "kind": "shared-graph",
+      "from": "../cds-core/ce7d378c5.mjs",
+      "name": "de",
+      "via": "ce7d378c5-DW6-PXsP.js#de"
+    },
+    {
+      "module": "rows-ce7d378c5.mjs",
+      "local": "kt",
+      "kind": "shared-graph",
+      "from": "../cds-core/ce7d378c5.mjs",
+      "name": "kt",
+      "via": "ce7d378c5-DW6-PXsP.js#kt"
+    },
+    {
+      "module": "rows-ce7d378c5.mjs",
+      "local": "n",
+      "kind": "shared-graph",
+      "from": "../cds-core/ce7d378c5.mjs",
+      "name": "n",
+      "via": "ce7d378c5-DW6-PXsP.js#n"
+    },
+    {
+      "module": "rows-ce7d378c5.mjs",
+      "local": "on",
+      "kind": "shared-graph",
+      "from": "../cds-core/ce7d378c5.mjs",
+      "name": "on",
+      "via": "ce7d378c5-DW6-PXsP.js#on"
+    },
+    {
+      "module": "rows-ce7d378c5.mjs",
+      "local": "sn",
+      "kind": "shared-graph",
+      "from": "../cds-core/ce7d378c5.mjs",
+      "name": "sn",
+      "via": "ce7d378c5-DW6-PXsP.js#sn"
+    },
+    {
+      "module": "rows-ce7d378c5.mjs",
+      "local": "ue",
+      "kind": "shared-graph",
+      "from": "../cds-core/ce7d378c5.mjs",
+      "name": "ue",
+      "via": "ce7d378c5-DW6-PXsP.js#ue"
+    },
+    {
+      "module": "rows-ce7d378c5.mjs",
+      "local": "vn",
+      "kind": "shared-graph",
+      "from": "../cds-core/ce7d378c5.mjs",
+      "name": "vn",
+      "via": "ce7d378c5-DW6-PXsP.js#vn"
+    },
+    {
+      "module": "rows-ce7d378c5.mjs",
+      "local": "wt",
+      "kind": "shared-graph",
+      "from": "../cds-core/ce7d378c5.mjs",
+      "name": "wt",
+      "via": "ce7d378c5-DW6-PXsP.js#wt"
+    },
+    {
+      "module": "rows-c68fd9df8.mjs",
+      "local": "U",
+      "kind": "shared-graph",
+      "from": "../cds-core/c68fd9df8.mjs",
+      "name": "U",
+      "via": "c68fd9df8-DaT0MWbj.js#U"
+    },
+    {
+      "module": "rows-c68fd9df8.mjs",
+      "local": "a",
+      "kind": "shared-graph",
+      "from": "../cds-core/c41eb0199.mjs",
+      "name": "e",
+      "via": "c41eb0199-Bea7nNQY.js:c"
+    },
+    {
+      "module": "rows-c68fd9df8.mjs",
+      "local": "c",
+      "kind": "shared-graph",
+      "from": "../cds-core/c41eb0199.mjs",
+      "name": "n",
+      "via": "c41eb0199-Bea7nNQY.js:s"
+    },
+    {
+      "module": "rows-c68fd9df8.mjs",
+      "local": "e",
+      "kind": "shared-graph",
+      "from": "../cds-core/browser-preload-helper.mjs",
+      "name": "s",
+      "via": "preload-helper-BBljBeZo.js:t"
+    },
+    {
+      "module": "rows-c68fd9df8.mjs",
+      "local": "ie",
+      "kind": "shared-graph",
+      "from": "../cds-core/c68fd9df8.mjs",
+      "name": "ie",
+      "via": "c68fd9df8-DaT0MWbj.js#ie"
+    },
+    {
+      "module": "rows-c68fd9df8.mjs",
+      "local": "o",
+      "kind": "shared-graph",
+      "from": "../cds-core/c41eb0199.mjs",
+      "name": "t",
+      "via": "c41eb0199-Bea7nNQY.js:l"
+    },
+    {
+      "module": "rows-c68fd9df8.mjs",
+      "local": "s",
+      "kind": "shared-graph",
+      "from": "../cds-core/c41eb0199.mjs",
+      "name": "r",
+      "via": "c41eb0199-Bea7nNQY.js:o"
+    },
+    {
+      "module": "rows-c68fd9df8.mjs",
+      "local": "w",
+      "kind": "shared-graph",
+      "from": "../cds-core/c68fd9df8.mjs",
+      "name": "w",
+      "via": "c68fd9df8-DaT0MWbj.js#w"
+    },
+    {
+      "module": "rows-ca7b95e24.mjs",
+      "local": "i",
+      "kind": "react",
+      "from": "react",
+      "name": "useContext",
+      "via": "vendor-frame-BckkO60Y.js:po"
+    },
+    {
+      "module": "rows-ca7b95e24.mjs",
+      "local": "n",
+      "kind": "react",
+      "from": "react",
+      "name": "useEffect",
+      "via": "vendor-frame-BckkO60Y.js:go"
+    },
+    {
+      "module": "rows-ca7b95e24.mjs",
+      "local": "o",
+      "kind": "shared-graph",
+      "from": "../cds-core/ca7b95e24.mjs",
+      "name": "o",
+      "via": "ca7b95e24-BFvFgBI_.js#o"
+    },
+    {
+      "module": "rows-c41eb0199.mjs",
+      "local": "i",
+      "kind": "shared-graph",
+      "from": "../cds-core/c41eb0199.mjs",
+      "name": "i",
+      "via": "c41eb0199-Bea7nNQY.js#i"
+    },
+    {
+      "module": "rows-cb971281b.mjs",
+      "local": "D",
+      "kind": "shared-graph",
+      "from": "../cds-core/cb971281b.mjs",
+      "name": "D",
+      "via": "cb971281b-D6cYBjx-.js#D"
+    },
+    {
+      "module": "rows-cb971281b.mjs",
+      "local": "X",
+      "kind": "shared-graph",
+      "from": "../cds-core/cb971281b.mjs",
+      "name": "X",
+      "via": "cb971281b-D6cYBjx-.js#X"
+    },
+    {
+      "module": "rows-c64baa838.mjs",
+      "local": "Be",
+      "kind": "shared-graph",
+      "from": "../cds-core/c64baa838.mjs",
+      "name": "Be",
+      "via": "c64baa838-C55z5EpT.js#Be"
+    },
+    {
+      "module": "rows-c64baa838.mjs",
+      "local": "I",
+      "kind": "shared-graph",
+      "from": "../cds-core/c64baa838.mjs",
+      "name": "I",
+      "via": "c64baa838-C55z5EpT.js#I"
+    },
+    {
+      "module": "rows-c64baa838.mjs",
+      "local": "L",
+      "kind": "shared-graph",
+      "from": "../cds-core/c64baa838.mjs",
+      "name": "L",
+      "via": "c64baa838-C55z5EpT.js#L"
+    },
+    {
+      "module": "rows-c64baa838.mjs",
+      "local": "a",
+      "kind": "react",
+      "from": "react",
+      "name": "useCallback",
+      "via": "vendor-frame-BckkO60Y.js:fo"
+    },
+    {
+      "module": "rows-c64baa838.mjs",
+      "local": "bn",
+      "kind": "shared-graph",
+      "from": "../cds-core/c64baa838.mjs",
+      "name": "bn",
+      "via": "c64baa838-C55z5EpT.js#bn"
+    },
+    {
+      "module": "rows-c64baa838.mjs",
+      "local": "c",
+      "kind": "react",
+      "from": "react",
+      "name": "useRef",
+      "via": "vendor-frame-BckkO60Y.js:wo"
+    },
+    {
+      "module": "rows-c64baa838.mjs",
+      "local": "e",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "jsx",
+      "via": "vendor-frame-BckkO60Y.js:Ga"
+    },
+    {
+      "module": "rows-c64baa838.mjs",
+      "local": "fn",
+      "kind": "shared-graph",
+      "from": "../cds-core/c64baa838.mjs",
+      "name": "fn",
+      "via": "c64baa838-C55z5EpT.js#fn"
+    },
+    {
+      "module": "rows-c64baa838.mjs",
+      "local": "gt",
+      "kind": "shared-graph",
+      "from": "../cds-core/c64baa838.mjs",
+      "name": "gt",
+      "via": "c64baa838-C55z5EpT.js#gt"
+    },
+    {
+      "module": "rows-c64baa838.mjs",
+      "local": "i",
+      "kind": "react",
+      "from": "react",
+      "name": "useInsertionEffect",
+      "via": "vendor-frame-BckkO60Y.js:bo"
+    },
+    {
+      "module": "rows-c64baa838.mjs",
+      "local": "jt",
+      "kind": "shared-graph",
+      "from": "../cds-core/c64baa838.mjs",
+      "name": "jt",
+      "via": "c64baa838-C55z5EpT.js#jt"
+    },
+    {
+      "module": "rows-c64baa838.mjs",
+      "local": "le",
+      "kind": "shared-graph",
+      "from": "../cds-core/c49d7f557.mjs",
+      "name": "a",
+      "via": "c49d7f557-CNaqSp3R.js:a"
+    },
+    {
+      "module": "rows-c64baa838.mjs",
+      "local": "n",
+      "kind": "react",
+      "from": "react",
+      "name": "useState",
+      "via": "vendor-frame-BckkO60Y.js:To"
+    },
+    {
+      "module": "rows-c64baa838.mjs",
+      "local": "r",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "Fragment",
+      "via": "vendor-frame-BckkO60Y.js:Wa"
+    },
+    {
+      "module": "rows-c64baa838.mjs",
+      "local": "s",
+      "kind": "react",
+      "from": "react",
+      "name": "useContext",
+      "via": "vendor-frame-BckkO60Y.js:po"
+    },
+    {
+      "module": "rows-c64baa838.mjs",
+      "local": "t",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "jsxs",
+      "via": "vendor-frame-BckkO60Y.js:Ka"
+    },
+    {
+      "module": "rows-c64baa838.mjs",
+      "local": "wt",
+      "kind": "shared-graph",
+      "from": "../cds-core/c64baa838.mjs",
+      "name": "wt",
+      "via": "c64baa838-C55z5EpT.js#wt"
+    },
+    {
+      "module": "rows-shared-25.mjs",
+      "local": "CH",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-25.mjs",
+      "name": "CH",
+      "via": "shared-25-D-aF0gt9.js#CH"
+    },
+    {
+      "module": "rows-shared-25.mjs",
+      "local": "N_",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-25.mjs",
+      "name": "N_",
+      "via": "shared-25-D-aF0gt9.js#N_"
+    },
+    {
+      "module": "rows-shared-25.mjs",
+      "local": "R_",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-25.mjs",
+      "name": "R_",
+      "via": "shared-25-D-aF0gt9.js#R_"
+    },
+    {
+      "module": "rows-shared-25.mjs",
+      "local": "SH",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-25.mjs",
+      "name": "SH",
+      "via": "shared-25-D-aF0gt9.js#SH"
+    },
+    {
+      "module": "rows-shared-25.mjs",
+      "local": "_H",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-25.mjs",
+      "name": "_H",
+      "via": "shared-25-D-aF0gt9.js#_H"
+    },
+    {
+      "module": "rows-shared-25.mjs",
+      "local": "jH",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-25.mjs",
+      "name": "jH",
+      "via": "shared-25-D-aF0gt9.js#jH"
+    },
+    {
+      "module": "rows-shared-25.mjs",
+      "local": "l",
+      "kind": "react",
+      "from": "react",
+      "name": "useSyncExternalStore",
+      "via": "vendor-frame-BckkO60Y.js:Eo"
+    },
+    {
+      "module": "rows-shared-25.mjs",
+      "local": "p",
+      "kind": "react",
+      "from": "react",
+      "name": "useState",
+      "via": "vendor-frame-BckkO60Y.js:To"
+    },
+    {
+      "module": "rows-shared-25.mjs",
+      "local": "yH",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-25.mjs",
+      "name": "yH",
+      "via": "shared-25-D-aF0gt9.js#yH"
+    },
+    {
+      "module": "rows-c5d464fa3.mjs",
+      "local": "d",
+      "kind": "linked",
+      "from": "../settings-pages-v4/editor-prefs.mjs",
+      "name": "Im",
+      "via": "shared-36-fqRFYwOb.js:Co"
+    },
+    {
+      "module": "rows-c5d464fa3.mjs",
+      "local": "m",
+      "kind": "linked",
+      "from": "../settings-pages-v4/editor-prefs.mjs",
+      "name": "Pm",
+      "via": "shared-36-fqRFYwOb.js:wo"
+    },
+    {
+      "module": "rows-c02b04696.mjs",
+      "local": "n",
+      "kind": "shared-graph",
+      "from": "../cds-core/c02b04696.mjs",
+      "name": "n",
+      "via": "c02b04696-BI-AWxcN.js#n"
+    },
+    {
+      "module": "rows-c02b04696.mjs",
+      "local": "t",
+      "kind": "react",
+      "from": "react",
+      "name": "useContext",
+      "via": "vendor-frame-BckkO60Y.js:po"
+    },
+    {
+      "module": "rows-c357f4e02.mjs",
+      "local": "e",
+      "kind": "react",
+      "from": "react",
+      "name": "useSyncExternalStore",
+      "via": "vendor-frame-BckkO60Y.js:Eo"
+    },
+    {
+      "module": "rows-c357f4e02.mjs",
+      "local": "n",
+      "kind": "shared-graph",
+      "from": "../cds-core/c357f4e02.mjs",
+      "name": "n",
+      "via": "c357f4e02-BWieMwXh.js#n"
+    },
+    {
+      "module": "rows-c357f4e02.mjs",
+      "local": "r",
+      "kind": "shared-graph",
+      "from": "../cds-core/c357f4e02.mjs",
+      "name": "r",
+      "via": "c357f4e02-BWieMwXh.js#r"
+    },
+    {
+      "module": "rows-c38a51fa0.mjs",
+      "local": "e",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "jsx",
+      "via": "vendor-frame-BckkO60Y.js:Ga"
+    },
+    {
+      "module": "rows-c38a51fa0.mjs",
+      "local": "t",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "Fragment",
+      "via": "vendor-frame-BckkO60Y.js:Wa"
+    },
+    {
+      "module": "rows-c7146e7f4.mjs",
+      "local": "e",
+      "kind": "react",
+      "from": "react",
+      "name": "useRef",
+      "via": "vendor-frame-BckkO60Y.js:wo"
+    },
+    {
+      "module": "rows-c7146e7f4.mjs",
+      "local": "t",
+      "kind": "react",
+      "from": "react",
+      "name": "useLayoutEffect",
+      "via": "vendor-frame-BckkO60Y.js:xo"
+    },
+    {
+      "module": "rows-c476e9be4.mjs",
+      "local": "a",
+      "kind": "shared-graph",
+      "from": "../cds-core/c41eb0199.mjs",
+      "name": "n",
+      "via": "c41eb0199-Bea7nNQY.js:s"
+    },
+    {
+      "module": "rows-c476e9be4.mjs",
+      "local": "b",
+      "kind": "shared-graph",
+      "from": "../cds-core/c476e9be4.mjs",
+      "name": "b",
+      "via": "c476e9be4-C5Gc087T.js#b"
+    },
+    {
+      "module": "rows-c476e9be4.mjs",
+      "local": "e",
+      "kind": "linked",
+      "from": "../working-line-v4/preload-helper.mjs",
+      "name": "e",
+      "via": "preload-helper-BBljBeZo.js:n"
+    },
+    {
+      "module": "rows-c476e9be4.mjs",
+      "local": "g",
+      "kind": "shared-graph",
+      "from": "../cds-core/c476e9be4.mjs",
+      "name": "g",
+      "via": "c476e9be4-C5Gc087T.js#g"
+    },
+    {
+      "module": "rows-c476e9be4.mjs",
+      "local": "r",
+      "kind": "shared-graph",
+      "from": "../cds-core/c41eb0199.mjs",
+      "name": "u",
+      "via": "c41eb0199-Bea7nNQY.js:a"
+    },
+    {
+      "module": "rows-c476e9be4.mjs",
+      "local": "x",
+      "kind": "shared-graph",
+      "from": "../cds-core/c476e9be4.mjs",
+      "name": "x",
+      "via": "c476e9be4-C5Gc087T.js#x"
+    },
+    {
+      "module": "rows-c476e9be4.mjs",
+      "local": "y",
+      "kind": "shared-graph",
+      "from": "../cds-core/c476e9be4.mjs",
+      "name": "y",
+      "via": "c476e9be4-C5Gc087T.js#y"
+    },
+    {
+      "module": "rows-shared-123.mjs",
+      "local": "A$",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-123.mjs",
+      "name": "A$",
+      "via": "shared-123-1Hc1RTKl.js#A$"
+    },
+    {
+      "module": "rows-shared-123.mjs",
+      "local": "C",
+      "kind": "react",
+      "from": "react",
+      "name": "Component",
+      "via": "vendor-frame-BckkO60Y.js:Ya"
+    },
+    {
+      "module": "rows-shared-123.mjs",
+      "local": "D",
+      "kind": "react",
+      "from": "react",
+      "name": "Suspense",
+      "via": "vendor-frame-BckkO60Y.js:eo"
+    },
+    {
+      "module": "rows-shared-123.mjs",
+      "local": "D$",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-123.mjs",
+      "name": "D$",
+      "via": "shared-123-1Hc1RTKl.js#D$"
+    },
+    {
+      "module": "rows-shared-123.mjs",
+      "local": "H$",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-123.mjs",
+      "name": "H$",
+      "via": "shared-123-1Hc1RTKl.js#H$"
+    },
+    {
+      "module": "rows-shared-123.mjs",
+      "local": "Lt",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-0.mjs",
+      "name": "H",
+      "via": "shared-0-CnnWnVrT.js:ry"
+    },
+    {
+      "module": "rows-shared-123.mjs",
+      "local": "N$",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-123.mjs",
+      "name": "N$",
+      "via": "shared-123-1Hc1RTKl.js#N$"
+    },
+    {
+      "module": "rows-shared-123.mjs",
+      "local": "S",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "Fragment",
+      "via": "vendor-frame-BckkO60Y.js:Wa"
+    },
+    {
+      "module": "rows-shared-123.mjs",
+      "local": "Sl",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-123.mjs",
+      "name": "Sl",
+      "via": "shared-123-1Hc1RTKl.js#Sl"
+    },
+    {
+      "module": "rows-shared-123.mjs",
+      "local": "b",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "jsxs",
+      "via": "vendor-frame-BckkO60Y.js:Ka"
+    },
+    {
+      "module": "rows-shared-123.mjs",
+      "local": "ee",
+      "kind": "react",
+      "from": "react",
+      "name": "lazy",
+      "via": "vendor-frame-BckkO60Y.js:so"
+    },
+    {
+      "module": "rows-shared-123.mjs",
+      "local": "h",
+      "kind": "linked",
+      "from": "../working-line-v4/preload-helper.mjs",
+      "name": "e",
+      "via": "preload-helper-BBljBeZo.js:n"
+    },
+    {
+      "module": "rows-shared-123.mjs",
+      "local": "j",
+      "kind": "react",
+      "from": "react",
+      "name": "useContext",
+      "via": "vendor-frame-BckkO60Y.js:po"
+    },
+    {
+      "module": "rows-shared-123.mjs",
+      "local": "ne",
+      "kind": "react",
+      "from": "react",
+      "name": "useLayoutEffect",
+      "via": "vendor-frame-BckkO60Y.js:xo"
+    },
+    {
+      "module": "rows-shared-123.mjs",
+      "local": "te",
+      "kind": "react",
+      "from": "react",
+      "name": "useRef",
+      "via": "vendor-frame-BckkO60Y.js:wo"
+    },
+    {
+      "module": "rows-shared-123.mjs",
+      "local": "w$",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-123.mjs",
+      "name": "w$",
+      "via": "shared-123-1Hc1RTKl.js#w$"
+    },
+    {
+      "module": "rows-shared-123.mjs",
+      "local": "x",
+      "kind": "react",
+      "from": "react",
+      "name": "useState",
+      "via": "vendor-frame-BckkO60Y.js:To"
+    },
+    {
+      "module": "rows-shared-123.mjs",
+      "local": "y",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "jsx",
+      "via": "vendor-frame-BckkO60Y.js:Ga"
+    },
+    {
+      "module": "rows-shared-183.mjs",
+      "local": "An",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-0.mjs",
+      "name": "H",
+      "via": "shared-0-CnnWnVrT.js:ry"
+    },
+    {
+      "module": "rows-shared-183.mjs",
+      "local": "F",
+      "kind": "react",
+      "from": "react",
+      "name": "useRef",
+      "via": "vendor-frame-BckkO60Y.js:wo"
+    },
+    {
+      "module": "rows-shared-183.mjs",
+      "local": "g",
+      "kind": "react",
+      "from": "react",
+      "name": "useSyncExternalStore",
+      "via": "vendor-frame-BckkO60Y.js:Eo"
+    },
+    {
+      "module": "rows-vendor-intl.mjs",
+      "local": "a",
+      "kind": "react",
+      "from": "react",
+      "name": "memo",
+      "via": "vendor-frame-BckkO60Y.js:co"
+    },
+    {
+      "module": "rows-vendor-intl.mjs",
+      "local": "e",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "jsx",
+      "via": "vendor-frame-BckkO60Y.js:Ga"
+    },
+    {
+      "module": "rows-vendor-intl.mjs",
+      "local": "i",
+      "kind": "react",
+      "from": "react",
+      "name": "Fragment",
+      "via": "vendor-frame-BckkO60Y.js:Xa"
+    },
+    {
+      "module": "rows-vendor-intl.mjs",
+      "local": "q",
+      "kind": "adapter",
+      "from": "../../source-transcript-rows-v4-adapters.jsx",
+      "name": "useIntl",
+      "via": "vendor-intl-BJgYK7RA.js#q"
+    },
+    {
+      "module": "rows-vendor-intl.mjs",
+      "local": "r",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "Fragment",
+      "via": "vendor-frame-BckkO60Y.js:Wa"
+    },
+    {
+      "module": "rows-cb8c5a88f.mjs",
+      "local": "Se",
+      "kind": "adapter",
+      "from": "../../source-transcript-rows-v4-adapters.jsx",
+      "name": "useIntl",
+      "via": "vendor-intl-BJgYK7RA.js:p"
+    },
+    {
+      "module": "rows-cb8c5a88f.mjs",
+      "local": "a",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "Fragment",
+      "via": "vendor-frame-BckkO60Y.js:Wa"
+    },
+    {
+      "module": "rows-cb8c5a88f.mjs",
+      "local": "i",
+      "kind": "react",
+      "from": "react",
+      "name": "useState",
+      "via": "vendor-frame-BckkO60Y.js:To"
+    },
+    {
+      "module": "rows-cb8c5a88f.mjs",
+      "local": "n",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "jsx",
+      "via": "vendor-frame-BckkO60Y.js:Ga"
+    },
+    {
+      "module": "rows-cb8c5a88f.mjs",
+      "local": "r",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "jsxs",
+      "via": "vendor-frame-BckkO60Y.js:Ka"
+    },
+    {
+      "module": "rows-cb8c5a88f.mjs",
+      "local": "y",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "CdsIcon",
+      "via": "shared-frame-CJdE5Ria.js:lf"
+    },
+    {
+      "module": "rows-cdb0de22b.mjs",
+      "local": "s",
+      "kind": "shared-graph",
+      "from": "../cds-core/cdb0de22b.mjs",
+      "name": "s",
+      "via": "cdb0de22b-BdYGa-_B.js#s"
+    },
+    {
+      "module": "rows-c425fb3cf.mjs",
+      "local": "c",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "CdsButton",
+      "via": "shared-frame-CJdE5Ria.js:Id"
+    },
+    {
+      "module": "rows-c425fb3cf.mjs",
+      "local": "e",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "jsx",
+      "via": "vendor-frame-BckkO60Y.js:Ga"
+    },
+    {
+      "module": "rows-c425fb3cf.mjs",
+      "local": "l",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "useCdsOwnerWindowAnchor",
+      "via": "shared-frame-CJdE5Ria.js:Kf"
+    },
+    {
+      "module": "rows-c425fb3cf.mjs",
+      "local": "o",
+      "kind": "react",
+      "from": "react",
+      "name": "useId",
+      "via": "vendor-frame-BckkO60Y.js:vo"
+    },
+    {
+      "module": "rows-c425fb3cf.mjs",
+      "local": "p",
+      "kind": "adapter",
+      "from": "../../source-transcript-rows-v4-adapters.jsx",
+      "name": "useIntl",
+      "via": "vendor-intl-BJgYK7RA.js:p"
+    },
+    {
+      "module": "rows-c425fb3cf.mjs",
+      "local": "r",
+      "kind": "react",
+      "from": "react",
+      "name": "useEffect",
+      "via": "vendor-frame-BckkO60Y.js:go"
+    },
+    {
+      "module": "rows-c425fb3cf.mjs",
+      "local": "s",
+      "kind": "react",
+      "from": "react",
+      "name": "useRef",
+      "via": "vendor-frame-BckkO60Y.js:wo"
+    },
+    {
+      "module": "rows-c425fb3cf.mjs",
+      "local": "t",
+      "kind": "react",
+      "from": "react",
+      "name": "useState",
+      "via": "vendor-frame-BckkO60Y.js:To"
+    },
+    {
+      "module": "rows-shared-11.mjs",
+      "local": "Gi",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-11.mjs",
+      "name": "Gi",
+      "via": "shared-11-CNsu0Zu8.js#Gi"
+    },
+    {
+      "module": "rows-shared-11.mjs",
+      "local": "Me",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-0.mjs",
+      "name": "H",
+      "via": "shared-0-CnnWnVrT.js:ry"
+    },
+    {
+      "module": "rows-shared-11.mjs",
+      "local": "Pe",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-0.mjs",
+      "name": "qB",
+      "via": "shared-0-CnnWnVrT.js:zd"
+    },
+    {
+      "module": "rows-shared-11.mjs",
+      "local": "r",
+      "kind": "linked",
+      "from": "../working-line-v4/preload-helper.mjs",
+      "name": "e",
+      "via": "preload-helper-BBljBeZo.js:n"
+    },
+    {
+      "module": "rows-c19e90103.mjs",
+      "local": "$l",
+      "kind": "shared-graph",
+      "from": "../cds-core/c19e90103.mjs",
+      "name": "$l",
+      "via": "c19e90103-BKPMSRL2.js#$l"
+    },
+    {
+      "module": "rows-c19e90103.mjs",
+      "local": "D",
+      "kind": "react",
+      "from": "react",
+      "name": "useLayoutEffect",
+      "via": "vendor-frame-BckkO60Y.js:xo"
+    },
+    {
+      "module": "rows-c19e90103.mjs",
+      "local": "Ga",
+      "kind": "shared-graph",
+      "from": "../cds-core/ca7b95e24.mjs",
+      "name": "o",
+      "via": "ca7b95e24-BFvFgBI_.js:c"
+    },
+    {
+      "module": "rows-c19e90103.mjs",
+      "local": "Ke",
+      "kind": "adapter",
+      "from": "../../source-transcript-rows-v4-adapters.jsx",
+      "name": "createHighlightWorker",
+      "via": "shared-55-BRv2XBP7.js:Ko"
+    },
+    {
+      "module": "rows-c19e90103.mjs",
+      "local": "M",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "CdsButton",
+      "via": "shared-frame-CJdE5Ria.js:Id"
+    },
+    {
+      "module": "rows-c19e90103.mjs",
+      "local": "Qn",
+      "kind": "adapter",
+      "from": "../../source-transcript-rows-v4-adapters.jsx",
+      "name": "useIntl",
+      "via": "vendor-intl-BJgYK7RA.js:p"
+    },
+    {
+      "module": "rows-c19e90103.mjs",
+      "local": "T",
+      "kind": "react",
+      "from": "react",
+      "name": "useRef",
+      "via": "vendor-frame-BckkO60Y.js:wo"
+    },
+    {
+      "module": "rows-c19e90103.mjs",
+      "local": "Wa",
+      "kind": "shared-graph",
+      "from": "../cds-core/c4c0784b6.mjs",
+      "name": "t",
+      "via": "c4c0784b6-CZiq2u9H.js:t"
+    },
+    {
+      "module": "rows-c19e90103.mjs",
+      "local": "X",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-0.mjs",
+      "name": "useEventCallback",
+      "via": "shared-0-CnnWnVrT.js:PT"
+    },
+    {
+      "module": "rows-c19e90103.mjs",
+      "local": "Xa",
+      "kind": "linked",
+      "from": "../settings-pages-v4/code-theme-vars.mjs",
+      "name": "C",
+      "via": "c6e73333a-LnS4e_bw.js:s"
+    },
+    {
+      "module": "rows-c19e90103.mjs",
+      "local": "Zl",
+      "kind": "shared-graph",
+      "from": "../cds-core/c19e90103.mjs",
+      "name": "Zl",
+      "via": "c19e90103-BKPMSRL2.js#Zl"
+    },
+    {
+      "module": "rows-c19e90103.mjs",
+      "local": "_",
+      "kind": "react",
+      "from": "react",
+      "name": "useEffect",
+      "via": "vendor-frame-BckkO60Y.js:go"
+    },
+    {
+      "module": "rows-c19e90103.mjs",
+      "local": "a",
+      "kind": "shared-graph",
+      "from": "../cds-core/vendor-frame.mjs",
+      "name": "clsx",
+      "via": "vendor-frame-BckkO60Y.js:Fa"
+    },
+    {
+      "module": "rows-c19e90103.mjs",
+      "local": "b",
+      "kind": "react",
+      "from": "react",
+      "name": "useContext",
+      "via": "vendor-frame-BckkO60Y.js:po"
+    },
+    {
+      "module": "rows-c19e90103.mjs",
+      "local": "c",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "jsxs",
+      "via": "vendor-frame-BckkO60Y.js:Ka"
+    },
+    {
+      "module": "rows-c19e90103.mjs",
+      "local": "g",
+      "kind": "react",
+      "from": "react",
+      "name": "useCallback",
+      "via": "vendor-frame-BckkO60Y.js:fo"
+    },
+    {
+      "module": "rows-c19e90103.mjs",
+      "local": "ga",
+      "kind": "linked",
+      "from": "../code-editor-current-v4/c5d464fa3.mjs",
+      "name": "O",
+      "via": "c5d464fa3-D1V4bYI5.js:i"
+    },
+    {
+      "module": "rows-c19e90103.mjs",
+      "local": "ha",
+      "kind": "linked",
+      "from": "../code-editor-current-v4/c5d464fa3.mjs",
+      "name": "z",
+      "via": "c5d464fa3-D1V4bYI5.js:c"
+    },
+    {
+      "module": "rows-c19e90103.mjs",
+      "local": "l",
+      "kind": "react",
+      "from": "react",
+      "name": "useState",
+      "via": "vendor-frame-BckkO60Y.js:To"
+    },
+    {
+      "module": "rows-c19e90103.mjs",
+      "local": "m",
+      "kind": "react",
+      "from": "react",
+      "name": "use",
+      "via": "vendor-frame-BckkO60Y.js:do"
+    },
+    {
+      "module": "rows-c19e90103.mjs",
+      "local": "ma",
+      "kind": "linked",
+      "from": "../code-editor-current-v4/c5d464fa3.mjs",
+      "name": "D",
+      "via": "c5d464fa3-D1V4bYI5.js:a"
+    },
+    {
+      "module": "rows-c19e90103.mjs",
+      "local": "n",
+      "kind": "shared-graph",
+      "from": "../cds-core/browser-preload-helper.mjs",
+      "name": "s",
+      "via": "preload-helper-BBljBeZo.js:t"
+    },
+    {
+      "module": "rows-c19e90103.mjs",
+      "local": "o",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "jsx",
+      "via": "vendor-frame-BckkO60Y.js:Ga"
+    },
+    {
+      "module": "rows-c19e90103.mjs",
+      "local": "p",
+      "kind": "react",
+      "from": "react",
+      "name": "memo",
+      "via": "vendor-frame-BckkO60Y.js:co"
+    },
+    {
+      "module": "rows-c19e90103.mjs",
+      "local": "pi",
+      "kind": "adapter",
+      "from": "../../source-transcript-rows-v4-adapters.jsx",
+      "name": "useTerminalInlineRunStore",
+      "via": "ca41b3815-k7z3sa_r.js:s"
+    },
+    {
+      "module": "rows-c19e90103.mjs",
+      "local": "tu",
+      "kind": "shared-graph",
+      "from": "../cds-core/c19e90103.mjs",
+      "name": "tu",
+      "via": "c19e90103-BKPMSRL2.js#tu"
+    },
+    {
+      "module": "rows-c19e90103.mjs",
+      "local": "u",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "Fragment",
+      "via": "vendor-frame-BckkO60Y.js:Wa"
+    },
+    {
+      "module": "rows-shared-1.mjs",
+      "local": "E",
+      "kind": "react",
+      "from": "react",
+      "name": "useContext",
+      "via": "vendor-frame-BckkO60Y.js:po"
+    },
+    {
+      "module": "rows-shared-1.mjs",
+      "local": "mF",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-1.mjs",
+      "name": "mF",
+      "via": "shared-1-D1bGaTaN.js#mF"
+    },
+    {
+      "module": "rows-c82eca2bd.mjs",
+      "local": "e",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "BI",
+      "via": "shared-frame-CJdE5Ria.js:Yi"
+    },
+    {
+      "module": "rows-c82eca2bd.mjs",
+      "local": "s",
+      "kind": "linked",
+      "from": "../code-editor-current-v4/c5d464fa3.mjs",
+      "name": "z",
+      "via": "c5d464fa3-D1V4bYI5.js:c"
+    },
+    {
+      "module": "rows-c69eb6b8e.mjs",
+      "local": "M",
+      "kind": "linked",
+      "from": "../code-editor-current-v4/c5d464fa3.mjs",
+      "name": "I",
+      "via": "c5d464fa3-D1V4bYI5.js:s"
+    },
+    {
+      "module": "rows-c69eb6b8e.mjs",
+      "local": "P",
+      "kind": "linked",
+      "from": "../code-editor-current-v4/c74f29bd2.mjs",
+      "name": "a",
+      "via": "c74f29bd2-CAuuQDSL.js:t"
+    },
+    {
+      "module": "rows-c69eb6b8e.mjs",
+      "local": "S",
+      "kind": "linked",
+      "from": "../settings-pages-v4/editor-prefs.mjs",
+      "name": "useEditorPrefsStore",
+      "via": "shared-36-fqRFYwOb.js:Eo"
+    },
+    {
+      "module": "rows-c69eb6b8e.mjs",
+      "local": "j",
+      "kind": "linked",
+      "from": "../code-editor-current-v4/c5d464fa3.mjs",
+      "name": "L",
+      "via": "c5d464fa3-D1V4bYI5.js:o"
+    },
+    {
+      "module": "rows-cc3bc2027.mjs",
+      "local": "e",
+      "kind": "linked",
+      "from": "../code-editor-current-v4/layout-tokens.mjs",
+      "name": "editorLayout",
+      "via": "cc3bc2027-C1f7RNlI.js#e"
+    },
+    {
+      "module": "rows-cc3bc2027.mjs",
+      "local": "t",
+      "kind": "linked",
+      "from": "../code-editor-current-v4/layout-tokens.mjs",
+      "name": "lineNumberLayout",
+      "via": "cc3bc2027-C1f7RNlI.js#t"
+    }
+  ]
+}

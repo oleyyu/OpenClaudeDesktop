@@ -41,9 +41,15 @@ test('tasks-09: the Scheduled page uses the 2.42304.0 page shell and CdsPage, no
   assert.match(source, /import \{ SessionsPageShell as Page \} from '\.\/source-sessions-primitives\.jsx';/);
   assert.doesNotMatch(source, /c193cfc9b-2wgBbI8O/);
   const shell = fs.readFileSync(path.join(app, 'src/source-sessions-primitives.jsx'), 'utf8');
-  // 3.6556.2 (w2-cds-followup, R6): the shell reads CdsPage through the view-tabs facade; it is the 3.6556.2 c193cfc9b
-  // (c193cfc9b-C3NZYkrZ _); the 2.42304.0 c193cfc9b-DSvIG0kE shim that re-exported it is retired (W7).
-  assert.match(shell, /import \{CdsPage as CurrentPage\} from '\.\/generated\/view-tabs\/index\.js';/);
+  // 4.16336.0 host wiring (frame): the shell reads CdsPage through the cds-core facade; it is the 4.16336.0 cd75b47e6 x
+  // (cd75b47e6-BcflIwff.js, manifest publicNames.CdsPage), not the 3.6556.2 view-tabs c193cfc9b-C3NZYkrZ _ any more.
+  assert.match(shell, /import \{CdsPage as CurrentPage\} from '\.\/cds-core\.mjs';/);
+  assert.doesNotMatch(shell, /generated\/view-tabs/);
+  const cdsManifest = JSON.parse(fs.readFileSync(path.join(app, 'src/generated/cds-core/manifest.json'), 'utf8'));
+  assert.deepEqual(cdsManifest.publicNames.CdsPage, { file: 'cd75b47e6-BcflIwff.js', local: 'x', target: 'page.mjs', exportName: 'CdsPage' });
+  // 4.16336.0 ccd3f68fe (the official Scheduled page) still takes its Page from the cd75b47e6 shell (export t).
+  const v4 = path.resolve(app, '../reference/snapshots/claude-4.16336.0-20261104/ion-dist/assets/v1');
+  assert.equal(count(fs.readFileSync(path.join(v4, 'ccd3f68fe-D3_oyEUp.js'), 'utf8'), 'from"./cd75b47e6-BcflIwff.js"'), 1);
   // ccd3f68fe (the official Scheduled page) imports its Page from the cd75b47e6 shell, which wraps c193cfc9b n.
   assert.equal(count(official('ccd3f68fe-DGWS8cEm.js'), 'import{t as Oi}from"./cd75b47e6-DDrZDYuB.js"'), 1);
   const wrapper = official('cd75b47e6-DDrZDYuB.js');

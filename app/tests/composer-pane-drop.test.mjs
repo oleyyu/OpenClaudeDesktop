@@ -17,6 +17,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
 import { withMemoCache } from './support/react-memo-cache.mjs';
+import { designEntryStylesheets, legacyGlobalStylesheets } from '../scripts/current-design-assets.mjs';
 
 const app = path.resolve(import.meta.dirname, '..');
 const v1 = path.resolve(app, '../reference/installed-2.42304.0-20261017/ion-dist/assets/v1');
@@ -185,16 +186,35 @@ test('YI: an in-app drag the pane owns (appDrag, cd06fb298 g) commits instead of
   assert.equal(typeof host.onDrop, 'function');
 });
 
+// 4.16336.0 design assets (current-design-assets): index.html links the 4.16336.0 entry sheets, the legacy global sheet the
+// 3.6556.2 regions still need, then the generated compatibility layer. A class the 4.16336.0 sheets dropped is styled only
+// through legacy-utilities.css, and only as a registered legacy-region dependency (style-compatibility.json keeps its
+// 3.6556.2 rule and names the generated region that draws it).
+function loadedStyles(appRoot) {
+  const read = (file) => fs.readFileSync(path.join(appRoot, file), 'utf8');
+  const names = [...designEntryStylesheets, ...legacyGlobalStylesheets];
+  assert.deepEqual([...read('index.html').matchAll(/<link\s+rel="stylesheet"\s+href="([^"]+)"/g)].map((m) => m[1]),
+    [...names.map((name) => `/assets/v1/${name}`), '/assets/legacy-utilities.css'], 'index.html stylesheet links');
+  const registry = JSON.parse(read('public/style-compatibility.json'));
+  return {
+    official: names.map((name) => read(`public/assets/v1/${name}`)).join('\n'),
+    compat: read('public/assets/legacy-utilities.css'),
+    legacyRegions: (token) => (registry.rules.some((rule) => rule.baselineVersion === '3.6556.2' && rule.references.some((ref) => ref.className === token))
+      ? registry.legacyDebt.owners.filter((owner) => owner.kind === 'region' && owner.classes.includes(token)).map((owner) => owner.area) : []),
+  };
+}
+
 test('SSR: the host zone is YI around the pane box, the halo is the official ring, and every class is in the loaded sheet', () => {
   const html = renderToStaticMarkup(h(PaneDrop.SourcePaneDropZone, { dropRef: { current: null }, owner: {} }, h('div', { className: 'source-chat-tile-content' })));
   assert.equal(html, '<div class="relative h-full min-w-0 flex flex-col"><div class="source-chat-tile-content"></div></div>');
   const halo = renderToStaticMarkup(h(Target.DropHalo));
   assert.match(halo, /^<div class="pointer-events-none absolute inset-0 rounded shadow-\[inset_0_0_0_2px_var\(--cds-fill-accent\)\] motion-safe:animate-\[cds-drop-ring-in_0\.15s_cubic-bezier\(0\.215,0\.61,0\.355,1\)\]" style="z-index:40"><div class="absolute inset-0 rounded-\[inherit\]/);
-  const sheets = ['shared-frame-CegduNQ2.css', 'shared-styles-D_GJawPO.css', 'c6a992d55-Che1orl5.css', 'c8e31bf58-C7gq8dUF.css', 'c3fde7009-BszyXGym.css']
-    .map((f) => fs.readFileSync(path.join(app, 'public/assets/v1', f), 'utf8')).join('\n');
+  const { official: sheets, compat, legacyRegions } = loadedStyles(app);
   const escape = (token) => '.' + token.replace(/[^a-zA-Z0-9_-]/g, (c) => '\\' + c);
+  const styled = (text, t) => ['{', ':', ',', '[', ' ', '>', ')', '.'].some((next) => text.includes(escape(t) + next));
   const tokens = [...new Set([...`${html}${halo}`.matchAll(/class="([^"]*)"/g)].flatMap((m) => m[1].split(/\s+/)).filter((t) => t && t !== 'source-chat-tile-content'))];
-  assert.deepEqual(tokens.filter((t) => !['{', ':', ',', '[', ' ', '>', ')', '.'].some((next) => sheets.includes(escape(t) + next))), []);
+  // A token the 4.16336.0 sheets dropped counts only as a registered code-composer legacy-region dependency.
+  assert.deepEqual(tokens.filter((t) => !styled(sheets, t) && !(styled(compat, t) && legacyRegions(t).includes('code-composer'))), []);
   assert.ok(sheets.includes('@keyframes cds-drop-ring-in'));
 });
 

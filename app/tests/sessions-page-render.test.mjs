@@ -48,12 +48,19 @@ test('primary action: the New session CDS link card (slot 441)', () => {
 test('tabs and panel: Active / Archived tabs control the labelled panel (slots 303, 486)', () => {
   assert.equal(count(chunk, 'id:`${ki}-${e}`,value:e,"aria-controls":Ai'), 1);
   assert.equal(count(chunk, 'id:Ai,role:Qa,"aria-labelledby":$a,"data-stale":eo,className:"flex flex-col"'), 1);
+  // Round-3 production switch S7: the host renders the 4.16336.0 page (src/generated/sessions-page-v4, cbd6c85c8-CxDdK_2w
+  // hm). Its panel keeps id / role / aria-labelledby and adds the page-header scroll offset to the class; the role is
+  // `es=Qi?"tabpanel":"group"` with `Qi=Xi&&!Y.isActive` (tabs shown). Pinned in the 4.16336.0 text.
+  const v4 = fs.readFileSync(path.resolve(root, '../reference/snapshots/claude-4.16336.0-20261104/ion-dist/assets/v1/cbd6c85c8-CxDdK_2w.js'), 'utf8');
+  assert.equal(count(v4, 'a(la.Tab,{id:`${Ji}-${e}`,value:e,"aria-controls":Yi,children:m.formatMessage(e===j?om:am[e])},e)'), 1);
+  assert.equal(count(v4, 'id:Yi,role:es,"aria-labelledby":ts,"data-stale":ns,className:"flex scroll-mt-(--cds-page-header-scroll-offset) flex-col",children:[as,os,ss,_s]'), 1);
+  assert.equal(count(v4, 'es=Qi?"tabpanel":"group",ts=`${Ji}-${Qi?B:"title"}`,'), 1);
   const html = render({ sessions });
-  const [, base] = html.match(/<div id="([^"]+)-panel" role="tabpanel" aria-labelledby="[^"]+-code" class="flex flex-col">/) ?? [];
+  const [, base] = html.match(/<div id="([^"]+)-panel" role="tabpanel" aria-labelledby="[^"]+-code" class="flex scroll-mt-\(--cds-page-header-scroll-offset\) flex-col">/) ?? [];
   assert.ok(base, 'panel');
   assert.match(html, new RegExp(`role="tab" aria-controls="${base}-panel" aria-selected="true" id="${base}-code"[^>]*>Active</button>`));
   assert.match(html, new RegExp(`role="tab" aria-controls="${base}-panel" aria-selected="false" id="${base}-archived"[^>]*>Archived</button>`));
-  assert.match(render({ sessions, initialSurface: 'archived' }), /aria-labelledby="[^"]+-archived" class="flex flex-col">/);
+  assert.match(render({ sessions, initialSurface: 'archived' }), /role="tabpanel" aria-labelledby="[^"]+-archived" class="flex scroll-mt-\(--cds-page-header-scroll-offset\) flex-col">/);
 });
 
 test('search: the collapsed "Search sessions" control (slot 383/389)', () => {

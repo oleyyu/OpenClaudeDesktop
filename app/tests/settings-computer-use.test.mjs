@@ -4,6 +4,7 @@
 import test, { before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import path from 'node:path';
+import { conciseCopy } from '../electron/i18n/concise.mjs';
 
 const app = path.resolve(import.meta.dirname, '..');
 let server, mod, React, render;
@@ -18,6 +19,9 @@ before(async () => {
 after(() => server?.close());
 
 const row = (id, label, description, control) => ({ id, label, description, control });
+// U-SET-LITE (round3-decisions U-SET-LITE / U-SET-LITE-2): the official long sentences render their short line from
+// electron/i18n/concise.mjs; `short` asserts the source has one and returns it (en-US).
+const short = (source) => { const line = conciseCopy(source, 'en-US'); assert.ok(line, `concise.mjs shortens: ${source}`); return line; };
 // W14-code r4 shell r4-shared-11: computer use is off unless saved on (c71860c77 `chicagoEnabled ?? !1`), so the helper
 // saves it on unless a test passes its own value; the unset default has its own test below.
 const group = (config = {}, extra = {}) => mod.computerUseSettingsGroup({ row, config: { agentComputerUse: true, ...config }, shownValue: (key, saved) => saved, save() {}, grants: [], revoke() {}, busy: false, preferredMode: 'background', onPreferredMode() {}, ...extra });
@@ -25,7 +29,8 @@ const group = (config = {}, extra = {}) => mod.computerUseSettingsGroup({ row, c
 test('the official section: Computer use, a Beta badge, the cloud note, the switch on by default', () => {
   const on = group();
   assert.deepEqual([on.tab, on.title, on.badge], ['general', 'Computer use', 'Beta']);
-  assert.equal(on.description, 'Not available in cloud Code sessions, which don’t run on this computer.');
+  assert.equal(on.description, short('Not available in cloud Code sessions, which don’t run on this computer.'));
+  assert.equal(on.description, 'Local sessions only.');
   // W14-code r2-shared-11: Denied apps (c71860c77 Bt) follows the preferred mode.
   assert.deepEqual(on.rows.map((r) => r.id), ['agentComputerUse', 'computerUseAutoUnhide', 'computer-use-preferred-mode', 'computer-use-denied-apps', 'computer-use-allowed-apps', 'computer-use-teach']);
   assert.equal(on.rows[0].label, 'Enable computer use');
@@ -40,7 +45,8 @@ test('the official section: Computer use, a Beta badge, the cloud note, the swit
 test('preferred mode (official c71860c77 ii): one row, the official sentence as its description, the segmented control in its control slot', () => {
   const preferred = group().rows.find((r) => r.id === 'computer-use-preferred-mode');
   assert.equal(preferred.label, 'How DeepSeek uses the apps you allow');
-  assert.equal(preferred.description, 'Background: DeepSeek works inside the apps you allow while you keep using your computer, and asks your permission before taking full control of your screen. Full control: DeepSeek takes control of your screen, mouse, and keyboard by default whenever DeepSeek uses an app you allow, without asking again.');
+  assert.equal(preferred.description, short('Background: DeepSeek works inside the apps you allow while you keep using your computer, and asks your permission before taking full control of your screen. Full control: DeepSeek takes control of your screen, mouse, and keyboard by default whenever DeepSeek uses an app you allow, without asking again.'));
+  assert.equal(preferred.description, 'Background, or full control of the screen.');
   assert.equal(preferred.below, undefined, 'nothing below the row');
   const bg = render(preferred.control);
   assert.match(bg, /^<div[^>]*data-cds="SegmentedControl"[^>]*aria-label="How DeepSeek uses the apps you allow"/);
@@ -82,7 +88,8 @@ test('Unhide apps when Claude finishes (official chicagoAutoUnhide, c71860c77 ii
   const unhide = rows[1];
   assert.equal(unhide.id, 'computerUseAutoUnhide');
   assert.equal(unhide.label, 'Unhide apps when DeepSeek finishes');
-  assert.equal(unhide.description, 'When DeepSeek has full control of your screen, apps hidden during a task are restored when DeepSeek stops.');
+  assert.equal(unhide.description, short('When DeepSeek has full control of your screen, apps hidden during a task are restored when DeepSeek stops.'));
+  assert.equal(unhide.description, 'Restore hidden apps after a task.');
   assert.match(render(unhide.control), /aria-checked="true"/, 'unset reads as on');
   assert.match(render(group({ computerUseAutoUnhide: false }).rows[1].control), /aria-checked="false"/);
   const saved = [];
@@ -96,7 +103,11 @@ test('Enable computer use: the official S-branch sentence (Derf4fJ5+V) and the L
   const opened = [];
   const enable = group({}, { onLearnMore: (url) => opened.push(url) }).rows[0];
   const html = render(enable.description);
-  assert.match(html, /^Let DeepSeek see and act in the apps you allow, working in the background or with full control of your screen\. <a[^>]*href="https:\/\/support\.claude\.com\/en\/articles\/14128542"[^>]*>Learn more<\/a>$/);
+  // U-SET-LITE: the S-branch sentence is its short line; the Learn more link still follows it.
+  const sentence = short('Let DeepSeek see and act in the apps you allow, working in the background or with full control of your screen.');
+  assert.equal(sentence, 'Let the agent use apps you allow.');
+  assert.ok(html.startsWith(`${sentence} <a`), html);
+  assert.match(html, /^[^<]* <a[^>]*href="https:\/\/support\.claude\.com\/en\/articles\/14128542"[^>]*>Learn more<\/a>$/);
   assert.equal(mod.COMPUTER_USE_LEARN_MORE_URL, 'https://support.claude.com/en/articles/14128542');
 });
 
@@ -107,7 +118,8 @@ test('Denied apps (Bt): after the preferred mode, the official copy, Add app ove
   assert.deepEqual(rows.map((r) => r.id), ['agentComputerUse', 'computerUseAutoUnhide', 'computer-use-preferred-mode', 'computer-use-denied-apps', 'computer-use-allowed-apps', 'computer-use-teach']);
   const denied = rows[3];
   assert.equal(denied.label, 'Denied apps');
-  assert.equal(denied.description, 'Any request DeepSeek makes to access these apps is automatically rejected. DeepSeek may still affect them indirectly through actions in allowed apps.');
+  assert.equal(denied.description, short('Any request DeepSeek makes to access these apps is automatically rejected. DeepSeek may still affect them indirectly through actions in allowed apps.'));
+  assert.equal(denied.description, 'Requests for these apps are rejected.');
   const control = mod.ComputerUseDeniedAppsControl(denied.control.props);
   assert.equal(control.props.label, 'Add app');
   assert.deepEqual(control.props.items.map((item) => item.label), ['Finder']);
@@ -117,7 +129,8 @@ test('Denied apps (Bt): after the preferred mode, the official copy, Add app ove
   assert.match(chips, /<span class="text-primary">Notes<\/span>/);
   assert.match(chips, /aria-label="Remove Notes from deny list"/);
   const empty = render(group({}, {}).rows[3].below);
-  assert.equal(empty, '<p class="text-footnote text-secondary">No apps denied. Add an app to automatically reject DeepSeek’s requests for it.</p>');
+  assert.equal(empty, `<p class="text-footnote text-secondary">${short('No apps denied. Add an app to automatically reject DeepSeek’s requests for it.')}</p>`);
+  assert.equal(empty, '<p class="text-footnote text-secondary">No apps denied.</p>');
 });
 
 test('Accessibility / Screen recording (`d && R`): only once the probe answered; a Badge and Open System Settings unless granted', () => {
@@ -238,6 +251,10 @@ test('r5-shared-03: the page copy names the assistant through the persona, the a
   try {
     i18n.setAssistantName('Codex');
     assert.equal(i18n.t('How DeepSeek uses the apps you allow'), 'How Codex uses the apps you allow');
-    assert.equal(i18n.t('No apps denied. Add an app to automatically reject DeepSeek’s requests for it.'), 'No apps denied. Add an app to automatically reject Codex’s requests for it.');
+    // U-SET-LITE: the Denied apps empty sentence is shortened to a persona-free line whichever core runs (the concise key
+    // folds the names, so Codex's wording maps to the same line); a sentence kept long still gets the persona swapped.
+    assert.equal(i18n.t('No apps denied. Add an app to automatically reject DeepSeek’s requests for it.'), short('No apps denied. Add an app to automatically reject Codex’s requests for it.'));
+    assert.equal(i18n.t('No apps denied. Add an app to automatically reject DeepSeek’s requests for it.'), 'No apps denied.');
+    assert.equal(i18n.t('No apps allowed right now. DeepSeek asks before it uses an app, and what you allow lasts until the app quits.'), 'No apps allowed right now. Codex asks before it uses an app, and what you allow lasts until the app quits.');
   } finally { i18n.setAssistantName(previous); }
 });

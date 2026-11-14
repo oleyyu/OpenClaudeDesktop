@@ -1,75 +1,191 @@
 {
-  "referenceVersion": "3.6556.2",
-  "referenceSnapshot": "snapshots/claude-3.6556.2-20261025-192807",
+  "referenceVersion": "4.16336.0",
+  "referenceSnapshot": "snapshots/claude-4.16336.0-20261104",
   "generator": "scripts/extract-r3b-tasks.mjs",
+  "sharedGraph": "cds-core",
+  "migratedFrom": {
+    "version": "3.6556.2",
+    "generator": "analysis/claude-4.16336.0-migrate-20261104/regions/batch2a/r3b-tasks/before/extract-r3b-tasks.mjs"
+  },
+  "callSites": [
+    {
+      "caller": "cc43287c9-dzfX-J5i.js",
+      "callerSha256": "4a6893cf4d24a16a99c88d0793529ff39cd1cc0abd9527ce263a54d8d26d7f43",
+      "from": "c8f38bf1f-B4N4qS0l.js",
+      "alias": "n",
+      "local": "QC",
+      "root": "l",
+      "call": "QC(c)",
+      "why": "the /subtask send handler refuses a task that starts with a command"
+    },
+    {
+      "caller": "caec4a2d4-BQDPvHyW.js",
+      "callerSha256": "b4df29d081e284f44f4c73a14001ec72717ce59aa1f5c0c8a4cc6ebf463e9a04",
+      "from": "cef1e6037-Dm5Rlsox.js",
+      "alias": "v",
+      "local": "un",
+      "root": "yr",
+      "call": "un(e.sendInBackground?.text)",
+      "why": "the background fork is titled with the task"
+    }
+  ],
   "modules": [
     {
       "target": "lazy-value.mjs",
-      "source": "shared-0-DDOOdL6P.js",
-      "sourceSha256": "6e8dd35d06f3483ca7a164d358560e34bdd02a0c4d4e67fec5e71e45c1009f61",
-      "sha256": "53f1a011f5759282b0139c827bd9f0817a07d61324404ad885d690bc84edac9c",
-      "referenceVersion": "3.6556.2",
-      "bindings": [],
-      "imports": [
+      "source": "shared-0-CnnWnVrT.js",
+      "sourceSha256": "eb5fb89d8b47627c28969bd1df41f25a49a3e1d6ed91c5af2d980d5847d78ae1",
+      "sha256": "5021cd985ae80c5d04b12bae7a6418e5fc06e02233804aed779851192bf007ea",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
         {
-          "local": "Pa",
-          "from": "../routines-shared/shared-0-DDOOdL6P.mjs",
-          "name": "Pa",
-          "via": "shared-0-DDOOdL6P.js:Pa",
-          "kind": "routines-shared"
+          "name": "Tl",
+          "sha256": "080c8b46ca6e0c49eecb52b81d5cccf28de3e9c15a1747d40107def4bd636cb2"
         }
       ],
+      "imports": [],
       "exports": {
-        "Pa": "lazyValue"
-      }
+        "Tl": "lazyValue"
+      },
+      "officialExports": {
+        "nS": "Tl"
+      },
+      "heldByCdsCore": [
+        "Tl"
+      ]
     },
     {
       "target": "invisible-character.mjs",
-      "source": "shared-182-BI1KJccu.js",
-      "sourceSha256": "203e9b9995696f7458a97c9bf0f4a61b2c969b9dc7ec3f1789cd85818424a96d",
-      "sha256": "e520399c75036ccb93ce665cd1171b60ec13c36e7341957908246319f065b512",
-      "referenceVersion": "3.6556.2",
+      "source": "shared-212-BHMAi0oa.js",
+      "sourceSha256": "839d794782807b9e4aff3cca942f6b14ab442de2eacfb978578086d4d5eae178",
+      "sha256": "17d3834759e6184ce3ac53757ff66046a7f8fb4a3d987f3e7d33a43547e455c5",
+      "referenceVersion": "4.16336.0",
       "bindings": [
         {
-          "name": "tm",
-          "sha256": "4f3ab80893ec024d9117bca099146794765cd94d0e9b8f0096304f6f5a4b907f"
+          "name": "j_",
+          "sha256": "fefe4ee5d64ec99523a0b2f1fb10d705c9a63c2e306e46cc2b2db6ecc01ca8b0"
         },
         {
-          "name": "nm",
-          "sha256": "97be287c86432fa0f5c2be4a4699f59a5a1ebed6211c663db59c6aa92f7a5be8"
+          "name": "M_",
+          "sha256": "c670c6556f2bdfae07a3330ee276305c5cebc0432dfdbe19a3dcd606aa2a0f7d"
+        },
+        {
+          "name": "yv",
+          "sha256": "0867dbac1a626c3ea8e87e13f69826386758b30c6b8c5b2f7da693ac4975d078"
+        },
+        {
+          "name": "Cv",
+          "sha256": "43efdc21fbd92c5c4f3be7a567720753cb6689c4ce724733d65bcc3d6ba7c297"
+        },
+        {
+          "name": "Dv",
+          "sha256": "45d80fddd25c3c142c801606ac1e4116481021504c306454e44ec220b34c417e"
+        },
+        {
+          "name": "kv",
+          "sha256": "0fca45add03f8e032ada3b7745ba66427f4278de46606432a7b998a47105e319"
         }
       ],
       "imports": [
         {
-          "local": "H",
+          "local": "z",
           "from": "./lazy-value.mjs",
           "name": "lazyValue",
-          "via": "shared-0-DDOOdL6P.js:Lb (Pa)",
+          "via": "shared-0-CnnWnVrT.js:nS (Tl)",
           "kind": "generated"
         }
       ],
       "exports": {
-        "nm": "isInvisibleCharacter"
-      }
+        "M_": "isInvisibleCharacter",
+        "kv": "isHiddenCharacter"
+      },
+      "linkExports": [
+        "j_",
+        "yv",
+        "Cv",
+        "Dv"
+      ],
+      "officialExports": {
+        "bb": "M_",
+        "ob": "kv"
+      },
+      "heldByCdsCore": []
+    },
+    {
+      "target": "mention-prefix.mjs",
+      "source": "shared-5-u8kha2eH.js",
+      "sourceSha256": "7e36ddc101d5b0a8b4427f9b882472b1f01636a60aa22fbb6062f45292f4e7e7",
+      "sha256": "c808f0f37d277d12b36b4aa7e92f78c188268fbfba71d17a26089b6f50b2f041",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "ID",
+          "sha256": "9078334e2770e3c825140edf2026d4a53e659c689dc9278f8ca9c99680cf974f"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "ID": "quotedMentionPrefix"
+      },
+      "officialExports": {
+        "Ml": "ID"
+      },
+      "heldByCdsCore": []
+    },
+    {
+      "target": "path-basename.mjs",
+      "source": "shared-92-BOgyxePb.js",
+      "sourceSha256": "ef73b1ca0bd064d1d7e606cdedd6c457cb99ffb02f93b7f8b00d8226941a3ada",
+      "sha256": "61ca93b414cdfc6555b3085a9e0771427b60bf0cb010a86997695a3498ad6d98",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "mk",
+          "sha256": "c787cbad8be4e2f81eb899edb88ef1d2015d1e0b5729f666fa5a5cd943188fc2"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "mk": "pathBasename"
+      },
+      "officialExports": {
+        "_p": "mk"
+      },
+      "heldByCdsCore": []
     },
     {
       "target": "command-prefix.mjs",
-      "source": "c8f38bf1f-Ba2QaQov.js",
-      "sourceSha256": "7c1a839372dbb84ade28e4d86028f2184320fdb16c8d2f440392529295d62110",
-      "sha256": "26c8e76978ad415a40d0f1c926d50dc5e4d4d73c1b5f1ab887f9bd1ae7203543",
-      "referenceVersion": "3.6556.2",
+      "source": "c8f38bf1f-B4N4qS0l.js",
+      "sourceSha256": "4d5c687577983ec6e0260a76e1f27b334bbbc5d280316d4a03ca007d5afd5d29",
+      "sha256": "917f904939b6cc26a620ddf3f5e620c8bb8bba0ea08f7ece1038f8f46e6da45e",
+      "referenceVersion": "4.16336.0",
       "bindings": [
         {
-          "name": "n",
-          "sha256": "85f772d94f304ef7d7d96f7b7fb16313e848ba1d82c3ee1a1640d3bb5a67e818"
-        },
-        {
           "name": "r",
-          "sha256": "b2d9daabf6f4f57be5ec93ac5db3d843149c66b3dee02abae517a0d6a331fcb2"
+          "sha256": "efe853bf179df076ad894617971ed00d3c467105e171b1ecba4f8f5e01478d8c"
         },
         {
           "name": "i",
-          "sha256": "87ceb39750d6571d48ccf541e8f85491962b2f2db2e8b22808d8e43774f64f01"
+          "sha256": "2c3ba1e1ced15aebd7db5d2b3b08b2fd919cc254c8ed03fa297f5cef500e44b8"
+        },
+        {
+          "name": "a",
+          "sha256": "2b65aa44d5c34694ef5478fb57a8872a35745e8a253d8f226c8b9cbce8ae2802"
+        },
+        {
+          "name": "o",
+          "sha256": "af6c0a6a0868be29f5bd64c5c61ee0c25370cbb1d7bd304bb16007a72a5509fe"
+        },
+        {
+          "name": "s",
+          "sha256": "80adfed98b2b73d7aeb6afef6dc6304212b10f2b281f71bd25456e1a4818d2d6"
+        },
+        {
+          "name": "c",
+          "sha256": "766f5f2c996dba7c7371b936528777711b06b961cfd834315a60193c72b8dd71"
+        },
+        {
+          "name": "l",
+          "sha256": "a75902f0aaf1d8e8b3d9b696586482f1e52845ccc3eaf14547f5bfc6cd078434"
         }
       ],
       "imports": [
@@ -77,38 +193,78 @@
           "local": "t",
           "from": "./invisible-character.mjs",
           "name": "isInvisibleCharacter",
-          "via": "shared-182-BI1KJccu.js:Vv (nm)",
+          "via": "shared-212-BHMAi0oa.js:bb (M_)",
           "kind": "generated"
         },
         {
           "local": "e",
           "from": "./lazy-value.mjs",
           "name": "lazyValue",
-          "via": "shared-0-DDOOdL6P.js:Lb (Pa)",
+          "via": "shared-0-CnnWnVrT.js:nS (Tl)",
+          "kind": "generated"
+        },
+        {
+          "local": "n",
+          "from": "./invisible-character.mjs",
+          "name": "isHiddenCharacter",
+          "via": "shared-212-BHMAi0oa.js:ob (kv)",
           "kind": "generated"
         }
       ],
       "exports": {
-        "r": "stripLeadingInvisible",
-        "i": "startsWithCommand"
-      }
+        "o": "stripLeadingInvisible",
+        "s": "startsWithCommandAfterInvisible",
+        "c": "stripLeadingHidden",
+        "l": "startsWithCommand"
+      },
+      "linkExports": [
+        "r",
+        "i",
+        "a"
+      ],
+      "officialExports": {
+        "r": "o",
+        "t": "s",
+        "i": "c",
+        "n": "l"
+      },
+      "heldByCdsCore": []
     },
     {
       "target": "subtask-title.mjs",
-      "source": "cef1e6037-C9OZ_iaL.js",
-      "sourceSha256": "e63fe830dfe686be2124724144131dfa590e05d809d5fc54ef9c97aa6c534a1e",
-      "sha256": "0d3335b1dbd95ad08e594b4eaebc30cc9241de0bd9c671f56347a381a0ad3122",
-      "referenceVersion": "3.6556.2",
+      "source": "cef1e6037-Dm5Rlsox.js",
+      "sourceSha256": "6b526398d76f5685a5556a59eda2ed055b994d5c0446f2591840de729ab18741",
+      "sha256": "6b6402556b127a9fa7c241f708748bfbd9596478f7fcb99458efc7e388b9fe68",
+      "referenceVersion": "4.16336.0",
       "bindings": [
         {
-          "name": "Bn",
-          "sha256": "f7d37957fae8754e3b990c5edf5ac47e7826dd28cddcc6f2048283155b0332c5"
+          "name": "yr",
+          "sha256": "42d118beca8cc0db6837dbc05a4b82882ee09e84c7715da4b8457c62fa1abc88"
         }
       ],
-      "imports": [],
+      "imports": [
+        {
+          "local": "Oe",
+          "from": "./path-basename.mjs",
+          "name": "pathBasename",
+          "via": "shared-92-BOgyxePb.js:_p (mk)",
+          "kind": "generated"
+        },
+        {
+          "local": "Xe",
+          "from": "./mention-prefix.mjs",
+          "name": "quotedMentionPrefix",
+          "via": "shared-5-u8kha2eH.js:Ml (ID)",
+          "kind": "generated"
+        }
+      ],
       "exports": {
-        "Bn": "subtaskTitle"
-      }
+        "yr": "subtaskTitle"
+      },
+      "officialExports": {
+        "v": "yr"
+      },
+      "heldByCdsCore": []
     }
   ]
 }

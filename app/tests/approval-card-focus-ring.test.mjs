@@ -7,6 +7,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
+import { designEntryStylesheets } from '../scripts/current-design-assets.mjs';
 
 const app = path.resolve(import.meta.dirname, '..');
 const v3 = path.resolve(app, '../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1');
@@ -28,7 +29,11 @@ test('the official card outline is c2d1aeb56 G on the tool card frame, and the l
 });
 
 test('the compiled sheet lets h\'s outline-none win over the card outline, and the host card carries the utilities', () => {
-  const css = read(path.join(app, 'public/assets/v1/c6a992d55-Che1orl5.css'));
+  // The loaded utilities sheet is the current design's c6a992d55 entry sheet (current-design-assets.mjs), linked by index.html.
+  const sheet = designEntryStylesheets.find(name => name.startsWith('c6a992d55-'));
+  assert.ok(sheet, 'the current design pins a c6a992d55 utilities sheet');
+  assert.equal(count(read(path.join(app, 'index.html')), `<link rel="stylesheet" href="/assets/v1/${sheet}" />`), 1);
+  const css = read(path.join(app, 'public/assets/v1', sheet));
   const one = css.indexOf('.focus-visible\\:outline-1:focus-visible'), none = css.indexOf('.focus-visible\\:outline-none:focus-visible');
   assert.ok(one >= 0 && none > one, 'outline-none comes after outline-1');
   for (const name of ['outline-fill-accent', 'outline-offset-2', 'after\\:shadow-focus', 'after\\:absolute'])

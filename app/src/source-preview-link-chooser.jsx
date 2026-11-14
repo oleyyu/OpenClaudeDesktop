@@ -5,8 +5,10 @@ import { previewLinksStore } from './preview-links-model.mjs';
 import { previewChooserStore } from './preview-link-routing.mjs';
 import { useRoutineIntl } from './source-routine-adapters.jsx';
 import { SourceDialog } from './source-dialog.jsx';
-// W14-code r6 R6DC-02: the chooser dialog's Cancel / confirm are shared-frame Uu (E41 direct import).
-import { CdsButton } from './generated/view-tabs/shared-frame-6jtSkIit.js';
+// W14-code r6 R6DC-02: the chooser dialog's Cancel / confirm are the CDS Button; host-wiring code-b: the 4.16336.0 cds-core
+// original (shared-frame-CJdE5Ria Xu → Id, semantic facade). They are the host ConfirmationDialog's own footer (a
+// SourceDialog); the generated chooser passes no Button contract into it.
+import { CdsButton } from './cds-core.mjs';
 import { useSourceToasts } from './source-toast.jsx';
 import { holdModalInert } from './modal-inert.mjs';
 import { Icon } from './icons.jsx';

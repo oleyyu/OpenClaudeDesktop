@@ -52,7 +52,10 @@ test('chin Mode label: rQ truncating span, Manual warning tone and hidden descri
   const loading = modeTrigger(render({ permission: null }));
   assert.match(loading, /aria-busy="true"/);
   assert.match(loading, / disabled=""/);
-  assert.ok(loading.includes('<span class="relative block"><span class="sr-only">Permission mode</span><span aria-hidden="true" class="invisible">Mode</span><span aria-hidden="true" class="absolute inset-0 flex items-center"><span data-cds="Skeleton" class="smenu-skeleton sc-permission-skeleton w-full"></span></span></span>'), loading);
+  // surfaces-prod-3 composer (4.16336.0 c227f4d5e J6): the placeholder word rides data-placeholder-label on an invisible
+  // span (`before:content-[attr(data-placeholder-label)]`), and the skeleton is cds-core's CdsLoadingSkeleton (decorative,
+  // as span) over CdsSkeleton "w-full": the official SkeletonGroup / Skeleton markup, no host skeleton classes.
+  assert.ok(loading.includes('<span class="relative block"><span class="sr-only">Permission mode</span><span aria-hidden="true" data-placeholder-label="Mode" class="invisible before:content-[attr(data-placeholder-label)]"></span><span data-cds="SkeletonGroup" data-motion="wave" data-hold="delayed" aria-hidden="true" class="absolute inset-0 flex items-center"><span aria-hidden="true" class="contents"><span data-cds="Skeleton" class="block h-[1em] max-w-full rounded bg-[var(--cds-skeleton-base)] w-full"></span></span></span></span>'), loading);
 });
 
 // W14-code r6-composer-02: the effort slider (marked stop, mark row, '{name} ({badge})' value text, warning note) is the

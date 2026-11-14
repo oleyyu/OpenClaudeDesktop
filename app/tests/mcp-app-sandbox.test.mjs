@@ -287,7 +287,8 @@ test("relay: only parent <-> inner, only JSON-RPC and anthropic:*, and the app c
 test("main registers the scheme in the one privileged call before ready and handles it; index.html frames only this scheme more", async () => {
   const main = await fs.readFile(new URL("../electron/main.cjs", import.meta.url), "utf8");
   assert.equal(main.split("registerSchemesAsPrivileged(").length - 1, 1, "Electron allows a single call");
-  assert.match(main, /registerSchemesAsPrivileged\(\[\{ scheme: FILE_PREVIEW_SCHEME, [^\]]*\}, \{ scheme: MCP_APP_SANDBOX_SCHEME, privileges: \{ standard: true, secure: true \} \}\]\);/);
+  // U-2: the same single call also carries the page origin (app, official qGn) and its media (claude-media, official x9).
+  assert.match(main, /registerSchemesAsPrivileged\(\[\{ scheme: FILE_PREVIEW_SCHEME, [^\]]*\}, \{ scheme: MCP_APP_SANDBOX_SCHEME, privileges: \{ standard: true, secure: true \} \}, \{ scheme: APP_SCHEME, privileges: APP_SCHEME_PRIVILEGES \}, \{ scheme: MEDIA_SCHEME, privileges: MEDIA_SCHEME_PRIVILEGES \}\]\);/);
   assert.ok(main.indexOf("registerSchemesAsPrivileged") < main.indexOf("app.whenReady()"));
   assert.match(main, /protocol\.handle\(MCP_APP_SANDBOX_SCHEME, mcpAppSandbox\.handle\)/);
   assert.match(main, /protocol\.handle\(MCP_APP_SANDBOX_SCHEME, mcpAppSandbox\.handle\);\n  \/\/ [^\n]*\n  guardSandboxPermissions\(require\("electron"\)\.session\.defaultSession\);/, "the permission fence is installed with the handler");
@@ -296,7 +297,8 @@ test("main registers the scheme in the one privileged call before ready and hand
   assert.doesNotMatch(main, /nodeIntegrationInSubFrames/, "the preload never runs in the sandbox frames");
   const html = await fs.readFile(new URL("../index.html", import.meta.url), "utf8");
   const csp = /http-equiv="Content-Security-Policy"\s+content="([^"]+)"/.exec(html)[1];
-  assert.equal(csp, "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; frame-src 'self' oc-file-preview: oc-mcp-sandbox:; object-src 'none'; base-uri 'self'; form-action 'none'");
+  // U-2: claude-media (the page's minted local media) is the only addition, to img-src, media-src and frame-src (PDF).
+  assert.equal(csp, "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: claude-media:; media-src 'self' claude-media:; font-src 'self' data:; connect-src 'self'; frame-src 'self' oc-file-preview: oc-mcp-sandbox: claude-media:; object-src 'none'; base-uri 'self'; form-action 'none'");
 });
 
 test("R4g review fix: the sandbox frames get no device permission; the app's own frames keep their answer", async () => {

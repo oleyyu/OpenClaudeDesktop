@@ -37,8 +37,12 @@ let server, View, Derive, Hooks, Dnd, MenuItems, Chip, Layout, Sections, Kit, Ad
 before(async () => {
   previousWindow = globalThis.window; previousDocument = globalThis.document;
   // view-tabs' preload helper creates a link element while it evaluates (D21); dnd-kit reads window.document.
-  globalThis.document = { createElement: () => ({ relList: { supports: () => false } }), querySelector: () => null, documentElement: { getAttribute: () => null } };
-  globalThis.window = { localStorage: localStorageStub, matchMedia: undefined, document: globalThis.document };
+  // W8-M9 (cds-wave8 stub contract, loadTimeCarry reads only): cds-core shared-0 CQ / Wo read document.cookie and shared-92
+  // cS reads documentElement.hasAttribute at load (official 4.16336.0), so the document stub answers both.
+  globalThis.document = { cookie: '', createElement: () => ({ relList: { supports: () => false } }), querySelector: () => null, documentElement: { getAttribute: () => null, hasAttribute: () => false } };
+  // W8-M9: the cds-core shared-25 router store tu reads
+  // window.location.pathname at load (`typeof window < "u" ? window.location.pathname : ""`, official 4.16336.0).
+  globalThis.window = { addEventListener() {}, removeEventListener() {}, localStorage: localStorageStub, matchMedia: undefined, document: globalThis.document, location: { pathname: '/' } };
   server = await createServer({ configFile: false, root: app, plugins: [react()], server: { middlewareMode: true, hmr: false, ws: false, watch: null }, appType: 'custom', logLevel: 'error' });
   const load = name => server.ssrLoadModule(`/src/generated/session-rail/${name}`);
   [View, Derive, Hooks, Dnd, MenuItems, Chip] = await Promise.all(['rail-view.mjs', 'rail-derive.mjs', 'rail-hooks.mjs', 'dnd-kit.mjs', 'menu-items.mjs', 'repo-name-chip.mjs'].map(load));
@@ -203,13 +207,23 @@ test('one copy: view-tabs and the kit by public names, dnd-kit and the rail cont
   assert.ok(view.imports.some(i => i.local === 'J9' && i.name === 'reactMemoCache'));
   // dnd-kit (c09f6b4e5) has one copy, sidebar-reorder's byte-for-byte chunk copy (enum and activator
   // initialisers included); no other area holds it, and this area's dnd-kit.mjs only re-exports its 13 roots from there.
+  const v4DndHolders = [];
   for (const area of fs.readdirSync(path.join(app, 'src/generated'))) {
     if (area === 'session-rail' || area === 'sidebar-reorder') continue;
     const file = path.join(app, 'src/generated', area, 'manifest.json');
     // W14-code r7 r7c-01: an area that imports dnd-kit through session-rail's re-exports (generated/queued-bar, cf74bc599
     // GE / BE) names c09f6b4e5 only in its imports' `via`; what is checked is that no module of it slices that chunk.
-    if (fs.existsSync(file)) assert.ok(!(JSON.parse(fs.readFileSync(file, 'utf8')).modules ?? []).some(m => String(m.source).startsWith('c09f6b4e5')), `${area} slices dnd-kit`);
+    // round3 integrate-gates: the rule is per release. The 4.16336.0 dnd-kit chunk (c09f6b4e5--ahaSfV5.js, a different
+    // module than this 3.6556.2 copy) may be held by exactly one 4.16336.0 graph (D1; d1-gate checks it), today
+    // queued-bar-v4 (rl-queued-bar-pierre); no 3.6556.2 area other than these two slices any dnd-kit chunk.
+    if (!fs.existsSync(file)) continue;
+    const m = JSON.parse(fs.readFileSync(file, 'utf8'));
+    const dndModules = (m.modules ?? []).filter(x => String(x.source).startsWith('c09f6b4e5'));
+    if (m.referenceVersion === '4.16336.0') { if (dndModules.length) v4DndHolders.push([area, ...new Set(dndModules.map(x => x.source))]); }
+    else assert.ok(dndModules.length === 0, `${area} slices dnd-kit`);
   }
+  assert.ok(v4DndHolders.length <= 1, `one 4.16336.0 dnd-kit owner: ${JSON.stringify(v4DndHolders)}`);
+  for (const [, ...sources] of v4DndHolders) assert.deepEqual(sources, ['c09f6b4e5--ahaSfV5.js']);
   const reorder = JSON.parse(fs.readFileSync(path.join(app, 'src/generated/sidebar-reorder/manifest.json'), 'utf8'));
   assert.deepEqual(reorder.modules.filter(m => m.source === DND).map(m => [m.target, m.kind]), [['dnd-kit.mjs', 'copy']]);
   const dnd = manifest.modules.find(m => m.target === 'dnd-kit.mjs');

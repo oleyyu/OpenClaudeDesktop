@@ -79,7 +79,10 @@ test('dead host CSS is gone: the collapsed chrome is laid out by its official cl
   // The selector only matches while the host root keeps data-variant="web" without data-web / data-wco, and the aside
   // stays a compact .dframe-sidebar (review #2): lock those host facts so the offset cannot silently stop applying.
   const main = src('src/main.jsx');
-  assert.match(main, /\n\s+data-variant="web"\n\s+data-frame-mode=\{mode\}/);
+  // frame-sidebar 4.16336.0: the legacy root (windows without a sidebar) as HostFrameRoot props; the main window's vB writes
+  // data-variant "web" and data-web only off the desktop (useIsDesktopApp answers true, src/frame-sidebar-host.jsx).
+  assert.match(main, /\n\s+"data-variant": "web",\n\s+"data-frame-mode": mode,/);
+  assert.ok(src('src/frame-sidebar-host.jsx').includes('useIsDesktopApp: ["host", (options) => (options?.platform ? options.platform === live?.platform : true)],'));
   assert.doesNotMatch(main.replace(/\/\/.*$/gm, '').replace(/`[^`]*`/g, ''), /\sdata-(?:web|wco)=/);
   assert.match(src('src/source-sidebar.jsx'), /className="app-sidebar dframe-sidebar source-sidebar cds-root" aria-label=\{t\("Sidebar"\)\} data-variant="web" data-density="compact"/);
   assert.ok(readFileSync(path.join(v1, 'c6a992d55-Che1orl5.css'), 'utf8').includes('.draggable-none{-webkit-app-region:no-drag;app-region:no-drag}'));

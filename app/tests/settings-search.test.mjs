@@ -36,7 +36,7 @@ test('literal first-match highlight preserves original Unicode and does not pret
 // Fidelity F14: shared-22:2274-2285 / :3915-3918 zC — a navHidden section leaves the nav and the narrow tabs and stays a
 // search destination. B23: 2.31226.0 shared-19 ZC (:2468-2482) lists Usage again (oC only swaps its icon), so no
 // local section is nav-hidden.
-test('nav-hidden sections leave the nav and the narrow tabs but stay searchable; Usage is listed',async()=>{
+test('nav-hidden sections leave the nav but stay searchable; Usage is listed',async()=>{
  const {settingsNavSections}=await import('../src/settings-shell-model.mjs');
  const shell=[{id:'preferences',label:'Preferences'},{id:'usage',label:'Usage',navHidden:true},{id:'code',label:'Code'}];
  assert.deepEqual(settingsNavSections(shell).map(s=>s.id),['preferences','code']);
@@ -50,8 +50,14 @@ test('nav-hidden sections leave the nav and the narrow tabs but stay searchable;
  // Harness is listed only on a core with harnessProfile (or while its page is open).
  // Hooks only on a core with hooksList (or while its page is open). Advanced › Core options only while it has rows.
  assert.match(text,/const navTabs=baseNavTabs\.filter\(section=>\(section\.id!=='harness'\|\|tab==='harness'\|\|coreSupports\(engine,'harnessProfile'\)\)&&\(section\.id!=='customize-hooks'\|\|tab==='customize-hooks'\|\|coreSupports\(engine,'hooksList'\)\)&&\(section\.id!=='advanced'\|\|tab==='advanced'\|\|advancedListed\)&&\(section\.id!=='cowork'\|\|boot\?\.coworkEnabled===true\)\);/); // w13-coworkui-settings: Cowork while Cowork is on
- assert.match(text,/\{navTabs\.map\(t=><CdsTabs\.Tab key=\{t\.id\} value=\{t\.id\}/,'narrow tablist (W12: CDS Tabs)');
- assert.match(text,/<ul>\{navTabs\.filter\(t=>t\.group===group\)\.map\(/,'wide nav');
+ // U-SET-LITE (U-SET-HANDWRITE): one hand-written nav at every width (no official rail, no stacked tabs). Its entries
+ // (SETTINGS_NAV) keep only the host pages navTabs lists, and an entry left with no host page drops out, so a nav-hidden
+ // host section stays out of the nav.
+ assert.match(text,/\{id:'usage',label:'Usage',icon:'UsageGaugeMiddle',hosts:\['usage'\]\},/,'Usage is a nav entry');
+ assert.match(text,/const hostAvailable=id=>navTabs\.some\(entry=>entry\.id===id\)&&/,'nav entries keep only the hosts navTabs lists');
+ assert.match(text,/const navItems=SETTINGS_NAV\.map\(entry=>entry\.sep\?entry:\{\.\.\.entry,hosts:entry\.hosts\.filter\(hostAvailable\),advanced:\(entry\.advanced\|\|\[\]\)\.filter\(hostAvailable\)\}\)\s*\.filter\(entry=>entry\.sep\|\|entry\.hosts\.length\|\|entry\.advanced\.length\)/,'an entry with no host page left drops out');
+ assert.match(text,/\{!usagePage&&<nav className="sl-nav" aria-label=\{t\('Settings'\)\}>\s*\{searchField\}\s*<div className="sl-nav-list">\{navItems\.map\(/,'the nav draws navItems');
+ for(const gone of ['<SettingsNavStacked','<SettingsRailWithLocalGroups','<CdsTabs.'])assert.equal(text.includes(gone),false,gone);
  assert.match(text,/settingsSearch\(searchTabs,/,'search receives the unfiltered sections');
  assert.match(text,/const searchTabs=[^\n]*\?tabs:tabs\.map\(/,'every section, only the Models keywords narrowed per core');
  const main=fs.readFileSync(path.resolve(import.meta.dirname,'../src/main.jsx'),'utf8');
@@ -75,17 +81,25 @@ test("searching 'keep awake' finds a single Code section hit; General no longer 
 });
 
 // B23: shared-19 ZC/BC — General first, This computer › System (c71860c77-C_7Gqn1u Qn heads the page 'System'); ids stay.
-test("the nav reads General / This computer › System; 'System' has its own heading entry; 'preferences' and 'desktop' still find the pages",async()=>{
+test("the nav reads Appearance / Desktop app › System; 'System' has its own heading entry; 'preferences' and 'desktop' still find the pages",async()=>{
  const {settingsHeading}=await import('../src/settings-model.mjs');
  const {setLocale,DEFAULT_LOCALE,t}=await import('../electron/i18n/index.mjs');
  const fs=await import('node:fs'),path=await import('node:path');
  const text=fs.readFileSync(path.resolve(import.meta.dirname,'../src/source-settings.jsx'),'utf8');
- assert.match(text,/\{id:'preferences',label:'General',icon:'Settings',group:'Settings',keywords:\['preferences',/);
+ // U-SET-LITE (U-SET-HANDWRITE): the 'preferences' page (the official General) is titled Appearance and keeps
+ // 'preferences' / 'general' as search keywords; 'general' stays the System page.
+ assert.match(text,/\{id:'preferences',label:'Appearance',icon:'Palette',group:'Settings',keywords:\['preferences','general',/);
  assert.match(text,/\{id:'general',label:'System',icon:'Computer',group:'This computer',keywords:\['desktop','general'\]\}/);
- // The host's developer-facing pages sit in an Advanced group after the official ones (settings-advanced-model.mjs).
- assert.match(text,/const navGroups = \['Settings','This computer','Customize','Advanced'\];/);
- assert.equal(text.includes("'Desktop app'"),false);
- const shell=[{id:'preferences',label:'General',keywords:['preferences']},{id:'general',label:'System',keywords:['desktop','general']},{id:'developer',label:'Developer',keywords:['desktop']}];
+ // The nav is the hand-written SETTINGS_NAV: the System page ('general') and Developer are the Desktop app entry's
+ // pages, General ('preferences') opens the Appearance entry; the official rail's groups and the OpenClaude local
+ // groups (settings-tab-compat LOCAL_EXTENSION_GROUPS, still the compat table's) are not drawn.
+ const {LOCAL_EXTENSION_GROUPS}=await import('../src/settings-tab-compat.mjs');
+ assert.deepEqual(LOCAL_EXTENSION_GROUPS.map(group=>group.title),['OpenClaude','OpenClaude · This computer','OpenClaude · Advanced']);
+ assert.equal(text.includes('const navGroups'),false);
+ assert.match(text,/\{id:'appearance',label:'Appearance',icon:'Palette',hosts:\['preferences','theme'\]\},/);
+ assert.match(text,/\{id:'desktop',label:'Desktop app',icon:'Computer',hosts:\['general','developer'\],advanced:\['advanced','harness','profiles'\]\},\n\];/,'Desktop app last');
+ assert.equal(/<nav className="sl-nav"[\s\S]*?<\/nav>/.exec(text)?.[0].includes('localGroups'),false,'no local groups in the nav');
+ const shell=[{id:'preferences',label:'Appearance',keywords:['preferences','general']},{id:'general',label:'System',keywords:['desktop','general']},{id:'developer',label:'Developer',keywords:['desktop']}];
  assert.deepEqual(settingsSearch(shell,[],'preferences').map(hit=>hit.tab),['preferences']);
  assert.deepEqual(settingsSearch(shell,[],'desktop').map(hit=>hit.tab),['general','developer']);
  assert.equal(settingsSearch(shell,[],'system')[0].tab,'general');

@@ -28,11 +28,12 @@
 //   - Oj never disables the trigger in Code (`disabled: !r && j.length === 0` with a plus-menu scope), so neither does
 //     the host (the former host + was disabled while a turn/start was in flight).
 import React from "react";
-// E41: in the chat / composer import graph, so view-tabs comes from the concrete file by semantic name, not the facade.
-import { CdsButton, CdsIcon, CdsTooltip, cdsClassNames } from "./generated/view-tabs/shared-frame-6jtSkIit.js";
-import { DockGlyphBox, autoGlyphSize, dockGlyphIconClass, dockGlyphProps, sendGlyphBoxClass } from "./generated/code-composer/composer-glyph.mjs";
-import { addFilesMenuItem, addTriggerSizes } from "./generated/code-composer/composer-add-menu.mjs";
-import { menuCollisionPadding } from "./generated/code-composer/menu-collision-padding.mjs";
+// 4.16336.0 (composer host cutover): the trigger sits in the v4 shell's Actions / Chin (generated/code-composer-v4), so its
+// CDS pieces are cds-core's (one graph with the parts' CdsButtonIconSizeContext / CdsSurfaceContext).
+import { CdsButton, CdsIcon, CdsTooltip, cdsClassNames } from "./cds-core.mjs";
+import { autoGlyphSize, dockGlyphIconClass, dockGlyphProps } from "./generated/code-composer-v4/composer-glyph.mjs";
+import { addFilesMenuItem, addTriggerSizes } from "./generated/code-composer-v4/composer-add-menu.mjs";
+import { menuCollisionPadding } from "./generated/code-composer-v4/menu-collision-padding.mjs";
 import { useComposerIntl } from "./source-composer-current-adapters.jsx";
 import { SourceMenu, menuTriggerProps } from "./source-menu";
 import { t } from "../electron/i18n/index.mjs";
@@ -40,25 +41,27 @@ import { t } from "../electron/i18n/index.mjs";
 // Oj's trigger className and jj's popup className, verbatim.
 export const ADD_TRIGGER_CLASS = "shrink-0";
 export const ADD_MENU_POPUP_CLASS = "epitaxy-root break-words";
-// c73f45bc3 pv: the presets card's + (`...rc, glyphSize: "md", glyphBoxClassName: ic`). 3.6556.2: the box class is a call,
-// `glyphBoxClassName: cl()` (cfca6870a p: "flex scale-90" unless the fizzy-lake icons part is on, which it never is, E12).
-export const CARD_ADD_TRIGGER = Object.freeze({ ...dockGlyphProps, glyphSize: "md", glyphBoxClassName: sendGlyphBoxClass() });
-// R4i-graph GR3: c73f45bc3 tv, the classic layout's chin + (`c(Fi, {…, side: "top", isPanelActive: t, ...rc})`): rc alone,
-// so the auto glyph size and no glyph box.
+// 4.16336.0 c73f45bc3: the presets card's + is `r(Ts, {…, side: "top", isPanelActive: s, ...Ll, glyphSize: "md"})` (Ts =
+// c227f4d5e wJ, Ll = cfca6870a r = dockGlyphProps): no glyph box any more (cfca6870a dropped 3.6556.2's "flex scale-90" box).
+export const CARD_ADD_TRIGGER = Object.freeze({ ...dockGlyphProps, glyphSize: "md" });
+// 4.16336.0 c73f45bc3, the classic layout's chin +: `r(Ts, {…, side: "top", isPanelActive: t, ...Ll})`, so the auto glyph
+// size.
 export const CHIN_ADD_TRIGGER = Object.freeze({ ...dockGlyphProps });
 
 /**
- * Oj's trigger (c227f4d5e). `onOpen(entry, event)` opens the host Add menu: entry is "first" / "last" for ArrowDown /
- * ArrowUp on the closed trigger (menuTriggerProps), undefined for a press (SourceMenu then follows the last input).
+ * 4.16336.0 c227f4d5e wJ's trigger (3.6556.2 Oj). `onOpen(entry, event)` opens the host Add menu: entry is "first" / "last"
+ * for ArrowDown / ArrowUp on the closed trigger (menuTriggerProps), undefined for a press (SourceMenu then follows the
+ * last input).
  */
-export function ComposerAddTrigger({ open = false, onOpen, tooltipOpen, icon = "Add", size = "small", dockGlyph, glyphSize = autoGlyphSize, glyphBoxClassName }) {
+export function ComposerAddTrigger({ open = false, onOpen, tooltipOpen, icon = "Add", size = "small", dockGlyph, glyphSize = autoGlyphSize }) {
   const label = t("Add");
-  // Oj `h = l ?? c === "small"`, `p = {size: u}`.
+  // wJ `x = f ?? v === "small"`, `b = {size: y}`, `he = x ? p(je, {name: le, ...b, className: hx}) : le` (je = CdsIcon,
+  // hx = cfca6870a t = dockGlyphIconClass): the glyph is the icon itself, no box.
   const glyph = dockGlyph ?? size === "small";
   return (
     <CdsTooltip content={label} open={tooltipOpen}>
       <CdsButton variant="ghost" size={addTriggerSizes[size]} iconOnly
-        icon={glyph ? <DockGlyphBox className={glyphBoxClassName}><CdsIcon name={icon} size={glyphSize} className={dockGlyphIconClass} /></DockGlyphBox> : icon}
+        icon={glyph ? <CdsIcon name={icon} size={glyphSize} className={dockGlyphIconClass} /> : icon}
         aria-label={label} tooltip={false} className={ADD_TRIGGER_CLASS}
         {...menuTriggerProps({ open, onOpen })}
         onClick={(event) => onOpen?.(undefined, event)} />

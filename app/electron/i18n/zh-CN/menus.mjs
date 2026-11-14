@@ -90,9 +90,8 @@ export default {
   'Reload': '重新载入',
   'Toggle Developer Tools': '切换开发者工具',
   // Notifications and folder pickers.
-  '{who} finished and is waiting for your input.': '{who} 已完成，正在等待你的输入。',
-  '{who} is asking you to choose between options.': '{who} 请你在几个选项中做出选择。',
-  '{who} needs your approval to use a tool.': '{who} 需要你批准使用工具。',
+  '{who} has finished your instructions.': '{who} 已完成你的指令。',
+  '{who} is waiting for your response.': '{who} 正在等你回复。',
   'Use folder': '使用此文件夹',
   // V3-w13-surfaces-menus: File / Go labels by area (3.6556.2 rSi, Qxi, SSi).
   'New Chat': '新建聊天',

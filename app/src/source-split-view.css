@@ -41,6 +41,17 @@
 .split-host[data-split] .split-pane:not([data-focused]) .workspace-toolbar .st-trailing:focus-within {
   opacity: 1;
 }
+/* surfaces wave 3 (titlebar frame): the Code titlebar is the 4.16336.0 frame (shared-20 s_), whose actions are the cluster
+   box before s_'s end clearance (shared-18 IS, [data-lined-row-end-clearance]) in the CdsToolbar's sections row; the same
+   host step-back applies to it. */
+.split-host[data-split] .split-pane:not([data-focused]) [data-perf-region="header"] [data-cds="Toolbar"] :has(+ [data-lined-row-end-clearance]) {
+  opacity: 0;
+  transition: opacity 0.12s ease-out;
+}
+.split-host[data-split] .split-pane:not([data-focused]):hover [data-perf-region="header"] [data-cds="Toolbar"] :has(+ [data-lined-row-end-clearance]),
+.split-host[data-split] .split-pane:not([data-focused]) [data-perf-region="header"] [data-cds="Toolbar"] :has(+ [data-lined-row-end-clearance]):focus-within {
+  opacity: 1;
+}
 /* The ⌘-held ring (.dframe-pane:before) sits above the pane's own content. */
 .split-host[data-split] > .dframe-pane::before {
   z-index: 20;
@@ -79,12 +90,14 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .split-host[data-split] .split-pane .workspace-toolbar .st-trailing,
+  .split-host[data-split] .split-pane [data-perf-region="header"] [data-cds="Toolbar"] :has(+ [data-lined-row-end-clearance]),
   .split-host .dframe-pane-extra,
   .split-host .dframe-pane {
     transition: none;
   }
 }
 html[data-reduce-motion="true"] .split-host[data-split] .split-pane .workspace-toolbar .st-trailing,
+html[data-reduce-motion="true"] .split-host[data-split] .split-pane [data-perf-region="header"] [data-cds="Toolbar"] :has(+ [data-lined-row-end-clearance]),
 html[data-reduce-motion="true"] .split-host .dframe-pane-extra,
 html[data-reduce-motion="true"] .split-host .dframe-pane,
 html[data-reduce-motion="true"] .split-host .dframe-drop-overlay-badge,

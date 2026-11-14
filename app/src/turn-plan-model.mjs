@@ -125,13 +125,48 @@ export function turnMessages(items, { activeTurnId = null, turnErrors = null, ag
   return { messages, runningAgents };
 }
 
-/** c4ea84cb3 Wr → Ur → Br (the update_plan branch: no TaskCreate todos) over the host transcript. */
+/**
+ * The session's todo list when its newest plan write is a core's own todo tool, else null: Br's `taskTodos` (c4ea84cb3
+ * Br `a = n !== void 0`: the plan is the list passed in and the plan tools are TodoWrite / TaskCreate / TaskUpdate).
+ * The list is c28efd0ef `d` for a TodoWrite call — it replaces the whole list: {id (the todo's, else `todo-<position>`),
+ * content (`content`, else `text`; the harness's older `step`), status, activeForm}, a todo with no content left out,
+ * an errored call skipped. A core whose model keeps its list with todo_write (the DeepSeek Harness, OpenCode, the ACP
+ * agents: transcript-sdk-tools.mjs DYNAMIC_TOOLS) never calls update_plan, so without this its list showed only as the
+ * "Updated todos" row inside a tool group. A ccd_turn call (update_plan / wrap_up) after the last TodoWrite keeps the
+ * update_plan branch, wrap-up included.
+ */
+export function taskTodosOf(items) {
+  const list = Array.isArray(items) ? items : [];
+  for (let index = list.length - 1; index >= 0; index--) {
+    const item = list[index];
+    if (!item || typeof item !== "object") continue;
+    if (turnToolOf(item)) return null;
+    if (!TOOL_ITEMS.has(item.type) || sdkToolName(item) !== "TodoWrite" || failedCall(item)) continue;
+    const todos = toolArgs(item).todos;
+    const out = [];
+    (Array.isArray(todos) ? todos : []).forEach((todo, position) => {
+      if (!record(todo)) return;
+      const content = str(todo.content) || str(todo.text) || str(todo.step);
+      if (!content) return;
+      const activeForm = str(todo.activeForm);
+      out.push({ id: str(todo.id) || `todo-${position}`, content, status: todo.status === "completed" ? "completed" : todo.status === "in_progress" ? "in_progress" : "pending",
+        ...(activeForm ? { activeForm } : {}) });
+    });
+    return out;
+  }
+  return null;
+}
+
+/**
+ * c4ea84cb3 Wr → Ur → Br over the host transcript: the update_plan branch, or the taskTodos branch when the session's
+ * list is a core's own todo tool (taskTodosOf).
+ */
 export function codeTurnTail({ items, latestPromptId, activeTurnId = null, turnErrors = null, agentLifecycle = null } = {}) {
   const list = Array.isArray(items) ? items : [];
   if (list.length === 0) return EMPTY_TURN_TAIL;
   const { messages, runningAgents } = turnMessages(list, { activeTurnId, turnErrors, agentLifecycle });
   if (messages.length === 0) return EMPTY_TURN_TAIL;
-  return deriveTurnTail(messages, latestPromptId, undefined, runningAgents, AT_REPLIES);
+  return deriveTurnTail(messages, latestPromptId, taskTodosOf(list) ?? undefined, runningAgents, AT_REPLIES);
 }
 
 /**

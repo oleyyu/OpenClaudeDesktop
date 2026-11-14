@@ -27,10 +27,19 @@ test('side panel header renders the drag handle after the tabs/title and before 
   assert.ok(handle < body.indexOf('paneControls'), 'before trailing controls');
 });
 
-test('background tasks header renders the drag handle after its title and before controls', () => {
-  const body = header('source-agent.jsx', '<header className="source-pane-header" data-pane-header="tasks"');
-  const handle = body.indexOf('{headerCenter}');
-  assert.ok(handle > body.indexOf('sag-pane-title'));
+// session-page relink SP-2: the Background tasks pane is the 4.16336.0 pane frame c4db265df Tn (generated/session-panels-v4
+// PaneFrame); its header order is Tn's own: in a tile the row is [b (window drag strip), S (the toolbar: title, then the
+// actions with the trailing slot), C (center, the tile drag handle), w], so the handle follows the title and paints above
+// the toolbar; the host passes the handle as center and its controls as trailing, nothing else orders them.
+test('background tasks header: the official pane frame puts the drag handle after the title and its actions', () => {
+  const c4d = fs.readFileSync(path.join(path.resolve(import.meta.dirname, '../../reference/snapshots/claude-4.16336.0-20261104/ion-dist/assets/v1'), 'c4db265df-CHyZjtsm.js'), 'utf8');
+  assert.ok(c4d.includes('T=J4($,111,b,S,C,w)?K4($,111,b,S,C,w,n(i,{children:[b,S,C,w]})):$[115]'));
+  assert.ok(c4d.includes('C=X===null&&_'));
+  const text = fs.readFileSync(path.join(src, 'source-agent.jsx'), 'utf8');
+  const call = text.slice(text.indexOf('<PaneFrame '), text.indexOf('>', text.indexOf('onBack={views.length>0 ? onBack : undefined}')));
+  assert.equal(call.split('{headerCenter}').length, 2, 'rendered once');
+  assert.match(call, /center=\{headerCenter\}/);
   // B21: rw "Clear finished tasks" leads the trailing controls through trailing(controls).
-  assert.ok(handle < body.search(/\{(?:trailing\()?controls\)?\}/));
+  assert.match(call, /trailing=\{trailing\(controls\)\}/);
+  assert.match(call, /title=\{current\?\.description \|\| t\('Background tasks'\)\}/);
 });

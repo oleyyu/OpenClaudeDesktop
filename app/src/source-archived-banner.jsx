@@ -22,7 +22,9 @@
 // queue dialog, shared-46 WD copy), then the removal (main.cjs worktree-remove); "busy" (another session works there)
 // and a failure raise the official toasts, and the status is read again (Po / not_kept invalidate).
 import React, { useEffect, useState } from "react";
-import { CdsButton } from "./generated/view-tabs/index.js";
+// 4.16336.0 host wiring (frame): BandFrame / BandActionCell only place the actions (no CDS context of their own), so the
+// buttons this host draws are the 4.16336.0 cds-core Button (Xu) through the semantic facade.
+import { CdsButton } from "./cds-core.mjs";
 import { BandFrame, BandActionCell } from "./generated/session-rail/band-frame.mjs"; // c0b46114c _ / y (c9543da06 uo / lo)
 import { worktreeProbe } from "./worktree-dispose-model.mjs";
 import { getLocale, t } from "../electron/i18n/index.mjs";

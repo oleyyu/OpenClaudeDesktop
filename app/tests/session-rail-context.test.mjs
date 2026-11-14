@@ -33,7 +33,8 @@ const ROOTS = new Set();
 let savedWindow, savedDocument;
 before(async () => {
   savedWindow = globalThis.window; savedDocument = globalThis.document;
-  globalThis.document = { createElement: () => ({ relList: { supports: () => false } }), querySelector: () => null, documentElement: { getAttribute: () => null, hasAttribute: () => false } };
+  // W8-M9 stub contract (round4 integration, stub fields only): cds-core 9203795f reads these at load (official 4.16336.0): document.cookie.
+  globalThis.document = { cookie: '' /* W8-M9: shared-0 CQ / Wo document.cookie */, createElement: () => ({ relList: { supports: () => false } }), querySelector: () => null, documentElement: { getAttribute: () => null, hasAttribute: () => false } };
   // W14-code r6 r6pa-03 (review rerun): the rail's background-tasks pane draws c96d752d0 UQ from code-transcript, whose
   // shared-25 router store reads window.location.pathname at load (in the app main.jsx already loads that graph).
   globalThis.window = { document: globalThis.document, localStorage: undefined, addEventListener() {}, removeEventListener() {}, matchMedia: undefined, location: { pathname: '/' }, navigator: globalThis.navigator };

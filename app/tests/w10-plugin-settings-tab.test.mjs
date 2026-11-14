@@ -20,6 +20,12 @@ const raw = file => fs.readFileSync(path.join(ionSource, file), 'utf8');
 const rawMain = file => fs.readFileSync(path.join(asarSource, file), 'utf8');
 const count = (text, needle) => text.split(needle).length - 1;
 const PLUGIN_PAGE = raw('c24c8737b-Czj7X1dz.js');
+// 4.16336.0 host wiring (frame): the form's CDS parts now come from the cds-core facade; the 4.16336.0 plugin page keeps the
+// same bc composition over the same roots (shared-frame-CJdE5Ria / c09817156-Yg3kFvSY).
+const V4 = path.resolve(app, '../reference/snapshots/claude-4.16336.0-20261104/ion-dist/assets/v1');
+const raw4 = file => fs.readFileSync(path.join(V4, file), 'utf8');
+const PLUGIN_PAGE_V4 = raw4('c24c8737b-CApeZDrg.js');
+const CDS_MANIFEST = JSON.parse(fs.readFileSync(path.join(app, 'src/generated/cds-core/manifest.json'), 'utf8'));
 
 test('3.6556.2 original: the Settings tab, its label and panel copy (c24c8737b ol / yc / bc)', () => {
   assert.equal(count(PLUGIN_PAGE, 't.push({id:"settings",href:se("settings"),label:e})'), 1);
@@ -252,7 +258,8 @@ test('wiring: main.cjs answers plugin-options through plugin-options.cjs, zh cov
     'Choose {cancelLabel} unless you just pressed Save on a plugin’s Settings tab.', 'Save these settings for the plugin “{plugin}”?', '{title}: value hidden'])
     assert.ok(Object.hasOwn(zh, key), key);
   const source = fs.readFileSync(path.join(app, 'src/source-plugin-settings-tab.jsx'), 'utf8');
-  assert.match(source, /from '\.\/generated\/view-tabs\/index\.js'/, 'R6: the view-tabs facade');
+  assert.match(source, /from '\.\/cds-core\.mjs'/, '4.16336.0: the cds-core facade');
+  assert.doesNotMatch(source, /generated\/view-tabs/, 'no view-tabs CDS part left');
 });
 
 // ------------------------------------------------------------------------------------------- V3-w11-sweep-shell-b
@@ -316,18 +323,23 @@ test('w11 sweep: main passes mP and the Customize folder, titles the consent "Cl
 });
 
 // ------------------------------------------------------------------------------------------- V3-w12-settings-radio
-test('w12: bc renders the generated shared-frame dV (N) and yP (w) from the view-tabs facade, no host copy', async () => {
+test('w12: bc renders the generated shared-frame RadioGroup (N) and ComboboxField (w) from the cds-core facade, no host copy', async () => {
   // c24c8737b imports `Si as w`, `yt as N`, `Mi as x`, `ji as k`, `ki as A`, `Ai as h` from shared-frame; bc calls them so.
   for (const needle of ['Si as w', 'yt as N', 'Mi as x', 'ji as k', 'ki as A', 'Ai as h', 'i(N,{options:v,value:a,onChange:e=>S(t,e)})',
     'i(w,{label:_,hint:l,error:d,items:v,value:a,onChange:e=>S(t,e??"")}'])
     assert.equal(count(PLUGIN_PAGE, needle), 1, needle);
-  const frame = raw('shared-frame-6jtSkIit.js');
-  for (const needle of ['dV=Object.assign(lV,{Root:uV,Item:oV,Card:cV})', 'dV as yt', 'yP as Si', '"data-cds":"RadioGroup"'])
-    assert.ok(frame.includes(needle), needle);
+  // 4.16336.0 c24c8737b: the same bc branches over `Kt as x` (RadioGroup HW) and `Gi as _` (ComboboxField sz), the cds-core roots.
+  for (const needle of ['Kt as x', 'Gi as _', 'ta as N', 'ea as A', 'Qi as w', '$i as h', 'i(x,{options:y,value:o,onChange:e=>T(t,e)})',
+    'i(_,{label:v,hint:l,error:d,items:y,value:o,onChange:e=>T(t,e??"")}'])
+    assert.equal(count(PLUGIN_PAGE_V4, needle), 1, needle);
+  const frame4 = raw4('shared-frame-CJdE5Ria.js');
+  for (const needle of ['HW as Kt,', 'sz as Gi,', 'OI as ta,', 'kI as ea,', 'AI as Qi,', 'NI as $i,']) assert.ok(frame4.includes(needle), needle);
+  for (const [name, local] of [['CdsRadioGroup', 'HW'], ['CdsComboboxField', 'sz'], ['CdsField', 'OI'], ['CdsFieldLabel', 'kI'], ['CdsFieldDescription', 'AI'], ['CdsFieldError', 'NI']])
+    assert.deepEqual(CDS_MANIFEST.publicNames[name], { file: 'shared-frame-CJdE5Ria.js', local, target: 'shared-frame.mjs', exportName: name }, name);
   const source = fs.readFileSync(path.join(app, 'src/source-plugin-settings-tab.jsx'), 'utf8');
-  assert.match(source, /import \{[^}]*\bCdsComboboxField\b[^}]*\bCdsRadioGroup\b[^}]*\} from '\.\/generated\/view-tabs\/index\.js'/);
+  assert.match(source, /import \{[^}]*\bCdsComboboxField\b[^}]*\bCdsRadioGroup\b[^}]*\} from '\.\/cds-core\.mjs'/);
   assert.doesNotMatch(source, /function RadioGroup\b|RADIO_DOT|SourceSelect|role="radio"|cowork-scheduled/, 'the hand-written radio group / host select / second Field import are gone');
-  const facade = await server.ssrLoadModule('/src/generated/view-tabs/index.js');
+  const facade = await server.ssrLoadModule('/src/cds-core.mjs');
   // The panel's radio group and select are exactly the generated components' output inside the same Field.
   const one = (key, entry, choices, input) => renderToStaticMarkup(React.createElement(Tab.PluginSettingsPanel, { pluginId: 'p',
     options: { schema: { [key]: entry }, inputs: { [key]: input }, choices: { [key]: choices }, configured: [key], unconfigured: [] }, save: async () => ({}) }));
@@ -354,23 +366,38 @@ test('w12: bc renders the generated shared-frame dV (N) and yP (w) from the view
 });
 
 // ------------------------------------------------------------------------------------------- W12 frame-settings-cont
-test('w12: bc text fields are the generated eM (CdsTextInputField) and booleans the generated c09817156 h (CdsCheckboxRow)', async () => {
+test('w12: bc text fields are the generated cds-core TextInputField (LI) and booleans the generated c09817156 h (CdsCheckboxRow)', async () => {
   // bc: `i(C,{label:_,hint:b,error:d,type:…})` with `Oi as C` (shared-frame `eM as Oi`, eM = Qj around uC) and
   // `i(Sn,{label:o,description:l,…})` with `t as Sn` from c09817156 (`export{h as t}`, h wraps its label in Qj = `Ni as d`).
   assert.equal(count(PLUGIN_PAGE, 'Oi as C'), 1);
   assert.equal(count(PLUGIN_PAGE, 'i(C,{label:_,hint:b,error:d,type:r.sensitive===!0?"password":"text"'), 1);
   assert.equal(count(PLUGIN_PAGE, 't as Sn}from"./c09817156-D4yWRk21.js"'), 1);
   assert.equal(count(PLUGIN_PAGE, 'i(Sn,{label:o,description:l,error:d,checked:a==="true"'), 1);
-  const frame = raw('shared-frame-6jtSkIit.js');
-  for (const needle of ['eM as Oi', 'Qj as Ni', 'b(uC,{ref:t,required:o,...s})', 'b(Qj,{label:a,hint:i,error:n,fieldClassName:r,children:c})'])
-    assert.ok(frame.includes(needle), needle);
-  const row = raw('c09817156-D4yWRk21.js');
-  for (const needle of ['Ni as d', 'onMouseDown:a,onClick:m,className:D', 't(d,{error:v,fieldClassName:y,children:L})', 'export{h as t}'])
-    assert.ok(row.includes(needle), needle);
+  // 4.16336.0 c24c8737b: `Zi as O` (TextInputField LI) for text, `t as Tn` from c09817156 (CheckboxRow h) for booleans.
+  assert.equal(count(PLUGIN_PAGE_V4, 'Zi as O'), 1);
+  assert.equal(count(PLUGIN_PAGE_V4, 'i(O,{label:v,hint:S,error:d,type:r.sensitive===!0?"password":"text"'), 1);
+  assert.equal(count(PLUGIN_PAGE_V4, 'import{t as Tn}from"./c09817156-Yg3kFvSY.js"'), 1);
+  assert.equal(count(PLUGIN_PAGE_V4, 'i(Tn,{label:c,description:l,error:d,checked:o==="true"'), 1);
+  assert.ok(raw4('shared-frame-CJdE5Ria.js').includes('LI as Zi,'));
+  assert.ok(raw4('c09817156-Yg3kFvSY.js').includes('export{h as t}'));
+  // LI is the Field (PI) around the TextInput (ww), as 3.6556.2 eM was Qj around uC; pinned inside LI's own declaration
+  // (its sibling RI has the same shape around another input).
+  const frame4 = raw4('shared-frame-CJdE5Ria.js');
+  const li = frame4.slice(frame4.indexOf('LI=J((e,t)=>'), frame4.indexOf(',RI=J((e,t)=>'));
+  assert.ok(li.length > 0 && count(frame4, 'LI=J((e,t)=>') === 1, 'LI declaration');
+  for (const needle of ['v(ww,{ref:t,required:o,...c})', 'v(PI,{label:a,hint:i,error:n,reserveErrorLines:s,fieldClassName:r,children:l})'])
+    assert.equal(count(li, needle), 1, needle);
+  // c09817156 h: the label row (onMouseDown / onClick on the label) inside the same Field PI (`PI as ra`, `ra as f`).
+  const row4 = raw4('c09817156-Yg3kFvSY.js');
+  assert.ok(frame4.includes('PI as ra,'));
+  for (const needle of ['ra as f', 'onMouseDown:l,onClick:m,className:O', 't(f,{error:v,reserveErrorLines:S,fieldClassName:y,children:R})'])
+    assert.equal(count(row4, needle), 1, needle);
+  assert.deepEqual(CDS_MANIFEST.publicNames.CdsTextInputField, { file: 'shared-frame-CJdE5Ria.js', local: 'LI', target: 'shared-frame.mjs', exportName: 'CdsTextInputField' });
+  assert.deepEqual(CDS_MANIFEST.publicNames.CdsCheckboxRow, { file: 'c09817156-Yg3kFvSY.js', local: 'h', target: 'c09817156.mjs', exportName: 'CdsCheckboxRow' });
   const source = fs.readFileSync(path.join(app, 'src/source-plugin-settings-tab.jsx'), 'utf8');
-  assert.match(source, /import \{[^}]*\bCdsCheckboxRow\b[^}]*\bCdsTextInputField\b[^}]*\} from '\.\/generated\/view-tabs\/index\.js'/);
+  assert.match(source, /import \{[^}]*\bCdsCheckboxRow\b[^}]*\bCdsTextInputField\b[^}]*\} from '\.\/cds-core\.mjs'/);
   assert.doesNotMatch(source, /FieldFrame|function CheckboxRow|MUTED_TEXT|<CdsCheckbox\b|<CdsTextInput\b/, 'no host copy of Qj / eM / the checkbox row');
-  const facade = await server.ssrLoadModule('/src/generated/view-tabs/index.js');
+  const facade = await server.ssrLoadModule('/src/cds-core.mjs');
   const strip = html => html.replace(/(id|for|aria-labelledby|aria-describedby)="[^"]*"/g, '$1=""');
   const panel = (key, entry, input) => renderToStaticMarkup(React.createElement(Tab.PluginSettingsPanel, { pluginId: 'p',
     options: { schema: { [key]: entry }, inputs: { [key]: input }, choices: {}, configured: [key], unconfigured: [] }, save: async () => ({}) }));
@@ -382,5 +409,8 @@ test('w12: bc text fields are the generated eM (CdsTextInputField) and booleans 
   const directBox = renderToStaticMarkup(React.createElement(facade.CdsCheckboxRow, { label: 'Verbose', description: 'More logs', checked: true, onCheckedChange() {} }));
   assert.ok(strip(box).includes(strip(directBox)), 'boolean = CdsCheckboxRow');
   assert.match(box, /<div data-cds="Field"[^>]*><label class="inline-flex gap-xs text-start font-sans text-body font-normal text-primary group\/cb items-start self-start cursor-interactive">/);
-  assert.ok(box.includes(`class="text-footnote leading-snug ${facade.cdsStaysSecondaryTextClass}">More logs</span>`));
+  // 4.16336.0 shared-frame's stays-secondary text class (no cds-core facade name; read from the official source).
+  const staysSecondary = 'text-[color:var(--cds-text-stays-secondary,var(--cds-text-muted))]';
+  assert.ok(raw4('shared-frame-CJdE5Ria.js').includes(`"${staysSecondary}"`));
+  assert.ok(box.includes(`class="text-footnote leading-snug ${staysSecondary}">More logs</span>`));
 });

@@ -12,7 +12,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
 import { emptyState, reduce } from '../src/state.js';
-import { codeTurnTail, promptRowOf, settledWrapUps, toolArgs, turnMessages, turnToolOf, withTurnBoxRows } from '../src/turn-plan-model.mjs';
+import { codeTurnTail, promptRowOf, settledWrapUps, taskTodosOf, toolArgs, turnMessages, turnToolOf, withTurnBoxRows } from '../src/turn-plan-model.mjs';
 
 const app = path.resolve(import.meta.dirname, '..');
 const count = (text, needle) => text.split(needle).length - 1;
@@ -139,6 +139,41 @@ test('the card: the turn box draws the plan with the official DOM for completed,
   const native = session();
   native.step('turn/plan/updated', { threadId: 'P', turnId: 't1', explanation: null, plan: [{ step: 'x', status: 'inProgress' }] });
   assert.equal(count(mount(native.state), '<li'), 0);
+});
+
+// A core whose model keeps its list with its own todo tool (the DeepSeek Harness's todo_write → TodoWrite) never calls
+// update_plan: c4ea84cb3 Br's taskTodos branch draws that list in the same card, outside the tool group its row sits in.
+const TODOS = [{ content: 'Read ui.m', status: 'completed' }, { content: 'Add the defaults', status: 'in_progress', activeForm: 'Adding the defaults' }, { content: 'Update the README', status: 'pending' }, { content: '', status: 'pending' }];
+const todoWrite = (id, todos, extra = {}) => ({ id, type: 'dynamicToolCall', namespace: null, tool: 'todo_write', arguments: { todos }, status: 'completed', turnId: 't1',
+  contentItems: [{ type: 'inputText', text: 'ok' }], ...extra });
+test('a core\'s own todo list (TodoWrite) is the turn box\'s plan: c28efd0ef todos, the newest plan write decides the branch', () => {
+  const base = [user('u1', 't1'), todoWrite('d1', TODOS)];
+  assert.deepEqual(taskTodosOf(base), [{ id: 'todo-0', content: 'Read ui.m', status: 'completed' },
+    { id: 'todo-1', content: 'Add the defaults', status: 'in_progress', activeForm: 'Adding the defaults' }, { id: 'todo-2', content: 'Update the README', status: 'pending' }]);
+  const tail = codeTurnTail({ items: [...base, { id: 'f1', type: 'fileChange', status: 'inProgress', turnId: 't1', changes: [] }], latestPromptId: 'u1', activeTurnId: 't1' });
+  assert.deepEqual(tail.plan.map((todo) => todo.status), ['completed', 'in_progress', 'pending']);
+  assert.equal(tail.planTouchedThisTurn, true);
+  assert.equal(tail.wrapUp, null);
+  // The whole list is replaced by the next call; an errored call is skipped; a JSON-string input is read.
+  assert.deepEqual(taskTodosOf([...base, todoWrite('d2', [{ id: 'a', text: 'Only this', status: 'in_progress' }])]), [{ id: 'a', content: 'Only this', status: 'in_progress' }]);
+  assert.equal(taskTodosOf([...base, todoWrite('d2', [{ content: 'Bad', status: 'pending' }], { status: 'failed' })]).length, 3);
+  assert.equal(taskTodosOf([user('u1', 't1'), todoWrite('d1', undefined, { arguments: JSON.stringify({ todos: TODOS }) })]).length, 3);
+  assert.deepEqual(taskTodosOf([user('u1', 't1'), todoWrite('d1', [])]), [], 'cleared todos: the taskTodos branch with no plan');
+  // No todo tool, or a ccd_turn call after it: the update_plan branch, as before.
+  assert.equal(taskTodosOf([user('u1', 't1')]), null);
+  assert.equal(taskTodosOf([...base, call('c1', 'update_plan', { items: PLAN, scope: 'first_task' }, { turnId: 't1' })]), null);
+  assert.deepEqual(codeTurnTail({ items: [...base, call('c1', 'update_plan', { items: PLAN, scope: 'first_task' }, { turnId: 't1' })], latestPromptId: 'u1', activeTurnId: 't1' }).plan.map((todo) => todo.content),
+    PLAN.map((todo) => todo.content));
+  assert.equal(taskTodosOf([...base, call('w1', 'wrap_up', WRAP, { turnId: 't1' })]), null, 'a wrap-up after the list keeps its box');
+  // The card: the same official list DOM as an update_plan plan.
+  const s = session();
+  item(s, todoWrite('d1', TODOS));
+  const html = mount(s.state);
+  assert.equal(count(html, '<li'), 3);
+  const [completed, inProgress, pending] = html.split('<li').slice(1);
+  assert.ok(completed.includes('Read ui.m') && completed.includes('>done</span>'));
+  assert.ok(inProgress.includes('data-cds="Spinner"') && inProgress.includes('>in progress</span>'));
+  assert.ok(pending.includes('Update the README') && pending.includes('>not done</span>'));
 });
 
 test('the next-step box: recap, question and the reply button after wrap_up; the plan card gives way to it', () => {

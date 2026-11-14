@@ -1,8 +1,9 @@
 // R3-composer composer-env-bar (research/composer.md §3.4, decisions D13): on the presets Home draft the composer hangs
-// the original 2.42304.0 cc43287c9 environment bar l0 under the card instead of a chin (Mte: `chin: Vo ? void 0 : Bo`,
-// the pickers in the StartCard rail's l0). Its chips are the original u0 (no caret), the groups c0, the iconOnly fit a0
-// with the r0 hysteresis. SSR of the composer, the original hooks under a minimal hook dispatcher with fake
-// ResizeObserver / MutationObserver / layout boxes, and the stylesheet; nothing opens a window.
+// the official cc43287c9 environment bar under the card instead of a chin. surfaces-prod-2 composer-env: the bar is the
+// 4.16336.0 one (code-composer-v4/environment-bar.mjs: vge, chips d8 (no caret), groups u8, the iconOnly fit _ge with the
+// gge hysteresis) and its model slot the 4.16336.0 Exe (composer-env-v4/model-effort.mjs). SSR of the composer, the
+// original hooks under a minimal hook dispatcher with fake ResizeObserver / MutationObserver / layout boxes, and the
+// stylesheet; nothing opens a window.
 import test, { before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -11,7 +12,9 @@ import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
+import { readFileSync } from 'node:fs';
 import { withMemoCache } from './support/react-memo-cache.mjs';
+import { designEntryStylesheets, legacyGlobalStylesheets } from '../scripts/current-design-assets.mjs';
 
 const app = path.resolve(import.meta.dirname, '..');
 const h = React.createElement;
@@ -20,8 +23,8 @@ before(async () => {
   server = await createServer({ configFile: false, root: app, plugins: [react()], server: { middlewareMode: true, hmr: false, ws: false, watch: null }, appType: 'custom', logLevel: 'error' });
   C = await server.ssrLoadModule('/src/source-composer.jsx');
   Bar = await server.ssrLoadModule('/src/source-composer-environment-bar.jsx');
-  Env = await server.ssrLoadModule('/src/generated/code-composer/environment-bar.mjs');
-  Tokens = await server.ssrLoadModule('/src/generated/code-composer/composer-tokens.mjs');
+  Env = await server.ssrLoadModule('/src/generated/code-composer-v4/environment-bar.mjs');
+  Tokens = await server.ssrLoadModule('/src/generated/code-composer-v4/composer-tokens.mjs');
 });
 after(() => server?.close());
 const noop = () => {};
@@ -80,45 +83,63 @@ test("second: the folder chip shows the basename or 'Choose…', the path as its
   assert.match(empty, />Choose…<\/span>/);
   assert.match(tag(empty, 'environment-bar-folder'), /aria-label="Folder: Choose folder…"/);
   assert.doesNotMatch(tag(empty, 'environment-bar-folder'), /title=/);
+  // 4.16336.0 Jge folder slot `shown && !starting && (activeStored === null || cloud without repos)`: a chosen saved (local)
+  // environment hides the folder chip (official 01: "BIHZCoding" alone on the left).
+  const saved = home({ environmentName: 'API server' });
+  assert.match(saved, /data-testid="environment-bar-place"/);
+  assert.doesNotMatch(saved, /environment-bar-second|environment-bar-folder/);
   // Nothing recent (the host's folderMenu=false): the chip browses directly, no menu semantics.
   assert.doesNotMatch(tag(slot(home({ folderMenu: false }), 'environment-bar-second'), 'environment-bar-folder'), /aria-haspopup/);
-  // F7 (shared-19, j2's Gr): a home folder reads ~-relative.
-  assert.deepEqual(Bar.environmentBarChips({ workdir: '/Users/me/code/app' }).folder,
+  // 4.16336.0 (cc43287c9 Yg = shared-3 VM under cd8a7d7c0's {home} label context): a folder under the home reads
+  // ~-relative; with no home known the full path stays.
+  assert.deepEqual(Bar.environmentBarChips({ workdir: '/Users/me/code/app', labelContext: { home: '/Users/me' } }).folder,
     { label: 'app', tail: undefined, title: '~/code/app', tooltipText: '~/code/app', ariaLabel: 'Folder: ~/code/app' });
+  assert.deepEqual(Bar.environmentBarChips({ workdir: '/Users/me/code/app', labelContext: { home: undefined } }).folder,
+    { label: 'app', tail: undefined, title: '/Users/me/code/app', tooltipText: '/Users/me/code/app', ariaLabel: 'Folder: /Users/me/code/app' });
 });
 
-test('mode and trailing: the composer’s Mode trigger in the empty:hidden mode slot; the bar Model trigger (effort as its tail) and the ring each in a c0 group', () => {
+test('model, mode and ring: vge’s right group holds the Exe model slot, then the composer’s Mode trigger in the empty:hidden mode slot, then the ring in a u8 group', () => {
   const html = home({ fastAvailable: true });
+  // vge: the chips line, then `flex grow items-center justify-end gap-x-1` holding model, mode, ring in that order
+  // (4.16336.0 moved the permission control after the model, official 01: "Opus 5.5 Extra  Bypass permissions  ring").
+  const right = subtree(html, html.indexOf('<div class="flex grow items-center justify-end gap-x-1">'));
+  assert.ok(right.length > 0, 'the right group rendered');
+  const order = ['data-testid="environment-bar-model"', 'data-testid="environment-bar-mode"', 'sc-usage-trigger'].map((needle) => right.indexOf(needle));
+  assert.ok(order.every((at) => at >= 0) && order[0] < order[1] && order[1] < order[2], `model < mode < ring: ${order}`);
+  assert.doesNotMatch(html, /environment-bar-trailing/, 'no 3.6556.2 trailing slot');
   const mode = slot(html, 'environment-bar-mode');
   assert.match(mode, /^<div data-testid="environment-bar-mode" class="flex shrink-0 empty:hidden rounded /);
-  // R3 composer-row-chin: the mode / model / effort / ring controls are the official CDS triggers (tQ in vQ, the
-  // ModelSelector pill, EffortControl's trigger, yZ's ring button: source-composer-row-chin.jsx). In the bar the Mode trigger
-  // takes x6's y6(true) text-secondary, and the model is x6's bar trigger (cc43287c9 Ce, r = bar): the ghost CdsButton
-  // y6(r, r) "shrink text-secondary" holding b6 — the givesWay name (shared-6 Ag) then the tail words, the effort in
-  // "shrink-0 whitespace-pre text-muted-control" — and no separate effort trigger (its menu has the Effort submenu).
+  // Hye: in the bar the permission trigger's class is Y5(inBar) = "min-w-0 shrink text-secondary".
+  assert.equal(Env.environmentTriggerClass(true), 'min-w-0 shrink text-secondary');
+  assert.equal(Bar.ENVIRONMENT_BAR_TRIGGER_TONE, 'text-secondary');
   assert.match(mode, /<span class="inline-flex min-w-0"><button type="button" data-cds="Button" data-cds-ghost=""[^>]*class="[^"]* min-w-0 shrink text-secondary sc-permission"/);
-  const trailing = slot(html, 'environment-bar-trailing');
-  assert.match(trailing, /<button type="button" data-cds="Button" data-cds-ghost=""[^>]*class="[^"]* shrink text-secondary sc-model-trigger" aria-label="Model: [^"]+" data-testid="environment-row-model"/);
+  // Exe: the model and the effort each in a u8 group; the bar's effort rides the model trigger's tail (Uye renderTrigger,
+  // `o = bar && !loading`), so the effort group stays empty (empty:hidden). The model trigger is Uye's ghost U with
+  // Y5(t, t) "shrink text-secondary" holding X5 (givesWay name, then the tail words).
+  const model = slot(html, 'environment-bar-model');
+  assert.match(model, /^<div data-testid="environment-bar-model" class="flex items-center gap-1">/);
+  const groups = [...model.matchAll(/<div class="flex empty:hidden rounded [^"]*">/g)];
+  assert.equal(groups.length, 2, 'Exe: model and effort u8 groups');
+  assert.match(model, /<button type="button" data-cds="Button" data-cds-ghost=""[^>]*class="[^"]* shrink text-secondary sc-model-trigger" aria-label="Model: Fixture High" data-testid="environment-row-model"/);
   assert.equal(Env.environmentTriggerClass(true, true), 'shrink text-secondary');
-  assert.ok(trailing.includes(`<span class="flex min-w-0 items-center gap-1 "><span class="${Tokens.environmentTriggerGivesWayClass}">Fixture</span><span class="shrink-0 whitespace-pre text-pro font-medium" data-top-tier=""> High</span></span>`), 'b6: the name, then the effort tail (High is the fixture model\'s highest level: purple, user decision 2026-10-18)');
-  assert.ok(slot(home({ effort: 'low' }), 'environment-bar-trailing').includes('<span class="shrink-0 whitespace-pre text-muted-control"> Low</span>'), 'a lower level keeps x6\'s text-muted-control');
-  assert.doesNotMatch(trailing, /sc-effort-trigger|ModelSelectorEffort/);
-  // The bar ring (3.6556.2 c227f4d5e B3, inComposerRow): the po `flex shrink-0 ms-px` slot and the 14px ring on the alpha-3
-  // track (`m=l?"var(--cds-alpha-3)":"var(--cds-alpha-2)"`, `y(_f,{pct:s,trackStroke:m,stroke:c,size:14})`).
-  assert.match(trailing, /<span class="flex shrink-0 ms-px"><button type="button" data-cds="Button" data-cds-icon-only=""[^>]*sc-usage-trigger"[^>]*>[\s\S]*?<svg width="14" height="14" viewBox="0 0 14 14" class="-rotate-90" aria-hidden="true"><circle cx="7" cy="7" r="6" fill="none" stroke-width="2" stroke="var\(--cds-alpha-3\)" data-ring-track="">/);
-  const groups = [...trailing.matchAll(/<div class="flex empty:hidden rounded [^"]*">/g)];
-  assert.equal(groups.length, 2);
-  for (const name of ['sc-model-trigger', 'sc-usage-trigger']) assert.match(trailing, new RegExp(name));
-  assert.ok(trailing.indexOf('sc-model-trigger') < trailing.indexOf('sc-usage-trigger'));
-  // The fast tier rides before the effort, in text-muted-as-secondary (x6 `c`: fastMode then effort).
-  assert.ok(slot(home({ fastAvailable: true, fastMode: true, speedLabel: 'Fast' }), 'environment-bar-trailing')
+  assert.ok(model.includes(`<span class="flex min-w-0 items-center gap-1 "><span class="${Tokens.environmentTriggerGivesWayClass}">Fixture</span><span class="shrink-0 whitespace-pre text-pro font-medium" data-top-tier=""> High</span></span>`), 'X5: the name, then the effort tail (High is the fixture model\'s highest level: purple, user decision 2026-10-18)');
+  // cc43287c9 (4.16336.0) Uye: a plain tail word is text-muted-as-secondary (3.6556.2 x6 had text-muted-control).
+  assert.ok(slot(home({ effort: 'low' }), 'environment-bar-model').includes('<span class="shrink-0 whitespace-pre text-muted-as-secondary"> Low</span>'), 'a lower level reads text-muted-as-secondary');
+  assert.doesNotMatch(html, /text-muted-control/);
+  assert.doesNotMatch(model, /sc-effort-trigger|ModelSelectorEffort|environment-row-effort/);
+  // The bar ring (inComposerRow): the `flex shrink-0 ms-px` slot and the 14px ring on the alpha-3 track, in its own u8 group
+  // after the mode slot.
+  const ring = right.slice(right.indexOf('data-testid="environment-bar-mode"'));
+  assert.match(ring, /<div class="flex empty:hidden rounded [^"]*"><span class="flex shrink-0 ms-px"><button type="button" data-cds="Button" data-cds-icon-only=""[^>]*sc-usage-trigger"[^>]*>[\s\S]*?<svg width="14" height="14" viewBox="0 0 14 14" class="-rotate-90" aria-hidden="true"><circle cx="7" cy="7" r="6" fill="none" stroke-width="2" stroke="var\(--cds-alpha-3\)" data-ring-track="">/);
+  // The fast tier rides before the effort, in text-muted-as-secondary (Uye: fastMode then effort).
+  assert.ok(slot(home({ fastAvailable: true, fastMode: true, speedLabel: 'Fast' }), 'environment-bar-model')
     .includes('<span class="shrink-0 whitespace-pre text-muted-as-secondary"> Fast</span><span class="shrink-0 whitespace-pre text-pro font-medium" data-top-tier=""> High</span>'));
   // The Fast status (the bare chin's sr-only live region) follows the bar inside the host scope.
   assert.match(html, /<\/div><span role="status" aria-live="polite" class="sr-only">Fast mode off<\/span><\/div>/);
   // No effort: no tail word.
-  assert.doesNotMatch(slot(home({ effort: '' }), 'environment-bar-trailing'), /text-muted-control/);
-  // An empty mode slot collapses by its own empty:hidden (chat mode has no permission control; the bar is Code only).
-  // 3.6556.2 i8 is React Compiler output (it reads its memo cache), so it is rendered, not called.
+  assert.doesNotMatch(slot(home({ effort: '' }), 'environment-bar-model'), /whitespace-pre/);
+  // An empty group collapses by its own empty:hidden (chat mode has no permission control; the bar is Code only).
+  // u8 is React Compiler output (it reads its memo cache), so it is rendered, not called.
   assert.equal(renderToStaticMarkup(h(Env.EnvironmentChipGroup, { children: null })), `<div class="flex empty:hidden ${Env.environmentChipClass}"></div>`);
 });
 
@@ -230,12 +251,17 @@ test('iconOnly chips (the n0 context): u0 hides its text for sr-only and its too
   assert.equal(narrow.props.children.props['data-icon-only'], '');
   assert.equal(narrow.props.children.props.children.props.className, 'sr-only');
   assert.equal(narrow.props.hoverable, false);
-  // A2: the place chip's "Where … runs" tooltip carries the place text as its detail only while iconOnly.
+  // 4.16336.0 Kge / $3: the place chip's tooltip is "Environment" (K7kuIZkkhY; D40's "Where … runs" is superseded), its
+  // detail the saved environment's name, and while iconOnly the place text when there is no name.
   const copy = Bar.environmentBarChips({ workdir: '/tmp/p', environmentName: 'API server' }).place;
-  const place = (iconOnly) => hookFixture(() => Bar.EnvironmentPlaceChip({ copy, menuKind: null, onMenu: noop }), contexts(iconOnly)).render();
-  assert.equal(place(false).props.content, 'Where DeepSeek runs');
-  assert.equal(place(false).props.detail, undefined);
+  const placeOf = (placeCopy) => (iconOnly) => hookFixture(() => Bar.EnvironmentPlaceChip({ copy: placeCopy, menuKind: null, onMenu: noop }), contexts(iconOnly)).render();
+  const place = placeOf(copy);
+  assert.equal(place(false).props.content, 'Environment');
+  assert.equal(place(false).props.detail, 'API server');
   assert.equal(place(true).props.detail, 'API server');
+  const local = placeOf(Bar.environmentBarChips({ workdir: '/tmp/p' }).place);
+  assert.equal(local(false).props.detail, undefined);
+  assert.equal(local(true).props.detail, 'This computer');
   assert.equal(place(true).props.hoverable, false);
   assert.deepEqual(place(true).props.collisionPadding, { top: 48, right: 8, bottom: 8, left: 8 });
   // The folder chip passes ik(pe) (c0fbbe82d hn): an ltr span breaking after each separator.
@@ -263,20 +289,39 @@ test('the chips open the host menus through onMenu with the trigger as anchor; A
   assert.deepEqual(Bar.ENVIRONMENT_BAR_MENUS, { place: 'home-environment', folder: 'home-folder' });
 });
 
+// 4.16336.0 design assets (current-design-assets): index.html links the 4.16336.0 entry sheets, the legacy global sheet the
+// 3.6556.2 regions still need, then the generated compatibility layer. A class the 4.16336.0 sheets dropped is styled only
+// through legacy-utilities.css, and only as a registered legacy-region dependency (style-compatibility.json keeps its
+// 3.6556.2 rule and names the generated region that draws it).
+function loadedStyles(appRoot) {
+  const read = (file) => readFileSync(path.join(appRoot, file), 'utf8');
+  const names = [...designEntryStylesheets, ...legacyGlobalStylesheets];
+  assert.deepEqual([...read('index.html').matchAll(/<link\s+rel="stylesheet"\s+href="([^"]+)"/g)].map((m) => m[1]),
+    [...names.map((name) => `/assets/v1/${name}`), '/assets/legacy-utilities.css'], 'index.html stylesheet links');
+  const registry = JSON.parse(read('public/style-compatibility.json'));
+  return {
+    official: names.map((name) => read(`public/assets/v1/${name}`)).join('\n'),
+    compat: read('public/assets/legacy-utilities.css'),
+    legacyRegions: (token) => (registry.rules.some((rule) => rule.baselineVersion === '3.6556.2' && rule.references.some((ref) => ref.className === token))
+      ? registry.legacyDebt.owners.filter((owner) => owner.kind === 'region' && owner.classes.includes(token)).map((owner) => owner.area) : []),
+  };
+}
+
 // TT-04 / D26: the bar's DOM is the official utility classes; every one is compiled in the loaded sheet, the host's
 // unlayered native-button reset is released for the chips, and no local rule styles l0's DOM.
 test("l0 / u0 / c0 classes are all in the official sheet; the host scope has no box; the chips' button reset is released", async () => {
-  // w2-composer-gen: the bar is 3.6556.2 output now, so only the official sheets count (no compatibility layer).
-  const sheet = (await Promise.all(['c6a992d55-Che1orl5.css', 'shared-styles-D_GJawPO.css', 'shared-frame-CegduNQ2.css', 'c8e31bf58-C7gq8dUF.css', 'c3fde7009-BszyXGym.css']
-    .map(f => fs.readFile(path.join(app, 'public/assets/v1', f), 'utf8')))).join('\n');
+  // w2-composer-gen: the bar is 3.6556.2 output, so only the official sheets the app loads count; 4.16336.0 (design
+  // assets): a class those sheets dropped counts only as a registered legacy-region dependency of the bar's region.
+  const { official: sheet, compat, legacyRegions } = loadedStyles(app);
   const html = renderToStaticMarkup(h(Bar.SourceComposerEnvironmentBar, { workdir: '/tmp/p', additionalFolders: [], onMenu: noop,
     mode: h('span', null, 'Auto'), model: h('span', null, 'Fixture'), effort: h('span', null, 'High'), ring: h('span', null, 'ring') }));
   const tokens = new Set([...html.matchAll(/class="([^"]*)"/g)].flatMap(m => m[1].split(/\s+/))
     .filter(t => t && !t.startsWith('stacks:') && !t.startsWith('sc-')).map(t => t.replaceAll('&amp;', '&')));
   assert.ok(tokens.size > 40, String(tokens.size));
   const escape = token => '.' + token.replace(/[^a-zA-Z0-9_-]/g, c => '\\' + c);
-  const missing = [...tokens].filter(token => !['{', ':', ',', '[', ' ', '>', ')'].some(next => sheet.includes(escape(token) + next)));
-  assert.deepEqual(missing, []);
+  const styled = (text, token) => ['{', ':', ',', '[', ' ', '>', ')'].some(next => text.includes(escape(token) + next));
+  const missing = [...tokens].filter(token => !styled(sheet, token));
+  assert.deepEqual(missing.filter(token => !(styled(compat, token) && legacyRegions(token).includes('code-composer'))), []);
   const css = await fs.readFile(path.join(app, 'src/source-composer.css'), 'utf8');
   assert.match(css, /\.sc-zone \.sc-chin\.sc-env-bar-scope \{ display: contents; font: inherit; color: inherit; \}/);
   // D26 (R3-style): the native-button reset is layered, so the chips need no revert-layer release

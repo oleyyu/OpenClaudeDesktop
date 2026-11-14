@@ -9,12 +9,22 @@
 // rewrite) and everything else, the response stream included, passes through.
 // The server listens on 127.0.0.1 only, on a free port, and keeps the relay's
 // base path so the adapter's /v1 handling stays the same.
+//
+// One forwarder per relay origin, each on its own port and never re-aimed: a
+// core reads DEEPSEEK_BASE_URL when it spawns, so the core already running when
+// Settings › Models saves another relay (or the official API) keeps talking to
+// the relay it started with until it is restarted ("Restart the core to
+// apply"), instead of sending its old key to the new relay or losing its
+// connection mid-session. Saving never waits on a stream in flight. The
+// forwarders a newer save left behind stay up (at most MAX_FORWARDERS, oldest
+// closed first) until the app quits.
 const http = require("node:http");
 // The relay is usually a remote host: its requests follow the system proxy (system-fetch.cjs).
 const { systemFetch } = require("./system-fetch.cjs");
 
 const HOP_BY_HOP = new Set(["host", "connection", "content-length", "transfer-encoding", "keep-alive", "upgrade", "proxy-connection", "te", "trailer"]);
 const RESPONSE_SKIP = new Set(["content-encoding", "content-length", "transfer-encoding", "connection", "keep-alive"]);
+const MAX_FORWARDERS = 4;
 
 /** Rename the reminder tag in a request body (plain text, so JSON escaping is untouched). */
 function rewriteBody(text) {
@@ -22,9 +32,11 @@ function rewriteBody(text) {
 }
 
 function createRelayProxy({ fetchImpl = (...args) => systemFetch(...args) } = {}) {
-  let server = null, target = null, port = 0;
+  // origin → {server, port, origin}, oldest first; `current` is the one the next core spawn gets.
+  const forwarders = new Map();
+  let current = null;
 
-  async function handle(req, res) {
+  async function handle(target, req, res) {
     const chunks = [];
     for await (const chunk of req) chunks.push(chunk);
     let body = chunks.length ? Buffer.concat(chunks) : null;
@@ -34,7 +46,7 @@ function createRelayProxy({ fetchImpl = (...args) => systemFetch(...args) } = {}
     res.on("close", () => { if (!res.writableFinished) controller.abort(); });
     let upstream;
     try {
-      upstream = await fetchImpl(`${target.origin}${req.url}`, { method: req.method, headers, body: body ?? undefined, signal: controller.signal, redirect: "manual" });
+      upstream = await fetchImpl(`${target}${req.url}`, { method: req.method, headers, body: body ?? undefined, signal: controller.signal, redirect: "manual" });
     } catch (error) {
       if (!res.headersSent) res.writeHead(502, { "content-type": "application/json" });
       res.end(JSON.stringify({ type: "error", error: { type: "api_error", message: `OpenClaude Desktop couldn’t reach the relay: ${error?.message || error}` } }));
@@ -48,25 +60,47 @@ function createRelayProxy({ fetchImpl = (...args) => systemFetch(...args) } = {}
     } catch { res.destroy(); }
   }
 
+  const close = (forwarder, { force = false } = {}) => new Promise(resolve => {
+    forwarder.server.close(() => resolve());
+    if (force) forwarder.server.closeAllConnections?.(); else forwarder.server.closeIdleConnections?.();
+  });
+
   /** Forward to `relayBaseURL`; resolves with the loopback base URL for the core. */
   async function start(relayBaseURL) {
-    target = new URL(relayBaseURL);
-    if (!server) {
-      server = http.createServer((req, res) => { handle(req, res).catch(() => { try { res.destroy(); } catch {} }); });
+    const target = new URL(relayBaseURL);
+    let forwarder = forwarders.get(target.origin);
+    if (!forwarder) {
+      const origin = target.origin;
+      const server = http.createServer((req, res) => { handle(origin, req, res).catch(() => { try { res.destroy(); } catch {} }); });
       await new Promise((resolve, reject) => { server.once("error", reject); server.listen(0, "127.0.0.1", () => { server.off("error", reject); resolve(); }); });
       server.unref();
-      port = server.address().port;
+      forwarder = { server, port: server.address().port, origin };
+      forwarders.set(origin, forwarder);
+      for (const [key, old] of forwarders) {
+        if (forwarders.size <= MAX_FORWARDERS) break;
+        if (old === forwarder) continue;
+        forwarders.delete(key);
+        void close(old);
+      }
     }
-    return `http://127.0.0.1:${port}${target.pathname.replace(/\/+$/, "")}`;
+    current = forwarder;
+    return `http://127.0.0.1:${forwarder.port}${target.pathname.replace(/\/+$/, "")}`;
   }
 
+  /** The next core spawn goes straight to its endpoint; a running core keeps the forwarder it started with. */
   async function stop() {
-    const current = server;
-    server = null; target = null; port = 0;
-    if (current) await new Promise(resolve => current.close(() => resolve()));
+    current = null;
   }
 
-  return { start, stop, get running() { return !!server; } };
+  /** App quit: every forwarder closes, connections in flight too. */
+  async function dispose() {
+    current = null;
+    const all = [...forwarders.values()];
+    forwarders.clear();
+    await Promise.all(all.map(forwarder => close(forwarder, { force: true })));
+  }
+
+  return { start, stop, dispose, get running() { return !!current; } };
 }
 
 module.exports = { createRelayProxy, rewriteBody };

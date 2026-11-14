@@ -21,8 +21,9 @@ const asar = name => fs.readFileSync(path.join(asarSource, name), 'utf8');
 const ion = prefix => fs.readFileSync(path.join(ionSource, fs.readdirSync(ionSource).find(name => name.startsWith(prefix + '-') && name.endsWith('.js'))), 'utf8');
 const once = (haystack, needle) => assert.equal(haystack.split(needle).length - 1, 1, needle);
 
-globalThis.document ??= { body: { nodeType: 1 }, head: { appendChild() {} }, createElement: () => ({ relList: { supports: () => false }, setAttribute() {}, style: {} }),
-  querySelector: () => null, querySelectorAll: () => [], addEventListener() {}, removeEventListener() {}, documentElement: { dataset: {}, getAttribute: () => null } };
+// W8-M9 stub contract (round4 integration, stub fields only): cds-core 9203795f reads these at load (official 4.16336.0): document.cookie, documentElement.hasAttribute.
+globalThis.document ??= { cookie: '' /* W8-M9: shared-0 CQ / Wo document.cookie */, body: { nodeType: 1 }, head: { appendChild() {} }, createElement: () => ({ relList: { supports: () => false }, setAttribute() {}, style: {} }),
+  querySelector: () => null, querySelectorAll: () => [], addEventListener() {}, removeEventListener() {}, documentElement: { hasAttribute: () => false /* W8-M9: shared-92 cS / Ib */, dataset: {}, getAttribute: () => null } };
 globalThis.window ??= { document: globalThis.document, navigator: { userAgent: 'Mozilla/5.0 (Macintosh)' }, location: { pathname: '/projects', search: '', hash: '', href: 'app://local/projects' },
   addEventListener() {}, removeEventListener() {}, matchMedia: () => ({ matches: false, addEventListener() {}, removeEventListener() {} }) };
 

@@ -45,7 +45,9 @@ function observeDirection(callback) {
 // so the thumb moves at once and a refused switch springs back. Bound only where `chord` (AM's desktop `e = B()`) holds,
 // which is also what makes bC offer the hint. The host mounts it with the one switch the sidebar renders (titlebar or
 // peek) so both share the pressed value the original keeps in its global store (zq).
-function useSurfaceChord({ enabled, homeMode, current, rtl, onChord }) {
+// On the 4.16336.0 frame the chord is shared-22 RL, mounted by zL (SidebarGlobalShortcuts): src/frame-sidebar-host.jsx binds it
+// with this hook over the same press the sliced x_ segments use.
+export function useSurfaceChord({ enabled, homeMode, current, rtl, onChord }) {
   const live = useRef(null);
   live.current = { homeMode, current, rtl, onChord };
   const matchers = useMemo(() => ({ prev: surfaceChordMatcher('chorus_surface_prev'), next: surfaceChordMatcher('chorus_surface_next') }), []);
@@ -85,7 +87,10 @@ function AppSwitchContainer({ mode, homeMode, onMode, chord, attention, rtl }) {
     homeMode={homeMode} selected={selected} onChange={onChange} size={size} home={home} code={code} />;
 }
 
-// placement "titlebar" (GI `G`, the open sidebar) or "peek" (GI `ce`, the collapsed sidebar's peek card).
+// placement "titlebar" (GI `G`, the open sidebar) or "peek" (GI `ce`, the collapsed sidebar's peek card), or "slot": the
+// 4.16336.0 frame (src/frame-sidebar-host.jsx) mounts the switch in the official KR's SidebarAppSwitch slot (shared-21 x_,
+// KR's `o(z, {children: o("div", {className: a(e, …, "flex items-center"), children: o(Nv, {})})})`): KR draws the
+// TooltipProvider and the titlebar container itself, so the slot is the switch alone, at KR's comfortable density.
 // `homeMode` is shared-21 rT (app-switch-model.mjs homeModeFor, main.jsx passes it through the sidebar); without it the
 // switch answers rT with Cowork unavailable, the Chat home.
 export function SourceAppSwitch({ mode = 'code', homeMode = homeModeFor(), onMode, chord = false, attention, density = 'compact', direction, placement = 'titlebar' }) {
@@ -95,7 +100,7 @@ export function SourceAppSwitch({ mode = 'code', homeMode = homeModeFor(), onMod
   const container = <AppSwitchContainer mode={mode} homeMode={homeMode} onMode={onMode} chord={chord} attention={attention} rtl={resolved === 'rtl'} />;
   // The desktop frame's CDS density is compact (shared-78 fW), so nT sizes the control "lg".
   return <DirectionContext value={context}><CdsDensityContext value={density}>
-    {placement === 'peek' ? <div className={appSwitchPeekClassName}>{container}</div>
+    {placement === 'slot' ? container : placement === 'peek' ? <div className={appSwitchPeekClassName}>{container}</div>
       : <CdsTooltipProvider><div className={appSwitchTitlebarClassName}>{container}</div></CdsTooltipProvider>}
   </CdsDensityContext></DirectionContext>;
 }

@@ -17,7 +17,7 @@ import { joinArguments } from './customize-model.mjs';
 import { mcpStatus } from './settings-model.mjs';
 import { canRemoveDeveloperServer } from './developer-server-actions.mjs';
 import { t, tn } from '../electron/i18n/index.mjs';
-import { CdsBadge, CdsCheckbox } from './generated/view-tabs/index.js';
+import { CdsBadge, CdsCheckbox } from './cds-core.mjs'; // 4.16336.0 host wiring (frame): cds-core Badge vh / Checkbox
 import './source-settings-pages.css';
 
 // menus C5: 3.6556.2 moved Developer › Local MCP servers into c8828a060-Co46iXy1, whose header status is the CDS Badge

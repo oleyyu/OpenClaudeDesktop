@@ -13,7 +13,14 @@
 // side-chat-chrome.mjs. Only main.jsx imports this host, so it reaches view-tabs through the facade (R6; not in the
 // chat/composer/menu graph of E41).
 import React, { useEffect, useId, useLayoutEffect, useRef, useSyncExternalStore } from 'react';
-import { CdsButton, CdsRoot, CdsSurface, CdsTooltip, useCdsDensity } from './generated/view-tabs/index.js';
+// host-wiring code-b: the header's Buttons and their Tooltips (Clear, Open in new window, Close; in the window, dock / pin)
+// are the 4.16336.0 cds-core originals (shared-frame-CJdE5Ria, semantic facade). Their 4.16336.0 counterparts pass no
+// hoverable, so the new default (false) stands. The pane's CdsSurface stays the view-tabs one: its CdsSurfaceContext is
+// read by what the body holds (the composer and the generated 3.6556.2 code-editor chips), as does useCdsDensity in the
+// user turn. qF's density-compact root is therefore both roots — the view-tabs CdsRoot for those readers and, inside it,
+// the cds-core CdsRoot (same density / className) for the new controls — each graph reading its own Root's Context.
+import { CdsRoot as ViewTabsCdsRoot, CdsSurface, useCdsDensity } from './generated/view-tabs/index.js';
+import { CdsButton, CdsRoot, CdsTooltip } from './cds-core.mjs';
 import {
   paneBodyClass, paneElevation, paneFlushRootClass, paneHeaderLineClass, paneRootClass, paneTitleClass, paneTrailingClass,
   sideChatInsetClass, sideChatUserTurnClass, userBubbleMeasureClass, userBubbleShapeClass,
@@ -239,7 +246,7 @@ export function SourceSideChat({ threadId, open, onClose, rpc, assistantName = '
   // absolute max-w-full flex flex-col` + open ? "draggable-none pointer-events-auto" : "invisible", holding the resize
   // handles and KF → UF: div.flex flex-1 min-h-0 flex-col outline-none (U) > N_ floating with noWindowDrag, no trailing
   // clearance, and the header dragging the panel. ssc-root is a host hook.
-  return <CdsRoot density="compact" className="contents">
+  return <ViewTabsCdsRoot density="compact" className="contents"><CdsRoot density="compact" className="contents">
     <div className="epitaxy-root text-body text-primary break-words pointer-events-none fixed inset-0" style={SIDE_CHAT_BOUNDS_STYLE}>
       <aside ref={root} aria-label={t('Side chat')} onClick={event => event.stopPropagation()} data-open={open || undefined} style={geometry.rect ?? undefined} {...geometry.pointerProps}
         className={`ssc-root epitaxy-side-chat rounded-card absolute max-w-full flex flex-col ${open ? 'draggable-none pointer-events-auto' : 'invisible'}`} inert={!open || undefined} aria-hidden={!open || undefined}>
@@ -265,5 +272,5 @@ export function SourceSideChat({ threadId, open, onClose, rpc, assistantName = '
         </div>
       </aside>
     </div>
-  </CdsRoot>;
+  </CdsRoot></ViewTabsCdsRoot>;
 }

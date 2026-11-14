@@ -36,7 +36,7 @@ const ROOTS = new Set();
 let savedWindow, savedDocument;
 before(async () => {
   savedWindow = globalThis.window; savedDocument = globalThis.document;
-  globalThis.document = { createElement: () => ({ relList: { supports: () => false } }), querySelector: () => null, documentElement: { getAttribute: () => null, hasAttribute: () => false } };
+  globalThis.document = { cookie: '', createElement: () => ({ relList: { supports: () => false } }), querySelector: () => null, documentElement: { getAttribute: () => null, hasAttribute: () => false } };
   // W14-code r6 r6pa-03: the rail's background-tasks pane now draws c96d752d0 UQ from code-transcript, whose shared-25
   // router store reads window.location.pathname at load (as in the app, where main.jsx already loads that graph).
   globalThis.window = { document: globalThis.document, localStorage: undefined, addEventListener() {}, removeEventListener() {}, matchMedia: undefined, location: { pathname: '/' }, navigator: globalThis.navigator };
@@ -285,8 +285,9 @@ test('fO stand-in: the flat rail\'s Save link beside an unnamed local environmen
     assert.equal(link.getAttribute('aria-label'), 'Save as environment');
     assert.equal(link.getAttribute('data-cds'), 'TextLink');
     assert.equal(link.textContent, 'Save');
-    // 3.6556.2 Zj (panes:C1-6): the link sits in the environment row's mark slot, `Y = "flex shrink-0 ps-xs"`
-    assert.equal(link.parentNode.getAttribute('class'), 'flex shrink-0 ps-xs');
+    // 3.6556.2 Zj (panes:C1-6): the link sits in the environment row's mark slot, `Y = "flex shrink-0 ps-xs"`; 4.16336.0
+    // cf74bc599 tN (the rail cutover): `de = \`flex shrink-0 ps-xs ${ti}\`` with ti = shared-20 xy (the lined rail's start pad).
+    assert.equal(link.parentNode.getAttribute('class'), 'flex shrink-0 ps-xs [.epitaxy-rail-lined_&]:ps-[calc(var(--rail-word-gap,var(--cds-gap-xs))-var(--rail-row-pad,var(--cds-pad-xs)))]');
     assert.equal(aside(container).querySelector('[data-testid="rail-save-environment"]'), null, 'Ly is null in the flat rail');
     // Py: the request goes on the scope store; qc (the host dialog) opens for it
     await act(async () => { reactProps(link).onClick?.({ preventDefault() {}, stopPropagation() {}, currentTarget: link, target: link, button: 0, nativeEvent: {} }); });

@@ -24,7 +24,7 @@ before(async () => {
   chunk = await server.ssrLoadModule('/src/generated/code-routines/cbd6c85c8-D1xuycDy.mjs');
   adapters = await server.ssrLoadModule('/src/source-code-routines-adapters.jsx');
   sharedAdapters = await server.ssrLoadModule('/src/source-routines-shared-adapters.jsx');
-  ({ createIntl } = await server.ssrLoadModule('/src/generated/chat/vendor-intl-DYfox5Co.js'));
+  ({ createIntl } = await server.ssrLoadModule('/src/generated/chat/vendor-intl-BJgYK7RA.js'));
   manifest = JSON.parse(await fs.readFile(path.join(OUT, 'manifest.json'), 'utf8'));
 });
 after(() => server?.close());

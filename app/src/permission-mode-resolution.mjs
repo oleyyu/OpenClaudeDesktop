@@ -1,13 +1,14 @@
-// R4g-composer CP6 (composer-14): the composer's permission mode as Claude Desktop 3.6556.2 layers it, on the host
-// (migrated from 2.42304.0 by lane w1-composer-pure).
+// R4g-composer CP6 (composer-14): the composer's permission mode as Claude Desktop 4.16336.0 layers it, on the host
+// (migrated from 2.42304.0 by lane w1-composer-pure, to 4.16336.0 by regions-misc).
 //
-// Official (c227f4d5e RR, pinned by scripts/extract-permission-mode.mjs): a draft's base mode is c8eb45883 p
-// (generated/permission-mode/resolution.mjs, `qb`; the 2.42304.0 d byte for byte): userChoice ?? userSettingsDefault ??
-// folderChoice ?? repoSettingsDefault ?? globalPref. A running session's mode is
-// `ct ?? (At ? bypass) ?? kt ?? jt ?? A ?? Ee`: its own pick, else the mode the session reports (or was spawned with),
-// else the global preference. The layers:
-//   userChoice           `[ct,lt]=$l(k,WR)` (WR returns null): an in-memory pick per opening (a draft, or the session
-//                        it became), never persisted with the draft.
+// Official (c227f4d5e, pinned by scripts/extract-permission-mode.mjs): a draft's base mode is c8eb45883 v
+// (generated/permission-mode/resolution.mjs, `iy`): userChoice ?? cap(userSettingsDefault ?? folderChoice ??
+// repoSettingsDefault ?? globalPref, heldPolicyCeiling). A running session's mode is
+// `X ?? (Kt ? bypass) ?? Gt ?? qt ?? F ?? null`, then `?? Pe`: its own pick, else the mode the session reports (or was
+// spawned with), else the global preference. The layers:
+//   userChoice           `[X,Tt]=Id(j,EH)` (EH returns null): an in-memory pick per opening (a draft, or the session
+//                        it became), never persisted with the draft. Beside it `jt=Pd(j,TH)`: the folder the pick was
+//                        committed in (null until the Mode menu or a carried pick commits it).
 //   userSettingsDefault  settings.json defaultPermissionMode (user/managed source), local and SSH environments only.
 //   folderChoice         `Xd("epitaxy-folder-permission-mode-v2",{},AR)[folder]`, Plan excluded; the session's folder is
 //                        its originCwd without `/.claude/worktrees/<name>` (pR). For a remote session or an SSH/WSL
@@ -15,10 +16,15 @@
 //                        permissive than the default (Jb over the rank table); the host has local folders only.
 //   repoSettingsDefault  settings.json defaultPermissionMode from the project's own settings.
 //   globalPref           `cc-landing-draft-permission-mode` through c8eb45883 f; only the auto-default nudge writes it.
-// A Mode-menu pick that differs from the current mode sets userChoice and, unless it is Plan, comes from the approval
-// card or is Bypass on a scratch / remote-env key (DR), the folder's pick; it never writes the global preference. When a
-// draft moves from no folder to a folder, a pick made before it is kept as that folder's pick (not a Bypass into an fR
-// key); any folder move then clears the draft's userChoice.
+//   heldPolicyCeiling    (new in 4.16336.0) the managed policy's defaultPermissionModeCeiling (c8eb45883 m, `uy`): every
+//                        layer below userChoice is capped to it (c8eb45883 _ over the rank table).
+// A Mode-menu pick that differs from the current mode sets userChoice, commits it in the current folder (`jt`) and,
+// unless it is Plan, comes from the approval card or is Bypass on a scratch / remote-env key (iH), the folder's pick; it
+// never writes the global preference. The draft folder-move effect (rewritten in 4.16336.0): when a draft moves from no
+// folder to a folder and its pick is not yet committed, the pick is kept as that folder's pick unless it is Plan, Bypass
+// into an fR key, or Auto without the auto-mode consent (`Jx`); the draft's userChoice itself survives the move when it
+// is neither Auto nor Bypass (cf059c6df p, `Yx`) and the environment offers it — it is then committed in the new
+// folder — and is cleared otherwise (3.6556.2 cleared it on every move).
 //
 // The v2 folder map (E11, the 3.6556.2 migration): AR = {scope:"account", seedFromPref:{key:"epitaxy-folder-permission-mode",
 // map: OR}}. While the v2 map has never been stored, it is seeded once from the 2.42304.0 map through
@@ -32,6 +38,13 @@
 // Host adapter:
 //   - userSettingsDefault and repoSettingsDefault: the host cores have no settings.json defaultPermissionMode, so both
 //     layers are absent (undefined), the official branch for an environment without settings.
+//   - heldPolicyCeiling: the host has no managed policy (no defaultPermissionModeCeiling), so it is undefined, the
+//     official value outside a managed environment (`Ge=se?uy(E):void 0` with no ceiling); _ then returns the layer as is.
+//   - The folder-move effect's auto-mode consent (Jx) is the host's own consent memory under the official keys
+//     (`epitaxy-auto-mode-consented`, or a `…:auto` ack in `epitaxy-perm-mode-acks-v2`, the same storage
+//     source-bypass-permission.jsx writes); the host environment is always this computer, so the environment never
+//     changes under a draft and every host mode is offered by it (official `Y.includes(a)`); the account-scoped storage
+//     is always ready (one local account, official Ze).
 //   - globalPref is the host's own Settings › Default permission mode (config.permission through savedPermission), used
 //     as is: a saved Plan or Bypass keeps working (official f would turn Plan into Accept edits, and without the
 //     GrowthBook auto-default gate `ccd_auto_default_mode` would also turn Auto into Accept edits). Settings is the only
@@ -88,14 +101,28 @@ export function folderPickWrites({ folderKey, value, how = 'mode_dropdown' } = {
   return !!folderKey && how !== 'approval_card' && value !== 'plan' && !(value === 'bypass' && scratchOrRemoteEnv(folderKey));
 }
 
-/** The ht effect for a draft whose folder changed from `previous` to `next`: a pick made with no folder carries into the
- * first one, except a Bypass into an fR key (`!(t==="bypassPermissions"&&$e!==null&&fR($e))`); host: no scratch,
- * remote-env or fR keys. */
-export function draftFolderMove({ previous = null, next = null, userChoice = null } = {}) {
-  if (previous === next) return { save: null, reset: false };
-  const fromNone = previous === null;
-  const carries = fromNone && userChoice !== null && userChoice !== 'plan' && !(userChoice === 'bypass' && next !== null && SCOPED_FOLDER_KEY.test(next));
-  return { save: carries && next !== null ? { key: next, value: userChoice } : null, reset: true };
+/** c227f4d5e cf059c6df p (`Yx`): Auto and Bypass are the risky modes, whatever the auto default. */
+const riskyMode = value => value === 'bypass' || value === 'auto';
+/**
+ * The 4.16336.0 draft folder-move effect (c227f4d5e Mt) for a draft whose folder changed from `previous` to `next`, with
+ * userChoice its pick, committed the folder that pick was committed in (official jt) and autoConsented the auto-mode
+ * consent (Jx). Official, with the host's single local environment (t===V, Y offers every host mode) and no scratch or
+ * remote-env keys (tH / rH never hold):
+ *   o = next!==null && previous===null; c = committed===null; u = pick && !risky(pick)
+ *   d = o && c && pick && pick!=="plan" && !(Bypass && fR(next)) && !(Auto && !autoConsented)   → save next's pick
+ *   pick===null || u ? (pick && next!==null && commit next) : clear the pick
+ * Returns { save, reset, commit }: save the folder pick, clear the draft's userChoice, commit the pick in `commit`.
+ */
+export function draftFolderMove({ previous = null, next = null, userChoice = null, committed = null, autoConsented = false } = {}) {
+  if (previous === next) return { save: null, reset: false, commit: null };
+  const pick = isPermissionMode(userChoice) ? userChoice : null;
+  const fromNone = next !== null && previous === null, uncommitted = committed === null;
+  const kept = pick !== null && !riskyMode(pick);
+  const carries = fromNone && uncommitted && pick !== null && pick !== 'plan' && !(pick === 'bypass' && SCOPED_FOLDER_KEY.test(next))
+    && !(pick === 'auto' && !autoConsented);
+  const save = carries ? { key: next, value: pick } : null;
+  if (pick === null || kept) return { save, reset: false, commit: pick !== null && next !== null ? next : null };
+  return { save, reset: true, commit: null };
 }
 
 /** The opening's mode: a draft through the original p, a running session through its own chain. */
@@ -111,7 +138,7 @@ export function resolveOpeningMode({ sessionId = null, userChoice = null, sessio
   }
   const folder = isPermissionMode(folderChoice) && folderChoice !== 'plan' ? folderChoice : undefined;
   const base = resolvePermissionBaseMode({ userChoice: pick, userSettingsDefault: undefined, repoSettingsDefault: undefined, folderChoice: folder,
-    globalPref: global, consultedStoredGlobalPref: global, storedPickLayersSettled: !!settled });
+    globalPref: global, consultedStoredGlobalPref: global, storedPickLayersSettled: !!settled, heldPolicyCeiling: undefined });
   return { mode: base.baseMode, source: base.baseModeSource, hasExplicitChoice: base.hasExplicitChoice };
 }
 
@@ -161,7 +188,19 @@ export function rememberSessionMode(modes, sessionId, mode) {
 }
 
 export function initialPermissionLayers(folders = {}, sessions = {}) {
-  return { choices: {}, spawn: {}, sessions, folders, folderAt: {}, spawnedFrom: {} };
+  return { choices: {}, spawn: {}, sessions, folders, folderAt: {}, committedAt: {}, spawnedFrom: {} };
+}
+
+/** The auto-mode consent the folder-move effect reads (official Jx, cf059c6df C): the host's consent memory under the
+ * official keys, as source-bypass-permission.jsx writes it (`epitaxy-auto-mode-consented`, or any `…:auto` ack). */
+export const AUTO_CONSENT_KEY = 'epitaxy-auto-mode-consented';
+export const PERMISSION_ACKS_KEY = 'epitaxy-perm-mode-acks-v2';
+export function readAutoConsented(storage) {
+  try { if (JSON.parse(storage?.getItem?.(AUTO_CONSENT_KEY) || 'false') === true) return true; } catch { /* unreadable */ }
+  try {
+    const acks = JSON.parse(storage?.getItem?.(PERMISSION_ACKS_KEY) || '[]');
+    return Array.isArray(acks) && acks.some(entry => typeof entry === 'string' && entry.endsWith(':auto'));
+  } catch { return false; }
 }
 const without = (record, key) => { const { [key]: _drop, ...rest } = record; return rest; };
 const dropBypass = record => {
@@ -174,21 +213,24 @@ export function permissionLayersReducer(state, action) {
     case 'pick': {
       const { openingKey, folderKey = null, value, how = 'mode_dropdown', current } = action;
       if (!openingKey || !isPermissionMode(value) || value === current) return state;
-      const next = { ...state, choices: { ...state.choices, [openingKey]: value } };
+      // Official `jt.current=ir.current,Tt(e)`: the pick is committed in the current folder.
+      const next = { ...state, choices: { ...state.choices, [openingKey]: value }, committedAt: { ...(state.committedAt ?? {}), [openingKey]: folderKey ?? null } };
       if (folderPickWrites({ folderKey, value, how })) next.folders = { ...state.folders, [folderKey]: value };
       // A pick in a session is that session's mode from now on (official: set_permission_mode updates kt).
       if (openingKey.startsWith('session:')) next.sessions = rememberSessionMode(state.sessions ?? {}, openingKey.slice('session:'.length), value);
       return next;
     }
     case 'folder': {
-      const { openingKey, folderKey = null } = action;
+      const { openingKey, folderKey = null, autoConsented = false } = action;
       if (!isDraftOpening(openingKey)) return state;
       if (!Object.hasOwn(state.folderAt, openingKey)) return { ...state, folderAt: { ...state.folderAt, [openingKey]: folderKey } };
       const previous = state.folderAt[openingKey];
       if (previous === folderKey) return state;
-      const move = draftFolderMove({ previous, next: folderKey, userChoice: state.choices[openingKey] ?? null });
+      const committedAt = state.committedAt ?? {};
+      const move = draftFolderMove({ previous, next: folderKey, userChoice: state.choices[openingKey] ?? null, committed: committedAt[openingKey] ?? null, autoConsented });
       return { ...state, folderAt: { ...state.folderAt, [openingKey]: folderKey },
         ...(move.save ? { folders: { ...state.folders, [move.save.key]: move.save.value } } : {}),
+        ...(move.commit !== null ? { committedAt: { ...committedAt, [openingKey]: move.commit } } : {}),
         ...(move.reset && Object.hasOwn(state.choices, openingKey) ? { choices: without(state.choices, openingKey) } : {}) };
     }
     case 'adopt': {
@@ -201,7 +243,8 @@ export function permissionLayersReducer(state, action) {
       // The draft opening became this session: its pick now lives in the session's spawn mode.
       const from = state.spawnedFrom[action.sessionId];
       if (from === undefined) return state;
-      return { ...state, spawnedFrom: without(state.spawnedFrom, action.sessionId), ...(isDraftOpening(from) && Object.hasOwn(state.choices, from) ? { choices: without(state.choices, from) } : {}) };
+      return { ...state, spawnedFrom: without(state.spawnedFrom, action.sessionId), ...(isDraftOpening(from) && Object.hasOwn(state.choices, from) ? { choices: without(state.choices, from) } : {}),
+        ...(isDraftOpening(from) && Object.hasOwn(state.committedAt ?? {}, from) ? { committedAt: without(state.committedAt, from) } : {}) };
     }
     case 'folders': return action.folders === state.folders ? state : { ...state, folders: action.folders ?? {} };
     case 'sessions': return action.sessions === state.sessions ? state : { ...state, sessions: action.sessions ?? {} };
@@ -230,7 +273,7 @@ export function usePermissionModeLayers({ globalPref = 'auto', settled = true, s
     spawnMode: sessionId ? state.spawn[sessionId] : undefined, folderChoice: !sessionId && folderKey ? state.folders[folderKey] : undefined, globalPref, settled });
   const live = useRef(null);
   live.current = { openingKey, folderKey, sessionId, mode: resolved.mode, state, globalPref };
-  useEffect(() => { if (!sessionId) dispatch({ type: 'folder', openingKey, folderKey }); }, [sessionId, openingKey, folderKey]);
+  useEffect(() => { if (!sessionId) dispatch({ type: 'folder', openingKey, folderKey, autoConsented: readAutoConsented(storageOf()) }); }, [sessionId, openingKey, folderKey]);
   useEffect(() => { if (sessionId) dispatch({ type: 'entered', sessionId }); }, [sessionId]);
   useEffect(() => { if (settled && bypassOptIn === false) dispatch({ type: 'purgeBypass' }); }, [settled, bypassOptIn, state.folders, state.choices, state.spawn, state.sessions]);
   const written = useRef(state.folders);

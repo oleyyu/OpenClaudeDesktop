@@ -25,5 +25,11 @@
    working line moves the tail by a gap. */
 .source-transcript-content > .source-message:has(> :only-child > [data-turn-mark-home]:only-child:empty),
 .source-transcript-content > .source-message:has(> :only-child > [data-turn-mark-home]:only-child:empty) > * { display: contents; }
+/* The same for the 4.16336.0 rows (source-code-transcript.jsx renderPart): a reply part is `[data-row-gap=own] >
+   [data-transcript-row].mt-5 > AssistantMessage > column > home`, in its own flow-root list row. With the box in the
+   tail outlet that `mt-5` was all the row still drew: 20px on top of the working line's own turn gap (35px between
+   the text and the line instead of 15px). The emptied row keeps no gap; it comes back with the box. */
+.source-transcript-content [data-transcript-row]:has(> [data-cds="AssistantMessage"]:only-child > :only-child > [data-turn-mark-home]:only-child:empty),
+.source-transcript-content [data-transcript-row]:has(> [data-reply-scope]:only-child > [data-cds="AssistantMessage"]:only-child > :only-child > [data-turn-mark-home]:only-child:empty) { margin-top: 0; }
 /* A loaded but empty thread has no preceding row and therefore no turn gap. */
 .source-transcript-content > .source-transcript-status:first-child { margin-top: 0; }

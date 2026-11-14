@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-// R6: CDS originals by semantic name from the view-tabs facade.
-import { CdsButton, CdsDropdown, CdsIcon, CdsSplitDropdownButton } from './generated/view-tabs/index.js';
+// host-wiring code-a: the header's Button, Icon, version Dropdown and Copy SplitDropdownButton are the 4.16336.0 cds-core
+// originals by semantic name (the facade replaces the view-tabs one, R6). The panel renders them itself; no 3.6556.2 area
+// receives them.
+import { CdsButton, CdsDropdown, CdsIcon, CdsSplitDropdownButton } from './cds-core.mjs';
 import { SourceFileViewer } from './source-file-viewer.jsx';
 import { SourceMarkdown } from './source-session.jsx';
 import { SourceLoadingPane } from './source-pane-states.jsx';

@@ -1450,6 +1450,177 @@ export function kimiLegacyMigration(env) {
   return { source: 'kimi-cli', path: source, sessions, config, mcp, history, skills }
 }
 
+// ---- Import Chat History: a new native session from another agent's conversation ---------------------------------
+// Written exactly as Kimi Code's own importer writes one (`kimi import-sessions`, apps/kimi-code/src/session-import/
+// run-import.ts:160-204 → migration-legacy imported-session.ts:40-64, wire-writer.ts:20-67, turn-structure.ts:25-82):
+//   sessions/<encodeWorkDirKey(cwd)>/<id>/agents/main/wire.jsonl   {type:'metadata', protocol_version:'1.0', created_at}
+//       then per turn (one per user message; a leading assistant run is an 'imported_orphan' system_trigger turn)
+//       turn.prompt {agentId, input, origin, time}, context.append_message {message:{role, content:[{type:'text',
+//       text}], toolCalls:[]}} for each message, turn.ended {agentId, turnId, reason:'completed', time} when the turn
+//       has an assistant message — so the resumed turn clock starts past the imported turns.
+//       Protocol 1.0 is what that writer emits; every Kimi Code migrates it forward on read (wire/migration/
+//       migration.ts:41-62, v1.1.ts needs `toolCalls` on every message) and rewrites the journal at the current version.
+//   state.json (last: a folder without it is an interrupted write) SessionMeta version 2 (sessionMetadata.ts:13-34),
+//       titleKind 'generated' (keeps the title when continued), isCustomTitle false, lastPrompt ≤ 200, lastTurnReason
+//       'completed', agents.main {homedir, type:'main', parentAgentId:null}, custom {imported_from, imported_source_id,
+//       imported_at} (run-import.ts:192-197);
+//   session_index.jsonl {sessionId, sessionDir, workDir} appended (migration-legacy session-index.ts:29-37).
+// The id is a native `session_<uuid>` (sessionLifecycleService.ts:1046) whose folder must not exist yet (an existing
+// session is never touched). No lock is taken: Kimi's session locks live in <home>/locks/sessions and are claimed by the
+// process that opens a session (persistence/backends/node-fs/sessionLockService.ts:57), which a new folder has none of.
+// session/load(id) finds it without the index's read model: FileSessionIndex.get falls back to the session_index.jsonl
+// hint and then a scan of every workspace folder's state.json (app/sessionIndex/sessionIndexService.ts:412-423, 669-681),
+// and replays the main agent's context (acp-server replay.ts:37-77). The same layout is what 2.1.1 (the pinned release)
+// reads: agents/<agent>/wire.jsonl, state.json and session_index.jsonl are the files this adapter already follows.
+
+export const KIMI_IMPORT_WIRE_PROTOCOL = '1.0'
+export const KIMI_SESSION_META_VERSION = 2
+export const KIMI_IMPORT_DEFAULT_TITLE = 'Imported session'
+// run-import.ts:19-24 (FALLBACK_CONTEXT_WINDOW, COMPACTION_TRIGGER_RATIO, RESERVED_CONTEXT_SIZE, CONTINUATION_MARGIN,
+// ESTIMATE_UNDERCOUNT, MIN_IMPORT_BUDGET) and session-import render.ts:4 (DEFAULT_IMPORT_RATIO).
+const IMPORT_FALLBACK_WINDOW = 131_072
+const IMPORT_TRIGGER_RATIO = 0.85
+const IMPORT_RESERVED = 50_000
+const IMPORT_MARGIN = 30_000
+const IMPORT_UNDERCOUNT = 1.25
+const IMPORT_MIN_BUDGET = 16_384
+const IMPORT_RATIO = 0.8
+
+/** session-import render.ts estimateTokens (:12-20): four ASCII characters a token, any other code point one. */
+export function kimiEstimateTokens(text) {
+  let ascii = 0
+  let other = 0
+  for (const ch of String(text ?? '')) { if (ch.codePointAt(0) <= 127) ascii++; else other++ }
+  return Math.ceil(ascii / 4) + other
+}
+
+/**
+ * The token allowance of an imported conversation for config.toml's default model (run-import.ts importBudget
+ * :104-116): its input limit (min of max_input_size / max_context_size after overrides, else 131072) times 0.8, and
+ * no more than the room below automatic compaction (0.85 of the window or window − 50000) less 30000, over 1.25.
+ */
+export function kimiImportBudget(config) {
+  const raw = config?.defaultModel ? config.models?.[config.defaultModel] : null
+  const model = raw ? { ...raw, ...(isPlainObject(raw.overrides) ? raw.overrides : {}) } : {}
+  const limits = [Number(model.max_input_size), Number(model.max_context_size)].filter((value) => Number.isFinite(value) && value > 0)
+  const window = limits.length ? Math.min(...limits) : IMPORT_FALLBACK_WINDOW
+  const threshold = Math.min(window * IMPORT_TRIGGER_RATIO, IMPORT_RESERVED > 0 && IMPORT_RESERVED < window ? window - IMPORT_RESERVED : window)
+  const allowance = Math.max(IMPORT_MIN_BUDGET, (threshold - IMPORT_MARGIN) / IMPORT_UNDERCOUNT)
+  return Math.floor(Math.min(window * IMPORT_RATIO, allowance))
+}
+
+/**
+ * The imported messages as Kimi turns: user / assistant text only (tool calls arrive flattened, images dropped),
+ * consecutive messages of one role joined (a provider that wants alternating roles gets them), grouped one turn per user
+ * message (turn-structure.ts splitIntoTurns :25-46). Whole turns are kept from the newest back while they fit
+ * `tokenBudget` (session-import's selection, README "Budget and selection"); the newest turn alone is cut to its end.
+ * A note heads the first kept message when turns were left out. → {turns: [{messages}], total, kept}
+ */
+export function kimiImportTurns(messages, { tokenBudget = Infinity } = {}) {
+  const merged = []
+  for (const message of Array.isArray(messages) ? messages : []) {
+    const role = message?.role === 'user' || message?.role === 'assistant' ? message.role : null
+    const text = typeof message?.text === 'string' ? message.text.replace(/\s+$/, '') : ''
+    if (!role || !text.trim()) continue
+    const last = merged.at(-1)
+    if (last && last.role === role) last.text += `\n\n${text}`
+    else merged.push({ role, text })
+  }
+  const turns = []
+  for (const message of merged) {
+    if (message.role === 'user' || !turns.length) turns.push({ messages: [message] })
+    else turns.at(-1).messages.push(message)
+  }
+  const cost = (turn) => turn.messages.reduce((sum, message) => sum + kimiEstimateTokens(message.role) + kimiEstimateTokens(message.text), 0)
+  const kept = []
+  let used = 0
+  for (let index = turns.length - 1; index >= 0; index--) {
+    const value = cost(turns[index])
+    if (kept.length && used + value > tokenBudget) break
+    kept.unshift(turns[index])
+    used += value
+  }
+  if (kept.length === 1 && used > tokenBudget && Number.isFinite(tokenBudget)) {
+    // The newest turn alone is over: each message keeps its ending, within an even share of the budget.
+    const share = Math.max(256, Math.floor(tokenBudget / kept[0].messages.length) - 8)
+    kept[0] = { messages: kept[0].messages.map((message) => {
+      if (kimiEstimateTokens(message.text) <= share) return message
+      let start = Math.max(0, message.text.length - share)
+      while (start < message.text.length && kimiEstimateTokens(message.text.slice(start)) > share) start += Math.max(1, Math.floor((message.text.length - start) / 10))
+      return { ...message, text: `[…]\n${message.text.slice(start)}` }
+    }) }
+  }
+  if (kept.length < turns.length && kept.length) {
+    const first = kept[0].messages[0]
+    kept[0] = { messages: [{ ...first, text: `[Earlier turns of this imported conversation were left out to fit the context window: ${kept.length} of ${turns.length} turns kept.]\n\n${first.text}` }, ...kept[0].messages.slice(1)] }
+  }
+  return { turns: kept, total: turns.length, kept: kept.length }
+}
+
+/** The main agent's journal lines (wire-writer.ts:24-66 with turn-structure.ts buildTurnRecords :52-82). */
+export function kimiImportWireLines(turns, time) {
+  const lines = [{ type: 'metadata', protocol_version: KIMI_IMPORT_WIRE_PROTOCOL, created_at: time }]
+  turns.forEach((turn, turnId) => {
+    const opensWithUser = turn.messages[0]?.role === 'user'
+    const content = (message) => [{ type: 'text', text: message.text }]
+    lines.push({ type: 'turn.prompt', agentId: 'main', input: opensWithUser ? content(turn.messages[0]) : [], origin: opensWithUser ? { kind: 'user' } : { kind: 'system_trigger', name: 'imported_orphan' }, time })
+    for (const message of turn.messages) lines.push({ type: 'context.append_message', message: { role: message.role, content: content(message), toolCalls: [] } })
+    if (turn.messages.some((message) => message.role === 'assistant')) lines.push({ type: 'turn.ended', agentId: 'main', turnId, reason: 'completed', time })
+  })
+  return lines
+}
+
+/**
+ * Write a new Kimi Code session holding an imported conversation, under the real Kimi home ($KIMI_CODE_HOME, else
+ * <home or env.HOME>/.kimi-code — the threads' overlay homes link its sessions/ and session_index.jsonl). `home` is the
+ * user's home folder. → {sessionId, sessionDir, turns, keptTurns}
+ */
+export async function kimiImportSession({ cwd, title, messages, home = null, env = process.env, importedFrom = null, tokenBudget, now = Date.now(), taken = () => false } = {}) {
+  if (typeof cwd !== 'string' || !path.isAbsolute(cwd)) throw new Error('An imported Kimi session needs an absolute folder.')
+  const workDir = path.resolve(cwd)
+  const kimiHome = env?.KIMI_CODE_HOME || path.join(home || env?.HOME || os.homedir(), '.kimi-code')
+  const budget = Number.isFinite(tokenBudget) ? tokenBudget : kimiImportBudget(readKimiConfig(path.join(kimiHome, 'config.toml')))
+  const { turns, total, kept } = kimiImportTurns(messages, { tokenBudget: budget })
+  if (!turns.length) throw new Error('There is nothing to import: the conversation has no messages.')
+  const time = Math.round(now)
+  // A fresh id the bridge doesn't already know (`taken`); mkdirSync below refuses one Kimi has.
+  let sessionId = null
+  for (let tries = 0; tries < 100 && !sessionId; tries++) { const candidate = `session_${crypto.randomUUID()}`; if (!taken(candidate)) sessionId = candidate }
+  if (!sessionId) throw new Error('No free Kimi Code session id.')
+  const bucket = path.join(kimiHome, 'sessions', kimiWorkDirKey(workDir))
+  const sessionDir = path.join(bucket, sessionId)
+  fs.mkdirSync(bucket, { recursive: true, mode: 0o700 })
+  fs.mkdirSync(sessionDir, { mode: 0o700 }) // EEXIST for a folder that is already there: never written into
+  try {
+    const wireDir = path.join(sessionDir, 'agents', 'main')
+    fs.mkdirSync(wireDir, { recursive: true, mode: 0o700 })
+    fs.writeFileSync(path.join(wireDir, 'wire.jsonl'), kimiImportWireLines(turns, time).map((line) => JSON.stringify(line)).join('\n') + '\n', 'utf8')
+    const lastUser = [...turns.flatMap((turn) => turn.messages)].reverse().find((message) => message.role === 'user')?.text ?? ''
+    const named = typeof title === 'string' && title.trim() ? title.replace(/\s+/g, ' ').trim().slice(0, 200) : KIMI_IMPORT_DEFAULT_TITLE
+    const custom = {
+      imported_from: typeof importedFrom?.source === 'string' && importedFrom.source ? importedFrom.source : 'openclaude-desktop',
+      ...(typeof importedFrom?.sourceId === 'string' && importedFrom.sourceId ? { imported_source_id: importedFrom.sourceId } : {}),
+      imported_at: new Date(time).toISOString(),
+      ...(kept < total ? { imported_turns: { kept, total } } : {}),
+    }
+    const state = {
+      id: sessionId, version: KIMI_SESSION_META_VERSION, cwd: workDir, createdAt: time, updatedAt: time, archived: false,
+      title: named, titleKind: 'generated', isCustomTitle: false, lastPrompt: lastUser.slice(0, 200), lastTurnReason: 'completed',
+      agents: { main: { homedir: wireDir, type: 'main', parentAgentId: null } }, custom,
+    }
+    fs.writeFileSync(path.join(sessionDir, 'state.json'), JSON.stringify(state, null, 2), 'utf8')
+    const index = path.join(kimiHome, 'session_index.jsonl')
+    fs.mkdirSync(path.dirname(index), { recursive: true, mode: 0o700 })
+    fs.appendFileSync(index, JSON.stringify({ sessionId, sessionDir, workDir }) + '\n', 'utf8')
+  } catch (error) {
+    // run-import.ts discard (:153-156): the half-written folder goes, and its bucket when it is left empty.
+    fs.rmSync(sessionDir, { recursive: true, force: true })
+    try { fs.rmdirSync(bucket) } catch {}
+    throw error
+  }
+  return { sessionId, sessionDir, turns: total, keptTurns: kept }
+}
+
 /** A Kimi server answer's data (its {code: 0, data} envelope), or throws with what it said. */
 function kimiData(result, what) {
   if (result.ok && result.body?.code === 0) return result.body.data
@@ -1619,6 +1790,17 @@ export default {
       const item = Array.isArray(body?.data?.results) ? body.data.results.find((entry) => entry?.id === sessionId) : null
       if (!ok || body?.code !== 0 || (item && item.ok === false)) throw new Error(`Kimi Code could not ${archived ? 'archive' : 'restore'} the session: ${item?.error?.message ?? body?.msg ?? `HTTP ${status}`}`)
     })
+  },
+
+  /**
+   * Import Chat History (codeDesktop/thread/import): a new native session holding the conversation (kimiImportSession),
+   * which session/load then opens and replays. → {sessionId}
+   */
+  async importSession({ cwd, title, messages, home = null, env = process.env, importedFrom = null, tokenBudget, taken } = {}) {
+    const { sessionId, sessionDir, turns, keptTurns } = await kimiImportSession({ cwd, title, messages, home, env, importedFrom, tokenBudget, ...(typeof taken === 'function' ? { taken } : {}) })
+    // written: the session folder it created (mkdir without recursive: never an existing one), what a failed import
+    // removes again (Kimi has no deleteSession hook here).
+    return { sessionId, turns, keptTurns, written: [sessionDir] }
   },
 
   /** Kimi's own title and archive state of each session (sessions/<wd>/<session>/state.json), for thread/list. */

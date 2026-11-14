@@ -16,6 +16,8 @@ import { groupFileTools } from '../src/file-tool-model.mjs';
 const app = path.resolve(import.meta.dirname, '..');
 const assets = path.join(app, '../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1');
 const official = (file) => fs.readFileSync(path.join(assets, file), 'utf8');
+// Wave 8b: the '!' entry is the 4.16336.0 c19e90103 k_ (transcript-rows-v4 UserBashRun).
+const official4 = (file) => fs.readFileSync(path.join(app, '../reference/snapshots/claude-4.16336.0-20261104/ion-dist/assets/v1', file), 'utf8');
 const enUS = JSON.parse(fs.readFileSync(path.join(app, '../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/i18n/en-US.json'), 'utf8'));
 const read = (file) => fs.readFileSync(path.join(app, file), 'utf8');
 const render = (element) => renderToStaticMarkup(element);
@@ -101,6 +103,13 @@ test('W12b-TR-4: the user\'s own ! command is the user entry c19e90103 Dg, not a
   assert.ok(official('c96d752d0-CWv_7-n9.js').includes('className:"flex flex-col gap-sm w-full",children:['));
   const generated = read('src/generated/transcript-rows/outside-handlers.mjs');
   assert.match(generated, /Dg as UserBashRun/);
+  // Wave 8b: the host entry renders the 4.16336.0 k_ (c19e90103-BKPMSRL2 `ft`, c96d752d0-D9VB6ArX vge under `_i==="bash"`).
+  const c19v4 = official4('c19e90103-BKPMSRL2.js');
+  assert.ok(c19v4.includes('"relative epitaxy-diff epitaxy-fence rounded-lg overflow-clip"'));
+  assert.ok(c19v4.includes('className:"rounded-lg epitaxy-card-outline-overlay overflow-clip max-h-100 overflow-y-auto px-md py-1.25"'));
+  assert.ok(official4('c96d752d0-D9VB6ArX.js').includes('f(vge,{command:e.command,output:e.output,error:e.error,runId:e.runId,kept:e.kept,commandOnly:e.commandOnly},e.id)'));
+  assert.match(read('src/generated/transcript-rows-v4/index.mjs'), /\bUserBashRun\b[^\n]*from "\.\/rows-c19e90103\.mjs"/);
+  assert.match(read('src/source-user-shell.jsx'), /import \{ UserBashRun \} from "\.\/generated\/transcript-rows-v4\/index\.mjs";/);
   const item = (extra) => ({ id: 'u1', turnId: 't2', type: 'commandExecution', source: 'userShell', command: "/bin/zsh -lc 'ls -la'", ...extra });
   assert.equal(S.officialToolItem(item({ status: 'completed' })), false);
   assert.equal(S.officialToolItem({ ...item({ status: 'completed' }), source: 'agent' }), true);
@@ -109,13 +118,18 @@ test('W12b-TR-4: the user\'s own ! command is the user entry c19e90103 Dg, not a
   assert.deepEqual(groupFileTools([agent, item({ status: 'completed' }), { ...agent, id: 'a2' }]).map((row) => row.id), ['a1', 'u1', 'a2']);
   const html = (extra) => render(React.createElement(S.SourceMessage, { item: item(extra), sessionKey: 's', turnStart: true }));
   const done = html({ status: 'completed', aggregatedOutput: 'a.txt\nb.txt\n' });
-  assert.match(done, /^<div class="source-message source-user-shell flex flex-col gap-sm w-full" data-transcript-item-id="u1" data-turn-start="true"><div class="relative max-w-full w-full select-text">/);
+  // Wave 8b: 4.16336.0 k_ (3.6556.2 Dg had `"relative max-w-full w-full select-text"`, the box
+  // `"mt-1.25 rounded-lg epitaxy-card-outline-overlay overflow-clip max-h-[160px] overflow-y-auto px-md py-1.25"`, the pre
+  // `"text-code text-secondary whitespace-pre-wrap break-all"` and "(no output)"; 4.16336.0 wraps the box in
+  // "group/body relative mt-1.25 first:mt-0" with the copy button, max-h-100, break-words and "No output").
+  assert.match(done, /^<div class="source-message source-user-shell flex flex-col gap-sm w-full" data-transcript-item-id="u1" data-turn-start="true"><div class="epitaxy-code-size relative max-w-full w-full select-text">/);
   assert.match(done, /class="relative epitaxy-diff epitaxy-fence rounded-lg overflow-clip"/);
-  assert.match(done, /class="mt-1\.25 rounded-lg epitaxy-card-outline-overlay overflow-clip max-h-\[160px\] overflow-y-auto px-md py-1\.25"/);
-  assert.match(done, /<pre class="text-code text-secondary whitespace-pre-wrap break-all">/);
+  assert.match(done, /<div class="group\/body relative mt-1\.25 first:mt-0"><div class="rounded-lg epitaxy-card-outline-overlay overflow-clip max-h-100 overflow-y-auto px-md py-1\.25"/);
+  assert.match(done, /<pre class="text-code text-secondary whitespace-pre-wrap break-words">/);
   assert.match(done, /a\.txt\nb\.txt/);
+  assert.match(done, /aria-label="Copy"/);
   assert.doesNotMatch(done, /You ran|Ran a command|Open in terminal/);
-  assert.match(html({ status: 'completed', aggregatedOutput: '' }), /\(no output\)/);
+  assert.match(html({ status: 'completed', aggregatedOutput: '' }), /No output/);
   assert.match(html({ status: 'inProgress' }), /Running…/);
   assert.deepEqual(U.userShellRun(item({ status: 'completed', aggregatedOutput: ' x \n' })), { command: 'ls -la', output: 'x' });
 });

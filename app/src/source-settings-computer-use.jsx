@@ -25,7 +25,9 @@ import { t } from '../electron/i18n/index.mjs';
 import { SourceSwitch as SettingSwitch } from './source-switch.jsx';
 import { SourceSegments } from './source-segments.jsx';
 // W14-code r6 sh6-03: c71860c77 `_` (Open System Settings, chip remove X) is shared-frame Uu = CdsButton.
-import { CdsBadge, CdsButton, CdsDialog, CdsDropdown, CdsIcon, CdsTextLink } from './generated/view-tabs/index.js';
+// 4.16336.0 host wiring (frame): Badge / Button / Dialog (with the turn-on body inside it) / Dropdown / Icon / TextLink are
+// the cds-core facade's; the host renders all of them.
+import { CdsBadge, CdsButton, CdsDialog, CdsDropdown, CdsIcon, CdsTextLink } from './cds-core.mjs';
 
 /** The apps every session has allowed right now (service.cjs allGrants) and a revoke that refreshes them. */
 export function useComputerUseGrants(desktopCall, active) {

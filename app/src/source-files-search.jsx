@@ -13,7 +13,9 @@ import { useMultiSelectionEscape } from "./generated/files-changes/file-selectio
 import {SourceFileSearchOptions} from './source-file-viewer.jsx';
 import {contentResults,contentPreview} from './file-content-results.mjs';
 import {DEFAULT_SEARCH_OPTIONS} from './file-find-model.mjs';
-import { CdsButton, CdsIcon, CdsSpinner, CdsTextInput } from "./generated/view-tabs/index.js";
+// host-wiring code-a: the filter bar's TextInput with its slot Spinner / Icon / Button and the rows' Icon are the
+// 4.16336.0 cds-core originals (semantic facade). SessionsHighlight stays c1ea8a271's 3.6556.2 original (not in cds-core).
+import { CdsButton, CdsIcon, CdsSpinner, CdsTextInput } from "./cds-core.mjs";
 import { SessionsHighlight } from "./generated/view-tabs/c1ea8a271-CHvO08g4.js";
 import { FileTypeIcon } from "./generated/files-changes/file-type-icon.mjs";
 import { LitText } from "./generated/files-changes/path-segments.mjs";

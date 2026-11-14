@@ -33,6 +33,7 @@ import { parsers } from '../../tools/node_modules/prettier/plugins/babel.mjs';
 import { format } from '../../tools/node_modules/prettier/index.mjs';
 import babel from '../../tools/node_modules/playwright/lib/transform/babelBundle.js';
 import * as official from './official-3.6556.2.mjs';
+import * as official4 from './official-4.16336.0.mjs';
 
 const root = path.resolve(import.meta.dirname, '..');
 const referenceVersion = official.referenceVersion;
@@ -517,7 +518,9 @@ function vendorImport(file, alias, src) {
   return target;
 }
 
-export async function extractFilesChanges({ check = false } = {}) {
+export async function extractFilesChanges({ check = false, version = referenceVersion, survey = false } = {}) {
+  if (version === official4.referenceVersion) return extractTarget4(contract4, { check, survey });
+  if (version !== referenceVersion) throw Error(`extract-files-changes has no ${version} source contract`);
   const cache = new Map();
   const emitted = []; // modules already generated in this run: { spec, src }
   const manifest = { referenceVersion, referenceSnapshot, generator: 'scripts/extract-files-changes.mjs', adapterModule: 'src/source-files-changes-adapters.jsx', modules: [] };
@@ -641,4 +644,738 @@ export async function extractFilesChanges({ check = false } = {}) {
   const count = manifest.modules.reduce((n, m) => n + m.bindings.length, 0);
   console.log(`${check ? 'Verified' : 'Extracted'} ${manifest.modules.length} files-changes modules (${count} original ${referenceVersion} bindings).`);
 }
-if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) await extractFilesChanges({ check: process.argv.includes('--check') });
+// ---------------------------------------------------------------------------------------------------------------------
+// 4.16336.0 (region batch 3, region-plan batches[3] files-changes, large-split, cutover.oldConsumersAtGeneration lists 13
+// 3.6556.2 areas — code-current:upper, code-transcript, composer-notices, cowork-approval, cowork-progress, pierre-changes,
+// proposal-group, session-rail, session-rail-changes, session-rail-sections, sessions-page, sidebar-hover-card,
+// transcript-rows — that import src/generated/files-changes by original identity; productionSwitchNotBeforeBatch 11):
+// a second source contract cuts the same semantic exports from snapshots/claude-4.16336.0-20261104 into the isolated
+// graph src/generated/files-changes-v4. The 3.6556.2 contract above and its output stay byte for byte as they were.
+//
+// Root location (AST, as extract-chat-markdown.mjs / extract-routines-shared.mjs 4.16336.0): every root names its chunk
+// export alias (checked against the chunk's export table) or null for a private root (which must not be exported), carries
+// all of its features (literal strings or looseFeature() patterns on its prettier-formatted declaration), and is proved
+// by one identity rule: (default) the only top-level declaration of its chunk carrying those features and, when `reads`
+// is given, reaching a same-chunk declaration that carries each `reads` feature; `readBy` (same-chunk declarations that
+// must reference it: shape-equal twins told apart by their official reader); or `importedBy` (an official declaration of
+// another chunk whose import of this chunk's alias names it). Anything else stops generation.
+//
+// Resolution (sharedGraph 'cds-core', linkedAreas ['routines-shared-v4']): an import resolves to React (assertVendorAlias),
+// a host answer (existing exports only; the replaced declaration's features are checked and its sha256 pinned), a cds-core
+// publicName (raw declaration hash checked), a binding the linked v4 area holds and exports (D1: a dependency area's
+// copy is linked, never cut again; declaration hash checked), or a module emitted earlier here. A binding cds-core holds
+// without a publicName is cut again only when it is not module state and hashes as cds-core's copy; module state stops
+// generation and is reported as stateConflicts {binding, text, reachedBy} (D46). React Compiler helpers are proved by
+// assertCompilerHelpers and cut once in compiler-helpers.mjs.
+const v4Root = path.join(root, 'src/generated');
+const featureMissing4 = (text, features = []) => features.filter(f => (f instanceof RegExp ? !f.test(text) : !text.includes(f)));
+const featureLabel4 = f => (f instanceof RegExp ? `/${f.source}/` : JSON.stringify(f));
+function assertFeatures4(label, text, features = []) {
+  const missing = featureMissing4(text, features);
+  if (missing.length) throw Error(`${label} lacks ${missing.map(featureLabel4).join(', ')}`);
+}
+async function readSource4(name, cache, dir) {
+  const key = `v4:${name}`;
+  if (cache.has(key)) return cache.get(key);
+  const bytes = await fs.readFile(path.join(dir, name));
+  const code = await format(bytes.toString(), { parser: 'babel' });
+  const ast = parsers.babel.parse(code, {});
+  let program;
+  babel.traverse(ast, { Program(p) { program = p; } });
+  const exported = new Map(ast.program.body.filter(n => n.type === 'ExportNamedDeclaration' && !n.source)
+    .flatMap(n => n.specifiers.map(s => [s.exported.name, s.local.name])));
+  const record = { name, bytes, text: bytes.toString(), code, program, exported };
+  cache.set(key, record);
+  return record;
+}
+const declText4 = (src, p) => src.code.slice(p.node.start, p.node.end);
+const within4 = (outer, q) => q.node.start >= outer.node.start && q.node.end <= outer.node.end;
+const declDeps4 = (src, p) => Object.entries(src.program.scope.bindings)
+  .filter(([, b]) => b.referencePaths.some(q => within4(p, q)) || b.constantViolations.some(q => within4(p, q))).map(([n]) => n);
+const isDecl4 = p => p && (p.isFunctionDeclaration() || p.isVariableDeclarator());
+// A top-level declaration in the unformatted chunk bytes (the text runSlicer graphs such as cds-core hash bindings by).
+function rawDeclText4(src, name) {
+  src.raw ??= new Map(parsers.babel.parse(src.text, {}).program.body.flatMap(node => (node.type === 'FunctionDeclaration' ? [[node.id.name, node]]
+    : node.type === 'VariableDeclaration' ? node.declarations.filter(d => d.id.type === 'Identifier').map(d => [d.id.name, d]) : [])));
+  const node = src.raw.get(name);
+  if (!node) throw Error(`${src.name}: no top-level declaration ${name} in the chunk bytes`);
+  return src.text.slice(node.start, node.end);
+}
+// The export list(s) of a generated module: local -> exported name.
+function moduleExportNames4(text) {
+  const out = new Map();
+  for (const m of text.matchAll(/^export \{([^}]*)\};?$/gm))
+    for (const spec of m[1].split(',').map(x => x.trim()).filter(Boolean)) {
+      const [local, as] = spec.split(/\s+as\s+/);
+      if (!out.has(local)) out.set(local, as ?? local);
+    }
+  return out;
+}
+// sharedGraph 'cds-core': manifest on this version / snapshot, every module's bytes equal its sha256 and its sourceSha256
+// equals the official chunk read here, every publicName exported by its target as exportName.
+async function sharedGraph4(contract) {
+  const { official } = contract, area = contract.sharedGraph, dir = path.join(v4Root, area);
+  const manifestBytes = await fs.readFile(path.join(dir, 'manifest.json'));
+  const manifest = JSON.parse(manifestBytes);
+  if (manifest.referenceVersion !== official.referenceVersion) throw Error(`${area} is ${manifest.referenceVersion}, expected ${official.referenceVersion}`);
+  if (manifest.referenceSnapshot !== official.referenceSnapshot) throw Error(`${area} snapshot is ${manifest.referenceSnapshot}, expected ${official.referenceSnapshot}`);
+  const byTarget = new Map(), held = new Map(), published = new Map();
+  for (const m of manifest.modules) {
+    if ((m.referenceVersion ?? manifest.referenceVersion) !== official.referenceVersion) throw Error(`shared module ${area}/${m.target} is ${m.referenceVersion}`);
+    if (sha(await fs.readFile(path.join(dir, m.target))) !== m.sha256) throw Error(`${area}/${m.target} differs from its manifest`);
+    const bytes = await fs.readFile(path.join(official.ionSource, path.basename(m.source))).catch(() => null);
+    if (!bytes || sha(bytes) !== m.sourceSha256) throw Error(`${area}/${m.target} was sliced from ${m.source} ${m.sourceSha256 ?? '(no sourceSha256)'}, not the source this area reads`);
+    byTarget.set(m.target, m);
+    for (const b of m.bindings) held.set(`${path.basename(m.source)}#${typeof b === 'string' ? b : b.name}`, { target: m.target, sha256: typeof b === 'string' ? null : b.sha256 });
+  }
+  for (const [name, entry] of Object.entries(manifest.publicNames ?? {})) {
+    const m = byTarget.get(entry.target);
+    const exported = m && (m.exports?.[entry.local] ?? (m.sharedExports?.includes(entry.local) ? entry.local : null));
+    if (!m || path.basename(m.source) !== entry.file || !m.bindings.some(b => (typeof b === 'string' ? b : b.name) === entry.local) || !entry.exportName || exported !== entry.exportName)
+      throw Error(`${area} publicName ${name} (${entry.file}#${entry.local}) is not exported by ${entry.target} as ${entry.exportName}`);
+    published.set(`${entry.file}#${entry.local}`, { name, ...entry });
+  }
+  const byName = new Map([...published.values()].map(e => [e.name, e]));
+  return { area, held, published, byName, byTarget, manifestSha256: sha(manifestBytes) };
+}
+// linkedAreas: another 4.16336.0 graph this area depends on (region-plan dependsOn). Manifest version / snapshot, module
+// bytes and source chunk hashes are checked; a binding it holds and exports is linked under that export name.
+async function linkedGraphs4(contract) {
+  const { official } = contract, holds = new Map(), areas = {};
+  for (const area of contract.linkedAreas ?? []) {
+    const dir = path.join(v4Root, area), manifestBytes = await fs.readFile(path.join(dir, 'manifest.json'));
+    const manifest = JSON.parse(manifestBytes);
+    if (manifest.referenceVersion !== official.referenceVersion || manifest.referenceSnapshot !== official.referenceSnapshot)
+      throw Error(`linked ${area} is ${manifest.referenceVersion} ${manifest.referenceSnapshot}, expected ${official.referenceVersion} ${official.referenceSnapshot}`);
+    areas[area] = sha(manifestBytes);
+    for (const m of manifest.modules) {
+      const bytes = await fs.readFile(path.join(dir, m.target));
+      if (sha(bytes) !== m.sha256) throw Error(`linked ${area}/${m.target} differs from its manifest`);
+      const source = await fs.readFile(path.join(official.ionSource, path.basename(m.source))).catch(() => null);
+      if (!source || sha(source) !== m.sourceSha256) throw Error(`linked ${area}/${m.target} was not sliced from the source this area reads`);
+      const exported = moduleExportNames4(bytes.toString());
+      for (const b of m.bindings ?? []) {
+        const name = typeof b === 'string' ? b : b.name, exportName = m.exports?.[name] ?? exported.get(name);
+        if (exportName && b.sha256) holds.set(`${path.basename(m.source)}#${name}`, { area, target: m.target, exportName, sha256: b.sha256, moduleSha256: m.sha256 });
+      }
+    }
+  }
+  return { holds, areas };
+}
+// Module state a second copy would split (D46): a context, a module-level Map / Set / WeakMap / WeakSet, or a module
+// variable the chunk assigns after its declaration.
+function isModuleState4(contract, src, p) {
+  if (!p.isVariableDeclarator()) return false;
+  const init = p.node.init;
+  if (init?.type === 'NewExpression' && init.callee.type === 'Identifier' && ['WeakMap', 'Map', 'Set', 'WeakSet'].includes(init.callee.name)) return true;
+  if (init?.type === 'CallExpression' && init.callee.type === 'Identifier') {
+    const callee = src.program.scope.getBinding(init.callee.name)?.path;
+    if (callee?.isImportSpecifier()) {
+      const file = callee.parent.source.value.replace(/^\.\//, '');
+      if (file === contract.official.vendorFrame && contract.official.reactAliases[callee.node.imported.name]?.[1] === 'createContext') return true;
+    }
+  }
+  return (src.program.scope.getBinding(p.node.id.name)?.constantViolations.length ?? 0) > 0;
+}
+const hostExportCache4 = new Map();
+async function assertHostExport4(label, from, name) {
+  const file = path.resolve(v4Root, 'files-changes-v4', from);
+  if (!hostExportCache4.has(file)) hostExportCache4.set(file, await fs.readFile(file, 'utf8'));
+  const text = hostExportCache4.get(file);
+  const direct = new RegExp(`^export (?:async )?(?:function|const|let|class) ${name.replace(/\$/g, '\\$')}\\b`, 'm').test(text);
+  const listed = [...text.matchAll(/^export \{([^}]*)\}/gm)].some(m => m[1].split(',').map(x => x.trim().split(/\s+as\s+/).pop()).includes(name));
+  if (!direct && !listed) throw Error(`${label}: ${path.relative(root, file)} does not export ${name}`);
+}
+
+async function extractTarget4(contract, { check = false, survey = false } = {}) {
+  const { official, output: out, label } = contract, dir = official.ionSource;
+  const cache = new Map(), files = {}, emitted = [], hostAnswers = new Map();
+  const graph = await sharedGraph4(contract), linked = await linkedGraphs4(contract);
+  const issues = { unresolved: [], stateConflicts: [], globals: [], roots: [] };
+  const sharedModules = new Set(), linkedModules = new Map();
+  const manifest = { referenceVersion: official.referenceVersion, referenceSnapshot: official.referenceSnapshot, generator: 'scripts/extract-files-changes.mjs',
+    sharedGraph: graph.area, linkedAreas: linked.areas, isolatedGraph: contract.isolatedGraph, modules: [] };
+  const sharedImport = (file, local) => {
+    const shared = graph.published.get(`${file}#${local}`);
+    return shared ? { from: `../${graph.area}/${shared.target}`, name: shared.exportName, kind: 'shared-graph', publicName: shared.name, sharedTarget: shared.target } : null;
+  };
+  const linkedSha = (src, file, local, shared) => {
+    const held = graph.held.get(`${file}#${local}`);
+    if (!held?.sha256 || held.sha256 !== sha(rawDeclText4(src, local))) throw Error(`${file}#${local} differs from the declaration ${graph.area} publishes as ${shared.publicName}`);
+    return held.sha256;
+  };
+  // A binding a linked area holds: its recorded hash must be the raw or the prettier declaration of the official chunk.
+  const linkedImport = (src, file, local) => {
+    const link = linked.holds.get(`${file}#${local}`);
+    if (!link) return null;
+    const p = src.program.scope.getBinding(local)?.path;
+    if (!isDecl4(p) || ![sha(rawDeclText4(src, local)), sha(declText4(src, p))].includes(link.sha256)) throw Error(`${file}#${local} differs from the declaration ${link.area}/${link.target} holds`);
+    linkedModules.set(`${link.area}/${link.target}`, link.moduleSha256);
+    return { from: `../${link.area}/${link.target}`, name: link.exportName, kind: 'linked-area', area: link.area, linkedSha256: link.sha256 };
+  };
+  for (const spec of contract.modules) {
+    const src = await readSource4(spec.source, cache, dir);
+    if (spec.compilerHelpers) {
+      const proved = official.assertCompilerHelpers(src.text);
+      for (const [local, name] of Object.entries(spec.exports))
+        if (proved[name]?.local !== local) throw Error(`${spec.target}: ${local} is not the proved compiler helper ${name}`);
+    }
+    const roots = Object.keys(spec.exports ?? {});
+    const exportsAll = { ...spec.exports, ...spec.reexports };
+    const selected = new Map(), imports = new Map(), seen = new Set(), heldByCdsCore = [], reachedBy = new Map();
+    const unresolved = (via, local, extra) => {
+      const item = { target: spec.target, via, local, ...extra };
+      if (survey) { issues.unresolved.push(item); return; }
+      throw Error(`${spec.target}: unresolved import ${via} (${local})`);
+    };
+    const add = async (name, from) => {
+      if (seen.has(name)) return;
+      seen.add(name);
+      reachedBy.set(name, from);
+      const binding = src.program.scope.getBinding(name);
+      if (!binding) throw Error(`${spec.target}: unbound ${name}`);
+      const p = binding.path;
+      const host = spec.host?.[name];
+      if (host) {
+        if (!isDecl4(p)) throw Error(`${spec.target}: host binding ${name} is not a declaration of ${spec.source}`);
+        if (roots.includes(name) || spec.reexports?.[name]) throw Error(`${spec.target}: host binding ${name} is a root`);
+        assertFeatures4(`${spec.target}: host ${host.name} (${name})`, declText4(src, p), host.features);
+        await assertHostExport4(`${spec.target}: host ${name}`, host.from, host.name);
+        imports.set(name, { from: host.from, name: host.name, via: `${spec.source}#${name}`, kind: 'host', original: name, hostOf: `${spec.source}#${name}`, replacedSha256: sha(declText4(src, p)) });
+        return;
+      }
+      if (p.isImportSpecifier()) {
+        const file = p.parent.source.value.replace(/^\.\//, ''), alias = p.node.imported.name, via = `${file}:${alias}`;
+        const dep = await readSource4(file, cache, dir);
+        if (file === official.vendorFrame && official.reactAliases[alias]) {
+          const { module, member } = official.assertVendorAlias(dep.text, alias);
+          imports.set(name, { from: module, name: member, via, kind: 'react' });
+          return;
+        }
+        const local = dep.exported.get(alias);
+        if (!local) throw Error(`${spec.target}: ${file} does not export ${alias}`);
+        const answer = contract.importHosts?.[`${file}#${local}`];
+        if (answer) {
+          const replaced = dep.program.scope.getBinding(local)?.path;
+          if (!isDecl4(replaced)) throw Error(`${spec.target}: host ${answer.name} replaces ${file}#${local}, which is not a declaration`);
+          assertFeatures4(`${spec.target}: host ${answer.name} (${file}#${local})`, declText4(dep, replaced), answer.features);
+          await assertHostExport4(`${spec.target}: host ${file}#${local}`, answer.from, answer.name);
+          imports.set(name, { from: answer.from, name: answer.name, via, kind: 'host', original: local, hostOf: `${file}#${local}`, replacedSha256: sha(declText4(dep, replaced)) });
+          return;
+        }
+        const shared = sharedImport(file, local);
+        if (shared) { imports.set(name, { ...shared, via, original: local, linkedSha256: linkedSha(dep, file, local, shared) }); return; }
+        const link = linkedImport(dep, file, local);
+        if (link) { imports.set(name, { ...link, via, original: local }); return; }
+        const owner = emitted.find(m => m.source === file && m.exports[local]);
+        if (owner) { imports.set(name, { from: `./${owner.target}`, name: owner.exports[local], via, kind: 'generated', original: local }); return; }
+        const silent = emitted.find(m => m.source === file && m.selectedNames.includes(local));
+        const declared = dep.program.scope.getBinding(local)?.path;
+        unresolved(via, local, { heldSilentlyBy: silent?.target, heldByCdsCore: graph.held.has(`${file}#${local}`) || undefined,
+          text: isDecl4(declared) ? declText4(dep, declared).slice(0, 160) : '(import)' });
+        return;
+      }
+      if (!isDecl4(p)) throw Error(`${spec.target}: unsupported declaration ${name}`);
+      const key = `${spec.source}#${name}`;
+      const holder = !exportsAll[name] && emitted.find(m => m.source === spec.source && m.exports[name]);
+      if (holder) { imports.set(name, { from: `./${holder.target}`, name: holder.exports[name], via: key, kind: 'generated', original: name }); return; }
+      const silent = emitted.find(m => m.source === spec.source && m.selectedNames.includes(name));
+      if (silent) {
+        if (survey) { issues.unresolved.push({ target: spec.target, via: key, local: name, heldSilentlyBy: silent.target }); return; }
+        throw Error(`${spec.target}: ${name} is held by ${silent.target} but not exported there`);
+      }
+      const shared = sharedImport(spec.source, name), held = graph.held.get(key);
+      if (shared) {
+        if (roots.includes(name) || spec.reexports?.[name]) throw Error(`${spec.target}: root ${key} is the cds-core publicName ${shared.publicName}; link it instead`);
+        imports.set(name, { ...shared, via: key, original: name, linkedSha256: linkedSha(src, spec.source, name, shared) });
+        return;
+      }
+      if (!roots.includes(name) && !spec.reexports?.[name]) {
+        const link = linkedImport(src, spec.source, name);
+        if (link) { imports.set(name, { ...link, via: key, original: name }); return; }
+      }
+      if (held) {
+        if (isModuleState4(contract, src, p)) {
+          const conflict = { binding: key, heldBy: `${graph.area}/${held.target}`, text: declText4(src, p).slice(0, 200), reachedBy: [] };
+          for (let at = from; at; at = reachedBy.get(at)) conflict.reachedBy.push(`${spec.source}#${at}`);
+          issues.stateConflicts.push({ target: spec.target, ...conflict });
+          return;
+        }
+        if (held.sha256 !== sha(rawDeclText4(src, name))) throw Error(`${spec.target}: ${key} differs from the declaration ${graph.area}/${held.target} holds`);
+        heldByCdsCore.push(name);
+      }
+      if (!roots.includes(name) && spec.features?.[name]) assertFeatures4(`${spec.target}: ${name}`, declText4(src, p), spec.features[name]);
+      selected.set(name, p);
+      p.traverse({ ImportExpression() { throw Error(`${spec.target}: dynamic import inside ${name}`); },
+        CallExpression(q) { if (q.node.callee.type === 'Import') throw Error(`${spec.target}: dynamic import inside ${name}`); } });
+      for (const dep of declDeps4(src, p)) await add(dep, name);
+    };
+    for (const name of roots) {
+      const binding = src.program.scope.getBinding(name);
+      if (!isDecl4(binding?.path)) throw Error(`${spec.target}: root ${name} is not a declaration of ${spec.source}`);
+      if (!spec.compilerHelpers) {
+        const alias = spec.aliases?.[name];
+        if (alias === undefined) throw Error(`${spec.target}: root ${name} names no export alias (null for a private root)`);
+        if (alias !== null && src.exported.get(alias) !== name) throw Error(`${spec.target}: ${spec.source} exports ${alias} as ${src.exported.get(alias) ?? 'nothing'}, not ${name}`);
+        if (alias === null && [...src.exported.values()].includes(name)) throw Error(`${spec.target}: private root ${name} is exported by ${spec.source}`);
+        try { await proveRoot4(spec, src, name, cache, dir); }
+        catch (error) { if (!survey) throw error; issues.roots.push(error.message); }
+      }
+      await add(name, null);
+    }
+    // D46 stops here, before the module is rendered: the state binding is left out, so later checks (unbound globals)
+    // would otherwise report the symptom instead of the unnamed state.
+    if (!survey && issues.stateConflicts.length) {
+      const error = Error(`module state ${graph.area} holds without a semantic name (D46): ${issues.stateConflicts.map(c => c.binding).join(', ')}`);
+      error.stateConflicts = issues.stateConflicts;
+      throw error;
+    }
+    for (const [local, name] of Object.entries(spec.reexportImports ?? {})) {
+      const p = src.program.scope.getBinding(local)?.path;
+      if (!p?.isImportSpecifier()) throw Error(`${spec.target}: ${local} is not an import of ${spec.source}`);
+      if (!imports.has(local)) throw Error(`${spec.target}: re-exported import ${local} is not reached`);
+      exportsAll[local] = name;
+    }
+    const unreached = [...Object.keys(spec.reexports ?? {}), ...Object.keys(spec.features ?? {})].filter(name => !selected.has(name) && !imports.has(name));
+    if (unreached.length && !survey) throw Error(`${spec.target}: listed bindings ${unreached.join(', ')} are not part of the module`);
+    const unusedHosts = Object.keys(spec.host ?? {}).filter(name => !imports.has(name));
+    if (unusedHosts.length) throw Error(`${spec.target}: host answers ${unusedHosts.join(', ')} are no longer reached`);
+    const order = [...selected].sort((a, b) => a[1].node.start - b[1].node.start);
+    const blocks = order.map(([, p]) => (p.isVariableDeclarator() ? `var ${declText4(src, p)};` : declText4(src, p)));
+    const groups = new Map();
+    for (const [local, entry] of [...imports].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))) {
+      if (!groups.has(entry.from)) groups.set(entry.from, []);
+      groups.get(entry.from).push(entry.name === local ? local : `${entry.name} as ${local}`);
+    }
+    const importText = [...groups].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+      .map(([from, names]) => `import { ${names.join(', ')} } from ${JSON.stringify(from)};`).join('\n');
+    // cdsCore: { exportName: publicName } re-exports cds-core's single copy (D1); forward: { exportName: [target, name] }
+    // re-exports a module emitted earlier here (an export whose 4.16336.0 original moved to another chunk).
+    const forwards = [];
+    for (const [exportName, publicName] of Object.entries(spec.cdsCore ?? {})) {
+      const entry = graph.byName.get(publicName);
+      if (!entry) throw Error(`${spec.target}: ${publicName} is not a ${graph.area} publicName`);
+      sharedModules.add(entry.target);
+      forwards.push({ from: `../${graph.area}/${entry.target}`, name: entry.exportName, as: exportName, publicName });
+    }
+    // linked: { exportName: 'file#local' } re-exports the copy a linked area holds (D1: a root a dependency area already
+    // holds is never cut again; its declaration hash is checked against the official chunk).
+    for (const [exportName, key] of Object.entries(spec.linked ?? {})) {
+      const [file, local] = key.split('#');
+      const link = linkedImport(await readSource4(file, cache, dir), file, local);
+      if (!link) throw Error(`${spec.target}: no linked area holds ${key}`);
+      forwards.push({ from: link.from, name: link.name, as: exportName, linked: key, linkedSha256: link.linkedSha256 });
+    }
+    for (const [exportName, [target, name]] of Object.entries(spec.forward ?? {})) {
+      const owner = emitted.find(m => m.target === target);
+      if (!owner || !Object.values(owner.exports).includes(name)) throw Error(`${spec.target}: forward ${exportName} -> ${target} ${name} is not exported there`);
+      forwards.push({ from: `./${target}`, name, as: exportName });
+    }
+    const forwardText = forwards.map(f => `export { ${f.name === f.as ? f.name : `${f.name} as ${f.as}`} } from ${JSON.stringify(f.from)};`).join('\n');
+    const exportEntries = Object.entries(exportsAll);
+    const exportText = exportEntries.length ? `export { ${exportEntries.map(([local, name]) => (local === name ? local : `${local} as ${name}`)).join(', ')} };` : '';
+    const header = `// Original Claude Desktop ${official.referenceVersion} bindings from ${spec.source}; generated by extract-files-changes.mjs.\n// Edit the extractor or the host adapter it names, never this file.\n`;
+    const text = await format(`${header}${importText}\n${blocks.join('\n')}\n${exportText}\n${forwardText}\n`, { parser: 'babel' });
+    const absent = featureMissing4(text, spec.signature);
+    if (absent.length) {
+      const message = `${spec.target}: ${spec.source} no longer has ${absent.map(featureLabel4).join(', ')}; re-check its roots`;
+      if (survey) issues.roots.push(message); else throw Error(message);
+    }
+    let globals;
+    babel.traverse(babel.babelParse(text, spec.target, true), { Program(p) { globals = Object.keys(p.scope.globals); } });
+    const foreign = globals.filter(name => !contract.hostGlobals.has(name));
+    if (foreign.length) { if (survey) issues.globals.push(`${spec.target}: ${foreign.join(', ')}`); else throw Error(`${spec.target}: unbound ${foreign.join(', ')}`); }
+    files[spec.target] = text;
+    for (const entry of imports.values()) {
+      if (entry.kind === 'host') hostAnswers.set(entry.hostOf, { original: entry.hostOf, from: entry.from, name: entry.name, replacedSha256: entry.replacedSha256 });
+      if (entry.kind === 'shared-graph') sharedModules.add(entry.sharedTarget);
+    }
+    manifest.modules.push({
+      target: spec.target, source: spec.source, sourceSha256: sha(src.bytes), sha256: sha(text), referenceVersion: official.referenceVersion,
+      bindings: order.map(([name, p]) => ({ name, sha256: sha(declText4(src, p)) })),
+      imports: [...imports].map(([local, e]) => ({ local, from: e.from, name: e.name, via: e.via, kind: e.kind, ...(e.original ? { original: e.original } : {}),
+        ...(e.publicName ? { publicName: e.publicName } : {}), ...(e.replacedSha256 ? { replacedSha256: e.replacedSha256 } : {}),
+        ...(e.linkedSha256 ? { linkedSha256: e.linkedSha256 } : {}) })),
+      exports: exportsAll,
+      ...(forwards.length ? { forwards: forwards.map(({ from, name, as, publicName, linked, linkedSha256 }) => ({ from, name, as, ...(publicName ? { publicName } : {}),
+        ...(linked ? { linked, linkedSha256 } : {}) })) } : {}),
+      ...(spec.compilerHelpers ? {} : { roots: Object.fromEntries(roots.map(name => [name, spec.aliases[name]])) }),
+      heldByCdsCore,
+    });
+    emitted.push({ ...spec, exports: exportsAll, selectedNames: [...selected.keys()] });
+  }
+  manifest.hosts = [...hostAnswers.values()].sort((a, b) => (a.original < b.original ? -1 : 1));
+  manifest.sharedGraphModules = Object.fromEntries([...sharedModules].sort().map(target => [target, graph.byTarget.get(target).sha256]));
+  manifest.linkedGraphModules = Object.fromEntries([...linkedModules].sort());
+  if (survey) return { issues, files, manifest };
+  if (issues.stateConflicts.length) {
+    const error = Error(`module state ${graph.area} holds without a semantic name (D46): ${issues.stateConflicts.map(c => c.binding).join(', ')}`);
+    error.stateConflicts = issues.stateConflicts;
+    throw error;
+  }
+  files['manifest.json'] = JSON.stringify(manifest, null, 2) + '\n';
+  if (check) {
+    const present = (await fs.readdir(out).catch(() => [])).sort(), expected = Object.keys(files).sort();
+    if (JSON.stringify(present) !== JSON.stringify(expected)) throw Error(`${label} output set changed: ${present.join(',')}. Run scripts/extract-files-changes.mjs --version ${official.referenceVersion}.`);
+    for (const [name, text] of Object.entries(files))
+      if (await fs.readFile(path.join(out, name), 'utf8') !== text) throw Error(`${label} source mismatch: ${name}. Run scripts/extract-files-changes.mjs --version ${official.referenceVersion}.`);
+  } else {
+    await fs.mkdir(out, { recursive: true });
+    for (const name of await fs.readdir(out)) if (!(name in files)) await fs.rm(path.join(out, name));
+    for (const [name, text] of Object.entries(files)) await fs.writeFile(path.join(out, name), text);
+  }
+  const count = manifest.modules.reduce((n, m) => n + m.bindings.length, 0);
+  console.log(`${check ? 'Verified' : 'Extracted'} ${manifest.modules.length} ${label} modules (${count} original ${official.referenceVersion} bindings; cds-core ${graph.manifestSha256.slice(0, 8)}).`);
+  return manifest;
+}
+// Root identity (see the contract comment above).
+async function proveRoot4(spec, src, name, cache, dir) {
+  const features = spec.features?.[name] ?? [];
+  if (!features.length) throw Error(`${spec.target}: root ${name} has no features to locate it by`);
+  const p = src.program.scope.getBinding(name).path;
+  assertFeatures4(`${spec.target}: root ${name}`, declText4(src, p), features);
+  const identity = spec.identity?.[name] ?? {};
+  for (const rule of ['readBy', 'importedBy', 'reads']) if (rule in identity && !(Array.isArray(identity[rule]) && identity[rule].length))
+    throw Error(`${spec.target}: root ${name} identity.${rule} must list at least one declaration or feature`);
+  const readsOk = q => (identity.reads ?? []).every(f => declDeps4(src, q).some(dep => {
+    const d = src.program.scope.getBinding(dep)?.path;
+    return isDecl4(d) && !featureMissing4(declText4(src, d), [f]).length;
+  }));
+  if (identity.readBy) {
+    for (const reader of identity.readBy) {
+      const r = src.program.scope.getBinding(reader)?.path;
+      if (!isDecl4(r) || !declDeps4(src, r).includes(name)) throw Error(`${spec.target}: root ${name} is not read by ${spec.source}#${reader}`);
+    }
+    return;
+  }
+  if (identity.importedBy) {
+    const alias = spec.aliases[name];
+    for (const consumer of identity.importedBy) {
+      const [file, local] = consumer.split('#');
+      const dep = await readSource4(file, cache, dir), r = dep.program.scope.getBinding(local)?.path;
+      if (!isDecl4(r)) throw Error(`${spec.target}: ${consumer} is not a declaration`);
+      const ok = declDeps4(dep, r).some(d => {
+        const q = dep.program.scope.getBinding(d)?.path;
+        return q?.isImportSpecifier() && q.parent.source.value.replace(/^\.\//, '') === spec.source && q.node.imported.name === alias;
+      });
+      if (!ok) throw Error(`${spec.target}: ${consumer} does not import ${spec.source} ${alias} (${name})`);
+    }
+    return;
+  }
+  const hits = Object.entries(src.program.scope.bindings)
+    .filter(([, b]) => isDecl4(b.path) && !featureMissing4(declText4(src, b.path), features).length && readsOk(b.path)).map(([n]) => n);
+  if (hits.length !== 1 || hits[0] !== name) throw Error(`${spec.target}: root ${name} is not the unique declaration with its features (${hits.join(', ') || 'none'})`);
+}
+const contract4 = (() => {
+  const official = official4, loose = official.looseFeature;
+  // L: a looseFeature (minified names of up to three characters generalised, `keep` names literal); K: a `name = value`
+  // top-level constant, name kept (constants are located by their own declarator).
+  const L = (text, keep) => loose(text, keep ? { keep } : {});
+  const K = (name, value) => loose(`${name} = ${value}`, { keep: [name] });
+  const adapters = '../../source-files-changes-adapters.jsx', cdsAdapter = '../../cds-core-adapter.mjs';
+  // m(target, source, { local: [exportName, exportAlias | null, features, identity?] }, rest)
+  const m = (target, source, roots, rest = {}) => ({ target, source,
+    exports: Object.fromEntries(Object.entries(roots).map(([local, [name]]) => [local, name])),
+    aliases: Object.fromEntries(Object.entries(roots).map(([local, [, alias]]) => [local, alias])),
+    features: { ...Object.fromEntries(Object.entries(roots).map(([local, [, , features]]) => [local, features])), ...rest.features },
+    identity: Object.fromEntries(Object.entries(roots).filter(([, r]) => r[3]).map(([local, r]) => [local, r[3]])),
+    ...Object.fromEntries(Object.entries(rest).filter(([k]) => k !== 'features')) });
+  return {
+    official, output: path.join(root, 'src/generated/files-changes-v4'), label: 'files-changes 4.16336.0',
+    sharedGraph: 'cds-core',
+    // D1: routines-shared is a region-plan dependency (its v4 graph is linked, never cut again); r3b-tasks (production
+    // 4.16336.0) is the one owner of shared-0 Tl (lazyValue) that its D1 test allows.
+    linkedAreas: ['routines-shared-v4', 'r3b-tasks'],
+    isolatedGraph: { legacyOutput: 'src/generated/files-changes', productionSwitchNotBeforeBatch: 11,
+      heldBy: ['code-current:upper', 'code-transcript', 'composer-notices', 'cowork-approval', 'cowork-progress', 'pierre-changes', 'proposal-group',
+        'session-rail', 'session-rail-changes', 'session-rail-sections', 'sessions-page', 'sidebar-hover-card', 'transcript-rows', 'src/** host consumers'],
+      dependsOn: { 'code-current:base': 'no 4.16336.0 graph at generation: the 3.6556.2 links (breadcrumb-paths, breadcrumb-measure, file-tree-style, path-parts, path-tooltip) are cut here; link code-current-v4 once it exists',
+        'routines-shared': 'linked: routines-shared-v4' } },
+    hostGlobals: new Set(['Math', 'Symbol', 'Object', 'Error', 'RegExp', 'String', 'Set', 'Map', 'WeakMap', 'WeakSet', 'Array', 'Number', 'Boolean', 'JSON',
+      'Promise', 'Date', 'DOMException', 'Intl', 'globalThis', 'window', 'document', 'navigator', 'setTimeout', 'clearTimeout', 'setInterval', 'clearInterval',
+      'getComputedStyle', 'AbortController', 'queueMicrotask', 'Infinity', 'NaN', 'undefined', 'parseInt', 'parseFloat', 'Proxy', 'Reflect', 'fetch',
+      'requestAnimationFrame', 'cancelAnimationFrame', 'NodeFilter']),
+    // Imports another chunk declares that the host answers (existing exports only): original file#local -> { from, name,
+    // features on the original's prettier-formatted declaration }.
+    importHosts: {
+      // shared-5 Op / _p / bp / kp: the persisted values (`persisted.<key>` in localStorage + the desktop preferences
+      // bucket) -> tile-layout-store's localStorage values (3.6556.2 shared-28 Uc / Mc / Fc / Wc answered the same way).
+      'shared-5-u8kha2eH.js#U_': { from: adapters, name: 'usePersistedValue', features: ['`persisted.${e}`', 'sync: !0'] },
+      'shared-5-u8kha2eH.js#I_': { from: adapters, name: 'persistedValuesLoading', features: ['?.getPreferences !== void 0'] },
+      'shared-5-u8kha2eH.js#L_': { from: adapters, name: 'readPersistedValue', features: ['`persisted.${e}`', '.has(e) ?'] },
+      'shared-5-u8kha2eH.js#z_': { from: adapters, name: 'writePersistedValue', features: ['`persisted.${e}`', 'typeof t == "function" ? t('] },
+      // shared-0 Kh: `globalThis["claude.web"]?.LocalSessions`, the desktop bridge (isSessionPathGone, getGitInfo).
+      'shared-0-CnnWnVrT.js#qO': { from: adapters, name: 'LocalSessions', features: ['globalThis["claude.web"]?.LocalSessions'] },
+      // c7fa71d26 n: session id -> {id, type} (cli / local / remote by id prefix); every OpenClaude session is local.
+      'c7fa71d26-Db91ge0c.js#r': { from: adapters, name: 'localSessionTarget', features: ['type: e.startsWith("local_") ? "local" : "remote"', 'type: "cli"'] },
+      // react-intl useIntl / FormattedMessage -> the host i18n adapter cds-core reads react-intl through.
+      'vendor-intl-BJgYK7RA.js#q': { from: cdsAdapter, name: 'useHostIntl', features: [L('let e = l(K);'), L('return (Mt(e), e);', ['Mt'])] },
+      'vendor-intl-BJgYK7RA.js#Gt': { from: cdsAdapter, name: 'HostFormattedMessage', features: [L('Gt = a(Wt, Ut)', ['Gt', 'Wt', 'Ut'])] },
+    },
+    modules: [
+      // E3: the React Compiler helpers are not cut here: routines-shared-v4 (a region-plan dependency) holds and exports
+      // them (shared-frame-CJdE5Ria.mjs), so every read links that copy (D1); memoStoreDeps4 is cds-core's publicName.
+      // shared-frame yf (rem-scaled length), Uu (control characters collapsed to spaces, invisible ones dropped) and Vu
+      // (a text without RTL / unpaired surrogates, else undefined): pure. cdsRem (Qo) is cds-core's publicName since wave 7
+      // (state_sharedframe_Qo, cds-integrate/wave7): re-exported from that single copy instead of cut here.
+      m('cds-parts.mjs', official.sharedFrame, {
+        Um: ['collapseControlCharacters', 'Uu', ['.replace(/[\\t\\n\\v\\f\\r\\u0085\\u2028\\u2029]+/g, " ")']],
+        qm: ['plainDirectionText', 'Vu', [L('return e === void 0 ? void 0 : Km(e);', ['Km'])]] },
+        { cdsCore: { cdsRem: 'state_sharedframe_Qo' } }),
+      // shared-25 Wp (old pf / mf, exported df / ff): the owner window of a node, or the global window; ownerWindow is cds-core's.
+      m('owner-window.mjs', 'shared-25-D-aF0gt9.js', { vd: ['ownerWindowOrGlobal', 'Wp', [L('return _d(e) ?? globalThis.window;', ['_d'])]] },
+        { cdsCore: { ownerWindow: 'ownerWindow' } }),
+      m('editable-target.mjs', 'shared-183-B2N6Zy4J.js', { YU: ['isEditableTarget', 'wa', [L('return XU(e) || qU(GU(e), XU);', ['XU', 'qU', 'GU'])]] }),
+      m('menu-context-guard.mjs', 'ca5db7aaf-C8dMH-IH.js', { P: ['suppressNativeContextMenu', 's', [L('g(e.target) || e.preventDefault();')]] }),
+      // c91a5e4a6 F (export _; 3.6556.2 shared-1 iK): the onContextMenu of the Changes context-menu popups (c44d00c7f imports
+      // it as An; shared-1's own `e.preventDefault()` twin R9 is the main-menu button's).
+      m('diff-context-guard.mjs', 'c91a5e4a6-BOaQZsN0.js', { F: ['preventContextMenu', '_', ['e.preventDefault();'], { importedBy: ['c44d00c7f-DNez7133.js#Do', 'c44d00c7f-DNez7133.js#Sp'] }] }),
+      m('diff-scope-memory.mjs', 'c03935b01-BylKMWqe.js', {
+        Xn: ['uncommittedSessionsKey', null, ['"epitaxy-diff-uncommitted-sessions"']],
+        Zn: ['uncommittedSessionsDefault', null, [K('Zn', '{}')], { readBy: ['$n', 'er'] }],
+        Qn: ['uncommittedSessionIds', null, ['typeof e == "object" && e ? Object.keys(e) : []']],
+        $n: ['useStoredDiffScope', 'Br', [L('return e !== void 0 && Qn(t).includes(e) ? qn : Kn;', ['Qn', 'qn', 'Kn'])]],
+        er: ['rememberDiffScope', 'Pr', ['[...r.slice(-49), e]', 't === "uncommitted"']],
+        Kn: ['branchDiffScope', 'jr', ['{ kind: "branch" }'], { readBy: ['$n'] }],
+        qn: ['uncommittedDiffScope', 'Mr', ['{ kind: "uncommitted" }'], { readBy: ['$n'] }],
+        Jn: ['diffScopeKey', 'Nr', ['`commit:${e.sha}`']],
+        Yn: ['sameDiffScope', 'Fr', [L('return Jn(e) === Jn(t);', ['Jn'])]] },
+        { signature: ['"epitaxy-diff-uncommitted-sessions"', '[...r.slice(-49), e]', '{ kind: "uncommitted" }'] }),
+      m('worktree-checking.mjs', 'shared-55-BRv2XBP7.js', { yj: ['WorktreeChecking', 'Fi',
+        ['"Checking for uncommitted changes\\u2026"', 'id: "iJ0f0MP5kz"', '"text-footnote text-muted-as-secondary"', '"animate-placeholder-reveal"', '"reserve"']] }),
+      // shared-55 D / k (3.6556.2 code-current path-tooltip.mjs t / n): a path tooltip's placement and its LTR,
+      // separator-split content.
+      m('path-tooltip.mjs', 'shared-55-BRv2XBP7.js', {
+        mV: ['pathTooltipOptions', 'D', ['className: "max-w-[min(480px,var(--available-width))]"', 'side: "bottom",', 'align: "start",']],
+        gV: ['pathTooltipContent', 'k', ['dir: "ltr",', '.split(/(?<=[\\\\/])/)']] }),
+      m('vanilla-store.mjs', 'vendor-all-0-uUCo-eCX.js', { m: ['createStore', 'z', [L('m = (e) => (e ? p(e) : p)', ['m', 'p'])], { reads: ['getInitialState: () => o'] }] },
+        { signature: ['getInitialState: () => o', 'typeof i != "object" || !i'] }),
+      m('windows-path.mjs', 'shared-26-B-POtn5S.js', { MA: ['windowsAbsolutePath', 'fu', [K('MA', '/^[A-Za-z]:[\\\\/]/')]] }),
+      m('path-absolute.mjs', 'shared-3-IQTrO7Gx.js', {
+        TN: ['isAbsolutePathFor', 'It', ['e.startsWith("/") || e === "~" || e.startsWith("~/")']],
+        JM: ['isRelativePath', 'Et', [L('return e !== "" && !/^[\\\\/]/.test(e) && !TN(e, !0);', ['TN'])]] }),
+      m('image-path.mjs', 'shared-153-DMw2VzSq.js', {
+        Ww: ['isImagePath', 'Qh', ['t?.allowSvg && n === "svg"']],
+        Fw: ['rasterImageExtensions', 'Uh', [K('Fw', '["png", "jpg", "jpeg", "gif", "bmp", "webp"]')]] }, { signature: [', "avif"]'] }),
+      m('file-editor-path.mjs', 'shared-3-IQTrO7Gx.js', { rP: ['canOpenFileInEditor', 'Vt', [L('return !eP.test(e) && !RN(e);', ['eP', 'RN'])]] },
+        { signature: ['dng|svgz)$/i'] }),
+      m('promise-timeout.mjs', 'shared-62-DoCqVpIq.js', { IF: ['withTimeout', 'Kc', ['new DOMException(n, "TimeoutError")']] },
+        { signature: ['Promise.race([e, i]).finally(() => clearTimeout(r))'] }),
+      m('windows-platform.mjs', 'shared-62-DoCqVpIq.js', { to: ['isWindowsPlatform', 'fS', ['window.navigator.userAgent.toLowerCase()'],
+        { reads: ['/(win32|win64|windows|wince)/i'] }] }),
+      m('session-context.mjs', 'c9b8e0296-DA332Htz.js', { t: ['CurrentSessionIdContext', 't', [K('t', 'e(null)')]] }),
+      m('file-gone-check.mjs', 'c856385e2-Cqx37C-b.js', {
+        et: ['useFileGone', 'Dt', ['?.isSessionPathGone === void 0', '.type !== "local"', 'beforeOpen']],
+        $e: ['goneCheckablePath', null, [L('return ue(e, !1) && !Qe.test(e);', ['Qe'])]],
+        Qe: ['cloudStoragePath', null, ['/\\/Library\\/(?:Mobile Documents|CloudStorage)\\//i']],
+        Xe: ['fileGoneKillSwitch', null, [K('Xe', '"__gb__3212098161"')]],
+        Ze: ['fileGoneDeadlineMs', null, [K('Ze', '150')]] },
+        { signature: ['"The desktop did not answer in time"', '{ gone: '] }),
+      m('file-selection.mjs', 'c856385e2-Cqx37C-b.js', {
+        ft: ['createFileSelectionStore', 'mt', ['selectOnly: (n) =>', 'moveAnchor: (n) =>', 'selectRange: (t, n) =>']],
+        pt: ['selectFileRange', '_t', ['e.getState().selectRange(o, l);', '.indexOfKey(i)']],
+        mt: ['selectAllFiles', 'gt', ['e.getState().selectRange(n.find((e) => e.absPath === i) ?? r, n);']],
+        vt: ['inMultiSelection', 'ht', ['return n && r.size >= 2 && r.has(t);']] }),
+      m('file-content-results.mjs', 'c9bd7af9c-Bvb7EG4D.js', {
+        bD: ['groupContentResults', null, ['{ listed: [t], more: !1 }', 'maxLine: Math.max(']],
+        TD: ['collapseContentWhitespace', null, ['return { text: n, matches: a?.length ? a : void 0 };']],
+        OD: ['contentSnippetLayout', null, ['hitMatches: [{ start: n.start - a, end: n.end - a }]', 'tailMatches: r.length > 0 ? r : void 0']] }),
+      m('file-tree-pointer.mjs', 'c9bd7af9c-Bvb7EG4D.js', {
+        nD: ['isBlankTreeTarget', null, ['t.closest("[data-tree-row]") === null']],
+        rD: ['isBlankTreePress', null, ['e.clientY >= n.top + t.clientTop + t.clientHeight']] },
+        { signature: ['getComputedStyle(e).direction === "rtl"'] }),
+      m('file-context-drag.mjs', 'c052e27aa-U_ULRjag.js', {
+        i: ['fileContextDragType', null, ['"application/x-claude-file-context"']],
+        s: ['fileContextDragEnabled', 't', [L('return !e() && t(r) !== !1;')], { reads: ['"__gb__3508862586"'] }],
+        c: ['beginFileContextDrag', 'i', ['e.dataTransfer.effectAllowed = "copy"', 'absPaths: r']],
+        l: ['isFileContextDrag', 'r', [L('return e.dataTransfer?.types?.includes(i) ?? !1;')]],
+        u: ['draggedFilePaths', 'n', ['a.owner === e ? a.absPaths : void 0']],
+        d: ['commitFileContextDrag', null, [L('((a = null), e?.attach());')]],
+        o: ['clearFileContextDrag', null, [L('a = null;')], { readBy: ['c'] }] }),
+      m('array-min.mjs', 'cf80fba0c-CT5qqVq9.js', { e: ['iterableMin', 't', ['(Object.is(n, -0) && t === 0)']] }),
+      m('file-frontmatter.mjs', 'c3fde7009-DTvRUX3c.js', {
+        er: ['splitFrontmatter', 'l', [L('return { fields: ur(n[1]), body: r };', ['ur'])]],
+        ur: ['frontmatterFields', null, ['/^(?:[ \\t]|#|$)/']],
+        $n: ['emptyFrontmatterBlock', null, ['/^---\\r?\\n---[ \\t]*(?:\\r?\\n|$)/']],
+        Qn: ['frontmatterBlock', null, ['/^---\\r?\\n([\\s\\S]*?)\\r?\\n---\\r?\\n?([\\s\\S]*)$/']] },
+        { signature: ['Error("Unsupported frontmatter")'] }),
+      m('diff-change-nav.mjs', 'c44d00c7f-DNez7133.js', {
+        La: ['adjacentChange', null, ['a.belowPane === !0 && c(e)', '!e.startsWithRemoval && e.newLine === a.lineNumber']],
+        Ia: ['sameChangeAnchor', null, ['e.id === t.id && e.side === t.side && e.lineNumber === t.lineNumber']],
+        Fa: ['changeAnchors', null, ['startsWithRemoval: o.deletions > 0', 'r.deletionStart + +(r.deletionCount === 0)']] }),
+      m('diff-tree-expand.mjs', 'c44d00c7f-DNez7133.js', {
+        oc: ['revealExpandedSubtree', null, ['r.scrollTop += Math.max(0, Math.min(l, u));']],
+        ac: ['diffTreeRowLevel', null, ['Number(e.getAttribute("aria-level") ?? "1")']],
+        ic: ['diffTreeRowSelector', null, [K('ic', '"[data-diff-tree-row]"')]] }),
+      m('diff-tree-memory.mjs', 'c44d00c7f-DNez7133.js', {
+        No: ['readTreeCollapsed', null, [L('return e === void 0 ? void 0 : Ao.get(Mo(e, t, n));', ['Ao', 'Mo'])], { readBy: ['Xs'] }],
+        Po: ['writeTreeCollapsed', null, [L('n.collapsed.size === 0 ? Ao.delete(i) : Ao.set(i, n);', ['Ao'])]],
+        Io: ['readTreeSectionOpen', null, [L('return e === void 0 ? void 0 : Fo.get(Mo(e, t, n));', ['Fo', 'Mo'])], { readBy: ['Zs'] }],
+        Lo: ['writeTreeSectionOpen', null, [L('e !== void 0 && Fo.set(Mo(e, t, r), n);', ['Fo', 'Mo'])]],
+        Bo: ['treeScrollKey', null, ['`${t.asTree ? "tree" : "flat"}${t.groupByKind ? "+kinds" : ""}`']],
+        Vo: ['readTreeScroll', null, [L('return Ro.get(e);', ['Ro'])]],
+        Ho: ['forgetTreeScroll', null, [L('Ro.delete(e);', ['Ro'])], { readBy: ['$s'] }],
+        Uo: ['writeTreeScroll', null, [L('Ro.size > zo', ['Ro', 'zo'])]],
+        Xs: ['initialTreeCollapsed', null, [L('let a = No(e, t, n);', ['No']), 'i && r !== a.activePath']],
+        Zs: ['initialTreeSectionOpen', null, ['a.open || (i && r !== a.activePath)']],
+        Qs: ['revealCollapsedFolders', null, ['t.startsWith(`${r}/`)']] }),
+      m('diff-pane-body.mjs', 'shared-1-D1bGaTaN.js', { pI: ['diffPaneFocusRoot', 'Ed', [L('return t ? fI(t) : null;')], { reads: ['[data-diff-pane-body], [role="dialog"]'] }] },
+        { signature: ['[data-pane-root]'] }),
+      m('node-hidden.mjs', 'c91a5e4a6-BOaQZsN0.js', { P: ['isNodeHidden', 'g', ['return e?.offsetParent === null;']] }),
+      m('diff-scope-label.mjs', 'c9bd7af9c-Bvb7EG4D.js', {
+        Cw: ['scopeLabelClipped', null, ['if (e.scrollWidth > e.clientWidth) return !0;', 'return n.right - r.right > 0.1 || r.left - n.left > 0.1;']],
+        kw: ['commitScopeTriggerLabel', null, ['return r ? `${r.shortSha} ${r.subject || n}` : e.slice(0, 7);']] }),
+      m('diff-scope-base-label.mjs', 'c5da7eb42-aEqbSKbC.js', { zN: ['scopeBranchLabel', 'Rn', ['return e?.detachedHead && t === e.branch ? "HEAD" : t;']] }),
+      m('diff-whitespace-pause.mjs', 'c44d00c7f-DNez7133.js', { Rl: ['whitespaceHidingPaused', null,
+        ['e.some((e) => e.source !== "file")', 'Object.values(r).some((e) => e.source !== "file")']] }),
+      // c621b1e2d: the file tree's official classes and geometry; f / l / u (3.6556.2 code-current file-tree-style.mjs
+      // treeIndent / fileTreeIconSize / guideGradient) are cut here (no code-current-v4 at generation).
+      m('file-tree-row-classes.mjs', 'c621b1e2d-Bo_3tWUk.js', {
+        u: ['fileTreePadding', 'n', [K('u', '"px-xs py-1.25"')]],
+        l: ['fileTreeRowGap', 'a', [K('l', '"gap-1"')]],
+        s: ['fileTreeGroup', 't', ['"group/file-tree [&:where(:root[dir=rtl]_:dir(rtl))]:[--file-tree-guides-to:to_left]"']],
+        c: ['fileTreeKeptGuides', 'o', ['bg-(image:--file-tree-kept-guides) group-hover/file-tree:bg-(image:--file-tree-guides)']],
+        d: ['fileTreeCompactRow', 'c', ['h-control text-body text-start w-full select-none focus-visible:outline-hidden hide-focus-ring`']],
+        m: ['fileTreeRowCurrent', 'i', ['"bg-fill-control hover:bg-fill-control text-primary"']],
+        p: ['fileTreeRowIdle', 's', ['"bg-alpha-0 text-primary hover:bg-fill-ghost-hover data-[pressed]:bg-fill-ghost-hover"']],
+        f: ['fileTreeCompactRowFocusable', 'r', ['rounded focus-visible:shadow-focus`']],
+        h: ['treeIndent', 'f', ['paddingInlineStart:', 'paddingInlineEnd:']],
+        r: ['fileTreeIconSize', 'l', [L('function r() {\n return "sm";\n}', ['r'])]],
+        _: ['guideGradient', 'u', ['linear-gradient(${g}, transparent ${t}px, var(--cds-border)']] }),
+      m('menu-pending.mjs', 'shared-183-B2N6Zy4J.js', {
+        UW: ['holdMenuPending', 'Wi', ['"abort"', '{ once: !0 }', L('HW.set(e, (HW.get(e) ?? 0) + 1)', ['HW'])]],
+        WW: ['menuPending', 'Qi', [L('return HW.has(e);', ['HW'])]] }),
+      m('escape-repeat.mjs', 'shared-8-BqfCbkJd.js', { qI: ['suppressEscapeRepeat', 'ni', [L('GI("Escape", e);', ['GI'])]] },
+        { signature: ['t.key === e && t.repeat ? (t.preventDefault(), t.stopPropagation()) : i();'] }),
+      // shared-frame Pt (3.6556.2 Uc, view-tabs asElementNode): cds-core's single copy, re-exported.
+      { target: 'event-element.mjs', source: official.sharedFrame, exports: {}, aliases: {}, cdsCore: { elementTarget: 'asElementNode' } },
+      m('menu-open-gate.mjs', 'c0cdf4a08-Ca7hJehs.js', {
+        m: ['openAfterCheck', null, ['addEventListener("pointerdown", o, { capture: !0, signal: a })', 'e.key === "Enter" && e.repeat']],
+        h: ['useMenuOpenGate', 'n', [L('m(a(n.event.target), i, () => r(!0));', ['m'])]] }),
+      // shared-0 Su (3.6556.2 nz): the no-op the breadcrumb popover's prefetch catches with.
+      m('noop.mjs', 'shared-0-CnnWnVrT.js', { PU: ['noop', 'Su', [L('function PU() {}', ['PU'])], { importedBy: ['cd2efac6e-B38TGyig.js#Qu'] }] }),
+      m('react-store.mjs', 'vendor-all-0-uUCo-eCX.js', { v: ['create', 'L', [L('v = (e) => (e ? _(e) : _)', ['v', '_'])]] },
+        { signature: ['.useSyncExternalStore('] }),
+      m('file-browser-query.mjs', 'vendor-query-Bl2Kfzgk.js', {
+        Ve: ['QueryClient', 'm', ['resumePausedMutations', 'e.queryCache ||']],
+        He: ['QueryClientProvider', 'f', ['e.mount(),', 'e.unmount();', L('t(q.Provider, { value: e, children: n })', ['q'])]],
+        J: ['useQueryClient', 'p', ['"No QueryClient set, use QueryClientProvider to set one"']],
+        tt: ['useQuery', 's', [L('return et(e, U, t);', ['et', 'U'])]],
+        nt: ['queryOptions', 'o', ['return e;'], { importedBy: ['cd2efac6e-B38TGyig.js#Eu'] }] },
+        // D1 (cds-integrate wave 8s, W8S-M7): cds-core now holds and publishes the three TanStack Query contexts
+        // (settings_vendorquery_q / _Ue / _Ke, pins.merge.wave8s), so He / J / tt link them from cds-core and this graph no longer
+        // cuts or exports them; were `q: ['QueryClientContext', 'd', [K('q', 'o(void 0)')], { readBy: ['He', 'J'] }],
+        // Ue: ['IsRestoringContext', null, [K('Ue', 'o(!1)')]], Ke: ['QueryErrorResetBoundaryContext', null, [K('Ke', 'o(Ge())')]]`.
+        { signature: ['(t.refetchOnReconnect = t.networkMode !== "always")'] }),
+      m('file-entry-order.mjs', 'shared-39-ZCs0lAwB.js', {
+        Tg: ['compareFileEntries', 'Ei', ['e.isDirectory === t.isDirectory', L('? wg(e.name, t.name)', ['wg'])]],
+        Cg: ['numericCollator', null, ['new Intl.Collator(void 0, { numeric: !0 })']],
+        wg: ['compareNames', 'Di', [L('Cg().compare(e, t) || (e < t ? -1 : 1)', ['Cg'])]] },
+        { forward: {} }),
+      m('popover-collision-padding.mjs', 'shared-18-Cfqwgjc5.js', { OJ: ['popoverCollisionPadding', 'Cn', [K('OJ', '{ top: 48, right: 8, bottom: 8, left: 8 }')]] }),
+      m('windows-path-kinds.mjs', 'shared-26-B-POtn5S.js', {
+        NA: ['uncPathPattern', 'du', [K('NA', '/^(?:[\\\\/]{2}|[\\\\/]\\?\\?[\\\\/])/')]],
+        IA: ['isWindowsRootedPath', 'hu', [L('return PA(e) || FA(e);', ['PA', 'FA'])], { reads: [L('return MA.test(e);', ['MA'])] }] }),
+      m('file-relative-path.mjs', 'shared-3-IQTrO7Gx.js', {
+        rN: ['relativeToRoot', 'bt', ['a.startsWith(`${o}/`) ? r.slice(i.length + 1) : r']],
+        qM: ['isAbsolutePath', 'xt', [L('return e.startsWith("/") || io.test(e);', ['io'])]] }),
+      // shared-33 Cb (export nl; 3.6556.2 shared-28 $h): routines-shared-v4 holds it, re-exported from there (D1).
+      { target: 'physical-side.mjs', source: 'shared-33-DtdykY0y.js', exports: {}, aliases: {}, linked: { physicalSide: 'shared-33-DtdykY0y.js#Cb' } },
+      m('loading-flag.mjs', 'shared-62-DoCqVpIq.js', { oQ: ['withLoadingFlag', 'y', ['e(!0);', 'return await t();', 'e(!1);']] }),
+      m('code-language-ids.mjs', 'shared-153-DMw2VzSq.js', { tT: ['highlightLanguageIds', 'og',
+        ['"python.javascript.typescript.java.csharp.go.rust.ruby.php.swift.kotlin.dart.scala.perl']] }),
+      m('arrow-key-direction.mjs', 'c7037f09e-DXK8RSre.js', { e: ['logicalArrowKey', 't', ['if (e === "ArrowLeft") return "ArrowRight";']] }),
+      // shared-6 QE (source-code-extensions.mjs until cds-core wave 5b): a cds-core publicName now (sourceCodeExtensions, one Set
+      // for every graph); its readers here (file-kind-icon-name.mjs) link it from cds-core.
+      m('file-icon-overrides.mjs', 'shared-2-CsjIBQD8.js', { S4: ['fileIconOverride', 'Ut', [L('Object.hasOwn(x4, t) ? x4[t] : void 0', ['x4'])],
+        { reads: ['markdown: "Note",'] }] }, { signature: ['xhtml: "Globe",'] }),
+      m('file-kind-icon-name.mjs', 'shared-9-BgdM6Y1f.js', { MT: ['fileKindIconName', 'j', [L('return t === "skill" ? jT.skill : (Ba(kT(e)) ?? jT[t]);', ['jT', 'Ba', 'kT'])],
+        { reads: ['skill: "Scroll",'] }] }),
+      m('path-basename.mjs', 'shared-92-BOgyxePb.js', { pk: ['pathBasename', 'vp', ['Math.max(t.lastIndexOf("/"), t.lastIndexOf("\\\\"))']] }),
+      // c17ed8826 t: the context the file-type icon reads its icon set from (module state: one copy, this graph).
+      m('file-type-icon-context.mjs', 'c17ed8826-s4tf2WDj.js', { t: ['FileTypeIconSetContext', 't', [K('t', 'e(null)')], { importedBy: ['c280f9bbb-BOcpax9X.js#L'] }] }),
+      m('file-type-icon.mjs', 'c280f9bbb-BOcpax9X.js', { V: ['FileTypeIcon', 't', ['fileName: n,', 'fallback: o', 'size: "auto"']] },
+        { signature: ['"data-file-type-icon": ""'] }),
+      // c0a54ccd3 t: hand focus back to a successor when the focused section unmounts (the Try again button's).
+      m('focus-return.mjs', 'c0a54ccd3-DO5tXxAj.js', { n: ['useFocusReturnOnUnmount', 't', ['sectionWide: a,', 'portaled: o,', 'successorIn: s,']] }),
+      m('retry-button.mjs', 'c30c42d34-CjFge6Ol.js', { u: ['RetryButton', 't', ['defaultMessage: "Try again", id: "FazwRldA7z"', 'busyLabel: f,', 'failedLabel: p,']] }),
+      m('diff-widget-background.mjs', 'c6e73333a-LnS4e_bw.js', {
+        k: ['diffWidgetBackground', 'r', ['"var(--diff-widget-bg, var(--cds-surface-3))"']],
+        E: ['codeBackground', 'n', [K('E', 'w("var(--cds-surface-2)")')]] }),
+      m('tree-context-menu-keys.mjs', 'shared-18-Cfqwgjc5.js', {
+        GN: ['preventMenuItemEnterRepeat', 'tc', ['\'[role^="menuitem"]\') === !0']],
+        WN: ['openContextMenuFromKey', 'ec', [L('t && Ys() && (e.preventDefault(), HN(t))', ['Ys', 'HN'])]] },
+        { signature: ['e.key === "ContextMenu" ||', '(e.key === "F10" && e.shiftKey && !e.metaKey && !e.ctrlKey && !e.altKey)', '"contextmenu"', 'button: -1,'] }),
+      m('file-tree-compact.mjs', 'ca7840910-Cb227yVR.js', {
+        F: ['FolderTree', 't', ['"classic"', 'onLoadChildren: i,', 'maxEntries: p,']],
+        k: ['currentFolderTreeRow', 'n', ['[aria-current="true"]']] },
+        { signature: ['name: "CaretRightFilled",', '"Collapse folder {name}"', '"Expand folder {name}"',
+          '"{count, plural, one {# more item not shown} other {# more items not shown}}"'] }),
+      m('folder-list-key.mjs', 'c0a74d72b-BELp4TMv.js', { Xa: ['folderListQueryKey', 'T', ['return ["epitaxy-file-browser-tree", e, t];']] }),
+      m('breadcrumb-folder.mjs', 'cd2efac6e-B38TGyig.js', {
+        $u: ['BreadcrumbFolderSegment', null, ['lister: l,', 'onOpenFile: d,', L('= Qu(l, r)', ['Qu'])]],
+        Qu: ['useFolderPopover', null, ['n.prefetchQuery(r)', L('setTimeout(d, Yu)', ['Yu'])]],
+        rd: ['BreadcrumbFolderList', null, ['errorUpdateCount: m,', L('Tu(r.scope, { isError: f, data: d })', ['Tu'])]],
+        Eu: ['folderListQuery', 'd', ['networkMode: "always",', '.toSorted(', 'relativePath:']],
+        Du: ['fetchFolderList', 'p', ['e.cancelQueries({ queryKey: r.queryKey, exact: !0 })']],
+        Tu: ['folderListFailed', 'h', ['return t && (e === "local" || n === void 0);']],
+        od: ['folderTreeEntries', null, ['path: e.absPath,']],
+        Gu: ['folderEntryLimit', null, [K('Gu', '200')]],
+        Ku: ['folderSkeletonRows', null, [K('Ku', '6')]],
+        Yu: ['folderHoldMs', null, [K('Yu', '150')]] },
+        { reexportImports: { Fo: 'folderListQueryKey' },
+          signature: ['"opacity-0 pointer-events-none"', '{ defaultMessage: "Files in {folder}", id: "ymTEkGZRIx" }', 'defaultMessage: "Listing this folder",',
+            '"Couldn\\u2019t list this folder"', 'defaultMessage: "Empty folder",', 'variant: "compact",'] }),
+      // shared-frame yT (3.6556.2 FC, view-tabs cdsMenuItemClass): cds-core's single copy, re-exported.
+      { target: 'menu-item-classes.mjs', source: official.sharedFrame, exports: {}, aliases: {}, cdsCore: { menuItemClasses: 'cdsMenuItemClass' } },
+      m('file-tree-row.mjs', 'c9bd7af9c-Bvb7EG4D.js', {
+        yE: ['fileTreeRowBase', null, ['py-0 focus-visible:outline-hidden focus-visible:shadow-focus`']],
+        bE: ['fileTreeRowSelected', null, [K('bE', '"bg-fill-ghost-selected hover:bg-fill-ghost-selected"')]],
+        xE: ['fileTreeRowPrimary', null, ["before:absolute before:inset-0 before:content-['']", 'flex flex-1 min-w-0 items-baseline']],
+        LD: ['keptGuideFolders', null, ['?.parentIndex === i ? i : r.parentIndex']],
+        RD: ['keptGuidesOfRow', null, ['return r.join(", ") || void 0;']] }),
+      m('path-within.mjs', 'shared-3-IQTrO7Gx.js', {
+        dN: ['pathWithinRoot', 'Ut', ['e.length > n.length + 1', '/^~[\\\\/]/.test(e)']],
+        $M: ['joinPath', 'Rt', ['`${n}\\\\${t.replace(/\\//g, "\\\\")}`']] }),
+      m('git-info-key.mjs', 'shared-0-CnnWnVrT.js', { OJ: ['gitInfoQueryKey', 'Ks', [K('OJ', '"gitInfo"')]] }),
+      m('git-info-query.mjs', 'shared-39-ZCs0lAwB.js', { Kg: ['gitInfoQuery', 'fi', ['networkMode: "always",', 'staleTime: 3e5,', '.getGitInfo']] }),
+      m('file-tree-start-folder.mjs', 'c9bd7af9c-Bvb7EG4D.js', {
+        ZE: ['useWorktreeStartFolder', null, ['t.hasDesktopWorktree === !0', '?.originCwd', '.replace(/[\\\\/]+$/, "")']],
+        eD: ['normalizeRevealPath', null, ['if (e === "..") {', 'e.replace(/\\\\/g, "/")']],
+        XE: ['startRevealNonce', null, [K('XE', '-1')], { readBy: ['WE'] }] }),
+      m('file-selection-escape.mjs', 'c856385e2-Cqx37C-b.js', { ht: ['useMultiSelectionEscape', 'vt',
+        ['n.key !== "Escape" ||', '.getState().selected.size < 2', '.getState().clear()', 'addEventListener("keydown", n)']] }),
+      m('file-frontmatter-label.mjs', 'c3fde7009-DTvRUX3c.js', { Ha: ['frontmatterLabel', null, ['e.replace(/[-_]/g, " ")']] }),
+      m('file-frontmatter-view.mjs', 'c3fde7009-DTvRUX3c.js', { Ua: ['Frontmatter', 'r', ['"data-not-prose": ""', 'i === "document"', '"pane"']] },
+        { forward: { frontmatterLabel: ['file-frontmatter-label.mjs', 'frontmatterLabel'] } }),
+      // c784da984's path rendering reads 3.6556.2 code-current path-parts / breadcrumb-measure (cut here: shared-3 Qt,
+      // ce574895a n / i).
+      m('path-parts.mjs', 'shared-3-IQTrO7Gx.js', { aN: ['splitPath', 'Qt', ['{ posix: t = !1 } = {}', 'return r < 0 ? ["", e] : [e.slice(0, r + 1), e.slice(r + 1)];']] }),
+      // ce574895a _ (useHeadCut) is a cds-core publicName since wave 5b (useHeadTruncationCut, with its measurement caches):
+      // path-segments.mjs links it from cds-core; observeWidth l stays a root here and links the ce574895a observer maps.
+      m('breadcrumb-measure.mjs', 'ce574895a-AyUKk43x.js', {
+        l: ['observeWidth', 'i', ['n?.ResizeObserver', 'a.observe(e)']] }),
+      m('path-segments.mjs', 'c784da984-CRJnGT1U.js', {
+        m: ['PathSegments', 'n', ['keepTailWhenNoRoom: g,', 'reportNoRoom: !0,']],
+        g: ['NameThenFolder', 't', ['/^(?:[A-Za-z]:)?[\\\\/]$/']],
+        d: ['LitText', 'r', ['"data-lit": ""', '"font-semibold text-primary"']] }),
+      m('diff-tree-tooltip.mjs', 'c44d00c7f-DNez7133.js', {
+        _a: ['DiffTreeRowTooltip', 'b', ['nameSaysMore: s,', 'detailIsPath: i,', 't.includes("/")']],
+        pa: ['rowNameClipped', 'x', ['e.querySelector("[data-clipped]") !== null']] }),
+    ],
+  };
+})();
+export const contractVersions = Object.freeze([referenceVersion, official4.referenceVersion]);
+// The 4.16336.0 contract and its engine, for tests that prove generation stops (a renamed alias, a non-unique root, D46).
+export { contract4, extractTarget4 };
+
+// CLI: every contract (3.6556.2 -> src/generated/files-changes, 4.16336.0 -> src/generated/files-changes-v4); `--version
+// <v>` runs one; `--survey` (4.16336.0 only) prints what the contract does not resolve yet and writes nothing.
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  const at = process.argv.indexOf('--version');
+  const versions = at > 0 ? [process.argv[at + 1]] : contractVersions;
+  if (process.argv.includes('--survey')) {
+    const { issues } = await extractFilesChanges({ version: official4.referenceVersion, survey: true });
+    console.log(JSON.stringify(issues, null, 1));
+  } else for (const version of versions) await extractFilesChanges({ check: process.argv.includes('--check'), version });
+}

@@ -36,8 +36,9 @@ before(async () => {
   previousWindow = globalThis.window; previousDocument = globalThis.document;
   // view-tabs' preload helper creates a link element while it evaluates (D21); the rail parts read nothing else of the
   // document during SSR.
-  globalThis.document = { createElement: () => ({ relList: { supports: () => false } }), querySelector: () => null, documentElement: { getAttribute: () => null } };
-  globalThis.window = { localStorage: localStorageStub, matchMedia: undefined };
+  // W8-M9 stub contract (round4 integration, stub fields only): cds-core 9203795f reads these at load (official 4.16336.0): document.cookie, window.location, documentElement.hasAttribute.
+  globalThis.document = { cookie: '' /* W8-M9: shared-0 CQ / Wo document.cookie */, createElement: () => ({ relList: { supports: () => false } }), querySelector: () => null, documentElement: { hasAttribute: () => false /* W8-M9: shared-92 cS / Ib */, getAttribute: () => null } };
+  globalThis.window = { location: { pathname: '/', search: '', hash: '', href: 'app://localhost/' } /* W8-M9: shared-25 router store */, addEventListener() {}, removeEventListener() {}, localStorage: localStorageStub, matchMedia: undefined };
   server = await createServer({ configFile: false, root: app, plugins: [react()], server: { middlewareMode: true, hmr: false, ws: false, watch: null }, appType: 'custom', logLevel: 'error' });
   const load = name => server.ssrLoadModule(`/src/generated/session-rail-kit/${name}`);
   [Rows, Sections, Layout, Shown, Chip, Card, Shell, Column, Tokens, Icons] = await Promise.all(['rail-rows.mjs', 'rail-sections-store.mjs', 'rail-layout.mjs',

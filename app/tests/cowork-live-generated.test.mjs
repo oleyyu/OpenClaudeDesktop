@@ -27,9 +27,10 @@ const h = React.createElement;
 const text = html => html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
 const manifest = JSON.parse(local('src/generated/cowork-live/manifest.json'));
 
-globalThis.document ??= { body: { nodeType: 1 }, head: { appendChild() {} }, createElement: () => ({ relList: { supports: () => false }, setAttribute() {}, style: {} }),
-  querySelector: () => null, querySelectorAll: () => [], addEventListener() {}, removeEventListener() {}, documentElement: { dataset: {}, getAttribute: () => null } };
-globalThis.window ??= { document: globalThis.document, navigator: { userAgent: 'Mozilla/5.0 (Macintosh)' }, addEventListener() {}, removeEventListener() {},
+// W8-M9 stub contract (round4 integration, stub fields only): cds-core 9203795f reads these at load (official 4.16336.0): document.cookie, window.location, documentElement.hasAttribute.
+globalThis.document ??= { cookie: '' /* W8-M9: shared-0 CQ / Wo document.cookie */, body: { nodeType: 1 }, head: { appendChild() {} }, createElement: () => ({ relList: { supports: () => false }, setAttribute() {}, style: {} }),
+  querySelector: () => null, querySelectorAll: () => [], addEventListener() {}, removeEventListener() {}, documentElement: { hasAttribute: () => false /* W8-M9: shared-92 cS / Ib */, dataset: {}, getAttribute: () => null } };
+globalThis.window ??= { location: { pathname: '/', search: '', hash: '', href: 'app://localhost/' } /* W8-M9: shared-25 router store */, document: globalThis.document, navigator: { userAgent: 'Mozilla/5.0 (Macintosh)' }, addEventListener() {}, removeEventListener() {},
   matchMedia: () => ({ matches: false, addEventListener() {}, removeEventListener() {} }) };
 
 // The official app is client-rendered: its stores call useSyncExternalStore without getServerSnapshot (c21f11e6d $y,

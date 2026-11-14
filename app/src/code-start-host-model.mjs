@@ -1,4 +1,10 @@
-// Data adaptation for cc43287c9 P3/N3/M8 (2.42304.0). The generated model owns ranking, grouping and dismissals.
+// Data adaptation for the start card. 4.16336.0 (src/source-code-start.jsx -> generated/code-start-v4): fve's awaiting
+// sessions (startWaitingSessions), Dye's environment items (startEnvironmentItems, D14), B5's records
+// (startEnvironmentRecords) and $be's local setup rows (startSetupRows: choose-folder / worktree-apart / continue-branch /
+// resume-session, the same facts ids and shapes as 4.16336.0 $be; the GitHub / PR / CLI-import / auto-mode rows
+// (connect-github, pr-ci-failed, pr-review-comments, add-repository, cli-import, auto-mode) need cloud and account stores
+// this host does not have and are never raised). The generated Dve owns ranking, grouping and dismissals.
+// (First written for 2.42304.0 cc43287c9 P3/N3/M8.)
 import { sessionTimestampMs } from './home-model.mjs';
 import { checkedOutBranch, defaultBranch } from './branch-picker-model.mjs';
 

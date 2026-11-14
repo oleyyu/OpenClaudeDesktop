@@ -23,7 +23,7 @@ const reference = path.resolve(app, '../reference/snapshots/claude-3.6556.2-2026
 const read = (file) => fs.readFile(path.join(app, file), 'utf8');
 const sha = (text) => createHash('sha256').update(text).digest('hex');
 // D21: view-tabs' preload-helper calls document.createElement while it evaluates; sidebar-resize reads documentElement.
-const documentStub = { createElement: () => ({ relList: { supports: () => false } }),
+const documentStub = { cookie: '', createElement: () => ({ relList: { supports: () => false } }),
   documentElement: { dir: 'ltr', getAttribute: () => null, hasAttribute: () => false } };
 let server, savedDocument, M = {};
 before(async () => {

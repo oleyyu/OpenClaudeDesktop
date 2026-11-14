@@ -25,7 +25,8 @@ const manifest = JSON.parse(fs.readFileSync(path.join(directory, 'manifest.json'
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
 const h = React.createElement;
 
-globalThis.document ??= { body: { nodeType: 1 }, head: { appendChild() {} }, createElement: () => ({ relList: { supports: () => false }, setAttribute() {}, style: {} }),
+// W8-M9 stub contract (round4 integration, stub fields only): cds-core 9203795f reads these at load (official 4.16336.0): document.cookie.
+globalThis.document ??= { cookie: '' /* W8-M9: shared-0 CQ / Wo document.cookie */, body: { nodeType: 1 }, head: { appendChild() {} }, createElement: () => ({ relList: { supports: () => false }, setAttribute() {}, style: {} }),
   querySelector: () => null, querySelectorAll: () => [], getElementById: () => null, addEventListener() {}, removeEventListener() {},
   documentElement: { dataset: {}, getAttribute: () => null, hasAttribute: () => false } };
 globalThis.window ??= { document: globalThis.document, navigator: { userAgent: 'Mozilla/5.0 (Macintosh)' }, addEventListener() {}, removeEventListener() {},
@@ -38,6 +39,10 @@ before(async () => {
     server: { middlewareMode: true, hmr: false, ws: false, watch: null }, appType: 'custom', logLevel: 'error' });
   i18n = await server.ssrLoadModule('/electron/i18n/index.mjs');
   i18n.setLocale('en-US');
+  // Round 4 S11 cutover: the 4.16336.0 roots (generated/chat-messages-v4) read the frame-sidebar host's reused answers (useIntl …)
+  // and the frame-sidebar-nav table, which main.jsx installs by importing both host modules; the test does the same.
+  await server.ssrLoadModule('/src/frame-sidebar-host.jsx');
+  await server.ssrLoadModule('/src/frame-sidebar-nav-host.jsx');
   actions = await server.ssrLoadModule('/src/source-chat-message-actions.jsx');
 });
 after(async () => { i18n?.setLocale('en-US'); await closeWhenSettled(server); await server?.close(); });
@@ -100,7 +105,12 @@ test('SSR: the reply toolbar is the MessageActions compound with Copy, Good / Ba
   const root = attrs(html, 'message-actions');
   assert.match(root, /data-cds="MessageActions"/);
   assert.match(root, /role="toolbar"/);
-  assert.match(root, /class="[^"]*ms-\[calc\(var\(--msg-text-inset,0\.5rem\)_-_0\.375rem\)\] -mt-1"/);
+  // was: assert.match(root, /class="[^"]*ms-\[calc\(var\(--msg-text-inset,0\.5rem\)_-_0\.375rem\)\] -mt-1"/);  (3.6556.2 n1)
+  // Round 4 S11 cutover: the toolbar is chat-messages-v4's 4.16336.0 r1, whose inset is tM (cc1aae219 of the 4.16336.0 snapshot, checked here).
+  const v4dir = path.join(app, '../reference/snapshots/claude-4.16336.0-20261104/ion-dist/assets/v1');
+  const cc1v4 = fs.readFileSync(path.join(v4dir, fs.readdirSync(v4dir).find((f) => f.startsWith('cc1aae219-') && f.endsWith('.js'))), 'utf8');
+  assert.ok(cc1v4.includes('className:p("ms-[calc(var(--msg-text-inset,0.5rem)_-_6px)] touch:ms-[calc(var(--msg-text-inset,0.5rem)_-_0.625rem*var(--cds-rem-scale,1))]","-mt-1",'));
+  assert.match(root, /class="[^"]*ms-\[calc\(var\(--msg-text-inset,0\.5rem\)_-_6px\)\] touch:ms-\[calc\(var\(--msg-text-inset,0\.5rem\)_-_0\.625rem\*var\(--cds-rem-scale,1\)\)\] -mt-1"/);
   const order = [...html.matchAll(/data-testid="([^"]+)"/g)].map(m => m[1]);
   assert.deepEqual(order, ['message-actions', 'action-bar-copy', 'action-bar-thumbs-up', 'action-bar-thumbs-down', 'action-bar-retry']);
   assert.match(attrs(html, 'action-bar-copy'), /aria-label="Copy"/);
@@ -122,8 +132,17 @@ test('SSR: the reply toolbar is the MessageActions compound with Copy, Good / Ba
 
 test('SSR: the disclaimer is U9 where the conversation ends, linking the support article', () => {
   const html = renderToStaticMarkup(h(actions.SourceChatDisclaimer, { conversationUuid: 't1', onOpenLink: () => {} }));
-  assert.match(html, /^<div role="note" data-disclaimer="true" class="pointer-events-auto relative z-0 -mt-10 bg-surface-1 pb-2 pt-12 text-center text-xs text-muted-as-secondary">/);
-  assert.match(html, /<a href="https:\/\/support\.anthropic\.com\/en\/articles\/8525154-claude-is-providing-incorrect-or-misleading-responses-what-s-going-on" target="_blank" rel="noopener noreferrer" class="hover:text-secondary transition">Claude is AI and can make mistakes\. Please double-check responses\.<\/a>/);
+  // was: assert.match(html, /^<div role="note" data-disclaimer="true" class="pointer-events-auto relative z-0 -mt-10 bg-surface-1 pb-2 pt-12 text-center text-xs text-muted-as-secondary">/);
+  // was: assert.match(html, /<a href="…8525154-…" target="_blank" rel="noopener noreferrer" class="hover:text-secondary transition">Claude is AI and can make mistakes\. Please double-check responses\.<\/a>/);
+  // Round 4 S11 cutover: the disclaimer is chat-messages-v4's 4.16336.0 copy of U9 — its ground is bg-page and the link adds
+  // not-hover:not-focus-visible:text-muted-as-tertiary (ca2ef848d of the 4.16336.0 snapshot, checked here); the rest is unchanged.
+  const v4dir = path.join(app, '../reference/snapshots/claude-4.16336.0-20261104/ion-dist/assets/v1');
+  const ca2v4 = fs.readFileSync(path.join(v4dir, fs.readdirSync(v4dir).find((f) => f.startsWith('ca2ef848d-'))), 'utf8');
+  assert.ok(ca2v4.includes('"pointer-events-auto relative z-0 -mt-10 bg-page pb-2 pt-12 text-center text-xs text-muted-as-secondary"'));
+  assert.ok(ca2v4.includes('className:"not-hover:not-focus-visible:text-muted-as-tertiary hover:text-secondary transition",children:i?'));
+  assert.ok(ca2v4.includes('defaultMessage:"Claude is AI and can make mistakes. Please double-check responses."'));
+  assert.match(html, /^<div role="note" data-disclaimer="true" class="pointer-events-auto relative z-0 -mt-10 bg-page pb-2 pt-12 text-center text-xs text-muted-as-secondary">/);
+  assert.match(html, /<a href="https:\/\/support\.anthropic\.com\/en\/articles\/8525154-claude-is-providing-incorrect-or-misleading-responses-what-s-going-on" target="_blank" rel="noopener noreferrer" class="not-hover:not-focus-visible:text-muted-as-tertiary hover:text-secondary transition">Claude is AI and can make mistakes\. Please double-check responses\.<\/a>/);
   i18n.setLocale('zh-CN');
   try {
     assert.match(renderToStaticMarkup(h(actions.SourceChatDisclaimer, { conversationUuid: 't1' })), /Claude 是 AI，可能会出错。请核实回答内容。/);

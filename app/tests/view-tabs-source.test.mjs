@@ -162,7 +162,8 @@ test('host bar forwards createBusy with the translated busy status and keeps cal
 });
 // R4g SM2 (global-10 / X7-21), 3.6556.2: shared-23's spa:fizzy-lake writer PD=[ND(AD)] still has an empty switch table
 // (AD={}); the part gate (shared-4 lp -> shared-52 th) filters <html data-cds-fizzy-lake> through Qm=[] (cds:C25), so
-// every part is always false. The host never sets the attribute or the storage keys (E12).
+// every part is always false. No host code sets the attribute or the storage keys (E12); index.html's <html> carries the
+// 4.16336.0 official value (html-root), which the 3.6556.2 gate still filters to nothing.
 test('global-10: the official build compiles fizzy-lake off and the host never turns a part on',async()=>{
   const fs=await import('node:fs/promises');
   const count=(text,s)=>text.split(s).length-1;
@@ -179,9 +180,24 @@ test('global-10: the official build compiles fizzy-lake off and the host never t
     if(name.split(path.sep).includes('generated')||!/\.(jsx?|mjs|cjs|css|html)$/.test(name))continue;
     // Code only: comments that explain why fizzy-lake stays off (e.g. the adapters' isFizzyLakePart notes) write nothing.
     const text=(await fs.readFile(path.join(app,dir,name),'utf8')).replace(/\/\*[\s\S]*?\*\//g,'').replace(/(^|\s)\/\/.*$/gm,'$1');
-    for(const s of ['data-cds-fizzy-lake','spa:fizzy-lake','fizzyLake'])if(text.includes(s))hits.push(`${dir}/${name}: ${s}`);
+    // html-root fix (integration-2): source-settings.css's one selector reads (never writes) the official type part for the
+    // 4.16336.0 c6a992d55 Large message-row leading; any other mention still counts.
+    const typeReader='html[data-cds-fizzy-lake~=type][data-chat-text-size=l] .source-message.source-message:is([data-cds=AssistantMessage],[data-cds=UserMessage]) {';
+    if(name==='source-settings.css'&&dir==='src'&&text.split(typeReader).length-1!==1)hits.push(`${dir}/${name}: type reader`);
+    // titlebar relink T1 (round3/relink/rl-main-entry): main.jsx hands the window root the official 4.16336.0 reader's
+    // answer, shared-92 St's `fizzyLake:_` with `_=A()` = cds-core readFizzyLakeParts (shared-92 ib, pinned below: it only
+    // getAttribute()s the <html> value and caches it). Exactly that one reader; any other mention still counts.
+    const rootReader='const cdsWindowExperimental = { fizzyLake: readFizzyLakeParts() };';
+    if(name==='main.jsx'&&dir==='src'&&text.split(rootReader).length-1!==1)hits.push(`${dir}/${name}: root reader`);
+    for(const s of ['data-cds-fizzy-lake','spa:fizzy-lake','fizzyLake'])if(text.split(typeReader).join('').split(rootReader).join('').includes(s))hits.push(`${dir}/${name}: ${s}`);
   }
-  const index=await fs.readFile(path.join(app,'index.html'),'utf8');if(index.includes('fizzy-lake'))hits.push('index.html');
+  // html-root (integration-2): index.html's <html> carries the 4.16336.0 official data-cds-fizzy-lake="color panels type" (the
+  // 3.6556.2 gate above still answers false for every part under it); nothing else in index.html mentions fizzy-lake.
+  const index=await fs.readFile(path.join(app,'index.html'),'utf8');
+  if(index.split('fizzy-lake').length-1!==1||!/<html\b[^>]*\sdata-cds-fizzy-lake="color panels type"[\s>]/.test(index))hits.push('index.html');
+  const s92=await fs.readFile(path.resolve(import.meta.dirname,'../../reference/snapshots/claude-4.16336.0-20261104/ion-dist/assets/v1/shared-92-BOgyxePb.js'),'utf8');
+  assert.equal(count(s92,'function ib(){return rb??={parts:typeof document>"u"?[]:eb(document.documentElement.getAttribute($y),nb)},rb}'),1);
+  assert.match(await fs.readFile(path.join(app,'src/cds-core.mjs'),'utf8'),/\bib as readFizzyLakeParts,/);
   assert.deepEqual(hits,[]);
 });
 test('original tab menu names the close-to-end action by reading direction: right in LTR, left in RTL',()=>{

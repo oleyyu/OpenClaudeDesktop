@@ -81,6 +81,48 @@ test('themeCss: a custom accent rewrites the mode-dependent accent steps and the
   assert.equal(themeCss({ accent: '' }), '');
 });
 
+// html-root fix (integration-2): with html[data-cds-fizzy-lake~=color] the 4.16336.0 color part hard-codes the accent
+// hover blue on .cds-root / .cds-dark-scope; the custom accent restores the official non-fizzy reference above it.
+test('themeCss: a custom accent keeps --cds-fill-accent-hover on the accent above every fizzy-lake color rule', async () => {
+  const { ionSource } = await import('../scripts/official-4.16336.0.mjs');
+  const name = readdirSync(ionSource).find((file) => /^c6a992d55-.*\.css$/.test(file));
+  const css = readFileSync(path.join(ionSource, name), 'utf8');
+  const hover = ':is(.cds-root,.cds-dark-scope):not([data-cds-theme]):not([data-cds-theme] *)';
+  const rule = `html:root[data-custom-theme]${hover},html:root[data-custom-theme] ${hover}{--cds-fill-accent-hover:var(--cds-role-accent-fill-hover);}`;
+  assert.ok(themeCss({ accent: '#e11d48' }).split('\n').includes(rule));
+  assert.equal(themeCss({ uiFont: 'Inter' }).includes('--cds-fill-accent-hover'), false, 'only an accent theme writes it');
+  // The value is the official one: .cds-root and [data-window-active=false] [data-cds] both read the role token.
+  assert.ok(css.includes('[data-window-active=false] [data-cds]:not(:where([data-cds-theme],[data-cds-theme] *)){--cds-fill-accent-hover:var(--cds-role-accent-fill-hover)}'));
+  // Specificity (a,b,c) of a selector: :where() 0, :is()/:not() their most specific argument.
+  const split = (list) => { const out = []; let depth = 0, start = 0;
+    for (let i = 0; i < list.length; i++) { const c = list[i]; if (c === '(') depth++; else if (c === ')') depth--; else if (c === ',' && !depth) { out.push(list.slice(start, i)); start = i + 1; } }
+    return [...out, list.slice(start)].map((part) => part.trim()); };
+  const add = (x, y) => x.map((v, i) => v + y[i]), max = (list) => list.reduce((m, x) => (x[0] - m[0] || x[1] - m[1] || x[2] - m[2]) > 0 ? x : m, [0, 0, 0]);
+  const spec = (sel) => { let total = [0, 0, 0], i = 0;
+    while (i < sel.length) {
+      const fn = /^:(is|not|where)\(/.exec(sel.slice(i));
+      if (fn) { let depth = 1, j = i + fn[0].length; for (; depth; j++) { if (sel[j] === '(') depth++; else if (sel[j] === ')') depth--; }
+        if (fn[1] !== 'where') total = add(total, max(split(sel.slice(i + fn[0].length, j - 1)).map(spec))); i = j; continue; }
+      const m = /^(#[\w-]+|\.[\w-]+|\[[^\]]*\]|:[\w-]+|[a-z][\w-]*|[\s>+~*]+)/.exec(sel.slice(i));
+      assert.ok(m, sel.slice(i)); const t = m[0];
+      if (t[0] === '#') total = add(total, [1, 0, 0]); else if (t[0] === '.' || t[0] === '[' || t[0] === ':') total = add(total, [0, 1, 0]); else if (/^[a-z]/.test(t)) total = add(total, [0, 0, 1]);
+      i += t.length; }
+    return total; };
+  const ours = max(split(rule.slice(0, rule.indexOf('{'))).map(spec));
+  assert.deepEqual(ours, [0, 5, 1]);
+  // Every official declaration of a fixed accent hover is a fizzy-lake color rule on .cds-root / .cds-dark-scope.
+  const fixed = [...css.matchAll(/--cds-fill-accent-hover:#[0-9a-f]+/g)].map(({ index }) => {
+    const open = css.lastIndexOf('{', index), start = Math.max(css.lastIndexOf('}', open), css.lastIndexOf('{', open - 1)) + 1;
+    return css.slice(start, open);
+  });
+  assert.equal(fixed.length, 4);
+  for (const list of fixed) for (const selector of split(list)) {
+    assert.match(selector, /(\.cds-root|\.cds-dark-scope):is\(\[data-cds-fizzy-lake~=color\],\[data-cds-fizzy-lake~=color\] \*\)/, selector);
+    const s = spec(selector);
+    assert.ok(s[0] === 0 && (s[1] < ours[1] || (s[1] === ours[1] && s[2] < ours[2])), `${selector} ${s}`);
+  }
+});
+
 test('onAccent picks the WCAG higher-contrast text colour', () => {
   assert.equal(relativeLuminance('#ffffff'), 1);
   assert.equal(relativeLuminance('#000000'), 0);

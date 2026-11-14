@@ -67,7 +67,12 @@ test("main.jsx renders the IO identity in the header and footer, with no 'Local 
   const sidebar = await fs.readFile(path.join(root, "src/source-sidebar.jsx"), "utf8");
   assert.doesNotMatch(sidebar, /displayName\.split\(/, "the first-name rule lives in accountFooter");
   // W12b-FTS-1 shared-19 $N: df-footer-name, no truncate (the df-footer-suffix mask fades a long name).
-  assert.match(sidebar, /<span className="df-footer-name whitespace-nowrap text-secondary max-w-full shrink-0">\{accountName\}<\/span>/);
+  // The legacy tray's row is SourceSidebarAccountRow; on the 4.16336.0 frame the tray is the sliced official shared-22 QL /
+  // shared-19 QF (sidebar-body, surfaces-prod-2), answered with the same accountFooter (frame-sidebar-host useAccountIdentity:
+  // identity = name, orgPrimary = plan).
+  assert.match(sidebar, /<span className="df-footer-name whitespace-nowrap text-secondary max-w-full shrink-0">\{displayName\}<\/span>/);
+  assert.match(main, /account: \{ name: accountButton\.name, plan: accountButton\.plan, avatarName: accountButton\.avatarName, menuOpen: menu\?\.kind === "account",/);
+  assert.doesNotMatch(main, /accountTray:/);
 });
 
 // R02 account menu (sidebar-rows.js:16155-16432 $B, pw w-[17rem] at sidebar-groups.js:5250-5253).

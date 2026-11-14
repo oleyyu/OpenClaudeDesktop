@@ -6,7 +6,10 @@
 // with CdsTextArea, and Back / Skip / primary CdsButtons. No digit shortcuts or approval plumbing. In the Code transcript
 // (context.presentation "card") it wears c2f6611a3 En's structure instead, like the question card there.
 import React, { createContext, useContext, useId, useRef, useState } from "react";
-import { CdsButton, CdsTextArea, cdsClassNames } from "./generated/view-tabs/index.js";
+// host-wiring/chat (4.16336.0): what the card draws in host markup — its Buttons, the Other TextArea and the class joins — is
+// the cds-core graph's (shared-frame-CJdE5Ria Xu → Id, oN, Q). The Other mark's top-align class goes into QuestionRadioMark
+// (src/generated/question-card, 3.6556.2), so it stays the 3.6556.2 view-tabs value (below).
+import { CdsButton, CdsTextArea, cdsClassNames } from "./cds-core.mjs";
 import { asyncAnswerText, asyncQuestionsOf } from "./async-questions-model.mjs";
 import { QuestionOptionRow, selectedRowClass, preventMouseDown, otherFieldArrowKeys, stopClickPropagation } from "./generated/question-card/option-row.mjs";
 import { QuestionCardHeader, questionDisplayText } from "./generated/question-card/card-header.mjs";

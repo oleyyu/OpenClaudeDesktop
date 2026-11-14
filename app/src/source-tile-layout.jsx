@@ -1,9 +1,9 @@
-import React, { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useContext, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { SourceTooltip } from "./source-tooltip";
 import { t } from "../electron/i18n/index.mjs";
 import {
-  CHAT_TILE_ID, TILE_CONFIG, adjustFlexes, chatContentInset, chatGutters, cloneNode, coveredWidth, distributeFlex, findStack, findTilePath, layoutsEqual, minSize, moveTile, nodeKey,
+  CHAT_TILE_ID, adjustFlexes, chatContentInset, chatGutters, cloneNode, coveredWidth, distributeFlex, findStack, findTilePath, layoutsEqual, minSize, moveTile, nodeKey,
   orderedTileIds, parentAtPath, resolveLayout, withChatMinimum,
 } from "./tile-layout-model.mjs";
 import { createDragSnapshot, hitTest, indicatorOutset } from "./tile-drop-zones.mjs";
@@ -11,6 +11,12 @@ import { createDragSnapshot, hitTest, indicatorOutset } from "./tile-drop-zones.
 import { fitOpenedLayout } from "./generated/code-current/tile-fit-opened.mjs";
 import "./source-tile-layout.css";
 import { tileRegion } from "./focus-region-model.mjs";
+// 4.16336.0 Code session line mode (cc43287c9 Eje over shared-20 f_ / h_, c9543da06 Es / Is / qs; tile-line-model.mjs).
+import { ROOT_AT_EDGE, childAtEdge, isLineConfig, lineShell, lineTileConfig, lineTileStyle, lineViewportVars, paneTileContexts } from "./tile-line-model.mjs";
+// 4.16336.0 pane frame tile contexts (c4db265df ot, shared-20 ub), provided around a pane tile as cc43287c9 Hje does.
+import { PaneInTileContext } from "./generated/session-panels-v4/pane-frame.mjs";
+import { PaneStandsOnPageContext } from "./generated/session-panels-v4/tiles-line.mjs";
+import { PaneWindowContext } from "./pane-window-header.jsx";
 
 // Recursive tile layout host (independent implementation of the 2.2553.1
 // pane engine: c360a9e1c-GPs-MV9u.js $m engine 8750-9552, gh renderer
@@ -28,6 +34,7 @@ const SIDE_STATUS = {
   down: t("Press Enter to move down, or Escape to cancel."),
 };
 const NO_HANDLES = Object.freeze({ left: null, right: null, top: null, bottom: null });
+const LINE_TILE_CONFIG = lineTileConfig();
 const isPlainKey = (event) => !event.ctrlKey && !event.metaKey && !event.altKey;
 const boundaryKey = (boundary) => `${boundary.stackId}:${boundary.boundaryIndex}`;
 
@@ -75,7 +82,7 @@ function DragHandle({ tileId, isActive, isDragging, previewSide, describedById, 
   );
 }
 
-function Separator({ direction, isActive, isDropTarget, isDisabled, size, depth, valueNow, ariaLabel, cornerStart, cornerEnd, onPointerDown, onDoubleClick, onKeyDown }) {
+function Separator({ direction, isActive, isDropTarget, isDisabled, size, line = false, depth, valueNow, ariaLabel, cornerStart, cornerEnd, onPointerDown, onDoubleClick, onKeyDown }) {
   const row = direction === "row";
   const [hovered, setHovered] = useState(false);
   return (
@@ -89,14 +96,18 @@ function Separator({ direction, isActive, isDropTarget, isDisabled, size, depth,
         aria-valuemin={0}
         aria-valuemax={100}
         aria-label={ariaLabel}
-        className={`tiles-handle${isActive ? " is-active" : ""}`}
+        // 4.16336.0 c9543da06 qs: `se = \`tiles-handle draggable-none hide-focus-ring ${n ? "is-active" : ""}\``,
+        // `"data-starts-at-divider": o && g ? "" : void 0`, `zIndex: (o ? 4 : 1) + d` (o: config.divider === "line").
+        className={line ? `tiles-handle draggable-none hide-focus-ring ${isActive ? "is-active" : ""}` : `tiles-handle${isActive ? " is-active" : ""}`}
         data-drop-target={isDropTarget || undefined}
-        style={{ zIndex: 1 + depth, ...(row ? { cursor: "col-resize", alignSelf: "stretch", width: size } : { cursor: "row-resize", height: size }), pointerEvents: isDisabled ? "none" : undefined }}
+        data-starts-at-divider={line && cornerStart ? "" : undefined}
+        style={{ zIndex: (line ? 4 : 1) + depth, ...(row ? { cursor: "col-resize", alignSelf: "stretch", width: size } : { cursor: "row-resize", height: size }), pointerEvents: isDisabled ? "none" : undefined }}
         onPointerDown={onPointerDown}
         onMouseDown={(event) => event.preventDefault()}
         onDoubleClick={onDoubleClick}
         onKeyDown={(event) => { if (isDisabled) return; setHovered(false); onKeyDown(event); }}
       >
+        {line && !isDropTarget && <span className="tiles-handle-line" />}
         <span className="tiles-handle-affordance" style={row ? { width: 3, height: isDropTarget ? "100%" : 56 } : { width: isDropTarget ? "100%" : 56, height: 3 }} />
         {cornerStart && <span className="tiles-handle-corner" style={{ width: size, height: size, ...(row ? { left: 0, top: -size } : { top: 0, left: -size }) }}
           onPointerDown={cornerStart.onPointerDown} onDoubleClick={(event) => event.stopPropagation()} />}
@@ -107,7 +118,7 @@ function Separator({ direction, isActive, isDropTarget, isDisabled, size, depth,
   );
 }
 
-function TileWrap({ node, flex, config, minWidthSize, edgeHandles, engine, tileById, hosts, isTop, gutters }) {
+function TileWrap({ node, flex, config, minWidthSize, edgeHandles, atEdge = ROOT_AT_EDGE, engine, tileById, hosts, isTop, gutters }) {
   const tile = tileById(node.tileId);
   const overflowMin = tile?.overflowMin ?? null;
   const target = engine.feedback.target;
@@ -143,10 +154,18 @@ function TileWrap({ node, flex, config, minWidthSize, edgeHandles, engine, tileB
   const adopt = useCallback((element) => {
     if (element) hosts.adopt(node.tileId, element);
   }, [hosts, node.tileId]);
+  // 4.16336.0 line mode (c9543da06 Is): the shell after a divider reaches back over it (data-after-line-x / -y, ks / As)
+  // and takes Eje's tile style last (shared-20 h_: padding, --tiles-padding, --tile-shell-ground); the docked pane drops
+  // the 2.2553.1 floating card (rounded, shadow-panel-sm) and stands edge to edge.
+  const line = isLineConfig(config);
+  const lined = line ? lineShell(config, atEdge, overflowMin) : null;
+  const rtl = typeof document !== "undefined" && document.documentElement.dir === "rtl";
+  const shellClass = line && isDragged ? "tiles-shell is-moving" : "tiles-shell";
+  const lineShellStyle = line ? { ...shellStyle, ...lined.style, ...lineTileStyle(node.tileId, gutters, rtl) } : shellStyle;
   return (
     <div
       ref={wrapRef}
-      data-pane-root="" className={`tiles-tile-wrap ${node.tileId === "chat" ? "source-chat-tile" : "source-side-tile shadow-panel-sm"}`}
+      data-pane-root="" className={`tiles-tile-wrap ${node.tileId === "chat" ? "source-chat-tile" : line ? "source-side-tile" : "source-side-tile shadow-panel-sm"}`}
       data-tile-id={node.tileId}
       // W14-code r2 css2-chat-gutter-shave: cc43287c9 Fbe's chat tile `"data-chat-gutter-start": m, "data-chat-gutter-end": h`.
       data-chat-gutter-start={node.tileId === "chat" ? gutters?.start : undefined}
@@ -159,7 +178,10 @@ function TileWrap({ node, flex, config, minWidthSize, edgeHandles, engine, tileB
       data-tile-top={isTop || undefined}
       style={{ zIndex: overflowMin ? 0 : 1, flexGrow: flex, flexShrink: 1, flexBasis: 0, minWidth: minWidthSize, minHeight: config.minTileBasePx }}
     >
-      <div ref={adopt} className="tiles-shell" data-tile-overflow-anchor={overflowMin?.anchor} style={shellStyle} />
+      <div ref={adopt} className={shellClass} data-tile-overflow-anchor={overflowMin?.anchor} {...lined?.attrs} style={lineShellStyle} />
+      {lined?.afterX && edgeHandles.left !== null && (
+        <div aria-hidden="true" data-line-no-drag="" className="draggable-none absolute inset-y-0 start-[calc(-1*var(--tiles-gap,1px)-1px)] w-[calc(var(--tiles-gap,1px)+7px)]" />
+      )}
       {wrapEdge && <DropIndicator edge={wrapEdge} outset={indicatorOutset(config, edgeHandles, wrapEdge)} />}
     </div>
   );
@@ -179,13 +201,13 @@ function resizeLabel(node, index, tileById) {
   const named = left !== null && right !== null && left !== right;
   return t("Resize {left} and {right}", { left: named ? left : index + 1, right: named ? right : index + 2 });
 }
-function Stack({ node, depth, config, engine, resolved, tileById, hosts, parentDirection, edgeHandles, topTileId, gutters }) {
+function Stack({ node, depth, config, engine, resolved, tileById, hosts, parentDirection, edgeHandles, atEdge = ROOT_AT_EDGE, topTileId, gutters }) {
   const info = resolved.get(nodeKey(node));
   const flex = info?.resolvedFlex ?? node.flex;
   const rowMin = info?.rowMin ?? 0;
   if (node.kind === "tile") {
     if (!tileById(node.tileId)) return null;
-    return <TileWrap node={node} flex={flex} config={config} minWidthSize={rowMin} edgeHandles={edgeHandles} engine={engine} tileById={tileById} hosts={hosts} isTop={topTileId === node.tileId} gutters={gutters} />;
+    return <TileWrap node={node} flex={flex} config={config} minWidthSize={rowMin} edgeHandles={edgeHandles} atEdge={atEdge} engine={engine} tileById={tileById} hosts={hosts} isTop={topTileId === node.tileId} gutters={gutters} />;
   }
   const target = engine.feedback.target;
   const isRow = node.direction === "row";
@@ -206,6 +228,9 @@ function Stack({ node, depth, config, engine, resolved, tileById, hosts, parentD
     const end = index === last ? (isRow ? edgeHandles.right : edgeHandles.bottom) : boundaryAt(index);
     return isRow ? { ...edgeHandles, left: start, right: end } : { ...edgeHandles, top: start, bottom: end };
   };
+  // c9543da06 Es z(r) over the shown children (ne / re); a tile the host has no definition for renders nothing.
+  const shownIndexes = node.children.map((child, index) => (child.kind === "tile" && !tileById(child.tileId) ? -1 : index)).filter((index) => index >= 0);
+  const firstShown = shownIndexes.length ? shownIndexes[0] : -1, lastShown = shownIndexes.length ? shownIndexes[shownIndexes.length - 1] : -1;
   const cornerStart = isRow ? edgeHandles.top : edgeHandles.left;
   const cornerEnd = isRow ? edgeHandles.bottom : edgeHandles.right;
   return (
@@ -219,7 +244,7 @@ function Stack({ node, depth, config, engine, resolved, tileById, hosts, parentD
       {node.children.map((child, index) => (
         <React.Fragment key={nodeKey(child)}>
           <Stack node={child} depth={depth + 1} config={config} engine={engine} resolved={resolved} tileById={tileById} hosts={hosts}
-            parentDirection={node.direction} edgeHandles={childHandles(index)} topTileId={topTileId} gutters={gutters} />
+            parentDirection={node.direction} edgeHandles={childHandles(index)} atEdge={childAtEdge(atEdge, node.direction, index, firstShown, lastShown)} topTileId={topTileId} gutters={gutters} />
           {index < node.children.length - 1 && (
             <Separator
               direction={node.direction}
@@ -227,6 +252,7 @@ function Stack({ node, depth, config, engine, resolved, tileById, hosts, parentD
               isDropTarget={mainIndex === index + 1}
               isDisabled={engine.isDraggingTile}
               size={config.gap}
+              line={isLineConfig(config)}
               depth={depth}
               valueNow={Math.round((flexes[index] / (flexes[index] + flexes[index + 1])) * 100)}
               ariaLabel={resizeLabel(node, index, tileById)}
@@ -239,6 +265,19 @@ function Stack({ node, depth, config, engine, resolved, tileById, hosts, parentD
       ))}
       {edge && <DropIndicator edge={edge} outset={indicatorOutset(config, edgeHandles, edge)} />}
     </div>
+  );
+}
+
+// cc43287c9 Hje's providers around a tile's content (tile-line-model paneTileContexts): none for the chat tile, and none
+// in a pane window, which c5638815a wt renders straight into the window with no tile host around it.
+function PaneTileContexts({ tileId, children }) {
+  const paneWindow = useContext(PaneWindowContext);
+  const values = paneWindow ? null : paneTileContexts(tileId);
+  if (values === null) return children;
+  return (
+    <PaneInTileContext value={values.inTile}>
+      <PaneStandsOnPageContext value={values.standsOnPage}>{children}</PaneStandsOnPageContext>
+    </PaneInTileContext>
   );
 }
 
@@ -268,7 +307,13 @@ function useContentHosts() {
   }), []);
 }
 
-export function SourceTileLayout({ layout, onLayoutChange, tiles, renderTile, config = TILE_CONFIG, onTileTearOff, hasPane = true, dataAttributes, restoreKey = null, onRestoreLayout, tileHosts = null }) {
+export function SourceTileLayout({ layout, onLayoutChange, tiles, renderTile, config: configProp, onTileTearOff, hasPane = true, dataAttributes, restoreKey = null, onRestoreLayout, tileHosts = null }) {
+  // 4.16336.0 cc43287c9 Eje: the Code session tiles always run shared-20 f_(!0) (gap 1, padding 0, borderPx 0, divider
+  // "line"): `Rt = Zf(!0)` is built unconditionally, the chat-only layout (no pane, the Code start screen included) runs
+  // it too (round3 rl-session-page step 4). A caller's own config (the pane window popout, PANE_WINDOW_TILE_CONFIG) is
+  // kept as is.
+  const config = configProp ?? LINE_TILE_CONFIG;
+  const line = isLineConfig(config);
   const containerRef = useRef(null);
   const viewportRef = useRef(null);
   const nodeEls = useRef(new Map());
@@ -712,7 +757,10 @@ export function SourceTileLayout({ layout, onLayoutChange, tiles, renderTile, co
   // the host's verified chat-only geometry (source-tile-layout.css). fitOpened keeps the plain padding at the end
   // (cc43287c9 `at = {...Ve, paddingTop: et, paddingEnd: Ve.padding + Qe}`).
   const gutters = useMemo(() => chatGutters(layout), [layout]);
-  const containerPadding = hasPane
+  // Line mode (Eje `$t = {...Rt, paddingTop: 0, paddingEnd: Qt}`, Rt.padding 0, no dock reserve in the host): the
+  // container pads nothing on any side, with or without a pane; the chat tile's own insets come from shared-20 h_ / l_
+  // (lineTileStyle). The inline zero also stands over the 2.42304.0 chat-only bottom rule in source-tile-layout.css.
+  const containerPadding = hasPane || line
     ? { paddingTop: config.padding, paddingRight: gutters.end === "bleed" ? 0 : config.padding, paddingBottom: config.padding, paddingLeft: config.padding }
     : { paddingLeft: config.padding };
   const engine = useMemo(() => ({
@@ -728,6 +776,11 @@ export function SourceTileLayout({ layout, onLayoutChange, tiles, renderTile, co
       data-dragging={isDraggingTile || undefined}
       data-resizing={activeBoundaries.size > 0 || undefined}
       data-tile-layout={serialized}
+      // c9543da06 ys: `"data-tiles-viewport": ""`, `"data-tiles-line": r.divider === "line" ? "" : void 0`; Eje's wrapper
+      // style Hf() (p_: --tiles-border, --titlebar-end-inset) where the line config runs.
+      data-tiles-viewport=""
+      data-tiles-line={line ? "" : undefined}
+      style={line ? lineViewportVars() : undefined}
       {...dataAttributes}
     >
       <div ref={containerRef} className="tiles-container" style={{ ...containerPadding, "--tiles-gap": `${config.gap}px`, "--tiles-padding": `${config.padding}px` }}>
@@ -735,13 +788,13 @@ export function SourceTileLayout({ layout, onLayoutChange, tiles, renderTile, co
           parentDirection={undefined} edgeHandles={NO_HANDLES} topTileId={visibleIds[0]} gutters={gutters} />
       </div>
       {visibleTiles.map((tile) => createPortal(
-        renderTile(tile.id, {
+        <PaneTileContexts tileId={tile.id}>{renderTile(tile.id, {
           dragHandle: canDrag && tile.id !== "chat"
             ? <DragHandle tileId={tile.id} isActive={dragVisual === tile.id} isDragging={isDraggingTile && dragVisual === tile.id}
               previewSide={keyboardPreview?.tileId === tile.id ? keyboardPreview.side : null} describedById={instructionsId} {...getTileDragProps(tile.id)} />
             : null,
           isActive: dragVisual === tile.id,
-        }),
+        })}</PaneTileContexts>,
         hosts.host(tile.id),
         tile.id,
       ))}

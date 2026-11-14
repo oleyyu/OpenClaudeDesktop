@@ -11,6 +11,10 @@ import { parseAst } from 'rolldown/parseAst';
 import * as officialPaths from '../scripts/official-3.6556.2.mjs';
 import { appSheets, append, bundleOrder, computed, declarations, element, find, loadCascade, orderOnly, parseMarkup, setState, specificity }
   from './fixtures/transcript-css-cascade.mjs';
+import { designEntryStylesheets } from '../scripts/current-design-assets.mjs';
+// design-production (4.16336.0): the loaded c6a992d55 / shared-styles entry sheets, named by current-design-assets.
+const UTILITIES_CSS = designEntryStylesheets.find(name => name.startsWith('c6a992d55-'));
+const SHARED_STYLES_CSS = designEntryStylesheets.find(name => name.startsWith('shared-styles-'));
 
 // D26 (R3-style): style.css's native-control resets (button/input/textarea/select font+color, the button box reset,
 // button:disabled and -webkit-app-region) were unlayered, so they beat every @layer components / utilities class of
@@ -22,7 +26,7 @@ import { appSheets, append, bundleOrder, computed, declarations, element, find, 
 // renderer loads, in bundle order, three ways: with the workaround put back; without it (as shipped — nothing changes,
 // so it was redundant); and without it over the old unlayered reset (the root cause: the reset wins again).
 const ROOT = path.resolve(import.meta.dirname, '..');
-const OFFICIAL = 'public/assets/v1/c6a992d55-Che1orl5.css';
+const OFFICIAL = `public/assets/v1/${UTILITIES_CSS}`;
 // Host buttons that copy an official button's class list verbatim (W13 closeout): c623cddd3 ye, Move to project's rows.
 const V1_ASSETS = path.join(path.dirname(new URL(import.meta.url).pathname), '../../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1');
 const OFFICIAL_BUTTON_REPLICAS = [{ file: 'src/source-chats-page.jsx', chunk: 'c623cddd3-' }];
@@ -328,7 +332,8 @@ test('2.42304.0 declares properties … base, components, utilities and puts its
   assert.doesNotMatch(base, /button:disabled\{[^}]*color/, 'the source preflight gives a disabled button no colour of its own');
   assert.ok(css.includes('.cds-root[data-platform=desktop]{--cds-cursor-interactive:default}'));
   assert.ok(css.includes('--spacing:.25rem'));
-  assert.equal(HTML_ATTRS.class, 'cds-root'); assert.equal(HTML_ATTRS['data-platform'], 'desktop'); assert.equal(HTML_ATTRS['data-dframe'], '');
+  // 4.16336.0 ion-dist/index.html root class (html-root)
+  assert.equal(HTML_ATTRS.class, 'cds-root h-screen antialiased motion-safe:scroll-smooth'); assert.equal(HTML_ATTRS['data-platform'], 'desktop'); assert.equal(HTML_ATTRS['data-dframe'], '');
   // index.html links every official sheet; the app bundle (style.css among it) is loaded after them.
   const order = appSheets(ROOT).map((sheet) => sheet.name);
   assert.ok(order.indexOf(OFFICIAL) < order.indexOf('src/style.css'));
@@ -446,7 +451,7 @@ test('.df-user-menu-btn: the source\'s ps-/pe-2/text-start class string, and no 
   const healthy = userButton(sidebar({}));
   for (const c of [withIt, shipped, rootCause]) {
     const r = resolve(c, healthy, 'padding-right');
-    assert.equal(r.value, 'calc(var(--df-tray-caret-col) - 14px)'); assert.equal(r.from.sheet, 'public/assets/v1/shared-styles-D_GJawPO.css');
+    assert.equal(r.value, 'calc(var(--df-tray-caret-col) - 14px)'); assert.equal(r.from.sheet, `public/assets/v1/${SHARED_STYLES_CSS}`);
   }
   const atState = (c, property, state = []) => { clearState(host); if (state.length) setState(btn, state); return resolve(c, btn, property); };
   const utility = (r, value, name) => { assert.equal(r.value, value, `${name} → ${r.value} from ${where(r.from)}`); assert.equal(r.from.sheet, OFFICIAL); assert.equal(r.from.layer, 'utilities'); };

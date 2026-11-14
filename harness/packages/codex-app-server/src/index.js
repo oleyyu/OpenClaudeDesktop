@@ -101,7 +101,8 @@ import { profileReadResponse } from './profile.js'
 import { runSideQuestion, sessionTranscript, sideQuestionPrompt } from './side-question.js'
 import { ALIASES as PRICE_ALIASES, DEEPSEEK_PRICES, PEAK_WINDOWS, PRICING_URL } from './pricing.js'
 import { backgroundTerminal, chunkText, isLiveJobStatus, pageOf } from './jobs.js'
-import { forkBoundary } from './fork.js'
+import { forkBoundary, withEmptyInbox } from './fork.js'
+import { importMessages, importSeed, importedFromOf } from './thread-import.js'
 import { rewindAppends, rewindBoundary, rewindRuns } from './rewind.js'
 import { REVIEW_FIELD, reviewRequest } from './review.js'
 import { executeCommand, listedCommands } from './commands.js'
@@ -147,7 +148,9 @@ const DSH_VERSION = '0.2.0-rc.2'
 // messageFeedback: codeDesktop/messageFeedback/list|put|delete (dsh-message-feedback, Good / Bad response on replies).
 // btwChildSessions: /btw opens a side session (thread/fork of a running or idle thread, thread/name/set, thread/archive),
 // so the app shows 2.42304.0's side-chat pane instead of the sideQuestion panel.
-const CAPABILITIES = { btwChildSessions: true, messageFeedback: true, subAgentMessages: true, unsupportedMethods: [], reviewReadOnly: 'noEdits', skillToggle: false, mcpConfigWrite: false, livePermissions: true, toolSelection: true, codeStats: true, modelWorkflows: true, structuredOutput: true, systemPromptPreview: true, contextUsage: true, coreCommands: true, sideQuestion: true, modelParams: true, sandboxNetwork: 'always', generatesTitles: true }
+// threadImport: codeDesktop/thread/import {cwd, title, messages, importedFrom} seeds a new session with a conversation
+// from another agent (thread-import.js; the app's Import Chat History continues it natively).
+const CAPABILITIES = { btwChildSessions: true, threadImport: true, messageFeedback: true, subAgentMessages: true, unsupportedMethods: [], reviewReadOnly: 'noEdits', skillToggle: false, mcpConfigWrite: false, livePermissions: true, toolSelection: true, codeStats: true, modelWorkflows: true, structuredOutput: true, systemPromptPreview: true, contextUsage: true, coreCommands: true, sideQuestion: true, modelParams: true, sandboxNetwork: 'always', generatesTitles: true }
 
 // How long after start account/read waits for the credentials and account services.
 const ACCOUNT_SERVICE_WAIT_MS = 5000
@@ -1153,7 +1156,8 @@ export function apply(ctx, config) {
     let appReady
     const handle = await ctx.agents.create({
       sessionId,
-      meta: fork ? { cwd, parentSession: fork.parentSession, isSeeded: true } : { cwd },
+      // An import (codeDesktop/thread/import) is seeded like a fork but names no parent: no fork lineage.
+      meta: fork ? { cwd, ...(fork.parentSession ? { parentSession: fork.parentSession } : {}), isSeeded: true } : { cwd },
       ...(fork ? { seed: fork.seed, inheritedEventCount: fork.inheritedEventCount } : {}),
       agentOptions: selection ? { provider: selection.provider, model: selection.model, ...(selection.reasoningEffort ? { reasoningEffort: selection.reasoningEffort } : {}) } : {},
       // A defined setup return value must be a commit handle; return nothing.
@@ -1280,11 +1284,39 @@ export function apply(ctx, config) {
     }
     if (!Array.isArray(events)) throw new RpcError(-32000, 'The session history could not be read.')
     const boundary = forkBoundary({ turns: history.projector.turns, events, lastTurnId: params.lastTurnId, beforeTurnId: params.beforeTurnId })
-    const seed = buildForkSeed(events, boundary)
+    // A prompt queued while the forked turn ran stays with the source (fork.js withEmptyInbox).
+    const seed = withEmptyInbox(buildForkSeed(events, boundary))
     const instructions = developerInstructionsOf(params) ?? developerInstructionsOf(store.get(sourceId))
     return createThread({ ...params, cwd: params.cwd || history.header?.cwd, ...(instructions ? { developerInstructions: instructions } : {}) }, {
       seed, inheritedEventCount: boundary + 1, parentSession: sourceId, route: history.child?.route() ?? routeOf(history.live, events),
     })
+  }
+
+  /**
+   * codeDesktop/thread/import: another agent's conversation (thread-import.js) as a new session seeded like a fork but
+   * with no parent: its imported turns are inherited history, the user's next prompt is its first own turn. The
+   * assistant messages name the new thread's route as their source (dsh-session requires a provider/model on every
+   * assistant message). The title goes through the session title service as a user rename (renameSession), so
+   * Harness does not title it again; the provenance stays with the bridge metadata (store.js importedFrom).
+   */
+  async function importThread(params) {
+    const messages = importMessages(params?.messages)
+    const importedFrom = importedFromOf(params?.importedFrom)
+    const route = (await catalog.selection(params.model, params.effort ?? params.config?.model_reasoning_effort)) ?? catalog.defaultRoute() ?? fallback
+    const { seed, inheritedEventCount } = importSeed(messages, { provider: route.provider || fallback.provider, model: route.model || fallback.model })
+    const { messages: _messages, importedFrom: _from, title: _title, ...rest } = params
+    const thread = await createThread(rest, { seed, inheritedEventCount, parentSession: undefined, route })
+    if (importedFrom) store.update(thread.id, { importedFrom })
+    const title = typeof params.title === 'string' ? params.title.trim().slice(0, 200) : ''
+    if (title) {
+      try {
+        const named = await renameSession(thread.id, title)
+        if (named) store.update(thread.id, { name: named })
+      } catch (error) {
+        logger.warn(`imported thread ${thread.id} kept its first prompt as its title: ${errorChain(error)}`)
+      }
+    }
+    return thread
   }
 
   /**
@@ -1969,6 +2001,13 @@ export function apply(ctx, config) {
         if (runnerRole) store.update(thread.id, { workflowAgent: true })
         const response = sessionResponse(thread)
         notify('thread/started', { thread: response.thread })
+        return response
+      }
+      case 'codeDesktop/thread/import': {
+        // thread/start's answer (the imported turns included), announced as thread/fork announces its new thread.
+        const thread = await importThread(params ?? {})
+        const response = sessionResponse(thread, { includeTurns: params?.excludeTurns !== true })
+        notify('thread/started', { thread: { ...response.thread, turns: [] } })
         return response
       }
       case 'review/start':

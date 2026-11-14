@@ -1,72 +1,72 @@
 {
-  "referenceVersion": "3.6556.2",
-  "referenceSnapshot": "snapshots/claude-3.6556.2-20261025-192807",
+  "referenceVersion": "4.16336.0",
+  "referenceSnapshot": "snapshots/claude-4.16336.0-20261104",
   "generator": "scripts/extract-r4e-envbranch.mjs",
   "adapterModule": "src/source-r4e-envbranch-adapters.mjs",
   "modules": [
     {
       "target": "start-branch-missing.mjs",
-      "sha256": "b4ca2f959ad82d3482e3546bff00d782601e0802a16a2c5ee41bd24490c2b929",
+      "sha256": "494be0b4ffe41b520bc422a251aacee37cd55f9a963be1d059bbff033726d8b9",
       "sources": {
-        "cc43287c9-Me-M2ucD.js": "fe2e064c6172162094dff263210a6e7e8f163b703471fe20e5f5bf0a1a12ccf2",
-        "c3efc6f9e-BnLNtm1h.js": "773f6723dc1f8d05f65502c59e6758b4132972545c7296a713a9eaad4f9cf52b"
+        "cc43287c9-dzfX-J5i.js": "4a6893cf4d24a16a99c88d0793529ff39cd1cc0abd9527ce263a54d8d26d7f43",
+        "c5da7eb42-aEqbSKbC.js": "0f6b4227402f0cf436078f7e09ff9e6bb93edc714e14554b63d8a4c0a5d5bcaa"
       },
       "bindings": [
         {
-          "file": "cc43287c9-Me-M2ucD.js",
-          "name": "L0",
-          "sha256": "dae1cc2e1c225d994a11e110f40f3feac530d9dc14fbf9a3594e17890a86794f",
+          "file": "cc43287c9-dzfX-J5i.js",
+          "name": "Pde",
+          "sha256": "56de2dd15c77dcf4312fb8443b2b418e45e89efc0a5610fd4de97a1bf2b5ac88",
           "exportedAs": "startBranchMissing"
         },
         {
-          "file": "c3efc6f9e-BnLNtm1h.js",
-          "name": "C.branchMissing",
+          "file": "c5da7eb42-aEqbSKbC.js",
+          "name": "dC.branchMissing",
           "sha256": "c5a1781ad4046f488c5192c76e365622e939940cbbb1e20fcd8089c27d2ad7f0",
           "exportedAs": "branchMissingMessage"
         }
       ],
       "imports": [
         {
-          "local": "Tn",
+          "local": "ot",
           "name": "LocalSessions",
           "from": "../../source-r4e-envbranch-adapters.mjs",
-          "via": "./shared-0-DDOOdL6P.js:dh (pC)"
+          "via": "./shared-0-CnnWnVrT.js:Kh (qO)"
         }
       ],
       "callSites": {
-        "R0": {
-          "sha256": "09b6a006a7d3ba836340336e04aaa45f61001ba1a9e9ed4ffa7c3a2aa3bc1ff7",
+        "Fde": {
+          "sha256": "626cab8bea962c8ad36a646a2d6d743166cc94a679b42544182f47967c487950",
           "needles": [
-            "async(e,t)=>{let n={target:t};ve(n);let r=!0;try{Tn?.checkBranchSwitchConflict?r=await Tn.checkBranchSwitchConflict(e,t):Tn?.isWorkingTreeDirty&&(r=await Tn.isWorkingTreeDirty(e))}catch{}let i=r&&await L0(e,t,V);",
-            "if(q(n),le.current===e&&Te.current===t){if(i){M(void 0),me(void 0);let e=ue.current,{environments:n,selectedEnvironmentId:r}=jF.getState();m(d.formatMessage(Hj.branchMissing,{branch:t,known:e?\"yes\":\"no\",fallback:e,saved:n.some(e=>e.id===r&&e.settings?.branch===t)?\"yes\":\"no\"}),{uniqueKey:`branch-missing:${t}`})}else r?me(t):M(t)}",
+            "async(e,t)=>{let n={target:t};ve(n);let r=!0;try{ot?.checkBranchSwitchConflict?r=await ot.checkBranchSwitchConflict(e,t):ot?.isWorkingTreeDirty&&(r=await ot.isWorkingTreeDirty(e))}catch{}let i=r&&await Pde(e,t,V);",
+            "if(q(n),le.current===e&&Te.current===t){if(i){M(void 0),me(void 0);let e=ue.current,{environments:n,selectedEnvironmentId:r}=jF.getState();m(d.formatMessage(xS.branchMissing,{branch:t,known:e?\"yes\":\"no\",fallback:e,saved:n.some(e=>e.id===r&&e.settings?.branch===t)?\"yes\":\"no\"}),{uniqueKey:`branch-missing:${t}`})}else r?me(t):M(t)}",
             "e=>{if(Te.current=e,!A&&!u&&!ne&&!h&&e!==void 0&&e!==R&&H!==!1){",
             "r.trusted?await De(t,e)",
             "ve(void 0),M(e)})",
             "{addError:p,addWarning:m}=Bi()",
-            "{branches:z,isAvailable:B,refetch:V}=ax(_,g)",
+            "{branches:z,isAvailable:B,refetch:V}=bC(_,g)",
             "le=f(r),ue=f(R),de,fe;J2($,28,R,r)?(de=()=>{le.current=r,ue.current=R},fe=[r,R],K3($,28,R,r,de,fe)):(de=$[30],fe=$[31])",
             "handleSelectSourceBranch:Oe,"
           ]
         },
         "ue": {
-          "in": "Lse",
+          "in": "d_e",
           "needle": "ue=(t,n,r)=>{let i=n.kind===\"ssh\"||n.kind===\"local\"&&!!n.wslDistro,a=t.worktree??e.settings.worktree.preference,o=n.kind===\"local\"&&!!n.variant,s=i&&!a||o?void 0:t.branch;!s&&e.branch&&!r?e.onSelectBranch(void 0):s&&e.branch!==s&&e.onSelectBranch(s)}"
         },
         "onSelectBranch": {
-          "in": "wpe",
-          "needle": "branchPickerDisabled:eu,onSelectBranch:Y.setSourceBranch,worktree:Y.worktree"
+          "in": "owe",
+          "needle": "ef=b!==null||Y.branchPickerDisabled,tf=Y.setSourceBranch,nf=Y.worktree"
         },
         "setSourceBranch": {
-          "in": "a4",
+          "in": "Rfe",
           "needle": "sourceBranch:Zt,setSourceBranch:Fn,branchChanged:$t"
         },
         "stableHandler": {
-          "in": "a4",
+          "in": "Rfe",
           "needle": "Pn=rn(sn),Fn=rn(Qt),In=ee&&!ye,Ln=Ae&&at.length>0"
         },
         "sourceBranchHandler": {
-          "in": "a4",
-          "needle": "handleSelectSourceBranch:Qt,branchChanged:$t,branchCheckPending:en"
+          "in": "Rfe",
+          "needle": "handleSelectSourceBranch:Qt,branchChanged:$t,branchCheckPending:en,dirtyTreeDialog:on,branchSwitchTrustPrompt:sn}=Fde("
         }
       }
     }

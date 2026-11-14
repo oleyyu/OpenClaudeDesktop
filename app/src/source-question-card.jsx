@@ -10,7 +10,13 @@
 // dt's `je` (c30607cef i: CdsButton whose shortcut hides while the window is not attended, shared-10 Fx).
 import React, { useId, useLayoutEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
-import { CdsButton, CdsIcon, CdsTextArea, CdsShortcut, CdsCheckboxIndicator, cdsCheckboxTopAlignClass, cdsClassNames } from "./generated/view-tabs/index.js";
+// host-wiring/chat (4.16336.0): what the card draws in its own markup is the cds-core graph's (shared-frame-CJdE5Ria): Back /
+// Skip and the En pager Buttons (Xu → Id), the Other TextArea (oN), the digit Shortcut (ic), the multi-select
+// CheckboxIndicator (GC) with its top-align class (HC), and the class joins (Q). The title row's collapse / dismiss Buttons are
+// QuestionCardHeader's `trailing` value and the single-select mark is QuestionRadioMark (src/generated/question-card, 3.6556.2):
+// that region renders them, so they keep the 3.6556.2 view-tabs Button / Icon / top-align class (ViewTabs*).
+import { CdsButton as ViewTabsCdsButton, CdsIcon as ViewTabsCdsIcon, cdsCheckboxTopAlignClass as viewTabsCheckboxTopAlignClass } from "./generated/view-tabs/index.js";
+import { CdsButton, CdsTextArea, CdsShortcut, CdsCheckboxIndicator, cdsCheckboxTopAlignClass, cdsClassNames } from "./cds-core.mjs";
 import { useApprovalDraft } from "./use-approval-draft.js";
 import {
   dismissQuestionPayload,
@@ -372,11 +378,11 @@ export function SourceQuestionCardDt({
             ? <span className={PROGRESS_PILL} style={{ height: "var(--cds-leading-body)" }}>{page + 1}/{view.questions.length}</span>
             : undefined}
           trailing={<span className="flex items-center gap-0.5">
-            <CdsButton size="base" variant="ghost" iconOnly
-              icon={<CdsIcon name="CaretRight" size="auto" rotate={collapsed ? 0 : 90}
+            <ViewTabsCdsButton size="base" variant="ghost" iconOnly
+              icon={<ViewTabsCdsIcon name="CaretRight" size="auto" rotate={collapsed ? 0 : 90}
                 className="transition-transform duration-fast motion-reduce:transition-none" />}
               onMouseDown={preventMouseDown} aria-expanded={!collapsed} aria-label={t("View question options")} onClick={toggleCollapsed} />
-            {dismissResponse && <CdsButton size="base" variant="ghost" iconOnly icon="X" onMouseDown={preventMouseDown}
+            {dismissResponse && <ViewTabsCdsButton size="base" variant="ghost" iconOnly icon="X" onMouseDown={preventMouseDown}
               aria-label={t("Dismiss question")} disabled={unavailable || menuOpen} onClick={() => void dismiss()} />}
           </span>}
         >
@@ -608,7 +614,7 @@ function SourceQuestionCardEn(props) {
   // En B: the Other row's mark, the CDS checkbox indicator (multiSelect) or cn, both with shared-frame OS.
   const mark = (checked) => multi
     ? <CdsCheckboxIndicator checked={checked} className={cdsCheckboxTopAlignClass} />
-    : <QuestionRadioMark checked={checked} className={cdsCheckboxTopAlignClass} />;
+    : <QuestionRadioMark checked={checked} className={viewTabsCheckboxTopAlignClass} />;
   const fieldProps = {
     ref: otherField,
     value: answer.customText,

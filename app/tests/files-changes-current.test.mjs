@@ -12,6 +12,7 @@ import react from '@vitejs/plugin-react';
 import { extractFilesChanges } from '../scripts/extract-files-changes.mjs';
 import { withMemoCache } from './support/react-memo-cache.mjs';
 import * as official3 from '../scripts/official-3.6556.2.mjs';
+import { designEntryStylesheets } from '../scripts/current-design-assets.mjs';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
 const values = new Map();
@@ -234,8 +235,12 @@ test('FT-11 diffgit-10: "Checking for uncommitted changes…" is shared-46 GD (2
   assert.match(reveal, /animate-\[cds-shimmer-text-shine_3s_linear_infinite\]/);
   const after = renderToStaticMarkup(React.createElement(dialog.WorktreeChecking, { hold: 'reveal', afterHeader: true }));
   assert.doesNotMatch(after, /mt-md/, 'afterHeader (the nested-sessions confirm) drops the top margin');
-  // The classes come from the official stylesheet (utilities layer) and no local rule overrides them.
-  const css = fs.readFileSync(path.join(ROOT, 'public/assets/v1/c6a992d55-Che1orl5.css'), 'utf8');
+  // The classes come from the official stylesheet (utilities layer) and no local rule overrides them. The loaded utilities
+  // sheet is the current design's c6a992d55 entry sheet (current-design-assets.mjs), linked by index.html.
+  const utilitiesSheet = designEntryStylesheets.find((name) => name.startsWith('c6a992d55-'));
+  assert.ok(utilitiesSheet, 'the current design pins a c6a992d55 utilities sheet');
+  assert.ok(fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8').includes(`<link rel="stylesheet" href="/assets/v1/${utilitiesSheet}" />`));
+  const css = fs.readFileSync(path.join(ROOT, 'public/assets/v1', utilitiesSheet), 'utf8');
   for (const name of ['.text-muted-as-secondary{', '.bg-clip-text{', '@keyframes cds-shimmer-text-shine', '[data-cds-shimmer-clone]'])
     assert.ok(css.includes(name), name);
   const local = fs.readdirSync(path.join(ROOT, 'src')).filter((name) => name.endsWith('.css')).map((name) => fs.readFileSync(path.join(ROOT, 'src', name), 'utf8'))

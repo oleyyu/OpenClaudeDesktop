@@ -9,6 +9,7 @@ import react from '@vitejs/plugin-react';
 import postcss from 'postcss';
 import { appSheets, append, computed, declarations, element, find, loadCascade, orderOnly, parseMarkup, setState } from './fixtures/transcript-css-cascade.mjs';
 import { withMemoCache } from './support/react-memo-cache.mjs';
+import { designEntryStylesheets } from '../scripts/current-design-assets.mjs';
 
 // TT-04 / transcript-01: the turn footer's Pin as chapter and Good / Bad response are ghost Buttons with
 // pressedVariant "selected" (2.42304.0 c96d752d0 S6e; shared-2 TX hX / gX). shared-frame-BfjMqbuN.js $l only takes
@@ -23,7 +24,11 @@ const PAINT = ['group-aria-pressed/btn:bg-accent', 'group-hover/btn:group-aria-p
 const TOOLBAR = ['[&_button]:text-muted', '[&_button:hover:not([aria-pressed=true])]:text-primary'];
 // Il base: a disabled, not busy Button dims (opacity-disabled) and takes no pointer events; its colour stays.
 const DISABLED = ['[&:disabled:not([aria-busy])]:opacity-disabled', 'disabled:pointer-events-none'];
-const UTILITIES = 'public/assets/v1/c6a992d55-Che1orl5.css';
+// The loaded official utilities sheet: the current design's c6a992d55 entry sheet (current-design-assets.mjs). setup()
+// still requires index.html to load it (the cascade fixture reads the links from index.html).
+const UTILITIES_SHEET = designEntryStylesheets.find((name) => name.startsWith('c6a992d55-'));
+assert.ok(UTILITIES_SHEET, 'the current design pins a c6a992d55 utilities sheet');
+const UTILITIES = `public/assets/v1/${UTILITIES_SHEET}`;
 let server, F;
 before(async () => {
   server = await createServer({ configFile: false, root: ROOT, plugins: [react()],

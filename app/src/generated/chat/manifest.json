@@ -1,6 +1,6 @@
 {
-  "referenceVersion": "3.6556.2",
-  "referenceSnapshot": "snapshots/claude-3.6556.2-20261025-192807",
+  "referenceVersion": "4.16336.0",
+  "referenceSnapshot": "snapshots/claude-4.16336.0-20261104",
   "generator": "scripts/extract-chat-ui.mjs",
   "publicNames": {
     "HandBlocksDef": {
@@ -13,28 +13,32 @@
         "line:["
       ]
     },
+    "ideaPreviewClass": {
+      "file": "shared-9-BgdM6Y1f.js",
+      "literal": true,
+      "owner": "gO",
+      "start": 291995,
+      "end": 292059,
+      "expect": [
+        "text-muted-as-secondary"
+      ],
+      "features": [
+        "className:\"animate-preview-prompt-in line-clamp-2 text-muted-as-secondary\"",
+        "onBlockedSubmitAttempt:"
+      ]
+    },
     "sessionLiveStatus": {
-      "file": "shared-104-CTONUSaz.js",
-      "local": "_x",
-      "export": "ml",
+      "file": "shared-92-BOgyxePb.js",
+      "local": "jU",
+      "export": "oo",
       "expect": [
         "e.liveStatus===\"awaiting\"?\"awaiting\"",
         "e.pendingToolPermissions?.length?\"awaiting\"",
         "e.isRunning?\"running\":\"idle\""
       ]
     },
-    "ideaPreviewClass": {
-      "file": "shared-9-CM21XrJw.js",
-      "literal": true,
-      "owner": "wD",
-      "start": 292240,
-      "end": 292304,
-      "expect": [
-        "text-muted-as-secondary"
-      ]
-    },
     "createIntl": {
-      "file": "vendor-intl-DYfox5Co.js",
+      "file": "vendor-intl-BJgYK7RA.js",
       "local": "Ht",
       "export": "u",
       "expect": [
@@ -52,8 +56,8 @@
       "source": "cbcaf521a-CrWJ5SHy.js",
       "target": "cbcaf521a-CrWJ5SHy.js",
       "sourceSha256": "f7ccc89d1ad39d0b14e93c740c1c60b78e4fd2b40af1806fa5b34f3f375aae1a",
-      "sha256": "3d620372b88d59eba86d2bb3df5f15aa2f9bde8b6b53d5b861f2debf47333862",
-      "referenceVersion": "3.6556.2",
+      "sha256": "ac206b880aa081a775ff6846a5e32f7e8e1f0afcadef5eac25b9f2ef2fcb20eb",
+      "referenceVersion": "4.16336.0",
       "bindings": [
         {
           "name": "e",
@@ -69,37 +73,18 @@
       }
     },
     {
-      "source": "shared-104-CTONUSaz.js",
-      "target": "shared-104-CTONUSaz.js",
-      "sourceSha256": "621e1186f00f5767be314b43a3f7c663adedfee5e2592ceda05c83be0baa58b6",
-      "sha256": "fd40d741f26cb6fae4991b09eb199f0d86f2ef7edd0007caee2be884ec42e98f",
-      "referenceVersion": "3.6556.2",
-      "bindings": [
-        {
-          "name": "_x",
-          "sha256": "642768067def2a2b3df7ae184751eafe6d01ac037e49b469478b2256f9b9a10c"
-        }
-      ],
-      "literals": [],
-      "statements": [],
-      "imports": [],
-      "exports": {
-        "sessionLiveStatus": "_x"
-      }
-    },
-    {
-      "source": "shared-9-CM21XrJw.js",
-      "target": "shared-9-CM21XrJw.js",
-      "sourceSha256": "7df52ad2089a9f4d40a6fe762ee3a839f8a705c9c4e6a8cd16eb68584e89f1ad",
-      "sha256": "031459d094b9ca9d84532d8f68bfcba8713125b64c5c6f65b48adc5ded8786aa",
-      "referenceVersion": "3.6556.2",
+      "source": "shared-9-BgdM6Y1f.js",
+      "target": "shared-9-BgdM6Y1f.js",
+      "sourceSha256": "216efe74f323608b469149c24d4168c15d82711d93a9b5ba7fcdb3dca94931d7",
+      "sha256": "e7a682cb7a83612c986b262fbb0ddda36c9bd7190906806db60698ffe121df8f",
+      "referenceVersion": "4.16336.0",
       "bindings": [],
       "literals": [
         {
           "name": "ideaPreviewClass",
-          "owner": "wD",
-          "start": 292240,
-          "end": 292304
+          "owner": "gO",
+          "start": 291995,
+          "end": 292059
         }
       ],
       "statements": [],
@@ -109,11 +94,30 @@
       }
     },
     {
-      "source": "vendor-intl-DYfox5Co.js",
-      "target": "vendor-intl-DYfox5Co.js",
-      "sourceSha256": "5fe49d3a34f7583ec9f95b03817a66af29352be20d8f4a49d742bd0758f6761e",
-      "sha256": "6a9b045419eadcc55d762e33cf80b5add66840a1e0f8aed42b76683e05483af2",
-      "referenceVersion": "3.6556.2",
+      "source": "shared-92-BOgyxePb.js",
+      "target": "shared-92-BOgyxePb.js",
+      "sourceSha256": "ef73b1ca0bd064d1d7e606cdedd6c457cb99ffb02f93b7f8b00d8226941a3ada",
+      "sha256": "ae34b67a37cb46ffafa21d37e1ca261d194f1b3510aed6e3b6b420dfcfe815fd",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "jU",
+          "sha256": "92e09587ec62e6627454daa195078f2928dc4334c0502d53aa5931ca134221b8"
+        }
+      ],
+      "literals": [],
+      "statements": [],
+      "imports": [],
+      "exports": {
+        "sessionLiveStatus": "jU"
+      }
+    },
+    {
+      "source": "vendor-intl-BJgYK7RA.js",
+      "target": "vendor-intl-BJgYK7RA.js",
+      "sourceSha256": "dd77dcb059497cc4e67d90952fe82af856b23fdd623d9aa333c0646e036c7abd",
+      "sha256": "eddc342022084cf7e6a85af1464bd63d4ef05c4824600cb6355df14643fa68c0",
+      "referenceVersion": "4.16336.0",
       "bindings": [
         {
           "name": "d",
@@ -593,11 +597,11 @@
         },
         {
           "name": "Nt",
-          "sha256": "cacad172c303540e1bebc243f7c53d94895f5587944704a2134a416f38d1191f"
+          "sha256": "6350047261796ef16bb8c162ba8a0a1b9e1cfc651fd405ace9f51e8b742805f2"
         },
         {
           "name": "Pt",
-          "sha256": "a2b01ed7ef0cceb63ec8f4e9de111b04028751b5bf4872cc9779c0fd39433813"
+          "sha256": "a4942fa1847685f2b88720b4ddb331da9e14c30a36544d30f7bfb7bd330cd3bb"
         },
         {
           "name": "Ft",
@@ -620,31 +624,31 @@
       "statements": [],
       "imports": [
         {
-          "local": "s",
+          "local": "t",
           "from": "react",
           "name": "Children",
-          "via": "vendor-frame-CnSY1sxv.js:qa",
+          "via": "vendor-frame-BckkO60Y.js:Ja",
+          "kind": "react"
+        },
+        {
+          "local": "c",
+          "from": "react",
+          "name": "isValidElement",
+          "via": "vendor-frame-BckkO60Y.js:oo",
+          "kind": "react"
+        },
+        {
+          "local": "e",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-BckkO60Y.js:Ga",
           "kind": "react"
         },
         {
           "local": "i",
           "from": "react",
-          "name": "isValidElement",
-          "via": "vendor-frame-CnSY1sxv.js:ao",
-          "kind": "react"
-        },
-        {
-          "local": "t",
-          "from": "react/jsx-runtime",
-          "name": "jsx",
-          "via": "vendor-frame-CnSY1sxv.js:Ha",
-          "kind": "react"
-        },
-        {
-          "local": "r",
-          "from": "react",
           "name": "Fragment",
-          "via": "vendor-frame-CnSY1sxv.js:Ya",
+          "via": "vendor-frame-BckkO60Y.js:Xa",
           "kind": "react"
         }
       ],

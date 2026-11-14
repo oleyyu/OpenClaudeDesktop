@@ -21,14 +21,17 @@
 // for the send), as the previous pills' disabled remove did. Ki's project-files rename (c63c52947 Pt, /mnt/project-files/
 // paths) is remote-only: a host file shows `relativePath || name`.
 import React, { useRef, useState } from "react";
-import { ComposerFileTile, ComposerImageTile, ComposerQuoteTile, ComposerVideoTile, videoMimeTypePattern } from "./generated/code-composer/composer-attachment-tiles.mjs";
-import { videoFileNamePattern } from "./generated/code-composer/composer-video-types.mjs";
+import { ComposerFileTile, ComposerImageTile, ComposerQuoteTile, ComposerVideoTile, videoMimeTypePattern } from "./generated/code-composer-v4/composer-attachment-tiles.mjs";
+// 4.16336.0: the video file-name test (3.6556.2 shared-28 iN) is shared-3 BN, which code-composer-v4 slices into
+// chat-composer-attachments.mjs (no composer-video-types module in that graph).
+import { videoFileNamePattern } from "./generated/code-composer-v4/chat-composer-attachments.mjs";
 import { annotationText, annotationWhere, attachmentLabel, attachmentOpenAction, attachmentViewerState } from "./composer-attachments-model.mjs";
 import { SourceImageViewer } from "./source-image-viewer.jsx";
 import { SourcePopover } from "./source-popover";
 import { AttachmentPill, SourceContextPill, SourceSelectedElementPill, attachmentStripHandlers, useAttachmentPreviewIntent } from "./source-selected-element.jsx";
-import { HeldTextDialog } from "./generated/code-composer/composer-held-text-dialog.mjs";
-import { CdsConfirmationDialog, CdsContextMenu, CdsIcon } from "./generated/view-tabs/shared-frame-6jtSkIit.js";
+import { HeldTextDialog } from "./generated/code-composer-v4/composer-held-text-dialog.mjs";
+// 4.16336.0 (composer host cutover): the tiles render in the v4 shell's Attachments, so the CDS pieces are cds-core's.
+import { CdsConfirmationDialog, CdsContextMenu, CdsIcon } from "./cds-core.mjs";
 import { useRoutineIntl } from "./source-routine-adapters.jsx";
 import "./source-composer-attachments.css";
 import { t } from "../electron/i18n/index.mjs";

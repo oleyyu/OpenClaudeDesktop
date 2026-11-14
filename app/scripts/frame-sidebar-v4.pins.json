@@ -1,0 +1,1234 @@
+{
+  "referenceVersion": "4.16336.0",
+  "referenceSnapshot": "snapshots/claude-4.16336.0-20261104",
+  "sources": {
+    "shared-22-BACJUrcb.js": "6629e87cd46c19aaace5887518795ac2e1417a958d4849ebe4f63c52176fdd3e",
+    "shared-21-CuohtEoj.js": "8513ed8b2bdb0e469685841a90fb35d63529a0c18733e6fd20f3d7a96f3a765d",
+    "shared-140-DfG6VwpK.js": "c23715333142677854aedb06a57a4993941dbe8da6b7dba8f687d7d8428433d3",
+    "shared-92-BOgyxePb.js": "ef73b1ca0bd064d1d7e606cdedd6c457cb99ffb02f93b7f8b00d8226941a3ada",
+    "shared-11-CNsu0Zu8.js": "a176ca9aedcd99e1f220eb51011771daaa53e93433131f3a2c43722136c9dd98",
+    "shared-0-CnnWnVrT.js": "eb5fb89d8b47627c28969bd1df41f25a49a3e1d6ed91c5af2d980d5847d78ae1",
+    "shared-25-D-aF0gt9.js": "29089e649e4a1179c6a21019ba8d9c78732c4d70a3ce66587f311002189a7183",
+    "shared-1-D1bGaTaN.js": "bc66aa8473c6bb2c7f6c179732a63f6cb9b8b69572abc2ebaf7c1e31d5eeb0ea",
+    "shared-20-DUEo90UF.js": "28c50cf76aa77031056343ebb0dcd4505ffe22671779d25852ebc47ff0cbfccc",
+    "shared-19-UalAfDtn.js": "17a7839fb39b22485dcb90f549bcdc92f115afbefa43e73d08d98e7bea4220f1",
+    "shared-212-BHMAi0oa.js": "839d794782807b9e4aff3cca942f6b14ab442de2eacfb978578086d4d5eae178",
+    "shared-62-DoCqVpIq.js": "15a90aabd711c4209050f53ef48b2754661e19b090936fdc6d37346bd4cf4e56",
+    "shared-4-C_EiQb9h.js": "814c53812f2cab378d3d69b9ca35d4f05f7f4fa1e28857c0b1675a0e6b0fcbc5",
+    "shared-55-BRv2XBP7.js": "84e184eeb3f901dcf2ae406c08be9dc7d96b8119e493b026f8f5d80f4537844e",
+    "shared-33-DtdykY0y.js": "1fcaa039b040c657e69517217d0defa2cf5c92cb4485911ea9b3d3698dcaa7a9",
+    "shared-31-C9BqSSuD.js": "7b554823056e9df24d9b258e505fd0d0a2fc1e3bdd8e35d9bcf8c16fdaf0ef7d",
+    "shared-123-1Hc1RTKl.js": "38122e6a90c5a0af58a5f3d2c98176fd6de1f4a8055529e304317cda513e098a",
+    "shared-18-Cfqwgjc5.js": "6828aa7109628e08360fd1e7b4ddc2ff022f5f369a297ce690cd4b19e4205436",
+    "shared-8-BqfCbkJd.js": "d9aa7c7f690b43147e921fbef5473f2311a1474e316c44e6db5ef07e9fede5bc",
+    "shared-183-B2N6Zy4J.js": "ef19933e2d466d6f2024d69a025682fee0a0ce82c175d4afd30b1109920e4001",
+    "shared-39-ZCs0lAwB.js": "fbbdc3e3589752233fbb792abb01ef80fc15de2662c5a79456d7d44a766e7c4b",
+    "shared-5-u8kha2eH.js": "7e36ddc101d5b0a8b4427f9b882472b1f01636a60aa22fbb6062f45292f4e7e7",
+    "vendor-all-0-uUCo-eCX.js": "3b07702e173cffed44ac6394d2be390a2db09506d66baf378c247840a3aacfd8",
+    "vendor-intl-BJgYK7RA.js": "dd77dcb059497cc4e67d90952fe82af856b23fdd623d9aa333c0646e036c7abd",
+    "shared-26-B-POtn5S.js": "c908911d08e9fa275c39f71e0f1f35c1ac65961c285bdd1a233b9745f3b6f5ed",
+    "shared-120-DCdTP1_5.js": "b1a1dc9691fe9e451db638c8bec3f6df98fd4b0b8dbf10503f3d118fb29ec32e",
+    "shared-frame-CJdE5Ria.js": "b6a5f61e0f243a48215fab7f3d65958d693d715e565f57af4e0ff35ae14697bc"
+  },
+  "roots": {
+    "DesktopFrame": {
+      "file": "shared-22-BACJUrcb.js",
+      "local": "vB",
+      "export": "s",
+      "declarationSha256": "7762b8e34579c537ce812a4063fc93b7a956f8b80a37c8bca3209f13e27b8255",
+      "features": [
+        "\"dframe-root draggable-none\"",
+        "\"data-sidebar-density\": \"comfortable\"",
+        "\"--df-traffic-light-spacer\": V",
+        "\"data-lights-follow\": z",
+        "\"dframe-content-inner\"",
+        "o(KR, { narrow: C })"
+      ],
+      "old": {
+        "version": "3.6556.2",
+        "file": "shared-22-Bwn3sJTG.js",
+        "local": "oR",
+        "export": "s",
+        "declarationSha256": "7022e3ee948598edbbd7b5d0bc676356a8c029d1a5bdd019623a484f250d82a1",
+        "sourceSha256": "7604d119a352d77d8d048a98d7f87103703f932ccdb06cf3dc88bf32041eaaf6"
+      }
+    },
+    "DesktopSidebar": {
+      "file": "shared-22-BACJUrcb.js",
+      "local": "KR",
+      "export": null,
+      "declarationSha256": "e829cb2aa39bbab7bb730faff0aa6fe5a5e35628be9996323d3d755d018f43d8",
+      "features": [
+        "\"data-density\": \"comfortable\"",
+        "defaultMessage: \"Navigation\"",
+        "\"data-traffic-light-spacer\": !0",
+        "density: \"comfortable\"",
+        "componentName: \"FrameSidebarNav\"",
+        "\"df-titlebar draggable h-11 shrink-0 flex items-center px-2\""
+      ],
+      "old": {
+        "version": "3.6556.2",
+        "file": "shared-22-Bwn3sJTG.js",
+        "local": "GI",
+        "export": null,
+        "declarationSha256": "351f597c620935d9d0b5f5ffbf9d449817f91d1f0744b79aca1287405a2688b6",
+        "sourceSha256": "7604d119a352d77d8d048a98d7f87103703f932ccdb06cf3dc88bf32041eaaf6"
+      }
+    },
+    "SidebarCollapsedTrigger": {
+      "file": "shared-21-CuohtEoj.js",
+      "local": "fO",
+      "export": null,
+      "declarationSha256": "c6820b4ff897810a87434618853b9d8a2590d8dd40290feb28b316301c039b74",
+      "features": [
+        "defaultMessage: \"Show sidebar\"",
+        "\"Restart needed. Show sidebar for details.\"",
+        "shortcut: \"cmd+b\"",
+        "\"data-testid\": \"sidebar-compact-trigger\"",
+        "\"df-compact-trigger draggable-none\"",
+        "\"aria-expanded\": r"
+      ],
+      "old": {
+        "version": "3.6556.2",
+        "file": "shared-21-R7LldJ05.js",
+        "local": "gI",
+        "export": null,
+        "declarationSha256": "b68022fe6da525ea073d5ba6562dd21517b942666429ad2f40f43603c3ae8de8",
+        "sourceSha256": "a06452a49264df5f9527c5367dc9b77f265e750ba86c255a5ec8db7c5070bdb0"
+      }
+    },
+    "frameWindowBorder": {
+      "file": "shared-22-BACJUrcb.js",
+      "local": "cB",
+      "export": null,
+      "declarationSha256": "d25bbf7880290196253a861a9773952beaead512faa7fa237ac25be391c051ad",
+      "features": [
+        "macAppInWindow: e, zoomFactor: t",
+        "`${1 / t}px` : \"0px\""
+      ]
+    },
+    "sidebarTitleRowMinWidth": {
+      "file": "shared-140-DfG6VwpK.js",
+      "local": "za",
+      "export": "Qi",
+      "declarationSha256": "43b68e9aad4cc2f91847508ba148486199db8348bfe105aba139cb986726f96c",
+      "features": [
+        "trafficLightSpacerPx: e,",
+        "hasChromeBarSwitcher: s = !1,",
+        "iconShiftPx: l = 0,"
+      ]
+    },
+    "contentGutterStyle": {
+      "file": "shared-21-CuohtEoj.js",
+      "local": "Fw",
+      "export": "qr",
+      "declarationSha256": "604df20a0b5de233d2eb5e9239dc74da4c289d255d4f4317907a6fd8345ff695",
+      "features": [
+        "\"--df-content-gutter\": \"0px\"",
+        "\"--df-ceded-gutter\": \"8px\""
+      ]
+    },
+    "narrowViewportQuery": {
+      "file": "shared-92-BOgyxePb.js",
+      "local": "Tg",
+      "export": "Gy",
+      "declarationSha256": "ce5691da470ca9b077d1aa2f96350a7b249050c0ad1572c3eb8abbf0023d76ba",
+      "features": [
+        "`(max-width: ${wg(e)}px)`"
+      ]
+    },
+    "narrowViewportMaxWidth": {
+      "file": "shared-92-BOgyxePb.js",
+      "local": "wg",
+      "export": "Wy",
+      "declarationSha256": "35564369fdd780a39493894279b6df717784d92cc06e68dc2af9d6f92f5eb98c",
+      "features": [
+        "Math.max(700, Math.ceil(e) + 330 - 1)"
+      ]
+    },
+    "SIDEBAR_WIDTH_LIMITS": {
+      "file": "shared-92-BOgyxePb.js",
+      "local": "Sg",
+      "export": "zy",
+      "declarationSha256": "b2b65188845b6787973a3f897d3254512d7c72b4103a33661a3421a7603ddaa1",
+      "features": [
+        "{ MIN: 200, MAX: 420, DEFAULT: 288 }"
+      ]
+    },
+    "useWindowChrome": {
+      "file": "shared-11-CNsu0Zu8.js",
+      "local": "pn",
+      "export": "Wr",
+      "declarationSha256": "3dd024bec506541fe97d35eb6c519d101080f39c8b5dfbe5df8d607f91a3261a",
+      "features": [
+        "onFullscreenChanged",
+        "onZoomFactorChanged",
+        "Math.round(fn / Math.min(i, 1))",
+        "trafficLightSpacerWidth: d,",
+        "needsTrafficLightPadding: u,"
+      ]
+    },
+    "SidebarGlassLayer": {
+      "file": "shared-22-BACJUrcb.js",
+      "local": "Yz",
+      "export": null,
+      "declarationSha256": "ad70c1f888830425e8bcc333b63ed802f9a92c9c2fcdbc21332ad1a8ce8136b8",
+      "features": [
+        "{ platform: \"mac\" }",
+        "e.ask ?? az",
+        "rz?.showUnderSidebar",
+        "`${r} ${i}`"
+      ]
+    },
+    "SidebarVibrancy": {
+      "file": "shared-22-BACJUrcb.js",
+      "local": "Kz",
+      "export": null,
+      "declarationSha256": "510f42bf79bdf1a8bf4e50a73e0c92e4755be0e36ac83b5a76403ebc63923fae",
+      "features": [
+        "o.material !== \"sidebar\" && o.behind !== \"clear\"",
+        "s === \"appkit-glass\" ? Fz : Pz",
+        "underBootPlaceholder: !0",
+        "\"under-placeholder\"",
+        "((s = \"sidebar\"), h(Jz), v(null), l());"
+      ]
+    },
+    "useSidebarTintUnderSidebar": {
+      "file": "shared-22-BACJUrcb.js",
+      "local": "vz",
+      "export": null,
+      "declarationSha256": "4599ba0740479e127fc98722d3f5db6c541d1638149949348bfc56dd026708f7",
+      "features": [
+        "typeof rz?.tintUnderSidebar != \"function\"",
+        "rz.clearTintUnderSidebar?.()?.catch(xz)",
+        "n.setAttribute(mz, \"\")",
+        "\"data-cds-fizzy-lake\""
+      ]
+    },
+    "SidebarDockRootMarks": {
+      "file": "shared-22-BACJUrcb.js",
+      "local": "hB",
+      "export": null,
+      "declarationSha256": "bdeabc954a671afed28b271aedbe85614a59a9f1cde90dea9c84f358b0a60340",
+      "features": [
+        "e.toggleAttribute(\"data-session-dragging\", a)",
+        "ta(o && n),",
+        "Xu(t);"
+      ]
+    }
+  },
+  "boundaries": {
+    "shared-22-BACJUrcb.js#_B": {
+      "name": "FrameSidebarDock",
+      "kind": "component",
+      "export": null,
+      "declarationSha256": "f8ac3ddd1ff6059ad47e3d03bee70e54d30b93e7742e809926f82487d7778dca",
+      "head": "var _B = m(function (e) {",
+      "sourceSha256": "6629e87cd46c19aaace5887518795ac2e1417a958d4849ebe4f63c52176fdd3e"
+    },
+    "shared-22-BACJUrcb.js#fB": {
+      "name": "FrameChromeBar",
+      "kind": "component",
+      "export": null,
+      "declarationSha256": "1d914bf182ddf045f6f9e5fbc4dfedb97fff95ac9a577e6fd3a2720eb9a0585d",
+      "head": "function fB() {",
+      "sourceSha256": "6629e87cd46c19aaace5887518795ac2e1417a958d4849ebe4f63c52176fdd3e"
+    },
+    "shared-21-CuohtEoj.js#qC": {
+      "name": "FrameIdleWork",
+      "kind": "component",
+      "export": "ei",
+      "declarationSha256": "3a39bc03d8c9ee0001eaa79c96fa9650719db7339d7019abb180485629d668ab",
+      "head": "var qC = _(function () {",
+      "sourceSha256": "8513ed8b2bdb0e469685841a90fb35d63529a0c18733e6fd20f3d7a96f3a765d"
+    },
+    "shared-22-BACJUrcb.js#bB": {
+      "name": "frameMountResets",
+      "kind": "effect",
+      "export": null,
+      "declarationSha256": "4c787db2affaebc7cf2c9c1ee681d3140c6fa1a01b7e2ee21248cfc10b5e8e5b",
+      "head": "function bB() {",
+      "sourceSha256": "6629e87cd46c19aaace5887518795ac2e1417a958d4849ebe4f63c52176fdd3e"
+    },
+    "shared-92-BOgyxePb.js#CC": {
+      "name": "useCdsInterfaceFont",
+      "kind": "hook",
+      "export": "p_",
+      "declarationSha256": "5a2bd6eb37f568fe1fec76ea0ef26c48c5b11833bfe24d7b765a12ba56d83acf",
+      "head": "function CC() {",
+      "sourceSha256": "ef73b1ca0bd064d1d7e606cdedd6c457cb99ffb02f93b7f8b00d8226941a3ada"
+    },
+    "shared-39-ZCs0lAwB.js#Oh": {
+      "name": "useReducedMotionSync",
+      "kind": "effect",
+      "export": "ua",
+      "declarationSha256": "a8c93af1d7e6eb726187eb8f1c94366c75f13c22ee01abea058116177437f463",
+      "head": "function Oh() {",
+      "sourceSha256": "fbbdc3e3589752233fbb792abb01ef80fc15de2662c5a79456d7d44a766e7c4b"
+    },
+    "shared-20-DUEo90UF.js#$T": {
+      "name": "useMemoryPressureBridge",
+      "kind": "effect",
+      "export": "Ca",
+      "declarationSha256": "f217beaf4468bcdd0bf983fdc8918d039a0e7208f4fd844de201ddde72ab48ab",
+      "head": "function $T(e) {",
+      "sourceSha256": "28c50cf76aa77031056343ebb0dcd4505ffe22671779d25852ebc47ff0cbfccc"
+    },
+    "shared-55-BRv2XBP7.js#UV": {
+      "name": "useIsSidebarless",
+      "kind": "hook",
+      "export": "v",
+      "declarationSha256": "7c584796e2c0febdcc04f43ebd63f86797f655cbd2e339046321fb8b5dde9b26",
+      "head": "function UV() {",
+      "sourceSha256": "84e184eeb3f901dcf2ae406c08be9dc7d96b8119e493b026f8f5d80f4537844e"
+    },
+    "shared-55-BRv2XBP7.js#zV": {
+      "name": "useIsFullBleedBody",
+      "kind": "hook",
+      "export": "_",
+      "declarationSha256": "94922448aba9def53059a8bdff5af334b3d98d3aa16e80a76e3129f1f5c1d41d",
+      "head": "function zV() {",
+      "sourceSha256": "84e184eeb3f901dcf2ae406c08be9dc7d96b8119e493b026f8f5d80f4537844e"
+    },
+    "shared-19-UalAfDtn.js#sR": {
+      "name": "useIsFocusMode",
+      "kind": "hook",
+      "export": "g",
+      "declarationSha256": "86ad1548b23bac67325101849c1f856ddae263df7d2c8db170f0f6aca39ae735",
+      "head": "function sR() {",
+      "sourceSha256": "17a7839fb39b22485dcb90f549bcdc92f115afbefa43e73d08d98e7bea4220f1"
+    },
+    "shared-31-C9BqSSuD.js#Gd": {
+      "name": "useContentGutterZero",
+      "kind": "hook",
+      "export": "Ia",
+      "declarationSha256": "9cdf1262f1c55f94255441038bbfce258f7e4e829550b888391057287152e3dc",
+      "head": "var Gd = xd",
+      "sourceSha256": "7b554823056e9df24d9b258e505fd0d0a2fc1e3bdd8e35d9bcf8c16fdaf0ef7d"
+    },
+    "shared-21-CuohtEoj.js#LC": {
+      "name": "useCmdArrowHistoryKeys",
+      "kind": "effect",
+      "export": "ri",
+      "declarationSha256": "a68c74b4dd63e41df559789da104ed75b59cf2b6e2dc379b7a4145d649becc00",
+      "head": "function LC() {",
+      "sourceSha256": "8513ed8b2bdb0e469685841a90fb35d63529a0c18733e6fd20f3d7a96f3a765d"
+    },
+    "shared-31-C9BqSSuD.js#Xd": {
+      "name": "useRouteGutter",
+      "kind": "hook",
+      "export": "Fa",
+      "declarationSha256": "8933c195fc48df3d033aac0702f4bef9638392f2bde604b5fcd5742688f7d59d",
+      "head": "var Xd = xd",
+      "sourceSha256": "7b554823056e9df24d9b258e505fd0d0a2fc1e3bdd8e35d9bcf8c16fdaf0ef7d"
+    },
+    "shared-21-CuohtEoj.js#vw": {
+      "name": "useFindInPage",
+      "kind": "effect",
+      "export": "Qr",
+      "declarationSha256": "bfc3ac2195c473a2e6e0256e1f40ed2b742c41ce93d06e2485053069e46bb9b8",
+      "head": "function vw(e, t, n) {",
+      "sourceSha256": "8513ed8b2bdb0e469685841a90fb35d63529a0c18733e6fd20f3d7a96f3a765d"
+    },
+    "shared-21-CuohtEoj.js#cw": {
+      "name": "useLinuxTitlebarMenu",
+      "kind": "effect",
+      "export": "$r",
+      "declarationSha256": "a19f36990064c7365a6d9b47980a489d4e626630b881f0048852f71753ac7edc",
+      "head": "function cw() {",
+      "sourceSha256": "8513ed8b2bdb0e469685841a90fb35d63529a0c18733e6fd20f3d7a96f3a765d"
+    },
+    "shared-0-CnnWnVrT.js#FH": {
+      "name": "useIsDesktopApp",
+      "kind": "hook",
+      "export": "Yu",
+      "declarationSha256": "48c5ac390eae53e7b9a93536657c342305c74ce97cafa85a7f0f17dd88cbec31",
+      "head": "function FH(e) {",
+      "sourceSha256": "eb5fb89d8b47627c28969bd1df41f25a49a3e1d6ed91c5af2d980d5847d78ae1"
+    },
+    "shared-0-CnnWnVrT.js#uO": {
+      "name": "WindowState",
+      "kind": "bridge",
+      "export": "lg",
+      "declarationSha256": "10476c360dba89c9e33093c82ff9f0bf5cb4699c817d89d2d869ca407a40b561",
+      "head": "var uO = globalThis[\"claude.web\"]?.WindowState;",
+      "sourceSha256": "eb5fb89d8b47627c28969bd1df41f25a49a3e1d6ed91c5af2d980d5847d78ae1"
+    },
+    "shared-22-BACJUrcb.js#PI": {
+      "name": "SidebarNavBody",
+      "kind": "component",
+      "export": null,
+      "declarationSha256": "ace43838661ea9c06b466523290bffaa97e8bdb5f6c19d567d09211f58291377",
+      "head": "function PI(e) {",
+      "sourceSha256": "6629e87cd46c19aaace5887518795ac2e1417a958d4849ebe4f63c52176fdd3e"
+    },
+    "shared-21-CuohtEoj.js#bA": {
+      "name": "SidebarDesktopUpdateLayer",
+      "kind": "component",
+      "export": "kn",
+      "declarationSha256": "315f8acad664f95482c56b6efe0007dc644dd30321918e1bc93635b91a75862e",
+      "head": "function bA() {",
+      "sourceSha256": "8513ed8b2bdb0e469685841a90fb35d63529a0c18733e6fd20f3d7a96f3a765d"
+    },
+    "shared-22-BACJUrcb.js#GR": {
+      "name": "SidebarChromeBarCluster",
+      "kind": "component",
+      "export": null,
+      "declarationSha256": "41897e544537a1027aeed01fade197bb5d6a26734baf5b30089d50cf44a57d9b",
+      "head": "function GR(e) {",
+      "sourceSha256": "6629e87cd46c19aaace5887518795ac2e1417a958d4849ebe4f63c52176fdd3e"
+    },
+    "shared-21-CuohtEoj.js#S_": {
+      "name": "SidebarModeSwitchRow",
+      "kind": "component",
+      "export": "xa",
+      "declarationSha256": "53417a73fd6a81898875b54cc716ebb0b2dcd26968b8551e07f2808591b5dcee",
+      "head": "var S_ = _(function () {",
+      "sourceSha256": "8513ed8b2bdb0e469685841a90fb35d63529a0c18733e6fd20f3d7a96f3a765d"
+    },
+    "shared-21-CuohtEoj.js#eA": {
+      "name": "SidebarModeScope",
+      "kind": "component",
+      "export": "Pn",
+      "declarationSha256": "d0b7e647b790196d21fccbede31eb63846f1bea94978de42341d36212528dcb5",
+      "head": "function eA(e) {",
+      "sourceSha256": "8513ed8b2bdb0e469685841a90fb35d63529a0c18733e6fd20f3d7a96f3a765d"
+    },
+    "shared-21-CuohtEoj.js#yO": {
+      "name": "SidebarCollapsedChrome",
+      "kind": "component",
+      "export": "gr",
+      "declarationSha256": "5d60f70cabc20c836f727be81b213111b613f611f73d71ffda91f8324fddf366",
+      "head": "function yO(e) {",
+      "sourceSha256": "8513ed8b2bdb0e469685841a90fb35d63529a0c18733e6fd20f3d7a96f3a765d"
+    },
+    "shared-21-CuohtEoj.js#qE": {
+      "name": "SidebarChatPromo",
+      "kind": "component",
+      "export": "Or",
+      "declarationSha256": "ebbd25b4a61551d84eb014d0cc3f220e7fb9a0c43d58e9d99dddd601782691f6",
+      "head": "function qE(e) {",
+      "sourceSha256": "8513ed8b2bdb0e469685841a90fb35d63529a0c18733e6fd20f3d7a96f3a765d"
+    },
+    "shared-22-BACJUrcb.js#tL": {
+      "name": "SidebarDesktopDialogs",
+      "kind": "component",
+      "export": null,
+      "declarationSha256": "4a5d35f11b24a40f57bcc2cd3e7416bbf973bce688ea22405232b80efc4ec91d",
+      "head": "function tL() {",
+      "sourceSha256": "6629e87cd46c19aaace5887518795ac2e1417a958d4849ebe4f63c52176fdd3e"
+    },
+    "shared-22-BACJUrcb.js#HL": {
+      "name": "useSidebarHotkeys",
+      "kind": "effect",
+      "export": null,
+      "declarationSha256": "d739835a2fdb789f135ae66f1975234d7599408917e75f3e4ae26d8725b4e94c",
+      "head": "function HL() {",
+      "sourceSha256": "6629e87cd46c19aaace5887518795ac2e1417a958d4849ebe4f63c52176fdd3e"
+    },
+    "shared-21-CuohtEoj.js#dA": {
+      "name": "SidebarCommandPalette",
+      "kind": "component",
+      "export": "Nn",
+      "declarationSha256": "689c76e6e3c20bebba02b4b456f61760b8c3d2b816f656baa2c4e67e048131a8",
+      "head": "function dA() {",
+      "sourceSha256": "8513ed8b2bdb0e469685841a90fb35d63529a0c18733e6fd20f3d7a96f3a765d"
+    },
+    "shared-21-CuohtEoj.js#uj": {
+      "name": "SidebarSearchButton",
+      "kind": "component",
+      "export": "gn",
+      "declarationSha256": "fe18920aa22ac1dbff9d12fef80f408777a85431db7df1fe4d03521370463ff4",
+      "head": "function uj(e) {",
+      "sourceSha256": "8513ed8b2bdb0e469685841a90fb35d63529a0c18733e6fd20f3d7a96f3a765d"
+    },
+    "shared-21-CuohtEoj.js#cv": {
+      "name": "SidebarSetupCardScope",
+      "kind": "component",
+      "export": "ia",
+      "declarationSha256": "689dee6cf4304eef2a5c0c06730db58351ee6b8ba88e9a65bfa8b73b5c2cf631",
+      "head": "function cv(e) {",
+      "sourceSha256": "8513ed8b2bdb0e469685841a90fb35d63529a0c18733e6fd20f3d7a96f3a765d"
+    },
+    "shared-21-CuohtEoj.js#s_": {
+      "name": "useWordmarkRowCollapse",
+      "kind": "hook",
+      "export": "wa",
+      "declarationSha256": "5e007c6b8c5ce2d32eb29126bac7804529a4758ff200c86c8618c3b1233fb209",
+      "head": "function s_() {",
+      "sourceSha256": "8513ed8b2bdb0e469685841a90fb35d63529a0c18733e6fd20f3d7a96f3a765d"
+    },
+    "shared-21-CuohtEoj.js#o_": {
+      "name": "useTitlebarSwitcher",
+      "kind": "hook",
+      "export": "ja",
+      "declarationSha256": "23ddd7f7d1392aa17d9d197e190368cdcfd2ccc48d80d4103d824ac0476d33e8",
+      "head": "function o_() {",
+      "sourceSha256": "8513ed8b2bdb0e469685841a90fb35d63529a0c18733e6fd20f3d7a96f3a765d"
+    },
+    "shared-21-CuohtEoj.js#l_": {
+      "name": "useChromeBarSwitcher",
+      "kind": "hook",
+      "export": "Aa",
+      "declarationSha256": "9f0bcf54fb5d71334a4e4203bb666d405218ac966155a1892ac81d24be38e614",
+      "head": "function l_() {",
+      "sourceSha256": "8513ed8b2bdb0e469685841a90fb35d63529a0c18733e6fd20f3d7a96f3a765d"
+    },
+    "shared-21-CuohtEoj.js#QE": {
+      "name": "SidebarSwitcherExposure",
+      "kind": "component",
+      "export": "Er",
+      "declarationSha256": "b633e63b5b1bf75a0c2f0f9926db8f204225ab3fad8bf7fbb951a33b147dd067",
+      "head": "function QE(e) {",
+      "sourceSha256": "8513ed8b2bdb0e469685841a90fb35d63529a0c18733e6fd20f3d7a96f3a765d"
+    },
+    "shared-21-CuohtEoj.js#p_": {
+      "name": "useHubSwitcherInTitlebar",
+      "kind": "hook",
+      "export": "Sa",
+      "declarationSha256": "54a17e40bf733d368cf03db60934dbbfea1ff28aa8ff5def6e2135bd79301bf5",
+      "head": "function p_() {",
+      "sourceSha256": "8513ed8b2bdb0e469685841a90fb35d63529a0c18733e6fd20f3d7a96f3a765d"
+    },
+    "shared-21-CuohtEoj.js#cD": {
+      "name": "SidebarToasts",
+      "kind": "component",
+      "export": "Sr",
+      "declarationSha256": "915eaa4f6eed934eb48b3cbbabe53653e7d1f40f3196adc3480df425b4c34d47",
+      "head": "function cD() {",
+      "sourceSha256": "8513ed8b2bdb0e469685841a90fb35d63529a0c18733e6fd20f3d7a96f3a765d"
+    },
+    "shared-21-CuohtEoj.js#n_": {
+      "name": "useSwitcherHidden",
+      "kind": "hook",
+      "export": "Ta",
+      "declarationSha256": "92dbde9f6368d6cf39b5852b510e01ef73a770e789346cf9b3c6546bec646b44",
+      "head": "function n_() {",
+      "sourceSha256": "8513ed8b2bdb0e469685841a90fb35d63529a0c18733e6fd20f3d7a96f3a765d"
+    },
+    "shared-21-CuohtEoj.js#qM": {
+      "name": "SidebarSettingsSync",
+      "kind": "component",
+      "export": "Jt",
+      "declarationSha256": "a04c3bb2360c72231de428614209a9be82b4c664fd687fa999290412dfea618a",
+      "head": "function qM() {",
+      "sourceSha256": "8513ed8b2bdb0e469685841a90fb35d63529a0c18733e6fd20f3d7a96f3a765d"
+    },
+    "shared-22-BACJUrcb.js#zL": {
+      "name": "SidebarGlobalShortcuts",
+      "kind": "component",
+      "export": null,
+      "declarationSha256": "9be68065d23e409cdc97209413199d88bc73e63d5fdf10dd77f9c9f3ce8ad0fb",
+      "head": "function zL() {",
+      "sourceSha256": "6629e87cd46c19aaace5887518795ac2e1417a958d4849ebe4f63c52176fdd3e"
+    },
+    "shared-21-CuohtEoj.js#JA": {
+      "name": "SidebarNarrowHeader",
+      "kind": "component",
+      "export": "En",
+      "declarationSha256": "300830e07400cde3dbb058fd8e2b6cd6b62157e9a1e7576aff1d9c95b4d7d872",
+      "head": "function JA(e) {",
+      "sourceSha256": "8513ed8b2bdb0e469685841a90fb35d63529a0c18733e6fd20f3d7a96f3a765d"
+    },
+    "shared-21-CuohtEoj.js#_O": {
+      "name": "SidebarHistoryNav",
+      "kind": "component",
+      "export": "vr",
+      "declarationSha256": "90863c79e15ea8cdfc66a6f8e4b5c963832788ae075951217db21b80906a62f4",
+      "head": "function _O() {",
+      "sourceSha256": "8513ed8b2bdb0e469685841a90fb35d63529a0c18733e6fd20f3d7a96f3a765d"
+    },
+    "shared-20-DUEo90UF.js#$k": {
+      "name": "SidebarCodeSessionsPrefetch",
+      "kind": "component",
+      "export": "gi",
+      "declarationSha256": "6c759b06a8ee666065aed2d189518d7c540f79d1d01bb41f3e3c32035d40b7e8",
+      "head": "function $k() {",
+      "sourceSha256": "28c50cf76aa77031056343ebb0dcd4505ffe22671779d25852ebc47ff0cbfccc"
+    },
+    "shared-22-BACJUrcb.js#WR": {
+      "name": "SidebarInstallUpsell",
+      "kind": "component",
+      "export": null,
+      "declarationSha256": "1d62b98575af488cc18c46279aa720447ad118adddfe5c73414f343a2153266c",
+      "head": "var { Component: WR } = Or({",
+      "sourceSha256": "6629e87cd46c19aaace5887518795ac2e1417a958d4849ebe4f63c52176fdd3e"
+    },
+    "shared-21-CuohtEoj.js#fE": {
+      "name": "SidebarBottomRail",
+      "kind": "component",
+      "export": "Lr",
+      "declarationSha256": "2881b81d190d383898b392dd355138ee130e280d2e904eeca53e76d63b541055",
+      "head": "var fE = _((e) => {",
+      "sourceSha256": "8513ed8b2bdb0e469685841a90fb35d63529a0c18733e6fd20f3d7a96f3a765d"
+    },
+    "shared-26-B-POtn5S.js#Ds": {
+      "name": "SidebarErrorBoundary",
+      "kind": "component",
+      "export": "$b",
+      "declarationSha256": "6ba5c414e024a3bf29b29642de8a5b5036d065d58129b041ba88ad63b5981ae5",
+      "head": "var Ds = class extends m {",
+      "sourceSha256": "c908911d08e9fa275c39f71e0f1f35c1ac65961c285bdd1a233b9745f3b6f5ed"
+    },
+    "shared-21-CuohtEoj.js#lj": {
+      "name": "SidebarNewChatButton",
+      "kind": "component",
+      "export": "_n",
+      "declarationSha256": "8ba2848b759227751aecb0a20153e797fa39f5f2c31a021e1f3f67b9ac004cec",
+      "head": "function lj(e) {",
+      "sourceSha256": "8513ed8b2bdb0e469685841a90fb35d63529a0c18733e6fd20f3d7a96f3a765d"
+    },
+    "shared-140-DfG6VwpK.js#Wh": {
+      "name": "useSidebarRowActionKeys",
+      "kind": "effect",
+      "export": "f",
+      "declarationSha256": "9aa1a99ce3fdf16229f3aebc9ee8df43846522f49fc1aea948c5b3e021952258",
+      "head": "function Wh() {",
+      "sourceSha256": "c23715333142677854aedb06a57a4993941dbe8da6b7dba8f687d7d8428433d3"
+    },
+    "shared-21-CuohtEoj.js#sT": {
+      "name": "TitlebarHipaaBadge",
+      "kind": "component",
+      "export": "Hr",
+      "declarationSha256": "6da4959dd8365d71f4dd32a2fa6c9acf6d1a6265649ea05459750764ee0d21f6",
+      "head": "function sT(e) {",
+      "sourceSha256": "8513ed8b2bdb0e469685841a90fb35d63529a0c18733e6fd20f3d7a96f3a765d"
+    },
+    "shared-140-DfG6VwpK.js#Zp": {
+      "name": "useSidebarCycleKeys",
+      "kind": "effect",
+      "export": "ot",
+      "declarationSha256": "adc8704ec470c6170c7c78ad7de47c33463fd7da44feb5d23770c150bab70df7",
+      "head": "function Zp() {",
+      "sourceSha256": "c23715333142677854aedb06a57a4993941dbe8da6b7dba8f687d7d8428433d3"
+    },
+    "shared-22-BACJUrcb.js#IR": {
+      "name": "SidebarDesktopMenus",
+      "kind": "component",
+      "export": null,
+      "declarationSha256": "6af486fad7d2e8341c3c94c901cf4bc95111b09b2e48aab715043be8ca988ff4",
+      "head": "function IR() {",
+      "sourceSha256": "6629e87cd46c19aaace5887518795ac2e1417a958d4849ebe4f63c52176fdd3e"
+    },
+    "shared-57-grpFrBWt.js#sw": {
+      "name": "useSidebarSessionsPrefetch",
+      "kind": "effect",
+      "export": "yt",
+      "declarationSha256": "2a3451a78794030b44672acc97e1c15c5be205b865f6f4b1f3309f985d8a6507",
+      "head": "function sw() {",
+      "sourceSha256": "d53d34b38a219049c24efcea43e9771b73b36dc69318e770de481668daeed0f3"
+    },
+    "shared-22-BACJUrcb.js#rR": {
+      "name": "useSidebarRowJumpKeys",
+      "kind": "effect",
+      "export": null,
+      "declarationSha256": "8cfbb0122babcf794aa98f3ffdb8bb80ae37520552b65f121d152f94a5494b43",
+      "head": "function rR() {",
+      "sourceSha256": "6629e87cd46c19aaace5887518795ac2e1417a958d4849ebe4f63c52176fdd3e"
+    },
+    "shared-22-BACJUrcb.js#XI": {
+      "name": "SidebarDesktopOverlays",
+      "kind": "component",
+      "export": null,
+      "declarationSha256": "3ae725afde42ce1e4ba5ff8fbd94d62732dc1996e3f1bdf5cff990206185f53d",
+      "head": "function XI() {",
+      "sourceSha256": "6629e87cd46c19aaace5887518795ac2e1417a958d4849ebe4f63c52176fdd3e"
+    },
+    "shared-22-BACJUrcb.js#zR": {
+      "name": "useNativeSidebarMenuToggle",
+      "kind": "effect",
+      "export": null,
+      "declarationSha256": "045ede29eed89fb81fd92f9edc567329588e407746591bc0ab95ee5c4e3218f6",
+      "head": "function zR(e) {",
+      "sourceSha256": "6629e87cd46c19aaace5887518795ac2e1417a958d4849ebe4f63c52176fdd3e"
+    },
+    "shared-22-BACJUrcb.js#LL": {
+      "name": "SidebarAnnouncer",
+      "kind": "component",
+      "export": null,
+      "declarationSha256": "ca3360741b7499811f844f16005470e7e0e59301c63a917c2493622aa1c218ba",
+      "head": "function LL() {",
+      "sourceSha256": "6629e87cd46c19aaace5887518795ac2e1417a958d4849ebe4f63c52176fdd3e"
+    },
+    "shared-21-CuohtEoj.js#ub": {
+      "name": "useSidebarToggleCommand",
+      "kind": "hook",
+      "export": "bi",
+      "declarationSha256": "77cca63364a84517a8f68302af8396e003b1b0c668a089aacee791b7beff57cc",
+      "head": "function ub(e) {",
+      "sourceSha256": "8513ed8b2bdb0e469685841a90fb35d63529a0c18733e6fd20f3d7a96f3a765d"
+    },
+    "shared-8-BqfCbkJd.js#$S": {
+      "name": "useSidebarRouteSync",
+      "kind": "effect",
+      "export": "Ml",
+      "declarationSha256": "e794e75f1c290e1aed168d4e9f3aaeade7f82be9830202b01bcf2a4685753cd9",
+      "head": "function $S() {",
+      "sourceSha256": "d9aa7c7f690b43147e921fbef5473f2311a1474e316c44e6db5ef07e9fede5bc"
+    },
+    "shared-123-1Hc1RTKl.js#EV": {
+      "name": "useFrameMode",
+      "kind": "hook",
+      "export": "Cc",
+      "declarationSha256": "5657da3497d803ca09cb4948809ee7449a9da858fda337740ea9425abe53c378",
+      "head": "function EV() {",
+      "sourceSha256": "38122e6a90c5a0af58a5f3d2c98176fd6de1f4a8055529e304317cda513e098a"
+    },
+    "shared-21-CuohtEoj.js#zA": {
+      "name": "SidebarNarrowSheet",
+      "kind": "component",
+      "export": "Dn",
+      "declarationSha256": "ae2d8250d90393560279d2d749af343d342151a62aa9e216cb9548bcd69b847e",
+      "head": "function zA(e) {",
+      "sourceSha256": "8513ed8b2bdb0e469685841a90fb35d63529a0c18733e6fd20f3d7a96f3a765d"
+    },
+    "shared-21-CuohtEoj.js#HE": {
+      "name": "useBouncingLogo",
+      "kind": "hook",
+      "export": "kr",
+      "declarationSha256": "5c1b87d241c5228ee13d653fcfcf2ef7fffbf0237cb9d9187ebb6340bf8efb15",
+      "head": "function HE() {",
+      "sourceSha256": "8513ed8b2bdb0e469685841a90fb35d63529a0c18733e6fd20f3d7a96f3a765d"
+    },
+    "shared-140-DfG6VwpK.js#Km": {
+      "name": "usePeekHover",
+      "kind": "hook",
+      "export": "J",
+      "declarationSha256": "2c128e45de065eb007fe45c00bfeefbfa703b00021ff54b4baf92c8afe510c8f",
+      "head": "function Km() {",
+      "sourceSha256": "c23715333142677854aedb06a57a4993941dbe8da6b7dba8f687d7d8428433d3"
+    },
+    "shared-21-CuohtEoj.js#jA": {
+      "name": "SidebarPeekInertSync",
+      "kind": "component",
+      "export": "On",
+      "declarationSha256": "1390de844c652000b5f633a4aaeaedc6d4640d05f27ac02f3865fadfebf8aa55",
+      "head": "function jA() {",
+      "sourceSha256": "8513ed8b2bdb0e469685841a90fb35d63529a0c18733e6fd20f3d7a96f3a765d"
+    },
+    "shared-21-CuohtEoj.js#u_": {
+      "name": "useHubSwitcherPinned",
+      "kind": "hook",
+      "export": "Da",
+      "declarationSha256": "e0350418f37ec0702c37e2eab522bdb5f44105585ff3b2fd0873d21c39837240",
+      "head": "function u_() {",
+      "sourceSha256": "8513ed8b2bdb0e469685841a90fb35d63529a0c18733e6fd20f3d7a96f3a765d"
+    },
+    "shared-21-CuohtEoj.js#ZE": {
+      "name": "useDesktopNavButtons",
+      "kind": "hook",
+      "export": "Dr",
+      "declarationSha256": "4202234c259cc1d04a1f6875d083cc2ce7ea343d7ea731d1b09320f62196e47f",
+      "head": "function ZE() {",
+      "sourceSha256": "8513ed8b2bdb0e469685841a90fb35d63529a0c18733e6fd20f3d7a96f3a765d"
+    },
+    "shared-20-DUEo90UF.js#XT": {
+      "name": "SidebarModeWordmark",
+      "kind": "component",
+      "export": "wa",
+      "declarationSha256": "7a3cccff802d1d4f056b330768e077c2118afb34ba032decf030f6d487fef345",
+      "head": "var XT = f(function (e) {",
+      "sourceSha256": "28c50cf76aa77031056343ebb0dcd4505ffe22671779d25852ebc47ff0cbfccc"
+    },
+    "shared-8-BqfCbkJd.js#_C": {
+      "name": "trackSidebarLogoClick",
+      "kind": "hook",
+      "export": "Ol",
+      "declarationSha256": "4fbecc9b057ad1144738e028490a85da63a2b3a4df752232502b1f2d58e339ae",
+      "head": "function _C() {",
+      "sourceSha256": "d9aa7c7f690b43147e921fbef5473f2311a1474e316c44e6db5ef07e9fede5bc"
+    },
+    "shared-1-D1bGaTaN.js#Tb": {
+      "name": "ClaudeLogo",
+      "kind": "component",
+      "export": "N_",
+      "declarationSha256": "de32417983419b29cfa7b5b48dc4f47bf1be4f10c59334df2077b2a38112209a",
+      "head": "var Tb = S(wb);",
+      "sourceSha256": "bc66aa8473c6bb2c7f6c179732a63f6cb9b8b69572abc2ebaf7c1e31d5eeb0ea"
+    },
+    "shared-25-D-aF0gt9.js#Ky": {
+      "name": "RouterLink",
+      "kind": "component",
+      "export": "Pu",
+      "declarationSha256": "4884879fdd5f05cd45263c786ab487acc75ba4998798ae34e579b75402024130",
+      "head": "function Ky(e) {",
+      "sourceSha256": "29089e649e4a1179c6a21019ba8d9c78732c4d70a3ce66587f311002189a7183"
+    },
+    "shared-21-CuohtEoj.js#JT": {
+      "name": "useSidebarBootPlaceholderReport",
+      "kind": "effect",
+      "export": "zr",
+      "declarationSha256": "c800ea425ad0d6c2779ced0c2e0957f223317460138f3ebdaff45c32cd8a9afe",
+      "head": "function JT(e) {",
+      "sourceSha256": "8513ed8b2bdb0e469685841a90fb35d63529a0c18733e6fd20f3d7a96f3a765d"
+    },
+    "shared-55-BRv2XBP7.js#tM": {
+      "name": "useMobileUpsellEnabled",
+      "kind": "hook",
+      "export": "ki",
+      "declarationSha256": "4bbfdf5c6e151f89d50952385df4d7011518a4ec2f2034bc6943a00c6e828f30",
+      "head": "function tM(e) {",
+      "sourceSha256": "84e184eeb3f901dcf2ae406c08be9dc7d96b8119e493b026f8f5d80f4537844e"
+    },
+    "shared-21-CuohtEoj.js#lO": {
+      "name": "useSidebarAttentionIndicator",
+      "kind": "hook",
+      "export": null,
+      "declarationSha256": "f27cd3cfe71b2e27cf2b9cc885e3956bc56f7718f30a39dc78ac7a204419af3c",
+      "head": "function lO() {",
+      "sourceSha256": "8513ed8b2bdb0e469685841a90fb35d63529a0c18733e6fd20f3d7a96f3a765d"
+    },
+    "shared-21-CuohtEoj.js#ZD": {
+      "name": "runSidebarViewTransition",
+      "kind": "hook",
+      "export": null,
+      "declarationSha256": "521f298c35d1a7428344a05675b7f832f70be598a18ac3b8cf159049e299d0c5",
+      "head": "function ZD(e) {",
+      "sourceSha256": "8513ed8b2bdb0e469685841a90fb35d63529a0c18733e6fd20f3d7a96f3a765d"
+    },
+    "shared-8-BqfCbkJd.js#ZS": {
+      "name": "useSidebarToggle",
+      "kind": "hook",
+      "export": "Pl",
+      "declarationSha256": "79e9b9bb59ab4824dd692d7e8cbd9670c6f11ef750e8b40fd3a6acf748a0482e",
+      "head": "function ZS(e) {",
+      "sourceSha256": "d9aa7c7f690b43147e921fbef5473f2311a1474e316c44e6db5ef07e9fede5bc"
+    },
+    "shared-21-CuohtEoj.js#mE": {
+      "name": "useRestartRequired",
+      "kind": "hook",
+      "export": "Rr",
+      "declarationSha256": "59d8120d69de00f3b60870b43a80b23faac292b158eab71c4dd11da71ff6c40d",
+      "head": "function mE(e) {",
+      "sourceSha256": "8513ed8b2bdb0e469685841a90fb35d63529a0c18733e6fd20f3d7a96f3a765d"
+    },
+    "shared-8-BqfCbkJd.js#XS": {
+      "name": "trackSidebarStateSet",
+      "kind": "hook",
+      "export": "ll",
+      "declarationSha256": "b572921a2f67bf347f9642db87d6289de8fc9af38a3afb07e847c34a54844cbb",
+      "head": "function XS(e, t) {",
+      "sourceSha256": "d9aa7c7f690b43147e921fbef5473f2311a1474e316c44e6db5ef07e9fede5bc"
+    },
+    "shared-21-CuohtEoj.js#f_": {
+      "name": "useHomeMode",
+      "kind": "hook",
+      "export": null,
+      "declarationSha256": "8d9435916477731ebd4e61a8d7cab376801c24a6f6abbf59c0071fe7bee26af2",
+      "head": "function f_() {",
+      "sourceSha256": "8513ed8b2bdb0e469685841a90fb35d63529a0c18733e6fd20f3d7a96f3a765d"
+    },
+    "shared-21-CuohtEoj.js#Xg": {
+      "name": "useCoworkHomeName",
+      "kind": "hook",
+      "export": "Oa",
+      "declarationSha256": "8814d45015204feffe5b64566a2b09857621be0a9075e99c4811e8d08e12b9c3",
+      "head": "function Xg() {",
+      "sourceSha256": "8513ed8b2bdb0e469685841a90fb35d63529a0c18733e6fd20f3d7a96f3a765d"
+    },
+    "shared-21-CuohtEoj.js#Lg": {
+      "name": "useUnifiedHomeTooltip",
+      "kind": "hook",
+      "export": null,
+      "declarationSha256": "00489890e0d0beed0264689a458a6d7c385526d25a8d5a7c84ed020f2e7e3bb8",
+      "head": "function Lg() {",
+      "sourceSha256": "8513ed8b2bdb0e469685841a90fb35d63529a0c18733e6fd20f3d7a96f3a765d"
+    },
+    "shared-21-CuohtEoj.js#t_": {
+      "name": "useCodeModeAvailability",
+      "kind": "hook",
+      "export": null,
+      "declarationSha256": "b4613976d27edfd6991835e72d5c889e95ab7b8054582335f2cba6c93069a6f2",
+      "head": "function t_() {",
+      "sourceSha256": "8513ed8b2bdb0e469685841a90fb35d63529a0c18733e6fd20f3d7a96f3a765d"
+    },
+    "shared-33-DtdykY0y.js#yb": {
+      "name": "useUnsupportedModeCopy",
+      "kind": "hook",
+      "export": "ol",
+      "declarationSha256": "56e8dc965051460ef5e15003fa45a4566ed6d3e1f9e7a3c889eca93065645cda",
+      "head": "function yb(e, t, n, r) {",
+      "sourceSha256": "1fcaa039b040c657e69517217d0defa2cf5c92cb4485911ea9b3d3698dcaa7a9"
+    },
+    "shared-6-2QYRw_Wv.js#EE": {
+      "name": "usePrefetchMode",
+      "kind": "hook",
+      "export": "Wn",
+      "declarationSha256": "168c145135b091e89b2b4a3eaeb3c78b0ca3a0cf0326f37161899dbe2fa32200",
+      "head": "function EE() {",
+      "sourceSha256": "a5e6885abc21539c4729012fc1fab423776f45331ace70f5da6679cca6af6a20"
+    },
+    "shared-6-2QYRw_Wv.js#TE": {
+      "name": "useNavigateToMode",
+      "kind": "hook",
+      "export": "Gn",
+      "declarationSha256": "f2c4ebe0aa3b3d671ac9426a9e0a00525707fac8ae65a2edcb7e4c3f063302c4",
+      "head": "function TE() {",
+      "sourceSha256": "a5e6885abc21539c4729012fc1fab423776f45331ace70f5da6679cca6af6a20"
+    },
+    "shared-6-2QYRw_Wv.js#DE": {
+      "name": "useModeHoverRoute",
+      "kind": "hook",
+      "export": "Un",
+      "declarationSha256": "08b5d2df74a08d2ba10f8b031b6301802e7c03554e8c7cc5dd5c5778e97957fa",
+      "head": "function DE() {",
+      "sourceSha256": "a5e6885abc21539c4729012fc1fab423776f45331ace70f5da6679cca6af6a20"
+    },
+    "shared-123-1Hc1RTKl.js#MV": {
+      "name": "useSelectedMode",
+      "kind": "hook",
+      "export": "Dc",
+      "declarationSha256": "bc39ab76e02a5bc0248ac1deec7a2da8d1196213720435d182132e79b963fea9",
+      "head": "function MV() {",
+      "sourceSha256": "38122e6a90c5a0af58a5f3d2c98176fd6de1f4a8055529e304317cda513e098a"
+    },
+    "shared-123-1Hc1RTKl.js#tV": {
+      "name": "useEnabledModes",
+      "kind": "hook",
+      "export": "Hc",
+      "declarationSha256": "fbd980b108f245a689e5790a49276e672056b116d740b13eb2bb0a4c0b4a41c0",
+      "head": "function tV() {",
+      "sourceSha256": "38122e6a90c5a0af58a5f3d2c98176fd6de1f4a8055529e304317cda513e098a"
+    },
+    "shared-8-BqfCbkJd.js#WS": {
+      "name": "useModeActivityDot",
+      "kind": "hook",
+      "export": "Bl",
+      "declarationSha256": "5bf39ad761ea7a4192b043f3f718e81f803008ec1ffa59d20c6ffda2f9f97df4",
+      "head": "function WS(e) {",
+      "sourceSha256": "d9aa7c7f690b43147e921fbef5473f2311a1474e316c44e6db5ef07e9fede5bc"
+    },
+    "shared-8-BqfCbkJd.js#HS": {
+      "name": "modeActivityTelemetry",
+      "kind": "hook",
+      "export": "Ll",
+      "declarationSha256": "092b94c3133c348e17cd81fe0c32327d89fc88a41f7ff10a22a5077a151147f5",
+      "head": "function HS(e, t) {",
+      "sourceSha256": "d9aa7c7f690b43147e921fbef5473f2311a1474e316c44e6db5ef07e9fede5bc"
+    },
+    "shared-8-BqfCbkJd.js#KS": {
+      "name": "sidebarStateForTelemetry",
+      "kind": "hook",
+      "export": "ol",
+      "declarationSha256": "a147a6c5704f217cf9cb3d9c7eb1f497960ff5811add8a0c630eac9bed15425d",
+      "head": "function KS() {",
+      "sourceSha256": "d9aa7c7f690b43147e921fbef5473f2311a1474e316c44e6db5ef07e9fede5bc"
+    },
+    "shared-62-DoCqVpIq.js#OT": {
+      "name": "useAnalytics",
+      "kind": "hook",
+      "export": "cf",
+      "declarationSha256": "3c633717a8860b212c950b6eae2980d9f443be740871672219540c921d1525e1",
+      "head": "function OT() {",
+      "sourceSha256": "15a90aabd711c4209050f53ef48b2754661e19b090936fdc6d37346bd4cf4e56"
+    },
+    "shared-212-BHMAi0oa.js#rk": {
+      "name": "trackFeatureOk",
+      "kind": "hook",
+      "export": "Gh",
+      "declarationSha256": "584b387f90445e3d81ccb6e5117b27c82ad845dd4b93ab0dc30ffafa120d047b",
+      "head": "function rk(e, t, n) {",
+      "sourceSha256": "839d794782807b9e4aff3cca942f6b14ab442de2eacfb978578086d4d5eae178"
+    },
+    "shared-25-D-aF0gt9.js#vf": {
+      "name": "useRoutePrefetchHandlers",
+      "kind": "hook",
+      "export": "Tp",
+      "declarationSha256": "54c24822acfa3683c8d3b332fbc4fe27cbe304ea7990cfbffaf8de7c0d6cca92",
+      "head": "function vf(e, t) {",
+      "sourceSha256": "29089e649e4a1179c6a21019ba8d9c78732c4d70a3ce66587f311002189a7183"
+    },
+    "shared-25-D-aF0gt9.js#vu": {
+      "name": "subscribePathname",
+      "kind": "hook",
+      "export": "vm",
+      "declarationSha256": "7e765b5611b3b986cd3ee307ebfca47c03ac7bab90caf26b554bb6a0e5fa5c84",
+      "head": "function vu(e) {",
+      "sourceSha256": "29089e649e4a1179c6a21019ba8d9c78732c4d70a3ce66587f311002189a7183"
+    },
+    "shared-55-BRv2XBP7.js#HS": {
+      "name": "DiscoveryUpsellCards",
+      "kind": "component",
+      "export": "ic",
+      "declarationSha256": "8fe36a559a9ab5f00d27cdb4d546029745fbf65fa6d062e6eb46e4fea5a84d1e",
+      "head": "function HS(e) {",
+      "sourceSha256": "84e184eeb3f901dcf2ae406c08be9dc7d96b8119e493b026f8f5d80f4537844e"
+    },
+    "shared-123-1Hc1RTKl.js#TC": {
+      "name": "isWebBuild",
+      "kind": "constant",
+      "export": "Sv",
+      "declarationSha256": "f266d8d43899eaece3df5111b31984b5fd5a1f26a18f49c2e15157546c34f490",
+      "head": "var TC = wC();",
+      "sourceSha256": "38122e6a90c5a0af58a5f3d2c98176fd6de1f4a8055529e304317cda513e098a"
+    },
+    "shared-123-1Hc1RTKl.js#cf": {
+      "name": "useFeedbackHiddenForOrg",
+      "kind": "hook",
+      "export": "SC",
+      "declarationSha256": "5fb052bc952a99877247d89e19df5ce3e61a1e8efcb1084c1ea9e82a8a5f97b7",
+      "head": "function cf() {",
+      "sourceSha256": "38122e6a90c5a0af58a5f3d2c98176fd6de1f4a8055529e304317cda513e098a"
+    },
+    "shared-5-u8kha2eH.js#uJ": {
+      "name": "useFeedbackAvailable",
+      "kind": "hook",
+      "export": "B",
+      "declarationSha256": "44946793e561138946a845d9d34fefa2fdfedc4e7d7132c9af84281b430da98d",
+      "head": "function uJ() {",
+      "sourceSha256": "7e36ddc101d5b0a8b4427f9b882472b1f01636a60aa22fbb6062f45292f4e7e7"
+    },
+    "shared-5-u8kha2eH.js#gJ": {
+      "name": "useOpenFeedback",
+      "kind": "hook",
+      "export": "U",
+      "declarationSha256": "30bc2a469184ef525084f737ffb6c80ea149649ae1e0f8dbae844c0e5c7cbc4e",
+      "head": "function gJ() {",
+      "sourceSha256": "7e36ddc101d5b0a8b4427f9b882472b1f01636a60aa22fbb6062f45292f4e7e7"
+    },
+    "shared-21-CuohtEoj.js#cO": {
+      "name": "useInstallHubDot",
+      "kind": "hook",
+      "export": "yr",
+      "declarationSha256": "3e0d7c739468d856add17c33b764a20ed11fb6b3a411ad2ad88bacd441755ff4",
+      "head": "function cO() {",
+      "sourceSha256": "8513ed8b2bdb0e469685841a90fb35d63529a0c18733e6fd20f3d7a96f3a765d"
+    },
+    "shared-22-BACJUrcb.js#ZL": {
+      "name": "useAppsButtonEnabled",
+      "kind": "hook",
+      "export": null,
+      "declarationSha256": "28da28f5f020758535a5d7bbae5b3a9645fbf0cfe8d7cfc541091486f1faed70",
+      "head": "function ZL(e) {",
+      "sourceSha256": "6629e87cd46c19aaace5887518795ac2e1417a958d4849ebe4f63c52176fdd3e"
+    },
+    "shared-8-BqfCbkJd.js#jC": {
+      "name": "trackDownloadsClick",
+      "kind": "hook",
+      "export": "Cl",
+      "declarationSha256": "2ca91ca4a4435e1da17411c5a23450ab0341a508a5d0a0305401613f27d67435",
+      "head": "function jC() {",
+      "sourceSha256": "d9aa7c7f690b43147e921fbef5473f2311a1474e316c44e6db5ef07e9fede5bc"
+    },
+    "shared-8-BqfCbkJd.js#MC": {
+      "name": "trackProfileMenuOpened",
+      "kind": "hook",
+      "export": "kl",
+      "declarationSha256": "6029f9e16a55fb21e19688f211ae011480fa82bd9850945b8d6f0224cd45a704",
+      "head": "function MC() {",
+      "sourceSha256": "d9aa7c7f690b43147e921fbef5473f2311a1474e316c44e6db5ef07e9fede5bc"
+    },
+    "shared-25-D-aF0gt9.js#$u": {
+      "name": "useRouter",
+      "kind": "hook",
+      "export": "em",
+      "declarationSha256": "bca1b5a89e27f3817348b46b7fa0b6a3c14e1c60511c35cab275c6c0bfd2d2f7",
+      "head": "function $u() {",
+      "sourceSha256": "29089e649e4a1179c6a21019ba8d9c78732c4d70a3ce66587f311002189a7183"
+    },
+    "shared-55-BRv2XBP7.js#Hh": {
+      "name": "useClaudeCodeAvailable",
+      "kind": "hook",
+      "export": "Zl",
+      "declarationSha256": "d80e2c965cfe457e1df11fc3f24c343d8f421d42b8502c85dd1ff2df2d7de34b",
+      "head": "function Hh() {",
+      "sourceSha256": "84e184eeb3f901dcf2ae406c08be9dc7d96b8119e493b026f8f5d80f4537844e"
+    },
+    "shared-18-Cfqwgjc5.js#TS": {
+      "name": "useSettingsPagePrefetch",
+      "kind": "hook",
+      "export": "Mm",
+      "declarationSha256": "ec6c9b2d14152294abab98a8b319d42b2037cb147e32809bb85be3296856971f",
+      "head": "function TS(e, t) {",
+      "sourceSha256": "6828aa7109628e08360fd1e7b4ddc2ff022f5f369a297ce690cd4b19e4205436"
+    },
+    "shared-183-B2N6Zy4J.js#Sg": {
+      "name": "useSettingsOpensAsDialog",
+      "kind": "hook",
+      "export": "Zg",
+      "declarationSha256": "3d4f41a52c883f44c78b889eda084a46810d50d9fb4e8ad099ae201ba3de1df2",
+      "head": "function Sg() {",
+      "sourceSha256": "ef19933e2d466d6f2024d69a025682fee0a0ce82c175d4afd30b1109920e4001"
+    },
+    "shared-183-B2N6Zy4J.js#jg": {
+      "name": "openSettingsPage",
+      "kind": "hook",
+      "export": "Eg",
+      "declarationSha256": "fce238e7652dfc40a3c3b1abe566bd94c1356920c9241c7fb305b8e7ed26d460",
+      "head": "function jg(e, t, n) {",
+      "sourceSha256": "ef19933e2d466d6f2024d69a025682fee0a0ce82c175d4afd30b1109920e4001"
+    },
+    "shared-123-1Hc1RTKl.js#bC": {
+      "name": "useAccountReady",
+      "kind": "hook",
+      "export": "wv",
+      "declarationSha256": "7e20e1885b6a0b21df997c8a8df5939a19a3fd72097e11991418eefd154bba72",
+      "head": "function bC() {",
+      "sourceSha256": "38122e6a90c5a0af58a5f3d2c98176fd6de1f4a8055529e304317cda513e098a"
+    },
+    "shared-19-UalAfDtn.js#BF": {
+      "name": "AccountMenu",
+      "kind": "component",
+      "export": "ut",
+      "declarationSha256": "15f54a85e7d37d213d26ae8663b331db6bd4867b4408dc78e65c161b211741f1",
+      "head": "function BF(e) {",
+      "sourceSha256": "17a7839fb39b22485dcb90f549bcdc92f115afbefa43e73d08d98e7bea4220f1"
+    },
+    "shared-19-UalAfDtn.js#NP": {
+      "name": "OrganizationAvatar",
+      "kind": "component",
+      "export": "wt",
+      "declarationSha256": "7e58b2599930ae382e71c021cffe08bb9090ad48295a21e4b0567dbcaecab5ad",
+      "head": "function NP() {",
+      "sourceSha256": "17a7839fb39b22485dcb90f549bcdc92f115afbefa43e73d08d98e7bea4220f1"
+    },
+    "shared-1-D1bGaTaN.js#fee": {
+      "name": "usePendingInviteCount",
+      "kind": "hook",
+      "export": "f",
+      "declarationSha256": "0c5399370a0683931a009764dae71485c3c10b294f54b0956b9b73fdea18658e",
+      "head": "function fee() {",
+      "sourceSha256": "bc66aa8473c6bb2c7f6c179732a63f6cb9b8b69572abc2ebaf7c1e31d5eeb0ea"
+    },
+    "shared-80-BDW2YKDx.js#De": {
+      "name": "useAccountIdentity",
+      "kind": "hook",
+      "export": "F",
+      "declarationSha256": "6b48a3ca79de6d8616542e18dde50e985eac5cef65968f60d6b1e31a41797360",
+      "head": "function De(e) {",
+      "sourceSha256": "6f0a6a325dd354690c0d77cad508ed7632885be8ecdd200477a7b84bcf58aa3f"
+    },
+    "shared-1-D1bGaTaN.js#c5": {
+      "name": "useLoginProvider",
+      "kind": "hook",
+      "export": "It",
+      "declarationSha256": "f99a8440c08fd04dcb1cd11421892d87407d29c392179db4de67e0db68c83c95",
+      "head": "function c5() {",
+      "sourceSha256": "bc66aa8473c6bb2c7f6c179732a63f6cb9b8b69572abc2ebaf7c1e31d5eeb0ea"
+    },
+    "shared-25-D-aF0gt9.js#eV": {
+      "name": "usePlanTier",
+      "kind": "hook",
+      "export": "ta",
+      "declarationSha256": "7978ad65e58e58b3e16019d469796ace18abe5616bb977224060813aea78c8a7",
+      "head": "var eV = () => {",
+      "sourceSha256": "29089e649e4a1179c6a21019ba8d9c78732c4d70a3ce66587f311002189a7183"
+    },
+    "shared-25-D-aF0gt9.js#Z": {
+      "name": "useCurrentAccount",
+      "kind": "hook",
+      "export": "yi",
+      "declarationSha256": "65456efed4ffae1a16e739336c231a59f0f8fd4f0523de0d58b1ae8c18f0eb74",
+      "head": "var Z = () => {",
+      "sourceSha256": "29089e649e4a1179c6a21019ba8d9c78732c4d70a3ce66587f311002189a7183"
+    },
+    "shared-19-UalAfDtn.js#jP": {
+      "name": "useAccountAvatar",
+      "kind": "hook",
+      "export": "Tt",
+      "declarationSha256": "060d5f21268650cc7de9c99ff8d8a79537b3622726741b1d17c33bc6430ea72b",
+      "head": "function jP() {",
+      "sourceSha256": "17a7839fb39b22485dcb90f549bcdc92f115afbefa43e73d08d98e7bea4220f1"
+    },
+    "shared-25-D-aF0gt9.js#Mo": {
+      "name": "useGrowthBookFlagWhen",
+      "kind": "hook",
+      "export": "Wg",
+      "declarationSha256": "f243b75f74f235156ddf346288f39555d25ee25d364536fb4297c8ad7acd8688",
+      "head": "function Mo(e, t) {",
+      "sourceSha256": "29089e649e4a1179c6a21019ba8d9c78732c4d70a3ce66587f311002189a7183"
+    },
+    "shared-21-CuohtEoj.js#tT": {
+      "name": "EdgeMagnetPeekEntry",
+      "kind": "bridge",
+      "export": null,
+      "declarationSha256": "dd94c6d6bc5f8244d2846490c86e9375a25c424c96666d14df0c0c7224962c65",
+      "head": "var tT = ji({",
+      "sourceSha256": "8513ed8b2bdb0e469685841a90fb35d63529a0c18733e6fd20f3d7a96f3a765d"
+    },
+    "shared-21-CuohtEoj.js#eT": {
+      "name": "loadEdgeMagnetPeekChunk",
+      "kind": "hook",
+      "export": null,
+      "declarationSha256": "1ecc853472bb9461f3f5084ce4e52c3fb8765e19276dff325abeceae5ca7f8fa",
+      "head": "function eT() {",
+      "sourceSha256": "8513ed8b2bdb0e469685841a90fb35d63529a0c18733e6fd20f3d7a96f3a765d"
+    },
+    "shared-3-IQTrO7Gx.js#Gb": {
+      "name": "useLazyEntryState",
+      "kind": "hook",
+      "export": "Ga",
+      "declarationSha256": "c9d05bd1f880c935057da9628e24139b4a36e89522ed46a50623b7b0b3b36343",
+      "head": "function Gb(e, t, n, r) {",
+      "sourceSha256": "8e08befdcac208adfcd30309fcc4e292a698b253f7accc2c79bdf44fa202b919"
+    },
+    "shared-92-BOgyxePb.js#zu": {
+      "name": "setRumGlobalContext",
+      "kind": "hook",
+      "export": "Hb",
+      "declarationSha256": "15fa50f1a0594658c57c775ae02a55d990bb053e42ff9dbc38d9888b063ed764",
+      "head": "function zu(e, t) {",
+      "sourceSha256": "ef73b1ca0bd064d1d7e606cdedd6c457cb99ffb02f93b7f8b00d8226941a3ada"
+    },
+    "shared-92-BOgyxePb.js#Bu": {
+      "name": "removeRumGlobalContext",
+      "kind": "hook",
+      "export": "Vb",
+      "declarationSha256": "9a6507222aac84ea3706fb0ce7a84cda303ab63d385b64f9bb1493ed6d59b00d",
+      "head": "function Bu(e) {",
+      "sourceSha256": "ef73b1ca0bd064d1d7e606cdedd6c457cb99ffb02f93b7f8b00d8226941a3ada"
+    },
+    "shared-0-CnnWnVrT.js#nj": {
+      "name": "setCrashReportTag",
+      "kind": "hook",
+      "export": "Km",
+      "declarationSha256": "b244a4cd20bef958ddf41fe34055c559af306e225a625830ea73c9f428f4ed4c",
+      "head": "function nj(e, t) {",
+      "sourceSha256": "eb5fb89d8b47627c28969bd1df41f25a49a3e1d6ed91c5af2d980d5847d78ae1"
+    },
+    "shared-0-CnnWnVrT.js#rj": {
+      "name": "removeCrashReportTag",
+      "kind": "hook",
+      "export": "qm",
+      "declarationSha256": "0a9e0e0cd4606b65a43ed77a6c91f2d8e4177f41db45360fa34ff7bc64daaf20",
+      "head": "function rj(e) {",
+      "sourceSha256": "eb5fb89d8b47627c28969bd1df41f25a49a3e1d6ed91c5af2d980d5847d78ae1"
+    },
+    "shared-25-D-aF0gt9.js#go": {
+      "name": "useGrowthBookFeature",
+      "kind": "hook",
+      "export": null,
+      "declarationSha256": "89564857b4d28dd13b7532d71998b48bbe17ce7c03000b63eab82e4b60c465a6",
+      "head": "function go(e) {",
+      "sourceSha256": "29089e649e4a1179c6a21019ba8d9c78732c4d70a3ce66587f311002189a7183"
+    },
+    "shared-0-CnnWnVrT.js#Ku": {
+      "name": "growthBookValue",
+      "kind": "hook",
+      "export": "Nx",
+      "declarationSha256": "af598a8723b4dcb73c4522ca43c3c993df4d3d5720c3bb0a573c717f3ab98b58",
+      "head": "function Ku(e, t) {",
+      "sourceSha256": "eb5fb89d8b47627c28969bd1df41f25a49a3e1d6ed91c5af2d980d5847d78ae1"
+    },
+    "vendor-intl-BJgYK7RA.js#q": {
+      "name": "useIntl",
+      "kind": "hook",
+      "export": "p",
+      "declarationSha256": "edf793bc7b87ae9a38cea39d25d752a5bcfef1d492e06a2219e120311feaaec0",
+      "head": "function q() {",
+      "sourceSha256": "dd77dcb059497cc4e67d90952fe82af856b23fdd623d9aa333c0646e036c7abd"
+    },
+    "vendor-intl-BJgYK7RA.js#Gt": {
+      "name": "FormattedMessage",
+      "kind": "component",
+      "export": "l",
+      "declarationSha256": "bde2ec1630e0a679fa4135cf75389568e77fa98fdcb08519af8104d5306ff5b5",
+      "head": "var Gt = a(Wt, Ut);",
+      "sourceSha256": "dd77dcb059497cc4e67d90952fe82af856b23fdd623d9aa333c0646e036c7abd"
+    }
+  },
+  "cdsCore": {
+    "manifestSha256": "06d2026939e5c8992713c2a0dda1b1abc9adffe7a0c223fe3c1e79eecd08d62c",
+    "adapterSha256": "7d63624afd6a3e7eaa2c42803aacdcf1a74ca479ffbed4d9c1f40c60e233ff1e"
+  }
+}

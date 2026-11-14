@@ -4,6 +4,10 @@
 //   overlay.json        app-managed state {rows:{[id]:{disabled?, config?}}, inserts:[{id,name,config,disabled?}]}
 //   overlay.patch.yml   that state rendered in the loader patch grammar (JSON text, valid YAML)
 //   user.patch.yml      the power user's own patch, opened by "Edit profile patch"
+//   managed.json        rows other features own (setManagedRow: model-settings.cjs's relay catalog, custom providers and
+//   managed.patch.yml   the web search key row), rendered the same way. Applied whatever "Use overlays" says and left
+//                       alone by "Reset overlay": they are no change made on that page, and the search row is what keeps
+//                       a relay key from reaching DeepSeek's search endpoint.
 //
 // The core reads the overlays from CODE_DESKTOP_CORE_PATCHES (path-delimited,
 // harness/bin/codex-app-server.mjs) when it starts, so this module keeps that
@@ -44,8 +48,10 @@ function createHarnessProfile({ app, shell, dialog, getConfig = () => undefined,
     overlay: path.join(harnessDir, "overlay.patch.yml"),
     user: path.join(harnessDir, "user.patch.yml"),
     lastStart: path.join(harnessDir, "last-start.json"),
+    managedState: path.join(harnessDir, "managed.json"),
+    managed: path.join(harnessDir, "managed.patch.yml"),
   };
-  const ours = new Set([files.overlay, files.user]);
+  const ours = new Set([files.managed, files.overlay, files.user]);
   // The launch environment's own overlays stay first; ours follow.
   const basePatches = String(env.CODE_DESKTOP_CORE_PATCHES || "").split(path.delimiter).filter((file) => file && !ours.has(file));
   const lib = import("./prefs/harness-profile.mjs");
@@ -87,6 +93,9 @@ function createHarnessProfile({ app, shell, dialog, getConfig = () => undefined,
   function readState() {
     try { return JSON.parse(fs.readFileSync(files.state, "utf8")); } catch { return { rows: {}, inserts: [] }; }
   }
+  function readManaged() {
+    try { return JSON.parse(fs.readFileSync(files.managedState, "utf8")); } catch { return { rows: {}, inserts: [] }; }
+  }
   function stateEmpty(state) {
     return !state || (Object.keys(state.rows || {}).length === 0 && (state.inserts || []).length === 0);
   }
@@ -99,6 +108,8 @@ function createHarnessProfile({ app, shell, dialog, getConfig = () => undefined,
   /** The overlay files the next core spawn applies, in order. */
   function patchList() {
     const list = [...basePatches];
+    // The managed rows first: the page's overlay and the user's patch still come after them and win a row they share.
+    if (!stateEmpty(readManaged()) && fs.existsSync(files.managed)) list.push(files.managed);
     if (overlayEnabled()) {
       if (!stateEmpty(readState()) && fs.existsSync(files.overlay)) list.push(files.overlay);
       if (fs.existsSync(files.user)) list.push(files.user);
@@ -253,8 +264,18 @@ function createHarnessProfile({ app, shell, dialog, getConfig = () => undefined,
   // C5 seams: provider rows and the env vars the core process needs.
   // An unchanged row writes nothing and asks for no restart (model-settings re-applies its rows at startup).
   async function setManagedRow(id, row) {
-    const mod = await lib, current = readState(), next = mod.setManagedRow(current, id, row);
-    return JSON.stringify(mod.normalizeOverlay(current)) === JSON.stringify(next) ? next : writeState(next);
+    const mod = await lib, current = readManaged(), next = mod.setManagedRow(current, id, row);
+    // Before managed.json these rows lived in overlay.json: a copy left there would outlive this one (and go with the
+    // overlay), so it moves out the first time the row is set or cleared.
+    const overlay = mod.normalizeOverlay(readState());
+    if (overlay.rows[id]) { const rows = { ...overlay.rows }; delete rows[id]; await writeState({ ...overlay, rows }); }
+    if (JSON.stringify(mod.normalizeOverlay(current)) === JSON.stringify(next)) return next;
+    writeAtomic(files.managedState, JSON.stringify(next, null, 2) + "\n");
+    if (stateEmpty(next)) fs.rmSync(files.managed, { force: true });
+    else writeAtomic(files.managed, "# Managed by OpenClaude Desktop (Settings › Models). Applied with or without overlays.\n" + JSON.stringify(mod.renderOverlay(next), null, 2) + "\n");
+    syncEnv();
+    markPending();
+    return next;
   }
   async function removeManagedRow(id) { return setManagedRow(id, null); }
   // pending:false sets a value before the first core spawn (nothing to restart yet); an unchanged value marks nothing.

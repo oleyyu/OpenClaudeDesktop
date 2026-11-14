@@ -30,7 +30,7 @@ const read = file => fs.readFile(file, 'utf8');
 
 // D21: view-tabs' preload-helper (reached through shared-frame) calls document.createElement while it evaluates, and
 // sidebar-resize's shared-52 Rm reads documentElement[data-artifact-composed].
-const documentStub = { createElement: () => ({ relList: { supports: () => false } }),
+const documentStub = { cookie: '', createElement: () => ({ relList: { supports: () => false } }),
   documentElement: { dir: 'ltr', getAttribute: () => null, hasAttribute: () => false } };
 let server, savedDocument, M = {};
 before(async () => {

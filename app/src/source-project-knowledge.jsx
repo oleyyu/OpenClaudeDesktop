@@ -14,10 +14,10 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 // E41: the sidebar's chat row menu (a menu-graph module) imports this file, so view-tabs comes by semantic name from the
 // concrete shared-frame file, not the facade (which evaluates every view-tabs module).
-import { CdsBadge, CdsSegmentedControl } from './generated/view-tabs/shared-frame-6jtSkIit.js';
+import { CdsBadge, CdsSegmentedControl } from './cds-core.mjs'; // 4.16336.0 host wiring (frame): cds-core Badge vh / SegmentedControl
 // G5 (chatfn-projects-05 / 06): a knowledge file's card is c52b32660 fe over the sliced shared-7 mD / OD / GE and shared-3
 // FD; the Add files control is the sliced cf2f34ee4 _r; the capacity bar the sliced c52b32660 ge.
-import { KnowledgeFileThumbnail, KnowledgeFileTag, knowledgeFileTagName, formatKnowledgeFileSize, KnowledgeAddMenu, KnowledgeCapacityBar } from './generated/chat-knowledge/index.mjs';
+import { KnowledgeFileThumbnail, KnowledgeFileTag, knowledgeFileTagName, formatKnowledgeFileSize, KnowledgeAddMenu, KnowledgeCapacityBar } from './generated/chat-knowledge-v4/index.mjs';
 import { ChatKnowledgeHostContext } from './source-chat-knowledge-adapters.jsx';
 import { useIntl } from './source-routines-shared-adapters.jsx';
 import { SourceMenu } from './source-menu';

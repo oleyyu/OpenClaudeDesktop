@@ -13,14 +13,17 @@ import {buildSidebarGroups} from '../src/sidebar-model.js';
 import {sessionPageRecords,sessionIdFromPageHref,sessionPageHref} from '../src/sessions-page-model.mjs';
 import {sessionPageRows} from './fixtures/session-page-rows.mjs';
 import { withMemoCache } from './support/react-memo-cache.mjs';
-// w10-ccres-hf-host: the Code Sessions page renders the generated 3.6556.2 cbd6c85c8 Hf whole (src/generated/sessions-page,
-// re-exported by code-current/sessions-page-view.mjs) over SessionsPageHfHost; these tests drive the host's side of it.
-let server,Host,View,Hf,Adapters,LoadHold,Controls,Row,Primitives,SearchState;
+// w10-ccres-hf-host: the Code Sessions page renders the generated official page whole over SessionsPageHfHost; these tests
+// drive the host's side of it. Since the round-3 switch S7 that page is 4.16336.0 cbd6c85c8-CxDdK_2w hm
+// (src/generated/sessions-page-v4, V4.SessionsPage) with the cds-core row actions (cc18d27d7 O / c75e89812 s); the 3.6556.2
+// Hf (src/generated/sessions-page, re-exported by code-current/sessions-page-view.mjs) stays generated, checked as legacy.
+let server,Host,View,Hf,V4,Adapters,LoadHold,Controls,Row,Primitives,SearchState;
 before(async()=>{
   server=await createServer({configFile:false,root:new URL('..',import.meta.url).pathname,plugins:[react()],server:{middlewareMode:true,hmr:false,watch:null},appType:'custom',logLevel:'error'});
   Host=await server.ssrLoadModule('/src/source-sessions-page.jsx');
   View=await server.ssrLoadModule('/src/generated/code-current/sessions-page-view.mjs');
   Hf=await server.ssrLoadModule('/src/generated/sessions-page/sessions-page-hf.mjs');
+  V4=await server.ssrLoadModule('/src/generated/sessions-page-v4/index.mjs');
   Adapters=await server.ssrLoadModule('/src/source-sessions-page-hf-adapters.jsx');
   LoadHold=await server.ssrLoadModule('/src/generated/code-current/sessions-page-load-hold.mjs');
   Controls=await server.ssrLoadModule('/src/generated/code-current/sidebar-filter-controls.mjs');
@@ -31,6 +34,7 @@ before(async()=>{
 const now=Date.now(),sessions=[{id:'live',name:'Live task',updatedAtMs:now},{id:'old',name:'Old task',updatedAtMs:now-1000},{id:'archive',name:'Stored task',archived:true,updatedAtMs:now+1000}];
 const ids=rows=>rows.map(r=>r.ref.id);
 const v3=name=>fs.readFileSync(new URL(`../../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/${name}`,import.meta.url),'utf8');
+const v4=name=>fs.readFileSync(new URL(`../../reference/snapshots/claude-4.16336.0-20261104/ion-dist/assets/v1/${name}`,import.meta.url),'utf8');
 // 3.6556.2 view-tabs c9c7785eb (CdsSelectableTable, official c9c7785eb-D_0oAvkh.js): the selection cell reads the row's
 // selection with useSyncExternalStore(subscribe, getSnapshot) and no server snapshot (`return i(n,r)`), so the desktop
 // renders the table on the client only and react-dom/server throws "Missing getServerSnapshot". renderToStaticMarkup is
@@ -65,7 +69,7 @@ test('session links round trip identifiers without letting unrelated anchors sel
 });
 test('original page renders Active/Archived tabs, table and Code rows without Select',()=>{
   const html=page({sessions,onSessionMenu(){}});
-  assert.match(html,/data-cds="Page"/);assert.match(html,/<h1[^>]*>Sessions<\/h1>/);assert.match(html,/role="tablist"/);assert.match(html,/>Active</);assert.match(html,/>Archived</);
+  assert.match(html,/data-cds="Page"/);assert.match(html,/<h1[^>]*><span id="[^"]+-title">Sessions<\/span><\/h1>/);assert.match(html,/role="tablist"/);assert.match(html,/>Active</);assert.match(html,/>Archived</);
   assert.match(html,/<table/);assert.match(html,/Live task/);assert.doesNotMatch(html,/Stored task/);
   assert.doesNotMatch(html,/>Select<|>Deselect all<|>Delete selected/);
   // cbd6c85c8 Bf: the row link is the router link with data-primary, under codeRowLinkComponent's wrapper.
@@ -73,8 +77,10 @@ test('original page renders Active/Archived tabs, table and Code rows without Se
   assert.match(html,/data-cds="RelativeTime"/);assert.match(html,/aria-label="More options for Live task"/);
   // Hf slot 441: the primary New session is a CDS Button link (`href: m ? k : "/new"`, k = shared-52 Jx = "/code").
   assert.match(html,/<a data-cds="Button"[^>]*class="[^"]* df-link-card" href="\/code"[^>]*><span[^>]*>.*?<\/span><span class="inline-flex min-w-0 items-center gap-1 ">New session<\/span><\/a>/);
-  // Hf slot 486: the panel wraps the table and is labelled by the selected tab.
-  assert.match(html,/<div id="([^"]+)-panel" role="tabpanel" aria-labelledby="\1-code" class="flex flex-col">/);
+  // 4.16336.0 hm (cbd6c85c8-CxDdK_2w): the panel wraps the table, is labelled by the selected tab and scrolls under the
+  // page header (3.6556.2 Hf slot 486 had plain "flex flex-col").
+  assert.equal(v4('cbd6c85c8-CxDdK_2w.js').split('"aria-labelledby":ts,"data-stale":ns,className:"flex scroll-mt-(--cds-page-header-scroll-offset) flex-col"').length-1,1);
+  assert.match(html,/<div id="([^"]+)-panel" role="tabpanel" aria-labelledby="\1-code" class="flex scroll-mt-\(--cds-page-header-scroll-offset\) flex-col">/);
 });
 test('archived page renders only archived records without the mixed-list archive badge',()=>{
   // Hf bi: showArchivedBadge is `we && ia(e)` and we = q && H === "all" && !T; the Code page is text-first
@@ -119,9 +125,10 @@ function fixture(component,props={},contexts=new Map()){
   render();return {get tree(){return tree;},render,flush(){while(effects.length)effects.shift()();},close(){cells.forEach(c=>c.cleanup?.());}};
 }
 const hostValue=f=>nodes(f.tree,n=>n.props?.value?.router)[0].props.value;
-const hfProps=f=>nodes(f.tree,n=>n.type===View.SessionsPageView)[0].props;
-test('the page view is the generated Hf, rendered with the Code page props',()=>{
-  assert.equal(View.SessionsPageView,Hf.SessionsPageHf);
+const hfProps=f=>nodes(f.tree,n=>n.type===V4.SessionsPage)[0].props;
+test('the page view is the generated 4.16336.0 hm (sessions-page-v4), rendered with the Code page props',()=>{
+  assert.equal(View.SessionsPageView,Hf.SessionsPageHf,'legacy: code-current re-exports the 3.6556.2 Hf');
+  assert.notEqual(V4.SessionsPage,Hf.SessionsPageHf);
   const f=fixture(Host.SourceSessionsPage,{sessions,onSessionMenu(){}});const props=hfProps(f);
   assert.deepEqual([props.codeScoped,props.reportsRecentsLoad,props.codeRowLinkComponent],[true,false,Host.SessionsPageCodeRowLink]);
   assert.equal(typeof props.renderCodeRowActions,'function');
@@ -212,7 +219,7 @@ function withWindow(fn){
   try{return fn(win);}finally{if(saved)Object.defineProperty(globalThis,'window',saved);else delete globalThis.window;}
 }
 function mountHf(props){
-  const host=fixture(Host.SourceSessionsPage,props),contexts=new Map([[Adapters.SessionsPageHfHost,hostValue(host)]]),hf=fixture(View.SessionsPageView,hfProps(host),contexts);
+  const host=fixture(Host.SourceSessionsPage,props),contexts=new Map([[Adapters.SessionsPageHfHost,hostValue(host)]]),hf=fixture(V4.SessionsPage,hfProps(host),contexts);
   // rerender: the host renders again, then Hf under the host value it now provides (as React renders parent, then child).
   return {host,hf,get search(){return hf.tree.props.search;},rerender(){host.render();contexts.set(Adapters.SessionsPageHfHost,hostValue(host));hf.render();},close(){hf.close();host.close();}};
 }
@@ -244,7 +251,9 @@ test('cov11-02: a tab change replaces the entry key and the shown page keeps wri
   const back=mountHf({...props,initialSurface:history[0].surface});assert.equal(back.search.value,'stored');back.close();
   assert.equal(mountHf({...props,historyKey:firstKey}).search.value,'stored','the old entry kept what it held when it was left');
 }));
-test('cov11-02: engine or account changes empty Hf\'s own Tf (cbd6c85c8 J(() => Tf.clear()) via shared-52 Xi)',()=>withWindow(()=>{
+// 4.16336.0: hm's store is Xp, registered by the carried top-level `St(()=>Xp.clear())` (St = shared-123 vc, the same host
+// registry as 3.6556.2 shared-52 Xi; scripts/extract-sessions-page-v4.mjs PAGE_CARRY).
+test('cov11-02: engine or account changes empty the page\'s own Xp (cbd6c85c8 St(() => Xp.clear()) via shared-123 vc)',()=>withWindow(()=>{
   const entry=sessionsPageRoute('code'),props={sessions,scopeKey:'reset-test',historyKey:entry.key};
   const first=mountHf(props);first.hf.flush();first.search.onChange('old');first.hf.render();first.hf.flush();first.close();
   const kept=mountHf(props);assert.equal(kept.search.value,'old');kept.close();
@@ -307,7 +316,7 @@ test('actual app Back/Forward restores page routes without passing route objects
   appNavigationFunction('travel',{...env,historyAt:1})(-1);assert.equal(section,'new');assert.deepEqual(opened,['thread-a']);assert.deepEqual(noted,['thread-a']);
   appNavigationFunction('travel',{...env,historyAt:0})(-1);assert.deepEqual(opened,['thread-a']);
 });
-test('sessions-page helpers come from cbd6c85c8 (3.6556.2 Hf) and its neighbours with semantic exports',()=>{
+test('legacy code-current sessions-page helpers come from cbd6c85c8 (3.6556.2 Hf) with semantic exports; the host renders 4.16336.0',()=>{
   const manifest=JSON.parse(fs.readFileSync(new URL('../src/generated/code-current/manifest.json',import.meta.url),'utf8'));
   const entries=Object.fromEntries(manifest.modules.filter(m=>m.target.startsWith('sessions-page-')).map(m=>[m.target,m]));
   const page3='cbd6c85c8-D1xuycDy.js',V3='3.6556.2',expected={
@@ -353,9 +362,12 @@ test('sessions-page helpers come from cbd6c85c8 (3.6556.2 Hf) and its neighbours
   assert.match(generated('row'),/import \{ CdsRelativeTime as Hn \} from "\.\.\/view-tabs\/shared-2-TF8v67kg\.js"/);
   // Old 2.37337.1 names are reused for other values in 2.42304.0; no consumer may import them any more.
   assert.doesNotMatch(generated('row'),/import \{[^}]*\b(gu|_u|vu|yu|bu)\b[^}]*\} from "\.\/sessions-page-copy\.mjs"/);
-  // The host renders Hf through code-current and no longer imports the gd-era pieces.
+  // The host renders the 4.16336.0 page (round-3 switch S7) and its row actions from cds-core, no longer the 3.6556.2 Hf
+  // through code-current or the view-tabs rail, and no gd-era pieces.
   const host=fs.readFileSync(new URL('../src/source-sessions-page.jsx',import.meta.url),'utf8');
-  assert.match(host,/import \{SessionsPageView\} from '\.\/generated\/code-current\/sessions-page-view\.mjs';/);
+  assert.match(host,/^import \{SessionsPage as SessionsPageView\} from '\.\/generated\/sessions-page-v4\/index\.mjs';$/m);
+  assert.match(host,/^import \{SessionsActionsRail,SessionsMoreButton\} from '\.\/cds-core\.mjs';$/m);
+  assert.doesNotMatch(host,/generated\/code-current\/|generated\/view-tabs\/|generated\/sessions-page\//);
   assert.doesNotMatch(host,/sessions-page-(tabs|count-text|empty|search|row|load-hold|bulk-actions)\.mjs|source-sessions-primitives/);
 });
 test('closed GrowthBook gate and unreachable stand-ins match the Code page branches',async()=>{

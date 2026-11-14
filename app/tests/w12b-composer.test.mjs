@@ -22,6 +22,7 @@ import { parseSessionCommand } from '../src/session-command-model.mjs';
 import zhSession from '../electron/i18n/zh-CN/session.mjs';
 import zhApp from '../electron/i18n/zh-CN/app.mjs';
 import { withPreviewDom } from './fixtures/preview-r3b-dom.mjs';
+import { designEntryStylesheets } from '../scripts/current-design-assets.mjs';
 
 const app = path.resolve(import.meta.dirname, '..');
 const snapshot = path.join(app, '../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist');
@@ -33,6 +34,8 @@ const count = (text, needle) => text.split(needle).length - 1;
 let server, Q, VT, Menu, I18n;
 before(async () => {
   server = await createServer({ configFile: false, root: app, plugins: [react()], server: { middlewareMode: true, hmr: false, ws: false, watch: null }, appType: 'custom', logLevel: 'error' });
+  // Round 4 queued-bar cutover: the 4.16336.0 bar (generated/queued-bar-v4) asks the nav host table main.jsx installs.
+  await server.ssrLoadModule('/src/frame-sidebar-nav-host.jsx');
   Q = await server.ssrLoadModule('/src/source-queued-messages.jsx');
   VT = await server.ssrLoadModule('/src/generated/view-tabs/shared-frame-6jtSkIit.js');
   Menu = await server.ssrLoadModule('/src/source-permission-menu.jsx');
@@ -97,10 +100,12 @@ test('official Jfe / VE / CSS: the exit runs only for a lone entry that landed',
   assert.ok(bar.includes('o=`${Kv} ${a?"epitaxy-band-exit":""}`'));
   assert.ok(bar.includes('s("div",{className:o,inert:a,onAnimationEnd:c,children:n})'));
   assert.ok(official('c6b8adeaf-bLEQVSWL.js').includes('e!==null&&e in t.landed'));
-  const css = local('public/assets/v1/c6a992d55-Che1orl5.css');
+  // The c6a992d55 utilities entry sheet index.html loads (current-design-assets: 4.16336.0 c6a992d55-_JRfOmTh).
+  const utilities = designEntryStylesheets.find(name => name.startsWith('c6a992d55-'));
+  const css = local(`public/assets/v1/${utilities}`);
   assert.ok(css.includes('@keyframes epitaxy-band-exit{to{opacity:0;translate:0 6px}'));
   assert.ok(css.includes('.epitaxy-root .epitaxy-band-exit{animation:epitaxy-band-exit var(--cds-dur-snap) var(--cds-ease-out) forwards}'));
-  assert.ok(local('index.html').includes('/assets/v1/c6a992d55-Che1orl5.css'));
+  assert.ok(local('index.html').includes(`/assets/v1/${utilities}`));
 });
 
 test('queuedEntryLanded: the userMessage whose clientId is the entry clientUserMessageId', () => {
@@ -147,8 +152,10 @@ test('SSR: an exiting band carries epitaxy-band-exit and inert', () => {
   assert.match(exiting, /^<div class="sqm-band" data-queued-messages="" data-count="1"><div class="epitaxy-band-enter epitaxy-band-exit" inert="">/);
   const live = renderToStaticMarkup(React.createElement(Q.SourceQueuedMessages, { entries: [entry], onCancel: noop }));
   assert.match(live, /^<div class="sqm-band" data-queued-messages="" data-count="1"><div class="epitaxy-band-enter ">/);
-  const generated = local('src/generated/queued-bar/queued-bar.mjs');
+  // was: local('src/generated/queued-bar/queued-bar.mjs') (3.6556.2 VE); round 4: the mounted bar is 4.16336.0 wO, same exit handler
+  const generated = local('src/generated/queued-bar-v4/queued-bar.mjs');
   assert.ok(generated.includes('e.target === e.currentTarget && i?.();'));
+  assert.ok(generated.includes('o("div", { className: s, inert: a, onAnimationEnd: c, children: n }),'));
   assert.match(local('src/source-queued-messages.jsx'), /export function useQueuedBandExit\(entries, scope, landed\)/);
 });
 

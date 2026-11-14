@@ -85,7 +85,7 @@ test('output directory holds the modules and the facade, nothing else', () => {
 });
 
 test('generated modules import only each other, React (with the compiler runtime) and the documented host adapters', () => {
-  const allowed = new Set(['react', 'react-dom', 'react/jsx-runtime', 'react/compiler-runtime', '../../source-code-start-adapters.jsx', '../../source-sessions-adapters.jsx', '../../source-view-tabs-adapters.jsx']);
+  const allowed = new Set(['react', 'react-dom', 'react/jsx-runtime', 'react/compiler-runtime', '../../source-code-start-adapters.jsx', '../../source-sessions-adapters.jsx', '../../source-view-tabs-adapters.jsx', '../../view-tabs-asset-url.mjs']);
   for (const module of manifest.modules) {
     const text = fs.readFileSync(path.join(directory, module.source), 'utf8');
     for (const [, from] of text.matchAll(/^import [^;]* from "([^"]+)";$/gm)) {
@@ -99,6 +99,14 @@ test('generated modules import only each other, React (with the compiler runtime
   assert.deepEqual(adapters['shared-2-TF8v67kg.js'], [{local:'je', from:'../../source-sessions-adapters.jsx', name:'useSessionsLocale', source:frame, imported:'kd'}]);
   assert.deepEqual(adapters[vendorFrame].map(a => [a.local, a.from, a.name]).sort(),
     [['Hn','react-dom','*'], ['c','react','default'], ['i','../../source-view-tabs-adapters.jsx','requireHostReact'], ['l','react','default'], ['me','react/jsx-runtime','*'], ['o','react/compiler-runtime','c']]);
+  // integration-1 preload-helper: Vite's assetsURL `a=function(e){return"/"+e}` is the host's viteAssetUrl (file:// base),
+  // the only declaration of the helper not copied; everything else in it stays the original text.
+  assert.deepEqual(adapters['preload-helper-D0dM6GpB.js'], [{local:'a', from:'../../view-tabs-asset-url.mjs', name:'viteAssetUrl'}]);
+  const helper = fs.readFileSync(path.join(directory, 'preload-helper-D0dM6GpB.js'), 'utf8');
+  assert.equal(helper.split('import {viteAssetUrl as a} from "../../view-tabs-asset-url.mjs";').length, 2);
+  assert.ok(!helper.includes('return"/"+e'));
+  assert.ok(helper.includes('if(t=a(t,n),t=u(t),t in o)'));
+  assert.deepEqual(manifest.modules.find(m => m.source === 'preload-helper-D0dM6GpB.js').bindings, ['e', 'i', 'o', 's']);
   // cds:C9 / E3: the compiler runtime is the host's real subpath, imported once by vendor-frame; shared-frame's J9 aliases it.
   const vendor = fs.readFileSync(path.join(directory, vendorFrame), 'utf8');
   assert.equal(vendor.split('import {c as o} from "react/compiler-runtime";').length, 2);

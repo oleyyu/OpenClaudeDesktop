@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useMemo, useState } from 'react';
-import { createIntl } from './generated/chat/vendor-intl-DYfox5Co.js';
+import { createIntl } from './generated/chat/vendor-intl-BJgYK7RA.js';
 import { t, getLocale } from '../electron/i18n/index.mjs';
 import { SourceMenu, menuTriggerProps } from './source-menu.jsx';
 

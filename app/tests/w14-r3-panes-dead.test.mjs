@@ -7,6 +7,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
 import { createCustomizeStore } from '../src/customize-store.mjs';
+import { designEntryStylesheets } from '../scripts/current-design-assets.mjs';
 
 // W14-code round 3, lane panes-dead: the popped-out header tooltips (fr3-02), the Add plugin result toast (r3-shared-01),
 // the remaining host pane-header buttons (fr3-08), the arrange popover (fr3-07) and the dead names (R3DC-03/04/05).
@@ -80,9 +81,12 @@ test('fr3-08: Clear finished tasks, Copy plan and the preview download Dismiss a
   assert.doesNotMatch(local('src/source-preview-pane.css'), /\.spv-icon/);
   for (const file of ['src/source-background-tasks.jsx', 'src/source-plan-pane.jsx', 'src/source-preview-pane.jsx', 'src/source-pane-controls.css'])
     assert.doesNotMatch(local(file).replace(/\/\*[\s\S]*?\*\//g, ''), /spc-ghost/, file);
-  // The official utility the Clear button reads ships in a sheet the app loads.
-  assert.ok(local('index.html').includes('/assets/v1/c6a992d55-Che1orl5.css'));
-  assert.ok(fs.readFileSync(path.join(app, 'public/assets/v1/c6a992d55-Che1orl5.css'), 'utf8').includes('aria-disabled\\:opacity-disabled'));
+  // The official utility the Clear button reads ships in a sheet the app loads: the current design's c6a992d55 entry
+  // sheet (current-design-assets.mjs), linked by index.html.
+  const utilitiesSheet = designEntryStylesheets.find((name) => name.startsWith('c6a992d55-'));
+  assert.ok(utilitiesSheet, 'the current design pins a c6a992d55 utilities sheet');
+  assert.ok(local('index.html').includes(`/assets/v1/${utilitiesSheet}`));
+  assert.ok(fs.readFileSync(path.join(app, 'public/assets/v1', utilitiesSheet), 'utf8').includes('aria-disabled\\:opacity-disabled'));
 });
 
 test('fr3-07: the arrange popup is the CDS Popover (c4db265df mt / bt), Open in new window its Close', () => {
@@ -102,11 +106,19 @@ test('fr3-07: the arrange popup is the CDS Popover (c4db265df mt / bt), Open in 
   for (const text of ['onPointerDown={(event) => {', 'LONG_PRESS_MS);', 'onContextMenu={(event) => {', 'openPopup("keyboard");', 'onToggleExpand?.();'])
     assert.ok(controls.includes(text), text);
   const html = renderToStaticMarkup(React.createElement(C.SourcePaneControls, { tileId: 't', paneName: 'Files', onToggleExpand() {}, onPopOut() {}, onClose() {} }));
-  const trigger = html.match(/<button[^>]*data-pane-arrange-trigger=""[^>]*>/)?.[0];
-  assert.ok(trigger, 'the Expand trigger renders');
+  // 4.16336.0 c4db265df Ht: with "__gb__414699090" off (ARRANGE_POPUP false, what the official app draws) the cluster is
+  // nt (ca5db7aaf V: WindowNew "Open in new window") then G (ca5db7aaf B: plain Expand / Collapse), no Popover trigger.
+  assert.ok(controls.includes('const ARRANGE_POPUP = false;'));
+  const v4 = fs.readFileSync(path.resolve(app, '../reference/snapshots/claude-4.16336.0-20261104/ion-dist/assets/v1/c4db265df-CHyZjtsm.js'), 'utf8');
+  assert.ok(v4.includes('var Nt="__gb__414699090";function Pt(){return P(k(Nt))}'));
+  assert.ok(v4.includes('(o!==void 0||typeof s=="string")&&t(nt,{onPopOut:o,disabled:c,waitingReason:s})'));
+  assert.doesNotMatch(html, /data-pane-arrange-trigger/);
+  const popout = html.indexOf('data-pane-popout=""'), trigger = html.match(/<button[^>]*data-pane-expand="expand"[^>]*>/)?.[0];
+  assert.ok(popout > 0 && trigger && popout < html.indexOf('data-pane-expand="expand"'), 'Open in new window, then Expand');
+  assert.match(html, /aria-label="Open in new window"/);
   assert.match(trigger, /data-cds="Button" data-cds-icon-only="" data-cds-ghost=""/);
   assert.match(trigger, /aria-label="Expand"/);
-  assert.match(trigger, /aria-haspopup="dialog"/, 'a Popover trigger, not a menu');
+  assert.doesNotMatch(trigger, /aria-haspopup/);
 });
 
 test('R3DC-03 / R3DC-05 / R3DC-04: the dead names are gone', () => {
@@ -199,7 +211,7 @@ test('fr3-07 补做: pressFocus "body" is wired as c4db265df yt / bt and ca5db7a
 
 test('fr3-07 补做: the arrange trigger still renders the same SSR markup', () => {
   const html = renderToStaticMarkup(React.createElement(C.SourcePaneControls, { tileId: 'terminal', paneName: 'Terminal', onToggleExpand() {}, onClose() {} }));
-  assert.match(html, /data-pane-arrange-trigger=""/);
-  assert.match(html, /aria-haspopup="dialog"/);
+  assert.match(html, /data-pane-expand="expand"/);
+  assert.doesNotMatch(html, /data-pane-popout|data-pane-arrange-trigger/, 'no onPopOut: no Open in new window button');
   assert.match(html, /aria-label="Expand"/);
 });

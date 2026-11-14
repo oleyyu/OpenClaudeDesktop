@@ -5,7 +5,11 @@ import {
 } from "./diff-scope-model.mjs";
 import { rememberDiffScope, useStoredDiffScope } from "./generated/files-changes/diff-scope-memory.mjs";
 import { onSessionEvicted } from "./source-files-changes-adapters.jsx";
-import { asElementNode, CdsDropdown, CdsIcon, CdsTooltip, useCdsOwnerWindow, useCdsOwnerWindowAnchor } from "./generated/view-tabs/index.js";
+// host-wiring code-a: the range arrow is the 4.16336.0 cds-core Icon (semantic facade; explicit size, so it reads no
+// Context). The Dropdown, Tooltip and owner-window hooks stay the 3.6556.2 view-tabs originals: code-editor's Sections
+// (3.6556.2) is built over them below and draws its rows inside this Root / Popup, which must be the same Menu.
+import { CdsIcon } from "./cds-core.mjs";
+import { asElementNode, CdsDropdown, CdsTooltip, useCdsOwnerWindow, useCdsOwnerWindowAnchor } from "./generated/view-tabs/index.js";
 import { createPreviewPaneMenu } from "./generated/code-editor/preview-pane-menu.mjs";
 import { suppressNativeContextMenu } from "./generated/files-changes/menu-context-guard.mjs";
 import { menuCollisionPadding } from "./generated/code-composer/menu-collision-padding.mjs";

@@ -1,6 +1,8 @@
 import React from "react";
 import { Icon } from "./icons";
-import { CdsIcon } from "./generated/view-tabs/shared-frame-6jtSkIit.js";
+// host-wiring code-b: the pending step's Placeholder is the 4.16336.0 cds-core CdsIcon (shared-frame-CJdE5Ria Bs → lf,
+// semantic facade); the checklist draws it in its own box, no 3.6556.2 region renders it.
+import { CdsIcon } from "./cds-core.mjs";
 import { SourceSpinner } from "./source-pane-states.jsx";
 import { SourceInlineRuns } from "./source-user-text.jsx";
 import "./source-plan-pane.css";

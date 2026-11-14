@@ -3,6 +3,10 @@
 /* z-index: the transcript's sticky bottom fade strip (z-index 1, opaque at its edge) ends where the card
    begins and would paint over the card's outset hairline ring once scrolled up. */
 .sc-zone.composer-zone { position: relative; z-index: 2; container-type: inline-size; gap: 6px; }
+/* The Code column's row gap is density-driven (4.23118.1 shared-33 KS "gap-1.5 compact:gap-1.5 comfortable:gap-2", the
+   code column YS that holds the card and the environment bar slot): 8px between the card and the bar in comfortable
+   density, 6px in compact. Chat / Cowork (.surface-form card) keep the zone's 6px. */
+.sc-zone.composer-zone:has(> .sc-composer):where([data-density=comfortable], [data-density=comfortable] *) { gap: 8px; }
 /* W14-code css2-composer-gutter-780: the chat column gutter (shared-6-sd9jbJqs.js yg, vg var(--chat-gutter,32px); gg
    `[.epitaxy-chat-panel_&]:[@container_tile-slot_(max-width:560px)]:[--chat-gutter:16px]`) follows the chat tile's width,
    as the transcript column does (source-transcript.css), not the window's (the old @media (max-width: 780px) 20px is gone). */

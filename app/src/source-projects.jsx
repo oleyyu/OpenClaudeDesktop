@@ -1,10 +1,16 @@
 import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
-// w10-curchat-projects: the 3.6556.2 projects page parts (scripts/extract-chat-projects.mjs). The gallery layout,
-// ProjectCard and the loading skeleton are re-exported there from code-routines / routines-shared (D1, one copy).
-import { GalleryPageLayout, ProjectSpaceCard, ProjectsEmptyState as EmptyState, ProjectsLoadingSkeleton,
+// account2 chat-projects: the 4.16336.0 projects page parts (scripts/extract-chat-projects-v4.mjs ->
+// src/generated/chat-projects-v4, over src/source-chat-projects-v4-adapters.jsx, which re-exports the same
+// LocalProjectContext host boundaries). The gallery layout, ProjectCard, the loading skeleton and the announcement hook
+// are re-exported there from code-routines-v4 / routines-shared-v4 (D1, one copy).
+import { GalleryPageLayout, ProjectSpaceCard, ProjectsEmptyState as EmptyState, ProjectsLoadingSkeleton, projectsSearchMessages,
   useProjectsSearchKeys, useProjectsSearchAnnouncement, ProjectInstructionsSection, ProjectRailDivider, ProjectSessionsHeading, useProjectRecommendations,
-  ProjectPageHeader, ProjectBreadcrumb, ProjectKnowledgeDropZone, ProjectMemorySection, ProjectSessionTable, RenameChatDialog } from './generated/chat-projects/index.mjs';
-import { CdsButton, CdsDropdown, CdsIcon, CdsTextInput as TextInput } from './generated/view-tabs/index.js';
+  ProjectPageHeader, ProjectBreadcrumb, ProjectKnowledgeDropZone, ProjectMemorySection, ProjectSessionTable, RenameChatDialog } from './generated/chat-projects-v4/index.mjs';
+// 4.16336.0 host wiring (frame): CdsButton stays view-tabs (the primaryAction goes to the 3.6556.2 chat-projects page
+// header, whose compact-primary context the Button reads; the menu trigger renders inside the 3.6556.2 CdsDropdown);
+// the empty-state glyph and the host create / edit dialogs' name fields are the cds-core Icon (Bs) and TextInput.
+import { CdsButton, CdsDropdown } from './generated/view-tabs/index.js';
+import { CdsIcon, CdsTextInput as TextInput, CdsRouterContext } from './cds-core.mjs';
 import { SourceSettingsButton as Button } from './source-settings-button.jsx';
 // 3.6556.2 shared-frame nk: the one sliced copy is cowork-scheduled's (its routine form and the native field
 // registry use it); view-tabs does not publish nk, and a second copy there would break D1.
@@ -32,7 +38,6 @@ const ms = value => typeof value === 'number' ? value : Date.parse(value) || 0;
 const projectSpace = project => ({ id: project.id, name: project.name, description: project.description ?? '', createdAt: ms(project.createdAt), updatedAt: ms(project.updatedAt),
   folders: project.cwd ? [{ path: project.cwd }] : [], ccdFolderPath: project.cwd ?? null });
 const byName = (a, b) => a.name.localeCompare(b.name, getLocale()) || a.id.localeCompare(b.id);
-const SEARCH_NOUNS = { singular: 'project', plural: 'projects' };
 
 // c17beaa76 cr: GalleryPageLayout (cd75b47e6 l) with contentGap "lg", search, the sort icon action, the primary
 // action and the result announcement; the starred-first sort, the space card grid, the empty / error / no-match states.
@@ -54,7 +59,8 @@ export function SourceProjects({ call, onOpen, composer, sessions, sessionMetada
         || (sort === 'created' ? b.space.createdAt - a.space.createdAt : sort === 'alphabetical' ? byName(a.space, b.space) : b.space.updatedAt - a.space.updatedAt));
   }, [projects, query, sort, starredIds]);
   const { onInputKeyDown, onResultsKeyDown } = useProjectsSearchKeys(inputRef, results);
-  const { announcement } = useProjectsSearchAnnouncement(rows.length, query, { singular: t(SEARCH_NOUNS.singular), plural: t(SEARCH_NOUNS.plural) });
+  // 4.16336.0 c17beaa76: fn(Y.length, f, Sr), the page's own noMatch / matching messages.
+  const { announcement } = useProjectsSearchAnnouncement(rows.length, query, projectsSearchMessages);
   const open = async project => {
     if (opening) return;
     setOpening(true); setError('');
@@ -74,6 +80,10 @@ export function SourceProjects({ call, onOpen, composer, sessions, sessionMetada
   const [editing, setEditing] = useState(null);
   // Fn links to `/space/<id>` (shared-52 Zl); RouterLink (routines-shared) hands the push to this router.
   const router = useMemo(() => ({ navigate: href => { const project = (projects ?? []).find(entry => `${SPACE_ROUTE}${entry.id}` === href); if (project) openRef.current(project); }, pathname: '/projects', search: '', bridge: undefined, models: [] }), [projects]);
+  // 4.16336.0 cf8745532 u links the card through shared-frame Card.Link (Fh → wh → fa, useCdsLinkProps), which navigates
+  // with the CDS router context (shared-frame Ci) the official app root provides (shared-46: {navigate, resolveHref,
+  // intentHandlers} over TanStack). This page's card links go to the same local router as RouterLink above.
+  const cdsRouter = useMemo(() => ({ navigate: href => router.navigate(href) }), [router]);
   if (selected) return <ProjectDetail key={selected.id} project={selected} call={call} composer={composer} sessions={sessions} sessionMetadata={sessionMetadata} onSession={onSession}
     onSessionAction={onSessionAction} onOpenSettings={onOpenSettings} projectTools={projectTools} composerMode={composerMode} coworkBlocked={coworkBlocked} onComposerMode={onComposerMode ? mode => onComposerMode(selected, mode) : undefined}
     onBack={() => { setSelected(null); onBack(); }} onUpdated={project => { setSelected(project); setProjects(rows => rows.map(row => row.id === project.id ? project : row)); onUpdated(project); }} />;
@@ -97,7 +107,7 @@ export function SourceProjects({ call, onOpen, composer, sessions, sessionMetada
       </li>)}
     </ul>;
   return <div className="surface-projects cds-root" data-density="comfortable">
-    <RoutinesSharedHost.Provider value={router}>
+    <RoutinesSharedHost.Provider value={router}><CdsRouterContext.Provider value={cdsRouter}>
       <LocalProjectSpacesContext.Provider value={spaces}>
         <GalleryPageLayout contentGap="lg" title={t('Projects')} search={search} iconActions={iconActions} primaryAction={primaryAction} status={query && initialized && !failed ? announcement : null}>
           <div className="flex flex-col">
@@ -107,7 +117,7 @@ export function SourceProjects({ call, onOpen, composer, sessions, sessionMetada
           </div>
         </GalleryPageLayout>
       </LocalProjectSpacesContext.Provider>
-    </RoutinesSharedHost.Provider>
+    </CdsRouterContext.Provider></RoutinesSharedHost.Provider>
     {creating && <CreateProject call={call} onClose={() => setCreating(false)} onCreated={project => { setProjects(value => [...(value ?? []), project]); setQuery(''); setCreating(false); }} />}
     {editing && <EditProject key={editing.id} project={editing} kind="details" onClose={() => setEditing(null)}
       update={async patch => { const next = await call('local-projects', { action: 'update', id: editing.id, ...patch }); replace(next); return next; }} />}

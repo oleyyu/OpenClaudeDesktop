@@ -14,6 +14,9 @@ import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
 import { appSheets, append, computed, element, find, loadCascade, parseMarkup } from './fixtures/transcript-css-cascade.mjs';
 import { ionSource, referenceVersion, sharedFrame } from '../scripts/official-3.6556.2.mjs';
+import { designEntryStylesheets } from '../scripts/current-design-assets.mjs';
+// design-production (4.16336.0): the loaded c6a992d55 entry sheet, named by current-design-assets.
+const UTILITIES_CSS = designEntryStylesheets.find(name => name.startsWith('c6a992d55-'));
 
 const app = path.resolve(import.meta.dirname, '..');
 const official = name => fs.readFileSync(path.join(ionSource, name), 'utf8');
@@ -112,16 +115,35 @@ test('global-13 local cascade: over every loaded sheet the inheritColor link tak
   // Decided on the link by the official .text-inherit utility (vd), which beats the .cds-text-link accent colour.
   assert.equal(color.inheritedFrom, row);
   assert.equal(color.via.value, 'inherit');
-  assert.equal(color.via.sheet, 'public/assets/v1/c6a992d55-Che1orl5.css');
+  assert.equal(color.via.sheet, `public/assets/v1/${UTILITIES_CSS}`);
   assert.equal(color.via.layer, 'utilities');
   assert.equal(computed(cascade, inherit, 'cursor').value, 'pointer');
-  // The default link keeps .cds-text-link's accent colour.
+  // The default link keeps .cds-text-link's accent colour. design-production: 4.16336.0's rule reads the accent through
+  // the optional --cds-text-link-color token (var(--cds-text-link-color,var(--cds-text-accent))); nothing on the plain
+  // link or its ancestors sets that token, so it falls back to the accent.
   const [plain] = parseMarkup(renderLink({ href: SAFE_USE }));
   append(row, plain);
-  assert.equal(computed(cascade, plain, 'color').value, 'var(--cds-text-accent)');
+  const LINK_COLOR = 'var(--cds-text-link-color, var(--cds-text-accent))';
+  assert.ok(local(`public/assets/v1/${UTILITIES_CSS}`).includes(':where(.cds-root) .cds-text-link{color:var(--cds-text-link-color,var(--cds-text-accent));'));
+  const plainColor = computed(cascade, plain, 'color');
+  assert.equal(plainColor.value, LINK_COLOR);
+  assert.equal(plainColor.from.sheet, `public/assets/v1/${UTILITIES_CSS}`);
+  // Every loaded declaration of the token is an arbitrary-property utility class `[--cds-text-link-color:…]` (bare or
+  // variant-prefixed), and neither the plain link nor its ancestors carry one.
+  const setters = [];
+  for (const sheet of appSheets(app)) {
+    for (const match of sheet.code.matchAll(/([^{};]*)\{[^{}]*?(?<![\w-])--cds-text-link-color:/g)) {
+      const selector = match[1].trim();
+      setters.push(selector);
+      assert.match(selector, /^\.(?:[\w-]+\\:)*\\\[--cds-text-link-color\\:/, `${sheet.name}: ${selector.slice(0, 120)}`);
+    }
+  }
+  assert.ok(setters.length > 0);
+  for (const node of [plain, row, root])
+    assert.equal((node.attrs?.class ?? '').split(' ').some(name => name.includes('[--cds-text-link-color:')), false, node.attrs?.class);
   // The 35% rest is the vd utility the served sheet compiles; it applies while not hovered / focus-visible, and the
   // .cds-text-link hover rule puts the line back to currentColor.
-  const css = local('public/assets/v1/c6a992d55-Che1orl5.css');
+  const css = local(`public/assets/v1/${UTILITIES_CSS}`);
   once(css, ['.\\[\\&\\:not\\(\\:hover\\,\\:focus-visible\\)\\]\\:\\[--_text-link-line\\:color-mix\\(in_srgb\\,currentColor\\,transparent_35\\%\\)\\]:not(:hover,:focus-visible){--_text-link-line:color-mix(in srgb,currentColor,transparent 35%)}',
     ':where(.cds-root) .cds-text-link:is(:hover,:focus-visible){--_text-link-line:currentColor}']);
   assert.ok(find([inherit], node => node.attrs?.class?.split(' ').includes('[&:not(:hover,:focus-visible)]:[--_text-link-line:color-mix(in_srgb,currentColor,transparent_35%)]')));

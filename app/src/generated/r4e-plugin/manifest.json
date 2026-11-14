@@ -1,605 +1,2684 @@
 {
-  "referenceVersion": "3.6556.2",
-  "referenceSnapshot": "snapshots/claude-3.6556.2-20261025-192807",
+  "referenceVersion": "4.16336.0",
+  "referenceSnapshot": "snapshots/claude-4.16336.0-20261104",
   "generator": "scripts/extract-r4e-plugin.mjs",
   "adapterModule": "src/source-r4e-plugin-adapters.jsx",
+  "sharedGraph": "cds-core",
   "modules": [
     {
-      "target": "lazy-value.mjs",
-      "source": "shared-0-DDOOdL6P.js",
-      "sourceSha256": "6e8dd35d06f3483ca7a164d358560e34bdd02a0c4d4e67fec5e71e45c1009f61",
-      "sha256": "a05f99f63dab0bc256c650756c2d0ec11e9db75734a94f6fe496814a05b29a56",
-      "referenceVersion": "3.6556.2",
-      "bindings": [],
-      "imports": [
-        {
-          "local": "Pa",
-          "from": "../routines-shared/shared-0-DDOOdL6P.mjs",
-          "name": "Pa",
-          "via": "shared-0-DDOOdL6P.js:Pa",
-          "kind": "routines-shared"
-        }
-      ],
-      "exports": {
-        "Pa": "lazyValue"
-      }
-    },
-    {
-      "target": "clsx.mjs",
-      "source": "vendor-frame-CnSY1sxv.js",
-      "sourceSha256": "7064f152d05f6a7f477fc13a4b24606b82cbd401336a7e3a59840236818699e6",
-      "sha256": "96b24d16eaf96a8358c9f0058ffb6b0da20612825420abae9098d1c1720a3d01",
-      "referenceVersion": "3.6556.2",
-      "bindings": [
-        {
-          "name": "_e",
-          "sha256": "bcd792e27dd8558392d1c33840d665388cb40ba810262b823eecf5b3ff2fa856"
-        },
-        {
-          "name": "ve",
-          "sha256": "d9810211b4124d7de6740055a27e650a9029fac8fb01b9e23b0a1fa169b7daf4"
-        }
-      ],
-      "imports": [],
-      "exports": {
-        "ve": "clsx"
-      }
-    },
-    {
       "target": "text-sanitize.mjs",
-      "source": "shared-52-uHFNjl7C.js",
-      "sourceSha256": "83537e599f2f6720c2a0a245162e44a5c7431e22872a32ed16ea716e65ded08a",
-      "sha256": "964d6d36bc8f7418d5e06b8da0148b2c6ba8d43f10e02c0eb85e97b3367ba88a",
-      "referenceVersion": "3.6556.2",
+      "source": "shared-62-DoCqVpIq.js",
+      "sourceSha256": "15a90aabd711c4209050f53ef48b2754661e19b090936fdc6d37346bd4cf4e56",
+      "sha256": "a56139051dcda65aaca66000ec8ad1217b360b62ab549407b9ef46a1552b2f9c",
+      "referenceVersion": "4.16336.0",
       "bindings": [
         {
-          "name": "$q",
-          "sha256": "65851f843b0cbb82d1238cab947bf3fa11657660ffa774eba92c17a38f450756"
+          "name": "aL",
+          "sha256": "31af3f35c0446612a34d5cf8ec094946db7c62162011df63334ffcc764666b90"
         },
         {
-          "name": "eJ",
-          "sha256": "072036e1f1161cb973139b1774dfcb7c1479e9128e6284f3ce535cb3eb39e363"
+          "name": "sL",
+          "sha256": "77039c0a61756ff1afa6bb79191430f722f3d94cea356bd91e6fac839acf1d86"
         },
         {
-          "name": "tJ",
-          "sha256": "b1b8170be44b41486aaba357ee885c9d0a9cb967b2ab83044f3d317e8bef7702"
+          "name": "cL",
+          "sha256": "9570c69cf8dbdc990a41fdd39c1a65a77a081f2c2cb18b01a88773bfc7760ce7"
         },
         {
-          "name": "nJ",
-          "sha256": "9d866abcf1f2eb95af5d853a9e024235850b7768276dffeff3a0f1d240666109"
-        },
-        {
-          "name": "rJ",
-          "sha256": "7c2e5e366a462d2c122c7aa05bc4cc688daad4cee32f7eb2eb4507c7185c90d5"
+          "name": "lL",
+          "sha256": "6a5737b6ac8a9d6c57c36941b46c97d61cb3d0680f543740ed930dd7f5db3b6e"
         }
       ],
       "imports": [
         {
-          "local": "sn",
-          "from": "./lazy-value.mjs",
+          "local": "q",
+          "from": "./url-safety.mjs",
           "name": "lazyValue",
-          "via": "shared-0-DDOOdL6P.js:Lb",
-          "kind": "generated"
+          "via": "shared-0-CnnWnVrT.js:nS",
+          "kind": "generated",
+          "original": "Tl"
+        },
+        {
+          "local": "oL",
+          "from": "../cds-core/shared-62.mjs",
+          "name": "oL",
+          "via": "shared-62-DoCqVpIq.js#oL",
+          "kind": "shared-graph",
+          "original": "oL",
+          "linkedSha256": "fad89c1aa2009fc2ebb105d855c5e02dce36dfc3a4f8c7cc64884a882ddeaa22"
         }
       ],
       "exports": {
-        "rJ": "sanitizeMultilineText",
-        "tJ": "sanitizeText"
-      }
+        "lL": "sanitizeMultilineText",
+        "sL": "sanitizeText"
+      },
+      "heldByCdsCore": [],
+      "ownedState": []
     },
     {
       "target": "overview-layout.mjs",
-      "source": "shared-19-DIKJVT7c.js",
-      "sourceSha256": "d1cf17f173b5bc379212f11b92e173feceed10ecdb1fe8fdd85ebcbc0e57190f",
-      "sha256": "e3e29739c18222538eb08b8df5af55cfc3e5a1a484e9f85d5b919d60a006a75f",
-      "referenceVersion": "3.6556.2",
+      "source": "shared-19-UalAfDtn.js",
+      "sourceSha256": "17a7839fb39b22485dcb90f549bcdc92f115afbefa43e73d08d98e7bea4220f1",
+      "sha256": "83bb2c7227821b8817dbc570d6da65ba541755ffd50076fed31e7defa642a07c",
+      "referenceVersion": "4.16336.0",
       "bindings": [
         {
-          "name": "ig",
-          "sha256": "b5ecf0c43895d245255c822628c6659c8f7947bea84241e7eaf928979533da12"
+          "name": "yg",
+          "sha256": "8d46ae0e6d995fe336c42b078e2b19572b8cbb6c91ee76304f8bc0675a6c3277"
         },
         {
-          "name": "Eg",
-          "sha256": "9ef6afcd98d67f9c57772d5a8c1c3c85ded9ebd00300cad394c48fe634dc1167"
+          "name": "Vg",
+          "sha256": "d21e027d7ee833b58c688c03af4687fe635d9f5071de440a335a98e1a5972799"
         },
         {
-          "name": "C_",
-          "sha256": "904feb3e0a91e17cab6ccb815ac9fee7feadc5c00eb96c3fbec0613b87043f68"
+          "name": "rv",
+          "sha256": "3ffecfa639649fdd3e5f56da4a6882f26dfda4ef48ef3e362e3c12f8b23ff4fc"
         },
         {
-          "name": "w_",
-          "sha256": "009e8b75637a42e46145b9841c8c194b2553cf711065c1f8e2f50041a22e3524"
+          "name": "iv",
+          "sha256": "c3d383141e680cd1fe54b327272af108ccaa09d06b637da03670e2bcccad3277"
         },
         {
-          "name": "T_",
-          "sha256": "033b1efde6954045cc3a17527b7c6fe1a0963c940655cca9dba4d54b1a7086ff"
+          "name": "av",
+          "sha256": "5ed0a5c4e740d06b3a204d9ca470e765875d439a8b961b7680ed828ddc72b6db"
         }
       ],
       "imports": [
         {
-          "local": "p",
-          "from": "./clsx.mjs",
-          "name": "clsx",
-          "via": "vendor-frame-CnSY1sxv.js:Ba",
-          "kind": "generated"
+          "local": "J9",
+          "from": "./shared-frame.mjs",
+          "name": "reactMemoCache",
+          "via": "shared-frame-CJdE5Ria.js:hm",
+          "kind": "generated",
+          "original": "J9"
+        },
+        {
+          "local": "J1",
+          "from": "./shared-frame.mjs",
+          "name": "memoChanged1",
+          "via": "shared-frame-CJdE5Ria.js:lm",
+          "kind": "generated",
+          "original": "J1"
+        },
+        {
+          "local": "K1",
+          "from": "./shared-frame.mjs",
+          "name": "memoStore1",
+          "via": "shared-frame-CJdE5Ria.js:_m",
+          "kind": "generated",
+          "original": "K1"
         },
         {
           "local": "h",
-          "from": "react/jsx-runtime",
-          "name": "jsx",
-          "via": "vendor-frame-CnSY1sxv.js:Ha",
-          "kind": "react"
+          "from": "../cds-core/vendor-frame.mjs",
+          "name": "clsx",
+          "via": "vendor-frame-BckkO60Y.js:Fa",
+          "kind": "shared-graph",
+          "original": "ke",
+          "linkedSha256": "d872f1f1ac1656cd472d8cf1313bf60356710021b06ad5c76a2afae05adf5f77"
         },
         {
-          "local": "b",
+          "local": "g",
           "from": "react/jsx-runtime",
-          "name": "jsxs",
-          "via": "vendor-frame-CnSY1sxv.js:Ua",
+          "name": "jsx",
+          "via": "vendor-frame-BckkO60Y.js:Ga",
           "kind": "react"
         },
         {
           "local": "J2",
-          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "from": "./shared-frame.mjs",
           "name": "memoChanged2",
-          "via": "shared-frame-6jtSkIit.js:$f",
-          "kind": "view-tabs"
-        },
-        {
-          "local": "J1",
-          "from": "../view-tabs/shared-frame-6jtSkIit.js",
-          "name": "memoChanged1",
-          "via": "shared-frame-6jtSkIit.js:Qf",
-          "kind": "view-tabs"
-        },
-        {
-          "local": "J9",
-          "from": "../view-tabs/shared-frame-6jtSkIit.js",
-          "name": "reactMemoCache",
-          "via": "shared-frame-6jtSkIit.js:ip",
-          "kind": "view-tabs"
-        },
-        {
-          "local": "K1",
-          "from": "../view-tabs/shared-frame-6jtSkIit.js",
-          "name": "memoStore1",
-          "via": "shared-frame-6jtSkIit.js:op",
-          "kind": "view-tabs"
+          "via": "shared-frame-CJdE5Ria.js:um",
+          "kind": "generated",
+          "original": "J2"
         },
         {
           "local": "K2",
-          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "from": "./shared-frame.mjs",
           "name": "memoStore2",
-          "via": "shared-frame-6jtSkIit.js:sp",
-          "kind": "view-tabs"
+          "via": "shared-frame-CJdE5Ria.js:vm",
+          "kind": "generated",
+          "original": "K2"
         },
         {
-          "local": "Sc",
+          "local": "v",
+          "from": "react/jsx-runtime",
+          "name": "jsxs",
+          "via": "vendor-frame-BckkO60Y.js:Ka",
+          "kind": "react"
+        },
+        {
+          "local": "Vp",
           "from": "../../source-r4e-plugin-adapters.jsx",
           "name": "usePageLayout",
-          "via": "shared-5-Bg6ZMqvt.js:xc",
+          "via": "shared-33-DtdykY0y.js:ou",
           "kind": "adapter",
-          "original": "Qg"
+          "original": "Nv",
+          "replacedSha256": "f3f0a014dc0590da7f8907602f672b84e574859cf0b7b27a6aa01af8645e6ea0"
         },
         {
           "local": "I1",
-          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "from": "./shared-frame.mjs",
           "name": "memoStoreValueFirst1",
-          "via": "shared-frame-6jtSkIit.js:Kf",
-          "kind": "view-tabs"
+          "via": "shared-frame-CJdE5Ria.js:rm",
+          "kind": "generated",
+          "original": "I1"
         },
         {
-          "local": "q",
-          "from": "../../source-r4e-plugin-adapters.jsx",
-          "name": "OverviewCard",
-          "via": "shared-frame-6jtSkIit.js:Tu",
-          "kind": "adapter",
-          "original": "cd"
+          "local": "te",
+          "from": "../cds-core/shared-frame.mjs",
+          "name": "CdsCard",
+          "via": "shared-frame-CJdE5Ria.js:Nu",
+          "kind": "shared-graph",
+          "original": "Bh",
+          "linkedSha256": "136745b51e6ca9e8ac8de9da9cb6bd27d85999f2eb38c38e02d7d2267be1e5e2"
         }
       ],
       "exports": {
-        "w_": "PluginOverviewLayout",
-        "T_": "OverviewRailCard",
-        "Eg": "OVERVIEW_HEADING_LEADING"
-      }
+        "iv": "PluginOverviewLayout",
+        "av": "OverviewRailCard",
+        "Vg": "OVERVIEW_HEADING_LEADING"
+      },
+      "heldByCdsCore": [],
+      "ownedState": []
     },
     {
       "target": "overview-sections.mjs",
-      "source": "cae01a6fc-CssbXTs8.js",
-      "sourceSha256": "944b5e5cdf88f4ae52b70030ce22200ee00311fd176ce800632228ebd38ccfa8",
-      "sha256": "b503791c81b2e001e6141a0fc48ba83414017d8091047d393a5ad3a7fea9025c",
-      "referenceVersion": "3.6556.2",
+      "source": "cae01a6fc-t1NhdR7u.js",
+      "sourceSha256": "4605f3ac8e27dbb93744945e82e7d78b93e261ff55704e95f211b97c61f433d3",
+      "sha256": "8b3da33b34627af3ef76a5f55e1df9c3259f9308289a776486332d4ca52fd126",
+      "referenceVersion": "4.16336.0",
       "bindings": [
         {
-          "name": "G",
-          "sha256": "f27f7a418172c0a81718c9a67653252e0ecffd0ffdbb702e37a3d75c98b72381"
+          "name": "U",
+          "sha256": "f82a2917fdc110b38831086cf14e6ecbcd9f93b7f36fa786f0017c7542c8efdb"
         },
         {
-          "name": "K",
-          "sha256": "e537b23423b2699d5538a756570830cb23168ab13992f907c14ee230bcfe8481"
+          "name": "W",
+          "sha256": "9cbf98e9b3905c3259f306fcd9812a6c92966627bd73985db3890e6d74052c32"
         },
         {
-          "name": "Y",
-          "sha256": "3a2ed8067aa32f9a01adda119b868e777b85cca1d6de3ccc9cf345a4b96cece4"
+          "name": "J",
+          "sha256": "f3a27d050c2021f433224276bce042165542febf1967cfc77c43fdff655902da"
         },
         {
           "name": "X",
-          "sha256": "eb8e5fb4be0cf94dc20fd0fbd9cd1c17207907d6f4227f18d60034fe5f434c40"
+          "sha256": "2120da68cca459319aec3b655dfc83309e5acccb38e93ffd37ddf4cab4644a90"
         },
         {
-          "name": "oe",
-          "sha256": "b6d8868e546bb1f117efd630c5cdac210ca033ebb8ecfae64a56b4aa87a26f60"
+          "name": "ie",
+          "sha256": "719871c2011fccf935189e88462a571df1f82e59de70b2c07f6647ad80a34cae"
         },
         {
-          "name": "se",
-          "sha256": "2f951ef2820a82f7952cc89a08425e0779d103f477ce771cbb1b9b8f8e9d00ec"
+          "name": "ae",
+          "sha256": "61ecb2d600025c4af749715c97dfd5aeccffbb7087bc15c34b978936e8fd7700"
         }
       ],
       "imports": [
         {
-          "local": "t",
-          "from": "react/jsx-runtime",
-          "name": "jsx",
-          "via": "vendor-frame-CnSY1sxv.js:Ha",
-          "kind": "react"
+          "local": "J9",
+          "from": "./shared-frame.mjs",
+          "name": "reactMemoCache",
+          "via": "shared-frame-CJdE5Ria.js:hm",
+          "kind": "generated",
+          "original": "J9"
         },
         {
-          "local": "K3",
-          "from": "../view-tabs/shared-frame-6jtSkIit.js",
-          "name": "memoStore3",
-          "via": "shared-frame-6jtSkIit.js:cp",
-          "kind": "view-tabs"
+          "local": "p",
+          "from": "../../source-r4e-plugin-adapters.jsx",
+          "name": "useUnifiedPluginsUi",
+          "via": "shared-62-DoCqVpIq.js:Dl",
+          "kind": "adapter",
+          "original": "bP",
+          "replacedSha256": "8a359b07a3a7ff2756ae2805c904af180d968af058b8da8ea2e8fc9beb034e9c"
         },
         {
           "local": "J3",
-          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "from": "./shared-frame.mjs",
           "name": "memoChanged3",
-          "via": "shared-frame-6jtSkIit.js:ep",
-          "kind": "view-tabs"
+          "via": "shared-frame-CJdE5Ria.js:dm",
+          "kind": "generated",
+          "original": "J3"
         },
         {
-          "local": "J9",
-          "from": "../view-tabs/shared-frame-6jtSkIit.js",
-          "name": "reactMemoCache",
-          "via": "shared-frame-6jtSkIit.js:ip",
-          "kind": "view-tabs"
+          "local": "K3",
+          "from": "./shared-frame.mjs",
+          "name": "memoStore3",
+          "via": "shared-frame-CJdE5Ria.js:ym",
+          "kind": "generated",
+          "original": "K3"
         },
         {
-          "local": "m",
+          "local": "t",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-BckkO60Y.js:Ga",
+          "kind": "react"
+        },
+        {
+          "local": "J2",
+          "from": "./shared-frame.mjs",
+          "name": "memoChanged2",
+          "via": "shared-frame-CJdE5Ria.js:um",
+          "kind": "generated",
+          "original": "J2"
+        },
+        {
+          "local": "h",
+          "from": "./text-sanitize.mjs",
+          "name": "sanitizeMultilineText",
+          "via": "shared-62-DoCqVpIq.js:_c",
+          "kind": "generated",
+          "original": "lL"
+        },
+        {
+          "local": "J1",
+          "from": "./shared-frame.mjs",
+          "name": "memoChanged1",
+          "via": "shared-frame-CJdE5Ria.js:lm",
+          "kind": "generated",
+          "original": "J1"
+        },
+        {
+          "local": "b",
           "from": "../../source-r4e-plugin-adapters.jsx",
-          "name": "useUnifiedPluginsUi",
-          "via": "shared-52-uHFNjl7C.js:uo",
+          "name": "FormattedMessage",
+          "via": "vendor-intl-BJgYK7RA.js:l",
           "kind": "adapter",
-          "original": "QL"
+          "original": "Gt",
+          "replacedSha256": "bde2ec1630e0a679fa4135cf75389568e77fa98fdcb08519af8104d5306ff5b5"
+        },
+        {
+          "local": "K1",
+          "from": "./shared-frame.mjs",
+          "name": "memoStore1",
+          "via": "shared-frame-CJdE5Ria.js:_m",
+          "kind": "generated",
+          "original": "K1"
+        },
+        {
+          "local": "v",
+          "from": "./overview-layout.mjs",
+          "name": "OVERVIEW_HEADING_LEADING",
+          "via": "shared-19-UalAfDtn.js:qs",
+          "kind": "generated",
+          "original": "Vg"
         },
         {
           "local": "e",
-          "from": "./clsx.mjs",
+          "from": "../cds-core/vendor-frame.mjs",
           "name": "clsx",
-          "via": "vendor-frame-CnSY1sxv.js:Ba",
-          "kind": "generated"
+          "via": "vendor-frame-BckkO60Y.js:Fa",
+          "kind": "shared-graph",
+          "original": "ke",
+          "linkedSha256": "d872f1f1ac1656cd472d8cf1313bf60356710021b06ad5c76a2afae05adf5f77"
+        },
+        {
+          "local": "z",
+          "from": "./linkify.mjs",
+          "name": "linkifyDescription",
+          "via": "c79fa23ba-Cua_bx3X.js:t",
+          "kind": "generated",
+          "original": "h"
+        },
+        {
+          "local": "K5",
+          "from": "./shared-frame.mjs",
+          "name": "memoStore5",
+          "via": "shared-frame-CJdE5Ria.js:xm",
+          "kind": "generated",
+          "original": "K5"
         },
         {
           "local": "n",
           "from": "react/jsx-runtime",
           "name": "jsxs",
-          "via": "vendor-frame-CnSY1sxv.js:Ua",
+          "via": "vendor-frame-BckkO60Y.js:Ka",
           "kind": "react"
         },
         {
-          "local": "J1",
-          "from": "../view-tabs/shared-frame-6jtSkIit.js",
-          "name": "memoChanged1",
-          "via": "shared-frame-6jtSkIit.js:Qf",
-          "kind": "view-tabs"
-        },
-        {
-          "local": "K1",
-          "from": "../view-tabs/shared-frame-6jtSkIit.js",
-          "name": "memoStore1",
-          "via": "shared-frame-6jtSkIit.js:op",
-          "kind": "view-tabs"
-        },
-        {
-          "local": "K5",
-          "from": "../view-tabs/shared-frame-6jtSkIit.js",
-          "name": "memoStore5",
-          "via": "shared-frame-6jtSkIit.js:up",
-          "kind": "view-tabs"
-        },
-        {
-          "local": "d",
-          "from": "./text-sanitize.mjs",
-          "name": "sanitizeMultilineText",
-          "via": "shared-52-uHFNjl7C.js:S",
-          "kind": "generated"
-        },
-        {
-          "local": "v",
+          "local": "x",
           "from": "../../source-r4e-plugin-adapters.jsx",
-          "name": "FormattedMessage",
-          "via": "vendor-intl-DYfox5Co.js:l",
+          "name": "useIntl",
+          "via": "vendor-intl-BJgYK7RA.js:p",
           "kind": "adapter",
-          "original": "Gt"
+          "original": "q",
+          "replacedSha256": "edf793bc7b87ae9a38cea39d25d752a5bcfef1d492e06a2219e120311feaaec0"
         },
         {
-          "local": "w",
-          "from": "./overview-layout.mjs",
-          "name": "OVERVIEW_HEADING_LEADING",
-          "via": "shared-19-DIKJVT7c.js:zs",
-          "kind": "generated"
-        },
-        {
-          "local": "B",
+          "local": "C",
           "from": "../../source-r4e-plugin-adapters.jsx",
-          "name": "useLinkifiedDescription",
-          "via": "c79fa23ba-C-z2OzjO.js:r",
+          "name": "usePageLayout",
+          "via": "shared-33-DtdykY0y.js:ou",
           "kind": "adapter",
-          "original": "g"
+          "original": "Nv",
+          "replacedSha256": "f3f0a014dc0590da7f8907602f672b84e574859cf0b7b27a6aa01af8645e6ea0"
         },
         {
-          "local": "V",
-          "from": "../../source-r4e-plugin-adapters.jsx",
-          "name": "linkifyDescription",
-          "via": "c79fa23ba-C-z2OzjO.js:t",
-          "kind": "adapter",
-          "original": "_"
+          "local": "K2",
+          "from": "./shared-frame.mjs",
+          "name": "memoStore2",
+          "via": "shared-frame-CJdE5Ria.js:vm",
+          "kind": "generated",
+          "original": "K2"
         },
         {
           "local": "r",
           "from": "react/jsx-runtime",
           "name": "Fragment",
-          "via": "vendor-frame-CnSY1sxv.js:Va",
+          "via": "vendor-frame-BckkO60Y.js:Wa",
           "kind": "react"
         },
         {
-          "local": "J2",
-          "from": "../view-tabs/shared-frame-6jtSkIit.js",
-          "name": "memoChanged2",
-          "via": "shared-frame-6jtSkIit.js:$f",
-          "kind": "view-tabs"
-        },
-        {
-          "local": "a",
-          "from": "../../source-r4e-plugin-adapters.jsx",
-          "name": "OverviewButton",
-          "via": "shared-frame-6jtSkIit.js:Eu",
-          "kind": "adapter",
-          "original": "Uu"
-        },
-        {
-          "local": "o",
-          "from": "../../source-r4e-plugin-adapters.jsx",
-          "name": "OverviewOverflowText",
-          "via": "shared-frame-6jtSkIit.js:Gl",
-          "kind": "adapter",
-          "original": "hh"
-        },
-        {
-          "local": "c",
-          "from": "../../source-r4e-plugin-adapters.jsx",
-          "name": "OverviewInfoTip",
-          "via": "shared-frame-6jtSkIit.js:la",
-          "kind": "adapter",
-          "original": "Tk"
-        },
-        {
-          "local": "K4",
-          "from": "../view-tabs/shared-frame-6jtSkIit.js",
-          "name": "memoStore4",
-          "via": "shared-frame-6jtSkIit.js:lp",
-          "kind": "view-tabs"
-        },
-        {
           "local": "l",
-          "from": "../../source-r4e-plugin-adapters.jsx",
-          "name": "OverviewIcon",
-          "via": "shared-frame-6jtSkIit.js:od",
-          "kind": "adapter",
-          "original": "us"
+          "from": "../cds-core/shared-frame.mjs",
+          "name": "CdsIcon",
+          "via": "shared-frame-CJdE5Ria.js:lf",
+          "kind": "shared-graph",
+          "original": "Bs",
+          "linkedSha256": "ce4b3a7adb02a63f9f0282a6c1a8eaab37abb8dcfbfa1de70a58e1a7e34427cb"
         },
         {
-          "local": "K2",
-          "from": "../view-tabs/shared-frame-6jtSkIit.js",
-          "name": "memoStore2",
-          "via": "shared-frame-6jtSkIit.js:sp",
-          "kind": "view-tabs"
+          "local": "u",
+          "from": "../cds-core/shared-frame.mjs",
+          "name": "CdsOverflowTooltip",
+          "via": "shared-frame-CJdE5Ria.js:sd",
+          "kind": "shared-graph",
+          "original": "dm",
+          "linkedSha256": "120428202f981c1bdcd1f17f73bfe0b815f6a2b3d4f9f040b6f46997abf0e4a5"
         },
         {
           "local": "J4",
-          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "from": "./shared-frame.mjs",
           "name": "memoChanged4",
-          "via": "shared-frame-6jtSkIit.js:tp",
-          "kind": "view-tabs"
+          "via": "shared-frame-CJdE5Ria.js:fm",
+          "kind": "generated",
+          "original": "J4"
         },
         {
-          "local": "_",
-          "from": "../../source-r4e-plugin-adapters.jsx",
-          "name": "usePageLayout",
-          "via": "shared-5-Bg6ZMqvt.js:xc",
-          "kind": "adapter",
-          "original": "Qg"
+          "local": "K4",
+          "from": "./shared-frame.mjs",
+          "name": "memoStore4",
+          "via": "shared-frame-CJdE5Ria.js:bm",
+          "kind": "generated",
+          "original": "K4"
         },
         {
-          "local": "y",
-          "from": "../../source-r4e-plugin-adapters.jsx",
-          "name": "useIntl",
-          "via": "vendor-intl-DYfox5Co.js:p",
-          "kind": "adapter",
-          "original": "q"
+          "local": "a",
+          "from": "../cds-core/shared-frame.mjs",
+          "name": "CdsInfoTooltip",
+          "via": "shared-frame-CJdE5Ria.js:Ha",
+          "kind": "shared-graph",
+          "original": "eN",
+          "linkedSha256": "21b24a8318a3446f38819a8f9768766812190885e6450493b1b26bca48b1a7bd"
+        },
+        {
+          "local": "o",
+          "from": "../cds-core/shared-frame.mjs",
+          "name": "CdsButton",
+          "via": "shared-frame-CJdE5Ria.js:Id",
+          "kind": "shared-graph",
+          "original": "Xu",
+          "linkedSha256": "4b503923352833f023d774449ed5511998ad05447beca0f4fd7643da07bba1e3"
         },
         {
           "local": "J0",
-          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "from": "./shared-frame.mjs",
           "name": "memoIsEmpty",
-          "via": "shared-frame-6jtSkIit.js:Zf",
-          "kind": "view-tabs"
+          "via": "shared-frame-CJdE5Ria.js:cm",
+          "kind": "generated",
+          "original": "J0"
         },
         {
           "local": "K0",
-          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "from": "./shared-frame.mjs",
           "name": "memoStore0",
-          "via": "shared-frame-6jtSkIit.js:ap",
-          "kind": "view-tabs"
+          "via": "shared-frame-CJdE5Ria.js:gm",
+          "kind": "generated",
+          "original": "K0"
         }
       ],
       "exports": {
-        "G": "OverviewSectionHeading",
-        "K": "OverviewDescription",
+        "U": "OverviewSectionHeading",
+        "W": "OverviewDescription",
         "X": "OverviewRow",
-        "Y": "OverviewRailGroup",
-        "oe": "OverviewConnectorsAndTools"
-      }
+        "J": "OverviewRailGroup",
+        "ie": "OverviewConnectorsAndTools"
+      },
+      "heldByCdsCore": [],
+      "ownedState": []
+    },
+    {
+      "target": "linkify.mjs",
+      "source": "c79fa23ba-Cua_bx3X.js",
+      "sourceSha256": "fc834b8267f6e22c19c5c3b9475783d52d822b7dab76bb0f5715006a34cb6675",
+      "sha256": "cd985e21378aefb9117f1724cc162aee6dd3ff8bb350b1ed892f2d06341d72b7",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "h",
+          "sha256": "1250704d04a83aae8f469ca6a36f5eed8f269360e6025c35613be55dcbf24b33"
+        },
+        {
+          "name": "g",
+          "sha256": "d3b001f9d4b6a0f0a8b7d378faa552a67178b81827a335c8bfac9d4319b91544"
+        },
+        {
+          "name": "_",
+          "sha256": "7f15faba23aad831b901a27f6aa7eedc54ceb4034c67e24399984c6dfa06070a"
+        },
+        {
+          "name": "v",
+          "sha256": "292026b54f4601a3151c758ec37e17a37c2d5d28a4fd57ced3d3c7d91ff2be1a"
+        },
+        {
+          "name": "y",
+          "sha256": "d9b0769044c72b061bd045ebd3fe4a6b1bb44f3f7936ef00974a1f065702cf7c"
+        },
+        {
+          "name": "b",
+          "sha256": "cf064177adcf1fa4b2667c0ab0ab7d1644483e69f339bf4c676439b14fd2d182"
+        }
+      ],
+      "imports": [
+        {
+          "local": "l",
+          "from": "./link-text.mjs",
+          "name": "linkifyText",
+          "via": "shared-62-DoCqVpIq.js:Jl",
+          "kind": "generated",
+          "original": "fN"
+        },
+        {
+          "local": "a",
+          "from": "./url-safety.mjs",
+          "name": "Bi",
+          "via": "shared-0-CnnWnVrT.js:Aw",
+          "kind": "generated",
+          "original": "Bi"
+        },
+        {
+          "local": "o",
+          "from": "./url-safety.mjs",
+          "name": "dn",
+          "via": "shared-0-CnnWnVrT.js:nT",
+          "kind": "generated",
+          "original": "dn"
+        },
+        {
+          "local": "f",
+          "from": "./link-text.mjs",
+          "name": "fM",
+          "via": "shared-62-DoCqVpIq.js:au",
+          "kind": "generated",
+          "original": "fM"
+        },
+        {
+          "local": "c",
+          "from": "./link-text.mjs",
+          "name": "rC",
+          "via": "shared-62-DoCqVpIq.js:Hf",
+          "kind": "generated",
+          "original": "rC"
+        },
+        {
+          "local": "d",
+          "from": "./link-text.mjs",
+          "name": "qM",
+          "via": "shared-62-DoCqVpIq.js:Zl",
+          "kind": "generated",
+          "original": "qM"
+        },
+        {
+          "local": "u",
+          "from": "./link-text.mjs",
+          "name": "MF",
+          "via": "shared-62-DoCqVpIq.js:Xc",
+          "kind": "generated",
+          "original": "MF"
+        },
+        {
+          "local": "s",
+          "from": "./link-text.mjs",
+          "name": "XM",
+          "via": "shared-62-DoCqVpIq.js:$l",
+          "kind": "generated",
+          "original": "XM"
+        },
+        {
+          "local": "e",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-BckkO60Y.js:Ga",
+          "kind": "react"
+        },
+        {
+          "local": "i",
+          "from": "../cds-core/shared-frame.mjs",
+          "name": "CdsTextLink",
+          "via": "shared-frame-CJdE5Ria.js:Eu",
+          "kind": "shared-graph",
+          "original": "Lg",
+          "linkedSha256": "20a91e878b532b8370df059227e2655eccfc4b86de53563f4a2bf733da437407"
+        },
+        {
+          "local": "m",
+          "from": "./external-link.mjs",
+          "name": "g",
+          "via": "c4acc1503-BXsdaWDM.js:r",
+          "kind": "generated",
+          "original": "g"
+        },
+        {
+          "local": "p",
+          "from": "./external-link.mjs",
+          "name": "y",
+          "via": "c4acc1503-BXsdaWDM.js:i",
+          "kind": "generated",
+          "original": "y"
+        }
+      ],
+      "exports": {
+        "h": "linkifyDescription"
+      },
+      "heldByCdsCore": [],
+      "ownedState": [
+        "_"
+      ]
+    },
+    {
+      "target": "link-text.mjs",
+      "source": "shared-62-DoCqVpIq.js",
+      "sourceSha256": "15a90aabd711c4209050f53ef48b2754661e19b090936fdc6d37346bd4cf4e56",
+      "sha256": "11bf7b2bcdb709af26ab2c4ae024189d86249452a75130a82d79e8e5f6307552",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "rC",
+          "sha256": "10214a3d22cd9fa6c5c1a608a813b0cb34e45839e82c70f622175e5057555164"
+        },
+        {
+          "name": "X",
+          "sha256": "f541a0ce7120bf59a56c233d76659b78c5f2cd476d691647f4bc555fff8e04d3"
+        },
+        {
+          "name": "yj",
+          "sha256": "b39ef72331de8fdb4b48b1c0da951eff6d36ba31206fb47308ac45fc0e9171aa"
+        },
+        {
+          "name": "jj",
+          "sha256": "647665176e554c21b8dc6170367c02f4b803a56cfc4da3704f4a656deed48242"
+        },
+        {
+          "name": "Nj",
+          "sha256": "2ae6d6711f6024a85c525d0a6f2f4702bdafe1b5a8cdac03eda1e665bbc16477"
+        },
+        {
+          "name": "Fj",
+          "sha256": "820f033291d57e3ca0eddaf12e815eec8151b110cc0fdcc101f6c3c220cc2a7b"
+        },
+        {
+          "name": "Ij",
+          "sha256": "ae7e15a76d279d266cbce9dba135263b11c70367be72ba76cfa500f8a1280df8"
+        },
+        {
+          "name": "Lj",
+          "sha256": "ca2434d5af5414d8b26b42d4e303e5a14d7fc8d0226c295abb8dac2306ea5dd8"
+        },
+        {
+          "name": "zj",
+          "sha256": "b37233437ba30ae54230e009883f71ecdade23df1056643a01ff2231969f5a69"
+        },
+        {
+          "name": "Bj",
+          "sha256": "9f51edc765997c2a36bde63ba9b369db8456fa3fe8a7a3133f066d38acb3472a"
+        },
+        {
+          "name": "Vj",
+          "sha256": "43b4c3209caf216f3102f6cb0647bb22d9a5fd9a010bfd902cff33c936b98339"
+        },
+        {
+          "name": "Hj",
+          "sha256": "29e0da29be76b856f2b86af47441d26cfba155660392b9b4a399f2104e2477ef"
+        },
+        {
+          "name": "Wj",
+          "sha256": "5bde506a43d863be954a4c20f90633727cb12b07dd5c788e12fcfae6c579025f"
+        },
+        {
+          "name": "qj",
+          "sha256": "fb7b645c7d3f7881cc8c529c9e814c547c7171a2cf92db3e80c3c248b07c9e24"
+        },
+        {
+          "name": "Jj",
+          "sha256": "3cc77a4a963d0f93f91884f8d8fa9d6b3f7cd2967b13c61d6369074b5330325d"
+        },
+        {
+          "name": "Yj",
+          "sha256": "ef0d05e0b4615d763e2161760e3a583d5d1a5e9beabb195693934e49a528c645"
+        },
+        {
+          "name": "Xj",
+          "sha256": "4352759e83674d5a904df0f85a8868b1cb58923adc69b76838b6303f34d14fa9"
+        },
+        {
+          "name": "Zj",
+          "sha256": "c1ff704f3cae0f7c5cf59703920cdaf7dde130bee00ac016abfa2b61e5857741"
+        },
+        {
+          "name": "Qj",
+          "sha256": "a5646898eaaf8a58e71c2f98bb6429afb63bafc0b964ff5ad2eb30b731eda516"
+        },
+        {
+          "name": "$j",
+          "sha256": "7eceb0150b2ef7f2791fe8185cc566eef5dc04d8d0b591885bdcd8797723f1a4"
+        },
+        {
+          "name": "eM",
+          "sha256": "ad3bd1043ed4447f7a1f15a71c165953b23b876e0a2ce94352839ac0799e1ddc"
+        },
+        {
+          "name": "tM",
+          "sha256": "2b68b6db8ad76b49a93c21c55c4a15f9156aad47e6245822b8aa0fb456ba2619"
+        },
+        {
+          "name": "nM",
+          "sha256": "fd2daf8bd3cccfa0cc7548272442171a90abd6c4757f396bdb3c9e9fcc901b03"
+        },
+        {
+          "name": "rM",
+          "sha256": "331532d164f9b265bb2d66d07469345f55d7baf15d01f3e2437a438bca4c9b4d"
+        },
+        {
+          "name": "iM",
+          "sha256": "fbeecff8443cb8a38e82bcc33c938bc48fe374bf853c6be9a5e7ad0dab8f35dc"
+        },
+        {
+          "name": "aM",
+          "sha256": "b09cb695154205d7506820aa70a32e53faadbbec38dfcd5b5b781105efe7a2d4"
+        },
+        {
+          "name": "oM",
+          "sha256": "c3b4e1e986c55e5f97f14ca8239277258758395936f03377bb1c38d62e46d75b"
+        },
+        {
+          "name": "sM",
+          "sha256": "de94b172d928e8cb70c243b4566987dafe77dae505fc7da65e3704c8ac913ec5"
+        },
+        {
+          "name": "cM",
+          "sha256": "a4fbe460163a942df73d384eb6d7f8fb646afcd9678c51c461c759a2e3f671d6"
+        },
+        {
+          "name": "lM",
+          "sha256": "8e468a430000ce97e991395e8447b0bff9840369ffb65165abc8b18ab631530b"
+        },
+        {
+          "name": "uM",
+          "sha256": "95ad6e5f285b142ff74ebe5886f6eab0acff4de28bb6475472baad298a28591f"
+        },
+        {
+          "name": "dM",
+          "sha256": "4163e18273d672deca5da72c515d2523d26d620e2da89020f8749f0ef02e3c3e"
+        },
+        {
+          "name": "fM",
+          "sha256": "3f59b3074f5df7b419281e51d00f5970506d0b826a274cc0e32ff43a83d8004b"
+        },
+        {
+          "name": "pM",
+          "sha256": "5f95a7b519ccf7d0e5b3c2d212b102282b6cfae4f0d9207f772c315412b5416f"
+        },
+        {
+          "name": "mM",
+          "sha256": "add917bbebcfd0ee5d05a95d60177d45384d479785251c8f9fcc5c49295b1664"
+        },
+        {
+          "name": "hM",
+          "sha256": "2bb7f65c957dab99faab86e06b074a8d5e906bb30cf560927022310c3b7feaab"
+        },
+        {
+          "name": "gM",
+          "sha256": "e7f7a9548067ea83588580210179d772f8695415e4b3290ac4502524409152d1"
+        },
+        {
+          "name": "_M",
+          "sha256": "88b56b035f21bd3ff6a144298b2424be2ca3142a5416d72cab2f0aad00cdcc45"
+        },
+        {
+          "name": "vM",
+          "sha256": "cbe7beccdc40d2859c61e6ad1dd50a21ae8a1140abbd7be37a4a0489fca490ba"
+        },
+        {
+          "name": "yM",
+          "sha256": "d3394ecc8c8ffd59cd0df88418109fc1584caf7b0137c7e099e9ada2e2eb965f"
+        },
+        {
+          "name": "bM",
+          "sha256": "7ce60f09530908606c859f705839df254fd53f89f6d753220a661033907b3ff7"
+        },
+        {
+          "name": "xM",
+          "sha256": "b07452b5c11cd2348a582c0a3cd2a2cb5d44a52407dd63c31c05c87d99e00e19"
+        },
+        {
+          "name": "SM",
+          "sha256": "9e2aca31ac20f25fe0e938b9fe2ba486d51055b5eb080cea1ba4ddacaa118341"
+        },
+        {
+          "name": "wM",
+          "sha256": "4d41cfb8a03ac6b2966458e1c992c1da8f4ab49682515221e85b6cb47727fe6c"
+        },
+        {
+          "name": "EM",
+          "sha256": "22da626d57ea2c92cc48872de33e7843927329a0d33fd5b93785f61bcd3a47d8"
+        },
+        {
+          "name": "OM",
+          "sha256": "16399bc3ebbfb6e29b3dca0777c2a5e532d1e956a9df3ed9f8b4c79277143dba"
+        },
+        {
+          "name": "kM",
+          "sha256": "700f894834e23defe3d94fa9edfef058b06ff9d807ab8e1ac5383a3eed8848b8"
+        },
+        {
+          "name": "AM",
+          "sha256": "707250269c7ce11d2e342ae6011c1fec8c311441bc1e85e08c569c17ff1c9f3b"
+        },
+        {
+          "name": "jM",
+          "sha256": "14d00198a1063a905a299ec6a9eb0098d31f392aa987d943452947c0b9f7a8bf"
+        },
+        {
+          "name": "PM",
+          "sha256": "5c7212d012c588152f80a9f8d1c7aab1f294045d3618457cd21fa8766e20cea0"
+        },
+        {
+          "name": "FM",
+          "sha256": "dffdcfd75a7c75bfbee08f39484e73fd3cc06308b3f560a37504106d2ccf74aa"
+        },
+        {
+          "name": "IM",
+          "sha256": "0951e9bf00e71a91d4c35f966f314f380e42b0e057cc3438bf9635787d52cf81"
+        },
+        {
+          "name": "LM",
+          "sha256": "f22e52d209e241c185a61ab9d80485f0c521bd0d81309f11b9d09361b5d1ac6e"
+        },
+        {
+          "name": "RM",
+          "sha256": "14f13fc41d8b020d1da7ff0aa8f4d02bf458594f09b6f5824dece610b9cd7773"
+        },
+        {
+          "name": "zM",
+          "sha256": "d9a4343b668f4eb72016161a4001fe450ea3d2068a0a8e153bdb21a7a4d56d33"
+        },
+        {
+          "name": "BM",
+          "sha256": "28bda68ca53e5a7455e63c1d83a9a7ac49851673111205e8a2f4c05ded9963c5"
+        },
+        {
+          "name": "VM",
+          "sha256": "fc35cc722656abf15c97336cc53aa7389f8bee24a4cc94e257d892eb01ef9f7d"
+        },
+        {
+          "name": "HM",
+          "sha256": "971859fdcc1d20492e88a16ef5734ea2a6d74ea6df8e58b5ae11e9aafd52eaed"
+        },
+        {
+          "name": "UM",
+          "sha256": "591ace86c48eec5950d9aa1d45db2fa1f64da866a9898df7cc2735e22420694d"
+        },
+        {
+          "name": "WM",
+          "sha256": "5c3fbfa7eea333e0d5bba5f3c4b228118bb4c7183bd817c49d1a8a9503112a6d"
+        },
+        {
+          "name": "GM",
+          "sha256": "6a32b932dad2449d190aa7c2ed307df66541b8ad9748f48b9470a4801f567e05"
+        },
+        {
+          "name": "qM",
+          "sha256": "b0621cefe1e301f3b5203d25939a182a7c9f66e868def72b24b70e7b2a51497c"
+        },
+        {
+          "name": "XM",
+          "sha256": "15ca79a9fd4cc32c92aa6ed49dc515eb407c9159f4d7de56e32e655ef2ef60e7"
+        },
+        {
+          "name": "iN",
+          "sha256": "b2f481d90a53a85b2ba55a516393638f5e1f240f31b8fd51a5829cac6c4f5487"
+        },
+        {
+          "name": "aN",
+          "sha256": "97e47b3cc2257a6567c4739b98172988713ebc2be0aa467da1e791e4e5b0ba4e"
+        },
+        {
+          "name": "oN",
+          "sha256": "64781192c2fba77cfb141c2e854e80253ce6a22ea44b63f0da008dae9e96ebd1"
+        },
+        {
+          "name": "sN",
+          "sha256": "14704a3a973cd09ad97545f518cf1d1f5db2a42ade58a2cd98ad6b6f515c6de7"
+        },
+        {
+          "name": "cN",
+          "sha256": "ffd90ac86d587b015cadf1eaf900ae4db8f59ddb2d6649169f3727f35e3c2dea"
+        },
+        {
+          "name": "lN",
+          "sha256": "ea67e079dea7fd157286e2d2cd77719cf718c840a4225cbe403f743bd086737e"
+        },
+        {
+          "name": "uN",
+          "sha256": "ffbbd0d3b55d53097e3b6e9e39a715af4fa5599541631c338c0c2df6cd27f675"
+        },
+        {
+          "name": "dN",
+          "sha256": "7c0b3edc4fe75a8292cbbb6d051d413c54aa2cdb0c041ef2437ec1f42037b636"
+        },
+        {
+          "name": "fN",
+          "sha256": "eb151580075f95a60556abab53e43c337cf4455c84443b2fb43c79154c46d11c"
+        },
+        {
+          "name": "MF",
+          "sha256": "efb78400eac564e7da112d08d14e95564ebccd4f8a74b00fb80f320b7c407a24"
+        }
+      ],
+      "imports": [
+        {
+          "local": "v",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-BckkO60Y.js:Ga",
+          "kind": "react"
+        },
+        {
+          "local": "C",
+          "from": "react",
+          "name": "Fragment",
+          "via": "vendor-frame-BckkO60Y.js:Xa",
+          "kind": "react"
+        },
+        {
+          "local": "q",
+          "from": "./url-safety.mjs",
+          "name": "lazyValue",
+          "via": "shared-0-CnnWnVrT.js:nS",
+          "kind": "generated",
+          "original": "Tl"
+        },
+        {
+          "local": "be",
+          "from": "./url-safety.mjs",
+          "name": "Ze",
+          "via": "shared-0-CnnWnVrT.js:ET",
+          "kind": "generated",
+          "original": "Ze"
+        },
+        {
+          "local": "CM",
+          "from": "../cds-core/shared-62.mjs",
+          "name": "CM",
+          "via": "shared-62-DoCqVpIq.js#CM",
+          "kind": "shared-graph",
+          "original": "CM",
+          "linkedSha256": "20f4cc88f29ded88fb6b1f49c2c0c563e79bf20c1b9c321fa0b6a79e26531428"
+        },
+        {
+          "local": "TM",
+          "from": "../cds-core/shared-62.mjs",
+          "name": "TM",
+          "via": "shared-62-DoCqVpIq.js#TM",
+          "kind": "shared-graph",
+          "original": "TM",
+          "linkedSha256": "d3d9c385a70042b74299df7eac14522c4fb97bf7ab69a3491e105a681a089a91"
+        },
+        {
+          "local": "fn",
+          "from": "./url-safety.mjs",
+          "name": "on",
+          "via": "shared-0-CnnWnVrT.js:cT",
+          "kind": "generated",
+          "original": "on"
+        },
+        {
+          "local": "rn",
+          "from": "./url-safety.mjs",
+          "name": "sn",
+          "via": "shared-0-CnnWnVrT.js:aT",
+          "kind": "generated",
+          "original": "sn"
+        },
+        {
+          "local": "MM",
+          "from": "../cds-core/shared-62.mjs",
+          "name": "MM",
+          "via": "shared-62-DoCqVpIq.js#MM",
+          "kind": "shared-graph",
+          "original": "MM",
+          "linkedSha256": "05e2d919a7de67429bedf72a397f236f10978c9f1d22e8e03d116385f4adeb8a"
+        },
+        {
+          "local": "NM",
+          "from": "../cds-core/shared-62.mjs",
+          "name": "NM",
+          "via": "shared-62-DoCqVpIq.js#NM",
+          "kind": "shared-graph",
+          "original": "NM",
+          "linkedSha256": "28a2b9391bf4a2e39bb1bc7c0ea00859d19d456d964af3ce764fd06918c15a55"
+        },
+        {
+          "local": "Se",
+          "from": "./url-safety.mjs",
+          "name": "_i",
+          "via": "shared-0-CnnWnVrT.js:Ew",
+          "kind": "generated",
+          "original": "_i"
+        },
+        {
+          "local": "_e",
+          "from": "./url-safety.mjs",
+          "name": "ji",
+          "via": "shared-0-CnnWnVrT.js:Dw",
+          "kind": "generated",
+          "original": "ji"
+        },
+        {
+          "local": "rt",
+          "from": "./url-safety.mjs",
+          "name": "vi",
+          "via": "shared-0-CnnWnVrT.js:Mw",
+          "kind": "generated",
+          "original": "vi"
+        },
+        {
+          "local": "In",
+          "from": "./url-safety.mjs",
+          "name": "yi",
+          "via": "shared-0-CnnWnVrT.js:kw",
+          "kind": "generated",
+          "original": "yi"
+        },
+        {
+          "local": "lt",
+          "from": "./url-safety.mjs",
+          "name": "bi",
+          "via": "shared-0-CnnWnVrT.js:Ow",
+          "kind": "generated",
+          "original": "bi"
+        },
+        {
+          "local": "Sj",
+          "from": "../cds-core/shared-62.mjs",
+          "name": "Sj",
+          "via": "shared-62-DoCqVpIq.js#Sj",
+          "kind": "shared-graph",
+          "original": "Sj",
+          "linkedSha256": "54130f64e99c0eaff64b756cfb863aa2e72ccc2ba2fefc0387175d0cbc169a0f"
+        },
+        {
+          "local": "wj",
+          "from": "../cds-core/shared-62.mjs",
+          "name": "wj",
+          "via": "shared-62-DoCqVpIq.js#wj",
+          "kind": "shared-graph",
+          "original": "wj",
+          "linkedSha256": "e0d11a4fe02ca51fccab3fabddc2134a4664955cd2933e8cc2c9d17572b7b0a7"
+        },
+        {
+          "local": "bj",
+          "from": "../cds-core/shared-62.mjs",
+          "name": "bj",
+          "via": "shared-62-DoCqVpIq.js#bj",
+          "kind": "shared-graph",
+          "original": "bj",
+          "linkedSha256": "5bfe35da993f71c63315adc3162dc94a111374d761a71f7e0becf5702266bdd3"
+        },
+        {
+          "local": "Uj",
+          "from": "../cds-core/shared-62.mjs",
+          "name": "Uj",
+          "via": "shared-62-DoCqVpIq.js#Uj",
+          "kind": "shared-graph",
+          "original": "Uj",
+          "linkedSha256": "08818a3415dcef2fbd17e760f10f5927f7ef3518d915f85657d68026d6df1b6f"
+        },
+        {
+          "local": "Aj",
+          "from": "../cds-core/shared-62.mjs",
+          "name": "Aj",
+          "via": "shared-62-DoCqVpIq.js#Aj",
+          "kind": "shared-graph",
+          "original": "Aj",
+          "linkedSha256": "b144c8707bc105eb14200ae2c684d0cf28f7fdb672139cfd8914a9a5b2e12455"
+        },
+        {
+          "local": "Rj",
+          "from": "../cds-core/shared-62.mjs",
+          "name": "Rj",
+          "via": "shared-62-DoCqVpIq.js#Rj",
+          "kind": "shared-graph",
+          "original": "Rj",
+          "linkedSha256": "9abb2e7611cd3c15d96463ab308aaef380a1d75835a5784bbeca30470f279bc0"
+        },
+        {
+          "local": "H",
+          "from": "./url-safety.mjs",
+          "name": "kr",
+          "via": "shared-0-CnnWnVrT.js:Hw",
+          "kind": "generated",
+          "original": "kr"
+        },
+        {
+          "local": "Mj",
+          "from": "../cds-core/shared-62.mjs",
+          "name": "Mj",
+          "via": "shared-62-DoCqVpIq.js#Mj",
+          "kind": "shared-graph",
+          "original": "Mj",
+          "linkedSha256": "554bd9fd8eb7ba3d41fd211cc6057fddca4c228430370176ecc926402ab8b24c"
+        },
+        {
+          "local": "Pj",
+          "from": "../cds-core/shared-62.mjs",
+          "name": "Pj",
+          "via": "shared-62-DoCqVpIq.js#Pj",
+          "kind": "shared-graph",
+          "original": "Pj",
+          "linkedSha256": "abf85f978a1428b8635c00f18dcf994d9bce9f7020029100b5431028aefb50a7"
+        },
+        {
+          "local": "Gj",
+          "from": "../cds-core/shared-62.mjs",
+          "name": "Gj",
+          "via": "shared-62-DoCqVpIq.js#Gj",
+          "kind": "shared-graph",
+          "original": "Gj",
+          "linkedSha256": "fbdd2864594d923d3c8f630b2ca53ab8003d2f73464a5156e5f42d02b2635587"
+        },
+        {
+          "local": "Kj",
+          "from": "../cds-core/shared-62.mjs",
+          "name": "Kj",
+          "via": "shared-62-DoCqVpIq.js#Kj",
+          "kind": "shared-graph",
+          "original": "Kj",
+          "linkedSha256": "5e7e770ee77031de67c762b1c5d70f80d2e4c82f43f961855e4e5ea87c4f1d2f"
+        },
+        {
+          "local": "kj",
+          "from": "../cds-core/shared-62.mjs",
+          "name": "kj",
+          "via": "shared-62-DoCqVpIq.js#kj",
+          "kind": "shared-graph",
+          "original": "kj",
+          "linkedSha256": "3ea6614b3ff5eaf5a6074e4b3f1228c0310d862718ea191d9c542de7433a271a"
+        },
+        {
+          "local": "Dj",
+          "from": "../cds-core/shared-62.mjs",
+          "name": "Dj",
+          "via": "shared-62-DoCqVpIq.js#Dj",
+          "kind": "shared-graph",
+          "original": "Dj",
+          "linkedSha256": "fedb6fd23c4d76ba1822122543a2d1c982eff21d218a8adbe6beff4ae5b30f25"
+        },
+        {
+          "local": "vn",
+          "from": "./url-safety.mjs",
+          "name": "en",
+          "via": "shared-0-CnnWnVrT.js:eT",
+          "kind": "generated",
+          "original": "en"
+        },
+        {
+          "local": "yr",
+          "from": "./url-safety.mjs",
+          "name": "$e",
+          "via": "shared-0-CnnWnVrT.js:wT",
+          "kind": "generated",
+          "original": "$e"
+        },
+        {
+          "local": "ur",
+          "from": "./url-safety.mjs",
+          "name": "ln",
+          "via": "shared-0-CnnWnVrT.js:sT",
+          "kind": "generated",
+          "original": "ln"
+        }
+      ],
+      "exports": {
+        "fN": "linkifyText",
+        "fM": "fM",
+        "rC": "rC",
+        "qM": "qM",
+        "MF": "MF",
+        "XM": "XM"
+      },
+      "heldByCdsCore": [
+        "$j",
+        "AM",
+        "BM",
+        "Bj",
+        "EM",
+        "FM",
+        "Fj",
+        "HM",
+        "Hj",
+        "IM",
+        "Ij",
+        "Jj",
+        "LM",
+        "Lj",
+        "Nj",
+        "OM",
+        "PM",
+        "Qj",
+        "RM",
+        "SM",
+        "VM",
+        "Vj",
+        "Wj",
+        "X",
+        "Xj",
+        "Yj",
+        "Zj",
+        "_M",
+        "aM",
+        "bM",
+        "cM",
+        "dM",
+        "eM",
+        "fM",
+        "gM",
+        "iM",
+        "jM",
+        "jj",
+        "kM",
+        "lM",
+        "mM",
+        "nM",
+        "oM",
+        "pM",
+        "qj",
+        "rM",
+        "sM",
+        "tM",
+        "uM",
+        "vM",
+        "wM",
+        "xM",
+        "yM",
+        "yj",
+        "zM",
+        "zj"
+      ],
+      "ownedState": []
+    },
+    {
+      "target": "url-safety.mjs",
+      "source": "shared-0-CnnWnVrT.js",
+      "sourceSha256": "eb5fb89d8b47627c28969bd1df41f25a49a3e1d6ed91c5af2d980d5847d78ae1",
+      "sha256": "4ee59a244c960b0a514d5b9612683e2e8093db502a1de817cfae4b2736b7235d",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "Ze",
+          "sha256": "2c470189d70f5054c85110af6ab4c4e288bd96dcee96392afe32ef7d078ddc38"
+        },
+        {
+          "name": "Qe",
+          "sha256": "591a6989ed9c09f1c1f7092ab794f42043772fddcfc76790a0eb98da991c056b"
+        },
+        {
+          "name": "$e",
+          "sha256": "b97744310a5cf283c47a805c227a25de31825d7bc7a1594747e06b316c2da38e"
+        },
+        {
+          "name": "vt",
+          "sha256": "a63752cad59741ca3d9b3fa49d1f6f65908591e8b8a0edd722cbea06521354c2"
+        },
+        {
+          "name": "Tt",
+          "sha256": "b066237dad6eee66d356cb4b0144806306179b8c835ae3feab0689072cea113e"
+        },
+        {
+          "name": "Dt",
+          "sha256": "c1ed764cf8bfbc466b2539a8d0b8821c304c2bf7255099137354317f2c5e57c4"
+        },
+        {
+          "name": "j",
+          "sha256": "b2681c354e7f794249921a5095ba29f96136ba9653c20cc1187730b0bc10ca9e"
+        },
+        {
+          "name": "en",
+          "sha256": "de858e281817f24756897f74ff3e6d461a54a3859918d946640c162260c06798"
+        },
+        {
+          "name": "nn",
+          "sha256": "d9f871e2e02219dc4807a60fbd8698f0e160391dbc307ba28127f9b6aecb905f"
+        },
+        {
+          "name": "an",
+          "sha256": "558b1a44f9b08bb21db62aaa532a13746e887861b92fc5fe1e805e69f2958601"
+        },
+        {
+          "name": "on",
+          "sha256": "5b2f4cc2ede647a1e6f08447c029202fbf3d6a6ed4bd50f406cb52dd85e9cc28"
+        },
+        {
+          "name": "sn",
+          "sha256": "efdc7cb7e034af275c88b19b4c60791dfb3c5d23f6d1bd659ac147419c6bec45"
+        },
+        {
+          "name": "cn",
+          "sha256": "efe8a5fd10b30a8049a22adf73d5ccdb8822dbaac3a72fe4e2e4484a3b7ac36f"
+        },
+        {
+          "name": "ln",
+          "sha256": "bdb367b3b07765d732740b582bed490acdd2ac66981f853865b8365a1bea09aa"
+        },
+        {
+          "name": "un",
+          "sha256": "f5fbf1f542f92a721bb279e2fbe8cb63956ed371f7934fc241a54ebcc4279fa0"
+        },
+        {
+          "name": "dn",
+          "sha256": "3cbd7a7326b5dcb295b1d3e46d2bb658b873243f862c148dc1061f4bf2b471ac"
+        },
+        {
+          "name": "fn",
+          "sha256": "f3f9852df8a776f53b1fa050e0c943fc2fd49e0a7aa3369a2bcfe702e22a58d7"
+        },
+        {
+          "name": "pn",
+          "sha256": "51980e66665b9e2e597bf4de21a4a5667d25782ef823dda6e17626c644f2dafa"
+        },
+        {
+          "name": "gn",
+          "sha256": "868b5985377433af81a8c83e9eb87fa18c75c75a3ad193a2e35ad658ddf9d769"
+        },
+        {
+          "name": "_n",
+          "sha256": "6204247c8cb796ce3f6557b14fad1443f29570c79c646ac03346186984fc6985"
+        },
+        {
+          "name": "vn",
+          "sha256": "14545ad4a7c0ad6ee9ed124c8aa2f4adc1edeb0fc46adf8a5156e809cf9ccb5a"
+        },
+        {
+          "name": "yn",
+          "sha256": "5515601325a628bda44a32329b2fa93aa4dc58699f01e9f3e8df50caa6fb80c9"
+        },
+        {
+          "name": "bn",
+          "sha256": "fa747d7f7a62a8676c364f0bdaccc962f9f42c8a03250449a77358332e2e7d7e"
+        },
+        {
+          "name": "xn",
+          "sha256": "c523424cb37788c4afe0c7ac71a09639971aa2d7e3356fcf99d6d0a801f8c7f6"
+        },
+        {
+          "name": "Sn",
+          "sha256": "765975e5fa3205dcb9459d837bb100ea6534b65726e7ea3625765a90627942cd"
+        },
+        {
+          "name": "Cn",
+          "sha256": "b6a27dbce06a5b13f56e52cf4c1d377cfd18cebbad82408e25795ba7d08859f8"
+        },
+        {
+          "name": "wn",
+          "sha256": "ea5398c89eeec3b80c74ae3b79875d147a62ad7e35df40ca401842b47629f00e"
+        },
+        {
+          "name": "Tn",
+          "sha256": "7b2c6b417328717a22a1f5f6283151f83cdd19f87ffb9fa7077e713ec66e7aa7"
+        },
+        {
+          "name": "En",
+          "sha256": "4a41c1b6ac6333833c3f103c93e459cf37f7aac0d44b5fb9fddc33545d54eeaa"
+        },
+        {
+          "name": "Dn",
+          "sha256": "e54313a28e36c67f31f33b0869f7165f2d8ff7746348cb0095736380b76d6311"
+        },
+        {
+          "name": "On",
+          "sha256": "a4f7a8b5cca8a149471eb6464445e492edb95edce60ab03cd81b41eee09849fc"
+        },
+        {
+          "name": "An",
+          "sha256": "41004bf71a8eed5caeb214166fe0a9b2a7c9ba5fd4f8c7ce5ca6b0c0ca40cce5"
+        },
+        {
+          "name": "jn",
+          "sha256": "ea1f2ef76f9638b7d5a2bde28ffe010ad6589df3760cfb61739e66ffc46cb6e8"
+        },
+        {
+          "name": "Mn",
+          "sha256": "1c1a31ce9e6f1e94061afdf3c4122026d4e66dcc6e86006fc17196f6b51b7cac"
+        },
+        {
+          "name": "Nn",
+          "sha256": "b87d19c691fae3560837155d3ba741a50e05faa369176e862c248b28a5acc296"
+        },
+        {
+          "name": "Pn",
+          "sha256": "fb06d261ed78d8f0c8c03791c4f3db57b16c0204e3de0b69e1848ddf51a56abb"
+        },
+        {
+          "name": "Fn",
+          "sha256": "b2ad2e8ae90ff6bf92f0ce6a7ff845413341c44efbeec3016f6ca76e28013ce2"
+        },
+        {
+          "name": "In",
+          "sha256": "21233ded8107465a8b7ed80d3da442f1942d009a1401bd00de90ff3121447d46"
+        },
+        {
+          "name": "Ln",
+          "sha256": "8d067245f9b2b385723007b270376e5f893498be0d12a8ffdb52aa863bf92b20"
+        },
+        {
+          "name": "Rn",
+          "sha256": "f78e3872dc27da8edd4e62301dc3042e262cb1c38f1588d5326f37b22a56bf9a"
+        },
+        {
+          "name": "zn",
+          "sha256": "e0a2fc774c9e85dc17a4510d1356847440410dec436d4b873bfb2305a1b74f76"
+        },
+        {
+          "name": "Bn",
+          "sha256": "e33d71f4747bfd4529831251e8b573baa0f302de6c9f31c6baf1837816659e42"
+        },
+        {
+          "name": "Vn",
+          "sha256": "73e2c5a1398bde251f70b6321dc166eb14bb4af861263505d770d8fa8f54ad8a"
+        },
+        {
+          "name": "Hn",
+          "sha256": "c0fd93a88a37e1d1e55240d46fd2d6b43b8c32e9179ebd120f50f0addab9bdf3"
+        },
+        {
+          "name": "Un",
+          "sha256": "b544c8cee3bb1fa5ea25f4aaa89fed0a22b78df2a61d0da1abf613653fe16cf4"
+        },
+        {
+          "name": "Wn",
+          "sha256": "a7837a1f105e05369b9581081d2d096f708e64c3257e754b3f5943b2dd26544b"
+        },
+        {
+          "name": "Gn",
+          "sha256": "43e36b8b3e1b0191a3b8c29c74f565d9eeb36fb753708d1e5057f3d133a71ec7"
+        },
+        {
+          "name": "Kn",
+          "sha256": "81c3a78c93f4e1b9c2f5f1b83c96a3e0f85bc960a587fd3dd9795e2019262128"
+        },
+        {
+          "name": "qn",
+          "sha256": "5bba8d898ac2ec130a7a05d300e0252e8bb42d8eb740d37dbf5ab332c4efe365"
+        },
+        {
+          "name": "Jn",
+          "sha256": "3c58395dcfc476b5740f01f5d219deb9257a842a44914075f58c0682ca851b68"
+        },
+        {
+          "name": "Yn",
+          "sha256": "071ce88427944596eb76099072d17db23761debc31fa077740b08afe88ad7172"
+        },
+        {
+          "name": "Xn",
+          "sha256": "8c146af9041c260abc6641f97f3a24e718ef0e748260e322cb946ecee9e3994d"
+        },
+        {
+          "name": "Zn",
+          "sha256": "ce0670cb377a3cb9fbf3635dd2b037da03931e114e02f068ed9b530b39d7febf"
+        },
+        {
+          "name": "Qn",
+          "sha256": "37dd4a1b7dedb20f6e558a1921665b5e084d9d545a6f09492ac5e8aef2c75a06"
+        },
+        {
+          "name": "$n",
+          "sha256": "f4d2d8d133099bb428184d306895e0e6c13c7dcfa516741667e6cdd46808d5ff"
+        },
+        {
+          "name": "er",
+          "sha256": "ccd2be503e97c3b73dc54b9c5e90bbe5b04f5a64fc076c19bfb9701ee827fe89"
+        },
+        {
+          "name": "tr",
+          "sha256": "97ee6b9fb2affb5e3c315a13affc27c909961740fb1008ef7b9a45cfe15b5473"
+        },
+        {
+          "name": "nr",
+          "sha256": "54fdc5c1866defa98af9881f0d96ea5662f4fd6ddba83bd889a0d8a4c5c10dbd"
+        },
+        {
+          "name": "rr",
+          "sha256": "4bdd0006c99f7ca2ca1543446db0621d9d51b0851be85b30e1e22efad86e0632"
+        },
+        {
+          "name": "ir",
+          "sha256": "ac786f5a359e79a29db5f0149b8026ef30989f5c8ad87b3756829d4285d7aa1d"
+        },
+        {
+          "name": "ar",
+          "sha256": "e81729b02d5b49918b27fbe1e4f1a54e2abd8480f03222e8191960284dfeffa5"
+        },
+        {
+          "name": "or",
+          "sha256": "a8c1c96fa433996d8d2ab35c392a3aaff7633c670d7728b60dd87ae94ee73690"
+        },
+        {
+          "name": "sr",
+          "sha256": "dcebad81531808912dec0df3f3c6bf2db28defe8f0a8e7462b24c8a51600613f"
+        },
+        {
+          "name": "cr",
+          "sha256": "7558c905420d626efa6b45e6b8e8682c9a704ea51c227e96a129c8b922f1b1e9"
+        },
+        {
+          "name": "lr",
+          "sha256": "ce9245095fba2ca7574fe3d5ad3c43ae193e7b7fe4639560214f30085450ac22"
+        },
+        {
+          "name": "ur",
+          "sha256": "5658797f4a58be9cefe6cb1bf59e2ba15c693b151000e71665aaea721e6d7253"
+        },
+        {
+          "name": "gr",
+          "sha256": "bde568a33af0d3e1676d8048c7f84eacdc7300fa5a3aa823efcaf9f7ecdfc68d"
+        },
+        {
+          "name": "vr",
+          "sha256": "31ddacde63bc6423265d54b700133adb265f9de07030f6602dd61ccb36fe7608"
+        },
+        {
+          "name": "yr",
+          "sha256": "2a05c980f15f3018acfa5ed9da6535ebe45b666a0e9d9fbe36a003e2ca7a179c"
+        },
+        {
+          "name": "xr",
+          "sha256": "94dee9b3584187dd645b0ec2f844f06747680ed07bb36bd61b56bb192050d18b"
+        },
+        {
+          "name": "Or",
+          "sha256": "5531aeaa8b2b5d342905ba4ba1352c5087b45f89a148a90749788e00099d7cad"
+        },
+        {
+          "name": "kr",
+          "sha256": "a88d2d5239a440a9bed9de6a41e880f5b711781c38a5997efd4de9df63997db5"
+        },
+        {
+          "name": "Yr",
+          "sha256": "6a312b56983f6b7b2b913448a9837748b05f832bb2c7e2e16fd3643aa760925a"
+        },
+        {
+          "name": "Xr",
+          "sha256": "dc81b8b788cb67897992e217067b1d6d8db807bb21804fe981e3a6d27edf9167"
+        },
+        {
+          "name": "Zr",
+          "sha256": "36426a51ceb414dce5828e7fbe31880e9512e2a4710d2749bf5f8e514a61acd0"
+        },
+        {
+          "name": "$r",
+          "sha256": "0388f99047cb5dbd6d3f531386279130edd0f2b18f9a031d5d13521059a6a49c"
+        },
+        {
+          "name": "ei",
+          "sha256": "c3208028428bbdd1c4b7d8723c8ac401058e1f87f2d12f9ca946c32a7145bb89"
+        },
+        {
+          "name": "ti",
+          "sha256": "c0268b11cba86a416ced5ae3e3b9a2fea8d7d55e428b1f3dc827f0617888c74e"
+        },
+        {
+          "name": "ni",
+          "sha256": "bdfaf0b447b3cca040a3483e92251505272276abdbb6c6b69ccc0b454cc62af3"
+        },
+        {
+          "name": "ri",
+          "sha256": "fff27638065eb09a05baad1b2b8e6963a7e593127cf059fb557d851fbf492667"
+        },
+        {
+          "name": "ai",
+          "sha256": "fa6eaba829505347a787d7101b8101e8a74e0c20174511e106618b2e29d86385"
+        },
+        {
+          "name": "oi",
+          "sha256": "25d9bab42276f84f5308b4232d6e923b6dda87ae3cf8dd308e98642f8a276754"
+        },
+        {
+          "name": "si",
+          "sha256": "022a0293e0dbc46fbc46a3b73aed1e9acdc698ec9a528e7ba70676657b0b3de8"
+        },
+        {
+          "name": "ci",
+          "sha256": "d8b6c10203171bc963103f285c9da62b0c4577951a54c7716e13cea195e6529b"
+        },
+        {
+          "name": "li",
+          "sha256": "a4d284a4d1c08629a396203b5c6c98d9eadfde8b4f61764bea076441f42d0182"
+        },
+        {
+          "name": "ui",
+          "sha256": "13fa4a209718a2cb2e7f617d707f04cc0f428bc8fb852ce092046bf3038782a2"
+        },
+        {
+          "name": "di",
+          "sha256": "d9d8b966b5666a10b5506ad501cbc55d2be23851c22644e1d7dee4538ce5b596"
+        },
+        {
+          "name": "fi",
+          "sha256": "915cc7628fe7f70b79999fbca79ecbb77b2d0c15eb450c1c3149d1cb174333b6"
+        },
+        {
+          "name": "pi",
+          "sha256": "3105438ad51d3727bd73c4bbf5b1e6190b36344ecf9a03f3766e62fd4dfa25aa"
+        },
+        {
+          "name": "mi",
+          "sha256": "a84da91d608f44dc48afb07ee417e8d86dc1ddd97539382d1367ef889cb675ec"
+        },
+        {
+          "name": "hi",
+          "sha256": "3185691f90e3993e31f8b39d2669110c89605dfca59af6144cf222c31014b582"
+        },
+        {
+          "name": "gi",
+          "sha256": "5ee312d880045eb2249bfa1da96c7737e862b894a71519347f2c858847dc2d2f"
+        },
+        {
+          "name": "_i",
+          "sha256": "1bcf01f0cbc938aa162392f04dd2972b3b9ba49ee5e761051f66e785253901f4"
+        },
+        {
+          "name": "vi",
+          "sha256": "4c4bd4486c5b406609f20c356fe8df271343c65d9d7dbd7a68ce69583d6eee88"
+        },
+        {
+          "name": "yi",
+          "sha256": "c95e139852cfa6ab03bd0d33de0034842d15d1406ef95629b464d875e4ec3092"
+        },
+        {
+          "name": "bi",
+          "sha256": "aa472cb1a6b353ffaf200f308d75c5a0ad648110e6b826f51910e9d2d9c8cdf1"
+        },
+        {
+          "name": "xi",
+          "sha256": "2650799870bc49181d8707b6acd08d9e10b4087cbe6a17a2dfdf284cb1b84cb4"
+        },
+        {
+          "name": "Si",
+          "sha256": "a0fd6d81465e34a397b59ea741d76034833ad78a1384e36f148765649be2c6cb"
+        },
+        {
+          "name": "Ci",
+          "sha256": "d0add4277eda81075e3a2d3668013ada9605542310342bafdbc10618078623df"
+        },
+        {
+          "name": "wi",
+          "sha256": "95a074170aac0e2a2969630193ea03df8b38113d607db49853bff8b5de353469"
+        },
+        {
+          "name": "Ti",
+          "sha256": "362f1781b23a44c97973d483cfc07e4089648d6116703f813671b745ce030144"
+        },
+        {
+          "name": "Ei",
+          "sha256": "6213a69e263b50fa9e9dba7795025f6ab703a6c5087061e3dd11d01c433ae9bd"
+        },
+        {
+          "name": "Di",
+          "sha256": "dc58209e996ae2deb7bf6130d5d660e7d299ee34129f261935dedef94861eea6"
+        },
+        {
+          "name": "Oi",
+          "sha256": "28544d79c104358edeee2c0f14a4aaccc56ed2915ac37ade0d70cba3e1c89260"
+        },
+        {
+          "name": "ki",
+          "sha256": "26b2f426d4cfd78e662ebb70788c9fd58490b05aca7c908b615ef2be775e3dd9"
+        },
+        {
+          "name": "Ai",
+          "sha256": "e1f4579cc70ab0b9ef0ceb8a6a08ccf7f3e3c358cc87b58788bcf1c699d222e5"
+        },
+        {
+          "name": "ji",
+          "sha256": "96e345bfc6a9dc078dbcad0465e7f8f489cc764a452695313568bda7356d4d70"
+        },
+        {
+          "name": "Mi",
+          "sha256": "4c7e4c46a75cc2f26e1319ec3415538bde52fdcb41c6cead9fb5868c32796eac"
+        },
+        {
+          "name": "Ni",
+          "sha256": "bb5b933043ba09adb9c52dc3254c7013641d9664c308792ce4e4b7b370a55bf0"
+        },
+        {
+          "name": "Ri",
+          "sha256": "e98c0ce30af9cfe9f69ee3343ade53179d98e615d6a058dcc9f8003721bab1eb"
+        },
+        {
+          "name": "zi",
+          "sha256": "166d70ec2c34f5dcb3f2cd4b15e907a2b68c2d7824d8edee147fb56353ca5f90"
+        },
+        {
+          "name": "Bi",
+          "sha256": "ee001043333e05b5aca4424e068904f9efd6323b5180bd34b26cff89876dd417"
+        },
+        {
+          "name": "Tl",
+          "sha256": "080c8b46ca6e0c49eecb52b81d5cccf28de3e9c15a1747d40107def4bd636cb2"
+        },
+        {
+          "name": "lF",
+          "sha256": "fc8ddc9fcdd86b2b8c03705ef1e8fe7560e9be417429ca64da5485e5fce1cf6b"
+        },
+        {
+          "name": "uF",
+          "sha256": "dc78aca58ba80656239d8708d1f9b1d46e67c5947b70078c74aa37a6b57c9f37"
+        },
+        {
+          "name": "dF",
+          "sha256": "c4ea7fa5c582c189c5bd5879dab2e7f0052f715b39f51406541c1f1f3d5ac81d"
+        },
+        {
+          "name": "bF",
+          "sha256": "4cb19792599a0ef9b54c15de66c9704b6b73e98e00b228ddcfecd385fe97e6a7"
+        },
+        {
+          "name": "MF",
+          "sha256": "da084a69be6688d47feaa4c5ee7356ecfcf9076a454893be7486c01b3bc109dc"
+        },
+        {
+          "name": "q",
+          "sha256": "8f72111716956eab84c7ace635435e724888cfe9e36d9aa52700419f39e6ba7b"
+        },
+        {
+          "name": "NF",
+          "sha256": "dba678fcdfe67e9c8409f7a45d5646df9aa30dcc758dfb20b4be88da050404de"
+        },
+        {
+          "name": "PF",
+          "sha256": "ac591819ce14d88fa255c9ef4f88dcd3e0954e1882201242a91850033a99b659"
+        },
+        {
+          "name": "FF",
+          "sha256": "b65432e31cef8774f703a20e1df19a3acf9da225375c2de34e7cf96a26fff614"
+        },
+        {
+          "name": "RF",
+          "sha256": "bdeab7cbfdc5a2cbe356b2a71e9e9fba9e6fce9c50f12a0f82e63f45b172c74e"
+        },
+        {
+          "name": "zF",
+          "sha256": "643323a6b41ed4b7e1a2f794212d4587881c9c1be4d696ce20a59ffacfd5674f"
+        },
+        {
+          "name": "BF",
+          "sha256": "bb7d81fc16710ac8d5dd4415ae360751ef3ef7a5823faa6ae2d561a51656111a"
+        },
+        {
+          "name": "VF",
+          "sha256": "8687c9363c524266b18a5c23451abc4463344fd9ee390157190337f8ab9d8f0e"
+        },
+        {
+          "name": "JF",
+          "sha256": "290e2a80e31b80890da8a1ba2cee904e85a0ac03d0b3263735af53a77594c71e"
+        },
+        {
+          "name": "YF",
+          "sha256": "41803c1e72d8a47abedd5d58e3d3b455591d54ade51e73a1d88835365a8f17e2"
+        },
+        {
+          "name": "XF",
+          "sha256": "94639d16f8ad651e32f038f7ca770c3b016c36a7920a3f8619904558408f25a9"
+        },
+        {
+          "name": "QF",
+          "sha256": "e992d392d4e593b582f7fd8e3c55b35b0fee20526c13fbca7dbac00e7f57a60d"
+        },
+        {
+          "name": "$F",
+          "sha256": "b824c69eafc4e25fe005bee30d3fcf99581eda530f55886b9504dc81f7659a19"
+        },
+        {
+          "name": "eI",
+          "sha256": "a124592b8209198d1484347994278ad663bed567ed185f64a35462fa30fe4d4e"
+        },
+        {
+          "name": "tI",
+          "sha256": "d82d3c9701c4385dc9839dac010549c3b33b5ee3d93ae94ec403047b22cbc332"
+        },
+        {
+          "name": "nI",
+          "sha256": "f811c95ac9490233baf64f10e6c9104bf3043db36b4e9dde5f878443ed01a086"
+        },
+        {
+          "name": "rI",
+          "sha256": "9286b34715902ffef2197c860a6ce2e73f01e9330b30acabd1211049d0e93a44"
+        },
+        {
+          "name": "iI",
+          "sha256": "ba4e4e845ecd51354b95d4139cf2ca596fd8cd2d55b495c5e182c1eafe51277f"
+        },
+        {
+          "name": "aI",
+          "sha256": "c7c2ee745d9a202c76f11686281ab8c03ef3d48e1ab4a86e8e980876c4cef785"
+        },
+        {
+          "name": "oI",
+          "sha256": "3347fec5bc252f48e87fe0b77cc0a94e34ac2df114bd13ddc1b2f51ed1e5f011"
+        },
+        {
+          "name": "sI",
+          "sha256": "3bfddf3c0c7199719ee252ade8aeb5d94902702f82ae709221af05204266318b"
+        },
+        {
+          "name": "cI",
+          "sha256": "c5e29f6be6a179921196eef407a37afe1f5b3189e06d3b29a57cfd2f98fcdeee"
+        },
+        {
+          "name": "_I",
+          "sha256": "f5c74e7ddea782a24ec01a34f71cd99727c2d9d3894b7c37ea6f33338ec8124e"
+        },
+        {
+          "name": "vI",
+          "sha256": "b21538ff439ce368ac113171a46cfa9725fccb6b317cb38f5f3d0ea732ffe8eb"
+        },
+        {
+          "name": "yI",
+          "sha256": "333d55b833fd5850da76d9e9f80fe98cfd415eec3179618aee50d24292444c74"
+        },
+        {
+          "name": "CI",
+          "sha256": "694b1826d887cb7c4491217a841642f8c5d21649efb2784e29a8374ead7c5d86"
+        },
+        {
+          "name": "wI",
+          "sha256": "57a9e9059a17a63eb16c1d1b830ebe5f65d61406813769bd9cbd25652affb4f0"
+        }
+      ],
+      "imports": [
+        {
+          "local": "tn",
+          "from": "../cds-core/shared-0.mjs",
+          "name": "tn",
+          "via": "shared-0-CnnWnVrT.js#tn",
+          "kind": "shared-graph",
+          "original": "tn",
+          "linkedSha256": "b8946f8e5550de2713f7c9f9f392a8e93f3c5b7a5ffba331d41ff201f0d3bf79"
+        },
+        {
+          "local": "rn",
+          "from": "../cds-core/shared-0.mjs",
+          "name": "rn",
+          "via": "shared-0-CnnWnVrT.js#rn",
+          "kind": "shared-graph",
+          "original": "rn",
+          "linkedSha256": "850f5f9ae454691b038d49a2ab1f68d3d631c00c2bd81864686f6b5aeeac0bdf"
+        },
+        {
+          "local": "kn",
+          "from": "../cds-core/shared-0.mjs",
+          "name": "kn",
+          "via": "shared-0-CnnWnVrT.js#kn",
+          "kind": "shared-graph",
+          "original": "kn",
+          "linkedSha256": "ff96cb1d6b2600589d7025044fba0790d0425546f1a04c97fd2a35fe89e87f45"
+        },
+        {
+          "local": "yt",
+          "from": "../cds-core/shared-0.mjs",
+          "name": "yt",
+          "via": "shared-0-CnnWnVrT.js#yt",
+          "kind": "shared-graph",
+          "original": "yt",
+          "linkedSha256": "6763727594fb5a0a84bcb8e8d37ba3cead38a7a9150d59071864d5a14c389e0d"
+        },
+        {
+          "local": "bt",
+          "from": "../cds-core/shared-0.mjs",
+          "name": "bt",
+          "via": "shared-0-CnnWnVrT.js#bt",
+          "kind": "shared-graph",
+          "original": "bt",
+          "linkedSha256": "5e6c1c2495bd5a3495ef22ddaaea1f4d98ba8d28bf42318fcaf38c7a8f3b1034"
+        },
+        {
+          "local": "xt",
+          "from": "../cds-core/shared-0.mjs",
+          "name": "xt",
+          "via": "shared-0-CnnWnVrT.js#xt",
+          "kind": "shared-graph",
+          "original": "xt",
+          "linkedSha256": "a86f0b11fda16686996180e88759c0911ce6b09b53764ec99153a6080495d136"
+        },
+        {
+          "local": "c",
+          "from": "./preload-helper.mjs",
+          "name": "e",
+          "via": "preload-helper-BBljBeZo.js:n",
+          "kind": "generated",
+          "original": "e"
+        },
+        {
+          "local": "hn",
+          "from": "../cds-core/shared-0.mjs",
+          "name": "hn",
+          "via": "shared-0-CnnWnVrT.js#hn",
+          "kind": "shared-graph",
+          "original": "hn",
+          "linkedSha256": "6d79fdcc08621413e181daa5b656c03d709f1e1528bdf813c63ab5e5edfdf8dc"
+        },
+        {
+          "local": "mn",
+          "from": "../cds-core/shared-0.mjs",
+          "name": "mn",
+          "via": "shared-0-CnnWnVrT.js#mn",
+          "kind": "shared-graph",
+          "original": "mn",
+          "linkedSha256": "4beae093892261deec372e16dacb10840e2b5a42c933baeccd4acd15c66761ae"
+        },
+        {
+          "local": "Wr",
+          "from": "../cds-core/shared-0.mjs",
+          "name": "Wr",
+          "via": "shared-0-CnnWnVrT.js#Wr",
+          "kind": "shared-graph",
+          "original": "Wr",
+          "linkedSha256": "dc645360f7213b5766ee261701e726e1e8a94912b98cd76ca2adc73cc2271ec3"
+        },
+        {
+          "local": "eee",
+          "from": "../cds-core/shared-0.mjs",
+          "name": "eee",
+          "via": "shared-0-CnnWnVrT.js#eee",
+          "kind": "shared-graph",
+          "original": "eee",
+          "linkedSha256": "0bd615c9da06d55ea87edd03419961350614298e9061370c067e1079a18dcb6c"
+        },
+        {
+          "local": "Ur",
+          "from": "../cds-core/shared-0.mjs",
+          "name": "Ur",
+          "via": "shared-0-CnnWnVrT.js#Ur",
+          "kind": "shared-graph",
+          "original": "Ur",
+          "linkedSha256": "7c35bf18fcc158854e49f08017968a3bc78c1226dfe12ae29e344c47ecf9b439"
+        },
+        {
+          "local": "Gr",
+          "from": "../cds-core/shared-0.mjs",
+          "name": "Gr",
+          "via": "shared-0-CnnWnVrT.js#Gr",
+          "kind": "shared-graph",
+          "original": "Gr",
+          "linkedSha256": "568b62ce6fe0dc61a209b7d67fd152005b4bfd35079c7c3eebc31508e1abce7b"
+        },
+        {
+          "local": "Kr",
+          "from": "../cds-core/shared-0.mjs",
+          "name": "Kr",
+          "via": "shared-0-CnnWnVrT.js#Kr",
+          "kind": "shared-graph",
+          "original": "Kr",
+          "linkedSha256": "4827d581e85923e8c829661381b8455426f4a62035fe9c010081f7a284991ac1"
+        },
+        {
+          "local": "qr",
+          "from": "../cds-core/shared-0.mjs",
+          "name": "qr",
+          "via": "shared-0-CnnWnVrT.js#qr",
+          "kind": "shared-graph",
+          "original": "qr",
+          "linkedSha256": "0191c0746c90e0057cc85c229239ea6bc8a85e4a332524d9184a1c32ec5d9ced"
+        },
+        {
+          "local": "br",
+          "from": "../cds-core/shared-0.mjs",
+          "name": "br",
+          "via": "shared-0-CnnWnVrT.js#br",
+          "kind": "shared-graph",
+          "original": "br",
+          "linkedSha256": "545c2fbcf42af9e73307a29c136abca551e2f1d34341966c6408677ffedf9094"
+        },
+        {
+          "local": "_r",
+          "from": "../cds-core/shared-0.mjs",
+          "name": "_r",
+          "via": "shared-0-CnnWnVrT.js#_r",
+          "kind": "shared-graph",
+          "original": "_r",
+          "linkedSha256": "66db43f55532815a399fab1e46151eff1b4854d1af4a47b6b1e52e2f23605788"
+        },
+        {
+          "local": "Jr",
+          "from": "../cds-core/shared-0.mjs",
+          "name": "Jr",
+          "via": "shared-0-CnnWnVrT.js#Jr",
+          "kind": "shared-graph",
+          "original": "Jr",
+          "linkedSha256": "eebc0a0686c89b772741733ea7471fb8141b473ba904ad87576661d4c1ee30aa"
+        },
+        {
+          "local": "Qr",
+          "from": "../cds-core/shared-0.mjs",
+          "name": "Qr",
+          "via": "shared-0-CnnWnVrT.js#Qr",
+          "kind": "shared-graph",
+          "original": "Qr",
+          "linkedSha256": "eb54efb243f84daa195661f93137d066169143adc3f29eeec49521695fc1e2ed"
+        },
+        {
+          "local": "SI",
+          "from": "../cds-core/shared-0.mjs",
+          "name": "SI",
+          "via": "shared-0-CnnWnVrT.js#SI",
+          "kind": "shared-graph",
+          "original": "SI",
+          "linkedSha256": "d7d8f3e6342dde5df11d33c534c607351f1aca2d4fb7c08bf3bfd6f2c5957f18"
+        },
+        {
+          "local": "EF",
+          "from": "../cds-core/shared-0.mjs",
+          "name": "EF",
+          "via": "shared-0-CnnWnVrT.js#EF",
+          "kind": "shared-graph",
+          "original": "EF",
+          "linkedSha256": "721a3851a40a9ac8b6e227f3c753f614495bcf9fa8f3b61840092f9a947d9c48"
+        },
+        {
+          "local": "AF",
+          "from": "../cds-core/shared-0.mjs",
+          "name": "AF",
+          "via": "shared-0-CnnWnVrT.js#AF",
+          "kind": "shared-graph",
+          "original": "AF",
+          "linkedSha256": "f06f73cefbe24bd6db3d14993e9b17cabdaaa10df9b0d8d79de2780f6f612fec"
+        },
+        {
+          "local": "ZF",
+          "from": "../cds-core/shared-0.mjs",
+          "name": "ZF",
+          "via": "shared-0-CnnWnVrT.js#ZF",
+          "kind": "shared-graph",
+          "original": "ZF",
+          "linkedSha256": "bff89420760e2fc13271302bf82b2f247c17cf276754621f41bdbf68ff981c14"
+        },
+        {
+          "local": "kF",
+          "from": "../cds-core/shared-0.mjs",
+          "name": "kF",
+          "via": "shared-0-CnnWnVrT.js#kF",
+          "kind": "shared-graph",
+          "original": "kF",
+          "linkedSha256": "4c734fe9b92ffcb74875b5f2712e1cb721b3e825ada393f77c258fef5c7400fa"
+        },
+        {
+          "local": "jF",
+          "from": "../cds-core/shared-0.mjs",
+          "name": "jF",
+          "via": "shared-0-CnnWnVrT.js#jF",
+          "kind": "shared-graph",
+          "original": "jF",
+          "linkedSha256": "410a6cfab11937c894b4f06534e89509741a6616ff6fc0dad42c731cd34bfca8"
+        }
+      ],
+      "exports": {
+        "Tl": "lazyValue",
+        "Bi": "Bi",
+        "dn": "dn",
+        "Ze": "Ze",
+        "on": "on",
+        "sn": "sn",
+        "_i": "_i",
+        "ji": "ji",
+        "vi": "vi",
+        "yi": "yi",
+        "bi": "bi",
+        "kr": "kr",
+        "en": "en",
+        "$e": "$e",
+        "ln": "ln",
+        "wI": "wI",
+        "gn": "gn",
+        "zi": "zi",
+        "Ri": "Ri",
+        "un": "un"
+      },
+      "heldByCdsCore": [
+        "$F",
+        "$r",
+        "Ai",
+        "BF",
+        "CI",
+        "Ci",
+        "Di",
+        "Ei",
+        "FF",
+        "JF",
+        "MF",
+        "NF",
+        "Oi",
+        "Or",
+        "PF",
+        "QF",
+        "RF",
+        "Si",
+        "Ti",
+        "Tl",
+        "Tt",
+        "VF",
+        "XF",
+        "Xr",
+        "YF",
+        "Yr",
+        "Ze",
+        "Zr",
+        "_I",
+        "_i",
+        "aI",
+        "ai",
+        "an",
+        "bF",
+        "bi",
+        "cI",
+        "ci",
+        "cn",
+        "dF",
+        "di",
+        "eI",
+        "ei",
+        "fi",
+        "gi",
+        "gr",
+        "hi",
+        "iI",
+        "j",
+        "ji",
+        "ki",
+        "kr",
+        "lF",
+        "li",
+        "mi",
+        "nI",
+        "ni",
+        "nn",
+        "oI",
+        "oi",
+        "on",
+        "pi",
+        "q",
+        "rI",
+        "ri",
+        "sI",
+        "si",
+        "sn",
+        "tI",
+        "ti",
+        "uF",
+        "ui",
+        "un",
+        "vI",
+        "vi",
+        "vr",
+        "vt",
+        "wI",
+        "wi",
+        "xi",
+        "xr",
+        "yI",
+        "yi",
+        "yr",
+        "zF"
+      ],
+      "ownedState": []
+    },
+    {
+      "target": "external-link.mjs",
+      "source": "c4acc1503-BXsdaWDM.js",
+      "sourceSha256": "7cbfdcaaae750e13e6f3e9b68e4dfb6e016863e0968a1d9d5aac02099619286e",
+      "sha256": "837e14599489d3e115b577576341e8ba4f6b6dc1e8d73d1cd7e83be5d10c23cd",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "u",
+          "sha256": "fc63312edf8de6e19d5c4bb3149412f2216db3bb041d19223f482f0c190583e8"
+        },
+        {
+          "name": "d",
+          "sha256": "36e08b2b9153d436c8c78e6af2c5cde5d0e1eaf32fc8c77229d9431e393729ef"
+        },
+        {
+          "name": "f",
+          "sha256": "df79ec7dbc668eb6255fcefe99b7959ce1d41c27b35f7f4c4a8243678139416e"
+        },
+        {
+          "name": "p",
+          "sha256": "b5b4859451592676f355a1f53aa28e4dcb3a621139297cb8697dddcf56d1753b"
+        },
+        {
+          "name": "h",
+          "sha256": "cd9608990034803067d9995467d2bebc24fa3fc7f7eb1e1774038a9433ebf8c8"
+        },
+        {
+          "name": "g",
+          "sha256": "219e38356f604b2b1fe1a1b5f955c6dfebac5658b743a9fb46c6784334afa21e"
+        },
+        {
+          "name": "y",
+          "sha256": "c6b2f922e632c7ededf2395ab78025597dfbbaaedd9638185495a6646e130ed0"
+        }
+      ],
+      "imports": [
+        {
+          "local": "r",
+          "from": "./url-safety.mjs",
+          "name": "wI",
+          "via": "shared-0-CnnWnVrT.js:Gp",
+          "kind": "generated",
+          "original": "wI"
+        },
+        {
+          "local": "a",
+          "from": "./url-safety.mjs",
+          "name": "on",
+          "via": "shared-0-CnnWnVrT.js:cT",
+          "kind": "generated",
+          "original": "on"
+        },
+        {
+          "local": "s",
+          "from": "./url-safety.mjs",
+          "name": "dn",
+          "via": "shared-0-CnnWnVrT.js:nT",
+          "kind": "generated",
+          "original": "dn"
+        },
+        {
+          "local": "o",
+          "from": "./url-safety.mjs",
+          "name": "gn",
+          "via": "shared-0-CnnWnVrT.js:lT",
+          "kind": "generated",
+          "original": "gn"
+        },
+        {
+          "local": "t",
+          "from": "./url-safety.mjs",
+          "name": "Bi",
+          "via": "shared-0-CnnWnVrT.js:Aw",
+          "kind": "generated",
+          "original": "Bi"
+        },
+        {
+          "local": "i",
+          "from": "./url-safety.mjs",
+          "name": "zi",
+          "via": "shared-0-CnnWnVrT.js:Nw",
+          "kind": "generated",
+          "original": "zi"
+        },
+        {
+          "local": "n",
+          "from": "./url-safety.mjs",
+          "name": "Ri",
+          "via": "shared-0-CnnWnVrT.js:Fw",
+          "kind": "generated",
+          "original": "Ri"
+        },
+        {
+          "local": "c",
+          "from": "./url-safety.mjs",
+          "name": "un",
+          "via": "shared-0-CnnWnVrT.js:tT",
+          "kind": "generated",
+          "original": "un"
+        },
+        {
+          "local": "e",
+          "from": "../cds-core/shared-frame.mjs",
+          "name": "cdsOpenWindow",
+          "via": "shared-frame-CJdE5Ria.js:$f",
+          "kind": "shared-graph",
+          "original": "ya",
+          "linkedSha256": "1267ca7e0b561831c2a1158f8e33015f4711dc4f31c2ad60244cc33f7a0180bf"
+        }
+      ],
+      "exports": {
+        "g": "g",
+        "y": "y"
+      },
+      "heldByCdsCore": [],
+      "ownedState": []
+    },
+    {
+      "target": "preload-helper.mjs",
+      "source": "preload-helper-BBljBeZo.js",
+      "sourceSha256": "eaca89d983d210116ad54e23c289ba7e36d993ab760a62264603d744601fa614",
+      "sha256": "7c5f12033d3f8a24b303b354413634b0502454555bb5983f001a033ce744098d",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "e",
+          "sha256": "1938bb61d6973b6f74879c2397be92dca43aeb8ad924be1a4a78ca0421ea9101"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "e": "e"
+      },
+      "heldByCdsCore": [
+        "e"
+      ],
+      "ownedState": []
+    },
+    {
+      "target": "shared-frame.mjs",
+      "source": "shared-frame-CJdE5Ria.js",
+      "sourceSha256": "b6a5f61e0f243a48215fab7f3d65958d693d715e565f57af4e0ff35ae14697bc",
+      "sha256": "a266bd502ddffd8ee4ee898f63cc6bb0e905cf890c0de74640152d4356e7f865",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "J9",
+          "sha256": "ca7ddb6034a5a5374320a12a4daca9ac6443bce6f91d7df5d979795e575805fb"
+        },
+        {
+          "name": "J8",
+          "sha256": "eb5d795f0739cc3c17f8a0c98006f81d73ae4c3af3e4769afcbf8c5bfb2c9ed0"
+        },
+        {
+          "name": "J0",
+          "sha256": "2be922c4a5c9f4b2ce3834a6c2445d46bac9d12f13e80edad0ce00ae3c597061"
+        },
+        {
+          "name": "J1",
+          "sha256": "90115ec6fab3fa87e5595ba8510be0d8358228a2ebaa4f401f3f57cc68da1c02"
+        },
+        {
+          "name": "J2",
+          "sha256": "59d967dff21fbdf7fdd4cc4a9fb5c16c477c0c8d716bbdf2b812ed4ba8993eb4"
+        },
+        {
+          "name": "J3",
+          "sha256": "a3a151da51d4962a782d5de1c3f201d436f6f005690149fd8e54064016e76c22"
+        },
+        {
+          "name": "J4",
+          "sha256": "f413d19ac30f7bb64a90764af85cd29c66a8824d1a15e7a5b94d4a36e6b005c5"
+        },
+        {
+          "name": "K0",
+          "sha256": "36ecfa9d21d34e63ba007e2188f58eecccc9197999c1e5ec6c501794e1400f4c"
+        },
+        {
+          "name": "K1",
+          "sha256": "3ba1df1b203477e5f87a3385a3cca1c53d9c5b253a9c765e72bdc6ac93e0dfc5"
+        },
+        {
+          "name": "K2",
+          "sha256": "7d4968137ebec422b65baa77806c57a6be36ff55d62953d1e2321748c0ab4751"
+        },
+        {
+          "name": "K3",
+          "sha256": "aedf510a103c06562de3370ca0eaf1572c6d6f7725ab1b51730bfb0ec71e8f5f"
+        },
+        {
+          "name": "K4",
+          "sha256": "6b31ef4b8b3ba1c4ff286ba20697b1a4969bcc3e2605ddecf752480f0cc8c3d1"
+        },
+        {
+          "name": "K5",
+          "sha256": "8dd1688fcd9c8fa0fc20a0dac16b580576133b6739eb1810b05f049bddb0ed8a"
+        },
+        {
+          "name": "I1",
+          "sha256": "fe77ba5764038938f55b53c60f9327bb1d7b7a5ba7a175f3cfb0d30bee4d6475"
+        }
+      ],
+      "imports": [
+        {
+          "local": "Je",
+          "from": "react/compiler-runtime",
+          "name": "c",
+          "via": "vendor-frame-BckkO60Y.js:ko",
+          "kind": "react"
+        }
+      ],
+      "exports": {
+        "J9": "reactMemoCache",
+        "J1": "memoChanged1",
+        "K1": "memoStore1",
+        "J2": "memoChanged2",
+        "K2": "memoStore2",
+        "I1": "memoStoreValueFirst1",
+        "J3": "memoChanged3",
+        "K3": "memoStore3",
+        "K5": "memoStore5",
+        "J4": "memoChanged4",
+        "K4": "memoStore4",
+        "J0": "memoIsEmpty",
+        "K0": "memoStore0"
+      },
+      "heldByCdsCore": [
+        "I1",
+        "J0",
+        "J1",
+        "J2",
+        "J3",
+        "J4",
+        "J8",
+        "J9",
+        "K0",
+        "K1",
+        "K2",
+        "K3",
+        "K4",
+        "K5"
+      ],
+      "ownedState": []
     }
   ],
   "callSites": [
     {
-      "source": "c24c8737b-Czj7X1dz.js",
-      "binding": "ol",
-      "role": "Plugin page: the tab list (Overview first, Tool permissions only for a non-empty resolved list, then the content tabs, then Settings only when the plugin options query answers; menus N2), Overview as the initial and fallback tab, and its panel",
-      "sourceSha256": "4a93efee59eb38936970e66cb6d256ccaecec4c8b88e3ee102f48bcbaf89484d",
-      "sha256": "ff20e78e49ea02c58fa7df31a85b03652369bc244228576885ebb70080f15f0f",
+      "source": "c24c8737b-CApeZDrg.js",
+      "binding": "pu",
+      "role": "Plugin page: the tab list (Overview first and unconditional, Tool permissions only for a non-empty resolved list, Contents for a backend plugin, the content tabs with their counts, then Settings only for an added plugin whose options query answers), Overview as the initial and fallback tab, and its panel (c12456454 r = oo with onOpenConnectors only when the Connectors tab exists)",
+      "sourceSha256": "48299fa32a83a8ee0fa7a4d2ebd61c64182d558d6e8859bb0b29f1f2ea4ce8a2",
+      "sha256": "6913a0b02449d890cbf9c98fc6fcae1f71e846242ca29aacc2d456809e6846e4",
       "features": [
-        "hostToolPermissionsServers: me,",
-        "() => bt(ie) ?? \"overview\"",
-        "Yt = Jt !== \"loading\" && Jt.length > 0,",
-        "t = [{ id: \"overview\", href: se(\"overview\"), label: e }];",
+        "hostToolPermissionsServers: xe,",
+        {
+          "loose": "() => At(z) ?? \"overview\""
+        },
+        {
+          "loose": "Sn = xn !== \"loading\" && xn.length > 0,"
+        },
+        {
+          "loose": "t = [{ id: \"overview\", href: B(\"overview\"), label: e }];"
+        },
         "defaultMessage: \"Overview\", id: \"9uOFF3L8kp\"",
-        "if (Yt === !0) {",
-        "K0($, 73, i(Oc, {}))",
-        "t.push({ id: \"permissions\", href: se(\"permissions\"), label: e });",
+        {
+          "loose": "if (Sn === !0) {"
+        },
+        {
+          "loose": "K0($, 101, i(Fl, {}))"
+        },
+        {
+          "loose": "t.push({ id: \"permissions\", href: B(\"permissions\"), label: e });"
+        },
         "id: \"contents\",",
-        "if (St.length > 0) {",
-        "id: \"skills\",",
-        "if (Ct.length > 0) {",
+        {
+          "loose": "if (Lt.length > 0) {"
+        },
+        {
+          "loose": "t.push({ id: \"skills\", href: B(\"skills\"), label: e, count: Lt.length });"
+        },
+        {
+          "loose": "if (Rt.length > 0) {"
+        },
         "id: \"commands\",",
-        "if (Pt) {",
+        {
+          "loose": "count: Rt.length,"
+        },
+        {
+          "loose": "if (an) {"
+        },
         "id: \"connectors\",",
-        "if (Et > 0 || Dt) {",
+        {
+          "loose": "count: rn > 0 ? rn : void 0,"
+        },
+        {
+          "loose": "if (Wt > 0 || Xt) {"
+        },
         "id: \"hooks\",",
-        "if (Ot.length > 0 || kt) {",
+        {
+          "loose": "if (Zt.length > 0 || Qt) {"
+        },
         "id: \"monitors\",",
-        "if (At.length > 0) {",
+        {
+          "loose": "if (en.length > 0) {"
+        },
         "id: \"language-servers\",",
-        "if (jt.length > 0) {",
-        "id: \"agents\",",
-        "Be = T && !Re,",
-        "{ data: $t } = Mt(Qt, Be),",
-        "en = Be ? $t : void 0,",
-        "if (en) {",
-        "i(yc, { options: en })",
-        "t.push({ id: \"settings\", href: se(\"settings\"), label: e });",
-        "(tn = gt(Gs(t, Te), Zt))",
-        "nn.some((e) => e.id === Ee) ? Ee : \"overview\"",
-        "Gn = J1($, 124, Oe) ? K1($, 124, Oe, () => Oe(\"connectors\")) : $[125],",
-        "rn === \"overview\" &&",
-        "onOpenConnectors: nn.some(sl) ? Gn : void 0,",
-        "rn === \"permissions\" &&",
-        "i(wc, { connectors: Jt, connectorPageStyle: H })",
-        "rn === \"settings\" &&",
-        "i(bc, { pluginId: Qt, options: en, connectorPageStyle: H }, Qt)"
+        {
+          "loose": "if (nn.length > 0) {"
+        },
+        {
+          "loose": "t.push({ id: \"agents\", href: B(\"agents\"), label: e, count: nn.length });"
+        },
+        {
+          "loose": "tt = E && !Xe,"
+        },
+        {
+          "loose": "{ data: An, isLoading: jn } = be(kn, tt),"
+        },
+        {
+          "loose": "Nn = tt ? An : void 0,"
+        },
+        {
+          "loose": "if (Nn) {"
+        },
+        {
+          "loose": "i(El, { options: Nn })"
+        },
+        {
+          "loose": "t.push({ id: \"settings\", href: B(\"settings\"), label: e });"
+        },
+        {
+          "loose": "(Pn = Ht(Yc(t, Me), Tn))"
+        },
+        {
+          "loose": "Fn.some((e) => e.id === Pe) ? Pe : \"overview\""
+        },
+        {
+          "loose": "xr = J1($, 152, Ie) ? K1($, 152, Ie, () => Ie(\"connectors\")) : $[153],"
+        },
+        {
+          "loose": "In === \"overview\" &&"
+        },
+        {
+          "loose": "i(oo, {"
+        },
+        {
+          "loose": "onOpenConnectors: Fn.some(mu) ? xr : void 0,"
+        },
+        {
+          "loose": "In === \"permissions\" &&"
+        },
+        {
+          "loose": "i(jl, { connectors: xn, connectorPageStyle: W })"
+        },
+        {
+          "loose": "In === \"settings\" &&"
+        },
+        {
+          "loose": "i(Dl, { pluginId: kn, options: Nn, connectorPageStyle: W }, kn)"
+        }
       ]
     },
     {
-      "source": "c24c8737b-Czj7X1dz.js",
-      "binding": "Ys",
+      "source": "c24c8737b-CApeZDrg.js",
+      "binding": "el",
       "role": "Tool permissions servers: the host servers only with the unified plugins UI; otherwise the listed servers, enabled only with that UI too",
-      "sourceSha256": "4a93efee59eb38936970e66cb6d256ccaecec4c8b88e3ee102f48bcbaf89484d",
-      "sha256": "0e1eba7586c4f8d873a820ed6fc55e011abe811126f5c40e3719945a1d65b591",
+      "sourceSha256": "48299fa32a83a8ee0fa7a4d2ebd61c64182d558d6e8859bb0b29f1f2ea4ce8a2",
+      "sha256": "eb7e259c9462574f1fcb2a797ebb57f71168aa901b2c0dd8230e37ab223e228e",
       "features": [
-        "return e === !0 && n !== void 0 && n.length > 0",
-        "? { servers: n, serversSettled: !0, enabled: !0, hostConnector: r }",
-        "enabled: e === !0 && (t === !0 || r !== void 0),"
+        {
+          "loose": "return e === !0 && n !== void 0 && n.length > 0"
+        },
+        {
+          "loose": "? { servers: n, serversSettled: !0, enabled: !0, hostConnector: r }"
+        },
+        {
+          "loose": "enabled: e === !0 && (t === !0 || r !== void 0),"
+        }
       ]
     },
     {
-      "source": "c24c8737b-Czj7X1dz.js",
-      "binding": "Oc",
+      "source": "c24c8737b-CApeZDrg.js",
+      "binding": "Fl",
       "role": "Tool permissions tab label",
-      "sourceSha256": "4a93efee59eb38936970e66cb6d256ccaecec4c8b88e3ee102f48bcbaf89484d",
-      "sha256": "250c3b38a2227e80fd901adbba9f83c8a07f74c3111f06feea5ce5fb5cc73b3a",
+      "sourceSha256": "48299fa32a83a8ee0fa7a4d2ebd61c64182d558d6e8859bb0b29f1f2ea4ce8a2",
+      "sha256": "b1c85c089cebdd39de677de0d72e36a9575590e523fec61db68a30662018a5f1",
       "features": [
         "defaultMessage: \"Tool permissions\", id: \"xq9OFmeici\""
       ]
     },
     {
-      "source": "c24c8737b-Czj7X1dz.js",
-      "binding": "Gs",
-      "role": "A plugin blocked by the sales cloud access check keeps only Overview, Tool permissions and Connectors",
-      "sourceSha256": "4a93efee59eb38936970e66cb6d256ccaecec4c8b88e3ee102f48bcbaf89484d",
-      "sha256": "9e56a9afbb4ff1db855a0a3608fd2f243c6c441bce1967627a8917e54672456b",
+      "source": "c24c8737b-CApeZDrg.js",
+      "binding": "Yc",
+      "role": "A plugin blocked by the sales cloud access check keeps only Overview, Tool permissions and Connectors (Jc)",
+      "sourceSha256": "48299fa32a83a8ee0fa7a4d2ebd61c64182d558d6e8859bb0b29f1f2ea4ce8a2",
+      "sha256": "ac6466d32a1525d7962c681387a734619d085a0ea313d954b70bfa870da03d9f",
       "features": [
-        "return t ? e.filter((e) => Ws.some((t) => t === e.id)) : e;"
+        {
+          "loose": "return t ? e.filter((e) => Jc.some((t) => t === e.id)) : e;"
+        }
       ]
     },
     {
-      "source": "c24c8737b-Czj7X1dz.js",
-      "binding": "sl",
+      "source": "c24c8737b-CApeZDrg.js",
+      "binding": "Jc",
+      "role": "The tabs a sales-cloud-blocked plugin keeps",
+      "sourceSha256": "48299fa32a83a8ee0fa7a4d2ebd61c64182d558d6e8859bb0b29f1f2ea4ce8a2",
+      "sha256": "9af09f524e677dbcbbe84fff906bf6236b242e290d20f86bdf6ab8a5443cbe01",
+      "features": [
+        "[\"overview\", \"permissions\", \"connectors\"]"
+      ]
+    },
+    {
+      "source": "c24c8737b-CApeZDrg.js",
+      "binding": "mu",
       "role": "Overview opens Connectors only when that tab exists",
-      "sourceSha256": "4a93efee59eb38936970e66cb6d256ccaecec4c8b88e3ee102f48bcbaf89484d",
-      "sha256": "a5357c786884bab16da67332d966e05effd89ecf2aa4565508942e344e785a17",
+      "sourceSha256": "48299fa32a83a8ee0fa7a4d2ebd61c64182d558d6e8859bb0b29f1f2ea4ce8a2",
+      "sha256": "734cb76bdcaecabd8afe9115722e393b8e391946ae18f7b8a11dc63387e4069f",
       "features": [
         "return e.id === \"connectors\";"
       ]
     },
     {
-      "source": "shared-130-dWztbTO1.js",
-      "binding": "RE",
-      "role": "N2: the plugin options query (Settings tab data) is enabled only when the bridge has getPluginOptions; the host answers it from electron/plugin-options.cjs (src/source-plugin-settings-tab.jsx usePluginOptions), so the tab appears for a plugin that declares userConfig",
-      "sourceSha256": "cf809697067e7408a0bf3ff7d172d3bc784163429e2d3aa909aabeb73a2f0aea",
-      "sha256": "235d83f3c93ed2bcda3491b38002f2d67a2946c7eac96109d0d8abf2e6281f53",
+      "source": "shared-123-1Hc1RTKl.js",
+      "binding": "h4",
+      "role": "The plugin options query (Settings tab data) is enabled only when asked and the bridge has getPluginOptions; the host answers it from electron/plugin-options.cjs (src/source-plugin-settings-tab.jsx usePluginOptions)",
+      "sourceSha256": "38122e6a90c5a0af58a5f3d2c98176fd6de1f4a8055529e304317cda513e098a",
+      "sha256": "55ff1e230dd6bfd9012492118168fcfcb51186298ab94adab2170b5ee8843b5a",
       "features": [
-        "let a = t && n && !!U?.getPluginOptions,",
-        "enabled: a,"
+        {
+          "loose": "let a = t && n && !!z?.getPluginOptions,"
+        },
+        {
+          "loose": "enabled: a,"
+        }
       ]
     },
     {
-      "source": "shared-18-D3y8YMFN.js",
-      "binding": "$v",
-      "role": "gt(…, Zt): the tab list is unchanged unless the unified UI and the connector page style both hold",
-      "sourceSha256": "ea0ef4b74193e2e73c04b942311076a0922533df2ddb3d333464d22003e3355b",
-      "sha256": "9f79bcfaacde09af9acf7e142cf08e47faf226146f4093c5017b5a1497a71e31",
+      "source": "shared-18-Cfqwgjc5.js",
+      "binding": "$b",
+      "role": "Ht(…, Tn): the tab list is unchanged unless the unified UI and the connector page style both hold",
+      "sourceSha256": "6828aa7109628e08360fd1e7b4ddc2ff022f5f369a297ce690cd4b19e4205436",
+      "sha256": "0bc8244223b4497026b5fab0af65128b21ca869b5a7c3cd773ffe1cf2d10d474",
       "features": [
-        "if (t === !1) return e;"
+        "if (t === !1) return e;",
+        {
+          "loose": "return n.length < 2 ? [] : n;"
+        }
       ]
     },
     {
-      "source": "c76f00e40-YUpQMsTD.js",
-      "binding": "zr",
+      "source": "shared-18-Cfqwgjc5.js",
+      "binding": "ex",
+      "role": "Tn = Gt(Y, W): the Overview lists parts only with the unified UI and the connector page style",
+      "sourceSha256": "6828aa7109628e08360fd1e7b4ddc2ff022f5f369a297ce690cd4b19e4205436",
+      "sha256": "422dcb1f2be9f08fa95a659c7dd66939ed7c164b7f31cc4c730aeca8a9f26040",
+      "features": [
+        "return e === !0 && t === !0;"
+      ]
+    },
+    {
+      "source": "c76f00e40-CUxmQzhc.js",
+      "binding": "li",
       "role": "The only caller that passes hostToolPermissionsServers: the directory connector record shown as a plugin page",
-      "sourceSha256": "d23a7b88210588a88a11cdec83555f5c3e7e8d535cb5f2d6891d7ff25f4b058f",
-      "sha256": "b954ea0a634e619c740bdd55b55493e58d9495b48c57dab792451270f2cdc287",
+      "sourceSha256": "ee25ba96eb552652a7771b37272f8a4711f632e005efc3cdf6a38f3d0947866f",
+      "sha256": "c3a2aee10ed8f35170a5d297437fb102e52ae4307baf3960451b3c264e739f40",
       "features": [
         "connectorPageStyle: !0,",
-        "hostDirectoryPlugin: t,",
-        "hostToolPermissionsServers: b,"
+        {
+          "loose": "hostDirectoryPlugin: r,"
+        },
+        {
+          "loose": "hostToolPermissionsServers: x,"
+        }
       ]
     },
     {
-      "source": "c12456454-DrLqfhYF.js",
-      "binding": "ya",
-      "role": "Overview: org usage, what’s new, the Description, categories, Try it; the rail lists Connectors & tools (in the classic layout)",
-      "sourceSha256": "58c64d833c836c7faef625badf40c73e94d838993b32b14397224bf6231001cb",
-      "sha256": "c06a84202c79116b8ae1ea94046f4d601adc62ed3401027eb50f87b7af1b0b22",
+      "source": "c12456454-DBorkKpY.js",
+      "binding": "oo",
+      "role": "Overview: org usage, what’s new, the Description (W over lo), categories, Try it; the rail lists Connectors & tools (re rows) in the classic layout; the Contents list and sections need the connector page style",
+      "sourceSha256": "60dc43b0d970df2e739e166be34464c41a92beca0a293398a2924d53db90e88b",
+      "sha256": "5a7353ed48e27ed9d4572948ab38792bea2ff62036eaac359e594d9d3ddcb655",
       "features": [
-        "ie = _a(t, re?.examplePrompts),",
-        "z = Ht(d, oe),",
-        "i !== null && t.provenance.source === \"shared\"",
-        "? n(Bt, { credit: s })",
-        "ue = H === !0 && A === !0,",
-        "W = ue === !1 && (se !== null || z.length > 0),",
-        "n(Vt, { categories: P(t), connectorPageStyle: A })",
-        "n(cr, {",
-        "slashCommand: d?.skills.some(xe) ? `/${t.name}` : void 0,",
-        ": W === !0\n                ? a(Ie, { children: [se, z.length > 0 && n(Lt, { rows: z })] })",
-        "n(Le, { connectorPageStyle: A, main: Me, rail: Ne, embedded: j })"
+        {
+          "loose": "re = io(t, te?.examplePrompts),"
+        },
+        {
+          "loose": "ie = o === null ? (E?.getConnectorIdentity ?? Dr) : void 0,"
+        },
+        {
+          "loose": "B = Yt(p, ae),"
+        },
+        {
+          "loose": "o !== null && t.provenance.source === \"shared\""
+        },
+        {
+          "loose": "? n(qt, { credit: s })"
+        },
+        {
+          "loose": "U = V === !0 && N === !0,"
+        },
+        {
+          "loose": "pe = U === !1 && (oe !== null || B.length > 0),"
+        },
+        {
+          "loose": "n(Jt, { categories: me(t), connectorPageStyle: N })"
+        },
+        {
+          "loose": "n(Er, {"
+        },
+        {
+          "loose": "slashCommand: p?.skills.some(P) ? `/${t.name}` : void 0,"
+        },
+        {
+          "loose": "Y === !1 &&"
+        },
+        {
+          "loose": "description: lo({"
+        },
+        {
+          "loose": "N === !0 &&\n            E === void 0 &&\n            T !== void 0 &&"
+        },
+        {
+          "loose": ": pe === !0\n                ? r(Me, { children: [oe, B.length > 0 && n(Wt, { rows: B })] })"
+        },
+        {
+          "loose": "n(Ne, { connectorPageStyle: N, main: He, rail: Q, embedded: F })"
+        }
       ]
     },
     {
-      "source": "c12456454-DrLqfhYF.js",
-      "binding": "cr",
+      "source": "c12456454-DBorkKpY.js",
+      "binding": "Er",
       "role": "Try it: nothing without prompts; the “…or type {command} in any chat.” line lives inside it",
-      "sourceSha256": "58c64d833c836c7faef625badf40c73e94d838993b32b14397224bf6231001cb",
-      "sha256": "219754ffa05f5332dc71db8e62793c7ee509c992528807f2ea4646b5d86d32d7",
+      "sourceSha256": "60dc43b0d970df2e739e166be34464c41a92beca0a293398a2924d53db90e88b",
+      "sha256": "d0ffb3b252b5b34727a64e6360e206289ca6806318368f4e617e626f77c8416b",
       "features": [
         "if (t.length === 0) return null;",
         "defaultMessage: \"Try it\", id: \"g3Yfya3FKa\"",
@@ -608,105 +2687,168 @@
       ]
     },
     {
-      "source": "c12456454-DrLqfhYF.js",
-      "binding": "ha",
+      "source": "c12456454-DBorkKpY.js",
+      "binding": "no",
       "role": "Try it prompts: the curated catalog’s suggested prompts, for default-catalog plugins only",
-      "sourceSha256": "58c64d833c836c7faef625badf40c73e94d838993b32b14397224bf6231001cb",
-      "sha256": "d783e539e1366139626bd39bfaea82e59395067faa7a363723d2c01b05ecaf29",
+      "sourceSha256": "60dc43b0d970df2e739e166be34464c41a92beca0a293398a2924d53db90e88b",
+      "sha256": "b81dcb77240b185b9d712c7596af47c840e8ddaf9e62a8a36b41e6b4112469d3",
       "features": [
         ")?.suggested_prompts;",
-        "e.provenance.source === \"default\" && r ? r.map(ga) : ma,"
+        {
+          "loose": "e.provenance.source === \"default\" && r ? r.map(ro) : to,"
+        }
       ]
     },
     {
-      "source": "c12456454-DrLqfhYF.js",
-      "binding": "ga",
+      "source": "c12456454-DBorkKpY.js",
+      "binding": "ro",
       "role": "A curated prompt",
-      "sourceSha256": "58c64d833c836c7faef625badf40c73e94d838993b32b14397224bf6231001cb",
-      "sha256": "839ad1f71540ce36dd210004adfeeef5cc4baa1334b5ab30c0f6174afa130c32",
+      "sourceSha256": "60dc43b0d970df2e739e166be34464c41a92beca0a293398a2924d53db90e88b",
+      "sha256": "ed554c3fb4ab3d5c78be65be9092799835b0499fd6af653c8c2b7f208d2e1850",
       "features": [
         "return { ...e, origin: \"curated\" };"
       ]
     },
     {
-      "source": "c12456454-DrLqfhYF.js",
-      "binding": "_a",
+      "source": "c12456454-DBorkKpY.js",
+      "binding": "io",
       "role": "Try it prompts: a directory listing’s example prompts win over the curated ones",
-      "sourceSha256": "58c64d833c836c7faef625badf40c73e94d838993b32b14397224bf6231001cb",
-      "sha256": "c0ea0199b732e5c9f4a8191638b5e39dbb81e50449dd84f70aad7f288e471c12",
+      "sourceSha256": "60dc43b0d970df2e739e166be34464c41a92beca0a293398a2924d53db90e88b",
+      "sha256": "c1190b90188bb3dccbbff2dbe6814f87919f7d52a641b140f799aaade854fe0b",
       "features": [
-        "t === void 0 || t.length === 0 ? n : t.map(va)"
+        {
+          "loose": "t === void 0 || t.length === 0 ? n : t.map(ao)"
+        }
       ]
     },
     {
-      "source": "c12456454-DrLqfhYF.js",
-      "binding": "va",
+      "source": "c12456454-DBorkKpY.js",
+      "binding": "ao",
       "role": "A directory listing prompt",
-      "sourceSha256": "58c64d833c836c7faef625badf40c73e94d838993b32b14397224bf6231001cb",
-      "sha256": "4a7ff4862ec7c5f0c557749ad216c499d358c9326eed03078b02ddeeb158010a",
+      "sourceSha256": "60dc43b0d970df2e739e166be34464c41a92beca0a293398a2924d53db90e88b",
+      "sha256": "634dca919f79ea346273df22e8d29784a658703abc7539d35cc1d13fd4c83e1c",
       "features": [
         "return { prompt: e.prompt, origin: \"directory_listing\" };"
       ]
     },
     {
-      "source": "c12456454-DrLqfhYF.js",
-      "binding": "Sa",
+      "source": "c12456454-DBorkKpY.js",
+      "binding": "lo",
       "role": "Description: the item’s own description without a directory listing or signed-in record",
-      "sourceSha256": "58c64d833c836c7faef625badf40c73e94d838993b32b14397224bf6231001cb",
-      "sha256": "9a5f2aefac9411526415771b5c6ee9492c55e0ec95f3c858865263cd0d92752c",
+      "sourceSha256": "60dc43b0d970df2e739e166be34464c41a92beca0a293398a2924d53db90e88b",
+      "sha256": "9abc8299f240cd66bc768678f81eadd9e3975afcaddf90e4fd20d0a69913df28",
       "features": [
-        "return t === null || t === \"loading\" ? n === void 0 || n.summary.trim() === \"\" ? e.description : n.summary : t.oneLiner;"
+        {
+          "loose": "return t === null || t === \"loading\" ? n === void 0 || n.summary.trim() === \"\" ? e.description : n.summary : t.oneLiner;"
+        }
       ]
     },
     {
-      "source": "cae01a6fc-CssbXTs8.js",
-      "binding": "ie",
-      "role": "Connectors & tools rows: reach rows (remote_privileged reads as remote plus the privileged row, menus C8), one row per MCP server (display name, the server name as the note when it differs, opens Connectors), CLI components",
-      "sourceSha256": "944b5e5cdf88f4ae52b70030ce22200ee00311fd176ce800632228ebd38ccfa8",
-      "sha256": "134620e1fc8ab3cdf85ca1bd159af6ffa558ba05bdd6b7ec881e2da028915278",
+      "source": "cae01a6fc-t1NhdR7u.js",
+      "binding": "re",
+      "role": "Connectors & tools rows hook: without getIdentity the listed servers query resolves each server, then ne",
+      "sourceSha256": "4605f3ac8e27dbb93744945e82e7d78b93e261ff55704e95f211b97c61f433d3",
+      "sha256": "fa027c68d8d54937bc1cb2051ad95714bbf11c40d69d5e9188aeac9666c5fdef",
       "features": [
-        "if (e.reach) {",
-        "let t = e.reach === \"remote_privileged\",",
-        "e.mcpServers.forEach((s, c) => {",
-        "d = h(s.name);",
+        {
+          "loose": "i = (e?.mcpServers.length ?? 0) > 0 && r === void 0,"
+        },
+        {
+          "loose": "ne(u, o, n, l, r)"
+        }
+      ]
+    },
+    {
+      "source": "cae01a6fc-t1NhdR7u.js",
+      "binding": "ne",
+      "role": "Connectors & tools rows: reach rows (remote_privileged reads as remote plus the privileged row), one row per MCP server (display name, the server name as the note when it differs, opens Connectors), CLI components",
+      "sourceSha256": "4605f3ac8e27dbb93744945e82e7d78b93e261ff55704e95f211b97c61f433d3",
+      "sha256": "58d0c85acdf31d19915daf9559b0b86cba649941a60d9b62004bcc9638a76c28",
+      "features": [
+        {
+          "loose": "if (e.reach) {"
+        },
+        {
+          "loose": "let t = e.reach === \"remote_privileged\","
+        },
+        {
+          "loose": "e.mcpServers.forEach((s, c) => {"
+        },
+        {
+          "loose": "d = g(s.name);"
+        },
         "key: `mcp:${c}:${s.name}`,",
-        "icon: t(z, { server: l, size: Q, glyphSize: 12 }),",
-        "label: u,",
-        "note: u === d ? void 0 : d,",
-        "onClick: r,",
-        "e.type === \"cli\" &&"
+        {
+          "loose": "icon: t(R, { server: l, size: Q, glyphSize: 12 }),"
+        },
+        {
+          "loose": "label: u,"
+        },
+        {
+          "loose": "note: u === d ? void 0 : d,"
+        },
+        {
+          "loose": "onClick: r,"
+        },
+        {
+          "loose": "e.type === \"cli\" &&"
+        }
       ]
     },
     {
-      "source": "cd14a8022-D1-_IMYH.js",
+      "source": "cd14a8022-DP8PKode.js",
       "binding": "a",
-      "role": "A server’s display name: the directory / sync-source / connector name, else its own name (sanitized)",
-      "sourceSha256": "9d5aea2de841a57201223938d3e87cdc8be10c2fea8f29fe99c4806d1d4271fc",
-      "sha256": "ec7500bd5fecc68a3ea12f4b4240337ec55e70bb7be81f4c065c4bf7026a9168",
+      "role": "A server’s display name: the directory / sync-source / connector name, else its own name (sanitized, shared-62 gc = sL)",
+      "sourceSha256": "e6de4b49457294af00f9aaab4debf9df18c45db62c283c60dac42eb3fdd63426",
+      "sha256": "d58dea2190fdc532ecc0a692e32561c5b8a8950303dd27dca52fee3a6848430a",
       "features": [
-        "n.connector?.name ??",
-        "n.name,"
+        "e.directoryServer?.name ??",
+        "e.connector?.name ??",
+        "e.name,"
       ]
     },
     {
-      "source": "c28f9f509-DTH_B8Rb.js",
+      "source": "cd85e132d-RVI9Vb9v.js",
+      "binding": "d",
+      "role": "A server without an icon falls back to the connector kind glyph at the glyph size",
+      "sourceSha256": "67146b10359d7bba89b1a09a00de7ac45953d6c347c63a4bc150824c88e33d95",
+      "sha256": "9e770c451f7ba93d32aafa35576df0918ff73006f4dc2c47a25468fac169818a",
+      "features": [
+        {
+          "loose": "e(c, { item: { kind: \"connector\" }, size: n })"
+        }
+      ]
+    },
+    {
+      "source": "c28f9f509-upcFCkwG.js",
       "binding": "u",
-      "role": "A server without an icon: the kind glyph (connector: Connectors) at the glyph size, text-muted-as-secondary",
-      "sourceSha256": "b6cf867c5dd39662408519775782ac580d137b0367595cbd74612c2a04be2b80",
-      "sha256": "3c0dcf009faaa728ee34c9fcc6fa87bf115c131bfc67e8ceceb15dc8d3cf0fe9",
+      "role": "The kind glyph: CDS Icon at customSize, text-muted-as-secondary",
+      "sourceSha256": "9b566a1771ac78294674cadd80801ec12caade8577a25d4008cc9d302a57afe3",
+      "sha256": "0844457eb9599d9c5e6479659b53f65d0ba28790d55fdcf47944361593d4cefc",
       "features": [
-        "e(t, {\n            name: s,\n            customSize: i,\n            className: \"text-muted-as-secondary\",\n          })"
+        {
+          "loose": "e(t, {\n            name: s,\n            customSize: i,\n            className: \"text-muted-as-secondary\",\n          })"
+        }
       ]
     },
     {
-      "source": "c28f9f509-DTH_B8Rb.js",
+      "source": "c28f9f509-upcFCkwG.js",
       "binding": "h",
       "role": "Kind glyphs",
-      "sourceSha256": "b6cf867c5dd39662408519775782ac580d137b0367595cbd74612c2a04be2b80",
-      "sha256": "2167b1ae2e4dda13e9f04667217062f9414f2def6098aadcd2966f89db9dd3f2",
+      "sourceSha256": "9b566a1771ac78294674cadd80801ec12caade8577a25d4008cc9d302a57afe3",
+      "sha256": "6d7ce746b7f409331c1e706e6f13f18e610f3c6e2bcd6cac22ca04471214fc72",
       "features": [
         "connector: \"Connectors\""
       ]
     }
-  ]
+  ],
+  "sharedGraphModules": {
+    "shared-0.mjs": "5713ad9f5eb640772707ffb3e7854f9b4cbb42688a159018a46d60c4845e23a2",
+    "shared-62.mjs": "514d877303d4af43f5693aa961c40ec9534c7ac15b0747ec308601a87ca5b816",
+    "shared-frame.mjs": "7a8f2192bcc5002cd72deccec3750f982ccfa0c59633e732f9dc88356317c0e6",
+    "vendor-frame.mjs": "a923a956696beb9f7f50cba5751272a523b9ec050223fa066e370498d5fa9969"
+  },
+  "ownedStateReasons": {
+    "c79fa23ba-Cua_bx3X.js#_": "read-only Set of first-party docs hosts the linkifier keeps as links"
+  }
 }

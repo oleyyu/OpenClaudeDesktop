@@ -9,18 +9,22 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
 import { ionSource } from '../scripts/official-3.6556.2.mjs';
+import { ionSource as ionSource4 } from '../scripts/official-4.16336.0.mjs';
 import zh from '../electron/i18n/zh-CN/index.mjs';
 
 const app = path.resolve(import.meta.dirname, '..');
 const h = React.createElement;
 const read = prefix => { const [name] = fs.readdirSync(ionSource).filter(file => file.startsWith(prefix + '-') && file.endsWith('.js')); return fs.readFileSync(path.join(ionSource, name), 'utf8'); };
+// Since the round-3 switch S5 the knowledge tiles are 4.16336.0 shared-36 U_ (src/generated/chat-knowledge-v4).
+const shared36v4 = fs.readFileSync(path.join(ionSource4, fs.readdirSync(ionSource4).find(file => file.startsWith('shared-36-') && file.endsWith('.js'))), 'utf8');
 const official = { c71: read('c71dee58b'), cf2: read('cf2f34ee4'), c52: read('c52b32660'), cf8: read('cf8e2003d'), c9b: read('c9b54eb90'), s16: read('shared-16'), s7: read('shared-7'), s3: read('shared-3') };
 const message = (text, id) => `defaultMessage:"${text}",id:"${id}"`;
 const text = html => html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
 const count = (haystack, needle) => haystack.split(needle).length - 1;
 
-globalThis.document ??= { body: { nodeType: 1 }, head: { appendChild() {} }, createElement: () => ({ relList: { supports: () => false }, setAttribute() {}, style: {} }),
-  querySelector: () => null, querySelectorAll: () => [], addEventListener() {}, removeEventListener() {}, documentElement: { dataset: {}, getAttribute: () => null } };
+// W8-M9 stub contract (round4 integration, stub fields only): cds-core 9203795f reads these at load (official 4.16336.0): document.cookie.
+globalThis.document ??= { cookie: '' /* W8-M9: shared-0 CQ / Wo document.cookie */, body: { nodeType: 1 }, head: { appendChild() {} }, createElement: () => ({ relList: { supports: () => false }, setAttribute() {}, style: {} }),
+  querySelector: () => null, querySelectorAll: () => [], addEventListener() {}, removeEventListener() {}, documentElement: { dataset: {}, style: {}, getAttribute: () => null, hasAttribute: () => false } };
 globalThis.window ??= { document: globalThis.document, navigator: { userAgent: 'Mozilla/5.0 (Macintosh)' }, location: { pathname: '/projects', search: '', hash: '', href: 'app://local/projects' },
   addEventListener() {}, removeEventListener() {}, matchMedia: () => ({ matches: false, addEventListener() {}, removeEventListener() {} }) };
 
@@ -91,7 +95,9 @@ test('SSR: the knowledge region — header, Add files trigger, empty card, tiles
   assert.ok(!listed.includes('data-knowledge-file='));
   assert.match(listed, /<div data-find-omitted="" class="relative"><div class="group\/thumbnail" data-testid="file-thumbnail">/);
   assert.match(listed, /class="uppercase truncate font-sans text-text-300 text-\[11px\] leading-\[13px\]">(md|text)</);
-  assert.match(listed, /<h3 id="([^"]+)" class="file-thumbnail-fade-in text-\[12px\] break-words text-text-100 line-clamp-3">pricing\.md<\/h3>[\s\S]*?<button aria-label="Remove" aria-describedby="\1"/);
+  // 4.16336.0 shared-36 U_: the name heading carries data-heading-step="3" (the 3.6556.2 shared-7 mD heading had none).
+  assert.equal(count(shared36v4, 'f(z,{"data-heading-step":"3",id:I,className:d("file-thumbnail-fade-in text-[12px] break-words",_?"text-text-500":"text-text-100",s?"line-clamp-3":"line-clamp-4")'), 1);
+  assert.match(listed, /<h3 data-heading-step="3" id="([^"]+)" class="file-thumbnail-fade-in text-\[12px\] break-words text-text-100 line-clamp-3">pricing\.md<\/h3>[\s\S]*?<button aria-label="Remove" aria-describedby="\1"/);
   assert.ok(official.s7.includes('defaultMessage:"Remove {name}",id:"T0e6Lh8loG"') && official.c52.includes('{size:"stretch",isEditable:d,isInSelectionMode:L}'));
   assert.match(listed, /<ul class="grid grid-cols-\[repeat\(auto-fill,minmax\(120px,1fr\)\)\] gap-3 mt-3">/);
   assert.ok(official.c52.includes('n("ul",{className:"grid grid-cols-[repeat(auto-fill,minmax(120px,1fr))] gap-3 mt-3",'));

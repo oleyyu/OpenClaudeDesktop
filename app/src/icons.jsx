@@ -1,44 +1,37 @@
 import React from "react";
-import glyphs from "./generated/icons.json";
-// Glyph mapping from shared-frame-DVFSKIcx.js Ka.icons (2.31226.0, in step with the vendored c0f671921-CWPPK3vl font);
-// the optical weight formula (Ka.wght) is unchanged since 2.110.1.
-export function Icon({
-  name,
-  size = 16,
-  weight = "regular",
-  className = "",
-  style,
-  glyphMap = glyphs,
-  ...props
-}) {
-  const master = size <= 18 ? 16 : 20;
-  // shared-frame ta/sa: nearest size token, with ties choosing the larger token.
-  const token = [12, 16, 20, 24, 28, 32].reduce((best, px) => Math.abs(px - size) <= Math.abs(best - size) ? px : best, 12);
-  const regular = { 12: .8, 16: 1, 20: 1.2, 24: 1.4, 28: 1.6, 32: 1.8 };
-  const stroke = weight === "strong" && [16, 20].includes(token)
-    ? token === 16 ? 1.25 : 1.5
-    : regular[token];
-  const [lo, hi] = master === 16 ? [0.8, 1.25] : [1.125, 1.8];
-  const w =
-    Math.round(
-      Math.max(
-        400,
-        Math.min(
-          700,
-          400 + 300 * (((stroke * master) / size - lo) / (hi - lo)),
-        ),
-      ) * 10,
-    ) / 10;
+import { CdsIcon } from "./cds-core.mjs";
+// The host Icon is the official 4.16336.0 CdsIcon (shared-frame-CJdE5Ria.js Bs, generated in src/generated/cds-core and
+// re-exported by cds-core.mjs); this wrapper only maps the host call contract onto its props, so the glyph table
+// (gs.icons, 412 + 24 secondary), the optical sizes/weights (bs, gs.wght, Is opsz 18→20 / 24→24), the secondary layer,
+// RTL mirroring and the accessibility attributes are the official ones:
+//   size   a number of pixels → customSize (Bs: nearest bs token, ties to the larger, then Ls(px, stroke));
+//          a CDS size token ("xs" … "xxl", "auto", "auto-sm", "auto-lg") → size, resolved against the density Context.
+//          The host default stays 16 px (customSize 16), not the official default "md": callers were written for 16.
+//   weight "strong" → bold (the official strong stroke where the token has one: sm / md); anything else → regular.
+//   className, style and every other prop (alt, rotate, aria-*, data-*, handlers) pass through to Bs unchanged.
+// A name the official table lacks renders an empty Icon span, as Bs does (no Placeholder fallback here).
+//   accessibility  The previous host Icon defaulted aria-hidden="true" and let a caller lift it with an explicit
+//          'aria-hidden': undefined. Bs instead computes aria-hidden = props["aria-hidden"] ?? (!alt || undefined), so an
+//          explicit undefined falls back to hidden. A caller that names the icon (aria-label) and explicitly lifts
+//          aria-hidden therefore gets that label as the official alt, which is how Bs exposes an accessible icon
+//          (role="img", aria-label, no aria-hidden).
+export function Icon({ name, size = 16, weight = "regular", ...props }) {
+  if (
+    props.alt === undefined &&
+    props["aria-label"] != null &&
+    Object.hasOwn(props, "aria-hidden") &&
+    props["aria-hidden"] === undefined
+  ) {
+    const { "aria-hidden": _lifted, ...rest } = props;
+    props = { ...rest, alt: props["aria-label"] };
+  }
   return (
-    <span
-      aria-hidden="true"
-      data-cds="Icon"
-      className={className}
-      style={{ fontSize: size, fontWeight: w, ...style }}
+    <CdsIcon
       {...props}
-    >
-      {String.fromCodePoint(glyphMap[name] || glyphMap.Placeholder)}
-    </span>
+      name={name}
+      {...(typeof size === "number" ? { customSize: size } : { size })}
+      bold={weight === "strong"}
+    />
   );
 }
 // W14-code r5 cleanup R5DC-02: the 32 Phosphor-name wrappers (ArrowLeft … DotsThree) and their `make` factory are

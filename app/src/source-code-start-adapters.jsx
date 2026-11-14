@@ -1,7 +1,7 @@
 // Local services for the original start-card view. Layout and row logic live in generated/code-start (3.6556.2
 // cc43287c9 ele/Bce/_5); this module answers the imports extract-code-start.mjs maps to it.
 import React, { Children, Fragment, cloneElement, createContext, isValidElement, useCallback, useContext, useEffect, useId, useMemo, useRef, useState } from 'react';
-import { createIntl } from './generated/chat/vendor-intl-DYfox5Co.js';
+import { createIntl } from './generated/chat/vendor-intl-BJgYK7RA.js';
 import { Icon } from './icons.jsx';
 // W14-code r6 R6DC-02: cc43287c9 `B` is shared-frame Uu = CdsButton (E41 direct import); it draws its own tooltip.
 import { CdsButton } from './generated/view-tabs/shared-frame-6jtSkIit.js';
@@ -44,7 +44,11 @@ export function createStartIntl(locale = getLocale()) {
   const intl = createIntl({ locale, defaultLocale: locale, messages: {} });
   return { ...intl, formatMessage: (message, values) => {
     const id = message.id || message.defaultMessage;
-    const result = intl.formatMessage({ ...message, id, defaultMessage: t(message.defaultMessage) }, keyedValues(values));
+    const text = t(message.defaultMessage);
+    // U-SET-LITE-2: a sentence the concise copy table drops (electron/i18n/concise.mjs, '') renders nothing; react-intl
+    // would fall back to showing the message id for an empty defaultMessage.
+    if (text === '' && message.defaultMessage) return '';
+    const result = intl.formatMessage({ ...message, id, defaultMessage: text }, keyedValues(values));
     return Array.isArray(result) ? keyedParts(result) : result;
   } };
 }

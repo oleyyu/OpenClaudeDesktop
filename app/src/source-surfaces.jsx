@@ -14,9 +14,10 @@ import { CoworkBrowserSection as BrowserSection, CoworkComputerUseSection as Com
   useCoworkToolRunning, useCoworkBrowserActivityText, useCoworkBrowserScreenshot } from './generated/cowork-live/index.mjs';
 import { CoworkContextSection as ContextSection } from './generated/cowork-context/index.mjs';
 import { CdsTooltipProvider } from './generated/view-tabs/index.js';
-import { HomeColumn, homeLayout, homeBannerOffsetClass as bannerOffset, homeDockHeightClass as dockHeight,
+import { HomeColumn, homeBannerOffsetClass as bannerOffset, homeDockHeightClass as dockHeight,
   homeColumnClass } from './generated/cowork-home/index.mjs';
-import { SourceChatGreeting } from './source-chat-home.jsx';
+import { homeLayout } from './generated/home-chat-cowork/shared-19.mjs';
+import { SourceChatGreeting, newPageLayoutVariant } from './source-chat-home.jsx';
 import { FileSystem } from './source-cowork-progress-v3-adapters.jsx';
 import { CoworkRunsHost } from './source-cowork-runs-adapters.jsx';
 import { coworkLiveActivity, coworkLiveSectionProps, COMPUTER_USE_CARD_GATE } from './source-cowork-live-adapters.jsx';
@@ -39,8 +40,11 @@ export { homeScrollClass } from './generated/cowork-home/index.mjs';
 // The layout is "classic" (w11-sweep-curchat, E53): shared-23 WC takes `n === void 0 ? zl : n` with zl = shared-2 M1
 // "classic", shared-2 B1 reads data-new-page-layout / the new-page-layout-latch (both "classic" unless set), and "home"
 // is the GrowthBook new_page_home arm (shared-3 `flag:"__gb__1085985672",label:"new_page_home"`; shared-21 hD
-// homeLayoutLive needs a.gateOn), off by default here (D29/D31). Local transcripts keep their own scroll host.
-const homeVariant = homeLayout('classic');
+// homeLayoutLive needs a.gateOn), off by default here (D29/D31). integration-3 review-0 P1: the user's official 4.16336.0
+// draws the home arm, so the column takes the same ruling as the greeting (source-chat-home.jsx newPageLayoutVariant,
+// host switch local_new_page_home) from the 4.16336.0 table (shared-19 pS; its classic / home column offsets are byte-equal
+// to 3.6556.2's). Local transcripts keep their own scroll host.
+const homeVariant = homeLayout(newPageLayoutVariant);
 export function SourceSurfaceHome({ active, children }) {
   if (!active) return children;
   return <HomeColumn className={`surface-home-column ${homeColumnClass} ${homeVariant.columnTopOffsetClass} ${bannerOffset} ${dockHeight}`}>

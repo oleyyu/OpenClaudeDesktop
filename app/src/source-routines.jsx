@@ -17,20 +17,23 @@ import { ScheduledTaskMenu as CurrentScheduledTaskMenu, ScheduledTaskTemplateCar
   Pictogram as RoutinePictogram, STOPWATCH_PICTOGRAM as stopwatch, CdsField as Field, CdsFieldLabel as Label, CdsFieldDescription as Description,
   CdsFieldError as ErrorText, CdsTextArea as TextArea, KeepAwakeSwitch } from './generated/cowork-scheduled/index.mjs';
 import { useKeepAwakeAvailable } from './source-routine-cowork-adapters.jsx';
-// R6: view-tabs through its facade. CdsBanner = shared-frame ya (ccd3f68fe `L`), CdsDropdown = Jo (`S`), CdsConfirmationDialog
-// = Xc (`k`), the same bindings ccd3f68fe-C8Xiv_qI imports.
-import { CdsTextInput as TextInput, CdsBanner, CdsDropdown, CdsConfirmationDialog, CdsCheckbox } from './generated/view-tabs/index.js';
+// 4.16336.0 host wiring (frame): TextInput stays view-tabs because registerNativeFieldComponents hands it to the 3.6556.2
+// cowork-scheduled form; the page's Banner, header Dropdowns, delete ConfirmationDialog and its Checkbox are cds-core (the
+// page itself is the cds-core CdsPage through source-sessions-primitives).
+import { CdsTextInput as TextInput } from './generated/view-tabs/index.js';
+import { CdsBanner, CdsCheckbox, CdsConfirmationDialog, CdsDropdown } from './cds-core.mjs';
 // V3-w13-coworkui-scheduled-page: the official list route's own helpers, published by chat-projects under their projects
 // names (same bindings): shared-18 Ou (aC, the loading grid `ar`), c444bcdd7 t (`Pi`, search ↔ results keys) and
-// c365fd3fe n (`Fi`, the search results announcement).
-import { ProjectsLoadingSkeleton as LoadingGrid, useProjectsSearchKeys as useSearchKeys, useProjectsSearchAnnouncement as useSearchAnnouncement } from './generated/chat-projects/index.mjs';
+// c365fd3fe n (`Fi`, the search results announcement). 4.16336.0 through chat-projects-v4: shared-18 nE, c444bcdd7 t, c365fd3fe n
+// (one copy with the Projects page); n keeps the { singular, plural } branch this 3.6556.2 list body passes.
+import { ProjectsLoadingSkeleton as LoadingGrid, useProjectsSearchKeys as useSearchKeys, useProjectsSearchAnnouncement as useSearchAnnouncement } from './generated/chat-projects-v4/index.mjs';
 import { CoworkScheduledTaskCard as RoutineCard, CoworkScheduledTaskDetail as RoutineDetail, CoworkUpsertScheduledTaskModal as OriginalRoutineForm } from './source-routine-cowork-page-adapters.jsx';
 import { registerNativeFieldComponents } from './source-field-adapters.jsx';
 import { toFormPermission } from './source-routine-form-adapters.jsx';
 import { coworkHomeState } from './cowork-home-model.mjs';
 import { RoutineContext, sourceRoutine } from './source-routine-adapters.jsx';
 import { t, getLocale } from '../electron/i18n/index.mjs';
-import { createIntl } from './generated/chat/vendor-intl-DYfox5Co.js';
+import { createIntl } from './generated/chat/vendor-intl-BJgYK7RA.js';
 import { useLocalRoutines } from './use-local-routines.jsx';
 
 registerNativeFieldComponents({ Field, Label, Description, ErrorText, TextInput, TextArea });

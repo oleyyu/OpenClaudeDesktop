@@ -70,11 +70,20 @@ html.cds-root[data-dyslexic-font][data-font=system] { --cds-font-sans:var(--font
 /* A column's forced mode wins over the application mode for token paint. */
 .ss-theme-preview[data-mode=light] .scb-code [data-code-token] { color:var(--sch-light); font-style:var(--sch-light-style); font-weight:var(--sch-light-weight); text-decoration:var(--sch-light-decoration); }
 .ss-theme-preview[data-mode=dark] .scb-code [data-code-token] { color:var(--sch-dark); font-style:var(--sch-dark-style); font-weight:var(--sch-dark-weight); text-decoration:var(--sch-dark-decoration); }
-/* c6a992d55-Che1orl5.css [data-chat-text-size=s|l] .epitaxy-transcript-typography (html[data-chat-text-size], shared-20 Gh):
-   Small .8125rem, Large .9375rem over 1.46667 (Small keeps 1.42857), on the host transcript column. */
-html[data-chat-text-size=s] .source-transcript-content { --chat-body:calc(.8125rem * var(--cds-rem-scale,1)); }
-html[data-chat-text-size=l] .source-transcript-content { --chat-body:calc(.9375rem * var(--cds-rem-scale,1)); --chat-leading:1.46667; }
+/* 4.16336.0 c6a992d55-_JRfOmTh.css [data-chat-text-size=s|l] .epitaxy-transcript-typography (html[data-chat-text-size],
+   shared-20 Gh; snapshot ion-dist JS string index 1698342 / 1698470, UTF-8 byte offset 1698460 / 1698588): Small .875rem
+   over 1.4286, Large 1rem over 1.375, on the host transcript column. (3.6556.2 c6a992d55-Che1orl5 had Small .8125rem,
+   Large .9375rem over 1.46667.) */
+html[data-chat-text-size=s] .source-transcript-content { --chat-body:calc(.875rem * var(--cds-rem-scale,1)); --chat-leading:1.4286; }
+html[data-chat-text-size=l] .source-transcript-content { --chat-body:calc(1rem * var(--cds-rem-scale,1)); --chat-leading:1.375; }
 html[data-chat-text-size=s] .source-message.source-message,html[data-chat-text-size=l] .source-message.source-message { font-size:var(--chat-body); line-height:var(--chat-leading); --chat-item-gap:calc(var(--chat-body)*var(--chat-leading)*.5); --chat-turn-gap:calc(var(--chat-body)*var(--chat-leading)*.75); }
+/* 4.16336.0 c6a992d55-_JRfOmTh.css .cds-root:is([data-cds-fizzy-lake~=type],…)[data-chat-text-size=l] .epitaxy-transcript-typography
+   [data-transcript-row] [data-cds=AssistantMessage|UserMessage][data-turn-key], … [data-code-own-row]{--chat-leading:1.46667}
+   (JS string index 1822302, UTF-8 byte offset 1822420): with the type part on, Large message rows keep 1.46667 over the
+   1rem body. Host rows: .source-message[data-cds=AssistantMessage|UserMessage] (no data-turn-key / data-code-own-row
+   markers). The row spacing stays the transcript's (official --chat-item-gap / --chat-turn-gap are computed on
+   .epitaxy-transcript-typography at its Large --chat-leading:1.375, string index 1698470), so the row restates them. */
+html[data-cds-fizzy-lake~=type][data-chat-text-size=l] .source-message.source-message:is([data-cds=AssistantMessage],[data-cds=UserMessage]) { --chat-leading:1.46667; --chat-item-gap:calc(var(--chat-body)*1.375*.5); --chat-turn-gap:calc(var(--chat-body)*1.375*.75); }
 /* shared-6 Cg: [[data-transcript-width=m]_&] 960px, [[data-transcript-width=l]_&] 1280px (--chat-column-measure first). */
 html[data-transcript-width=m] { --local-transcript-width:var(--chat-column-measure,960px); }
 html[data-transcript-width=l] { --local-transcript-width:var(--chat-column-measure,1280px); }

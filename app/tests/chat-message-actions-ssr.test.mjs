@@ -18,7 +18,8 @@ const enUS = JSON.parse(fs.readFileSync(path.resolve(v1, '../../i18n/en-US.json'
 const local = (rel) => fs.readFileSync(path.join(app, rel), 'utf8');
 const h = React.createElement;
 
-globalThis.document ??= { body: { nodeType: 1 }, head: { appendChild() {} }, createElement: () => ({ relList: { supports: () => false }, setAttribute() {}, style: {} }),
+// W8-M9 stub contract (round4 integration, stub fields only): cds-core 9203795f reads these at load (official 4.16336.0): document.cookie.
+globalThis.document ??= { cookie: '' /* W8-M9: shared-0 CQ / Wo document.cookie */, body: { nodeType: 1 }, head: { appendChild() {} }, createElement: () => ({ relList: { supports: () => false }, setAttribute() {}, style: {} }),
   querySelector: () => null, querySelectorAll: () => [], getElementById: () => null, addEventListener() {}, removeEventListener() {},
   documentElement: { dataset: {}, getAttribute: () => null, hasAttribute: () => false } };
 globalThis.window ??= { document: globalThis.document, navigator: { userAgent: 'Mozilla/5.0 (Macintosh)' }, addEventListener() {}, removeEventListener() {},
@@ -31,6 +32,10 @@ before(async () => {
     server: { middlewareMode: true, hmr: false, ws: false, watch: null }, appType: 'custom', logLevel: 'error' });
   i18n = await server.ssrLoadModule('/electron/i18n/index.mjs');
   i18n.setLocale('en-US');
+  // Round 4 S11 cutover: the 4.16336.0 roots (generated/chat-messages-v4) read the frame-sidebar host's reused answers (useIntl …)
+  // and the frame-sidebar-nav table, which main.jsx installs by importing both host modules; the test does the same.
+  await server.ssrLoadModule('/src/frame-sidebar-host.jsx');
+  await server.ssrLoadModule('/src/frame-sidebar-nav-host.jsx');
   actions = await server.ssrLoadModule('/src/source-chat-message-actions.jsx');
 });
 after(async () => { i18n?.setLocale('en-US'); await closeWhenSettled(server); await server?.close(); });
@@ -61,6 +66,13 @@ test('official evidence: lI (cc1aae219) and its copy ids in the 3.6556.2 catalog
 });
 
 test('SSR: the switcher is lI after Retry — 1 / 2 has Previous disabled, testids, icons and classes as the original', () => {
+  // Round 4 S11 cutover: the switcher is chat-messages-v4's 4.16336.0 lI (cc1aae219-BbSf__8R.js); its button and counter
+  // classes changed from 3.6556.2 (asserted on the 4.16336.0 bytes here; the 3.6556.2 forms stay as `was:` comments).
+  const v4 = fs.readFileSync(path.resolve(app, '../reference/snapshots/claude-4.16336.0-20261104/ion-dist/assets/v1/cc1aae219-BbSf__8R.js'), 'utf8');
+  for (const t of ['m(V,{variant:"ghost",iconOnly:!0,className:"not-touch:!w-6",size:"xs",icon:"CaretLeft","data-testid":d,',
+    'm(V,{variant:"ghost",iconOnly:!0,className:"not-touch:!w-6",size:"xs",icon:"CaretRight","data-testid":g,',
+    'm("span",{className:"self-center shrink-0 select-none text-caption-regular font-sans text-muted-as-secondary",',
+    '_("div",{className:"inline-flex items-center gap-1",children:[p,h,y]})']) assert.ok(v4.includes(t), t);
   const html = toolbar({ versions: { selectedOption: 0, nOptions: 2, previous: null, next: 'v1' } });
   const order = [...html.matchAll(/data-testid="([^"]+)"/g)].map((m) => m[1]);
   assert.deepEqual(order, ['message-actions', 'action-bar-copy', 'action-bar-thumbs-up', 'action-bar-thumbs-down', 'action-bar-retry',
@@ -73,9 +85,11 @@ test('SSR: the switcher is lI after Retry — 1 / 2 has Previous disabled, testi
   assert.match(next, /aria-label="Next version"/);
   for (const button of [previous, next]) {
     assert.match(button, /data-cds="Button"[^>]*data-cds-ghost=""/);
-    assert.match(button, /!text-muted-as-secondary hover:!text-primary !w-6/);
+    // was: assert.match(button, /!text-muted-as-secondary hover:!text-primary !w-6/);  (3.6556.2 lI)
+    assert.match(button, /data-size="xs" class="[^"]* not-touch:!w-6"/);
   }
-  assert.match(html, /<span class="self-center shrink-0 select-none font-small text-muted-as-secondary">1 \/ 2<\/span>/);
+  // was: /<span class="self-center shrink-0 select-none font-small text-muted-as-secondary">1 \/ 2<\/span>/  (3.6556.2 lI)
+  assert.match(html, /<span class="self-center shrink-0 select-none text-caption-regular font-sans text-muted-as-secondary">1 \/ 2<\/span>/);
   // 2 / 2: Next disabled. 2 / 3: both live.
   const last = toolbar({ versions: { selectedOption: 1, nOptions: 2, previous: 'r', next: null } });
   assert.match(attrs(last, 'action-bar-next-version'), / disabled=""/);
@@ -117,7 +131,10 @@ test('host wiring: Retry on a reply makes a version where the core forks at a tu
   assert.match(main, /const next = chatBranches\.pendingFor\(current\);\n\s+if \(!next \|\| loading \|\| running \|\| sending \|\| !boot\?\.connected\) return;\n\s+chatBranches\.clearPending\(\);\n\s+void sendMessage\(next\.text, next\.attachments \?\? \[\], \[\], \{ resend: true \}\);/);
   // The switcher is the generated lI (w13-close-gen-dedup, D1); no view-tabs facade in this chat-graph file (E41).
   const source = local('src/source-chat-message-actions.jsx');
-  assert.match(source, /import \{ ChatVersionSelector \} from '\.\/generated\/chat-messages\/version-selector\.mjs';/);
+  // was: /import \{ ChatVersionSelector \} from '\.\/generated\/chat-messages\/version-selector\.mjs';/ (3.6556.2 cc1aae219 lI);
+  // round 4 S11 cutover: the 4.16336.0 version selector of generated/chat-messages-v4 (scripts/extract-chat-messages-v4.mjs).
+  assert.match(source, /import \{ ChatVersionSelector \} from '\.\/generated\/chat-messages-v4\/index\.mjs';/);
+  assert.doesNotMatch(source, /from '\.\/generated\/chat-messages\//);
   assert.match(source, /export const SourceChatVersionNav = ChatVersionSelector;/);
   assert.doesNotMatch(source, /view-tabs\/index\.js/);
 });

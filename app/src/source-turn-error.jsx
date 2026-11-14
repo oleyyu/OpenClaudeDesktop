@@ -7,7 +7,11 @@ import { describeTurnError, officialErrorFix, TURN_ERROR_ICONS, turnErrorDetails
 // W14-code transcript-rest TR-H1: the Code transcript's error card is the original 3.6556.2 card (cb1a6e506 j, sliced by
 // extract-code-transcript.mjs; c96d752d0 pK draws it as `hC`), its actions the CDS Buttons and Checkbox c3e34355f / pK use.
 import { j as OfficialErrorCard } from "./generated/code-transcript/cb1a6e506-CGO9mb0Y.mjs";
-import { CdsButton } from "./generated/view-tabs/shared-frame-6jtSkIit.js";
+// host-wiring/chat (4.16336.0): the host card's Buttons (its actions, Dismiss, Copy details) are the cds-core graph's
+// (shared-frame-CJdE5Ria Xu → Id). The official card's actions are values OfficialErrorCard (src/generated/code-transcript,
+// 3.6556.2) renders, so OfficialButton keeps the 3.6556.2 view-tabs Button (ViewTabsCdsButton).
+import { CdsButton as ViewTabsCdsButton } from "./generated/view-tabs/shared-frame-6jtSkIit.js";
+import { CdsButton } from "./cds-core.mjs";
 import "./source-turn-error.css";
 import { t } from "../electron/i18n/index.mjs";
 
@@ -105,7 +109,7 @@ export function rendererTurnErrors(turnErrors) {
 
 // c3e34355f's recovery Buttons (shared-frame Eu = CdsButton, no size); `variant` / `onClick` / children as the host's.
 function OfficialButton({ size: _size, iconSize: _iconSize, ...props }) {
-  return <CdsButton {...props} />;
+  return <ViewTabsCdsButton {...props} />;
 }
 
 // One failed Codex turn. variant "card" = newest error of the last turn

@@ -4,12 +4,14 @@ import { createRequire } from 'node:module';
 import path from 'node:path';
 import fs from 'node:fs';
 import { closeWhenSettled } from './support/vite-ssr-settle.mjs';
+import { conciseCopy } from '../electron/i18n/concise.mjs';
 
 // w10-shell-settings: notdone 45 (Storage copy, D23 keeps "Claude"), menus:W2 (search "+N more" jump set) and
 // menus:W3 (stacked Settings popup under 768px). Official chunks are read as text, never executed.
 const app = path.resolve(import.meta.dirname, '..');
 createRequire(path.join(app, 'package.json'))('react-dom').createPortal = children => children;
-globalThis.document ??= { body: { nodeType: 1 }, documentElement: { dataset: {}, dir: 'ltr', getAttribute: () => null, hasAttribute: () => false },
+// W8-M9 stub contract (round4 integration, stub fields only): cds-core 9203795f reads these at load (official 4.16336.0): document.cookie.
+globalThis.document ??= { cookie: '' /* W8-M9: shared-0 CQ / Wo document.cookie */, body: { nodeType: 1 }, documentElement: { dataset: {}, dir: 'ltr', getAttribute: () => null, hasAttribute: () => false },
   createElement: () => ({ relList: { supports: () => false } }) };
 const v3 = name => fs.readFileSync(path.join(app, '../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1', name), 'utf8');
 const source = name => fs.readFileSync(path.join(app, name), 'utf8');
@@ -41,7 +43,11 @@ test('notdone 45: the Storage row and the Storage dialog header read the 3.6556.
   const { setLocale, DEFAULT_LOCALE, t } = await import('../electron/i18n/index.mjs');
   try {
     setLocale('zh-CN');
-    assert.equal(t('See how much space Claude uses on this computer.'), '查看 Claude 在此电脑上占用的空间。');
+    // U-SET-LITE: the Storage row's long description renders its short zh-CN line (concise.mjs) ahead of the dictionary's
+    // D23 translation; the dialog header below has no short line and keeps "Claude".
+    assert.equal(t('See how much space Claude uses on this computer.'), conciseCopy('See how much space Claude uses on this computer.', 'zh-CN'));
+    assert.equal(t('See how much space Claude uses on this computer.'), '应用占用的磁盘空间。');
+    assert.equal(conciseCopy('Space Claude uses on this computer.', 'zh-CN'), null);
     assert.equal(t('Space Claude uses on this computer.'), 'Claude 在此电脑上占用的空间。');
   } finally { setLocale(DEFAULT_LOCALE); }
 });

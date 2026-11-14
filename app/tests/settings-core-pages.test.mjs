@@ -5,13 +5,14 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 
 // Settings pages describe and gate on the running core (settings-core-copy.mjs, source-settings.jsx pageProps):
-// Developer › Local engine, the Preferences account group, the account rows (sign-out confirm, device codes, API
+// Developer › Local engine, the Account page's account group, the account rows (sign-out confirm, device codes, API
 // keys) and the Cores page's guarded actions. Server-rendered; effects do not run.
 const app = path.resolve(import.meta.dirname, '..');
 createRequire(path.join(app, 'package.json'))('react-dom').createPortal = children => children;
 globalThis.innerWidth = 1200;
 // D21: the Settings import graph reaches view-tabs, whose preload-helper calls document.createElement at evaluation.
-globalThis.document ??= { body: { nodeType: 1 }, documentElement: { dataset: {}, getAttribute: () => null }, createElement: () => ({}) };
+// W8-M9 stub contract (round4 integration, stub fields only): cds-core 9203795f reads these at load (official 4.16336.0): document.cookie.
+globalThis.document ??= { cookie: '' /* W8-M9: shared-0 CQ / Wo document.cookie */, body: { nodeType: 1 }, documentElement: { dataset: {}, getAttribute: () => null, hasAttribute: () => false /* 4.16336.0 settings-nav: shared-92 Ib reads the root's attribute at evaluation */ }, createElement: () => ({}) };
 let server, React, render, Settings, copy, account, i18n;
 before(async () => {
   React = (await import('react')).default;
@@ -93,16 +94,27 @@ test('the account group follows the chosen core while disconnected; sign-out cop
   for (const id of NON_DEEPSEEK) assert.equal(/DeepSeek/.test(copy.signOutConfirmText(id)), false, id);
 });
 
-test('Settings shell: Developer › Local engine and Preferences name the running core', () => {
+test('Settings shell: Developer › Local engine and the Account page name the running core', () => {
   const codex = page('developer', { boot: { core: core('codex') } });
   assert.ok(codex.includes('Codex core') && codex.includes('Runs Codex. Connectors you add or remove in OpenClaude Desktop are saved to ~/.codex/config.toml.'));
   assert.equal(/DeepSeek Harness|~\/\.dsh/.test(codex), false);
   const deepseek = page('developer', { boot: { core: core('deepseek-harness') } });
   assert.ok(deepseek.includes('DeepSeek core') && deepseek.includes('Settings here do not rewrite your DeepSeek Harness configuration.'));
+  // U-SET-LITE: the account group moved from General ('preferences', now Appearance) to the Account page, the nav entry
+  // whose hosts are 'account' and 'privacy'. The page is opened through its 'privacy' host (an initialSection
+  // settings-tab-compat resolves; it has no 'account' id).
+  const account = page('privacy', { config: { core: 'codex' }, boot: { connected: false } });
+  assert.match(account, /data-page="privacy" data-entry="account"><span hidden=""><\/span><h2 class="sl-page-title">Account<\/h2>/);
+  assert.match(account, /<h3[^>]*>Codex account<\/h3>/);
+  assert.equal(account.includes('DeepSeek account'), false);
+  // After it, the compact privacy host: 'Data' with Export data, without the official provider card.
+  assert.ok(account.indexOf('>Data</h3>') > account.indexOf('>Codex account</h3>') && account.includes('data-setting-id="export-data"'));
+  assert.equal(account.includes('your provider'), false);
+  assert.match(page('privacy', { boot: { core: core('deepseek-harness') } }), /<h3[^>]*>DeepSeek account<\/h3>/);
+  // It is no longer on Appearance.
   const prefs = page('preferences', { config: { core: 'codex' }, boot: { connected: false } });
-  assert.match(prefs, /<h3[^>]*>Codex account<\/h3>/);
-  assert.equal(prefs.includes('DeepSeek account'), false);
-  assert.match(page('preferences', { boot: { core: core('deepseek-harness') } }), /<h3[^>]*>DeepSeek account<\/h3>/);
+  assert.match(prefs, /data-page="preferences" data-entry="appearance">/);
+  assert.equal(/<h3[^>]*>(?:Codex|DeepSeek) account<\/h3>/.test(prefs), false);
 });
 
 test('page gates get boot.core itself, so a reported capability wins over the implied one', () => {

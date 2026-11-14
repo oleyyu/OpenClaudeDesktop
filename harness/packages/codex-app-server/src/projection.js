@@ -36,6 +36,7 @@ import { STRUCTURED_OUTPUT_TOOL } from './structured.js'
 import { AssistantUsageFold, assistantSegmentBlocks } from './assistant-response.js'
 import { SHELL_TOOLS, backgroundJobOf, jobReadOutput, jobStatusOf, killJobOf, noticeJobOf, settledAgentJobItem, settledJobItem, subagentJobOf } from './jobs.js'
 import { REWIND_SOURCE } from './rewind.js'
+import { importedToolItem } from './thread-import.js'
 import { reportedFindings, reviewLabelOf } from './review.js'
 
 const nowSeconds = (ms) => Math.floor((ms ?? Date.now()) / 1000)
@@ -793,7 +794,8 @@ export class ThreadProjector {
         content.forEach(({ block, index }) => {
           const id = assistantItemId(data.turn, data.step, index)
           if (block.type === 'text') {
-            const item = { type: 'agentMessage', id, text: block.text ?? '', phase: null, memoryCitation: null, delivery: null, questions: null }
+            // A settled (never streamed) block in the imported tool-call form is a tool row, not prose (thread-import.js).
+            const item = (!stream && data.stream?.length === 0 && importedToolItem(id, block.text)) || { type: 'agentMessage', id, text: block.text ?? '', phase: null, memoryCitation: null, delivery: null, questions: null }
             this.replaceItem(turn, item)
             stream?.items.add(id)
             notes.push({ method: 'item/completed', params: { item, threadId: this.threadId, turnId: turn.id, completedAtMs: time } })

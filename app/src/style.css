@@ -24,6 +24,17 @@
 html.cds-root {
   --cds-page-bg: var(--cds-surface-1);
 }
+/* round4 navfix (d), the Chat disclaimer band: the window's page background is the root CdsRoot's pageBackground
+   "surface-1" (shared-46 St, shared-23 FD), and every nested 4.16336.0 CdsRoot passes it on — shared-frame xo
+   `te = o ?? X(Ua)` (its own pageBackground, else the enclosing root's) inlined as `ro(te)` = --cds-page-bg:
+   var(--cds-surface-1) — so the official epitaxy root (c11959232 j_, a CdsRoot without pageBackground) and everything
+   under it, the Chat disclaimer's `bg-page` (ca2ef848d H9) included, paint the ground the chat tile shell paints
+   (shared-20 m_ chat: var(--tile-page-ground, var(--df-bg-page, …)), --df-bg-page from --cds-surface-1 under fizzy-lake color).
+   main.epitaxy-root.cds-root is the host's own root element (no official CdsRoot of its own, see main.jsx U-1): it takes
+   the page background it sits in instead of resetting it to the stylesheet's `.cds-root{--cds-page-bg:var(--cds-surface-0)}`. */
+main.epitaxy-root.cds-root {
+  --cds-page-bg: inherit;
+}
 * {
   box-sizing: border-box;
   /* design-system.css:1260-1265 base layer: every scroller uses the thin

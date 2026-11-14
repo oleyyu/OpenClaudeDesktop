@@ -1,0 +1,245 @@
+{
+  "step": "tr-0",
+  "referenceVersion": "4.16336.0",
+  "owned": [
+    {
+      "name": "BackgroundTaskStatusContext",
+      "binding": "cea7057eb-BrXukOIp.js#L",
+      "owner": "transcript-rows-v4",
+      "target": "rows-cea7057eb.mjs",
+      "export": "BackgroundTaskStatusContext"
+    },
+    {
+      "name": "SessionScopeContext",
+      "binding": "cd96b5fdc-HvwFILuF.js#g",
+      "owner": "transcript-rows-v4",
+      "target": "rows-cd96b5fdc.mjs",
+      "export": "SessionScopeContext"
+    },
+    {
+      "name": "PathResolverProvider",
+      "binding": "c856385e2-Cqx37C-b.js#Nt",
+      "owner": "transcript-rows-v4",
+      "target": "rows-c856385e2.mjs",
+      "export": "PathResolverProvider"
+    },
+    {
+      "name": "usePathResolver",
+      "binding": "c856385e2-Cqx37C-b.js#It",
+      "owner": "transcript-rows-v4",
+      "target": "rows-c856385e2.mjs",
+      "export": "usePathResolver"
+    },
+    {
+      "name": "ProposalPaneContext",
+      "binding": "c96d752d0-D9VB6ArX.js#aV",
+      "owner": "transcript-rows-v4",
+      "target": "group-status.mjs",
+      "export": "ProposalPaneContext"
+    }
+  ],
+  "state": [
+    {
+      "binding": "cea7057eb-BrXukOIp.js#L",
+      "kind": "context",
+      "target": "rows-cea7057eb.mjs",
+      "export": "BackgroundTaskStatusContext"
+    },
+    {
+      "binding": "cd96b5fdc-HvwFILuF.js#g",
+      "kind": "context",
+      "target": "rows-cd96b5fdc.mjs",
+      "export": "SessionScopeContext"
+    },
+    {
+      "binding": "shared-100-BBQR7Gmd.js#yc",
+      "kind": "module Map",
+      "target": "rows-shared-100.mjs"
+    },
+    {
+      "binding": "shared-100-BBQR7Gmd.js#Mc",
+      "kind": "module Set",
+      "target": "rows-shared-100.mjs"
+    },
+    {
+      "binding": "cb6930dae-DPu57U90.js#Xu",
+      "kind": "context",
+      "target": "rows-cb6930dae.mjs",
+      "export": "TranscriptLiveScopeContext"
+    },
+    {
+      "binding": "shared-153-DMw2VzSq.js#rB",
+      "kind": "module Set",
+      "target": "rows-shared-153.mjs"
+    },
+    {
+      "binding": "shared-153-DMw2VzSq.js#lq",
+      "kind": "module Set",
+      "target": "rows-shared-153.mjs"
+    },
+    {
+      "binding": "shared-153-DMw2VzSq.js#uq",
+      "kind": "module Set",
+      "target": "rows-shared-153.mjs"
+    },
+    {
+      "binding": "shared-153-DMw2VzSq.js#dq",
+      "kind": "module Map",
+      "target": "rows-shared-153.mjs"
+    },
+    {
+      "binding": "c77e464d3-CXDLcHxC.js#c",
+      "kind": "module Set",
+      "target": "rows-c77e464d3.mjs"
+    },
+    {
+      "binding": "c77e464d3-CXDLcHxC.js#l",
+      "kind": "module Set",
+      "target": "rows-c77e464d3.mjs"
+    },
+    {
+      "binding": "c77e464d3-CXDLcHxC.js#p",
+      "kind": "module Set",
+      "target": "rows-c77e464d3.mjs"
+    },
+    {
+      "binding": "c77e464d3-CXDLcHxC.js#m",
+      "kind": "module Set",
+      "target": "rows-c77e464d3.mjs"
+    },
+    {
+      "binding": "c77e464d3-CXDLcHxC.js#h",
+      "kind": "module Set",
+      "target": "rows-c77e464d3.mjs"
+    },
+    {
+      "binding": "c77e464d3-CXDLcHxC.js#g",
+      "kind": "module Set",
+      "target": "rows-c77e464d3.mjs"
+    },
+    {
+      "binding": "c96d752d0-D9VB6ArX.js#MM",
+      "kind": "context",
+      "target": "group-status.mjs"
+    },
+    {
+      "binding": "c96d752d0-D9VB6ArX.js#aV",
+      "kind": "context",
+      "target": "group-status.mjs",
+      "export": "ProposalPaneContext"
+    },
+    {
+      "binding": "c68fd9df8-DaT0MWbj.js#pe",
+      "kind": "module Set",
+      "target": "rows-c68fd9df8.mjs"
+    },
+    {
+      "binding": "c64baa838-C55z5EpT.js#Xt",
+      "kind": "module Map",
+      "target": "rows-c64baa838.mjs"
+    },
+    {
+      "binding": "c476e9be4-C5Gc087T.js#_",
+      "kind": "module Map",
+      "target": "rows-c476e9be4.mjs"
+    },
+    {
+      "binding": "c476e9be4-C5Gc087T.js#v",
+      "kind": "module Set",
+      "target": "rows-c476e9be4.mjs"
+    },
+    {
+      "binding": "shared-11-CNsu0Zu8.js#la",
+      "kind": "module Set",
+      "target": "rows-shared-11.mjs"
+    },
+    {
+      "binding": "shared-11-CNsu0Zu8.js#ua",
+      "kind": "module Set",
+      "target": "rows-shared-11.mjs"
+    },
+    {
+      "binding": "shared-11-CNsu0Zu8.js#So",
+      "kind": "module Map",
+      "target": "rows-shared-11.mjs"
+    },
+    {
+      "binding": "shared-11-CNsu0Zu8.js#Co",
+      "kind": "module Set",
+      "target": "rows-shared-11.mjs"
+    },
+    {
+      "binding": "shared-11-CNsu0Zu8.js#wo",
+      "kind": "module Set",
+      "target": "rows-shared-11.mjs"
+    },
+    {
+      "binding": "shared-11-CNsu0Zu8.js#To",
+      "kind": "module Map",
+      "target": "rows-shared-11.mjs"
+    },
+    {
+      "binding": "shared-11-CNsu0Zu8.js#Eo",
+      "kind": "module Set",
+      "target": "rows-shared-11.mjs"
+    },
+    {
+      "binding": "shared-11-CNsu0Zu8.js#Do",
+      "kind": "module Set",
+      "target": "rows-shared-11.mjs"
+    },
+    {
+      "binding": "shared-11-CNsu0Zu8.js#Oo",
+      "kind": "module Map",
+      "target": "rows-shared-11.mjs"
+    },
+    {
+      "binding": "shared-11-CNsu0Zu8.js#jo",
+      "kind": "module Set",
+      "target": "rows-shared-11.mjs"
+    },
+    {
+      "binding": "shared-11-CNsu0Zu8.js#Mo",
+      "kind": "module Map",
+      "target": "rows-shared-11.mjs"
+    }
+  ],
+  "foreign": [
+    {
+      "name": "pathResolverContext",
+      "binding": "c856385e2-Cqx37C-b.js#Mt",
+      "owner": "cds-core",
+      "publicName": "ctx_c856385e2_Mt",
+      "previous": "c856385e2-aEyDzrcK.js#at",
+      "why": "the context PathResolverProvider (Nt = Mt.Provider) provides; cds-core holds it, so this graph imports it",
+      "target": "cds-core/c856385e2.mjs",
+      "export": "Mt"
+    },
+    {
+      "name": "CdsModeStoreContext",
+      "binding": "shared-frame-CJdE5Ria.js#ka",
+      "owner": "cds-core",
+      "publicName": "CdsModeStoreContext",
+      "why": "D46: read by the CDS rows the later steps slice",
+      "target": "cds-core/shared-frame.mjs",
+      "export": "ka"
+    },
+    {
+      "name": "CdsSkeletonGroupContext",
+      "binding": "shared-frame-CJdE5Ria.js#rf",
+      "owner": "cds-core",
+      "publicName": "CdsSkeletonGroupContext",
+      "why": "D46: read by the CDS rows the later steps slice",
+      "target": "cds-core/shared-frame.mjs",
+      "export": "rf"
+    },
+    {
+      "name": "SessionFileOpenerProvider",
+      "binding": "c856385e2-Cqx37C-b.js#Ot",
+      "owner": "r3b-transcript-v4",
+      "target": "r3b-transcript-v4/session-file-access.mjs",
+      "export": "SessionFileOpenerProvider",
+      "why": "account2/plan.json tr-0 named c856385e2#Ot as PathResolverProvider; in 4.16336.0 it is Dt.Provider, the session file opener provider r3b-transcript-v4 slices and exports (linked by the step that reads it)"
+    }
+  ]
+}

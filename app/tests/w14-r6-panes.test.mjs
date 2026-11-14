@@ -8,17 +8,19 @@ import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
 
 // W14-code round 6, lane panes: the host button replica swept from the Code surfaces (R6DC-02 /
-// css6-settings-button-code-callers / sh6-03 / r6pa-04), the Stop buttons as c96d752d0 UQ (r6pa-03), the loop / preview
+// css6-settings-button-code-callers / sh6-03 / r6pa-04), the Stop buttons as c96d752d0 UQ (r6pa-03; prestage-btgap: 4.16336.0 QH), the loop / preview
 // server cards as cccc2cf0a $M / tN / nN (r6pa-06), the TOC on the rail band (css6-toc-position-gutter) and the MCP
 // Always allow tooltip (r6pa-08, in approval-card-model.test.mjs). The preview start page (r6pa-05) and the focus
 // sentinel are in preview-pane-render.test.mjs. Official chunks are read as text only.
 const app = path.resolve(import.meta.dirname, '..');
 const v1 = path.resolve(app, '../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1');
 const official = (name) => fs.readFileSync(path.join(v1, fs.readdirSync(v1).find((file) => file.startsWith(name) && file.endsWith('.js'))), 'utf8');
+const v416 = path.resolve(app, '../reference/snapshots/claude-4.16336.0-20261104/ion-dist/assets/v1');
+const official416 = (name) => fs.readFileSync(path.join(v416, fs.readdirSync(v416).find((file) => file.startsWith(name) && file.endsWith('.js'))), 'utf8');
 const local = (file) => fs.readFileSync(path.join(app, file), 'utf8');
 const h = React.createElement;
 
-let server, B, D, R, T, P, PM, i18n, persona;
+let server, B, D, R, T, P, PM, PC, i18n, persona;
 before(async () => {
   server = await createServer({ configFile: false, root: app, plugins: [react()],
     server: { middlewareMode: true, hmr: false, ws: false, watch: null }, appType: 'custom', logLevel: 'error' });
@@ -30,6 +32,7 @@ before(async () => {
   PM = await server.ssrLoadModule('/src/preview-model.mjs');
   i18n = await server.ssrLoadModule('/electron/i18n/index.mjs');
   persona = await server.ssrLoadModule('/src/persona-store.mjs');
+  PC = await server.ssrLoadModule('/src/generated/cds-core/shared-120.mjs');
 });
 after(() => server?.close());
 
@@ -103,14 +106,20 @@ test('R6DC-02: the suggested-task chips are cc43287c9 Hse (joined ButtonGroup) a
   assert.doesNotMatch(local('src/source-task-backlog.css').replace(/\/\*[^]*?\*\//g, ''), /\.stb-(chip|row|see-all|list)(?![\w-])|\.stb-(chip|row)-/);
 });
 
-test('r6pa-03: the task Stop button is c96d752d0 UQ (TaskStopButton) with busyLabel Stopping…', () => {
+test('r6pa-03: the task Stop button is 4.16336.0 c96d752d0 QH (TaskStopButton, c9bd7af9c Zo) with busyLabel Stopping…', () => {
   const html = renderToStaticMarkup(h(B.TaskCard, { task: { id: 'x', kind: 'bash', status: 'running', description: 'npm test', startedAt: Date.now() },
     sessionId: 's', expanded: false, stopping: true, onStop() {}, onOpen() {}, onToggle() {} }));
-  assert.match(html, /<span class="contents"><button type="button" data-cds="Button" data-cds-icon-only="" data-size="sm" class="[^"]* epitaxy-task-row-secondary shrink-0" aria-busy="true" aria-disabled="true" aria-label="Stop this task"/);
+  assert.match(html, /<span class="contents"><button type="button" data-cds="Button" data-cds-icon-only="" data-size="sm" class="[^"]* shrink-0" aria-label="Stop this task" aria-busy="true" aria-disabled="true"/);
   assert.match(html, />Stopping…</, 'the busy spinner speaks Stopping…');
   assert.doesNotMatch(html, /sbt-stop|source-settings-button/);
-  const ccc = official('cccc2cf0a-DhZC33Gc');
-  assert.ok(ccc.includes('u(Ho,{busy:i,busyLabel:w.formatMessage({defaultMessage:"Stopping\\u2026",id:"NACfNicI6z"}),onClick:U,ariaLabel:w.formatMessage({defaultMessage:"Stop this task",id:"+ZLTl3VMv+"})})'));
+  const c9b = official416('c9bd7af9c-Bvb7EG4D');
+  assert.ok(c9b.includes('u(Zo,{quiet:b==="line",busy:i,busyLabel:k.formatMessage({defaultMessage:"Stopping\\u2026",id:"NACfNicI6z"}),onClick:U,ariaLabel:k.formatMessage({defaultMessage:"Stop this task",id:"+ZLTl3VMv+"}),describedBy:M})'));
+  const c96 = official416('c96d752d0-D9VB6ArX');
+  assert.ok(c96.includes('d=s||l?"xs":"sm",p=s&&!l?"ghost":"secondary"') && c96.includes('f(Z,{size:d,variant:p,icon:"StopFilled",className:"shrink-0",busy:i,busyLabel:a,onClick:u,"aria-label":n,"aria-describedby":r,iconOnly:!0,tooltipSide:m})'));
+  // Inside the pane frame's panels context (shared-120 Je, c4db265df Tn) the same button is "xs".
+  const panels = renderToStaticMarkup(h(PC.Je.Provider, { value: true }, h(B.TaskCard, { task: { id: 'x', kind: 'bash', status: 'running', description: 'npm test', startedAt: Date.now() },
+    sessionId: 's', expanded: false, stopping: false, onStop() {}, onOpen() {}, onToggle() {} })));
+  assert.match(panels, /<span class="contents"><button type="button" data-cds="Button" data-cds-icon-only="" data-size="xs" class="[^"]* shrink-0" aria-label="Stop this task"/);
 });
 
 test('r6pa-06: the loop / preview server cards are cccc2cf0a $M / tN / nN with the official Next / Ends ICU', () => {

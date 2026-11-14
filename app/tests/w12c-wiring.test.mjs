@@ -37,7 +37,11 @@ before(async () => {
 });
 after(async () => { I18n?.setLocale('en-US'); await server?.close(); });
 
-const leadOf = (html) => html.slice(html.indexOf('<div class="st-lead'), html.indexOf('<div class="st-trailing'));
+// surfaces wave 3 (titlebar frame): the Code titlebar is the 4.16336.0 frame; its lead is RX's gt box (`group/lead relative z-[1] …`)
+// and its actions the frame's cluster box (`relative z-[1] epitaxy-titlebar-end …`), not .st-lead / .st-trailing.
+const leadOf = (html) => html.includes('<div class="group/lead') ? html.slice(html.indexOf('<div class="group/lead'), html.indexOf('<div class="relative z-[1] epitaxy-titlebar-end')) : html.slice(html.indexOf('<div class="st-lead'), html.indexOf('<div class="st-trailing'));
+// RX's gt box: `group/lead relative z-[1] ${shared-38 fn} ${shared-38 En} draggable-none` (generated/titlebar-frame).
+const FRAME_LEAD = '<div class="group/lead relative z-[1] flex min-w-0 items-center [[data-tile-overflow-anchor]_&amp;]:[@container_tile-slot_(max-width:320px)]:[clip-path:inset(-32px_-12px)] draggable-none"';
 
 test('#1/#2 official: oG draws EP while it spawns (t null, o set), the spawn being the store\'s spawnOrigin', () => {
   pin(official3('cc43287c9-Me-M2ucD.js'), ['t||o?p(EP,{origin:pe&&{kind:pe,label:ve},title:J,bare:M})', 'spawn:le', 'L as EP']);
@@ -48,7 +52,7 @@ test('#1/#2 SSR: the New session titlebar\'s lead is EP while the first send spa
   const spawn = titlebarSpawnSource({ spawnPhase: { token: 'wt-1', phase: 'worktree' }, cwd: '/Users/me/work/repo-a' });
   const render = (props) => renderToStaticMarkup(h(T.SourceTitlebar, { section: 'new', session: null, onRename() {}, ...props }));
   const spawning = leadOf(render({ spawning: true, starting: true, spawn }));
-  assert.match(spawning, /^<div class="st-lead group\/lead"><span role="status" class="flex min-w-0 items-center"><span class="sr-only">Loading session<\/span>/);
+  assert.ok(spawning.startsWith(`${FRAME_LEAD}><span role="status" class="flex min-w-0 items-center"><span class="sr-only">Loading session</span>`), spawning);
   assert.match(spawning, /data-slot="origin-glyph" data-testid="epitaxy-origin-indicator"/);
   assert.equal(count(spawning, 'data-slot="title-ghost"'), 1);
   // Rail mode passes through (EP `bare: M`): no origin glyph.
@@ -137,7 +141,9 @@ test('#8 account Learn more: external link first (trailing ArrowOutSquare), then
   const order = ['data-testid="user-menu-core-homepage" trailing={<CdsIcon name="ArrowOutSquare" size="sm" />}', '<SourceMenu.Separator />', 't("Keyboard shortcuts")}</SourceMenu.Item>']
     .map((needle) => popup.indexOf(needle));
   assert.ok(order.every((index, at) => index > 0 && (at === 0 || index > order[at - 1])), `order: ${order}`);
-  assert.match(main, /import \{ CdsIcon \} from "\.\/generated\/view-tabs\/index\.js";/);
+  // host-wiring root: the host-rendered trailing icon is the 4.16336.0 Icon through the cds-core facade.
+  assert.match(main, /import \{ CdsIcon \} from "\.\/cds-core\.mjs";/);
+  assert.doesNotMatch(main, /import \{ CdsIcon \} from "\.\/generated\/view-tabs\/index\.js";/);
 });
 
 test('#9 default browser name: main.cjs answers desktop:call "default-browser-name", preload exposes getDefaultBrowserName', () => {

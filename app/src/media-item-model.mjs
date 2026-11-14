@@ -3,16 +3,17 @@
 // failure}, imageView {path} and sleep {durationMs}, plus hookPrompt {fragments[{text, hookRunId}]}.
 // Pure, so the labels and image sources are unit-tested; source-session.jsx renders them as steps.
 import { t } from '../electron/i18n/index.mjs';
+import { localMediaUrl } from './local-media-url.mjs';
 
 export const MEDIA_ITEM_TYPES = Object.freeze(['imageGeneration', 'imageView', 'sleep', 'hookPrompt']);
 export const isMediaItem = item => MEDIA_ITEM_TYPES.includes(item?.type);
 
 const basename = value => String(value || '').split(/[\\/]/).filter(Boolean).pop() || '';
-// An absolute local path the renderer may show (file:// like user image attachments), never a URL or a
-// relative path.
+// An absolute local path the renderer may show (U-2: the claude-media:// URL main mints, like user image
+// attachments; src/local-media-url.mjs), never a URL or a relative path.
 export function localImageSource(path) {
   if (typeof path !== 'string' || !path.startsWith('/') || /[\0\n\r]/.test(path)) return null;
-  return encodeURI(`file://${path}`);
+  return localMediaUrl(path);
 }
 // ImageGenerationItem.result is the base64 PNG; savedPath (when Codex saved it) is preferred.
 export function generatedImageSource(item) {

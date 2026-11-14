@@ -1,0 +1,137 @@
+{
+  "step": "ct-0",
+  "referenceVersion": "4.16336.0",
+  "owned": [
+    {
+      "name": "SessionFileReadableProvider",
+      "binding": "c856385e2-Cqx37C-b.js#At",
+      "owner": "code-transcript-v4",
+      "target": "session-providers.mjs",
+      "export": "SessionFileReadableProvider",
+      "previous": "c856385e2-aEyDzrcK.js#rt"
+    },
+    {
+      "name": "ImageLoaderProvider",
+      "binding": "c856385e2-Cqx37C-b.js#Yt",
+      "owner": "code-transcript-v4",
+      "target": "session-providers.mjs",
+      "export": "ImageLoaderProvider",
+      "previous": "c856385e2-aEyDzrcK.js#xt"
+    },
+    {
+      "name": "ContainedImageLoaderProvider",
+      "binding": "c856385e2-Cqx37C-b.js#Qt",
+      "owner": "code-transcript-v4",
+      "target": "session-providers.mjs",
+      "export": "ContainedImageLoaderProvider",
+      "previous": "c856385e2-aEyDzrcK.js#wt"
+    },
+    {
+      "name": "BackgroundTasksContext",
+      "binding": "cea7057eb-BrXukOIp.js#X",
+      "owner": "code-transcript-v4",
+      "target": "background-tasks.mjs",
+      "export": "BackgroundTasksContext",
+      "previous": "cea7057eb-De2BQu3K.js#X"
+    },
+    {
+      "name": "UserRowChromeContext",
+      "binding": "c96d752d0-D9VB6ArX.js#WM",
+      "owner": "code-transcript-v4",
+      "target": "transcript-rows-chrome.mjs",
+      "export": "UserRowChromeContext",
+      "previous": "c96d752d0-CWv_7-n9.js#uD"
+    }
+  ],
+  "foreign": [
+    {
+      "name": "CdsOwnerWindowContext",
+      "binding": "shared-frame-CJdE5Ria.js#Ga",
+      "owner": "cds-core",
+      "publicName": "CdsOwnerWindowContext",
+      "why": "D46 (ct-0 precondition): the owner window the CDS rows read",
+      "target": "cds-core/shared-frame.mjs",
+      "export": "Ga"
+    },
+    {
+      "name": "CdsSkeletonStartedAtContext",
+      "binding": "shared-frame-CJdE5Ria.js#nf",
+      "owner": "cds-core",
+      "publicName": "CdsSkeletonStartedAtContext",
+      "why": "D46 (ct-0 precondition): the skeleton shimmer phase",
+      "target": "cds-core/shared-frame.mjs",
+      "export": "nf"
+    },
+    {
+      "name": "CdsNaturalImageTilesContext",
+      "binding": "shared-frame-CJdE5Ria.js#Ia",
+      "owner": "cds-core",
+      "publicName": "CdsNaturalImageTilesContext",
+      "why": "D46 (ct-0 precondition): the natural-size image tiles flag",
+      "target": "cds-core/shared-frame.mjs",
+      "export": "Ia"
+    },
+    {
+      "name": "sessionFileReadableContext",
+      "binding": "c856385e2-Cqx37C-b.js#kt",
+      "owner": "cds-core",
+      "publicName": "ctx_c856385e2_kt",
+      "previous": "c856385e2-aEyDzrcK.js#nt",
+      "why": "the context SessionFileReadableProvider (At = kt.Provider) provides",
+      "target": "cds-core/c856385e2.mjs",
+      "export": "kt"
+    },
+    {
+      "name": "imageLoaderContext",
+      "binding": "c856385e2-Cqx37C-b.js#Jt",
+      "owner": "cds-core",
+      "publicName": "ctx_c856385e2_Jt",
+      "previous": "c856385e2-aEyDzrcK.js#bt",
+      "why": "the context ImageLoaderProvider (Yt = Jt.Provider) provides",
+      "target": "cds-core/c856385e2.mjs",
+      "export": "Jt"
+    },
+    {
+      "name": "containedImageLoaderContext",
+      "binding": "c856385e2-Cqx37C-b.js#Zt",
+      "owner": "cds-core",
+      "publicName": "ctx_c856385e2_Zt",
+      "previous": "c856385e2-aEyDzrcK.js#Ct",
+      "why": "the context ContainedImageLoaderProvider (Qt = Zt.Provider) provides",
+      "target": "cds-core/c856385e2.mjs",
+      "export": "Zt"
+    },
+    {
+      "name": "BackgroundTaskStatusContext",
+      "binding": "cea7057eb-BrXukOIp.js#L",
+      "owner": "transcript-rows-v4",
+      "target": "transcript-rows-v4/rows-cea7057eb.mjs",
+      "export": "BackgroundTaskStatusContext",
+      "why": "transcript-rows tr-0 owns it; linked by the steps that read it"
+    },
+    {
+      "name": "SessionScopeContext",
+      "binding": "cd96b5fdc-HvwFILuF.js#g",
+      "owner": "transcript-rows-v4",
+      "target": "transcript-rows-v4/rows-cd96b5fdc.mjs",
+      "export": "SessionScopeContext",
+      "why": "transcript-rows tr-0 owns it; linked by the steps that read it"
+    },
+    {
+      "name": "PathResolverProvider",
+      "binding": "c856385e2-Cqx37C-b.js#Nt",
+      "owner": "transcript-rows-v4",
+      "target": "transcript-rows-v4/rows-c856385e2.mjs",
+      "export": "PathResolverProvider",
+      "why": "transcript-rows tr-0 owns it; linked by the steps that read it"
+    },
+    {
+      "name": "SessionFileOpenerProvider",
+      "binding": "c856385e2-Cqx37C-b.js#Ot",
+      "owner": "r3b-transcript-v4",
+      "target": "r3b-transcript-v4/session-file-access.mjs",
+      "export": "SessionFileOpenerProvider",
+      "why": "r3b-transcript-v4 owns it; linked by the steps that read it"
+    }
+  ]
+}

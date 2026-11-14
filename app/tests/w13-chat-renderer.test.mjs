@@ -24,7 +24,8 @@ const manifest = JSON.parse(fs.readFileSync(path.join(directory, 'manifest.json'
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
 const h = React.createElement;
 
-globalThis.document ??= { body: { nodeType: 1 }, head: { appendChild() {} }, createElement: () => ({ relList: { supports: () => false }, setAttribute() {}, style: {} }),
+// W8-M9 stub contract (round4 integration, stub fields only): cds-core 9203795f reads these at load (official 4.16336.0): document.cookie.
+globalThis.document ??= { cookie: '' /* W8-M9: shared-0 CQ / Wo document.cookie */, body: { nodeType: 1 }, head: { appendChild() {} }, createElement: () => ({ relList: { supports: () => false }, setAttribute() {}, style: {} }),
   querySelector: () => null, querySelectorAll: () => [], getElementById: () => null, addEventListener() {}, removeEventListener() {},
   documentElement: { dataset: {}, getAttribute: () => null, hasAttribute: () => false } };
 globalThis.window ??= { document: globalThis.document, navigator: { userAgent: 'Mozilla/5.0 (Macintosh)', language: 'en-US' }, addEventListener() {}, removeEventListener() {},

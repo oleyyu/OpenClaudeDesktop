@@ -25,6 +25,9 @@
  *   catalog             skills/list (skill folders + ACP commands), MCP config + a probe
  *                       for status and tools (mcp-probe.js), plugins = agent extensions
  *   usage               usage.js ledger from the agent's usage reports
+ *   import              codeDesktop/thread/import → adapter.importSession writes a NEW native session
+ *                       holding another agent's conversation, opened like a session the agent recorded
+ *                       (importThread; capabilities.threadImport only where the adapter has the hook)
  */
 
 import { spawn } from 'node:child_process'
@@ -66,6 +69,29 @@ const LIVE_USAGE_MS = 2000
 
 const seconds = (ms) => Math.floor((ms ?? Date.now()) / 1000)
 const isRecord = (value) => value !== null && typeof value === 'object' && !Array.isArray(value)
+// codeDesktop/thread/import bounds (app/electron/chat-import targets.mjs trims to fewer first; each adapter's writer
+// checks its own: GEMINI_/QWEN_IMPORT_MAX_*, Kimi's token budget).
+export const IMPORT_MAX_MESSAGES = 5000
+export const IMPORT_MAX_TURNS = 2000
+const IMPORT_FIELD_MAX = 1000
+
+/** params.importedFrom → the provenance kept in the thread's metadata (index.json importedFrom), or null. */
+export function importedFromOf(value, now = Date.now()) {
+  if (!isRecord(value)) return null
+  const text = (field) => (typeof value[field] === 'string' && value[field].trim() ? value[field].trim().slice(0, IMPORT_FIELD_MAX) : undefined)
+  const out = { source: text('source'), sourceId: text('sourceId'), title: text('title'), sourcePath: text('sourcePath'), importedAt: now }
+  for (const key of Object.keys(out)) if (out[key] === undefined) delete out[key]
+  return out.source ? out : null
+}
+
+/** params.turns (Codex Thread turns for display, optional): a bounded list of {id, items[]} objects, else null. */
+export function importTurnsOf(value) {
+  if (value === undefined || value === null) return null
+  if (!Array.isArray(value) || value.length > IMPORT_MAX_TURNS || !value.every((turn) => isRecord(turn) && typeof turn.id === 'string' && Array.isArray(turn.items))) {
+    throw invalidParams(`turns must be at most ${IMPORT_MAX_TURNS} Codex turns ({id, items}).`)
+  }
+  return value.length ? value.map((turn) => ({ ...turn, status: 'completed' })) : null
+}
 
 /**
  * The session's added folders (/add-dir, OpenClaude Desktop's writable roots) as ACP additionalDirectories, for an agent that
@@ -2099,14 +2125,19 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
     let result, failure
     let localReply = null
     let retries = null
+    // A stop while the agent is still starting (a cold start takes seconds): nothing reaches the agent after it. interrupt()
+    // ends such a turn at once; these checks keep the prompt from going out once the start finishes.
+    const stopped = () => { if (state.cancelled) throw new Error('Stopped before the prompt was sent.') }
     try {
       let host = await ensureHost(thread)
       thread.suppress = false
+      stopped()
       // OpenClaude Desktop's tools, where the agent declares them only once their server has connected (awaitSessionTools).
       if (thread.toolsReady) { const ready = thread.toolsReady; thread.toolsReady = null; await ready }
       // A model or effort picked since the session opened (the process stays up across turns).
       await applyModel(thread)
       await ensureModelApplied(thread)
+      stopped()
       host = thread.host ?? host
       try { adapter.beforeTurn?.(ctx, thread) } catch (error) { log(`before turn: ${error?.message ?? error}`) }
       const capabilities = host.capabilities?.promptCapabilities ?? {}
@@ -2121,6 +2152,8 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
       // An agent still winding down a stopped turn refuses a new prompt for a moment (MiniMax, Kimi): retry.
       for (let attempt = 0; localReply === null; attempt++) {
         try {
+          stopped()
+          state.promptSent = true
           result = await host.call('session/prompt', { sessionId: thread.id, prompt: blocks, ...(continuation && adapter.continueMeta ? { _meta: { ...adapter.continueMeta } } : {}) }, 0)
           break
         } catch (error) {
@@ -2461,6 +2494,13 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
     state.cancelled = true
     thread.compaction?.resolve?.()
     if (process.env.CODE_DESKTOP_ACP_TRACE) fs.appendFileSync(process.env.CODE_DESKTOP_ACP_TRACE, `interrupt ${thread.id} turn ${state.turnId}\n${new Error().stack}\n`)
+    // Stopped before session/prompt went out (the agent is still starting, or a model switch is pending): the agent has
+    // nothing to cancel, so the turn ends now. runTurnBody sees the flag and sends nothing; the start itself carries on
+    // (ensureHost is serialized), so the next turn reuses the process.
+    if (!state.promptSent) {
+      finishTurn(thread, { status: 'interrupted', error: null })
+      return
+    }
     try { thread.host?.notify('session/cancel', { sessionId: thread.id }) } catch {}
     // An agent that does not answer the cancel in time is restarted; the turn ends interrupted.
     setTimeout(() => {
@@ -3507,6 +3547,9 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
       // /compact [instructions] reaches the agent's compact command (Kimi).
       compactInstructions: Boolean(adapter?.compactCommand && adapter?.compactInstructions),
       deleteHistory: can.deleteHistory !== false,
+      // codeDesktop/thread/import (importThread): only where the adapter can write a native session (adapter.importSession:
+      // Gemini, Kimi, Qwen; not MiniMax), and never on the workflow runner's bridge.
+      ...(typeof adapter?.importSession === 'function' && !runnerRole ? { threadImport: true } : {}),
       // thread/fork honours lastTurnId ('Fork from here' on an earlier message): the fork is rewound with the agent's
       // own rewind, so an agent without one forks only whole conversations.
       forkAtTurn: Boolean(can.fork && can.revert && adapter?.revertSession),
@@ -3865,6 +3908,7 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
         notify('thread/started', { thread: response.thread })
         return response
       }
+      case 'codeDesktop/thread/import': return importThread(params)
       case 'thread/resume': {
         const thread = await openThread(requireId(params.threadId))
         if (typeof thread.cwd === 'string') lastCwd = thread.cwd
@@ -4297,6 +4341,84 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
     }
     store.remove(id)
     store.update(id, { deleted: true, agentHistoryRemoved: removed })
+  }
+
+  /**
+   * codeDesktop/thread/import {cwd, title, messages: [{role, text, ts?}], turns?, importedFrom, …thread/start params}
+   * (app/electron/chat-import targets.mjs, sent only by main.cjs importCoreThread): another agent's conversation as a
+   * NEW native session of this agent, answered like thread/start (+ import {mode: 'history', messages}).
+   *   write   adapter.importSession({cwd, title, messages, home, env, importedFrom, version, model}) → {sessionId}: the
+   *           agent's own on-disk format under a fresh id, never an existing session (Gemini importGeminiSession,
+   *           Kimi kimiImportSession — what `kimi import-sessions` writes —, Qwen qwenImportSession). The cwd is the
+   *           realpath every later session/load|resume names (Gemini's project slug, Kimi's workdir key and Qwen's
+   *           sanitizeCwd/hash all derive from it); home and env are the agent's own (agentEnv).
+   *   index   the thread's metadata BEFORE opening it (openThread on an id it doesn't know asks the agent's session list,
+   *           whose index may lag the files just written: Kimi), source 'bridge' (OpenClaude's own session, in the real
+   *           agent home: no agentHome), the title as the user's name (an agent title never replaces it).
+   *   open    params.turns (Codex turns) become threads/<id>.json and the agent process starts with the first turn
+   *           (session/resume on Qwen and Kimi, beforeLoad → session/load → afterLoad on Gemini); without them openThread
+   *           replays the new session through session/load now (replayHistory), so the history shown is the agent's.
+   * An adapter without the hook (MiniMax: no safe writer, agents/minimax.js) is refused with METHOD_NOT_FOUND: the app
+   * hands the transcript over instead. The writer gets `taken(id)` (ids this bridge already knows) and never picks one of
+   * them; should an id it returns still collide, only what it wrote (`written`: the paths it created exclusively) is
+   * removed — never by id, which could name the existing session. Any failure once the session is written (the index,
+   * the display turns, opening it, the settings, the answer) deletes it again (discardImported), so the app's fallback
+   * never leaves a duplicate session behind.
+   */
+  async function importThread(params) {
+    requireAgent()
+    if (typeof adapter.importSession !== 'function' || runnerRole) throw new RpcError(METHOD_NOT_FOUND, `${adapter.name} can’t import a conversation as one of its own sessions.`)
+    if (!Array.isArray(params.messages) || !params.messages.length) throw invalidParams('messages must be a non-empty array of {role, text}.')
+    if (params.messages.length > IMPORT_MAX_MESSAGES) throw invalidParams(`An imported conversation can have at most ${IMPORT_MAX_MESSAGES} messages.`)
+    const cwd = await normalizeCwd(params.cwd)
+    const title = typeof params.title === 'string' ? params.title.replace(/\s+/g, ' ').trim().slice(0, 200) : ''
+    const importedFrom = importedFromOf(params.importedFrom)
+    const turns = importTurnsOf(params.turns)
+    const taken = (id) => store.has(id) || threads.has(id) || opening.has(id)
+    let written
+    try {
+      written = await adapter.importSession({ cwd, title, messages: params.messages, home: agentEnv.HOME || os.homedir(), env: agentEnv, importedFrom, version: version || undefined, model: typeof params.model === 'string' && params.model ? params.model : undefined, taken })
+    } catch (error) {
+      throw error instanceof RpcError ? error : new RpcError(SERVER_ERROR, `${adapter.name} could not import the conversation: ${error?.message ?? error}`)
+    }
+    const sessionId = written?.sessionId
+    if (typeof sessionId !== 'string' || !sessionId) {
+      removeWritten(written)
+      throw new RpcError(SERVER_ERROR, `${adapter.name} did not return the imported session.`)
+    }
+    if (taken(sessionId)) {
+      removeWritten(written)
+      throw new RpcError(SERVER_ERROR, 'The imported session’s id is already in use.')
+    }
+    let response
+    try {
+      const now = Date.now()
+      store.update(sessionId, { cwd, createdAt: now, updatedAt: now, source: 'bridge', ...(title ? { name: title } : {}), ...(importedFrom ? { importedFrom } : {}) })
+      if (turns) store.writeHistory(sessionId, { turns })
+      const thread = await openThread(sessionId)
+      lastCwd = cwd
+      applySettings(thread, params)
+      response = sessionResponse(thread, { includeTurns: params.excludeTurns !== true })
+    } catch (error) {
+      await discardImported(sessionId, written)
+      throw error instanceof RpcError ? error : new RpcError(SERVER_ERROR, `${adapter.name} could not open the imported session: ${error?.message ?? error}`)
+    }
+    notify('thread/started', { thread: { ...response.thread, turns: [] } })
+    return { ...response, import: { mode: 'history', messages: params.messages.length } }
+  }
+
+  /** The paths an import's writer created (adapter.importSession `written`), removed: only ever its own new files. */
+  function removeWritten(written) {
+    for (const entry of Array.isArray(written?.written) ? written.written : []) {
+      if (typeof entry !== 'string' || !path.isAbsolute(entry)) continue
+      try { fs.rmSync(entry, { recursive: true, force: true }) } catch (error) { log(`import: ${entry} not removed (${error?.message ?? error})`) }
+    }
+  }
+
+  /** An imported session given up on: the thread and the agent's session deleted (discardThread), its own files too. */
+  async function discardImported(sessionId, written) {
+    await discardThread(sessionId).catch((reason) => log(`import ${sessionId}: ${reason?.message ?? reason}`))
+    removeWritten(written)
   }
 
   async function forkThread(source) {

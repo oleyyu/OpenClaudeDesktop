@@ -12,19 +12,19 @@
 // The host keeps that order: Copy, Good / Bad response, Retry.
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { R6 } from './generated/working-line/shared-2.mjs';
-import { ChatMessageFeedback, MESSAGE_ACTIONS_INSET } from './generated/chat-messages/feedback.mjs';
-import { ChatRetryAction } from './generated/chat-messages/retry-action.mjs';
-import { MessageContextMenu } from './generated/chat-messages/context-menu.mjs';
-import { ChatDisclaimer } from './generated/chat-messages/disclaimer.mjs';
+import { ChatMessageFeedback, MESSAGE_ACTIONS_INSET } from './generated/chat-messages-v4/index.mjs';
+import { ChatRetryAction } from './generated/chat-messages-v4/index.mjs';
+import { MessageContextMenu } from './generated/chat-messages-v4/index.mjs';
+import { ChatDisclaimer } from './generated/chat-messages-v4/index.mjs';
 // w13-close-chat-messages (chatui-message-actions-02): shared-6 iT, the details form OF opens (ChatFeedbackForm adapter).
-import { ChatFeedbackDialog } from './generated/chat-messages/feedback-form.mjs';
+import { ChatFeedbackDialog } from './generated/chat-messages-v4/index.mjs';
 import { ChatFeedbackContext, ChatIncognitoContext, ChatLinkContext, incognitoNotice } from './source-chat-messages-adapters.jsx';
 import { feedbackMessage, retryPrompt } from './chat-feedback-model.mjs';
 import { markdownToClipboardHtml } from './rich-copy-html.mjs';
 import { userMessageContent } from './composer-attachments-model.mjs';
 import { getLocale } from '../electron/i18n/index.mjs';
 // w13-close-gen-dedup (chatfn-branches-05, D1): the version switcher is the generated cc1aae219 lI.
-import { ChatVersionSelector } from './generated/chat-messages/version-selector.mjs';
+import { ChatVersionSelector } from './generated/chat-messages-v4/index.mjs';
 import { applyMetadataPatch, normalizeGroups, showVersionNav, turnIndexIn, versionsAt } from './chat-branches-model.mjs';
 
 // One assistant reply's toolbar.
@@ -149,7 +149,9 @@ export function useChatFeedback({ threadId, call, onSent, onError }) {
 export const VERSION_NAV_CLASS = 'inline-flex items-center gap-1';
 export const VERSION_BUTTON_CLASS = '!text-muted-as-secondary hover:!text-primary !w-6';
 export const VERSION_COUNT_CLASS = 'self-center shrink-0 select-none font-small text-muted-as-secondary';
-// The component is lI itself (generated/chat-messages/version-selector.mjs); its strings go through the host intl adapter.
+// The component is lI itself; its strings go through the host intl adapter. Round 4 S11 cutover: the 4.16336.0 lI of
+// generated/chat-messages-v4 (was generated/chat-messages/version-selector.mjs); the restatement and the three class constants
+// above are the 3.6556.2 form (4.16336.0: not-touch:!w-6 buttons, a text-caption-regular font-sans counter).
 export const SourceChatVersionNav = ChatVersionSelector;
 
 // w13-chatfn-branches: this chat's versions (electron/chat-branches.mjs through the "chat-branches" host call).

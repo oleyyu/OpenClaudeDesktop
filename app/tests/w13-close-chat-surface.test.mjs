@@ -25,11 +25,13 @@ const shared8 = read('shared-8-Db1QN4mf.js'), shared78 = read('shared-78-D5Fw2h0
   shared52 = read('shared-52-uHFNjl7C.js'), shared11 = read('shared-11-_AVGLHEz.js'), shared21 = read('shared-21-R7LldJ05.js'),
   page = read('c623cddd3-C9tp6cLn.js'), bulk = read('c44373cde-CAOQ4vZq.js');
 
-let server, Composer, Page, intl, Shell, I18n;
+let server, Composer, Page, intl, Shell, I18n, Frame, Cds;
 before(async () => {
   server = await createServer({ configFile: false, root: app, plugins: [react()],
     server: { middlewareMode: true, hmr: false, ws: false, watch: null }, appType: 'custom', logLevel: 'error' });
   Shell = await server.ssrLoadModule('/src/source-incognito-shell.jsx'); // E77 incognito shell (复核修复)
+  Frame = await server.ssrLoadModule('/src/frame-sidebar-host.jsx'); // chat-header 4.16336.0: the frame host the shell sits in
+  Cds = await server.ssrLoadModule('/src/cds-core.mjs');
   I18n = await server.ssrLoadModule('/electron/i18n/index.mjs');
   Composer = await server.ssrLoadModule('/src/source-chat-composer.jsx');
   Page = await server.ssrLoadModule('/src/source-chats-page.jsx');
@@ -241,27 +243,35 @@ test('E77 official: vK unmounts the frame shell while incognito; VA adds a 48px 
     assert.ok(css.includes(selector), selector);
 });
 
-test('E77 shell: inactive it is display: contents only; active it is VA\'s grid, Fy\'s row, LA\'s padding and Jy\'s frame', () => {
+// chat-header 4.16336.0 (surfaces wave 2): the shell's top bar row is the sliced shared-20 Yw → Xw (Zw → Ix), mounted in
+// the frame host main.jsx gives it (the platform and window state of frame-sidebar-host.jsx). Fixtures only.
+const shellIn = (frame, props, child = null) => React.createElement(Frame.FrameSidebarHost, { value: { platform: 'mac', zoomFactor: 1, ...frame } },
+  React.createElement(Shell.SourceIncognitoShell, { active: true, onExit: noop, pathname: '/new', ...props }, child));
+
+test('E77 shell: inactive it is display: contents only; active it is VA\'s grid, the sliced Xw row, LA\'s padding and Jy\'s frame', () => {
   const h = React.createElement;
-  const off = renderToStaticMarkup(h(Shell.SourceIncognitoShell, { active: false, onExit: noop }, h('main', { className: 'workspace' })));
+  const off = renderToStaticMarkup(h(Shell.SourceIncognitoShell, { active: false, onExit: noop, pathname: '/new' }, h('main', { className: 'workspace' })));
   assert.equal(off, '<div class="contents"><div class="contents"><div class="contents"><main class="workspace"></main></div></div></div>');
-  const on = renderToStaticMarkup(h(Shell.SourceIncognitoShell, { active: true, onExit: noop, trafficLights: true }, h('main', { className: 'workspace' })));
+  const on = renderToStaticMarkup(shellIn({ fullScreen: false }, {}, h('main', { className: 'workspace' })));
   assert.ok(on.startsWith('<div class="grid w-full overflow-hidden" style="height:100%;grid-template-rows:48px 1fr;--desktop-top-bar-row-height:48px">'));
-  assert.match(on, /<div class="flex items-center draggable px-2" style="z-index:30"[^>]*><div class="flex-1 flex items-center gap-1"><div class="w-\[69px\] shrink-0"><\/div><\/div>/);
-  assert.match(on, /<div class="flex items-center gap-2 text-bg-000"><div class="group"[^>]*><svg[^>]*viewBox="0 0 20 20"[^>]*>.*?<\/svg><\/div><span class="text-sm select-none">Incognito chat<\/span><\/div>/);
-  assert.match(on, /<div class="flex-1 flex items-center justify-end"><div class="cds-root text-primary contents"[^>]*data-mode="dark"[^>]*>.*?aria-label="Exit incognito"/);
+  // Xw: replacesFrameHeader (no border-b), zIndex V(30) while incognito, the titlebar-area spacer (pA: env() fallback on a
+  // Mac) and the 69px traffic-light spacer (pn: Mac, not fullscreen); no sidebar toggle while incognito.
+  assert.match(on, /<div class="flex items-center draggable px-2" style="z-index:30"><div class="flex-1 flex items-center gap-1"><div class="shrink-0" style="width:env\(titlebar-area-x, 0px\)"><\/div><div class="w-\[69px\] shrink-0"><\/div><\/div>/);
+  assert.doesNotMatch(on, /desktop-topbar-sidebar-toggle|border-b/);
+  // The 4.16336.0 GhostFilled label icon (shared-140 Xl) and the incognito copy (shared-123 kh).
+  assert.match(on, /<div class="flex items-center gap-2 text-bg-000"><svg width="20" height="20" viewBox="0 0 20 20"[^>]*class="group" aria-hidden="true"[^>]*><path[^>]*d="M10 3C6\.134 3 3 6\.134 3 10L3 14\.25[^"]*"><\/path><path class="group-hover:animate-\[icon-ghost-blink_4s_ease-in-out_infinite\] opacity-0"[^>]*><\/path><\/svg><span class="text-sm select-none">Incognito chat<\/span><\/div>/);
+  // Zw → Ix first in the trailing slot: the inverted CdsRoot (resolved light → dark) around the ghost iconOnly X.
+  assert.match(on, /<div class="flex-1 flex items-center justify-end"><div class="cds-root text-primary contents"[^>]*data-mode="dark"[^>]*><button[^>]*data-cds="Button" data-cds-icon-only="" data-cds-ghost=""[^>]*class="[^"]*\bgroup draggable-none" aria-label="Exit incognito"/);
   assert.match(on, /<div class="flex min-h-0 min-w-0 w-full overflow-x-clip relative overflow-y-auto \[scrollbar-gutter:stable\] print:!overflow-visible"><div class="w-full relative min-w-0 h-full print:!h-auto" style="padding:calc\(48px - var\(--desktop-top-bar-row-height, 0px\)\) 8px 8px"><main class="workspace"><\/main><\/div><div data-testid="incognito-frame"/);
   assert.match(on, /data-testid="incognito-frame" class="animate-incognito-frame-in pointer-events-none fixed inset-\[50px_8px_8px_8px\] rounded-2xl shadow-\[0_0_0_100px_var\(--cds-text-primary\)\]" style="top:calc\(50px \+ var\(--app-top-offset, 0px\)\);clip-path:inset\(-50px -100px -100px\);z-index:20;opacity:1"/);
-  assert.doesNotMatch(renderToStaticMarkup(h(Shell.SourceIncognitoShell, { active: true, onExit: noop, trafficLights: false }, null)), /w-\[69px\]/);
+  // Off a Mac the row is Xw's window-controls-overlay branch, which the host contract excludes (WindowControlsMenu throws).
+  assert.throws(() => renderToStaticMarkup(shellIn({ platform: 'windows' }, {})), /WindowControlsMenu was entered/);
 });
 
-test('E77 Qg: the Exit X sits in a CdsRoot of the opposite mode, ghost iconOnly, group draggable-none; zh label', () => {
+test('E77 Ix: the Exit X sits in a CdsRoot of the opposite mode, ghost iconOnly, group draggable-none; zh label', () => {
   const h = React.createElement;
-  assert.equal(Shell.incognitoToggleMode(true, 'light'), 'dark');
-  assert.equal(Shell.incognitoToggleMode(true, 'dark'), 'light');
-  assert.equal(Shell.incognitoToggleMode(false, 'dark'), 'dark');
-  const dark = renderToStaticMarkup(h(Shell.SourceExitIncognito, { onToggle: noop, className: 'draggable-none', mode: 'dark' }));
-  assert.match(dark, /^<div class="cds-root text-primary contents"[^>]*data-mode="light"/);
+  const dark = renderToStaticMarkup(h(Cds.CdsRoot, { mode: 'dark' }, shellIn({}, {})));
+  assert.match(dark, /<div class="flex-1 flex items-center justify-end"><div class="cds-root text-primary contents"[^>]*data-mode="light"/);
   const button = dark.match(/<button[^>]*aria-label="Exit incognito"[^>]*>/)?.[0];
   assert.ok(button);
   assert.match(button, /class="[^"]*\bgroup draggable-none\b/);
@@ -269,7 +279,7 @@ test('E77 Qg: the Exit X sits in a CdsRoot of the opposite mode, ghost iconOnly,
   assert.equal(Shell.frameShellMounted({ isIncognito: false }), true);
   I18n.setLocale('zh-CN');
   try {
-    const zhBar = renderToStaticMarkup(h(Shell.SourceIncognitoTopBar, { onExit: noop, mode: 'light' }));
+    const zhBar = renderToStaticMarkup(shellIn({}, {}));
     assert.match(zhBar, /aria-label="退出无痕模式"/);
     assert.match(zhBar, /<span class="text-sm select-none">无痕聊天<\/span>/);
   } finally { I18n.setLocale('en-US'); }
@@ -279,9 +289,12 @@ test('E77 main.jsx: the shell wraps the workspace, unmounts the sidebar and the 
   const main = src('src/main.jsx');
   assert.equal(count(main, 'import { SourceIncognitoShell, frameShellMounted } from "./source-incognito-shell.jsx";'), 1);
   assert.equal(count(main, 'const incognitoShell = incognitoActive && side === 0 && !NO_SIDEBAR;'), 1);
-  assert.equal(count(main, '{side === 0 && !NO_SIDEBAR && frameShellMounted({ isIncognito: incognitoShell }) && <SourceSidebarBoundary>'), 1);
-  assert.equal(count(main, 'data-collapsed={effectiveCollapsed && !NO_SIDEBAR && frameShellMounted({ isIncognito: incognitoShell }) || undefined}'), 1);
-  const open = main.indexOf('<SourceIncognitoShell active={incognitoShell} onExit={() => incognitoKey.current?.()} trafficLights={isMacPlatform() && !fullScreen}>');
+  // frame-sidebar 4.16336.0: the main window's frame is the official vB; incognito makes it sidebarless (vB's _r(): no KR,
+  // no collapsed frame, data-experiment). The legacy root of the other windows keeps the expression.
+  assert.equal(count(main, 'const frameHost = side === 0 && !NO_SIDEBAR ? {'), 1);
+  assert.equal(count(main, 'sidebarless: !frameShellMounted({ isIncognito: incognitoShell }),'), 1);
+  assert.equal(count(main, '"data-collapsed": effectiveCollapsed && !NO_SIDEBAR && frameShellMounted({ isIncognito: incognitoShell }) || undefined,'), 1);
+  const open = main.indexOf('<SourceIncognitoShell active={incognitoShell} onExit={() => incognitoKey.current?.()} pathname={incognitoDraft ? "/new" : `/chat/${current}`}>');
   assert.ok(open > 0);
   assert.ok(open < main.indexOf('<SourceSplitHost side={side}>') && main.indexOf('</SourceSplitHost>\n      </SourceIncognitoShell>') > open);
   assert.equal(count(main, 'onExitIncognito={incognitoActive && !incognitoShell ? () => incognitoKey.current?.() : undefined'), 1);

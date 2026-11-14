@@ -26,18 +26,22 @@ const count = (text, needle) => text.split(needle).length - 1;
 const h = React.createElement;
 const TRANSCRIPT = 'c96d752d0-CWv_7-n9.js';
 
-let server, Adapters, PrRows, KitChip, Changes, previousWindow, previousDocument;
+let server, Adapters, PrRows, KitChip, Changes, KitV4, ChangesV4, previousWindow, previousDocument;
 before(async () => {
   previousWindow = globalThis.window; previousDocument = globalThis.document;
   // view-tabs' preload helper creates a link element while it evaluates (D21); the keybinding table reads the agent.
-  globalThis.document = { createElement: () => ({ relList: { supports: () => false } }), querySelector: () => null, documentElement: { getAttribute: () => null } };
-  globalThis.window = { localStorage: undefined, matchMedia: undefined, navigator: { userAgent: 'Mozilla/5.0 (X11; Linux x86_64)' } };
+  globalThis.document = { cookie: '', createElement: () => ({ relList: { supports: () => false } }), querySelector: () => null, documentElement: { getAttribute: () => null, hasAttribute: () => false } };
+  globalThis.window = { addEventListener() {}, removeEventListener() {}, localStorage: undefined, matchMedia: undefined, navigator: { userAgent: 'Mozilla/5.0 (X11; Linux x86_64)' }, location: { pathname: '/' } };
   server = await createServer({ configFile: false, root: app, plugins: [react()], server: { middlewareMode: true, hmr: false, ws: false, watch: null }, appType: 'custom', logLevel: 'error' });
   (await server.ssrLoadModule('/electron/i18n/index.mjs')).setLocale('en-US');
   Adapters = await server.ssrLoadModule('/src/source-session-rail-changes-adapters.jsx');
   PrRows = await server.ssrLoadModule('/src/generated/session-rail-changes/pr-rows.mjs');
   KitChip = await server.ssrLoadModule('/src/generated/session-rail-kit/branch-chip.mjs');
   Changes = await server.ssrLoadModule('/src/generated/session-rail/pr-count-context.mjs');
+  // 4.16336.0 rail cutover: SessionRailChanges draws the session-rail-changes-v4 rows inside the 4.16336.0 rail's card
+  // (its row layout on the 4.16336.0 kit's ChangesRowLayoutContext, its PR count report on the v4 RailPrCountContext).
+  KitV4 = await server.ssrLoadModule('/src/generated/session-rail-kit-v4/index.mjs');
+  ChangesV4 = await server.ssrLoadModule('/src/generated/session-rail-changes-v4/index.mjs');
 });
 after(async () => {
   await server?.close();
@@ -50,7 +54,7 @@ const status = (patch = {}) => ({ isRepo: true, cwd: '/work/claude-ui-lab', repo
 // The GitHub CLI lookup's record (electron/git-pull-request.cjs parsePullRequest), as main.jsx bandPrView holds it.
 const pr = (patch = {}) => ({ number: 42, url: 'https://github.com/acme/claude-ui-lab/pull/42', state: 'open', title: 'Rail PR rows',
   baseRefName: 'develop', headRefName: 'feature/rail', ci: 'passed', checks: { passed: 3, failed: 0, pending: 0, skipped: 0, total: 3 }, ...patch });
-const inRow = (node) => h(KitChip.ChangesRowLayoutContext.Provider, { value: 'row' }, node);
+const inRow = (node) => h(KitChip.ChangesRowLayoutContext.Provider, { value: 'row' }, h(KitV4.ChangesRowLayoutContext.Provider, { value: 'row' }, node));
 const render = (props) => renderToStaticMarkup(inRow(h(Adapters.SessionRailChanges, { diffOpenable: true, onOpenChanges() {}, onToggleChanges() {}, ...props })));
 
 // A hook dispatcher (as tests/session-rail-changes.test.mjs): one component level, so handlers can be reached.
@@ -166,11 +170,12 @@ test('SessionRailChanges with a PR: Ike\'s link row (state glyph, title link, #n
   assert.match(html, /^<nav aria-label="Repository and pull request controls" class="flex flex-col gap-1 empty:hidden"><ul role="list" class="flex flex-col gap-1"><li class="flex flex-col">/);
   assert.doesNotMatch(html, /data-rail-changes-row/, 'a PR link is Ike\'s link layout, not the flat changes row');
   assert.match(html, /<span role="img" aria-label="Open" class="inline-flex shrink-0 text-git-opened">/, 'kke open glyph, Wc label');
-  assert.match(html, /<a href="https:\/\/github\.com\/acme\/claude-ui-lab\/pull\/42" target="_blank" rel="noopener" class="min-w-0 truncate text-primary hover:underline focus-visible:underline focus-visible:outline-none">Rail PR rows<\/a>/);
+  // 4.16336.0 c96d752d0: the title link's class drops `truncate` and its text sits in an OverflowTooltip (`f(it, {lazy: !0, …})`).
+  assert.match(html, /<a href="https:\/\/github\.com\/acme\/claude-ui-lab\/pull\/42" target="_blank" rel="noopener" class="min-w-0 text-primary hover:underline focus-visible:underline focus-visible:outline-none"><span data-cds="OverflowTooltip" class="block min-w-0 overflow-x-clip text-ellipsis whitespace-nowrap"[^>]*>Rail PR rows<\/span><\/a>/);
   assert.match(html, /<span class="shrink-0">#42<\/span>/);
   assert.match(html, /aria-label="CI: all checks passed"/);
   // C2-1: CL's passed dot is c219730b0's StatusDot preset (CdsPulse, animate off), no longer a 6px span.
-  assert.match(html, /aria-label="CI: all checks passed" class="inline-flex size-5 shrink-0 items-center justify-center"><span class="contents \[--cds-page-bg:transparent\]"><span data-cds="Pulse" class="[^"]*rounded-full" style="background:var\(--cds-text-git-opened\);/);
+  assert.match(html, /aria-label="CI: all checks passed" class="inline-flex size-5 shrink-0 items-center justify-center"><span class="contents \[--cds-page-bg:transparent\]"><span data-cds="Pulse" class="[^"]*rounded-full[^"]*" style="background:var\(--cds-text-git-opened\);/); // 4.16336.0 cds-core Pulse adds stacks: variants after rounded-full
   assert.doesNotMatch(html, /size-\[6px\]/);
   assert.match(html, /aria-label="More options for Rail PR rows"/);
   assert.match(html, /aria-label="Open changes, 12 added, 3 removed"/);
@@ -255,7 +260,7 @@ test('mounted: gke reports the PR count to the Changes card (cL), the title link
     Object.assign(dom.window, { setTimeout, clearTimeout, setInterval, clearInterval, navigator: { userAgent: 'Mozilla/5.0 (X11; Linux x86_64)' } });
     const container = dom.document.body.appendChild(dom.document.createElement('div'));
     const root = createRoot(container);
-    const tree = (props) => h(Changes.RailPrCountContext.Provider, { value: (n) => counts.push(n) },
+    const tree = (props) => h(ChangesV4.RailPrCountContext.Provider, { value: (n) => counts.push(n) },
       inRow(h(Adapters.SessionRailChanges, { status: status(), diffOpenable: true, onOpenPr: (url) => opened.push(url), ...props })));
     await act(async () => { root.render(tree({ pr: pr() })); });
     assert.equal(counts.at(-1), 1, '"1 pull request" in the card summary');

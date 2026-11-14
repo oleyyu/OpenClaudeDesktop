@@ -23,7 +23,8 @@ before(async () => {
   // D21: source-session.jsx reaches the view-tabs graph (R2-topbar TT-07 attachment name), whose preload-helper calls
   // document.createElement("link") when it is evaluated, so the stub has one.
   // The transcript rows' code themes (generated c5d464fa3, over shared-4 kf) read html[data-cds-*] when evaluated.
-  globalThis.document ??= { body: { nodeType: 1, style: {} }, documentElement: { dataset: {}, style: {}, getAttribute: () => null, hasAttribute: () => false /* W14-code r4 R4T-02: the question card's cb8c5a88f ii pulls shared-52, which reads it at load */ }, createElement: () => ({}) };
+  // W8-M9 stub contract (round4 integration, stub fields only): cds-core 9203795f reads these at load (official 4.16336.0): document.cookie.
+  globalThis.document ??= { cookie: '' /* W8-M9: shared-0 CQ / Wo document.cookie */, body: { nodeType: 1, style: {} }, documentElement: { dataset: {}, style: {}, getAttribute: () => null, hasAttribute: () => false /* W14-code r4 R4T-02: the question card's cb8c5a88f ii pulls shared-52, which reads it at load */ }, createElement: () => ({}) };
   const { createServer } = await import("vite"), react = (await import("@vitejs/plugin-react")).default;
   server = await createServer({ configFile: false, root, plugins: [react()], server: { middlewareMode: true, hmr: false, watch: null }, appType: "custom", logLevel: "error" });
   React = (await import("react")).default;

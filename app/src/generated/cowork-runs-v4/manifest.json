@@ -1,0 +1,671 @@
+{
+  "referenceVersion": "4.16336.0",
+  "referenceSnapshot": "snapshots/claude-4.16336.0-20261104",
+  "generator": "scripts/extract-cowork-runs-v4.mjs",
+  "adapterModule": "src/source-cowork-runs-v4-adapters.jsx",
+  "linkedAreas": [
+    "cowork-progress-v4",
+    "cowork-scheduled-v4",
+    "routines-shared-v4"
+  ],
+  "sharedGraph": "cds-core",
+  "modules": [
+    {
+      "target": "shared-0.mjs",
+      "source": "shared-0-CnnWnVrT.js",
+      "sourceSha256": "eb5fb89d8b47627c28969bd1df41f25a49a3e1d6ed91c5af2d980d5847d78ae1",
+      "sha256": "7ed75c1df9ac9999e442ee67b5bcdbde293e5a182f4633b4d46c61f5808cb49b",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "Kc",
+          "sha256": "8388c84c2c4193a16cf74ae64398c94484e51bc0a1ef186234c6cbfd9ce31908"
+        },
+        {
+          "name": "qc",
+          "sha256": "ff374054dbb218e7c59b94a5fb2cee09708faeb3776e0b2064a3ec8a9225bbc9"
+        }
+      ],
+      "initializers": [],
+      "imports": [],
+      "exports": {},
+      "sharedExports": [
+        "qc"
+      ],
+      "heldByViewTabs": [
+        "Kc",
+        "qc"
+      ]
+    },
+    {
+      "target": "shared-62.mjs",
+      "source": "shared-62-DoCqVpIq.js",
+      "sourceSha256": "15a90aabd711c4209050f53ef48b2754661e19b090936fdc6d37346bd4cf4e56",
+      "sha256": "ffb5a9f10cd22c92681bc2cdb35d6c8c4e1c69a353f3ffe0588da99bf3f090d0",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "ql",
+          "sha256": "aa1d6b769785cf1ae0671c777ec6bbd7567e4cd4e5b74d04e2cc401aefb1d38b"
+        },
+        {
+          "name": "Fd",
+          "sha256": "afc07b92065ff1dc335a94037ac2ea0cca10ed41b88adc0f19239610cbc2069c"
+        }
+      ],
+      "initializers": [],
+      "imports": [],
+      "exports": {},
+      "sharedExports": [
+        "Fd",
+        "ql"
+      ],
+      "heldByViewTabs": [
+        "Fd"
+      ]
+    },
+    {
+      "target": "shared-92.mjs",
+      "source": "shared-92-BOgyxePb.js",
+      "sourceSha256": "ef73b1ca0bd064d1d7e606cdedd6c457cb99ffb02f93b7f8b00d8226941a3ada",
+      "sha256": "3ec9b85169bd9def65a22f38bfedeb304e007ab0c7f45c263c556576f38b2701",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "xW",
+          "sha256": "378d80956cf6b4addc19fbf9a96a57a2ee7c952602ec96b2bbf128692cf1b59d"
+        }
+      ],
+      "initializers": [],
+      "imports": [],
+      "exports": {},
+      "sharedExports": [
+        "xW"
+      ],
+      "heldByViewTabs": []
+    },
+    {
+      "target": "shared-120.mjs",
+      "source": "shared-120-DCdTP1_5.js",
+      "sourceSha256": "b1a1dc9691fe9e451db638c8bec3f6df98fd4b0b8dbf10503f3d118fb29ec32e",
+      "sha256": "88db2978fec4e39a63eda217a3c9da85bbafa2dbb00c0752946c78e55ba0372d",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "Ze",
+          "sha256": "a317969f345ca4f3d910156c80a11ab43f54e0d121c59fc6d8dd3b36c071376e"
+        }
+      ],
+      "initializers": [],
+      "imports": [
+        {
+          "local": "J1",
+          "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+          "name": "J1",
+          "via": "shared-frame-CJdE5Ria.js:lm",
+          "kind": "linked",
+          "original": "J1"
+        },
+        {
+          "local": "J9",
+          "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+          "name": "J9",
+          "via": "shared-frame-CJdE5Ria.js:hm",
+          "kind": "linked",
+          "original": "J9"
+        },
+        {
+          "local": "K1",
+          "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+          "name": "K1",
+          "via": "shared-frame-CJdE5Ria.js:_m",
+          "kind": "linked",
+          "original": "K1"
+        },
+        {
+          "local": "Xe",
+          "from": "../cowork-progress-v4/shared-120.mjs",
+          "name": "Xe",
+          "via": "shared-120-DCdTP1_5.js#Xe",
+          "kind": "linked",
+          "original": "Xe"
+        },
+        {
+          "local": "l",
+          "from": "../cds-core/vendor-frame.mjs",
+          "name": "useDirection",
+          "via": "vendor-frame-BckkO60Y.js:xa",
+          "kind": "shared-graph",
+          "original": "Xn"
+        }
+      ],
+      "exports": {},
+      "sharedExports": [
+        "Ze"
+      ],
+      "heldByViewTabs": []
+    },
+    {
+      "target": "c21f11e6d.mjs",
+      "source": "c21f11e6d-Cyj5xu_D.js",
+      "sourceSha256": "447d453f1060221fbc7dba61a01b4b2ecff7fc10d1fbcd7a060e2a7269045145",
+      "sha256": "b5940a878ed3cc582c979da8362590bac60b81fd8c7c1b9b6feb5ef6fdb8b9ef",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "hT",
+          "sha256": "e08017ddd3d71221ad436437a464b4d3b0075bb9e086305a2513df4b1ec3bab4"
+        },
+        {
+          "name": "gT",
+          "sha256": "4130ba3c940cc3a181c14baca7e28ef0aa6234a13fd10ffaa177400b5b0181d9"
+        },
+        {
+          "name": "_T",
+          "sha256": "a0a27da15607b0b9cfcea35c25e0f4df5883a28cc37a0e960277a7a070ce534a"
+        },
+        {
+          "name": "vT",
+          "sha256": "6952e72e6a1f6fedd5fb12506c4ff6f42d6a19e50ff41d6db3c349343f37c18a"
+        },
+        {
+          "name": "yT",
+          "sha256": "c6faf7c421daf37c35083a5528b321ddb04d41b3e688a7fd956008bc8f4ed3cb"
+        },
+        {
+          "name": "bT",
+          "sha256": "aca17fcd4170c03801a196817642c1c144ed053290fc8ee2e700a01478267222"
+        },
+        {
+          "name": "xT",
+          "sha256": "5c3ee7e5303e032132675abaf55d4e248795c5b338f80ceecee281b0a13f8cfc"
+        },
+        {
+          "name": "ST",
+          "sha256": "60f44b6f87e2fcb081025138f64e9df85f9ee2d4f00fbcae0dfb15cb8ffa55a3"
+        },
+        {
+          "name": "CT",
+          "sha256": "179fb4e9264176e6f1a3b69cd38ba2bd6d26e12b635dd12f93ce2a2636aa7bad"
+        },
+        {
+          "name": "wT",
+          "sha256": "3ffc2a0f78e1bf0bb2ea5d7fd438edc3692e7fdfa627e9e3b19678c7002b871c"
+        },
+        {
+          "name": "TT",
+          "sha256": "682c958113cf51374a8161f117462f12d57cab5cd23b4a119d3855476a978a95"
+        },
+        {
+          "name": "HT",
+          "sha256": "5d5772060d1f50659a70425c40c93cb3eca248d749e285298e4e7a250f26ffea"
+        },
+        {
+          "name": "UT",
+          "sha256": "2a746dc368b02260bb33e980f617c5dafb77293d09736df54dd0c5ea89e16329"
+        },
+        {
+          "name": "WT",
+          "sha256": "5056743457e41f46e0efd90d400dd32bdfdc261036e74f77e6301cfc9b722bc1"
+        }
+      ],
+      "initializers": [],
+      "imports": [
+        {
+          "local": "Bc",
+          "from": "../routines-shared-v4/shared-2-CsjIBQD8.mjs",
+          "name": "$T",
+          "via": "shared-2-CsjIBQD8.js:ym",
+          "kind": "linked",
+          "original": "$T"
+        },
+        {
+          "local": "Ei",
+          "from": "./shared-62.mjs",
+          "name": "ql",
+          "via": "shared-62-DoCqVpIq.js:xv",
+          "kind": "generated"
+        },
+        {
+          "local": "Ga",
+          "from": "./shared-92.mjs",
+          "name": "xW",
+          "via": "shared-92-BOgyxePb.js:ja",
+          "kind": "generated"
+        },
+        {
+          "local": "H",
+          "from": "../cds-core/shared-frame.mjs",
+          "name": "CdsSkeleton",
+          "via": "shared-frame-CJdE5Ria.js:Ou",
+          "kind": "shared-graph",
+          "original": "Eg"
+        },
+        {
+          "local": "I1",
+          "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+          "name": "I1",
+          "via": "shared-frame-CJdE5Ria.js:rm",
+          "kind": "linked",
+          "original": "I1"
+        },
+        {
+          "local": "I2",
+          "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+          "name": "I2",
+          "via": "shared-frame-CJdE5Ria.js:im",
+          "kind": "linked",
+          "original": "I2"
+        },
+        {
+          "local": "I4",
+          "from": "../cds-core/shared-frame.mjs",
+          "name": "I4",
+          "via": "shared-frame-CJdE5Ria.js:om",
+          "kind": "shared-graph",
+          "original": "I4"
+        },
+        {
+          "local": "J0",
+          "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+          "name": "J0",
+          "via": "shared-frame-CJdE5Ria.js:cm",
+          "kind": "linked",
+          "original": "J0"
+        },
+        {
+          "local": "J1",
+          "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+          "name": "J1",
+          "via": "shared-frame-CJdE5Ria.js:lm",
+          "kind": "linked",
+          "original": "J1"
+        },
+        {
+          "local": "J2",
+          "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+          "name": "J2",
+          "via": "shared-frame-CJdE5Ria.js:um",
+          "kind": "linked",
+          "original": "J2"
+        },
+        {
+          "local": "J3",
+          "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+          "name": "J3",
+          "via": "shared-frame-CJdE5Ria.js:dm",
+          "kind": "linked",
+          "original": "J3"
+        },
+        {
+          "local": "J4",
+          "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+          "name": "J4",
+          "via": "shared-frame-CJdE5Ria.js:fm",
+          "kind": "linked",
+          "original": "J4"
+        },
+        {
+          "local": "J5",
+          "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+          "name": "J5",
+          "via": "shared-frame-CJdE5Ria.js:pm",
+          "kind": "linked",
+          "original": "J5"
+        },
+        {
+          "local": "J9",
+          "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+          "name": "J9",
+          "via": "shared-frame-CJdE5Ria.js:hm",
+          "kind": "linked",
+          "original": "J9"
+        },
+        {
+          "local": "K0",
+          "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+          "name": "K0",
+          "via": "shared-frame-CJdE5Ria.js:gm",
+          "kind": "linked",
+          "original": "K0"
+        },
+        {
+          "local": "K1",
+          "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+          "name": "K1",
+          "via": "shared-frame-CJdE5Ria.js:_m",
+          "kind": "linked",
+          "original": "K1"
+        },
+        {
+          "local": "K2",
+          "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+          "name": "K2",
+          "via": "shared-frame-CJdE5Ria.js:vm",
+          "kind": "linked",
+          "original": "K2"
+        },
+        {
+          "local": "K3",
+          "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+          "name": "K3",
+          "via": "shared-frame-CJdE5Ria.js:ym",
+          "kind": "linked",
+          "original": "K3"
+        },
+        {
+          "local": "K4",
+          "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+          "name": "K4",
+          "via": "shared-frame-CJdE5Ria.js:bm",
+          "kind": "linked",
+          "original": "K4"
+        },
+        {
+          "local": "K5",
+          "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+          "name": "K5",
+          "via": "shared-frame-CJdE5Ria.js:xm",
+          "kind": "linked",
+          "original": "K5"
+        },
+        {
+          "local": "Kg",
+          "from": "../cowork-progress-v4/cc5a62f6f.mjs",
+          "name": "CoworkPanelMergedContext",
+          "via": "cc5a62f6f-CsfnfFRu.js:_",
+          "kind": "linked",
+          "original": "ne"
+        },
+        {
+          "local": "Kr",
+          "from": "../routines-shared-v4/shared-62-DoCqVpIq.mjs",
+          "name": "hu",
+          "via": "shared-62-DoCqVpIq.js:Pv",
+          "kind": "linked",
+          "original": "hu"
+        },
+        {
+          "local": "M_",
+          "from": "../cowork-scheduled-v4/c1dd841c3-1sytfYmN.mjs",
+          "name": "o",
+          "via": "c1dd841c3-1sytfYmN.js:t",
+          "kind": "linked",
+          "original": "o"
+        },
+        {
+          "local": "Q",
+          "from": "../../source-cowork-runs-v4-adapters.jsx",
+          "name": "FormattedMessage",
+          "via": "vendor-intl-BJgYK7RA.js:l",
+          "kind": "adapter",
+          "original": "Gt"
+        },
+        {
+          "local": "S",
+          "from": "react",
+          "name": "useEffect",
+          "via": "vendor-frame-BckkO60Y.js:go",
+          "kind": "react"
+        },
+        {
+          "local": "Tc",
+          "from": "../../source-cowork-runs-v4-adapters.jsx",
+          "name": "useCoworkRunsReadState",
+          "via": "shared-2-CsjIBQD8.js:ms",
+          "kind": "adapter",
+          "original": "wH"
+        },
+        {
+          "local": "Tm",
+          "from": "../cowork-progress-v4/shared-120.mjs",
+          "name": "Xn",
+          "via": "shared-120-DCdTP1_5.js:q",
+          "kind": "linked",
+          "original": "Xn"
+        },
+        {
+          "local": "U",
+          "from": "../cds-core/shared-frame.mjs",
+          "name": "CdsBadge",
+          "via": "shared-frame-CJdE5Ria.js:Pu",
+          "kind": "shared-graph",
+          "original": "vh"
+        },
+        {
+          "local": "Y",
+          "from": "../cds-core/shared-frame.mjs",
+          "name": "CdsIcon",
+          "via": "shared-frame-CJdE5Ria.js:lf",
+          "kind": "shared-graph",
+          "original": "Bs"
+        },
+        {
+          "local": "Zi",
+          "from": "../routines-shared-v4/shared-183-B2N6Zy4J.mjs",
+          "name": "_J",
+          "via": "shared-183-B2N6Zy4J.js:Cr",
+          "kind": "linked",
+          "original": "_J"
+        },
+        {
+          "local": "Zn",
+          "from": "../../source-cowork-runs-v4-adapters.jsx",
+          "name": "useDesktopFrame",
+          "via": "shared-123-1Hc1RTKl.js:Nu",
+          "kind": "adapter",
+          "original": "_L"
+        },
+        {
+          "local": "_t",
+          "from": "../../source-cowork-runs-v4-adapters.jsx",
+          "name": "RouterLink",
+          "via": "shared-25-D-aF0gt9.js:Pu",
+          "kind": "adapter",
+          "original": "Ky"
+        },
+        {
+          "local": "a_",
+          "from": "../cowork-progress-v4/cc5a62f6f.mjs",
+          "name": "ie",
+          "via": "cc5a62f6f-CsfnfFRu.js:s",
+          "kind": "linked",
+          "original": "ie"
+        },
+        {
+          "local": "ae",
+          "from": "../cds-core/shared-frame.mjs",
+          "name": "CdsTooltip",
+          "via": "shared-frame-CJdE5Ria.js:cd",
+          "kind": "shared-graph",
+          "original": "Kp"
+        },
+        {
+          "local": "cu",
+          "from": "../cowork-scheduled-v4/shared-140-DfG6VwpK.mjs",
+          "name": "sd",
+          "via": "shared-140-DfG6VwpK.js:Jn",
+          "kind": "linked",
+          "original": "sd"
+        },
+        {
+          "local": "e_",
+          "from": "../cowork-progress-v4/cc5a62f6f.mjs",
+          "name": "CoworkPanelLayoutContext",
+          "via": "cc5a62f6f-CsfnfFRu.js:m",
+          "kind": "linked",
+          "original": "E"
+        },
+        {
+          "local": "f",
+          "from": "../cds-core/vendor-frame.mjs",
+          "name": "clsx",
+          "via": "vendor-frame-BckkO60Y.js:Fa",
+          "kind": "shared-graph",
+          "original": "ke"
+        },
+        {
+          "local": "h",
+          "from": "react/jsx-runtime",
+          "name": "jsxs",
+          "via": "vendor-frame-BckkO60Y.js:Ka",
+          "kind": "react"
+        },
+        {
+          "local": "nc",
+          "from": "../routines-shared-v4/shared-2-CsjIBQD8.mjs",
+          "name": "XH",
+          "via": "shared-2-CsjIBQD8.js:Qo",
+          "kind": "linked",
+          "original": "XH"
+        },
+        {
+          "local": "oi",
+          "from": "./shared-62.mjs",
+          "name": "Fd",
+          "via": "shared-62-DoCqVpIq.js:cv",
+          "kind": "generated"
+        },
+        {
+          "local": "ou",
+          "from": "../routines-shared-v4/vendor-intl-BJgYK7RA.mjs",
+          "name": "tn",
+          "via": "vendor-intl-BJgYK7RA.js:f",
+          "kind": "linked",
+          "original": "tn"
+        },
+        {
+          "local": "p",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-BckkO60Y.js:Ga",
+          "kind": "react"
+        },
+        {
+          "local": "pr",
+          "from": "../../source-cowork-runs-v4-adapters.jsx",
+          "name": "useCoworkScheduledTasksStatus",
+          "via": "shared-123-1Hc1RTKl.js:Zy",
+          "kind": "adapter",
+          "original": "By"
+        },
+        {
+          "local": "qg",
+          "from": "../cowork-progress-v4/cc5a62f6f.mjs",
+          "name": "coworkPanelRow",
+          "via": "cc5a62f6f-CsfnfFRu.js:a",
+          "kind": "linked",
+          "original": "O"
+        },
+        {
+          "local": "ss",
+          "from": "../../source-cowork-runs-v4-adapters.jsx",
+          "name": "useScheduledTaskDisplayName",
+          "via": "shared-31-C9BqSSuD.js:ba",
+          "kind": "adapter",
+          "original": "Yp"
+        },
+        {
+          "local": "su",
+          "from": "../../source-cowork-runs-v4-adapters.jsx",
+          "name": "useIntl",
+          "via": "vendor-intl-BJgYK7RA.js:p",
+          "kind": "adapter",
+          "original": "q"
+        },
+        {
+          "local": "t_",
+          "from": "../cowork-progress-v4/cc5a62f6f.mjs",
+          "name": "CoworkPanelSection",
+          "via": "cc5a62f6f-CsfnfFRu.js:n",
+          "kind": "linked",
+          "original": "R"
+        },
+        {
+          "local": "ts",
+          "from": "../../source-cowork-runs-v4-adapters.jsx",
+          "name": "useScheduledTaskSessions",
+          "via": "shared-31-C9BqSSuD.js:Sa",
+          "kind": "adapter",
+          "original": "Tm"
+        },
+        {
+          "local": "ve",
+          "from": "./shared-0.mjs",
+          "name": "qc",
+          "via": "shared-0-CnnWnVrT.js:ES",
+          "kind": "generated"
+        },
+        {
+          "local": "w",
+          "from": "react",
+          "name": "useContext",
+          "via": "vendor-frame-BckkO60Y.js:po",
+          "kind": "react"
+        },
+        {
+          "local": "wm",
+          "from": "./shared-120.mjs",
+          "name": "Ze",
+          "via": "shared-120-DCdTP1_5.js:pn",
+          "kind": "generated"
+        },
+        {
+          "local": "x",
+          "from": "react",
+          "name": "memo",
+          "via": "vendor-frame-BckkO60Y.js:co",
+          "kind": "react"
+        }
+      ],
+      "exports": {
+        "gT": "CoworkRunsSection",
+        "WT": "CoworkUpcomingSection"
+      },
+      "sharedExports": [],
+      "heldByViewTabs": []
+    }
+  ],
+  "callSites": [
+    {
+      "source": "c21f11e6d-Cyj5xu_D.js",
+      "role": "The activity panel mounts Runs only for a session a scheduled task started (de), with the listed-change callback",
+      "sourceSha256": "447d453f1060221fbc7dba61a01b4b2ecff7fc10d1fbcd7a060e2a7269045145",
+      "raw": true,
+      "features": [
+        "de&&p(gT,{scheduledTaskId:de,currentSessionId:fe??q,isExpanded:fr,onToggle:()=>pr(!fr),onListedChange:Na})"
+      ]
+    },
+    {
+      "source": "c21f11e6d-Cyj5xu_D.js",
+      "role": "The activity panel always mounts Upcoming with the session triggers (no `now`: WT ticks through _J)",
+      "sourceSha256": "447d453f1060221fbc7dba61a01b4b2ecff7fc10d1fbcd7a060e2a7269045145",
+      "raw": true,
+      "features": [
+        "p(WT,{triggers:H,isExpanded:mr,onToggle:Ls})"
+      ]
+    },
+    {
+      "source": "c21f11e6d-Cyj5xu_D.js",
+      "role": "The run rows: \"Run - {time}\", the \"Unread completed run\" dot, the \"Runs\" title",
+      "sourceSha256": "447d453f1060221fbc7dba61a01b4b2ecff7fc10d1fbcd7a060e2a7269045145",
+      "raw": true,
+      "features": [
+        "{defaultMessage:\"Run - {time}\",id:\"28KG348KqB\"}",
+        "unreadCompletedRun:{defaultMessage:\"Unread completed run\",id:\"gN5ix3ELxz\"}",
+        "{defaultMessage:\"Runs\",id:\"pYmrK6Njpr\"}"
+      ]
+    },
+    {
+      "source": "cb1e253a0-Ct0IcfPp.js",
+      "role": "Upcoming triggers are the successful send_later tool results not deleted or fired since",
+      "sourceSha256": "3858c618d9e83798462473a91058efbb0f8be2c4ca449a0335e20e7c36e756c4",
+      "raw": true,
+      "features": [
+        "if(pi(r.name,\"delete_trigger\")||pi(r.name,\"fire_trigger\"))",
+        "if(!pi(r.name,\"send_later\"))continue;"
+      ]
+    }
+  ],
+  "publicAssets": []
+}

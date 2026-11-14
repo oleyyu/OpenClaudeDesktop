@@ -5,7 +5,9 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'node:path';
+import { readFileSync } from 'node:fs';
 import { withMemoCache } from './support/react-memo-cache.mjs';
+import { designEntryStylesheets, legacyGlobalStylesheets } from '../scripts/current-design-assets.mjs';
 
 // R2 composer-send-cell: the Code card's Send/Stop is the original 2.42304.0 c227f4d5e lM (generated
 // composer-send-cell.mjs). Its crossfade Ij (2.2553.1 sm, unchanged): the first mount renders only the active layer
@@ -15,7 +17,7 @@ before(async () => {
   server = await createServer({ configFile: false, root: path.resolve(import.meta.dirname, '..'), plugins: [react()],
     server: { middlewareMode: true, hmr: false, watch: null }, appType: 'custom', logLevel: 'error' });
   C = await server.ssrLoadModule('/src/source-composer.jsx');
-  Cell = await server.ssrLoadModule('/src/generated/code-composer/composer-send-cell.mjs');
+  Cell = await server.ssrLoadModule('/src/generated/code-composer-v4/composer-send-cell.mjs');
 });
 after(() => server?.close());
 const stopEl = React.createElement('button', { type: 'button', 'aria-label': 'Stop response' });
@@ -76,10 +78,15 @@ before(async () => {
   const probe = { name: 'tooltip-probe', enforce: 'pre', transform(code, id) {
     // w2-composer-gen: the generated Send cell is 3.6556.2 and imports the 3.6556.2 view-tabs graph (CdsTooltip = Xm); the
     // 2.42304.0 shim re-exports the same binding, so wrapping it here covers every caller.
-    if (!id.endsWith('/src/generated/view-tabs/shared-frame-6jtSkIit.js')) return null;
-    if (code.split('Xm as CdsTooltip').length !== 2) throw Error('shared-frame no longer exports Xm as CdsTooltip');
-    return code.replace('Xm as CdsTooltip', '__probeTooltip as CdsTooltip')
-      + '\nimport { createElement as __probeH, Fragment as __probeF } from "react";\nimport { renderToStaticMarkup as __probeMarkup } from "react-dom/server";\nfunction __probeTooltip(props) { return __probeH(__probeF, null, __probeH(Xm, props), __probeH("span", { hidden: true, "data-tooltip-probe": JSON.stringify({ content: typeof props.content === "string" ? props.content : null, markup: typeof props.content === "string" ? null : __probeMarkup(props.content), shortcut: props.shortcut ?? null, multiline: props.multiline ?? null, open: props.open ?? null }) })); }\n';
+    // surfaces-prod-3 composer (host cutover): the Send cell is now 4.16336.0 lM (code-composer-v4 composer-send-cell.mjs),
+    // whose CdsTooltip is the cds-core graph's (shared-frame Kp); both exports are probed alike.
+    const probed = { '/src/generated/view-tabs/shared-frame-6jtSkIit.js': 'Xm', '/src/generated/cds-core/shared-frame.mjs': 'Kp' };
+    const file = Object.keys(probed).find((suffix) => id.endsWith(suffix));
+    if (!file) return null;
+    const local = probed[file];
+    if (code.split(`${local} as CdsTooltip`).length !== 2) throw Error(`${file} no longer exports ${local} as CdsTooltip`);
+    return code.replace(`${local} as CdsTooltip`, '__probeTooltip as CdsTooltip')
+      + '\nimport { createElement as __probeH, Fragment as __probeF } from "react";\nimport { renderToStaticMarkup as __probeMarkup } from "react-dom/server";\nfunction __probeTooltip(props) { return __probeH(__probeF, null, __probeH(' + local + ', props), __probeH("span", { hidden: true, "data-tooltip-probe": JSON.stringify({ content: typeof props.content === "string" ? props.content : null, markup: typeof props.content === "string" ? null : __probeMarkup(props.content), shortcut: props.shortcut ?? null, multiline: props.multiline ?? null, open: props.open ?? null }) })); }\n';
   } };
   probeServer = await createServer({ configFile: false, root: path.resolve(import.meta.dirname, '..'), plugins: [probe, react()],
     server: { middlewareMode: true, hmr: false, watch: null }, appType: 'custom', logLevel: 'error' });
@@ -113,19 +120,28 @@ test("the Send tooltip adds the ⌘⌥⏎ fork row when forkAvailable and no tur
   assert.deepEqual(rows(sendTooltip({ forkAvailable: true, running: true, queueEnabled: true })).map(row => row[0]), ['Send', 'Queue for later'], 'a running turn cannot fork');
   assert.deepEqual(rows(sendTooltip({ forkAvailable: true, stayOnDraft: true })).map(row => row[0]), ['Send', 'Send and stay here', 'Send in a forked session']);
 });
-test("Send and Stop are the original lM buttons: names, test ids, the md glyphs in 'flex scale-90', Stop's escape shortcut", async () => {
+test("Send and Stop are the original lM buttons: names, test ids, the md glyphs (4.16336.0: no box), Stop's escape shortcut", async () => {
   const icons = (await import('../src/generated/icons.json', { with: { type: 'json' } })).default;
   const idle = composer({});
   assert.match(sendTag(idle), /data-testid="code-prompt-send"/);
   assert.match(sendTag(idle), /data-cds="Button"/);
   assert.match(sendTag(idle), /aria-keyshortcuts="Enter"/);
   assert.doesNotMatch(idle, /aria-label="Send message"/);
-  assert.match(idle, /<span class="flex scale-90"><span data-cds="Icon"[^>]*>/, 'cy wraps the md glyph');
+  // surfaces-prod-3 composer (4.16336.0 c227f4d5e-DGDdGBTz lM): `O ? p(je, { name: "ArrowReturn", size: "md" }) :
+  // "ArrowReturn"` — the md glyph sits in the button with no "flex scale-90" box; Stop's is StopFilled.
+  const official4 = (await import('node:fs')).readFileSync(path.resolve(import.meta.dirname, '../../reference/snapshots/claude-4.16336.0-20261104/ion-dist/assets/v1/c227f4d5e-DGDdGBTz.js'), 'utf8');
+  for (const needle of ['O?p(je,{name:"ArrowReturn",size:"md"}):"ArrowReturn"', 'O?p(je,{name:"StopFilled",size:"md"}):"StopFilled"'])
+    assert.equal(official4.split(needle).length - 1, 1, needle);
+  assert.equal(official4.split('"StopCircle"').length - 1, 0);
+  const sendButton = /<button[^>]*data-testid="code-prompt-send"[^>]*>.*?<\/button>/.exec(idle)?.[0] ?? '';
+  assert.ok(sendButton.includes(String.fromCodePoint(icons.ArrowReturn)), 'the ArrowReturn glyph');
+  assert.doesNotMatch(idle, /<span class="flex scale-90">/, 'no glyph box');
   const busy = composer({ running: true, onStop: noop, draft: '' });
   const stopButton = /<button[^>]*aria-label="Stop"[^>]*>.*?<\/button>/.exec(busy)?.[0] ?? '';
   assert.match(stopButton, /data-testid="code-prompt-stop"/);
   assert.match(stopButton, /aria-keyshortcuts="Escape"/);
-  assert.ok(stopButton.includes(String.fromCodePoint(icons.StopCircle)), 'StopCircle, not the plain Stop square');
+  assert.ok(stopButton.includes(String.fromCodePoint(icons.StopFilled)), '4.16336.0: StopFilled (no StopCircle in c227f4d5e)');
+  assert.ok(!stopButton.includes(String.fromCodePoint(icons.StopCircle)));
   assert.doesNotMatch(busy, /aria-label="Stop response"/);
   const stopTip = probes({ running: true, draft: '' }).find(entry => entry.content === 'Stop');
   assert.deepEqual([stopTip.shortcut, stopTip.open], ['escape', null], 'B = escapeClaimed ? void 0 : "escape"; U = L ? void 0 : !1');
@@ -159,12 +175,15 @@ test('sendButtonHeld: KM disables Send while held; the host holds it 1.5s from m
 });
 test('presets card: trailing-controls > send-cell with the inert size-control placeholder; Send only with a draft; Stop while running', () => {
   const empty = composer({ draft: '' });
-  assert.match(empty, /<div data-testid="code-prompt-trailing-controls" class="flex items-center gap-2"><div data-testid="code-prompt-send-cell" class="grid shrink-0 items-center justify-items-end"><div aria-hidden="true" inert="" class="col-start-1 row-start-1 flex invisible"><span class="size-control"><\/span><\/div>/);
+  // 4.16336.0 lM: the send cell carries data-hint-over-cell (`e = De ? "" : void 0`, De = !fe && !L && !Ee), set on
+  // this empty presets draft (c227f4d5e-DGDdGBTz `"data-hint-over-cell":e`).
+  assert.match(empty, /<div data-testid="code-prompt-trailing-controls" class="flex items-center gap-2"><div data-testid="code-prompt-send-cell" data-hint-over-cell="" class="grid shrink-0 items-center justify-items-end"><div aria-hidden="true" inert="" class="col-start-1 row-start-1 flex invisible"><span class="size-control"><\/span><\/div>/);
   assert.doesNotMatch(empty, /code-prompt-send"/, 'w && !j ? null: no Send without a draft');
   assert.doesNotMatch(empty, /code-prompt-stop/);
   assert.match(composer({ draft: 'hello' }), /data-testid="code-prompt-send"/);
   assert.match(composer({ draft: '', sending: true }), /data-testid="code-prompt-send"[^>]*>|aria-busy="true"[^>]*data-testid="code-prompt-send"/, 'submitQueued: the busy Send shows');
-  assert.match(composer({ draft: '', sending: true }), /<button[^>]*aria-busy="true"[^>]*aria-label="Send"/);
+  // 4.16336.0 CdsButton (cds-core) writes aria-label before its waiting state's aria-busy: one Send tag carries both.
+  assert.match(composer({ draft: '', sending: true }), /<button(?=[^>]*aria-busy="true")(?=[^>]*aria-label="Send")[^>]*>/);
   const running = composer({ running: true, draft: '' });
   assert.match(running, /data-testid="code-prompt-stop"/);
   assert.doesNotMatch(running, /code-prompt-send"/);
@@ -217,12 +236,34 @@ test('running with the queue lane: the editor names both lanes, with the spoken 
   assert.equal(placeholderOf(suggested), undefined, 'a shown suggestion clears it (K ? "")'); assert.equal(ghostOf(suggested), undefined);
 });
 
+// 4.16336.0 design assets (current-design-assets): index.html links the 4.16336.0 entry sheets, the legacy global sheet the
+// 3.6556.2 regions still need, then the generated compatibility layer. A class the 4.16336.0 sheets dropped is styled only
+// through legacy-utilities.css, and only as a registered legacy-region dependency (style-compatibility.json keeps its
+// 3.6556.2 rule and names the generated region that draws it).
+function loadedStyles(appRoot) {
+  const read = (file) => readFileSync(path.join(appRoot, file), 'utf8');
+  const names = [...designEntryStylesheets, ...legacyGlobalStylesheets];
+  assert.deepEqual([...read('index.html').matchAll(/<link\s+rel="stylesheet"\s+href="([^"]+)"/g)].map((m) => m[1]),
+    [...names.map((name) => `/assets/v1/${name}`), '/assets/legacy-utilities.css'], 'index.html stylesheet links');
+  const registry = JSON.parse(read('public/style-compatibility.json'));
+  return {
+    official: names.map((name) => read(`public/assets/v1/${name}`)).join('\n'),
+    compat: read('public/assets/legacy-utilities.css'),
+    legacyRegions: (token) => (registry.rules.some((rule) => rule.baselineVersion === '3.6556.2' && rule.references.some((ref) => ref.className === token))
+      ? registry.legacyDebt.owners.filter((owner) => owner.kind === 'region' && owner.classes.includes(token)).map((owner) => owner.area) : []),
+  };
+}
+
 // TT-04 lesson: lM's classes live in the loaded @layer utilities sheet, so the host must not shadow them with unlayered
-// rules. Every class the Send cell and the fit probe render is compiled there (except the uncompiled stacks: theme
-// variant), the host's legacy native-button reset is released for those buttons, and no local rule styles lM's DOM.
+// rules. Every class the Send cell and the fit probe render is compiled there (except the stacks: theme
+// variant: no 3.6556.2 rule, and 4.16336.0 gates every one on fizzy-lake color), the host's legacy native-button reset is released for those buttons, and no local rule styles lM's DOM.
+// 4.16336.0 (design assets): the sheet is the current c6a992d55 entry sheet (current-design-assets); a class it dropped
+// counts only as a registered code-composer legacy-region dependency served by legacy-utilities.css.
 test("lM's and the fit probe's classes are all in the official sheet, and the host's button reset is released for them", async () => {
   const fsp = await import('node:fs/promises');
-  const sheet = await fsp.readFile(path.resolve(import.meta.dirname, '../public/assets/v1/c6a992d55-Che1orl5.css'), 'utf8');
+  const utilities = designEntryStylesheets.find(name => name.startsWith('c6a992d55-'));
+  const sheet = await fsp.readFile(path.resolve(import.meta.dirname, '../public/assets/v1', utilities), 'utf8');
+  const { compat, legacyRegions } = loadedStyles(path.resolve(import.meta.dirname, '..'));
   const html = [composer({ draft: '' }), composer({ draft: 'hi' }), composer({ draft: '', running: true }), composer({ draft: 'hi', sending: true }),
     composer({ draft: 'hi', canSubmit: false, connectingHint: 'x' }), composer({ draft: '', running: true, queueEnabled: true })].join('');
   // Each code-prompt-trailing-controls subtree, cut at its matching </div>.
@@ -234,8 +275,9 @@ test("lM's and the fit probe's classes are all in the official sheet, and the ho
     .filter(t => t && !t.startsWith('stacks:') && !t.startsWith('sc-')).map(t => t.replaceAll('&amp;', '&')));
   assert.ok(tokens.size > 40, String(tokens.size));
   const escape = token => '.' + token.replace(/[^a-zA-Z0-9_-]/g, c => '\\' + c);
-  const missing = [...tokens].filter(token => !['{', ':', ',', '[', ' ', '>', ')'].some(next => sheet.includes(escape(token) + next)));
-  assert.deepEqual(missing, []);
+  const styled = (text, token) => ['{', ':', ',', '[', ' ', '>', ')'].some(next => text.includes(escape(token) + next));
+  const missing = [...tokens].filter(token => !styled(sheet, token));
+  assert.deepEqual(missing.filter(token => !(styled(compat, token) && legacyRegions(token).includes('code-composer'))), []);
   const css = await fsp.readFile(path.resolve(import.meta.dirname, '../src/source-composer.css'), 'utf8');
   // D26 (R3-style): the native-button reset is layered, so lM's CdsButton needs no revert-layer release
   // (tests/style-control-reset-layer.test.mjs resolves the cascade).
@@ -248,6 +290,8 @@ function shallow(props) {
   const hooks = {
     useMemo: fn => fn(), useCallback: fn => fn, useRef: initial => ({ current: initial }), useState: initial => [typeof initial === 'function' ? initial() : initial, () => {}],
     useLayoutEffect() {}, useEffect() {}, useContext: context => context._currentValue, useSyncExternalStore: (_subscribe, get) => get(),
+    // 4.16336.0 lM reads a hook that labels itself with useDebugValue (a no-op outside DevTools).
+    useDebugValue() {},
   };
   const internal = React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, old = internal.H;
   internal.H = withMemoCache(hooks);
@@ -316,7 +360,9 @@ test('permission null (saved mode not loaded) renders a disabled, busy "Mode" ch
   const chip = html => /<button[^>]*class="[^"]*sc-permission[^"]*"[^>]*>.*?<\/button>/.exec(html)?.[0] ?? '';
   const loading = chip(composer({ permission: null, canSubmit: false }));
   assert.match(loading, / disabled=""/); assert.match(loading, /aria-busy="true"/);
-  assert.match(loading, />Mode</); assert.doesNotMatch(loading, /Auto/);
+  // 4.16336.0 J6: the placeholder word rides data-placeholder-label (drawn by ::before), beside the sr-only name.
+  assert.match(loading, /data-placeholder-label="Mode"/); assert.match(loading, /<span class="sr-only">Permission mode<\/span>/);
+  assert.doesNotMatch(loading, /Auto/);
   const plan = chip(composer({ permission: 'plan' }));
   assert.doesNotMatch(plan, / disabled=""/); assert.match(plan, /Plan/);
 });

@@ -17,6 +17,9 @@ export default Object.freeze({
   license: "MIT (with extra use terms)",
   // The adapter script, relative to the repository root (packaged: process.resourcesPath).
   bridge: Object.freeze({ script: "harness/packages/opencode-bridge/bin/app-server.mjs" }),
+  // The bridge passes Settings › Models' custom providers to the agent, keys by {env:CODE_DESKTOP_PROVIDER_KEY_<ROUTE>}
+  // reference: codex.cjs resolveCore keeps those variables for it (every other bridge gets them blanked, foreignCoreEnv).
+  providerKeys: true,
   // Thread.cliVersion the bridge reports: "mimo <version>".
   sessionPrefix: "mimo ",
   // Its own dynamic-workflow tool (named by the ultracode reminders on its own engine).

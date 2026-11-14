@@ -6,6 +6,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'node:path';
+import { designEntryStylesheets } from '../scripts/current-design-assets.mjs';
 
 // W14-code r8 css8-classic-context-row-dead (E95): the classic layout's context row (codeLayout=classic) is gone with its
 // chips; the presets environment bar, the folder menu and the usage panel are what is left to pin here.
@@ -108,7 +109,8 @@ test('the legacy code-ui Popover/MenuItem host is gone; menus and popovers use t
   assert.ok(composer.includes('<OfficialEffortControl options={options}'));
   const composerCss = read('src/source-composer.css');
   assert.doesNotMatch(composerCss, /\.sc-effort-popover|\.sc-effort-label/);
-  const utilities = read('public/assets/v1/c6a992d55-Che1orl5.css');
+  // The official c6a992d55 utilities entry sheet index.html loads (current-design-assets: 4.16336.0 c6a992d55-_JRfOmTh).
+  const utilities = read(`public/assets/v1/${designEntryStylesheets.find((name) => name.startsWith('c6a992d55-'))}`);
   for (const name of ['.isolate{', '.flex{', '.w-\\[220px\\]{', '.select-none{', '.flex-col{', '.gap-lg{', '.shrink-0{', '.text-muted{']) assert.ok(utilities.includes(name), name);
   // W14-code r5 css5-usage-popover-handcopy: c227f4d5e V3's popup / Title / body classes verbatim; the host rule only
   // releases source-popover.css's unlayered caps to those utilities.
@@ -167,9 +169,16 @@ test("the env pill tooltip names the running core's assistant, in English and zh
   i18n.setLocale('zh-CN');
   i18n.setAssistantName('Kimi');
   assert.equal(i18n.t('Where DeepSeek runs'), 'Kimi 的运行位置');
-  // (W14-code r8: the environment bar's place chip is its reader now, source-composer-environment-bar.jsx; the classic
-  // row's ComposerButton is gone.)
-  assert.ok(fs.readFileSync(path.join(app, 'src/source-composer-environment-bar.jsx'), 'utf8').includes('content={t("Where DeepSeek runs")}'));
+  // composer-env (4.16336.0): the environment bar's place chip no longer reads it — 4.16336.0 $3 titles the place tooltip
+  // "Environment" (K7kuIZkkhY, picked into generated/composer-env-v4/environment-row.mjs), so D40's assistant-named copy
+  // has no 4.16336.0 counterpart there; the host takes the picked official copy through t().
+  const bar = fs.readFileSync(path.join(app, 'src/source-composer-environment-bar.jsx'), 'utf8');
+  assert.ok(!bar.includes('Where DeepSeek runs'));
+  assert.ok(bar.includes('content={t(tooltip.content.defaultMessage)}'));
+  const { environmentRow } = await import('../src/generated/composer-env-v4/environment-row.mjs');
+  assert.deepEqual(environmentRow.placeChip.tooltip.content, { defaultMessage: 'Environment', id: 'K7kuIZkkhY' });
+  i18n.setLocale('zh-CN');
+  assert.equal(i18n.t('Environment'), '环境');
 });
 
 // composer-env-chip-caret (3.6556.2 cc43287c9 a8 `caret: o`): the place chip shows CaretDown only for a cloud auto place

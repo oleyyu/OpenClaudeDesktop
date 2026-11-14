@@ -3,7 +3,9 @@ import { Icon } from "./icons";
 import { SourceSwitch as SettingSwitch } from "./source-switch.jsx";
 import { SourceMenu } from "./source-menu";
 import { SourceTooltip } from "./source-tooltip";
-import { CdsBadge, CdsHiddenReasonText, CdsTextInput } from "./generated/view-tabs/index.js";
+// host-wiring/chat (4.16336.0): the rows' Badges, the reason mirror and the search field in the host menu are the cds-core
+// graph's (shared-frame-CJdE5Ria vh → Pu Badge, Al HiddenReasonText, ww TextInput).
+import { CdsBadge, CdsHiddenReasonText, CdsTextInput } from "./cds-core.mjs";
 import { effortId, effortName, filterModels, isHighestEffort, modelMenuSections, shapeModelCatalog } from "./model-menu-model.mjs";
 import "./source-model-menu.css";
 import { t } from "../electron/i18n/index.mjs";
@@ -28,6 +30,9 @@ const modelName = (model) => model.displayName || model.name || modelKey(model);
  * models" rows (fw) pass `showDescription: !1`. The row's tooltip (aw) is only `b || t.tooltip?.content || m` — the
  * disabled reason, the catalog tooltip content or the notice text — and aria-description only the disabled reason.
  * Several faster tiers (Codex Fast, Ultrafast) are mutually exclusive switch rows under the "Fast mode" header.
+ * U-MODEL-MENU (2026-11-13, user: "改到图二", Claude Desktop's own picker with Claude models): one-line rows — a main
+ * row's catalog description is its tooltip, not a second line; no 'Default' badge on the model new sessions use (a
+ * catalog badge still shows); a single Fast tier's switch reads "Enable fast mode" (several tiers keep their names).
  */
 const hasText = (value) => typeof value === "string" && value.trim() !== "";
 const withTip = (content, item) => hasText(content)
@@ -102,7 +107,8 @@ function FastRow({ tier, label, checked, onToggle, unavailable, tooltipContent, 
 }
 // W14-code composer-14: shared-7 yw labels the switch row with the fast option's own name (`_w name: s.name`, the
 // catalog's text, under the block's Header); the host's is the core's tier name.
-const tierLabel = (tier) => tier.name || tier.key;
+// U-MODEL-MENU: with one tier the switch reads "Enable fast mode"; several tiers are told apart by their names.
+const tierLabel = (tier, several = true) => (several ? tier.name || tier.key : t("Enable fast mode"));
 export function SourceModelMenu({
   anchor, models = [], selected, onSelect, onClose, fastTier, fastMode = false, fastDisabled = false,
   fastSaving = false, onFastModeChange, initialHighlight,
@@ -123,7 +129,9 @@ export function SourceModelMenu({
   // R$ `zn(t&&b!==void 0,te)`: an open menu with a row reports it once.
   useEffect(() => { if (blockedRow) blockedRow.onShown?.(); }, [blockedRow]);
   const severalSpeeds = Array.isArray(speedTiers) && speedTiers.length > 1 && !!onSpeedChange;
-  const shaped = useMemo(() => shapeModelCatalog({ models, selected, defaultModel }), [models, selected, defaultModel]);
+  // U-MODEL-MENU: defaultModel is not passed on, so no row gets shapeModelCatalog's 'Default' badge.
+  void defaultModel;
+  const shaped = useMemo(() => shapeModelCatalog({ models, selected }), [models, selected]);
   const { primary, overflow, showFast, searchable } = useMemo(() => modelMenuSections({ models: shaped, fastTier, selected }), [shaped, fastTier, selected]);
   const primaryDigits = useMemo(() => {
     const digits = new Map();
@@ -140,16 +148,17 @@ export function SourceModelMenu({
     const id = modelKey(model), active = id === selected, digit = main ? primaryDigits.get(id) : undefined;
     // lp c: the unsupported current model stays checked but disabled (Sk: no digit for a deprecated row).
     const disabled = !!model.disabled && (!active || !!model.unsupported);
+    // U-MODEL-MENU: one-line rows; a main row's description is read from its tooltip.
     const description = main && hasText(model.description) ? model.description : undefined;
     // dw b / x: the disabled reason (the item's own disabledReason wrapper, XS), else the catalog tooltip or notice text, is the row's tooltip (aw).
     const reason = disabled ? model.disabled_reason?.message || undefined : undefined;
-    const tip = reason || model.tooltip?.content || model.notice?.text || model.notice_text || undefined;
+    const tip = reason || model.tooltip?.content || model.notice?.text || model.notice_text || description || undefined;
     const trailing = digit !== undefined
       ? <span className="sm-model-trailing" aria-hidden="true">{active
           ? <Icon name="Check" size={16} weight="strong" />
           : <span className="sm-model-digit">{digit}</span>}</span>
       : undefined;
-    return withTip(disabled ? undefined : tip, <SourceMenu.Item key={id} className="sm-model-item" label={modelName(model)} description={description}
+    return withTip(disabled ? undefined : tip, <SourceMenu.Item key={id} className="sm-model-item" label={modelName(model)}
       aria-description={reason} disabled={disabled} disabledReason={reason}
       checked={digit !== undefined ? undefined : active} checkedRole="radio"
       {...(digit !== undefined ? { role: "menuitemradio", "aria-checked": active, "aria-keyshortcuts": String(digit) } : {})}
@@ -184,7 +193,7 @@ export function SourceModelMenu({
         const toggle = () => { if (blockedRow) return; if (severalSpeeds) onSpeedChange(on ? "standard" : tier.key); else onFastModeChange(!fastMode); };
         // yw → _w: the tier's unavailable form (CTA, greyed, or a reason on an available-looking row).
         const unavailable = fastRowUnavailable(tier, { on, model: selected, onIntent: blockedRow ? () => blockedRow.cta?.run?.() : onFastIntent });
-        return <FastRow key={tier.key} tier={tier} label={tierLabel(tier)} checked={on} onToggle={toggle} unavailable={unavailable}
+        return <FastRow key={tier.key} tier={tier} label={tierLabel(tier, severalSpeeds)} checked={on} onToggle={toggle} unavailable={unavailable}
           tooltipContent={hasText(tier.description) ? tier.description : undefined} disabled={fastDisabled} busy={fastSaving} />;
       })}
     </>}
@@ -193,12 +202,16 @@ export function SourceModelMenu({
 
 /** shared-7 yx (thinkingStyle unset, as c227f4d5e AK gives the chin placement): after the model group, a separator
  * and an "Effort" submenu whose trigger hints the current level (P?.name; none for a warning badge) and whose popup
- * lists the levels as fx rows — radio-checked items (data-effort-id) with the level description (not for a warning
- * badge), the name with its badge (nx) and ultracode in "text-pro font-medium" — then dx, the selected warning
- * level description as a text-warning header. The host has no catalog thinking.description header.
+ * lists the levels as fx rows under the thinking.description header — radio-checked items (data-effort-id), the name
+ * with its badge (nx) and ultracode in "text-pro font-medium" — then dx, the selected warning level description as a
+ * text-warning header.
  * open (E21): ww `ee = f===!0&&Y!=="separate"`, `[X,te]=F(ee)`, `ne=X!==null` — the submenu is `defaultOpen:ne,
  * closeParentOnEsc:ne` and gw focuses `ie=(U??R[0])?.id` (the checked level, else the first); closing it drops ne
  * (`onOpenChange:e=>{e||te(null)}`), so a later hover open is a plain one. */
+// 4.16336.0 shared-7: the Effort popup opens with thinking.description as a font-normal header, and the level rows are
+// one line each (name + badge). Every harness's levels share this header; their per-level descriptions (DeepSeek
+// Harness: "Use for simple tasks…") are not shown as a second line.
+export const EFFORT_MENU_DESCRIPTION = "Higher effort means more thorough responses, but takes longer and uses your limits faster.";
 function EffortSection({ levels = [], value, onPick, open = false }) {
   const [levelFocus, setLevelFocus] = useState(!!open);
   const options = (levels || []).map((level) => {
@@ -213,11 +226,10 @@ function EffortSection({ levels = [], value, onPick, open = false }) {
     <SourceMenu.Submenu defaultOpen={levelFocus} closeParentOnEsc={levelFocus} onOpenChange={(next) => { if (!next) setLevelFocus(false); }}>
       <SourceMenu.SubmenuTrigger className="sm-model-item" label={t("Effort")} hint={warning ? undefined : selected?.name}>{t("Effort")}</SourceMenu.SubmenuTrigger>
       <SourceMenu.Popup label={t("Effort")} dataCds="ModelSelector" className="sm-model-menu sm-model-submenu" initialHighlight={levelFocus ? "checked" : undefined}>
+        <SourceMenu.Header className="sm-model-header sm-effort-description">{t(EFFORT_MENU_DESCRIPTION)}</SourceMenu.Header>
         <SourceMenu.Group>{options.map((option) => {
-          const optionWarning = option.badge?.variant === "warning";
           return <SourceMenu.Item key={option.id} className="sm-model-item" label={option.name} checked={option.id === value} checkedRole="radio"
-            data-effort-id={option.id} description={optionWarning || !hasText(option.description) ? undefined : option.description}
-            onClick={() => onPick?.(option.id)}>
+            data-effort-id={option.id} onClick={() => onPick?.(option.id)}>
             <ModelName name={option.name} badge={option.badge} labelClassName={isHighestEffort(option.id, options) ? "sm-model-label text-pro font-medium" : "sm-model-label"} />
           </SourceMenu.Item>;
         })}</SourceMenu.Group>

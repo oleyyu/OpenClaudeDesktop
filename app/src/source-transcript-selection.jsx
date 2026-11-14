@@ -2,8 +2,9 @@
 // hook and context serializer are extracted; the portal/layer host is local.
 import React, { useCallback, useLayoutEffect, useRef, useSyncExternalStore } from 'react';
 import { createPortal } from 'react-dom';
-// W14-code r6 css6-settings-button-code-callers: the selection toolbar's ghost buttons are shared-frame Uu (E41 direct import).
-import { CdsButton } from './generated/view-tabs/shared-frame-6jtSkIit.js';
+// W14-code r6 css6-settings-button-code-callers: the selection toolbar's ghost buttons are the CDS Button; host-wiring code-b:
+// the 4.16336.0 cds-core original (shared-frame-CJdE5Ria Xu → Id, semantic facade). The portal keeps the React tree's Context.
+import { CdsButton } from './cds-core.mjs';
 import { useTranscriptSelection } from './generated/code-editor/transcript-selection.mjs';
 import { sideChatContextLimit, truncateSideChatContext } from './generated/code-editor/side-chat-context.mjs';
 import { sideChatStore } from './side-chat-store.mjs';

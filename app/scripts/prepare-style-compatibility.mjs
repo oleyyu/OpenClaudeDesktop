@@ -301,10 +301,44 @@ async function generatedOwners() {
   return records;
 }
 
+// Prior snapshots, newest first. 3.6556.2 joined when the design pin moved to 4.16336.0: regions and host code still on
+// 3.6556.2 name utilities its c6a992d55 shipped and 4.16336.0 dropped (styles-audit §6).
 const BASELINES = [
+  ['3.6556.2', 'snapshots/claude-3.6556.2-20261025-192807', 'c6a992d55-Che1orl5.css'],
   ['2.42304.0', 'installed-2.42304.0-20261017', 'c6a992d55-sXiDGMFQ.css'],
   ['2.37337.1', 'installed-2.37337.1-20261015', 'c6a992d55-CNGsCU46.css'],
 ];
+
+// Unmigrated debt the layer carries, by owner: each generated region (its extract-*.mjs and the source version its
+// manifest records) or host file whose class references keep a rule, with the classes, baselines and theme tokens.
+// Region debt and host debt are kept apart: a generated region still on an earlier version is migration debt that ends
+// when its generator moves to the pin, while a host file (sourceVersion null) naming a dropped utility is the host's own
+// debt — it never "migrates" and must be rewritten to the pinned version's official classes/tokens. regionRules counts
+// rules at least one earlier-version generated region still holds; hostDebt lists the rules held only by host files.
+function legacyDebt(retained, tokens) {
+  const groups = new Map(), hostOnly = [];
+  let regionRules = 0;
+  for (const rule of retained) {
+    const legacy = rule.references.flatMap(ref => ref.hits.filter(hit => hit.sourceVersion !== designVersion).map(hit => ({ref, hit})));
+    if (legacy.some(({hit}) => hit.sourceVersion !== null)) regionRules += 1;
+    else hostOnly.push({selector:rule.selector, baselineVersion:rule.baselineVersion, start:rule.start, sha256:rule.sha256,
+      classes:[...new Set(legacy.map(({ref}) => ref.className))].sort(), files:[...new Set(legacy.map(({hit}) => hit.file))].sort()});
+  }
+  for (const rule of retained) for (const ref of rule.references) for (const hit of ref.hits) {
+    if (hit.sourceVersion === designVersion) continue;
+    const area = hit.file.match(/^src\/generated\/([^/]+)\//)?.[1] ?? null;
+    const key = area ? 'generated:' + area : 'host:' + hit.file;
+    if (!groups.has(key)) groups.set(key, {owner:key, kind:area ? 'region' : 'host', generator:hit.generator, area, sourceVersions:new Set(), files:new Set(), classes:new Set(), rules:new Set(), baselines:new Set()});
+    const group = groups.get(key);
+    group.sourceVersions.add(hit.sourceVersion ?? 'host'); group.files.add(hit.file); group.classes.add(ref.className);
+    group.rules.add(rule.baselineVersion + ':' + rule.start); group.baselines.add(rule.baselineVersion);
+  }
+  return {rules:retained.length, regionRules, tokens:tokens.map(token => token.property),
+    owners:[...groups.values()].sort((a, b) => a.owner < b.owner ? -1 : a.owner > b.owner ? 1 : 0).map(group => ({owner:group.owner, kind:group.kind, generator:group.generator, area:group.area,
+      sourceVersions:[...group.sourceVersions].sort(), files:[...group.files].sort(), classes:[...group.classes].sort(), rules:group.rules.size, baselines:[...group.baselines].sort()})),
+    hostDebt:{rules:hostOnly.length, owners:[...new Set(hostOnly.flatMap(item => item.files))].sort().map(file => 'host:' + file), items:hostOnly,
+      note:'Rules no earlier-version generated region holds: only host files name these dropped utilities. Not region migration debt; rewrite the host call sites to official ' + designVersion + ' classes/tokens.'}};
+}
 
 // dryRun computes the manifest without writing or comparing the published files (a scanner change can be measured
 // before the gate regenerates them, R10).
@@ -340,6 +374,10 @@ export async function prepareStyleCompatibility({check = false, dryRun = false} 
   };
   const hitsOf = name => [...(index.get(name) ?? new Map())].sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0)
     .flatMap(([file, bindings]) => [...bindings].sort().map(binding => ({file, binding, ...origin(file), reachable:!reach.complete ? true : reach.reachable.has(file)})));
+  // Only code still on an earlier version (a generated region whose manifest records it, or host code) may hold a prior
+  // utility: a class that code on the pinned design version names must come from that version's own sheets, so its hits
+  // never retain a rule (they are reported under targetVersionUnresolved instead).
+  const isLegacyHit = hit => hit.sourceVersion !== designVersion;
   const utilities = [];
   for (const baseline of baselines) baseline.ast.walkRules(rule => {
     const parents=[];
@@ -357,7 +395,7 @@ export async function prepareStyleCompatibility({check = false, dryRun = false} 
     const taken = new Set();
     for (const {rule, parents} of utilities.filter(u => u.baseline === baseline)) {
       const references=selectorClasses(rule.selector).filter(name=>!currentClasses.has(name)&&!covered.has(name))
-        .map(name=>({className:name,hits:hitsOf(name)})).filter(ref=>ref.hits.length);
+        .map(name=>({className:name,hits:hitsOf(name)})).filter(ref=>ref.hits.some(isLegacyHit));
       // The references it records stay all referenced absent classes of the selector.
       if(!retainsRule(rule.selector,references.map(ref=>ref.className)))continue;
       const text=baseline.text, start=rule.source.start.offset,end=rule.source.end.offset;
@@ -371,7 +409,7 @@ export async function prepareStyleCompatibility({check = false, dryRun = false} 
       }
       fragments.push(fragment);
       references.forEach(ref => taken.add(ref.className));
-      retained.push({selector:rule.selector,references,baseline:baseline.source,start,end,sha256:sha(raw),
+      retained.push({selector:rule.selector,references,baseline:baseline.source,baselineVersion:baseline.version,start,end,sha256:sha(raw),
         contexts:wrappers.map(p=>({name:p.name,params:p.params})),fragmentSha256:sha(fragment)});
     }
     taken.forEach(name => covered.add(name));
@@ -388,12 +426,12 @@ export async function prepareStyleCompatibility({check = false, dryRun = false} 
     for (const {decl, baseline} of missing) {
       if (tokens.some(t => t.property === decl.prop) || !references.includes(decl.prop)) continue;
       const text = baseline.text.slice(decl.source.start.offset, decl.source.end.offset);
-      tokens.push({property:decl.prop, value:decl.value, baseline:baseline.source, text, sha256:sha(text)});
+      tokens.push({property:decl.prop, value:decl.value, baseline:baseline.source, baselineVersion:baseline.version, text, sha256:sha(text)});
       references += '\n' + decl.value;
       changed = true;
     }
   }
-  const css = '/* Original prior-snapshot utilities for modules still awaiting migration; generated, not current-version parity. */\n'
+  const css = '/* Original prior-snapshot utilities for modules still awaiting migration (unmigrated debt, see style-compatibility.json legacyDebt); generated, not current-version parity. */\n'
     + (tokens.length ? '@layer theme{:root,:host{' + tokens.map(t => t.text.endsWith(';') ? t.text : t.text + ';').join('') + '}}\n' : '')
     + '@layer utilities{\n' + fragments.join('\n') + '\n}\n';
   postcss.parse(css); // Fail preparation on malformed source slices, before emitting assets.
@@ -421,6 +459,9 @@ export async function prepareStyleCompatibility({check = false, dryRun = false} 
         note:'Per-hit reachable flag only; a rule held solely by unreachable modules is still retained.'},
     },
     rules:retained, tokens,
+    legacyDebt:legacyDebt(retained, tokens),
+    targetVersionUnresolved:[...absent].filter(name => !covered.has(name)).sort().map(name => ({className:name, hits:hitsOf(name)}))
+      .filter(ref => ref.hits.length && !ref.hits.some(isLegacyHit)),
   };
   if (dryRun) return manifest;
   for (const [file, text] of [['assets/legacy-utilities.css',css], ['style-compatibility.json',JSON.stringify(manifest,null,2)+'\n']]) {

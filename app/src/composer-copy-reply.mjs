@@ -12,8 +12,8 @@
 // 3.6556.2 (composer-copy-aside): the generated reader (cc43287c9 H$) also skips `aside === !0` replies, the assistant
 // entries c06cf64bb qh builds from a message's annotations.code.aside; the host items have no such annotation, so no host
 // entry is ever aside and nothing is skipped on that account.
-import { parseCopyReplyCount } from './generated/code-composer/copy-reply-arg.mjs';
-import { copyReplyTranscript } from './generated/code-composer/copy-reply-replies.mjs';
+import { parseCopyReplyCount } from './generated/code-composer-v4/copy-reply-arg.mjs';
+import { copyReplyTranscript } from './generated/code-composer-v4/copy-reply-replies.mjs';
 import { clipboardEnvironment, writeClipboardPayload } from './clipboard-payload.mjs';
 import { markdownToClipboardHtml } from './rich-copy-html.mjs';
 import { t, tn } from '../electron/i18n/index.mjs';

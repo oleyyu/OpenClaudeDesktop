@@ -1,7 +1,7 @@
 import React, { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { SourceDialog, SourceDialogFooter, SourceConfirmationDialog } from './source-dialog.jsx';
 // W14-code r6 R6DC-02: ca690a791's footer / confirm buttons are shared-frame Uu (E41 direct import), not the host replica.
-import { CdsButton as Button } from './generated/view-tabs/shared-frame-6jtSkIit.js';
+import { CdsButton as Button } from './cds-core.mjs'; // 4.16336.0 host wiring (frame): cds-core Button (Xu)
 import { EnvironmentField as Field, EnvironmentLabel as Label, EnvironmentFieldError as FieldError, EnvironmentTextInput as TextInput } from './generated/code-current/environment-field-controls.mjs';
 import { EnvironmentFooter } from './generated/code-current/environment-form-layout.mjs';
 import { EnvironmentFolderField, EnvironmentFolderList, EnvironmentEmptyFolders, EnvironmentFolderRow, EnvironmentFolderControls, environmentAddFolderSelect } from './generated/code-current/environment-folder-view.mjs';
@@ -16,7 +16,7 @@ import { StartMessage, useStartIntl } from './source-code-start-adapters.jsx';
 import { EnvironmentSelect } from './source-environment-folder-adapters.jsx';
 import { t } from '../electron/i18n/index.mjs';
 // E41: the dialog is reached from the menu graph (source-environment-folder-adapters), so CDS comes from the view-tabs file.
-import { CdsTextLink } from './generated/view-tabs/shared-frame-6jtSkIit.js';
+import { CdsTextLink } from './cds-core.mjs'; // 4.16336.0 host wiring (frame): cds-core TextLink (Lg)
 import './source-saved-environment-dialog.css';
 
 // ca690a791 fn, local kind (2.42304.0), with folderCheckouts off (the host saves no per-folder checkouts) and saveScoped

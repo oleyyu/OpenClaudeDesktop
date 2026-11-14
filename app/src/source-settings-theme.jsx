@@ -119,7 +119,7 @@ export function SourceThemeSettings({ config = {}, desktopCall, onSave, onOpenSe
   // The one free-text font override in the theme (customTheme.uiFont); the Interface font choice itself is on Code.
   const uiFontRow = settingRow('themeUiFont', t('Custom interface font'), t('Any installed font, saved with this theme. Leave empty to use the Interface font chosen on the Code page.'),
     <UiFontControl value={theme.uiFont} onCommit={value => saveTheme('themeUiFont', { uiFont: value })}/>,
-    onOpenSetting ? { below: <div className="ss-theme-custom-actions">{openButton(t('Interface font settings'), 'code', 'interfaceFont')}</div> } : undefined);
+    onOpenSetting ? { below: <div className="ss-theme-custom-actions">{openButton(t('Interface font settings'), 'preferences', 'interfaceFont')}</div> } : undefined);
   // Claude keeps segmented controls to 2–3 choices; longer lists are a 160px Select in the control slot.
   const fontSizeRow = settingRow('themeFontScale', t('Font size'), t('Scales most interface text and controls.'),
     <SourceSelect label={t('Font size')} align="end" className="sselect-width-160" value={theme.fontScale}

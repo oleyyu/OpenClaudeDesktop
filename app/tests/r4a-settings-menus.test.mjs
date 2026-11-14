@@ -55,7 +55,7 @@ function handWritten() {
 }
 
 // ---------------------------------------------------------------------------------------------------- settings-02
-test('settings-02 Interface font stays on the Code page: official __gb__1197194941 off branch, local Code › Appearance row', () => {
+test('settings-02 Interface font: 2.42304.0 __gb__1197194941 off branch was Code › Appearance; 4.16336.0 has it on General › Appearance only (official Hn)', () => {
   // (a) cd19fedd2 p/m: the GrowthBook gate (shared-25 hc: growthbook feature .on), exported as p.
   const gate = official('cd19fedd2-7Tk-qNbq.js');
   once(gate, ['var p="__gb__1197194941";function m(){return n(p)}', 'import{Ah as n}from"./shared-25-DP8p7i1Z.js"', 'm as p',
@@ -83,22 +83,39 @@ test('settings-02 Interface font stays on the Code page: official __gb__11971949
   assert.equal(appearancePreferences({}).interfaceFont, 'anthropic');
   for (const value of ['anthropic', 'system', 'dyslexic']) assert.equal(appearancePreferences({ interfaceFont: value }).interfaceFont, value);
   assert.equal(appearancePreferences({ interfaceFont: 'serif' }).interfaceFont, 'anthropic');
-  // The only Interface font row is the first row of Code › Appearance; General › Appearance has Theme, Motion, Language.
+  // 4.16336.0 (the v0.3 target): the gate is gone and "Interface font" (ZHco1GSUHH) is drawn only by General's Appearance
+  // group (c0db37792 Mn inside Hn) — the search index ca25db325 lists it; no Claude Code page row.
+  const v4 = name => fs.readFileSync(path.join(app, '../reference/snapshots/claude-4.16336.0-20261104/ion-dist/assets/v1', name), 'utf8');
+  const v4Files = fs.readdirSync(path.join(app, '../reference/snapshots/claude-4.16336.0-20261104/ion-dist/assets/v1')).filter(name => name.endsWith('.js'));
+  assert.deepEqual(v4Files.filter(name => v4(name).includes('__gb__1197194941')), []);
+  assert.deepEqual(v4Files.filter(name => v4(name).includes('ZHco1GSUHH')).sort(), ['c0db37792-BTkaIv78.js', 'ca25db325-CVWdSFl1.js']);
+  // Local: the official Appearance group (settings-pages-v4 GeneralAppearance) is General's; its search rows are Theme,
+  // Interface font, Motion (no controls: the official group draws them); Code › Appearance no longer has the row;
+  // Language is the OpenClaude local group after it.
   const settings = local('src/source-settings.jsx');
   const group = head => { const i = settings.indexOf(head); assert.ok(i >= 0, head); return settings.slice(i, settings.indexOf('\n    ]},', i)); };
   const rowIds = text => [...text.matchAll(/(?:row|booleanRow|levelRow)\('([A-Za-z]+)'/g)].map(match => match[1]);
-  const code = group("{tab:'code',title:'Appearance',rows:[");
-  assert.deepEqual(rowIds(code), ['interfaceFont', 'transcriptSize', 'transcriptWidth', 'transcriptView']);
-  assert.ok(code.includes("row('interfaceFont',t('Interface font'),<>{t('Font for the whole interface — menus, sidebars, and panels.')} <FontLicenses/></>,segments('interfaceFont',t('Interface font'),[{value:'anthropic',label:'Anthropic Sans'},{value:'system',label:t('System')},{value:'dyslexic',label:'OpenDyslexic'}])"));
-  assert.deepEqual(rowIds(group("{tab:'preferences',title:'Appearance',rows:[")), ['theme', 'motion', 'locale']);
+  // Round 4 (settings lane general, corrects B2): on desktop shared-1 Vd is false (simple nav off: shared-183 Ch =
+  // GrowthBook && mh, mh = !1), so General has no Code looks; c71860c77-puomdTO2 Ea `x && !C` renders Code appearance
+  // (cda9efc49 R) and Appearance (cda9efc49 M part "all": text size, width, Default transcript view) on the Claude Code
+  // page. Was: code Appearance = ['transcriptView'] and preferences Code appearance (general-code-looks) = the five rows.
+  assert.equal(settings.indexOf("{tab:'code',title:'Appearance',rows:["), -1, 'no host Claude Code › Appearance group');
+  assert.equal(settings.indexOf("official:'general-code-looks'"), -1, 'no General › Code looks');
+  assert.deepEqual(rowIds(group("{tab:'code',title:'Code appearance',official:'claude-code-appearance',rows:[")), ['codeTheme', 'codeFont', 'codeFontSize', 'transcriptSize', 'transcriptWidth', 'transcriptView']);
+  assert.deepEqual(rowIds(group("{tab:'preferences',title:'Appearance',official:'general-appearance',rows:[")), ['theme', 'interfaceFont', 'motion']);
+  assert.deepEqual(rowIds(group("{tab:'preferences',title:'Language',rows:[")), ['locale']);
   assert.equal(count(settings, "row('interfaceFont'"), 1);
+  assert.equal(count(settings, "group.official==='general-appearance'?<CdsLayerProvider key={group.tab+group.title} base={500}><SettingsGeneralAppearance "), 1);
+  // The official row's Font licenses keeps the text/plain check (c0db37792 Tn, generated). The local FontLicenses
+  // (source-settings.jsx) is no longer mounted on General; it is left for the B3 Code-page pass to remove or reuse.
+  assert.equal(count(local('src/generated/settings-pages-v4/general.mjs'), 'e.ok && e.headers.get("content-type")?.startsWith("text/plain")'), 1);
   assert.equal(count(settings, "r.ok&&r.headers.get('content-type')?.startsWith('text/plain')?r.text():null"), 1, 'local Font licenses keeps the text/plain check');
-  // The custom theme page points at the Code page row, not General.
-  assert.equal(count(local('src/source-settings-theme.jsx'), "openButton(t('Interface font settings'), 'code', 'interfaceFont')"), 1);
+  // The custom theme page points at General, where the row now is.
+  assert.equal(count(local('src/source-settings-theme.jsx'), "openButton(t('Interface font settings'), 'preferences', 'interfaceFont')"), 1);
 });
 
 // ---------------------------------------------------------------------------------------------------- settings-12
-test('settings-12 unified plugins UI is behind __gb__1022745313 && __gb__2406162393; local keeps the classic field + Your plugins tab', () => {
+test('settings-12 unified plugins UI is behind __gb__1022745313 && __gb__2406162393; local keeps the classic field + Your plugins tab', async () => {
   // (a) shared-52 gk = Sa() && ae(hk), both GrowthBook (shared-25 hc), exported Go.
   once(official('shared-52-DGviI8xb.js'), ['ba="__gb__1022745313"', 'function Sa(){return ae(ba)}',
     'hk="__gb__2406162393";function gk(){let e=Sa(),t=ae(hk);return e&&t}', 'gk as Go'], 'shared-52');
@@ -135,8 +152,23 @@ test('settings-12 unified plugins UI is behind __gb__1022745313 && __gb__2406162
   assert.equal(count(page, '<div className="cz-search" data-cds="TextInput" data-clearable={value !== "" || undefined} role="search"'), 1);
   assert.equal(count(page, 'const toolbar = <ListToolbar label={t("Plugins")} tab={t("Your plugins")} tabTestId="plugins-tabbed-list-tab-mine"'), 1);
   for (const [file, text] of handWritten())
-    for (const word of ['customize-yours-first-rows', 'box_with_tokens', 'field_with_tokens_not_drawn', '__gb__2406162393'])
+    for (const word of ['customize-yours-first-rows', 'box_with_tokens', 'field_with_tokens_not_drawn'])
       assert.equal(token(text, word), 0, `${file} ${word}`);
+  // The local unified plugins UI gate stays closed. Since batch 2a (4.16336.0 r4e-plugin) the one reader of the gate is
+  // the region adapter, which asks the host GrowthBook table — 4.16336.0 shared-62 `var yP="__gb__2406162393";function
+  // bP(){return Fr(yP)}`, exported Dl — and that table does not open it. So: the gate's literal appears in code only as
+  // that single host-growthbook read (comments aside), nowhere else in the hand-written tree, and the table answers false.
+  const v4 = name => fs.readFileSync(path.join(app, '../reference/snapshots/claude-4.16336.0-20261104/ion-dist/assets/v1', name), 'utf8');
+  once(v4('shared-62-DoCqVpIq.js'), ['var yP="__gb__2406162393";function bP(){return Fr(yP)}', 'bP as Dl'], '4.16336.0 shared-62');
+  const gateReader = 'src/source-r4e-plugin-adapters.jsx';
+  const code = text => text.split('\n').filter(line => !/^\s*(\/\/|\*|\/\*)/.test(line)).join('\n');
+  for (const [file, text] of handWritten())
+    assert.equal(token(code(text), '__gb__2406162393'), file === gateReader ? 1 : 0, `${file} __gb__2406162393 in code`);
+  const reader = code(local(gateReader));
+  assert.equal(count(reader, 'export function useUnifiedPluginsUi() {\n  return hostGrowthBookFlag("__gb__2406162393");\n}'), 1, 'the gate is read only through hostGrowthBookFlag');
+  const growthBook = await import('../src/host-growthbook.mjs');
+  assert.equal(Object.hasOwn(growthBook.HOST_GROWTHBOOK, '__gb__2406162393'), false, 'the host table does not list the unified plugins UI');
+  assert.equal(growthBook.hostGrowthBookFlag('__gb__2406162393'), false, 'the unified plugins UI is off');
 });
 
 // ------------------------------------------------------------------------------------------------------- menus-04
@@ -200,8 +232,18 @@ test('menus-04 fizzy-lake parts: the generated 2.42304.0 allowlist is empty, so 
   assert.doesNotMatch(dialog, /className="shortcuts-(?:region|section|row|label|keys|or)"/);
   // (Comment lines may name the attribute, as source-app-switch-adapters.jsx does for its closed isFizzyLakePart.)
   const code = text => text.split('\n').filter(line => !/^\s*(\/\/|\*|\/\*)/.test(line)).join('\n');
-  for (const [file, text] of handWritten()) assert.equal(count(code(text), 'data-cds-fizzy-lake'), 0, file);
-  assert.equal(count(local('index.html'), 'fizzy'), 0);
+  // html-root fix (integration-2): source-settings.css reads (never writes) the root's official type part in one selector,
+  // the 4.16336.0 c6a992d55 Large message-row leading (.cds-root:is([data-cds-fizzy-lake~=type],…)[data-chat-text-size=l]).
+  const TYPE_READER = 'html[data-cds-fizzy-lake~=type][data-chat-text-size=l] .source-message.source-message:is([data-cds=AssistantMessage],[data-cds=UserMessage]) {';
+  for (const [file, text] of handWritten()) {
+    if (file === 'src/source-settings.css') assert.equal(count(code(text), TYPE_READER), 1, file);
+    assert.equal(count(code(text).split(TYPE_READER).join(''), 'data-cds-fizzy-lake'), 0, file);
+  }
+  // html-root (integration-2): index.html now carries the official root attribute data-cds-fizzy-lake="color panels type"
+  // (4.16336.0 ion-dist/index.html); the 3.6556.2 gate above still filters it through Qm=[], so the c518a31cc fizzy branch stays
+  // off in the local dialog. It is the only fizzy mention there.
+  assert.equal(count(local('index.html'), 'fizzy'), 1);
+  assert.equal(count(local('index.html'), ' data-cds-fizzy-lake="color panels type"\n'), 1);
 });
 
 // ------------------------------------------------------------------------------------------------------- menus-07

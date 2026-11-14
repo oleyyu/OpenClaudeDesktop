@@ -132,7 +132,11 @@ test('one focus ring on search fields: the dialog’s generic input outline skip
 test('clicking the current Customize nav entry returns a drill-in to its list', () => {
   const source = readFileSync(path.join(app, 'src/source-settings.jsx'), 'utf8');
   assert.match(source, /const customizeNavFocus = entry => entry\.customize&&entry\.id===tab\?\{reset:Date\.now\(\)\}:null;/);
-  assert.match(source, /setFocus\(customizeNavFocus\(t\)\)/);
+  // 4.16336.0 settings-nav: a click on the official row re-opens the settings modal store (shared-183 yg open bumps
+  // openCount), which the host follows with the same reset token; a local row refocuses directly.
+  assert.match(source, /refocus=entry\?customizeNavFocus\(entry\):null;\n?\s*selectTab\(target\.tab\);setFocus\(refocus\);/);
+  assert.match(source, /if\(!quietStore\.current&&state\.openCount!==previous\.openCount\)followStore\.current\(state\.section\);/);
+  assert.match(source, /const selectLocal=id=>\{const entry=tabs\.find\(item=>item\.id===id\);const refocus=entry\?customizeNavFocus\(entry\):null;selectTab\(id\);setFocus\(refocus\);\};/);
 });
 
 test('Usage: the daily-usage failure is one translated line only when no daily view is drawn; local bars share one grid', () => {

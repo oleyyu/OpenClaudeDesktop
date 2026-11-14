@@ -1,6 +1,7 @@
 import { parseCsvPreview as currentCsvPreview } from './generated/code-current/csv-parser.mjs';
 import { HIGHLIGHT_LIMITS, isPlainLanguage, normalizeLanguage } from './highlight-model.mjs';
 import { FILE_EXTENSION_LANGUAGES, LOCKFILE_LANGUAGES } from './highlight-languages.mjs';
+import { localMediaUrl } from './local-media-url.mjs';
 
 // Highlight tokens describe complete fragments; split without dropping empty
 // lines, CRs, or a token that spans multiple lines. No HTML is interpreted.
@@ -79,9 +80,10 @@ export function filePreviewKind(path = '') {
   if (/\.(md|mdx|markdown)$/i.test(value)) return { kind: 'markdown', delimiter: null };
   return null;
 }
-// The composer's file:// preview URL (main.jsx filePreviewUrl), the same
-// encoding for the Files viewer's <img>/<video>/<audio>.
-export const filePreviewUrl = (filePath) => encodeURI(`file://${filePath}`);
+// The Files viewer's <img>/<video>/<audio>/PDF frame URL (U-2): the claude-media:// URL main mints for the file
+// (src/local-media-url.mjs over electron/session-media.cjs), the same as the composer's (main.jsx filePreviewUrl);
+// null when main refuses it. The app://localhost page never names file://.
+export const filePreviewUrl = (filePath) => localMediaUrl(filePath);
 // The drawn SVG: the shown text as an image (the app CSP allows data: images),
 // so the graphic follows the text the viewer holds and its scripts never run.
 export const svgPreviewUrl = (text) => `data:image/svg+xml;charset=utf-8,${encodeURIComponent(String(text ?? ''))}`;

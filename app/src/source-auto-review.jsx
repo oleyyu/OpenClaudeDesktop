@@ -2,8 +2,9 @@ import React, { useState } from "react";
 import "./source-auto-review.css";
 import { t } from "../electron/i18n/index.mjs";
 import { deniedActionSummary, guardianDenialEvent } from "./auto-review-model.mjs";
-// W14-code r6 R6DC-02: shared-frame Uu (E41 direct import), not the host replica.
-import { CdsButton } from './generated/view-tabs/shared-frame-6jtSkIit.js';
+// W14-code r6 R6DC-02, host-wiring code-a: the 4.16336.0 cds-core Button (shared-frame Xu) through the semantic facade,
+// not the host replica.
+import { CdsButton } from './cds-core.mjs';
 
 // Codex's 'Approve for me' (approvalsReviewer auto_review): item/autoApprovalReview/started|completed name the item
 // they review (targetItemId); state.js keeps them per thread. Each shows as one muted line under that row:

@@ -1,7 +1,8 @@
 // General > Menu bar (c71860c77) drives main dji: the Tray exists only while
-// menuBarEnabled is on (source default true). Left click is pji, whose Quick
-// Entry target has no local equivalent, so it falls back to showing the main
-// window. Right click pops NOr's menu built from the current account.
+// menuBarEnabled is on (source default true). Left click is pji (4.16336.0
+// rTo): it toggles Quick Entry (quick-entry/window.cjs), and shows the main
+// window when Quick Entry cannot open. Right click pops NOr's menu built from
+// the current account.
 const REFRESH_WAIT_MS = 800;
 // pK / KK: restore a minimized window, focus a visible one, otherwise show it.
 // The tray's Show App and Window > Show Main Window share it.
@@ -12,7 +13,7 @@ function showWindow(window) {
   else window.show();
 }
 
-function createMenuBar({ Tray, Menu, nativeImage, app, iconPath, menuModel, getWindow, getEnabled, getAccount, getClient }) {
+function createMenuBar({ Tray, Menu, nativeImage, app, iconPath, menuModel, getWindow, getEnabled, getAccount, getClient, quickEntry = null }) {
   let tray = null, disposed = false;
   // Last successful account/rateLimits/read for one client + identity. The
   // sparse account/rateLimits/updated notification is not merged; each menu
@@ -26,11 +27,16 @@ function createMenuBar({ Tray, Menu, nativeImage, app, iconPath, menuModel, getW
 
   function showApp() { showWindow(getWindow()); }
   // pji fallback when no Quick Entry window is shown: show and focus.
-  function click() {
+  function showFallback() {
     const window = getWindow();
     if (!window || window.isDestroyed()) return;
     if (window.isMinimized()) window.restore(); else window.show();
     window.focus();
+  }
+  // rTo: `!await activateQuickEntryWindow() && mainWindow && (restore, show, focus)`.
+  function click() {
+    if (!quickEntry) { showFallback(); return; }
+    Promise.resolve().then(quickEntry).then((shown) => { if (!shown) showFallback(); }, () => showFallback());
   }
 
   function refresh() {

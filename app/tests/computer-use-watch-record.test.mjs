@@ -448,7 +448,10 @@ test('the card reads a demonstration as the original: rows, captions, the lead, 
   assert.equal(model.parseDemonstration([{ type: 'text', text: 'words first ' }, ...blocks.slice(0, 1)]), null);
 });
 
-test('Codex parts: localImage paths become file URLs; the demonstration is found on a transcript item', () => {
+test('Codex parts: localImage paths become claude-media URLs main mints (U-2, never file://); the demonstration is found on a transcript item', () => {
+  const saved = globalThis.desktop, minted = [];
+  globalThis.desktop = { mediaUrl: (p) => { minted.push(p); return `claude-media://v/t${minted.length}?v=1`; } };
+  try {
   const content = [{ type: 'text', text: '<watch-record-demonstration durationMs="2500" steps="1" images="1">I recorded a demonstration of a desktop workflow for you to learn from. The blocks below are a chronological trajectory: timestamped action descriptions interleaved with images of the screen state.\n' },
     { type: 'text', text: '[0.1s] clicked at (1, 2) in "Notes"\n' }, { type: 'text', text: '[0.1s] full screen (Display 1 — frontmost: "Notes"):\n' },
     { type: 'localImage', path: '/tmp/a b.jpg' }, { type: 'text', text: '</watch-record-demonstration>\n\n<system-reminder>\nx\n</system-reminder>' }];
@@ -456,7 +459,8 @@ test('Codex parts: localImage paths become file URLs; the demonstration is found
   assert.equal(parsed.durationMs, 2500);
   const rows = model.demonstrationRows(parsed, model.demonstrationLead(parsed));
   assert.deepEqual(rows.map((row) => row.kind), ['action', 'caption', 'image']);
-  assert.equal(rows[2].src, 'file:///tmp/a%20b.jpg');
+  assert.equal(rows[2].src, 'claude-media://v/t1?v=1');
+  assert.deepEqual(minted, ['/tmp/a b.jpg'], 'main mints for the staged path itself');
   assert.equal(model.actionLabel(rows[0].action), 'Clicked in ');
   assert.equal(model.demonstrationOf({ type: 'userMessage', content: [{ type: 'text', text: 'plain' }] }), null);
   assert.equal(model.demonstrationTitle(2500), 'Recorded demonstration (2.5s)');
@@ -464,6 +468,10 @@ test('Codex parts: localImage paths become file URLs; the demonstration is found
   // The optimistic row shows that same input.
   const row = pendingModel.pendingUserRow(pendingModel.pendingSend({ threadId: 't', content }));
   assert.equal(row.content, content);
+  } finally { if (saved === undefined) delete globalThis.desktop; else globalThis.desktop = saved; }
+  const bare = model.demonstrationOf({ type: 'userMessage', content: [{ type: 'text', text: '<watch-record-demonstration durationMs="1000" steps="0" images="1">x\n' }, { type: 'localImage', path: '/tmp/a b.jpg' }, { type: 'text', text: '</watch-record-demonstration>' }] });
+  const bareImages = model.demonstrationRows(bare, model.demonstrationLead(bare)).filter((r) => r.kind === 'image');
+  assert.deepEqual(bareImages, [{ kind: 'image', src: null }], 'no desktop bridge: still a card, the picture has no URL (never file://)');
 });
 
 test('start answers map to the original entry behaviour', () => {

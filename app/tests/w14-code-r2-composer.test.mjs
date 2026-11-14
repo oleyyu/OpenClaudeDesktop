@@ -20,7 +20,9 @@ const official = (file) => fs.readFileSync(path.join(assets, file), 'utf8').repl
 const rules = (css) => css.replace(/\/\*[\s\S]*?\*\//g, '');
 const read = (file) => fs.readFileSync(path.join(app, file), 'utf8');
 createRequire(path.join(app, 'package.json'))('react-dom').createPortal = children => children;
-globalThis.document ??= { body: { nodeType: 1 }, documentElement: { dataset: {}, getAttribute: () => null }, createElement: () => ({}) };
+// W8 stub contract (design class c): cds-core now holds shared-0 CQ/Wo (read document.cookie at load), shared-92 cS
+// (reads documentElement.hasAttribute at load) and the shared-25 router store (reads window.location.pathname at load), as in the app.
+globalThis.document ??= { cookie: '', body: { nodeType: 1 }, documentElement: { hasAttribute: () => false, dataset: {}, getAttribute: () => null }, createElement: () => ({}) };
 let server, React, render, load;
 before(async () => {
   React = (await import('react')).default;
@@ -104,9 +106,17 @@ test('r2-composer-04: saved-environments probe answers for the stored folder onl
 
 test('r2-composer-04: the gone line is j9ML5nKNoc with the TextLink edit, blocking in the bar\'s line host; send is blocked', async () => {
   const { EnvironmentGoneLine } = await load('/src/source-composer-environment-bar.jsx');
+  // composer-env (4.16336.0): dxe `at: Yg(L, _n)` — the path is ~-relative under `{ home }`. surfaces-prod-3 composer: the
+  // label context is the official one, linked (cd8a7d7c0 y over its home store u = $v(l()), l() = window.desktopHomePath;
+  // src/generated/code-routines-v4), and the gone line takes no home prop. Under SSR the store answers its server snapshot
+  // (f: no home), so the rendered path reads in full; the ~ form is the label function itself under `{ home }` (shared-3 VM).
   let edited = 0;
   const html = render(React.createElement(EnvironmentGoneLine, { name: 'App', folder: '/Users/me/src/app', onEdit: () => edited++ }));
-  assert.match(html, /^App can’t start: ~\/src\/app no longer exists\. <[a-z]+[^>]*data-cds="TextLink"[^>]*data-inherit-color=""[^>]*>Edit environment<\/[a-z]+>$/);
+  assert.match(html, /^App can’t start: \/Users\/me\/src\/app no longer exists\. <[a-z]+[^>]*data-cds="TextLink"[^>]*data-inherit-color=""[^>]*>Edit environment<\/[a-z]+>$/);
+  const { environmentPathLabel, noHomeLabelContext } = await load('/src/source-composer-env-adapters.jsx');
+  assert.equal(environmentPathLabel('/Users/me/src/app', { home: '/Users/me' }), '~/src/app');
+  assert.equal(environmentPathLabel('/Users/me/src/app', noHomeLabelContext), '/Users/me/src/app');
+  assert.match(read('src/source-composer-environment-bar.jsx'), /const labelContext = useHomeLabelContext\(\);\n\s+return intl\.formatMessage\(\{ defaultMessage: "\{name\} can’t start: \{path\} no longer exists\. <edit>Edit environment<\/edit>", id: "j9ML5nKNoc" \},\n\s+\{ name, path: environmentPathLabel\(folder, labelContext\), /);
   const composer = read('src/source-composer.jsx');
   assert.match(composer, /line=\{environmentLine\} lineEl=\{environmentLineEl\}/);
   assert.match(composer, /<div ref=\{setEnvironmentLineEl\} className="relative h-0 -mb-1\.5 compact:-mb-1\.5 comfortable:-mb-2" \/>/);
@@ -115,22 +125,26 @@ test('r2-composer-04: the gone line is j9ML5nKNoc with the TextLink edit, blocki
   assert.match(read('src/source-composer-environment-bar.jsx'), /mode=\{mode\} line=\{line\} lineEl=\{lineEl\} note=\{note\}/);
   const main = read('src/main.jsx');
   assert.match(main, /const environmentFolderGone = useEnvironmentFolderGone\(savedEnvironments\.run, selectedEnvironment\);/);
-  assert.match(main, /environmentLine=\{environmentFolderGone && selectedEnvironment \? \{ kind: "blocking", content: <EnvironmentGoneLine /);
+  assert.match(main, /environmentLine=\{environmentFolderGone && selectedEnvironment \? \{ kind: "blocking", content: <EnvironmentGoneLine name=\{selectedEnvironment\.name\} folder=\{selectedEnvironment\.target\.cwd\} onEdit=/);
   assert.match(main, /if \(!current && environmentFolderGone && selectedEnvironment\) \{\n\s+const text = t\("\{name\} can’t start: \{path\} no longer exists\. Edit the environment to choose another folder\."/);
   const hook = read('src/use-saved-environments.js');
   assert.match(hook, /ENVIRONMENT_FOLDER_PROBE_MS = 30000/);
   assert.match(hook, /window\.addEventListener\('focus', probe\)/);
   for (const key of ['{name} can’t start: {path} no longer exists. <edit>Edit environment</edit>', '{name} can’t start: {path} no longer exists. Edit the environment to choose another folder.'])
     assert.ok(zhSession[key], key);
-  // The generated l0 draws a blocking line text-danger in the host it is given.
-  assert.match(read('src/generated/code-composer/environment-bar.mjs'), /i\?\.kind === "blocking" \? "text-danger" : "text-muted-as-secondary"/);
+  // The generated 4.16336.0 vge draws a blocking line text-danger in the host it is given.
+  assert.match(read('src/generated/code-composer-v4/environment-bar.mjs'), /o\?\.kind === "blocking" \? "text-danger" : "text-muted-as-secondary"/);
+  assert.match(read('src/source-composer-environment-bar.jsx'), /^import \{ EnvironmentBar, [^}]*\} from "\.\/generated\/code-composer-v4\/environment-bar\.mjs";$/m);
 });
 
-test('r2-composer-05: a main model row carries its description as the second line; More models rows do not', () => {
+// U-MODEL-MENU (2026-11-13, user request): rows are one line, as Claude Desktop's picker with Claude models; the
+// description moved from the row's second line to its tooltip.
+test('r2-composer-05: a main model row is one line with its description as the tooltip; More models rows have none', () => {
   const menu = read('src/source-model-menu.jsx');
   assert.match(menu, /const description = main && hasText\(model\.description\) \? model\.description : undefined;/);
-  assert.match(menu, /const tip = reason \|\| model\.tooltip\?\.content \|\| model\.notice\?\.text \|\| model\.notice_text \|\| undefined;/);
-  assert.match(menu, /withTip\(disabled \? undefined : tip, <SourceMenu\.Item key=\{id\} className="sm-model-item" label=\{modelName\(model\)\} description=\{description\}\n\s+aria-description=\{reason\}/);
+  assert.match(menu, /const tip = reason \|\| model\.tooltip\?\.content \|\| model\.notice\?\.text \|\| model\.notice_text \|\| description \|\| undefined;/);
+  assert.match(menu, /withTip\(disabled \? undefined : tip, <SourceMenu\.Item key=\{id\} className="sm-model-item" label=\{modelName\(model\)\}\n\s+aria-description=\{reason\}/);
+  assert.doesNotMatch(menu, /description=\{description\}/);
   assert.doesNotMatch(menu, /scopeNote|sm-model-scope/);
   assert.doesNotMatch(read('src/source-model-menu.css'), /sm-model-scope/);
 });

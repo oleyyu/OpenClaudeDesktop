@@ -1,18 +1,18 @@
 // w13-chatui-thinking-search (research/w13-chatui.md chatui-C9/C10, plan-w13.md "w13-chatui-thinking-search"): extract the
-// 3.6556.2 labels the desktop Chat conversation (c21f11e6d CoworkSessionView → cc1aae219 timeline, nS = c734f318c
+// 4.16336.0 labels the desktop Chat conversation (c21f11e6d CoworkSessionView → cc1aae219 timeline, qv = c734f318c
 // TurnStatus) puts on a thought and on a search, so Chat stops borrowing Code's "Thought process" row. Own generator, own
 // output folder src/generated/chat-thinking, own scripts/verify-gen-chat-thinking.mjs (D0). Nothing here executes
 // desktop runtime code.
 //
-//   c05b96c7f zs   (export yr) the milliseconds between a block's start_timestamp and stop_timestamp, or undefined.
-//   c05b96c7f Bs   (export vr) "Thought for {seconds}s" / "{minutes}m {seconds}s" / "{minutes}m" / "{hours}h {minutes}m" /
+//   c05b96c7f ua   (export nr) the milliseconds between a block's start_timestamp and stop_timestamp, or undefined.
+//   c05b96c7f da   (export tr) "Thought for {seconds}s" / "{minutes}m {seconds}s" / "{minutes}m" / "{hours}h {minutes}m" /
 //                  "{hours}h" from a duration in ms, undefined under half a second.
-//   c05b96c7f Gg   the label of a run of thinking blocks (a single block's title, else Bs over the summed durations,
-//                  else "Thought process"): what B_ / R_ return for a group that holds only thinking.
-//   c05b96c7f Wg   one thinking block's own title or duration label (the `duration` of its timeline entry).
-//   shared-130 uq  (export Ir) a tool group's past-tense label by kind and count: "Searched the web", "Read a page",
+//   c05b96c7f _d   the label of a run of thinking blocks (a single block's title, else da over the summed durations,
+//                  else "Thought process") for a timeline group that holds only thinking.
+//   c05b96c7f gd   one thinking block's own title or duration label (the `duration` of its timeline entry).
+//   shared-153 hq  (export Qr) a tool group's past-tense label by kind and count: "Searched the web", "Read a page",
 //                  "Searched project knowledge", "Searched past chats", "Searched Google Drive", ….
-//   shared-130 rq  the tool-name → kind table uq is keyed by (web_search → web, web_fetch → web_fetch,
+//   shared-153 cq  the tool-name → kind table hq is keyed by (web_search → web, web_fetch → web_fetch,
 //                  project_knowledge_search → project_knowledge, conversation_search → past_chats, …).
 //
 // All six are plain functions and tables over an injected intl (`e.formatMessage`): the output has no imports, so the pure
@@ -25,7 +25,7 @@ import { createHash } from 'node:crypto';
 import { parsers } from '../../tools/node_modules/prettier/plugins/babel.mjs';
 import { format } from '../../tools/node_modules/prettier/index.mjs';
 import babel from '../../tools/node_modules/playwright/lib/transform/babelBundle.js';
-import * as official from './official-3.6556.2.mjs';
+import * as official from './official-4.16336.0.mjs';
 
 const { referenceVersion, referenceSnapshot, ionSource: source, looseFeature } = official;
 const root = path.resolve(import.meta.dirname, '..');
@@ -37,27 +37,27 @@ const hostGlobals = new Set(['Date', 'Math', 'Number']);
 // `exports` maps original local binding -> exported name (its keys are the roots); `exported` lists the roots the chunk
 // itself exports under that alias (checked), the rest are internal declarations reached by name.
 const modules = [
-  { target: 'thinking-labels.mjs', source: 'c05b96c7f-MPVkefMW.js',
-    exports: { zs: 'thinkingDurationMs', Bs: 'thinkingDurationLabel', Gg: 'thinkingGroupLabel', Wg: 'thinkingBlockLabel' },
-    exported: { zs: 'yr', Bs: 'vr' },
+  { target: 'thinking-labels.mjs', source: 'c05b96c7f-3na38kSt.js',
+    exports: { ua: 'thinkingDurationMs', da: 'thinkingDurationLabel', _d: 'thinkingGroupLabel', gd: 'thinkingBlockLabel' },
+    exported: { ua: 'nr', da: 'tr' },
     features: {
-      zs: ['if (!e || !t) return;', 'new Date(e).getTime()', 'r <= n ? void 0 : r - n'],
-      Bs: ['Math.round(t / 1e3)', 'if (n <= 0) return;',
+      ua: ['if (!e || !t) return;', 'new Date(e).getTime()', 'r <= n ? void 0 : r - n'],
+      da: ['Math.round(t / 1e3)', 'if (n <= 0) return;',
         'defaultMessage: "Thought for {seconds}s", id: "Jj0DasG7Mx"', 'defaultMessage: "Thought for {minutes}m {seconds}s", id: "4LM6AdGWNg"',
         'defaultMessage: "Thought for {minutes}m", id: "vFyvc213kN"', 'defaultMessage: "Thought for {hours}h {minutes}m", id: "voTuOb/ijW"',
         'defaultMessage: "Thought for {hours}h", id: "MFx4UWu2HS"'],
-      Gg: ['t.length === 1 ? t[0]?.title : void 0', 'zs(e.start_timestamp, e.stop_timestamp) ?? 0',
+      _d: ['t.length === 1 ? t[0]?.title : void 0', 'ua(e.start_timestamp, e.stop_timestamp) ?? 0',
         'defaultMessage: "Thought process", id: "zl6fNbo7RW"'],
-      Wg: ['t.title ?? Bs(e, zs(t.start_timestamp, t.stop_timestamp) ?? 0)'] } },
-  { target: 'tool-group-label.mjs', source: 'shared-130-dWztbTO1.js',
-    exports: { uq: 'toolGroupLabel', rq: 'TOOL_KINDS' },
-    exported: { uq: 'Ir' },
+      gd: ['t.title ?? da(e, ua(t.start_timestamp, t.stop_timestamp) ?? 0)'] } },
+  { target: 'tool-group-label.mjs', source: 'shared-153-DMw2VzSq.js',
+    exports: { hq: 'toolGroupLabel', cq: 'TOOL_KINDS' },
+    exported: { hq: 'Qr' },
     features: {
-      uq: ['case "web":', 'defaultMessage: "Searched the web", id: "4+310Bnuvz"', 'case "web_fetch":',
+      hq: ['case "web":', 'defaultMessage: "Searched the web", id: "4+310Bnuvz"', 'case "web_fetch":',
         'defaultMessage: "Read a page", id: "XJU1UZCozL"', 'case "project_knowledge":',
         'defaultMessage: "Searched project knowledge", id: "4GCi2qH3xL"', 'case "past_chats":',
         'defaultMessage: "Searched past chats", id: "kFCjIUtnx0"', 'case "drive_search":'],
-      rq: ['project_knowledge_search: "project_knowledge"', 'web_fetch: "web_fetch"', 'web_search: "web"', 'web_search_fast: "web"',
+      cq: ['project_knowledge_search: "project_knowledge"', 'web_fetch: "web_fetch"', 'web_search: "web"', 'web_search_fast: "web"',
         'conversation_search: "past_chats"', 'drive_search: "drive_search"'] } },
 ];
 

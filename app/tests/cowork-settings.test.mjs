@@ -11,6 +11,7 @@ import {
   COWORK_GLOBAL_INSTRUCTIONS_MAX, COWORK_FILES_ERRORS, coworkFilesInfo, coworkFilesTargetError, coworkMemoryEnabled,
   createCoworkSettingsService,
 } from '../electron/prefs/cowork-settings.mjs';
+import { conciseCopy } from '../electron/i18n/concise.mjs';
 
 // w13-coworkui-settings (research/w13-coworkui.md §1.5, cwui-38..42): Settings › Cowork, the 3.6556.2 c71860c77 De page
 // generated into src/generated/cowork-settings, fed from local preferences (electron/prefs/cowork-settings.mjs,
@@ -23,7 +24,8 @@ const local = rel => fs.readFileSync(path.join(app, rel), 'utf8');
 const h = React.createElement;
 const text = html => html.replace(/<[^>]+>/g, ' ').replace(/&#x27;/g, "'").replace(/&quot;/g, '"').replace(/&amp;/g, '&').replace(/\s+/g, ' ').trim();
 
-globalThis.document ??= { body: { nodeType: 1 }, head: { appendChild() {} }, createElement: () => ({ relList: { supports: () => false }, setAttribute() {}, style: {} }),
+// W8-M9 stub contract (round4 integration, stub fields only): cds-core 9203795f reads these at load (official 4.16336.0): document.cookie.
+globalThis.document ??= { cookie: '' /* W8-M9: shared-0 CQ / Wo document.cookie */, body: { nodeType: 1 }, head: { appendChild() {} }, createElement: () => ({ relList: { supports: () => false }, setAttribute() {}, style: {} }),
   querySelector: () => null, querySelectorAll: () => [], addEventListener() {}, removeEventListener() {}, documentElement: { dataset: {}, getAttribute: () => null, hasAttribute: () => false } };
 globalThis.window ??= { document: globalThis.document, navigator: { userAgent: 'Mozilla/5.0 (Macintosh)' }, addEventListener() {}, removeEventListener() {},
   matchMedia: () => ({ matches: false, addEventListener() {}, removeEventListener() {} }), localStorage: { getItem: () => null, setItem() {}, removeItem() {} },
@@ -88,8 +90,10 @@ test('SSR: the page is main.flex.flex-col.gap-7 with the official sections in De
   assert.ok(html.startsWith('<main class="flex flex-col gap-7">'));
   const shown = text(html);
   order(shown, ['Trusted Cowork folders', 'Manage', 'Open links in built-in browser', 'Allowed sites', 'Manage', 'Global instructions', 'Edit',
-    'Memory', 'Use memory in sessions', 'No memories yet. Claude will add entries here as you work together.']);
-  // Word for word against the official chunks.
+    'Memory', 'Use memory in sessions', conciseCopy('No memories yet. Claude will add entries here as you work together.', 'en-US')]);
+  assert.ok(shown.endsWith('No memories yet.'), 'U-SET-LITE: the empty memory line is its short copy');
+  // Word for word against the official chunks; U-SET-LITE: each long sentence renders its short line (concise.mjs) and
+  // the long one is gone.
   const copy = [
     ['cabd7b1c1-BLDBBA7m.js', 'When you trust a folder on this device, you allow Claude to use it and the folders inside it. Trusting a folder doesn\\u2019t add it to new tasks. When you add one to a task, you may be asked to allow it again.'],
     ['cdc95db1a-DsLkT8qE.js', 'Links open in the built-in browser instead of your default browser.'],
@@ -100,7 +104,10 @@ test('SSR: the page is main.flex.flex-col.gap-7 with the official sections in De
   ];
   for (const [file, message] of copy) {
     assert.ok(official(file).includes(`defaultMessage:"${message}"`), `${file} has ${message}`);
-    assert.ok(shown.includes(message.replace(/\\u2019/g, '’')), `shown: ${message}`);
+    const source = message.replace(/\\u2019/g, '’'), line = conciseCopy(source, 'en-US');
+    assert.ok(line, `concise.mjs shortens: ${source}`);
+    assert.ok(shown.includes(line), `shown: ${line}`);
+    assert.ok(!shown.includes(source), `not shown: ${source}`);
   }
   // Rows tied to an account or to Claude in Chrome are not on this page.
   for (const absent of ['Dispatch', 'Require trusted devices', 'Preferred browser', 'Cowork isn’t enabled for your organization', 'session host'])
@@ -116,6 +123,7 @@ test('SSR: Use memory in sessions reads config.coworkMemory (unset is on) and th
   const paused = text(render({ coworkMemory: false }));
   assert.ok(paused.includes('Paused. Existing memories are kept but won’t be read or updated in new sessions.'));
   assert.ok(!paused.includes('Claude will read and update these memories during Cowork sessions.'));
+  assert.ok(!paused.includes(conciseCopy('Claude will read and update these memories during Cowork sessions.', 'en-US')), 'U-SET-LITE: nor its short line');
   assert.match(render({}), /role="switch"[^>]*aria-checked="true"|aria-checked="true"[^>]*role="switch"/);
   // The switch writes through the "cowork-settings" memory op (the official PATCH { enabled_cowork_memory }).
   const calls = [], shownMemory = [];
@@ -308,6 +316,10 @@ test('zh-CN: the page reads in Chinese with Claude kept (D23)', () => {
   i18n.setLocale('zh-CN');
   try {
     const shown = text(render({}));
-    order(shown, ['受信任的协作文件夹', '在内置浏览器中打开链接', '全局指令', '在会话中使用记忆', '还没有记忆。你们一起工作时，Claude 会在这里添加条目。']);
+    // U-SET-LITE: the empty memory line is its short zh-CN copy (concise.mjs), not the dictionary's long sentence.
+    const empty = conciseCopy('No memories yet. Claude will add entries here as you work together.', 'zh-CN');
+    assert.equal(empty, '暂无记忆。');
+    order(shown, ['受信任的协作文件夹', '在内置浏览器中打开链接', '全局指令', '在会话中使用记忆', empty]);
+    assert.ok(!shown.includes('还没有记忆。你们一起工作时，Claude 会在这里添加条目。'));
   } finally { i18n.setLocale('en-US'); }
 });

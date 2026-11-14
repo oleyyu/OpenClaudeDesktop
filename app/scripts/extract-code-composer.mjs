@@ -43,8 +43,10 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { viewTabsManifestFor } from './view-tabs-compat.mjs';
 import * as official from './official-3.6556.2.mjs';
+import * as official4 from './official-4.16336.0.mjs';
 import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
+import { createRequire } from 'node:module';
 import { parsers } from '../../tools/node_modules/prettier/plugins/babel.mjs';
 import { format } from '../../tools/node_modules/prettier/index.mjs';
 import babel from '../../tools/node_modules/playwright/lib/transform/babelBundle.js';
@@ -61,6 +63,8 @@ const adapterModule = '../../source-composer-current-adapters.jsx';
 // set the c0fbbe82d tile wrappers read) live in their own module; an adapter entry names it with `module`.
 const tileAdapterModule = '../../source-composer-attachment-adapters.jsx';
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
+// The native (rolldown) parser for raw chunk bytes: positions of top-level declarations only (4.16336.0 hash checks).
+const parseAst4 = text => createRequire(path.join(root, 'package.json'))('rolldown/parseAst').parseAst(text);
 
 // R1 / R3: vendor-frame re-exports React / ReactDOM / react-jsx-runtime / react/compiler-runtime; every alias is the
 // official-3.6556.2.mjs table entry, checked on this vendor-frame with assertVendorAlias (a top-level
@@ -745,6 +749,9 @@ const modules = [
     ], },
 ];
 
+// The 3.6556.2 contract's module table, read by the 4.16336.0 port's tests and locate tooling (no effect on output).
+export { modules as contract3Modules };
+
 async function readSource(name, cache) {
   if (cache.has(name)) return cache.get(name);
   const bytes = await fs.readFile(path.join(source, name));
@@ -795,7 +802,9 @@ function vendorImport(file, alias, src) {
 }
 
 // `dry`: build every module and the manifest without reading or writing the output folder (generator development).
-export async function extractCodeComposer({ check = false, dry = false } = {}) {
+export async function extractCodeComposer({ check = false, dry = false, version = referenceVersion, survey = false } = {}) {
+  if (version === official4.referenceVersion) return extractTarget4(contract4, { check, dry, survey });
+  if (version !== referenceVersion) throw Error(`extract-code-composer has no ${version} source contract`);
   const cache = new Map();
   const viewTabsManifest = await viewTabsManifestFor(referenceVersion);
   if (viewTabsManifest.referenceVersion !== referenceVersion) throw Error(`view-tabs is ${viewTabsManifest.referenceVersion}, not ${referenceVersion}`);
@@ -991,4 +1000,781 @@ export async function extractCodeComposer({ check = false, dry = false } = {}) {
   console.log(`${dry ? 'Built' : check ? 'Verified' : 'Extracted'} ${manifest.modules.length} Code composer modules (${count} original ${referenceVersion} bindings).`);
   return manifest;
 }
-if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) await extractCodeComposer({ check: process.argv.includes('--check'), dry: process.argv.includes('--dry') });
+// ---------------------------------------------------------------------------------------------------------------------
+// 4.16336.0 source contract (see the engine below). Adapters: react-intl useIntl / FormattedMessage are answered by the
+// composer's host intl (as 3.6556.2); the GrowthBook reader shared-0 Uu (exported Rx) by the one host table cds-core reads.
+const CONTRACT4_ADAPTERS = {
+  [official4.vendorIntl]: {
+    p: { name: 'useComposerIntl', module: '../../source-composer-current-adapters.jsx', features: ['[React Intl]'] },
+    l: { name: 'ComposerMessage', module: '../../source-composer-attachment-adapters.jsx', features: ['[React Intl]'] },
+  },
+};
+const CONTRACT4_GLOBALS = new Set(['window', 'document', 'globalThis', 'navigator', 'performance', 'queueMicrotask', 'requestAnimationFrame',
+  'cancelAnimationFrame', 'setTimeout', 'clearTimeout', 'setInterval', 'clearInterval', 'Promise', 'Symbol', 'Object', 'Array', 'Map', 'Set',
+  'WeakMap', 'WeakSet', 'WeakRef', 'Math', 'Number', 'String', 'Boolean', 'Date', 'JSON', 'Error', 'TypeError', 'RegExp', 'Infinity', 'NaN',
+  'undefined', 'Intl', 'URL', 'Reflect', 'Proxy', 'console', 'isNaN', 'parseInt', 'parseFloat', 'encodeURIComponent', 'decodeURIComponent',
+  'getComputedStyle', 'matchMedia', 'CSS', 'Element', 'HTMLElement', 'Node', 'DOMException', 'ResizeObserver', 'MutationObserver',
+  'IntersectionObserver', 'AbortController', 'Event', 'KeyboardEvent', 'CustomEvent', 'DataTransfer', 'File', 'Blob', 'Uint8Array', 'BigInt', 'arguments', 'NodeFilter']);
+// Semantic modules: the 3.6556.2 file and export names, re-located in 4.16336.0 (roots by export alias or as private
+// declarations, features on their own prettier text, uniqueness or `readBy`). 3.6556.2 roots with no 4.16336.0 binding are
+// dropped with a DROPPED note; roots cds-core now publishes are dropped too (consumers link cds-core), noted LINKED.
+const L = (loose, keep) => (keep ? { loose, keep } : { loose });
+const CONTRACT4_MODULES = [
+  // shared-6 -> shared-38 (the composer / environment class tokens moved). DROPPED: __ composerRowLeadingClass ("flex
+  // items-center ms-0.5", no 4.16336.0 binding). Changed values: the chin class is "-mt-1.5 -mb-2.5 md:-my-2" and the
+  // environment bar "pt-0.5 -mb-0.5 md:pt-0 md:mb-0" (density variants became md: breakpoints); the line class lost ps-4 pe-20.
+  { target: 'composer-tokens.mjs', source: 'shared-38-DyF0_Fim.js',
+    exports: { Hr: 'composerCardSizeClass', Gr: 'composerCardRootClass', ar: 'composerRowControlClass', sr: 'composerRowChinClass',
+      cr: 'composerRowChinSlotClass', Lr: 'composerChinTrailingClass', Ur: 'composerTrailingControlsClass', Wr: 'composerRowTrailingInsetClass',
+      xr: 'composerPetSlotClass', ir: 'environmentBarClass', dr: 'environmentBarResponsive', or: 'environmentBarInsetClass',
+      rr: 'environmentBarLineClass', fr: 'environmentBarLabelClass', lr: 'composerRingSlotClass', pr: 'environmentTriggerGivesWayClass' },
+    aliases: { Hr: null, Gr: 'hn', ar: 'sn', sr: 'en', cr: 'rn', Lr: '$t', Ur: 'Wt', Wr: 'tn', xr: 'Kt', ir: 'an', dr: 'bn', or: 'on', rr: 'vn',
+      fr: 'xn', lr: 'in', pr: 'yn' },
+    features: {
+      Hr: ['"[--cds-h-control:calc(1.75rem*var(--cds-rem-scale,1))] [--cds-radius-composer:calc(0.875rem*var(--cds-rem-scale,1))]"'],
+      Gr: [L('${Hr}', ['Hr']), '[--cmp-font-size:var(--prompt-text-size)]', '[--cmp-line-height:var(--prompt-line-height)]'],
+      ar: ['"[--cds-h-control:calc(1.5rem*var(--cds-rem-scale,1))] [--cds-pad-md:calc(0.375rem*var(--cds-rem-scale,1))]', '[--cds-leading-body:calc(1.25rem*var(--cds-rem-scale,1))]"'],
+      sr: ['"-mt-1.5 -mb-2.5 md:-my-2"'], cr: ['"block h-6"'], Lr: ['"grid min-w-0 grid-flow-col auto-cols-[minmax(0,max-content)] items-center"'],
+      Ur: ['"flex items-center gap-2"'], Wr: ['"compact:me-1"'], xr: ['"-mb-1.5 compact:-mb-1.5 comfortable:-mb-2"'],
+      ir: ['"pt-0.5 -mb-0.5 md:pt-0 md:mb-0"'], dr: ['row: "@max-[28.75rem]:flex-wrap"', 'ghost: "h-6 @max-[28.75rem]:h-13.5"'],
+      or: ['"px-2.5"'], rr: ['"pointer-events-none absolute inset-x-0 bottom-1.5 px-4 text-footnote"'],
+      fr: ['min-w-[calc-size(max-content,min(size,5ch))]"'], lr: ['"flex shrink-0 ms-px"'], pr: ['min-w-[calc-size(max-content,min(size,10ch))]"'],
+    } },
+  { target: 'composer-testids.mjs', source: 'shared-1-D1bGaTaN.js', exports: { ap: 'sendTestId', op: 'stopTestId' }, aliases: { ap: 'Rb', op: 'Vb' },
+    features: { ap: ['"code-prompt-send"'], op: ['"code-prompt-stop"'] } },
+  // DROPPED: p sendGlyphBoxClass, m DockGlyphBox (the fizzy-lake "icons" glyph box is gone from cfca6870a).
+  { target: 'composer-glyph.mjs', source: 'cfca6870a-CdqZXIck.js', exports: { f: 'dockGlyphProps', p: 'dockGlyphIconClass', d: 'autoGlyphSize' },
+    aliases: { f: 'r', p: 't', d: 'n' },
+    features: { f: ['size: "base"', 'dockGlyph: !0'],
+      p: ['"text-secondary-control group-hover/btn:text-primary group-aria-pressed/btn:text-accent group-hover/btn:group-aria-pressed/btn:text-accent"'],
+      d: [L('d = "auto"')] },
+    chunkFeatures: ['dockGlyph'] },
+  // LINKED: shared-25 _d (ownerWindow) is cds-core's. DROPPED: ni noopSubscribe (nothing in this graph reads it).
+  { target: 'owner-support.mjs', source: 'shared-25-D-aF0gt9.js', exports: { vd: 'ownerWindowOrGlobal', yd: 'ownerDocument' }, aliases: { vd: 'Wp', yd: 'Bp' },
+    features: { vd: ['?? globalThis.window'], yd: ['globalThis.document', 'e.ownerDocument ?? globalThis.document'] } },
+  { target: 'placeholder-fit.mjs', source: 'c1c6ea9ac-BbaFmNAA.js', exports: { a: 'useOverflowing' }, aliases: { a: 't' },
+    features: { a: ['e.scrollWidth > e.clientWidth', '.fonts?.ready?.then(', L('l === "y"')] } },
+  { target: 'shortcut-caps.mjs', source: 'shared-frame-CJdE5Ria.js', exports: { Sc: 'shortcutCaps', bc: 'parseShortcutKeys', _c: 'ownEntry' },
+    aliases: { Sc: 'if', bc: null, _c: null },
+    features: { Sc: ['spoken: n', '/^[A-Za-z0-9 ]+$/'], bc: ['.split("+")', L('dc(e) ? r.push(e) : i.push(e)')], _c: ['Object.hasOwn(e, t) ? e[t] : void 0'] } },
+  { target: 'composer-keycap.mjs', source: 'shared-frame-CJdE5Ria.js', exports: { Qs: 'keycapClass' }, aliases: { Qs: 'of' },
+    features: { Qs: ['Array.from(e ?? "").length === 1'] } },
+  { target: 'composer-kbd.mjs', source: 'cbd6db52c-CNwL7yiy.js', exports: { r: 'Kbd' }, aliases: { r: 't' },
+    features: { r: ['"text-caption"', '[--cds-shortcut-cap-ink:currentColor]', 'onFill'] } },
+  // c4a70913c -> cc44b66a7.
+  { target: 'transcript-surface.mjs', source: 'cc44b66a7-CBE7MOEW.js', exports: { f: 'transcriptSurfaceClass' }, aliases: { f: 'g' },
+    features: { f: ['"bg-[var(--epitaxy-transcript-surface,var(--cds-surface-1))]"'] } },
+  // cc5c56f5c -> shared-55.
+  { target: 'path-tooltip-placement.mjs', source: 'shared-55-BRv2XBP7.js', exports: { mV: 'pathTooltipPlacement', gV: 'pathTooltipContent' },
+    aliases: { mV: 'D', gV: 'k' },
+    features: { mV: ['max-w-[min(480px,var(--available-width))]', 'side: "bottom"'], gV: ['dir: "ltr"', 'inline-block max-w-full whitespace-pre-wrap'] } },
+  { target: 'composer-card-tokens.mjs', source: 'c227f4d5e-DGDdGBTz.js',
+    exports: { eY: 'sendCellClass', tY: 'sendCellLayerClass', nY: 'bashModeRingClass', rY: 'shelfStartInset', iY: 'shelfStartProperty',
+      aY: 'shelfStartPaddingClass', sY: 'suggestionGhostClass', OJ: 'submitLayerClass', kJ: 'submitLayerEnterClass', AJ: 'submitLayerExitClass',
+      $J: 'stopSendGuardMs', vZ: 'strayEnterWindowMs' },
+    aliases: { eY: null, tY: null, nY: null, rY: null, iY: null, aY: null, sY: null, OJ: null, kJ: null, AJ: null, $J: null, vZ: null },
+    readBy: { rY: 'mY', $J: 'pY', vZ: 'QZ' },
+    features: {
+      eY: ['"grid shrink-0 items-center justify-items-end"'], tY: ['"col-start-1 row-start-1 flex"'], nY: ['"inset-ring-1 inset-ring-pro"'],
+      rY: [L('rY = 4', ['rY'])], iY: ['"--epitaxy-shelf-start"'], aY: ['"ltr:ps-[var(--epitaxy-shelf-start,0px)]"'],
+      sY: ['"italic text-muted-as-secondary"'], OJ: ['"col-start-1 row-start-1 flex cursor-default items-center justify-end"'],
+      kJ: ['cds-fade-in_0.12s_ease-out_0.08s_backwards'], AJ: ['[transition:visibility_0s_linear_80ms]'],
+      $J: [L('$J = 500', ['$J'])], vZ: [L('vZ = 500', ['vZ'])],
+    },
+    chunkFeatures: [
+      L('Date.now() - v.current < $J || m(h())', ['$J']), L('jo.current = Date.now() + vZ', ['vZ']),
+      '.style.setProperty(iY, `${Math.max(0, t - rY)}px`)', '"epitaxy-prompt"', 'cardClassName:', 'onClusterWidthsChange:', 'dropScope:',
+      L('trailingNotch: It'), L('holdSendButton: () => Tn({ until: Date.now() + yZ, storeKey: o })'),
+      'maxHeight: "min(24rem, 40svh)",', 'className: "epitaxy-prompt-input",', '"epitaxy-attachment-shelf w-full",',
+      'className: "truncate text-muted-as-secondary",',
+    ] },
+  // shared-28 -> shared-5.
+  { target: 'composer-dialog-focus.mjs', source: 'shared-5-u8kha2eH.js', exports: { oY: 'overlaySurfaceSelector', sY: 'focusInsideOverlay' },
+    aliases: { oY: null, sY: '_' },
+    features: { oY: ['[role="dialog"]', '[data-cds="AskUserQuestion"]'], sY: [L('t.closest(oY)', ['oY']), '!n.contains(e)'] } },
+  { target: 'composer-focus-yield.mjs', source: 'c227f4d5e-DGDdGBTz.js', exports: { GJ: 'editableFieldSelector', KJ: 'focusBelongsElsewhere' },
+    aliases: { GJ: null, KJ: 'Gn' },
+    features: { GJ: ['[contenteditable=""]', '[contenteditable="true"]'], KJ: [L('t.closest(GJ)', ['GJ']), 'checkVisibility({ visibilityProperty: !0 })'] },
+    chunkFeatures: [
+      'i = n?.yieldsToUser === !0;', 'e.focus({ preventScroll: !0 });', '(t.view.focus(), t.commands.focus(null, { scrollIntoView: !1 }));',
+      'if (!(e.shiftKey || e.altKey)) {', L('(e.metaKey || e.ctrlKey || zs())'),
+    ] },
+  { target: 'composer-final-focus.mjs', source: 'c227f4d5e-DGDdGBTz.js', exports: { R6: 'useComposerFinalFocus' }, aliases: { R6: 'y' },
+    features: { R6: ['{ onRequestComposerFocus: t, isPanelActive: n, keyboardOnly: r } = e,', "'[role=\"menu\"], [role=\"dialog\"], [role=\"alertdialog\"]'"] } },
+  { target: 'composer-key-label.mjs', source: 'c227f4d5e-DGDdGBTz.js', exports: { lY: 'shortcutLabel' }, aliases: { lY: null },
+    features: { lY: ['.join("+")', 'e.spoken ?? e.label'] },
+    chunkFeatures: [
+      'import { t as um } from "./c1c6ea9ac-BbaFmNAA.js";', L('defaultMessage: "{sendKey} to send, {queueKey} to queue for later",'),
+      'id: "mZ6xnUz7iS",', '{ defaultMessage: "{queueKey} to queue", id: "FIL0bW8Kgx" },', '"aria-description":', 'placeholderFit:',
+      '"invisible me-px whitespace-nowrap before:content-[attr(data-placeholder-fit-probe)]",',
+    ] },
+  // DROPPED: shared-8 HF stopGlyphName (pY now names "StopFilled" itself); mj preventFocusSteal (c227f4d5e Cq, exported Qn, is
+  // shape-equal to eleven other `e.preventDefault()` helpers and nothing in this graph or its consumers reads it).
+  { target: 'composer-send-cell.mjs', source: 'c227f4d5e-DGDdGBTz.js',
+    exports: { pY: 'ComposerSendCell', jJ: 'SubmitCrossfade', cY: 'SendHintRow', DJ: 'IdleSendStateContext', $G: 'useComposerHasText' },
+    aliases: { pY: null, jJ: null, cY: null, DJ: null, $G: 'or' }, readBy: { DJ: 'pY' },
+    features: {
+      pY: ['"data-testid": "code-prompt-trailing-controls"', '"data-testid": "code-prompt-send-cell"', 'className: "size-control"',
+        L('Date.now() - v.current < $J', ['$J']), 'defaultMessage: "Queue for later"', 'defaultMessage: "Send and stay here"', 'keys: "cmd+alt+enter"', '"StopFilled"'],
+      jJ: ['e.propertyName === "visibility"', 'inert: !0'], cY: ['"inline-flex items-center justify-between gap-xs"', 'keys: n'],
+      DJ: [L('F(void 0)')], $G: ['e.readOutsideRender', 'e.subscribe('],
+    } },
+  { target: 'transcript-text-item.mjs', source: 'cb27dab29-Cw2yQaFh.js', exports: { Fe: 'isTranscriptTextItem' }, aliases: { Fe: 'S' },
+    features: { Fe: ['e.kind === "text"', '"narration_summary"'] } },
+  { target: 'transcript-provisional.mjs', source: 'c06cf64bb-CoZso5N4.js', exports: { Hy: 'isEmptyProvisionalEntry' }, aliases: { Hy: 'ni' },
+    features: { Hy: ['e.provisionalMessageId !== void 0 && e.items.length === 0'] } },
+  { target: 'transcript-user-kind.mjs', source: 'c4d199b75-BFt-qsGU.js', exports: { ot: 'userEntryKind' }, aliases: { ot: 'w' },
+    features: { ot: ['case "commentSummon":', '"bash"', '"bubble"'] } },
+  // c227f4d5e IE / NE / WE / UE -> cee0f6656 (u / s / v / _); wE -> c227f4d5e II.
+  { target: 'transcript-replies.mjs', source: 'cee0f6656--wXNpyCQ.js',
+    exports: { u: 'isAssistantEntry', s: 'isUserTurnEntry', v: 'endsFinishedReply', _: 'replyItems' }, aliases: { u: 'a', s: 'f', v: 'o', _: 'u' },
+    features: { u: [L('e.author === "assistant" && !n(e)')], s: [L('e.author === "user" && o(e) && t(e.items) !== "bash"')],
+      v: [L('if (i === void 0 || i.synthetic === !0) return !1;'), L('t.synthetic !== !0 && t.aside !== !0'), 'return !n;'],
+      _: [L('return g(e, t, n).flat();')] } },
+  { target: 'transcript-reply-text.mjs', source: 'c227f4d5e-DGDdGBTz.js', exports: { II: 'replyText' }, aliases: { II: 'vo' },
+    features: { II: [L('e.text.length > 0 ? [e.text] : []')] } },
+  { target: 'copy-reply-arg.mjs', source: 'cc43287c9-dzfX-J5i.js', exports: { kue: 'parseCopyReplyCount' }, aliases: { kue: null },
+    features: { kue: ['e === "" ? 1', '/^[1-9]\\d*$/.test(e)'] },
+    chunkFeatures: ['case "copy-reply": {'] },
+  { target: 'copy-reply-replies.mjs', source: 'cc43287c9-dzfX-J5i.js', exports: { Aue: 'copyableReplies', jue: 'copyReplyTranscript' },
+    aliases: { Aue: null, jue: null },
+    features: { Aue: ['i.localOutput === !0', 'a !== "" && n.push({ entryId: i.id, text: a });'], jue: ['replying: e.responding', L('Aue(e.entries, e.responding)', ['Aue'])] },
+    chunkFeatures: ['id: "d6GVin8ZgF",', 'id: "iAkUwGZZtY",', 'id: "iZ+iUUQvSB",', 'id: "kT+SiiA0vq",', '{ count: l.length },', 'let u = l[l.length - s];',
+      'formats: "plain_html",', 'id: "wSG94kLy28",', 'i.arg === "" ? `/${i.name}` : `/${i.name} ${i.arg}`,', 'id: "z7U1VhFXoU",'] },
+  { target: 'environment-bar.mjs', source: 'cc43287c9-dzfX-J5i.js',
+    exports: { vge: 'EnvironmentBar', d8: 'EnvironmentChip', u8: 'EnvironmentChipGroup', _ge: 'useEnvironmentBarFit', c8: 'environmentBarSignature',
+      s8: 'EnvironmentIconOnlyContext', gge: 'environmentBarHysteresis', l8: 'environmentChipClass', Y5: 'environmentTriggerClass', X5: 'EnvironmentTriggerLabel' },
+    aliases: { vge: null, d8: null, u8: null, _ge: null, c8: null, s8: null, gge: null, l8: null, Y5: null, X5: null },
+    readBy: { s8: 'vge', gge: '_ge' },
+    features: {
+      vge: ['"data-testid": "epitaxy-environment-bar"', '"data-testid": "environment-bar-mode"', 'flex shrink-0 empty:hidden', L('s8.Provider', ['s8'])],
+      d8: ['"data-icon-only":', 'name: "CaretDown"', 'className: "shrink-0 text-muted-as-secondary"', 'hoverable: !1'],
+      u8: [L('flex empty:hidden ${l8}', ['l8'])],
+      _ge: [L('n.width < e.need + gge', ['gge'])],
+      c8: ['.join("|")', 'getBoundingClientRect().width'],
+      s8: [L('s8 = O(!1)', ['s8'])], gge: [L('gge = 2', ['gge'])], l8: ['`rounded ${'],
+      Y5: ['`${t ? "shrink" : "min-w-0 shrink"}${e ? " text-secondary" : ""}`'],
+      X5: ['"data-overridden":', L('flex min-w-0 items-center gap-1 ${c ? "text-warning" : n ? "text-accent" : ""}')],
+    } },
+  { target: 'usage-ring.mjs', source: 'shared-8-BqfCbkJd.js', exports: { RZ: 'UsageRing', PZ: 'usageRingStroke' }, aliases: { RZ: 'k', PZ: 'j' }, readBy: { PZ: 'RZ' },
+    features: { RZ: ['className: "-rotate-90"', '"data-ring-track": ""', '"data-ring-arc": ""'], PZ: [L('return NZ(DZ(e));')] } },
+  { target: 'composer-row-chin.mjs', source: 'c227f4d5e-DGDdGBTz.js', exports: { j6: 'ModeTriggerLabel', Wz: 'rowModelTriggerClass' },
+    aliases: { j6: null, Wz: null }, readBy: { Wz: 'rB' },
+    features: { j6: ['"grid grid-cols-[minmax(0,1fr)]"', '"overflow-x-clip text-ellipsis whitespace-nowrap"', 'hidden: !0'], Wz: ['"text-secondary"'] },
+    chunkFeatures: [
+      'inComposerRow:', 'effortInModelMenu:', '"compact:me-1"', 'EngineFooterStrip',
+      L('label: Ie && (!ze || st) ? p(J6, { label: en, name: Qt }, Me?.id) : en,'), 'className: "min-w-0 shrink",', 'className: "inline-flex min-w-0",',
+      'className: "relative block",', 'className: "absolute inset-0 flex items-center",',
+    ],
+    // relink rl-composer (round 3, C1): the X6 row layout — the empty aria-hidden leading, the mode picker after the model
+    // selector (On), the trailing children order — and J6's placeholder label are now cut from the official text by
+    // scripts/extract-composer-chin-v4.mjs (src/generated/composer-chin-v4 ComposerSessionChin); O3 (w3's ring trigger:
+    // its tracks, the "shrink-0" trigger, the row slot gp) is that graph's host boundary, which the host ring follows.
+    // These seven chunk strings became the raw declaration sha256 of X6 / J6 / O3 (the composer-chin-v4 pin scheme),
+    // which must also be the ones composer-chin-v4's provenance records.
+    declarationPins: { X6: 'f54d3bebfa1bd432c0305e7038e7b1822f9bb7d10b1b9a936d373c41859d8378',
+      J6: '0c47a2d7ce4be786a3d9d14ef85818165946a6761c7eb5d5a2b692d7feb30756', O3: 'd30a7b7450e5f7eed266400973f016e6c329a66acfe2354d30405435598003df' },
+    declarationPinsMirror: 'src/generated/composer-chin-v4/provenance.json' },
+  { target: 'keyboard-activation.mjs', source: 'shared-8-BqfCbkJd.js', exports: { UI: 'isKeyboardActivation' }, aliases: { UI: 'oi' },
+    features: { UI: ['e.detail === 0', '!("pointerType" in e && e.pointerType)'] } },
+  // The shared-frame helpers this graph exports for its consumers (3.6556.2 viewTabsSame copies). cds-core holds most of
+  // them without a publicName: cut again here (pure, raw declaration hash equal). LINKED: Wa useCdsColorMode -> cds-core
+  // useCdsMode (shared-frame Xa).
+  { target: 'chat-composer-frame.mjs', source: 'shared-frame-CJdE5Ria.js',
+    exports: { Zm: 'textDirectionOf', ld: 'afterFontsReady', Em: 'useSurfaceFocusShadowStyle', Es: 'useResolvedIconSize', wn: 'isRenderable',
+      La: 'useRootNaturalImageTiles', Mn: 'useOptionalEventCallback', Md: 'isTextarea', rs: 'rootRemPx', Ad: 'isHtmlElement', co: 'isSurfaceToken',
+      Dn: 'afterAnimationsSettle', _d: 'dropScrimLayer', Rn: 'isUnfocusedFrame', Hn: 'swallowEnterAfterFocusMove', yn: 'clickModifierSource',
+      Hm: 'sanitizeLabelText', Um: 'collapseControlText', Wm: 'isBlankLabelText', Gm: 'trimLeadingInvisible', Km: 'tooltipSafeText', An: 'loadNamedChunk' },
+    aliases: { Zm: 'Iu', ld: 'Nd', Em: 'td', Es: 'ff', wn: 'Rp', La: 'Hf', Mn: 'Pp', Md: 'Cd', rs: 'vf', Ad: 'yd', co: 'Af', Dn: 'Lp', _d: 'wd', Rn: 'Ap',
+      Hn: 'kp', yn: 'Wp', Hm: 'Wu', Um: 'Uu', Wm: 'Bu', Gm: 'Gu', Km: 'Hu', An: 'Fp' },
+    features: {
+      Zm: ['/\\p{L}/u.exec(e)?.[0]', '? "rtl" : "ltr"'], ld: ['e?.fonts?.ready', 't.then(i, i)'],
+      Em: ['"--cds-focus-shadow":', '"--cds-focus-shadow-danger":', L('t = Xa()', ['Xa'])], Es: [L('t = e === void 0 ? ws : e', ['ws']), L('return J2($, 0, t, n) ? K2($, 0, t, n, Cs(t, n)) : $[2];', ['Cs'])],
+      wn: ['e != null && typeof e != "boolean"'], La: [L('return X(Ia) ?? !1;', ['Ia'])], Mn: ['return e === void 0 ? void 0 : r;', 't.current?.(...n)'],
+      Md: ['e.localName === "textarea"', L('return Ad(e) &&', ['Ad'])], rs: [L('typeof document > "u" ? 16 : ns(ts())')], Ad: [L('return Od(e) === Ed;', ['Od', 'Ed'])],
+      Ed: ['"http://www.w3.org/1999/xhtml"'], co: [L('return so.has(e);', ['so'])], Dn: ['Promise.allSettled(r.map((e) => e.finished))'],
+      _d: [L('_d = 9e3', ['_d'])], Rn: ['t.top !== t.self && !e.hasFocus()'], Hn: ['e.key === "Enter" && (e.repeat || (t && performance.now() < n))'],
+      yn: ['modifierKey: e.metaKey || e.ctrlKey, source: t'], Hm: [L('return e.replace(Bm(), Vm);', ['Bm', 'Vm'])],
+      Um: ['.replace(/[\\t\\n\\v\\f\\r\\u0085\\u2028\\u2029]+/g, " ")'], Wm: [L('return Gm(e) === "";', ['Gm'])],
+      Gm: ['return e.replace(/^(?:\\s|\\u200C|\\u200D|\\uFE0E|\\uFE0F)+/u, "");'], Km: [L('let t = Hm(e);', ['Hm'])],
+      An: [L('return On ? Promise.resolve(On(e, t)) : t();', ['On'])],
+    } },
+  // shared-2 -> shared-2 (transition, attributes) + shared-3 (MessageAttachments and its tiles). The shell's Attachments
+  // part is shared-3's own `Object.assign(Al, { Image, Video, File, Quote })` (cut as is, no substitute any more).
+  { target: 'chat-composer-attachments.mjs', source: 'shared-3-IQTrO7Gx.js',
+    exports: { Al: 'MessageAttachments', dl: 'AttachmentImage', Sl: 'AttachmentFile', Ol: 'AttachmentQuote', vl: 'AttachmentVideo', BN: 'videoFileNamePattern' },
+    aliases: { Al: null, dl: null, Sl: null, Ol: null, vl: null, BN: 'ct' },
+    features: {
+      Al: ['"data-cds": "MessageAttachments"', 'thumbnailHeight:'], dl: ['"data-cds": "MessageAttachmentsImage"'],
+      Sl: ['"data-cds": "MessageAttachmentsFile"', 'shownBadge:', 'dir: "auto"', '[text-align:match-parent]'],
+      Ol: ['"data-cds": "MessageAttachmentsQuote"'], vl: ['"data-cds": "MessageAttachmentsVideo"', 'preload: "metadata",'],
+      BN: [L('BN = /\\.(mp4|webm|mov)$/i', ['BN'])],
+    } },
+  { target: 'chat-composer-attachment-transition.mjs', source: 'shared-2-CsjIBQD8.js',
+    exports: { jm: 'useAttachmentTransition', dm: 'scrollParentOf', _m: 'attachmentAttribute', vm: 'attachmentRestoredAttribute',
+      Tm: 'attachmentTransitionNameProperty', Hm: 'attachmentTransitionName' },
+    aliases: { jm: 'Oy', dm: 'Ny', _m: 'by', vm: 'Sy', Tm: 'xy', Hm: 'wy' },
+    features: { jm: ['skipTransition()'], dm: ['e.ownerDocument.defaultView'], _m: ['"data-cds-attachment"'], vm: ['"data-cds-attachment-restored"'],
+      Tm: ['"--cds-attachment-vt-name"'], Hm: ['return `cds-attachment-${e.replace(/[^a-zA-Z0-9_-]/g, "-")}`;'] } },
+  // shared-1 hd / Sd / jd -> shared-26 Qp / am / mm. Qp (ComposerDockContext) is a cds-core publicName since wave 5b (one
+  // Context for every graph): no longer a root here; chat-composer-shell.mjs links it from cds-core under the same name.
+  { target: 'chat-composer-dock.mjs', source: 'shared-26-B-POtn5S.js', exports: { am: 'dockGroupAttribute', mm: 'dockMaskedClass' },
+    aliases: { am: 'yy', mm: 'dy' },
+    features: { am: ['"data-cds-dock-group"'], mm: ['"in-data-cds-dock-masked:bg-page"'] } },
+  { target: 'chat-composer-presence.mjs', source: 'shared-5-u8kha2eH.js',
+    localAdapters: { Ed: { name: 'loadPresenceMotionChunk', module: '../../source-composer-current-adapters.jsx', features: ['import("./cb6c4b462-DQhtu8Uk.js")'] } },
+    exports: { Ud: 'Presence', yd: 'lazyPresenceMotion', Od: 'presenceMotion', Dd: 'loadPresenceMotion' },
+    aliases: { Ud: 'Bm', yd: null, Od: 'Um', Dd: 'Gm' }, readBy: { yd: 'Od' },
+    features: { Ud: [L('Object.assign(Rd, { Div: Hd("div"), Span: Hd("span") })')], yd: [L('yd = null', ['yd'])], Od: [L('Od = () => yd', ['Od', 'yd'])],
+      Dd: ['"cds_lazy_presence_motion"', 'e?.AnimatePresence !== void 0'] } },
+  // Mp (ChatComposerLayoutContext) is a cds-core publicName since wave 5b: no longer a root here (linked from cds-core).
+  { target: 'chat-composer-layout.mjs', source: 'shared-26-B-POtn5S.js',
+    exports: { Np: 'ChatComposerSendContext', Pp: 'SendPinContext', kp: 'startInsetClass', Cp: 'insetTransitionClass',
+      jp: 'multilineThreshold', Dp: 'hasMinLines', yp: 'composerTypeVariables', Sp: 'insetDurationClass', Ip: 'reserveTrailingClass', Lp: 'editorClass',
+      Ep: 'editorSizeStyle', Kp: 'proseMirrorContentClass', Rp: 'resolvePlaceholderFit', zp: 'placeholderFitBox', Hp: 'placeholderGhostProps',
+      Up: 'placeholderProps', Wp: 'stackedEditorClass', xp: 'editorRowClass' },
+    aliases: { xp: 'ky', Np: 'wy', Pp: 'Ty', kp: 'Uy', Cp: 'Py', jp: 'Ly', Dp: 'zy', yp: 'Iy', Sp: 'Oy', Ip: 'My', Lp: 'Jy', Ep: 'Yy', Kp: 'jy', Rp: 'Zy',
+      zp: 'By', Hp: 'Vy', Up: 'Hy', Wp: 'Ny' },
+    features: {
+      xp: [L('xp = `${yp} py-[var(--cmp-row-py)] ${bp}`')],
+      Np: ['hasContent: !1', 'busy: !1', 'pinSend: !1'], Pp: [L('Pp = b(null)', ['Pp'])],
+      kp: [L('return e === "none" ? void 0 : ')], Cp: ['motion-safe:transition-[padding-left,padding-right]'], jp: [L('jp = 0.3', ['jp'])],
+      Dp: ['return e !== void 0 && e > 1;'], yp: ['[--cmp-row-h:calc(var(--cmp-leading)+2*var(--cmp-row-py))]'], Sp: ['"motion-safe:duration-200"'],
+      Ip: [L('Ip = "pe-[var(--cmp-trail-w,0px)]"', ['Ip'])], Lp: ['t && "cursor-default opacity-60"'], Ep: ['lh + 2 * var(--cmp-row-py))'],
+      Kp: ['[&_.ProseMirror:focus]:outline-none', "[&_.is-editor-empty]:before:!content-['']"], Rp: [L('(Fp(e) ? "grow" : "clamp")')],
+      zp: ['line-clamp-[var(--cmp-placeholder-lines)] break-words', '{ lines: n, className: "truncate", style: void 0 }'],
+      Hp: ['"invisible pointer-events-none select-none max-w-full self-start"', '"data-composer-placeholder-ghost": e,'],
+      Up: ['"pointer-events-none select-none absolute start-0 top-0 max-w-full max-h-96 overflow-hidden"', '!o && "transition-none motion-safe:transition-none",'],
+      Wp: ['"grid [&>*]:[grid-area:1/1] [&>*]:min-w-0"'],
+    } },
+  { target: 'chat-composer-shell.mjs', source: 'shared-5-u8kha2eH.js',
+    exports: { _m: 'ChatComposerShell', xm: 'ChatComposerParts', mm: 'useChatComposerFocusRef', pm: 'chatComposerFormPlaceholder', Bm: 'useResolvedPlaceholder',
+      zm: 'placeholderGhostLines' },
+    aliases: { _m: 'Nm', xm: 'Mm', mm: 'Fm', pm: 'Im', Bm: 'Am', zm: 'km' },
+    features: {
+      _m: ['"data-cds": "ChatComposer"', 'r.style.setProperty("--cmp-wrap-h", e)', '"data-end-column":', '"data-composer-size":', '[&:dir(rtl)_.ProseMirror]:before:float-left', '"ps-[var(--cmp-lead-w)]"'],
+      xm: [L('Header:'), L('Attachments:'), L('Actions:'), L('PrimaryAction:'), L('Chin:'), L('Overlay:'), L('Tray:')],
+      mm: ['handle:', '.current?.focus()'], pm: ['"replyPlaceholder"'],
+      Bm: ['n?.intervalMs ?? 5e3', 'rotating: !1,'], zm: ['if (typeof e == "string") return e === "" ? [] : [e];'],
+    },
+    chunkFeatures: [L('handoffCard:'), L('storeCaret:'), 'hasDraftText:', 'e.commands.setTextSelection(e.view.posAtDOM(t, n)), e.view.focus());'] },
+  // shared-28 -> shared-5 (placeholder timing).
+  { target: 'chat-composer-placeholder-timing.mjs', source: 'shared-5-u8kha2eH.js', exports: { UQ: 'placeholderElementTiming' }, aliases: { UQ: 'n' },
+    features: { UQ: ['elementtiming: "composer-placeholder-text"'] }, chunkFeatures: [L('BQ = "data-doc-empty"', ['BQ'])] },
+  { target: 'composer-add-menu.mjs', source: 'c227f4d5e-DGDdGBTz.js', exports: { SJ: 'addTriggerSizes', CJ: 'addFilesMenuItem', vJ: 'imageFileAccept' },
+    aliases: { SJ: null, CJ: null, vJ: null },
+    features: { SJ: ['{ small: "sm", base: "base", large: "lg" }'],
+      CJ: ['defaultMessage: "Add files or photos",', 'id: "vVSGqeakjA",', 'e.formatMessage({ defaultMessage: "Add image", id: "jsBzHH0H/K" })', 'icon: "Attachment",'],
+      vJ: ['"image/png,image/jpeg,image/gif,image/webp"'] },
+    chunkFeatures: ['formatMessage({ defaultMessage: "Add", id: "alWu/MbgXB" })', '"epitaxy-root break-words"', 'glyphSize:', 'supportsFileAttachments:'] },
+  { target: 'menu-collision-padding.mjs', source: 'shared-18-Cfqwgjc5.js', exports: { OJ: 'menuCollisionPadding' }, aliases: { OJ: 'Cn' },
+    features: { OJ: ['{ top: 48, right: 8, bottom: 8, left: 8 }'] } },
+  // shared-7 -> shared-36.
+  { target: 'composer-object-url.mjs', source: 'shared-36-fqRFYwOb.js', exports: { mg: 'useFileObjectUrl' }, aliases: { mg: 'eo' },
+    features: { mg: [L('(e ? ug.get(e)?.url : void 0)', ['ug'])] },
+    chunkFeatures: ['url: URL.createObjectURL(e), subscribers: new Set()', L('r.subscribers.size === 0 && (URL.revokeObjectURL(r.url), ug.delete(e))', ['ug'])] },
+  // c0fbbe82d -> c0a74d72b. Bi attachmentTileAttributes -> Wo, Ri useTileRemove -> Ho.
+  { target: 'composer-attachment-tiles.mjs', source: 'c0a74d72b-BELp4TMv.js',
+    // c856385e2 br (exported `a`): the path hover card a tile is the trigger of; the host answers it as in 3.6556.2.
+    adapters: { 'c856385e2-Cqx37C-b.js': { a: { name: 'ComposerPathHoverCard', module: '../../source-composer-attachment-adapters.jsx',
+      features: ['surface: a,', 'trigger: o,', 'beforeOpen', 'reveal: l,'] } } },
+    exports: { Go: 'ComposerImageTile', qo: 'ComposerFileTile', Jo: 'ComposerQuoteTile', Ko: 'ComposerVideoTile', Oc: 'videoMimeTypePattern',
+      Wo: 'attachmentTileAttributes', Ho: 'useTileRemove', Po: 'tileFocusTarget' },
+    aliases: { Go: null, qo: null, Jo: null, Ko: null, Oc: null, Wo: null, Ho: null, Po: null }, readBy: { Wo: 'Ko' },
+    features: {
+      Go: ['defaultMessage: "Processing image",', 'surface: "composer"', 'reorder:'], qo: ['isDirectory: a', 'fileName: r'],
+      Jo: ['badgeTooltip: a', 'asRow: s'], Ko: ['file: t', 'qt.Video'], Oc: ['/^video\\/[a-z0-9.-]+$/'], Wo: [L('return { [Pt]: e ? "" : void 0 };', ['Pt'])],
+      Ho: ['keepFocusOnPointerRemove:', 'requestAnimationFrame'], Po: ['[data-cds="CardLink"], .epitaxy-pill-body'],
+    } },
+  // Na (`Ma.Component`, Ma = Xe({entry: Da, pick: (e) => e.EpitaxyCodeMirrorText, …}), Da a dynamic import of cbd02b8f2):
+  // the host has no CodeMirror, so Na is the 3.6556.2 local adapter ComposerHeldTextEditor (4.16336.0 no longer passes
+  // autoFocus; the adapter defaults it to false).
+  { target: 'composer-held-text-dialog.mjs', source: 'c0a74d72b-BELp4TMv.js', exports: { fs: 'HeldTextDialog' }, aliases: { fs: null },
+    localAdapters: { Na: { name: 'ComposerHeldTextEditor', module: '../../source-composer-attachment-adapters.jsx', features: ['Na = Ma.Component'] } },
+    features: { fs: ['defaultMessage: "Saved draft"', 'defaultMessage: "Discard changes?"', 'defaultMessage: "Remove saved draft?"', 'size: "3xl"'] },
+    chunkFeatures: ['pick: (e) => e.EpitaxyCodeMirrorText,', 'overlayHost: "held_text_sheet",'] },
+  { target: 'code-pane-experimental.mjs', source: 'shared-18-Cfqwgjc5.js', exports: { BC: 'codePaneExperimental' }, aliases: { BC: 'wp' },
+    features: { BC: ['{ naturalImageTiles: "sized" }'] } },
+  // shared-52 -> shared-62. DROPPED: cafc2a89b acceptedImageTypes (its re-export of the image list is gone; shared-62 Eh is it).
+  { target: 'composer-intake-split.mjs', source: 'shared-62-DoCqVpIq.js', exports: { bg: 'splitTransferItems', Eh: 'composerImageMimeTypes' },
+    aliases: { bg: 'Ph', Eh: 'Cg' },
+    features: { bg: ['i.webkitGetAsEntry?.()?.isDirectory ? n.push(a) : r.push(a)', 'return { folders: n, files: Array.from(t ?? []) };'],
+      Eh: ['["image/jpeg", "image/png", "image/gif", "image/webp"]'] } },
+  { target: 'composer-intake-route.mjs', source: 'cc43287c9-dzfX-J5i.js', exports: { K$: 'routeComposerIntake' }, aliases: { K$: null },
+    features: { K$: ['n.refuseFiles', 'a = n.otherFiles ? [] : [...i, ...(n.folders ? [] : t)];', 'n.folders !== void 0 && t.length > 0'] },
+    chunkFeatures: [L('sx(Yo(e.clipboardData?.items, e.clipboardData?.files), "paste",')] },
+  { target: 'composer-drop-target.mjs', source: 'cc63499d2-BD7iFRH4.js', exports: { c: 'useDropTarget', l: 'DropHalo' }, aliases: { c: 'n', l: 't' },
+    features: { c: ['claim: c', 'dropEffect: o', 'disabled: l'], l: ['"on-target"', 'motion-safe:animate-[cds-fade-in_0.15s_cubic-bezier(0.215,0.61,0.355,1)]'] } },
+  { target: 'composer-pane-drop-zone.mjs', source: 'c4c113f6f-B-i6bpoH.js', exports: { v: 'ComposerPaneDropZone', h: 'useFileDropTarget', g: 'droppedEntries' },
+    aliases: { v: 't', h: 'r', g: 'n' },
+    features: { v: ['onDropped: u', 'onEntriesDropped: l'], h: ['dropEffect: "copy",', 'claim: !0,', L('r?.accepts(e) === !0')],
+      g: ['n[e].kind === "file" ? n[e].webkitGetAsEntry?.() : null'] },
+    chunkFeatures: ['return e.dataTransfer?.types?.includes("Files") ?? !1;'] },
+];
+// ---------------------------------------------------------------------------------------------------------------------
+// 4.16336.0 (region batch 2b, region-plan G6 / cutover.oldConsumersAtGeneration): a second source contract cut from
+// snapshots/claude-4.16336.0-20261104 into the isolated graph src/generated/code-composer-v4. Ten 3.6556.2 areas
+// (chat-artifact-card, chat-side-chat, code-current, code-editor, code-transcript, composer-notices, cowork-approval,
+// effort-control, session-rail-context, sidebar-hover-card) and 18 host files link src/generated/code-composer by original
+// identity, so that graph stays 3.6556.2, byte for byte, until they move (productionSwitchNotBeforeBatch 11).
+//
+// Engine (sharedGraph 'cds-core', the extract-approval-landing.mjs 4.16336.0 contract plus this generator's adapters):
+//   - semantic modules (`contract4.modules`) keep the 3.6556.2 file names and export names; every root is pinned by its
+//     chunk export alias (`aliases`, null for a private root, which the chunk must not export), by feature strings of its
+//     own prettier declaration, and by uniqueness: the only top-level declaration of its chunk carrying every feature, or
+//     (`readBy`) the only dependency of a located declaration carrying them. `chunkFeatures` pin strings of the source
+//     chunk that consume the roots (call sites the host contract relies on).
+//   - every binding reached from a root is the original top-level declaration, sliced once (D1): a same-chunk dependency
+//     goes into the module that reaches it first; a binding of another chunk that no module roots goes into that chunk's
+//     own module (`chunk-<chunk>.mjs`), so nothing is hand-picked and every cross-chunk edge is the original import.
+//   - an import resolves, in order, to: an adapter entry (host answer, its original pinned by features), a React export of
+//     vendor-frame (official-4.16336.0.mjs assertVendorAlias), a cds-core publicName (linked, its raw declaration hash equal
+//     to cds-core's), a root of a semantic module, or a slice as above. A declaration cds-core replaces by a host adapter
+//     (cds-core manifest `kind: adapter`, e.g. vendor-frame's React CJS loader) is replaced by the same adapter here.
+//   - a binding cds-core holds without a publicName is cut again only when pure and its raw declaration hashes as
+//     cds-core's; module state (a context, a module-level WeakMap / Map / Set / WeakSet, or a reassigned module binding)
+//     stops generation (D46) with its stateConflicts (binding, text, reachedBy).
+//   - module state the linked area (btw-pane-v4) holds without exporting it stops generation (a second instance). Other
+//     4.16336.0 areas are regenerated concurrently and are not link targets of this graph: `--survey` lists the
+//     bindings this graph shares with them (overlapWithOtherV4Areas) for the cutover, and generation never reads them.
+//   - every emitted module is closed apart from `hostGlobals`; dynamic import() inside a sliced declaration stops generation
+//     unless a `localAdapters` entry answers that declaration.
+const contract4 = (() => {
+  const official = official4, loose = (f, o) => ({ loose: f, ...(o ? { keep: o.keep } : {}) });
+  return {
+    official, output: path.join(root, 'src/generated/code-composer-v4'), label: 'Code composer 4.16336.0',
+    sharedGraph: 'cds-core',
+    // The dependency region already on 4.16336.0 whose module state this graph reaches (shared-1 vI modifier keys, the
+    // focus guard, the shown-session store): linked, one instance.
+    linkedAreas: ['btw-pane-v4'],
+    isolatedGraph: { legacyOutput: 'src/generated/code-composer', productionSwitchNotBeforeBatch: 11,
+      heldBy: ['chat-artifact-card', 'chat-side-chat', 'code-current', 'code-editor', 'code-transcript', 'composer-notices',
+        'cowork-approval', 'effort-control', 'session-rail-context', 'sidebar-hover-card', 'src/composer-copy-reply.mjs',
+        'src/composer-final-focus-model.mjs', 'src/composer-focus-api.mjs', 'src/composer-focus-handoff.mjs', 'src/composer-placeholder.mjs',
+        'src/main.jsx', 'src/source-branch-switch-dialog.jsx', 'src/source-btw-pane.jsx', 'src/source-chat-composer.jsx',
+        'src/source-composer-add-menu.jsx', 'src/source-composer-attachment-adapters.jsx', 'src/source-composer-environment-bar.jsx',
+        'src/source-composer-pane-drop.jsx', 'src/source-composer-row-chin.jsx', 'src/source-composer-shell.jsx',
+        'src/source-composer-tiles.jsx', 'src/source-composer.jsx', 'src/source-diff-scope.jsx', 'src/source-preview-tabs.jsx'] },
+    adapterModules: ['src/source-composer-current-adapters.jsx', 'src/source-composer-attachment-adapters.jsx', 'src/cds-core-adapter.mjs'],
+    // Import-level host answers: file -> alias -> { name, module, features (on the original's same-chunk closure) }.
+    adapters: CONTRACT4_ADAPTERS,
+    hostGlobals: CONTRACT4_GLOBALS,
+    modules: CONTRACT4_MODULES,
+  };
+})();
+
+const featureMatches4 = (text, f) => typeof f === 'string' ? text.includes(f) : official4.looseFeature(f.loose, { keep: f.keep ?? [] }).test(text);
+function assertFeatures4(label, text, features = []) {
+  const missing = features.filter(f => !featureMatches4(text, f));
+  if (missing.length) throw Error(`${label} lacks ${missing.map(f => JSON.stringify(f)).join(', ')}`);
+}
+// Parsed chunks are kept in a small LRU (a parsed 1 MB chunk holds hundreds of MB): selections keep their text, not paths.
+const sourceCacheSize4 = 6;
+// `declarationPins` (local -> raw declaration sha256 of the chunk's shipped bytes: the declarator, or the function
+// declaration, as the chunk spells it) and `declarationPinsMirror` (a generated provenance.json that must record the same
+// sha256 for each of them, as a root or in pinnedDeclarations). Assertions only: nothing of them reaches the manifest.
+function rawDeclarationSha4(src, local) {
+  src.rawAst ??= parsers.babel.parse(src.text, {});
+  for (const n of src.rawAst.program.body) {
+    if (n.type === 'FunctionDeclaration' && n.id?.name === local) return sha(src.text.slice(n.start, n.end));
+    if (n.type === 'VariableDeclaration') for (const d of n.declarations) if (d.id?.name === local) return sha(src.text.slice(d.start, d.end));
+  }
+  return null;
+}
+async function assertDeclarationPins4(spec, src) {
+  const pins = Object.entries(spec.declarationPins ?? {});
+  if (!pins.length) return;
+  const problems = [];
+  for (const [local, pin] of pins) {
+    const now = rawDeclarationSha4(src, local);
+    if (now !== pin) problems.push(`${spec.source}#${local} is ${now ?? 'not a top-level declaration'}, pinned ${pin}`);
+  }
+  if (spec.declarationPinsMirror) {
+    const recorded = JSON.parse(await fs.readFile(path.join(root, spec.declarationPinsMirror), 'utf8'));
+    const seen = new Map([...(recorded.roots ?? []).map(r => [`${r.file}#${r.local}`, r.declarationSha256]), ...Object.entries(recorded.pinnedDeclarations ?? {})]);
+    for (const [local, pin] of pins) if (seen.get(`${spec.source}#${local}`) !== pin)
+      problems.push(`${spec.declarationPinsMirror} records ${spec.source}#${local} as ${seen.get(`${spec.source}#${local}`) ?? 'nothing'}, pinned ${pin}`);
+  }
+  if (problems.length) throw Error(`${spec.target}: declaration pins: ${problems.join('; ')}`);
+}
+async function readSource4(name, cache) {
+  if (cache.has(name)) { const hit = cache.get(name); cache.delete(name); cache.set(name, hit); return hit; }
+  while (cache.size >= sourceCacheSize4) cache.delete(cache.keys().next().value);
+  if (process.env.CODE_COMPOSER_TRACE) console.error(`read ${name} (${cache.size} cached, heap ${Math.round(process.memoryUsage().heapUsed / 1e6)}MB)`);
+  const bytes = await fs.readFile(path.join(official4.ionSource, name));
+  const text = bytes.toString();
+  const code = await format(text, { parser: 'babel' });
+  const ast = parsers.babel.parse(code, {});
+  let program;
+  babel.traverse(ast, { Program(p) { program = p; } });
+  const exported = new Map(ast.program.body.filter(n => n.type === 'ExportNamedDeclaration')
+    .flatMap(n => n.specifiers.map(s => [s.exported.name, s.local.name])));
+  const record = { name, bytes, text, code, program, exported };
+  cache.set(name, record);
+  return record;
+}
+// A top-level declaration in the unformatted chunk bytes: the text cds-core (a runSlicer graph) hashes its bindings by.
+function rawDeclarationText4(src, name) {
+  if (!src.raw) {
+    src.raw = new Map();
+    for (const node of parseAst4(src.text).body) {
+      if (node.type === 'FunctionDeclaration' && node.id) src.raw.set(node.id.name, [node.start, node.end]);
+      if (node.type === 'VariableDeclaration') for (const d of node.declarations) if (d.id.type === 'Identifier') src.raw.set(d.id.name, [d.start, d.end]);
+    }
+  }
+  const at = src.raw.get(name);
+  if (!at) throw Error(`${src.name}: no top-level declaration ${name} in the chunk bytes`);
+  return src.text.slice(...at);
+}
+// sharedGraph 'cds-core': version, snapshot, every module's bytes and source hash, every publicName exported by its module.
+async function cdsCoreGraph4(contract) {
+  const { official } = contract, area = contract.sharedGraph, dir = path.join(root, 'src/generated', area);
+  const manifestBytes = await fs.readFile(path.join(dir, 'manifest.json'));
+  const manifest = JSON.parse(manifestBytes);
+  if (manifest.referenceVersion !== official.referenceVersion) throw Error(`${area} is ${manifest.referenceVersion}, expected ${official.referenceVersion}`);
+  if (manifest.referenceSnapshot !== official.referenceSnapshot) throw Error(`${area} snapshot is ${manifest.referenceSnapshot}, expected ${official.referenceSnapshot}`);
+  const byTarget = new Map(), held = new Map(), published = new Map(), adapters = new Map(), aliasAdapters = new Map();
+  for (const m of manifest.modules) {
+    if ((m.referenceVersion ?? manifest.referenceVersion) !== official.referenceVersion) throw Error(`shared module ${area}/${m.target} is ${m.referenceVersion}`);
+    if (sha(await fs.readFile(path.join(dir, m.target))) !== m.sha256) throw Error(`${area}/${m.target} differs from its manifest`);
+    const bytes = await fs.readFile(path.join(official.ionSource, path.basename(m.source))).catch(() => null);
+    if (!bytes || sha(bytes) !== m.sourceSha256) throw Error(`${area}/${m.target} was sliced from other ${m.source} bytes`);
+    byTarget.set(m.target, m);
+    for (const b of m.bindings) held.set(`${path.basename(m.source)}#${typeof b === 'string' ? b : b.name}`, { target: m.target, sha256: typeof b === 'string' ? null : b.sha256 });
+    // A declaration cds-core answers by a host adapter (its import `via` names the declaration, file#local).
+    for (const i of m.imports ?? []) if (i.kind === 'adapter' && /#/.test(i.via ?? '')) adapters.set(i.via, { from: i.from, name: i.name });
+    // An import cds-core answers by a host adapter (its `via` names the chunk export, file:alias; e.g. shared-0 Rx, the
+    // GrowthBook feature reader, -> hostGrowthBookFeature): the same import here gets the same host answer.
+    for (const i of m.imports ?? []) if (i.kind === 'adapter' && /^[^#]+:[^:#]+$/.test(i.via ?? '')) {
+      const seen = aliasAdapters.get(i.via);
+      if (seen && (seen.from !== i.from || seen.name !== i.name)) throw Error(`${area}: ${i.via} is answered by two host adapters`);
+      aliasAdapters.set(i.via, { from: i.from, name: i.name, original: i.original });
+    }
+  }
+  for (const [name, entry] of Object.entries(manifest.publicNames ?? {})) {
+    const m = byTarget.get(entry.target);
+    const exported = m && (m.exports?.[entry.local] ?? (m.sharedExports?.includes(entry.local) ? entry.local : null));
+    if (!m || path.basename(m.source) !== entry.file || !m.bindings.some(b => (typeof b === 'string' ? b : b.name) === entry.local) || !entry.exportName || exported !== entry.exportName)
+      throw Error(`${area} publicName ${name} (${entry.file}#${entry.local}) is not exported by ${entry.target} as ${entry.exportName}`);
+    published.set(`${entry.file}#${entry.local}`, { name, ...entry });
+  }
+  return { area, held, published, adapters, aliasAdapters, manifestSha256: sha(manifestBytes) };
+}
+// A dependency region's 4.16336.0 graph this one links (btw-pane-v4): same version, snapshot and shared graph; each module
+// cut from the very chunk bytes read here and equal to its manifest. Its exported bindings are linked, never cut again (one
+// instance, D1); one it holds without exporting is cut again only when pure and its declaration hashes equal.
+async function linkedArea4(contract, area, cache) {
+  const dir = path.join(root, 'src/generated', area);
+  const manifestBytes = await fs.readFile(path.join(dir, 'manifest.json'));
+  const manifest = JSON.parse(manifestBytes);
+  if (manifest.referenceVersion !== contract.official.referenceVersion || manifest.referenceSnapshot !== contract.official.referenceSnapshot)
+    throw Error(`${area} is ${manifest.referenceVersion} (${manifest.referenceSnapshot}), expected ${contract.official.referenceVersion}`);
+  if (manifest.sharedGraph !== contract.sharedGraph) throw Error(`${area} links ${manifest.sharedGraph}, expected ${contract.sharedGraph}`);
+  const exported = new Map(), held = new Map();
+  for (const m of manifest.modules) {
+    const src = await readSource4(m.source, cache);
+    if (sha(src.bytes) !== m.sourceSha256) throw Error(`${area} ${m.target} was cut from other ${m.source} bytes`);
+    if (sha(await fs.readFile(path.join(dir, m.target))) !== m.sha256) throw Error(`${area} ${m.target} differs from its manifest`);
+    for (const b of m.bindings) {
+      held.set(`${m.source}#${b.name}`, { area, target: m.target, sha256: b.sha256 });
+      if (m.exports?.[b.name]) exported.set(`${m.source}#${b.name}`, { area, target: m.target, name: m.exports[b.name], sha256: b.sha256 });
+    }
+  }
+  return { area, exported, held, manifestSha256: sha(manifestBytes) };
+}
+// Survey only (never part of generation, whose output must not depend on concurrently regenerated areas): bindings this
+// graph cuts that another 4.16336.0 area also holds; module state among them must be linked at the production cutover.
+async function otherV4Areas(contract, self, linked) {
+  const base = path.join(root, 'src/generated'), held = new Map();
+  for (const area of (await fs.readdir(base)).sort()) {
+    if (area === contract.sharedGraph || area === self || linked.includes(area)) continue;
+    const manifest = await fs.readFile(path.join(base, area, 'manifest.json'), 'utf8').then(JSON.parse).catch(() => null);
+    if (manifest?.referenceVersion !== contract.official.referenceVersion) continue;
+    for (const m of manifest.modules ?? []) if (m.source) for (const b of m.bindings ?? [])
+      held.set(`${path.basename(m.source)}#${typeof b === 'string' ? b : b.name}`, `${area}/${m.target}`);
+  }
+  return held;
+}
+// Module state a second copy would split (D46 / D1): a React context (vendor-frame createContext), a module-level
+// WeakMap / Map / Set / WeakSet, or a module binding some declaration reassigns.
+function moduleStateKind4(contract, src, p) {
+  if (!p.isVariableDeclarator()) return null;
+  const binding = src.program.scope.getBinding(p.node.id.name);
+  if (binding?.constantViolations.length) return 'module-level binding written elsewhere';
+  const init = p.node.init;
+  if (init?.type === 'NewExpression' && init.callee.type === 'Identifier' && ['WeakMap', 'Map', 'Set', 'WeakSet'].includes(init.callee.name)) return `new ${init.callee.name}`;
+  if (init?.type === 'CallExpression' && init.callee.type === 'Identifier') {
+    const callee = src.program.scope.getBinding(init.callee.name)?.path;
+    if (callee?.isImportSpecifier()) {
+      const file = callee.parent.source.value.replace(/^\.\//, '');
+      if (file === contract.official.vendorFrame && contract.official.reactAliases[callee.node.imported.name]?.[1] === 'createContext') return 'context';
+    }
+  }
+  return null;
+}
+const chunkModuleName = file => `chunk-${(/^(shared-[^-]+|vendor-[a-z]+(?:-[a-z]+)*?|[^-]+)-/.exec(file) ?? [, file.replace(/\.js$/, '')])[1]}.mjs`;
+
+// `survey`: resolve everything and return the stateConflicts / problems instead of throwing or writing.
+async function extractTarget4(contract, { check = false, dry = false, survey = false } = {}) {
+  const { official, output, label } = contract;
+  const cache = new Map();
+  const graph = await cdsCoreGraph4(contract);
+  const linkedAreas = [];
+  for (const area of contract.linkedAreas ?? []) linkedAreas.push(await linkedArea4(contract, area, cache));
+  const linkedExport = key => linkedAreas.map(a => a.exported.get(key)).find(Boolean);
+  const linkedHeld = key => linkedAreas.map(a => a.held.get(key)).find(Boolean);
+  const linkedImport = (src, name, key, via) => {
+    const l = linkedExport(key);
+    if (!l) return null;
+    if (l.sha256 !== sha(declarationText(src, src.program.scope.getBinding(name).path))) throw Error(`${key} differs from the declaration ${l.area}/${l.target} exports`);
+    return { from: `../${l.area}/${l.target}`, name: l.name, via, kind: 'linked', original: name };
+  };
+  const sharedFrame = await readSource4(official.sharedFrame, cache);
+  official.assertCompilerHelpers(sharedFrame.text);
+  const modules = new Map(); // target -> module record
+  const order = [];
+  const newModule = (spec, kind) => {
+    const m = { spec, kind, target: spec.target, source: spec.source, selected: new Map(), imports: new Map(), seen: new Set(),
+      rootNames: new Map(Object.entries(spec.exports ?? {})), reexports: new Set(), extraExports: new Set(), heldByCdsCore: [], heldByLinked: [] };
+    if (modules.has(m.target)) throw Error(`${m.target} is declared twice`);
+    modules.set(m.target, m); order.push(m);
+    return m;
+  };
+  const rootOwner = new Map(), holder = new Map(), parent = new Map(), stateConflicts = [], problems = [];
+  const exportFrom = (m, local) => m.rootNames.get(local) ?? (m.extraExports.add(local), local);
+  const reachedBy = key => { const chain = []; for (let k = key; k && chain.length < 12; k = parent.get(k)) chain.push(k); return chain.join(' <- '); };
+  const fail = message => { if (survey) problems.push(message); else throw Error(message); };
+  const linkedSha = (src, file, local, shared) => {
+    const held = graph.held.get(`${file}#${local}`);
+    if (!held?.sha256 || held.sha256 !== sha(rawDeclarationText4(src, local))) throw Error(`${file}#${local} differs from the declaration ${graph.area} publishes as ${shared.name}`);
+    return held.sha256;
+  };
+  const sharedImport = (src, file, local, via) => {
+    const shared = graph.published.get(`${file}#${local}`);
+    return shared ? { from: `../${graph.area}/${shared.target}`, name: shared.exportName, via, kind: 'shared-graph', original: local, linkedSha256: linkedSha(src, file, local, shared) } : null;
+  };
+
+  // Phase 1: claim and locate every root of the semantic modules (every failure is reported, then generation stops).
+  const locateErrors = [];
+  for (const spec of contract.modules) {
+    const src = await readSource4(spec.source, cache);
+    const m = newModule(spec, 'semantic');
+    try { assertFeatures4(`${spec.target}: chunk ${spec.source}`, src.code, spec.chunkFeatures); } catch (e) { locateErrors.push(e.message); }
+    try { await assertDeclarationPins4(spec, src); } catch (e) { locateErrors.push(e.message); }
+    for (const [local, name] of Object.entries(spec.exports)) try {
+      const binding = src.program.scope.getBinding(local);
+      if (!binding || binding.path.isImportSpecifier()) throw Error(`${spec.target}: root ${local} is not a declaration of ${spec.source}`);
+      const alias = spec.aliases?.[local];
+      if (alias === undefined) throw Error(`${spec.target}: root ${local} names no export alias (null for a private root)`);
+      if (alias !== null && src.exported.get(alias) !== local) throw Error(`${spec.target}: ${spec.source} exports ${alias} as ${src.exported.get(alias) ?? 'nothing'}, not ${local}`);
+      if (alias === null && [...src.exported.values()].includes(local)) throw Error(`${spec.target}: private root ${local} is exported by ${spec.source}`);
+      const features = spec.features?.[local];
+      if (!features?.length) throw Error(`${spec.target}: root ${local} has no feature strings`);
+      assertFeatures4(`${spec.target}: root ${local}`, declarationText(src, binding.path), features);
+      const top = Object.entries(src.program.scope.bindings).filter(([, b]) => b.path.isFunctionDeclaration() || b.path.isVariableDeclarator());
+      const readBy = spec.readBy?.[local];
+      const pool = readBy ? declarationDeps(src, src.program.scope.getBinding(readBy)?.path ?? (() => { throw Error(`${spec.target}: readBy ${readBy} is not a declaration`); })())
+        .map(n => [n, src.program.scope.getBinding(n)]).filter(([, b]) => b && !b.path.isImportSpecifier()) : top;
+      const hits = pool.filter(([, b]) => features.every(f => featureMatches4(declarationText(src, b.path), f))).map(([n]) => n);
+      if (hits.length !== 1 || hits[0] !== local)
+        throw Error(`${spec.target}: root ${local} is not the unique ${readBy ? `dependency of ${readBy}` : 'declaration'} with its features (${hits.join(', ') || 'none'})`);
+      const key = `${spec.source}#${local}`;
+      if (rootOwner.has(key)) throw Error(`${spec.target}: root ${key} is already a root of ${rootOwner.get(key).target}`);
+      if (graph.published.has(key)) throw Error(`${spec.target}: root ${key} is the cds-core publicName ${graph.published.get(key).name}; link it instead`);
+      // A root the linked dependency region exports is linked and re-exported here under its semantic name (one instance).
+      if (linkedExport(key)) m.reexports.add(local);
+      rootOwner.set(key, m);
+    } catch (e) { locateErrors.push(e.message); }
+  }
+  if (locateErrors.length) throw Error(`${label}: ${locateErrors.length} root / feature failures:\n  ${locateErrors.join('\n  ')}`);
+
+  // Phase 2: slice the closures.
+  const resolveDecl = async (file, local, via, from) => {
+    const key = `${file}#${local}`;
+    const owner = rootOwner.get(key);
+    if (owner) return { module: owner, name: exportFrom(owner, local), kind: 'generated' };
+    const src = await readSource4(file, cache);
+    const shared = sharedImport(src, file, local, via);
+    if (shared) return shared;
+    const linked = linkedImport(src, local, key, via);
+    if (linked) return linked;
+    const replaced = graph.adapters.get(key);
+    // cds-core's module sits at the same depth (src/generated/<area>/), so its adapter path is valid here as is.
+    if (replaced) return { from: replaced.from, name: replaced.name, via: key, kind: 'adapter', original: local, sameAs: graph.area };
+    const held = holder.get(key);
+    if (held) return { module: held, name: exportFrom(held, local), kind: 'generated' };
+    const target = chunkModuleName(file);
+    const m = modules.get(target) ?? newModule({ target, source: file }, 'chunk');
+    if (m.source !== file) throw Error(`${target} would hold bindings of ${m.source} and ${file}`);
+    if (!parent.has(key)) parent.set(key, from);
+    await visit(m, local, from);
+    if (!m.selected.has(local) && !m.imports.has(local)) throw Error(`${key} was not sliced`);
+    if (m.imports.has(local)) return { ...m.imports.get(local), via };
+    return { module: m, name: exportFrom(m, local), kind: 'generated' };
+  };
+  const visit = async (m, name, from) => {
+    if (m.seen.has(name)) return;
+    m.seen.add(name);
+    const src = await readSource4(m.source, cache);
+    const key = `${m.source}#${name}`;
+    if (!parent.has(key)) parent.set(key, from);
+    const binding = src.program.scope.getBinding(name);
+    if (!binding) throw Error(`${m.target}: unbound ${name}`);
+    const p = binding.path;
+    if (p.isImportSpecifier()) {
+      const file = p.parent.source.value.replace(/^\.\//, ''), alias = p.node.imported.name, via = `${file}:${alias}`;
+      const adapter = m.spec.adapters?.[file]?.[alias] ?? contract.adapters[file]?.[alias];
+      if (adapter) {
+        const dep = await readSource4(file, cache);
+        const local = dep.exported.get(alias);
+        if (!local) throw Error(`${m.target}: adapter alias ${via} is no longer exported`);
+        assertFeatures4(`${m.target}: adapter ${via} (${local})`, closureText(dep, local), adapter.features);
+        m.imports.set(name, { from: adapter.module, name: adapter.name, via, kind: 'adapter', original: local });
+        return;
+      }
+      const hostAnswer = graph.aliasAdapters.get(via);
+      if (hostAnswer) {
+        const dep = await readSource4(file, cache);
+        if (dep.exported.get(alias) !== hostAnswer.original) throw Error(`${m.target}: ${via} is ${dep.exported.get(alias) ?? 'not exported'}, not the ${hostAnswer.original} ${graph.area} answers by ${hostAnswer.name}`);
+        m.imports.set(name, { from: hostAnswer.from, name: hostAnswer.name, via, kind: 'adapter', original: hostAnswer.original, sameAs: graph.area });
+        return;
+      }
+      if (file === official.vendorFrame && official.reactAliases[alias]) {
+        const dep = await readSource4(file, cache);
+        const { module, member } = official.assertVendorAlias(dep.text, alias);
+        m.imports.set(name, { from: module, name: member, via, kind: 'react' });
+        return;
+      }
+      const dep = await readSource4(file, cache);
+      const local = dep.exported.get(alias);
+      if (!local) throw Error(`${m.target}: ${file} does not export ${alias}`);
+      const r = await resolveDecl(file, local, via, key);
+      m.imports.set(name, r.module ? { from: `./${r.module.target}`, name: r.name, via, kind: 'generated', original: local } : { ...r, via });
+      return;
+    }
+    const localAdapter = m.spec.localAdapters?.[name];
+    if (localAdapter) {
+      assertFeatures4(`${m.target}: local adapter ${name}`, declarationText(src, p), localAdapter.features);
+      m.imports.set(name, { from: localAdapter.module, name: localAdapter.name, via: key, kind: 'adapter', original: name });
+      return;
+    }
+    const owner = rootOwner.get(key);
+    if (owner && owner !== m) { m.imports.set(name, { from: `./${owner.target}`, name: exportFrom(owner, name), via: key, kind: 'generated', original: name }); return; }
+    const shared = sharedImport(src, m.source, name, key);
+    if (shared) { m.imports.set(name, shared); return; }
+    const linked = linkedImport(src, name, key, key);
+    if (linked) { m.imports.set(name, linked); return; }
+    const replaced = graph.adapters.get(key);
+    if (replaced) { m.imports.set(name, { from: replaced.from, name: replaced.name, via: key, kind: 'adapter', original: name, sameAs: graph.area }); return; }
+    const held = holder.get(key);
+    if (held && held !== m) { m.imports.set(name, { from: `./${held.target}`, name: exportFrom(held, name), via: key, kind: 'generated', original: name }); return; }
+    if (!p.isFunctionDeclaration() && !p.isVariableDeclarator()) throw Error(`${m.target}: unsupported declaration ${name}`);
+    const state = moduleStateKind4(contract, src, p);
+    const cds = graph.held.get(key);
+    if (cds) {
+      if (state) {
+        stateConflicts.push({ binding: key, kind: state, text: declarationText(src, p).slice(0, 160), reachedBy: reachedBy(key) });
+        if (!survey) throw Error(`module state ${graph.area} holds without a semantic name (add it to ${graph.area} publicNames, D46): ${m.target}: ${key} (${state}); reached by ${reachedBy(key)}`);
+      } else if (cds.sha256 !== sha(rawDeclarationText4(src, name))) fail(`${m.target}: ${key} differs from the declaration ${graph.area}/${cds.target} holds`);
+      else m.heldByCdsCore.push(name);
+    }
+    const lheld = linkedHeld(key);
+    if (lheld) {
+      if (state) fail(`${m.target}: module state ${key} (${state}) is held by ${lheld.area}/${lheld.target} without an export; a second copy would split it`);
+      else if (lheld.sha256 !== sha(declarationText(src, p))) fail(`${m.target}: ${key} differs from the declaration ${lheld.area}/${lheld.target} holds`);
+      else m.heldByLinked.push(name);
+    }
+    holder.set(key, m);
+    m.selected.set(name, { start: p.node.start, text: declarationText(src, p), isVar: p.isVariableDeclarator(), state });
+    p.traverse({
+      ImportExpression() { fail(`${m.target}: dynamic import inside ${name} (${reachedBy(key)})`); },
+      CallExpression(r) { if (r.node.callee.type === 'Import') fail(`${m.target}: dynamic import inside ${name}`); },
+    });
+    for (const dep of declarationDeps(src, p)) await visit(m, dep, key);
+  };
+  for (const m of [...order]) for (const name of Object.keys(m.spec.exports)) await visit(m, name, `${m.target}`);
+  for (const m of order) {
+    if (m.kind !== 'semantic') continue;
+    const unreached = Object.keys(m.spec.features ?? {}).filter(n => !m.spec.exports[n] && !m.selected.has(n));
+    if (unreached.length) fail(`${m.target}: listed bindings ${unreached.join(', ')} are not part of the module`);
+  }
+  if (survey) {
+    const others = await otherV4Areas(contract, path.basename(output), contract.linkedAreas ?? []), overlap = [];
+    for (const m of order) for (const [name, rec] of m.selected) {
+      const other = others.get(`${m.source}#${name}`);
+      if (other) overlap.push({ binding: `${m.source}#${name}`, module: m.target, alsoIn: other, state: rec.state });
+    }
+    return { stateConflicts, problems, overlapWithOtherV4Areas: overlap, modules: order.map(m => ({ target: m.target, source: m.source, bindings: m.selected.size })) };
+  }
+
+  // Phase 3: emit.
+  const files = {}, unbound = [];
+  const manifest = { referenceVersion: official.referenceVersion, referenceSnapshot: official.referenceSnapshot, generator: 'scripts/extract-code-composer.mjs',
+    sharedGraph: graph.area, sharedGraphManifestSha256: graph.manifestSha256, linkedGraphs: Object.fromEntries(linkedAreas.map(a => [a.area, a.manifestSha256])),
+    isolatedGraph: contract.isolatedGraph,
+    adapterModules: contract.adapterModules, modules: [] };
+  const semantic = order.filter(m => m.kind === 'semantic'), chunks = order.filter(m => m.kind === 'chunk').sort((a, b) => a.target.localeCompare(b.target));
+  for (const m of [...semantic, ...chunks]) {
+    const src = await readSource4(m.source, cache);
+    const sorted = [...m.selected].sort((a, b) => a[1].start - b[1].start);
+    const blocks = sorted.map(([, r]) => (r.isVar ? `var ${r.text};` : r.text));
+    const groups = new Map();
+    for (const [local, entry] of m.imports) {
+      const from = entry.from;
+      if (!groups.has(from)) groups.set(from, []);
+      groups.get(from).push(entry.name === local ? local : `${entry.name} as ${local}`);
+    }
+    const exportsAll = { ...Object.fromEntries(m.rootNames), ...Object.fromEntries([...m.extraExports].map(n => [n, n])) };
+    const names = Object.values(exportsAll);
+    if (new Set(names).size !== names.length) throw Error(`${m.target}: duplicate export names ${names.join(', ')}`);
+    for (const n of Object.keys(exportsAll)) if (!m.selected.has(n) && !(m.reexports.has(n) && m.imports.get(n)?.kind === 'linked')) throw Error(`${m.target}: exports ${n}, which it does not hold`);
+    const importText = [...groups].map(([from, list]) => `import { ${list.join(', ')} } from ${JSON.stringify(from)};`).join('\n');
+    const exportText = `export { ${Object.entries(exportsAll).map(([local, name]) => (local === name ? local : `${local} as ${name}`)).join(', ')} };`;
+    const header = `// Original Claude Desktop ${official.referenceVersion} bindings from ${m.source}; generated by extract-code-composer.mjs.\n// Edit the extractor or its adapter modules, never this file.\n`;
+    const text = await format(`${header}${importText}\n${blocks.join('\n')}\n${exportText}\n`, { parser: 'babel' });
+    let globals;
+    babel.traverse(babel.babelParse(text, m.target, true), { Program(p) { globals = Object.keys(p.scope.globals); } });
+    const foreign = globals.filter(n => !contract.hostGlobals.has(n));
+    if (foreign.length) { unbound.push(`${m.target}: unbound ${foreign.join(', ')}`); continue; }
+    files[m.target] = text;
+    manifest.modules.push({
+      target: m.target, source: m.source, kind: m.kind, sourceSha256: sha(src.bytes), sha256: sha(text), referenceVersion: official.referenceVersion,
+      bindings: sorted.map(([name, r]) => ({ name, sha256: sha(r.text) })),
+      imports: [...m.imports].map(([local, e]) => ({ local, from: e.from, name: e.name, via: e.via, kind: e.kind, ...(e.original ? { original: e.original } : {}),
+        ...(e.linkedSha256 ? { linkedSha256: e.linkedSha256 } : {}), ...(e.sameAs ? { sameAdapterAs: e.sameAs } : {}) })),
+      exports: exportsAll,
+      ...(m.kind === 'semantic' ? { roots: Object.fromEntries(Object.keys(m.spec.exports).map(n => [n, m.spec.aliases[n]])) } : {}),
+      ...(m.reexports.size ? { reexports: [...m.reexports] } : {}), heldByCdsCore: m.heldByCdsCore, heldByLinked: m.heldByLinked,
+    });
+  }
+  if (unbound.length) throw Error(unbound.join('\n'));
+  files['manifest.json'] = JSON.stringify(manifest, null, 2) + '\n';
+  if (dry) {
+    // nothing written
+  } else if (check) {
+    const present = (await fs.readdir(output).catch(() => [])).sort(), expected = Object.keys(files).sort();
+    if (JSON.stringify(present) !== JSON.stringify(expected)) throw Error(`${label} output set changed: ${present.join(',')}. Run scripts/extract-code-composer.mjs --release=4.16336.0.`);
+    for (const [name, text] of Object.entries(files))
+      if (await fs.readFile(path.join(output, name), 'utf8') !== text) throw Error(`${label} source mismatch: ${name}. Run scripts/extract-code-composer.mjs --release=4.16336.0.`);
+  } else {
+    await fs.mkdir(output, { recursive: true });
+    for (const name of await fs.readdir(output)) if (!(name in files)) await fs.rm(path.join(output, name));
+    for (const [name, text] of Object.entries(files)) await fs.writeFile(path.join(output, name), text);
+  }
+  const count = manifest.modules.reduce((n, m) => n + m.bindings.length, 0);
+  console.log(`${dry ? 'Built' : check ? 'Verified' : 'Extracted'} ${manifest.modules.length} ${label} modules (${count} original ${official.referenceVersion} bindings, cds-core ${graph.manifestSha256.slice(0, 8)}).`);
+  return manifest;
+}
+export const contractVersions = Object.freeze([referenceVersion, official4.referenceVersion]);
+// The 4.16336.0 contract and its engine, for tests that prove generation stops (a renamed alias, a non-unique root, D46).
+export { contract4, extractTarget4 as extractContract4 };
+
+// CLI: no --release runs every contract; --release=<version> one of them; --survey prints the 4.16336.0 D46 stateConflicts.
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  const release = process.argv.find(a => a.startsWith('--release='))?.slice('--release='.length);
+  const opts = { check: process.argv.includes('--check'), dry: process.argv.includes('--dry'), survey: process.argv.includes('--survey') };
+  for (const version of release ? [release] : contractVersions) {
+    const result = await extractCodeComposer({ ...opts, version });
+    if (opts.survey && version === official4.referenceVersion) console.log(JSON.stringify({ stateConflicts: result.stateConflicts, problems: result.problems, overlapWithOtherV4Areas: result.overlapWithOtherV4Areas }, null, 1));
+  }
+}

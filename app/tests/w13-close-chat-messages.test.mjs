@@ -24,7 +24,8 @@ const official = (name) => fs.readFileSync(path.join(v1, fs.readdirSync(v1).find
 const local = (rel) => fs.readFileSync(path.join(app, rel), 'utf8');
 const h = React.createElement;
 
-globalThis.document ??= { body: { nodeType: 1 }, head: { appendChild() {} }, createElement: () => ({ relList: { supports: () => false }, setAttribute() {}, style: {} }),
+// W8-M9 stub contract (round4 integration, stub fields only): cds-core 9203795f reads these at load (official 4.16336.0): document.cookie.
+globalThis.document ??= { cookie: '' /* W8-M9: shared-0 CQ / Wo document.cookie */, body: { nodeType: 1 }, head: { appendChild() {} }, createElement: () => ({ relList: { supports: () => false }, setAttribute() {}, style: {} }),
   querySelector: () => null, querySelectorAll: () => [], getElementById: () => null, addEventListener() {}, removeEventListener() {},
   documentElement: { dataset: {}, getAttribute: () => null, hasAttribute: () => false } };
 globalThis.window ??= { document: globalThis.document, navigator: { userAgent: 'Mozilla/5.0 (Macintosh)' }, addEventListener() {}, removeEventListener() {},
@@ -309,7 +310,12 @@ test('SSR: an incognito Chat ends with U9’s temporary branch — the incognito
   assert.ok(ca2.includes('isTemporary:Ce,incognitoString:Et,hasWebSearchResponse:!!Va'));
   assert.ok(official('shared-78-').includes('incognitoNotice:{defaultMessage:"Incognito chats stay out of your history, memory, and search, and aren\\u2019t used to train Claude.",id:"S6ScX5d4QF"}'));
   const html = renderToStaticMarkup(h(actions.SourceChatDisclaimer, { conversationUuid: 't1', incognito: true }));
-  assert.match(html, /^<div role="note" data-disclaimer="true" class="pointer-events-auto relative z-0 -mt-10 bg-surface-1 pb-2 pt-12 text-center text-xs text-muted-as-secondary">Incognito chats stay out of your history, memory, and search, and aren’t used to train Claude\.<\/div>$/);
+  // was: … class="pointer-events-auto relative z-0 -mt-10 bg-surface-1 pb-2 pt-12 text-center text-xs text-muted-as-secondary">… (3.6556.2 U9).
+  // Round 4 S11 cutover: the disclaimer is chat-messages-v4's 4.16336.0 copy, whose ground is bg-page (ca2ef848d of the
+  // 4.16336.0 snapshot, checked here); the rest of the element is unchanged.
+  const ca2v4 = fs.readdirSync(path.join(app, '../reference/snapshots/claude-4.16336.0-20261104/ion-dist/assets/v1')).find((f) => f.startsWith('ca2ef848d-'));
+  assert.ok(fs.readFileSync(path.join(app, '../reference/snapshots/claude-4.16336.0-20261104/ion-dist/assets/v1', ca2v4), 'utf8').includes('"pointer-events-auto relative z-0 -mt-10 bg-page pb-2 pt-12 text-center text-xs text-muted-as-secondary"'));
+  assert.match(html, /^<div role="note" data-disclaimer="true" class="pointer-events-auto relative z-0 -mt-10 bg-page pb-2 pt-12 text-center text-xs text-muted-as-secondary">Incognito chats stay out of your history, memory, and search, and aren’t used to train Claude\.<\/div>$/);
   assert.match(renderToStaticMarkup(h(actions.SourceChatDisclaimer, { conversationUuid: 't1' })), /href="https:\/\/support\.anthropic\.com\/en\/articles\/8525154/);
   i18n.setLocale('zh-CN');
   try { assert.match(renderToStaticMarkup(h(actions.SourceChatDisclaimer, { conversationUuid: 't1', incognito: true })), /无痕聊天不会出现在你的历史记录、记忆和搜索中/); }

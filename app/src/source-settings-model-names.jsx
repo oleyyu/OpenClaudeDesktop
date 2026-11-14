@@ -55,15 +55,20 @@ export function ModelNameField({ model, names, coreId, onSave, onError }) {
  * One model's entry: the header (custom name, the catalog name and id when they differ, badges, the efforts line)
  * opens its option rows. Open at first when one of its options is already set.
  */
-export function ModelOptionsEntry({ model, name, defaultName, badges = null, description = null, rows = [], rowErrors = {}, customized = false }) {
+export function ModelOptionsEntry({ model, name, defaultName, badges = null, description = null, aside = null, rows = [], rowErrors = {}, customized = false }) {
+  // U-SET-LITE: one line per model — name, badges and ids on the left, capability chips (aside) on the right, the
+  // caret at the end.
   const label = <span className="msx-model-head">
-    <span className="msx-model-name text-body settings-row-title">{name}{badges}</span>
-    {(name !== defaultName || defaultName !== model.model) && <span className="msx-model-ids">
-      {name !== defaultName && <span>{defaultName}</span>}{defaultName !== model.model && <code className="msx-name-id">{model.model}</code>}</span>}
-    {description}
+    <span className="msx-model-main">
+      <span className="msx-model-name text-body settings-row-title">{name}{badges}</span>
+      {(name !== defaultName || defaultName !== model.model) && <span className="msx-model-ids">
+        {name !== defaultName && <span>{defaultName}</span>}{defaultName !== model.model && <code className="msx-name-id">{model.model}</code>}</span>}
+      {description}
+    </span>
+    {aside && <span className="msx-model-aside">{aside}</span>}
   </span>;
   return <div className="msx-model-entry" data-setting-id={`model-${model.model}`} data-model-options={model.model}>
-    <SourceDisclosure className="msx-model-disclosure" triggerClassName="msx-model-trigger" defaultOpen={customized} label={label}
+    <SourceDisclosure className="msx-model-disclosure" triggerClassName="msx-model-trigger" caret="end" defaultOpen={customized} label={label}
       ariaLabel={t('{name} options', { name })}>
       <div className="settings-group-dividers msx-model-rows">{rows.map(row => <SettingRow key={row.id} row={row} error={rowErrors[row.id]}/>)}</div>
     </SourceDisclosure>

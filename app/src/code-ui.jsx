@@ -1,6 +1,8 @@
 import React from "react";
-// E41: code-ui sits in the menu graph (source-sidebar / source-titlebar), so CDS comes from the concrete view-tabs file.
-import { CdsButton } from "./generated/view-tabs/shared-frame-6jtSkIit.js";
+// host-wiring code-a: the 4.16336.0 cds-core Button (shared-frame Xu → Id) through the semantic facade. The facade graph
+// is closed over src/generated/cds-core + the adapter (tests/cds-core-v4.test.mjs), so the menu graph (source-sidebar /
+// source-titlebar) still never evaluates the view-tabs facade (E41).
+import { CdsButton } from "./cds-core.mjs";
 import { SourceTooltip } from "./source-tooltip";
 import { t } from "../electron/i18n/index.mjs";
 // W14-code r2 fr2-16 / css2-toolbutton-cds: ToolButton is the CDS ghost iconOnly Button itself (shared-frame Tu / Uu:

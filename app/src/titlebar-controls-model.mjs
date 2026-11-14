@@ -2,6 +2,9 @@
 // c73f45bc3 Zh). Pure values so source-titlebar.jsx and its tests share them.
 import { foldTitlebarToggles } from "./generated/code-current/titlebar-toggle-fold.mjs";
 import { RAIL_TOGGLE_ICON } from "./generated/session-rail-kit/rail-icon-name.mjs";
+// surfaces wave 2 (titlebar): the 4.16336.0 pane icon table (cc44b66a7 M, c73f45bc3 hy `icon: e === "preview" && D ? "Globe" :
+// vl[e]`), sliced by scripts/extract-titlebar-v4.mjs.
+import { PANE_ICONS } from "./generated/titlebar/pane-icons.mjs";
 
 // R3-topbar TT-03 (2.42304.0 c73f45bc3 Rh): the titlebar's pane toggles in their official order. A session lists
 // Terminal, Changes, Preview/Browser, (iOS, Android: no local simulator), then Files; the landing (the Code New session
@@ -17,14 +20,18 @@ import { RAIL_TOGGLE_ICON } from "./generated/session-rail-kit/rail-icon-name.mj
 // counterpart of the Cowork session view's yE (c21f11e6d: Globe, "Browser"), kept with the local ⇧⌘P binding
 // (pane-shortcuts.mjs; yE's ⇧⌘B opens a separate built-in browser the host does not have). A folded row uses the
 // toggle's own icon, as Vh does. Changes only exists for a Code session, Terminal and Files only on Code.
+// 4.16336.0 (c73f45bc3 hy): the same order and the same gate-off preview row (D = shared-123 yy: the Launch bridge
+// globalThis["claude.web"].Launch, absent on the host, so `fy()` / `cy()` are false), icons from the official table: the
+// local pane kinds "changes" / "files" are hy's "diff" / "file".
+export const PANE_ICON_KIND = Object.freeze({ terminal: "terminal", changes: "diff", preview: "preview", files: "file" });
 export function titlebarToggleSpecs({ surface = "code", session = false, terminalAvailable = false, previewAvailable = false, filesAvailable = false, panes = new Set() } = {}) {
   const code = surface === "code";
   const spec = (pane, shown, icon, label, shortcut) => (shown ? [{ pane, icon, label, shortcut, active: panes.has(pane) }] : []);
-  const terminal = spec("terminal", code && terminalAvailable, "CommandLinePrompt", "Terminal", "cmd+j");
-  const preview = spec("preview", previewAvailable, code ? "Play" : "Globe", code ? "Preview" : "Browser", "cmd+shift+p");
-  const files = spec("files", code && (session || filesAvailable), "Folder", "Files", "cmd+shift+f");
+  const terminal = spec("terminal", code && terminalAvailable, PANE_ICONS[PANE_ICON_KIND.terminal], "Terminal", "cmd+j");
+  const preview = spec("preview", previewAvailable, code ? PANE_ICONS[PANE_ICON_KIND.preview] : "Globe", code ? "Preview" : "Browser", "cmd+shift+p");
+  const files = spec("files", code && (session || filesAvailable), PANE_ICONS[PANE_ICON_KIND.files], "Files", "cmd+shift+f");
   return session
-    ? [...terminal, ...spec("changes", code, "ChangesPlusMinus", "Changes", "cmd+shift+d"), ...preview, ...files]
+    ? [...terminal, ...spec("changes", code, PANE_ICONS[PANE_ICON_KIND.changes], "Changes", "cmd+shift+d"), ...preview, ...files]
     : [...terminal, ...preview, ...files];
 }
 
@@ -101,6 +108,18 @@ export function titlebarControlClass(_active = false, extra = "") {
 // o("span",{role:"separator","aria-orientation":"vertical",className:"h-4 w-px shrink-0 bg-border"})}`. wW draws it
 // while `_e` is false (fizzy `panels` off, the local case) for a mounted cluster (`re`, a session).
 export const TITLEBAR_RAIL_SEPARATOR = Object.freeze({ role: "separator", "aria-orientation": "vertical", className: "h-4 w-px shrink-0 bg-border" });
+
+// integration-4 (surfaces-prod-2): when the rule is drawn. 4.16336.0 cc43287c9 RX heads the cluster with
+// `[p(KK, {...}), se && !Te && p(Nie, {})]`, `Te = !F`, `F = T !== void 0 && T` for RX's prop `lifted: T`; fAe hands RX
+// `lifted: e` from shared-20 ob / sb `children(m)`, `m = Kp(eligible) !== null` (a frame slot the titlebar is lifted into).
+// So 4.16336.0 draws it only on a lifted titlebar. (3.6556.2 oG `ae && !Ee && Fne` drew it while fizzy "panels" was off,
+// Ee = Zs("panels") && Y && Te && !P; the host has been in panels since integration-2 set data-cds-fizzy-lake.) The host
+// gives the session titlebar no lift slot, so `lifted` is false and the rule is not drawn; official screenshot 02 has no
+// rule between the rail toggle and Terminal either.
+export const TITLEBAR_LIFTED = false;
+export function titlebarRailRuleShown(seen, lifted = TITLEBAR_LIFTED) {
+  return Boolean(seen && lifted);
+}
 
 // wW `Te = y !== void 0 && e !== null && de.overflowMenuProps !== null && !Ce`: the rail toggle may fold into ⋮ when
 // there is one, for a session whose titlebar has the ⋮ menu and no trailing slot. Locally the ⋮ menu is there exactly

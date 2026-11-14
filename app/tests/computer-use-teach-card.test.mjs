@@ -72,8 +72,8 @@ test('markup: the official card shell and body, the app rows (Hi), Deny ⌘. the
   assert.match(html, /<div class="p-md"><div class="mb-1 flex items-start gap-2">/);
   assert.match(html, /<span class="font-semibold text-body text-secondary">Let [^<]+ guide you step by step\?<\/span>/);
   // The GraduationCap glyph (icons.json 57475) in the header icon, Warning (57609) in the risk lines.
-  assert.match(html, new RegExp(`<div class="mb-1 flex items-start gap-2"><span aria-hidden="true" data-cds="Icon" class="shrink-0 text-secondary" style="font-size:20px[^"]*">${String.fromCodePoint(57475)}</span>`));
-  assert.ok(html.includes(`class="mt-0.5 shrink-0" style="font-size:14px;font-weight:628.6">${String.fromCodePoint(57609)}</span>`));
+  assert.match(html, new RegExp(`<div class="mb-1 flex items-start gap-2"><span data-cds="Icon" style="font-size:calc\\(1.25rem \\* var\\(--cds-rem-scale, 1\\)\\)[^"]*" class="shrink-0 text-secondary" aria-hidden="true">${String.fromCodePoint(57475)}</span>`));
+  assert.ok(html.includes(`style="font-size:calc(0.875rem * var(--cds-rem-scale, 1));font-weight:628.6" class="mt-0.5 shrink-0" aria-hidden="true">${String.fromCodePoint(57609)}</span>`));
   assert.match(html, /<p class="ms-7 mb-2 text-body text-secondary">making a new note<\/p>/);
   assert.match(html, /<p class="ms-7 mb-3 text-footnote text-muted-as-secondary">The [^<]+ window will hide\. A tooltip appears next to each step with a Next button\. Click Exit anytime to stop\.<\/p>/);
   assert.match(html, /<div class="ms-7 mb-3 divide-y rounded border bg-surface-1">/);

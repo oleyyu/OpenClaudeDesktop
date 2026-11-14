@@ -10,7 +10,8 @@ import { closeWhenSettled } from './support/vite-ssr-settle.mjs';
 // any session); the host's own "Remove unused worktrees" button is gone. Official text is read, never executed.
 const app = path.resolve(import.meta.dirname, '..');
 createRequire(path.join(app, 'package.json'))('react-dom').createPortal = children => children;
-globalThis.document ??= { body: { nodeType: 1 }, documentElement: { dataset: {}, dir: 'ltr', getAttribute: () => null, hasAttribute: () => false },
+// W8-M9 stub contract (round4 integration, stub fields only): cds-core 9203795f reads these at load (official 4.16336.0): document.cookie.
+globalThis.document ??= { cookie: '' /* W8-M9: shared-0 CQ / Wo document.cookie */, body: { nodeType: 1 }, documentElement: { dataset: {}, dir: 'ltr', getAttribute: () => null, hasAttribute: () => false },
   createElement: () => ({ relList: { supports: () => false } }) };
 const v3 = name => fs.readFileSync(path.join(app, '../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1', name), 'utf8');
 let server, React, render, pages;

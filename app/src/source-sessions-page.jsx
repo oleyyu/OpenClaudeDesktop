@@ -1,8 +1,11 @@
 import React,{createContext,useCallback,useContext,useMemo,useState} from 'react';
-// R6: view-tabs through its facade, by semantic name (this page is not in the chat / composer / menu graph, E41).
-import {SessionsActionsRail,SessionsMoreButton} from './generated/view-tabs/index.js';
-// 3.6556.2 cbd6c85c8 Hf, the whole Sessions page (src/generated/sessions-page, re-exported by code-current).
-import {SessionsPageView} from './generated/code-current/sessions-page-view.mjs';
+// The row actions rail and its kebab, by semantic name: 4.16336.0 cc18d27d7 O / c75e89812 s through the cds-core facade, the
+// same bindings the 4.16336.0 page (sessions-page-v4 Dc / Mc) renders for its own rows (one copy, D1).
+import {SessionsActionsRail,SessionsMoreButton} from './cds-core.mjs';
+// 4.16336.0 cbd6c85c8-CxDdK_2w hm, the whole Sessions page (src/generated/sessions-page-v4, scripts/extract-sessions-page-v4.mjs);
+// same props (codeScoped / reportsRecentsLoad / renderCodeRowActions / codeRowLinkComponent) and the same
+// SessionsPageHfHost value (src/source-sessions-page-v4-adapters.jsx re-exports the 3.6556.2 host boundaries).
+import {SessionsPage as SessionsPageView} from './generated/sessions-page-v4/index.mjs';
 import {SessionsPageHfHost} from './source-sessions-page-hf-adapters.jsx';
 import {useStartIntl} from './source-code-start-adapters.jsx';
 import {sessionPageRecords,sessionPageHref,sessionIdFromPageHref} from './sessions-page-model.mjs';

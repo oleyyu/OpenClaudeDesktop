@@ -41,7 +41,9 @@ for (const [name, props] of [['new chat', {}], ['new cowork', { mode: 'cowork' }
     const html = render(props);
     assert.match(html, /data-cds="ChatComposerActions"/);
     assert.doesNotMatch(html, /Dictat|Use voice mode|Voice is not available/, 'no dictation / voice label or host tooltip');
-    assert.doesNotMatch(html, /source-chat-voice|SplitDropdownButton/);
+    // 4.16336.0 CdsButton (cds-core) writes `not-in-data-[cds=SplitDropdownButton]` into every button's class (its stacks
+    // disabled tone); apart from that class token, no SplitDropdownButton is rendered.
+    assert.doesNotMatch(html.replaceAll(':not-in-data-[cds=SplitDropdownButton]:', ':'), /source-chat-voice|SplitDropdownButton/);
     assert.doesNotMatch(html, /data-cds-part="idle-slot"/, 'no idle slot: Actions gets idle=null, as with hideDictation');
     const labels = [...html.matchAll(/<button[^>]*aria-label="([^"]*)"/g)].map(match => match[1]);
     assert.ok(!labels.some(label => /Dictat|voice/i.test(label)), `no microphone or voice button (${labels.join(', ')})`);

@@ -1,0 +1,702 @@
+{
+  "referenceVersion": "4.16336.0",
+  "referenceSnapshot": "snapshots/claude-4.16336.0-20261104",
+  "generator": "scripts/extract-pierre-changes-v4.mjs",
+  "steps": [
+    "pc-0"
+  ],
+  "previous": {
+    "generator": "scripts/extract-pierre-changes.mjs",
+    "output": "src/generated/pierre-changes",
+    "referenceVersion": "3.6556.2"
+  },
+  "sharedGraph": {
+    "area": "cds-core",
+    "manifestSha256": "06d2026939e5c8992713c2a0dda1b1abc9adffe7a0c223fe3c1e79eecd08d62c"
+  },
+  "linkedAreas": {
+    "chat-knowledge-v4": "c9b7145c372539e22e2cdac8caf9ed380d4953cb4c4be8cb40ba5f5d09c9ea91",
+    "code-current-v4": "38e807769b8b78b4564954b6441278a7fad18cd79f9c8d1fbcc1840d6188df76",
+    "files-changes-v4": "35740c17397e4a05b8f5a12f408061040cdd39e4fb28ca86b43c02f786e1b93e",
+    "frame-sidebar-nav": "f050559d8d4736a10e502efd30f166d28900e800b146c6c8749608a326966487",
+    "review-findings-v4": "539686c82407f012dc7920b9c68d2e92c16de3aa1700e25bf407f36f1ae495f4",
+    "routines-shared-v4": "a2a9b9a84b2705e48451025af38eb7582de5bb421c626e6bdf5b067eb8e00c8c",
+    "session-rail-changes-v4": "fd23545a7c4be524493f74e75d69170c3538554b15051026bb8622d8240903bf",
+    "session-rail-kit-v4": "8e3066efa4721cee2a5bb0b190fae471848c3456fa9b9424773baba5f2b9291a",
+    "settings-pages-v4": "10c5fe1c4bf21bf43298bab9e58dddc91af58217aceea8ce915423157f448aa7",
+    "turn-plan-v4": "120180f4946ca49f0a8cb0302a85c1ff5f155733e1ef1bb35000ece88b1ceb2e",
+    "working-line-v4": "25610753870c1d676d772810433ca78b2413b2d93418b0e3ea8a904875d1deaa"
+  },
+  "roots": [
+    {
+      "file": "c44d00c7f-DNez7133.js",
+      "local": "fo",
+      "name": "PierreChangesFileHeader",
+      "step": "pc-0",
+      "sliced": true,
+      "previous": "c44d00c7f-Cr1FDL2F.js#Zu",
+      "exports": [],
+      "declarationSha256": "dd96d3491c7ecde510e24dc38c8e9748bf5c5a9fcca236689b1f28f388880bb5",
+      "pinned": true
+    },
+    {
+      "file": "c44d00c7f-DNez7133.js",
+      "local": "Ff",
+      "name": "pierreChangesMessages",
+      "step": "pc-0",
+      "sliced": true,
+      "previous": "c44d00c7f-Cr1FDL2F.js#lu",
+      "exports": [],
+      "declarationSha256": "16782c7b2bff749b70061e7670b4e6aec3bff0e8ea4c9f17e26f7a0b39678504",
+      "pinned": true
+    },
+    {
+      "file": "c44d00c7f-DNez7133.js",
+      "local": "ca",
+      "name": "comparisonFileEntries",
+      "step": "pc-0",
+      "sliced": true,
+      "previous": "c44d00c7f-Cr1FDL2F.js#mi",
+      "exports": [
+        "C"
+      ],
+      "declarationSha256": "dabf610917a3a344ebf4c5e02bb1dffbd783ecf1e901bd4181729b7ca311e248",
+      "pinned": true
+    },
+    {
+      "file": "c44d00c7f-DNez7133.js",
+      "local": "Ql",
+      "name": "useDiffFetchScheduler",
+      "step": "pc-0",
+      "sliced": true,
+      "previous": "c44d00c7f-Cr1FDL2F.js#Vc",
+      "exports": [],
+      "declarationSha256": "9720f19a1ea45feb31198872629b5a5842eaa8386f8400d9014a739b7f8f348a",
+      "pinned": true
+    },
+    {
+      "file": "c44d00c7f-DNez7133.js",
+      "local": "ud",
+      "name": "DiffImageViewerContext",
+      "step": "pc-0",
+      "sliced": true,
+      "previous": "c44d00c7f-Cr1FDL2F.js#Yc",
+      "exports": [],
+      "constraint": "imageViewerProvider:value",
+      "shapeAlternatives": 1,
+      "declarationSha256": "ef07d073f521ce57ff7b0da22448338a08bcf1979ae9f235f7129b9196fa08c3",
+      "pinned": true
+    },
+    {
+      "file": "c44d00c7f-DNez7133.js",
+      "local": "dd",
+      "name": "DiffImageViewerShownContext",
+      "step": "pc-0",
+      "sliced": true,
+      "previous": "c44d00c7f-Cr1FDL2F.js#Xc",
+      "exports": [],
+      "constraint": "imageViewerProvider:shown",
+      "shapeAlternatives": 1,
+      "declarationSha256": "85f6e5ae0c41258232b802ff1aa3d3fb853daedd1924f26b94ab2ee7d604b633",
+      "pinned": true
+    },
+    {
+      "file": "c44d00c7f-DNez7133.js",
+      "local": "fd",
+      "name": "DiffImageViewerProvider",
+      "step": "pc-0",
+      "sliced": true,
+      "previous": null,
+      "exports": [
+        "s"
+      ],
+      "declarationSha256": "dbea45b616ac74bb0875a06b888ad8e3e5c828268bd75258d2c2aa6666e11d9b",
+      "pinned": true
+    },
+    {
+      "file": "c44d00c7f-DNez7133.js",
+      "local": "Cp",
+      "name": "PierreChanges",
+      "step": "pc-1",
+      "sliced": false,
+      "previous": "c44d00c7f-Cr1FDL2F.js#Ju",
+      "exports": [],
+      "declarationSha256": "1cd5dd2f27ad90ef3c78c10baacd68e3a406e8c24dd4c4d9f0b563ae9ab73342",
+      "pinned": true
+    },
+    {
+      "file": "c44d00c7f-DNez7133.js",
+      "local": "Kl",
+      "name": "PierreChangesCommentCard",
+      "step": "pc-1",
+      "sliced": false,
+      "previous": "c44d00c7f-Cr1FDL2F.js#Fc",
+      "exports": [],
+      "declarationSha256": "f588a317fb1a81aa41b3cd70489347cdf8921e26700ce47179b4424b83be8d02",
+      "pinned": true
+    },
+    {
+      "file": "cc8941b7b-C4hsxbbb.js",
+      "local": "I",
+      "name": "useDiffAnnotationStore",
+      "step": "pc-1",
+      "sliced": false,
+      "previous": "cc8941b7b-DAgMZRvX.js#F",
+      "exports": [
+        "q"
+      ],
+      "declarationSha256": "d4477b4f610d928888617d46b2be6cdb8b0b169ab14176baab5e37ca75cf7765",
+      "pinned": true
+    },
+    {
+      "file": "cc8941b7b-C4hsxbbb.js",
+      "local": "L",
+      "name": "diffAnnotationActions",
+      "step": "pc-1",
+      "sliced": false,
+      "previous": "cc8941b7b-DAgMZRvX.js#I",
+      "exports": [
+        "N"
+      ],
+      "declarationSha256": "3719e942fabe536bd5428d5a0938ec1ce7d9fdb0504f3a07c5d7050fc13973cf",
+      "pinned": true
+    },
+    {
+      "file": "cc8941b7b-C4hsxbbb.js",
+      "local": "j",
+      "name": "diffAnnotationKey",
+      "step": "pc-1",
+      "sliced": false,
+      "previous": "cc8941b7b-DAgMZRvX.js#k",
+      "exports": [
+        "H"
+      ],
+      "declarationSha256": "6909390d1afb8bfced4be96292dc19275adb53563f0fdbb07bcde5f647d9d389",
+      "pinned": true
+    },
+    {
+      "file": "cc8941b7b-C4hsxbbb.js",
+      "local": "M",
+      "name": "isFileAnnotationKey",
+      "step": "pc-1",
+      "sliced": false,
+      "previous": "cc8941b7b-DAgMZRvX.js#A",
+      "exports": [
+        "R"
+      ],
+      "declarationSha256": "8d75e9de06602e05277bbd43b7eeb88a7f68dd58ea1832fe4a4232f6912145e0",
+      "pinned": true
+    },
+    {
+      "file": "cc8941b7b-C4hsxbbb.js",
+      "local": "at",
+      "name": "useFileAnnotations",
+      "step": "pc-1",
+      "sliced": false,
+      "previous": "cc8941b7b-DAgMZRvX.js#Ie",
+      "exports": [
+        "Q"
+      ],
+      "declarationSha256": "0a67a4bc4c938fd6569f13600183280915aad1845a9fa4e74a81e8943c6e29a3",
+      "pinned": true
+    },
+    {
+      "file": "cc8941b7b-C4hsxbbb.js",
+      "local": "Kt",
+      "name": "useFileAnnotationDrafts",
+      "step": "pc-1",
+      "sliced": false,
+      "previous": "cc8941b7b-DAgMZRvX.js#St",
+      "exports": [
+        "$"
+      ],
+      "declarationSha256": "715068bb987029012dc169a0ec86ac00664739d55a8ad66f88044d6d75fd2116",
+      "pinned": true
+    },
+    {
+      "file": "cc8941b7b-C4hsxbbb.js",
+      "local": "F",
+      "name": "prCommentBodiesStore",
+      "step": "pc-1",
+      "sliced": false,
+      "previous": null,
+      "exports": [
+        "J"
+      ],
+      "declarationSha256": "a599e3dda0460b506e6eebda20e15660a49d1ec8922def1189946830c37ac33c",
+      "pinned": true
+    }
+  ],
+  "callSites": [
+    {
+      "file": "c44d00c7f-DNez7133.js",
+      "local": "Dm",
+      "previous": "c44d00c7f-Cr1FDL2F.js#Jd",
+      "declarationSha256": "bd3cd2b9db69839544c499b4c1a51c72e4e17465488ec847fed0f63ea0d6092c",
+      "pinned": true
+    }
+  ],
+  "pendingRoots": [
+    {
+      "root": "c44d00c7f-DNez7133.js#Cp",
+      "name": "PierreChanges",
+      "cdsCoreWriters": {
+        "c34e6410a-BLtdknyP.js#s": [
+          "c34e6410a-BLtdknyP.js#i",
+          "c34e6410a-BLtdknyP.js#r"
+        ],
+        "cb8c5a88f-Cxti0pWl.js#go": [
+          "cb8c5a88f-Cxti0pWl.js#ho"
+        ]
+      },
+      "unexportedLinks": {
+        "frame-sidebar-nav": [
+          "shared-212-BHMAi0oa.js#Pv",
+          "shared-212-BHMAi0oa.js#Av",
+          "shared-212-BHMAi0oa.js#vv"
+        ]
+      },
+      "mainWorkflow": [
+        "turn-box-v4",
+        "transcript-rows-v4 tr-2..tr-5",
+        "code-transcript-v4 ct-2 (V8 / f8)"
+      ],
+      "why": "closure (round2/pierre-changes/logs/explore-all.json: 64 modules / 2525 bindings) reaches 1677 bindings of transcript-rows' own probe (tr-2..tr-5, incl. the pierre diffs library c2a6d07ee / ce7d378c5 state) and 751 of turn-box's, the cds-core writers c34e6410a s (writes i, r) and cb8c5a88f go (writes ho), and (through the comment card) frame-sidebar-nav's unexported shared-212 Pv / Av / vv"
+    },
+    {
+      "root": "c44d00c7f-DNez7133.js#Kl",
+      "name": "PierreChangesCommentCard",
+      "unexportedLinks": {
+        "frame-sidebar-nav": [
+          "shared-212-BHMAi0oa.js#Pv",
+          "shared-212-BHMAi0oa.js#Av",
+          "shared-212-BHMAi0oa.js#vv"
+        ]
+      },
+      "why": "Kl -> cc8941b7b ei / I (the store) -> cfdc58f68 (markdown escape) -> ce311b43f (cds-core since wave 7) … -> shared-212 Pv / Av / vv, sliced by frame-sidebar-nav without an export"
+    },
+    {
+      "root": "cc8941b7b-C4hsxbbb.js#I",
+      "name": "useDiffAnnotationStore",
+      "unexportedLinks": {
+        "frame-sidebar-nav": [
+          "shared-212-BHMAi0oa.js#Pv",
+          "shared-212-BHMAi0oa.js#Av",
+          "shared-212-BHMAi0oa.js#vv"
+        ]
+      },
+      "why": "the store module (cc8941b7b I / L / E / F …) reaches ce311b43f (cds-core since wave 7) through cfdc58f68 and, past it, shared-212 Pv / Av / vv, sliced by frame-sidebar-nav without an export (the same hold as Kl). D1 owner plan: this graph owns the store (as the 3.6556.2 pierre-changes did); transcript-rows ToolRow (tr-4, pending) and later graphs link it"
+    },
+    {
+      "root": "cc8941b7b-C4hsxbbb.js#L",
+      "name": "diffAnnotationActions",
+      "unexportedLinks": {
+        "frame-sidebar-nav": [
+          "shared-212-BHMAi0oa.js#Pv",
+          "shared-212-BHMAi0oa.js#Av",
+          "shared-212-BHMAi0oa.js#vv"
+        ]
+      },
+      "why": "the store module (cc8941b7b I / L / E / F …) reaches ce311b43f (cds-core since wave 7) through cfdc58f68 and, past it, shared-212 Pv / Av / vv, sliced by frame-sidebar-nav without an export (the same hold as Kl). D1 owner plan: this graph owns the store (as the 3.6556.2 pierre-changes did); transcript-rows ToolRow (tr-4, pending) and later graphs link it"
+    },
+    {
+      "root": "cc8941b7b-C4hsxbbb.js#j",
+      "name": "diffAnnotationKey",
+      "unexportedLinks": {
+        "frame-sidebar-nav": [
+          "shared-212-BHMAi0oa.js#Pv",
+          "shared-212-BHMAi0oa.js#Av",
+          "shared-212-BHMAi0oa.js#vv"
+        ]
+      },
+      "why": "the store module (cc8941b7b I / L / E / F …) reaches ce311b43f (cds-core since wave 7) through cfdc58f68 and, past it, shared-212 Pv / Av / vv, sliced by frame-sidebar-nav without an export (the same hold as Kl). D1 owner plan: this graph owns the store (as the 3.6556.2 pierre-changes did); transcript-rows ToolRow (tr-4, pending) and later graphs link it"
+    },
+    {
+      "root": "cc8941b7b-C4hsxbbb.js#M",
+      "name": "isFileAnnotationKey",
+      "unexportedLinks": {
+        "frame-sidebar-nav": [
+          "shared-212-BHMAi0oa.js#Pv",
+          "shared-212-BHMAi0oa.js#Av",
+          "shared-212-BHMAi0oa.js#vv"
+        ]
+      },
+      "why": "the store module (cc8941b7b I / L / E / F …) reaches ce311b43f (cds-core since wave 7) through cfdc58f68 and, past it, shared-212 Pv / Av / vv, sliced by frame-sidebar-nav without an export (the same hold as Kl). D1 owner plan: this graph owns the store (as the 3.6556.2 pierre-changes did); transcript-rows ToolRow (tr-4, pending) and later graphs link it"
+    },
+    {
+      "root": "cc8941b7b-C4hsxbbb.js#at",
+      "name": "useFileAnnotations",
+      "unexportedLinks": {
+        "frame-sidebar-nav": [
+          "shared-212-BHMAi0oa.js#Pv",
+          "shared-212-BHMAi0oa.js#Av",
+          "shared-212-BHMAi0oa.js#vv"
+        ]
+      },
+      "why": "the store module (cc8941b7b I / L / E / F …) reaches ce311b43f (cds-core since wave 7) through cfdc58f68 and, past it, shared-212 Pv / Av / vv, sliced by frame-sidebar-nav without an export (the same hold as Kl). D1 owner plan: this graph owns the store (as the 3.6556.2 pierre-changes did); transcript-rows ToolRow (tr-4, pending) and later graphs link it"
+    },
+    {
+      "root": "cc8941b7b-C4hsxbbb.js#Kt",
+      "name": "useFileAnnotationDrafts",
+      "unexportedLinks": {
+        "frame-sidebar-nav": [
+          "shared-212-BHMAi0oa.js#Pv",
+          "shared-212-BHMAi0oa.js#Av",
+          "shared-212-BHMAi0oa.js#vv"
+        ]
+      },
+      "why": "the store module (cc8941b7b I / L / E / F …) reaches ce311b43f (cds-core since wave 7) through cfdc58f68 and, past it, shared-212 Pv / Av / vv, sliced by frame-sidebar-nav without an export (the same hold as Kl). D1 owner plan: this graph owns the store (as the 3.6556.2 pierre-changes did); transcript-rows ToolRow (tr-4, pending) and later graphs link it"
+    },
+    {
+      "root": "cc8941b7b-C4hsxbbb.js#F",
+      "name": "prCommentBodiesStore",
+      "unexportedLinks": {
+        "frame-sidebar-nav": [
+          "shared-212-BHMAi0oa.js#Pv",
+          "shared-212-BHMAi0oa.js#Av",
+          "shared-212-BHMAi0oa.js#vv"
+        ]
+      },
+      "why": "the store module (cc8941b7b I / L / E / F …) reaches ce311b43f (cds-core since wave 7) through cfdc58f68 and, past it, shared-212 Pv / Av / vv, sliced by frame-sidebar-nav without an export (the same hold as Kl). D1 owner plan: this graph owns the store (as the 3.6556.2 pierre-changes did); transcript-rows ToolRow (tr-4, pending) and later graphs link it"
+    }
+  ],
+  "adapters": [
+    {
+      "original": "vendor-intl-BJgYK7RA.js#q",
+      "name": "useIntl",
+      "hostAdapter": "src/source-session-rail-kit-adapters.jsx",
+      "declarationSha256": "edf793bc7b87ae9a38cea39d25d752a5bcfef1d492e06a2219e120311feaaec0",
+      "pinned": true
+    },
+    {
+      "original": "vendor-intl-BJgYK7RA.js#Gt",
+      "name": "FormattedMessage",
+      "hostAdapter": "src/source-session-rail-kit-adapters.jsx",
+      "declarationSha256": "bde2ec1630e0a679fa4135cf75389568e77fa98fdcb08519af8104d5306ff5b5",
+      "pinned": true
+    }
+  ],
+  "linkedCopies": {},
+  "imports": [
+    {
+      "module": "pierre-shared-39.mjs",
+      "local": "wg",
+      "kind": "linked",
+      "from": "../frame-sidebar-nav/shared-39.mjs",
+      "name": "wg",
+      "via": "shared-39-ZCs0lAwB.js#wg"
+    },
+    {
+      "module": "pierre-changes.mjs",
+      "local": "A",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "CdsSkeleton",
+      "via": "shared-frame-CJdE5Ria.js:Ou"
+    },
+    {
+      "module": "pierre-changes.mjs",
+      "local": "I3",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-frame.mjs",
+      "name": "I3",
+      "via": "shared-frame-CJdE5Ria.js:am"
+    },
+    {
+      "module": "pierre-changes.mjs",
+      "local": "I4",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "I4",
+      "via": "shared-frame-CJdE5Ria.js:om"
+    },
+    {
+      "module": "pierre-changes.mjs",
+      "local": "J0",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-frame.mjs",
+      "name": "J0",
+      "via": "shared-frame-CJdE5Ria.js:cm"
+    },
+    {
+      "module": "pierre-changes.mjs",
+      "local": "J1",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-frame.mjs",
+      "name": "J1",
+      "via": "shared-frame-CJdE5Ria.js:lm"
+    },
+    {
+      "module": "pierre-changes.mjs",
+      "local": "J2",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-frame.mjs",
+      "name": "J2",
+      "via": "shared-frame-CJdE5Ria.js:um"
+    },
+    {
+      "module": "pierre-changes.mjs",
+      "local": "J3",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-frame.mjs",
+      "name": "J3",
+      "via": "shared-frame-CJdE5Ria.js:dm"
+    },
+    {
+      "module": "pierre-changes.mjs",
+      "local": "J4",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-frame.mjs",
+      "name": "J4",
+      "via": "shared-frame-CJdE5Ria.js:fm"
+    },
+    {
+      "module": "pierre-changes.mjs",
+      "local": "J5",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-frame.mjs",
+      "name": "J5",
+      "via": "shared-frame-CJdE5Ria.js:pm"
+    },
+    {
+      "module": "pierre-changes.mjs",
+      "local": "J9",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-frame.mjs",
+      "name": "J9",
+      "via": "shared-frame-CJdE5Ria.js:hm"
+    },
+    {
+      "module": "pierre-changes.mjs",
+      "local": "K0",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-frame.mjs",
+      "name": "K0",
+      "via": "shared-frame-CJdE5Ria.js:gm"
+    },
+    {
+      "module": "pierre-changes.mjs",
+      "local": "K1",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-frame.mjs",
+      "name": "K1",
+      "via": "shared-frame-CJdE5Ria.js:_m"
+    },
+    {
+      "module": "pierre-changes.mjs",
+      "local": "K2",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-frame.mjs",
+      "name": "K2",
+      "via": "shared-frame-CJdE5Ria.js:vm"
+    },
+    {
+      "module": "pierre-changes.mjs",
+      "local": "K3",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-frame.mjs",
+      "name": "K3",
+      "via": "shared-frame-CJdE5Ria.js:ym"
+    },
+    {
+      "module": "pierre-changes.mjs",
+      "local": "K4",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-frame.mjs",
+      "name": "K4",
+      "via": "shared-frame-CJdE5Ria.js:bm"
+    },
+    {
+      "module": "pierre-changes.mjs",
+      "local": "K5",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-frame.mjs",
+      "name": "K5",
+      "via": "shared-frame-CJdE5Ria.js:xm"
+    },
+    {
+      "module": "pierre-changes.mjs",
+      "local": "L",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "CdsDialog",
+      "via": "shared-frame-CJdE5Ria.js:Yl"
+    },
+    {
+      "module": "pierre-changes.mjs",
+      "local": "Wt",
+      "kind": "linked",
+      "from": "../files-changes-v4/file-type-icon.mjs",
+      "name": "FileTypeIcon",
+      "via": "c280f9bbb-BOcpax9X.js:t"
+    },
+    {
+      "module": "pierre-changes.mjs",
+      "local": "Z",
+      "kind": "adapter",
+      "from": "../../source-pierre-changes-v4-adapters.jsx",
+      "name": "FormattedMessage",
+      "via": "vendor-intl-BJgYK7RA.js:l"
+    },
+    {
+      "module": "pierre-changes.mjs",
+      "local": "Z1",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-frame.mjs",
+      "name": "Z1",
+      "via": "shared-frame-CJdE5Ria.js:Sm"
+    },
+    {
+      "module": "pierre-changes.mjs",
+      "local": "Z2",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-frame.mjs",
+      "name": "Z2",
+      "via": "shared-frame-CJdE5Ria.js:Cm"
+    },
+    {
+      "module": "pierre-changes.mjs",
+      "local": "_n",
+      "kind": "linked",
+      "from": "../files-changes-v4/path-segments.mjs",
+      "name": "PathSegments",
+      "via": "c784da984-CRJnGT1U.js:n"
+    },
+    {
+      "module": "pierre-changes.mjs",
+      "local": "c",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "Fragment",
+      "via": "vendor-frame-BckkO60Y.js:Wa"
+    },
+    {
+      "module": "pierre-changes.mjs",
+      "local": "dt",
+      "kind": "linked",
+      "from": "../working-line-v4/define-messages.mjs",
+      "name": "tn",
+      "via": "vendor-intl-BJgYK7RA.js:f"
+    },
+    {
+      "module": "pierre-changes.mjs",
+      "local": "gt",
+      "kind": "linked",
+      "from": "../chat-knowledge-v4/shared-4.mjs",
+      "name": "formatKnowledgeFileSize",
+      "via": "shared-4-C_EiQb9h.js:xt"
+    },
+    {
+      "module": "pierre-changes.mjs",
+      "local": "h",
+      "kind": "react",
+      "from": "react",
+      "name": "createContext",
+      "via": "vendor-frame-BckkO60Y.js:no"
+    },
+    {
+      "module": "pierre-changes.mjs",
+      "local": "i",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "jsxs",
+      "via": "vendor-frame-BckkO60Y.js:Ka"
+    },
+    {
+      "module": "pierre-changes.mjs",
+      "local": "me",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-0-CnnWnVrT.mjs",
+      "name": "yu",
+      "via": "shared-0-CnnWnVrT.js:zx"
+    },
+    {
+      "module": "pierre-changes.mjs",
+      "local": "n",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "jsx",
+      "via": "vendor-frame-BckkO60Y.js:Ga"
+    },
+    {
+      "module": "pierre-changes.mjs",
+      "local": "p",
+      "kind": "react",
+      "from": "react",
+      "name": "useEffect",
+      "via": "vendor-frame-BckkO60Y.js:go"
+    },
+    {
+      "module": "pierre-changes.mjs",
+      "local": "pt",
+      "kind": "adapter",
+      "from": "../../source-pierre-changes-v4-adapters.jsx",
+      "name": "useIntl",
+      "via": "vendor-intl-BJgYK7RA.js:p"
+    },
+    {
+      "module": "pierre-changes.mjs",
+      "local": "re",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "CdsIcon",
+      "via": "shared-frame-CJdE5Ria.js:lf"
+    },
+    {
+      "module": "pierre-changes.mjs",
+      "local": "rr",
+      "kind": "linked",
+      "from": "../session-rail-changes-v4/c761aa8b9.mjs",
+      "name": "Kn",
+      "via": "c761aa8b9-CdRbeywV.js:ct"
+    },
+    {
+      "module": "pierre-changes.mjs",
+      "local": "s",
+      "kind": "react",
+      "from": "react",
+      "name": "useState",
+      "via": "vendor-frame-BckkO60Y.js:To"
+    },
+    {
+      "module": "pierre-changes.mjs",
+      "local": "t",
+      "kind": "shared-graph",
+      "from": "../cds-core/vendor-frame.mjs",
+      "name": "clsx",
+      "via": "vendor-frame-BckkO60Y.js:Fa"
+    },
+    {
+      "module": "pierre-changes.mjs",
+      "local": "te",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "CdsTooltip",
+      "via": "shared-frame-CJdE5Ria.js:cd"
+    },
+    {
+      "module": "pierre-changes.mjs",
+      "local": "u",
+      "kind": "react",
+      "from": "react",
+      "name": "memo",
+      "via": "vendor-frame-BckkO60Y.js:co"
+    },
+    {
+      "module": "pierre-changes.mjs",
+      "local": "ue",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-0.mjs",
+      "name": "useEventCallback",
+      "via": "shared-0-CnnWnVrT.js:PT"
+    },
+    {
+      "module": "pierre-changes.mjs",
+      "local": "vn",
+      "kind": "linked",
+      "from": "../files-changes-v4/path-segments.mjs",
+      "name": "NameThenFolder",
+      "via": "c784da984-CRJnGT1U.js:t"
+    }
+  ]
+}

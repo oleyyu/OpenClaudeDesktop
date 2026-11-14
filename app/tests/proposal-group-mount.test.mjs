@@ -373,7 +373,7 @@ test('Do it here, dismiss and a failed start go through the host bridge', async 
 
 test('zh-CN: the card\'s copy is translated, ICU plurals included', async () => {
   // The intl the card formats with (source-code-start-adapters.jsx useStartIntl: the vendored react-intl createIntl).
-  const { createIntl } = await server.ssrLoadModule('/src/generated/chat/vendor-intl-DYfox5Co.js');
+  const { createIntl } = await server.ssrLoadModule('/src/generated/chat/vendor-intl-BJgYK7RA.js');
   const zh = (await import('../electron/i18n/zh-CN/agent-tools.mjs')).default;
   const source = fs.readFileSync(path.join(app, 'electron/i18n/zh-CN/agent-tools.mjs'), 'utf8');
   const block = source.slice(source.indexOf('// R4f-proposal:'), source.indexOf('// R4f-proposal end.'));
@@ -559,7 +559,19 @@ test('inline: a tool group of proposing calls is mQ under the pane context, the 
     else if (/\.m?js$/.test(entry.name) && /=\s*\w+\(\{\s*inline:\s*!1,\s*captureGuardedSnapToBottom:/.test(fs.readFileSync(file, 'utf8'))) pzCopies.push(path.relative(app, file));
   } };
   walk(path.join(app, 'src/generated'));
-  assert.deepEqual(pzCopies, ['src/generated/transcript-rows/group-status.mjs']);
+  // round3 integrate-gates: the rule holds per release. The 4.16336.0 transcript-rows-v4 graph (tr-b) cuts the 4.16336.0
+  // context, c96d752d0-D9VB6ArX.js aV (`var aV=k({inline:!1,captureGuardedSnapToBottom:TYe});function oV(){return j(aV)}`),
+  // a different object than 3.6556.2 PZ; exactly one 4.16336.0 graph may hold it (D1), and d1-gate checks every other.
+  const versionOf = (file) => JSON.parse(fs.readFileSync(path.join(app, 'src/generated', path.relative(path.join(app, 'src/generated'), path.join(app, file)).split(path.sep)[0], 'manifest.json'), 'utf8')).referenceVersion;
+  assert.deepEqual(pzCopies.filter((file) => versionOf(file) === '3.6556.2'), ['src/generated/transcript-rows/group-status.mjs']);
+  assert.deepEqual(pzCopies.filter((file) => versionOf(file) !== '3.6556.2'), ['src/generated/transcript-rows-v4/group-status.mjs']);
+  const rowsV4 = JSON.parse(fs.readFileSync(path.join(app, 'src/generated/transcript-rows-v4/manifest.json'), 'utf8'));
+  assert.equal(rowsV4.referenceVersion, '4.16336.0');
+  const v4Group = rowsV4.modules.find((m) => m.target === 'group-status.mjs');
+  assert.equal(v4Group.source, 'c96d752d0-D9VB6ArX.js');
+  assert.ok(v4Group.bindings.some((b) => b.name === 'aV'), 'transcript-rows-v4 holds 4.16336.0 aV');
+  const official4Group = fs.readFileSync(path.resolve(app, '../reference/snapshots/claude-4.16336.0-20261104/ion-dist/assets/v1/c96d752d0-D9VB6ArX.js'), 'utf8');
+  assert.equal(occurrences(official4Group, 'var aV=k({inline:!1,captureGuardedSnapToBottom:TYe});function oV(){return j(aV)}'), 1);
 
   const stub = stubHost();
   const running = spawn(3, 't1', { status: 'inProgress', result: null });

@@ -270,8 +270,12 @@ test('image viewer: c44d00c7f Zc / tl on the shared-frame CDS Dialog (view-tabs 
     'className={`grid grid-cols-1 gap-md${viewer.columns > 1 ? " sm:grid-cols-2" : ""}`}',
   ]);
   assert.doesNotMatch(diff, /SourceDialog/);
-  // W14-code r6 pierre: CdsButton joins the import (the header's View image / Open file are c44d00c7f il / _a's CDS Button).
-  assert.match(diff, /import \{ CdsButton, CdsDialog, CdsIcon, CdsSkeleton, useCdsLayerAwareZIndex \} from '\.\/generated\/view-tabs\/index\.js';/);
+  // W14-code r6 pierre: the header's View image / Open file are c44d00c7f il / _a's CDS Button. host-wiring code-a: the
+  // Buttons, Icons, the image Dialog and Skeleton this file renders are the 4.16336.0 cds-core originals.
+  assert.match(diff, /import \{ CdsButton, CdsDialog, CdsIcon, CdsSkeleton \} from '\.\/cds-core\.mjs';/);
+  // The file-menu entries stay on view-tabs: pierre-changes (3.6556.2) draws them inside its own ContextMenu popup.
+  // host-wiring fix-code-a: the layer hook stays there too — its value only feeds the generated (3.6556.2) DiffTree handles.
+  assert.match(diff, /import \{ CdsContextMenu, useCdsLayerAwareZIndex \} from '\.\/generated\/view-tabs\/index\.js';/);
 });
 
 // ---------------------------------------------------------------- selection chip: ceb49ada3 Tt

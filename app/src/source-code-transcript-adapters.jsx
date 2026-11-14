@@ -28,6 +28,8 @@
 //   skill menu, code session menu, sidebar actions, emoji field, read-aloud engine, connector suggestion, image preview
 //   modal): the host serves none of them, so each answers its loader's failure / empty branch.
 import React from "react";
+// c96d752d0 c1bc4f7a0: the agent cells' style the original injects at module load (extract-code-transcript.mjs agent-cell.css).
+import "./generated/code-transcript/agent-cell.css";
 export * from "./source-transcript-rows-adapters.jsx";
 // W14-code r4 ct-feed: the feed slices' host side (the Workflow tool row F$, the workflow card N$).
 export * from "./source-code-feed-adapters.jsx";

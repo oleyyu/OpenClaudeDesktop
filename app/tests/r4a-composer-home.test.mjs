@@ -9,7 +9,7 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { setLocale } from '../electron/i18n/index.mjs';
-import { clawdClassName, clawdReplayButtonClassName } from '../src/generated/code-start/pet.mjs';
+import { clawdReplayButtonClassName } from '../src/generated/code-start-v4/clawd-replay.mjs';
 import { IMAGE_TYPES, IMAGE_TYPE_ERROR, planFolderPaste, stageFiles } from '../src/composer-attachments-model.mjs';
 // W14-code r4 gen-final-4: the host splitClipboardFolders is deleted; the composer's split is the generated nP (mb),
 // imported below.
@@ -17,6 +17,7 @@ import { DRAFT_STORAGE_PREFIX, persistDraft, readPersistedDraft, saveDraft, take
 import { routeComposerIntake } from '../src/generated/code-composer/composer-intake-route.mjs';
 import { splitTransferItems, composerImageMimeTypes } from '../src/generated/code-composer/composer-intake-split.mjs';
 import { savedPermission } from '../electron/preferences.mjs';
+import { designEntryStylesheets } from '../scripts/current-design-assets.mjs';
 
 const app = path.resolve(import.meta.dirname, '..');
 const reference = path.resolve(app, '../reference/installed-2.42304.0-20261017');
@@ -132,30 +133,33 @@ test('composer-11 official: k7 puts ClawdLaptop at O7 (right -13px, bottom ring-
 });
 
 test('composer-11 local: SourcePet uses the generated O7 binding, the loaded original CSS resolves it, and no host rule overrides it', () => {
-  // Generated, not hand-copied: pet.mjs is extract-code-start output from the 3.6556.2 chunk (manifest hashes; w2-home-start).
-  assert.equal(clawdClassName, O7);
+  // code-start v4: O7 is 4.16336.0 m_e (same value), exported by extract-code-start-v4 as clawdClassName from start.mjs;
+  // the replay classes are the cc13f8cc7-COuBECEu.js template fragment (clawd-replay.mjs). Both pinned in provenance.json.
   assert.equal(clawdReplayButtonClassName, REPLAY);
-  const manifest = JSON.parse(local('src/generated/code-start/manifest.json'));
-  assert.equal(manifest.referenceVersion, '3.6556.2');
-  const pet = manifest.outputs.find(entry => entry.target === 'pet.mjs');
-  assert.deepEqual(pet.bindings.map(binding => [binding.name, binding.export]), [['jfe', 'clawdClassName']]);
-  assert.equal(pet.sourceSha256, sha(fs.readFileSync(path.join(v3, 'ion-dist/assets/v1/cc43287c9-Me-M2ucD.js'))));
-  assert.equal(pet.fragments[0].sourceSha256, sha(fs.readFileSync(path.join(v3, 'ion-dist/assets/v1/cc13f8cc7-BHF1aIvS.js'))));
-  assert.equal(pet.sha256, sha(fs.readFileSync(path.join(app, 'src/generated/code-start/pet.mjs'))));
-  assert.equal(pet.fragments[0].sha256, sha(REPLAY));
-  // The button carries exactly O7 + the replay classes; the slot is k7's wrapper (relative, 0 high, no pointer events,
-  // z-index 2) with Nl's compact margin (-mb-1.5 = -6px at --spacing .25rem).
+  const startV4 = local('src/generated/code-start-v4/start.mjs');
+  assert.equal(count(startV4, `var m_e =\n  "${O7}";`), 1);
+  assert.equal(count(startV4, '  m_e as clawdClassName,'), 1);
+  const provenance = JSON.parse(local('src/generated/code-start-v4/provenance.json'));
+  assert.equal(provenance.referenceVersion, '4.16336.0');
+  assert.deepEqual(provenance.roots.filter(root => root.semantic === 'clawdClassName').map(root => [root.local, root.pinned]), [['m_e', true]]);
+  const v4 = path.resolve(app, '../reference/snapshots/claude-4.16336.0-20261104/ion-dist/assets/v1');
+  assert.equal(provenance.clawdReplay.sourceSha256, sha(fs.readFileSync(path.join(v4, 'cc13f8cc7-COuBECEu.js'))));
+  // The button carries exactly m_e + the replay classes (ClawdLaptopInner replayOnClick); the legacy composer slot keeps
+  // k7's wrapper (relative, 0 high, no pointer events, z-index 2) with Nl's compact margin (-mb-1.5 = -6px at --spacing .25rem).
   const source = local('src/source-pet.jsx');
   once(source, [
-    'import { clawdClassName, clawdReplayButtonClassName } from "./generated/code-start/pet.mjs";',
-    '<div className={`sc-pet-slot ${className}`} aria-hidden="true" style={{ zIndex: 2 }}>',
-    'className={`${clawdClassName} ${clawdReplayButtonClassName}`}',
+    'import { clawdClassName } from "./generated/code-start-v4/start.mjs";',
+    'import { clawdReplayButtonClassName } from "./generated/code-start-v4/clawd-replay.mjs";',
+    '<div className="sc-pet-slot" aria-hidden="true" style={{ zIndex: 2 }}>',
+    'className={`${className ?? ""} ${clawdReplayButtonClassName}`}',
   ], 'source-pet.jsx');
   const css = local('src/source-composer.css');
   assert.equal(count(css, '.sc-pet-slot { position: relative; height: 0; margin-bottom: -6px; pointer-events: none; }'), 1);
   // The original stylesheet index.html loads defines every O7 utility with the official values.
-  assert.equal(count(local('index.html'), '<link rel="stylesheet" href="/assets/v1/c6a992d55-Che1orl5.css" />'), 1);
-  const sheet = local('public/assets/v1/c6a992d55-Che1orl5.css');
+  // 4.16336.0 (current-design-assets): the c6a992d55 utilities entry sheet is c6a992d55-_JRfOmTh.
+  const utilities = designEntryStylesheets.find(name => name.startsWith('c6a992d55-'));
+  assert.equal(count(local('index.html'), `<link rel="stylesheet" href="/assets/v1/${utilities}" />`), 1);
+  const sheet = local(`public/assets/v1/${utilities}`);
   for (const rule of ['.absolute{position:absolute}', '.right-\\[-13px\\]{right:-13px}',
     '.bottom-\\[calc\\(var\\(--cds-ring-outer\\,0px\\)-144px\\/11\\)\\]{bottom:calc(var(--cds-ring-outer,0px) - 144px / 11)}',
     '.w-\\[80px\\]{width:80px}', '.h-\\[80px\\]{height:80px}', '.-scale-x-100{--tw-scale-x:calc(100% * -1);scale:var(--tw-scale-x) var(--tw-scale-y)}',
@@ -168,7 +172,8 @@ test('composer-11 local: SourcePet uses the generated O7 binding, the loaded ori
   // k7 sits directly before the composer card: the pet mounts right before the <form> on the draft page (code, no session).
   // R3-composer step 3: the Code card root is the composer shell's CardRoot (a div for Code, the form for Chat/Cowork); the pet still sits right before it.
   assert.match(local('src/source-composer.jsx'), /\{showPet && <SourcePet \/>\}\n(?:\s*\{\/\*[\s\S]*?\*\/\}\n)?\s*<CardRoot ref=\{card\}/);
-  assert.equal(count(local('src/main.jsx'), 'showPet={mode === "code" && !current && !error && !draft.startsWith("/")}'), 1);
+  // 4.16336.0 draws the Clawd inside the start card (cc43287c9 Aye / Dve lead H5 -> g_e): the composer's pet slot is off.
+  assert.equal(count(local('src/main.jsx'), 'showPet={false}'), 1);
 });
 
 // ── composer-12 ────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -386,13 +391,25 @@ test('composer-14 local: drafts never carry a permission; the mode is layered li
   // E11 (3.6556.2): folder picks live under the v2 key, seeded once from the v1 key without remembered Bypass.
   assert.equal(FOLDER_PERMISSION_KEY, 'epitaxy-folder-permission-mode-v2');
   // The ledger's visible case: acceptEdits picked in folder A, then a new draft in folder B shows the Settings default.
+  // 4.16336.0 (c227f4d5e Mt): the draft that moved keeps its non-risky pick; B's own folder map stays empty.
   const draft = permissionOpeningKey({});
   let state = permissionLayersReducer(initialPermissionLayers({}), { type: 'folder', openingKey: draft, folderKey: '/A' });
   state = permissionLayersReducer(state, { type: 'pick', openingKey: draft, folderKey: '/A', value: 'acceptEdits', current: 'auto' });
   state = permissionLayersReducer(state, { type: 'folder', openingKey: draft, folderKey: '/B' });
-  const shown = folder => resolveOpeningMode({ userChoice: state.choices[draft] ?? null, folderChoice: state.folders[folder], globalPref: savedPermission({ permission: 'ask' }) }).mode;
-  assert.equal(shown('/B'), 'ask');
+  const shown = (folder, opening = draft) => resolveOpeningMode({ userChoice: state.choices[opening] ?? null, folderChoice: state.folders[folder], globalPref: savedPermission({ permission: 'ask' }) }).mode;
+  // A draft of another surface that never picked a mode shows the Settings default in B.
+  assert.equal(shown('/B', permissionOpeningKey({ surface: 'chat' })), 'ask', 'a chat draft in B with no pick of its own');
+  assert.equal(shown('/B'), 'acceptEdits', 'the moved draft keeps its non-risky pick');
+  assert.equal(state.folders['/B'], undefined);
   assert.equal(shown('/A'), 'acceptEdits');
+  // The Code case: once that draft is sent (adoptSession, then the session is entered) its pick lives in the session,
+  // and the next new Code draft (the same draft:code opening) in folder B shows the Settings default again.
+  let sent = permissionLayersReducer(state, { type: 'adopt', sessionId: 's1', openingKey: draft, mode: 'acceptEdits' });
+  sent = permissionLayersReducer(sent, { type: 'entered', sessionId: 's1' });
+  sent = permissionLayersReducer(sent, { type: 'folder', openingKey: draft, folderKey: '/B' });
+  assert.equal(draft, 'draft:code');
+  assert.equal(resolveOpeningMode({ userChoice: sent.choices[draft] ?? null, folderChoice: sent.folders['/B'], globalPref: savedPermission({ permission: 'ask' }) }).mode, 'ask', 'a new Code draft in B');
+  assert.equal(resolveOpeningMode({ userChoice: sent.choices[draft] ?? null, folderChoice: sent.folders['/A'], globalPref: savedPermission({ permission: 'ask' }) }).mode, 'acceptEdits', 'A keeps its folder pick');
   // main.jsx: the saved Settings default is the global layer, and the Mode-menu pick goes to the layers, not preference().
   const main = local('src/main.jsx');
   once(main, ['[permission, setPermission] = useState("auto"),', 'setPermission(savedPermission(b.config));',

@@ -1,5 +1,7 @@
 import React from "react";
-import { CdsButton } from "./generated/view-tabs/shared-frame-6jtSkIit.js";
+// host-wiring code-b: the Dismiss recap Button is the 4.16336.0 cds-core original (shared-frame-CJdE5Ria Xu → Id, semantic
+// facade); the card renders it itself.
+import { CdsButton } from "./cds-core.mjs";
 import { qE as recapPlainText } from "./generated/turn-box/shared-11.mjs";
 import { t } from "../electron/i18n/index.mjs";
 import "./source-recap-card.css";

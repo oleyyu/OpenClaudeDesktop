@@ -25,7 +25,9 @@
 // thinking: the model's effort (thinkingEffort); its switch is the model selector's thinking mode (shared-50
 // thinking_mode_extended_title), not a + menu row.
 import { isToolOff, normalizeSelection } from '../electron/prefs/tool-profiles.mjs';
-import { messageTextFeatures } from './generated/chat-messages/message-links.mjs';
+// Round 4 S11 cutover: shared-153 Kq of the 4.16336.0 chat-messages-v4 graph, from its own module (import-free, so this
+// model stays loadable without the graph's UI modules, as with the 3.6556.2 message-links.mjs it replaces).
+import { messageTextFeatures } from './generated/chat-messages-v4/message-links.mjs';
 // w13-close-main-process (closeout chatfn-branches-02, packaging): the main process reads a conversation's switches too
 // (electron/chat-context/tools.mjs, electron/local-projects.mjs), and the package script ships no src/*.mjs outside its
 // whitelist, so that part lives in electron/chat-tools-store.mjs and is re-exported here unchanged.

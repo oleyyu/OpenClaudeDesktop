@@ -19,7 +19,8 @@ const SESSION = 'cw-0123abcd-4567-89ef-0123-456789abcdef';
 
 createRequire(path.join(app, 'package.json'))('react-dom').createPortal = (children) => children;
 globalThis.innerWidth = 1200;
-globalThis.document ??= { body: { nodeType: 1 }, documentElement: { dataset: {}, getAttribute: () => null }, createElement: () => ({ style: {}, setAttribute() {}, appendChild() {} }) };
+// W8-M9 stub contract (round4 integration, stub fields only): cds-core 9203795f reads these at load (official 4.16336.0): document.cookie, documentElement.hasAttribute.
+globalThis.document ??= { cookie: '' /* W8-M9: shared-0 CQ / Wo document.cookie */, body: { nodeType: 1 }, documentElement: { hasAttribute: () => false /* W8-M9: shared-92 cS / Ib */, dataset: {}, getAttribute: () => null }, createElement: () => ({ style: {}, setAttribute() {}, appendChild() {} }) };
 let server, React, render, A, TurnError, UserActions;
 before(async () => {
   React = (await import('react')).default;

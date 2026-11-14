@@ -32,3 +32,6 @@
 }
 /* The role="none" wrapper a row's tooltip (shared-7 aw: catalog tooltip / notice text, a Fast tier's reason) sits on. */
 .sm-model-tip { display: block; width: 100%; }
+/* 4.16336.0 Effort popup header (X.Header "font-normal", thinking.description): muted footnote copy that wraps
+   within the popup instead of stretching it to one long line. */
+.sm-effort-description { max-width: 18rem; white-space: normal; font-weight: 400; }

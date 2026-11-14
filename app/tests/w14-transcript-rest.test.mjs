@@ -13,7 +13,8 @@ const official = (file) => fs.readFileSync(path.join(snapshot, 'ion-dist/assets/
 const read = (file) => fs.readFileSync(path.join(app, file), 'utf8');
 createRequire(path.join(app, 'package.json'))('react-dom').createPortal = children => children;
 globalThis.innerWidth = 1200;
-globalThis.document ??= { body: { nodeType: 1 }, documentElement: { dataset: {}, getAttribute: () => null }, createElement: () => ({}) };
+// W8-M9 stub contract (round4 integration, stub fields only): cds-core 9203795f reads these at load (official 4.16336.0): document.cookie, documentElement.hasAttribute.
+globalThis.document ??= { cookie: '' /* W8-M9: shared-0 CQ / Wo document.cookie */, body: { nodeType: 1 }, documentElement: { hasAttribute: () => false /* W8-M9: shared-92 cS / Ib */, dataset: {}, getAttribute: () => null }, createElement: () => ({}) };
 let server, React, render, load;
 before(async () => {
   React = (await import('react')).default;

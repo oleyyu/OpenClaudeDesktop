@@ -1,0 +1,754 @@
+{
+  "referenceVersion": "4.16336.0",
+  "referenceSnapshot": "snapshots/claude-4.16336.0-20261104",
+  "generator": "scripts/extract-titlebar-v4.mjs",
+  "adapterModule": "src/titlebar-adapter.mjs",
+  "linkedAreas": [
+    "frame-sidebar"
+  ],
+  "sharedGraph": "cds-core",
+  "modules": [
+    {
+      "target": "navigation-state.mjs",
+      "source": "shared-1-D1bGaTaN.js",
+      "sourceSha256": "bc66aa8473c6bb2c7f6c179732a63f6cb9b8b69572abc2ebaf7c1e31d5eeb0ea",
+      "sha256": "fc743c933a1d36215f44bbd8c4baefa6dbc41cb88d2216b65fe4ed63fb9ff8c4",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "jm",
+          "sha256": "913443229da3907cd9fcde2b022fe433cd129174fc292a040a602c86d1dcf57d"
+        },
+        {
+          "name": "Mm",
+          "sha256": "a7b4caa9aa28a79ce1d153e563bf85f3e97310e6606594abf3b0c6696eee50a9"
+        }
+      ],
+      "initializers": [],
+      "imports": [
+        {
+          "local": "Am",
+          "from": "../../titlebar-adapter.mjs",
+          "name": "BrowserNavigationState",
+          "via": "shared-1-D1bGaTaN.js#Am",
+          "kind": "adapter",
+          "original": "Am"
+        },
+        {
+          "local": "J8",
+          "from": "../frame-sidebar/shared-frame.mjs",
+          "name": "J8",
+          "via": "shared-frame-CJdE5Ria.js:mm",
+          "kind": "linked",
+          "original": "J8"
+        },
+        {
+          "local": "J9",
+          "from": "../frame-sidebar/shared-frame.mjs",
+          "name": "J9",
+          "via": "shared-frame-CJdE5Ria.js:hm",
+          "kind": "linked",
+          "original": "J9"
+        },
+        {
+          "local": "_",
+          "from": "react",
+          "name": "useState",
+          "via": "vendor-frame-BckkO60Y.js:To",
+          "kind": "react"
+        },
+        {
+          "local": "w",
+          "from": "react",
+          "name": "useEffect",
+          "via": "vendor-frame-BckkO60Y.js:go",
+          "kind": "react"
+        }
+      ],
+      "exports": {},
+      "sharedExports": [
+        "jm"
+      ],
+      "heldByViewTabs": []
+    },
+    {
+      "target": "shared-62.mjs",
+      "source": "shared-62-DoCqVpIq.js",
+      "sourceSha256": "15a90aabd711c4209050f53ef48b2754661e19b090936fdc6d37346bd4cf4e56",
+      "sha256": "f57635a7a848b6b181235d6b346914be7c874056c72e3c7f24b1218632bdd473",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "OT",
+          "sha256": "3c633717a8860b212c950b6eae2980d9f443be740871672219540c921d1525e1"
+        }
+      ],
+      "initializers": [],
+      "imports": [
+        {
+          "local": "ZS",
+          "from": "../cds-core/shared-62.mjs",
+          "name": "ZS",
+          "via": "shared-62-DoCqVpIq.js#ZS",
+          "kind": "shared-graph",
+          "original": "ZS"
+        }
+      ],
+      "exports": {},
+      "sharedExports": [
+        "OT"
+      ],
+      "heldByViewTabs": []
+    },
+    {
+      "target": "history-nav.mjs",
+      "source": "shared-20-DUEo90UF.js",
+      "sourceSha256": "28c50cf76aa77031056343ebb0dcd4505ffe22671779d25852ebc47ff0cbfccc",
+      "sha256": "e5ec1239c8235142876454c8a0cfa19e3d77f40bec0de86c6ae17c5a590d991c",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "zg",
+          "sha256": "98a4cba126d5072bfd92d8be9d6ff5e5f57f47786a873a3cc598ce29dfd2b994"
+        },
+        {
+          "name": "Bg",
+          "sha256": "8aee37ed1ae083f952f8c8336ba9ea88f0609f51a9269a5bd9f15a9dd0dc1c4f"
+        },
+        {
+          "name": "Vg",
+          "sha256": "c318e5494e2deae5398ba36e01c8b7ba89051c720e2b0e319c28f3cea71f8a76"
+        },
+        {
+          "name": "ov",
+          "sha256": "82e00000cffeef99c7f7e7c85c9bf6a3064cc868c966edd4d5fa8712f2d250d9"
+        },
+        {
+          "name": "sv",
+          "sha256": "0d83a5350f36aa688eebdff62f4d3b1d62dc0cabf2dd06b64b22a18e84a61794"
+        },
+        {
+          "name": "uv",
+          "sha256": "ba0549ac830feb17aafd433987a6fa98e599fd82c3346e18485ed4fe1517a2bc"
+        },
+        {
+          "name": "dv",
+          "sha256": "a855f7a825655dada7bba849e3d555037b09aed4148c66c6dd065fa279606216"
+        },
+        {
+          "name": "fv",
+          "sha256": "a5afe6bbb591306b79bb5792d40e22d7e0d859fea68a037b81075db3b09ed040"
+        },
+        {
+          "name": "pv",
+          "sha256": "b1c125bd52f87bc66af200f2b9e6903952fa8c44c5bf885225d2a08d10b2c2bf"
+        },
+        {
+          "name": "mv",
+          "sha256": "b333b98b22a95e2fb8fc764eb10c70c7d60a613958d99ec90e69d4b20077f56b"
+        },
+        {
+          "name": "hv",
+          "sha256": "c772f502565480c6fe01083a6ea069730fa182480ad0a7549a122a01ce0196e0"
+        }
+      ],
+      "initializers": [],
+      "imports": [
+        {
+          "local": "G",
+          "from": "../cds-core/shared-frame.mjs",
+          "name": "CdsIcon",
+          "via": "shared-frame-CJdE5Ria.js:lf",
+          "kind": "shared-graph",
+          "original": "Bs"
+        },
+        {
+          "local": "J0",
+          "from": "../frame-sidebar/shared-frame.mjs",
+          "name": "J0",
+          "via": "shared-frame-CJdE5Ria.js:cm",
+          "kind": "linked",
+          "original": "J0"
+        },
+        {
+          "local": "J1",
+          "from": "../frame-sidebar/shared-frame.mjs",
+          "name": "J1",
+          "via": "shared-frame-CJdE5Ria.js:lm",
+          "kind": "linked",
+          "original": "J1"
+        },
+        {
+          "local": "J2",
+          "from": "../frame-sidebar/shared-frame.mjs",
+          "name": "J2",
+          "via": "shared-frame-CJdE5Ria.js:um",
+          "kind": "linked",
+          "original": "J2"
+        },
+        {
+          "local": "J3",
+          "from": "../frame-sidebar/shared-frame.mjs",
+          "name": "J3",
+          "via": "shared-frame-CJdE5Ria.js:dm",
+          "kind": "linked",
+          "original": "J3"
+        },
+        {
+          "local": "J4",
+          "from": "../frame-sidebar/shared-frame.mjs",
+          "name": "J4",
+          "via": "shared-frame-CJdE5Ria.js:fm",
+          "kind": "linked",
+          "original": "J4"
+        },
+        {
+          "local": "J5",
+          "from": "../frame-sidebar/shared-frame.mjs",
+          "name": "J5",
+          "via": "shared-frame-CJdE5Ria.js:pm",
+          "kind": "linked",
+          "original": "J5"
+        },
+        {
+          "local": "J8",
+          "from": "../frame-sidebar/shared-frame.mjs",
+          "name": "J8",
+          "via": "shared-frame-CJdE5Ria.js:mm",
+          "kind": "linked",
+          "original": "J8"
+        },
+        {
+          "local": "J9",
+          "from": "../frame-sidebar/shared-frame.mjs",
+          "name": "J9",
+          "via": "shared-frame-CJdE5Ria.js:hm",
+          "kind": "linked",
+          "original": "J9"
+        },
+        {
+          "local": "K0",
+          "from": "../frame-sidebar/shared-frame.mjs",
+          "name": "K0",
+          "via": "shared-frame-CJdE5Ria.js:gm",
+          "kind": "linked",
+          "original": "K0"
+        },
+        {
+          "local": "K1",
+          "from": "../frame-sidebar/shared-frame.mjs",
+          "name": "K1",
+          "via": "shared-frame-CJdE5Ria.js:_m",
+          "kind": "linked",
+          "original": "K1"
+        },
+        {
+          "local": "K2",
+          "from": "../frame-sidebar/shared-frame.mjs",
+          "name": "K2",
+          "via": "shared-frame-CJdE5Ria.js:vm",
+          "kind": "linked",
+          "original": "K2"
+        },
+        {
+          "local": "K3",
+          "from": "../frame-sidebar/shared-frame.mjs",
+          "name": "K3",
+          "via": "shared-frame-CJdE5Ria.js:ym",
+          "kind": "linked",
+          "original": "K3"
+        },
+        {
+          "local": "K4",
+          "from": "../frame-sidebar/shared-frame.mjs",
+          "name": "K4",
+          "via": "shared-frame-CJdE5Ria.js:bm",
+          "kind": "linked",
+          "original": "K4"
+        },
+        {
+          "local": "K5",
+          "from": "../frame-sidebar/shared-frame.mjs",
+          "name": "K5",
+          "via": "shared-frame-CJdE5Ria.js:xm",
+          "kind": "linked",
+          "original": "K5"
+        },
+        {
+          "local": "S",
+          "from": "react",
+          "name": "useRef",
+          "via": "vendor-frame-BckkO60Y.js:wo",
+          "kind": "react"
+        },
+        {
+          "local": "Z",
+          "from": "../../titlebar-adapter.mjs",
+          "name": "useIntl",
+          "via": "vendor-intl-BJgYK7RA.js:p",
+          "kind": "adapter",
+          "original": "q"
+        },
+        {
+          "local": "Zn",
+          "from": "./navigation-state.mjs",
+          "name": "jm",
+          "via": "shared-1-D1bGaTaN.js:db",
+          "kind": "generated"
+        },
+        {
+          "local": "c",
+          "from": "react",
+          "name": "useState",
+          "via": "vendor-frame-BckkO60Y.js:To",
+          "kind": "react"
+        },
+        {
+          "local": "cv",
+          "from": "../../titlebar-adapter.mjs",
+          "name": "historyPagesMenuEntry",
+          "via": "shared-20-DUEo90UF.js#cv",
+          "kind": "adapter",
+          "original": "cv"
+        },
+        {
+          "local": "f",
+          "from": "react",
+          "name": "memo",
+          "via": "vendor-frame-BckkO60Y.js:co",
+          "kind": "react"
+        },
+        {
+          "local": "fa",
+          "from": "./shared-62.mjs",
+          "name": "OT",
+          "via": "shared-62-DoCqVpIq.js:cf",
+          "kind": "generated"
+        },
+        {
+          "local": "h",
+          "from": "react",
+          "name": "useEffect",
+          "via": "vendor-frame-BckkO60Y.js:go",
+          "kind": "react"
+        },
+        {
+          "local": "i",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-BckkO60Y.js:Ga",
+          "kind": "react"
+        },
+        {
+          "local": "k",
+          "from": "../cds-core/shared-frame.mjs",
+          "name": "CdsButton",
+          "via": "shared-frame-CJdE5Ria.js:Id",
+          "kind": "shared-graph",
+          "original": "Xu"
+        },
+        {
+          "local": "l",
+          "from": "react/jsx-runtime",
+          "name": "Fragment",
+          "via": "vendor-frame-BckkO60Y.js:Wa",
+          "kind": "react"
+        },
+        {
+          "local": "lv",
+          "from": "../../titlebar-adapter.mjs",
+          "name": "HistoryPagesMenu",
+          "via": "shared-20-DUEo90UF.js#lv",
+          "kind": "adapter",
+          "original": "lv"
+        },
+        {
+          "local": "o",
+          "from": "react/jsx-runtime",
+          "name": "jsxs",
+          "via": "vendor-frame-BckkO60Y.js:Ka",
+          "kind": "react"
+        },
+        {
+          "local": "rm",
+          "from": "../../titlebar-adapter.mjs",
+          "name": "useTitlebarPanelsScope",
+          "via": "shared-120-DCdTP1_5.js:_n",
+          "kind": "adapter",
+          "original": "qe"
+        },
+        {
+          "local": "va",
+          "from": "../frame-sidebar/shared-62.mjs",
+          "name": "Qa",
+          "via": "shared-62-DoCqVpIq.js:hS",
+          "kind": "linked",
+          "original": "Qa"
+        },
+        {
+          "local": "wt",
+          "from": "../../titlebar-adapter.mjs",
+          "name": "BrowserNavigation",
+          "via": "shared-0-CnnWnVrT.js:sh",
+          "kind": "adapter",
+          "original": "gO"
+        }
+      ],
+      "exports": {
+        "hv": "HistoryNavButtons"
+      },
+      "sharedExports": [
+        "Bg"
+      ],
+      "heldByViewTabs": []
+    },
+    {
+      "target": "sidebar-history-nav.mjs",
+      "source": "shared-21-CuohtEoj.js",
+      "sourceSha256": "8513ed8b2bdb0e469685841a90fb35d63529a0c18733e6fd20f3d7a96f3a765d",
+      "sha256": "ce481f877d9d5f0973b1b79f267ead88e9e3d5a1a047dc85dc5fabfad113701b",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "_O",
+          "sha256": "90863c79e15ea8cdfc66a6f8e4b5c963832788ae075951217db21b80906a62f4"
+        }
+      ],
+      "initializers": [],
+      "imports": [
+        {
+          "local": "E",
+          "from": "react",
+          "name": "useRef",
+          "via": "vendor-frame-BckkO60Y.js:wo",
+          "kind": "react"
+        },
+        {
+          "local": "In",
+          "from": "./navigation-state.mjs",
+          "name": "jm",
+          "via": "shared-1-D1bGaTaN.js:db",
+          "kind": "generated"
+        },
+        {
+          "local": "J1",
+          "from": "../frame-sidebar/shared-frame.mjs",
+          "name": "J1",
+          "via": "shared-frame-CJdE5Ria.js:lm",
+          "kind": "linked",
+          "original": "J1"
+        },
+        {
+          "local": "J9",
+          "from": "../frame-sidebar/shared-frame.mjs",
+          "name": "J9",
+          "via": "shared-frame-CJdE5Ria.js:hm",
+          "kind": "linked",
+          "original": "J9"
+        },
+        {
+          "local": "K1",
+          "from": "../frame-sidebar/shared-frame.mjs",
+          "name": "K1",
+          "via": "shared-frame-CJdE5Ria.js:_m",
+          "kind": "linked",
+          "original": "K1"
+        },
+        {
+          "local": "N",
+          "from": "../cds-core/shared-frame.mjs",
+          "name": "useCdsDensity",
+          "via": "shared-frame-CJdE5Ria.js:Ff",
+          "kind": "shared-graph",
+          "original": "Ja"
+        },
+        {
+          "local": "ju",
+          "from": "../frame-sidebar/shared-19.mjs",
+          "name": "tj",
+          "via": "shared-19-UalAfDtn.js:ar",
+          "kind": "linked",
+          "original": "tj"
+        },
+        {
+          "local": "l",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-BckkO60Y.js:Ga",
+          "kind": "react"
+        },
+        {
+          "local": "rO",
+          "from": "../frame-sidebar/frame-chrome.mjs",
+          "name": "rO",
+          "via": "shared-21-CuohtEoj.js#rO",
+          "kind": "linked",
+          "original": "rO"
+        },
+        {
+          "local": "td",
+          "from": "./history-nav.mjs",
+          "name": "HistoryNavButtons",
+          "via": "shared-20-DUEo90UF.js:xc",
+          "kind": "generated"
+        }
+      ],
+      "exports": {
+        "_O": "SidebarHistoryNav"
+      },
+      "sharedExports": [],
+      "heldByViewTabs": []
+    },
+    {
+      "target": "shared-8.mjs",
+      "source": "shared-8-BqfCbkJd.js",
+      "sourceSha256": "d9aa7c7f690b43147e921fbef5473f2311a1474e316c44e6db5ef07e9fede5bc",
+      "sha256": "bb9497e8ddc8bd3fc7d2db1e554ae537743ac07231128bc4e28082cadc59c3e7",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "UI",
+          "sha256": "d6b8d3b38fbc3f25c06b0a0b9546506826d2b99d0547b1a212a381c9c7683131"
+        }
+      ],
+      "initializers": [],
+      "imports": [],
+      "exports": {},
+      "sharedExports": [
+        "UI"
+      ],
+      "heldByViewTabs": [
+        "UI"
+      ]
+    },
+    {
+      "target": "shared-frame.mjs",
+      "source": "shared-frame-CJdE5Ria.js",
+      "sourceSha256": "b6a5f61e0f243a48215fab7f3d65958d693d715e565f57af4e0ff35ae14697bc",
+      "sha256": "7b0bc893d9c531fb8ab272c4e0db5bac915e985c287983fb00be78703921a041",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "Z2",
+          "sha256": "47175fc7ec308cc9629424264901436870d0550a39649b25173f4320477c9897"
+        }
+      ],
+      "initializers": [],
+      "imports": [],
+      "exports": {},
+      "sharedExports": [
+        "Z2"
+      ],
+      "heldByViewTabs": [
+        "Z2"
+      ]
+    },
+    {
+      "target": "c81ea1931.mjs",
+      "source": "c81ea1931-ChuE7vym.js",
+      "sourceSha256": "ad82887242c4d2027078f12971d6f74b22be0af5264fee71d76f9cb33eef7076",
+      "sha256": "37b5f3025cb10a6d4a5429e73d29847b9e6dff1c0283140b56f4fe1eadbcbbf8",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "e",
+          "sha256": "6b87fe405a4514f73daa223d0fff7b0f2b4bb3c2ccb9a6670857bf11aec98062"
+        }
+      ],
+      "initializers": [],
+      "imports": [],
+      "exports": {},
+      "sharedExports": [
+        "e"
+      ],
+      "heldByViewTabs": []
+    },
+    {
+      "target": "pane-toggle.mjs",
+      "source": "cc43287c9-dzfX-J5i.js",
+      "sourceSha256": "4a6893cf4d24a16a99c88d0793529ff39cd1cc0abd9527ce263a54d8d26d7f43",
+      "sha256": "6e87c2d3f47bf55bd1679040af065dd621430d7d9a7af49838ea77b156e3623f",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "UJ",
+          "sha256": "5a31f5b9c1b878ca250b92a7e114fc776c9f01a57917d2929338c3ca49410a62"
+        },
+        {
+          "name": "SY",
+          "sha256": "584c183f658cef018681830f18b33b55fa2c791f242cdf10e37f260bc9603266"
+        }
+      ],
+      "initializers": [],
+      "imports": [
+        {
+          "local": "$m",
+          "from": "./shared-8.mjs",
+          "name": "UI",
+          "via": "shared-8-BqfCbkJd.js:oi",
+          "kind": "generated"
+        },
+        {
+          "local": "Dp",
+          "from": "./history-nav.mjs",
+          "name": "Bg",
+          "via": "shared-20-DUEo90UF.js:Xc",
+          "kind": "generated"
+        },
+        {
+          "local": "I1",
+          "from": "../frame-sidebar/shared-frame.mjs",
+          "name": "I1",
+          "via": "shared-frame-CJdE5Ria.js:rm",
+          "kind": "linked",
+          "original": "I1"
+        },
+        {
+          "local": "I2",
+          "from": "../frame-sidebar/shared-frame.mjs",
+          "name": "I2",
+          "via": "shared-frame-CJdE5Ria.js:im",
+          "kind": "linked",
+          "original": "I2"
+        },
+        {
+          "local": "I3",
+          "from": "../frame-sidebar/shared-frame.mjs",
+          "name": "I3",
+          "via": "shared-frame-CJdE5Ria.js:am",
+          "kind": "linked",
+          "original": "I3"
+        },
+        {
+          "local": "IM",
+          "from": "./c81ea1931.mjs",
+          "name": "e",
+          "via": "c81ea1931-ChuE7vym.js:t",
+          "kind": "generated"
+        },
+        {
+          "local": "J1",
+          "from": "../frame-sidebar/shared-frame.mjs",
+          "name": "J1",
+          "via": "shared-frame-CJdE5Ria.js:lm",
+          "kind": "linked",
+          "original": "J1"
+        },
+        {
+          "local": "J2",
+          "from": "../frame-sidebar/shared-frame.mjs",
+          "name": "J2",
+          "via": "shared-frame-CJdE5Ria.js:um",
+          "kind": "linked",
+          "original": "J2"
+        },
+        {
+          "local": "J3",
+          "from": "../frame-sidebar/shared-frame.mjs",
+          "name": "J3",
+          "via": "shared-frame-CJdE5Ria.js:dm",
+          "kind": "linked",
+          "original": "J3"
+        },
+        {
+          "local": "J9",
+          "from": "../frame-sidebar/shared-frame.mjs",
+          "name": "J9",
+          "via": "shared-frame-CJdE5Ria.js:hm",
+          "kind": "linked",
+          "original": "J9"
+        },
+        {
+          "local": "K2",
+          "from": "../frame-sidebar/shared-frame.mjs",
+          "name": "K2",
+          "via": "shared-frame-CJdE5Ria.js:vm",
+          "kind": "linked",
+          "original": "K2"
+        },
+        {
+          "local": "K3",
+          "from": "../frame-sidebar/shared-frame.mjs",
+          "name": "K3",
+          "via": "shared-frame-CJdE5Ria.js:ym",
+          "kind": "linked",
+          "original": "K3"
+        },
+        {
+          "local": "Qne",
+          "from": "../../titlebar-adapter.mjs",
+          "name": "notePaneToggleClick",
+          "via": "c73f45bc3-C7dtUSq8.js:it",
+          "kind": "adapter",
+          "original": "ry"
+        },
+        {
+          "local": "U",
+          "from": "../cds-core/shared-frame.mjs",
+          "name": "CdsButton",
+          "via": "shared-frame-CJdE5Ria.js:Id",
+          "kind": "shared-graph",
+          "original": "Xu"
+        },
+        {
+          "local": "Z1",
+          "from": "../frame-sidebar/shared-frame.mjs",
+          "name": "Z1",
+          "via": "shared-frame-CJdE5Ria.js:Sm",
+          "kind": "linked",
+          "original": "Z1"
+        },
+        {
+          "local": "Z2",
+          "from": "./shared-frame.mjs",
+          "name": "Z2",
+          "via": "shared-frame-CJdE5Ria.js:Cm",
+          "kind": "generated"
+        },
+        {
+          "local": "p",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-BckkO60Y.js:Ga",
+          "kind": "react"
+        },
+        {
+          "local": "xe",
+          "from": "../cds-core/shared-frame.mjs",
+          "name": "CdsTooltip",
+          "via": "shared-frame-CJdE5Ria.js:cd",
+          "kind": "shared-graph",
+          "original": "Kp"
+        }
+      ],
+      "exports": {
+        "SY": "TitlebarPaneToggle",
+        "UJ": "titlebarOverflowIcon"
+      },
+      "sharedExports": [],
+      "heldByViewTabs": []
+    },
+    {
+      "target": "pane-icons.mjs",
+      "source": "cc44b66a7-CBE7MOEW.js",
+      "sourceSha256": "366a23532a76d2778bc6ad83e0e06f7faa23f1188d9c6d6232a8d929592e05c2",
+      "sha256": "71cd93a64202231f26803dea76bbc50621f8b8a519962d575f54c80500ca15c1",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "M",
+          "sha256": "5926aee20ad9f6b9b512bed7a3f016aa98f73363bfc12c8dc61343a43ff8ab3b"
+        }
+      ],
+      "initializers": [],
+      "imports": [],
+      "exports": {
+        "M": "PANE_ICONS"
+      },
+      "sharedExports": [],
+      "heldByViewTabs": []
+    }
+  ],
+  "callSites": [],
+  "publicAssets": []
+}

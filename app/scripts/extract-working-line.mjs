@@ -45,7 +45,7 @@
 // WORKING_LINE_EXPLORE=1 surveys a closure without writing.
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { viewTabsManifestFor } from './view-tabs-compat.mjs';
+import { viewTabsManifestFor, viewTabsViewFor } from './view-tabs-compat.mjs';
 import * as v3 from './official-3.6556.2.mjs';
 import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
@@ -59,6 +59,8 @@ const referenceVersion = v3.referenceVersion;
 const referenceSnapshot = v3.referenceSnapshot;
 const source = v3.ionSource;
 const output = path.join(root, 'src/generated/working-line');
+const defaultGeneratedRoot = path.join(root, 'src/generated');
+const defaultPublicAssetsRoot = path.join(root, 'public/assets/v1');
 const adapterModule = '../../source-working-line-adapters.jsx';
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
 
@@ -314,23 +316,62 @@ function assertFeatures(label, text, features = []) {
   const missing = features.filter(f => !text.includes(f) && !flat.includes(normalised(f)));
   if (missing.length) throw Error(`${label} lacks ${missing.map(f => JSON.stringify(f)).join(', ')}${process.env.WORKING_LINE_EXPLAIN ? `\n--- text ---\n${text}` : ''}`);
 }
-function vendorImportIn(file, alias, src, table = vendor, version = referenceVersion) {
+function vendorImportIn(file, alias, src, table = vendor, version = referenceVersion, sourceContract = v3) {
   const target = table[file]?.[alias];
   if (!target) return null;
-  // 3.6556.2 (R3): official-3.6556.2.mjs checks the alias' declarator, including the compiler runtime's shape. The
-  // pre-3.6556.2 regex branch went with the last non-3.6556.2 caller (w11-sweep-rest, w10-cleanup-slicer-d1 review).
-  if (version !== v3.referenceVersion) throw Error(`vendor-frame aliases are checked for ${v3.referenceVersion} only, not ${version}`);
-  v3.assertVendorAlias(src.code, alias, target);
+  // The selected release checks its own aliases; matching minified names across
+  // releases is insufficient. Old callers retain the exact 3.6556.2 contract.
+  if (version !== sourceContract.referenceVersion) throw Error(`vendor-frame contract is ${sourceContract.referenceVersion}, expected ${version}`);
+  sourceContract.assertVendorAlias(src.code, alias, target);
   return target;
 }
-async function viewTabsGraph(version = referenceVersion) {
-  const manifest = await viewTabsManifestFor(version);
+async function viewTabsGraph(version = referenceVersion, generatedRoot = defaultGeneratedRoot, snapshot = null) {
+  const manifest = generatedRoot === defaultGeneratedRoot
+    ? await viewTabsManifestFor(version)
+    : viewTabsViewFor(JSON.parse(await fs.readFile(path.join(generatedRoot, 'view-tabs/manifest.json'), 'utf8')), version);
   if (manifest.referenceVersion !== version) throw Error(`view-tabs is ${manifest.referenceVersion}, expected ${version}`);
+  if (snapshot && manifest.referenceSnapshot !== snapshot) throw Error(`view-tabs snapshot is ${manifest.referenceSnapshot}, expected ${snapshot}`);
   const published = new Map();
   for (const [name, entry] of Object.entries(manifest.publicNames ?? {})) published.set(`${entry.file}#${entry.local}`, { name, ...entry });
   const held = new Set();
   for (const m of manifest.modules) for (const b of m.bindings) held.add(`${m.source}#${typeof b === 'string' ? b : b.name}`);
   return { published, held };
+}
+// cfg.sharedGraph, the graph whose publicNames an area imports instead of slicing again: undefined is the view-tabs graph
+// above (unchanged: `../view-tabs/<chunk>` under the public name); null is none (the shared graph's own generator); an
+// area name reads generatedRoot/<area>/manifest.json (version, snapshot and module bytes checked like linkedAreas), whose
+// publicNames are { file, local, target, exportName } (runSlicer cfg.publicNames writes them), imported from
+// `../<area>/<target>` under the name that module exports. Each shared module's sourceSha256 must equal the bytes of
+// that official chunk in this consumer's source folder: publicNames match by minified file#local, so a drifted chunk
+// under an unchanged version/snapshot string must not link a consumer to another declaration.
+async function sharedGraphFor(area, version, generatedRoot, snapshot, source) {
+  if (area === undefined) return { ...(await viewTabsGraph(version, generatedRoot, snapshot)), area: 'view-tabs', kind: 'view-tabs',
+    from: file => `../view-tabs/${file}`, importName: shared => shared.name, hint: 'name it in extract-view-tabs.mjs' };
+  const none = { published: new Map(), held: new Set(), area, kind: 'shared-graph', hint: `add it to ${area} publicNames` };
+  if (area === null) return none;
+  if (typeof area !== 'string' || !/^[\w-]+$/.test(area)) throw Error(`sharedGraph must be an area name, got ${JSON.stringify(area)}`);
+  const dir = path.join(generatedRoot, area);
+  const manifest = JSON.parse(await fs.readFile(path.join(dir, 'manifest.json'), 'utf8'));
+  if (manifest.referenceVersion !== version) throw Error(`${area} is ${manifest.referenceVersion}, expected ${version}`);
+  if (snapshot && manifest.referenceSnapshot !== snapshot) throw Error(`${area} snapshot is ${manifest.referenceSnapshot}, expected ${snapshot}`);
+  const byTarget = new Map();
+  for (const m of manifest.modules) {
+    if ((m.referenceVersion ?? manifest.referenceVersion) !== version) throw Error(`shared module ${area}/${m.target} is ${m.referenceVersion}, expected ${version}`);
+    if (sha(await fs.readFile(path.join(dir, m.target))) !== m.sha256) throw Error(`${area}/${m.target} differs from its manifest`);
+    const official = await fs.readFile(path.join(source, path.basename(m.source))).catch(() => null);
+    if (!official || !/^[0-9a-f]{64}$/.test(m.sourceSha256 ?? '') || sha(official) !== m.sourceSha256)
+      throw Error(`${area}/${m.target} was sliced from ${m.source} ${m.sourceSha256 ?? '(no sourceSha256)'}, which is not the source this area reads`);
+    byTarget.set(m.target, m);
+    for (const b of m.bindings) none.held.add(`${path.basename(m.source)}#${typeof b === 'string' ? b : b.name}`);
+  }
+  for (const [name, entry] of Object.entries(manifest.publicNames ?? {})) {
+    const m = byTarget.get(entry.target);
+    const exported = m && (m.exports?.[entry.local] ?? (m.sharedExports?.includes(entry.local) ? entry.local : null));
+    if (!m || path.basename(m.source) !== entry.file || !m.bindings.some(b => (typeof b === 'string' ? b : b.name) === entry.local) || !entry.exportName || exported !== entry.exportName)
+      throw Error(`${area} publicName ${name} (${entry.file}#${entry.local}) is not exported by ${entry.target} as ${entry.exportName}`);
+    none.published.set(`${entry.file}#${entry.local}`, { name, ...entry });
+  }
+  return { ...none, from: (file, shared) => `../${area}/${shared.target}`, importName: shared => shared.exportName };
 }
 // Module state a second copy would split: a context, or a module-level WeakMap / Map / Set.
 async function isModuleState(src, entry, table = vendor) {
@@ -348,7 +389,7 @@ const allowedGlobals = new Set(['Math', 'Number', 'Array', 'Object', 'Error', 'T
   'globalThis', 'crypto', 'performance', 'setTimeout', 'clearTimeout', 'setInterval', 'clearInterval', 'requestAnimationFrame', 'cancelAnimationFrame',
   'window', 'document', 'console', 'navigator', 'queueMicrotask', 'getComputedStyle', 'Uint8Array', 'BigInt', 'CSS', 'Element', 'HTMLElement', 'Node',
   'reportError', 'URL', 'MutationObserver', 'AbortController', 'ClipboardItem', 'Blob', 'NodeFilter', 'isNaN', 'SVGElement', 'EventTarget', 'PointerEvent', 'ResizeObserver', 'Proxy',
-  'HTMLButtonElement', 'IntersectionObserver', 'arguments', 'Image', 'location', 'MessageChannel', 'WeakRef', 'decodeURIComponent', 'decodeURI', 'encodeURI', 'TextDecoder', 'TextEncoder', 'atob', 'btoa',
+  'HTMLButtonElement', 'HTMLLabelElement', 'IntersectionObserver', 'arguments', 'Image', 'location', 'MessageChannel', 'WeakRef', 'decodeURIComponent', 'decodeURI', 'encodeURI', 'TextDecoder', 'TextEncoder', 'atob', 'btoa',
   'structuredClone', 'Reflect', 'Int32Array', 'Uint16Array', 'Uint32Array', 'Float64Array', 'ArrayBuffer', 'DataView', 'SyntaxError', 'RangeError',
   'URLSearchParams', 'Event', 'CustomEvent', 'KeyboardEvent', 'MouseEvent', 'HTMLInputElement', 'HTMLTextAreaElement', 'Text', 'DOMParser',
   'escape', 'unescape', 'AggregateError', 'FinalizationRegistry', 'BigInt64Array', 'BigUint64Array', 'Int8Array', 'Int16Array', 'Float32Array', 'Uint8ClampedArray',
@@ -395,7 +436,7 @@ function exportedLocals(code, label) {
   }
   return names;
 }
-async function linkedBindings(areas, version = referenceVersion) {
+async function linkedBindings(areas, version = referenceVersion, generatedRoot = defaultGeneratedRoot, snapshot = null) {
   const map = new Map();
   // A binding two linked areas answer for: an exported one is never replaced by a `null` (sliced, not exported) entry; a
   // later exported entry wins (the area listed last is the one that slices it).
@@ -403,7 +444,7 @@ async function linkedBindings(areas, version = referenceVersion) {
   for (const linkedArea of areas) {
     const area = typeof linkedArea === 'string' ? linkedArea : linkedArea.area;
     const only = typeof linkedArea === 'string' ? null : new Set(linkedArea.modules);
-    const dir = path.join(root, 'src/generated', area);
+    const dir = path.join(generatedRoot, area);
     const current = JSON.parse(await fs.readFile(path.join(dir, 'manifest.json'), 'utf8'));
     const manifest = only ? current : workingLineManifestFor(current, version, area);
     for (const target of only ?? []) if (!manifest.modules.some(m => m.target === target)) throw Error(`linked module ${area}/${target} is not in its manifest`);
@@ -411,6 +452,8 @@ async function linkedBindings(areas, version = referenceVersion) {
       if (only && !only.has(m.target)) continue;
       const moduleVersion = m.referenceVersion ?? manifest.referenceVersion;
       if (moduleVersion !== version) throw Error(`linked module ${area}/${m.target} is ${moduleVersion}, expected ${version}`);
+      const moduleSnapshot = m.referenceSnapshot ?? manifest.referenceSnapshot;
+      if (snapshot && moduleSnapshot !== snapshot) throw Error(`linked module ${area}/${m.target} snapshot is ${moduleSnapshot}, expected ${snapshot}`);
       const bytes = await fs.readFile(path.join(dir, m.target));
       if (sha(bytes) !== m.sha256) throw Error(`${area}/${m.target} differs from its manifest`);
       // The manifest's source may be a path into the snapshot (code-current): the chunk is its file name.
@@ -442,14 +485,69 @@ async function linkedBindings(areas, version = referenceVersion) {
 export async function runSlicer(cfg, { check = false, dryRun = false } = {}) {
   const { name: areaName, generator, output, adapterModule, adapterFile, adapters, localAdapters = {}, stateCopies = {}, modules,
     callSites = [], rawCallSites = [], gate = null, linkedAreas = [], lazyVerbatim = null,
-    referenceVersion, referenceSnapshot, source, vendor, linkedCopies = {} } = cfg;
+    referenceVersion, referenceSnapshot, source, vendor, linkedCopies = {}, extraGlobals = {}, absentChunks = {} } = cfg;
+  // cfg.absentChunks (chunk file name -> why; round-4 navfix): official lazy chunks a selected declaration imports dynamically
+  // (`import("./<chunk>.js")`, kept byte for byte) that this area does not ship. Each is emitted under the chunk's own file
+  // name as a generated module that rejects the import with ChunkLoadError (the failure branch every official loader of a
+  // chunk that does not arrive takes: W$ fail-open, `.catch`, the recovery kit); each needs its reason, must exist in the
+  // snapshot and must be imported by the closure. Recorded in the manifest (absentChunks).
+  // A value may also be { why, host: { module, exports } } (U-NAV-MENU): the chunk is still not shipped, but its official
+  // exports are answered by a host module (module: specifier from the output directory; exports: the official export names,
+  // checked against the chunk's own export list), re-exported under the chunk's file name instead of the ChunkLoadError module.
+  const absentWhy = (value) => (typeof value === 'string' ? value : value?.why);
+  for (const [name, value] of Object.entries(absentChunks)) {
+    const why = absentWhy(value);
+    if (!/^[\w-]+\.js$/.test(name) || typeof why !== 'string' || !why.trim())
+      throw Error(`${areaName ?? 'runSlicer'}: absentChunks ${name} needs a chunk file name and a reason`);
+    if (typeof value !== 'string' && (typeof value.host?.module !== 'string' || !Array.isArray(value.host.exports) || !value.host.exports.length))
+      throw Error(`${areaName ?? 'runSlicer'}: absentChunks ${name}: host needs a module and its export names`);
+  }
+  const absentImporters = new Map();
+  // cfg.rewrites ('<chunk>#<binding>' -> [{ from, to, why }]; prestage-btgap U-BT-KEEP): a user-requested local
+  // customisation of one sliced declaration, never an official rule. Each `from` is an exact substring of the official
+  // minified declaration and must occur exactly once; `to` replaces it before formatting; every rewrite must apply and
+  // needs its reason. The manifest keeps the binding's official sha256 and records each rewrite (rewrites).
+  const rewrites = cfg.rewrites ?? {};
+  for (const [key, list] of Object.entries(rewrites)) if (!/^[\w.-]+\.js#[A-Za-z_$][\w$]*$/.test(key) || !Array.isArray(list) || !list.length ||
+    list.some(r => typeof r.from !== 'string' || !r.from || typeof r.to !== 'string' || typeof r.why !== 'string' || !r.why.trim()))
+    throw Error(`${areaName ?? 'runSlicer'}: rewrites ${key} needs [{ from, to, why }]`);
+  const appliedRewrites = [];
+  // cfg.extraGlobals (name -> why): platform globals one area's closure reads that the shared list does not carry; each
+  // needs its reason, and is recorded in the manifest.
+  for (const [name, why] of Object.entries(extraGlobals)) if (!/^[A-Za-z_$][\w$]*$/.test(name) || typeof why !== 'string' || !why.trim())
+    throw Error(`${areaName ?? 'runSlicer'}: extraGlobals ${name} needs a reason`);
   // No default snapshot (wave 10): each caller names the version it slices, its snapshot, source folder and vendor table.
   for (const [key, value] of Object.entries({ referenceVersion, referenceSnapshot, source, vendor }))
     if (!value) throw Error(`${areaName ?? 'runSlicer'}: ${key} is required`);
+  // New releases must opt into their source contract explicitly. The fallback
+  // only preserves the existing 3.6556.2 generators and their byte output.
+  const sourceContract = cfg.sourceContract ?? (referenceVersion === v3.referenceVersion ? v3 : null);
+  if (!sourceContract || typeof sourceContract.assertVendorAlias !== 'function')
+    throw Error(`${areaName ?? 'runSlicer'}: sourceContract is required for ${referenceVersion}`);
+  if (sourceContract.referenceVersion !== referenceVersion || sourceContract.referenceSnapshot !== referenceSnapshot)
+    throw Error(`${areaName ?? 'runSlicer'}: sourceContract version/snapshot does not match the requested source`);
+  if (referenceVersion !== v3.referenceVersion && cfg.generatedRoot === undefined)
+    throw Error(`${areaName ?? 'runSlicer'}: generatedRoot is required for ${referenceVersion}`);
+  const generatedRoot = cfg.generatedRoot === undefined ? defaultGeneratedRoot : path.resolve(cfg.generatedRoot);
+  // Staged graphs must never copy their sprites into the active app by default.
+  const publicAssetsRoot = cfg.publicAssetsRoot === undefined
+    ? (generatedRoot === defaultGeneratedRoot ? defaultPublicAssetsRoot : null)
+    : path.resolve(cfg.publicAssetsRoot);
   for (const key of ['legacyExports', 'legacyView']) if (Object.hasOwn(cfg, key)) throw Error(`${areaName ?? 'runSlicer'}: ${key} was removed in wave 10 (E34 legacy names)`);
   const readSource = (name, c) => readSourceIn(name, c, source);
-  const vendorImport = (file, alias, src) => vendorImportIn(file, alias, src, vendor, referenceVersion);
-  const linked = await linkedBindings(linkedAreas, referenceVersion);
+  const vendorImport = (file, alias, src) => vendorImportIn(file, alias, src, vendor, referenceVersion, sourceContract);
+  const dependencySnapshot = referenceVersion === v3.referenceVersion ? null : referenceSnapshot;
+  // cfg.crossVersion (R5-V1, scripts/cross-version-link.mjs): this graph slices one official build and links the graphs of
+  // another (base) build. Shared / linked graphs are read on the base version, snapshot and chunk folder; a binding of this
+  // build is linked to a base binding only when the linker proves the two bisimilar (generation-time proof from both
+  // snapshots); otherwise it is sliced from this build. Without crossVersion nothing below changes.
+  const crossVersion = cfg.crossVersion ?? null;
+  if (crossVersion && (!crossVersion.linker || !crossVersion.base?.referenceVersion || !crossVersion.base?.referenceSnapshot || !crossVersion.base?.source))
+    throw Error(`${areaName ?? 'runSlicer'}: crossVersion needs { linker, base: { referenceVersion, referenceSnapshot, source } }`);
+  const depVersion = crossVersion ? crossVersion.base.referenceVersion : referenceVersion;
+  const depSnapshot = crossVersion ? crossVersion.base.referenceSnapshot : dependencySnapshot;
+  const depSource = crossVersion ? crossVersion.base.source : source;
+  const linked = await linkedBindings(linkedAreas, depVersion, generatedRoot, depSnapshot);
   const unexportedLinks = [];
   const linkedImport = key => {
     const link = linked.get(key);
@@ -463,7 +561,23 @@ export async function runSlicer(cfg, { check = false, dryRun = false } = {}) {
   // survey a closure before listing its chunks. Nothing is written in a dry run.
   const explore = dryRun && !!process.env.WORKING_LINE_EXPLORE;
   const cache = new Map();
-  const { published, held } = await viewTabsGraph(referenceVersion);
+  const sharedGraph = await sharedGraphFor(cfg.sharedGraph, depVersion, generatedRoot, depSnapshot, depSource);
+  const { published, held } = sharedGraph;
+  // crossVersion: this build's key -> the base key it is proven bisimilar to among the linkable (published / linked-and-
+  // exported) and the held-unpublished base bindings; an unproven key maps to itself prefixed `live!` (never a base key).
+  const crossLinkable = crossVersion ? new Set([...published.keys(), ...[...linked].filter(([, v]) => v.name).map(([k]) => k)]) : null;
+  const crossHeld = crossVersion ? new Set([...held].filter(k => !crossLinkable.has(k))) : null;
+  const crossLinked = new Map(), crossStateSplits = [];
+  const xk = key => {
+    if (!crossVersion) return key;
+    if (crossLinked.has(key)) return crossLinked.get(key);
+    let r = crossVersion.linker.link(key, crossLinkable);
+    if (r && typeof r === 'object') throw Error(`${areaName}: ${key} is bisimilar to several linkable base bindings (${r.ambiguous.join(', ')}): review`);
+    if (!r) { const h = crossVersion.linker.link(key, crossHeld); if (h && typeof h !== 'object') r = h; }
+    const out = r ?? `live!${key}`;
+    crossLinked.set(key, out);
+    return out;
+  };
   const specs = new Map(modules.map(spec => [spec.source, { ...spec, exports: spec.exports ?? {} }]));
   const state = new Map([...specs.values()].map(spec => [spec.source, { spec, selected: new Map(), imports: new Map(), seen: new Set(), shared: new Set(), heldCopies: [] }]));
   const stateConflicts = [];
@@ -543,10 +657,10 @@ export async function runSlicer(cfg, { check = false, dryRun = false } = {}) {
         st.imports.set(name, { from: adapterModule, name: standIn.name, via, kind: 'adapter', original: local });
         return;
       }
-      const shared = published.get(`${depFile}#${local}`);
-      if (shared) { st.imports.set(name, { from: `../view-tabs/${depFile}`, name: shared.name, via, kind: 'view-tabs', original: local }); return; }
-      const link = linkedImport(`${depFile}#${local}`);
-      if (link) { st.imports.set(name, { from: link.from, name: link.name, via, kind: 'linked', original: local }); return; }
+      const shared = published.get(xk(`${depFile}#${local}`));
+      if (shared) { st.imports.set(name, { from: sharedGraph.from(depFile, shared), name: sharedGraph.importName(shared), via, kind: sharedGraph.kind, original: local, ...(crossVersion ? { crossVersion: xk(`${depFile}#${local}`) } : {}) }); return; }
+      const link = linkedImport(xk(`${depFile}#${local}`));
+      if (link) { st.imports.set(name, { from: link.from, name: link.name, via, kind: 'linked', original: local, ...(crossVersion ? { crossVersion: xk(`${depFile}#${local}`) } : {}) }); return; }
       if (state.get(depFile)?.spec.verbatim) { st.imports.set(name, { from: `./${depFile}`, name: alias, via, kind: 'verbatim' }); return; }
       if (explore && !state.has(depFile)) state.set(depFile, { spec: { target: `auto:${depFile}`, source: depFile, exports: {} }, selected: new Map(), imports: new Map(), seen: new Set(), shared: new Set(), heldCopies: [] });
       const owner = state.get(depFile);
@@ -563,24 +677,38 @@ export async function runSlicer(cfg, { check = false, dryRun = false } = {}) {
       st.imports.set(name, { from: adapterModule, name: stand.name, via: `${file}#${name}`, kind: 'adapter', original: name });
       return;
     }
-    const shared = published.get(`${file}#${name}`);
+    const shared = published.get(xk(`${file}#${name}`));
     if (shared && !Object.hasOwn(st.spec.exports, name)) {
-      st.imports.set(name, { from: `../view-tabs/${file}`, name: shared.name, via: `${file}#${name}`, kind: 'view-tabs', original: name });
+      st.imports.set(name, { from: sharedGraph.from(file, shared), name: sharedGraph.importName(shared), via: `${file}#${name}`, kind: sharedGraph.kind, original: name, ...(crossVersion ? { crossVersion: xk(`${file}#${name}`) } : {}) });
       return;
     }
     if (!Object.hasOwn(st.spec.exports, name)) {
-      const link = linkedImport(`${file}#${name}`);
-      if (link) { st.imports.set(name, { from: link.from, name: link.name, via: `${file}#${name}`, kind: 'linked', original: name }); return; }
+      const link = linkedImport(xk(`${file}#${name}`));
+      if (link) { st.imports.set(name, { from: link.from, name: link.name, via: `${file}#${name}`, kind: 'linked', original: name, ...(crossVersion ? { crossVersion: xk(`${file}#${name}`) } : {}) }); return; }
     }
     if (entry.kind !== 'function' && entry.kind !== 'var') throw Error(`${target}: unsupported declaration ${name}`);
-    if (held.has(`${file}#${name}`)) {
+    if (held.has(xk(`${file}#${name}`))) {
       if (await isModuleState(src, entry, vendor) && !Object.hasOwn(stateCopies, `${file}#${name}`)) stateConflicts.push(`${target}: ${file}#${name}`);
       st.heldCopies.push(name);
+    }
+    // crossVersion D1 guard: slicing (not linking) module state whose base counterpart (the reviewed candidate) a shared or
+    // linked graph holds would make a second copy of that state, newer code beside the base one.
+    if (crossVersion) {
+      const counterpart = crossVersion.linker.candidate(`${file}#${name}`);
+      if (counterpart && (held.has(counterpart) || linked.has(counterpart)) && await isModuleState(src, entry, vendor)) crossStateSplits.push(`${target}: ${file}#${name} (base ${counterpart})`);
     }
     const text = declarationText(src, entry);
     // A dynamic import is kept only when it names a listed chunk emitted under its own file name next to this module
     // (shared-frame AT: `import("./cf2613ee5-Btwr9m9F.js")`, the Spark sprites), so the original specifier resolves.
     for (const [, spec] of text.matchAll(/\bimport\s*\(\s*"([^"]+)"\s*\)/g)) {
+      if (Object.hasOwn(absentChunks, spec.replace(/^\.\//, ''))) {
+        const bare = spec.replace(/^\.\//, '');
+        if (spec !== `./${bare}`) throw Error(`${target}: absent chunk ${spec} inside ${name} is not a sibling specifier`);
+        if (!absentImporters.has(bare)) absentImporters.set(bare, new Set());
+        absentImporters.get(bare).add(`${file}#${name}`);
+        st.dynamic ??= new Set(); st.dynamic.add(spec);
+        continue;
+      }
       if (!state.has(spec.replace(/^\.\//, '')) && lazyVerbatim?.importers.includes(file)) await addVerbatim(spec.replace(/^\.\//, ''), `${file}#${name}`);
       const lazy = state.get(spec.replace(/^\.\//, ''));
       if (explore && (!lazy || lazy.spec.target !== spec.replace(/^\.\//, ''))) { (globalThis.__exploreLazy ??= new Set()).add(`${file}#${name} -> ${spec}`); continue; }
@@ -607,7 +735,7 @@ export async function runSlicer(cfg, { check = false, dryRun = false } = {}) {
     for (const name of Object.keys(st.spec.exports)) {
       const entry = src.top.get(name);
       if (!entry || entry.kind === 'import') throw Error(`${st.spec.target}: root ${name} is not a declaration of ${st.spec.source}`);
-      if (linked.has(`${st.spec.source}#${name}`)) throw Error(`${st.spec.target}: root ${name} is already sliced by a linked area; import it from there`);
+      if (linked.has(xk(`${st.spec.source}#${name}`))) throw Error(`${st.spec.target}: root ${name} is already sliced by a linked area; import it from there`);
       if (!st.spec.internal && ![...src.exported.values()].includes(name)) throw Error(`${st.spec.target}: root ${name} is no longer exported by ${st.spec.source}`);
       assertFeatures(`${st.spec.target}: root ${name}`, await featureText(src, entry), st.spec.features?.[name]);
       await add(st.spec.source, name);
@@ -641,7 +769,9 @@ export async function runSlicer(cfg, { check = false, dryRun = false } = {}) {
   }
   if (unexportedLinks.length && !explore) throw Error(`bindings a linked area slices without exporting (export them there):\n  ${[...new Set(unexportedLinks)].join('\n  ')}`);
   if (explore && (unexportedLinks.length || stateConflicts.length)) console.log('EXPLORE unexported links:', [...new Set(unexportedLinks)].join(' '), '\nEXPLORE state conflicts:', stateConflicts.join(' '));
-  if (stateConflicts.length && !explore) throw Error(`module state view-tabs holds without a semantic name (name it in extract-view-tabs.mjs, D46):\n  ${stateConflicts.join("\n  ")}`);
+  if (crossStateSplits.length && !explore) throw Error(`cross-version state split (D1): module state sliced from ${referenceVersion} whose ${crossVersion.base.referenceVersion} counterpart another graph holds:\n  ${crossStateSplits.join('\n  ')}`);
+  if (explore && crossStateSplits.length) console.log('EXPLORE cross-version state splits:', crossStateSplits.join(' '));
+  if (stateConflicts.length && !explore) throw Error(`module state ${sharedGraph.area} holds without a semantic name (${sharedGraph.hint}, D46):\n  ${stateConflicts.join("\n  ")}`);
   // Name what each generated import binds: the root's semantic name, else the original local (exported as such).
   const exportName = (chunk, local) => {
     const owner = state.get(chunk);
@@ -656,6 +786,14 @@ export async function runSlicer(cfg, { check = false, dryRun = false } = {}) {
     if (!st.selected.has(local)) throw Error(`${st.spec.target}: linkExports ${local} is not in the closure`);
     if (!Object.hasOwn(st.spec.exports, local)) st.shared.add(local);
   }
+  // cfg.publicNames (a shared graph's own generator): semantic name -> { file, local }, a binding this run emits and exports;
+  // written to the manifest with its target and export name for areas that name this graph as their sharedGraph.
+  const publicNames = cfg.publicNames && Object.fromEntries(Object.entries(cfg.publicNames).map(([name, { file, local }]) => {
+    const st = state.get(file);
+    const exported = st && (Object.hasOwn(st.spec.exports, local) ? st.spec.exports[local] : st.shared.has(local) ? local : null);
+    if (!st?.selected.has(local) || !exported) throw Error(`publicName ${name}: ${file}#${local} is not an exported binding of this graph`);
+    return [name, { file, local, target: st.spec.target, exportName: exported }];
+  }));
   const unused = [...state.values()].filter(st => st.selected.size === 0 && !st.spec.verbatim && !st.spec.reexport).map(st => st.spec.source);
   if (lazyVerbatim && !explore && verbatimFound.length !== lazyVerbatim.count) throw Error(`lazyVerbatim found ${verbatimFound.length} chunks, expected ${lazyVerbatim.count}`);
   // A listed verbatim chunk must be imported (statically by a module, or by another verbatim chunk, or dynamically).
@@ -678,7 +816,11 @@ export async function runSlicer(cfg, { check = false, dryRun = false } = {}) {
 
   const manifest = {
     referenceVersion, referenceSnapshot, generator: `scripts/${generator}`, adapterModule: adapterFile, ...(gate ? { gate } : {}),
-    ...(linkedAreas.length ? { linkedAreas } : {}), modules: [], callSites: [],
+    ...(linkedAreas.length ? { linkedAreas } : {}), ...(cfg.sharedGraph !== undefined ? { sharedGraph: cfg.sharedGraph } : {}),
+    ...(publicNames ? { publicNames } : {}), ...(Object.keys(extraGlobals).length ? { extraGlobals } : {}),
+    ...(crossVersion ? { crossVersion: { base: crossVersion.base.referenceVersion, baseSnapshot: crossVersion.base.referenceSnapshot, candidatesSha256: crossVersion.candidatesSha256 ?? null,
+      linker: 'scripts/cross-version-link.mjs', provenLinks: [...crossLinked.values()].filter(v => !v.startsWith('live!')).length } } : {}),
+    modules: [], callSites: [],
   };
   const files = {};
   for (const chunk of order) {
@@ -687,7 +829,18 @@ export async function runSlicer(cfg, { check = false, dryRun = false } = {}) {
     const decls = [...st.selected].sort((a, b) => a[1].node.start - b[1].node.start);
     const inits = [...(st.initializers ?? [])].map(statement => ({ start: statement.node.start, text: src.code.slice(statement.node.start, statement.node.end) }));
     const once = [...new Set(decls.map(([, entry]) => entry))];
-    const blocks = [...once.map(entry => ({ start: entry.node.start, text: emittedText(src, entry) })), ...inits]
+    const rewritten = (entry) => {
+      let text = emittedText(src, entry);
+      const name = decls.find(([, e]) => e === entry)?.[0];
+      for (const r of rewrites[`${chunk}#${name}`] ?? []) {
+        const count = text.split(r.from).length - 1;
+        if (count !== 1) throw Error(`${areaName}: rewrite of ${chunk}#${name}: ${JSON.stringify(r.from.slice(0, 80))} occurs ${count} times, expected 1`);
+        text = text.split(r.from).join(r.to);
+        appliedRewrites.push({ binding: `${chunk}#${name}`, why: r.why, fromSha256: sha(r.from), toSha256: sha(r.to), from: r.from, to: r.to });
+      }
+      return text;
+    };
+    const blocks = [...once.map(entry => ({ start: entry.node.start, text: rewritten(entry) })), ...inits]
       .sort((a, b) => a.start - b.start).map(block => block.text);
     const groups = new Map();
     for (const [local, entry] of [...st.imports].sort((a, b) => (a[0] < b[0] ? -1 : 1))) {
@@ -703,7 +856,7 @@ export async function runSlicer(cfg, { check = false, dryRun = false } = {}) {
     const closed = babel.babelParse(text, spec.target, true);
     let globals;
     babel.traverse(closed, { Program(p) { globals = Object.keys(p.scope.globals); p.stop(); } });
-    const unbound = globals.filter(name => !allowedGlobals.has(name));
+    const unbound = globals.filter(name => !allowedGlobals.has(name) && !Object.hasOwn(extraGlobals, name));
     if (unbound.length && !explore) throw Error(`${spec.target}: unbound ${unbound.join(', ')}`);
     files[spec.target] = text;
     manifest.modules.push({
@@ -713,6 +866,8 @@ export async function runSlicer(cfg, { check = false, dryRun = false } = {}) {
       imports: [...st.imports].sort((a, b) => (a[0] < b[0] ? -1 : 1)).map(([local, e]) => ({ local, from: e.from, name: e.name, via: e.via, kind: e.kind, ...(e.original ? { original: e.original } : {}) })),
       exports: spec.exports, sharedExports: [...st.shared].sort(), heldByViewTabs: [...st.heldCopies].sort(),
       ...(spec.linkExports?.length ? { linkExports: [...spec.linkExports].sort() } : {}),
+      // crossVersion: each sliced binding's reviewed base counterpart (d1 maps this graph's copies onto base keys with it)
+      ...(crossVersion ? { crossCounterparts: Object.fromEntries(decls.map(([name]) => [name, crossVersion.linker.candidate(`${chunk}#${name}`)]).filter(([, v]) => v)) } : {}),
     });
   }
   for (const site of callSites) {
@@ -731,6 +886,9 @@ export async function runSlicer(cfg, { check = false, dryRun = false } = {}) {
     }
     manifest.callSites.push({ source: site.source, role: site.role, sourceSha256: sha(bytes), raw: true, features: site.features });
   }
+  for (const key of Object.keys(rewrites)) for (const r of rewrites[key])
+    if (!appliedRewrites.some(a => a.binding === key && a.from === r.from)) throw Error(`${areaName}: rewrite of ${key} was not applied (binding not sliced)`);
+  if (appliedRewrites.length) manifest.rewrites = appliedRewrites;
   // Public assets the emitted code names by absolute URL (c8677db5f: `new URL("/assets/v1/<sheet>.webp", import.meta.url)`).
   // The bytes are copied from the installed snapshot into public-assets/ here (checked), and, on a write run, into
   // public/assets/v1 where the renderer serves /assets/v1 (scripts/prepare-ui.mjs recreates that folder and does not know
@@ -759,12 +917,40 @@ export async function runSlicer(cfg, { check = false, dryRun = false } = {}) {
     }
     if (next !== text) { files[file] = next; const entry = manifest.modules.find(m => m.target === file); if (entry) entry.sha256 = sha(next); }
   }
+  // cfg.absentChunks: one generated module per official lazy chunk not shipped, under the chunk's own file name.
+  if (Object.keys(absentChunks).length) {
+    manifest.absentChunks = [];
+    for (const name of Object.keys(absentChunks).sort()) {
+      const importers = [...(absentImporters.get(name) ?? [])].sort();
+      if (!importers.length && !explore) throw Error(`${areaName}: absentChunks ${name}: no selected declaration imports it`);
+      if (Object.hasOwn(files, name)) throw Error(`${areaName}: absentChunks ${name} collides with generated output`);
+      const bytes = await fs.readFile(path.join(source, name));
+      const why = absentWhy(absentChunks[name]), host = typeof absentChunks[name] === 'string' ? null : absentChunks[name].host;
+      const header = `// Official Claude Desktop ${referenceVersion} lazy chunk ${name} (${bytes.length} bytes, sha256 ${sha(bytes)}): not shipped by ${generator}.\n` +
+        `// ${why.replace(/\s+/g, ' ')}\n// Imported by ${importers.join(', ')}. ` +
+        (host ? `Its official exports are answered by the host module ${host.module}.\n` : 'Importing it rejects with ChunkLoadError.\n');
+      let text;
+      if (host) {
+        // The official export list (the chunk's trailing `export{local as Name,…}`) must be exactly the host's.
+        const official = [...(bytes.toString('utf8').match(/export\{([^}]*)\}/g) ?? [])].pop()?.slice(7, -1).split(',').map(part => part.trim().split(/\s+as\s+/).pop()).sort();
+        if (JSON.stringify(official) !== JSON.stringify([...host.exports].sort())) throw Error(`${areaName}: absentChunks ${name}: host exports ${host.exports.join(', ')} differ from the chunk's (${official?.join(', ')})`);
+        text = await format(`${header}export { ${[...host.exports].sort().join(', ')} } from ${JSON.stringify(host.module)};\n`, { parser: 'babel' });
+      } else text = await format(`${header}throw Object.assign(new Error(${JSON.stringify(`${generator.replace(/^extract-|\.mjs$/g, '')}: the official lazy chunk ${name} is not shipped in OpenClaude Desktop`)}), { name: "ChunkLoadError" });\n`, { parser: 'babel' });
+      files[name] = text;
+      manifest.absentChunks.push({ chunk: name, sourceSha256: sha(bytes), sha256: sha(text), importers, why, ...(host ? { host } : {}) });
+    }
+  }
   for (const st of [...state.values()].filter(st => st.spec.verbatim).sort((a, b) => (a.spec.target < b.spec.target ? -1 : 1))) {
     files[st.spec.target] = st.bytes;
     manifest.modules.push({ target: st.spec.target, source: st.spec.source, sourceSha256: sha(st.bytes), sha256: sha(st.bytes), referenceVersion, verbatim: true,
       bindings: [], initializers: [], imports: st.deps.map(dep => ({ from: `./${dep}`, kind: 'verbatim' })), exports: {}, sharedExports: [], heldByViewTabs: [] });
   }
   files['manifest.json'] = JSON.stringify(manifest, null, 2) + '\n';
+  // cfg.artifacts(manifest): further files the generator writes and --check compares in the output (provenance.json).
+  if (cfg.artifacts && !dryRun) for (const [name, content] of Object.entries(await cfg.artifacts(manifest))) {
+    if (Object.hasOwn(files, name) || name.includes('/')) throw Error(`${areaName}: artifact ${name} collides with generated output`);
+    files[name] = content;
+  }
   if (dryRun) {
     // WORKING_LINE_EXPLORE_WRITE=<dir>: an exploration also writes what it would emit there (never the area's folder).
     if (explore && process.env.WORKING_LINE_EXPLORE_WRITE) for (const [name, content] of Object.entries(files)) { const to = path.join(process.env.WORKING_LINE_EXPLORE_WRITE, name.replace(/^auto:/, 'auto-')); await fs.mkdir(path.dirname(to), { recursive: true }); await fs.writeFile(to, content); }
@@ -777,11 +963,13 @@ export async function runSlicer(cfg, { check = false, dryRun = false } = {}) {
       if (!on.equals(Buffer.isBuffer(content) ? content : Buffer.from(content))) throw Error(`${areaName} source mismatch: ${name}. Run scripts/${generator}.`);
     }
   } else {
+    if (manifest.publicAssets.length && !publicAssetsRoot)
+      throw Error(`${areaName}: publicAssetsRoot is required when writing staged public assets`);
     await fs.rm(output, { recursive: true, force: true });
     await fs.mkdir(output, { recursive: true });
     if (manifest.publicAssets.length) await fs.mkdir(path.join(output, 'public-assets'), { recursive: true });
     for (const [name, content] of Object.entries(files)) await fs.writeFile(path.join(output, name), content);
-    const served = path.join(root, 'public/assets/v1');
+    const served = publicAssetsRoot;
     if (manifest.publicAssets.length) await fs.mkdir(served, { recursive: true });
     for (const asset of manifest.publicAssets) await fs.copyFile(path.join(output, 'public-assets', asset.name), path.join(served, asset.name));
   }

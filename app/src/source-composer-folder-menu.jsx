@@ -18,8 +18,12 @@
 // from recent-folders-model.mjs (the folder is required in Code, so no "No folder" row and no radio, P8 `h` unset).
 // Imported by main.jsx only (not the composer graph), so view-tabs comes through the facade (R6 / E41).
 import React from 'react';
-import { CdsCheckbox, CdsIcon } from './generated/view-tabs/index.js';
-import { homeRelativePath } from './generated/code-start/home-path.mjs';
+// host-wiring/chat (4.16336.0): the remove glyph and the Worktree checkbox in the host menu rows are the cds-core graph's
+// (shared-frame-CJdE5Ria Bs → lf Icon, lz Checkbox).
+import { CdsCheckbox, CdsIcon } from './cds-core.mjs';
+// 4.16336.0 (composer-env): paths read as cc43287c9 Yg (shared-3 VM) under Jge's label context `oe` (Jge `Yg(t, oe)`):
+// the official cd8a7d7c0 y (useHomeLabelContext over window.desktopHomePath), linked through the adapters.
+import { environmentPathLabel, noHomeLabelContext, useHomeLabelContext } from './source-composer-env-adapters.jsx';
 import { SourceMenu } from './source-menu.jsx';
 import { EnvironmentSearchablePopup } from './source-environment-folder-adapters.jsx';
 import { t } from '../electron/i18n/index.mjs';
@@ -29,18 +33,19 @@ export const FOLDER_MENU_SEARCH_AFTER = 8;
 const EMPTY_CLASS = 'px-md py-sm text-footnote text-muted-as-secondary';
 
 /** P8 `re`: the rows a (lowercased) query shows — every match, or the first eight without one. */
-export function folderMenuRows(rows = [], query = '') {
+export function folderMenuRows(rows = [], query = '', labelContext = noHomeLabelContext) {
   if (!query) return rows.slice(0, FOLDER_MENU_SEARCH_AFTER);
-  return rows.filter(({ path }) => [path, homeRelativePath(path)].some((value) => String(value).toLowerCase().includes(query)));
+  return rows.filter(({ path }) => [path, environmentPathLabel(path, labelContext)].some((value) => String(value).toLowerCase().includes(query)));
 }
 
 /** hse `J`: the extra folders' group (null without any). */
 export function AlsoIncludedGroup({ folders = [], onRemove }) {
+  const labelContext = useHomeLabelContext();
   if (!folders.length) return null;
   return <SourceMenu.Group>
     <SourceMenu.GroupLabel>{t('Also included')}</SourceMenu.GroupLabel>
     {folders.map((path) => {
-      const shown = homeRelativePath(path);
+      const shown = environmentPathLabel(path, labelContext);
       return <SourceMenu.Item key={path} labelDir="auto" title={shown} data-testid="environment-bar-extra-folder"
         trailing={<CdsIcon name="X" size="xs" />} aria-label={t('Remove folder {name}', { name: shown })}
         onClick={() => onRemove?.(path)}>{path.split('/').filter(Boolean).pop() || path}</SourceMenu.Item>;
@@ -76,16 +81,18 @@ export function CheckoutRows({ checkout, worktree }) {
 
 /**
  * The folder chip's menu. `popup` = the SourceMenu.Popup placement (anchor, side, align, label, onClose); `rows` =
- * recentFolderRows; `checkout` = {branch, branches, branchDisabled, onSelectBranch} for a repository, else null.
+ * recentFolderRows; `checkout` = {branch, branches, branchDisabled, onSelectBranch} for a repository, else null. The ~ paths
+ * read under the official home label context (cd8a7d7c0 y).
  */
 export function SourceComposerFolderMenu({ popup, rows = [], onSelectFolder, onBrowse, extraFolders = [], onRemoveFolder, checkout = null, worktree = null }) {
+  const labelContext = useHomeLabelContext();
   const footer = checkout || extraFolders.length ? <>
     <AlsoIncludedGroup folders={extraFolders} onRemove={onRemoveFolder} />
     {checkout && extraFolders.length > 0 && <SourceMenu.Separator />}
     {checkout && <CheckoutRows checkout={checkout} worktree={worktree} />}
   </> : null;
   const body = (query) => {
-    const shown = folderMenuRows(rows, query);
+    const shown = folderMenuRows(rows, query, labelContext);
     return <>
       {query && shown.length === 0 && <div className={EMPTY_CLASS}>{t('No matches')}</div>}
       {shown.length > 0 && <>
@@ -102,7 +109,7 @@ export function SourceComposerFolderMenu({ popup, rows = [], onSelectFolder, onB
   };
   if (rows.length > FOLDER_MENU_SEARCH_AFTER) {
     return <EnvironmentSearchablePopup {...popup} searchLabel={t('Search folders…')}
-      onSubmitQuery={(query) => { const first = folderMenuRows(rows, query.toLowerCase())[0]; if (first) onSelectFolder?.(first.path); else onBrowse?.(); }}>
+      onSubmitQuery={(query) => { const first = folderMenuRows(rows, query.toLowerCase(), labelContext)[0]; if (first) onSelectFolder?.(first.path); else onBrowse?.(); }}>
       {(query) => body(query)}
     </EnvironmentSearchablePopup>;
   }

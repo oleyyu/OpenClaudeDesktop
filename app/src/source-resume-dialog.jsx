@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { ActionDialog } from "./source-session-actions.jsx";
 import { SourceDialogFooter } from "./source-dialog.jsx";
 // W14-code r6 R6DC-02: shared-frame Uu (E41 direct import), not the host replica.
-import { CdsButton } from "./generated/view-tabs/shared-frame-6jtSkIit.js";
+import { CdsButton } from "./cds-core.mjs"; // 4.16336.0 host wiring (frame): cds-core Button (Xu)
 import { SourceSegments } from "./source-segments.jsx";
 import { getAssistantName, t } from "../electron/i18n/index.mjs";
 import "./source-resume-dialog.css";

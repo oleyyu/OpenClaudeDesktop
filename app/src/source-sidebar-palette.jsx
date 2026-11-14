@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { Icon } from "./icons";
 import { holdModalInert } from "./modal-inert.mjs";
 // W14-code r6 R6DC-02: c2771e1f6 / ce8be540f palette buttons are shared-frame Uu (E41 direct import).
-import { CdsButton } from "./generated/view-tabs/shared-frame-6jtSkIit.js";
+import { CdsButton } from "./cds-core.mjs"; // 4.16336.0 host wiring (frame): cds-core Button (Xu)
 import { SourceSpinner } from "./source-pane-states.jsx";
 import { hasPendingApproval } from "./state.js";
 import { sessionArchived, sessionName, sessionState, sessionUpdatedAt } from "./sidebar-model";

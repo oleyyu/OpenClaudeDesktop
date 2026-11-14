@@ -1,0 +1,4212 @@
+{
+  "referenceVersion": "4.16336.0",
+  "referenceSnapshot": "snapshots/claude-4.16336.0-20261104",
+  "generator": "scripts/extract-home-v4.mjs",
+  "adapterModule": "src/source-home-v4-adapters.jsx",
+  "linkedAreas": [
+    "r3b-tasks"
+  ],
+  "sharedGraph": "cds-core",
+  "modules": [
+    {
+      "target": "shared-frame.mjs",
+      "source": "shared-frame-CJdE5Ria.js",
+      "sourceSha256": "b6a5f61e0f243a48215fab7f3d65958d693d715e565f57af4e0ff35ae14697bc",
+      "sha256": "76ba361132ac8d6b6c2313063be7ae4911e8b6714d6e75ea5de37bc687e7bd05",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "J9",
+          "sha256": "ca7ddb6034a5a5374320a12a4daca9ac6443bce6f91d7df5d979795e575805fb"
+        },
+        {
+          "name": "J8",
+          "sha256": "eb5d795f0739cc3c17f8a0c98006f81d73ae4c3af3e4769afcbf8c5bfb2c9ed0"
+        },
+        {
+          "name": "J0",
+          "sha256": "2be922c4a5c9f4b2ce3834a6c2445d46bac9d12f13e80edad0ce00ae3c597061"
+        },
+        {
+          "name": "J1",
+          "sha256": "90115ec6fab3fa87e5595ba8510be0d8358228a2ebaa4f401f3f57cc68da1c02"
+        },
+        {
+          "name": "J2",
+          "sha256": "59d967dff21fbdf7fdd4cc4a9fb5c16c477c0c8d716bbdf2b812ed4ba8993eb4"
+        },
+        {
+          "name": "J3",
+          "sha256": "a3a151da51d4962a782d5de1c3f201d436f6f005690149fd8e54064016e76c22"
+        },
+        {
+          "name": "J4",
+          "sha256": "f413d19ac30f7bb64a90764af85cd29c66a8824d1a15e7a5b94d4a36e6b005c5"
+        },
+        {
+          "name": "J5",
+          "sha256": "101acb075573001f1756e985e6a9198860130b55bd62c9b50a2cd8eba6a0dfef"
+        },
+        {
+          "name": "K0",
+          "sha256": "36ecfa9d21d34e63ba007e2188f58eecccc9197999c1e5ec6c501794e1400f4c"
+        },
+        {
+          "name": "K1",
+          "sha256": "3ba1df1b203477e5f87a3385a3cca1c53d9c5b253a9c765e72bdc6ac93e0dfc5"
+        },
+        {
+          "name": "K2",
+          "sha256": "7d4968137ebec422b65baa77806c57a6be36ff55d62953d1e2321748c0ab4751"
+        },
+        {
+          "name": "K3",
+          "sha256": "aedf510a103c06562de3370ca0eaf1572c6d6f7725ab1b51730bfb0ec71e8f5f"
+        },
+        {
+          "name": "K4",
+          "sha256": "6b31ef4b8b3ba1c4ff286ba20697b1a4969bcc3e2605ddecf752480f0cc8c3d1"
+        },
+        {
+          "name": "K5",
+          "sha256": "8dd1688fcd9c8fa0fc20a0dac16b580576133b6739eb1810b05f049bddb0ed8a"
+        },
+        {
+          "name": "I1",
+          "sha256": "fe77ba5764038938f55b53c60f9327bb1d7b7a5ba7a175f3cfb0d30bee4d6475"
+        },
+        {
+          "name": "I2",
+          "sha256": "359eb3218d00445c9289890a42a3631e8ba55d331418ef62e40dcfc45e699606"
+        },
+        {
+          "name": "I3",
+          "sha256": "af2685ac5c499b5a5f4dc617f783a9b41701e75251bbcce77a0906e48b0cdd0f"
+        },
+        {
+          "name": "I5",
+          "sha256": "e18f9d06dfbb82535d0b012ac0a04c125ee85a60868e254fab5b3a8ab5ec3fc5"
+        },
+        {
+          "name": "Z1",
+          "sha256": "20a4648bbe3451434891b2310a7d9d80ca712ddedb0872a934a36407ddcbc0c5"
+        },
+        {
+          "name": "Z2",
+          "sha256": "47175fc7ec308cc9629424264901436870d0550a39649b25173f4320477c9897"
+        },
+        {
+          "name": "Z3",
+          "sha256": "0c126690ce6e68b2861977aeb9bad1480a09eb67eb08872182e2adf4a5d9e610"
+        },
+        {
+          "name": "Z5",
+          "sha256": "25242e82785d4e208a798bfd45e0a787e1521b2a9cf06cc00dcd372b0c755045"
+        }
+      ],
+      "initializers": [],
+      "imports": [
+        {
+          "local": "Je",
+          "from": "react/compiler-runtime",
+          "name": "c",
+          "via": "vendor-frame-BckkO60Y.js:ko",
+          "kind": "react"
+        }
+      ],
+      "exports": {},
+      "sharedExports": [
+        "I1",
+        "I2",
+        "I3",
+        "I5",
+        "J0",
+        "J1",
+        "J2",
+        "J3",
+        "J4",
+        "J5",
+        "J9",
+        "K0",
+        "K1",
+        "K2",
+        "K3",
+        "K4",
+        "K5",
+        "Z1",
+        "Z2",
+        "Z3",
+        "Z5"
+      ],
+      "heldByViewTabs": [
+        "I1",
+        "I2",
+        "I3",
+        "I5",
+        "J0",
+        "J1",
+        "J2",
+        "J3",
+        "J4",
+        "J5",
+        "J8",
+        "J9",
+        "K0",
+        "K1",
+        "K2",
+        "K3",
+        "K4",
+        "K5",
+        "Z1",
+        "Z2",
+        "Z3",
+        "Z5"
+      ]
+    },
+    {
+      "target": "shared-0.mjs",
+      "source": "shared-0-CnnWnVrT.js",
+      "sourceSha256": "eb5fb89d8b47627c28969bd1df41f25a49a3e1d6ed91c5af2d980d5847d78ae1",
+      "sha256": "3ad3644b34ee598bee5a0b94a9c41ea908f6b07b8bd06df1e9c2208a14e22362",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "_e",
+          "sha256": "b4d5dab2af415fe94d7395a46c9542f20448de86eec6aa12547b82117e8f0714"
+        },
+        {
+          "name": "ve",
+          "sha256": "61929d526f6cd63190b2c250aeeebd053e912970e9dd98e92da8f7855f857b00"
+        },
+        {
+          "name": "Ya",
+          "sha256": "b6f73569894f3c33eb9d2c42b1ab2be96af02ef691d70d9c3049fc5ebb0ae545"
+        },
+        {
+          "name": "Kc",
+          "sha256": "8388c84c2c4193a16cf74ae64398c94484e51bc0a1ef186234c6cbfd9ce31908"
+        },
+        {
+          "name": "qc",
+          "sha256": "ff374054dbb218e7c59b94a5fb2cee09708faeb3776e0b2064a3ec8a9225bbc9"
+        },
+        {
+          "name": "yu",
+          "sha256": "c872dea1f2f46302cb4f1b5902f5ae11ed193153add8362d635cefa333ab14ff"
+        },
+        {
+          "name": "id",
+          "sha256": "879be52aed235e8901a175b760c6b3242b80656a65f229728b66a9feb8199ea9"
+        },
+        {
+          "name": "cd",
+          "sha256": "efe85824eb58311aff005988867c6d96d8b767e8ef7f29e62c4bd69f7c609444"
+        },
+        {
+          "name": "T6",
+          "sha256": "cd6530f41a30cade44d4f611b9f2258af799903d350c522b707ae1e4d4712b6b"
+        },
+        {
+          "name": "k6",
+          "sha256": "11628b66af8baedecf7bcef078eb876bd03880f29115565b50bd87a64c34ed43"
+        },
+        {
+          "name": "M6",
+          "sha256": "b3a75cb1abcbc3d0b16a55676f8fce462f981cdac6cfdf465f88699df5e1d8ad"
+        },
+        {
+          "name": "P6",
+          "sha256": "d8961c195dc405f6a36857dd0fd233b69bb675dde5b19b378cbad9f88e23131e"
+        }
+      ],
+      "initializers": [],
+      "imports": [
+        {
+          "local": "N6",
+          "from": "../cds-core/shared-0.mjs",
+          "name": "N6",
+          "via": "shared-0-CnnWnVrT.js#N6",
+          "kind": "shared-graph",
+          "original": "N6"
+        },
+        {
+          "local": "Tl",
+          "from": "../r3b-tasks/lazy-value.mjs",
+          "name": "lazyValue",
+          "via": "shared-0-CnnWnVrT.js#Tl",
+          "kind": "linked",
+          "original": "Tl"
+        }
+      ],
+      "exports": {},
+      "sharedExports": [
+        "M6",
+        "P6",
+        "Ya",
+        "_e",
+        "cd",
+        "id",
+        "qc"
+      ],
+      "heldByViewTabs": [
+        "Kc",
+        "T6",
+        "_e",
+        "qc",
+        "ve",
+        "yu"
+      ]
+    },
+    {
+      "target": "shared-25.mjs",
+      "source": "shared-25-D-aF0gt9.js",
+      "sourceSha256": "29089e649e4a1179c6a21019ba8d9c78732c4d70a3ce66587f311002189a7183",
+      "sha256": "1e4b4678bfb8b2a95e5d08ceae220392ec245e6cf758c5c988b646fcbf68a9f4",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "xi",
+          "sha256": "58d4c7da5dd68bed8ecf05d782d75e1c5a2a250b4992adb1e39363b630773b24"
+        },
+        {
+          "name": "Si",
+          "sha256": "4591f88a645ac6b9460bdbad62947b4c34be47ab7b4139c96b803baa2114f160"
+        },
+        {
+          "name": "Ci",
+          "sha256": "ca46b1f0ba82d25cff94273be1cacb0833b15cee7c190c38cb7ff73af41fc882"
+        },
+        {
+          "name": "wi",
+          "sha256": "12656f23ef30db34ce8aadaf0a3a5d7d04e2779fd39282f4ec1c00494d4c9525"
+        }
+      ],
+      "initializers": [],
+      "imports": [
+        {
+          "local": "ct",
+          "from": "./shared-0.mjs",
+          "name": "_e",
+          "via": "shared-0-CnnWnVrT.js:RT",
+          "kind": "generated"
+        },
+        {
+          "local": "l",
+          "from": "react",
+          "name": "useSyncExternalStore",
+          "via": "vendor-frame-BckkO60Y.js:Eo",
+          "kind": "react"
+        }
+      ],
+      "exports": {},
+      "sharedExports": [
+        "wi"
+      ],
+      "heldByViewTabs": [
+        "Ci",
+        "Si",
+        "wi",
+        "xi"
+      ]
+    },
+    {
+      "target": "shared-62.mjs",
+      "source": "shared-62-DoCqVpIq.js",
+      "sourceSha256": "15a90aabd711c4209050f53ef48b2754661e19b090936fdc6d37346bd4cf4e56",
+      "sha256": "19fedee0144bda67fe0f76d1f7451fc040799088fcff46ff064e1e4f33b7bd1b",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "as",
+          "sha256": "90dd34c775fffc47580597f363971b668ad6e227dde09167e205069810d15567"
+        },
+        {
+          "name": "bb",
+          "sha256": "1705c04a1fd370bb0ab68280130893ca5436902a4ef93cee7a2943f26ae3f42b"
+        },
+        {
+          "name": "Sb",
+          "sha256": "6a0ea8ca4163ecdcaaffeca5ca58ec25e0423090d98bb17fe8684f5c8347bf0a"
+        },
+        {
+          "name": "Cb",
+          "sha256": "dfbd8b1d814af1b7d2cd917cd9f6494337a980a88dfa7f2eb1f5e3ed10b591da"
+        },
+        {
+          "name": "wb",
+          "sha256": "55269d1f8d753c55997cf3e50a2f83242ce4b677d7a9a091475ae82d0a20820b"
+        },
+        {
+          "name": "Tb",
+          "sha256": "909a8b5527f1c86d51316dae801cb8347057d37e71db6fa2e1190c0491ee00c6"
+        },
+        {
+          "name": "Eb",
+          "sha256": "1c189745712d2c2ea42211772f20b47dfaa09911de3de041b9decf4f6bd269ba"
+        },
+        {
+          "name": "IS",
+          "sha256": "cec2f769b2c3a5a79abcf71488b75a9a53a9c29cdc7de79a84ca1ff3d61622e9"
+        },
+        {
+          "name": "hN",
+          "sha256": "e4e268af39e7f5c9c368a1a2514cbcfa74187dd62c608909a99056b0782cd322"
+        },
+        {
+          "name": "gN",
+          "sha256": "5695a98f071cccd25eb47b92f827ad0d103d07908894aa4a94f130ebfea738ba"
+        },
+        {
+          "name": "_N",
+          "sha256": "218c7aba44ee795bdd2d6f598541915e58a056f455822a63c5b6f319d959e109"
+        },
+        {
+          "name": "yN",
+          "sha256": "79a01f624d2da262fd97e850b3274f3d5e08de351a49cacceb3d2ba86607c1ff"
+        },
+        {
+          "name": "SN",
+          "sha256": "ac7ee9b55c56be0f64e9312d39952f420f59f50e8ac4f37c20de6ada8c8872b0"
+        },
+        {
+          "name": "bI",
+          "sha256": "208ee2e7ff8bb2ade33f8f7bc0efa984a1c29d42ad97812904aaaec596cda545"
+        },
+        {
+          "name": "aL",
+          "sha256": "31af3f35c0446612a34d5cf8ec094946db7c62162011df63334ffcc764666b90"
+        },
+        {
+          "name": "sL",
+          "sha256": "77039c0a61756ff1afa6bb79191430f722f3d94cea356bd91e6fac839acf1d86"
+        },
+        {
+          "name": "SL",
+          "sha256": "1df3a4e284e1bf14a305b360e060d2491083aab1a1aa7fcaa26939afab6d086e"
+        },
+        {
+          "name": "rR",
+          "sha256": "62b6df33919ae70fe067a335cc4469471b683d9677703f00af16f63fc1203dda"
+        },
+        {
+          "name": "iR",
+          "sha256": "362d12787c04b2205f4fb106f514c047de86dc6e0d2ac1d1ae8f38d854a95e43"
+        },
+        {
+          "name": "oR",
+          "sha256": "33fdf78a122f89a361ec7616a1a6ce9bc736fb7895b423f5df849d042ee26644"
+        },
+        {
+          "name": "vB",
+          "sha256": "e449180ba900eec55d1c69400dfc2acd9793f4917ee850a74c4cdb6af8513cd2"
+        },
+        {
+          "name": "yB",
+          "sha256": "6eb8f5b5cc99981dd3fb92728f93264e34eeac61ab79fd9382ee01290262b0dc"
+        }
+      ],
+      "initializers": [],
+      "imports": [
+        {
+          "local": "D",
+          "from": "react",
+          "name": "createContext",
+          "via": "vendor-frame-BckkO60Y.js:no",
+          "kind": "react"
+        },
+        {
+          "local": "k",
+          "from": "react",
+          "name": "useContext",
+          "via": "vendor-frame-BckkO60Y.js:po",
+          "kind": "react"
+        },
+        {
+          "local": "kS",
+          "from": "../cds-core/shared-62.mjs",
+          "name": "kS",
+          "via": "shared-62-DoCqVpIq.js#kS",
+          "kind": "shared-graph",
+          "original": "kS"
+        },
+        {
+          "local": "mN",
+          "from": "../cds-core/shared-62.mjs",
+          "name": "mN",
+          "via": "shared-62-DoCqVpIq.js#mN",
+          "kind": "shared-graph",
+          "original": "mN"
+        },
+        {
+          "local": "oL",
+          "from": "../cds-core/shared-62.mjs",
+          "name": "oL",
+          "via": "shared-62-DoCqVpIq.js#oL",
+          "kind": "shared-graph",
+          "original": "oL"
+        },
+        {
+          "local": "pN",
+          "from": "../cds-core/shared-62.mjs",
+          "name": "pN",
+          "via": "shared-62-DoCqVpIq.js#pN",
+          "kind": "shared-graph",
+          "original": "pN"
+        },
+        {
+          "local": "q",
+          "from": "../r3b-tasks/lazy-value.mjs",
+          "name": "lazyValue",
+          "via": "shared-0-CnnWnVrT.js:nS",
+          "kind": "linked",
+          "original": "Tl"
+        },
+        {
+          "local": "xr",
+          "from": "./shared-0.mjs",
+          "name": "M6",
+          "via": "shared-0-CnnWnVrT.js:wt",
+          "kind": "generated"
+        }
+      ],
+      "exports": {},
+      "sharedExports": [
+        "Eb",
+        "IS",
+        "SN",
+        "_N",
+        "as",
+        "bI",
+        "bb",
+        "iR",
+        "sL",
+        "yB"
+      ],
+      "heldByViewTabs": [
+        "Cb",
+        "Eb",
+        "IS",
+        "Sb",
+        "Tb",
+        "bb",
+        "wb"
+      ]
+    },
+    {
+      "target": "shared-123.mjs",
+      "source": "shared-123-1Hc1RTKl.js",
+      "sourceSha256": "38122e6a90c5a0af58a5f3d2c98176fd6de1f4a8055529e304317cda513e098a",
+      "sha256": "394bb414213ac972a99b6d2e3a85a952ab9344e6271933b0f33d83ac96fc7a8f",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "Ih",
+          "sha256": "324c6168f75a64907eb55aec9ae45fd62d714b714368e1859ee06b7532f7e3b7"
+        },
+        {
+          "name": "v_",
+          "sha256": "df517caec26887d641e230df50008b73dd6017aef1b5097bba3898b36c5292a3"
+        },
+        {
+          "name": "JC",
+          "sha256": "6ee4b8a433a13490d55ceb83c66533830ae6d74e88844cd8f5dd40cbc3d3abb2"
+        },
+        {
+          "name": "YC",
+          "sha256": "2146582b0ada0871aff02ba1b55717803e7062b16ea633a4ae7255b3b9a63a79"
+        },
+        {
+          "name": "yB",
+          "sha256": "e6e919ed8478413ae010aa86512ab9bda010150dd90b5e17f42cb4d209166482"
+        },
+        {
+          "name": "bB",
+          "sha256": "047722db1fc5e6d736462d08be20c255a2531a1963a9bbe5efda977c657770f5"
+        },
+        {
+          "name": "xB",
+          "sha256": "85c1b6312c0e866d13bd85333145aa5e5bec19a19036a4f1eac261275ec4b708"
+        },
+        {
+          "name": "DB",
+          "sha256": "3937d327f3d9c8c24c93a010a2090eda81b48c2a93c7e5a22e056315786ddab7"
+        },
+        {
+          "name": "OB",
+          "sha256": "e851bdfb9ad3b5caf3e57b337ff34d1504e7ec36513cf1a73f6fb7e815a098e7"
+        },
+        {
+          "name": "UW",
+          "sha256": "bb2979a7329c6e4a573768fea5c68f8abeb667afdb37490096972481c3e509c7"
+        },
+        {
+          "name": "HX",
+          "sha256": "f990643cb78c231c5eadc81ddede7847e67377686f0bc1b52b7a5ffe59b1ad47"
+        },
+        {
+          "name": "UX",
+          "sha256": "c152d689b86b7924c4a2360ff4580fc80e2c6b184cb800ba5217f30b0c49b5b4"
+        },
+        {
+          "name": "L$",
+          "sha256": "160d2f88f081fc3fb72233c6668708d006ff88a1597c446053ae899e067aab83"
+        },
+        {
+          "name": "R$",
+          "sha256": "f0d4d82213fb44ae8b341cad0ea4e9b50b28cb93ce6ce1ac79ff5744186dbdf6"
+        }
+      ],
+      "initializers": [],
+      "imports": [
+        {
+          "local": "Fh",
+          "from": "../cds-core/shared-123.mjs",
+          "name": "Fh",
+          "via": "shared-123-1Hc1RTKl.js#Fh",
+          "kind": "shared-graph",
+          "original": "Fh"
+        },
+        {
+          "local": "GC",
+          "from": "../cds-core/shared-123.mjs",
+          "name": "GC",
+          "via": "shared-123-1Hc1RTKl.js#GC",
+          "kind": "shared-graph",
+          "original": "GC"
+        },
+        {
+          "local": "Ga",
+          "from": "./shared-62.mjs",
+          "name": "iR",
+          "via": "shared-62-DoCqVpIq.js:nc",
+          "kind": "generated"
+        },
+        {
+          "local": "KC",
+          "from": "../cds-core/shared-123.mjs",
+          "name": "KC",
+          "via": "shared-123-1Hc1RTKl.js#KC",
+          "kind": "shared-graph",
+          "original": "KC"
+        },
+        {
+          "local": "SB",
+          "from": "../cds-core/shared-123.mjs",
+          "name": "SB",
+          "via": "shared-123-1Hc1RTKl.js#SB",
+          "kind": "shared-graph",
+          "original": "SB"
+        },
+        {
+          "local": "Un",
+          "from": "../../source-home-v4-adapters.jsx",
+          "name": "useGrowthBookFlagWhen",
+          "via": "shared-25-D-aF0gt9.js:Wg",
+          "kind": "adapter",
+          "original": "Mo"
+        },
+        {
+          "local": "j",
+          "from": "react",
+          "name": "useContext",
+          "via": "vendor-frame-BckkO60Y.js:po",
+          "kind": "react"
+        }
+      ],
+      "exports": {},
+      "sharedExports": [
+        "Ih",
+        "JC",
+        "OB",
+        "R$",
+        "UW",
+        "UX",
+        "YC",
+        "v_"
+      ],
+      "heldByViewTabs": [
+        "Ih"
+      ]
+    },
+    {
+      "target": "shared-5.mjs",
+      "source": "shared-5-u8kha2eH.js",
+      "sourceSha256": "7e36ddc101d5b0a8b4427f9b882472b1f01636a60aa22fbb6062f45292f4e7e7",
+      "sha256": "fdf44f268aebaeef3f91e1e4526f26863cdec4e3259ed700ff805b7d9b6b61a2",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "FO",
+          "sha256": "c899f9237f87423e50201a76c60115a740f2ce21e072ecbf972f0c87657576bd"
+        }
+      ],
+      "initializers": [],
+      "imports": [],
+      "exports": {},
+      "sharedExports": [
+        "FO"
+      ],
+      "heldByViewTabs": []
+    },
+    {
+      "target": "shared-19.mjs",
+      "source": "shared-19-UalAfDtn.js",
+      "sourceSha256": "17a7839fb39b22485dcb90f549bcdc92f115afbefa43e73d08d98e7bea4220f1",
+      "sha256": "b5d8564c7f57a8f2f24b332e526ec397e0e0690cff192ffa2ea8212f5685783c",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "Wx",
+          "sha256": "17bb9dc6010fc23571367fc479b84540590be5627df925ca6a4f746e14e9b031"
+        },
+        {
+          "name": "Gx",
+          "sha256": "7fed0aa7f0714aa855152dae15cab0b5ecb0bdbab408bc2b7aa6815450e5d107"
+        },
+        {
+          "name": "Yx",
+          "sha256": "0d07f8b3292fa5ec6b4f980fa508cbac5e4c90212648601ff98a9c0d39514a8c"
+        },
+        {
+          "name": "Xx",
+          "sha256": "c166b4741fe838ae82acb5e2411317342bc07e4ae30d401009aa34f5e561a1be"
+        },
+        {
+          "name": "Zx",
+          "sha256": "0d10369ee1ef1b2f414821abc659a608c62adfeadc4d55567d445892612c7465"
+        },
+        {
+          "name": "Qx",
+          "sha256": "de15dfc6e7f6b7e76098837be2ea955b81029ae3c4032b4015046d8465cb7704"
+        },
+        {
+          "name": "$x",
+          "sha256": "83d822ca72d196c1eb7e85afc740d3798eeb83455c30a5a2fc7f94acab25bab7"
+        },
+        {
+          "name": "eS",
+          "sha256": "35d5c1a788dab3ad8c3ee6222b1839c126d31961d0f3ddef57233fa8ab2ce1d3"
+        },
+        {
+          "name": "tS",
+          "sha256": "32e4ed086e859618612b4fdd15adaec5020677fc2d92496aefc7eed738863a1c"
+        },
+        {
+          "name": "nS",
+          "sha256": "7e3f29e4045ebf03449395e6cb3b4ba5f70e014e91ef782faeb192239ba148f4"
+        },
+        {
+          "name": "rS",
+          "sha256": "1ab5bb1cac16bed58dd37acbe6d65586364f3e2020534f28810e63ddf60d2de2"
+        },
+        {
+          "name": "iS",
+          "sha256": "86a90cd742a43621ee7c8876abc3dd48e872b3f43a5e54374d0879b03814ca13"
+        },
+        {
+          "name": "aS",
+          "sha256": "ca31f3ee4a6317b308231f2e85e2625a00c679c974870350871936ddbc147c07"
+        },
+        {
+          "name": "oS",
+          "sha256": "328977011b3abf0110e97338d8923a88c67eb7bc4c25e39e8b924b35e8c360a5"
+        },
+        {
+          "name": "sS",
+          "sha256": "3c03dabc77116ca00424f4f3ac0b1a7e13263ae8b5d04af85d8305353325bb9b"
+        },
+        {
+          "name": "cS",
+          "sha256": "ff7fa053bc39fd0e3af9080d5842260b54abaa50003899e0931b70d4406a1ed9"
+        },
+        {
+          "name": "lS",
+          "sha256": "7e96a331fbd049d077ce7e1e800eadfca9cb806f2c4f4f07ecdc8afd74ae9331"
+        },
+        {
+          "name": "uS",
+          "sha256": "2a767648a4905539fbb74ce5f73b7b6f27e0fa0942226ef656833a012dc03a14"
+        },
+        {
+          "name": "dS",
+          "sha256": "50aa6c279746bf043d8c6f555599cb798db80718d61c20b155356467a61173f9"
+        },
+        {
+          "name": "fS",
+          "sha256": "64183a642ce643e5bbec97c4109c01c4527c5a1fbc3041f9b02a8cbfff5064ca"
+        },
+        {
+          "name": "pS",
+          "sha256": "b50a8a7e22930f3cf6b3d8f6a0e8b6bada90a2747dfcab9c539e11a62cd75975"
+        }
+      ],
+      "initializers": [],
+      "imports": [
+        {
+          "local": "pu",
+          "from": "./shared-5.mjs",
+          "name": "FO",
+          "via": "shared-5-u8kha2eH.js:fl",
+          "kind": "generated"
+        }
+      ],
+      "exports": {
+        "pS": "homeLayout",
+        "eS": "greetingFrameClass"
+      },
+      "sharedExports": [
+        "$x",
+        "Yx",
+        "dS",
+        "rS",
+        "uS"
+      ],
+      "heldByViewTabs": []
+    },
+    {
+      "target": "shared-3.mjs",
+      "source": "shared-3-IQTrO7Gx.js",
+      "sourceSha256": "8e08befdcac208adfcd30309fcc4e292a698b253f7accc2c79bdf44fa202b919",
+      "sha256": "ccdd99ac7ecbd78abbcdd31c9a28455b83e7c3b65ae848c7024d7dcfb2306ceb",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "Ml",
+          "sha256": "1e21b698d66efcd3f13b8ec9f0413676468baed27ac3b66118b507236f06df41"
+        }
+      ],
+      "initializers": [],
+      "imports": [
+        {
+          "local": "J2",
+          "from": "./shared-frame.mjs",
+          "name": "J2",
+          "via": "shared-frame-CJdE5Ria.js:um",
+          "kind": "generated"
+        },
+        {
+          "local": "J9",
+          "from": "./shared-frame.mjs",
+          "name": "J9",
+          "via": "shared-frame-CJdE5Ria.js:hm",
+          "kind": "generated"
+        },
+        {
+          "local": "K3",
+          "from": "./shared-frame.mjs",
+          "name": "K3",
+          "via": "shared-frame-CJdE5Ria.js:ym",
+          "kind": "generated"
+        },
+        {
+          "local": "w",
+          "from": "react",
+          "name": "useEffect",
+          "via": "vendor-frame-BckkO60Y.js:go",
+          "kind": "react"
+        }
+      ],
+      "exports": {},
+      "sharedExports": [
+        "Ml"
+      ],
+      "heldByViewTabs": []
+    },
+    {
+      "target": "shared-153.mjs",
+      "source": "shared-153-DMw2VzSq.js",
+      "sourceSha256": "7e609971286c1de3bb64e01d2567c0dc95a1407a6c4b5b6d8525c44093aedea9",
+      "sha256": "585ffed242e15d028080201f6de5eb48faaf2a01c1dbd681988dc6c11b3df193",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "xg",
+          "sha256": "a007ee143fa43f6ada631a8d94045549a1f184770084228ddc32a7538b145e05"
+        },
+        {
+          "name": "HT",
+          "sha256": "391207655d2fd177684390e1e736240b854be1b01bead0eba7ab5183ba85b1e4"
+        },
+        {
+          "name": "UT",
+          "sha256": "569e4ab52b0ae61a3ff03353e6e7cb95b563d5cfdaadd62ff59286b0408004a0"
+        },
+        {
+          "name": "IN",
+          "sha256": "ff835f275ed0aa00fb52f8a45fe81eb92f8bb6bd54628e1df01803fa6709cb02"
+        }
+      ],
+      "initializers": [],
+      "imports": [
+        {
+          "local": "J4",
+          "from": "./shared-frame.mjs",
+          "name": "J4",
+          "via": "shared-frame-CJdE5Ria.js:fm",
+          "kind": "generated"
+        },
+        {
+          "local": "J9",
+          "from": "./shared-frame.mjs",
+          "name": "J9",
+          "via": "shared-frame-CJdE5Ria.js:hm",
+          "kind": "generated"
+        },
+        {
+          "local": "K4",
+          "from": "./shared-frame.mjs",
+          "name": "K4",
+          "via": "shared-frame-CJdE5Ria.js:bm",
+          "kind": "generated"
+        },
+        {
+          "local": "te",
+          "from": "react",
+          "name": "useDeferredValue",
+          "via": "vendor-frame-BckkO60Y.js:ho",
+          "kind": "react"
+        }
+      ],
+      "exports": {},
+      "sharedExports": [
+        "HT",
+        "IN",
+        "UT",
+        "xg"
+      ],
+      "heldByViewTabs": []
+    },
+    {
+      "target": "shared-92.mjs",
+      "source": "shared-92-BOgyxePb.js",
+      "sourceSha256": "ef73b1ca0bd064d1d7e606cdedd6c457cb99ffb02f93b7f8b00d8226941a3ada",
+      "sha256": "ff60049133a3fa281e2246314d621978c0bc39ae43b095467278e692fadc4927",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "yg",
+          "sha256": "cbfb2382d6cdeeacc1bd57e6bcbd848faf7ce13bc7538289ec6b17205cc1e284"
+        },
+        {
+          "name": "jU",
+          "sha256": "92e09587ec62e6627454daa195078f2928dc4334c0502d53aa5931ca134221b8"
+        }
+      ],
+      "initializers": [],
+      "imports": [],
+      "exports": {},
+      "sharedExports": [
+        "jU",
+        "yg"
+      ],
+      "heldByViewTabs": []
+    },
+    {
+      "target": "shared-212.mjs",
+      "source": "shared-212-BHMAi0oa.js",
+      "sourceSha256": "839d794782807b9e4aff3cca942f6b14ab442de2eacfb978578086d4d5eae178",
+      "sha256": "e01d1eabf7a0855ac4aa0931f680caa20800e63f74482eb6fa86b6c5917e7560",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "Nf",
+          "sha256": "51c0189662c5abe8eb6b05adb015483dccffdcc49d82f502e494339aceaae791"
+        },
+        {
+          "name": "Pf",
+          "sha256": "532b1782c3a1fc1f566f8310e514bdb1c7fbd21bb018344445f8f90d81bfc1d5"
+        },
+        {
+          "name": "vp",
+          "sha256": "4f5d1f31ff43c94c969708a9a876254773e3bc0f9ac38ab3933c8a230ad855cd"
+        },
+        {
+          "name": "yp",
+          "sha256": "a71882da605b3d45f2fc837e1262e762f9b49c30d87c661c39479a207c2910fd"
+        },
+        {
+          "name": "Dp",
+          "sha256": "f771ac794310ea06085878221de0233f6a4688fadbb1a40d144c8bcde2f33203"
+        },
+        {
+          "name": "Op",
+          "sha256": "6c3ec765351290c94ab25a3ec49ffec7fea54509732d4ce2b397a6a89b29a55d"
+        },
+        {
+          "name": "kp",
+          "sha256": "f783b7863586b5b8c0de9c388bfe95c9ba0ea98114edc06c64ef5a5b41664966"
+        },
+        {
+          "name": "Pp",
+          "sha256": "443ac72aa931ca5f6a065f582aeb947a4abd6aabd3c239d9534026f22e958faf"
+        },
+        {
+          "name": "Fp",
+          "sha256": "6c8eb6abee54e1329aed9682598a16ee63e9fba9775c337eed2e2a76ae6ff3cd"
+        },
+        {
+          "name": "Ip",
+          "sha256": "28755db382d3079df809d06878411f3a8d8d65e51490a152270605b8e6dd4fd4"
+        },
+        {
+          "name": "X4",
+          "sha256": "1f4154acda6f82dfdbb249fa7c8f742a5f3bbc04f73dc6e4e32d90a38f79c602"
+        },
+        {
+          "name": "Q4",
+          "sha256": "b927ff04c1759f24e67d631fe914e5a3cc95fc634adb637555524c3082963271"
+        },
+        {
+          "name": "$4",
+          "sha256": "862249462a591f3284773cc339e7f0fc98658880e93eeb4d8ab8cbb7928dc096"
+        },
+        {
+          "name": "e3",
+          "sha256": "c0f313831cbc6e4b5c13723963c55d9824592e4afc85bb7c9c56333d461eb7d2"
+        },
+        {
+          "name": "t3",
+          "sha256": "eab86cd79140188d433c96a98a3aa2e19cff04390bd0b7b589f7431603aa9bb8"
+        },
+        {
+          "name": "n3",
+          "sha256": "8811e791b044ea03536b30862d22e680583c0e82d2b0d87c378f12a2d5edeaf8"
+        }
+      ],
+      "initializers": [],
+      "imports": [
+        {
+          "local": "Sl",
+          "from": "./shared-92.mjs",
+          "name": "yg",
+          "via": "shared-92-BOgyxePb.js:Py",
+          "kind": "generated"
+        },
+        {
+          "local": "Us",
+          "from": "./shared-62.mjs",
+          "name": "sL",
+          "via": "shared-62-DoCqVpIq.js:gc",
+          "kind": "generated"
+        },
+        {
+          "local": "Ws",
+          "from": "./shared-62.mjs",
+          "name": "yB",
+          "via": "shared-62-DoCqVpIq.js:io",
+          "kind": "generated"
+        },
+        {
+          "local": "da",
+          "from": "./shared-153.mjs",
+          "name": "UT",
+          "via": "shared-153-DMw2VzSq.js:lh",
+          "kind": "generated"
+        },
+        {
+          "local": "qa",
+          "from": "./shared-123.mjs",
+          "name": "v_",
+          "via": "shared-123-1Hc1RTKl.js:Vx",
+          "kind": "generated"
+        },
+        {
+          "local": "va",
+          "from": "./shared-153.mjs",
+          "name": "HT",
+          "via": "shared-153-DMw2VzSq.js:sh",
+          "kind": "generated"
+        }
+      ],
+      "exports": {},
+      "sharedExports": [
+        "$4",
+        "Dp",
+        "Ip",
+        "kp",
+        "vp"
+      ],
+      "heldByViewTabs": []
+    },
+    {
+      "target": "shared-33.mjs",
+      "source": "shared-33-DtdykY0y.js",
+      "sourceSha256": "1fcaa039b040c657e69517217d0defa2cf5c92cb4485911ea9b3d3698dcaa7a9",
+      "sha256": "623f2a16af2d157132b17c201ae0d741a6661a6104fdf359f1c7cb40dc29e2f8",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "Cb",
+          "sha256": "f35c3def00106a42ea882a1a595213e051e3bb87d9e3145247a2fea108ae4ccf"
+        },
+        {
+          "name": "kb",
+          "sha256": "47992b11590ef219199a63af200031b4566e961e6324f9d8ed8599761f309228"
+        },
+        {
+          "name": "iD",
+          "sha256": "d544ca991252c64d4710e71a8ae212b93d68a59aebf295b449790cc7a31f9df6"
+        },
+        {
+          "name": "aD",
+          "sha256": "0bf6a1edf5904b2b96bdae56ebd42ebd9155627ebe5bc0cfd0b494f6c2967c85"
+        },
+        {
+          "name": "oD",
+          "sha256": "100e14a62b0c1b896e579d9a99871bf245fc1b6add90f92cd0e7aa5079e3bd31"
+        },
+        {
+          "name": "sD",
+          "sha256": "ccfbbb4e92fb3d71a426b49739a736460772fe1ce5ae53c12084b8a6c450da75"
+        },
+        {
+          "name": "cD",
+          "sha256": "1b8f9798b15af9aca22fc72b5f6a88e2813d5bf50b9714cfe08d0b6fe3db699a"
+        },
+        {
+          "name": "lD",
+          "sha256": "1df30210499e577a91b78b1cbff095300f1989793311f5e26b652663fca532e1"
+        },
+        {
+          "name": "Fk",
+          "sha256": "49c59b5ba5e2d799b1470565f64abe2a68b72b8c93ed00bef3eff97db606781d"
+        },
+        {
+          "name": "Ik",
+          "sha256": "624daa0dfc9002b9497aa34c28b98603f2cb5ca6de9a0a3268df64426642e3f1"
+        },
+        {
+          "name": "zA",
+          "sha256": "4fd133bce334d225ba0ec6d19be78272edbef3260bd74440d2f01400bf7f52cc"
+        },
+        {
+          "name": "Lj",
+          "sha256": "e96bde4b8fe8ad5977e3fc625f9945c76dcd85d6578ed63f8241aabaf3a72b8e"
+        },
+        {
+          "name": "aM",
+          "sha256": "2751fd688ac8e4d3356cf71595da06ad4b2bed8ce90a444122bfac21f6e0ae33"
+        },
+        {
+          "name": "oM",
+          "sha256": "2addf39f6026e519b67544892876ea16d51382fa7671279dd3caec1311c22253"
+        },
+        {
+          "name": "lM",
+          "sha256": "57432210648d9146897c04a545524cad4f4c24f1c5a2d794ca448b8c79c92797"
+        }
+      ],
+      "initializers": [],
+      "imports": [
+        {
+          "local": "Dh",
+          "from": "./shared-212.mjs",
+          "name": "Dp",
+          "via": "shared-212-BHMAi0oa.js:ix",
+          "kind": "generated"
+        },
+        {
+          "local": "Eo",
+          "from": "./shared-62.mjs",
+          "name": "as",
+          "via": "shared-62-DoCqVpIq.js:Px",
+          "kind": "generated"
+        },
+        {
+          "local": "J1",
+          "from": "./shared-frame.mjs",
+          "name": "J1",
+          "via": "shared-frame-CJdE5Ria.js:lm",
+          "kind": "generated"
+        },
+        {
+          "local": "J9",
+          "from": "./shared-frame.mjs",
+          "name": "J9",
+          "via": "shared-frame-CJdE5Ria.js:hm",
+          "kind": "generated"
+        },
+        {
+          "local": "K1",
+          "from": "./shared-frame.mjs",
+          "name": "K1",
+          "via": "shared-frame-CJdE5Ria.js:_m",
+          "kind": "generated"
+        },
+        {
+          "local": "Wi",
+          "from": "./shared-153.mjs",
+          "name": "UT",
+          "via": "shared-153-DMw2VzSq.js:lh",
+          "kind": "generated"
+        },
+        {
+          "local": "Xi",
+          "from": "./shared-153.mjs",
+          "name": "HT",
+          "via": "shared-153-DMw2VzSq.js:sh",
+          "kind": "generated"
+        },
+        {
+          "local": "dh",
+          "from": "./shared-212.mjs",
+          "name": "vp",
+          "via": "shared-212-BHMAi0oa.js:cx",
+          "kind": "generated"
+        },
+        {
+          "local": "mm",
+          "from": "./shared-212.mjs",
+          "name": "kp",
+          "via": "shared-212-BHMAi0oa.js:Lx",
+          "kind": "generated"
+        },
+        {
+          "local": "p",
+          "from": "react",
+          "name": "useState",
+          "via": "vendor-frame-BckkO60Y.js:To",
+          "kind": "react"
+        },
+        {
+          "local": "xh",
+          "from": "./shared-212.mjs",
+          "name": "Ip",
+          "via": "shared-212-BHMAi0oa.js:gx",
+          "kind": "generated"
+        }
+      ],
+      "exports": {
+        "Ik": "homeGreetingSeatClass"
+      },
+      "sharedExports": [
+        "Cb",
+        "Lj",
+        "kb",
+        "lD",
+        "lM",
+        "zA"
+      ],
+      "heldByViewTabs": [
+        "Cb"
+      ]
+    },
+    {
+      "target": "vendor-all-0.mjs",
+      "source": "vendor-all-0-uUCo-eCX.js",
+      "sourceSha256": "3b07702e173cffed44ac6394d2be390a2db09506d66baf378c247840a3aacfd8",
+      "sha256": "fafce19567f102786bc6d29afa3028166af35c5f29fa0832b8574472c0ac634d",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "p",
+          "sha256": "8902db3968c29950a0cebda0a25392fc47233016e565ba51bdd8cde28189c791"
+        },
+        {
+          "name": "m",
+          "sha256": "105ce3faa3f568f768bbeaf34505103305d665597bdfe8bcda342bbbdc1db747"
+        },
+        {
+          "name": "h",
+          "sha256": "887f01aa4b4a0a7d87fedefa47bc0c062a55c0c25d7379cf0559144db9bf47f3"
+        },
+        {
+          "name": "g",
+          "sha256": "45860cc15ec0a4d2c08e87ddb1daf15b1987f37ae1bcc4626399fc052e651549"
+        },
+        {
+          "name": "_",
+          "sha256": "065fe3a8d729b0535b7fcabeab2f566be2bcf1683abf1a555fab6a9fa2c5e41b"
+        },
+        {
+          "name": "v",
+          "sha256": "9cba6a6ac210c6144c39a3ff0decc9389dbad37e6ce98b57e12b58fea5a84a7a"
+        }
+      ],
+      "initializers": [],
+      "imports": [
+        {
+          "local": "c",
+          "from": "react",
+          "name": "default",
+          "via": "vendor-frame-BckkO60Y.js:lo",
+          "kind": "react"
+        }
+      ],
+      "exports": {},
+      "sharedExports": [
+        "v"
+      ],
+      "heldByViewTabs": [
+        "_",
+        "g",
+        "h",
+        "m",
+        "p",
+        "v"
+      ]
+    },
+    {
+      "target": "shared-2.mjs",
+      "source": "shared-2-CsjIBQD8.js",
+      "sourceSha256": "afd4bee5585cd387fdb8dc97eac37ef14c3a5cf5edc473f52739ca7c7cc9165f",
+      "sha256": "5bd73d9685feae71063ac8feb46d6c9b73dc71f1180c4f698838a9e5d05a757e",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "AO",
+          "sha256": "3080703bdda854e40c5fdc8ca5a7580bc90200dd1e0bce6fd31b56b061dcd08c"
+        },
+        {
+          "name": "vH",
+          "sha256": "b215bf0371da0f5194aa56a3481982f8b7f530ed85f7adf017f79ed69eb3e344"
+        },
+        {
+          "name": "yH",
+          "sha256": "5d8663f468cb062b5591665e5f87265a6149d468072224afb6d4463ab5329140"
+        },
+        {
+          "name": "XH",
+          "sha256": "a04de3d83dc7ff1744af0341425e4a03ed4b4349ca42a036a327df5a8f1f1405"
+        },
+        {
+          "name": "ZH",
+          "sha256": "4f2e70f98457264be3a2b24591fa6973b97023d3167a0e25102f614bff2a4d86"
+        }
+      ],
+      "initializers": [],
+      "imports": [
+        {
+          "local": "lt",
+          "from": "../../source-home-v4-adapters.jsx",
+          "name": "hostGrowthBookFeature",
+          "via": "shared-0-CnnWnVrT.js:Rx",
+          "kind": "adapter",
+          "original": "Uu"
+        }
+      ],
+      "exports": {},
+      "sharedExports": [
+        "AO",
+        "XH",
+        "ZH"
+      ],
+      "heldByViewTabs": []
+    },
+    {
+      "target": "shared-183.mjs",
+      "source": "shared-183-B2N6Zy4J.js",
+      "sourceSha256": "ef19933e2d466d6f2024d69a025682fee0a0ce82c175d4afd30b1109920e4001",
+      "sha256": "b33e847b84890d63f9c1616503b448848c4d78a72b937e1b2c37018f778ace2c",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "eJ",
+          "sha256": "3133eee79dcb5d3709fde72576f18424c74b4c689bc50043683a0410af484235"
+        },
+        {
+          "name": "lJ",
+          "sha256": "aaee21a90594a76a78eeb0a2aa92d24a18cfa00a83029c7b26159e0989d7c716"
+        },
+        {
+          "name": "dJ",
+          "sha256": "167208b061248c8ebe7ff46ec585a234136fadb444522787aed0a3ea7d17b743"
+        },
+        {
+          "name": "pJ",
+          "sha256": "c07fb124a18f1e7552ee3d6c4822bbc83a422709a5adeb76a38e190b81f6dc22"
+        },
+        {
+          "name": "hJ",
+          "sha256": "c69654b4610a84bc62f7f3dd1bec567afa4d0743fb876327533e361a7672db8d"
+        },
+        {
+          "name": "gJ",
+          "sha256": "e26a1993eebdff29109e05410f9bd59c1cf8703bb47a59f659118c5072c83d08"
+        },
+        {
+          "name": "_J",
+          "sha256": "47b5cb9971ef18a00387b2b703cb85c60a3b235faff6482ebbe85f4ed0d54c90"
+        },
+        {
+          "name": "xJ",
+          "sha256": "6d41038c15ea2c61b54a8410d2b4a9b05095d54affff4a01e89d786e090f729c"
+        }
+      ],
+      "initializers": [],
+      "imports": [
+        {
+          "local": "$q",
+          "from": "../cds-core/shared-183.mjs",
+          "name": "$q",
+          "via": "shared-183-B2N6Zy4J.js#$q",
+          "kind": "shared-graph",
+          "original": "$q"
+        },
+        {
+          "local": "g",
+          "from": "react",
+          "name": "useSyncExternalStore",
+          "via": "vendor-frame-BckkO60Y.js:Eo",
+          "kind": "react"
+        },
+        {
+          "local": "mi",
+          "from": "./shared-153.mjs",
+          "name": "IN",
+          "via": "shared-153-DMw2VzSq.js:Vu",
+          "kind": "generated"
+        },
+        {
+          "local": "uJ",
+          "from": "../cds-core/shared-183.mjs",
+          "name": "uJ",
+          "via": "shared-183-B2N6Zy4J.js#uJ",
+          "kind": "shared-graph",
+          "original": "uJ"
+        },
+        {
+          "local": "vt",
+          "from": "./shared-0.mjs",
+          "name": "_e",
+          "via": "shared-0-CnnWnVrT.js:RT",
+          "kind": "generated"
+        },
+        {
+          "local": "xi",
+          "from": "./shared-153.mjs",
+          "name": "xg",
+          "via": "shared-153-DMw2VzSq.js:ab",
+          "kind": "generated"
+        }
+      ],
+      "exports": {},
+      "sharedExports": [
+        "_J",
+        "xJ"
+      ],
+      "heldByViewTabs": [
+        "lJ"
+      ]
+    },
+    {
+      "target": "shared-26.mjs",
+      "source": "shared-26-B-POtn5S.js",
+      "sourceSha256": "c908911d08e9fa275c39f71e0f1f35c1ac65961c285bdd1a233b9745f3b6f5ed",
+      "sha256": "478e64dddbc21f350f9cc5b1c2565d38722652edf6c0ea5161b2782a35af3d4c",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "iV",
+          "sha256": "d7bd0b53b39e27142dd52abc678d19c35ea0e84551b353dfed308fbe9ee18c4c"
+        },
+        {
+          "name": "sV",
+          "sha256": "c195298ff18a8903759b640a9bf3786a1d7babbe915adf6f6e6cee947da1d2b3"
+        }
+      ],
+      "initializers": [],
+      "imports": [],
+      "exports": {},
+      "sharedExports": [
+        "sV"
+      ],
+      "heldByViewTabs": []
+    },
+    {
+      "target": "shared-8.mjs",
+      "source": "shared-8-BqfCbkJd.js",
+      "sourceSha256": "d9aa7c7f690b43147e921fbef5473f2311a1474e316c44e6db5ef07e9fede5bc",
+      "sha256": "3d9a73284a55095343eb4297bb7ad835558b9970cfe76b35dea2aa758efb0b05",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "kS",
+          "sha256": "92e4016cf58ad5fd25843ba70e9cbae8fb8b71ef2c2e0af1f7f1a59873d7fec8"
+        }
+      ],
+      "initializers": [],
+      "imports": [
+        {
+          "local": "As",
+          "from": "./shared-26.mjs",
+          "name": "sV",
+          "via": "shared-26-B-POtn5S.js:Wi",
+          "kind": "generated"
+        }
+      ],
+      "exports": {},
+      "sharedExports": [
+        "kS"
+      ],
+      "heldByViewTabs": []
+    },
+    {
+      "target": "vendor-intl.mjs",
+      "source": "vendor-intl-BJgYK7RA.js",
+      "sourceSha256": "dd77dcb059497cc4e67d90952fe82af856b23fdd623d9aa333c0646e036c7abd",
+      "sha256": "30073044956f943dead104b7bdae9904b204813a55007c6dbe5730577f450e26",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "tn",
+          "sha256": "e8bcfdd6704487bca47d7ebe2c3a799667e4da8daef469e53da344bbb77d91e2"
+        },
+        {
+          "name": "nn",
+          "sha256": "f6701ebe822787754c70f5c955a5ec0fcf85b1b81540e41a6af8d8ca8b9c6927"
+        }
+      ],
+      "initializers": [],
+      "imports": [],
+      "exports": {},
+      "sharedExports": [
+        "nn",
+        "tn"
+      ],
+      "heldByViewTabs": [
+        "tn"
+      ]
+    },
+    {
+      "target": "shared-160.mjs",
+      "source": "shared-160-DDUFdDNM.js",
+      "sourceSha256": "5cb47b46a6f9e4147afa9bc9a88794a5e7c230193348ef4ed895b08e1495887b",
+      "sha256": "aec99e00f967772c59900f06fa84e666a0587854813271d5c5a75263264a9be8",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "Sr",
+          "sha256": "ab866254886a78c39089c0249a94fa0d0219028c3322423c0ee9886024fce38d"
+        }
+      ],
+      "initializers": [],
+      "imports": [
+        {
+          "local": "U",
+          "from": "./shared-62.mjs",
+          "name": "_N",
+          "via": "shared-62-DoCqVpIq.js:ql",
+          "kind": "generated"
+        },
+        {
+          "local": "j",
+          "from": "./shared-0.mjs",
+          "name": "P6",
+          "via": "shared-0-CnnWnVrT.js:kt",
+          "kind": "generated"
+        },
+        {
+          "local": "wt",
+          "from": "./shared-62.mjs",
+          "name": "SN",
+          "via": "shared-62-DoCqVpIq.js:Wl",
+          "kind": "generated"
+        }
+      ],
+      "exports": {},
+      "sharedExports": [
+        "Sr"
+      ],
+      "heldByViewTabs": []
+    },
+    {
+      "target": "shared-18.mjs",
+      "source": "shared-18-Cfqwgjc5.js",
+      "sourceSha256": "6828aa7109628e08360fd1e7b4ddc2ff022f5f369a297ce690cd4b19e4205436",
+      "sha256": "eb6da48264aa634835a7ddd40f334a962f9e621785842d06c00395622d018466",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "Vb",
+          "sha256": "601ea088d6eda902236f23d4e5cf9042b01f4b9e1e51ed865ead1669517b927b"
+        },
+        {
+          "name": "Hb",
+          "sha256": "1f3dd81025f6e0c333813e5a6a354f1bfbb6b4bc78fabdec7be501630ef35637"
+        },
+        {
+          "name": "Ub",
+          "sha256": "617dd84a380f520b98ed85cc6b73ab3e03364f34889a8740affde37b533c1268"
+        },
+        {
+          "name": "Gb",
+          "sha256": "119f23c425095ed3d2b0d7832ee31ebef0d87cdb037f9f32401551a81c7bfcca"
+        },
+        {
+          "name": "fO",
+          "sha256": "8e8beccab98b36c7ca15c1c6d10360294a94aa2e05af700bd18eed6c21dbe13f"
+        },
+        {
+          "name": "gO",
+          "sha256": "aeb6e16999c287dfff7dd460aa6d9d56f3a194e1cf00417c4e77bc8f142ac5d6"
+        },
+        {
+          "name": "vO",
+          "sha256": "819eb850e3cfb318b2b76730c9884cb39826f816966c7ea68654df187a363261"
+        },
+        {
+          "name": "yO",
+          "sha256": "9a0d2a8e6329ea7b99e4fff6ed6e71918a24526a065bd2442c147a020cf9e0be"
+        },
+        {
+          "name": "bO",
+          "sha256": "2b3a6f1fcb2501dcbc951662eafa430be2ca7229478db56932a175a18ea314f9"
+        },
+        {
+          "name": "lM",
+          "sha256": "83c4a1addb9dc1c6ed4317f50f6e996c1f4e3089857cd0ff01168154b6133b13"
+        },
+        {
+          "name": "KM",
+          "sha256": "f239a4a624c1da58f0f7d920f208f139e0c0e8fbb6331ccc032762962c95aa44"
+        },
+        {
+          "name": "QM",
+          "sha256": "63198df28f09be0f37b8b755cf0a4ce5730939060833d2a6956c59701b3572ef"
+        },
+        {
+          "name": "$M",
+          "sha256": "fe39451dd36946323e7763a415e0a6829d76d913425dab52fed12b61fa151293"
+        },
+        {
+          "name": "tN",
+          "sha256": "3ee9ea4da0a394595c790904c7198d3b3085fd8e3d19cf7c105f15d461d0971d"
+        },
+        {
+          "name": "PN",
+          "sha256": "4554d054e25433c49fd812d61fed07df7d9eab4ea448b91b31a3cc3cd9186f9b"
+        },
+        {
+          "name": "aP",
+          "sha256": "70519da2f674fc294da098f9dcb7726c84d15f90371c4ee42c2a2149dbae2068"
+        },
+        {
+          "name": "gF",
+          "sha256": "a48534711d755de1b17bc870d44a11fa6ca87e36e04ef2c601205dcc70384f8f"
+        },
+        {
+          "name": "_F",
+          "sha256": "aae737f3d3228141c2d002342e43b7371a6ee79b3012119a82802994a48463ea"
+        },
+        {
+          "name": "vF",
+          "sha256": "3cc1e2a314a527602b20a34589e84694181ff5983806d811819791fff0ce37d5"
+        },
+        {
+          "name": "yF",
+          "sha256": "f10898c6cfb6380b6e0c2e7441ba41185679217a3889215529b4e6766db8ac26"
+        },
+        {
+          "name": "bF",
+          "sha256": "5f675240bfff71af12e47892cbe78b2e3d0e50886e65f4c8db69dad74160a63c"
+        },
+        {
+          "name": "SF",
+          "sha256": "ab63b2a8203a8d21a222cde53a8fbd185f737c7f5cbdc7efc57c1d5997cb7d0a"
+        },
+        {
+          "name": "CF",
+          "sha256": "90421d8abf25773d0eb2f36d014cf2c8f1772a1c1ff2475580990701eac547bf"
+        },
+        {
+          "name": "wF",
+          "sha256": "bc79abd450b32bd24124dc0668c9c2b06e3ddc51192e67f827a69e9d4aa9fa4f"
+        },
+        {
+          "name": "TF",
+          "sha256": "ee278d14be0e18822974a5cc200f8a7fd4dc6338f150010b1ca61d692442986f"
+        },
+        {
+          "name": "EF",
+          "sha256": "67f1cbe9834c83a5b3d1b5ced70284f40e116af715cb30a1ba340525c40e11fb"
+        },
+        {
+          "name": "kF",
+          "sha256": "bcb54e3bd621b5ab2d410af345774a070cbc58dfe2779a8deb5985c8806bd9c4"
+        },
+        {
+          "name": "AF",
+          "sha256": "5c2b18d0c53360c04e4a875cacf6a1af67b1301a442f7053c5a145df141547c1"
+        },
+        {
+          "name": "jF",
+          "sha256": "7612e21aeefef88f0038f6944a147795e248b3a286b6814d477cf534fc999a10"
+        },
+        {
+          "name": "MF",
+          "sha256": "b11cc3a0698545f6fe3105f781e95f343f07b4f694f5385a5bb69c2a4b7099fc"
+        },
+        {
+          "name": "NF",
+          "sha256": "1ad5be43369b65f9783784ca7de3ad2d2693404bb80aca84e913cc799b4eea27"
+        },
+        {
+          "name": "PF",
+          "sha256": "77b92d2820028929a72098bf825d1ef8c1918d80a09cdbe97e0486f5fc969871"
+        },
+        {
+          "name": "FF",
+          "sha256": "c8854138294c6c16d9f3296b3675605096197a33b07b4ff8e3e4e404a180e523"
+        },
+        {
+          "name": "IF",
+          "sha256": "b0aa145e74151d99ea84b42da249d0bec190995e8c6fa3841bde06a0bf9c1242"
+        },
+        {
+          "name": "LF",
+          "sha256": "3dd7577dea9ae51f1d1727fc08b7cab074cc8c493f0bc66ec3ff792ec378f27b"
+        },
+        {
+          "name": "RF",
+          "sha256": "b5b6d741d1bbae4d7cc875e7e5e5b250fc5e893dffcd88b08aeee888a95cf3cd"
+        },
+        {
+          "name": "zF",
+          "sha256": "23b0f0a868c0f0165691b1a7a0d7ce711c928a8300d608293719f931f0dd971b"
+        },
+        {
+          "name": "BF",
+          "sha256": "da614b9717bfd1aca4c83117faeae733ba882701070f542af5cdff8a3c8a70dd"
+        },
+        {
+          "name": "VF",
+          "sha256": "8ba077305d941277ee7b267e6e525bd00f515d51077737dc5ed9cdbde70caaeb"
+        },
+        {
+          "name": "HF",
+          "sha256": "e7aa87c05852549bba309ddbf7e58e532b99b2a74dc23e3cf34f1ed46e9488b3"
+        },
+        {
+          "name": "UF",
+          "sha256": "66fadb1c5c9ed0d9a57c6269b0895f667e0ca3127b13be3152902b1285183694"
+        },
+        {
+          "name": "WF",
+          "sha256": "551fa2a1a1a17956b8a9b2a9c698cf86a181a9c352a4213613d880652822f282"
+        },
+        {
+          "name": "KF",
+          "sha256": "93a28762658f5e5b494382f144b8f8682e4a89c387cd1647b3cbe5e86c68721f"
+        },
+        {
+          "name": "qF",
+          "sha256": "36f403bf0e8a7f3632bf2822e08d3906df01e879387c1721991eea2a59f3f3dc"
+        }
+      ],
+      "initializers": [],
+      "imports": [
+        {
+          "local": "A",
+          "from": "react",
+          "name": "useContext",
+          "via": "vendor-frame-BckkO60Y.js:po",
+          "kind": "react"
+        },
+        {
+          "local": "Bh",
+          "from": "./shared-160.mjs",
+          "name": "Sr",
+          "via": "shared-160-DDUFdDNM.js:x",
+          "kind": "generated"
+        },
+        {
+          "local": "Fv",
+          "from": "../cds-core/shared-60.mjs",
+          "name": "vt",
+          "via": "shared-60-DmOyT7JJ.js:j",
+          "kind": "shared-graph",
+          "original": "vt"
+        },
+        {
+          "local": "Hm",
+          "from": "../../source-home-v4-adapters.jsx",
+          "name": "useHomeSessionAwaiting",
+          "via": "shared-5-u8kha2eH.js:Tn",
+          "kind": "adapter",
+          "original": "jW"
+        },
+        {
+          "local": "I5",
+          "from": "./shared-frame.mjs",
+          "name": "I5",
+          "via": "shared-frame-CJdE5Ria.js:sm",
+          "kind": "generated"
+        },
+        {
+          "local": "IM",
+          "from": "../../source-home-v4-adapters.jsx",
+          "name": "useHomeSessionPreviewActive",
+          "via": "shared-18-Cfqwgjc5.js#IM",
+          "kind": "adapter",
+          "original": "IM"
+        },
+        {
+          "local": "Im",
+          "from": "../../source-home-v4-adapters.jsx",
+          "name": "useHomeSessionAutoAnswering",
+          "via": "shared-5-u8kha2eH.js:Nn",
+          "kind": "adapter",
+          "original": "lW"
+        },
+        {
+          "local": "Iv",
+          "from": "../cds-core/shared-60.mjs",
+          "name": "On",
+          "via": "shared-60-DmOyT7JJ.js:o",
+          "kind": "shared-graph",
+          "original": "On"
+        },
+        {
+          "local": "J0",
+          "from": "./shared-frame.mjs",
+          "name": "J0",
+          "via": "shared-frame-CJdE5Ria.js:cm",
+          "kind": "generated"
+        },
+        {
+          "local": "J1",
+          "from": "./shared-frame.mjs",
+          "name": "J1",
+          "via": "shared-frame-CJdE5Ria.js:lm",
+          "kind": "generated"
+        },
+        {
+          "local": "J2",
+          "from": "./shared-frame.mjs",
+          "name": "J2",
+          "via": "shared-frame-CJdE5Ria.js:um",
+          "kind": "generated"
+        },
+        {
+          "local": "J3",
+          "from": "./shared-frame.mjs",
+          "name": "J3",
+          "via": "shared-frame-CJdE5Ria.js:dm",
+          "kind": "generated"
+        },
+        {
+          "local": "J4",
+          "from": "./shared-frame.mjs",
+          "name": "J4",
+          "via": "shared-frame-CJdE5Ria.js:fm",
+          "kind": "generated"
+        },
+        {
+          "local": "J5",
+          "from": "./shared-frame.mjs",
+          "name": "J5",
+          "via": "shared-frame-CJdE5Ria.js:pm",
+          "kind": "generated"
+        },
+        {
+          "local": "J9",
+          "from": "./shared-frame.mjs",
+          "name": "J9",
+          "via": "shared-frame-CJdE5Ria.js:hm",
+          "kind": "generated"
+        },
+        {
+          "local": "K0",
+          "from": "./shared-frame.mjs",
+          "name": "K0",
+          "via": "shared-frame-CJdE5Ria.js:gm",
+          "kind": "generated"
+        },
+        {
+          "local": "K1",
+          "from": "./shared-frame.mjs",
+          "name": "K1",
+          "via": "shared-frame-CJdE5Ria.js:_m",
+          "kind": "generated"
+        },
+        {
+          "local": "K2",
+          "from": "./shared-frame.mjs",
+          "name": "K2",
+          "via": "shared-frame-CJdE5Ria.js:vm",
+          "kind": "generated"
+        },
+        {
+          "local": "K3",
+          "from": "./shared-frame.mjs",
+          "name": "K3",
+          "via": "shared-frame-CJdE5Ria.js:ym",
+          "kind": "generated"
+        },
+        {
+          "local": "K4",
+          "from": "./shared-frame.mjs",
+          "name": "K4",
+          "via": "shared-frame-CJdE5Ria.js:bm",
+          "kind": "generated"
+        },
+        {
+          "local": "K5",
+          "from": "./shared-frame.mjs",
+          "name": "K5",
+          "via": "shared-frame-CJdE5Ria.js:xm",
+          "kind": "generated"
+        },
+        {
+          "local": "Kp",
+          "from": "../../source-home-v4-adapters.jsx",
+          "name": "markHomeSessionRead",
+          "via": "shared-2-CsjIBQD8.js:es",
+          "kind": "adapter",
+          "original": "RH"
+        },
+        {
+          "local": "NN",
+          "from": "../cds-core/shared-18.mjs",
+          "name": "NN",
+          "via": "shared-18-Cfqwgjc5.js#NN",
+          "kind": "shared-graph",
+          "original": "NN"
+        },
+        {
+          "local": "Po",
+          "from": "./shared-123.mjs",
+          "name": "UW",
+          "via": "shared-123-1Hc1RTKl.js:ro",
+          "kind": "generated"
+        },
+        {
+          "local": "Q",
+          "from": "../../source-home-v4-adapters.jsx",
+          "name": "useIntl",
+          "via": "vendor-intl-BJgYK7RA.js:p",
+          "kind": "adapter",
+          "original": "q"
+        },
+        {
+          "local": "Sh",
+          "from": "./vendor-intl.mjs",
+          "name": "tn",
+          "via": "vendor-intl-BJgYK7RA.js:f",
+          "kind": "generated"
+        },
+        {
+          "local": "Sm",
+          "from": "../cds-core/shared-5.mjs",
+          "name": "dH",
+          "via": "shared-5-u8kha2eH.js:Cr",
+          "kind": "shared-graph",
+          "original": "dH"
+        },
+        {
+          "local": "To",
+          "from": "./shared-123.mjs",
+          "name": "Ih",
+          "via": "shared-123-1Hc1RTKl.js:pS",
+          "kind": "generated"
+        },
+        {
+          "local": "WM",
+          "from": "../cds-core/shared-18.mjs",
+          "name": "WM",
+          "via": "shared-18-Cfqwgjc5.js#WM",
+          "kind": "shared-graph",
+          "original": "WM"
+        },
+        {
+          "local": "W_",
+          "from": "../../source-home-v4-adapters.jsx",
+          "name": "useHomeEffectiveErrorCategory",
+          "via": "shared-7-D2e77H6v.js:Qa",
+          "kind": "adapter",
+          "original": "zg"
+        },
+        {
+          "local": "X",
+          "from": "../cds-core/shared-frame.mjs",
+          "name": "CdsIcon",
+          "via": "shared-frame-CJdE5Ria.js:lf",
+          "kind": "shared-graph",
+          "original": "Bs"
+        },
+        {
+          "local": "_O",
+          "from": "../cds-core/shared-18.mjs",
+          "name": "_O",
+          "via": "shared-18-Cfqwgjc5.js#_O",
+          "kind": "shared-graph",
+          "original": "_O"
+        },
+        {
+          "local": "dm",
+          "from": "../../source-home-v4-adapters.jsx",
+          "name": "markHomeSessionUnread",
+          "via": "shared-2-CsjIBQD8.js:rs",
+          "kind": "adapter",
+          "original": "WH"
+        },
+        {
+          "local": "g",
+          "from": "react/jsx-runtime",
+          "name": "jsxs",
+          "via": "vendor-frame-BckkO60Y.js:Ka",
+          "kind": "react"
+        },
+        {
+          "local": "ga",
+          "from": "../cds-core/shared-123.mjs",
+          "name": "id",
+          "via": "shared-123-1Hc1RTKl.js:JC",
+          "kind": "shared-graph",
+          "original": "id"
+        },
+        {
+          "local": "hO",
+          "from": "../cds-core/shared-18.mjs",
+          "name": "hO",
+          "via": "shared-18-Cfqwgjc5.js#hO",
+          "kind": "shared-graph",
+          "original": "hO"
+        },
+        {
+          "local": "jn",
+          "from": "../cds-core/shared-25.mjs",
+          "name": "ownerWindow",
+          "via": "shared-25-D-aF0gt9.js:Gp",
+          "kind": "shared-graph",
+          "original": "_d"
+        },
+        {
+          "local": "m",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-BckkO60Y.js:Ga",
+          "kind": "react"
+        },
+        {
+          "local": "p",
+          "from": "../cds-core/vendor-frame.mjs",
+          "name": "clsx",
+          "via": "vendor-frame-BckkO60Y.js:Fa",
+          "kind": "shared-graph",
+          "original": "ke"
+        },
+        {
+          "local": "ph",
+          "from": "../../source-home-v4-adapters.jsx",
+          "name": "useHomeSessionOnlyQuestions",
+          "via": "shared-5-u8kha2eH.js:wn",
+          "kind": "adapter",
+          "original": "NW"
+        },
+        {
+          "local": "tp",
+          "from": "./shared-8.mjs",
+          "name": "kS",
+          "via": "shared-8-BqfCbkJd.js:Wl",
+          "kind": "generated"
+        },
+        {
+          "local": "ve",
+          "from": "../cds-core/shared-frame.mjs",
+          "name": "CdsTooltip",
+          "via": "shared-frame-CJdE5Ria.js:cd",
+          "kind": "shared-graph",
+          "original": "Kp"
+        },
+        {
+          "local": "w",
+          "from": "react",
+          "name": "memo",
+          "via": "vendor-frame-BckkO60Y.js:co",
+          "kind": "react"
+        }
+      ],
+      "exports": {},
+      "sharedExports": [
+        "lM",
+        "qF"
+      ],
+      "heldByViewTabs": []
+    },
+    {
+      "target": "shared-55.mjs",
+      "source": "shared-55-BRv2XBP7.js",
+      "sourceSha256": "84e184eeb3f901dcf2ae406c08be9dc7d96b8119e493b026f8f5d80f4537844e",
+      "sha256": "85cb0fe30c649820a33e7b4f185450804140b912beed4757a4dc39a04df64614",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "XS",
+          "sha256": "1b2d4392506b7e32de27595a11a279b4db5a628bcd4cbe7b23f2ac5853fbc65c"
+        },
+        {
+          "name": "ZS",
+          "sha256": "e0ea5acbbbd6eb13c28600364a6606c7d8d63ccf23b3c3da7dbe4c60a012151a"
+        },
+        {
+          "name": "$S",
+          "sha256": "831eec21cea969735073c045c5b32c5c5999587d1af969f9e798ee71828d9d40"
+        }
+      ],
+      "initializers": [],
+      "imports": [
+        {
+          "local": "$s",
+          "from": "./shared-18.mjs",
+          "name": "qF",
+          "via": "shared-18-Cfqwgjc5.js:ms",
+          "kind": "generated"
+        },
+        {
+          "local": "C",
+          "from": "../cds-core/vendor-frame.mjs",
+          "name": "useDirection",
+          "via": "vendor-frame-BckkO60Y.js:xa",
+          "kind": "shared-graph",
+          "original": "Xn"
+        },
+        {
+          "local": "Dt",
+          "from": "../../source-home-v4-adapters.jsx",
+          "name": "HomeRouterLink",
+          "via": "shared-25-D-aF0gt9.js:Pu",
+          "kind": "adapter",
+          "original": "Ky"
+        },
+        {
+          "local": "F",
+          "from": "../cds-core/shared-frame.mjs",
+          "name": "CdsSkeleton",
+          "via": "shared-frame-CJdE5Ria.js:Ou",
+          "kind": "shared-graph",
+          "original": "Eg"
+        },
+        {
+          "local": "I",
+          "from": "../cds-core/shared-frame.mjs",
+          "name": "CdsPopover",
+          "via": "shared-frame-CJdE5Ria.js:Ua",
+          "kind": "shared-graph",
+          "original": "JM"
+        },
+        {
+          "local": "I1",
+          "from": "./shared-frame.mjs",
+          "name": "I1",
+          "via": "shared-frame-CJdE5Ria.js:rm",
+          "kind": "generated"
+        },
+        {
+          "local": "I2",
+          "from": "./shared-frame.mjs",
+          "name": "I2",
+          "via": "shared-frame-CJdE5Ria.js:im",
+          "kind": "generated"
+        },
+        {
+          "local": "J",
+          "from": "../cds-core/shared-frame.mjs",
+          "name": "CdsIcon",
+          "via": "shared-frame-CJdE5Ria.js:lf",
+          "kind": "shared-graph",
+          "original": "Bs"
+        },
+        {
+          "local": "J0",
+          "from": "./shared-frame.mjs",
+          "name": "J0",
+          "via": "shared-frame-CJdE5Ria.js:cm",
+          "kind": "generated"
+        },
+        {
+          "local": "J1",
+          "from": "./shared-frame.mjs",
+          "name": "J1",
+          "via": "shared-frame-CJdE5Ria.js:lm",
+          "kind": "generated"
+        },
+        {
+          "local": "J2",
+          "from": "./shared-frame.mjs",
+          "name": "J2",
+          "via": "shared-frame-CJdE5Ria.js:um",
+          "kind": "generated"
+        },
+        {
+          "local": "J3",
+          "from": "./shared-frame.mjs",
+          "name": "J3",
+          "via": "shared-frame-CJdE5Ria.js:dm",
+          "kind": "generated"
+        },
+        {
+          "local": "J4",
+          "from": "./shared-frame.mjs",
+          "name": "J4",
+          "via": "shared-frame-CJdE5Ria.js:fm",
+          "kind": "generated"
+        },
+        {
+          "local": "J5",
+          "from": "./shared-frame.mjs",
+          "name": "J5",
+          "via": "shared-frame-CJdE5Ria.js:pm",
+          "kind": "generated"
+        },
+        {
+          "local": "J9",
+          "from": "./shared-frame.mjs",
+          "name": "J9",
+          "via": "shared-frame-CJdE5Ria.js:hm",
+          "kind": "generated"
+        },
+        {
+          "local": "Jr",
+          "from": "./shared-123.mjs",
+          "name": "Ih",
+          "via": "shared-123-1Hc1RTKl.js:pS",
+          "kind": "generated"
+        },
+        {
+          "local": "K0",
+          "from": "./shared-frame.mjs",
+          "name": "K0",
+          "via": "shared-frame-CJdE5Ria.js:gm",
+          "kind": "generated"
+        },
+        {
+          "local": "K1",
+          "from": "./shared-frame.mjs",
+          "name": "K1",
+          "via": "shared-frame-CJdE5Ria.js:_m",
+          "kind": "generated"
+        },
+        {
+          "local": "K2",
+          "from": "./shared-frame.mjs",
+          "name": "K2",
+          "via": "shared-frame-CJdE5Ria.js:vm",
+          "kind": "generated"
+        },
+        {
+          "local": "K3",
+          "from": "./shared-frame.mjs",
+          "name": "K3",
+          "via": "shared-frame-CJdE5Ria.js:ym",
+          "kind": "generated"
+        },
+        {
+          "local": "K4",
+          "from": "./shared-frame.mjs",
+          "name": "K4",
+          "via": "shared-frame-CJdE5Ria.js:bm",
+          "kind": "generated"
+        },
+        {
+          "local": "Pa",
+          "from": "./shared-183.mjs",
+          "name": "_J",
+          "via": "shared-183-B2N6Zy4J.js:Cr",
+          "kind": "generated"
+        },
+        {
+          "local": "Q",
+          "from": "../../source-home-v4-adapters.jsx",
+          "name": "FormattedMessage",
+          "via": "vendor-intl-BJgYK7RA.js:l",
+          "kind": "adapter",
+          "original": "Gt"
+        },
+        {
+          "local": "QS",
+          "from": "../../source-home-v4-adapters.jsx",
+          "name": "UnavailableInlineReview",
+          "via": "shared-55-BRv2XBP7.js#QS",
+          "kind": "adapter",
+          "original": "QS"
+        },
+        {
+          "local": "Ri",
+          "from": "../../source-home-v4-adapters.jsx",
+          "name": "useHomeTracker",
+          "via": "shared-62-DoCqVpIq.js:cf",
+          "kind": "adapter",
+          "original": "OT"
+        },
+        {
+          "local": "Ul",
+          "from": "./shared-2.mjs",
+          "name": "ZH",
+          "via": "shared-2-CsjIBQD8.js:Zo",
+          "kind": "generated"
+        },
+        {
+          "local": "Wl",
+          "from": "../../source-home-v4-adapters.jsx",
+          "name": "markHomeSessionRead",
+          "via": "shared-2-CsjIBQD8.js:es",
+          "kind": "adapter",
+          "original": "RH"
+        },
+        {
+          "local": "Ws",
+          "from": "../../source-home-v4-adapters.jsx",
+          "name": "useHomePermissions",
+          "via": "shared-18-Cfqwgjc5.js:cs",
+          "kind": "adapter",
+          "original": "lI"
+        },
+        {
+          "local": "Z1",
+          "from": "./shared-frame.mjs",
+          "name": "Z1",
+          "via": "shared-frame-CJdE5Ria.js:Sm",
+          "kind": "generated"
+        },
+        {
+          "local": "Z3",
+          "from": "./shared-frame.mjs",
+          "name": "Z3",
+          "via": "shared-frame-CJdE5Ria.js:wm",
+          "kind": "generated"
+        },
+        {
+          "local": "Z4",
+          "from": "../cds-core/shared-frame.mjs",
+          "name": "memoStoreDeps4",
+          "via": "shared-frame-CJdE5Ria.js:Tm",
+          "kind": "shared-graph",
+          "original": "Z4"
+        },
+        {
+          "local": "Z5",
+          "from": "./shared-frame.mjs",
+          "name": "Z5",
+          "via": "shared-frame-CJdE5Ria.js:Em",
+          "kind": "generated"
+        },
+        {
+          "local": "_r",
+          "from": "../../source-home-v4-adapters.jsx",
+          "name": "useHomePinsEnabled",
+          "via": "shared-123-1Hc1RTKl.js:Nu",
+          "kind": "adapter",
+          "original": "_L"
+        },
+        {
+          "local": "a",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-BckkO60Y.js:Ga",
+          "kind": "react"
+        },
+        {
+          "local": "ds",
+          "from": "./shared-92.mjs",
+          "name": "jU",
+          "via": "shared-92-BOgyxePb.js:oo",
+          "kind": "generated"
+        },
+        {
+          "local": "gu",
+          "from": "../../source-home-v4-adapters.jsx",
+          "name": "HomeRelativeTime",
+          "via": "vendor-intl-BJgYK7RA.js:a",
+          "kind": "adapter",
+          "original": "en"
+        },
+        {
+          "local": "h",
+          "from": "react",
+          "name": "Suspense",
+          "via": "vendor-frame-BckkO60Y.js:eo",
+          "kind": "react"
+        },
+        {
+          "local": "i",
+          "from": "../cds-core/vendor-frame.mjs",
+          "name": "clsx",
+          "via": "vendor-frame-BckkO60Y.js:Fa",
+          "kind": "shared-graph",
+          "original": "ke"
+        },
+        {
+          "local": "j",
+          "from": "../cds-core/shared-frame.mjs",
+          "name": "CdsButton",
+          "via": "shared-frame-CJdE5Ria.js:Id",
+          "kind": "shared-graph",
+          "original": "Xu"
+        },
+        {
+          "local": "m",
+          "from": "react",
+          "name": "memo",
+          "via": "vendor-frame-BckkO60Y.js:co",
+          "kind": "react"
+        },
+        {
+          "local": "pf",
+          "from": "./shared-33.mjs",
+          "name": "Cb",
+          "via": "shared-33-DtdykY0y.js:nl",
+          "kind": "generated"
+        },
+        {
+          "local": "qr",
+          "from": "./shared-123.mjs",
+          "name": "OB",
+          "via": "shared-123-1Hc1RTKl.js:ol",
+          "kind": "generated"
+        },
+        {
+          "local": "ru",
+          "from": "../../source-home-v4-adapters.jsx",
+          "name": "useHomeSessionAwaiting",
+          "via": "shared-5-u8kha2eH.js:Tn",
+          "kind": "adapter",
+          "original": "jW"
+        },
+        {
+          "local": "s",
+          "from": "react/jsx-runtime",
+          "name": "jsxs",
+          "via": "vendor-frame-BckkO60Y.js:Ka",
+          "kind": "react"
+        },
+        {
+          "local": "se",
+          "from": "./shared-0.mjs",
+          "name": "qc",
+          "via": "shared-0-CnnWnVrT.js:ES",
+          "kind": "generated"
+        },
+        {
+          "local": "yu",
+          "from": "../../source-home-v4-adapters.jsx",
+          "name": "useIntl",
+          "via": "vendor-intl-BJgYK7RA.js:p",
+          "kind": "adapter",
+          "original": "q"
+        }
+      ],
+      "exports": {},
+      "sharedExports": [
+        "$S"
+      ],
+      "heldByViewTabs": []
+    },
+    {
+      "target": "shared-23.mjs",
+      "source": "shared-23-BRmsPtuN.js",
+      "sourceSha256": "f52e23053cdcb6378fb347c14ff7a6243e4d89a5dfb63cf27d4b2217d2cb01c9",
+      "sha256": "06711713ff1b0486aad6460fbc116675a4cfb22f704ce91ec89f27c44051027a",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "__vite__mapDeps",
+          "sha256": "3a05a1d6a329c04611b6d9e14ed153f7ff0a97c531db765ff5329cc14bfefab7"
+        },
+        {
+          "name": "Fb",
+          "sha256": "b7d1a6ab532eeb266381fefe5d9f03723e62d4bd86e8351fa0e01625270023fa"
+        },
+        {
+          "name": "Ib",
+          "sha256": "b32c81a63b5327df63360758e29c2875a46221ffa2b50966a2f0890ecbca6da3"
+        },
+        {
+          "name": "Lb",
+          "sha256": "0fc92598cfe8230624627c2f2f128b0451621b32abd16b495899f9d38b14b5df"
+        },
+        {
+          "name": "Rb",
+          "sha256": "92115eeac8fe4ebc5cbf6fe66450617f6c1b25e4af71dc391d50974f794cda37"
+        },
+        {
+          "name": "zb",
+          "sha256": "6506a937cbc29a656bf83fc13e4f2cfe8b215dcdc5d2cf3a6da1c2ad01160acd"
+        },
+        {
+          "name": "Bb",
+          "sha256": "148d7c8d3b7cb498f62ab1af76cc7d09fa8c57a745956c0d6bc379275f94fa54"
+        },
+        {
+          "name": "Vb",
+          "sha256": "93252f781797ec2adbf62e54239a62bebf5f1374542aeebaea25236bd4830804"
+        },
+        {
+          "name": "Hb",
+          "sha256": "71d171b903f713aaa9b69e510c1d0d4754056dc14515f71c9c9c8ac28defa95d"
+        },
+        {
+          "name": "Ub",
+          "sha256": "5bb41052ca5ec3d2a51b1b1e2a31e558764a23dc1c5adee9afab1fc47d28b3c7"
+        },
+        {
+          "name": "Wb",
+          "sha256": "a244ca7385363564fbe46a550573a37635df1190b20691fe9c7193c8507b3385"
+        },
+        {
+          "name": "$b",
+          "sha256": "d34ccf796a38e53268f26922bdd336c7beedf19d080435f0888ad104be02a236"
+        },
+        {
+          "name": "ex",
+          "sha256": "de2ae611f27e77e0222281993fe86b56aa9e30c40efff1a608981762073c2736"
+        },
+        {
+          "name": "tx",
+          "sha256": "c64494ba7b2322b604dbb00b0b03bc8738a229434c6d1e133f6f5d110b243333"
+        },
+        {
+          "name": "nx",
+          "sha256": "037f575459fc500e8121415f8b18460896e15e18882336b9c904de2f2c77a2f3"
+        },
+        {
+          "name": "ix",
+          "sha256": "a10b45da6abac199984c4ff5c4f2a8464d82f146d6d852d7d7f520e66b500c54"
+        },
+        {
+          "name": "ax",
+          "sha256": "56124465cc70b0e247ad3b59a7eedff1961c9b0ba3d78cc91c98dafe7ee339f9"
+        },
+        {
+          "name": "ox",
+          "sha256": "6c961c5e90b245af02ed2a6b5d807ffd854a694441bf86a322a52cf7550f052d"
+        },
+        {
+          "name": "cx",
+          "sha256": "7106e6047cf22e80c3b06d810fbb4abcb76eca8099d8a0ccb2ad9148e1668974"
+        },
+        {
+          "name": "lx",
+          "sha256": "91578fefae6991bf50fbe52389a2be556847f3754f60f214055941beacdd998c"
+        },
+        {
+          "name": "ux",
+          "sha256": "c9b490380c900163f024067a11838b0706802a500ca568f3f5a936eb505d1975"
+        },
+        {
+          "name": "bx",
+          "sha256": "ed752e14a8079ea1f7dbd2719c366c36ad2863e64c8667429034d814c26fbe34"
+        },
+        {
+          "name": "wx",
+          "sha256": "23869972797d1cfca116cc7883320b5f7940dfa2a46d6d4c21abefc489f0bbd6"
+        },
+        {
+          "name": "Gx",
+          "sha256": "8a7d50b7fe2bbe936020050b947ea09a1ff93749bb01268ef7f459c4663820f7"
+        },
+        {
+          "name": "qx",
+          "sha256": "9b5dc56d488f966431032cd17070cf20ad1df12b7e29900df5bb4e376521e1f3"
+        },
+        {
+          "name": "Xx",
+          "sha256": "46c9864a210c2c0f35fe40446a688b93936d200e546d7d684be69c2f1181ed64"
+        },
+        {
+          "name": "$x",
+          "sha256": "cfb8cc36af059cda70e0af7e7f355e8faa819cc7d2b4b25042d413724155a203"
+        },
+        {
+          "name": "DC",
+          "sha256": "2bc4d09061336c53baee87987f4587fad3edc94368de27f2751a88ca774e9e83"
+        },
+        {
+          "name": "OC",
+          "sha256": "49e378b0aa1231167dd7e4d97a0e061dfe894a192a4a493c8c696eea50e294a4"
+        },
+        {
+          "name": "kC",
+          "sha256": "31399b1fb3013f18bb5e32d17e53605780fe1539cbc059031766f6060dec07af"
+        },
+        {
+          "name": "AC",
+          "sha256": "ff5ecba07c01f493b2a6ca4258a67556bc12340a5c7badfea4afe82f06d7622d"
+        },
+        {
+          "name": "jC",
+          "sha256": "34bb7fed1718f26e907781d0ce4a167db5b3b897138a3282c0df05557902d506"
+        },
+        {
+          "name": "NC",
+          "sha256": "6fe8d4d8b26502929f35e4e90eba0c80b8c545d4ff64732d5f9d0a8755807f45"
+        },
+        {
+          "name": "PC",
+          "sha256": "62dca80bda78cea6282cb60a7c319a5fdc34e9c161b724ae207887d9c44c4824"
+        },
+        {
+          "name": "FC",
+          "sha256": "111104d09953ce849cfa571d8f9b4bb7379a6c6c81fd694407567ffdc7f68f57"
+        },
+        {
+          "name": "IC",
+          "sha256": "34cd93a516cf7e2010b1c2f71750a47998d0338b2b8ac2bf18c93ef874fd5169"
+        },
+        {
+          "name": "LC",
+          "sha256": "693a12fe146db628da7457f37dcbb220edafae7c6e8b574c607aaf09d5e7b8cd"
+        },
+        {
+          "name": "RC",
+          "sha256": "7fcfcdba25a142d700099415146157efe8e9603f73aba827011c0de62c64945b"
+        },
+        {
+          "name": "zC",
+          "sha256": "e292de32b2ad6b7c877d3ce9e1679a9aaf824b7050adc7c9e69ef4841f722509"
+        },
+        {
+          "name": "BC",
+          "sha256": "c94e7fed26fe616e0569eab2475fb7efa8452a69e7e98daf2b18aa809508d9f7"
+        },
+        {
+          "name": "HC",
+          "sha256": "c09e30aeead6c7a97f953d533ab07aa6d336ccb18eb575d13de94a6510a975f4"
+        },
+        {
+          "name": "UC",
+          "sha256": "8be6a21d010811be89122b75c6115f23362705ae766976b756c949858bdba51f"
+        },
+        {
+          "name": "WC",
+          "sha256": "9810171068611ead99f3c4c3b590abdae7e9b919c4ced7d063526be9a4d0c3a1"
+        },
+        {
+          "name": "GC",
+          "sha256": "a782fdef8946f47f845715c0aed0fab8720ef8fd7abed30a0d9f3d84bc6ef115"
+        },
+        {
+          "name": "KC",
+          "sha256": "b302eecd0f81303c103c5a008dce8449047246991b6dcad3261beea4e01af6fb"
+        },
+        {
+          "name": "JC",
+          "sha256": "9d676bba8039673ece933456463cca810196f6e947eff4c3db8d55ca90210859"
+        },
+        {
+          "name": "YC",
+          "sha256": "dace21d495172ea11a69266269a6113c3c79fcb7c2e3c1d51f6ad3cd8f941c69"
+        },
+        {
+          "name": "XC",
+          "sha256": "2f1142723288f4b46a0d33fd6ee21caa7892753b3175dfb4fc47046d10385bac"
+        },
+        {
+          "name": "ZC",
+          "sha256": "da248aa1044973858973f4e47ed62d83633f450cc2bda39b2d79916a0e1ffd15"
+        },
+        {
+          "name": "QC",
+          "sha256": "fc03e8b2c8fa64220479d46044a4a50a35d46088a26c385adb8ec3ee74f7b51b"
+        },
+        {
+          "name": "$C",
+          "sha256": "1429074af393db177736842d4b037302c2e8749c2b4686440f26202dbab6d95d"
+        },
+        {
+          "name": "ew",
+          "sha256": "c4fb9c19fc0f8aaaa66c0737d3a114e4a77627481aff82d6ec40d2b4caf13b84"
+        },
+        {
+          "name": "tw",
+          "sha256": "fd03b5f6e613d1496790b3ff61b85c1a7c1ad21e7cc99077c8855c6b071e3e83"
+        },
+        {
+          "name": "nw",
+          "sha256": "0e732434152b457602ffb62e9f2a3448596472c1fa4d5060b761359f4a7e7cf3"
+        },
+        {
+          "name": "rw",
+          "sha256": "9fe698297132445f5676cd14d94106bec7926a8565789b401df316daeef8308f"
+        },
+        {
+          "name": "iw",
+          "sha256": "3da04f05f2faccbef72c34e468f1db67d3e5ee4c3b73611d6b48fad3a74c844a"
+        },
+        {
+          "name": "aw",
+          "sha256": "55572976a8e2578687bf7a0582d2eec0fba8ab69db36b3ac914584e425442a63"
+        },
+        {
+          "name": "ow",
+          "sha256": "9aec7c2c70c4638599ef2465b6d0a5381d846eb34be76de959f7c2fd72f6a391"
+        },
+        {
+          "name": "sw",
+          "sha256": "9f4163b968736dc35e52dd11fd4b5a3da29c39ceabb10261b521be7ea55305f6"
+        },
+        {
+          "name": "cw",
+          "sha256": "db8d1cba053695072f3f168202e5756a1588eaeaf07de4c59e15f3e5a2bb8d8c"
+        },
+        {
+          "name": "lw",
+          "sha256": "91167bfe50ce06592a89ea3a2105b02e831be7bf0d803bcdecbb9db433dd11cb"
+        },
+        {
+          "name": "uw",
+          "sha256": "bfb42917f52ee82855fd63003f424c950457a6104d08774cc55220c8f7c02c2f"
+        },
+        {
+          "name": "dw",
+          "sha256": "f4bbe9943b85a1cb251d3ae6b66b2399c375b4dffbd97532a0ef7793a9ca0c3b"
+        },
+        {
+          "name": "fw",
+          "sha256": "79dbefc1a1012b5c825a6b20f9eeccb8e37e0938d2000f2f2add6d615d2ff812"
+        }
+      ],
+      "initializers": [],
+      "imports": [
+        {
+          "local": "A",
+          "from": "react",
+          "name": "useLayoutEffect",
+          "via": "vendor-frame-BckkO60Y.js:xo",
+          "kind": "react"
+        },
+        {
+          "local": "Ah",
+          "from": "../../source-home-v4-adapters.jsx",
+          "name": "useHomeRemoteCoworkSession",
+          "via": "shared-33-DtdykY0y.js:ka",
+          "kind": "adapter",
+          "original": "Fj"
+        },
+        {
+          "local": "Be",
+          "from": "./shared-0.mjs",
+          "name": "Ya",
+          "via": "shared-0-CnnWnVrT.js:JC",
+          "kind": "generated"
+        },
+        {
+          "local": "Br",
+          "from": "../../source-home-v4-adapters.jsx",
+          "name": "useHomeIncognito",
+          "via": "shared-1-D1bGaTaN.js:hf",
+          "kind": "adapter",
+          "original": "MP"
+        },
+        {
+          "local": "Cs",
+          "from": "./shared-62.mjs",
+          "name": "bb",
+          "via": "shared-62-DoCqVpIq.js:yp",
+          "kind": "generated"
+        },
+        {
+          "local": "D",
+          "from": "react",
+          "name": "useContext",
+          "via": "vendor-frame-BckkO60Y.js:po",
+          "kind": "react"
+        },
+        {
+          "local": "Dh",
+          "from": "../../source-home-v4-adapters.jsx",
+          "name": "useHomePluginSkillFilter",
+          "via": "shared-33-DtdykY0y.js:co",
+          "kind": "adapter",
+          "original": "RA"
+        },
+        {
+          "local": "E",
+          "from": "react",
+          "name": "createContext",
+          "via": "vendor-frame-BckkO60Y.js:no",
+          "kind": "react"
+        },
+        {
+          "local": "EC",
+          "from": "../../source-home-v4-adapters.jsx",
+          "name": "PluginSetupCardEntry",
+          "via": "shared-23-BRmsPtuN.js#EC",
+          "kind": "adapter",
+          "original": "EC"
+        },
+        {
+          "local": "Fu",
+          "from": "./shared-19.mjs",
+          "name": "uS",
+          "via": "shared-19-UalAfDtn.js:wa",
+          "kind": "generated"
+        },
+        {
+          "local": "G",
+          "from": "./shared-123.mjs",
+          "name": "R$",
+          "via": "shared-123-1Hc1RTKl.js:Dt",
+          "kind": "generated"
+        },
+        {
+          "local": "Ga",
+          "from": "../../source-home-v4-adapters.jsx",
+          "name": "useHomeMarlinDesign",
+          "via": "shared-123-1Hc1RTKl.js:Yx",
+          "kind": "adapter",
+          "original": "s_"
+        },
+        {
+          "local": "I1",
+          "from": "./shared-frame.mjs",
+          "name": "I1",
+          "via": "shared-frame-CJdE5Ria.js:rm",
+          "kind": "generated"
+        },
+        {
+          "local": "I3",
+          "from": "./shared-frame.mjs",
+          "name": "I3",
+          "via": "shared-frame-CJdE5Ria.js:am",
+          "kind": "generated"
+        },
+        {
+          "local": "I5",
+          "from": "./shared-frame.mjs",
+          "name": "I5",
+          "via": "shared-frame-CJdE5Ria.js:sm",
+          "kind": "generated"
+        },
+        {
+          "local": "Ip",
+          "from": "./shared-3.mjs",
+          "name": "Ml",
+          "via": "shared-3-IQTrO7Gx.js:uu",
+          "kind": "generated"
+        },
+        {
+          "local": "J0",
+          "from": "./shared-frame.mjs",
+          "name": "J0",
+          "via": "shared-frame-CJdE5Ria.js:cm",
+          "kind": "generated"
+        },
+        {
+          "local": "J1",
+          "from": "./shared-frame.mjs",
+          "name": "J1",
+          "via": "shared-frame-CJdE5Ria.js:lm",
+          "kind": "generated"
+        },
+        {
+          "local": "J2",
+          "from": "./shared-frame.mjs",
+          "name": "J2",
+          "via": "shared-frame-CJdE5Ria.js:um",
+          "kind": "generated"
+        },
+        {
+          "local": "J3",
+          "from": "./shared-frame.mjs",
+          "name": "J3",
+          "via": "shared-frame-CJdE5Ria.js:dm",
+          "kind": "generated"
+        },
+        {
+          "local": "J4",
+          "from": "./shared-frame.mjs",
+          "name": "J4",
+          "via": "shared-frame-CJdE5Ria.js:fm",
+          "kind": "generated"
+        },
+        {
+          "local": "J5",
+          "from": "./shared-frame.mjs",
+          "name": "J5",
+          "via": "shared-frame-CJdE5Ria.js:pm",
+          "kind": "generated"
+        },
+        {
+          "local": "J9",
+          "from": "./shared-frame.mjs",
+          "name": "J9",
+          "via": "shared-frame-CJdE5Ria.js:hm",
+          "kind": "generated"
+        },
+        {
+          "local": "Ja",
+          "from": "../../source-home-v4-adapters.jsx",
+          "name": "subscribeHomeSessionEvents",
+          "via": "shared-123-1Hc1RTKl.js:cy",
+          "kind": "adapter",
+          "original": "_x"
+        },
+        {
+          "local": "Jf",
+          "from": "../../source-home-v4-adapters.jsx",
+          "name": "useHomeSessions",
+          "via": "shared-2-CsjIBQD8.js:_o",
+          "kind": "adapter",
+          "original": "hK"
+        },
+        {
+          "local": "K",
+          "from": "../../source-home-v4-adapters.jsx",
+          "name": "defineLazyEntry",
+          "via": "shared-123-1Hc1RTKl.js:Et",
+          "kind": "adapter",
+          "original": "W$"
+        },
+        {
+          "local": "K0",
+          "from": "./shared-frame.mjs",
+          "name": "K0",
+          "via": "shared-frame-CJdE5Ria.js:gm",
+          "kind": "generated"
+        },
+        {
+          "local": "K1",
+          "from": "./shared-frame.mjs",
+          "name": "K1",
+          "via": "shared-frame-CJdE5Ria.js:_m",
+          "kind": "generated"
+        },
+        {
+          "local": "K2",
+          "from": "./shared-frame.mjs",
+          "name": "K2",
+          "via": "shared-frame-CJdE5Ria.js:vm",
+          "kind": "generated"
+        },
+        {
+          "local": "K3",
+          "from": "./shared-frame.mjs",
+          "name": "K3",
+          "via": "shared-frame-CJdE5Ria.js:ym",
+          "kind": "generated"
+        },
+        {
+          "local": "K4",
+          "from": "./shared-frame.mjs",
+          "name": "K4",
+          "via": "shared-frame-CJdE5Ria.js:bm",
+          "kind": "generated"
+        },
+        {
+          "local": "K5",
+          "from": "./shared-frame.mjs",
+          "name": "K5",
+          "via": "shared-frame-CJdE5Ria.js:xm",
+          "kind": "generated"
+        },
+        {
+          "local": "Ka",
+          "from": "../../source-home-v4-adapters.jsx",
+          "name": "useHomeScheduleAccess",
+          "via": "shared-123-1Hc1RTKl.js:Zy",
+          "kind": "adapter",
+          "original": "By"
+        },
+        {
+          "local": "Ln",
+          "from": "../../source-home-v4-adapters.jsx",
+          "name": "readCachedChatGreetings",
+          "via": "shared-25-D-aF0gt9.js:hs",
+          "kind": "adapter",
+          "original": "BO"
+        },
+        {
+          "local": "Lu",
+          "from": "./shared-19.mjs",
+          "name": "rS",
+          "via": "shared-19-UalAfDtn.js:xa",
+          "kind": "generated"
+        },
+        {
+          "local": "MC",
+          "from": "../../source-home-v4-adapters.jsx",
+          "name": "useHomeSetupCardGate",
+          "via": "shared-23-BRmsPtuN.js#MC",
+          "kind": "adapter",
+          "original": "MC"
+        },
+        {
+          "local": "Mm",
+          "from": "../../source-home-v4-adapters.jsx",
+          "name": "useHomeLandingIntent",
+          "via": "shared-4-C_EiQb9h.js:Mt",
+          "kind": "adapter",
+          "original": "ij"
+        },
+        {
+          "local": "Ms",
+          "from": "../../source-home-v4-adapters.jsx",
+          "name": "useHomeFolderSelection",
+          "via": "shared-26-B-POtn5S.js:Ys",
+          "kind": "adapter",
+          "original": "wI"
+        },
+        {
+          "local": "Nh",
+          "from": "./shared-33.mjs",
+          "name": "lD",
+          "via": "shared-33-DtdykY0y.js:ps",
+          "kind": "generated"
+        },
+        {
+          "local": "On",
+          "from": "../../source-home-v4-adapters.jsx",
+          "name": "useChatGreetingBootstrap",
+          "via": "shared-25-D-aF0gt9.js:di",
+          "kind": "adapter",
+          "original": "kB"
+        },
+        {
+          "local": "Pa",
+          "from": "./shared-123.mjs",
+          "name": "UX",
+          "via": "shared-123-1Hc1RTKl.js:Un",
+          "kind": "generated"
+        },
+        {
+          "local": "Pf",
+          "from": "../../source-home-v4-adapters.jsx",
+          "name": "clearHomeActive",
+          "via": "shared-2-CsjIBQD8.js:$o",
+          "kind": "adapter",
+          "original": "KH"
+        },
+        {
+          "local": "Pm",
+          "from": "../../source-home-v4-adapters.jsx",
+          "name": "pendingHomeCreation",
+          "via": "shared-4-C_EiQb9h.js:br",
+          "kind": "adapter",
+          "original": "fC"
+        },
+        {
+          "local": "Qa",
+          "from": "./shared-123.mjs",
+          "name": "JC",
+          "via": "shared-123-1Hc1RTKl.js:iv",
+          "kind": "generated"
+        },
+        {
+          "local": "Sc",
+          "from": "../../source-home-v4-adapters.jsx",
+          "name": "setGreetingTelemetry",
+          "via": "shared-92-BOgyxePb.js:Hb",
+          "kind": "adapter",
+          "original": "zu"
+        },
+        {
+          "local": "Si",
+          "from": "./shared-55.mjs",
+          "name": "$S",
+          "via": "shared-55-BRv2XBP7.js:$s",
+          "kind": "generated"
+        },
+        {
+          "local": "T",
+          "from": "react",
+          "name": "useEffect",
+          "via": "vendor-frame-BckkO60Y.js:go",
+          "kind": "react"
+        },
+        {
+          "local": "U",
+          "from": "../../source-home-v4-adapters.jsx",
+          "name": "useIsClaudeDesktopApp",
+          "via": "shared-0-CnnWnVrT.js:Yu",
+          "kind": "adapter",
+          "original": "FH"
+        },
+        {
+          "local": "Uf",
+          "from": "./shared-2.mjs",
+          "name": "XH",
+          "via": "shared-2-CsjIBQD8.js:Qo",
+          "kind": "generated"
+        },
+        {
+          "local": "Vc",
+          "from": "../../source-home-v4-adapters.jsx",
+          "name": "useHomeSidebarCollapsed",
+          "via": "shared-92-BOgyxePb.js:Yg",
+          "kind": "adapter",
+          "original": "FS"
+        },
+        {
+          "local": "W",
+          "from": "../../source-home-v4-adapters.jsx",
+          "name": "useHomeAccount",
+          "via": "shared-25-D-aF0gt9.js:yi",
+          "kind": "adapter",
+          "original": "Z"
+        },
+        {
+          "local": "Wo",
+          "from": "./shared-62.mjs",
+          "name": "Eb",
+          "via": "shared-62-DoCqVpIq.js:Sp",
+          "kind": "generated"
+        },
+        {
+          "local": "X",
+          "from": "../../source-home-v4-adapters.jsx",
+          "name": "useIntl",
+          "via": "vendor-intl-BJgYK7RA.js:p",
+          "kind": "adapter",
+          "original": "q"
+        },
+        {
+          "local": "Xc",
+          "from": "./shared-92.mjs",
+          "name": "jU",
+          "via": "shared-92-BOgyxePb.js:oo",
+          "kind": "generated"
+        },
+        {
+          "local": "Xp",
+          "from": "../../source-home-v4-adapters.jsx",
+          "name": "useHomeIdle",
+          "via": "shared-140-DfG6VwpK.js:na",
+          "kind": "adapter",
+          "original": "Ta"
+        },
+        {
+          "local": "Y",
+          "from": "../../source-home-v4-adapters.jsx",
+          "name": "FormattedMessage",
+          "via": "vendor-intl-BJgYK7RA.js:l",
+          "kind": "adapter",
+          "original": "Gt"
+        },
+        {
+          "local": "Z2",
+          "from": "./shared-frame.mjs",
+          "name": "Z2",
+          "via": "shared-frame-CJdE5Ria.js:Cm",
+          "kind": "generated"
+        },
+        {
+          "local": "_",
+          "from": "react/jsx-runtime",
+          "name": "Fragment",
+          "via": "vendor-frame-BckkO60Y.js:Wa",
+          "kind": "react"
+        },
+        {
+          "local": "_u",
+          "from": "./shared-19.mjs",
+          "name": "$x",
+          "via": "shared-19-UalAfDtn.js:Ta",
+          "kind": "generated"
+        },
+        {
+          "local": "au",
+          "from": "./shared-19.mjs",
+          "name": "dS",
+          "via": "shared-19-UalAfDtn.js:Ca",
+          "kind": "generated"
+        },
+        {
+          "local": "c",
+          "from": "../cds-core/browser-preload-helper.mjs",
+          "name": "s",
+          "via": "preload-helper-BBljBeZo.js:t",
+          "kind": "shared-graph",
+          "original": "s"
+        },
+        {
+          "local": "cp",
+          "from": "../../source-home-v4-adapters.jsx",
+          "name": "useHomeAttentionIds",
+          "via": "shared-5-u8kha2eH.js:Cn",
+          "kind": "adapter",
+          "original": "IW"
+        },
+        {
+          "local": "d",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-BckkO60Y.js:Ga",
+          "kind": "react"
+        },
+        {
+          "local": "dl",
+          "from": "./vendor-all-0.mjs",
+          "name": "v",
+          "via": "vendor-all-0-uUCo-eCX.js:L",
+          "kind": "generated"
+        },
+        {
+          "local": "dn",
+          "from": "./shared-25.mjs",
+          "name": "wi",
+          "via": "shared-25-D-aF0gt9.js:Q_",
+          "kind": "generated"
+        },
+        {
+          "local": "fc",
+          "from": "../../source-home-v4-adapters.jsx",
+          "name": "useChatGreetingSearchParams",
+          "via": "shared-183-B2N6Zy4J.js:to",
+          "kind": "adapter",
+          "original": "UH"
+        },
+        {
+          "local": "fi",
+          "from": "./shared-153.mjs",
+          "name": "xg",
+          "via": "shared-153-DMw2VzSq.js:ab",
+          "kind": "generated"
+        },
+        {
+          "local": "fm",
+          "from": "./shared-212.mjs",
+          "name": "$4",
+          "via": "shared-212-BHMAi0oa.js:Ut",
+          "kind": "generated"
+        },
+        {
+          "local": "g",
+          "from": "react",
+          "name": "useState",
+          "via": "vendor-frame-BckkO60Y.js:To",
+          "kind": "react"
+        },
+        {
+          "local": "jm",
+          "from": "../../source-home-v4-adapters.jsx",
+          "name": "useHomeLandingActive",
+          "via": "shared-4-C_EiQb9h.js:Bt",
+          "kind": "adapter",
+          "original": "_j"
+        },
+        {
+          "local": "kh",
+          "from": "./shared-33.mjs",
+          "name": "zA",
+          "via": "shared-33-DtdykY0y.js:io",
+          "kind": "generated"
+        },
+        {
+          "local": "l",
+          "from": "react",
+          "name": "useSyncExternalStore",
+          "via": "vendor-frame-BckkO60Y.js:Eo",
+          "kind": "react"
+        },
+        {
+          "local": "mp",
+          "from": "../../source-home-v4-adapters.jsx",
+          "name": "useHomeSurface",
+          "via": "shared-5-u8kha2eH.js:Mc",
+          "kind": "adapter",
+          "original": "tA"
+        },
+        {
+          "local": "ms",
+          "from": "./shared-62.mjs",
+          "name": "_N",
+          "via": "shared-62-DoCqVpIq.js:ql",
+          "kind": "generated"
+        },
+        {
+          "local": "nc",
+          "from": "./shared-183.mjs",
+          "name": "xJ",
+          "via": "shared-183-B2N6Zy4J.js:Sr",
+          "kind": "generated"
+        },
+        {
+          "local": "nf",
+          "from": "../../source-home-v4-adapters.jsx",
+          "name": "useHomeSchedules",
+          "via": "shared-31-C9BqSSuD.js:ha",
+          "kind": "adapter",
+          "original": "Up"
+        },
+        {
+          "local": "np",
+          "from": "../../source-home-v4-adapters.jsx",
+          "name": "useHomeReadState",
+          "via": "shared-2-CsjIBQD8.js:ps",
+          "kind": "adapter",
+          "original": "QH"
+        },
+        {
+          "local": "oi",
+          "from": "../../source-home-v4-adapters.jsx",
+          "name": "useHomePluginsInChat",
+          "via": "shared-153-DMw2VzSq.js:Dh",
+          "kind": "adapter",
+          "original": "nD"
+        },
+        {
+          "local": "p",
+          "from": "react/jsx-runtime",
+          "name": "jsxs",
+          "via": "vendor-frame-BckkO60Y.js:Ka",
+          "kind": "react"
+        },
+        {
+          "local": "pe",
+          "from": "../cds-core/shared-frame.mjs",
+          "name": "CdsIcon",
+          "via": "shared-frame-CJdE5Ria.js:lf",
+          "kind": "shared-graph",
+          "original": "Bs"
+        },
+        {
+          "local": "qC",
+          "from": "../../source-home-v4-adapters.jsx",
+          "name": "useHomeTasksReady",
+          "via": "shared-23-BRmsPtuN.js#qC",
+          "kind": "adapter",
+          "original": "qC"
+        },
+        {
+          "local": "qa",
+          "from": "./shared-123.mjs",
+          "name": "YC",
+          "via": "shared-123-1Hc1RTKl.js:av",
+          "kind": "generated"
+        },
+        {
+          "local": "qf",
+          "from": "./shared-2.mjs",
+          "name": "AO",
+          "via": "shared-2-CsjIBQD8.js:Yf",
+          "kind": "generated"
+        },
+        {
+          "local": "qp",
+          "from": "../../source-home-v4-adapters.jsx",
+          "name": "useHomeUnifiedRoutines",
+          "via": "shared-140-DfG6VwpK.js:ea",
+          "kind": "adapter",
+          "original": "Aa"
+        },
+        {
+          "local": "re",
+          "from": "../cds-core/shared-frame.mjs",
+          "name": "CdsAnimatedSpark",
+          "via": "shared-frame-CJdE5Ria.js:Wa",
+          "kind": "shared-graph",
+          "original": "dM"
+        },
+        {
+          "local": "rp",
+          "from": "../../source-home-v4-adapters.jsx",
+          "name": "useHomeReadStateSync",
+          "via": "shared-2-CsjIBQD8.js:us",
+          "kind": "adapter",
+          "original": "IH"
+        },
+        {
+          "local": "rx",
+          "from": "../../source-home-v4-adapters.jsx",
+          "name": "readStaticComposerGreeting",
+          "via": "shared-23-BRmsPtuN.js#rx",
+          "kind": "adapter",
+          "original": "rx"
+        },
+        {
+          "local": "si",
+          "from": "../../source-home-v4-adapters.jsx",
+          "name": "useHomeSetupCards",
+          "via": "shared-153-DMw2VzSq.js:Eh",
+          "kind": "adapter",
+          "original": "AE"
+        },
+        {
+          "local": "u",
+          "from": "../cds-core/vendor-frame.mjs",
+          "name": "clsx",
+          "via": "vendor-frame-BckkO60Y.js:Fa",
+          "kind": "shared-graph",
+          "original": "ke"
+        },
+        {
+          "local": "um",
+          "from": "../../source-home-v4-adapters.jsx",
+          "name": "useHomeSetupCardDismissals",
+          "via": "shared-212-BHMAi0oa.js:Tc",
+          "kind": "adapter",
+          "original": "bU"
+        },
+        {
+          "local": "un",
+          "from": "../../source-home-v4-adapters.jsx",
+          "name": "HomeRouterLink",
+          "via": "shared-25-D-aF0gt9.js:Pu",
+          "kind": "adapter",
+          "original": "Ky"
+        },
+        {
+          "local": "v",
+          "from": "react",
+          "name": "Fragment",
+          "via": "vendor-frame-BckkO60Y.js:Xa",
+          "kind": "react"
+        },
+        {
+          "local": "wr",
+          "from": "../../source-home-v4-adapters.jsx",
+          "name": "chatBootLocale",
+          "via": "shared-1-D1bGaTaN.js:S_",
+          "kind": "adapter",
+          "original": "nx"
+        },
+        {
+          "local": "x",
+          "from": "react",
+          "name": "memo",
+          "via": "vendor-frame-BckkO60Y.js:co",
+          "kind": "react"
+        },
+        {
+          "local": "xu",
+          "from": "./shared-19.mjs",
+          "name": "Yx",
+          "via": "shared-19-UalAfDtn.js:ba",
+          "kind": "generated"
+        },
+        {
+          "local": "ya",
+          "from": "../../source-home-v4-adapters.jsx",
+          "name": "useHomePinsEnabled",
+          "via": "shared-123-1Hc1RTKl.js:Nu",
+          "kind": "adapter",
+          "original": "_L"
+        },
+        {
+          "local": "ye",
+          "from": "../cds-core/shared-frame.mjs",
+          "name": "cdsClassNames",
+          "via": "shared-frame-CJdE5Ria.js:tm",
+          "kind": "shared-graph",
+          "original": "Q"
+        },
+        {
+          "local": "zm",
+          "from": "../../source-home-v4-adapters.jsx",
+          "name": "useHomeLandingSkipsPlugins",
+          "via": "shared-4-C_EiQb9h.js:zt",
+          "kind": "adapter",
+          "original": "vj"
+        },
+        {
+          "local": "zo",
+          "from": "./shared-62.mjs",
+          "name": "bI",
+          "via": "shared-62-DoCqVpIq.js:Nc",
+          "kind": "generated"
+        }
+      ],
+      "exports": {
+        "ix": "useChatGreeting",
+        "Hb": "personalizedGreeting",
+        "lx": "HomeGreeting",
+        "dw": "CoworkHome",
+        "uw": "homeSurfaceSlots",
+        "ZC": "CoworkTaskList"
+      },
+      "sharedExports": [],
+      "heldByViewTabs": []
+    },
+    {
+      "target": "c05c7c31d.mjs",
+      "source": "c05c7c31d-CsbIKKsT.js",
+      "sourceSha256": "36ccc7419218900a36f69d62c99f86bf6d80c383cacdf65ca38671a63aeb231c",
+      "sha256": "2dd7f23a44de11bbbcbea70a7d5e8a24e537312717fa9ed215233d91e62655ec",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "t",
+          "sha256": "5af1a71cfa7de64dab33197b8f587aef866daf805389e57df2d666cb50ff8dbf"
+        },
+        {
+          "name": "n",
+          "sha256": "1b16b1df538ba12dc3f97edbb85caa7050d46c148134290feba80f8236c83db9"
+        },
+        {
+          "name": "r",
+          "sha256": "99c6bf6ddd8d1498b414a018169cc1079a20b46564205083c399db8e46fd6eec"
+        }
+      ],
+      "initializers": [],
+      "imports": [
+        {
+          "local": "e",
+          "from": "./shared-18.mjs",
+          "name": "lM",
+          "via": "shared-18-Cfqwgjc5.js:Lc",
+          "kind": "generated"
+        }
+      ],
+      "exports": {},
+      "sharedExports": [
+        "r"
+      ],
+      "heldByViewTabs": []
+    },
+    {
+      "target": "c3b8779ba.mjs",
+      "source": "c3b8779ba-ftPgp0TO.js",
+      "sourceSha256": "c6be9bd4f51e702128a1f504455da59ffa9ec4afcc1a73cc9a5253a9eccd2772",
+      "sha256": "1c350bf0999629d0402b4f07a8139c20988e77ff04200973c8964fe557ea0a1b",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "r",
+          "sha256": "0d3b54b30e0847b81fa2cbf9d02cdce7f7167779551b55a522d28c8c491731c3"
+        },
+        {
+          "name": "i",
+          "sha256": "0572e583450d410af9a2fb31e13a3e32707d4882b818e996780f5da37cac643e"
+        },
+        {
+          "name": "a",
+          "sha256": "e1fc7989bdafaec83026d80e238544b5097684aa9ed8f1b48d743b3d96f5370f"
+        },
+        {
+          "name": "o",
+          "sha256": "0bd3e5d36507d54e2fefc5767afa04c007f21d66bc08661f87d40791920ffe97"
+        },
+        {
+          "name": "s",
+          "sha256": "322037ae8e19ed4391a219b257433ff74b3407011c9f1941168846d9579dbd18"
+        },
+        {
+          "name": "c",
+          "sha256": "544383f954dfcf286ff472bb3ee36de35ec9d8dbd12a01f25c83c6efb7d0816f"
+        },
+        {
+          "name": "l",
+          "sha256": "17698012bdf03d96ae6c180e86c450ff350e51278cf5f9b5063348621a64832f"
+        }
+      ],
+      "initializers": [],
+      "imports": [
+        {
+          "local": "I1",
+          "from": "./shared-frame.mjs",
+          "name": "I1",
+          "via": "shared-frame-CJdE5Ria.js:rm",
+          "kind": "generated"
+        },
+        {
+          "local": "J0",
+          "from": "./shared-frame.mjs",
+          "name": "J0",
+          "via": "shared-frame-CJdE5Ria.js:cm",
+          "kind": "generated"
+        },
+        {
+          "local": "J1",
+          "from": "./shared-frame.mjs",
+          "name": "J1",
+          "via": "shared-frame-CJdE5Ria.js:lm",
+          "kind": "generated"
+        },
+        {
+          "local": "J2",
+          "from": "./shared-frame.mjs",
+          "name": "J2",
+          "via": "shared-frame-CJdE5Ria.js:um",
+          "kind": "generated"
+        },
+        {
+          "local": "J5",
+          "from": "./shared-frame.mjs",
+          "name": "J5",
+          "via": "shared-frame-CJdE5Ria.js:pm",
+          "kind": "generated"
+        },
+        {
+          "local": "J9",
+          "from": "./shared-frame.mjs",
+          "name": "J9",
+          "via": "shared-frame-CJdE5Ria.js:hm",
+          "kind": "generated"
+        },
+        {
+          "local": "K0",
+          "from": "./shared-frame.mjs",
+          "name": "K0",
+          "via": "shared-frame-CJdE5Ria.js:gm",
+          "kind": "generated"
+        },
+        {
+          "local": "K1",
+          "from": "./shared-frame.mjs",
+          "name": "K1",
+          "via": "shared-frame-CJdE5Ria.js:_m",
+          "kind": "generated"
+        },
+        {
+          "local": "K2",
+          "from": "./shared-frame.mjs",
+          "name": "K2",
+          "via": "shared-frame-CJdE5Ria.js:vm",
+          "kind": "generated"
+        },
+        {
+          "local": "K3",
+          "from": "./shared-frame.mjs",
+          "name": "K3",
+          "via": "shared-frame-CJdE5Ria.js:ym",
+          "kind": "generated"
+        },
+        {
+          "local": "K5",
+          "from": "./shared-frame.mjs",
+          "name": "K5",
+          "via": "shared-frame-CJdE5Ria.js:xm",
+          "kind": "generated"
+        },
+        {
+          "local": "Z1",
+          "from": "./shared-frame.mjs",
+          "name": "Z1",
+          "via": "shared-frame-CJdE5Ria.js:Sm",
+          "kind": "generated"
+        },
+        {
+          "local": "e",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-BckkO60Y.js:Ga",
+          "kind": "react"
+        },
+        {
+          "local": "n",
+          "from": "./c05c7c31d.mjs",
+          "name": "r",
+          "via": "c05c7c31d-CsbIKKsT.js:t",
+          "kind": "generated"
+        },
+        {
+          "local": "t",
+          "from": "react/jsx-runtime",
+          "name": "jsxs",
+          "via": "vendor-frame-BckkO60Y.js:Ka",
+          "kind": "react"
+        }
+      ],
+      "exports": {},
+      "sharedExports": [
+        "c",
+        "i",
+        "l",
+        "o",
+        "r",
+        "s"
+      ],
+      "heldByViewTabs": []
+    },
+    {
+      "target": "c644c45fc.mjs",
+      "source": "c644c45fc-Ckc94xcg.js",
+      "sourceSha256": "c3ebdfb30030fbeebcc2b47e04e058d1c70c50953b13e53ff1ef041a5a12314e",
+      "sha256": "f7fcf5437f91aa9d1b729cef5661bc27c318c4bbd7806279b8924bdf013cb0ce",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "e",
+          "sha256": "72749624669a8e066d53a75d6436ca67705cf610050393055fb3defd4e5e20f7"
+        }
+      ],
+      "initializers": [],
+      "imports": [],
+      "exports": {},
+      "sharedExports": [
+        "e"
+      ],
+      "heldByViewTabs": []
+    },
+    {
+      "target": "ce266b9be-DwMu7QWG.js",
+      "source": "ce266b9be-DwMu7QWG.js",
+      "sourceSha256": "7bc02618202f1a5008ca76f4041c55e75d1cc07267529a16658992d3535e2e86",
+      "sha256": "1dd5f59c9a4bbbc5ce691284fcc26ff499ef46c9d7b536d6a49d2d9897b76a62",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "__vite__mapDeps",
+          "sha256": "9a98339bdfdacd4831143f1077a6c5755f93679eb8d08146115ceed8b79cbb21"
+        },
+        {
+          "name": "M",
+          "sha256": "466cab1c138c93c30606557973c4a46da6693403af747ba3f0734723315de190"
+        },
+        {
+          "name": "N",
+          "sha256": "9076e4b673c1058885abb0b880fd6651aa9cef3cf8c8a7698ead703fa674f8ca"
+        },
+        {
+          "name": "F",
+          "sha256": "cdd1d825cc59859deb822851f6e87f43b970abf5dc95bd7bfc2f1abc0ddd56d2"
+        },
+        {
+          "name": "I",
+          "sha256": "bfe8e0d81d4bc674d2b335357673a10ca676456ceb17574cf9b023e72e9846a8"
+        },
+        {
+          "name": "L",
+          "sha256": "155552563b5bdf15c0601ffc7c1eee6d42dc8f3f56950953309b3ce2182f75a3"
+        },
+        {
+          "name": "R",
+          "sha256": "4d2e0147f18f4e95a46eb701e3208249eb118d9688ba1fec711eea8369a04fcb"
+        },
+        {
+          "name": "z",
+          "sha256": "7678bad30ca2010cff7d9f68e6901810bba4ff52c333efeee19235bb3cbb6867"
+        },
+        {
+          "name": "B",
+          "sha256": "400c8dadb490301f7bc7084dfefd4837985c61164b23ce05eee1adfbb28bb64c"
+        },
+        {
+          "name": "V",
+          "sha256": "e8dd932a58b6f264b49d97e7eb71ac76d6b34335948400f4d9bcef845be3a480"
+        },
+        {
+          "name": "je",
+          "sha256": "43045ad3f16b18e4eda9541b2b969348d0f33aca2355e1637aa8cf296eccdad9"
+        },
+        {
+          "name": "H",
+          "sha256": "ec9354afcbf34025d6396fa470082997b01ccb32503b7e9c8de6418cc8ef83cc"
+        },
+        {
+          "name": "Me",
+          "sha256": "8bac582a7b980997e7a0ae8ed215255f7c386081ff3ade563188fd394ca97183"
+        },
+        {
+          "name": "Ne",
+          "sha256": "cc23a27abf5a34d2ec29716cca273f00e208eed64a086520e13100b564c2c94e"
+        },
+        {
+          "name": "Ie",
+          "sha256": "1f9394b1ac2c36cf38395bfdfa77361467c874686e4f1f5dbf013e63028f0e1e"
+        },
+        {
+          "name": "Le",
+          "sha256": "6e56d4e1f56c55ec40a19984e44ad4313122675bcf4aa9b20db340ec65960259"
+        },
+        {
+          "name": "Re",
+          "sha256": "1ba5d3a6975f53ef516e598f3ded441ff5fceb108e74d532791e826b0bc20d01"
+        },
+        {
+          "name": "ze",
+          "sha256": "255e4160be12ceed9aedd042c706563986680c8856e023cea1b80b5801893731"
+        },
+        {
+          "name": "Be",
+          "sha256": "b9060d23b061d088d3a0c7f4f4b5493f00ca918cee1d727ef67009a0dab6f102"
+        },
+        {
+          "name": "Ve",
+          "sha256": "e8d5c590d41042898cd519ec5321afb3bcff68bf64134b2342435249f2534186"
+        },
+        {
+          "name": "He",
+          "sha256": "fb2353b15302e4a67dc0f322968d0ac23a1719b03201ee24620db40bb5d57916"
+        },
+        {
+          "name": "Ue",
+          "sha256": "e39950a27644b4d4e0701985e5484ecf4abf7d01b3f854d8301f86feb20af7dc"
+        }
+      ],
+      "initializers": [],
+      "imports": [
+        {
+          "local": "Ae",
+          "from": "../../source-home-v4-adapters.jsx",
+          "name": "useHomeChipsVariant",
+          "via": "ce266b9be-DwMu7QWG.js#Ae",
+          "kind": "adapter",
+          "original": "Ae"
+        },
+        {
+          "local": "Ce",
+          "from": "../../source-home-v4-adapters.jsx",
+          "name": "useHomeSkillNames",
+          "via": "shared-33-DtdykY0y.js:ua",
+          "kind": "adapter",
+          "original": "NM"
+        },
+        {
+          "local": "D",
+          "from": "./c3b8779ba.mjs",
+          "name": "i",
+          "via": "c3b8779ba-ftPgp0TO.js:CommsThumbnail",
+          "kind": "generated"
+        },
+        {
+          "local": "De",
+          "from": "../../source-home-v4-adapters.jsx",
+          "name": "useHomeAgentModeAnalytics",
+          "via": "cca63be39-YRQcYEN1.js:t",
+          "kind": "adapter",
+          "original": "n"
+        },
+        {
+          "local": "E",
+          "from": "./c644c45fc.mjs",
+          "name": "e",
+          "via": "c644c45fc-Ckc94xcg.js:t",
+          "kind": "generated"
+        },
+        {
+          "local": "Ee",
+          "from": "./c3b8779ba.mjs",
+          "name": "l",
+          "via": "c3b8779ba-ftPgp0TO.js:PrepThumbnail",
+          "kind": "generated"
+        },
+        {
+          "local": "J0",
+          "from": "./shared-frame.mjs",
+          "name": "J0",
+          "via": "shared-frame-CJdE5Ria.js:cm",
+          "kind": "generated"
+        },
+        {
+          "local": "J1",
+          "from": "./shared-frame.mjs",
+          "name": "J1",
+          "via": "shared-frame-CJdE5Ria.js:lm",
+          "kind": "generated"
+        },
+        {
+          "local": "J2",
+          "from": "./shared-frame.mjs",
+          "name": "J2",
+          "via": "shared-frame-CJdE5Ria.js:um",
+          "kind": "generated"
+        },
+        {
+          "local": "J3",
+          "from": "./shared-frame.mjs",
+          "name": "J3",
+          "via": "shared-frame-CJdE5Ria.js:dm",
+          "kind": "generated"
+        },
+        {
+          "local": "J4",
+          "from": "./shared-frame.mjs",
+          "name": "J4",
+          "via": "shared-frame-CJdE5Ria.js:fm",
+          "kind": "generated"
+        },
+        {
+          "local": "J5",
+          "from": "./shared-frame.mjs",
+          "name": "J5",
+          "via": "shared-frame-CJdE5Ria.js:pm",
+          "kind": "generated"
+        },
+        {
+          "local": "J9",
+          "from": "./shared-frame.mjs",
+          "name": "J9",
+          "via": "shared-frame-CJdE5Ria.js:hm",
+          "kind": "generated"
+        },
+        {
+          "local": "K0",
+          "from": "./shared-frame.mjs",
+          "name": "K0",
+          "via": "shared-frame-CJdE5Ria.js:gm",
+          "kind": "generated"
+        },
+        {
+          "local": "K1",
+          "from": "./shared-frame.mjs",
+          "name": "K1",
+          "via": "shared-frame-CJdE5Ria.js:_m",
+          "kind": "generated"
+        },
+        {
+          "local": "K2",
+          "from": "./shared-frame.mjs",
+          "name": "K2",
+          "via": "shared-frame-CJdE5Ria.js:vm",
+          "kind": "generated"
+        },
+        {
+          "local": "K3",
+          "from": "./shared-frame.mjs",
+          "name": "K3",
+          "via": "shared-frame-CJdE5Ria.js:ym",
+          "kind": "generated"
+        },
+        {
+          "local": "K4",
+          "from": "./shared-frame.mjs",
+          "name": "K4",
+          "via": "shared-frame-CJdE5Ria.js:bm",
+          "kind": "generated"
+        },
+        {
+          "local": "K5",
+          "from": "./shared-frame.mjs",
+          "name": "K5",
+          "via": "shared-frame-CJdE5Ria.js:xm",
+          "kind": "generated"
+        },
+        {
+          "local": "O",
+          "from": "./c3b8779ba.mjs",
+          "name": "r",
+          "via": "c3b8779ba-ftPgp0TO.js:SkillThumbnail",
+          "kind": "generated"
+        },
+        {
+          "local": "Oe",
+          "from": "../../source-home-v4-adapters.jsx",
+          "name": "useHomeBrowserIdeas",
+          "via": "ce266b9be-DwMu7QWG.js#Oe",
+          "kind": "adapter",
+          "original": "Oe"
+        },
+        {
+          "local": "Pe",
+          "from": "../../source-home-v4-adapters.jsx",
+          "name": "useHomeSkillIdeas",
+          "via": "ce266b9be-DwMu7QWG.js#Pe",
+          "kind": "adapter",
+          "original": "Pe"
+        },
+        {
+          "local": "Se",
+          "from": "./shared-33.mjs",
+          "name": "lM",
+          "via": "shared-33-DtdykY0y.js:ga",
+          "kind": "generated"
+        },
+        {
+          "local": "Te",
+          "from": "../../source-home-v4-adapters.jsx",
+          "name": "useHomeChalkSidebar",
+          "via": "shared-21-CuohtEoj.js:va",
+          "kind": "adapter",
+          "original": "O_"
+        },
+        {
+          "local": "_e",
+          "from": "../../source-home-v4-adapters.jsx",
+          "name": "useHomeIdeasPrompt",
+          "via": "shared-212-BHMAi0oa.js:Tv",
+          "kind": "adapter",
+          "original": "kw"
+        },
+        {
+          "local": "a",
+          "from": "react",
+          "name": "useState",
+          "via": "vendor-frame-BckkO60Y.js:To",
+          "kind": "react"
+        },
+        {
+          "local": "be",
+          "from": "../../source-home-v4-adapters.jsx",
+          "name": "useHomeIdeasTracker",
+          "via": "shared-33-DtdykY0y.js:Mo",
+          "kind": "adapter",
+          "original": "Jk"
+        },
+        {
+          "local": "c",
+          "from": "react",
+          "name": "useRef",
+          "via": "vendor-frame-BckkO60Y.js:wo",
+          "kind": "react"
+        },
+        {
+          "local": "d",
+          "from": "../../source-home-v4-adapters.jsx",
+          "name": "useIsClaudeDesktopApp",
+          "via": "shared-0-CnnWnVrT.js:Yu",
+          "kind": "adapter",
+          "original": "FH"
+        },
+        {
+          "local": "ee",
+          "from": "../../source-home-v4-adapters.jsx",
+          "name": "useHomeAccount",
+          "via": "shared-25-D-aF0gt9.js:yi",
+          "kind": "adapter",
+          "original": "Z"
+        },
+        {
+          "local": "f",
+          "from": "./shared-0.mjs",
+          "name": "cd",
+          "via": "shared-0-CnnWnVrT.js:cx",
+          "kind": "generated"
+        },
+        {
+          "local": "fe",
+          "from": "../../source-home-v4-adapters.jsx",
+          "name": "useHomeRemoteDevicesAvailable",
+          "via": "shared-8-BqfCbkJd.js:Hi",
+          "kind": "adapter",
+          "original": "HN"
+        },
+        {
+          "local": "ge",
+          "from": "../../source-home-v4-adapters.jsx",
+          "name": "useHomeIdeasEditor",
+          "via": "shared-212-BHMAi0oa.js:Mv",
+          "kind": "adapter",
+          "original": "UC"
+        },
+        {
+          "local": "he",
+          "from": "../../source-home-v4-adapters.jsx",
+          "name": "useIntl",
+          "via": "vendor-intl-BJgYK7RA.js:p",
+          "kind": "adapter",
+          "original": "q"
+        },
+        {
+          "local": "i",
+          "from": "react/jsx-runtime",
+          "name": "jsxs",
+          "via": "vendor-frame-BckkO60Y.js:Ka",
+          "kind": "react"
+        },
+        {
+          "local": "ke",
+          "from": "../../source-home-v4-adapters.jsx",
+          "name": "useHomeBrowserDevices",
+          "via": "ce266b9be-DwMu7QWG.js#ke",
+          "kind": "adapter",
+          "original": "ke"
+        },
+        {
+          "local": "l",
+          "from": "../cds-core/shared-frame.mjs",
+          "name": "CdsShimmer",
+          "via": "shared-frame-CJdE5Ria.js:aa",
+          "kind": "shared-graph",
+          "original": "wI"
+        },
+        {
+          "local": "me",
+          "from": "../../source-home-v4-adapters.jsx",
+          "name": "useHomeSurface",
+          "via": "shared-5-u8kha2eH.js:Mc",
+          "kind": "adapter",
+          "original": "tA"
+        },
+        {
+          "local": "n",
+          "from": "../cds-core/vendor-frame.mjs",
+          "name": "clsx",
+          "via": "vendor-frame-BckkO60Y.js:Fa",
+          "kind": "shared-graph",
+          "original": "ke"
+        },
+        {
+          "local": "o",
+          "from": "react",
+          "name": "memo",
+          "via": "vendor-frame-BckkO60Y.js:co",
+          "kind": "react"
+        },
+        {
+          "local": "oe",
+          "from": "../../source-home-v4-adapters.jsx",
+          "name": "useHomeBrowserInitialized",
+          "via": "shared-123-1Hc1RTKl.js:zx",
+          "kind": "adapter",
+          "original": "w_"
+        },
+        {
+          "local": "p",
+          "from": "./shared-0.mjs",
+          "name": "id",
+          "via": "shared-0-CnnWnVrT.js:nx",
+          "kind": "generated"
+        },
+        {
+          "local": "r",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-BckkO60Y.js:Ga",
+          "kind": "react"
+        },
+        {
+          "local": "s",
+          "from": "react",
+          "name": "useEffect",
+          "via": "vendor-frame-BckkO60Y.js:go",
+          "kind": "react"
+        },
+        {
+          "local": "se",
+          "from": "./shared-62.mjs",
+          "name": "IS",
+          "via": "shared-62-DoCqVpIq.js:Xf",
+          "kind": "generated"
+        },
+        {
+          "local": "t",
+          "from": "../cds-core/browser-preload-helper.mjs",
+          "name": "s",
+          "via": "preload-helper-BBljBeZo.js:t",
+          "kind": "shared-graph",
+          "original": "s"
+        },
+        {
+          "local": "te",
+          "from": "../../source-home-v4-adapters.jsx",
+          "name": "useHomeServerGates",
+          "via": "shared-123-1Hc1RTKl.js:Xc",
+          "kind": "adapter",
+          "original": "PB"
+        },
+        {
+          "local": "u",
+          "from": "../cds-core/shared-frame.mjs",
+          "name": "CdsIcon",
+          "via": "shared-frame-CJdE5Ria.js:lf",
+          "kind": "shared-graph",
+          "original": "Bs"
+        },
+        {
+          "local": "ue",
+          "from": "../../source-home-v4-adapters.jsx",
+          "name": "useHomeChalkTeacher",
+          "via": "shared-183-B2N6Zy4J.js:Qa",
+          "kind": "adapter",
+          "original": "WH"
+        },
+        {
+          "local": "ve",
+          "from": "./shared-33.mjs",
+          "name": "Lj",
+          "via": "shared-33-DtdykY0y.js:Ea",
+          "kind": "generated"
+        },
+        {
+          "local": "w",
+          "from": "./vendor-intl.mjs",
+          "name": "nn",
+          "via": "vendor-intl-BJgYK7RA.js:d",
+          "kind": "generated"
+        },
+        {
+          "local": "we",
+          "from": "../../source-home-v4-adapters.jsx",
+          "name": "useHomeIdeaTarget",
+          "via": "shared-33-DtdykY0y.js:wi",
+          "kind": "adapter",
+          "original": "dF"
+        },
+        {
+          "local": "x",
+          "from": "../../source-home-v4-adapters.jsx",
+          "name": "useDesktopHomeSupported",
+          "via": "shared-123-1Hc1RTKl.js:Qb",
+          "kind": "adapter",
+          "original": "kv"
+        },
+        {
+          "local": "xe",
+          "from": "../../source-home-v4-adapters.jsx",
+          "name": "useHomeSupportedCommands",
+          "via": "shared-33-DtdykY0y.js:da",
+          "kind": "adapter",
+          "original": "HM"
+        },
+        {
+          "local": "y",
+          "from": "../../source-home-v4-adapters.jsx",
+          "name": "useHomeBrowserPaired",
+          "via": "shared-123-1Hc1RTKl.js:Kb",
+          "kind": "adapter",
+          "original": "ay"
+        },
+        {
+          "local": "ye",
+          "from": "./shared-33.mjs",
+          "name": "kb",
+          "via": "shared-33-DtdykY0y.js:Kc",
+          "kind": "generated"
+        }
+      ],
+      "exports": {
+        "Le": "ChorusCoworkSuggestions"
+      },
+      "sharedExports": [],
+      "heldByViewTabs": []
+    },
+    {
+      "target": "c2bf50d9e-C85ZHUZy.js",
+      "source": "c2bf50d9e-C85ZHUZy.js",
+      "sourceSha256": "723e1c3426dc409b519eb4a5810e002364f3ca7b5a8dac13468ec20006230db7",
+      "sha256": "98f1c633cb7a84e0c6d0690741fb0a0f7c88e4e3e9f866e589664a2ec3e587ff",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "o",
+          "sha256": "a83df521489af574afa7d6ca7c35b0ef930a5b1b95b6d145b5099138a3ab5639"
+        }
+      ],
+      "initializers": [],
+      "imports": [
+        {
+          "local": "a",
+          "from": "./c3b8779ba.mjs",
+          "name": "s",
+          "via": "c3b8779ba-ftPgp0TO.js:SpreadsheetThumbnail",
+          "kind": "generated"
+        },
+        {
+          "local": "e",
+          "from": "./vendor-intl.mjs",
+          "name": "nn",
+          "via": "vendor-intl-BJgYK7RA.js:d",
+          "kind": "generated"
+        },
+        {
+          "local": "i",
+          "from": "./c3b8779ba.mjs",
+          "name": "l",
+          "via": "c3b8779ba-ftPgp0TO.js:PrepThumbnail",
+          "kind": "generated"
+        },
+        {
+          "local": "n",
+          "from": "./c3b8779ba.mjs",
+          "name": "o",
+          "via": "c3b8779ba-ftPgp0TO.js:DocThumbnail",
+          "kind": "generated"
+        },
+        {
+          "local": "r",
+          "from": "./c3b8779ba.mjs",
+          "name": "c",
+          "via": "c3b8779ba-ftPgp0TO.js:OrganizeThumbnail",
+          "kind": "generated"
+        },
+        {
+          "local": "t",
+          "from": "./c3b8779ba.mjs",
+          "name": "i",
+          "via": "c3b8779ba-ftPgp0TO.js:CommsThumbnail",
+          "kind": "generated"
+        }
+      ],
+      "exports": {
+        "o": "COWORK_HOME_IDEAS_CATALOG"
+      },
+      "sharedExports": [],
+      "heldByViewTabs": []
+    }
+  ],
+  "callSites": [],
+  "publicAssets": []
+}

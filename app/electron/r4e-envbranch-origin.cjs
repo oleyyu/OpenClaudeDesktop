@@ -8,7 +8,9 @@
 // `rev-parse --verify --quiet` and `config --get-all`; nothing fetches, so no network is touched.
 //
 // Host adapters (the factory's `host`): the official GitStatusService answers requireTrustedCwd (folder policy and
-// workspace trust) and isKnownNonGitDir (its non-git cache). Main admits only known workspace folders before calling
+// workspace trust) and isKnownNonGitDir (its non-git cache). Since 4.16336.0 isBranchOnOrigin calls
+// requireTrustedCwd(cwd, {pressed:true}) — a user-pressed check, which skips only the config's refusesCwd and keeps the
+// trust and workspace-policy gates. Main admits only known workspace folders before calling
 // (workspaceQueryRoot, the same gate as branch-switch-check), so here a folder is never refused and never known
 // non-git; a non-repository fails rev-parse with exit 128 and the original answers null. runGit / configRead run
 // `git -C <cwd> <args>` with the official timeout; a failure carries its exit status as `result.code` (what BQi7slPm r

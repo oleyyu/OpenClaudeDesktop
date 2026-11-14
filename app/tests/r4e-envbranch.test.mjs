@@ -1,5 +1,5 @@
 // R4e-envbranch (home-15): a named environment's start branch that doesn't exist is cleared with a warning, as in
-// 3.6556.2 De / L0 (2.42304.0 Te / qZ; lane w1-composer-pure moved the generator). Main's branch-on-origin (the original GitStatusService.isBranchOnOrigin over a stub git runner —
+// 4.16336.0 De / Pde (3.6556.2 L0, 2.42304.0 Te / qZ; regions-misc moved the generator to 4.16336.0). Main's branch-on-origin (the original GitStatusService.isBranchOnOrigin over a stub git runner —
 // no git process runs), the generator's source pins, the warning's ICU text in both locales (Vite SSR, no browser), and
 // the host wiring in main.jsx / main.cjs (source text).
 import test, { before, after } from 'node:test';
@@ -82,32 +82,54 @@ test('the original refspec helpers: C3tnPGuy _ all/patterns/refused and v matchi
   assert.equal(gitExitCode({ result: { code: 1 }, remoteExitSynthesized: true }), undefined);
 });
 
-test('generator: the originals and their call sites still match 3.6556.2, and the outputs are current', async () => {
+test('generator: the originals and their call sites still match 4.16336.0, and the outputs are current', async () => {
   await extractR4eEnvbranch({ check: true });
   const manifest = JSON.parse(await fs.readFile(new URL('../src/generated/r4e-envbranch/manifest.json', import.meta.url), 'utf8'));
-  assert.equal(manifest.referenceVersion, '3.6556.2');
-  assert.equal(manifest.referenceSnapshot, 'snapshots/claude-3.6556.2-20261025-192807');
+  assert.equal(manifest.referenceVersion, '4.16336.0');
+  assert.equal(manifest.referenceSnapshot, 'snapshots/claude-4.16336.0-20261104');
   const [module] = manifest.modules;
   assert.deepEqual(module.bindings.map(binding => [binding.file, binding.name, binding.exportedAs]),
-    [['cc43287c9-Me-M2ucD.js', 'L0', 'startBranchMissing'], ['c3efc6f9e-BnLNtm1h.js', 'C.branchMissing', 'branchMissingMessage']]);
-  assert.deepEqual(module.imports.map(entry => [entry.local, entry.name, entry.via]), [['Tn', 'LocalSessions', './shared-0-DDOOdL6P.js:dh (pC)']]);
-  assert.deepEqual(Object.keys(module.callSites), ['R0', 'ue', 'onSelectBranch', 'setSourceBranch', 'stableHandler', 'sourceBranchHandler']);
-  assert.equal(module.callSites.ue.in, 'Lse', 'ue is located inside the environment apply hook');
-  assert.equal(module.callSites.onSelectBranch.in, 'wpe', 'the draft composer hands the picker the a4 setSourceBranch');
-  for (const label of ['setSourceBranch', 'stableHandler', 'sourceBranchHandler']) assert.equal(module.callSites[label].in, 'a4', label);
-  assert.match(module.callSites.R0.sha256, /^[0-9a-f]{64}$/);
-  // The 2.42304.0 message chunk is gone; the descriptor kept its id and text.
-  const snapshot = new URL('../../reference/snapshots/claude-3.6556.2-20261025-192807/', import.meta.url);
+    [['cc43287c9-dzfX-J5i.js', 'Pde', 'startBranchMissing'], ['c5da7eb42-aEqbSKbC.js', 'dC.branchMissing', 'branchMissingMessage']]);
+  assert.deepEqual(module.imports.map(entry => [entry.local, entry.name, entry.via]), [['ot', 'LocalSessions', './shared-0-CnnWnVrT.js:Kh (qO)']]);
+  assert.deepEqual(Object.keys(module.callSites), ['Fde', 'ue', 'onSelectBranch', 'setSourceBranch', 'stableHandler', 'sourceBranchHandler']);
+  assert.equal(module.callSites.ue.in, 'd_e', 'ue is located inside the environment apply hook');
+  assert.equal(module.callSites.onSelectBranch.in, 'owe', 'the draft composer hands the picker the Rfe setSourceBranch');
+  for (const label of ['setSourceBranch', 'stableHandler', 'sourceBranchHandler']) assert.equal(module.callSites[label].in, 'Rfe', label);
+  assert.match(module.callSites.Fde.sha256, /^[0-9a-f]{64}$/);
+  // The 3.6556.2 message chunk is gone; the descriptor kept its id and text (now c5da7eb42 dC, exported Lr).
+  const snapshot = new URL('../../reference/snapshots/claude-4.16336.0-20261104/', import.meta.url);
+  await assert.rejects(fs.access(new URL('ion-dist/assets/v1/c3efc6f9e-BnLNtm1h.js', snapshot)));
   await assert.rejects(fs.access(new URL('ion-dist/assets/v1/cc0051c10-pi8fKHOz.js', snapshot)));
   const origin = JSON.parse(await fs.readFile(new URL('../electron/generated/r4e-envbranch-origin-manifest.json', import.meta.url), 'utf8'));
-  assert.equal(origin.referenceVersion, '3.6556.2');
-  assert.deepEqual([origin.service.file, origin.service.class, origin.host.binding], ['index.chunk-Da165atI.js', 'W', 'un']);
+  assert.equal(origin.referenceVersion, '4.16336.0');
+  assert.deepEqual([origin.service.file, origin.service.class, origin.host.binding], ['index.chunk-DeY_BH2u.js', 'ue', 'Er']);
   assert.deepEqual(Object.fromEntries(Object.entries(origin.service.namespaces).map(([name, entry]) => [name, entry.require])), {
-    u: './index.chunk-DXSKLguD.js', s: './index.chunk-CArOlz-X.js', i: './index.chunk-NwjHwcLG.js', a: './index.chunk-C3tnPGuy.js' });
+    u: './index.chunk-kQsFPJyA.js', s: './index.chunk-BHwKNgSL.js', i: './index.chunk-CLQBepLq.js', a: './index.chunk-DcO4MHOu.js' });
+  // New in 4.16336.0: isBranchOnOrigin hands requireTrustedCwd the chunk constant w={pressed:!0}, sliced as an original.
+  assert.deepEqual(origin.service.constants.map(entry => entry.name), ['w']);
+  const emitted = await fs.readFile(new URL('../electron/generated/r4e-envbranch-origin.cjs', import.meta.url), 'utf8');
+  assert.equal(emitted.split('const w = { pressed: !0 };').length - 1, 1);
+  assert.equal(emitted.split('await this.requireTrustedCwd(e, w)').length - 1, 1);
+  assert.doesNotMatch(emitted, /\bundefined\b/, 'every namespace member is answered');
   assert.deepEqual(origin.functions.map(fn => [fn.binding, fn.as]), [['F', 'isPlausibleBranchName'], ['r', 'gitExitCode'], ['_', 'parseFetchRefspecs'], ['v', 'refspecsCoverBranch']]);
-  assert.deepEqual(origin.callers.map(caller => caller.file), ['index.chunk-DVWJXMwL.js', 'index.chunk-jPKPzV-P.js']);
+  assert.deepEqual(origin.callers.map(caller => caller.file), ['index.chunk-yo8W6L7k.js', 'index.chunk-Du-Wqi0E.js']);
   const { branchMissingMessage } = await import('../src/generated/r4e-envbranch/start-branch-missing.mjs');
   assert.equal(branchMissingMessage.id, '94ae6MV2dl');
+});
+
+test('branch-on-origin (4.16336.0): the trust gate is asked as a user-pressed check, and a refusal answers null without git', async () => {
+  const seen = [], ran = [];
+  const make = refusal => generated.createBranchOnOrigin({
+    git: { runGit: async (args) => { ran.push(args); return ''; } },
+    configRead: async () => '',
+    requireTrustedCwd: async (cwd, options) => { seen.push([cwd, options]); return refusal; },
+    isKnownNonGitDir: () => false,
+  });
+  assert.equal(await make(null).isBranchOnOrigin('/repo', 'main'), true);
+  assert.deepEqual(seen, [['/repo', { pressed: true }]]);
+  ran.length = 0;
+  assert.equal(await make({ success: false, error: 'Folder is not trusted.' }).isBranchOnOrigin('/repo', 'main'), null);
+  assert.deepEqual(ran, []);
 });
 
 let server, notice, i18n, glue;

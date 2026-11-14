@@ -68,8 +68,12 @@ test('capabilitiesFor: 2.x reports no share links and no structured output; 1.x 
   const mimo = capabilitiesFor(FLAVORS.mimo)
   assert.equal(mimo.structuredOutput, true)
   assert.equal(mimo.threadShare, undefined)
+  // threadImport (codeDesktop/thread/import, Import history) is 1.x / MiMo only until the 2.x import path is wired
+  // (index.js importThread's TODO; opencode-bridge-thread-import.test.mjs).
+  assert.equal(v1.threadImport, true)
+  assert.equal(v2.threadImport, undefined)
   // Everything else is the same capability set (the workflow tool switches name 2.x's tools).
-  const rest = (caps) => { const { structuredOutput: _s, threadShare: _t, workflowToolSwitches: _w, ...others } = caps; return others }
+  const rest = (caps) => { const { structuredOutput: _s, threadShare: _t, workflowToolSwitches: _w, threadImport: _i, ...others } = caps; return others }
   assert.deepEqual(rest(v2), rest(v1))
 })
 

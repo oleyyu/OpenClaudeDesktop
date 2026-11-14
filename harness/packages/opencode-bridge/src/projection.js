@@ -935,6 +935,9 @@ export class Projector {
     let current = null
     for (const message of this.ordered()) {
       const info = message.info
+      // An imported conversation the agent took only as one context message (thread-import.js fallback): the app shows
+      // the imported turns itself.
+      if (info.role === 'user' && info.id === this.meta.importTranscript) continue
       if (info.role === 'user') {
         // A scheduled prompt (MiMo cron / loop) is a turn of its own, though its text is synthetic.
         if (current && (steer.has(info.id) || (isSyntheticUser(message) && !hasCompaction(message) && !scheduledOrigin(message)))) {

@@ -24,7 +24,8 @@ const occurrences = (text, needle) => text.split(needle).length - 1;
 let server, Line, Model, Status, Rows, Adapters, Morph;
 before(async () => {
   // D21: view-tabs' preload-helper calls document.createElement while its module evaluates.
-  globalThis.document ??= { createElement: () => ({ relList: { supports: () => false } }), querySelector: () => null, head: { appendChild() {} } };
+  // W8-M9 stub contract (round4 integration, stub fields only): cds-core 9203795f reads these at load (official 4.16336.0): document.cookie, documentElement.
+  globalThis.document ??= { documentElement: { getAttribute: () => null, hasAttribute: () => false } /* W8-M9: shared-92 cS / Ib */, cookie: '' /* W8-M9: shared-0 CQ / Wo document.cookie */, createElement: () => ({ relList: { supports: () => false } }), querySelector: () => null, head: { appendChild() {} } };
   // The import chain reaches view-tabs' shared-4 (source-menu.jsx imports the view-tabs facade), which reads
   // document.documentElement.getAttribute while its module evaluates.
   globalThis.document.documentElement ??= { getAttribute: () => null, setAttribute() {}, removeAttribute() {}, classList: { add() {}, remove() {}, contains: () => false }, style: {} };
@@ -446,6 +447,9 @@ test('mark held by a tool row: W6 quiet / markHeld, the line steps back in the s
   // The held row's in-place remains (an empty `contents` home) make no box, so the tail does not move by its margin.
   const css = fs.readFileSync(path.join(app, 'src/source-transcript-status.css'), 'utf8');
   assert.ok(css.includes('.source-transcript-content > .source-message:has(> :only-child > [data-turn-mark-home]:only-child:empty) > * { display: contents; }'));
+  // 4.16336.0 rows: the emptied part row's `mt-5` goes too (it stacked 20px on the working line's turn gap).
+  assert.ok(css.includes('.source-transcript-content [data-transcript-row]:has(> [data-cds="AssistantMessage"]:only-child > :only-child > [data-turn-mark-home]:only-child:empty),'));
+  assert.match(css, /\[data-transcript-row\]:has\(> \[data-reply-scope\]:only-child > \[data-cds="AssistantMessage"\]:only-child > :only-child > \[data-turn-mark-home\]:only-child:empty\) \{ margin-top: 0; \}/);
 });
 
 // W14-code r8 css8-side-chat-status-handrow: cccc2cf0a _F draws Go = c96d752d0 V (U6), the same generated working line;

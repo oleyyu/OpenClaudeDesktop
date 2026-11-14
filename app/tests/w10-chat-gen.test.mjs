@@ -6,13 +6,14 @@ import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
-import { ionSource, referenceSnapshot } from '../scripts/official-3.6556.2.mjs';
-// E42: shared-104's liveStatus slice is a pure file, so plain node imports it.
-import { sessionLiveStatus } from '../src/generated/chat/shared-104-CTONUSaz.js';
+import { ionSource, referenceSnapshot } from '../scripts/official-4.16336.0.mjs';
+// E42: shared-92's liveStatus slice is a pure file, so plain node imports it.
+import { sessionLiveStatus } from '../src/generated/chat/shared-92-BOgyxePb.js';
 
-// w10-chat-gen: src/generated/chat is the 3.6556.2 slice (research/w10-chat.md §3.2): createIntl / FormattedRelativeTime
-// (vendor-intl Ht / en), the Ideas preview class (shared-9 wD literal), the HandBlocks pictogram data (cbcaf521a e) and
-// sessionLiveStatus (shared-104 _x), plus E34 re-export shims for the 2.2553.1 names current-chat still imports.
+// w10-chat-gen / regions-chat: src/generated/chat is the 4.16336.0 slice (research/w10-chat.md §3.2): createIntl /
+// FormattedRelativeTime (vendor-intl-BJgYK7RA Ht / en), the Ideas preview class (shared-9-BgdM6Y1f gO literal; 3.6556.2
+// shared-9 wD), the HandBlocks pictogram data (cbcaf521a e, byte-identical file) and sessionLiveStatus (shared-92 jU;
+// 3.6556.2 shared-104 _x), plus E34 re-export shims for older names a generated folder still imports (none now).
 // Official chunks are read as text, never executed; SSR in middleware mode only.
 const root = path.resolve(import.meta.dirname, '..');
 const chatDir = path.join(root, 'src/generated/chat');
@@ -25,8 +26,8 @@ let server, intl, composerSlice;
 before(async () => {
   server = await createServer({ configFile: false, root, plugins: [react()],
     server: { middlewareMode: true, hmr: false, watch: null }, appType: 'custom', logLevel: 'error' });
-  intl = await server.ssrLoadModule('/src/generated/chat/vendor-intl-DYfox5Co.js');
-  composerSlice = await server.ssrLoadModule('/src/generated/chat/shared-9-CM21XrJw.js');
+  intl = await server.ssrLoadModule('/src/generated/chat/vendor-intl-BJgYK7RA.js');
+  composerSlice = await server.ssrLoadModule('/src/generated/chat/shared-9-BgdM6Y1f.js');
 });
 after(() => server?.close());
 
@@ -51,15 +52,18 @@ function chatImportsOfGeneratedFolders() {
   return Object.fromEntries(Object.entries(found).map(([file, names]) => [file, [...names].sort()]));
 }
 
-test('manifest: 3.6556.2, and the folder holds exactly the modules, the legacy shims and the manifest', () => {
-  assert.equal(manifest.referenceVersion, '3.6556.2');
+test('manifest: 4.16336.0, and the folder holds exactly the modules, the legacy shims and the manifest', () => {
+  assert.equal(manifest.referenceVersion, '4.16336.0');
   assert.equal(manifest.referenceSnapshot, referenceSnapshot);
   assert.equal(manifest.generator, 'scripts/extract-chat-ui.mjs');
   const listed = [...manifest.modules.map(m => m.target), ...Object.keys(manifest.legacy), 'manifest.json'].sort();
   assert.deepEqual(fs.readdirSync(chatDir).sort(), listed);
   assert.deepEqual(manifest.modules.map(m => m.target).sort(),
-    ['cbcaf521a-CrWJ5SHy.js', 'shared-104-CTONUSaz.js', 'shared-9-CM21XrJw.js', 'vendor-intl-DYfox5Co.js']);
-  for (const m of manifest.modules) assert.equal(m.referenceVersion, '3.6556.2', m.target);
+    ['cbcaf521a-CrWJ5SHy.js', 'shared-9-BgdM6Y1f.js', 'shared-92-BOgyxePb.js', 'vendor-intl-BJgYK7RA.js']);
+  for (const m of manifest.modules) assert.equal(m.referenceVersion, '4.16336.0', m.target);
+  // The 3.6556.2 outputs are gone (their files were renamed by the official build).
+  for (const file of ['shared-104-CTONUSaz.js', 'shared-9-CM21XrJw.js', 'vendor-intl-DYfox5Co.js'])
+    assert.equal(fs.existsSync(path.join(chatDir, file)), false, file);
   // The 2.2553.1 slice (63 modules and provenance.json) is gone.
   assert.equal(fs.existsSync(path.join(chatDir, 'provenance.json')), false);
   for (const file of fs.readdirSync(chatDir).filter(f => f.endsWith('.js')))
@@ -79,19 +83,19 @@ test('createIntl is react-intl createIntl (vendor-intl Ht) and formats ICU plura
   assert.equal(manifest.publicNames.createIntl.export, 'u');
 });
 
-test('ideaPreviewClass is the shared-9 wD literal and renders as the preview class', () => {
+test('ideaPreviewClass is the shared-9 gO literal and renders as the preview class', () => {
   assert.equal(composerSlice.ideaPreviewClass, 'animate-preview-prompt-in line-clamp-2 text-muted-as-secondary');
   assert.equal(renderToStaticMarkup(h('p', { className: composerSlice.ideaPreviewClass }, 'Idea')),
     '<p class="animate-preview-prompt-in line-clamp-2 text-muted-as-secondary">Idea</p>');
   const entry = manifest.publicNames.ideaPreviewClass;
-  assert.equal(entry.owner, 'wD');
-  const text = official('shared-9-CM21XrJw.js');
+  assert.equal(entry.owner, 'gO');
+  const text = official('shared-9-BgdM6Y1f.js');
   assert.equal(text.slice(entry.start, entry.end), '"animate-preview-prompt-in line-clamp-2 text-muted-as-secondary"');
-  const owner = text.slice(text.indexOf('function wD('), text.indexOf('function wD(') + 40000);
+  const owner = text.slice(text.indexOf('function gO('), text.indexOf('function gO(') + 40000);
   assert.ok(owner.includes('className:"animate-preview-prompt-in line-clamp-2 text-muted-as-secondary"'));
 });
 
-test('sessionLiveStatus is shared-104 _x (plain node import)', () => {
+test('sessionLiveStatus is shared-92 jU (plain node import)', () => {
   assert.equal(sessionLiveStatus({ pendingToolPermissions: [1] }), 'awaiting');
   assert.equal(sessionLiveStatus({ liveStatus: 'awaiting' }), 'awaiting');
   assert.equal(sessionLiveStatus({ liveStatus: 'running' }), 'running');
@@ -100,7 +104,7 @@ test('sessionLiveStatus is shared-104 _x (plain node import)', () => {
   assert.equal(sessionLiveStatus({}), 'idle');
   assert.equal(sessionLiveStatus({ pendingToolPermissions: [1] }, false, true), 'idle');
   assert.equal(sessionLiveStatus({}, true), 'awaiting');
-  assert.doesNotMatch(read('src/generated/chat/shared-104-CTONUSaz.js'), /^import /m);
+  assert.doesNotMatch(read('src/generated/chat/shared-92-BOgyxePb.js'), /^import /m);
 });
 
 test('HandBlocksDef is the byte-identical cbcaf521a data, exported as e and HandBlocksDef', async () => {
@@ -150,21 +154,21 @@ test('FormattedRelativeTime (vendor-intl en) renders through the host HomeRelati
   assert.equal(intl.FormattedRelativeTime.displayName, 'FormattedRelativeTime');
   assert.equal(renderToStaticMarkup(h(intl.FormattedRelativeTime, { value: -120, unit: 'second' })), '120 seconds ago');
   assert.equal(renderToStaticMarkup(h(intl.FormattedRelativeTime, { value: 1, unit: 'day' })), 'tomorrow');
-  assert.match(read('src/generated/chat/vendor-intl-DYfox5Co.js'), /^import \{ HomeRelativeTime as \$t \} from "\.\.\/\.\.\/source-home-adapters\.jsx";$/m);
+  assert.match(read('src/generated/chat/vendor-intl-BJgYK7RA.js'), /^import \{ HomeRelativeTime as \$t \} from "\.\.\/\.\.\/source-home-adapters\.jsx";$/m);
 });
 
-test('every public name is pinned on the official 3.6556.2 text', () => {
-  const VI = 'vendor-intl-DYfox5Co.js';
+test('every public name is pinned on the official 4.16336.0 text', () => {
+  const VI = 'vendor-intl-BJgYK7RA.js';
   const vi = official(VI);
   assert.equal(count(vi, 'Ht=({defaultRichTextElements:e,...t},n)=>'), 1);
   assert.match(vi, /export\{[^}]*\bHt as u\b[^}]*\}/);
   assert.match(vi, /export\{[^}]*\ben as a\b[^}]*\}/);
   assert.equal(count(vi, 'en.displayName="FormattedRelativeTime"'), 1);
   assert.ok(vi.includes('Missing locale data for locale'));
-  const s104 = official('shared-104-CTONUSaz.js');
-  assert.equal(count(s104, 'function _x(e,t=!1,n=!1){return t||e.liveStatus==="awaiting"?"awaiting":e.liveStatus?e.liveStatus:!n&&e.pendingToolPermissions?.length?"awaiting":e.isRunning?"running":"idle"}'), 1);
-  assert.match(s104, /export\{[^}]*\b_x as ml\b[^}]*\}/);
-  assert.equal(count(official('shared-9-CM21XrJw.js'), '"animate-preview-prompt-in line-clamp-2 text-muted-as-secondary"'), 1);
+  const s92 = official('shared-92-BOgyxePb.js');
+  assert.equal(count(s92, 'function jU(e,t=!1,n=!1){return t||e.liveStatus==="awaiting"?"awaiting":e.liveStatus?e.liveStatus:!n&&e.pendingToolPermissions?.length?"awaiting":e.isRunning?"running":"idle"}'), 1);
+  assert.match(s92, /export\{[^}]*\bjU as oo\b[^}]*\}/);
+  assert.equal(count(official('shared-9-BgdM6Y1f.js'), '"animate-preview-prompt-in line-clamp-2 text-muted-as-secondary"'), 1);
   assert.ok(official('cbcaf521a-CrWJ5SHy.js').startsWith('var e={name:"HandBlocks"'));
   // The manifest's expect strings are the ones checked here.
   for (const [name, entry] of Object.entries(manifest.publicNames)) {
@@ -177,9 +181,9 @@ test('every public name is pinned on the official 3.6556.2 text', () => {
   }
 });
 
-test('host files import the 3.6556.2 chat outputs by semantic name, and no 2.2553.1 chat file', () => {
+test('host files import the 4.16336.0 chat outputs by semantic name, and no older chat file', () => {
   for (const file of ['src/source-code-start-adapters.jsx', 'src/source-routine-adapters.jsx', 'src/source-r4e-envbranch-notice.jsx'])
-    assert.match(read(file), /^import \{ createIntl \} from (["'])\.\/generated\/chat\/vendor-intl-DYfox5Co\.js\1;$/m, file);
+    assert.match(read(file), /^import \{ createIntl \} from (["'])\.\/generated\/chat\/vendor-intl-BJgYK7RA\.js\1;$/m, file);
   // w10-ccres-turnbox dropped the turn box's own catalog branch (3.6556.2 cd4f82e77 formats the defaultMessage), so its
   // useIntl is the start card's: useStartIntl → createStartIntl → the vendor-intl createIntl imported above.
   const turnBox = read('src/source-turn-box-adapters.jsx');
@@ -187,7 +191,7 @@ test('host files import the 3.6556.2 chat outputs by semantic name, and no 2.255
   assert.match(turnBox, /export function useIntl\(\) \{\n\s+return useStartIntl\(\);\n\}/);
   assert.doesNotMatch(turnBox, /createIntl|generated\/chat\//);
   assert.match(read('src/source-code-start-adapters.jsx'), /export function createStartIntl\(locale = getLocale\(\)\) \{\n\s+const intl = createIntl\(/);
-  assert.match(read('src/source-chat-composer.jsx'), /^import \{ ideaPreviewClass \} from '\.\/generated\/chat\/shared-9-CM21XrJw\.js';$/m);
+  assert.match(read('src/source-chat-composer.jsx'), /^import \{ ideaPreviewClass \} from '\.\/generated\/chat\/shared-9-BgdM6Y1f\.js';$/m);
   const legacyFiles = Object.keys(manifest.legacy);
   for (const file of fs.readdirSync(path.join(root, 'src')).filter(f => /\.(?:jsx?|mjs)$/.test(f))) {
     const text = read(`src/${file}`);

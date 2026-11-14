@@ -20,8 +20,13 @@ const h = React.createElement;
 const text = html => html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
 const ZU = 'ccd3f68fe-C8Xiv_qI.js';
 
-globalThis.document ??= { body: { nodeType: 1 }, head: { appendChild() {} }, createElement: () => ({ relList: { supports: () => false }, setAttribute() {}, style: {} }),
-  querySelector: () => null, querySelectorAll: () => [], addEventListener() {}, removeEventListener() {}, documentElement: { dataset: {}, getAttribute: () => null } };
+// W8 stub contract (design class c): cds-core now holds shared-0 CQ/Wo (read document.cookie at load) and the shared-25
+// router store (reads window.location.pathname at load), as in the app; shared-92 cS reads documentElement.hasAttribute at load.
+globalThis.document ??= { cookie: '', body: { nodeType: 1 }, head: { appendChild() {} }, createElement: () => ({ relList: { supports: () => false }, setAttribute() {}, style: {} }),
+  querySelector: () => null, querySelectorAll: () => [], addEventListener() {}, removeEventListener() {}, documentElement: { dataset: {}, getAttribute: () => null, hasAttribute: () => false } };
+// round3 integrate-gates: since rl-switch-leaf (S6) the page imports chat-projects-v4, whose code-routines-v4 links reach
+// shared-52 `var zg = typeof document < "u" && Ah()` (Ah: documentElement.hasAttribute("data-artifact-composed")) at module
+// load; a DOM <html> without the attribute answers false, as the stub's hasAttribute now does (getAttribute answers null).
 globalThis.window ??= { document: globalThis.document, navigator: { userAgent: 'Mozilla/5.0 (Macintosh)' }, location: { pathname: '/scheduled', search: '', hash: '', href: 'app://local/scheduled' }, addEventListener() {}, removeEventListener() {},
   matchMedia: () => ({ matches: false, addEventListener() {}, removeEventListener() {} }) };
 
@@ -149,7 +154,11 @@ test('delete confirmation copy and the sessions it archives', async () => {
 test('source: official copy, CDS parts through the facade, Create with Claude prompt, zh-CN entries', async () => {
   const source = local('src/source-routines.jsx');
   assert.doesNotMatch(source, /Search scheduled tasks\.\.\.|This removes the schedule|OpenClaude Desktop is open|SourceDialog/);
-  assert.match(source, /import \{ CdsTextInput as TextInput, CdsBanner, CdsDropdown, CdsConfirmationDialog, CdsCheckbox \} from '\.\/generated\/view-tabs\/index\.js';/);
+  // 4.16336.0 host wiring (frame): the page's Banner / Checkbox / ConfirmationDialog / Dropdown are the cds-core facade's; only
+  // TextInput stays view-tabs, because registerNativeFieldComponents hands it to the 3.6556.2 cowork-scheduled form.
+  assert.match(source, /import \{ CdsTextInput as TextInput \} from '\.\/generated\/view-tabs\/index\.js';/);
+  assert.match(source, /import \{ CdsBanner, CdsCheckbox, CdsConfirmationDialog, CdsDropdown \} from '\.\/cds-core\.mjs';/);
+  assert.match(source, /registerNativeFieldComponents\(\{ Field, Label, Description, ErrorText, TextInput, TextArea \}\);/);
   assert.match(source, /<CdsDropdown\.Item icon="Chat" onClick=\{onCreateWithClaude\}>\{t\('Create with Claude'\)\}<\/CdsDropdown\.Item>/);
   assert.match(source, /<CdsDropdown\.Item icon="Settings" onClick=\{onSetUpManually\}>\{t\('Set up manually'\)\}<\/CdsDropdown\.Item>/);
   // cwui-33 host: main.jsx hands the page onCreateWithClaude — switch to Cowork, open its home, the prompt as the draft, focus.

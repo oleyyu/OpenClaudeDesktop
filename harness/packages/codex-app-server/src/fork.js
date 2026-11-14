@@ -63,3 +63,30 @@ export function forkBoundary({ turns, events, lastTurnId, beforeTurnId }) {
   if (events[boundary]?.seq !== boundary) throw invalidParams('The session log cannot be forked at that turn.')
   return boundary
 }
+
+/**
+ * A fork seed (dsh-session buildForkSeed) whose agent inbox starts empty. A prompt sent or queued while the forked turn
+ * was still running (turn/start during a turn, thread/queue/add, a sub-agent notice) is spliced into the inbox inside
+ * that turn, before its turn/end, so the cut carries it; the turn that claimed it came after the cut. Left pending, the
+ * fork's first prompt would run that cut-off prompt first (its tools included). So the fork's own events (after its
+ * session/end-seed) discard whatever the copied splices leave pending, the way the inbox discards a queued message
+ * (dsh-agent-loop inbox mutate: removedCount, nothing inserted, outcome 'canceled').
+ * @param {Array<{seq: number, time: number, type: string, data?: any}>} seed
+ * @returns {Array<object>} the seed, with the discarding splices appended when something was pending
+ */
+export function withEmptyInbox(seed) {
+  const pending = { 'next-turn': 0, 'next-step': 0 }
+  for (const event of seed) {
+    if (event.type !== 'agent/inbox/spliced') continue
+    const splice = event.data ?? {}
+    if (!(splice.target in pending)) continue
+    pending[splice.target] += (Array.isArray(splice.inserted) ? splice.inserted.length : 0) - (splice.removedCount ?? 0)
+  }
+  const out = [...seed]
+  for (const target of ['next-turn', 'next-step']) {
+    if (pending[target] <= 0) continue
+    const last = out.at(-1)
+    out.push({ type: 'agent/inbox/spliced', seq: last.seq + 1, time: last.time, data: { target, start: 0, removedCount: pending[target], inserted: [], outcome: 'canceled' } })
+  }
+  return out
+}

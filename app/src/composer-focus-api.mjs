@@ -13,8 +13,8 @@
 //   node.ignoreStrayEnter()                              swallow Enter for rP (500ms) from now.
 // Host difference: OP keeps a focus scheduled before its editor mounts (Gr/qr/Jr) and applies it on mount; the host
 // element exists only together with its editor, so the calls act at once (a caller without an element does nothing).
-import { focusBelongsElsewhere } from './generated/code-composer/composer-focus-yield.mjs';
-import { strayEnterWindowMs } from './generated/code-composer/composer-card-tokens.mjs';
+import { focusBelongsElsewhere } from './generated/code-composer-v4/composer-focus-yield.mjs';
+import { strayEnterWindowMs } from './generated/code-composer-v4/composer-card-tokens.mjs';
 import { strayEnterSwallowed } from './composer-keys-model.mjs';
 
 /**

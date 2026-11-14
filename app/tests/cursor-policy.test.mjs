@@ -2,6 +2,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
+import { designEntryStylesheets } from '../scripts/current-design-assets.mjs';
+// design-production (4.16336.0): the loaded shared-styles entry sheet, named by current-design-assets.
+const SHARED_STYLES_CSS = designEntryStylesheets.find(name => name.startsWith('shared-styles-'));
 
 // R08 cursor policy. The original frame marks <html data-dframe> (sidebar-main.js:15140-15146 sR,
 // called from mR :15362) and the loaded shared-styles copy of desktop-layout.css:1026-1047 then gives
@@ -38,11 +41,13 @@ test('<html> carries data-dframe so the loaded desktop-layout cursor rules apply
   const html = readFileSync(path.join(app, 'index.html'), 'utf8');
   const root = /<html\b[^>]*>/i.exec(html)?.[0] ?? '';
   assert.match(root, /\sdata-dframe(?:=""|\s|>)/);
-  assert.match(root, /class="cds-root"/);
+  // html-root (4.16336.0 ion-dist/index.html, <html> at byte 15): the class list starts with cds-root, then the official h-screen antialiased
+  // motion-safe:scroll-smooth (pinned in html-root-official.test.mjs).
+  assert.match(root, /\sclass="cds-root(?:\s[^"]*)?"/);
   assert.match(root, /data-platform="desktop"/);
   // The rules themselves come from the loaded shared-styles copy, not from local CSS.
-  assert.match(html, /<link rel="stylesheet" href="\/assets\/v1\/shared-styles-D_GJawPO\.css"/);
-  const shared = readFileSync(path.join(official, 'shared-styles-D_GJawPO.css'), 'utf8');
+  assert.ok(html.includes(`<link rel="stylesheet" href="/assets/v1/${SHARED_STYLES_CSS}"`), SHARED_STYLES_CSS);
+  const shared = readFileSync(path.join(official, SHARED_STYLES_CSS), 'utf8');
   // 2.31226.0 (shared-styles-Bl9zqrv-.css) keeps explicit grab/move/resize cursors out of both rules.
   const keep = ':where(:not([class*=cursor-grab],[class*=cursor-move],[class*=cursor-all-scroll],[class*=cursor-][class*=-resize]))';
   assert.ok(shared.includes([':root[data-dframe] button', ':root[data-dframe] [role=button]', ':root[data-dframe] [role=menuitem]', ':root[data-dframe] a:not([target=_blank])', ':root[data-dframe] .cursor-pointer', ':root[data-dframe] .cursor-interactive'].map((selector) => selector + keep).join(',') + '{cursor:default}'));

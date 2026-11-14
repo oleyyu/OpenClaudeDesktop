@@ -1,6 +1,7 @@
 import React from "react";
-// W14-code r6 R6DC-02: shared-frame Uu (E41 direct import), not the host replica.
-import { CdsButton } from "./generated/view-tabs/shared-frame-6jtSkIit.js";
+// W14-code r6 R6DC-02: the CDS Button, not the host replica; host-wiring code-b: the 4.16336.0 cds-core original
+// (shared-frame-CJdE5Ria Xu → Id, semantic facade). SourceEmptyState is host markup, so the Retry action is host-rendered.
+import { CdsButton } from "./cds-core.mjs";
 import { Icon } from "./icons";
 import "./source-transcript-states.css";
 import { t } from "../electron/i18n/index.mjs";

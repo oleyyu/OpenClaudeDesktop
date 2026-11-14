@@ -1,0 +1,171 @@
+{
+  "referenceVersion": "4.16336.0",
+  "referenceSnapshot": "snapshots/claude-4.16336.0-20261104",
+  "pins": "scripts/titlebar-frame-v4.pins.json",
+  "roots": {
+    "TitlebarFrame": {
+      "file": "shared-20-DUEo90UF.js",
+      "local": "o_",
+      "export": "Uc",
+      "declarationSha256": "261e59964774e9a1aac49b686698858129e90343e8a83669e353c5261341fa46",
+      "features": [
+        "lifted: t, ...n } = e",
+        "t && !r && !n.startScreen && i(xl, {})",
+        "o(Es, { compact: t, children: [a, s] })"
+      ]
+    },
+    "TitlebarLiftedHiddenContext": {
+      "file": "shared-20-DUEo90UF.js",
+      "local": "Rg",
+      "export": null,
+      "declarationSha256": "dc37c1c8f9fc4d81ee9541b3f9b75d2e603eb3c7461a55d5f4acf79162bc7e1c",
+      "features": [
+        "Rg = g(!1)"
+      ]
+    },
+    "titlebarTextVars": {
+      "file": "shared-20-DUEo90UF.js",
+      "local": "Ug",
+      "export": "Yc",
+      "declarationSha256": "adbb0e758a5f03f32e29e0a5a51624ba06d1289b3b1b9f8faec7aeda3a51e38c",
+      "features": [
+        "\"--titlebar-text-primary\": \"var(--cds-text-primary)\""
+      ]
+    },
+    "useTitlebarPanelsScope": {
+      "file": "shared-120-DCdTP1_5.js",
+      "local": "qe",
+      "export": "_n",
+      "declarationSha256": "7c6e147f8833439c4338313768e401e273cc646d05a49a98ff624271f1c10382",
+      "features": [
+        "return c(Ke) === !0;"
+      ]
+    },
+    "titlebarLeadRowClass": {
+      "file": "shared-38-DyF0_Fim.js",
+      "local": "fn",
+      "export": "Br",
+      "declarationSha256": "09a6906f5f82d559e67c6fde4d82851814b63dc02cbbb1209a43bbc15e2d8726",
+      "features": [
+        "fn = \"flex min-w-0 items-center\""
+      ]
+    },
+    "titlebarLeadClipClass": {
+      "file": "shared-38-DyF0_Fim.js",
+      "local": "En",
+      "export": "Hr",
+      "declarationSha256": "467ee713d042f818fdd879e1b009b7caf8353b341d3ef499ded2a3ba4fc4f34f",
+      "features": [
+        "[clip-path:inset(-32px_-12px)]"
+      ]
+    },
+    "titlebarLeadNoOriginPanelsClass": {
+      "file": "shared-38-DyF0_Fim.js",
+      "local": "gn",
+      "export": "Zn",
+      "declarationSha256": "7f866cdc7f7821f02f8df13e5d93f16e0380c0dfd7d9fda11aad753e828be1da",
+      "features": [
+        "gn = \"ps-md shrink-0\""
+      ]
+    },
+    "titleBleedPanels": {
+      "file": "shared-18-Cfqwgjc5.js",
+      "local": "Iw",
+      "export": "Rf",
+      "declarationSha256": "f39006b853703ddf9877129997cb0cdf54514cf107845d1cc6f42c1fffc3e87a",
+      "features": [
+        "Iw = { pad: Fw, style: { \"--cds-outset-x\": \"var(--cds-pad-md)\" } }"
+      ]
+    },
+    "titleGroupPanelsClass": {
+      "file": "shared-18-Cfqwgjc5.js",
+      "local": "Bw",
+      "export": "xf",
+      "declarationSha256": "d7a2ef1cbecd9d75721341816be6384b39145b6e29d2f553e507de18094b2bc2",
+      "features": [
+        "gap-[calc(var(--cds-pad-md)_-_--spacing(1.5))]"
+      ]
+    }
+  },
+  "also": {
+    "TitlebarRow": {
+      "file": "shared-20-DUEo90UF.js",
+      "local": "s_",
+      "export": null,
+      "declarationSha256": "a898e7a7b8195a253c6026ad4235c92d952a3ba058ff0b609d52a3e223ab54f3",
+      "features": [
+        "i(re, { label: a, divider: P, flush: F, ...I, className: L, children: H })",
+        "P = D ? void 0 : !1",
+        "\"--title-row-lane\": `${S}px`",
+        "className: v ? \"flex min-w-0 items-center ps-md\" : \"contents\""
+      ]
+    },
+    "TitlebarDensityRoot": {
+      "file": "shared-18-Cfqwgjc5.js",
+      "local": "OS",
+      "export": "Am",
+      "declarationSha256": "b2eb13021c37c5e9c49f834f26f9055fc42b109ed11ece311698011474e93905",
+      "features": [
+        "density: \"comfortable\"",
+        "children: m(iv, { value: r, children: n })"
+      ]
+    }
+  },
+  "boundaries": {
+    "shared-0-CnnWnVrT.js#FH": {
+      "name": "useIsDesktopApp",
+      "kind": "hook",
+      "export": "Yu",
+      "declarationSha256": "48c5ac390eae53e7b9a93536657c342305c74ce97cafa85a7f0f17dd88cbec31",
+      "head": "function FH(e) {"
+    }
+  },
+  "reexportFrom": "./frame-sidebar-adapter.mjs",
+  "cdsCore": {
+    "manifestSha256": "06d2026939e5c8992713c2a0dda1b1abc9adffe7a0c223fe3c1e79eecd08d62c",
+    "adapterSha256": "7d63624afd6a3e7eaa2c42803aacdcf1a74ca479ffbed4d9c1f40c60e233ff1e"
+  },
+  "adapterSha256": "7abd605d8b449d6f51e56796a51aa4cb21d0542a8521ba2d4ff66f850549e16d",
+  "linkedAreas": [
+    "frame-sidebar",
+    "titlebar"
+  ],
+  "linkedCopies": {},
+  "sharedGraphImports": [
+    "CdsRoot <- shared-frame-CJdE5Ria.js:Ef",
+    "CdsToolbar <- shared-frame-CJdE5Ria.js:su",
+    "Ke <- shared-120-DCdTP1_5.js#Ke",
+    "Ke <- shared-120-DCdTP1_5.js:hn",
+    "Tu <- shared-31-C9BqSSuD.js#Tu",
+    "Y <- shared-92-BOgyxePb.js:qg",
+    "clsx <- vendor-frame-BckkO60Y.js:Fa",
+    "getMutationObserverClass <- shared-25-D-aF0gt9.js:Hp",
+    "getResizeObserverClass <- shared-25-D-aF0gt9.js:Up",
+    "useCdsLayerAwareZIndex <- shared-frame-CJdE5Ria.js:Dd",
+    "useCdsOwnerWindow <- shared-frame-CJdE5Ria.js#mo",
+    "useCdsOwnerWindow <- shared-frame-CJdE5Ria.js:Uf"
+  ],
+  "linkedImports": [
+    "I1 <- shared-frame-CJdE5Ria.js:rm (../frame-sidebar/shared-frame.mjs)",
+    "I3 <- shared-frame-CJdE5Ria.js:am (../frame-sidebar/shared-frame.mjs)",
+    "J0 <- shared-frame-CJdE5Ria.js:cm (../frame-sidebar/shared-frame.mjs)",
+    "J1 <- shared-frame-CJdE5Ria.js:lm (../frame-sidebar/shared-frame.mjs)",
+    "J2 <- shared-frame-CJdE5Ria.js:um (../frame-sidebar/shared-frame.mjs)",
+    "J3 <- shared-frame-CJdE5Ria.js:dm (../frame-sidebar/shared-frame.mjs)",
+    "J4 <- shared-frame-CJdE5Ria.js:fm (../frame-sidebar/shared-frame.mjs)",
+    "J5 <- shared-frame-CJdE5Ria.js:pm (../frame-sidebar/shared-frame.mjs)",
+    "J9 <- shared-frame-CJdE5Ria.js:hm (../frame-sidebar/shared-frame.mjs)",
+    "K0 <- shared-frame-CJdE5Ria.js:gm (../frame-sidebar/shared-frame.mjs)",
+    "K1 <- shared-frame-CJdE5Ria.js:_m (../frame-sidebar/shared-frame.mjs)",
+    "K2 <- shared-frame-CJdE5Ria.js:vm (../frame-sidebar/shared-frame.mjs)",
+    "K3 <- shared-frame-CJdE5Ria.js:ym (../frame-sidebar/shared-frame.mjs)",
+    "K4 <- shared-frame-CJdE5Ria.js:bm (../frame-sidebar/shared-frame.mjs)",
+    "K5 <- shared-frame-CJdE5Ria.js:xm (../frame-sidebar/shared-frame.mjs)",
+    "Kl <- shared-31-C9BqSSuD.js#Kl (../frame-sidebar/shared-31.mjs)",
+    "Z1 <- shared-frame-CJdE5Ria.js:Sm (../frame-sidebar/shared-frame.mjs)"
+  ],
+  "heldByCdsCore": {
+    "shared-frame.mjs": 1
+  },
+  "initializers": {}
+}

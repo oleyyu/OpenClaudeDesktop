@@ -47,6 +47,10 @@
 // `callSites` pin the original text the host wiring follows but cannot import: the session view's rail state machine and
 // its mount points, the lazy rail host (uH / dH), the composer-menu raise (yH), the titlebar placement and the ⋮ menu's
 // rail item (cf74bc599 DA). Raw pins go through official.looseFeature (R2).
+//
+// batch3 (claude-4.16336.0-migrate-20261104): this file is the 3.6556.2 source contract and stays byte for byte the
+// production output while the plan's 15 consumers import it; the 4.16336.0 contract (scripts/extract-session-rail-kit-v4.mjs,
+// output src/generated/session-rail-kit-v4) runs from here too: `--version 3.6556.2 | 4.16336.0`, both by default.
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { viewTabsManifestFor } from './view-tabs-compat.mjs';
@@ -56,6 +60,7 @@ import { createHash } from 'node:crypto';
 import { parsers } from '../../tools/node_modules/prettier/plugins/babel.mjs';
 import { format } from '../../tools/node_modules/prettier/index.mjs';
 import babel from '../../tools/node_modules/playwright/lib/transform/babelBundle.js';
+import { extractSessionRailKitV4 } from './extract-session-rail-kit-v4.mjs';
 
 const root = path.resolve(import.meta.dirname, '..');
 // w2-rail-kit: 3.6556.2 (R1/E6). The constants come from official-3.6556.2.mjs.
@@ -738,11 +743,28 @@ export async function extractSessionRailKit({ check = false, explore = null } = 
   console.log(`${check ? 'Verified' : 'Extracted'} ${manifest.modules.length} session rail kit modules (${count} original ${referenceVersion} bindings, ${manifest.callSites.length} pinned call sites).`);
   return manifest;
 }
+// Source contracts: 3.6556.2 (src/generated/session-rail-kit, production, imported by the 15 consumers of the region
+// plan's cutover.oldConsumersAtGeneration; this file) and 4.16336.0 (src/generated/session-rail-kit-v4, the staged
+// isolated graph over cds-core, linking routines-shared-v4 / files-changes-v4; scripts/extract-session-rail-kit-v4.mjs).
+export const contractVersions = Object.freeze(['3.6556.2', '4.16336.0']);
+export async function extractSessionRailKitVersion({ version, check = false, survey = false } = {}) {
+  if (version === '3.6556.2') {
+    if (survey) throw Error('extract-session-rail-kit: --survey runs the 4.16336.0 contract');
+    return extractSessionRailKit({ check });
+  }
+  if (version === '4.16336.0') return extractSessionRailKitV4({ check, survey });
+  throw Error(`extract-session-rail-kit: no source contract for ${version} (${contractVersions.join(', ')})`);
+}
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  if (process.argv.includes('--explore')) {
+  const at = process.argv.indexOf('--version');
+  if (at > 0 || process.argv.includes('--survey')) {
+    const versions = at > 0 ? [process.argv[at + 1]] : ['4.16336.0'];
+    for (const version of versions)
+      await extractSessionRailKitVersion({ version, check: process.argv.includes('--check'), survey: process.argv.includes('--survey') });
+  } else if (process.argv.includes('--explore')) {
     const found = [];
     const manifest = await extractSessionRailKit({ explore: found });
     for (const m of manifest.modules) console.log(`${m.target}\t${m.bindings.length} bindings\t${m.imports.filter(i => i.kind !== 'unresolved').map(i => `${i.local}=${i.kind}:${i.name}`).join(' ')}`);
     for (const f of found) console.log(`UNRESOLVED ${f.target}\t${f.via}\t${f.local}\t${f.size}`);
-  } else await extractSessionRailKit({ check: process.argv.includes('--check') });
+  } else for (const version of contractVersions) await extractSessionRailKitVersion({ version, check: process.argv.includes('--check') });
 }

@@ -1,0 +1,192 @@
+{
+  "referenceVersion": "4.16336.0",
+  "referenceSnapshot": "snapshots/claude-4.16336.0-20261104",
+  "generator": "scripts/extract-usage-countdown-v4.mjs",
+  "previous": {
+    "generator": "scripts/extract-usage-countdown.mjs",
+    "output": "src/generated/usage-countdown",
+    "referenceVersion": "3.6556.2",
+    "roots": {
+      "UsageResetCountdown": "c227f4d5e-B-FYKrwT.js#QF",
+      "UsageNoticeCardContext": "c227f4d5e-B-FYKrwT.js#ZF"
+    }
+  },
+  "sharedGraph": {
+    "area": "cds-core",
+    "manifestSha256": "06d2026939e5c8992713c2a0dda1b1abc9adffe7a0c223fe3c1e79eecd08d62c"
+  },
+  "linkedAreas": {
+    "routines-shared-v4": "a2a9b9a84b2705e48451025af38eb7582de5bb421c626e6bdf5b067eb8e00c8c"
+  },
+  "disambiguation": {
+    "UsageNoticeCardContext": {
+      "chosen": "c227f4d5e-DGDdGBTz.js#xQ",
+      "planCandidate": "c227f4d5e-DGDdGBTz.js#uD",
+      "shapeTwins": [
+        "uD",
+        "XL",
+        "wU"
+      ],
+      "why": "SQ reads I(xQ) and the usage limit card h$ provides xQ.Provider; uD is the pull-request view context (uD.Provider value prNumber !== undefined, read by dD)"
+    }
+  },
+  "countdown": {
+    "file": "c227f4d5e-DGDdGBTz.js",
+    "local": "CQ",
+    "previous": "c227f4d5e-B-FYKrwT.js#$F",
+    "note": "no per-second ticking in 4.16336.0: the absolute text until the minute clock passes the reset, then Resetting…"
+  },
+  "removedFromClosure": {
+    "c93058e68-CMBi_EBm.js": "3.6556.2 seconds-until store (Yp) and YF / XF thresholds: CQ no longer reads them"
+  },
+  "roots": [
+    {
+      "file": "c227f4d5e-DGDdGBTz.js",
+      "local": "SQ",
+      "name": "UsageResetCountdown",
+      "export": null,
+      "declarationSha256": "df04a072ab4421089b34ca1cd5a7bacae79166b0168f91ed5cc0db92ae369906",
+      "pinned": true
+    },
+    {
+      "file": "c227f4d5e-DGDdGBTz.js",
+      "local": "xQ",
+      "name": "UsageNoticeCardContext",
+      "export": null,
+      "declarationSha256": "764dc64202509ea46e653c0ed3035d789d9dc4500604d5368529d3b082e12339",
+      "pinned": true
+    }
+  ],
+  "adapters": [
+    {
+      "original": "vendor-intl-BJgYK7RA.js#Gt",
+      "name": "FormattedMessage",
+      "hostAdapter": "src/source-usage-countdown-adapters.jsx",
+      "previous": "vendor-intl-DYfox5Co.js#Gt",
+      "declarationSha256": "bde2ec1630e0a679fa4135cf75389568e77fa98fdcb08519af8104d5306ff5b5",
+      "pinned": true
+    }
+  ],
+  "imports": [
+    {
+      "module": "usage-countdown.mjs",
+      "local": "F",
+      "kind": "react",
+      "from": "react",
+      "name": "createContext",
+      "via": "vendor-frame-BckkO60Y.js:no"
+    },
+    {
+      "module": "usage-countdown.mjs",
+      "local": "I",
+      "kind": "react",
+      "from": "react",
+      "name": "useContext",
+      "via": "vendor-frame-BckkO60Y.js:po"
+    },
+    {
+      "module": "usage-countdown.mjs",
+      "local": "I1",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "I1",
+      "via": "shared-frame-CJdE5Ria.js:rm"
+    },
+    {
+      "module": "usage-countdown.mjs",
+      "local": "J0",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J0",
+      "via": "shared-frame-CJdE5Ria.js:cm"
+    },
+    {
+      "module": "usage-countdown.mjs",
+      "local": "J1",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J1",
+      "via": "shared-frame-CJdE5Ria.js:lm"
+    },
+    {
+      "module": "usage-countdown.mjs",
+      "local": "J2",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J2",
+      "via": "shared-frame-CJdE5Ria.js:um"
+    },
+    {
+      "module": "usage-countdown.mjs",
+      "local": "J9",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J9",
+      "via": "shared-frame-CJdE5Ria.js:hm"
+    },
+    {
+      "module": "usage-countdown.mjs",
+      "local": "K0",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "K0",
+      "via": "shared-frame-CJdE5Ria.js:gm"
+    },
+    {
+      "module": "usage-countdown.mjs",
+      "local": "K1",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "K1",
+      "via": "shared-frame-CJdE5Ria.js:_m"
+    },
+    {
+      "module": "usage-countdown.mjs",
+      "local": "K2",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "K2",
+      "via": "shared-frame-CJdE5Ria.js:vm"
+    },
+    {
+      "module": "usage-countdown.mjs",
+      "local": "Q",
+      "kind": "adapter",
+      "from": "../../source-usage-countdown-v4-adapters.jsx",
+      "name": "FormattedMessage",
+      "via": "vendor-intl-BJgYK7RA.js:l"
+    },
+    {
+      "module": "usage-countdown.mjs",
+      "local": "T",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "Fragment",
+      "via": "vendor-frame-BckkO60Y.js:Wa"
+    },
+    {
+      "module": "usage-countdown.mjs",
+      "local": "Ua",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-183-B2N6Zy4J.mjs",
+      "name": "_J",
+      "via": "shared-183-B2N6Zy4J.js:Cr"
+    },
+    {
+      "module": "usage-countdown.mjs",
+      "local": "_",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "jsxs",
+      "via": "vendor-frame-BckkO60Y.js:Ka"
+    },
+    {
+      "module": "usage-countdown.mjs",
+      "local": "p",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "jsx",
+      "via": "vendor-frame-BckkO60Y.js:Ga"
+    }
+  ]
+}

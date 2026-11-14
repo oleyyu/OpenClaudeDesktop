@@ -3,6 +3,8 @@
 // 1. The terminal find bar renders the CDS TextInput by its view-tabs semantic name CdsTextInput, as the official
 //    terminal find does: 2.42304.0 c6bf19e8f en (`ho as O`, shared-frame tx), now 3.6556.2 c6bf19e8f rn (`vs as v`,
 //    shared-frame-6jtSkIit uC, className "w-48", Enter steps from the field's onKeyDown M). Not the 2.2553.1 chat Bh.
+//    Since host-wiring code-b the field is the 4.16336.0 cds-core CdsTextInput (shared-frame-CJdE5Ria ww, exported pc —
+//    the TextInput 4.16336.0 c6bf19e8f imports as y); the bar's props are still 3.6556.2 rn's.
 // 2. The native-field registry (source-field-adapters.jsx) imports no field family: each family registers its own
 //    parts from its own module (code-current environment-field-controls; the 2.31226.0 current-chat family went with
 //    w10-curchat-retire).
@@ -22,13 +24,17 @@ import { parseAst } from 'rolldown/parseAst';
 import { appSheets, computed, element, append, find, loadCascade, parseMarkup } from './fixtures/transcript-css-cascade.mjs';
 import { prepareStyleCompatibility, selectorClasses } from '../scripts/prepare-style-compatibility.mjs';
 import { withMemoCache } from './support/react-memo-cache.mjs';
+import { createHash } from 'node:crypto';
+import { designSnapshot, designVersion } from '../scripts/current-design-assets.mjs';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
 const OFFICIAL = path.join(ROOT, '../reference/installed-2.42304.0-20261017/ion-dist/assets/v1');
 const OFFICIAL_V3 = path.join(ROOT, '../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1');
+const OFFICIAL_V4 = path.join(ROOT, '../reference/snapshots/claude-4.16336.0-20261104/ion-dist/assets/v1');
 const read = rel => fs.readFileSync(path.join(ROOT, rel), 'utf8');
 const official = name => fs.readFileSync(path.join(OFFICIAL, name), 'utf8');
 const officialV3 = name => fs.readFileSync(path.join(OFFICIAL_V3, name), 'utf8');
+const officialV4 = name => fs.readFileSync(path.join(OFFICIAL_V4, name), 'utf8');
 // 3.6556.2 c6bf19e8f rn: the find field element and the props it passes.
 const RN_FIELD = /n\(v,\{(ref:t,value:y,onChange:j,onKeyDown:M,spellCheck:!1,autoComplete:"off","aria-label":F,placeholder:pe,fullWidth:!1,className:"w-48",slotEnd:me)\}\)/;
 const VIEW_TABS_FRAME = 'src/generated/view-tabs/shared-frame-6jtSkIit.js';
@@ -39,11 +45,12 @@ const vite = async () => {
   servers.push(server);
   return server;
 };
-let ssr, Find, ViewTabs, Env;
+let ssr, Find, ViewTabs, Cds, Env;
 before(async () => {
   ssr = await vite();
   ({ SourceTerminalFind: Find } = await ssr.ssrLoadModule('/src/source-terminal-find.jsx'));
   ViewTabs = await ssr.ssrLoadModule(`/${VIEW_TABS_FRAME}`);
+  Cds = await ssr.ssrLoadModule('/src/cds-core.mjs');
   Env = await ssr.ssrLoadModule('/src/generated/code-current/environment-field-controls.mjs');
 });
 after(async () => { for (const server of servers) await server.close(); });
@@ -80,13 +87,20 @@ function callWithHooks(render, ...args) {
   try { return render(...args); } finally { internals.H = previous; }
 }
 const findProps = { view: { current: null }, selectionSuppressed: { current: false }, onClose() {} };
-// SourceTerminalFind's own tree (forwardRef render) and the TextInput element in it.
+// SourceTerminalFind's own tree (forwardRef render) and the TextInput element in it: the cds-core CdsTextInput
+// (host-wiring code-b), never the view-tabs one.
 const findTree = (props = findProps) => callWithHooks(Find.render, props, null);
-const findInput = tree => { const node = elements(tree).find(node => node.type === ViewTabs.CdsTextInput); assert.ok(node, 'the find bar renders view-tabs CdsTextInput'); return node; };
-// uC's own tree: the native <input> is the `render` element of Base UI Field.Control.
+const findInput = tree => {
+  assert.notEqual(Cds.CdsTextInput, ViewTabs.CdsTextInput, 'cds-core and view-tabs TextInputs are distinct bindings');
+  const node = elements(tree).find(node => node.type === Cds.CdsTextInput);
+  assert.ok(node, 'the find bar renders cds-core CdsTextInput');
+  assert.equal(elements(tree).some(node => node.type === ViewTabs.CdsTextInput), false, 'not the view-tabs CdsTextInput');
+  return node;
+};
+// ww's own tree (4.16336.0, as 3.6556.2 uC): the native <input> is the `render` element of Base UI Field.Control.
 const nativeInput = (props) => {
-  const control = elements(callWithHooks(ViewTabs.CdsTextInput.render, props, null)).find(node => node.props.render?.type === 'input');
-  assert.ok(control, 'uC renders its <input> through Field.Control render');
+  const control = elements(callWithHooks(Cds.CdsTextInput.render, props, null)).find(node => node.props.render?.type === 'input');
+  assert.ok(control, 'ww renders its <input> through Field.Control render');
   return control.props.render;
 };
 const keyEvent = (key, value, extra = {}) => {
@@ -100,13 +114,27 @@ const keyEvent = (key, value, extra = {}) => {
 };
 
 // ---------------------------------------------------------------- stylesheets
-const OFFICIAL_SHEETS = JSON.parse(read('public/style-compatibility.json')).currentStylesheets.map(sheet => `public/assets/v1/${sheet.file}`);
-const sheetClasses = rel => {
+// The compatibility layer's target set (public/style-compatibility.json currentStylesheets): the current design's official
+// sheets, entry and component. Their classes are read from the design snapshot of that same version (component sheets
+// such as c8e31bf58 / c3fde7009 are not shipped to public/ until a host consumer loads them), checked byte-for-byte
+// against the recorded sha256. The cascade below may only end on the copies of these sheets that index.html links.
+const COMPAT = JSON.parse(read('public/style-compatibility.json'));
+const DESIGN_DIR = path.join(ROOT, '../reference', designSnapshot, 'ion-dist/assets/v1');
+const CURRENT_SHEETS = COMPAT.currentStylesheets.map(sheet => sheet.file);
+const LINKED = [...read('index.html').matchAll(/<link\s+rel="stylesheet"\s+href="\/([^"]+)"/g)].map(m => `public/${m[1]}`);
+const OFFICIAL_SHEETS = CURRENT_SHEETS.map(file => `public/assets/v1/${file}`).filter(rel => LINKED.includes(rel));
+const sheetClasses = code => {
   const out = new Set();
-  for (const [, selector] of read(rel).replace(/\/\*[\s\S]*?\*\//g, '').matchAll(/(?:^|[}{;])\s*([^{}@;][^{}]*?)\s*\{/g)) for (const name of selectorClasses(selector)) out.add(name);
+  for (const [, selector] of code.replace(/\/\*[\s\S]*?\*\//g, '').matchAll(/(?:^|[}{;])\s*([^{}@;][^{}]*?)\s*\{/g)) for (const name of selectorClasses(selector)) out.add(name);
   return out;
 };
-const officialClasses = new Set(OFFICIAL_SHEETS.flatMap(rel => [...sheetClasses(rel)]));
+// Only the current sheets index.html links count as official classes the app loads (the unlinked component sheets
+// c8e31bf58 / c3fde7009-Dl-p803_ give a class no style at runtime); every recorded sheet is still checked byte-for-byte.
+const officialClasses = new Set(COMPAT.currentStylesheets.flatMap(({ file, sha256 }) => {
+  const bytes = fs.readFileSync(path.join(DESIGN_DIR, file));
+  assert.equal(createHash('sha256').update(bytes).digest('hex'), sha256, `${designSnapshot} ${file} is the sheet style-compatibility.json recorded`);
+  return LINKED.includes(`public/assets/v1/${file}`) ? [...sheetClasses(bytes.toString('utf8'))] : [];
+}));
 const legacyClasses = new Set(JSON.parse(read('public/style-compatibility.json')).rules.flatMap(rule => rule.references.map(ref => ref.className)));
 const tokens = html => new Set([...html.matchAll(/\bclass="([^"]*)"/g)].flatMap(m => m[1].replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#x27;/g, "'").split(/\s+/)).filter(Boolean));
 const HTML_ATTRS = Object.fromEntries([...(/<html\b([^>]*)>/.exec(read('index.html'))[1]).matchAll(/([\w-]+)="([^"]*)"/g)].map(m => [m[1], m[2]]));
@@ -150,6 +178,18 @@ test('official 3.6556.2: the terminal find bar (c6bf19e8f rn) renders shared-fra
   assert.deepEqual({ file: names.CdsTextInput.file, local: names.CdsTextInput.local, export: names.CdsTextInput.export }, { file: 'shared-frame-6jtSkIit.js', local: 'uC', export: 'vs' });
 });
 
+test('official 4.16336.0: c6bf19e8f imports shared-frame pc = ww as its find field, and ww pads pe-md (the cds-core CdsTextInput)', () => {
+  const terminal = officialV4('c6bf19e8f-BKh29bml.js');
+  assert.match(terminal, /import\{[^}]*\bpc as y\b[^}]*\}from"\.\/shared-frame-CJdE5Ria\.js"/, 'c6bf19e8f imports pc as y');
+  assert.match(terminal, /t\(y,\{ref:a,value:S,onChange:N,onKeyDown:P,spellCheck:!1,autoComplete:"off","aria-label":le,placeholder:de,fullWidth:!1,className:"w-48 min-w-0",slotEnd:pe\}\)/, 'the 4.16336.0 find field call');
+  const frame = officialV4('shared-frame-CJdE5Ria.js');
+  for (const feature of [/\bww as pc\b/, /[,;]ww=J\(\(e,t\)=>\{let \$=J9\(100\)/, /let e=W\?Cw:"pe-md"/, /Q\("cds-input cds-reset",yw,"pe-md",/])
+    assert.ok(feature.test(frame), `shared-frame-CJdE5Ria.js has ${feature}`);
+  // The cds-core semantic name is that binding.
+  const names = JSON.parse(read('src/generated/cds-core/manifest.json')).publicNames;
+  assert.deepEqual({ file: names.CdsTextInput.file, local: names.CdsTextInput.local }, { file: 'shared-frame-CJdE5Ria.js', local: 'ww' });
+});
+
 // ---------------------------------------------------------------- 2. host imports
 const hostFiles = () => fs.readdirSync(path.join(ROOT, 'src'), { recursive: true }).map(rel => `src/${rel.split(path.sep).join('/')}`)
   .filter(rel => /\.(jsx?|mjs)$/.test(rel) && !rel.startsWith('src/generated/'));
@@ -160,8 +200,9 @@ const importsOf = rel => {
     .flatMap(node => (node.specifiers ?? []).map(s => ({ from: path.posix.normalize(path.posix.join(path.posix.dirname(rel), node.source.value)), name: (s.imported ?? s.local)?.name ?? s.local?.name })));
 };
 test('host: the terminal find and the field adapters take nothing from a chat shared-frame; no host file imports one', () => {
-  // W7 (R6): through the view-tabs facade, no longer the 2.42304.0 shim file (retired in W7).
-  assert.deepEqual(importsOf('src/source-terminal-find.jsx').filter(i => i.name === 'CdsTextInput'), [{ from: 'src/generated/view-tabs/index.js', name: 'CdsTextInput' }]);
+  // W7 (R6): through the view-tabs facade, no longer the 2.42304.0 shim file (retired in W7); host-wiring code-b: through
+  // the 4.16336.0 cds-core facade.
+  assert.deepEqual(importsOf('src/source-terminal-find.jsx').filter(i => i.name === 'CdsTextInput'), [{ from: 'src/cds-core.mjs', name: 'CdsTextInput' }]);
   assert.equal(importsOf('src/source-terminal-find.jsx').some(i => i.from.startsWith('src/generated/chat/')), false);
   assert.equal(importsOf('src/source-field-adapters.jsx').some(i => i.from.startsWith('src/generated/')), false, 'the field registry imports no field family');
   // W10: the 2.2553.1 chat shared-frame (Bh, $v, the field family) is retired; its E34 legacy shim went with the
@@ -172,7 +213,7 @@ test('host: the terminal find and the field adapters take nothing from a chat sh
 });
 
 // ---------------------------------------------------------------- 3. SSR: the find bar's field is the official tx
-test('SSR: the find bar field is uC — wrapper div[data-cds=TextInput] with pe-md and w-48 (not pr-md / pr-0), the polite end slot, the official rn props', () => {
+test('SSR: the find bar field is cds-core ww (3.6556.2 uC) — wrapper div[data-cds=TextInput] with pe-md and w-48 (not pr-md / pr-0), the polite end slot, the official rn props', () => {
   const html = renderToStaticMarkup(h(Find, findProps));
   const wrapper = /<div data-cds="TextInput"[^>]*>/.exec(html)?.[0];
   assert.ok(wrapper, html);
@@ -191,9 +232,12 @@ test('SSR: the find bar field is uC — wrapper div[data-cds=TextInput] with pe-
   assert.equal(typeof props.onKeyDown, 'function');
 });
 
-test('stylesheets: every class uC gives the find field is in the official 3.6556.2 sheets and none needs the compatibility layer', () => {
+test('stylesheets: every class ww (cds-core CdsTextInput) gives the find field is in the official current-design sheets and none needs the compatibility layer', () => {
+  // The current design is the version the compatibility layer targets; its entry sheets are the ones index.html links.
+  assert.equal(COMPAT.currentVersion, designVersion);
+  assert.ok(OFFICIAL_SHEETS.length > 0 && OFFICIAL_SHEETS.length < CURRENT_SHEETS.length + 1, `index.html links official sheets: ${OFFICIAL_SHEETS}`);
   const props = findInput(findTree()).props;
-  const uC = tokens(renderToStaticMarkup(h(ViewTabs.CdsTextInput, props)));
+  const uC = tokens(renderToStaticMarkup(h(Cds.CdsTextInput, props)));
   assert.deepEqual([...uC].filter(name => !officialClasses.has(name)), []);
   assert.deepEqual([...uC].filter(name => legacyClasses.has(name)), []);
   assert.ok(uC.has('pe-md') && !uC.has('pr-md') && uC.has('w-48'));
@@ -216,7 +260,7 @@ test('stylesheets: every class uC gives the find field is in the official 3.6556
 });
 
 // ---------------------------------------------------------------- 4. controlled events: Escape
-test('Escape: the non-clearable uC lets it through and the bar closes; a clearable uC with a value consumes it to clear', () => {
+test('Escape: the non-clearable ww (3.6556.2 uC) lets it through and the bar closes; a clearable ww with a value consumes it to clear', () => {
   let closed = 0;
   const tree = findTree({ ...findProps, onClose() { closed++; } });
   const field = findInput(tree);

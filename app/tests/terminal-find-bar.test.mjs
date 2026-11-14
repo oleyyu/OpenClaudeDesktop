@@ -1,5 +1,5 @@
 // w11-e31-terminal-cont: the terminal find bar (src/source-terminal-find.jsx) against 3.6556.2 c6bf19e8f rn.
-//   - the root is the CDS Surface (shared-frame cg, exported Dl; view-tabs CdsSurface) with rn's props: elevation
+//   - the root is the CDS Surface (shared-frame cg, exported Dl; view-tabs CdsSurface; since host-wiring code-b the 4.16336.0 cds-core CdsSurface) with rn's props: elevation
 //     "panel", role search, data-terminal-find, rn's className and the layer-aware z-index 13, plus `{[N]: ""}` with N =
 //     shared-156 Ln = "data-escape-owner";
 //   - the Surface's sg style variables and its panel class reach the markup (they were missing while cg was not
@@ -21,11 +21,12 @@ const OFFICIAL_V3 = path.join(ROOT, '../reference/snapshots/claude-3.6556.2-2026
 const official = name => fs.readFileSync(path.join(OFFICIAL_V3, name), 'utf8');
 const read = rel => fs.readFileSync(path.join(ROOT, rel), 'utf8');
 const h = React.createElement;
-let server, Find, ViewTabs;
+let server, Find, ViewTabs, Cds;
 before(async () => {
   server = await createServer({ configFile: false, root: ROOT, plugins: [react()], server: { middlewareMode: true, hmr: false, ws: false, watch: null }, appType: 'custom', logLevel: 'error' });
   ({ SourceTerminalFind: Find } = await server.ssrLoadModule('/src/source-terminal-find.jsx'));
   ViewTabs = await server.ssrLoadModule('/src/generated/view-tabs/index.js');
+  Cds = await server.ssrLoadModule('/src/cds-core.mjs');
 });
 after(async () => { await server?.close(); });
 
@@ -72,9 +73,15 @@ test('official 3.6556.2: rn renders the Surface (shared-frame Dl = cg) with data
   assert.match(read('src/generated/proposal-group/shared-156-BLTosN8U.js'), /var iq = "data-escape-owner";[\s\S]*export \{[^}]*\biq as Ln\b/);
 });
 
-test('host: the bar imports CdsSurface through the view-tabs facade and restates neither the Surface nor its context', () => {
+test('host: the bar imports CdsSurface through the cds-core facade and restates neither the Surface nor its context', () => {
   const host = read('src/source-terminal-find.jsx');
-  assert.match(host, /import \{[^}]*\bCdsSurface\b[^}]*\} from '\.\/generated\/view-tabs\/index\.js'/);
+  // host-wiring code-b: every CDS name of the bar comes from the 4.16336.0 cds-core facade, none from view-tabs; the facade
+  // publishes the shared-frame-CJdE5Ria originals (Surface Dm, Button Xu, TextInput ww, TooltipProvider _m, Td, mo).
+  assert.match(host, /import \{CdsButton,CdsSurface,CdsTextInput as TextInput,CdsTooltipProvider,useCdsLayerAwareZIndex,useCdsOwnerWindow\} from '\.\/cds-core\.mjs';/);
+  assert.doesNotMatch(host, /generated\/view-tabs/);
+  const names = JSON.parse(read('src/generated/cds-core/manifest.json')).publicNames;
+  assert.deepEqual(['CdsSurface', 'CdsButton', 'CdsTextInput', 'CdsTooltipProvider', 'useCdsLayerAwareZIndex', 'useCdsOwnerWindow'].map(name => [names[name].file, names[name].local]),
+    [['shared-frame-CJdE5Ria.js', 'Dm'], ['shared-frame-CJdE5Ria.js', 'Xu'], ['shared-frame-CJdE5Ria.js', 'ww'], ['shared-frame-CJdE5Ria.js', '_m'], ['shared-frame-CJdE5Ria.js', 'Td'], ['shared-frame-CJdE5Ria.js', 'mo']]);
   assert.match(host, /import \{Ln as escapeOwnerAttribute\} from '\.\/generated\/proposal-group\/shared-156-BLTosN8U\.js'/);
   const code = host.replace(/^\s*\/\/.*$/gm, '');
   for (const gone of ['data-cds="Surface"', 'data-surface=', 'cdsSurfaceClass', 'CdsSurfaceContext', 'stp-find']) assert.ok(!code.includes(gone), gone);
@@ -105,15 +112,16 @@ test('SSR: Previous/Next show their step shortcuts only on macOS (rn k); Close a
   assert.deepEqual(plain.match(/aria-keyshortcuts="[^"]*"/g), ['aria-keyshortcuts="Escape"']);
   const mac = onMac(() => render());
   assert.equal((mac.match(/aria-keyshortcuts="[^"]*"/g) ?? []).length, 3);
-  const buttons = onMac(() => tree()).props.children.props.children.filter(node => node?.type === ViewTabs.CdsButton);
+  const buttons = onMac(() => tree()).props.children.props.children.filter(node => node?.type === Cds.CdsButton);
   assert.deepEqual(buttons.map(node => node.props.shortcut), ['cmd+shift+g', 'cmd+g', 'esc']);
-  assert.deepEqual(tree().props.children.props.children.filter(node => node?.type === ViewTabs.CdsButton).map(node => node.props.shortcut), [undefined, undefined, 'esc']);
+  assert.deepEqual(tree().props.children.props.children.filter(node => node?.type === Cds.CdsButton).map(node => node.props.shortcut), [undefined, undefined, 'esc']);
 });
 
-test('the root element is view-tabs CdsSurface; its key and context-menu handlers follow rn A / en', () => {
+test('the root element is the cds-core CdsSurface; its key and context-menu handlers follow rn A / en', () => {
   let closed = 0;
   const root = tree({ onClose: () => { closed += 1; } });
-  assert.equal(root.type, ViewTabs.CdsSurface);
+  assert.equal(root.type, Cds.CdsSurface);
+  assert.notEqual(root.type, ViewTabs.CdsSurface);
   assert.equal(root.props.elevation, 'panel');
   assert.equal(root.props['data-escape-owner'], '');
   assert.deepEqual(root.props.style, { zIndex: 13 });

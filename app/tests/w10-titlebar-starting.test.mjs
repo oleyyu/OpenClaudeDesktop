@@ -35,9 +35,15 @@ const SESSION = { id: 'a', name: 'A title', cwd: '/tmp/work' };
 const rail = (over = {}) => ({ onScreen: false, raises: false, panelId: 'rail-panel', onToggle() {}, ...over });
 const render = (props = {}) => renderToStaticMarkup(h(T.SourceTitlebar, { section: 'new', session: SESSION, onRename() {},
   terminalAvailable: true, previewAvailable: true, filesAvailable: true, ...props }));
-const trailingOf = (html) => html.slice(html.indexOf('st-trailing'));
-const leadOf = (html) => html.slice(html.indexOf('<div class="st-lead'), html.indexOf('<div class="st-trailing'));
-const toggles = (html) => [...html.matchAll(/data-pane-toggle="([a-z]+)"/g)].map((match) => match[1]);
+// surfaces wave 3 (titlebar frame): the Code titlebar is the 4.16336.0 frame; its lead is RX's gt box (`group/lead relative z-[1] …`)
+// and its actions the frame's cluster box (`relative z-[1] epitaxy-titlebar-end …`), not .st-lead / .st-trailing.
+const trailingOf = (html) => html.includes('epitaxy-titlebar-end') ? html.slice(html.indexOf('epitaxy-titlebar-end')) : html.slice(html.indexOf('st-trailing'));
+// RX's gt box: `group/lead relative z-[1] ${shared-38 fn} ${shared-38 En} draggable-none` (generated/titlebar-frame).
+const FRAME_LEAD = '<div class="group/lead relative z-[1] flex min-w-0 items-center [[data-tile-overflow-anchor]_&amp;]:[@container_tile-slot_(max-width:320px)]:[clip-path:inset(-32px_-12px)] draggable-none"';
+const leadOf = (html) => html.includes('<div class="group/lead') ? html.slice(html.indexOf('<div class="group/lead'), html.indexOf('<div class="relative z-[1] epitaxy-titlebar-end')) : html.slice(html.indexOf('<div class="st-lead'), html.indexOf('<div class="st-trailing'));
+// surfaces wave 2 (titlebar): the toggles are 4.16336.0 SY buttons, named by their aria-label (no host data-pane-toggle).
+const PANE_OF = { Terminal: 'terminal', Changes: 'changes', Preview: 'preview', Browser: 'preview', Files: 'files' };
+const toggles = (html) => [...trailingOf(html).matchAll(/<button[^>]*aria-label="(Terminal|Changes|Preview|Browser|Files)"/g)].map((match) => PANE_OF[match[1]]);
 const group = (html) => trailingOf(html).match(/<div class="flex items-center gap-1 empty:hidden"[^>]*>/)?.[0];
 const railButton = (html) => html.match(/<button[^>]*aria-label="Session rail"[^>]*>/)?.[0];
 const RULE = '<span role="separator" aria-orientation="vertical" class="h-4 w-px shrink-0 bg-border"></span>';
@@ -129,7 +135,7 @@ test('SSR TF-O1: while the draft starts its session, the landing toggles (Files 
 test('SSR notdone 20: a session the core has no history for draws an empty lead, no toggles, no ⋮; the rail toggle is inert and unseen', () => {
   const html = render({ sessionNotFound: true, railToggle: rail() });
   const lead = leadOf(html);
-  assert.match(lead, /^<div class="st-lead group\/lead"><\/div>$/);
+  assert.equal(lead, `${FRAME_LEAD}></div>`);
   assert.doesNotMatch(lead, /A title|st-origin|st-folder|st-session-caret/);
   assert.deepEqual(toggles(html), []);
   assert.doesNotMatch(trailingOf(html), /aria-label="Changes"/);
@@ -143,10 +149,11 @@ test('SSR notdone 20: a session the core has no history for draws an empty lead,
   // Found: the lead, the toggles and ⋮ are back; the rail toggle is live with its rule.
   const found = render({ sessionNotFound: false, railToggle: rail() });
   assert.match(leadOf(found), /A title/);
-  assert.deepEqual(toggles(found), ['terminal', 'preview', 'files']);
+  assert.deepEqual(toggles(found), ['terminal', 'changes', 'preview', 'files'], 'a session lists hy\'s diff spec among the SY toggles');
   assert.match(found, /View options/);
   assert.doesNotMatch(railButton(found), /\sinert=|opacity:0/);
-  assert.equal(count(found, RULE), 1);
+  // integration-4: 4.16336.0 RX draws the rule only on a lifted titlebar (`se && !Te`, Te = !lifted); the host's is not lifted.
+  assert.equal(count(found, RULE), 0);
   // N belongs to the Code session titlebar (oG): another surface keeps its title.
   assert.match(leadOf(render({ surface: 'cowork', sessionNotFound: true })), /A title/);
 });

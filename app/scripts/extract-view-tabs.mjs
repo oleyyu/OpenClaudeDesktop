@@ -66,6 +66,13 @@ const wrappers=[
     expect:[{in:'pe',has:'.jsxs='}]},
   {file:'vendor-frame-CnSY1sxv.js',local:'Hn',declaration:'Hn=e(le())',host:['react-dom','*'],
     expect:[{in:'le',has:'__REACT_DEVTOOLS_GLOBAL_HOOK__'}]},
+  // integration-1 preload-helper: Vite's assetsURL. The official app serves its bundle from the origin root, so the
+  // helper builds "/"+dep; this host loads dist/index.html over file:// (vite base './'), where "/assets/v1/x" resolves
+  // to file:///assets/v1/x (ERR_FILE_NOT_FOUND, and a rejected lazy import) and never equals the href of a sheet
+  // index.html already links (no dedupe). The host answers with Vite's base-relative assetsURL (document.baseURI) and
+  // points 3.6556.2 sheets 4.16336.0 superseded at their linked replacement. `s` must still pass every dep through `a`.
+  {file:'preload-helper-D0dM6GpB.js',local:'a',declaration:'a=function(e){return"/"+e}',host:['../../view-tabs-asset-url.mjs','viteAssetUrl'],
+    expect:[{in:'s',has:'if(t=a(t,n),t=u(t),t in o)'}]},
 ];
 // Roots, each exported under a semantic name (`publicNames`) that consumers
 // import instead of the minified local: every version reuses old minified
@@ -700,6 +707,15 @@ export async function extractViewTabs({check=false}={}) {
     (boundaries.get(adapter.file)??boundaries.set(adapter.file,new Map()).get(adapter.file)).set(local,adapter.host);
     boundaryInfo.set(`${adapter.file}:${local}`,{source:file,imported:adapter.imported});
   }
+  // integration-1 G2: a top-level binding a selected declaration only writes (`zl??=setTimeout(…)`, `zl=null` in
+  // 3.6556.2 shared-frame Vl) is not a ReferencedIdentifier, yet the copy needs its declaration (`zl=null`), or the
+  // first write throws "zl is not defined" in the module's strict mode. Assignment and update targets are dependencies too.
+  function writtenTopLevel(m,deps) {
+    return {
+      AssignmentExpression(r){for(const name of Object.keys(r.get('left').getBindingIdentifiers()))if(r.scope.getBinding(name)?.scope===m.program.scope)deps.add(name);},
+      UpdateExpression(r){const a=r.node.argument;if(a.type==='Identifier'&&r.scope.getBinding(a.name)?.scope===m.program.scope)deps.add(a.name);},
+    };
+  }
   async function add(m,name) {
     if(m.seen.has(name))return;m.seen.add(name);
     const adapter=boundaries.get(m.name)?.get(name);if(adapter){m.imports.set(name,adapter);return;}
@@ -713,7 +729,7 @@ export async function extractViewTabs({check=false}={}) {
     }
     if(p.isImportDefaultSpecifier()||p.isImportNamespaceSpecifier())throw Error(`Unsupported import form ${m.name}:${name}`);
     m.selected.set(name,p);
-    const deps=new Set(),dynamic=new Set();p.traverse({ReferencedIdentifier(r){if(r.scope.getBinding(r.node.name)?.scope===m.program.scope)deps.add(r.node.name);},CallExpression(r){if(r.node.callee.type==='Import')dynamic.add(r.node.arguments[0]?.value);},ImportExpression(r){dynamic.add(r.node.source?.value);}});
+    const deps=new Set(),dynamic=new Set();p.traverse({...writtenTopLevel(m,deps),ReferencedIdentifier(r){if(r.scope.getBinding(r.node.name)?.scope===m.program.scope)deps.add(r.node.name);},CallExpression(r){if(r.node.callee.type==='Import')dynamic.add(r.node.arguments[0]?.value);},ImportExpression(r){dynamic.add(r.node.source?.value);}});
     for(const specifier of dynamic){const file=specifier?.slice(2);if(!files.includes(file))throw Error(`Dynamic boundary ${m.name}:${name} -> ${specifier}`);const dep=await read(file);dep.dynamic=true;for(const local of dep.exports.values())await add(dep,local);}
     for(const dep of deps)try{await add(m,dep);}catch(error){throw Error(`${m.name}:${name} -> ${error.message}`);}
   }
@@ -745,7 +761,7 @@ export async function extractViewTabs({check=false}={}) {
       });
       if(candidates.length!==1)throw Error(`Base UI store hook registration changed in ${m.name} (${candidates.length} candidates)`);
       const p=candidates[0];m.storeHook=true;m.initializers.push(p);changed=true;
-      const deps=new Set();p.traverse({ReferencedIdentifier(r){if(r.scope.getBinding(r.node.name)?.scope===m.program.scope)deps.add(r.node.name);}});
+      const deps=new Set();p.traverse({...writtenTopLevel(m,deps),ReferencedIdentifier(r){if(r.scope.getBinding(r.node.name)?.scope===m.program.scope)deps.add(r.node.name);}});
       for(const dep of deps)await add(m,dep);
     }
     // w11-pictogram-d1: a top-level property write on a selected binding belongs to it and is copied with it
@@ -755,7 +771,7 @@ export async function extractViewTabs({check=false}={}) {
       const e=p.node.expression;
       if(e.type!=='AssignmentExpression'||e.left.type!=='MemberExpression'||e.left.computed||e.left.object.type!=='Identifier'||!m.selected.has(e.left.object.name))continue;
       m.initializers.push(p);changed=true;
-      const deps=new Set();p.traverse({ReferencedIdentifier(r){if(r.scope.getBinding(r.node.name)?.scope===m.program.scope)deps.add(r.node.name);}});
+      const deps=new Set();p.traverse({...writtenTopLevel(m,deps),ReferencedIdentifier(r){if(r.scope.getBinding(r.node.name)?.scope===m.program.scope)deps.add(r.node.name);}});
       for(const dep of deps)await add(m,dep);
     }
   }

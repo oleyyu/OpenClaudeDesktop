@@ -123,6 +123,20 @@ export function useSessionTurnRunning(sessionId) {
   return sessionId != null && host?.sessionKey === sessionId && host.running === true;
 }
 
+// 4.16336.0 cd2efac6e el (exported N; read by the isolated 4.16336.0 graph of scripts/extract-r4e-findings.mjs only, not
+// by the 3.6556.2 card): whether the user may act on the session's findings (Re-run review / Apply fixes):
+// `(e === null || ei(e)) && Uo({isSlackOrigin}) === "off" && !nn()` — no session, or one the user owns and may edit
+// (c5da7eb42 SR: not shared, not archived, not a CLI session), not driven from Slack (c0a74d72b oi), and not under the
+// `cai_groovy_fog` restriction (shared-20 xP, a GrowthBook gate: off here, D29). Every local session of this host is the
+// user's own and none comes from Slack; an archived session (host.archived, when the host value carries it) or a CLI
+// session ref has no actions.
+export function useCanActOnFindings(sessionRef) {
+  const host = useContext(FindingsCardHost);
+  if (sessionRef == null) return true;
+  if (sessionRef.type === "cli") return false;
+  return !(host && host.sessionKey === sessionRef.id && host.archived === true);
+}
+
 // c6b8adeaf Xa (exported g; 2.42304.0 ua): sendWithOutcome({ref, text, uuid}) for a send surface, resolving once the message is sent
 // or queued.
 //   "findings_card_apply": the host's fixed turn when idle (main.jsx sendFixedTurn → turn/start), or its queue lane

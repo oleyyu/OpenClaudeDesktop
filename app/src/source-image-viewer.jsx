@@ -2,7 +2,9 @@ import React, { useEffect, useId, useLayoutEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { MODAL_LAYER } from "./source-dialog.jsx";
 import { holdModalInert } from "./modal-inert.mjs";
-import { CdsButton } from "./generated/view-tabs/shared-frame-6jtSkIit.js";
+// host-wiring code-a: the close X is the 4.16336.0 cds-core Button (semantic facade); React context reaches it through
+// the document.body portal, so it reads the app's cds-core Root.
+import { CdsButton } from "./cds-core.mjs";
 import "./source-image-viewer.css";
 import { t } from "../electron/i18n/index.mjs";
 

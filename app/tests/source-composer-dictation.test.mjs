@@ -10,7 +10,8 @@ import path from 'node:path';
 // :4892-4907 bH{…empty:hidden gap-xs} holds only nf, which returns null for hideDictation (:5067-5095); Code
 // passes hideDictation:!dictationEnabled (cc43287c9-BMbiZYzF.js:36836). This Codex client has no dictation,
 // so the chin renders no SplitDropdownButton and no Dictate control. R3 composer-row-chin: an open session's presets chin
-// is bQ's row layout (c227f4d5e `Le = Ne === "row"`), whose leading slot holds the mode picker alone (no folder chip).
+// is bQ's row layout (c227f4d5e `Le = Ne === "row"`), whose leading slot holds the mode picker alone (no folder chip);
+// 4.16336.0 X6 moves the picker into the trailing group (below).
 let server, C;
 before(async () => {
   server = await createServer({ configFile: false, root: path.resolve(import.meta.dirname, '..'), plugins: [react()],
@@ -37,11 +38,23 @@ for (const [name, props] of [['idle', {}], ['running', { running: true }], ['sen
   test(`${name} composer renders no dictation control`, () => {
     const html = render(props);
     assert.match(html, /data-cds="ChatComposerChin"/);
-    assert.doesNotMatch(html, /SplitDropdownButton/);
+    // 4.16336.0 CdsButton (cds-core) writes `not-in-data-[cds=SplitDropdownButton]` into every button's class (its stacks
+    // disabled tone); apart from that class token, no SplitDropdownButton is rendered.
+    assert.doesNotMatch(html.replaceAll(':not-in-data-[cds=SplitDropdownButton]:', ':'), /SplitDropdownButton/);
     assert.doesNotMatch(html, /Dictat/, "no 'Dictate', 'Dictation settings' or 'Dictation unavailable' text or label");
     assert.doesNotMatch(html, /sc-dictation|Microphone/);
-    const labels = [...leading(html).matchAll(/<button[^>]*aria-label="([^"]*)"/g)].map(match => match[1]);
-    assert.deepEqual(labels, ['Permission mode'], 'the row chin leading is the mode picker alone');
+    // surfaces-prod-3 composer (4.16336.0 c227f4d5e X6, `tt = layout === "row"`): the row chin's leading is
+    // `tt ? ln && p("span", { "aria-hidden": !0 })` — an empty marker, no control — and the mode picker rides the
+    // trailing group (`On = tt ? ln : null`, after the model selector).
+    const lead = leading(html);
+    const labels = [...lead.matchAll(/<button[^>]*aria-label="([^"]*)"/g)].map(match => match[1]);
+    assert.deepEqual(labels, [], 'the row chin leading holds no control');
+    assert.equal(lead, '<div class="flex items-center self-start"><span aria-hidden="true"></span></div>', 'the aria-hidden marker alone');
+    const chinAt = html.indexOf('data-cds="ChatComposerChin"');
+    const trailing = html.slice(html.indexOf('<div class="ms-auto flex min-w-0 items-center gap-1 ps-2">', chinAt));
+    const trailingLabels = [...trailing.matchAll(/<button[^>]*aria-label="([^"]*)"/g)].map(match => match[1]);
+    assert.equal(trailingLabels.filter(label => label === 'Permission mode').length, 1, 'the mode picker is in the trailing group');
+    assert.ok(trailing.indexOf('data-cds="ModelSelector"') < trailing.indexOf('aria-label="Permission mode"'), 'model first, then mode (dn, Dn, On)');
     assert.doesNotMatch(html, /sc-folder-chip/, 'no folder chip in a session chin (the titlebar folder chip has its menu)');
   });
 

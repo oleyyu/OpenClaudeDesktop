@@ -19,7 +19,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { createRoot } from 'react-dom/client';
 import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
-import { extractR3bSettings } from '../scripts/extract-r3b-settings.mjs';
+import { extractR3bSettings, productionBlockers, PRODUCTION_VERSION } from '../scripts/extract-r3b-settings.mjs';
 import { createToastStore } from '../src/toast-store.mjs';
 
 const app = path.resolve(import.meta.dirname, '..');
@@ -37,7 +37,8 @@ function createEnvironment() {
     dispatchEvent(event) { for (const fn of [...(this.__listeners?.get(event.type) ?? [])]) fn.call(this, event); return true; },
     listenerCount(type) { return this.__listeners?.get(type)?.length ?? 0; },
   };
-  const document = Object.assign(Object.create(events), { nodeType: 9, nodeName: '#document', activeElement: null });
+  // W8 stub contract (design class c): cds-core now holds shared-0 CQ/Wo, which read document.cookie at load (as in the app).
+  const document = Object.assign(Object.create(events), { nodeType: 9, nodeName: '#document', activeElement: null, cookie: '' });
   class Element {
     constructor(tag) { Object.assign(this, { tagName: tag.toUpperCase(), nodeName: tag.toUpperCase(), localName: tag, nodeType: 1, namespaceURI: 'http://www.w3.org/1999/xhtml', ownerDocument: document, childNodes: [], parentNode: null, attributes: new Map(), dataset: {}, style: {} }); }
     setAttribute(k, v) { this.attributes.set(k, String(v)); }
@@ -56,7 +57,8 @@ function createEnvironment() {
   const localStorage = { getItem: k => (storage.has(k) ? storage.get(k) : null), setItem: (k, v) => storage.set(k, String(v)), removeItem: k => storage.delete(k) };
   const calls = [];
   let answer = () => Promise.resolve(null);
-  const window = Object.assign(Object.create(events), { document, localStorage, navigator: { userAgent: 'node' }, HTMLIFrameElement: class {},
+  // W8 stub contract (design class c): cds-core now holds the shared-25 router store, which reads window.location.pathname at load.
+  const window = Object.assign(Object.create(events), { document, localStorage, location: { pathname: '/' }, navigator: { userAgent: 'node' }, HTMLIFrameElement: class {},
     desktop: { call: (action, params) => { calls.push(action); return answer(action, params); } } });
   document.defaultView = window;
   return { window, document, storage, calls, answer: fn => { answer = typeof fn === 'function' ? fn : () => Promise.resolve(fn); },
@@ -143,6 +145,53 @@ test('generator: check mode passes, sources are pinned, the toast chunk is whole
   assert.deepEqual(Object.keys(mainManifest.callers), ['cEa', 'pEa']);
 });
 
+test('generator 4.16336.0 contract (dry run, nothing written): cf615570b-Km8zsRDm on cds-core, compiler helpers re-cut, dai in main; refused in place while 3.6556.2 areas link r3b-settings', async () => {
+  assert.equal(PRODUCTION_VERSION, '3.6556.2');
+  const v4 = path.resolve(app, '../reference/snapshots/claude-4.16336.0-20261104');
+  const { files, electronFiles, manifest, count } = await extractR3bSettings({ target: '4.16336.0', dryRun: true });
+  assert.equal(manifest.referenceVersion, '4.16336.0');
+  assert.equal(manifest.referenceSnapshot, 'snapshots/claude-4.16336.0-20261104');
+  assert.equal(manifest.sharedGraph, 'cds-core');
+  // 34 since cds-core wave 5: shared-0 Ac / jc / Pc (the logger error-mark writers and tags; the stack Oc behind them is
+  // no longer reached) and shared-62 pN / mN (the RTL script set and locale cache) are cds-core publicNames, imported from
+  // it (sharedGraph.locals), not cut again. 33 since cds-core wave 5b: shared-25 yH (the localStorage value cache the
+  // persisted store reads and writes) is the cds-core publicName localStorageValueCache, imported the same way (D1).
+  // 31 since cds-core wave 8a (R4-K1 addendum A, identity family): shared-0 Fc (the logger's userAgent probe) and shared-25 _H
+  // (the persisted store's Symbol("absent") sentinel) are the publicNames identity_shared0_Fc / identity_shared25__H, imported
+  // (sharedGraph.locals), not cut again (was: 33, and the list below without 'persisted-store.mjs:_H=_H', 'shared-0.mjs:Fc=Fc').
+  assert.equal(count, 31);
+  assert.deepEqual(manifest.modules.flatMap(m => m.imports.filter(e => e.kind === 'shared-graph' && e.via === `${m.source}#${e.local}`).map(e => `${m.target}:${e.local}=${e.name}`)).sort(),
+    ['bidi-isolate.mjs:mN=mN', 'bidi-isolate.mjs:pN=pN', 'persisted-store.mjs:_H=_H', 'persisted-store.mjs:yH=yH', 'shared-0.mjs:Ac=Ac', 'shared-0.mjs:Fc=Fc', 'shared-0.mjs:Pc=Pc', 'shared-0.mjs:jc=jc']);
+  const persisted = manifest.modules.find(m => m.target === 'persisted-store.mjs');
+  assert.equal(persisted.bindings.some(b => b.name === 'yH'), false, 'yH is not cut again');
+  assert.deepEqual(persisted.imports.filter(e => e.local === 'yH').map(e => [e.kind, e.from]), [['shared-graph', '../cds-core/shared-25.mjs']]);
+  assert.deepEqual(manifest.modules.map(m => [m.target, m.source]), [['shared-0.mjs', 'shared-0-CnnWnVrT.js'], ['persisted-store.mjs', 'shared-25-D-aF0gt9.js'],
+    ['bidi-isolate.mjs', 'shared-62-DoCqVpIq.js'], ['format-bytes.mjs', 'shared-4-C_EiQb9h.js'], ['compiler-helpers.mjs', 'shared-frame-CJdE5Ria.js'], ['low-disk-toast.mjs', 'cf615570b-Km8zsRDm.js']]);
+  for (const module of manifest.modules) {
+    assert.equal(module.sourceSha256, sha(await fs.readFile(path.join(v4, 'ion-dist/assets/v1', module.source))), module.source);
+    assert.equal(module.sha256, sha(files[module.target]), module.target);
+  }
+  const toast = manifest.modules.find(m => m.target === 'low-disk-toast.mjs');
+  assert.deepEqual(toast.bindings.map(b => b.name).sort(), ['_', 'g', 'h', 'm', 'p']);
+  assert.deepEqual(toast.imports.filter(e => e.kind === 'shared-graph').map(e => [e.name, e.from]), [['CdsButton', '../cds-core/shared-frame.mjs']]);
+  assert.deepEqual(toast.imports.filter(e => e.kind === 'adapter').map(e => e.name).sort(), ['DeviceStorage', 'FormattedMessage', 'useErrors', 'useIntl']);
+  assert.deepEqual(manifest.modules.find(m => m.target === 'compiler-helpers.mjs').heldByCdsCore, ['J0', 'J1', 'J4', 'J8', 'J9', 'K0', 'K1', 'K4']);
+  assert.match(files['low-disk-toast.mjs'], /defaultMessage: "Manage storage",\s*id: "UMxPPH\/sWm"/);
+  for (const [name, text] of Object.entries(files)) assert.equal(/view-tabs|routines-shared|3\.6556\.2/.test(text), false, name);
+  const main = JSON.parse(electronFiles['r3b-settings-free-disk-manifest.json']);
+  assert.equal(main.referenceVersion, '4.16336.0');
+  assert.equal(main.binding, 'dai');
+  assert.equal(main.sourceSha256, sha(await fs.readFile(path.join(v4, 'asar/.vite/build/index.chunk-Du-Wqi0E.js'))));
+  assert.deepEqual(Object.keys(main.callers), ['sto', 'dto']);
+  // Same statfs walk as 3.6556.2 YUr, only renamed (p -> h, YUr -> dai).
+  const body = text => text.slice(text.indexOf('async function')).replace(/\b(YUr|dai)\b/g, 'F').replace(/\b[ph]\.statfs/g, 'fs.statfs');
+  assert.equal(body(electronFiles['r3b-settings-free-disk.cjs']), body(await fs.readFile(path.join(app, 'electron/generated/r3b-settings-free-disk.cjs'), 'utf8')));
+  const blockers = await productionBlockers('4.16336.0');
+  for (const area of ['chat-renderer', 'code-transcript']) assert.ok(blockers.some(entry => entry.startsWith(`${area} `)), area);
+  await assert.rejects(extractR3bSettings({ check: true, target: '4.16336.0' }), /cannot replace the production output: .*chat-renderer/);
+  assert.deepEqual(await productionBlockers('3.6556.2'), []);
+});
+
 // ---------------------------------------------------------------- main process
 test('main: the original YUr returns statfs bavail × bsize of the folder or its nearest existing parent, undefined when nothing is readable; main.cjs answers desktop-free-disk-space with it on userData', async () => {
   const { freeDiskSpace } = require('../electron/generated/r3b-settings-free-disk.cjs');
@@ -174,6 +223,13 @@ test('main: the original YUr returns statfs bavail × bsize of the folder or its
 // ---------------------------------------------------------------- renderer
 test('below 10 GB: one warning "Low disk space: 5 GB free" with Manage storage; the time is recorded and a focus within 7 days does not warn again', async () => {
   reset(5 * GB);
+  // round5 integration (real-b): since wave 8s cds-core holds shared-26 jF (official 4.16336.0 computer-use TCC store); its
+  // creator runs when the module evaluates (`typeof window<"u"&&!AF&&(AF=!0,t(),window.addEventListener("focus",t))`, a
+  // listener the official code never removes), so the window carries exactly that one focus listener before the toast mounts.
+  // The toast's own contract is unchanged: mounting adds exactly one, unmounting removes exactly that one.
+  const official = env.window.__listeners?.get('focus') ?? [];
+  assert.equal(official.length, 1, 'only the shared-26 TCC store listens before the toast mounts');
+  assert.match(String(official[0]), /getState/, 'that listener is shared-26 jF\'s refresh (Ve?.getState)');
   const store = quietStore(), opened = [];
   const view = await mount({ ready: true, toasts: store, onManageStorage: () => opened.push('storage') });
   try {
@@ -186,7 +242,7 @@ test('below 10 GB: one warning "Low disk space: 5 GB free" with Manage storage; 
     assert.equal(entry.action.label, 'Manage storage');
     const record = JSON.parse(env.storage.get(RECORD));
     assert.ok(Math.abs(record.value - Date.now()) < 5000, 'records when it warned');
-    assert.equal(env.window.listenerCount('focus'), 1);
+    assert.equal(env.window.listenerCount('focus'), 1 + 1); // was: 1 (before wave 8s: no official load-time focus listener); now shared-26 jF + the toast's
     await act(async () => env.focus());
     await settle();
     assert.deepEqual(env.calls, ['desktop-free-disk-space', 'desktop-free-disk-space'], 'asked again on focus');
@@ -197,7 +253,8 @@ test('below 10 GB: one warning "Low disk space: 5 GB free" with Manage storage; 
     assert.equal(live(store).length, 0);
     assert.deepEqual(opened, ['storage']);
   } finally { await view.unmount(); }
-  assert.equal(env.window.listenerCount('focus'), 0, 'unmount stops listening');
+  assert.equal(env.window.listenerCount('focus'), 1, 'unmount stops listening'); // was: 0; the one left is shared-26 jF's (official, never removed)
+  assert.ok(env.window.__listeners.get('focus').every(fn => official.includes(fn)), 'only the official listener remains');
 });
 
 test('back above 10 GB clears the toast and keeps the record; above 20 GB forgets it', async () => {

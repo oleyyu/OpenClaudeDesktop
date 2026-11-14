@@ -228,3 +228,16 @@ html[data-local-motion="reduce"] .tiles-drag-handle-affordance,
 html[data-local-motion="reduce"] .tiles-handle-affordance {
   transition: none;
 }
+/* 4.16336.0 Code session line mode (session-page lane item 2; tile-line-model.mjs). The divider, the shell ground and the
+   reach-back are the official c6a992d55-_JRfOmTh.css rules ([data-tiles-line] .tiles-handle:before / .tiles-shell /
+   .tiles-shell[data-after-line-x] / the lit handle line), loaded as is. What the host takes away here is only its own
+   2.2553.1 floating-card decoration above, which the 4.16336.0 viewport does not have: the docked pane is not rounded and
+   its content does not paint a second ground over the shell's (shared-20 h_ --tile-shell-ground, m_). */
+[data-tiles-line] .source-side-tile,
+[data-tiles-line] .source-side-tile > .tiles-shell {
+  border-radius: 0;
+}
+[data-tiles-line] .source-side-tile,
+[data-tiles-line] .source-side-tile .detail-panel {
+  background: transparent;
+}

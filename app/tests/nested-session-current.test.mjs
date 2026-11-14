@@ -13,6 +13,7 @@ import * as PaletteCopy from '../src/generated/code-current/nested-session-palet
 const { nestedSessionLabel, nestedStatusLabels, nestedRevealLabel } = NestedCopy;
 import { splitNestedRun } from '../src/sidebar-model.js';
 import { dictionary } from '../electron/i18n/index.mjs';
+import { designEntryStylesheets } from '../scripts/current-design-assets.mjs';
 
 // R3-nested NBS-2: model/copy/separator/parts come from 2.42304.0; the family stub carries g$'s hit-row class.
 // 3.6556.2 (w2-sidebar-resize-nested): model (+ needs-input), palette copy, copy and separator moved to 3.6556.2.
@@ -31,7 +32,7 @@ const h = React.createElement;
 let server, createIntl, Parts, RowPrimitive, SourceSidebar, Separator;
 before(async () => {
   server = await createServer({ configFile: false, root: new URL('..', import.meta.url).pathname, plugins: [react()], server: { middlewareMode: true, hmr: false, watch: null }, appType: 'custom', logLevel: 'error' });
-  ({ createIntl } = await server.ssrLoadModule('/src/generated/chat/vendor-intl-DYfox5Co.js'));
+  ({ createIntl } = await server.ssrLoadModule('/src/generated/chat/vendor-intl-BJgYK7RA.js'));
   Parts = await server.ssrLoadModule('/src/generated/code-current/nested-session-parts.mjs');
   Separator = await server.ssrLoadModule('/src/generated/code-current/nested-session-separator.mjs');
   RowPrimitive = await server.ssrLoadModule('/src/generated/code-current/sidebar-row-primitive.mjs');
@@ -221,7 +222,20 @@ test('w10-ccres-nested-parts: qv / HA are the 3.6556.2 originals, HA draws the C
   const wholeChunkCopies = new Set(['cowork-scheduled/shared-18-D3y8YMFN.mjs', 'proposal-group/shared-18-D3y8YMFN.js', 'current-chat/shared-18-DaJGQi6_.js']);
   const generatedRoot = path.join(app, 'src/generated');
   const files = readdirSync(generatedRoot, { recursive: true }).filter(name => /\.(m?js)$/.test(name)).map(name => name.split(path.sep).join('/'));
-  const holders = pattern => files.filter(name => pattern.test(readFileSync(path.join(generatedRoot, name), 'utf8')));
+  // round3 integrate-gates: this is the 3.6556.2 graphs' rule. 4.16336.0 graphs (manifest referenceVersion 4.16336.0) cut
+  // their pure copies of the 4.16336.0 shared-18 (Cfqwgjc5) under D1, whose gate (d1/d1-gate.mjs, both modes) allows pure
+  // re-cuts and fails stateful ones; each such holder must be a module sliced from that 4.16336.0 chunk.
+  const releaseOf = new Map();
+  const v4Holders = [];
+  const isV4 = name => {
+    const area = name.split('/')[0];
+    if (!releaseOf.has(area)) { try { releaseOf.set(area, JSON.parse(readFileSync(path.join(generatedRoot, area, 'manifest.json'), 'utf8'))); } catch { releaseOf.set(area, null); } }
+    const m = releaseOf.get(area);
+    if (m?.referenceVersion !== '4.16336.0') return false;
+    v4Holders.push([name, (m.modules ?? []).find(x => x.target === name.slice(area.length + 1))?.source]);
+    return true;
+  };
+  const holders = pattern => files.filter(name => pattern.test(readFileSync(path.join(generatedRoot, name), 'utf8'))).filter(name => !isV4(name));
   const owned = list => list.filter(name => !wholeChunkCopies.has(name));
   for (const [binding, pattern] of [
     ['qv', /className:\s*"status-dot",\s*"data-kind":\s*\w+,\s*onAnimationStart:/],
@@ -232,6 +246,7 @@ test('w10-ccres-nested-parts: qv / HA are the 3.6556.2 originals, HA draws the C
     assert.deepEqual(owned(found), ['code-current/nested-session-parts.mjs'], `${binding} holders: ${found}`);
     for (const name of found) assert.ok(name === 'code-current/nested-session-parts.mjs' || wholeChunkCopies.has(name), `${binding}: new copy ${name}`);
   }
+  for (const [name, source] of v4Holders) assert.ok(source === 'shared-18-Cfqwgjc5.js' || /^shared-18-Cfqwgjc5/.test(String(source)), `4.16336.0 holder ${name} slices ${source}`);
 });
 
 test('the folded family stub renders g$ class-for-class (df-family-stub ${TE} â€¦ ${DE}) and the loaded CSS owns hit-row', () => {
@@ -253,8 +268,12 @@ test('the folded family stub renders g$ class-for-class (df-family-stub ${TE} â€
   assert.ok(stub, 'folded family renders its stub');
   assert.equal(stub[1], expected);
   assert.match(stub[0], /data-row="" data-roving-item="" aria-label="Show 2 nested sessions"/);
-  // The utilities that make the click target reach 7px into the gap ship in the loaded 2.42304.0 CSS.
-  const utilities = readFileSync(path.join(app, 'public/assets/v1/c6a992d55-Che1orl5.css'), 'utf8');
+  // The utilities that make the click target reach 7px into the gap ship in the loaded official CSS: the current
+  // design's c6a992d55 entry sheet (current-design-assets.mjs), linked by index.html.
+  const utilitiesSheet = designEntryStylesheets.find(name => name.startsWith('c6a992d55-'));
+  assert.ok(utilitiesSheet, 'the current design pins a c6a992d55 utilities sheet');
+  assert.ok(readFileSync(path.join(app, 'index.html'), 'utf8').includes(`<link rel="stylesheet" href="/assets/v1/${utilitiesSheet}" />`));
+  const utilities = readFileSync(path.join(app, 'public/assets/v1', utilitiesSheet), 'utf8');
   // 3.6556.2 splits the reach into top / x / bottom (bottom = gap-y + grid-y; with no hit grid it is 2.42304.0's gap-y).
   assert.ok(utilities.includes('.hit-row{--cds-hit-row-reach-top:var(--cds-hit-grid-y,0px);--cds-hit-row-reach-x:var(--cds-hit-grid-x,0px);--cds-hit-row-reach-bottom:calc(var(--cds-hit-gap-y,0px) + var(--cds-hit-grid-y,0px));isolation:isolate;position:relative}'));
   assert.ok(utilities.includes('.hit-row-main:before{content:"";z-index:-1;inset:calc(var(--cds-hit-row-reach-top) * -1) calc(var(--cds-hit-row-reach-x) * -1) calc(var(--cds-hit-row-reach-bottom) * -1);position:absolute}'));

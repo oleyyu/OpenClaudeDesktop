@@ -52,7 +52,7 @@ try{
  step('toggle');
  assert.equal(await pane().count(),0,'no preview pane before the shortcut');
  await page.keyboard.press('Meta+Shift+KeyP');await pane().waitFor();
- const toggle=page.locator('[data-pane-toggle="preview"]');assert.equal(await toggle.getAttribute('aria-pressed'),'true');
+ const toggle=page.locator('.st-trailing button[aria-label="Preview"]');assert.equal(await toggle.getAttribute('aria-pressed'),'true');
  await poll(async()=>await surface()==='start','start page');
  const run=pane().getByRole('button',{name:'Run site',exact:true});await run.waitFor();
  assert.match(await pane().locator('[data-preview-start="servers"]').textContent(),/Run a server to preview your app, or enter a URL\./);

@@ -129,23 +129,23 @@ test('without the preload bridge the pane explains it cannot load (no crash)', a
   assert.equal(terminalError(new Error("Error invoking remote method 'terminal:call': Error: Unknown session."), 'x'), 'Unknown session.');
 });
 
-test('titlebar: the Terminal toggle with ⌘J, pressed while open, a running dot while hidden', () => {
+// surfaces wave 2 (titlebar): the Terminal toggle is 4.16336.0 c73f45bc3 hy's terminal spec (`e("terminal", !!T, "Terminal"
+// GE7Vqpsyct, Ce("toggleTerminal", E), …)`) drawn by cc43287c9 SY: ⌘J from the spec (the Button writes aria-keyshortcuts),
+// aria-pressed while open; hy carries no activity indicator, so the busy dot (D15) is gone.
+test('titlebar: the Terminal toggle with ⌘J, pressed while open, no busy dot (hy has no indicator)', () => {
   const render = (props) => renderToStaticMarkup(h(T.SourceTitlebar, { section: 'new', session: { id: 'a', name: 'A', cwd: '/tmp/work' }, onRename() {}, ...props }));
-  assert.doesNotMatch(render({}), /data-pane-toggle="terminal"/, 'hidden unless main.jsx can open it');
+  const terminal = (html) => html.match(/<button[^>]*aria-label="Terminal"[^>]*>/)?.[0];
+  assert.equal(terminal(render({})), undefined, 'hidden unless main.jsx can open it');
   let html = render({ terminalAvailable: true, panes: new Set(['chat']) });
-  const button = html.match(/<button[^>]*data-pane-toggle="terminal"[^>]*>/)?.[0];
+  const button = terminal(html);
   assert.ok(button);
-  assert.match(button, /aria-label="Terminal"/);
-  assert.match(button, /aria-pressed="false"/);
-  assert.match(button, /aria-keyshortcuts="Meta\+J Control\+`"/);
-  assert.ok(html.indexOf('data-pane-toggle="terminal"') < html.indexOf('aria-label="Changes"'), 'before Changes');
+  assert.match(button, /data-cds="Button" data-cds-icon-only="" data-cds-ghost=""/);
+  assert.match(button, /aria-pressed="false" aria-label="Terminal" aria-keyshortcuts="(?:Meta|Control)\+j"/);
+  assert.ok(html.indexOf('aria-label="Terminal"') < html.indexOf('aria-label="Changes"'), 'before Changes');
   html = render({ terminalAvailable: true, terminalBusy: true, panes: new Set(['chat']) });
-  // c73f45bc3 pane items keep the name "Terminal" (GE7Vqpsyct) while busy; only the indicator dot shows it.
-  assert.match(html, /aria-label="Terminal"[^>]*data-pane-toggle="terminal"/);
-  assert.doesNotMatch(html, /command running/);
-  assert.match(html, /data-pane-toggle="terminal"[^>]*>(?:(?!<\/button>).)*st-indicator-dot/);
+  assert.doesNotMatch(html, /command running|st-indicator/);
   html = render({ terminalAvailable: true, terminalBusy: true, panes: new Set(['chat', 'terminal']) });
-  assert.match(html.match(/<button[^>]*data-pane-toggle="terminal"[^>]*>/)[0], /aria-pressed="true"/);
+  assert.match(terminal(html), /aria-pressed="true"/);
   assert.doesNotMatch(html, /Terminal \(command running\)/);
 });
 

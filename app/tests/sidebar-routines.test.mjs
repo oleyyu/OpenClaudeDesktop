@@ -202,7 +202,9 @@ test('SSR: delete asks the host confirmation with fO\'s routine copy; the host a
 test('wiring: main.jsx wraps the sidebar in SidebarRoutinesHost; the filter menu passes VJ(open)', () => {
   const main = read(path.join(app, 'src/main.jsx'));
   assert.match(main, /<SidebarRoutinesHost call=\{call\} onEvent=\{api\?\.onEvent\}/);
-  assert.match(main, /<\/SidebarRoutinesHost><\/SourceSidebarBoundary>/);
+  // frame-sidebar 4.16336.0: the host wraps the nav-body slot the official KR draws (frameHost.navBody).
+  assert.match(main, /<\/SidebarRoutinesHost>\n\s+\);/);
+  assert.match(main, /navBody: sidebarNavBody,/);
   assert.match(read(path.join(app, 'src/source-sidebar-filter-current.jsx')), /useSidebarRoutinesToggle\(open\)/);
   const adapters = read(path.join(app, 'src/source-sidebar-sections-adapters.jsx'));
   assert.match(adapters, /export \{ SidebarShowToggleItem \} from '\.\/generated\/sidebar-routines\/routines-section\.mjs';/);

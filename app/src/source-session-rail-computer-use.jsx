@@ -10,7 +10,8 @@
 // opens it in the image viewer (the original opens its activity detail, which this app does not have).
 import React, { useEffect, useRef, useState } from "react";
 import { RailCard, RailCardGripContext, useRailFlat } from "./generated/session-rail-kit/rail-card.mjs";
-import { CdsBadge, CdsShimmer } from "./generated/view-tabs/index.js";
+// 4.16336.0 host wiring (frame): the Live Badge and the title Shimmer are host content the RailCard only places.
+import { CdsBadge, CdsShimmer } from "./cds-core.mjs";
 import { SourceImageViewer } from "./source-image-viewer.jsx";
 import { computerUseAction, computerUseScreenshot } from "./computer-use-model.mjs";
 import { t } from "../electron/i18n/index.mjs";

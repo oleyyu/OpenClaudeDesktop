@@ -4,9 +4,10 @@ import { rateLimitRows } from './session-command-model.mjs';
 import { planLabel, planUsageSummary } from './usage-model.mjs';
 import { SourceDialog, SourceDialogFooter } from './source-dialog.jsx';
 import { SourceSelect } from './source-select.jsx';
-import { CdsTextArea, CdsTextInput } from './generated/view-tabs/index.js';
-// W14-code r6 sh6-03: the dialog footers / help links are shared-frame Uu (E41 direct import), not the host replica.
-import { CdsButton } from './generated/view-tabs/shared-frame-6jtSkIit.js';
+// W14-code r6 sh6-03: the dialog footers / help links are the CDS Button, not the host replica; host-wiring code-b: the
+// Buttons and the review fields (TextInput / TextArea) are the 4.16336.0 cds-core originals (shared-frame-CJdE5Ria,
+// semantic facade), drawn in the host dialogs' own markup.
+import { CdsButton, CdsTextArea, CdsTextInput } from './cds-core.mjs';
 import { SourceShortcut } from './source-shortcut';
 import { shortcutsDialogSections } from './shortcuts-dialog-model.mjs';
 import { hostGrowthBookFlag } from './host-growthbook.mjs';

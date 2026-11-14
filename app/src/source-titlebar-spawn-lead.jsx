@@ -12,15 +12,16 @@ import { titlebarLiveOrigin, titlebarOriginKind, titlebarOriginLabel, titlebarSp
 
 // spawn: oG's `o` (titlebarSpawnSource); episodeKey: oG's `n`; title: oG's J (the host learns a session's title only
 // once the core has the thread, so a spawning draft passes none and iy shows its ghost); railMode: oG's M (EP `bare`).
-// The lead box is the host's (the same `st-lead group/lead` with data-pills-compact as the session and not-found leads).
-export function SourceTitlebarSpawnLead({ spawn, episodeKey = "draft", title, railMode = false, pillsCompact = false }) {
+// The lead box is the host's (the same `st-lead group/lead` with data-pills-compact as the session and not-found leads); in
+// the 4.16336.0 titlebar frame it is RX's gt box (leadClassName, source-titlebar.jsx), EP its only child.
+export function SourceTitlebarSpawnLead({ spawn, episodeKey = "draft", title, railMode = false, pillsCompact = false, leadClassName = "st-lead group/lead" }) {
   const origin = titlebarLiveOrigin(spawn);
   const kind = useEpisodeSeed(titlebarOriginKind(origin), episodeKey);
   const spawnId = useEpisodeSeed(spawn?.id, episodeKey);
   // The host has no scratch workspace (titlebarSpawnSource never sets isScratchWorkspace), so Fv's "No folder" is not reached.
   const label = useEpisodeSeed(titlebarOriginLabel(origin, undefined), `${episodeKey}:${spawnId ?? ""}`);
   return (
-    <div className="st-lead group/lead" data-pills-compact={pillsCompact || undefined}>
+    <div className={leadClassName} data-pills-compact={pillsCompact || undefined}>
       <TitlebarSpawnLead {...titlebarSpawnLeadProps({ kind, label, title, railMode })} />
     </div>
   );

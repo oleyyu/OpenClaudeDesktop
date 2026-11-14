@@ -380,3 +380,68 @@ export function ToolRowFallback({ tool }) {
 }
 // gJe: the server header row of a non-visualize card, drawn only while __gb__3106245306 (FJe) is on.
 export const GatedServerHeaderRow = unreachable('The MCP App server header row (__gb__3106245306)');
+
+// ======== 4.16336.0 (scripts/extract-mcp-app-card-v4.mjs, batch3 mcp-app-card): the imports the v4 card adds. The
+// extractor pins each original (chunk, export alias, local, features) in extract-mcp-app-card-v4-spec.mjs.
+
+// ---- vendor-intl l (Gt): react-intl FormattedMessage over the same local catalog as useIntl above.
+export function FormattedMessage({ values, ...message }) { return useMcpAppIntl().formatMessage(message, values); }
+
+// ---- vendor-query d (q): react-query's QueryClientContext. The card reads it only for load-timing telemetry (wde, a
+// host no-op); the one generated copy of the context is re-exported so no second context exists (D1). Since cds-core wave 8s
+// (W8S-M7) that copy is cds-core's (settings_vendorquery_q; files-changes-v4 links it); it was files-changes-v4's
+// ("./generated/files-changes-v4/file-browser-query.mjs") through wave 8.
+export { settings_vendorquery_q as QueryClientContext } from "./cds-core.mjs";
+
+// ---- shared-5 _p/bp/Op/kp (I_/L_/U_/z_): the persisted values (the card's "visualize used" list). The host's one store
+// (localStorage persisted.<key>, source-files-changes-adapters.jsx) is re-exported, not copied (D1).
+export { persistedValuesLoading, readPersistedValue, usePersistedValue, writePersistedValue } from "./source-files-changes-adapters.jsx";
+
+// ---- c87a7a2df n (v): the side pane portal slot. The card draws it only when useSidePanePortalHost gives a host node
+// (`Wt === null ? qo : …`); the host has no side pane (useSidePanePortalHost: null), so it is never drawn.
+export const SidePanePortalSlot = unreachable('The MCP App side pane portal slot');
+
+// ---- c2fd10b8d Fa/Ma/Ra/Aa/za/Na/Ia (_c/Ac/jc/kc/Mc/wc/Ec): the pane question registry, keyed by the session pane store.
+// The host has no pane store (usePaneStoreContext: null), so the originals' null-store answers apply: nothing is held,
+// open or counted; registration only happens with a store and is never reached.
+export function registerPaneQuestion() { throw Error('Pane questions are registered with a pane store; this host has none.'); }
+export function isPaneQuestionBackOpen() { return false; }
+export function usePaneQuestionBackOpen() { return false; }
+export function closePaneQuestionBack() { return undefined; }
+export function usePaneQuestionCount() { return 0; }
+export function isPaneQuestionHeld() { return false; }
+export function usePaneQuestionAnswered() {}
+
+// ---- c5da7eb42 Jr/qr/Kr (kS/jS/OS): the question host-delivery record of a session. The host records none, so every
+// session answers as the originals do for an unrecorded one.
+export function questionHostDelivery() { return 'none_read'; }
+export function questionSourceOf() { return 'none_read'; }
+export function questionHostDelivered() { return false; }
+
+// ---- c06cf64bb sn/ht (sk/Yk): the locally armed pending turn. The host arms none (pendingTurnArmedAt above is null).
+export function usePendingTurnLocalArmed() { return false; }
+export function localArmedPendingTurnAt() { return null; }
+
+// ---- c8b5c2821 B/z (B/he): the pending tool approvals of a session and its family. The host has no session families
+// (sessionsStore above is empty), so the family is the session itself, read from toolApprovalStore.
+const NO_APPROVALS = Object.freeze([]);
+const pendingOf = requests => Object.values(requests ?? {}).filter(request => request?.status === 'pending');
+export function useSessionFamilyApprovals(sessionId) {
+  const requests = toolApprovalStore(state => (sessionId == null ? undefined : state.requestsBySession[sessionId]));
+  return useMemo(() => (requests === undefined ? NO_APPROVALS : pendingOf(requests)), [requests]);
+}
+export function hasPendingApprovalInFamily(sessionId) {
+  return pendingOf(toolApprovalStore.getState().requestsBySession[sessionId]).length > 0;
+}
+
+// ---- cbec108f3 i (l): whether the side pane opens first. No side pane here (useMcpAppPaneSupported: false).
+const NOT_PANEL_FIRST = Object.freeze({ panelFirst: false, paneReady: false });
+export function usePanelFirst() { return NOT_PANEL_FIRST; }
+
+// ---- c5dea2982 o (B): register the widget's view tools with the chat's model context. The host has no model-context
+// tool registry for MCP App views, so registration answers like the original's unknown anchor: an empty cleanup.
+export function registerMcpAppViewTools() { return () => undefined; }
+
+// ---- cc0e3547f p (rn): file a widget's content into the transcript. The host has no transcript filing action, so the
+// card takes its own path without it (`mi ? mi(…) : i(a, !0)`, the composer send).
+export function useMcpAppFileIntoTranscript() { return undefined; }

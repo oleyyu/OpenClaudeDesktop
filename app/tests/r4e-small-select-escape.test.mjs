@@ -20,7 +20,15 @@ let server, Select;
 before(async () => {
   // SelectPopup portals to document.body (react-dom only checks it is an element) and reads theme attributes from
   // <html>; Tab scans the body for the next control. Nothing else of the DOM is reached on the keyboard path.
-  globalThis.document = { body: { nodeType: 1, querySelectorAll: () => [] }, documentElement: { getAttribute: () => null } };
+  // integration-1 cds-core-api: createElement only serves the official 4.16336.0 probe that cds-core
+  // browser-preload-helper.mjs (preload-helper-BBljBeZo.js) runs when the module is evaluated,
+  // `document.createElement("link").relList`; a link without relList takes the official 'preload' branch. It is never
+  // reached on the keyboard path below.
+  // W8 stub contract (design class c): cds-core now holds shared-0 CQ/Wo (read document.cookie at load) and the shared-25
+  // router store (reads window.location.pathname at load), as in the app.
+  // W8 stub contract (design class c): cds-core now holds shared-92 cS, which reads documentElement.hasAttribute at load.
+  globalThis.document = { cookie: '', body: { nodeType: 1, querySelectorAll: () => [] }, documentElement: { hasAttribute: () => false, getAttribute: () => null },
+    createElement: () => ({}) };
   server = await createServer({ configFile: false, root: app, plugins: [react()],
     server: { middlewareMode: true, hmr: false, watch: null }, appType: 'custom', logLevel: 'error' });
   Select = await server.ssrLoadModule('/src/source-select.jsx');

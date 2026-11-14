@@ -11,7 +11,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
 import postcss from 'postcss';
-import { designSnapshot, designStylesheets } from '../scripts/current-design-assets.mjs';
+import { designSnapshot, designEntryStylesheets } from '../scripts/current-design-assets.mjs';
 import { selectorClasses } from '../scripts/prepare-style-compatibility.mjs';
 import * as chrome from '../src/generated/code-editor/side-chat-chrome.mjs';
 
@@ -118,8 +118,12 @@ test('the host carries no replaced markup and no host rules for it', async () =>
 });
 
 test('every qF/UF/HF/r8/N_ utility is in the loaded design stylesheets', async () => {
+  // Loaded = the 4.16336.0 sheets index.html links (the entry sheets), read from the design snapshot; the unlinked
+  // component sheets (c8e31bf58, c3fde7009-Dl-p803_) do not count, a class only they define has no style at runtime.
+  const linked = [...(await fs.readFile(new URL('../index.html', import.meta.url), 'utf8')).matchAll(/<link rel="stylesheet" href="\/assets\/v1\/([^"]+)"/g)].map(m => m[1]);
+  assert.deepEqual(designEntryStylesheets.filter(name => !linked.includes(name)), [], 'index.html links every 4.16336.0 entry sheet');
   const loaded = new Set();
-  for (const name of designStylesheets) postcss.parse(await fs.readFile(new URL(name, latest), 'utf8')).walkRules(rule => selectorClasses(rule.selector).forEach(c => loaded.add(c)));
+  for (const name of designEntryStylesheets.filter(name => linked.includes(name))) postcss.parse(await fs.readFile(new URL(name, latest), 'utf8')).walkRules(rule => selectorClasses(rule.selector).forEach(c => loaded.add(c)));
   // epitaxy-side-chat / epitaxy-user-attachments carry no rule in any 3.6556.2 stylesheet (selector hooks only).
   const hooks = new Set(['epitaxy-side-chat', 'epitaxy-user-attachments']);
   for (const token of [EMPTY_OUTER, EMPTY_NOTICE, LIST, ERROR, BOUNDS, ASIDE, 'invisible', FRAME, WINDOW_FRAME, UF_BODY, COMPOSER_ROW, USER_TURN, USER_ROW, BUBBLE,
@@ -129,7 +133,10 @@ test('every qF/UF/HF/r8/N_ utility is in the loaded design stylesheets', async (
 
 test('SSR: the floating panel is qF > UF > N_, with the empty notice; the window is UF\'s pane window', () => {
   const html = render({ threadId: 'markup-empty', assistantName: 'Claude' });
-  assert.match(html, new RegExp(`^<div class="cds-root[^"]*\\bcontents\\b[^"]*" data-density="compact"[^>]*><div class="${esc(BOUNDS)}" style="z-index:440"><aside aria-label="Side chat" data-open="true" class="ssc-root ${esc(ASIDE)}">`));
+  // host-wiring code-b: qF's compact root is the view-tabs CdsRoot (3.6556.2 readers in the body) around the cds-core one
+  // (4.16336.0 header controls): two `contents` roots with the same density, then the bounds layer.
+  const ROOT = 'cds-root text-primary contents" data-density="compact" data-platform="web" data-font="anthropic" style="font-size:var\\(--cds-font-size-body\\)';
+  assert.match(html, new RegExp(`^<div class="${ROOT}"><div class="${ROOT}"><div class="${esc(BOUNDS)}" style="z-index:440"><aside aria-label="Side chat" data-open="true" class="ssc-root ${esc(ASIDE)}">`));
   assert.match(html, new RegExp(`<div tabindex="-1" data-escape-owner="" class="${esc(FRAME)}"><div data-cds="Surface" data-surface="panel" data-pane-root="" data-perf-region="side_pane" class="[^"]*\\bmin-w-0 shrink-0 relative isolate flex flex-col\\b[^"]*" style="[^"]*flex:1;min-height:0">`));
   assert.match(html, new RegExp(`<div data-pane-corner-row="" class="ssc-header ${esc(HEADER)}" style="touch-action:none"><span class="ssc-title ${esc(TITLE)}">Side chat</span><div class="${esc(TRAILING)}"><button `));
   assert.doesNotMatch(html, /draggable absolute inset-0|data-top-left|data-top-right/);

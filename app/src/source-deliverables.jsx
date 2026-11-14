@@ -5,7 +5,8 @@ import React, { useState } from "react";
 import { Icon } from "./icons";
 // W14-code r7 R7DC-02 / css7-deliverables-settings-button: the CDS Button (shared-frame Uu, official Eu) straight from the
 // shared-frame file (E41), in place of the host settings-button copy.
-import { CdsButton } from "./generated/view-tabs/shared-frame-6jtSkIit.js";
+// host-wiring code-a: the file cards' own Buttons are the 4.16336.0 cds-core Button (semantic facade).
+import { CdsButton } from "./cds-core.mjs";
 import { fileKindIcon } from "./file-kind-icon.mjs";
 import "./source-deliverables.css";
 import { t } from "../electron/i18n/index.mjs";

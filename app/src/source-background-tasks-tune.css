@@ -1,0 +1,11 @@
+/* Local design tune of the Background tasks pane (user decision U-BT-KEEP, 2026-11-11: the pane keeps its current
+   look instead of following the live official one, with the title-to-meta spacing a little tighter). Not an official
+   rule; source-background-tasks.css stays the empty official-fidelity sheet.
+   The card's Stop button (4.16336.0 c96d752d0 QH, "xs" in the pane frame's panels context) sits in the host card's
+   title row and can still be taller than one text line, pushing the "Bash · 1m" line down. Pulling the button's block
+   margins in by the overflow keeps it centred on the title line without growing the row. Scoped to the side tile's
+   host task cards; the 4.16 workflow card (CQe) places its Stop absolutely, so the rule does not reach it. */
+.source-side-tile [data-task-id] .items-start > [data-cds="Button"][data-cds-icon-only],
+.source-side-tile [data-task-id] .items-start > .contents > [data-cds="Button"][data-cds-icon-only] {
+  margin-block: calc((1lh - var(--cds-h-control, 28px)) / 2);
+}

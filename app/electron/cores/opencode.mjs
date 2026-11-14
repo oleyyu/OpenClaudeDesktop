@@ -20,6 +20,9 @@ export default Object.freeze({
   license: "MIT",
   // The adapter script, relative to the repository root (packaged: process.resourcesPath).
   bridge: Object.freeze({ script: "harness/packages/opencode-bridge/bin/app-server.mjs" }),
+  // The bridge passes Settings › Models' custom providers to the agent, keys by {env:CODE_DESKTOP_PROVIDER_KEY_<ROUTE>}
+  // reference: codex.cjs resolveCore keeps those variables for it (every other bridge gets them blanked, foreignCoreEnv).
+  providerKeys: true,
   // Thread.cliVersion the bridge reports: "opencode <version>".
   sessionPrefix: "opencode ",
   // The bridge reports these in initialize too (harness/packages/opencode-bridge/src/index.js capabilitiesFor), for either

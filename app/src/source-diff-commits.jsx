@@ -1,6 +1,9 @@
 import React, { useCallback, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
-// Hand-written host file: view-tabs through the facade (R6; this graph is not imported by chat/composer/menu, E41).
-import { CdsCollapsible, CdsIcon, isMacUserAgent } from "./generated/view-tabs/index.js";
+// host-wiring code-a: the Commits section's Collapsible (Trigger with hideCaret, so its 4.16336.0 CaretRightFilled caret
+// is not drawn) and Icon are the 4.16336.0 cds-core originals (semantic facade). isMacUserAgent has no cds-core name and
+// stays on the view-tabs facade (R6; this graph is not imported by chat/composer/menu, E41).
+import { CdsCollapsible, CdsIcon } from "./cds-core.mjs";
+import { isMacUserAgent } from "./generated/view-tabs/index.js";
 // shared-18 ok / sk (c44d00c7f `$e` / `Z`): the keyboard context menu (⇧F10 / ContextMenu on macOS, ^Enter on a commit
 // row) and the menu-item Enter-repeat guard.
 import { openContextMenuFromKey, preventMenuItemEnterRepeat } from "./generated/files-changes/tree-context-menu-keys.mjs";

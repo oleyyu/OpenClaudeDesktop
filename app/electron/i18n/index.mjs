@@ -10,6 +10,7 @@
 // Module-level t() calls are therefore safe. The main process calls setLocale
 // after reading preferences and rebuilds its menus.
 import zhCN from './zh-CN/index.mjs';
+import { conciseCopy } from './concise.mjs';
 
 export const DEFAULT_LOCALE = 'en-US';
 // name: in English (the secondary line); localName: in the language itself.
@@ -69,6 +70,9 @@ const named = (text) => (assistant === 'DeepSeek' || typeof text !== 'string' ||
 
 export function t(source, values) {
   if (typeof source !== 'string') return source;
+  // U-SET-LITE: a long setting description has a short line (concise.mjs) in every locale.
+  const short = conciseCopy(source, current);
+  if (short !== null) return interpolate(named(short), values);
   const table = DICTIONARIES[current];
   const text = table && Object.hasOwn(table, source) ? table[source] : source;
   return interpolate(named(text), values);

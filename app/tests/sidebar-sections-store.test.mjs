@@ -600,7 +600,8 @@ test('main.cjs keeps the record in step at startup (no seeding) and delegates; m
 });
 
 // ---------------------------------------------------------------- the renderer store (src/source-sidebar-sections-adapters.jsx)
-const documentStub = { createElement: () => ({ relList: { supports: () => false } }),
+// W8-M9 stub contract (round4 integration, stub fields only): cds-core 9203795f reads these at load (official 4.16336.0): document.cookie.
+const documentStub = { cookie: '' /* W8-M9: shared-0 CQ / Wo document.cookie */, createElement: () => ({ relList: { supports: () => false } }),
   documentElement: { dir: 'ltr', getAttribute: () => null, hasAttribute: () => false } };
 let server, savedDocument, adapters, rendererModel;
 before(async () => {

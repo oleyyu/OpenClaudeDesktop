@@ -1,6 +1,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { SourceDialog, SourceDialogFooter, SourceConfirmationDialog } from "./source-dialog.jsx";
-import { CdsButton, CdsTextAreaField, CdsTextLink } from "./generated/view-tabs/shared-frame-6jtSkIit.js";
+// 4.16336.0 host wiring (frame): cds-core Button Xu / TextAreaField RI / TextLink Lg; EnvironmentFooter only lays out.
+import { CdsButton, CdsTextAreaField, CdsTextLink } from "./cds-core.mjs";
 import { getAssistantName, t } from "../electron/i18n/index.mjs";
 import { ENVIRONMENT_PLACEHOLDER, parseEnvironmentText, serializeEnvironment, validateEnvironmentText } from "../electron/prefs/local-environment.mjs";
 import { environmentBodyClass, EnvironmentFooter } from "./generated/code-current/environment-form-layout.mjs";

@@ -39,7 +39,7 @@ test.before(async () => {
   filter = userPathFilter(opts);
 });
 
-const TOOL_FILES = ['agent-tools-server.mjs', 'agent-tools-host.cjs', 'agent-tools-instructions.cjs', 'agent-tool-approval.cjs', 'agent-tools/preview.mjs', 'agent-tools/terminal.mjs',
+const TOOL_FILES = ['agent-tools-server.mjs', 'agent-tools-opencode.mjs', 'agent-tools-host.cjs', 'agent-tools-instructions.cjs', 'agent-tool-approval.cjs', 'agent-tools/preview.mjs', 'agent-tools/terminal.mjs',
   'preview-launch.mjs', 'terminal-model.mjs',
   // preview-launch.mjs imports the official autoPort/port checks (R3b-preview, scripts/extract-r3b-preview.mjs).
   'generated/r3b-preview-launch-fields.mjs'];
@@ -47,8 +47,8 @@ const TOOL_FILES = ['agent-tools-server.mjs', 'agent-tools-host.cjs', 'agent-too
 test('the package script keeps the agent tools server, its host and the tool modules (inside app.asar, not unpacked)', async () => {
   for (const file of TOOL_FILES) assert.equal(await filter(path.join(app, 'electron', file)), true, `electron/${file} is packaged`);
   // Only native code is unpacked (dlopen cannot read inside an archive): node-pty's prebuilds and the computer-use
-  // module's build/. The server is plain JavaScript read through Electron's asar support.
-  assert.deepEqual(opts.asar, { unpackDir: '{node_modules/node-pty/prebuilds,native/computer-use/build}' });
+  // and sidebar-glass modules' build/. The server is plain JavaScript read through Electron's asar support.
+  assert.deepEqual(opts.asar, { unpackDir: '{node_modules/node-pty/prebuilds,native/computer-use/build,native/sidebar-glass/build}' });
 });
 
 test('computer use: the built module ships unpacked; its Swift sources and SwiftPM .build do not ship', async () => {
@@ -66,6 +66,18 @@ test('computer use: the built module ships unpacked; its Swift sources and Swift
   const { minimatch } = require(require.resolve('minimatch', { paths: [path.join(app, 'node_modules/@electron/asar')] }));
   for (const dir of ['native/computer-use/build', 'node_modules/node-pty/prebuilds']) assert.equal(minimatch(dir, opts.asar.unpackDir), true, dir);
   assert.equal(minimatch('native/computer-use/Sources', opts.asar.unpackDir), false);
+});
+
+test('sidebar glass: the built module ships unpacked; its Swift sources and SwiftPM .build do not ship', async () => {
+  const native = (relative) => filter(path.join(app, 'native/sidebar-glass', relative));
+  assert.equal(await native('build'), true);
+  assert.equal(await native('build/sidebar_glass.node'), true);
+  for (const relative of ['Package.swift', 'build.mjs', 'Sources', 'Sources/SidebarGlass/SidebarGlass.swift', '.build', '.gitignore']) {
+    assert.equal(await native(relative), false, `native/sidebar-glass/${relative} is not packaged`);
+  }
+  const { minimatch } = require(require.resolve('minimatch', { paths: [path.join(app, 'node_modules/@electron/asar')] }));
+  assert.equal(minimatch('native/sidebar-glass/build', opts.asar.unpackDir), true);
+  assert.equal(minimatch('native/sidebar-glass/Sources', opts.asar.unpackDir), false);
 });
 
 test('computer use: the Accessibility calls live in computer_use.node — no separate helper is built, packaged or signed', async () => {

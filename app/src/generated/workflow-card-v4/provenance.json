@@ -1,0 +1,868 @@
+{
+  "referenceVersion": "4.16336.0",
+  "referenceSnapshot": "snapshots/claude-4.16336.0-20261104",
+  "generator": "scripts/extract-workflow-card-v4.mjs",
+  "previous": {
+    "generator": "scripts/extract-code-transcript.mjs",
+    "output": "src/generated/code-transcript",
+    "referenceVersion": "3.6556.2",
+    "roots": {
+      "WorkflowTaskCard": "c96d752d0-CWv_7-n9.js#N$",
+      "TaskStopButton": "c96d752d0-CWv_7-n9.js#UQ"
+    }
+  },
+  "sharedGraph": {
+    "area": "cds-core",
+    "manifestSha256": "06d2026939e5c8992713c2a0dda1b1abc9adffe7a0c223fe3c1e79eecd08d62c"
+  },
+  "linkedAreas": {
+    "artifact-library-v4": "f57f9ab2d8ef06f6169d0c3b2eee66a3503228ca66916f39428519a90253923c",
+    "cowork-progress-v4": "e5501ac28f6c72be0c01e5278e0b22159f48d63e1a3a61349e0c4eca8bd504a7",
+    "cowork-scheduled-v4": "1af355ba22cc6cee9062edb2710c581d7808d95812d240d343ad995cf96ceb78",
+    "files-changes-v4": "35740c17397e4a05b8f5a12f408061040cdd39e4fb28ca86b43c02f786e1b93e",
+    "frame-sidebar-nav": "f050559d8d4736a10e502efd30f166d28900e800b146c6c8749608a326966487",
+    "proposal-group-v4": "373e3ed4e243fdfea94253655f55063a894ac1a21187f4fd5eb8745eea61bc83",
+    "routines-shared-v4": "a2a9b9a84b2705e48451025af38eb7582de5bb421c626e6bdf5b067eb8e00c8c",
+    "session-rail-changes-v4": "fd23545a7c4be524493f74e75d69170c3538554b15051026bb8622d8240903bf",
+    "session-rail-context-v4": "b2224a8593dc7c7440bbd8903b00f32276d57a50f8bd9734c3cbff12e67018bf",
+    "session-rail-kit-v4": "8e3066efa4721cee2a5bb0b190fae471848c3456fa9b9424773baba5f2b9291a",
+    "session-rail-sections-v4": "150a2450f0b81d000fab6f2f7f9dc62554d734e6adc4fe055db8e3dff374fc33",
+    "settings-desktop-v4": "540f6881c10584f6db4e81363d4dea195d0c7c70815cf6e7f5bc8c8038ae413d",
+    "settings-nav": "435f5b7252e981860470a2e95daf50f60eb6fe14bf70caf26cace55915d2da8d",
+    "transcript-rows-v4": "78a6fba1cc34e50cbd11f242247a0361851ad33988ef2df04afc104e4853d7fe",
+    "turn-plan-v4": "120180f4946ca49f0a8cb0302a85c1ff5f155733e1ef1bb35000ece88b1ceb2e",
+    "working-line-v4": "25610753870c1d676d772810433ca78b2413b2d93418b0e3ea8a904875d1deaa"
+  },
+  "roots": [
+    {
+      "file": "c96d752d0-D9VB6ArX.js",
+      "local": "jU",
+      "name": "WorkflowTaskCard",
+      "export": "Wr",
+      "previous": "c96d752d0-CWv_7-n9.js#N$",
+      "declarationSha256": "65c35bcdcbb5137c85d692c5050c06da5e9539b7dbead851b9992dea71750ad1",
+      "pinned": true
+    },
+    {
+      "file": "c96d752d0-D9VB6ArX.js",
+      "local": "QH",
+      "name": "TaskStopButton",
+      "export": "Kr",
+      "previous": "c96d752d0-CWv_7-n9.js#UQ",
+      "declarationSha256": "1fbf6fac9b5696816dfa266501a7f00b4273bed83d4cf2db834b89d4c428a310",
+      "pinned": true
+    }
+  ],
+  "adapters": [
+    {
+      "original": "cef1e6037-Dm5Rlsox.js#Z",
+      "name": "localSessionClient",
+      "hostAdapter": "src/source-code-feed-adapters.jsx",
+      "previous": "cef1e6037-C9OZ_iaL.js#Z",
+      "declarationSha256": "5e0de79a41f07ae54196b3301892e44fdfd8f536526eb0e70d399f24ea97d22a",
+      "pinned": true
+    },
+    {
+      "original": "c5da7eb42-aEqbSKbC.js#LL",
+      "name": "useSessionBandFields",
+      "hostAdapter": "src/source-session-rail-adapters.jsx",
+      "previous": "c5da7eb42-XijZdwf1.js#QI",
+      "declarationSha256": "6b7105ae24f3ae257f8320347117a0f95159a2f96952da4134221c3550c95cca",
+      "pinned": true
+    },
+    {
+      "original": "c06cf64bb-CoZso5N4.js#vO",
+      "name": "sessionBucketsStore",
+      "hostAdapter": "src/source-code-transcript-adapters.jsx",
+      "previous": "c06cf64bb-CdJdJuVd.js#iD",
+      "declarationSha256": "44ae4a01ef85d4d040140e3ed3a8ad66b2751e2109cc88d4c32e0fbc9c4eaf8b",
+      "pinned": true
+    },
+    {
+      "original": "vendor-intl-BJgYK7RA.js#q",
+      "name": "useIntl",
+      "hostAdapter": "src/source-transcript-rows-adapters.jsx",
+      "previous": "vendor-intl-DYfox5Co.js#q",
+      "declarationSha256": "edf793bc7b87ae9a38cea39d25d752a5bcfef1d492e06a2219e120311feaaec0",
+      "pinned": true
+    }
+  ],
+  "linkedCopies": {
+    "c966e2bd9-D2U_Ub6d.js#e": "the ANSI escape pattern (a regex literal; every reader resets lastIndex or clones it), sliced by transcript-rows-v4 without an export: c62da1b56 ft's ANSI strip of a run's summary reads it through c966e2bd9 s"
+  },
+  "callSites": [
+    {
+      "source": "c9bd7af9c-Bvb7EG4D.js",
+      "role": "The Background tasks pane row (c9bd7af9c RI) draws a local_workflow task as c96d752d0 jU (Wr as ds), detailed",
+      "sourceSha256": "78619621ed4fe40e505a3a91e7e0b92a4482cb4b9c5fc87237b9b6fea7bf736b",
+      "features": [
+        "Wr as ds",
+        "u(ds,{task:r,variant:\"detailed\",sessionRef:i,onStop:a,stopping:o?.has(r.taskId),inRunning:t.inRunning,depth:t.depth,tasksFollow:t.tasksFollow})"
+      ]
+    },
+    {
+      "source": "c9bd7af9c-Bvb7EG4D.js",
+      "role": "The pane's other task cards stop through c96d752d0 QH (Kr as Zo)",
+      "sourceSha256": "78619621ed4fe40e505a3a91e7e0b92a4482cb4b9c5fc87237b9b6fea7bf736b",
+      "features": [
+        "Kr as Zo",
+        "u(Zo,{quiet:b===\"line\",busy:i,busyLabel:k.formatMessage({defaultMessage:\"Stopping\\u2026\",id:\"NACfNicI6z\"}),onClick:U,ariaLabel:k.formatMessage({defaultMessage:\"Stop this task\",id:\"+ZLTl3VMv+\"})"
+      ]
+    },
+    {
+      "source": "c4db265df-CHyZjtsm.js",
+      "role": "The pane frame (c4db265df Tn) sets the panels context (shared-120 Je, gn as we) around the pane body",
+      "sourceSha256": "fcf338553d4fe5524b8d704f1b6758df8f63737570f7775e34aaea8817bd76f7",
+      "features": [
+        "gn as we",
+        "et=J1($,0,je)?K1($,0,je,t(fe,{value:!1,children:je})):$[1]",
+        "t(we,{value:!0,children:t(Yt,{value:null,children:et})})"
+      ]
+    },
+    {
+      "source": "c96d752d0-D9VB6ArX.js",
+      "role": "kQe draws a running workflow as CQe under the panels context; CQe ends in \"Up next: {phases}\" (Poe = c62da1b56 ct); QH sizes its StopFilled button by the panels context",
+      "sourceSha256": "0fdf7e459a4e03edf9e87bf76dde64243824299d88e80034cd7a56ccae4a9a49",
+      "features": [
+        "import{gn as pf,mn as mf,nn as Yoe}from\"./shared-120-DCdTP1_5.js\"",
+        "import{A as Poe,",
+        "E=T(pf),D=!!m&&m.phases.length>0;if(E&&u)",
+        "return f(CQe,{task:t,title:x,phases:m?.phases.map(t=>t.index===af?{...t,title:e}:t)??[],counts:m?.counts,stallNow:d,stopping:a,onStop:i&&w,depth:o,tasksFollow:c})",
+        "T=Poe(r)",
+        "defaultMessage:\"Up next: {phases}\",id:\"AbOFlWPZyk\"",
+        "l=T(pf),u=J1($,0,t)",
+        "icon:\"StopFilled\"",
+        "jU as Wr",
+        "QH as Kr"
+      ]
+    },
+    {
+      "source": "c96d752d0-D9VB6ArX.js",
+      "role": "U-BT-KEEP (user customisation, not official): the official pieces the panel card's agents + tokens line is built from (REWRITES): the non-panels card's counts / tokens cell, SQe's line box and CQe's description cell it replaces",
+      "sourceSha256": "0fdf7e459a4e03edf9e87bf76dde64243824299d88e80034cd7a56ccae4a9a49",
+      "features": [
+        "R=J2($,99,u,m)||J1($,101,t.usage)?I1($,101,Z2($,99,m&&m.counts.total>0||t.usage?",
+        "h(\"span\",{className:\"flex flex-wrap items-baseline gap-x-sm gap-y-0.75\",children:[m&&m.counts.total>0?f(cU,{counts:m.counts,muted:!u}):null,t.usage?f(\"span\",{children:f(Q,{defaultMessage:\"<v>{n}</v> tokens\",id:\"q8yC2bH6mD\",values:{n:hu(t.usage.totalTokens),v:u?EQe:OU}})}):null]})",
+        "let e=st(\"flex min-h-5 min-w-0 items-center\",RH)",
+        "ee=J2($,69,O,s)||J1($,71,t.description)?I1($,71,Z2($,69,O?f(\"div\",{className:s?FH:void 0,children:f(SQe,{text:t.description})}):null,O,s),t.description):$[72]"
+      ]
+    },
+    {
+      "source": "c62da1b56-Blm2zUF0.js",
+      "role": "The phases model: a workflow_phase entry opens a phase with no agents (counts.total 0); ct (exported A) is the upcoming ones",
+      "sourceSha256": "5ea040ad4db877654d378d6af18260d130e884ff3db308644d6a005b599582a4",
+      "features": [
+        "if(n.type===\"workflow_phase\"){a(n.index,n.title);continue}",
+        "function ct(e){let t=Math.max(-1,...e.filter(e=>e.index!==D&&e.counts.total>0).map(e=>e.index));return e.filter(e=>e.counts.total===0&&e.index>t)}",
+        "ct as A"
+      ]
+    }
+  ],
+  "agentCells": {
+    "source": "c96d752d0-D9VB6ArX.js",
+    "id": "c1bc4f7a0",
+    "file": "src/generated/code-transcript/agent-cell.css",
+    "cssSha256": "a34863b0aa12acb5dda16fea196296491932f1abbe320be5fcc9edb21efc125f",
+    "fileSha256": "dde0c7239c805ec73bea8a7d7dc9d47af7052e4440780bfe89d50eb3402cf005"
+  },
+  "userCustomisations": [
+    {
+      "decision": "U-BT-KEEP",
+      "official": false,
+      "binding": "c96d752d0-D9VB6ArX.js#CQe",
+      "why": "User customisation U-BT-KEEP (2026-11-11), not official: the panel card's description line reads agents + tokens (the non-panels card's official counts / tokens cell, running branch) instead of task.description",
+      "fromSha256": "b16b1a75c9ab445b7990c0e4c42dafae368c7dca7fd75dc1b02f48f444496879",
+      "toSha256": "5e3af84e22c7fcf3d722a2333b0d61138068cfdc9b78dbb4e51daf11c030fa41"
+    }
+  ],
+  "imports": [
+    {
+      "module": "shared-183.mjs",
+      "local": "bW",
+      "kind": "linked",
+      "from": "../frame-sidebar-nav/shared-183.mjs",
+      "name": "bW",
+      "via": "shared-183-B2N6Zy4J.js#bW"
+    },
+    {
+      "module": "c62da1b56.mjs",
+      "local": "d",
+      "kind": "linked",
+      "from": "../turn-plan-v4/shared-183.mjs",
+      "name": "mW",
+      "via": "shared-183-B2N6Zy4J.js:xa"
+    },
+    {
+      "module": "c62da1b56.mjs",
+      "local": "m",
+      "kind": "linked",
+      "from": "../turn-plan-v4/shared-92.mjs",
+      "name": "eM",
+      "via": "shared-92-BOgyxePb.js:hf"
+    },
+    {
+      "module": "c62da1b56.mjs",
+      "local": "re",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-c966e2bd9.mjs",
+      "name": "i",
+      "via": "c966e2bd9-D2U_Ub6d.js:o"
+    },
+    {
+      "module": "shared-123.mjs",
+      "local": "X",
+      "kind": "linked",
+      "from": "../cowork-progress-v4/shared-123.mjs",
+      "name": "X",
+      "via": "shared-123-1Hc1RTKl.js#X"
+    },
+    {
+      "module": "c5da7eb42.mjs",
+      "local": "K",
+      "kind": "linked",
+      "from": "../settings-desktop-v4/shared-25.mjs",
+      "name": "ko",
+      "via": "shared-25-D-aF0gt9.js:Fg"
+    },
+    {
+      "module": "c5da7eb42.mjs",
+      "local": "LL",
+      "kind": "adapter",
+      "from": "../../source-workflow-card-v4-adapters.jsx",
+      "name": "useSessionBandFields",
+      "via": "c5da7eb42-aEqbSKbC.js#LL"
+    },
+    {
+      "module": "c5da7eb42.mjs",
+      "local": "NV",
+      "kind": "shared-graph",
+      "from": "../cds-core/c5da7eb42.mjs",
+      "name": "NV",
+      "via": "c5da7eb42-aEqbSKbC.js#NV"
+    },
+    {
+      "module": "c5da7eb42.mjs",
+      "local": "V",
+      "kind": "linked",
+      "from": "../settings-desktop-v4/shared-0.mjs",
+      "name": "HY",
+      "via": "shared-0-CnnWnVrT.js:Ra"
+    },
+    {
+      "module": "c5da7eb42.mjs",
+      "local": "uN",
+      "kind": "shared-graph",
+      "from": "../cds-core/c5da7eb42.mjs",
+      "name": "uN",
+      "via": "c5da7eb42-aEqbSKbC.js#uN"
+    },
+    {
+      "module": "c5da7eb42.mjs",
+      "local": "v",
+      "kind": "react",
+      "from": "react",
+      "name": "use",
+      "via": "vendor-frame-BckkO60Y.js:do"
+    },
+    {
+      "module": "c0a74d72b.mjs",
+      "local": "C",
+      "kind": "react",
+      "from": "react",
+      "name": "useRef",
+      "via": "vendor-frame-BckkO60Y.js:wo"
+    },
+    {
+      "module": "c0a74d72b.mjs",
+      "local": "J3",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-frame.mjs",
+      "name": "J3",
+      "via": "shared-frame-CJdE5Ria.js:dm"
+    },
+    {
+      "module": "c0a74d72b.mjs",
+      "local": "J9",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-frame.mjs",
+      "name": "J9",
+      "via": "shared-frame-CJdE5Ria.js:hm"
+    },
+    {
+      "module": "c0a74d72b.mjs",
+      "local": "K3",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-frame.mjs",
+      "name": "K3",
+      "via": "shared-frame-CJdE5Ria.js:ym"
+    },
+    {
+      "module": "c0a74d72b.mjs",
+      "local": "Zn",
+      "kind": "adapter",
+      "from": "../../source-workflow-card-v4-adapters.jsx",
+      "name": "sessionBucketsStore",
+      "via": "c06cf64bb-CoZso5N4.js:kt"
+    },
+    {
+      "module": "workflow-card.mjs",
+      "local": "$ie",
+      "kind": "linked",
+      "from": "../session-rail-changes-v4/vendor-intl.mjs",
+      "name": "FormattedList",
+      "via": "vendor-intl-BJgYK7RA.js:r"
+    },
+    {
+      "module": "workflow-card.mjs",
+      "local": "Dn",
+      "kind": "linked",
+      "from": "../cowork-scheduled-v4/shared-0-CnnWnVrT.mjs",
+      "name": "fE",
+      "via": "shared-0-CnnWnVrT.js:xv"
+    },
+    {
+      "module": "workflow-card.mjs",
+      "local": "F",
+      "kind": "react",
+      "from": "react",
+      "name": "useId",
+      "via": "vendor-frame-BckkO60Y.js:vo"
+    },
+    {
+      "module": "workflow-card.mjs",
+      "local": "Fe",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "CdsShimmer",
+      "via": "shared-frame-CJdE5Ria.js:aa"
+    },
+    {
+      "module": "workflow-card.mjs",
+      "local": "I",
+      "kind": "react",
+      "from": "react",
+      "name": "useRef",
+      "via": "vendor-frame-BckkO60Y.js:wo"
+    },
+    {
+      "module": "workflow-card.mjs",
+      "local": "I1",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-frame.mjs",
+      "name": "I1",
+      "via": "shared-frame-CJdE5Ria.js:rm"
+    },
+    {
+      "module": "workflow-card.mjs",
+      "local": "I2",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-frame.mjs",
+      "name": "I2",
+      "via": "shared-frame-CJdE5Ria.js:im"
+    },
+    {
+      "module": "workflow-card.mjs",
+      "local": "I3",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-frame.mjs",
+      "name": "I3",
+      "via": "shared-frame-CJdE5Ria.js:am"
+    },
+    {
+      "module": "workflow-card.mjs",
+      "local": "I4",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "I4",
+      "via": "shared-frame-CJdE5Ria.js:om"
+    },
+    {
+      "module": "workflow-card.mjs",
+      "local": "I5",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-frame.mjs",
+      "name": "I5",
+      "via": "shared-frame-CJdE5Ria.js:sm"
+    },
+    {
+      "module": "workflow-card.mjs",
+      "local": "Ie",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "CdsTooltip",
+      "via": "shared-frame-CJdE5Ria.js:cd"
+    },
+    {
+      "module": "workflow-card.mjs",
+      "local": "J0",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-frame.mjs",
+      "name": "J0",
+      "via": "shared-frame-CJdE5Ria.js:cm"
+    },
+    {
+      "module": "workflow-card.mjs",
+      "local": "J1",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-frame.mjs",
+      "name": "J1",
+      "via": "shared-frame-CJdE5Ria.js:lm"
+    },
+    {
+      "module": "workflow-card.mjs",
+      "local": "J2",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-frame.mjs",
+      "name": "J2",
+      "via": "shared-frame-CJdE5Ria.js:um"
+    },
+    {
+      "module": "workflow-card.mjs",
+      "local": "J3",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-frame.mjs",
+      "name": "J3",
+      "via": "shared-frame-CJdE5Ria.js:dm"
+    },
+    {
+      "module": "workflow-card.mjs",
+      "local": "J4",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-frame.mjs",
+      "name": "J4",
+      "via": "shared-frame-CJdE5Ria.js:fm"
+    },
+    {
+      "module": "workflow-card.mjs",
+      "local": "J5",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-frame.mjs",
+      "name": "J5",
+      "via": "shared-frame-CJdE5Ria.js:pm"
+    },
+    {
+      "module": "workflow-card.mjs",
+      "local": "J8",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-frame.mjs",
+      "name": "J8",
+      "via": "shared-frame-CJdE5Ria.js:mm"
+    },
+    {
+      "module": "workflow-card.mjs",
+      "local": "J9",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-frame.mjs",
+      "name": "J9",
+      "via": "shared-frame-CJdE5Ria.js:hm"
+    },
+    {
+      "module": "workflow-card.mjs",
+      "local": "Js",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-183-B2N6Zy4J.mjs",
+      "name": "_J",
+      "via": "shared-183-B2N6Zy4J.js:Cr"
+    },
+    {
+      "module": "workflow-card.mjs",
+      "local": "K0",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-frame.mjs",
+      "name": "K0",
+      "via": "shared-frame-CJdE5Ria.js:gm"
+    },
+    {
+      "module": "workflow-card.mjs",
+      "local": "K1",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-frame.mjs",
+      "name": "K1",
+      "via": "shared-frame-CJdE5Ria.js:_m"
+    },
+    {
+      "module": "workflow-card.mjs",
+      "local": "K2",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-frame.mjs",
+      "name": "K2",
+      "via": "shared-frame-CJdE5Ria.js:vm"
+    },
+    {
+      "module": "workflow-card.mjs",
+      "local": "K3",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-frame.mjs",
+      "name": "K3",
+      "via": "shared-frame-CJdE5Ria.js:ym"
+    },
+    {
+      "module": "workflow-card.mjs",
+      "local": "K4",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-frame.mjs",
+      "name": "K4",
+      "via": "shared-frame-CJdE5Ria.js:bm"
+    },
+    {
+      "module": "workflow-card.mjs",
+      "local": "K5",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-frame.mjs",
+      "name": "K5",
+      "via": "shared-frame-CJdE5Ria.js:xm"
+    },
+    {
+      "module": "workflow-card.mjs",
+      "local": "Ke",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "CdsTooltipProvider",
+      "via": "shared-frame-CJdE5Ria.js:ld"
+    },
+    {
+      "module": "workflow-card.mjs",
+      "local": "L",
+      "kind": "shared-graph",
+      "from": "../cds-core/vendor-frame.mjs",
+      "name": "useDirection",
+      "via": "vendor-frame-BckkO60Y.js:xa"
+    },
+    {
+      "module": "workflow-card.mjs",
+      "local": "My",
+      "kind": "linked",
+      "from": "../proposal-group-v4/c425fb3cf.mjs",
+      "name": "re",
+      "via": "c425fb3cf-Gc8R9PSy.js:D"
+    },
+    {
+      "module": "workflow-card.mjs",
+      "local": "Ny",
+      "kind": "linked",
+      "from": "../proposal-group-v4/c425fb3cf.mjs",
+      "name": "ie",
+      "via": "c425fb3cf-Gc8R9PSy.js:E"
+    },
+    {
+      "module": "workflow-card.mjs",
+      "local": "O_",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/c227f4d5e-DGDdGBTz.mjs",
+      "name": "TE",
+      "via": "c227f4d5e-DGDdGBTz.js:$c"
+    },
+    {
+      "module": "workflow-card.mjs",
+      "local": "Q",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-vendor-intl.mjs",
+      "name": "Gt",
+      "via": "vendor-intl-BJgYK7RA.js:l"
+    },
+    {
+      "module": "workflow-card.mjs",
+      "local": "Rw",
+      "kind": "linked",
+      "from": "../files-changes-v4/focus-return.mjs",
+      "name": "useFocusReturnOnUnmount",
+      "via": "c0a54ccd3-DO5tXxAj.js:t"
+    },
+    {
+      "module": "workflow-card.mjs",
+      "local": "T",
+      "kind": "react",
+      "from": "react",
+      "name": "use",
+      "via": "vendor-frame-BckkO60Y.js:do"
+    },
+    {
+      "module": "workflow-card.mjs",
+      "local": "Ve",
+      "kind": "linked",
+      "from": "../frame-sidebar-nav/shared-frame.mjs",
+      "name": "nI",
+      "via": "shared-frame-CJdE5Ria.js:ia"
+    },
+    {
+      "module": "workflow-card.mjs",
+      "local": "Vh",
+      "kind": "linked",
+      "from": "../session-rail-context-v4/c25d7186f.mjs",
+      "name": "i",
+      "via": "c25d7186f-CHE_J2eY.js:t"
+    },
+    {
+      "module": "workflow-card.mjs",
+      "local": "Vu",
+      "kind": "adapter",
+      "from": "../../source-workflow-card-v4-adapters.jsx",
+      "name": "useIntl",
+      "via": "vendor-intl-BJgYK7RA.js:p"
+    },
+    {
+      "module": "workflow-card.mjs",
+      "local": "X",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-frame.mjs",
+      "name": "bz",
+      "via": "shared-frame-CJdE5Ria.js:Hi"
+    },
+    {
+      "module": "workflow-card.mjs",
+      "local": "Y_",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/c227f4d5e-DGDdGBTz.mjs",
+      "name": "aD",
+      "via": "c227f4d5e-DGDdGBTz.js:bl"
+    },
+    {
+      "module": "workflow-card.mjs",
+      "local": "Z",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "CdsButton",
+      "via": "shared-frame-CJdE5Ria.js:Id"
+    },
+    {
+      "module": "workflow-card.mjs",
+      "local": "Z1",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-frame.mjs",
+      "name": "Z1",
+      "via": "shared-frame-CJdE5Ria.js:Sm"
+    },
+    {
+      "module": "workflow-card.mjs",
+      "local": "Z2",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-frame.mjs",
+      "name": "Z2",
+      "via": "shared-frame-CJdE5Ria.js:Cm"
+    },
+    {
+      "module": "workflow-card.mjs",
+      "local": "Z3",
+      "kind": "linked",
+      "from": "../settings-nav/shared-frame.mjs",
+      "name": "Z3",
+      "via": "shared-frame-CJdE5Ria.js:wm"
+    },
+    {
+      "module": "workflow-card.mjs",
+      "local": "Zy",
+      "kind": "linked",
+      "from": "../proposal-group-v4/c425fb3cf.mjs",
+      "name": "V",
+      "via": "c425fb3cf-Gc8R9PSy.js:m"
+    },
+    {
+      "module": "workflow-card.mjs",
+      "local": "cb",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/cced621b6-BzJn1GRx.mjs",
+      "name": "t",
+      "via": "cced621b6-BzJn1GRx.js:t"
+    },
+    {
+      "module": "workflow-card.mjs",
+      "local": "cl",
+      "kind": "linked",
+      "from": "../settings-desktop-v4/vendor-query.mjs",
+      "name": "tt",
+      "via": "vendor-query-Bl2Kfzgk.js:s"
+    },
+    {
+      "module": "workflow-card.mjs",
+      "local": "dpe",
+      "kind": "linked",
+      "from": "../session-rail-sections-v4/cd4f82e77.mjs",
+      "name": "useSecondNow",
+      "via": "cd4f82e77-Cuw99s6A.js:vt"
+    },
+    {
+      "module": "workflow-card.mjs",
+      "local": "dv",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/c227f4d5e-DGDdGBTz.mjs",
+      "name": "aE",
+      "via": "c227f4d5e-DGDdGBTz.js:ol"
+    },
+    {
+      "module": "workflow-card.mjs",
+      "local": "ec",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-183.mjs",
+      "name": "CdsPreviewCard",
+      "via": "shared-183-B2N6Zy4J.js:Ka"
+    },
+    {
+      "module": "workflow-card.mjs",
+      "local": "f",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "jsx",
+      "via": "vendor-frame-BckkO60Y.js:Ga"
+    },
+    {
+      "module": "workflow-card.mjs",
+      "local": "h",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "jsxs",
+      "via": "vendor-frame-BckkO60Y.js:Ka"
+    },
+    {
+      "module": "workflow-card.mjs",
+      "local": "hl",
+      "kind": "linked",
+      "from": "../frame-sidebar-nav/shared-18.mjs",
+      "name": "OJ",
+      "via": "shared-18-Cfqwgjc5.js:Cn"
+    },
+    {
+      "module": "workflow-card.mjs",
+      "local": "hu",
+      "kind": "linked",
+      "from": "../session-rail-context-v4/shared-8.mjs",
+      "name": "bZ",
+      "via": "shared-8-BqfCbkJd.js:L"
+    },
+    {
+      "module": "workflow-card.mjs",
+      "local": "it",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "CdsOverflowTooltip",
+      "via": "shared-frame-CJdE5Ria.js:sd"
+    },
+    {
+      "module": "workflow-card.mjs",
+      "local": "ki",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-153-DMw2VzSq.mjs",
+      "name": "_g",
+      "via": "shared-153-DMw2VzSq.js:nb"
+    },
+    {
+      "module": "workflow-card.mjs",
+      "local": "me",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "CdsPopover",
+      "via": "shared-frame-CJdE5Ria.js:Ua"
+    },
+    {
+      "module": "workflow-card.mjs",
+      "local": "mf",
+      "kind": "linked",
+      "from": "../cowork-progress-v4/shared-120.mjs",
+      "name": "Ye",
+      "via": "shared-120-DCdTP1_5.js:mn"
+    },
+    {
+      "module": "workflow-card.mjs",
+      "local": "moe",
+      "kind": "linked",
+      "from": "../settings-nav/shared-33.mjs",
+      "name": "Cb",
+      "via": "shared-33-DtdykY0y.js:nl"
+    },
+    {
+      "module": "workflow-card.mjs",
+      "local": "o",
+      "kind": "linked",
+      "from": "../working-line-v4/preload-helper.mjs",
+      "name": "e",
+      "via": "preload-helper-BBljBeZo.js:n"
+    },
+    {
+      "module": "workflow-card.mjs",
+      "local": "pf",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-120.mjs",
+      "name": "Je",
+      "via": "shared-120-DCdTP1_5.js:gn"
+    },
+    {
+      "module": "workflow-card.mjs",
+      "local": "pfe",
+      "kind": "adapter",
+      "from": "../../source-workflow-card-v4-adapters.jsx",
+      "name": "localSessionClient",
+      "via": "cef1e6037-Dm5Rlsox.js:o"
+    },
+    {
+      "module": "workflow-card.mjs",
+      "local": "qe",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "CdsIcon",
+      "via": "shared-frame-CJdE5Ria.js:lf"
+    },
+    {
+      "module": "workflow-card.mjs",
+      "local": "st",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "cdsClassNames",
+      "via": "shared-frame-CJdE5Ria.js:tm"
+    },
+    {
+      "module": "workflow-card.mjs",
+      "local": "v",
+      "kind": "react",
+      "from": "react",
+      "name": "useState",
+      "via": "vendor-frame-BckkO60Y.js:To"
+    },
+    {
+      "module": "workflow-card.mjs",
+      "local": "w",
+      "kind": "react",
+      "from": "react",
+      "name": "memo",
+      "via": "vendor-frame-BckkO60Y.js:co"
+    },
+    {
+      "module": "workflow-card.mjs",
+      "local": "wp",
+      "kind": "linked",
+      "from": "../cowork-scheduled-v4/c1c6ea9ac-BbaFmNAA.mjs",
+      "name": "a",
+      "via": "c1c6ea9ac-BbaFmNAA.js:t"
+    },
+    {
+      "module": "workflow-card.mjs",
+      "local": "xi",
+      "kind": "linked",
+      "from": "../artifact-library-v4/shared-153-DMw2VzSq.mjs",
+      "name": "mg",
+      "via": "shared-153-DMw2VzSq.js:Xy"
+    },
+    {
+      "module": "workflow-card.mjs",
+      "local": "y",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "Fragment",
+      "via": "vendor-frame-BckkO60Y.js:Wa"
+    },
+    {
+      "module": "workflow-card.mjs",
+      "local": "ze",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "CdsCollapsible",
+      "via": "shared-frame-CJdE5Ria.js:eo"
+    },
+    {
+      "module": "workflow-card.mjs",
+      "local": "zu",
+      "kind": "linked",
+      "from": "../working-line-v4/define-messages.mjs",
+      "name": "tn",
+      "via": "vendor-intl-BJgYK7RA.js:f"
+    }
+  ]
+}

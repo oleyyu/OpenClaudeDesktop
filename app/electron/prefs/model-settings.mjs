@@ -414,6 +414,34 @@ export function validateProvider(value) {
   return { route, ...(displayName ? { displayName } : {}), api, baseURL, models: unique, ...(imageModels.length || Array.isArray(value.imageModels) ? { imageModels } : {}), ...withContextWindows(contextWindowsFor(value.contextWindows, unique)) };
 }
 
+/**
+ * The custom provider a listed model comes from ({provider, id}), or null. The core lists a provider's models with
+ * provider: route and model '<route>/<id>' (or the bare id).
+ */
+export function providerForModel(providers, model) {
+  if (!model || typeof model.model !== 'string' || !Array.isArray(providers)) return null;
+  for (const provider of providers) {
+    if (!provider || !Array.isArray(provider.models)) continue;
+    const prefixed = model.model.startsWith(`${provider.route}/`) ? model.model.slice(provider.route.length + 1) : null;
+    const id = prefixed ?? (model.provider === provider.route ? model.model : null);
+    if (id && provider.models.includes(id)) return { provider, id };
+  }
+  return null;
+}
+
+/** The provider without one model (its image mark and context window go with it), or null when none would be left. */
+export function providerWithoutModel(provider, id) {
+  const models = (provider?.models ?? []).filter(item => item !== id);
+  if (!models.length) return null;
+  const next = { ...provider, models };
+  if (Array.isArray(provider.imageModels)) next.imageModels = provider.imageModels.filter(item => item !== id);
+  if (provider.contextWindows) {
+    const windows = { ...provider.contextWindows }; delete windows[id];
+    if (Object.keys(windows).length) next.contextWindows = windows; else delete next.contextWindows;
+  }
+  return next;
+}
+
 // Which of a model list accept image input. The cores only send images to a model whose catalog entry says so
 // (text-only otherwise), and a relay's or custom provider's ids carry no such facts, so the user marks them.
 // Ids not in the list are dropped.

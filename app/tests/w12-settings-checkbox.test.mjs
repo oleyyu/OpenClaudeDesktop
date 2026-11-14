@@ -42,7 +42,10 @@ test('every former SourceSettingsCheckbox call site is the facade CdsCheckbox wi
   const pages = src('src/source-settings-pages.jsx'), models = src('src/source-settings-models.jsx'), profiles = src('src/source-settings-tool-profiles.jsx');
   for (const [name, text] of [['pages', pages], ['models', models], ['profiles', profiles]]) {
     assert.doesNotMatch(text, /SourceSettingsCheckbox|source-settings-checkbox|sscb/, name);
-    assert.match(text, /import \{[^}]*\bCdsCheckbox\b[^}]*\} from '\.\/generated\/view-tabs\/index\.js'/, name);
+    // 4.16336.0 host wiring (frame): the settings pages take CdsCheckbox from the cds-core facade; models / profiles (another
+    // line's files) still read the view-tabs facade.
+    assert.match(text, name === 'pages' ? /import \{[^}]*\bCdsCheckbox\b[^}]*\} from '\.\/cds-core\.mjs'/
+      : /import \{[^}]*\bCdsCheckbox\b[^}]*\} from '\.\/generated\/view-tabs\/index\.js'/, name);
   }
   assert.ok(pages.includes('<CdsCheckbox checked={current.includeUncommitted} disabled={pending} onCheckedChange={checked => choose({ includeUncommitted: checked === true })} label={cleanupUncommittedLabel('));
   assert.ok(pages.includes('<CdsCheckbox checked={current.deleteSessions} disabled={pending} onCheckedChange={checked => choose({ deleteSessions: checked === true })} label={cleanupDeleteLabel(preview, current)}/>'));

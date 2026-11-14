@@ -17,7 +17,7 @@ import { clipboardEnvironment, writeClipboardPayload } from './clipboard-payload
 import { markdownToClipboardHtml } from './rich-copy-html.mjs';
 import { SourceTimestamp } from './source-timestamp.jsx';
 // w13-close-chat-messages: cc1aae219 lI, generated (chat-messages version-selector), for a Chat prompt's versions.
-import { ChatVersionSelector } from './generated/chat-messages/version-selector.mjs';
+import { ChatVersionSelector } from './generated/chat-messages-v4/index.mjs';
 import { showVersionNav } from './chat-branches-model.mjs';
 import './source-user-actions.css';
 import { t } from '../electron/i18n/index.mjs';

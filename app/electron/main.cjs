@@ -81,7 +81,33 @@ const filePreviewFrames = createFilePreviewFrames();
 // R4g-mcp MA-3: the MCP App sandbox proxy page (mcp-app-sandbox.cjs); privileged in the same single call.
 const { SCHEME: MCP_APP_SANDBOX_SCHEME, createMcpAppSandbox, guardSandboxPermissions } = require("./mcp-app-sandbox.cjs");
 const mcpAppSandbox = createMcpAppSandbox();
-require("electron").protocol.registerSchemesAsPrivileged([{ scheme: FILE_PREVIEW_SCHEME, privileges: { standard: true, secure: true, supportFetchAPI: true, stream: true } }, { scheme: MCP_APP_SANDBOX_SCHEME, privileges: { standard: true, secure: true } }]);
+// U-2: the page's own origin app://localhost (app-protocol.cjs, 4.16336.0 qGn/imi/Smi/_mi) and its local media
+// claude-media:// (session-media.cjs, 4.16336.0 x9); both join the one privileged call, as the official BKn list does.
+const { APP_SCHEME, APP_SCHEME_PRIVILEGES, APP_ORIGIN, appPageUrl, createAppProtocolHandler, isAppSenderFrame } = require("./app-protocol.cjs");
+const { MEDIA_SCHEME, MEDIA_SCHEME_PRIVILEGES, createSessionMedia } = require("./session-media.cjs");
+const sessionMedia = createSessionMedia({ warn: (...args) => console.warn(...args) });
+require("electron").protocol.registerSchemesAsPrivileged([{ scheme: FILE_PREVIEW_SCHEME, privileges: { standard: true, secure: true, supportFetchAPI: true, stream: true } }, { scheme: MCP_APP_SANDBOX_SCHEME, privileges: { standard: true, secure: true } }, { scheme: APP_SCHEME, privileges: APP_SCHEME_PRIVILEGES }, { scheme: MEDIA_SCHEME, privileges: MEDIA_SCHEME_PRIVILEGES }]);
+// Where the page loads from: app://localhost once its localStorage is carried over from file:// (origin-storage-
+// migration.cjs); "file" only for a launch whose migration failed, so the user's data stays visible (retried next launch).
+let appPageOrigin = "app";
+const APP_DIST = path.join(__dirname, "../dist");
+/** The page of a window: the dev server, else app://localhost/index.html (or dist/index.html after a failed migration). */
+function loadAppPage(window, query = null) {
+  if (process.env.CODE_DESKTOP_DEV_URL) {
+    const url = new URL(process.env.CODE_DESKTOP_DEV_URL);
+    for (const [name, value] of Object.entries(query ?? {})) url.searchParams.set(name, value);
+    return window.loadURL(url.href);
+  }
+  if (appPageOrigin === "file") return window.loadFile(path.join(APP_DIST, "index.html"), query ? { query } : undefined);
+  return window.loadURL(appPageUrl(query));
+}
+/** X_ (4.16336.0 @1660918): the page's own top frame: app://localhost, the dev server, or file:// after a failed migration. */
+function appSenderFrame(frame) {
+  const extra = [];
+  if (process.env.CODE_DESKTOP_DEV_URL) { try { extra.push(new URL(process.env.CODE_DESKTOP_DEV_URL).origin); } catch {} }
+  if (appPageOrigin === "file") extra.push("file://");
+  return isAppSenderFrame(frame, extra);
+}
 const { createFilesWatch } = require("./files-watch.cjs");
 const { readEditableFile, writeFile: writeEditedFile } = require("./file-editor.cjs");
 const {createImageOperations}=require('./image-files.cjs');
@@ -244,7 +270,7 @@ function installFileEditWindowGuard(window) {
   window.once("closed", () => { dirtyFileWindows.delete(id); autoSaveWindows.delete(id); for (const pending of pendingFileFlushes.values()) if (pending.sender === id) pending.finish(); });
 }
 
-const POPOUT_ACTIONS = new Set(["init", "files", "file", "file:document-bytes", "image:copy", "file:edit-read", "file:save", "file:preview-frame", "file:preview-frame-release", "file:gone", "files:search", "files:content-search", "files:search:cancel", "files:watch", "workspace-git-status", "workspace-git-diff", "workspace-git-file-patch", "workspace-git-image", "workspace-git-commits", "workspace-git-branches", "popout-dock", "popout-always-on-top", "popout-add-to-prompt", "popout-state", "home-shape", "mcp-app:servers", "mcp-app:read-resource", "mcp-app:list-resources", "mcp-app:call-tool", "mcp-app:sandbox-origin", "default-browser-name"]);
+const POPOUT_ACTIONS = new Set(["init", "files", "file", "file:document-bytes", "image:copy", "media:data-url", "file:edit-read", "file:save", "file:preview-frame", "file:preview-frame-release", "file:gone", "files:search", "files:content-search", "files:search:cancel", "files:watch", "workspace-git-status", "workspace-git-diff", "workspace-git-file-patch", "workspace-git-image", "workspace-git-commits", "workspace-git-branches", "popout-dock", "popout-always-on-top", "popout-add-to-prompt", "popout-state", "home-shape", "mcp-app:servers", "mcp-app:read-resource", "mcp-app:list-resources", "mcp-app:call-tool", "mcp-app:sandbox-origin", "default-browser-name"]);
 // R4i-mcp MC1: the five mcp-app:* actions above are mcp-apps-host.cjs WIDGET_ACTIONS: a pane window (the side chat, a
 // subagent view) draws MCP App widgets, which read and call through them (official widget IPC is open to every window).
 // R4i-transcript TR3 (layout-08): "session" is the /btw side pane (2.42304.0 c03935b01 pa lists it among the tiles that
@@ -333,6 +359,7 @@ const backgroundOperations=createBackgroundTasks({getClient:()=>client,getConfig
 const {desktopPatch,createDesktopSettings,directoryUsage} = require("./desktop-settings.cjs");
 const { createCodeCleanup } = require("./code-cleanup.cjs");
 const {createMenuBar,showWindow} = require("./menu-bar.cjs");
+const { createQuickEntry, fontBaseFor: quickEntryFontBase } = require("./quick-entry/window.cjs");
 // R4f-popout F3 (layout-04): WindowState.getOnScreen / WindowControl show + focus for the asking main window.
 const { windowOnScreen, raiseWindow } = require("./popout-r4f-window.cjs");
 const {appMenuTemplate,refreshZoomMenu,sidebarCollapsedPatch,navigationState,menuState,sameMenuState,closeAction,activateAction,splitMenuState,isOtherWindowFocused,watchOtherWindowFocus} = require("./app-menu.cjs");
@@ -348,7 +375,18 @@ const popoutRestore = require("./popout-restore.cjs");
 // pane services use to find the window a request came from).
 const {MAIN_WINDOW_KEY,OPEN_WINDOWS_FILE,MAX_WINDOWS,MAX_SESSION_POPOUTS,WINDOW_KINDS,newWindowKey,createWindowRegistry,sidePanePopoutsForSession} = require("./window-registry.cjs");
 const windowRegistry = createWindowRegistry({ file: () => path.join(app.getPath("userData"), OPEN_WINDOWS_FILE), BrowserWindow });
+// claude.windowVibrancy (window-vibrancy.cjs; official index.chunk-Du-Wqi0E.js unr / Mto and index.chunk-puk2Wpzf.js
+// createWindowVibrancyImpl): a full main window is created with vibrancy "sidebar" when its page asked for the sidebar's
+// material during the previous run, and its page's WindowVibrancy calls show / clear that material under the sidebar.
+const { createWindowVibrancy, installWindowVibrancyIpc } = require("./window-vibrancy.cjs");
+const windowVibrancy = createWindowVibrancy({ nativeTheme, windowColor: windowBackground, recordFile: () => path.join(app.getPath("userData"), "window-vibrancy.json") });
+installWindowVibrancyIpc(ipcMain, windowVibrancy, (event) => {
+  const window = BrowserWindow.fromWebContents(event.sender);
+  return window && windowRegistry.fullWindows().includes(window) && !windowRegistry.isPaneWindow(window) ? window : null;
+});
 let menuBar;
+// Quick Entry (quick-entry/window.cjs): the floating prompt bar behind the menu bar icon and the global shortcut.
+let quickEntry = null, quickEntryAccelerator = null;
 // Set by the app "before-quit" listener (index.chunk-ChZ67Jhw.js kk()): only a
 // quit lets the main window's "close" through; otherwise it hides.
 let quitting = false;
@@ -448,7 +486,7 @@ async function requestWatchRecordPermission(kind) {
 /** The app's own click-through overlays (the glow, the pointer, the teach tooltips): out of the hit test and the window-wide handling. */
 const computerUseClickThroughOverlay = (window) => !!(computerUseGlow?.owns(window) || computerUseCursor?.owns(window) || computerUseTeachOverlay?.owns(window));
 // Watch-record's chooser and pill join them for the window-wide handling (their own backgrounds, no quit guard).
-const computerUseOwnOverlay = (window) => computerUseClickThroughOverlay(window) || !!computerUseWatchRecord?.owns(window);
+const computerUseOwnOverlay = (window) => computerUseClickThroughOverlay(window) || !!computerUseWatchRecord?.owns(window) || (!!quickEntry && quickEntry.window() === window);
 // Full control (full-control.cjs): the display lock, per-session approval and the preferred mode. The lock's holder
 // drives the screen glow, the docked strip, a system notification and the global Esc stop (official §2.5.2). The
 // preferred mode persists in config.computerUsePreferredMode.
@@ -1425,6 +1463,18 @@ async function stageAttachment(payload) {
 // grants: its paths come from the page.
 const userStagedDocuments = require("./document-convert.cjs").createStagedPaths();
 ipcMain.on("desktop:attachment-path", (_event, filePath) => { userStagedDocuments.grant(filePath); });
+// U-2: a local image / video / audio / PDF the page shows (composer attachments, Codex imageView / generated images,
+// session image parts, the Files viewer) is a claude-media://v/<token>?v=<mtime> URL main mints for that one file
+// (session-media.cjs mintLocalMedia over the official T_o); null for anything else. Synchronous, so the page's
+// URL builders (src/local-media-url.mjs) keep their shape; only the app's own top frames may ask.
+ipcMain.on("desktop:media-url", (e, filePath) => {
+  let url = null;
+  try {
+    const trusted = appSenderFrame(e.senderFrame) && (windowRegistry.isMainSender(e) || (popoutForSender(e.sender) && e.senderFrame === e.sender.mainFrame));
+    if (trusted) url = sessionMedia.mintLocalMedia(filePath);
+  } catch { url = null; }
+  e.returnValue = url;
+});
 // View > Hide/Show Sidebar label follows the persisted state (index.chunk-ChZ67Jhw.js _Nr/gNr).
 // Go > Back/Forward enabled state (index.chunk-D6ATlqeD.js xyr/Syr), reported
 // by the renderer's history and carried into every template rebuild.
@@ -1607,8 +1657,10 @@ ipcMain.on("desktop:appearance", (e) => {
   const theme = themePreference ? themePreference(config?.theme) : "system";
   // preferredLanguages: the source's desktopPreferredLanguages (ZK preferredSystemLanguages: JDr over
   // app.getPreferredSystemLanguages()), read by the renderer's html[data-cjk-order] (src/cjk-order.mjs).
+  // homePath: the same managed-config field (4.16336.0 index.chunk-Du-Wqi0E zJ `homePath: u.app.getPath("home")`), which
+  // the official mainView preload exposes as window.desktopHomePath (read by cd8a7d7c0 l(), the ~ label context store u).
   e.returnValue = { theme, mode: nativeTheme.shouldUseDarkColors ? "dark" : "light", locale: i18n ? i18n.localePreference(config?.locale) : "en-US", assistant: chosenAssistant(),
-    preferredLanguages: preferredSystemLanguages(app.getPreferredSystemLanguages()) };
+    preferredLanguages: preferredSystemLanguages(app.getPreferredSystemLanguages()), homePath: app.getPath("home") };
 });
 function setNavigationState(payload, window) {
   const next = navigationState(payload);
@@ -1636,6 +1688,28 @@ function sharedConfig() {
   const { activity, stats, threadMetadata, codeStats, sessionMetadata, ...shared } = config || {};
   void activity; void stats; void threadMetadata; void codeStats; void sessionMetadata;
   return shared;
+}
+// Quick Entry's global shortcut (official eF(ZP.QUICK_ENTRY, accelerator) over globalShortcut.register). The saved
+// preference has the original's shape — "off", or { accelerator } — and defaults to the original's accelerator for the
+// web Quick Entry, oUe = "Alt+Space". Its macOS default "double-tap-option" needs the native key monitor of
+// @ant/claude-swift, which this build does not have, so that value reads as the default accelerator.
+const QUICK_ENTRY_DEFAULT_ACCELERATOR = "Alt+Space";
+function quickEntryAcceleratorPreference() {
+  const saved = config?.quickEntryShortcut;
+  if (saved === "off") return null;
+  return saved && typeof saved === "object" && typeof saved.accelerator === "string" && saved.accelerator ? saved.accelerator : QUICK_ENTRY_DEFAULT_ACCELERATOR;
+}
+function registerQuickEntryShortcut() {
+  const next = quickEntryAcceleratorPreference();
+  if (next === quickEntryAccelerator) return;
+  if (quickEntryAccelerator) { try { globalShortcut.unregister(quickEntryAccelerator); } catch {} quickEntryAccelerator = null; }
+  if (!next) return;
+  // rTo / _5r: Quick Entry, else the main window.
+  const activate = () => { Promise.resolve(quickEntry?.toggle()).then((shown) => { if (!shown) showWindow(win); }, (error) => console.warn("Quick Entry:", error?.message ?? error)); };
+  try {
+    if (globalShortcut.register(next, activate)) quickEntryAccelerator = next;
+    else console.warn(`Quick Entry: the shortcut ${next} is taken by another app.`);
+  } catch (error) { console.warn("Quick Entry:", error?.message ?? error); }
 }
 function emitConfig() {
   computerUseGlow?.refreshMotion();
@@ -1854,7 +1928,7 @@ function coreInfo(owner) {
   const capabilities = { ...(info?.capabilities ?? {}), ...(perTokenAccount(account) ? { perTokenBilling: true } : {}),
     btwChildSessions: supportsBtwChildren(owner),
     ...(supportsBtwChildren(owner) ? { reorderQueued: true } : {}),
-    ...(owner.connection?.enabledFeatures?.has("guardian_approval") ? { autoReview: true } : {}),
+    ...(owner.connection?.enabledFeatures?.has("guardian_approval") && !modelSettings.codexOnCustomEndpoint?.(owner) ? { autoReview: true } : {}),
     // Goals: Codex's feature flag, or a bridge that serves the agent's own goals (capabilities.goals: Qwen's /goal).
     ...(owner.connection?.enabledFeatures?.has("goals") || info?.capabilities?.goals === true ? { nativeGoals: true } : {}) };
   // Codex reports no engineVersion: its initialize userAgent ("<client>/0.155.1 (Mac OS …)") carries the version.
@@ -1906,10 +1980,12 @@ function coreFeatures(owner) {
     .then((enabled) => { connection.enabledFeatures = enabled; return enabled; });
   return connection.features;
 }
-// …and only where the core's requirements allow that reviewer (ConfigRequirements.allowedApprovalsReviewers).
+// …and only where the core's requirements allow that reviewer (ConfigRequirements.allowedApprovalsReviewers). Never
+// on a custom endpoint (model-settings codexOnCustomEndpoint): the review model is OpenAI's, so every review would fail
+// and refuse the escalation; approvals go to the user there.
 function autoReviewFeature(owner) {
   const connection = owner?.connection;
-  if (!connection) return Promise.resolve(false);
+  if (!connection || modelSettings.codexOnCustomEndpoint?.(owner)) return Promise.resolve(false);
   connection.autoReviewAllowed ??= owner.request("configRequirements/read", {}, 10000, connection)
     .then((result) => { const allowed = result?.requirements?.allowedApprovalsReviewers; return !Array.isArray(allowed) || allowed.includes("auto_review"); }, () => true);
   return Promise.all([coreFeatures(owner), connection.autoReviewAllowed]).then(([features, allowed]) => features.has("guardian_approval") && allowed);
@@ -1991,6 +2067,8 @@ function popoutForSender(sender) {
   return null;
 }
 function validSender(e, action) {
+  // X_: only the page's own origin (app://localhost; the dev server; file:// after a failed migration) is the app.
+  if (!appSenderFrame(e.senderFrame)) throw new Error("Untrusted renderer.");
   // Any main window's top frame (multi-window); both split sides live in that one renderer.
   if (windowRegistry.isMainSender(e)) return "primary";
   const popout = popoutForSender(e.sender);
@@ -2033,6 +2111,49 @@ function attachContextMenu(window) {
     if (openContextMenu && !openContextMenu.window.isDestroyed()) openContextMenu.menu.closePopup(openContextMenu.window);
     openContextMenu = { menu, window };
     menu.popup({ window, x: params.x, y: params.y, callback: () => { if (openContextMenu?.menu === menu) openContextMenu = null; } });
+  });
+}
+// Links (integration-2 links): one window.open / navigation policy for every app window, after the 4.16336.0 main
+// process (asar/.vite/build/index.chunk-Du-Wqi0E.js). The main view's open handler `oe` (@6669273) never makes a child
+// window for a web URL — it ends `return Y9(t,{trigger:"window-open"}),{action:"deny"}` (@6670048) — and Y9 (@6671476)
+// hands an external http(s) URL to the system browser (`P.debug("Opening in system browser %o"…),_b(r.toString())`
+// @6672525; _b @2106510 = shell.openExternal); the secondary windows' handler p2t (@2103352) is the same: http(s) → _b,
+// anything else denied. will-navigate is Mwo (@6671076, wired @6665835: `b.webContents.on("will-navigate",Mwo)`) = Nwo
+// (@6671103) `Y9(n,{trigger:t})||e.preventDefault()`: the page never leaves the app, an external URL goes to the browser.
+// The renderer relies on it: c4acc1503 h answers "native" for an ordinary external http(s) link, so the CdsTextLink
+// (target _blank) / cdsOpenWindow (shared-frame ya, ownerWindow.open) reaches this handler. The host has no
+// window.claudeAppBindings (official preload mainView.js @269253 exposes only registerBinding / unregisterBinding / MCP
+// calls, nothing that opens links), so nothing changes in preload.cjs.
+// Host rules kept: an http(s) URL must pass the context menu's externalLink() (no username / password); the app's own
+// origin (the dev server) is never "external"; mailto: goes to the system handler (official r2t @2099446 / s2t @2101350
+// first asks in a native confirmation dialog — not reproduced, see integration-2/links/report.json); every other scheme
+// is denied, and no BrowserWindow is ever created from window.open.
+function externalLinkTarget(url, contents) {
+  let parsed;
+  try { parsed = new URL(url); } catch { return null; }
+  if (parsed.protocol === "mailto:") return parsed.href;
+  if (!externalLink(url)) return null;
+  try {
+    const own = new URL(contents.getURL());
+    if (own.origin !== "null" && own.origin === parsed.origin) return null;
+  } catch {}
+  return parsed.href;
+}
+function openExternalLink(url, contents) {
+  const target = externalLinkTarget(url, contents);
+  if (target) shell.openExternal(target).catch(() => {});
+  return target !== null;
+}
+function installLinkPolicy(window) {
+  const contents = window.webContents;
+  contents.setWindowOpenHandler(({ url }) => {
+    openExternalLink(url, contents);
+    return { action: "deny" };
+  });
+  contents.on("will-navigate", (e, url) => {
+    if (url === contents.getURL()) return;
+    e.preventDefault();
+    openExternalLink(url, contents);
   });
 }
 function broadcastPopouts() {
@@ -2147,10 +2268,7 @@ async function openPopout({ sessionId, pane, position, bounds: requestedBounds =
   if (restore?.alwaysOnTop === true) { entry.alwaysOnTop = true; window.setAlwaysOnTop(true); }
   watchZoom(window);
   attachContextMenu(window);
-  window.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
-  window.webContents.on("will-navigate", (e, url) => {
-    if (url !== window.webContents.getURL()) e.preventDefault();
-  });
+  installLinkPolicy(window);
   window.webContents.once("destroyed", () => void fileSearch.cancelAll());
   window.on("closed", () => {
     if (popouts.get(key) === entry) popouts.delete(key);
@@ -2161,11 +2279,7 @@ async function openPopout({ sessionId, pane, position, bounds: requestedBounds =
     broadcastPopouts();
   });
   const query = appPane ? { window: "pane", popout: sessionId, pane, cwd } : { popout: sessionId, pane, cwd };
-  if (process.env.CODE_DESKTOP_DEV_URL) {
-    const url = new URL(process.env.CODE_DESKTOP_DEV_URL);
-    for (const [name, value] of Object.entries(query)) url.searchParams.set(name, value);
-    await window.loadURL(url.href);
-  } else await window.loadFile(path.join(__dirname, "../dist/index.html"), { query });
+  await loadAppPage(window, query);
   broadcastPopouts();
   return { existing: false, windowId: window.id, bounds: window.getBounds() };
 }
@@ -2295,7 +2409,8 @@ function createMainWindow({ key = MAIN_WINDOW_KEY, layout = null, from = null, p
   // (CODE_DESKTOP_OFFSCREEN_LAUNCH) keeps those extra windows hidden.
   const deferShow = windowRegistry.mainWindows().length > 0;
   const startZoom = liveContents(win) ? zoomFactorOf(win) : zoomHint();
-  const window = new BrowserWindow({
+  // unr: { ...options, vibrancy: "sidebar" } then setVibrancy(null) when the page asked last run (window-vibrancy.cjs).
+  const window = windowVibrancy.createMainWindow({
     ...windowStateBounds(saved),
     ...(deferShow ? { show: false } : {}),
     minWidth: 600,
@@ -2313,7 +2428,7 @@ function createMainWindow({ key = MAIN_WINDOW_KEY, layout = null, from = null, p
       contextIsolation: true,
       sandbox: true,
     },
-  });
+  }, (options) => new BrowserWindow(options));
   // The source's Chromium host zoom comes back on its own; this file:// page's does not, so the start zoom is set
   // once the first load commits (setZoomLevel needs a committed entry). Not webPreferences.zoomFactor: Electron
   // re-applies that default on every later navigation whenever the level is back at 0 (Chromium keeps no host
@@ -2373,19 +2488,16 @@ function createMainWindow({ key = MAIN_WINDOW_KEY, layout = null, from = null, p
     // File › New Window follows the open session popouts (adoptMainWindow above rebuilds the menu itself).
     if (!quitting) installAppMenu();
   });
-  window.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
+  installLinkPolicy(window);
   watchZoom(window);
   attachContextMenu(window);
   window.webContents.on("render-process-gone", () => void fileSearch.cancelAll());
   window.webContents.once("destroyed", () => void fileSearch.cancelAll());
-  window.webContents.on("will-navigate", (e, url) => {
-    if (url !== window.webContents.getURL()) e.preventDefault();
-  });
   return window;
 }
 function loadMainWindow(window) {
   if (process.env.CODE_DESKTOP_DEV_URL) return window.loadURL(process.env.CODE_DESKTOP_DEV_URL);
-  return window.loadFile(path.join(__dirname, "../dist/index.html"));
+  return loadAppPage(window);
 }
 // "activate" / KK with no main window left: a fresh one over the same session state.
 async function openMainWindow(options) {
@@ -2466,21 +2578,14 @@ async function openSessionPopout({ sessionId = null, from = win, position = null
     }
     if (!quitting) installAppMenu();
   });
-  window.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
+  installLinkPolicy(window);
   watchZoom(window);
   attachContextMenu(window);
   window.webContents.on("render-process-gone", () => void fileSearch.cancelAll());
   window.webContents.once("destroyed", () => void fileSearch.cancelAll());
-  window.webContents.on("will-navigate", (e, url) => {
-    if (url !== window.webContents.getURL()) e.preventDefault();
-  });
   installAppMenu();
   const query = { window: "session" };
-  if (process.env.CODE_DESKTOP_DEV_URL) {
-    const url = new URL(process.env.CODE_DESKTOP_DEV_URL);
-    for (const [name, value] of Object.entries(query)) url.searchParams.set(name, value);
-    await window.loadURL(url.href);
-  } else await window.loadFile(path.join(__dirname, "../dist/index.html"), { query });
+  await loadAppPage(window, query);
   return { windowId: window.id, existing: false };
 }
 // The full window a session popout docks into (Open in main window): the full window focused last, shown again when it
@@ -2496,6 +2601,9 @@ app.whenReady().then(async () => {
   require("electron").protocol.handle(MCP_APP_SANDBOX_SCHEME, mcpAppSandbox.handle);
   // R4g review fix: the MCP App frames get no device permissions (2.42304.0 defaultSession handlers refuse them).
   guardSandboxPermissions(require("electron").session.defaultSession);
+  // U-2: Smi `u.protocol.handle("app",async e=>_mi(await s(e)))` over dist/, and I_o `u.protocol.handle(x9,j_o)`.
+  require("electron").protocol.handle(APP_SCHEME, createAppProtocolHandler({ root: APP_DIST, fetchFile: (url) => require("electron").net.fetch(url), warn: (...args) => console.warn(...args) }));
+  require("electron").protocol.handle(MEDIA_SCHEME, sessionMedia.handle);
   const preferences = await import("./preferences.mjs");
   const { settingsPatch, validateServiceTier, DEFAULT_THEME } = preferences;
   const { recordCoreModel, validateCoreModels } = await import("./prefs/core-model.mjs");
@@ -2976,7 +3084,11 @@ app.whenReady().then(async () => {
       await connect();
     } });
   // Shared by interactive messages and durable local scheduled tasks.
-  async function requestRpc(p, sender, expectedOwner) {
+  // `internal` comes from main only (never the renderer's "rpc" case): {appendInstructions} is text added after the
+  // session's own developer instructions on a thread/start (Import history's handoff, chat-import targets.mjs);
+  // {appendFit(params) → {text, trimmed}}, when given, sizes it to what the decorated params leave (MiniMax's AGENTS.md
+  // cap) and may refuse (throws: nothing is started).
+  async function requestRpc(p, sender, expectedOwner, internal = null) {
         const expectedConnection = p.expected ? client.connection : null;
         const assertExpectedConnection = () => {
           if (p.expected && (client.connection !== expectedConnection || !connectionMatches(client, p.expected)))
@@ -3229,6 +3341,12 @@ app.whenReady().then(async () => {
         if (coworkStart) require("./cowork-runtime/core-cowork.mjs").keepCoworkPrompt(params, { storage: coworkStart, folders: coworkStart.folders });
         // w13-close-main-process (closeout chatfn-projects-02): a Chat session runs read-only whatever was asked (surface-policy.mjs enforceChatReadOnly).
         (await import("./surface-policy.mjs")).enforceChatReadOnly(p.method, params, { surface: requestedSurface, metadata: config.sessionMetadata });
+        // Import history's handoff (requestRpc `internal`, main only): added after the session's own instructions, once
+        // every decorator above has had its say.
+        if (p.method === "thread/start" && typeof internal?.appendInstructions === "string" && internal.appendInstructions) {
+          const appended = typeof internal.appendFit === "function" ? internal.appendFit(params)?.text : internal.appendInstructions;
+          params.developerInstructions = [typeof params.developerInstructions === "string" ? params.developerInstructions : "", appended].filter(Boolean).join("\n\n");
+        }
         // Approvals go to the user, except Codex's auto-review ('Approve for me', the renderer's Auto on a core that
         // has it): kept only where this connection reported the feature and approvals can happen at all.
         if (["thread/start", "thread/resume", "turn/start"].includes(p.method)) {
@@ -3379,6 +3497,8 @@ app.whenReady().then(async () => {
           config.pinnedOrder = (config.pinnedOrder || []).filter((known) => known !== id);
           config.sidebarRevision = (config.sidebarRevision || 0) + 1;
           save();
+          // An imported session's display prefix copy (chat-import index.cjs) goes with it.
+          require("./chat-import/index.cjs").forgetPrefix(app.getPath("userData"), id);
           // R4g-btw BT3 (X7-14): a deleted session is always evicted (c6b8adeaf delete → evictEpitaxySession).
           closeSidePanePopoutsForSession(id);
           void chatHistory.cascade(id); // w13-chatfn-history: the chat's artifacts, index entry, ratings and other versions
@@ -3391,6 +3511,147 @@ app.whenReady().then(async () => {
         else if (p.method === "thread/delete") emitSessionList("deleted", params.threadId);
         return result;
   }
+  // A session picked in 'Resume a session': confirmed by the core (thread/read) and added to the sidebar.
+  async function addCoreSession(threadId, owner = client) {
+    if (typeof threadId !== "string" || !threadId || threadId.length > 200) throw new Error("Unknown session.");
+    if (owner !== client) throw new Error("The core connection changed. Try again.");
+    await owner.start();
+    const read = await owner.request("thread/read", { threadId, includeTurns: false });
+    const thread = read?.thread;
+    if (!thread || thread.id !== threadId) throw new Error("That session can’t be opened.");
+    config.threadIds = [...new Set([thread.id, ...config.threadIds])];
+    config.archivedThreadIds = config.archivedThreadIds.filter((id) => id !== thread.id);
+    const { turns, ...metadata } = thread;
+    void turns;
+    config.threadMetadata[thread.id] = metadata;
+    config.stats[thread.id] ??= { messages: 0, tokens: 0, observedTokens: 0, observedUsage: { input: 0, output: 0, cached: 0, cacheWrite: 0 }, ids: [] };
+    if (typeof metadata.cwd === "string") observedThreadCwds.add(metadata.cwd);
+    save();
+    emitSessionList("added", metadata);
+    return { threadId: thread.id };
+  }
+  // Import history (chat-import index.cjs / targets.mjs), the core calls only main makes.
+  // A new session joins the sidebar as a thread/start's does.
+  function joinSidebar(thread, params) {
+    config.threadIds = [...new Set([thread.id, ...config.threadIds])];
+    const { turns, ...metadata } = thread;
+    void turns;
+    config.threadMetadata[thread.id] = metadata;
+    config.stats[thread.id] = { messages: 0, tokens: 0, observedTokens: 0, observedUsage: { input: 0, output: 0, cached: 0, cacheWrite: 0 }, ids: [] };
+    const tools = normalizeSelection(params?.codeDesktop?.tools);
+    if (tools) config.threadTools[thread.id] = tools;
+    if (typeof metadata.cwd === "string") observedThreadCwds.add(metadata.cwd);
+    save();
+    emitSessionList("added", metadata);
+  }
+  // A plain Code session's start params in the Auto mode, approvals to the user (no Bypass: nothing for
+  // validateBypassRequest to allow), decorated as main decorates a thread/start (Dynamic workflows, tools, model
+  // options, agent tools, instructions).
+  async function importStartParams(method, params, owner) {
+    const { threadPermissionParams } = await import("./permission-policy.mjs");
+    const permission = threadPermissionParams({ permission: "auto", mode: "code", hints: coreSupports(owner.serverInfo, "permissionHints") });
+    const out = { ...params, ...permission, approvalsReviewer: "user", approvalPolicy: permission.approvalPolicy || "on-request" };
+    if (method === "thread/start") {
+      out.codeDesktop = { ...(permission.codeDesktop || {}), dynamicWorkflows: workflowSettings().enabled && currentWorkflowEngine(owner) === "native",
+        ...(owner.serverInfo?.capabilities?.toolSelection === true ? { tools: defaultProfile(config)?.tools ?? null } : {}) };
+      if (!coreSupports(owner.serverInfo, "permissionHints")) delete out.codeDesktop;
+      modelSettings.decorate(method, out);
+      instructionsService.decorate(method, out);
+    } else modelSettings.decorateThread?.(method, out, owner);
+    return decorateAgentTools(method, out, owner);
+  }
+  // codeDesktop/thread/import (any core reporting capabilities.threadImport: DeepSeek, the ACP bridge's Gemini / Kimi /
+  // Qwen, OpenCode / MiMo, ZCode) is main-only: it is not in `allowed`, so the renderer cannot send it, and only these
+  // fields reach the core. No display turns are sent: each bridge shows the history of the session it made (an ACP
+  // bridge replays it through session/load), so rewind and fork line up with what the agent holds.
+  async function importCoreThread(input, owner) {
+    if (owner !== client) throw new Error("The core connection changed. Try again.");
+    await owner.start();
+    if (owner.serverInfo?.capabilities?.threadImport !== true) throw new Error("Unsupported operation.");
+    const str = (value, max) => (typeof value === "string" ? value.slice(0, max) : "");
+    const from = input?.importedFrom && typeof input.importedFrom === "object" ? input.importedFrom : {};
+    // parts (chat-import convert.mjs toDshSeed): the reply block by block, tool calls marked, so a core that seeds
+    // content blocks gives each its own row instead of one wall of text. The core spells the message out of them, so
+    // they travel only while they still spell exactly this text — a capped or disagreeing one goes as text alone.
+    const partsOf = (message, value) => {
+      if (message?.role !== "assistant" || !Array.isArray(message?.parts) || !message.parts.length || message.parts.length > 5000) return null;
+      const parts = message.parts.map((part) => ({ text: str(part?.text, 4000000), ...(part?.tool === true ? { tool: true } : {}) }));
+      return parts.map((part) => part.text).join("\n\n") === value ? parts : null;
+    };
+    const messages = (Array.isArray(input?.messages) ? input.messages : []).slice(-5000)
+      .map((message) => {
+        const value = str(message?.text, 4000000), parts = partsOf(message, value);
+        const ts = Number.isSafeInteger(message?.ts) && message.ts > 0 ? { ts: message.ts } : {};
+        return { role: message?.role === "assistant" ? "assistant" : "user", text: value, ...(parts ? { parts } : {}), ...ts };
+      });
+    const params = await importStartParams("thread/start", {
+      ...(typeof input?.cwd === "string" && path.isAbsolute(input.cwd) ? { cwd: input.cwd } : {}),
+      title: str(input?.title, 200), messages, excludeTurns: true,
+      importedFrom: { source: str(from.source, 64), sourceId: str(from.sourceId, 400), title: str(from.title, 200), sourcePath: str(from.sourcePath, 4096) },
+    }, owner);
+    const result = await requestImport(owner, params);
+    if (owner !== client) throw new Error("The core connection changed. Try again.");
+    if (typeof result?.thread?.id !== "string" || !result.thread.id) throw new Error("The core didn’t start a session.");
+    bindAgentTools(params, result.thread);
+    joinSidebar(result.thread, params);
+    return result;
+  }
+  // codeDesktop/thread/import's wait, past each bridge's own worst case: the ACP bridge opens the new session before it
+  // answers (acp-bridge server.js importThread → replayHistory: initialize 90 s + session/load 180 s + set_mode and
+  // set_model 30 s each, about 6.5 min); OpenCode / MiMo replay it (opencode-bridge thread-import.js: probe 60 s +
+  // history 300 s, else the transcript 60 s, beside a few API calls bounded at 120 s each); DeepSeek seeds it locally.
+  // Every bridge deletes the session it made when its own import fails. An answer that still comes later (ZCode's
+  // session/create has no bound of its own; OpenCode's calls all at their limits) is awaited IMPORT_LATE_MS more and
+  // that thread deleted, so the handoff the app falls back to never sits next to a duplicate native session.
+  const IMPORT_TIMEOUT_MS = 15 * 60000;
+  const IMPORT_LATE_MS = 30 * 60000;
+  function requestImport(owner, params) {
+    return require("./chat-import/index.cjs").raceImport(owner.request("codeDesktop/thread/import", params, IMPORT_TIMEOUT_MS + IMPORT_LATE_MS),
+      IMPORT_TIMEOUT_MS, (late) => discardLateImport(owner, late));
+  }
+  // A session a bridge made after main gave up on its import: never joined the sidebar, deleted in the core (archived if
+  // the core refuses the delete).
+  function discardLateImport(owner, late) {
+    const threadId = typeof late?.thread?.id === "string" && late.thread.id ? late.thread.id : null;
+    if (!threadId) return;
+    console.warn("Import history: a timed-out import finished late; its session is deleted:", threadId);
+    owner.request("thread/delete", { threadId }, 30000)
+      .catch(() => owner.request("thread/archive", { threadId }, 30000))
+      .catch((error) => console.warn("Import history: the late session was not removed:", error?.message || error));
+  }
+  // The running core's own session (a Codex rollout on Codex, a dsh session on DeepSeek) forked into a new one, so the
+  // original is left as it was (Import history never resumes it in place).
+  // folder (chat-import index.cjs folderFor: the session's own folder, else the default one): used only when the
+  // original's folder is gone (deleted or moved since), so the fork does not open in a path every command fails in.
+  async function forkCoreSession(threadId, owner, { folder } = {}) {
+    if (typeof threadId !== "string" || !threadId || threadId.length > 200) throw new Error("Unknown session.");
+    if (owner !== client) throw new Error("The core connection changed. Try again.");
+    await owner.start();
+    if (owner.serverInfo?.capabilities?.unsupportedMethods?.includes?.("thread/fork")) throw new Error("Unsupported operation.");
+    const read = await owner.request("thread/read", { threadId, includeTurns: false });
+    const thread = read?.thread;
+    if (!thread || thread.id !== threadId) throw new Error("That session can’t be opened.");
+    const gone = typeof thread.cwd === "string" && thread.cwd && !fs.existsSync(thread.cwd);
+    const cwd = gone && typeof folder === "string" && path.isAbsolute(folder) && fs.existsSync(folder) ? { cwd: folder } : {};
+    const params = await importStartParams("thread/fork", { threadId, ...(thread.historyMode === "legacy" ? {} : { excludeTurns: true }), ...cwd }, owner);
+    const result = await owner.request("thread/fork", params, 120000);
+    if (owner !== client) throw new Error("The core connection changed. Try again.");
+    if (typeof result?.thread?.id !== "string" || !result.thread.id || result.thread.id === threadId) throw new Error("The core did not return a new fork.");
+    bindAgentTools(params, result.thread);
+    joinSidebar(result.thread, params);
+    return { threadId: result.thread.id };
+  }
+  // The context window of the model a new session on this core gets (Settings › Models' own value, else the model
+  // list's): Import history sizes what it hands the model by it. null when unknown.
+  async function importContextWindow(coreId) {
+    const models = initial?.core?.id === coreId && Array.isArray(initial.models) ? initial.models : [];
+    const chosen = models.find((model) => config.model && (model?.model === config.model || model?.id === config.model)) ?? models.find((model) => model?.isDefault) ?? models[0];
+    const modelId = chosen?.model ?? chosen?.id ?? config.model ?? null;
+    let own;
+    try { own = modelId ? (await import("./prefs/model-settings.mjs")).modelParamsFor(config.modelSettings, coreId, modelId).contextWindow : undefined; } catch {}
+    return [own, chosen?.contextWindow, chosen?.context_window].find((value) => Number.isInteger(value) && value > 0) ?? null;
+  }
+  let chatImport = null;
   ipcMain.handle("desktop:call", async (e, action, p = {}) => {
     const senderKind = validSender(e, action);
     // The Preview pane (preview-service.cjs validates each action; the sender is the pane's own window).
@@ -3520,6 +3781,8 @@ app.whenReady().then(async () => {
       // this window is on screen, and off screen brings it forward (2.42304.0 te.getOnScreen, Le = Jk show + focus).
       case "window-on-screen": return windowOnScreen(windowRegistry.windowForSender(e.sender));
       case "window-raise": return raiseWindow(windowRegistry.windowForSender(e.sender));
+      // Quick Entry from the page (a command or a probe): the same toggle as the menu bar icon and the global shortcut.
+      case "quick-entry-toggle": return quickEntry ? quickEntry.toggle() : false;
       case "split-menu-state": return setSplitMenuState(p, windowRegistry.windowForSender(e.sender));
       case "popout-dock":
         return require("./popout-dock-r4h.cjs").dockPopoutWindow({
@@ -3837,7 +4100,7 @@ app.whenReady().then(async () => {
           const recorded = recordCoreModel(config, initial.core.id);
           if (recorded) config.coreModels = recorded;
         }
-        if (config.locale !== previous.locale) { i18n.setLocale(config.locale); process.env.CODE_DESKTOP_LOCALE = i18n.getLocale(); installAppMenu(); }
+        if (config.locale !== previous.locale) { i18n.setLocale(config.locale); process.env.CODE_DESKTOP_LOCALE = i18n.getLocale(); installAppMenu(); quickEntry?.localeChanged(); }
         if(typeof p.dynamicWorkflows === "boolean")config.dynamicWorkflows=p.dynamicWorkflows;
         // The Workflow tool's presence and description follow Dynamic workflows, the engine choice and the size guideline.
         // Settings › Code › Preview: the running agent servers re-list their tools (notifications/tools/list_changed).
@@ -4589,23 +4852,31 @@ app.whenReady().then(async () => {
         return { data: (Array.isArray(found?.data) ? found.data : []).filter((match) => typeof match?.thread?.id === "string")
           .map((match) => ({ id: match.thread.id, snippet: typeof match.snippet === "string" ? match.snippet.slice(0, 300) : "" })) };
       }
-      case "resume-add": {
-        // A session picked in 'Resume a session': confirmed by the core (thread/read) and added to the sidebar.
-        if (typeof p.threadId !== "string" || !p.threadId || p.threadId.length > 200) throw new Error("Unknown session.");
-        await client.start();
-        const read = await client.request("thread/read", { threadId: p.threadId, includeTurns: false });
-        const thread = read?.thread;
-        if (!thread || thread.id !== p.threadId) throw new Error("That session can’t be opened.");
-        config.threadIds = [...new Set([thread.id, ...config.threadIds])];
-        config.archivedThreadIds = config.archivedThreadIds.filter((id) => id !== thread.id);
-        const { turns, ...metadata } = thread;
-        void turns;
-        config.threadMetadata[thread.id] = metadata;
-        config.stats[thread.id] ??= { messages: 0, tokens: 0, observedTokens: 0, observedUsage: { input: 0, output: 0, cached: 0, cacheWrite: 0 }, ids: [] };
-        if (typeof metadata.cwd === "string") observedThreadCwds.add(metadata.cwd);
-        save();
-        emitSessionList("added", metadata);
-        return { threadId: thread.id };
+      case "resume-add": return addCoreSession(p.threadId);
+      // Import history (chat-import/index.cjs): other agents' sessions listed, previewed and brought into the
+      // running core. Another core as the target answers {code: 'needs-core-switch'}: the page switches first.
+      case "chat-import": {
+        chatImport ??= require("./chat-import/index.cjs").createChatImport({
+          home: os.homedir(), env: process.env, userDataDir: app.getPath("userData"), getConfig: () => config, save,
+          defaultCwd: () => config.cwd,
+          getCore: async () => {
+            const owner = client; await owner.start();
+            const id = coreForEngine(owner.serverInfo?.engine).id;
+            return { id, capabilities: coreCapabilities(owner.serverInfo), owner, contextWindow: await importContextWindow(id) };
+          },
+          rpc: (method, params, owner, options) => requestRpc({ method, params }, undefined, owner, options ?? null),
+          request: (method, params, owner) => { if (owner !== client) throw new Error("The core connection changed. Try again."); return owner.request(method, params, 120000); },
+          fork: (threadId, owner, options) => forkCoreSession(threadId, owner, options),
+          importThread: (params, owner) => importCoreThread(params, owner),
+          // A Codex session whose history could not be injected: archived in the core and gone from the sidebar.
+          discard: async (threadId, owner) => {
+            if (owner === client) await owner.request("thread/archive", { threadId }, 30000).catch((error) => console.warn("Import history: the empty session was not archived:", error?.message || error));
+            config.threadIds = config.threadIds.filter((id) => id !== threadId); delete config.threadMetadata[threadId]; delete config.stats[threadId]; delete config.threadTools[threadId]; save(); emitSessionList("deleted", threadId);
+          },
+          // importedFrom reaches every window (main.jsx applySidebarState), so an imported session's prefix is asked for.
+          notify: () => { config.sidebarRevision = (config.sidebarRevision || 0) + 1; save(); emit({ kind: "sidebar-state", state: sidebarSnapshot() }); },
+        });
+        return chatImport.call(p, { senderId: e.sender?.id ?? null });
       }
       // Official getInstalledEditors / openInEditor (editors.cjs): the code editors on this Mac, and one opening a file
       // or folder. The path must be absolute and exist; the editor must be one of the known, installed ones.
@@ -4939,6 +5210,9 @@ app.whenReady().then(async () => {
         return filePreviewFrames.release(p.url);
       case 'image:read': return imageOperations.read(p);
       case 'image:copy': return imageOperations.copy(p);
+      // c5259f582 ke (readSessionImageAsDataUrl): a claude-media image's bytes for Copy image, read by main (a canvas
+      // that draws the cross-origin image is tainted).
+      case 'media:data-url': return sessionMedia.readDataUrl(p?.url);
       case 'image:save': return imageOperations.save(p);
       case "external": {
         const url = new URL(p.url);
@@ -4954,6 +5228,14 @@ app.whenReady().then(async () => {
         throw new Error("Unknown operation.");
     }
   });
+  // U-2: before the first page loads, the file:// origin's localStorage is copied to app://localhost once
+  // (origin-storage-migration.cjs, the official storage seed); a failure keeps this launch on file://.
+  if (!process.env.CODE_DESKTOP_DEV_URL) {
+    const { migrateFileOriginStorage } = require("./origin-storage-migration.cjs");
+    const migration = await migrateFileOriginStorage({ WebContentsView: require("electron").WebContentsView, session: require("electron").session.defaultSession,
+      userData: app.getPath("userData"), appOrigin: APP_ORIGIN, log: (...args) => console.warn(...args) });
+    if (migration.status === "failed") appPageOrigin = "file";
+  }
   installAppMenu();
   // w12c-wiring (w12b-menu-ko §4): ybi `a.app.on("browser-window-focus",t),a.app.on("browser-window-blur",t)` rebuilds
   // the menu (CM) whenever ko() flips.
@@ -4965,8 +5247,24 @@ app.whenReady().then(async () => {
   // The window focused at the last quit comes back in front.
   const lastFocusedWindow = windowRegistry.byKey(restoredWindows.focused);
   if (otherWindows.length && lastFocusedWindow && lastFocusedWindow.isVisible()) lastFocusedWindow.focus();
+  // Quick Entry (official Vhi): the menu bar icon's click and the global shortcut toggle it; a submitted prompt goes to
+  // the main window ("quick-entry-submit": a new session, or the chosen recent one) the way the original dispatches
+  // onQuickEntrySubmit to its main view after showing and focusing the window (sgi / ogi).
+  quickEntry = createQuickEntry({ BrowserWindow, screen, ipcMain, Menu, app, fs, tmpdir: () => os.tmpdir(), fontBase: quickEntryFontBase(APP_DIST),
+    t: (source, values) => i18n.t(source, values), locale: () => i18n.getLocale(),
+    canOpen: () => desktopReady && !quitting && !!win && !win.isDestroyed(),
+    getRecentChats: () => { const running = liveWork.sessions(); return (config.threadIds || []).filter((id) => !config.sessionMetadata?.[id]?.incognito)
+      .map((id) => agentToolSessionView(id, running)).filter(Boolean).sort((a, b) => (b.updatedAt ?? 0) - (a.updatedAt ?? 0)).map((row) => ({ chatId: row.id, chatName: row.title })); },
+    getSavedPosition: () => config.quickWindowPosition ?? null,
+    savePosition: (record) => { config.quickWindowPosition = record; save(); },
+    submit: ({ text, chatId }) => {
+      if (!win || win.isDestroyed()) return;
+      showWindow(win); win.focus();
+      windowRegistry.send(win, { kind: "quick-entry-submit", text, ...(chatId ? { sessionId: chatId } : {}) });
+    } });
+  registerQuickEntryShortcut();
   menuBar = createMenuBar({Tray,Menu,nativeImage,app,iconPath:path.join(__dirname,"assets/TrayIconTemplate.png"),menuModel:await import("./tray-menu.mjs"),
-    getWindow:()=>win,getEnabled:()=>config.menuBarEnabled!==false,getAccount:()=>accountOperations.accountSnapshot(),getClient:()=>client});
+    getWindow:()=>win,getEnabled:()=>config.menuBarEnabled!==false,getAccount:()=>accountOperations.accountSnapshot(),getClient:()=>client,quickEntry:()=>quickEntry.toggle()});
   menuBar.update();
   void restorePopouts().catch((error) => console.warn("Pane windows:", error?.message ?? error));
 });
@@ -4995,7 +5293,10 @@ installShutdownHandler(app, {
     }
     return quitGuard.handle(event);
   },
-  onStart: () => { quitting = true; try { savePopoutsForRelaunch(); } catch (error) { console.warn("Pane windows:", error?.message ?? error); } },
+  onStart: () => { quitting = true; try { savePopoutsForRelaunch(); } catch (error) { console.warn("Pane windows:", error?.message ?? error); }
+    // Quick Entry's window is not closable (official Zhi); like the original's "quick-entry-cleanup" it is destroyed
+    // as the quit goes ahead, so it cannot hold the quit open.
+    try { quickEntry?.dispose(); } catch (error) { console.warn("Quick Entry:", error?.message ?? error); } },
   stop: async () => {
     customCommands.dispose();
     computerUseGlow?.dispose();
@@ -5006,6 +5307,8 @@ installShutdownHandler(app, {
     const terminalsStopped = terminalService.dispose();
     desktopSettings?.dispose();
     menuBar?.dispose();
+    if (quickEntryAccelerator) { try { globalShortcut.unregister(quickEntryAccelerator); } catch {} quickEntryAccelerator = null; }
+    quickEntry?.dispose();
     // Dev servers get TERM, a moment to exit, then KILL for what is left of their process group (preview-service.cjs).
     const previewsStopped = Promise.resolve(previewService?.dispose()).catch(() => {});
     monitorService.dispose();

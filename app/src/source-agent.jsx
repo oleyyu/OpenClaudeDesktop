@@ -13,9 +13,10 @@ import {createStickToBottom} from './task-output-follow.mjs';
 import {SourceClearFinishedTasks} from './source-background-tasks.jsx';
 import {attachTabFocusRelease} from './generated/code-current/tab-focus-release.mjs';
 import {f as EmptyState} from './generated/code-routines/cc0a875c8-Ba9KI-Fw.mjs';
-import {CdsButton} from './generated/view-tabs/shared-frame-6jtSkIit.js';
 import {classifyKeyScroll,keyScrollIntentMs} from './generated/code-current/tab-focus-key-scroll.mjs';
-import { PaneWindowDragStrip, usePaneWindowHeaderProps } from "./pane-window-header.jsx";
+import { usePaneWindowHeaderProps } from "./pane-window-header.jsx";
+// session-page relink SP-2: the pane frame is the 4.16336.0 original c4db265df Tn (generated/session-panels-v4, PaneFrame).
+import { PaneFrame } from "./generated/session-panels-v4/pane-frame.mjs";
 
 /** The sub-agent view's key intent (R3-topbar TT-05; TT-05 / tasks-01). cccc2cf0a mO hands the follow hook c7f8992b4
  * C itself (`es({classifyKeyScroll:$o})`), and T reads every keydown on the scroller's document in the capture phase
@@ -142,9 +143,11 @@ function AgentTranscript({agent,item,ownerId=null,renderItem,renderRows=null,loa
 // W14-code r5pa-07 (E95): 3.6556.2 cccc2cf0a's sub-agent view has no composer (en-US has no "Message {name}…"), so the
 // host's follow-up box for a continuable sub-agent (AgentComposer, onMessage / canMessage, .sag-composer) is gone.
 export function SourceTasksPane({transcriptView="normal",state,sessionId,views=[],onBack,onClose,onOpen,onLoad,renderItem,renderRows=null,headerCenter,controls,background}) {
-  const current=views.at(-1),pane=useRef(null),load=useRef(onLoad);load.current=onLoad;
-  // W14-code r4 r4pa-c03: in a pane window (c5638815a wt `isTopLeft: !0`) the header clears the traffic lights and drags the window.
-  const paneWindowHeader=usePaneWindowHeaderProps();
+  const current=views.at(-1),back=useRef(null),load=useRef(onLoad);load.current=onLoad;
+  // W14-code r4 r4pa-c03: in a pane window (c5638815a wt `isTopLeft: !0`) the header clears the traffic lights; the
+  // pane frame takes it as leadingClearance (c4db265df Tn `"data-top-left": ce || void 0`) and drags the window itself
+  // (`!V && t("div", {className: "draggable absolute inset-0 -z-[1]", …})`).
+  const leadingClearance=usePaneWindowHeaderProps()!==null;
   const [loadState,setLoadState]=useState({id:null,pending:false,error:null});
   useEffect(()=>{
     if(!current?.threadId)return;
@@ -152,7 +155,9 @@ export function SourceTasksPane({transcriptView="normal",state,sessionId,views=[
     load.current(current.threadId).then(()=>{if(live)setLoadState({id:current.threadId,pending:false,error:null});},error=>{if(live)setLoadState({id:current.threadId,pending:false,error:error.message});});
     return()=>{live=false;};
   },[current?.threadId,state.approvalConnectionEpoch]);
-  useLayoutEffect(()=>{pane.current?.querySelector('.source-pane-header button')?.focus({preventScroll:true});},[current?.threadId]);
+  // Opening a sub-agent view focuses the pane frame's back button (Tn backRef, its `Q` CaretLeft Button); leaving the last
+  // view unmounts it, and Tn's own effect (At: the back button had focus → focus the pane content) takes over.
+  useLayoutEffect(()=>{if(current?.threadId)back.current?.focus({preventScroll:true});},[current?.threadId]);
   const item=current && (state.items[current.ownerId || sessionId] || []).find(item=>item.id===current.toolId);
   const agent=current && agentView(state,item||{},current.threadId);
   const spawns=(state.items[sessionId] || []).filter(item=>item.type==='collabAgentToolCall' && item.tool==='spawnAgent');
@@ -160,21 +165,23 @@ export function SourceTasksPane({transcriptView="normal",state,sessionId,views=[
   // the task list shows (not under a sub-agent view), disabled rather than hidden when nothing has finished.
   const clear=views.length===0 && background && sessionId ? <SourceClearFinishedTasks sessionId={sessionId}/> : null;
   const trailing=node=>!clear ? node : React.isValidElement(node) && typeof node.type!=='string' ? React.cloneElement(node,{leading:<>{clear}{node.props.leading}</>}) : <>{clear}{node}</>;
-  return <aside ref={pane} className="source-file-panel detail-panel sag-pane" aria-label={t("Background tasks")} onKeyDown={event=>{
-    if(event.key==='Escape' && !event.defaultPrevented && !event.target.closest('[role="menu"]')){event.preventDefault();event.stopPropagation();onClose();}
-  }}>
-    <header className="source-pane-header" data-pane-header="tasks" {...paneWindowHeader}>
-      <PaneWindowDragStrip/>
-      {/* W14-code r4 css4-pane-toggle-icon-buttons: c4db265df's pane-header back button Q, `n(h,{variant:"ghost",iconOnly:!0,
-          icon:"CaretLeft","aria-label":pe??"Back" (cyR7KhiuaU),onClick:B,tooltip:me,className:"shrink-0"})` (h = the CDS Button). */}
-      {views.length>0 && <CdsButton variant="ghost" iconOnly icon="CaretLeft" aria-label={t("Back")} onClick={onBack} className="shrink-0"/>}
-      <span className="sag-pane-title">{current?.description || t('Background tasks')}</span>{/* ka [H, t, o] then pe (panes-toggle-current.js:1627-1632): handle after the title */}{headerCenter}{trailing(controls)}
-    </header>
+  // c4db265df Tn as the official Code tile host calls it (cc43287c9 `fR({style: {height: "100%"}, leadingClearance:
+  // n.isTopLeft, center: n.dragHandle, …, title: … dR(r, u)})`, dR = c4db265df Gt, case "tasks": "Background tasks"
+  // PO+0DdDIId): the title, the drag handle as center, the back button while a sub-agent view is open (Tn I / backRef).
+  // Not passed (D-SP-1): tileId / paneLayout / onPopOut, whose readers (Qe pane menu, Ht layout toggle) need the official
+  // tile store; the host's pane controls (settings menu, arrange / expand, close) stay the trailing slot, so onClose is
+  // not handed to Tn (one close button). Escape closes through Tn's onEscapeClose (cb50b3202 c), the host's former
+  // aside keydown handler is gone (one Escape path).
+  return <PaneFrame style={PANE_FRAME_STYLE} leadingClearance={leadingClearance} title={current?.description || t('Background tasks')}
+    center={headerCenter} trailing={trailing(controls)} onEscapeClose={onClose}
+    onBack={views.length>0 ? onBack : undefined} backRef={back}>
     {agent ? <AgentTranscript transcriptView={transcriptView} key={current.threadId} agent={agent} ownerId={sessionId} stats={agentConclusionStats(state,agent)} item={item||{}} renderItem={renderItem} renderRows={renderRows} loading={loadState.id===current.threadId && loadState.pending} error={loadState.id===current.threadId && loadState.error}/> : !current&&background ? background : <div className="sag-transcript">
       {/* W14-code r3 r3pa-01: cccc2cf0a CP without a prompt (`underPrompt: !1`) — the EmptyState (cc0a875c8 t, nd) titled
           "No activity yet" (aojEGT2eHI). */}
       {current ? <EmptyState title={<StartMessage {...NO_ACTIVITY_MESSAGE}/>}/> : spawns.map(item=><React.Fragment key={item.id}>{renderItem(item,sessionId)}</React.Fragment>)}
       {!current && !spawns.length && <EmptyState title={<StartMessage {...NO_ACTIVITY_MESSAGE}/>}/>}
     </div>}
-  </aside>;
+  </PaneFrame>;
 }
+// cc43287c9's tile pane call: `style: {height: "100%"}`.
+const PANE_FRAME_STYLE=Object.freeze({height:"100%"});

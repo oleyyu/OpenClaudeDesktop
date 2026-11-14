@@ -9,7 +9,9 @@ import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
+import crypto from 'node:crypto';
 import { ionSource, sharedFrame } from '../scripts/official-3.6556.2.mjs';
+import { ionSource as ionSourceV4, referenceVersion as referenceVersionV4 } from '../scripts/official-4.16336.0.mjs';
 
 const app = path.resolve(import.meta.dirname, '..');
 const read = file => fs.readFileSync(path.join(app, file), 'utf8');
@@ -52,6 +54,21 @@ test('CdsCounter is the official shared-frame vE (exported Vo), published once',
   assert.deepEqual(manifest.publicNames.CdsCounter, { file: sharedFrame, local: 'vE', export: 'Vo' });
   const html = renderToStaticMarkup(h(Cds.CdsCounter, { value: 120, variant: 'accent', size: 'xs' }));
   assert.match(html, /^<span data-cds="Counter"[^>]*class="inline-flex shrink-0 items-center justify-center align-middle [^"]*bg-fill-accent text-on-accent[^"]*">99\+<\/span>$/);
+  // integration-1 cds-core-api: cds-core (4.16336.0) now publishes CdsCounter too. Each graph still publishes the
+  // official Counter exactly once: view-tabs the 3.6556.2 shared-frame vE above, cds-core the binding its manifest
+  // publicNames.CdsCounter names (official file/local, read from the manifest rather than pinned here).
+  const coreManifest = JSON.parse(read('src/generated/cds-core/manifest.json'));
+  const corePublic = coreManifest.publicNames.CdsCounter;
+  assert.ok(corePublic?.file && corePublic.local && corePublic.target, 'cds-core manifest publishes CdsCounter with file/local/target');
+  assert.deepEqual(Object.entries(coreManifest.publicNames).filter(([, entry]) => entry.file === corePublic.file && entry.local === corePublic.local).map(([name]) => name),
+    ['CdsCounter'], 'cds-core publishes the Counter binding under one name');
+  const coreModule = coreManifest.modules.find(module => module.target === corePublic.target);
+  assert.equal(coreModule?.source, corePublic.file);
+  assert.equal(coreModule.referenceVersion, referenceVersionV4);
+  assert.equal(coreModule.bindings.filter(binding => binding.name === corePublic.local).length, 1);
+  const coreOfficial = fs.readFileSync(path.join(ionSourceV4, corePublic.file));
+  assert.equal(crypto.createHash('sha256').update(coreOfficial).digest('hex'), coreModule.sourceSha256);
+  assert.ok(coreOfficial.toString('utf8').includes('"data-cds":"Counter"'), 'the official 4.16336.0 binding is the CDS Counter');
   // D1: code-routines imports it instead of keeping its own copy.
   const copies = [];
   const walk = dir => { for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -59,5 +76,5 @@ test('CdsCounter is the official shared-frame vE (exported Vo), published once',
     if (entry.isDirectory()) walk(full); else if (/\.m?js$/.test(entry.name) && /"data-cds":\s?"Counter"/.test(fs.readFileSync(full, 'utf8'))) copies.push(path.relative(app, full));
   } };
   walk(path.join(app, 'src/generated'));
-  assert.deepEqual(copies, ['src/generated/view-tabs/shared-frame-6jtSkIit.js']);
+  assert.deepEqual(copies.sort(), [`src/generated/cds-core/${corePublic.target}`, 'src/generated/view-tabs/shared-frame-6jtSkIit.js'].sort());
 });

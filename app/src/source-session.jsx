@@ -75,6 +75,7 @@ import { SourceAsyncQuestions } from './source-async-questions.jsx';
 import { SourceResponseMath } from './source-response-math.jsx';
 import { SourceResponseImage } from './source-response-image.jsx';
 import { responseImageTarget } from './response-image-model.mjs';
+import { localMediaUrl } from './local-media-url.mjs';
 import { ResponseTaskInput, ResponseTaskItem } from './source-response-task.jsx';
 import { Icon } from "./icons";
 import { SourceTooltip } from "./source-tooltip.jsx";
@@ -124,7 +125,14 @@ import { parseUnifiedDiff } from "./diff-model";
 // its glyphs (CDS Icon, the c280f9bbb file-type icon), the multi-selection Escape (c856385e2 nt) and the worktree start folder.
 import { FILE_TREE_CONTAINER_CLASS, FILE_TREE_GUIDE_LAYER_CLASS, fileTreeRowClassName, fileTreeRowPrimary, fileTreeIconClassName,
   fileTreeNameClassName, fileTreeIconSize, applyKeptGuides } from "./file-tree-row-model.mjs";
-import { CdsButton, CdsIcon, CdsTextLink, CdsTooltip, cdsClassNames, useCdsLayerAwareZIndex } from "./generated/view-tabs/index.js";
+// host-wiring code-b: the CDS parts this file draws in its own markup — PaneListToggle (Tooltip over the ghost ListBullet
+// Button; 4.16336.0 c9bd7af9c calls `u(q,{content,shortcut,side:"top",align,children:u(z,{…icon:"ListBullet"…})})` with
+// no hoverable, so the new default false stands), the delivery Retry / Discard, the thinking copy Button, the tree's
+// CaretRight / link mark, the fallback pane Close, cdsClassNames and the tree handle's useCdsLayerAwareZIndex — are the
+// 4.16336.0 cds-core originals (shared-frame-CJdE5Ria, semantic facade). "Open plan" (CdsTextLink) is the generated
+// QuestionCardHeader's `trailing` (src/generated/question-card, 3.6556.2 renders it), so it stays the view-tabs one.
+import { CdsTextLink } from "./generated/view-tabs/index.js";
+import { CdsButton, CdsIcon, CdsTooltip, cdsClassNames, useCdsLayerAwareZIndex } from "./cds-core.mjs";
 import { FileTypeIcon } from "./generated/files-changes/file-type-icon.mjs";
 import { useMultiSelectionEscape } from "./generated/files-changes/file-selection-escape.mjs";
 import { FilesQueryScope, useTreeStartFolder, startRevealNonce } from "./file-tree-start-folder.jsx";
@@ -539,8 +547,9 @@ function Diff({ value = "", scopeKey, ...props }) {
 // measurement; the row is mounted only for real copyable text.
 const IMAGE_URL = /^(?:https?:|data:image\/)/i;
 function attachmentSource(part) {
-  if (typeof part.path === "string" && part.path.startsWith("/"))
-    return encodeURI(`file://${part.path}`);
+  // U-2: a local image part is the claude-media:// URL main mints for it (src/local-media-url.mjs), never file://.
+  const local = typeof part.path === "string" && part.path.startsWith("/") ? localMediaUrl(part.path) : null;
+  if (local) return local;
   const url = part.imageUrl || part.url || part.image_url;
   return typeof url === "string" && IMAGE_URL.test(url) ? url : null;
 }
@@ -1028,6 +1037,8 @@ export function SourceMessage({ isInterrupting = false, item, agentContext = nul
       </SourceStep>
     );
   }
+  // An imported conversation's end (import-history-display.mjs IMPORTED_DIVIDER): a quiet done row naming its source.
+  if (item.type === "importedHistory") return <SourceStep item={item} {...stepDefaults} label={item.text || ""} state="done" />;
   return null;
 }
 

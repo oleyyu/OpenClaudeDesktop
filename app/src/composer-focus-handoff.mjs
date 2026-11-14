@@ -15,7 +15,7 @@
 // Host differences (unchanged from R2): OP keeps a scheduleFocus made before its editor mounts (Gr/qr/Jr), so the
 // created session / rewind / goal / selection sites wait a frame (two after the rewind confirm releases its modal inert)
 // for the host element instead; `hy` (the focus-ring hint of the side chat) is not ported.
-import { isKeyboardActivation } from './generated/code-composer/keyboard-activation.mjs';
+import { isKeyboardActivation } from './generated/code-composer-v4/keyboard-activation.mjs';
 
 const frameOf = (frame) => frame ?? ((callback) => requestAnimationFrame(callback));
 const element = (composer) => (typeof composer === 'function' ? composer() : composer);

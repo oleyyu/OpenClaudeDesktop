@@ -740,6 +740,7 @@ export default {
   "Sees {count, plural, one {# message} other {# messages}} from main chat": "可看到主会话中的 {count, plural, other {# 条消息}}",
   "Follow up…": "继续追问…",
   "Ask a quick question…": "问个简短的问题…",
+  "Ask a quick question": "问个简短的问题",
   "Copy answer": "复制回答",
   "Branch to new chat": "转到新会话",
   "Continuing from a side question.\n\nQ: {question}\n\nA: “{answer}”\n\n": "接着一个旁问继续。\n\n问：{question}\n\n答：“{answer}”\n\n",

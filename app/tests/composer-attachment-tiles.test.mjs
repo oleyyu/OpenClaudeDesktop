@@ -14,8 +14,10 @@ import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
+import postcss from 'postcss';
 import { find, parseMarkup } from './fixtures/transcript-css-cascade.mjs';
 import { withMemoCache } from './support/react-memo-cache.mjs';
+import { designEntryStylesheets, legacyGlobalStylesheets } from '../scripts/current-design-assets.mjs';
 
 const app = path.resolve(import.meta.dirname, '..');
 const v1 = path.resolve(app, '../reference/installed-2.42304.0-20261017/ion-dist/assets/v1');
@@ -24,17 +26,29 @@ const count = (text, needle) => text.split(needle).length - 1;
 const h = React.createElement;
 const noop = () => {};
 let server, Tiles, Wrappers, Attachments, ViewTabs, TileAdapters, VideoTypes, Experimental, Route, Split, Viewer, Popover, Elements;
+// surfaces-prod-3 composer (host cutover): the host tiles render the 4.16336.0 wrappers (code-composer-v4 c0a74d72b Go / qo /
+// Jo / Ko over shared-3 jl) inside the 4.16336.0 shell, under cds-core's CdsRoot; the 3.6556.2 graph keeps its own copies,
+// pinned below as the legacy graph (…3), which the host no longer imports.
+let Wrappers3, Attachments3, VideoTypes3, Experimental3, Route3, Split3, CdsCore, Shared2v4;
 before(async () => {
   server = await createServer({ configFile: false, root: app, plugins: [react()], server: { middlewareMode: true, hmr: false, ws: false, watch: null }, appType: 'custom', logLevel: 'error' });
   Tiles = await server.ssrLoadModule('/src/source-composer-tiles.jsx');
-  Wrappers = await server.ssrLoadModule('/src/generated/code-composer/composer-attachment-tiles.mjs');
-  Attachments = await server.ssrLoadModule('/src/generated/code-composer/chat-composer-attachments.mjs');
+  Wrappers = await server.ssrLoadModule('/src/generated/code-composer-v4/composer-attachment-tiles.mjs');
+  Attachments = await server.ssrLoadModule('/src/generated/code-composer-v4/chat-composer-attachments.mjs');
+  Wrappers3 = await server.ssrLoadModule('/src/generated/code-composer/composer-attachment-tiles.mjs');
+  Attachments3 = await server.ssrLoadModule('/src/generated/code-composer/chat-composer-attachments.mjs');
+  CdsCore = await server.ssrLoadModule('/src/cds-core.mjs');
+  Shared2v4 = await server.ssrLoadModule('/src/generated/code-composer-v4/chunk-shared-2.mjs');
   ViewTabs = await server.ssrLoadModule('/src/generated/view-tabs/shared-frame-6jtSkIit.js');
   TileAdapters = await server.ssrLoadModule('/src/source-composer-attachment-adapters.jsx');
-  VideoTypes = await server.ssrLoadModule('/src/generated/code-composer/composer-video-types.mjs');
-  Experimental = await server.ssrLoadModule('/src/generated/code-composer/code-pane-experimental.mjs');
-  Route = await server.ssrLoadModule('/src/generated/code-composer/composer-intake-route.mjs');
-  Split = await server.ssrLoadModule('/src/generated/code-composer/composer-intake-split.mjs');
+  VideoTypes = Attachments; // 4.16336.0: the video name test is shared-3 BN (chat-composer-attachments.mjs)
+  Experimental = await server.ssrLoadModule('/src/generated/code-composer-v4/code-pane-experimental.mjs');
+  Route = await server.ssrLoadModule('/src/generated/code-composer-v4/composer-intake-route.mjs');
+  Split = await server.ssrLoadModule('/src/generated/code-composer-v4/composer-intake-split.mjs');
+  VideoTypes3 = await server.ssrLoadModule('/src/generated/code-composer/composer-video-types.mjs');
+  Experimental3 = await server.ssrLoadModule('/src/generated/code-composer/code-pane-experimental.mjs');
+  Route3 = await server.ssrLoadModule('/src/generated/code-composer/composer-intake-route.mjs');
+  Split3 = await server.ssrLoadModule('/src/generated/code-composer/composer-intake-split.mjs');
   Viewer = await server.ssrLoadModule('/src/source-image-viewer.jsx');
   Popover = await server.ssrLoadModule('/src/source-popover.jsx');
   Elements = await server.ssrLoadModule('/src/source-selected-element.jsx');
@@ -44,7 +58,12 @@ after(() => server?.close());
 const tree = (html) => parseMarkup(html);
 const cls = (node) => String(node?.attrs?.class ?? '');
 const kids = (node) => (node?.children ?? []).filter((n) => n.tag);
-const inRoot = (child) => h(ViewTabs.CdsRoot, { platform: 'desktop', density: 'compact', className: 'contents', experimental: Experimental.codePaneExperimental }, child);
+// main.jsx renderMainComposer: the view-tabs root, the cds-core root inside it, then (in the shell) the Attachments part's
+// transition scope — 4.16336.0 shared-5 `d(Cc.Provider, { value: ht, children: ne })`, Cc = shared-2 km — under which the
+// tiles' shared-3 Ac stamps data-cds-attachment and the view-transition name. The fixture scope runs the update at once.
+const inScope = (child) => h(Shared2v4.km.Provider, { value: (update) => update() }, child);
+const inRoot = (child) => h(ViewTabs.CdsRoot, { platform: 'desktop', density: 'compact', className: 'contents', experimental: Experimental3.codePaneExperimental },
+  h(CdsCore.CdsRoot, { platform: 'desktop', density: 'compact', className: 'contents', experimental: Experimental.codePaneExperimental }, inScope(child)));
 const image = { id: 'i1', kind: 'image', name: 'shot.png', previewUrl: 'blob:shot', status: 'ready', path: '/w/shot.png' };
 const pending = { id: 'i2', kind: 'image', name: 'clip.png', previewUrl: '', status: 'loading', path: '' };
 const notes = { id: 'f1', kind: 'file', name: 'notes.txt', path: '/w/notes.txt', status: 'ready' };
@@ -126,13 +145,18 @@ test('generated (3.6556.2): the tiles, the wrappers, lx, and the route are the o
   assert.deepEqual(byTarget['composer-intake-split.mjs'].officialExports, { nP: 'oc', pb: 'Tp' });
   assert.deepEqual(byTarget['composer-image-types.mjs'].officialExports, { a: 'i' });
   assert.deepEqual(byTarget['composer-intake-route.mjs'].bindings.map((b) => b.name), ['Kq']);
-  assert.deepEqual(Experimental.codePaneExperimental, { naturalImageTiles: 'sized' });
-  // The tile set adapter is all four of Hp's members (R4i-graph GR3 added Video).
+  assert.deepEqual(Experimental3.codePaneExperimental, { naturalImageTiles: 'sized' });
+  assert.deepEqual(Experimental.codePaneExperimental, { naturalImageTiles: 'sized' }, '4.16336.0 shared-18 BC, the one the host passes');
+  // The tile set adapter is all four of Hp's members (R4i-graph GR3 added Video). surfaces-prod-3 composer: the adapter
+  // module serves the 4.16336.0 graph now (its members are code-composer-v4's dl / vl / Sl / Ol); only the host-unused
+  // 3.6556.2 tiles module still reads this set, the 4.16336.0 wrappers read shared-3 jl directly.
   assert.deepEqual(TileAdapters.ComposerAttachmentTiles, { Image: Attachments.AttachmentImage, Video: Attachments.AttachmentVideo, File: Attachments.AttachmentFile, Quote: Attachments.AttachmentQuote });
-  assert.equal(Attachments.MessageAttachments.Image, undefined, 'eh is not mutated');
+  assert.equal(Attachments3.MessageAttachments.Image, undefined, 'eh is not mutated');
+  // 4.16336.0 shared-3 is the official `jl = Object.assign(Al, { Image: dl, Video: vl, File: Sl, Quote: Ol })`.
+  assert.equal(Attachments.MessageAttachments.Image, Attachments.AttachmentImage, '4.16336.0 jl assigns onto Al');
   // Vi's video branch: a File-backed, video-named, video-typed attachment only.
-  assert.ok(VideoTypes.videoFileNamePattern.test('clip.MOV') && !VideoTypes.videoFileNamePattern.test('clip.mkv'));
-  assert.ok(Wrappers.videoMimeTypePattern.test('video/mp4') && !Wrappers.videoMimeTypePattern.test('image/png'));
+  for (const names of [VideoTypes3, VideoTypes]) assert.ok(names.videoFileNamePattern.test('clip.MOV') && !names.videoFileNamePattern.test('clip.mkv'));
+  for (const mimes of [Wrappers3, Wrappers]) assert.ok(mimes.videoMimeTypePattern.test('video/mp4') && !mimes.videoMimeTypePattern.test('image/png'));
   assert.equal(Tiles.isVideoTileEntry({ kind: 'file', name: 'clip.mp4', path: '/p/clip.mp4' }), false, 'a host entry keeps no File');
   assert.equal(Tiles.isVideoTileEntry({ kind: 'file', name: 'clip.mp4', file: { type: 'video/mp4' } }), true);
   assert.equal(Tiles.isVideoTileEntry({ kind: 'file', name: 'clip.mp4', file: { type: 'application/octet-stream' } }), false);
@@ -146,12 +170,16 @@ test('generated (3.6556.2): the tiles, the wrappers, lx, and the route are the o
   const item = (file, isDirectory = false) => ({ kind: 'file', getAsFile: () => file, webkitGetAsEntry: () => ({ isDirectory }) });
   const dir = { name: 'src' }, txt = { name: 'b.txt' };
   assert.deepEqual(Split.splitTransferItems([item(dir, true), item(txt), { kind: 'string', getAsFile: () => null }], []), { folders: [dir], files: [txt] });
+  // The 3.6556.2 copies the host no longer imports answer the same.
+  assert.equal(Route3.routeComposerIntake({ files: [], folders: [{ name: 'src' }] }, { images: noop, otherFiles: noop }), false);
+  assert.deepEqual(Split3.splitTransferItems([item(dir, true), item(txt)], []), { folders: [dir], files: [txt] });
 });
 
 // ---------------------------------------------------------------- the row (SSR)
 test("SSR: Ri's row in uM's shelf — image tiles, file / folder tiles, quote tiles, then the pill group; official CDS markup", () => {
   const html = renderToStaticMarkup(inRoot(h(Tiles.ComposerAttachmentTiles, { entries: [image, pending, notes, folder, snippet, element], contextPills: [agent], onRemove: noop, onOpenFile: noop })));
-  const root = tree(html)[0];
+  const root = kids(tree(html)[0])[0]; // the cds-core root inside the view-tabs one
+  assert.match(cls(root), /^cds-root text-primary contents$/, 'cds-core CdsRoot (shared-frame `Q("cds-root text-primary", h)`)');
   const row = kids(root)[0];
   assert.equal(cls(row), Tiles.TILE_ROW_CLASS);
   assert.equal(Tiles.TILE_ROW_CLASS, 'flex flex-wrap items-end gap-xs');
@@ -195,22 +223,48 @@ test('SSR: each tile is the generated wrapper with the props Bi / Vi / Hi give i
   assert.equal(ids(only(snippet)), ids(wrap(h(Wrappers.ComposerQuoteTile, { name: snippet.label, text: snippet.text, badge: 'Excerpt', badgeTooltip: snippet.label, onOpen: noop, onRemove: noop }))));
 });
 
+// 4.16336.0 design assets (current-design-assets): index.html links the 4.16336.0 entry sheets, the legacy global sheet the
+// 3.6556.2 regions still need, then the generated compatibility layer. A class the 4.16336.0 sheets dropped is styled only
+// through legacy-utilities.css, and only as a registered legacy-region dependency (style-compatibility.json keeps its
+// 3.6556.2 rule and names the generated region that draws it).
+function loadedStyles(appRoot) {
+  const read = (file) => fs.readFileSync(path.join(appRoot, file), 'utf8');
+  const names = [...designEntryStylesheets, ...legacyGlobalStylesheets];
+  assert.deepEqual([...read('index.html').matchAll(/<link\s+rel="stylesheet"\s+href="([^"]+)"/g)].map((m) => m[1]),
+    [...names.map((name) => `/assets/v1/${name}`), '/assets/legacy-utilities.css'], 'index.html stylesheet links');
+  const registry = JSON.parse(read('public/style-compatibility.json'));
+  return {
+    official: names.map((name) => read(`public/assets/v1/${name}`)).join('\n'),
+    compat: read('public/assets/legacy-utilities.css'),
+    legacyRegions: (token) => (registry.rules.some((rule) => rule.baselineVersion === '3.6556.2' && rule.references.some((ref) => ref.className === token))
+      ? registry.legacyDebt.owners.filter((owner) => owner.kind === 'region' && owner.classes.includes(token)).map((owner) => owner.area) : []),
+  };
+}
+
 test('every class the tiles and the row draw is in the loaded official sheets', () => {
-  const sheets = ['shared-frame-CegduNQ2.css', 'shared-styles-D_GJawPO.css', 'c6a992d55-Che1orl5.css', 'c8e31bf58-C7gq8dUF.css', 'c3fde7009-BszyXGym.css']
-    .map((f) => fs.readFileSync(path.join(app, 'public/assets/v1', f), 'utf8')).join('\n');
+  const { official: sheets, compat, legacyRegions } = loadedStyles(app);
   const html = renderToStaticMarkup(inRoot(h(Tiles.ComposerAttachmentTiles, { entries: [image, pending, notes, folder, snippet], onRemove: noop, onOpenFile: noop })));
   const tokens = new Set();
   (function walk(nodes) { for (const n of nodes) { for (const t of cls(n).split(/\s+/)) if (t) tokens.add(t.replaceAll('&amp;', '&')); walk(kids(n)); } })(tree(html));
   assert.ok(tokens.size > 60, String(tokens.size));
   const escape = (token) => '.' + token.replace(/[^a-zA-Z0-9_-]/g, (c) => '\\' + c);
+  const styled = (text, t) => ['{', ':', ',', '[', ' ', '>', ')', '.'].some((next) => text.includes(escape(t) + next));
   // group/tile and group/card are group markers (no rule of their own); cds-root / contents come from CdsRoot.
   // 3.6556.2 CdsBadge also writes the fizzy-lake `stacks:` variant (shared-frame-6jtSkIit, e.g.
-  // `stacks:rounded-[calc(var(--cds-h-control-nested)/2)]`); fizzy-lake is off (E12, Qm=[]) and no official 3.6556.2 sheet
-  // carries a single `stacks:` rule, so those tokens are unstyled in the official app too.
-  assert.equal(sheets.includes('.stacks\\:'), false, 'no official stacks: rule');
-  const unstyled = [...tokens].filter((t) => !['group/tile', 'group/card'].includes(t)
-    && !['{', ':', ',', '[', ' ', '>', ')', '.'].some((next) => sheets.includes(escape(t) + next)));
-  assert.deepEqual(unstyled.filter((t) => !t.startsWith('stacks:')), []);
+  // `stacks:rounded-[calc(var(--cds-h-control-nested)/2)]`); fizzy-lake is off (E12, Qm=[]). No 3.6556.2 sheet carried a
+  // `stacks:` rule; the 4.16336.0 c6a992d55 does, but every one is gated on a `[data-cds-fizzy-lake~=color]` ancestor,
+  // which nothing here renders, so those tokens are unstyled in the official app too.
+  const stacks = [];
+  postcss.parse(sheets + '\n' + compat).walkRules((rule) => { if (rule.selector.includes('.stacks\\:')) stacks.push(rule.selector); });
+  assert.deepEqual(stacks.filter((selector) => !selector.includes(':where([data-cds-fizzy-lake~=color],[data-cds-fizzy-lake~=color] *)')), [],
+    'every official stacks: rule is gated on fizzy-lake color');
+  assert.equal(html.includes('data-cds-fizzy-lake'), false, 'no fizzy-lake scope rendered');
+  const unstyled = [...tokens].filter((t) => !['group/tile', 'group/card'].includes(t) && !styled(sheets, t));
+  // The rest of the 3.6556.2 tokens the 4.16336.0 sheets dropped: registered legacy-region dependencies of the code-composer
+  // / view-tabs regions that draw the tiles.
+  const legacy = unstyled.filter((t) => !t.startsWith('stacks:') && styled(compat, t)
+    && legacyRegions(t).some((area) => ['code-composer', 'view-tabs'].includes(area)));
+  assert.deepEqual(unstyled.filter((t) => !t.startsWith('stacks:') && !legacy.includes(t)), []);
 });
 
 // ---------------------------------------------------------------- the presses (hook dispatcher)
@@ -226,6 +280,8 @@ function hookFixture(component) {
     useContext(context) { return context._currentValue; },
     useId() { const i = cursor++; cells[i] ??= { value: `:r${i}:` }; return cells[i].value; },
     useEffect() {}, useLayoutEffect() {},
+    // 4.16336.0 Bo (the tiles' restore-focus hook) wraps its effect in useEffectEvent; the fixture never runs effects.
+    useEffectEvent(fn) { return fn; },
   };
   const render = (...args) => {
     const internal = React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, old = internal.H;
@@ -327,7 +383,7 @@ test("Go's one strip intent: the pill group carries s / d / m, every pill gets t
   assert.equal(state().intent.open, null);
 });
 
-test('the generated wrapper under a press: pr removes once per two frames and hands focus on; mr stamps the attachment attributes', (t) => {
+test('the generated wrapper under a press: Ho (the old pr) removes once per two frames and hands focus on; Wo (the old mr) stamps the restored flag', (t) => {
   const frames = [];
   const saved = Object.getOwnPropertyDescriptor(globalThis, 'window');
   Object.defineProperty(globalThis, 'window', { value: { requestAnimationFrame: (fn) => frames.push(fn) }, configurable: true, writable: true });
@@ -340,9 +396,13 @@ test('the generated wrapper under a press: pr removes once per two frames and ha
   const tileElement = out.props.trigger;
   assert.equal(tileElement.type, Attachments.AttachmentFile);
   assert.equal(tileElement.props.badge, 'TXT');
-  assert.equal(tileElement.props['data-cds-attachment'], '');
+  // 4.16336.0 Wo (the old mr) stamps only the restored flag (`{ [vm]: e ? "" : void 0 }`); data-cds-attachment and the
+  // view-transition name moved into the tile itself (shared-3 Ac, under the shell's transition scope: the SSR row above).
+  assert.ok(Object.hasOwn(tileElement.props, 'data-cds-attachment-restored'));
   assert.equal(tileElement.props['data-cds-attachment-restored'], undefined);
-  assert.match(tileElement.props.style['--cds-attachment-vt-name'], /^cds-attachment-/);
+  assert.equal(tileElement.props['data-cds-attachment'], undefined);
+  assert.equal(tileElement.props.style, undefined);
+  assert.deepEqual(Wrappers.attachmentTileAttributes(true), { 'data-cds-attachment-restored': '' });
   tileElement.props.onRemove();
   tileElement.props.onRemove();
   assert.deepEqual(removed, ['x'], 'a second press inside the two frames is ignored');
@@ -368,10 +428,14 @@ test('wiring: the Code shelf renders the tiles; paste / drop go through mb + aK;
   assert.equal(count(composer, '<ComposerAttachmentTiles entries={attachments} contextPills={contextPills} onRemove={onRemoveAttachment} onOpenFile={onOpenAttachmentFile} onClickAnnotation={onClickAnnotation} onEditHeldText={onEditHeldText} disabled={sending} />'), 1);
   // Chat / Cowork (SourceChatComposer) keep the host pills.
   assert.equal(count(composer, 'attachments={attachments.length > 0 || contextPills.length > 0 ? <SourceComposerAttachments entries={attachments}'), 1);
-  assert.equal(count(composer, 'import { splitTransferItems } from "./generated/code-composer/composer-intake-split.mjs";'), 1);
-  assert.equal(count(composer, 'import { routeComposerIntake } from "./generated/code-composer/composer-intake-route.mjs";'), 1);
+  assert.equal(count(composer, 'import { splitTransferItems } from "./generated/code-composer-v4/composer-intake-split.mjs";'), 1);
+  assert.equal(count(composer, 'import { routeComposerIntake } from "./generated/code-composer-v4/composer-intake-route.mjs";'), 1);
   const main = fs.readFileSync(path.join(app, 'src/main.jsx'), 'utf8');
-  assert.equal(count(main, 'experimental={codePaneExperimental}'), 1);
+  // host-wiring root: the old (view-tabs) root and the nested 4.16336.0 (cds-core) root both carry it.
+  assert.equal(count(main, 'experimental={codePaneExperimental}'), 2);
+  // rl-main-entry U-1: the 3.6556.2 root's density is the window root's resolved one (shared-frame Ja; host-wiring-root.test.mjs).
+  assert.equal(count(main, '<CdsRoot density={windowDensity} font={cdsFont} platform="desktop" experimental={codePaneExperimental} className="contents">'), 1);
+  assert.equal(count(main, '<CdsCoreRoot density={themeDensity(boot?.config)} font={cdsCoreFont} platform="desktop" experimental={codePaneExperimental} className="contents">'), 1);
   // W14-code composer review: only the card fallback outside a pane zone hands the shell onFileDrop (its card-scope drop
   // panel); inside a pane the zone takes the drop and the shell gets undefined, as the official Code card. Never the page scrim.
   assert.equal(count(composer, 'onFileDrop='), 1);

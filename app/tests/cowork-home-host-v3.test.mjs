@@ -18,7 +18,9 @@ const h = React.createElement;
 const text = html => html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
 const hostFiles = ['src/source-cowork-home.jsx', 'src/source-surfaces.jsx', 'src/source-surfaces.css'];
 
-globalThis.document ??= { body: { nodeType: 1 }, head: { appendChild() {} }, createElement: () => ({ relList: { supports: () => false }, setAttribute() {}, style: {} }),
+// W8 stub contract (design class c): cds-core now holds shared-0 CQ/Wo (read document.cookie at load) and the shared-25
+// router store (reads window.location.pathname at load), as in the app.
+globalThis.document ??= { cookie: '', body: { nodeType: 1 }, head: { appendChild() {} }, createElement: () => ({ relList: { supports: () => false }, setAttribute() {}, style: {} }),
   querySelector: () => null, querySelectorAll: () => [], addEventListener() {}, removeEventListener() {}, documentElement: { dataset: {}, getAttribute: () => null, hasAttribute: () => false } };
 globalThis.window ??= { document: globalThis.document, navigator: { userAgent: 'Mozilla/5.0 (Macintosh)' }, addEventListener() {}, removeEventListener() {},
   matchMedia: () => ({ matches: false, addEventListener() {}, removeEventListener() {} }), localStorage: { getItem: () => null, setItem() {} },
@@ -48,7 +50,10 @@ before(async () => {
 after(() => server?.close());
 
 const call = async () => [];
-const renderHome = (sessions = [], metadata = {}, state = {}) => renderToStaticMarkup(h(home.SourceCoworkHome, {
+// surfaces-prod home-chat-cowork: main.jsx now mounts the 4.16336.0 SourceCoworkHome (tests/home-v4.test.mjs); the
+// 3.6556.2 home stays exported as SourceCoworkHomeV3, the comparison these tests keep pinned until the screenshot
+// acceptance retires it.
+const renderHome = (sessions = [], metadata = {}, state = {}) => renderToStaticMarkup(h(home.SourceCoworkHomeV3, {
   call, sessions, metadata, state, ready: true, onOpen() {}, onOpenRoutine() {}, onClearActive: async () => {},
   onPrompt() {}, onPreviewPrompt() {}, onFocusInput() {} }));
 
@@ -108,7 +113,7 @@ test('a collapsed sidebar adds the pinned tasks (shared-23 SS u = !Mo() || ea(),
   const now = Math.floor(Date.now() / 1000);
   const sessions = [{ id: 'pinned-1', name: 'Pinned quarterly plan', updatedAt: now - 86400 * 30 }];
   const metadata = { 'pinned-1': { surface: 'cowork', pinned: true } };
-  const render = sidebarCollapsed => text(renderToStaticMarkup(h(home.SourceCoworkHome, { call, sessions, metadata, state: {}, ready: true,
+  const render = sidebarCollapsed => text(renderToStaticMarkup(h(home.SourceCoworkHomeV3, { call, sessions, metadata, state: {}, ready: true,
     sidebarCollapsed, onOpen() {}, onOpenRoutine() {}, onClearActive: async () => {}, onPrompt() {}, onPreviewPrompt() {}, onFocusInput() {} })));
   assert.doesNotMatch(render(false), /Pinned quarterly plan/);
   assert.match(render(true), /Pinned quarterly plan/);
@@ -129,31 +134,35 @@ test('generated RouterLink targets reach the host: sessions open, scheduled task
   assert.match(local('src/source-cowork-home.jsx'), /window\.addEventListener\(HOME_V3_CLEAR_EVENT, clear\)/);
 });
 
-test('home column and greeting take the 3.6556.2 new-page classes', () => {
+test('home column and greeting take the new-page classes of the new_page_home ruling (home arm)', () => {
   const column = renderToStaticMarkup(h(surfaces.SourceSurfaceHome, { active: true }, h('i')));
   assert.match(column, /^<(main|div) class="mx-auto mt-4 w-full flex-1 px-md md:px-8 lg:mt-6 max-w-7xl surface-home-column relative flex flex-col items-center gap-6 max-sm:!px-1 md:px-14 /);
-  // nS.classic column offset (Px), the official default layout (w11-sweep-curchat; "home" is the new_page_home gate arm).
-  assert.match(column, /pt-\[calc\(var\(--prerender-activation-viewport-height,100vh\)\*0\.1\)\] md:pt-\[calc\(var\(--prerender-activation-viewport-height,100vh\)\*0\.25\)\]/);
-  assert.doesNotMatch(column, /0\.28\+0\.56875rem/);
+  // integration-3 review-0 P1: the user's official 4.16336.0 draws the new_page_home arm, so the column takes fS.home's
+  // offset (shared-19 Gx: 0.28·vh + 0.56875rem, min 12rem; tall: 0.32·vh) instead of classic's 0.25·vh (Px / Wx), from the
+  // 4.16336.0 table (host switch local_new_page_home in host-growthbook.mjs; false restores classic).
+  assert.match(column, /md:pt-\[max\(var\(--prerender-activation-viewport-height,100vh\)\*0\.28\+0\.56875rem,12rem\)\]/);
+  assert.doesNotMatch(column, /md:pt-\[calc\(var\(--prerender-activation-viewport-height,100vh\)\*0\.25\)\]/);
   const s2 = official('shared-2-TF8v67kg.js');
   assert.ok(s2.includes('var j1=["classic","home"],M1="classic",N1="new-page-layout-latch"') && s2.includes('M1 as nr'));
   assert.ok(official('shared-23-BZ6ZY5fu.js').includes('nr as zl,') && official('shared-23-BZ6ZY5fu.js').includes('r=n===void 0?zl:n'));
   assert.ok(official('shared-3-BCEbd8Fv.js').includes('{flag:"__gb__1085985672",label:"new_page_home"'));
-  assert.match(local('src/source-surfaces.jsx'), /const homeVariant = homeLayout\('classic'\);/);
+  assert.match(local('src/source-surfaces.jsx'), /const homeVariant = homeLayout\(newPageLayoutVariant\);/);
+  assert.match(local('src/source-surfaces.jsx'), /import \{ homeLayout \} from '\.\/generated\/home-chat-cowork\/shared-19\.mjs';/);
+  assert.match(local('src/host-growthbook.mjs'), /\[growthBookFlagKey\("local_new_page_home"\)\]: true,/);
   assert.match(column, /!mt-\[calc\(-1\*min\(var\(--organization-banner-column-height/);
   assert.match(column, /dock:h-auto dock:min-h-\[calc\(100%\+min/);
   assert.equal(surfaces.homeScrollClass, 'min-h-0 flex-1 overflow-x-hidden overflow-y-auto [scrollbar-gutter:stable_both-edges]');
   assert.ok(official('shared-23-BZ6ZY5fu.js').includes('className:"min-h-0 flex-1 overflow-x-hidden overflow-y-auto [scrollbar-gutter:stable_both-edges]"'));
   assert.equal(renderToStaticMarkup(h(surfaces.SourceSurfaceHome, { active: false }, h('i'))), '<i></i>');
   const greeting = renderToStaticMarkup(h(surfaces.SourceSurfaceGreeting, { name: 'Ada' }));
-  // nS.classic: greetingSlotClass "my-3 w-full", seat "center" (shared-5 aC → iC), lockup "inline".
-  assert.match(greeting, /^<header class="surface-greeting my-3 w-full dock:mt-0 dock:mb-0 dock:pt-\[max\(0px,calc\(var\(--app-visual-viewport-height,100dvh\)\*0\.5_-_/);
+  // fS.home: greetingSlotClass "mt-3 w-full", seat "top" (no dock seat class), lockup "compact".
+  assert.match(greeting, /^<header class="surface-greeting mt-3 w-full ">/);
   assert.match(greeting, /data-new-page-greeting-spark=""/);
   assert.match(greeting, /data-new-page-greeting-text=""/);
-  // The inline lockup (shared-19 eS("inline") / tS): the display face, not the compact serif.
-  // SSR has no clock yet (Dy `l === null`): the empty text keeps the lockup invisible, as the Chat greeting does.
-  assert.match(greeting, /class="text-primary text-balance text-center font-display max-sm:px-\[0\.96em\] invisible"/);
-  assert.doesNotMatch(greeting, /font-ui-serif font-\[360\]/);
+  // The compact lockup (4.16336.0 shared-19 uS("compact")): the ui serif at 360, not the display face.
+  // SSR has no clock yet (ix `l === null`): the empty text keeps the lockup invisible, as the Chat greeting does.
+  assert.match(greeting, /class="text-primary text-balance text-center font-ui-serif font-\[360\] [^"]*max-sm:px-\[0\.96em\] [^"]*invisible"/);
+  assert.doesNotMatch(greeting, /text-center font-display /);
   // w13-close-cowork-ui (chatui-home-01): the Cowork greeting is shared-23 Fy → Dy, the one new-page greeting call site
   // for both tabs, whose table lookup is the "chat" surface only; 3.6556.2 has no `{name} returns!`.
   assert.doesNotMatch(text(greeting), /returns!|Ada/);

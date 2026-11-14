@@ -2,6 +2,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
+import { designEntryStylesheets } from '../scripts/current-design-assets.mjs';
+// design-production (4.16336.0): the loaded c6a992d55 entry sheet, named by current-design-assets.
+const UTILITIES_CSS = designEntryStylesheets.find(name => name.startsWith('c6a992d55-'));
 
 // Guard: every var(--cds-*) in local CSS must name a token that exists. An
 // undefined custom property makes the declaration invalid at computed-value
@@ -63,7 +66,7 @@ test('local CSS never redeclares the --font-anthropic-* chains (design-system.cs
       redeclared.push(`${path.basename(file)} ${match[1]}`);
   assert.deepEqual(redeclared, []);
   // The loaded stylesheet does define the full chains (CJK and ui-monospace fallbacks).
-  const loaded = readFileSync(path.join(official, 'c6a992d55-Che1orl5.css'), 'utf8');
+  const loaded = readFileSync(path.join(official, UTILITIES_CSS), 'utf8');
   // 2.31226.0 routes the sans chain through --font-sans-fallbacks (CJK, then the script fallbacks).
   assert.match(loaded, /--font-anthropic-sans:"anthropic-sans", var\(--font-sans-fallbacks\)/);
   assert.match(loaded, /--font-sans-fallbacks:[^;}]*var\(--font-cjk-sans-fallback\), var\(--font-script-fallbacks\)/);

@@ -13,8 +13,9 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Icon } from "./icons";
 import { SourceDialog } from "./source-dialog.jsx";
-// W14-code r6 R6DC-02: shared-frame Uu (E41 direct import), not the host replica.
-import { CdsButton } from "./generated/view-tabs/shared-frame-6jtSkIit.js";
+// W14-code r6 R6DC-02: the CDS Button, not the host replica; host-wiring code-b: the 4.16336.0 cds-core original
+// (shared-frame-CJdE5Ria Xu → Id, semantic facade) — the Request rows and the SourceDialog footer are host markup.
+import { CdsButton } from "./cds-core.mjs";
 import { SourceImageViewer } from "./source-image-viewer.jsx";
 import { actionLabel, demonstrationLead, demonstrationRows, startOutcome } from "./watch-record-model.mjs";
 import { t } from "../electron/i18n/index.mjs";

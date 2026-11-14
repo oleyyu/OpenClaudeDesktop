@@ -86,11 +86,39 @@ export const MINIMAX_GLOBAL_MAX_BYTES = 32 * 1024
 const APP_TOOLS_TIMEOUT_MS = 600000
 const TRUNCATED_NOTE = '[OpenClaude Desktop instructions truncated to fit MiniMax Code’s 32 KiB limit for global instructions.]'
 
+// Import Chat History's handoff transcript in the developer instructions (app/electron/chat-import targets.mjs
+// handoffInstructions / fitHandoffInstructions: the same tags and note).
+const IMPORTED_OPEN = '<imported_conversation>\n'
+const IMPORTED_CLOSE = '\n</imported_conversation>'
+const IMPORTED_LEFT_OUT = '[… the earlier part of this conversation was left out to fit …]\n'
+
+/**
+ * `text` with its imported conversation shortened from its oldest end (the newest messages and the closing tag kept,
+ * a note where the cut is) so the whole is at most `maxBytes`; null when it has no such block or even the block's
+ * frame doesn't fit.
+ */
+export function trimImportedConversation(text, maxBytes) {
+  if (Buffer.byteLength(text, 'utf8') <= maxBytes) return text
+  const open = text.indexOf(IMPORTED_OPEN), close = text.lastIndexOf(IMPORTED_CLOSE)
+  if (open < 0 || close < open + IMPORTED_OPEN.length) return null
+  const head = text.slice(0, open + IMPORTED_OPEN.length), body = text.slice(open + IMPORTED_OPEN.length, close), tail = text.slice(close)
+  const room = maxBytes - Buffer.byteLength(head + IMPORTED_LEFT_OUT + tail, 'utf8')
+  if (room <= 0) return null
+  const raw = Buffer.from(body, 'utf8')
+  // Cut on a character boundary (a partial UTF-8 sequence decodes to U+FFFD, dropped), then at a line start when one is near.
+  let kept = raw.length > room ? raw.subarray(raw.length - room).toString('utf8').replace(/^\uFFFD+/, '') : body
+  const line = kept.indexOf('\n')
+  if (raw.length > room && line >= 0 && line < 2000 && line < kept.length - 1) kept = kept.slice(line + 1)
+  return head + IMPORTED_LEFT_OUT + kept + tail
+}
+
 /**
  * The thread's global AGENTS.md: the user's own file, then OpenClaude Desktop's prompt and instructions, kept within mcode's
- * 32 KiB so neither is dropped. Past it, the user's file stays whole and OpenClaude Desktop's part is cut with a note; a
- * user file over the limit by itself (mcode ignores it anyway) gives way to OpenClaude Desktop's part.
- * @returns {{text: string, truncated: boolean, ownDropped: boolean}}
+ * 32 KiB so neither is dropped. Past it, an imported conversation in OpenClaude Desktop's part (Import Chat History's
+ * handoff) gives way first, from its oldest end (trimImportedConversation: the newest messages and the closing tag stay,
+ * and so do the instructions around it); only then the user's file stays whole and OpenClaude Desktop's part is cut with
+ * a note; a user file over the limit by itself (mcode ignores it anyway) gives way to OpenClaude Desktop's part.
+ * @returns {{text: string, truncated: boolean, ownDropped: boolean, importTrimmed?: boolean}}
  */
 export function minimaxGlobalInstructions(own, prompt, max = MINIMAX_GLOBAL_MAX_BYTES) {
   const mine = String(own ?? '').trim(), ours = String(prompt ?? '')
@@ -100,6 +128,8 @@ export function minimaxGlobalInstructions(own, prompt, max = MINIMAX_GLOBAL_MAX_
   if (bytes(whole) <= max) return { text: whole, truncated: false, ownDropped: false }
   const ownDropped = bytes(mine) + bytes(TRUNCATED_NOTE) + 4 > max
   if (ownDropped && bytes(ours) <= max) return { text: ours, truncated: false, ownDropped }
+  const shortened = trimImportedConversation(ours, max - (!ownDropped && mine ? bytes(mine) + 2 : 0))
+  if (shortened !== null) return { text: join([ownDropped ? '' : mine, shortened]), truncated: false, ownDropped, importTrimmed: true }
   const keep = ownDropped ? '' : mine
   const room = max - bytes(join([keep, TRUNCATED_NOTE])) - 2
   // Cut on a character boundary: a partial UTF-8 sequence decodes to U+FFFD, which is dropped.
@@ -903,6 +933,18 @@ export default {
   },
   // Sessions live in the thread's own home (deleted with the thread); a fork gets a home of its own (forkHome).
   sessionFeatures: { fork: 'acp', revert: false, deleteHistory: true, ownHome: true },
+  // No importSession (Import Chat History falls back to a text handoff): mcode has no import or seeded-session API (ACP
+  // session/new | load | resume | fork and the mcode/session/* extensions only, tui/src/acp/agent.ts; no CLI command),
+  // and a native session is not one store but several that must agree: local_runtime_sessions (columnar v3 rows decoded
+  // strictly, sessions/repo/drizzle/codec.ts:53-149), its FTS keys and agent-definition snapshot, the display rows
+  // (local_runtime_message_rows) and a file-based model history (v2/sessions/<UTC date>/<time>-session_<id>/manifest.json
+  // + messages.jsonl envelopes with revisions and identity vectors, messages/history/session-history-paths.ts,
+  // history-store.ts), in a database only mcode's own 36 migrations create (infra/db/migrations, schema-consistency.ts),
+  // for a pinned 0.6.2 whose source differs from the HEAD this was read against. Its one-way legacy importer
+  // (session-system/legacy-migration/importer.ts) reads a legacy daemon sqlite.db and OpenCode databases, not an import
+  // format. A handoff through developerInstructions lands in the thread's global AGENTS.md, which mcode reads only up to
+  // 32 KiB (MINIMAX_GLOBAL_MAX_BYTES): the app sizes the transcript to what is left (chat-import targets.mjs
+  // minimaxHandoffLimit), and minimaxGlobalInstructions shortens its oldest end first should it still not fit.
 
   /**
    * A fork's own home (server.js thread/fork, after mcode forked the session in its source's home): a thread's home
@@ -989,7 +1031,7 @@ export default {
       let own = ''
       try { own = fs.readFileSync(path.join(real, 'AGENTS.md'), 'utf8') } catch {}
       const global = minimaxGlobalInstructions(own, prompt)
-      if (global.truncated || global.ownDropped) ctx.log?.(`minimax: the global instructions passed ${MINIMAX_GLOBAL_MAX_BYTES} bytes;${global.truncated ? ' OpenClaude Desktop\'s part was shortened' : ''}${global.ownDropped ? ' the user\'s own AGENTS.md (over the limit by itself, so mcode ignores it) was left out' : ''}`)
+      if (global.truncated || global.ownDropped || global.importTrimmed) ctx.log?.(`minimax: the global instructions passed ${MINIMAX_GLOBAL_MAX_BYTES} bytes;${global.importTrimmed ? ' the imported conversation\'s oldest part was left out' : ''}${global.truncated ? ' OpenClaude Desktop\'s part was shortened' : ''}${global.ownDropped ? ' the user\'s own AGENTS.md (over the limit by itself, so mcode ignores it) was left out' : ''}`)
       files['AGENTS.md'] = global.text
     }
     // The thread's own config.yaml (never a link to the user's: mcode writes its model and permission choices there):

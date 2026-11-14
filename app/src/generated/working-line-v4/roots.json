@@ -1,0 +1,402 @@
+{
+  "referenceVersion": "4.16336.0",
+  "referenceSnapshot": "snapshots/claude-4.16336.0-20261104",
+  "roots": {
+    "TURN_STATUS_ROWS_FLAG": {
+      "chunk": "ca7b95e24-BFvFgBI_.js",
+      "local": "l",
+      "alias": "i",
+      "sha256": "e6e7d4bf406c902ee852a63cb688f5f36977a78734f5e953aa14903672691654"
+    },
+    "TurnStatusRowsProvider": {
+      "chunk": "ca7b95e24-BFvFgBI_.js",
+      "local": "d",
+      "alias": "o",
+      "sha256": "ac66d421e94c121062db71037f15f25f9c91d7f25f013d76d83035bb7b058af4"
+    },
+    "TurnStatusRowsOverride": {
+      "chunk": "ca7b95e24-BFvFgBI_.js",
+      "local": "f",
+      "alias": "a",
+      "sha256": "ccf250636235be65c0045be98ba69c1574bdd490b085cac1e11c0f5d34de637a"
+    },
+    "useTurnStatusRows": {
+      "chunk": "ca7b95e24-BFvFgBI_.js",
+      "local": "p",
+      "alias": "s",
+      "sha256": "ae8ec6ce31d98195e248f077e56879680257a1e0ef97526e5c97da5e79c10349"
+    },
+    "useElapsedSince": {
+      "chunk": "c93058e68-Dnwt2AaM.js",
+      "local": "d",
+      "alias": "t",
+      "sha256": "cf0e97d6eef21088ea5aa30f406c5fb0aeba5212ca590ef51fdfe98f93001014"
+    },
+    "useCountTween": {
+      "chunk": "c60636ac6-Qhz8qfr3.js",
+      "local": "Je",
+      "alias": "a",
+      "sha256": "97358475eab1cca243dc7ff7f261b6020389abe69b86dbbf4ca0b4be9429f6d0"
+    },
+    "formatTokenCount": {
+      "chunk": "shared-8-BqfCbkJd.js",
+      "local": "xZ",
+      "alias": "I",
+      "sha256": "05e5721b33a395227442805eb4996edbf3ffb688be5d734e409b5747ddb3b14f"
+    },
+    "THINKING_TOKEN_COUNT_FLAG": {
+      "chunk": "c93fb40ec-ueIsHfDz.js",
+      "local": "t",
+      "alias": "n",
+      "sha256": "227c0162e0ce571c94275785c28437d238941b79874f93380137f717f795a741"
+    },
+    "apiRetryLabel": {
+      "chunk": "c4a9ee384-BWj_BT12.js",
+      "local": "rp",
+      "alias": "t",
+      "sha256": "668debaa065daa9b8da3bf140ad85e588f63817430be953632a9556d47df5f1e"
+    },
+    "apiRetryCountText": {
+      "chunk": "c4a9ee384-BWj_BT12.js",
+      "local": "ap",
+      "alias": "n",
+      "sha256": "2222cf5f74af39a188235f882413d4419185ac19716508b699a7dbb1154e46a4"
+    },
+    "useSpinnerFace": {
+      "chunk": "cc5c5e22c-Bin4bZh4.js",
+      "local": "c",
+      "alias": "t",
+      "sha256": "e8ddd2a21a935d932a38065470f1c3ed9b5e7eba86a4b6887804d1c418c66592"
+    },
+    "SpinnerFaceContext": {
+      "chunk": "cc5c5e22c-Bin4bZh4.js",
+      "local": "s",
+      "alias": "n",
+      "sha256": "37a09cd33c5678a853e793678e397af64a293b7186fd89c59a21e5a73157a919"
+    },
+    "seatLeadingMark": {
+      "chunk": "c28b569d3-CjPHW-8M.js",
+      "local": "a",
+      "alias": "r",
+      "sha256": "fad6fe7f2f33ed6ff721424188d715da8d0fd96ddb4bf0261852f748edcadf03"
+    },
+    "MarkSeatContext": {
+      "chunk": "c28b569d3-CjPHW-8M.js",
+      "local": "i",
+      "alias": "n",
+      "sha256": "d0b17a530434a002013c27f4eea228ecc6336b9281337b990c3d99a1b1526dd6"
+    },
+    "ALIASES": {
+      "chunk": "c8677db5f-CJKAHncR.js",
+      "local": "D",
+      "alias": "ALIASES",
+      "sha256": "8a06288f26c8642d3d7e1eb62fb4edb8576f950a157ba399e609d7ad15d0e6f3"
+    },
+    "SHEETS": {
+      "chunk": "c8677db5f-CJKAHncR.js",
+      "local": "O",
+      "alias": "SHEETS",
+      "sha256": "6a7732d2e5bb2e571bb8361adc725cfc677da0a0ba482cc7066a8147a90a38e4"
+    },
+    "SHEET_FRAME": {
+      "chunk": "c8677db5f-CJKAHncR.js",
+      "local": "E",
+      "alias": "SHEET_FRAME",
+      "sha256": "bedab7e40b56ba17b139679bae9f41e385bc036bf66a1390c75cfd7c101959d3"
+    },
+    "SHEET_URLS": {
+      "chunk": "c8677db5f-CJKAHncR.js",
+      "local": "k",
+      "alias": "SHEET_URLS",
+      "sha256": "704bde99864ef3bbf1fe7fa76bfbc3f6431977f71b995eb5bb275afe42fbd61b"
+    },
+    "ActivityMark": {
+      "chunk": "c05970c42-pKfzwsnZ.js",
+      "local": "s",
+      "alias": "t",
+      "sha256": "1f2fd86a206ec4dc0705d65ce5298d5981dd85ead681bb037a16cbeb87256b07"
+    },
+    "TurnStatus": {
+      "chunk": "c734f318c-CGzPyTBU.js",
+      "local": "zt",
+      "alias": "t",
+      "sha256": "483e9c48c8f1485c1190c0780a1fce55fb9dea9e8338881ac261ae29888da539"
+    },
+    "TurnStatusStep": {
+      "chunk": "c734f318c-CGzPyTBU.js",
+      "local": "Dt",
+      "alias": null,
+      "sha256": "e2e5975a38dc6f8c0d32d7916b7d05d8aeda368ae8718ba09da635a4f3b6ed4e"
+    },
+    "domMax": {
+      "chunk": "cb6c4b462-DQhtu8Uk.js",
+      "local": "d",
+      "alias": "domMax",
+      "sha256": "faaea64d45905e83d59fc3c06e504b4fd6650ae705be5affbf508fc79d85bde7"
+    },
+    "PresenceElement": {
+      "chunk": "cb6c4b462-DQhtu8Uk.js",
+      "local": "f",
+      "alias": "PresenceElement",
+      "sha256": "3a00e831f9a5d6880a42d327bedd03f3b94463f3211d822e39d70b0114904a4f"
+    },
+    "HidingPresenceElement": {
+      "chunk": "cb6c4b462-DQhtu8Uk.js",
+      "local": "p",
+      "alias": "HidingPresenceElement",
+      "sha256": "70a4985a843d55c0455ff1f48307ba2fedc5f3438dc6134b60babcbfcb56eca4"
+    },
+    "Morph": {
+      "chunk": "cb6930dae-DPu57U90.js",
+      "local": "ru",
+      "alias": "xt",
+      "sha256": "059885f4657d7e8e03156f5884f3658eb8d4ee4709e310348e91c61580612839"
+    },
+    "TurnMarkBrokerContext": {
+      "chunk": "cb6930dae-DPu57U90.js",
+      "local": "du",
+      "alias": null,
+      "sha256": "3371491769688d3aa194a6a3cbb2e928992ef909cb3d23e1169915b8f281520b"
+    },
+    "noSubscription": {
+      "chunk": "cb6930dae-DPu57U90.js",
+      "local": "Nu",
+      "alias": null,
+      "sha256": "beaa307ea169468df44e722f5defd02dba32085923e6479181b84fda80567701"
+    },
+    "neverHeld": {
+      "chunk": "cb6930dae-DPu57U90.js",
+      "local": "Pu",
+      "alias": null,
+      "sha256": "41eb2e86113a0d4a836d579a342a3cf84712d435ff4673cd3fbfb23d63ea826b"
+    },
+    "TurnActivityContext": {
+      "chunk": "cb6930dae-DPu57U90.js",
+      "local": "qu",
+      "alias": null,
+      "sha256": "4170b42270815344e167c62b7c942ca7624468d69288aa1e936e6c21efadcebc"
+    },
+    "useTurnActivity": {
+      "chunk": "cb6930dae-DPu57U90.js",
+      "local": "Yu",
+      "alias": "Q",
+      "sha256": "79f7adc689447715e7d6f84b1be2b5c1d872356d5d6808d25384a01c306f9b89"
+    },
+    "useTurnMarkHeld": {
+      "chunk": "cb6930dae-DPu57U90.js",
+      "local": "Ru",
+      "alias": "pt",
+      "sha256": "78f2edfb4b97e32fa7773bda0d252c800ff683040fada862f1f02a769d7ae6e1"
+    },
+    "WorkingLine": {
+      "chunk": "c96d752d0-D9VB6ArX.js",
+      "local": "Y5",
+      "alias": "X",
+      "sha256": "e2779bbd81f62fed273931c316f3fdab1734b6f69a3af2f14339ccec42253446"
+    },
+    "thinkingElapsedBucket": {
+      "chunk": "c96d752d0-D9VB6ArX.js",
+      "local": "F5",
+      "alias": "Z",
+      "sha256": "0d6262370eda0d9abb2a2a7af5ce264c1463be2ec91311ebca0781764c0d904d"
+    },
+    "thinkingLabel": {
+      "chunk": "c96d752d0-D9VB6ArX.js",
+      "local": "Zgt",
+      "alias": null,
+      "sha256": "07b74808776db0ce4482bdb9be4375d3916adbeeb7d2bd99414b5a4a015ccfc9"
+    },
+    "waitingLabel": {
+      "chunk": "c96d752d0-D9VB6ArX.js",
+      "local": "R5",
+      "alias": "$",
+      "sha256": "3d0f2e72b5a1fe3315fa2878a9b270eaf59c4319c2c7819101e491999bbb72f7"
+    },
+    "spinnerMode": {
+      "chunk": "c96d752d0-D9VB6ArX.js",
+      "local": "RM",
+      "alias": null,
+      "sha256": "2ebc4061668271604bf95f9cb642bd6c0e87fb064e7fd27f8f3ae82875bc7901"
+    },
+    "WORKING_LINE_TEST_ID": {
+      "chunk": "c96d752d0-D9VB6ArX.js",
+      "local": "i_t",
+      "alias": null,
+      "sha256": "77db8eedc81647097e6995f0f6047f8c9f07c66ff07be96e794f60ee23dba51d"
+    },
+    "useNeedsYourInputLabel": {
+      "chunk": "c96d752d0-D9VB6ArX.js",
+      "local": "FM",
+      "alias": null,
+      "sha256": "2890c6ca7a96431de80c8cafeebf573da0ae9592f2abb14a6b5a5fe16a66c63a"
+    },
+    "useSpinnerWord": {
+      "chunk": "c96d752d0-D9VB6ArX.js",
+      "local": "IM",
+      "alias": null,
+      "sha256": "8bb1b6c45967d208c3642c66306e52fef3a8f591e8ddbc5640de44fd0bf6a582"
+    },
+    "spinnerWord": {
+      "chunk": "c96d752d0-D9VB6ArX.js",
+      "local": "LM",
+      "alias": null,
+      "sha256": "9f4701328887ce4bb419d4e383e0089dfc4fca1ea338b81050d2e01d6a691fb7"
+    },
+    "useTurnClock": {
+      "chunk": "c96d752d0-D9VB6ArX.js",
+      "local": "PM",
+      "alias": null,
+      "sha256": "08ab9975d43a638bd0bc9fdadf019dc69feed60731505c58ba65aaacb47c8fbe"
+    },
+    "activityMark": {
+      "chunk": "c96d752d0-D9VB6ArX.js",
+      "local": "rE",
+      "alias": "ds",
+      "sha256": "6908d325c0b1c28b6afdac951b987c320aae280421cd5d4951fce3bc70ea9986"
+    }
+  },
+  "linkExports": {
+    "vendor-motion-Ba5cqrBN.js#C": "50ef138ff0e03c802bf04d04e9490698fcd599ecfa14373f4baf94ad2a8bcac3",
+    "vendor-motion-Ba5cqrBN.js#Cl": "0794e5dbd59ff5dbe6babd571e15b5f7e39208476dff03fb4792005ae12c1427",
+    "vendor-motion-Ba5cqrBN.js#F": "4db42ea48d511f48fe55aafb937980092b9cc905b708b904d848cb718b2ba25f",
+    "vendor-motion-Ba5cqrBN.js#G": "9feac94cfd95e688d78dbf2a3890f9d048ce1f754b0c18f42deffbf23d2cc875",
+    "vendor-motion-Ba5cqrBN.js#K": "974ff5a9895e9ca6aa490186a6f0ce9b39b7bfecab26dba2a06f766a54a99723",
+    "vendor-motion-Ba5cqrBN.js#M": "2b0c2edf27418281549a2b23a9779d11b9d9da6ba924268d71009d8a277cc899",
+    "vendor-motion-Ba5cqrBN.js#N": "2b0c2edf27418281549a2b23a9779d11b9d9da6ba924268d71009d8a277cc899",
+    "vendor-motion-Ba5cqrBN.js#S": "d990e3cc1581a1986845f173c48bd8bfbe82b7e46ce1941f36447d1fa8e82106",
+    "vendor-motion-Ba5cqrBN.js#Tn": "481f6a9dea0349e804c9933c5cc8e06d0a1bb1f3ef59edceb3978c5f80a0ce52",
+    "vendor-motion-Ba5cqrBN.js#Zr": "0ade4ef0a8f449fbaa6fa47f11d39925f463bfbe23397d9d88e9f25d946c8485",
+    "vendor-motion-Ba5cqrBN.js#_n": "ba2cc04503e4e481a03849b03af93bdc20e5ecf32947f813eb78282c52b46fb5",
+    "vendor-motion-Ba5cqrBN.js#fd": "d754e486c144b90129b03103ec0db20fceb0912290c7f810667832b500937ae8",
+    "vendor-motion-Ba5cqrBN.js#ln": "456770c1795c54203150fdb201c550a3840374b474d3c9f89caabb9f0ce1609e",
+    "vendor-motion-Ba5cqrBN.js#mn": "5d101593bfe64c886eb7c757ccbd36c721aeff8548963a2299b4b93de338d3f4",
+    "vendor-motion-Ba5cqrBN.js#ol": "02dd1959bd40285c0624a67cfb2362323eefd60ffb381d0d5a1423c61d04da19",
+    "vendor-motion-Ba5cqrBN.js#pd": "da4002030ae286368882c46709112d5f3814604790b3e535b4df7701f580ad0f",
+    "vendor-motion-Ba5cqrBN.js#su": "0ac206375905de6520ca5bbc9fcc8271d74cca6c2e6d520337bc2ce7677ceb25",
+    "vendor-motion-Ba5cqrBN.js#ul": "2b58913cbf9a2df4e24a2a2766838e26d8c14382ac3f2897de1031eed043f6b4",
+    "vendor-motion-Ba5cqrBN.js#x": "8a550c4867edef3fc807b855a6aa40a9850b3c62d8d265b826416a5b4864d1e2",
+    "vendor-motion-Ba5cqrBN.js#xn": "979de2666826b5dd8a58fcad98a718cc4cd0666a53b7d7a190d702d996ea17ef",
+    "cb6930dae-DPu57U90.js#Gl": "10e2e84f47df2812be3eccd6f135d30766dccef86b0af3290a25cc34144eb709",
+    "cb6930dae-DPu57U90.js#Jl": "7da0d289afa7a4e1080e8d489505b62be7ad5bc5a63fc4e034f5d72006bd0104",
+    "cb6930dae-DPu57U90.js#Kl": "99348f6005e5984ab0a845b5a36ce8af515f69daa36ffc5e17317a4b7167ea8f",
+    "cb6930dae-DPu57U90.js#Ul": "0c3a25772708fda03e4cf22f7ed2be414b8bf94d5f69cb8a6cbcef0d1ce472b1",
+    "cb6930dae-DPu57U90.js#Wl": "7567b531a971c1878ef2a3fa8b55d8021b387183b101815bee1fa565a3aff64d",
+    "cb6930dae-DPu57U90.js#Yl": "c2173b9c9b283035c5559a1a6befaa5655c5372c9b460c46ce6ef98c3713b945",
+    "cb6930dae-DPu57U90.js#ql": "3d3d4c6e305817ca9fcd177d1ccbe0c7492cd6e7efa5d484ac98f484970de24e",
+    "shared-2-CsjIBQD8.js#X5": "e73be74538011609a8dfd4214d0968e6e855913cc5b227c18eb20dfb5300f6ee",
+    "shared-2-CsjIBQD8.js#m7": "55e745c867ed80c2bab10d39eeb6b403a75b3b0727b0d9a6d08b9930734fdce5",
+    "shared-2-CsjIBQD8.js#n5": "8863a6146bf552dc5345007457215fd53f78c35066aa18cbc44e4e7b8dfc3ade",
+    "shared-2-CsjIBQD8.js#$8": "ba094e921dcea4c44898b457c79f1e8da45187087d724f36ebf78426e900a5db",
+    "shared-2-CsjIBQD8.js#Q8": "68f52ebf27926ce363a63f8d05acc0eff291b37c6f2b596853b25ff28e49f8cd",
+    "shared-2-CsjIBQD8.js#e5": "f2a95a8760a644a7c279ab92002724ca449cae3b8f73a0d34aa4451a54f2d4bb",
+    "shared-2-CsjIBQD8.js#t5": "e7c8268069b8bcac483d24722f069ecee16788af06e90cb8ddd8118408fbfb2c",
+    "shared-1-D1bGaTaN.js#J$": "80d624eaa29165eaa729e4b4dc5ff62da16c288b193ed5f714ecff80e09f5078",
+    "vendor-intl-BJgYK7RA.js#tn": "e8bcfdd6704487bca47d7ebe2c3a799667e4da8daef469e53da344bbb77d91e2",
+    "c96d752d0-D9VB6ArX.js#pP": "6030061abfe68c95897dd24d7b3416dcdb9d4d79c0d8e1b87904fa63332a44e3"
+  },
+  "callSites": {
+    "X5": {
+      "chunk": "c96d752d0-D9VB6ArX.js",
+      "alias": "Y",
+      "sha256": "eb921c507f578fc57fbae6fdf497d1e68fdfa06da496793efc69cc6a9e5f7db0"
+    },
+    "s_t": {
+      "chunk": "c96d752d0-D9VB6ArX.js",
+      "alias": null,
+      "sha256": "8a93923722c64de7962d896a19b36fdfdccf1e0b3efa630444ab005e337d5734"
+    },
+    "W5": {
+      "chunk": "c96d752d0-D9VB6ArX.js",
+      "alias": null,
+      "sha256": "fc11c5b159a87de20192ee6915e61c2b713fc95d3d5292624c13241bd63899e8"
+    },
+    "a_t": {
+      "chunk": "c96d752d0-D9VB6ArX.js",
+      "alias": null,
+      "sha256": "ca8c376f8970eec952d5beb1580ac15e2eade0b9869e738f5f7aa12482a76433"
+    }
+  },
+  "isolatedGraph": {
+    "productionGraph": "src/generated/working-line",
+    "productionSwitchNotBeforeBatch": 10,
+    "heldBy": [
+      "chat-knowledge",
+      "chat-markdown",
+      "chat-messages",
+      "chat-projects",
+      "code-editor",
+      "code-transcript",
+      "cowork-home",
+      "session-rail-context",
+      "sessions-page",
+      "transcript-rows"
+    ]
+  },
+  "previous": {
+    "referenceVersion": "3.6556.2",
+    "output": "src/generated/working-line",
+    "generator": "scripts/extract-working-line.mjs",
+    "roots": {
+      "WorkingLine": "c96d752d0-CWv_7-n9.js#U6",
+      "thinkingElapsedBucket": "#M6",
+      "thinkingLabel": "#Ret",
+      "waitingLabel": "#P6",
+      "spinnerMode": "#iD",
+      "WORKING_LINE_TEST_ID": "#Get",
+      "useNeedsYourInputLabel": "#tD",
+      "useSpinnerWord": "#nD",
+      "spinnerWord": "#rD",
+      "useTurnClock": "#eD",
+      "activityMark": "#jT",
+      "TURN_STATUS_ROWS_FLAG": "c26fb8b6b-B7Friu61.js#qe",
+      "TurnStatusRowsProvider": "#Je",
+      "TurnStatusRowsOverride": "#Ye",
+      "useTurnStatusRows": "#Xe",
+      "useElapsedSince": "c93058e68-CMBi_EBm.js#d",
+      "useCountTween": "c60636ac6-xYOM0GQX.js#Je",
+      "formatTokenCount": "shared-8-Db1QN4mf.js#lX",
+      "THINKING_TOKEN_COUNT_FLAG": "c93fb40ec-ueIsHfDz.js#t",
+      "apiRetryLabel": "c4a9ee384-RLCjceOL.js#ym",
+      "apiRetryCountText": "#xm",
+      "useSpinnerFace": "cc5c5e22c-CxzwX9Ie.js#c",
+      "SpinnerFaceContext": "#s",
+      "seatLeadingMark": "c28b569d3-Cz90mWvn.js#a",
+      "MarkSeatContext": "#i",
+      "animations": "cf2613ee5-Btwr9m9F.js#e (not in the 4.16336.0 closure: the Spark sprites are cds-core's)",
+      "SHEET_URLS": "c8677db5f-CJKAHncR.js#k (same bytes)",
+      "ActivityMark": "c05970c42-1Ws8_hz4.js#s",
+      "TurnStatus": "c734f318c-SHcb2X2p.js#It",
+      "TurnStatusStep": "#Et",
+      "domMax": "cb6c4b462-Dl6QEgSL.js#d",
+      "PresenceElement": "#f",
+      "HidingPresenceElement": "#p",
+      "Morph": "cb6930dae-Dw_4c1QI.js#Ja",
+      "TurnMarkBrokerContext": "#$a",
+      "noSubscription": "#vo",
+      "neverHeld": "#yo",
+      "TurnActivityContext": "#jo",
+      "useTurnMarkHeld": "#So"
+    },
+    "linkExports": {
+      "vendor-motion C/Cl/fd/ol/pd/ul/En/F/G/K/M/N/Qr/S/Sn/Zc/hn/su/un/vn/x": "C/Cl/fd/ol/pd/ul/Tn/F/G/K/M/N/Zr/S/xn/Zc/mn/su/ln/_n/x (same export aliases)",
+      "morph Ba/Fa/Ia/La/Pa/Ra/za": "Yl/Wl/Gl/Kl/Ul/ql/Jl",
+      "shared-2 R6/x6": "m7/X5",
+      "clipboard CR": "shared-1 J$",
+      "define-messages tn": "tn",
+      "working-line EE": "pP",
+      "shared-frame gn/hn/ia/Mh/qF": "not carried (cds-core owns shared-frame)",
+      "shared-0 ea": "not carried (ambiguous: alias -> Zu, shape -> Uc)"
+    },
+    "callSites": {
+      "W6": "X5",
+      "Jet": "s_t",
+      "B6": "W5",
+      "Ket": "a_t"
+    },
+    "removed": {
+      "cdsIconAliases": "official 4.16336.0 removed it (region plan G3)",
+      "transcript-attrs shared-6 Sg": "shared-38 qn",
+      "activity-sprites cc39db724": "shared-33"
+    }
+  }
+}

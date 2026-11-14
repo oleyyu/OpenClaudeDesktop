@@ -404,15 +404,25 @@ test('TR1 style: the inherit-color rule had no consumer and is gone; the first-l
   // preloads that official sheet for the inline diff / MCP app card (`"assets/v1/c19e90103-CuNz46ca.css"` in their
   // __vite__mapDeps) and prepare-ui ships it as is (only `/assets/v1/` → `./`), so a copy byte-equal to the official file
   // is the official DOM's own rule, not a host one; it still matches nothing in the turn box (see the SSR check above).
-  const snapshot = path.resolve(app, '../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1');
-  const officialCopy = (dir, f) => dir === 'public/assets' && fs.existsSync(path.join(snapshot, path.basename(f)))
-    && fs.readFileSync(path.join(app, dir, f), 'utf8') === fs.readFileSync(path.join(snapshot, path.basename(f)), 'utf8').replaceAll('/assets/v1/', './');
+  // integration-3: the 4.16336.0 home-chat-cowork graph (shared-23 __vite__mapDeps) preloads the 4.16336.0 sheet
+  // c19e90103-CUD1JNzE.css (current-design-assets: the replacement of c19e90103-CuNz46ca.css), which prepare-ui ships the
+  // same way; it counts as official only when it is byte-equal to the frozen 4.16336.0 snapshot file.
+  const snapshots = [path.resolve(app, '../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1'),
+    path.resolve(app, '../reference/snapshots/claude-4.16336.0-20261104/ion-dist/assets/v1')];
+  const officialCopy = (dir, f) => dir === 'public/assets' && snapshots.some((snapshot) => fs.existsSync(path.join(snapshot, path.basename(f)))
+    && fs.readFileSync(path.join(app, dir, f), 'utf8') === fs.readFileSync(path.join(snapshot, path.basename(f)), 'utf8').replaceAll('/assets/v1/', './'));
   for (const dir of ['src', 'public/assets']) {
     if (!fs.existsSync(path.join(app, dir))) continue;
     const hits = fs.readdirSync(path.join(app, dir), { recursive: true }).filter((f) => /\.css$/.test(f))
       .filter((f) => fs.readFileSync(path.join(app, dir, f), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '').includes('.epitaxy-markdown-inherit-color'))
       .filter((f) => !officialCopy(dir, f));
     assert.deepEqual(hits, [], dir);
+  }
+  // A shipped 4.16336.0 copy of the sheet must be the declared design replacement, not just any official file.
+  const shipped4 = path.join(app, 'public/assets/v1/c19e90103-CUD1JNzE.css');
+  if (fs.existsSync(shipped4)) {
+    const assets = fs.readFileSync(path.join(app, 'scripts/current-design-assets.mjs'), 'utf8');
+    assert.match(assets, /'c19e90103-CuNz46ca\.css': Object\.freeze\(\{ replacedBy: 'c19e90103-CUD1JNzE\.css',/);
   }
 });
 

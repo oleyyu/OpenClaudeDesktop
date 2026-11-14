@@ -147,7 +147,7 @@ test('GitHub refs: a bare PR URL in transcript text is the forge chip; a descrip
   const chip = inTranscript(`See ${pr} now.`);
   assert.match(chip, new RegExp('<a href="https://github.com/acme/widgets/pull/42" target="_blank" rel="noreferrer" class="hide-focus-ring smd-forge-ref" data-forge-kind="pull">'
     + '<span class="whitespace-nowrap"><span class="relative bottom-\\[calc\\(\\(1cap-1ex\\)/2\\)\\] me-1 inline-flex align-middle">'
-    + '<span aria-hidden="true" data-cds="Icon" class="" style="font-size:12px;font-weight:[\\d.]+">[^<]+</span></span>acme/widgets#42</span></a>'));
+    + '<span data-cds="Icon" style="font-size:calc\\(0.75rem \\* var\\(--cds-rem-scale, 1\\)\\);font-weight:[\\d.]+" aria-hidden="true">[^<]+</span></span>acme/widgets#42</span></a>'));
   assert.doesNotMatch(chip, /aria-label=|title=/);
   // The session's own repo shortens to #N; an issue has no glyph; deep links add the source suffix.
   assert.match(inTranscript(`<${pr}>`, 'acme/widgets'), />#42<\/span><\/a>/);

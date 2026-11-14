@@ -37,15 +37,15 @@
 import React, { cloneElement, forwardRef, useCallback, useContext, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import {
   ChatComposerParts, ChatComposerShell, chatComposerFormPlaceholder, placeholderGhostLines, useChatComposerFocusRef, useResolvedPlaceholder,
-} from './generated/code-composer/chat-composer-shell.mjs';
+} from './generated/code-composer-v4/chat-composer-shell.mjs';
 import {
-  ChatComposerLayoutContext, SendPinContext, editorClass, editorSizeStyle, placeholderGhostProps, placeholderProps, proseMirrorContentClass,
+  SendPinContext, editorClass, editorSizeStyle, placeholderGhostProps, placeholderProps, proseMirrorContentClass,
   resolvePlaceholderFit, stackedEditorClass,
-} from './generated/code-composer/chat-composer-layout.mjs';
-import { placeholderElementTiming } from './generated/code-composer/chat-composer-placeholder-timing.mjs';
-// E41: this module is in the chat / composer import graph, so view-tabs comes from the concrete file by semantic name,
-// not from the facade (index.js evaluates every view-tabs module, some of which import host adapters back).
-import { cdsClassNames } from './generated/view-tabs/shared-frame-6jtSkIit.js';
+} from './generated/code-composer-v4/chat-composer-layout.mjs';
+import { placeholderElementTiming } from './generated/code-composer-v4/chat-composer-placeholder-timing.mjs';
+// 4.16336.0 (composer host cutover): the layout context the v4 shell _m provides is cds-core's (shared-26 Mp, which the
+// generated shell imports from ../cds-core/shared-26.mjs), and the class merge is cds-core's: one graph inside the shell.
+import { ChatComposerLayoutContext, cdsClassNames } from './cds-core.mjs';
 
 /** jf: Header / Attachments / Actions / PrimaryAction / Chin / Overlay / Tray (bp carries them as statics). */
 export const ComposerShellParts = ChatComposerParts;

@@ -22,6 +22,7 @@
  */
 
 import { execFile } from 'node:child_process'
+import { randomUUID } from 'node:crypto'
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
@@ -581,6 +582,144 @@ export function qwenAppToolsSettings(overlay, name, layers = []) {
   return out
 }
 
+// ------------------------------------------------------------ Import Chat History: a native Qwen session
+//
+// codeDesktop/thread/import on Qwen (app/electron/chat-import): the conversation, already flattened to text (tool calls
+// and results folded into the assistant's text, images dropped), becomes a NEW Qwen Code session file that Qwen's own
+// session/resume and session/load open. Shapes from QwenLM/qwen-code core (HEAD 0.26.5; the bridge runs 0.24.7, whose
+// ChatRecord core is the same, see qwenProjectCwds):
+//   file      <runtime>/projects/<sanitizeCwd(cwd)>/chats/<sessionId>.jsonl, created with flag 'wx' and one
+//             `${JSON.stringify(record)}\n` per record (chatRecordingService.ts ensureConversationFile, jsonl-utils.ts
+//             writeLine); <runtime> per config/storage.ts getRuntimeBaseDir (qwenRuntimeDir); sanitizeCwd replaces every
+//             [^a-zA-Z0-9] with '-' (utils/paths.ts).
+//   id        randomUUID, as Config's session ids: sessionService.ts SESSION_FILE_PATTERN /^[0-9a-fA-F-]{32,36}\.jsonl$/
+//             lists only such files.
+//   records   createBaseRecord {uuid, parentUuid (the previous record, null first), sessionId, timestamp (ISO),
+//             type, provenance (real_user | assistant_output | system), cwd, version, gitBranch?}; a prompt is
+//             recordUserMessage's {message: {role: 'user', parts: [{text}]}} (no systemPayload: a legacy prompt whose
+//             parts are its display text), a reply recordAssistantTurn's {message: {role: 'model', parts: [{text}]},
+//             model?}, the title persistCustomTitle's system/custom_title {customTitle, titleSource: 'manual'} chained
+//             after the last message (so auto-titling never replaces it, and the tail read finds it).
+//   load      sessionService.ts loadSessionFromState: the first record's cwd must hash (sha256) to the cwd the session
+//             is opened in, the chain is walked from the last conversation record (transcript-records.ts), and the API
+//             history keeps user/model contents in order (session-api-history.ts). Consecutive same-role contents are
+//             joined (Gemini-style providers reject them: postCompactAttachments.ts composePostCompactHistory), and a
+//             conversation opening with a reply gets QWEN_IMPORT_OPENING first. A trailing prompt keeps no reply (Qwen
+//             reports it as an interrupted prompt it can continue: core/session-recovery.ts).
+//   locks     the writer lease lives in <runtime>/tmp/session-writer-locks/<id>.lock (session-writer-lease.ts); a new id
+//             has none, and the first Qwen process to open the session takes it. Existing sessions are never touched.
+
+export const QWEN_IMPORT_MAX_MESSAGES = 5000
+export const QWEN_IMPORT_MAX_CHARS = 4_000_000
+export const QWEN_IMPORT_OPENING = '(Continuing a conversation imported from another coding agent.)'
+
+/** Qwen's sanitizeCwd (utils/paths.ts): the project folder name of a cwd (lower-cased on Windows). */
+export const qwenSanitizeCwd = (cwd) => (process.platform === 'win32' ? cwd.toLowerCase() : cwd).replace(/[^a-zA-Z0-9]/g, '-')
+
+/** config/storage.ts resolvePath: ~ expanded against `home`, a relative path against `cwd` (null without one). */
+function qwenResolvePath(dir, home, cwd) {
+  let resolved = dir
+  if (resolved === '~' || resolved.startsWith('~/') || resolved.startsWith('~\\')) resolved = path.join(home, ...resolved.slice(2).split(/[/\\]+/).filter(Boolean))
+  return path.isAbsolute(resolved) ? resolved : cwd ? path.resolve(cwd, resolved) : null
+}
+
+/**
+ * The runtime folder Qwen keeps a project's sessions in (Storage.getRuntimeBaseDir): QWEN_RUNTIME_DIR, else the merged
+ * settings' advanced.runtimeOutputDir (system settings over the project's .qwen/settings.json over the user's; resolved
+ * against the cwd, cli/src/config/config.ts setRuntimeBaseDir(settings.advanced?.runtimeOutputDir, cwd)), else
+ * QWEN_HOME or ~/.qwen.
+ */
+export function qwenRuntimeDir(env, cwd) {
+  const home = env.HOME || os.homedir()
+  if (env.QWEN_RUNTIME_DIR) return qwenResolvePath(env.QWEN_RUNTIME_DIR, home, home)
+  const files = [env.QWEN_CODE_SYSTEM_SETTINGS_PATH || DEFAULT_SYSTEM_SETTINGS, cwd ? path.join(cwd, '.qwen', 'settings.json') : null, userSettingsFile(env)].filter(Boolean)
+  for (const file of files) {
+    const value = readJsonFile(file, null)?.advanced?.runtimeOutputDir
+    if (typeof value === 'string' && value) { const dir = qwenResolvePath(value, home, cwd); if (dir) return dir }
+  }
+  return qwenResolvePath(homeOf(env), home, home) ?? homeOf(env)
+}
+
+/**
+ * The request's messages as alternating prompts and replies: roles user / assistant only, blank texts dropped,
+ * consecutive messages of one role joined, an opening reply preceded by QWEN_IMPORT_OPENING. Throws on an empty or
+ * oversized conversation.
+ */
+export function qwenImportMessages(raw) {
+  if (!Array.isArray(raw)) throw new Error('messages must be an array of {role, text}.')
+  if (raw.length > QWEN_IMPORT_MAX_MESSAGES) throw new Error(`An imported conversation can have at most ${QWEN_IMPORT_MAX_MESSAGES} messages.`)
+  let chars = 0
+  const out = []
+  for (const message of raw) {
+    const role = message?.role
+    if (role !== 'user' && role !== 'assistant') continue
+    const text = typeof message.text === 'string' ? message.text.trim() : ''
+    if (!text) continue
+    chars += text.length
+    if (chars > QWEN_IMPORT_MAX_CHARS) throw new Error('The imported conversation is too long.')
+    const ts = Number.isSafeInteger(message.ts) && message.ts > 0 ? message.ts : undefined
+    const last = out.at(-1)
+    if (last?.role === role) last.text += `\n\n${text}`
+    else out.push({ role, text, ...(ts ? { ts } : {}) })
+  }
+  if (!out.length) throw new Error('The imported conversation has no messages.')
+  if (out[0].role === 'assistant') out.unshift({ role: 'user', text: QWEN_IMPORT_OPENING, ...(out[0].ts ? { ts: out[0].ts } : {}) })
+  return out
+}
+
+/**
+ * The records of an imported session, in file order (one chain: each record's parentUuid is the one before it).
+ * `cwd` must be resolved already; times never go backwards nor past `now`.
+ */
+export function qwenImportRecords({ sessionId, cwd, title, messages, version = 'unknown', gitBranch, model, now = Date.now(), uuid = randomUUID }) {
+  const records = []
+  let clock = 0
+  const timeOf = (ts) => new Date((clock = Math.max(clock, Math.min(Number.isSafeInteger(ts) && ts > 0 ? ts : now, now)))).toISOString()
+  const base = (type, ts) => ({
+    uuid: uuid(), parentUuid: records.at(-1)?.uuid ?? null, sessionId, timestamp: timeOf(ts), type,
+    provenance: type === 'user' ? 'real_user' : type === 'assistant' ? 'assistant_output' : 'system',
+    cwd, version: version || 'unknown', ...(typeof gitBranch === 'string' && gitBranch ? { gitBranch } : {}),
+  })
+  for (const message of qwenImportMessages(messages)) {
+    if (message.role === 'user') records.push({ ...base('user', message.ts), message: { role: 'user', parts: [{ text: message.text }] } })
+    else records.push({ ...base('assistant', message.ts), ...(typeof model === 'string' && model ? { model } : {}), message: { role: 'model', parts: [{ text: message.text }] } })
+  }
+  const name = typeof title === 'string' ? title.replace(/\s+/g, ' ').trim().slice(0, 200) : ''
+  if (name) records.push({ ...base('system', now), subtype: 'custom_title', systemPayload: { customTitle: name, titleSource: 'manual' } })
+  return records
+}
+
+/**
+ * Writes a new Qwen Code session for an imported conversation and returns {sessionId, file}. Never overwrites: the
+ * file is created exclusively, and an id already present (chats/, chats/archive/, a writer lock) is refused.
+ */
+export function qwenImportSession({ cwd, title, messages, home, env = process.env, version, gitBranch, model, now = Date.now(), sessionId = randomUUID() }) {
+  if (typeof cwd !== 'string' || !path.isAbsolute(cwd)) throw new Error('An imported Qwen Code session needs an absolute working folder.')
+  if (!/^[0-9a-fA-F-]{32,36}$/.test(sessionId)) throw new Error('Qwen Code session ids are UUIDs.')
+  const scope = home ? { ...env, HOME: home } : { ...env }
+  // Config's targetDir is path.resolve(cwd), and every record's cwd must hash to it (sessionBelongsToCurrentProject).
+  const root = path.resolve(cwd)
+  const runtime = qwenRuntimeDir(scope, root)
+  const chats = path.join(runtime, 'projects', qwenSanitizeCwd(root), 'chats')
+  const file = path.join(chats, `${sessionId}.jsonl`)
+  const taken = [path.join(chats, 'archive', `${sessionId}.jsonl`), path.join(runtime, 'tmp', 'session-writer-locks', `${encodeURIComponent(sessionId)}.lock`)]
+  if (taken.some((candidate) => fs.existsSync(candidate))) throw new Error('A Qwen Code session with this id already exists.')
+  const records = qwenImportRecords({ sessionId, cwd: root, title, messages, version, gitBranch, model, now })
+  fs.mkdirSync(chats, { recursive: true })
+  const fd = fs.openSync(file, 'wx')
+  try {
+    // writeFileSync on a descriptor loops until every byte is written (a single writeSync may write only part).
+    fs.writeFileSync(fd, records.map((record) => `${JSON.stringify(record)}\n`).join(''), 'utf8')
+    fs.fsyncSync(fd)
+  } catch (error) {
+    try { fs.closeSync(fd) } catch {}
+    try { fs.unlinkSync(file) } catch {}
+    throw error
+  }
+  fs.closeSync(fd)
+  return { sessionId, file }
+}
+
 export default {
   id: 'qwen',
   name: 'Qwen Code',
@@ -1043,6 +1182,19 @@ export default {
 
   async renameSession(ctx, sessionId, title, host) {
     await (host ?? await ctx.utility()).call('renameSession', { sessionId, title }, 30000)
+  },
+
+  /**
+   * Import Chat History (codeDesktop/thread/import): writes the conversation as a new native Qwen Code session
+   * (qwenImportSession) that the bridge then opens with session/resume or session/load. `taken(id)`: ids the bridge
+   * already knows, never used. {sessionId, written: the file it created ('wx': only ever its own)}.
+   */
+  async importSession({ cwd, title, messages, home, env, version, gitBranch, model, taken = () => false } = {}) {
+    let fresh = null
+    for (let tries = 0; tries < 100 && !fresh; tries++) { const candidate = randomUUID(); if (!taken(candidate)) fresh = candidate }
+    if (!fresh) throw new Error('No free Qwen Code session id.')
+    const { sessionId, file } = qwenImportSession({ cwd, title, messages, home, env: env ?? process.env, version, gitBranch, model, sessionId: fresh })
+    return { sessionId, written: [file] }
   },
 
   /** qwen/control/session/branch on the thread's own process (the source must be loaded there). */

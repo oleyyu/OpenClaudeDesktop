@@ -4,11 +4,11 @@ import {SourceTooltip} from './source-tooltip.jsx';
 import {ActionDialog} from './source-session-actions.jsx';
 import {workflowPhases,workflowCells,workflowSummary} from './workflow-progress-model.mjs';
 import {StartMessage} from './source-code-start-adapters.jsx';
-// W14-code r4 R4T-08b: the desktop's workflow card (c96d752d0 N$), its task record and the app's QueryClient.
-import {WorkflowTaskCard} from './generated/code-transcript/code-transcript.mjs';
+// prestage-btgap: the desktop's 4.16336.0 workflow card (c96d752d0 jU, scripts/extract-workflow-card-v4.mjs), its task
+// record and a 4.16336.0 QueryClient (TanStack Query of generated/files-changes-v4, the one instance the slice links).
+import {WorkflowTaskCard} from './generated/workflow-card-v4/index.mjs';
 import {workflowTask} from './source-code-feed-adapters.jsx';
-import {QueryClientProvider} from './generated/files-changes/file-browser-query.mjs';
-import {fileBrowserQueryClient} from './source-breadcrumb-adapters.jsx';
+import {QueryClient,QueryClientProvider} from './generated/files-changes-v4/file-browser-query.mjs';
 import './source-workflow.css';
 import {t} from '../electron/i18n/index.mjs';
 const label={completed:t('Completed'),running:t('Running'),stopped:t('Stopped'),failed:t('Failed')};
@@ -49,14 +49,16 @@ const AgentCount=({n})=><span className="whitespace-nowrap"><StartMessage defaul
 export function WorkflowRow({run,onOpen,warningLimits}){const active=run.status==='running',title=run.title||run.name||run.description,now=useClock(active),agents=workflowPhases(run,now).flatMap(p=>p.agents);if(!active)return <div className="swf-terminal" data-status={run.status} data-workflow-id={run.id}><span>{t('Ran workflow')}</span><span className="swf-terminal-title">{title}</span>{run.plan&&<span>{t('Plan · {count} agents estimated',{count:run.plannedAgents||0})}</span>}{['failed','stopped'].includes(run.status)&&(workflowSummary(run.summary,run.description)?<SourceTooltip content={workflowSummary(run.summary,run.description)}><span tabIndex={0} data-status={run.status}>{label[run.status]}</span></SourceTooltip>:<span data-status={run.status}>{label[run.status]}</span>)}</div>;
  return <button className="swf-compact" aria-label={t('View workflow: {title}',{title})} data-workflow-id={run.id} onClick={onOpen}><span className="swf-surface" aria-hidden="true"/><span className="swf-compact-content"><span className="swf-title source-shimmer">{title}</span><span className="swf-meta"><span>{run.plan?t('Workflow plan'):run.source==='model'&&!run.runId?t('Starting workflow'):t('Workflow')}</span>{agents.length>0&&<AgentCount n={agents.length}/>}<span>{Number.isFinite(run.startedAt)?duration(now-run.startedAt):null}</span>{largeWorkflow(run,warningLimits)&&<LargeWarning/>}</span><span className="swf-grid-wrap"><Cells compact anticipate agents={agents}/></span></span><span className="swf-caret-slot"><Icon name="CaretRight" size={16} style={{fontSize:"calc(1rem * var(--cds-rem-scale,1))"}}/></span></button>;
 }
-// W14-code r4 ct-feed R4T-08b (E95): a workflow run in the Background tasks pane is the desktop's workflow card — c96d752d0
-// N$ detailed (k1e: the title, Stop, "Workflow · {time} · {n} agents", the reason a failed / stopped run ended, the phases
-// with their agents, "Up next: {phases}", "Failed agents", Stalled), as cccc2cf0a wN draws a local_workflow task: `u(ds,
-// {task: r, variant: "detailed", sessionRef: i, onStop: a, stopping: o?.has(r.taskId), nested: t.nested, ownLine:
-// t.variant !== "line"})`. The run is the desktop's task record (source-code-feed-adapters.jsx workflowTask); D1e's
-// output-file read is a react-query (the app's one QueryClient). The host's own card (member Retry / Skip, Pause /
-// Resume, deliverables, Configure, open questions, compatibility notes, the large-workflow warning, the agent view) is
-// gone with it. `data-task-id` is the pane's focus anchor (source-background-tasks.jsx focusTask).
+// prestage-btgap (4.16336.0): a workflow run in the Background tasks pane is the desktop's workflow card, as the pane's
+// row (c9bd7af9c RI) draws a local_workflow task: `u(ds, {task: r, variant: "detailed", sessionRef: i, onStop: a,
+// stopping: o?.has(r.taskId), inRunning: t.inRunning, depth: t.depth, tasksFollow: t.tasksFollow})` (ds = c96d752d0 jU).
+// The pane has no nested rows (depth 0, nothing follows the card) and a workflow sits in Running while it runs (jU's
+// inRunning default). Inside the pane frame's panels context (session-panels-v4 PaneFrame = c4db265df Tn) a running run
+// is CQe: the title with Stop (QH StopFilled), the description, the counts, one collapsible row per started phase and
+// "Up next: {phases}" for the announced phases no agent has reached (workflow_phase entries, c62da1b56 ct). The run is
+// the desktop's task record (source-code-feed-adapters.jsx workflowTask); DQe's output-file read is a react-query.
+// `data-task-id` is the pane's focus anchor (source-background-tasks.jsx focusTask).
+const workflowQueryClient=new QueryClient({defaultOptions:{queries:{retry:false,refetchOnWindowFocus:false}}});
 export function SourceWorkflowTask({task,sessionId=null,onStop}){
  const run=task.run,[stopping,setStopping]=useState(false),alive=useRef(true);
  useEffect(()=>{alive.current=true;return()=>{alive.current=false;};},[]);
@@ -64,8 +66,8 @@ export function SourceWorkflowTask({task,sessionId=null,onStop}){
  const sessionRef=useMemo(()=>(sessionId?{type:'local',id:sessionId}:null),[sessionId]);
  const stop=useCallback(async()=>{setStopping(true);try{await onStop?.();}finally{if(alive.current)setStopping(false);}},[onStop]);
  if(!shown)return null;
- return <div data-task-id={task.id} data-workflow-status={shown.status}><QueryClientProvider client={fileBrowserQueryClient}>
-  <WorkflowTaskCard task={shown} variant="detailed" sessionRef={sessionRef} onStop={onStop&&shown.status==='running'?stop:undefined} stopping={stopping} nested={false} ownLine={true}/>
+ return <div data-task-id={task.id} data-workflow-status={shown.status}><QueryClientProvider client={workflowQueryClient}>
+  <WorkflowTaskCard task={shown} variant="detailed" sessionRef={sessionRef} onStop={onStop&&shown.status==='running'?stop:undefined} stopping={stopping}/>
  </QueryClientProvider></div>;
 }
 // Local launcher reuses the host dialog. The source has no Codex script picker.

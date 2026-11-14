@@ -16,6 +16,8 @@
  *   accounts              API-key providers / Coding Plan sign-in (`zcode login`) + quota (accounts.js)
  *   catalog               skills, MCP servers, plugins, hooks (catalog.js); usage (usage.js)
  *   fork / compact        session/fork (at a turn) / session/compact; rename / delete via ZCode's V4 commands
+ *   import                codeDesktop/thread/import → session/create importedHistory (ZCode writes the new session
+ *                         itself, as the ZCode app imports Claude Code sessions: thread-import.js)
  *   rewind                thread/revert → `/rewind conversation <messageId>` as a silent control turn; history
  *                         applies ZCode's branch cut (session.revert)
  *   slash commands        ZCode's `/` catalog (workspace/readPresentation) as skills/list command rows; `/goal`
@@ -53,6 +55,7 @@ import { RateLimitWatch } from './rate-limit-watch.js'
 import * as accounts from './accounts.js'
 import * as catalog from './catalog.js'
 import { accountUsage, codeStats, databaseActivity, deleteSessionRows, sessionRevert, storedMessages } from './usage.js'
+import { finishImport, importCreateParams, importedFromOf, importedHistoryOf, startParamsOf } from './thread-import.js'
 
 const PACKAGE_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const BRIDGE_VERSION = JSON.parse(fs.readFileSync(path.join(PACKAGE_DIR, 'package.json'), 'utf8')).version
@@ -106,6 +109,11 @@ export const BASE_CAPABILITIES = {
   // its tool item (workflows.js) and stops through codeDesktop/workflow/stop. Offered in every permission mode: ZCode
   // runs a workflow's agents without asking, so outside Bypass the bridge asks once per run (askPermission).
   modelWorkflows: true,
+  // codeDesktop/thread/import {cwd, title, messages, importedFrom, ...thread/start params}: another agent's conversation
+  // as a new ZCode session that starts with it (session/create importedHistory, thread-import.js), answered like
+  // thread/start. An agent too old for importedHistory refuses the request (strict params): the app hands the
+  // transcript over as instructions instead (chat-import targets.mjs).
+  threadImport: true,
 }
 
 /**
@@ -668,7 +676,12 @@ export async function main() {
     thread.subscribed = true
   }
 
-  async function startThread(params) {
+  /**
+   * thread/start; `importedHistory` (codeDesktop/thread/import) makes ZCode create the session with that history
+   * already in it, persisted at once (thread-import.js importCreateParams); `created(id)` hears the new session's id as
+   * soon as ZCode answers, so an import that fails later in here can delete it.
+   */
+  async function startThread(params, { importedHistory = null, created = null } = {}) {
     const cwd = typeof params.cwd === 'string' && params.cwd ? params.cwd : home
     if (!path.isAbsolute(cwd)) throw new RpcError(INVALID_PARAMS, `cwd must be absolute: ${cwd}`)
     let real = cwd
@@ -679,7 +692,7 @@ export async function main() {
     if (!modelCache) await settingsCatalog().catch(() => null)
     const effort = params.effort ?? params.config?.model_reasoning_effort ?? defaultEffort(selection ?? modelCache?.settings?.model?.current)
     const mcpServers = sessionMcpServers(draft, sessionIdentityOf(params))
-    const result = await request('session/create', {
+    const createParams = {
       workspace: workspaceOf(real), mode: zcodeMode(permission.mode), persistence: 'deferred',
       ...(selection ? { model: { ...selection, ...(effort ? { options: { reasoningLevel: effort } } : {}) } } : {}),
       ...(effort ? { thoughtLevel: effort } : {}),
@@ -687,20 +700,51 @@ export async function main() {
       ...(mcpServers ? { mcpServers } : {}),
       // A workflow agent (the runner's own bridge) is never a session anyone reads by title: no extra title model call.
       ...(runnerRole ? { titleGenerationEnabled: false } : {}),
-    })
+    }
+    const result = await request('session/create', importedHistory ? importCreateParams(createParams, importedHistory) : createParams)
     const id = result?.session?.sessionId
     if (!id) throw new RpcError(-32000, 'ZCode did not create a session.')
+    created?.(id)
     const thread = newThread(id, { cwd: real, permission, model: selection, effort })
     thread.loaded = true
     thread.workflowRuntime = draft.dynamicWorkflows
     thread.appliedMode = zcodeMode(permission.mode)
     adoptSessionResult(thread, result)
+    // ZCode titles an imported session itself (titleSource 'custom'); kept here too should its snapshot omit it.
+    if (importedHistory) { thread.title ||= importedHistory.title; thread.titleSource ||= 'custom' }
     thread.appliedModel = JSON.stringify(thread.model ? { ...thread.model, ...(thread.effort ? { options: { reasoningLevel: thread.effort } } : {}) } : null)
     applyRequestParams(thread, params)
     store.update(id, { createdAt: thread.createdAt })
     await subscribe(thread)
     notify('thread/started', { thread: threadObject(thread) })
     return sessionResponse(thread)
+  }
+
+  /**
+   * codeDesktop/thread/import (thread-import.js): thread/start with session/create importedHistory, so ZCode itself
+   * writes a new session holding the conversation. Answered like thread/start (the imported turns included unless
+   * excludeTurns); the provenance stays with the bridge metadata (store.js importedFrom). A session that comes back
+   * without the history (an agent that took the request but not the field), or any failure once the session exists
+   * (its history unreadable, the bookkeeping), deletes it again and fails the import, so the app falls back to its
+   * text handoff rather than continue in an empty session or leave a duplicate behind.
+   */
+  async function importThread(params) {
+    const importedHistory = importedHistoryOf(params)
+    const importedFrom = importedFromOf(params.importedFrom)
+    let id = null
+    const discard = () => (id ? handle('thread/delete', { threadId: id }).catch((reason) => log(`zcode-bridge: import ${id}: not deleted (${reason?.message ?? reason})`)) : null)
+    let response
+    try {
+      response = await startThread(startParamsOf(params), { importedHistory, created: (value) => { id = value } })
+    } catch (error) {
+      await discard()
+      throw error
+    }
+    return finishImport(response, {
+      thread: threads.get(id), historyOf, excludeTurns: params.excludeTurns === true,
+      remember: () => { if (importedFrom) store.update(id, { importedFrom }) },
+      discard, fail: (message) => new RpcError(-32000, message),
+    })
   }
 
   /** Load a thread's session in ZCode (resume) if needed. */
@@ -2367,6 +2411,7 @@ export async function main() {
       case 'hooks/list': return catalog.hooksList(catalog.readConfig(paths.cliConfig), { cwds: params?.cwds, sourcePath: paths.cliConfig, fallbackCwd: os.homedir(), root: paths.root })
 
       case 'thread/start': return startThread(params)
+      case 'codeDesktop/thread/import': return importThread(params ?? {})
       case 'thread/resume': {
         const threadId = requireThreadId(params)
         const thread = await loadThread(threadId, params)

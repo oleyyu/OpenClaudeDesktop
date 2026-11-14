@@ -12,7 +12,8 @@ const require = createRequire(path.join(app, 'package.json'));
 require('react-dom').createPortal = children => children;
 globalThis.innerWidth = 1200;
 // D21: the Settings import graph reaches view-tabs, whose preload-helper calls document.createElement at evaluation.
-globalThis.document ??= { body: { nodeType: 1 }, documentElement: { dataset: {}, getAttribute: () => null }, createElement: () => ({}) };
+// W8-M9 stub contract (round4 integration, stub fields only): cds-core 9203795f reads these at load (official 4.16336.0): document.cookie.
+globalThis.document ??= { cookie: '' /* W8-M9: shared-0 CQ / Wo document.cookie */, body: { nodeType: 1 }, documentElement: { dataset: {}, getAttribute: () => null, hasAttribute: () => false /* 4.16336.0 settings-nav: shared-92 Ib reads the root's attribute at evaluation */ }, createElement: () => ({}) };
 const read = file => readFileSync(path.join(app, file), 'utf8');
 let server, React, render, Settings, account, i18n;
 before(async () => {

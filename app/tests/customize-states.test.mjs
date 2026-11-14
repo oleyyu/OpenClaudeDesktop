@@ -140,13 +140,13 @@ test('connectors Status cells, Type column and the stopped-working card follow c
   const warning = String.fromCodePoint(57609), connectorsGlyph = String.fromCodePoint(57429);
   for (const [status, label, action] of [['unreachable', 'Server not responding', 'Reconnect'], ['sign-in', 'Sign-in required', 'Sign in']]) {
     const cell = two.match(new RegExp(`<span class="cz-status" data-status="${status}">(.*?)</td>`))[1];
-    assert.match(cell, new RegExp(`^<span aria-hidden="true" data-cds="Icon" class="cz-status-icon" style="font-size:16px;[^"]*">${warning}</span><span class="cz-status-action"><button type="button" data-cds="Button" data-variant="secondary" data-size="sm"[^>]*>.*<span class="ssb-content">${action}</span></button></span><span class="sr-only">${label}</span></span>$`));
+    assert.match(cell, new RegExp(`^<span data-cds="Icon" style="font-size:calc\\(1rem \\* var\\(--cds-rem-scale, 1\\)\\);[^"]*" class="cz-status-icon" aria-hidden="true">${warning}</span><span class="cz-status-action"><button type="button" data-cds="Button" data-variant="secondary" data-size="sm"[^>]*>.*<span class="ssb-content">${action}</span></button></span><span class="sr-only">${label}</span></span>$`));
     assert.equal(count(cell, label), 1, `${label} only inside .sr-only`);
   }
-  assert.match(two, /<span class="cz-status" data-status="connected"><span aria-hidden="true" data-cds="Icon"[^>]*>[^<]*<\/span><span class="sr-only">Connected<\/span><\/span>/, 'connected unchanged');
+  assert.match(two, /<span class="cz-status" data-status="connected"><span data-cds="Icon"[^>]*>[^<]*<\/span><span class="sr-only">Connected<\/span><\/span>/, 'connected unchanged');
   // Ca :2644-2750: 24px connector tile (not a Warning), name + secondary reason, Retry for unreachable.
   const card = two.match(/<section class="cz-broken"[^]*?<\/section>/)[0];
-  assert.match(card, new RegExp(`<li data-broken-name="fx-unreachable-0"><span aria-hidden="true" class="cz-connector-tile"><span aria-hidden="true" data-cds="Icon" class="" style="font-size:16px;[^"]*">${connectorsGlyph}</span></span><div class="cz-broken-text"><span class="cz-broken-name">fx-unreachable-0</span><span class="cz-broken-reason">Server not responding</span></div><div class="cz-broken-action"><button type="button" data-cds="Button" data-variant="secondary" data-size="sm"[^>]*>.*?<span class="ssb-content">Retry</span></button></div></li>`));
+  assert.match(card, new RegExp(`<li data-broken-name="fx-unreachable-0"><span aria-hidden="true" class="cz-connector-tile"><span data-cds="Icon" style="font-size:calc\\(1rem \\* var\\(--cds-rem-scale, 1\\)\\);[^"]*" aria-hidden="true">${connectorsGlyph}</span></span><div class="cz-broken-text"><span class="cz-broken-name">fx-unreachable-0</span><span class="cz-broken-reason">Server not responding</span></div><div class="cz-broken-action"><button type="button" data-cds="Button" data-variant="secondary" data-size="sm"[^>]*>.*?<span class="ssb-content">Retry</span></button></div></li>`));
   // signIn keeps the honest "Sign-in required" (q87c5Fstfm) / "Sign in" (Codex notLoggedIn is not "Sign-in expired").
   assert.match(card, /<span class="cz-broken-reason">Sign-in required<\/span><\/div><div class="cz-broken-action"><button[^>]*>.*?<span class="ssb-content">Sign in<\/span><\/button><\/div><\/li>/);
   assert.equal(count(card.split('<ul')[1], warning), 0, 'no Warning icon in the row leading slot');
@@ -172,7 +172,7 @@ test('connectors Status cells, Type column and the stopped-working card follow c
   const rows = [...all.matchAll(/<tr data-hoverable=""[^>]*data-mcp-name="([^"]+)"[^>]*>(.*?)<\/tr>/g)].map(match => ({ name: match[1], cells: [...match[2].matchAll(/<td[^>]*>(.*?)<\/td>/g)].map(cell => cell[1]) }));
   assert.equal(rows.length, 4);
   for (const row of rows) {
-    assert.match(row.cells[0], new RegExp(`^<div class="cz-name"><span aria-hidden="true" class="cz-connector-tile"><span aria-hidden="true" data-cds="Icon" class="" style="font-size:16px;[^"]*">${connectorsGlyph}</span></span><span class="cz-truncate">${row.name}</span></div>$`));
+    assert.match(row.cells[0], new RegExp(`^<div class="cz-name"><span aria-hidden="true" class="cz-connector-tile"><span data-cds="Icon" style="font-size:calc\\(1rem \\* var\\(--cds-rem-scale, 1\\)\\);[^"]*" aria-hidden="true">${connectorsGlyph}</span></span><span class="cz-truncate">${row.name}</span></div>$`));
     assert.equal(row.cells[1], '<div class="cz-type flex min-w-0 items-center gap-xs overflow-hidden"><span>Desktop</span></div>');
   }
   assert.doesNotMatch(all, /MCP server|\d tools|cz-row-icon/);
@@ -219,8 +219,8 @@ test('F13 connector drill-in replaces the list with the page-shell drill and c08
   // Not connected: centred column, 56/40 tile, the failure title only for a broken server, the font-large muted message, one primary action.
   const view = name => drill(name).match(/data-connector-view="disconnected">(.*)$/)[1];
   const down = view('down');
-  assert.match(down, /<span aria-hidden="true" class="cz-connector-tile cz-connector-tile-lg"><span aria-hidden="true" data-cds="Icon" class="" style="font-size:40px;/);
-  assert.match(down, /<div class="flex items-center justify-center gap-1\.5 text-warning" data-connection-issue=""><span aria-hidden="true" data-cds="Icon"[^>]*>[^<]*<\/span><span class="font-large-bold">Connection issue<\/span><\/div>/);
+  assert.match(down, /<span aria-hidden="true" class="cz-connector-tile cz-connector-tile-lg"><span data-cds="Icon" style="font-size:calc\(2.5rem \* var\(--cds-rem-scale, 1\)\);/);
+  assert.match(down, /<div class="flex items-center justify-center gap-1\.5 text-warning" data-connection-issue=""><span data-cds="Icon"[^>]*>[^<]*<\/span><span class="font-large-bold">Connection issue<\/span><\/div>/);
   assert.match(down, /<p class="font-large text-muted \[overflow-wrap:anywhere\]">Your connection to down stopped working\. Reconnect to continue\.<\/p>/);
   const primary = html => [...html.matchAll(/<button (disabled="" )?type="button" data-cds="Button" data-variant="primary"[^>]*>.*?<span class="ssb-content">([^<]+)<\/span><\/button>/g)].map(match => [match[2], !!match[1]]);
   assert.deepEqual(primary(down), [['Reconnect', false]]);

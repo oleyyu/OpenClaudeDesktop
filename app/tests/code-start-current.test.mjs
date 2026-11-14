@@ -130,12 +130,11 @@ test('worktree suggestion uses actual working directory; continuation requires a
   assert.equal(startSetupRows({})[0].card.blocksSend, true);
 });
 
-let server, View, Adapters, Host;
+let server, View, Adapters;
 before(async () => {
   server = await createServer({ configFile: false, root: new URL('..', import.meta.url).pathname, server: { middlewareMode: true, hmr: false, watch: null }, appType: 'custom', logLevel: 'error' });
   View = await server.ssrLoadModule('/src/generated/code-start/view.mjs');
   Adapters = await server.ssrLoadModule('/src/source-code-start-adapters.jsx');
-  Host = await server.ssrLoadModule('/src/source-code-start.jsx');
 });
 after(async () => { await server?.close(); });
 const noop = () => {};
@@ -328,55 +327,7 @@ test('a staged suggested task hides the task family for this opening', () => {
   assert.equal(f.tree, null);
 });
 
-test('SourceCodeStart: an unread task is prefilled (staged); one read to the end starts beside the draft and opens once sent', () => {
-  const taken = [], beside = [], opened = [], dismissed = [];
-  const call = (method, params) => { if (method === 'task-backlog-dismiss') dismissed.push([params.id, params.taken]); return Promise.resolve(method === 'task-backlog-list' ? [] : true); };
-  const f = fixture(Host.SourceCodeStart, {
-    ready: true, folders: [{ path: '/Users/me/repo', label: 'repo' }], folder: '/Users/me/repo', onSelect: noop, onChoose: noop, chooseOpen: false, call, onError: noop,
-    sessions: [], workspace: null, onOpenSession: id => opened.push(id), onFocusComposer: noop,
-    onTake: prompt => { taken.push(prompt); return true; },
-    onStartBesideDraft: (prompt, onSent) => { beside.push(prompt); setTimeout(() => onSent('s1'), 0); return 'asked'; },
-  });
-  nodes(f.tree, n => n.type === View.StartSlot)[0].props.slotRef({ nodeType: 1 });
-  f.render();
-  const card = nodes(f.tree, n => n.type === View.StartCard)[0];
-  assert.deepEqual(card.props.environments.map(e => e.where.text), ['~/repo']);
-  const item = { id: 't1', title: 'Fix', prompt: 'Fix\r\nit ' };
-  const started = [];
-  assert.equal(card.props.tasks.onStart(item, { keyboard: true, shown: false, onStart: id => started.push(id) }, 'chip'), 'staged');
-  assert.deepEqual(taken, ['Fix\r\nit ']);
-  assert.equal(card.props.tasks.onStart(item, { keyboard: false, shown: true, onStart: id => started.push(id) }, 'chip'), null, 'a second pointer take right after is a double click');
-  assert.equal(card.props.tasks.onStart(item, { keyboard: true, shown: true, onStart: id => started.push(id) }, 'chip'), 'starting');
-  assert.deepEqual(beside, ['Fix\nit']);
-  return new Promise(resolve => setTimeout(resolve, 5)).then(() => {
-    assert.deepEqual(started, ['s1']);
-    assert.deepEqual(dismissed, [['t1', true], ['t1', true]]);
-    f.close();
-  });
-});
-test('SourceCodeStart: a blocked or missing beside-draft start falls back to the message box; busy does nothing', () => {
-  const taken = [];
-  const base = { ready: true, folders: [], folder: '/r', onSelect: noop, onChoose: noop, chooseOpen: false, call: () => Promise.resolve([]), onError: noop, sessions: [], workspace: null, onOpenSession: noop, onTake: prompt => { taken.push(prompt); return true; } };
-  const cardOf = props => { const f = fixture(Host.SourceCodeStart, props); nodes(f.tree, n => n.type === View.StartSlot)[0].props.slotRef({ nodeType: 1 }); f.render(); return nodes(f.tree, n => n.type === View.StartCard)[0]; };
-  const item = { id: 't', prompt: 'go' };
-  assert.equal(cardOf({ ...base, onStartBesideDraft: () => 'blocked' }).props.tasks.onStart(item, { keyboard: true, shown: true }), 'staged');
-  assert.equal(cardOf({ ...base, onStartBesideDraft: () => 'busy' }).props.tasks.onStart(item, { keyboard: true, shown: true }), null);
-  assert.equal(cardOf(base).props.tasks.onStart(item, { keyboard: true, shown: true }), 'staged');
-  assert.deepEqual(taken, ['go', 'go']);
-});
-test('SourceCodeStart: setup rows carry M8 copy (resume title, continue prompt) and press through to the host', () => {
-  const taken = [], opened = [];
-  const failed = startSessions([{ id: 'f', title: 'Broken', cwd: '/r', updatedAt: 9 }], { metadata: { f: { errorAt: 5 } } });
-  const f = fixture(Host.SourceCodeStart, { ready: true, folders: [], folder: '/r', onSelect: noop, onChoose: noop, chooseOpen: false, call: () => Promise.resolve([]), onError: noop,
-    sessions: failed, workspace: { isRepo: false }, onOpenSession: id => opened.push(id), onTake: prompt => { taken.push(prompt); return true; } });
-  nodes(f.tree, n => n.type === View.StartSlot)[0].props.slotRef({ nodeType: 1 });
-  f.render();
-  const [resume] = nodes(f.tree, n => n.type === View.StartCard)[0].props.setupRows;
-  assert.equal(resume.title, 'Resume “Broken”');
-  assert.equal(resume.card.on, 'error');
-  resume.onPress(event(), false, false, undefined);
-  assert.deepEqual(opened, ['f']);
-});
+// The host SourceCodeStart now mounts the 4.16336.0 card: its behaviour tests moved to tests/code-start-v4.test.mjs.
 test('d3 dismissals keep using the stored startCardDismissals record and write it back', () => {
   const store = new Map([['startCardDismissals', JSON.stringify({ 'auto-mode': '', bad: 3 })]]);
   const events = [];

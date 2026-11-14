@@ -1,0 +1,1143 @@
+{
+  "referenceVersion": "4.16336.0",
+  "referenceSnapshot": "snapshots/claude-4.16336.0-20261104",
+  "generator": "scripts/extract-effort-control-v4.mjs",
+  "previous": {
+    "generator": "scripts/extract-effort-control.mjs",
+    "output": "src/generated/effort-control",
+    "referenceVersion": "3.6556.2",
+    "roots": {
+      "c8e04f916-39YFkTtR.js#S": "EffortControl",
+      "c227f4d5e-B-FYKrwT.js#P$": "EffortSliderOverlay"
+    }
+  },
+  "sharedGraph": {
+    "area": "cds-core",
+    "manifestSha256": "06d2026939e5c8992713c2a0dda1b1abc9adffe7a0c223fe3c1e79eecd08d62c"
+  },
+  "linkedAreas": {
+    "code-composer-v4": "dc5bfba3750b5f0468cadcf5b6123fe59ce856daf14f6aebf5b1bce1c2f1cf64",
+    "session-rail-kit-v4": "8e3066efa4721cee2a5bb0b190fae471848c3456fa9b9424773baba5f2b9291a",
+    "cowork-scheduled-v4": "1af355ba22cc6cee9062edb2710c581d7808d95812d240d343ad995cf96ceb78",
+    "transcript-rows-v4": "78a6fba1cc34e50cbd11f242247a0361851ad33988ef2df04afc104e4853d7fe"
+  },
+  "roots": [
+    {
+      "file": "c8e04f916-DxnnNQyG.js",
+      "local": "S",
+      "name": "EffortControl",
+      "export": "EffortControl",
+      "declarationSha256": "6b2a22c007c6158d2bb3ce1333434b15de7e4c95cb892c95642d15ddcee795c9",
+      "pinned": true
+    },
+    {
+      "file": "c227f4d5e-DGDdGBTz.js",
+      "local": "Zz",
+      "name": "EffortSliderOverlay",
+      "export": null,
+      "declarationSha256": "1b7fc2f60306f913e7efd1c900effe86fb06aa1c242d92c1d94becec30c17483",
+      "pinned": true
+    },
+    {
+      "file": "c227f4d5e-DGDdGBTz.js",
+      "local": "Qz",
+      "name": "EffortSliderOverlayLit",
+      "export": null,
+      "declarationSha256": "7ed2e19523285df9a08315baf9942d3eb7096d1d83737f6697693dc2de641cf1",
+      "pinned": true
+    },
+    {
+      "file": "c227f4d5e-DGDdGBTz.js",
+      "local": "$z",
+      "name": "EffortSliderOverlayUnlit",
+      "export": null,
+      "declarationSha256": "d5e8c86e8de9421100d51fccc57ce0a6d452b92fe20894f10d893773b9182076",
+      "pinned": true
+    }
+  ],
+  "removedRoots": [],
+  "adapters": [
+    {
+      "original": "vendor-frame-BckkO60Y.js#ce",
+      "name": "hostJsxRuntime",
+      "hostAdapter": "src/cds-core-adapter.mjs",
+      "declarationSha256": "461f5f38a003bd6487ff4524212ad7350e68a8bb2415717fcb2ef533be66e9c8",
+      "pinned": true
+    }
+  ],
+  "linkedCopies": {},
+  "imports": [
+    {
+      "module": "shared-frame.mjs",
+      "local": "J2",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "J2",
+      "via": "shared-frame-CJdE5Ria.js#J2"
+    },
+    {
+      "module": "shared-frame.mjs",
+      "local": "J9",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "J9",
+      "via": "shared-frame-CJdE5Ria.js#J9"
+    },
+    {
+      "module": "shared-frame.mjs",
+      "local": "K2",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "K2",
+      "via": "shared-frame-CJdE5Ria.js#K2"
+    },
+    {
+      "module": "shared-frame.mjs",
+      "local": "Y",
+      "kind": "react",
+      "from": "react",
+      "name": "useEffect",
+      "via": "vendor-frame-BckkO60Y.js:go"
+    },
+    {
+      "module": "vendor-frame.mjs",
+      "local": "Aa",
+      "kind": "linked",
+      "from": "../cowork-scheduled-v4/vendor-frame-BckkO60Y.mjs",
+      "name": "Aa",
+      "via": "vendor-frame-BckkO60Y.js#Aa"
+    },
+    {
+      "module": "vendor-frame.mjs",
+      "local": "Cn",
+      "kind": "shared-graph",
+      "from": "../cds-core/vendor-frame.mjs",
+      "name": "Cn",
+      "via": "vendor-frame-BckkO60Y.js#Cn"
+    },
+    {
+      "module": "vendor-frame.mjs",
+      "local": "Ia",
+      "kind": "shared-graph",
+      "from": "../cds-core/vendor-frame.mjs",
+      "name": "Ia",
+      "via": "vendor-frame-BckkO60Y.js#Ia"
+    },
+    {
+      "module": "vendor-frame.mjs",
+      "local": "Q",
+      "kind": "linked",
+      "from": "../cowork-scheduled-v4/vendor-frame-BckkO60Y.mjs",
+      "name": "Q",
+      "via": "vendor-frame-BckkO60Y.js#Q"
+    },
+    {
+      "module": "vendor-frame.mjs",
+      "local": "Y",
+      "kind": "linked",
+      "from": "../cowork-scheduled-v4/vendor-frame-BckkO60Y.mjs",
+      "name": "Y",
+      "via": "vendor-frame-BckkO60Y.js#Y"
+    },
+    {
+      "module": "vendor-frame.mjs",
+      "local": "Yn",
+      "kind": "shared-graph",
+      "from": "../cds-core/vendor-frame.mjs",
+      "name": "Yn",
+      "via": "vendor-frame-BckkO60Y.js#Yn"
+    },
+    {
+      "module": "vendor-frame.mjs",
+      "local": "ap",
+      "kind": "shared-graph",
+      "from": "../cds-core/vendor-frame.mjs",
+      "name": "ap",
+      "via": "vendor-frame-BckkO60Y.js#ap"
+    },
+    {
+      "module": "vendor-frame.mjs",
+      "local": "c",
+      "kind": "shared-graph",
+      "from": "../cds-core/vendor-frame.mjs",
+      "name": "c",
+      "via": "vendor-frame-BckkO60Y.js#c"
+    },
+    {
+      "module": "vendor-frame.mjs",
+      "local": "ce",
+      "kind": "adapter",
+      "from": "../../source-effort-control-v4-adapters.jsx",
+      "name": "hostJsxRuntime",
+      "via": "vendor-frame-BckkO60Y.js#ce"
+    },
+    {
+      "module": "vendor-frame.mjs",
+      "local": "on",
+      "kind": "linked",
+      "from": "../cowork-scheduled-v4/vendor-frame-BckkO60Y.mjs",
+      "name": "on",
+      "via": "vendor-frame-BckkO60Y.js#on"
+    },
+    {
+      "module": "vendor-frame.mjs",
+      "local": "pn",
+      "kind": "shared-graph",
+      "from": "../cds-core/vendor-frame.mjs",
+      "name": "pn",
+      "via": "vendor-frame-BckkO60Y.js#pn"
+    },
+    {
+      "module": "vendor-frame.mjs",
+      "local": "rn",
+      "kind": "shared-graph",
+      "from": "../cds-core/vendor-frame.mjs",
+      "name": "rn",
+      "via": "vendor-frame-BckkO60Y.js#rn"
+    },
+    {
+      "module": "vendor-frame.mjs",
+      "local": "wn",
+      "kind": "shared-graph",
+      "from": "../cds-core/vendor-frame.mjs",
+      "name": "mergeProps",
+      "via": "vendor-frame-BckkO60Y.js#wn"
+    },
+    {
+      "module": "vendor-frame.mjs",
+      "local": "yn",
+      "kind": "shared-graph",
+      "from": "../cds-core/vendor-frame.mjs",
+      "name": "yn",
+      "via": "vendor-frame-BckkO60Y.js#yn"
+    },
+    {
+      "module": "vendor-frame.mjs",
+      "local": "ys",
+      "kind": "shared-graph",
+      "from": "../cds-core/vendor-frame.mjs",
+      "name": "ys",
+      "via": "vendor-frame-BckkO60Y.js#ys"
+    },
+    {
+      "module": "slider-parts.mjs",
+      "local": "C",
+      "kind": "react",
+      "from": "react",
+      "name": "useMemo",
+      "via": "vendor-frame-BckkO60Y.js:So"
+    },
+    {
+      "module": "slider-parts.mjs",
+      "local": "D",
+      "kind": "linked",
+      "from": "../cowork-scheduled-v4/vendor-frame-BckkO60Y.mjs",
+      "name": "Y",
+      "via": "vendor-frame-BckkO60Y.js:_a"
+    },
+    {
+      "module": "slider-parts.mjs",
+      "local": "I",
+      "kind": "react",
+      "from": "react",
+      "name": "useRef",
+      "via": "vendor-frame-BckkO60Y.js:wo"
+    },
+    {
+      "module": "slider-parts.mjs",
+      "local": "L",
+      "kind": "linked",
+      "from": "../cowork-scheduled-v4/vendor-frame-BckkO60Y.mjs",
+      "name": "Q",
+      "via": "vendor-frame-BckkO60Y.js:xi"
+    },
+    {
+      "module": "slider-parts.mjs",
+      "local": "N",
+      "kind": "react",
+      "from": "react",
+      "name": "useContext",
+      "via": "vendor-frame-BckkO60Y.js:po"
+    },
+    {
+      "module": "slider-parts.mjs",
+      "local": "O",
+      "kind": "react",
+      "from": "react",
+      "name": "forwardRef",
+      "via": "vendor-frame-BckkO60Y.js:ao"
+    },
+    {
+      "module": "slider-parts.mjs",
+      "local": "Oe",
+      "kind": "shared-graph",
+      "from": "../cds-core/c69149ae7.mjs",
+      "name": "Oe",
+      "via": "c69149ae7-QcwBEzuN.js#Oe"
+    },
+    {
+      "module": "slider-parts.mjs",
+      "local": "R",
+      "kind": "linked",
+      "from": "../cowork-scheduled-v4/vendor-frame-BckkO60Y.mjs",
+      "name": "Yf",
+      "via": "vendor-frame-BckkO60Y.js:yn"
+    },
+    {
+      "module": "slider-parts.mjs",
+      "local": "T",
+      "kind": "react",
+      "from": "react",
+      "name": "useState",
+      "via": "vendor-frame-BckkO60Y.js:To"
+    },
+    {
+      "module": "slider-parts.mjs",
+      "local": "_",
+      "kind": "shared-graph",
+      "from": "../cds-core/vendor-frame.mjs",
+      "name": "Gm",
+      "via": "vendor-frame-BckkO60Y.js:Lt"
+    },
+    {
+      "module": "slider-parts.mjs",
+      "local": "_e",
+      "kind": "shared-graph",
+      "from": "../cds-core/vendor-frame.mjs",
+      "name": "useDirection",
+      "via": "vendor-frame-BckkO60Y.js:xa"
+    },
+    {
+      "module": "slider-parts.mjs",
+      "local": "ce",
+      "kind": "react",
+      "from": "react",
+      "name": "useEffect",
+      "via": "vendor-frame-BckkO60Y.js:go"
+    },
+    {
+      "module": "slider-parts.mjs",
+      "local": "d",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "jsx",
+      "via": "vendor-frame-BckkO60Y.js:Ga"
+    },
+    {
+      "module": "slider-parts.mjs",
+      "local": "o",
+      "kind": "linked",
+      "from": "../cowork-scheduled-v4/vendor-frame-BckkO60Y.mjs",
+      "name": "gh",
+      "via": "vendor-frame-BckkO60Y.js:Dt"
+    },
+    {
+      "module": "slider-parts.mjs",
+      "local": "r",
+      "kind": "linked",
+      "from": "../cowork-scheduled-v4/vendor-frame-BckkO60Y.mjs",
+      "name": "zm",
+      "via": "vendor-frame-BckkO60Y.js:Bt"
+    },
+    {
+      "module": "slider-parts.mjs",
+      "local": "v",
+      "kind": "shared-graph",
+      "from": "../cds-core/vendor-frame.mjs",
+      "name": "rn",
+      "via": "vendor-frame-BckkO60Y.js:Ma"
+    },
+    {
+      "module": "slider-parts.mjs",
+      "local": "ye",
+      "kind": "linked",
+      "from": "../cowork-scheduled-v4/vendor-frame-BckkO60Y.mjs",
+      "name": "Um",
+      "via": "vendor-frame-BckkO60Y.js:zt"
+    },
+    {
+      "module": "slider.mjs",
+      "local": "J0",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "J0",
+      "via": "shared-frame-CJdE5Ria.js:cm"
+    },
+    {
+      "module": "slider.mjs",
+      "local": "J1",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "J1",
+      "via": "shared-frame-CJdE5Ria.js:lm"
+    },
+    {
+      "module": "slider.mjs",
+      "local": "J2",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "J2",
+      "via": "shared-frame-CJdE5Ria.js:um"
+    },
+    {
+      "module": "slider.mjs",
+      "local": "J3",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "J3",
+      "via": "shared-frame-CJdE5Ria.js:dm"
+    },
+    {
+      "module": "slider.mjs",
+      "local": "J5",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "J5",
+      "via": "shared-frame-CJdE5Ria.js:pm"
+    },
+    {
+      "module": "slider.mjs",
+      "local": "J8",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "J8",
+      "via": "shared-frame-CJdE5Ria.js:mm"
+    },
+    {
+      "module": "slider.mjs",
+      "local": "J9",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "J9",
+      "via": "shared-frame-CJdE5Ria.js:hm"
+    },
+    {
+      "module": "slider.mjs",
+      "local": "K0",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "K0",
+      "via": "shared-frame-CJdE5Ria.js:gm"
+    },
+    {
+      "module": "slider.mjs",
+      "local": "K1",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "K1",
+      "via": "shared-frame-CJdE5Ria.js:_m"
+    },
+    {
+      "module": "slider.mjs",
+      "local": "K2",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "K2",
+      "via": "shared-frame-CJdE5Ria.js:vm"
+    },
+    {
+      "module": "slider.mjs",
+      "local": "K3",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "K3",
+      "via": "shared-frame-CJdE5Ria.js:ym"
+    },
+    {
+      "module": "slider.mjs",
+      "local": "K5",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "K5",
+      "via": "shared-frame-CJdE5Ria.js:xm"
+    },
+    {
+      "module": "slider.mjs",
+      "local": "ae",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "CdsDisabledReason",
+      "via": "shared-frame-CJdE5Ria.js:od"
+    },
+    {
+      "module": "slider.mjs",
+      "local": "c",
+      "kind": "linked",
+      "from": "../cowork-scheduled-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "Ca",
+      "via": "shared-frame-CJdE5Ria.js:Nf"
+    },
+    {
+      "module": "slider.mjs",
+      "local": "d",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "CdsTooltipProvider",
+      "via": "shared-frame-CJdE5Ria.js:ld"
+    },
+    {
+      "module": "slider.mjs",
+      "local": "de",
+      "kind": "shared-graph",
+      "from": "../cds-core/c69149ae7.mjs",
+      "name": "We",
+      "via": "c69149ae7-QcwBEzuN.js:t"
+    },
+    {
+      "module": "slider.mjs",
+      "local": "e",
+      "kind": "shared-graph",
+      "from": "../cds-core/vendor-frame.mjs",
+      "name": "clsx",
+      "via": "vendor-frame-BckkO60Y.js:Fa"
+    },
+    {
+      "module": "slider.mjs",
+      "local": "ee",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "useCdsIsoLayoutEffect",
+      "via": "shared-frame-CJdE5Ria.js:Op"
+    },
+    {
+      "module": "slider.mjs",
+      "local": "f",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "cdsClassNames",
+      "via": "shared-frame-CJdE5Ria.js:tm"
+    },
+    {
+      "module": "slider.mjs",
+      "local": "i",
+      "kind": "react",
+      "from": "react",
+      "name": "forwardRef",
+      "via": "vendor-frame-BckkO60Y.js:ao"
+    },
+    {
+      "module": "slider.mjs",
+      "local": "l",
+      "kind": "linked",
+      "from": "../cowork-scheduled-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "ow",
+      "via": "shared-frame-CJdE5Ria.js:Oc"
+    },
+    {
+      "module": "slider.mjs",
+      "local": "n",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "jsxs",
+      "via": "vendor-frame-BckkO60Y.js:Ka"
+    },
+    {
+      "module": "slider.mjs",
+      "local": "ne",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "ga",
+      "via": "shared-frame-CJdE5Ria.js:Zf"
+    },
+    {
+      "module": "slider.mjs",
+      "local": "o",
+      "kind": "react",
+      "from": "react",
+      "name": "useEffect",
+      "via": "vendor-frame-BckkO60Y.js:go"
+    },
+    {
+      "module": "slider.mjs",
+      "local": "oe",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "useCdsFieldDisabled",
+      "via": "shared-frame-CJdE5Ria.js:wc"
+    },
+    {
+      "module": "slider.mjs",
+      "local": "r",
+      "kind": "react",
+      "from": "react",
+      "name": "useState",
+      "via": "vendor-frame-BckkO60Y.js:To"
+    },
+    {
+      "module": "slider.mjs",
+      "local": "re",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "CdsTooltip",
+      "via": "shared-frame-CJdE5Ria.js:cd"
+    },
+    {
+      "module": "slider.mjs",
+      "local": "s",
+      "kind": "react",
+      "from": "react",
+      "name": "useRef",
+      "via": "vendor-frame-BckkO60Y.js:wo"
+    },
+    {
+      "module": "slider.mjs",
+      "local": "se",
+      "kind": "linked",
+      "from": "../code-composer-v4/chunk-shared-frame.mjs",
+      "name": "Bg",
+      "via": "shared-frame-CJdE5Ria.js:wu"
+    },
+    {
+      "module": "slider.mjs",
+      "local": "t",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "jsx",
+      "via": "vendor-frame-BckkO60Y.js:Ga"
+    },
+    {
+      "module": "slider.mjs",
+      "local": "te",
+      "kind": "linked",
+      "from": "../code-composer-v4/chat-composer-frame.mjs",
+      "name": "useOptionalEventCallback",
+      "via": "shared-frame-CJdE5Ria.js:Pp"
+    },
+    {
+      "module": "effort-control.mjs",
+      "local": "I1",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "I1",
+      "via": "shared-frame-CJdE5Ria.js:rm"
+    },
+    {
+      "module": "effort-control.mjs",
+      "local": "I3",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "I3",
+      "via": "shared-frame-CJdE5Ria.js:am"
+    },
+    {
+      "module": "effort-control.mjs",
+      "local": "I4",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "I4",
+      "via": "shared-frame-CJdE5Ria.js:om"
+    },
+    {
+      "module": "effort-control.mjs",
+      "local": "J0",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "J0",
+      "via": "shared-frame-CJdE5Ria.js:cm"
+    },
+    {
+      "module": "effort-control.mjs",
+      "local": "J1",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "J1",
+      "via": "shared-frame-CJdE5Ria.js:lm"
+    },
+    {
+      "module": "effort-control.mjs",
+      "local": "J2",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "J2",
+      "via": "shared-frame-CJdE5Ria.js:um"
+    },
+    {
+      "module": "effort-control.mjs",
+      "local": "J3",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "J3",
+      "via": "shared-frame-CJdE5Ria.js:dm"
+    },
+    {
+      "module": "effort-control.mjs",
+      "local": "J4",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "J4",
+      "via": "shared-frame-CJdE5Ria.js:fm"
+    },
+    {
+      "module": "effort-control.mjs",
+      "local": "J5",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "J5",
+      "via": "shared-frame-CJdE5Ria.js:pm"
+    },
+    {
+      "module": "effort-control.mjs",
+      "local": "J9",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "J9",
+      "via": "shared-frame-CJdE5Ria.js:hm"
+    },
+    {
+      "module": "effort-control.mjs",
+      "local": "K0",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "K0",
+      "via": "shared-frame-CJdE5Ria.js:gm"
+    },
+    {
+      "module": "effort-control.mjs",
+      "local": "K1",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "K1",
+      "via": "shared-frame-CJdE5Ria.js:_m"
+    },
+    {
+      "module": "effort-control.mjs",
+      "local": "K2",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "K2",
+      "via": "shared-frame-CJdE5Ria.js:vm"
+    },
+    {
+      "module": "effort-control.mjs",
+      "local": "K3",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "K3",
+      "via": "shared-frame-CJdE5Ria.js:ym"
+    },
+    {
+      "module": "effort-control.mjs",
+      "local": "K4",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "K4",
+      "via": "shared-frame-CJdE5Ria.js:bm"
+    },
+    {
+      "module": "effort-control.mjs",
+      "local": "K5",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "K5",
+      "via": "shared-frame-CJdE5Ria.js:xm"
+    },
+    {
+      "module": "effort-control.mjs",
+      "local": "Z1",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "Z1",
+      "via": "shared-frame-CJdE5Ria.js:Sm"
+    },
+    {
+      "module": "effort-control.mjs",
+      "local": "Z2",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "Z2",
+      "via": "shared-frame-CJdE5Ria.js:Cm"
+    },
+    {
+      "module": "effort-control.mjs",
+      "local": "Z3",
+      "kind": "linked",
+      "from": "../code-composer-v4/chunk-shared-frame.mjs",
+      "name": "Z3",
+      "via": "shared-frame-CJdE5Ria.js:wm"
+    },
+    {
+      "module": "effort-control.mjs",
+      "local": "a",
+      "kind": "react",
+      "from": "react",
+      "name": "useId",
+      "via": "vendor-frame-BckkO60Y.js:vo"
+    },
+    {
+      "module": "effort-control.mjs",
+      "local": "ae",
+      "kind": "linked",
+      "from": "../code-composer-v4/chat-composer-presence.mjs",
+      "name": "presenceMotion",
+      "via": "shared-5-u8kha2eH.js:Um"
+    },
+    {
+      "module": "effort-control.mjs",
+      "local": "c",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "useIsMacPlatform",
+      "via": "shared-frame-CJdE5Ria.js:cf"
+    },
+    {
+      "module": "effort-control.mjs",
+      "local": "e",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "jsx",
+      "via": "vendor-frame-BckkO60Y.js:Ga"
+    },
+    {
+      "module": "effort-control.mjs",
+      "local": "ee",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "CdsButton",
+      "via": "shared-frame-CJdE5Ria.js:Id"
+    },
+    {
+      "module": "effort-control.mjs",
+      "local": "f",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "ui",
+      "via": "shared-frame-CJdE5Ria.js:pp"
+    },
+    {
+      "module": "effort-control.mjs",
+      "local": "g",
+      "kind": "linked",
+      "from": "../cowork-scheduled-v4/shared-7-D2e77H6v.mjs",
+      "name": "yI",
+      "via": "shared-7-D2e77H6v.js:x"
+    },
+    {
+      "module": "effort-control.mjs",
+      "local": "h",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-183.mjs",
+      "name": "CdsPreviewCard",
+      "via": "shared-183-B2N6Zy4J.js:Ka"
+    },
+    {
+      "module": "effort-control.mjs",
+      "local": "i",
+      "kind": "react",
+      "from": "react",
+      "name": "useContext",
+      "via": "vendor-frame-BckkO60Y.js:po"
+    },
+    {
+      "module": "effort-control.mjs",
+      "local": "ie",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "CdsSwitch",
+      "via": "shared-frame-CJdE5Ria.js:oa"
+    },
+    {
+      "module": "effort-control.mjs",
+      "local": "l",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "useCdsLabel",
+      "via": "shared-frame-CJdE5Ria.js:hp"
+    },
+    {
+      "module": "effort-control.mjs",
+      "local": "m",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "cdsClassNames",
+      "via": "shared-frame-CJdE5Ria.js:tm"
+    },
+    {
+      "module": "effort-control.mjs",
+      "local": "n",
+      "kind": "react",
+      "from": "react",
+      "name": "useState",
+      "via": "vendor-frame-BckkO60Y.js:To"
+    },
+    {
+      "module": "effort-control.mjs",
+      "local": "ne",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "useCdsPrefersReducedMotion",
+      "via": "shared-frame-CJdE5Ria.js:Tu"
+    },
+    {
+      "module": "effort-control.mjs",
+      "local": "o",
+      "kind": "react",
+      "from": "react",
+      "name": "useRef",
+      "via": "vendor-frame-BckkO60Y.js:wo"
+    },
+    {
+      "module": "effort-control.mjs",
+      "local": "oe",
+      "kind": "linked",
+      "from": "../cowork-scheduled-v4/shared-7-D2e77H6v.mjs",
+      "name": "UF",
+      "via": "shared-7-D2e77H6v.js:C"
+    },
+    {
+      "module": "effort-control.mjs",
+      "local": "p",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "ariaKeyShortcuts",
+      "via": "shared-frame-CJdE5Ria.js:sf"
+    },
+    {
+      "module": "effort-control.mjs",
+      "local": "r",
+      "kind": "react",
+      "from": "react",
+      "name": "useEffect",
+      "via": "vendor-frame-BckkO60Y.js:go"
+    },
+    {
+      "module": "effort-control.mjs",
+      "local": "re",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "CdsTooltip",
+      "via": "shared-frame-CJdE5Ria.js:cd"
+    },
+    {
+      "module": "effort-control.mjs",
+      "local": "s",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "CdsPopover",
+      "via": "shared-frame-CJdE5Ria.js:Ua"
+    },
+    {
+      "module": "effort-control.mjs",
+      "local": "t",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "jsxs",
+      "via": "vendor-frame-BckkO60Y.js:Ka"
+    },
+    {
+      "module": "effort-control.mjs",
+      "local": "te",
+      "kind": "linked",
+      "from": "../cowork-scheduled-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "Om",
+      "via": "shared-frame-CJdE5Ria.js:Qu"
+    },
+    {
+      "module": "effort-control.mjs",
+      "local": "u",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "CdsIcon",
+      "via": "shared-frame-CJdE5Ria.js:lf"
+    },
+    {
+      "module": "lit-overlay.mjs",
+      "local": "A",
+      "kind": "react",
+      "from": "react",
+      "name": "memo",
+      "via": "vendor-frame-BckkO60Y.js:co"
+    },
+    {
+      "module": "lit-overlay.mjs",
+      "local": "B",
+      "kind": "react",
+      "from": "react",
+      "name": "useRef",
+      "via": "vendor-frame-BckkO60Y.js:wo"
+    },
+    {
+      "module": "lit-overlay.mjs",
+      "local": "H",
+      "kind": "react",
+      "from": "react",
+      "name": "useLayoutEffect",
+      "via": "vendor-frame-BckkO60Y.js:xo"
+    },
+    {
+      "module": "lit-overlay.mjs",
+      "local": "I1",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "I1",
+      "via": "shared-frame-CJdE5Ria.js:rm"
+    },
+    {
+      "module": "lit-overlay.mjs",
+      "local": "J0",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "J0",
+      "via": "shared-frame-CJdE5Ria.js:cm"
+    },
+    {
+      "module": "lit-overlay.mjs",
+      "local": "J1",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "J1",
+      "via": "shared-frame-CJdE5Ria.js:lm"
+    },
+    {
+      "module": "lit-overlay.mjs",
+      "local": "J2",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "J2",
+      "via": "shared-frame-CJdE5Ria.js:um"
+    },
+    {
+      "module": "lit-overlay.mjs",
+      "local": "J3",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "J3",
+      "via": "shared-frame-CJdE5Ria.js:dm"
+    },
+    {
+      "module": "lit-overlay.mjs",
+      "local": "J9",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "J9",
+      "via": "shared-frame-CJdE5Ria.js:hm"
+    },
+    {
+      "module": "lit-overlay.mjs",
+      "local": "K0",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "K0",
+      "via": "shared-frame-CJdE5Ria.js:gm"
+    },
+    {
+      "module": "lit-overlay.mjs",
+      "local": "K1",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "K1",
+      "via": "shared-frame-CJdE5Ria.js:_m"
+    },
+    {
+      "module": "lit-overlay.mjs",
+      "local": "K2",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "K2",
+      "via": "shared-frame-CJdE5Ria.js:vm"
+    },
+    {
+      "module": "lit-overlay.mjs",
+      "local": "K3",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "K3",
+      "via": "shared-frame-CJdE5Ria.js:ym"
+    },
+    {
+      "module": "lit-overlay.mjs",
+      "local": "K4",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "K4",
+      "via": "shared-frame-CJdE5Ria.js:bm"
+    },
+    {
+      "module": "lit-overlay.mjs",
+      "local": "N",
+      "kind": "react",
+      "from": "react",
+      "name": "useEffect",
+      "via": "vendor-frame-BckkO60Y.js:go"
+    },
+    {
+      "module": "lit-overlay.mjs",
+      "local": "O",
+      "kind": "react",
+      "from": "react",
+      "name": "useEffectEvent",
+      "via": "vendor-frame-BckkO60Y.js:_o"
+    },
+    {
+      "module": "lit-overlay.mjs",
+      "local": "S",
+      "kind": "react",
+      "from": "react",
+      "name": "useState",
+      "via": "vendor-frame-BckkO60Y.js:To"
+    },
+    {
+      "module": "lit-overlay.mjs",
+      "local": "T",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "Fragment",
+      "via": "vendor-frame-BckkO60Y.js:Wa"
+    },
+    {
+      "module": "lit-overlay.mjs",
+      "local": "W",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "useCdsMode",
+      "via": "shared-frame-CJdE5Ria.js:Bf"
+    },
+    {
+      "module": "lit-overlay.mjs",
+      "local": "Z1",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "Z1",
+      "via": "shared-frame-CJdE5Ria.js:Sm"
+    },
+    {
+      "module": "lit-overlay.mjs",
+      "local": "_",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "jsxs",
+      "via": "vendor-frame-BckkO60Y.js:Ka"
+    },
+    {
+      "module": "lit-overlay.mjs",
+      "local": "_n",
+      "kind": "linked",
+      "from": "../cowork-scheduled-v4/shared-25-D-aF0gt9.mjs",
+      "name": "vd",
+      "via": "shared-25-D-aF0gt9.js:Wp"
+    },
+    {
+      "module": "lit-overlay.mjs",
+      "local": "le",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "useCdsPrefersReducedMotion",
+      "via": "shared-frame-CJdE5Ria.js:Tu"
+    },
+    {
+      "module": "lit-overlay.mjs",
+      "local": "p",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "jsx",
+      "via": "vendor-frame-BckkO60Y.js:Ga"
+    },
+    {
+      "module": "lit-overlay.mjs",
+      "local": "ut",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-0.mjs",
+      "name": "useEventCallback",
+      "via": "shared-0-CnnWnVrT.js:PT"
+    }
+  ]
+}

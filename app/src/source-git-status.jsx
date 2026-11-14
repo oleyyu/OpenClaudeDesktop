@@ -1,5 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import { CdsButton, CdsIcon, CdsPopover } from "./generated/view-tabs/index.js"; // shared-frame Uu / us / bk
+// host-wiring fix-code-a: kept on the 3.6556.2 graph. GhHint is the host stand-in for c219730b0 ii / ai and is only
+// rendered as the prStatusHint value inside generated session-rail-changes pr-rows (3.6556.2), beside its Buttons in
+// epitaxy-branch-trailing; it moves to cds-core together with that surface's 4.16336.0 migration.
 import { prStatusHintText, GH_INSTALL_URL, GH_AUTH_LOGIN } from "./git-rail-model.mjs";
 import { t } from "../electron/i18n/index.mjs";
 

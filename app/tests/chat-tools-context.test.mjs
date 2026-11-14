@@ -314,6 +314,15 @@ test('Add to project: Es’s literals (generated), the local projects as its row
     'e===a?t?await i([t],{showSuccess:!1}):n(void 0):t&&a?await r([t],a,o,{enableNavigation:!0}):n(a)}):$[5]}function Ps('])
     assert.equal(add.split(pin).length - 1, 1, pin);
   assert.ok(rawChunk('shared-8-Db1QN4mf.js').includes('typeof e=="string"&&e.startsWith("/project/")'), 'EP hides it on a project page (wP)');
+  // regions-chat: chat-composer-menus reads 4.16336.0 — ks → wc (no onOpenChange), As → Tc, Ms → Ec (maxVisibleItems Zn =
+  // shared-212 _W 8.5), Ns → Dc (its move / remove callback now has a second copy, Is, elsewhere in the chunk).
+  const add4 = fs.readFileSync(path.resolve(app, '../reference/snapshots/claude-4.16336.0-20261104/ion-dist/assets/v1/c752b32f8-NSBu06gO.js'), 'utf8');
+  for (const pin of ['t?{type:"submenu",icon:"Projects",label:o,renderPopup:Tc}:null', 'function Tc(e){return n(Ec,{popup:e})}',
+    't({search:n,items:r,leadingRows:i,rows:a,maxVisibleItems:Zn})', 'icon:"Projects",checked:e.project.uuid===t,closeOnClick:!0',
+    'e===a?t?await i([t],{showSuccess:!1}):n(void 0):t&&a?await r([t],a,o,{enableNavigation:!0}):n(a)}):$[5]}function Oc('])
+    assert.equal(add4.split(pin).length - 1, 1, pin);
+  assert.ok(fs.readFileSync(path.resolve(app, '../reference/snapshots/claude-4.16336.0-20261104/ion-dist/assets/v1/shared-8-BqfCbkJd.js'), 'utf8')
+    .includes('typeof e=="string"&&e.startsWith("/project/")'));
   const { chatAddMenu, chatAddMenuMessages } = await import('../src/generated/chat-composer-menus/add-menu.mjs');
   assert.deepEqual(chatAddMenu.items.project, { type: 'submenu', icon: 'Projects', maxVisibleItems: 8.5 });
   assert.deepEqual(chatAddMenu.items.projectRow, { type: 'checkbox', icon: 'Projects', closeOnClick: true });

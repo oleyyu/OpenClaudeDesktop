@@ -152,6 +152,14 @@ export function themeCss(value) {
     // Page text selection follows the accent (the same 30% tint as the theme preview). :where() keeps it at
     // (0,0,1) so ProseMirror-hideselection and transparent-selection rules still win.
     rules.push(`:where(${SCOPE}) ::selection{background-color:color-mix(in srgb, ${theme.accent} 30%, transparent);}`);
+    // Accent hover follows the custom accent under html[data-cds-fizzy-lake~=color] too. The 4.16336.0 color part
+    // (c6a992d55-_JRfOmTh.css .cds-root:is([data-cds-fizzy-lake~=color],…):not(:where([data-cds-theme],…)) and its
+    // dark / system / .cds-dark-scope variants) hard-codes --cds-fill-accent-hover:#2171ca, up to (0,5,0) on every
+    // .cds-root / .cds-dark-scope; the value restored is the official non-fizzy one, .cds-root
+    // --cds-fill-accent-hover:var(--cds-role-accent-fill-hover) (also [data-window-active=false] [data-cds]). The same
+    // [data-cds-theme] exclusion as :not() (0,1,0)×2 makes these (0,5,1).
+    const hover = ':is(.cds-root,.cds-dark-scope):not([data-cds-theme]):not([data-cds-theme] *)';
+    rules.push(`html${SCOPE}${hover},html${SCOPE} ${hover}{--cds-fill-accent-hover:var(--cds-role-accent-fill-hover);}`);
   }
   if (theme.radiusScale !== 1) {
     const scaled = (base, unit) => Object.fromEntries(Object.entries(base).map(([prop, value]) => [prop, unit(value * theme.radiusScale)]));

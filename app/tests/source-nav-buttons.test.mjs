@@ -1,136 +1,166 @@
 import test, { before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import React from 'react';
+import React, { act } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
+import { createRoot } from 'react-dom/client';
 import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'node:path';
 import fs from 'node:fs';
+import { withPreviewDom, reactProps } from './fixtures/preview-r3b-dom.mjs';
 
-// SSR of the Back/Forward cluster (2.2553.1 sidebar-session.js:10732-10800 qM) and its
-// collapsed placement (3.6556.2 shared-21 CI df-collapsed-chrome/df-collapsed-nav, the aside's pill).
-let server, N, T;
+// surfaces wave 2 (titlebar): Back / Forward are the sliced 4.16336.0 shared-20 hv (memo(mv) → uv) and shared-21 _O
+// (generated/titlebar, scripts/extract-titlebar-v4.mjs); they read the official history store (shared-1 jm over
+// BrowserNavigation.navigationStateStore), which src/titlebar-host.jsx answers from main.jsx's history.
+const app = path.resolve(import.meta.dirname, '..');
+const v4 = path.resolve(app, '../reference/snapshots/claude-4.16336.0-20261104/ion-dist/assets/v1');
+let server, N, T, H;
 before(async () => {
-  server = await createServer({ configFile: false, root: path.resolve(import.meta.dirname, '..'), plugins: [react()],
-    server: { middlewareMode: true, hmr: false, watch: null }, appType: 'custom', logLevel: 'error' });
+  server = await createServer({ configFile: false, root: app, plugins: [react()],
+    server: { middlewareMode: true, hmr: false, ws: false, watch: null }, appType: 'custom', logLevel: 'error' });
+  (await server.ssrLoadModule('/electron/i18n/index.mjs')).setLocale('en-US');
   N = await server.ssrLoadModule('/src/source-nav-buttons.jsx');
   T = await server.ssrLoadModule('/src/source-titlebar.jsx');
+  H = await server.ssrLoadModule('/src/titlebar-host.jsx');
 });
 after(() => server?.close());
-const render = (Component, props) => renderToStaticMarkup(React.createElement(Component, props));
+const h = React.createElement;
+const render = (Component, props) => renderToStaticMarkup(h(Component, props));
 const buttons = html => html.split('<button').slice(1).map(chunk => chunk.slice(0, chunk.indexOf('>')));
+const generated = name => fs.readFileSync(path.join(app, 'src/generated/titlebar', name), 'utf8');
 
-test('navAvailability mirrors travel() bounds', () => {
+test('navAvailability is the host store state: travel() bounds', () => {
+  assert.equal(N.navAvailability, H.hostNavigationState);
   assert.deepEqual(N.navAvailability(0, 1), { canGoBack: false, canGoForward: false });
   assert.deepEqual(N.navAvailability(0, 2), { canGoBack: false, canGoForward: true });
   assert.deepEqual(N.navAvailability(1, 2), { canGoBack: true, canGoForward: false });
   assert.deepEqual(N.navAvailability(1, 3), { canGoBack: true, canGoForward: true });
 });
 
-// W12 frame: 3.6556.2 shared-20 Cm (shared-21 xI `u(w_,{buttonClassName:"df-chrome-btn",placement:"sidebar",size:a,…})`)
-// draws two ghost icon-only CDS Buttons; the host ToolButton (24px code-icon-button) is gone.
-test('Cm: ghost icon-only CdsButtons with df-chrome-btn + Sm, aria-disabled instead of disabled, sidebar wrapper', () => {
-  const html = render(N.SourceNavButtons, { placement: 'sidebar', historyAt: 0, historyLength: 1 });
+test('the slice is the official text: uv CaretLeft / CaretRight, ov, the wrappers; mv over jm; _O over td', () => {
+  const nav = generated('history-nav.mjs');
+  for (const needle of ['icon: "CaretLeft"', 'icon: "CaretRight"', 'var ov = "aria-disabled:pointer-events-none aria-disabled:*:opacity-50";',
+    '? "flex items-center draggable-none"', ': "flex items-center gap-0.5 draggable-none"', '_ = g ? "cmd+[" : "alt+left"', 'v = g ? "cmd+]" : "alt+right"',
+    'n = Zn(),', 'onGoBack: dv,', 'onGoForward: fv,', 'wt?.goBack?.();', 'wt?.goForward?.();', 'var hv = f(mv);', 'export { hv as HistoryNavButtons, Bg };'])
+    assert.ok(nav.includes(needle), needle);
+  assert.doesNotMatch(nav, /ArrowLeft"|ArrowRight"/);
+  assert.match(nav, /import \{ CdsIcon as G, CdsButton as k \} from "\.\.\/cds-core\/shared-frame\.mjs";/);
+  assert.match(nav, /BrowserNavigation as wt,/);
+  const state = generated('navigation-state.mjs');
+  assert.match(state, /import \{ BrowserNavigationState as Am \} from "\.\.\/\.\.\/titlebar-adapter\.mjs";/);
+  assert.ok(state.includes('return Am?.navigationStateStore ? { state: "loading" } : { state: "missing" };'));
+  const sidebar = generated('sidebar-history-nav.mjs');
+  for (const needle of ['(ju(e, "nav-back", n), ju(t, "nav-forward", n));', 'let r = rO(N()) ? "sm" : void 0;', 'buttonClassName: "df-chrome-btn",', 'placement: "sidebar",'])
+    assert.ok(sidebar.includes(needle), needle);
+  // D1: the focus registry tj writes is frame-sidebar's one copy (linked), not a second one.
+  assert.match(sidebar, /import \{ tj as ju \} from "\.\.\/frame-sidebar\/shared-19\.mjs";/);
+  assert.doesNotMatch(Object.values(Object.fromEntries(fs.readdirSync(path.join(app, 'src/generated/titlebar')).filter(n => n.endsWith('.mjs')).map(n => [n, generated(n)]))).join('\n'), /new Map\(\)/);
+  // The official declarations themselves (only parsed).
+  const s20 = fs.readFileSync(path.join(v4, 'shared-20-DUEo90UF.js'), 'utf8');
+  for (const needle of ['icon:"CaretLeft"', 'icon:"CaretRight"', 'ov="aria-disabled:pointer-events-none aria-disabled:*:opacity-50"', 'hv=f(mv)', 'hv as xc'])
+    assert.ok(s20.includes(needle), needle);
+  const s21 = fs.readFileSync(path.join(v4, 'shared-21-CuohtEoj.js'), 'utf8');
+  assert.ok(s21.includes('buttonClassName:"df-chrome-btn",placement:"sidebar",size:r,backRef:e,forwardRef:t'));
+  const s1 = fs.readFileSync(path.join(v4, 'shared-1-D1bGaTaN.js'), 'utf8');
+  assert.ok(s1.includes('Am=globalThis[`claude.web`]?.BrowserNavigation') || s1.includes('Am=globalThis["claude.web"]?.BrowserNavigation'));
+});
+
+test('SSR: two ghost icon-only cds-core Buttons with df-chrome-btn + ov, aria-disabled until the store answers; wrappers by placement', () => {
+  const html = render(N.SourceNavButtons, { placement: 'sidebar' });
   assert.match(html, /^<div class="flex items-center draggable-none"><button/);
-  assert.doesNotMatch(html, /source-nav-buttons|code-icon-button|data-placement/);
   const [back, forward] = buttons(html);
   for (const button of [back, forward]) {
     assert.match(button, /data-cds="Button" data-cds-icon-only="" data-cds-ghost=""/);
-    // xI size: the fizzy-lake "panels" gate is closed, so no size (h-control default) — no data-size attribute.
     assert.doesNotMatch(button, /data-size=/);
     assert.match(button, / df-chrome-btn aria-disabled:pointer-events-none aria-disabled:\*:opacity-50"/);
+    // jm's first state is "loading" (useState(Mm)); the getState promise lands in an effect, which SSR never runs.
     assert.match(button, /aria-disabled="true"/);
-    assert.doesNotMatch(button, /\sdisabled(=|\s|$)/);
-    assert.doesNotMatch(button, /title=/);
+    assert.doesNotMatch(button, /\sdisabled(=|\s|$)|title=/);
   }
-  // No window in node: isMacUserAgent() is false (as Qr() is on the server), so Cm's non-mac alt+left / alt+right.
-  assert.match(back, /aria-label="Back"/); assert.match(back, /aria-keyshortcuts="Alt\+ArrowLeft"/);
-  assert.match(forward, /aria-label="Forward"/); assert.match(forward, /aria-keyshortcuts="Alt\+ArrowRight"/);
-  const middle = buttons(render(N.SourceNavButtons, { placement: 'sidebar', historyAt: 1, historyLength: 3 }));
-  for (const button of middle) assert.doesNotMatch(button, /aria-disabled="true"/);
+  // uv's va() is shared-62 Qa (ni($a, !1)): the server snapshot is false, so SSR names the non-mac keys.
+  assert.match(back, /aria-label="Back" aria-keyshortcuts="Alt\+ArrowLeft"/);
+  assert.match(forward, /aria-label="Forward" aria-keyshortcuts="Alt\+ArrowRight"/);
   assert.match(render(N.SourceNavButtons, { placement: 'project_window' }), /^<div class="flex items-center gap-0\.5 draggable-none">/);
-  assert.deepEqual(N.NAV_TOOLTIPS, {
-    back: { content: 'Back', shortcut: 'cmd+[', side: 'bottom', hoverable: false },
-    forward: { content: 'Forward', shortcut: 'cmd+]', side: 'bottom', hoverable: false },
-  });
-  // Official text (only parsed): Cm's wrapper / Sm / Button props, and xI's call.
-  const v1 = path.resolve(import.meta.dirname, '../../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1');
-  const cm = fs.readFileSync(path.join(v1, 'shared-20-mUr7IqZY.js'), 'utf8');
-  for (const needle of ['"aria-disabled:pointer-events-none aria-disabled:*:opacity-50"',
-    '"sidebar"?"flex items-center draggable-none":"flex items-center gap-0.5 draggable-none"',
-    'variant:"ghost",iconOnly:!0,icon:f?"CaretLeft":"ArrowLeft",className:x,tooltipSide:"bottom",shortcut:g'])
-    assert.ok(cm.includes(needle), needle);
-  const s21 = fs.readFileSync(path.join(v1, 'shared-21-R7LldJ05.js'), 'utf8');
-  assert.ok(s21.includes('buttonClassName:"df-chrome-btn",placement:"sidebar",size:a'));
-  // The utilities are in the loaded sheet.
-  const sheet = fs.readFileSync(path.join(v1, 'c6a992d55-Che1orl5.css'), 'utf8');
-  for (const rule of ['.aria-disabled\\:pointer-events-none[aria-disabled=true]{pointer-events:none}', '.aria-disabled\\:\\*\\:opacity-50[aria-disabled=true]>*{opacity:.5}'])
-    assert.ok(sheet.includes(rule), rule);
-  assert.doesNotMatch(fs.readFileSync(path.resolve(import.meta.dirname, '../src/source-nav-buttons.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, ''), /\S/);
+  assert.match(render(N.SourceNavButtons, { placement: 'sidebar', buttonClassName: '' }), /draggable-none"><button[^>]* aria-disabled:pointer-events-none aria-disabled:\*:opacity-50"/);
 });
 
-// W12 frame-settings-cont: Cm `h=Qr(),g=h?"cmd+[":"alt+left",_=h?"cmd+]":"alt+right"` (Qr = shared-78 Do, the To
-// user-agent test); the host branches on view-tabs isMacUserAgent (shared-78 Eo, the same To regex).
-test('Cm platform branch: cmd+[ / cmd+] on a Mac user agent, alt+left / alt+right elsewhere', () => {
-  assert.deepEqual(N.navShortcuts(true), { back: 'cmd+[', forward: 'cmd+]' });
-  assert.deepEqual(N.navShortcuts(false), { back: 'alt+left', forward: 'alt+right' });
-  const keys = () => [...render(N.SourceNavButtons, { placement: 'sidebar', historyAt: 1, historyLength: 3 })
-    .matchAll(/aria-keyshortcuts="([^"]+)"/g)].map(match => match[1]);
-  const had = Object.getOwnPropertyDescriptor(globalThis, 'window');
-  const as = userAgent => { Object.defineProperty(globalThis, 'window', { value: { navigator: { userAgent } }, configurable: true, writable: true }); };
-  try {
-    as('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Claude/3.6556.2');
-    assert.equal(N.navShortcuts().back, 'cmd+[');
-    // The CDS Button resolves "cmd" with its own (hydration-time) platform read, so SSR spells it Control.
-    assert.match(keys().join(' '), /^(Meta|Control)\+\[ (Meta|Control)\+\]$/);
-    for (const ua of ['Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36']) {
-      as(ua);
-      assert.deepEqual(N.navShortcuts(), { back: 'alt+left', forward: 'alt+right' });
-      assert.deepEqual(keys(), ['Alt+ArrowLeft', 'Alt+ArrowRight']);
+test('mounted: the store follows main.jsx history; Back / Forward call travel(); a mac user agent names cmd+[ / cmd+]; only the primary side publishes', async () => {
+  await withPreviewDom(async (dom) => {
+    Object.assign(dom.window, { setTimeout, clearTimeout, navigator: { userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Claude/4.16336.0' } });
+    const host = dom.document.body.appendChild(dom.document.createElement('div'));
+    const root = createRoot(host);
+    const travels = [];
+    const travel = (delta) => travels.push(delta);
+    const button = (label) => host.find((node) => node.localName === 'button' && node.getAttribute('aria-label') === label);
+    function App({ at, length, primary = true }) {
+      H.useHostNavigation(at, length, travel, primary);
+      return h(N.SourceNavButtons, { placement: 'sidebar' });
     }
-  } finally {
-    if (had) Object.defineProperty(globalThis, 'window', had); else delete globalThis.window;
-  }
-  const v1 = path.resolve(import.meta.dirname, '../../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1');
-  const cm = fs.readFileSync(path.join(v1, 'shared-20-mUr7IqZY.js'), 'utf8');
-  assert.ok(cm.includes('h=Qr(),g=h?"cmd+[":"alt+left",_=h?"cmd+]":"alt+right"'));
-  assert.match(cm, /import\{[^}]*\bSE as Qr\b[^}]*\}from"\.\/shared-78-D5Fw2h0a\.js"/);
-  const s78 = fs.readFileSync(path.join(v1, 'shared-78-D5Fw2h0a.js'), 'utf8');
-  for (const needle of ['Do as SE', 'function Do(){return Oe(Oo,!1)}function Oo(){return To.test(window.navigator.userAgent)}', 'To=/(macintosh|macintel|macppc|mac68k|macos)/i'])
-    assert.ok(s78.includes(needle), needle);
+    const settle = async () => { await act(async () => { await Promise.resolve(); await Promise.resolve(); }); };
+    try {
+      await act(async () => root.render(h(App, { at: 0, length: 1 })));
+      await settle();
+      assert.equal(button('Back').getAttribute('aria-disabled'), 'true');
+      assert.equal(button('Forward').getAttribute('aria-disabled'), 'true');
+      act(() => reactProps(button('Back')).onClick?.({ preventDefault() {}, stopPropagation() {} }));
+      assert.deepEqual(travels, [], 'uv: `onClick: t ? y : void 0` — an unavailable direction does nothing');
+      await act(async () => root.render(h(App, { at: 1, length: 2 })));
+      await settle();
+      assert.equal(button('Back').getAttribute('aria-disabled'), null);
+      assert.equal(button('Forward').getAttribute('aria-disabled'), 'true');
+      act(() => reactProps(button('Back')).onClick({}));
+      assert.deepEqual(travels, [-1], 'dv → BrowserNavigation.goBack → travel(-1)');
+      await act(async () => root.render(h(App, { at: 0, length: 2 })));
+      await settle();
+      act(() => reactProps(button('Forward')).onClick({}));
+      assert.deepEqual(travels, [-1, 1], 'fv → goForward → travel(1)');
+      // va() (Qa) read the mac user agent, so uv passes cmd+[ / cmd+] (the CDS Button spells "cmd" from its own platform
+      // read, which the fake DOM's navigator does not name: Meta or Control); never Alt+Arrow here.
+      assert.match(button('Back').getAttribute('aria-keyshortcuts'), /^(Meta|Control)\+\[$/);
+      assert.match(button('Forward').getAttribute('aria-keyshortcuts'), /^(Meta|Control)\+\]$/);
+      // A split view's secondary App does not move the window's store.
+      await act(async () => root.render(h(App, { at: 3, length: 4, primary: false })));
+      await settle();
+      assert.equal(button('Back').getAttribute('aria-disabled'), 'true');
+      assert.equal(button('Forward').getAttribute('aria-disabled'), null);
+      // The host keeps no page list: the state has no listsPages (pv(false, …) gives no press-and-hold props and never
+      // loads the lazy HistoryPagesMenu), and historyPages / goToHistoryPage are absent.
+      assert.equal('listsPages' in await H.hostBrowserNavigation.navigationStateStore.getState(), false);
+      assert.equal(H.hostBrowserNavigation.historyPages, undefined);
+      assert.equal(H.hostBrowserNavigation.goToHistoryPage, undefined);
+    } finally {
+      act(() => root.unmount());
+      H.publishHostNavigation({ historyAt: 0, historyLength: 1, travel: null });
+    }
+  });
 });
 
-// w11-frame-root-cont: 3.6556.2 shared-21 CI (shared-22 GI `l ? I ? null : o(Sy, …)`) is the aside's collapsed pill, so
-// the session titlebar no longer renders it (it carries cc43287c9 Vh's data-top-left clearance target instead).
-test('CI: SourceCollapsedChrome renders the compact trigger then df-collapsed-nav with Back/Forward; the titlebar renders neither', () => {
-  const chrome = render(T.SourceCollapsedChrome, { historyAt: 1, historyLength: 2 });
+// 4.16336.0 shared-21 yO (the aside's collapsed pill): `l(fO, {onPointerEnter})` then, withNavButtons,
+// `div.df-collapsed-nav.draggable-none.relative.flex.items-center` around `l(_O, {})`.
+test('yO: SourceCollapsedChrome renders the compact trigger then df-collapsed-nav with the sliced _O; the titlebar renders neither', () => {
+  const chrome = render(T.SourceCollapsedChrome, {});
   assert.ok(chrome.startsWith('<div class="df-collapsed-chrome flex items-center">'), chrome.slice(0, 120));
   const labels = [...chrome.matchAll(/<button[^>]*aria-label="([^"]+)"/g)].map(match => match[1]).slice(0, 3);
   assert.deepEqual(labels, ['Show sidebar', 'Back', 'Forward']);
   const [trigger] = buttons(chrome);
-  // W12 frame — gI: CdsTooltip around a ghost icon-only CdsButton, size "lg" (compact aside; the 28px --df-pill-size pill),
-  // CdsIcon sm "Sidebar" text-secondary, data-testid, `df-compact-trigger draggable-none`, aria-expanded / aria-controls (wC).
   assert.match(trigger, /data-cds="Button" data-cds-icon-only="" data-cds-ghost="" data-size="lg"/);
   assert.match(trigger, / df-compact-trigger draggable-none"/);
-  assert.doesNotMatch(trigger, /code-icon-button|aria-expanded:bg-fill-ghost-hover|title=/);
   assert.match(trigger, /aria-label="Show sidebar" aria-keyshortcuts="(?:Meta|Control)\+b"/);
-  assert.match(trigger, /data-testid="sidebar-compact-trigger"/);
   assert.match(trigger, /aria-expanded="false" aria-controls="frame-peek-popover"/);
-  assert.match(chrome, /<span data-cds="Icon" style="font-size:calc\(1rem \* var\(--cds-rem-scale, 1\)\);font-weight:533\.3" class="text-secondary" aria-hidden="true">/);
-  assert.doesNotMatch(trigger, /data-peek-open/);
   assert.match(buttons(render(T.SourceCollapsedChrome, { peekOpen: true }))[0], /aria-expanded="true"/);
-  const v1 = path.resolve(import.meta.dirname, '../../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1');
-  const s21 = fs.readFileSync(path.join(v1, 'shared-21-R7LldJ05.js'), 'utf8');
-  for (const needle of ['_==="compact"?"lg":', '"data-testid":"sidebar-compact-trigger"', '"aria-controls":wC', 'shortcut:"cmd+b",hoverable:!1', 'pI="text-secondary"'])
-    assert.ok(s21.includes(needle), needle);
-  assert.ok(fs.readFileSync(path.join(v1, 'shared-styles-D_GJawPO.css'), 'utf8').includes('--df-pill-size:28px'));
   assert.ok(chrome.indexOf('<div class="df-collapsed-nav draggable-none relative flex items-center"><div class="flex items-center draggable-none">') > chrome.indexOf('aria-label="Show sidebar"'));
   const [back, forward] = buttons(chrome.slice(chrome.indexOf('df-collapsed-nav')));
-  assert.doesNotMatch(back, /aria-disabled="true"/); assert.match(forward, /aria-disabled="true"/);
+  for (const button of [back, forward]) assert.match(button, / df-chrome-btn aria-disabled:pointer-events-none aria-disabled:\*:opacity-50"/);
   assert.doesNotMatch(render(T.SourceCollapsedChrome, { withNavButtons: false }), /df-collapsed-nav|aria-label="Back"/);
+  const s21 = fs.readFileSync(path.join(v4, 'shared-21-CuohtEoj.js'), 'utf8');
+  assert.ok(s21.includes('className:`df-collapsed-nav draggable-none relative flex items-center`,children:l(_O,{})') || s21.includes('className:"df-collapsed-nav draggable-none relative flex items-center",children:l(_O,{})'));
   for (const collapsed of [true, false]) {
-    const titlebar = render(T.SourceTitlebar, { collapsed, section: 'new', historyAt: 1, historyLength: 2 });
+    const titlebar = render(T.SourceTitlebar, { collapsed, section: 'new' });
     assert.doesNotMatch(titlebar, /df-collapsed-chrome|df-collapsed-nav|aria-label="Show sidebar"|aria-label="Back"/);
-    assert.match(titlebar, /^<header class="workspace-toolbar st-toolbar window-drag" data-surface="code" data-top-left="true">/);
+    // surfaces wave 3 (titlebar frame): the Code titlebar is the 4.16336.0 frame (shared-20 o_: the comfortable CdsRoot, then
+    // s_'s row with data-top-left and RX's data-perf-region="header"), not the host header.
+    assert.match(titlebar, /^<div class="cds-root [^"]*\bcontents" data-density="comfortable"[^>]*><div class="[^"]*"><div data-top-left="true" data-perf-region="header" class="epitaxy-titlebar /);
+    assert.doesNotMatch(titlebar, /st-toolbar|window-drag/);
   }
+  assert.doesNotMatch(fs.readFileSync(path.join(app, 'src/source-nav-buttons.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, ''), /\S/);
 });

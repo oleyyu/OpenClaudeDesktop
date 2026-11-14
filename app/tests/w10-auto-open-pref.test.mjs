@@ -203,7 +203,8 @@ test('host: main.cjs keeps and reads the preference; the pane and menu wire the 
 // --------------------------------------------------------------------------------------------- SSR: Settings › Browser
 createRequire(path.join(app, 'package.json'))('react-dom').createPortal = children => children;
 globalThis.innerWidth = 1200;
-globalThis.document ??= { body: { nodeType: 1 }, documentElement: { dataset: {}, dir: 'ltr', getAttribute: () => null, hasAttribute: () => false },
+// W8-M9 stub contract (round4 integration, stub fields only): cds-core 9203795f reads these at load (official 4.16336.0): document.cookie.
+globalThis.document ??= { cookie: '' /* W8-M9: shared-0 CQ / Wo document.cookie */, body: { nodeType: 1 }, documentElement: { dataset: {}, dir: 'ltr', getAttribute: () => null, hasAttribute: () => false },
   createElement: () => ({ relList: { supports: () => false } }) };
 let server, Settings, store, menuModule;
 before(async () => {

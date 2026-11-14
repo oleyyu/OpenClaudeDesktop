@@ -88,8 +88,12 @@ test('fr8-03: the Code title button is c9543da06 Mp (Ap + jp, data-pane-title, Z
   assert.ok(mp.includes('defaultMessage:"{name}, rename session",id:"Z444Es4IIr"'));
   assert.ok(s6.includes('ig="truncate text-body font-medium font-control text-primary select-none"'));
   const T = await server.ssrLoadModule('/src/source-titlebar.jsx');
-  const html = renderToStaticMarkup(React.createElement(T.SourceTitlebar, { section: 'new', session: { id: 'a', name: 'A title', cwd: '/tmp/work' }, onRename() {} }));
+  // verify:titlebar: outside the 4.16336.0 frame (the session popout keeps the host header) Mp keeps jp; inside it the title
+  // takes cc43287c9 FX's bleed (shared-18 Iw), see tests/titlebar-frame-v4.test.mjs.
+  const html = renderToStaticMarkup(React.createElement(T.SourceTitlebar, { section: 'new', session: { id: 'a', name: 'A title', cwd: '/tmp/work' }, onRename() {}, popoutWindow: { alwaysOnTop: false, onDock() {}, onTogglePin() {} } }));
   assert.ok(html.includes('data-pane-title="" aria-label="A title, rename session" class="truncate text-body font-medium font-control text-primary select-none mx-outset h-control px-xs rounded text-start bg-transparent border-0 hover:bg-fill-ghost-hover focus-visible:outline-hidden hide-focus-ring focus-visible:shadow-focus cursor-text" style="--cds-outset-x:var(--cds-pad-xs)">A title</button>'), html);
+  const framed = renderToStaticMarkup(React.createElement(T.SourceTitlebar, { section: 'new', session: { id: 'a', name: 'A title', cwd: '/tmp/work' }, onRename() {} }));
+  assert.ok(framed.includes('data-pane-title="" aria-label="A title, rename session" class="truncate text-body font-medium font-control text-primary select-none mx-outset h-control px-md rounded text-start bg-transparent border-0 hover:bg-fill-ghost-hover focus-visible:outline-hidden hide-focus-ring focus-visible:shadow-focus cursor-text" style="--cds-outset-x:var(--cds-pad-md)">A title</button>'), framed);
   const zh = await inZh(() => renderToStaticMarkup(React.createElement(T.SourceTitlebar, { section: 'new', session: { id: 'a', name: 'A title', cwd: '/tmp/work' }, onRename() {} })));
   assert.match(zh, /aria-label="A title，重命名会话"/);
   // Chat / Cowork keep their own title (not in this wave).

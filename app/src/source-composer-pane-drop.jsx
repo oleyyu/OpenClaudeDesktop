@@ -17,7 +17,7 @@
 // zone stays mounted (no remount on a mode switch) but inert, through YI's own `filesElsewhere` and no appDrag, so it
 // accepts no drag at all (u's accepts is false: no preventDefault, no dropEffect, no halo).
 import React, { useMemo } from "react";
-import { ComposerPaneDropZone } from "./generated/code-composer/composer-pane-drop-zone.mjs";
+import { ComposerPaneDropZone } from "./generated/code-composer-v4/composer-pane-drop-zone.mjs";
 import { acceptsFileContextDrag } from "./file-context-drag.mjs";
 import { commitFileContextDrag } from "./generated/files-changes/file-context-drag.mjs";
 

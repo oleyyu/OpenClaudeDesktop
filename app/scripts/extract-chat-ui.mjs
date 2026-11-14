@@ -1,25 +1,24 @@
-// Chat area (src/generated/chat), migrated to Claude Desktop 3.6556.2 (w10-chat-gen; research/w10-chat.md §2–§3, R1/R2/R4,
-// E34/E36/E42/D1). Official chunks are only read and parsed, never executed.
+// Chat area (src/generated/chat), migrated to Claude Desktop 4.16336.0 (regions-chat; previously 3.6556.2 w10-chat-gen,
+// research/w10-chat.md §2–§3, R1/R2/R4, E34/E36/E42/D1). Official chunks are only read and parsed, never executed.
 //
-// Until 3.6556.2 this generator copied 63 modules of the 2.2553.1 bundle. Only four bindings of that slice were still on
-// a live path; the rest was dead or test-only (data/w10-chat-module-map.json). The 3.6556.2 slice is those four, from
-// the files that now hold them:
-//   vendor-intl-DYfox5Co.js  Ht  createIntl             react-intl's createIntl (formatjs core At under it); host
-//                                                       createIntl callers (code-start, routines, env notice).
-//   shared-9-CM21XrJw.js     wD  ideaPreviewClass       the Chat composer Ideas preview class: one literal of wD
-//                                                       (`text-muted-as-secondary`; 2.2553.1 shared-14 ZP: text-muted).
-//   cbcaf521a-CrWJ5SHy.js    e   HandBlocksDef          the HandBlocks pictogram data (byte-identical to 2.2553.1; E36:
-//                                                       same file name, no shim).
-//   shared-104-CTONUSaz.js   _x  sessionLiveStatus      a session's live status (awaiting / running / idle); a pure
-//                                                       function, so plain node can import the file (E42).
+// The slice is four bindings, located in the 4.16336.0 snapshot by their features (each root's string `expect`s must hold
+// for exactly one top-level declaration of its chunk; the local and the chunk's export alias are then pinned):
+//   vendor-intl-BJgYK7RA.js  Ht  (export u)  createIntl         react-intl's createIntl (formatjs core At under it); host
+//                                                                createIntl callers (code-start, routines, env notice).
+//                                                                (3.6556.2: vendor-intl-DYfox5Co.js Ht / u.)
+//   shared-9-BgdM6Y1f.js     gO              ideaPreviewClass   the Chat composer Ideas preview class: one literal of gO
+//                                                                (`text-muted-as-secondary`). (3.6556.2: shared-9-CM21XrJw wD.)
+//   cbcaf521a-CrWJ5SHy.js    e   (export HandBlocksDef)         the HandBlocks pictogram data; the file is byte-identical
+//                                                                in 3.6556.2 and 4.16336.0 (E36: same file name, no shim).
+//   shared-92-BOgyxePb.js    jU  (export oo) sessionLiveStatus  a session's live status (awaiting / running / idle); a pure
+//                                                                function, so plain node can import the file (E42).
+//                                                                (3.6556.2: shared-104-CTONUSaz.js _x / ml.)
 //
-// Legacy shims (E34): another generator's output that still imports a 2.2553.1 chat file by its old name and minified
-// export gets a re-export file under that name, pointing at the one 3.6556.2 copy of the same binding (D1). The set of
+// Legacy shims (E34): another generator's output that still imports an older chat file by its old name and minified
+// export gets a re-export file under that name, pointing at the one current copy of the same binding (D1). The set of
 // names is derived from the actual import statements in src/generated/*/ (not chat itself); a name outside `legacyTable`
 // is an error, and a file nothing imports any more is not written. Host files and tests never use the shims (R4).
-// w11-sweep-rest: current-chat retired its last ../chat/ imports (w10-curchat-retire), so the table is empty and the
-// root and adapter that served only its vendor-intl $t shim (react-intl FormattedRelativeTime `en`, inner `$t` ->
-// HomeRelativeTime) are gone; the derivation still runs, so a new legacy import fails here instead of shipping.
+// The table is empty (w11-sweep-rest); the derivation still runs, so a new legacy import fails here instead of shipping.
 //
 // `node scripts/extract-chat-ui.mjs` writes the folder (removing every file it no longer emits), `--check` compares it
 // (scripts/verify-chat-ui.mjs).
@@ -31,7 +30,7 @@ import { parseAst } from 'rolldown/parseAst';
 import { format } from '../../tools/node_modules/prettier/index.mjs';
 import babel from '../../tools/node_modules/playwright/lib/transform/babelBundle.js';
 import { viewTabsManifestFor } from './view-tabs-compat.mjs';
-import * as official from './official-3.6556.2.mjs';
+import * as official from './official-4.16336.0.mjs';
 
 const root = path.resolve(import.meta.dirname, '..');
 const { referenceVersion, referenceSnapshot } = official;
@@ -39,10 +38,10 @@ const source = official.ionSource;
 const output = path.join(root, 'src/generated/chat');
 const generatedRoot = path.join(root, 'src/generated');
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
-const VI = official.vendorIntl, S9 = 'shared-9-CM21XrJw.js', S104 = 'shared-104-CTONUSaz.js', HB = 'cbcaf521a-CrWJ5SHy.js';
+const VI = official.vendorIntl, S9 = 'shared-9-BgdM6Y1f.js', S92 = 'shared-92-BOgyxePb.js', HB = 'cbcaf521a-CrWJ5SHy.js';
 
 // Every chunk a closure may enter; leaving them is an error, and so is a listed chunk no closure enters.
-const files = new Set([VI, S104, HB]);
+const files = new Set([VI, S92, HB]);
 // vendor-frame re-exports React; each alias is checked against official.reactAliases (R3).
 const vendor = { [official.vendorFrame]: official.reactAliases };
 // Same-chunk declarations the host answers. `features` must occur in the declaration's minified text. None now.
@@ -55,7 +54,7 @@ const chunkAdapters = {};
 const roots = [
   { source: VI, local: 'Ht', export: 'u', name: 'createIntl',
     expect: ['({defaultRichTextElements:e,...t},n)=>', 'formatMessage:Vt.bind(null,a,i.formatters)', { in: 'At', has: 'Missing locale data for locale' }] },
-  { source: S104, local: '_x', export: 'ml', name: 'sessionLiveStatus',
+  { source: S92, local: 'jU', export: 'oo', name: 'sessionLiveStatus',
     expect: ['e.liveStatus==="awaiting"?"awaiting"', 'e.pendingToolPermissions?.length?"awaiting"', 'e.isRunning?"running":"idle"'] },
   { source: HB, local: 'e', export: 'HandBlocksDef', name: 'HandBlocksDef', alias: ['e'],
     expect: ['name:"HandBlocks"', 'highlight:[', 'line:['] },
@@ -63,8 +62,8 @@ const roots = [
 // One string literal of a top-level declaration (`owner`), copied verbatim: exactly one string literal of the owner
 // starts with `prefix`, and it must contain each `expect` string.
 const literals = [
-  { source: S9, owner: 'wD', name: 'ideaPreviewClass', prefix: 'animate-preview-prompt-in line-clamp-2',
-    expect: ['text-muted-as-secondary'] },
+  { source: S9, owner: 'gO', name: 'ideaPreviewClass', prefix: 'animate-preview-prompt-in line-clamp-2',
+    expect: ['text-muted-as-secondary'], features: ['className:"animate-preview-prompt-in line-clamp-2 text-muted-as-secondary"', 'onBlockedSubmitAttempt:'] },
 ];
 // E34 legacy shims: old 2.2553.1 chat file -> { old export: [module relative to src/generated/chat, semantic name] }.
 // `check` confirms the target still publishes that name for the same official binding. Empty since w11-sweep-rest: the
@@ -240,8 +239,17 @@ export async function extractChatUi({ check = false } = {}) {
       legacy[file][name] = { from: table[name][0], name: table[name][1], importers: [...new Set(by)].sort() };
     }
   }
+  // AST location (R2/E5): the declaration is the only top-level declaration of its chunk holding every feature; the
+  // pinned local (and export alias) must be that one, so a renamed or duplicated root fails instead of drifting.
+  const locate = (src, features, label) => {
+    const hits = [...src.top].filter(([, e]) => e.kind !== 'import' && e.node && features.every(f => declarationText(src, e).includes(f)));
+    if (hits.length !== 1) throw Error(`${label}: ${hits.length} top-level declarations of ${src.name} hold its features (${hits.map(([n]) => n).join(', ')})`);
+    return hits[0][0];
+  };
   for (const r of roots) {
     const src = await readSource(r.source, cache);
+    const located = locate(src, r.expect.filter(f => typeof f === 'string'), `root ${r.name}`);
+    if (located !== r.local) throw Error(`root ${r.name}: ${r.source} features locate ${located}, not the pinned ${r.local}`);
     const entry = src.top.get(r.local);
     if (!entry || entry.kind === 'import' || entry.kind === 'pattern') throw Error(`root ${r.name}: ${r.source}#${r.local} is not a declaration`);
     if (src.exported.get(r.export) !== r.local) throw Error(`root ${r.name}: ${r.source} exports ${r.export} as ${src.exported.get(r.export)}, not ${r.local}`);
@@ -258,6 +266,8 @@ export async function extractChatUi({ check = false } = {}) {
   }
   for (const l of literals) {
     const src = await readSource(l.source, cache);
+    const located = locate(src, l.features, `literal ${l.name}`);
+    if (located !== l.owner) throw Error(`literal ${l.name}: ${l.source} features locate ${located}, not the pinned ${l.owner}`);
     const entry = src.top.get(l.owner);
     if (!entry || entry.kind === 'import' || entry.kind === 'pattern') throw Error(`literal ${l.name}: ${l.source}#${l.owner} is not a declaration`);
     const matches = [];
@@ -266,7 +276,7 @@ export async function extractChatUi({ check = false } = {}) {
     } });
     if (matches.length !== 1) throw Error(`Expected one source literal ${l.source}:${l.owner}:${l.name}, found ${matches.length}`);
     for (const f of l.expect) if (!matches[0].value.includes(f)) throw Error(`literal ${l.name} lacks ${JSON.stringify(f)}`);
-    moduleFor(l.source).literals.set(l.name, { owner: l.owner, node: matches[0], expect: l.expect });
+    moduleFor(l.source).literals.set(l.name, { owner: l.owner, node: matches[0], expect: l.expect, features: l.features });
   }
   for (const [key, adapter] of Object.entries(chunkAdapters)) {
     const [file] = key.split('#');
@@ -312,7 +322,7 @@ export async function extractChatUi({ check = false } = {}) {
       manifest.publicNames[name] = { file: m.file, local, export: r.export, expect: r.expect };
     }
     for (const [name, l] of m.literals)
-      manifest.publicNames[name] = { file: m.file, literal: true, owner: l.owner, start: l.node.start, end: l.node.end, expect: l.expect };
+      manifest.publicNames[name] = { file: m.file, literal: true, owner: l.owner, start: l.node.start, end: l.node.end, expect: l.expect, features: l.features };
     manifest.modules.push({
       source: m.file, target: m.file, sourceSha256: sha(src.bytes), sha256: sha(text), referenceVersion,
       bindings: selected.map(([name, e]) => ({ name, sha256: sha(declarationText(src, e)) })),

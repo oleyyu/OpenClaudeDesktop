@@ -310,6 +310,25 @@ test("the Codex core gets the launch's -c overrides after app-server --stdio and
   assert.deepEqual(resolveCore(), { command: binary, prefix: [], kind: "override" });
 });
 
+test("a bridge core's agent never inherits the saved keys; only the OpenCode-based ones keep the provider keys", (t) => {
+  const { resolveCore, setCoreChoice, setCodexLaunch } = require("../electron/codex.cjs");
+  const names = ["CODE_DESKTOP_CORE", "CODEX_BINARY", "DEEPSEEK_API_KEY", "DEEPSEEK_BASE_URL", "CODE_DESKTOP_PROVIDER_KEY_GW"];
+  const saved = Object.fromEntries(names.map((key) => [key, process.env[key]]));
+  t.after(() => { setCodexLaunch(null); setCoreChoice({}); for (const key of names) { if (saved[key] === undefined) delete process.env[key]; else process.env[key] = saved[key]; } });
+  delete process.env.CODE_DESKTOP_CORE; delete process.env.CODEX_BINARY;
+  Object.assign(process.env, { DEEPSEEK_API_KEY: "sk-ds", DEEPSEEK_BASE_URL: "http://127.0.0.1:1", CODE_DESKTOP_PROVIDER_KEY_GW: "sk-gw" });
+  // The Codex launch blanks every Harness-managed variable, the provider keys and the search key among them.
+  setCodexLaunch(() => ({ args: [], env: { CODE_DESKTOP_PROVIDER_KEY_GW: undefined, CODE_DESKTOP_DEEPSEEK_SEARCH_KEY: undefined } }));
+  const blanked = (id) => {
+    setCoreChoice({ core: id, agents: {} });
+    const env = resolveCore().env;
+    return ["DEEPSEEK_API_KEY", "DEEPSEEK_BASE_URL", "CODE_DESKTOP_DEEPSEEK_SEARCH_KEY", "CODE_DESKTOP_PROVIDER_KEY_GW"].filter((key) => key in env && env[key] === undefined);
+  };
+  for (const id of ["kimi", "gemini", "qwen", "minimax", "zcode"])
+    assert.deepEqual(blanked(id), ["DEEPSEEK_API_KEY", "DEEPSEEK_BASE_URL", "CODE_DESKTOP_DEEPSEEK_SEARCH_KEY", "CODE_DESKTOP_PROVIDER_KEY_GW"], id);
+  for (const id of ["opencode", "mimo"]) assert.deepEqual(blanked(id), ["DEEPSEEK_API_KEY", "DEEPSEEK_BASE_URL", "CODE_DESKTOP_DEEPSEEK_SEARCH_KEY"], id);
+});
+
 test("an exit before initialize names stderr's last line, sanitized", { timeout: 10000 }, async (t) => {
   const { stderrReason } = require("../electron/codex.cjs");
   await codexCore(t, { args: [], env: {} }, `process.stderr.write('starting\\nError: invalid model_providers.codedesktop at https://relay.test/v1?token=abc: Bearer sk-abcdefghijkl\\n'); process.exit(1);`);

@@ -471,3 +471,14 @@ html[data-sidebar-row-dragging] * { cursor: grabbing !important; -webkit-user-se
 .source-sidebar[data-code-list] .source-nested.df-family :is(.source-session-open, .source-session-rename) {
   padding-inline-start: calc(var(--df-row-px) + var(--df-row-indent, 0px));
 }
+
+/* surfaces-prod-3 sidebar lane: the glass layer (shared-22 Yz / Kz, generated/frame-sidebar) shows the macOS material under
+   the window and sets html[data-sidebar-vibrancy]; the official page then clears body (shared-styles
+   `html[data-sidebar-vibrancy] body{background-color:#0000!important}`) and paints only main.dframe-content past the seam.
+   The official ion-dist page paints neither the html element nor .dframe-root (shared-styles .dframe-root has no
+   background); this host paints both with --app-bg (style.css :root and .desktop-app.dframe-root), which would cover the
+   material. While the material shows, those two host paints are taken off so the official layers are what is seen. */
+html[data-sidebar-vibrancy],
+html[data-sidebar-vibrancy] .desktop-app.dframe-root {
+  background: transparent;
+}

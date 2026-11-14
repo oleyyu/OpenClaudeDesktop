@@ -1,0 +1,456 @@
+{
+  "referenceVersion": "4.16336.0",
+  "referenceSnapshot": "snapshots/claude-4.16336.0-20261104",
+  "generator": "scripts/extract-btw-pane.mjs",
+  "sharedGraph": "cds-core",
+  "isolatedGraph": {
+    "legacyOutput": "src/generated/btw-pane"
+  },
+  "modules": [
+    {
+      "target": "compiler-helpers.mjs",
+      "source": "shared-frame-CJdE5Ria.js",
+      "sourceSha256": "b6a5f61e0f243a48215fab7f3d65958d693d715e565f57af4e0ff35ae14697bc",
+      "sha256": "2f5c5af3c35b508febfdd625acc75a4b56b25150b35da8dfe84898ac048e8ad2",
+      "bindings": [
+        {
+          "name": "J9",
+          "sha256": "3afe70bd559a6a0831ad0609e50876fc250377705c312b61e62fdcf9120af3ea"
+        },
+        {
+          "name": "J8",
+          "sha256": "69bef5a9d6159f08093500f260abab70880bf2e4210e028a2ca3fd08e4e9d40b"
+        },
+        {
+          "name": "J0",
+          "sha256": "c796f82f59036cb9e78ec4185eae660b12d780899aaa0de1e6a2ce718986cd07"
+        },
+        {
+          "name": "J2",
+          "sha256": "9122bc38ff4d578f1d00e10c12e6a36dd207630efb0ce6ed9187ea3c3208f580"
+        },
+        {
+          "name": "K0",
+          "sha256": "995adefdc7bf1545fcdaabd732952331d531c9a43b08db8ed43bd9da0c2b6f92"
+        },
+        {
+          "name": "K3",
+          "sha256": "729e8dd8a0f1ec2c21512ba08f2546e580acd1f2bb23636111b293c3ee3e4908"
+        }
+      ],
+      "imports": [
+        {
+          "local": "Je",
+          "from": "react/compiler-runtime",
+          "name": "c",
+          "via": "vendor-frame-BckkO60Y.js:ko",
+          "kind": "react"
+        }
+      ],
+      "exports": {
+        "J9": "reactMemoCache",
+        "J0": "memoIsEmpty",
+        "J2": "memoChanged2",
+        "K0": "memoStore0",
+        "K3": "memoStore3"
+      },
+      "heldByCdsCore": [
+        "J9",
+        "J0",
+        "J8",
+        "J2",
+        "K0",
+        "K3"
+      ]
+    },
+    {
+      "target": "owner-window.mjs",
+      "source": "shared-25-D-aF0gt9.js",
+      "sourceSha256": "29089e649e4a1179c6a21019ba8d9c78732c4d70a3ce66587f311002189a7183",
+      "sha256": "271e8e14a466f63f1697b679e291bae9c1e43336939b171b491156a03a1c2692",
+      "bindings": [
+        {
+          "name": "vd",
+          "sha256": "1f7a2401f5f61bdff5c0aa03c83ee1ef67eea6ec374fb6ee9f53b78b709ad3f8"
+        }
+      ],
+      "imports": [
+        {
+          "local": "_d",
+          "from": "../cds-core/shared-25.mjs",
+          "name": "ownerWindow",
+          "via": "shared-25-D-aF0gt9.js#_d",
+          "kind": "shared-graph",
+          "original": "_d",
+          "linkedSha256": "4aec83faeea643c17c30b621a124b2c90d0bcf627d75f6788e5708f957d1b28d"
+        }
+      ],
+      "exports": {
+        "vd": "ownerWindowOrGlobal"
+      },
+      "heldByCdsCore": [
+        "vd"
+      ]
+    },
+    {
+      "target": "use-event.mjs",
+      "source": "shared-0-CnnWnVrT.js",
+      "sourceSha256": "eb5fb89d8b47627c28969bd1df41f25a49a3e1d6ed91c5af2d980d5847d78ae1",
+      "sha256": "e9e781460a80fa0f0ec6b3c2700e2ff0b6ddcdf6b7cb26fa67424dd4d0f67c47",
+      "bindings": [],
+      "imports": [
+        {
+          "local": "xe",
+          "from": "../cds-core/shared-0.mjs",
+          "name": "useEventCallback",
+          "via": "shared-0-CnnWnVrT.js#xe",
+          "kind": "shared-graph",
+          "original": "xe",
+          "linkedSha256": "41592fc7139c7ebfe6352dd2465c3a41a7984e05715adebb4393510ebfb551af"
+        }
+      ],
+      "exports": {
+        "xe": "useEvent"
+      },
+      "heldByCdsCore": []
+    },
+    {
+      "target": "focus-guard.mjs",
+      "source": "shared-frame-CJdE5Ria.js",
+      "sourceSha256": "b6a5f61e0f243a48215fab7f3d65958d693d715e565f57af4e0ff35ae14697bc",
+      "sha256": "1be97c3c72155253ea2b88b0f4adb08e8621f5694530dcbd8fc2e9b2adce0298",
+      "bindings": [
+        {
+          "name": "zn",
+          "sha256": "7d413b8cb8f6cba92a06c6ff90e3cc3243730bcf5da1ce5d55936da1e2e2bdab"
+        },
+        {
+          "name": "Bn",
+          "sha256": "a37c560d06ecbba1b74f3ffdf3c5d939bb493709ac8811bfa81fb8c304fd9422"
+        },
+        {
+          "name": "Hn",
+          "sha256": "bae483b8518c0a56a24014107d49b5c9a23f935ede645ebbab574cb2527903ca"
+        }
+      ],
+      "imports": [
+        {
+          "local": "Vn",
+          "from": "../cds-core/shared-frame.mjs",
+          "name": "Vn",
+          "via": "shared-frame-CJdE5Ria.js#Vn",
+          "kind": "shared-graph",
+          "original": "Vn",
+          "linkedSha256": "3508fa38f916b3ddca08ebe5cc55fc6781f2ba734383cf7fc94a6de6b8a41fcc"
+        },
+        {
+          "local": "Pt",
+          "from": "../cds-core/shared-frame.mjs",
+          "name": "asElementNode",
+          "via": "shared-frame-CJdE5Ria.js#Pt",
+          "kind": "shared-graph",
+          "original": "Pt",
+          "linkedSha256": "013bca69d7ca0ae45b5c68d45a4fd0bcc7d5c7848123117cb349146cd04eb59b"
+        }
+      ],
+      "exports": {
+        "Hn": "guardStrayEnter",
+        "Pt": "elementOf"
+      },
+      "heldByCdsCore": []
+    },
+    {
+      "target": "focus-on-click.mjs",
+      "source": "shared-frame-CJdE5Ria.js",
+      "sourceSha256": "b6a5f61e0f243a48215fab7f3d65958d693d715e565f57af4e0ff35ae14697bc",
+      "sha256": "004356e746181908a6fbee3e8392e99562192abf401bcac7d5c85fd38eec3549",
+      "bindings": [],
+      "imports": [
+        {
+          "local": "an",
+          "from": "../cds-core/shared-frame.mjs",
+          "name": "an",
+          "via": "shared-frame-CJdE5Ria.js#an",
+          "kind": "shared-graph",
+          "original": "an",
+          "linkedSha256": "1e98d68cacfffffd5c53aa7194ead57fb14559f357338a1145e271fb5e36bba7"
+        }
+      ],
+      "exports": {
+        "an": "canFocusComposerOnClick"
+      },
+      "heldByCdsCore": []
+    },
+    {
+      "target": "modifier-keys.mjs",
+      "source": "shared-1-D1bGaTaN.js",
+      "sourceSha256": "bc66aa8473c6bb2c7f6c179732a63f6cb9b8b69572abc2ebaf7c1e31d5eeb0ea",
+      "sha256": "129d09b7a5ce55978154aae67bfbec980209b603e30079013c6045c1b13c6918",
+      "bindings": [],
+      "imports": [
+        {
+          "local": "vI",
+          "from": "../cds-core/shared-1.mjs",
+          "name": "vI",
+          "via": "shared-1-D1bGaTaN.js#vI",
+          "kind": "shared-graph",
+          "original": "vI",
+          "linkedSha256": "7ffce4540665280409c420e3f1d255502154197f54d9bc197cf00db734d1d754"
+        }
+      ],
+      "exports": {
+        "vI": "modifierKeys"
+      },
+      "heldByCdsCore": []
+    },
+    {
+      "target": "focus-lost.mjs",
+      "source": "c37aeaf53-Cm_eXF4J.js",
+      "sourceSha256": "5f1ae02c54efc9bb093d2850cd1f7f911ae2a1c245aec86e61ced5d2a244dbd2",
+      "sha256": "1db53e1135e32f2c0b74d47ef272ccd7c65f4f0d4cbdc7edf5227c48fc5ef44a",
+      "bindings": [
+        {
+          "name": "a",
+          "sha256": "6c07173e76c2b69b22bf28ba00c81f6af818400af1633a2ea37c72f15b500d72"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "a": "focusIsLost"
+      },
+      "heldByCdsCore": []
+    },
+    {
+      "target": "focus-hand-back.mjs",
+      "source": "shared-1-D1bGaTaN.js",
+      "sourceSha256": "bc66aa8473c6bb2c7f6c179732a63f6cb9b8b69572abc2ebaf7c1e31d5eeb0ea",
+      "sha256": "2ae69594e511cfcbbfd13611c493f734c043208c9444e721e86a4db89d37c29e",
+      "bindings": [
+        {
+          "name": "oI",
+          "sha256": "0849d100975f080335110112fb2947bcea69b674e8353105d250ccfb1cbbac1f"
+        },
+        {
+          "name": "sI",
+          "sha256": "7e0d783cf3745b4d9b178766a71932d610a92b472167095e327873f7852709f1"
+        },
+        {
+          "name": "CI",
+          "sha256": "43fa518b8b92b265c8db82013f222b26c81c2a63e05737d04fe6f0764b3c8ca5"
+        }
+      ],
+      "imports": [
+        {
+          "local": "j",
+          "from": "react",
+          "name": "useLayoutEffect",
+          "via": "vendor-frame-BckkO60Y.js:xo",
+          "kind": "react"
+        },
+        {
+          "local": "me",
+          "from": "../cds-core/shared-frame.mjs",
+          "name": "an",
+          "via": "shared-frame-CJdE5Ria.js:Yp",
+          "kind": "shared-graph",
+          "original": "an"
+        },
+        {
+          "local": "J9",
+          "from": "./compiler-helpers.mjs",
+          "name": "reactMemoCache",
+          "via": "shared-frame-CJdE5Ria.js:hm",
+          "kind": "generated",
+          "original": "J9"
+        },
+        {
+          "local": "ge",
+          "from": "./focus-guard.mjs",
+          "name": "guardStrayEnter",
+          "via": "shared-frame-CJdE5Ria.js:kp",
+          "kind": "generated",
+          "original": "Hn"
+        },
+        {
+          "local": "ve",
+          "from": "../cds-core/shared-frame.mjs",
+          "name": "asElementNode",
+          "via": "shared-frame-CJdE5Ria.js:nm",
+          "kind": "shared-graph",
+          "original": "Pt"
+        },
+        {
+          "local": "J2",
+          "from": "./compiler-helpers.mjs",
+          "name": "memoChanged2",
+          "via": "shared-frame-CJdE5Ria.js:um",
+          "kind": "generated",
+          "original": "J2"
+        },
+        {
+          "local": "K3",
+          "from": "./compiler-helpers.mjs",
+          "name": "memoStore3",
+          "via": "shared-frame-CJdE5Ria.js:ym",
+          "kind": "generated",
+          "original": "K3"
+        },
+        {
+          "local": "Tt",
+          "from": "../cds-core/shared-0.mjs",
+          "name": "useEventCallback",
+          "via": "shared-0-CnnWnVrT.js:PT",
+          "kind": "shared-graph",
+          "original": "xe"
+        },
+        {
+          "local": "di",
+          "from": "./owner-window.mjs",
+          "name": "ownerWindowOrGlobal",
+          "via": "shared-25-D-aF0gt9.js:Wp",
+          "kind": "generated",
+          "original": "vd"
+        },
+        {
+          "local": "jt",
+          "from": "../../btw-focus-host.mjs",
+          "name": "readGrowthBookValue",
+          "via": "shared-0-CnnWnVrT.js:Rx",
+          "kind": "host",
+          "replacedSha256": "1ccf9cdb99366250d90fc663237637e2425845b411078eb58a5cd17ffe302c6c"
+        },
+        {
+          "local": "vI",
+          "from": "./modifier-keys.mjs",
+          "name": "modifierKeys",
+          "via": "shared-1-D1bGaTaN.js:vI",
+          "kind": "generated",
+          "original": "vI"
+        }
+      ],
+      "exports": {
+        "CI": "useFocusHandBack"
+      },
+      "heldByCdsCore": [
+        "sI",
+        "oI"
+      ]
+    },
+    {
+      "target": "shown-session.mjs",
+      "source": "shared-8-BqfCbkJd.js",
+      "sourceSha256": "d9aa7c7f690b43147e921fbef5473f2311a1474e316c44e6db5ef07e9fede5bc",
+      "sha256": "44c2ec72bc4fac0733e70251aaeffa6669587677083482d0d07c9d5f4c7ece51",
+      "bindings": [
+        {
+          "name": "q_",
+          "sha256": "d25dabb60eb557be0c970b12e6e87ea8b20c9d9efdd45df94081e4878b687a9b"
+        },
+        {
+          "name": "J_",
+          "sha256": "133c29367e308da04427219883bb1ea0921decc894b9e20b1041f20007670db3"
+        },
+        {
+          "name": "X_",
+          "sha256": "a41c761c77ee85bcc2e61fa8731b5e67357d1143557a892175165dcfb5d2b90d"
+        }
+      ],
+      "imports": [
+        {
+          "local": "N",
+          "from": "react",
+          "name": "useEffect",
+          "via": "vendor-frame-BckkO60Y.js:go",
+          "kind": "react"
+        },
+        {
+          "local": "J9",
+          "from": "./compiler-helpers.mjs",
+          "name": "reactMemoCache",
+          "via": "shared-frame-CJdE5Ria.js:hm",
+          "kind": "generated",
+          "original": "J9"
+        },
+        {
+          "local": "J2",
+          "from": "./compiler-helpers.mjs",
+          "name": "memoChanged2",
+          "via": "shared-frame-CJdE5Ria.js:um",
+          "kind": "generated",
+          "original": "J2"
+        },
+        {
+          "local": "K3",
+          "from": "./compiler-helpers.mjs",
+          "name": "memoStore3",
+          "via": "shared-frame-CJdE5Ria.js:ym",
+          "kind": "generated",
+          "original": "K3"
+        },
+        {
+          "local": "Y_",
+          "from": "../../btw-read-state.mjs",
+          "name": "unreadStore",
+          "via": "shared-8-BqfCbkJd.js:Y_",
+          "kind": "host",
+          "replacedSha256": "06079180bbb716160b3dce963444af94419c53fcf8a9b4d831c3999a566c6039"
+        },
+        {
+          "local": "G_",
+          "from": "../../btw-read-state.mjs",
+          "name": "paneSessions",
+          "via": "shared-8-BqfCbkJd.js:G_",
+          "kind": "host",
+          "replacedSha256": "9d41f26998974c65b91dc23d33d45e70a4fe564b78be2d9a1c46bcb41ea2fc48"
+        }
+      ],
+      "exports": {
+        "J_": "useShownSession",
+        "X_": "markUnreadUnlessShown"
+      },
+      "heldByCdsCore": []
+    },
+    {
+      "target": "detach-eligibility.mjs",
+      "source": "shared-39-ZCs0lAwB.js",
+      "sourceSha256": "fbbdc3e3589752233fbb792abb01ef80fc15de2662c5a79456d7d44a766e7c4b",
+      "sha256": "183ff7ce5cff06669aed04c6dc8735fc7d9ede8f9f2cd6fb67adedacd6534992",
+      "bindings": [
+        {
+          "name": "h_",
+          "sha256": "b25f6093e51deef6c72b2f6e1afe63e877b14f23ff413b8a082f84abd270ac64"
+        },
+        {
+          "name": "g_",
+          "sha256": "6629cdc33771f7b9ff463f7a9614e2b0fec9ec6daed7eb8387d75a442259e3d5"
+        },
+        {
+          "name": "v_",
+          "sha256": "5142d0daf3ba6df40e5867e066e523048a59f30e3212caee92239b13dc40d216"
+        }
+      ],
+      "imports": [
+        {
+          "local": "uh",
+          "from": "../../btw-detach-host.mjs",
+          "name": "detachLineageParents",
+          "via": "shared-39-ZCs0lAwB.js:uh",
+          "kind": "host",
+          "replacedSha256": "de0c2a569f4b56ea5efdc54b79d5c1dceb6ae335271119f6831b5bfea68fd212"
+        },
+        {
+          "local": "__",
+          "from": "../../btw-detach-host.mjs",
+          "name": "detachFromParentAvailable",
+          "via": "shared-39-ZCs0lAwB.js:__",
+          "kind": "host",
+          "replacedSha256": "1221f6e2b96a5d7b73fcfaac47ba8a432f20cd6c6b4775340a17b72469b0270e"
+        }
+      ],
+      "exports": {
+        "v_": "sideSessionDetachable"
+      },
+      "heldByCdsCore": []
+    }
+  ]
+}

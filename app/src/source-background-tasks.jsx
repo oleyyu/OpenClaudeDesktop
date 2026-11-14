@@ -1,12 +1,14 @@
 import React,{useEffect,useLayoutEffect,useRef,useState,useSyncExternalStore} from 'react';
-// E41: CDS by semantic name from the view-tabs file (this module is imported by source-agent's pane graph).
-import {CdsButton,CdsIcon,CdsShimmer} from './generated/view-tabs/shared-frame-6jtSkIit.js';
+// host-wiring code-a: the Button, Icon and Shimmer this file draws itself are the 4.16336.0 cds-core originals (semantic
+// facade; its graph never reaches view-tabs, so source-agent's pane graph stays off the view-tabs facade, E41).
+import {CdsButton,CdsIcon,CdsShimmer} from './cds-core.mjs';
 // W14-code r7 r7pa-07: cccc2cf0a `mp` (c86240138 n), the task row's text-link class (View transcript).
 import {n as TASK_LINK_CLASS} from './generated/transcript-rows/rows-c86240138-Cq_NwsO0.mjs';
 // W14-code r7 r7pa-06: cccc2cf0a `wr` (Ff), the relative day-and-time phrase tN shows for a one-shot prompt.
 import {pA as relativeTime} from './generated/routines-shared/shared-2-TF8v67kg.mjs';
-// W14-code r6 r6pa-03: cccc2cf0a Ho = c96d752d0 UQ (the task row's Stop button), exported by code-transcript as TaskStopButton.
-import {TaskStopButton} from './generated/code-transcript/code-transcript.mjs';
+// prestage-btgap: the task cards' Stop button is the 4.16336.0 c96d752d0 QH (c9bd7af9c's Zo: CDS Button `icon:
+// "StopFilled"`, "xs" inside the pane frame's panels context), the workflow card's own (scripts/extract-workflow-card-v4.mjs).
+import {TaskStopButton} from './generated/workflow-card-v4/index.mjs';
 // W14-code r4 r4pa-05: the empty list is the EmptyState (cc0a875c8 t, cccc2cf0a nd), as source-agent.jsx uses it.
 import {f as EmptyState} from './generated/code-routines/cc0a875c8-Ba9KI-Fw.mjs';
 import {createDismissedTasksStore,createTaskRowsStore,loopDaysLeft,stopsInLabel,monitorTasks,previewServerTasks,scheduledLoops,taskKindLabel,taskOutput,taskSections} from './background-tasks-model.mjs';
@@ -16,6 +18,8 @@ import { SourceCommandLine } from './source-command.jsx';
 import { taskOutputFollow } from './task-output-follow.mjs';
 import { getLocale, t } from '../electron/i18n/index.mjs';
 import './source-background-tasks.css';
+// Local design tune (U-BT-KEEP): the title-to-meta spacing, not an official rule.
+import './source-background-tasks-tune.css';
 import { localizeBridgeText } from './bridge-text-model.mjs';
 import { assistantName } from './persona-store.mjs';
 import { useSourceToasts } from './source-toast.jsx';
@@ -70,7 +74,7 @@ function Countdown({at}){const [now,setNow]=useState(Date.now);useEffect(()=>{co
 function Uptime({startedAt}){const [now,setNow]=useState(Date.now);useEffect(()=>{const timer=setInterval(()=>setNow(Date.now()),1000);return()=>clearInterval(timer);},[]);return <span className="tabular-nums">{formatDuration(Math.max(0,now-startedAt)/1000)}</span>;}
 // W14-code r6 r6pa-06: cccc2cf0a $M — the loop / preview server card shell (Vn("panels") is fizzy-lake off, so the
 // "rounded-lg bg-alpha-1" / "p-md" branch): the title in the Shimmer (`ae` = shared-frame zF, active while it runs), the
-// Stop button (Ho = UQ) in a `contents` span, then the footnote metadata column. A stop the caller accepted (returns
+// Stop button (4.16336.0 QH, as c9bd7af9c draws Zo) in a `contents` span, then the footnote metadata column. A stop the caller accepted (returns
 // true) parks focus on the card's label span, as $M d.
 function TaskCardShell({ariaLabel,title,shine=true,stop,children}){
  const label=useRef(null);

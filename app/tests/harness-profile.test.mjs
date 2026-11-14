@@ -275,9 +275,29 @@ test('main: preferences.json is read before config loads; Codex and old cores ar
   assert.equal('MY_PROVIDER_KEY' in f.env, false);
   assert.throws(() => f.harness.setCoreEnv('bad key', 'x'), /Invalid/);
   await f.harness.setManagedRow('llm-pi-ai', { config: { providers: { x: {} } } });
-  assert.deepEqual(JSON.parse(fs.readFileSync(path.join(f.dir, 'overlay.json'), 'utf8')).rows, { 'llm-pi-ai': { config: { providers: { x: {} } } } });
+  assert.deepEqual(JSON.parse(fs.readFileSync(path.join(f.dir, 'managed.json'), 'utf8')).rows, { 'llm-pi-ai': { config: { providers: { x: {} } } } });
   await f.harness.removeManagedRow('llm-pi-ai');
+  assert.equal(fs.existsSync(path.join(f.dir, 'managed.patch.yml')), false);
   assert.equal(fs.existsSync(path.join(f.dir, 'overlay.patch.yml')), false);
+});
+
+test('main: managed rows (the relay search key row, catalogs) apply with overlays off and outlive Reset overlay', async () => {
+  const f = fixture();
+  const managed = path.join(f.dir, 'managed.patch.yml'), overlay = path.join(f.dir, 'overlay.patch.yml');
+  // An install from before managed.json kept the row in overlay.json: setting it moves it out.
+  fs.mkdirSync(f.dir, { recursive: true });
+  fs.writeFileSync(path.join(f.dir, 'overlay.json'), JSON.stringify({ rows: { 'web-search-deepseek': { config: { apiKeyEnv: 'OLD' } }, 'tool-web': { disabled: true } }, inserts: [] }));
+  await f.harness.setManagedRow('web-search-deepseek', { config: { apiKeyEnv: 'CODE_DESKTOP_DEEPSEEK_SEARCH_KEY' } });
+  assert.deepEqual(Object.keys(JSON.parse(fs.readFileSync(path.join(f.dir, 'overlay.json'), 'utf8')).rows), ['tool-web']);
+  assert.deepEqual(JSON.parse(fs.readFileSync(managed, 'utf8').replace(/^#.*\n/, '')), [{ id: 'web-search-deepseek', config: { apiKeyEnv: 'CODE_DESKTOP_DEEPSEEK_SEARCH_KEY' } }]);
+  assert.deepEqual(f.env.CODE_DESKTOP_CORE_PATCHES.split(path.delimiter), ['/launch/extra.yml', managed, overlay]);
+  f.state.config = { harnessProfile: { overlayEnabled: false } };
+  await f.harness.run({ op: 'sync' });
+  assert.deepEqual(f.env.CODE_DESKTOP_CORE_PATCHES.split(path.delimiter), ['/launch/extra.yml', managed], 'overlays off: the managed rows stay');
+  f.state.config = undefined;
+  await f.harness.run({ op: 'reset-overlay' });
+  assert.deepEqual(f.env.CODE_DESKTOP_CORE_PATCHES.split(path.delimiter), ['/launch/extra.yml', managed], 'Reset overlay leaves the managed rows');
+  assert.equal(fs.existsSync(managed), true);
 });
 
 // ------------------------------------------------------------- page render
@@ -287,7 +307,8 @@ test('Settings › Harness page: Codex notice, unsupported notice, groups, Requi
   require(path.join(appRoot, 'node_modules/react-dom')).createPortal = children => children;
   // W14-code r6 gen-final-6: SourceDialog's close / footer buttons are the view-tabs CdsButton now (r6 panes R6DC-02), so the
   // page's module graph loads shared-frame, whose preload helper probes document.createElement("link").relList at load.
-  globalThis.document ??= { body: { nodeType: 1 }, documentElement: { dataset: {} }, createElement: () => ({}) };
+  // W8-M9 stub contract (round4 integration, stub fields only): cds-core 9203795f reads these at load (official 4.16336.0): document.cookie, documentElement.hasAttribute.
+  globalThis.document ??= { cookie: '' /* W8-M9: shared-0 CQ / Wo document.cookie */, body: { nodeType: 1 }, documentElement: { hasAttribute: () => false /* W8-M9: shared-92 cS / Ib */, dataset: {} }, createElement: () => ({}) };
   const React = (await import('react')).default;
   const { renderToStaticMarkup: render } = await import('react-dom/server');
   const { createServer } = await import('vite'), react = (await import('@vitejs/plugin-react')).default;

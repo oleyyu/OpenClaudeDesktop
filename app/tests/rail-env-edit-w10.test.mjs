@@ -39,7 +39,7 @@ const ROOTS = new Set();
 let savedWindow, savedDocument;
 before(async () => {
   savedWindow = globalThis.window; savedDocument = globalThis.document;
-  globalThis.document = { createElement: () => ({ relList: { supports: () => false } }), querySelector: () => null, documentElement: { getAttribute: () => null, hasAttribute: () => false } };
+  globalThis.document = { cookie: '', createElement: () => ({ relList: { supports: () => false } }), querySelector: () => null, documentElement: { getAttribute: () => null, hasAttribute: () => false } };
   // W14-code r6 r6pa-03 (review rerun): the rail's background-tasks pane draws c96d752d0 UQ from code-transcript, whose
   // shared-25 router store reads window.location.pathname at load (in the app main.jsx already loads that graph).
   globalThis.window = { document: globalThis.document, localStorage: undefined, addEventListener() {}, removeEventListener() {}, matchMedia: undefined, location: { pathname: '/' }, navigator: globalThis.navigator };
@@ -152,7 +152,9 @@ test('Zx (SSR): the ghost xs icon-only Settings button, "Edit environment" local
 test('host source: TN\'s xn / Sn / kn in the stand-in, pu in SessionRailSaveEnvironment, main\'s update and delete', () => {
   const view = read('src/source-session-rail.jsx');
   pin(view, [
-    'import { RailEditEnvironmentButton, isRailEditableEnvironment } from "./generated/session-rail/environment-edit.mjs";',
+    // 4.16336.0 rail cutover: the button is c73f45bc3 _C (session-rail-v4); the editable test (fu) stays the 3.6556.2 export.
+    'import { isRailEditableEnvironment } from "./generated/session-rail/environment-edit.mjs";',
+    'import { SessionRail, NO_PLUGIN_SECTIONS, RailSaveEnvironmentLink, RailSaveEnvironmentRow, RailEditEnvironmentButton } from "./generated/session-rail-v4/index.mjs";',
     'const y = useStore(t, (state) => state.openEditEnvironment);',
     'const xn = e.type === "local" && !o && isRailEditableEnvironment(K) ? K.id : null;',
     'const Sn = useCallback(() => t.setState({ editEnvironmentRequest: xn }), [t, xn]);',

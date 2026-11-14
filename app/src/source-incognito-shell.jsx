@@ -27,11 +27,15 @@
 //   clipPath: "inset(-50px -100px -100px)", zIndex: V(20), ...au}` (au = shared-7 GP `{opacity: 1}`); the header label
 //   and $g are Jy's web branch (`e && !p`), which the desktop top bar replaces.
 // Every class is in the loaded c6a992d55 sheet. Host differences (registered in the lane report): the frame and the
-// header have no framer-motion exit fade (the host has no motion library; the enter animation is the CSS class), Fy's
-// WCO spacers (Windows) and its Mac context-menu guard are not drawn, and the layering is unverified in a GUI (E61).
-import React, { useSyncExternalStore } from "react";
-import { CdsButton, CdsRoot, CdsTooltip, cdsClassNames } from "./generated/view-tabs/index.js";
-import { t } from "../electron/i18n/index.mjs";
+// header have no framer-motion exit fade (the host has no motion library; the enter animation is the CSS class). Since
+// 4.16336.0 the top bar row (Fy's successor Xw, its Mac context-menu guard MU and its WCO spacers included) is sliced;
+// the frame below (4.16336.0 lT: motion, fizzy-lake shadow token) and this grid stay host code (chat-header report).
+import React from "react";
+// chat-header 4.16336.0 (surfaces wave 2): the top bar row is the sliced shared-20 Yw → Xw with Zw → Ix (the Exit
+// incognito X in its inverted CdsRoot / CdsTooltip, the ghost GhostFilled label icon, the traffic-light spacer from
+// frame-sidebar's linked useWindowChrome), generated/chat-header through chat-header-host.jsx. The hand port of Fy / Qg /
+// xy that stood here (SourceIncognitoTopBar, SourceExitIncognito, SourceIncognitoGhostIcon) is gone.
+import { ChatDesktopTopBar } from "./chat-header-host.jsx";
 
 // VA's top bar row while incognito on a Mac (O = 48) and vA() with fizzy-lake panels off (gc() false → 48).
 export const INCOGNITO_TOP_BAR_ROW = "48px";
@@ -48,65 +52,6 @@ export const INCOGNITO_MAIN_CLASS = "w-full relative min-w-0 h-full print:!h-aut
 // window is never in an iframe and has no computer-use takeover store (dK(yK)), so only isIncognito decides.
 export const frameShellMounted = ({ isIncognito }) => !isIncognito;
 
-// Qg's `u = E()`: the resolved light / dark the host writes to html[data-mode] (theme-command-model writeThemeMode).
-const readMode = () => (typeof document !== "undefined" && document.documentElement.dataset.mode === "dark" ? "dark" : "light");
-function subscribeMode(callback) {
-  if (typeof MutationObserver !== "function" || typeof document === "undefined") return () => {};
-  const observer = new MutationObserver(callback);
-  observer.observe(document.documentElement, { attributes: true, attributeFilter: ["data-mode"] });
-  return () => observer.disconnect();
-}
-export const useResolvedMode = () => useSyncExternalStore(subscribeMode, readMode, () => "light");
-// Qg `b = t ? d : u`.
-export const incognitoToggleMode = (enabled, resolved) => (enabled ? (resolved === "dark" ? "light" : "dark") : resolved);
-
-// shared-20 xy through Ud (shared-16 Zf returns `today` while the GhostFilled master is empty) and shared-52 Kf
-// (size 20: a 20×20 flex box around the svg).
-export function SourceIncognitoGhostIcon({ className }) {
-  return (
-    <div className={cdsClassNames("group", className)} style={{ width: 20, height: 20, display: "flex", alignItems: "center", justifyContent: "center" }}>
-      <svg width={20} height={20} viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg" style={{ flexShrink: 0 }} className={cdsClassNames("group", className)} aria-hidden="true">
-        <path fillRule="evenodd" clipRule="evenodd" d="M10 2C14.4183 2 18 5.58172 18 10V17.333C18 17.6404 17.7899 17.9087 17.4912 17.9814C17.1925 18.0539 16.8824 17.9125 16.7412 17.6396C16.4654 17.1046 16.2278 16.6907 15.9443 16.4053C15.6891 16.1486 15.4011 16.0001 14.9775 16C14.3 16.0002 13.5743 16.4876 13.1016 17.5947C12.9967 17.8403 12.7553 18 12.4883 18C12.2214 17.9998 11.9798 17.8402 11.875 17.5947C11.4021 16.4874 10.6776 16 10 16C9.32238 16 8.59794 16.4874 8.125 17.5947C8.02021 17.8402 7.77857 17.9998 7.51172 18C7.24472 18 7.0033 17.8403 6.89844 17.5947C6.42567 16.4876 5.70001 16.0002 5.02246 16C4.59894 16.0001 4.31088 16.1486 4.05566 16.4053C3.7722 16.6907 3.53456 17.1046 3.25879 17.6396C3.11763 17.9125 2.80745 18.0539 2.50879 17.9814C2.21014 17.9087 2 17.6404 2 17.333V10C2 5.58172 5.58172 2 10 2ZM7 8.66699C6.44772 8.66699 6 9.11471 6 9.66699C6.00021 10.2191 6.44785 10.667 7 10.667C7.55215 10.667 7.99979 10.2191 8 9.66699C8 9.11471 7.55228 8.66699 7 8.66699ZM13 8.66699C12.4477 8.66699 12 9.11471 12 9.66699C12.0002 10.2191 12.4478 10.667 13 10.667C13.5522 10.667 13.9998 10.2191 14 9.66699C14 9.11471 13.5523 8.66699 13 8.66699Z" />
-        <path className="group-hover:animate-[icon-ghost-blink_4s_ease-in-out_infinite] opacity-0" fillRule="evenodd" clipRule="evenodd" d="M10 2C14.4183 2 18 5.58172 18 10V17.333C18 17.6404 17.7899 17.9087 17.4912 17.9814C17.1925 18.0539 16.8824 17.9125 16.7412 17.6396C16.4654 17.1046 16.2278 16.6907 15.9443 16.4053C15.6891 16.1486 15.4011 16.0001 14.9775 16C14.3 16.0002 13.5743 16.4876 13.1016 17.5947C12.9967 17.8403 12.7553 18 12.4883 18C12.2214 17.9998 11.9798 17.8402 11.875 17.5947C11.4021 16.4874 10.6776 16 10 16C9.32238 16 8.59794 16.4874 8.125 17.5947C8.02021 17.8402 7.77857 17.9998 7.51172 18C7.24472 18 7.0033 17.8403 6.89844 17.5947C6.42567 16.4876 5.70001 16.0002 5.02246 16C4.59894 16.0001 4.31088 16.1486 4.05566 16.4053C3.7722 16.6907 3.53456 17.1046 3.25879 17.6396C3.11763 17.9125 2.80745 18.0539 2.50879 17.9814C2.21014 17.9087 2 17.6404 2 17.333V10C2 5.58172 5.58172 2 10 2Z" />
-      </svg>
-    </div>
-  );
-}
-
-// shared-20 Qg while enabled (the only state the incognito top bar draws): the ghost X in its tooltip, inside the
-// inverted CdsRoot. `mode` overrides the resolved mode (SSR tests).
-export function SourceExitIncognito({ onToggle, shortcut = "cmd+shift+i", tooltipSide = "left", className, size, mode }) {
-  const resolved = useResolvedMode();
-  const label = t("Exit incognito");
-  return (
-    <CdsRoot mode={incognitoToggleMode(true, mode ?? resolved)} className="contents">
-      <CdsTooltip hoverable={false} side={tooltipSide} shortcut={shortcut} content={label}>
-        <CdsButton variant="ghost" iconOnly size={size} icon="X" tooltip={false} className={cdsClassNames("group", className)} aria-label={label} onClick={onToggle} />
-      </CdsTooltip>
-    </CdsRoot>
-  );
-}
-
-// shared-20 Fy with `T` (incognitoModeEnabled) on a Mac, replacesFrameHeader true: traffic-light spacer, the
-// incognito label in the middle, Iy (Qg) first in the trailing slot. Ry (the activity panel toggle) is the agent
-// route's and Chat has none.
-export function SourceIncognitoTopBar({ onExit, trafficLights = false, mode }) {
-  return (
-    <div className="flex items-center draggable px-2" style={{ zIndex: 30 }}>
-      <div className="flex-1 flex items-center gap-1">{trafficLights && <div className="w-[69px] shrink-0" />}</div>
-      <div className="flex items-center justify-center">
-        <div className="flex items-center gap-2 text-bg-000">
-          <SourceIncognitoGhostIcon />
-          <span className="text-sm select-none">{t("Incognito chat")}</span>
-        </div>
-      </div>
-      <div className="flex-1 flex items-center justify-end">
-        <SourceExitIncognito onToggle={onExit} tooltipSide="left" className="draggable-none" mode={mode} />
-      </div>
-    </div>
-  );
-}
-
 // shared-20 Jy on a desktop top bar: the frame alone.
 export function SourceIncognitoFrame() {
   return (
@@ -118,11 +63,13 @@ export function SourceIncognitoFrame() {
 // VA + LA around the host's workspace. While `active` is false every wrapper is `display: contents` with no style, so
 // the workspace lays out in the frame root exactly as before, and the element tree (and the workspace's state) stays
 // the same when incognito turns on or off: only classes and styles change, the top bar and the frame fill fixed slots.
-export function SourceIncognitoShell({ active, onExit, trafficLights, children }) {
+// `pathname` is the host route the top bar's selectors read ("/new" on the incognito New chat page, "/chat/<id>" in an
+// incognito chat); `onExit` leaves incognito (Zw's setIncognitoModeEnabled(false)).
+export function SourceIncognitoShell({ active, onExit, pathname, children }) {
   return (
     <div className={active ? "grid w-full overflow-hidden" : "contents"}
       style={active ? { height: "100%", gridTemplateRows: `${INCOGNITO_TOP_BAR_ROW} 1fr`, "--desktop-top-bar-row-height": INCOGNITO_TOP_BAR_ROW } : undefined}>
-      {active ? <SourceIncognitoTopBar onExit={onExit} trafficLights={trafficLights} /> : null}
+      {active ? <ChatDesktopTopBar incognito onToggleIncognito={onExit} pathname={pathname} /> : null}
       <div className={active ? INCOGNITO_CONTENT_CLASS : "contents"}>
         <div className={active ? INCOGNITO_MAIN_CLASS : "contents"} style={active ? { padding: INCOGNITO_MAIN_PADDING } : undefined}>
           {children}

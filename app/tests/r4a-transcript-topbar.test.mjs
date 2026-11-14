@@ -19,6 +19,7 @@ import { fileGroupPresentation } from '../src/file-tool-model.mjs';
 import { titlebarControlClass } from '../src/titlebar-controls-model.mjs';
 import { sessionArchived } from '../src/sidebar-model.js';
 import { createClipboardFeedback } from '../src/clipboard-feedback.mjs';
+import { designEntryStylesheets } from '../scripts/current-design-assets.mjs';
 
 const app = path.resolve(import.meta.dirname, '..');
 const reference = path.resolve(app, '../reference/installed-2.42304.0-20261017');
@@ -111,8 +112,10 @@ test('cov4-03 official: the find walk skips [data-cds=Icon]:not(svg) and [data-c
 });
 
 test('cov4-03 local: the glyph is never matched and skipping it keeps the run (as official shared-15 Ca)', () => {
-  // The local Icon is a span[aria-hidden][data-cds=Icon] holding the font glyph (icons.jsx), the transcript has no Avatar.
-  assert.match(local('src/icons.jsx'), /<span\n\s+aria-hidden="true"\n\s+data-cds="Icon"/);
+  // The local Icon is the official CdsIcon (icons.jsx -> cds-core.mjs, 4.16336.0 Bs): a span[data-cds=Icon] holding the
+  // font glyph, aria-hidden unless given alt; the transcript has no Avatar.
+  assert.match(local('src/icons.jsx'), /import \{ CdsIcon \} from "\.\/cds-core\.mjs";/);
+  assert.match(local('src/generated/cds-core/shared-frame.mjs'), /A\("span", \{\n\s+"data-cds": "Icon",[\s\S]{0,300}"aria-hidden": w,/);
   const avatars = fs.readdirSync(path.join(app, 'src')).filter((name) => /\.(jsx|mjs|js)$/.test(name))
     .filter((name) => /data-cds=["']Avatar|"data-cds":\s*["']Avatar/.test(local(`src/${name}`)));
   assert.deepEqual(avatars, []);
@@ -262,7 +265,7 @@ test('topbar-08 local: View options shows the row for any unarchived session (al
   assert.match(titlebarMenu, /\{!sessionArchived\(menu\.data\) && <>\n\s+<SourceMenu\.Separator \/>\n\s+<SessionKeepAwakeItem session=\{menu\.data\} metadata=\{sessionMetadata\[menu\.data\.id\]\}/);
   assert.match(main, /case "keep-awake": return updateSessionMetadata\(target\.id, \{ keepAwake: payload\?\.value === true \}\);/);
   // The ⋮ trigger exists only with a session, so menu.data is always one.
-  assert.match(local('src/source-titlebar.jsx'), /\{surface === "code" && session && <ToolButton\n\s+label=\{viewOptionsLabel\(foldedActivity\)\}/);
+  assert.match(local('src/source-titlebar.jsx'), /\{surface === "code" && session && <ToolButton\n\s+label=\{viewOptionsLabel\(false\)\}/);
   const sidebar = local('src/source-sidebar.jsx');
   assert.match(sidebar, /<SourceMenu\.Item keepOpen role="menuitemcheckbox" aria-checked=\{metadata\.keepAwake === true\} description=\{t\("Only for this session"\)\}/);
   assert.match(sidebar, /trailing=\{<SourceSwitch decorative size="xs" checked=\{metadata\.keepAwake === true\} \/>\}/);
@@ -305,14 +308,21 @@ test('topbar-09 official: "selected" needs fizzy-lake color, whose allow-list is
 
 test('topbar-09 local: no selected variant (as default), and the pressed toggle paints bg-accent under text-accent — aligned (R4f-rail SR-6)', () => {
   const html = renderTitlebar({ terminalAvailable: true, panes: new Set(['terminal']) });
-  const toggle = html.match(/<button[^>]*data-pane-toggle="terminal"[^>]*>/)[0];
+  const toggle = html.match(/<button[^>]*aria-label="Terminal"[^>]*>/)[0];
   assert.match(toggle, /aria-pressed="true"/);
-  // W14-code r2 fr2-16: ToolButton is the CDS ghost Button (its own gc paint layer), no host class or is-selected.
-  assert.match(toggle, /data-cds-ghost="" class="[^"]* text-secondary"/);
+  // surfaces wave 2 (titlebar): the toggle is 4.16336.0 cc43287c9 SY — the CDS ghost Button (its own gc paint layer) with
+  // `pressed: t.active, pressedVariant: "selected"` and no className (4.16336.0 drops lW's rm("text-secondary")).
+  assert.match(toggle, /data-cds-ghost="" class="[^"]*"/);
+  assert.doesNotMatch(toggle, /text-secondary/);
   // Same as the default-off branch: no data-cds-pressed-variant and no ghost-selected fill.
   assert.doesNotMatch(html, /data-cds-pressed-variant|bg-fill-ghost-selected/);
   assert.equal(titlebarControlClass(true), 'text-secondary');
-  assert.match(html, /<div class="st-trailing panel-toggles">/);
+  // surfaces wave 3 (titlebar frame): the Code titlebar's actions are the 4.16336.0 frame's cluster box (shared-20 s_ T:
+  // `relative z-[1] ${vn} draggable-none`, vn = shared-38 epitaxy-titlebar-end) inside the CdsToolbar, not .st-trailing.
+  assert.match(html, /<div data-cds="Toolbar" role="toolbar" aria-label="Session tools"/);
+  assert.ok(html.indexOf('<div class="relative z-[1] epitaxy-titlebar-end ') > html.indexOf('data-cds="Toolbar"'));
+  assert.ok(html.indexOf('<div class="relative z-[1] epitaxy-titlebar-end ') < html.indexOf(toggle));
+  assert.doesNotMatch(html, /st-trailing/);
   // ALIGNED: the official default path is gc + Il ghost, bg-accent behind text-accent, hovered or not. W14-code r2 fr2-16:
   // ToolButton is the CDS Button itself, so its paint layer carries gc and its class Il; no host pressed rule is left.
   const css = local('src/source-titlebar.css');
@@ -320,8 +330,12 @@ test('topbar-09 local: no selected variant (as default), and the pressed toggle 
   const toggleHtml = html.slice(html.indexOf(toggle), html.indexOf('</button>', html.indexOf(toggle)));
   assert.match(toggleHtml, /group-aria-pressed\/btn:bg-accent/);
   assert.match(toggle, /aria-pressed:text-accent/);
-  // The same values as the loaded official utilities that gc and Il name.
-  const sheet = local('public/assets/v1/c6a992d55-Che1orl5.css');
+  // The same values as the loaded official utilities that gc and Il name: the current design's c6a992d55 entry sheet
+  // (current-design-assets.mjs), linked by index.html.
+  const utilitiesSheet = designEntryStylesheets.find(name => name.startsWith('c6a992d55-'));
+  assert.ok(utilitiesSheet, 'the current design pins a c6a992d55 utilities sheet');
+  assert.ok(local('index.html').includes(`<link rel="stylesheet" href="/assets/v1/${utilitiesSheet}" />`));
+  const sheet = local(`public/assets/v1/${utilitiesSheet}`);
   pin(sheet, ['.group-aria-pressed\\/btn\\:bg-accent:is(:where(.group\\/btn)[aria-pressed=true] :where(.group-aria-pressed\\/btn\\:bg-accent)){background-color:var(--cds-bg-accent)}',
     '.aria-pressed\\:text-accent[aria-pressed=true]{color:var(--cds-text-accent)}']);
   // The popout Keep window on top (DW: ghost, pressed: t, no pressedVariant) takes the same default pressed look.

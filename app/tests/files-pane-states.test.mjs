@@ -6,6 +6,7 @@ import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
 import fs from 'node:fs';
 import path from 'node:path';
+import { designEntryStylesheets } from '../scripts/current-design-assets.mjs';
 
 // Files pane states of 2.2553.1 readable/panes-tile-current.js: Ig root states
 // (:5496-5512) in Jg (:6101-6110) with Yg (:6111-6113), Pg subfolder rows
@@ -157,7 +158,11 @@ test('Lg subfolder error row: treeitem at depth+1, no activation button, muted c
   // color, height and guides are official @layer utilities rules.
   const css = fs.readFileSync(path.resolve(import.meta.dirname, '../src/source-session.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
   assert.doesNotMatch(css, /\.source-tree-(error|guided|guides)\b/);
-  assert.match(fs.readFileSync(path.resolve(import.meta.dirname, '../public/assets/v1/c6a992d55-Che1orl5.css'), 'utf8'), /\.text-muted-as-secondary\{color:var\(--muted-as-secondary,var\(--cds-text-muted\)\)\}/);
+  // The loaded utilities sheet is the current design's c6a992d55 entry sheet (current-design-assets.mjs), linked by index.html.
+  const utilitiesSheet = designEntryStylesheets.find(name => name.startsWith('c6a992d55-'));
+  assert.ok(utilitiesSheet, 'the current design pins a c6a992d55 utilities sheet');
+  assert.ok(fs.readFileSync(path.resolve(import.meta.dirname, '../index.html'), 'utf8').includes(`<link rel="stylesheet" href="/assets/v1/${utilitiesSheet}" />`));
+  assert.match(fs.readFileSync(path.resolve(import.meta.dirname, '../public/assets/v1', utilitiesSheet), 'utf8'), /\.text-muted-as-secondary\{color:var\(--muted-as-secondary,var\(--cds-text-muted\)\)\}/);
 });
 
 test('empty preview: the three exact source title/body pairs in EmptyState yu with icon Folder', () => {
@@ -166,7 +171,7 @@ test('empty preview: the three exact source title/body pairs in EmptyState yu wi
   assert.deepEqual(P.filesEmptyPreviewCopy({ tabs: 0, treeShown: true }), { title: 'Open files appear here', body: 'Pick a file in the tree, or click a file path in the conversation.' });
   assert.deepEqual(P.filesEmptyPreviewCopy({ tabs: 0, treeShown: false }), { title: 'Open files appear here', body: 'Click a file path in the conversation to open it.' });
   const markup = html(P.SourceFilesEmptyPreview, { tabs: 1, treeShown: true });
-  assert.match(markup, /^<div class="flex min-h-0 min-w-0 flex-1 flex-col source-file-empty-preview"><div class="flex h-full flex-col items-center justify-center gap-md px-lg py-lg text-center source-empty-state"><span aria-hidden="true" data-cds="Icon" class="!size-7 text-muted"/);
+  assert.match(markup, /^<div class="flex min-h-0 min-w-0 flex-1 flex-col source-file-empty-preview"><div class="flex h-full flex-col items-center justify-center gap-md px-lg py-lg text-center source-empty-state"><span data-cds="Icon" style="[^"]*" class="!size-7 text-muted" aria-hidden="true"/);
   assert.match(markup, /<p class="max-w-\[36ch\] break-words text-body text-primary">No file selected<\/p><p class="max-w-\[36ch\] break-words text-footnote text-muted">Pick an open file above, or click a file path in the conversation\.<\/p>/);
   // Through the panel: tree hidden while empty and no tabs -> "Click a file path…".
   const hidden = panel({ view: { treeHiddenWhileEmpty: true }, onViewChange: () => {} });

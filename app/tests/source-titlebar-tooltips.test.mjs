@@ -20,15 +20,28 @@ before(async () => {
   // settings-shell-render does) before the first ESM import of react-dom.
   createRequire(path.resolve(import.meta.dirname, '../package.json'))('react-dom').createPortal = (children) => children;
   T = await server.ssrLoadModule('/src/source-titlebar.jsx');
-  // W14-code r2 fr2-21: c73f45bc3 Pv (ready Trigger) and Nv (loading span), generated.
-  PILL_TRIGGER = (await server.ssrLoadModule('/src/generated/code-current/titlebar-folder-pill.mjs')).folderPillTriggerClass.replaceAll("'", '&#x27;');
-  PILL_STATIC = (await server.ssrLoadModule('/src/generated/code-current/titlebar-spawn-lead.mjs')).originPillStaticClass.replaceAll("'", '&#x27;');
+  // W14-code r2 fr2-21: c73f45bc3 Pv (ready Trigger) and Nv (loading span), generated. surfaces wave 3 (titlebar frame): the
+  // Code titlebar is the 4.16336.0 frame, whose OS provides the panels scope (shared-120 Ke true), so wy's `x = Sr()` picks
+  // the panels sizes: Iv (ready Trigger) and Fv (loading span).
+  PILL_TRIGGER = (await server.ssrLoadModule('/src/generated/code-current/titlebar-folder-pill.mjs')).folderPillTriggerPanelsClass.replaceAll("'", '&#x27;');
+  PILL_STATIC = (await server.ssrLoadModule('/src/generated/code-current/titlebar-spawn-lead.mjs')).originPillStaticPanelsClass.replaceAll("'", '&#x27;');
 });
 after(() => server?.close());
-const CODE_TITLE = 'truncate text-body font-medium font-control text-primary select-none mx-outset h-control px-xs rounded text-start bg-transparent border-0 hover:bg-fill-ghost-hover focus-visible:outline-hidden hide-focus-ring focus-visible:shadow-focus cursor-text';
+// verify:titlebar: inside the 4.16336.0 frame the title takes cc43287c9 FX's bleed (shared-18 Iw: px-md, --cds-outset-x pad-md).
+const CODE_TITLE = 'truncate text-body font-medium font-control text-primary select-none mx-outset h-control px-md rounded text-start bg-transparent border-0 hover:bg-fill-ghost-hover focus-visible:outline-hidden hide-focus-ring focus-visible:shadow-focus cursor-text';
 const render = (props) => renderToStaticMarkup(React.createElement(T.SourceTitlebar, { section: 'new', session: { id: 'a', name: 'A title', cwd: '/tmp/work' }, onRename() {}, ...props }));
 // R3-topbar TT-03: the lead ends where the trailing cluster starts (the local measurement spans are gone).
-const lead = (html) => html.slice(html.indexOf('<div class="st-lead'), html.indexOf('<div class="st-trailing'));
+// surfaces wave 3 (titlebar frame): the Code titlebar is the 4.16336.0 frame; its lead is RX's gt box (`group/lead relative z-[1] …`)
+// and its actions the frame's cluster box (`relative z-[1] epitaxy-titlebar-end …`), not .st-lead / .st-trailing.
+const lead = (html) => html.includes('<div class="group/lead') ? html.slice(html.indexOf('<div class="group/lead'), html.indexOf('<div class="relative z-[1] epitaxy-titlebar-end')) : html.slice(html.indexOf('<div class="st-lead'), html.indexOf('<div class="st-trailing'));
+// RX's gt box: `group/lead relative z-[1] ${shared-38 fn} ${shared-38 En} draggable-none` (generated/titlebar-frame).
+const FRAME_LEAD = '<div class="group/lead relative z-[1] flex min-w-0 items-center [[data-tile-overflow-anchor]_&amp;]:[@container_tile-slot_(max-width:320px)]:[clip-path:inset(-32px_-12px)] draggable-none"';
+// surfaces wave 2 (titlebar): the pane toggles are the sliced 4.16336.0 cc43287c9 SY (no host data-pane-toggle attribute);
+// a toggle is named by its spec label (hy: "Terminal", "Changes", "Preview" / "Browser", "Files").
+const PANE_OF = { Terminal: 'terminal', Changes: 'changes', Preview: 'preview', Browser: 'preview', Files: 'files' };
+const toggleGroup = (html) => { const at = html.indexOf('<div class="flex items-center gap-1 empty:hidden"'); return at < 0 ? '' : html.slice(at, html.indexOf('aria-label="View options', at) < 0 ? undefined : html.indexOf('aria-label="View options', at)); };
+const toggles = (html) => [...toggleGroup(html).matchAll(/<button[^>]*aria-label="(Terminal|Changes|Preview|Browser|Files)"/g)].map((match) => PANE_OF[match[1]]);
+const toggleButton = (html, label) => toggleGroup(html).match(new RegExp(`<button[^>]*aria-label="${label}"[^>]*>`))?.[0];
 
 test('no native title on .st-origin, .st-title or .st-folder', () => {
   for (const props of [{}, { menuKind: 'folder' }, { session: { id: 'b', name: 'No folder' } }]) {
@@ -73,16 +86,20 @@ test('home What’s new button follows showWhatsNew', async () => {
 // that the tooltip draws as one <kbd> per key in io modifier order, so Changes reads ⇧ ⌘ D, not ⌘⇧D.
 test('titlebar tooltips carry key specs; the text-variant Shortcut draws Changes as ⇧ ⌘ D', async () => {
   const S = await server.ssrLoadModule('/src/source-shortcut.jsx');
-  const N = await server.ssrLoadModule('/src/source-nav-buttons.jsx');
-  assert.equal(T.CHANGES_TOOLTIP.shortcut, 'cmd+shift+d');
-  assert.deepEqual([N.NAV_TOOLTIPS.back.shortcut, N.NAV_TOOLTIPS.forward.shortcut], ['cmd+[', 'cmd+]']);
+  // surfaces wave 2: the Changes toggle is hy's diff spec through SY (tooltip content label, shortcut Ce("toggleDiff") ⇧⌘D);
+  // Back / Forward name cmd+[ / cmd+] in the sliced uv (source-nav-buttons.test.mjs).
+  const changes = T.paneToggleSpec({ pane: 'changes', icon: 'ChangesPlusMinus', label: 'Changes', shortcut: 'cmd+shift+d', active: false });
+  assert.equal(changes.shortcut, 'cmd+shift+d');
+  assert.equal(changes.label, 'Changes');
+  const nav = fs.readFileSync(path.resolve(import.meta.dirname, '../src/generated/titlebar/history-nav.mjs'), 'utf8');
+  assert.ok(nav.includes('_ = g ? "cmd+[" : "alt+left"') && nav.includes('v = g ? "cmd+]" : "alt+right"'));
   const glyphs = (keys) => [...renderToStaticMarkup(React.createElement(S.SourceShortcut, { keys, variant: 'text', mac: true }))
     .matchAll(/<kbd class="scds-text-key">(?:<span aria-hidden="true">)?([^<]+)/g)].map((match) => match[1]);
-  assert.deepEqual(glyphs(T.CHANGES_TOOLTIP.shortcut), ['⇧', '⌘', 'D']);
+  assert.deepEqual(glyphs(changes.shortcut), ['⇧', '⌘', 'D']);
   // W14-code r2 closeout-2 (DC-05): code-ui's SIDEBAR_TOGGLE_TOOLTIP had no reader and is gone; the sidebar toggle's
   // cmd+b key spec still draws ⌘ B.
   assert.deepEqual(glyphs('cmd+b'), ['⌘', 'B']);
-  assert.deepEqual(glyphs(N.NAV_TOOLTIPS.back.shortcut), ['⌘', '[']);
+  assert.deepEqual(glyphs('cmd+['), ['⌘', '[']);
   assert.deepEqual(glyphs('cmd+shift+\\'), ['⇧', '⌘', '\\']);
   assert.deepEqual(glyphs('enter'), ['⏎']);
   // The tooltip renders that variant for `shortcut` and `secondaryHint.shortcut`.
@@ -138,7 +155,7 @@ test('a secondary pane closes itself from the end of its own titlebar, naming �
   const plain = render({});
   assert.doesNotMatch(plain, /data-split-close|Close split view|Close pane/);
   const html = render({ onCloseSplit() {} });
-  const trailing = html.slice(html.indexOf('st-trailing'));
+  const trailing = html.slice(html.indexOf('epitaxy-titlebar-end'));
   const close = trailing.match(/<button[^>]*data-split-close=""[^>]*>/)?.[0];
   assert.ok(close, 'close control renders in the trailing actions');
   assert.match(close, /data-cds-ghost="" class="[^"]* epitaxy-pane-close-control text-secondary"/);
@@ -172,16 +189,17 @@ test('Code draft page: the official h1 title and the landing toggles Terminal �
   const html = draft({ terminalAvailable: true, previewAvailable: true, filesAvailable: true });
   assert.ok(html.includes(DRAFT_H1), html);
   assert.doesNotMatch(html, /st-draft-title/);
-  const toggles = [...html.matchAll(/data-pane-toggle="([a-z]+)"/g)].map((match) => match[1]);
-  assert.deepEqual(toggles, ['terminal', 'preview', 'files']);
+  assert.deepEqual(toggles(html), ['terminal', 'preview', 'files']);
   // Landing: no Changes, no ⋮ (Zh needs a session).
   assert.doesNotMatch(html, /aria-label="Changes"|View options/);
-  const files = html.match(/<button[^>]*data-pane-toggle="files"[^>]*>/)[0];
-  assert.match(files, /data-cds-ghost="" class="[^"]* text-secondary"/);
-  assert.match(files, /aria-label="Files"/);
-  assert.match(files, /aria-keyshortcuts="Meta\+Shift\+F"/);
+  // SY: a ghost iconOnly cds-core Button, pressed state as aria-pressed, the shortcut written by the Button (SSR spells
+  // "cmd" Control: no platform on the server), no host class (4.16336.0 drops lW's text-secondary).
+  const files = toggleButton(html, 'Files');
+  assert.match(files, /data-cds="Button" data-cds-icon-only="" data-cds-ghost=""/);
+  assert.match(files, /aria-pressed="false" aria-label="Files" aria-keyshortcuts="(?:Meta|Control)\+Shift\+f"/);
+  assert.doesNotMatch(files, /text-secondary|data-pane-toggle/);
   // Files only where main.jsx can open the pane on the page's folder.
-  assert.deepEqual([...draft({ terminalAvailable: true, previewAvailable: true }).matchAll(/data-pane-toggle="([a-z]+)"/g)].map((match) => match[1]), ['terminal', 'preview']);
+  assert.deepEqual(toggles(draft({ terminalAvailable: true, previewAvailable: true })), ['terminal', 'preview']);
   // Only Code has the draft title; other surfaces and other sections keep theirs.
   assert.doesNotMatch(draft({ surface: 'cowork' }), /data-pane-title/);
   assert.doesNotMatch(render({ section: 'routines', session: null, sectionLabel: 'Routines' }), /data-pane-title/);
@@ -190,8 +208,7 @@ test('Code draft page: the official h1 title and the landing toggles Terminal �
   // W14-code r8 fr8-03: the session title is c9543da06 Mp's button[data-pane-title] (not the draft h1).
   assert.doesNotMatch(session, /<h1[^>]*data-pane-title/);
   assert.match(session, /<button[^>]*data-pane-title=""/);
-  assert.deepEqual([...session.matchAll(/data-pane-toggle="([a-z]+)"/g)].map((match) => match[1]), ['terminal', 'preview', 'files']);
-  assert.ok(session.indexOf('aria-label="Changes"') < session.indexOf('data-pane-toggle="preview"'));
+  assert.deepEqual(toggles(session), ['terminal', 'changes', 'preview', 'files']);
   const css = fs.readFileSync(path.resolve(import.meta.dirname, '../src/source-titlebar.css'), 'utf8');
   assert.doesNotMatch(css, /\.st-draft-title\s*\{/, 'no local rule over the official utilities');
   const official = (name) => fs.readFileSync(path.resolve(import.meta.dirname, '../../reference/installed-2.42304.0-20261017/ion-dist/assets/v1', name), 'utf8');
@@ -215,30 +232,35 @@ test('home-07: the Code draft title is hidden while the first send spawns', () =
   const spawning = draft({ spawning: true });
   assert.doesNotMatch(spawning, /data-pane-title/);
   // Only the title goes: the landing toggles stay.
-  assert.deepEqual([...spawning.matchAll(/data-pane-toggle="([a-z]+)"/g)].map((match) => match[1]), ['terminal', 'preview']);
+  assert.deepEqual(toggles(spawning), ['terminal', 'preview']);
   // main.jsx hands the titlebar its spawn phase while no session is open.
   const main = fs.readFileSync(path.resolve(import.meta.dirname, '../src/main.jsx'), 'utf8');
   assert.equal(count(main, 'spawning={!current && !!spawnPhase}'), 1);
 });
 
-// R4g-small SM1 topbar-04 (D36, c73f45bc3 Rh gate-off row; c26fb8b6b Cn `preview:"Play"`): the Code toggle draws Play,
-// is labelled Preview and names ⇧⌘P; other surfaces keep Globe + Browser (the Cowork view's yE counterpart).
-test('topbar-04: Code preview toggle is Play + Preview + ⇧⌘P, other surfaces Globe + Browser', () => {
-  const glyphs = JSON.parse(fs.readFileSync(path.resolve(import.meta.dirname, '../src/generated/icons.json'), 'utf8'));
-  const glyph = (name) => String.fromCodePoint(glyphs[name]);
-  const button = (html) => html.slice(html.indexOf('<button', html.lastIndexOf('<button', html.indexOf('data-pane-toggle="preview"'))), html.indexOf('</button>', html.indexOf('data-pane-toggle="preview"')));
-  for (const props of [{}, { session: null }, { previewRunning: true }]) {
-    const html = button(render({ previewAvailable: true, ...props }));
-    assert.match(html, /aria-keyshortcuts="Meta\+Shift\+P"/);
-    assert.ok(html.includes(glyph('Play')), 'Play glyph');
-    assert.ok(!html.includes(glyph('Globe')), 'no Globe glyph');
-    // c73f45bc3 pane items: the name stays "Preview" (GD2Vvn5YZe) while the dev server runs; only the dot shows it.
-    assert.match(html, /aria-label="Preview"/);
-    assert.doesNotMatch(html, /dev server running/);
+// R4g-small SM1 topbar-04 (D36) on 4.16336.0: c73f45bc3 hy's preview row is `icon: e === "preview" && D ? "Globe" : vl[e]`,
+// label `D ? "Browser" : "Preview"`, shortcut Ce("togglePreview", E, {externalPreviewAvailable: D}) with D = shared-123 yy
+// (`e === "remote" ? fy() && n : t`, cy() = `!!ce && V(sy) && !$v()`, ce = globalThis["claude.web"].Launch): the host has no
+// Launch bridge, so D is false — vl.preview "Play" (cc44b66a7 M), "Preview", ⇧⌘P. Other surfaces keep Globe + Browser
+// (the Cowork view's yE counterpart). Icons render client-side, so the glyph is checked through the spec and SY's Dp call.
+test('topbar-04: Code preview toggle is Play + Preview + ⇧⌘P (gate off: no Launch bridge), other surfaces Globe + Browser', async () => {
+  const M = await server.ssrLoadModule('/src/titlebar-controls-model.mjs');
+  for (const session of [true, false]) {
+    const [preview] = M.titlebarToggleSpecs({ session, previewAvailable: true }).filter((spec) => spec.pane === 'preview');
+    assert.deepEqual(preview, { pane: 'preview', icon: 'Play', label: 'Preview', shortcut: 'cmd+shift+p', active: false });
   }
-  const other = button(render({ surface: 'cowork', previewAvailable: true }));
-  assert.match(other, /aria-label="Browser"/);
-  assert.ok(other.includes(glyph('Globe')));
+  const [cowork] = M.titlebarToggleSpecs({ surface: 'cowork', session: true, previewAvailable: true });
+  assert.deepEqual([cowork.icon, cowork.label], ['Globe', 'Browser']);
+  for (const props of [{}, { session: null }, { previewRunning: true }]) {
+    const button = toggleButton(render({ previewAvailable: true, ...props }), 'Preview');
+    assert.match(button, /aria-label="Preview" aria-keyshortcuts="(?:Meta|Control)\+Shift\+p"/);
+    assert.doesNotMatch(button, /dev server running/);
+  }
+  assert.match(toggleButton(render({ surface: 'cowork', previewAvailable: true }), 'Browser'), /aria-label="Browser" aria-keyshortcuts="(?:Meta|Control)\+Shift\+p"/);
+  const v4 = (name) => fs.readFileSync(path.resolve(import.meta.dirname, '../../reference/snapshots/claude-4.16336.0-20261104/ion-dist/assets/v1', name), 'utf8');
+  assert.ok(v4('c73f45bc3-C7dtUSq8.js').includes('icon:e===`preview`&&D?`Globe`:vl[e]') || v4('c73f45bc3-C7dtUSq8.js').includes('icon:e==="preview"&&D?"Globe":vl[e]'));
+  assert.ok(v4('shared-0-CnnWnVrT.js').includes('GO=globalThis["claude.web"]?.Launch') || v4('shared-0-CnnWnVrT.js').includes('GO=globalThis[`claude.web`]?.Launch'));
+  assert.ok(fs.readFileSync(path.resolve(import.meta.dirname, '../src/generated/titlebar/pane-toggle.mjs'), 'utf8').includes('I1($, 3, Dp(t.icon), t.icon)'));
 });
 
 // R2-topbar TT-02 (cc43287c9 wW `div{ref:he,inert:!B,className:"flex items-center gap-1 empty:hidden"}`, c73f45bc3
@@ -246,26 +268,30 @@ test('topbar-04: Code preview toggle is Play + Preview + ⇧⌘P, other surfaces
 test('a loading session holds the toggle group and ⋮ inert instead of disabled', () => {
   const props = { terminalAvailable: true, previewAvailable: true, loading: true };
   const html = render(props);
-  const trailing = html.slice(html.indexOf('st-trailing'));
+  const trailing = html.slice(html.indexOf('epitaxy-titlebar-end'));
   const group = trailing.match(/<div class="flex items-center gap-1 empty:hidden"[^>]*>/)?.[0];
   assert.ok(group, 'the toggle group wraps the toggles');
   assert.match(group, /\sinert=""/);
   const inside = trailing.slice(trailing.indexOf(group), trailing.indexOf('aria-label="View options'));
-  assert.deepEqual([...inside.matchAll(/data-pane-toggle="([a-z]+)"/g)].map((match) => match[1]), ['terminal', 'preview', 'files']);
-  assert.match(inside, /aria-label="Changes"/);
+  assert.deepEqual(toggles(trailing), ['terminal', 'changes', 'preview', 'files']);
+  assert.ok(inside.includes('aria-label="Changes"'));
   for (const button of trailing.match(/<button[^>]*>/g)) assert.doesNotMatch(button, /\sdisabled(=|\s|>)/, button);
   const more = trailing.match(/<button[^>]*aria-label="View options"[^>]*>/)[0];
   assert.match(more, /\sinert=""/);
   assert.match(more, /data-cds-ghost="" class="[^"]* text-secondary"/);
   // Ready: neither is inert.
   const ready = render({ ...props, loading: false });
-  assert.doesNotMatch(ready.slice(ready.indexOf('st-trailing')), /\sinert=/);
+  assert.doesNotMatch(ready.slice(ready.indexOf('epitaxy-titlebar-end')), /\sinert=/);
   // The draft page is never held; an empty group hides itself (empty:hidden) and renders no children.
   assert.match(render({ session: null }), /<div class="flex items-center gap-1 empty:hidden"><\/div>/);
-  // lW / Zh / DW: every cluster control carries text-secondary; W14-code r2 fr2-16: they are CDS ghost Buttons and a
-  // pressed toggle is aria-pressed (the Button's own pressed paint), no host is-selected.
+  // surfaces wave 2: the pane toggles are 4.16336.0 SY — CDS ghost Buttons, `pressed: t.active, pressedVariant:
+  // "selected"` (aria-pressed, the Button's own pressed paint), no className (4.16336.0 drops lW's text-secondary); the
+  // other cluster controls (⋮, popout dock / pin) keep it.
   const open = render({ terminalAvailable: true, panes: new Set(['terminal', 'changes']) });
-  assert.match(open.match(/<button[^>]*data-pane-toggle="terminal"[^>]*>/)[0], /data-cds-ghost="" class="[^"]* text-secondary" aria-pressed="true"/);
+  assert.match(toggleButton(open, 'Terminal'), /data-cds-ghost="" class="[^"]*" aria-pressed="true" aria-label="Terminal"/);
+  assert.doesNotMatch(toggleButton(open, 'Terminal'), /text-secondary/);
+  assert.match(toggleButton(open, 'Changes'), /aria-pressed="true"/);
+  assert.match(toggleButton(open, 'Files'), /aria-pressed="false"/);
   const popout = render({ popoutWindow: { alwaysOnTop: true, onDock() {}, onTogglePin() {} } });
   assert.match(popout.match(/<button[^>]*data-popout-dock=""[^>]*>/)[0], /data-cds-ghost="" class="[^"]* text-secondary"/);
   assert.match(popout.match(/<button[^>]*data-popout-pin=""[^>]*>/)[0], /data-cds-ghost="" class="[^"]* text-secondary" aria-pressed="true"/);
@@ -302,7 +328,7 @@ test('Code title bar: CaretDown session menu beside the title and the View optio
   assert.match(render({ menuKind: 'session-title' }), /data-cds-ghost="" class="[^"]* st-session-caret text-secondary"[^>]*aria-expanded="true" data-popup-open=""/);
   // shared-21 IV contextMenuAt: the title's right-click is a ContextMenu at the cursor, not the caret's popup.
   assert.match(render({ menuKind: 'session-title', menuAtPointer: true }), /data-cds-ghost="" class="[^"]* st-session-caret text-secondary"[^>]*aria-expanded="false"/);
-  const trailing = html.slice(html.indexOf('st-trailing'));
+  const trailing = html.slice(html.indexOf('epitaxy-titlebar-end'));
   assert.match(trailing, /aria-label="View options"/);
   assert.doesNotMatch(html, /Session options/);
   // Other surfaces keep their own CaretDown 'Session options' and no Code caret.
@@ -328,7 +354,7 @@ const GHOST = '<span aria-hidden="true" data-slot="title-ghost" class="h-[1lh] w
 test('a loading Code session shows the official title skeleton, no caret, and a static folder pill', () => {
   const known = lead(render({ loading: true }));
   assert.ok(known.includes(SKELETON), known);
-  assert.match(known, /^<div class="st-lead group\/lead">/);
+  assert.ok(known.startsWith(`${FRAME_LEAD}>`), known);
   assert.doesNotMatch(known, /st-session-caret|<button[^>]*data-pane-title|More options/);
   assert.doesNotMatch(known, /\sdisabled(=|\s|>)/);
   // W14-code r2 fr2-21: the loading pill is c73f45bc3 wy's `${Nv} cursor-default` span over Bv.
@@ -347,7 +373,7 @@ test('a loading Code session shows the official title skeleton, no caret, and a 
   // Ready: title button, caret and folder button, nothing disabled.
   const ready = lead(render({}));
   // r8 fr8-03: Mp's button — data-pane-title, (dir only under RTL), aria-label Z444Es4IIr, Ap classes, jp style.
-  assert.ok(ready.includes(`data-pane-title="" aria-label="A title, rename session" class="${CODE_TITLE}" style="--cds-outset-x:var(--cds-pad-xs)">A title</button>`), ready);
+  assert.ok(ready.includes(`data-pane-title="" aria-label="A title, rename session" class="${CODE_TITLE}" style="--cds-outset-x:var(--cds-pad-md)">A title</button>`), ready);
   assert.doesNotMatch(ready, /st-title"/);
   // Without onRename Mp is the span[data-pane-title] in Mt (no button, no rename label).
   const fixed = lead(render({ onRename: undefined }));

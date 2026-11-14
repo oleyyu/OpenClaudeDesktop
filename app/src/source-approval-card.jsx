@@ -15,8 +15,13 @@ import { nq as J } from "./generated/approval-titles/shared-18-D3y8YMFN.mjs";
 // `Ft as ir`). The title is shared-5 bL (cc32965c2 `tt as Lt`), sliced by extract-question-card.mjs.
 import { FS as ApprovalActions, IS as ApprovalActionButton, OS as useApprovalAllowArm } from "./generated/cowork-approval/shared-10-D6FXWZph.mjs";
 import { QuestionCardHeader as ApprovalTitle } from "./generated/question-card/card-header.mjs";
-import { CdsButton, CdsCard, CdsCollapsible, CdsTextLink, cdsClassNames } from "./generated/view-tabs/index.js";
-import { ElicitationField, ElicitationForm, elicitationInitialValues as formInitialValues, readElicitationForm } from "./generated/approval-elicitation/index.mjs";
+// host-wiring/chat (4.16336.0): the url / form elicitation cards' own Buttons, the link Card, the folded-detail Collapsible,
+// the token warning's TextLink and the class joins are the cds-core graph's (shared-frame-CJdE5Ria Xu → Id, Bh → Nu, LA,
+// Lg → Eu, Q). 4.16336.0 cc32965c2 calls them as before (Card {size:"sm"} without the new `outlined`; $b's Collapsible
+// with the default Trigger, whose caret is now CaretRightFilled). The tool card's decisions stay the 3.6556.2
+// cowork-approval FS / IS buttons (that region renders them).
+import { CdsButton, CdsCard, CdsCollapsible, CdsTextLink, cdsClassNames } from "./cds-core.mjs";
+import { ElicitationField, ElicitationForm, elicitationInitialValues as formInitialValues, readElicitationForm } from "./generated/approval-elicitation-v4/index.mjs";
 import { useIntl } from "./source-routines-shared-adapters.jsx";
 import { useSourceToasts } from "./source-toast.jsx";
 import { Icon } from "./icons";

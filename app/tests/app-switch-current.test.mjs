@@ -12,7 +12,7 @@ import { extractAppSwitch } from '../scripts/extract-app-switch.mjs';
 import { extractCurrentCodeHelpers } from '../scripts/extract-code-ui-current.mjs';
 import { pinSurfaceChordHelper, surfaceChordPins } from '../scripts/code-current-surface-chord-pins.mjs';
 import * as Chord from '../src/generated/code-current/surface-chord.mjs';
-import { designSnapshot } from '../scripts/current-design-assets.mjs';
+import { designEntryStylesheets, designSnapshot, legacyGlobalStylesheets } from '../scripts/current-design-assets.mjs';
 import { withMemoCache } from './support/react-memo-cache.mjs';
 
 // R2-appswitch W1 (decision D11): the macOS titlebar's compact Chat/Code switch is the 3.6556.2 (migration
@@ -28,6 +28,16 @@ const raw = file => fs.readFileSync(path.join(reference, file), 'utf8');
 // The 2.42304.0 originals the code-current surface chord (W3) and the host's older notes still quote.
 const previous = path.resolve(app, '../reference/installed-2.42304.0-20261017/ion-dist/assets/v1');
 const rawPrevious = file => fs.readFileSync(path.join(previous, file), 'utf8');
+
+// The official sheets the renderer loads: index.html's /assets/v1/ links — design-production (4.16336.0): the three entry
+// sheets and the registered global legacy-region sheet, named by current-design-assets (no hash written here).
+const indexHtml = fs.readFileSync(path.join(app, 'index.html'), 'utf8');
+const LOADED_OFFICIAL = [...indexHtml.matchAll(/<link rel="stylesheet" href="\/assets\/v1\/([^"]+)" \/>/g)].map(m => m[1]);
+const SHARED_STYLES = designEntryStylesheets.find(name => name.startsWith('shared-styles-'));
+const loadedOfficialCss = () => {
+  assert.deepEqual(LOADED_OFFICIAL, [...designEntryStylesheets, ...legacyGlobalStylesheets]);
+  return LOADED_OFFICIAL.map(f => fs.readFileSync(path.join(app, 'public/assets/v1', f), 'utf8')).join('\n');
+};
 
 let server, Switch, Frame, Host, SourceSidebar, CdsDensityContext, CdsTooltipProvider;
 before(async () => {
@@ -169,23 +179,49 @@ test('official strings: the raw 3.6556.2 chunks still carry what the generated m
   for (const needle of ['icon: "Chats"', 'tooltipSide: "bottom"', 'className: "df-tab-dot-running"', '"{tab}, working"']) assert.ok(generated.includes(needle), needle);
 });
 
-test('CSS: the df-app-switch rules come from the loaded official stylesheet, every rendered class exists there, no local mode-switch rule', () => {
-  const sharedStyles = fs.readFileSync(path.join(app, 'public/assets/v1/shared-styles-D_GJawPO.css'), 'utf8');
-  assert.equal(sharedStyles, fs.readFileSync(path.resolve(app, '../reference', designSnapshot, 'ion-dist/assets/v1/shared-styles-D_GJawPO.css'), 'utf8'));
-  assert.match(fs.readFileSync(path.join(app, 'index.html'), 'utf8'), /href="\/assets\/v1\/shared-styles-D_GJawPO\.css"/);
-  for (const rule of ['.df-app-switch{--cds-radius:999px}', 'span[role=radio][data-mode=code][data-checked] [data-cds=Icon]{font-weight:var(--df-app-switch-code-weight,700)!important}'])
-    assert.ok(sharedStyles.replace(/"/g, '').includes(rule.replace(/"/g, '')), rule);
+test('CSS: the main window\'s switch is the 4.16336.0 x_ slice; its df-app-switch rules and every class it renders are in the loaded official stylesheet', async () => {
+  // The loaded shared-styles is the pinned design's entry sheet (current-design-assets), served byte for byte.
+  const sharedStyles = fs.readFileSync(path.join(app, 'public/assets/v1', SHARED_STYLES), 'utf8');
+  assert.equal(sharedStyles, fs.readFileSync(path.resolve(app, '../reference', designSnapshot, 'ion-dist/assets/v1', SHARED_STYLES), 'utf8'));
+  assert.equal(LOADED_OFFICIAL.filter(name => name === SHARED_STYLES).length, 1);
+  // sidebar-body (surfaces-prod-2): the main window's frame (src/frame-sidebar-host.jsx) draws the official 4.16336.0 shared-21
+  // x_ (generated/frame-sidebar) over shared-18 dO (df-app-switch); main.jsx no longer mounts this 3.6556.2 switch, which
+  // stays only in the legacy aside (source-sidebar.jsx, windows without the 4.16336.0 frame).
+  assert.doesNotMatch(fs.readFileSync(path.join(app, 'src/main.jsx'), 'utf8'), /SourceAppSwitch/);
+  assert.ok(fs.readFileSync(path.join(app, 'src/generated/frame-sidebar/frame-chrome.mjs'), 'utf8').includes('var x_ = _(function ()'));
+  // The 4.16336.0 df-app-switch rules the x_ slice is styled by must be in the loaded sheet (collected, asserted last).
+  const flat = sharedStyles.replace(/"/g, '');
+  const missingRules = ['.df-app-switch{--cds-radius:999px}',
+    '.df-app-switch [data-cds=SegmentedControl] span[role=radio]{aspect-ratio:auto;width:calc(2.125rem * var(--cds-rem-scale,1))}',
+    '.df-app-switch [data-cds=SegmentedControl] span[role=radio]:not([data-checked]):is(:not(:hover),[data-disabled]){color:var(--cds-text-muted)}',
+    '.df-app-switch [data-cds=SegmentedControl] span[role=radio][data-checked] [data-cds=Icon]{font-weight:566.7!important}']
+    .filter(rule => !flat.includes(rule));
+  // Why the 3.6556.2 slice is not the main window's switch any more: its bold checked Code rule is gone from 4.16336.0.
+  assert.ok(!flat.includes('span[role=radio][data-mode=code][data-checked]'));
   const style = fs.readFileSync(path.join(app, 'src/style.css'), 'utf8');
   assert.doesNotMatch(style, /\.mode-switch\b/);
-  // Every class the switch renders is defined by one of the five loaded official stylesheets (no legacy utility).
-  const css = ['c6a992d55-Che1orl5.css', 'shared-styles-D_GJawPO.css', 'shared-frame-CegduNQ2.css', 'c3fde7009-BszyXGym.css', 'c8e31bf58-C7gq8dUF.css']
-    .map(f => fs.readFileSync(path.join(app, 'public/assets/v1', f), 'utf8')).join('\n');
-  const html = renderToStaticMarkup(React.createElement(Host.SourceAppSwitch, { mode: 'code', homeMode: 'cowork', onMode() {} }));
+  // Every class the x_ slice renders (SSR through the production frame host, synthetic fixture) is defined by one of the
+  // loaded official stylesheets (index.html's /assets/v1/ links; no legacy utility).
+  const FrameHost = await server.ssrLoadModule('/src/frame-sidebar-host.jsx');
+  const value = { mode: 'code', cdsFont: 'anthropic', platform: 'mac', sidebarless: false, collapsed: false, sidebarWidth: 288, sidebarFloor: 240,
+    hovering: false, peeked: false, narrowViewport: false, cuDocked: false, setSidebarFloor() {}, setNarrowViewport() {}, resetTransients() {},
+    closePeek() {}, expandSidebar() {}, toggleSidebar() {}, collapseSidebar() {}, peekEnter() {}, peekLeave() {}, fullScreen: false, zoomFactor: 1,
+    trafficLightSpacer: 74, ...FrameHost.hostRouteGutter({ mode: 'code', section: 'code' }), history: { at: 0, length: 1, travel() {} },
+    navBody: null, announcer: null, account: { name: 'Fixture', plan: '', avatarName: 'Fixture', menuOpen: false, openMenu() {} },
+    homeMode: 'cowork', switchMode() {}, openSettings() {}, setCollapsedPref() {}, commitSidebarWidth() {}, rootAttributes: {} };
+  const page = renderToStaticMarkup(React.createElement(FrameHost.HostFrameRoot, { value, legacy: {} }, 'x'));
+  const from = page.indexOf('<div data-compact-mode-switcher="true"'), to = page.indexOf('id="frame-peek-popover"');
+  assert.ok(from > 0 && to > from);
+  const html = page.slice(from, to);
+  assert.match(html, /^<div data-compact-mode-switcher="true" data-chorus-callout="pills" class="df-app-switch flex">/);
+  assert.equal(radios(html).length, 2);
+  const css = loadedOfficialCss();
   const classes = new Set([...html.matchAll(/class="([^"]*)"/g)].flatMap(m => m[1].replace(/&amp;/g, '&').split(/\s+/)).filter(Boolean));
   assert.ok(classes.size > 30);
   const esc = c => '.' + c.replace(/[^a-zA-Z0-9_-]/g, ch => '\\' + ch);
   const missing = [...classes].filter(c => !['{', ':', ',', ' ', '[', '>', '.', ')'].some(after => css.includes(esc(c) + after)));
   assert.deepEqual(missing, []);
+  assert.deepEqual(missingRules, [], `4.16336.0 df-app-switch rules missing from the loaded ${SHARED_STYLES}`);
 });
 
 test('bC (appSwitchShortcutHint): cmd+alt toward the other segment, mirrored in RTL, none for the current, disabled, discovery or a non-desktop host', () => {
@@ -288,7 +324,7 @@ test('SSR: the sidebar titlebar ends with the original switch; the hand-written 
   const source = fs.readFileSync(path.join(app, 'src/source-sidebar.jsx'), 'utf8');
   // W2/W3: the titlebar instance while open, the peek instance while collapsed; both bind the chord.
   assert.match(source, /\{!collapsed && <SourceAppSwitch mode=\{mode\} homeMode=\{homeMode\} onMode=\{onMode\} chord \/>\}/);
-  assert.match(source, /\{collapsed && <SourceAppSwitch placement="peek" mode=\{mode\} homeMode=\{homeMode\} onMode=\{onMode\} chord \/>\}/);
+  assert.match(source, /\{!frameSlot && collapsed && <SourceAppSwitch placement="peek" mode=\{mode\} homeMode=\{homeMode\} onMode=\{onMode\} chord \/>\}/);
   assert.equal((source.match(/<SourceAppSwitch /g) || []).length, 2);
   assert.doesNotMatch(source, /modeBusy|className="mode-switch"/);
   // main.jsx keeps the sending guard in switchMode and no longer passes a busy flag to the switch.
@@ -474,8 +510,7 @@ test('W2 SSR: the peek placement has no titlebar wrapper or tooltip provider of 
   const providers = props => nodes(fixture(Host.SourceAppSwitch, props).tree, n => n.type === CdsTooltipProvider).length;
   assert.equal(providers({ mode: 'code', homeMode: 'cowork', onMode() {}, placement: 'peek' }), 0, 'DN renders bg in the peek card without Zs');
   assert.equal(providers({ mode: 'code', homeMode: 'cowork', onMode() {} }), 1, 'the titlebar keeps its Zs');
-  const css = ['c6a992d55-Che1orl5.css', 'shared-styles-D_GJawPO.css', 'shared-frame-CegduNQ2.css', 'c3fde7009-BszyXGym.css', 'c8e31bf58-C7gq8dUF.css']
-    .map(f => fs.readFileSync(path.join(app, 'public/assets/v1', f), 'utf8')).join('\n');
+  const css = loadedOfficialCss();
   for (const c of ['df-peek-mode-switch', 'mb-2', 'shrink-0']) assert.ok(css.includes('.' + c), c);
 });
 
@@ -500,7 +535,10 @@ test('W2 CSS: the [data-collapsed] band rules of the loaded shared-styles place 
   const main = fs.readFileSync(path.join(app, 'src/main.jsx'), 'utf8');
   // w13-close-chat-surface (E77): no collapsed frame while the window is incognito either (shared-78 vK unmounts the
   // frame shell, source-incognito-shell.jsx frameShellMounted).
-  assert.match(main, /data-collapsed=\{effectiveCollapsed && !NO_SIDEBAR && frameShellMounted\(\{ isIncognito: incognitoShell \}\) \|\| undefined\}/);
+  // frame-sidebar 4.16336.0: the main window's root is the official vB (its data-collapsed from the frame store); the legacy
+  // root (popouts, pane windows, the secondary split side) keeps the same expression.
+  assert.match(main, /"data-collapsed": effectiveCollapsed && !NO_SIDEBAR && frameShellMounted\(\{ isIncognito: incognitoShell \}\) \|\| undefined,/);
+  assert.match(main, /<HostFrameRoot value=\{frameHost\} legacy=\{\{/);
   const style = fs.readFileSync(path.join(app, 'src/style.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
   assert.doesNotMatch(style, /\.df-peek-mode-switch|--df-peek-band|sidebar-collapsed/);
 });

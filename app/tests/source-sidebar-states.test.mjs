@@ -6,6 +6,9 @@ import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'node:path';
 import { readFileSync } from 'node:fs';
+import { designEntryStylesheets } from '../scripts/current-design-assets.mjs';
+// design-production (4.16336.0): the loaded c6a992d55 entry sheet, named by current-design-assets.
+const UTILITIES_CSS = designEntryStylesheets.find(name => name.startsWith('c6a992d55-'));
 
 // Node-only SSR of the real SourceSidebar (no browser, Electron or Codex):
 // sidebar-groups.js zP New row selection, OO empty variants and AO skeleton.
@@ -167,10 +170,10 @@ test('New leading slot holds the df-new-circle Add glyph; no other nav row has i
   // W14-code r8 fr8-07 (E95): shared-21 hH gives projects modes ["chat","cowork"]; Code's epitaxy-projects needs Ll()
   // (amber_tributary_osprey, Uon always !1), so the Code nav has no Projects row.
   assert.deepEqual(rows.map((row) => row.match(/<span class="min-w-0 truncate">([^<]+)<\/span>/)[1]), ['New', 'Artifacts', 'Routines', 'Customize']);
-  assert.match(rows[0], /<span class="source-leading-slot df-leading-slot"><span class="df-new-circle flex shrink-0 items-center justify-center rounded-full"><span aria-hidden="true" data-cds="Icon" class="text-secondary group-hover:text-primary group-data-\[selected=focused\]:text-primary" style="font-size:16px;font-weight:533.3">[^<]+<\/span><\/span><\/span><span class="flex min-w-0 flex-1 items-center"><span class="min-w-0 truncate">New<\/span>/);
+  assert.match(rows[0], /<span class="source-leading-slot df-leading-slot"><span class="df-new-circle flex shrink-0 items-center justify-center rounded-full"><span data-cds="Icon" style="font-size:calc\(1rem \* var\(--cds-rem-scale, 1\)\);font-weight:533.3" class="text-secondary group-hover:text-primary group-data-\[selected=focused\]:text-primary" aria-hidden="true">[^<]+<\/span><\/span><\/span><span class="flex min-w-0 flex-1 items-center"><span class="min-w-0 truncate">New<\/span>/);
   for (const row of rows.slice(1)) {
     assert.doesNotMatch(row, /df-new-circle/);
-    assert.match(row, /^<button[^>]*><span class="source-leading-slot"><span aria-hidden="true" data-cds="Icon" class="" style="font-size:16px/);
+    assert.match(row, /^<button[^>]*><span class="source-leading-slot"><span data-cds="Icon" style="font-size:calc\(1rem \* var\(--cds-rem-scale, 1\)\)/);
   }
   assert.equal(html.match(/df-new-circle/g).length, 1);
 });
@@ -198,11 +201,11 @@ test('account footer is the pw df-user-menu-btn: df-on-rail static Spark, name, 
   // W12b-FTS-1 shared-19 $N: the suffix span p("df-user-menu-trailing flex …","df-footer-suffix items-baseline"), the name
   // p("df-footer-name whitespace-nowrap text-secondary","max-w-full shrink-0") (no truncate), text-muted-as-secondary dot and
   // suffix, and the xs CaretDown "df-user-menu-trailing shrink-0 text-muted-as-secondary" as the button's last child.
-  assert.match(body, /<span class="df-user-menu-trailing flex min-w-0 gap-1 overflow-hidden text-\[length:var\(--df-row-font\)\] df-footer-suffix items-baseline"><span class="df-footer-name whitespace-nowrap text-secondary max-w-full shrink-0">Fixture<\/span><span aria-hidden="true" class="df-footer-suffix-text text-muted-as-secondary">·<\/span><span class="df-footer-suffix-text min-w-0 whitespace-nowrap text-muted-as-secondary">Plus<\/span><\/span><span aria-hidden="true" data-cds="Icon" class="df-user-menu-trailing shrink-0 text-muted-as-secondary" style="font-size:12px;font-weight:[\d.]+">[^<]+<\/span>$/);
+  assert.match(body, /<span class="df-user-menu-trailing flex min-w-0 gap-1 overflow-hidden text-\[length:var\(--df-row-font\)\] df-footer-suffix items-baseline"><span class="df-footer-name whitespace-nowrap text-secondary max-w-full shrink-0">Fixture<\/span><span aria-hidden="true" class="df-footer-suffix-text text-muted-as-secondary">·<\/span><span class="df-footer-suffix-text min-w-0 whitespace-nowrap text-muted-as-secondary">Plus<\/span><\/span><span data-cds="Icon" style="font-size:calc\(0.75rem \* var\(--cds-rem-scale, 1\)\);font-weight:[\d.]+" class="df-user-menu-trailing shrink-0 text-muted-as-secondary" aria-hidden="true">[^<]+<\/span>$/);
   assert.doesNotMatch(html, /<small|class="avatar"|class="account-name"/);
   const bare = render({ displayName: 'Fixture', accountLabel: '' });
   // The shown name is what main.jsx passes (accountFooter's first name), faded by the df-footer-suffix mask.
-  assert.match(bare, /<span class="df-footer-name whitespace-nowrap text-secondary max-w-full shrink-0">Fixture<\/span><\/span><span aria-hidden="true" data-cds="Icon" class="df-user-menu-trailing shrink-0 text-muted-as-secondary"/, 'no dot or suffix without a label');
+  assert.match(bare, /<span class="df-footer-name whitespace-nowrap text-secondary max-w-full shrink-0">Fixture<\/span><\/span><span data-cds="Icon" style="[^"]*" class="df-user-menu-trailing shrink-0 text-muted-as-secondary" aria-hidden="true"/, 'no dot or suffix without a label');
 });
 
 // sidebar-session.js:13916/13924 and sidebar-groups.js:18641-18669 promise a permanent delete. W14-code r4 fr4-12b (E95):
@@ -277,7 +280,7 @@ test('the sidebar aside is a CDS root carrying data-density, data-platform and d
 test('group and confirm dialogs use the shared Dialog with the CDS primary/danger Button', () => {
   const read = (file) => readFileSync(path.resolve(import.meta.dirname, '../src/' + file), 'utf8');
   const css = read('source-sidebar.css'), jsx = read('source-sidebar.jsx');
-  const official = readFileSync(path.resolve(import.meta.dirname, '../public/assets/v1/c6a992d55-Che1orl5.css'), 'utf8');
+  const official = readFileSync(path.resolve(import.meta.dirname, '../public/assets/v1', UTILITIES_CSS), 'utf8');
   assert.doesNotMatch(css, /\.source-group-dialog(-backdrop)?\s*\{/);
   assert.doesNotMatch(css, /--cds-text-on-primary/);
   assert.match(jsx, /<SourceDialog open=\{open\} onExited=\{onExited\} size="sm" showClose=\{false\}/);
@@ -652,7 +655,7 @@ test('W12b-FTS-1: the account button trails with df-user-menu-trailing as in sha
   // Healthy core: the aux is empty, and the caret is the button's last child.
   const html = render({ displayName: 'Fixture', accountLabel: 'Plus' });
   assert.match(html, /<div class="df-footer-aux ml-auto flex shrink-0 items-center"><\/div>/);
-  assert.match(html, /<span aria-hidden="true" data-cds="Icon" class="df-user-menu-trailing shrink-0 text-muted-as-secondary"[^>]*>[^<]+<\/span><\/button>/);
+  assert.match(html, /<span data-cds="Icon" style="[^"]*" class="df-user-menu-trailing shrink-0 text-muted-as-secondary" aria-hidden="true"[^>]*>[^<]+<\/span><\/button>/);
   assert.doesNotMatch(html, /max-w-full shrink-0 truncate">Fixture/);
 });
 

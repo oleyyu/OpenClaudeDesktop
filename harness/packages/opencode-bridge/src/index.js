@@ -46,6 +46,7 @@ import { McpToolCache } from './mcp-tools.js'
 import { PLUGIN_FILE } from './plugin.js'
 import { OAuthCallbacks, callbackOf } from './oauth-callback.js'
 import { UsageCache, accountUsage, codeStats, foldSession, localDayKey } from './usage.js'
+import { importMessages, importTitle, importedFromOf, lowId, replayEvents, replayHistory, transcriptText } from './thread-import.js'
 import { AgentServerV2 } from './v2/server.js'
 import { V2Api } from './v2/api.js'
 import { CATALOG_EVENTS, SeqFilter, normalizeEvent } from './v2/events.js'
@@ -148,8 +149,12 @@ const AGENT_PERMISSIONS = ['bash', 'read', 'edit', 'glob', 'grep', 'webfetch', '
  * structured output (G2): both are reported false there, outranking the descriptor (core-registry.mjs coreCapabilities:
  * implied, then reported), which implies neither since a core can run either generation.
  */
-export function capabilitiesFor(flavor, api = flavor?.api ?? 'v1') {
+export function capabilitiesFor(flavor, api = flavor?.api ?? 'v1', options = {}) {
+  // (flavor, {threadImport}) is also taken: the options in the api's place.
+  if (api && typeof api === 'object') { options = api; api = flavor?.api ?? 'v1' }
   const v2 = api === 'v2'
+  // Not on a 2.x server until its import path exists (importThread's TODO).
+  const threadImport = options.threadImport ?? !v2
   return {
     customization: true,
     permissionHints: true,
@@ -207,6 +212,10 @@ export function capabilitiesFor(flavor, api = flavor?.api ?? 'v1') {
     configOverlay: true,
     // codeDesktop/history/import: MiMo imports other tools' sessions on request (Settings › Code).
     ...(flavor.id === 'mimo' ? { historyImport: ['cc', 'codex', 'opencode'] } : {}),
+    // codeDesktop/thread/import {cwd, title, messages, importedFrom, …thread/start params}: another agent's conversation
+    // as a new session whose turns are real history (thread-import.js; answered with import.mode 'history', or
+    // 'transcript' when this server could only take it as one context message).
+    ...(threadImport ? { threadImport: true } : {}),
     // codeDesktop/promptSuggestion: MiMo's next-prompt prediction after each turn (predictNext); the app's
     // Settings › Code › Sessions › Prompt suggestions switch is listed for it.
     ...(flavor.id === 'mimo' ? { promptSuggestion: true } : {}),
@@ -822,7 +831,8 @@ export class Bridge {
     return promise
   }
 
-  async createThread(params) {
+  /** thread/start's session. `created(info)` hears of it as soon as the agent made it (an import deletes it on failure). */
+  async createThread(params, { created = null } = {}) {
     const cwd = await this.normalizeCwd(params.cwd)
     // A workflow agent's session (the OpenClaude Desktop workflow runner's own connection, workflow-child.mjs) is named up
     // front: nobody sees its title, and OpenCode and MiMo would spend a model request generating one per agent
@@ -849,6 +859,7 @@ export class Bridge {
       // The folder's MCP servers before the first call (their tools are mcpToolCall rows), once per folder.
       this.mcpNamesByDir?.has(cwd) ? null : this.refreshMcpNames(cwd),
     ])
+    created?.(info)
     // runnerPid: the runner bridge that owns the session; it deletes it when it stops, and the app's bridge deletes one a
     // runner left behind (removeWorkflowSessions): a workflow agent's session never lands in the user's own history.
     this.store.update(info.id, { cwd: info.directory ?? cwd, createdBy: 'code-desktop', ...(workflowAgent ? { workflowAgent: true, runnerPid: process.pid } : {}) })
@@ -858,6 +869,116 @@ export class Bridge {
     if (typeof params.developerInstructions === 'string' && params.developerInstructions.trim()) thread.custom.developer = params.developerInstructions.trim()
     await thread.applyParams(params, { initial: true })
     return thread
+  }
+
+  /** thread/name/set without the notice: the name here, and the agent's own title (a person's name is never retitled). */
+  async renameSession(id, name) {
+    this.store.update(id, { name: name || undefined })
+    if (!name || parseActorThreadId(id)) return
+    try {
+      // MiMo guards renames with the title revision it last reported.
+      const info = this.flavor.id === 'mimo' ? await this.sessionInfo(id) : null
+      if (this.v2) await (await this.v2Api()).patch(`/api/session/${encodeURIComponent(id)}`, { title: name })
+      else await this.api('PATCH', `/session/${encodeURIComponent(id)}`, { directory: this.store.get(id).cwd, body: { title: name, ...(Number.isInteger(info?.titleRevision) ? { expectedRevision: info.titleRevision } : {}) } })
+    } catch (error) { this.log(`rename ${id}: ${error?.message}`) }
+  }
+
+  /**
+   * codeDesktop/thread/import (thread-import.js): a new session with the imported conversation as its history.
+   * OpenCode 1.x / MiMo: thread/start's session, then the messages through POST /sync/replay; a server that won't take
+   * them gets the transcript as one noReply context message (import.mode 'transcript'). The provenance stays in
+   * threads.json (importedFrom). Anything that fails once the session exists deletes it again (discardImported), so a
+   * failed import (which the app follows with its text handoff) never leaves a half-made or duplicate session behind.
+   * TODO(v2 merge): OpenCode 2.x (this.v2, set by the v2 bridge) creates the session with its history in one request
+   * (thread-import.js v2ImportPayload / importSessionV2 → POST /api/experimental/session/import) where its
+   * createSessionV2 would POST /api/session; until that path exists and sets this.v2ThreadImport, a 2.x server neither
+   * advertises threadImport (initialize) nor takes the request.
+   */
+  async importThread(params) {
+    if (this.v2 && this.v2ThreadImport !== true) throw new RpcError(METHOD_NOT_FOUND, `${this.flavor.name} 2.x can’t import a conversation here yet.`)
+    const messages = importMessages(params.messages)
+    const importedFrom = importedFromOf(params.importedFrom)
+    const title = importTitle(params.title)
+    const { messages: _messages, importedFrom: _from, title: _title, turns: _turns, ...start } = params
+    let made = null, thread = null
+    try {
+      thread = await this.createThread(start, { created: (info) => { made = info } })
+      const mode = await this.appendHistory(thread, messages, { title, source: importedFrom?.source })
+      if (importedFrom) this.store.update(thread.id, { importedFrom })
+      if (title) await this.renameSession(thread.id, title)
+      await thread.reload()
+      const response = thread.sessionResponse({ includeTurns: params.excludeTurns !== true })
+      return { ...response, import: { mode, messages: messages.length } }
+    } catch (error) {
+      if (made?.id) await this.discardImported(made, thread).catch((reason) => this.log(`import ${made.id}: not deleted (${reason?.message ?? reason})`))
+      throw error
+    }
+  }
+
+  /**
+   * A session an import made (`info`, POST /session's answer) and gave up on: unloaded (`thread`, when it got that far),
+   * deleted in the agent, marked deleted here (never announced).
+   */
+  async discardImported(info, thread = null) {
+    const live = this.threads.get(info.id)
+    if (live) { this.threads.delete(info.id); try { live.close('Session deleted.') } catch {} }
+    if (thread && thread !== live) { try { thread.close('Session deleted.') } catch {} }
+    try { await this.api('DELETE', `/session/${encodeURIComponent(info.id)}`, { directory: thread?.cwd ?? info.directory, timeout: 30000 }) } catch (error) { if (error?.status !== 404) throw error } finally {
+      this.store.update(info.id, { deleted: true, importTranscript: undefined })
+    }
+  }
+
+  /**
+   * The model the imported messages name: the thread's (thread/start's model, else what applyParams chose), else the
+   * catalog's default for the folder (the server's own default model). Never a made-up one: MiMo takes a session's
+   * model from its newest user message whenever a prompt names none (session/prompt.ts lastModel :2917-2925, used at
+   * :2703 and :2950), so an invented provider would fail the first real turn. null when none resolves.
+   */
+  async importModel(thread) {
+    const id = thread.turnModel() ?? await this.mergedConfig(thread.cwd).then((config) => this.catalog.defaultId(config?.model)).catch(() => null)
+    return splitModel(id ?? '')
+  }
+
+  /**
+   * The imported messages into a 1.x session made for them: 'history' (replayed), else 'transcript'. Only ever into
+   * this session, and only while it is still empty: replayHistory refuses events for any other aggregate, and what a
+   * failed replay left behind (a probe a server without the gap check kept, part of the history) is deleted before the
+   * transcript goes in; a session that can't be emptied again fails the import (importThread deletes it).
+   */
+  async appendHistory(thread, messages, { title, source } = {}) {
+    const model = await this.importModel(thread)
+    const agent = thread.agentName()
+    const route = (id) => `/session/${encodeURIComponent(thread.sessionID)}/message/${encodeURIComponent(id)}`
+    if (model) {
+      const existing = await thread.messages()
+      if (!Array.isArray(existing) || existing.length) throw new RpcError(-32000, 'The new session isn’t empty: the conversation was not imported into it.')
+      const events = replayEvents({ sessionID: thread.sessionID, cwd: thread.cwd, agent, model, messages })
+      const ours = new Set(events.filter((event) => event.type === 'message.updated.1').map((event) => event.data.info.id))
+      try {
+        await replayHistory((method, path, options) => this.api(method, path, options), { cwd: thread.cwd, sessionID: thread.sessionID, events })
+        const stored = await thread.messages().catch(() => null)
+        const count = Array.isArray(stored) ? stored.length : messages.length
+        if (count >= messages.length) return 'history'
+        if (count > 0) { this.log(`import ${thread.id}: ${count} of ${messages.length} messages replayed`); return 'history' }
+        this.log(`import ${thread.id}: the replay left the session empty`)
+      } catch (error) { this.log(`import ${thread.id}: replay refused (${error?.status ?? ''} ${error?.message ?? error}); importing the transcript`) }
+      const left = ((await thread.messages()) ?? []).map((entry) => entry?.info?.id).filter((id) => typeof id === 'string')
+      for (const id of left) {
+        if (!ours.has(id)) throw new RpcError(-32000, 'The new session changed while the conversation was imported.')
+        await this.api('DELETE', route(id), { directory: thread.cwd, timeout: 30000 })
+      }
+    } else this.log(`import ${thread.id}: no model to name in the replayed messages; importing the transcript`)
+    // Named here (PromptInput messageID) so the transcript leaves that message out of its turns (projection.js
+    // meta.importTranscript): the app shows the imported turns itself. No model unless one resolved: the server then
+    // gives the prompt its own default.
+    const messageID = lowId('msg', 0)
+    this.store.update(thread.id, { importTranscript: messageID })
+    const prompt = `/session/${encodeURIComponent(thread.sessionID)}/${this.flavor.promptRoute === 'message' ? 'message' : 'prompt_async'}`
+    await this.api('POST', prompt, { directory: thread.cwd, timeout: 60000, body: {
+      messageID, noReply: true, agent, ...(model ? { model } : {}),
+      parts: [{ type: 'text', synthetic: true, text: transcriptText(messages, { source, title }) }],
+    } })
+    return 'transcript'
   }
 
   /** Codex Thread for a session not loaded here. */
@@ -1438,7 +1559,7 @@ export class Bridge {
           platformOs: process.platform === 'darwin' ? 'macos' : process.platform,
           engine: this.flavor.engine,
           engineVersion: version,
-          capabilities: { ...capabilitiesFor(this.flavor), ...(this.v2 ? this.historyStoreV2() : {}) },
+          capabilities: { ...capabilitiesFor(this.flavor, undefined, { threadImport: !this.v2 || this.v2ThreadImport === true }), ...(this.v2 ? this.historyStoreV2() : {}) },
           configPath: this.config.configPath,
         }
       }
@@ -1499,6 +1620,12 @@ export class Bridge {
       case 'account/usage/read': return accountUsage(await this.usageFolds(), localDayKey(Date.now()))
       case 'codeDesktop/stats/read': return codeStats(await this.usageFolds())
       case 'codeDesktop/history/import': return this.importHistory(params)
+      case 'codeDesktop/thread/import': {
+        // thread/start's answer (the imported turns included), announced as thread/start announces its thread.
+        const response = await this.importThread(params ?? {})
+        this.notify('thread/started', { thread: { ...response.thread, turns: [] } })
+        return response
+      }
       case 'configRequirements/read': return { requirements: null }
       case 'config/read': return this.configRead(params)
       case 'config/batchWrite': return this.configBatchWrite(params)
@@ -1577,15 +1704,7 @@ export class Bridge {
       case 'thread/name/set': {
         const id = this.requireId(params.threadId)
         const name = typeof params.name === 'string' ? params.name.trim() : ''
-        this.store.update(id, { name: name || undefined })
-        if (name && !parseActorThreadId(id)) {
-          try {
-            // MiMo guards renames with the title revision it last reported.
-            const info = this.flavor.id === 'mimo' ? await this.sessionInfo(id) : null
-            if (this.v2) await (await this.v2Api()).patch(`/api/session/${encodeURIComponent(id)}`, { title: name })
-            else await this.api('PATCH', `/session/${encodeURIComponent(id)}`, { directory: this.store.get(id).cwd, body: { title: name, ...(Number.isInteger(info?.titleRevision) ? { expectedRevision: info.titleRevision } : {}) } })
-          } catch (error) { this.log(`rename ${id}: ${error?.message}`) }
-        }
+        await this.renameSession(id, name)
         this.notify('thread/name/updated', { threadId: id, ...(name ? { threadName: name } : {}) })
         return {}
       }

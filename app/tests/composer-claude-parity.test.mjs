@@ -81,9 +81,10 @@ test("bash mode: purple ring flag, the 'bash' pro badge, 'Enter a shell command'
   // inset-ring-pro' (cardClassName) and the view-tabs CdsBadge {pro, sm} sits in lc.Actions' trailing slot (pt).
   assert.match(html, /<div class="sc-composer epitaxy-prompt [^"]*" data-bash-mode="true"/);
   assert.match(html, /<div class="bg-surface-3 [^"]* inset-ring-1 inset-ring-pro [^"]*sc-card"/);
-  // 3.6556.2 CdsBadge (view-tabs shared-frame-6jtSkIit Cs / ws / Es.pro) appends the fizzy-lake stacks variant after the
-  // tint; fizzy-lake is off (E12), so the variant never applies and the badge still reads bg-tint-violet text-pro.
-  assert.match(html, /<div data-cds="ChatComposerActions" class="contents">.*<span data-cds="Badge" data-size="sm" aria-hidden="true" title="Run as a shell command" class="[^"]*bg-tint-violet text-pro stacks:rounded-\[calc\(var\(--cds-h-control-nested\)\/2\)\] stacks:border-\[1\.5px\] stacks:border-solid stacks:px-\[calc\(var\(--cds-pad-sm\)-1px\)\] stacks:bg-transparent stacks:border-pro stacks:dark:border-\[color-mix\(in_srgb,var\(--cds-fill-tint-violet\)_40%,transparent\)\]"><span class="pb-\[0\.05em\]">bash<\/span><\/span>/);
+  // surfaces-prod-3 composer (host cutover): the Actions slot is the 4.16336.0 shell's, so the badge is cds-core's CdsBadge
+  // (generated/cds-core/shared-frame.mjs: the label `Q("pb-[0.05em]", ph)`, ph = "stacks:pb-0"). Like 3.6556.2 it appends
+  // the fizzy-lake stacks variant after the tint; fizzy-lake is off (E12), so the badge still reads bg-tint-violet text-pro.
+  assert.match(html, /<div data-cds="ChatComposerActions" class="contents">.*<span data-cds="Badge" data-size="sm" aria-hidden="true" title="Run as a shell command" class="[^"]*bg-tint-violet text-pro stacks:rounded-\[calc\(var\(--cds-h-control-nested\)\/2\)\] stacks:border-\[1\.5px\] stacks:border-solid stacks:px-\[calc\(var\(--cds-pad-sm\)-1px\)\] stacks:bg-transparent stacks:border-pro stacks:dark:border-\[color-mix\(in_srgb,var\(--cds-fill-tint-violet\)_40%,transparent\)\]"><span class="pb-\[0\.05em\] stacks:pb-0">bash<\/span><\/span>/);
   // R4g-composer CP2 (X7-08): the editor is not empty ('ls -la'), so cm shows no placeholder span; the grow ghost stays.
   assert.doesNotMatch(html, /data-composer-placeholder=""/);
   assert.match(html, /data-composer-placeholder-ghost="Enter a shell command"/);

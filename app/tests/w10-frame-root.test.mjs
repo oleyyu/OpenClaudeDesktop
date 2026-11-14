@@ -8,26 +8,33 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { ionSource, sharedFrame } from '../scripts/official-3.6556.2.mjs';
 import { effectiveSidebarWidth, trafficLightSpacerWidth } from '../src/sidebar-width-model.mjs';
+import { designEntryStylesheets } from '../scripts/current-design-assets.mjs';
+// design-production (4.16336.0): the loaded c6a992d55 / shared-styles entry sheets, named by current-design-assets.
+const UTILITIES_CSS = designEntryStylesheets.find(name => name.startsWith('c6a992d55-'));
+const SHARED_STYLES_CSS = designEntryStylesheets.find(name => name.startsWith('shared-styles-'));
 
 const appRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const main = fs.readFileSync(path.join(appRoot, 'src/main.jsx'), 'utf8');
 const official = (file) => fs.readFileSync(path.join(ionSource, file), 'utf8');
 
-// The frame root: the <div> whose className builds "desktop-app dframe-root draggable-none", up to its opening tag's end.
+// frame-sidebar 4.16336.0: the main window's frame root is the official vB (generated/frame-sidebar/frame.mjs, mounted by
+// src/frame-sidebar-host.jsx HostFrameRoot); the windows without a sidebar (session popouts, pane windows, the secondary
+// split side) keep the legacy 3.6556.2 oR root, passed to HostFrameRoot as `legacy` props. frameRoot() is that object.
 function frameRoot() {
   const start = main.indexOf('"desktop-app dframe-root draggable-none"');
   assert.ok(start > 0, 'frame root className');
-  const open = main.lastIndexOf('<div', start);
-  const end = main.indexOf('\n    >\n', start);
+  const open = main.lastIndexOf('<HostFrameRoot value={frameHost} legacy={{', start);
+  const end = main.indexOf('\n    }}>\n', start);
   assert.ok(open > 0 && end > start, 'frame root opening tag');
   return main.slice(open, end);
 }
 function rootStyle() {
   const block = frameRoot();
-  const at = block.indexOf('style={{');
+  const at = block.indexOf('style: {');
   assert.ok(at > 0, 'frame root style');
-  return block.slice(at + 'style={'.length, block.lastIndexOf('}}') + 1);
+  return block.slice(at + 'style: '.length, block.lastIndexOf('},') + 1);
 }
+const generatedFrame = fs.readFileSync(path.join(appRoot, 'src/generated/frame-sidebar/frame.mjs'), 'utf8');
 
 test('official oR writes the five frame variables and the root attributes', () => {
   const t = official('shared-22-Bwn3sJTG.js');
@@ -57,6 +64,8 @@ test('main.jsx frame root writes each official variable once', () => {
   }
   assert.match(block, /"--df-sidebar-floor": sidebarFloor \+ "px"/);
   assert.match(block, /"--df-drag-ghost-z": 9001/);
+  // The main window: vB writes the same five itself (4.16336.0 shared-22, sliced).
+  assert.ok(generatedFrame.includes('"--df-sidebar-width": B,\n          "--df-sidebar-floor": ee,\n          "--df-traffic-light-spacer": V,\n          "--df-window-border": H,\n          "--df-drag-ghost-z": br,'));
 });
 
 test('the root style evaluates to the official values (window, full screen, zoom)', () => {
@@ -96,14 +105,14 @@ test('the root carries the official draggable-none class (oR className "dframe-r
   // The collapsed state is the data-collapsed attribute (below), not the old local .sidebar-collapsed class.
   assert.doesNotMatch(main, /sidebar-collapsed/);
   // The loaded c6a992d55 sheet supplies the rule; the titlebars' own drag regions are descendants and still win.
-  const loaded = fs.readFileSync(path.join(appRoot, 'public/assets/v1/c6a992d55-Che1orl5.css'), 'utf8');
+  const loaded = fs.readFileSync(path.join(appRoot, 'public/assets/v1', UTILITIES_CSS), 'utf8');
   assert.ok(loaded.includes('.draggable-none{-webkit-app-region:no-drag;app-region:no-drag}'));
 });
 
 // Collapsed layout (w11-frame-root-cont). 3.6556.2 keys it on the root's data-collapsed (oR `"data-collapsed":F`):
 // .dframe-sidebar becomes the trigger pill holding the collapsed chrome (shared-22 GI renders shared-21 CI there in place
-// of its titlebar) and .dframe-sidebar-body the full-height drawer of width --df-peek-width (shared-styles-D_GJawPO.css).
-const sharedStyles = fs.readFileSync(path.join(appRoot, 'public/assets/v1/shared-styles-D_GJawPO.css'), 'utf8');
+// of its titlebar) and .dframe-sidebar-body the full-height drawer of width --df-peek-width (the loaded shared-styles entry sheet; 3.6556.2 D_GJawPO).
+const sharedStyles = fs.readFileSync(path.join(appRoot, 'public/assets/v1', SHARED_STYLES_CSS), 'utf8');
 const style = fs.readFileSync(path.join(appRoot, 'src/style.css'), 'utf8');
 const uncommented = (css) => css.replace(/\/\*[\s\S]*?\*\//g, '');
 
@@ -136,11 +145,14 @@ test('official: oR writes data-collapsed / data-sidebar-density; GI puts CI (Sy)
 
 test('main.jsx: the root writes data-collapsed and data-sidebar-density; the aside gets the chrome, the titlebar and viewer none', () => {
   const block = frameRoot();
-  assert.equal(block.split('data-collapsed=').length - 1, 1);
+  assert.equal(block.split('\n      "data-collapsed":').length - 1, 1);
   // w13-close-chat-surface (E77): no collapsed frame while the window is incognito either (shared-78 vK unmounts the
   // frame shell, source-incognito-shell.jsx frameShellMounted).
-  assert.match(block, /data-collapsed=\{effectiveCollapsed && !NO_SIDEBAR && frameShellMounted\(\{ isIncognito: incognitoShell \}\) \|\| undefined\}/);
-  assert.match(block, /data-sidebar-density="compact"/);
+  assert.match(block, /"data-collapsed": effectiveCollapsed && !NO_SIDEBAR && frameShellMounted\(\{ isIncognito: incognitoShell \}\) \|\| undefined,/);
+  assert.match(block, /"data-sidebar-density": "compact",/);
+  // frame-sidebar 4.16336.0: the main window's vB root and KR aside are comfortable (official, sliced).
+  assert.ok(generatedFrame.includes('className: "dframe-root draggable-none",\n            "data-collapsed": P,'));
+  assert.ok(generatedFrame.includes('"data-sidebar-density": "comfortable",'));
   // The aside writes the same density (oR m and GI be are both Ha()).
   assert.match(fs.readFileSync(path.join(appRoot, 'src/source-sidebar.jsx'), 'utf8'), /className="app-sidebar dframe-sidebar source-sidebar cds-root" aria-label=\{t\("Sidebar"\)\} data-variant="web" data-density="compact"/);
   // SourceCollapsedChrome is rendered once, for SourceSidebar's collapsedChrome.

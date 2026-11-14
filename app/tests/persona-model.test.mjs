@@ -79,16 +79,16 @@ test("desktop notification bodies use a valid persona name and fall back to the 
     service.dispose();
     return seen;
   };
-  assert.deepEqual(bodies(" Ada "), ["Ada finished and is waiting for your input.", "Ada is asking you to choose between options."]);
-  assert.deepEqual(bodies(""), ["DeepSeek finished and is waiting for your input.", "DeepSeek is asking you to choose between options."]);
-  assert.equal(bodies("<x>")[0], "DeepSeek finished and is waiting for your input.");
-  assert.equal(bodies("x".repeat(41))[0], "DeepSeek finished and is waiting for your input.");
+  assert.deepEqual(bodies(" Ada "), ["Ada has finished your instructions.", "Ada is waiting for your response."]);
+  assert.deepEqual(bodies(""), ["DeepSeek has finished your instructions.", "DeepSeek is waiting for your response."]);
+  assert.equal(bodies("<x>")[0], "DeepSeek has finished your instructions.");
+  assert.equal(bodies("x".repeat(41))[0], "DeepSeek has finished your instructions.");
   // Without a persona name the banner names the running core's assistant, not a literal DeepSeek.
   const { setAssistantName } = await import("../electron/i18n/index.mjs");
   try {
     setAssistantName("GLM");
-    assert.deepEqual(bodies(""), ["GLM finished and is waiting for your input.", "GLM is asking you to choose between options."]);
-    assert.equal(bodies("<x>")[0], "GLM finished and is waiting for your input.");
-    assert.equal(bodies(" Ada ")[0], "Ada finished and is waiting for your input.", "a persona name still wins");
+    assert.deepEqual(bodies(""), ["GLM has finished your instructions.", "GLM is waiting for your response."]);
+    assert.equal(bodies("<x>")[0], "GLM has finished your instructions.");
+    assert.equal(bodies(" Ada ")[0], "Ada has finished your instructions.", "a persona name still wins");
   } finally { setAssistantName("DeepSeek"); }
 });

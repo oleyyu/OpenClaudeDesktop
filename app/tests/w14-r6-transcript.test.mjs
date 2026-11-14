@@ -145,17 +145,25 @@ test('R6T-02: MT is the handle\'s component (no more undefined), ImageLoaderProv
 });
 
 test('R6T-02: loadSessionImage refuses schemes and traversals, resolves a relative path in the session folder, answers null when unreadable', async () => {
+  // U-2: the image is the claude-media URL main mints for the resolved absolute path (desktop.mediaUrl), never file://.
+  const saved = globalThis.desktop, minted = [];
+  globalThis.desktop = { mediaUrl: (p) => { minted.push(p); return `claude-media://v/t${minted.length}?v=1`; } };
+  try {
   assert.equal(await C.loadSessionImage('', '/w'), null);
   assert.equal(await C.loadSessionImage('https://x/a.png', '/w', null), null);
   assert.equal(await C.loadSessionImage('../secret.png', '/w', null), null);
   assert.equal(await C.loadSessionImage('/a/../b.png', '/w', null), null);
-  assert.equal(await C.loadSessionImage('out/shot.png', '/w', null), 'file:///w/out/shot.png');
-  assert.equal(await C.loadSessionImage('/abs/My Shot.png', null, null), 'file:///abs/My%20Shot.png');
+  assert.deepEqual(minted, [], 'schemes and traversals never reach main');
+  assert.equal(await C.loadSessionImage('out/shot.png', '/w', null), 'claude-media://v/t1?v=1');
+  assert.equal(await C.loadSessionImage('/abs/My Shot.png', null, null), 'claude-media://v/t2?v=1');
+  assert.deepEqual(minted, ['/w/out/shot.png', '/abs/My Shot.png'], 'main mints for the resolved absolute path');
   assert.equal(await C.loadSessionImage('rel.png', null, null), null);
   class Loads { set src(value) { this.onload?.(); } }
   class Fails { set src(value) { this.onerror?.(); } }
-  assert.equal(await C.loadSessionImage('/x.png', null, Loads), 'file:///x.png');
+  assert.equal(await C.loadSessionImage('/x.png', null, Loads), 'claude-media://v/t3?v=1');
   assert.equal(await C.loadSessionImage('/x.png', null, Fails), null);
+  } finally { if (saved === undefined) delete globalThis.desktop; else globalThis.desktop = saved; }
+  assert.equal(await C.loadSessionImage('/x.png', null, null), null, 'no desktop bridge: no local image URL');
 });
 
 test('R6T-02 (SSR): a reply linking an image file renders with the image loader on (the zoomable preview no longer throws)', () => {

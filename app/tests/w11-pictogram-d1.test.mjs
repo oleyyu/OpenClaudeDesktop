@@ -29,7 +29,7 @@ before(async () => {
 });
 after(() => server?.close());
 
-test('view-tabs publishes KG and nk; their only copies in src/generated are the view-tabs ones', () => {
+test('view-tabs publishes KG and nk; per reference version, the only copies in src/generated are the shared graph owner ones', () => {
   const manifest = JSON.parse(read('src/generated/view-tabs/manifest.json'));
   assert.deepEqual(manifest.publicNames.CdsPictogram, { file: 'shared-156-BLTosN8U.js', local: 'KG', export: 'Hr' });
   assert.deepEqual(manifest.publicNames.CdsTextArea, { file: 'shared-frame-6jtSkIit.js', local: 'nk', export: 'da' });
@@ -40,17 +40,77 @@ test('view-tabs publishes KG and nk; their only copies in src/generated are the 
   const s156 = read('src/generated/view-tabs/shared-156-BLTosN8U.js');
   assert.equal(s156.split('\nKG.isCdsPictogram=!0;\n').length, 2);
   assert.equal(official('shared-156-BLTosN8U.js').split('KG.isCdsPictogram=!0;').length, 2);
+  // Single copy per reference version (cds-integrate/fix.md): each generated module is attributed to the version its
+  // area manifest records (modules[].referenceVersion, else the area's). 3.6556.2 copies may live only in view-tabs, the
+  // 3.6556.2 shared graph (runSlicer sharedGraph undefined); 4.16336.0 copies only in cds-core, the 4.16336.0 shared graph
+  // (its own manifest: sharedGraph null with publicNames, imported by consumers as sharedGraph: 'cds-core').
+  const versionOf = new Map();
+  const versionFor = rel => {
+    const area = /^src\/generated\/([^/]+)\/(.+)$/.exec(rel.split(path.sep).join('/'));
+    if (!area) return null;
+    if (!versionOf.has(area[1])) {
+      const file = path.join(root, 'src/generated', area[1], 'manifest.json');
+      const m = fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')) : null;
+      versionOf.set(area[1], { top: m?.referenceVersion ?? null,
+        files: new Map((Array.isArray(m?.modules) ? m.modules : []).filter(x => x.target).map(x => [x.target, x.referenceVersion ?? m.referenceVersion])) });
+    }
+    const v = versionOf.get(area[1]);
+    return v.files.get(area[2]) ?? v.top;
+  };
   const copies = [];
   const walk = dir => { for (const e of fs.readdirSync(path.join(root, dir), { withFileTypes: true })) {
     const rel = path.join(dir, e.name);
     if (e.isDirectory()) walk(rel); else if (/\.(m?js|cjs)$/.test(e.name)) {
       const text = read(rel);
-      if (/"data-cds": ?"Pictogram"/.test(text)) copies.push(`Pictogram ${rel}`);
-      if (/"data-cds": ?"TextArea"/.test(text)) copies.push(`TextArea ${rel}`);
+      if (/"data-cds": ?"Pictogram"/.test(text)) copies.push(`${versionFor(rel)} Pictogram ${rel}`);
+      if (/"data-cds": ?"TextArea"/.test(text)) copies.push(`${versionFor(rel)} TextArea ${rel}`);
     }
   } };
   walk('src/generated');
-  assert.deepEqual(copies.sort(), ['Pictogram src/generated/view-tabs/shared-156-BLTosN8U.js', 'TextArea src/generated/view-tabs/shared-frame-6jtSkIit.js']);
+  assert.deepEqual(copies.sort(), [
+    '3.6556.2 Pictogram src/generated/view-tabs/shared-156-BLTosN8U.js',
+    '3.6556.2 TextArea src/generated/view-tabs/shared-frame-6jtSkIit.js',
+    '4.16336.0 Pictogram src/generated/cds-core/shared-183.mjs',
+    '4.16336.0 TextArea src/generated/cds-core/shared-frame.mjs',
+  ]);
+  // Wave 3 (cds-integrate/merge-pins-wave3.mjs): the stateful 4.16336.0 components cds-core gained are single copies too;
+  // a 4.16336.0 area must link them through sharedGraph 'cds-core', never slice a second one.
+  const wave3 = [];
+  const scan = dir => { for (const e of fs.readdirSync(path.join(root, dir), { withFileTypes: true })) {
+    const rel = path.join(dir, e.name);
+    if (e.isDirectory()) scan(rel); else if (/\.(m?js|cjs)$/.test(e.name) && versionFor(rel) === '4.16336.0') {
+      const text = read(rel);
+      for (const kind of ['Switch', 'InfoTip', 'PreviewCard', 'Separator', 'SkeletonGroup', 'Spark'])
+        if (new RegExp(`"data-cds": ?"${kind}"`).test(text)) wave3.push(`${kind} ${rel}`);
+      if (text.includes('"data-vtb-id"')) wave3.push(`ViewTabBar ${rel}`);
+    }
+  } };
+  scan('src/generated');
+  assert.deepEqual(wave3.sort(), [
+    'InfoTip src/generated/cds-core/shared-frame.mjs',
+    'PreviewCard src/generated/cds-core/shared-183.mjs',
+    'Separator src/generated/cds-core/c04b2e418.mjs',
+    'SkeletonGroup src/generated/cds-core/shared-frame.mjs',
+    'Spark src/generated/cds-core/shared-frame.mjs',
+    'Switch src/generated/cds-core/shared-frame.mjs',
+    'ViewTabBar src/generated/cds-core/cfe7c4b3b.mjs',
+  ]);
+  // The owners' roles: view-tabs is the 3.6556.2 graph, cds-core the 4.16336.0 graph that owns its own Contexts.
+  assert.equal(manifest.referenceVersion, '3.6556.2');
+  assert.equal(Object.hasOwn(manifest, 'sharedGraph'), false);
+  const core = JSON.parse(read('src/generated/cds-core/manifest.json'));
+  assert.equal(core.referenceVersion, '4.16336.0');
+  assert.equal(core.sharedGraph, null);
+  assert.deepEqual(core.publicNames.CdsTextAreaField, { file: 'shared-frame-CJdE5Ria.js', local: 'RI', target: 'shared-frame.mjs', exportName: 'CdsTextAreaField' });
+  // Wave 2 (cds-integrate/merge-pins-wave2.mjs): the 4.16336.0 Pictogram (shared-183 Zq, export Dr) and bare TextArea
+  // (shared-frame oN, export Va) are cds-core public names; Zq's property write is carried with it, once.
+  assert.deepEqual(core.publicNames.CdsPictogram, { file: 'shared-183-B2N6Zy4J.js', local: 'Zq', target: 'shared-183.mjs', exportName: 'CdsPictogram' });
+  assert.deepEqual(core.publicNames.CdsTextArea, { file: 'shared-frame-CJdE5Ria.js', local: 'oN', target: 'shared-frame.mjs', exportName: 'CdsTextArea' });
+  assert.equal(read('src/generated/cds-core/shared-183.mjs').split('\nZq.isCdsPictogram = !0;\n').length, 2);
+  // No two owners per version and kind.
+  const owners = new Map();
+  for (const copy of copies) { const [version, kind, rel] = copy.split(' '); const key = `${version} ${kind}`;
+    assert.equal(owners.has(key), false, `second ${key} copy: ${rel} (first ${owners.get(key)})`); owners.set(key, rel); }
 });
 
 test('cowork-scheduled and code-routines import the view-tabs bindings by semantic name', () => {

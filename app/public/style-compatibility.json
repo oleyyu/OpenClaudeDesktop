@@ -1,6 +1,11 @@
 {
-  "currentVersion": "3.6556.2",
+  "currentVersion": "4.16336.0",
   "baselines": [
+    {
+      "version": "3.6556.2",
+      "source": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "sha256": "657bcacaf4e4f8096eb54d0fb3e614f8cbff35ca9f4df0a98a909679d2bed5d2"
+    },
     {
       "version": "2.42304.0",
       "source": "installed-2.42304.0-20261017/ion-dist/assets/v1/c6a992d55-sXiDGMFQ.css",
@@ -14,28 +19,28 @@
   ],
   "currentStylesheets": [
     {
-      "file": "c3fde7009-BszyXGym.css",
-      "sha256": "94f128c5576ace1d44d8699473204bbdfbe2d7d299ffcebbd79947b70e7e95f9"
+      "file": "shared-frame-BRemtw6F.css",
+      "sha256": "b2e2c88a748ea2603199b40a2ab58124ed843750ef36a1f8b57c2631760259a0"
+    },
+    {
+      "file": "shared-styles-C9nbzN1z.css",
+      "sha256": "97e65601ccfc00a8fbea1fb7c1aab3658e79b100a6346746eb3dd5f57ae96687"
+    },
+    {
+      "file": "c6a992d55-_JRfOmTh.css",
+      "sha256": "e704135f9b14bd261438f0c2f3b4a5eb604a92418c8edee4c9d5580cba70e161"
     },
     {
       "file": "c8e31bf58-C7gq8dUF.css",
       "sha256": "0ccba0932c352ddc088837007b8403b0bbe565e3f9f78f99f2f47a896356368f"
     },
     {
-      "file": "c6a992d55-Che1orl5.css",
-      "sha256": "657bcacaf4e4f8096eb54d0fb3e614f8cbff35ca9f4df0a98a909679d2bed5d2"
-    },
-    {
-      "file": "shared-styles-D_GJawPO.css",
-      "sha256": "fee96d715272484dcb09a32a2320728606a9bc8f43aa9cd61cdab42a7fa045ab"
-    },
-    {
-      "file": "shared-frame-CegduNQ2.css",
-      "sha256": "154b1334a8300f602d552a3dc040bb6f9e006a36531537491f25fe1ae35c2b80"
+      "file": "c3fde7009-Dl-p803_.css",
+      "sha256": "21cdbbc308f823fbac5ab23a5addbdcf2dc6e88c6793dc0edb4dafd37b26d689"
     }
   ],
   "output": "assets/legacy-utilities.css",
-  "outputSha256": "fe1f5840a9bae32f67290ee3e281a55f237a0361cbe0625d3502b921d07f5936",
+  "outputSha256": "a7f5e55a5303bc8fc06b1a626c89efc9ca1784ea1414f7af6ba656224f088399",
   "note": "Only absent utilities whose exact class token is still named by a src string literal, template fragment or CSS selector, plus their missing theme tokens. Hits list the owning file/binding, its generator and source version; reachable is informational (rules are never dropped for it). Remove as owning modules migrate.",
   "scanner": {
     "mode": "class-token",
@@ -64,6 +69,87 @@
     ],
     "exclusions": [
       {
+        "file": "src/generated/cds-core/shared-frame.mjs",
+        "binding": "Jt",
+        "key": "classGroups",
+        "reason": "tailwind-merge-registry",
+        "tokens": 38,
+        "suppressed": []
+      },
+      {
+        "file": "src/generated/cds-core/shared-frame.mjs",
+        "binding": "Jt",
+        "key": "conflictingClassGroups",
+        "reason": "tailwind-merge-registry",
+        "tokens": 30,
+        "suppressed": []
+      },
+      {
+        "file": "src/generated/cds-core/vendor-frame.mjs",
+        "binding": "Yt",
+        "key": "classGroups",
+        "reason": "tailwind-merge-registry",
+        "tokens": 516,
+        "suppressed": [
+          "inline-table",
+          "isolation-auto"
+        ]
+      },
+      {
+        "file": "src/generated/cds-core/vendor-frame.mjs",
+        "binding": "Yt",
+        "key": "conflictingClassGroupModifiers",
+        "reason": "tailwind-merge-registry",
+        "tokens": 2,
+        "suppressed": []
+      },
+      {
+        "file": "src/generated/cds-core/vendor-frame.mjs",
+        "binding": "Yt",
+        "key": "conflictingClassGroups",
+        "reason": "tailwind-merge-registry",
+        "tokens": 108,
+        "suppressed": []
+      },
+      {
+        "file": "src/generated/chat-knowledge-v4/c25d7186f.mjs",
+        "binding": "e",
+        "key": "__name",
+        "reason": "design-token-metadata",
+        "tokens": 654,
+        "suppressed": [
+          "bg-editor-canvas",
+          "bg-editor-claude-pending",
+          "bg-editor-comment",
+          "bg-editor-comment-active",
+          "bg-editor-highlight-blue",
+          "bg-editor-highlight-gray",
+          "bg-editor-highlight-green",
+          "bg-editor-highlight-magenta",
+          "bg-editor-highlight-violet",
+          "bg-editor-highlight-yellow",
+          "bg-git-modified",
+          "bg-tint-aqua-opaque",
+          "bg-tint-blue-opaque",
+          "bg-tint-magenta-opaque",
+          "bg-tint-red-opaque",
+          "bg-tint-yellow-opaque",
+          "border-editor-comment",
+          "border-pro",
+          "fill-pro",
+          "text-git-modified",
+          "z-toast"
+        ]
+      },
+      {
+        "file": "src/generated/chat-knowledge-v4/c25d7186f.mjs",
+        "binding": "e",
+        "key": "cssVar",
+        "reason": "design-token-metadata",
+        "tokens": 654,
+        "suppressed": []
+      },
+      {
         "file": "src/generated/code-editor/preview-sketch-canvas.mjs",
         "binding": "T",
         "key": "__name",
@@ -81,7 +167,6 @@
           "bg-editor-highlight-violet",
           "bg-editor-highlight-yellow",
           "bg-git-modified",
-          "bg-highlight",
           "bg-tint-aqua-opaque",
           "bg-tint-blue-opaque",
           "bg-tint-magenta-opaque",
@@ -97,6 +182,44 @@
       {
         "file": "src/generated/code-editor/preview-sketch-canvas.mjs",
         "binding": "T",
+        "key": "cssVar",
+        "reason": "design-token-metadata",
+        "tokens": 654,
+        "suppressed": []
+      },
+      {
+        "file": "src/generated/proposal-group-v4/c25d7186f.mjs",
+        "binding": "e",
+        "key": "__name",
+        "reason": "design-token-metadata",
+        "tokens": 654,
+        "suppressed": [
+          "bg-editor-canvas",
+          "bg-editor-claude-pending",
+          "bg-editor-comment",
+          "bg-editor-comment-active",
+          "bg-editor-highlight-blue",
+          "bg-editor-highlight-gray",
+          "bg-editor-highlight-green",
+          "bg-editor-highlight-magenta",
+          "bg-editor-highlight-violet",
+          "bg-editor-highlight-yellow",
+          "bg-git-modified",
+          "bg-tint-aqua-opaque",
+          "bg-tint-blue-opaque",
+          "bg-tint-magenta-opaque",
+          "bg-tint-red-opaque",
+          "bg-tint-yellow-opaque",
+          "border-editor-comment",
+          "border-pro",
+          "fill-pro",
+          "text-git-modified",
+          "z-toast"
+        ]
+      },
+      {
+        "file": "src/generated/proposal-group-v4/c25d7186f.mjs",
+        "binding": "e",
         "key": "cssVar",
         "reason": "design-token-metadata",
         "tokens": 654,
@@ -120,7 +243,6 @@
           "bg-editor-highlight-violet",
           "bg-editor-highlight-yellow",
           "bg-git-modified",
-          "bg-highlight",
           "bg-tint-aqua-opaque",
           "bg-tint-blue-opaque",
           "bg-tint-magenta-opaque",
@@ -135,6 +257,120 @@
       },
       {
         "file": "src/generated/proposal-group/c25d7186f-CHE_J2eY.js",
+        "binding": "e",
+        "key": "cssVar",
+        "reason": "design-token-metadata",
+        "tokens": 654,
+        "suppressed": []
+      },
+      {
+        "file": "src/generated/session-rail-changes-v4/c25d7186f.mjs",
+        "binding": "e",
+        "key": "__name",
+        "reason": "design-token-metadata",
+        "tokens": 654,
+        "suppressed": [
+          "bg-editor-canvas",
+          "bg-editor-claude-pending",
+          "bg-editor-comment",
+          "bg-editor-comment-active",
+          "bg-editor-highlight-blue",
+          "bg-editor-highlight-gray",
+          "bg-editor-highlight-green",
+          "bg-editor-highlight-magenta",
+          "bg-editor-highlight-violet",
+          "bg-editor-highlight-yellow",
+          "bg-git-modified",
+          "bg-tint-aqua-opaque",
+          "bg-tint-blue-opaque",
+          "bg-tint-magenta-opaque",
+          "bg-tint-red-opaque",
+          "bg-tint-yellow-opaque",
+          "border-editor-comment",
+          "border-pro",
+          "fill-pro",
+          "text-git-modified",
+          "z-toast"
+        ]
+      },
+      {
+        "file": "src/generated/session-rail-changes-v4/c25d7186f.mjs",
+        "binding": "e",
+        "key": "cssVar",
+        "reason": "design-token-metadata",
+        "tokens": 654,
+        "suppressed": []
+      },
+      {
+        "file": "src/generated/session-rail-context-v4/c25d7186f.mjs",
+        "binding": "e",
+        "key": "__name",
+        "reason": "design-token-metadata",
+        "tokens": 654,
+        "suppressed": [
+          "bg-editor-canvas",
+          "bg-editor-claude-pending",
+          "bg-editor-comment",
+          "bg-editor-comment-active",
+          "bg-editor-highlight-blue",
+          "bg-editor-highlight-gray",
+          "bg-editor-highlight-green",
+          "bg-editor-highlight-magenta",
+          "bg-editor-highlight-violet",
+          "bg-editor-highlight-yellow",
+          "bg-git-modified",
+          "bg-tint-aqua-opaque",
+          "bg-tint-blue-opaque",
+          "bg-tint-magenta-opaque",
+          "bg-tint-red-opaque",
+          "bg-tint-yellow-opaque",
+          "border-editor-comment",
+          "border-pro",
+          "fill-pro",
+          "text-git-modified",
+          "z-toast"
+        ]
+      },
+      {
+        "file": "src/generated/session-rail-context-v4/c25d7186f.mjs",
+        "binding": "e",
+        "key": "cssVar",
+        "reason": "design-token-metadata",
+        "tokens": 654,
+        "suppressed": []
+      },
+      {
+        "file": "src/generated/session-rail-kit-v4/c25d7186f-CHE_J2eY.mjs",
+        "binding": "e",
+        "key": "__name",
+        "reason": "design-token-metadata",
+        "tokens": 654,
+        "suppressed": [
+          "bg-editor-canvas",
+          "bg-editor-claude-pending",
+          "bg-editor-comment",
+          "bg-editor-comment-active",
+          "bg-editor-highlight-blue",
+          "bg-editor-highlight-gray",
+          "bg-editor-highlight-green",
+          "bg-editor-highlight-magenta",
+          "bg-editor-highlight-violet",
+          "bg-editor-highlight-yellow",
+          "bg-git-modified",
+          "bg-tint-aqua-opaque",
+          "bg-tint-blue-opaque",
+          "bg-tint-magenta-opaque",
+          "bg-tint-red-opaque",
+          "bg-tint-yellow-opaque",
+          "border-editor-comment",
+          "border-pro",
+          "fill-pro",
+          "text-git-modified",
+          "z-toast"
+        ]
+      },
+      {
+        "file": "src/generated/session-rail-kit-v4/c25d7186f-CHE_J2eY.mjs",
         "binding": "e",
         "key": "cssVar",
         "reason": "design-token-metadata",
@@ -159,7 +395,6 @@
           "bg-editor-highlight-violet",
           "bg-editor-highlight-yellow",
           "bg-git-modified",
-          "bg-highlight",
           "bg-tint-aqua-opaque",
           "bg-tint-blue-opaque",
           "bg-tint-magenta-opaque",
@@ -198,7 +433,6 @@
           "bg-editor-highlight-violet",
           "bg-editor-highlight-yellow",
           "bg-git-modified",
-          "bg-highlight",
           "bg-tint-aqua-opaque",
           "bg-tint-blue-opaque",
           "bg-tint-magenta-opaque",
@@ -243,8 +477,7 @@
         "tokens": 516,
         "suppressed": [
           "inline-table",
-          "isolation-auto",
-          "text-clip"
+          "isolation-auto"
         ]
       },
       {
@@ -273,6 +506,4099 @@
       "note": "Per-hit reachable flag only; a rule held solely by unreachable modules is still retained."
     }
   },
-  "rules": [],
-  "tokens": []
+  "rules": [
+    {
+      "selector": ".inset-x-\\[8px\\]",
+      "references": [
+        {
+          "className": "inset-x-[8px]",
+          "hits": [
+            {
+              "file": "src/generated/code-editor/side-chat-geometry.mjs",
+              "binding": "DF",
+              "generator": "scripts/extract-code-editor.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 69450,
+      "end": 69484,
+      "sha256": "ee322f3cb50e70bb874db38204e5c07c56ee9fbb7ffcec699bc0e5e1b9e40f7c",
+      "contexts": [],
+      "fragmentSha256": "ee322f3cb50e70bb874db38204e5c07c56ee9fbb7ffcec699bc0e5e1b9e40f7c"
+    },
+    {
+      "selector": ".top-\\[8px\\]",
+      "references": [
+        {
+          "className": "top-[8px]",
+          "hits": [
+            {
+              "file": "src/generated/code-editor/side-chat-geometry.mjs",
+              "binding": "DF",
+              "generator": "scripts/extract-code-editor.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 80431,
+      "end": 80452,
+      "sha256": "ce64b1bb7d381f3a5b8428e183c0262a21ef7b79b66c6c77534f84eba6275582",
+      "contexts": [],
+      "fragmentSha256": "ce64b1bb7d381f3a5b8428e183c0262a21ef7b79b66c6c77534f84eba6275582"
+    },
+    {
+      "selector": ".-right-\\[3px\\]",
+      "references": [
+        {
+          "className": "-right-[3px]",
+          "hits": [
+            {
+              "file": "src/generated/code-editor/side-chat-geometry.mjs",
+              "binding": "DF",
+              "generator": "scripts/extract-code-editor.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 84763,
+      "end": 84790,
+      "sha256": "b0d021490f6ac0142eabdae174676890383c9da26dac8e76b0b910a3ab155a5d",
+      "contexts": [],
+      "fragmentSha256": "b0d021490f6ac0142eabdae174676890383c9da26dac8e76b0b910a3ab155a5d"
+    },
+    {
+      "selector": ".-bottom-\\[3px\\]",
+      "references": [
+        {
+          "className": "-bottom-[3px]",
+          "hits": [
+            {
+              "file": "src/generated/code-editor/side-chat-geometry.mjs",
+              "binding": "DF",
+              "generator": "scripts/extract-code-editor.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 86090,
+      "end": 86119,
+      "sha256": "0caedf1dd5fd60407cc3e5cac419b84c029bfcc3c11e181f2882e47922572251",
+      "contexts": [],
+      "fragmentSha256": "0caedf1dd5fd60407cc3e5cac419b84c029bfcc3c11e181f2882e47922572251"
+    },
+    {
+      "selector": ".bottom-\\[8px\\]",
+      "references": [
+        {
+          "className": "bottom-[8px]",
+          "hits": [
+            {
+              "file": "src/generated/code-editor/side-chat-geometry.mjs",
+              "binding": "DF",
+              "generator": "scripts/extract-code-editor.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 87215,
+      "end": 87242,
+      "sha256": "20debd586923b7ac903d03f8580e9f97475aeda991784ec9fe7e4c9c1823731f",
+      "contexts": [],
+      "fragmentSha256": "20debd586923b7ac903d03f8580e9f97475aeda991784ec9fe7e4c9c1823731f"
+    },
+    {
+      "selector": ".-left-\\[3px\\]",
+      "references": [
+        {
+          "className": "-left-[3px]",
+          "hits": [
+            {
+              "file": "src/generated/code-editor/side-chat-geometry.mjs",
+              "binding": "DF",
+              "generator": "scripts/extract-code-editor.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 88957,
+      "end": 88982,
+      "sha256": "85fa3431fb0a4e80085b8bc2ef7a39a08940909874da9eec5e285ef1f35817a0",
+      "contexts": [],
+      "fragmentSha256": "85fa3431fb0a4e80085b8bc2ef7a39a08940909874da9eec5e285ef1f35817a0"
+    },
+    {
+      "selector": ".ms-\\[calc\\(var\\(--msg-text-inset\\,0\\.5rem\\)_-_0\\.375rem\\)\\]",
+      "references": [
+        {
+          "className": "ms-[calc(var(--msg-text-inset,0.5rem)_-_0.375rem)]",
+          "hits": [
+            {
+              "file": "src/generated/chat-messages/feedback.mjs",
+              "binding": "n1",
+              "generator": "scripts/extract-chat-messages-v4.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": false
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 104040,
+      "end": 104165,
+      "sha256": "4b0241e86a51f229d97f2184ca3f4e58294434e7916caad1064b4e24b168db27",
+      "contexts": [],
+      "fragmentSha256": "4b0241e86a51f229d97f2184ca3f4e58294434e7916caad1064b4e24b168db27"
+    },
+    {
+      "selector": ".ms-pad-xs",
+      "references": [
+        {
+          "className": "ms-pad-xs",
+          "hits": [
+            {
+              "file": "src/generated/code-transcript/code-transcript.mjs",
+              "binding": "b1e",
+              "generator": "scripts/extract-code-transcript-v4.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            },
+            {
+              "file": "src/generated/code-transcript/code-transcript.mjs",
+              "binding": "k1e",
+              "generator": "scripts/extract-code-transcript-v4.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 105362,
+      "end": 105411,
+      "sha256": "a6d84b54f047c90237cd8f4dcca96331f3415afbadd5ecfef627727710068876",
+      "contexts": [],
+      "fragmentSha256": "a6d84b54f047c90237cd8f4dcca96331f3415afbadd5ecfef627727710068876"
+    },
+    {
+      "selector": ".me-\\[calc\\(\\(40px-var\\(--cds-h-control\\)\\)\\/2-var\\(--cds-pad-md\\)\\)\\]",
+      "references": [
+        {
+          "className": "me-[calc((40px-var(--cds-h-control))/2-var(--cds-pad-md))]",
+          "hits": [
+            {
+              "file": "src/generated/session-rail/band-frame.mjs",
+              "binding": "_",
+              "generator": "scripts/extract-session-rail-v4.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 108803,
+      "end": 108952,
+      "sha256": "9f0da4c12482b9e33094e94860581b84ddd2e1a0f3a537c9fa5c609f54c7e6f7",
+      "contexts": [],
+      "fragmentSha256": "9f0da4c12482b9e33094e94860581b84ddd2e1a0f3a537c9fa5c609f54c7e6f7"
+    },
+    {
+      "selector": ".me-pad-xs",
+      "references": [
+        {
+          "className": "me-pad-xs",
+          "hits": [
+            {
+              "file": "src/generated/code-transcript/code-transcript.mjs",
+              "binding": "g1e",
+              "generator": "scripts/extract-code-transcript-v4.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 112817,
+      "end": 112864,
+      "sha256": "8e33ecba4971525147a3c4dfdcf8dfdc63f610287c95a3a8905a288907ca0b1e",
+      "contexts": [],
+      "fragmentSha256": "8e33ecba4971525147a3c4dfdcf8dfdc63f610287c95a3a8905a288907ca0b1e"
+    },
+    {
+      "selector": ".mb-pad-xl",
+      "references": [
+        {
+          "className": "mb-pad-xl",
+          "hits": [
+            {
+              "file": "src/generated/view-tabs/shared-frame-6jtSkIit.js",
+              "binding": "Zy",
+              "generator": "scripts/extract-approval-landing.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 122832,
+      "end": 122875,
+      "sha256": "d62ef6f54a4c1532a699f8fc59968a75df2e8ec4665871d70db60f3722fd1228",
+      "contexts": [],
+      "fragmentSha256": "d62ef6f54a4c1532a699f8fc59968a75df2e8ec4665871d70db60f3722fd1228"
+    },
+    {
+      "selector": ".min-h-\\[24rem\\]",
+      "references": [
+        {
+          "className": "min-h-[24rem]",
+          "hits": [
+            {
+              "file": "src/generated/cowork-progress/c21f11e6d-Cyd8_HO8.mjs",
+              "binding": "Vb",
+              "generator": "scripts/extract-cowork-progress-v4.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 164569,
+      "end": 164603,
+      "sha256": "d20a54960fd6f5f7a2bdf9bfeee28c8095c1c08e6c4a97299c3dea39945984ef",
+      "contexts": [],
+      "fragmentSha256": "d20a54960fd6f5f7a2bdf9bfeee28c8095c1c08e6c4a97299c3dea39945984ef"
+    },
+    {
+      "selector": ".min-h-\\[calc\\(var\\(--df-group-pt\\)\\+\\(var\\(--df-row-h\\)-8px\\)\\+4px\\)\\]",
+      "references": [
+        {
+          "className": "min-h-[calc(var(--df-group-pt)+(var(--df-row-h)-8px)+4px)]",
+          "hits": [
+            {
+              "file": "src/generated/sidebar-sections/group-label.mjs",
+              "binding": "aA",
+              "generator": "scripts/extract-sidebar-sections.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 168100,
+      "end": 168240,
+      "sha256": "23e32d168b442750ce154b3119e6bb2633642635e97cfe1a275a36a48ccc688a",
+      "contexts": [],
+      "fragmentSha256": "23e32d168b442750ce154b3119e6bb2633642635e97cfe1a275a36a48ccc688a"
+    },
+    {
+      "selector": ".\\!w-6",
+      "references": [
+        {
+          "className": "!w-6",
+          "hits": [
+            {
+              "file": "src/generated/chat-messages/version-selector.mjs",
+              "binding": "lI",
+              "generator": "scripts/extract-chat-messages-v4.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": false
+            },
+            {
+              "file": "src/source-chat-message-actions.jsx",
+              "binding": "VERSION_BUTTON_CLASS",
+              "generator": "host",
+              "sourceVersion": null,
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 169836,
+      "end": 169884,
+      "sha256": "95592fdd722cbd38cae1613eb5317532c1ac8ea5ebea5c95df7e133dcd6f2d6b",
+      "contexts": [],
+      "fragmentSha256": "95592fdd722cbd38cae1613eb5317532c1ac8ea5ebea5c95df7e133dcd6f2d6b"
+    },
+    {
+      "selector": ".w-\\[calc\\(100\\%\\+2\\*var\\(--cds-menu-gutter\\,4px\\)\\)\\]",
+      "references": [
+        {
+          "className": "w-[calc(100%+2*var(--cds-menu-gutter,4px))]",
+          "hits": [
+            {
+              "file": "src/generated/code-current/environment-select-parts.mjs",
+              "binding": "FM",
+              "generator": "scripts/extract-code-current-upper-v4.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            },
+            {
+              "file": "src/generated/view-tabs/shared-frame-6jtSkIit.js",
+              "binding": "FM",
+              "generator": "scripts/extract-approval-landing.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 176861,
+      "end": 176966,
+      "sha256": "f29461896d691b0ed02d6f94371d5a72801ca6f4a336f41d9f8f685e5e2bf61b",
+      "contexts": [],
+      "fragmentSha256": "f29461896d691b0ed02d6f94371d5a72801ca6f4a336f41d9f8f685e5e2bf61b"
+    },
+    {
+      "selector": ".max-w-28",
+      "references": [
+        {
+          "className": "max-w-28",
+          "hits": [
+            {
+              "file": "src/generated/code-transcript/code-transcript.mjs",
+              "binding": "l1e",
+              "generator": "scripts/extract-code-transcript-v4.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 181232,
+      "end": 181278,
+      "sha256": "e9e618960d2d6eb0ac9dd37711519e3a27e51bf47503a10686126c88d384a141",
+      "contexts": [],
+      "fragmentSha256": "e9e618960d2d6eb0ac9dd37711519e3a27e51bf47503a10686126c88d384a141"
+    },
+    {
+      "selector": ".max-w-\\[calc\\(100\\%_-_var\\(--cmp-lead-w\\)\\)\\]",
+      "references": [
+        {
+          "className": "max-w-[calc(100%_-_var(--cmp-lead-w))]",
+          "hits": [
+            {
+              "file": "src/generated/code-composer/chat-composer-shell.mjs",
+              "binding": "hp",
+              "generator": "scripts/extract-code-composer.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": false
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 187822,
+      "end": 187910,
+      "sha256": "c76d7a929c91f1e9ff806b49af9c747628cb2f2f9ec1ee462535aff53a5c0c4a",
+      "contexts": [],
+      "fragmentSha256": "c76d7a929c91f1e9ff806b49af9c747628cb2f2f9ec1ee462535aff53a5c0c4a"
+    },
+    {
+      "selector": ".scale-90",
+      "references": [
+        {
+          "className": "scale-90",
+          "hits": [
+            {
+              "file": "src/generated/code-composer/composer-glyph.mjs",
+              "binding": "p",
+              "generator": "scripts/extract-code-composer.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": false
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 209476,
+      "end": 209579,
+      "sha256": "35512b8e608ba79f43a3a7a0206a9f48ee2221b059673eb05d48fe12e989c0a9",
+      "contexts": [],
+      "fragmentSha256": "35512b8e608ba79f43a3a7a0206a9f48ee2221b059673eb05d48fe12e989c0a9"
+    },
+    {
+      "selector": ".bg-\\[color-mix\\(in_srgb\\,var\\(--cds-surface-3\\)_70\\%\\,transparent\\)\\]",
+      "references": [
+        {
+          "className": "bg-[color-mix(in_srgb,var(--cds-surface-3)_70%,transparent)]",
+          "hits": [
+            {
+              "file": "src/source-sidebar-drag.jsx",
+              "binding": "SidebarDragGhost",
+              "generator": "host",
+              "sourceVersion": null,
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 290773,
+      "end": 290917,
+      "sha256": "f7ab8d8dd852f280d58241d676541b97e5214690cd973b2b6b14a7b62ab50904",
+      "contexts": [],
+      "fragmentSha256": "f7ab8d8dd852f280d58241d676541b97e5214690cd973b2b6b14a7b62ab50904"
+    },
+    {
+      "selector": ".bg-\\[color-mix\\(in_srgb\\,var\\(--cds-surface-3\\)_80\\%\\,transparent\\)\\]",
+      "references": [
+        {
+          "className": "bg-[color-mix(in_srgb,var(--cds-surface-3)_80%,transparent)]",
+          "hits": [
+            {
+              "file": "src/source-sidebar-drag.jsx",
+              "binding": "SidebarDragGhost",
+              "generator": "host",
+              "sourceVersion": null,
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 290917,
+      "end": 291061,
+      "sha256": "939efad7e04ce1682cad759a71371bff0723447a9cf360775ac1df3da6dea0be",
+      "contexts": [],
+      "fragmentSha256": "939efad7e04ce1682cad759a71371bff0723447a9cf360775ac1df3da6dea0be"
+    },
+    {
+      "selector": ".bg-\\[color-mix\\(in_srgb\\,var\\(--cds-surface-3\\)_90\\%\\,transparent\\)\\]",
+      "references": [
+        {
+          "className": "bg-[color-mix(in_srgb,var(--cds-surface-3)_90%,transparent)]",
+          "hits": [
+            {
+              "file": "src/source-sidebar-drag.jsx",
+              "binding": "SidebarDragGhost",
+              "generator": "host",
+              "sourceVersion": null,
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 291061,
+      "end": 291205,
+      "sha256": "e159d46d619fcda162239fbb3574ac921b66b5b05fded36c4493d19f8cdb04a4",
+      "contexts": [],
+      "fragmentSha256": "e159d46d619fcda162239fbb3574ac921b66b5b05fded36c4493d19f8cdb04a4"
+    },
+    {
+      "selector": ".\\[background-image\\:linear-gradient\\(var\\(--cds-shimmer-text-angle\\,120deg\\)\\,var\\(--cds-shimmer-text-ink\\)_37\\.5\\%\\,var\\(--cds-shimmer-text-peak\\)_45\\%\\,var\\(--cds-shimmer-text-peak\\)_55\\%\\,var\\(--cds-shimmer-text-ink\\)_62\\.5\\%\\)\\]",
+      "references": [
+        {
+          "className": "[background-image:linear-gradient(var(--cds-shimmer-text-angle,120deg),var(--cds-shimmer-text-ink)_37.5%,var(--cds-shimmer-text-peak)_45%,var(--cds-shimmer-text-peak)_55%,var(--cds-shimmer-text-ink)_62.5%)]",
+          "hits": [
+            {
+              "file": "src/generated/view-tabs/shared-frame-6jtSkIit.js",
+              "binding": "CF",
+              "generator": "scripts/extract-approval-landing.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 315395,
+      "end": 315834,
+      "sha256": "4f86b6792c20b0ad6d2f360e540eb252a66d7441972ab8b8b404e68a98ded732",
+      "contexts": [],
+      "fragmentSha256": "4f86b6792c20b0ad6d2f360e540eb252a66d7441972ab8b8b404e68a98ded732"
+    },
+    {
+      "selector": ".px-\\[calc\\(var\\(--cds-pad-md\\)\\+var\\(--cds-menu-gutter\\,4px\\)\\)\\]",
+      "references": [
+        {
+          "className": "px-[calc(var(--cds-pad-md)+var(--cds-menu-gutter,4px))]",
+          "hits": [
+            {
+              "file": "src/generated/code-current/environment-select-parts.mjs",
+              "binding": "FM",
+              "generator": "scripts/extract-code-current-upper-v4.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            },
+            {
+              "file": "src/generated/view-tabs/shared-frame-6jtSkIit.js",
+              "binding": "FM",
+              "generator": "scripts/extract-approval-landing.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 356073,
+      "end": 356208,
+      "sha256": "693ae0066ffec2f7c4502e9946de08f8719602b9a6bbf6efe5f6eb0cfd32cba7",
+      "contexts": [],
+      "fragmentSha256": "693ae0066ffec2f7c4502e9946de08f8719602b9a6bbf6efe5f6eb0cfd32cba7"
+    },
+    {
+      "selector": ".ps-\\[calc\\(\\(var\\(--df-row-ctl\\)-var\\(--df-pr-glyph\\,12px\\)\\)\\/2\\)\\]",
+      "references": [
+        {
+          "className": "ps-[calc((var(--df-row-ctl)-var(--df-pr-glyph,12px))/2)]",
+          "hits": [
+            {
+              "file": "src/generated/code-current/sidebar-pr-card.mjs",
+              "binding": "gD",
+              "generator": "scripts/extract-code-current-upper-v4.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 364424,
+      "end": 364571,
+      "sha256": "8102737530be9b82536a9e1ef038b35f4e3f3623769874d6bfc3a6bcf6723d32",
+      "contexts": [],
+      "fragmentSha256": "8102737530be9b82536a9e1ef038b35f4e3f3623769874d6bfc3a6bcf6723d32"
+    },
+    {
+      "selector": ".pe-\\[calc\\(\\(var\\(--df-row-ctl\\)-var\\(--df-pr-glyph\\,12px\\)\\)\\/2\\+max\\(0px\\,var\\(--df-heading-pitch\\,0px\\)-var\\(--df-row-ctl\\)\\)\\)\\]",
+      "references": [
+        {
+          "className": "pe-[calc((var(--df-row-ctl)-var(--df-pr-glyph,12px))/2+max(0px,var(--df-heading-pitch,0px)-var(--df-row-ctl)))]",
+          "hits": [
+            {
+              "file": "src/generated/code-current/sidebar-pr-card.mjs",
+              "binding": "gD",
+              "generator": "scripts/extract-code-current-upper-v4.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 372822,
+      "end": 373091,
+      "sha256": "441815672773d75a51b77c06c5730d0b2cd4f776f503ff940ceb3a0602e88ce1",
+      "contexts": [],
+      "fragmentSha256": "441815672773d75a51b77c06c5730d0b2cd4f776f503ff940ceb3a0602e88ce1"
+    },
+    {
+      "selector": ".pe-\\[calc\\(var\\(--cds-h-control\\)\\+2\\*var\\(--cds-pad-xs\\)\\)\\]",
+      "references": [
+        {
+          "className": "pe-[calc(var(--cds-h-control)+2*var(--cds-pad-xs))]",
+          "hits": [
+            {
+              "file": "src/generated/code-transcript/code-transcript.mjs",
+              "binding": "VQ",
+              "generator": "scripts/extract-code-transcript-v4.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 374416,
+      "end": 374549,
+      "sha256": "f33f7d50965ee711fece976afb678f41b95df0af34f109275d36ff46d26a0c55",
+      "contexts": [],
+      "fragmentSha256": "f33f7d50965ee711fece976afb678f41b95df0af34f109275d36ff46d26a0c55"
+    },
+    {
+      "selector": ".pe-\\[calc\\(var\\(--cds-h-control\\)\\+var\\(--cds-gap-xs\\)\\)\\]",
+      "references": [
+        {
+          "className": "pe-[calc(var(--cds-h-control)+var(--cds-gap-xs))]",
+          "hits": [
+            {
+              "file": "src/generated/code-transcript/code-transcript.mjs",
+              "binding": "U$e",
+              "generator": "scripts/extract-code-transcript-v4.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 374549,
+      "end": 374675,
+      "sha256": "aabf00565a175863fc6f04676e44abee7d414ad6408f68b4610e09a4398f56d3",
+      "contexts": [],
+      "fragmentSha256": "aabf00565a175863fc6f04676e44abee7d414ad6408f68b4610e09a4398f56d3"
+    },
+    {
+      "selector": ".pt-\\[var\\(--df-group-pt\\)\\]",
+      "references": [
+        {
+          "className": "pt-[var(--df-group-pt)]",
+          "hits": [
+            {
+              "file": "src/generated/sidebar-sections/group-label.mjs",
+              "binding": "lA",
+              "generator": "scripts/extract-sidebar-sections.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 381642,
+      "end": 381702,
+      "sha256": "17a96a061d456e9bf2b52c4bf4851b04a1829f772fda31bb5b24bc17352aa369",
+      "contexts": [],
+      "fragmentSha256": "17a96a061d456e9bf2b52c4bf4851b04a1829f772fda31bb5b24bc17352aa369"
+    },
+    {
+      "selector": ".pr-\\[96px\\]",
+      "references": [
+        {
+          "className": "pr-[96px]",
+          "hits": [
+            {
+              "file": "src/source-task-backlog.jsx",
+              "binding": "SourceTaskBacklog",
+              "generator": "host",
+              "sourceVersion": null,
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 382338,
+      "end": 382370,
+      "sha256": "0d86089c3dcbbb6cd5b4c24a4025dc6dc036c1d7ff495ebeda7c47c8ee7ff0c1",
+      "contexts": [],
+      "fragmentSha256": "0d86089c3dcbbb6cd5b4c24a4025dc6dc036c1d7ff495ebeda7c47c8ee7ff0c1"
+    },
+    {
+      "selector": ".pr-xs",
+      "references": [
+        {
+          "className": "pr-xs",
+          "hits": [
+            {
+              "file": "src/source-preview-pane.jsx",
+              "binding": "PreviewStartFailedCard",
+              "generator": "host",
+              "sourceVersion": null,
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 382535,
+      "end": 382574,
+      "sha256": "9e70e3e30288abdc2ddceb93d19ccaff27683fc66be49908231c7cc80269e846",
+      "contexts": [],
+      "fragmentSha256": "9e70e3e30288abdc2ddceb93d19ccaff27683fc66be49908231c7cc80269e846"
+    },
+    {
+      "selector": ".pb-\\[16px\\]",
+      "references": [
+        {
+          "className": "pb-[16px]",
+          "hits": [
+            {
+              "file": "src/source-background-tasks.jsx",
+              "binding": "SourceTaskOutput",
+              "generator": "host",
+              "sourceVersion": null,
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 384269,
+      "end": 384302,
+      "sha256": "3eb1140377ff682adaaa0a27065151b7d27c91f6390ba1b695830580a1338c8d",
+      "contexts": [],
+      "fragmentSha256": "3eb1140377ff682adaaa0a27065151b7d27c91f6390ba1b695830580a1338c8d"
+    },
+    {
+      "selector": ".text-gray-900\\/80",
+      "references": [
+        {
+          "className": "text-gray-900/80",
+          "hits": [
+            {
+              "file": "src/generated/artifact-library/c2bb74286-CQLOwqIZ.mjs",
+              "binding": "It",
+              "generator": "scripts/extract-artifact-library-v4.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            },
+            {
+              "file": "src/generated/artifact-library/frame-shell-header-B1Xokuj0.mjs",
+              "binding": "Ae",
+              "generator": "scripts/extract-artifact-library-v4.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            },
+            {
+              "file": "src/generated/artifact-library/shared-9-CM21XrJw.mjs",
+              "binding": "vh",
+              "generator": "scripts/extract-artifact-library-v4.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            },
+            {
+              "file": "src/generated/artifact-library/shared-frame-6jtSkIit.mjs",
+              "binding": "KE",
+              "generator": "scripts/extract-artifact-library-v4.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 418771,
+      "end": 418854,
+      "sha256": "bafa470a35eadbf1cffdc79bab0117b8cabbfb8ba10fc63902473fa59ee0cbc4",
+      "contexts": [],
+      "fragmentSha256": "bafa470a35eadbf1cffdc79bab0117b8cabbfb8ba10fc63902473fa59ee0cbc4"
+    },
+    {
+      "selector": ".shadow-\\[0_0_0_100px_var\\(--cds-text-primary\\)\\]",
+      "references": [
+        {
+          "className": "shadow-[0_0_0_100px_var(--cds-text-primary)]",
+          "hits": [
+            {
+              "file": "src/source-incognito-shell.jsx",
+              "binding": "INCOGNITO_FRAME_CLASS",
+              "generator": "host",
+              "sourceVersion": null,
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 432866,
+      "end": 433121,
+      "sha256": "c5b5c9b508b3fdc04dfe1b9185ad7cf7abb725d3443d9c3c3bb56fac4b32cb90",
+      "contexts": [],
+      "fragmentSha256": "c5b5c9b508b3fdc04dfe1b9185ad7cf7abb725d3443d9c3c3bb56fac4b32cb90"
+    },
+    {
+      "selector": ".\\[--cds-radius-composer\\:calc\\(1\\.125rem\\*var\\(--cds-rem-scale\\,1\\)\\)\\]",
+      "references": [
+        {
+          "className": "[--cds-radius-composer:calc(1.125rem*var(--cds-rem-scale,1))]",
+          "hits": [
+            {
+              "file": "src/generated/code-composer/chat-composer-shell.mjs",
+              "binding": "Jp",
+              "generator": "scripts/extract-code-composer.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": false
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 520343,
+      "end": 520478,
+      "sha256": "87c692c7066f622f3bf28def4698de835ebad6b8ce19fdc0eb237a8801567d11",
+      "contexts": [],
+      "fragmentSha256": "87c692c7066f622f3bf28def4698de835ebad6b8ce19fdc0eb237a8801567d11"
+    },
+    {
+      "selector": ".\\[--cds-shimmer-text-peak\\:color-mix\\(in_srgb\\,var\\(--cds-text-primary\\)_20\\%\\,white\\)\\]",
+      "references": [
+        {
+          "className": "[--cds-shimmer-text-peak:color-mix(in_srgb,var(--cds-text-primary)_20%,white)]",
+          "hits": [
+            {
+              "file": "src/generated/view-tabs/shared-frame-6jtSkIit.js",
+              "binding": "bF",
+              "generator": "scripts/extract-approval-landing.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 522130,
+      "end": 522297,
+      "sha256": "796dfb6cbc4378a4b6d7e167f16199252b1eff1e4faa43b977285c07f731cfd4",
+      "contexts": [],
+      "fragmentSha256": "796dfb6cbc4378a4b6d7e167f16199252b1eff1e4faa43b977285c07f731cfd4"
+    },
+    {
+      "selector": ".\\[--cds-shimmer-text-plateau\\:5\\%\\]",
+      "references": [
+        {
+          "className": "[--cds-shimmer-text-plateau:5%]",
+          "hits": [
+            {
+              "file": "src/generated/view-tabs/shared-frame-6jtSkIit.js",
+              "binding": "bF",
+              "generator": "scripts/extract-approval-landing.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 522635,
+      "end": 522702,
+      "sha256": "b3cd9e3e7eca23151db769205aa26d78626171d2c042c93c654f8fcb7335bf6e",
+      "contexts": [],
+      "fragmentSha256": "b3cd9e3e7eca23151db769205aa26d78626171d2c042c93c654f8fcb7335bf6e"
+    },
+    {
+      "selector": ".\\[--cmp-chin-end\\:calc\\(var\\(--cmp-pad-x\\)\\+2px\\)\\]",
+      "references": [
+        {
+          "className": "[--cmp-chin-end:calc(var(--cmp-pad-x)+2px)]",
+          "hits": [
+            {
+              "file": "src/generated/code-composer/chat-composer-shell.mjs",
+              "binding": "Cp",
+              "generator": "scripts/extract-code-composer.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": false
+            },
+            {
+              "file": "src/generated/code-composer/chat-composer-shell.mjs",
+              "binding": "Sp",
+              "generator": "scripts/extract-code-composer.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": false
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 526493,
+      "end": 526590,
+      "sha256": "a9534c7b6624e0b57c80774d1f1b8583a1f7753dfae7aaec345ce6aa2c3e0789",
+      "contexts": [],
+      "fragmentSha256": "a9534c7b6624e0b57c80774d1f1b8583a1f7753dfae7aaec345ce6aa2c3e0789"
+    },
+    {
+      "selector": ".\\[--cmp-pad-x\\:0\\.75rem\\]",
+      "references": [
+        {
+          "className": "[--cmp-pad-x:0.75rem]",
+          "hits": [
+            {
+              "file": "src/generated/code-composer/chat-composer-shell.mjs",
+              "binding": "Hp",
+              "generator": "scripts/extract-code-composer.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": false
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 528137,
+      "end": 528183,
+      "sha256": "293ee419eff98719b6109a341645f72dd53c1cbe3dd1b430ec03c7766b8d94d1",
+      "contexts": [],
+      "fragmentSha256": "293ee419eff98719b6109a341645f72dd53c1cbe3dd1b430ec03c7766b8d94d1"
+    },
+    {
+      "selector": ".scroll-fade-size-\\[48px\\]",
+      "references": [
+        {
+          "className": "scroll-fade-size-[48px]",
+          "hits": [
+            {
+              "file": "src/source-transcript.jsx",
+              "binding": "SourceTranscript",
+              "generator": "host",
+              "sourceVersion": null,
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 548050,
+      "end": 548105,
+      "sha256": "7df352330aafdb2d683d388b828ae40b65cdd3bae74a850af9b015acbe8d81fe",
+      "contexts": [],
+      "fragmentSha256": "7df352330aafdb2d683d388b828ae40b65cdd3bae74a850af9b015acbe8d81fe"
+    },
+    {
+      "selector": ".\\*\\:pt-0\\!>*",
+      "references": [
+        {
+          "className": "*:pt-0!",
+          "hits": [
+            {
+              "file": "src/generated/code-transcript/c425fb3cf-B-SGR6Na.mjs",
+              "binding": "x",
+              "generator": "scripts/extract-code-transcript-v4.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 548970,
+      "end": 549008,
+      "sha256": "8f3c6f91e57ac29bae8e268f98e2b529a7d4b5111e8f28329399395efd49c4ff",
+      "contexts": [],
+      "fragmentSha256": "8f3c6f91e57ac29bae8e268f98e2b529a7d4b5111e8f28329399395efd49c4ff"
+    },
+    {
+      "selector": ".group-focus-within\\/diff-file\\:opacity-100:is(:where(.group\\/diff-file):focus-within :where(.group-focus-within\\/diff-file\\:opacity-100))",
+      "references": [
+        {
+          "className": "group-focus-within/diff-file:opacity-100",
+          "hits": [
+            {
+              "file": "src/generated/pierre-changes/pierre-changes.mjs",
+              "binding": "_a",
+              "generator": "scripts/extract-pierre-changes-v4.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            },
+            {
+              "file": "src/source-diff.jsx",
+              "binding": "ChangesFileHeader",
+              "generator": "host",
+              "sourceVersion": null,
+              "reachable": true
+            }
+          ]
+        },
+        {
+          "className": "group/diff-file",
+          "hits": [
+            {
+              "file": "src/generated/pierre-changes/pierre-changes.mjs",
+              "binding": "Xu",
+              "generator": "scripts/extract-pierre-changes-v4.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            },
+            {
+              "file": "src/source-diff.jsx",
+              "binding": "ChangesFileHeader",
+              "generator": "host",
+              "sourceVersion": null,
+              "reachable": true
+            }
+          ]
+        },
+        {
+          "className": "group-focus-within/diff-file:opacity-100",
+          "hits": [
+            {
+              "file": "src/generated/pierre-changes/pierre-changes.mjs",
+              "binding": "_a",
+              "generator": "scripts/extract-pierre-changes-v4.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            },
+            {
+              "file": "src/source-diff.jsx",
+              "binding": "ChangesFileHeader",
+              "generator": "host",
+              "sourceVersion": null,
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 553882,
+      "end": 554031,
+      "sha256": "1fe8ad12a9bfb51d5507b4f95abd39468007df07b7686dc3f64cad940bff933f",
+      "contexts": [],
+      "fragmentSha256": "1fe8ad12a9bfb51d5507b4f95abd39468007df07b7686dc3f64cad940bff933f"
+    },
+    {
+      "selector": ".group-hover\\/diff-file\\:opacity-100:is(:where(.group\\/diff-file):hover :where(.group-hover\\/diff-file\\:opacity-100))",
+      "references": [
+        {
+          "className": "group-hover/diff-file:opacity-100",
+          "hits": [
+            {
+              "file": "src/generated/pierre-changes/pierre-changes.mjs",
+              "binding": "_a",
+              "generator": "scripts/extract-pierre-changes-v4.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            },
+            {
+              "file": "src/source-diff.jsx",
+              "binding": "ChangesFileHeader",
+              "generator": "host",
+              "sourceVersion": null,
+              "reachable": true
+            }
+          ]
+        },
+        {
+          "className": "group/diff-file",
+          "hits": [
+            {
+              "file": "src/generated/pierre-changes/pierre-changes.mjs",
+              "binding": "Xu",
+              "generator": "scripts/extract-pierre-changes-v4.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            },
+            {
+              "file": "src/source-diff.jsx",
+              "binding": "ChangesFileHeader",
+              "generator": "host",
+              "sourceVersion": null,
+              "reachable": true
+            }
+          ]
+        },
+        {
+          "className": "group-hover/diff-file:opacity-100",
+          "hits": [
+            {
+              "file": "src/generated/pierre-changes/pierre-changes.mjs",
+              "binding": "_a",
+              "generator": "scripts/extract-pierre-changes-v4.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            },
+            {
+              "file": "src/source-diff.jsx",
+              "binding": "ChangesFileHeader",
+              "generator": "host",
+              "sourceVersion": null,
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 582889,
+      "end": 583017,
+      "sha256": "2356b26f07db4450fceafa3ec73fd69fb3d018847e88bdecee4af99ebc2fd600",
+      "contexts": [
+        {
+          "name": "media",
+          "params": "(hover:hover)"
+        }
+      ],
+      "fragmentSha256": "494f7e0208f3e77e8a824bc61fd9a990fd4148b97332aeceb143ada1e16a0d00"
+    },
+    {
+      "selector": ".group-hover\\/rd\\:border-stronger:is(:where(.group\\/rd):hover :where(.group-hover\\/rd\\:border-stronger))",
+      "references": [
+        {
+          "className": "group-hover/rd:border-stronger",
+          "hits": [
+            {
+              "file": "src/generated/view-tabs/shared-frame-6jtSkIit.js",
+              "binding": "rV",
+              "generator": "scripts/extract-approval-landing.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            }
+          ]
+        },
+        {
+          "className": "group-hover/rd:border-stronger",
+          "hits": [
+            {
+              "file": "src/generated/view-tabs/shared-frame-6jtSkIit.js",
+              "binding": "rV",
+              "generator": "scripts/extract-approval-landing.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 594716,
+      "end": 594861,
+      "sha256": "b238dc8af267cbf9c5b5d99b9427f3fd0c6bfe836d3f9e351850e892a75e1f92",
+      "contexts": [
+        {
+          "name": "media",
+          "params": "(hover:hover)"
+        }
+      ],
+      "fragmentSha256": "51bd02b2a3965a710b49b280a7b415b3f8a6c1bdd08ae6b63eac1078e43f68a8"
+    },
+    {
+      "selector": ".group-data-\\[disabled\\]\\/rd\\:group-hover\\/rd\\:border-strong:is(:where(.group\\/rd)[data-disabled] :where(.group-data-\\[disabled\\]\\/rd\\:group-hover\\/rd\\:border-strong)):is(:where(.group\\/rd):hover :where(.group-data-\\[disabled\\]\\/rd\\:group-hover\\/rd\\:border-strong))",
+      "references": [
+        {
+          "className": "group-data-[disabled]/rd:group-hover/rd:border-strong",
+          "hits": [
+            {
+              "file": "src/generated/view-tabs/shared-frame-6jtSkIit.js",
+              "binding": "rV",
+              "generator": "scripts/extract-approval-landing.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            }
+          ]
+        },
+        {
+          "className": "group-data-[disabled]/rd:group-hover/rd:border-strong",
+          "hits": [
+            {
+              "file": "src/generated/view-tabs/shared-frame-6jtSkIit.js",
+              "binding": "rV",
+              "generator": "scripts/extract-approval-landing.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            }
+          ]
+        },
+        {
+          "className": "group-data-[disabled]/rd:group-hover/rd:border-strong",
+          "hits": [
+            {
+              "file": "src/generated/view-tabs/shared-frame-6jtSkIit.js",
+              "binding": "rV",
+              "generator": "scripts/extract-approval-landing.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 635041,
+      "end": 635345,
+      "sha256": "c979e3e7d7ad29bb91bcbcd787829d47ae8d9cace98c92c8b3e8c273e3824286",
+      "contexts": [
+        {
+          "name": "media",
+          "params": "(hover:hover)"
+        }
+      ],
+      "fragmentSha256": "fded3da60fb9fb036031a445f355a135732b31a73dbae29082fe59b27d54c6e2"
+    },
+    {
+      "selector": ".group-data-\\[unchecked\\]\\/cb\\:group-hover\\/cb\\:border-stronger:is(:where(.group\\/cb)[data-unchecked] :where(.group-data-\\[unchecked\\]\\/cb\\:group-hover\\/cb\\:border-stronger)):is(:where(.group\\/cb):hover :where(.group-data-\\[unchecked\\]\\/cb\\:group-hover\\/cb\\:border-stronger))",
+      "references": [
+        {
+          "className": "group-data-[unchecked]/cb:group-hover/cb:border-stronger",
+          "hits": [
+            {
+              "file": "src/generated/view-tabs/shared-frame-6jtSkIit.js",
+              "binding": "bP",
+              "generator": "scripts/extract-approval-landing.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            }
+          ]
+        },
+        {
+          "className": "group-data-[unchecked]/cb:group-hover/cb:border-stronger",
+          "hits": [
+            {
+              "file": "src/generated/view-tabs/shared-frame-6jtSkIit.js",
+              "binding": "bP",
+              "generator": "scripts/extract-approval-landing.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            }
+          ]
+        },
+        {
+          "className": "group-data-[unchecked]/cb:group-hover/cb:border-stronger",
+          "hits": [
+            {
+              "file": "src/generated/view-tabs/shared-frame-6jtSkIit.js",
+              "binding": "bP",
+              "generator": "scripts/extract-approval-landing.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 653426,
+      "end": 653742,
+      "sha256": "97d55bb1d1a566ab28b8ce06bcfdba831540d08b08bfd70b37ed52a3d20db253",
+      "contexts": [
+        {
+          "name": "media",
+          "params": "(hover:hover)"
+        }
+      ],
+      "fragmentSha256": "19f7e0eb2599fb075dc71bb6e307e70a7444bc6918023d36c48b8a33ac4b3bdd"
+    },
+    {
+      "selector": ".group-data-\\[disabled\\]\\/cb\\:group-data-\\[unchecked\\]\\/cb\\:group-hover\\/cb\\:border-strong:is(:where(.group\\/cb)[data-disabled] :where(.group-data-\\[disabled\\]\\/cb\\:group-data-\\[unchecked\\]\\/cb\\:group-hover\\/cb\\:border-strong)):is(:where(.group\\/cb)[data-unchecked] :where(.group-data-\\[disabled\\]\\/cb\\:group-data-\\[unchecked\\]\\/cb\\:group-hover\\/cb\\:border-strong)):is(:where(.group\\/cb):hover :where(.group-data-\\[disabled\\]\\/cb\\:group-data-\\[unchecked\\]\\/cb\\:group-hover\\/cb\\:border-strong))",
+      "references": [
+        {
+          "className": "group-data-[disabled]/cb:group-data-[unchecked]/cb:group-hover/cb:border-strong",
+          "hits": [
+            {
+              "file": "src/generated/view-tabs/shared-frame-6jtSkIit.js",
+              "binding": "bP",
+              "generator": "scripts/extract-approval-landing.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            }
+          ]
+        },
+        {
+          "className": "group-data-[disabled]/cb:group-data-[unchecked]/cb:group-hover/cb:border-strong",
+          "hits": [
+            {
+              "file": "src/generated/view-tabs/shared-frame-6jtSkIit.js",
+              "binding": "bP",
+              "generator": "scripts/extract-approval-landing.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            }
+          ]
+        },
+        {
+          "className": "group-data-[disabled]/cb:group-data-[unchecked]/cb:group-hover/cb:border-strong",
+          "hits": [
+            {
+              "file": "src/generated/view-tabs/shared-frame-6jtSkIit.js",
+              "binding": "bP",
+              "generator": "scripts/extract-approval-landing.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            }
+          ]
+        },
+        {
+          "className": "group-data-[disabled]/cb:group-data-[unchecked]/cb:group-hover/cb:border-strong",
+          "hits": [
+            {
+              "file": "src/generated/view-tabs/shared-frame-6jtSkIit.js",
+              "binding": "bP",
+              "generator": "scripts/extract-approval-landing.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 653742,
+      "end": 654274,
+      "sha256": "75133ddbf67b5adda62096ad2e2ecde1f312a8af221d97d73bd1cfdbae838f3f",
+      "contexts": [
+        {
+          "name": "media",
+          "params": "(hover:hover)"
+        }
+      ],
+      "fragmentSha256": "de1dfd13df66de538393eddd0195102cfa45039da031edd2fddf13dd26210d34"
+    },
+    {
+      "selector": ".placeholder\\:text-\\[var\\(--diff-widget-muted\\,var\\(--cds-text-muted\\)\\)\\]::placeholder",
+      "references": [
+        {
+          "className": "placeholder:text-[var(--diff-widget-muted,var(--cds-text-muted))]",
+          "hits": [
+            {
+              "file": "src/generated/pierre-changes/pierre-c82eca2bd-CImI7zNG.mjs",
+              "binding": "ke",
+              "generator": "scripts/extract-pierre-changes-v4.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            },
+            {
+              "file": "src/generated/pierre-changes/pierre-changes.mjs",
+              "binding": "Zs",
+              "generator": "scripts/extract-pierre-changes-v4.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 662242,
+      "end": 662383,
+      "sha256": "5c955e6ed48449155f2c7c8182565de9c67438620ba12fa19920259531c5b58c",
+      "contexts": [],
+      "fragmentSha256": "5c955e6ed48449155f2c7c8182565de9c67438620ba12fa19920259531c5b58c"
+    },
+    {
+      "selector": ".placeholder\\:text-text-500\\/70::placeholder",
+      "references": [
+        {
+          "className": "placeholder:text-text-500/70",
+          "hits": [
+            {
+              "file": "src/generated/chat-side-chat/side-chat-panel.mjs",
+              "binding": "y1",
+              "generator": "scripts/extract-chat-side-chat-v4.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": false
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 662615,
+      "end": 662752,
+      "sha256": "e6aa93b49f8c288bc0a2184a913fcf1d85fe318aabff0a4b374d9224d1102eb7",
+      "contexts": [],
+      "fragmentSha256": "e6aa93b49f8c288bc0a2184a913fcf1d85fe318aabff0a4b374d9224d1102eb7"
+    },
+    {
+      "selector": ".after\\:-start-px:after",
+      "references": [
+        {
+          "className": "after:-start-px",
+          "hits": [
+            {
+              "file": "src/generated/view-tabs/shared-frame-6jtSkIit.js",
+              "binding": "iF",
+              "generator": "scripts/extract-approval-landing.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 677377,
+      "end": 677451,
+      "sha256": "e89bac2a3ad34625ed1e93e1993215c5b20e7ef24d656ce81f9dfd5138c60172",
+      "contexts": [],
+      "fragmentSha256": "e89bac2a3ad34625ed1e93e1993215c5b20e7ef24d656ce81f9dfd5138c60172"
+    },
+    {
+      "selector": ".first\\:-mt-pad-xl:first-child",
+      "references": [
+        {
+          "className": "first:-mt-pad-xl",
+          "hits": [
+            {
+              "file": "src/generated/view-tabs/shared-frame-6jtSkIit.js",
+              "binding": "iy",
+              "generator": "scripts/extract-approval-landing.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 691310,
+      "end": 691381,
+      "sha256": "2ab7bca7dda99074f232fd37bf65a0ed7aab76f5e31de00549c3e3b6ae8a65bd",
+      "contexts": [],
+      "fragmentSha256": "2ab7bca7dda99074f232fd37bf65a0ed7aab76f5e31de00549c3e3b6ae8a65bd"
+    },
+    {
+      "selector": ".last\\:me-\\[calc\\(var\\(--cds-pad-xl\\)_-_var\\(--cds-toolbar-pad-block\\)\\)\\]:last-child",
+      "references": [
+        {
+          "className": "last:me-[calc(var(--cds-pad-xl)_-_var(--cds-toolbar-pad-block))]",
+          "hits": [
+            {
+              "file": "src/generated/view-tabs/shared-frame-6jtSkIit.js",
+              "binding": "sy",
+              "generator": "scripts/extract-approval-landing.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 693618,
+      "end": 693777,
+      "sha256": "0213739c4ab28a64ddba118179526d92df69b69189c733dd26a01bb255842300",
+      "contexts": [],
+      "fragmentSha256": "0213739c4ab28a64ddba118179526d92df69b69189c733dd26a01bb255842300"
+    },
+    {
+      "selector": ".enabled\\:hover\\:bg-\\[linear-gradient\\(var\\(--cds-alpha-2\\)\\,var\\(--cds-alpha-2\\)\\)\\]:enabled:hover",
+      "references": [
+        {
+          "className": "enabled:hover:bg-[linear-gradient(var(--cds-alpha-2),var(--cds-alpha-2))]",
+          "hits": [
+            {
+              "file": "src/generated/pierre-changes/pierre-c82eca2bd-CImI7zNG.mjs",
+              "binding": "Ce",
+              "generator": "scripts/extract-pierre-changes-v4.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            },
+            {
+              "file": "src/source-diff.jsx",
+              "binding": "CHANGES_HEADER_BUTTON_CLASS",
+              "generator": "host",
+              "sourceVersion": null,
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 736349,
+      "end": 736521,
+      "sha256": "818726e0f4f09de34203e869e470befdd0c26f0f42e9c45314b4c5e47ff1ad20",
+      "contexts": [
+        {
+          "name": "media",
+          "params": "(hover:hover)"
+        }
+      ],
+      "fragmentSha256": "b51c27e43d4d31de0e530bf13b0efc330137cc1166cf589933a6b8868c844a6d"
+    },
+    {
+      "selector": ".has-\\[\\[data-primary\\]\\:active\\]\\:scale-\\[0\\.98\\]:has([data-primary]:active)",
+      "references": [
+        {
+          "className": "has-[[data-primary]:active]:scale-[0.98]",
+          "hits": [
+            {
+              "file": "src/generated/routines-shared/cf8745532-5Ehsv_zP.mjs",
+              "binding": "u",
+              "generator": "scripts/extract-files-changes.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 752253,
+      "end": 752341,
+      "sha256": "6c5771a8bac9539cb3a73502a30bc32aefcb8fdcb9b7b41ef7e0e5a7a48e3786",
+      "contexts": [],
+      "fragmentSha256": "6c5771a8bac9539cb3a73502a30bc32aefcb8fdcb9b7b41ef7e0e5a7a48e3786"
+    },
+    {
+      "selector": ".has-\\[\\[data-primary\\]\\:active\\]\\:duration-fast:has([data-primary]:active)",
+      "references": [
+        {
+          "className": "has-[[data-primary]:active]:duration-fast",
+          "hits": [
+            {
+              "file": "src/generated/routines-shared/cf8745532-5Ehsv_zP.mjs",
+              "binding": "u",
+              "generator": "scripts/extract-files-changes.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 752341,
+      "end": 752491,
+      "sha256": "ad132ca62591ddecaadaa0c24e05a8aed4ae26c0e9f8f1bb39a8a42c96b8183c",
+      "contexts": [],
+      "fragmentSha256": "ad132ca62591ddecaadaa0c24e05a8aed4ae26c0e9f8f1bb39a8a42c96b8183c"
+    },
+    {
+      "selector": ".aria-expanded\\:bg-surface-3[aria-expanded=true]",
+      "references": [
+        {
+          "className": "aria-expanded:bg-surface-3",
+          "hits": [
+            {
+              "file": "src/generated/artifact-library/c69e9937a-BIwXoJBq.mjs",
+              "binding": "cn",
+              "generator": "scripts/extract-artifact-library-v4.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 767399,
+      "end": 767486,
+      "sha256": "2b2e1b23d33b33e0b84e3307dbf088fccbbc80c4bef2e56554e6a3fc9d8368f9",
+      "contexts": [],
+      "fragmentSha256": "2b2e1b23d33b33e0b84e3307dbf088fccbbc80c4bef2e56554e6a3fc9d8368f9"
+    },
+    {
+      "selector": ".motion-safe\\:has-\\[\\[aria-expanded\\=true\\]\\]\\:scale-\\[1\\.03\\]:not(:where([data-reduce-motion=true],[data-reduce-motion=true] *)):has([aria-expanded=true])",
+      "references": [
+        {
+          "className": "motion-safe:has-[[aria-expanded=true]]:scale-[1.03]",
+          "hits": [
+            {
+              "file": "src/generated/code-routines/shared-9-CM21XrJw.mjs",
+              "binding": "Nh",
+              "generator": "scripts/extract-code-routines.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 811241,
+      "end": 811408,
+      "sha256": "83275527e74f291cec4a63bbb42c3cf4f535585270a67ab52a4b492a3adab6ea",
+      "contexts": [
+        {
+          "name": "media",
+          "params": "(prefers-reduced-motion:no-preference)"
+        }
+      ],
+      "fragmentSha256": "4bab3e644da162fa973ae758fbb04ff063b542bf9c415c0fc449ac4d283557e0"
+    },
+    {
+      "selector": ".max-md\\:has-\\[\\>\\:empty\\]\\:hidden:has(>:empty),.max-md\\:nth-\\[n\\+5\\]\\:hidden:nth-child(n+5)",
+      "references": [
+        {
+          "className": "max-md:nth-[n+5]:hidden",
+          "hits": [
+            {
+              "file": "src/generated/artifact-library/c230724a2-Dey3VRG9.mjs",
+              "binding": "As",
+              "generator": "scripts/extract-artifact-library-v4.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 826123,
+      "end": 826229,
+      "sha256": "550e7f92931693670a75bf066717e932d22e43dfb919877ee5cf330f35e6d9df",
+      "contexts": [
+        {
+          "name": "media",
+          "params": "not all and (width>=48rem)"
+        }
+      ],
+      "fragmentSha256": "6cace7e000b751da4d6e50452f01bb4dc4e5fae48f75fb09c818e78f029257b0"
+    },
+    {
+      "selector": ".max-sm\\:nth-\\[n\\+3\\]\\:hidden:nth-child(n+3)",
+      "references": [
+        {
+          "className": "max-sm:nth-[n+3]:hidden",
+          "hits": [
+            {
+              "file": "src/generated/artifact-library/c230724a2-Dey3VRG9.mjs",
+              "binding": "As",
+              "generator": "scripts/extract-artifact-library-v4.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 829395,
+      "end": 829453,
+      "sha256": "8a07c7444dfe5758ffc1cc99df7457193cdb4d5cc65d14a95e9c1380d7adac55",
+      "contexts": [
+        {
+          "name": "media",
+          "params": "not all and (width>=40rem)"
+        }
+      ],
+      "fragmentSha256": "c7d2834ce3b3c87cad531493fd978242190de808e3f12fefcfe35fb6fa20c928"
+    },
+    {
+      "selector": ".\\@max-\\[300px\\]\\:hidden",
+      "references": [
+        {
+          "className": "@max-[300px]:hidden",
+          "hits": [
+            {
+              "file": "src/generated/code-transcript/code-transcript.mjs",
+              "binding": "b1e",
+              "generator": "scripts/extract-code-transcript-v4.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 880622,
+      "end": 880660,
+      "sha256": "7942dfb2ff6b1d70fae31428ab46cb54c81ca11a5c623c9a9af0c71ddb1ab6af",
+      "contexts": [
+        {
+          "name": "container",
+          "params": "not (width>=300px)"
+        }
+      ],
+      "fragmentSha256": "748857285092d463740325e4125ced479af71a0d1ee5941284731caadb5a78ad"
+    },
+    {
+      "selector": ".\\@max-\\[32rem\\]\\:sr-only",
+      "references": [
+        {
+          "className": "@max-[32rem]:sr-only",
+          "hits": [
+            {
+              "file": "src/generated/code-transcript/code-transcript.mjs",
+              "binding": "n1e",
+              "generator": "scripts/extract-code-transcript-v4.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 884023,
+      "end": 884181,
+      "sha256": "668b48c3d5f431a8fbc0b1769090e56b0910e478d3b783335502e6c6e709c351",
+      "contexts": [
+        {
+          "name": "container",
+          "params": "not (width>=32rem)"
+        }
+      ],
+      "fragmentSha256": "ed55ed6ac133b950a6beba54299dc9ae9209907fad0d8736e21b6b3d9a21655a"
+    },
+    {
+      "selector": ".\\@max-\\[32rem\\]\\:hidden",
+      "references": [
+        {
+          "className": "@max-[32rem]:hidden",
+          "hits": [
+            {
+              "file": "src/generated/code-transcript/code-transcript.mjs",
+              "binding": "n1e",
+              "generator": "scripts/extract-code-transcript-v4.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 884298,
+      "end": 884336,
+      "sha256": "99824f1eb2f0d114bffa9fc2969ecafb0d27ecaf271e2fd2f3a2da93f98ea45e",
+      "contexts": [
+        {
+          "name": "container",
+          "params": "not (width>=32rem)"
+        }
+      ],
+      "fragmentSha256": "1d1cd6dbc67678d9e4d1b9a2f5e22ee90b1e3ab3e2e262402f5d7a5d2d7eb6a2"
+    },
+    {
+      "selector": ".\\@max-\\[28\\.75rem\\]\\:grow",
+      "references": [
+        {
+          "className": "@max-[28.75rem]:grow",
+          "hits": [
+            {
+              "file": "src/generated/code-composer/composer-tokens.mjs",
+              "binding": "zg",
+              "generator": "scripts/extract-code-composer.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": false
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 885054,
+      "end": 885093,
+      "sha256": "d7b73f11756f97a3d1a664cb61c6c386c1423d60feb4d7a75771efa7aa02fa46",
+      "contexts": [
+        {
+          "name": "container",
+          "params": "not (width>=28.75rem)"
+        }
+      ],
+      "fragmentSha256": "4941549a0499670dbe25d6e08118590fcbfffbb7cef673663bd1394e07f59f81"
+    },
+    {
+      "selector": ".\\@max-\\[28\\.75rem\\]\\:basis-0",
+      "references": [
+        {
+          "className": "@max-[28.75rem]:basis-0",
+          "hits": [
+            {
+              "file": "src/generated/code-composer/composer-tokens.mjs",
+              "binding": "zg",
+              "generator": "scripts/extract-code-composer.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": false
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 885093,
+      "end": 885136,
+      "sha256": "e48a0f9815f5fcd7a617ebfe4b470c4f8c20f6a77d04c5f16199539ad9ea6b05",
+      "contexts": [
+        {
+          "name": "container",
+          "params": "not (width>=28.75rem)"
+        }
+      ],
+      "fragmentSha256": "3fce4c7be369d22fad7c56e83e7e53c7ef6f699f4cdfda313c968e557955c11e"
+    },
+    {
+      "selector": ".\\@max-\\[28\\.75rem\\]\\:justify-end",
+      "references": [
+        {
+          "className": "@max-[28.75rem]:justify-end",
+          "hits": [
+            {
+              "file": "src/generated/code-composer/composer-tokens.mjs",
+              "binding": "zg",
+              "generator": "scripts/extract-code-composer.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": false
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 885232,
+      "end": 885291,
+      "sha256": "adb6b2b155d0d6ff2ddaeb3341b95f839625f3ff4be79f697dd13efb8fb512a6",
+      "contexts": [
+        {
+          "name": "container",
+          "params": "not (width>=28.75rem)"
+        }
+      ],
+      "fragmentSha256": "e3db6cb9cf101545cae56afc7bca731925c612f66771c78541576663fa745cfe"
+    },
+    {
+      "selector": ".\\@max-\\[26rem\\]\\:sr-only",
+      "references": [
+        {
+          "className": "@max-[26rem]:sr-only",
+          "hits": [
+            {
+              "file": "src/generated/code-transcript/code-transcript.mjs",
+              "binding": "n1e",
+              "generator": "scripts/extract-code-transcript-v4.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 885401,
+      "end": 885559,
+      "sha256": "0c6972a96898337267cdc282f68b53999cf02dd2cc25ed75eaf6fccf8cbf2c83",
+      "contexts": [
+        {
+          "name": "container",
+          "params": "not (width>=26rem)"
+        }
+      ],
+      "fragmentSha256": "dd668722e9ef6b7555aabe085d3989994d6cbd259490876d0bb24e0c3aca609c"
+    },
+    {
+      "selector": ".\\@max-\\[26rem\\]\\:hidden",
+      "references": [
+        {
+          "className": "@max-[26rem]:hidden",
+          "hits": [
+            {
+              "file": "src/generated/code-transcript/code-transcript.mjs",
+              "binding": "n1e",
+              "generator": "scripts/extract-code-transcript-v4.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 885559,
+      "end": 885597,
+      "sha256": "d4b2e5a6a7775e86d42260a82abea4874cd69b5ab1a65bb97bd810466660dec9",
+      "contexts": [
+        {
+          "name": "container",
+          "params": "not (width>=26rem)"
+        }
+      ],
+      "fragmentSha256": "270917de62db4ca0f5d8b3d3210e97ab5be60c1bd15a3263794bdc7de472d878"
+    },
+    {
+      "selector": ".\\@max-\\[19\\.875rem\\]\\/agents\\:col-span-2",
+      "references": [
+        {
+          "className": "@max-[19.875rem]/agents:col-span-2",
+          "hits": [
+            {
+              "file": "src/generated/code-transcript/code-transcript.mjs",
+              "binding": "L$e",
+              "generator": "scripts/extract-code-transcript-v4.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 887467,
+      "end": 887535,
+      "sha256": "21cccafb553cf4c2b0e64d713522a55b5462166612530de9e9f4699c902153b8",
+      "contexts": [
+        {
+          "name": "container",
+          "params": "agents not (width>=19.875rem)"
+        }
+      ],
+      "fragmentSha256": "926a863ea73e3f8d6784cba78d3896f23fe8687cb525d38c8b52ffbd9c6dc0ee"
+    },
+    {
+      "selector": ".\\@max-\\[19\\.875rem\\]\\/agents\\:hidden",
+      "references": [
+        {
+          "className": "@max-[19.875rem]/agents:hidden",
+          "hits": [
+            {
+              "file": "src/generated/code-transcript/code-transcript.mjs",
+              "binding": "s$",
+              "generator": "scripts/extract-code-transcript-v4.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 887535,
+      "end": 887586,
+      "sha256": "89bb1bc6233248308fa21231c92699d6611eb7e0eb34c736e5f7564f7b9f3d66",
+      "contexts": [
+        {
+          "name": "container",
+          "params": "agents not (width>=19.875rem)"
+        }
+      ],
+      "fragmentSha256": "35ebae74e4fc4236807e93a6f0074656ef05f960b72443b7362d18c6625535bd"
+    },
+    {
+      "selector": ".\\@max-\\[19\\.875rem\\]\\/agents\\:grid-cols-\\[calc\\(0\\.75rem\\*var\\(--cds-rem-scale\\,1\\)\\)_minmax\\(auto\\,1fr\\)_minmax\\(0\\,max-content\\)_minmax\\(3\\.5rem\\,max-content\\)\\]",
+      "references": [
+        {
+          "className": "@max-[19.875rem]/agents:grid-cols-[calc(0.75rem*var(--cds-rem-scale,1))_minmax(auto,1fr)_minmax(0,max-content)_minmax(3.5rem,max-content)]",
+          "hits": [
+            {
+              "file": "src/generated/code-transcript/code-transcript.mjs",
+              "binding": "P$e",
+              "generator": "scripts/extract-code-transcript-v4.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 887586,
+      "end": 887877,
+      "sha256": "3307d348443542c705cb99558d89b1fa077a855c0cbb2d8fb2b5a4192111ab26",
+      "contexts": [
+        {
+          "name": "container",
+          "params": "agents not (width>=19.875rem)"
+        }
+      ],
+      "fragmentSha256": "d51928428b18a346338ed15dcec7d5208147f77e2eb8508e88444bdc836d625f"
+    },
+    {
+      "selector": ".dark\\:text-gray-0\\/70:where([data-mode=dark],[data-mode=dark] *)",
+      "references": [
+        {
+          "className": "dark:text-gray-0/70",
+          "hits": [
+            {
+              "file": "src/generated/artifact-library/c2bb74286-CQLOwqIZ.mjs",
+              "binding": "It",
+              "generator": "scripts/extract-artifact-library-v4.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            },
+            {
+              "file": "src/generated/artifact-library/frame-shell-header-B1Xokuj0.mjs",
+              "binding": "Ae",
+              "generator": "scripts/extract-artifact-library-v4.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            },
+            {
+              "file": "src/generated/artifact-library/shared-9-CM21XrJw.mjs",
+              "binding": "vh",
+              "generator": "scripts/extract-artifact-library-v4.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            },
+            {
+              "file": "src/generated/artifact-library/shared-frame-6jtSkIit.mjs",
+              "binding": "KE",
+              "generator": "scripts/extract-artifact-library-v4.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 976843,
+      "end": 976971,
+      "sha256": "b9fb86ba8097f0e199e9babbb076eb7787b709cf3d7bf005385aa4168d1aea13",
+      "contexts": [
+        {
+          "name": "media",
+          "params": "screen"
+        }
+      ],
+      "fragmentSha256": "6301fe9baec9eea05fe41dfc5327cdcd31a53d761e622b506daff5ae33fd8cd5"
+    },
+    {
+      "selector": ".dark\\:text-gray-0\\/70:where([data-mode=system],[data-mode=system] *):not(:where([data-mode=system] :is([data-mode=light],[data-mode=dark]),[data-mode=system] :is([data-mode=light],[data-mode=dark]) *)),.dark\\:text-gray-0\\/70:where(.cds-root,.cds-root *):not(:where([data-mode],[data-mode] *))",
+      "references": [
+        {
+          "className": "dark:text-gray-0/70",
+          "hits": [
+            {
+              "file": "src/generated/artifact-library/c2bb74286-CQLOwqIZ.mjs",
+              "binding": "It",
+              "generator": "scripts/extract-artifact-library-v4.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            },
+            {
+              "file": "src/generated/artifact-library/frame-shell-header-B1Xokuj0.mjs",
+              "binding": "Ae",
+              "generator": "scripts/extract-artifact-library-v4.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            },
+            {
+              "file": "src/generated/artifact-library/shared-9-CM21XrJw.mjs",
+              "binding": "vh",
+              "generator": "scripts/extract-artifact-library-v4.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            },
+            {
+              "file": "src/generated/artifact-library/shared-frame-6jtSkIit.mjs",
+              "binding": "KE",
+              "generator": "scripts/extract-artifact-library-v4.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            }
+          ]
+        },
+        {
+          "className": "dark:text-gray-0/70",
+          "hits": [
+            {
+              "file": "src/generated/artifact-library/c2bb74286-CQLOwqIZ.mjs",
+              "binding": "It",
+              "generator": "scripts/extract-artifact-library-v4.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            },
+            {
+              "file": "src/generated/artifact-library/frame-shell-header-B1Xokuj0.mjs",
+              "binding": "Ae",
+              "generator": "scripts/extract-artifact-library-v4.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            },
+            {
+              "file": "src/generated/artifact-library/shared-9-CM21XrJw.mjs",
+              "binding": "vh",
+              "generator": "scripts/extract-artifact-library-v4.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            },
+            {
+              "file": "src/generated/artifact-library/shared-frame-6jtSkIit.mjs",
+              "binding": "KE",
+              "generator": "scripts/extract-artifact-library-v4.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 977018,
+      "end": 977374,
+      "sha256": "d4a3917354ebd287298e993d1ceb1cb7b55de81f52ee0caf1dc4891b921c3a42",
+      "contexts": [
+        {
+          "name": "media",
+          "params": "screen and (prefers-color-scheme:dark)"
+        }
+      ],
+      "fragmentSha256": "aa6fe449b1f47f4c0892663ed75c0f75bad8d9d38bae2ba32b2faae005da7510"
+    },
+    {
+      "selector": ".dark\\:\\[--cds-shimmer-text-peak\\:var\\(--cds-gray-500\\)\\]:where([data-mode=dark],[data-mode=dark] *)",
+      "references": [
+        {
+          "className": "dark:[--cds-shimmer-text-peak:var(--cds-gray-500)]",
+          "hits": [
+            {
+              "file": "src/generated/view-tabs/shared-frame-6jtSkIit.js",
+              "binding": "bF",
+              "generator": "scripts/extract-approval-landing.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 1011328,
+      "end": 1011473,
+      "sha256": "abbccb3c82107ba5094828f5baf8ea8192d09652edf352297a2c6f386093bbaa",
+      "contexts": [
+        {
+          "name": "media",
+          "params": "screen"
+        }
+      ],
+      "fragmentSha256": "d6a2a96ddeacf2d388b32e789c1ee88beee94efaf66e1bf6bb49706f75715e3d"
+    },
+    {
+      "selector": ".dark\\:\\[--cds-shimmer-text-peak\\:var\\(--cds-gray-500\\)\\]:where([data-mode=system],[data-mode=system] *):not(:where([data-mode=system] :is([data-mode=light],[data-mode=dark]),[data-mode=system] :is([data-mode=light],[data-mode=dark]) *)),.dark\\:\\[--cds-shimmer-text-peak\\:var\\(--cds-gray-500\\)\\]:where(.cds-root,.cds-root *):not(:where([data-mode],[data-mode] *))",
+      "references": [
+        {
+          "className": "dark:[--cds-shimmer-text-peak:var(--cds-gray-500)]",
+          "hits": [
+            {
+              "file": "src/generated/view-tabs/shared-frame-6jtSkIit.js",
+              "binding": "bF",
+              "generator": "scripts/extract-approval-landing.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            }
+          ]
+        },
+        {
+          "className": "dark:[--cds-shimmer-text-peak:var(--cds-gray-500)]",
+          "hits": [
+            {
+              "file": "src/generated/view-tabs/shared-frame-6jtSkIit.js",
+              "binding": "bF",
+              "generator": "scripts/extract-approval-landing.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 1011520,
+      "end": 1011928,
+      "sha256": "a0fdcb937859d2f3a93f3f3920c060bf3043a62118fe73257af77d9834142c7f",
+      "contexts": [
+        {
+          "name": "media",
+          "params": "screen and (prefers-color-scheme:dark)"
+        }
+      ],
+      "fragmentSha256": "0693bfbff35dc33f5a0951e201e0ff68285c95e4e36cb2323c2013b02dbfc587"
+    },
+    {
+      "selector": ".comfortable\\:-mt-1\\.5:where([data-density=comfortable],[data-density=comfortable] *)",
+      "references": [
+        {
+          "className": "comfortable:-mt-1.5",
+          "hits": [
+            {
+              "file": "src/generated/code-composer/composer-tokens.mjs",
+              "binding": "Fg",
+              "generator": "scripts/extract-code-composer.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": false
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 1072218,
+      "end": 1072343,
+      "sha256": "468ebca0c8970c3e6e90e2c111a697169a2771022ba869594ea4868c8020f2ff",
+      "contexts": [],
+      "fragmentSha256": "468ebca0c8970c3e6e90e2c111a697169a2771022ba869594ea4868c8020f2ff"
+    },
+    {
+      "selector": ".comfortable\\:-mt-3:where([data-density=comfortable],[data-density=comfortable] *)",
+      "references": [
+        {
+          "className": "comfortable:-mt-3",
+          "hits": [
+            {
+              "file": "src/generated/code-composer/chat-composer-shell.mjs",
+              "binding": "Xp",
+              "generator": "scripts/extract-code-composer.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": false
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 1072463,
+      "end": 1072583,
+      "sha256": "9083f771241537c35fcd77793d8f282d25739bf85e6f58d02c5b34d978e94ca3",
+      "contexts": [],
+      "fragmentSha256": "9083f771241537c35fcd77793d8f282d25739bf85e6f58d02c5b34d978e94ca3"
+    },
+    {
+      "selector": ".comfortable\\:-mb-3:where([data-density=comfortable],[data-density=comfortable] *)",
+      "references": [
+        {
+          "className": "comfortable:-mb-3",
+          "hits": [
+            {
+              "file": "src/generated/code-composer/chat-composer-shell.mjs",
+              "binding": "$p",
+              "generator": "scripts/extract-code-composer.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": false
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 1072946,
+      "end": 1073069,
+      "sha256": "f489fe0fd60760053259ee9c7fa59b294c7b179f02f37a864580528899039639",
+      "contexts": [],
+      "fragmentSha256": "f489fe0fd60760053259ee9c7fa59b294c7b179f02f37a864580528899039639"
+    },
+    {
+      "selector": ".comfortable\\:h-\\[calc\\(2rem\\*var\\(--cds-rem-scale\\,1\\)\\)\\]:where([data-density=comfortable],[data-density=comfortable] *)",
+      "references": [
+        {
+          "className": "comfortable:h-[calc(2rem*var(--cds-rem-scale,1))]",
+          "hits": [
+            {
+              "file": "src/generated/code-routines/shared-18-D3y8YMFN.mjs",
+              "binding": "iC",
+              "generator": "scripts/extract-code-routines.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 1073280,
+      "end": 1073446,
+      "sha256": "5d2ce1557eac57f1f59df4913048f7c0edb95811d856283dfdbd1d9405922150",
+      "contexts": [],
+      "fragmentSha256": "5d2ce1557eac57f1f59df4913048f7c0edb95811d856283dfdbd1d9405922150"
+    },
+    {
+      "selector": ".comfortable\\:py-3:where([data-density=comfortable],[data-density=comfortable] *)",
+      "references": [
+        {
+          "className": "comfortable:py-3",
+          "hits": [
+            {
+              "file": "src/generated/code-composer/chat-composer-shell.mjs",
+              "binding": "qp",
+              "generator": "scripts/extract-code-composer.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": false
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 1074232,
+      "end": 1074353,
+      "sha256": "17381f8d093169ec7255683d1c22397d89d4831ab4238566e10701ac7490c9bc",
+      "contexts": [],
+      "fragmentSha256": "17381f8d093169ec7255683d1c22397d89d4831ab4238566e10701ac7490c9bc"
+    },
+    {
+      "selector": ".comfortable\\:pe-2:where([data-density=comfortable],[data-density=comfortable] *)",
+      "references": [
+        {
+          "className": "comfortable:pe-2",
+          "hits": [
+            {
+              "file": "src/generated/code-composer/chat-composer-shell.mjs",
+              "binding": "hp",
+              "generator": "scripts/extract-code-composer.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": false
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 1075083,
+      "end": 1075209,
+      "sha256": "05437cada3be47248931dc439773805dcc2827cb58bc19fcab1752146d00fc23",
+      "contexts": [],
+      "fragmentSha256": "05437cada3be47248931dc439773805dcc2827cb58bc19fcab1752146d00fc23"
+    },
+    {
+      "selector": ".comfortable\\:pt-0\\.5:where([data-density=comfortable],[data-density=comfortable] *)",
+      "references": [
+        {
+          "className": "comfortable:pt-0.5",
+          "hits": [
+            {
+              "file": "src/generated/code-composer/composer-tokens.mjs",
+              "binding": "Mg",
+              "generator": "scripts/extract-code-composer.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": false
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 1075209,
+      "end": 1075332,
+      "sha256": "002bc1647809c1acefd9d358c5c4c9e5d78ffad7a211dcb59c80ee0e5155c764",
+      "contexts": [],
+      "fragmentSha256": "002bc1647809c1acefd9d358c5c4c9e5d78ffad7a211dcb59c80ee0e5155c764"
+    },
+    {
+      "selector": ".comfortable\\:pt-3:where([data-density=comfortable],[data-density=comfortable] *)",
+      "references": [
+        {
+          "className": "comfortable:pt-3",
+          "hits": [
+            {
+              "file": "src/generated/code-composer/chat-composer-shell.mjs",
+              "binding": "Xp",
+              "generator": "scripts/extract-code-composer.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": false
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 1075451,
+      "end": 1075570,
+      "sha256": "8d1836ab7ecd1e556e5a83c234c5cbbe712e4de9c553380b60b9bcb48aef2f69",
+      "contexts": [],
+      "fragmentSha256": "8d1836ab7ecd1e556e5a83c234c5cbbe712e4de9c553380b60b9bcb48aef2f69"
+    },
+    {
+      "selector": ".comfortable\\:\\[--cds-radius-composer\\:calc\\(1\\.25rem\\*var\\(--cds-rem-scale\\,1\\)\\)\\]:where([data-density=comfortable],[data-density=comfortable] *)",
+      "references": [
+        {
+          "className": "comfortable:[--cds-radius-composer:calc(1.25rem*var(--cds-rem-scale,1))]",
+          "hits": [
+            {
+              "file": "src/generated/code-composer/chat-composer-shell.mjs",
+              "binding": "Jp",
+              "generator": "scripts/extract-code-composer.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": false
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 1075675,
+      "end": 1075884,
+      "sha256": "0dd556e8be2920179e88018427e73cdd466d590b65ace3c0defa1236ab6d666f",
+      "contexts": [],
+      "fragmentSha256": "0dd556e8be2920179e88018427e73cdd466d590b65ace3c0defa1236ab6d666f"
+    },
+    {
+      "selector": ".comfortable\\:\\[--cmp-chin-end\\:calc\\(var\\(--cmp-pad-x\\)\\+1px\\)\\]:where([data-density=comfortable],[data-density=comfortable] *)",
+      "references": [
+        {
+          "className": "comfortable:[--cmp-chin-end:calc(var(--cmp-pad-x)+1px)]",
+          "hits": [
+            {
+              "file": "src/generated/code-composer/chat-composer-shell.mjs",
+              "binding": "Sp",
+              "generator": "scripts/extract-code-composer.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": false
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 1075884,
+      "end": 1076057,
+      "sha256": "b04519bb652848e779c8c884e0a46bc15ca9fe3f596838ffefc9282aff0a9c48",
+      "contexts": [],
+      "fragmentSha256": "b04519bb652848e779c8c884e0a46bc15ca9fe3f596838ffefc9282aff0a9c48"
+    },
+    {
+      "selector": ".comfortable\\:\\[--cmp-chin-end\\:calc\\(var\\(--cmp-pad-x\\)\\+2px\\)\\]:where([data-density=comfortable],[data-density=comfortable] *)",
+      "references": [
+        {
+          "className": "comfortable:[--cmp-chin-end:calc(var(--cmp-pad-x)+2px)]",
+          "hits": [
+            {
+              "file": "src/generated/code-composer/chat-composer-shell.mjs",
+              "binding": "Sp",
+              "generator": "scripts/extract-code-composer.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": false
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 1076353,
+      "end": 1076526,
+      "sha256": "07ce4ccf62087b563dd9f99fa22410ead46f0f30ca653f03c6995659160dcd79",
+      "contexts": [],
+      "fragmentSha256": "07ce4ccf62087b563dd9f99fa22410ead46f0f30ca653f03c6995659160dcd79"
+    },
+    {
+      "selector": ".comfortable\\:\\[--cmp-chin-end\\:calc\\(var\\(--cmp-pad-x\\)\\+3px\\)\\]:where([data-density=comfortable],[data-density=comfortable] *)",
+      "references": [
+        {
+          "className": "comfortable:[--cmp-chin-end:calc(var(--cmp-pad-x)+3px)]",
+          "hits": [
+            {
+              "file": "src/generated/code-composer/chat-composer-shell.mjs",
+              "binding": "Sp",
+              "generator": "scripts/extract-code-composer.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": false
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 1076526,
+      "end": 1076699,
+      "sha256": "9a9658fef284f6f4f75f005ce46d49f74b90345be43ebd773741cefca5706469",
+      "contexts": [],
+      "fragmentSha256": "9a9658fef284f6f4f75f005ce46d49f74b90345be43ebd773741cefca5706469"
+    },
+    {
+      "selector": ".comfortable\\:\\[--cmp-chin-end\\:calc\\(var\\(--cmp-pad-x\\)\\+3px-\\(2rem\\*var\\(--cds-rem-scale\\,1\\)-var\\(--cds-h-control\\)\\)\\/2\\)\\]:where([data-density=comfortable],[data-density=comfortable] *)",
+      "references": [
+        {
+          "className": "comfortable:[--cmp-chin-end:calc(var(--cmp-pad-x)+3px-(2rem*var(--cds-rem-scale,1)-var(--cds-h-control))/2)]",
+          "hits": [
+            {
+              "file": "src/generated/code-composer/chat-composer-shell.mjs",
+              "binding": "Cp",
+              "generator": "scripts/extract-code-composer.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": false
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 1076699,
+      "end": 1076995,
+      "sha256": "0aad7f6ecb11466eb5130fa6ad900c442f112ac252e39a1b1b64f654a9708d8e",
+      "contexts": [],
+      "fragmentSha256": "0aad7f6ecb11466eb5130fa6ad900c442f112ac252e39a1b1b64f654a9708d8e"
+    },
+    {
+      "selector": ".comfortable\\:\\[--cmp-pad-x\\:0\\.75rem\\]:where([data-density=comfortable],[data-density=comfortable] *)",
+      "references": [
+        {
+          "className": "comfortable:[--cmp-pad-x:0.75rem]",
+          "hits": [
+            {
+              "file": "src/generated/code-composer/chat-composer-shell.mjs",
+              "binding": "Hp",
+              "generator": "scripts/extract-code-composer.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": false
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 1077383,
+      "end": 1077505,
+      "sha256": "d70b972c4fd92cdb63fa906e6b009af9d820f62f711ebaa10f56f1ff7ffe5b0e",
+      "contexts": [],
+      "fragmentSha256": "d70b972c4fd92cdb63fa906e6b009af9d820f62f711ebaa10f56f1ff7ffe5b0e"
+    },
+    {
+      "selector": ".compact\\:-mt-1:where([data-density=compact],[data-density=compact] *)",
+      "references": [
+        {
+          "className": "compact:-mt-1",
+          "hits": [
+            {
+              "file": "src/generated/code-composer/composer-tokens.mjs",
+              "binding": "Fg",
+              "generator": "scripts/extract-code-composer.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": false
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 1079445,
+      "end": 1079553,
+      "sha256": "7782d147266bc8595230a00cff1ecd1fe896a432e476fe99730eee186ee029eb",
+      "contexts": [],
+      "fragmentSha256": "7782d147266bc8595230a00cff1ecd1fe896a432e476fe99730eee186ee029eb"
+    },
+    {
+      "selector": ".compact\\:-mt-3:where([data-density=compact],[data-density=compact] *)",
+      "references": [
+        {
+          "className": "compact:-mt-3",
+          "hits": [
+            {
+              "file": "src/generated/code-composer/chat-composer-shell.mjs",
+              "binding": "Xp",
+              "generator": "scripts/extract-code-composer.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": false
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 1079661,
+      "end": 1079769,
+      "sha256": "38b4f83eec68c696bff9dd40bd37985690fd85ebe273b30182795e15436844d1",
+      "contexts": [],
+      "fragmentSha256": "38b4f83eec68c696bff9dd40bd37985690fd85ebe273b30182795e15436844d1"
+    },
+    {
+      "selector": ".compact\\:-mb-3:where([data-density=compact],[data-density=compact] *)",
+      "references": [
+        {
+          "className": "compact:-mb-3",
+          "hits": [
+            {
+              "file": "src/generated/code-composer/chat-composer-shell.mjs",
+              "binding": "$p",
+              "generator": "scripts/extract-code-composer.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": false
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 1080631,
+      "end": 1080742,
+      "sha256": "c7fa37430b6022b21b61c276dc1bb42794c2ad2b1c58307728688837a9a7db44",
+      "contexts": [],
+      "fragmentSha256": "c7fa37430b6022b21b61c276dc1bb42794c2ad2b1c58307728688837a9a7db44"
+    },
+    {
+      "selector": ".compact\\:gap-2:where([data-density=compact],[data-density=compact] *)",
+      "references": [
+        {
+          "className": "compact:gap-2",
+          "hits": [
+            {
+              "file": "src/generated/cowork-approval/c14f706e5-BnmRTX8N.mjs",
+              "binding": "wt",
+              "generator": "scripts/extract-cowork-approval-v4.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 1083016,
+      "end": 1083116,
+      "sha256": "69e343ed44abfae13134057584c14b132578f00c88fd1c2bc0ebf0f312239a01",
+      "contexts": [],
+      "fragmentSha256": "69e343ed44abfae13134057584c14b132578f00c88fd1c2bc0ebf0f312239a01"
+    },
+    {
+      "selector": ".compact\\:p-0:where([data-density=compact],[data-density=compact] *)",
+      "references": [
+        {
+          "className": "compact:p-0",
+          "hits": [
+            {
+              "file": "src/generated/cowork-approval/c14f706e5-BnmRTX8N.mjs",
+              "binding": "wt",
+              "generator": "scripts/extract-cowork-approval-v4.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 1083417,
+      "end": 1083496,
+      "sha256": "5d33cfd2b870a7b6243b7c952f409ef56f1389bf0cd5b49b4badd3cc8066241f",
+      "contexts": [],
+      "fragmentSha256": "5d33cfd2b870a7b6243b7c952f409ef56f1389bf0cd5b49b4badd3cc8066241f"
+    },
+    {
+      "selector": ".compact\\:p-2:where([data-density=compact],[data-density=compact] *)",
+      "references": [
+        {
+          "className": "compact:p-2",
+          "hits": [
+            {
+              "file": "src/generated/cowork-approval/c14f706e5-BnmRTX8N.mjs",
+              "binding": "wt",
+              "generator": "scripts/extract-cowork-approval-v4.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 1083496,
+      "end": 1083598,
+      "sha256": "cdf0f5fe8cb7e637c62d2fff1590d61c737d499f1f1b0d7ef335701c48548905",
+      "contexts": [],
+      "fragmentSha256": "cdf0f5fe8cb7e637c62d2fff1590d61c737d499f1f1b0d7ef335701c48548905"
+    },
+    {
+      "selector": ".compact\\:py-0:where([data-density=compact],[data-density=compact] *)",
+      "references": [
+        {
+          "className": "compact:py-0",
+          "hits": [
+            {
+              "file": "src/generated/cowork-approval/shared-10-D6FXWZph.mjs",
+              "binding": "IS",
+              "generator": "scripts/extract-cowork-approval-v4.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 1083708,
+      "end": 1083794,
+      "sha256": "18102c43aa5d83fe5a9d199a0b6e3c154a6a8a3e7eed3d4c0c72480b161acf4a",
+      "contexts": [],
+      "fragmentSha256": "18102c43aa5d83fe5a9d199a0b6e3c154a6a8a3e7eed3d4c0c72480b161acf4a"
+    },
+    {
+      "selector": ".compact\\:py-3:where([data-density=compact],[data-density=compact] *)",
+      "references": [
+        {
+          "className": "compact:py-3",
+          "hits": [
+            {
+              "file": "src/generated/code-composer/chat-composer-shell.mjs",
+              "binding": "qp",
+              "generator": "scripts/extract-code-composer.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": false
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 1084116,
+      "end": 1084225,
+      "sha256": "fcf24eeec2e9d3c3331b8212553211055c0c2b99806238106592a8ee924c0920",
+      "contexts": [],
+      "fragmentSha256": "fcf24eeec2e9d3c3331b8212553211055c0c2b99806238106592a8ee924c0920"
+    },
+    {
+      "selector": ".compact\\:ps-1\\.5:where([data-density=compact],[data-density=compact] *)",
+      "references": [
+        {
+          "className": "compact:ps-1.5",
+          "hits": [
+            {
+              "file": "src/generated/code-composer/chat-composer-shell.mjs",
+              "binding": "hp",
+              "generator": "scripts/extract-code-composer.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": false
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 1084459,
+      "end": 1084580,
+      "sha256": "4d0a6de4ba3d831aa772545b677459acf69b26dee62e5f11cf304f9a9b374249",
+      "contexts": [],
+      "fragmentSha256": "4d0a6de4ba3d831aa772545b677459acf69b26dee62e5f11cf304f9a9b374249"
+    },
+    {
+      "selector": ".compact\\:pe-1\\.5:where([data-density=compact],[data-density=compact] *)",
+      "references": [
+        {
+          "className": "compact:pe-1.5",
+          "hits": [
+            {
+              "file": "src/generated/code-composer/chat-composer-shell.mjs",
+              "binding": "hp",
+              "generator": "scripts/extract-code-composer.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": false
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 1084898,
+      "end": 1085017,
+      "sha256": "09454e3170ebd1185250df7a096a7037101ad8f51b16b2469e757244f63dbaa6",
+      "contexts": [],
+      "fragmentSha256": "09454e3170ebd1185250df7a096a7037101ad8f51b16b2469e757244f63dbaa6"
+    },
+    {
+      "selector": ".compact\\:pt-0:where([data-density=compact],[data-density=compact] *)",
+      "references": [
+        {
+          "className": "compact:pt-0",
+          "hits": [
+            {
+              "file": "src/generated/cowork-approval/c14f706e5-BnmRTX8N.mjs",
+              "binding": "wt",
+              "generator": "scripts/extract-cowork-approval-v4.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 1085017,
+      "end": 1085101,
+      "sha256": "2b312f4ba7145b3f8c537af0194d9fb941451a6cd1d79efa4cc0b2bc6357094f",
+      "contexts": [],
+      "fragmentSha256": "2b312f4ba7145b3f8c537af0194d9fb941451a6cd1d79efa4cc0b2bc6357094f"
+    },
+    {
+      "selector": ".compact\\:pt-1:where([data-density=compact],[data-density=compact] *)",
+      "references": [
+        {
+          "className": "compact:pt-1",
+          "hits": [
+            {
+              "file": "src/generated/code-composer/composer-tokens.mjs",
+              "binding": "Mg",
+              "generator": "scripts/extract-code-composer.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": false
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 1085212,
+      "end": 1085309,
+      "sha256": "0a82e77eb6870c1f8b39140e66577fc1b40b4877337c3ca71e7353b1764981fe",
+      "contexts": [],
+      "fragmentSha256": "0a82e77eb6870c1f8b39140e66577fc1b40b4877337c3ca71e7353b1764981fe"
+    },
+    {
+      "selector": ".compact\\:pt-3:where([data-density=compact],[data-density=compact] *)",
+      "references": [
+        {
+          "className": "compact:pt-3",
+          "hits": [
+            {
+              "file": "src/generated/code-composer/chat-composer-shell.mjs",
+              "binding": "Xp",
+              "generator": "scripts/extract-code-composer.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": false
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 1085416,
+      "end": 1085523,
+      "sha256": "59bbfacef4758097c177ebda800c3eb517c0f1ce7d468711e05c6c8540208396",
+      "contexts": [],
+      "fragmentSha256": "59bbfacef4758097c177ebda800c3eb517c0f1ce7d468711e05c6c8540208396"
+    },
+    {
+      "selector": ".compact\\:pb-2:where([data-density=compact],[data-density=compact] *)",
+      "references": [
+        {
+          "className": "compact:pb-2",
+          "hits": [
+            {
+              "file": "src/generated/cowork-approval/c14f706e5-BnmRTX8N.mjs",
+              "binding": "wt",
+              "generator": "scripts/extract-cowork-approval-v4.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 1085610,
+      "end": 1085720,
+      "sha256": "3d82d3e694c64332ff412bfc2ef106778885b3a3b81e19b0b9924ce4fcaae16e",
+      "contexts": [],
+      "fragmentSha256": "3d82d3e694c64332ff412bfc2ef106778885b3a3b81e19b0b9924ce4fcaae16e"
+    },
+    {
+      "selector": ".compact\\:pb-4:where([data-density=compact],[data-density=compact] *)",
+      "references": [
+        {
+          "className": "compact:pb-4",
+          "hits": [
+            {
+              "file": "src/generated/code-transcript/code-transcript.mjs",
+              "binding": "P6e",
+              "generator": "scripts/extract-code-transcript-v4.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 1085720,
+      "end": 1085830,
+      "sha256": "7484b3d812ef067dc26b3140ccb597a9dd033f750dee5eba3feb6e29e64bb1de",
+      "contexts": [],
+      "fragmentSha256": "7484b3d812ef067dc26b3140ccb597a9dd033f750dee5eba3feb6e29e64bb1de"
+    },
+    {
+      "selector": ".compact\\:\\[--cds-radius-composer\\:calc\\(1\\.125rem\\*var\\(--cds-rem-scale\\,1\\)\\)\\]:where([data-density=compact],[data-density=compact] *)",
+      "references": [
+        {
+          "className": "compact:[--cds-radius-composer:calc(1.125rem*var(--cds-rem-scale,1))]",
+          "hits": [
+            {
+              "file": "src/generated/code-composer/chat-composer-shell.mjs",
+              "binding": "Jp",
+              "generator": "scripts/extract-code-composer.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": false
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 1086535,
+      "end": 1086734,
+      "sha256": "2353bfdebc0470e2b6e2c38bdc070608dc882c750954f02f4d3ce539ea223b57",
+      "contexts": [],
+      "fragmentSha256": "2353bfdebc0470e2b6e2c38bdc070608dc882c750954f02f4d3ce539ea223b57"
+    },
+    {
+      "selector": ".compact\\:\\[--cmp-chin-end\\:calc\\(var\\(--cmp-pad-x\\)\\+2px\\)\\]:where([data-density=compact],[data-density=compact] *)",
+      "references": [
+        {
+          "className": "compact:[--cmp-chin-end:calc(var(--cmp-pad-x)+2px)]",
+          "hits": [
+            {
+              "file": "src/generated/code-composer/chat-composer-shell.mjs",
+              "binding": "Cp",
+              "generator": "scripts/extract-code-composer.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": false
+            },
+            {
+              "file": "src/generated/code-composer/chat-composer-shell.mjs",
+              "binding": "Sp",
+              "generator": "scripts/extract-code-composer.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": false
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 1086901,
+      "end": 1087062,
+      "sha256": "301aebe3a44b4ba6c650ff87eb56dbc86558e7af98a5e784421123ea026d625a",
+      "contexts": [],
+      "fragmentSha256": "301aebe3a44b4ba6c650ff87eb56dbc86558e7af98a5e784421123ea026d625a"
+    },
+    {
+      "selector": ".compact\\:\\[--cmp-pad-x\\:0\\.75rem\\]:where([data-density=compact],[data-density=compact] *)",
+      "references": [
+        {
+          "className": "compact:[--cmp-pad-x:0.75rem]",
+          "hits": [
+            {
+              "file": "src/generated/code-composer/chat-composer-shell.mjs",
+              "binding": "Hp",
+              "generator": "scripts/extract-code-composer.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": false
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 1087578,
+      "end": 1087688,
+      "sha256": "ce8c159adbf42cdf2d938384a642cb259198c47b1cf52344e8ba2232c056e56e",
+      "contexts": [],
+      "fragmentSha256": "ce8c159adbf42cdf2d938384a642cb259198c47b1cf52344e8ba2232c056e56e"
+    },
+    {
+      "selector": ".\\[\\&_\\.flex-col\\.outline-none\\]\\:gap-0\\.5 .flex-col.outline-none",
+      "references": [
+        {
+          "className": "[&_.flex-col.outline-none]:gap-0.5",
+          "hits": [
+            {
+              "file": "src/generated/session-rail-kit/rail-shown-store.mjs",
+              "binding": "vh",
+              "generator": "scripts/extract-session-rail-kit-v4.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 1108331,
+      "end": 1108427,
+      "sha256": "7ad19553d09b25756d92d82c5bcf89dbab5ee90538e8c7d662890012abe5bca9",
+      "contexts": [],
+      "fragmentSha256": "7ad19553d09b25756d92d82c5bcf89dbab5ee90538e8c7d662890012abe5bca9"
+    },
+    {
+      "selector": ".\\[\\&_\\.gap-sm\\.px-xs\\.py-1\\]\\:gap-x-xs .gap-sm.px-xs.py-1",
+      "references": [
+        {
+          "className": "[&_.gap-sm.px-xs.py-1]:gap-x-xs",
+          "hits": [
+            {
+              "file": "src/generated/session-rail-kit/rail-shown-store.mjs",
+              "binding": "_h",
+              "generator": "scripts/extract-session-rail-kit-v4.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 1109655,
+      "end": 1109743,
+      "sha256": "c881ee6272c59807ec354ab4d779b09a8dd9261781216516d0957c048bf90508",
+      "contexts": [],
+      "fragmentSha256": "c881ee6272c59807ec354ab4d779b09a8dd9261781216516d0957c048bf90508"
+    },
+    {
+      "selector": ".\\[\\&_\\[data-cds\\=Button\\]\\:hover\\:not\\(\\[aria-pressed\\=true\\]\\)\\]\\:text-primary [data-cds=Button]:hover:not([aria-pressed=true])",
+      "references": [
+        {
+          "className": "[&_[data-cds=Button]:hover:not([aria-pressed=true])]:text-primary",
+          "hits": [
+            {
+              "file": "src/generated/code-transcript/code-transcript.mjs",
+              "binding": "GA",
+              "generator": "scripts/extract-code-transcript-v4.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 1124751,
+      "end": 1124911,
+      "sha256": "ddd000cc9e58c5f5118a7d2510f9b891c17c781952d648d5eabfdbd1b962f478",
+      "contexts": [],
+      "fragmentSha256": "ddd000cc9e58c5f5118a7d2510f9b891c17c781952d648d5eabfdbd1b962f478"
+    },
+    {
+      "selector": ".\\[\\&_\\[data-cds\\=Button\\]\\:not\\(\\[aria-pressed\\=true\\]\\)\\]\\:text-muted-as-secondary [data-cds=Button]:not([aria-pressed=true])",
+      "references": [
+        {
+          "className": "[&_[data-cds=Button]:not([aria-pressed=true])]:text-muted-as-secondary",
+          "hits": [
+            {
+              "file": "src/generated/code-transcript/code-transcript.mjs",
+              "binding": "GA",
+              "generator": "scripts/extract-code-transcript-v4.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 1124911,
+      "end": 1125093,
+      "sha256": "ccead6568ecd1728a1ffe06bdbbfc52bd259895e82fa5bcf44dbd2d6ff90fd1e",
+      "contexts": [],
+      "fragmentSha256": "ccead6568ecd1728a1ffe06bdbbfc52bd259895e82fa5bcf44dbd2d6ff90fd1e"
+    },
+    {
+      "selector": ".\\[\\&_\\[role\\=toolbar\\]\\]\\:gap-0 [role=toolbar]",
+      "references": [
+        {
+          "className": "[&_[role=toolbar]]:gap-0",
+          "hits": [
+            {
+              "file": "src/generated/code-transcript/code-transcript.mjs",
+              "binding": "DI",
+              "generator": "scripts/extract-code-transcript-v4.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 1136418,
+      "end": 1136472,
+      "sha256": "45fb27b68d31e201980bbf77acc33ff433d26f172696164d20e9c87831e89739",
+      "contexts": [],
+      "fragmentSha256": "45fb27b68d31e201980bbf77acc33ff433d26f172696164d20e9c87831e89739"
+    },
+    {
+      "selector": ".\\[\\&\\:hover\\:not\\(\\:has\\(\\.epitaxy-task-row-secondary\\:hover\\)\\)\\]\\:bg-alpha-2:hover:not(:has(.epitaxy-task-row-secondary:hover))",
+      "references": [
+        {
+          "className": "[&:hover:not(:has(.epitaxy-task-row-secondary:hover))]:bg-alpha-2",
+          "hits": [
+            {
+              "file": "src/source-background-tasks.jsx",
+              "binding": "TaskCard",
+              "generator": "host",
+              "sourceVersion": null,
+              "reachable": true
+            }
+          ]
+        },
+        {
+          "className": "epitaxy-task-row-secondary",
+          "hits": [
+            {
+              "file": "src/generated/code-transcript/code-transcript.mjs",
+              "binding": "UQ",
+              "generator": "scripts/extract-code-transcript-v4.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 1177863,
+      "end": 1178030,
+      "sha256": "1552dcc0ed676448a9c0cade9f7f6212b2c3c0f31b5e6966a379592cfb2b2d36",
+      "contexts": [],
+      "fragmentSha256": "1552dcc0ed676448a9c0cade9f7f6212b2c3c0f31b5e6966a379592cfb2b2d36"
+    },
+    {
+      "selector": ".\\[\\&\\>\\*\\]\\:\\!pt-0>*",
+      "references": [
+        {
+          "className": "[&>*]:!pt-0",
+          "hits": [
+            {
+              "file": "src/generated/code-transcript/code-transcript.mjs",
+              "binding": "DI",
+              "generator": "scripts/extract-code-transcript-v4.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 1215643,
+      "end": 1215689,
+      "sha256": "bb4fc72cf5095a88d40917700ce6ec07e110d772dc2cd1eaed1dd81c717b693b",
+      "contexts": [],
+      "fragmentSha256": "bb4fc72cf5095a88d40917700ce6ec07e110d772dc2cd1eaed1dd81c717b693b"
+    },
+    {
+      "selector": ".\\[\\&\\>\\.ms-auto\\]\\:gap-1>.ms-auto",
+      "references": [
+        {
+          "className": "[&>.ms-auto]:gap-1",
+          "hits": [
+            {
+              "file": "src/generated/code-editor/preview-navigation.mjs",
+              "binding": "E",
+              "generator": "scripts/extract-code-editor.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 1218020,
+      "end": 1218074,
+      "sha256": "aa063ea8eb4d5116ddea4e5fbec4f92bdfd4cf78d21329cac272350df4bf9092",
+      "contexts": [],
+      "fragmentSha256": "aa063ea8eb4d5116ddea4e5fbec4f92bdfd4cf78d21329cac272350df4bf9092"
+    },
+    {
+      "selector": ".\\[\\&\\>\\:not\\(\\[role\\=group\\]\\)\\]\\:py-md>:not([role=group]),.\\[\\&\\>\\:not\\(\\[role\\=group\\]\\)\\:not\\(\\[data-cds\\=DataTable\\]\\)\\:not\\(\\[role\\=treegrid\\]\\)\\:not\\(\\[data-settle-slot\\]\\)\\]\\:py-md>:not([role=group]):not([data-cds=DataTable]):not([role=treegrid]):not([data-settle-slot])",
+      "references": [
+        {
+          "className": "[&>:not([role=group]):not([data-cds=DataTable]):not([role=treegrid]):not([data-settle-slot])]:py-md",
+          "hits": [
+            {
+              "file": "src/generated/cowork-settings/shared-1-BJhqMmkf.mjs",
+              "binding": "wC",
+              "generator": "scripts/extract-cowork-settings-v4.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 1221954,
+      "end": 1222265,
+      "sha256": "ca7f791c234e69068b544e2ad7e7bd44be1f26c53d49f0caccc325f002a61a52",
+      "contexts": [],
+      "fragmentSha256": "ca7f791c234e69068b544e2ad7e7bd44be1f26c53d49f0caccc325f002a61a52"
+    },
+    {
+      "selector": ".\\[\\&\\>\\[data-cover-light\\]\\>img\\]\\:h-\\[109px\\]>[data-cover-light]>img",
+      "references": [
+        {
+          "className": "[&>[data-cover-light]>img]:h-[109px]",
+          "hits": [
+            {
+              "file": "src/generated/artifact-library/c69e9937a-BIwXoJBq.mjs",
+              "binding": "yt",
+              "generator": "scripts/extract-artifact-library-v4.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 1229676,
+      "end": 1229760,
+      "sha256": "05150fce733da56d8e26cdf5c43b73f8ad606b10e1b2ef76320f8c57250b653d",
+      "contexts": [],
+      "fragmentSha256": "05150fce733da56d8e26cdf5c43b73f8ad606b10e1b2ef76320f8c57250b653d"
+    },
+    {
+      "selector": ".\\[\\&\\>img\\]\\:h-\\[109px\\]>img",
+      "references": [
+        {
+          "className": "[&>img]:h-[109px]",
+          "hits": [
+            {
+              "file": "src/generated/artifact-library/c69e9937a-BIwXoJBq.mjs",
+              "binding": "yt",
+              "generator": "scripts/extract-artifact-library-v4.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 1237654,
+      "end": 1237697,
+      "sha256": "1572fb6c95808fb9359ab7dc880370774fd1a84b0e3615fbee0488d5ee6ffc21",
+      "contexts": [],
+      "fragmentSha256": "1572fb6c95808fb9359ab7dc880370774fd1a84b0e3615fbee0488d5ee6ffc21"
+    },
+    {
+      "selector": ".tiles-dragging .\\[\\.tiles-dragging_\\&\\]\\:opacity-100",
+      "references": [
+        {
+          "className": "tiles-dragging",
+          "hits": [
+            {
+              "file": "src/source-tile-layout.css",
+              "binding": "css:.tiles-dragging .tiles-drag-handle.is-active .tiles-drag-handle-affordance",
+              "generator": "host",
+              "sourceVersion": null,
+              "reachable": true
+            },
+            {
+              "file": "src/source-tile-layout.css",
+              "binding": "css:.tiles-dragging, .tiles-dragging *",
+              "generator": "host",
+              "sourceVersion": null,
+              "reachable": true
+            },
+            {
+              "file": "src/source-tile-layout.jsx",
+              "binding": "SourceTileLayout",
+              "generator": "host",
+              "sourceVersion": null,
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 1256963,
+      "end": 1257027,
+      "sha256": "53a7511836225afc36eb574afd591bb3d441a818e748356d4c945e894f60ca30",
+      "contexts": [],
+      "fragmentSha256": "53a7511836225afc36eb574afd591bb3d441a818e748356d4c945e894f60ca30"
+    },
+    {
+      "selector": ".\\[\\@media\\(pointer\\:coarse\\)\\]\\:block",
+      "references": [
+        {
+          "className": "[@media(pointer:coarse)]:block",
+          "hits": [
+            {
+              "file": "src/generated/code-transcript/code-transcript.mjs",
+              "binding": "F$",
+              "generator": "scripts/extract-code-transcript-v4.mjs",
+              "sourceVersion": "3.6556.2",
+              "reachable": true
+            }
+          ]
+        }
+      ],
+      "baseline": "snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/c6a992d55-Che1orl5.css",
+      "baselineVersion": "3.6556.2",
+      "start": 1265005,
+      "end": 1265058,
+      "sha256": "bc32ffd96b44a632a6e8baed25f05fa6d039d8b912b2fe38950a39850de07b69",
+      "contexts": [
+        {
+          "name": "media",
+          "params": "(pointer:coarse)"
+        }
+      ],
+      "fragmentSha256": "86cbde4351ec869cd6cb43fb6d8234c0174d5acfc5e9dd5bb509976f4086dfca"
+    }
+  ],
+  "tokens": [],
+  "legacyDebt": {
+    "rules": 118,
+    "regionRules": 109,
+    "tokens": [],
+    "owners": [
+      {
+        "owner": "generated:artifact-library",
+        "kind": "region",
+        "generator": "scripts/extract-artifact-library-v4.mjs",
+        "area": "artifact-library",
+        "sourceVersions": [
+          "3.6556.2"
+        ],
+        "files": [
+          "src/generated/artifact-library/c230724a2-Dey3VRG9.mjs",
+          "src/generated/artifact-library/c2bb74286-CQLOwqIZ.mjs",
+          "src/generated/artifact-library/c69e9937a-BIwXoJBq.mjs",
+          "src/generated/artifact-library/frame-shell-header-B1Xokuj0.mjs",
+          "src/generated/artifact-library/shared-9-CM21XrJw.mjs",
+          "src/generated/artifact-library/shared-frame-6jtSkIit.mjs"
+        ],
+        "classes": [
+          "[&>[data-cover-light]>img]:h-[109px]",
+          "[&>img]:h-[109px]",
+          "aria-expanded:bg-surface-3",
+          "dark:text-gray-0/70",
+          "max-md:nth-[n+5]:hidden",
+          "max-sm:nth-[n+3]:hidden",
+          "text-gray-900/80"
+        ],
+        "rules": 8,
+        "baselines": [
+          "3.6556.2"
+        ]
+      },
+      {
+        "owner": "generated:chat-messages",
+        "kind": "region",
+        "generator": "scripts/extract-chat-messages-v4.mjs",
+        "area": "chat-messages",
+        "sourceVersions": [
+          "3.6556.2"
+        ],
+        "files": [
+          "src/generated/chat-messages/feedback.mjs",
+          "src/generated/chat-messages/version-selector.mjs"
+        ],
+        "classes": [
+          "!w-6",
+          "ms-[calc(var(--msg-text-inset,0.5rem)_-_0.375rem)]"
+        ],
+        "rules": 2,
+        "baselines": [
+          "3.6556.2"
+        ]
+      },
+      {
+        "owner": "generated:chat-side-chat",
+        "kind": "region",
+        "generator": "scripts/extract-chat-side-chat-v4.mjs",
+        "area": "chat-side-chat",
+        "sourceVersions": [
+          "3.6556.2"
+        ],
+        "files": [
+          "src/generated/chat-side-chat/side-chat-panel.mjs"
+        ],
+        "classes": [
+          "placeholder:text-text-500/70"
+        ],
+        "rules": 1,
+        "baselines": [
+          "3.6556.2"
+        ]
+      },
+      {
+        "owner": "generated:code-composer",
+        "kind": "region",
+        "generator": "scripts/extract-code-composer.mjs",
+        "area": "code-composer",
+        "sourceVersions": [
+          "3.6556.2"
+        ],
+        "files": [
+          "src/generated/code-composer/chat-composer-shell.mjs",
+          "src/generated/code-composer/composer-glyph.mjs",
+          "src/generated/code-composer/composer-tokens.mjs"
+        ],
+        "classes": [
+          "@max-[28.75rem]:basis-0",
+          "@max-[28.75rem]:grow",
+          "@max-[28.75rem]:justify-end",
+          "[--cds-radius-composer:calc(1.125rem*var(--cds-rem-scale,1))]",
+          "[--cmp-chin-end:calc(var(--cmp-pad-x)+2px)]",
+          "[--cmp-pad-x:0.75rem]",
+          "comfortable:-mb-3",
+          "comfortable:-mt-1.5",
+          "comfortable:-mt-3",
+          "comfortable:[--cds-radius-composer:calc(1.25rem*var(--cds-rem-scale,1))]",
+          "comfortable:[--cmp-chin-end:calc(var(--cmp-pad-x)+1px)]",
+          "comfortable:[--cmp-chin-end:calc(var(--cmp-pad-x)+2px)]",
+          "comfortable:[--cmp-chin-end:calc(var(--cmp-pad-x)+3px)]",
+          "comfortable:[--cmp-chin-end:calc(var(--cmp-pad-x)+3px-(2rem*var(--cds-rem-scale,1)-var(--cds-h-control))/2)]",
+          "comfortable:[--cmp-pad-x:0.75rem]",
+          "comfortable:pe-2",
+          "comfortable:pt-0.5",
+          "comfortable:pt-3",
+          "comfortable:py-3",
+          "compact:-mb-3",
+          "compact:-mt-1",
+          "compact:-mt-3",
+          "compact:[--cds-radius-composer:calc(1.125rem*var(--cds-rem-scale,1))]",
+          "compact:[--cmp-chin-end:calc(var(--cmp-pad-x)+2px)]",
+          "compact:[--cmp-pad-x:0.75rem]",
+          "compact:pe-1.5",
+          "compact:ps-1.5",
+          "compact:pt-1",
+          "compact:pt-3",
+          "compact:py-3",
+          "max-w-[calc(100%_-_var(--cmp-lead-w))]",
+          "scale-90"
+        ],
+        "rules": 32,
+        "baselines": [
+          "3.6556.2"
+        ]
+      },
+      {
+        "owner": "generated:code-current",
+        "kind": "region",
+        "generator": "scripts/extract-code-current-upper-v4.mjs",
+        "area": "code-current",
+        "sourceVersions": [
+          "3.6556.2"
+        ],
+        "files": [
+          "src/generated/code-current/environment-select-parts.mjs",
+          "src/generated/code-current/sidebar-pr-card.mjs"
+        ],
+        "classes": [
+          "pe-[calc((var(--df-row-ctl)-var(--df-pr-glyph,12px))/2+max(0px,var(--df-heading-pitch,0px)-var(--df-row-ctl)))]",
+          "ps-[calc((var(--df-row-ctl)-var(--df-pr-glyph,12px))/2)]",
+          "px-[calc(var(--cds-pad-md)+var(--cds-menu-gutter,4px))]",
+          "w-[calc(100%+2*var(--cds-menu-gutter,4px))]"
+        ],
+        "rules": 4,
+        "baselines": [
+          "3.6556.2"
+        ]
+      },
+      {
+        "owner": "generated:code-editor",
+        "kind": "region",
+        "generator": "scripts/extract-code-editor.mjs",
+        "area": "code-editor",
+        "sourceVersions": [
+          "3.6556.2"
+        ],
+        "files": [
+          "src/generated/code-editor/preview-navigation.mjs",
+          "src/generated/code-editor/side-chat-geometry.mjs"
+        ],
+        "classes": [
+          "-bottom-[3px]",
+          "-left-[3px]",
+          "-right-[3px]",
+          "[&>.ms-auto]:gap-1",
+          "bottom-[8px]",
+          "inset-x-[8px]",
+          "top-[8px]"
+        ],
+        "rules": 7,
+        "baselines": [
+          "3.6556.2"
+        ]
+      },
+      {
+        "owner": "generated:code-routines",
+        "kind": "region",
+        "generator": "scripts/extract-code-routines.mjs",
+        "area": "code-routines",
+        "sourceVersions": [
+          "3.6556.2"
+        ],
+        "files": [
+          "src/generated/code-routines/shared-18-D3y8YMFN.mjs",
+          "src/generated/code-routines/shared-9-CM21XrJw.mjs"
+        ],
+        "classes": [
+          "comfortable:h-[calc(2rem*var(--cds-rem-scale,1))]",
+          "motion-safe:has-[[aria-expanded=true]]:scale-[1.03]"
+        ],
+        "rules": 2,
+        "baselines": [
+          "3.6556.2"
+        ]
+      },
+      {
+        "owner": "generated:code-transcript",
+        "kind": "region",
+        "generator": "scripts/extract-code-transcript-v4.mjs",
+        "area": "code-transcript",
+        "sourceVersions": [
+          "3.6556.2"
+        ],
+        "files": [
+          "src/generated/code-transcript/c425fb3cf-B-SGR6Na.mjs",
+          "src/generated/code-transcript/code-transcript.mjs"
+        ],
+        "classes": [
+          "*:pt-0!",
+          "@max-[19.875rem]/agents:col-span-2",
+          "@max-[19.875rem]/agents:grid-cols-[calc(0.75rem*var(--cds-rem-scale,1))_minmax(auto,1fr)_minmax(0,max-content)_minmax(3.5rem,max-content)]",
+          "@max-[19.875rem]/agents:hidden",
+          "@max-[26rem]:hidden",
+          "@max-[26rem]:sr-only",
+          "@max-[300px]:hidden",
+          "@max-[32rem]:hidden",
+          "@max-[32rem]:sr-only",
+          "[&>*]:!pt-0",
+          "[&_[data-cds=Button]:hover:not([aria-pressed=true])]:text-primary",
+          "[&_[data-cds=Button]:not([aria-pressed=true])]:text-muted-as-secondary",
+          "[&_[role=toolbar]]:gap-0",
+          "[@media(pointer:coarse)]:block",
+          "compact:pb-4",
+          "epitaxy-task-row-secondary",
+          "max-w-28",
+          "me-pad-xs",
+          "ms-pad-xs",
+          "pe-[calc(var(--cds-h-control)+2*var(--cds-pad-xs))]",
+          "pe-[calc(var(--cds-h-control)+var(--cds-gap-xs))]"
+        ],
+        "rules": 21,
+        "baselines": [
+          "3.6556.2"
+        ]
+      },
+      {
+        "owner": "generated:cowork-approval",
+        "kind": "region",
+        "generator": "scripts/extract-cowork-approval-v4.mjs",
+        "area": "cowork-approval",
+        "sourceVersions": [
+          "3.6556.2"
+        ],
+        "files": [
+          "src/generated/cowork-approval/c14f706e5-BnmRTX8N.mjs",
+          "src/generated/cowork-approval/shared-10-D6FXWZph.mjs"
+        ],
+        "classes": [
+          "compact:gap-2",
+          "compact:p-0",
+          "compact:p-2",
+          "compact:pb-2",
+          "compact:pt-0",
+          "compact:py-0"
+        ],
+        "rules": 6,
+        "baselines": [
+          "3.6556.2"
+        ]
+      },
+      {
+        "owner": "generated:cowork-progress",
+        "kind": "region",
+        "generator": "scripts/extract-cowork-progress-v4.mjs",
+        "area": "cowork-progress",
+        "sourceVersions": [
+          "3.6556.2"
+        ],
+        "files": [
+          "src/generated/cowork-progress/c21f11e6d-Cyd8_HO8.mjs"
+        ],
+        "classes": [
+          "min-h-[24rem]"
+        ],
+        "rules": 1,
+        "baselines": [
+          "3.6556.2"
+        ]
+      },
+      {
+        "owner": "generated:cowork-settings",
+        "kind": "region",
+        "generator": "scripts/extract-cowork-settings-v4.mjs",
+        "area": "cowork-settings",
+        "sourceVersions": [
+          "3.6556.2"
+        ],
+        "files": [
+          "src/generated/cowork-settings/shared-1-BJhqMmkf.mjs"
+        ],
+        "classes": [
+          "[&>:not([role=group]):not([data-cds=DataTable]):not([role=treegrid]):not([data-settle-slot])]:py-md"
+        ],
+        "rules": 1,
+        "baselines": [
+          "3.6556.2"
+        ]
+      },
+      {
+        "owner": "generated:pierre-changes",
+        "kind": "region",
+        "generator": "scripts/extract-pierre-changes-v4.mjs",
+        "area": "pierre-changes",
+        "sourceVersions": [
+          "3.6556.2"
+        ],
+        "files": [
+          "src/generated/pierre-changes/pierre-c82eca2bd-CImI7zNG.mjs",
+          "src/generated/pierre-changes/pierre-changes.mjs"
+        ],
+        "classes": [
+          "enabled:hover:bg-[linear-gradient(var(--cds-alpha-2),var(--cds-alpha-2))]",
+          "group-focus-within/diff-file:opacity-100",
+          "group-hover/diff-file:opacity-100",
+          "group/diff-file",
+          "placeholder:text-[var(--diff-widget-muted,var(--cds-text-muted))]"
+        ],
+        "rules": 4,
+        "baselines": [
+          "3.6556.2"
+        ]
+      },
+      {
+        "owner": "generated:routines-shared",
+        "kind": "region",
+        "generator": "scripts/extract-files-changes.mjs",
+        "area": "routines-shared",
+        "sourceVersions": [
+          "3.6556.2"
+        ],
+        "files": [
+          "src/generated/routines-shared/cf8745532-5Ehsv_zP.mjs"
+        ],
+        "classes": [
+          "has-[[data-primary]:active]:duration-fast",
+          "has-[[data-primary]:active]:scale-[0.98]"
+        ],
+        "rules": 2,
+        "baselines": [
+          "3.6556.2"
+        ]
+      },
+      {
+        "owner": "generated:session-rail",
+        "kind": "region",
+        "generator": "scripts/extract-session-rail-v4.mjs",
+        "area": "session-rail",
+        "sourceVersions": [
+          "3.6556.2"
+        ],
+        "files": [
+          "src/generated/session-rail/band-frame.mjs"
+        ],
+        "classes": [
+          "me-[calc((40px-var(--cds-h-control))/2-var(--cds-pad-md))]"
+        ],
+        "rules": 1,
+        "baselines": [
+          "3.6556.2"
+        ]
+      },
+      {
+        "owner": "generated:session-rail-kit",
+        "kind": "region",
+        "generator": "scripts/extract-session-rail-kit-v4.mjs",
+        "area": "session-rail-kit",
+        "sourceVersions": [
+          "3.6556.2"
+        ],
+        "files": [
+          "src/generated/session-rail-kit/rail-shown-store.mjs"
+        ],
+        "classes": [
+          "[&_.flex-col.outline-none]:gap-0.5",
+          "[&_.gap-sm.px-xs.py-1]:gap-x-xs"
+        ],
+        "rules": 2,
+        "baselines": [
+          "3.6556.2"
+        ]
+      },
+      {
+        "owner": "generated:sidebar-sections",
+        "kind": "region",
+        "generator": "scripts/extract-sidebar-sections.mjs",
+        "area": "sidebar-sections",
+        "sourceVersions": [
+          "3.6556.2"
+        ],
+        "files": [
+          "src/generated/sidebar-sections/group-label.mjs"
+        ],
+        "classes": [
+          "min-h-[calc(var(--df-group-pt)+(var(--df-row-h)-8px)+4px)]",
+          "pt-[var(--df-group-pt)]"
+        ],
+        "rules": 2,
+        "baselines": [
+          "3.6556.2"
+        ]
+      },
+      {
+        "owner": "generated:view-tabs",
+        "kind": "region",
+        "generator": "scripts/extract-approval-landing.mjs",
+        "area": "view-tabs",
+        "sourceVersions": [
+          "3.6556.2"
+        ],
+        "files": [
+          "src/generated/view-tabs/shared-frame-6jtSkIit.js"
+        ],
+        "classes": [
+          "[--cds-shimmer-text-peak:color-mix(in_srgb,var(--cds-text-primary)_20%,white)]",
+          "[--cds-shimmer-text-plateau:5%]",
+          "[background-image:linear-gradient(var(--cds-shimmer-text-angle,120deg),var(--cds-shimmer-text-ink)_37.5%,var(--cds-shimmer-text-peak)_45%,var(--cds-shimmer-text-peak)_55%,var(--cds-shimmer-text-ink)_62.5%)]",
+          "after:-start-px",
+          "dark:[--cds-shimmer-text-peak:var(--cds-gray-500)]",
+          "first:-mt-pad-xl",
+          "group-data-[disabled]/cb:group-data-[unchecked]/cb:group-hover/cb:border-strong",
+          "group-data-[disabled]/rd:group-hover/rd:border-strong",
+          "group-data-[unchecked]/cb:group-hover/cb:border-stronger",
+          "group-hover/rd:border-stronger",
+          "last:me-[calc(var(--cds-pad-xl)_-_var(--cds-toolbar-pad-block))]",
+          "mb-pad-xl",
+          "px-[calc(var(--cds-pad-md)+var(--cds-menu-gutter,4px))]",
+          "w-[calc(100%+2*var(--cds-menu-gutter,4px))]"
+        ],
+        "rules": 15,
+        "baselines": [
+          "3.6556.2"
+        ]
+      },
+      {
+        "owner": "host:src/source-background-tasks.jsx",
+        "kind": "host",
+        "generator": "host",
+        "area": null,
+        "sourceVersions": [
+          "host"
+        ],
+        "files": [
+          "src/source-background-tasks.jsx"
+        ],
+        "classes": [
+          "[&:hover:not(:has(.epitaxy-task-row-secondary:hover))]:bg-alpha-2",
+          "pb-[16px]"
+        ],
+        "rules": 2,
+        "baselines": [
+          "3.6556.2"
+        ]
+      },
+      {
+        "owner": "host:src/source-chat-message-actions.jsx",
+        "kind": "host",
+        "generator": "host",
+        "area": null,
+        "sourceVersions": [
+          "host"
+        ],
+        "files": [
+          "src/source-chat-message-actions.jsx"
+        ],
+        "classes": [
+          "!w-6"
+        ],
+        "rules": 1,
+        "baselines": [
+          "3.6556.2"
+        ]
+      },
+      {
+        "owner": "host:src/source-diff.jsx",
+        "kind": "host",
+        "generator": "host",
+        "area": null,
+        "sourceVersions": [
+          "host"
+        ],
+        "files": [
+          "src/source-diff.jsx"
+        ],
+        "classes": [
+          "enabled:hover:bg-[linear-gradient(var(--cds-alpha-2),var(--cds-alpha-2))]",
+          "group-focus-within/diff-file:opacity-100",
+          "group-hover/diff-file:opacity-100",
+          "group/diff-file"
+        ],
+        "rules": 3,
+        "baselines": [
+          "3.6556.2"
+        ]
+      },
+      {
+        "owner": "host:src/source-incognito-shell.jsx",
+        "kind": "host",
+        "generator": "host",
+        "area": null,
+        "sourceVersions": [
+          "host"
+        ],
+        "files": [
+          "src/source-incognito-shell.jsx"
+        ],
+        "classes": [
+          "shadow-[0_0_0_100px_var(--cds-text-primary)]"
+        ],
+        "rules": 1,
+        "baselines": [
+          "3.6556.2"
+        ]
+      },
+      {
+        "owner": "host:src/source-preview-pane.jsx",
+        "kind": "host",
+        "generator": "host",
+        "area": null,
+        "sourceVersions": [
+          "host"
+        ],
+        "files": [
+          "src/source-preview-pane.jsx"
+        ],
+        "classes": [
+          "pr-xs"
+        ],
+        "rules": 1,
+        "baselines": [
+          "3.6556.2"
+        ]
+      },
+      {
+        "owner": "host:src/source-sidebar-drag.jsx",
+        "kind": "host",
+        "generator": "host",
+        "area": null,
+        "sourceVersions": [
+          "host"
+        ],
+        "files": [
+          "src/source-sidebar-drag.jsx"
+        ],
+        "classes": [
+          "bg-[color-mix(in_srgb,var(--cds-surface-3)_70%,transparent)]",
+          "bg-[color-mix(in_srgb,var(--cds-surface-3)_80%,transparent)]",
+          "bg-[color-mix(in_srgb,var(--cds-surface-3)_90%,transparent)]"
+        ],
+        "rules": 3,
+        "baselines": [
+          "3.6556.2"
+        ]
+      },
+      {
+        "owner": "host:src/source-task-backlog.jsx",
+        "kind": "host",
+        "generator": "host",
+        "area": null,
+        "sourceVersions": [
+          "host"
+        ],
+        "files": [
+          "src/source-task-backlog.jsx"
+        ],
+        "classes": [
+          "pr-[96px]"
+        ],
+        "rules": 1,
+        "baselines": [
+          "3.6556.2"
+        ]
+      },
+      {
+        "owner": "host:src/source-tile-layout.css",
+        "kind": "host",
+        "generator": "host",
+        "area": null,
+        "sourceVersions": [
+          "host"
+        ],
+        "files": [
+          "src/source-tile-layout.css"
+        ],
+        "classes": [
+          "tiles-dragging"
+        ],
+        "rules": 1,
+        "baselines": [
+          "3.6556.2"
+        ]
+      },
+      {
+        "owner": "host:src/source-tile-layout.jsx",
+        "kind": "host",
+        "generator": "host",
+        "area": null,
+        "sourceVersions": [
+          "host"
+        ],
+        "files": [
+          "src/source-tile-layout.jsx"
+        ],
+        "classes": [
+          "tiles-dragging"
+        ],
+        "rules": 1,
+        "baselines": [
+          "3.6556.2"
+        ]
+      },
+      {
+        "owner": "host:src/source-transcript.jsx",
+        "kind": "host",
+        "generator": "host",
+        "area": null,
+        "sourceVersions": [
+          "host"
+        ],
+        "files": [
+          "src/source-transcript.jsx"
+        ],
+        "classes": [
+          "scroll-fade-size-[48px]"
+        ],
+        "rules": 1,
+        "baselines": [
+          "3.6556.2"
+        ]
+      }
+    ],
+    "hostDebt": {
+      "rules": 9,
+      "owners": [
+        "host:src/source-background-tasks.jsx",
+        "host:src/source-incognito-shell.jsx",
+        "host:src/source-preview-pane.jsx",
+        "host:src/source-sidebar-drag.jsx",
+        "host:src/source-task-backlog.jsx",
+        "host:src/source-tile-layout.css",
+        "host:src/source-tile-layout.jsx",
+        "host:src/source-transcript.jsx"
+      ],
+      "items": [
+        {
+          "selector": ".bg-\\[color-mix\\(in_srgb\\,var\\(--cds-surface-3\\)_70\\%\\,transparent\\)\\]",
+          "baselineVersion": "3.6556.2",
+          "start": 290773,
+          "sha256": "f7ab8d8dd852f280d58241d676541b97e5214690cd973b2b6b14a7b62ab50904",
+          "classes": [
+            "bg-[color-mix(in_srgb,var(--cds-surface-3)_70%,transparent)]"
+          ],
+          "files": [
+            "src/source-sidebar-drag.jsx"
+          ]
+        },
+        {
+          "selector": ".bg-\\[color-mix\\(in_srgb\\,var\\(--cds-surface-3\\)_80\\%\\,transparent\\)\\]",
+          "baselineVersion": "3.6556.2",
+          "start": 290917,
+          "sha256": "939efad7e04ce1682cad759a71371bff0723447a9cf360775ac1df3da6dea0be",
+          "classes": [
+            "bg-[color-mix(in_srgb,var(--cds-surface-3)_80%,transparent)]"
+          ],
+          "files": [
+            "src/source-sidebar-drag.jsx"
+          ]
+        },
+        {
+          "selector": ".bg-\\[color-mix\\(in_srgb\\,var\\(--cds-surface-3\\)_90\\%\\,transparent\\)\\]",
+          "baselineVersion": "3.6556.2",
+          "start": 291061,
+          "sha256": "e159d46d619fcda162239fbb3574ac921b66b5b05fded36c4493d19f8cdb04a4",
+          "classes": [
+            "bg-[color-mix(in_srgb,var(--cds-surface-3)_90%,transparent)]"
+          ],
+          "files": [
+            "src/source-sidebar-drag.jsx"
+          ]
+        },
+        {
+          "selector": ".pr-\\[96px\\]",
+          "baselineVersion": "3.6556.2",
+          "start": 382338,
+          "sha256": "0d86089c3dcbbb6cd5b4c24a4025dc6dc036c1d7ff495ebeda7c47c8ee7ff0c1",
+          "classes": [
+            "pr-[96px]"
+          ],
+          "files": [
+            "src/source-task-backlog.jsx"
+          ]
+        },
+        {
+          "selector": ".pr-xs",
+          "baselineVersion": "3.6556.2",
+          "start": 382535,
+          "sha256": "9e70e3e30288abdc2ddceb93d19ccaff27683fc66be49908231c7cc80269e846",
+          "classes": [
+            "pr-xs"
+          ],
+          "files": [
+            "src/source-preview-pane.jsx"
+          ]
+        },
+        {
+          "selector": ".pb-\\[16px\\]",
+          "baselineVersion": "3.6556.2",
+          "start": 384269,
+          "sha256": "3eb1140377ff682adaaa0a27065151b7d27c91f6390ba1b695830580a1338c8d",
+          "classes": [
+            "pb-[16px]"
+          ],
+          "files": [
+            "src/source-background-tasks.jsx"
+          ]
+        },
+        {
+          "selector": ".shadow-\\[0_0_0_100px_var\\(--cds-text-primary\\)\\]",
+          "baselineVersion": "3.6556.2",
+          "start": 432866,
+          "sha256": "c5b5c9b508b3fdc04dfe1b9185ad7cf7abb725d3443d9c3c3bb56fac4b32cb90",
+          "classes": [
+            "shadow-[0_0_0_100px_var(--cds-text-primary)]"
+          ],
+          "files": [
+            "src/source-incognito-shell.jsx"
+          ]
+        },
+        {
+          "selector": ".scroll-fade-size-\\[48px\\]",
+          "baselineVersion": "3.6556.2",
+          "start": 548050,
+          "sha256": "7df352330aafdb2d683d388b828ae40b65cdd3bae74a850af9b015acbe8d81fe",
+          "classes": [
+            "scroll-fade-size-[48px]"
+          ],
+          "files": [
+            "src/source-transcript.jsx"
+          ]
+        },
+        {
+          "selector": ".tiles-dragging .\\[\\.tiles-dragging_\\&\\]\\:opacity-100",
+          "baselineVersion": "3.6556.2",
+          "start": 1256963,
+          "sha256": "53a7511836225afc36eb574afd591bb3d441a818e748356d4c945e894f60ca30",
+          "classes": [
+            "tiles-dragging"
+          ],
+          "files": [
+            "src/source-tile-layout.css",
+            "src/source-tile-layout.jsx"
+          ]
+        }
+      ],
+      "note": "Rules no earlier-version generated region holds: only host files name these dropped utilities. Not region migration debt; rewrite the host call sites to official 4.16336.0 classes/tokens."
+    }
+  },
+  "targetVersionUnresolved": []
 }

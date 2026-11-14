@@ -18,6 +18,8 @@ const assets = path.join(reference, 'ion-dist/assets/v1');
 const cache = new Map();
 const read = file => { if (!cache.has(file)) cache.set(file, fs.readFileSync(file, 'utf8')); return cache.get(file); };
 const official = name => read(path.join(assets, name));
+// 4.16336.0 (session-page lane: the Code session line mode).
+const official4 = name => read(path.resolve(app, '../reference/snapshots/claude-4.16336.0-20261104/ion-dist/assets/v1', name));
 // 3.6556.2 (the sidebar handle moved there in the 3.6556.2 migration, w2-sidebar-resize-nested).
 const v3Assets = path.resolve(app, '../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1');
 const local = rel => read(path.join(app, rel));
@@ -194,33 +196,40 @@ test('layout-07 official: tiles-handle-line only renders for divider:"line", whi
   assert.equal(run(officialPanelsGate().jf('panels'))(true).divider, undefined, 'and panels is off in 2.42304.0');
 });
 
-test('layout-07 local: the tile config is official Tb with no divider, and the separator renders no line span', () => {
+// session-page lane (4.16336.0): Eje no longer gates the line divider on the panels part. shared-20-DUEo90UF.js
+// `function f_(e){return e?(u_??={...c_,gap:1,padding:0,borderPx:0,divider:"line"}):c_}` and cc43287c9 `Rt=Zf(!0)`:
+// a Code session's tiles always run the line config (tests/tile-line-model.test.mjs pins the port). The host runs it for
+// every layout, the chat-only one included (round3 rl-session-page: Eje builds `Rt = Zf(!0)` unconditionally); TILE_CONFIG
+// stays c_ (= the old Tb) as the model's defaults.
+test('layout-07 local (4.16336.0): Tb / c_ stays the default, the docked layout runs shared-20 f_(!0) and the separator draws the line span', async () => {
   const Tb = Function('return {gap:12,padding:8,minTileBasePx:100,minTileWidthPx:280,dragLift:24}')();
   assert.deepEqual({ ...TILE_CONFIG }, Tb);
   assert.equal('divider' in TILE_CONFIG, false);
+  const s20 = official4('shared-20-DUEo90UF.js');
+  once(s20, ['function f_(e){return e?u_??={...c_,gap:1,padding:0,borderPx:0,divider:"line"}:c_}', 'var c_={gap:12,padding:8,minTileBasePx:100,minTileWidthPx:280,dragLift:24}']);
   const layout = local('src/source-tile-layout.jsx');
-  assert.equal(count(layout, 'export function SourceTileLayout({ layout, onLayoutChange, tiles, renderTile, config = TILE_CONFIG,'), 1);
-  // The one mount (main.jsx) keeps the default config in a window's frame; W14-code r4 r4pa-c03: a pane window (E90 /
-  // E95, c5638815a wt renders the pane with no tile container) passes PANE_WINDOW_TILE_CONFIG, Tb without the padding.
+  assert.equal(count(layout, 'export function SourceTileLayout({ layout, onLayoutChange, tiles, renderTile, config: configProp,'), 1);
+  assert.equal(count(layout, 'const config = configProp ?? LINE_TILE_CONFIG;'), 1);
+  assert.equal(count(layout, 'hasPane ? LINE_TILE_CONFIG'), 0, 'the line config is not scoped to a docked pane');
+  // Eje `$t = {...Rt, paddingTop: 0, paddingEnd: Qt}` (Rt.padding 0): the line container pads no side, pane or not.
+  once(official4('cc43287c9-dzfX-J5i.js'), ['Rt=J0($,154)?K0($,154,Zf(!0)):$[154]', '$t=J1($,172,Qt)?K1($,172,Qt,{...Rt,paddingTop:0,paddingEnd:Qt}):$[173]']);
+  assert.equal(count(layout, 'const containerPadding = hasPane || line'), 1);
   const mounts = localFiles('src').filter(file => read(file).includes('<SourceTileLayout '));
   assert.deepEqual(mounts.map(file => path.relative(app, file)), ['src/main.jsx']);
   const main = local('src/main.jsx');
   assert.equal(count(main, '<SourceTileLayout '), 1);
-  // W14-code r6 sleep (gen-final-6 syncs this count): the sliced sleep / kept-awake bands (cf74bc599 wO / dO) read the
-  // session settings through SourceSessionBands' own config prop, which is no tile config.
   assert.equal(count(main, ' config={'), 3);
   assert.equal(count(main, '<SourceSessionBands key={`${current}:bands`}') + count(main, 'config={boot?.config ?? null} saveSettings={saveBandSettings}'), 2);
   assert.equal(count(main, '<SourceSettings open={!!settings} config={'), 1);
   assert.equal(count(main, 'config={paneWindowPopout ? PANE_WINDOW_TILE_CONFIG : undefined}'), 1, 'main.jsx keeps the default tile config outside a pane window');
   const separator = fnBody(layout, 'function Separator(');
-  assert.doesNotMatch(separator, /\bline\b/, 'no line prop');
-  assert.equal(count(separator, 'style={{ zIndex: 1 + depth, '), 1, 'official (a?4:1)+l with a=false');
-  // The separator's children: the affordance first, then the two corners (official: line span only when a&&!n).
+  assert.equal(count(separator, 'style={{ zIndex: (line ? 4 : 1) + depth, '), 1, 'official qs (o?4:1)+d');
   const spans = separator.match(/<span className="[^"]+"/g);
-  assert.deepEqual(spans, ['<span className="tiles-handle-affordance"', '<span className="tiles-handle-corner"', '<span className="tiles-handle-corner"']);
+  assert.deepEqual(spans, ['<span className="tiles-handle-line"', '<span className="tiles-handle-affordance"', '<span className="tiles-handle-corner"', '<span className="tiles-handle-corner"']);
   for (const file of localFiles('src')) {
-    const text = read(file);
-    assert.doesNotMatch(text, /tiles-handle-line|data-tiles-line|data-after-line-[xy]/, path.relative(app, file));
+    const rel = path.relative(app, file), text = read(file);
+    if (rel === 'src/source-tile-layout.jsx' || rel === 'src/source-tile-layout.css' || rel === 'src/tile-line-model.mjs' || rel.startsWith('src/generated/')) continue;
+    assert.doesNotMatch(text, /tiles-handle-line|data-tiles-line|data-after-line-[xy]/, rel);
   }
 });
 

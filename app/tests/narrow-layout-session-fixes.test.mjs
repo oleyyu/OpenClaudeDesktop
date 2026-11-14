@@ -20,7 +20,8 @@ createRequire(path.resolve(import.meta.dirname, '..', 'package.json'))('react-do
 // D21: original modules probe the document while they evaluate — the view-tab graph's preload helper
 // reads `document.createElement("link").relList` (no relList: it falls back to "preload"), and the
 // sidebar width module asks `documentElement.hasAttribute(<artifact composed>)` (absent here).
-globalThis.document ??= { body: { nodeType: 1, style: {} }, documentElement: { dataset: {}, style: {}, getAttribute: () => null, hasAttribute: () => false }, createElement: () => ({}) };
+// W8-M9 stub contract (round4 integration, stub fields only): cds-core 9203795f reads these at load (official 4.16336.0): document.cookie.
+globalThis.document ??= { cookie: '' /* W8-M9: shared-0 CQ / Wo document.cookie */, body: { nodeType: 1, style: {} }, documentElement: { dataset: {}, style: {}, getAttribute: () => null, hasAttribute: () => false }, createElement: () => ({}) };
 let server, Split, Store, Sidebar, Actions, Lineage;
 before(async () => {
   server = await createServer({ configFile: false, root: path.resolve(import.meta.dirname, '..'), plugins: [react()],

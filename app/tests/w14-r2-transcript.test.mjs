@@ -78,8 +78,15 @@ test('R2T-01: a user message\'s images and files are entry items (c06cf64bb), dr
   const html = render({ items: [item, REPLY], host: { cwd: '/repo' } });
   assert.match(html, /app\.js/);
   assert.match(html, /data:image\/png;base64,iVBORw0KGgo=/);
-  assert.equal(C.containedImageSource('/tmp/a b.png'), 'file:///tmp/a%20b.png');
-  assert.equal(C.containedImageSource('img/x.png', '/repo/'), 'file:///repo/img/x.png');
+  // U-2: a local image is the claude-media URL main mints for the absolute path (preload desktop.mediaUrl), never file://.
+  const savedDesktop = globalThis.desktop, minted = [];
+  globalThis.desktop = { mediaUrl: (p) => { minted.push(p); return `claude-media://v/m${minted.length}?v=1`; } };
+  try {
+    assert.equal(C.containedImageSource('/tmp/a b.png'), 'claude-media://v/m1?v=1');
+    assert.equal(C.containedImageSource('img/x.png', '/repo/'), 'claude-media://v/m2?v=1');
+    assert.deepEqual(minted, ['/tmp/a b.png', '/repo/img/x.png']);
+  } finally { if (savedDesktop === undefined) delete globalThis.desktop; else globalThis.desktop = savedDesktop; }
+  assert.equal(C.containedImageSource('/tmp/a b.png'), null, 'no desktop bridge: no local image URL');
   assert.equal(C.containedImageSource('https://e.x/y.png'), 'https://e.x/y.png');
   assert.equal(C.containedImageSource('rel.png'), null);
   // The loader is the original's context (c856385e2 `wt = Ct.Provider`), exported by the extractor.

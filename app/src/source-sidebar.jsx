@@ -7,7 +7,11 @@ import { SourceAppSwitch } from "./source-app-switch.jsx";
 import { surfaceNavRows } from "./surface-nav-model.mjs";
 import { SourceTooltip, textOverflows } from "./source-tooltip";
 import { SourceSpark } from "./source-spark.jsx";
-import { CdsAvatar, CdsButton, CdsIcon, CdsTooltip } from "./generated/view-tabs/index.js";
+// 4.16336.0 host wiring (frame): Avatar / Button / Tooltip this host draws are cds-core (the Hide-sidebar Tooltip passes
+// hoverable false itself, the 4.16336.0 default). Kept on view-tabs: the group-heading Add glyphs, which sit in rows whose
+// controls read the sections' view-tabs compact density (source-sidebar-sections Shift, SidebarRowControl).
+import { CdsIcon } from "./generated/view-tabs/index.js";
+import { CdsAvatar, CdsButton, CdsTooltip } from "./cds-core.mjs";
 import { SidebarRowControl } from "./generated/code-current/sidebar-row-control.mjs";
 import { staticComposerBootFade } from "./generated/app-switch/boot-fade.mjs";
 import { hostGrowthBookFlag } from "./host-growthbook.mjs";
@@ -829,6 +833,44 @@ function SidebarResizeHandle({ width, minWidth = SIDEBAR_WIDTH.MIN, collapsed, o
   return <OriginalSidebarResizeHandle minWidth={minWidth} />;
 }
 
+/** The account row of the bottom tray (3.6556.2 hL df-footer-row / pw) of the legacy aside below. The 4.16336.0 frame
+ * (src/frame-sidebar-host.jsx) no longer uses it: there the tray is the sliced official shared-22 QL / shared-19 QF
+ * (generated/frame-sidebar), answered with the same main.jsx account (sidebar-body lane, surfaces-prod-2). */
+export function SourceSidebarAccountRow({ displayName = t("Local user"), accountLabel, avatarName, onAccount, accountMenuOpen = false }) {
+  return (
+    <div className="df-footer-row account-footer shrink-0 flex items-center gap-[var(--df-footer-gap)]">
+      <div className="min-w-0 flex-1">
+        <button type="button" data-testid="user-menu-button" aria-label={t("Account menu")}
+          className="df-user-menu-btn account-button cds-reset flex h-[max(28px,var(--df-footer-btn-size))] max-w-full items-center gap-[var(--df-row-gap)] rounded-[var(--df-radius-pill)] ps-[var(--df-row-px)] pe-2 text-start outline-none hover:bg-[var(--df-hover)] focus-visible:shadow-focus"
+          {...menuTriggerProps({ open: accountMenuOpen, onOpen: (entry, event) => onAccount?.(event, entry) })} onClick={(event) => onAccount?.(event, keyboardEntry(event))}>
+          {/* shared-19 E0 avatar slot: C0 = CDS Avatar pp{name, src, size:"sm", aria-hidden} while __gb__496524976
+              (S0) is on; off, T0's static Spark at 16. W14-code r4 gates-r4-06 (E95): the desktop's Uon does not
+              serve 496524976, so host-growthbook leaves it off and the slot is the static Spark, as on the 3P
+              desktop; E0's own S0 read stays, as in shared-19. */}
+          <span className="df-on-rail relative flex w-[var(--df-leading-slot)] shrink-0 items-center justify-center">{hostGrowthBookFlag("__gb__496524976")
+            ? <CdsAvatar name={avatarName ?? displayName} size="sm" aria-hidden />
+            : <SourceSpark size={16} className="shrink-0" />}</span>
+          {/* W12b-FTS-1 shared-19 $N: the suffix span and the xs CaretDown both carry df-user-menu-trailing (shared-styles
+              pushes the last one to the row end while df-footer-aux is empty); the name is df-footer-name with no truncate
+              (the df-footer-suffix mask fades it); the dot and suffix are text-muted-as-secondary. */}
+          <span className="df-user-menu-trailing flex min-w-0 gap-1 overflow-hidden text-[length:var(--df-row-font)] df-footer-suffix items-baseline">
+            <span className="df-footer-name whitespace-nowrap text-secondary max-w-full shrink-0">{displayName}</span>
+            {accountLabel && <>
+              <span aria-hidden="true" className="df-footer-suffix-text text-muted-as-secondary">·</span>
+              <span className="df-footer-suffix-text min-w-0 whitespace-nowrap text-muted-as-secondary">{accountLabel}</span>
+            </>}
+          </span>
+          {displayName !== "" && <Icon name="CaretDown" size={12} className="df-user-menu-trailing shrink-0 text-muted-as-secondary" />}
+        </button>
+      </div>
+      {/* sidebar-main.js:14185-14235 hL df-footer-aux (vL/yL/gL) is empty in code mode. W14-code r4 复核 (E95):
+          the host's Connection settings control (en-US has no such string) is gone; reconnecting stays on the
+          session-list error's Retry (onRetryLoad), the composer's "Connection to {core} lost." Reconnect and Settings' Reconnect. */}
+      <div className="df-footer-aux ml-auto flex shrink-0 items-center" />
+    </div>
+  );
+}
+
 const SELECTION_DOMAIN = "code";
 const SOURCE_TRUNCATE_AT = 20;
 const EMPTY_REVEALED = new Map();
@@ -882,7 +924,17 @@ export function SourceSidebar({
   models = null,
   // w13-surfaces-modes: the Home segment's mode, 3.6556.2 shared-21 rT (main.jsx: app-switch-model.mjs homeModeFor).
   homeMode,
+  // frame-sidebar 4.16336.0 (src/frame-sidebar-host.jsx): "nav-body" renders only what the official KR's SidebarNavBody slot
+  // (shared-22 PI) holds -- the body column, its menus, dialogs, drag ghost and palette. The aside, its titlebar (collapse
+  // button, history nav, app switch), the peek bridge, the bottom tray and the resize handle are the official KR's then.
+  // "overlays" (frame-sidebar-nav 4.16336.0, src/frame-sidebar-nav-body.jsx): the official nav body (shared-22 PI, sliced) is
+  // KR's SidebarNavBody; this host component then draws none of its body column, only the host overlays the sliced nav has
+  // no host for yet: the ⌘K palette (SourceSidebarPalette; frame-sidebar-host.jsx answers the official dA with nothing) and
+  // its confirm dialog. relink-prep/plan.json residueRemoval H10 (moved, not removed).
+  slot,
 }) {
+  const overlaySlot = slot === "overlays";
+  const frameSlot = slot === "nav-body" || overlaySlot;
   const toasts = useSourceToasts();
   const intl = useStartIntl();
   const splitSides = useSplitSides();
@@ -1885,11 +1937,24 @@ export function SourceSidebar({
   // the desktop default cursor and the --cds-font-sans family.
   // ca1d33d05 jt / kt (F6 page areas): the "navigation" stop is the whole aside, or while collapsed the peek card
   // (the body) when it shows; focus anywhere in it holds the stop.
-  return <aside data-surface={mode} data-code-list={mode === "code" ? "" : undefined} className="app-sidebar dframe-sidebar source-sidebar cds-root" aria-label={t("Sidebar")} data-variant="web" data-density="compact" data-platform="desktop" data-font={cdsFont}
+  const Aside = overlaySlot ? FrameSlotPassthrough : frameSlot ? FrameSlotScope : "aside", Body = frameSlot ? FrameSlotPassthrough : "div";
+  return <Aside data-surface={mode} data-code-list={mode === "code" ? "" : undefined} className="app-sidebar dframe-sidebar source-sidebar cds-root" aria-label={t("Sidebar")} data-variant="web" data-density="compact" data-platform="desktop" data-font={cdsFont}
     data-focus-region={collapsed ? undefined : "navigation"} data-focus-region-holds={collapsed ? undefined : "contains"}>
+    {/* sidebar prestage-r4 (frame-sidebar-nav 4.16336.0): with slot="overlays" (main.jsx main window) the body column below is
+        not drawn; the sliced official PI draws it through frame-sidebar-nav-body.jsx. Residues it replaces (relink-prep plan H1–H8):
+        H1 New row + df-new-circle -> shared-57 Ek (circle from the official .df-new-circle CSS); H2/H3 old Search field / button
+        -> shared-21 rj (Search ⌘K row); H4 primaryRows / surfaceNavRows -> shared-57 Ok / rb over shared-21 qN (HN table);
+        H5 Code list (routines section, This computer group, Group and sort) -> LI -> RI -> BI -> shared-57 qh / KF / ZF;
+        H6 Recents header + filter -> LI -> zI -> VI -> KF / ZF group head (shared-57 b_ / shared-123 Ch); H7 session rows ->
+        shared-22 fT / iT / zw (Code), shared-57 xM / sM (Chat); H8 slot="nav-body" -> KR's SidebarNavBody draws PI.
+        The code is not deleted yet: SourceSidebar's own slot (no slot / "nav-body") and the source-sidebar tests still draw it,
+        and deleting it waits for SB-2 (the official nav cannot render under the node SSR tests: pending user decision R4-U1,
+        a DOM test environment; round4 real-b sidebar lane); H10 (⌘K palette,
+        menus, confirm dialogs) still renders here because the host SidebarCommandPalette answer is renderNothing. */}
+    {!overlaySlot && <>
     {/* GI children [pt, Ge, mt, ht, gt, Ut, Wt]: the peek bridge (collapsed only), then the titlebar or, collapsed, the pill. */}
-    {collapsed && <div className="dframe-peek-bridge" aria-hidden="true" onPointerEnter={onPeekEnter} onPointerLeave={onPeekLeave} />}
-    {collapsed ? collapsedChrome : <div ref={toolbarRef} className="sidebar-toolbar df-titlebar window-drag">
+    {!frameSlot && collapsed && <div className="dframe-peek-bridge" aria-hidden="true" onPointerEnter={onPeekEnter} onPointerLeave={onPeekLeave} />}
+    {frameSlot ? null : collapsed ? collapsedChrome : <div ref={toolbarRef} className="sidebar-toolbar df-titlebar window-drag">
       <div className="traffic-space" />
       {/* W12b-FTS-2 3.6556.2 shared-22 GI (desktop, ee = Yh() false, no wordmark He): `o("div",{className:i(e,"ms-0.5"),
           children:o(Ex,{holdPeekOnCollapse:_,size:Ce?"sm":void 0})})` with e = i("draggable-none",Ys,_&&"flex") (Ys = shared-5
@@ -1914,13 +1979,14 @@ export function SourceSidebar({
     </div>}
     {/* sidebar-main.js:14918-14925: the body is the peek card while collapsed (id = the trigger's
         aria-controls); it is inert while the card is hidden. */}
-    <div className={collapsed ? `${SIDEBAR_BODY_CLASS} bg-[hsl(var(--df-surface-primary))] border-0.5` : SIDEBAR_BODY_CLASS} data-testid="sidebar" id="frame-peek-popover" data-focus-region={collapsed ? "navigation" : undefined} data-focus-region-holds={collapsed ? "contains" : undefined} inert={collapsed && !peekOpen ? true : undefined}
+    <Body className={collapsed ? `${SIDEBAR_BODY_CLASS} bg-[hsl(var(--df-surface-primary))] border-0.5` : SIDEBAR_BODY_CLASS} data-testid="sidebar" id="frame-peek-popover" data-focus-region={collapsed ? "navigation" : undefined} data-focus-region-holds={collapsed ? "contains" : undefined} inert={collapsed && !peekOpen ? true : undefined}
       onPointerEnter={collapsed ? onPeekEnter : undefined} onPointerLeave={collapsed ? onPeekLeave : undefined}>
       {/* R2-appswitch W2: shared-22 DN `ae` puts the same switch at the top of the peek card while collapsed. */}
-      {collapsed && <SourceAppSwitch placement="peek" mode={mode} homeMode={homeMode} onMode={onMode} chord />}
+      {!frameSlot && collapsed && <SourceAppSwitch placement="peek" mode={mode} homeMode={homeMode} onMode={onMode} chord />}
       {/* W14-code r2 fr2-05: GI's FrameSidebarNav child is shared-18 vA, one `flex flex-col flex-1 min-h-0` column holding
           the shrink-0 header and the nav scroller, so the body's gap-2 falls between it, the banner slot and the tray. */}
-      <div className="flex flex-col flex-1 min-h-0">
+      {/* frame slot: KR's aside carries no host focus-region marks, so the column is the "navigation" stop (F6). */}
+      <div className="flex flex-col flex-1 min-h-0" data-focus-region={frameSlot ? "navigation" : undefined} data-focus-region-holds={frameSlot ? "contains" : undefined}>
       <div className="source-sidebar-header">
       {mode === 'code' ? <SidebarSearchContext.Provider value={{open: entry => setShowSearch?.(entry), shortcut: 'cmd+k'}}>
         <SidebarSearchField/>
@@ -2084,41 +2150,13 @@ export function SourceSidebar({
           df-footer-row: LC = pw (sidebar-groups.js:5225-5310, hideSuffix false) in
           min-w-0 flex-1, then df-footer-aux. W14-code r3 fr3-05: shared-22 GI `It = … i(Ys, "df-bottom-tray shrink-0")`,
           Ys = shared-5 pS "static-composer-boot-fade". */}
-      <div className={`${staticComposerBootFade} df-bottom-tray shrink-0`}>
-        <div className="df-footer-row account-footer shrink-0 flex items-center gap-[var(--df-footer-gap)]">
-          <div className="min-w-0 flex-1">
-            <button type="button" data-testid="user-menu-button" aria-label={t("Account menu")}
-              className="df-user-menu-btn account-button cds-reset flex h-[max(28px,var(--df-footer-btn-size))] max-w-full items-center gap-[var(--df-row-gap)] rounded-[var(--df-radius-pill)] ps-[var(--df-row-px)] pe-2 text-start outline-none hover:bg-[var(--df-hover)] focus-visible:shadow-focus"
-              {...menuTriggerProps({ open: accountMenuOpen, onOpen: (entry, event) => onAccount?.(event, entry) })} onClick={(event) => onAccount?.(event, keyboardEntry(event))}>
-              {/* shared-19 E0 avatar slot: C0 = CDS Avatar pp{name, src, size:"sm", aria-hidden} while __gb__496524976
-                  (S0) is on; off, T0's static Spark at 16. W14-code r4 gates-r4-06 (E95): the desktop's Uon does not
-                  serve 496524976, so host-growthbook leaves it off and the slot is the static Spark, as on the 3P
-                  desktop; E0's own S0 read stays, as in shared-19. */}
-              <span className="df-on-rail relative flex w-[var(--df-leading-slot)] shrink-0 items-center justify-center">{hostGrowthBookFlag("__gb__496524976")
-                ? <CdsAvatar name={avatarName ?? accountName} size="sm" aria-hidden />
-                : <SourceSpark size={16} className="shrink-0" />}</span>
-              {/* W12b-FTS-1 shared-19 $N: the suffix span and the xs CaretDown both carry df-user-menu-trailing (shared-styles
-                  pushes the last one to the row end while df-footer-aux is empty); the name is df-footer-name with no truncate
-                  (the df-footer-suffix mask fades it); the dot and suffix are text-muted-as-secondary. */}
-              <span className="df-user-menu-trailing flex min-w-0 gap-1 overflow-hidden text-[length:var(--df-row-font)] df-footer-suffix items-baseline">
-                <span className="df-footer-name whitespace-nowrap text-secondary max-w-full shrink-0">{accountName}</span>
-                {accountLabel && <>
-                  <span aria-hidden="true" className="df-footer-suffix-text text-muted-as-secondary">·</span>
-                  <span className="df-footer-suffix-text min-w-0 whitespace-nowrap text-muted-as-secondary">{accountLabel}</span>
-                </>}
-              </span>
-              {accountName !== "" && <Icon name="CaretDown" size={12} className="df-user-menu-trailing shrink-0 text-muted-as-secondary" />}
-            </button>
-          </div>
-          {/* sidebar-main.js:14185-14235 hL df-footer-aux (vL/yL/gL) is empty in code mode. W14-code r4 复核 (E95):
-              the host's Connection settings control (en-US has no such string) is gone; reconnecting stays on the
-              session-list error's Retry (onRetryLoad), the composer's "Connection to {core} lost." Reconnect and Settings' Reconnect. */}
-          <div className="df-footer-aux ml-auto flex shrink-0 items-center" />
-        </div>
-      </div>
-    </div>
-    {setSidebarWidth && <SidebarResizeHandle width={sidebarWidth} minWidth={sidebarFloor} collapsed={collapsed} onCommit={setSidebarWidth} onCollapse={onCollapse} onCollapsedChange={onCollapsedChange} />}
+      {!frameSlot && <div className={`${staticComposerBootFade} df-bottom-tray shrink-0`}>
+        <SourceSidebarAccountRow displayName={accountName} accountLabel={accountLabel} avatarName={avatarName} onAccount={onAccount} accountMenuOpen={accountMenuOpen} />
+      </div>}
+    </Body>
+    {!frameSlot && setSidebarWidth && <SidebarResizeHandle width={sidebarWidth} minWidth={sidebarFloor} collapsed={collapsed} onCommit={setSidebarWidth} onCollapse={onCollapse} onCollapsedChange={onCollapsedChange} />}
     <SidebarDragGhost drag={drag} />
+    </>}
     {menu && <SidebarListContext.Provider value={{getList:()=>navRef.current}}><SourceSidebarMenu key={menu.token} anchor={menu.anchor} point={menu.point} kind={menu.kind} initialHighlight={menu.entry ?? "popup"}
       // The official sidebar menus (CDS Dropdown / ContextMenu popups: shared-21 PJ, shared-20 group menu, _B) carry no
       // aria-label of their own, and en-US has none of the host's former names for them.
@@ -2251,6 +2289,14 @@ export function SourceSidebar({
           preferences.collapsedNested, (collapsedNested) => updatePreferences({ ...preferences, collapsedNested })) : null,
         ...(showSearch && typeof paletteCommands === "function" ? paletteCommands() : null) })}
       onOpenSession={onOpen} onStartSession={onStartSession} onNew={onNew} onProject={onProject} surface={mode} />}
-  </aside>;
+  </Aside>;
 }
+// The frame slot's stand-ins for the legacy aside / body elements (KR draws the aside and the body). The aside's host scope
+// stays as a display:contents element: source-sidebar.css / source-surfaces.css and the session chord / cycle models
+// select the list through `.source-sidebar` and its data-surface / data-code-list marks.
+function FrameSlotScope({ children, "data-surface": surface, "data-code-list": codeList }) {
+  return <div className="source-sidebar contents" data-surface={surface} data-code-list={codeList}>{children}</div>;
+}
+function FrameSlotPassthrough({ children }) { return <>{children}</>; }
 
+export { SidebarResizeHandle as SourceSidebarResizeHandle };

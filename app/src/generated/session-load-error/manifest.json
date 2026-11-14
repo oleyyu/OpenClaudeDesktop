@@ -1,606 +1,739 @@
 {
-  "referenceVersion": "3.6556.2",
-  "referenceSnapshot": "snapshots/claude-3.6556.2-20261025-192807",
+  "referenceVersion": "4.16336.0",
+  "referenceSnapshot": "snapshots/claude-4.16336.0-20261104",
   "generator": "scripts/extract-session-load-error.mjs",
   "adapterModule": "src/source-session-load-error-adapters.jsx",
+  "sharedGraph": "cds-core",
   "modules": [
     {
-      "target": "error-page.mjs",
-      "source": "shared-46-BIbZBGFq.js",
-      "sourceSha256": "ab4d599f5c2e563a1365c06f58ef96edb025106aea10e73a9c329cac899e3540",
-      "sha256": "ba51361c47d23f5170bc32c3521856ed2edd441ed69b88586016dc15705fbf36",
-      "referenceVersion": "3.6556.2",
+      "target": "compiler-helpers.mjs",
+      "source": "shared-frame-CJdE5Ria.js",
+      "sourceSha256": "b6a5f61e0f243a48215fab7f3d65958d693d715e565f57af4e0ff35ae14697bc",
+      "sha256": "9cfb3366ca7381d05b65d7f57ed304727a4cf5f3adc3c8350189740d51a36ad3",
+      "referenceVersion": "4.16336.0",
       "bindings": [
         {
-          "name": "wR",
-          "sha256": "993e9ca05a8b16d719426b407762dd009012de68b90a74f92243cfcdbcca2df7"
+          "name": "J9",
+          "sha256": "ca7ddb6034a5a5374320a12a4daca9ac6443bce6f91d7df5d979795e575805fb"
+        },
+        {
+          "name": "J8",
+          "sha256": "eb5d795f0739cc3c17f8a0c98006f81d73ae4c3af3e4769afcbf8c5bfb2c9ed0"
+        },
+        {
+          "name": "J1",
+          "sha256": "90115ec6fab3fa87e5595ba8510be0d8358228a2ebaa4f401f3f57cc68da1c02"
+        },
+        {
+          "name": "J2",
+          "sha256": "59d967dff21fbdf7fdd4cc4a9fb5c16c477c0c8d716bbdf2b812ed4ba8993eb4"
+        },
+        {
+          "name": "J3",
+          "sha256": "a3a151da51d4962a782d5de1c3f201d436f6f005690149fd8e54064016e76c22"
+        },
+        {
+          "name": "K1",
+          "sha256": "3ba1df1b203477e5f87a3385a3cca1c53d9c5b253a9c765e72bdc6ac93e0dfc5"
+        },
+        {
+          "name": "K2",
+          "sha256": "7d4968137ebec422b65baa77806c57a6be36ff55d62953d1e2321748c0ab4751"
+        },
+        {
+          "name": "K3",
+          "sha256": "aedf510a103c06562de3370ca0eaf1572c6d6f7725ab1b51730bfb0ec71e8f5f"
+        }
+      ],
+      "imports": [
+        {
+          "local": "Je",
+          "from": "react/compiler-runtime",
+          "name": "c",
+          "via": "vendor-frame-BckkO60Y.js:ko",
+          "kind": "react"
+        }
+      ],
+      "exports": {
+        "J9": "reactMemoCache",
+        "J8": "memoSentinel",
+        "J1": "memoChanged1",
+        "K1": "memoStore1",
+        "J2": "memoChanged2",
+        "K2": "memoStore2",
+        "J3": "memoChanged3",
+        "K3": "memoStore3"
+      },
+      "heldByCdsCore": [
+        "J9",
+        "J8",
+        "J1",
+        "K1",
+        "J2",
+        "K2",
+        "J3",
+        "K3"
+      ]
+    },
+    {
+      "target": "error-page.mjs",
+      "source": "shared-55-BRv2XBP7.js",
+      "sourceSha256": "84e184eeb3f901dcf2ae406c08be9dc7d96b8119e493b026f8f5d80f4537844e",
+      "sha256": "dfd20ebf0d764f59bc09d19f8e893489d8295ef5e4842ae65d9daae8dc9a8fc7",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "QV",
+          "sha256": "ed17d7c5993840db699cfae18d2b6e5b44499a5844a4daede11f9601edb8bb63"
         }
       ],
       "imports": [
         {
           "local": "J9",
-          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "from": "./compiler-helpers.mjs",
           "name": "reactMemoCache",
-          "via": "shared-frame-6jtSkIit.js:ip",
-          "kind": "view-tabs",
+          "via": "shared-frame-CJdE5Ria.js:hm",
+          "kind": "generated",
           "original": "J9"
         },
         {
-          "local": "ot",
+          "local": "qt",
           "from": "../../source-session-load-error-adapters.jsx",
           "name": "useRouter",
-          "via": "shared-25-DOWZRSlq.js:yp",
+          "via": "shared-25-D-aF0gt9.js:em",
           "kind": "adapter",
-          "original": "Jd"
+          "original": "$u"
         },
         {
           "local": "J1",
-          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "from": "./compiler-helpers.mjs",
           "name": "memoChanged1",
-          "via": "shared-frame-6jtSkIit.js:Qf",
-          "kind": "view-tabs",
+          "via": "shared-frame-CJdE5Ria.js:lm",
+          "kind": "generated",
           "original": "J1"
         },
         {
           "local": "K1",
-          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "from": "./compiler-helpers.mjs",
           "name": "memoStore1",
-          "via": "shared-frame-6jtSkIit.js:op",
-          "kind": "view-tabs",
+          "via": "shared-frame-CJdE5Ria.js:_m",
+          "kind": "generated",
           "original": "K1"
         },
         {
-          "local": "o",
+          "local": "a",
           "from": "react/jsx-runtime",
           "name": "jsx",
-          "via": "vendor-frame-CnSY1sxv.js:Ha",
+          "via": "vendor-frame-BckkO60Y.js:Ga",
           "kind": "react"
         },
         {
           "local": "J2",
-          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "from": "./compiler-helpers.mjs",
           "name": "memoChanged2",
-          "via": "shared-frame-6jtSkIit.js:$f",
-          "kind": "view-tabs",
+          "via": "shared-frame-CJdE5Ria.js:um",
+          "kind": "generated",
           "original": "J2"
         },
         {
           "local": "K2",
-          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "from": "./compiler-helpers.mjs",
           "name": "memoStore2",
-          "via": "shared-frame-6jtSkIit.js:sp",
-          "kind": "view-tabs",
+          "via": "shared-frame-CJdE5Ria.js:vm",
+          "kind": "generated",
           "original": "K2"
         },
         {
-          "local": "E",
-          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "local": "j",
+          "from": "../cds-core/shared-frame.mjs",
           "name": "CdsButton",
-          "via": "shared-frame-6jtSkIit.js:Eu",
-          "kind": "view-tabs",
-          "original": "Uu"
+          "via": "shared-frame-CJdE5Ria.js:Id",
+          "kind": "shared-graph",
+          "original": "Xu",
+          "linkedSha256": "4b503923352833f023d774449ed5511998ad05447beca0f4fd7643da07bba1e3"
         },
         {
-          "local": "Z",
+          "local": "Q",
           "from": "../../source-session-load-error-adapters.jsx",
           "name": "FormattedMessage",
-          "via": "vendor-intl-DYfox5Co.js:l",
+          "via": "vendor-intl-BJgYK7RA.js:l",
           "kind": "adapter",
           "original": "Gt"
         },
         {
           "local": "J3",
-          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "from": "./compiler-helpers.mjs",
           "name": "memoChanged3",
-          "via": "shared-frame-6jtSkIit.js:ep",
-          "kind": "view-tabs",
+          "via": "shared-frame-CJdE5Ria.js:dm",
+          "kind": "generated",
           "original": "J3"
         },
         {
           "local": "K3",
-          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "from": "./compiler-helpers.mjs",
           "name": "memoStore3",
-          "via": "shared-frame-6jtSkIit.js:cp",
-          "kind": "view-tabs",
+          "via": "shared-frame-CJdE5Ria.js:ym",
+          "kind": "generated",
           "original": "K3"
         },
         {
-          "local": "u",
+          "local": "s",
           "from": "react/jsx-runtime",
           "name": "jsxs",
-          "via": "vendor-frame-CnSY1sxv.js:Ua",
+          "via": "vendor-frame-BckkO60Y.js:Ka",
           "kind": "react"
         }
       ],
       "exports": {
-        "wR": "ErrorPage"
-      }
+        "QV": "ErrorPage"
+      },
+      "locate": {
+        "QV": "unique"
+      },
+      "heldByCdsCore": []
     },
     {
       "target": "chunk-reload-state.mjs",
-      "source": "shared-52-uHFNjl7C.js",
-      "sourceSha256": "83537e599f2f6720c2a0a245162e44a5c7431e22872a32ed16ea716e65ded08a",
-      "sha256": "d7aadf703810c8bdcba15a3a99269942ddb6bd8a3b088af75b71557f33a1dcb6",
-      "referenceVersion": "3.6556.2",
+      "source": "shared-62-DoCqVpIq.js",
+      "sourceSha256": "15a90aabd711c4209050f53ef48b2754661e19b090936fdc6d37346bd4cf4e56",
+      "sha256": "198cb5f677176c1277f2ea76eb61c1483c179450e8fdcabffa1e4d97f359038a",
+      "referenceVersion": "4.16336.0",
       "bindings": [
         {
-          "name": "pf",
-          "sha256": "f8a9762a2dddf83f9bc4ea3aed73643df7545af9500e5159d3813d168a64dbc5"
+          "name": "Vd",
+          "sha256": "f85b291e22fc17eb75974b9f6da9f001c14e6ab3e5ae4dfe6e215bbfa04a215b"
         },
         {
-          "name": "gf",
-          "sha256": "48a4f17e0956c50f1a2e03c822595876f524b75ec99ddf6e1dfb253f488481d7"
-        },
-        {
-          "name": "vf",
-          "sha256": "62f1b2b86d323dfee00e01da9c7cfc3a3137a95158da2897d5194ede94061352"
-        },
-        {
-          "name": "kf",
-          "sha256": "33844734adcdbb820124234722861bc9ebec1cc05a16a2d8c415cd9687cf3003"
-        },
-        {
-          "name": "Af",
-          "sha256": "3212878cd3e40efc4855c3b585fd2d8ca67bef9bab9c05b939606ca8c44b7317"
-        },
-        {
-          "name": "jf",
-          "sha256": "03da84b581322a7fa08d8aebfc24754b480bdd30ec3e6e64cb924de26148ae10"
-        }
-      ],
-      "imports": [],
-      "exports": {
-        "pf": "CHUNK_RELOAD_SPACING_MS",
-        "jf": "markPageUnloading",
-        "vf": "isChunkReloadPending"
-      }
-    },
-    {
-      "target": "chunk-heal-probe.mjs",
-      "source": "shared-26-CGuBxVt9.js",
-      "sourceSha256": "ae470abead4f769bdf0661897b47c2b17f3a7f706c725e97b29f49e6060e57b3",
-      "sha256": "ba4f83aac0079d3bcb67f68fcd1fb9761b15ea3dd3417130601b83263288316d",
-      "referenceVersion": "3.6556.2",
-      "bindings": [
-        {
-          "name": "Rd",
-          "sha256": "eace6be6b1fcdf182fbf8c4972ef98c394146b5d341052d374e5e0c329cd4238"
-        }
-      ],
-      "imports": [],
-      "exports": {
-        "Rd": "CHUNK_HEAL_PROBE_MS"
-      }
-    },
-    {
-      "target": "chunk-heal-gate.mjs",
-      "source": "shared-15-BvlV43cI.js",
-      "sourceSha256": "60b50b149da73e5f15e4c4d2a496a0203f105f9866e996d7c9c0523538557225",
-      "sha256": "a4a70a03de9045f7ce6b097aedf5fd7fe8e08cbd159e512b055db577b7bddb42",
-      "referenceVersion": "3.6556.2",
-      "bindings": [
-        {
-          "name": "ca",
-          "sha256": "41e77cd35b485059802421053d172cd4b80b656e2d711cc6f8e14c87b8cc1ecf"
-        },
-        {
-          "name": "la",
-          "sha256": "eeced3733c8a5f50b834d967168928a57d80ac70b0a481e89e31626762fb8207"
-        },
-        {
-          "name": "Pa",
-          "sha256": "7eaebea8798959dbcb5a7e90eed33a7e1ce25b3e5adf9cd70b9b9da542029ea4"
+          "name": "qd",
+          "sha256": "dee9b56b2bf2fd4d00115a495f023055c63d5aa7a2c42c33c86487991d9d8b1c"
         }
       ],
       "imports": [
         {
-          "local": "U",
-          "from": "../../source-session-load-error-adapters.jsx",
-          "name": "growthBookValue",
-          "via": "shared-0-DDOOdL6P.js:yb",
-          "kind": "adapter",
-          "original": "Zo"
-        },
-        {
-          "local": "Fa",
-          "from": "../../source-session-load-error-adapters.jsx",
-          "name": "resolveChunkHealTarget",
-          "via": "shared-15-BvlV43cI.js:Fa",
-          "kind": "adapter",
-          "original": "Fa"
+          "local": "Gd",
+          "from": "../cds-core/shared-62.mjs",
+          "name": "Gd",
+          "via": "shared-62-DoCqVpIq.js#Gd",
+          "kind": "shared-graph",
+          "original": "Gd",
+          "linkedSha256": "864d600d79521ad2181844a98672d2b72445a04995fe97c158324aa65d034a5f"
         }
       ],
       "exports": {
-        "Pa": "chunkHealTarget",
-        "ca": "CHUNK_HEAL_FLAG",
-        "la": "chunkHealFlagOn"
-      }
+        "Vd": "CHUNK_RELOAD_SPACING_MS",
+        "qd": "isChunkReloadPending"
+      },
+      "locate": {
+        "Vd": "import",
+        "qd": "import"
+      },
+      "heldByCdsCore": []
+    },
+    {
+      "target": "chunk-heal-probe.mjs",
+      "source": "shared-26-B-POtn5S.js",
+      "sourceSha256": "c908911d08e9fa275c39f71e0f1f35c1ac65961c285bdd1a233b9745f3b6f5ed",
+      "sha256": "2748cf3a8af89007a508358bcdb8b92659585038655eae07eea91989d7e6e63f",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "yu",
+          "sha256": "d1e80770eb693cf9e7af354b86474555829a4cfa85c4377ec4891b99fa341e4d"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "yu": "CHUNK_HEAL_PROBE_MS"
+      },
+      "locate": {
+        "yu": "import"
+      },
+      "heldByCdsCore": []
+    },
+    {
+      "target": "chunk-heal-gate.mjs",
+      "source": "shared-100-BBQR7Gmd.js",
+      "sourceSha256": "2667959abe40092ed520c34cfb3e66e4633df852ef0aec88850c88bd1a7a3d7b",
+      "sha256": "fe59357f9840d49cf4c85f831a93b94f56033c112eafc26b0fa361fc414614d4",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "oo",
+          "sha256": "75295bb7054489934cc195ccab5cf7c5c38108184ca0e19090fc34c6014bd2b1"
+        },
+        {
+          "name": "so",
+          "sha256": "90336cce40b39b33df42c804e775ed564da7ef49d1e3bdad2f5870bcfa31793c"
+        },
+        {
+          "name": "No",
+          "sha256": "511859307fa684f1e4b68b7b92c79d33cc4e83a9f27e1bbbe4640fefdba6e588"
+        }
+      ],
+      "imports": [
+        {
+          "local": "N",
+          "from": "../../source-session-load-error-adapters.jsx",
+          "name": "growthBookValue",
+          "via": "shared-0-CnnWnVrT.js:Rx",
+          "kind": "adapter",
+          "original": "Uu"
+        },
+        {
+          "local": "Po",
+          "from": "../../source-session-load-error-adapters.jsx",
+          "name": "resolveChunkHealTarget",
+          "via": "shared-100-BBQR7Gmd.js:Po",
+          "kind": "adapter",
+          "original": "Po"
+        }
+      ],
+      "exports": {
+        "No": "chunkHealTarget",
+        "oo": "CHUNK_HEAL_FLAG",
+        "so": "chunkHealFlagOn"
+      },
+      "locate": {
+        "No": "unique",
+        "oo": {
+          "readBy": "No"
+        },
+        "so": {
+          "readBy": "No"
+        }
+      },
+      "heldByCdsCore": []
     },
     {
       "target": "pane-retry-claim.mjs",
-      "source": "shared-15-BvlV43cI.js",
-      "sourceSha256": "60b50b149da73e5f15e4c4d2a496a0203f105f9866e996d7c9c0523538557225",
-      "sha256": "5baadf488aa78cbce2f06a2de99cc1b59f0cf528a27cb21e05f9b1fc14568e2e",
-      "referenceVersion": "3.6556.2",
+      "source": "shared-100-BBQR7Gmd.js",
+      "sourceSha256": "2667959abe40092ed520c34cfb3e66e4633df852ef0aec88850c88bd1a7a3d7b",
+      "sha256": "99e2b3164f99f7e98efeaa3f24f6963519216c2420a2fe86814861a83e833b94",
+      "referenceVersion": "4.16336.0",
       "bindings": [
         {
-          "name": "Ba",
-          "sha256": "8b16942f36fdf965d0884ba2bbc679da820745f7426ddc37c50872a6e00367a2"
+          "name": "zo",
+          "sha256": "dd0b24e08821933a75e2be03048da2c28b182befe34c706e43a8de8ba063eb67"
         },
         {
-          "name": "Ha",
-          "sha256": "9697bbe4f2ca733e61ab78918c8b090337c0c50232a08447d46f35718e171080"
+          "name": "Vo",
+          "sha256": "563d7a625d2d93be46d60e0fcb3a34d41815f5c243fd71fef61e7d3916de504a"
         },
         {
-          "name": "Ja",
-          "sha256": "7980308c061a5c2ed0f39cf0fb30c00e73735afd51167d491a8f7f0da7d252f1"
+          "name": "qo",
+          "sha256": "f5bbe71c2a2f644b69a1491913e240157e6c48d821d01bbb32c286265f3798a3"
         },
         {
-          "name": "Xa",
-          "sha256": "7f68a982db0c3ca19dd9c3be46ce09210f287ef30c1fb256d4759976bd70fb9a"
+          "name": "Yo",
+          "sha256": "15ef5ed1f64d60a4f5e6526ee20a722eb1748b7b9cce702755942714c76ac518"
         },
         {
-          "name": "Qa",
-          "sha256": "d5d2f4a21fa164e70b001df0fa7c08af15d3f86e939f614883809c8030057d5b"
+          "name": "Zo",
+          "sha256": "5e8f3b52c8087441249d4e6fbe8b9b38bbe84398604e49b38141d9dd132624b8"
         },
         {
-          "name": "eo",
-          "sha256": "00c0bb59482972d175bfb1486f5f88debfe3f897541a6076d18721068351b5e9"
+          "name": "$o",
+          "sha256": "742175558eafe34e13dcbd0295ce9825467d6a9c8a7b914592ab81196344abbd"
         }
       ],
       "imports": [],
       "exports": {
-        "Qa": "claimPaneRetry",
-        "Ja": "PANE_RETRY_CLAIM_PREFIX"
-      }
+        "Zo": "claimPaneRetry",
+        "qo": "PANE_RETRY_CLAIM_PREFIX"
+      },
+      "locate": {
+        "Zo": "import",
+        "qo": {
+          "readBy": "Zo"
+        }
+      },
+      "heldByCdsCore": []
     },
     {
       "target": "reload-blockers.mjs",
-      "source": "shared-104-CTONUSaz.js",
-      "sourceSha256": "621e1186f00f5767be314b43a3f7c663adedfee5e2592ceda05c83be0baa58b6",
-      "sha256": "8c509d0239ce08ac1eb0e00712e6cad9be3fdcabedaff3a91c71c3bbd0e87fb6",
-      "referenceVersion": "3.6556.2",
+      "source": "shared-123-1Hc1RTKl.js",
+      "sourceSha256": "38122e6a90c5a0af58a5f3d2c98176fd6de1f4a8055529e304317cda513e098a",
+      "sha256": "982a0d52defbe41f51c71e38749979f87803fb415f4163b974dc2828825c640d",
+      "referenceVersion": "4.16336.0",
       "bindings": [
         {
-          "name": "oc",
-          "sha256": "f7f6922b094a4ecfde1a13dd167e7caed5c43c9f8f9138251efb65d8812c48d4"
+          "name": "Wc",
+          "sha256": "c23188b06c03042bb90a7024104c87d9e79bd05049b15ceb40d489c487944b4e"
         },
         {
-          "name": "sc",
-          "sha256": "90b241ba6bcd4989281b18e289f891703550ba61b6e4903ec90a028a527af2f6"
+          "name": "Gc",
+          "sha256": "bcae61e462832c6d5dabe038457923067003e270afe735e71517a1698ecd515f"
         },
         {
-          "name": "uc",
-          "sha256": "fa260d7a97559c73081ea146112652836fdbeb3db52c901e23df6c428954589f"
+          "name": "Xc",
+          "sha256": "d5c5767656d40b12d8b6ea7d872bf4b18a75471bc7907d4ac1819d70928014f9"
         },
         {
-          "name": "dc",
-          "sha256": "5ad568fa710b96fe5880b56bffacd68ca05f5501b3c8c3edb1033806610558b2"
+          "name": "Zc",
+          "sha256": "208ccb3ca32841ceb42398aeb870c4b14a1f9e7c538afd69e69acf0398765b99"
         }
       ],
       "imports": [],
       "exports": {
-        "dc": "reloadBlocker",
-        "sc": "registerReloadBlocker"
-      }
+        "Zc": "reloadBlocker",
+        "Gc": "registerReloadBlocker"
+      },
+      "locate": {
+        "Zc": "import",
+        "Gc": "unique"
+      },
+      "heldByCdsCore": []
     },
     {
       "target": "unload-veto.mjs",
-      "source": "c7f0c0d23-BeKocnIJ.js",
-      "sourceSha256": "4c8b7f5195a3e6a0d991c2dd717e0d284bbe554802f96df794920dbd1d7d8365",
-      "sha256": "879b870a2309398b34ce662e015846f1ac84558365b93927a6bb06f1f5ca7a75",
-      "referenceVersion": "3.6556.2",
+      "source": "c7f0c0d23-CMovzUAr.js",
+      "sourceSha256": "b708f545559665049816885273aa8923cf5b9aed7575cf0fcf9d25cb57c6d282",
+      "sha256": "01aac414ff3dd36e5d87ab89c54fa7dd92f3e85a8acef735e57a9dd2365f3eca",
+      "referenceVersion": "4.16336.0",
       "bindings": [
         {
-          "name": "a",
-          "sha256": "b948af37b11cae871e6b34628f828ba198c60f8508477b921f70ca9b8f31e5aa"
-        },
-        {
-          "name": "o",
-          "sha256": "8e7c09c01ff3d032ed88137a8e1844649dc4d18d8f86269435deedc004bfe57d"
-        },
-        {
           "name": "s",
-          "sha256": "d518de5578cd768fff177281c5bdd55fa349b59ee2556b6623da0c627bab7239"
+          "sha256": "913d31241039bf05540dc1fe74898552dc41c0eb409bee0e6fbdc2363b5057ad"
+        },
+        {
+          "name": "c",
+          "sha256": "e21f68a0c19df22655034a695fd7bd6a070a3a289b027fa5ee6012e4a0b80a4e"
+        },
+        {
+          "name": "d",
+          "sha256": "be7b4c8c9a02fe95d1d8e219a82df02ffd78a82ba9afd10c243945cec7d9a248"
         }
       ],
       "imports": [],
       "exports": {
-        "o": "unloadHeld"
-      }
+        "c": "unloadHeld"
+      },
+      "locate": {
+        "c": "import"
+      },
+      "heldByCdsCore": []
     },
     {
       "target": "session-load-error.mjs",
-      "source": "cc43287c9-Me-M2ucD.js",
-      "sourceSha256": "fe2e064c6172162094dff263210a6e7e8f163b703471fe20e5f5bf0a1a12ccf2",
-      "sha256": "5f0aff29ae5be85bca2f8589621678a985fa1a0d18b02ae97021596cf30f62ec",
-      "referenceVersion": "3.6556.2",
+      "source": "cc43287c9-dzfX-J5i.js",
+      "sourceSha256": "4a6893cf4d24a16a99c88d0793529ff39cd1cc0abd9527ce263a54d8d26d7f43",
+      "sha256": "9b94bdb9dacccd16ce46f8e9fa7d4d32c4f1b0c57ece4eba69be8299bedae3c9",
+      "referenceVersion": "4.16336.0",
       "bindings": [
         {
-          "name": "iV",
-          "sha256": "41c66890f84dca8c97b95fbc0312b02a4c4177fa0e5f0cefb01a5a8077fb798b"
+          "name": "bG",
+          "sha256": "a70862440a0e3c93a567a708a9d4ac953dd478711969199025a7b82d15094a63"
         },
         {
-          "name": "aV",
-          "sha256": "848ee80080ebc5f79a9387d1b4fcb3e04c5e24ab8103f5981f28ac8745414d6a"
+          "name": "xG",
+          "sha256": "83b433aedd3d9946c1acc6bcfb6a2ce6f6d5892318373f012fd222377204f91a"
         }
       ],
       "imports": [
         {
           "local": "J9",
-          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "from": "./compiler-helpers.mjs",
           "name": "reactMemoCache",
-          "via": "shared-frame-6jtSkIit.js:ip",
-          "kind": "view-tabs",
+          "via": "shared-frame-CJdE5Ria.js:hm",
+          "kind": "generated",
           "original": "J9"
         },
         {
-          "local": "qd",
+          "local": "o_",
           "from": "../../source-session-load-error-adapters.jsx",
           "name": "useIntl",
-          "via": "vendor-intl-DYfox5Co.js:p",
+          "via": "vendor-intl-BJgYK7RA.js:p",
           "kind": "adapter",
           "original": "q"
         },
         {
-          "local": "f",
+          "local": "M",
           "from": "react",
           "name": "useRef",
-          "via": "vendor-frame-CnSY1sxv.js:Co",
+          "via": "vendor-frame-BckkO60Y.js:wo",
           "kind": "react"
         },
         {
           "local": "J8",
-          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "from": "./compiler-helpers.mjs",
           "name": "memoSentinel",
-          "via": "shared-frame-6jtSkIit.js:rp",
-          "kind": "view-tabs",
+          "via": "shared-frame-CJdE5Ria.js:mm",
+          "kind": "generated",
           "original": "J8"
         },
         {
-          "local": "E",
+          "local": "D",
           "from": "react",
           "name": "useEffect",
-          "via": "vendor-frame-CnSY1sxv.js:ho",
+          "via": "vendor-frame-BckkO60Y.js:go",
           "kind": "react"
         },
         {
           "local": "J2",
-          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "from": "./compiler-helpers.mjs",
           "name": "memoChanged2",
-          "via": "shared-frame-6jtSkIit.js:$f",
-          "kind": "view-tabs",
+          "via": "shared-frame-CJdE5Ria.js:um",
+          "kind": "generated",
           "original": "J2"
         },
         {
           "local": "K2",
-          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "from": "./compiler-helpers.mjs",
           "name": "memoStore2",
-          "via": "shared-frame-6jtSkIit.js:sp",
-          "kind": "view-tabs",
+          "via": "shared-frame-CJdE5Ria.js:vm",
+          "kind": "generated",
           "original": "K2"
         },
         {
-          "local": "lM",
+          "local": "BP",
           "from": "../../source-session-load-error-adapters.jsx",
           "name": "forgetScrollAnchors",
-          "via": "cd14a8022-Bt1HiRdE.js:l",
+          "via": "cd14a8022-DdgywyOs.js:u",
           "kind": "adapter",
           "original": "T"
         },
         {
-          "local": "xne",
+          "local": "Cie",
           "from": "../../source-session-load-error-adapters.jsx",
           "name": "forgetRowExpansion",
-          "via": "cc6e9624e-CoHywWvV.js:a",
+          "via": "cc6e9624e-QSsNXeYh.js:a",
           "kind": "adapter",
           "original": "l"
         },
         {
           "local": "J1",
-          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "from": "./compiler-helpers.mjs",
           "name": "memoChanged1",
-          "via": "shared-frame-6jtSkIit.js:Qf",
-          "kind": "view-tabs",
+          "via": "shared-frame-CJdE5Ria.js:lm",
+          "kind": "generated",
           "original": "J1"
         },
         {
           "local": "K1",
-          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "from": "./compiler-helpers.mjs",
           "name": "memoStore1",
-          "via": "shared-frame-6jtSkIit.js:op",
-          "kind": "view-tabs",
+          "via": "shared-frame-CJdE5Ria.js:_m",
+          "kind": "generated",
           "original": "K1"
         },
         {
-          "local": "Es",
+          "local": "tc",
           "from": "./chunk-heal-probe.mjs",
           "name": "CHUNK_HEAL_PROBE_MS",
-          "via": "shared-26-CGuBxVt9.js:Rm",
-          "kind": "generated"
+          "via": "shared-26-B-POtn5S.js:_b",
+          "kind": "generated",
+          "original": "yu"
         },
         {
-          "local": "Qi",
+          "local": "$o",
           "from": "./chunk-reload-state.mjs",
           "name": "CHUNK_RELOAD_SPACING_MS",
-          "via": "shared-52-uHFNjl7C.js:qg",
-          "kind": "generated"
+          "via": "shared-62-DoCqVpIq.js:U_",
+          "kind": "generated",
+          "original": "Vd"
         },
         {
-          "local": "Ki",
-          "from": "./chunk-reload-state.mjs",
-          "name": "markPageUnloading",
-          "via": "shared-52-uHFNjl7C.js:n_",
-          "kind": "generated"
+          "local": "Oo",
+          "from": "../cds-core/shared-62.mjs",
+          "name": "sf",
+          "via": "shared-62-DoCqVpIq.js:$_",
+          "kind": "shared-graph",
+          "original": "sf",
+          "linkedSha256": "27d485bbe352077baefd9127bf20c2c328472f900fbe273fe63467560293d477"
         },
         {
           "local": "J3",
-          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "from": "./compiler-helpers.mjs",
           "name": "memoChanged3",
-          "via": "shared-frame-6jtSkIit.js:ep",
-          "kind": "view-tabs",
+          "via": "shared-frame-CJdE5Ria.js:dm",
+          "kind": "generated",
           "original": "J3"
         },
         {
           "local": "K3",
-          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "from": "./compiler-helpers.mjs",
           "name": "memoStore3",
-          "via": "shared-frame-6jtSkIit.js:cp",
-          "kind": "view-tabs",
+          "via": "shared-frame-CJdE5Ria.js:ym",
+          "kind": "generated",
           "original": "K3"
         },
         {
-          "local": "hh",
+          "local": "Ev",
           "from": "./chunk-heal-gate.mjs",
           "name": "chunkHealTarget",
-          "via": "shared-15-BvlV43cI.js:Ct",
-          "kind": "generated"
+          "via": "shared-100-BBQR7Gmd.js:dt",
+          "kind": "generated",
+          "original": "No"
         },
         {
-          "local": "vc",
+          "local": "$a",
           "from": "./reload-blockers.mjs",
           "name": "reloadBlocker",
-          "via": "shared-104-CTONUSaz.js:Lp",
-          "kind": "generated"
+          "via": "shared-123-1Hc1RTKl.js:Vw",
+          "kind": "generated",
+          "original": "Zc"
         },
         {
-          "local": "zy",
+          "local": "Px",
           "from": "./unload-veto.mjs",
           "name": "unloadHeld",
-          "via": "c7f0c0d23-BeKocnIJ.js:n",
-          "kind": "generated"
+          "via": "c7f0c0d23-CMovzUAr.js:n",
+          "kind": "generated",
+          "original": "c"
         },
         {
-          "local": "Wr",
+          "local": "is",
           "from": "./chunk-reload-state.mjs",
           "name": "isChunkReloadPending",
-          "via": "shared-52-uHFNjl7C.js:$g",
-          "kind": "generated"
+          "via": "shared-62-DoCqVpIq.js:X_",
+          "kind": "generated",
+          "original": "qd"
         },
         {
-          "local": "yh",
+          "local": "Tv",
           "from": "./pane-retry-claim.mjs",
           "name": "claimPaneRetry",
-          "via": "shared-15-BvlV43cI.js:bt",
-          "kind": "generated"
+          "via": "shared-100-BBQR7Gmd.js:ct",
+          "kind": "generated",
+          "original": "Zo"
         },
         {
-          "local": "Ss",
+          "local": "bc",
           "from": "../../source-session-load-error-adapters.jsx",
           "name": "reportChunkCacheHeal",
-          "via": "shared-26-CGuBxVt9.js:Bm",
+          "via": "shared-26-B-POtn5S.js:yb",
           "kind": "adapter",
-          "original": "Kd"
+          "original": "Du"
         },
         {
           "local": "p",
           "from": "react/jsx-runtime",
           "name": "jsx",
-          "via": "vendor-frame-CnSY1sxv.js:Ha",
+          "via": "vendor-frame-BckkO60Y.js:Ga",
           "kind": "react"
         },
         {
-          "local": "Ha",
+          "local": "pa",
           "from": "./error-page.mjs",
           "name": "ErrorPage",
-          "via": "shared-46-BIbZBGFq.js:n",
-          "kind": "generated"
+          "via": "shared-55-BRv2XBP7.js:l",
+          "kind": "generated",
+          "original": "QV"
         }
       ],
       "exports": {
-        "aV": "SessionLoadError",
-        "iV": "canReloadPane"
-      }
+        "xG": "SessionLoadError",
+        "bG": "canReloadPane"
+      },
+      "locate": {
+        "xG": "unique",
+        "bG": {
+          "readBy": "xG"
+        }
+      },
+      "heldByCdsCore": []
     }
   ],
   "callSites": [
     {
-      "source": "c11959232-TLc_9Vpx.js",
-      "binding": "P_",
-      "role": "Main pane: EpitaxyChatPanel boundary (resetOn = mountKey), fallback aV with the session id",
-      "sourceSha256": "b8eca92e0200c48142b8e20ec7040bb1608c15ec07c4c43ea1de2240896e82b5",
-      "sha256": "8d11c08e30e313bb14c50194cc497383f1b9131217e09e2ff745003e3752e3a6",
+      "source": "c11959232-D8gLbLAI.js",
+      "binding": "Pv",
+      "role": "Main pane: EpitaxyChatPanel boundary (resetOn = mountKey), fallback xG with the session id",
+      "sourceSha256": "5e00db02052a59a16c2337b6935b5de469d310111feb43ecd46190984100a6a9",
+      "sha256": "21219d74f782b791f79b72deb8b8fdb7b9706565ec8a26a8893edf7dcd712973",
       "features": [
         "componentName: \"EpitaxyChatPanel\",",
-        "resetOn: o,",
-        "{ feature: \"epitaxy\" }",
-        "(s = { sessionId: a }),",
         {
-          "loose": "(c = (e, t) => i(ls, { error: e, reset: t, sessionId: a })),"
+          "loose": "resetOn: o,"
+        },
+        "{ feature: \"epitaxy\" }",
+        {
+          "loose": "(y = { sessionId: a }),"
+        },
+        {
+          "loose": "(b = (e, t) => i(bs, { error: e, reset: t, sessionId: a })),"
         },
         "componentName: \"EpitaxyAgentGraphView\","
       ],
       "imports": {
-        "ls": "cc43287c9-Me-M2ucD.js:M (aV)",
-        "On": "shared-26-CGuBxVt9.js:fh ($l)"
+        "bs": "cc43287c9-dzfX-J5i.js:j (xG)",
+        "pn": "shared-26-B-POtn5S.js:$b (Ds)"
       }
     },
     {
-      "source": "c11959232-TLc_9Vpx.js",
-      "binding": "F_",
+      "source": "c11959232-D8gLbLAI.js",
+      "binding": "Fv",
       "role": "Secondary pane: the same boundary, resetOn = the session id or the pane draft key",
-      "sourceSha256": "b8eca92e0200c48142b8e20ec7040bb1608c15ec07c4c43ea1de2240896e82b5",
-      "sha256": "9e7979a2d9bf77a7850d29283b2474582ae538a9f586577bc0552713711c37ea",
+      "sourceSha256": "5e00db02052a59a16c2337b6935b5de469d310111feb43ecd46190984100a6a9",
+      "sha256": "f14da811ef7b61e961214e0cbf0be940c793346903212ac4ffb1ef74f59a3277",
       "features": [
         "m = r ?? `pane-draft-${a ?? o}`,",
-        "resetOn: m,",
+        {
+          "loose": "resetOn: m,"
+        },
         "componentName: \"EpitaxyChatPanel\",",
         "{ feature: \"epitaxy\", pane: \"secondary\" }",
         {
-          "loose": "(_ = (e, t) => i(ls, { error: e, reset: t, sessionId: r })),"
+          "loose": "(_ = (e, t) => i(bs, { error: e, reset: t, sessionId: r })),"
         }
       ],
       "imports": {
-        "ls": "cc43287c9-Me-M2ucD.js:M (aV)",
-        "On": "shared-26-CGuBxVt9.js:fh ($l)"
+        "bs": "cc43287c9-dzfX-J5i.js:j (xG)",
+        "pn": "shared-26-B-POtn5S.js:$b (Ds)"
       }
     },
     {
-      "source": "c5638815a-C5PjpJjD.js",
-      "binding": "dt",
-      "role": "Pop-out window: the same boundary with its own sanitizer; a chunk failure (p) rethrows past it",
-      "sourceSha256": "415b29958cad08317e56dc72de2f7e53d72e38b9af0d916276ef3c957fdb8f52",
-      "sha256": "310379a289670ec1ee53b03c44eaa4961b990e78ac655596910de462bde1d674",
+      "source": "c5638815a-DZAqfzwl.js",
+      "binding": "ct",
+      "role": "Pop-out window: the same boundary with its own sanitizer; a chunk failure (u) rethrows past it",
+      "sourceSha256": "38b3aa23452f44e43442dd80619f82d9e3aaaa227ef5e142a8a7b8f0c49889b6",
+      "sha256": "226d6ab28b2449aa0a1bcdf05b6b61e785dfcfad7b6331ae80673fd8259bc069",
       "features": [
         "componentName: \"EpitaxyChatPanel\",",
         "tags: { feature: \"epitaxy\", pane: \"popout\" },",
-        "sanitizeError: ut,",
-        "if (p(e)) throw e;",
-        "return t(ge, { error: e, reset: n, sessionId: i });"
+        {
+          "loose": "sanitizeError: st,"
+        },
+        {
+          "loose": "if (u(t)) throw t;"
+        },
+        {
+          "loose": "return e(le, { error: t, reset: n, sessionId: a });"
+        }
       ],
       "imports": {
-        "ge": "cc43287c9-Me-M2ucD.js:M (aV)",
-        "S": "shared-26-CGuBxVt9.js:fh ($l)"
+        "le": "cc43287c9-dzfX-J5i.js:j (xG)",
+        "b": "shared-26-B-POtn5S.js:$b (Ds)"
       }
     },
     {
-      "source": "cc43287c9-Me-M2ucD.js",
-      "role": "aV is exported as M, and iV is the reload check it reads",
-      "sourceSha256": "fe2e064c6172162094dff263210a6e7e8f163b703471fe20e5f5bf0a1a12ccf2",
+      "source": "cc43287c9-dzfX-J5i.js",
+      "role": "xG is exported as j, and bG is the reload check it reads",
+      "sourceSha256": "4a6893cf4d24a16a99c88d0793529ff39cd1cc0abd9527ce263a54d8d26d7f43",
       "raw": true,
       "features": [
         "Something went wrong loading this session",
         "id:\"z0PjNhLbSp\"",
-        "Ss(t,\"pane_retry\",Es,void 0,e)",
-        "function iV(){return vc()===null&&!zy()}",
-        "aV as M"
+        "bc(t,\"pane_retry\",tc,void 0,e)",
+        "function bG(){return $a()===null&&!Px()}",
+        "xG as j"
       ]
     },
     {
-      "source": "shared-15-BvlV43cI.js",
+      "source": "shared-100-BBQR7Gmd.js",
       "role": "The chunk heal gate and its GrowthBook flag",
-      "sourceSha256": "60b50b149da73e5f15e4c4d2a496a0203f105f9866e996d7c9c0523538557225",
+      "sourceSha256": "2667959abe40092ed520c34cfb3e66e4633df852ef0aec88850c88bd1a7a3d7b",
       "raw": true,
       "features": [
-        "function Pa(e){return la(ca)?Fa(e):void 0}",
-        "ca=\"__gb__982582273\"",
+        "function No(e){return so(oo)?Po(e):void 0}",
+        "oo=\"__gb__982582273\"",
         "__gb__982582273"
       ]
     },
     {
-      "source": "shared-46-BIbZBGFq.js",
+      "source": "shared-55-BRv2XBP7.js",
       "role": "The error page layout",
-      "sourceSha256": "ab4d599f5c2e563a1365c06f58ef96edb025106aea10e73a9c329cac899e3540",
+      "sourceSha256": "84e184eeb3f901dcf2ae406c08be9dc7d96b8119e493b026f8f5d80f4537844e",
       "raw": true,
       "features": [
         "min-h-screen flex flex-col items-center justify-center px-4"

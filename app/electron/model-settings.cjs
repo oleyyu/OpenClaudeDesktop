@@ -385,6 +385,11 @@ function createModelSettings({ getConfig, getClient, app, getHarnessProfile = ()
           keys[name] = value.trim();
         } else if (value === null) delete keys[name];
       }
+      // The saved relay key belongs to the saved relay's origin (as connection-models sends it): a Base URL on another
+      // host or scheme without a key of its own drops it, so the next start never hands relay A's key to relay B.
+      const savedRelay = readConnection().relayBaseURL;
+      if (!(typeof p.relayKey === "string" && p.relayKey.trim()) && keys[prefs().CONNECTION_KEY_RELAY]
+        && connection.relayBaseURL && originOf(connection.relayBaseURL) !== originOf(savedRelay)) delete keys[prefs().CONNECTION_KEY_RELAY];
       if (connection.mode === "relay" && !keys[prefs().CONNECTION_KEY_RELAY]) throw new Error("Enter the relay’s API key.");
       writeAtomic(connectionFile(), JSON.stringify({ version: 1, ...connection }, null, 2) + "\n", 0o644);
       writeKeys(keys);
@@ -441,6 +446,17 @@ function createModelSettings({ getConfig, getClient, app, getHarnessProfile = ()
       await applyProviders(next, keys, previousRoutes);
       return providersView();
     }
+    // Settings › Models › a model's Remove: drop one id from its provider; the provider (and its key) goes with its last model.
+    if (p.op === "provider-remove-model") {
+      const providers = readProviders(), previousRoutes = providers.map(item => item.route);
+      const index = providers.findIndex(item => item.route === p.route);
+      if (index < 0 || typeof p.id !== "string" || !providers[index].models.includes(p.id)) throw new Error("Unknown model.");
+      const rest = prefs().providerWithoutModel(providers[index], p.id), keys = readKeys();
+      const next = rest ? providers.map((item, at) => at === index ? prefs().validateProvider(rest) : item) : providers.filter((_, at) => at !== index);
+      if (!rest) delete keys[p.route];
+      await applyProviders(next, keys, previousRoutes);
+      return providersView();
+    }
     // First-run quick setup (src/source-onboarding.jsx, prefs/provider-presets.mjs): a typed endpoint and key,
     // tested the way the core will call it (a 1-token request) or asked for its models. The key never goes back.
     if (p.op === "provider-test" || p.op === "provider-models") {
@@ -473,6 +489,11 @@ function createModelSettings({ getConfig, getClient, app, getHarnessProfile = ()
           if (p.apiKey.length > 4096 || /[\x00-\x1f\x7f]/.test(p.apiKey.trim())) throw new Error("Invalid API key.");
           keys[codex.CODEX_KEY_SLOT] = p.apiKey.trim();
         } else if (p.apiKey === null) delete keys[codex.CODEX_KEY_SLOT];
+        // The saved key belongs to the saved endpoint's origin (as codex-provider-test sends it): a Base URL on another
+        // host or scheme without a key of its own drops it instead of sending the old endpoint's key to the new one.
+        const savedBase = readCodexProvider().baseURL;
+        if (!(typeof p.apiKey === "string" && p.apiKey.trim()) && keys[codex.CODEX_KEY_SLOT]
+          && provider.baseURL && originOf(provider.baseURL) !== originOf(savedBase)) delete keys[codex.CODEX_KEY_SLOT];
         // A local model server (LM Studio, Ollama on this Mac) needs no key.
         if (provider.mode === "custom" && !keys[codex.CODEX_KEY_SLOT] && !codex.codexLocalEndpoint(provider.baseURL)) throw new Error("Enter the API key.");
         // The key first: a failed key write (no secure storage) changes nothing, and a failed provider.json write
@@ -534,7 +555,11 @@ function createModelSettings({ getConfig, getClient, app, getHarnessProfile = ()
       connection: readConnection(), keys: readKeys(), inherited: { ...inherited },
       officialKeySlot: prefs().CONNECTION_KEY_OFFICIAL, relayKeySlot: prefs().CONNECTION_KEY_RELAY, officialBaseURL: prefs().OFFICIAL_BASE_URL });
   }
-  return { decorate, decorateThread, run, codexLaunch, codexCustomModels, coworkConnection, ready, dispose: () => relayProxy.stop() };
+  // Codex launched on the saved custom endpoint (its own `-c model_provider=…`, launchedProvider): Codex's auto-review
+  // asks a model of its own (codex-auto-review) that such an endpoint (a relay, LM Studio, Ollama) does not serve, so
+  // 'Approve for me' would refuse every escalation instead of asking (main.cjs autoReviewFeature).
+  const codexOnCustomEndpoint = (client = getClient()) => !!codexPrefs() && isCodex(client) && launchedProvider(client) === codexPrefs().CODEX_PROVIDER_ID;
+  return { decorate, decorateThread, run, codexLaunch, codexCustomModels, codexOnCustomEndpoint, coworkConnection, ready, dispose: () => (relayProxy.dispose ?? relayProxy.stop)() };
 }
 
 module.exports = { createModelSettings };

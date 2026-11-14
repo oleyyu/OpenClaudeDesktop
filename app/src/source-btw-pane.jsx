@@ -431,12 +431,14 @@ export function SourceBtwContent({ sessionId, meta, thread, state, connected, pe
             experimental, className "contents"). No font prop: CdsRoot then reads html[data-font] (Za's nr), which
             appearance-root writes from the same preference main.jsx's cdsFont comes from. */}
         <CdsRoot density={density} platform="desktop" experimental={codePaneExperimental} className="contents">
-        <SourceComposer key={sessionId} embedded isPanelActive={false} codeLayout="side-session" draft={draft} setDraft={value => btwDrafts.set(sessionId, typeof value === 'function' ? value(btwDrafts.get(sessionId)) : value)} textarea={input}
+        {/* 4.16336.0 c9bd7af9c KP `Ce = o?.spawnedFrom?.btw === !0 && o.title === yg(r)`: a side chat still under its
+            default title asks "Ask a quick question" (65lRW0A2LM); a renamed one "Reply in this session…". */}
+        <SourceComposer key={sessionId} embedded isPanelActive={false} codeLayout="side-session"  draft={draft} setDraft={value => btwDrafts.set(sessionId, typeof value === 'function' ? value(btwDrafts.get(sessionId)) : value)} textarea={input}
           onSubmit={submit} onStop={() => void onStop(sessionId).catch(error => onError(error.message))} running={running} sending={!!pending[sessionId]} stopping={!!stopping[sessionId]}
           editable={!thread?.archived} canSubmit={!composerHidden && connected && !reading && !readError && !queueView?.busy} queueEnabled={queueEnabled}
           onEmptyArrowUp={connected && !thread?.archived && !queueView?.busy && lastDequeueable(queued) ? () => { editQueued(lastDequeueable(queued).id); return true; } : undefined}
           commandScope={`btw:${sessionId}`} workdir={thread?.cwd}
-          placeholder={t('Reply in this session…')} permission={meta?.btw?.permission} folderMenu={false}/>
+          placeholder={!thread?.name || thread.name === 'Side chat' || thread.name === t('Side chat') ? t('Ask a quick question') : t('Reply in this session…')} permission={meta?.btw?.permission} folderMenu={false}/>
         </CdsRoot>
         </div>
       </div>

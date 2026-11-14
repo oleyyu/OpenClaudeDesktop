@@ -56,7 +56,7 @@ before(async () => {
   sharedAdapters = await server.ssrLoadModule('/src/source-routines-shared-adapters.jsx');
   cards = await server.ssrLoadModule('/src/generated/routines-shared/cdbc75b4b-BCUW8bqT.mjs');
   model = await server.ssrLoadModule('/src/code-routine-model.mjs');
-  ({ createIntl } = await server.ssrLoadModule('/src/generated/chat/vendor-intl-DYfox5Co.js'));
+  ({ createIntl } = await server.ssrLoadModule('/src/generated/chat/vendor-intl-BJgYK7RA.js'));
   dict = (await import('../electron/i18n/zh-CN/index.mjs')).default;
 });
 after(async () => { delete globalThis.__codeRoutinesCombobox; await server?.close(); });

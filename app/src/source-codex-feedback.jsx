@@ -3,7 +3,8 @@ import { ActionDialog } from "./source-session-actions.jsx";
 import { SourceDialogFooter } from "./source-dialog.jsx";
 // W14-code r7 R7DC-02 / css7-deliverables-settings-button: the CDS Button (shared-frame Uu, official Eu) straight from the
 // shared-frame file (E41), in place of the host settings-button copy.
-import { CdsButton } from "./generated/view-tabs/shared-frame-6jtSkIit.js";
+// host-wiring/chat (4.16336.0): the dialog's Buttons are the cds-core graph's (shared-frame-CJdE5Ria Xu → Id).
+import { CdsButton } from "./cds-core.mjs";
 import { t } from "../electron/i18n/index.mjs";
 import "./source-claude-import.css";
 

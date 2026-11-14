@@ -14,7 +14,9 @@
 // (`Oi as C` → CdsTextInputField) and a boolean the generated c09817156 h (`t as Sn` → CdsCheckboxRow) (W12
 // frame-settings-cont). No host copy of a CDS part is left here.
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { CdsBadge, CdsBanner, CdsButton, CdsCheckboxRow, CdsComboboxField, CdsField, CdsFieldDescription, CdsFieldError, CdsFieldLabel, CdsRadioGroup, CdsTextInputField } from './generated/view-tabs/index.js';
+// 4.16336.0 host wiring (frame): the form's Badge / Banner / Button / TextInputField / CheckboxRow / ComboboxField / Field
+// parts / RadioGroup are the cds-core facade's (4.16336.0 shared-frame and c09817156 originals).
+import { CdsBadge, CdsBanner, CdsButton, CdsCheckboxRow, CdsComboboxField, CdsField, CdsFieldDescription, CdsFieldError, CdsFieldLabel, CdsRadioGroup, CdsTextInputField } from './cds-core.mjs';
 import { sanitizeMultilineText, sanitizeText } from './generated/r4e-plugin/text-sanitize.mjs';
 import { useSourceToasts } from './source-toast.jsx';
 import { t } from '../electron/i18n/index.mjs';

@@ -2,6 +2,7 @@ import test, { before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
+import { createHash } from 'node:crypto';
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { createServer } from 'vite';
@@ -14,8 +15,10 @@ import zh from '../electron/i18n/zh-CN/index.mjs';
 // w13-chatui-composer-tools (research/w13-chatui.md K2 / K3 / K5, research/w13-chatfn.md C1 / C2 / C8): the Chat card's +
 // button is shared-8 kF, its menu is c752b32f8 Js's slot assembly (na testids, shared-8 lN groups, separator-tools /
 // separator-modes); 3.6556.2 has no separate composer tools menu and no Chat style picker.
+// regions-chat: the generator reads 4.16336.0 (shared-8-BqfCbkJd TP / Wj / Xj, c752b32f8-NSBu06gO Vc / Ia / La, shared-33
+// Cq / _q); the checks below run on that snapshot, and 4.16336.0 still has neither a tools menu nor a style picker.
 const app = path.resolve(import.meta.dirname, '..');
-const v1 = path.resolve(app, '../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist');
+const v1 = path.resolve(app, '../reference/snapshots/claude-4.16336.0-20261104/ion-dist');
 const official = name => fs.readFileSync(path.join(v1, 'assets/v1', name), 'utf8');
 const enUS = JSON.parse(fs.readFileSync(path.join(v1, 'i18n/en-US.json'), 'utf8'));
 
@@ -38,33 +41,48 @@ const buttonTag = (html, testId) => {
 
 test('the generator is current (--check)', async () => {
   const manifest = await extractChatComposerMenus({ check: true });
-  assert.equal(manifest.referenceVersion, '3.6556.2');
-  assert.equal(manifest.referenceSnapshot, 'snapshots/claude-3.6556.2-20261025-192807');
-  // w13-chatfn-tools (review 补做): Es / Ms, the Add to project popup's literals.
-  assert.deepEqual(Object.keys(manifest.roots).sort(), ['Es', 'Fs', 'Js', 'Ms', 'Tz', 'Ws', 'cN', 'iN', 'ia', 'kF', 'ks', 'lN', 'na', 'oN', 'ra', 'sN', 'yz'].sort());
-  assert.deepEqual(manifest.resolved.triggerTestId, { source: 'shared-1-BJhqMmkf.js', export: 'Qd', local: 'S_', value: 'chat-input-attach' });
+  assert.equal(manifest.referenceVersion, '4.16336.0');
+  assert.equal(manifest.referenceSnapshot, 'snapshots/claude-4.16336.0-20261104');
+  // w13-chatfn-tools (review 补做): Es / Ms, the Add to project popup's literals; regions-chat: + Yj (4.16336.0).
+  assert.deepEqual(Object.keys(manifest.roots).sort(), ['Es', 'Fs', 'Js', 'Ms', 'Tz', 'Ws', 'Yj', 'cN', 'iN', 'ia', 'kF', 'ks', 'lN', 'na', 'oN', 'ra', 'sN', 'yz'].sort());
+  assert.deepEqual(Object.fromEntries(Object.entries(manifest.roots).map(([key, root]) => [key, `${root.source}#${root.local}`])), {
+    kF: 'shared-8-BqfCbkJd.js#TP', iN: 'shared-8-BqfCbkJd.js#Wj', oN: 'shared-8-BqfCbkJd.js#Kj', sN: 'shared-8-BqfCbkJd.js#qj',
+    cN: 'shared-8-BqfCbkJd.js#Jj', Yj: 'shared-8-BqfCbkJd.js#Yj', lN: 'shared-8-BqfCbkJd.js#Xj', na: 'c752b32f8-NSBu06gO.js#Ia',
+    ra: 'c752b32f8-NSBu06gO.js#La', ia: 'c752b32f8-NSBu06gO.js#Ra', Js: 'c752b32f8-NSBu06gO.js#Vc', Ws: 'c752b32f8-NSBu06gO.js#Rc',
+    Fs: 'c752b32f8-NSBu06gO.js#kc', ks: 'c752b32f8-NSBu06gO.js#wc', Es: 'c752b32f8-NSBu06gO.js#xc', Ms: 'c752b32f8-NSBu06gO.js#Ec',
+    Tz: 'shared-33-DtdykY0y.js#Cq', yz: 'shared-33-DtdykY0y.js#_q' });
+  for (const root of Object.values(manifest.roots))
+    assert.equal(root.sourceSha256, createHash('sha256').update(fs.readFileSync(path.join(v1, 'assets/v1', root.source))).digest('hex'), root.source);
+  assert.deepEqual(manifest.resolved.triggerTestId, { source: 'shared-1-D1bGaTaN.js', export: 'Ob', local: '_p', value: 'chat-input-attach' });
+  assert.deepEqual({ ...manifest.resolved.projectMaxVisibleItems }, { source: 'shared-212-BHMAi0oa.js', export: 'bs', local: '_W', value: 8.5 });
+  // lN's sixth argument in Js is shared-8 kN (exported Qi): the offered-files context && its gate.
+  assert.deepEqual([manifest.resolved.artifactFileRows.source, manifest.resolved.artifactFileRows.export, manifest.resolved.artifactFileRows.local],
+    ['shared-8-BqfCbkJd.js', 'Qi', 'kN']);
 });
 
-test('generated copy and literals are the 3.6556.2 originals, and every message has zh-CN', () => {
+test('generated copy and literals are the 4.16336.0 originals, and every message has zh-CN', () => {
   for (const descriptor of Object.values(chatAddMenuMessages)) {
     assert.equal(enUS[descriptor.id], descriptor.defaultMessage, descriptor.id);
     assert.ok(zh[descriptor.defaultMessage], `zh-CN for ${descriptor.defaultMessage}`);
   }
-  const shared1 = official('shared-1-BJhqMmkf.js'), shared8 = official('shared-8-Db1QN4mf.js'), shared5 = official('shared-5-Bg6ZMqvt.js');
-  const add = official('c752b32f8-mYZAs6yC.js');
-  assert.ok(shared1.includes('S_="chat-input-attach"'));
+  // 4.16336.0: shared-1 _p (3.6556.2 S_), shared-8 TP (kF), c752b32f8-NSBu06gO, shared-33 Cq / _q (3.6556.2 shared-5 Tz / yz).
+  const shared1 = official('shared-1-D1bGaTaN.js'), shared8 = official('shared-8-BqfCbkJd.js'), shared5 = official('shared-33-DtdykY0y.js');
+  const add = official('c752b32f8-NSBu06gO.js');
+  assert.ok(shared1.includes('_p="chat-input-attach"'));
   assert.ok(shared8.includes('"data-chorus-callout":"attach",iconOnly:!0,icon:c,variant:"ghost","aria-label":u,tooltip:!1'));
-  assert.ok(shared8.includes('c=o===void 0?"Add":o') && shared8.includes('h("ms-0.5",g)') && shared8.includes('m=n?void 0:"/"'));
+  assert.ok(shared8.includes('c=o===void 0?"Add":o') && shared8.includes('m("ms-0.5",_)') && shared8.includes('h=n?void 0:"/"'));
   assert.ok(add.includes('{type:"separator",label:"separator-tools"}') && add.includes('{type:"separator",label:"separator-modes"}'));
-  assert.ok(add.includes('{type:"button",label:n,icon:"Camera",onAction:o}'));
-  assert.ok(shared5.includes('icon:"Globe",checked:n,disabled:f,onAction:l,tooltip:o,closeOnClick:!0'));
+  assert.ok(add.includes('{type:"button",label:n,icon:"Camera",onAction:r}'));
+  assert.ok(shared5.includes('icon:"Globe",checked:n,disabled:p,onAction:u,tooltip:o,closeOnClick:!0'));
   assert.ok(shared5.includes('icon:"Research",checked:n,disabled:r,tooltip:g,onAction:m,closeOnClick:!0'));
   assert.deepEqual({ ...chatAddMenu.trigger }, { callout: 'attach', variant: 'ghost', testId: 'chat-input-attach', icon: 'Add', className: 'ms-0.5', tooltipSide: 'bottom', shortcut: '/' });
   assert.deepEqual({ ...chatAddMenu.separators }, { tools: 'separator-tools', modes: 'separator-modes' });
 });
 
 test('the sliced slot tables behave as shared-8 lN and c752b32f8 ra', () => {
-  assert.deepEqual(addMenuSlotGroups.map(group => group.length), [9, 5, 5]);
+  // 4.16336.0 adds artifactFile / artifactDrive to the base group (3.6556.2: [9, 5, 5]).
+  assert.deepEqual(addMenuSlotGroups.map(group => group.length), [11, 5, 5]);
+  assert.deepEqual(addMenuSlotGroups[0].slice(0, 3), ['uploadFile', 'artifactFile', 'artifactDrive']);
   assert.equal(addMenuTestIds.webSearch, 'add-menu-web-search');
   const slots = { uploadFile: { type: 'button' }, project: { type: 'submenu' }, connectors: { type: 'element' }, research: { type: 'checkbox' }, webSearch: { type: 'checkbox' }, memory: null };
   const tagged = withAddMenuTestIds(slots);
@@ -75,6 +93,18 @@ test('the sliced slot tables behave as shared-8 lN and c752b32f8 ra', () => {
   // Agent mode drops project / github / haystack / research / webSearch (oN); per-chat-tools-unavailable drops the tools group (cN).
   assert.deepEqual(ids(splitAddMenuSlots(tagged, true)), [['add-menu-upload-file'], ['element'], []]);
   assert.deepEqual(ids(splitAddMenuSlots(tagged, false, undefined, false, true)), [['add-menu-upload-file', 'add-menu-project'], [], ['add-menu-research', 'add-menu-web-search']]);
+  // 4.16336.0 lN's sixth argument (artifact-file rows on) drops designSystem (Yj); session hosts (sN) and per-chat-tools
+  // (cN) also drop artifactDrive.
+  const more = { uploadFile: { type: 'button' }, artifactFile: { type: 'button' }, artifactDrive: { type: 'button' }, designSystem: { type: 'button' }, plugins: { type: 'button' } };
+  const keys = groups => groups.map(group => group.map(row => row.key));
+  const keyed = Object.fromEntries(Object.entries(more).map(([key, row]) => [key, { ...row, key }]));
+  assert.deepEqual(keys(splitAddMenuSlots(keyed)), [['uploadFile', 'artifactFile', 'artifactDrive'], ['designSystem', 'plugins'], []]);
+  assert.deepEqual(keys(splitAddMenuSlots(keyed, false, undefined, false, false, true)), [['uploadFile', 'artifactFile', 'artifactDrive'], ['plugins'], []]);
+  assert.deepEqual(keys(splitAddMenuSlots(keyed, false, undefined, true)), [['uploadFile', 'artifactFile'], ['plugins'], []]);
+  assert.deepEqual(keys(splitAddMenuSlots(keyed, false, undefined, false, true)), [['uploadFile', 'artifactFile'], [], []]);
+  // The host passes the flag as false (no offered-files context or service here), so designSystem is not dropped by it.
+  assert.match(fs.readFileSync(path.join(app, 'src/source-chat-tools-menu.jsx'), 'utf8'),
+    /const ARTIFACT_FILE_ROWS = false;[\s\S]*splitAddMenuSlots\(withAddMenuTestIds\(slots\), agentMode, undefined, onSessionHost, perChatToolsUnavailable, ARTIFACT_FILE_ROWS\)/);
 });
 
 test('ChatAddTrigger renders shared-8 kF', () => {
@@ -138,7 +168,7 @@ test('kF drops its tooltip while the + menu is open; the Chat card wires addMenu
   const open = buttonTag(renderToStaticMarkup(React.createElement(M.ChatAddTrigger, { isMenuOpen: true })), 'chat-input-attach');
   assert.match(closed, /\sdata-base-ui-tooltip-trigger=""/, 'label tooltip while closed');
   assert.doesNotMatch(open, /data-base-ui-tooltip-trigger/, 'kF: content p = isMenuOpen ? void 0 : label');
-  assert.ok(official('shared-8-Db1QN4mf.js').includes('"Add files, connectors, and more"'));
+  assert.ok(official('shared-8-BqfCbkJd.js').includes('"Add files, connectors, and more"'));
   const Input = ({ inputRef, ...rest }) => React.createElement('div', rest);
   const render = props => buttonTag(renderToStaticMarkup(React.createElement(C.SourceChatComposer, {
     editorNode: React.createElement(Input, { className: 'sc-input' }), draft: '', scope: 'chat:fixture', mode: 'chat',
@@ -158,8 +188,8 @@ test('host rows fill Js\'s addFolder / teach / github / skills / plugins slots i
     addFolder: row('add-folder'), teach: row('teach'), github: row('github'), skills: row('skills'), plugins: row('plugins'),
     webSearch: { checked: false, onToggle: noop } });
   // Js's own call: every iN key is in its slot object.
-  const add = official('c752b32f8-mYZAs6yC.js');
-  for (const key of ['addFolder:t', 'teach:r', 'github:o', 'skills:c', 'plugins:m']) assert.ok(add.includes(key), key);
+  const add = official('c752b32f8-NSBu06gO.js');
+  for (const key of ['addFolder:i', 'teach:a', 'github:u', 'skills:p', 'plugins:S']) assert.ok(add.includes(key), key);
   const entries = M.chatAddMenuEntries(slots);
   assert.deepEqual(entries.map(e => e.testId ?? e.label), ['add-menu-upload-file', 'add-folder', 'teach', 'add-menu-screenshot', 'github',
     'separator-tools', 'skills', 'connectors', 'plugins', 'separator-modes', 'add-menu-web-search']);
@@ -176,21 +206,21 @@ test('host rows fill Js\'s addFolder / teach / github / skills / plugins slots i
   assert.ok(order.every((at, i) => at >= 0 && (i === 0 || at > order[i - 1])), `row order ${order}`);
 });
 
-test('3.6556.2 has no separate Chat composer tools menu and no Chat style picker (K3 / K5)', () => {
+test('4.16336.0 (as 3.6556.2) has no separate Chat composer tools menu and no Chat style picker (K3 / K5)', () => {
   // K3: c9b54eb90 pe is a hook returning the org/project tool list, not a menu; Extended thinking is a model-selector
   // thinking mode; Web search / Research are + menu slots (lN's modes group).
-  assert.ok(official('c9b54eb90-C9rXk4ZP.js').includes('{tools:E,enable:O,createInPlace:b}'));
-  assert.ok(official('shared-50-DopKwmK0.js').includes('thinking_mode_extended_title:p(Z,{defaultMessage:"Extended thinking",id:"u8n5HzNZ2R"})'));
+  assert.ok(official('c9b54eb90-D0FvVL5w.js').includes('{tools:C,enable:w,createInPlace:v}'));
+  assert.ok(official('shared-23-BRmsPtuN.js').includes('thinking_mode_extended_title:d(Q,{defaultMessage:"Extended thinking",id:"u8n5HzNZ2R"})'));
   assert.deepEqual(addMenuSlotGroups[2], ['haystack', 'research', 'webSearch', 'memory', 'permissionMode']);
   assert.ok(!addMenuSlotGroups.flat().some(slot => /style|thinking|tools/i.test(slot)), 'no style / thinking / tools slot');
   // K5: the send event hard-codes no personalized style; "Style" is voice settings' label; "Choose a style" is Code's
   // session output-style dialog (cc43287c9 efe, titled "Output style").
-  assert.ok(official('shared-28-DNYlf4wu.js').includes('has_personalized_style:!1'));
-  assert.ok(official('shared-9-CM21XrJw.js').includes('voiceStyle:{defaultMessage:"Style",id:"GQM96kFSM3"}'));
-  const code = official('cc43287c9-Me-M2ucD.js');
+  assert.ok(official('shared-33-DtdykY0y.js').includes('has_personalized_style:!1'));
+  assert.ok(official('c90d7fd86-iWqdaSNP.js').includes('voiceStyle:{defaultMessage:"Style",id:"GQM96kFSM3"}'));
+  const code = official('cc43287c9-dzfX-J5i.js');
   const at = code.indexOf('"AU4HcqqKpC"');
   assert.ok(at > 0 && code.lastIndexOf('defaultMessage:"Output style"', at) > at - 1500, 'Choose a style sits in the Output style dialog');
   const files = fs.readdirSync(path.join(v1, 'assets/v1')).filter(name => name.endsWith('.js'));
-  assert.deepEqual(files.filter(name => official(name).includes('"AU4HcqqKpC"')), ['cc43287c9-Me-M2ucD.js']);
+  assert.deepEqual(files.filter(name => official(name).includes('"AU4HcqqKpC"')), ['cc43287c9-dzfX-J5i.js']);
   assert.ok(!files.some(name => official(name).includes('personalized_styles')));
 });

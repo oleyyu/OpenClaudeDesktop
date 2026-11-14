@@ -71,7 +71,11 @@ test('$S / rC: tooltip trigger over the ghost button; non-branch label span; Ul(
   assert.match(jsx, /if \(!diffScopeMenuEnabled\(\)\) return <span className="flex min-w-0 items-center text-body text-muted-as-secondary">\{grid\}<\/span>;/);
   assert.match(jsx, /\[baseRef, headRef, labelRef\]\.some\(\(ref\) => scopeLabelClipped\(ref\.current\)\) \? trigger\.label : undefined/);
   assert.match(jsx, /<CdsDropdown\.Root open=\{open\} onOpenChange=\{setOpen\}>\n\s+<CdsTooltip content=\{tooltip\} open=\{!open && undefined\}>\{trigger\}<\/CdsTooltip>\n\s+\{children\}\n\s+<\/CdsDropdown\.Root>;/);
-  assert.match(jsx, /import \{ asElementNode, CdsDropdown, CdsIcon, CdsTooltip, useCdsOwnerWindow, useCdsOwnerWindowAnchor \} from "\.\/generated\/view-tabs\/index\.js";/);
+  // host-wiring code-a: the arrow Icon is cds-core's; the Dropdown / Tooltip / owner-window hooks stay view-tabs because
+  // code-editor's 3.6556.2 Sections factory is built over them and draws its rows inside this same Menu.
+  assert.match(jsx, /import \{ CdsIcon \} from "\.\/cds-core\.mjs";/);
+  assert.match(jsx, /import \{ asElementNode, CdsDropdown, CdsTooltip, useCdsOwnerWindow, useCdsOwnerWindowAnchor \} from "\.\/generated\/view-tabs\/index\.js";/);
+  assert.match(jsx, /createPreviewPaneMenu\(\{ Menu: CdsDropdown, Tooltip: CdsTooltip, useOwnerWindow: useCdsOwnerWindow, asElement: asElementNode \}\)/);
 });
 
 test('Ta / Aa / Na memory (generated): per session + scope, "diff:" tiles only, scroll top for at most 32 lists', async () => {

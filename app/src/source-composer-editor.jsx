@@ -12,7 +12,8 @@ import {compositionEdgePlugins,finishCompositionBeforePaste,trackComposition} fr
 import {composerSchema,composerDocument,composerText,composerTextOffset,composerPosition,composerSelection,selectCommandBefore,commandTransaction,caretRunStart,mentionTransaction,skillTransaction,reconcileComposerText,composerArgumentHint,commandSeparatorPlugin,leafText,mentionLabel,composerEchoTracker,inputRuleTransaction,pasteTransaction,caretInCode,activeLink,editLinkTransaction,removeLinkTransaction,linkHrefValid,LINK_PROTOCOL,toggleInlineCode,toggleCodeBlock,clearCodeBlock,exitCodeBlockUp,exitCodeBlockDown} from './composer-editor-model.mjs';
 import {SourceDialog} from './source-dialog.jsx';
 // W14-code r6 R6DC-02: c227f4d5e link bubble / Edit link dialog buttons are shared-frame Uu (E41 direct import).
-import {CdsButton} from './generated/view-tabs/shared-frame-6jtSkIit.js';
+// host-wiring/chat (4.16336.0): the link bubble's and Edit link dialog's Buttons are the cds-core graph's (Xu → Id).
+import {CdsButton} from './cds-core.mjs';
 import {SourceMenu} from './source-menu.jsx';
 import {pathChoices} from './file-tool-model.mjs';
 import {positionMenu} from './menu-model.mjs';

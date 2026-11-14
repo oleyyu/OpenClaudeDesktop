@@ -161,6 +161,9 @@ test('codexArgs and launchEnv describe the server without exposing the secret on
   assert.deepEqual(definition, { name: 'code_desktop', command: '/Applications/OpenClaude Desktop.app/Contents/MacOS/OpenClaude Desktop', args: ['/x/agent-tools-server.mjs'], env: { ELECTRON_RUN_AS_NODE: '1' } });
   // The server's instructions travel with the definition, for bridges whose agent never shows them to the model (ZCode).
   assert.match(instructions, /Verifying changes in the preview/);
+  // …and say how to start a workflow (behind load_tools on a deferring core) and which tool delegates to a sub-agent.
+  assert.match(instructions, /load_tools with \{"groups": \["workflow"\]\}/);
+  assert.match(instructions, /your own sub-agent tool/);
   assert.throws(() => host.provide('sessionId', () => 1), /Invalid service name/);
 });
 

@@ -11,6 +11,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
 import { withMemoCache } from './support/react-memo-cache.mjs';
+import { designEntryStylesheets } from '../scripts/current-design-assets.mjs';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
 const OFFICIAL = path.join(ROOT, '../reference/installed-2.42304.0-20261017/ion-dist/assets/v1');
@@ -19,6 +20,8 @@ const official = name => fs.readFileSync(path.join(OFFICIAL, name), 'utf8');
 const OFFICIAL_V3 = path.join(ROOT, '../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1');
 const officialV3 = name => fs.readFileSync(path.join(OFFICIAL_V3, name), 'utf8');
 const source = name => fs.readFileSync(path.join(ROOT, name), 'utf8');
+// The official c6a992d55 utilities entry sheet index.html loads (current-design-assets: 4.16336.0 c6a992d55-_JRfOmTh).
+const LOADED_UTILITIES = `public/assets/v1/${designEntryStylesheets.find(name => name.startsWith('c6a992d55-'))}`;
 const glyphs = JSON.parse(source('src/generated/icons.json'));
 const glyph = name => String.fromCodePoint(glyphs[name]);
 let server, Menu, Rows, Keys, Adapters, Folder, Dialog, Select, Fields, Pet, PetClasses, LocalDialog, Revision, StartView;
@@ -33,10 +36,11 @@ before(async () => {
   Select = await server.ssrLoadModule('/src/generated/code-current/environment-select-parts.mjs');
   Fields = await server.ssrLoadModule('/src/generated/code-current/environment-field-controls.mjs');
   ({ SourcePet: Pet } = await server.ssrLoadModule('/src/source-pet.jsx'));
-  PetClasses = await server.ssrLoadModule('/src/generated/code-start/pet.mjs');
+  PetClasses = { ...(await server.ssrLoadModule('/src/generated/code-start-v4/start.mjs')), ...(await server.ssrLoadModule('/src/generated/code-start-v4/clawd-replay.mjs')) };
   LocalDialog = await server.ssrLoadModule('/src/source-local-environment-dialog.jsx');
   ({ localEnvironmentRevision: Revision } = Adapters);
-  StartView = await server.ssrLoadModule('/src/generated/code-start/view.mjs');
+  // composer-env (4.16336.0): the picker orders by cc43287c9 s3 (3.6556.2 s8), the code-start surface's slice.
+  StartView = await server.ssrLoadModule('/src/generated/code-start-v4/start.mjs');
 });
 after(() => server?.close());
 const noop = () => {};
@@ -264,7 +268,8 @@ test('T2/p0: the picker lists environments by last use and keeps that order whil
   // A new environment joins by its last use without moving the rest.
   const added = [...used, item('d', 'Delta', 50)];
   assert.deepEqual(order(f.render({ popup, environments: added, onStar: noop })), ['d', 'b', 'c', 'a']);
-  assert.equal(StartView.useStableEnvironmentOrder.name, 's8');
+  assert.equal(StartView.useStableEnvironmentOrder.name, 's3');
+  assert.match(source('src/source-environment-menu.jsx'), /^import \{ useStableEnvironmentOrder \} from '\.\/generated\/code-start-v4\/start\.mjs';$/m);
 });
 
 test('h2 popup: the SearchablePopup (min-w-[260px]) with the search field fixed in the header; the sr-only status', () => {
@@ -289,7 +294,7 @@ test('h2 popup: the SearchablePopup (min-w-[260px]) with the search field fixed 
   // The popup classes are official utilities released from source-menu.css's unlayered min-width.
   const css = source('src/source-environment-menu.css');
   assert.match(css, /\.smenu-popup\.environment-picker-popup,\s*\.smenu-popup\.environment-picker-more \{ min-width: revert-layer; \}/);
-  const sheet = fs.readFileSync(path.join(ROOT, 'public/assets/v1/c6a992d55-Che1orl5.css'), 'utf8');
+  const sheet = source(LOADED_UTILITIES);
   for (const name of ['min-w-[260px]', 'min-w-[220px]', 'w-max', 'min-w-48', 'max-w-96']) assert.ok(sheet.includes(`.${cssEscape(name)}{`), name);
 });
 
@@ -440,9 +445,9 @@ test('home-env-07: the Clawd button carries O7 and ClawdLaptopInner’s classes;
   assert.equal(PetClasses.clawdClassName, 'absolute right-[-13px] bottom-[calc(var(--cds-ring-outer,0px)-144px/11)] w-[80px] h-[80px] -scale-x-100');
   const stubs = { matchMedia: () => ({ matches: false, addEventListener() {}, removeEventListener() {} }), document: { documentElement: { dataset: {} } } };
   const html = withGlobal('matchMedia', stubs.matchMedia, () => withGlobal('document', stubs.document, () => renderToStaticMarkup(React.createElement(Pet))));
-  assert.equal(unescape(html), `<div class="sc-pet-slot " aria-hidden="true" style="z-index:2"><button type="button" tabindex="-1" aria-hidden="true" data-clawd="" class="${PetClasses.clawdClassName} ${PetClasses.clawdReplayButtonClassName}"><span class="sc-pet-animation w-full h-full"></span></button></div>`);
+  assert.equal(unescape(html), `<div class="sc-pet-slot" aria-hidden="true" style="z-index:2"><button type="button" tabindex="-1" aria-hidden="true" data-clawd="" class="${PetClasses.clawdClassName} ${PetClasses.clawdReplayButtonClassName}"><span class="sc-pet-animation w-full h-full"></span></button></div>`);
   // Every class is in the loaded official sheet; no local stylesheet targets the button any more.
-  const sheet = fs.readFileSync(path.join(ROOT, 'public/assets/v1/c6a992d55-Che1orl5.css'), 'utf8');
+  const sheet = source(LOADED_UTILITIES);
   for (const name of [...PetClasses.clawdClassName.split(' '), ...PetClasses.clawdReplayButtonClassName.split(' ')])
     assert.ok(sheet.includes(`.${cssEscape(name)}`), `${name} in c6a992d55`);
   const local = fs.readdirSync(path.join(ROOT, 'src')).filter(name => name.endsWith('.css')).map(name => source(`src/${name}`)).join('\n');

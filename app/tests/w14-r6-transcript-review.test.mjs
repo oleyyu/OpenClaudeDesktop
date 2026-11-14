@@ -185,6 +185,13 @@ test('R6T-REG-01 remainder: partRowIds maps a part\'s item (every call of a tool
   assert.deepEqual(C.partRowIds({ isFirst: true, turnKey: 'k', itemKey: 'k:t0' }, entry), []);
   assert.deepEqual(C.partRowIds({ isFirst: false, turnKey: 'k', itemKey: 'k:nope' }, entry), []);
   assert.equal(C.partRowId({ isFirst: false, turnKey: 'k', itemKey: 'k:grp:g2' }, entry, 'first'), 'group');
+  // integration-3 review-1: lP's WN parts (`assistantItem`, an entry the renderer does not draw yet) carry the item and no
+  // itemKey — they name their own item's row and never reach TM with an undefined key (React #520 on the first send).
+  assert.deepEqual(C.partRowIds({ kind: 'assistantItem', isFirst: false, turnKey: 'k', item: entry.items[2] }, entry), ['b1']);
+  assert.deepEqual(C.partRowIds({ kind: 'assistantItem', isFirst: false, turnKey: 'k', item: entry.items[1] }, entry), ['group', 'g3']);
+  assert.doesNotThrow(() => C.partRowIds({ kind: 'assistantItem', isFirst: false, turnKey: 'k' }, entry));
+  assert.deepEqual(C.partRowIds({ isFirst: false, turnKey: 'k' }, entry), []);
+  assert.equal(C.partRowId({ isFirst: false, turnKey: 'k' }, entry, 'first'), 'first');
   const src = read('src/source-code-transcript.jsx');
   assert.ok(src.includes('partItemIds: (part) => partRowIds(part, entry).filter((id) => id !== itemId && id !== entry.id),'));
 });

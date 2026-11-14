@@ -297,19 +297,26 @@ export function titlebarViewOptionsItems({
   hasTasks = false,
   hasPlan = false,
   hasRuns = false,
+  sideChatAvailable = false,
+  sideChatShown = false,
+  taskCount,
   onToggleTerminal,
   onTogglePane,
+  onToggleSideChat,
 } = {}) {
   const open = panes instanceof Set ? panes : new Set(panes);
   return [
     ...titlebarFoldedToggles({ surface, session, terminalAvailable, previewAvailable, filesAvailable, panes: open }, hiddenCount)
       .map((spec) => ({ kind: spec.pane, label: spec.label, icon: spec.icon, shortcut: spec.shortcut })),
-    ...((hasTasks || open.has("tasks")) ? [{ kind: "tasks", label: "Background tasks", icon: "AgentsSimple" }] : []),
+    // 4.16336.0 c73f45bc3 q_: `py(L, { icon: "Chats", label: "Side chat", checked: R.shown, shortcut: Ce("toggleSideChat") })`
+    // (L = Cy: the session can host a side chat) ahead of Background tasks, which carries `count: E` (running tasks).
+    ...(sideChatAvailable ? [{ kind: "sideChat", label: "Side chat", icon: "Chats", shortcut: "cmd+;", checked: sideChatShown === true, onSelect: () => onToggleSideChat?.() }] : []),
+    ...((hasTasks || taskCount > 0 || open.has("tasks")) ? [{ kind: "tasks", label: "Background tasks", icon: "AgentsSimple", ...(taskCount === undefined ? {} : { count: taskCount }) }] : []),
     ...((hasPlan || open.has("plan")) ? [{ kind: "plan", label: "Plan", icon: "Checklist" }] : []),
     ...(hasRuns ? [{ kind: "runs", label: "Runs", icon: "Clock" }] : []),
   ].map((item) => ({
-    ...item,
     checked: open.has(item.kind),
     onSelect: () => (item.kind === "terminal" ? onToggleTerminal?.() : onTogglePane?.(item.kind)),
+    ...item,
   }));
 }

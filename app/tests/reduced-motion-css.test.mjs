@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import postcss from 'postcss';
+import { designEntryStylesheets } from '../scripts/current-design-assets.mjs';
 
 // Reduced motion is targeted, as in the source: no blanket `* {animation:none}`
 // kill. Every local keyframe animation and every movement transition needs a
@@ -81,7 +82,9 @@ test('the composer submit swap keeps its visibility transition under reduced mot
   const Card = await import('../src/generated/code-composer/composer-card-tokens.mjs');
   assert.equal(Card.submitLayerEnterClass, 'motion-safe:animate-[cds-fade-in_0.12s_ease-out_0.08s_backwards]');
   assert.equal(Card.submitLayerExitClass, 'pointer-events-none invisible opacity-0 [transition:visibility_0s_linear_80ms] motion-safe:[transition:opacity_80ms_ease-out,visibility_0s_linear_80ms]');
-  const official = postcss.parse(readFileSync(path.resolve(src, '../public/assets/v1/c6a992d55-Che1orl5.css'), 'utf8'));
+  // The official c6a992d55 utilities entry sheet index.html loads (current-design-assets: 4.16336.0 c6a992d55-_JRfOmTh).
+  const utilities = designEntryStylesheets.find((name) => name.startsWith('c6a992d55-'));
+  const official = postcss.parse(readFileSync(path.resolve(src, '../public/assets/v1', utilities), 'utf8'));
   const keys = ['.motion-safe\\:animate-\\[cds-fade-in_0\\.12s_ease-out_0\\.08s_backwards\\]', '.motion-safe\\:\\[transition\\:opacity_80ms_ease-out\\,visibility_0s_linear_80ms\\]', '.\\[transition\\:visibility_0s_linear_80ms\\]'];
   const found = {};
   official.walkRules((rule) => {

@@ -8,6 +8,7 @@ import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
 import { withMemoCache } from './support/react-memo-cache.mjs';
 import { ionSource } from '../scripts/official-3.6556.2.mjs';
+import { conciseCopy } from '../electron/i18n/concise.mjs';
 
 // w13-chatfn-memory: Settings › Memory after 3.6556.2 c6bba3086 (Sn, En, yt, kn), c274117ff O and cffc9ea71 (w, E, D, O).
 // Official chunks are read as text only. SSR through Vite middleware mode; no browser, Electron or core.
@@ -54,8 +55,14 @@ const render = (props) => renderToStaticMarkup(React.createElement(Memory.Source
 test('the Memory group: Search and reference chats, then Generate memory from chat history (off: no summary row)', () => {
   const html = render({ initialState: STATE({}), boot: { coworkEnabled: false, config: {} } });
   assert.match(html, /<h3[^>]*>Memory<\/h3>/);
-  const order = ['Search and reference chats', 'Allow Claude to search for relevant details in past chats.', 'Generate memory from chat history',
-    'Allow Claude to remember relevant context from your chats. Memory includes your entire chat history with Claude.'];
+  // U-SET-LITE: both rows' official sentences render their short lines (concise.mjs).
+  const reference = conciseCopy(Memory.MEMORY_COPY.referenceDescription, 'en-US');
+  assert.equal(reference, 'Search past chats for context.');
+  const generate = conciseCopy(Memory.MEMORY_COPY.generateFirst, 'en-US');
+  assert.equal(generate, 'Remember context across chats.');
+  const order = ['Search and reference chats', reference, 'Generate memory from chat history', generate];
+  assert.doesNotMatch(html, /Memory includes your entire chat history with Claude\./);
+  assert.doesNotMatch(html, /Allow Claude to search for relevant details in past chats\./);
   let at = -1;
   for (const text of order) { const next = html.indexOf(text); assert.ok(next > at, text); at = next; }
   assert.match(html, /role="switch" aria-label="Search and reference chats" aria-checked="true"/);
@@ -65,13 +72,27 @@ test('the Memory group: Search and reference chats, then Generate memory from ch
 });
 
 test('descriptions follow En: never chosen / chosen, with Cowork', () => {
-  assert.match(render({ initialState: STATE({}), boot: { coworkEnabled: true, config: {} } }), /from your chats and Cowork sessions\. Memory includes your entire chat history with Claude\./);
+  // U-SET-LITE: never chosen with Cowork is its short line (concise.mjs), not the long official sentence.
+  const firstCowork = render({ initialState: STATE({}), boot: { coworkEnabled: true, config: {} } });
+  assert.ok(firstCowork.includes(`data-settings-desc="">${conciseCopy(Memory.MEMORY_COPY.generateFirstCowork, 'en-US')}</div>`), firstCowork);
+  assert.match(firstCowork, /data-settings-desc="">Remember context across chats\.<\/div>/);
+  assert.doesNotMatch(firstCowork, /from your chats and Cowork sessions\./);
   // G5 (memory-04): chosen is chat-memory's userSetting (c6bba3086 `C.userSetting===void 0`), not "enabled was ever written".
-  assert.match(render({ initialState: STATE({ enabled: true, userSetting: true }), boot: { coworkEnabled: true, config: { chatMemory: { enabled: true } } } }), /from your chats and Cowork sessions\. This setting also applies to projects\./);
-  assert.match(render({ initialState: STATE({ enabled: true, userSetting: true }), boot: { coworkEnabled: false, config: { chatMemory: { enabled: true } } } }), /This setting controls memory for both chats and projects\./);
-  assert.match(render({ initialState: STATE({ paused: true, userSetting: false }), boot: { coworkEnabled: false, config: {} } }), /This setting controls memory for both chats and projects\./, 'Turn off is a choice');
-  assert.match(render({ initialState: STATE({ enabled: false, referenceChats: false }), boot: { coworkEnabled: false, config: { chatMemory: { enabled: false, referenceChats: false } } } }),
-    /Memory includes your entire chat history with Claude\./, 'switching Search and reference chats is no choice about generating');
+  // U-SET-LITE-2: all four En variants share one short line, so the description no longer changes with Cowork or the
+  // choice; each case renders it and none of the long official sentences.
+  for (const variant of ['generateFirst', 'generateFirstCowork', 'generateChosen', 'generateChosenCowork'])
+    assert.equal(conciseCopy(Memory.MEMORY_COPY[variant], 'en-US'), 'Remember context across chats.', variant);
+  const LONG = /Memory includes your entire chat history|This setting controls memory for both chats and projects|This setting also applies to projects/;
+  for (const [props, why] of [
+    [{ initialState: STATE({ enabled: true, userSetting: true }), boot: { coworkEnabled: true, config: { chatMemory: { enabled: true } } } }, 'chosen, with Cowork'],
+    [{ initialState: STATE({ enabled: true, userSetting: true }), boot: { coworkEnabled: false, config: { chatMemory: { enabled: true } } } }, 'chosen'],
+    [{ initialState: STATE({ paused: true, userSetting: false }), boot: { coworkEnabled: false, config: {} } }, 'Turn off is a choice'],
+    [{ initialState: STATE({ enabled: false, referenceChats: false }), boot: { coworkEnabled: false, config: { chatMemory: { enabled: false, referenceChats: false } } } }, 'never chosen'],
+  ]) {
+    const html = render(props);
+    assert.match(html, /data-settings-desc="">Remember context across chats\.<\/div>/, why);
+    assert.doesNotMatch(html, LONG, why);
+  }
 });
 
 test('yt: "Chat memory · No memory yet", or the "View and manage memory · Updated {time}" button', () => {
@@ -137,7 +158,12 @@ test('Manage memory: header description, the summary, the edit field and Manage 
   assert.match(html, /radial-gradient\(at 90% 90%,color-mix\(in srgb, var\(--cds-clay\) 10%, transparent\) 0%, transparent 90%\)/);
   assert.match(html, /aria-label="Tell Claude what to remember or forget"/);
   assert.match(html, /<div aria-hidden="false" class="absolute inset-0 w-full h-full p-3 pointer-events-none[^"]*"><p class="break-words absolute"[^>]*>Tell Claude what to remember or forget\.\.\.<\/p>/);
-  assert.match(html, /<button class="rounded-lg border-0\.5 hover:bg-surface-0 flex flex-row items-center justify-between text-start mt-4 h-9 px-3"><span class="font-base text-secondary">Manage edits<\/span>/);
+  // round3 (rl-switch-leaf): the dialog body is the 4.16336.0 chat-knowledge-v4 slice of cffc9ea71-Do_Jrd6d.js E / D, whose
+  // text classes are the 4.16336.0 type scale (text-body-regular where 3.6556.2 had font-base); pinned in the official text.
+  const knowledge4 = fs.readFileSync(path.resolve(import.meta.dirname, '../../reference/snapshots/claude-4.16336.0-20261104/ion-dist/assets/v1/cffc9ea71-Do_Jrd6d.js'), 'utf8');
+  assert.equal(knowledge4.split('n("span",{className:"text-body-regular text-secondary",children:n(u,{defaultMessage:"Manage edits",id:"wnHb2iwk7/"})})').length - 1, 1);
+  assert.equal(knowledge4.split('className:"flex flex-row items-center justify-between gap-3 ps-3 py-2.5 last:border-b-0 border-b-0.5 text-primary text-body-regular",children:[n("p",{children:e})').length - 1, 1);
+  assert.match(html, /<button class="rounded-lg border-0\.5 hover:bg-surface-0 flex flex-row items-center justify-between text-start mt-4 h-9 px-3"><span class="text-body-regular text-secondary">Manage edits<\/span>/);
   assert.match(html, />1<\/div>/);
   // Updating: the official status line replaces the summary (and the edit field is gone).
   const busy = renderToStaticMarkup(shallow(Memory.MemoryManageDialog, { open: true, onClose() {}, memory, busy: true, onControls() {} }).props.children);
@@ -151,7 +177,7 @@ test('Manage memory: header description, the summary, the edit field and Manage 
   const editsHtml = renderToStaticMarkup(edits.props.children);
   assert.match(editsHtml, /Back to memory/);
   assert.match(editsHtml, /Clear edits/);
-  assert.match(editsHtml, /<li class="flex flex-row items-center justify-between gap-3 ps-3 py-2\.5 last:border-b-0 border-b-0\.5 text-primary font-base"><p>Forget my job<\/p>/);
+  assert.match(editsHtml, /<li class="flex flex-row items-center justify-between gap-3 ps-3 py-2\.5 last:border-b-0 border-b-0\.5 text-primary text-body-regular"><p>Forget my job<\/p>/);
   assert.match(editsHtml, /aria-label="Remove edit"/);
   // A project's dialog (c274117ff O with a project): its own title and description.
   const project = shallow(Memory.MemoryManageDialog, { open: true, onClose() {}, memory, busy: false, onControls() {}, projectId: 'p1' });

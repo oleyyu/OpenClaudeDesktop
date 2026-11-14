@@ -86,6 +86,8 @@ import { SourceTitlebar, SourceCollapsedChrome, LocalReleaseNotes, LOCAL_RELEASE
 import { version as clientVersion } from "../package.json";
 import { markSeenValue, readSeenVersion, whatsNewVisible, writeSeenVersion } from "./whats-new-model.mjs";
 import { navAvailability } from "./source-nav-buttons";
+// surfaces wave 2 (titlebar): the 4.16336.0 Back / Forward read the official BrowserNavigation store; this App's history feeds it.
+import { useHostNavigation } from "./titlebar-host.jsx";
 import { SourceComposer, SourceEffortPopover, SourceUsagePopover, SourceRecentFolderMenu } from "./source-composer";
 // R4g-composer CP3 (X7-09): the Add menu's popup (c227f4d5e jj) and first row (Dj) as 2.42304.0 draws them.
 import { ComposerAddFilesItem, ComposerAddMenuPopup } from "./source-composer-add-menu.jsx";
@@ -109,7 +111,9 @@ import { archivedWithChangesMessages } from "./generated/sessions-page/messages-
 import { nestedMoveFailedMessages } from "./generated/sessions-page/messages-c48ea26ad.mjs";
 import { useEnvironmentFolderGone, useSavedEnvironments } from "./use-saved-environments.js";
 import { EnvironmentGoneLine } from "./source-composer-environment-bar.jsx";
-import { homeRelativePath } from "./generated/code-start/home-path.mjs";
+// composer-env (4.16336.0): paths read as cc43287c9 Yg (shared-3 VM); the bar, folder menu and gone line take the official
+// cd8a7d7c0 y label context themselves (window.desktopHomePath, electron/preload.cjs).
+import { environmentPathLabel, useHomeLabelContext } from "./source-composer-env-adapters.jsx";
 import { environmentWorkspace, environmentStartChanges } from "./saved-environment-model.mjs";
 import { gitRepoMenuItems, COMMIT_TURN_TEXT, commitAction, pullRequestAction, CREATE_PR_TURN_TEXT, CREATE_DRAFT_PR_TURN_TEXT, branchPullRequest, githubRepoUrl, githubBranchUrl, readPrCreateMode, writePrCreateMode, prStatusWarning, behindIndicator } from "./git-rail-model.mjs";
 import { sessionPullRequestUrl } from "./sidebar-palette-model.mjs";
@@ -199,6 +203,8 @@ import { SourceRecapCard } from "./source-recap-card.jsx";
 import { SourceTaskEvent } from "./source-task-event.jsx";
 import { backgroundTaskEventsByTurn } from "./task-event-model.mjs";
 import { ClaudeImportDialog } from "./source-claude-import.jsx";
+import { ImportHistoryDialog } from "./source-import-history.jsx";
+import { isImportedTurn, mayHaveImportedPrefix, withImportedPrefix } from "./import-history-display.mjs";
 import { SourceResumeDialog } from "./source-resume-dialog.jsx";
 import { autoCompactHint } from "./context-usage-model.mjs";
 import { MCP_STATUS_LABELS, customizeCore } from "./customize-model.mjs";
@@ -210,7 +216,7 @@ import { pendingConversions, conversionPatch, conversationImageCount, imageLimit
 import { ChatAddMenuItems, chatAddMenuEntries, chatAddMenuSlots } from "./source-chat-tools-menu.jsx";
 import { ChatProjectPopup } from "./source-chat-project-popup.jsx";
 import { chatSettingsFor, chatThinkingSection, chatToolSlots, chatToolsMessages, searchSupport, toggleResearch, toggleThinking, toggleWebSearch, webSearchNudge } from "./chat-tools-model.mjs";
-import { ChatMessageWarning } from "./generated/chat-messages/message-warning.mjs"; // w13-chatfn-tools: cc1aae219 eP
+import { ChatMessageWarning } from "./generated/chat-messages-v4/index.mjs"; // w13-chatfn-tools: cc1aae219 eP (round 4 S11 cutover: 4.16336.0 chat-messages-v4)
 import { SourceSwitch } from "./source-switch.jsx";
 import { CodexFeedbackDialog } from "./source-codex-feedback.jsx";
 import { retryingStatus, spawnPhaseLabel } from "./transcript-status-model.mjs";
@@ -236,7 +242,7 @@ import { createPreviewLinkRouter, previewChooserStore } from "./preview-link-rou
 import { SourcePreviewLinkChooser } from "./source-preview-link-chooser.jsx";
 import { KeyboardShortcutsDialog, SlashHelp, RewindPicker, RewindConfirmDialog, ReviewDialog, SessionStatusDialog, FeedbackShareDialog } from "./source-session-actions";
 import { SourceConfirmationDialog, SourceDialog, SourceDialogFooter, useDialogRetention } from "./source-dialog.jsx";
-import { CdsButton } from "./generated/view-tabs/index.js"; // W14-code r5 cleanup css5-settings-button-replica: shared-frame Uu, not the host replica
+import { CdsButton, CdsBadge } from "./cds-core.mjs"; // W14-code r5 cleanup css5-settings-button-replica: the official Button, not the host replica; host-wiring root: 4.16336.0 shared-frame Xu (export Id) through the cds-core facade
 import { withLocalCommandRows, rewindChoices, transcriptMarkdown } from "./slash-actions-model.mjs";
 import { REWIND_PREVIEW_DELAY_MS, rewindPreview, rewindRequestStep, rewindRestoreItems, rewindRestoresFiles, turnRows } from "./rewind-flow-model.mjs";
 import { chapterOf, withWorkflowToolRuns } from "./agent-tool-titles.mjs";
@@ -268,7 +274,13 @@ import { SourceChatArtifactPanel } from "./source-chat-artifact-panel.jsx";
 import { SourceChatArtifactCard, restoreChatArtifactTrigger } from "./source-chat-artifact-card.jsx";
 import { artifactToolCall, withArtifactChips } from "./chat-artifact-model.mjs";
 import { SidebarRoutinesHost, routinesPathname } from './source-sidebar-routines.jsx'; // W14-code r4 sidebar-new fr4-06
-import { SourceSidebar, SourceSidebarBoundary, SourceSidebarMenu, SourceSidebarSessionMenu, SessionKeepAwakeItem, SourceConfirmDialog, deleteConfirmCopy } from "./source-sidebar";
+import { SourceSidebar, SourceSidebarMenu, SourceSidebarSessionMenu, SessionKeepAwakeItem, SourceConfirmDialog, deleteConfirmCopy } from "./source-sidebar";
+import { HostFrameRoot, hostRouteGutter } from "./frame-sidebar-host.jsx"; // frame-sidebar 4.16336.0 (official vB / KR)
+// frame-sidebar-nav 4.16336.0: KR's SidebarNavBody is the sliced official nav body (shared-22 PI: New, Search, destinations,
+// the session lists) under its host (frame-sidebar-nav-body.jsx installs the host table before the nav body evaluates).
+import { HostSidebarNavBody } from "./frame-sidebar-nav-body.jsx";
+import { hostSupportedFeaturesV4 } from "./host-app-features.mjs";
+import { officialLocalSession, officialPathToHostRoute } from "./frame-sidebar-nav-host.jsx";
 import { SourceSessionDeleteDialog, SourceWorktreeDirtyDialog } from "./source-worktree-dispose-dialog.jsx";
 import { SidebarBulkWorktreeConfirm } from "./source-sidebar-bulk-worktree.jsx";
 import { connectWorktreeConfirmQueue, worktreeConfirmVariant, sessionWorktreeGate, worktreeGatedAction, settleWorktreeQueue, connectNestedFamilies, nestedSessionFamily, nestedFamilyAsks, familyWorktreeProbe, singleDeleteStep, confirmCouldntCheck, familyUnknownRead, connectWorktreeProbes, archiveWorktreeGate, lateArchiveWorktree, prefetchWorktreeProbes, mapConcurrent } from "./sidebar-bulk-model.mjs";
@@ -312,15 +324,28 @@ import { applyCjkOrder } from "./cjk-order.mjs";
 import { applyCustomTheme, themeDensity } from "./theme-custom-model.mjs";
 // R4g-composer CP1 (X7-07): the original CDS root (shared-frame Za) around the Code composer.
 import { CdsRoot } from "./generated/view-tabs/index.js";
+// host-wiring root: the 4.16336.0 CDS root (shared-frame xo, export Ef) through the cds-core facade. It provides the cds-core
+// Contexts the facade controls read; the view-tabs CdsRoot / Locale / Labels above stay for the 3.6556.2 regions, which read
+// the old graph's Contexts.
+import { CdsRoot as CdsCoreRoot } from "./cds-core.mjs";
+// titlebar relink T1: shared-92 ib (exported as sv / xa), the fizzy-lake parts shared-46 St reads once (`_=…A()`) and hands
+// the window root as experimental.fizzyLake; ib reads html[data-cds-fizzy-lake] (index.html) and caches it in rb.
+import { readFizzyLakeParts } from "./cds-core.mjs";
+// rl-main-entry U-1 (round3-decisions U-1, density as the official code): shared-frame Ja (useCdsDensity, `X(Da)`), the density
+// the window root resolved (xo `k=E??…` with E = "comfortable" under the panels part); the host's two extra density writers
+// (the 3.6556.2 view-tabs root and main.epitaxy-root) read it instead of the local theme density, see App below.
+import { useCdsDensity } from "./cds-core.mjs";
+// SB-0 / H11 (round4 wave8b sidebar): the official frame store shared-92 Y (qg), held by cds-core; main.jsx drives its actions.
+import { store_shared92_Y as officialFrameStore } from "./cds-core.mjs";
 import { SourceIncognitoShell, frameShellMounted } from "./source-incognito-shell.jsx"; // w13-close-chat-surface (E77)
-import { CdsIcon } from "./generated/view-tabs/index.js"; // w12c-wiring: the account menu's Learn more links (cd75f6c8c X)
+import { CdsIcon } from "./cds-core.mjs"; // w12c-wiring: the account menu's Learn more links (cd75f6c8c X); host-wiring root: 4.16336.0 shared-frame Bs (export lf)
 import { CdsLocaleContext } from "./generated/view-tabs/index.js"; // w11-sweep-rest: the root CDS locale (below)
 // R4i-graph GR2 (Y1-R3-graph-1): the app root's CDS labels (shared-23 UG passes CdsRoot `labels: Ev()`); see cds-labels.mjs.
 import { CdsLabelsContext } from "./generated/view-tabs/index.js";
-import { CdsTextInput } from "./generated/view-tabs/index.js"; // W14-code r3 css3-dialog-text-fields: shared-16's rename field (vs, TextInput)
+import { CdsTextInput } from "./cds-core.mjs"; // W14-code r3 css3-dialog-text-fields: shared-16's rename field (vs, TextInput); host-wiring root: 4.16336.0 shared-frame ww (export pc), what shared-140's rename dialog draws
 import { cdsLabels } from "./cds-labels.mjs";
-import { codePaneExperimental } from "./generated/code-composer/code-pane-experimental.mjs";
-import { useComposerFinalFocus } from "./generated/code-composer/composer-final-focus.mjs";
+import { codePaneExperimental } from "./generated/code-composer-v4/code-pane-experimental.mjs";
+import { useComposerFinalFocus } from "./generated/code-composer-v4/composer-final-focus.mjs";
 import { hostComposerFinalFocus } from "./composer-final-focus-model.mjs";
 // R4i-graph GR3: the Code session pane's drop zone (cc43287c9 YI over c4c113f6f f), see source-composer-pane-drop.jsx.
 import { SourcePaneDropZone } from "./source-composer-pane-drop.jsx";
@@ -342,13 +367,14 @@ import { btwTabMenuState } from "./btw-tab-menu-model.mjs";
 import { useShownSession, markUnreadUnlessShown } from "./generated/btw-pane/shown-session.mjs";
 import { useBtwReadStateHost, useReportShownSession } from "./btw-read-state.mjs";
 import { SourceSideChat, askSideQuestion } from "./source-side-chat.jsx";
-// w13-close-chat-sidechat (G9): Chat's own side chat (ca2ef848d T1, generated chat-side-chat) and its store.
+// w13-close-chat-sidechat (G9): Chat's own side chat and its store; rl-main-entry S3: the 4.16336.0 graph (round2
+// chat-side-chat: ca2ef848d b0 through source-chat-side-chat.jsx, shared-2 h0 here), the only store the host reads.
 import { SourceChatSideChat } from "./source-chat-side-chat.jsx";
-import { chatSideChatStore, useChatSideChatOpen } from "./generated/chat-side-chat/side-chat-store.mjs";
+import { chatSideChatStore, useChatSideChatOpen } from "./generated/chat-side-chat-v4/side-chat-store.mjs"; // 4.16336.0 shared-2 h0 (export Gn)
 import { chatSideChatInheritedCount } from "./chat-side-chat-model.mjs";
 import { t, tn } from "../electron/i18n/index.mjs";
 import { sessionOutputFiles, mergeSessionOutputMatches } from './mention-output-model.mjs';
-import { coreAssistant, coreForEngine, coreName, coreSupports, hasSignInOptions, registerCores } from "../electron/core-registry.mjs";
+import { coreAssistant, coreCapabilities, coreForEngine, coreName, coreSupports, hasSignInOptions, registerCores } from "../electron/core-registry.mjs";
 import { getAssistantName, getLocale } from "../electron/i18n/index.mjs";
 import { backendBanner, bannerFallbackModel, composerUsageNotice, mergeRateLimits, planUsageSummary, usageLimitReset } from "./usage-model.mjs";
 import { SourceInlineUsageBand, SourceInlineWorkflowBand, SourceSessionNotices, sessionNotices, UNTRUSTED_FOLDER_NOTICE, workflowSizeName as workflowSizeTaskName, workflowSizeTitle } from "./source-session-notices.jsx";
@@ -372,6 +398,7 @@ import { useFocusRegionNavigation } from "./use-focus-regions.js";
 import { WATCH_RECORD_COPY, useWatchRecord } from "./source-watch-record.jsx";
 import { demonstrationDuration, demonstrationTitle } from "./watch-record-model.mjs";
 import { isMacPlatform } from "./pane-keys-model.mjs";
+import { localMediaUrl } from './local-media-url.mjs';
 const api = window.desktop;
 // index.html ships data-mode="system" (the loaded CSS resolves it through
 // prefers-color-scheme, which nativeTheme.themeSource drives). Before the first
@@ -948,6 +975,17 @@ function App({ side = 0, initialSession = null }) {
   // Watch-record, "Record a skill" (source-watch-record.jsx, official shared-6 Sz): the Add menu's and Customize ›
   // Skills' entry, the macOS permissions dialog, and the delivery of a finished recording (deliverDemonstration).
   const watchRecordNotice = useCallback((message) => { if (toasts) toasts.add(message, { variant: "warning" }); else setError(message); }, [toasts]);
+  // Import history (source-import-history.jsx): a finished import's session metadata (importedFrom), kept before the open
+  // below reads it: navigate's load runs in this render's closure, before the merged sessionMetadata (or main's
+  // sidebar-state broadcast) arrives.
+  const importedRecords = useRef(new Map());
+  const importDone = useCallback((result) => {
+    if (!result?.threadId || !result.sessionMetadata) return;
+    importedRecords.current.set(result.threadId, result.sessionMetadata);
+    setSessionMetadata((value) => ({ ...value, [result.threadId]: { ...value[result.threadId], ...result.sessionMetadata } }));
+  }, []);
+  // Display prefixes of imported sessions already asked for (withImportPrefix): threadId → main's answer.
+  const importPrefixes = useRef(new Map());
   // W14-code r3-composer-01/02 (E94): in Code, attachment staging notices are c0fbbe82d Ha's addWarning toasts, one per
   // notice, `m(f.formatMessage({…id:"2jkIk4kqLa"}),{timeout:Ma})` with `Ma = 8e3` (Okt7cSOonY, b4a1PYnspq alike), and a
   // partial success is cc43287c9's `H(…)` addWarning (LPNNW+cd/e); only refusals and failures take the literal error card.
@@ -979,6 +1017,10 @@ function App({ side = 0, initialSession = null }) {
   };
   const watchRecordSession =useCallback(() => currentRef.current ?? undefined, []);
   const watchRecordComplete = useRef(null);
+  // Quick Entry (electron/quick-entry/window.cjs "quick-entry-submit"): the latest deliverer for the mount-time event
+  // listener, and a prompt for a recent session that waits for that session to open and load here.
+  const quickEntrySubmit = useRef(null), quickEntryPending = useRef(null);
+  const [quickEntryTick, setQuickEntryTick] = useState(0);
   const watchRecord = useWatchRecord({ call: api ? call : null, sessionId: watchRecordSession, notify: watchRecordNotice, available: !!api && isMacPlatform() && !PANE_WINDOW });
   // F08: the latest reduced state for the mount-time event listener (sub-agent ownership of a completed
   // turn), and the custom group a "New session" from its header menu files the next started session into.
@@ -1034,6 +1076,14 @@ function App({ side = 0, initialSession = null }) {
   const selectedEnvironment = mode === 'code' && !current && savedEnvironment?.target.cwd === cwd ? savedEnvironment : null;
   // W14-code r2-composer-04: cc43287c9 bue / Wue ya — the picked local environment's folder no longer exists.
   const environmentFolderGone = useEnvironmentFolderGone(savedEnvironments.run, selectedEnvironment);
+  // composer-env label context (relink C3 L2): cc43287c9 dxe `Qt=rT()` (cd8a7d7c0 y over window.desktopHomePath) and
+  // `_n=gn?Qt:iT` (gn = local / wsl place): a gone folder is always a local environment's, so its path reads under Qt.
+  const homeLabelContext = useHomeLabelContext();
+  // U-1: the official 4.16336.0 window has one density writer above the session, the CdsRoot c11959232 j_ renders
+  // (`y({density:"compact",fontMono,experimental,className:"contents",children:div.epitaxy-root…})`), which xo resolves to
+  // comfortable under panels; its div.epitaxy-root carries no data-density. The host's 3.6556.2 view-tabs root and
+  // main.epitaxy-root.cds-root have no official counterpart of their own, so they take that resolved value (Ja).
+  const windowDensity = useCdsDensity();
   const savedSelectionKey = savedEnvironment ? JSON.stringify([savedEnvironment.id, savedEnvironment.name, savedEnvironment.target, savedEnvironment.settings]) : null;
   const applySavedEnvironment = row => {
     if (!row || currentRef.current || modeRef.current !== 'code') return;
@@ -1263,7 +1313,9 @@ function App({ side = 0, initialSession = null }) {
   const rewindRunning = useRef(false);
   const misalignedTurn = current ? misalignmentStop(items, state.turnErrors?.[current], { activeTurnId: state.active[current] }) : null;
   // Per-turn edits card (turn-edits-model.mjs, Vpe): what each finished turn changed; Undo on the latest turn only.
-  const editsByTurn = useMemo(() => turnEdits(items, { activeTurnId: state.active[current] }), [items, current, state.active]);
+  // An imported conversation's display prefix (import-history-display.mjs, `imported-` turns) is no turn of this session.
+  const ownItems = useMemo(() => (items.some((item) => isImportedTurn(item.turnId)) ? items.filter((item) => !isImportedTurn(item.turnId)) : items), [items]);
+  const editsByTurn = useMemo(() => turnEdits(ownItems, { activeTurnId: state.active[current] }), [ownItems, current, state.active]);
   // The Changes pane outside a git repo: the core's turn diff when it sends one, else the session's own fileChange
   // edits (DeepSeek and the bridges send no turn/diff/updated), so View changes is never a dead button.
   const editsNeeded = !gitStatus?.isRepo && !(current && state.diffs[current]);
@@ -1403,7 +1455,7 @@ function App({ side = 0, initialSession = null }) {
   // A task-event row (source-task-event.jsx, L2): the Background tasks pane, on the run its <task-id> names when listed.
   const openTaskEvent=event=>{const task=event?.taskKey?tasks.find(entry=>entry.id===event.taskKey):event?.taskId?tasks.find(entry=>entry.kind==='workflow'&&entry.run?.taskId===event.taskId):null;changeTileView({taskViews:[]});if(task)setTaskFocus(task.id);openPaneTile('tasks');};
   // Finished background commands and agents as Claude's task-event rows at the end of the turn they finished in.
-  const taskEventsByTurn=backgroundTaskEventsByTurn(tasks,{items,turnTimes:state.turnTimes?.[current],activeTurnId:state.active[current],backgroundItemIds:new Set(Object.keys(state.background?.[current]?.knownTerminals||{}))});
+  const taskEventsByTurn=backgroundTaskEventsByTurn(tasks,{items:ownItems,turnTimes:state.turnTimes?.[current],activeTurnId:state.active[current],backgroundItemIds:new Set(Object.keys(state.background?.[current]?.knownTerminals||{}))});
   const stopBackgroundTask=async task=>{const expected={connectionId:state.approvalConnectionId,connectionEpoch:state.approvalConnectionEpoch};
     if(task.kind==='workflow')return isModelWorkflow(task.run)?rpc('codeDesktop/workflow/stop',{threadId:current,runId:task.run.runId??task.run.id,attemptId:task.run.attemptId}):call('workflow-stop',{id:task.run.id});
     if(task.kind==='agent')await call('interrupt',{threadId:task.threadId,turnId:task.turnId,expected});
@@ -2490,7 +2542,8 @@ function App({ side = 0, initialSession = null }) {
     if (imageFallback && entry.context.screenshot) toasts?.add(IMAGE_FALLBACK_NOTE, { variant: 'neutral' });
     requestAnimationFrame(() => { if (currentRef.current === event.sessionId) textarea.current?.focus(); });
   }
-  const filePreviewUrl = (filePath) => encodeURI(`file://${filePath}`);
+  // U-2: the composer image tile's URL is the claude-media:// URL main mints for the staged path (src/local-media-url.mjs).
+  const filePreviewUrl = (filePath) => localMediaUrl(filePath) ?? "";
   // Paste (image lane, official q/ue) and Finder drop: files with a real path
   // are referenced in place; clipboard images are persisted by the main
   // process so localImage can carry an actual path. Notices use the official
@@ -2971,6 +3024,7 @@ function App({ side = 0, initialSession = null }) {
       if (e.kind === "computer-use-dock-state") setCuDocked(e.docked === true);
       // Watch-record (main.cjs notify): a recording this view started is done (or discarded).
       if (e.kind === "watch-record-complete") watchRecordComplete.current?.(e);
+      if (e.kind === "quick-entry-submit" && side === 0 && !PANE_WINDOW) quickEntrySubmit.current?.(e);
     });
     init();
     call("computer-use:in-use").then((list) => { if (Array.isArray(list)) setComputerUseSessions(list); }, () => {});
@@ -3014,6 +3068,9 @@ function App({ side = 0, initialSession = null }) {
   // cds-root gets data-font (anthropic → "sans", otherwise the system branch;
   // OpenDyslexic rides on that branch through --font-ui-dyslexic).
   const cdsFont = cdsFontFor(prefs);
+  // host-wiring root: the 4.16336.0 CdsRoot's font is "anthropic" | "system" (shared-frame Nr; 4.16336.0 shared-92 Ox:
+  // `t=e==="anthropic"?"anthropic":"system"` → cdsFont), not the 3.6556.2 "sans" token cdsFont keeps for the old roots.
+  const cdsCoreFont = prefs.interfaceFont === "anthropic" ? "anthropic" : "system";
   useEffect(() => { setPersona(boot?.config?.persona); }, [boot?.config?.persona]);
   useEffect(() => {
     // appearance-root.mjs: the same writer a popped-out pane window uses (PopoutApp), so both look alike.
@@ -3473,10 +3530,11 @@ function App({ side = 0, initialSession = null }) {
       if (seq !== loadSeq.current) { releaseSession(id, currentRef.current); return; }
       applySessionModel(id, r);
       const history = await loadThreadHistory(rpc, { threadId: id, thread: r.thread, route, initialPage: r.initialTurnsPage ?? null });
+      const shown = await withImportPrefix(id, { ...r.thread, turns: history.turns });
       if (seq === loadSeq.current) {
         setHistoryUnavailable((value) => historyMissing(history, known, r.thread) ? id : value === id ? null : value);
         setHistoryTruncated((value) => history.truncated ? id : value === id ? null : value);
-        dispatch({ type: "hydrate", id, thread: { ...r.thread, turns: history.turns }, baselineItems: state.items[id], baselineActive: state.active[id], baselineActiveVersion: state.activeVersions?.[id] });
+        dispatch({ type: "hydrate", id, thread: shown, baselineItems: state.items[id], baselineActive: state.active[id], baselineActiveVersion: state.activeVersions?.[id] });
         if (r.thread.cwd) setCwd(r.thread.cwd);
         if (!isArchived) loadQueue(id);
       }
@@ -3547,7 +3605,7 @@ function App({ side = 0, initialSession = null }) {
     const toggle = (event) => {
       if (event.repeat || event.isComposing || !event.metaKey || event.shiftKey || event.altKey || event.ctrlKey || event.key !== ";") return;
       if (!currentRef.current || settings || !splitActiveRef.current) return;
-      // G9: in Chat, ⌘; is Chat's side chat (its own btw_side_chat listener, source-chat-side-chat-adapters.jsx p1).
+      // G9: in Chat, ⌘; is Chat's side chat (its own btw_side_chat listener, ca2ef848d c0: source-chat-side-chat-v4-adapters.jsx).
       if (modeRef.current === "chat") return;
       // A core without side questions (Codex) leaves ⌘; alone; an open card still closes.
       if (!sideQuestionsRef.current) { setSideChat(value => value.open ? { open: false, pending: null } : value); return; }
@@ -3640,6 +3698,8 @@ function App({ side = 0, initialSession = null }) {
   // index.chunk-D6ATlqeD.js Syr: the Go menu's go-back/go-forward items are
   // enabled from canGoBack/canGoForward on every navigation.
   const navigation = navAvailability(historyAt, history.length);
+  // shared-1 jm / shared-20 dv, fv (titlebar-host.jsx): the window's BrowserNavigation store is the primary side's history.
+  useHostNavigation(historyAt, history.length, travel, side === 0);
   useEffect(() => {
     if (splitActive) call("navigation-state", navigation).catch(() => {});
   }, [navigation.canGoBack, navigation.canGoForward, splitActive]);
@@ -3875,6 +3935,19 @@ function App({ side = 0, initialSession = null }) {
     options.codeDesktop = { ...(options.codeDesktop ?? {}), workflowTurn: { permission, mode, ultracode: ultracodeOn, ...(keyword ? { keyword: true } : {}) } };
     return withAgentChoice(options);
   }
+  // Import history (import-history-display.mjs): an inject/handoff import shows the conversation it came from before
+  // its own turns, from the copy main keeps (chat-import `prefix`). Only a session whose metadata records such an
+  // import asks (every other session, native and fork imports included, skips the call). One answer per session and window.
+  async function withImportPrefix(id, thread) {
+    const metadata = sessionMetadata[id]?.importedFrom ? sessionMetadata[id] : importedRecords.current.get(id);
+    if (!id || !mayHaveImportedPrefix(metadata)) return thread;
+    let prefix = importPrefixes.current.get(id);
+    if (prefix === undefined) {
+      prefix = await call("chat-import", { op: "prefix", threadId: id }).catch(() => null);
+      importPrefixes.current.set(id, prefix);
+    }
+    return prefix?.turns?.length ? withImportedPrefix(thread, prefix) : thread;
+  }
   async function ensureResumed(id) {
     if (resumed.current.has(id)) return;
     const known = knownThread(id);
@@ -3885,7 +3958,7 @@ function App({ side = 0, initialSession = null }) {
     }, known));
     resumed.current.add(id);
     const history = await loadThreadHistory(rpc, { threadId: id, thread: restored.thread, route, initialPage: restored.initialTurnsPage ?? null });
-    dispatch({ type: "hydrate", id, thread: { ...restored.thread, turns: history.turns }, baselineItems: state.items[id], baselineActive: state.active[id], baselineActiveVersion: state.activeVersions?.[id] });
+    dispatch({ type: "hydrate", id, thread: await withImportPrefix(id, { ...restored.thread, turns: history.turns }), baselineItems: state.items[id], baselineActive: state.active[id], baselineActiveVersion: state.activeVersions?.[id] });
   }
   // Band/rail Commit action (git-status-card.js:4955-4990): a real turn with the
   // official text, under the session's current permission mode and approvals.
@@ -4300,7 +4373,7 @@ function App({ side = 0, initialSession = null }) {
     // "epitaxy: draft submit blocked"}); Ue.onPress?.(); return; }` — Wue's block for a gone folder (+NHh0bYyxd), whose press
     // opens the environment's editor; the draft stays.
     if (!current && environmentFolderGone && selectedEnvironment) {
-      const text = t("{name} can’t start: {path} no longer exists. Edit the environment to choose another folder.", { name: selectedEnvironment.name, path: homeRelativePath(selectedEnvironment.target.cwd) });
+      const text = t("{name} can’t start: {path} no longer exists. Edit the environment to choose another folder.", { name: selectedEnvironment.name, path: environmentPathLabel(selectedEnvironment.target.cwd, homeLabelContext) });
       if (toasts) toasts.add(text, { variant: "danger" }); else setError(text);
       editSavedEnvironment(selectedEnvironment.id);
       return;
@@ -4601,6 +4674,47 @@ function App({ side = 0, initialSession = null }) {
     finally { if (Number.isInteger(payload.holdEpoch) && payload.holdEpoch >= 0) call("watch-record:dismiss-pill", { holdEpoch: payload.holdEpoch }).catch(() => {}); }
   }
   watchRecordComplete.current = (payload) => { void deliverDemonstration(payload); };
+  // Quick Entry's delivery (official QuickEntryApiRegistrar newConversationWithFirstMessage / processQuickEntry with a
+  // chatId): the prompt typed in the floating bar goes out as the user's message — into a new session started from this
+  // window's Home settings, or into the recent session the bar's target menu named (queued while that session runs a
+  // turn). It rides sendMessage's `demonstration` path, the one that sends a message the composer never held, so a draft
+  // being typed here stays. A send that could not start says so and leaves the prompt in an empty composer.
+  function quickEntryFailed(text) {
+    const message = t("Your Quick Entry message wasn’t sent. Try again.");
+    if (toasts) toasts.add(message, { variant: "danger" }); else setError(message);
+    setDraft((value) => value || text);
+  }
+  async function deliverQuickEntry({ text, sessionId = null }) {
+    const failed = () => quickEntryFailed(text);
+    try {
+      const input = [{ type: "text", text, text_elements: [] }];
+      const sent = await sendMessage(text, [], [], { demonstration: { input, title: firstMessageName(text, [], { max: 64 }), newSession: sessionId === null } });
+      if (!sent) failed();
+    } catch { failed(); }
+  }
+  quickEntrySubmit.current = (payload) => {
+    const text = typeof payload.text === "string" ? payload.text : "";
+    if (text.trim().length < 3) return;
+    const sessionId = typeof payload.sessionId === "string" && payload.sessionId ? payload.sessionId : null;
+    if (settings) setSettings(false);
+    if (sessionId === null || sessionId === currentRef.current) { quickEntryPending.current = { text, sessionId, at: Date.now(), ready: true }; setQuickEntryTick((tick) => tick + 1); return; }
+    quickEntryPending.current = { text, sessionId, at: Date.now(), ready: false };
+    (navigateRef.current ?? navigate)(sessionId);
+    setQuickEntryTick((tick) => tick + 1);
+  };
+  useEffect(() => {
+    const pending = quickEntryPending.current;
+    if (!pending) return undefined;
+    const expire = () => { if (quickEntryPending.current !== pending) return; quickEntryPending.current = null; quickEntryFailed(pending.text); };
+    if (pending.sessionId !== null && (current !== pending.sessionId || loading) || sending || !boot?.connected) {
+      // The session did not open, or the core is not connected: give up after a while instead of sending much later.
+      const timer = setTimeout(expire, Math.max(0, 15000 - (Date.now() - pending.at)));
+      return () => clearTimeout(timer);
+    }
+    quickEntryPending.current = null;
+    void deliverQuickEntry(pending);
+    return undefined;
+  }, [quickEntryTick, current, loading, sending, boot?.connected]);
   // send()'s rollback for a session it created whose first turn/start failed: the row leaves the sidebar, the window
   // goes back to Home with the message still in the composer (so it can be fixed and resent), and the empty thread is
   // deleted from the core (archived where a core can't delete). Never touches a session that has a turn.
@@ -4951,7 +5065,7 @@ function App({ side = 0, initialSession = null }) {
           // 'Resume a session': every session the core keeps, its own CLI's or app's included (source-resume-dialog.jsx).
           case "resume": setActionDialog({ kind: "resume", query: args || "" }); break;
           case "config": setSettings("code"); break;
-          case "login": setSettings("preferences#account"); break;
+          case "login": setSettings("account#account"); break;
           case "update": setSettings("cores"); break;
           case "usage": setSettings("usage"); break;
           case "sandbox": setSettings("code#sandbox"); break;
@@ -5095,7 +5209,7 @@ function App({ side = 0, initialSession = null }) {
       const result=await call('slash-rewind',{threadId:id,beforeTurnId,restoreFiles,expected:{connectionId:state.approvalConnectionId,connectionEpoch:state.approvalConnectionEpoch}});
       const history=await loadThreadHistory(rpc,{threadId:id,thread:result.thread,route:historyRoute(result.thread)});
       if(history.truncated||history.unavailable)throw new Error(t('Rewind succeeded, but retained history could not be fully loaded. Reopen the session.'));
-      dispatch({type:'hydrate',id,thread:{...result.thread,turns:history.turns},replaceHistory:true,baselineItems,baselineActiveVersion});
+      dispatch({type:'hydrate',id,thread:await withImportPrefix(id,{...result.thread,turns:history.turns}),replaceHistory:true,baselineItems,baselineActiveVersion});
       setLocalCommandRows(rows=>({...rows,[id]:[]}));
       // Za(e || t): the rewound message goes back into the composer, which takes focus (Ji.current?.scheduleFocus()) once
       // the confirm has closed and released the modal inert.
@@ -6065,7 +6179,7 @@ function App({ side = 0, initialSession = null }) {
       call("login", { type: signInBrowser?.type || "chatgpt", ...(signInBrowser?.provider ? { codeDesktop: { provider: signInBrowser.provider } } : {}) }).catch((e) => setError(e.message));
       return;
     }
-    setSettings("preferences#account");
+    setSettings("account#account");
   }
   useEffect(() => {
     if (side !== 0 || onboardingOffered.current || !boot?.connected || !boot.config || boot.config.onboarded === true) return;
@@ -6195,6 +6309,9 @@ function App({ side = 0, initialSession = null }) {
   const dismissedRecentFolders = boot?.config?.dismissedRecentFolders;
   const recentFoldersEnabled = mode === "code" && !current && sessionsLoaded;
   const codeSessions = useMemo(() => surfaceSessions(sessions, "code", sessionMetadata), [sessions, sessionMetadata]);
+  // frame-sidebar-nav LocalSessions (frame-sidebar-nav-host.jsx): the Code sessions in the official record shape, in every
+  // mode (the official LocalSessionManager list does not follow the shown surface), one array per change of the list.
+  const navLocalSessions = useMemo(() => codeSessions.map((session) => officialLocalSession(session, sessionMetadata[session.id])), [codeSessions, sessionMetadata]);
   // The sidebar's list keeps its identity across renders: a fresh filter per render re-ran the sidebar's [sessionById]
   // effects on every keystroke, and their queued updates chained into React #185 under fast typing.
   const sidebarSessions = useMemo(() => surfaceSessions(sessions, mode, sessionMetadata), [sessions, mode, sessionMetadata]);
@@ -6513,6 +6630,48 @@ function App({ side = 0, initialSession = null }) {
     clearTimeout(peekTimer.current); peekTimer.current = null;
     setPeek((previous) => previous.hovering || previous.peeked ? { ...previous, hovering: false, peeked: false } : previous);
   }, [cuDocked]);
+  // SB-0 / H11 (round4 wave8b sidebar): the main window's frame (generated/frame-sidebar, titlebar-frame, frame-sidebar-nav)
+  // reads the official frame store shared-92 Y (cds-core store_shared92_Y), not a host store. main.jsx drives Y with Y's own
+  // actions from its sidebar model (the stored preference and width of its settings, the peek, the narrow viewport and the
+  // computer-use dock): setCollapsedPref / commitSidebarWidth / setSidebarFloor / setIsNarrowViewport / setIsCuDocked /
+  // setHovering, resetTransients when the peek is gone; and follows what the sliced frame does to Y itself (cj and fO's
+  // toggleCollapsed, ZA / rT's commitSidebarWidth / setCollapsedPref, the official closePeek / resetTransients): collapsed and
+  // width go to its settings (setSidebarCollapsed / saveWidth, one write per change), hovering / peeked to its peek.
+  const frameStoreDriven = side === 0 && !NO_SIDEBAR;
+  const frameFollow = useRef(null);
+  frameFollow.current = { setSidebarCollapsed, saveWidth, collapsed: collapsedRef.current, sidebarWidth };
+  useLayoutEffect(() => { if (frameStoreDriven) officialFrameStore.getState().setCollapsedPref(!!collapsed); }, [frameStoreDriven, collapsed]);
+  useLayoutEffect(() => {
+    if (frameStoreDriven && officialFrameStore.getState().sidebarWidth !== sidebarWidth) officialFrameStore.getState().commitSidebarWidth(sidebarWidth);
+  }, [frameStoreDriven, sidebarWidth]);
+  useLayoutEffect(() => { if (frameStoreDriven) officialFrameStore.getState().setSidebarFloor(sidebarFloor); }, [frameStoreDriven, sidebarFloor]);
+  useLayoutEffect(() => {
+    if (frameStoreDriven && officialFrameStore.getState().isNarrowViewport !== narrowMedia) officialFrameStore.getState().setIsNarrowViewport(narrowMedia);
+  }, [frameStoreDriven, narrowMedia]);
+  useLayoutEffect(() => {
+    if (frameStoreDriven && officialFrameStore.getState().isCuDocked !== cuDocked) officialFrameStore.getState().setIsCuDocked(cuDocked);
+  }, [frameStoreDriven, cuDocked]);
+  useLayoutEffect(() => {
+    if (!frameStoreDriven) return;
+    const frame = officialFrameStore.getState();
+    if (peek.hovering) { if (!frame.hovering || !frame.peeked) frame.setHovering(true); }
+    else if (frame.hovering) frame.setHovering(false);
+    else if (!peek.peeked && frame.peeked && !frame.isResizing) frame.resetTransients();
+  }, [frameStoreDriven, peek.hovering, peek.peeked]);
+  useEffect(() => {
+    if (!frameStoreDriven) return undefined;
+    return officialFrameStore.subscribe((state, previous) => {
+      const follow = frameFollow.current;
+      if (state.collapsed !== previous.collapsed && state.collapsed !== follow.collapsed) follow.setSidebarCollapsed(state.collapsed);
+      if (state.sidebarWidth !== previous.sidebarWidth && state.sidebarWidth !== follow.sidebarWidth) follow.saveWidth(state.sidebarWidth);
+      if (state.hovering !== previous.hovering || state.peeked !== previous.peeked) {
+        const shown = peekState.current;
+        if (state.hovering === shown.hovering && state.peeked === shown.peeked) return;
+        clearTimeout(peekTimer.current); peekTimer.current = null;
+        setPeek((value) => ({ ...value, hovering: state.hovering, peeked: state.peeked }));
+      }
+    });
+  }, [frameStoreDriven]);
   // shared-2 toggleCollapsed: while narrow (Dg) it opens or closes the peek card instead of the stored
   // preference. Used by ⌘B, View > Show/Hide Sidebar and the 'Show sidebar' trigger (Nb onClick Tb(r)).
   const toggleNarrowPeek = () => { if (peekState.current.hovering) closePeek(); else openPeek(); };
@@ -6784,20 +6943,28 @@ function App({ side = 0, initialSession = null }) {
           </>
         );
       }
-      case "titlebar":
+      case "titlebar": {
+        const railRows = titlebarRailMenuItems(titlebarRailFolded ? sessionRailToggle : undefined);
+        const viewRows = titlebarViewOptionsItems({ surface: mode, session: !!menu.data, terminalAvailable, previewAvailable, filesAvailable, panes: openPanes,
+            hiddenCount: titlebarHidden, hasTasks: tasks.length > 0, hasPlan: !!(state.plans[current]?.length || state.planDocs?.[current]),
+            hasRuns: mode === "code" && !!menu.data && sessionHasRuns(menu.data.id, { sessions, metadata: sessionMetadata }),
+            sideChatAvailable: mode === "code" && !!menu.data && menu.data.id === current && !sessionArchived(menu.data) && commandContext.sideQuestions === true,
+            sideChatShown: sideChat.open || openPanes.has("session"), taskCount: taskSections(tasks).running.length,
+            onToggleTerminal: toggleTerminalPane, onTogglePane: togglePaneTile,
+            onToggleSideChat: () => setSideChat((value) => ({ open: !value.open, pending: null })) });
         return <>
           {/* R3-topbar TT-03 (2.42304.0 c73f45bc3 Vh): first the toggles the titlebar folded away (`jh(Rh(...),
               hiddenMainPaneCount).folded`, in toggle order, each with the toggle's icon, label and shortcut, checked while
               its pane is open), then Background tasks, Plan. */}
           {/* R4f-rail SR-6 (2.42304.0 cf74bc599 tE): ahead of them, the folded session rail toggle is the first group,
               `k = XT(a, {icon: "ListCard", label: Hide/Show session rail, onSelect: a?.onToggle})`, unchecked. */}
-          {titlebarRailMenuItems(titlebarRailFolded ? sessionRailToggle : undefined).map((item) => <SourceMenu.Item key="session-rail"
+          {railRows.map((item) => <SourceMenu.Item key="session-rail"
             icon={item.icon} onClick={item.onSelect}>{t(item.label)}</SourceMenu.Item>)}
-          {titlebarViewOptionsItems({ surface: mode, session: !!menu.data, terminalAvailable, previewAvailable, filesAvailable, panes: openPanes,
-            hiddenCount: titlebarHidden, hasTasks: tasks.length > 0, hasPlan: !!(state.plans[current]?.length || state.planDocs?.[current]),
-            hasRuns: mode === "code" && !!menu.data && sessionHasRuns(menu.data.id, { sessions, metadata: sessionMetadata }),
-            onToggleTerminal: toggleTerminalPane, onTogglePane: togglePaneTile })
-            .map(item => <SourceMenu.Item key={item.kind} className="st-view-item" icon={item.icon} checked={item.checked} shortcut={item.shortcut}
+          {/* cf74bc599 mM: a count above 0 is the trailing neutral sm Badge; a counted row that is not checked keeps no check slot. */}
+          {viewRows
+            .map(item => <SourceMenu.Item key={item.kind} className="st-view-item" icon={item.icon} shortcut={item.shortcut}
+              {...(item.count !== undefined && !item.checked ? { role: "menuitemcheckbox", "aria-checked": false } : { checked: item.checked })}
+              trailing={item.count > 0 ? <CdsBadge size="sm" variant="neutral">{item.count}</CdsBadge> : undefined}
               onClick={item.onSelect}>{t(item.label)}</SourceMenu.Item>)}
           {/* cf74bc599 ZT (11900-12070) View options: the view items, then a separator and 'Keep computer awake' (only
               for this session). Lifecycle items (rename, export, fork, archive, delete), Open in and Transcript view live in
@@ -6805,7 +6972,8 @@ function App({ side = 0, initialSession = null }) {
               (KT("")) and the session rail toggle has no local counterpart. c593f7513 kp (6759-6777) offers keepAwake
               only for a session that is not archived; without it ZT renders neither the row nor its separator. */}
           {!sessionArchived(menu.data) && <>
-            <SourceMenu.Separator />
+            {/* hM `U = z && F.length > 0 && Separator`: only below rail / view rows, never leading the menu. */}
+            {(railRows.length > 0 || viewRows.length > 0) && <SourceMenu.Separator />}
             <SessionKeepAwakeItem session={menu.data} metadata={sessionMetadata[menu.data.id]}
               onAction={(...args) => sessionAction(...args).catch(actionFailed(sessionActionErrorKind(args[0])))} />
           </>}
@@ -6820,6 +6988,7 @@ function App({ side = 0, initialSession = null }) {
             </>;
           })()}
         </>;
+      }
       case "session-title":
         // w13-close-cowork-sidebar (chatui-sidebar-star-02): a Chat session's title is ca2ef848d F5 (y5's session branch,
         // c21f11e6d BP's props; chat-starred-model.mjs chatTitleMenuEntries): Schedule / Turn into skill fill the composer
@@ -7135,7 +7304,8 @@ function App({ side = 0, initialSession = null }) {
     // session whose core serves the request.
     resolveTurn: (itemId) => {
       const row = items.find((item) => item.id === itemId);
-      if (!row?.turnId || row.turnId === state.active[current]) return null;
+      // An imported prefix row is a copy shown for context: nothing to rewind to or fork from.
+      if (!row?.turnId || row.turnId === state.active[current] || row.importedPrefix || isImportedTurn(row.turnId)) return null;
       return { turnId: row.turnId, user: row.type === "userMessage" };
     },
     // onRewindToMessage (cc43287c9 :33905): the message's own rewind request, no picker.
@@ -7457,6 +7627,10 @@ function App({ side = 0, initialSession = null }) {
   // to html[data-mode] (written by theme-command-model), density / font / platform repeat main.cds-root's so no token
   // changes, and no pageBackground is passed (R4g-composer-CP1.md §3). R4g-composer CP4 (X7-10): experimental is the Code
   // pane's (shared-18 Ub, `naturalImageTiles: "sized"`), which the composer's image tiles read.
+  // host-wiring root: inside it the 4.16336.0 CdsRoot with the same props, so cds-core controls under the composer read the
+  // same density / font / platform / experimental (4.16336.0 c11959232 j_ wraps the pane in Ef `{density:"compact",
+  // fontMono, experimental, className:"contents"}`, experimental shared-18 BC = `{naturalImageTiles:"sized"}`, the value
+  // codePaneExperimental carries). Its font is the 4.16336.0 token (cdsCoreFont). The old root stays for the 3.6556.2 regions.
   // The effort pick of the effort popover and of the environment bar's model menu (its Effort submenu).
   // W14-code composer-08 (c9543da06 Ls waSR82Iwd2): in Code a failed effort change is a danger toast.
   const effortChangeFailed = (e) => { if (mode === "code" && toasts) toasts.add(t("Effort change couldn’t be applied. You can try again."), { variant: "danger" }); else setError(e.message); };
@@ -7508,7 +7682,8 @@ function App({ side = 0, initialSession = null }) {
     return codeNoticeSlots ? <SourceCodeNoticeRegion session={current || null}>{bands}{stack}{approveOnce}</SourceCodeNoticeRegion> : <>{inlineCards}{bands}{stack}{approveOnce}</>;
   };
   const renderMainComposer = ({ notices = false } = {}) => (
-    <CdsRoot density={themeDensity(boot?.config)} font={cdsFont} platform="desktop" experimental={codePaneExperimental} className="contents">
+    <CdsRoot density={windowDensity} font={cdsFont} platform="desktop" experimental={codePaneExperimental} className="contents">
+    <CdsCoreRoot density={themeDensity(boot?.config)} font={cdsCoreFont} platform="desktop" experimental={codePaneExperimental} className="contents">
     <SourceComposer
       afterComposer={!current && mode === "code" && openPanes.size > 0 ? <SourceTaskBacklog folder={workdir} call={call}
         onTake={takeStartTask} onFocusComposer={() => textarea.current?.focus()} onError={setError} /> : undefined}
@@ -7548,7 +7723,9 @@ function App({ side = 0, initialSession = null }) {
         onOpenChanges={() => setPanel("changes")} onToggleChanges={() => togglePaneTile("changes")} onMeasured={rememberBandHeight} />
         // Sje's stale hold (gje / sAe): the revisited session's last row, held inert at its remembered height.
         : bandHold ? <SessionBandHold status={bandHold.status} heightPx={bandHold.heightPx} /> : null)}</> : false}
-      showPet={mode === "code" && !current && !error && !draft.startsWith("/")}
+      // code-start v4: 4.16336.0 draws the Clawd inside the start card (cc43287c9 Aye / Dve lead H5 -> g_e), not above the
+      // composer (3.6556.2 jfe), so the composer's pet slot stays off.
+      showPet={false}
       showContext={mode === "code" && !current}
       // cc43287c9 :28686 placeholder Yn ? 'Type / for commands' : 'Describe a task or ask a question'
       // (Yn = Pn?.id ?? null, :27454) — composer-placeholder.mjs; chat mode keeps its own copy.
@@ -7669,6 +7846,7 @@ function App({ side = 0, initialSession = null }) {
       spawnNotice={spawnNotice}
       onUseSuggestedCommand={(command) => { setDraft(`/${command} `); setSpawnNotice(null); textarea.current?.focus(); }}
     />
+    </CdsCoreRoot>
     </CdsRoot>
   );
   // R4f-rail SR-7: the chat tile's data for the session rail (source-session-rail.jsx SessionRailRow and fO's host stand-in):
@@ -7727,52 +7905,55 @@ function App({ side = 0, initialSession = null }) {
   const openSidebarRoutine = (id) => { setRoutineSelection(id); setSection('routines'); };
   const openSidebarRoutineRun = (id) => navigate(id);
   const leaveDeletedRoutine = (id) => { setRoutineSelection((selected) => (selected === id ? null : selected)); };
-  return (
-    <div
-      className={
-        // 3.6556.2 shared-22 oR: className "dframe-root draggable-none" (c6a992d55 .draggable-none{app-region:no-drag};
-        // the titlebars' own drag regions sit inside and still win).
-        "desktop-app dframe-root draggable-none" + (side > 0 ? " split-secondary" : "")
-      }
-      // R01 / oR `"data-collapsed": F` (F = i && !0 || void 0): collapsed by the stored preference or the narrow viewport
-      // (sidebar-main.js:15367-15372). The loaded shared-styles lay the collapsed frame out from it: the aside is the
-      // trigger pill (SourceCollapsedChrome, passed below), its body the full-height drawer of width --df-peek-width.
-      // A session popout / pane window has no sidebar, so no collapsed frame either.
-      data-collapsed={effectiveCollapsed && !NO_SIDEBAR && frameShellMounted({ isIncognito: incognitoShell }) || undefined}
-      // oR `"data-sidebar-density": m` (m = Ha(), the density the aside also writes: source-sidebar.jsx data-density).
-      data-sidebar-density="compact"
-      data-variant="web"
-      data-frame-mode={mode}
-      data-session-popout={SESSION_POPOUT || undefined}
-      data-pane-window={PANE_WINDOW?.pane}
-      // W14-code r4 r4pa-c03 (E90 / E95, GUI check): a pane window is c3af3d0ed S's `div.dframe-root` with cd377abb5 lr's
-      // containerProps, `data-popout="traffic-lights"` (macOS, lights shown) and the --df-popout-zoom-out style below.
-      data-popout={paneWindowPopout?.["data-popout"]}
-      data-fullscreen={fullScreen || undefined}
-      // sidebar-main.js:15304-15320 dR mirrors the peek store onto the root (F08).
-      data-hovering={effectiveCollapsed && peek.hovering || undefined}
-      data-peeked={effectiveCollapsed && peek.peeked || undefined}
-      // 3.6556.2 shared-22-Bwn3sJTG.js oR: --df-sidebar-width = shared-52 x_ max(sidebarWidth, sidebarFloor),
-      // --df-sidebar-floor = lR sidebarFloor, the spacer = shared-10 Gn trafficLightSpacerWidth (0 in full screen) in
-      // the app-top-offset formula, --df-window-border = XL({ macAppInWindow: !fullscreen, zoomFactor }) and
-      // --df-drag-ghost-z = Wi (shared-46 kj = shared-frame au 9e3 + 1). Exactly oR's five; the drawer is placed by the
-      // [data-collapsed] rules (no host --df-peek-top/-left any more).
-      style={{ "--df-sidebar-width": effectiveSidebarWidth(sidebarWidth, sidebarFloor) + "px", "--df-sidebar-floor": sidebarFloor + "px",
-        "--df-traffic-light-spacer": `max(0px, calc(${fullScreen ? 0 : trafficLightSpacer}px - 1000 * max(0px, var(--app-top-offset, 0px) - 48px)))`,
-        "--df-window-border": fullScreen ? "0px" : `${1 / zoomFactor}px`, "--df-drag-ghost-z": 9001, ...paneWindowPopout?.style }}
-    >
-      {/* W14-code fr2-04: shared-5 Bw, the polite announcer zw (JD's sidebar announcements) speaks through; one per window. */}
-      {side === 0 && <SourceLiveAnnouncer />}
-      {/* shared-21 lK / shared-22 15368-15373: a sidebar render error shows "Sidebar failed to load." with Try again
-          (remount) instead of taking the window down. */}
-      {/* w13-close-chat-surface (E77): shared-78 vK — no frame shell, so no sidebar, while the window is incognito. */}
-      {side === 0 && !NO_SIDEBAR && frameShellMounted({ isIncognito: incognitoShell }) && <SourceSidebarBoundary>
-      {/* W14-code r4 sidebar-new fr4-06: the Code sidebar's Routines section host (source-sidebar-routines.jsx): the
-          scheduler's Code tasks at app level, the routine runs, the unread store and the delete confirmation. */}
+  // frame-sidebar-nav 4.16336.0 (relink-prep/plan.json mainJsxMinimalChange): the official nav body's host value. Its
+  // LocalSessions bridge lists the Code sessions in the official record shape; the official pathnames it navigates to come
+  // back as host routes (frame-sidebar-nav-host.jsx officialPathToHostRoute); Search opens the host palette.
+  const sidebarNavRoutes = {
+    openSurface: (target, id) => { if (!id && target !== mode) { void switchMode(target); return; } openInFocusedSide(id); },
+    openRoutines: (id) => { closePeek(); setMenu(null); setRoutineSelection(id); setSection("routines"); },
+    openSection: (key) => { closePeek(); setMenu(null); setRoutineSelection(null); setSection(key); },
+    openSettings: (tab) => { setMenu(null); setSettings(tab); },
+    showSessionsPage: () => showSessionsPage(mode),
+  };
+  const sidebarNavValue = {
+    mode, section, current: splitView.open ? splitView.sides[splitView.active].current : current, routineId: routineSelection,
+    localSessions: navLocalSessions,
+    // The manager's load state (getSessionList waits for "loaded"; "failed" is the settled init without a list, as the
+    // SourceSidebar loading / loadFailed props below read it).
+    localSessionsState: sessionsLoaded ? "loaded" : initSettled && !loading ? "failed" : "loading",
+    sessionAction: (action, id) => action === "fork" ? sessionAction("fork", sessions.find((session) => session.id === id) ?? { id })
+      : Promise.reject(new Error(t("This action is not available in OpenClaude Desktop."))),
+    searchOpen: !!showSearch, setSearchOpen: (open) => setShowSearch(open ? "search" : false),
+    navigateOfficial: (pathname) => { const routed = officialPathToHostRoute(pathname, sidebarNavRoutes, { mode }); if (!routed) console.warn(`frame-sidebar-nav: no host route for ${pathname}`); return routed; },
+    travel, account: { display_name: accountButton.name, full_name: accountButton.avatarName },
+    markUnread: (id) => updateSessionMetadata(id, { unread: true }),
+    // U-NAV-MENU: the official session row's right-click / ⋯ menu (frame-sidebar-nav-session-actions.jsx; c39a247c4 / ce4f4374c
+    // are not shipped) opens the host's own session menu, SourceSidebarSessionMenu over sessionAction, as the classic sidebar did.
+    openSessionMenu: (id, { anchor = null, point, starred } = {}) => {
+      const session = sessions.find((entry) => entry.id === id);
+      if (!session) return false;
+      if (starred !== undefined && starred !== !!sessionMetadata[id]?.pinned) updateSessionMetadata(id, { pinned: starred });
+      openMenu("session", anchor, session, undefined, point);
+      return true;
+    },
+    // AppFeatures.getSupportedFeatures (shared-25 Vi): the 4.16336.0 main-process answers this host has a backend for.
+    supportedFeatures: hostSupportedFeaturesV4(boot?.core || engine),
+    // U-NAV-IMPORT: the Code nav's Import history row (frame-sidebar-nav-import-row.jsx) opens the Import history dialog
+    // (source-import-history.jsx): other agents' conversations on this Mac, picked one by one, into the running core.
+    openImport: mode === "code" && boot?.connected
+      ? () => { closePeek(); setMenu(null); setActionDialog({ kind: "import-history" }); }
+      : undefined,
+  };
+  // W14-code r4 sidebar-new fr4-06: the Code sidebar's Routines section host (source-sidebar-routines.jsx): the scheduler's
+  // Code tasks at app level, the routine runs, the unread store and the delete confirmation. frame-sidebar-nav 4.16336.0: it
+  // wraps the official KR's SidebarNavBody slot (shared-22 PI, sliced: HostSidebarNavBody with KR's props); SourceSidebar
+  // draws only its host overlays there (slot "overlays": the ⌘K palette and its confirm dialog), none of the body column.
+  const sidebarNavBody = (navProps) => (
       <SidebarRoutinesHost call={call} onEvent={api?.onEvent} sessions={sessions} metadata={sessionMetadata} state={state}
         updateSessionMetadata={updateSessionMetadata}
         pathname={routinesPathname({ mode, section, routineId: routineSelection, sessionId: current })}
         onOpenTask={openSidebarRoutine} onOpenSession={openSidebarRoutineRun} onTaskDeleted={leaveDeletedRoutine}>
+      <HostSidebarNavBody value={sidebarNavValue} {...navProps} />
       <SourceSidebar
         homeMode={homeModeFor({ coworkEnabled: boot?.coworkEnabled === true })}
         localProjects={boot?.config?.localProjects}
@@ -7880,15 +8061,87 @@ function App({ side = 0, initialSession = null }) {
         section={section}
         // Customize opens its real pages (Settings › Customize: Skills, Connectors, Plugins), not an empty surface.
         setSection={(key) => { if (key === "customize") { setMenu(null); setSettings("customize-skills"); } else { setRoutineSelection(null); setSection(key); } }}
-      /></SidebarRoutinesHost></SourceSidebarBoundary>}
+        // frame-sidebar 4.16336.0: the official KR (generated/frame-sidebar) draws the aside, titlebar, tray and resize handle;
+        // frame-sidebar-nav 4.16336.0: the official PI draws the body column (HostSidebarNavBody above).
+        slot="overlays"
+      /></SidebarRoutinesHost>
+  );
+  // frame-sidebar 4.16336.0 (src/frame-sidebar-host.jsx, productionPlan step 4): the main window's frame root is the official
+  // DesktopFrame (shared-22 vB, `div.dframe-root.draggable-none` with data-sidebar-density / data-variant / data-collapsed /
+  // data-fullscreen and the five root variables of its own) and its DesktopSidebar (KR, the aside). main.jsx answers vB/KR's
+  // frame store (the sidebar model below under official field names), WindowState (fullScreen / zoomFactor) and slots
+  // (sidebar body, account row, app switch, history nav, resize handle, announcer). The host-only root marks (desktop-app,
+  // data-frame-mode) are written onto vB's root by the host's FrameSidebarDock slot. Session popouts, pane windows and the
+  // secondary split side have no sidebar and keep the legacy root (`legacy` below) until vB's sidebarless path is verified.
+  const frameHost = side === 0 && !NO_SIDEBAR ? {
+    // integration-3 (frame-sidebar review P2): vB's CdsRoot takes the 4.16336.0 font token (shared-92 Ox: "anthropic" | "system"),
+    // not the 3.6556.2 "sans" the legacy roots keep.
+    mode, cdsFont: cdsCoreFont, platform: isMacPlatform() ? "mac" : /^Win/.test(globalThis.navigator?.platform ?? "") ? "windows" : "linux",
+    sidebarless: !frameShellMounted({ isIncognito: incognitoShell }),
+    // SB-0: the frame store is the official Y (driven above); the frame's host answers read only these.
+    toggleSidebar: () => toggleSidebarRef.current?.(), peekEnter, peekLeave,
+    fullScreen, zoomFactor, trafficLightSpacer: fullScreen ? 0 : trafficLightSpacer,
+    ...hostRouteGutter({ mode, section }),
+    history: { at: historyAt, length: history.length, travel },
+    navBody: sidebarNavBody,
+    // sidebar-body (surfaces-prod-2): the account tray (shared-22 QL / shared-19 QF), the mode switch (shared-21 x_) and the
+    // resize handle (ZA) are sliced; the host answers them with its account, menu, switchMode, settings and sidebar model.
+    account: { name: accountButton.name, plan: accountButton.plan, avatarName: accountButton.avatarName, menuOpen: menu?.kind === "account",
+      openMenu: (e, entry) => openMenu("account", e.currentTarget, undefined, entry) },
+    homeMode: homeModeFor({ coworkEnabled: boot?.coworkEnabled === true }), switchMode,
+    openSettings: (tab) => { setMenu(null); setSettings(tab); },
+    announcer: <SourceLiveAnnouncer />,
+    rootAttributes: { "data-frame-mode": mode },
+  } : null;
+  return (
+    <HostFrameRoot value={frameHost} legacy={{
+      className: (
+        // 3.6556.2 shared-22 oR: className "dframe-root draggable-none" (c6a992d55 .draggable-none{app-region:no-drag};
+        // the titlebars' own drag regions sit inside and still win).
+        "desktop-app dframe-root draggable-none" + (side > 0 ? " split-secondary" : "")
+      ),
+      // R01 / oR `"data-collapsed": F` (F = i && !0 || void 0): collapsed by the stored preference or the narrow viewport
+      // (sidebar-main.js:15367-15372). The loaded shared-styles lay the collapsed frame out from it: the aside is the
+      // trigger pill (SourceCollapsedChrome, passed below), its body the full-height drawer of width --df-peek-width.
+      // A session popout / pane window has no sidebar, so no collapsed frame either.
+      "data-collapsed": effectiveCollapsed && !NO_SIDEBAR && frameShellMounted({ isIncognito: incognitoShell }) || undefined,
+      // oR `"data-sidebar-density": m` (m = Ha(), the density the aside also writes: source-sidebar.jsx data-density).
+      "data-sidebar-density": "compact",
+      "data-variant": "web",
+      "data-frame-mode": mode,
+      "data-session-popout": SESSION_POPOUT || undefined,
+      "data-pane-window": PANE_WINDOW?.pane,
+      // W14-code r4 r4pa-c03 (E90 / E95, GUI check): a pane window is c3af3d0ed S's `div.dframe-root` with cd377abb5 lr's
+      // containerProps, `data-popout="traffic-lights"` (macOS, lights shown) and the --df-popout-zoom-out style below.
+      "data-popout": paneWindowPopout?.["data-popout"],
+      "data-fullscreen": fullScreen || undefined,
+      // sidebar-main.js:15304-15320 dR mirrors the peek store onto the root (F08).
+      "data-hovering": effectiveCollapsed && peek.hovering || undefined,
+      "data-peeked": effectiveCollapsed && peek.peeked || undefined,
+      // 3.6556.2 shared-22-Bwn3sJTG.js oR: --df-sidebar-width = shared-52 x_ max(sidebarWidth, sidebarFloor),
+      // --df-sidebar-floor = lR sidebarFloor, the spacer = shared-10 Gn trafficLightSpacerWidth (0 in full screen) in
+      // the app-top-offset formula, --df-window-border = XL({ macAppInWindow: !fullscreen, zoomFactor }) and
+      // --df-drag-ghost-z = Wi (shared-46 kj = shared-frame au 9e3 + 1). Exactly oR's five; the drawer is placed by the
+      // [data-collapsed] rules (no host --df-peek-top/-left any more).
+      style: { "--df-sidebar-width": effectiveSidebarWidth(sidebarWidth, sidebarFloor) + "px", "--df-sidebar-floor": sidebarFloor + "px",
+        "--df-traffic-light-spacer": `max(0px, calc(${fullScreen ? 0 : trafficLightSpacer}px - 1000 * max(0px, var(--app-top-offset, 0px) - 48px)))`,
+        "--df-window-border": fullScreen ? "0px" : `${1 / zoomFactor}px`, "--df-drag-ghost-z": 9001, ...paneWindowPopout?.style },
+    }}>
+      {/* W14-code fr2-04: shared-5 Bw, the polite announcer zw (JD's sidebar announcements) speaks through; one per window. */}
+      {side === 0 && !frameHost && <SourceLiveAnnouncer />}
+      {/* shared-21 lK / shared-22 15368-15373: a sidebar render error shows "Sidebar failed to load." with Try again
+          (remount) instead of taking the window down. */}
+      {/* w13-close-chat-surface (E77): shared-78 vK — no frame shell, so no sidebar, while the window is incognito. */}
+      {/* frame-sidebar 4.16336.0: the sidebar is the official KR inside HostFrameRoot (main window); its body is
+          sidebarNavBody above. Windows without a sidebar (popouts, pane windows, the secondary split side) never drew one. */}
       {/* w13-close-chat-surface (E77): shared-23 VA/LA + shared-20 Fy/Jy while incognito; display: contents otherwise. */}
-      <SourceIncognitoShell active={incognitoShell} onExit={() => incognitoKey.current?.()} trafficLights={isMacPlatform() && !fullScreen}>
+      <SourceIncognitoShell active={incognitoShell} onExit={() => incognitoKey.current?.()} pathname={incognitoDraft ? "/new" : `/chat/${current}`}>
       <SourceSplitHost side={side}>
       <main
         ref={mainRef}
         // r4pa-c03: c5638815a Ct / cccc2cf0a kT, the pane window's root is the epitaxy-pane-window.
         className={"workspace epitaxy-root cds-root" + (paneWindowPopout ? " epitaxy-pane-window" : "")}
-        data-density={themeDensity(boot?.config)}
+        data-density={windowDensity /* U-1: c11959232 j_'s root as xo resolves it (Ja), see above */}
         data-font={cdsFont}
         data-platform="desktop"
       >
@@ -8239,7 +8492,8 @@ function App({ side = 0, initialSession = null }) {
                         liveTail={toolRunLiveTail(displayedItems, index, running ? state.active[current] ?? null : null, transcriptView)}
                         /* w13-close-chat-messages (chatfn-branches-03): a Chat prompt's actions are cc1aae219 s4's — Edit (a new version)
                            and lI with sender "human" — not the Code Rewind / Fork (s4 shows rewind only in agent mode). */
-                        userActions={item.type === "userMessage" ? mode === "chat" ? { rewind: null, fork: null, chat: chatBranches.forUserTurn(items, item.turnId, () => coworkMessageEdits.start(current, item.id), (row) => messageItemText(shownUserItem(row)), turnAttachments) } : userMessageActions({ turnId: item.turnId, itemId: item.id, activeTurnId: state.active[current], running,
+                        // An imported prefix message (import-history-display.mjs) gets no rewind, fork or edit (Copy stays).
+                        userActions={item.type === "userMessage" && !item.importedPrefix && !isImportedTurn(item.turnId) ? mode === "chat" ? { rewind: null, fork: null, chat: chatBranches.forUserTurn(items, item.turnId, () => coworkMessageEdits.start(current, item.id), (row) => messageItemText(shownUserItem(row)), turnAttachments) } : userMessageActions({ turnId: item.turnId, itemId: item.id, activeTurnId: state.active[current], running,
                           onRestartFrom: coworkActions?.onRestartFromHere ? (uuid) => void coworkActions.onRestartFromHere({ uuid }) : null,
                           onEditFrom: coworkActions?.onEditMessage ? (uuid) => coworkMessageEdits.start(current, uuid) : null, isLastHuman: !!coworkLastHuman && coworkLastHuman.uuid === item.id,
                           rewindServed: !!(current && !session?.archived && boot?.connected && codeRewindServed(current, boot?.core?.capabilities, sessionMetadata)),
@@ -8268,10 +8522,12 @@ function App({ side = 0, initialSession = null }) {
                             createdAt={turnSecondsToMs(state.turnTimes?.[current]?.[footer.turnId]?.completedAt) /* w13-close-chat-messages: r1 Ic.Timestamp */} /></SourceTranscriptRowBoundary>;
                         }
                         // The reply the rating belongs to: the turn's last agent message.
-                        const replyId = ratingsCore ? items.findLast((row) => row.turnId === footer.turnId && row.type === "agentMessage")?.id : null;
+                        // An imported prefix turn has no rating and no fork (import-history-display.mjs).
+                        const importedTurn = isImportedTurn(footer.turnId);
+                        const replyId = ratingsCore && !importedTurn ? items.findLast((row) => row.turnId === footer.turnId && row.type === "agentMessage")?.id : null;
                         return <SourceTranscriptRowBoundary sessionId={current} item={item} kind="reply"><SourceTurnFooter sessionKey={current} turnId={footer.turnId}
                           text={footer.text} completedAtMs={turnSecondsToMs(state.turnTimes?.[current]?.[footer.turnId]?.completedAt)} {...turnInteraction.forTurn(footer.turnId)}
-                          onFork={transcriptActions.onForkFrom ? () => transcriptActions.onForkFrom(footer.turnId) : null}
+                          onFork={transcriptActions.onForkFrom && !importedTurn ? () => transcriptActions.onForkFrom(footer.turnId) : null}
                           pin={turnChapterPin(footer.turnId, footer.text)}
                           rating={replyId ? { value: messageRatings[current]?.[replyId]?.rating ?? null, onRate: (value) => rateReply(current, replyId, value).catch((e) => toasts?.add?.(e.message, { variant: "danger" })) } : null} /></SourceTranscriptRowBoundary>;
                       })()}
@@ -8512,6 +8768,8 @@ function App({ side = 0, initialSession = null }) {
                   sidebarCollapsed={NO_SIDEBAR || collapsed || narrowViewport}
                   onOpenRoutine={id => { setRoutineSelection(id); setSection('routines'); }}
                   onOpen={navigate} onClearActive={rows => Promise.all(rows.map(row => updateSessionMetadata(row.sessionId, { unread: false })))}
+                  /* home-chat-cowork v4: the rows' open / Mark as read / Mark as unread (shared-2 RH / WH), the sidebar's read-state action */
+                  onMarkRead={id => updateSessionMetadata(id, { unread: false })} onMarkUnread={id => updateSessionMetadata(id, { unread: true })}
                   onPrompt={setDraft} onPreviewPrompt={setHomeIdeaPreview} onFocusInput={() => requestAnimationFrame(() => textarea.current?.focus())}
                   onError={error => setError(error.message)} />}
                 </SourceCoworkSessionStates>
@@ -8707,6 +8965,10 @@ function App({ side = 0, initialSession = null }) {
         onOpened={async (id) => { setActionDialog(null); await refreshSession(id); navigate(id); }} />}
       {shownActionDialog.value?.kind === "claude-import" && <ClaudeImportDialog key={`action-${shownActionDialog.key}`} {...actionDialogProps("claude-import")} desktopCall={call}
         cwds={[workdir || cwd].filter(Boolean)} onDone={() => { void customizeStore?.loadSkills?.({ cwd: workdir || cwd, force: true }); void customizeStore?.loadMcp?.({ cwd: workdir || cwd, threadId: current ?? null, force: true }); }} onClose={() => setActionDialog(null)} />}
+      {shownActionDialog.value?.kind === "import-history" && <ImportHistoryDialog key={`action-${shownActionDialog.key}`} {...actionDialogProps("import-history")} desktopCall={call}
+        coreLabel={coreName(boot?.core)} sessionMetadata={sessionMetadata} onImported={importDone}
+        onOpenThread={async (id) => { setActionDialog(null); await refreshSession(id); navigate(id); }}
+        onImportSettings={commandContext.claudeImport ? () => setActionDialog({ kind: "claude-import" }) : null} onClose={() => setActionDialog(null)} />}
       {shownActionDialog.value?.kind === "feedback-share" && <FeedbackShareDialog key={`action-${shownActionDialog.key}`} {...actionDialogProps("feedback-share")} text={shownActionDialog.value.text}
         onConfirm={async () => { const run = shownActionDialog.value.run; setActionDialog(null); await run(); }} onClose={() => setActionDialog(null)} />}
       {shownActionDialog.value?.kind === "rewind" && <RewindPicker key={`action-${shownActionDialog.key}`} {...actionDialogProps("rewind")} turns={shownActionDialog.value.turns}
@@ -8744,7 +9006,7 @@ function App({ side = 0, initialSession = null }) {
       {<SourceSettings open={!!settings} config={{...boot?.config,...localPreferences,theme,displayName,fastMode:fastEnabled,speed}} model={model} effort={effort} permission={permission}
         boot={boot} busy={running || sending || actionPending}
         coreBusy={hasLiveWork(state) || sending || actionPending} onSave={updatePreferences} onClose={()=>setSettings(false)}
-        initialSection={typeof settings === "string" ? settings : undefined} readUsage={readAccountUsageDetails} usageActions={usageActions} desktopCall={call}
+        initialSection={typeof settings === "string" ? settings : undefined} surface={mode} readUsage={readAccountUsageDetails} usageActions={usageActions} desktopCall={call}
         onQuickSetup={() => { setSettings(false); setOnboarding("connect"); }}
         customize={customize}
         onFolder={async()=>{const dir=await call("folder");if(dir){setBoot(b=>({...b,config:{...b.config,cwd:dir}}));setCwd(dir);navigate(null);}}}
@@ -8797,13 +9059,16 @@ function App({ side = 0, initialSession = null }) {
           </form>
         </SourceDialog>
       )}
-    </div>
+    </HostFrameRoot>
   );
 }
 // Popped-out pane window (?popout=<sessionId>&pane=<kind>&cwd=<dir>): the same
 // pane component over the same scoped IPC; approvals/events stay with the
 // primary window. Plan data is pushed by the primary through popout-sync.
 function PopoutApp({ sessionId, pane, cwd }) {
+  // U-1: c5638815a bt's pane window is a plain div.epitaxy-root…epitaxy-pane-window under the window root, no density of
+  // its own; its main.epitaxy-root reads the window root's resolved density (shared-frame Ja) as App's does.
+  const windowDensity = useCdsDensity();
   const [connected, setConnected] = useState(null);
   const [error, setErrorText] = useState("");
   const setError = useCallback((value) => setErrorText(typeof value === "string" ? cleanErrorReason(value) : value), []);
@@ -8915,7 +9180,7 @@ function PopoutApp({ sessionId, pane, cwd }) {
     <div className={"popout-root" + (popoutFrame ? " dframe-root" : "")} data-popout-pane={pane} data-popout-session={sessionId} data-connected={connected}
       data-popout={popoutFrame?.["data-popout"]} style={popoutFrame?.style}>
       <PaneWindowContext.Provider value={!!popoutFrame}>
-      <main className={"workspace epitaxy-root cds-root popout-workspace" + (popoutFrame ? " epitaxy-pane-window" : "")} data-density={appearanceConfig ? themeDensity(appearanceConfig) : "compact"} data-font={cdsFontFor(appearance)} data-platform="desktop">
+      <main className={"workspace epitaxy-root cds-root popout-workspace" + (popoutFrame ? " epitaxy-pane-window" : "")} data-density={windowDensity} data-font={cdsFontFor(appearance)} data-platform="desktop">
         {error && <p className="source-panel-error popout-error" role="alert">{error}</p>}
         <div data-pane-root="" className="popout-tile source-side-tile">
           <FilePanel
@@ -8952,6 +9217,11 @@ function PopoutApp({ sessionId, pane, cwd }) {
     </div>
   );
 }
+// titlebar relink T1: shared-46 St's experimental `v={theme:u,fizzyLake:_,automaticDelayedBusy:h}` with `_=A()` (A = shared-92
+// sv = ib, memoised for the first render; ib keeps its own rb cache, so the parts object is stable). theme (u = St's theme store)
+// and automaticDelayedBusy (h = U(), growthbook gate __gb__3526081406, off without a growthbook client) are left unset: the host
+// has neither, which is St's unset default.
+const cdsWindowExperimental = { fizzyLake: readFizzyLakeParts() };
 const popoutQuery = new URLSearchParams(window.location.search);
 const popoutSession = popoutQuery.get("popout");
 createRoot(document.getElementById("root")).render(
@@ -8959,7 +9229,24 @@ createRoot(document.getElementById("root")).render(
   // R4i-graph GR2: every window's CDS controls read the host's labels (the root has no CdsRoot; nested CdsRoots chain to it).
   // w11-sweep-rest: likewise the CDS locale (3.6556.2 frame-shell-chrome Ji passes CdsRoot `locale:r.locale`), which
   // useCdsLocale readers (date fields, meters, transcript rows) and nested CdsRoots read.
-  <CdsLocaleContext.Provider value={getLocale()}><CdsLabelsContext.Provider value={cdsLabels}><SourceToastProvider><SourceFileEditGuard />{popoutSession && !PANE_WINDOW && PANE_KINDS.includes(popoutQuery.get("pane"))
+  // host-wiring root: those two stay for the 3.6556.2 regions; the 4.16336.0 window root is the official CdsRoot as the
+  // main window renders it: index XQ wraps the app in kE (shared-46 St, export o), which renders Ef (shared-frame xo) as
+  // `s,{mode:g,font:m,router:c,labels:d,locale:f,pageBackground:C,experimental:v,className:"contents"}` with C =
+  // shared-23 FD "surface-1" (frame-shell-chrome tte is the artifact iframe shell's root, not this one). Host values:
+  // labels cdsLabels (Rl's (key, defaultMessage, params) contract, unchanged in 4.16336.0 ui); locale getLocale();
+  // pageBackground "surface-1" (St's FD: the root inlines --cds-page-bg:var(--cds-surface-1) over the sheet's .cds-root
+  // surface-0, as html.cds-root does in style.css); className "contents" (no box of its own). Like St: no direction and
+  // no density (Root's density Context defaults to comfortable, what html.cds-root carries). platform "desktop" stays
+  // explicit (St passes none and Root reads the UA, /\b(?:Claude(?:Nest|Gov)?|Electron)\//, which Electron matches; the
+  // explicit value keeps it equal to html[data-platform] outside Electron too). Left out on purpose: mode (St's mode
+  // setting lives in App / PopoutApp state; without the prop Root follows the closest [data-mode], html[data-mode] that
+  // theme-command-model writes), font (Root follows html[data-font], shared-frame Ir/Fr: "system" stays, the 3.6556.2
+  // "sans" reads as "anthropic", which is shared-92 Ox's answer), router (the host has no in-app router). experimental is
+  // cdsWindowExperimental (titlebar relink T1): St's {theme, fizzyLake: sv(), automaticDelayedBusy: U()} with fizzyLake =
+  // shared-92 ib (sv), which reads html[data-cds-fizzy-lake] ("color panels type" in index.html, as in ion-dist/index.html);
+  // theme and automaticDelayedBusy stay unset (no theme store; U() is growthbook gate __gb__3526081406, off without a client).
+  // Root (shared-frame xo) unions those parts into rr (cr) and, with panels set, resolves its density to comfortable.
+  <CdsLocaleContext.Provider value={getLocale()}><CdsLabelsContext.Provider value={cdsLabels}><CdsCoreRoot className="contents" labels={cdsLabels} locale={getLocale()} pageBackground="surface-1" platform="desktop" experimental={cdsWindowExperimental}><SourceToastProvider><SourceFileEditGuard />{popoutSession && !PANE_WINDOW && PANE_KINDS.includes(popoutQuery.get("pane"))
     ? <PopoutApp sessionId={popoutSession} pane={popoutQuery.get("pane")} cwd={popoutQuery.get("cwd") || ""} />
-    : <SessionRailShownScope popout={SESSION_POPOUT}><SourceSplitRoot renderSide={(side, secondary) => <App side={side} initialSession={secondary?.sessionId ?? null} />} /></SessionRailShownScope>}</SourceToastProvider></CdsLabelsContext.Provider></CdsLocaleContext.Provider>,
+    : <SessionRailShownScope popout={SESSION_POPOUT}><SourceSplitRoot renderSide={(side, secondary) => <App side={side} initialSession={secondary?.sessionId ?? null} />} /></SessionRailShownScope>}</SourceToastProvider></CdsCoreRoot></CdsLabelsContext.Provider></CdsLocaleContext.Provider>,
 );

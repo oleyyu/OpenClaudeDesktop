@@ -83,14 +83,26 @@ test('generated map keeps the generated header and the grammar loaders file unto
   assert.doesNotMatch(loaders, /FILE_EXTENSION_LANGUAGES|c41eb0199/);
 });
 
-test('preview kinds and the file:// preview URL', async () => {
+test('preview kinds and the claude-media preview URL (U-2: main mints it; never file://)', async () => {
   const { filePreviewKind, filePreviewUrl } = await import('../src/file-preview-model.mjs');
   assert.deepEqual(filePreviewKind('docs/README.md'), { kind: 'markdown', delimiter: null });
   assert.deepEqual(filePreviewKind('a.MDX'), { kind: 'markdown', delimiter: null });
   assert.deepEqual(filePreviewKind('data.csv'), { kind: 'csv', delimiter: ',' });
   assert.deepEqual(filePreviewKind('data.tsv'), { kind: 'csv', delimiter: '\t' });
   assert.equal(filePreviewKind('app.js'), null);
-  assert.equal(filePreviewUrl('/w/a b/photo.png'), 'file:///w/a%20b/photo.png');
+  // U-2: the viewer's media URL is what main mints for the absolute path (preload desktop.mediaUrl); no bridge, no URL.
+  const asked = [];
+  const saved = globalThis.desktop;
+  globalThis.desktop = { mediaUrl: (p) => { asked.push(p); return p.endsWith('.png') ? 'claude-media://v/tok?v=1' : null; } };
+  try {
+    assert.equal(filePreviewUrl('/w/a b/photo.png'), 'claude-media://v/tok?v=1');
+    assert.equal(filePreviewUrl('/w/notes.txt'), null, 'main refused it');
+    assert.equal(filePreviewUrl('w/relative.png'), null, 'a relative path never reaches main');
+    assert.deepEqual(asked, ['/w/a b/photo.png', '/w/notes.txt']);
+    globalThis.desktop = { mediaUrl: () => 'file:///w/a%20b/photo.png' };
+    assert.equal(filePreviewUrl('/w/a b/photo.png'), null, 'only a claude-media URL is accepted');
+  } finally { if (saved === undefined) delete globalThis.desktop; else globalThis.desktop = saved; }
+  assert.equal(filePreviewUrl('/w/a b/photo.png'), null, 'no desktop bridge');
 });
 
 // B13 (2.31226.0 cd2efac6e Ql :6783-6799): .htm/.html and .svg take the sandbox arm; a PDF is shown like media.

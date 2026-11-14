@@ -48,4 +48,10 @@ export default {
   'Move split view down': '将分屏下移',
   'Move split view to bottom left': '将分屏移到左下',
   'Move split view to new column': '将分屏移到新列',
+  // Quick Entry (electron/quick-entry). The placeholder is the official zh-Hans catalog's own (resources/i18n
+  // zh-Hans.json S3MXlbjkax); the target menu follows the native bar's English strings (en.lproj Localizable.strings).
+  'What can I help you with today?': '今天有什么可以帮您的？',
+  'Send to new chat': '发送到新聊天',
+  'Keep chatting about...': '继续聊聊…',
+  'Your Quick Entry message wasn’t sent. Try again.': '快速输入的消息未能发送，请重试。',
 };

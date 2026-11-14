@@ -27,3 +27,16 @@ export function hostAppFeatures(core) {
   const btw = !!core && typeof core === "object" && core.capabilities?.btwChildSessions === true;
   return { ...HOST_APP_FEATURES, btwChildSessions: btw ? supported : unavailable };
 }
+
+// round-4 sidebar (4.16336.0 frame-sidebar-nav, AppFeatures bridge shared-25 Vi = globalThis["claude.web"].AppFeatures):
+// the 4.16336.0 main process answers getSupportedFeatures from its own table (asar index.chunk-Du-Wqi0E.js, the object
+// beside schema RCt). Of the entries the nav reads, the ones this host has a backend for answer as the official main does
+// on a machine without an enterprise policy; every other entry stays absent (read as unavailable: the official closed
+// branch — Cowork artifacts / watchers / spaces / Design window / WSL / launch have no local backend):
+//   chillingSlothEnterprise  `a6r(){return q().codeSurface.enabled?{status:"supported"}:{status:"unsupported",…
+//                            unsupportedCode:"disabled_by_enterprise"}}` — no managed policy: codeSurface enabled → supported
+//                            (shared-123 lR: Claude Code for Desktop available; the local Code engine).
+//   sideSessions / nestedArchiveKeepsFamily / btwChildSessions: hostAppFeatures(core) above (same answers).
+export function hostSupportedFeaturesV4(core) {
+  return { ...hostAppFeatures(core), chillingSlothEnterprise: supported };
+}

@@ -1,7 +1,7 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { ActionDialog } from './source-session-actions.jsx';
 // W14-code r6 R6DC-02: shared-frame Uu (E41 direct import), not the host replica.
-import { CdsButton } from './generated/view-tabs/shared-frame-6jtSkIit.js';
+import { CdsButton } from './cds-core.mjs'; // 4.16336.0 host wiring (frame): cds-core Button (shared-frame-CJdE5Ria Xu)
 import { SourceDialogFooter } from './source-dialog.jsx';
 import './source-bypass-permission.css';
 import { t } from '../electron/i18n/index.mjs';

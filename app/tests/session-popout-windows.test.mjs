@@ -180,7 +180,10 @@ test('main.jsx: the popout renders without sidebar or split, ends its titlebar w
   const jsx = read('src/main.jsx');
   assert.match(jsx, /const NO_SIDEBAR = SESSION_POPOUT \|\| !!PANE_WINDOW;/);
   // w13-close-chat-surface (E77): the incognito shell (shared-78 vK) also unmounts the sidebar; NO_SIDEBAR still does.
-  assert.match(jsx, /\{side === 0 && !NO_SIDEBAR && frameShellMounted\(\{ isIncognito: incognitoShell \}\) && <SourceSidebarBoundary>/);
+  // frame-sidebar 4.16336.0: the sidebar is the official KR under vB, mounted only for the main window's primary side
+  // (frameHost); the incognito shell makes vB sidebarless (useIsSidebarless), which drops KR.
+  assert.match(jsx, /const frameHost = side === 0 && !NO_SIDEBAR \? \{/);
+  assert.match(jsx, /sidebarless: !frameShellMounted\(\{ isIncognito: incognitoShell \}\),/);
   assert.match(jsx, /popoutWindow=\{SESSION_POPOUT \? \{ alwaysOnTop: popoutPinned, onDock: dockSessionPopout, onTogglePin: toggleSessionPopoutPin \} : null\}/);
   assert.match(jsx, /if \(SESSION_POPOUT\) \{ window\.close\(\); return; \}/, '⌘W closes the popout once no pane is left');
   assert.match(jsx, /storage: \(SESSION_POPOUT_WINDOW \|\| PANE_WINDOW\) && tileStorage\n\s+\? \{ getItem: \(name\) => tileStorage\.getItem\(name\), setItem: \(\) => \{\}, removeItem: \(\) => \{\} \}/);

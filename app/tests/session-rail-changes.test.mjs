@@ -27,13 +27,16 @@ const TRANSCRIPT = 'c96d752d0-CWv_7-n9.js';
 const attr = text => text.replace(/&/g, '&amp;').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 let previousWindow, previousDocument;
-let server, Row, Verb, Counts, Rail, Adapters, KitChip, KitRows, PrRows;
+let server, Row, Verb, Counts, Rail, Adapters, KitChip, KitRows, PrRows, KitV4, ChangesV4;
 before(async () => {
   previousWindow = globalThis.window; previousDocument = globalThis.document;
   // view-tabs' preload helper creates a link element while it evaluates (D21); nothing else reads the document in SSR.
-  globalThis.document = { createElement: () => ({ relList: { supports: () => false } }), querySelector: () => null, documentElement: { getAttribute: () => null } };
+  // W8-M9 stub contract (round4 relink-w8 R4-RW8-SR, as cds-integrate/wave8 did for the tests it ran): cds-core shared-0 CQ / Wo
+  // read document.cookie and shared-92 cS reads documentElement.hasAttribute at load (official 4.16336.0); fields added, none removed.
+  globalThis.document = { cookie: '', createElement: () => ({ relList: { supports: () => false } }), querySelector: () => null, documentElement: { getAttribute: () => null, hasAttribute: () => false } };
   // A Linux user agent: the keybinding table (shared-46 aR) and the Mac test (view-tabs isMacUserAgent) read it.
-  globalThis.window = { localStorage: undefined, matchMedia: undefined, navigator: { userAgent: 'Mozilla/5.0 (X11; Linux x86_64)' } };
+  // W8-M9: the cds-core shared-25 router store reads window.location.pathname at load (official 4.16336.0).
+  globalThis.window = { addEventListener() {}, removeEventListener() {}, localStorage: undefined, matchMedia: undefined, navigator: { userAgent: 'Mozilla/5.0 (X11; Linux x86_64)' }, location: { pathname: '/' } };
   server = await createServer({ configFile: false, root: app, plugins: [react()], server: { middlewareMode: true, hmr: false, ws: false, watch: null }, appType: 'custom', logLevel: 'error' });
   const load = name => server.ssrLoadModule(`/src/generated/session-rail-changes/${name}`);
   [Row, Verb, Counts, Rail] = await Promise.all(['changes-row.mjs', 'changes-verb.mjs', 'diff-counts.mjs', 'pr-bar-rail.mjs'].map(load));
@@ -41,6 +44,10 @@ before(async () => {
   PrRows = await load('pr-rows.mjs');
   KitChip = await server.ssrLoadModule('/src/generated/session-rail-kit/branch-chip.mjs');
   KitRows = await server.ssrLoadModule('/src/generated/session-rail-kit/rail-rows.mjs');
+  // 4.16336.0 rail cutover: SessionRailChanges draws the session-rail-changes-v4 rows inside the 4.16336.0 rail's card,
+  // which hands the row layout on the 4.16336.0 kit's ChangesRowLayoutContext (c96d752d0 ME).
+  KitV4 = await server.ssrLoadModule('/src/generated/session-rail-kit-v4/index.mjs');
+  ChangesV4 = await server.ssrLoadModule('/src/generated/session-rail-changes-v4/index.mjs');
 });
 after(async () => {
   await server?.close();
@@ -49,7 +56,7 @@ after(async () => {
 
 const render = node => renderToStaticMarkup(node);
 // The flat rail (D10): the rail hands the Changes card the "row" layout (c96d752d0 hL = kit ChangesRowLayoutContext).
-const inRow = node => h(KitChip.ChangesRowLayoutContext.Provider, { value: 'row' }, node);
+const inRow = node => h(KitChip.ChangesRowLayoutContext.Provider, { value: 'row' }, h(KitV4.ChangesRowLayoutContext.Provider, { value: 'row' }, node));
 const status = (patch = {}) => ({ isRepo: true, cwd: '/work/claude-ui-lab', repoName: 'claude-ui-lab', branch: 'feature/rail', hasChanges: true,
   workingTreeDirty: true, added: 12, removed: 3, comparison: { base: 'main', behind: 0 }, ...patch });
 
@@ -279,8 +286,11 @@ test('handlers: counts open Changes, the menu opens it, the verb sends the commi
   const outer = shallow(Adapters.SessionRailChanges, { status: status(), diffOpenable: true, diffOpenHasChord: true,
     onOpenChanges: () => calls.push('open'), onToggleChanges: () => calls.push('toggle'), verb: { onClick: () => calls.push('commit') } });
   // R4i-rail RL2 / w3: Sje (lL "rail" > nav > bAe over mAe's shape, renderRow) > YL (li, the chord) > EL (memo) > Ike.
+  // 4.16336.0 rail cutover: the rail branch is the session-rail-changes-v4 lL / vMe / EL (the rows the 4.16336.0 rail's card
+  // provides for); EL / Ike's own behaviour over the same entry props is driven below through the 3.6556.2 EL the band keeps.
+  assert.ok([ChangesV4.PrBarLayoutContext, ChangesV4.PrBarLayoutContext.Provider].includes(outer.type), 'the 4.16336.0 lL');
   assert.equal(outer.props.value, 'rail');
-  const [rows] = nodes(outer, n => n.type === PrRows.RailPrRows);
+  const [rows] = nodes(outer, n => n.type === ChangesV4.RailPrRows);
   assert.equal(rows.props.shape.rows.length, 1);
   assert.equal(rows.props.renderRow, Adapters.railPrRow);
   const [entry] = rows.props.shape.rows;
@@ -289,9 +299,11 @@ test('handlers: counts open Changes, the menu opens it, the verb sends the commi
   shallow(Adapters.RailPrListItem, { rowKey: entry.rowKey, primary: entry.primary, children: (chord) => (chords.push(chord), null) }, new Map([[Adapters.RailDiffOpenHasChordContext, true]]));
   shallow(Adapters.RailPrListItem, { rowKey: 'x', primary: false, children: (chord) => (chords.push(chord), null) });
   assert.deepEqual(chords, [true, false]);
-  const barRow = rows.props.renderRow(entry, true);
-  assert.equal(barRow.type, PrRows.PrBarRow);
-  assert.equal(barRow.props.layout, 'rail');
+  const railRow = rows.props.renderRow(entry, true);
+  assert.equal(railRow.type, ChangesV4.PrBarRow);
+  assert.equal(railRow.props.layout, 'rail');
+  assert.equal(railRow.props.diffOpenHasChord, true);
+  const barRow = h(PrRows.PrBarRow, railRow.props);
   const host = shallow(PrRows.PrBarRow.type, barRow.props, new Map([[PrRows.PrBarLayoutContext, 'rail']]));
   const [rowElement] = [host].filter(n => n.type === Row.ChangesRow);
   assert.equal(rowElement.props.link, null);

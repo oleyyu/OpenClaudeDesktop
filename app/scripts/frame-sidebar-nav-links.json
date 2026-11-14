@@ -1,0 +1,92 @@
+{
+ "note": "linkedCopies of scripts/extract-frame-sidebar-nav.mjs: area -> chunk -> pure bindings that linked module slices without an export",
+ "copies": {
+  "files-changes-v4": {
+   "vendor-query-Bl2Kfzgk.js": [
+    "A",
+    "B",
+    "E",
+    "H",
+    "Je",
+    "M",
+    "N",
+    "O",
+    "Pe",
+    "Qe",
+    "T",
+    "X",
+    "Xe",
+    "Y",
+    "Ye",
+    "Z",
+    "Ze",
+    "ee",
+    "et",
+    "h",
+    "l",
+    "m",
+    "ne",
+    "qe",
+    "te",
+    "w",
+    "xe"
+   ]
+  },
+  "code-current-v4": {
+   "shared-6-2QYRw_Wv.js": [
+    "YS"
+   ],
+   "shared-18-Cfqwgjc5.js": [
+    "DF",
+    "IF",
+    "MF",
+    "MN",
+    "NF",
+    "OF",
+    "_F",
+    "bO",
+    "gF",
+    "gO",
+    "jF",
+    "vF",
+    "vO",
+    "yO"
+   ]
+  },
+  "settings-nav": {
+   "shared-183-B2N6Zy4J.js": [
+    "A_",
+    "Ah",
+    "D_",
+    "Hh",
+    "M_",
+    "S_",
+    "Uh",
+    "Vh",
+    "cg",
+    "j_",
+    "k_",
+    "mh",
+    "ph",
+    "qh",
+    "sg",
+    "v_",
+    "wg",
+    "x_",
+    "y_"
+   ]
+  },
+  "cowork-progress-v4": {
+   "shared-9-BgdM6Y1f.js": [
+    "AT",
+    "ET",
+    "kT"
+   ]
+  },
+  "frame-sidebar": {
+   "shared-212-BHMAi0oa.js": [
+    "Op"
+   ]
+  }
+ }
+}

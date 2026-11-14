@@ -81,3 +81,6 @@
 .source-selection-divider { width:1px;flex-shrink:0;margin:7px 0;background:var(--cds-alpha-2);transition:opacity .15s; }
 .source-selection-toolbar:hover .source-selection-divider,.source-selection-toolbar:focus-within .source-selection-divider { opacity:0; }
 @media (prefers-reduced-motion:reduce) { .source-selection-divider { transition:none; } }
+/* The session's start line (save-environment Mx, "Started on {place} · Save as environment") sits centred in the
+   column, in line with the empty transcript's "No messages yet" below it (user fix, 2026-11-13). */
+.source-transcript-content [data-testid="epitaxy-save-start-line"] { text-align: center; }

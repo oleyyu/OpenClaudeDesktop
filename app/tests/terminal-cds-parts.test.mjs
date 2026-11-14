@@ -84,8 +84,15 @@ test('body menu: cccc2cf0a iS kf (c0cdf4a08 g) around the terminal; Le needs a l
   assert.match(read('src/generated/session-rail-changes/row-context-menu.mjs'), /export \{ g as RowContextMenu \};$/m);
   const host = read('src/source-terminal-pane.jsx');
   assert.match(host, /import \{ RowContextMenu \} from "\.\/generated\/session-rail-changes\/row-context-menu\.mjs";/);
-  // W14-code r6 r6pa-04: Restart / Reload / New terminal are CdsButton too (cccc2cf0a Zx), from the same view-tabs import.
-  assert.match(host, /import \{ CdsButton, CdsConfirmationDialog, CdsContextMenu, CdsRoot \} from "\.\/generated\/view-tabs\/index\.js";/);
+  // W14-code r6 r6pa-04: Restart / Reload / New terminal are CdsButton too (cccc2cf0a Zx). host-wiring code-b: the pane's own
+  // "New terminal" and the close confirmation in its comfortable CdsRoot are the 4.16336.0 cds-core originals (facade);
+  // Restart / Reload are the generated EmptyState's `actions` (r3b-transcript, 3.6556.2) and the cS items are children of
+  // the generated RowContextMenu (session-rail-changes, 3.6556.2), so those stay the view-tabs Button / CdsContextMenu.
+  assert.match(host, /import \{ CdsButton as ViewTabsCdsButton, CdsContextMenu \} from "\.\/generated\/view-tabs\/index\.js";/);
+  assert.match(host, /import \{ CdsButton, CdsConfirmationDialog, CdsRoot \} from "\.\/cds-core\.mjs";/);
+  assert.match(host, /actions=\{cover\.action && <ViewTabsCdsButton ref=\{restartButton\}/);
+  assert.match(host, /actions=\{<ViewTabsCdsButton size="sm" variant="secondary" onClick=\{\(\) => window\.location\.reload\(\)\}>/);
+  assert.match(host, /!tabs\.length && <CdsButton size="sm" variant="secondary" onClick=\{\(\) => void newTab\(\)\}>/);
   assert.match(host, /<RowContextMenu\n\s+onContextMenu=\{\(event\) => \{\n\s+const term = viewRef\.current\?\.term;\n\s+if \(!term\) \{ event\.preventDefault\(\); return; \}\n\s+setBodySelection\(term\.getSelection\(\) \|\| ""\);/);
   assert.match(host, /trigger=\{<div ref=\{host\} className="stp-host"/);
   assert.match(host, /if \(term && terminalOwnsContextMenu\(term, event\.nativeEvent\)\) event\.preventDefault\(\);/);
@@ -142,9 +149,17 @@ test('close confirmation: cccc2cf0a Zx Ie is CdsRoot density comfortable around 
   for (const text of ['Xc as ne', 'yd as be',
     'u(be,{density:"comfortable",className:"contents",children:u(ne,{className:"epitaxy-root break-words",open:!0,onOpenChange:ge,onConfirm:he,confirmVariant:"danger"'])
     assert.ok(pane.includes(text), text);
-  const names = JSON.parse(read('src/generated/view-tabs/manifest.json')).publicNames;
-  assert.deepEqual([names.CdsRoot.export, names.CdsConfirmationDialog.export], ['yd', 'Xc']);
+  // host-wiring code-b: the host renders the 4.16336.0 pair now — c9bd7af9c (the same Zx confirmation) imports `Ef as I`
+  // (shared-frame-CJdE5Ria xo) and `Jl as B` (lx) and calls I density comfortable around B with the same props; the
+  // cds-core facade publishes exactly those two bindings.
+  const v4 = fs.readFileSync(path.join(ROOT, '../reference/snapshots/claude-4.16336.0-20261104/ion-dist/assets/v1/c9bd7af9c-Bvb7EG4D.js'), 'utf8');
+  for (const text of ['Ef as I', 'Jl as B', 'u(I,{density:"comfortable",className:"contents",children:u(B,{className:"epitaxy-root break-words",open:!0,onOpenChange:Pe,onConfirm:Ne,confirmVariant:"danger"'])
+    assert.ok(v4.includes(text), text);
+  const names = JSON.parse(read('src/generated/cds-core/manifest.json')).publicNames;
+  assert.deepEqual([names.CdsRoot.file, names.CdsRoot.local, names.CdsConfirmationDialog.file, names.CdsConfirmationDialog.local],
+    ['shared-frame-CJdE5Ria.js', 'xo', 'shared-frame-CJdE5Ria.js', 'lx']);
   const host = read('src/source-terminal-pane.jsx');
+  assert.match(host, /import \{ CdsButton, CdsConfirmationDialog, CdsRoot \} from "\.\/cds-core\.mjs";/);
   assert.match(host, /<CdsRoot density="comfortable" className="contents">\n\s+<CdsConfirmationDialog className="epitaxy-root break-words" open\n\s+onOpenChange=\{\(open\) => \{ if \(!open\) setConfirm\(null\); \}\} onConfirm=\{confirmed\} confirmVariant="danger"/);
   assert.doesNotMatch(host, /SourceConfirmationDialog/);
 });

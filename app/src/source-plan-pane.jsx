@@ -8,8 +8,9 @@ import { createClipboardFeedback } from "./clipboard-feedback.mjs";
 import { SourcePlanChecklist } from "./source-plan-checklist.jsx";
 import { suppressEscapeRepeat } from "./generated/code-editor-current/keyboard-repeat.mjs";
 import { ownerWindow } from "./generated/files-changes/owner-window.mjs";
-// E41: CDS by semantic name from the view-tabs file (the pane is imported by source-session's graph).
-import { CdsButton, CdsIcon } from "./generated/view-tabs/shared-frame-6jtSkIit.js";
+// host-wiring code-a: the hint Icon and the copy Button are the 4.16336.0 cds-core originals (semantic facade; its graph
+// never reaches view-tabs, so source-session's graph stays off the view-tabs facade, E41).
+import { CdsButton, CdsIcon } from "./cds-core.mjs";
 import "./source-plan-pane.css";
 import { t } from "../electron/i18n/index.mjs";
 

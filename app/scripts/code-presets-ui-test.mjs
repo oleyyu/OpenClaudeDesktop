@@ -80,12 +80,12 @@ try {
   await page.locator('[data-source-session-id="S"] [data-row-main-button]').click();
   // R2-topbar TT-02: the New session page has its own Files toggle now; wait for the session's titlebar first.
   await page.locator('.st-lead .st-session-caret').waitFor();
-  await page.locator('[data-pane-toggle="files"]').waitFor();
-  await page.locator('[data-pane-toggle="files"]').click();
+  await page.locator('.st-trailing button[aria-label="Files"]').waitFor();
+  await page.locator('.st-trailing button[aria-label="Files"]').click();
   await page.waitForTimeout(250);
   await page.screenshot({path:path.join(out,'session-files.png')});
-  assert.equal(await page.locator('[data-pane-toggle="files"]').getAttribute('aria-pressed'),'true');
-  if (await page.locator('[data-pane-toggle="files"]').isVisible()) await page.locator('[data-pane-toggle="files"]').click();
+  assert.equal(await page.locator('.st-trailing button[aria-label="Files"]').getAttribute('aria-pressed'),'true');
+  if (await page.locator('.st-trailing button[aria-label="Files"]').isVisible()) await page.locator('.st-trailing button[aria-label="Files"]').click();
   else {
     await page.getByRole('button',{name:'View options',exact:true}).click();
     await page.getByRole('menuitemcheckbox',{name:/Files/}).click();

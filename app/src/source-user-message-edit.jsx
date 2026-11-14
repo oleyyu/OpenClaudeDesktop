@@ -18,7 +18,10 @@
 // Host differences (CW4 report): no attachments to keep or remove (Cowork sends text only), no edit-box arrow navigation
 // (`Jl`: only the last message is editable), no HX focus handoff, no entrance animation, no telemetry.
 import React, { useEffect, useId, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react';
-import { CdsButton, CdsIcon, CdsTooltip, cdsClassNames } from './generated/view-tabs/index.js';
+// host-wiring/chat (4.16336.0): Cancel / Save, the note's Info glyph and its Tooltip are the cds-core graph's (shared-frame-
+// CJdE5Ria Xu → Id, Bs → lf, Kp). 4.16336.0 Tooltip's hoverable defaults to false; the note keeps its explicit
+// hoverable (the reason text can be hovered and selected), so the call is unchanged.
+import { CdsButton, CdsIcon, CdsTooltip, cdsClassNames } from './cds-core.mjs';
 import { t } from '../electron/i18n/index.mjs';
 
 // ---------------------------------------------------------------- the edit store (Ou / fl requestEdit)

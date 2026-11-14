@@ -1,0 +1,511 @@
+{
+  "schema": "code-transcript-v4-link-surface/1",
+  "graph": "src/generated/code-transcript-v4",
+  "referenceVersion": "4.16336.0",
+  "howToLink": "add \"code-transcript-v4\" to the consumer's runSlicer linkedAreas (linkedGraphs for another engine): bindings are matched by 4.16336.0 file#local and imported under the semantic name below; a binding sliced here without an export stops the consumer (unexportedLinks): list it in scripts/<consumer>-v4-links.json {\"linkExports\":{\"code-transcript-v4\":{\"<chunk>.js\":[\"<local>\"]}}} (LINK_REQUEST_FILES) and re-run this generator. Never link src/generated/code-transcript (3.6556.2) from a 4.16336.0 graph.",
+  "semanticExports": {
+    "SessionFileReadableProvider": {
+      "module": "session-providers.mjs",
+      "ref": "c856385e2-Cqx37C-b.js#At"
+    },
+    "ImageLoaderProvider": {
+      "module": "session-providers.mjs",
+      "ref": "c856385e2-Cqx37C-b.js#Yt"
+    },
+    "ContainedImageLoaderProvider": {
+      "module": "session-providers.mjs",
+      "ref": "c856385e2-Cqx37C-b.js#Qt"
+    },
+    "BackgroundTasksContext": {
+      "module": "background-tasks.mjs",
+      "ref": "cea7057eb-BrXukOIp.js#X"
+    },
+    "UserRowChromeContext": {
+      "module": "transcript-rows-chrome.mjs",
+      "ref": "c96d752d0-D9VB6ArX.js#WM"
+    }
+  },
+  "linkExports": {},
+  "linkRequests": {},
+  "pendingSemanticExports": {
+    "ForkedFromRow": {
+      "ref": "c96d752d0-D9VB6ArX.js#jgt",
+      "step": "ct-1",
+      "located": "pinned"
+    },
+    "ForkMarkerRow": {
+      "ref": "c96d752d0-D9VB6ArX.js#Ngt",
+      "step": "ct-1",
+      "located": "pinned"
+    },
+    "CodeTranscriptRenderer": {
+      "ref": "c96d752d0-D9VB6ArX.js#V8",
+      "step": "ct-2",
+      "located": "pinned"
+    },
+    "RendererTurnRow": {
+      "ref": "c96d752d0-D9VB6ArX.js#f8",
+      "step": "ct-2",
+      "located": "pinned"
+    },
+    "CODE_TRANSCRIPT_SPEC": {
+      "ref": "c96d752d0-D9VB6ArX.js#A8",
+      "step": "ct-2",
+      "located": "candidate",
+      "previous": "c96d752d0-CWv_7-n9.js#E3"
+    },
+    "createRendererFragments": {
+      "ref": null,
+      "step": "ct-2",
+      "located": "unsurveyed",
+      "previous": "c96d752d0-CWv_7-n9.js#E4e"
+    },
+    "RendererItemRow": {
+      "ref": "c96d752d0-D9VB6ArX.js#cmt",
+      "step": "ct-2",
+      "located": "candidate",
+      "previous": "c96d752d0-CWv_7-n9.js#e7e"
+    },
+    "useLiveTexts": {
+      "ref": null,
+      "step": "ct-2",
+      "located": "unsurveyed",
+      "previous": "c96d752d0-CWv_7-n9.js#LSe"
+    },
+    "LiveTextProvider": {
+      "ref": "c96d752d0-D9VB6ArX.js#zrt",
+      "step": "ct-2",
+      "located": "candidate",
+      "previous": "c96d752d0-CWv_7-n9.js#S2e"
+    },
+    "rendererTurnKey": {
+      "ref": null,
+      "step": "ct-2",
+      "located": "unsurveyed",
+      "previous": "c96d752d0-CWv_7-n9.js#kN"
+    },
+    "entryIndexById": {
+      "ref": null,
+      "step": "ct-2",
+      "located": "unsurveyed",
+      "previous": "c96d752d0-CWv_7-n9.js#ON"
+    },
+    "createValueStore": {
+      "ref": null,
+      "step": "ct-2",
+      "located": "unsurveyed",
+      "previous": "c96d752d0-CWv_7-n9.js#U0"
+    },
+    "seedKeysOwn": {
+      "ref": null,
+      "step": "ct-2",
+      "located": "unsurveyed",
+      "previous": "c96d752d0-CWv_7-n9.js#lit"
+    },
+    "seedKeysWithTurnEdits": {
+      "ref": null,
+      "step": "ct-2",
+      "located": "unsurveyed",
+      "previous": "c96d752d0-CWv_7-n9.js#cit"
+    },
+    "isDeferrableEntry": {
+      "ref": null,
+      "step": "ct-2",
+      "located": "unsurveyed",
+      "previous": "c96d752d0-CWv_7-n9.js#TN"
+    },
+    "entriesThroughProvisional": {
+      "ref": null,
+      "step": "ct-2",
+      "located": "unsurveyed",
+      "previous": "c96d752d0-CWv_7-n9.js#rat"
+    },
+    "createEntrySharer": {
+      "ref": null,
+      "step": "ct-2",
+      "located": "unsurveyed",
+      "previous": "c96d752d0-CWv_7-n9.js#X3"
+    },
+    "epitaxyChapterStore": {
+      "ref": null,
+      "step": "ct-2",
+      "located": "unsurveyed",
+      "previous": "c96d752d0-CWv_7-n9.js#GT"
+    },
+    "messageRatingStore": {
+      "ref": null,
+      "step": "ct-2",
+      "located": "unsurveyed",
+      "previous": "c96d752d0-CWv_7-n9.js#l0"
+    },
+    "RewindDisabledReasonProvider": {
+      "ref": "c96d752d0-D9VB6ArX.js#dLe",
+      "step": "ct-2",
+      "located": "candidate",
+      "previous": "c96d752d0-CWv_7-n9.js#tDe"
+    },
+    "UserEntryRow": {
+      "ref": "c96d752d0-D9VB6ArX.js#JR",
+      "step": "ct-2",
+      "located": "candidate",
+      "previous": "c96d752d0-CWv_7-n9.js#kI"
+    },
+    "WorkflowToolRow": {
+      "ref": "c96d752d0-D9VB6ArX.js#MU",
+      "step": "ct-2",
+      "located": "candidate",
+      "previous": "c96d752d0-CWv_7-n9.js#F$"
+    },
+    "WorkflowTaskCard": {
+      "ref": "c96d752d0-D9VB6ArX.js#jU",
+      "step": "ct-2",
+      "located": "candidate",
+      "previous": "c96d752d0-CWv_7-n9.js#N$"
+    },
+    "TranscriptSessionNotice": {
+      "ref": "c96d752d0-D9VB6ArX.js#QW",
+      "step": "ct-2",
+      "located": "candidate",
+      "previous": "c96d752d0-CWv_7-n9.js#GG"
+    },
+    "TranscriptInsetRow": {
+      "ref": "c96d752d0-D9VB6ArX.js#RCt",
+      "step": "ct-2",
+      "located": "candidate",
+      "previous": "c96d752d0-CWv_7-n9.js#e9"
+    },
+    "useFeedKeyboard": {
+      "ref": null,
+      "step": "ct-2",
+      "located": "unsurveyed",
+      "previous": "c96d752d0-CWv_7-n9.js#Cat"
+    },
+    "FEED_WINDOWING": {
+      "ref": "c96d752d0-D9VB6ArX.js#owt",
+      "step": "ct-2",
+      "located": "candidate",
+      "previous": "c96d752d0-CWv_7-n9.js#c9"
+    },
+    "feedViewportEstimate": {
+      "ref": null,
+      "step": "ct-2",
+      "located": "unsurveyed",
+      "previous": "c96d752d0-CWv_7-n9.js#Nat"
+    },
+    "buildFeedRows": {
+      "ref": null,
+      "step": "ct-2",
+      "located": "unsurveyed",
+      "previous": "c96d752d0-CWv_7-n9.js#lP"
+    },
+    "splitsRendererEntry": {
+      "ref": null,
+      "step": "ct-2",
+      "located": "unsurveyed",
+      "previous": "c96d752d0-CWv_7-n9.js#hit"
+    },
+    "useRendererFragmentsVersion": {
+      "ref": null,
+      "step": "ct-2",
+      "located": "unsurveyed",
+      "previous": "c96d752d0-CWv_7-n9.js#w4e"
+    },
+    "isEntryPartRow": {
+      "ref": null,
+      "step": "ct-2",
+      "located": "unsurveyed",
+      "previous": "c96d752d0-CWv_7-n9.js#pN"
+    },
+    "isArticlelessRow": {
+      "ref": null,
+      "step": "ct-2",
+      "located": "unsurveyed",
+      "previous": "c96d752d0-CWv_7-n9.js#VN"
+    },
+    "RendererRowActions": {
+      "ref": "c96d752d0-D9VB6ArX.js#I9",
+      "step": "ct-2",
+      "located": "candidate",
+      "previous": "c96d752d0-CWv_7-n9.js#M7"
+    },
+    "rendererItemOfKey": {
+      "ref": null,
+      "step": "ct-2",
+      "located": "unsurveyed",
+      "previous": "c96d752d0-CWv_7-n9.js#TM"
+    },
+    "rendererPinItemKey": {
+      "ref": null,
+      "step": "ct-2",
+      "located": "unsurveyed",
+      "previous": "c96d752d0-CWv_7-n9.js#EM"
+    },
+    "TaskStopButton": {
+      "ref": "c96d752d0-D9VB6ArX.js#QH",
+      "step": "ct-2",
+      "located": "candidate",
+      "previous": "c96d752d0-CWv_7-n9.js#UQ"
+    },
+    "feedPressKeepsFollow": {
+      "ref": null,
+      "step": "ct-2",
+      "located": "unsurveyed",
+      "previous": "c96d752d0-CWv_7-n9.js#i7"
+    },
+    "feedRepinAfterClick": {
+      "ref": null,
+      "step": "ct-2",
+      "located": "unsurveyed",
+      "previous": "c96d752d0-CWv_7-n9.js#a7"
+    },
+    "TranscriptMessageMenuHost": {
+      "ref": "c96d752d0-D9VB6ArX.js#nA",
+      "step": "ct-2",
+      "located": "candidate",
+      "previous": "c96d752d0-CWv_7-n9.js#TA"
+    },
+    "applyStreamSnapshot": {
+      "ref": null,
+      "step": "ct-2",
+      "located": "unsurveyed",
+      "previous": "c96d752d0-CWv_7-n9.js#fO"
+    },
+    "TurnErrorRecoveryProvider": {
+      "ref": "c227f4d5e-DGDdGBTz.js#KF",
+      "step": "ct-2",
+      "located": "candidate",
+      "previous": "c227f4d5e-B-FYKrwT.js#PZ"
+    },
+    "classifyFeedKeyScroll": {
+      "ref": null,
+      "step": "ct-2",
+      "located": "unsurveyed",
+      "previous": "c227f4d5e-B-FYKrwT.js#S2"
+    },
+    "useTranscriptList": {
+      "ref": null,
+      "step": "ct-2",
+      "located": "unsurveyed",
+      "previous": "c4a9ee384-RLCjceOL.js#ba"
+    },
+    "useHoldPlaceOnWidthChange": {
+      "ref": null,
+      "step": "ct-2",
+      "located": "unsurveyed",
+      "previous": "c4a9ee384-RLCjceOL.js#Zp"
+    },
+    "useFeedScroller": {
+      "ref": null,
+      "step": "ct-2",
+      "located": "unsurveyed",
+      "previous": "c4a9ee384-RLCjceOL.js#Hp"
+    },
+    "useResnapBeforeInput": {
+      "ref": null,
+      "step": "ct-2",
+      "located": "unsurveyed",
+      "previous": "c4a9ee384-RLCjceOL.js#Wp"
+    },
+    "transcriptStreamStore": {
+      "ref": null,
+      "step": "ct-2",
+      "located": "unsurveyed",
+      "previous": "c06cf64bb-CdJdJuVd.js#W"
+    },
+    "useStreamSnapshot": {
+      "ref": null,
+      "step": "ct-2",
+      "located": "unsurveyed",
+      "previous": "cd4f82e77-CAMIsQ30.js#zt"
+    },
+    "EpitaxyMermaidFence": {
+      "ref": "c9e4d0c57-DvzRE6N8.js#we",
+      "step": "ct-4",
+      "located": "candidate",
+      "previous": "c9e4d0c57-DoEW0Gy_.js#J"
+    },
+    "HELD_HEIGHT_ATTR": {
+      "ref": "cb264bc23-DwbYs7Ip.js#p",
+      "step": "ct-4",
+      "located": "candidate",
+      "previous": "cb264bc23-DxMA33A4.js#d"
+    },
+    "attachTabFocusRelease": {
+      "ref": "c9f414608-CCeBXbMm.js#o",
+      "step": "ct-4",
+      "located": "candidate",
+      "previous": "c9f414608-BplIKcn2.js#i"
+    },
+    "ImagePreviewModal": {
+      "ref": "shared-36-fqRFYwOb.js#r_",
+      "step": "ct-4",
+      "located": "candidate",
+      "previous": "cb1b78cfa-VqsYNxqp.js#g"
+    }
+  },
+  "linkedAreas": [
+    "transcript-rows-v4",
+    "r3b-transcript-v4",
+    "chat-renderer-v4",
+    "chat-markdown-v4",
+    "code-composer-v4",
+    "code-routines-v4",
+    "cowork-approval-v4",
+    "cowork-progress-v4",
+    "files-changes-v4",
+    "routines-shared-v4",
+    "session-rail-kit-v4",
+    "session-rail-sections-v4",
+    "sessions-page-v4",
+    "turn-plan-v4",
+    "working-line-v4"
+  ],
+  "linkPlan": [
+    {
+      "region": "chat-markdown",
+      "graph": "chat-markdown-v4",
+      "status": "linked",
+      "why": "prose / markdown helpers (shared-11 J_ context held unexported: link-export request)"
+    },
+    {
+      "region": "chat-renderer",
+      "graph": "chat-renderer-v4",
+      "status": "linked",
+      "why": "round2/chat-renderer-b/link-surface.json (Markdown roots still pending there)"
+    },
+    {
+      "region": "code-composer",
+      "graph": "code-composer-v4",
+      "status": "linked",
+      "why": "composer helpers the feed reads"
+    },
+    {
+      "region": "code-current:base",
+      "graph": "code-current-v4",
+      "status": "not-reached",
+      "why": "the V8 / f8 closure (4.16336.0) takes no binding code-current-v4 holds"
+    },
+    {
+      "region": "code-routines",
+      "graph": "code-routines-v4",
+      "status": "linked",
+      "why": "routine rows / helpers"
+    },
+    {
+      "region": "cowork-approval",
+      "graph": "cowork-approval-v4",
+      "status": "linked",
+      "why": "3.6556.2 shared-52 Qq is shared-123#ZS (frame-sidebar-nav) now; cowork-approval-v4 holds other closure bindings"
+    },
+    {
+      "region": "cowork-progress",
+      "graph": "cowork-progress-v4",
+      "status": "linked",
+      "why": "progress rows"
+    },
+    {
+      "region": "files-changes",
+      "graph": "files-changes-v4",
+      "status": "linked",
+      "why": "changed-file rows"
+    },
+    {
+      "region": "r3b-settings",
+      "graph": null,
+      "status": "no-graph",
+      "why": "staging only (regions/batch1/r3b-settings); logger / logCategory are shared-0 Rc / N, resolved through turn-plan-v4"
+    },
+    {
+      "region": "r3b-transcript",
+      "graph": "r3b-transcript-v4",
+      "status": "linked",
+      "why": "SessionFileOpenerProvider (ct-0) and the transcript file access"
+    },
+    {
+      "region": "routines-shared",
+      "graph": "routines-shared-v4",
+      "status": "linked",
+      "why": "routine helpers"
+    },
+    {
+      "region": "session-rail",
+      "graph": "session-rail-v4",
+      "status": "pending",
+      "why": "main workflow batch 6; not in the real tree on 4.16336.0 yet"
+    },
+    {
+      "region": "session-rail-kit",
+      "graph": "session-rail-kit-v4",
+      "status": "linked",
+      "why": "rail kit helpers"
+    },
+    {
+      "region": "session-rail-sections",
+      "graph": "session-rail-sections-v4",
+      "status": "linked",
+      "why": "main workflow batch 5 (in the real tree on 4.16336.0)"
+    },
+    {
+      "region": "sessions-page",
+      "graph": "sessions-page-v4",
+      "status": "linked",
+      "why": "main workflow batch 5 (in the real tree on 4.16336.0)"
+    },
+    {
+      "region": "transcript-rows",
+      "graph": "transcript-rows-v4",
+      "status": "linked",
+      "why": "tr-0 / tr-1 in the real tree; tr-2..tr-5 pending (PENDING_LINKED_AREAS)"
+    },
+    {
+      "region": "turn-box",
+      "graph": "turn-box-v4",
+      "status": "pending",
+      "why": "main workflow batch 7; not in the real tree yet (PENDING_LINKED_AREAS)"
+    },
+    {
+      "region": "turn-plan",
+      "graph": "turn-plan-v4",
+      "status": "linked",
+      "why": "turn plan rows; shared-0 Rc / N (logger, r3b-settings)"
+    },
+    {
+      "region": "working-line",
+      "graph": "working-line-v4",
+      "status": "linked",
+      "why": "working line + the shared-0 / shared-frame helpers it exports"
+    }
+  ],
+  "linkAtSlice": [
+    "frame-sidebar-nav",
+    "settings-nav",
+    "settings-pages-v4",
+    "r4e-plugin",
+    "cowork-scheduled-v4",
+    "proposal-group-v4",
+    "effort-control-v4",
+    "frame-sidebar",
+    "cowork-live-v4",
+    "chat-knowledge-v4",
+    "question-card-v4",
+    "retry-decision-v4",
+    "r3b-tasks",
+    "titlebar-frame",
+    "titlebar",
+    "session-rail-changes-v4",
+    "home-chat-cowork",
+    "cowork-settings-v4",
+    "chat-thinking",
+    "approval-titles-v4",
+    "approval-elicitation-v4",
+    "session-panels-v4",
+    "artifact-library-v4",
+    "session-load-error",
+    "code-editor-current-v4",
+    "code-start-v4"
+  ],
+  "pendingLinkedAreas": [
+    "transcript-rows-v4",
+    "turn-box-v4"
+  ]
+}

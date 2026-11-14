@@ -127,3 +127,40 @@ html[data-reduce-motion="true"] .msx-image-chip { transition:none; }
 .msx-model-rows { padding:0 0 var(--cds-pad-sm,6px) 24px; }
 .msx-name-control { display:inline-flex; align-items:center; gap:6px; }
 .msx-name-id { font-family:var(--cds-font-mono, ui-monospace, monospace); font-size:12px; color:var(--cds-text-secondary); }
+
+/* U-SET-LITE (2026-11-12): the simple Settings › Models page. Every group is a quiet card under a small section label;
+   a model is one line (name, id, chips, caret at the end) and opens to its options. Tokens only, light and dark. */
+.sl-content[data-entry=models] { --msx-card-fill:color-mix(in srgb, var(--cds-text-primary) 2.5%, transparent); --msx-chip-fill:color-mix(in srgb, var(--cds-text-primary) 6%, transparent); }
+.sl-content[data-entry=models] .ss-group { margin-bottom:26px; }
+.sl-content[data-entry=models] .ss-group > h3 { margin:0 0 8px 4px; font-size:13px; line-height:18px; font-weight:500; color:var(--cds-text-secondary); }
+.sl-content[data-entry=models] .ss-group > .settings-group-dividers { padding:0 18px; border:1px solid var(--cds-alpha-2); border-radius:14px; background:var(--msx-card-fill); }
+.sl-content[data-entry=models] .ss-group > .settings-group-dividers > .ss-row { padding:14px 0; }
+.sl-content[data-entry=models] .ss-row-copy [data-settings-desc] { font-size:13px; line-height:18px; }
+.sl-content[data-entry=models] .msx-connection-footer { padding:10px 0 12px; }
+.sl-content[data-entry=models] .msx-connection-status:empty { display:none; }
+.sl-content[data-entry=models] .ss-group .msx-note { margin:0; padding:10px 0 12px; border-top:1px solid var(--cds-alpha-1); font-size:12.5px; }
+.sl-content[data-entry=models] .msx-callout { margin:0 0 12px; }
+/* Model entries: one line, the caret on the right. */
+.sl-content[data-entry=models] .msx-model-entry { border-bottom:1px solid var(--cds-alpha-1); }
+.sl-content[data-entry=models] .msx-model-entry:last-child { border-bottom:0; }
+.sl-content[data-entry=models] .msx-model-trigger { align-items:center; gap:12px; padding:13px 0; border-radius:0; }
+.sl-content[data-entry=models] .msx-model-trigger > svg { margin:0; color:var(--cds-text-muted); }
+.msx-model-head { flex-direction:row; align-items:center; gap:12px; }
+.msx-model-main { display:flex; flex:1; flex-direction:column; gap:2px; min-width:0; }
+.msx-model-name { font-weight:500; }
+.msx-model-aside { display:flex; flex-shrink:0; align-items:center; }
+.msx-model-chips { display:inline-flex; flex-wrap:wrap; justify-content:flex-end; gap:6px; }
+.msx-chip { padding:2px 9px; border-radius:999px; background:var(--msx-chip-fill, var(--cds-fill-secondary)); color:var(--cds-text-secondary); font-size:12px; line-height:18px; white-space:nowrap; }
+.msx-model-desc { color:var(--cds-text-muted); font-size:12.5px; line-height:18px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.msx-model-ids .msx-name-id { color:var(--cds-text-muted); }
+.sl-content[data-entry=models] .msx-model-rows { margin-bottom:10px; padding:2px 14px; border-radius:10px; background:var(--msx-card-fill); }
+.sl-content[data-entry=models] .msx-badge { padding:0 7px; border-radius:999px; box-shadow:none; background:var(--msx-chip-fill); font-size:11.5px; }
+/* Cores on the Models page: no intro row (the section label says it), no install paths. */
+.sl-content[data-entry=models] [data-setting-id=cores-intro] { display:none; }
+.sl-content[data-entry=models] [data-setting-id=cores-intro] + [data-settings-row] { border-top:0; }
+.sl-content[data-entry=models] .cores-page .ccmd-path { display:none; }
+.sl-content[data-entry=models] .cores-desc { font-size:13px; line-height:18px; color:var(--cds-text-muted); }
+.sl-content[data-entry=models] .cores-note { margin:-14px 0 0 4px; font-size:12px; }
+.sl-content[data-entry=models] .cores-desc { flex-direction:row; flex-wrap:wrap; align-items:baseline; gap:0 6px; }
+.sl-content[data-entry=models] .cores-desc > .cores-status { color:var(--cds-text-muted); font-size:13px; line-height:18px; }
+.sl-content[data-entry=models] .cores-desc > .cores-status:not(:empty)::before { content:"·"; margin-right:6px; }

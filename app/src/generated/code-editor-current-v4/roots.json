@@ -1,0 +1,475 @@
+{
+  "referenceVersion": "4.16336.0",
+  "referenceSnapshot": "snapshots/claude-4.16336.0-20261104",
+  "source": "cbd02b8f2-WPvqHhA2.js",
+  "sourceSha256": "a2555ec9928ff299258cbca2e55da421ff6e88b26e06b8e5424546f05771c095",
+  "roots": {
+    "detectIndentation": {
+      "local": "yn",
+      "previous": "Bt",
+      "features": [
+        "for (let [e, t] of r) (t > s || (t === s && e < o))",
+        "return o === 0 ? null : \" \".repeat(o);"
+      ],
+      "sha256": "e3154107ebc65695ae7f7a9caff684cb8bbb154cfe24f04b4fe023906c011fc5"
+    },
+    "detectedIndentation": {
+      "local": "il",
+      "previous": "Ua",
+      "features": [
+        "/\\.tsv$/i.test(t)",
+        ": dt.of($c)"
+      ],
+      "sha256": "a65df5a048870bbbcd7635eb99554ef5a67a5f085fe29ac0b9b78cce8e64762f"
+    },
+    "resetIndentation": {
+      "local": "Qc",
+      "previous": "La",
+      "features": [
+        "mt.define()"
+      ],
+      "via": "tl",
+      "sha256": "bcd2ca65483af9f3594e3260c34d6b9b831116733cf64d0d1afd9b7dcdb7709a"
+    },
+    "bracketIndentation": {
+      "local": "An",
+      "previous": "Xt",
+      "features": [
+        "{ key: \"Enter\", run: On, shift: On }"
+      ],
+      "sha256": "94fb75092f29edcb59c7c85e741172b19103970cab94671fac27cf678ade5cf9"
+    },
+    "bracketJump": {
+      "local": "Yn",
+      "previous": "ln",
+      "features": [
+        "{ key: \"Shift-Mod-\\\\\", run: kt }"
+      ],
+      "sha256": "d1e1ac8716301c458313bb39ff3784c4b923377b9519fc811c2a521511568845"
+    },
+    "editorKeymap": {
+      "local": "Hn",
+      "previous": "tn",
+      "features": [
+        "...Pt.filter((e) => e.run !== kt).map(Vn), Ln"
+      ],
+      "sha256": "9aeb1c57f1d43425bbace3a6362110834d6c377d990efb8b1ee4dbc33b419362"
+    },
+    "autoCloseBrackets": {
+      "local": "ll",
+      "previous": "Ja",
+      "features": [
+        "{ key: \"Backspace\", run: fr }"
+      ],
+      "sha256": "efee52c519adaa613088e40d5c28ab5e6e0c34ac07f55aa6305102179ffd6a0b"
+    },
+    "tabIndentation": {
+      "local": "cl",
+      "previous": "qa",
+      "features": [
+        "{ key: \"Ctrl-m\", mac: \"Shift-Alt-m\", run: W }",
+        "\"aria-describedby\": t"
+      ],
+      "sha256": "78acce043b3d01ef117a67ef40668b3cd8ac78df896d92507eef50fb804a37e4"
+    },
+    "columnSelection": {
+      "local": "sl",
+      "previous": "Ka",
+      "features": [
+        "return e ? [Nt(), ol] : [];"
+      ],
+      "sha256": "3ddab5d5369477b03058b4e1f289774d7673452d7604a3654acc08fac96cc469"
+    },
+    "codeFolding": {
+      "local": "Br",
+      "previous": "Rn",
+      "features": [
+        "defaultMessage: \"Fold line\"",
+        "defaultMessage: \"Unfold line\"",
+        "e.focus(), !0"
+      ],
+      "sha256": "ce281c3c501363e50e0c2ea4ecee616ebaba4e8a31d1a850a26ce686d21c8515"
+    },
+    "indentGuides": {
+      "local": "Ci",
+      "previous": "Sr",
+      "features": [
+        "return [xi, Si];"
+      ],
+      "sha256": "684b8ab2c465081c3b04ac46b4f5db84a2f53dc05b129689977c212737304735"
+    },
+    "insertTabIndent": {
+      "local": "dr",
+      "previous": "un",
+      "features": [
+        "return pt({ state: e, dispatch: t });",
+        "e.facet(dt)"
+      ],
+      "sha256": "c9a834765a6847bf69a27552b2c0c7495ef0857aaed79ef766df946e5bb206c3"
+    },
+    "bracketEnter": {
+      "local": "On",
+      "previous": "Jt",
+      "features": [
+        "r = new Set(n.map((t) => e.doc.lineAt(t.from).from))"
+      ],
+      "sha256": "b2465a31291801c1943403664464b2d7585c3eada1d704c53f03fe3937a78418"
+    },
+    "jumpBracket": {
+      "local": "Gn",
+      "previous": "an",
+      "features": [
+        "t.selection.ranges.map((e) => Wn(t, e))"
+      ],
+      "sha256": "7281b72bc16bf7bcdb5faa77ec12091793c75898460627c4231f3970f066f1dc"
+    },
+    "rememberEditorView": {
+      "local": "cs",
+      "previous": "ca",
+      "features": [
+        "ss.delete(e);",
+        "n.unappliedScroll === void 0"
+      ],
+      "sha256": "8b45f3c1961e4ffc83ade642a5ab5d26e3358326926a5cd0e4d7192cee7b9ea9"
+    },
+    "restoreEditorView": {
+      "local": "us",
+      "previous": "ua",
+      "features": [
+        "return (ss.delete(e), n !== void 0 && n.doc === t ? n : void 0);"
+      ],
+      "sha256": "d49af24619c7825e2aa6e26a8aae73067f188f67f61b43988f9ac13d17f6865c"
+    },
+    "restoredHistory": {
+      "local": "ds",
+      "previous": "da",
+      "features": [
+        "let t = e?.history;",
+        "St.init(() => t)"
+      ],
+      "sha256": "882d8961eaa80e8ea19e9c526a77ef27a7e2978bb3f05cf08197a12d5310ca80"
+    },
+    "restoredFolds": {
+      "local": "Kr",
+      "previous": "Wn",
+      "features": [
+        "return e && t !== void 0 ? V.init(() => t) : [];"
+      ],
+      "sha256": "1522d73f31d7557c466fdf88cc004cf30b3fe20f3fb78be7619cc0b0bd58f2bc"
+    },
+    "loadEditorLanguage": {
+      "local": "Jo",
+      "previous": "Ji",
+      "features": [
+        "return n ? In(await Yo(t, n)) : null;"
+      ],
+      "sha256": "671b11c1b5f83548e9ec9c34c49d0e8a2ed9d01c9fbd29e78bad75305843bc14"
+    },
+    "cachedEditorLanguage": {
+      "local": "Wo",
+      "previous": "Gi",
+      "features": [
+        "return n ? In(Bo.get(t)) : null;"
+      ],
+      "sha256": "b9536c2099dd3d8f5035cfefc8a465e0c3fed7481a1dac2d9a527b3cc638e812"
+    },
+    "resolveEditorLanguage": {
+      "local": "Io",
+      "previous": "Li",
+      "features": [
+        "{ key: \"ext:python\", loader: Ba }",
+        "{ key: `name:${n}`, loader: c }"
+      ],
+      "sha256": "777db0c312672749444b3f069b834d3de91b420d11f28c72c3295c8616a542ec"
+    },
+    "settleEditorParse": {
+      "local": "Cl",
+      "previous": "uo",
+      "features": [
+        "Math.min(e.viewport.to + Sl, e.state.doc.length)"
+      ],
+      "sha256": "61dc120ef276c19f3d319e4da0a3bf6d42a77a2245b762fddd727399a1ec2b0b"
+    },
+    "commentRangeHighlight": {
+      "local": "ru",
+      "previous": "Go",
+      "features": [
+        "ru = eu(nu, !1)"
+      ],
+      "sha256": "3b087251ef587ffef2014afeb912f99ccbc5392e77eeff7ce8cdbd5839c869e4"
+    },
+    "setCommentRange": {
+      "local": "nu",
+      "previous": "Wo",
+      "features": [
+        "Kt.define()"
+      ],
+      "via": "ru",
+      "sha256": "87c83ae6a26357251aac99b48933ea28bed005c41648a27d382a03107893815b"
+    },
+    "rangeHighlightTheme": {
+      "local": "su",
+      "previous": "Ko",
+      "features": [
+        "\".cm-epitaxyJumpRange\": {",
+        "ou.set(e, t)"
+      ],
+      "sha256": "f67d5595ca523224e5b991ad129d3d4b3049c9fe702efa9c202ab4ec4a8a397c"
+    },
+    "selectionActions": {
+      "local": "Ml",
+      "previous": "bo",
+      "features": [
+        "e.getHandler()",
+        "e.getCommentHandler()"
+      ],
+      "sha256": "c2f9ab8755fed0c4fc1c5e7fc09bf723d8e7d6dea74e3dc841defbf5c980a1af"
+    },
+    "selectableLineNumbers": {
+      "local": "ai",
+      "previous": "rr",
+      "features": [
+        "pointerdown: (e, t, n) => (ni(e, t, n), !1)"
+      ],
+      "sha256": "9940b1b064a9ff7c37e1e4e30f4ae37288241106c42fe80f419164846ea12999"
+    },
+    "commentWidgets": {
+      "local": "Hl",
+      "previous": "Ao",
+      "features": [
+        "create: () => ({ slots: [], heights: new Map(), deco: D.none })"
+      ],
+      "sha256": "2a899c5c3dd1aa5083c3cc8fb8553acc2d2e0a9d780cdde162c42d9daa1acd25"
+    },
+    "setCommentSlots": {
+      "local": "Il",
+      "previous": "wo",
+      "features": [
+        "Kt.define()"
+      ],
+      "via": "Hl",
+      "sha256": "13b06d0817041df6f5c1d467748f878d51e64b68e125c29f306e7aec56a545d1"
+    },
+    "hoveredEditorLine": {
+      "local": "Ul",
+      "previous": "jo",
+      "features": [
+        "let r = n - e.documentTop;"
+      ],
+      "sha256": "ad59c5039cfca3c594d380ff261ee5300b14268ea3449195172544e6a48a9246"
+    },
+    "lineRangeSelection": {
+      "local": "qr",
+      "previous": "Gn",
+      "features": [
+        "R.single(s(a), c(o)) : R.single(c(a), s(o))"
+      ],
+      "sha256": "70dc4ea80e9aad6e83c3eef25bb47bae618b40face566e52db15d30192394f37"
+    },
+    "lineSelectionAnchor": {
+      "local": "Jr",
+      "previous": "Kn",
+      "features": [
+        "t > n && t === r.from && r.number > 1"
+      ],
+      "sha256": "daea55edae03ec83f200c63a792afe75118fa2f3f64fdb718c7d6f9a8870e9bc"
+    },
+    "selectedEditorContext": {
+      "local": "es",
+      "previous": "ea",
+      "features": [
+        "$o(e).filter((e) => !e.empty)",
+        "rs(e.sliceDoc(t.from, t.to))"
+      ],
+      "sha256": "6ecee47050c02387df67d87a0d8e7c185d0e0afc97dde03f79fc6e1e8df5c5b1"
+    },
+    "selectionTooltipAnchor": {
+      "local": "ts",
+      "previous": "ta",
+      "features": [
+        "return { pos: i(e.to, e.from), above: !1, far: r[0].from };"
+      ],
+      "sha256": "dddef528d4e4c0a95471801e80f3f9946e36daa4017b52d3b45a4cb76571673c"
+    },
+    "selectionTooltipCoords": {
+      "local": "ns",
+      "previous": "na",
+      "features": [
+        "head: e, far: t, space: n, chipHeight: r, above: i"
+      ],
+      "sha256": "b8e02293fa116426e7aa6c79f2c4ddd75581de155e00be75141a5b7ebcb119dc"
+    },
+    "externalEditorChange": {
+      "local": "Kl",
+      "previous": "Po",
+      "features": [
+        "o = r < i || a !== \"\" ? Hr(n, r, i) : [];"
+      ],
+      "sha256": "7b5b952646dac57b0d30c320dbd1a1af8a063c44c9490bb7eb605fbf401fde3e"
+    },
+    "externalEditorUpdate": {
+      "local": "Xl",
+      "previous": "Ro",
+      "features": [
+        "mt.define()"
+      ],
+      "via": "eu",
+      "sha256": "4e36169f3417edc7eb00160e243f5b4cdf458eac210f3a2121d3dc0bdf1383c8"
+    },
+    "minimalEditorChange": {
+      "local": "is",
+      "previous": "ia",
+      "features": [
+        "e.charCodeAt(r) === t.charCodeAt(r)"
+      ],
+      "sha256": "78400aca6df39865ac28cde06140432d0425a309a3f410d5249800991adc6e1a"
+    },
+    "activeIndentBlock": {
+      "local": "_i",
+      "previous": "hr",
+      "features": [
+        "e(t + 1) === a + 1"
+      ],
+      "sha256": "4d9fcbb9b4e947858ac0433f6062b947e71177f9e79fb432ef82d728a9b0b2de"
+    },
+    "lineIndentLevels": {
+      "local": "gi",
+      "previous": "mr",
+      "features": [
+        "let a = e - ((e - 1) % li)"
+      ],
+      "sha256": "ffb99cc81a03f0ff3eaa2e2649197a4ce114e6a12cdf443ceb055adb0b18e2d9"
+    },
+    "indentGradient": {
+      "local": "bi",
+      "previous": "vr",
+      "features": [
+        "o = `calc(${a} + 1px)`"
+      ],
+      "sha256": "387524b6595a54bb9813f92af44d619f95cb55482ae7be8a8e972f6d82cf37dc"
+    },
+    "copyLines": {
+      "local": "zn",
+      "previous": "Qt",
+      "features": [
+        "userEvent: \"input.copyline\""
+      ],
+      "sha256": "91e7b3d4c71c99198597e678ddcb92d099fdc54247386b8883b6cf06272c763e"
+    },
+    "suppressCommandRepeat": {
+      "local": "Xc",
+      "previous": "Fa",
+      "features": [
+        "let r = le(n.dom);",
+        "return (r && t(n) && ve(r), !0);"
+      ],
+      "sha256": "2cde58e179cd0e0a8b8f74f69bef85c75422965a33bd775632bd77f2a7f3f3fd"
+    },
+    "updateEditorTransactions": {
+      "local": "Yc",
+      "previous": "Pa",
+      "features": [
+        "annotations: [Xe.addToHistory.of(!1), Jc.of(!0)]"
+      ],
+      "sha256": "d4ed6e41635e48625aeda4611637dbeb1f9d5649f754aab9a08bea1c83ccad57"
+    },
+    "activeLineHighlight": {
+      "local": "qc",
+      "previous": "Ma",
+      "features": [
+        "r.push(Kc.range(t.from))"
+      ],
+      "sha256": "48de735badfe8d3a057046179bff6785ef7308c931be008fb726c42ccf6c421a"
+    },
+    "whitespaceHighlighter": {
+      "local": "ml",
+      "previous": "$a",
+      "features": [
+        "this.decorations = pl.createDeco(e);"
+      ],
+      "sha256": "47770c6a081fb3994f51c3d5d8cc1bad9bbb7e578bb2ce76d7a850df078c995f"
+    },
+    "editorViewOptions": {
+      "local": "gl",
+      "previous": null,
+      "features": [
+        "e && a ? ki() : []",
+        "t ? ml : []",
+        "i ? Ci() : []",
+        "n ? At() : []"
+      ],
+      "sha256": "26428ac76c0a5df5eaf3896515c6c493e8d0032184d2525be6026d69bc147525"
+    },
+    "editorTheme": {
+      "local": "ws",
+      "previous": "xa",
+      "features": [
+        "...Cs(\".cm-epitaxyFindMatch-active\", h.current)",
+        "{ dark: e.type === \"dark\" }"
+      ],
+      "sha256": "89a77fd51ce0906405a3f8dd7ff21fef84747f501262305972df5806d611600a"
+    },
+    "editorThemePalette": {
+      "local": "xs",
+      "previous": "ya",
+      "features": [
+        "find: Ie(t, n)",
+        "bracketMatchBorder:"
+      ],
+      "sha256": "5321e8c8dbc6bc7096ff472b7a58f0c330c712329b8ac8fb3a4d111edc12f25d"
+    }
+  },
+  "preloadCalls": 40,
+  "baseLanguageBehavior": {
+    "list": "Zc",
+    "listSha256": "9dfdb9e31ddd4e4c1d74b1afde646a74888fea027dfbd88fb81592c032c91fc7",
+    "members": [
+      {
+        "index": 3,
+        "sha256": "1185a625c00dfcead6d7e1a0ac93294c8734ff85ac031b5fd3557cbed72214e6"
+      },
+      {
+        "index": 4,
+        "sha256": "3effcf9af310022727819ea07b5b5c49ebf741364a4eaef6ce28224952fcb455"
+      },
+      {
+        "index": 5,
+        "sha256": "997164d13810adf6cab52541447d083c4472e5ca6052cc6ddd9501318ac5730c"
+      },
+      {
+        "index": 6,
+        "sha256": "f076a60bcd81da54748fcd480733e212d6746d1095abf85c88fed837d808397e"
+      },
+      {
+        "index": 7,
+        "sha256": "6a43ae72d3db6befc12888831bc8b9540f2c05a643ffcfb259c51c71cd1736a0"
+      },
+      {
+        "index": 10,
+        "sha256": "50429d736e7558fab8529799f56c85c10b3f90adb90978df2a6b913aba17a170"
+      }
+    ]
+  },
+  "withheld": {
+    "findMatchTheme": {
+      "old": "io",
+      "status": "removed",
+      "why": "4.16336.0 has no find-match theme: ws styles .cm-epitaxyFindMatch through Cs(..., h.others / h.current), h = c74f29bd2 a(colors, mode)"
+    },
+    "pendingEditorLanguage": {
+      "old": "qi",
+      "local": "qo",
+      "status": "blocked",
+      "why": "qo answers `(Fn() && Ko.get(Oe(e))) || Go` for a path without a CodeMirror loader; Oe is c476e9be4 O (exported i), which registers lazy grammars in the Shiki language registry (c476e9be4 x / y / b, c41eb0199 a / r / i) shared with the transcript highlighter and needs c5a058668's 235 grammar chunks. That state has one owner, transcript-rows (still 3.6556.2), so it is not sliced a second time here."
+    },
+    "highlightWhitespace": {
+      "old": "$a",
+      "status": "renamed",
+      "why": "the 3.6556.2 adapter wrapped $a in an arrow; 4.16336.0 mounts ml directly (gl, _test.whitespaceHighlighter): exported as whitespaceHighlighter"
+    }
+  },
+  "facades": {
+    "wrapper.mjs": 48,
+    "theme.mjs": 2
+  }
+}

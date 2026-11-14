@@ -48,6 +48,7 @@
 // rest those areas slice without exporting is copied (`copies`, each pure or module-local). W14-code r7 (R7DC-03, r7c-01):
 // this area in turn exports what the sidebar hover card, the sidebar routines and the queued message bar reach in its
 // chunks (`linkExports['code-transcript']`), so they link it instead of slicing it again.
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -516,7 +517,29 @@ export const CODE_TRANSCRIPT = {
   stateCopies, linkedCopies,
   gate: { flag: '__gb__3413676205', name: 'code_unified_renderer', host: 'src/host-growthbook.mjs HOST_GROWTHBOOK (Uon always !0, E81); source-code-transcript.jsx codeTranscriptRendererOn' },
   referenceVersion: v3.referenceVersion, referenceSnapshot: v3.referenceSnapshot, source: v3.ionSource, vendor: { [v3.vendorFrame]: v3.reactAliases },
+  artifacts: () => ({ 'agent-cell.css': inlineStyleCss(AGENT_CELL_STYLE) }),
 };
+// Style text c96d752d0 injects at module load with its `(function (e, t) { … })(id, css)` prelude (the slicer keeps
+// declarations, not this bare statement): the agent cells of the workflow card's phase strip (QQ / qQ: epitaxy-agent-cell
+// and its --done / --running / --pending … states). Written out verbatim as CSS (as extract-r3b-transcript.mjs does
+// for cbbd9b21e) and imported once by src/source-code-transcript-adapters.jsx, which this area's modules load.
+const AGENT_CELL_STYLE = { source: C96, id: 'c1bc4f7a0',
+  features: ['.epitaxy-agent-cell{background-color:#0000;border:1px solid #0000;', '.epitaxy-agent-cell--done{background-color:var(--cds-alpha-3)}', '@keyframes epitaxy-agent-pulse{'] };
+function inlineStyleCss(style) {
+  const text = fs.readFileSync(path.join(v3.ionSource, style.source), 'utf8');
+  const prelude = ['querySelector(\'style[data-inline-css="\'+e+\'"]\')', 'r.setAttribute("data-inline-css",e)', 'r.textContent=t,n.head.appendChild(r)'];
+  const call = `("${style.id}","`;
+  if (text.split(call).length - 1 !== 1) throw Error(`${style.source}: inline style ${style.id} occurs ${text.split(call).length - 1} times, expected 1`);
+  const at = text.indexOf(call), head = text.slice(Math.max(0, at - 600), at);
+  for (const pin of prelude) if (!head.includes(pin)) throw Error(`${style.source}: inline style ${style.id}: prelude pin ${pin} not found`);
+  const literal = text.slice(at + call.length - 1).match(/^"(?:[^"\\]|\\.)*"/);
+  if (!literal) throw Error(`${style.source}: inline style ${style.id}: no string literal`);
+  const css = JSON.parse(literal[0]);
+  for (const feature of style.features) if (css.split(feature).length - 1 !== 1) throw Error(`${style.source}: inline style ${style.id}: ${feature} not found once`);
+  const sha = crypto.createHash('sha256').update(css).digest('hex');
+  return `/* Original Claude Desktop ${v3.referenceVersion} style text that ${style.source} injects as <style data-inline-css="${style.id}">;\n` +
+    `   written out verbatim by scripts/extract-code-transcript.mjs (sha256 ${sha}). Never edit this file. */\n${css}\n`;
+}
 export function extractCodeTranscript(options) {
   return runSlicer(CODE_TRANSCRIPT, options);
 }

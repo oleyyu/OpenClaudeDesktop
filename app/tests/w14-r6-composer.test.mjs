@@ -15,13 +15,15 @@ const v1 = path.join(app, '../reference/snapshots/claude-3.6556.2-20261025-19280
 const read = (file) => fs.readFileSync(path.join(app, file), 'utf8');
 const official = (prefix) => fs.readFileSync(path.join(v1, fs.readdirSync(v1).find((name) => name.startsWith(prefix))), 'utf8');
 const h = React.createElement;
-let server, E, S, L, C, P;
+let server, E, S, L, V, C, P;
 before(async () => {
   server = await createServer({ configFile: false, root: app, plugins: [react()],
     server: { middlewareMode: true, hmr: false, watch: null }, appType: 'custom', logLevel: 'error' });
   E = await server.ssrLoadModule('/src/generated/effort-control/effort-control.mjs');
   S = await server.ssrLoadModule('/src/generated/effort-control/slider.mjs');
   L = await server.ssrLoadModule('/src/generated/effort-control/lit-overlay.mjs');
+  // Round 3 relink rl-composer S4: the host popover reads the 4.16336.0 graph (its overlay is c227f4d5e-DGDdGBTz Zz).
+  V = await server.ssrLoadModule('/src/generated/effort-control-v4/index.mjs');
   C = await server.ssrLoadModule('/src/source-composer.jsx');
   P = await server.ssrLoadModule('/src/generated/code-composer/chat-composer-presence.mjs');
 });
@@ -71,7 +73,9 @@ test('r6-composer-02: options as jw builds them; R$ passes P$ only when the last
     { id: 'high', name: 'High', description: 'Deep', badge: { message: 'Default', variant: 'neutral' } },
     { id: 'max', name: 'Max', description: undefined, tooltip: { content: 'x' } },
   ]);
-  assert.equal(C.effortSliderOverlay([{ id: 'low' }, { id: 'ultracode' }]), L.EffortSliderOverlay);
+  // 4.16336.0 rB keeps the rule (`qf(fe?.thinking?.effort_options?.at(-1)?.id) ? Zz : void 0`); the host passes the v4 Zz since S4.
+  assert.ok(fs.readFileSync(path.join(app, '../reference/snapshots/claude-4.16336.0-20261104/ion-dist/assets/v1/c227f4d5e-DGDdGBTz.js'), 'utf8').includes(':qf(fe?.thinking?.effort_options?.at(-1)?.id)?Zz:void 0'));
+  assert.equal(C.effortSliderOverlay([{ id: 'low' }, { id: 'ultracode' }]), V.EffortSliderOverlay);
   for (const last of ['ultra', 'max', 'xhigh']) assert.equal(C.effortSliderOverlay([{ id: 'low' }, { id: last }]), undefined, last);
 });
 

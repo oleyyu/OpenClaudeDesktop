@@ -1,0 +1,717 @@
+{
+  "referenceVersion": "4.16336.0",
+  "referenceSnapshot": "snapshots/claude-4.16336.0-20261104",
+  "generator": "scripts/extract-chat-artifact-card-v4.mjs",
+  "previous": {
+    "generator": "scripts/extract-chat-artifact-card.mjs",
+    "output": "src/generated/chat-artifact-card",
+    "referenceVersion": "3.6556.2"
+  },
+  "sharedGraph": {
+    "area": "cds-core",
+    "manifestSha256": "06d2026939e5c8992713c2a0dda1b1abc9adffe7a0c223fe3c1e79eecd08d62c",
+    "reads": [
+      "store_shared2_Y_ (3.6556.2 drawerTriggerStore)",
+      "ctx_shared2_g4 (the transcript layout context)"
+    ]
+  },
+  "linkedAreas": {
+    "code-composer-v4": "dc5bfba3750b5f0468cadcf5b6123fe59ce856daf14f6aebf5b1bce1c2f1cf64",
+    "cowork-scheduled-v4": "1af355ba22cc6cee9062edb2710c581d7808d95812d240d343ad995cf96ceb78",
+    "session-rail-kit-v4": "8e3066efa4721cee2a5bb0b190fae471848c3456fa9b9424773baba5f2b9291a"
+  },
+  "roots": [
+    {
+      "file": "cc1aae219-BbSf__8R.js",
+      "local": "c1",
+      "name": "ChatArtifactToolBlock",
+      "exports": [],
+      "declarationSha256": "0b6be9f6cdca91c895d1d4cbf2a4c3eb76c729759a636290ba4cc248d4d1d281",
+      "pinned": true
+    },
+    {
+      "file": "cc1aae219-BbSf__8R.js",
+      "local": "oI",
+      "name": "artifactCellType",
+      "exports": [],
+      "declarationSha256": "d6300b3763833a17bb390b93c56d1881cd9665dab66dea44f88684ab9b4018cf",
+      "pinned": true
+    },
+    {
+      "file": "cc1aae219-BbSf__8R.js",
+      "local": "rI",
+      "name": "artifactToolUseId",
+      "exports": [],
+      "declarationSha256": "5656caa9e99d4ba275ffcd85c9068ee094d8d9de88ce6e208006f390c026b156",
+      "pinned": true
+    },
+    {
+      "file": "shared-38-DyF0_Fim.js",
+      "local": "qa",
+      "name": "ArtifactBlock",
+      "exports": [
+        "O"
+      ],
+      "declarationSha256": "2cb0953548eaead1726e573a04356847e960ef02f3617063e5dde826ba66faf8",
+      "pinned": true
+    },
+    {
+      "file": "shared-2-CsjIBQD8.js",
+      "local": "v4",
+      "name": "useTranscriptLayoutName",
+      "exports": [
+        "Wt"
+      ],
+      "declarationSha256": "e3bdd449239471b8d42adcef4908eab6d07524ed4edc0112634cf9cbc9f09bce",
+      "pinned": true
+    },
+    {
+      "file": "shared-2-CsjIBQD8.js",
+      "local": "y4",
+      "name": "useTranscriptLayoutIsCustom",
+      "exports": [
+        "Kt"
+      ],
+      "declarationSha256": "aac2b7ae7525908714781d6c5a8b73e1008cbd6d9451d2511c973f420316f3be",
+      "pinned": true
+    },
+    {
+      "file": "shared-2-CsjIBQD8.js",
+      "local": "b4",
+      "name": "useTranscriptLayoutCard",
+      "exports": [
+        "Gt"
+      ],
+      "declarationSha256": "dd3e5b0432ae1458a1df45736f3802580a6eb913ac34ed88b770f006a44c2a0a",
+      "pinned": true
+    },
+    {
+      "file": "shared-31-C9BqSSuD.js",
+      "local": "Zw",
+      "name": "transcriptStaysPutAttribute",
+      "exports": [
+        "vt"
+      ],
+      "declarationSha256": "5ba910798545871a5f822e032f2507f01305b59e2d52e388037ebaa2f4ede527",
+      "pinned": true
+    },
+    {
+      "file": "shared-153-DMw2VzSq.js",
+      "local": "J",
+      "name": "ArtifactType",
+      "exports": [
+        "yg"
+      ],
+      "declarationSha256": "d3ee732177f1ebee040ef54f30ef1f288807b161659497287006ffd46bd77a48",
+      "pinned": true
+    },
+    {
+      "file": "shared-38-DyF0_Fim.js",
+      "local": "ao",
+      "name": "useArtifactBlockGrouped",
+      "exports": [
+        "T"
+      ],
+      "linkedFrom": "session-rail-kit-v4",
+      "declarationSha256": "6e7c1ab7f90d9b4643acc7a820308f82c33a757897af43b7a0f8d1b5b2e03014",
+      "pinned": true
+    },
+    {
+      "file": "shared-38-DyF0_Fim.js",
+      "local": "ro",
+      "name": "ArtifactBlockGroupedContext",
+      "exports": [
+        "C"
+      ],
+      "linkedFrom": "cds-core",
+      "declarationSha256": "e81357e5fab0f2654c3139bb0944b6711d591e4f25cef2853147e9bfbea08ac0",
+      "pinned": true
+    }
+  ],
+  "adapters": [
+    {
+      "original": "shared-153-DMw2VzSq.js#Aw",
+      "name": "chatArtifactsInputSchema",
+      "hostAdapter": "src/source-chat-artifact-card-adapters.jsx",
+      "declarationSha256": "554c3e4d2b84d5c1795694b23f0fea0097ede0318cdc1fa7fdb1e1afbc07b8e3",
+      "pinned": true
+    },
+    {
+      "original": "shared-31-C9BqSSuD.js#Jm",
+      "name": "useChatTranscriptCapability",
+      "hostAdapter": "src/source-chat-artifact-card-adapters.jsx",
+      "declarationSha256": "2f6652b613dee4ff3af4fe067818447e3c3794a1d25f6444c2815a3964e71b77",
+      "pinned": true
+    },
+    {
+      "original": "shared-2-CsjIBQD8.js#_y",
+      "name": "useChatArtifactDrawer",
+      "hostAdapter": "src/source-chat-artifact-card-adapters.jsx",
+      "declarationSha256": "f8dcdad91efdce3a7f1569c2dfa4e720d6936d03438e106fc0a1191583f6b0fa",
+      "pinned": true
+    },
+    {
+      "original": "shared-153-DMw2VzSq.js#IY",
+      "name": "useChatArtifactRecord",
+      "hostAdapter": "src/source-chat-artifact-card-adapters.jsx",
+      "declarationSha256": "f646c1b051cf4cb61add09d74dfa98ded2dfc7785b0d22ee7e3279b1c881bad7",
+      "pinned": true
+    },
+    {
+      "original": "shared-153-DMw2VzSq.js#FY",
+      "name": "useChatArtifactEntry",
+      "hostAdapter": "src/source-chat-artifact-card-adapters.jsx",
+      "declarationSha256": "cb2660db4b0a57db6553235bd14225222c104a496ae4836e14188620647c10a5",
+      "pinned": true
+    },
+    {
+      "original": "c7d03f0bf-BAalxCl2.js#s",
+      "name": "useChatArtifactDrawerSelected",
+      "hostAdapter": "src/source-chat-artifact-card-adapters.jsx",
+      "declarationSha256": "ba603a8f575302e8056908356f659979cb9b9b2d4ab97e5637bd9c06ec18abf7",
+      "pinned": true
+    },
+    {
+      "original": "shared-25-D-aF0gt9.js#IH",
+      "name": "setChatLocalValue",
+      "hostAdapter": "src/source-chat-markdown-adapters.jsx",
+      "declarationSha256": "2105fca2d0b1e2bff2323ff4a0d7cf60a25ba761214bda367a76358fcbcdcbc9",
+      "pinned": true
+    },
+    {
+      "original": "vendor-intl-BJgYK7RA.js#q",
+      "name": "useIntl",
+      "hostAdapter": "src/source-routines-shared-adapters.jsx",
+      "declarationSha256": "edf793bc7b87ae9a38cea39d25d752a5bcfef1d492e06a2219e120311feaaec0",
+      "pinned": true
+    },
+    {
+      "original": "vendor-intl-BJgYK7RA.js#Gt",
+      "name": "FormattedMessage",
+      "hostAdapter": "src/source-routines-shared-adapters.jsx",
+      "declarationSha256": "bde2ec1630e0a679fa4135cf75389568e77fa98fdcb08519af8104d5306ff5b5",
+      "pinned": true
+    },
+    {
+      "original": "shared-0-CnnWnVrT.js#qB",
+      "name": "reportRenderError",
+      "hostAdapter": "src/source-r3b-transcript-adapters.jsx",
+      "declarationSha256": "9786ddc2b863b95c734f9b0cf48201ae2302e49d990a43e9c6ffba102914843f",
+      "pinned": true
+    }
+  ],
+  "imports": [
+    {
+      "module": "shared-2.mjs",
+      "local": "g4",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-2.mjs",
+      "name": "g4",
+      "via": "shared-2-CsjIBQD8.js#g4"
+    },
+    {
+      "module": "shared-2.mjs",
+      "local": "x",
+      "kind": "react",
+      "from": "react",
+      "name": "useContext",
+      "via": "vendor-frame-BckkO60Y.js:po"
+    },
+    {
+      "module": "shared-38.mjs",
+      "local": "I2",
+      "kind": "linked",
+      "from": "../code-composer-v4/chunk-shared-frame.mjs",
+      "name": "I2",
+      "via": "shared-frame-CJdE5Ria.js:im"
+    },
+    {
+      "module": "shared-38.mjs",
+      "local": "I3",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "I3",
+      "via": "shared-frame-CJdE5Ria.js:am"
+    },
+    {
+      "module": "shared-38.mjs",
+      "local": "J0",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J0",
+      "via": "shared-frame-CJdE5Ria.js:cm"
+    },
+    {
+      "module": "shared-38.mjs",
+      "local": "J1",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J1",
+      "via": "shared-frame-CJdE5Ria.js:lm"
+    },
+    {
+      "module": "shared-38.mjs",
+      "local": "J2",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J2",
+      "via": "shared-frame-CJdE5Ria.js:um"
+    },
+    {
+      "module": "shared-38.mjs",
+      "local": "J3",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J3",
+      "via": "shared-frame-CJdE5Ria.js:dm"
+    },
+    {
+      "module": "shared-38.mjs",
+      "local": "J4",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J4",
+      "via": "shared-frame-CJdE5Ria.js:fm"
+    },
+    {
+      "module": "shared-38.mjs",
+      "local": "J5",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J5",
+      "via": "shared-frame-CJdE5Ria.js:pm"
+    },
+    {
+      "module": "shared-38.mjs",
+      "local": "J9",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J9",
+      "via": "shared-frame-CJdE5Ria.js:hm"
+    },
+    {
+      "module": "shared-38.mjs",
+      "local": "K",
+      "kind": "adapter",
+      "from": "../../source-chat-artifact-card-v4-adapters.jsx",
+      "name": "setChatLocalValue",
+      "via": "shared-25-D-aF0gt9.js:gr"
+    },
+    {
+      "module": "shared-38.mjs",
+      "local": "K0",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "K0",
+      "via": "shared-frame-CJdE5Ria.js:gm"
+    },
+    {
+      "module": "shared-38.mjs",
+      "local": "K1",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "K1",
+      "via": "shared-frame-CJdE5Ria.js:_m"
+    },
+    {
+      "module": "shared-38.mjs",
+      "local": "K2",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "K2",
+      "via": "shared-frame-CJdE5Ria.js:vm"
+    },
+    {
+      "module": "shared-38.mjs",
+      "local": "K3",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "K3",
+      "via": "shared-frame-CJdE5Ria.js:ym"
+    },
+    {
+      "module": "shared-38.mjs",
+      "local": "K4",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "K4",
+      "via": "shared-frame-CJdE5Ria.js:bm"
+    },
+    {
+      "module": "shared-38.mjs",
+      "local": "K5",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "K5",
+      "via": "shared-frame-CJdE5Ria.js:xm"
+    },
+    {
+      "module": "shared-38.mjs",
+      "local": "Te",
+      "kind": "adapter",
+      "from": "../../source-chat-artifact-card-v4-adapters.jsx",
+      "name": "useIntl",
+      "via": "vendor-intl-BJgYK7RA.js:p"
+    },
+    {
+      "module": "shared-38.mjs",
+      "local": "Z1",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "Z1",
+      "via": "shared-frame-CJdE5Ria.js:Sm"
+    },
+    {
+      "module": "shared-38.mjs",
+      "local": "Z2",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "Z2",
+      "via": "shared-frame-CJdE5Ria.js:Cm"
+    },
+    {
+      "module": "shared-38.mjs",
+      "local": "Z5",
+      "kind": "linked",
+      "from": "../code-composer-v4/chunk-shared-frame.mjs",
+      "name": "Z5",
+      "via": "shared-frame-CJdE5Ria.js:Em"
+    },
+    {
+      "module": "shared-38.mjs",
+      "local": "e",
+      "kind": "shared-graph",
+      "from": "../cds-core/vendor-frame.mjs",
+      "name": "clsx",
+      "via": "vendor-frame-BckkO60Y.js:Fa"
+    },
+    {
+      "module": "shared-38.mjs",
+      "local": "i",
+      "kind": "react",
+      "from": "react",
+      "name": "useMemo",
+      "via": "vendor-frame-BckkO60Y.js:So"
+    },
+    {
+      "module": "shared-38.mjs",
+      "local": "k",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "CdsIcon",
+      "via": "shared-frame-CJdE5Ria.js:lf"
+    },
+    {
+      "module": "shared-38.mjs",
+      "local": "l",
+      "kind": "react",
+      "from": "react",
+      "name": "memo",
+      "via": "vendor-frame-BckkO60Y.js:co"
+    },
+    {
+      "module": "shared-38.mjs",
+      "local": "o",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "Fragment",
+      "via": "vendor-frame-BckkO60Y.js:Wa"
+    },
+    {
+      "module": "shared-38.mjs",
+      "local": "p",
+      "kind": "react",
+      "from": "react",
+      "name": "createElement",
+      "via": "vendor-frame-BckkO60Y.js:ro"
+    },
+    {
+      "module": "shared-38.mjs",
+      "local": "r",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "jsxs",
+      "via": "vendor-frame-BckkO60Y.js:Ka"
+    },
+    {
+      "module": "shared-38.mjs",
+      "local": "s",
+      "kind": "react",
+      "from": "react",
+      "name": "Fragment",
+      "via": "vendor-frame-BckkO60Y.js:Xa"
+    },
+    {
+      "module": "shared-38.mjs",
+      "local": "t",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "jsx",
+      "via": "vendor-frame-BckkO60Y.js:Ga"
+    },
+    {
+      "module": "shared-38.mjs",
+      "local": "u",
+      "kind": "react",
+      "from": "react",
+      "name": "useEffect",
+      "via": "vendor-frame-BckkO60Y.js:go"
+    },
+    {
+      "module": "shared-38.mjs",
+      "local": "w",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "CdsShimmer",
+      "via": "shared-frame-CJdE5Ria.js:aa"
+    },
+    {
+      "module": "shared-38.mjs",
+      "local": "we",
+      "kind": "adapter",
+      "from": "../../source-chat-artifact-card-v4-adapters.jsx",
+      "name": "FormattedMessage",
+      "via": "vendor-intl-BJgYK7RA.js:l"
+    },
+    {
+      "module": "shared-38.mjs",
+      "local": "ye",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-2.mjs",
+      "name": "Y_",
+      "via": "shared-2-CsjIBQD8.js:fv"
+    },
+    {
+      "module": "cc1aae219.mjs",
+      "local": "Br",
+      "kind": "adapter",
+      "from": "../../source-chat-artifact-card-v4-adapters.jsx",
+      "name": "useChatArtifactEntry",
+      "via": "shared-153-DMw2VzSq.js:Wt"
+    },
+    {
+      "module": "cc1aae219.mjs",
+      "local": "D",
+      "kind": "react",
+      "from": "react",
+      "name": "useEffect",
+      "via": "vendor-frame-BckkO60Y.js:go"
+    },
+    {
+      "module": "cc1aae219.mjs",
+      "local": "Fu",
+      "kind": "adapter",
+      "from": "../../source-chat-artifact-card-v4-adapters.jsx",
+      "name": "useChatArtifactDrawer",
+      "via": "shared-2-CsjIBQD8.js:A_"
+    },
+    {
+      "module": "cc1aae219.mjs",
+      "local": "I1",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "I1",
+      "via": "shared-frame-CJdE5Ria.js:rm"
+    },
+    {
+      "module": "cc1aae219.mjs",
+      "local": "I2",
+      "kind": "linked",
+      "from": "../code-composer-v4/chunk-shared-frame.mjs",
+      "name": "I2",
+      "via": "shared-frame-CJdE5Ria.js:im"
+    },
+    {
+      "module": "cc1aae219.mjs",
+      "local": "I3",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "I3",
+      "via": "shared-frame-CJdE5Ria.js:am"
+    },
+    {
+      "module": "cc1aae219.mjs",
+      "local": "J0",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J0",
+      "via": "shared-frame-CJdE5Ria.js:cm"
+    },
+    {
+      "module": "cc1aae219.mjs",
+      "local": "J1",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J1",
+      "via": "shared-frame-CJdE5Ria.js:lm"
+    },
+    {
+      "module": "cc1aae219.mjs",
+      "local": "J2",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J2",
+      "via": "shared-frame-CJdE5Ria.js:um"
+    },
+    {
+      "module": "cc1aae219.mjs",
+      "local": "J3",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J3",
+      "via": "shared-frame-CJdE5Ria.js:dm"
+    },
+    {
+      "module": "cc1aae219.mjs",
+      "local": "J4",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J4",
+      "via": "shared-frame-CJdE5Ria.js:fm"
+    },
+    {
+      "module": "cc1aae219.mjs",
+      "local": "J5",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J5",
+      "via": "shared-frame-CJdE5Ria.js:pm"
+    },
+    {
+      "module": "cc1aae219.mjs",
+      "local": "J9",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J9",
+      "via": "shared-frame-CJdE5Ria.js:hm"
+    },
+    {
+      "module": "cc1aae219.mjs",
+      "local": "K0",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "K0",
+      "via": "shared-frame-CJdE5Ria.js:gm"
+    },
+    {
+      "module": "cc1aae219.mjs",
+      "local": "K1",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "K1",
+      "via": "shared-frame-CJdE5Ria.js:_m"
+    },
+    {
+      "module": "cc1aae219.mjs",
+      "local": "K2",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "K2",
+      "via": "shared-frame-CJdE5Ria.js:vm"
+    },
+    {
+      "module": "cc1aae219.mjs",
+      "local": "K3",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "K3",
+      "via": "shared-frame-CJdE5Ria.js:ym"
+    },
+    {
+      "module": "cc1aae219.mjs",
+      "local": "K4",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "K4",
+      "via": "shared-frame-CJdE5Ria.js:bm"
+    },
+    {
+      "module": "cc1aae219.mjs",
+      "local": "K5",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "K5",
+      "via": "shared-frame-CJdE5Ria.js:xm"
+    },
+    {
+      "module": "cc1aae219.mjs",
+      "local": "Ol",
+      "kind": "adapter",
+      "from": "../../source-chat-artifact-card-v4-adapters.jsx",
+      "name": "useChatTranscriptCapability",
+      "via": "shared-31-C9BqSSuD.js:Bi"
+    },
+    {
+      "module": "cc1aae219.mjs",
+      "local": "Py",
+      "kind": "adapter",
+      "from": "../../source-chat-artifact-card-v4-adapters.jsx",
+      "name": "useChatArtifactDrawerSelected",
+      "via": "c7d03f0bf-BAalxCl2.js:r"
+    },
+    {
+      "module": "cc1aae219.mjs",
+      "local": "Z1",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "Z1",
+      "via": "shared-frame-CJdE5Ria.js:Sm"
+    },
+    {
+      "module": "cc1aae219.mjs",
+      "local": "Z3",
+      "kind": "linked",
+      "from": "../code-composer-v4/chunk-shared-frame.mjs",
+      "name": "Z3",
+      "via": "shared-frame-CJdE5Ria.js:wm"
+    },
+    {
+      "module": "cc1aae219.mjs",
+      "local": "fg",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-38-DyF0_Fim.mjs",
+      "name": "ao",
+      "via": "shared-38-DyF0_Fim.js:T"
+    },
+    {
+      "module": "cc1aae219.mjs",
+      "local": "m",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "jsx",
+      "via": "vendor-frame-BckkO60Y.js:Ga"
+    },
+    {
+      "module": "cc1aae219.mjs",
+      "local": "p",
+      "kind": "shared-graph",
+      "from": "../cds-core/vendor-frame.mjs",
+      "name": "clsx",
+      "via": "vendor-frame-BckkO60Y.js:Fa"
+    },
+    {
+      "module": "cc1aae219.mjs",
+      "local": "ta",
+      "kind": "adapter",
+      "from": "../../source-chat-artifact-card-v4-adapters.jsx",
+      "name": "useChatArtifactRecord",
+      "via": "shared-153-DMw2VzSq.js:qt"
+    },
+    {
+      "module": "cc1aae219.mjs",
+      "local": "ut",
+      "kind": "adapter",
+      "from": "../../source-chat-artifact-card-v4-adapters.jsx",
+      "name": "reportRenderError",
+      "via": "shared-0-CnnWnVrT.js:zd"
+    },
+    {
+      "module": "cc1aae219.mjs",
+      "local": "wr",
+      "kind": "adapter",
+      "from": "../../source-chat-artifact-card-v4-adapters.jsx",
+      "name": "chatArtifactsInputSchema",
+      "via": "shared-153-DMw2VzSq.js:Ph"
+    }
+  ]
+}

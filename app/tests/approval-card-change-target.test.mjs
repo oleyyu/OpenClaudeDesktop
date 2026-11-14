@@ -134,10 +134,10 @@ test('SSR: the change block and the footnote read together inside ApprovalReadRo
   assert.ok(gated, 'the gated block precedes the reason');
   const block = gated[1];
   assert.match(block, /^<div class="flex flex-col gap-md rounded-lg border border-alpha-2 p-md"><span class="sr-only">Environment staging, personal<\/span><div aria-hidden="true" class="flex items-start gap-md text-body">/);
-  assert.match(block, /<span class="flex h-\[1lh\] w-4 shrink-0 items-center"><span aria-hidden="true" data-cds="Icon" class=""[^>]*>[^<]*<\/span><\/span><span data-testid="approval-change-target" class="min-w-0 select-text break-words \[unicode-bidi:plaintext\]">staging<\/span>/);
+  assert.match(block, /<span class="flex h-\[1lh\] w-4 shrink-0 items-center"><span data-cds="Icon" style="[^"]*" aria-hidden="true">[^<]*<\/span><\/span><span data-testid="approval-change-target" class="min-w-0 select-text break-words \[unicode-bidi:plaintext\]">staging<\/span>/);
   assert.match(block, /<span class="flex shrink-0 gap-xs text-secondary"><span class="flex h-\[1lh\] w-4 shrink-0 items-center"><span[^>]*data-cds="Icon"[^>]*>[^<]*<\/span><\/span>Personal<\/span>/);
   assert.match(block, /<div id="[^"]+-0" class="text-footnote text-muted-as-secondary select-text \[unicode-bidi:plaintext\]">Network<\/div><ul role="list" aria-labelledby="[^"]+-0" class="flex flex-col gap-0.75">/);
-  assert.match(block, /<li data-sign="add" class="flex gap-sm text-body text-secondary"><span class="flex h-\[1lh\] w-4 shrink-0 items-center"><span aria-hidden="true" data-cds="Icon" class="text-git-added"/);
+  assert.match(block, /<li data-sign="add" class="flex gap-sm text-body text-secondary"><span class="flex h-\[1lh\] w-4 shrink-0 items-center"><span data-cds="Icon" style="[^"]*" class="text-git-added" aria-hidden="true"/);
   assert.match(block, /<span class="min-w-0 select-text break-words \[unicode-bidi:plaintext\]">Allow <code class="text-code-medium text-primary \[unicode-bidi:plaintext\]">api.example.com<\/code><\/span>/);
   assert.match(block, /Stop <span class="text-primary \[unicode-bidi:plaintext\]">npm<\/span><span class="sr-only"> \(package managers\)<\/span>/);
   assert.match(block, /<div role="group" aria-labelledby="[^"]+-1" data-testid="approval-exact-lines" class="overflow-hidden rounded-\[5px\] bg-alpha-1"><pre dir="ltr" class="py-md pe-lg text-code text-secondary whitespace-break-spaces break-words select-text \[unicode-bidi:bidi-override\]"><span data-line="1" class="relative block ps-\[6ch\][^"]*">TOKEN=&quot;a b&quot;<\/span><\/pre><\/div>/);

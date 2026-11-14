@@ -1,4 +1,5 @@
-// Host adapters for src/generated/chat-artifact-card (scripts/extract-chat-artifact-card.mjs; the generator checks each
+// Host adapters for src/generated/chat-artifact-card (scripts/extract-chat-artifact-card.mjs) and, re-exported by
+// src/source-chat-artifact-card-v4-adapters.jsx, src/generated/chat-artifact-card-v4 (scripts/extract-chat-artifact-card-v4.mjs; the generator checks each
 // original declaration's features before it points the slice here). OpenClaude has no claude.ai account (plan-w13 E59):
 // a Chat's artifacts are the ones its local `artifacts` tool calls wrote (electron/agent-tools/chat-artifacts.mjs), and
 // the "drawer" is the Chat artifact panel beside the conversation (src/source-chat-artifact-panel.jsx).
@@ -34,6 +35,15 @@ export const chatArtifactsInputSchema = Object.freeze({
     out.source = input.source === 'c' || input.source === 'w' ? input.source : undefined;
     out.md_citations = input.md_citations;
     return out;
+  },
+  // 4.16336.0 shared-153 Aw (c1 `wr.safeParse(t)`): zod's safeParse over the same rules — `{ success: true, data }`, or
+  // `{ success: false, error }` where parse throws.
+  safeParse(input) {
+    try {
+      return { success: true, data: this.parse(input) };
+    } catch (error) {
+      return { success: false, error };
+    }
   },
 });
 

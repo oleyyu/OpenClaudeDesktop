@@ -14,6 +14,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
 import { environmentStartChanges } from '../src/saved-environment-model.mjs';
+import { designEntryStylesheets } from '../scripts/current-design-assets.mjs';
 
 const app = path.resolve(import.meta.dirname, '..');
 const h = React.createElement;
@@ -148,6 +149,7 @@ test('r5 review r5-composer-02: Code registers the whole dock column (error card
   // Only one opening wrapper between the transcript body and the column (no per-sibling registration).
   assert.equal(column.match(/data-toast-safe-region=\{mode === "code"/g).length, 1);
   // The utilities it uses exist in the loaded official sheet.
-  const sheet = read('public/assets/v1/c6a992d55-Che1orl5.css');
+  // (the c6a992d55 utilities entry sheet index.html loads; current-design-assets: 4.16336.0 c6a992d55-_JRfOmTh).
+  const sheet = read(`public/assets/v1/${designEntryStylesheets.find((name) => name.startsWith('c6a992d55-'))}`);
   for (const name of ['.contents{', '.flex{', '.min-w-0{', '.shrink-0{', '.flex-col{']) assert.ok(sheet.includes(name), name);
 });

@@ -4,7 +4,7 @@ import { SourceTooltip } from "./source-tooltip";
 import { SourcePopover } from "./source-popover";
 import { attachmentOpenAction, attachmentViewerState, extensionOf } from "./composer-attachments-model.mjs";
 import { SourceImageViewer } from "./source-image-viewer.jsx";
-import { CdsSkeleton } from "./generated/view-tabs/shared-frame-6jtSkIit.js";
+import { CdsSkeleton } from "./cds-core.mjs"; // 4.16336.0 cutover: inside the v4 shell's Attachments (cds-core graph)
 import { convertedTooltip } from "./chat-attachment-model.mjs"; // w13-close-chat-composer
 import { SourceContextPill, SourceSelectedElementPill, attachmentStripHandlers, useAttachmentPreviewIntent } from "./source-selected-element.jsx";
 import "./source-composer-attachments.css";

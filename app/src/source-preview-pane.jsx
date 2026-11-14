@@ -15,7 +15,12 @@ import { SourcePreviewAddress, SourcePreviewNavigation } from "./source-preview-
 import { SourcePreviewServerMenu } from "./source-preview-server-menu.jsx";
 import { SourcePreviewCloseTabsDialog, SourcePreviewTabs } from "./source-preview-tabs.jsx";
 import { ownsSelectedElement } from './preview-element-attachments.mjs';
-import { CdsButton, CdsConfirmationDialog, CdsIcon, CdsSpinner } from "./generated/view-tabs/index.js";
+// host-wiring code-b: the Buttons, Icon, Spinner and the Discard your annotations? CdsConfirmationDialog the pane draws in its
+// own markup are the 4.16336.0 cds-core originals (shared-frame-CJdE5Ria, semantic facade). The `actions` handed to the
+// generated EmptyState (src/generated/r3b-transcript, 3.6556.2) are rendered inside that region, so they stay the 3.6556.2
+// view-tabs Button (ViewTabsCdsButton).
+import { CdsButton as ViewTabsCdsButton } from "./generated/view-tabs/index.js";
+import { CdsButton, CdsConfirmationDialog, CdsIcon, CdsSpinner } from "./cds-core.mjs";
 import { devServerLogTone, devServerLogToneClasses } from "./generated/code-editor/preview-log-lines.mjs";
 import { SourcePreviewSketch } from "./source-preview-sketch.jsx";
 import { matchSketchCommand } from './generated/code-editor/preview-sketch-keys.mjs';
@@ -209,7 +214,7 @@ export function PreviewBrowserToolsOff({ onTurnOn }) {
     <div className="absolute inset-0" data-preview-start="setting-off">
       <EmptyState role="status" icon="Globe" title={t("Browser tools are turned off")}
         body={t("They let {assistant} start your dev server and open pages here. Once they’re on, {assistant} can use them in new sessions on your computer.", { assistant })}
-        actions={onTurnOn ? <CdsButton variant="secondary" onClick={onTurnOn}>{t("Turn on Browser tools")}</CdsButton> : null} />
+        actions={onTurnOn ? <ViewTabsCdsButton variant="secondary" onClick={onTurnOn}>{t("Turn on Browser tools")}</ViewTabsCdsButton> : null} />
     </div>
   );
 }
@@ -353,7 +358,7 @@ export function PreviewStoppedCard({ serverLabel, onRestart, restartPending = fa
   if (!serverLabel) {
     return (
       <EmptyState role="status" icon="Cache" title={t("Preview server stopped")} body={t("Close and reopen the preview to start it again.")}
-        actions={onClose ? <CdsButton variant="secondary" onClick={onClose}>{t("Close")}</CdsButton> : null} />
+        actions={onClose ? <ViewTabsCdsButton variant="secondary" onClick={onClose}>{t("Close")}</ViewTabsCdsButton> : null} />
     );
   }
   return (

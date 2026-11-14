@@ -42,7 +42,7 @@ before(async () => {
   server = await createServer({ configFile: false, root: app, plugins: [dialogStub, react()],
     server: { middlewareMode: true, hmr: false, ws: false, watch: null }, appType: "custom", logLevel: "error" });
   ({ SidebarBulkWorktreeConfirm: Confirm } = await server.ssrLoadModule("/src/source-sidebar-bulk-worktree.jsx"));
-  ({ createIntl } = await server.ssrLoadModule("/src/generated/chat/vendor-intl-DYfox5Co.js"));
+  ({ createIntl } = await server.ssrLoadModule("/src/generated/chat/vendor-intl-BJgYK7RA.js"));
 });
 after(() => server?.close());
 
@@ -387,7 +387,7 @@ test("fr5-05 补做: header-menu / open-session probes and QI's bulk unarchive c
   assert.deepEqual([sidebarListMessages.bulkRestored.id, sidebarListMessages.bulkRestoreFailed.id], ["ONUBGyrHFE", "1kRanlGAB8"]);
   for (const message of [sidebarListMessages.bulkRestored, sidebarListMessages.bulkRestoreFailed]) assert.ok(dictionary("zh-CN")[message.defaultMessage], message.defaultMessage);
   // The ICU copy formats per count through the intl main uses.
-  const { createIntl } = await import("../src/generated/chat/vendor-intl-DYfox5Co.js");
+  const { createIntl } = await import("../src/generated/chat/vendor-intl-BJgYK7RA.js");
   const intl = createIntl({ locale: "en", messages: {} });
   assert.equal(intl.formatMessage(sidebarListMessages.bulkRestored, { count: 1 }), "Unarchived 1 session");
   assert.equal(intl.formatMessage(sidebarListMessages.bulkRestoreFailed, { count: 2 }), "2 sessions couldn’t be unarchived. Try again.");

@@ -19,7 +19,8 @@ const local = rel => fs.readFileSync(path.join(app, rel), 'utf8');
 const h = React.createElement;
 const text = html => html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
 
-globalThis.document ??= { body: { nodeType: 1 }, head: { appendChild() {} }, createElement: () => ({ relList: { supports: () => false }, setAttribute() {}, style: {} }),
+// W8-M9 stub contract (round4 integration, stub fields only): cds-core 9203795f reads these at load (official 4.16336.0): document.cookie.
+globalThis.document ??= { cookie: '' /* W8-M9: shared-0 CQ / Wo document.cookie */, body: { nodeType: 1 }, head: { appendChild() {} }, createElement: () => ({ relList: { supports: () => false }, setAttribute() {}, style: {} }),
   querySelector: () => null, querySelectorAll: () => [], addEventListener() {}, removeEventListener() {}, documentElement: { dataset: {}, getAttribute: () => null, hasAttribute: () => false } };
 globalThis.window ??= { document: globalThis.document, navigator: { userAgent: 'Mozilla/5.0 (Macintosh)' }, addEventListener() {}, removeEventListener() {},
   matchMedia: () => ({ matches: false, addEventListener() {}, removeEventListener() {} }), localStorage: { getItem: () => null, setItem() {} },
@@ -161,9 +162,15 @@ test('no sessions, no scheduled tasks: the home shows the standalone Ideas (empt
   assert.doesNotMatch(text(html), /Active tasks|Pinned or active|Scheduled/);
 });
 
-test('local sessions: the task list renders the 3.6556.2 rows and headings instead of the Ideas', () => {
-  const html = renderToStaticMarkup(home({ rows: [session(), session({ sessionId: 's2', title: 'Draft the memo', isRunning: false, isStarred: true })],
-    scheduledTasks: [{ id: 'r1', displayName: 'Morning digest', enabled: true, cronExpression: '0 9 * * *', nextRunAt: new Date(now + 36e5).toISOString() }] },
+test('local sessions: the task list renders the 3.6556.2 rows and headings instead of the Ideas', t => {
+  // The clock is pinned to local noon of today, so "next run in one hour" is always the same day (shared-23 yS compares
+  // the run's local date with today's: run at 23:xx it would read "Tomorrow at 12:00 AM").
+  const noon = new Date(now);
+  noon.setHours(12, 0, 0, 0);
+  t.mock.timers.enable({ apis: ['Date'], now: noon.getTime() });
+  const at = { lastActivityAt: noon.getTime() - 120000, createdAt: noon.getTime() - 600000 };
+  const html = renderToStaticMarkup(home({ rows: [session(at), session({ ...at, sessionId: 's2', title: 'Draft the memo', isRunning: false, isStarred: true })],
+    scheduledTasks: [{ id: 'r1', displayName: 'Morning digest', enabled: true, cronExpression: '0 9 * * *', nextRunAt: new Date(noon.getTime() + 36e5).toISOString() }] },
   h(gen.CoworkHome)));
   assert.match(html, /w-full max-w-2xl mt-4 space-y-8/);
   assert.match(text(html), /Active/);

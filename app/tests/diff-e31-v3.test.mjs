@@ -188,8 +188,11 @@ test('PR-comment step (cc8941b7b nt) and Qn enabled; OpenClaude has none, so the
   const comments = source('src/source-diff-comments.jsx');
   assert.match(comments, /export function usePrCommentShortcuts\(/);
   assert.match(comments, /view\.closest\('\[data-pane-root\], \[role="dialog"\]'\) \?\? view/);
-  // R6: the Commits section reads view-tabs through the facade.
-  assert.match(source('src/source-diff-commits.jsx'), /import \{ CdsCollapsible, CdsIcon, isMacUserAgent \} from "\.\/generated\/view-tabs\/index\.js";/);
+  // host-wiring code-a: the Commits section's Collapsible and Icon are the 4.16336.0 cds-core facade's; isMacUserAgent
+  // (no cds-core name) still reads view-tabs through its facade (R6).
+  const commitsSource = source('src/source-diff-commits.jsx');
+  assert.match(commitsSource, /import \{ CdsCollapsible, CdsIcon \} from "\.\/cds-core\.mjs";/);
+  assert.match(commitsSource, /import \{ isMacUserAgent \} from "\.\/generated\/view-tabs\/index\.js";/);
 });
 
 test('official 3.6556.2 Changes file header (aa / la / _a / il, the c219730b0 header moved into c44d00c7f) and the host header', () => {

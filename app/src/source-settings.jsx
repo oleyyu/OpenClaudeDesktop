@@ -9,23 +9,28 @@ import React, { useEffect, useId, useLayoutEffect, useRef, useState, useSyncExte
 import { createPortal } from 'react-dom';
 import { Icon } from './icons';
 import { SourceSegments } from './source-segments.jsx';
-import { SourceCodeFontSetting } from './source-code-font-setting.jsx';
 import { SourceSelect } from './source-select.jsx';
 import { LOCALES, getLocale, t, tn } from '../electron/i18n/index.mjs';
 import { bypassAvailability } from '../electron/permission-policy.mjs';
 import { appearancePreferences, fastTierForModel, speedTiersForModel, tierForSpeed, savedSpeed, STANDARD_SPEED } from '../electron/preferences.mjs';
-import { lightThemes, darkThemes } from './code-theme-catalog.mjs';
 import { TRANSCRIPT_VIEW_LABELS } from './transcript-view-model.mjs';
-import { SourceCodeThemePreview } from './source-code-theme-preview.jsx';
 import { SourceCustomize } from './source-customize.jsx';
 import { createSettingsSnapshotReader, removeDeveloperServer } from './developer-server-actions.mjs';
 import './source-settings.css';
+import './settings-lite.css';
 import { SourceUsage } from './source-usage';
 import { SourceHooksSettings } from './source-hooks-settings.jsx';
-import { DeveloperServers, StorageDialog } from './source-settings-pages.jsx';
+import { StorageDialog } from './source-settings-pages.jsx';
 import { useModalPresence } from './use-modal-presence';
 // W12 settings: the stacked tabs are CDS Tabs (shared-46 Zh Xd = shared-10 Qr) in a CDS layer above the z-500 backdrop.
-import { CdsLayerProvider, CdsTabs } from './generated/view-tabs/index.js';
+// 4.16336.0 host wiring (frame): the narrow nav's LayerProvider and Tabs are one cds-core graph, so the Tabs read the 500 base.
+import { CdsLayerProvider, CdsTabs } from './cds-core.mjs';
+// 4.16336.0 settings-nav (scripts/extract-settings-nav-v4.mjs): the official rail (shared-55 z_), stacked tabs (ev),
+// group rows (J_) and the official settings modal store (shared-183 yg, one copy) over the host's SettingsNavHost value.
+import { SettingsNavRail, SettingsNavStacked, SettingsNavGroup } from './generated/settings-nav/settings-nav.mjs';
+import { settingsModalStore } from './generated/settings-nav/settings-store.mjs';
+import { SettingsNavHostProvider } from './settings-nav-adapter.mjs';
+import { resolveHostTab, hostTabForSection, isLocalSection, UNTARGETED_SECTION } from './settings-tab-compat.mjs';
 import { holdModalInert } from './modal-inert.mjs';
 import { settingsSearch, settingsHeading, sandboxFacts, mcpStatus, desktopErrors, windowCore, normalizeSettingsQuery } from './settings-model.mjs';
 import { settingsCore, accountCore, accountGroupTitle, engineCopy } from './settings-core-copy.mjs';
@@ -34,7 +39,7 @@ import { computerUseSettingsGroup, useComputerUseGrants, useComputerUseInstalled
 import { ListBadge } from './source-customize-list.jsx';
 import { coreName, coreForEngine, coreCapabilities, coreSupports } from '../electron/core-registry.mjs';
 import { SettingsSearchResults } from './source-settings-search.jsx';
-import { bindSettingsAnchor } from './settings-anchor.mjs';
+import { bindSettingsAnchor, highlightSettingsTarget } from './settings-anchor.mjs';
 import { EMPTY_SETTINGS_CATALOG, expandSettingsSearch, settingsCatalogGroups, settingsSearchMoreExpands } from './settings-catalog-search.mjs';
 import { effortName } from './model-menu-model.mjs';
 import { SourceHarnessSettings } from './source-settings-harness.jsx';
@@ -45,15 +50,21 @@ import { SourceThemeSettings } from './source-settings-theme.jsx';
 import { SourceModelsSettings } from './source-settings-models.jsx';
 import { personaGroup } from './source-settings-persona.jsx';
 import { SettingRow } from './source-settings-kit.jsx';
+import { SettingsGeneralAppearance, SettingsClaudeCodeAppearance, SettingsClaudeCodeGroups, SettingsDeveloperPage } from './settings-pages-host.jsx';
+// 4.16336.0 settingsComponentsByPath "desktop" (c71860c77-B4INzBZs Vs, scripts/extract-settings-desktop-v4.mjs): the System page.
+import { SettingsDesktopPage } from './source-settings-desktop.jsx';
+import { DESKTOP_PAGE_GROUP } from './settings-routes-desktop.mjs';
 import { SourceInstructionsSettings } from './source-settings-instructions.jsx';
 import { hasAdvancedRows, advancedEmptyNotice } from './settings-advanced-model.mjs';
 import { bootModelsCoreId, namedModels } from './model-names-model.mjs';
-import { settingsNavSections, settingsInitialFocus, scrollPopupToTop, NOTIFICATION_LEVEL_ITEMS, notificationLevel, drawAttentionDisabled, keepAwakeEnabled, PREVIEW_STORAGE_ITEMS, previewStorageChoice, promptSuggestionsEnabled } from './settings-shell-model.mjs';
+import { settingsNavSections, settingsInitialFocus, scrollPopupToTop, NOTIFICATION_LEVEL_ITEMS, notificationLevel, drawAttentionDisabled, keepAwakeEnabled, PREVIEW_STORAGE_ITEMS, previewStorageChoice, promptSuggestionsEnabled, localNavGroups, settingsNavHostValue } from './settings-shell-model.mjs';
 import { previewLinksStore } from './preview-links-model.mjs';
 import { autoOpenFilesSettingRow, autoOpenFilesStore } from './auto-open-files-model.mjs';
 import { SourcePreviewAllowedSites } from './source-preview-allowed-sites.jsx';
 import { SourceSettingsMemory } from './source-settings-memory.jsx'; // w13-chatfn-memory
 import { SourceSettingsPrivacy } from './source-settings-privacy.jsx'; // w13-chatfn-history
+// U-SET-LITE: no Privacy page; its Export data row (and DeepSeek's data sharing) sit on Account.
+const SourceSettingsPrivacyCompact = props => <SourceSettingsPrivacy {...props} compact/>;
 import { SourceCoworkSettings } from './source-cowork-settings.jsx'; // w13-coworkui-settings
 const noCatalogSubscription=()=>()=>{};
 const emptyCatalog=()=>EMPTY_SETTINGS_CATALOG;
@@ -98,16 +109,6 @@ function FontLicenses() {
     </div>,document.body)}
   </>;
 }
-// c71860c77 _i: two columns (3.6556.2 c71860c77-C3tXoNVw `grid grid-cols-2 gap-md`, no py-md since W12b S5), each a mode-filtered
-// Select above the fixed greet.ts diff preview (min-h-[94px] overflow-clip rounded-lg border).
-function CodeThemeGrid({ light, dark, onChange }) {
-  const column=(mode,value,items,label)=> <div className="ss-theme-column">
-    <SourceSelect label={label} value={value} items={items} onChange={next=>onChange(mode==='light'?'codeThemeLight':'codeThemeDark',next)}/>
-    <div className="ss-theme-preview-frame"><SourceCodeThemePreview mode={mode} theme={value}/></div>
-  </div>;
-  return <div className="ss-theme-grid">{column('light',light,lightThemes(),t('Light code theme'))}{column('dark',dark,darkThemes(),t('Dark code theme'))}</div>;
-}
-
 export { SourceSwitch as SettingSwitch } from './source-switch.jsx';
 // shared-19 ZC (2337-2715, classic nav): Settings (General first), then This computer (System, Developer), then
 // Customize; BC names the device group 'This computer' and its first page 'System' (c71860c77-C_7Gqn1u Qn :3712 heads
@@ -119,9 +120,13 @@ export { SourceSwitch as SettingSwitch } from './source-switch.jsx';
 const ALLOWED_SITES_LAYER = Object.freeze({ base: 520, z: 520 });
 const tabs = [
   // Light / Dark is chosen on General (the Theme page only points there): 'dark mode' finds General.
-  {id:'preferences',label:'General',icon:'Settings',group:'Settings',keywords:['preferences','dark mode','light mode']},
+  {id:'preferences',label:'Appearance',icon:'Palette',group:'Settings',keywords:['preferences','general','dark mode','light mode','language']},
+  // U-SET-HANDWRITE (2026-11-12, hand-written simple settings): Account and Notifications are their own pages; their
+  // groups are moved here from General and Code (see SETTINGS_RETAB below).
+  {id:'account',label:'Account',icon:'User',group:'Settings',keywords:['account','profile','name','sign in','log in','log out','persona']},
+  {id:'notifications',label:'Notifications',icon:'Notification',group:'Settings',keywords:['notifications','notification sound','banner','alerts','draw attention']},
   // w13-chatfn-history: shared-46's Privacy entry (id data-privacy-controls, icon Dp = LockShield) after General: Export data.
-  {id:'privacy',label:'Privacy',icon:'LockShield',group:'Settings',keywords:['export data','export conversations','download my data','data-privacy-controls'],page:SourceSettingsPrivacy},
+  {id:'privacy',label:'Privacy',icon:'LockShield',group:'Settings',keywords:['export data','export conversations','download my data','data-privacy-controls'],page:SourceSettingsPrivacyCompact},
   // ZC :2468-2482 pushes Usage straight after General (Privacy and Billing, between them, have no local page).
   {id:'usage',label:'Usage',icon:'UsageGaugeMiddle',group:'Settings'},
   // w13-chatfn-memory: shared-46's Memory entry (id memory, icon Memory) after Capabilities, which has no local page.
@@ -150,10 +155,76 @@ const tabs = [
   {id:'customize-hooks',label:'Hooks',icon:'CommandLine',group:'Advanced',shell:'customize',keywords:['hooks','pre tool use','lifecycle','trust','review','advanced'],page:SourceHooksSettings},
   {id:'profiles',label:'Profiles',icon:'Tool',group:'Advanced',keywords:['tool profiles','tools','mcp','turn off tools','disable tools','advanced'],page:SourceToolProfilesSettings},
 ];
-const navGroups = ['Settings','This computer','Customize','Advanced'];
 const baseNavTabs = settingsNavSections(tabs);
+// U-SET-HANDWRITE: the hand-written simple nav (user reference: Settings › Account / Usage | Appearance / Your Claude /
+// Models / Notifications / Privacy | Customize / Code | Desktop app, API keys at the bottom). Each entry stacks the
+// host pages listed in `hosts` (mode 'tabs': one at a time behind a pill strip); `advanced` hosts and the groups in
+// SETTINGS_ADVANCED_GROUPS fold into the page's collapsible Advanced section. Host ids stay, so 'tab#row' anchors,
+// search and the official store opens keep resolving (entryOfHost).
+const SETTINGS_NAV = [
+  {id:'account',label:'Account',icon:'User',hosts:['account','privacy']},
+  {id:'usage',label:'Usage',icon:'UsageGaugeMiddle',hosts:['usage']},
+  {sep:true},
+  {id:'appearance',label:'Appearance',icon:'Palette',hosts:['preferences','theme']},
+  {id:'your-claude',label:'Your Claude',icon:'Chat',hosts:['instructions','memory']},
+  {id:'models',label:'Models',icon:'Lightning',hosts:['models','cores']},
+  {id:'notifications',label:'Notifications',icon:'Notification',hosts:['notifications']},
+  {sep:true},
+  {id:'customize',label:'Customize',icon:'Shapes',mode:'tabs',hosts:['customize-skills','customize-connectors','customize-plugins','commands','customize-hooks']},
+  {id:'code',label:'Code',icon:'Code',hosts:['code','cowork']},
+  {sep:true},
+  {id:'desktop',label:'Desktop app',icon:'Computer',hosts:['general','developer'],advanced:['advanced','harness','profiles']},
+];
+const entryOfHost = id => SETTINGS_NAV.find(entry=>entry.hosts?.includes(id)||entry.advanced?.includes(id)) ?? SETTINGS_NAV[0];
+const hostsOnPage = (entry, tab) => entry.mode==='tabs' ? [tab] : [...entry.hosts, ...(entry.advanced||[])];
+// Code groups that fold into Code › Advanced (titles as the groups carry them).
+const SETTINGS_ADVANCED_GROUPS = new Set(['Browser','Visuals','Memories','Remote control','Import sessions']);
 // Shown labels; tabs keep the English copy, which settingsSearch also matches ('System' has its own heading entry).
 const navLabel = Object.fromEntries(tabs.map(section=>[section.id,settingsHeading(section.label)]));
+// 4.16336.0 settings-nav: the host page ids above keep drawing the pages (official pages are not sliced yet); the nav is
+// the official one. initialSection → host page through settings-tab-compat resolveHostTab: undefined / '' (Cmd+, the
+// account menu's Settings, the palette) is the official untargeted open (General → 'preferences'); an id neither table
+// knows is a wiring error, reported on the console, and opens General as the untargeted open does.
+// The desktop preferences the official Claude Code groups read (settings-pages-host.jsx officialDesktopPrefs).
+const CLAUDE_CODE_PREF_KEYS=['permissionNotifications','questionNotifications','completeNotifications','notificationSound','drawAttention','keepAwake','keepAwakeOnBattery','archiveInactiveDays','worktreeLocation','worktreeDirectory','allowBypassPermissions'];
+// U-SET-LITE: the hand-written pages with no official section (Account, Notifications) open by their own id; the compat
+// table (settings-tab-compat.mjs) maps only the official sections, so it would log an unknown id and draw Appearance first.
+const HOST_ONLY_TABS = new Set(['account', 'notifications']);
+function hostTabOf(initialSection) {
+  const page = String(initialSection ?? '').split('#')[0];
+  if (HOST_ONLY_TABS.has(page)) return page;
+  try { const target=resolveHostTab(initialSection); return target.kind==='local'?target.section:hostTabForSection(target.section).tab; }
+  catch (error) { console.error(error); return hostTabForSection(UNTARGETED_SECTION).tab; }
+}
+// A host page id → the official section the nav marks (null for the OpenClaude local pages).
+// U-SET-HANDWRITE: the new host pages (account, notifications) have no official section; any id the compat table
+// does not know is likewise left out of the store sync.
+const officialSectionOf = tab => { if(isLocalSection(tab)||!tabs.some(entry=>entry.id===tab))return null; try{return resolveHostTab(tab).section;}catch{return null;} };
+// SettingsNavRail's SearchComponent: the host's settings search field (cc011544b _t port, search over the host catalog),
+// read from context so the component type z_ receives stays the same across renders (the field keeps focus).
+const HostNavSearchContext = React.createContext(null);
+function HostNavSearch() { return React.useContext(HostNavSearchContext); }
+// The official rail (shared-55 z_) followed, inside its own scrolling group list, by the OpenClaude local extension groups
+// drawn with the official group/row component (J_ / q_). z_ has no slot for extra groups, so the local groups are a portal
+// into a holder kept as the last child of the rail's group list (re-appended after every commit; z_'s group list has a
+// fixed set of top-level groups). The holder is display:contents, so the groups keep the list's gap; it carries the list's
+// own `[&>.text-caption]:px-0` (shared-19 zv), which the titles would otherwise miss as grandchildren of the list.
+function SettingsRailWithLocalGroups({ activeSection, onSelect, localGroups, onSelectLocal }) {
+  const wrapper=useRef(null), [holder]=useState(()=>typeof document==='undefined'?null:Object.assign(document.createElement('div'),{style:'display:contents',className:'[&>.text-caption]:px-0'}));
+  const titleId=useId();
+  useLayoutEffect(()=>{
+    const list=wrapper.current?.querySelector('nav[data-perf-region="settings_nav"] > div.overflow-y-auto');
+    if(list&&holder&&list.lastElementChild!==holder)list.appendChild(holder);
+  });
+  useEffect(()=>()=>holder?.remove(),[holder]);
+  return <div ref={wrapper} style={{display:'contents'}}>
+    <SettingsNavRail activeSection={activeSection} onSelect={onSelect} SearchComponent={HostNavSearch}/>
+    {holder&&createPortal(localGroups.map((group,index)=><React.Fragment key={group.id}>
+      <div id={`${titleId}-${index}`} className="px-sm pt-md text-caption text-muted-as-secondary">{group.title}</div>
+      <SettingsNavGroup group={group} mergedPageHere={false} labelledBy={`${titleId}-${index}`} activeSection={activeSection} onSelect={onSelectLocal} onSelectYours={onSelectLocal}/>
+    </React.Fragment>),holder)}
+  </div>;
+}
 // DeepSeek's settings rows (codeDesktop/settings/read fields): label, description, and how the value is shown (seconds for
 // the shell's millisecond timeouts, KB for its output cap).
 export function harnessSettingCopy(setting) {
@@ -174,10 +245,10 @@ export function SourceSettings({ open = true, ...props }) {
   const presence = useModalPresence(open);
   return presence.present ? <SettingsContent {...props} presence={presence}/> : null;
 }
-function SettingsContent({ presence, config, model, effort, permission, boot, busy, coreBusy, initialSection, readUsage, usageActions, desktopCall, customize, onSave, onFolder, onReconnect, onSwitchCore, onQuickSetup, onLogin, onAccountAction, onRefreshAccount, onReveal, onClose }) {
+function SettingsContent({ presence, config, model, effort, permission, boot, busy, coreBusy, initialSection, surface = 'code', readUsage, usageActions, desktopCall, customize, onSave, onFolder, onReconnect, onSwitchCore, onQuickSetup, onLogin, onAccountAction, onRefreshAccount, onReveal, onClose }) {
   // initialSection 'tab' or 'tab#rowId' (the Mode menu's Bypass 'Enable' opens 'code#bypass': the page, then the row's anchor highlight).
   const [section,anchorRow]=String(initialSection??'').split('#');
-  const [tab,setTab]=useState(()=>tabs.some(t=>t.id===section)?section:'preferences'), [query,setQuery]=useState(''), [pending,setPending]=useState(''), [error,setError]=useState(''), [build,setBuild]=useState(null), [focus,setFocus]=useState(null);
+  const [tab,setTab]=useState(()=>hostTabOf(initialSection)), [query,setQuery]=useState(''), [pending,setPending]=useState(''), [error,setError]=useState(''), [build,setBuild]=useState(null), [focus,setFocus]=useState(null);
   // Opened straight on Usage (the account menu's Usage, /usage): the stacked Usage dialog without the nav, as the user's
   // Usage reference shows it. Usage picked in the nav, the narrow tabs or search stays in the Settings shell (shared-19 ZC).
   const [usageFocused,setUsageFocused]=useState(()=>section==='usage');
@@ -199,11 +270,14 @@ function SettingsContent({ presence, config, model, effort, permission, boot, bu
     void Promise.allSettled([store.loadSkills({cwd}),store.loadPlugins({cwd}),store.loadMcp({cwd,threadId:threadId??null})]);
   },[customize?.store,customize?.cwd,customize?.threadId]);
   const [desktop,setDesktop]=useState(null),[desktopRevision,setDesktopRevision]=useState(0),[storage,setStorage]=useState(()=>(section==='general'&&anchorRow==='open-storage')||null),[rowErrors,setRowErrors]=useState({}),[searchOpen,setSearchOpen]=useState(false),[searchIndex,setSearchIndex]=useState(0),[searchExpanded,setSearchExpanded]=useState(),[highlight,setHighlight]=useState(null),[narrow,setNarrow]=useState(()=>innerWidth<=767);
+  // U-SET-HANDWRITE: the nav entry showing `tab`, and every host page drawn on it (hooks below gate on these).
+  const navEntry=entryOfHost(tab), visibleHosts=new Set(hostsOnPage(navEntry,tab));
   // menus W3 (cc011544b On): in the stacked dialog (popupScrolls) a section change scrolls the stacked body to the top.
   const pane=useRef(null);
   useLayoutEffect(()=>{if(narrow)scrollPopupToTop(pane.current);},[tab,narrow]);
-  const refreshDesktop = useRef(null), removingServer = useRef(false);
+  const refreshDesktop = useRef(null);
   const [claudeImport,setClaudeImport]=useState(false);
+  const [advancedOpen,setAdvancedOpen]=useState(false);
   // An ACP agent's own settings (Gemini / Qwen settings.json keys; codeDesktop/coreSettings/*), for Settings › Code.
   const [coreSettings,setCoreSettings]=useState(null);
   const coreSettingsCore=boot?.connected&&coreSupports(boot?.core,'coreSettings');
@@ -267,18 +341,12 @@ function SettingsContent({ presence, config, model, effort, permission, boot, bu
     void reader.refresh().catch(() => {});
     return () => { reader.dispose(); if (refreshDesktop.current === reader.refresh) refreshDesktop.current = null; };
   }, [desktopRevision, boot?.connected, customize?.threadId, customize?.cwd, customize?.store, desktopCall]);
-  const removeServer = async name => {
-    if (removingServer.current || pending) return false;
-    removingServer.current = true; setPending('mcp-remove');
-    const refresh = refreshDesktop.current;
-    try {
-      return await removeDeveloperServer(name, {
-        confirm: message => window.confirm(message),
-        call: customize.call,
-        refresh: () => refresh?.(true),
-      });
-    } finally { removingServer.current = false; setPending(''); }
-  };
+  // B4 Settings › Developer (settings-pages-host.jsx SettingsDeveloperPage, 4.16336.0 c8828a060 F > B > oe): the official
+  // Local MCP servers section deletes after its own window.confirm and Edit config reveals the core's config file. The
+  // host removal is the same one (developer-server-actions.mjs removeDeveloperServer: mcp-remove, then re-read), with the
+  // official confirm already answered; a core without MCP config writes refuses it (the error toasts).
+  const developerRemoveServer=React.useCallback(name=>{if(!customize?.call||boot?.core?.capabilities?.mcpConfigWrite===false)return Promise.reject(Error(t('Use Edit config to remove this server.')));return removeDeveloperServer(name,{confirm:async()=>true,call:customize.call,refresh:()=>refreshDesktop.current?.(true)});},[customize?.call,boot?.core?.capabilities?.mcpConfigWrite]);
+  const developerRevealConfig=React.useCallback(()=>{void action('mcp-config',()=>desktopCall('desktop-edit-config'));},[desktopCall]);
   useEffect(()=>{if(!highlight || !presence.visible)return;return bindSettingsAnchor(presence.popup.current,highlight.id,()=>setHighlight(current=>current===highlight?null:current));},[highlight,tab,presence.visible,presence.popup]);
   useEffect(()=>{if(tab==='usage'&&usageFocused)presence.popup.current?.focus({preventScroll:true});},[tab]);
   const root=presence.popup, search=useRef(null), titleId=useId(), close=useRef(onClose);close.current=onClose;
@@ -332,6 +400,11 @@ function SettingsContent({ presence, config, model, effort, permission, boot, bu
     finally{if(--writes.current===0)setOptimistic({});}
   }
   const save=(key,value,rowId=key)=>commit(rowId,{[key]:value});
+  // The official desktop page's Startup bridge writes (shared-25 Pi setStartupOnLoginEnabled / setMenuBarEnabled): the
+  // same main "desktop-startup" call and saved menuBarEnabled preference the System rows wrote; a failure rejects so the
+  // official switch's own catch runs.
+  const desktopStartupWrite=async enabled=>{const value=await desktopCall('desktop-startup',{enabled});setDesktop(current=>current?.desktop?{...current,desktop:{...current.desktop,runOnStartup:value===true}}:current);setDesktopRevision(n=>n+1);return value===true;};
+  const desktopMenuBarWrite=async enabled=>{await onSave({menuBarEnabled:enabled});};
   const segments=(key,label,options)=> <SourceSegments label={label} value={shownValue(key,prefs[key] ?? config[key])} options={options} onChange={value=>save(key,value)}/>;
   const row=(id,label,description,control,searchText)=>({id,label,description,control,searchText:searchText??(typeof description==='string'?description:'')});
   // engine: boot.core itself (its reported capabilities win over the implied ones in coreSupports), else the chosen
@@ -347,7 +420,6 @@ function SettingsContent({ presence, config, model, effort, permission, boot, bu
   const advancedListed=hasAdvancedRows({coreSettings,harnessSettings,codexFeatures,codexPermissions:codexNative?desktop?.codexPermissions:null});
   const navTabs=baseNavTabs.filter(section=>(section.id!=='harness'||tab==='harness'||coreSupports(engine,'harnessProfile'))&&(section.id!=='customize-hooks'||tab==='customize-hooks'||coreSupports(engine,'hooksList'))&&(section.id!=='advanced'||tab==='advanced'||advancedListed)&&(section.id!=='cowork'||boot?.coworkEnabled===true)); // w13-coworkui-settings: shared-46 `if(d&&!k)` (CODE_DESKTOP_COWORK=0 hides Cowork)
   // A core without MCP config writes (DeepSeek: capabilities.mcpConfigWrite false) offers no Delete.
-  const mcpWritable=boot?.core?.capabilities?.mcpConfigWrite!==false;
   const booleanRow=(id,label,description,{indent=false,checked=!!shownValue(id,config[id]),disabled=false}={})=>({...row(id,label,description,<SettingSwitch label={label} checked={checked} disabled={disabled} onChange={value=>save(id,value)}/>),indent});
   // c71860c77 Jr (:1455-1500) on the Code page only; unset reads as on (index.chunk-ChZ67Jhw.js tV).
   const awake=key=>keepAwakeEnabled(shownValue(key,config[key]));
@@ -365,66 +437,100 @@ function SettingsContent({ presence, config, model, effort, permission, boot, bu
   const desktopCallRef=useRef(desktopCall);desktopCallRef.current=desktopCall;
   const [allowedSitesHost]=useState(()=>({call:(action,params)=>desktopCallRef.current(action,params)}));
   // System › Computer use: what sessions allowed right now, read while that page is open.
-  const computerUseGrants=useComputerUseGrants(desktopCall,tab==='general');
-  const computerUsePreferredMode=useComputerUsePreferredMode(desktopCall,tab==='general');
+  const computerUseGrants=useComputerUseGrants(desktopCall,visibleHosts.has('general'));
+  const computerUsePreferredMode=useComputerUsePreferredMode(desktopCall,visibleHosts.has('general'));
   // W14-code r2-shared-11: one probe for the teach row and the Accessibility / Screen recording rows; Denied apps' installed apps.
-  const computerUseProbe=useComputerUseProbe(desktopCall,tab==='general'),computerUseTeachStatus=computerUseProbe.teachStatus;
-  const computerUseInstalledApps=useComputerUseInstalledApps(desktopCall,tab==='general');
+  const computerUseProbe=useComputerUseProbe(desktopCall,visibleHosts.has('general')),computerUseTeachStatus=computerUseProbe.teachStatus;
+  const computerUseInstalledApps=useComputerUseInstalledApps(desktopCall,visibleHosts.has('general'));
   const linksInPreview=useSyncExternalStore(previewLinksStore.subscribe,previewLinksStore.getSnapshot,previewLinksStore.getSnapshot);
   // V3-w10-shell-auto-open-pref: c71860c77-C3tXoNVw Or's Auto-open row (auto-open-files-model.mjs). V3-w11-sweep-shell-b:
   // before the first read it is drawn as Or's `invisible` placeholder (`className: f ? void 0 : "invisible"`).
   const autoOpenFiles=autoOpenFilesSettingRow(useSyncExternalStore(autoOpenFilesStore.subscribe,autoOpenFilesStore.getState,autoOpenFilesStore.getState));
   const [previewStorage,setPreviewStorage]=useState(()=>previewStorageChoice(config.previewStorage,config.previewKeepCookies));
-  useEffect(()=>{if(tab!=='code')return undefined;let live=true;
+  useEffect(()=>{if(!visibleHosts.has('code'))return undefined;let live=true;
     Promise.resolve(desktopCall('preview-storage-read')).then(value=>{if(live&&value?.previewStorage)setPreviewStorage(previewStorageChoice(value.previewStorage));},()=>{});
     return()=>{live=false;};},[tab]);
+  // settings-pages-v4 B1: General › Appearance is the official 4.16336.0 c0db37792 Hn (settings-pages-host.jsx); it saves
+  // through the same per-row commit (optimistic value, row error) as the host rows.
+  const commitRef=useRef(commit);commitRef.current=commit;
+  const [appearanceSave]=useState(()=>patch=>commitRef.current(Object.keys(patch).join(','),patch));
+  // B3 Settings › Claude Code official groups (settings-pages-host.jsx SettingsClaudeCodeGroups): the shown desktop
+  // preferences, the same per-row save (the host requirements policy still refuses Bypass when it disallows it, as the
+  // host row did), the host folder picker (main.cjs desktop-worktree-folder saves the custom folder) and the
+  // 'code#bypass' anchor as the official deep link (?highlight=bypass_permissions).
+  const claudeCodeConfig=React.useMemo(()=>Object.fromEntries(CLAUDE_CODE_PREF_KEYS.map(key=>[key,shownValue(key,config[key])])),[config,optimistic]);
+  const claudeCodeSave=React.useCallback(patch=>{if(patch.allowBypassPermissions===true&&!bypass.allowed&&!bypassChecking)return Promise.reject(Error(t(bypass.reason)));return appearanceSave(patch);},[appearanceSave,bypass.allowed,bypass.reason,bypassChecking]);
+  const claudeCodePickDirectory=React.useCallback(async()=>{const picked=await desktopCall('desktop-worktree-folder');if(!picked?.worktreeDirectory)return undefined;await onSave({worktreeLocation:picked.worktreeLocation});setDesktopRevision(n=>n+1);return [picked.worktreeDirectory];},[desktopCall,onSave]);
+  const claudeCodeDeepLink=React.useMemo(()=>section==='code'&&anchorRow==='bypass'?{param:'highlight',value:'bypass_permissions',highlight:elementId=>{const target=presence.popup.current?.querySelector(`#${CSS.escape(elementId)}`);if(target)highlightSettingsTarget(target,()=>{});}}:null,[section,anchorRow,presence.popup]);
   const accountRows=useAccountSettings({snapshot:boot?.account,auth:boot?.auth,connected:boot?.connected,busy,engine:boot?.connected?engine:accountCore(boot,config),onLogin,onAccountAction,onRefreshAccount,onOpenExternal:url=>desktopCall('external',{url})});
   const groups=[
-    {tab:'preferences',title:'Appearance',rows:[
-      row('theme',t('Theme'),'',segments('theme',t('Theme'),[{value:'system',label:t('System'),icon:'Computer'},{value:'light',label:t('Light'),icon:'Sun'},{value:'dark',label:t('Dark'),icon:'Moon'}])),
-      row('motion',t('Motion'),t('Reduce animation in streaming responses and other interface elements.'),segments('motion',t('Motion'),[{value:'system',label:t('System')},{value:'reduce',label:t('Reduced')}])),
+    // Round 4 (settings lane general): General keeps the official c0db37792 zn order — Profile (zn's first group, Et =
+    // c547d6690 gr) then Appearance (Hn). The official Profile reads / saves the claude.ai account profile and reaches
+    // vendor-motion (avatar crop c6bd2cd90) that working-line-v4 holds unexported, so it is not sliced (D1, blocked); its
+    // slot shows the OpenClaude local profile (display name, host-drawn). Tasks / Notifications / Memory follow in zn but
+    // are blocked (round4/settings/general/report.json); the OpenClaude local groups come after the official ones.
+    {tab:'preferences',title:'Profile',rows:[{id:'name',label:t('What should we call you?'),description:t('Used only in this app.'),below:<SourceProfileSetting value={config.displayName || ''} onSave={value=>onSave({displayName:value})}/>}]},
+    // 4.16336.0 General › Appearance (c0db37792 Hn: Theme, Interface font, Chat font, Motion) is drawn by the official group
+    // (`official`); these rows stay for Settings search only (labels, anchors), never rendered.
+    {tab:'preferences',title:'Appearance',official:'general-appearance',rows:[
+      row('theme',t('Theme'),'',null),
+      row('interfaceFont',t('Interface font'),t('Font for the whole interface — menus, sidebars, and panels.'),null,`${t('Font for the whole interface — menus, sidebars, and panels.')} ${t('Font licenses')}`),
+      row('motion',t('Motion'),t('Reduce animation in streaming responses and other interface elements.'),null),
+    ]},
+    // OpenClaude local (no official General counterpart: c0db37792's Language row belongs to Voice).
+    {tab:'preferences',title:'Language',rows:[
       // shared-21 user menu Language (y1Z3orIe9Z) / ca25db325 general › Language: here a select; changing it reloads the window.
       row('locale',t('Language'),t('The language of menus, settings and other interface text.'),<SourceSelect label={t('Language')} value={getLocale()} align="end" items={LOCALES.map(entry=>({value:entry.locale,label:entry.localName}))}
         onChange={value=>{if(value!==getLocale())void Promise.resolve(onSave({locale:value})).then(()=>{try{globalThis.sessionStorage?.setItem('code-desktop:reopen-settings','preferences');}catch{}globalThis.location?.reload();},()=>{});}}/>,'Language 语言'),
     ]},
-    {tab:'preferences',title:'Profile',rows:[{id:'name',label:t('What should we call you?'),description:t('Used only in this app.'),below:<SourceProfileSetting value={config.displayName || ''} onSave={value=>onSave({displayName:value})}/>}]},
     personaGroup({config,onSave,desktopCall}),
     {tab:'preferences',title:accountTitle,rows:accountRows},
-    // c71860c77 pa: appearance precedes local sessions. Codex-only controls stay below.
-    {tab:'code',title:'Code appearance',rows:[
-      // Searchable as "Code theme" (local index entry; the official search index lists only Code font here).
-      {id:'codeTheme',label:t('Code theme'),description:t('Light and dark code themes'),grid:<CodeThemeGrid light={shownValue('codeThemeLight',prefs.codeThemeLight)} dark={shownValue('codeThemeDark',prefs.codeThemeDark)} onChange={(key,value)=>save(key,value,'codeTheme')}/>},
-      row('codeFont',t('Code font'),t('Set a custom monospace font for code and terminal.'),<SourceCodeFontSetting value={prefs.codeFont} placeholder={t('e.g. {font}',{font:prefs.interfaceFont==='dyslexic'?'OpenDyslexic Mono':'JetBrains Mono'})} onSave={value=>onSave({codeFont:value})}/>),
-    ]},
-    {tab:'code',title:'Appearance',rows:[
-      row('interfaceFont',t('Interface font'),<>{t('Font for the whole interface — menus, sidebars, and panels.')} <FontLicenses/></>,segments('interfaceFont',t('Interface font'),[{value:'anthropic',label:'Anthropic Sans'},{value:'system',label:t('System')},{value:'dyslexic',label:'OpenDyslexic'}]),`${t('Font for the whole interface — menus, sidebars, and panels.')} ${t('Font licenses')}`),
-      // menus C4 / CI-14: 3.6556.2 c0db37792 zt draws Transcript text size without a description (QmhFCiN99p is gone).
-      row('transcriptSize',t('Transcript text size'),'',segments('transcriptSize',t('Transcript text size'),[{value:'s',label:t('Small')},{value:'m',label:t('Medium')},{value:'l',label:t('Large')}])),
-      row('transcriptWidth',t('Transcript width'),t('Maximum width of the transcript and composer columns.'),segments('transcriptWidth',t('Transcript width'),[{value:'s',label:t('Narrow')},{value:'m',label:t('Medium')},{value:'l',label:t('Wide')}])),
-      row('transcriptView',t('Default transcript view'),t('The view sessions open in. Picking a view from a session’s Transcript view menu changes only that session.'),segments('transcriptView',t('Default transcript view'),['normal','thinking','verbose'].map(value=>({value,label:t(TRANSCRIPT_VIEW_LABELS[value])})))),
-    ]},
-    // c71860c77-DzP8HoeV hr (:989-1240): the group is titled 'Sessions' (id local-sessions).
-    {tab:'code',title:'Sessions',rows:[
-      // c71860c77:2188-2212 YlYBASRBOt with DeepSeek substituted; the <link> to Anthropic's security page has no
-      // DeepSeek counterpart, so the link element is dropped.
+    // B3 (4.16336.0 c8b630735 ot, settings-pages-v4 ClaudeCodeSettingsGroups): the official local-sessions groups render
+    // part "local" (Sessions: bypass, keep awake, archive, worktree location; c71860c77-puomdTO2 Ea `zn {part:"local"}`)
+    // and part "notifications" (On this computer: permission / question / task complete levels, sound, draw attention;
+    // `zn {part:"notifications"}`). Their rows stay listed here for Settings search (searchText); the official code
+    // renders them over the host desktop preferences (settings-pages-host.jsx officialDesktopPrefs).
+    {tab:'code',title:'Sessions',official:'claude-code-local',rows:[
       row('bypass',t('Allow bypass permissions mode'),<>{t('Bypass all permission checks and let DeepSeek work uninterrupted. This works well for workflows like fixing lint errors or generating boilerplate code. Letting DeepSeek run arbitrary commands is risky and can result in data loss, system corruption, or data exfiltration (e.g., via prompt injection attacks).')}{!bypass.allowed && !bypassChecking && <span className="ss-bypass-reason"> {t(bypass.reason)}</span>}</>,<SettingSwitch label={t('Allow bypass permissions mode')} checked={shownValue('allowBypassPermissions',config.allowBypassPermissions)===true} disabled={!config.allowBypassPermissions && (!boot?.connected || (!bypass.allowed && !bypassChecking))} onChange={value=>save('allowBypassPermissions',value,'bypass')}/>,t('Bypass all permission checks and let DeepSeek work uninterrupted.')),
-      // c71860c77:2180-2245: the Dynamic workflows switch comes straight after Bypass; OpenClaude Desktop's extra workflow rows
-      // (source-settings-workflows.jsx: engine, keyword, size, Advanced) nest beneath it, indented, only while it is on.
-      ...workflowSettingsGroup({config,boot,engine,shownValue,save,rowErrors,setRowErrors,models,advanced:workflowAdvanced,setAdvanced:setWorkflowAdvanced,desktopCall,cwd:customize?.cwd??config.cwd??null}).rows,
+      ...keepAwake,
+      row('archiveInactiveDays',t('Archive inactive sessions'),t('Automatically archive local sessions after a period of no activity. Sessions that are running or have background work are never archived, and a worktree with uncommitted changes is kept on disk.'),<SourceSelect label={t('Archive inactive sessions')} align="end" className="sselect-width-160" value={shownValue('archiveInactiveDays',config.archiveInactiveDays)||0} onChange={value=>save('archiveInactiveDays',Number(value))} items={[0,1,2,7,14,30].map(d=>({value:d,label:d?tn(d,'{count} day','{count} days'):t('Never')}))}/>),
+      row('worktreeLocation',t('Worktree location'),t('Where to store Git worktrees for isolated coding sessions on this computer.'),<div className="ss-worktree-control"><SourceSelect label={t('Worktree location')} align="end" value={shownValue('worktreeLocation',config.worktreeLocation)||'project'} title={config.worktreeLocation==='custom'?config.worktreeDirectory:'.code/worktrees'} onChange={value=>value==='custom'?commit('worktreeLocation',{},async()=>{const c=await desktopCall('desktop-worktree-folder');if(c)await onSave({worktreeLocation:c.worktreeLocation});setDesktopRevision(n=>n+1);}):save('worktreeLocation','project')} items={[{value:'project',label:t('Inside project'),description:'.code/worktrees'},{value:'custom',label:t('Custom…')}]}/>{config.worktreeLocation==='custom'&&config.worktreeDirectory&&<div className="ss-worktree-path" title={config.worktreeDirectory}>{config.worktreeDirectory}</div>}</div>),
+    ]},
+    {tab:'code',title:'On this computer',official:'claude-code-notifications',rows:[
       levelRow('permissionNotifications',t('Permission requests'),t('DeepSeek needs your approval to use a tool.')),
       levelRow('questionNotifications',t('Questions'),t('DeepSeek is asking you to choose between options.')),
       levelRow('completeNotifications',t('Task complete'),t('DeepSeek finished and is waiting for your input.')),
       row('notificationSound',t('Notification sound'),t('Played when an OS banner is shown.'),<SourceSelect label={t('Notification sound')} align="end" className="sselect-width-160" value={shownValue('notificationSound',config.notificationSound)||'system'} onChange={value=>save('notificationSound',value)} items={[{value:'system',label:t('System sound')},{value:'none',label:t('None')}]}/>),
       booleanRow('drawAttention',t('Draw attention on notifications'),t('Bounce the Dock icon when DeepSeek needs your attention and the app isn’t focused.'),{disabled:drawAttentionDisabled({permissionNotifications:level('permissionNotifications'),questionNotifications:level('questionNotifications')})}),
-      ...keepAwake,
+    ]},
+    // Round 4 (settings lane general): the code looks are the Claude Code page's on desktop, not General's. shared-1 Vd is
+    // false there (simple nav off: shared-183 Ch = GrowthBook && mh, mh = !1), so c71860c77-puomdTO2 Ea renders, after its
+    // model group, `x && !C && n(Wn, {})` (cda9efc49 R: Code appearance — light / dark code theme with the greet.ts preview,
+    // Code font family, Code font size) and `x && !C && n(Un, {})` (cda9efc49 M part "all": Appearance — Transcript text
+    // size, Transcript width, Default transcript view), drawn by the official groups (settings-pages-host.jsx
+    // SettingsClaudeCodeAppearance); these rows stay for Settings search only (labels, anchors), never rendered.
+    {tab:'code',title:'Code appearance',official:'claude-code-appearance',rows:[
+      row('codeTheme',t('Code theme'),t('Light and dark code themes'),null),
+      row('codeFont',t('Code font'),t('Set a custom monospace font for code and terminal.'),null),
+      row('codeFontSize',t('Code font size'),'',null),
+      row('transcriptSize',t('Transcript text size'),'',null),
+      row('transcriptWidth',t('Transcript width'),t('Maximum width of the transcript and composer columns.'),null),
+      row('transcriptView',t('Default transcript view'),t('The view sessions open in. Picking a view from a session’s Transcript view menu changes only that session.'),null),
+    ]},
+    // OpenClaude Desktop's own session rows, after the official groups (as the official page's account-scoped behavior
+    // group `zn {part:"behavior"}` follows them, also titled Sessions): DeepSeek workflow rows, prompt suggestions, sandbox.
+    {tab:'code',title:'Sessions',rows:[
+      // c71860c77:2188-2212 YlYBASRBOt with DeepSeek substituted; the <link> to Anthropic's security page has no
+      // DeepSeek counterpart, so the link element is dropped.
+      // c71860c77:2180-2245: the Dynamic workflows switch comes straight after Bypass; OpenClaude Desktop's extra workflow rows
+      // (source-settings-workflows.jsx: engine, keyword, size, Advanced) nest beneath it, indented, only while it is on.
+      ...workflowSettingsGroup({config,boot,engine,shownValue,save,rowErrors,setRowErrors,models,advanced:workflowAdvanced,setAdvanced:setWorkflowAdvanced,desktopCall,cwd:customize?.cwd??config.cwd??null}).rows,
       // c71860c77-DzP8HoeV cr (:877-899), right after keep-awake (:1201-1202): listed where the running core suggests a
       // next prompt (capabilities.promptSuggestion); main.jsx hides the composer suggestion when it is off.
       ...(coreSupports(engine,'promptSuggestion')?[booleanRow('promptSuggestions',t('Prompt suggestions'),t('Show a suggested next prompt in the message box after DeepSeek replies. Suggestions add a little to your usage.'),{checked:promptSuggestionsEnabled(shownValue('promptSuggestions',config.promptSuggestions))})]:[]),
-      row('archiveInactiveDays',t('Archive inactive sessions'),t('Automatically archive local sessions after a period of no activity. Sessions that are running or have background work are never archived, and a worktree with uncommitted changes is kept on disk.'),<SourceSelect label={t('Archive inactive sessions')} align="end" className="sselect-width-160" value={shownValue('archiveInactiveDays',config.archiveInactiveDays)||0} onChange={value=>save('archiveInactiveDays',Number(value))} items={[0,1,2,7,14,30].map(d=>({value:d,label:d?tn(d,'{count} day','{count} days'):t('Never')}))}/>),
       // c71860c77:2376-2398 g: the custom choice goes through the folder picker; only the saved location shows.
       // settings-01 (2.42304.0 cd19fedd2 worktreeLocation P0gQiUc0+j): "…on this computer." The SSH variant (c71860c77
       // dnMG5c8GDx, only while SSH connections are available) has no local counterpart: no core runs over SSH.
-      row('worktreeLocation',t('Worktree location'),t('Where to store Git worktrees for isolated coding sessions on this computer.'),<div className="ss-worktree-control"><SourceSelect label={t('Worktree location')} align="end" value={shownValue('worktreeLocation',config.worktreeLocation)||'project'} title={config.worktreeLocation==='custom'?config.worktreeDirectory:'.code/worktrees'} onChange={value=>value==='custom'?commit('worktreeLocation',{},async()=>{const c=await desktopCall('desktop-worktree-folder');if(c)await onSave({worktreeLocation:c.worktreeLocation});setDesktopRevision(n=>n+1);}):save('worktreeLocation','project')} items={[{value:'project',label:t('Inside project'),description:'.code/worktrees'},{value:'custom',label:t('Custom…')}]}/>{config.worktreeLocation==='custom'&&config.worktreeDirectory&&<div className="ss-worktree-path" title={config.worktreeDirectory}>{config.worktreeDirectory}</div>}</div>),
       row('sandbox',t('Sandbox mode'),t(facts.reason),<span>{facts.mode||t('Unavailable')}</span>),
       // turn/start sandboxPolicy.networkAccess for workspace-write turns (permission-policy.mjs turnPermissionParams).
       // A core without a sandbox (descriptor or reported capability sandbox: false) has nothing to open.
@@ -583,7 +689,9 @@ function SettingsContent({ presence, config, model, effort, permission, boot, bu
     // Storage. Its own 'Keep computer awake' (scheduled tasks while the app is open) has no local counterpart;
     // the Code page's keep-awake rows stay on the Code page. While the desktop snapshot loads, the fallback
     // branch draws three skeleton rows under the version row.
-    {tab:'general',title:'System',skeleton:desktop===null,rows:[
+    // official: the page body is the official desktop page (src/source-settings-desktop.jsx); these rows stay as the
+    // settings search index of the page and its anchors (open-storage keeps opening the host Storage dialog below).
+    {tab:'general',title:'System',official:DESKTOP_PAGE_GROUP,skeleton:desktop===null,rows:[
       ...(build?.version?[row('version',t('Desktop app version'),'',<span className="ss-version">{build.version}</span>)]:[]),
       row('startup',t('Run on startup'),t('Automatically start OpenClaude Desktop when you log in to your computer.'),<SettingSwitch label={t('Run on startup')} checked={shownValue('runOnStartup',desktop?.desktop?.runOnStartup)===true} disabled={!desktop?.desktop} onChange={enabled=>commit('startup',{runOnStartup:enabled},async()=>{const value=await desktopCall('desktop-startup',{enabled});setDesktop(current=>current?.desktop?{...current,desktop:{...current.desktop,runOnStartup:value===true}}:current);setDesktopRevision(n=>n+1);})}/>),
       booleanRow('menuBarEnabled',t('Menu bar'),t('Show OpenClaude Desktop in the menu bar.')),
@@ -602,8 +710,25 @@ function SettingsContent({ presence, config, model, effort, permission, boot, bu
       row('engine',t('Engine'),local.engine,null),
     ]},
   ];
+  // U-SET-HANDWRITE: regroup for the simple nav — Profile and the account group on Account, Persona under Your Claude,
+  // the notification levels on Notifications, the code looks on Appearance, DeepSeek's uploads on Privacy; the rarer
+  // Code groups fold into Code › Advanced.
+  for(const group of groups){
+    if(group.tab==='preferences'&&(group.title==='Profile'||group.title===accountTitle))group.tab='account';
+    else if(group.tab==='preferences'&&group.title==='Persona')group.tab='instructions';
+    else if(group.tab==='code'&&group.title==='On this computer')group.tab='notifications';
+    else if(group.tab==='code'&&group.title==='Code appearance')group.tab='preferences';
+    else if(group.tab==='code'&&group.title==='Privacy'){group.tab='privacy';group.title='Data sharing';}
+    if(group.tab==='code'&&(SETTINGS_ADVANCED_GROUPS.has(group.title)||[...SETTINGS_ADVANCED_GROUPS].some(title=>t(title)===group.title)))group.advanced=true;
+  }
   // Profile belongs in Preferences, before Appearance (c0db37792:1391–1403).
-  groups.sort((a,b)=>a.tab==='preferences'&&b.tab==='preferences'?(['Profile','Persona',accountTitle,'Appearance'].indexOf(a.title)-['Profile','Persona',accountTitle,'Appearance'].indexOf(b.title)):0);
+  // 4.16336.0 c0db37792 zn (desktop): Profile, Appearance, Code looks, then the OpenClaude local groups.
+  const generalOrder=['Profile','Appearance','Code appearance','Persona',accountTitle,'Language'];
+  // U-SET-LITE: only the Appearance page's own slots are re-filled in that order (a comparator returning 0 across pages is no
+  // consistent order: Code appearance, moved here from Code, stayed after Language). Unlisted titles keep their order, last.
+  const generalRank=group=>{const index=generalOrder.indexOf(group.title);return index<0?generalOrder.length:index;};
+  const generalSlots=groups.flatMap((group,index)=>group.tab==='preferences'?[index]:[]);
+  generalSlots.map(index=>groups[index]).sort((a,b)=>generalRank(a)-generalRank(b)).forEach((group,i)=>{groups[generalSlots[i]]=group;});
   // Only DeepSeek's Models page has a key field (its connection rows): elsewhere 'api key' doesn't lead there.
   const searchTabs=(coreForEngine(typeof engine==='string'?engine:engine?.engine).id==='deepseek'?tabs:tabs.map(tab=>tab.id==='models'?{...tab,keywords:tab.keywords.filter(word=>word!=='api key')}:tab)).filter(entry=>entry.id!=='cowork'||boot?.coworkEnabled===true); // w13-coworkui-settings
   const results=settingsSearch(searchTabs,[...groups,...settingsCatalogGroups(catalog,{cwd:customize?.cwd,threadId:customize?.threadId??null})],query,searchExpanded?.sections),shown=groups.filter(group=>group.tab===tab&&group.title!=='Local MCP servers'&&!tabs.find(t=>t.id===group.tab)?.customize);
@@ -633,7 +758,8 @@ function SettingsContent({ presence, config, model, effort, permission, boot, bu
     onNavigate={(section,target)=>{setFocus(target||null);setTab(section);setQuery('');}} /> : null;
   const closeSearch=()=>{setSearchOpen(false);setQuery('');setSearchIndex(0);setSearchExpanded(undefined);};
   // cc011544b _t: the field (icon + input, no clear button; Escape clears) focuses its input when clicked.
-  const searchField=<div className="ss-search" onClick={event=>{if(!event.target.closest?.('.ss-search-results'))search.current?.focus();}}><Icon name="Search" size={20}/>
+  // In the official rail's search slot (z_ `shrink-0 px-lg pt-lg`), which pads it: no margin of its own.
+  const searchField=<div className="ss-search" style={{margin:0}} onClick={event=>{if(!event.target.closest?.('.ss-search-results'))search.current?.focus();}}><Icon name="Search" size={20}/>
     <input ref={search} aria-label={t('Search settings')} placeholder={t('Search')} value={query} aria-expanded={searchOpen}
       onBlur={closeSearch}
       onChange={event=>{const value=event.target.value;if(normalizeSettingsQuery(value)!==normalizeSettingsQuery(query))setSearchExpanded(undefined);setQuery(value);setSearchIndex(0);setSearchOpen(value.trim()!=='');}}
@@ -659,19 +785,101 @@ function SettingsContent({ presence, config, model, effort, permission, boot, bu
   const usageIdentity=JSON.stringify([boot?.connected,account?.type,account?.email,account?.planType]);
   // shared-22:4511-4515 ye and cc011544b's page header CloseButton: both are named 'Close'.
   const closeButton = <button type="button" className="ss-close" aria-label={t('Close')} onClick={onClose}><Icon name="X" size={16}/></button>;
-  return createPortal(<div className="ss-backdrop ss-settings-backdrop" data-open={presence.visible} onMouseDown={e=>{if(e.target===e.currentTarget)onClose();}}><section ref={root} className="ss-dialog ss-settings-dialog" data-usage={usagePage&&!narrow||undefined} data-open={presence.visible} role="dialog" aria-modal="true" aria-labelledby={titleId} tabIndex={-1}
-    onKeyDown={e=>{if(!usagePage&&!narrow&&!e.altKey&&(e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='f'){e.preventDefault();e.stopPropagation();search.current?.focus();search.current?.select();return;}if(e.key==='Escape'){e.preventDefault();e.stopPropagation();close.current();}if(e.key==='Tab'){const items=[...root.current.querySelectorAll('button:not(:disabled),input:not(:disabled),select:not(:disabled),textarea:not(:disabled),[tabindex="0"]')].filter(el=>el.getClientRects().length&&el.tabIndex>=0);const first=items[0],last=items.at(-1);if(e.shiftKey&&(document.activeElement===first||document.activeElement===root.current)){e.preventDefault();last?.focus();}else if(!e.shiftKey&&(document.activeElement===last||document.activeElement===root.current)){e.preventDefault();first?.focus();}}}}>
-    <h2 id={titleId} className="sr-only">{usagePage&&!narrow?t('Usage'):t('Settings')}</h2>{stackedBody(<>
-    {usagePage&&!narrow?<header className="ss-usage-header"><h2 className="text-heading-semibold" aria-hidden="true">{t('Usage')}</h2>{closeButton}</header>:narrow?<header className="ss-narrow"><div className="ss-narrow-heading"><strong aria-hidden="true">{t('Settings')}</strong>{closeButton}</div>{!usagePage&&<div className="shrink-0 pb-md"><CdsLayerProvider base={500}><CdsTabs.Root value={tab} onValueChange={id=>selectTab(id)}><CdsTabs.List activateOnFocus={false} aria-label={t('Settings')}>
-      {navTabs.map(t=><CdsTabs.Tab key={t.id} value={t.id} disabledReason={null} disabledReasonSide="bottom" onClick={t.id===tab?()=>setFocus(customizeNavFocus(t)):undefined}>{navLabel[t.id]}</CdsTabs.Tab>)}
-    </CdsTabs.List></CdsTabs.Root></CdsLayerProvider></div>}</header>:<nav className="ss-nav" aria-label={t('Settings')}>{searchField}<div className="ss-nav-scroll scroll-fade-y scroll-fade-size-6">{navGroups.map(group=><div key={group}><p>{settingsHeading(group)}</p><ul>{navTabs.filter(t=>t.group===group).map(t=><li key={t.id}><button aria-current={tab===t.id?'page':undefined} onClick={()=>{selectTab(t.id);setFocus(customizeNavFocus(t));}}><Icon name={t.icon} size={20}/><span>{navLabel[t.id]}</span></button></li>)}</ul></div>)}</div></nav>}
-    <div ref={pane} className="ss-pane" data-customize={!!activeTab?.customize||activeTab?.shell==='customize'}>
-    {!usagePage&&!narrow&&<div className="ss-page-header">{closeButton}</div>}
-    <div className="ss-content" key={tab} data-page={tab}>{error&&<p className="ss-error" role="alert">{error}</p>}{['code','developer','advanced'].includes(tab)&&desktopErrors(desktop?.errors).map(notice=><p className="ss-connection-notice" role="status" key={notice.key}>{notice.message}</p>)}{tab==='advanced'&&!shown.length&&<p className="ss-connection-notice" role="status">{advancedEmptyNotice(boot?.core&&typeof boot.core==='object'?coreName(boot.core):windowCore()?.name??(typeof engine==='string'?coreName(engine):null))}</p>}{tab==='developer'&&<DeveloperServers desktop={desktop} connected={boot?.connected} pending={!!pending} error={rowErrors['mcp-config']} onRemove={customize?.call&&mcpWritable ? removeServer : undefined} onEditConfig={()=>action('mcp-config',()=>desktopCall('desktop-edit-config'))} onDocs={()=>action('mcp-config',()=>desktopCall('external',{url:'https://modelcontextprotocol.io/quickstart'}))}/>} {customizePage}{activeTab?.page&&<activeTab.page {...pageProps}/>}{tab==='usage'&&<SourceUsage key={usageIdentity} readUsage={readUsage} consumeResetCredit={usageActions?.consumeResetCredit} sendCreditsNudge={usageActions?.sendCreditsNudge} engine={engine} models={models} onOpenLink={url=>Promise.resolve(desktopCall('external',{url})).catch(()=>{})}/>} {shown.map(group=><section className="ss-group" key={group.tab+group.title}><h3 tabIndex={-1} className="text-heading-semibold settings-row-title">{group.badge?<span className="flex items-center gap-2">{settingsHeading(group.title)}<ListBadge variant="neutral">{group.badge}</ListBadge></span>:settingsHeading(group.title)}</h3>{group.description&&<p className="text-footnote text-secondary ss-group-description">{group.description}</p>}<div className="settings-group-dividers">{(group.skeleton?group.rows.filter(row=>row.id==='version'):group.rows).map(row=><SettingRow key={row.id} row={row} error={rowErrors[row.id]}/>)}{group.skeleton&&[0,1,2].map(index=><SettingSkeletonRow key={index}/>)}</div></section>)}
-      {claudeImport&&<ClaudeImportDialog open desktopCall={desktopCall} cwds={[customize?.cwd].filter(Boolean)} onClose={()=>setClaudeImport(false)}
-        onDone={()=>{void customize?.store?.loadSkills?.({cwd:customize?.cwd,force:true});void customize?.store?.loadMcp?.({cwd:customize?.cwd,threadId:customize?.threadId??null,force:true});setDesktopRevision(n=>n+1);}}/>}</div></div></>)}
+  // 4.16336.0 settings-nav (productionPlan P3/P4). The official nav selects through the official settings modal store
+  // (z_ / rv call settingsModalStore open(section)); the host follows the store's opens onto its page ids
+  // (settings-tab-compat hostTabForSection), and tells the store the section of a page the host opened itself
+  // (initialSection, search, a page's link) without echoing it back. The store is closed when Settings closes.
+  const storeSection=settingsModalStore(state=>state.section), quietStore=useRef(false), followStore=useRef(null);
+  followStore.current=section=>{
+    const target=hostTabForSection(section);if(!target)return;
+    const entry=tabs.find(item=>item.id===target.tab), refocus=entry?customizeNavFocus(entry):null;
+    selectTab(target.tab);setFocus(refocus);if(target.anchor)setHighlight({id:target.anchor});
+  };
+  useEffect(()=>settingsModalStore.subscribe((state,previous)=>{if(!quietStore.current&&state.openCount!==previous.openCount)followStore.current(state.section);}),[]);
+  useEffect(()=>{
+    const official=officialSectionOf(tab), store=settingsModalStore.getState();
+    if(!official||hostTabForSection(store.section)?.tab===tab)return;
+    quietStore.current=true;try{store.open(official);}finally{quietStore.current=false;}
+  },[tab]);
+  useEffect(()=>()=>settingsModalStore.getState().close(),[]);
+  const activeNavSection=hostTabForSection(storeSection)?.tab===tab?storeSection:officialSectionOf(tab)??tab;
+  const navHost=React.useMemo(()=>settingsNavHostValue({surface,coworkEnabled:boot?.coworkEnabled===true,importAvailable:codexNative&&boot?.connected===true}),[surface,boot?.coworkEnabled,codexNative,boot?.connected]);
+  const localGroups=localNavGroups(navTabs.filter(entry=>isLocalSection(entry.id)),entry=>navLabel[entry.id]);
+  const selectLocal=id=>{const entry=tabs.find(item=>item.id===id);const refocus=entry?customizeNavFocus(entry):null;selectTab(id);setFocus(refocus);};
+  // U-SET-HANDWRITE: the hand-written simple shell. One host page's body (its notices, its page component, Usage, the
+  // developer page, Customize, then its groups); `advancedGroups` draws only the groups folded into Advanced.
+  const renderGroup=group=>group.official===DESKTOP_PAGE_GROUP?<CdsLayerProvider key={group.tab+group.title+group.official} base={500}><SettingsDesktopPage version={build?.version} runOnStartup={desktop?.desktop?shownValue('runOnStartup',desktop.desktop.runOnStartup):null} setRunOnStartup={desktopStartupWrite} menuBarEnabled={shownValue('menuBarEnabled',config.menuBarEnabled)} setMenuBarEnabled={desktopMenuBarWrite} desktopCall={desktopCall} settingsRoot={root}/></CdsLayerProvider>:group.official==='claude-code-local'||group.official==='claude-code-notifications'?<CdsLayerProvider key={group.tab+group.title+group.official} base={500}><SettingsClaudeCodeGroups part={group.official==='claude-code-local'?'local':'notifications'} theme={shownValue('theme',config.theme??'system')} motion={shownValue('motion',prefs.motion)} interfaceFont={shownValue('interfaceFont',prefs.interfaceFont)} config={claudeCodeConfig} save={claudeCodeSave} pickDirectory={claudeCodePickDirectory} deepLink={claudeCodeDeepLink}/></CdsLayerProvider>:group.official==='general-appearance'?<CdsLayerProvider key={group.tab+group.title} base={500}><SettingsGeneralAppearance theme={shownValue('theme',config.theme??'system')} motion={shownValue('motion',prefs.motion)} interfaceFont={shownValue('interfaceFont',prefs.interfaceFont)} transcriptSize={shownValue('transcriptSize',prefs.transcriptSize)} transcriptWidth={shownValue('transcriptWidth',prefs.transcriptWidth)} save={appearanceSave}/></CdsLayerProvider>:group.official==='claude-code-appearance'?<CdsLayerProvider key={group.tab+group.title} base={500}><SettingsClaudeCodeAppearance theme={shownValue('theme',config.theme??'system')} motion={shownValue('motion',prefs.motion)} interfaceFont={shownValue('interfaceFont',prefs.interfaceFont)} transcriptSize={shownValue('transcriptSize',prefs.transcriptSize)} transcriptWidth={shownValue('transcriptWidth',prefs.transcriptWidth)} transcriptView={shownValue('transcriptView',prefs.transcriptView)} codeFont={shownValue('codeFont',prefs.codeFont)} codeThemeLight={shownValue('codeThemeLight',prefs.codeThemeLight)} codeThemeDark={shownValue('codeThemeDark',prefs.codeThemeDark)} save={appearanceSave} config={claudeCodeConfig} codeSave={claudeCodeSave} pickDirectory={claudeCodePickDirectory} deepLink={claudeCodeDeepLink}/></CdsLayerProvider>:<section className="ss-group" key={group.tab+group.title}>{!group.hideTitle&&<h3 tabIndex={-1} className="text-heading-semibold settings-row-title">{group.badge?<span className="flex items-center gap-2">{settingsHeading(group.title)}<ListBadge variant="neutral">{group.badge}</ListBadge></span>:settingsHeading(group.title)}</h3>}{group.description&&<p className="text-footnote text-secondary ss-group-description">{group.description}</p>}<div className="settings-group-dividers">{(group.skeleton?group.rows.filter(row=>row.id==='version'):group.rows).map(row=><SettingRow key={row.id} row={row} error={rowErrors[row.id]}/>)}{group.skeleton&&[0,1,2].map(index=><SettingSkeletonRow key={index}/>)}</div></section>;
+  const hostAvailable=id=>navTabs.some(entry=>entry.id===id)&&(!tabs.find(entry=>entry.id===id)?.customize||!!customize);
+  const navItems=SETTINGS_NAV.map(entry=>entry.sep?entry:{...entry,hosts:entry.hosts.filter(hostAvailable),advanced:(entry.advanced||[]).filter(hostAvailable)})
+    .filter(entry=>entry.sep||entry.hosts.length||entry.advanced.length)
+    .filter((entry,index,list)=>!entry.sep||(index>0&&!list[index-1].sep&&index<list.length-1));
+  const shownEntry=navItems.find(entry=>entry.id===navEntry.id)??{...navEntry,hosts:[],advanced:[]};
+  const hostBody=(id,advancedGroups=false)=>{
+    const hostEntry=tabs.find(entry=>entry.id===id);
+    const list=groups.filter(group=>group.tab===id&&group.title!=='Local MCP servers'&&!hostEntry?.customize&&!!group.advanced===advancedGroups);
+    return <React.Fragment key={id+(advancedGroups?':advanced':'')}>
+      {!advancedGroups&&<>
+        {['code','developer','advanced'].includes(id)&&desktopErrors(desktop?.errors).map(notice=><p className="ss-connection-notice" role="status" key={notice.key}>{notice.message}</p>)}
+        {id==='advanced'&&!list.length&&<p className="ss-connection-notice" role="status">{advancedEmptyNotice(boot?.core&&typeof boot.core==='object'?coreName(boot.core):windowCore()?.name??(typeof engine==='string'?coreName(engine):null))}</p>}
+        {id==='developer'&&<CdsLayerProvider base={500}><SettingsDeveloperPage theme={shownValue('theme',config.theme??'system')} motion={shownValue('motion',prefs.motion)} interfaceFont={shownValue('interfaceFont',prefs.interfaceFont)} desktop={desktop} removeServer={developerRemoveServer} revealConfig={developerRevealConfig}/></CdsLayerProvider>}
+        {hostEntry?.customize&&id===tab?customizePage:null}
+        {hostEntry?.page&&<hostEntry.page {...pageProps}/>}
+        {id==='usage'&&<SourceUsage key={usageIdentity} readUsage={readUsage} consumeResetCredit={usageActions?.consumeResetCredit} sendCreditsNudge={usageActions?.sendCreditsNudge} engine={engine} models={models} onOpenLink={url=>Promise.resolve(desktopCall('external',{url})).catch(()=>{})}/>}
+      </>}
+      {list.map(renderGroup)}
+    </React.Fragment>;
+  };
+  // A host group titled like the page, or a second 'Sessions' after the official Sessions group, drops its heading.
+  for(const group of groups){group.hideTitle=settingsHeading(group.title)===t(shownEntry.label)||(group.title==='Sessions'&&!group.official&&groups.some(other=>other.official==='claude-code-local'&&other.tab===group.tab));}
+  const pageHosts=shownEntry.mode==='tabs'?(shownEntry.hosts.includes(tab)?[tab]:shownEntry.hosts.slice(0,1)):shownEntry.hosts;
+  const advancedHosts=shownEntry.advanced||[];
+  const advancedGroupsHere=pageHosts.some(id=>groups.some(group=>group.tab===id&&group.advanced));
+  const advancedForced=advancedHosts.includes(tab)||(!!highlight&&groups.some(group=>(group.advanced&&pageHosts.includes(group.tab)||advancedHosts.includes(group.tab))&&group.rows.some(row=>row.id===highlight.id)));
+  const openEntry=entry=>{const id=entry.mode==='tabs'&&entry.hosts.includes(tab)?tab:entry.hosts[0]??entry.advanced?.[0];if(!id)return;const hostEntry=tabs.find(item=>item.id===id);const refocus=hostEntry?customizeNavFocus(hostEntry):null;selectTab(id);setFocus(refocus);};
+  const modelsEntry=navItems.find(entry=>entry.id==='models');
+  const pageBody=usagePage?hostBody('usage'):<>
+    <h2 className="sl-page-title">{t(shownEntry.label)}</h2>
+    {shownEntry.mode==='tabs'&&shownEntry.hosts.length>1&&<div className="sl-subtabs" role="tablist" aria-label={t(shownEntry.label)}>
+      {shownEntry.hosts.map(id=><button key={id} type="button" role="tab" aria-selected={pageHosts.includes(id)} onClick={()=>{const hostEntry=tabs.find(item=>item.id===id);const refocus=hostEntry?customizeNavFocus(hostEntry):null;selectTab(id);setFocus(refocus);}}>{navLabel[id]}</button>)}
+    </div>}
+    {pageHosts.map(id=>hostBody(id))}
+    {(advancedHosts.length>0||advancedGroupsHere)&&<details className="sl-advanced" open={advancedOpen||advancedForced} onToggle={event=>setAdvancedOpen(event.currentTarget.open)}>
+      <summary>{t('Advanced')}</summary>
+      {pageHosts.map(id=>hostBody(id,true))}
+      {advancedHosts.map(id=><section className="sl-advanced-page" key={id}><h3 className="sl-advanced-title">{navLabel[id]}</h3>{hostBody(id)}</section>)}
+    </details>}
+  </>;
+  return createPortal(<div className="ss-backdrop ss-settings-backdrop" data-open={presence.visible} onMouseDown={e=>{if(e.target===e.currentTarget)onClose();}}><section ref={root} className="ss-dialog ss-settings-dialog sl-dialog" data-usage={usagePage||undefined} data-open={presence.visible} role="dialog" aria-modal="true" aria-labelledby={titleId} tabIndex={-1}
+    onKeyDown={e=>{if(!usagePage&&!e.altKey&&(e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='f'){e.preventDefault();e.stopPropagation();search.current?.focus();search.current?.select();return;}if(e.key==='Escape'){e.preventDefault();e.stopPropagation();close.current();}if(e.key==='Tab'){const items=[...root.current.querySelectorAll('button:not(:disabled),input:not(:disabled),select:not(:disabled),textarea:not(:disabled),summary,[tabindex="0"]')].filter(el=>el.getClientRects().length&&el.tabIndex>=0);const first=items[0],last=items.at(-1);if(e.shiftKey&&(document.activeElement===first||document.activeElement===root.current)){e.preventDefault();last?.focus();}else if(!e.shiftKey&&(document.activeElement===last||document.activeElement===root.current)){e.preventDefault();first?.focus();}}}}>
+    <header className="sl-header"><h2 id={titleId}>{usagePage?t('Usage'):t('Settings')}</h2>{closeButton}</header>
+    <SettingsNavHostProvider value={navHost}><div className="sl-body">
+      {!usagePage&&<nav className="sl-nav" aria-label={t('Settings')}>
+        {searchField}
+        <div className="sl-nav-list">{navItems.map((entry,index)=>entry.sep?<hr key={`sep-${index}`} className="sl-sep"/>:
+          <button key={entry.id} type="button" className="sl-nav-item" data-testid={`settings-nav-${entry.id}`} aria-current={entry.id===shownEntry.id?'page':undefined} onClick={()=>openEntry(entry)}><Icon name={entry.icon} size={20}/><span>{t(entry.label)}</span></button>)}</div>
+        {modelsEntry&&<button type="button" className="sl-nav-footer" onClick={()=>openEntry(modelsEntry)}><span>{t('API keys')}</span><Icon name="ArrowUpRight" size={16}/></button>}
+      </nav>}
+      <div ref={pane} className="ss-pane sl-pane" data-customize="false">
+        <div className="ss-content sl-content" key={shownEntry.id+(shownEntry.mode==='tabs'?':'+tab:'')} data-page={tab} data-entry={shownEntry.id}><SlDedupeHeadings/>{error&&<p className="ss-error" role="alert">{error}</p>}{pageBody}
+          {claudeImport&&<ClaudeImportDialog open desktopCall={desktopCall} cwds={[customize?.cwd].filter(Boolean)} onClose={()=>setClaudeImport(false)}
+            onDone={()=>{void customize?.store?.loadSkills?.({cwd:customize?.cwd,force:true});void customize?.store?.loadMcp?.({cwd:customize?.cwd,threadId:customize?.threadId??null,force:true});setDesktopRevision(n=>n+1);}}/>}</div>
+      </div>
+    </div></SettingsNavHostProvider>
   </section>{storage&&<StorageDialog call={desktopCall} settingsRoot={root} onClose={()=>setStorage(false)}/>}
   <SourcePreviewAllowedSites isOpen={allowedSites} onClose={()=>setAllowedSites(false)} desktop={allowedSitesHost} layer={ALLOWED_SITES_LAYER}/></div>,document.body);
+}
+// U-SET-HANDWRITE: official page renderers bring their own headings; on the merged pages a heading that repeats the
+// page title or the heading right before it is hidden (data-sl-dup), re-checked as async groups render.
+function SlDedupeHeadings() {
+  const mark=useRef(null);
+  useLayoutEffect(()=>{
+    const content=mark.current?.parentElement;if(!content)return undefined;
+    // A heading whose text already titles the page or an earlier section is hidden (the page title over its first group of the
+    // same name; Code appearance's own "Appearance" block on the Appearance page), its rows staying under that section.
+    const run=()=>{const seen=new Set();for(const heading of content.querySelectorAll('h2,h3')){if(heading.closest('[role=dialog]')!==content.closest('[role=dialog]'))continue;const text=heading.textContent.trim();const dup=!heading.classList.contains('sl-page-title')&&seen.has(text);if(dup)heading.setAttribute('data-sl-dup','');else heading.removeAttribute('data-sl-dup');seen.add(text);}};
+    run();const observer=new MutationObserver(run);observer.observe(content,{childList:true,subtree:true,characterData:true});return ()=>observer.disconnect();
+  },[]);
+  return <span ref={mark} hidden/>;
 }
 // c71860c77-B72Ova_w It fallback: a row of two text bars (h-5 w-36 / h-5 w-72) beside a 40×24 pill, drawn with
 // the shared-frame Skeleton classes from the loaded CDS stylesheet (role=status, sr-only "Loading").

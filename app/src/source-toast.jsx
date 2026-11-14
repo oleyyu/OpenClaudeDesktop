@@ -2,7 +2,7 @@ import React,{createContext,useContext,useEffect,useId,useLayoutEffect,useRef,us
 import {createPortal} from 'react-dom';
 import {Icon} from './icons.jsx';
 // W14-code r6 sh6-03: shared-22 QI `action: o(A,{size:"sm",variant:"secondary",onClick:…})` — A is shared-frame Uu (E41 direct import).
-import {CdsButton} from './generated/view-tabs/shared-frame-6jtSkIit.js';
+import {CdsButton} from './cds-core.mjs'; // 4.16336.0 host wiring (frame): cds-core Button (Xu)
 import {t} from '../electron/i18n/index.mjs';
 import {createToastStore,toastClearance} from './toast-store.mjs';
 import './source-toast.css';

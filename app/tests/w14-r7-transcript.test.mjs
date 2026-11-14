@@ -100,11 +100,18 @@ test('R7T-02: Chat / Cowork transcripts keep the host message menu (no TA, no M7
 });
 
 test('R7T-05: file URLs encode each path segment (# ? % name the file); no cwd / home range check is added', async () => {
-  assert.equal(C.fileUrlOf('/tmp/a b.png'), 'file:///tmp/a%20b.png');
-  assert.equal(C.containedImageSource('/x/#1?.png'), 'file:///x/%231%3F.png');
-  assert.equal(C.containedImageSource('100%.png', '/w'), 'file:///w/100%25.png');
-  assert.equal(await C.loadSessionImage('/elsewhere/shot #2.png', '/w', null), 'file:///elsewhere/shot%20%232.png');
+  assert.equal(C.fileUrlOf('/tmp/a b.png'), 'file:///tmp/a%20b.png', 'links still name the file');
+  // U-2: an image is minted by main for the raw path (# ? % stay part of the file name; no URL parsing on the way).
+  const saved = globalThis.desktop, minted = [];
+  globalThis.desktop = { mediaUrl: (p) => { minted.push(p); return `claude-media://v/t${minted.length}?v=1`; } };
+  try {
+  assert.equal(C.containedImageSource('/x/#1?.png'), 'claude-media://v/t1?v=1');
+  assert.equal(C.containedImageSource('100%.png', '/w'), 'claude-media://v/t2?v=1');
+  assert.equal(await C.loadSessionImage('/elsewhere/shot #2.png', '/w', null), 'claude-media://v/t3?v=1');
   assert.equal(await C.loadSessionImage('../secret.png', '/w', null), null);
+  assert.deepEqual(minted, ['/x/#1?.png', '/w/100%.png', '/elsewhere/shot #2.png']);
+  } finally { if (saved === undefined) delete globalThis.desktop; else globalThis.desktop = saved; }
+  assert.equal(C.containedImageSource('/x/#1?.png'), null, 'no desktop bridge: no local image URL');
 });
 
 // ---- r7c-01：排队消息条换成官方 cf74bc599 VE（generated/queued-bar），宿主重述的 SingleRow / MultiEntry / .sqm-* 删除。
@@ -127,6 +134,10 @@ test('r7c-01 official: VE / WE / GE / UE as sliced; the bar is generated, the ho
 });
 
 test('r7c-01 SSR: one entry is WE (count, preview, Send now with its note in the persona, Edit, Remove); several are GE\'s collapsed button', async () => {
+  // Round 4 queued-bar cutover: the host mounts the 4.16336.0 wO (generated/queued-bar-v4), whose "sent" mark gate (shared-39
+  // Ol, linked from frame-sidebar-nav) asks the nav host table; main.jsx installs it (src/frame-sidebar-nav-host.jsx), so here too.
+  await server.ssrLoadModule('/src/frame-sidebar-nav-host.jsx');
+  assert.match(read('src/source-queued-messages.jsx'), /import \{ QueuedMessageBar \} from "\.\/generated\/queued-bar-v4\/index\.mjs";/);
   const Q = await server.ssrLoadModule('/src/source-queued-messages.jsx');
   const noop = () => {};
   const one = renderToStaticMarkup(React.createElement(Q.SourceQueuedMessages, { entries: [queuedEntry('q1', 'later please')], onCancel: noop, onEdit: noop, onSteer: noop }));

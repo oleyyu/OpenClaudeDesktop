@@ -1,5 +1,6 @@
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useSyncExternalStore } from "react";
-import { CdsButton } from "./generated/view-tabs/shared-frame-6jtSkIit.js";
+// host-wiring code-a: the findings bar's own Buttons are the 4.16336.0 cds-core Button (semantic facade).
+import { CdsButton } from "./cds-core.mjs";
 import { findingAnnotation, findingCounts, findingsStatusText, fixFindingsPrompt, latestReviewFindings, paneReviewSeed, paneReviewView, seedPaneReview } from "./review-findings-model.mjs";
 import { ReviewFindingCard } from "./generated/review-findings/review-finding-card.mjs";
 import { isSendStopped } from "./generated/r4e-findings/send-stopped.mjs";

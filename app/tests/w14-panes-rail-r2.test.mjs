@@ -24,7 +24,10 @@ after(() => server?.close());
 test('fr2-04: JD compares the shown state before and after the toggle and announces through zw', () => {
   const main = read('src/main.jsx');
   assert.match(main, /if \(after !== before && side === 0 && !NO_SIDEBAR\) announcePolite\(after \? t\("Side navigation shown"\) : t\("Side navigation hidden"\)\);/);
-  assert.match(main, /\{side === 0 && <SourceLiveAnnouncer \/>\}/);
+  // frame-sidebar 4.16336.0: one announcer per window -- the official KR's SidebarAnnouncer slot in the main window
+  // (frameHost.announcer), the legacy root's own in a window without the official frame.
+  assert.match(main, /\{side === 0 && !frameHost && <SourceLiveAnnouncer \/>\}/);
+  assert.match(main, /announcer: <SourceLiveAnnouncer \/>,/);
   assert.equal(typeof announcer.announcePolite, 'function');
   // Bw renders nothing on the server (portal into document.body needs a document).
   assert.equal(render(React.createElement(announcer.SourceLiveAnnouncer)), '');

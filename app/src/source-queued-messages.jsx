@@ -3,7 +3,10 @@ import React, { useCallback, useMemo, useState } from "react";
 // scripts/extract-queued-bar.mjs); the host's restatement of the 2.2553.1 bar (SingleRow / MultiEntry / Row / RowMenu and
 // their .sqm-* rules) is gone. This module is the host side: the Codex queue's entries and in-flight state as VE's props
 // and stores, and Jfe's exit (useQueuedBandExit).
-import { QueuedMessageBar } from "./generated/queued-bar/queued-bar.mjs";
+// Round 3 / wave 8 cutover (rl-queued-bar-pierre): the 4.16336.0 bar cf74bc599 wO (scripts/extract-queued-bar-v4.mjs).
+// Its props are VE's plus steerHeadOnly / joinTop and entry.seeded / waitingLane, which the Codex queue does not have:
+// they stay absent (wO's defaults: `steerHeadOnly === !0` false, no joinTop, no seeded / steer-lane entries).
+import { QueuedMessageBar } from "./generated/queued-bar-v4/index.mjs";
 import { QueuedBarStateContext } from "./source-queued-bar-adapter.jsx";
 import { bandAccentClassName } from "./generated/session-rail-changes/branch-row-classes.mjs"; // shared-6 C_ (gen-final-7 D1: its one copy)
 import { queuedBandStep, queuedBandView } from "./queued-messages-model.mjs";

@@ -48,6 +48,36 @@ export const HOST_GROWTHBOOK = Object.freeze({
   // W14-code r4 sidebar-new fr4-07 (E81; Uon `1002481325:{rule:"always",value:!0}`): the sidebar hover card's edit-type
   // tools (shared-20 DO `ve("__gb__1002481325")`, jO `(c || !EO(e)) && wO(…)`) are offered inline with their diff body.
   __gb__1002481325: true,
+  // Region batch 1 btw-pane (4.16336.0, Uon `1951358650:{rule:"always",value:!0}`): shared-1 sI, read by the /btw and
+  // approval-card focus hand-back CI (generated/btw-pane-v4/focus-hand-back.mjs through btw-focus-host.mjs): a
+  // keyboard-activated click (mouse-typed, buttons 1, no sourceCapabilities) counts as a keyboard decision.
+  __gb__1951358650: true,
+  // surfaces-prod-2 host-native (4.16336.0 Wbn, the 3P desktop's bootstrap defaults; index.chunk-Du-Wqi0E.js @2536501, read
+  // by pxn/fxn; audit: analysis/…/surfaces-prod-2/host-native/tools/gb-align.mjs). Only keys a live 4.16336.0 area reads
+  // land here; keys read only by a staged -v4 output wait for its cutover (cowork_subagent_model "inherit",
+  // yukon_silver_clocks follows scheduledTasksEnabled → true; yukon_silver_config computed coworkConfig), as does
+  // __gb__1616707004 (approval-landing cluster).
+  //   claude_ai_plugins_in_chat (`1179150525:{rule:"always",value:!0}`): settings-nav (shared-55 `_ = ht("claude_ai_plugins_in_chat")`,
+  //   `y = g === "chat" && !_ ? v : void 0`) draws the Customize › Plugins row enabled on the Chat surface too, without
+  //   "Plugins are only available in Cowork and Code".
+  __gb__1179150525: true,
+  //   `130942744:{rule:"always",value:!0}`: home-chat-cowork shared-123 DB's admin-withheld gate (read only behind bB = !1).
+  __gb__130942744: true,
+  // W8A-3 (round4 wave8b sidebar; ruling D32): chilling_sloth_clocks (Wbn `2971093051:{rule:"follows",condition:
+  // "scheduledTasksEnabled"}`, uxn `scheduledTasksEnabled: e => e.scheduledTasksEnabled`; the desktop answers
+  // `scheduledTasksEnabled: rT() && B_n("coworkRoutines", …)`, rT = T_n(q()) `e.workspace?.scheduledTasksEnabled !== !1`,
+  // true on this host, which runs its scheduled tasks itself — the same answer as yukon_silver_clocks). Read by shared-123
+  // fR (`t = V("chilling_sloth_clocks")`, with lR().enabled + NA().onThisDevice + CCDScheduledTasks) → shared-31 Om
+  // ccdEnabled → the Code sidebar's "Scheduled" row (shared-21 qN `p = d.codeEnabled`).
+  __gb__2971093051: true,
+  // Round-4 wave 8d sidebar lane (ruling R4-G1: a copy-only flag the 3P defaults omit takes the value the user's official
+  // screenshots prove): claude_ai_unified_routines (`__gb__2405438802`; not in Wbn, so a 3P desktop reads it off). Read by
+  // shared-140 Aa `function Aa(){return Ce(ka)}` (ka = "claude_ai_unified_routines"), re-exported as shared-18 aq and read
+  // by shared-21 qN (`i = mu()`, mu = aq): `n.id === "scheduled" && t === "code" && !i && (p = e.formatMessage(zN.routines))`,
+  // so off draws the Code nav row "Routines" and on keeps zN.scheduled "Scheduled". Evidence: official-reference/
+  // user-screens/02 (official 4.16336.0, Code mode) labels that row "Scheduled". Its other readers only pick strings
+  // (shared-18 cq message set, shared-57 XE untitled name, shared-140 sd delete-dialog copy); no request depends on it.
+  __gb__2405438802: true,
   // W14-code r4 E90 / E95 rollback switches (host entries, not desktop GrowthBook flags; looked up by name through
   // growthBookFlagKey). Open: the official layout, which needs the user's GUI check; set false to roll back.
   //   local_popout_traffic_lights: pane windows fill the window and share the title row with the traffic lights
@@ -84,6 +114,16 @@ export const HOST_GROWTHBOOK = Object.freeze({
   //     brings back the host's Code notice region (source-sleep-notice.jsx SourceCodeNoticeRegion: Ide's providers, the
   //     c227f4d5e slot table, the Rde stack in rI's order) that the round-6 sleep lane mounted; needs the user's GUI check.
   [growthBookFlagKey("local_code_notice_region")]: false,
+  //   local_new_page_home (integration-3 review-0 P1; host gate ruling, rollback switch): the Chat / Cowork new page draws
+  //     the "home" arm of shared-19 pS (fS.home: columnTopOffsetClass Gx, greetingLockup "compact" → $x Qx
+  //     clamp(1.5rem,1.15rem+1vw,2rem) + uS font-ui-serif 360, greetingSlotClass "mt-3 w-full", phone seat "top") instead
+  //     of "classic". Officially the arm is GrowthBook __gb__1085985672 new_page_home, live only on the hub home route
+  //     (shared-21 Ay `homeLayoutLive: a.gateOn && a.stringsDelivered`; ce73cda51 Ha's outside-hub eligibility is the
+  //     constant Va=!1) or through the new-page-layout-latch; it is not in the desktop's Uon, so a 3P desktop draws
+  //     classic. The user's official 4.16336.0 (official-reference/user-screens/03, a 1P account) draws home: heading cap
+  //     2.36× the sidebar N cap vs 2.85× for classic (38/32), heading ~35–40 px lower — so the host takes that arm.
+  //     false: classic (D29 / D31). Read by source-chat-home.jsx newPageLayoutVariant and source-surfaces.jsx.
+  [growthBookFlagKey("local_new_page_home")]: true,
 });
 /**
  * The table key of a GrowthBook feature: shared-0 Do (`function Do(e){if(e.startsWith("__gb__"))return e.slice(6);let
@@ -100,4 +140,15 @@ export function growthBookFlagKey(flag) {
 }
 export function hostGrowthBookFlag(flag) {
   return HOST_GROWTHBOOK[growthBookFlagKey(flag)] === true;
+}
+// cds-core wave 8 (cds-wave8/design/plan.json classification b, W8-M2): the two GrowthBook readers cds-core now holds the
+// callers of, answered from this one table (no GrowthBook client on the host):
+//   shared-0 Ru `function Ru(e){let t=ju();return t?t.isOn(yu(e)):!1}` — no client: false; a listed `true` is on. Same answer
+//   as hostGrowthBookFlag (one reader, one table).
+//   shared-0 Ku `function Ku(e,t){let n=ju();return n?n.evalFeature(yu(e)).value??t:t}` — no client: the caller's fallback t;
+//   a listed value is the feature's value (`?? t` as officially).
+export const hostGrowthBookIsOn = hostGrowthBookFlag;
+export function hostGrowthBookValue(flag, fallback) {
+  const key = growthBookFlagKey(flag);
+  return (Object.hasOwn(HOST_GROWTHBOOK, key) ? HOST_GROWTHBOOK[key] : undefined) ?? fallback;
 }

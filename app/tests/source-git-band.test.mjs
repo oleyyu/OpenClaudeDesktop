@@ -37,8 +37,8 @@ const REPO_ITEMS = [{ label: 'Show in Finder', onSelect: noop }, { label: 'Copy 
 let railModules;
 async function withRail(fn) {
   const saved = { window: Object.getOwnPropertyDescriptor(globalThis, 'window'), document: Object.getOwnPropertyDescriptor(globalThis, 'document') };
-  globalThis.document = { createElement: () => ({ relList: { supports: () => false } }), querySelector: () => null, documentElement: { getAttribute: () => null } };
-  globalThis.window = { localStorage: undefined, matchMedia: undefined, navigator: { userAgent: 'Mozilla/5.0 (X11; Linux x86_64)' } };
+  globalThis.document = { cookie: '', createElement: () => ({ relList: { supports: () => false } }), querySelector: () => null, documentElement: { getAttribute: () => null, hasAttribute: () => false } };
+  globalThis.window = { addEventListener() {}, removeEventListener() {}, localStorage: undefined, matchMedia: undefined, navigator: { userAgent: 'Mozilla/5.0 (X11; Linux x86_64)' }, location: { pathname: '/' } };
   try {
     railModules ??= { adapters: await server.ssrLoadModule('/src/source-session-rail-changes-adapters.jsx'),
       chip: await server.ssrLoadModule('/src/generated/session-rail-kit/branch-chip.mjs') };
@@ -256,7 +256,10 @@ test('W14-code r8 css8-gh-hint-popover-host: GhHint is c219730b0 ii / ai verbati
     'side:"top",align:"end",sideOffset:8,padding:"md"'])
     assert.ok(official.includes(needle), needle);
   const source = (await fs.readFile(path.resolve(import.meta.dirname, '../src/source-git-status.jsx'), 'utf8')).replace(/^\s*(?:\/\/|\/\*\*|\*)[^\n]*\n/gm, '');
+  // host-wiring fix-code-a: GhHint is only rendered as the prStatusHint value inside 3.6556.2 session-rail-changes pr-rows,
+  // so its Button / Icon / Popover stay on that graph (view-tabs), not cds-core, until the surface itself migrates.
   assert.match(source, /import \{ CdsButton, CdsIcon, CdsPopover \} from "\.\/generated\/view-tabs\/index\.js";/);
+  assert.doesNotMatch(source, /cds-core/);
   assert.doesNotMatch(source, /SourcePopover|\bIcon\b(?! name)|from "\.\/icons"|sg-gh-|\.css"/);
   for (const needle of [
     '<CdsPopover.Root>',

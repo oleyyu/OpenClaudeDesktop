@@ -525,3 +525,26 @@ test('SourceSlashMenu: the active row is described by SkillDescriptionTooltip (c
   assert.equal(find(portal.children, (node) => node.props?.role === 'tooltip'), null, 'no hand-drawn role="tooltip" layer');
   assert.doesNotMatch(source('source-slash-menu.css'), /slash-description/);
 });
+
+// 4.16336.0 shared-7: the Effort popup opens with thinking.description as a header and lists one-line rows; a
+// harness's per-level descriptions (DeepSeek Harness: "Use for simple tasks that do not need reasoning.") stay off.
+test('model menu Effort submenu: description header on top, level rows without descriptions', async () => {
+  const mod = await server.ssrLoadModule('/src/source-model-menu.jsx');
+  const levels = [
+    { id: 'off', description: 'Use for simple tasks that do not need reasoning.' },
+    { id: 'low', description: 'Prefer for routine or latency-sensitive tasks.' },
+    { id: 'high', description: 'The default balance for most tasks.', badge: { message: 'Default', variant: 'neutral' } },
+    { id: 'max', description: 'Reserve for the hardest quality-first tasks.' },
+  ];
+  const menu = renderOnce(mod.SourceModelMenu, { models: [{ id: 'm', name: 'M' }], selected: 'm', effort: { levels, value: 'high', onPick() {} } });
+  const sectionEl = find(menu, (node) => node.props?.levels === levels);
+  assert.ok(sectionEl, 'effort section rendered');
+  const section = renderOnce(sectionEl.type, sectionEl.props);
+  const popup = find(section, (node) => node.type === SourceMenu.Popup);
+  const kids = React.Children.toArray(popup.props.children).filter(Boolean);
+  assert.equal(kids[0].type, SourceMenu.Header);
+  assert.equal(kids[0].props.children, mod.EFFORT_MENU_DESCRIPTION);
+  const rows = React.Children.toArray(kids[1].props.children);
+  assert.deepEqual(rows.map((row) => row.props['data-effort-id']), ['off', 'low', 'high', 'max']);
+  for (const row of rows) assert.equal(row.props.description, undefined, `${row.props['data-effort-id']} has no second line`);
+});

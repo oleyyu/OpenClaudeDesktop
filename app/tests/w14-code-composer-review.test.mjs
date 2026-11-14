@@ -10,6 +10,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
 import { HELD_TEXT_MAX, editHeldText, isHeldText, makeHeldText, withHeldText } from '../src/composer-attachments-model.mjs';
+import { designEntryStylesheets } from '../scripts/current-design-assets.mjs';
 
 const app = path.resolve(import.meta.dirname, '..');
 const assets = path.resolve(app, '../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1');
@@ -93,7 +94,8 @@ test('Code card outside a pane: the shell draws ChatComposerDropPanel (qf / Kf /
     '"motion-safe:animate-[cds-fade-in_0.2s_cubic-bezier(0.215,0.61,0.355,1)_0.08s_backwards]"', 's(r ? "on-target" : "off-target");', 'e.addEventListener("dragover", r, !0)'])
     assert.ok(shell.includes(s), s);
   assert.ok(!css.includes('.sc-composer[data-drag-over] [data-cds="ChatComposer"] > .sc-card'));
-  const sheet = await fs.readFile(path.join(app, 'public/assets/v1/c6a992d55-Che1orl5.css'), 'utf8');
+  // The c6a992d55 utilities entry sheet index.html loads (current-design-assets: 4.16336.0 c6a992d55-_JRfOmTh).
+  const sheet = await read(`public/assets/v1/${designEntryStylesheets.find((name) => name.startsWith('c6a992d55-'))}`);
   for (const s of ['.border-dashed{', '.border-\\[color\\:var\\(--cds-fill-accent\\)\\]{', '.shadow-\\[inset_0_0_0_2px_var\\(--cds-fill-accent\\)\\]{', '@keyframes cds-fade-in{'])
     assert.ok(sheet.includes(s), s);
 });

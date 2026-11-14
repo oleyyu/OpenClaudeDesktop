@@ -1,5 +1,8 @@
-// W12b w12b-usage-notices: the 3.6556.2 usage band's live reset countdown (c227f4d5e QF / $F, sliced by
-// scripts/extract-usage-countdown.mjs into src/generated/usage-countdown), the reached notice's detail (usage-model.mjs
+// W12b w12b-usage-notices: the usage band's reset countdown. The host's notice card renders the 4.16336.0 c227f4d5e SQ / CQ
+// inside xQ (src/generated/usage-countdown-v4, round-3 switch S2): the absolute time until the minute clock passes the
+// reset, then Resetting…. The 3.6556.2 live countdown (QF / $F, scripts/extract-usage-countdown.mjs into
+// src/generated/usage-countdown) is still generated and checked below as the legacy graph; no host file imports it.
+// Also the reached notice's detail (usage-model.mjs
 // composerUsageNotice countdown / lead), and the Usage page's reset captions on shared-156 lU over the minute clock.
 // Source only: the official chunks are read as text (never run); the generated slice renders with Vite SSR and, for the
 // ticking branches, with React's client renderer in the R3b fake DOM under mocked Date / setTimeout. No window, no GUI.
@@ -20,14 +23,17 @@ import { withPreviewDom } from './fixtures/preview-r3b-dom.mjs';
 const app = path.resolve(import.meta.dirname, '..');
 const v1 = path.join(app, '../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist');
 const chunk = (name) => fs.readFileSync(path.join(v1, 'assets/v1', name), 'utf8');
+const v4 = path.join(app, '../reference/snapshots/claude-4.16336.0-20261104/ion-dist');
+const chunk4 = (name) => fs.readFileSync(path.join(v4, 'assets/v1', name), 'utf8');
 const local = (rel) => fs.readFileSync(path.join(app, rel), 'utf8');
 const count = (text, needle) => text.split(needle).length - 1;
 const h = React.createElement;
 
-let server, Countdown, Notices, Usage, I18n;
+let server, Countdown, Countdown4, Notices, Usage, I18n;
 before(async () => {
   server = await createServer({ configFile: false, root: app, plugins: [react()], server: { middlewareMode: true, hmr: false, ws: false, watch: null }, appType: 'custom', logLevel: 'error' });
   Countdown = await server.ssrLoadModule('/src/generated/usage-countdown/usage-countdown.mjs');
+  Countdown4 = await server.ssrLoadModule('/src/generated/usage-countdown-v4/index.mjs');
   Notices = await server.ssrLoadModule('/src/source-session-notices.jsx');
   Usage = await server.ssrLoadModule('/src/source-usage.jsx');
   I18n = await server.ssrLoadModule('/electron/i18n/index.mjs');
@@ -115,7 +121,23 @@ test('composerUsageNotice: a reached limit carries the countdown; no-remedy bodi
   assert.deepEqual([noReset.details, noReset.countdown], ['', undefined], 'no reset time: the reached detail is empty, like et without _e');
 });
 
-test('SSR: the notice card renders QF inside ZF (aria-hidden text, sr-only absolute); passed resets read Resetting…', () => {
+test('host: the notice card imports the 4.16336.0 SQ / xQ (c227f4d5e-DGDdGBTz, pinned once each), not the 3.6556.2 graph', () => {
+  const notices = local('src/source-session-notices.jsx');
+  assert.equal(count(notices, 'import { UsageNoticeCardContext, UsageResetCountdown } from "./generated/usage-countdown-v4/index.mjs";'), 1);
+  assert.doesNotMatch(notices, /generated\/usage-countdown\//);
+  for (const file of fs.readdirSync(path.join(app, 'src')).filter((name) => /\.(m?js|jsx)$/.test(name)))
+    assert.doesNotMatch(local(`src/${file}`), /from ["']\.\/generated\/usage-countdown\//, file);
+  const band = chunk4('c227f4d5e-DGDdGBTz.js');
+  for (const needle of [
+    'var xQ=F(!1);function SQ(e){let $=J9(9);if(!I(xQ))return J1($,0,e)?K1($,0,e,p(CQ,{...e})):$[1];',
+    'p("span",{"aria-hidden":"true",children:p(CQ,{...e,inNoticeCard:!0})})',
+    'p("span",{className:"sr-only",children:e.absolute})',
+    'if(!(t*1e3<=Ua()))return J1($,0,n)?K1($,0,n,p(T,{children:n})):$[1];let a=i?void 0:"off",o=J0($,2)?K0($,2,p(Q,{defaultMessage:"Resetting\\u2026",id:"26SvXGZRRO"})):$[2];return J1($,3,a)?K1($,3,a,p("span",{"aria-live":a,children:o})):$[4]}',
+    '_(xQ.Provider,{value:!0,children:[D,O]})',
+  ]) assert.equal(count(band, needle), 1, needle);
+});
+
+test('SSR: the notice card renders 4.16336.0 SQ inside xQ (aria-hidden text, sr-only absolute); passed resets read Resetting…', () => {
   const nowSeconds = Math.floor(Date.now() / 1000);
   const notice = (resetsAtSeconds, lead = null) => ({ kind: 'usage', level: 'danger', summary: 'Session limit reached', details: 'Resets at 10:30 AM', dismissKey: `k${resetsAtSeconds}`,
     countdown: { resetsAtSeconds, absolute: 'Resets at 10:30 AM', lead } });
@@ -124,17 +146,19 @@ test('SSR: the notice card renders QF inside ZF (aria-hidden text, sr-only absol
   assert.ok(html(notice(nowSeconds + 1800)).includes('<p class="ssn-details"><bdi><span aria-hidden="true">Resets at 10:30 AM</span><span class="sr-only">Resets at 10:30 AM</span></bdi></p>'));
   // Over an hour out: the absolute text as well.
   assert.ok(html(notice(nowSeconds + 3 * 3600)).includes('<span aria-hidden="true">Resets at 10:30 AM</span><span class="sr-only">Resets at 10:30 AM</span>'));
-  // Passed: Resetting…, no aria-live inside a card.
-  assert.ok(html(notice(nowSeconds - 120)).includes('<span aria-hidden="true"><span class="tabular-nums">Resetting…</span></span><span class="sr-only">Resets at 10:30 AM</span>'));
+  // Passed on the minute clock: Resetting…, no aria-live inside a card (CQ `a=i?void 0:"off"`; 4.16336.0 dropped tabular-nums).
+  assert.ok(html(notice(nowSeconds - 120)).includes('<span aria-hidden="true"><span>Resetting…</span></span><span class="sr-only">Resets at 10:30 AM</span>'));
   // A remedy body leads the countdown.
   assert.ok(html(notice(nowSeconds + 1800, 'Use an earned reset.')).includes('<bdi>Use an earned reset. <span aria-hidden="true">'));
-  // Outside a card (ZF false): $F alone, aria-live off.
+  // Outside a card (xQ false): CQ alone, aria-live off; the 3.6556.2 $F (legacy graph) kept its tabular-nums span.
+  assert.equal(renderToStaticMarkup(h(Countdown4.UsageResetCountdown, { resetsAtSeconds: nowSeconds - 120, absolute: 'x' })), '<span aria-live="off">Resetting…</span>');
   assert.equal(renderToStaticMarkup(h(Countdown.UsageResetCountdown, { resetsAtSeconds: nowSeconds - 120, absolute: 'x' })), '<span aria-live="off" class="tabular-nums">Resetting…</span>');
   // Other notices keep their plain details.
   assert.ok(renderToStaticMarkup(h(Notices.SourceSessionNotices, { notices: [{ kind: 'warning', summary: 'S', details: 'D' }] })).includes('<p class="ssn-details"><bdi>D</bdi></p>'));
 });
 
-test('client: the countdown ticks every second within the hour — {duration}, then minutes:seconds under ten minutes, then Resetting…', async (t) => {
+// The legacy 3.6556.2 graph (still generated, no longer rendered by the host): QF / $F tick every second within the hour.
+test('client (3.6556.2 legacy graph): the countdown ticks every second within the hour — {duration}, then minutes:seconds under ten minutes, then Resetting…', async (t) => {
   const start = new Date(2026, 9, 28, 10, 0, 0).getTime();
   t.mock.timers.enable({ apis: ['Date', 'setTimeout'], now: start });
   await withPreviewDom(async (dom) => {

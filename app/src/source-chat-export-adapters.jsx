@@ -5,6 +5,9 @@
 import { StartMessage } from "./source-code-start-adapters.jsx";
 import { dictionary } from "../electron/i18n/index.mjs";
 export { useStartIntl as useIntl } from "./source-code-start-adapters.jsx";
+// 4.16336.0 (src/generated/chat-export-v4, scripts/extract-chat-export.mjs CHAT_EXPORT_V4): vendor-frame's CommonJS React
+// loader (i) is the host's React, the one cds-core's slices read (src/cds-core-adapter.mjs), never a second copy.
+export { loadHostReact } from "./cds-core-adapter.mjs";
 
 // w13-close-main-jsx-tests (zh "To" context): the catalog is keyed by the English text, and the range's "From" /
 // "To" (H9/0QD/PB9, xdBzfNZWw7; ja-JP 開始日 / 終了日) share it with the email card's headers (mcp-app-card cfdfec14c

@@ -355,7 +355,7 @@ try {
   const settledInline = async () => {
     let last, same = 0;
     for (let attempt = 0; attempt < 60 && same < 4; attempt += 1) {
-      const value = await secondaryTrailing.locator('[data-pane-toggle="terminal"]').count();
+      const value = await secondaryTrailing.locator('button[aria-label="Terminal"]').count();
       same = value === last ? same + 1 : 0;
       last = value;
       await page.waitForTimeout(50);
@@ -363,7 +363,7 @@ try {
     return last;
   };
   if (await settledInline() > 0) {
-    const terminalToggle = secondaryTrailing.locator('[data-pane-toggle="terminal"]');
+    const terminalToggle = secondaryTrailing.locator('button[aria-label="Terminal"]');
     await terminalToggle.waitFor();
     assert.match(await terminalToggle.getAttribute("aria-keyshortcuts"), /^Meta\+J\b/);
     assert.equal(await terminalToggle.getAttribute("aria-pressed"), "false");

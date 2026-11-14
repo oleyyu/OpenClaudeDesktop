@@ -48,6 +48,7 @@ import { parsers } from '../../tools/node_modules/prettier/plugins/babel.mjs';
 import { format } from '../../tools/node_modules/prettier/index.mjs';
 import babel from '../../tools/node_modules/playwright/lib/transform/babelBundle.js';
 import * as official from './official-3.6556.2.mjs';
+import * as official4 from './official-4.16336.0.mjs';
 
 const root = path.resolve(import.meta.dirname, '..');
 // w2-tr-r3b (3.6556.2 migration, R1/E6) moved step 1 (transcript-03, cov1-06, transcript-v01, cov2-05) to 3.6556.2;
@@ -467,7 +468,9 @@ function importOf(src, local) {
   throw Error(`${src.name}: ${local} is not an import`);
 }
 
-export async function extractR3bTranscript({ check = false } = {}) {
+export async function extractR3bTranscript({ check = false, version = referenceVersion, ...options } = {}) {
+  if (version === official4.referenceVersion) return extractR3bTranscriptV4({ check, ...options });
+  if (version !== referenceVersion) throw Error(`extract-r3b-transcript has no ${version} source contract`);
   const cache = new Map();
   const published = await viewTabsPublic();
   const emitted = [];
@@ -620,4 +623,865 @@ export async function extractR3bTranscript({ check = false } = {}) {
   console.log(`${check ? 'Verified' : 'Extracted'} ${manifest.modules.length} R3b transcript modules (${v3} from ${V3}, ${manifest.modules.length - v3} from ${V2}; ${count} original bindings, ${manifest.callSites.length} pinned call sites).`);
   return manifest;
 }
-if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) await extractR3bTranscript({ check: process.argv.includes('--check') });
+// ---------------------------------------------------------------------------------------------------------------------
+// 4.16336.0 (region batch 2b; region-plan G6, cutover.oldConsumersAtGeneration = chat-renderer, code-transcript,
+// sessions-page, transcript-rows). Those four regions are still 3.6556.2 and link src/generated/r3b-transcript by
+// original identity (session-file-access, page-leave-state, error-stack, invisible-characters, table-column-freeze), so
+// that graph stays on 3.6556.2, byte for byte, until they move (productionSwitchNotBeforeBatch 10). A second source
+// contract cuts the same semantic exports from snapshots/claude-4.16336.0-20261104 into the isolated graph
+// src/generated/r3b-transcript-v4 (the retry-decision / approval-landing staging form).
+//
+// Where the 4.16336.0 originals live (every root names its chunk export alias, proved against the chunk's export table, or
+// null for a private root, which the chunk must not export; every root must also be the only top-level declaration of its
+// chunk carrying its features, `twins` naming byte-identical declarations a feature cannot tell apart):
+//   c89efce1a-CleBUUAy.js cu (`f`) / su        the table column freeze, now with a third argument (hold the appended row
+//                                               out of the measurement while streaming) and its re-measure stride.
+//   c05b96c7f-3na38kSt.js $c (`nn`)            the row-crash copy (unchanged).
+//   shared-0-CnnWnVrT.js $N / ZN / zk / dV     chunk-load classification, stack carry-over, document teardown.
+//   shared-62-DoCqVpIq.js cf (`Z_`)            the page is unloading (3.6556.2 shared-52 Mf).
+//   shared-26-B-POtn5S.js Ds / Ts / Ss         the render-error boundary (new: `unreported`, the console form through the
+//                                               preload helper's o11y error text), its sanitizer and class.
+//   preload-helper-BBljBeZo.js e (`n`)         the o11y error text a sanitised stand-in carries (cds-core holds it, pure).
+//   shared-31-C9BqSSuD.js ST (`$`)             the per-part boundary (3.6556.2 shared-4 uk).
+//   c4a9ee384-BWj_BT12.js Jd / Zd / yf / vf    the row boundary, its fallback, the per-view gate and its flag.
+//   cc0a875c8-CEwFiq99.js f / d, c81ea1931 e    EmptyState and its icon; the mouse-down guard.
+//   cf74bc599-BytvntCE.js vS                   the unavailable-transcript state, now memo() and with `ageLimitedByOrg`.
+//   step 2 (toolcards-06/07): c60636ac6 Ze, shared-55 mV / gV (path tooltip, 3.6556.2 cc5c56f5c), shared-18 tP and
+//   cced621b6 t (the caret drop style and the CaretRightFilled override, now a constant the caret reads unless atRowEnd),
+//   c425fb3cf q / K / Q / H / W, shared-92 pk (file basename, 3.6556.2 shared-52 nk), shared-3 rN (relative path,
+//   3.6556.2 shared-28 TM), c761aa8b9 ea (the muted action class, now a CSS variable colour), c19ad462c n / r, shared-9 MT
+//   (file icon name), c856385e2 (the session file access contexts; providers are exported `.Provider` declarations) and
+//   c96d752d0 nrt (memo $nt: the Turn edits card, with Created / Changed / Edited titles, the a$ / o$ rows and the Qnt
+//   list), s$, art, Znt.
+// Resolution (sharedGraph 'cds-core', the btw-pane / approval-landing 4.16336.0 rules): an import resolves to a host
+// adapter (adapters4, feature-pinned), React (assertVendorAlias), a cds-core publicName (its raw declaration hash checked,
+// linkedSha256) or a module emitted earlier here. A same-chunk binding cds-core publishes is linked (a published root is
+// re-exported under its semantic name); one it holds without a publicName is cut again only when pure and hash-equal
+// (heldByCdsCore); held module state stops generation (D46, stateConflicts with text and reachedBy). React Compiler
+// helpers cds-core holds unnamed are cut once in compiler-helpers.mjs, proved by assertCompilerHelpers.
+const V4 = official4.referenceVersion;
+const output4 = path.join(root, 'src/generated/r3b-transcript-v4');
+const loose4 = feature => ({ loose: feature });
+// Host dependencies of the 4.16336.0 graph: chunk -> export alias -> { name, features } (features on the closure of the
+// aliased declaration, as for 3.6556.2). The names are the ones src/source-r3b-transcript-adapters.jsx exports.
+const adapters4 = {
+  'vendor-intl-BJgYK7RA.js': {
+    p: { name: 'useIntl', features: ['[React Intl]'] },
+    l: { name: 'FormattedMessage', features: ['textComponent'] },
+    // sn (exported r): react-intl's FormattedList (the +N −M counts' sr-only text); the host re-exports one copy.
+    r: { name: 'FormattedList', features: ['sn = J("formatList")'] },
+  },
+  // shared-0 qB (exported zd; 3.6556.2 bN / Id): the render-error report (D17: this host sends no telemetry).
+  'shared-0-CnnWnVrT.js': { zd: { name: 'reportRenderError', features: [loose4('I(xN, F.O11Y_INTERNALS)')] } },
+  // c3320899b o (exported n): a GrowthBook value pinned for one view.
+  'c3320899b-D8pnTMal.js': { n: { name: 'useViewPinnedFlag', features: [loose4('let r = c(t);'), loose4('r.pinned === null')] } },
+  // shared-92 uk (exported xp; 3.6556.2 shared-78 rC / Tb): retention may have expired (GrowthBook + org match).
+  'shared-92-BOgyxePb.js': { xp: { name: 'useRetentionMayHaveExpired', features: ['("__gb__2142364912")', '=== "another"'] } },
+  // shared-123 v$ (exported It; 3.6556.2 shared-78 t3 / n): preload props of a lazy dialog trigger.
+  'shared-123-1Hc1RTKl.js': { It: { name: 'useDialogPreloadProps', features: ['e?.preload("intent")', 'onPointerEnter: n, onFocus: n, onPointerDown: n'] } },
+  'shared-39-ZCs0lAwB.js': {
+    // Wc (exported $s; 3.6556.2 shared-11 Ps / Ss): the organization's local-sessions policy (now also off when sessions
+    // do not run on this device).
+    $s: { name: 'useLocalSessionsPolicy', features: ['disableDesktopLocalSessions?.value === !0', 'disabledByPolicy: !0,', 'knownAllowed: !1,', 'rereadPolicy: r,'] },
+    // Ol (exported zs; 3.6556.2 shared-11 gc / us): the claudeai_cc_epitaxy_session_presets_main gate (D10: on).
+    zs: { name: 'useSessionPresetsMain', features: ['"claudeai_cc_epitaxy_session_presets_main"', loose4('return Ke(Dl);')] },
+  },
+  'shared-20-DUEo90UF.js': {
+    xa: { name: 'useCliSessionImport', features: [loose4('return !!Ce?.importAllCliSessions;')] },
+    Sa: { name: 'openCliSessionImport', features: ['submitAction', 'actingWindow: e'] },
+    _a: { name: 'cliImportDialog', features: ['id: "epitaxy_cli_import_dialog"', 'pick: (e) => e.EpitaxyCliImportDialogBody'] },
+  },
+  'c73f45bc3-C7dtUSq8.js': { Ar: { name: 'useSessionRemoved', features: ['{ sessionId: t, onSessionRemoved: n } = e,', loose4('? (n(e), t !== void 0 && Qr(t))')] } },
+  'c48ea26ad-DTl74jog.js': { o: { name: 'useSessionArchiveDelete', features: ['archiveSession: d,', 'isArchiving: f,', 'sessionTitle: r,', 'afterRemoval: i,'] } },
+  'c03935b01-BylKMWqe.js': {
+    Tt: { name: 'usePaneStoreState', features: [loose4('return (u(vf) ?? yf).getState();')] },
+    Dt: { name: 'usePaneStoreContext', features: [loose4('function wf() { return u(vf); }')] },
+    Et: { name: 'usePaneStore', features: [loose4('let t = u(vf); return $e(t ?? yf, e);')] },
+  },
+  'cc6e9624e-QSsNXeYh.js': { l: { name: 'useToolGroupExpanded', features: [loose4('t.groups[e] ?? r'), loose4('i.getState().setGroupExpanded(e, t);')] } },
+  'c280f9bbb-BOcpax9X.js': { t: { name: 'FileTypeIcon', features: ['{ fileName: n, size: i, className: a, fallback: o } = e,', loose4('if (v === null && o !== void 0) return o;')] } },
+  'c856385e2-Cqx37C-b.js': { a: { name: 'FilePathMenu', features: [loose4('trigger: o,'), loose4('surface: a,'), loose4('beforeOpen: f')] } },
+};
+// Same-chunk declarations answered by the host (the declaration itself must carry `features`).
+const chunkAdapters4 = {
+  'c96d752d0-D9VB6ArX.js': {
+    // KQ: the Turn edits summary of a turn's entries (3.6556.2 s1); host: turn-edits-model.mjs turnEdits().
+    KQ: { name: 'turnEditsSummary', features: [loose4('for (let e of jW(a, t).runs) {'), 'soleVisibleEditToolRow: n.size === 1 && r === 1 && i'] },
+    // irt / rrt: the artifact row's label and opener, and its glyph (3.6556.2 G0e / W0e). No artifacts here.
+    irt: { name: 'useArtifactPageLink', features: ['defaultMessage: "Untitled artifact"', loose4('i = Hz(r, t),')] },
+    rrt: { name: 'ArtifactPageIcon', features: ['f(qe, { name: "Artifacts", size: "sm" })', 'className: `flex ${n.inkClass}`'] },
+  },
+};
+const helperNames4 = names => Object.fromEntries(names.map(name => {
+  const helper = Object.values(official4.compilerHelpers).find(h => h.name === name);
+  if (!helper) throw Error(`official-4.16336.0 has no compiler helper ${name}`);
+  return [helper.local, name];
+}));
+// The React Compiler helpers this graph reads (cds-core holds them unnamed; memoStoreDeps4 is published).
+const HELPERS4 = ['reactMemoCache', 'memoIsEmpty', 'memoChanged1', 'memoChanged2', 'memoChanged3', 'memoChanged4', 'memoChanged5',
+  'memoStore0', 'memoStore1', 'memoStore2', 'memoStore3', 'memoStore4', 'memoStore5', 'memoStoreValueFirst1', 'memoStoreValueFirst2', 'memoStoreValueFirst3',
+  'memoStoreValueFirst5', 'memoStoreDeps1'];
+const contract4 = {
+  official: official4, output: output4, label: 'R3b transcript 4.16336.0', sharedGraph: 'cds-core',
+  adapterModule: '../../source-r3b-transcript-adapters.jsx',
+  isolatedGraph: { legacyOutput: 'src/generated/r3b-transcript', productionSwitchNotBeforeBatch: 10,
+    heldBy: ['chat-renderer', 'code-transcript', 'sessions-page', 'transcript-rows', 'src/source-r3b-transcript-adapters.jsx',
+      'src/source-r3b-transcript.jsx', 'src/source-turn-edits.jsx', 'src/source-session-error-boundary.jsx', 'src/source-response-table.jsx',
+      'src/source-code-transcript.jsx', 'src/source-file-tabs.jsx', 'src/source-preview-pane.jsx', 'src/source-terminal-pane.jsx',
+      'src/source-session-rail.jsx', 'src/source-session-rail-adapters.jsx', 'src/source-transcript-tool-rows.jsx', 'src/turn-edits-model.mjs'] },
+  // Every chunk is parsed as shipped: declarations are cut from (and hashed by, as cds-core does) the shipped bytes and
+  // the module is prettier-formatted as a whole; features are matched on the prettier form of the one declaration they
+  // name (featureText4), the uniqueness scan pre-filters the shipped text first.
+  rawSources: { has: () => true },
+  hostGlobals: new Set(['Math', 'Number', 'Array', 'Object', 'Error', 'String', 'Set', 'Map', 'WeakMap', 'WeakSet', 'JSON', 'Symbol', 'Promise',
+    'performance', 'globalThis', 'getComputedStyle', 'document', 'window', 'Infinity', 'undefined', 'RegExp', 'Date', 'decodeURIComponent', 'crypto',
+    'Boolean']),
+  adapters: adapters4, chunkAdapters: chunkAdapters4,
+  // D1 (one copy): pure 4.16336.0 bindings another region's 4.16336.0 graph already cuts are linked from it, not cut
+  // again. linkedArea4 proves the other manifest is this version and snapshot, the module's bytes and source chunk, and
+  // that the binding there is byte for byte the declaration this chunk ships.
+  linkedAreas: {
+    // shared-0 Tl (exported nS): lazyValue, the region-plan resliceInsteadOfLink binding r3b-tasks owns (r4e-plugin's
+    // allowed re-cut is not linked).
+    'shared-0-CnnWnVrT.js#Tl': { area: 'r3b-tasks', target: 'lazy-value.mjs', exportName: 'lazyValue' },
+    // (cds-wave8 addendum W8A: shared-0 T6 (exported St), the invisible / unassigned code point class, left this list.
+    // r4e-plugin's url-safety cut it only for its link-text reader, which now links the published owner value
+    // (identity_*, cds-core) and no longer reaches T6, so r4e-plugin neither cuts nor exports it; this graph cuts the
+    // pure regex itself again (held by cds-core, unpublished; heldByCdsCore), one copy outside cds-core as before. Was:
+    // 'shared-0-CnnWnVrT.js#T6': { area: 'r4e-plugin', target: 'url-safety.mjs', exportName: 'T6' }.)
+  },
+  // D1 / D46 outside cds-core: module state this graph cuts that another 4.16336.0 region also cuts is a split
+  // instance. Each such copy must be listed here: `areas` = exactly the regions that may hold it, or `anyAreas` for a
+  // copy that is interchangeable (a lazily built constant). Writing (no --check) fails closed on an unlisted copy, a
+  // region outside `areas`, or a stale entry; --check (run by prepare-ui while other regions regenerate) reports
+  // those on stderr instead, since they are caused by another region's output, and tests/r3b-transcript-v4.test.mjs
+  // asserts them strictly. The manifest records only this contract's side (no other region's manifest sha), so
+  // another region regenerating never changes these bytes.
+  //
+  // shared-62 af (the page-unloading timestamp) left this list in cds-core wave 5: cds-core holds af with its writer sf,
+  // its reader cf and the official pagehide / pageshow registration, and publishes them (pageUnloadingAt,
+  // markPageUnloading, isPageUnloading), so neither this graph nor session-load-error cuts a copy any more.
+  foreignState: {
+    // shared-frame zm (the RegExp Bm builds on first use) left this list in cds-core wave 5: cds-core holds and publishes
+    // zm / Bm (invisibleCharsPatternCache, getInvisibleCharsPattern), so this graph links them instead of cutting a copy.
+  },
+  modules: [
+    // E3: React Compiler helpers cds-core holds without a publicName (memoStoreDeps4 is published and linked instead).
+    { target: 'compiler-helpers.mjs', source: official4.sharedFrame, compilerHelpers: true, exports: helperNames4(HELPERS4) },
+    // ---- Step 1.
+    { target: 'table-column-freeze.mjs', source: 'c89efce1a-CleBUUAy.js', exports: { cu: 'useTableColumnFreeze', su: 'tableRemeasureStride' },
+      aliases: { cu: 'f', su: null },
+      features: {
+        cu: ['t?.tHead?.rows[0]?.cells', loose4('(c.current = { rows: u, tail: d }),'), loose4('f && f.rows === u && f.tail === d'),
+          loose4('if (p && u > 1 && !m && u - p.rows < su(p.rows)) {'), loose4('_.some((e, t) => Math.abs(e - b[t]) > Math.max(ru, iu * b[t]))'),
+          loose4('g = r && u > 1 && f !== null && u > f.rows ? l.rows[u - 1] : null;')],
+        su: [loose4('return Math.min(ou, Math.max(1, Math.floor(e / au)));')],
+      } },
+    // vendor-intl tn (exported f): react-intl defineMessages, the identity; nn (exported d, defineMessage) is its twin.
+    { target: 'define-messages.mjs', source: 'vendor-intl-BJgYK7RA.js', exports: { tn: 'defineMessages' }, aliases: { tn: 'f' },
+      features: { tn: [loose4('function tn(e) { return e; }', )] }, twins: { tn: ['nn'] } },
+    { target: 'row-crash-messages.mjs', source: 'c05b96c7f-3na38kSt.js', exports: { $c: 'transcriptRowCrashMessages' }, aliases: { $c: 'nn' },
+      features: { $c: ['defaultMessage: "Couldn\\u2019t load this.", id: "vHA8qpGWmW"', 'defaultMessage: "This response didn\\u2019t load.",', 'id: "qlw7hIBZl4"',
+        'retry: { defaultMessage: "Try again", id: "FazwRldA7z" }', 'defaultMessage: "Couldn\\u2019t load this. Reload the page to continue.",', 'id: "BPi/T6wZmd"',
+        'reload: { defaultMessage: "Reload", id: "fdCS5/bISp" }'] } },
+    // shared-0 T6 (exported St): the invisible / unassigned code point class shared-3 MM (relativePath's display form)
+    // reads. cds-wave8 addendum W8A: r4e-plugin no longer cuts it (see linkedAreas), so this graph cuts the pure regex
+    // itself; cds-core holds it unpublished (heldByCdsCore), one copy outside cds-core as before.
+    { target: 'invisible-code-points.mjs', source: 'shared-0-CnnWnVrT.js', exports: { T6: 'invisibleCodePointPattern' }, aliases: { T6: 'St' },
+      features: { T6: ['\\p{Default_Ignorable_Code_Point}', '\\uFDD0-\\uFDEF'] } },
+    { target: 'chunk-load-error.mjs', source: 'shared-0-CnnWnVrT.js', exports: { $N: 'isChunkLoadError', ZN: 'chunkLoadErrorLiteral' }, aliases: { $N: 'Sm', ZN: 'Cm' },
+      features: { $N: ['e.name === "ChunkLoadError"', loose4('return n ? ZN(n) !== void 0 : !1;')],
+        ZN: [loose4('return YN.find((e) => (e === JN ? t.includes(e) : n.startsWith(e)));')] } },
+    { target: 'error-stack.mjs', source: 'shared-0-CnnWnVrT.js', exports: { zk: 'withOriginalStack' }, aliases: { zk: 'Zm' },
+      features: { zk: [loose4('let { headed: n, frames: r } = Bk(e);'), loose4('n || r.length === 0')] } },
+    // shared-62 cf (exported Z_, a pagehide mark within 30 s; 3.6556.2 shared-52 Mf) is cds-core isPageUnloading since
+    // cds-core wave 5 (which also carries the official pagehide / pageshow registration that writes af), so the former
+    // page-leave-state.mjs had every root linked and is dropped: render-error-boundary imports cf from cds-core.
+    // shared-0 dV (exported Id): the document is tearing down (3.6556.2 s$). Nothing on this host marks it.
+    { target: 'document-teardown.mjs', source: 'shared-0-CnnWnVrT.js', exports: { dV: 'documentTearingDown' }, aliases: { dV: 'Id' },
+      features: { dV: [loose4('function dV() { return iV; }'), { reads: ['"Document teardown was cancelled"', loose4('iV = !1')] }] } },
+    // preload-helper e (exported n): the o11y error text the boundary's console form carries (Symbol.for("ant.o11y.errorText")).
+    { target: 'error-text.mjs', source: 'preload-helper-BBljBeZo.js', exports: { e: 'withErrorText' }, aliases: { e: 'n' },
+      features: { e: ['Symbol.for("ant.o11y.errorText")', 'value: { text: t, kind: n },'] } },
+    { target: 'render-error-boundary.mjs', source: 'shared-26-B-POtn5S.js',
+      exports: { Ds: 'RenderErrorBoundary', Ts: 'renderErrorSanitizer', Ss: 'renderErrorClass' }, aliases: { Ds: '$b', Ts: 'ex', Ss: 'nx' },
+      features: {
+        Ds: ['static getDerivedStateFromError(e) {', 'e.resetOn !== this.props.resetOn', 'return typeof r == "function" ? r(e, this.reset) : r;',
+          'source: "render_error_boundary"', 'return this.props.terminalFallback ?? null;', 'tagsOf(e) {', 'if (this.props.unreported) return;',
+          '"A part of the page failed to draw"'],
+        Ts: ['Error(n === void 0 ? `${e}: ${t.name}` : `${e}: ${t.name}: ${n}`)'], Ss: [loose4('return xs(e)?.cls;')],
+        ws: ['document_tearing_down:', 'visibility_state: document.visibilityState'],
+      } },
+    { target: 'row-part-boundary.mjs', source: 'shared-31-C9BqSSuD.js', exports: { ST: 'RowPartBoundary' }, aliases: { ST: '$' },
+      features: { ST: ['return { caught: !0, error: e };', loose4('(this.state.caught && gT(this.state.error, this.props.part),')] } },
+    { target: 'transcript-row-boundary.mjs', source: 'c4a9ee384-BWj_BT12.js',
+      exports: { Jd: 'TranscriptRowBoundary', Zd: 'TranscriptRowCrashed', yf: 'useTranscriptRowBoundaryGate', vf: 'TRANSCRIPT_ROW_BOUNDARY_FLAG' },
+      aliases: { Jd: 'T', Zd: 'w', yf: 'f', vf: null },
+      features: {
+        Jd: ['componentName: "TranscriptRow"', 'y = r === void 0 ? "classic" : r,', '{ ...i, surface: n, rows: y }', 'announce: y !== "shared",',
+          loose4('if (K(e) || h?.(e) === !0) throw e;'), loose4('(S(), f?.(), n());')],
+        Zd: ['"data-transcript-row-crashed": t,', '"data-transcript-row-stage": p,', 'className: "py-sm",', 'name: "WarningCircle", size: "auto"',
+          'variant: "secondary",', '"aria-describedby": f,', loose4('u = Qd("[data-transcript-row-crashed]", r),'), 'h = c ? void 0 : "none",',
+          loose4('? _n.partNeedsReload'), loose4('l.formatMessage(_n.reload)')],
+        yf: [loose4('return bf(vf, e, t === void 0 || t);')], vf: ['vf = "__gb__3525173228"'],
+      } },
+    { target: 'empty-state.mjs', source: 'cc0a875c8-CEwFiq99.js', exports: { f: 'EmptyState', d: 'EmptyStateIcon' }, aliases: { f: 't', d: 'n' },
+      features: { f: ['textRole: _,', loose4('f && e("p", { className: o, children: f })'), loose4('h && e("div", { className: l, children: h })'),
+        loose4('t("div", { role: g, className: r, children: [y, C, w, T] })')],
+        d: ['size: "lg", className: i'] } },
+    { target: 'prevent-mouse-down.mjs', source: 'c81ea1931-ChuE7vym.js', exports: { e: 'preventMouseDown' }, aliases: { e: 't' },
+      features: { e: ['return e.preventDefault()'] } },
+    { target: 'transcript-unavailable.mjs', source: 'cf74bc599-BytvntCE.js', exports: { vS: 'TranscriptUnavailable' }, aliases: { vS: null },
+      features: { vS: ['defaultMessage: "Earlier messages may have expired"', 'defaultMessage: "Session not found on disk"',
+        'defaultMessage: "Send a message to start fresh in this directory."', 'defaultMessage: "Import CLI sessions"',
+        'r && !g', 'variant: b ? "ghost" : "secondary",', 'busy: g,', 'busy: _,', 'defaultMessage: "Archive session"', 'defaultMessage: "Delete session"',
+        '{ sessionRef: t, sessionTitle: n, afterRemoval: f }', '{ sessionId: t.id, onSessionRemoved: a }', 'disabledByPolicy', 'ageLimitedByOrg: i,', 'v = Sr() || s,'] } },
+    // ---- Step 2 (toolcards-06/07).
+    { target: 'diff-counts.mjs', source: 'c60636ac6-Qhz8qfr3.js', exports: { Ze: 'DiffCounts' }, aliases: { Ze: 'i' },
+      features: { Ze: [loose4('shownAdded: e.added,'), loose4('shownRemoved: e.removed')] } },
+    { target: 'path-tooltip.mjs', source: 'shared-55-BRv2XBP7.js', exports: { mV: 'PATH_TOOLTIP_PROPS', gV: 'pathTooltipText' }, aliases: { mV: 'D', gV: 'k' },
+      features: { mV: ['className: "max-w-[min(480px,var(--available-width))]"'], gV: ['dir: "ltr"', '"inline-block max-w-full whitespace-pre-wrap"'] } },
+    // shared-frame Hm (exported Wu) and Um (exported Uu, which relative-path's VM reads to collapse control characters).
+    { target: 'invisible-characters.mjs', source: official4.sharedFrame, exports: { Hm: 'stripInvisibleCharacters', Um: 'collapseControlCharacters' },
+      aliases: { Hm: 'Wu', Um: 'Uu' },
+      features: { Hm: [loose4('return e.replace(Bm(), Vm);')], Um: ['.replace(/[\\t\\n\\v\\f\\r\\u0085\\u2028\\u2029]+/g, " ")'] } },
+    { target: 'icon-override.mjs', source: 'shared-18-Cfqwgjc5.js', exports: { tP: 'CARET_DROP_STYLE' }, aliases: { tP: 'Xs' },
+      features: { tP: [loose4('tP = { translate: "0 0.5px" }')] } },
+    { target: 'caret-override.mjs', source: 'cced621b6-BzJn1GRx.js', exports: { t: 'CARET_ICON_OVERRIDE' }, aliases: { t: 't' },
+      features: { t: ['name: "CaretRightFilled", headSize: "sm"'] } },
+    // shared-33 aG (exported dt): the card keyline shadow the summary card classes now interpolate.
+    { target: 'card-shadow.mjs', source: 'shared-33-DtdykY0y.js', exports: { aG: 'CARD_SHADOW_CLASS' }, aliases: { aG: 'dt' },
+      features: { aG: ['"shadow-[inset_0_0_0_1px_var(--cds-border)]"'] } },
+    { target: 'summary-card.mjs', source: 'c425fb3cf-Gc8R9PSy.js',
+      exports: { q: 'SummaryCardList', K: 'SummaryCardDivider', Q: 'DisclosureCaret', H: 'SUMMARY_CARD_CLASS', W: 'SUMMARY_CARD_SEE_ALL_CLASS' },
+      aliases: { q: 'A', K: 'k', Q: 'r', H: 'x', W: 'C' },
+      features: {
+        q: ['role: "list",', 'className: "flex w-full min-w-0 flex-col",'], K: ['className: "-mx-[calc(var(--cds-pad-md)-1px)] h-px shrink-0 bg-alpha-2",'],
+        Q: ['customSize: 14,', '"transition-transform duration-fast motion-reduce:transition-none"', '?? "CaretRight"', loose4('u = n ? 90 : 0,'), loose4('s = a ? void 0 : v,')],
+        H: [loose4('`flex w-full select-text flex-col gap-1 rounded-lg px-md py-xs ${m}`')],
+        W: [loose4('`epitaxy-summary-card-control-text flex w-full select-text flex-col gap-1 rounded-card px-md py-xs ${m}`')],
+      } },
+    { target: 'file-basename.mjs', source: 'shared-92-BOgyxePb.js', exports: { pk: 'fileBasename' }, aliases: { pk: 'vp' },
+      features: { pk: ['Math.max(t.lastIndexOf("/"), t.lastIndexOf("\\\\"))'] } },
+    // shared-26 IA / MA / NA (exported hu / fu / du; 3.6556.2 jS / DS / OS): a Windows path, its drive and UNC prefixes.
+    { target: 'windows-path.mjs', source: 'shared-26-B-POtn5S.js', exports: { IA: 'isWindowsPath', MA: 'WINDOWS_DRIVE', NA: 'WINDOWS_UNC' },
+      aliases: { IA: 'hu', MA: 'fu', NA: 'du' },
+      features: { IA: [loose4('return PA(e) || FA(e);'), { reads: [loose4('return MA.test(e);')] }], MA: ['/^[A-Za-z]:[\\\\/]/'], NA: ['/^(?:[\\\\/]{2}|[\\\\/]\\?\\?[\\\\/])/'] } },
+    // shared-3 rN (exported bt; 3.6556.2 shared-28 TM): a path relative to a root; YM (St) a URL-shaped path and VM (rn)
+    // the displayed path, which c856385e2 Et (the path tooltip text) reads.
+    { target: 'relative-path.mjs', source: 'shared-3-IQTrO7Gx.js', exports: { rN: 'relativePath', YM: 'isUrlPath', VM: 'displayPath' },
+      aliases: { rN: 'bt', YM: 'St', VM: 'rn' },
+      features: { rN: ['if (!t) return r;', 'a.startsWith(`${o}/`) ? r.slice(i.length + 1) : r'], YM: ['/^[a-z][a-z\\d+.-]+:\\/\\//i.test(e)', 'e === e.trimEnd()'],
+        VM: [loose4('return BM(zM(e, t, n?.relative));')] } },
+    { target: 'muted-action-class.mjs', source: 'c761aa8b9-CdRbeywV.js', exports: { ea: 'MUTED_ACTION_CLASS' }, aliases: { ea: 't' },
+      features: { ea: ['"text-[color:var(--muted-as-secondary,var(--cds-text-muted))] hover:text-secondary"'] } },
+    { target: 'session-output-files.mjs', source: 'c19ad462c-CtMio9hE.js', exports: { n: 'SessionOutputFilesContext', r: 'useSessionOutputFiles' },
+      aliases: { n: 't', r: 'n' }, features: { n: [loose4('n = t(new Map())')], r: [loose4('function r() { return e(n); }')] } },
+    { target: 'file-icon-override.mjs', source: 'shared-2-CsjIBQD8.js', exports: { S4: 'fileIconOverride' }, aliases: { S4: 'Ut' },
+      features: { S4: ['t && Object.hasOwn(x4, t) ? x4[t] : void 0'] } },
+    // source-extensions.mjs (shared-6 QE) dropped since cds-core wave 5b: its only root is the cds-core publicName
+    // sourceCodeExtensions (one Set for every graph); file-icon-name.mjs links it from cds-core.
+    { target: 'file-kind-tables.mjs', source: 'shared-153-DMw2VzSq.js', exports: { Fw: 'RASTER_IMAGE_EXTENSIONS', tT: 'HIGHLIGHT_LANGUAGES' }, aliases: { Fw: 'Uh', tT: 'og' },
+      features: { Fw: ['["png", "jpg", "jpeg", "gif", "bmp", "webp"]'], tT: ['"python.javascript.typescript.java.csharp.go.rust'] } },
+    { target: 'file-icon-name.mjs', source: 'shared-9-BgdM6Y1f.js', exports: { MT: 'fileIconName' }, aliases: { MT: 'j' }, features: { MT: [loose4('return t === "skill" ? jT.skill : (Ba(kT(e)) ?? jT[t]);')] } },
+    // c856385e2: the session file access contexts the card, the transcript rows' file links and the host read.
+    { target: 'session-file-access.mjs', source: 'c856385e2-Cqx37C-b.js',
+      exports: { Z: 'useSessionFileOpener', Ot: 'SessionFileOpenerProvider', vn: 'useDiffOpener', _n: 'DiffOpenerProvider', xn: 'useDiffPlacement',
+        bn: 'DiffPlacementProvider', Wt: 'ReadRefusalProvider', Kt: 'useOutsideRootsCheck', qt: 'usePathOutsideRoots', Ht: 'useSessionLinksBlock',
+        Vt: 'SessionLinksBlockProvider', Rr: 'SessionFileBlock', Ut: 'ReadRefusalContext', yn: 'DiffPlacementContext', Sn: 'useDiffPlacementWhenRefusing',
+        Gt: 'isOutsideRoots', Et: 'pathDisplayText' },
+      aliases: { Z: 'F', Ot: 'u', vn: 'N', _n: 'o', xn: 'at', bn: 's', Wt: 'f', Kt: 'L', qt: 'Y', Ht: 'P', Vt: 'c', Rr: 't', Ut: null, yn: null, Sn: null, Gt: null, Et: 'ut' },
+      aliasOnly: Object.fromEntries(['Z', 'Ot', 'vn', '_n', 'xn', 'bn', 'Wt', 'Ht', 'Vt'].map(name => [name, 'context getter / provider'])),
+      features: {
+        Z: [loose4('function Z() { return s(Dt); }')], Ot: [loose4('Ot = Dt.Provider')], vn: [loose4('function vn() { return s(gn); }')], _n: [loose4('_n = gn.Provider')],
+        xn: [loose4('function xn() { return s(yn); }')], bn: [loose4('bn = yn.Provider')], Wt: [loose4('Wt = Ut.Provider')],
+        Kt: [loose4('(a, o) => e !== null && Gt(a, n, i, o && t !== null ? r : null)')], qt: [loose4('e !== null && t !== null && Gt(e, n, r, null)')],
+        Ht: [loose4('function Ht() { return s(Bt); }')], Vt: [loose4('Vt = Bt.Provider')],
+        Rr: ['t === "outside_roots"', 'defaultMessage: "This file is outside this session\\u2019s folders, so it can\\u2019t be opened here.",'],
+        Ut: [loose4('Ut = l(null)'), { readBy: [loose4('(a, o) => e !== null && Gt(a, n, i, o && t !== null ? r : null)')] }],
+        yn: [loose4('yn = l(null)'), { readBy: [loose4('return e === null ? null : s(yn);')] }], Sn: [loose4('return e === null ? null : s(yn);')],
+        Gt: ['if (t === null) return !1;', loose4('return t(e, i === void 0 ? void 0 : { taskId: i }) && !r?.(e);')],
+        Et: ['if (r === "windows" && pe(e)) return e;', '{ ...t, style: "posix" }', loose4('return _(s) === s.replace(Tt, "") ? s : Se(e, o);')],
+      } },
+    // cd8a7d7c0 _ (exported a): the path display options a hovered path reads (h, default { dots: "keep" }); v (exported
+    // t) provides them (and m, the label options) — one instance of both contexts. linkExports m: the label options
+    // context itself, so a linking graph (code-current-upper-v4 cd2efac6e dd BreadcrumbBody -> g, official export o,
+    // `t(m)`) reads this instance instead of cutting a second createContext (D1).
+    { target: 'path-display-options.mjs', source: 'cd8a7d7c0-DuH0T8rm.js', exports: { _: 'usePathHoverOptions', v: 'PathDisplayOptionsProvider' },
+      linkExports: ['m'],
+      aliases: { _: 'a', v: 't' },
+      features: { _: [loose4('return t(h);'), { reads: ['dots: "keep"'] }], v: ['{ ...a, dots: "keep" }', loose4('e(h.Provider, { value: o, children: i })')] } },
+    // c96d752d0 nrt (memo $nt): the Turn edits card; s$ a file row's stop, art a file row's opener, Znt the folder hints.
+    { target: 'turn-edits-card.mjs', source: 'c96d752d0-D9VB6ArX.js',
+      exports: { nrt: 'TurnEditsCard', s$: 'useTurnEditStop', art: 'useTurnEditFileOpener', Znt: 'turnEditFolderHints' },
+      aliases: { nrt: null, s$: null, art: null, Znt: null },
+      features: {
+        nrt: [/^(?:var\s+)?[\w$]{1,4}\s*=\s*[\w$]{1,3}\(\s*[\w$]{1,4}\s*\)\s*;?\s*$/, { reads: ['defaultMessage: "{n, plural, one {Edited a file} other {Edited # files}}",', 'defaultMessage: "Undo", id: "JkS37H8PlA"'] }],
+        s$: ['if (e(i, !0)) return "outside_roots";', 'if (t === null && n?.(i) === !1) return r ?? "plain";'],
+        art: ['if (!t?.(r)) {', loose4('{ openDiffPane: e } = hg(),')],
+        Znt: ['detail: n < 0 ? void 0 : t.slice(0, n) || "/",'],
+        $nt: ['defaultMessage: "{n, plural, one {Edited a file} other {Edited # files}}",', 'defaultMessage: "{n, plural, one {Created a file} other {Created # files}}",',
+          'defaultMessage: "{n, plural, one {Changed a file} other {Changed # files}}",', 'defaultMessage: "See all", id: "078WAre0KU"',
+          'defaultMessage: "Total", id: "MJ2jZQxQnT"', 'defaultMessage: "Undo", id: "JkS37H8PlA"', 'defaultMessage: "Ask Claude to undo this turn\\u2019s file changes",',
+          'defaultMessage: "View this turn\\u2019s changes", id: "00aRWTQr5k"', '"flex h-control min-w-0 items-center justify-between gap-sm px-xs"',
+          loose4('O = x && D.length > 3,'), loose4('irt(r, "turn_edits_card")')],
+        Qnt: ['`turn-edits:${t[0]?.calls[0]?.id ?? ""}`', 'a ? t : t.slice(0, 3)', 'p = t.length - 3,'],
+        Xnt: ['defaultMessage: "Show less", id: "qyJtWyZ0yt"', 'defaultMessage: "Show {count} more", id: "Z184O6N3fq"', '"aria-expanded": n,'],
+        Unt: ['t?.name === "Write" && t.toolUseResult?.type === "create"', '"created"', '"changed"'],
+      } },
+  ],
+  // Original 4.16336.0 text the host wiring follows but cannot import (the 3.6556.2 callSites, re-located). Each
+  // feature must appear in the prettier form of the declaration, which must be the only top-level declaration of its
+  // chunk carrying them all; each import must still resolve to the named declaration of the named chunk.
+  callSites: [
+    // ---- Step 1.
+    { source: 'cf74bc599-BytvntCE.js', binding: 'eT', role: 'Suggested task card: title clamp 6, bottom edge published while shown',
+      features: [loose4('xe = j && k,'), loose4('Se = oS(iS, xe, Xw);'), 'ref: Se,', 'absolute top-[12px] inset-x-0', '"text-body text-primary break-words line-clamp-6"',
+        '`text-footnote text-secondary break-words ${C ? "line-clamp-6" : "line-clamp-3"}`'] },
+    { source: 'cf74bc599-BytvntCE.js', binding: 'gS', role: 'Sticky prompt bubble: the other publisher of the region edge (not in this host)',
+      features: [loose4('O = oS(aS, D, 0)')] },
+    { source: 'c89efce1a-CleBUUAy.js', binding: 'uu', role: 'Markdown table: the freeze hook reads the streaming flag and the rows (no third argument here)',
+      features: [loose4('d = cu(Ne(), t),'), loose4('n("table", { ref: d, className: p, ...i, children: t })')] },
+    { source: 'c96d752d0-D9VB6ArX.js', binding: 'oCt', role: 'Feed row wrapper: reply for assistant rows, row otherwise',
+      features: ['t.kind === "assistant" || t.kind === "assistantItem"', '? "reply"', ': "row",', 'surface: n,', loose4('tagsOf: N3,'), 'resetOn: r,', 'onRetry: i,', 'children: a,'],
+      imports: { Bf: ['c4a9ee384-BWj_BT12.js', 'Jd'] } },
+    { source: 'c96d752d0-D9VB6ArX.js', binding: 'sCt', role: 'Row retry: forget the session tool expansion',
+      features: [loose4('(fC(e), t !== null && uTe(t));')] },
+    { source: 'c96d752d0-D9VB6ArX.js', binding: 'lCt', role: 'Code feed: gate per session, resetOn = the row is the live tail',
+      features: [loose4('Ct = Uf(i, !st),'), loose4('wt = sCt(tt.toolExpansionStore, i),'), 'x = t.kind === "loader" ? r : r && m,', 'e.codesOwnView === !0 ? "code" : "code_feed",'],
+      imports: { Uf: ['c4a9ee384-BWj_BT12.js', 'yf'] } },
+    { source: 'cf74bc599-BytvntCE.js', binding: '_D', role: 'Session pane: vS when the transcript is unavailable (new: ageLimitedByOrg)',
+      features: ['T?.transcriptUnavailable && n', loose4('o(vS, {'), 'sessionRef: n,', 'title: T.title,', 'isArchived: T.isArchived === !0,',
+        'ageLimitedByOrg: T.transcriptAgeLimitedByOrg === !0,', 'onSessionRemoved: f,'] },
+    // ---- Step 2 (toolcards-06/07): where the turn edits card mounts and what Undo sends.
+    { source: 'c96d752d0-D9VB6ArX.js', binding: 'c1', role: 'Turn edits card gate: Vw (c585d217d g) for the session at the finished turn tail',
+      features: ['turnEditsCardDrawn: u', loose4('u = Vw(s),'), loose4('f = u && r && !i,')], imports: { Vw: ['c585d217d-C-1Lrrpr.js', 'g'] } },
+    // New in 4.16336.0: the card is behind the GrowthBook gate claudeai_cc_epitaxy_turn_edits_card again, and not drawn
+    // for a local session h (c5da7eb42 Ri) holds.
+    { source: 'c585d217d-C-1Lrrpr.js', binding: 'g', role: 'Turn edits card gate: GrowthBook claudeai_cc_epitaxy_turn_edits_card, and not h(session)',
+      features: [loose4('t = r("claudeai_cc_epitaxy_turn_edits_card"),'), loose4('n = h(e);'), loose4('return t && !n;')] },
+    { source: 'c585d217d-C-1Lrrpr.js', binding: 'h', role: 'Turn edits card: the local sessions the card is not drawn for',
+      features: [loose4('return l(e?.id) && e?.type === "local";')] },
+    { source: 'c96d752d0-D9VB6ArX.js', binding: 'n1', role: 'Turn edits card row: data-find-omitted contents, at the finished turn tail; Undo only for the last entry',
+      features: ['u = s && o && !i && t.synthetic !== !0', '"data-find-omitted": ""', 'className: "contents"', 'p = a ? n : void 0;'] },
+    { source: 'c96d752d0-D9VB6ArX.js', binding: 'ort', role: 'Undo: sends Wnt as the next message (host: main.jsx sendUndoTurn with undoTurnText)',
+      features: ['Gx("turn_edits_undo")', 'text: Wnt(t)', 'source: "epitaxy_turn_edits_undo"'] },
+    // New in 4.16336.0: each path is QTe-sanitised (backticks / line breaks dropped, escaped) and wrapped in backticks.
+    { source: 'c96d752d0-D9VB6ArX.js', binding: 'Wnt', role: 'Undo message text (host: turn-edits-model.mjs undoTurnText, in the UI language)',
+      features: ['`\\`${QTe(e.path)}\\``', '`Undo the changes you made to ${t[0]} in your last turn and restore it to its previous state.`',
+        '`Undo the changes you made to these ${t.length} files in your last turn and restore them to their previous state:`'],
+      imports: { QTe: ['cc8941b7b-C4hsxbbb.js', 'Re'] } },
+    // Step 2, toolcards-16: the runningIds hold and the branch it lives in (transcript rows' turnStatusRows branch).
+    { source: 'c96d752d0-D9VB6ArX.js', binding: 'VM', role: 'Running mark: runningIds keep the mark across wire gaps (turnStatusRows candidates only)',
+      features: ['t?.runningIds?.some(l) ?? !1', loose4('h = f || (s === !0 && t !== void 0 && !t.wireRunning && p === t.key),'), 'tailHeld: w,'] },
+    { source: 'c96d752d0-D9VB6ArX.js', binding: 't1e', role: 'Tool group: the candidate (with runningIds) under turnStatusRows; the running label holds 650 ms (rest key with the rows)',
+      features: [loose4('Ie = Rv(),'), loose4('mt = pP(pt, 650, Ie ? Cy : void 0),'), 'runningIds: t.flatMap(i1e),'],
+      imports: { Rv: ['ca7b95e24-BFvFgBI_.js', 'p'] } },
+    { source: 'c96d752d0-D9VB6ArX.js', binding: 'pP', role: 'Held key: each shown key stays at least t ms',
+      features: ['i = Math.max(t - r, d ? u - (n - (_.current ?? n)) : 0);'] },
+    { source: 'ca7b95e24-BFvFgBI_.js', binding: 'p', role: 'turnStatusRows: the provider value, false without one', features: [loose4('return t(u) ?? !1;')] },
+    { source: 'ca7b95e24-BFvFgBI_.js', binding: 'd', role: 'turnStatusRows provider: an outer provider wins, else GrowthBook __gb__2846116625',
+      features: [loose4('i = t(u),'), loose4('o = a(l),'), loose4('s = i ?? o;'), 'u.Provider'] },
+    { source: 'ca7b95e24-BFvFgBI_.js', binding: 'l', role: 'turnStatusRows flag', features: ['l = "__gb__2846116625"'] },
+  ],
+  // Style text a chunk injects with its `(function (e, t) { … })(id, css)` prelude, written out verbatim as CSS (now
+  // also carrying the task card surface rules).
+  inlineStyles: [
+    { source: 'c425fb3cf-Gc8R9PSy.js', id: 'cbbd9b21e', target: 'summary-card.css',
+      features: ['.epitaxy-root .epitaxy-summary-card-control-text{font-size:var(--cds-font-size-body--own,var(--cds-font-size-body));line-height:var(--cds-leading-body--own,var(--cds-leading-body))}'] },
+  ],
+};
+
+// ---- 4.16336.0 engine ----------------------------------------------------------------------------------------------
+// A chunk record is light until a declaration of it is cut, matched or scope-analysed (`full`): the export table is read
+// from the shipped bytes (checked against the parsed one once the chunk is parsed), and declarations by name from a raw
+// parse that keeps only their offsets. Parsed chunks no later module or call site reads are released (`release`), which
+// keeps the 1.9 MB feed chunk and the shared chunks from piling up.
+function exportTable4(text) {
+  const exported = new Map();
+  for (const match of text.matchAll(/export\s*\{([^}]*)\}\s*(?!\s*from)/g))
+    for (const part of match[1].split(',').map(x => x.trim()).filter(Boolean)) {
+      const [local, alias = local] = part.split(/\s+as\s+/);
+      exported.set(alias.replace(/^"|"$/g, ''), local);
+    }
+  return exported;
+}
+async function readSource4(contract, name, cache) {
+  if (cache.has(name)) return cache.get(name);
+  const bytes = await fs.readFile(path.join(contract.official.ionSource, name));
+  const text = bytes.toString();
+  const record = { name, bytes, text, exported: exportTable4(text), raw: contract.rawSources.has(name), code: null, ast: null, program: null, formatted: new Map() };
+  cache.set(name, record);
+  return record;
+}
+async function full(src) {
+  if (src.ast) return src;
+  src.code = src.raw ? src.text : await format(src.text, { parser: 'babel' });
+  src.ast = parsers.babel.parse(src.code, {});
+  const parsed = new Map(src.ast.program.body.filter(n => n.type === 'ExportNamedDeclaration' && !n.source)
+    .flatMap(n => n.specifiers.map(s => [s.exported.name, s.local.name])));
+  if (JSON.stringify([...parsed].sort()) !== JSON.stringify([...src.exported].sort())) throw Error(`${src.name}: export table read from the bytes differs from the parsed one`);
+  return src;
+}
+function release(src) {
+  src.code = null; src.ast = null; src.program = null; src.formatted = new Map(); src.depsIndex = null;
+}
+// A top-level declaration in the unformatted chunk bytes: the text cds-core hashes its bindings by.
+function rawDeclarationText4(src, name) {
+  if (!src.rawDeclarations) {
+    src.rawDeclarations = new Map();
+    for (const node of parsers.babel.parse(src.text, {}).program.body) {
+      if ((node.type === 'FunctionDeclaration' || node.type === 'ClassDeclaration') && node.id) src.rawDeclarations.set(node.id.name, [node.start, node.end]);
+      if (node.type === 'VariableDeclaration') for (const d of node.declarations) if (d.id.type === 'Identifier') src.rawDeclarations.set(d.id.name, [d.start, d.end]);
+    }
+  }
+  const range = src.rawDeclarations.get(name);
+  if (!range) throw Error(`${src.name}: no top-level declaration ${name} in the chunk bytes`);
+  return src.text.slice(...range);
+}
+const topLevel4 = src => src.ast.program.body.flatMap(node => (node.type === 'FunctionDeclaration' || node.type === 'ClassDeclaration' ? [[node.id.name, node]]
+  : node.type === 'VariableDeclaration' ? node.declarations.filter(d => d.id.type === 'Identifier').map(d => [d.id.name, d]) : []));
+// A feature is a string (whitespace-insensitive), { loose } (R2/E5 looseFeature), a RegExp, or { reads: [features] }: the
+// declaration reads a top-level binding of its chunk whose declaration, or a top-level declaration that assigns it,
+// carries those features (used where the declaration itself is too small to tell apart, e.g. `return iV`).
+// The declaration-deps scan over a per-chunk index (top-level declaration -> the top-level bindings it reads or writes),
+// built once: scanning every binding of the 1.9 MB feed chunk per declaration dominated the run.
+function deps4(src, name) {
+  if (!src.depsIndex) {
+    const ranges = topLevel4(src).map(([n, node]) => [n, node.start, node.end]).sort((a, b) => a[1] - b[1]);
+    const ownerOf = at => {
+      let lo = 0, hi = ranges.length - 1;
+      while (lo <= hi) {
+        const mid = (lo + hi) >> 1;
+        if (ranges[mid][2] < at) lo = mid + 1; else if (ranges[mid][1] > at) hi = mid - 1; else return ranges[mid][0];
+      }
+      return null;
+    };
+    src.depsIndex = new Map();
+    for (const [binding, b] of Object.entries(scoped(src).scope.bindings))
+      for (const q of [...b.referencePaths, ...b.constantViolations]) {
+        const owner = ownerOf(q.node.start);
+        if (owner === null) continue;
+        if (!src.depsIndex.has(owner)) src.depsIndex.set(owner, new Set());
+        src.depsIndex.get(owner).add(binding);
+      }
+  }
+  return [...(src.depsIndex.get(name) ?? [])];
+}
+const featureMissing4 = (text, features = [], context) => features.filter(f => (f instanceof RegExp ? !f.test(text)
+  : typeof f === 'string' ? !text.includes(f) && !normalised(text).includes(normalised(f))
+    : f.reads ? !context || !readsFeature(context.src, context.name, f.reads)
+      : f.readBy ? !context || !readByFeature(context.src, context.name, f.readBy) : !official4.looseFeature(f.loose, f.options).test(text)));
+// { readBy: [features] }: a top-level declaration of the chunk that reads this one directly carries those features.
+function readByFeature(src, name, features) {
+  const program = scoped(src), b = program.scope.getBinding(name);
+  if (!b) return false;
+  const owners = new Set(b.referencePaths.map(q => { let x = q; while (x.parentPath && !x.parentPath.isProgram()) x = x.parentPath; return x.node; }));
+  return [...owners].some(node => (src.raw ? rawCarries(src.code.slice(node.start, node.end), features) : !featureMissing4(src.code.slice(node.start, node.end), features).length));
+}
+function readsFeature(src, name, features) {
+  const program = scoped(src), p = program.scope.getBinding(name)?.path;
+  if (!p) return false;
+  const owner = q => { let x = q; while (x && x.parentPath && !x.parentPath.isProgram()) x = x.parentPath; return x; };
+  return deps4(src, name).some(dep => {
+    const b = program.scope.getBinding(dep);
+    if (!b || b.path.isImportSpecifier()) return false;
+    const texts = [declarationText(src, b.path), ...b.constantViolations.map(q => owner(q)).filter(Boolean).map(x => src.code.slice(x.node.start, x.node.end))];
+    return texts.some(text => (src.raw ? rawCarries(text, features) : !featureMissing4(text, features).length));
+  });
+}
+// On a chunk parsed as shipped: string features squeezed, loose features without `;` / parentheses (see assertUniqueRoot4).
+function rawCarries(raw, features) {
+  const bare = text => text.replace(/[;()]/g, ' ');
+  return features.every(f => (f instanceof RegExp ? f.test(raw) : typeof f === 'string' ? squeeze(raw).includes(squeeze(f))
+    : f.loose ? official4.looseFeature(bare(f.loose), f.options).test(bare(raw)) : false));
+}
+function assertFeatures4(label, text, features = [], context) {
+  const missing = featureMissing4(text, features, context);
+  if (missing.length) throw Error(`${label} lacks ${missing.map(f => JSON.stringify(f instanceof RegExp ? f.source : f)).join(', ')}`);
+}
+// A necessary condition on the shipped text of a declaration for its prettier form to carry `features`: every string
+// literal and long identifier of each feature, with whitespace, parentheses, quotes, commas and semicolons removed.
+const squeeze = text => text.replace(/[\s()'";,]/g, '');
+function featureTokens(features) {
+  return features.flatMap(f => (f instanceof RegExp || f.reads || f.readBy ? [] : typeof f === 'string' ? [squeeze(f)]
+    : [...f.loose.matchAll(/"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|`(?:[^`\\]|\\.)*`|[A-Za-z_$][\w$]{3,}/g)].map(m => squeeze(m[0])))).filter(Boolean);
+}
+// The root is the only top-level declaration of its chunk carrying every feature (byte-identical `twins` aside).
+async function assertUniqueRoot4(label, src, name, features = [], twins = []) {
+  if (!features.length) throw Error(`${label}: root ${name} has no features to locate it by`);
+  const tokens = featureTokens(features), hits = [];
+  for (const [local, node] of topLevel4(src)) {
+    if (src.raw) {
+      // Shipped text: string tokens squeezed, loose / RegExp features as written (both are whitespace-flexible); a
+      // feature only the prettier form satisfies fails here loudly (the root itself would be missing), never silently.
+      const raw = src.code.slice(node.start, node.end);
+      if (!tokens.every(t => squeeze(raw).includes(t))) continue;
+      const bare = text => text.replace(/[;()]/g, ' ');
+      if (features.some(f => (f instanceof RegExp ? !f.test(raw) : f.loose ? !official4.looseFeature(bare(f.loose), f.options).test(bare(raw)) : false))) continue;
+    }
+    if (!featureMissing4(await featureText4(src, node), features, { src, name: local }).length) hits.push(local);
+  }
+  const expected = [name, ...twins].sort();
+  if (JSON.stringify(hits.sort()) !== JSON.stringify(expected))
+    throw Error(`${label}: root ${name} is not the unique declaration with its features (${hits.join(', ') || 'none'})`);
+  const rootText = rawDeclarationText4(src, name).replace(/^(function |class )?[\w$]+/, '');
+  for (const twin of twins) if (rawDeclarationText4(src, twin).replace(/^(function |class )?[\w$]+/, '') !== rootText)
+    throw Error(`${label}: ${twin} is not a byte-identical twin of ${name}`);
+}
+async function featureText4(src, node) {
+  const own = src.code.slice(node.start, node.end);
+  if (!src.raw) return own;
+  if (!src.formatted.has(node)) src.formatted.set(node, await format(node.type === 'VariableDeclarator' ? `var ${own};` : own, { parser: 'babel' }));
+  return src.formatted.get(node);
+}
+// The prettier form of a declaration's same-chunk closure (what an adapter's features are pinned on).
+async function closureText4(src, name) {
+  const seen = new Set(), parts = [];
+  const visit = async n => {
+    if (seen.has(n)) return;
+    seen.add(n);
+    const p = scoped(src).scope.getBinding(n)?.path;
+    if (!p || p.isImportSpecifier()) return;
+    parts.push(await featureText4(src, p.node));
+    for (const dep of deps4(src, n)) await visit(dep);
+  };
+  await visit(name);
+  return parts.join('\n');
+}
+function importOf4(src, local) {
+  const p = scoped(src).scope.getBinding(local)?.path;
+  if (!p?.isImportSpecifier()) throw Error(`${src.name}: ${local} is not an import`);
+  return { file: p.parent.source.value.replace(/^\.\//, ''), alias: p.node.imported.name };
+}
+// sharedGraph 'cds-core': the manifest is on this version and snapshot, every module's bytes equal its recorded sha256
+// and its sourceSha256 equals the official chunk read here, and every publicName is a binding its target module exports
+// under exportName (the runSlicer sharedGraph contract, as extract-btw-pane.mjs / extract-approval-landing.mjs).
+async function sharedGraph4(contract) {
+  const { official } = contract, area = contract.sharedGraph, dir = path.join(root, 'src/generated', area);
+  const manifestText = await fs.readFile(path.join(dir, 'manifest.json'), 'utf8');
+  const manifest = JSON.parse(manifestText);
+  if (manifest.referenceVersion !== official.referenceVersion) throw Error(`${area} is ${manifest.referenceVersion}, expected ${official.referenceVersion}`);
+  if (manifest.referenceSnapshot !== official.referenceSnapshot) throw Error(`${area} snapshot is ${manifest.referenceSnapshot}, expected ${official.referenceSnapshot}`);
+  const byTarget = new Map(), held = new Map(), published = new Map();
+  for (const m of manifest.modules) {
+    if ((m.referenceVersion ?? manifest.referenceVersion) !== official.referenceVersion) throw Error(`shared module ${area}/${m.target} is ${m.referenceVersion}, expected ${official.referenceVersion}`);
+    if (sha(await fs.readFile(path.join(dir, m.target))) !== m.sha256) throw Error(`${area}/${m.target} differs from its manifest`);
+    const bytes = await fs.readFile(path.join(official.ionSource, path.basename(m.source))).catch(() => null);
+    if (!bytes || !/^[0-9a-f]{64}$/.test(m.sourceSha256 ?? '') || sha(bytes) !== m.sourceSha256)
+      throw Error(`${area}/${m.target} was sliced from ${m.source} ${m.sourceSha256 ?? '(no sourceSha256)'}, which is not the source this area reads`);
+    byTarget.set(m.target, m);
+    for (const b of m.bindings) held.set(`${path.basename(m.source)}#${typeof b === 'string' ? b : b.name}`, { target: m.target, sha256: typeof b === 'string' ? null : b.sha256 });
+  }
+  for (const [name, entry] of Object.entries(manifest.publicNames ?? {})) {
+    const m = byTarget.get(entry.target);
+    const exported = m && (m.exports?.[entry.local] ?? (m.sharedExports?.includes(entry.local) ? entry.local : null));
+    if (!m || path.basename(m.source) !== entry.file || !m.bindings.some(b => (typeof b === 'string' ? b : b.name) === entry.local) || !entry.exportName || exported !== entry.exportName)
+      throw Error(`${area} publicName ${name} (${entry.file}#${entry.local}) is not exported by ${entry.target} as ${entry.exportName}`);
+    published.set(`${entry.file}#${entry.local}`, { name, ...entry });
+  }
+  return { area, held, published, manifestSha256: sha(manifestText) };
+}
+// Module state a second copy would split: a context, or a module-level WeakMap / Map / Set / WeakSet (D46), or a
+// module-level `let`/`var` binding some declaration reassigns.
+function isModuleState4(contract, src, p) {
+  if (!p.isVariableDeclarator()) return false;
+  const init = p.node.init;
+  if (init?.type === 'NewExpression' && init.callee.type === 'Identifier' && ['WeakMap', 'Map', 'Set', 'WeakSet'].includes(init.callee.name)) return true;
+  if (init?.type === 'CallExpression' && init.callee.type === 'Identifier') {
+    const callee = scoped(src).scope.getBinding(init.callee.name)?.path;
+    if (callee?.isImportSpecifier()) {
+      const file = callee.parent.source.value.replace(/^\.\//, '');
+      if (file === contract.official.vendorFrame && contract.official.reactAliases[callee.node.imported.name]?.[1] === 'createContext') return true;
+    }
+  }
+  return (scoped(src).scope.getBinding(p.node.id.name)?.constantViolations.length ?? 0) > 0;
+}
+const contractVersions4 = Object.freeze([V3, V4]);
+// Every other 4.16336.0 region manifest's cut bindings, `${chunk}#${name}` -> regions (cds-core and this area's two
+// outputs excluded).
+async function foreignCuts4(contract) {
+  const generated = path.join(root, 'src/generated'), own = new Set([path.basename(contract.output), contract.sharedGraph, 'r3b-transcript']);
+  const cuts = new Map();
+  for (const dirent of await fs.readdir(generated, { withFileTypes: true })) {
+    if (!dirent.isDirectory() || own.has(dirent.name)) continue;
+    let manifest;
+    try { manifest = JSON.parse(await fs.readFile(path.join(generated, dirent.name, 'manifest.json'), 'utf8')); } catch { continue; }
+    for (const m of Array.isArray(manifest.modules) ? manifest.modules : []) {
+      if ((m.referenceVersion ?? manifest.referenceVersion) !== contract.official.referenceVersion || typeof m.source !== 'string') continue;
+      for (const b of m.bindings ?? []) {
+        const key = `${path.basename(m.source)}#${typeof b === 'string' ? b : b.name}`;
+        if (!cuts.has(key)) cuts.set(key, new Set());
+        cuts.get(key).add(dirent.name);
+      }
+    }
+  }
+  return cuts;
+}
+async function linkedArea4(contract, key, src, local, linkedManifests) {
+  const link = contract.linkedAreas?.[key];
+  if (!link) return null;
+  const { official } = contract, dir = path.join(root, 'src/generated', link.area);
+  if (!linkedManifests.has(link.area)) {
+    const text = await fs.readFile(path.join(dir, 'manifest.json'), 'utf8');
+    linkedManifests.set(link.area, { text, manifest: JSON.parse(text) });
+  }
+  const { manifest } = linkedManifests.get(link.area);
+  if (manifest.referenceVersion !== official.referenceVersion || manifest.referenceSnapshot !== official.referenceSnapshot)
+    throw Error(`linked ${link.area} is ${manifest.referenceVersion} ${manifest.referenceSnapshot}, expected ${official.referenceVersion} ${official.referenceSnapshot}`);
+  if (manifest.sharedGraph !== contract.sharedGraph) throw Error(`linked ${link.area} does not link ${contract.sharedGraph}`);
+  const m = manifest.modules.find(entry => entry.target === link.target);
+  if (!m || (m.referenceVersion ?? manifest.referenceVersion) !== official.referenceVersion || path.basename(m.source) !== src.name)
+    throw Error(`linked ${link.area}/${link.target} is not a ${official.referenceVersion} slice of ${src.name}`);
+  if (m.sourceSha256 !== sha(src.bytes)) throw Error(`linked ${link.area}/${link.target} was sliced from another ${src.name}`);
+  if (sha(await fs.readFile(path.join(dir, link.target))) !== m.sha256) throw Error(`linked ${link.area}/${link.target} differs from its manifest`);
+  const binding = m.bindings.find(b => (typeof b === 'string' ? b : b.name) === local);
+  if (!binding?.sha256 || binding.sha256 !== sha(rawDeclarationText4(src, local))) throw Error(`linked ${link.area}/${link.target} ${key} is not the declaration ${src.name} ships`);
+  if (m.exports?.[local] !== link.exportName) throw Error(`linked ${link.area}/${link.target} does not export ${local} as ${link.exportName}`);
+  return { from: `../${link.area}/${link.target}`, name: link.exportName, kind: 'linked-area', area: link.area, original: local, linkedSha256: binding.sha256 };
+}
+
+async function extractR3bTranscriptV4({ check = false, contract = contract4, survey = false } = {}) {
+  const { official, output, label } = contract;
+  const cache = new Map(), files = {}, emitted = [], unresolved = [], stateConflicts = [], linkedManifests = new Map();
+  const graph = await sharedGraph4(contract);
+  const foreign = await foreignCuts4(contract), foreignStateSeen = new Set(), foreignStateCopies = [], foreignProblems = [];
+  const manifest = {
+    referenceVersion: official.referenceVersion, referenceSnapshot: official.referenceSnapshot, generator: 'scripts/extract-r3b-transcript.mjs',
+    adapterModule: 'src/source-r3b-transcript-adapters.jsx', sharedGraph: graph.area, cdsCoreManifestSha256: graph.manifestSha256,
+    isolatedGraph: contract.isolatedGraph, modules: [], callSites: [], inlineStyles: [],
+  };
+  const sharedImport = (file, local) => {
+    const shared = graph.published.get(`${file}#${local}`);
+    return shared ? { from: `../${graph.area}/${shared.target}`, name: shared.exportName, kind: 'shared-graph', publicName: shared.name } : null;
+  };
+  const linkedSha = (src, file, local, shared) => {
+    const held = graph.held.get(`${file}#${local}`);
+    if (!held?.sha256 || held.sha256 !== sha(rawDeclarationText4(src, local))) throw Error(`${file}#${local} differs from the declaration ${graph.area} publishes as ${shared.publicName}`);
+    return held.sha256;
+  };
+  for (const spec of contract.modules) {
+    if (process.env.R3B_DEBUG) console.error(`[r3b-v4] ${spec.target} ${Math.round(process.memoryUsage().heapUsed / 1e6)}MB ${Math.round(performance.now())}ms`);
+    const src = await full(await readSource4(contract, spec.source, cache));
+    const program = scoped(src);
+    if (spec.compilerHelpers) {
+      const proved = official.assertCompilerHelpers(src.text);
+      for (const [local, name] of Object.entries(spec.exports)) if (proved[name]?.local !== local) throw Error(`${spec.target}: ${local} is not the proved compiler helper ${name}`);
+    }
+    const roots = Object.keys(spec.exports);
+    const selected = new Map(), imports = new Map(), seen = new Set(), heldByCdsCore = [];
+    const add = async (name, chain) => {
+      if (seen.has(name)) return;
+      seen.add(name);
+      const key = `${spec.source}#${name}`;
+      const binding = program.scope.getBinding(name);
+      if (!binding) throw Error(`${spec.target}: unbound ${name}`);
+      const p = binding.path;
+      if (p.isImportSpecifier()) {
+        const file = p.parent.source.value.replace(/^\.\//, ''), alias = p.node.imported.name, via = `${file}:${alias}`;
+        const adapter = contract.adapters[file]?.[alias];
+        const dep = await readSource4(contract, file, cache);
+        if (adapter) {
+          const local = dep.exported.get(alias);
+          if (!local) throw Error(`${spec.target}: adapter alias ${via} is no longer exported`);
+          assertFeatures4(`${spec.target}: adapter ${via} (${local})`, await closureText4(await full(dep), local), adapter.features);
+          if (!contract.modules.some(m => m.source === file) && !contract.callSites.some(c => c.source === file)) release(dep);
+          imports.set(name, { from: contract.adapterModule, name: adapter.name, via, kind: 'adapter', original: local,
+            replacedSha256: sha(rawDeclarationText4(dep, local)) });
+          return;
+        }
+        if (file === official.vendorFrame && official.reactAliases[alias]) {
+          const { module, member } = official.assertVendorAlias(dep.text, alias);
+          imports.set(name, { from: module, name: member, via, kind: 'react' });
+          return;
+        }
+        const local = dep.exported.get(alias);
+        if (!local) throw Error(`${spec.target}: ${file} does not export ${alias}`);
+        const shared = sharedImport(file, local);
+        if (shared) { imports.set(name, { ...shared, via, original: local, linkedSha256: linkedSha(dep, file, local, shared) }); return; }
+        const linked = await linkedArea4(contract, `${file}#${local}`, await full(dep), local, linkedManifests);
+        if (linked) { imports.set(name, { ...linked, via }); return; }
+        const owner = emitted.find(m => m.source === file && m.exports[local]);
+        if (owner) { imports.set(name, { from: `./${owner.target}`, name: owner.exports[local], via, kind: 'generated', original: local }); return; }
+        if (!survey) throw Error(`${spec.target}: unresolved import ${via} (${local}) reached by ${chain.join(' <- ')}`);
+        unresolved.push({ module: spec.target, via, local, held: graph.held.has(`${file}#${local}`), reachedBy: chain.join(' <- ') });
+        imports.set(name, { from: '(unresolved)', name: local, via, kind: 'unresolved' });
+        return;
+      }
+      const own = contract.chunkAdapters[spec.source]?.[name];
+      if (own) {
+        assertFeatures4(`${spec.target}: chunk adapter ${key}`, await featureText4(src, p.node), own.features);
+        imports.set(name, { from: contract.adapterModule, name: own.name, via: key, kind: 'adapter', original: name, replacedSha256: sha(rawDeclarationText4(src, name)) });
+        return;
+      }
+      if (!p.isFunctionDeclaration() && !p.isVariableDeclarator() && !p.isClassDeclaration()) throw Error(`${spec.target}: unsupported declaration ${name}`);
+      // One instance: a same-chunk binding an earlier module of this graph exports is imported from it.
+      const holder = !roots.includes(name) && emitted.find(m => m.source === spec.source && m.exports[name]);
+      if (holder) { imports.set(name, { from: `./${holder.target}`, name: holder.exports[name], via: key, kind: 'generated', original: name }); return; }
+      const shared = sharedImport(spec.source, name);
+      if (shared) { imports.set(name, { ...shared, via: key, original: name, linkedSha256: linkedSha(src, spec.source, name, shared) }); return; }
+      const linked = !roots.includes(name) && await linkedArea4(contract, key, src, name, linkedManifests);
+      if (linked) { imports.set(name, { ...linked, via: key }); return; }
+      if (isModuleState4(contract, src, p)) {
+        const silent = emitted.find(m => m.source === spec.source && m.selectedNames.includes(name));
+        if (silent) throw Error(`${spec.target}: module state ${key} is held by ${silent.target} but not exported there`);
+      }
+      const held = graph.held.get(key);
+      if (held) {
+        if (isModuleState4(contract, src, p)) {
+          stateConflicts.push({ binding: key, text: rawDeclarationText4(src, name).slice(0, 160), reachedBy: chain.join(' <- '), module: spec.target });
+          if (!survey) throw Error(`module state ${graph.area} holds without a semantic name (add it to ${graph.area} publicNames, D46): ${spec.target}: ${key} reached by ${chain.join(' <- ')}`);
+        } else if (held.sha256 !== sha(rawDeclarationText4(src, name))) throw Error(`${spec.target}: ${key} differs from the declaration ${graph.area}/${held.target} holds`);
+        heldByCdsCore.push(name);
+      }
+      if (isModuleState4(contract, src, p)) {
+        const areas = [...(foreign.get(key) ?? [])].sort(), listed = contract.foreignState?.[key];
+        if (areas.length || listed) {
+          const problem = !listed ? `module state ${key} is also cut by ${areas.join(', ')} (D1: link it from there, or list it in foreignState)`
+            : !areas.length ? `foreignState ${key} is no longer cut by another region; drop it`
+              : !listed.anyAreas && JSON.stringify([...listed.areas].sort()) !== JSON.stringify(areas) ? `module state ${key} is cut by ${areas.join(', ')}, foreignState lists ${listed.areas.join(', ')}` : null;
+          if (problem) foreignProblems.push({ module: spec.target, binding: key, areas, problem, reachedBy: chain.join(' <- ') });
+          if (listed) {
+            foreignStateSeen.add(key);
+            foreignStateCopies.push({ binding: key, module: spec.target, ...(listed.anyAreas ? { anyAreas: true } : { areas: [...listed.areas].sort() }), reason: listed.reason,
+              ...(listed.blocked ? { blocked: listed.blocked } : {}) });
+          }
+        }
+      }
+      if (!roots.includes(name) && spec.features?.[name]) assertFeatures4(`${spec.target}: ${name}`, await featureText4(src, p.node), spec.features[name]);
+      selected.set(name, p);
+      p.traverse({
+        ImportExpression() { throw Error(`${spec.target}: dynamic import inside ${name}`); },
+        CallExpression(r) { if (r.node.callee.type === 'Import') throw Error(`${spec.target}: dynamic import inside ${name}`); },
+      });
+      for (const dep of deps4(src, name)) await add(dep, [key, ...chain]);
+    };
+    for (const name of roots) {
+      const binding = program.scope.getBinding(name);
+      if (!binding || binding.path.isImportSpecifier()) throw Error(`${spec.target}: root ${name} is not a declaration of ${spec.source}`);
+      if (!spec.compilerHelpers) {
+        const alias = spec.aliases?.[name];
+        if (alias === undefined) throw Error(`${spec.target}: root ${name} names no export alias (null for a private root)`);
+        if (alias !== null && src.exported.get(alias) !== name) throw Error(`${spec.target}: ${spec.source} exports ${alias} as ${src.exported.get(alias) ?? 'nothing'}, not ${name}`);
+        if (alias === null && [...src.exported.values()].includes(name)) throw Error(`${spec.target}: private root ${name} is exported by ${spec.source}`);
+        assertFeatures4(`${spec.target}: root ${name}`, await featureText4(src, binding.path.node), spec.features?.[name], { src, name });
+        // aliasOnly: a same-shaped family (context getters / providers) the features cannot tell apart; the export alias
+        // is the identity, and its role is pinned where it is read (callSites imports, the consumers' features).
+        if (spec.aliasOnly?.[name]) { if (alias === null) throw Error(`${spec.target}: aliasOnly root ${name} must be exported`); }
+        else await assertUniqueRoot4(spec.target, src, name, spec.features?.[name], spec.twins?.[name]);
+      }
+      await add(name, [`${spec.source}#${name} (root of ${spec.target})`]);
+    }
+    const unreached = Object.keys(spec.features ?? {}).filter(name => !selected.has(name) && !roots.includes(name));
+    if (unreached.length) throw Error(`${spec.target}: listed bindings ${unreached.join(', ')} are not part of the module`);
+    // linkExports: selected bindings a linking graph imports from this one under their own names (D1: one instance; e.g.
+    // cd8a7d7c0 m, the path label options context code-current-upper-v4's BreadcrumbBody reads), recorded in the manifest.
+    for (const name of spec.linkExports ?? []) if (!selected.has(name) || spec.exports[name]) throw Error(`${spec.target}: linkExports ${name} is not a selected, unexported binding of ${spec.source}`);
+    // A root cds-core publishes is linked and re-exported under this module's semantic name.
+    const order = [...selected].sort((a, b) => a[1].node.start - b[1].node.start);
+    if (!order.length && !spec.compilerHelpers) throw Error(`${spec.target}: every root is linked; drop the module`);
+    const blocks = order.map(([, p]) => (p.isVariableDeclarator() ? `var ${declarationText(src, p)};` : declarationText(src, p)));
+    const groups = new Map();
+    for (const [local, entry] of imports) {
+      if (!groups.has(entry.from)) groups.set(entry.from, []);
+      groups.get(entry.from).push(entry.name === local ? local : `${entry.name} as ${local}`);
+    }
+    const importText = [...groups].map(([from, names]) => `import { ${names.join(', ')} } from ${JSON.stringify(from)};`).join('\n');
+    const exportText = `export { ${[...Object.entries(spec.exports), ...(spec.linkExports ?? []).map(name => [name, name])].map(([local, name]) => (local === name ? local : `${local} as ${name}`)).join(', ')} };`;
+    const header = `// Original Claude Desktop ${official.referenceVersion} bindings from ${spec.source}; generated by extract-r3b-transcript.mjs.\n// Edit the extractor or src/source-r3b-transcript-adapters.jsx, never this file.\n`;
+    const text = await format(`${header}${importText}\n${blocks.join('\n')}\n${exportText}\n`, { parser: 'babel' });
+    let globals;
+    babel.traverse(babel.babelParse(text, spec.target, true), { Program(p) { globals = Object.keys(p.scope.globals); p.stop(); } });
+    const unboundGlobals = globals.filter(name => !contract.hostGlobals.has(name));
+    if (unboundGlobals.length) throw Error(`${spec.target}: unbound ${unboundGlobals.join(', ')}`);
+    files[spec.target] = text;
+    manifest.modules.push({
+      target: spec.target, source: spec.source, sourceSha256: sha(src.bytes), sha256: sha(text), referenceVersion: official.referenceVersion,
+      referenceSnapshot: official.referenceSnapshot,
+      bindings: order.map(([name, p]) => ({ name, sha256: sha(declarationText(src, p)) })),
+      imports: [...imports].map(([local, e]) => ({ local, from: e.from, name: e.name, via: e.via, kind: e.kind, ...(e.original ? { original: e.original } : {}),
+        ...(e.area ? { area: e.area } : {}), ...(e.replacedSha256 ? { replacedSha256: e.replacedSha256 } : {}),
+        ...(e.linkedSha256 ? { linkedSha256: e.linkedSha256 } : {}) })),
+      exports: spec.exports,
+      ...(spec.linkExports?.length ? { linkExports: [...spec.linkExports].sort() } : {}),
+      ...(spec.compilerHelpers ? {} : { roots: Object.fromEntries(roots.map(name => [name, spec.aliases[name]])) }),
+      ...(spec.aliasOnly ? { locatedByAliasOnly: Object.keys(spec.aliasOnly) } : {}),
+      heldByCdsCore,
+    });
+    emitted.push({ target: spec.target, source: spec.source, exports: spec.exports, selectedNames: [...selected.keys()] });
+    const later = new Set([...contract.modules.slice(contract.modules.indexOf(spec) + 1).map(m => m.source), ...contract.callSites.map(c => c.source),
+      ...contract.inlineStyles.map(c => c.source)]);
+    for (const record of cache.values()) if (record.ast && !later.has(record.name)) release(record);
+  }
+  for (const site of contract.callSites) {
+    const src = await full(await readSource4(contract, site.source, cache));
+    const node = topLevel4(src).find(([n]) => n === site.binding)?.[1];
+    if (!node) throw Error(`call site ${site.source}: no top-level ${site.binding}`);
+    const text = await featureText4(src, node);
+    assertFeatures4(`call site ${site.source}:${site.binding}`, text, site.features);
+    await assertUniqueRoot4(`call site ${site.source}`, src, site.binding, site.features);
+    const imports = {};
+    for (const [local, [file, expected]] of Object.entries(site.imports ?? {})) {
+      const resolved = importOf4(src, local);
+      const dep = await readSource4(contract, resolved.file, cache);
+      const target = dep.exported.get(resolved.alias);
+      if (resolved.file !== file || target !== expected)
+        throw Error(`call site ${site.source}:${site.binding}: ${local} resolves to ${resolved.file}:${target}, expected ${file}:${expected}`);
+      imports[local] = `${file}:${resolved.alias} (${expected})`;
+    }
+    manifest.callSites.push({ source: site.source, referenceVersion: official.referenceVersion, binding: site.binding, role: site.role,
+      sourceSha256: sha(src.bytes), sha256: sha(rawDeclarationText4(src, site.binding)), features: site.features, imports });
+  }
+  for (const style of contract.inlineStyles) {
+    const src = await full(await readSource4(contract, style.source, cache));
+    const hits = src.ast.program.body.filter(node => node.type === 'ExpressionStatement' && node.expression.type === 'CallExpression'
+      && node.expression.callee.type === 'FunctionExpression' && node.expression.arguments.length === 2
+      && node.expression.arguments.every(arg => arg.type === 'StringLiteral') && node.expression.arguments[0].value === style.id);
+    if (hits.length !== 1) throw Error(`${style.source}: expected one inline style ${style.id}, found ${hits.length}`);
+    const call = hits[0].expression;
+    assertFeatures4(`${style.source}: inline style prelude`, await format(`(${src.code.slice(call.callee.start, call.callee.end)});`, { parser: 'babel' }),
+      ['n.querySelector(\'style[data-inline-css="\' + e + \'"]\')', 'r.setAttribute("data-inline-css", e);', '(r.textContent = t), n.head.appendChild(r)']);
+    const css = call.arguments[1].value;
+    assertFeatures4(`${style.source}: inline style ${style.id}`, css, style.features);
+    files[style.target] = `/* Original Claude Desktop ${official.referenceVersion} style text that ${style.source} injects as <style data-inline-css="${style.id}">;\n`
+      + `   generated by extract-r3b-transcript.mjs. Edit the extractor, never this file. */\n${css}\n`;
+    manifest.inlineStyles.push({ target: style.target, source: style.source, referenceVersion: official.referenceVersion, id: style.id, sourceSha256: sha(src.bytes), sha256: sha(css), features: style.features });
+  }
+  for (const key of Object.keys(contract.foreignState ?? {}).filter(key => !foreignStateSeen.has(key)))
+    foreignProblems.push({ binding: key, problem: `foreignState ${key} is no longer module state this graph cuts; drop it` });
+  if (foreignProblems.length && !survey) {
+    const text = foreignProblems.map(f => `${f.module ? `${f.module}: ` : ''}${f.problem}${f.reachedBy ? ` reached by ${f.reachedBy}` : ''}`).join('\n  ');
+    if (!check) { const error = Error(`D1 module-state copies:\n  ${text}`); error.foreignProblems = foreignProblems; throw error; }
+    console.warn(`[r3b-transcript-v4] D1 module-state copies another region changed (regenerate to fail closed):\n  ${text}`);
+  }
+  manifest.foreignStateCopies = foreignStateCopies;
+  // The array form other generators read (extract-r3b-settings productionBlockers: strings or { area }).
+  manifest.linkedAreas = [...linkedManifests.keys()].sort().map(area => ({ area, modules: [...new Set(Object.values(contract.linkedAreas)
+    .filter(link => link.area === area).map(link => link.target))].sort() }));
+  if (survey) return { unresolved, stateConflicts, foreignProblems, modules: manifest.modules.map(m => ({ target: m.target, bindings: m.bindings.map(b => b.name), heldByCdsCore: m.heldByCdsCore, imports: m.imports.map(i => `${i.local}<${i.kind}:${i.via}`) })) };
+  if (stateConflicts.length) { const error = Error(`D46: ${stateConflicts.length} cds-core module states without publicName`); error.stateConflicts = stateConflicts; throw error; }
+  files['manifest.json'] = JSON.stringify(manifest, null, 2) + '\n';
+  if (check) {
+    const present = (await fs.readdir(output).catch(() => [])).sort(), expected = Object.keys(files).sort();
+    if (JSON.stringify(present) !== JSON.stringify(expected)) throw Error(`${label} output set changed: ${present.join(',')}. Run scripts/extract-r3b-transcript.mjs --release=${official.referenceVersion}.`);
+    for (const [name, text] of Object.entries(files))
+      if (await fs.readFile(path.join(output, name), 'utf8') !== text) throw Error(`${label} source mismatch: ${name}. Run scripts/extract-r3b-transcript.mjs --release=${official.referenceVersion}.`);
+  } else {
+    await fs.mkdir(output, { recursive: true });
+    for (const name of await fs.readdir(output)) if (!(name in files)) await fs.rm(path.join(output, name));
+    for (const [name, text] of Object.entries(files)) await fs.writeFile(path.join(output, name), text);
+  }
+  const count = manifest.modules.reduce((n, m) => n + m.bindings.length, 0);
+  console.log(`${check ? 'Verified' : 'Extracted'} ${manifest.modules.length} ${label} modules (${count} original ${official.referenceVersion} bindings, ${manifest.callSites.length} pinned call sites).`);
+  return manifest;
+}
+export { contract4, extractR3bTranscriptV4, contractVersions4 as contractVersions };
+
+// CLI: no flag = the 3.6556.2 production graph only (unchanged); --release=4.16336.0 = the isolated graph only; --all =
+// both. verify-gen-r3b-transcript.mjs checks both contracts.
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  const check = process.argv.includes('--check');
+  const release = process.argv.find(a => a.startsWith('--release='))?.slice('--release='.length);
+  if (process.argv.includes('--survey')) console.log(JSON.stringify(await extractR3bTranscriptV4({ survey: true }), null, 1));
+  else for (const version of process.argv.includes('--all') ? contractVersions4 : [release ?? V3]) await extractR3bTranscript({ check, version });
+}

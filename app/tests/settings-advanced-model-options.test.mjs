@@ -15,6 +15,8 @@ const ADVANCED_PAGES = ['advanced', 'harness', 'customize-hooks', 'profiles'];
 import { settingsSearch } from '../src/settings-model.mjs';
 import { PALETTE_SETTINGS_SECTIONS, PALETTE_CUSTOMIZE_SECTIONS } from '../src/sidebar-palette-model.mjs';
 import { setLocale, DEFAULT_LOCALE, t } from '../electron/i18n/index.mjs';
+import { LOCAL_EXTENSION_GROUPS } from '../src/settings-tab-compat.mjs';
+import { conciseCopy } from '../electron/i18n/concise.mjs';
 
 const app = path.resolve(import.meta.dirname, '..');
 const read = file => fs.readFileSync(path.join(app, file), 'utf8');
@@ -124,7 +126,10 @@ test('composer: an image refused because image input is off names the switch, an
 
 test('Advanced: the host’s developer pages form the last nav group; official pages keep their places', () => {
   const text = read('src/source-settings.jsx');
-  assert.match(text, /const navGroups = \['Settings','This computer','Customize','Advanced'\];/);
+  // 4.16336.0 settings-nav: the official groups are the official nav's own (shared-55 z_ over Kg); the host's developer
+  // pages form the last OpenClaude local group (settings-tab-compat LOCAL_EXTENSION_GROUPS).
+  assert.equal(text.includes('const navGroups'), false);
+  assert.deepEqual(LOCAL_EXTENSION_GROUPS.at(-1), { id: 'openclaude-advanced', title: 'OpenClaude · Advanced', sections: ADVANCED_PAGES });
   for (const id of ADVANCED_PAGES) assert.match(text, new RegExp(`\\{id:'${id}',label:'[^']+',icon:'[^']+',group:'Advanced'`), id);
   for (const [id, group] of [['preferences', 'Settings'], ['code', 'Settings'], ['general', 'This computer'], ['developer', 'This computer'], ['customize-skills', 'Customize']])
     assert.match(text, new RegExp(`\\{id:'${id}',label:'[^']+',icon:'[^']+',group:'${group}'`), id);
@@ -162,7 +167,8 @@ test('Advanced: search finds the moved rows and lands on Core options; zh-CN rea
 createRequire(path.join(app, 'package.json'))('react-dom').createPortal = children => children;
 globalThis.innerWidth = 1200;
 // D21: the Settings import graph reaches view-tabs, whose preload-helper calls document.createElement at evaluation.
-globalThis.document ??= { body: { nodeType: 1 }, documentElement: { dataset: {}, getAttribute: () => null }, createElement: () => ({}) };
+// W8-M9 stub contract (round4 integration, stub fields only): cds-core 9203795f reads these at load (official 4.16336.0): document.cookie.
+globalThis.document ??= { cookie: '' /* W8-M9: shared-0 CQ / Wo document.cookie */, body: { nodeType: 1 }, documentElement: { dataset: {}, getAttribute: () => null, hasAttribute: () => false /* 4.16336.0 settings-nav: shared-92 Ib reads the root's attribute at evaluation */ }, createElement: () => ({}) };
 let server, React, render, Settings, Models;
 before(async () => {
   React = (await import('react')).default;
@@ -178,12 +184,21 @@ test('Settings shell: the Advanced group heads Core options while it is open, wi
   const html = render(React.createElement(Settings, { open: true, config: { threadIds: [] }, model: 'm', effort: 'medium', permission: 'ask',
     boot: { connected: true, models: [], core: { engine: 'codex', capabilities: { hooksList: true } } }, busy: false, initialSection: 'advanced',
     desktopCall: async () => ({}), onSave: async () => ({}), onClose() {} }));
-  const nav = html.slice(html.indexOf('<nav class="ss-nav"'), html.indexOf('</nav>'));
-  assert.deepEqual([...nav.matchAll(/<p>([^<]+)<\/p>/g)].map(match => match[1]), ['Settings', 'This computer', 'Customize', 'Advanced']);
-  const advanced = nav.slice(nav.indexOf('<p>Advanced</p>'));
-  assert.deepEqual([...advanced.matchAll(/<span>([^<]+)<\/span><\/button>/g)].map(match => match[1]), ['Core options', 'Hooks', 'Profiles']);
-  assert.match(html, /aria-current="page"><span[^>]*>[^<]*<\/span><span>Core options<\/span>/);
-  assert.ok(html.includes('Codex has no advanced options to change here.'));
+  // U-SET-HANDWRITE (source-settings.jsx SETTINGS_NAV): the hand-written sl-* shell. Core options is no nav row of its
+  // own: it is the first page in Desktop app › Advanced (Profiles after it; Harness only on DeepSeek; Hooks moved to
+  // Customize), so opening on it marks Desktop app current and opens that Advanced section.
+  const nav = html.slice(html.indexOf('<nav class="sl-nav"'), html.indexOf('</nav>'));
+  const items = [...nav.matchAll(/<button type="button" class="sl-nav-item" data-testid="settings-nav-([^"]+)"([^>]*)>/g)];
+  assert.deepEqual(items.map(match => match[1]), ['account', 'usage', 'appearance', 'your-claude', 'models', 'notifications', 'customize', 'code', 'desktop']);
+  assert.deepEqual(items.filter(match => match[2].includes('aria-current="page"')).map(match => match[1]), ['desktop']);
+  const content = html.slice(html.indexOf('<div class="ss-content sl-content"'));
+  assert.match(content, /^<div class="ss-content sl-content" data-page="advanced" data-entry="desktop">/);
+  assert.match(content, /<h2 class="sl-page-title">Desktop app<\/h2>/);
+  const advanced = content.slice(content.indexOf('<details class="sl-advanced"'));
+  assert.match(advanced, /^<details class="sl-advanced" open=""><summary>Advanced<\/summary>/, 'Advanced is open while Core options is the section');
+  assert.deepEqual([...advanced.matchAll(/class="sl-advanced-title">([^<]+)</g)].map(match => match[1]), ['Core options', 'Profiles']);
+  // Core options heads its section, with the notice when the core has none of its rows.
+  assert.match(advanced, /<section class="sl-advanced-page"><h3 class="sl-advanced-title">Core options<\/h3><p class="ss-connection-notice" role="status">Codex has no advanced options to change here\.<\/p><\/section>/);
 });
 
 test('Settings › Models: each model’s everyday options sit on the page under the running core’s keys', () => {
@@ -193,22 +208,41 @@ test('Settings › Models: each model’s everyday options sit on the page under
   ];
   const config = { modelNames: { 'kimi:glm-5.3': 'My GLM', 'opencode:text-only': 'Elsewhere' }, modelSettings: { params: { 'kimi:glm-5.3': { images: false, contextWindow: 131072 } } } };
   const page = (core, extra = {}) => render(React.createElement(Models, { config, boot: { connected: true, models: list, core }, desktopCall: async () => ({ unsupported: true }), onSave: async () => {}, ...extra }));
-  const kimi = page({ engine: 'kimi', capabilities: { customization: true } });
+  // U-SET-LITE: an entry starts closed unless its model was customized for the running core (params or a name);
+  // `opened` adds a saved option for the models this test reads on Kimi (Text Only) and Codex (GLM 5.3).
+  const opened = { ...config, modelSettings: { params: { ...config.modelSettings.params, 'kimi:text-only': { temperature: 1 }, 'codex:glm-5.3': { effort: 'high' } } } };
+  const trigger = (html, name) => new RegExp(`<button[^>]*aria-label="${name.replace('.', '\\.')} options"[^>]*>`).exec(html)?.[0] ?? '';
+  const kimiCore = { engine: 'kimi', capabilities: { customization: true } };
+  const kimi = page(kimiCore);
+  assert.match(trigger(kimi, 'My GLM'), /aria-expanded="true"/, 'renamed and customized on Kimi: open');
+  assert.match(trigger(kimi, 'Text Only'), /aria-expanded="false"/, 'nothing changed on Kimi: closed');
+  assert.match(kimi, /<span class="msx-model-name text-body settings-row-title">Text Only<\/span>/, 'another core’s name is not this core’s');
+  assert.equal(kimi.includes('Elsewhere'), false);
+  const kimiOpen = page(kimiCore, { config: opened });
   assert.match(kimi, /<h3[^>]*>Kimi Code models<\/h3>/);
   assert.match(kimi, /data-model-options="glm-5\.3"/);
   assert.match(kimi, /My GLM<span class="msx-badge">Default<\/span><span class="msx-badge">Renamed<\/span>/);
   assert.match(kimi, /aria-label="GLM 5\.3 display name" placeholder="GLM 5\.3"[^>]*value="My GLM"/);
-  assert.match(kimi, /aria-label="Text Only display name" placeholder="Text Only"[^>]*value=""/, 'another core’s name is not this core’s');
+  assert.match(kimiOpen, /aria-label="Text Only display name" placeholder="Text Only"[^>]*value=""/, 'another core’s name is not this core’s');
   assert.match(kimi, /role="switch" aria-label="My GLM image input" aria-checked="false"/, 'image input switched off for this core');
-  assert.match(kimi, /<button[^>]*disabled=""[^>]*role="switch" aria-label="Text Only image input"|role="switch" aria-label="Text Only image input"[^>]*disabled=""/, 'a text-only catalog model can’t be switched on');
-  assert.ok(kimi.includes('Kimi Code lists this model as text only, so images can’t be sent to it.'));
+  assert.match(kimiOpen, /<button[^>]*disabled=""[^>]*role="switch" aria-label="Text Only image input"|role="switch" aria-label="Text Only image input"[^>]*disabled=""/, 'a text-only catalog model can’t be switched on');
+  // U-SET-LITE: the text-only description is its short line (concise.mjs).
+  const textOnly = conciseCopy('{core} lists this model as text only, so images can’t be sent to it.', 'en-US');
+  assert.equal(textOnly, 'Text only.');
+  assert.match(kimiOpen, new RegExp(`data-setting-id="model-text-only-images"[\\s\\S]*?data-settings-desc="">${textOnly.replace('.', '\\.')}<`));
+  assert.equal(kimiOpen.includes('lists this model as text only'), false);
   assert.match(kimi, /aria-label="My GLM context window"[^>]*value="131K"|aria-label="My GLM context window"[^>]*value="131072"/);
   assert.match(kimi, /aria-label="My GLM default reasoning effort"/);
-  // A core that keeps its own limits: no context window or output rows, and the list says so.
-  const codex = page({ engine: 'codex', capabilities: {} });
-  assert.equal(codex.includes('context window"'), false);
-  assert.ok(codex.includes('Codex keeps its own context window and output limits, so they aren’t set here.'));
-  assert.match(codex, /aria-label="GLM 5\.3 display name"[^>]*value=""/, 'Codex has no names saved');
+  // A core that keeps its own limits: no context window or output rows (U-SET-LITE: the note saying so was removed).
+  const codexCore = { engine: 'codex', capabilities: {} };
+  const codex = page(codexCore);
+  assert.match(trigger(codex, 'GLM 5.3'), /aria-expanded="false"/, 'Kimi’s customization does not open Codex’s entry');
+  assert.equal(codex.includes('My GLM'), false, 'Kimi’s name is not Codex’s');
+  assert.equal(codex.includes('keeps its own context window'), false);
+  const codexOpen = page(codexCore, { config: opened });
+  assert.match(codexOpen, /aria-label="GLM 5\.3 default reasoning effort"/, 'the entry is open');
+  assert.equal(codexOpen.includes('context window"') || codexOpen.includes('max output tokens"'), false);
+  assert.match(codexOpen, /aria-label="GLM 5\.3 display name"[^>]*value=""/, 'Codex has no names saved');
   // DeepSeek: the options are outside Advanced (which keeps pricing and custom providers).
   const deepseek = page({ engine: 'deepseek-harness', capabilities: {} });
   assert.ok(deepseek.indexOf('data-model-options="glm-5.3"') < deepseek.indexOf('Pricing and custom providers'));

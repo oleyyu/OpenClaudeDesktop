@@ -7,7 +7,7 @@
 // class strings, copy and structure; every value the original takes from a generated binding comes from that same
 // slice here: c511d59b8 t (Wc, the schedule text), c10bdd6e8 t (By, the status icons), cc0a875c8 t (nd, EmptyState),
 // shared-2 Ff / Cd / md (wr relative time, Sr / Mr task name), shared-156 Rr (Ai, the minute clock), shared-18 sr (Ci,
-// the scheduled-task / routine wording), and the CDS Badge / Icon / Pulse / Shimmer of shared-frame (view-tabs).
+// the scheduled-task / routine wording), and the CDS Badge / Icon / Pulse / Shimmer of shared-frame (cds-core facade since host-wiring code-b).
 // Host data: src/runs-pane-model.mjs over the local-routines list, the host's sessions, their metadata and state.
 //
 // Local facts (fizzy `panels` off, `Vn("panels") && D(Wi)` false): lA / fA / mA take their non-panels classes and mA
@@ -16,7 +16,9 @@
 // ⌘/Ctrl-click opens it in a new window and ⌥-click in split view (mA's `s = e.metaKey || e.ctrlKey, c = s && v,
 // l = e.altKey && !s && _ && !g` → `y(e, …)`): RunRow hands the click event to onOpen (W14-code pa2-05, main.jsx).
 import React, { useEffect, useState } from 'react';
-import { CdsBadge, CdsIcon, CdsPulse, CdsShimmer } from './generated/view-tabs/shared-frame-6jtSkIit.js';
+// host-wiring code-b: the Local Badge, the status Pulse / Icons, the status Shimmer and the caret are the 4.16336.0 cds-core
+// originals (shared-frame-CJdE5Ria, semantic facade); the pane draws them all in its own rows.
+import { CdsBadge, CdsIcon, CdsPulse, CdsShimmer } from './cds-core.mjs';
 import { r as scheduleText } from './generated/code-routines/c511d59b8-DUTlpzSr.mjs';
 import { e as RUN_STATUS } from './generated/code-routines/c10bdd6e8-Dsd2w7_R.mjs';
 import { f as EmptyState } from './generated/code-routines/cc0a875c8-Ba9KI-Fw.mjs';

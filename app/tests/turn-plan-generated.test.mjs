@@ -66,8 +66,11 @@ test('extract-turn-plan --check: the generated modules match the official chunks
   assert.deepEqual(ccd.imports.filter((i) => i.kind === 'adapter').map((i) => `${i.via}=${i.name}`),
     ['index.chunk-jPKPzV-P.js:h0=growthBookValue', 'index.chunk-jPKPzV-P.js:m0=growthBookOn', 'index.chunk-jPKPzV-P.js:uz=logEvent']);
   for (const name of ['Yt', 'Jt', '_t', 'vt', 'jt', 'kt', 'At', 'Nt', 'Qe', 'et', 'We', 'Ke', 'Ge', 'Ue', 'it', 'st', 'Dt', 'Tt']) assert.ok(ccd.bindings.some((b) => b.name === name), name);
-  // verify-gen is the one-line D0 form prepare-ui discovers.
-  assert.equal(fs.readFileSync(path.join(app, 'scripts/verify-gen-turn-plan.mjs'), 'utf8'), "import { extractTurnPlan } from './extract-turn-plan.mjs'; await extractTurnPlan({ check: true });\n");
+  // verify-gen keeps the one-line D0 form prepare-ui discovers as its first line (the 3.6556.2 graph, always strict); the
+  // 4.16336.0 staging graph (src/generated/turn-plan-v4, batch 3) is checked strictly after it once staged.
+  const verify = fs.readFileSync(path.join(app, 'scripts/verify-gen-turn-plan.mjs'), 'utf8');
+  assert.ok(verify.startsWith("import { extractTurnPlan } from './extract-turn-plan.mjs'; await extractTurnPlan({ check: true });\n"));
+  assert.match(verify, /if \(existsSync\(outputs\.renderer\)\) await extractTurnPlanV4\(\{ check: true \}\);/);
 });
 
 test('official strings: the ccd_turn server, its gate, the sub-agent deny, the renderer reading and the skipped row', { skip: !has }, () => {

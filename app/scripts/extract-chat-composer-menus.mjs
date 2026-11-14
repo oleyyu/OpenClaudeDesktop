@@ -1,5 +1,13 @@
 // w13-chatui-composer-tools (research/w13-chatui.md §1.6 K2/K3/K5, research/w13-chatfn.md §1.5 C1/C2/C8; plan-w13
-// 「#### w13-chatui-composer-tools」): extract the 3.6556.2 originals the Chat card's + button and + menu are built on.
+// 「#### w13-chatui-composer-tools」): extract the originals the Chat card's + button and + menu are built on, now from
+// 4.16336.0 (regions-chat). Root keys keep their 3.6556.2 names; each root is located in 4.16336.0 by its features alone
+// and the manifest records the real local: kF→TP, iN→Wj, oN→Kj, sN→qj, cN→Jj, Yj (new), lN→Xj (export Ia) in
+// shared-8-BqfCbkJd.js; na→Ia, ra→La, ia→Ra, Js→Vc, Ws→Rc, Fs→kc, ks→wc, Es→xc, Ms→Ec in c752b32f8-NSBu06gO.js;
+// Tz→Cq (export n), yz→_q (export s) in shared-33-DtdykY0y.js (3.6556.2: shared-5); the trigger testid shared-1 S_ is
+// shared-1-D1bGaTaN.js _p; Ms's maxVisibleItems comes from shared-212-BHMAi0oa.js _W (3.6556.2: shared-182 es).
+// 4.16336.0 changes: the slot groups gain artifactFile / artifactDrive, sN / cN gain artifactDrive, lN takes a sixth
+// argument (Js passes `ge(nn())`, nn = shared-8 kN: the offered-files context && its gate) that also drops Yj
+// (designSystem), and the project slot loses its onOpenChange analytics. The notes below keep the 3.6556.2 names.
 // Nothing here executes desktop runtime code; chunks are read, prettier-formatted and parsed (Babel scope analysis) only.
 //
 //   shared-8 kF              the + trigger: CdsButton `"data-chorus-callout": "attach"`, iconOnly, icon "Add", ghost,
@@ -36,16 +44,16 @@ import { createHash } from 'node:crypto';
 import { parsers } from '../../tools/node_modules/prettier/plugins/babel.mjs';
 import { format } from '../../tools/node_modules/prettier/index.mjs';
 import babel from '../../tools/node_modules/playwright/lib/transform/babelBundle.js';
-import { referenceVersion, referenceSnapshot, ionSource as source, looseFeature } from './official-3.6556.2.mjs';
+import { referenceVersion, referenceSnapshot, ionSource as source, looseFeature } from './official-4.16336.0.mjs';
 
 const root = path.resolve(import.meta.dirname, '..');
 const output = path.join(root, 'src/generated/chat-composer-menus');
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
-const SHARED1 = 'shared-1-BJhqMmkf.js';
-const SHARED5 = 'shared-5-Bg6ZMqvt.js';
-const SHARED8 = 'shared-8-Db1QN4mf.js';
-const SHARED182 = 'shared-182-BI1KJccu.js';
-const ADD = 'c752b32f8-mYZAs6yC.js';
+const SHARED1 = 'shared-1-D1bGaTaN.js';
+const SHARED5 = 'shared-33-DtdykY0y.js';
+const SHARED8 = 'shared-8-BqfCbkJd.js';
+const SHARED212 = 'shared-212-BHMAi0oa.js';
+const ADD = 'c752b32f8-NSBu06gO.js';
 const I = '[\\w$]+';
 const STR = '"((?:[^"\\\\]|\\\\.)*)"';
 // A react-intl descriptor, single- or multi-line as prettier printed it; emitted in canonical one-line form.
@@ -54,12 +62,17 @@ const descriptor = id => new RegExp(`\\{\\s*defaultMessage: ${STR},\\s*id: "(${i
 // Top-level declarations located by features (all must match exactly one declaration of the chunk).
 const roots = {
   kF: { source: SHARED8, features: ['"data-chorus-callout": "attach"', 'id: "OnsnuZtVJO"', 'tooltip: !1'] },
-  iN: { source: SHARED8, features: ['["uploadFile", "addPeople", "googleDrive", "addFolder", "teach", "screenshot", "shareScreen", "project", "github"]',
+  // 4.16336.0 adds the artifactFile / artifactDrive slots (c752b32f8 Js fills them only when shared-8 kN — the offered
+  // context and its gate — is on), the artifactDrive members of sN / cN, and Yj (dropped when that flag is on).
+  iN: { source: SHARED8, features: ['["uploadFile", "artifactFile", "artifactDrive", "addPeople", "googleDrive", "addFolder", "teach", "screenshot", "shareScreen", "project", "github",',
     '["skills", "connectors", "designSystem", "plugins", "devices"]', '["haystack", "research", "webSearch", "memory", "permissionMode"]'] },
   oN: { source: SHARED8, features: ['new Set(["project", "github", ...', '.filter((e) => e !== "memory" && e !== "permissionMode")'] },
-  sN: { source: SHARED8, features: ['new Set(["designSystem", "googleDrive"])'] },
-  cN: { source: SHARED8, features: ['"googleDrive", "teach", "haystack", "memory"]'] },
-  lN: { source: SHARED8, exportAlias: 'Wi', features: ['return r && !a(t) ? [n(t, r)] : [];', 'return [o(iN[0]), o(iN[1]), o(iN[2])];'] },
+  sN: { source: SHARED8, features: ['new Set(["designSystem", "googleDrive", "artifactDrive"])'] },
+  cN: { source: SHARED8, features: ['"googleDrive", "artifactDrive", "teach", "haystack", "memory"]'] },
+  // No 3.6556.2 counterpart: the key is the 4.16336.0 local.
+  Yj: { source: SHARED8, features: ['= new Set(["designSystem"])'] },
+  lN: { source: SHARED8, exportAlias: 'Ia', features: ['return r && !o(t) ? [n(t, r)] : [];', 'return [s(iN[0]), s(iN[1]), s(iN[2])];',
+    '(e, t, n = (e, t) => t, r = !1, i = !1, a = !1)', '(a && Yj.has(e)) || (t && oN.has(e)) || (r && sN.has(e)) || (i && cN.has(e))'] },
   na: { source: ADD, features: ['uploadFile: "add-menu-upload-file"', 'screenshot: "add-menu-screenshot"', 'webSearch: "add-menu-web-search"'] },
   ra: { source: ADD, features: ['for (let e of Object.keys(na))', 'n && r && (t[e] = ia(n, r));'] },
   ia: { source: ADD, features: ['case "toggle":', 'case "submenu":', 'return { ...e, testId: t };'] },
@@ -73,7 +86,7 @@ const roots = {
   yz: { source: SHARED5, exportAlias: 's', features: ['id: "C5I8J3lxs3"', 'icon: "Research"', 'id: "CzjOV5rgPZ"', 'id: "WyiVeak7w5"'] },
 };
 // Sliced verbatim, in this order (dependencies first); each may only read the others in its chunk's group.
-const sliced = { [SHARED8]: ['iN', 'oN', 'sN', 'cN', 'lN'], [ADD]: ['na', 'ia', 'ra'] };
+const sliced = { [SHARED8]: ['iN', 'oN', 'sN', 'cN', 'Yj', 'lN'], [ADD]: ['na', 'ia', 'ra'] };
 
 // Literal picks: [name, root, pattern, group names, count]; each pattern must match `count` times (identically).
 const picks = [
@@ -84,14 +97,16 @@ const picks = [
   ['trigger.shortcut', 'kF', new RegExp(`${I} = ${I} \\? void 0 : ${STR},`), ['value']],
   ['trigger.tooltip', 'kF', new RegExp(`${I}\\(${I}, \\{ content: ${I}, side: ${STR}, shortcut: ${I}, children: ${I} \\}\\)`), ['side']],
   ['separators', 'Js', new RegExp(`\\[\\s*\\.\\.\\.${I},\\s*\\.\\.\\.\\(${I}\\.length > 0 \\? \\[\\{ type: "separator", label: ${STR} \\}, \\.\\.\\.${I}\\] : \\[\\]\\),\\s*\\.\\.\\.\\(${I}\\.length > 0 \\? \\[\\{ type: "separator", label: ${STR} \\}, \\.\\.\\.${I}\\] : \\[\\]\\),\\s*\\]`), ['tools', 'modes']],
-  ['assembly', 'Js', new RegExp(`\\[${I}, ${I}, ${I}\\] = (${I})\\(\\s*(${I})\\(\\{([\\s\\S]*?)\\}\\),\\s*${I},\\s*${I},\\s*${I},\\s*${I},\\s*\\)`), ['split', 'testIds', 'slots']],
+  // 4.16336.0: lN's sixth argument is the artifact-file-rows flag (`y = ge(nn())`, nn = shared-8 kN).
+  ['assembly', 'Js', new RegExp(`\\[${I}, ${I}, ${I}\\] = (${I})\\(\\s*(${I})\\(\\{([\\s\\S]*?)\\}\\),\\s*${I},\\s*${I},\\s*${I},\\s*${I},\\s*(${I}),\\s*\\)`), ['split', 'testIds', 'slots', 'artifactRows']],
   ['messages.addFilesOrPhotos', 'Ws', descriptor('vVSGqeakjA'), ['message']],
   ['items.uploadFile', 'Ws', new RegExp(`\\{\\s*type: ${STR},\\s*label: ${I},\\s*icon: ${STR},\\s*onAction: ${I},\\s*focusesNothing: !0,\\s*shortcut: ${I},\\s*\\}`), ['type', 'icon']],
   ['messages.takeAScreenshot', 'Fs', descriptor('fVVgugcqfW'), ['message']],
   ['messages.couldNotCaptureScreen', 'Fs', descriptor('uGOETn5bfV'), ['message']],
   ['items.screenshot', 'Fs', new RegExp(`\\{ type: ${STR}, label: ${I}, icon: ${STR}, onAction: ${I} \\}`), ['type', 'icon']],
   ['messages.addToProject', 'ks', descriptor('VTbz0vOf5i'), ['message']],
-  ['items.project', 'ks', new RegExp(`\\{ type: ${STR}, icon: ${STR}, label: ${I}, onOpenChange: ${I}, renderPopup: ${I} \\}`), ['type', 'icon']],
+  // 4.16336.0 drops the slot's onOpenChange (3.6556.2 js: the row_shown / open analytics).
+  ['items.project', 'ks', new RegExp(`\\{ type: ${STR}, icon: ${STR}, label: ${I}, renderPopup: ${I} \\}`), ['type', 'icon']],
   ['messages.searchOrCreateProject', 'Es', descriptor('x1GW6kgtFG'), ['message']],
   ['messages.searchProjects', 'Es', descriptor('C1IFDydllb'), ['message']],
   ['messages.noMatches', 'Es', descriptor('96GJ5wSQam'), ['message']],
@@ -227,39 +242,50 @@ export async function extractChatComposerMenus({ check = false } = {}) {
   }
   const topKeys = [...data.assembly.slots.matchAll(/\n {10}(\w+):/g)].map(m => m[1]);
   if (JSON.stringify(topKeys) !== JSON.stringify(slotKeys)) throw Error(`Js slot keys ${topKeys.join(',')} differ from iN`);
+  // E5 (4.16336.0): lN's sixth argument is `<flag> = <memo>(<kN>())`, kN being shared-8's offered-context && gate hook.
+  const flagCall = [...found.Js.text.matchAll(new RegExp(`(?<![\\w$])${data.assembly.artifactRows.replace(/[$]/g, '\\$&')} = ${I}\\((${I})\\(\\)\\),`, 'g'))];
+  if (flagCall.length !== 1) throw Error(`Js artifact-rows flag ${data.assembly.artifactRows}: ${flagCall.length} assignments`);
+  const flagImport = add.imported.get(flagCall[0][1]);
+  const flagLocal = flagImport?.from === SHARED8 ? s8.exported.get(flagImport.imported) : null;
+  const flagPath = flagLocal && s8.program.scope.bindings[flagLocal]?.path;
+  if (!flagPath?.isFunctionDeclaration() || !looseFeature('let e = L(DN), t = ta(Bd); return e && t;').test(textOf(s8, flagPath)))
+    throw Error(`Js artifact-rows flag no longer reads ${SHARED8} kN (offered context && gate): ${flagCall[0][1]}`);
+  const artifactRowsResolved = { source: SHARED8, export: flagImport.imported, local: flagLocal, sha256: sha(textOf(s8, flagPath)) };
   delete data.assembly;
   // E5: Ms's maxVisibleItems is the shared-182 number constant c752b32f8 imports (es), read from its declaration.
   const maxImport = add.imported.get(data.projectPopup.maxVisibleBinding);
-  if (!maxImport || maxImport.from !== SHARED182) throw Error(`Ms maxVisibleItems ${data.projectPopup.maxVisibleBinding} is not a ${SHARED182} import`);
-  const s182 = await readSource(SHARED182, cache);
-  const maxLocal = s182.exported.get(maxImport.imported);
-  const maxInit = maxLocal && s182.program.scope.bindings[maxLocal]?.path.isVariableDeclarator() ? s182.program.scope.bindings[maxLocal].path.node.init : null;
-  if (maxInit?.type !== 'NumericLiteral') throw Error(`${SHARED182} ${maxImport.imported} (${maxLocal}) is no longer a number constant`);
+  if (!maxImport || maxImport.from !== SHARED212) throw Error(`Ms maxVisibleItems ${data.projectPopup.maxVisibleBinding} is not a ${SHARED212} import`);
+  const s212 = await readSource(SHARED212, cache);
+  const maxLocal = s212.exported.get(maxImport.imported);
+  const maxInit = maxLocal && s212.program.scope.bindings[maxLocal]?.path.isVariableDeclarator() ? s212.program.scope.bindings[maxLocal].path.node.init : null;
+  if (maxInit?.type !== 'NumericLiteral') throw Error(`${SHARED212} ${maxImport.imported} (${maxLocal}) is no longer a number constant`);
   data.items.project.maxVisibleItems = maxInit.value;
-  const projectPopupResolved = { source: SHARED182, export: maxImport.imported, local: maxLocal, value: maxInit.value };
+  const projectPopupResolved = { source: SHARED212, export: maxImport.imported, local: maxLocal, value: maxInit.value };
   delete data.projectPopup;
 
   const literal = value => typeof value === 'string' && value.startsWith('{ defaultMessage') ? value : JSON.stringify(value);
   const objectText = obj => `{ ${Object.entries(obj).map(([k, v]) => `${JSON.stringify(k)}: ${v && typeof v === 'object' ? objectText(v) : literal(v)}`).join(', ')} }`;
   const header = (sources) => `// Original Claude Desktop ${referenceVersion} code and literals from ${sources}; generated by extract-chat-composer-menus.mjs.\n// Edit the extractor, never this file.\n`;
   const declText = key => found[key].path.isVariableDeclarator() ? `var ${found[key].text};` : found[key].text;
-  const slotsText = await format(`${header(`${SHARED8} iN, oN, sN, cN, lN and ${ADD} na, ia, ra (sliced)`)}` +
+  // Header names: the real 4.16336.0 locals (key = local, or 3.6556.2 key → local where they differ).
+  const L = keys => keys.map(key => (found[key].local === key ? key : `${key}→${found[key].local}`));
+  const slotsText = await format(`${header(`${SHARED8} ${L(sliced[SHARED8]).join(', ')} and ${ADD} ${L(sliced[ADD]).join(', ')} (sliced)`)}` +
     `${[...sliced[SHARED8], ...sliced[ADD]].map(declText).join('\n')}\n` +
     `export { ${found.iN.local} as addMenuSlotGroups, ${found.lN.local} as splitAddMenuSlots, ${found.na.local} as addMenuTestIds, ${found.ra.local} as withAddMenuTestIds };\n`, { parser: 'babel' });
   const menu = { trigger: { ...data.trigger.button, icon: data.trigger.icon, className: data.trigger.className, tooltipSide: data.trigger.tooltip.side, shortcut: data.trigger.shortcut },
     separators: data.separators, items: data.items };
-  const menuText = await format(`${header(`${SHARED8} kF, ${SHARED1} S_, ${ADD} Js / Ws / Fs / ks / Es / Ms, ${SHARED182} es and ${SHARED5} Tz / yz (picked literals)`)}` +
+  const menuText = await format(`${header(`${SHARED8} ${L(['kF'])}, ${SHARED1} ${testIdLocal}, ${ADD} ${L(['Js', 'Ws', 'Fs', 'ks', 'Es', 'Ms']).join(' / ')}, ${SHARED212} ${maxLocal} and ${SHARED5} ${L(['Tz', 'yz']).join(' / ')} (picked literals)`)}` +
     `const chatAddMenuMessages = Object.freeze(${objectText(data.messages)});\n` +
     `const chatAddMenu = Object.freeze(${objectText(menu)});\n` +
     `export { chatAddMenuMessages, chatAddMenu };\n`, { parser: 'babel' });
   const files = { 'add-menu-slots.mjs': slotsText, 'add-menu.mjs': menuText };
   const manifest = { referenceVersion, referenceSnapshot, generator: 'scripts/extract-chat-composer-menus.mjs', hostModule: 'src/source-chat-tools-menu.jsx',
     roots: Object.fromEntries(Object.entries(found).map(([key, f]) => [key, { source: f.source, local: f.local, sourceSha256: sha(f.src.bytes), sha256: sha(f.text), features: roots[key].features }])),
-    resolved: { triggerTestId: { source: SHARED1, export: testIdImport.imported, local: testIdLocal, value: data.trigger.button.testId }, projectMaxVisibleItems: projectPopupResolved },
+    resolved: { artifactFileRows: artifactRowsResolved, triggerTestId: { source: SHARED1, export: testIdImport.imported, local: testIdLocal, value: data.trigger.button.testId }, projectMaxVisibleItems: projectPopupResolved },
     modules: [
       { target: 'add-menu-slots.mjs', sources: [SHARED8, ADD], sha256: sha(slotsText), sliced: Object.values(sliced).flat(),
         exports: ['addMenuSlotGroups', 'splitAddMenuSlots', 'addMenuTestIds', 'withAddMenuTestIds'] },
-      { target: 'add-menu.mjs', sources: [SHARED8, SHARED1, ADD, SHARED5, SHARED182], sha256: sha(menuText), exports: ['chatAddMenuMessages', 'chatAddMenu'] },
+      { target: 'add-menu.mjs', sources: [SHARED8, SHARED1, ADD, SHARED5, SHARED212], sha256: sha(menuText), exports: ['chatAddMenuMessages', 'chatAddMenu'] },
     ],
     picks: pickRecords };
   files['manifest.json'] = JSON.stringify(manifest, null, 2) + '\n';

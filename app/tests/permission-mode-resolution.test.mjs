@@ -1,5 +1,5 @@
-// R4g-composer CP6 (composer-14): the composer's layered permission mode (3.6556.2 c227f4d5e RR over c8eb45883 p; lane
-// w1-composer-pure moved it from 2.42304.0 JI / d) on the host. The generated p is compared with the shipped text, the
+// R4g-composer CP6 (composer-14): the composer's layered permission mode (4.16336.0 c227f4d5e over c8eb45883 v; regions-misc
+// moved it from 3.6556.2 RR / p, lane w1-composer-pure from 2.42304.0 JI / d) on the host. The generated p is compared with the shipped text, the
 // host layers run as a pure reducer, and the two hooks (permission-mode-resolution.mjs, source-bypass-permission.jsx)
 // are rendered once with Vite SSR (hmr and ws off).
 //
@@ -24,9 +24,10 @@ import {
 import { savedPermission } from '../electron/preferences.mjs';
 
 const app = path.resolve(import.meta.dirname, '..');
-const official = name => fs.readFileSync(path.join(app, '../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1', name), 'utf8');
+const official = name => fs.readFileSync(path.join(app, '../reference/snapshots/claude-4.16336.0-20261104/ion-dist/assets/v1', name), 'utf8');
+const v3 = name => fs.readFileSync(path.join(app, '../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1', name), 'utf8');
 const previous = name => fs.readFileSync(path.join(app, '../reference/installed-2.42304.0-20261017/ion-dist/assets/v1', name), 'utf8');
-const COMPOSER = 'c227f4d5e-B-FYKrwT.js';
+const COMPOSER = 'c227f4d5e-DGDdGBTz.js', HELPERS = 'cf059c6df-B32mQ24C.js', RESOLVER = 'c8eb45883-Daa6ad-i.js';
 const local = rel => fs.readFileSync(path.join(app, rel), 'utf8');
 const count = (text, needle) => text.split(needle).length - 1;
 const memoryStorage = (initial = {}) => {
@@ -41,51 +42,85 @@ before(async () => {
 });
 after(async () => { await server?.close(); });
 
-test('generated p is the shipped 3.6556.2 c8eb45883 p (byte slice, --check clean) and agrees with it on every layer combination', async () => {
+test('generated v is the shipped 4.16336.0 c8eb45883 v with its closure (byte slices, --check clean) and agrees with it on every layer combination', async () => {
   await extractPermissionMode({ check: true });
   const manifest = JSON.parse(local('src/generated/permission-mode/manifest.json'));
-  assert.equal(manifest.referenceVersion, '3.6556.2');
-  assert.equal(manifest.referenceSnapshot, 'snapshots/claude-3.6556.2-20261025-192807');
-  assert.deepEqual(manifest.bindings, { p: { source: 'c8eb45883-BdFVtK0i.js', exportedAs: 'resolvePermissionBaseMode' } });
-  const chunk = official('c8eb45883-BdFVtK0i.js');
-  assert.equal(count(chunk, 'baseMode:e??t??r??n??i,'), 1);
-  assert.equal(count(chunk, 'export{f as a,p as i,o as n,u as o,c as r,l as s,a as t};'), 1);
-  const at = chunk.indexOf('function p({'), body = chunk.slice(at, chunk.indexOf('export{', at)), shipped = new Function(`${body}; return p;`)();
-  // The 3.6556.2 p is the 2.42304.0 d byte for byte, renamed.
-  const old = previous('c8eb45883-BKWHnsew.js'), oldAt = old.indexOf('function d({');
-  assert.equal(body.replace(/^function p\(/, 'function d('), old.slice(oldAt, old.indexOf('export{', oldAt)));
-  const values = { userChoice: [null, 'ask', 'plan'], userSettingsDefault: [undefined, 'acceptEdits'], folderChoice: [undefined, 'bypass'],
-    repoSettingsDefault: [undefined, 'ask'], globalPref: ['auto', 'acceptEdits'], consultedStoredGlobalPref: [null, 'auto'], storedPickLayersSettled: [false, true] };
+  assert.equal(manifest.referenceVersion, '4.16336.0');
+  assert.equal(manifest.referenceSnapshot, 'snapshots/claude-4.16336.0-20261104');
+  assert.deepEqual(Object.keys(manifest.bindings), ['a', 'g', '_', 'v']);
+  assert.deepEqual({ ...manifest.bindings.v, sha256: undefined }, { source: RESOLVER, exportedAs: 'resolvePermissionBaseMode', chunkExport: 'c', sha256: undefined });
+  for (const name of ['a', 'g', '_']) assert.equal(manifest.bindings[name].reachedFrom, 'v', name);
+  const chunk = official(RESOLVER);
+  assert.equal(count(chunk, 'baseMode:e??_(t??r??n??i,s),'), 1);
+  assert.equal(count(chunk, 'heldPolicyCeiling:s'), 1);
+  assert.equal(count(chunk, 'export{s as a,v as c,h as d,l as f,o as i,f as l,_ as n,p as o,m as r,c as s,a as t,u};'), 1);
+  const table = 'a={plan:0,default:1,dontAsk:1,acceptEdits:2,auto:3,bypassPermissions:4}';
+  assert.equal(count(chunk, table), 1);
+  const at = chunk.indexOf('function g(e,t){'), body = chunk.slice(at, chunk.indexOf('export{', at));
+  assert.ok(body.includes('function _(e,t){return t!==void 0&&g(e,t)?t:e}') && body.includes('function v({'));
+  const shipped = new Function(`var ${table};${body}; return v;`)();
+  const generated = local('src/generated/permission-mode/resolution.mjs');
+  for (const name of ['a', 'g', '_', 'v']) assert.equal(manifest.bindings[name].sha256 !== undefined, true, name);
+  assert.match(generated, /export \{ v as resolvePermissionBaseMode \};/);
+  const values = { userChoice: [null, 'ask', 'plan'], userSettingsDefault: [undefined, 'acceptEdits'], folderChoice: [undefined, 'bypassPermissions'],
+    repoSettingsDefault: [undefined, 'default'], globalPref: ['auto', 'acceptEdits'], consultedStoredGlobalPref: [null, 'auto'], storedPickLayersSettled: [false, true],
+    heldPolicyCeiling: [undefined, 'default', 'acceptEdits'] };
   let combos = [{}];
   for (const [key, list] of Object.entries(values)) combos = combos.flatMap(combo => list.map(value => ({ ...combo, [key]: value })));
-  assert.equal(combos.length, 3 * 2 ** 6);
+  assert.equal(combos.length, 3 * 3 * 2 ** 6);
   for (const combo of combos) assert.deepEqual(resolvePermissionBaseMode(combo), shipped(combo), JSON.stringify(combo));
+  // Without a policy ceiling, v is the 3.6556.2 p (and the 2.42304.0 d) on every combination, host mode values included.
+  const old = v3('c8eb45883-BdFVtK0i.js'), oldAt = old.indexOf('function p({'), p = new Function(`${old.slice(oldAt, old.indexOf('export{', oldAt))}; return p;`)();
+  for (const combo of combos.filter(c => c.heldPolicyCeiling === undefined)) {
+    const { heldPolicyCeiling, ...rest } = combo;
+    assert.deepEqual(resolvePermissionBaseMode(combo), p(rest), JSON.stringify(combo));
+    const host = { ...rest, folderChoice: rest.folderChoice && 'bypass', repoSettingsDefault: rest.repoSettingsDefault && 'ask' };
+    assert.deepEqual(resolvePermissionBaseMode({ ...host, heldPolicyCeiling: undefined }), p(host), JSON.stringify(host));
+  }
   // The order: userChoice, settings default, folder pick, repo default, global.
   const base = { userChoice: null, userSettingsDefault: undefined, repoSettingsDefault: undefined, folderChoice: undefined, globalPref: 'auto', consultedStoredGlobalPref: 'auto', storedPickLayersSettled: true };
   assert.equal(resolvePermissionBaseMode({ ...base, repoSettingsDefault: 'ask', folderChoice: 'acceptEdits' }).baseMode, 'acceptEdits');
   assert.equal(resolvePermissionBaseMode({ ...base, repoSettingsDefault: 'ask' }).baseModeSource, 'repo_settings_default_mode');
   assert.equal(resolvePermissionBaseMode({ ...base, userSettingsDefault: 'ask', folderChoice: 'acceptEdits' }).baseModeSource, 'settings_default_mode');
+  // New in 4.16336.0: the policy ceiling caps every layer below the opening's own pick, never the pick itself.
+  assert.equal(resolvePermissionBaseMode({ ...base, heldPolicyCeiling: 'acceptEdits' }).baseMode, 'acceptEdits');
+  assert.equal(resolvePermissionBaseMode({ ...base, folderChoice: 'bypassPermissions', heldPolicyCeiling: 'default' }).baseMode, 'default');
+  assert.equal(resolvePermissionBaseMode({ ...base, folderChoice: 'plan', heldPolicyCeiling: 'default' }).baseMode, 'plan');
+  // default and dontAsk share a rank; g ranks a dontAsk ceiling above default, so default is capped to dontAsk, and a
+  // default ceiling leaves dontAsk alone.
+  assert.equal(resolvePermissionBaseMode({ ...base, globalPref: 'default', heldPolicyCeiling: 'dontAsk' }).baseMode, 'dontAsk');
+  assert.equal(resolvePermissionBaseMode({ ...base, globalPref: 'dontAsk', heldPolicyCeiling: 'default' }).baseMode, 'dontAsk');
+  assert.equal(resolvePermissionBaseMode({ ...base, userChoice: 'bypassPermissions', heldPolicyCeiling: 'default' }).baseMode, 'bypassPermissions');
+  // Host: no managed policy, so the ceiling is undefined and the host's own mode values pass through unchanged.
+  assert.equal(resolveOpeningMode({ folderChoice: 'bypass', globalPref: 'ask' }).mode, 'bypass');
+  assert.match(local('src/permission-mode-resolution.mjs'), /storedPickLayersSettled: !!settled, heldPolicyCeiling: undefined \}\);/);
 });
 
 test('the c227f4d5e call sites the host adapter follows are pinned once each (looseFeature, R2)', () => {
   const manifest = JSON.parse(local('src/generated/permission-mode/manifest.json'));
-  const composer = official(COMPOSER);
+  const composer = official(COMPOSER), helpers = official(HELPERS);
   assert.equal(manifest.pinMatch, 'looseFeature');
-  assert.deepEqual(Object.keys(manifest.pins), [COMPOSER]);
+  assert.deepEqual(Object.keys(manifest.pins), [COMPOSER, HELPERS]);
   const pins = manifest.pins[COMPOSER];
   assert.ok(pins.length >= 13);
   for (const pin of pins) assert.equal(looseCount(composer, pin), 1, pin);
+  for (const pin of manifest.pins[HELPERS]) assert.equal(looseCount(helpers, pin), 1, pin);
   // Every pin is also the shipped text verbatim (the loose match only matters for the next version).
   for (const pin of pins) assert.equal(count(composer, pin), 1, pin);
-  assert.ok(pins.includes('v=!!g&&c!=="approval_card"&&e!=="plan"&&!(e==="bypassPermissions"&&DR(g));lt(e),v&&Ge(t=>({...t,[g]:e}))'));
-  assert.ok(pins.includes('[We,Ge]=Xd("epitaxy-folder-permission-mode-v2",kR,AR),Ke=c?.originCwd'));
-  assert.ok(pins.includes('function OR(e){return Object.fromEntries(Object.entries(e).filter(([e,t])=>t!=="bypassPermissions"||fR(e)))}'));
+  for (const pin of manifest.pins[HELPERS]) assert.equal(count(helpers, pin), 1, pin);
+  assert.ok(pins.includes('y=!!_&&u!=="approval_card"&&e!=="plan"&&!(e==="bypassPermissions"&&iH(_))'));
+  assert.ok(pins.includes('jt.current=ir.current,Tt(e),y&&it(t=>({...t,[_]:e}))'));
+  assert.ok(pins.includes('[rt,it]=kl("epitaxy-folder-permission-mode-v2",oH,sH),at=u?.originCwd'));
+  assert.ok(pins.includes('function aH(e){return Object.fromEntries(Object.entries(e).filter(([e,t])=>t!=="bypassPermissions"||Gx(e)))}'));
+  assert.ok(pins.includes('Ge=se?uy(E):void 0'));
+  assert.ok(pins.some(pin => pin.includes('heldPolicyCeiling:Ge')));
+  assert.ok(pins.some(pin => pin.includes('u=a!==null&&!Yx(a,{autoIsDefault:!1})&&(t===V||a==="plan")&&Y.includes(a)')));
   // The v1 key is now only the seed source; 2.42304.0 never had the v2 key.
   assert.equal(count(composer, '"epitaxy-folder-permission-mode"'), 1);
   assert.equal(count(previous('c227f4d5e-Ba-r--Rl.js'), 'epitaxy-folder-permission-mode-v2'), 0);
-  // The global preference: only the auto-default nudge (XL/QL decision, M) writes it, and it is a GrowthBook-gated pref.
-  assert.equal(count(composer, 'M=J2($,12,o,r)?K2($,12,o,r,()=>(r("auto"),o("auto"))):$[14]'), 1);
-  assert.equal(count(composer, 'se=vt("ccd_auto_default_mode"),ce=vt("ccr_auto_default_mode")'), 1);
+  // The global preference: only the auto-default nudge (P) writes it, and it is a GrowthBook-gated pref.
+  assert.equal(count(composer, 'P=J2($,12,o,r)?K2($,12,o,r,()=>(r("auto"),o("auto"))):$[14]'), 1);
+  assert.equal(count(composer, 'he=Zt("ccd_auto_default_mode"),J=Zt("ccr_auto_default_mode")'), 1);
 });
 
 test('host layers: opening and folder keys, which picks become the folder pick, the draft folder move', () => {
@@ -102,10 +137,21 @@ test('host layers: opening and folder keys, which picks become the folder pick, 
   assert.equal(folderPickWrites({ folderKey: '/r/a', value: 'plan' }), false);
   assert.equal(folderPickWrites({ folderKey: '/r/a', value: 'ask', how: 'approval_card' }), false);
   assert.equal(folderPickWrites({ folderKey: null, value: 'ask' }), false);
-  assert.deepEqual(draftFolderMove({ previous: null, next: '/r/a', userChoice: 'ask' }), { save: { key: '/r/a', value: 'ask' }, reset: true });
-  assert.deepEqual(draftFolderMove({ previous: null, next: '/r/a', userChoice: 'plan' }), { save: null, reset: true });
-  assert.deepEqual(draftFolderMove({ previous: '/r/a', next: '/r/b', userChoice: 'ask' }), { save: null, reset: true });
-  assert.deepEqual(draftFolderMove({ previous: '/r/a', next: '/r/a', userChoice: 'ask' }), { save: null, reset: false });
+  // 4.16336.0 (c227f4d5e Mt): a non-risky pick survives the move and is committed in the new folder; a pick made with no
+  // folder and not yet committed is carried into the first one (not Plan, not Bypass into an fR key, not unconsented Auto).
+  assert.deepEqual(draftFolderMove({ previous: null, next: '/r/a', userChoice: 'ask' }), { save: { key: '/r/a', value: 'ask' }, reset: false, commit: '/r/a' });
+  assert.deepEqual(draftFolderMove({ previous: null, next: '/r/a', userChoice: 'ask', committed: '/r/z' }), { save: null, reset: false, commit: '/r/a' });
+  assert.deepEqual(draftFolderMove({ previous: null, next: '/r/a', userChoice: 'plan' }), { save: null, reset: false, commit: '/r/a' });
+  assert.deepEqual(draftFolderMove({ previous: '/r/a', next: '/r/b', userChoice: 'ask' }), { save: null, reset: false, commit: '/r/b' });
+  assert.deepEqual(draftFolderMove({ previous: '/r/a', next: '/r/b', userChoice: 'acceptEdits' }), { save: null, reset: false, commit: '/r/b' });
+  assert.deepEqual(draftFolderMove({ previous: '/r/a', next: null, userChoice: 'ask' }), { save: null, reset: false, commit: null });
+  assert.deepEqual(draftFolderMove({ previous: '/r/a', next: '/r/a', userChoice: 'ask' }), { save: null, reset: false, commit: null });
+  assert.deepEqual(draftFolderMove({ previous: '/r/a', next: '/r/b', userChoice: null }), { save: null, reset: false, commit: null });
+  // The risky modes never follow the draft: Auto and Bypass are cleared on every move.
+  assert.deepEqual(draftFolderMove({ previous: '/r/a', next: '/r/b', userChoice: 'auto', autoConsented: true }), { save: null, reset: true, commit: null });
+  assert.deepEqual(draftFolderMove({ previous: '/r/a', next: '/r/b', userChoice: 'bypass' }), { save: null, reset: true, commit: null });
+  assert.deepEqual(draftFolderMove({ previous: null, next: '/r/a', userChoice: 'auto' }), { save: null, reset: true, commit: null }, 'Auto without the consent is not remembered');
+  assert.deepEqual(draftFolderMove({ previous: null, next: '/r/a', userChoice: 'auto', autoConsented: true }), { save: { key: '/r/a', value: 'auto' }, reset: true, commit: null });
 });
 
 test('host layers: a pick in folder A is A\'s pick only; a new draft in folder B shows the Settings default (the composer-14 scenario)', () => {
@@ -118,14 +164,35 @@ test('host layers: a pick in folder A is A\'s pick only; a new draft in folder B
   assert.deepEqual(state.choices, { [draft]: 'acceptEdits' });
   assert.deepEqual(state.folders, { '/r/a': 'acceptEdits' });
   assert.equal(resolve('/r/a').source, 'in_session_pick');
-  // Folder B: the move clears the draft's pick, B has none, so the Settings default shows.
+  assert.deepEqual(state.committedAt, { [draft]: '/r/a' }, 'the pick is committed in A (official jt)');
+  // Folder B (4.16336.0): the draft's non-risky pick moves with it and is committed in B; B's own map is not written.
   state = permissionLayersReducer(state, { type: 'folder', openingKey: draft, folderKey: '/r/b' });
-  assert.deepEqual(state.choices, {});
-  assert.deepEqual(resolve('/r/b'), { mode: 'auto', source: 'global_pick', hasExplicitChoice: false });
-  assert.equal(resolve('/r/b', 'ask').mode, 'ask', 'the Settings default stays in effect');
-  // Back in A: A's pick.
+  assert.deepEqual(state.choices, { [draft]: 'acceptEdits' });
+  assert.deepEqual(state.folders, { '/r/a': 'acceptEdits' });
+  assert.deepEqual(state.committedAt, { [draft]: '/r/b' });
+  assert.deepEqual(resolve('/r/b'), { mode: 'acceptEdits', source: 'in_session_pick', hasExplicitChoice: true });
+  // A draft of another surface (never picked) in B: no pick and no folder pick for B, so the Settings default shows.
+  const other = 'draft:chat';
+  assert.deepEqual(resolveOpeningMode({ userChoice: state.choices[other] ?? null, folderChoice: state.folders['/r/b'], globalPref: 'auto' }), { mode: 'auto', source: 'global_pick', hasExplicitChoice: false });
+  assert.equal(resolveOpeningMode({ userChoice: state.choices[other] ?? null, folderChoice: state.folders['/r/b'], globalPref: 'ask' }).mode, 'ask', 'the Settings default stays in effect');
+  // A new Code draft in B: once the moved draft is sent (adopt, then entered) its pick leaves the draft:code opening,
+  // and the next Code draft there shows the Settings default.
+  let sent = permissionLayersReducer(state, { type: 'adopt', sessionId: 't-sent', openingKey: draft, mode: 'acceptEdits' });
+  sent = permissionLayersReducer(sent, { type: 'entered', sessionId: 't-sent' });
+  assert.deepEqual(sent.choices, {});
+  assert.deepEqual(sent.committedAt, {});
+  sent = permissionLayersReducer(sent, { type: 'folder', openingKey: draft, folderKey: '/r/b' });
+  assert.deepEqual(resolveOpeningMode({ userChoice: sent.choices[draft] ?? null, folderChoice: sent.folders['/r/b'], globalPref: 'ask' }), { mode: 'ask', source: 'global_pick', hasExplicitChoice: false }, 'a new Code draft in B');
+  // A risky pick does not move: Auto picked in B is cleared by the move back to A, which then shows A's pick.
+  let risky = permissionLayersReducer(state, { type: 'pick', openingKey: draft, folderKey: '/r/b', value: 'auto', current: 'acceptEdits' });
+  assert.deepEqual(risky.folders, { '/r/a': 'acceptEdits', '/r/b': 'auto' });
+  risky = permissionLayersReducer(risky, { type: 'folder', openingKey: draft, folderKey: '/r/a', autoConsented: true });
+  assert.deepEqual(risky.choices, {});
+  assert.deepEqual(resolveOpeningMode({ userChoice: null, folderChoice: risky.folders['/r/a'], globalPref: 'auto' }), { mode: 'acceptEdits', source: 'folder_pick', hasExplicitChoice: true });
+  assert.deepEqual(resolveOpeningMode({ userChoice: null, folderChoice: risky.folders['/r/b'], globalPref: 'ask' }), { mode: 'auto', source: 'folder_pick', hasExplicitChoice: true });
+  // Back in A with the non-risky pick: it is still the draft's own pick.
   state = permissionLayersReducer(state, { type: 'folder', openingKey: draft, folderKey: '/r/a' });
-  assert.deepEqual(resolve('/r/a'), { mode: 'acceptEdits', source: 'folder_pick', hasExplicitChoice: true });
+  assert.deepEqual(resolve('/r/a'), { mode: 'acceptEdits', source: 'in_session_pick', hasExplicitChoice: true });
   // Plan is the opening's pick only; the approval card's pick never becomes the folder's; the same mode is no pick.
   state = permissionLayersReducer(state, { type: 'pick', openingKey: draft, folderKey: '/r/a', value: 'plan', current: 'acceptEdits' });
   assert.equal(resolve('/r/a').mode, 'plan');
@@ -142,7 +209,21 @@ test('host layers: a pick in folder A is A\'s pick only; a new draft in folder B
   assert.deepEqual(fresh.folders, {});
   fresh = permissionLayersReducer(fresh, { type: 'folder', openingKey: draft, folderKey: '/r/c' });
   assert.deepEqual(fresh.folders, { '/r/c': 'ask' });
-  assert.deepEqual(fresh.choices, {});
+  assert.deepEqual(fresh.choices, { [draft]: 'ask' }, 'a non-risky pick stays the draft\'s pick (4.16336.0)');
+  assert.deepEqual(fresh.committedAt, { [draft]: '/r/c' });
+  // Once committed, a later first-folder move no longer carries it into another folder's map.
+  fresh = permissionLayersReducer(fresh, { type: 'folder', openingKey: draft, folderKey: null });
+  fresh = permissionLayersReducer(fresh, { type: 'folder', openingKey: draft, folderKey: '/r/d' });
+  assert.deepEqual(fresh.folders, { '/r/c': 'ask' });
+  assert.deepEqual(fresh.choices, { [draft]: 'ask' });
+  // Auto picked with no folder: carried into the first folder only with the auto-mode consent, and cleared either way.
+  for (const autoConsented of [false, true]) {
+    let auto = permissionLayersReducer(initialPermissionLayers({}), { type: 'folder', openingKey: draft, folderKey: null });
+    auto = permissionLayersReducer(auto, { type: 'pick', openingKey: draft, folderKey: null, value: 'auto', current: 'ask' });
+    auto = permissionLayersReducer(auto, { type: 'folder', openingKey: draft, folderKey: '/r/e', autoConsented });
+    assert.deepEqual(auto.folders, autoConsented ? { '/r/e': 'auto' } : {});
+    assert.deepEqual(auto.choices, {});
+  }
 });
 
 test('host layers: a running session is its own pick, else the mode it started with, else the Settings default; Bypass drops with the opt-in', () => {
@@ -169,8 +250,8 @@ test('host layers: a running session is its own pick, else the mode it started w
 
 test('R4g fix: a session keeps its mode across a restart (host stand-in for kt = c?.permissionMode), a pick in it updates it, Bypass drops with the opt-in', () => {
   // Official: the running-session chain reads the session record's permissionMode before the spawn mode and the global.
-  assert.equal(count(official(COMPOSER), 'kt=c?.permissionMode,At=hh(s?.type==="local"?s.id:null)'), 1);
-  assert.equal(count(official(COMPOSER), 'if(s){Ut=ct??(At?"bypassPermissions":void 0)??kt??jt??A??Ee;break bb1}'), 1);
+  assert.equal(count(official(COMPOSER), 'Gt=u?.permissionMode,Kt=Mh(l?.type==="local"?l.id:null)'), 1);
+  assert.equal(count(official(COMPOSER), 'let sn=X??(Kt?"bypassPermissions":void 0)??Gt??qt??F??null,cn;bb1:{if(l){cn=sn;break bb1}'), 1);
   const storage = memoryStorage();
   const draft = permissionOpeningKey({});
   let run = initialPermissionLayers(readFolderPicks(storage), readSessionModes(storage));
@@ -207,8 +288,9 @@ test('R4g fix: a session keeps its mode across a restart (host stand-in for kt =
 test('E11: the v2 folder map is seeded once from v1 without any local Bypass (OR), v1 untouched; v2 wins once stored', () => {
   assert.equal(FOLDER_PERMISSION_KEY, 'epitaxy-folder-permission-mode-v2');
   assert.equal(FOLDER_PERMISSION_SEED_KEY, 'epitaxy-folder-permission-mode');
-  // fR is the shipped regex, byte for byte.
-  assert.equal(count(official(COMPOSER), `function fR(e){return${SCOPED_FOLDER_KEY}.test(e)}`), 1);
+  // fR (4.16336.0: cf059c6df _, imported by c227f4d5e as Gx) is the shipped regex, byte for byte.
+  assert.equal(count(official(HELPERS), `function _(e){return${SCOPED_FOLDER_KEY}.test(e)}`), 1);
+  assert.equal(count(official(COMPOSER), 'i as Gx,'), 1);
   const v1 = JSON.stringify({ '/r/a': 'bypass', '/r/b': 'acceptEdits', '/r/c': 'ask', '/r/d': 'auto', '/r/e': 'plan', '/r/f': 'bogus' });
   const storage = memoryStorage({ [FOLDER_PERMISSION_SEED_KEY]: v1 });
   assert.deepEqual(readFolderPicks(storage), { '/r/b': 'acceptEdits', '/r/c': 'ask', '/r/d': 'auto', '/r/e': 'plan' });
@@ -232,8 +314,8 @@ test('E11: the v2 folder map is seeded once from v1 without any local Bypass (OR
   assert.equal(folderPickWrites({ folderKey: 'scratch:', value: 'bypass' }), false);
   assert.equal(folderPickWrites({ folderKey: 'remote-env:e1', value: 'bypass' }), false);
   assert.equal(folderPickWrites({ folderKey: 'remote-env:e1', value: 'ask' }), true);
-  assert.deepEqual(draftFolderMove({ previous: null, next: 'ssh:[h]:22:/x', userChoice: 'bypass' }), { save: null, reset: true });
-  assert.deepEqual(draftFolderMove({ previous: null, next: '/r/a', userChoice: 'bypass' }), { save: { key: '/r/a', value: 'bypass' }, reset: true });
+  assert.deepEqual(draftFolderMove({ previous: null, next: 'ssh:[h]:22:/x', userChoice: 'bypass' }), { save: null, reset: true, commit: null });
+  assert.deepEqual(draftFolderMove({ previous: null, next: '/r/a', userChoice: 'bypass' }), { save: { key: '/r/a', value: 'bypass' }, reset: true, commit: null });
 });
 
 test('folder picks persist under the official key; bad entries and broken storage read as none', () => {

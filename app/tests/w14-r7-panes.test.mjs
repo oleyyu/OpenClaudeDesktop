@@ -20,7 +20,7 @@ const local = (file) => fs.readFileSync(path.join(app, file), 'utf8');
 const h = React.createElement;
 const N_ = 'bg-alpha-1 rounded-[5px] py-md px-lg text-code text-secondary whitespace-pre-wrap break-words select-text [unicode-bidi:plaintext]';
 
-let server, S, B, Dl, C, Frame, i18n;
+let server, S, B, Dl, C, Frame, Core, i18n;
 before(async () => {
   server = await createServer({ configFile: false, root: app, plugins: [react()],
     server: { middlewareMode: true, hmr: false, ws: false, watch: null }, appType: 'custom', logLevel: 'error' });
@@ -29,6 +29,7 @@ before(async () => {
   Dl = await server.ssrLoadModule('/src/source-deliverables.jsx');
   C = await server.ssrLoadModule('/src/source-chapters.jsx');
   Frame = await server.ssrLoadModule('/src/generated/view-tabs/shared-frame-6jtSkIit.js');
+  Core = await server.ssrLoadModule('/src/cds-core.mjs');
   i18n = await server.ssrLoadModule('/electron/i18n/index.mjs');
 });
 after(() => server?.close());
@@ -134,14 +135,16 @@ test('r7pa-06: tN — a one-shot prompt with no phrase shows wr(nextRunAt, "futu
 test('R7DC-02 / css7-deliverables-settings-button: the deliverables, artifacts and Codex feedback buttons are the CDS Button', () => {
   const frame = official('shared-frame-6jtSkIit');
   assert.ok(frame.includes('Xs as Uu') && frame.includes('Uu as Eu'), 'shared-frame Uu (official Eu) is the CDS Button');
+  // host-wiring: both files now take the 4.16336.0 cds-core Button (shared-frame Xu → Id) through the semantic facade.
   for (const file of ['src/source-deliverables.jsx', 'src/source-codex-feedback.jsx']) {
     const source = local(file);
-    assert.match(source, /import \{ CdsButton \} from "\.\/generated\/view-tabs\/shared-frame-6jtSkIit\.js";/, file);
+    assert.match(source, /import \{ CdsButton \} from "\.\/cds-core\.mjs";/, file);
+    assert.doesNotMatch(source, /generated\/view-tabs/, file);
     assert.doesNotMatch(source, /SourceSettingsButton|source-settings-button|iconSize/, file);
   }
   assert.equal(local('src/source-codex-feedback.jsx').split('<CdsButton').length - 1, 6);
   // The feedback dialog's Done / Cancel keep data-autofocus and Send feedback its busy state through the CDS Button.
-  const sent = renderToStaticMarkup(h(Frame.CdsButton, { 'data-autofocus': true, variant: 'primary', busy: true }, 'Send feedback'));
+  const sent = renderToStaticMarkup(h(Core.CdsButton, { 'data-autofocus': true, variant: 'primary', busy: true }, 'Send feedback'));
   assert.match(sent, /^<button type="button" data-cds="Button"[^>]*data-autofocus="true"/);
   assert.match(sent, /aria-busy="true"/);
   const item = { id: 'd1', type: 'deliverables', deliverables: [{ path: '/w/report.md', description: 'The report' }] };

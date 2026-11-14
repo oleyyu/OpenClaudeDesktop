@@ -86,7 +86,8 @@
   outline: 0;
   box-shadow: var(--cds-focus-shadow);
 }
-.st-toolbar .st-title-input {
+/* surfaces wave 3: unscoped, the Code rename field also sits in the 4.16336.0 titlebar frame (no .st-toolbar there). */
+.st-title-input {
   min-width: 32px;
   max-width: min(30ch, 100%);
   field-sizing: content;
@@ -109,13 +110,14 @@
 }
 /* c593f7513 Om (8180-8205): the header session caret, a ghost icon-only Button (CaretDown sm) in text-secondary
    between the title and the folder chip. */
-.st-toolbar .st-session-caret {
+.st-session-caret {
   flex: none;
   color: var(--cds-text-secondary);
 }
 /* W14-code r2 fr2-21: the pill's look is c73f45bc3 Pv / Nv (titlebar-folder-pill.mjs, titlebar-spawn-lead.mjs); only the
    host fold's floor guard stays. */
-.st-lead[data-folder-hidden] .st-folder {
+/* surfaces wave 3: the lead box is .st-lead or, in the titlebar frame, RX's group/lead box; both carry the guard. */
+[data-folder-hidden] .st-folder {
   display: none;
 }
 .st-toolbar .st-trailing {

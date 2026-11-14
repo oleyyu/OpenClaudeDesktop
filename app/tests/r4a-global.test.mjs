@@ -9,7 +9,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { appSheets, append, computed, element, loadCascade, setState } from '../tests/fixtures/transcript-css-cascade.mjs';
-import { designSnapshot, designStylesheets, designVersion } from '../scripts/current-design-assets.mjs';
+import { designEntryStylesheets, designLegacySnapshot, designSnapshot, designStylesheets, designVersion } from '../scripts/current-design-assets.mjs';
 import { PASS_THROUGH_REGIONS, REGION_ORDER, orderStops } from '../src/focus-region-model.mjs';
 
 const app = path.resolve(import.meta.dirname, '..');
@@ -22,9 +22,12 @@ const local = rel => read(path.join(app, rel));
 const count = (text, needle) => text.split(needle).length - 1;
 const once = (text, needles) => { for (const needle of needles) assert.equal(count(text, needle), 1, needle); };
 const OFFICIAL_CSS = 'c6a992d55-sXiDGMFQ.css';
-// The served sheets follow the design pin (3.6556.2 since 2026-10-25); the (a) halves above stay 2.42304.0 locks.
+// The served sheets follow the design pin (3.6556.2 since 2026-10-25, 4.16336.0 since design-production 2026-11-04); the
+// (a) halves above stay 2.42304.0 locks. The pinned c6a992d55 entry sheet's name comes from current-design-assets.
 const pinned = name => read(path.join(app, '../reference', designSnapshot, 'ion-dist/assets/v1', name));
-const PINNED_CSS = 'c6a992d55-Che1orl5.css';
+// The 3.6556.2 sheet the served copy was pinned to before 4.16336.0 (read from its own snapshot, for the comparison only).
+const legacyPinned = name => read(path.join(app, '../reference', designLegacySnapshot, 'ion-dist/assets/v1', name));
+const PINNED_CSS = designEntryStylesheets.find(name => name.startsWith('c6a992d55-'));
 const LOCAL_CSS = `public/assets/v1/${PINNED_CSS}`;
 // The only difference between an official stylesheet and its public/assets/v1 copy: font url()s made relative.
 const asServed = text => text.replaceAll('url(/assets/v1/', 'url(./');
@@ -84,7 +87,7 @@ test('global-02 account row: pw\'s ps-[var(--df-row-px)] pe-2 text-start class s
 
 // ---- global-09 ------------------------------------------------------------------------------------------------------
 
-test('global-09 tokens: the served sheets are the 2.42304.0 originals; menu gutter, control ink, frame row and prose tokens keep their defaults', () => {
+test('global-09 tokens: the served sheets are the pinned design originals; menu gutter, control ink, frame row and prose tokens follow the official root (fizzy-lake on, flat-look / window-active off)', () => {
   // (a) 2.42304.0 c6a992d55: --cds-menu-gutter is reset to initial (its users fall back to .25rem / 4px), --control-ink
   // and --frame-row-h are only ever read with a fallback, never declared; --radius-4xl (2.37337.1) is gone.
   const css = official(OFFICIAL_CSS);
@@ -104,17 +107,63 @@ test('global-09 tokens: the served sheets are the 2.42304.0 originals; menu gutt
     'Bx="-mt-[var(--cds-menu-gutter,0.25rem)] shrink-0 px-[var(--cds-menu-gutter,0.25rem)] pb-[var(--cds-menu-gutter,0.25rem)]"',
     'calc(${r} * ${Vx} + ${e?"var(--cds-menu-gutter, 0.25rem) + 0.25rem":"2 * var(--cds-menu-gutter, 0.25rem)"})']);
 
-  // (b) local: the pinned design snapshot is 2.42304.0, index.html links the same-hash sheets, and each served copy is
-  // the original byte for byte but for the relative font url()s — so every token count above holds for what loads.
-  assert.equal(designVersion, '3.6556.2'); assert.equal(designSnapshot, 'snapshots/claude-3.6556.2-20261025-192807');
-  assert.ok(designStylesheets.includes(PINNED_CSS));
+  // (b) local: the pinned design snapshot is 4.16336.0 (design-production), index.html links its three entry sheets in the
+  // official index.html's order, and each served copy is the original byte for byte but for the relative font url()s —
+  // so every token count read from the pinned sheets holds for what loads. Component sheets are never linked.
+  assert.equal(designVersion, '4.16336.0'); assert.equal(designSnapshot, 'snapshots/claude-4.16336.0-20261104');
+  assert.ok(designEntryStylesheets.includes(PINNED_CSS));
+  const officialHtml = read(path.join(app, '../reference', designSnapshot, 'ion-dist/index.html'));
+  assert.deepEqual([...officialHtml.matchAll(/<link rel="stylesheet" crossorigin href="\/assets\/v1\/([^"]+)">/g)].map(m => m[1]), [...designEntryStylesheets]);
   const html = local('index.html');
-  for (const name of designStylesheets) {
+  for (const name of designEntryStylesheets) {
     assert.equal(count(html, `<link rel="stylesheet" href="/assets/v1/${name}" />`), 1, name);
     assert.equal(local(`public/assets/v1/${name}`), asServed(pinned(name)), name);
   }
-  // The served counts are the pinned sheet's (3.6556.2 reads --frame-row-h twice more); never-declared stays never-declared.
-  for (const [token, n] of Object.entries(TOKENS)) assert.equal(count(local(LOCAL_CSS), token), n === 0 ? 0 : count(pinned(PINNED_CSS), token), `served ${token}`);
+  for (const name of designStylesheets.filter(name => !designEntryStylesheets.includes(name))) assert.equal(count(html, name), 0, name);
+  // The served counts are the pinned 4.16336.0 sheet's. Compared with the 3.6556.2 sheet it replaced (read from that
+  // snapshot): 4.16336.0 reads --frame-row-h six more times and --control-ink three more, and declares --control-ink,
+  // --frame-row-h and one more --cds-menu-gutter:initial — but only for opt-in roots (below), so the defaults hold.
+  const OLD_CSS = 'c6a992d55-Che1orl5.css';
+  const PINNED = { '--cds-menu-gutter:initial': 3, 'var(--cds-menu-gutter': 12, '--control-ink': 10, '--control-ink:': 2,
+    '--frame-row-h': 37, '--frame-row-h:': 1, 'text-prose-medium': 5, 'radius-4xl': 0 };
+  const LEGACY = { '--cds-menu-gutter:initial': 2, 'var(--cds-menu-gutter': 12, '--control-ink': 7, '--control-ink:': 0,
+    '--frame-row-h': 31, '--frame-row-h:': 0, 'text-prose-medium': 3, 'radius-4xl': 0 };
+  assert.deepEqual(Object.keys(PINNED), Object.keys(TOKENS));
+  for (const token of Object.keys(TOKENS)) {
+    assert.equal(count(pinned(PINNED_CSS), token), PINNED[token], `4.16336.0 ${token}`);
+    assert.equal(count(legacyPinned(OLD_CSS), token), LEGACY[token], `3.6556.2 ${token}`);
+    assert.equal(count(local(LOCAL_CSS), token), PINNED[token], `served ${token}`);
+  }
+  // 4.16336.0 token evidence: every declaration of --control-ink / --frame-row-h, and every --cds-menu-gutter:initial
+  // other than the .[--cds-menu-gutter:initial] utility and the .cds-root default, in the served entry sheets sits under
+  // an opt-in root attribute (html[data-cds-fizzy-lake], html[data-flat-look], :root[data-window-active=false]).
+  const GATE = /\[data-cds-fizzy-lake[~\]=]|\[data-flat-look\]|\[data-window-active=false\]/;
+  const declared = [];
+  for (const name of designEntryStylesheets) {
+    const sheet = local(`public/assets/v1/${name}`);
+    for (const match of sheet.matchAll(/(--control-ink|--frame-row-h|--cds-menu-gutter):([^;}]*)/g)) {
+      if (match[1] === '--cds-menu-gutter' && match[2] !== 'initial') continue;
+      const start = sheet.lastIndexOf('{', match.index), selector = sheet.slice(Math.max(sheet.lastIndexOf('}', start), sheet.lastIndexOf(';', start), -1) + 1, start);
+      if (/^\.\\\[--cds-menu-gutter\\:initial\\\]$/.test(selector) || selector === '.cds-root') continue;
+      declared.push(`${name} ${match[1]}`);
+      assert.match(selector, GATE, `${name}: ${match[1]} under ${selector.slice(0, 160)}`);
+    }
+  }
+  assert.deepEqual(declared.toSorted(), [`${PINNED_CSS} --cds-menu-gutter`, `${PINNED_CSS} --control-ink`, `${PINNED_CSS} --control-ink`,
+    `${PINNED_CSS} --frame-row-h`, 'shared-styles-C9nbzN1z.css --control-ink'].toSorted());
+  // html-root (integration-2): index.html's <html> carries the official data-cds-fizzy-lake="color panels type"
+  // (4.16336.0 ion-dist/index.html, <html> at byte 15), so the fizzy-lake-gated --control-ink (color) and
+  // --cds-menu-gutter:initial (panels) apply as in the official app; --frame-row-h also needs html[data-flat-look] and the
+  // shared-styles --control-ink needs :root[data-window-active=false], which the host never sets. No host module writes any
+  // of the three attributes at runtime.
+  const rootTag = html.slice(0, html.indexOf('>', html.indexOf('<html')));
+  const officialRoot = officialHtml.slice(0, officialHtml.indexOf('>', officialHtml.indexOf('<html')));
+  assert.match(officialRoot, / data-cds-fizzy-lake="color panels type"/);
+  assert.match(rootTag, /\sdata-cds-fizzy-lake="color panels type"\s/);
+  assert.doesNotMatch(rootTag, /data-flat-look|data-window-active/);
+  const writers = sources(['.jsx', '.js', '.mjs', '.cjs'], { generated: false })
+    .filter(rel => /setAttribute\(\s*["'](data-cds-fizzy-lake|data-flat-look|data-window-active)["']|dataset\.(cdsFizzyLake|flatLook|windowActive)\s*=/.test(local(rel)));
+  assert.deepEqual(writers, []);
   // Nothing local redefines the tokens or still uses the removed radius.
   const files = [...sources(['.css', '.jsx', '.js', '.mjs'], { generated: false }), 'index.html', 'public/assets/legacy-utilities.css'];
   for (const pattern of [/--cds-menu-gutter\s*:/, /--control-ink\s*:/, /--frame-row-h\s*:/, /radius-4xl/, /rounded-4xl/])
@@ -262,7 +311,11 @@ test('global-14 F6 regions: composer stops skip [data-turn-next], the content ri
   // … and no element carries the dframe-content class (the local "main" landing is source-split-view's .split-host),
   // so the .dframe-content ring rules, logical or physical, never apply. focus-regions.css is the inline sheet's
   // generic landing rules verbatim and stops before them.
-  assert.deepEqual(code.filter(rel => /(?<![.\w-])dframe-content(?![\w-])/.test(local(rel))), []);
+  // frame-sidebar 4.16336.0: the one exception is the official vB slice itself (generated/frame-sidebar/frame.mjs), whose
+  // main.dframe-content carries shared-0 uv("main") = data-perf-region="main" (no focus region, no landing mark), so the
+  // .dframe-content[data-focus-region-landing] ring rules still never match and the "main" stop stays the split-host below.
+  assert.deepEqual(code.filter(rel => /(?<![.\w-])dframe-content(?![\w-])/.test(local(rel)) && !/(^|\/)generated\//.test(rel)), []);
+  assert.deepEqual(code.filter(rel => /(?<![.\w-])dframe-content(?![\w-])/.test(local(rel)) && /(^|\/)generated\//.test(rel)), ['src/generated/frame-sidebar/frame.mjs']);
   once(local('src/source-split-view.jsx'), ['className="split-host dframe-pane-host" data-focus-region="main"']);
   const sheet = regions.slice(regions.indexOf('("cdc7c802e",\'') + 14);
   const generic = sheet.slice(0, sheet.indexOf('.dframe-content['));

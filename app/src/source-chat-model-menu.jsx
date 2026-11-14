@@ -28,7 +28,8 @@ import React from 'react';
 // rendered; the card is docked at the bottom, so the side is "top"; there are no plan tags, notices, credits or
 // capability conflicts locally (WH's tag / leading column / tooltip stay empty). E41: view-tabs from the concrete
 // shared-frame file (this menu belongs to the composer graph).
-import { CdsBadge } from './generated/view-tabs/shared-frame-6jtSkIit.js';
+// host-wiring/chat (4.16336.0): the rows' Badges are the cds-core graph's (shared-frame-CJdE5Ria vh → Pu) inside the host menu.
+import { CdsBadge } from './cds-core.mjs';
 import { effortMenuMessages, modelSelector, modelSelectorMessages, modelSelectorPopupClass, modelSelectorSubmenuPopupClass, splitModelName } from './generated/chat-composer/model-selector.mjs';
 import { effortId, effortName, modelMenuSections } from './model-menu-model.mjs';
 import { SourceMenu } from './source-menu.jsx';

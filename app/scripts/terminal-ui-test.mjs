@@ -48,7 +48,7 @@ try{
  await poll(focusedInTerminal,'focus moves into the terminal');
  await poll(async()=>/fixture\$|\$ ?$/m.test(await screen()),'the shell prompt arrives');
  assert.equal(await tabs().count(),1);assert.equal((await tabs().first().textContent()).trim(),'Terminal');
- const titlebarButton=page.locator('[data-pane-toggle="terminal"]');assert.equal(await titlebarButton.getAttribute('aria-pressed'),'true');
+ const titlebarButton=page.locator('.st-trailing button[aria-label="Terminal"]');assert.equal(await titlebarButton.getAttribute('aria-pressed'),'true');
  report.checks.push('⌃` opens the Terminal pane beside the chat, starts one login shell and focuses it; the titlebar toggle is pressed');
  step('view-settings');
  assert.equal(await app.evaluate(()=>!!globalThis.offscreenClipboard),true);

@@ -15,6 +15,10 @@ import { pendingConversions } from '../src/chat-attachment-model.mjs';
 const app = path.resolve(import.meta.dirname, '..');
 const v1 = path.resolve(app, '../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1');
 const official = name => fs.readFileSync(path.join(v1, name), 'utf8');
+// regions-chat: the chat-composer generator reads 4.16336.0; the same evidence is re-checked there (KH → BU, yP → lN,
+// shared-28 → shared-33, shared-52 sd → shared-62 zb, the marlin gate shared-78 Fy → shared-123 s_).
+const v4 = path.resolve(app, '../reference/snapshots/claude-4.16336.0-20261104/ion-dist/assets/v1');
+const official4 = name => fs.readFileSync(path.join(v4, name), 'utf8');
 const local = rel => fs.readFileSync(path.join(app, rel), 'utf8');
 const h = React.createElement;
 
@@ -63,6 +67,19 @@ test('official: TU renders $H without a server CDS catalog; KH groups by convers
   assert.ok(s28.includes('"data-testid":"thinking-mode-toggle",keepOpen:!0'));
   assert.ok(s28.includes('"data-testid":"effort-menu-trigger"'));
   assert.ok(s28.includes('`effort-option-${'));
+  // 4.16336.0: the same structure under the new names.
+  const n8 = official4('shared-8-BqfCbkJd.js'), n62 = official4('shared-62-DoCqVpIq.js'), n33 = official4('shared-33-DtdykY0y.js');
+  assert.ok(n8.includes('if(!t||i){let t=e.placement??"bottom"'), 'TU: no cdsCatalog → qU');
+  assert.ok(n8.includes('q=!h&&!u,J=J3($,'), 'BU q');
+  assert.match(n8, /q\?\[a\]:re\)/, 'an open conversation lists only the current model in the main group');
+  assert.ok(n8.includes('{account:X}=fr(),se=cs(X)') && n8.includes('se?g(Q.SearchablePopup'));
+  assert.match(n8, /\bpp as cs\b[^;]*from"\.\/shared-62-DoCqVpIq\.js"/);
+  assert.match(n62, /function zb\(e\)\{return!!\(e\?\.email_address\?\.endsWith\("@anthropic\.com"\)/);
+  assert.match(n62, /\bzb as pp\b/);
+  assert.match(n8, /"data-testid":"model-selector-option",onClick:\w+,disabled:\w+,checked:\w+,checkedRole:"radio"/);
+  assert.ok(n33.includes('"data-testid":"thinking-mode-toggle",keepOpen:!0'));
+  assert.ok(n33.includes('"data-testid":"effort-menu-trigger"'));
+  assert.ok(n33.includes('`effort-option-${'));
 });
 
 test('chatModelMenuGroups: new chat = main section + overflow; open chat = current + the rest; a missing model is legacy', () => {
@@ -220,4 +237,20 @@ test('closed without code: kF\'s "/" hint, K6\'s chin, the incognito file restri
   for (const name of fs.readdirSync(v1).filter(n => n.endsWith('.js'))) readers += (fs.readFileSync(path.join(v1, name), 'utf8').match(/\.incognitoCannotOpenFile\b/g) ?? []).length;
   assert.equal(readers, 0);
   assert.equal((s78.match(/incognitoCannotOpenFile:\{/g) ?? []).length, 2);
+  // 4.16336.0: kF's "/" hint, lN (the former yP) with its projects branch, the marlin gate (shared-123 s_, exported Yx and
+  // read by shared-23), and still no reader of incognitoCannotOpenFile. The provider of unifiedComposerDesign (3.6556.2 WC
+  // h = To()) is not re-traced here (regions-chat report, open item).
+  const n8 = official4('shared-8-BqfCbkJd.js'), n9 = official4('shared-9-BgdM6Y1f.js'), n23 = official4('shared-23-BRmsPtuN.js'), n123 = official4('shared-123-1Hc1RTKl.js');
+  assert.match(n8, /\w+=\w+\?void 0:"\/"/);
+  assert.ok(n9.includes('defaultMessage:"Type / for skills",id:"uSmGqlwE3c"'));
+  assert.match(n8, /function lN\(\)\{let \$=J9\(3\),e=\w+\(\),t=\w+\(\),\{surfaces:n,unifiedComposerDesign:r,projectScopeLocked:i\}=\w+\(\),a=r!==void 0&&r/);
+  assert.match(n8, /s=e!==null&&a/);
+  assert.match(n8, /:\w+&&!\w+\?"projects":"enabled"/);
+  assert.ok(n123.includes('gd="voyage_composer_marlin"') && n123.includes('function s_(){let $=J9(11),{on:e,inPayload:t}=bn(gd)'));
+  assert.match(n123, /\bs_ as Yx\b/);
+  assert.match(n23, /\bYx as Ga\b[^;]*from"\.\/shared-123-1Hc1RTKl\.js"/);
+  let readers4 = 0;
+  for (const name of fs.readdirSync(v4).filter(n => n.endsWith('.js'))) readers4 += (fs.readFileSync(path.join(v4, name), 'utf8').match(/\.incognitoCannotOpenFile\b/g) ?? []).length;
+  assert.equal(readers4, 0);
+  assert.equal((n123.match(/incognitoCannotOpenFile:\{/g) ?? []).length, 2);
 });

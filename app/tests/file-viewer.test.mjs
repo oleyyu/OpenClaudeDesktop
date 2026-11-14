@@ -8,6 +8,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileViewerLines, fileViewerTooSlow, jumpRange } from '../src/file-preview-model.mjs';
 import { withMemoCache } from './support/react-memo-cache.mjs';
+import { designEntryStylesheets } from '../scripts/current-design-assets.mjs';
 
 // Files pane file viewer (2.2553.1 cd2efac6e jo :2576-4674): Yo/Ma breadcrumb
 // subheader, numbered wrapped rows in [data-file-viewer].epitaxy-diff, the Zo
@@ -217,16 +218,27 @@ test('CSV opens as the table preview (header row, Table preview region); TSV too
   assert.match(text(broken), /Couldn’t parse this file as a tableSwitch to Source to view the raw text\./);
 });
 
-test('images, video and audio render from the file:// URL (alt / aria-label = the base name); no toggle, no card', () => {
+// U-2: the viewer's media URL is the claude-media URL main mints for the full path (preload desktop.mediaUrl, faked
+// here with a stable token per path), never file://; without the bridge there is no URL at all.
+const mediaToken = (p) => `claude-media://v/${Buffer.from(p).toString('base64url')}?v=1`;
+const tokenPattern = (p) => mediaToken(p).replace(/[.*+?^${}()|[\]\\/]/g, '\\$&');
+function withMediaBridge(run) {
+  const saved = globalThis.desktop, asked = new Set();
+  globalThis.desktop = { mediaUrl: (p) => { asked.add(p); return mediaToken(p); } };
+  try { return run(asked); } finally { if (saved === undefined) delete globalThis.desktop; else globalThis.desktop = saved; }
+}
+test('images, video and audio render from the claude-media URL main mints (alt / aria-label = the base name); no toggle, no card', () => withMediaBridge((asked) => {
   const image = panel({ view: filesView({ path: 'img/photo.png', unavailable: 'image', size: 70 }) });
   assert.match(image, /data-file-state="image"/);
-  assert.match(image, /<div data-file-viewer="" data-file-media="image" class="flex-1 min-h-0 \[contain:strict\] sfv-media"><div class="h-full overflow-auto p-md flex items-center justify-center"><img src="file:\/\/\/tmp\/work\/img\/photo\.png" alt="photo\.png" class="max-w-full max-h-full object-contain"\/><\/div><\/div>/);
+  assert.match(image, new RegExp(`<div data-file-viewer="" data-file-media="image" class="flex-1 min-h-0 \\[contain:strict\\] sfv-media"><div class="h-full overflow-auto p-md flex items-center justify-center"><img src="${tokenPattern('/tmp/work/img/photo.png')}" alt="photo\\.png" class="max-w-full max-h-full object-contain"/></div></div>`));
   assert.doesNotMatch(image, /sfv-view-toggle|role="alert"|looks like binary/);
   const video = renderToStaticMarkup(h(V.SourceFileViewer, { file: { path: 'clip.mp4', unavailable: 'video' }, displayPath: 'clip.mp4', fullPath: '/w/clip.mp4', scopeKey: 'k' }));
-  assert.match(video, /<video src="file:\/\/\/w\/clip\.mp4" controls="" preload="metadata" aria-label="clip\.mp4" class="max-w-full max-h-full"><\/video>/);
+  assert.match(video, new RegExp(`<video src="${tokenPattern('/w/clip.mp4')}" controls="" preload="metadata" aria-label="clip\\.mp4" class="max-w-full max-h-full"></video>`));
   const audio = renderToStaticMarkup(h(V.SourceFileViewer, { file: { path: 'a song.mp3', unavailable: 'audio' }, displayPath: 'a song.mp3', fullPath: '/w/a song.mp3', scopeKey: 'k' }));
-  assert.match(audio, /<audio src="file:\/\/\/w\/a%20song\.mp3" controls="" preload="metadata" aria-label="a song\.mp3" class="w-full max-w-\[480px\]"><\/audio>/);
-});
+  assert.match(audio, new RegExp(`<audio src="${tokenPattern('/w/a song.mp3')}" controls="" preload="metadata" aria-label="a song\\.mp3" class="w-full max-w-\\[480px\\]"></audio>`));
+  assert.deepEqual([...asked].sort(), ['/tmp/work/img/photo.png', '/w/a song.mp3', '/w/clip.mp4'], 'main is asked for the full paths only');
+  assert.doesNotMatch(image + video + audio, /file:\/\//);
+}));
 
 test('media error copy (Un, local reader): the image and media bodies with View as text anyway', async () => {
   const { fileMediaErrorCopy, fileTabReason, FILE_MEDIA_KINDS } = await import('../src/file-unavailable-model.mjs');
@@ -309,10 +321,13 @@ test('source: the pane gives each progressive chunk its own Markdown owner', () 
   assert.match(src, /renderMarkdown=\{\(text, chunk = 0\) => <SourceMarkdown text=\{text\} sessionKey=\{sessionId\} itemId=\{chunk \? `file:\$\{preview\.path\}#\$\{chunk\}` : `file:\$\{preview\.path\}`\} cwd=\{cwd\} \/>\} \/>/);
   const css = fs.readFileSync(path.resolve(import.meta.dirname, '../src/source-file-viewer.css'), 'utf8');
   assert.match(css, /\.sfv-prose\.epitaxy-file-prose-chunk \{\s*margin-bottom: var\(--chat-item-gap\);/);
-  // R3-files FT-18: no host frontmatter rule; the dl/dd margins are the loaded 2.42304.0 preflight (@layer base).
+  // R3-files FT-18: no host frontmatter rule; the dl/dd margins are the loaded official preflight (@layer base) of the
+  // current design's c6a992d55 entry sheet (current-design-assets.mjs), which index.html links.
   assert.doesNotMatch(css, /sfv-frontmatter/);
-  assert.match(fs.readFileSync(path.resolve(import.meta.dirname, '../public/assets/v1/c6a992d55-Che1orl5.css'), 'utf8'), /@layer base\{\*,:after,:before,::backdrop\{box-sizing:border-box;border:0 solid;margin:0;padding:0\}/);
-  assert.match(fs.readFileSync(path.resolve(import.meta.dirname, '../index.html'), 'utf8'), /<link rel="stylesheet" href="\/assets\/v1\/c6a992d55-Che1orl5\.css" \/>/);
+  const utilitiesSheet = designEntryStylesheets.find(name => name.startsWith('c6a992d55-'));
+  assert.ok(utilitiesSheet, 'the current design pins a c6a992d55 utilities sheet');
+  assert.match(fs.readFileSync(path.resolve(import.meta.dirname, '../public/assets/v1', utilitiesSheet), 'utf8'), /@layer base\{\*,:after,:before,::backdrop\{box-sizing:border-box;border:0 solid;margin:0;padding:0\}/);
+  assert.ok(fs.readFileSync(path.resolve(import.meta.dirname, '../index.html'), 'utf8').includes(`<link rel="stylesheet" href="/assets/v1/${utilitiesSheet}" />`));
   assert.match(fs.readFileSync(path.resolve(import.meta.dirname, '../src/source-file-viewer.jsx'), 'utf8'), /import \{ Frontmatter \} from "\.\/generated\/files-changes\/file-frontmatter-view\.mjs";/);
 });
 
@@ -341,8 +356,9 @@ test('B13: HTML opens in the preview frame, SVG as the drawn image, PDF in an if
   const svg = renderToStaticMarkup(h(V.SourceFileViewer, { file: { path: 'logo.svg', text: '<svg xmlns="http://www.w3.org/2000/svg"/>' }, displayPath: 'logo.svg', fullPath: '/w/logo.svg', scopeKey: 'k' }));
   assert.match(svg, /<div data-file-viewer="" data-file-preview="svg" class="flex-1 min-h-0 \[contain:strict\] sfv-media"><div class="h-full overflow-auto p-md flex items-center justify-center"><img src="data:image\/svg\+xml;charset=utf-8,%3Csvg%20xmlns[^"]*" alt="logo\.svg" class="max-w-full max-h-full object-contain"\/>/);
   assert.match(svg, /aria-label="View source" data-view-toggle=""/);
-  const pdf = renderToStaticMarkup(h(V.SourceFileViewer, { file: { path: 'docs/Spec.pdf', unavailable: 'pdf' }, displayPath: 'docs/Spec.pdf', fullPath: '/w/docs/Spec.pdf', scopeKey: 'k' }));
-  assert.match(pdf, /<div data-file-viewer="" data-file-media="pdf" class="flex-1 min-h-0 \[contain:strict\] sfv-media"><div class="h-full w-full relative overflow-hidden"><iframe src="file:\/\/\/w\/docs\/Spec\.pdf" title="Spec\.pdf" class="h-full w-full border-0 sfv-pdf"><\/iframe>/);
+  // U-2: the PDF frame loads the claude-media URL main mints for the file (frame-src claude-media:), never file://.
+  const pdf = withMediaBridge(() => renderToStaticMarkup(h(V.SourceFileViewer, { file: { path: 'docs/Spec.pdf', unavailable: 'pdf' }, displayPath: 'docs/Spec.pdf', fullPath: '/w/docs/Spec.pdf', scopeKey: 'k' })));
+  assert.match(pdf, new RegExp(`<div data-file-viewer="" data-file-media="pdf" class="flex-1 min-h-0 \\[contain:strict\\] sfv-media"><div class="h-full w-full relative overflow-hidden"><iframe src="${tokenPattern('/w/docs/Spec.pdf')}" title="Spec\\.pdf" class="h-full w-full border-0 sfv-pdf"></iframe>`));
   assert.doesNotMatch(pdf, /sfv-view-toggle|role="alert"|looks like binary/);
 });
 

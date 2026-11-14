@@ -2,8 +2,15 @@ import {isGoToFileShortcut} from "./diff-go-to-file-model.mjs";
 import React, { useCallback, useEffect, useId, useRef, useState } from "react";
 import { SourceMenu } from "./source-menu";
 import { SourceTooltip } from "./source-tooltip";
-// E41: the pane cluster sits in the menu graph (source-menu), so CDS comes by semantic name from the view-tabs file.
-import { CdsButton, CdsButtonGroup, CdsDropdown, CdsIcon, CdsPopover, CdsTooltip, cdsClassNames, cdsDropdownGroupLabelClass, cdsMenuItemClass } from "./generated/view-tabs/shared-frame-6jtSkIit.js";
+// E41: the pane cluster sits in the menu graph (source-menu), so CDS comes by semantic name, never through the view-tabs
+// index facade; since host-wiring code-b the names come from the cds-core facade, whose graph never reaches view-tabs.
+// host-wiring code-b: every CDS part of the pane cluster — GhostButton, the "{pane} settings" trigger, the arrange picks
+// (ButtonGroup, Button, Icon), the arrange trigger with its Popover and Tooltip, the pop-out item (Dropdown separator,
+// Popover.Close, menu item class) and the group label class — is the 4.16336.0 cds-core original (shared-frame-CJdE5Ria,
+// semantic facade), so the picks read the new ButtonGroup's Context and the trigger renders in the new Popover.Trigger.
+// The arrange Tooltip keeps hoverable at the 4.16336.0 default (false): c4db265df's own call is
+// `t(y,{content:_e,shortcut:o,delay:700,children:we})`, no hoverable.
+import { CdsButton, CdsButtonGroup, CdsDropdown, CdsIcon, CdsPopover, CdsTooltip, cdsClassNames, cdsDropdownGroupLabelClass, cdsMenuItemClass } from "./cds-core.mjs";
 import { paneLayoutIcons, paneLayoutSplitOtherPane } from "./generated/code-current/pane-layout-icons.mjs";
 import { isAtEdge } from "./tile-layout-model.mjs";
 import { bodyFocusedElement, isKeyboardClick, paneBodyOf, pressFocusTarget } from "./pane-press-focus-model.mjs";
@@ -348,6 +355,26 @@ export function SourceFilesSearchButton({ onClick }) {
   return <GhostButton buttonRef={trigger} label="Go to file or search" icon="Search" shortcut="cmd+p" aria-keyshortcuts="Meta+P" onClick={onClick} data-files-search="" />;
 }
 
+// 4.16336.0 c4db265df Ht: `u = Pt()` is the fizzy flag "__gb__414699090" (the arrange popup, zt / ArrangeTrigger above).
+// Off — what the official app draws — the cluster is `[o !== void 0 && nt (ca5db7aaf V: ghost iconOnly WindowNew,
+// "Open in new window" b2WfwmtX9G), G (ca5db7aaf B: ghost iconOnly Expand / Collapse, shortcut toggleExpandPane)]`.
+const ARRANGE_POPUP = false;
+// ca5db7aaf B: onPointerDown records the body's focused element and the pointer type; the click toggles, then hands
+// focus back into the body (z: the recorded element, or for a mouse press the body's own focus target).
+function ExpandButton({ expanded, onToggleExpand }) {
+  const ref = useRef(null);
+  const pending = useRef(null);
+  return <CdsButton ref={ref} variant="ghost" iconOnly icon={expanded ? "Collapse" : "Expand"} aria-label={expanded ? t("Collapse") : t("Expand")}
+    shortcut={TOGGLE_SHORTCUT_LABEL} data-pane-expand={expanded ? "collapse" : "expand"}
+    onPointerDown={(event) => { pending.current = { focused: bodyFocusedElement(paneBodyOf(ref.current)), pointerType: event.pointerType }; }}
+    onClick={(event) => {
+      onToggleExpand();
+      const pressed = pending.current;
+      pending.current = null;
+      pressFocusTarget(paneBodyOf(ref.current), pressed, event.nativeEvent)?.focus({ preventScroll: true });
+    }} />;
+}
+
 // `leading` is the pane's own first trailing control (c_ for the file pane,
 // panes-tile-current.js:16366-16378), before the settings menu.
 // W14-code r2 fr2-19: the close label is c4db265df's "Close" (rbrahOGMC3), not a host "Close panel".
@@ -356,9 +383,11 @@ export function SourcePaneControls({ tileId, paneName, layout, expanded = false,
     <div className="spc-controls" data-pane-controls={tileId}>
       {leading}
       <PaneSettingsMenu paneName={paneName} sections={menuSections ?? []} />
-      {onToggleExpand && (
+      {onToggleExpand && ARRANGE_POPUP && (
         <ArrangeTrigger tileId={tileId} layout={layout} expanded={expanded} onMoveToEdge={onMoveToEdge} onToggleExpand={onToggleExpand} onPopOut={onPopOut} />
       )}
+      {!ARRANGE_POPUP && onPopOut && <GhostButton label="Open in new window" icon="WindowNew" onClick={onPopOut} data-pane-popout="" />}
+      {!ARRANGE_POPUP && onToggleExpand && <ExpandButton expanded={expanded} onToggleExpand={onToggleExpand} />}
       {onClose && <GhostButton label={closeLabel} icon="X" shortcut={CLOSE_SHORTCUT_LABEL} onClick={onClose} className="shrink-0 epitaxy-pane-close-control" />}
     </div>
   );

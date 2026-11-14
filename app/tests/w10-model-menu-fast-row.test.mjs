@@ -1,6 +1,7 @@
 // w10-shell-model-menu (notdone 33, 34; composer-model-selector-extras): the Code ModelSelector's 3.6556.2 Fast row and
 // name badges. Official: shared-7-DBAgAi5H _w / aw / iw / rw / ew, c227f4d5e R$ (fastModeUnavailableRow,
-// effortSliderOverlay, modelFallback). Loaded through Vite (the menu is JSX over view-tabs); nothing opens a window.
+// effortSliderOverlay, modelFallback). Loaded through Vite (the menu is JSX over the 4.16336.0 cds-core graph since
+// host-wiring/chat: its Badge and HiddenReasonText are src/cds-core.mjs's); nothing opens a window.
 import test, { before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -19,7 +20,8 @@ let server, menu, CdsBadge, CdsHiddenReasonText;
 before(async () => {
   server = await createServer({ configFile: false, root: ROOT, plugins: [react()], server: { middlewareMode: true, hmr: false, ws: false, watch: null }, appType: 'custom', logLevel: 'error' });
   menu = await server.ssrLoadModule('/src/source-model-menu.jsx');
-  ({ CdsBadge, CdsHiddenReasonText } = await server.ssrLoadModule('/src/generated/view-tabs/index.js'));
+  // host-wiring/chat: the menu's Badge and reason mirror are the cds-core graph's (the facade re-exports the generated originals).
+  ({ CdsBadge, CdsHiddenReasonText } = await server.ssrLoadModule('/src/cds-core.mjs'));
 });
 after(async () => { await server?.close(); });
 
@@ -83,9 +85,19 @@ test('official 3.6556.2 _w / aw / rw / ew pins', () => {
   ]) once(selector, pin);
   // ie / te / ge are the view-tabs CdsHiddenReasonText / CdsEndSideTooltip / CdsBadge (shared-frame exports Pu / Oc / ad).
   for (const pin of ['Pu as ie', 'Oc as te', 'ad as ge']) assert.ok(selector.includes(pin), pin);
-  const manifest = JSON.parse(fs.readFileSync(path.join(ROOT, 'src/generated/view-tabs/manifest.json'), 'utf8'));
-  assert.equal(manifest.publicNames.CdsHiddenReasonText.export, 'Pu');
-  assert.equal(manifest.publicNames.CdsBadge.export, 'ad');
+  // host-wiring/chat: the host now draws them from the 4.16336.0 cds-core graph. 4.16336.0 shared-7-D2e77H6v imports the same
+  // two roles from shared-frame-CJdE5Ria (`Pu as ne` the Badge = vh, `Gd as W` the HiddenReasonText = Al), and the cds-core
+  // manifest names exactly those declarations; the model menu takes both from the facade, not view-tabs.
+  const selector4 = fs.readFileSync(path.join(ROOT, '../reference/snapshots/claude-4.16336.0-20261104/ion-dist/assets/v1/shared-7-D2e77H6v.js'), 'utf8');
+  for (const pin of ['Pu as ne', 'Gd as W']) assert.ok(selector4.includes(pin), pin);
+  const frame4 = fs.readFileSync(path.join(ROOT, '../reference/snapshots/claude-4.16336.0-20261104/ion-dist/assets/v1/shared-frame-CJdE5Ria.js'), 'utf8');
+  for (const pin of ['vh as Pu', 'Al as Gd']) assert.ok(frame4.includes(pin), pin);
+  const manifest = JSON.parse(fs.readFileSync(path.join(ROOT, 'src/generated/cds-core/manifest.json'), 'utf8'));
+  assert.deepEqual([manifest.publicNames.CdsBadge.file, manifest.publicNames.CdsBadge.local], ['shared-frame-CJdE5Ria.js', 'vh']);
+  assert.deepEqual([manifest.publicNames.CdsHiddenReasonText.file, manifest.publicNames.CdsHiddenReasonText.local], ['shared-frame-CJdE5Ria.js', 'Al']);
+  const host = fs.readFileSync(path.join(ROOT, 'src/source-model-menu.jsx'), 'utf8');
+  assert.match(host, /import \{ CdsBadge, CdsHiddenReasonText, CdsTextInput \} from "\.\/cds-core\.mjs";/);
+  assert.doesNotMatch(host, /generated\/view-tabs/);
 });
 
 test('notdone 34: a reason that does not grey the row is a hidden mirror span named by aria-describedby, not aria-description', () => {
@@ -138,8 +150,9 @@ test('notdone 33: model and effort name badges are the official xxs CdsBadge (rw
     defaultModel: 'm', effort: { levels: [{ reasoningEffort: 'low', badge: { message: 'Default', variant: 'neutral' } }, { reasoningEffort: 'high', badge: { message: 'High usage', variant: 'warning' } }], value: 'low', onPick() {} } }));
   const names = findAll(tree, (node) => node.type?.name === 'ModelName').map((node) => renderOnce(node.type, node.props));
   const badges = names.map((out) => find(out, (node) => node.type?.name === 'NameBadge')).filter(Boolean).map((node) => renderOnce(node.type, node.props));
-  assert.deepEqual(badges.map((badge) => [badge.type === CdsBadge, badge.props.variant, badge.props.size]), [[true, 'neutral', 'xxs'], [true, 'neutral', 'xxs']]);
-  assert.deepEqual(badges.map((badge) => badge.props.children), ['Default', 'Beta']);
+  // U-MODEL-MENU (2026-11-13): the model new sessions use has no 'Default' badge in the menu; a catalog badge stays.
+  assert.deepEqual(badges.map((badge) => [badge.type === CdsBadge, badge.props.variant, badge.props.size]), [[true, 'neutral', 'xxs']]);
+  assert.deepEqual(badges.map((badge) => badge.props.children), ['Beta']);
   assert.equal(menu.badgeVariant('accent'), 'accent');
   assert.equal(menu.badgeVariant('info'), 'neutral');
   const section = find(tree, (node) => node.type?.name === 'EffortSection');

@@ -12,7 +12,12 @@ import { icuFormat } from "./approval-card-model.mjs";
 import { APPROVAL_CARD_BODY, ApprovalAllowArm, PLAIN_CARD_SHELL, currentlyVisible, useHotkeyArming } from "./source-approval-card.jsx";
 import { SourceQuestionCard } from "./source-question-card.jsx";
 import { useCardHotkeys } from "./use-card-hotkeys.js";
-import { CdsButton, CdsIcon, CdsSplitDropdownButton, CdsTextArea, CdsTextLink, cdsClassNames } from "./generated/view-tabs/index.js";
+// host-wiring code-b: the parts the card draws in its own rows — the Buttons, the comment Icon, PlanSplitButton's
+// SplitDropdownButton, the feedback TextArea and cdsClassNames — are the 4.16336.0 cds-core originals (shared-frame-CJdE5Ria,
+// semantic facade). The "Open plan" TextLink is QuestionCardHeader's `trailing` (src/generated/question-card, 3.6556.2
+// renders it), so it stays the 3.6556.2 view-tabs one.
+import { CdsTextLink } from "./generated/view-tabs/index.js";
+import { CdsButton, CdsIcon, CdsSplitDropdownButton, CdsTextArea, cdsClassNames } from "./cds-core.mjs";
 import { QuestionCardHeader as PlanCardTitle } from "./generated/question-card/card-header.mjs";
 import { QuestionPrimaryButton as PlanDecisionButton } from "./generated/question-card/primary-button.mjs";
 import { useWindowUnattended } from "./generated/approval-landing/window-attention-hook.mjs";

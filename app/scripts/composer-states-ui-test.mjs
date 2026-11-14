@@ -1309,9 +1309,10 @@ try {
 
   // R4i-gui fix §17-env: the presets Home draft has no .sc-context-row (source-composer.jsx:770 shows it only with extra
   // folders or a draft group); its chips are the environment bar's (source-composer-environment-bar.jsx over the generated
-  // cc43287c9 l0 / u0): the place chip [data-testid="environment-bar-trigger"] named "Environment: {value}" under h2's CdsTooltip
-  // "Where DeepSeek runs", and the folder chip [data-testid="environment-bar-folder"] named "Folder: {paths}" (F7 home-relative;
-  // the fixture workspace lives under the temp dir, so F7 leaves it as is) with the paths as native title.
+  // 4.16336.0 cc43287c9 vge / d8): the place chip [data-testid="environment-bar-trigger"] named "Environment: {value}" under $3's
+  // CdsTooltip "Environment" (surfaces-prod-2 composer-env; D40's "Where DeepSeek runs" is superseded), and the folder chip
+  // [data-testid="environment-bar-folder"] named "Folder: {paths}" (Yg home-relative; the fixture workspace lives under the temp
+  // dir, so Yg leaves it as is) with the paths as native title.
   await page.mouse.move(100, 700);
   await page.getByRole("button", { name: "New", exact: true }).click();
   await expectPlaceholder("Describe a task or ask a question", "New draft for the environment bar");
@@ -1322,9 +1323,9 @@ try {
     folderText: (await envFolder.textContent()).includes(path.basename(workspace)) };
   assert.deepEqual(metrics.envBar, { rows: 0, place: true, folderName: `Folder: ${workspace}`, folderTitle: workspace, folderText: true }, "environment bar chips on the Home draft");
   await envPlace.hover();
-  await cdsTip().filter({ hasText: "Where DeepSeek runs" }).first().waitFor();
+  await cdsTip().filter({ hasText: "Environment" }).first().waitFor();
   await page.mouse.move(100, 700);
-  checks.push("R4i §17-env: the Home draft has no .sc-context-row; the environment bar's place chip is named 'Environment: …' with the CDS tooltip 'Where DeepSeek runs', the folder chip is named 'Folder: <workspace>' with the path as native title and the basename as its label");
+  checks.push("R4i §17-env: the Home draft has no .sc-context-row; the environment bar's place chip is named 'Environment: …' with the CDS tooltip 'Environment', the folder chip is named 'Folder: <workspace>' with the path as native title and the basename as its label");
 
   // R4i-gui fix: §17–17c below still drive the classic .sc-context-row (folder / branch / worktree chips, lH Recent menu,
   // hT branch search, 'Send and stay here'), which the presets Home draft no longer renders, so they are skipped unless

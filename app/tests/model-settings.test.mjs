@@ -103,10 +103,16 @@ test('Settings › Models server-renders per-model rows and the price table on D
   t.after(() => server.close());
   const { SourceModelsSettings, CodexConnectionGroup } = await server.ssrLoadModule('/src/source-settings-models.jsx');
   const i18n = await server.ssrLoadModule('/electron/i18n/index.mjs');
+  const { conciseCopy } = await server.ssrLoadModule('/electron/i18n/concise.mjs');
   t.after(() => i18n.setLocale('en-US'));
   const models = [{ model: 'deepseek-flash', displayName: '4.1 Flash', defaultReasoningEffort: 'high', supportedReasoningEfforts: [{ reasoningEffort: 'off' }, { reasoningEffort: 'high' }, { reasoningEffort: 'max' }] }];
   const config = { modelSettings: { params: { 'deepseek-flash': { maxTokens: 8192, temperature: 0.3, effort: 'max' } }, prices: { 'my-model': { displayName: 'Mine', offPeak: tier(0, 1, 2), peak: tier(0, 2, 4) } } } };
   const page = (engine, list = models, extra = {}) => render(React.createElement(SourceModelsSettings, { config, boot: { connected: true, models: list }, engine, desktopCall: async () => ({ unsupported: true }), onSave: async () => {}, ...extra }));
+  // U-SET-LITE: a model's entry starts closed unless one of its options was changed (params set or renamed); `opened`
+  // is `page` with a default effort saved for every model listed, so their option rows render.
+  const withParams = (list) => ({ ...config, modelSettings: { ...config.modelSettings, params: { ...config.modelSettings.params, ...Object.fromEntries(list.map(model => [model.model, { effort: 'medium' }])) } } });
+  const opened = (engine, list, extra = {}) => page(engine, list, { config: withParams(list), ...extra });
+  const entryTrigger = (html, name) => new RegExp(`<button[^>]*aria-label="${name.replace(/[.()]/g, '\\$&')} options"[^>]*>`).exec(html)?.[0] ?? '';
   // DeepSeek (providerSettings): unchanged.
   const html = page('deepseek');
   // Per-model options sit on the page (not under Advanced), one collapsible entry per model.
@@ -115,7 +121,11 @@ test('Settings › Models server-renders per-model rows and the price table on D
   assert.match(html, /<input type="number"[^>]*aria-label="4.1 Flash max output tokens"[^>]*value="8192"/);
   assert.match(html, /aria-label="4.1 Flash temperature"[^>]*value="0.3"/);
   assert.match(html, /aria-label="4.1 Flash default reasoning effort"[^>]*data-value="max"/);
-  assert.ok(html.includes('top_p is not supported by the DeepSeek Harness adapter.'));
+  // U-SET-LITE: the defaults note is its short line (concise.mjs); the top_p sentence is gone.
+  assert.ok(html.includes(`<p class="msx-note">${conciseCopy('Defaults for every DeepSeek session; changes apply from the next request. top_p is not supported by the DeepSeek Harness adapter.', 'en-US')}</p>`));
+  assert.ok(html.includes('<p class="msx-note">Applies from the next request.</p>'));
+  assert.equal(html.includes('top_p'), false);
+  assert.match(entryTrigger(html, '4.1 Flash'), /aria-expanded="true"/, 'a model with saved params starts open');
   assert.match(html, /aria-label="Mine off-peak cache miss price"[^>]*value="1"/);
   assert.match(html, /Reset to official prices<\/span><\/button>/);
   const reset = /<button[^>]*>(?:(?!<button).)*Reset to official prices/.exec(html)[0];
@@ -128,8 +138,13 @@ test('Settings › Models server-renders per-model rows and the price table on D
   const plain = render(React.createElement(SourceModelsSettings, { config: {}, boot: { connected: true, models }, engine: 'deepseek', desktopCall: async () => ({ unsupported: true }), onSave: async () => {} }));
   assert.ok(plain.includes('Advanced') && plain.includes('Pricing and custom providers'));
   assert.equal(plain.includes('Add model price'), false, 'Advanced (pricing, providers) starts closed when nothing in it was changed');
-  assert.ok(plain.includes('aria-label="4.1 Flash max output tokens"'), 'per-model options are visible outside Advanced');
-  assert.ok(plain.includes('aria-label="4.1 Flash display name"') && plain.includes('aria-label="4.1 Flash image input"'));
+  // U-SET-LITE: with nothing changed the model's entry is one closed line on the page (outside Advanced): its trigger,
+  // no option rows until it opens.
+  const plainTrigger = entryTrigger(plain, '4.1 Flash');
+  assert.match(plainTrigger, /aria-expanded="false"/, 'an unchanged model starts closed');
+  assert.ok(plain.indexOf(plainTrigger) < plain.indexOf('Pricing and custom providers'), 'per-model entries sit outside Advanced');
+  assert.equal(plain.includes('aria-label="4.1 Flash max output tokens"'), false, 'closed: no option rows');
+  assert.ok(html.includes('aria-label="4.1 Flash display name"') && html.includes('aria-label="4.1 Flash image input"'), 'open: name and image rows');
 
   // Codex (codexProvider): the endpoint group and the running core's models; no DeepSeek connection, prices,
   // providers, Quick setup, Advanced or customization-only fields.
@@ -148,16 +163,24 @@ test('Settings › Models server-renders per-model rows and the price table on D
   assert.match(codex, /GPT-6 Astra<span class="msx-badge">Default<\/span>/);
   assert.equal((codex.match(/>Default<\/span>/g) || []).length, 1, 'only the catalog default carries the badge');
   assert.ok(codex.includes('Frontier agentic coding.'));
-  assert.match(codex, /<span data-top-tier="true">Ultra<\/span>/, 'the efforts list Ultra, in the top-tier accent');
-  assert.equal((codex.match(/Fast available/g) || []).length, 1);
+  // U-SET-LITE: the efforts are one range chip (the full list, Ultra included, in its title) and Fast its own chip.
+  assert.ok(codex.includes('<span class="msx-model-chips"><span class="msx-chip" title="Reasoning efforts: Low · Medium · High · Extra high · Max · Ultra">Low – Ultra</span><span class="msx-chip">Fast</span></span>'), 'GPT-6 Astra: efforts through Ultra, and Fast');
+  assert.ok(codex.includes('<span class="msx-model-chips"><span class="msx-chip" title="Reasoning efforts: Low · Medium · High · Extra high">Low – Extra high</span></span>'), 'GPT-5.5: no Fast chip');
+  assert.equal((codex.match(/<span class="msx-chip">Fast<\/span>/g) || []).length, 1);
+  assert.equal(codex.includes('data-top-tier'), false, 'no per-model efforts line');
   assert.equal(codex.includes('Hidden helper'), false, 'hidden catalog entries are not listed');
+  // Unchanged entries are closed (no effort select yet); a saved default effort opens them with an editable select.
+  for (const name of ['GPT-6 Astra', 'GPT-5.5']) assert.match(entryTrigger(codex, name), /aria-expanded="false"/, `${name} starts closed`);
+  assert.equal(codex.includes('default reasoning effort"'), false);
+  const codexOpen = opened('codex', gpt, { onQuickSetup() {} });
   for (const name of ['GPT-6 Astra', 'GPT-5.5']) {
-    const select = new RegExp(`<button[^>]*role="combobox"[^>]*aria-label="${name.replace('.', '\\.')} default reasoning effort"[^>]*>`).exec(codex)?.[0];
+    assert.match(entryTrigger(codexOpen, name), /aria-expanded="true"/, `${name} opens once customized`);
+    const select = new RegExp(`<button[^>]*role="combobox"[^>]*aria-label="${name.replace('.', '\\.')} default reasoning effort"[^>]*>`).exec(codexOpen)?.[0];
     assert.ok(select, name);
     assert.doesNotMatch(select, /disabled/, `${name} default effort is editable`);
   }
   for (const gone of ['aria-label="API provider"', 'DeepSeek API key', '>Pricing<', 'Custom providers', 'Quick setup', 'Advanced', 'max output tokens', 'temperature', 'apply with DeepSeek Harness', 'manages its own connection'])
-    assert.equal(codex.includes(gone), false, gone);
+    assert.equal(codexOpen.includes(gone), false, gone);
   assert.equal(page(undefined, gpt).includes('aria-label="Codex provider"'), true, 'no engine is Codex');
 
   // A core with neither connection capability: a one-line notice naming it and its models. A customization core
@@ -168,20 +191,22 @@ test('Settings › Models server-renders per-model rows and the price table on D
   assert.ok(zcode.includes('ZCode manages its own connection and prices.'));
   assert.match(zcode, /<h3[^>]*>ZCode models<\/h3>/);
   for (const core of ['zcode', 'opencode', 'gemini']) {
-    const html = page(core, gpt);
+    const html = opened(core, gpt);
     assert.match(html, /<input type="number"[^>]*aria-label="GPT-6 Astra max output tokens"/, `${core}: max output tokens`);
     assert.match(html, /aria-label="GPT-5\.5 temperature"/, `${core}: temperature`);
     assert.match(html, /data-model-options="gpt-6-astra"(?:(?!data-model-options=).)*data-setting-id="model-gpt-6-astra-maxTokens"/s, `${core}: the param rows sit under their model`);
   }
-  const noProxy = render(React.createElement(SourceModelsSettings, { config, boot: { connected: true, models: gpt, core: { engine: 'zcode', capabilities: { customization: false } } }, desktopCall: async () => ({ unsupported: true }), onSave: async () => {} }));
+  const noProxy = render(React.createElement(SourceModelsSettings, { config: withParams(gpt), boot: { connected: true, models: gpt, core: { engine: 'zcode', capabilities: { customization: false } } }, desktopCall: async () => ({ unsupported: true }), onSave: async () => {} }));
+  assert.ok(noProxy.includes('aria-label="GPT-6 Astra default reasoning effort"'), 'the entries are open');
   assert.equal(noProxy.includes('max output tokens') || noProxy.includes('temperature'), false, 'reported customization:false wins');
   // Qwen lists `${id}(${authType})` ids: the param rows render for them and keep the id intact.
   const qwenModels = [{ id: 'qwen3-coder-plus(openai)', model: 'qwen3-coder-plus(openai)', displayName: 'Qwen3 Coder Plus', isDefault: true, supportedReasoningEfforts: [] }];
-  const qwen = page('qwen', qwenModels);
+  const qwen = opened('qwen', qwenModels);
   assert.match(qwen, /<input type="number"[^>]*aria-label="Qwen3 Coder Plus max output tokens"/, 'qwen: max output tokens');
   assert.match(qwen, /data-setting-id="model-qwen3-coder-plus\(openai\)-temperature"/, 'qwen: temperature keyed by the listed id');
   // A core declaring modelParams:false (a customization bridge that never reads them) shows no rows it would ignore.
-  const ignores = render(React.createElement(SourceModelsSettings, { config, boot: { connected: true, models: gpt, core: { engine: 'qwen', capabilities: { modelParams: false } } }, desktopCall: async () => ({ unsupported: true }), onSave: async () => {} }));
+  const ignores = render(React.createElement(SourceModelsSettings, { config: withParams(gpt), boot: { connected: true, models: gpt, core: { engine: 'qwen', capabilities: { modelParams: false } } }, desktopCall: async () => ({ unsupported: true }), onSave: async () => {} }));
+  assert.ok(ignores.includes('aria-label="GPT-6 Astra default reasoning effort"'), 'the entries are open');
   assert.equal(ignores.includes('max output tokens') || ignores.includes('temperature'), false, 'modelParams:false drops the rows');
   assert.ok(ignores.includes('GPT-6 Astra'), 'the models are still listed');
   assert.equal(zcode.includes('aria-label="Codex provider"') || zcode.includes('>Pricing<'), false);
@@ -192,13 +217,17 @@ test('Settings › Models server-renders per-model rows and the price table on D
   const custom = render(React.createElement(CodexConnectionGroup, { core: 'Codex', desktopCall: async () => ({}),
     initialView: { available: true, mode: 'custom', baseURL: 'https://relay.example.com/v1', models: ['relay-a', 'relay-b'], webSearch: false, hasKey: true } }));
   assert.match(custom, /aria-label="Endpoint base URL"[^>]*value="https:\/\/relay\.example\.com\/v1"/);
-  assert.ok(custom.includes('/responses is added'));
+  // U-SET-LITE: the Base URL, Connection test and Responses-only callout read their short lines (concise.mjs).
+  const short = (source, values = {}) => { const line = conciseCopy(source, i18n.getLocale()); assert.ok(line, source); return line.replace(/\{(\w+)\}/g, (match, key) => values[key] ?? match); };
+  assert.match(custom, /data-setting-id="codex-base-url"[\s\S]*?Usually ends in \/v1\./);
+  assert.ok(custom.includes(short('The endpoint’s OpenAI Responses-compatible root, usually ending in /v1; /responses is added.')));
   assert.match(custom, /type="password" aria-label="Endpoint API key"[^>]*placeholder="•••••••• Saved" value=""/);
   assert.match(custom, /aria-label="Endpoint model ids"[^>]*>relay-a\nrelay-b<\/textarea>/);
   assert.match(custom, /role="switch" aria-label="Web search" aria-checked="false"/);
   assert.ok(custom.includes('>Test connection<') && custom.includes('>Fetch from endpoint<') && custom.includes('>Remove endpoint<'));
-  assert.ok(custom.includes('Sends one small request to /responses.'));
-  assert.ok(custom.includes('Codex speaks only the OpenAI Responses API') && custom.includes('custom provider on DeepSeek Harness'));
+  assert.ok(custom.includes(short('Sends one small request to /responses. A relay can pass it and still reject parts of {core}’s full requests.')));
+  assert.ok(custom.includes(`<p class="msx-callout">${short('{core} speaks only the OpenAI Responses API, so a relay that serves only /chat/completions can’t run it.', { core: 'Codex' })} ${short('Add a relay like that as a custom provider on DeepSeek Harness instead.')}</p>`));
+  assert.ok(custom.includes('Codex needs the Responses API; /chat/completions-only relays won’t work. Use them with DeepSeek Harness instead.'));
   assert.match(custom, /<button disabled="" type="submit"[^>]*>(?:(?!<\/button>).)*Save/, 'nothing to save until something changes');
   const openai = render(React.createElement(CodexConnectionGroup, { core: 'Codex', desktopCall: async () => ({}), initialView: { available: true, mode: 'openai', baseURL: '', models: [], webSearch: false, hasKey: false } }));
   assert.equal(openai.includes('Endpoint base URL') || openai.includes('Remove endpoint') || openai.includes('Responses API'), false, 'OpenAI mode shows only the provider choice');
@@ -206,10 +235,12 @@ test('Settings › Models server-renders per-model rows and the price table on D
   // zh-CN: the new copy resolves.
   i18n.setLocale('zh-CN');
   const zh = page('codex', gpt);
-  assert.ok(zh.includes('Codex 模型') && zh.includes('支持快速模式') && zh.includes('推理强度') && zh.includes('自定义端点'), zh.slice(0, 400));
+  // U-SET-LITE: Fast is a chip (快速) and the efforts range chip's title names them (推理强度).
+  assert.ok(zh.includes('Codex 模型') && zh.includes('<span class="msx-chip">快速</span>') && zh.includes('title="推理强度: ') && zh.includes('自定义端点'), zh.slice(0, 400));
   const zhCustom = render(React.createElement(CodexConnectionGroup, { core: 'Codex', desktopCall: async () => ({}),
     initialView: { available: true, mode: 'custom', baseURL: 'https://relay.example.com/v1', models: ['relay-a'], webSearch: false, hasKey: true } }));
-  assert.ok(zhCustom.includes('测试连接') && zhCustom.includes('端点 API 密钥') && zhCustom.includes('只支持 OpenAI Responses API'));
+  assert.ok(zhCustom.includes('测试连接') && zhCustom.includes('端点 API 密钥') && zhCustom.includes(short('{core} speaks only the OpenAI Responses API, so a relay that serves only /chat/completions can’t run it.', { core: 'Codex' })));
+  assert.ok(zhCustom.includes('Codex 只支持 Responses API'));
 });
 
 test('custom providers: definitions on disk, keys encrypted, one managed overlay row and env per route', async (t) => {
@@ -271,6 +302,15 @@ test('API connection: official or relay, keys encrypted, exported as DEEPSEEK_AP
   assert.equal(env.get('DEEPSEEK_BASE_URL'), 'http://127.0.0.1:4321/anthropic', 'the core talks to the loopback forwarder');
   assert.deepEqual(forwarder.calls.at(-1), ['start', 'https://relay.test/anthropic']);
   assert.equal(fs.readFileSync(path.join(dir, 'provider-keys.bin'), 'utf8').includes('sk-'), false);
+  // The saved relay key is the saved relay's: another origin without a key of its own is refused (nothing changes),
+  // another path on the same origin keeps it.
+  await assert.rejects(settings.run({ op: 'connection-save', connection: { mode: 'relay', relayBaseURL: 'https://other-relay.test/anthropic' } }), /relay’s API key/);
+  assert.equal((await settings.run({ op: 'connection-read' })).relayBaseURL, 'https://relay.test/anthropic');
+  assert.equal(env.get('DEEPSEEK_API_KEY'), 'sk-relay');
+  view = await settings.run({ op: 'connection-save', connection: { mode: 'relay', relayBaseURL: 'https://relay.test/claude' } });
+  assert.equal(view.relayKey, true);
+  view = await settings.run({ op: 'connection-save', connection: { mode: 'relay', relayBaseURL: 'https://other-relay.test/anthropic' }, relayKey: 'sk-relay-b' });
+  assert.equal(env.get('DEEPSEEK_API_KEY'), 'sk-relay-b');
   // Back to official keeps both keys; removing the official key falls back to ~/.dsh.
   await settings.run({ op: 'connection-save', connection: { mode: 'official' } });
   assert.equal(env.get('DEEPSEEK_API_KEY'), 'sk-official');
@@ -319,7 +359,7 @@ test('relay forwarder renames <system-reminder> in request bodies and streams th
   });
   await new Promise(resolve => relay.listen(0, '127.0.0.1', resolve));
   const proxy = createRelayProxy();
-  t.after(async () => { await proxy.stop(); relay.close(); });
+  t.after(async () => { await proxy.dispose(); relay.close(); });
   const base = await proxy.start(`http://127.0.0.1:${relay.address().port}/anthropic/`);
   assert.match(base, /^http:\/\/127\.0\.0\.1:\d+\/anthropic$/);
   const response = await fetch(`${base}/v1/messages`, { method: 'POST', headers: { 'content-type': 'application/json', 'x-api-key': 'k' }, body: JSON.stringify({ messages: [{ role: 'user', content: [{ type: 'text', text: 'hi' }, { type: 'text', text: '<system-reminder>skills</system-reminder>' }] }] }) });
@@ -328,6 +368,32 @@ test('relay forwarder renames <system-reminder> in request bodies and streams th
   assert.equal(seen[0].url, '/anthropic/v1/messages');
   assert.equal(seen[0].key, 'k');
   assert.ok(seen[0].body.includes('<system_reminder>skills</system_reminder>') && !seen[0].body.includes('<system-reminder>'));
+});
+
+test('relay forwarder: a core keeps the relay it started with until it restarts; saving never waits on a stream', async (t) => {
+  const http = await import('node:http');
+  const { createRelayProxy } = require('../electron/relay-proxy.cjs');
+  const relay = (name) => http.createServer((req, res) => {
+    req.resume(); res.writeHead(200, { 'content-type': 'text/event-stream' });
+    if (req.url.endsWith('/slow')) { res.write(`data: ${name}\n\n`); setTimeout(() => res.end(), 400); } else res.end(`data: ${name}\n\n`);
+  });
+  const a = relay('A'), b = relay('B');
+  await Promise.all([a, b].map(server => new Promise(resolve => server.listen(0, '127.0.0.1', resolve))));
+  const proxy = createRelayProxy();
+  t.after(async () => { await proxy.dispose(); a.close(); b.close(); });
+  const baseA = await proxy.start(`http://127.0.0.1:${a.address().port}/x`);
+  assert.equal(await proxy.start(`http://127.0.0.1:${a.address().port}/y`), baseA.replace(/\/x$/, '/y'), 'one forwarder per relay origin');
+  const slow = fetch(`${baseA}/slow`).then(response => response.text());
+  await new Promise(resolve => setTimeout(resolve, 50));
+  const started = Date.now();
+  const baseB = await proxy.start(`http://127.0.0.1:${b.address().port}/x`);
+  assert.notEqual(new URL(baseB).port, new URL(baseA).port, 'another relay gets its own port');
+  await proxy.stop();
+  assert.ok(Date.now() - started < 200, 'neither waits for the stream in flight');
+  assert.equal(proxy.running, false);
+  assert.equal(await (await fetch(`${baseA}/v1/messages`)).text(), 'data: A\n\n', 'the core started on A still reaches A');
+  assert.equal(await (await fetch(`${baseB}/v1/messages`)).text(), 'data: B\n\n');
+  assert.equal(await slow, 'data: A\n\n');
 });
 
 // Settings › Models on the Codex core: OpenAI or a custom Responses endpoint (prefs/codex-provider.mjs).
@@ -363,6 +429,10 @@ test('Codex endpoint: key encrypted under @codex, launch env scoped to Codex, ca
   assert.equal(JSON.parse(safeStorage.decryptString(fs.readFileSync(path.join(dir, 'provider-keys.bin'))))['@codex'], 'sk-codex');
   assert.equal(coreEnv.some(([, value]) => value === 'sk-codex'), false, 'the Codex key never enters the shared core environment');
   assert.equal(typeof launch, 'function', 'codex.cjs reads the launch at each spawn');
+  // The saved key is the saved endpoint's: another origin without a key is refused and the saved endpoint stays.
+  await assert.rejects(settings.run({ op: 'codex-provider-save', provider: { mode: 'custom', baseURL: 'https://other-endpoint.test/v1', models: ['relay-a'] } }), /API key/);
+  assert.equal(JSON.parse(fs.readFileSync(path.join(dir, 'codex/provider.json'), 'utf8')).baseURL, 'https://relay.test/v1');
+  assert.equal(JSON.parse(safeStorage.decryptString(fs.readFileSync(path.join(dir, 'provider-keys.bin'))))['@codex'], 'sk-codex');
   let current = launch();
   // Saved but not restarted: the running child has no codedesktop table, so resume / fork name no provider
   // (Codex 0.155.1 answers "Model provider `codedesktop` not found"); nor does a CODEX_BINARY / options.binary child.
@@ -371,6 +441,11 @@ test('Codex endpoint: key encrypted under @codex, launch env scoped to Codex, ca
   for (const method of ['thread/resume', 'thread/fork']) assert.deepEqual(settings.decorateThread(method, { threadId: 't' }, spawned([])), { threadId: 't' }, `${method} before the restart`);
   assert.equal(settings.decorateThread('thread/resume', { threadId: 't' }, spawned(customArgs)).modelProvider, 'codedesktop', 'after the restart');
   assert.deepEqual(settings.decorateThread('thread/resume', { threadId: 't' }, { ...codex(), options: { binary: '/fixture' } }), { threadId: 't' });
+  // 'Approve for me' (Codex auto-review) is off only while the running child is on the custom endpoint.
+  assert.equal(settings.codexOnCustomEndpoint(spawned(customArgs)), true, 'launched on the endpoint');
+  assert.equal(settings.codexOnCustomEndpoint(spawned([])), false, 'saved, not restarted: still OpenAI');
+  assert.equal(settings.codexOnCustomEndpoint({ ...codex(), options: { binary: '/fixture' } }), false, 'a binary of its own never gets the endpoint');
+  assert.equal(settings.codexOnCustomEndpoint({ serverInfo: { engine: 'dsh' }, child: { spawnargs: ['x', ...customArgs] } }), false, 'not Codex');
   const override = process.env.CODEX_BINARY;
   process.env.CODEX_BINARY = '/fixture/server';
   try { assert.deepEqual(settings.decorateThread('thread/resume', { threadId: 't' }), { threadId: 't' }, 'CODEX_BINARY never gets the launch args'); }
@@ -510,4 +585,14 @@ test('relay mode: web search reads its own key variable, set only from the offic
   assert.equal(rows.has('web-search-deepseek'), false);
   assert.equal(env.has('CODE_DESKTOP_DEEPSEEK_SEARCH_KEY'), false);
   assert.equal(env.get('DEEPSEEK_API_KEY'), 'sk-official');
+});
+
+test('main.cjs: Codex on its custom endpoint never offers or keeps Approve for me (its review model is OpenAI\'s)', () => {
+  const main = readFileSync(new URL('../electron/main.cjs', import.meta.url), 'utf8');
+  const start = main.indexOf('function autoReviewFeature(owner) {');
+  const body = main.slice(start, main.indexOf('\n}\n', start));
+  assert.match(body, /if \(!connection \|\| modelSettings\.codexOnCustomEndpoint\?\.\(owner\)\) return Promise\.resolve\(false\);/);
+  assert.match(main, /enabledFeatures\?\.has\("guardian_approval"\) && !modelSettings\.codexOnCustomEndpoint\?\.\(owner\) \? \{ autoReview: true \} : \{\}/);
+  // turn/start, thread/start and thread/resume keep auto_review only where autoReviewFeature says so; else the user.
+  assert.match(main, /params\.sandboxPolicy\?\.type !== "dangerFullAccess" && await autoReviewFeature\(owner\);[\s\S]{0,200}if \(auto\) params\.approvalsReviewer = "auto_review";\s*else if [^\n]*params\.approvalsReviewer = "user";/);
 });

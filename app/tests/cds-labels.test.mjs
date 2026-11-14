@@ -107,11 +107,17 @@ test('main.jsx provides the host labels at the app root, around every window, an
   // view-tabs vn, so the root provides that one context only.
   assert.doesNotMatch(main, /ChatCdsLabelsContext|generated\/chat\/shared-frame|generated\/current-chat\//);
   // w11-sweep-rest: the CDS locale context (what the official root CdsRoot's `locale` provides) wraps the labels.
-  assert.match(render, /^createRoot\(document\.getElementById\("root"\)\)\.render\(\n(?:\s*\/\/[^\n]*\n)*\s*<CdsLocaleContext\.Provider value=\{getLocale\(\)\}><CdsLabelsContext\.Provider value=\{cdsLabels\}><SourceToastProvider>/);
-  assert.match(render, /<\/SourceToastProvider><\/CdsLabelsContext\.Provider><\/CdsLocaleContext\.Provider>,\n\);/);
+  // host-wiring root: inside them the 4.16336.0 window root (cds-core CdsRoot, as index XQ's kE = shared-46 St renders it) takes the
+  // same labels and locale as props, so the cds-core controls read them from the cds-core Contexts.
+  assert.match(render, /^createRoot\(document\.getElementById\("root"\)\)\.render\(\n(?:\s*\/\/[^\n]*\n)*\s*<CdsLocaleContext\.Provider value=\{getLocale\(\)\}><CdsLabelsContext\.Provider value=\{cdsLabels\}><CdsCoreRoot className="contents" labels=\{cdsLabels\} locale=\{getLocale\(\)\} pageBackground="surface-1" platform="desktop" experimental=\{cdsWindowExperimental\}><SourceToastProvider>/);
+  // titlebar relink T1: experimental is shared-46 St's v with fizzyLake = shared-92 ib (host-wiring-root.test.mjs pins it).
+  assert.match(render, /<\/SourceToastProvider><\/CdsCoreRoot><\/CdsLabelsContext\.Provider><\/CdsLocaleContext\.Provider>,\n\);/);
+  assert.equal(count(main, 'import { CdsRoot as CdsCoreRoot } from "./cds-core.mjs";'), 1);
   assert.equal(count(main, '<CdsLabelsContext.Provider value='), 1);
   assert.equal(count(main, '.Provider value={cdsLabels}'), 1);
-  assert.equal(count(main, 'labels={'), 0);
+  // The window root is the only place labels are passed: both Code composer roots chain to it.
+  assert.equal(count(main, 'labels={'), 1);
+  assert.equal(count(main, 'labels={cdsLabels}'), 1);
 });
 
 // w10-curchat-retire: the 2.31226.0 current-chat graph and its own labels context (mn) are retired (CC-13); the 3.6556.2

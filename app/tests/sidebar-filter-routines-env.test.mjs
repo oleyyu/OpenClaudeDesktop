@@ -19,7 +19,8 @@ const app = path.resolve(import.meta.dirname, '..');
 const reference = path.resolve(app, '../reference/installed-2.42304.0-20261017/ion-dist/assets/v1');
 const read = (file) => fs.readFile(file, 'utf8');
 const count = (source, needle) => source.split(needle).length - 1;
-const documentStub = { createElement: () => ({ relList: { supports: () => false } }),
+// W8-M9 stub contract (round4 integration, stub fields only): cds-core 9203795f reads these at load (official 4.16336.0): document.cookie.
+const documentStub = { cookie: '' /* W8-M9: shared-0 CQ / Wo document.cookie */, createElement: () => ({ relList: { supports: () => false } }),
   documentElement: { dir: 'ltr', getAttribute: () => null, hasAttribute: () => false } };
 let server, savedDocument, M = {};
 before(async () => {

@@ -15,7 +15,13 @@ import React, { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef,
 // w11-e31-terminal-cont: the close confirmation (cccc2cf0a Zx Ie) and the body menu (cS items) are view-tabs CDS parts
 // (R6 facade).
 // W14-code r6 r6pa-04: cccc2cf0a Zx "New terminal" / Restart / Reload are shared-frame Uu = CdsButton.
-import { CdsButton, CdsConfirmationDialog, CdsContextMenu, CdsRoot } from "./generated/view-tabs/index.js";
+// host-wiring code-b: the error row's "New terminal" and the close confirmation (CdsConfirmationDialog in its own
+// density-comfortable CdsRoot, cccc2cf0a Zx Ie) are the 4.16336.0 cds-core originals (shared-frame-CJdE5Ria, semantic
+// facade): the pane renders them itself. The covers' actions go to the generated EmptyState and the body menu's items are
+// children of the generated RowContextMenu (both 3.6556.2: r3b-transcript, session-rail-changes, whose Root / Popup are
+// the view-tabs CdsContextMenu), so they stay the 3.6556.2 view-tabs Button (ViewTabsCdsButton) and CdsContextMenu.
+import { CdsButton as ViewTabsCdsButton, CdsContextMenu } from "./generated/view-tabs/index.js";
+import { CdsButton, CdsConfirmationDialog, CdsRoot } from "./cds-core.mjs";
 // cccc2cf0a iS → c0cdf4a08 g (kf, the context menu around the terminal): session-rail-changes already slices it from
 // 3.6556.2 (RowContextMenu, with cd59309dc's open marker), so the pane imports that slice (D1) instead of a second one.
 import { RowContextMenu } from "./generated/session-rail-changes/row-context-menu.mjs";
@@ -711,15 +717,15 @@ export function SourceTerminalPane({
             onMouseDown={(event) => { if (!event.defaultPrevented && !event.target.closest?.("button")) { event.preventDefault(); restartButton.current?.focus(); } }}>
             {/* cc-rest-terminal-b (3.6556.2 Ei): an error cover is role="alert"; needsNewerApp adds its body. */}
             <EmptyState role={cover.role} title={<span id={`${hintId}-exited`}>{cover.text}</span>} body={cover.body}
-              actions={cover.action && <CdsButton ref={restartButton} size="sm" variant="secondary" aria-describedby={`${hintId}-exited`}
-                data-initial-focus="" onClick={cover.retry}>{cover.action}</CdsButton>} />
+              actions={cover.action && <ViewTabsCdsButton ref={restartButton} size="sm" variant="secondary" aria-describedby={`${hintId}-exited`}
+                data-initial-focus="" onClick={cover.retry}>{cover.action}</ViewTabsCdsButton>} />
           </div>
         )}
         {/* cccc2cf0a Ay (ShellTerminalChunk's fallback): the terminal module (or the bridge) failed to load; Reload. */}
         {loadFailed && (
           <div className="stp-overlay">
             <EmptyState role="alert" icon="Warning" title={t("Couldn’t load the terminal")} body={t("Reload the page to try again.")}
-              actions={<CdsButton size="sm" variant="secondary" onClick={() => window.location.reload()}>{t("Reload")}</CdsButton>} />
+              actions={<ViewTabsCdsButton size="sm" variant="secondary" onClick={() => window.location.reload()}>{t("Reload")}</ViewTabsCdsButton>} />
           </div>
         )}
         {error && !exited && !loadFailed && (

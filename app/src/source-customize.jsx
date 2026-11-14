@@ -21,7 +21,7 @@ import { SourceDisclosure } from './source-disclosure.jsx';
 import { SourceSelect } from './source-select.jsx';
 import { SourceConfirmationDialog, SourceDialog, SourceDialogFooter } from './source-dialog.jsx';
 import { useSourceToasts } from './source-toast.jsx';
-import { CdsSpinner } from './generated/view-tabs/index.js';
+import { CdsSpinner } from './cds-core.mjs'; // 4.16336.0 host wiring (frame): cds-core Spinner (kc)
 import { WorkspaceTrustDialog } from './generated/code-routines/index.mjs';
 import { appsView, connectorPairs, connectorApprovalItems, connectorToolRows, pluginAppsNeedingAuth,
   CONNECTOR_TOASTS, MCP_STATUS_FILTERS, MCP_STATUS_LABELS, connectorDetailMessage, connectorDetailState, connectorsListView, customizeCore,

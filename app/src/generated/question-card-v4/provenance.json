@@ -1,0 +1,1147 @@
+{
+  "referenceVersion": "4.16336.0",
+  "referenceSnapshot": "snapshots/claude-4.16336.0-20261104",
+  "generator": "scripts/extract-question-card-v4.mjs",
+  "previous": {
+    "generator": "scripts/extract-question-card.mjs",
+    "output": "src/generated/question-card",
+    "referenceVersion": "3.6556.2"
+  },
+  "sharedGraph": {
+    "area": "cds-core",
+    "manifestSha256": "06d2026939e5c8992713c2a0dda1b1abc9adffe7a0c223fe3c1e79eecd08d62c"
+  },
+  "linkedAreas": {
+    "approval-landing-v4": {
+      "manifestSha256": "66f9f5e6062006d44a116f7671c26768d80cf9a13dc3e030aadaadaa11e1d94f"
+    },
+    "btw-pane-v4": {
+      "manifestSha256": "8a6f05218864d113af40b522457de2e82ab0c9a4930266419b54b17081a060d2"
+    },
+    "routines-shared-v4": {
+      "manifestSha256": "a2a9b9a84b2705e48451025af38eb7582de5bb421c626e6bdf5b067eb8e00c8c"
+    },
+    "proposal-group-v4": {
+      "manifestSha256": "373e3ed4e243fdfea94253655f55063a894ac1a21187f4fd5eb8745eea61bc83",
+      "modules": [
+        "c30607cef.mjs",
+        "shared-26.mjs"
+      ]
+    }
+  },
+  "publicNames": [
+    "QuestionOptionRow",
+    "selectedRowClass",
+    "dragSelectThreshold",
+    "preventMouseDown",
+    "otherFieldArrowKeys",
+    "stopClickPropagation",
+    "composedHopElements",
+    "isTextboxRole",
+    "isInEditableContent",
+    "QuestionAnswerOption",
+    "QuestionRadioMark",
+    "endsAnswerSelection",
+    "answerOptionInset",
+    "preventAnswerMouseDown",
+    "stopAnswerClick",
+    "QuestionOptionButton",
+    "QuestionCardHeader",
+    "questionDisplayText",
+    "bidiPlaintext",
+    "QuestionPrimaryButton",
+    "onLandedCard",
+    "questionDigitShortcuts",
+    "questionRowMouseDown",
+    "questionEndsDragSelect"
+  ],
+  "roots": [
+    {
+      "file": "c9ed5627b-DLvwQtiq.js",
+      "local": "_t",
+      "name": "QuestionOptionRow",
+      "export": null,
+      "previous": "c9ed5627b ut",
+      "declarationSha256": "7d7ca3a4fe533251bf6923527a3263ee946206554ba0e3ef337faeda79299017",
+      "pinned": true
+    },
+    {
+      "file": "c9ed5627b-DLvwQtiq.js",
+      "local": "mt",
+      "name": "selectedRowClass",
+      "export": null,
+      "previous": "c9ed5627b st",
+      "declarationSha256": "872d042a86722fee081b676b013bf9eb553455e4bf2368bacac2956fd757cb36",
+      "pinned": true
+    },
+    {
+      "file": "c9ed5627b-DLvwQtiq.js",
+      "local": "pt",
+      "name": "dragSelectThreshold",
+      "export": null,
+      "previous": "c9ed5627b ot",
+      "declarationSha256": "68235fd79e5a55f7157d0faf304fc72f00460ad6c0b90753882e0c68801c2f51",
+      "pinned": true
+    },
+    {
+      "file": "c9ed5627b-DLvwQtiq.js",
+      "local": "ft",
+      "name": "preventMouseDown",
+      "export": null,
+      "previous": "c9ed5627b at",
+      "declarationSha256": "dbaed59a2685a079e17e3cad5f3ea9d30a281fb0ae0ecbcf4048a3f8076514c1",
+      "pinned": true
+    },
+    {
+      "file": "c9ed5627b-DLvwQtiq.js",
+      "local": "Tt",
+      "name": "otherFieldArrowKeys",
+      "export": null,
+      "previous": "c9ed5627b vt",
+      "declarationSha256": "3b0e0f3633d66083282702b5020022331c5c15c301e8352361f7f2938b1d1487",
+      "pinned": true
+    },
+    {
+      "file": "c9ed5627b-DLvwQtiq.js",
+      "local": "wt",
+      "name": "stopClickPropagation",
+      "export": null,
+      "previous": "c9ed5627b _t",
+      "declarationSha256": "d6cfdef0534b2d2c4d37a6276a995a5b3771a37ca07b119dac4889977058baa0",
+      "pinned": true
+    },
+    {
+      "file": "c9ed5627b-DLvwQtiq.js",
+      "local": "xt",
+      "name": "composedHopElements",
+      "export": null,
+      "previous": "c9ed5627b mt",
+      "declarationSha256": "3f8dac691ca8f4b581695c39ec0b8e5b05845e3f3e28eca2ce71c5c3a5d7489a",
+      "pinned": true
+    },
+    {
+      "file": "c9ed5627b-DLvwQtiq.js",
+      "local": "St",
+      "name": "isTextboxRole",
+      "export": null,
+      "previous": "c9ed5627b ht",
+      "declarationSha256": "a5ba30f97d6cd860f82146bbc38aab968d6452bdbd9c3ef5fa64470f16b9dec1",
+      "pinned": true
+    },
+    {
+      "file": "c9ed5627b-DLvwQtiq.js",
+      "local": "Ct",
+      "name": "isInEditableContent",
+      "export": null,
+      "previous": "c9ed5627b gt",
+      "declarationSha256": "fdea43915b35e8ede4e8a1f5bbc3c8f0486791da29a497432167a96fc15d754c",
+      "pinned": true
+    },
+    {
+      "file": "c2f6611a3-Dcq4MBgv.js",
+      "local": "Wr",
+      "name": "QuestionAnswerOption",
+      "export": null,
+      "previous": "c2f6611a3 Tn",
+      "declarationSha256": "67575372b7a74d929425b5922eb3007462e604877b4a79fd6df89fc9c91d6745",
+      "pinned": true
+    },
+    {
+      "file": "c2f6611a3-Dcq4MBgv.js",
+      "local": "Dr",
+      "name": "QuestionRadioMark",
+      "export": null,
+      "previous": "c2f6611a3 cn",
+      "declarationSha256": "11bfca3902f1196c2786e204c0187abb0e361968983e85243e2a1621945b22a7",
+      "pinned": true
+    },
+    {
+      "file": "c2f6611a3-Dcq4MBgv.js",
+      "local": "Vr",
+      "name": "endsAnswerSelection",
+      "export": null,
+      "previous": "c2f6611a3 Sn",
+      "declarationSha256": "5a5124174a8c41f059a78e37eff1e01e27f17af9242e0244ac7f57c5adcd809f",
+      "pinned": true
+    },
+    {
+      "file": "c2f6611a3-Dcq4MBgv.js",
+      "local": "Hr",
+      "name": "answerOptionInset",
+      "export": null,
+      "previous": "c2f6611a3 Cn",
+      "declarationSha256": "87e23455a635040b542dc159d79757f83c858b38804cb62141eddb83b395fed9",
+      "pinned": true
+    },
+    {
+      "file": "c2f6611a3-Dcq4MBgv.js",
+      "local": "zr",
+      "name": "preventAnswerMouseDown",
+      "export": null,
+      "previous": "c2f6611a3 bn",
+      "declarationSha256": "2ad3b251de92d234ae71204777884b2c9751cb1225c9a3b180fa7bbfc45c8b0c",
+      "pinned": true
+    },
+    {
+      "file": "c2f6611a3-Dcq4MBgv.js",
+      "local": "Br",
+      "name": "stopAnswerClick",
+      "export": null,
+      "previous": "c2f6611a3 xn",
+      "declarationSha256": "460c1cdfa31487bc979adb7ab153d3befa76d9f32083729286dd573bd684809b",
+      "pinned": true
+    },
+    {
+      "file": "c2f6611a3-Dcq4MBgv.js",
+      "local": "hr",
+      "name": "QuestionOptionButton",
+      "export": "o",
+      "previous": null,
+      "declarationSha256": "4fe57a9f07da7ff6fb5857cdfef0c0948df80aa4ca77c1e7f3fef1dd7f39702c",
+      "pinned": true
+    },
+    {
+      "file": "shared-33-DtdykY0y.js",
+      "local": "rG",
+      "name": "QuestionCardHeader",
+      "export": "ft",
+      "previous": "shared-5 bL",
+      "declarationSha256": "9fa732d0196ad67e0bf6748214b4bd92ff28537d754f4bb5a0d9d6c4a165d0f0",
+      "pinned": true
+    },
+    {
+      "file": "shared-33-DtdykY0y.js",
+      "local": "_I",
+      "name": "questionDisplayText",
+      "export": "ti",
+      "previous": "shared-5 $A",
+      "declarationSha256": "70686ce12647e98fd55b58dbbe88ba155657ae59ec70392198d825fa1437957e",
+      "pinned": true
+    },
+    {
+      "file": "c8187a2dc-Dp9Zia_4.js",
+      "local": "e",
+      "name": "bidiPlaintext",
+      "export": "t",
+      "previous": "c8187a2dc e",
+      "declarationSha256": "df15440d036832d114cd80a53c1f7b6e69e5b6c276a44c986d303c59cd2d0b0e",
+      "pinned": true
+    },
+    {
+      "file": "c30607cef-DbSe2rPb.js",
+      "local": "i",
+      "name": "QuestionPrimaryButton",
+      "export": "t",
+      "previous": "c30607cef i",
+      "linkedFrom": "proposal-group-v4",
+      "declarationSha256": "f64fed25ad7e977ee8a2e6f1d8a9d93218cbbc398061b5ed5be6f046cad21bc2",
+      "pinned": true
+    },
+    {
+      "file": "c6dc54e94-Ci7MQEoh.js",
+      "local": "P",
+      "name": "onLandedCard",
+      "export": "h",
+      "previous": "c9ed5627b tt",
+      "linkedFrom": "approval-landing-v4",
+      "declarationSha256": "4e48757df8046c889a80e56590b6719ad421d3c5265217bf576551145e2e8855",
+      "pinned": true
+    }
+  ],
+  "adapters": [
+    {
+      "original": "cb8c5a88f-Cxti0pWl.js#Zi",
+      "name": "paintTranscriptText",
+      "hostAdapter": "src/source-question-card-v4-adapters.jsx",
+      "why": "the transcript plain-text painter (session mentions, links, file paths), owned by no 4.16336.0 graph yet",
+      "declarationSha256": "6e2b8c9218ac42b12b0b446ef6ba356fbb36c972067a90ddfbf19d1a87d51b35",
+      "pinned": true
+    }
+  ],
+  "inner": [
+    {
+      "name": "questionDigitShortcuts",
+      "module": "digit-shortcuts.mjs",
+      "within": "vt",
+      "previous": "c9ed5627b dt $t (slot 57)",
+      "params": [
+        "_",
+        "v",
+        "P",
+        "R",
+        "w",
+        "y",
+        "O",
+        "z",
+        "Bt",
+        "gn",
+        "sn",
+        "I"
+      ],
+      "sha256": "2af5e2911378e407154ab469d0ec18a9de8003479969c3720d6b0219cf3fb24a",
+      "imports": [
+        {
+          "local": "$e",
+          "original": "c2f6611a3-Dcq4MBgv.js#er",
+          "via": "c2f6611a3-Dcq4MBgv.js:p",
+          "kind": "generated",
+          "from": "./c2f6611a3.mjs",
+          "name": "er"
+        },
+        {
+          "local": "Ct",
+          "original": "c9ed5627b-DLvwQtiq.js#Ct",
+          "via": "c9ed5627b-DLvwQtiq.js#Ct",
+          "kind": "generated",
+          "from": "./c9ed5627b.mjs",
+          "name": "isInEditableContent"
+        },
+        {
+          "local": "St",
+          "original": "c9ed5627b-DLvwQtiq.js#St",
+          "via": "c9ed5627b-DLvwQtiq.js#St",
+          "kind": "generated",
+          "from": "./c9ed5627b.mjs",
+          "name": "isTextboxRole"
+        },
+        {
+          "local": "_e",
+          "original": "shared-183-B2N6Zy4J.js#KW",
+          "via": "shared-183-B2N6Zy4J.js:ta",
+          "kind": "generated",
+          "from": "./shared-183.mjs",
+          "name": "KW"
+        },
+        {
+          "local": "ce",
+          "original": "shared-26-B-POtn5S.js#uw",
+          "via": "shared-26-B-POtn5S.js:lp",
+          "kind": "generated",
+          "from": "./shared-26.mjs",
+          "name": "uw"
+        },
+        {
+          "local": "de",
+          "original": "shared-183-B2N6Zy4J.js#$W",
+          "via": "shared-183-B2N6Zy4J.js:Li",
+          "kind": "generated",
+          "from": "./shared-183.mjs",
+          "name": "$W"
+        },
+        {
+          "local": "fe",
+          "original": "shared-183-B2N6Zy4J.js#KU",
+          "via": "shared-183-B2N6Zy4J.js:Ta",
+          "kind": "generated",
+          "from": "./shared-183.mjs",
+          "name": "KU"
+        },
+        {
+          "local": "ge",
+          "original": "shared-183-B2N6Zy4J.js#aG",
+          "via": "shared-183-B2N6Zy4J.js:ki",
+          "kind": "generated",
+          "from": "./shared-183.mjs",
+          "name": "aG"
+        },
+        {
+          "local": "he",
+          "original": "shared-183-B2N6Zy4J.js#MG",
+          "via": "shared-183-B2N6Zy4J.js:ia",
+          "kind": "generated",
+          "from": "./shared-183.mjs",
+          "name": "MG"
+        },
+        {
+          "local": "le",
+          "original": "shared-26-B-POtn5S.js#dw",
+          "via": "shared-26-B-POtn5S.js:up",
+          "kind": "generated",
+          "from": "./shared-26.mjs",
+          "name": "dw"
+        },
+        {
+          "local": "lt",
+          "original": "c6dc54e94-Ci7MQEoh.js#F",
+          "via": "c6dc54e94-Ci7MQEoh.js:g",
+          "kind": "linked",
+          "from": "../approval-landing-v4/card-landing.mjs",
+          "name": "deliberateCardKey"
+        },
+        {
+          "local": "me",
+          "original": "shared-183-B2N6Zy4J.js#LG",
+          "via": "shared-183-B2N6Zy4J.js:hi",
+          "kind": "generated",
+          "from": "./shared-183.mjs",
+          "name": "LG"
+        },
+        {
+          "local": "ne",
+          "original": "shared-25-D-aF0gt9.js#_d",
+          "via": "shared-25-D-aF0gt9.js:Gp",
+          "kind": "shared-graph",
+          "from": "../cds-core/shared-25.mjs",
+          "name": "ownerWindow"
+        },
+        {
+          "local": "oe",
+          "original": "shared-26-B-POtn5S.js#mC",
+          "via": "shared-26-B-POtn5S.js:Dp",
+          "kind": "linked",
+          "from": "../proposal-group-v4/shared-26.mjs",
+          "name": "mC"
+        },
+        {
+          "local": "p",
+          "original": "shared-frame-CJdE5Ria.js#Pt",
+          "via": "shared-frame-CJdE5Ria.js:nm",
+          "kind": "shared-graph",
+          "from": "../cds-core/shared-frame.mjs",
+          "name": "asElementNode"
+        },
+        {
+          "local": "pe",
+          "original": "shared-183-B2N6Zy4J.js#RW",
+          "via": "shared-183-B2N6Zy4J.js:ea",
+          "kind": "generated",
+          "from": "./shared-183.mjs",
+          "name": "RW"
+        },
+        {
+          "local": "ue",
+          "original": "shared-183-B2N6Zy4J.js#NG",
+          "via": "shared-183-B2N6Zy4J.js:Ai",
+          "kind": "generated",
+          "from": "./shared-183.mjs",
+          "name": "NG"
+        },
+        {
+          "local": "ut",
+          "original": "c6dc54e94-Ci7MQEoh.js#P",
+          "via": "c6dc54e94-Ci7MQEoh.js:h",
+          "kind": "linked",
+          "from": "../approval-landing-v4/card-landing.mjs",
+          "name": "isLandedCard"
+        },
+        {
+          "local": "ve",
+          "original": "shared-183-B2N6Zy4J.js#ZW",
+          "via": "shared-183-B2N6Zy4J.js:zi",
+          "kind": "generated",
+          "from": "./shared-183.mjs",
+          "name": "ZW"
+        },
+        {
+          "local": "xt",
+          "original": "c9ed5627b-DLvwQtiq.js#xt",
+          "via": "c9ed5627b-DLvwQtiq.js#xt",
+          "kind": "generated",
+          "from": "./c9ed5627b.mjs",
+          "name": "composedHopElements"
+        }
+      ]
+    },
+    {
+      "name": "questionRowMouseDown",
+      "module": "row-pointer.mjs",
+      "within": "vt",
+      "previous": "c9ed5627b dt mn (slot 100)",
+      "params": [
+        "jn",
+        "An"
+      ],
+      "sha256": "b4c61d33144aab68d34eb16aa2227642f8068f503aac28856c3bfea0086a4eb6",
+      "imports": [
+        {
+          "local": "p",
+          "original": "shared-frame-CJdE5Ria.js#Pt",
+          "via": "shared-frame-CJdE5Ria.js:nm",
+          "kind": "shared-graph",
+          "from": "../cds-core/shared-frame.mjs",
+          "name": "asElementNode"
+        },
+        {
+          "local": "pt",
+          "original": "c9ed5627b-DLvwQtiq.js#pt",
+          "via": "c9ed5627b-DLvwQtiq.js#pt",
+          "kind": "generated",
+          "from": "./c9ed5627b.mjs",
+          "name": "dragSelectThreshold"
+        }
+      ]
+    },
+    {
+      "name": "questionEndsDragSelect",
+      "module": "row-pointer.mjs",
+      "within": "vt",
+      "previous": "c9ed5627b dt hn (slot 101)",
+      "params": [
+        "An"
+      ],
+      "sha256": "d9c95b4a17d4fa786e41d594adcbd693d8c154e4b8e6a21761e056be7fd9aa3e",
+      "imports": []
+    }
+  ],
+  "withinPins": {
+    "c9ed5627b-DLvwQtiq.js#vt": "2002162b7c7f3015e64bc54f70f445671a71560a39c3833c5218c20e2476aef8"
+  },
+  "imports": [
+    {
+      "module": "shared-0.mjs",
+      "local": "Tl",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-0-CnnWnVrT.mjs",
+      "name": "Tl",
+      "via": "shared-0-CnnWnVrT.js#Tl"
+    },
+    {
+      "module": "shared-12.mjs",
+      "local": "w",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-0-CnnWnVrT.mjs",
+      "name": "P6",
+      "via": "shared-0-CnnWnVrT.js:kt"
+    },
+    {
+      "module": "c9c0413df.mjs",
+      "local": "a",
+      "kind": "shared-graph",
+      "from": "../cds-core/c9c0413df.mjs",
+      "name": "a",
+      "via": "c9c0413df-DcWW5dIy.js#a"
+    },
+    {
+      "module": "shared-33.mjs",
+      "local": "BW",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-33.mjs",
+      "name": "BW",
+      "via": "shared-33-DtdykY0y.js#BW"
+    },
+    {
+      "module": "shared-33.mjs",
+      "local": "C",
+      "kind": "react",
+      "from": "react",
+      "name": "useContext",
+      "via": "vendor-frame-BckkO60Y.js:po"
+    },
+    {
+      "module": "shared-33.mjs",
+      "local": "J1",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J1",
+      "via": "shared-frame-CJdE5Ria.js:lm"
+    },
+    {
+      "module": "shared-33.mjs",
+      "local": "J2",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J2",
+      "via": "shared-frame-CJdE5Ria.js:um"
+    },
+    {
+      "module": "shared-33.mjs",
+      "local": "J3",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J3",
+      "via": "shared-frame-CJdE5Ria.js:dm"
+    },
+    {
+      "module": "shared-33.mjs",
+      "local": "J9",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J9",
+      "via": "shared-frame-CJdE5Ria.js:hm"
+    },
+    {
+      "module": "shared-33.mjs",
+      "local": "K1",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "K1",
+      "via": "shared-frame-CJdE5Ria.js:_m"
+    },
+    {
+      "module": "shared-33.mjs",
+      "local": "K2",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "K2",
+      "via": "shared-frame-CJdE5Ria.js:vm"
+    },
+    {
+      "module": "shared-33.mjs",
+      "local": "K3",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "K3",
+      "via": "shared-frame-CJdE5Ria.js:ym"
+    },
+    {
+      "module": "shared-33.mjs",
+      "local": "hs",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-26-B-POtn5S.mjs",
+      "name": "jT",
+      "via": "shared-26-B-POtn5S.js:Pf"
+    },
+    {
+      "module": "shared-33.mjs",
+      "local": "l",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "jsxs",
+      "via": "vendor-frame-BckkO60Y.js:Ka"
+    },
+    {
+      "module": "shared-33.mjs",
+      "local": "s",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "jsx",
+      "via": "vendor-frame-BckkO60Y.js:Ga"
+    },
+    {
+      "module": "shared-33.mjs",
+      "local": "vt",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-0-CnnWnVrT.mjs",
+      "name": "P6",
+      "via": "shared-0-CnnWnVrT.js:kt"
+    },
+    {
+      "module": "shared-92.mjs",
+      "local": "Xe",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-0-CnnWnVrT.mjs",
+      "name": "T6",
+      "via": "shared-0-CnnWnVrT.js:St"
+    },
+    {
+      "module": "shared-92.mjs",
+      "local": "rn",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-0-CnnWnVrT.mjs",
+      "name": "Tl",
+      "via": "shared-0-CnnWnVrT.js:nS"
+    },
+    {
+      "module": "c53f67064.mjs",
+      "local": "e",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-26-B-POtn5S.mjs",
+      "name": "jT",
+      "via": "shared-26-B-POtn5S.js:Pf"
+    },
+    {
+      "module": "c2ed6676f.mjs",
+      "local": "J1",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J1",
+      "via": "shared-frame-CJdE5Ria.js:lm"
+    },
+    {
+      "module": "c2ed6676f.mjs",
+      "local": "J2",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J2",
+      "via": "shared-frame-CJdE5Ria.js:um"
+    },
+    {
+      "module": "c2ed6676f.mjs",
+      "local": "J9",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J9",
+      "via": "shared-frame-CJdE5Ria.js:hm"
+    },
+    {
+      "module": "c2ed6676f.mjs",
+      "local": "K1",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "K1",
+      "via": "shared-frame-CJdE5Ria.js:_m"
+    },
+    {
+      "module": "c2ed6676f.mjs",
+      "local": "K2",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "K2",
+      "via": "shared-frame-CJdE5Ria.js:vm"
+    },
+    {
+      "module": "c2ed6676f.mjs",
+      "local": "e",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "jsx",
+      "via": "vendor-frame-BckkO60Y.js:Ga"
+    },
+    {
+      "module": "c2ed6676f.mjs",
+      "local": "n",
+      "kind": "react",
+      "from": "react",
+      "name": "Fragment",
+      "via": "vendor-frame-BckkO60Y.js:Xa"
+    },
+    {
+      "module": "c2ed6676f.mjs",
+      "local": "t",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "Fragment",
+      "via": "vendor-frame-BckkO60Y.js:Wa"
+    },
+    {
+      "module": "shared-183.mjs",
+      "local": "AG",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-183.mjs",
+      "name": "AG",
+      "via": "shared-183-B2N6Zy4J.js#AG"
+    },
+    {
+      "module": "shared-183.mjs",
+      "local": "Jt",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-0-CnnWnVrT.mjs",
+      "name": "D6",
+      "via": "shared-0-CnnWnVrT.js:bt"
+    },
+    {
+      "module": "shared-183.mjs",
+      "local": "_e",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "asElementNode",
+      "via": "shared-frame-CJdE5Ria.js:nm"
+    },
+    {
+      "module": "shared-183.mjs",
+      "local": "gG",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-183.mjs",
+      "name": "gG",
+      "via": "shared-183-B2N6Zy4J.js#gG"
+    },
+    {
+      "module": "shared-183.mjs",
+      "local": "gn",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-0-CnnWnVrT.mjs",
+      "name": "Tl",
+      "via": "shared-0-CnnWnVrT.js:nS"
+    },
+    {
+      "module": "shared-183.mjs",
+      "local": "hG",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-183.mjs",
+      "name": "hG",
+      "via": "shared-183-B2N6Zy4J.js#hG"
+    },
+    {
+      "module": "shared-183.mjs",
+      "local": "jG",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-183.mjs",
+      "name": "jG",
+      "via": "shared-183-B2N6Zy4J.js#jG"
+    },
+    {
+      "module": "shared-183.mjs",
+      "local": "mG",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-183.mjs",
+      "name": "mG",
+      "via": "shared-183-B2N6Zy4J.js#mG"
+    },
+    {
+      "module": "c88cd06ec.mjs",
+      "local": "J1",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J1",
+      "via": "shared-frame-CJdE5Ria.js:lm"
+    },
+    {
+      "module": "c88cd06ec.mjs",
+      "local": "J2",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J2",
+      "via": "shared-frame-CJdE5Ria.js:um"
+    },
+    {
+      "module": "c88cd06ec.mjs",
+      "local": "J9",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J9",
+      "via": "shared-frame-CJdE5Ria.js:hm"
+    },
+    {
+      "module": "c88cd06ec.mjs",
+      "local": "K1",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "K1",
+      "via": "shared-frame-CJdE5Ria.js:_m"
+    },
+    {
+      "module": "c88cd06ec.mjs",
+      "local": "K3",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "K3",
+      "via": "shared-frame-CJdE5Ria.js:ym"
+    },
+    {
+      "module": "c88cd06ec.mjs",
+      "local": "e",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "jsx",
+      "via": "vendor-frame-BckkO60Y.js:Ga"
+    },
+    {
+      "module": "c88cd06ec.mjs",
+      "local": "t",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "Fragment",
+      "via": "vendor-frame-BckkO60Y.js:Wa"
+    },
+    {
+      "module": "c2f6611a3.mjs",
+      "local": "I1",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "I1",
+      "via": "shared-frame-CJdE5Ria.js:rm"
+    },
+    {
+      "module": "c2f6611a3.mjs",
+      "local": "J0",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J0",
+      "via": "shared-frame-CJdE5Ria.js:cm"
+    },
+    {
+      "module": "c2f6611a3.mjs",
+      "local": "J1",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J1",
+      "via": "shared-frame-CJdE5Ria.js:lm"
+    },
+    {
+      "module": "c2f6611a3.mjs",
+      "local": "J2",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J2",
+      "via": "shared-frame-CJdE5Ria.js:um"
+    },
+    {
+      "module": "c2f6611a3.mjs",
+      "local": "J3",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J3",
+      "via": "shared-frame-CJdE5Ria.js:dm"
+    },
+    {
+      "module": "c2f6611a3.mjs",
+      "local": "J4",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J4",
+      "via": "shared-frame-CJdE5Ria.js:fm"
+    },
+    {
+      "module": "c2f6611a3.mjs",
+      "local": "J5",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J5",
+      "via": "shared-frame-CJdE5Ria.js:pm"
+    },
+    {
+      "module": "c2f6611a3.mjs",
+      "local": "J9",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J9",
+      "via": "shared-frame-CJdE5Ria.js:hm"
+    },
+    {
+      "module": "c2f6611a3.mjs",
+      "local": "K0",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "K0",
+      "via": "shared-frame-CJdE5Ria.js:gm"
+    },
+    {
+      "module": "c2f6611a3.mjs",
+      "local": "K1",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "K1",
+      "via": "shared-frame-CJdE5Ria.js:_m"
+    },
+    {
+      "module": "c2f6611a3.mjs",
+      "local": "K2",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "K2",
+      "via": "shared-frame-CJdE5Ria.js:vm"
+    },
+    {
+      "module": "c2f6611a3.mjs",
+      "local": "K3",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "K3",
+      "via": "shared-frame-CJdE5Ria.js:ym"
+    },
+    {
+      "module": "c2f6611a3.mjs",
+      "local": "K4",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "K4",
+      "via": "shared-frame-CJdE5Ria.js:bm"
+    },
+    {
+      "module": "c2f6611a3.mjs",
+      "local": "K5",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "K5",
+      "via": "shared-frame-CJdE5Ria.js:xm"
+    },
+    {
+      "module": "c2f6611a3.mjs",
+      "local": "a",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "Fragment",
+      "via": "vendor-frame-BckkO60Y.js:Wa"
+    },
+    {
+      "module": "c2f6611a3.mjs",
+      "local": "c",
+      "kind": "react",
+      "from": "react",
+      "name": "use",
+      "via": "vendor-frame-BckkO60Y.js:do"
+    },
+    {
+      "module": "c2f6611a3.mjs",
+      "local": "ee",
+      "kind": "react",
+      "from": "react",
+      "name": "useId",
+      "via": "vendor-frame-BckkO60Y.js:vo"
+    },
+    {
+      "module": "c2f6611a3.mjs",
+      "local": "f",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "cdsCheckboxTopAlignClass",
+      "via": "shared-frame-CJdE5Ria.js:Mc"
+    },
+    {
+      "module": "c2f6611a3.mjs",
+      "local": "lt",
+      "kind": "adapter",
+      "from": "../../source-question-card-v4-adapters.jsx",
+      "name": "paintTranscriptText",
+      "via": "cb8c5a88f-Cxti0pWl.js:f"
+    },
+    {
+      "module": "c2f6611a3.mjs",
+      "local": "m",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "asElementNode",
+      "via": "shared-frame-CJdE5Ria.js:nm"
+    },
+    {
+      "module": "c2f6611a3.mjs",
+      "local": "n",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "jsxs",
+      "via": "vendor-frame-BckkO60Y.js:Ka"
+    },
+    {
+      "module": "c2f6611a3.mjs",
+      "local": "ne",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "CdsCheckboxIndicator",
+      "via": "shared-frame-CJdE5Ria.js:Nc"
+    },
+    {
+      "module": "c2f6611a3.mjs",
+      "local": "st",
+      "kind": "shared-graph",
+      "from": "../cds-core/cb8c5a88f.mjs",
+      "name": "si",
+      "via": "cb8c5a88f-Cxti0pWl.js:N"
+    },
+    {
+      "module": "c2f6611a3.mjs",
+      "local": "t",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "jsx",
+      "via": "vendor-frame-BckkO60Y.js:Ga"
+    },
+    {
+      "module": "c2f6611a3.mjs",
+      "local": "u",
+      "kind": "react",
+      "from": "react",
+      "name": "useRef",
+      "via": "vendor-frame-BckkO60Y.js:wo"
+    },
+    {
+      "module": "c9ed5627b.mjs",
+      "local": "J3",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J3",
+      "via": "shared-frame-CJdE5Ria.js:dm"
+    },
+    {
+      "module": "c9ed5627b.mjs",
+      "local": "J4",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J4",
+      "via": "shared-frame-CJdE5Ria.js:fm"
+    },
+    {
+      "module": "c9ed5627b.mjs",
+      "local": "J5",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J5",
+      "via": "shared-frame-CJdE5Ria.js:pm"
+    },
+    {
+      "module": "c9ed5627b.mjs",
+      "local": "J9",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J9",
+      "via": "shared-frame-CJdE5Ria.js:hm"
+    },
+    {
+      "module": "c9ed5627b.mjs",
+      "local": "K3",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "K3",
+      "via": "shared-frame-CJdE5Ria.js:ym"
+    },
+    {
+      "module": "c9ed5627b.mjs",
+      "local": "K4",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "K4",
+      "via": "shared-frame-CJdE5Ria.js:bm"
+    },
+    {
+      "module": "c9ed5627b.mjs",
+      "local": "K5",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "K5",
+      "via": "shared-frame-CJdE5Ria.js:xm"
+    },
+    {
+      "module": "c9ed5627b.mjs",
+      "local": "e",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "jsx",
+      "via": "vendor-frame-BckkO60Y.js:Ga"
+    },
+    {
+      "module": "c9ed5627b.mjs",
+      "local": "i",
+      "kind": "react",
+      "from": "react",
+      "name": "memo",
+      "via": "vendor-frame-BckkO60Y.js:co"
+    },
+    {
+      "module": "c9ed5627b.mjs",
+      "local": "ie",
+      "kind": "linked",
+      "from": "../approval-landing-v4/keyboard-click.mjs",
+      "name": "isKeyboardActivatedClick",
+      "via": "shared-1-D1bGaTaN.js:Nd"
+    },
+    {
+      "module": "c9ed5627b.mjs",
+      "local": "p",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "asElementNode",
+      "via": "shared-frame-CJdE5Ria.js:nm"
+    },
+    {
+      "module": "c9ed5627b.mjs",
+      "local": "te",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "CdsShortcut",
+      "via": "shared-frame-CJdE5Ria.js:rf"
+    },
+    {
+      "module": "c9ed5627b.mjs",
+      "local": "u",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "CdsCheckboxIndicator",
+      "via": "shared-frame-CJdE5Ria.js:Nc"
+    },
+    {
+      "module": "shared-26.mjs",
+      "local": "qC",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-26.mjs",
+      "name": "qC",
+      "via": "shared-26-B-POtn5S.js#qC"
+    },
+    {
+      "module": "shared-26.mjs",
+      "local": "yt",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-25.mjs",
+      "name": "ownerWindow",
+      "via": "shared-25-D-aF0gt9.js:Gp"
+    }
+  ]
+}

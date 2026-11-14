@@ -7,7 +7,8 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
 
-// w10-curchat-composer (CC-01, research/w10-curchat.md §0.1 / §3): the Chat / Cowork card is the 3.6556.2 CDS
+// w10-curchat-composer (CC-01, research/w10-curchat.md §0.1 / §3; surfaces-prod-3 composer moved it on to 4.16336.0, below):
+// the Chat / Cowork card was the 3.6556.2 CDS
 // ChatComposer — shared-5-Bg6ZMqvt vm with its parts Sm (`Header: Mp, Attachments: rs, Actions: hp, PrimaryAction: sf,
 // Chin: Ap, Overlay: jp, Tray: Pp`) and shared-26-CGuBxVt9 io / lo / Qa — from the code-composer slice the Code card
 // already renders, no longer the 2.31226.0 current-chat shared-5 Rf / Wd / ef / tf / yd / ai / Br copy.
@@ -16,6 +17,14 @@ const repo = path.resolve(app, '..');
 const officialShared5 = fs.readFileSync(path.join(repo,
   'reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1/shared-5-Bg6ZMqvt.js'), 'utf8');
 const generatedShell = fs.readFileSync(path.join(app, 'src/generated/code-composer/chat-composer-shell.mjs'), 'utf8');
+// surfaces-prod-3 composer (host cutover): the card now renders the 4.16336.0 ChatComposer — shared-5-u8kha2eH _m with its
+// parts xm (code-composer-v4 chat-composer-shell.mjs), shared-26-B-POtn5S's editor box, the layout context cds-core's
+// shared-26 Mp — inside gD's card holder (shared-9). The 3.6556.2 slice above stays pinned as the legacy graph.
+const official4Shared5 = fs.readFileSync(path.join(repo,
+  'reference/snapshots/claude-4.16336.0-20261104/ion-dist/assets/v1/shared-5-u8kha2eH.js'), 'utf8');
+const official4Shared3 = fs.readFileSync(path.join(repo,
+  'reference/snapshots/claude-4.16336.0-20261104/ion-dist/assets/v1/shared-3-IQTrO7Gx.js'), 'utf8');
+const generated4Shell = fs.readFileSync(path.join(app, 'src/generated/code-composer-v4/chat-composer-shell.mjs'), 'utf8');
 const host = fs.readFileSync(path.join(app, 'src/source-chat-composer.jsx'), 'utf8');
 
 let server, C;
@@ -49,10 +58,30 @@ const officialRuns = [
   'ms-auto flex min-w-0 items-center gap-1 ps-2',
 ];
 
-test('the host card imports the 3.6556.2 code-composer shell, not current-chat or the host Attachments stand-in', () => {
+// 4.16336.0 runs the card's parts write (_m's action columns, jp's chin, the attachments clip). Each is one official
+// literal in shared-5-u8kha2eH and in the generated slice; the flow columns of the multiline card are the official
+// tailwind-merge (Be) of the absolute column with the multiline override, as rendered.
+const official4Runs = {
+  leading: 'absolute bottom-0 start-0 flex shrink-0 items-center gap-xs pe-[var(--cds-gap-xs)]',
+  trailing: 'absolute bottom-0 end-0 flex pointer-events-none max-w-[min(100%,calc(100%_-_var(--cmp-lead-w)_+_2*var(--cds-gap-xs)))] shrink-0 items-center justify-end gap-xs ps-[var(--cds-gap-xs)] *:pointer-events-auto',
+  flowLeading: 'relative z-[1] -me-[calc(2*var(--cds-gap-xs))] max-w-full *:pointer-events-auto',
+  flowTrailing: 'relative ms-auto min-w-0 max-w-max shrink grow basis-[min-content]',
+  flowRow: 'relative flex flex-wrap items-end min-h-control -mt-[var(--cds-h-control)]',
+  chin: 'relative z-0 overflow-clip px-2 -mx-2 pt-2 -mt-2',
+  chinTrailing: 'ms-auto flex min-w-0 items-center gap-1 ps-2',
+};
+const renderedFlow = {
+  leading: 'bottom-0 start-0 flex shrink-0 items-center gap-xs pe-[var(--cds-gap-xs)] relative z-[1] -me-[calc(2*var(--cds-gap-xs))] max-w-full *:pointer-events-auto',
+  trailing: 'bottom-0 end-0 flex pointer-events-none items-center justify-end gap-xs ps-[var(--cds-gap-xs)] *:pointer-events-auto relative ms-auto min-w-0 max-w-max shrink grow basis-[min-content]',
+};
+
+test('the host card imports the 4.16336.0 code-composer-v4 shell, not current-chat, the 3.6556.2 shell or the host Attachments stand-in', () => {
   assert.doesNotMatch(host, /generated\/current-chat\//);
-  assert.match(host, /from '\.\/generated\/code-composer\/chat-composer-shell\.mjs'/);
-  assert.match(host, /from '\.\/generated\/code-composer\/chat-composer-layout\.mjs'/);
+  assert.match(host, /from '\.\/generated\/code-composer-v4\/chat-composer-shell\.mjs'/);
+  assert.match(host, /from '\.\/generated\/code-composer-v4\/chat-composer-layout\.mjs'/);
+  assert.match(host, /^import \{ ChatComposerLayoutContext as Layout \} from '\.\/cds-core\.mjs';$/m);
+  assert.doesNotMatch(host, /generated\/code-composer\//);
+  assert.doesNotMatch(host, /generated\/view-tabs\//);
   assert.match(host, /const \{ Actions, Attachments, Chin, Overlay \} = ChatComposerParts;/);
   assert.doesNotMatch(host, /from '\.\/source-chat-adapters\.jsx'/);
   // E41: the card is in the composer graph; it must not reach the view-tabs facade.
@@ -77,21 +106,46 @@ test('the code-composer slice is 3.6556.2 shared-5 vm / Sm and shared-26 io / lo
   assert.ok(!officialShared5.includes('pr-[var(--cmp-trail-w,0px)]'));
 });
 
+test('the code-composer-v4 slice is 4.16336.0 shared-5 _m / xm and shared-26 editor box; the runs are official literals', () => {
+  const manifest = JSON.parse(fs.readFileSync(path.join(app, 'src/generated/code-composer-v4/manifest.json'), 'utf8'));
+  assert.equal(manifest.referenceVersion, '4.16336.0');
+  const sources = Object.fromEntries(manifest.modules.map(module => [module.target, module.source]));
+  assert.equal(sources['chat-composer-shell.mjs'], 'shared-5-u8kha2eH.js');
+  assert.equal(sources['chat-composer-layout.mjs'], 'shared-26-B-POtn5S.js');
+  assert.match(generated4Shell, /_m as ChatComposerShell,\s*xm as ChatComposerParts,/);
+  for (const [name, run] of Object.entries(official4Runs)) {
+    assert.equal(official4Shared5.split(run).length - 1, 1, `official shared-5 has ${name}`);
+    assert.ok(generated4Shell.includes(run), `generated shell has ${name}`);
+  }
+  assert.ok(!official4Shared5.includes('pr-[var(--cmp-trail-w,0px)]'));
+});
+
 for (const [name, props, form] of [['new chat', {}, 'new'], ['new cowork', { mode: 'cowork' }, 'new'],
   ['reply', { current: true }, 'reply']]) {
-  test(`${name}: the ChatComposer root and parts are the 3.6556.2 shell's`, () => {
-    const html = render(props);
-    assert.ok(html.startsWith('<div data-cds="ChatComposer"'), 'vm root first');
-    assert.match(html, /^<div data-cds="ChatComposer" data-cds-dock-group=""/, 'vm root carries the dock group attribute');
+  test(`${name}: the ChatComposer root and parts are the 4.16336.0 shell's`, () => {
+    const outer = render(props);
+    // gD: the card holder div (shared-9 `data-composer-card-holder`, "relative in-data-cds-dock-masked:bg-page") first.
+    const holder = '<div class="relative in-data-cds-dock-masked:bg-page" data-composer-card-holder="">';
+    assert.ok(outer.startsWith(holder), 'gD holder first');
+    const html = outer.slice(holder.length);
+    assert.ok(html.startsWith('<div data-cds="ChatComposer"'), '_m root right inside');
+    assert.match(html, /^<div data-cds="ChatComposer" data-cds-dock-group=""/, '_m root carries the dock group attribute');
     if (form === 'reply') assert.match(html, /^<div[^>]*data-form="reply"/);
     else assert.doesNotMatch(html.slice(0, html.indexOf('>')), /data-form=/, 'form "new" writes no data-form');
     assert.match(classOf(html, 'data-cds="ChatComposer"'), /source-chat-composer cds-root/);
     for (const part of ['ChatComposerEditor', 'ChatComposerActions', 'ChatComposerChin'])
       assert.equal(html.split(`data-cds="${part}"`).length - 1, 1, `one ${part}`);
-    assert.ok(html.includes(officialRuns[1]), 'hp trailing column (send) is the 3.6556.2 logical-inset run');
-    assert.ok(html.includes(officialRuns[2]), 'Ap chin root');
-    assert.ok(html.includes(officialRuns[3]), 'Ap chin trailing slot (model / permission)');
-    if (form === 'new') assert.ok(html.includes(officialRuns[0]), 'hp leading column (Add) on the new card');
+    // The new card is multiline (gD `multiline`): _m lays the columns in the flow row; the reply card keeps them absolute.
+    if (form === 'new') {
+      assert.ok(html.includes(`class="${official4Runs.flowRow} gap-y-[var(--cmp-gap-y)] pointer-events-none"`), 'multiline actions row');
+      assert.ok(html.includes(`class="${renderedFlow.leading}"`), '_m leading column (Add) in the flow');
+      assert.ok(html.includes(`class="${renderedFlow.trailing}"`), '_m trailing column (send) in the flow');
+    } else {
+      assert.ok(html.includes(official4Runs.trailing), '_m trailing column (send) is the 4.16336.0 logical-inset run');
+      assert.ok(!html.includes(official4Runs.flowRow));
+    }
+    assert.ok(html.includes(official4Runs.chin), 'jp chin root');
+    assert.ok(html.includes(official4Runs.chinTrailing), 'jp chin trailing slot (model / permission)');
     assert.doesNotMatch(html, /pr-\[var\(--cmp-trail-w,0px\)\]/);
     assert.doesNotMatch(html, /absolute bottom-0 (?:left|right)-0 /, 'no 2.31226.0 physical-inset action columns');
     assert.doesNotMatch(html, /data-cds="ChatComposerAttachments"/);
@@ -103,7 +157,7 @@ for (const [name, props, form] of [['new chat', {}, 'new'], ['new cowork', { mod
   });
 }
 
-test('the preview overlay is jp and attachments go through Sm.Attachments (MessageAttachments)', () => {
+test('the preview overlay is the 4.16336.0 Overlay and attachments go through xm.Attachments (MessageAttachments)', () => {
   const html = render({ current: true, previewPrompt: 'Preview prompt',
     attachments: React.createElement('span', { className: 'fixture-attachment' }, 'file.txt') });
   const overlay = classOf(html, 'data-cds="ChatComposerOverlay"');
@@ -111,7 +165,11 @@ test('the preview overlay is jp and attachments go through Sm.Attachments (Messa
   assert.match(overlay, /pointer-events-none$/);
   assert.doesNotMatch(overlay, /pr-\[var\(--cmp-trail-w/);
   assert.match(html, /data-cds="ChatComposerOverlay"[^>]*><p class="[^"]*">Preview prompt<\/p>/);
-  assert.match(html, /<div data-cds-composer-attachments-clip=""[^>]*><div data-cds-composer-attachments=""[^>]*><div data-cds="MessageAttachments" class="flex w-full flex-wrap gap-xs justify-start"><span class="fixture-attachment">file\.txt<\/span><\/div>/);
+  // 4.16336.0 shared-3 Al: the attachments row scrolls (one official literal), marked data-cds-composer-attachments-row.
+  const row = 'flex items-end gap-xs *:shrink-0 overflow-x-auto overscroll-x-contain scroll-fade-x p-2 pt-2.5 pe-2.5 -m-2 -mt-2.5 -me-2.5';
+  assert.equal(official4Shared3.split(row).length - 1, 1);
+  assert.ok(html.includes(`<div data-cds="MessageAttachments" class="${row}" data-cds-composer-attachments-row=""><span class="fixture-attachment">file.txt</span></div>`));
+  assert.match(html, /<div data-cds-composer-attachments-clip=""[^>]*><div data-cds-composer-attachments=""[^>]*><div data-cds="MessageAttachments" /);
   assert.ok(html.indexOf('data-cds-composer-attachments-clip') < html.indexOf('data-cds="ChatComposerEditor"'), 'attachments above the editor row');
 });
 

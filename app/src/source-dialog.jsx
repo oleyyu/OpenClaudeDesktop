@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { holdModalInert } from "./modal-inert.mjs";
 import { useModalPresence } from "./use-modal-presence";
 // W14-code r6 sh6-03: shared-frame Xy / ab buttons are Uu (E41 direct import, not the index facade).
-import { CdsButton } from "./generated/view-tabs/shared-frame-6jtSkIit.js";
+import { CdsButton } from "./cds-core.mjs"; // 4.16336.0 host wiring (frame): cds-core Button (shared-frame-CJdE5Ria Xu)
 import { t } from "../electron/i18n/index.mjs";
 import "./source-dialog.css";
 

@@ -34,7 +34,12 @@ import { diffChangeCommand, diffChangeHeaderOffset, diffChangeTargets, pickDiffC
 // R3-files FT-07: the Changed files tree on its 3.6556.2 originals (c44d00c7f-Cr1FDL2F cs / ls / Xo / as over c621b1e2d,
 // the Si tooltip, $o expansion; c784da984 path forms; 2.42304.0 Rc / zc / Ec / Fc, ca7840910, Jr, kc) and the per-file
 // whitespace pause (3.6556.2 Dc, 2.42304.0 Ca).
-import { CdsButton, CdsDialog, CdsIcon, CdsSkeleton, useCdsLayerAwareZIndex } from './generated/view-tabs/index.js';
+// host-wiring code-a: the Buttons, Icons, image Dialog and Skeleton this file renders itself are the 4.16336.0 cds-core
+// originals (semantic facade). The file-menu ContextMenu below stays on view-tabs: its entries are drawn by
+// renderFileMenuItems inside pierre-changes' (3.6556.2) own ContextMenu popup. host-wiring fix-code-a: so does the layer
+// z-index hook — its only value feeds the generated sidebar-resize DiffTree handles' tooltips (3.6556.2 c44d00c7f), so it
+// must read the same (3.6556.2) Layer context as those tooltips.
+import { CdsButton, CdsDialog, CdsIcon, CdsSkeleton } from './cds-core.mjs';
 import { FileTypeIcon } from './generated/files-changes/file-type-icon.mjs';
 import { fileTreeCompactRow, fileTreeGroup, fileTreeKeptGuides, fileTreePadding, fileTreeRowCurrent, fileTreeRowIdle } from './generated/files-changes/file-tree-row-classes.mjs';
 import { fileTreeIconSize, fileTreeRowStyle, guideGradient, treeIndent } from './generated/code-current/file-tree-style.mjs';
@@ -55,7 +60,7 @@ import { PierreChanges, comparisonFileEntries, useDiffFetchScheduler, DiffImageV
 import { useDiffAnnotationStore, diffAnnotationActions } from './generated/pierre-changes/pierre-cc8941b7b-DAgMZRvX.mjs';
 import { QueryClientProvider } from './generated/files-changes/file-browser-query.mjs';
 import { fileBrowserQueryClient } from './source-breadcrumb-adapters.jsx';
-import { CdsContextMenu } from './generated/view-tabs/index.js';
+import { CdsContextMenu, useCdsLayerAwareZIndex } from './generated/view-tabs/index.js';
 import { hostGrowthBookFlag } from './host-growthbook.mjs';
 import { PierreReviewContext } from './source-pane-review.jsx';
 import { addToPrompt, serializeLineComment } from './inline-comments.mjs';

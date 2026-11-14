@@ -15,7 +15,7 @@ let server, details, closedDetails, Pill, usePreviewIntent, Transcript, intl;
 before(async () => {
   server = await createServer({ configFile: false, root: app, plugins: [react()],
     server: { middlewareMode: true, hmr: false, watch: null }, appType: 'custom', logLevel: 'error' });
-  const { createIntl } = await server.ssrLoadModule('/src/generated/chat/vendor-intl-DYfox5Co.js');
+  const { createIntl } = await server.ssrLoadModule('/src/generated/chat/vendor-intl-BJgYK7RA.js');
   intl = createIntl({ locale: 'en', defaultLocale: 'en', messages: {} });
   const { createSelectedElementDetail } = await server.ssrLoadModule('/src/generated/code-editor/preview-element-detail.mjs');
   const { createSelectedElementPill } = await server.ssrLoadModule('/src/generated/code-editor/preview-element-chip.mjs');

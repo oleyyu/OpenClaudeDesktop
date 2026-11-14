@@ -33,7 +33,7 @@ let savedWindow, savedDocument;
 before(async () => {
   savedWindow = globalThis.window; savedDocument = globalThis.document;
   // view-tabs' preload helper creates a link element while it evaluates (D21).
-  globalThis.document = { createElement: () => ({ relList: { supports: () => false } }), querySelector: () => null, documentElement: { getAttribute: () => null, hasAttribute: () => false } };
+  globalThis.document = { cookie: '', createElement: () => ({ relList: { supports: () => false } }), querySelector: () => null, documentElement: { getAttribute: () => null, hasAttribute: () => false } };
   // W14-code r6 r6pa-03 (review rerun): the rail's background-tasks pane draws c96d752d0 UQ from code-transcript, whose
   // shared-25 router store reads window.location.pathname at load (in the app main.jsx already loads that graph).
   globalThis.window = { document: globalThis.document, localStorage: undefined, addEventListener() {}, removeEventListener() {}, matchMedia: undefined, location: { pathname: '/' }, navigator: globalThis.navigator };
@@ -234,7 +234,11 @@ test('jre on a wide session page: rail mode, the docked column with the geometry
     const column = container.querySelector('[data-epitaxy-rail-column]');
     assert.ok(column, 'bH: div[data-epitaxy-rail-column]');
     assert.equal(column.parentNode === row, true, 'the docked column is the body row\'s last child, after the conversation');
-    assert.equal(column.getAttribute('class'), Layout.RAIL_DOCKED_COLUMN_CLASS);
+    // 4.16336.0 IK: shared-20 Py (the flat pane column, data-session-rail-flat), not 3.6556.2 hH's Sp (floating cards);
+    // the row adds shared-18 dw and, docked, shared-20 Sy (tests/session-rail-flat-column.test.mjs pins the text).
+    assert.equal(column.getAttribute('class'), Rail.RAIL_FLAT_COLUMN_PROPS.className);
+    assert.equal(column.getAttribute('data-session-rail-flat'), '');
+    for (const token of [Rail.RAIL_BODY_ROW_BLEED_CLASS, Rail.RAIL_FLAT_GEOMETRY_CLASS]) assert.ok(rowClass.includes(token), token.slice(0, 40));
     const aside = column.querySelector('aside[aria-label="Session details"]');
     assert.ok(aside, 'the host stand-in renders rD inside the column');
     assert.equal(container.querySelector('[role="group"][aria-label="Session details"]') === null, true, 'no overlay while docked');
@@ -501,7 +505,7 @@ test('pL / dn / mL: the folder chip menu groups reveal | copy | terminal; no cha
     assert.deepEqual(Rail.railRepoMenuItems(intl, { cwd: '/x' }, {}), [], 'no host actions, no items');
     globalThis.window = { navigator: { userAgent: 'Mozilla/5.0 (Windows NT 10.0)' } };
     assert.equal(Rail.revealLabel(intl), 'Show in Explorer');
-    globalThis.window = { navigator: { userAgent: 'Mozilla/5.0 (X11; Linux x86_64)' } };
+    globalThis.window = { navigator: { userAgent: 'Mozilla/5.0 (X11; Linux x86_64)' }, location: { pathname: '/' } };
     assert.equal(Rail.revealLabel(intl), 'Show in file manager');
   } finally { globalThis.window = saved; }
   assert.deepEqual(['local', 'cloud', 'ssh', 'bridge', 'wsl'].map(Rail.environmentIcon), ['Laptop', 'Cloud', 'CommandLine', 'Cursor', undefined]);

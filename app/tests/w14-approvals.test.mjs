@@ -21,6 +21,18 @@ const read = file => fs.readFileSync(file, 'utf8');
 const count = (text, needle) => text.split(needle).length - 1;
 const once = (text, needles) => { for (const needle of needles) assert.equal(count(text, needle), 1, needle); };
 
+// The SSR server (section 3) is set up here, before the first top-level await (section 2), so the root-level after()
+// is registered in time to close it; ws:false keeps Vite from opening its HMR WebSocket server at all.
+let server, A, Plan, Comments;
+before(async () => {
+  server = await createServer({ configFile: false, root: app, plugins: [react()],
+    server: { middlewareMode: true, hmr: false, ws: false, watch: null }, appType: 'custom', logLevel: 'error' });
+  A = await server.ssrLoadModule('/src/source-approval-card.jsx');
+  Plan = await server.ssrLoadModule('/src/source-plan-card.jsx');
+  Comments = await server.ssrLoadModule('/src/inline-comments.mjs');
+});
+after(() => server?.close());
+
 // ---- 1. the official source ----------------------------------------------------------------------------------------
 
 test('c2d1aeb56: the card shell V, the body Y over J, the card-presentation outline, the backdrop only off the card', () => {
@@ -123,15 +135,6 @@ test('the send failure reads c5da7eb42 KS\'s sentence', async () => {
 
 // ---- 3. SSR ----------------------------------------------------------------------------------------------------------
 
-let server, A, Plan, Comments;
-before(async () => {
-  server = await createServer({ configFile: false, root: app, plugins: [react()],
-    server: { middlewareMode: true, hmr: false, watch: null }, appType: 'custom', logLevel: 'error' });
-  A = await server.ssrLoadModule('/src/source-approval-card.jsx');
-  Plan = await server.ssrLoadModule('/src/source-plan-card.jsx');
-  Comments = await server.ssrLoadModule('/src/inline-comments.mjs');
-});
-after(() => server?.close());
 const render = (Component, props) => renderToStaticMarkup(React.createElement(Component, props));
 
 test('SSR: the url card is Ss — the title row, the link card, the caution, Decline, I’m done, the primary Open link', () => {
@@ -155,7 +158,11 @@ test('SSR: the form card is bs — the message under the title, the generated fo
   const id = /<form [^>]*data-cds="Form"[^>]*id="([^"]+)"[^>]*data-testid="epitaxy-elicitation-form"/.exec(html)?.[1];
   assert.ok(id, 'the generated form');
   assert.equal(count(html, 'data-cds="Field"'), 3);
-  assert.match(html, /name="age"/);
+  // round3 rl-switch-leaf S8: the form is the 4.16336.0 approval-elicitation-v4 slice; c81a73d3f-tO6s9a8w names each field
+  // `elicit:${JSON.stringify(key)}` (a), where 3.6556.2 used the bare key.
+  const form4 = read(path.resolve(app, '../reference/snapshots/claude-4.16336.0-20261104/ion-dist/assets/v1/c81a73d3f-tO6s9a8w.js'));
+  assert.equal(count(form4, 'function a(e){return`elicit:${JSON.stringify(e)}`}'), 1);
+  assert.match(html, /name="elicit:&quot;age&quot;"/);
   assert.match(html, /data-testid="epitaxy-elicitation-caution">Don’t enter passwords or verification codes here\.<\/p>/);
   assert.match(html, new RegExp(`<button type="submit"[^>]* form="${id}"[^>]*data-approval-action="accept"`));
   assert.doesNotMatch(html, /sac-field|sac-form|Requested information/);

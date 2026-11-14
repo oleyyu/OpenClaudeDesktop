@@ -13,6 +13,8 @@ import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
 import { appSheets, append, computed, element, find, loadCascade, parseMarkup } from './fixtures/transcript-css-cascade.mjs';
 import { contextRingStroke } from '../src/context-usage-model.mjs';
+import { readFileSync } from 'node:fs';
+import { designEntryStylesheets, legacyGlobalStylesheets } from '../scripts/current-design-assets.mjs';
 // W14-code r4 closeout R4DC-N7: the model's test-only ring geometry / track / row-size exports are gone (the ring is the
 // generated shared-8 KV); the test keeps them as its oracle: xT 12px stroke 2, offset C·(1−clamp(pct)/100); _d track
 // alpha-2; c227f4d5e B3 draws it at 14.
@@ -27,27 +29,34 @@ function contextRingGeometry(pct, size = CONTEXT_RING_SIZE) {
 const app = path.resolve(import.meta.dirname, '..');
 const reference = path.resolve(app, '../reference/installed-2.42304.0-20261017/ion-dist/assets/v1');
 const readable = path.resolve(app, '../analysis/code-ui-unpack-20261017/readable');
-const OFFICIAL = 'public/assets/v1/c6a992d55-Che1orl5.css';
+// The official c6a992d55 utilities entry sheet index.html loads (current-design-assets: 4.16336.0 c6a992d55-_JRfOmTh).
+const OFFICIAL = `public/assets/v1/${designEntryStylesheets.find((name) => name.startsWith('c6a992d55-'))}`;
 const raw = (file) => fs.readFileSync(path.join(reference, file), 'utf8');
 const h = React.createElement;
 const noop = () => {};
-let server, probeServer, C, P, Row, Tokens, Ring, RowChin, ViewTabs;
+let Core, server, probeServer, C, P, Row, Tokens, Ring, RowChin, ViewTabs;
 before(async () => {
   server = await createServer({ configFile: false, root: app, plugins: [react()], server: { middlewareMode: true, hmr: false, ws: false, watch: null }, appType: 'custom', logLevel: 'error' });
   C = await server.ssrLoadModule('/src/source-composer.jsx');
   Row = await server.ssrLoadModule('/src/source-composer-row-chin.jsx');
-  Tokens = await server.ssrLoadModule('/src/generated/code-composer/composer-tokens.mjs');
-  Ring = await server.ssrLoadModule('/src/generated/code-composer/usage-ring.mjs');
-  RowChin = await server.ssrLoadModule('/src/generated/code-composer/composer-row-chin.mjs');
+  Tokens = await server.ssrLoadModule('/src/generated/code-composer-v4/composer-tokens.mjs');
+  Ring = await server.ssrLoadModule('/src/generated/code-composer-v4/usage-ring.mjs');
+  RowChin = await server.ssrLoadModule('/src/generated/code-composer-v4/composer-row-chin.mjs');
   // E41: the chin triggers import the 3.6556.2 view-tabs file by semantic name (the legacy shim re-exports the same values).
   ViewTabs = await server.ssrLoadModule('/src/generated/view-tabs/shared-frame-6jtSkIit.js');
+  // surfaces-prod-3 composer (host cutover): the host's shell subtree draws cds-core components (src/cds-core.mjs).
+  Core = await server.ssrLoadModule('/src/cds-core.mjs');
   // The tooltip popups only mount on hover, so a second server wraps the view-tabs CDS Tooltip export (3.6556.2 shared-frame
   // Xm) in a probe recording the props each one receives (the file on disk is untouched).
+  // composer-env (4.16336.0): the Home environment bar's own tooltips are the cds-core graph's (shared-frame Kp), probed alike.
+  const probed = { '/src/generated/view-tabs/shared-frame-6jtSkIit.js': 'Xm', '/src/generated/cds-core/shared-frame.mjs': 'Kp' };
   const probe = { name: 'cds-tooltip-probe', enforce: 'pre', transform(code, id) {
-    if (!id.endsWith('/src/generated/view-tabs/shared-frame-6jtSkIit.js')) return null;
-    if (code.split('Xm as CdsTooltip').length !== 2) throw Error('shared-frame no longer exports Xm as CdsTooltip');
-    return code.replace('Xm as CdsTooltip', '__probeTooltip as CdsTooltip')
-      + '\nimport { createElement as __probeH, Fragment as __probeF } from "react";\nfunction __probeTooltip(props) { return __probeH(__probeF, null, __probeH(Xm, props), __probeH("span", { hidden: true, "data-tooltip-probe": JSON.stringify({ content: typeof props.content === "string" ? props.content : null, detail: typeof props.detail === "string" ? props.detail : null, shortcut: props.shortcut ?? null, open: props.open ?? null, hoverable: props.hoverable ?? null, collisionPadding: props.collisionPadding ?? null }) })); }\n';
+    const file = Object.keys(probed).find((suffix) => id.endsWith(suffix));
+    if (!file) return null;
+    const local = probed[file];
+    if (code.split(`${local} as CdsTooltip`).length !== 2) throw Error(`${file} no longer exports ${local} as CdsTooltip`);
+    return code.replace(`${local} as CdsTooltip`, '__probeTooltip as CdsTooltip')
+      + `\nimport { createElement as __probeH, Fragment as __probeF } from "react";\nfunction __probeTooltip(props) { return __probeH(__probeF, null, __probeH(${local}, props), __probeH("span", { hidden: true, "data-tooltip-probe": JSON.stringify({ content: typeof props.content === "string" ? props.content : null, detail: typeof props.detail === "string" ? props.detail : null, shortcut: props.shortcut ?? null, open: props.open ?? null, hoverable: props.hoverable ?? null, collisionPadding: props.collisionPadding ?? null }) })); }\n`;
   } };
   probeServer = await createServer({ configFile: false, root: app, plugins: [probe, react()], server: { middlewareMode: true, hmr: false, ws: false, watch: null }, appType: 'custom', logLevel: 'error' });
   P = await probeServer.ssrLoadModule('/src/source-composer.jsx');
@@ -66,6 +75,7 @@ const chinOf = (html) => find(parseMarkup(html), (n) => n.attrs['data-cds'] === 
 const chinRow = (chin) => find(chin, (n) => n.attrs['data-size'] === 'xs');
 const KD_SLOTS = { 'sc-chin-leading': 'flex items-center self-start', 'sc-chin-trailing': 'ms-auto flex min-w-0 items-center gap-1 ps-2' };
 const slot = (chin, name) => chinRow(chin).children.find((n) => cls(n) === KD_SLOTS[name]);
+const grid0 = (chin) => slot(chin, 'sc-chin-trailing').children[0];
 const button = (nodes, hook) => find(nodes, (n) => n.tag === 'button' && cls(n).split(/\s+/).includes(hook));
 const probes = (props) => [...render(props, P).matchAll(/data-tooltip-probe="([^"]*)"/g)].map((m) => JSON.parse(m[1].replaceAll('&quot;', '"').replaceAll('&lt;', '<').replaceAll('&gt;', '>').replaceAll('&#x27;', "'").replaceAll('&amp;', '&')));
 
@@ -82,23 +92,46 @@ test("an open session's presets chin is bQ's row: the mode picker alone in 'flex
   assert.equal(chinRow(chin).attrs['data-size'], 'xs');
   assert.ok(cls(chinRow(chin)).includes(Row.CHIN_BUTTON_TONE_CLASS), "Kd's button tone classes on its row");
   const leading = slot(chin, 'sc-chin-leading');
-  assert.equal(leading.children.length, 1, 'only the mode picker');
+  // surfaces-prod-3 composer (4.16336.0 c227f4d5e X6, `tt = layout === "row"`): the row's leading is
+  // `tt ? ln && p("span", { "aria-hidden": !0 })` — an empty aria-hidden marker while there is a mode picker — and the
+  // picker joins the trailing group as `On = tt ? ln : null`. Both literals are pinned by extract-code-composer.mjs's
+  // composer-row-chin.mjs chunkFeatures (loose features of c227f4d5e-DGDdGBTz).
+  assert.equal(leading.children.length, 1, 'only the marker');
   const lead = leading.children[0];
-  // bQ `Ot`: the literal of the row branch is l_ + " " + Sg, both generated from shared-6.
-  assert.equal(cls(lead), Row.ROW_CHIN_LEADING_CLASS);
-  assert.equal(Row.ROW_CHIN_LEADING_CLASS, `${Tokens.composerRowLeadingClass} ${Tokens.composerRowControlClass}`);
-  assert.ok(raw('c227f4d5e-Ba-r--Rl.js').includes(JSON.stringify(Row.ROW_CHIN_LEADING_CLASS)), 'verbatim in c227f4d5e');
   assert.equal(lead.tag, 'span');
-  assert.equal(cls(lead.children[0]), 'inline-flex min-w-0', 'vQ');
-  assert.equal(all(leading, (n) => n.tag === 'button').length, 1);
-  assert.ok(button(leading, 'sc-permission'));
-  // bQ trailing: Bo(Va, "gap-1", Sg, "compact:me-1"), holding the model selector, the ring slot and Dt. A Code composer
+  assert.equal(lead.attrs['aria-hidden'], 'true');
+  assert.deepEqual([cls(lead), lead.children.length], ['', 0], 'no class, no content');
+  assert.equal(all(leading, (n) => n.tag === 'button').length, 0);
+  assert.equal(Row.ROW_CHIN_LEADING_CLASS, undefined, "3.6556.2's leading class box is gone");
+  assert.equal(Tokens.composerRowLeadingClass, undefined, 'and so is its token in the 4.16336.0 graph');
+  // relink rl-composer (round 3, C1): the three literals are inside X6's declaration, which contract4 now pins by its raw
+  // sha256 (composer-row-chin.mjs declarationPins.X6) and scripts/extract-composer-chin-v4.mjs cuts as ComposerSessionChin
+  // (its provenance records the same sha256), instead of three loose chunk strings.
+  const extractor = fs.readFileSync(path.join(app, 'scripts/extract-code-composer.mjs'), 'utf8');
+  const x6Pin = /declarationPins: \{ X6: '([0-9a-f]{64})'/.exec(extractor)?.[1];
+  assert.match(x6Pin ?? '', /^[0-9a-f]{64}$/);
+  const chinProvenance = JSON.parse(fs.readFileSync(path.join(app, 'src/generated/composer-chin-v4/provenance.json'), 'utf8'));
+  assert.equal(chinProvenance.roots.find((r) => r.local === 'X6')?.declarationSha256, x6Pin);
+  const c227 = fs.readFileSync(path.join(app, '../reference/snapshots/claude-4.16336.0-20261104/ion-dist/assets/v1/c227f4d5e-DGDdGBTz.js'), 'utf8');
+  const x6Start = c227.indexOf('X6=A(function(e){'), x6End = c227.indexOf(',Z6=dl(', x6Start);
+  assert.ok(x6Start > 0 && x6End > x6Start);
+  for (const feature of ['tt?ln&&p("span",{"aria-hidden":!0})', 'On=tt?ln:null', '_(T,{children:[En,Ee,dn,Dn,On,Te,kn,xn,An]})']) {
+    const at = c227.indexOf(feature);
+    assert.ok(at > x6Start && at < x6End && c227.indexOf(feature, at + 1) === -1, feature);
+  }
+  // X6 trailing: Be(fp, "gap-1", Nn, Pn) — [En, Ee, dn model, Dn, On mode, Te, kn ring, xn status, An]. A Code composer
   // shows the effort in the model menu and as the pill's tail (c9543da06 G), so no separate EffortControl.
   const grid = slot(chin, 'sc-chin-trailing').children[0];
-  assert.equal(cls(grid), `${Tokens.composerChinTrailingClass} gap-1 ${Tokens.composerRowControlClass} compact:me-1`);
+  assert.equal(cls(grid), `${Tokens.composerChinTrailingClass} gap-1 ${Tokens.composerRowControlClass} ${Tokens.composerRowTrailingInsetClass}`);
+  assert.equal(Tokens.composerRowTrailingInsetClass, 'compact:me-1');
   assert.equal(Row.chinTrailingClass(true), cls(grid));
   assert.deepEqual(grid.children.map((n) => n.attrs['data-cds'] ?? (n.attrs.role === 'status' ? 'status' : cls(n))),
-    ['ModelSelector', Tokens.composerRingSlotClass, 'status']);
+    ['ModelSelector', 'inline-flex min-w-0', Tokens.composerRingSlotClass, 'status']);
+  // On: the mode picker (vQ's "inline-flex min-w-0" around tQ's button), after the model selector.
+  const modeWrap = grid.children[1];
+  assert.equal(modeWrap.tag, 'span');
+  assert.equal(all(modeWrap, (n) => n.tag === 'button').length, 1);
+  assert.ok(button(modeWrap, 'sc-permission'));
   assert.equal(Tokens.composerRingSlotClass, 'flex shrink-0 ms-px', 'shared-6 Eg (c227f4d5e Fa)');
   // No folder chip in a session chin (the titlebar's folder chip carries the session's folder menu), no stray chips.
   const html = render({});
@@ -110,14 +143,17 @@ test("the classic layout keeps bQ's chin layout: Add then Mode, the plain Va tra
   assert.equal(chin.attrs['data-chin-layout'], undefined);
   const leading = slot(chin, 'sc-chin-leading');
   assert.deepEqual(all(leading, (n) => n.tag === 'button').map((n) => n.attrs['aria-label']), ['Add', 'Permission mode']);
-  assert.ok(!find(leading, (n) => cls(n) === Row.ROW_CHIN_LEADING_CLASS));
+  assert.ok(!find(leading, (n) => n.tag === 'span' && n.attrs['aria-hidden'] === 'true' && n.children.length === 0 && cls(n) === ''), 'no row marker');
+  assert.equal(button(grid0(chin), 'sc-permission'), null, 'the classic mode picker stays leading');
   const grid = slot(chin, 'sc-chin-trailing').children[0];
   assert.equal(cls(grid), `${Tokens.composerChinTrailingClass} gap-1`);
-  // composer-ring-14 (3.6556.2 B3): always 14px; outside the row the track is alpha-2 and the trigger is `shrink-0 me-px`.
+  // composer-ring-14 (4.16336.0 O3): always 14px; outside the row the track is alpha-2 and the trigger is "shrink-0"
+  // (3.6556.2's me-px is gone: `tooltip: !1, className: "shrink-0", onPointerEnter: d,`).
   const ring = find(grid, (n) => n.tag === 'svg');
   assert.equal(ring.attrs.width, '14');
   assert.equal(find(ring, (n) => 'data-ring-track' in n.attrs).attrs.stroke, 'var(--cds-alpha-2)');
-  assert.ok(cls(button(grid, 'sc-usage-trigger')).endsWith(' shrink-0 me-px sc-usage-trigger'));
+  assert.ok(cls(button(grid, 'sc-usage-trigger')).endsWith(' shrink-0 sc-usage-trigger'));
+  assert.ok(!cls(button(grid, 'sc-usage-trigger')).split(/\s+/).includes('me-px'));
   assert.ok(!find(grid, (n) => cls(n) === Tokens.composerRingSlotClass), 'outside the row: no po slot');
   assert.doesNotMatch(cls(button(grid, 'sc-model-trigger')), /text-secondary/, 'DK is the row placement only');
   // The Home draft (presets, no session) hangs no chin at all: its pickers are the environment bar's.
@@ -225,34 +261,36 @@ test('the KV ring agrees with contextRingGeometry / the B3 tracks / contextRingS
   }
 });
 
-test('the trigger components hand their props to the view-tabs originals (onClick / menuTriggerProps reach the CdsButton)', () => {
+test('the trigger components hand their props to the cds-core originals (onClick / menuTriggerProps reach the CdsButton)', () => {
   const onClick = () => 'clicked', onKeyDown = () => 'keyed';
   const model = Row.ComposerModelTrigger({ row: true, name: 'M', onClick, onKeyDown, 'aria-haspopup': 'menu' });
-  assert.equal(model.type, ViewTabs.CdsButton);
+  assert.equal(model.type, Core.CdsButton);
   assert.equal(model.props.onClick, onClick); assert.equal(model.props.onKeyDown, onKeyDown);
   assert.equal(model.props['data-cds'], 'ModelSelector'); assert.equal(model.props.variant, 'ghost');
   const effort = Row.ComposerEffortTrigger({ tooltip: 'Effort', tooltipOpen: false, label: 'High', onClick });
-  assert.equal(effort.type, ViewTabs.CdsTooltip);
+  assert.equal(effort.type, Core.CdsTooltip);
   assert.deepEqual([effort.props.content, effort.props.open], ['Effort', false]);
-  assert.equal(effort.props.children.type, ViewTabs.CdsButton);
+  assert.equal(effort.props.children.type, Core.CdsButton);
   assert.equal(effort.props.children.props.onClick, onClick);
   const ring = Row.ComposerUsageRing({ pct: 10, inComposerRow: true, tooltip: 'Usage', detail: null, onClick });
   assert.equal(ring.props.className, Tokens.composerRingSlotClass);
   const ringTip = ring.props.children;
-  assert.equal(ringTip.type, ViewTabs.CdsTooltip);
+  assert.equal(ringTip.type, Core.CdsTooltip);
   assert.equal(ringTip.props.detail, undefined, 'yZ `detail: i ?? void 0`');
-  assert.deepEqual([ringTip.props.children.type, ringTip.props.children.props.tooltip, ringTip.props.children.props.iconOnly], [ViewTabs.CdsButton, false, true]);
+  assert.deepEqual([ringTip.props.children.type, ringTip.props.children.props.tooltip, ringTip.props.children.props.iconOnly], [Core.CdsButton, false, true]);
   assert.equal(ringTip.props.children.props.icon.type, Ring.UsageRing);
   assert.deepEqual([ringTip.props.children.props.icon.props.size, ringTip.props.children.props.icon.props.trackStroke], [14, 'var(--cds-alpha-3)']);
   const outside = Row.ComposerUsageRing({ pct: 10, tooltip: 'Usage' });
-  assert.equal(outside.type, ViewTabs.CdsTooltip, 'outside the row: no po slot');
-  assert.deepEqual([outside.props.children.props.icon.props.size, outside.props.children.props.icon.props.trackStroke, outside.props.children.props.className], [14, 'var(--cds-alpha-2)', 'shrink-0 me-px']);
-  // The env bar's place chip (h2's td) is the same CDS Tooltip.
-  // W14-code r2-composer-04: CdsTextLink is the gone-environment line's <edit> (cc43287c9 Wue `p(Y, {inheritColor: !0, …})`).
-  assert.ok(fs.readFileSync(path.join(app, 'src/source-composer-environment-bar.jsx'), 'utf8').includes('import { CdsButton, CdsTextLink, CdsTooltip, cdsClassNames } from "./generated/view-tabs/shared-frame-6jtSkIit.js";'));
+  assert.equal(outside.type, Core.CdsTooltip, 'outside the row: no po slot');
+  // surfaces-prod-3 composer (4.16336.0 c227f4d5e O3 `tooltip: !1, className: "shrink-0", onPointerEnter: d,`, pinned by
+  // extract-code-composer.mjs chunkFeatures): the trigger is "shrink-0" in and out of the row; 3.6556.2's me-px is gone.
+  assert.deepEqual([outside.props.children.props.icon.props.size, outside.props.children.props.icon.props.trackStroke, outside.props.children.props.className], [14, 'var(--cds-alpha-2)', 'shrink-0']);
+  // composer-env (4.16336.0): the env bar is the code-composer-v4 vge, so its own triggers (place chip tooltip $3, model
+  // trigger Uye, the gone line's <edit> TextLink) are the cds-core graph's.
+  assert.ok(fs.readFileSync(path.join(app, 'src/source-composer-environment-bar.jsx'), 'utf8').includes('import { CdsButton, CdsIcon, CdsTextLink, CdsTooltip, cdsClassNames } from "./cds-core.mjs";'));
   for (const file of ['src/source-composer-row-chin.jsx', 'src/source-composer-environment-bar.jsx'])
     assert.doesNotMatch(fs.readFileSync(path.join(app, file), 'utf8'), /source-tooltip|SourceTooltip/, `${file}: no host tooltip`);
-  const place = probes({ showContext: true, environmentMenu: true }).find((p) => p.content === 'Where DeepSeek runs');
+  const place = probes({ showContext: true, environmentMenu: true }).find((p) => p.content === 'Environment');
   assert.deepEqual([place.hoverable, place.collisionPadding], [false, { top: 48, right: 8, bottom: 8, left: 8 }]);
 });
 
@@ -267,14 +305,36 @@ const mount = (markup) => {
 let sheets;
 const cascade = () => (sheets ??= loadCascade(appSheets(app)));
 
+// 4.16336.0 design assets (current-design-assets): index.html links the 4.16336.0 entry sheets, the legacy global sheet the
+// 3.6556.2 regions still need, then the generated compatibility layer. A class the 4.16336.0 sheets dropped is styled only
+// through legacy-utilities.css, and only as a registered legacy-region dependency (style-compatibility.json keeps its
+// 3.6556.2 rule and names the generated region that draws it).
+function loadedStyles(appRoot) {
+  const read = (file) => readFileSync(path.join(appRoot, file), 'utf8');
+  const names = [...designEntryStylesheets, ...legacyGlobalStylesheets];
+  assert.deepEqual([...read('index.html').matchAll(/<link\s+rel="stylesheet"\s+href="([^"]+)"/g)].map((m) => m[1]),
+    [...names.map((name) => `/assets/v1/${name}`), '/assets/legacy-utilities.css'], 'index.html stylesheet links');
+  const registry = JSON.parse(read('public/style-compatibility.json'));
+  return {
+    official: names.map((name) => read(`public/assets/v1/${name}`)).join('\n'),
+    compat: read('public/assets/legacy-utilities.css'),
+    legacyRegions: (token) => (registry.rules.some((rule) => rule.baselineVersion === '3.6556.2' && rule.references.some((ref) => ref.className === token))
+      ? registry.legacyDebt.owners.filter((owner) => owner.kind === 'region' && owner.classes.includes(token)).map((owner) => owner.area) : []),
+  };
+}
+
 test('every class the row chin draws is compiled in the official sheet; no local rule styles the CDS triggers but the ultra tint', () => {
   const sheet = fs.readFileSync(path.join(app, OFFICIAL), 'utf8');
+  // 4.16336.0 (design assets): a class the official sheet dropped counts only as a registered legacy-region dependency.
+  const { compat, legacyRegions } = loadedStyles(app);
   const html = render({ fastAvailable: true, fastMode: true, usage: { last: { totalTokens: 10 }, modelContextWindow: 100 } });
   const chin = chinOf(html);
   const tokens = new Set(all(chin, () => true).flatMap((n) => cls(n).split(/\s+/)).filter((t) => t && !t.startsWith('stacks:') && !t.startsWith('sc-') && t !== 'composer-footer'));
   assert.ok(tokens.size > 60, String(tokens.size));
   const escape = (token) => '.' + token.replace(/[^a-zA-Z0-9_-]/g, (c) => '\\' + c);
-  assert.deepEqual([...tokens].filter((t) => !['{', ':', ',', '[', ' ', '>', ')'].some((next) => sheet.includes(escape(t) + next))), []);
+  const styled = (text, t) => ['{', ':', ',', '[', ' ', '>', ')'].some((next) => text.includes(escape(t) + next));
+  const missing = [...tokens].filter((t) => !styled(sheet, t));
+  assert.deepEqual(missing.filter((t) => !(styled(compat, t) && legacyRegions(t).includes('code-composer'))), []);
   const css = fs.readFileSync(path.join(app, 'src/source-composer.css'), 'utf8');
   for (const gone of ['.sc-context-ring', '.sc-permission-label', '.sc-permission-text', '.sc-permission-loading', '.sc-fast-label {', '.sc-chin .sc-model-trigger {', '.sc-chin .sc-usage-trigger', '.sc-chin .sc-permission {', '.sc-chin .sc-permission:hover'])
     assert.ok(!css.includes(gone), `${gone} removed`);
@@ -337,7 +397,14 @@ test('the host transcriptions are the shipped 2.42304.0 strings (tQ / vQ / _Q, M
   assert.ok(v3('shared-8-Db1QN4mf.js').includes('TX="me-px"'));
   assert.ok(v3('shared-6-sd9jbJqs.js').includes('Lg="flex shrink-0 ms-px"'));
   assert.ok(v3('c73f45bc3-B7hbL7H9.js').includes('inComposerRow:!0'));
-  assert.deepEqual([Row.USAGE_RING_SIZE, Row.USAGE_RING_ROW_TRACK, Row.USAGE_RING_TRACK, Row.USAGE_RING_TRIGGER_INSET_CLASS], [14, 'var(--cds-alpha-3)', 'var(--cds-alpha-2)', 'me-px']);
+  // 4.16336.0 c227f4d5e O3 (what the host follows now): the same 14px ring and tracks, but the trigger is "shrink-0" in and
+  // out of the row — the 3.6556.2 non-row `me-px` inset above is gone.
+  const o3 = fs.readFileSync(path.resolve(app, '../reference/snapshots/claude-4.16336.0-20261104/ion-dist/assets/v1/c227f4d5e-DGDdGBTz.js'), 'utf8');
+  for (const pin of ['h=l?"var(--cds-alpha-3)":"var(--cds-alpha-2)"', 'trackStroke:h,stroke:c,size:14', 'tooltip:!1,className:"shrink-0",onPointerEnter:d'])
+    assert.equal(o3.split(pin).length, 2, pin);
+  assert.equal(Row.USAGE_RING_TRIGGER_INSET_CLASS, undefined);
+  assert.deepEqual([Row.USAGE_RING_SIZE, Row.USAGE_RING_ROW_TRACK, Row.USAGE_RING_TRACK, Row.usageRingTriggerClass(false), Row.usageRingTriggerClass(true)],
+    [14, 'var(--cds-alpha-3)', 'var(--cds-alpha-2)', 'shrink-0', 'shrink-0']);
   // LK opens the row / composer model menu on top, aligned to the end; the host model menu (main.jsx "model") is placed
   // the same way.
   const lk = fs.readFileSync(path.join(readable, 'c227f4d5e-Ba-r--Rl.js'), 'utf8');

@@ -11,6 +11,7 @@ import { createRequire } from 'node:module';
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { setLocale } from '../electron/i18n/index.mjs';
+import { designEntryStylesheets } from '../scripts/current-design-assets.mjs';
 
 const require = createRequire(import.meta.url);
 const app = path.resolve(import.meta.dirname, '..');
@@ -121,9 +122,11 @@ test('find bar: the official shared-23 SM root / input / status and wM button st
   assert.doesNotMatch(css.replace(/\/\*[\s\S]*?\*\//g, ''), /\.sfb-/);
   assert.match(css, /::highlight\(transcript-find\) \{/);
   assert.match(css, /::highlight\(transcript-find-active\) \{/);
-  // Every utility the bar uses ships in the CSS index.html loads.
-  const loaded = ['shared-frame-CegduNQ2.css', 'shared-styles-D_GJawPO.css', 'c6a992d55-Che1orl5.css', 'c8e31bf58-C7gq8dUF.css', 'c3fde7009-BszyXGym.css']
-    .map((name) => fs.readFileSync(path.join(app, 'public/assets/v1', name), 'utf8')).join('\n');
+  // Every utility the bar uses ships in the CSS index.html loads: its stylesheet links (the current design's entry sheets
+  // from current-design-assets.mjs among them), read from public/.
+  const linked = [...local('index.html').matchAll(/<link rel="stylesheet" href="\/([^"]+)"/g)].map((match) => match[1]);
+  for (const name of designEntryStylesheets) assert.ok(linked.includes(`assets/v1/${name}`), `index.html links ${name}`);
+  const loaded = linked.map((href) => fs.readFileSync(path.join(app, 'public', href), 'utf8')).join('\n');
   const escape = (name) => name.replace(/[:.\/\[\]()%]/g, (ch) => `\\${ch}`);
   for (const name of new Set([join(root), join(input), 'whitespace-nowrap text-footnote text-muted-as-secondary tabular-nums', join(button)].join(' ').split(' ')))
     assert.ok(loaded.includes(`.${escape(name)}`), name);
@@ -156,7 +159,11 @@ test('sr-only: no hand-copied visually-hidden rule or class is left; the find mo
     for (const block of text.match(/[^{}]+\{[^{}]*\}/g) ?? [])
       assert.ok(!(/width:\s*1px/.test(block) && /(clip-path:\s*inset\(50%\)|clip:\s*rect\()/.test(block)), `${name}: ${block.trim().slice(0, 80)}`);
   }
-  const official = fs.readFileSync(path.join(app, 'public/assets/v1/c6a992d55-Che1orl5.css'), 'utf8');
+  // The official class: the current design's c6a992d55 entry sheet (current-design-assets.mjs), linked by index.html.
+  const utilitiesSheet = designEntryStylesheets.find((name) => name.startsWith('c6a992d55-'));
+  assert.ok(utilitiesSheet, 'the current design pins a c6a992d55 utilities sheet');
+  assert.ok(local('index.html').includes(`<link rel="stylesheet" href="/assets/v1/${utilitiesSheet}" />`));
+  const official = fs.readFileSync(path.join(app, 'public/assets/v1', utilitiesSheet), 'utf8');
   assert.ok(official.includes('.sr-only{clip-path:inset(50%);white-space:nowrap;border-width:0;width:1px;height:1px;margin:-1px;padding:0;position:absolute;overflow:hidden}'));
   const { findMatches } = await import('../src/transcript-find-model.mjs');
   assert.match(local('src/transcript-find-model.mjs'), /const SR_ONLY_CLASSES = \["sr-only"\];/);

@@ -18,7 +18,8 @@ import { SourceChatDisclaimer, SourceChatMessageMenu, chatMessageMenuAttach, mes
 import { ChatMarkdownSurface } from "./source-chat-markdown.jsx"; // w13-chatui-markdown-code
 import { ChatThinkingSurface } from "./source-chat-thinking.jsx"; // w13-chatui-thinking-search
 import "./source-transcript.css";
-import { CdsIcon } from "./generated/view-tabs/shared-frame-6jtSkIit.js";
+// host-wiring code-b: the jump chip's CaretDown is the 4.16336.0 cds-core CdsIcon (shared-frame-CJdE5Ria Bs → lf, semantic facade).
+import { CdsIcon } from "./cds-core.mjs";
 // c4a70913c C: the scroll-to-bottom chip (verbatim).
 const JUMP_CHIP = "inline-flex items-center h-[24px] px-xs rounded bg-surface-panel text-secondary shadow-field hover:bg-[linear-gradient(var(--cds-fill-secondary-hover),var(--cds-fill-secondary-hover))] border-0 focus-visible:outline-hidden hide-focus-ring focus-visible:shadow-focus stacks:layers-1-fill-secondary stacks:shadow-none";
 import { t } from "../electron/i18n/index.mjs";

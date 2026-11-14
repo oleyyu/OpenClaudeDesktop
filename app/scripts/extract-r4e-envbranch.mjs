@@ -17,6 +17,14 @@
 //             parsing and matching, with the refname checks b / y they read). i.v (the git runner, NwjHwcLG un) and
 //             `this.git.runGit` / `requireTrustedCwd` / `isKnownNonGitDir` are the factory's host parameters.
 //
+// 4.16336.0 (regions-misc, analysis/claude-4.16336.0-migrate-20261104/regions/regions-misc): the names above are the
+// 3.6556.2 ones. In 4.16336.0 the renderer root is cc43287c9 Pde (L0), its free name ot (Tn; shared-0 qO exported Kh), the
+// hook Fde (R0), the message table c5da7eb42 dC exported Lr (`xS`; c3efc6f9e C / Hj), the list hook cc233fde2 t (`bC`);
+// main: index.chunk-DeY_BH2u.js GitStatusService ue (exports.t), namespaces u / s / i / a = index.chunk-kQsFPJyA (F) /
+// -BHwKNgSL (r) / -CLQBepLq (Er, the runner) / -DcO4MHOu (_ / v), callers index.chunk-yo8W6L7k (gitStatus) and
+// index.chunk-Du-Wqi0E (IPC schema). The only semantic change: isBranchOnOrigin passes the chunk constant
+// w={pressed:!0} to requireTrustedCwd (emitted as an original slice, `constants`); the rest is byte-identical apart
+// from names. The namespace members are now derived from the namespace specs (a missing one stops generation).
 // D0: own generator, own output (src/generated/r4e-envbranch/, electron/generated/r4e-envbranch-origin.cjs and its
 // manifest), own scripts/verify-gen-r4e-envbranch.mjs. Output is prettier-formatted; each emitted module is parsed and
 // may read no identifier it does not declare, apart from standard globals and the mapped imports.
@@ -27,7 +35,7 @@ import { createHash } from 'node:crypto';
 import { parsers } from '../../tools/node_modules/prettier/plugins/babel.mjs';
 import { format } from '../../tools/node_modules/prettier/index.mjs';
 import babel from '../../tools/node_modules/playwright/lib/transform/babelBundle.js';
-import { referenceVersion, referenceSnapshot, ionSource as source, asarSource as mainSource, vendorIntl, looseFeature } from './official-3.6556.2.mjs';
+import { referenceVersion, referenceSnapshot, ionSource as source, asarSource as mainSource, vendorIntl, looseFeature } from './official-4.16336.0.mjs';
 
 const root = path.resolve(import.meta.dirname, '..');
 const output = path.join(root, 'src/generated/r4e-envbranch');
@@ -40,24 +48,24 @@ const sha = bytes => createHash('sha256').update(bytes).digest('hex');
 const STANDARD_GLOBALS = new Set(['Array', 'Error', 'JSON', 'Map', 'Number', 'Object', 'Promise', 'RegExp', 'Set', 'String', 'undefined']);
 
 // Names this generator binds stay literal inside loose anchors, so a reused minified name cannot stand in for them.
-const boundNames = ['L0', 'Tn', 'Hj', 'ax'];
+const boundNames = ['Pde', 'ot', 'xS', 'bC', 'Fde'];
 const renderer = {
-  file: 'cc43287c9-Me-M2ucD.js',
-  binding: 'L0', exportedAs: 'startBranchMissing',
-  features: ['if(!Tn?.isBranchOnOrigin||t.startsWith("origin/")||/^[0-9a-f]{40}$/.test(t))return!1',
-    'try{let r=await n();return r.length>0&&!r.includes(t)&&await Tn.isBranchOnOrigin(e,t)===!1}catch{return!1}'],
+  file: 'cc43287c9-dzfX-J5i.js',
+  binding: 'Pde', exportedAs: 'startBranchMissing',
+  features: ['if(!ot?.isBranchOnOrigin||t.startsWith("origin/")||/^[0-9a-f]{40}$/.test(t))return!1',
+    'try{let r=await n();return r.length>0&&!r.includes(t)&&await ot.isBranchOnOrigin(e,t)===!1}catch{return!1}'],
   // Free names of L0 -> { import alias in the chunk, its source chunk, the adapter export, a feature of the original }.
-  adapters: { Tn: { from: './shared-0-DDOOdL6P.js', imported: 'dh', name: 'LocalSessions', declaration: 'globalThis["claude.web"]?.LocalSessions' } },
-  // De (the start-branch check after trust), Oe (handleSelectSourceBranch) and ax's list — inside R0.
+  adapters: { ot: { from: './shared-0-CnnWnVrT.js', imported: 'Kh', name: 'LocalSessions', declaration: 'globalThis["claude.web"]?.LocalSessions' } },
+  // De (the start-branch check after trust), Oe (handleSelectSourceBranch) and bC's list — inside Fde (3.6556.2 R0).
   callSites: {
-    R0: [
-      'async(e,t)=>{let n={target:t};ve(n);let r=!0;try{Tn?.checkBranchSwitchConflict?r=await Tn.checkBranchSwitchConflict(e,t):Tn?.isWorkingTreeDirty&&(r=await Tn.isWorkingTreeDirty(e))}catch{}let i=r&&await L0(e,t,V);',
-      'if(q(n),le.current===e&&Te.current===t){if(i){M(void 0),me(void 0);let e=ue.current,{environments:n,selectedEnvironmentId:r}=jF.getState();m(d.formatMessage(Hj.branchMissing,{branch:t,known:e?"yes":"no",fallback:e,saved:n.some(e=>e.id===r&&e.settings?.branch===t)?"yes":"no"}),{uniqueKey:`branch-missing:${t}`})}else r?me(t):M(t)}',
+    Fde: [
+      'async(e,t)=>{let n={target:t};ve(n);let r=!0;try{ot?.checkBranchSwitchConflict?r=await ot.checkBranchSwitchConflict(e,t):ot?.isWorkingTreeDirty&&(r=await ot.isWorkingTreeDirty(e))}catch{}let i=r&&await Pde(e,t,V);',
+      'if(q(n),le.current===e&&Te.current===t){if(i){M(void 0),me(void 0);let e=ue.current,{environments:n,selectedEnvironmentId:r}=jF.getState();m(d.formatMessage(xS.branchMissing,{branch:t,known:e?"yes":"no",fallback:e,saved:n.some(e=>e.id===r&&e.settings?.branch===t)?"yes":"no"}),{uniqueKey:`branch-missing:${t}`})}else r?me(t):M(t)}',
       'e=>{if(Te.current=e,!A&&!u&&!ne&&!h&&e!==void 0&&e!==R&&H!==!1){',
       'r.trusted?await De(t,e)',
       've(void 0),M(e)})',
       '{addError:p,addWarning:m}=Bi()',
-      '{branches:z,isAvailable:B,refetch:V}=ax(_,g)',
+      '{branches:z,isAvailable:B,refetch:V}=bC(_,g)',
       'le=f(r),ue=f(R),de,fe;J2($,28,R,r)?(de=()=>{le.current=r,ue.current=R},fe=[r,R],K3($,28,R,r,de,fe)):(de=$[30],fe=$[31])',
       'handleSelectSourceBranch:Oe,',
     ],
@@ -65,19 +73,19 @@ const renderer = {
   // ue (the environment apply's branch stage) is a closure of a larger top-level hook: located by its unique text.
   textSites: {
     ue: 'ue=(t,n,r)=>{let i=n.kind==="ssh"||n.kind==="local"&&!!n.wslDistro,a=t.worktree??e.settings.worktree.preference,o=n.kind==="local"&&!!n.variant,s=i&&!a||o?void 0:t.branch;!s&&e.branch&&!r?e.onSelectBranch(void 0):s&&e.branch!==s&&e.onSelectBranch(s)}',
-    onSelectBranch: 'branchPickerDisabled:eu,onSelectBranch:Y.setSourceBranch,worktree:Y.worktree',
+    onSelectBranch: 'ef=b!==null||Y.branchPickerDisabled,tf=Y.setSourceBranch,nf=Y.worktree',
     setSourceBranch: 'sourceBranch:Zt,setSourceBranch:Fn,branchChanged:$t',
     stableHandler: 'Pn=rn(sn),Fn=rn(Qt),In=ee&&!ye,Ln=Ae&&at.length>0',
-    sourceBranchHandler: 'handleSelectSourceBranch:Qt,branchChanged:$t,branchCheckPending:en',
+    sourceBranchHandler: 'handleSelectSourceBranch:Qt,branchChanged:$t,branchCheckPending:en,dirtyTreeDialog:on,branchSwitchTrustPrompt:sn}=Fde(',
   },
-  // Imports the call sites read, pinned to their chunks (Hj: the message table; ax: the local-branch query hook).
-  imports: { Hj: { from: './c3efc6f9e-BnLNtm1h.js', imported: 'p' }, ax: { from: './cc233fde2-CtW86q_B.js', imported: 't' } },
-  // ax's refetch (V) is a fresh getLocalBranches(cwd) that answers [] on error.
-  listHook: { file: 'cc233fde2-CtW86q_B.js', features: ['return e?.getLocalBranches?e.getLocalBranches(l):[]', 'async()=>{if(!l||!c)return r;let e=await y();return e.isError?r:e.data??r}', '["localGitBranches",l,d]'] },
+  // Imports the call sites read, pinned to their chunks (xS: the message table; bC: the local-branch query hook).
+  imports: { xS: { from: './c5da7eb42-aEqbSKbC.js', imported: 'Lr' }, bC: { from: './cc233fde2-CzXcKGSR.js', imported: 't' } },
+  // bC's refetch (V) is a fresh getLocalBranches(cwd) that answers [] on error.
+  listHook: { file: 'cc233fde2-CzXcKGSR.js', features: ['return e?.getLocalBranches?e.getLocalBranches(l):[]', 'async()=>{if(!l||!c)return r;let e=await y();return e.isError?r:e.data??r}', '["localGitBranches",l,d]'] },
 };
 const message = {
-  file: 'c3efc6f9e-BnLNtm1h.js', exported: 'p', importedAs: 'Hj', property: 'branchMissing', id: '94ae6MV2dl', exportedAs: 'branchMissingMessage',
-  // C = a({...}) where a is vendor-intl f (defineMessages, the identity `function tn(e){return e}`).
+  file: 'c5da7eb42-aEqbSKbC.js', exported: 'Lr', importedAs: 'xS', property: 'branchMissing', id: '94ae6MV2dl', exportedAs: 'branchMissingMessage',
+  // dC = zc({...}) where zc is vendor-intl f (defineMessages, the identity `function tn(e){return e}`).
   defineMessages: { from: `./${vendorIntl}`, imported: 'f', file: vendorIntl, declaration: 'function tn(e){return e}' },
   features: ['Branch {branch} wasn\u2019t found in this folder\u2019s repository. This session will start from {fallback}.',
     'Branch {branch} wasn\u2019t found in this folder\u2019s repository, so it won\u2019t be used.', '{saved, select, yes { To pick another branch, edit the environment.} other {}}'],
@@ -85,9 +93,9 @@ const message = {
 
 const main = {
   service: {
-    file: 'index.chunk-Da165atI.js', classBinding: 'W', exported: 't', methods: ['isBranchOnOrigin', 'pushLeavesOriginRef'],
+    file: 'index.chunk-DeY_BH2u.js', classBinding: 'ue', exported: 't', methods: ['isBranchOnOrigin', 'pushLeavesOriginRef'],
     features: {
-      isBranchOnOrigin: ['if(await this.requireTrustedCwd(e)||this.isKnownNonGitDir(e)||!u.n(t))return null',
+      isBranchOnOrigin: ['if(await this.requireTrustedCwd(e,w)||this.isKnownNonGitDir(e)||!u.n(t))return null',
         'return await this.git.runGit(["rev-parse","--verify","--quiet",`refs/remotes/origin/${t}^{commit}`],e,5e3),!0',
         'catch(e){if(s.r(e)!==1)return null}', 'return!await this.pushLeavesOriginRef(e,t)&&null'],
       pushLeavesOriginRef: ['await i.v("configRead",["--no-pager","config","--no-includes","--get-all","remote.origin.fetch"],e,5e3)',
@@ -95,31 +103,34 @@ const main = {
     },
     // Chunk-level requires the methods read, and the members they may read of each.
     namespaces: {
-      u: { require: './index.chunk-DXSKLguD.js', members: ['n'] },
-      s: { require: './index.chunk-CArOlz-X.js', members: ['r'] },
-      i: { require: './index.chunk-NwjHwcLG.js', members: ['v'] },
-      a: { require: './index.chunk-C3tnPGuy.js', members: ['a', 'o'] },
+      u: { require: './index.chunk-kQsFPJyA.js', members: ['n'] },
+      s: { require: './index.chunk-BHwKNgSL.js', members: ['r'] },
+      i: { require: './index.chunk-CLQBepLq.js', members: ['v'] },
+      a: { require: './index.chunk-DcO4MHOu.js', members: ['a', 'o'] },
     },
+    // New in 4.16336.0: chunk-level constants the methods read whole (not as a namespace member). w is the option
+    // `{pressed:!0}` isBranchOnOrigin hands requireTrustedCwd: a user-pressed check, which skips the config's refusesCwd.
+    constants: { w: { feature: 'w={pressed:!0}' } },
     thisMembers: ['git', 'isKnownNonGitDir', 'pushLeavesOriginRef', 'requireTrustedCwd'],
   },
   // Original top-level functions that rebuild u.n, s.r and a.a / a.o; `closure` is every declaration emitted with the
   // export (each found by its unique `function <name>(` text).
   functions: [
-    { file: 'index.chunk-DXSKLguD.js', exported: 'n', binding: 'F', closure: ['F'], as: 'isPlausibleBranchName',
+    { file: 'index.chunk-kQsFPJyA.js', exported: 'n', binding: 'F', closure: ['F'], as: 'isPlausibleBranchName',
       features: ['e.length>0&&e.length<=244&&/^[A-Za-z0-9][A-Za-z0-9._/+@-]*$/.test(e)', '!e.endsWith(".lock")'] },
-    { file: 'index.chunk-CArOlz-X.js', exported: 'r', binding: 'r', closure: ['r'], as: 'gitExitCode',
+    { file: 'index.chunk-BHwKNgSL.js', exported: 'r', binding: 'r', closure: ['r'], as: 'gitExitCode',
       features: ['if(t?.remoteExitSynthesized===!0)return;let n=t?.result?.code??t?.remoteExitCode;return typeof n=="number"&&n>=0?n:void 0'] },
-    { file: 'index.chunk-C3tnPGuy.js', exported: 'a', binding: '_', closure: ['_', 'b', 'y'], as: 'parseFetchRefspecs',
+    { file: 'index.chunk-DcO4MHOu.js', exported: 'a', binding: '_', closure: ['_', 'b', 'y'], as: 'parseFetchRefspecs',
       features: ['if(l===`refs/heads/*:${n}/*`){i=!0;continue}', 'return a?{kind:"refused"}:i?{kind:"all",prune:!s}:'] },
-    { file: 'index.chunk-C3tnPGuy.js', exported: 'o', binding: 'v', closure: ['v'], as: 'refspecsCoverBranch',
+    { file: 'index.chunk-DcO4MHOu.js', exported: 'o', binding: 'v', closure: ['v'], as: 'refspecsCoverBranch',
       features: ['let n=e.startsWith("refs/heads/")?e.slice(11):e;return t.patterns.some('] },
   ],
-  // i.v: the official git runner (un(intent, args, cwd, timeoutMs) → stdout); answered by the host.
-  host: { file: 'index.chunk-NwjHwcLG.js', exported: 'v', features: ['let{stdout:o}=await M(await Z(e,n,', 'return o}'] },
+  // i.v: the official git runner (Er(intent, args, cwd, timeoutMs, …) → stdout); answered by the host.
+  host: { file: 'index.chunk-CLQBepLq.js', exported: 'v', features: ['let{stdout:o}=await M(await Z(e,n,', 'return o}'] },
   // The desktop surface the renderer's Tn.isBranchOnOrigin reaches, and its IPC schema (cwd, branch) → boolean | null.
   callers: [
-    { file: 'index.chunk-DVWJXMwL.js', needle: 'async isBranchOnOrigin(e,t){return p.gitStatus.isBranchOnOrigin(e,t)}' },
-    { file: 'index.chunk-jPKPzV-P.js', needle: '["isBranchOnOrigin",[["cwd",F],["branch",F]],R(I)]' },
+    { file: 'index.chunk-yo8W6L7k.js', needle: 'async isBranchOnOrigin(e,t){return r.gitStatus.isBranchOnOrigin(e,t)}' },
+    { file: 'index.chunk-Du-Wqi0E.js', needle: '["isBranchOnOrigin",[["cwd",I],["branch",I]],z(L)]' },
   ],
 };
 
@@ -346,7 +357,14 @@ async function extractMain(cache) {
     if (hit.kind !== 'declarator' || hit.node.init?.type !== 'CallExpression' || hit.node.init.callee.name !== 'require' || hit.node.init.arguments[0]?.value !== wanted.require)
       throw Error(`${spec.file}: ${namespace} is no longer require(${JSON.stringify(wanted.require)})`);
   }
-  const reads = freeMemberReads(`({${methods.map(m => m.text).join(',')}});`, spec.file);
+  // Chunk-level constants the methods read whole: each an original top-level declarator, sliced with its feature.
+  const constants = Object.entries(spec.constants ?? {}).map(([name, { feature }]) => {
+    const hit = topLevel(chunk, name);
+    const declaration = text(chunk, hit.node);
+    if (hit.kind !== 'declarator' || declaration !== feature) throw Error(`${spec.file}: ${name} is no longer ${feature}`);
+    return { name, declaration };
+  });
+  const reads = freeMemberReads(`(${constants.length ? `(${constants.map(c => c.name).join(', ')}) => ` : ''}({${methods.map(m => m.text).join(',')}}));`, spec.file);
   if (JSON.stringify(Object.keys(reads).sort()) !== JSON.stringify(Object.keys(spec.namespaces).sort())) throw Error(`${spec.file}: the methods read ${Object.keys(reads).join(',')}`);
   for (const [namespace, members] of Object.entries(reads))
     if (JSON.stringify(members) !== JSON.stringify([...spec.namespaces[namespace].members].sort())) throw Error(`${spec.file}: the methods read ${namespace}.${members.join(',')}`);
@@ -371,11 +389,18 @@ async function extractMain(cache) {
     looseOnce(dep.code, caller.needle, caller.file);
     callers.push({ ...caller, sourceSha256: sha(dep.bytes) });
   }
+  // Each namespace member is the rebuilt original of that chunk's export, or the host's runner for the git runner's chunk;
+  // a member nothing answers stops generation (it would otherwise be emitted as `undefined`).
   const by = Object.fromEntries(main.functions.map(fn => [`${fn.file}:${fn.exported}`, fn.as]));
-  const namespaceValues = {
-    u: `{ n: ${by['index.chunk-DXSKLguD.js:n']} }`, s: `{ r: ${by['index.chunk-CArOlz-X.js:r']} }`,
-    i: '{ v: host.configRead }', a: `{ a: ${by['index.chunk-C3tnPGuy.js:a']}, o: ${by['index.chunk-C3tnPGuy.js:o']} }`,
-  };
+  const namespaceValues = Object.fromEntries(Object.entries(spec.namespaces).map(([namespace, wanted]) => {
+    const file = wanted.require.replace(/^\.\//, '');
+    const members = wanted.members.map(member => {
+      const value = file === main.host.file && member === main.host.exported ? 'host.configRead' : by[`${file}:${member}`];
+      if (!value) throw Error(`${spec.file}: nothing answers ${namespace}.${member} (${file} exports.${member})`);
+      return `${member}: ${value}`;
+    });
+    return [namespace, `{ ${members.join(', ')} }`];
+  }));
   const header = `// Original Claude Desktop ${referenceVersion} main-process code; generated by ${generator} — do not edit.\n`
     + `// ${spec.file} GitStatusService (exports.${spec.exported}) isBranchOnOrigin / pushLeavesOriginRef, verbatim, behind the desktop's\n`
     + `// LocalSessions.isBranchOnOrigin(cwd, branch) (${main.callers[0].file} → gitStatus). host: { git: { runGit(args, cwd, timeoutMs) → stdout,\n`
@@ -383,6 +408,7 @@ async function extractMain(cache) {
     + `// → a refusal or null, isKnownNonGitDir(cwd) → boolean }.\n`;
   const factory = `function createBranchOnOrigin(host) {\n`
     + Object.entries(spec.namespaces).map(([namespace, wanted]) => `// ${namespace} = require("${wanted.require}")\nconst ${namespace} = ${namespaceValues[namespace]};`).join('\n')
+    + constants.map(c => `\n// ${spec.file} top-level const ${c.declaration}\nconst ${c.declaration};`).join('')
     + `\nreturn {\nrequireTrustedCwd: host.requireTrustedCwd,\nisKnownNonGitDir: host.isKnownNonGitDir,\ngit: host.git,\n${methods.map(m => m.text).join(',\n')}\n};\n}`;
   const exportsList = ['createBranchOnOrigin', ...main.functions.map(fn => fn.as)];
   const out = await format(`${header}"use strict";\n${functionBlocks.join('\n')}\n${factory}\nmodule.exports = { ${exportsList.join(', ')} };\n`, { parser: 'babel' });
@@ -391,7 +417,8 @@ async function extractMain(cache) {
   const manifest = {
     referenceVersion, referenceSnapshot, generator, output: electronTarget,
     service: { file: spec.file, sourceSha256: sha(chunk.bytes), class: spec.classBinding, exported: spec.exported,
-      methods: methods.map(m => ({ name: m.name, sha256: sha(m.text) })), namespaces: spec.namespaces, thisMembers: spec.thisMembers },
+      methods: methods.map(m => ({ name: m.name, sha256: sha(m.text) })), namespaces: spec.namespaces, thisMembers: spec.thisMembers,
+      constants: constants.map(c => ({ name: c.name, sha256: sha(c.declaration) })) },
     functions: functionEntries, host: { file: main.host.file, exported: main.host.exported, binding: runner, sourceSha256: sha(host.bytes) },
     callers, exports: exportsList, sha256: sha(out),
   };

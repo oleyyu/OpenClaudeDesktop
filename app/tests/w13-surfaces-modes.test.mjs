@@ -91,7 +91,7 @@ test('SSR: the sidebar passes homeMode to the switch and has no host More ▸ Ch
   const sidebar = source('src/source-sidebar.jsx');
   assert.doesNotMatch(sidebar, /surface-more|surfaceMenu|lastChatSurface/);
   assert.match(sidebar, /\{!collapsed && <SourceAppSwitch mode=\{mode\} homeMode=\{homeMode\} onMode=\{onMode\} chord \/>\}/);
-  assert.match(sidebar, /\{collapsed && <SourceAppSwitch placement="peek" mode=\{mode\} homeMode=\{homeMode\} onMode=\{onMode\} chord \/>\}/);
+  assert.match(sidebar, /\{!frameSlot && collapsed && <SourceAppSwitch placement="peek" mode=\{mode\} homeMode=\{homeMode\} onMode=\{onMode\} chord \/>\}/);
 });
 
 test('main.jsx: startup restore, switchMode and the sidebar follow the 3.6556.2 surface list', () => {

@@ -305,6 +305,22 @@ test('View options lists the folded toggles from the titlebar\x27s count, before
     hasPlan: true,
   });
   assert.deepEqual(unfoldedItems.map((item) => item.kind), ['plan']);
+
+  // 4.16336.0 c73f45bc3 q_: Side chat (Chats, toggleSideChat cmd+;) precedes Background tasks, which carries the
+  // running count; neither row shows without its fact.
+  let sideToggles = 0;
+  const v4 = titlebarViewOptionsItems({ session: true, panes: new Set(['tasks']), sideChatAvailable: true, sideChatShown: true,
+    taskCount: 1, onToggleSideChat: () => { sideToggles += 1; } });
+  assert.deepEqual(v4.map((item) => ({ kind: item.kind, label: item.label, icon: item.icon, checked: item.checked, shortcut: item.shortcut, count: item.count })), [
+    { kind: 'sideChat', label: 'Side chat', icon: 'Chats', checked: true, shortcut: 'cmd+;', count: undefined },
+    { kind: 'tasks', label: 'Background tasks', icon: 'AgentsSimple', checked: true, shortcut: undefined, count: 1 },
+  ]);
+  v4[0].onSelect();
+  assert.equal(sideToggles, 1);
+  assert.deepEqual(titlebarViewOptionsItems({ session: true }), []);
+  const v4Chunk = fs.readFileSync(path.resolve(app, '../reference/snapshots/claude-4.16336.0-20261104/ion-dist/assets/v1/c73f45bc3-C7dtUSq8.js'), 'utf8');
+  assert.ok(v4Chunk.includes('{icon:"Chats",label:o.formatMessage({defaultMessage:"Side chat",id:"0MBP0bdWwx"}),checked:R.shown,checkedRole:"checkbox",shortcut:Ce("toggleSideChat",b),onSelect:R.toggle}'));
+  assert.ok(v4Chunk.includes('checked:p.has("tasks"),checkedRole:"checkbox",count:E,onSelect:n'));
 });
 
 // Generated titlebar targets: every W2 w2-titlebar-current entry reads 3.6556.2, pins the official chunk's bytes, and

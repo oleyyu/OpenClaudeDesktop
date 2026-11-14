@@ -14,7 +14,7 @@ import { React, mount, withEnvironment } from './fixtures/split-tiles-fake-dom.m
 
 const app = path.resolve(import.meta.dirname, '..');
 const v1 = path.resolve(app, '../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1');
-let server, Tiles, Store, Model, Fit, Glue;
+let server, Tiles, Store, Model, Fit, Glue, Line;
 before(async () => {
   server = await createServer({ configFile: false, root: app, plugins: [react()], server: { middlewareMode: true, hmr: false, ws: false, watch: null }, appType: 'custom', logLevel: 'error' });
   Tiles = await server.ssrLoadModule('/src/source-tile-layout.jsx');
@@ -22,6 +22,7 @@ before(async () => {
   Model = await server.ssrLoadModule('/src/tile-layout-model.mjs');
   Fit = await server.ssrLoadModule('/src/generated/code-current/tile-fit-opened.mjs');
   Glue = await server.ssrLoadModule('/src/r4h-glue-decisions.mjs');
+  Line = await server.ssrLoadModule('/src/tile-line-model.mjs');
 });
 after(() => server?.close());
 
@@ -139,9 +140,12 @@ const containerStyle = (element) => {
   const padding = element.style.padding || '0px';
   return { paddingLeft: padding, paddingRight: padding, paddingTop: padding, paddingBottom: padding };
 };
+// The fit math below is pinned at the shared-18 Tb / c_ config (TILE_CONFIG), handed in as a caller's config: since the
+// round3 rl-session-page relink the host's default is the 4.16336.0 line config at every layout (cc43287c9 Eje `Rt = Zf(!0)`,
+// chat-only included), checked separately below.
 const tileLayout = (props) => React.createElement(Tiles.SourceTileLayout, {
   layout: Model.chatOnlyLayout(), onLayoutChange() {}, tiles: tiles(), renderTile: (id) => React.createElement('div', { 'data-tile': id }),
-  hasPane: false, restoreKey: 'A', ...props,
+  hasPane: false, restoreKey: 'A', config: Model.TILE_CONFIG, ...props,
 });
 
 test('mounted, the tile layout registers under its owner; a new owner moves it; unmounting removes only its own host', () => {
@@ -197,6 +201,19 @@ test('the host recurses into nested stacks unless rootRowOnly', () => {
     assert.equal(fitted.root.children[0], nested.root.children[0], 'the root row already fits');
     const rootOnly = store.tileHost('A').fitOpenedLayout(nested, true);
     assert.equal(rootOnly, nested, 'rootRowOnly fits the root row alone');
+    await view.unmount();
+  });
+});
+
+test('without a config the host fits with the 4.16336.0 line config (Eje tn = {...Zf(!0), paddingTop: 0, paddingEnd: padding}), chat-only too', () => {
+  const box = { width: 700, height: 600 };
+  return withEnvironment({ rect: containerRect(box), styleOf: containerStyle }, async (env) => {
+    const store = Store.createTileLayoutStore({ storage: memoryStorage() });
+    const view = await mount(env, tileLayout({ tileHosts: store, config: undefined }));
+    const opened = Model.openPane(Model.chatOnlyLayout(), 'files', {});
+    const line = Line.lineTileConfig();
+    assert.equal(line.divider, 'line');
+    assert.deepEqual(store.fitOpenedLayout('A', opened), Fit.fitOpenedLayout({ layout: opened, containerWidth: 700, splitConfig: { ...line, borderPx: line.borderPx ?? 0 }, tileById, rootRowOnly: false }));
     await view.unmount();
   });
 });

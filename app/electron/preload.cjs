@@ -4,6 +4,10 @@ const { contextBridge, ipcRenderer, webUtils } = require("electron");
 // nativeTheme. A failure leaves the renderer on its media-query fallback.
 let appearance = null;
 try { appearance = ipcRenderer.sendSync("desktop:appearance") ?? null; } catch {}
+// window.desktopHomePath (4.16336.0 mainView.js preload: `let{homePath:e,...r}=JSON.parse(managedConfig);…
+// exposeInMainWorld("desktopHomePath",e)` inside a try): main answers the same homePath with the first-paint payload, so
+// it is in place before cd8a7d7c0 evaluates its home store u = $v(l()) (src/generated/code-routines-v4).
+try { if (typeof appearance?.homePath === "string" && appearance.homePath !== "") contextBridge.exposeInMainWorld("desktopHomePath", appearance.homePath); } catch {}
 // Electron prefixes every rejection with its transport ("Error invoking remote method 'desktop:call': Error: …"):
 // unwrapped here, once, so no component ever shows it (src/action-error-model.mjs cleanErrorReason, the same pattern).
 const IPC_PREFIX = /^Error invoking remote method '[^']+': (?:Error: )?/gm;
@@ -31,6 +35,12 @@ contextBridge.exposeInMainWorld("desktop", {
     if (filePath) ipcRenderer.send("desktop:attachment-path", filePath);
     return filePath;
   },
+  // U-2: the claude-media:// URL main mints for one local image / video / audio / PDF (main.cjs desktop:media-url over
+  // session-media.cjs, the official SessionMedia T_o); null when main refuses the path. The page never names file://.
+  mediaUrl: (filePath) => {
+    if (typeof filePath !== "string" || filePath === "") return null;
+    try { const url = ipcRenderer.sendSync("desktop:media-url", filePath); return typeof url === "string" ? url : null; } catch { return null; }
+  },
   onEvent: (handler) => {
     const listener = (_e, event) => handler(event);
     ipcRenderer.on("desktop:event", listener);
@@ -46,5 +56,19 @@ contextBridge.exposeInMainWorld("desktop", {
       ipcRenderer.on("terminal:event", listener);
       return () => ipcRenderer.removeListener("terminal:event", listener);
     },
+  },
+});
+// claude.windowVibrancy (official mainView.js preload: `e["claude.windowVibrancy"].WindowVibrancy = {showUnderSidebar,
+// clear, tintUnderSidebar, clearTintUnderSidebar}`, each an ipcRenderer.invoke of the eipc channel): the page's
+// globalThis["claude.windowVibrancy"].WindowVibrancy (shared-22 rz) reaches main.cjs window-vibrancy.cjs over one host
+// channel. Every method answers a promise, as the official ones do; main answers false (or nothing) for a window that
+// cannot show the material, and this build has no glass add-on, so glass and its tint are always told no.
+const WINDOW_VIBRANCY = "claude.windowVibrancy:WindowVibrancy";
+contextBridge.exposeInMainWorld("claude.windowVibrancy", {
+  WindowVibrancy: {
+    showUnderSidebar: (request) => ipcRenderer.invoke(WINDOW_VIBRANCY, "showUnderSidebar", request),
+    clear: () => ipcRenderer.invoke(WINDOW_VIBRANCY, "clear"),
+    tintUnderSidebar: (tint) => ipcRenderer.invoke(WINDOW_VIBRANCY, "tintUnderSidebar", tint),
+    clearTintUnderSidebar: () => ipcRenderer.invoke(WINDOW_VIBRANCY, "clearTintUnderSidebar"),
   },
 });

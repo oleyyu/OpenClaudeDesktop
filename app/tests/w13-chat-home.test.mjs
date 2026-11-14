@@ -23,7 +23,8 @@ const sha = bytes => createHash('sha256').update(bytes).digest('hex');
 const h = React.createElement;
 const text = html => html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
 
-globalThis.document ??= { body: { nodeType: 1 }, head: { appendChild() {} }, createElement: () => ({ relList: { supports: () => false }, setAttribute() {}, style: {} }),
+// W8-M9 stub contract (round4 integration, stub fields only): cds-core 9203795f reads these at load (official 4.16336.0): document.cookie.
+globalThis.document ??= { cookie: '' /* W8-M9: shared-0 CQ / Wo document.cookie */, body: { nodeType: 1 }, head: { appendChild() {} }, createElement: () => ({ relList: { supports: () => false }, setAttribute() {}, style: {} }),
   querySelector: () => null, querySelectorAll: () => [], getElementById: () => null, addEventListener() {}, removeEventListener() {},
   documentElement: { dataset: {}, getAttribute: () => null, hasAttribute: () => false } };
 globalThis.window ??= { document: globalThis.document, navigator: { userAgent: 'Mozilla/5.0 (Macintosh)' }, addEventListener() {}, removeEventListener() {},
@@ -65,7 +66,9 @@ function clientCall(component, props, contexts = new Map()) {
 // w13-close-chat-composer (chatui-home-02): Fy's `div { className: fg }` (shared-19 Wx) frames My; the helper returns
 // the framed My element after checking the frame.
 const clientGreeting = (greetings = [], props = {}) => {
-  const frame = clientCall(home.ChatGreetingText, props, new Map([[adapters.ChatGreetingHost, { greetings }]]));
+  // surfaces-prod home-chat-cowork: the 3.6556.2 greeting is kept as ChatGreetingTextV3 (main.jsx mounts the 4.16336.0
+  // ChatGreetingText, tests/home-v4.test.mjs) until the screenshot acceptance retires it.
+  const frame = clientCall(home.ChatGreetingTextV3, props, new Map([[adapters.ChatGreetingHost, { greetings }]]));
   assert.equal(frame.type, 'div');
   assert.equal(frame.props.className, 'mx-auto flex w-full flex-col items-center gap-7 max-md:pt-4 max-w-2xl');
   return frame.props.children;

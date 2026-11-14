@@ -5,7 +5,7 @@ import { SourceSwitch } from './source-switch.jsx';
 import { SourceDialog, SourceDialogFooter } from './source-dialog.jsx';
 import { Icon } from './icons';
 import { CdsRadioGroup } from './generated/view-tabs/index.js';
-import { MemoryPreviewContent } from './generated/chat-knowledge/index.mjs';
+import { MemoryPreviewContent } from './generated/chat-knowledge-v4/index.mjs';
 import { ChatMemoryHostContext } from './source-chat-knowledge-adapters.jsx';
 import { getLocale, t } from '../electron/i18n/index.mjs';
 

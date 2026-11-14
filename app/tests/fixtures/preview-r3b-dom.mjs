@@ -252,6 +252,9 @@ export function createPreviewDom() {
   const window = Object.assign(Object.create(events), {
     document, innerWidth: 1200, innerHeight: 800, devicePixelRatio: 2, ResizeObserver, MutationObserver,
     HTMLIFrameElement: class {}, HTMLElement: Element, Element, Node, Text,
+    // W8 stub contract: 4.16336.0 cds-core ce574895a (the rail's path fit) checks `"getBoundingClientRect" in
+    // Range.prototype` once a ResizeObserver exists; a browser has Range. Nothing here lays text out, so it measures 0.
+    Range: class Range { getBoundingClientRect() { return { x: 0, y: 0, top: 0, left: 0, right: 0, bottom: 0, width: 0, height: 0 }; } selectNodeContents() {} setStart() {} setEnd() {} getClientRects() { return []; } },
     getComputedStyle: () => ({ direction: 'ltr', getPropertyValue: () => '', fontSize: '16px', overflowX: 'visible', overflowY: 'visible' }),
     matchMedia: query => ({ media: query, matches: false, addEventListener() {}, removeEventListener() {}, addListener() {}, removeListener() {} }),
     // Frames run on setImmediate, so a test that mocks setTimeout still gets them.

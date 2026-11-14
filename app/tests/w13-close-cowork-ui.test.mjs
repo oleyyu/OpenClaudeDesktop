@@ -241,7 +241,24 @@ test('home-gates-01: hT is "no policy = unavailable" everywhere the host reaches
       if (/desktopHome\?\.status/.test(text)) hits.push(`${dir}/${file}`);
     }
   }
-  assert.deepEqual(hits, [], 'no copy of hT');
+  // round6 integration (real-c): was `assert.deepEqual(hits, [], 'no copy of hT')`. Since addendum D (stage 14d) the nav graph
+  // slices the official hub first-look boundary (shared-20 DC: `o = kv() || n`), whose closure carries the 4.16336.0 copy of hT
+  // verbatim: shared-123 `function kv(){return q()?.desktopHome?.status==="supported"}` over the official appFeatures store q.
+  // Exactly that one copy is allowed; it stays "no policy = unavailable" because the host's 4.16 getSupportedFeatures table
+  // (host-app-features.mjs hostSupportedFeaturesV4, main.jsx supportedFeatures) never carries desktopHome.
+  assert.deepEqual(hits, ['frame-sidebar-nav/shared-123.mjs'], 'only the official 4.16336.0 shared-123 kv copy of hT');
+  const navCopy = await read('src/generated/frame-sidebar-nav/shared-123.mjs');
+  assert.match(navCopy, /function kv\(\) \{\n  return q\(\)\?\.desktopHome\?\.status === "supported";\n\}/);
+  assert.equal(navCopy.match(/desktopHome/g).length, 1);
+  const official123 = (await fs.readdir(path.resolve(appDir, '../reference/snapshots/claude-4.16336.0-20261104/ion-dist/assets/v1'))).filter(name => /^shared-123-.*\.js$/.test(name));
+  assert.equal(official123.length, 1);
+  assert.ok((await fs.readFile(path.resolve(appDir, '../reference/snapshots/claude-4.16336.0-20261104/ion-dist/assets/v1', official123[0]), 'utf8'))
+    .includes('function kv(){return q()?.desktopHome?.status==="supported"}'));
+  const { HOST_APP_FEATURES, hostAppFeatures, hostSupportedFeaturesV4 } = await import('../src/host-app-features.mjs');
+  for (const table of [HOST_APP_FEATURES, hostAppFeatures(null), hostSupportedFeaturesV4(null), hostSupportedFeaturesV4({ capabilities: { btwChildSessions: true } })])
+    assert.equal(Object.hasOwn(table, 'desktopHome'), false, `host appFeatures answers no desktopHome: ${JSON.stringify(table)}`);
+  assert.match(await read('src/main.jsx'), /supportedFeatures: hostSupportedFeaturesV4\(/);
+  assert.doesNotMatch(await read('src/main.jsx'), /desktopHome\s*:/);
   const home = JSON.parse(await read('src/generated/cowork-home/manifest.json'));
   assert.ok(JSON.stringify(home).includes('useDesktopHomeSupported'));
   assert.match(await read('src/source-cowork-home-v3-adapters.jsx'), /export const useDesktopHomeSupported = \(\) => false;/);

@@ -10,7 +10,7 @@ import { SourceMarkdown } from "./source-session.jsx";
 import { localizeBridgeText } from "./bridge-text-model.mjs";
 // W12b: the 3.6556.2 usage band's live reset countdown (c227f4d5e QF) and the notice card context its card look
 // provides around the headline and detail (aL `E(ZF.Provider, { value: !0, children: [T, D] })`).
-import { UsageNoticeCardContext, UsageResetCountdown } from "./generated/usage-countdown/usage-countdown.mjs";
+import { UsageNoticeCardContext, UsageResetCountdown } from "./generated/usage-countdown-v4/index.mjs";
 import { InlineBand } from "./generated/session-rail/inline-band.mjs";
 import { persistedStorageKey, writePersisted } from "./generated/r3b-settings/persisted-store.mjs";
 import { KX as workflowTaskLabel } from "./generated/code-transcript/shared-156-BLTosN8U.mjs";
@@ -99,8 +99,8 @@ const noticeButton = (action) => <CdsButton key={action.label} variant="secondar
 function NoticeBody({ notice, noticeKey: key }) {
   return <UsageNoticeCardContext.Provider value={true}>
     <p className="ssn-summary"><bdi>{noticeInline(noticeText(notice))}</bdi></p>
-    {/* A reached usage limit (composerUsageNotice countdown): its text, then the reset as the band's QF, which
-        ticks within the hour before it and reads the absolute VI time to assistive tech. */}
+    {/* A reached usage limit (composerUsageNotice countdown): its text, then the reset as 4.16336.0 SQ (inside the xQ
+        card context): the absolute text until the minute clock passes the reset, then Resetting…; sr-only absolute. */}
     {notice.countdown ? <p className="ssn-details"><bdi>{notice.countdown.lead ? <>{noticeInline(notice.countdown.lead)}{" "}</> : null}<UsageResetCountdown
       resetsAtSeconds={notice.countdown.resetsAtSeconds} absolute={notice.countdown.absolute} /></bdi></p>
     /* Model-written details (a /recap answer) arrive as Markdown: render them like a reply, in a bounded scroller

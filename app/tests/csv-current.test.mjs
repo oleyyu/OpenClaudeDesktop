@@ -7,11 +7,20 @@ import react from '@vitejs/plugin-react';
 import path from 'node:path';
 import fs from 'node:fs';
 import { viewTabsManifestFor } from '../scripts/view-tabs-compat.mjs';
+import { designEntryStylesheets } from '../scripts/current-design-assets.mjs';
 import { parseCsvPreview } from '../src/generated/code-current/csv-parser.mjs';
 import { v as isMissing, b as number, E as dateValue, re as columnType, ie as sortedRows, ae as searchRows, oe as filteredRows, ue as numericColumns } from '../src/generated/code-current/csv-model.mjs';
 
 const officialDir = path.resolve(import.meta.dirname, '../../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1');
 const officialCsv = 'cd5fd9055-BXQRn_nx.js';
+// The loaded @layer utilities sheet: the current design's c6a992d55 entry sheet (current-design-assets.mjs), which
+// index.html links. The CSV slice is still the 3.6556.2 region; the classes it renders must resolve in the loaded sheet.
+const utilitiesSheet = designEntryStylesheets.find(name => name.startsWith('c6a992d55-'));
+const loadedUtilities = () => {
+  assert.ok(utilitiesSheet, 'the current design pins a c6a992d55 utilities sheet');
+  assert.ok(fs.readFileSync(path.resolve(import.meta.dirname, '../index.html'), 'utf8').includes(`<link rel="stylesheet" href="/assets/v1/${utilitiesSheet}" />`));
+  return fs.readFileSync(path.resolve(import.meta.dirname, '../public/assets/v1', utilitiesSheet), 'utf8');
+};
 
 let server, Csv, Breadcrumb;
 before(async () => {
@@ -143,7 +152,7 @@ test('3.6556.2 cd5fd9055 b: footnotes and the unsorted sort button are text-mute
   assert.match(empty, /<input[^>]*aria-label="Filter rows"[^>]*aria-controls="x-table"/);
   assert.doesNotMatch(empty, /aria-label="Clear"/, 'clearable shows the X only with a value');
   assert.match(field('a'), /<button type="button" data-cds="Button"[^>]*aria-label="Clear"/);
-  assert.match(fs.readFileSync(path.resolve(import.meta.dirname, '../public/assets/v1/c6a992d55-Che1orl5.css'), 'utf8'), /\.w-56\{width:calc\(var\(--spacing\) \* 56\)\}/);
+  assert.match(loadedUtilities(), /\.w-56\{width:calc\(var\(--spacing\) \* 56\)\}/);
 
   const document = renderToStaticMarkup(React.createElement(Csv, { text: 'name,count\na,1\nb,2', delimiter: ',', presentation: 'document', truncatedUpstream: true }));
   assert.match(document, /<span class="text-footnote text-muted-as-secondary tabular-nums" aria-live="polite">2 rows<\/span>/);
@@ -159,7 +168,7 @@ test('3.6556.2 cd5fd9055 b: footnotes and the unsorted sort button are text-mute
   const pane = renderToStaticMarkup(React.createElement(Csv, { text: 'a,b\nx,y', delimiter: ',', truncatedUpstream: true }));
   assert.match(pane, /<p id="[^"]+-tail" class="text-footnote text-muted-as-secondary px-0\.75">/);
   // The class is an official @layer utilities rule; no unlayered local rule targets the CSV text or the class.
-  assert.match(fs.readFileSync(path.resolve(import.meta.dirname, '../public/assets/v1/c6a992d55-Che1orl5.css'), 'utf8'), /\.text-muted-as-secondary\{color:var\(--muted-as-secondary,var\(--cds-text-muted\)\)\}/);
+  assert.match(loadedUtilities(), /\.text-muted-as-secondary\{color:var\(--muted-as-secondary,var\(--cds-text-muted\)\)\}/);
   const srcDir = path.resolve(import.meta.dirname, '../src');
   for (const file of fs.readdirSync(srcDir).filter(name => name.endsWith('.css')))
     assert.doesNotMatch(fs.readFileSync(path.join(srcDir, file), 'utf8').replace(/\/\*[\s\S]*?\*\//g, ''), /\.text-muted-as-secondary|epitaxy-document-csv|data-file-preview=["']?csv/, file);

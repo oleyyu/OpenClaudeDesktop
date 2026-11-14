@@ -111,7 +111,8 @@ test("menus:C6 — the Fast row keeps official _w's unavailable forms: accent xx
   const server = await createServer({ configFile: false, root, plugins: [react()], server: { middlewareMode: true, hmr: false, ws: false, watch: null }, appType: "custom", logLevel: "error" });
   t.after(() => server.close());
   const { SourceModelMenu, fastRowUnavailable } = await server.ssrLoadModule("/src/source-model-menu.jsx");
-  const { CdsBadge } = await server.ssrLoadModule("/src/generated/view-tabs/index.js");
+  // host-wiring/chat: the Fast row's CTA badge is the 4.16336.0 cds-core Badge (src/source-model-menu.jsx imports the facade).
+  const { CdsBadge } = await server.ssrLoadModule("/src/cds-core.mjs");
 
   // The derivation (yw): an available tier has none; a disabled tier that is off is greyed, or carries the CTA when there
   // is an intent handler and a selection notice; the tier that is on is never greyed.

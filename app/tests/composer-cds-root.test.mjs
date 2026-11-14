@@ -15,6 +15,7 @@ import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
 import { appSheets, computed, element, find, loadCascade, parseMarkup } from './fixtures/transcript-css-cascade.mjs';
 import { withMemoCache } from './support/react-memo-cache.mjs';
+import { designEntryStylesheets } from '../scripts/current-design-assets.mjs';
 
 const app = path.resolve(import.meta.dirname, '..');
 const generated = path.join(app, 'src/generated/code-composer');
@@ -95,15 +96,25 @@ test('main.jsx wraps the Code composer (renderMainComposer) in the view-tabs Cds
   const start = main.indexOf('const renderMainComposer = ({ notices = false } = {}) => ('); // r4 shell: the Code notice stack option
   const body = main.slice(start, main.indexOf('\n  );\n', start));
   // R4g-composer CP4 (X7-10): experimental is the Code pane's (generated shared-18 Ub), which the image tiles read.
-  assert.match(body, /^const renderMainComposer = \(\{ notices = false \} = \{\}\) => \(\n    <CdsRoot density=\{themeDensity\(boot\?\.config\)\} font=\{cdsFont\} platform="desktop" experimental=\{codePaneExperimental\} className="contents">\n    <SourceComposer\n/);
-  assert.equal(main.split('import { codePaneExperimental } from "./generated/code-composer/code-pane-experimental.mjs";').length - 1, 1);
-  assert.ok(body.endsWith('    />\n    </CdsRoot>'), 'the root closes right after the composer');
+  // host-wiring root: right inside it the 4.16336.0 CdsRoot (cds-core facade) with the same props, its font the
+  // 4.16336.0 token (shared-92 Ox: "anthropic" | "system"), so cds-core controls under the composer read the same values.
+  // rl-main-entry U-1: the 3.6556.2 root and main.cds-root take the window root's resolved density (shared-frame Ja, host-wiring-root.test.mjs).
+  assert.match(body, /^const renderMainComposer = \(\{ notices = false \} = \{\}\) => \(\n    <CdsRoot density=\{windowDensity\} font=\{cdsFont\} platform="desktop" experimental=\{codePaneExperimental\} className="contents">\n    <CdsCoreRoot density=\{themeDensity\(boot\?\.config\)\} font=\{cdsCoreFont\} platform="desktop" experimental=\{codePaneExperimental\} className="contents">\n    <SourceComposer\n/);
+  // surfaces-prod-3 composer (host cutover): experimental is now the 4.16336.0 Code pane's (shared-18 BC, the same
+  // { naturalImageTiles: "sized" }), from the isolated -v4 graph the cut-over composer subtree links.
+  assert.equal(main.split('import { codePaneExperimental } from "./generated/code-composer-v4/code-pane-experimental.mjs";').length - 1, 1);
+  assert.equal(main.split('import { codePaneExperimental } from "./generated/code-composer/code-pane-experimental.mjs";').length - 1, 0);
+  assert.equal(main.split('import { CdsRoot as CdsCoreRoot } from "./cds-core.mjs";').length - 1, 1);
+  assert.equal(main.split('const cdsCoreFont = prefs.interfaceFont === "anthropic" ? "anthropic" : "system";').length - 1, 1);
+  assert.ok(body.endsWith('    />\n    </CdsCoreRoot>\n    </CdsRoot>'), 'both roots close right after the composer');
   // No mode (the store follows html[data-mode]), no pageBackground (main.cds-root keeps .cds-root's --cds-page-bg).
-  const open = body.slice(0, body.indexOf('>') + 1);
-  for (const prop of ['mode=', 'pageBackground=', 'labels=']) assert.ok(!open.includes(prop), prop);
+  for (const open of body.split('\n').slice(1, 3)) {
+    assert.match(open, /^ {4}<Cds(Core)?Root /);
+    for (const prop of ['mode=', 'pageBackground=', 'labels=']) assert.ok(!open.includes(prop), prop);
+  }
   // main.cds-root carries the same three attributes the root repeats.
   // W14-code r4 r4pa-c03 (c5638815a Ct / cccc2cf0a kT): a popped-out pane window's root adds epitaxy-pane-window.
-  assert.match(main, /className=\{"workspace epitaxy-root cds-root" \+ \(paneWindowPopout \? " epitaxy-pane-window" : ""\)\}\n\s+data-density=\{themeDensity\(boot\?\.config\)\}\n\s+data-font=\{cdsFont\}\n\s+data-platform="desktop"/);
+  assert.match(main, /className=\{"workspace epitaxy-root cds-root" \+ \(paneWindowPopout \? " epitaxy-pane-window" : ""\)\}\n\s+data-density=\{windowDensity \/\* U-1: c11959232 j_'s root as xo resolves it \(Ja\), see above \*\/\}\n\s+data-font=\{cdsFont\}\n\s+data-platform="desktop"/);
   // Only main.jsx renders a CdsRoot among the host sources (the sidebar dialogs' generated ones aside), and, since
   // R4i-graph GR3, the /btw side-session pane around its composer (tests/composer-pane-drop.test.mjs pins it), and,
   // since w11-e31-terminal-cont, the terminal pane around its close confirmation (3.6556.2 cccc2cf0a Zx Ie: shared-frame
@@ -115,17 +126,26 @@ test('main.jsx wraps the Code composer (renderMainComposer) in the view-tabs Cds
   // the preview close-tabs dialog (3.6556.2 cf580efe9 va: `r(Pe,{children:r(E.Root,{open:f,…`, Pe = shared-18 Qd = fx).
   // w13-close-chat-surface (E77): and the incognito top bar's Exit incognito (3.6556.2 shared-20 Qg:
   // `i(ne,{mode:b,className:"contents",children:x})`, b the opposite of the resolved mode; source-incognito-shell.jsx).
+  // chat-header 4.16336.0: that root is now the sliced shared-20 Ix's (generated/chat-header/top-bar.mjs
+  // `i(O,{mode:b,className:"contents",children:x})`), so source-incognito-shell.jsx draws none and falls under the check below.
   // W14-code r6 git R6DC-03 (gen-final-6 syncs this pin): and the branch switch dialog (3.6556.2 cc43287c9 Jie wraps
   // he.Root in ap = shared-18 fx: `m(Ce,{density:"compact",experimental:lx,className:"contents",children:t})`).
   // W14-code r8 (r8pa-02): source-file-editor.jsx has two fx roots — the selection chip and, as cbd02b8f2 portals each
   // comment widget (`n(oe,{children:n("div",{dir:Je,className:"font-sans whitespace-normal","data-file-comment-card":!0,…})})`), the comment cards.
-  const roots = { 'source-btw-pane.jsx': 1, 'source-terminal-pane.jsx': 1, 'source-side-chat.jsx': 1, 'source-file-editor.jsx': 2, 'source-preview-tabs.jsx': 1, 'source-incognito-shell.jsx': 1, 'source-branch-switch-dialog.jsx': 1 };
+  const roots = { 'source-btw-pane.jsx': 1, 'source-terminal-pane.jsx': 1, 'source-side-chat.jsx': 1, 'source-file-editor.jsx': 2, 'source-preview-tabs.jsx': 1, 'source-branch-switch-dialog.jsx': 1 };
   for (const file of fs.readdirSync(path.join(app, 'src')).filter((f) => /\.(jsx|mjs|js)$/.test(f) && f !== 'main.jsx' && !(f in roots)))
     assert.doesNotMatch(fs.readFileSync(path.join(app, 'src', file), 'utf8'), /<CdsRoot\b|createElement\(CdsRoot|h\(CdsRoot/, file);
   for (const [file, count] of Object.entries(roots))
     assert.equal(fs.readFileSync(path.join(app, 'src', file), 'utf8').split('<CdsRoot ').length - 1, count, file);
   assert.match(fs.readFileSync(path.join(app, 'src/source-terminal-pane.jsx'), 'utf8'), /<CdsRoot density="comfortable" className="contents">/);
   assert.match(fs.readFileSync(path.join(app, 'src/source-side-chat.jsx'), 'utf8'), /<CdsRoot density="compact" className="contents">/);
+  // host-wiring code-b: qF's compact root is both graphs' — the view-tabs root (ViewTabsCdsRoot) for the 3.6556.2 readers
+  // in the body, and inside it the cds-core root for the 4.16336.0 header controls; same density, same className.
+  const sideChat = fs.readFileSync(path.join(app, 'src/source-side-chat.jsx'), 'utf8');
+  assert.match(sideChat, /import \{ CdsRoot as ViewTabsCdsRoot, CdsSurface, useCdsDensity \} from '\.\/generated\/view-tabs\/index\.js';/);
+  assert.match(sideChat, /import \{ CdsButton, CdsRoot, CdsTooltip \} from '\.\/cds-core\.mjs';/);
+  assert.equal(sideChat.split('<ViewTabsCdsRoot density="compact" className="contents"><CdsRoot density="compact" className="contents">').length - 1, 1);
+  assert.equal(sideChat.split('</CdsRoot></ViewTabsCdsRoot>').length - 1, 1);
   assert.match(fs.readFileSync(path.join(app, 'src/source-file-editor.jsx'), 'utf8'), /<CdsRoot density="compact" experimental=\{CHIP_ROOT_EXPERIMENTAL\} className="contents">/);
   assert.match(fs.readFileSync(path.join(app, 'src/source-preview-tabs.jsx'), 'utf8'), /<CdsRoot density="compact" experimental=\{codePaneExperimental\} className="contents">/);
 });
@@ -142,8 +162,10 @@ test('SSR: the root is div.cds-root.text-primary.contents with the repeated attr
   const wrapper = find(root, (n) => n.attrs?.class === 'cds-root text-primary contents');
   const color = computed(cascade, wrapper, 'color');
   assert.equal(color.value, 'var(--cds-text-primary)');
-  assert.equal(color.from?.sheet, 'public/assets/v1/c6a992d55-Che1orl5.css');
-  assert.match(fs.readFileSync(path.join(app, 'public/assets/v1/c6a992d55-Che1orl5.css'), 'utf8'), /\.contents\{display:contents\}/);
+  // The official c6a992d55 utilities entry sheet index.html loads (current-design-assets: 4.16336.0 c6a992d55-_JRfOmTh).
+  const official = `public/assets/v1/${designEntryStylesheets.find((name) => name.startsWith('c6a992d55-'))}`;
+  assert.equal(color.from?.sheet, official);
+  assert.match(fs.readFileSync(path.join(app, official), 'utf8'), /\.contents\{display:contents\}/);
 });
 
 // ---------------------------------------------------------------- the original root, store and readers, driven

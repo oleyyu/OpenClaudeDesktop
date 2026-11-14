@@ -22,7 +22,7 @@ before(async () => {
     server: { middlewareMode: true, hmr: false, ws: false, watch: null }, appType: 'custom', logLevel: 'error' });
   shared = await server.ssrLoadModule('/src/generated/routines-shared/index.mjs');
   adapters = await server.ssrLoadModule('/src/source-routines-shared-adapters.jsx');
-  ({ createIntl } = await server.ssrLoadModule('/src/generated/chat/vendor-intl-DYfox5Co.js'));
+  ({ createIntl } = await server.ssrLoadModule('/src/generated/chat/vendor-intl-BJgYK7RA.js'));
 });
 after(() => server?.close());
 

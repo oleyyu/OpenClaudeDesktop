@@ -222,7 +222,9 @@ test('uL Dialog + lYe: md, titled Export data, Conversations from with All / 30 
 });
 
 test('Custom (lYe / cYe / c71ba149d): the DateRangeSelector under the period row, 180 days back to today, Export disabled while the range is invalid', async () => {
-  const { DateRangeSelector } = await server.ssrLoadModule('/src/generated/chat-export/date-range-selector.mjs');
+  // Round 3 S1 cutover: the host imports the 4.16336.0 graph (src/generated/chat-export-v4, c71ba149d u); the 3.6556.2
+  // graph below stays byte-identical on disk and its pins are still checked.
+  const { DateRangeSelector } = await server.ssrLoadModule('/src/generated/chat-export-v4/date-range-selector.mjs');
   const today = '2026-10-28';
   const render = (from, to, exported = []) => shallow(Privacy.ExportDataDialog, { open: true, today, onClose() {}, onExport: (period, range) => exported.push([period, range]) }, ['custom', from, to]);
   const exported = [];
@@ -242,7 +244,7 @@ test('Custom (lYe / cYe / c71ba149d): the DateRangeSelector under the period row
   }
   render.last = render('2026-10-01', '2026-10-01');
   assert.equal(confirm().props.disabled, false, 'a single day');
-  // The selector SSR-renders the official From / To fields (c71ba149d u → cb499b8fa c → cowork-scheduled cff2bf6cb nu).
+  // The selector SSR-renders the official From / To fields (4.16336.0 c71ba149d u → cb499b8fa c → cowork-scheduled-v4 cff2bf6cb nu).
   const html = renderToStaticMarkup(React.createElement(range.type, range.props));
   assert.match(html, /^<div class="flex gap-md">/);
   assert.equal((html.match(/data-cds="Field"/g) ?? []).length, 2);

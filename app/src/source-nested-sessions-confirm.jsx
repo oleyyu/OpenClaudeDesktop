@@ -17,7 +17,8 @@
 // main.jsx's sessionAction fills and this component drains.
 import React, { useEffect, useRef, useSyncExternalStore } from "react";
 import { SourceDialog, SourceDialogFooter } from "./source-dialog.jsx";
-import { CdsButton } from "./generated/view-tabs/index.js";
+// host-wiring/chat (4.16336.0): the dialog's Buttons (busy / disabledReason as before) are the cds-core graph's.
+import { CdsButton } from "./cds-core.mjs";
 import { WorktreeChecking } from "./generated/files-changes/worktree-checking.mjs";
 import { t } from "../electron/i18n/index.mjs";
 import { createStartIntl } from "./source-code-start-adapters.jsx";

@@ -56,7 +56,9 @@ import { hookRunOutcome } from "./state.js";
 import { forkMarkerPlacements, officialSessionRecords } from "./code-transcript-sessions.mjs";
 import { t } from "../electron/i18n/index.mjs";
 import { TurnStatus } from "./generated/working-line/turn-status.mjs";
-import { CdsIcon } from "./generated/view-tabs/shared-frame-6jtSkIit.js";
+// host-wiring code-a: the scheduled check-in label's Clock is the 4.16336.0 cds-core Icon (semantic facade). The label is
+// a host element handed to working-line's TurnStatus.Step as a value; with an explicit size the Icon reads no Context.
+import { CdsIcon } from "./cds-core.mjs";
 import { QueryClientProvider } from "./generated/files-changes/file-browser-query.mjs";
 import { fileBrowserQueryClient } from "./source-breadcrumb-adapters.jsx";
 import { SessionScopeContext } from "./generated/transcript-rows/rows-cd96b5fdc-ByQr-Uye.mjs";
@@ -71,6 +73,7 @@ import { hostGrowthBookFlag } from "./host-growthbook.mjs";
 import { TranscriptLiveScopeContext } from "./generated/transcript-rows/turn-mark.mjs";
 import { chapterStore, chaptersByAnchor, seedChapterTitle, sessionChapterState } from "./session-chapters-model.mjs";
 import { useChapterStoreState } from "./source-chapters.jsx";
+import { localMediaUrl } from './local-media-url.mjs';
 
 const NO_CHAPTERS = Object.freeze([]);
 const NO_TASKS = Object.freeze([]);
@@ -85,7 +88,8 @@ export function containedImageSource(path, cwd = null) {
   if (!value) return null;
   if (/^(?:https?:|data:image\/)/i.test(value)) return value;
   const absolute = value.startsWith("/") ? value : cwd ? `${cwd.replace(/\/$/, "")}/${value}` : null;
-  return absolute ? fileUrlOf(absolute) : null;
+  // U-2: the claude-media:// URL main mints for the file (src/local-media-url.mjs); file:// is never loaded by the page.
+  return absolute ? localMediaUrl(absolute) : null;
 }
 
 // W14-code r7 R7T-05: a local path's file URL, each segment percent-encoded (encodeURIComponent), so a file name holding
@@ -577,7 +581,12 @@ export function partRowId(part, entry, fallback) {
  */
 export function partRowIds(part, entry) {
   if (!part || part.isFirst) return [];
-  const item = rendererItemOfKey(part.turnKey, part.itemKey, entry?.items ?? []);
+  // integration-3 review-1 (React #520 on the start card's first send): lP also splits an entry the renderer does not draw
+  // yet (index >= rendererEntryCount) through WN into `assistantItem` rows, which carry the item itself and no itemKey
+  // (TM's key argument is always a string in the official caller: `p = f === "" ? (d?.key ?? "") : f`). Such a part
+  // names its own item; a row with neither draws no host row.
+  const item = part.kind === "assistantItem" ? part.item
+    : typeof part.itemKey === "string" ? rendererItemOfKey(part.turnKey, part.itemKey, entry?.items ?? []) : undefined;
   const owns = item?.kind === "tools" ? (item.tools ?? []).map((tool) => tool?.hostItem?.id ?? String(tool?.id ?? "").replace(/#\d+$/, "")) : [item?.id];
   const out = [];
   for (const own of owns) {

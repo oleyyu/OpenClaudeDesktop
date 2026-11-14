@@ -1,0 +1,546 @@
+{
+  "referenceVersion": "4.16336.0",
+  "referenceSnapshot": "snapshots/claude-4.16336.0-20261104",
+  "generator": "scripts/extract-cowork-context-v4.mjs",
+  "adapterModule": "src/source-cowork-context-v4-adapters.jsx",
+  "linkedAreas": [
+    "cowork-progress-v4",
+    "cowork-runs-v4",
+    "cowork-session-states-v4",
+    "cowork-session-actions",
+    "cowork-live-v4",
+    "routines-shared-v4"
+  ],
+  "sharedGraph": "cds-core",
+  "modules": [
+    {
+      "target": "shared-33.mjs",
+      "source": "shared-33-DtdykY0y.js",
+      "sourceSha256": "1fcaa039b040c657e69517217d0defa2cf5c92cb4485911ea9b3d3698dcaa7a9",
+      "sha256": "a66bb5b7f44d5a42cf4b50ab0e1d5fa6f3e85f74ce25cddb15295f4f21022d76",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "yR",
+          "sha256": "aa9acadb1a911237500ed4f4aef9585318f1c34b28cc395cf94c0a109e1d58db"
+        },
+        {
+          "name": "bR",
+          "sha256": "c4c217e2963ada9eef38e4773d19ad3a88b0bb69272e6b97d18cd13987451097"
+        }
+      ],
+      "initializers": [],
+      "imports": [
+        {
+          "local": "C",
+          "from": "react",
+          "name": "useContext",
+          "via": "vendor-frame-BckkO60Y.js:po",
+          "kind": "react"
+        },
+        {
+          "local": "S",
+          "from": "react",
+          "name": "createContext",
+          "via": "vendor-frame-BckkO60Y.js:no",
+          "kind": "react"
+        }
+      ],
+      "exports": {},
+      "sharedExports": [
+        "bR"
+      ],
+      "heldByViewTabs": []
+    },
+    {
+      "target": "c21f11e6d.mjs",
+      "source": "c21f11e6d-Cyj5xu_D.js",
+      "sourceSha256": "447d453f1060221fbc7dba61a01b4b2ecff7fc10d1fbcd7a060e2a7269045145",
+      "sha256": "afe9d84c645ee13437df260819772068f42b4c7659705ec6ff42d156ed008ae0",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "jT",
+          "sha256": "d8093f46cde8c8cc3a62f20ba7cdb845498166561f20550d0800bf02909464f1"
+        },
+        {
+          "name": "MT",
+          "sha256": "bade3aaf0cba103eafcf47d4188b11a7aacb2f15abc862351b7bf9e0e1c10ee8"
+        },
+        {
+          "name": "NT",
+          "sha256": "6ba87a4efeb0e3117af810159da5334b5090819245321d2fa9e1def6f774c266"
+        },
+        {
+          "name": "PT",
+          "sha256": "fdc266c9e0b6707e00f7e9927a9b1fbf15a49dd58851280b150b0460e271a8a5"
+        },
+        {
+          "name": "FT",
+          "sha256": "e01460f7b6ce85e770511a2dde932373e54a20153d34c421410d7e4ef2fde8ae"
+        },
+        {
+          "name": "rE",
+          "sha256": "23f42cf230e86bbe523c6bdd0367b118f17597f3eb8e7afaf7f7ac97df65ca4c"
+        },
+        {
+          "name": "sE",
+          "sha256": "d39b9f0ba2bc447e4f663c88c3348bb91a88a522922da86ecad3df729ac6350f"
+        },
+        {
+          "name": "mE",
+          "sha256": "dbffd71f0801023a7de0c4c28458bb232ae522725637f5b5d5cd130a5144f7c1"
+        },
+        {
+          "name": "hE",
+          "sha256": "a3acd917035cc945904b19d0693e089d98f1a60995d89bd559bb7ccc465fc3d3"
+        },
+        {
+          "name": "gE",
+          "sha256": "681fa42aaaf82864d8cdf41b34055f76b8b0fc7ad33b03ad8650da3c1f166ee5"
+        }
+      ],
+      "initializers": [],
+      "imports": [
+        {
+          "local": "$g",
+          "from": "../cowork-progress-v4/cc5a62f6f.mjs",
+          "name": "k",
+          "via": "cc5a62f6f-CsfnfFRu.js:i",
+          "kind": "linked",
+          "original": "k"
+        },
+        {
+          "local": "D",
+          "from": "../cds-core/vendor-frame.mjs",
+          "name": "useDirection",
+          "via": "vendor-frame-BckkO60Y.js:xa",
+          "kind": "shared-graph",
+          "original": "Xn"
+        },
+        {
+          "local": "E",
+          "from": "react",
+          "name": "useRef",
+          "via": "vendor-frame-BckkO60Y.js:wo",
+          "kind": "react"
+        },
+        {
+          "local": "Ff",
+          "from": "./shared-33.mjs",
+          "name": "bR",
+          "via": "shared-33-DtdykY0y.js:Lr",
+          "kind": "generated"
+        },
+        {
+          "local": "I1",
+          "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+          "name": "I1",
+          "via": "shared-frame-CJdE5Ria.js:rm",
+          "kind": "linked",
+          "original": "I1"
+        },
+        {
+          "local": "I2",
+          "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+          "name": "I2",
+          "via": "shared-frame-CJdE5Ria.js:im",
+          "kind": "linked",
+          "original": "I2"
+        },
+        {
+          "local": "I3",
+          "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+          "name": "I3",
+          "via": "shared-frame-CJdE5Ria.js:am",
+          "kind": "linked",
+          "original": "I3"
+        },
+        {
+          "local": "I4",
+          "from": "../cds-core/shared-frame.mjs",
+          "name": "I4",
+          "via": "shared-frame-CJdE5Ria.js:om",
+          "kind": "shared-graph",
+          "original": "I4"
+        },
+        {
+          "local": "IT",
+          "from": "../../source-cowork-context-v4-adapters.jsx",
+          "name": "CoworkSuggestedConnectors",
+          "via": "c21f11e6d-Cyj5xu_D.js#IT",
+          "kind": "adapter",
+          "original": "IT"
+        },
+        {
+          "local": "Id",
+          "from": "../routines-shared-v4/shared-6-2QYRw_Wv.mjs",
+          "name": "iA",
+          "via": "shared-6-2QYRw_Wv.js:Kt",
+          "kind": "linked",
+          "original": "iA"
+        },
+        {
+          "local": "J0",
+          "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+          "name": "J0",
+          "via": "shared-frame-CJdE5Ria.js:cm",
+          "kind": "linked",
+          "original": "J0"
+        },
+        {
+          "local": "J1",
+          "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+          "name": "J1",
+          "via": "shared-frame-CJdE5Ria.js:lm",
+          "kind": "linked",
+          "original": "J1"
+        },
+        {
+          "local": "J2",
+          "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+          "name": "J2",
+          "via": "shared-frame-CJdE5Ria.js:um",
+          "kind": "linked",
+          "original": "J2"
+        },
+        {
+          "local": "J3",
+          "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+          "name": "J3",
+          "via": "shared-frame-CJdE5Ria.js:dm",
+          "kind": "linked",
+          "original": "J3"
+        },
+        {
+          "local": "J4",
+          "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+          "name": "J4",
+          "via": "shared-frame-CJdE5Ria.js:fm",
+          "kind": "linked",
+          "original": "J4"
+        },
+        {
+          "local": "J5",
+          "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+          "name": "J5",
+          "via": "shared-frame-CJdE5Ria.js:pm",
+          "kind": "linked",
+          "original": "J5"
+        },
+        {
+          "local": "J8",
+          "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+          "name": "J8",
+          "via": "shared-frame-CJdE5Ria.js:mm",
+          "kind": "linked",
+          "original": "J8"
+        },
+        {
+          "local": "J9",
+          "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+          "name": "J9",
+          "via": "shared-frame-CJdE5Ria.js:hm",
+          "kind": "linked",
+          "original": "J9"
+        },
+        {
+          "local": "Jf",
+          "from": "../routines-shared-v4/shared-33-DtdykY0y.mjs",
+          "name": "Cb",
+          "via": "shared-33-DtdykY0y.js:nl",
+          "kind": "linked",
+          "original": "Cb"
+        },
+        {
+          "local": "K0",
+          "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+          "name": "K0",
+          "via": "shared-frame-CJdE5Ria.js:gm",
+          "kind": "linked",
+          "original": "K0"
+        },
+        {
+          "local": "K1",
+          "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+          "name": "K1",
+          "via": "shared-frame-CJdE5Ria.js:_m",
+          "kind": "linked",
+          "original": "K1"
+        },
+        {
+          "local": "K2",
+          "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+          "name": "K2",
+          "via": "shared-frame-CJdE5Ria.js:vm",
+          "kind": "linked",
+          "original": "K2"
+        },
+        {
+          "local": "K3",
+          "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+          "name": "K3",
+          "via": "shared-frame-CJdE5Ria.js:ym",
+          "kind": "linked",
+          "original": "K3"
+        },
+        {
+          "local": "K4",
+          "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+          "name": "K4",
+          "via": "shared-frame-CJdE5Ria.js:bm",
+          "kind": "linked",
+          "original": "K4"
+        },
+        {
+          "local": "K5",
+          "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+          "name": "K5",
+          "via": "shared-frame-CJdE5Ria.js:xm",
+          "kind": "linked",
+          "original": "K5"
+        },
+        {
+          "local": "Kb",
+          "from": "../cowork-live-v4/c21f11e6d.mjs",
+          "name": "CoworkInAppBrowserSection",
+          "via": "c21f11e6d-Cyj5xu_D.js#Kb",
+          "kind": "linked",
+          "original": "Kb"
+        },
+        {
+          "local": "O",
+          "from": "react",
+          "name": "useLayoutEffect",
+          "via": "vendor-frame-BckkO60Y.js:xo",
+          "kind": "react"
+        },
+        {
+          "local": "Q",
+          "from": "../../source-cowork-context-v4-adapters.jsx",
+          "name": "FormattedMessage",
+          "via": "vendor-intl-BJgYK7RA.js:l",
+          "kind": "adapter",
+          "original": "Gt"
+        },
+        {
+          "local": "Qy",
+          "from": "../../source-cowork-context-v4-adapters.jsx",
+          "name": "CoworkAddFolderAction",
+          "via": "c21f11e6d-Cyj5xu_D.js#Qy",
+          "kind": "adapter",
+          "original": "Qy"
+        },
+        {
+          "local": "S",
+          "from": "react",
+          "name": "useEffect",
+          "via": "vendor-frame-BckkO60Y.js:go",
+          "kind": "react"
+        },
+        {
+          "local": "St",
+          "from": "../cds-core/shared-25.mjs",
+          "name": "getResizeObserverClass",
+          "via": "shared-25-D-aF0gt9.js:Up",
+          "kind": "shared-graph",
+          "original": "bd"
+        },
+        {
+          "local": "Y",
+          "from": "../cds-core/shared-frame.mjs",
+          "name": "CdsIcon",
+          "via": "shared-frame-CJdE5Ria.js:lf",
+          "kind": "shared-graph",
+          "original": "Bs"
+        },
+        {
+          "local": "Z1",
+          "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+          "name": "Z1",
+          "via": "shared-frame-CJdE5Ria.js:Sm",
+          "kind": "linked",
+          "original": "Z1"
+        },
+        {
+          "local": "_",
+          "from": "react",
+          "name": "useState",
+          "via": "vendor-frame-BckkO60Y.js:To",
+          "kind": "react"
+        },
+        {
+          "local": "ae",
+          "from": "../cds-core/shared-frame.mjs",
+          "name": "CdsTooltip",
+          "via": "shared-frame-CJdE5Ria.js:cd",
+          "kind": "shared-graph",
+          "original": "Kp"
+        },
+        {
+          "local": "cd",
+          "from": "../../source-cowork-context-v4-adapters.jsx",
+          "name": "ConnectorServerIcon",
+          "via": "shared-36-fqRFYwOb.js:Hi",
+          "kind": "adapter",
+          "original": "Db"
+        },
+        {
+          "local": "eC",
+          "from": "../cowork-progress-v4/c21f11e6d.mjs",
+          "name": "eC",
+          "via": "c21f11e6d-Cyj5xu_D.js#eC",
+          "kind": "linked",
+          "original": "eC"
+        },
+        {
+          "local": "f",
+          "from": "../cds-core/vendor-frame.mjs",
+          "name": "clsx",
+          "via": "vendor-frame-BckkO60Y.js:Fa",
+          "kind": "shared-graph",
+          "original": "ke"
+        },
+        {
+          "local": "h",
+          "from": "react/jsx-runtime",
+          "name": "jsxs",
+          "via": "vendor-frame-BckkO60Y.js:Ka",
+          "kind": "react"
+        },
+        {
+          "local": "iC",
+          "from": "../../source-cowork-context-v4-adapters.jsx",
+          "name": "CoworkRemoteContextSources",
+          "via": "c21f11e6d-Cyj5xu_D.js#iC",
+          "kind": "adapter",
+          "original": "iC"
+        },
+        {
+          "local": "iE",
+          "from": "../cowork-progress-v4/c21f11e6d.mjs",
+          "name": "iE",
+          "via": "c21f11e6d-Cyj5xu_D.js#iE",
+          "kind": "linked",
+          "original": "iE"
+        },
+        {
+          "local": "iT",
+          "from": "../../source-cowork-context-v4-adapters.jsx",
+          "name": "CoworkContextKindGroups",
+          "via": "c21f11e6d-Cyj5xu_D.js#iT",
+          "kind": "adapter",
+          "original": "iT"
+        },
+        {
+          "local": "mT",
+          "from": "../../source-cowork-context-v4-adapters.jsx",
+          "name": "CoworkMountedProjects",
+          "via": "c21f11e6d-Cyj5xu_D.js#mT",
+          "kind": "adapter",
+          "original": "mT"
+        },
+        {
+          "local": "p",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-BckkO60Y.js:Ga",
+          "kind": "react"
+        },
+        {
+          "local": "qn",
+          "from": "../cds-core/shared-123.mjs",
+          "name": "id",
+          "via": "shared-123-1Hc1RTKl.js:JC",
+          "kind": "shared-graph",
+          "original": "id"
+        },
+        {
+          "local": "sT",
+          "from": "../../source-cowork-context-v4-adapters.jsx",
+          "name": "CoworkContextKindGroupsWithBrowser",
+          "via": "c21f11e6d-Cyj5xu_D.js#sT",
+          "kind": "adapter",
+          "original": "sT"
+        },
+        {
+          "local": "su",
+          "from": "../../source-cowork-context-v4-adapters.jsx",
+          "name": "useIntl",
+          "via": "vendor-intl-BJgYK7RA.js:p",
+          "kind": "adapter",
+          "original": "q"
+        },
+        {
+          "local": "t_",
+          "from": "../cowork-progress-v4/cc5a62f6f.mjs",
+          "name": "CoworkPanelSection",
+          "via": "cc5a62f6f-CsfnfFRu.js:n",
+          "kind": "linked",
+          "original": "R"
+        },
+        {
+          "local": "v",
+          "from": "react/jsx-runtime",
+          "name": "Fragment",
+          "via": "vendor-frame-BckkO60Y.js:Wa",
+          "kind": "react"
+        },
+        {
+          "local": "x",
+          "from": "react",
+          "name": "memo",
+          "via": "vendor-frame-BckkO60Y.js:co",
+          "kind": "react"
+        }
+      ],
+      "exports": {
+        "gE": "CoworkContextSection",
+        "FT": "CoworkSuggestedConnectorsCard"
+      },
+      "sharedExports": [],
+      "heldByViewTabs": []
+    }
+  ],
+  "callSites": [
+    {
+      "source": "c21f11e6d-Cyj5xu_D.js",
+      "role": "The activity panel xE mounts gE (when the Context section is shown, ja) with the session context props",
+      "sourceSha256": "447d453f1060221fbc7dba61a01b4b2ecff7fc10d1fbcd7a060e2a7269045145",
+      "raw": true,
+      "features": [
+        "ja&&p(gE,{groupContextByKind:Ne,isContextExpanded:Ar,setIsContextExpanded:Mr,contextSeedSnap:Ao,conversationUuid:K,sessionId:q,isRemote:Xr,headerHostedToggle:X,mountedProjects:oe,hasContextActivity:ga,browserRowInContext:ya,hasContextUploads:va,contextUploads:je,onRevealStep:Vn,canRevealStep:I,coworkBrowserEnabled:bi,contextResourceActivity:Oi,handleContextActivityClick:es,handleKindRowSkillOpen:ts,selectedPath:Mi,coworkBrowserPreviewId:yi,isCoworkBrowserPaneOpen:Si,handleToggleCoworkBrowserPane:zo,contextLeadRows:M,persistedUserSelectedFolders:ae,contextSources:hi,userSelectedFolders:J,handleContextSourceFileClick:qi,handleContextChipProjectClick:Ki,hasContextCardContent:ba})"
+      ]
+    },
+    {
+      "source": "c21f11e6d-Cyj5xu_D.js",
+      "role": "xE takes groupContextByKind as an optional prop defaulting to false (the kind groups sT / iT stay unmounted)",
+      "sourceSha256": "447d453f1060221fbc7dba61a01b4b2ecff7fc10d1fbcd7a060e2a7269045145",
+      "raw": true,
+      "features": [
+        "groupContextByKind:L,perSession:R",
+        "Ne=L!==void 0&&L"
+      ]
+    },
+    {
+      "source": "c21f11e6d-Cyj5xu_D.js",
+      "role": "The empty body hE renders the suggested connectors IT under the illustration body mE",
+      "sourceSha256": "447d453f1060221fbc7dba61a01b4b2ecff7fc10d1fbcd7a060e2a7269045145",
+      "raw": true,
+      "features": [
+        "children:[o,p(IT,{availableHeight:n})]"
+      ]
+    },
+    {
+      "source": "c21f11e6d-Cyj5xu_D.js",
+      "role": "IT returns null without directory servers, else renders the FT card",
+      "sourceSha256": "447d453f1060221fbc7dba61a01b4b2ecff7fc10d1fbcd7a060e2a7269045145",
+      "raw": true,
+      "features": [
+        "Xe=O.length>0;if(!T||!Xe||y||He||ze||Le.length===0||Ke)return null;",
+        "p(FT,{isReady:Ze,hasAppeared:E,setHasAppeared:D,connectors:Ye,clickedConnectors:C,isPending:Qe,handleDismiss:De,handleAddConnector:Oe,handleSeeAllConnectors:Ae,isCycling:Je,showDescription:qe})"
+      ]
+    }
+  ],
+  "publicAssets": []
+}

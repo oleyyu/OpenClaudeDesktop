@@ -4,8 +4,11 @@
 // chips — the title (eight words at most; the full title and tldr in the tooltip) and an X — then 'See # more', which
 // opens the whole list. Taking a task puts its prompt in the message box and takes it off the list; X deletes it.
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-// W14-code r6 R6DC-02: cc43287c9 Hse / Bse / Gse buttons are shared-frame Uu (`B`), the chip is the joined ButtonGroup (`Oe`).
-import { CdsButton, CdsButtonGroup } from "./generated/view-tabs/shared-frame-6jtSkIit.js";
+// W14-code r6 R6DC-02: cc43287c9 Hse / Bse / Gse buttons are the CDS Button (`B`), the chip is the joined ButtonGroup (`Oe`).
+// host-wiring code-b: the chip (joined ButtonGroup and its two Buttons), the dialog rows (Bse) and 'See # more' (Gse) are the
+// 4.16336.0 cds-core originals (shared-frame-CJdE5Ria, semantic facade), so the chip Buttons read the new ButtonGroup's
+// Context (size / buttonVariant / joined).
+import { CdsButton, CdsButtonGroup } from "./cds-core.mjs";
 import { SourceTooltip } from "./source-tooltip.jsx";
 import { SourceDialog } from "./source-dialog.jsx";
 import { BACKLOG_CHIPS, BACKLOG_LIMIT, TAKE_GUARD_MS, backlogDetail, backlogTitle, chipLabel, restoreItem, withoutItem } from "./task-backlog-model.mjs";

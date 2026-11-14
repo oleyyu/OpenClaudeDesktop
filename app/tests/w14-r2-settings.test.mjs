@@ -49,10 +49,14 @@ test('r2-shared-06 official: Zv body, Sy/Cy nested state, xy drag strip, wy 3xl,
   for (const [name, value] of [['BODY_CLASS', ZV], ['NESTED_OVERLAY_CLASS', SY], ['NESTED_BLUR_CLASS', CY], ['POPUP_TRANSITION_CLASS', MY]])
     assert.ok(dialog.includes(`const ${name} = "${value}";`), name);
   assert.ok(dialog.includes(`const BACKDROP_CLASS = "${HY} starting:opacity-0"; // Q(hy, gy)`));
-  // W14-code r6 sh6-03: the close X and Cancel / Confirm are shared-frame Uu, imported straight from the shared-frame
-  // file (E41), never through the view-tabs index facade.
-  assert.doesNotMatch(dialog, /generated\/view-tabs\/index/);
-  assert.match(dialog, /import \{ CdsButton \} from "\.\/generated\/view-tabs\/shared-frame-6jtSkIit\.js";/);
+  // 4.16336.0 host wiring (frame): the close X and Cancel / Confirm are the cds-core Button (shared-frame-CJdE5Ria Xu; the
+  // 4.16336.0 dialog close / confirmation parts still draw `v(Xu,{variant:"ghost",iconOnly:!0,icon:"X",…,tooltip:!1`),
+  // through the cds-core facade, never through the view-tabs graph.
+  assert.doesNotMatch(dialog, /generated\/view-tabs/);
+  assert.match(dialog, /import \{ CdsButton \} from "\.\/cds-core\.mjs";/);
+  const frame4 = fs.readFileSync(path.join(app, '../reference/snapshots/claude-4.16336.0-20261104/ion-dist/assets/v1/shared-frame-CJdE5Ria.js'), 'utf8');
+  assert.ok(frame4.includes('v(Xu,{variant:"ghost",iconOnly:!0,icon:"X","aria-label":'));
+  assert.equal(JSON.parse(fs.readFileSync(path.join(app, 'src/generated/cds-core/manifest.json'), 'utf8')).publicNames.CdsButton.local, 'Xu');
 });
 
 test('r2-shared-06 SSR: portal > [backdrop, drag strip, popup > Zv body > header, content, footer]; the popup has no padding of its own', () => {
@@ -164,7 +168,8 @@ test('DC-12: the rewind confirm counts use the CDS git colours without the 2.x f
 test('r6 git R6DC-03: the branch-switch dialog is cc43287c9 Jie on CdsAlertDialog + CdsSplitDropdownButton + CdsButton', async () => {
   const source = read('src/source-branch-switch-dialog.jsx');
   for (const line of [
-    'import { CdsAlertDialog, CdsButton, CdsRoot, CdsSplitDropdownButton } from "./generated/view-tabs/index.js";',
+    // 4.16336.0 host wiring (frame): the dialog's own Root and every CDS part are the cds-core graph.
+    'import { CdsAlertDialog, CdsButton, CdsRoot, CdsSplitDropdownButton } from "./cds-core.mjs";',
     '<CdsRoot density="compact" experimental={codePaneExperimental} className="contents">',
     '<CdsAlertDialog.Root open={open} onOpenChange={onOpenChange} onOpenChangeComplete={(next) => { if (!next) onExited?.(); }}>',
     '<CdsAlertDialog.Popup className="epitaxy-root break-words max-w-[30rem]" initialFocus={cancelRef}>',

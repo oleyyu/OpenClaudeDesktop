@@ -1,11 +1,14 @@
 import React,{forwardRef,useImperativeHandle,useLayoutEffect,useRef,useState} from 'react';
-// 3.6556.2 c6bf19e8f rn (the terminal find bar), by view-tabs semantic names (R6 facade): u = CdsSurface (shared-frame
+// 3.6556.2 c6bf19e8f rn (the terminal find bar), by semantic names (view-tabs R6 facade; cds-core since host-wiring code-b): u = CdsSurface (shared-frame
 // Dl = cg, published by w11-e31-terminal-cont), v = CdsTextInput (vs), d = CdsButton (Eu), _ = CdsTooltipProvider (ql),
 // m = useCdsLayerAwareZIndex(13) (cu, Xt). The Surface gives the root data-cds="Surface" data-surface="panel", the
 // panel class (ig, forced-colors border included), its sg style variables (Za surface vars and the theme focus shadows)
 // under rn's style, and the CdsSurfaceContext value "surface-2" for its children. `fe` spreads `{[N]: ""}`, N being
 // shared-156 Ln = "data-escape-owner" (proposal-group slices it as the official export Ln).
-import {CdsButton,CdsSurface,CdsTextInput as TextInput,CdsTooltipProvider,useCdsLayerAwareZIndex,useCdsOwnerWindow} from './generated/view-tabs/index.js';
+// host-wiring code-b: all of them are the 4.16336.0 cds-core originals now (shared-frame-CJdE5Ria, semantic facade; wave-2
+// apiChanges records Surface and the two hooks unchanged, and TextInput's server markup for these props is byte-equal), so
+// the bar's controls, its Surface Context and its TooltipProvider are one graph.
+import {CdsButton,CdsSurface,CdsTextInput as TextInput,CdsTooltipProvider,useCdsLayerAwareZIndex,useCdsOwnerWindow} from './cds-core.mjs';
 import {Ln as escapeOwnerAttribute} from './generated/proposal-group/shared-156-BLTosN8U.js';
 import {ownerWindow} from './generated/code-current/owner-window.mjs';
 import {isMacUserAgent} from './generated/code-current/surface-chord-platform.mjs';

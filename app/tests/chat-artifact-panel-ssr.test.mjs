@@ -113,6 +113,8 @@ test('main.jsx: the chip replaces an artifacts call’s row in a Chat, and the p
   // w13-chatui-artifact-inline: the row is the official artifact block (tests/w13-chat-artifact-card.test.mjs), opening the panel.
   assert.match(main, /<SourceChatArtifactCard rows=\{displayedItems\} index=\{index\} threadId=\{current\}/);
   assert.match(main, /mode === 'chat' && current && section === 'new' && chatArtifact\?\.threadId === current && <SourceChatArtifactPanel/);
-  // R6: the panel takes CDS by semantic name from the facade.
-  assert.match(local('src/source-chat-artifact-panel.jsx'), /import \{ CdsButton, CdsDropdown, CdsIcon, CdsSplitDropdownButton \} from '\.\/generated\/view-tabs\/index\.js';/);
+  // host-wiring code-a: the panel takes CDS by semantic name from the 4.16336.0 cds-core facade (R6), none from view-tabs.
+  const panelSource = local('src/source-chat-artifact-panel.jsx');
+  assert.match(panelSource, /import \{ CdsButton, CdsDropdown, CdsIcon, CdsSplitDropdownButton \} from '\.\/cds-core\.mjs';/);
+  assert.doesNotMatch(panelSource, /generated\/view-tabs/);
 });

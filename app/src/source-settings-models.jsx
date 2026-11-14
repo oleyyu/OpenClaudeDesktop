@@ -28,10 +28,12 @@ import { SettingsGroup, settingRow } from './source-settings-kit.jsx';
 import { effortName, filterModels, isHighestEffort, MODEL_SEARCH_THRESHOLD } from './model-menu-model.mjs';
 import { DEEPSEEK_KEYS_URL } from './account-settings-model.mjs';
 import { t } from '../electron/i18n/index.mjs';
+// Whether two Base URLs share an origin (scheme, host, port): where a saved key may still go. Blank or invalid: no.
+const sameOrigin = (a, b) => { try { return new URL(String(a).trim()).origin === new URL(String(b).trim()).origin; } catch { return false; } };
 import {
   normalize, parseNumberInput, setModelParam, modelParamsFor, effectivePrices, setPrice, addPrice, removePrice, resetPrices, priceEdited,
   PRICE_TIERS, PRICE_FIELDS, MAX_TOKENS_MIN, MAX_TOKENS_MAX, PROVIDER_PROTOCOLS, validateProvider,
-  relayBaseURLError, OFFICIAL_BASE_URL, coreTakesModelParams, parseTokenCount, CONTEXT_WINDOW_MIN, CONTEXT_WINDOW_MAX,
+  relayBaseURLError, OFFICIAL_BASE_URL, coreTakesModelParams, parseTokenCount, CONTEXT_WINDOW_MIN, CONTEXT_WINDOW_MAX, providerForModel,
 } from '../electron/prefs/model-settings.mjs';
 import { CODEX_LOCAL_SERVERS, codexBaseURLError, codexLocalEndpoint, parseCodexModels } from '../electron/prefs/codex-provider.mjs';
 import { fastTierForModel, speedTiersForModel } from '../electron/preferences.mjs';
@@ -48,8 +50,6 @@ const FIELD_LABELS = { cacheHit: t('Cache hit'), cacheMiss: t('Cache miss'), out
 const DEFAULT_PRICING_URL = 'https://api-docs.deepseek.com/zh-cn/quick_start/pricing';
 // Above Settings (layer 500), like the other Settings page dialogs.
 const SETTINGS_LAYER = Object.freeze({ base: 520, z: 520 });
-// Settings › Models: up to this many listed models open their option rows at first.
-const MODEL_ENTRIES_OPEN = 4;
 const PROTOCOL_LABELS = { 'openai-completions': 'OpenAI Chat Completions', 'openai-responses': 'OpenAI Responses', 'anthropic-messages': 'Anthropic Messages' };
 
 // Which listed models accept images: one toggle chip per id. The cores attach images only for a model marked here.
@@ -220,7 +220,10 @@ function ConnectionGroup({ deepseek, desktopCall, onReconnect }) {
     || (relay && relayImages.join('\n') !== (view.relayImageModels || []).join('\n'))
     || (relay && windowsKey(draft.relayContextWindows, relayIds) !== windowsKey(windowsText(view.relayContextWindows), relayIds))
     || !!draft.officialKey.trim() || !!draft.relayKey.trim());
-  const canSave = dirty && !disabled && (!relay || (!relayBaseURLError(draft.relayBaseURL) && (view.relayKey || draft.relayKey.trim())));
+  // The saved relay key goes only to the relay it was saved for (model-settings.cjs connection-save drops it for another
+  // origin): a Base URL on another host needs its own key.
+  const relayKeyKept = !!view?.relayKey && sameOrigin(draft.relayBaseURL, view.relayBaseURL);
+  const canSave = dirty && !disabled && (!relay || (!relayBaseURLError(draft.relayBaseURL) && (relayKeyKept || draft.relayKey.trim())));
   const set = key => event => { const value = event.target.value; setError(''); setDraft(current => ({ ...current, [key]: value })); };
   const save = async (payload, key) => {
     setBusy(key); setError('');
@@ -260,8 +263,9 @@ function ConnectionGroup({ deepseek, desktopCall, onReconnect }) {
           spellCheck={false} autoCapitalize="off" autoComplete="off" disabled={disabled} placeholder="https://relay.example.com/anthropic"
           aria-invalid={urlError ? true : undefined} data-invalid={urlError ? '' : undefined} onChange={set('relayBaseURL')}/>,
         urlError ? { below: <span className="ss-row-error">{urlError}</span> } : {}),
-      settingRow('connection-relay-key', t('API key'), view?.relayKey ? t('Saved encrypted on this Mac. Type a new key to replace it.') : t('The key your relay issued.'),
-        keyInput('relayKey', view?.relayKey, t('Relay API key'))),
+      settingRow('connection-relay-key', t('API key'), relayKeyKept ? t('Saved encrypted on this Mac. Type a new key to replace it.')
+        : view?.relayKey ? t('The saved key is for another relay. Enter this relay’s key.') : t('The key your relay issued.'),
+        keyInput('relayKey', relayKeyKept, t('Relay API key'))),
       settingRow('connection-relay-models', t('Models'), t('The model ids your relay serves, one per line. They replace DeepSeek’s in the model menu; leave empty if the relay uses deepseek-flash and deepseek-v4-pro.'),
         <SourceSettingsButton size="sm" disabled={disabled || !!relayBaseURLError(draft.relayBaseURL) || !(view?.relayKey || draft.relayKey.trim())} busy={busy === 'models'} onClick={() => void fetchModels()}>{t('Fetch from relay')}</SourceSettingsButton>,
         { below: <textarea data-cds="TextArea" className="cds-input cds-reset msx-relay-models" aria-label={t('Relay model ids')} rows={4} value={draft.relayModels}
@@ -413,7 +417,10 @@ export function CodexConnectionGroup({ core, desktopCall, onReconnect, initialVi
   try { modelIds = parseCodexModels(draft.models); } catch (failure) { modelError = failure.message; }
   // A local model server on this Mac (LM Studio, Ollama) takes no key.
   const local = custom && !!baseURL && !urlError && codexLocalEndpoint(baseURL);
-  const typedKey = draft.apiKey.trim(), keyReady = !!view?.hasKey || !!typedKey || local;
+  // The saved key goes only to the endpoint it was saved for (model-settings.cjs codex-provider-save drops it for another
+  // origin); a typed key or a keyless local server otherwise.
+  const keyKept = !!view?.hasKey && (!custom || sameOrigin(baseURL, view.baseURL));
+  const typedKey = draft.apiKey.trim(), keyReady = keyKept || !!typedKey || local;
   // Which local model servers are running (codex-provider-local), asked when Custom endpoint is chosen.
   const [localServers, setLocalServers] = useState(null);
   useEffect(() => {
@@ -471,10 +478,11 @@ export function CodexConnectionGroup({ core, desktopCall, onReconnect, initialVi
           spellCheck={false} autoCapitalize="off" autoComplete="off" disabled={disabled} placeholder="https://relay.example.com/v1"
           aria-invalid={urlError ? true : undefined} data-invalid={urlError ? '' : undefined} onChange={set('baseURL')}/>,
         urlError ? { below: <span className="ss-row-error">{urlError}</span> } : {}),
-      settingRow('codex-api-key', t('API key'), local && !view?.hasKey ? t('Not needed for a model server on this Mac. Leave it empty unless your server asks for one.')
-        : view?.hasKey ? t('Saved encrypted on this Mac. Type a new key to replace it.') : t('The key your endpoint issued. It’s stored encrypted on this Mac and never shown again.'),
+      settingRow('codex-api-key', t('API key'), local && !keyKept ? t('Not needed for a model server on this Mac. Leave it empty unless your server asks for one.')
+        : keyKept ? t('Saved encrypted on this Mac. Type a new key to replace it.') : view?.hasKey ? t('The saved key is for another endpoint. Enter this endpoint’s key.')
+          : t('The key your endpoint issued. It’s stored encrypted on this Mac and never shown again.'),
         <input data-cds="TextInput" className="cds-input cds-reset msx-wide" type="password" aria-label={t('Endpoint API key')} value={draft.apiKey} maxLength={4096}
-          autoComplete="off" spellCheck={false} disabled={disabled} placeholder={view?.hasKey ? `•••••••• ${t('Saved')}` : 'sk-…'} onChange={set('apiKey')}/>),
+          autoComplete="off" spellCheck={false} disabled={disabled} placeholder={keyKept ? `•••••••• ${t('Saved')}` : 'sk-…'} onChange={set('apiKey')}/>),
       settingRow('codex-models', t('Models'), t('The model ids the endpoint serves, one per line. The first one is the default.'),
         <SourceSettingsButton size="sm" disabled={!canProbe} busy={busy === 'models'} onClick={() => void fetchModels()}>{t('Fetch from endpoint')}</SourceSettingsButton>,
         { below: <>
@@ -614,6 +622,35 @@ export function SourceModelsSettings({ config = {}, boot, engine, desktopCall, o
   // the DeepSeek bridge always): elsewhere the rows are left out and the list says so.
   const takesParams = deepseek || modelParams;
   const [nameErrors, setNameErrors] = useState({});
+  // A model a custom provider (or Quick setup) added can be removed here; it leaves the menu when the core restarts.
+  const [removing, setRemoving] = useState(null), [removed, setRemoved] = useState(() => new Set());
+  const removeModel = async (model, owner) => {
+    const rowId = `model-${model.model}-remove`;
+    setRowErrors(value => ({ ...value, [rowId]: null }));
+    try {
+      await providerCall(`remove:${model.model}`, { op: 'provider-remove-model', route: owner.provider.route, id: owner.id });
+      setRemoved(value => new Set(value).add(model.model)); setRemoving(null);
+    } catch (error) { setRowErrors(value => ({ ...value, [rowId]: error?.message || String(error) })); }
+  };
+  const removeRow = (model, name) => {
+    const rowId = `model-${model.model}-remove`;
+    // Removed: the provider no longer lists it, but the running core does until it restarts.
+    if (removed.has(model.model)) return [settingRow(rowId, t('Remove model'), <span role="status">{t('Removed. Restart the core to apply.')}</span>,
+      onReconnect ? <SourceSettingsButton size="sm" variant="primary" onClick={() => { setProviders(value => ({ ...value, changed: false })); void Promise.resolve(onReconnect()).catch(() => {}); }}>{t('Restart core')}</SourceSettingsButton> : null)];
+    const owner = customProviders && providerForModel(providers.providers, model);
+    if (!owner) return [];
+    const providerName = owner.provider.displayName || owner.provider.route;
+    const last = owner.provider.models.length === 1, busy = providerBusy === `remove:${model.model}`;
+    return [settingRow(rowId, t('Remove model'), last
+      ? t('Added with the {provider} provider. It’s that provider’s only model, so the provider and its key are removed too.', { provider: providerName })
+      : t('Added with the {provider} provider. Removing it takes it out of the model menu after the core restarts.', { provider: providerName }),
+      removing === model.model ? <div className="msx-actions">
+          <SourceSettingsButton size="sm" variant="ghost" disabled={busy} onClick={() => setRemoving(null)}>{t('Cancel')}</SourceSettingsButton>
+          <SourceSettingsButton size="sm" variant="danger" busy={busy} aria-label={t('Confirm removing {name}', { name })} onClick={() => void removeModel(model, owner)}>{t('Delete')}</SourceSettingsButton>
+        </div>
+        : <SourceSettingsButton size="sm" disabled={!!providerBusy} aria-label={t('Remove {name}', { name })} onClick={() => setRemoving(model.model)}>{t('Remove…')}</SourceSettingsButton>,
+      below(rowId))];
+  };
   const optionRows = (model, name) => {
     const efforts = effortsOf(model), imagesId = `model-${model.model}-images`, nameId = `model-${model.model}-name`;
     const listedImages = modelAcceptsImages(model), imagesOff = paramsOf(model).images === false;
@@ -636,29 +673,34 @@ export function SourceModelsSettings({ config = {}, boot, engine, desktopCall, o
         settingRow(`model-${model.model}-temperature`, t('Temperature'), t('0–2. Lower is more focused, higher more varied. Empty uses the model’s default.'),
           paramField(model, 'temperature', { label: t('{name} temperature', { name }), min: 0, max: 2, step: 0.1 }), below(`model-${model.model}-temperature`)),
       ] : []),
+      ...removeRow(model, name),
     ];
   };
   // A short list opens every entry; a long catalog (OpenCode through OpenRouter) opens only the models already changed.
-  const listedModels = models.filter(model => model.hidden !== true), openAll = listedModels.length <= MODEL_ENTRIES_OPEN;
+  // U-SET-LITE: entries start closed (one line each) unless something in them was changed.
+  const listedModels = models.filter(model => model.hidden !== true), openAll = false;
   const modelEntries = listedModels.map(model => {
     const defaultName = defaultModelName(model), name = customModelName(config.modelNames, coreId, model.model) || defaultName;
     const efforts = effortsOf(model), speeds = speedTiersForModel(model), fast = !!fastTierForModel(model) || speeds.length > 0;
-    const meta = (efforts.length > 0 || fast) && <span className="msx-model-meta">
-      {efforts.length > 0 && <span><span className="msx-model-meta-label">{t('Reasoning efforts')}</span>{' '}
-        {efforts.map((value, index) => <React.Fragment key={value}>{index ? ' · ' : ''}<span data-top-tier={isHighestEffort(value, efforts) || undefined}>{effortName(value)}</span></React.Fragment>)}</span>}
-      {fast && <span className="msx-badge">{speeds.length > 1 ? t('{speeds} available', { speeds: speeds.map(tier => tier.name).join(' · ') }) : t('Fast available')}</span>}
+    // U-SET-LITE: the efforts as one range chip (the full list in its tooltip) and Fast as a chip, beside the name.
+    const range = efforts.length > 1 ? `${effortName(efforts[0])} – ${effortName(efforts[efforts.length - 1])}` : efforts.length ? effortName(efforts[0]) : '';
+    const aside = (range || fast) && <span className="msx-model-chips">
+      {range && <span className="msx-chip" title={`${t('Reasoning efforts')}: ${efforts.map(effortName).join(' · ')}`}>{range}</span>}
+      {fast && <span className="msx-chip">{speeds.length > 1 ? speeds.map(tier => tier.name).join(' · ') : t('Fast')}</span>}
     </span>;
-    const customized = openAll || Object.keys(paramsOf(model)).length > 0 || name !== defaultName;
-    return <ModelOptionsEntry key={model.model} model={model} name={name} defaultName={defaultName} customized={customized} rows={optionRows(model, name)}
-      badges={<>{model.isDefault && <span className="msx-badge">{t('Default')}</span>}{customModelName(config.modelNames, coreId, model.model) && <span className="msx-badge">{t('Renamed')}</span>}</>}
-      description={(model.description || meta) && <span className="msx-model-desc">{model.description && <span>{model.description}</span>}{meta}</span>}/>;
+    const owner = customProviders && providerForModel(providers.providers, model);
+    const customized = openAll || Object.keys(paramsOf(model)).length > 0 || name !== defaultName || removing === model.model || removed.has(model.model);
+    return <ModelOptionsEntry key={model.model} model={model} name={name} defaultName={defaultName} customized={customized} rows={optionRows(model, name)} aside={aside}
+      badges={<>{model.isDefault && <span className="msx-badge">{t('Default')}</span>}{customModelName(config.modelNames, coreId, model.model) && <span className="msx-badge">{t('Renamed')}</span>}
+        {removed.has(model.model) ? <span className="msx-badge">{t('Removed')}</span>
+          : owner && <span className="msx-badge" title={t('Added with the {provider} provider', { provider: owner.provider.displayName || owner.provider.route })}>{t('Added')}</span>}</>}
+      description={model.description && <span className="msx-model-desc">{model.description}</span>}/>;
   });
   const modelsEmpty = <p className="msx-empty">{modelQuery.trim() && modelSearch ? t('No matching models') : connected ? t('No models are available yet.') : t('Connect to load the model list.')}</p>;
   const modelsSearch = modelSearch && <input type="search" data-cds="TextInput" className="cds-input cds-reset msx-model-search" aria-label={t('Search models')} placeholder={t('Search models')}
     value={modelQuery} spellCheck={false} autoComplete="off" onChange={event => setModelQuery(event.target.value)}/>;
   const modelsGroup = <SettingsGroup title={deepseek ? t('Models') : t('{core} models', { core: coreLabel })}>
     {modelEntries.length ? modelEntries : modelsEmpty}
-    {modelEntries.length > 0 && !takesParams && <p className="msx-note msx-models-note">{t('{core} keeps its own context window and output limits, so they aren’t set here.', { core: coreLabel })}</p>}
   </SettingsGroup>;
 
   // ---- Pricing
@@ -759,7 +801,6 @@ export function SourceModelsSettings({ config = {}, boot, engine, desktopCall, o
     {codexProvider && <CodexConnectionGroup core={coreLabel} desktopCall={desktopCall} onReconnect={onReconnect}/>}
     {modelsSearch}
     {modelsGroup}
-    {modelEntries.length > 0 && <p className="msx-note msx-models-note">{t('Pick the model new sessions use in Settings › Code › Model and permissions, or in the composer. A default effort set here applies whenever you switch to that model.')}</p>}
     {codexProvider && <CodexResponseGroup core={coreLabel} desktopCall={desktopCall} connected={connected}/>}
     {codexProvider && <CodexSubagentsGroup core={coreLabel} desktopCall={desktopCall} connected={connected} models={allModels}/>}
     {!codexProvider && providerGroup}

@@ -1,5 +1,11 @@
 import React, { useEffect, useId, useMemo, useRef, useState } from "react";
-import { CdsCombobox, CdsIcon, CdsTooltip, ariaKeyShortcuts, useIsMacPlatform } from "./generated/view-tabs/index.js";
+// host-wiring code-b: the Go to file Combobox (Root / Trigger / Popup / PopupSearch / List / Item / Status), its Tooltip and
+// the Search Icon are the 4.16336.0 cds-core originals (shared-frame-CJdE5Ria, semantic facade); the 4.16336.0 counterpart
+// (c9bd7af9c) also wraps ee.Trigger in the Tooltip with content and shortcut only, so hoverable stays at the new default
+// (false). ariaKeyShortcuts and useIsMacPlatform have no cds-core name; they are context-free helpers (a pure string
+// mapping and a platform useSyncExternalStore) and stay the view-tabs ones.
+import { ariaKeyShortcuts, useIsMacPlatform } from "./generated/view-tabs/index.js";
+import { CdsCombobox, CdsIcon, CdsTooltip } from "./cds-core.mjs";
 import { FileTypeIcon } from "./generated/files-changes/file-type-icon.mjs";
 import { PathSegments } from "./generated/files-changes/path-segments.mjs";
 import { fileTreeRowGap } from "./generated/files-changes/file-tree-row-classes.mjs";

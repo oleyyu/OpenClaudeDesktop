@@ -47,14 +47,25 @@
 // Not followed (see the w6-rail-host report): `computer`, `addFolder` ("Add repository…", needs the meta query), the
 // plan, artifacts and Nm's plan-drawn context. W14-code r4 shell fr4-12a: the goal is followed now (host.goal, host.editGoal).
 import React, { createContext, useCallback, useContext, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { SessionRailDockedColumn, SessionRailOverlay, SessionRailOpener, RailShownStoreProvider, useRailShown } from "./generated/session-rail-kit/rail-shell.mjs";
+import { SessionRailOverlay, SessionRailOpener, RailShownStoreProvider, useRailShown, useRailWheelHandoff } from "./generated/session-rail-kit/rail-shell.mjs";
 import { useRailFits, RAIL_CHAT_GEOMETRY_CLASS, RAIL_GUTTER_CLASS, RAIL_TITLEBAR_INSET_CLASS, RAIL_CONTAINER_CLASS,
-  RAIL_BAND_PADDING_CLASS, RAIL_OVERFLOW_ATTRIBUTE, releaseFlatComposerMenu } from "./generated/session-rail-kit/rail-layout.mjs";
+  RAIL_BAND_PADDING_CLASS, RAIL_OVERFLOW_ATTRIBUTE, releaseFlatComposerMenu,
+  RAIL_WIDTH_CLASS, RAIL_FLAT_ATTRIBUTE, RailFlatContext } from "./generated/session-rail-kit/rail-layout.mjs";
+import { RAIL_COLUMN_ATTRIBUTE, RAIL_OVERLAY_SHIFT_CLASS } from "./generated/session-rail-kit/rail-column.mjs";
+import { LazySessionRailHost } from "./source-session-rail-kit-adapters.jsx";
 import { useRailFlat } from "./generated/session-rail-kit/rail-card.mjs";
 import { createStore, useStore } from "./generated/session-rail-kit/react-store.mjs";
 import { RailFolderRow } from "./generated/session-rail-kit/rail-rows.mjs";
 import { SessionRailHostContext, useIntl } from "./source-session-rail-kit-adapters.jsx";
-import { SessionRail, NO_PLUGIN_SECTIONS } from "./generated/session-rail/rail-view.mjs";
+// 4.16336.0 rail cutover (2026-11-13): the rail body is cf74bc599 sN (src/generated/session-rail-v4, staged since round4
+// relink-w8), its props the 3.6556.2 Zj's plus the optional detailsAnswered / flaskSection (none here). With it go the
+// rows the host hands it (SC / xC save environment rows, c73f45bc3 _C edit environment button) and the Context section
+// (session-rail-context-v4 rC). Was: SessionRail / NO_PLUGIN_SECTIONS from ./generated/session-rail/rail-view.mjs,
+// RailSaveEnvironmentRow / RailSaveEnvironmentLink from ./generated/session-rail/save-environment.mjs, RailEditEnvironmentButton
+// from ./generated/session-rail/environment-edit.mjs, SessionRailContext from ./generated/session-rail-context/context-card.mjs.
+import { SessionRail, NO_PLUGIN_SECTIONS, RailSaveEnvironmentLink, RailSaveEnvironmentRow, RailEditEnvironmentButton } from "./generated/session-rail-v4/index.mjs";
+import { RailFlatContext as RailFlatContextV4 } from "./generated/session-rail-kit-v4/index.mjs";
+import { SessionRailContext } from "./generated/session-rail-context-v4/index.mjs";
 import { RepoNameChip } from "./generated/session-rail/repo-name-chip.mjs";
 import { railFolder, railExtraFolders, otherRepos, knownBranch, railBranch, railWorktree, lazyWorktreePending, lazyWorktreeState, railEnvironment,
   environmentKind, environmentConnection, isSideSessionNotesFolder, remoteControlState, RAIL_PENDING_GIVE_UP_MS } from "./generated/session-rail/rail-derive.mjs";
@@ -62,8 +73,12 @@ import { useRailPendingHold, useCheckoutInfo, useComposerMenuOpensRailSection } 
 import { NAME_PENDING_GIVE_UP_MS } from "./generated/session-rail/rail-timing.mjs";
 import { SessionRailOutputsContext, railGoal } from "./source-session-rail-adapters.jsx";
 import { SessionRailSectionsHostContext, railServerRows, railTaskRows, railLoopRows } from "./source-session-rail-sections-adapters.jsx";
-import { SessionRailServers } from "./generated/session-rail-sections/servers-card.mjs";
-import { SessionRailBackgroundTasks } from "./generated/session-rail-sections/background-tasks-card.mjs";
+// real-b background-tasks (2026-11-10): session-rail-sections cutover. The rail's Servers and Background tasks sections are
+// the 4.16336.0 cf74bc599 lP / KN (src/generated/session-rail-sections-v4, scripts/extract-session-rail-sections-v4.mjs),
+// called as the official rail host does (`{ sessionRef, readOnly }`, the pinned call site), over the same
+// SessionRailSectionsHostContext (src/source-session-rail-sections-v4-adapters.jsx re-exports the host adapters unchanged).
+// Was: SessionRailServers / SessionRailBackgroundTasks from ./generated/session-rail-sections/{servers-card,background-tasks-card}.mjs (3.6556.2).
+import { SessionRailServers, SessionRailBackgroundTasks } from "./generated/session-rail-sections-v4/index.mjs";
 import { SessionRailChanges } from "./source-session-rail-changes-adapters.jsx";
 import { SessionRailComputerUse } from "./source-session-rail-computer-use.jsx";
 import { QueryClientProvider } from "./generated/files-changes/file-browser-query.mjs";
@@ -77,12 +92,11 @@ import { loadLocalSessionRecord, railMetaFromRecord, railLazyPendingArgs, railRe
 import { monitorTasks } from "./background-tasks-model.mjs";
 import { taskRowsStore, dismissedTasksStore } from "./source-background-tasks.jsx";
 import { connectorRows, connectorLabel } from "./generated/session-rail/rail-derive.mjs";
-import { useSaveEnvironmentSetup, RailSaveEnvironmentLink, RailSaveEnvironmentRow, SessionStartLine, requestSaveEnvironment, recordSaveEnvironmentOutcome } from "./generated/session-rail/save-environment.mjs";
-import { RailEditEnvironmentButton, isRailEditableEnvironment } from "./generated/session-rail/environment-edit.mjs";
+import { useSaveEnvironmentSetup, SessionStartLine, requestSaveEnvironment, recordSaveEnvironmentOutcome } from "./generated/session-rail/save-environment.mjs";
+import { isRailEditableEnvironment } from "./generated/session-rail/environment-edit.mjs";
 import { setRailSavedEnvironments, setRailLocalSession, useSessionEnvironmentId, useStartedSetupRecord, keepStartedSetup } from "./source-session-rail-adapters.jsx";
 import { sessionMcpCounts, heldMcpCounts, railConnectors, NO_SESSION_MCP_COUNTS, NO_MCP_TOOL_OPENER } from "./session-rail-connectors-model.mjs";
 import { SourceSavedEnvironmentDialog } from "./source-saved-environment-dialog.jsx";
-import { SessionRailContext } from "./generated/session-rail-context/context-card.mjs";
 import { SessionRailContextHostContext } from "./source-session-rail-context-adapters.jsx";
 
 // ---- jre's geometry classes -----------------------------------------------------------------------------------------
@@ -117,6 +131,52 @@ export function createRailScopeStore() {
     // V3-w6-rail-host: 3.6556.2 c227f4d5e's initial `editEnvironmentRequest: null` (TN's Sn writes it, c73f45bc3 pu reads
     // it: w10-ccres-rail-env-edit) and `openMemoryDialog: null` (TN's FN, the Context card's openMemory; nothing sets it).
     editEnvironmentRequest: null, openMemoryDialog: null }));
+}
+
+// ---- the 4.16336.0 flat docked rail ------------------------------------------------------------------------------------
+//
+// 4.16336.0 docks the rail as a flat, full-height pane column instead of 3.6556.2's floating cards (hH, `className: Sp`,
+// rail-layout RAIL_DOCKED_COLUMN_CLASS). The official text (ion-dist v1, snapshots/claude-4.16336.0-20261104):
+// - cc43287c9 IK (the docked column, the session view's `wn ? yn ? p(IK, …) : p("div", {ref: cn, [wy]: "", ...pm}) : null`):
+//   `h = {[wy]: ""}` (shared-38 Kn, data-epitaxy-rail-column), `m = _p(f)` (shared-20 Vy over the session's band height),
+//   `p("div", {...h, ...pm, style: m, onWheel: c, children: p(Dd.Provider, {value: l, children: p(jK, {…, PrBarSlot: kK})})})`
+//   with `c = FK(s)` (the wheel handoff), `l = dL()` (the flat rail) and Dd = shared-18 iw (the flat rail context).
+// - pm = shared-20 Py: `{className: \`absolute top-0 -bottom-[var(--tiles-padding,0px)] md:-bottom-[calc(var(--tiles-padding,
+//   0px)-var(--spacing)*0.75)] flex ${Nc} flex-col end-[var(--session-rail-end)] ${Lf} ${nm} [&>*]:w-full\`, [lc]: ""}`:
+//   Nc = shared-18 nw (RAIL_WIDTH_CLASS), Lf = shared-38 dn (RAIL_OVERLAY_SHIFT_CLASS), nm = shared-120 ir (the pane
+//   ground, below), lc = shared-18 rw (RAIL_FLAT_ATTRIBUTE): the rail's cards draw flat, split by hairlines.
+// - the session view's wrapper (`_r`) adds shared-20 Sy while the rail is docked (`wn`): a 20rem rail flush with the tile.
+// - the body row (`Fr`) adds shared-18 dw (`md:-mb-0.75`) next to uw (`pb-0.75`) while the rail mode is on (`_n`).
+// The two literals below have no generated home yet (shared-20 / shared-120 are not sliced for this host); the rest are
+// the 3.6556.2 kit exports whose text 4.16336.0 kept byte for byte. tests/session-rail-flat-column.test.mjs pins all of it
+// to the official declarations.
+/** shared-120 ir: a pane's ground (the flat rail's surface and seam). */
+export const RAIL_PANE_GROUND_CLASS = "cds-pane-ground border-s border-[color:var(--cds-fizzy-lake-color-seam,var(--cds-border))] bg-surface-2";
+/** shared-20 Sy: the docked flat rail's width and end. */
+export const RAIL_FLAT_GEOMETRY_CLASS = "[--session-rail-w:20rem]! [--session-rail-end:0px]! [.epitaxy-chat-panel:not([data-chat-gutter-end])_&]:[--session-rail-end:calc(-1*var(--tiles-padding,0px))]!";
+/** shared-18 dw: the body row's bottom bleed. */
+export const RAIL_BODY_ROW_BLEED_CLASS = "md:-mb-0.75";
+/** shared-20 Py: the docked flat column's props. */
+export const RAIL_FLAT_COLUMN_PROPS = Object.freeze({
+  className: `absolute top-0 -bottom-[var(--tiles-padding,0px)] md:-bottom-[calc(var(--tiles-padding,0px)-var(--spacing)*0.75)] flex ${RAIL_WIDTH_CLASS} flex-col end-[var(--session-rail-end)] ${RAIL_OVERLAY_SHIFT_CLASS} ${RAIL_PANE_GROUND_CLASS} [&>*]:w-full`,
+  [RAIL_FLAT_ATTRIBUTE]: "",
+});
+const RAIL_COLUMN_PROPS = Object.freeze({ [RAIL_COLUMN_ATTRIBUTE]: "" });
+
+/**
+ * cc43287c9 IK (4.16336.0): the docked column. The rail body is the host's lazy rail host (3.6556.2 uH, the official
+ * jK), as the 3.6556.2 hH renders it. Host: `m = _p(f)` is undefined — the host keeps no per-session band heights (shared-20
+ * Vy returns undefined for a missing height), so the first card keeps its default height; jK's PrBarSlot (kK) is not
+ * passed: the PR rows are the Changes card's here (R4i-rail RL2).
+ */
+function SessionRailFlatColumn({ sessionRef: t, scopeStore: n, mountKey: r, isPanelActive: i, onRequestComposerFocus: a, readOnly: o, scrollRef: s }) {
+  const c = useRailWheelHandoff(s);
+  const l = useRailFlat();
+  return <div {...RAIL_COLUMN_PROPS} {...RAIL_FLAT_COLUMN_PROPS} onWheel={c}>
+    <RailFlatContext.Provider value={l}>
+      <LazySessionRailHost key={t.id} sessionRef={t} scopeStore={n} mountKey={r} isPanelActive={i} onRequestComposerFocus={a} readOnly={o} />
+    </RailFlatContext.Provider>
+  </div>;
 }
 
 // ---- the jre state machine -------------------------------------------------------------------------------------------
@@ -174,7 +234,8 @@ export function useSessionRail({ enabled = false, sessionId = null, sessionNotFo
     sessionRef: an, scopeStore: U, model: bn, railToggle: on ? bn : undefined, railToggleRef: mn, panelId: hn,
     focusOnMount: ln?.focus === true, raise: gn, dismiss: _n, rowRef: setRowElement,
     // Host: the geometry follows the session view only (`on`): the landing page keeps its own local layout.
-    rowClassName: on ? `${RAIL_BODY_ROW_CLASS} ${RAIL_BODY_ROW_INSET_CLASS} ${RAIL_CONTAINER_CLASS} ${RAIL_TITLEBAR_INSET_CLASS} ${RAIL_GUTTER_CLASS}${cn ? ` ${RAIL_CHAT_GEOMETRY_CLASS}` : ""}` : "contents",
+    // 4.16336.0: Fr's `md:-mb-0.75` with the inset, and `_r`'s Sy after the chat geometry while docked (see RAIL_FLAT_COLUMN_PROPS).
+    rowClassName: on ? `${RAIL_BODY_ROW_CLASS} ${RAIL_BODY_ROW_INSET_CLASS} ${RAIL_BODY_ROW_BLEED_CLASS} ${RAIL_CONTAINER_CLASS} ${RAIL_TITLEBAR_INSET_CLASS} ${RAIL_GUTTER_CLASS}${cn ? ` ${RAIL_CHAT_GEOMETRY_CLASS} ${RAIL_FLAT_GEOMETRY_CLASS}` : ""}` : "contents",
     rowProps: cn ? { [RAIL_OVERFLOW_ATTRIBUTE]: "" } : undefined,
     bandClassName: cn ? RAIL_BAND_PADDING_CLASS : "",
     panelBodyClassName: on ? `${CHAT_PANEL_BODY_CLASS} ${HOST_PANEL_BODY_FLEX}` : "contents",
@@ -399,13 +460,13 @@ export function SessionRailStartLine({ sessionId, cwd }) {
 }
 
 /** jre's `cn ? an ? bH : <div [data-epitaxy-rail-column] className=Gp ref=Wt/> : null`: the docked column (the draft
- * rail placeholder has no host source). */
+ * rail placeholder has no host source). 4.16336.0: `wn ? yn ? p(IK, …) : … : null`, IK being SessionRailFlatColumn. */
 export function SessionRailColumn() {
   const mount = useMount();
   const rail = mount?.rail;
   const host = mount?.host ?? {};
   if (!rail?.active || !rail.sessionRef) return null;
-  return <SessionRailDockedColumn sessionRef={rail.sessionRef} scopeStore={rail.scopeStore} mountKey={host.mountKey} isPanelActive={host.isPanelActive}
+  return <SessionRailFlatColumn sessionRef={rail.sessionRef} scopeStore={rail.scopeStore} mountKey={host.mountKey} isPanelActive={host.isPanelActive}
     onRequestComposerFocus={host.onRequestComposerFocus} readOnly={host.readOnly === true} scrollRef={mount.scrollRef} />;
 }
 
@@ -749,13 +810,15 @@ export function SessionRailHostView({ sessionRef: e, scopeStore: t, readOnly: o 
     tailRef={Ct}
     className={s} />;
   // fO `u(ug, { snapshot: j, held: N, … })`: c73f45bc3 Ty shows a draft rail snapshot while it is held; never here.
-  return <SessionFileOpenerProvider value={host.openFile ?? null}>
+  // 4.16336.0 IK / ZK provide the flat rail on shared-18 iw (Dd), the context sN's cards read; the docked column and the
+  // 3.6556.2 overlay provide the 3.6556.2 kit's, so the host view hands its value (`c`) on to the 4.16336.0 one.
+  return <RailFlatContextV4.Provider value={c}><SessionFileOpenerProvider value={host.openFile ?? null}>
     <SessionRailOutputsContext.Provider value={outputs}>
       <SessionRailSectionsHostContext.Provider value={sections}>
         <SessionRailContextHostContext.Provider value={host.context ?? null}>{wt}</SessionRailContextHostContext.Provider>
       </SessionRailSectionsHostContext.Provider>
     </SessionRailOutputsContext.Provider>
-  </SessionFileOpenerProvider>;
+  </SessionFileOpenerProvider></RailFlatContextV4.Provider>;
 }
 
 // fO `K = ey(e.id, ce)`: the saved environment the session started from (main.cjs records sessionMetadata.environmentId

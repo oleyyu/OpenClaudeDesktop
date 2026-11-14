@@ -56,7 +56,10 @@ test('review fix: Dle hands finalFocus:$i to the env picker and the folder menu;
   assert.ok(dle.includes('glyphClassName:Vue,finalFocus:$i}'), 'P8 folder recents');
   assert.ok(dle.includes('sshRecentFolders:Ln,finalFocus:$i,'), 'hse folder config');
   const main = read('src/main.jsx');
-  assert.ok(main.includes('import { useComposerFinalFocus } from "./generated/code-composer/composer-final-focus.mjs";'));
+  // surfaces-prod-3 composer (host cutover): K6 is now the 4.16336.0 binding (code-composer-v4 composer-final-focus.mjs,
+  // root R6 exported as y), the 3.6556.2 module no longer imported by main.jsx.
+  assert.ok(main.includes('import { useComposerFinalFocus } from "./generated/code-composer-v4/composer-final-focus.mjs";'));
+  assert.ok(!main.includes('import { useComposerFinalFocus } from "./generated/code-composer/composer-final-focus.mjs";'));
   assert.ok(main.includes('const composerFinalFocus = useComposerFinalFocus({ onRequestComposerFocus: () => textarea.current?.focus(), isPanelActive: splitActive, keyboardOnly: true });'));
   const finals = main.match(/finalFocus: hostComposerFinalFocus\(composerFinalFocus, menu\.anchor\) \}\}/g) ?? [];
   assert.equal(finals.length, 2);

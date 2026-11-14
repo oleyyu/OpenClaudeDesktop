@@ -10,23 +10,32 @@ import { setLocale, DEFAULT_LOCALE, t } from '../electron/i18n/index.mjs';
 // Codex 0.155.1 imageGeneration / imageView / sleep / hookPrompt items were rendered as nothing (SourceMessage
 // fell through to null); they are steps now, with the image shown from savedPath (or the base64 result).
 test('image generation, image view, sleep and hook-context rows', () => {
+  // U-2: a local image is the claude-media URL main mints for its path (preload desktop.mediaUrl), never file://.
+  const saved = globalThis.desktop, minted = [];
+  globalThis.desktop = { mediaUrl: (p) => { minted.push(p); return `claude-media://v/t${minted.length}?v=1`; } };
+  try {
   const png = 'iVBORw0KGgo' + 'A'.repeat(80);
   const busy = mediaItemRow({ type: 'imageGeneration', id: 'g', status: 'in_progress', revisedPrompt: null, result: '', failure: null });
   assert.deepEqual([busy.state, busy.label, busy.image], ['busy', 'Generating image', null]);
   const done = mediaItemRow({ type: 'imageGeneration', id: 'g', status: 'completed', revisedPrompt: 'A blue app icon', result: png, savedPath: '/Users/me/.codex/generated/icon one.png', failure: null });
   assert.deepEqual([done.state, done.label, done.meta, done.caption], ['done', 'Generated image', 'icon one.png', 'A blue app icon']);
-  assert.equal(done.image, 'file:///Users/me/.codex/generated/icon%20one.png', 'savedPath wins over the inline result');
+  assert.equal(done.image, 'claude-media://v/t1?v=1', 'savedPath wins over the inline result');
+  assert.deepEqual(minted, ['/Users/me/.codex/generated/icon one.png'], 'main mints for the saved path itself');
   assert.equal(generatedImageSource({ result: png }), `data:image/png;base64,${png}`);
   assert.equal(generatedImageSource({ result: 'not an image' }), null);
   const failed = mediaItemRow({ type: 'imageGeneration', id: 'g', status: 'failed', result: '', failure: { type: 'usageLimitExceeded', limitId: 'images', resetsAt: null } });
   assert.deepEqual([failed.state, failed.label, failed.image, failed.error], ['failed', 'Couldn’t generate image', null, 'You’ve reached your image generation limit.']);
   const view = mediaItemRow({ type: 'imageView', id: 'v', path: '/w/shot.png' });
-  assert.deepEqual([view.label, view.meta, view.image], ['Viewed image', 'shot.png', 'file:///w/shot.png']);
+  assert.deepEqual([view.label, view.meta, view.image], ['Viewed image', 'shot.png', 'claude-media://v/t2?v=1']);
+  assert.equal(minted[1], '/w/shot.png');
   assert.equal(localImageSource('relative.png'), null);
   assert.equal(localImageSource('https://x.test/a.png'), null);
   assert.equal(mediaItemRow({ type: 'sleep', id: 's', durationMs: 4600 }).label, 'Waited 5s');
   assert.equal(mediaItemRow({ type: 'hookPrompt', id: 'h', fragments: [{ text: 'Run the linter first.', hookRunId: 'r' }] }).caption, 'Run the linter first.');
   assert.equal(isMediaItem({ type: 'agentMessage' }), false);
+  assert.equal(minted.length, 2, 'relative and URL paths never reach main');
+  } finally { if (saved === undefined) delete globalThis.desktop; else globalThis.desktop = saved; }
+  assert.equal(localImageSource('/w/shot.png'), null, 'no desktop bridge: no local image URL');
 });
 
 test('raw reasoning shows when the model sends no summary', () => {

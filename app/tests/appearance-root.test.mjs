@@ -4,6 +4,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { applyAppearanceRoot, cdsFontFor } from '../src/appearance-root.mjs';
 import { appearancePreferences } from '../electron/preferences.mjs';
+import { designEntryStylesheets, designLegacySnapshot } from '../scripts/current-design-assets.mjs';
+// design-production (4.16336.0): the loaded c6a992d55 entry sheet, named by current-design-assets.
+const UTILITIES_CSS = designEntryStylesheets.find(name => name.startsWith('c6a992d55-'));
 
 // B02 GL2: a popped-out pane window writes the same html appearance as the main window (cd377abb5 Yn mirrors qn's
 // data-code-theme-light/-dark, data-reduce-motion, font attributes and Jn's properties onto the popout document).
@@ -64,14 +67,24 @@ test('the main window and pane windows share the writer; pane windows get the sa
 });
 
 // B38: c6a992d55-sXiDGMFQ.css [data-chat-text-size=l] .epitaxy-transcript-typography{--chat-body:15px;--chat-leading:1.46667};
-// Small keeps the 1.42857 leading, and the turn/item gaps follow both variables.
-test('transcript text size Large is 15px over 1.46667, like the reference', () => {
+// Small keeps the 1.42857 leading, and the turn/item gaps follow both variables. design-production: the reference is the
+// loaded c6a992d55 entry sheet of the pinned design (current-design-assets); 3.6556.2's steps (Large .9375rem over
+// 1.46667, Small .8125rem) are read from its own snapshot, and 4.16336.0 moved them (Large 1rem over 1.375, Small .875rem
+// over 1.4286). The host restates whatever the loaded reference declares.
+test('transcript text size Large / Small restate the loaded reference steps (Large: 3.6556.2 15px over 1.46667, 4.16336.0 16px over 1.375)', () => {
   const css = fs.readFileSync(path.resolve(import.meta.dirname, '../src/source-settings.css'), 'utf8');
-  const official = fs.readFileSync(path.resolve(import.meta.dirname, '../public/assets/v1/c6a992d55-Che1orl5.css'), 'utf8');
-  assert.ok(official.includes('[data-chat-text-size=l] .epitaxy-transcript-typography{--chat-body:calc(.9375rem * var(--cds-rem-scale,1));--chat-leading:1.46667}'));
+  const official = fs.readFileSync(path.resolve(import.meta.dirname, '../public/assets/v1', UTILITIES_CSS), 'utf8');
+  const legacy = fs.readFileSync(path.resolve(import.meta.dirname, '../../reference', designLegacySnapshot, 'ion-dist/assets/v1/c6a992d55-Che1orl5.css'), 'utf8');
+  assert.ok(legacy.includes('[data-chat-text-size=l] .epitaxy-transcript-typography{--chat-body:calc(.9375rem * var(--cds-rem-scale,1));--chat-leading:1.46667}'));
+  assert.ok(legacy.includes('[data-chat-text-size=s] .epitaxy-transcript-typography{--chat-body:calc(.8125rem * var(--cds-rem-scale,1))}'));
+  const step = size => official.match(new RegExp(`(?<![\\w)\\]])\\[data-chat-text-size=${size}\\] \\.epitaxy-transcript-typography\\{([^}]*)\\}`))?.[1];
+  const large = step('l'), small = step('s');
+  assert.equal(large, '--chat-body:calc(1rem * var(--cds-rem-scale,1));--chat-leading:1.375', `${UTILITIES_CSS} Large`);
+  assert.equal(small, '--chat-body:calc(.875rem * var(--cds-rem-scale,1));--chat-leading:1.4286', `${UTILITIES_CSS} Small`);
   // W14 css-main-01: the official html attribute (shared-20 Gh) and the official values.
-  assert.ok(css.includes('html[data-chat-text-size=l] .source-transcript-content { --chat-body:calc(.9375rem * var(--cds-rem-scale,1)); --chat-leading:1.46667; }'));
-  assert.ok(css.includes('html[data-chat-text-size=s] .source-transcript-content { --chat-body:calc(.8125rem * var(--cds-rem-scale,1)); }'));
+  const restate = decls => decls.split(';').join('; ');
+  assert.ok(css.includes(`html[data-chat-text-size=l] .source-transcript-content { ${restate(large)}; }`), `source-settings.css restates the loaded Large step: ${large}`);
+  assert.ok(css.includes(`html[data-chat-text-size=s] .source-transcript-content { ${restate(small)}; }`), `source-settings.css restates the loaded Small step: ${small}`);
   assert.doesNotMatch(css, /data-local-transcript-(?:size|width)/);
   assert.ok(css.includes('{ font-size:var(--chat-body); line-height:var(--chat-leading); --chat-item-gap:calc(var(--chat-body)*var(--chat-leading)*.5); --chat-turn-gap:calc(var(--chat-body)*var(--chat-leading)*.75); }'));
   assert.doesNotMatch(css, /--chat-body:16px; \}/);

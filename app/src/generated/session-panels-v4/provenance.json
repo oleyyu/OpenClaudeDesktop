@@ -1,0 +1,242 @@
+{
+  "referenceVersion": "4.16336.0",
+  "referenceSnapshot": "snapshots/claude-4.16336.0-20261104",
+  "pins": "scripts/session-panels-v4.pins.json",
+  "roots": {
+    "tileShellStyle": {
+      "file": "shared-20-DUEo90UF.js",
+      "local": "h_",
+      "export": "Vc",
+      "declarationSha256": "2edb4bf2d001c84a56d93ee8e25395895d1f894e1bdbcd61093d9aca156f25f9",
+      "features": [
+        "\"--tiles-padding\": \"8px\",",
+        "\"--tile-shell-ground\": m_(r),"
+      ]
+    },
+    "isChatOrSessionTile": {
+      "file": "shared-20-DUEo90UF.js",
+      "local": "l_",
+      "export": "zc",
+      "declarationSha256": "4e786e5a5b63f7320aaf1ac459fc94eeab66c50fc50e14d59cd2198c66d8d283",
+      "features": [
+        "return e === \"chat\" || e === \"session\";"
+      ]
+    },
+    "paneTileStandsOnPage": {
+      "file": "shared-20-DUEo90UF.js",
+      "local": "fb",
+      "export": "Cs",
+      "declarationSha256": "818336c26c14b8833ce565f34360f4a3fec72df6e9690a0e6ae6b3dd49717327",
+      "features": [
+        "let t = e.split(\":\", 1)[0];",
+        "return Object.hasOwn(db, t) && db[t];"
+      ]
+    },
+    "WIDE_TITLE_ROW_H": {
+      "file": "shared-20-DUEo90UF.js",
+      "local": "Qy",
+      "export": "Os",
+      "declarationSha256": "b3637f4599414be18643791c6148cfc94cf1b6eefc1713a102fbd02e310e4295",
+      "features": [
+        "Qy = \"var(--wide-title-row-h)\""
+      ]
+    },
+    "TILE_REACH_BACK": {
+      "file": "c9543da06-DHwxxZai.js",
+      "local": "Os",
+      "export": null,
+      "declarationSha256": "310ff6d9eb2aadacd87801d6944a3225630b48e194d1997ad9bd4f38eb34b5a5",
+      "features": [
+        "Os = \"var(--tile-reach-back, 0px)\""
+      ]
+    },
+    "TILE_AFTER_LINE_X_STYLE": {
+      "file": "c9543da06-DHwxxZai.js",
+      "local": "ks",
+      "export": null,
+      "declarationSha256": "08af0aea463cb50d119ce0e74da53cb7da372c001c0bcb500459042a227b09b2",
+      "features": [
+        "ks = { width: `calc(100% + ${Os})` }"
+      ]
+    },
+    "TILE_AFTER_LINE_Y_STYLE": {
+      "file": "c9543da06-DHwxxZai.js",
+      "local": "As",
+      "export": null,
+      "declarationSha256": "d0f608c5fccd32a2a3b6c45ab5b6edb55603abd5ada65c24e0e5f5d4bc70bf16",
+      "features": [
+        "As = { height: `calc(100% + ${Os})` }"
+      ]
+    },
+    "TILE_STYLES": {
+      "file": "c9543da06-DHwxxZai.js",
+      "local": "vs",
+      "export": null,
+      "declarationSha256": "478d871913a176e41c1c309616c1322d866bf985de8a11d3ce185ccac8ce85f6",
+      "features": [
+        "gridTemplateRows: \"minmax(0, 1fr)\",",
+        "transform: \"translateZ(2px)\","
+      ]
+    },
+    "PaneFrame": {
+      "file": "c4db265df-CHyZjtsm.js",
+      "local": "Tn",
+      "export": "t",
+      "declarationSha256": "44c7d59c43df9a3ad2553043cbcb76091c617ce0f0a3b223c753f65b345c5229",
+      "features": [
+        "\"data-pane-root\": M,",
+        "r ? void 0 : te(\"side_pane\")",
+        "\"data-pane-header-line\": me,",
+        "Ye = o(ot),",
+        "Xe = o(fe),",
+        "ht = Pe();"
+      ]
+    },
+    "PaneInTileContext": {
+      "file": "c4db265df-CHyZjtsm.js",
+      "local": "ot",
+      "export": "D",
+      "declarationSha256": "049f460e78ec1362c348d7b3fc73140a4e6e0870dacda9dc611713f09bd5cc09",
+      "features": [
+        "ot = c(!1)"
+      ]
+    },
+    "PaneReadingOrderContext": {
+      "file": "c4db265df-CHyZjtsm.js",
+      "local": "at",
+      "export": "E",
+      "declarationSha256": "cec27f4ee13712cb0371cb18916bbcf4f49f6d7fe6a65a8537b1cdea57797ed7",
+      "features": [
+        "at = c([])"
+      ]
+    },
+    "PaneStandsOnPageContext": {
+      "file": "shared-20-DUEo90UF.js",
+      "local": "ub",
+      "export": "xs",
+      "declarationSha256": "e7572d9e6912d96b586ff4e8b3e4b454c2827dd129ecfa80b28ba74a3e0e825e",
+      "features": [
+        "ub = g(!1)"
+      ]
+    }
+  },
+  "also": {},
+  "cdsCore": {
+    "manifestSha256": "06d2026939e5c8992713c2a0dda1b1abc9adffe7a0c223fe3c1e79eecd08d62c",
+    "adapterSha256": "7d63624afd6a3e7eaa2c42803aacdcf1a74ca479ffbed4d9c1f40c60e233ff1e"
+  },
+  "adapterSha256": "02a4b5bd2f056aa52ee266850a9e95d9952e99876d6280dee8f9a1e82f316473",
+  "linkedAreas": [
+    "code-composer-v4",
+    "routines-shared-v4",
+    "frame-sidebar",
+    "settings-pages-v4",
+    {
+      "area": "code-current-v4",
+      "modules": [
+        "environment-modifier-keys.mjs"
+      ]
+    },
+    {
+      "area": "files-changes-v4",
+      "modules": [
+        "file-type-icon-context.mjs"
+      ]
+    }
+  ],
+  "linkedCopies": {
+    "shared-1-D1bGaTaN.js#jU": "pure: the pane header double-click guard (composedPath / selection test); frame-sidebar and code-current-v4 slice it unexported",
+    "shared-1-D1bGaTaN.js#AU": "pure: the interactive-element selector string jU tests; frame-sidebar and code-current-v4 slice it unexported",
+    "c5d464fa3-D1V4bYI5.js#V": "pure: the code theme pair hook over settings-pages-v4 linked hooks; settings-pages-v4 slices it unexported"
+  },
+  "sharedGraphImports": [
+    "AT <- shared-31-C9BqSSuD.js#AT",
+    "CdsButton <- shared-frame-CJdE5Ria.js:Id",
+    "CdsButtonGroup <- shared-frame-CJdE5Ria.js:Ui",
+    "CdsDropdown <- shared-frame-CJdE5Ria.js:Vs",
+    "CdsIcon <- shared-frame-CJdE5Ria.js:lf",
+    "CdsPopover <- shared-frame-CJdE5Ria.js:Ua",
+    "CdsSurface <- shared-frame-CJdE5Ria.js:ed",
+    "CdsToolbar <- shared-frame-CJdE5Ria.js:su",
+    "CdsTooltip <- shared-frame-CJdE5Ria.js:cd",
+    "CdsTooltipProvider <- shared-frame-CJdE5Ria.js:ld",
+    "Di <- shared-38-DyF0_Fim.js#Di",
+    "Di <- shared-38-DyF0_Fim.js:mt",
+    "Dr <- shared-120-DCdTP1_5.js:P",
+    "I4 <- shared-frame-CJdE5Ria.js:om",
+    "Je <- shared-120-DCdTP1_5.js:gn",
+    "Tc <- shared-39-ZCs0lAwB.js:bc",
+    "Wi <- shared-38-DyF0_Fim.js:ft",
+    "asElementNode <- shared-frame-CJdE5Ria.js:nm",
+    "c <- cf53e1812-B98_08tN.js#c",
+    "cdsClassNames <- shared-frame-CJdE5Ria.js:tm",
+    "cdsDropdownGroupLabelClass <- shared-frame-CJdE5Ria.js:Bs",
+    "cdsMenuItemClass <- shared-frame-CJdE5Ria.js:tc",
+    "clsx <- vendor-frame-BckkO60Y.js:Fa",
+    "isMacUserAgent <- shared-62-DoCqVpIq.js:sS",
+    "ownerWindow <- shared-25-D-aF0gt9.js:Gp",
+    "useCdsDensity <- shared-frame-CJdE5Ria.js:Ff",
+    "useCdsIsoLayoutEffect <- shared-frame-CJdE5Ria.js:Op",
+    "useCdsLabel <- shared-frame-CJdE5Ria.js:hp",
+    "useCdsMergedRefs <- shared-frame-CJdE5Ria.js:jp",
+    "useCdsMode <- shared-frame-CJdE5Ria.js:Bf",
+    "useCdsOwnerWindow <- shared-frame-CJdE5Ria.js:Uf",
+    "useCdsOwnerWindowAnchor <- shared-frame-CJdE5Ria.js:Kf",
+    "useDirection <- vendor-frame-BckkO60Y.js:xa",
+    "useEventCallback <- shared-0-CnnWnVrT.js:PT",
+    "useFizzyLakePart <- shared-frame-CJdE5Ria.js:Ep",
+    "useLazyMutationObserver <- shared-frame-CJdE5Ria.js:_p",
+    "useLazyObserver <- shared-frame-CJdE5Ria.js:vp",
+    "vf <- c03935b01-BylKMWqe.js#vf"
+  ],
+  "linkedImports": [
+    "Bg <- shared-frame-CJdE5Ria.js:wu (../code-composer-v4/chunk-shared-frame.mjs)",
+    "C <- c6e73333a-LnS4e_bw.js:s (../settings-pages-v4/code-theme-vars.mjs)",
+    "DT <- shared-55-BRv2XBP7.js:Wo (../settings-pages-v4/shared-55.mjs)",
+    "FH <- shared-0-CnnWnVrT.js:Yu (../routines-shared-v4/shared-0-CnnWnVrT.mjs)",
+    "FileTypeIconSetContext <- c17ed8826-s4tf2WDj.js:t (../files-changes-v4/file-type-icon-context.mjs)",
+    "I1 <- shared-frame-CJdE5Ria.js:rm (../frame-sidebar/shared-frame.mjs)",
+    "I2 <- shared-frame-CJdE5Ria.js:im (../frame-sidebar/shared-frame.mjs)",
+    "I3 <- shared-frame-CJdE5Ria.js:am (../frame-sidebar/shared-frame.mjs)",
+    "I5 <- shared-frame-CJdE5Ria.js:sm (../routines-shared-v4/shared-frame-CJdE5Ria.mjs)",
+    "Im <- shared-36-fqRFYwOb.js:Co (../settings-pages-v4/editor-prefs.mjs)",
+    "J0 <- shared-frame-CJdE5Ria.js:cm (../frame-sidebar/shared-frame.mjs)",
+    "J1 <- shared-frame-CJdE5Ria.js:lm (../frame-sidebar/shared-frame.mjs)",
+    "J2 <- shared-frame-CJdE5Ria.js:um (../frame-sidebar/shared-frame.mjs)",
+    "J3 <- shared-frame-CJdE5Ria.js:dm (../frame-sidebar/shared-frame.mjs)",
+    "J4 <- shared-frame-CJdE5Ria.js:fm (../frame-sidebar/shared-frame.mjs)",
+    "J5 <- shared-frame-CJdE5Ria.js:pm (../frame-sidebar/shared-frame.mjs)",
+    "J8 <- shared-frame-CJdE5Ria.js:mm (../frame-sidebar/shared-frame.mjs)",
+    "J9 <- shared-frame-CJdE5Ria.js:hm (../frame-sidebar/shared-frame.mjs)",
+    "K0 <- shared-frame-CJdE5Ria.js:gm (../frame-sidebar/shared-frame.mjs)",
+    "K1 <- shared-frame-CJdE5Ria.js:_m (../frame-sidebar/shared-frame.mjs)",
+    "K2 <- shared-frame-CJdE5Ria.js:vm (../frame-sidebar/shared-frame.mjs)",
+    "K3 <- shared-frame-CJdE5Ria.js:ym (../frame-sidebar/shared-frame.mjs)",
+    "K4 <- shared-frame-CJdE5Ria.js:bm (../frame-sidebar/shared-frame.mjs)",
+    "K5 <- shared-frame-CJdE5Ria.js:xm (../frame-sidebar/shared-frame.mjs)",
+    "MU <- shared-1-D1bGaTaN.js:Hs (../frame-sidebar/shared-1.mjs)",
+    "OS <- shared-18-Cfqwgjc5.js:Am (../routines-shared-v4/shared-18-Cfqwgjc5.mjs)",
+    "PT <- shared-31-C9BqSSuD.js:W (../frame-sidebar/shared-31.mjs)",
+    "Pm <- shared-36-fqRFYwOb.js:wo (../settings-pages-v4/editor-prefs.mjs)",
+    "VB <- shared-25-D-aF0gt9.js:bi (../routines-shared-v4/shared-25-D-aF0gt9.mjs)",
+    "Xp <- shared-7-D2e77H6v.js:Ao (../settings-pages-v4/shared-7.mjs)",
+    "Z1 <- shared-frame-CJdE5Ria.js:Sm (../frame-sidebar/shared-frame.mjs)",
+    "dF <- shared-0-CnnWnVrT.js:lm (../routines-shared-v4/shared-0-CnnWnVrT.mjs)",
+    "environmentModifierKeys <- shared-1-D1bGaTaN.js:_ (../code-current-v4/environment-modifier-keys.mjs)",
+    "isKeyboardActivation <- shared-8-BqfCbkJd.js:oi (../code-composer-v4/keyboard-activation.mjs)",
+    "jh <- shared-123-1Hc1RTKl.js:DS (../frame-sidebar/shared-123.mjs)",
+    "ko <- shared-25-D-aF0gt9.js:Fg (../frame-sidebar/shared-25.mjs)",
+    "menuCollisionPadding <- shared-18-Cfqwgjc5.js:Cn (../code-composer-v4/menu-collision-padding.mjs)",
+    "on <- shared-38-DyF0_Fim.js:Dn (../routines-shared-v4/shared-38-DyF0_Fim.mjs)",
+    "qI <- shared-8-BqfCbkJd.js:ni (../frame-sidebar/shared-8.mjs)",
+    "tn <- vendor-intl-BJgYK7RA.js:f (../frame-sidebar/vendor-intl.mjs)",
+    "ud <- shared-frame-CJdE5Ria.js:Md (../code-composer-v4/chunk-shared-frame.mjs)",
+    "uv <- shared-0-CnnWnVrT.js:yb (../frame-sidebar/shared-0.mjs)",
+    "vd <- shared-25-D-aF0gt9.js:Wp (../settings-pages-v4/shared-25.mjs)",
+    "yT <- shared-18-Cfqwgjc5.js:_f (../routines-shared-v4/shared-18-Cfqwgjc5.mjs)",
+    "yd <- shared-25-D-aF0gt9.js:Bp (../frame-sidebar/shared-25.mjs)",
+    "zI <- shared-62-DoCqVpIq.js:Bc (../routines-shared-v4/shared-62-DoCqVpIq.mjs)",
+    "zb <- shared-62-DoCqVpIq.js:pp (../routines-shared-v4/shared-62-DoCqVpIq.mjs)"
+  ],
+  "initializers": {}
+}

@@ -3,12 +3,15 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { coworkHomeState } from '../src/cowork-home-model.mjs';
-// 3.6556.2 shared-104 _x (export ml), the live-status function of the Cowork rows; a pure chat target with no imports
-// (E42), so plain node loads it.
-import { sessionLiveStatus as liveStatus } from '../src/generated/chat/shared-104-CTONUSaz.js';
+// shared-92 jU (export oo; 3.6556.2: shared-104 _x / ml), the live-status function of the Cowork rows, sliced from
+// 4.16336.0 by the chat generator; a pure chat target with no imports (E42), so plain node loads it.
+import { sessionLiveStatus as liveStatus } from '../src/generated/chat/shared-92-BOgyxePb.js';
 
 const OFFICIAL = path.resolve(import.meta.dirname, '../../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1');
 const official = name => fs.readFileSync(path.join(OFFICIAL, name), 'utf8');
+// The chat slice's source (src/generated/chat/manifest.json referenceVersion 4.16336.0).
+const CHAT_OFFICIAL = path.resolve(import.meta.dirname, '../../reference/snapshots/claude-4.16336.0-20261104/ion-dist/assets/v1');
+const chatOfficial = name => fs.readFileSync(path.join(CHAT_OFFICIAL, name), 'utf8');
 
 test('Cowork home excludes Code, Chat, archives and child threads while retaining real task metadata', () => {
   const sessions = ['code', 'chat', 'task', 'archived', 'child', 'legacy-child'].map(id => ({ id, name: ` ${id} `, updatedAt: 1700000000 }));
@@ -45,8 +48,8 @@ test('official 3.6556.2 eK: the unread predicate the read state below is shaped 
   for (const feature of ['r=!!t.explicitUnread?.[e.sessionId]||n===0;if(e.unread===!1&&!r&&!CG())return!1',
     'let i=e.lastActivityAt??e.createdAt??0;return n===void 0?i>t.initializedAt:i>n}', 'SG="__gb__3873045074"', 'function CG(){return Wi(SG)===!0}'])
     assert.equal(shared2.split(feature).length, 2, feature);
-  const shared104 = official('shared-104-CTONUSaz.js');
-  assert.match(shared104, /\b_x as ml\b/);
+  const shared92 = chatOfficial('shared-92-BOgyxePb.js');
+  assert.match(shared92, /\bjU as oo\b/);
   assert.equal(String(liveStatus).replace(/\s+/g, '').includes('e.liveStatus==="awaiting"?"awaiting":e.liveStatus?e.liveStatus:!n&&e.pendingToolPermissions?.length?"awaiting":e.isRunning?"running":"idle"'), true);
 });
 
@@ -73,11 +76,13 @@ test('source unread predicate tracks persisted read metadata without marking pin
 
 // w11-sweep-rest (w10-chat-tests review): the two checks above were weaker than their comments. These pin the whole
 // official declarations and run them on the host rows.
-test('sessionLiveStatus is the whole official _x (signature included) and every branch answers as in 3.6556.2', () => {
-  const decl = 'function _x(e,t=!1,n=!1){return t||e.liveStatus==="awaiting"?"awaiting":e.liveStatus?e.liveStatus:!n&&e.pendingToolPermissions?.length?"awaiting":e.isRunning?"running":"idle"}';
-  assert.equal(official('shared-104-CTONUSaz.js').split(decl).length, 2);
-  const generated = fs.readFileSync(path.resolve(import.meta.dirname, '../src/generated/chat/shared-104-CTONUSaz.js'), 'utf8');
-  const body = generated.slice(generated.indexOf('function _x('), generated.indexOf('export {'));
+test('sessionLiveStatus is the whole official 4.16336.0 jU (signature included) and every branch answers as in 3.6556.2 _x', () => {
+  const decl = 'function jU(e,t=!1,n=!1){return t||e.liveStatus==="awaiting"?"awaiting":e.liveStatus?e.liveStatus:!n&&e.pendingToolPermissions?.length?"awaiting":e.isRunning?"running":"idle"}';
+  assert.equal(chatOfficial('shared-92-BOgyxePb.js').split(decl).length, 2);
+  // The 3.6556.2 declaration differs only in its local name (_x -> jU).
+  assert.equal(official('shared-104-CTONUSaz.js').split(decl.replace('function jU(', 'function _x(')).length, 2);
+  const generated = fs.readFileSync(path.resolve(import.meta.dirname, '../src/generated/chat/shared-92-BOgyxePb.js'), 'utf8');
+  const body = generated.slice(generated.indexOf('function jU('), generated.indexOf('export {'));
   // prettier only adds whitespace and the statement's `;` before the closing brace.
   assert.equal(body.replace(/\s+/g, '').replace(/;\}$/, '}'), decl.replace(/\s+/g, ''));
   assert.equal(liveStatus.length, 1, 'two defaulted parameters');

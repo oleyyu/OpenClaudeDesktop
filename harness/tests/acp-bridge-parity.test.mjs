@@ -22,8 +22,7 @@ const tmp = () => fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'acp-par
 const kimi = adapterById('kimi')
 
 /** A bridge on the scripted agent, driven like OpenClaude Desktop's client. */
-function bridge({ adapter = kimi, env = {}, answer } = {}) {
-  const home = tmp()
+function bridge({ adapter = kimi, env = {}, answer, home = tmp() } = {}) {
   const kimiHome = path.join(home, '.kimi-code')
   fs.mkdirSync(kimiHome, { recursive: true })
   const logFile = path.join(home, 'agent.log')
@@ -430,4 +429,34 @@ test('Kimi /init: the bridge serves it (Kimi’s ACP mode doesn’t) as a turn t
   const prompt = await kimi.expandCommand({}, init, { args: 'mention the CLI', cwd: '/x' })
   assert.match(prompt, /AGENTS\.md/)
   assert.match(prompt, /mention the CLI$/)
+})
+
+test('a stop while the agent is still starting: the turn ends at once and the agent never gets the prompt', async () => {
+  // Reopening the app: the session's agent process starts again (initialize is slow here) on the first message.
+  const first = bridge()
+  let threadId
+  try {
+    await first.call('initialize', {})
+    threadId = (await first.call('thread/start', { cwd: first.home })).thread.id
+    await first.turn(threadId, 'hello')
+  } finally { await first.close() }
+  const b = bridge({ home: first.home, env: { FAKE_ACP_INIT_DELAY: '1500' } })
+  try {
+    await b.call('initialize', {})
+    await b.call('thread/resume', { threadId })
+    const before = b.agentLog().length
+    const { turn: started } = await b.call('turn/start', { threadId, input: [{ type: 'text', text: 'do it', text_elements: [] }] })
+    await new Promise((resolve) => setTimeout(resolve, 200))
+    const stoppedAt = Date.now()
+    await b.call('turn/interrupt', { threadId, turnId: started.id })
+    const done = await b.waitFor((method, params) => method === 'turn/completed' && params.turn.id === started.id)
+    assert.equal(done.turn.status, 'interrupted')
+    assert.ok(Date.now() - stoppedAt < 1000, 'ends at once, not when the start (or the cancel grace) runs out')
+    // The next message reuses the process that was starting and is the only prompt the agent gets.
+    const next = await b.turn(threadId, 'again')
+    assert.equal(next.status, 'completed')
+    const prompts = b.agentLog().slice(before).filter((entry) => entry.method === 'session/prompt')
+    assert.equal(prompts.length, 1, JSON.stringify(prompts.map((entry) => entry.params?.prompt)))
+    assert.match(JSON.stringify(prompts[0].params.prompt), /again/)
+  } finally { await b.close() }
 })

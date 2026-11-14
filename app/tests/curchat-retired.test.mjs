@@ -9,6 +9,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { parseAst } from 'rolldown/parseAst';
+import { designEntryStylesheets, legacyGlobalStylesheets } from '../scripts/current-design-assets.mjs';
 
 const app = path.resolve(import.meta.dirname, '..');
 const local = rel => fs.readFileSync(path.join(app, rel), 'utf8');
@@ -37,12 +38,16 @@ test('the generator, the prepare script, the generated folder and the scoped sty
   assert.doesNotMatch(local('scripts/prepare-ui.mjs'), /current-chat/);
 });
 
-test('index.html links no current-chat/layout.css: Chat / Cowork surfaces read only the 3.6556.2 sheets and the compatibility layer', () => {
+test('index.html links no current-chat/layout.css: Chat / Cowork surfaces read only the official design sheets and the compatibility layer', () => {
   const html = local('index.html');
   assert.doesNotMatch(html, /current-chat/);
   const links = [...html.matchAll(/<link rel="stylesheet" href="([^"]+)" \/>/g)].map(m => m[1]);
   assert.equal(links.at(-1), '/assets/legacy-utilities.css');
-  assert.equal(links.filter(href => href.startsWith('/assets/v1/')).length, 5);
+  // design-production (4.16336.0): the three official entry sheets plus the one registered global legacy-region sheet
+  // (current-design-assets legacyGlobalStylesheets, c3fde7009-BszyXGym) — 4 /assets/v1/ links, named by the asset table.
+  const v1 = links.filter(href => href.startsWith('/assets/v1/'));
+  assert.equal(v1.length, 4);
+  assert.deepEqual(v1, [...designEntryStylesheets, ...legacyGlobalStylesheets].map(name => `/assets/v1/${name}`));
   // No local sheet restates the removed 2.31226.0 @scope root either.
   for (const rel of walk('src', /\.css$/)) assert.doesNotMatch(local(rel), /data-chat-source-version="2\.31226\.0"/, rel);
 });
@@ -61,17 +66,18 @@ test('main.jsx provides the view-tabs labels context only (CC-13)', () => {
   const main = local('src/main.jsx');
   assert.doesNotMatch(main, /CurrentChatCdsLabelsContext/);
   // The view-tabs locale context wraps it on the outside (CdsLocaleContext, the CDS formatters' locale).
-  assert.match(main, /\n {2}<CdsLocaleContext\.Provider value=\{getLocale\(\)\}><CdsLabelsContext\.Provider value=\{cdsLabels\}><SourceToastProvider><SourceFileEditGuard \/>/);
-  assert.match(main, /<\/SourceToastProvider><\/CdsLabelsContext\.Provider><\/CdsLocaleContext\.Provider>,\n\);/);
+  // host-wiring root: the 4.16336.0 window root (cds-core CdsRoot) sits inside them, around every window.
+  assert.match(main, /\n {2}<CdsLocaleContext\.Provider value=\{getLocale\(\)\}><CdsLabelsContext\.Provider value=\{cdsLabels\}><CdsCoreRoot className="contents" [^>\n]*><SourceToastProvider><SourceFileEditGuard \/>/);
+  assert.match(main, /<\/SourceToastProvider><\/CdsCoreRoot><\/CdsLabelsContext\.Provider><\/CdsLocaleContext\.Provider>,\n\);/);
 });
 
 test('the chat folder no longer writes the E34 shims current-chat imported (vendor-intl $t, shared-frame X, shared-8 vl)', () => {
   const manifest = JSON.parse(local('src/generated/chat/manifest.json'));
-  assert.equal(manifest.referenceVersion, '3.6556.2');
+  assert.equal(manifest.referenceVersion, '4.16336.0'); // regions-chat: the chat slice is cut from 4.16336.0
   assert.deepEqual(manifest.legacy ?? {}, {});
   for (const file of ['vendor-intl-Cf4IuK3L.js', 'shared-frame-C_2npUJq.js', 'shared-8-B5xbG2px.js'])
     assert.equal(fs.existsSync(path.join(app, 'src/generated/chat', file)), false, file);
   // en (FormattedRelativeTime) was emitted only for the legacy $t, so its HomeRelativeTime adapter import went with it.
   assert.equal(Object.hasOwn(manifest.publicNames, 'FormattedRelativeTime'), false);
-  assert.doesNotMatch(local('src/generated/chat/vendor-intl-DYfox5Co.js'), /source-home-adapters\.jsx/);
+  assert.doesNotMatch(local('src/generated/chat/vendor-intl-BJgYK7RA.js'), /source-home-adapters\.jsx/);
 });

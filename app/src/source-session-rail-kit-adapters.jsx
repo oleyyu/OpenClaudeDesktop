@@ -2,11 +2,12 @@
 // (src/generated/session-rail-kit, R4f-rail SR-1; 3.6556.2 since w2-rail-kit). Each export replaces one import of the
 // original, and the extractor checks the declaration it stands for (file:local, with feature strings) before it accepts
 // the import. 3.6556.2 keys: vendor-intl q / Gt, shared-52 cB, shared-78 L2, c68c4283d un / _f / hf, shared-11 Pc,
-// shared-4 Sk, shared-16 Q / Bo, cc43287c9 uH / dH. The kit no longer imports the layer hooks below (3.6556.2 reads
+// shared-4 Sk, shared-16 Q / Bo, cc43287c9 uH / dH; 4.16336.0 (src/generated/session-rail-kit-v4) adds shared-123 kB. The kit no longer imports the layer hooks below (3.6556.2 reads
 // view-tabs' useCdsOwnerWindow / useCdsOwnerWindowAnchor); they stay for the rail view adapters that re-export them.
 import React, { createContext, useContext, useMemo } from "react";
 import { StartMessage, useStartIntl } from "./source-code-start-adapters.jsx";
 import { useSourceToasts } from "./source-toast.jsx";
+import { growthBookFlagKey, hostGrowthBookFlag } from "./host-growthbook.mjs";
 
 // vendor-intl q / Gt (react-intl useIntl / FormattedMessage) over the local catalog: the English message is looked up in
 // zh-CN by t() (source-code-start-adapters.jsx).
@@ -62,6 +63,29 @@ export function panesOfMode(state, mode) {
 // host follows its "on" branch, so the rail is the flat rail (c73f45bc3 wy, cc43287c9 uN).
 export function useSessionPresetsFlat() {
   return true;
+}
+
+// shared-123 kB (exported Zc; new in 4.16336.0, session-rail-kit-v4): `function kB(e){let t=AB(e);return V(e)&&t}`, read by
+// shared-55 Yz (`Mr("__gb__428353835")`) for the rail's new "flask" section (cdbb20c70 Ve, the Show menu row).
+//   AB (exported $c) `NB(e) === !0`; NB (exported el) asks useConfiguration().serverGateNames (shared-0 dn) when that list is
+//   non-empty, else the server gate store hu (exported uw) `e.isLoaded ? MB(e.gates, flag) : void 0`; MB matches gate keys
+//   through shared-0 yu (exported zx, the `__gb__` id hash = host-growthbook.mjs growthBookFlagKey).
+//   V = shared-25 ko (exported Fg), useFeatureIsOn: `go(H(e)).on`, the GrowthBook evaluation of that key.
+// Host: V is the one host GrowthBook table (host-growthbook.mjs; __gb__428353835 is absent from the 3P bootstrap Wbn, so off).
+// NB: this renderer has no claude.ai boot configuration (no serverGateNames; source-routine-cowork-adapters.jsx
+// useAppConfiguration answers {}) and no server gate store is ever loaded, so NB is undefined and AB false. Both legs are
+// evaluated in kB's order; the answer is false today whatever either table says, and follows them if either changes.
+const HOST_SERVER_GATE_NAMES = Object.freeze([]);
+const HOST_SERVER_GATE_STORE = Object.freeze({ isLoaded: false, gates: Object.freeze([]) });
+function hostServerGate(flag) {
+  const key = growthBookFlagKey(flag);
+  const matches = gates => gates.some(gate => growthBookFlagKey(gate) === key);
+  if (HOST_SERVER_GATE_NAMES.length > 0) return matches(HOST_SERVER_GATE_NAMES);
+  return HOST_SERVER_GATE_STORE.isLoaded ? matches(HOST_SERVER_GATE_STORE.gates) : undefined;
+}
+export function useServerGatedFeature(flag) {
+  const serverGate = hostServerGate(flag) === true;
+  return hostGrowthBookFlag(flag) && serverGate;
 }
 
 // shared-4 NE (exported Z; 3.6556.2 Sk, exported rt): renders the region registry's body (`AE((e) => e.body)`) for a navigation region — here the

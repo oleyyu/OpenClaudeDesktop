@@ -1,0 +1,1233 @@
+{
+  "referenceVersion": "4.16336.0",
+  "referenceSnapshot": "snapshots/claude-4.16336.0-20261104",
+  "generator": "scripts/extract-queued-bar-v4.mjs",
+  "previous": {
+    "generator": "scripts/extract-queued-bar.mjs",
+    "output": "src/generated/queued-bar",
+    "referenceVersion": "3.6556.2",
+    "roots": {
+      "QueuedMessageBar": "cf74bc599-CRYqipWN.js#VE"
+    },
+    "callSite": "cc43287c9-Me-M2ucD.js#epe"
+  },
+  "sharedGraph": {
+    "area": "cds-core",
+    "manifestSha256": "06d2026939e5c8992713c2a0dda1b1abc9adffe7a0c223fe3c1e79eecd08d62c"
+  },
+  "linkedAreas": {
+    "chat-projects-v4": "397c2214e00334df6904f376e61a97d2867b7fd66f3606c5563de57535c392b2",
+    "code-composer-v4": "dc5bfba3750b5f0468cadcf5b6123fe59ce856daf14f6aebf5b1bce1c2f1cf64",
+    "cowork-scheduled-v4": "1af355ba22cc6cee9062edb2710c581d7808d95812d240d343ad995cf96ceb78",
+    "frame-sidebar-nav": "f050559d8d4736a10e502efd30f166d28900e800b146c6c8749608a326966487",
+    "proposal-group-v4": "373e3ed4e243fdfea94253655f55063a894ac1a21187f4fd5eb8745eea61bc83",
+    "r3b-transcript-v4": "6bcda4070823d55dfc00e8a5641c8a4dce1d0aa39d0dd5370fb853532dcd2301",
+    "titlebar": "8a99c5c6a464578ba13c6b81c3a5cc4ca8079d4f2f47db7f268e520c78e5372f",
+    "turn-plan-v4": "120180f4946ca49f0a8cb0302a85c1ff5f155733e1ef1bb35000ece88b1ceb2e",
+    "session-rail-changes-v4": "fd23545a7c4be524493f74e75d69170c3538554b15051026bb8622d8240903bf",
+    "working-line-v4": "25610753870c1d676d772810433ca78b2413b2d93418b0e3ea8a904875d1deaa"
+  },
+  "roots": [
+    {
+      "file": "cf74bc599-BytvntCE.js",
+      "local": "wO",
+      "name": "QueuedMessageBar",
+      "export": "QueuedMessageBar",
+      "declarationSha256": "718c33b793fe5b518edfca40aec430422b5405346da7192adcaf66dbcf4260b4",
+      "pinned": true
+    }
+  ],
+  "pendingRoots": [],
+  "adapters": [
+    {
+      "original": "c6b8adeaf-qnfs920E.js#la",
+      "name": "useQueuedEntryRemoving",
+      "hostAdapter": "src/source-queued-bar-adapter.jsx",
+      "previous": "c6b8adeaf-bLEQVSWL.js#Ti",
+      "declarationSha256": "7426a45bb8b62b3f82d4c41650bf8ae8d261ccc2c82e8e2def1a936c0a6ec73f",
+      "pinned": true
+    },
+    {
+      "original": "c6b8adeaf-qnfs920E.js#ta",
+      "name": "useQueuedEntrySending",
+      "hostAdapter": "src/source-queued-bar-adapter.jsx",
+      "previous": "c6b8adeaf-bLEQVSWL.js#vi",
+      "declarationSha256": "f5cdd41e678d555ad0bcf68f254620f3c986f262d4600551eac3f1a361df833f",
+      "pinned": true
+    },
+    {
+      "original": "c6b8adeaf-qnfs920E.js#na",
+      "name": "useQueuedEntrySendAccepted",
+      "hostAdapter": "src/source-queued-bar-adapter.jsx",
+      "previous": "c6b8adeaf-bLEQVSWL.js#yi",
+      "declarationSha256": "f8b53a11810e9ba7bb46d1f1a384a7f5d09e5e6524882eb7b5995c112f171902",
+      "pinned": true
+    },
+    {
+      "original": "c6b8adeaf-qnfs920E.js#ra",
+      "name": "useQueuedEntrySendLanded",
+      "hostAdapter": "src/source-queued-bar-adapter.jsx",
+      "previous": "c6b8adeaf-bLEQVSWL.js#bi",
+      "declarationSha256": "dbb7a588f868db985da23da9010585c59049b7f50ca61dacfced79cf31c84ebd",
+      "pinned": true
+    },
+    {
+      "original": "cb231ff8d-H_9bdVKG.js#c",
+      "name": "SEEDED_SUMMON_PARSER_ENTRY",
+      "hostAdapter": "src/source-code-transcript-adapters.jsx",
+      "previous": "cb231ff8d-C3NUlIOY.js#c",
+      "declarationSha256": "4b672a180649313a49b901e0fd92e133fa66fdddc01ef1ca59b28bba0d4029bc",
+      "pinned": true
+    },
+    {
+      "original": "shared-25-D-aF0gt9.js#Z",
+      "name": "useCurrentAccount",
+      "hostAdapter": "src/source-routines-shared-adapters.jsx",
+      "previous": null,
+      "declarationSha256": "65456efed4ffae1a16e739336c231a59f0f8fd4f0523de0d58b1ae8c18f0eb74",
+      "pinned": true
+    },
+    {
+      "original": "vendor-intl-BJgYK7RA.js#q",
+      "name": "useIntl",
+      "hostAdapter": "src/source-routines-shared-adapters.jsx",
+      "previous": "vendor-intl-DYfox5Co.js#q",
+      "declarationSha256": "edf793bc7b87ae9a38cea39d25d752a5bcfef1d492e06a2219e120311feaaec0",
+      "pinned": true
+    },
+    {
+      "original": "vendor-intl-BJgYK7RA.js#Gt",
+      "name": "QueuedBarMessage",
+      "hostAdapter": "src/source-queued-bar-adapter.jsx",
+      "previous": "vendor-intl-DYfox5Co.js#l",
+      "declarationSha256": "bde2ec1630e0a679fa4135cf75389568e77fa98fdcb08519af8104d5306ff5b5",
+      "pinned": true
+    }
+  ],
+  "linkedCopies": {
+    "shared-1-D1bGaTaN.js#F4": "pure (d1-lib classify), sliced by turn-plan-v4 without an export: the queued preview's text cleanup (shared-1 system-tag strip, c4d199b75 reply / attach markers)",
+    "shared-1-D1bGaTaN.js#P4": "pure (d1-lib classify), sliced by turn-plan-v4 without an export: the queued preview's text cleanup (shared-1 system-tag strip, c4d199b75 reply / attach markers)",
+    "shared-1-D1bGaTaN.js#Y4": "pure (d1-lib classify), sliced by turn-plan-v4 without an export: the queued preview's text cleanup (shared-1 system-tag strip, c4d199b75 reply / attach markers)",
+    "shared-1-D1bGaTaN.js#G4": "pure (d1-lib classify), sliced by turn-plan-v4 without an export: the queued preview's text cleanup (shared-1 system-tag strip, c4d199b75 reply / attach markers)",
+    "shared-1-D1bGaTaN.js#N4": "pure (d1-lib classify), sliced by turn-plan-v4 without an export: the queued preview's text cleanup (shared-1 system-tag strip, c4d199b75 reply / attach markers)",
+    "shared-1-D1bGaTaN.js#j4": "pure (d1-lib classify), sliced by turn-plan-v4 without an export: the queued preview's text cleanup (shared-1 system-tag strip, c4d199b75 reply / attach markers)",
+    "shared-1-D1bGaTaN.js#q4": "pure (d1-lib classify), sliced by turn-plan-v4 without an export: the queued preview's text cleanup (shared-1 system-tag strip, c4d199b75 reply / attach markers)",
+    "shared-1-D1bGaTaN.js#e3": "pure (d1-lib classify), sliced by turn-plan-v4 without an export: the queued preview's text cleanup (shared-1 system-tag strip, c4d199b75 reply / attach markers)",
+    "shared-1-D1bGaTaN.js#$4": "pure (d1-lib classify), sliced by turn-plan-v4 without an export: the queued preview's text cleanup (shared-1 system-tag strip, c4d199b75 reply / attach markers)",
+    "shared-1-D1bGaTaN.js#t3": "pure (d1-lib classify), sliced by turn-plan-v4 without an export: the queued preview's text cleanup (shared-1 system-tag strip, c4d199b75 reply / attach markers)",
+    "shared-1-D1bGaTaN.js#n3": "pure (d1-lib classify), sliced by turn-plan-v4 without an export: the queued preview's text cleanup (shared-1 system-tag strip, c4d199b75 reply / attach markers)",
+    "c4d199b75-BFt-qsGU.js#q": "pure (d1-lib classify), sliced by turn-plan-v4 without an export: the queued preview's text cleanup (shared-1 system-tag strip, c4d199b75 reply / attach markers)",
+    "c4d199b75-BFt-qsGU.js#F": "pure (d1-lib classify), sliced by turn-plan-v4 without an export: the queued preview's text cleanup (shared-1 system-tag strip, c4d199b75 reply / attach markers)",
+    "c4d199b75-BFt-qsGU.js#we": "pure (d1-lib classify), sliced by turn-plan-v4 without an export: the queued preview's text cleanup (shared-1 system-tag strip, c4d199b75 reply / attach markers)",
+    "c4d199b75-BFt-qsGU.js#N": "pure (d1-lib classify), sliced by turn-plan-v4 without an export: the queued preview's text cleanup (shared-1 system-tag strip, c4d199b75 reply / attach markers)",
+    "c4d199b75-BFt-qsGU.js#z": "pure (d1-lib classify), sliced by turn-plan-v4 without an export: the queued preview's text cleanup (shared-1 system-tag strip, c4d199b75 reply / attach markers)",
+    "c4d199b75-BFt-qsGU.js#P": "pure (d1-lib classify), sliced by turn-plan-v4 without an export: the queued preview's text cleanup (shared-1 system-tag strip, c4d199b75 reply / attach markers)",
+    "c4d199b75-BFt-qsGU.js#j": "pure (d1-lib classify), sliced by turn-plan-v4 without an export: the queued preview's text cleanup (shared-1 system-tag strip, c4d199b75 reply / attach markers)",
+    "shared-3-IQTrO7Gx.js#NF": "pure (d1-lib classify), sliced by frame-sidebar-nav without an export: the artifact name key / uuid helpers (shared-3)",
+    "shared-3-IQTrO7Gx.js#MF": "pure (d1-lib classify), sliced by frame-sidebar-nav without an export: the artifact name key / uuid helpers (shared-3)",
+    "shared-3-IQTrO7Gx.js#yF": "pure (d1-lib classify), sliced by frame-sidebar-nav without an export: the artifact name key / uuid helpers (shared-3)",
+    "shared-3-IQTrO7Gx.js#vF": "pure (d1-lib classify), sliced by frame-sidebar-nav without an export: the artifact name key / uuid helpers (shared-3)"
+  },
+  "callSites": [
+    {
+      "source": "cc43287c9-dzfX-J5i.js",
+      "role": "The session scope body's queued message bar overlay (cf74bc599 wO, export QueuedMessageBar), rendered while the queue has entries",
+      "sourceSha256": "4a6893cf4d24a16a99c88d0793529ff39cd1cc0abd9527ce263a54d8d26d7f43",
+      "features": [
+        "var{Component:ICe}=Da({entry:Tm,pick:e=>e.QueuedMessageBar,options:{loading:Ea(\"placeholder-would-mislead\")},overlayHost:\"EpitaxySessionScopeBody.QueuedMessageBar\"})",
+        "_c.entries?.length?p(ICe,{entries:_c.entries,exiting:_c.exiting,onExited:_c.onExited,lockedIds:wn,onCancel:Tn?Ae:void 0,onEdit:Tn?Ge:void 0,onSteer:ji&&!Pi?void 0:Dn,steerHeadOnly:On,steerBusy:On&&Ai,onReorder:En?ut:void 0},`${t}:queued`):null"
+      ]
+    },
+    {
+      "source": "cf74bc599-BytvntCE.js",
+      "role": "The bar chunk exports wO as QueuedMessageBar (the overlay's pick)",
+      "sourceSha256": "8bb84ff612c95bafa8c6e9dbde405570f6e259c185c0b25839f89eedba4bb10e",
+      "features": [
+        "wO as QueuedMessageBar"
+      ]
+    }
+  ],
+  "dndKit": "c09f6b4e5--ahaSfV5.js",
+  "imports": [
+    {
+      "module": "shared-38.mjs",
+      "local": "Yr",
+      "kind": "linked",
+      "from": "../session-rail-changes-v4/shared-38.mjs",
+      "name": "bandAccentClassName",
+      "via": "shared-38-DyF0_Fim.js#Yr"
+    },
+    {
+      "module": "shared-153.mjs",
+      "local": "kr",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-0.mjs",
+      "name": "eP",
+      "via": "shared-0-CnnWnVrT.js:xm"
+    },
+    {
+      "module": "shared-153.mjs",
+      "local": "uG",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-153.mjs",
+      "name": "uG",
+      "via": "shared-153-DMw2VzSq.js#uG"
+    },
+    {
+      "module": "cb231ff8d.mjs",
+      "local": "J2",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-frame.mjs",
+      "name": "J2",
+      "via": "shared-frame-CJdE5Ria.js:um"
+    },
+    {
+      "module": "cb231ff8d.mjs",
+      "local": "J9",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-frame.mjs",
+      "name": "J9",
+      "via": "shared-frame-CJdE5Ria.js:hm"
+    },
+    {
+      "module": "cb231ff8d.mjs",
+      "local": "K2",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-frame.mjs",
+      "name": "K2",
+      "via": "shared-frame-CJdE5Ria.js:vm"
+    },
+    {
+      "module": "cb231ff8d.mjs",
+      "local": "c",
+      "kind": "adapter",
+      "from": "../../source-queued-bar-v4-adapters.jsx",
+      "name": "SEEDED_SUMMON_PARSER_ENTRY",
+      "via": "cb231ff8d-H_9bdVKG.js#c"
+    },
+    {
+      "module": "cb231ff8d.mjs",
+      "local": "e",
+      "kind": "linked",
+      "from": "../working-line-v4/preload-helper.mjs",
+      "name": "e",
+      "via": "preload-helper-BBljBeZo.js:n"
+    },
+    {
+      "module": "cb231ff8d.mjs",
+      "local": "i",
+      "kind": "linked",
+      "from": "../frame-sidebar-nav/shared-183.mjs",
+      "name": "DJ",
+      "via": "shared-183-B2N6Zy4J.js:_r"
+    },
+    {
+      "module": "cb231ff8d.mjs",
+      "local": "r",
+      "kind": "linked",
+      "from": "../r3b-transcript-v4/render-error-boundary.mjs",
+      "name": "renderErrorSanitizer",
+      "via": "shared-26-B-POtn5S.js:ex"
+    },
+    {
+      "module": "c06cf64bb.mjs",
+      "local": "Ke",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-62.mjs",
+      "name": "pG",
+      "via": "shared-62-DoCqVpIq.js:gr"
+    },
+    {
+      "module": "c06cf64bb.mjs",
+      "local": "vr",
+      "kind": "linked",
+      "from": "../chat-projects-v4/shared-2.mjs",
+      "name": "tk",
+      "via": "shared-2-CsjIBQD8.js:dp"
+    },
+    {
+      "module": "c4d199b75.mjs",
+      "local": "e",
+      "kind": "linked",
+      "from": "../turn-plan-v4/shared-153.mjs",
+      "name": "Sd",
+      "via": "shared-153-DMw2VzSq.js:XS"
+    },
+    {
+      "module": "shared-3.mjs",
+      "local": "Gt",
+      "kind": "linked",
+      "from": "../frame-sidebar-nav/shared-0.mjs",
+      "name": "B1",
+      "via": "shared-0-CnnWnVrT.js:wr"
+    },
+    {
+      "module": "shared-3.mjs",
+      "local": "Hn",
+      "kind": "linked",
+      "from": "../frame-sidebar-nav/shared-25-D-aF0gt9.js",
+      "name": "Zq",
+      "via": "shared-25-D-aF0gt9.js:Zt"
+    },
+    {
+      "module": "shared-3.mjs",
+      "local": "J1",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-frame.mjs",
+      "name": "J1",
+      "via": "shared-frame-CJdE5Ria.js:lm"
+    },
+    {
+      "module": "shared-3.mjs",
+      "local": "J2",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-frame.mjs",
+      "name": "J2",
+      "via": "shared-frame-CJdE5Ria.js:um"
+    },
+    {
+      "module": "shared-3.mjs",
+      "local": "J3",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-frame.mjs",
+      "name": "J3",
+      "via": "shared-frame-CJdE5Ria.js:dm"
+    },
+    {
+      "module": "shared-3.mjs",
+      "local": "J4",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-frame.mjs",
+      "name": "J4",
+      "via": "shared-frame-CJdE5Ria.js:fm"
+    },
+    {
+      "module": "shared-3.mjs",
+      "local": "J5",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-frame.mjs",
+      "name": "J5",
+      "via": "shared-frame-CJdE5Ria.js:pm"
+    },
+    {
+      "module": "shared-3.mjs",
+      "local": "J9",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-frame.mjs",
+      "name": "J9",
+      "via": "shared-frame-CJdE5Ria.js:hm"
+    },
+    {
+      "module": "shared-3.mjs",
+      "local": "Jt",
+      "kind": "linked",
+      "from": "../frame-sidebar-nav/shared-0.mjs",
+      "name": "L1",
+      "via": "shared-0-CnnWnVrT.js:xr"
+    },
+    {
+      "module": "shared-3.mjs",
+      "local": "K1",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-frame.mjs",
+      "name": "K1",
+      "via": "shared-frame-CJdE5Ria.js:_m"
+    },
+    {
+      "module": "shared-3.mjs",
+      "local": "K2",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-frame.mjs",
+      "name": "K2",
+      "via": "shared-frame-CJdE5Ria.js:vm"
+    },
+    {
+      "module": "shared-3.mjs",
+      "local": "K3",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-frame.mjs",
+      "name": "K3",
+      "via": "shared-frame-CJdE5Ria.js:ym"
+    },
+    {
+      "module": "shared-3.mjs",
+      "local": "K5",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-frame.mjs",
+      "name": "K5",
+      "via": "shared-frame-CJdE5Ria.js:xm"
+    },
+    {
+      "module": "shared-3.mjs",
+      "local": "Lo",
+      "kind": "linked",
+      "from": "../frame-sidebar-nav/vendor-query.mjs",
+      "name": "$e",
+      "via": "vendor-query-Bl2Kfzgk.js:c"
+    },
+    {
+      "module": "shared-3.mjs",
+      "local": "Rt",
+      "kind": "linked",
+      "from": "../frame-sidebar-nav/shared-0.mjs",
+      "name": "lH",
+      "via": "shared-0-CnnWnVrT.js:od"
+    },
+    {
+      "module": "shared-3.mjs",
+      "local": "Ve",
+      "kind": "linked",
+      "from": "../frame-sidebar-nav/shared-0.mjs",
+      "name": "ut",
+      "via": "shared-0-CnnWnVrT.js:CT"
+    },
+    {
+      "module": "shared-3.mjs",
+      "local": "Vt",
+      "kind": "linked",
+      "from": "../frame-sidebar-nav/shared-0.mjs",
+      "name": "A9",
+      "via": "shared-0-CnnWnVrT.js:u"
+    },
+    {
+      "module": "shared-3.mjs",
+      "local": "X",
+      "kind": "adapter",
+      "from": "../../source-queued-bar-v4-adapters.jsx",
+      "name": "useCurrentAccount",
+      "via": "shared-25-D-aF0gt9.js:yi"
+    },
+    {
+      "module": "shared-3.mjs",
+      "local": "bF",
+      "kind": "linked",
+      "from": "../frame-sidebar-nav/shared-3.mjs",
+      "name": "bF",
+      "via": "shared-3-IQTrO7Gx.js#bF"
+    },
+    {
+      "module": "shared-3.mjs",
+      "local": "c",
+      "kind": "linked",
+      "from": "../working-line-v4/preload-helper.mjs",
+      "name": "e",
+      "via": "preload-helper-BBljBeZo.js:n"
+    },
+    {
+      "module": "shared-3.mjs",
+      "local": "dt",
+      "kind": "linked",
+      "from": "../frame-sidebar-nav/shared-0.mjs",
+      "name": "V1",
+      "via": "shared-0-CnnWnVrT.js:Sr"
+    },
+    {
+      "module": "shared-3.mjs",
+      "local": "gn",
+      "kind": "linked",
+      "from": "../proposal-group-v4/shared-25.mjs",
+      "name": "tJ",
+      "via": "shared-25-D-aF0gt9.js:Kt"
+    },
+    {
+      "module": "shared-3.mjs",
+      "local": "hd",
+      "kind": "linked",
+      "from": "../frame-sidebar-nav/shared-3.mjs",
+      "name": "hd",
+      "via": "shared-3-IQTrO7Gx.js#hd"
+    },
+    {
+      "module": "shared-3.mjs",
+      "local": "jF",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-3.mjs",
+      "name": "jF",
+      "via": "shared-3-IQTrO7Gx.js#jF"
+    },
+    {
+      "module": "shared-3.mjs",
+      "local": "kt",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-0.mjs",
+      "name": "cV",
+      "via": "shared-0-CnnWnVrT.js:jd"
+    },
+    {
+      "module": "shared-3.mjs",
+      "local": "wu",
+      "kind": "linked",
+      "from": "../frame-sidebar-nav/shared-3.mjs",
+      "name": "wu",
+      "via": "shared-3-IQTrO7Gx.js#wu"
+    },
+    {
+      "module": "shared-2.mjs",
+      "local": "nO",
+      "kind": "linked",
+      "from": "../cowork-scheduled-v4/shared-2-CsjIBQD8.mjs",
+      "name": "nO",
+      "via": "shared-2-CsjIBQD8.js#nO"
+    },
+    {
+      "module": "shared-2.mjs",
+      "local": "tO",
+      "kind": "linked",
+      "from": "../cowork-scheduled-v4/shared-2-CsjIBQD8.mjs",
+      "name": "tO",
+      "via": "shared-2-CsjIBQD8.js#tO"
+    },
+    {
+      "module": "c28ffe629.mjs",
+      "local": "J4",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-frame.mjs",
+      "name": "J4",
+      "via": "shared-frame-CJdE5Ria.js:fm"
+    },
+    {
+      "module": "c28ffe629.mjs",
+      "local": "J9",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-frame.mjs",
+      "name": "J9",
+      "via": "shared-frame-CJdE5Ria.js:hm"
+    },
+    {
+      "module": "c28ffe629.mjs",
+      "local": "K4",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-frame.mjs",
+      "name": "K4",
+      "via": "shared-frame-CJdE5Ria.js:bm"
+    },
+    {
+      "module": "c28ffe629.mjs",
+      "local": "Ue",
+      "kind": "linked",
+      "from": "../turn-plan-v4/shared-92.mjs",
+      "name": "eM",
+      "via": "shared-92-BOgyxePb.js:hf"
+    },
+    {
+      "module": "c28ffe629.mjs",
+      "local": "ot",
+      "kind": "adapter",
+      "from": "../../source-queued-bar-v4-adapters.jsx",
+      "name": "useIntl",
+      "via": "vendor-intl-BJgYK7RA.js:p"
+    },
+    {
+      "module": "c96d752d0.mjs",
+      "local": "J0",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-frame.mjs",
+      "name": "J0",
+      "via": "shared-frame-CJdE5Ria.js:cm"
+    },
+    {
+      "module": "c96d752d0.mjs",
+      "local": "J9",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-frame.mjs",
+      "name": "J9",
+      "via": "shared-frame-CJdE5Ria.js:hm"
+    },
+    {
+      "module": "c96d752d0.mjs",
+      "local": "K0",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-frame.mjs",
+      "name": "K0",
+      "via": "shared-frame-CJdE5Ria.js:gm"
+    },
+    {
+      "module": "c96d752d0.mjs",
+      "local": "Q",
+      "kind": "adapter",
+      "from": "../../source-queued-bar-v4-adapters.jsx",
+      "name": "QueuedBarMessage",
+      "via": "vendor-intl-BJgYK7RA.js:l"
+    },
+    {
+      "module": "c96d752d0.mjs",
+      "local": "f",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "jsx",
+      "via": "vendor-frame-BckkO60Y.js:Ga"
+    },
+    {
+      "module": "c96d752d0.mjs",
+      "local": "h",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "jsxs",
+      "via": "vendor-frame-BckkO60Y.js:Ka"
+    },
+    {
+      "module": "c96d752d0.mjs",
+      "local": "qe",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "CdsIcon",
+      "via": "shared-frame-CJdE5Ria.js:lf"
+    },
+    {
+      "module": "c53a94863.mjs",
+      "local": "J1",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-frame.mjs",
+      "name": "J1",
+      "via": "shared-frame-CJdE5Ria.js:lm"
+    },
+    {
+      "module": "c53a94863.mjs",
+      "local": "J2",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-frame.mjs",
+      "name": "J2",
+      "via": "shared-frame-CJdE5Ria.js:um"
+    },
+    {
+      "module": "c53a94863.mjs",
+      "local": "J9",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-frame.mjs",
+      "name": "J9",
+      "via": "shared-frame-CJdE5Ria.js:hm"
+    },
+    {
+      "module": "c53a94863.mjs",
+      "local": "K1",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-frame.mjs",
+      "name": "K1",
+      "via": "shared-frame-CJdE5Ria.js:_m"
+    },
+    {
+      "module": "c53a94863.mjs",
+      "local": "K2",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-frame.mjs",
+      "name": "K2",
+      "via": "shared-frame-CJdE5Ria.js:vm"
+    },
+    {
+      "module": "c53a94863.mjs",
+      "local": "i",
+      "kind": "react",
+      "from": "react",
+      "name": "useEffectEvent",
+      "via": "vendor-frame-BckkO60Y.js:_o"
+    },
+    {
+      "module": "c53a94863.mjs",
+      "local": "u",
+      "kind": "react",
+      "from": "react",
+      "name": "useLayoutEffect",
+      "via": "vendor-frame-BckkO60Y.js:xo"
+    },
+    {
+      "module": "c09f6b4e5.mjs",
+      "local": "a",
+      "kind": "react",
+      "from": "react",
+      "name": "memo",
+      "via": "vendor-frame-BckkO60Y.js:co"
+    },
+    {
+      "module": "c09f6b4e5.mjs",
+      "local": "c",
+      "kind": "react",
+      "from": "react",
+      "name": "default",
+      "via": "vendor-frame-BckkO60Y.js:lo"
+    },
+    {
+      "module": "c09f6b4e5.mjs",
+      "local": "d",
+      "kind": "react",
+      "from": "react",
+      "name": "cloneElement",
+      "via": "vendor-frame-BckkO60Y.js:to"
+    },
+    {
+      "module": "c09f6b4e5.mjs",
+      "local": "e",
+      "kind": "react",
+      "from": "react",
+      "name": "useReducer",
+      "via": "vendor-frame-BckkO60Y.js:Co"
+    },
+    {
+      "module": "c09f6b4e5.mjs",
+      "local": "f",
+      "kind": "react",
+      "from": "react",
+      "name": "useRef",
+      "via": "vendor-frame-BckkO60Y.js:wo"
+    },
+    {
+      "module": "c09f6b4e5.mjs",
+      "local": "i",
+      "kind": "react",
+      "from": "react",
+      "name": "forwardRef",
+      "via": "vendor-frame-BckkO60Y.js:ao"
+    },
+    {
+      "module": "c09f6b4e5.mjs",
+      "local": "l",
+      "kind": "react",
+      "from": "react",
+      "name": "createContext",
+      "via": "vendor-frame-BckkO60Y.js:no"
+    },
+    {
+      "module": "c09f6b4e5.mjs",
+      "local": "m",
+      "kind": "react",
+      "from": "react-dom",
+      "name": "unstable_batchedUpdates",
+      "via": "vendor-frame-BckkO60Y.js:za"
+    },
+    {
+      "module": "c09f6b4e5.mjs",
+      "local": "n",
+      "kind": "react",
+      "from": "react",
+      "name": "useMemo",
+      "via": "vendor-frame-BckkO60Y.js:So"
+    },
+    {
+      "module": "c09f6b4e5.mjs",
+      "local": "o",
+      "kind": "react",
+      "from": "react",
+      "name": "useCallback",
+      "via": "vendor-frame-BckkO60Y.js:fo"
+    },
+    {
+      "module": "c09f6b4e5.mjs",
+      "local": "p",
+      "kind": "react",
+      "from": "react",
+      "name": "useLayoutEffect",
+      "via": "vendor-frame-BckkO60Y.js:xo"
+    },
+    {
+      "module": "c09f6b4e5.mjs",
+      "local": "r",
+      "kind": "react",
+      "from": "react",
+      "name": "useState",
+      "via": "vendor-frame-BckkO60Y.js:To"
+    },
+    {
+      "module": "c09f6b4e5.mjs",
+      "local": "s",
+      "kind": "react",
+      "from": "react",
+      "name": "useEffect",
+      "via": "vendor-frame-BckkO60Y.js:go"
+    },
+    {
+      "module": "c09f6b4e5.mjs",
+      "local": "t",
+      "kind": "react",
+      "from": "react-dom",
+      "name": "createPortal",
+      "via": "vendor-frame-BckkO60Y.js:Ia"
+    },
+    {
+      "module": "c09f6b4e5.mjs",
+      "local": "u",
+      "kind": "react",
+      "from": "react",
+      "name": "useContext",
+      "via": "vendor-frame-BckkO60Y.js:po"
+    },
+    {
+      "module": "c470fd30f.mjs",
+      "local": "I2",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-frame.mjs",
+      "name": "I2",
+      "via": "shared-frame-CJdE5Ria.js:im"
+    },
+    {
+      "module": "c470fd30f.mjs",
+      "local": "I3",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-frame.mjs",
+      "name": "I3",
+      "via": "shared-frame-CJdE5Ria.js:am"
+    },
+    {
+      "module": "c470fd30f.mjs",
+      "local": "J2",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-frame.mjs",
+      "name": "J2",
+      "via": "shared-frame-CJdE5Ria.js:um"
+    },
+    {
+      "module": "c470fd30f.mjs",
+      "local": "J3",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-frame.mjs",
+      "name": "J3",
+      "via": "shared-frame-CJdE5Ria.js:dm"
+    },
+    {
+      "module": "c470fd30f.mjs",
+      "local": "J5",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-frame.mjs",
+      "name": "J5",
+      "via": "shared-frame-CJdE5Ria.js:pm"
+    },
+    {
+      "module": "c470fd30f.mjs",
+      "local": "J9",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-frame.mjs",
+      "name": "J9",
+      "via": "shared-frame-CJdE5Ria.js:hm"
+    },
+    {
+      "module": "c470fd30f.mjs",
+      "local": "K2",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-frame.mjs",
+      "name": "K2",
+      "via": "shared-frame-CJdE5Ria.js:vm"
+    },
+    {
+      "module": "c470fd30f.mjs",
+      "local": "K5",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-frame.mjs",
+      "name": "K5",
+      "via": "shared-frame-CJdE5Ria.js:xm"
+    },
+    {
+      "module": "c470fd30f.mjs",
+      "local": "e",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "jsx",
+      "via": "vendor-frame-BckkO60Y.js:Ga"
+    },
+    {
+      "module": "c470fd30f.mjs",
+      "local": "n",
+      "kind": "linked",
+      "from": "../code-composer-v4/chat-composer-frame.mjs",
+      "name": "useOptionalEventCallback",
+      "via": "shared-frame-CJdE5Ria.js:Pp"
+    },
+    {
+      "module": "c470fd30f.mjs",
+      "local": "r",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "CdsDropdown",
+      "via": "shared-frame-CJdE5Ria.js:Vs"
+    },
+    {
+      "module": "c470fd30f.mjs",
+      "local": "t",
+      "kind": "react",
+      "from": "react",
+      "name": "memo",
+      "via": "vendor-frame-BckkO60Y.js:co"
+    },
+    {
+      "module": "queued-bar.mjs",
+      "local": "D",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "CdsTextLink",
+      "via": "shared-frame-CJdE5Ria.js:Eu"
+    },
+    {
+      "module": "queued-bar.mjs",
+      "local": "F",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "_D",
+      "via": "shared-frame-CJdE5Ria.js:Us"
+    },
+    {
+      "module": "queued-bar.mjs",
+      "local": "I1",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-frame.mjs",
+      "name": "I1",
+      "via": "shared-frame-CJdE5Ria.js:rm"
+    },
+    {
+      "module": "queued-bar.mjs",
+      "local": "I2",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-frame.mjs",
+      "name": "I2",
+      "via": "shared-frame-CJdE5Ria.js:im"
+    },
+    {
+      "module": "queued-bar.mjs",
+      "local": "I3",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-frame.mjs",
+      "name": "I3",
+      "via": "shared-frame-CJdE5Ria.js:am"
+    },
+    {
+      "module": "queued-bar.mjs",
+      "local": "I5",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-frame.mjs",
+      "name": "I5",
+      "via": "shared-frame-CJdE5Ria.js:sm"
+    },
+    {
+      "module": "queued-bar.mjs",
+      "local": "J0",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-frame.mjs",
+      "name": "J0",
+      "via": "shared-frame-CJdE5Ria.js:cm"
+    },
+    {
+      "module": "queued-bar.mjs",
+      "local": "J1",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-frame.mjs",
+      "name": "J1",
+      "via": "shared-frame-CJdE5Ria.js:lm"
+    },
+    {
+      "module": "queued-bar.mjs",
+      "local": "J2",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-frame.mjs",
+      "name": "J2",
+      "via": "shared-frame-CJdE5Ria.js:um"
+    },
+    {
+      "module": "queued-bar.mjs",
+      "local": "J3",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-frame.mjs",
+      "name": "J3",
+      "via": "shared-frame-CJdE5Ria.js:dm"
+    },
+    {
+      "module": "queued-bar.mjs",
+      "local": "J4",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-frame.mjs",
+      "name": "J4",
+      "via": "shared-frame-CJdE5Ria.js:fm"
+    },
+    {
+      "module": "queued-bar.mjs",
+      "local": "J5",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-frame.mjs",
+      "name": "J5",
+      "via": "shared-frame-CJdE5Ria.js:pm"
+    },
+    {
+      "module": "queued-bar.mjs",
+      "local": "J9",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-frame.mjs",
+      "name": "J9",
+      "via": "shared-frame-CJdE5Ria.js:hm"
+    },
+    {
+      "module": "queued-bar.mjs",
+      "local": "Jy",
+      "kind": "linked",
+      "from": "../turn-plan-v4/cd57a9664.mjs",
+      "name": "i",
+      "via": "cd57a9664-DS9NN1WS.js:n"
+    },
+    {
+      "module": "queued-bar.mjs",
+      "local": "K0",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-frame.mjs",
+      "name": "K0",
+      "via": "shared-frame-CJdE5Ria.js:gm"
+    },
+    {
+      "module": "queued-bar.mjs",
+      "local": "K1",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-frame.mjs",
+      "name": "K1",
+      "via": "shared-frame-CJdE5Ria.js:_m"
+    },
+    {
+      "module": "queued-bar.mjs",
+      "local": "K2",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-frame.mjs",
+      "name": "K2",
+      "via": "shared-frame-CJdE5Ria.js:vm"
+    },
+    {
+      "module": "queued-bar.mjs",
+      "local": "K3",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-frame.mjs",
+      "name": "K3",
+      "via": "shared-frame-CJdE5Ria.js:ym"
+    },
+    {
+      "module": "queued-bar.mjs",
+      "local": "K4",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-frame.mjs",
+      "name": "K4",
+      "via": "shared-frame-CJdE5Ria.js:bm"
+    },
+    {
+      "module": "queued-bar.mjs",
+      "local": "K5",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-frame.mjs",
+      "name": "K5",
+      "via": "shared-frame-CJdE5Ria.js:xm"
+    },
+    {
+      "module": "queued-bar.mjs",
+      "local": "N",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "useCdsPrefersReducedMotion",
+      "via": "shared-frame-CJdE5Ria.js:Tu"
+    },
+    {
+      "module": "queued-bar.mjs",
+      "local": "Nh",
+      "kind": "linked",
+      "from": "../titlebar/c81ea1931.mjs",
+      "name": "e",
+      "via": "c81ea1931-ChuE7vym.js:t"
+    },
+    {
+      "module": "queued-bar.mjs",
+      "local": "O",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "CdsButton",
+      "via": "shared-frame-CJdE5Ria.js:Id"
+    },
+    {
+      "module": "queued-bar.mjs",
+      "local": "Oy",
+      "kind": "linked",
+      "from": "../session-rail-changes-v4/c0b46114c.mjs",
+      "name": "BAND_ENTER_CLASS",
+      "via": "c0b46114c-hEcQAWZ3.js:t"
+    },
+    {
+      "module": "queued-bar.mjs",
+      "local": "Q",
+      "kind": "adapter",
+      "from": "../../source-queued-bar-v4-adapters.jsx",
+      "name": "QueuedBarMessage",
+      "via": "vendor-intl-BJgYK7RA.js:l"
+    },
+    {
+      "module": "queued-bar.mjs",
+      "local": "S",
+      "kind": "react",
+      "from": "react",
+      "name": "useLayoutEffect",
+      "via": "vendor-frame-BckkO60Y.js:xo"
+    },
+    {
+      "module": "queued-bar.mjs",
+      "local": "Sa",
+      "kind": "adapter",
+      "from": "../../source-queued-bar-v4-adapters.jsx",
+      "name": "useIntl",
+      "via": "vendor-intl-BJgYK7RA.js:p"
+    },
+    {
+      "module": "queued-bar.mjs",
+      "local": "Te",
+      "kind": "linked",
+      "from": "../frame-sidebar-nav/shared-25-D-aF0gt9.js",
+      "name": "yd",
+      "via": "shared-25-D-aF0gt9.js:Bp"
+    },
+    {
+      "module": "queued-bar.mjs",
+      "local": "Z1",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-frame.mjs",
+      "name": "Z1",
+      "via": "shared-frame-CJdE5Ria.js:Sm"
+    },
+    {
+      "module": "queued-bar.mjs",
+      "local": "b",
+      "kind": "react",
+      "from": "react",
+      "name": "useRef",
+      "via": "vendor-frame-BckkO60Y.js:wo"
+    },
+    {
+      "module": "queued-bar.mjs",
+      "local": "c",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "jsxs",
+      "via": "vendor-frame-BckkO60Y.js:Ka"
+    },
+    {
+      "module": "queued-bar.mjs",
+      "local": "d",
+      "kind": "react",
+      "from": "react",
+      "name": "Fragment",
+      "via": "vendor-frame-BckkO60Y.js:Xa"
+    },
+    {
+      "module": "queued-bar.mjs",
+      "local": "es",
+      "kind": "linked",
+      "from": "../frame-sidebar-nav/shared-39.mjs",
+      "name": "Ol",
+      "via": "shared-39-ZCs0lAwB.js:zs"
+    },
+    {
+      "module": "queued-bar.mjs",
+      "local": "h",
+      "kind": "react",
+      "from": "react",
+      "name": "useEffect",
+      "via": "vendor-frame-BckkO60Y.js:go"
+    },
+    {
+      "module": "queued-bar.mjs",
+      "local": "i_",
+      "kind": "adapter",
+      "from": "../../source-queued-bar-v4-adapters.jsx",
+      "name": "useQueuedEntrySendAccepted",
+      "via": "c6b8adeaf-qnfs920E.js:R"
+    },
+    {
+      "module": "queued-bar.mjs",
+      "local": "ie",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "CdsContextMenu",
+      "via": "shared-frame-CJdE5Ria.js:sa"
+    },
+    {
+      "module": "queued-bar.mjs",
+      "local": "l",
+      "kind": "react",
+      "from": "react",
+      "name": "useState",
+      "via": "vendor-frame-BckkO60Y.js:To"
+    },
+    {
+      "module": "queued-bar.mjs",
+      "local": "n_",
+      "kind": "adapter",
+      "from": "../../source-queued-bar-v4-adapters.jsx",
+      "name": "useQueuedEntrySending",
+      "via": "c6b8adeaf-qnfs920E.js:L"
+    },
+    {
+      "module": "queued-bar.mjs",
+      "local": "ne",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "asElementNode",
+      "via": "shared-frame-CJdE5Ria.js:nm"
+    },
+    {
+      "module": "queued-bar.mjs",
+      "local": "o",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "jsx",
+      "via": "vendor-frame-BckkO60Y.js:Ga"
+    },
+    {
+      "module": "queued-bar.mjs",
+      "local": "p",
+      "kind": "react",
+      "from": "react",
+      "name": "memo",
+      "via": "vendor-frame-BckkO60Y.js:co"
+    },
+    {
+      "module": "queued-bar.mjs",
+      "local": "q",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "CdsTooltipProvider",
+      "via": "shared-frame-CJdE5Ria.js:ld"
+    },
+    {
+      "module": "queued-bar.mjs",
+      "local": "r_",
+      "kind": "adapter",
+      "from": "../../source-queued-bar-v4-adapters.jsx",
+      "name": "useQueuedEntryRemoving",
+      "via": "c6b8adeaf-qnfs920E.js:N"
+    },
+    {
+      "module": "queued-bar.mjs",
+      "local": "t_",
+      "kind": "adapter",
+      "from": "../../source-queued-bar-v4-adapters.jsx",
+      "name": "useQueuedEntrySendLanded",
+      "via": "c6b8adeaf-qnfs920E.js:B"
+    },
+    {
+      "module": "queued-bar.mjs",
+      "local": "te",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "CdsIcon",
+      "via": "shared-frame-CJdE5Ria.js:lf"
+    },
+    {
+      "module": "queued-bar.mjs",
+      "local": "u",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "Fragment",
+      "via": "vendor-frame-BckkO60Y.js:Wa"
+    },
+    {
+      "module": "queued-bar.mjs",
+      "local": "x",
+      "kind": "shared-graph",
+      "from": "../cds-core/vendor-frame.mjs",
+      "name": "useDirection",
+      "via": "vendor-frame-BckkO60Y.js:xa"
+    },
+    {
+      "module": "queued-bar.mjs",
+      "local": "y",
+      "kind": "react",
+      "from": "react",
+      "name": "useId",
+      "via": "vendor-frame-BckkO60Y.js:vo"
+    }
+  ]
+}

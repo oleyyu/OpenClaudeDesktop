@@ -7,7 +7,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
 import { ionSource } from '../scripts/official-3.6556.2.mjs';
-import { designStylesheets } from '../scripts/current-design-assets.mjs';
+import { designSnapshot, designStylesheets } from '../scripts/current-design-assets.mjs';
 import { extractChatArtifactCard } from '../scripts/extract-chat-artifact-card.mjs';
 import { JUMP_COMMANDS, PASS_THROUGH_REGIONS, REGION_ORDER } from '../src/focus-region-model.mjs';
 import { paletteActions } from '../src/sidebar-palette-model.mjs';
@@ -83,11 +83,19 @@ test('official: the Chat `artifacts` tool block is cc1aae219 Y3 over shared-9 sO
   assert.ok(ca1.includes('jump_to_artifact:Z("artifact")'));
   assert.ok(ca1.includes('"composer","sidePanel","artifact","overview"') && ca1.includes('Se=new Set(["question","artifact"])'));
   assert.ok(official('cbaae0d6d-').includes('(xe,{kind:"artifact",boxRef:Pe,name:oi,shown:si})'));
-  // The block's utilities are in the stylesheets the app loads (index.html, current-design-assets): no host CSS.
-  const css = designStylesheets.map((name) => fs.readFileSync(path.join(ionSource, name), 'utf8')).join('\n');
+  // The block's utilities are in the stylesheets the app loads (index.html, current-design-assets): no host CSS. The
+  // design sheets are read from the design snapshot of the same version (current-design-assets designSnapshot), never
+  // from the 3.6556.2 ionSource the region's JS comes from; and each selector is also in a sheet index.html links.
+  const designDir = path.resolve(app, '../reference', designSnapshot, 'ion-dist/assets/v1');
+  const css = designStylesheets.map((name) => fs.readFileSync(path.join(designDir, name), 'utf8')).join('\n');
+  const linked = [...local('index.html').matchAll(/<link rel="stylesheet" href="\/([^"]+)"/g)].map((m) => m[1]);
+  assert.ok(linked.length > 0, 'index.html links stylesheets');
+  const loaded = linked.map((href) => fs.readFileSync(path.join(app, 'public', href), 'utf8')).join('\n');
   for (const selector of ['.group-hover\\/artifact-block\\:scale-\\[1\\.035\\]', '.w-\\[52px\\]', '.h-\\[71px\\]', '.rotate-\\[0\\.1rad\\]',
-    '.w-\\[68px\\]', '.text-\\[0\\.3rem\\]', '.translate-y-\\[120\\%\\]', '.has-\\[button\\]\\:ms-md', '.hover\\:bg-bg-000\\/50', '.border-accent-200'])
+    '.w-\\[68px\\]', '.text-\\[0\\.3rem\\]', '.translate-y-\\[120\\%\\]', '.has-\\[button\\]\\:ms-md', '.hover\\:bg-bg-000\\/50', '.border-accent-200']) {
     assert.ok(css.includes(selector), selector);
+    assert.ok(loaded.includes(selector), `${selector} in a sheet index.html links`);
+  }
 });
 
 test('block: a created markdown artifact — the Y3 wrapper, the oO block, the open button, title and type line', () => {

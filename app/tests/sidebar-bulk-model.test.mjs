@@ -12,6 +12,9 @@ import { digitFor, moveToGroupRows, multiHotkeys, multiMenuState, openSessionLas
 import { bulkNestedFamilies } from "../src/generated/code-current/sidebar-bulk-family.mjs";
 import { worktreeConfirmReady } from "../src/worktree-dispose-model.mjs";
 import { dictionary } from "../electron/i18n/index.mjs";
+import { designEntryStylesheets } from '../scripts/current-design-assets.mjs';
+// design-production (4.16336.0): the loaded c6a992d55 entry sheet, named by current-design-assets.
+const UTILITIES_CSS = designEntryStylesheets.find(name => name.startsWith('c6a992d55-'));
 
 const sessions = [{ id: "a" }, { id: "b" }, { id: "c" }];
 
@@ -72,7 +75,7 @@ const BULK_TARGETS = {
 let server, createIntl, WorktreeCopy;
 before(async () => {
   server = await createServer({ configFile: false, root: app, plugins: [react()], server: { middlewareMode: true, hmr: false, ws: false, watch: null }, appType: "custom", logLevel: "error" });
-  ({ createIntl } = await server.ssrLoadModule("/src/generated/chat/vendor-intl-DYfox5Co.js"));
+  ({ createIntl } = await server.ssrLoadModule("/src/generated/chat/vendor-intl-BJgYK7RA.js"));
   WorktreeCopy = await server.ssrLoadModule("/src/generated/code-current/sidebar-bulk-worktree-copy.mjs");
 });
 after(() => server?.close());
@@ -204,7 +207,7 @@ test("yY: the several-sessions Couldn’t check confirm (AY's sessions copy over
   assert.match(source, /if \(worktreeConfirmReady\(\{ guardSince, openedAt \}\)\) onConfirm\?\.\(\);/);
   assert.match(source, /<WorktreeSessionTitles titles=\{titles\} \/>/);
   // The official classes are @layer utilities rules of the loaded CSS.
-  const css = readFileSync(path.join(app, "public/assets/v1/c6a992d55-Che1orl5.css"), "utf8");
+  const css = readFileSync(path.join(app, "public/assets/v1", UTILITIES_CSS), "utf8");
   for (const rule of [".gap-xs{gap:var(--cds-gap-xs)}", ".break-words{", ".mt-md{"]) assert.ok(css.includes(rule), rule);
 });
 

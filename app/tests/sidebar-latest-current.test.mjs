@@ -14,6 +14,9 @@ import { currentSidebarDetails } from '../src/sidebar-details-current-model.mjs'
 import zhSidebar from '../electron/i18n/zh-CN/sidebar.mjs';
 import { withMemoCache } from './support/react-memo-cache.mjs';
 import { ionSource, referenceVersion } from '../scripts/official-3.6556.2.mjs';
+import { designEntryStylesheets } from '../scripts/current-design-assets.mjs';
+// design-production (4.16336.0): the loaded c6a992d55 entry sheet, named by current-design-assets.
+const UTILITIES_CSS = designEntryStylesheets.find(name => name.startsWith('c6a992d55-'));
 
 // R2-sidebar step 2 (map-cc-sidebar, SC-4): the seven sidebar helpers that changed between 2.37337.1 and 2.42304.0
 // (PR card, row details model/view, status glyph, sort order, search field, group view). W2 (w2-sidebar-current-a/b)
@@ -24,7 +27,7 @@ const generated = path.join(app, 'src/generated/code-current');
 const latest = ionSource;
 const manifest = JSON.parse(readFileSync(path.join(generated, 'manifest.json'), 'utf8'));
 const viewTabs = JSON.parse(readFileSync(path.join(app, 'src/generated/view-tabs/manifest.json'), 'utf8'));
-const utilities = readFileSync(path.join(app, 'public/assets/v1/c6a992d55-Che1orl5.css'), 'utf8');
+const utilities = readFileSync(path.join(app, 'public/assets/v1', UTILITIES_CSS), 'utf8');
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
 const read = target => readFileSync(path.join(generated, target), 'utf8');
 const entry = target => manifest.modules.find(module => module.target === target);
@@ -115,9 +118,24 @@ test('SC-4: the title PR glyph pads with the 2.42304.0 ps/pe variables, sizes it
   assert.match(one, /font-weight:[0-9.]+/);
   const bold = renderToStaticMarkup(h(Card.SidebarPrGlyph, { pr:{ state:'open', count:1, entries:[] }, place:'line' }));
   assert.match(bold, /class="flex h-4 shrink-0 items-center gap-0\.5"/);
-  // The loaded 2.42304.0 utilities carry both new paddings (inside @layer utilities, like every other utility).
-  assert.ok(utilities.includes('.ps-\\[calc\\(\\(var\\(--df-row-ctl\\)-var\\(--df-pr-glyph\\,12px\\)\\)\\/2\\)\\]{padding-inline-start:'));
-  assert.ok(utilities.includes('.pe-\\[calc\\(\\(var\\(--df-row-ctl\\)-var\\(--df-pr-glyph\\,12px\\)\\)\\/2\\+max\\(0px\\,var\\(--df-heading-pitch\\,0px\\)-var\\(--df-row-ctl\\)\\)\\)\\]{padding-inline-end:'));
+  // The loaded utilities carry both new paddings (inside @layer utilities, like every other utility). design-production:
+  // 4.16336.0 compiles only the fallback-less var(--df-pr-glyph) form, so the 3.6556.2 gD class strings are served by the
+  // compatibility layer (legacy-utilities.css, itself one @layer utilities block), registered to the code-current region.
+  const compatibility = JSON.parse(readFileSync(path.join(app, 'public/style-compatibility.json'), 'utf8'));
+  const layer = readFileSync(path.join(app, 'public', compatibility.output), 'utf8');
+  assert.match(layer, /^\/\*[^]*?\*\/\n@layer utilities\{\n[^]*\n\}\n?$/);
+  for (const [className, rule] of [
+    ['ps-[calc((var(--df-row-ctl)-var(--df-pr-glyph,12px))/2)]', '.ps-\\[calc\\(\\(var\\(--df-row-ctl\\)-var\\(--df-pr-glyph\\,12px\\)\\)\\/2\\)\\]{padding-inline-start:'],
+    ['pe-[calc((var(--df-row-ctl)-var(--df-pr-glyph,12px))/2+max(0px,var(--df-heading-pitch,0px)-var(--df-row-ctl)))]', '.pe-\\[calc\\(\\(var\\(--df-row-ctl\\)-var\\(--df-pr-glyph\\,12px\\)\\)\\/2\\+max\\(0px\\,var\\(--df-heading-pitch\\,0px\\)-var\\(--df-row-ctl\\)\\)\\)\\]{padding-inline-end:'],
+  ]) {
+    assert.ok(glyph.split(' ').includes(className), className);
+    if (utilities.includes(rule)) continue;
+    assert.ok(layer.includes(rule), `${className}: in the loaded ${UTILITIES_CSS} or the compatibility layer`);
+    const owned = compatibility.rules.find(entry => entry.references.some(ref => ref.className === className));
+    assert.ok(owned?.references.find(ref => ref.className === className).hits.some(hit => hit.file === 'src/generated/code-current/sidebar-pr-card.mjs' && hit.sourceVersion === '3.6556.2'), className);
+    const owner = compatibility.legacyDebt.owners.find(entry => entry.classes.includes(className));
+    assert.deepEqual([owner?.owner, owner?.kind], ['generated:code-current', 'region'], className);
+  }
   assert.match(utilities, /\.text-muted-as-secondary\{color:var\(--muted-as-secondary,var\(--cds-text-muted\)\)\}/);
   // Two entries still open the original preview card (count shown, no eager popup).
   const many = renderToStaticMarkup(h(Card.SidebarPrGlyph, { pr:{ state:'open', count:2, entries:[{ repo:'a/b', number:1, state:'open' }, { repo:'a/c', number:2, state:'open' }] }, place:'title' }));

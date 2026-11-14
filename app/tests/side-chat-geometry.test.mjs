@@ -8,7 +8,7 @@ import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
 import postcss from 'postcss';
 import { sideChatRect, sideChatResizeHandles, sideChatResizeCursor, moveSideChat, resizeSideChat } from '../src/side-chat-geometry.mjs';
-import { designSnapshot, designStylesheets } from '../scripts/current-design-assets.mjs';
+import { designSnapshot, designEntryStylesheets } from '../scripts/current-design-assets.mjs';
 import { selectorClasses } from '../scripts/prepare-style-compatibility.mjs';
 
 const latest = new URL(`../../reference/${designSnapshot}/ion-dist/assets/v1/`, import.meta.url);
@@ -55,17 +55,38 @@ test('east/south resizing observes 16px margin while dragging reaches the viewpo
   assert.deepEqual(moveSideChat(rect, { x: 900, y: 900 }, viewport, 45), { ...rect, left: 960, top: 480 });
 });
 
-test('3.6556.2 handles: DF geometry classes verbatim (n/s use inset-x-[8px]), all in the loaded stylesheets', async () => {
+test('3.6556.2 handles: DF geometry classes verbatim (n/s use inset-x-[8px]), all in the loaded stylesheets (design ∪ owned compatibility rules)', async () => {
   const source = await fs.readFile(new URL('cccc2cf0a-DhZC33Gc.js', sliced), 'utf8');
   const handles = Function(`return ${source.match(/var DF=(\[\{edges:[\s\S]*?\}\]),OF=/)[1]}`)();
   assert.deepEqual(sideChatResizeHandles, handles);
   assert.equal(sideChatResizeHandles[0].className, '-top-[3px] inset-x-[8px] h-[6px]');
   assert.equal(sideChatResizeHandles[1].className, '-bottom-[3px] inset-x-[8px] h-[6px]');
   assert.ok(sideChatResizeHandles.every(({ className }) => !/(?:^|\s)(?:left|right)-\[8px\]/.test(className)));
-  const loaded = new Set();
-  for (const name of designStylesheets) postcss.parse(await fs.readFile(new URL(name, latest), 'utf8')).walkRules(rule => selectorClasses(rule.selector).forEach(c => loaded.add(c)));
-  for (const token of ['draggable-none', 'absolute', 'z-[1]', ...sideChatResizeHandles.flatMap(({ className }) => className.split(/\s+/))])
-    assert.ok(loaded.has(token), `${token} is in the current design stylesheets`);
+  // Loaded = the current (4.16336.0) design stylesheets index.html links ∪ the registered compatibility rules (public/assets/legacy-utilities.css,
+  // index.html's last link). A class from the compatibility layer must be owned there by the 3.6556.2 side-chat geometry
+  // slice (style-compatibility.json rule hit + legacyDebt owner), so it leaves with that region instead of lingering.
+  // The design sheets counted are the 4.16336.0 sheets index.html actually links (the entry sheets); component sheets
+  // such as c8e31bf58 / c3fde7009-Dl-p803_ are not linked, so a class only they define has no style at runtime.
+  const linked = [...(await fs.readFile(new URL('../index.html', import.meta.url), 'utf8')).matchAll(/<link rel="stylesheet" href="\/assets\/v1\/([^"]+)"/g)].map(m => m[1]);
+  assert.deepEqual(designEntryStylesheets.filter(name => !linked.includes(name)), [], 'index.html links every 4.16336.0 entry sheet');
+  const design = new Set();
+  for (const name of designEntryStylesheets.filter(name => linked.includes(name))) postcss.parse(await fs.readFile(new URL(name, latest), 'utf8')).walkRules(rule => selectorClasses(rule.selector).forEach(c => design.add(c)));
+  const compatibility = JSON.parse(await fs.readFile(new URL('../public/style-compatibility.json', import.meta.url), 'utf8'));
+  assert.equal(compatibility.output, 'assets/legacy-utilities.css');
+  const layer = new Set();
+  postcss.parse(await fs.readFile(new URL(`../public/${compatibility.output}`, import.meta.url), 'utf8')).walkRules(rule => selectorClasses(rule.selector).forEach(c => layer.add(c)));
+  const SLICE = 'src/generated/code-editor/side-chat-geometry.mjs';
+  for (const token of ['draggable-none', 'absolute', 'z-[1]', ...sideChatResizeHandles.flatMap(({ className }) => className.split(/\s+/))]) {
+    if (design.has(token)) continue;
+    assert.ok(layer.has(token), `${token} is in the current design stylesheets or the compatibility layer`);
+    const rule = compatibility.rules.find(r => r.references.some(ref => ref.className === token));
+    assert.ok(rule, `${token} has a style-compatibility rule`);
+    assert.ok(rule.references.find(ref => ref.className === token).hits.some(hit => hit.file === SLICE && hit.binding === 'DF' && hit.sourceVersion === '3.6556.2'), `${token} is held by DF`);
+    const owner = compatibility.legacyDebt.owners.find(o => o.classes.includes(token));
+    assert.equal(owner?.owner, 'generated:code-editor', `${token} owner`);
+    assert.equal(owner.kind, 'region');
+    assert.ok(owner.files.includes(SLICE), `${token} owner files`);
+  }
 });
 
 test('3.6556.2 rect: rtl defaults off (LTR placement unchanged) and mirrors the default/anchored start edge', () => {

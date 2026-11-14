@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { menuLayer, positionMenu } from "./menu-model.mjs";
 import { POPOVER_LAYER_OFFSET } from "./source-popover.jsx";
 // W14-code r6 R6DC-02: shared-frame CoachMark close / action are Uu with a `us` icon (E41 direct import).
-import { CdsButton, CdsIcon } from "./generated/view-tabs/shared-frame-6jtSkIit.js";
+import { CdsButton, CdsIcon } from "./cds-core.mjs"; // 4.16336.0 host wiring (frame): cds-core Button Xu / Icon Bs
 import { t } from "../electron/i18n/index.mjs";
 import "./source-coachmark.css";
 

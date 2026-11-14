@@ -93,7 +93,14 @@ test('main.jsx mounts the window as split sides; only the focused side takes win
   // frameShellMounted), and the workspace sits in the incognito shell (display: contents when not incognito).
   // W14-code r4 sidebar-new fr4-06: the Code sidebar's Routines host (SidebarRoutinesHost, shared-22 $N's app-level
   // scheduled-task store) wraps the sidebar inside the same primary-side boundary.
-  assert.match(jsx, /\{side === 0 && !NO_SIDEBAR && frameShellMounted\(\{ isIncognito: incognitoShell \}\) && <SourceSidebarBoundary>\n(?:\s+\{\/\*[\s\S]*?\*\/\}\n)?\s+<SidebarRoutinesHost [^>]*?>\n\s+<SourceSidebar\n(?:\s+[^\n]*\n)*?\s+windowActions=\{windowActions\}/, 'the sidebar belongs to the primary side');
+  // frame-sidebar 4.16336.0: the sidebar body is the official KR's nav-body slot, its error boundary KR's own (Ds + Cj);
+  // only the primary side of a window with a sidebar mounts the official frame (frameHost).
+  // round4 real-b sidebar (SB-1, frame-sidebar-nav 4.16336.0): navBody is KR's render function — the official PI
+  // (HostSidebarNavBody, given KR's navProps) draws the body column inside the same Routines host, and SourceSidebar
+  // stays below it for its overlays slot. Old expected value (kept):
+  //   /const sidebarNavBody = \(\n\s+<SidebarRoutinesHost [^>]*?>\n\s+<SourceSidebar\n(?:\s+[^\n]*\n)*?\s+windowActions=\{windowActions\}/
+  assert.match(jsx, /const sidebarNavBody = \(navProps\) => \(\n\s+<SidebarRoutinesHost [^>]*?>\n\s+<HostSidebarNavBody value=\{sidebarNavValue\} \{\.\.\.navProps\} \/>\n\s+<SourceSidebar\n(?:\s+[^\n]*\n)*?\s+windowActions=\{windowActions\}(?:\n\s+[^\n]*)*?\n\s+slot="overlays"/, 'the sidebar body');
+  assert.match(jsx, /const frameHost = side === 0 && !NO_SIDEBAR \? \{/, 'the sidebar belongs to the primary side');
   // The primary pane's App hosts the grid; a narrow window parks the extra panes (no tab strip, no chrome of its own).
   assert.match(jsx, /<SourceSplitHost side=\{side\}>\n\s+<main\n\s+ref=\{mainRef\}/);
   // A secondary pane's titlebar has the Close pane X; the primary's has none (View › Split View, ⌃⌘W).

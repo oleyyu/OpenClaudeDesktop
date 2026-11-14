@@ -320,8 +320,11 @@ test('source wiring: the card imports markCardPick from the generated landing an
   assert.match(source, /import \{ markCardPick \} from "\.\/generated\/approval-landing\/card-landing\.mjs";/);
   assert.match(source, /questionCardKeyDown\(event, \{[\s\S]*?\}, markCardPick, root\.current\)/);
   assert.match(source, /event\.nativeEvent\?\.stopImmediatePropagation\?\.\(\);/);
-  // W12: CDS parts come through the view-tabs facade (R6), the card's rows and listeners from the question-card target.
-  assert.match(source, /from "\.\/generated\/view-tabs\/index\.js";/);
+  // W12: CDS parts come through a facade (R6), the card's rows and listeners from the question-card target. host-wiring/chat
+  // (4.16336.0): the card's own CDS markup comes from the cds-core facade; only what QuestionCardHeader / QuestionRadioMark
+  // (3.6556.2 question-card) render keeps the view-tabs facade.
+  assert.match(source, /import \{ CdsButton, CdsTextArea, CdsShortcut, CdsCheckboxIndicator, cdsCheckboxTopAlignClass, cdsClassNames \} from "\.\/cds-core\.mjs";/);
+  assert.match(source, /import \{ CdsButton as ViewTabsCdsButton, CdsIcon as ViewTabsCdsIcon, cdsCheckboxTopAlignClass as viewTabsCheckboxTopAlignClass \} from "\.\/generated\/view-tabs\/index\.js";/);
   assert.doesNotMatch(source, /generated\/view-tabs\/(?!index\.js)/);
   assert.match(source, /from "\.\/generated\/question-card\/option-row\.mjs";/);
   assert.match(source, /from "\.\/generated\/question-card\/digit-shortcuts\.mjs";/);

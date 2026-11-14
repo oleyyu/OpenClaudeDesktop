@@ -3,7 +3,8 @@ import { SourceEmptyState } from "./source-transcript-states.jsx";
 import "./source-pane-states.css";
 import { t } from "../electron/i18n/index.mjs";
 // W14-code r6 r6pa-04: c44d00c7f / cccc2cf0a Try again buttons are shared-frame Uu (E41 direct import).
-import { CdsButton } from "./generated/view-tabs/shared-frame-6jtSkIit.js";
+// host-wiring code-a: the retry Buttons are the 4.16336.0 cds-core Button (semantic facade).
+import { CdsButton } from "./cds-core.mjs";
 import { fileTreeRowStyle, FILE_TREE_ERROR_ROW_CLASS } from "./file-tree-row-model.mjs";
 
 // Changes/Plan pane body states (2.2553.1). Class strings are the source strings;

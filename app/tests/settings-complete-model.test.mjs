@@ -83,7 +83,7 @@ test('a profile without the keys gets a banner when a turn completes and keeps t
  f.service.start();f.battery(true);f.service.observe(started('a'));
  assert.equal(f.service.snapshot().powerActive,true,'keep-awake and keep-awake on battery default on');assert.ok(f.calls.some(v=>v[0]==='power-start'));
  f.service.observe(completed('a'));
- const notice=f.calls.find(v=>v[0]==='notice');assert.ok(notice,'banner shown');assert.equal(notice[1].body,'DeepSeek finished and is waiting for your input.');assert.equal(notice[1].silent,false);assert.ok(f.calls.includes('notice-show'));
+ const notice=f.calls.find(v=>v[0]==='notice');assert.ok(notice,'banner shown');assert.equal(notice[1].body,'DeepSeek has finished your instructions.');assert.equal(notice[1].silent,false);assert.ok(f.calls.includes('notice-show'));
  assert.equal(f.service.snapshot().powerActive,false,'the blocker stops once no thread works');f.service.dispose();
 });
 test('a stored Task complete badge level notifies as a banner',()=>{

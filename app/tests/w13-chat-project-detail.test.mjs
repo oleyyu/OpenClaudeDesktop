@@ -14,6 +14,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
 import { ionSource } from '../scripts/official-3.6556.2.mjs';
+import { ionSource as ionSource4 } from '../scripts/official-4.16336.0.mjs';
 import { extractChatProjects } from '../scripts/extract-chat-projects.mjs';
 import { localProjects, applyProjectContext } from '../electron/local-projects.mjs';
 import zh from '../electron/i18n/zh-CN/index.mjs';
@@ -21,13 +22,18 @@ import zh from '../electron/i18n/zh-CN/index.mjs';
 const app = path.resolve(import.meta.dirname, '..');
 const h = React.createElement;
 const read = prefix => { const [name] = fs.readdirSync(ionSource).filter(file => file.startsWith(prefix + '-') && file.endsWith('.js')); return fs.readFileSync(path.join(ionSource, name), 'utf8'); };
+// Since the round-3 switch S6 the page SSRs the 4.16336.0 parts (src/generated/chat-projects-v4); markup the 4.16336.0
+// release changed is checked against its chunks.
+const read4 = prefix => fs.readFileSync(path.join(ionSource4, fs.readdirSync(ionSource4).find(file => file.startsWith(prefix + '-') && file.endsWith('.js'))), 'utf8');
+const official4 = { c71: read4('c71dee58b'), cf2: read4('cf2f34ee4'), s31: read4('shared-31') };
 const official = { c71: read('c71dee58b'), cf2: read('cf2f34ee4'), c9b: read('c9b54eb90'), c17: read('c17beaa76'), s9: read('shared-9'), s78: read('shared-78'), s26: read('shared-26') };
 const message = (text, id) => `defaultMessage:"${text}",id:"${id}"`;
 const text = html => html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
 const count = (haystack, needle) => haystack.split(needle).length - 1;
 
-globalThis.document ??= { body: { nodeType: 1 }, head: { appendChild() {} }, createElement: () => ({ relList: { supports: () => false }, setAttribute() {}, style: {} }),
-  querySelector: () => null, querySelectorAll: () => [], addEventListener() {}, removeEventListener() {}, documentElement: { dataset: {}, getAttribute: () => null } };
+// W8-M9 stub contract (round4 integration, stub fields only): cds-core 9203795f reads these at load (official 4.16336.0): document.cookie.
+globalThis.document ??= { cookie: '' /* W8-M9: shared-0 CQ / Wo document.cookie */, body: { nodeType: 1 }, head: { appendChild() {} }, createElement: () => ({ relList: { supports: () => false }, setAttribute() {}, style: {} }),
+  querySelector: () => null, querySelectorAll: () => [], addEventListener() {}, removeEventListener() {}, documentElement: { dataset: {}, style: {}, getAttribute: () => null, hasAttribute: () => false } };
 globalThis.window ??= { document: globalThis.document, navigator: { userAgent: 'Mozilla/5.0 (Macintosh)' }, location: { pathname: '/projects', search: '', hash: '', href: 'app://local/projects' },
   addEventListener() {}, removeEventListener() {}, matchMedia: () => ({ matches: false, addEventListener() {}, removeEventListener() {} }) };
 
@@ -120,7 +126,9 @@ test('SSR P2: Up’s grid — the left column (header, composer, conversations) 
 test('SSR P3: the rail’s Instructions section (cf2f34ee4 ri) — placeholder or the saved text, and the Edit / Add button', () => {
   const empty = detail();
   assert.match(empty, /<span class="opacity-60">Add instructions to tailor Claude’s responses<\/span>/);
-  assert.match(empty, /<p class="text-muted-as-secondary font-small line-clamp-2">/);
+  // 4.16336.0 cf2f34ee4-CGe8SQnD fn: text-caption-regular (3.6556.2 had font-small).
+  assert.equal(count(official4.cf2, 'i("p",{className:"text-muted-as-secondary text-caption-regular line-clamp-2",children:t})'), 1);
+  assert.match(empty, /<p class="text-muted-as-secondary text-caption-regular line-clamp-2">/);
   assert.match(empty, /aria-label="Edit instructions"/);
   assert.match(empty, /class="w-full px-\[1\.375rem\] py-4 flex flex-row items-center justify-between gap-4 mt-1"/);
   const saved = detail({ project: project({ instructions: 'Answer in bullet points.' }) });
@@ -244,7 +252,11 @@ test('review fix: Eu, nc, qr and Jr are the official parts, placed as Up / Gr pl
 
 test('SSR review fix: nc’s "All projects" row in place over the scroll column, then Eu (h1, menu, Pin / Unpin, description)', () => {
   const html = detail();
-  const row = html.indexOf('class="dframe-header group/title-row absolute inset-x-0 top-0 flex h-frame-row items-center');
+  // 4.16336.0 shared-31-C9BqSSuD: the title row the page owns (data-owns-header-title-row, the I branch) is
+  // "absolute top-0 …" with the bleed classes; the inset-x-0 form is the branch for a row the page does not own.
+  assert.equal(count(official4.s31, 'pe=f(I&&["dframe-header group/title-row absolute top-0 flex h-frame-row items-center",'), 1);
+  assert.match(html, /<div data-owns-header-title-row=""[^>]* class="dframe-header group\/title-row absolute top-0 flex h-frame-row items-center !px-0 /);
+  const row = html.indexOf('class="dframe-header group/title-row absolute top-0 flex h-frame-row items-center');
   const crumb = html.indexOf('<a href="/projects" class="df-link-card inline-flex h-6 shrink-0 select-none items-center gap-1 rounded-md px-1.5 text-[13px] text-secondary-control transition-colors hover:bg-neutral-30 hover:text-primary">');
   const scroll = html.indexOf('data-scrolls-under-page-header=""');
   assert.ok(row > 0 && crumb > row && scroll > crumb);
@@ -252,7 +264,8 @@ test('SSR review fix: nc’s "All projects" row in place over the scroll column,
   assert.match(html, /<h1 class="mt-0\.5 min-w-0 font-heading text-secondary gap-1\.5 text-start line-clamp-2 break-words">Billing<\/h1>/);
   assert.ok(html.indexOf('aria-label="More options for Billing"') > html.indexOf('>Billing</h1>'));
   assert.ok(html.indexOf('aria-label="Pin project"') > html.indexOf('aria-label="More options for Billing"'));
-  assert.ok(html.includes('<div class="text-secondary font-base break-words line-clamp-2">Invoices</div>'));
+  assert.equal(count(official4.c71, 's("text-secondary text-body-regular break-words",N&&"line-clamp-2")'), 1);
+  assert.ok(html.includes('<div class="text-secondary text-body-regular break-words line-clamp-2">Invoices</div>'));
   assert.ok(!html.includes('Example project') && !html.includes('>Projects</'));
   assert.ok(detail({ project: project({ isStarred: true }) }).includes('aria-label="Unpin project"'));
 });
@@ -267,7 +280,9 @@ test('SSR review fix: qr wraps the bordered rail; with memory on, Jr leads it (M
   assert.ok(box > 0 && memory > box && badge > memory && instructions > badge);
   assert.ok(html.slice(badge, instructions).includes('class="h-[0.5px] w-full bg-border"'));
   assert.ok(text(html).includes('Prefers short answers.') && html.includes('aria-label="Edit memory"') && text(html).includes('Last updated'));
-  assert.match(html, /class="flex flex-row items-center font-small gap-1 ps-1\.5 pe-2 py-\[3px\] text-muted-as-secondary rounded-md border-0\.5 border-border-300"/);
+  // 4.16336.0 cf2f34ee4-CGe8SQnD: the private badge is text-caption-regular (3.6556.2 had font-small) plus the bordered variant.
+  assert.equal(count(official4.cf2, 'a=t==="private"?"border-0.5 border-border-300":"bg-neutral-30",s=J1($,0,a)?K1($,0,a,r("flex flex-row items-center text-caption-regular gap-1 ps-1.5 pe-2 py-[3px] text-muted-as-secondary rounded-md",a))'), 1);
+  assert.match(html, /class="flex flex-row items-center text-caption-regular gap-1 ps-1\.5 pe-2 py-\[3px\] text-muted-as-secondary rounded-md border-0\.5 border-border-300"/);
   const empty = detail({ initialMemory: { ...on, memory: { memory: '', controls: [], updated_at: null } } });
   assert.ok(empty.includes('<span class="opacity-60">Project memory will show here after a few chats.</span>'));
   assert.ok(!empty.includes('aria-label="Edit memory"'));

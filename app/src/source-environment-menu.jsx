@@ -5,7 +5,8 @@ import {
   EnvironmentPickerRow, EnvironmentPickerRows, EnvironmentPickerNew, EnvironmentPickerComputer, EnvironmentPickerNoMatches, environmentPresetKey,
 } from './generated/code-current/environment-menu-rows.mjs';
 import { environmentStarKeys, starredIncludes, thisComputerLabel, thisComputerStarKey } from './generated/code-current/environment-picker-keys.mjs';
-import { useStableEnvironmentOrder } from './generated/code-start/view.mjs';
+// 4.16336.0 cc43287c9 s3 (3.6556.2 s8), sliced by the code-start surface (extract-code-start-v4.mjs).
+import { useStableEnvironmentOrder } from './generated/code-start-v4/start.mjs';
 import { EnvironmentSearchablePopup } from './source-environment-folder-adapters.jsx';
 import { bindEnvironmentStars, localEnvironmentAvailable, toggleEnvironmentStar } from './source-environment-menu-adapters.jsx';
 import { StartMessage, useStartIntl } from './source-code-start-adapters.jsx';

@@ -32,7 +32,7 @@ import path from 'node:path'
 import { readJsonFile, normalizeMcpServer, scanSkills, writeJsonFile, pluginSummary, projectDirs } from '../catalog.js'
 import { createOverlay } from '../overlay.js'
 import { withoutBrowser } from '../no-browser.js'
-import { RpcError, SERVER_ERROR } from '../transport.js'
+import { RpcError, SERVER_ERROR, INVALID_PARAMS } from '../transport.js'
 import { geminiToolName, loadGeminiPolicies, policyDecision } from '../gemini-policy.js'
 import { appToolsServer } from '../app-tools.js'
 import { APP_TOOL_NAMES } from '../app-tools.js'
@@ -493,6 +493,148 @@ function projectSlug(env, cwd) {
   return null
 }
 
+// ---------------------------------------------------------------- native session files (restore and import)
+// Upstream HEAD citations (github.com/google-gemini/gemini-cli 6814e00, 0.67.0-nightly) — the installed 0.64.0 bundle
+// writes and reads the same records: packages/core/src/config/projectRegistry.ts (the project's short id),
+// packages/core/src/services/chatRecordingService.ts (the session file), packages/cli/src/acp/acpSessionManager.ts
+// loadSession → cli/src/utils/sessionUtils.ts resolveSessionById → core/src/utils/sessionUtils.ts
+// convertSessionToClientHistory (how session/load reads it back).
+
+// ProjectRegistry: a short id is [a-z0-9-]+ (projectRegistry.ts:20-22); a slug folder is owned through the
+// .project_root marker in each of the registry's base dirs, <runtime>/tmp and <runtime>/history (storage.ts:289-297).
+const SLUG = /^[a-z0-9-]+$/
+const PROJECT_ROOT_FILE = '.project_root'
+const slugBaseDirs = (env) => [path.join(homeOf(env), 'tmp'), path.join(homeOf(env), 'history')]
+const markerOwner = (file) => { try { return { owner: fs.readFileSync(file, 'utf8').trim() } } catch (error) { return { error } } }
+/** projectRegistry.ts:414-422 slugify. */
+export const geminiSlugify = (text) => String(text).toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') || 'project'
+
+/** projects.json's {path: slug} map as loadData accepts it (an invalid schema reads as empty, projectRegistry.ts:62-93). */
+function registryProjects(env) {
+  const value = readJsonFile(path.join(homeOf(env), 'projects.json'), null)
+  const projects = value?.projects
+  if (!isObject(projects) || !Object.values(projects).every((slug) => typeof slug === 'string' && SLUG.test(slug))) return {}
+  return projects
+}
+
+/** ensureOwnershipMarkers (projectRegistry.ts:372-412): each base dir's marker names the project, created exclusively. */
+function ensureOwnershipMarkers(env, slug, root) {
+  for (const base of slugBaseDirs(env)) {
+    const dir = path.join(base, slug)
+    fs.mkdirSync(dir, { recursive: true })
+    const marker = path.join(dir, PROJECT_ROOT_FILE)
+    const found = markerOwner(marker)
+    if (!found.error) {
+      if (path.resolve(found.owner) === root) continue
+      throw Object.assign(new Error(`Slug ${slug} is already owned by ${found.owner}`), { code: 'EEXIST' })
+    }
+    try { fs.writeFileSync(marker, root, { encoding: 'utf8', flag: 'wx' }) } catch (error) {
+      if (error?.code === 'EEXIST' && path.resolve(markerOwner(marker).owner ?? '') === root) continue
+      throw error
+    }
+  }
+}
+
+/**
+ * The project folder Gemini will use for cwd, found as ProjectRegistry.getShortId does (projectRegistry.ts:163-236):
+ * the registry's entry when no marker contradicts it (verifySlugOwnership :238-264), else a slug folder whose marker
+ * names the path (findExistingSlugForPath :266-302), else — with `claim` — a new slug from the folder's name, skipping
+ * ids the registry or another project's marker holds (claimNewSlug :304-370). Paths compare by path.resolve
+ * (normalizePath :95-101), as Gemini receives the ACP cwd. A claimed slug gets its markers but no projects.json entry:
+ * Gemini's next getShortId finds it by its marker and registers it under its own lock (proper-lockfile on
+ * projects.json, :189-195), so the bridge never races that lock. {slug, root} or null.
+ */
+export function geminiProject(env, cwd, { claim = false } = {}) {
+  if (typeof cwd !== 'string' || !path.isAbsolute(cwd)) return null
+  const root = path.resolve(cwd)
+  const projects = registryProjects(env)
+  const registered = projects[root]
+  if (registered) {
+    const owned = slugBaseDirs(env).every((base) => {
+      const found = markerOwner(path.join(base, registered, PROJECT_ROOT_FILE))
+      return found.error ? found.error.code === 'ENOENT' : path.resolve(found.owner) === root
+    })
+    if (owned) return { slug: registered, root }
+  }
+  for (const base of slugBaseDirs(env)) {
+    let names = []
+    try { names = fs.readdirSync(base) } catch { continue }
+    for (const name of names) {
+      const found = markerOwner(path.join(base, name, PROJECT_ROOT_FILE))
+      if (!found.error && path.resolve(found.owner) === root) return { slug: name, root }
+    }
+  }
+  if (!claim) return null
+  const taken = new Set(Object.entries(projects).filter(([dir]) => dir !== root).map(([, slug]) => slug))
+  const base = geminiSlugify(path.basename(root) || 'project')
+  for (let counter = 0; counter < 10000; counter++) {
+    const candidate = counter === 0 ? base : `${base}-${counter}`
+    if (taken.has(candidate)) continue
+    const foreign = slugBaseDirs(env).some((dir) => {
+      const found = markerOwner(path.join(dir, candidate, PROJECT_ROOT_FILE))
+      return found.error ? found.error.code !== 'ENOENT' : path.resolve(found.owner) !== root
+    })
+    if (foreign) continue
+    try { ensureOwnershipMarkers(env, candidate, root); return { slug: candidate, root } } catch (error) { if (error?.code !== 'EEXIST') throw error }
+  }
+  throw new Error(`No free Gemini CLI project id for ${root}.`)
+}
+
+/** session-<YYYY-MM-DDTHH-MM> of a time (chatRecordingService.ts:801-804). */
+const sessionStamp = (ms) => new Date(ms).toISOString().slice(0, 16).replace(/:/g, '-')
+
+/**
+ * Writes a NEW session file into tmp/<slug>/chats and returns its path; an existing file is never replaced. Named as
+ * the recorder names one (chatRecordingService.ts:812-822: session-<stamp>-<id8>.jsonl, then session-<stamp>-<n>-<id8>
+ * on a collision), for a minute ten minutes back: a 0.64 session/load starts its own recording in a file for the
+ * current minute (see beforeLoad). Written to a hidden temp file (no session- prefix, so no reader lists it) and
+ * hard-linked into place, which fails rather than overwrites when the name was taken meanwhile. On a filesystem without
+ * hard links (exFAT, SMB / some network shares, FAT: link answers EPERM, ENOTSUP, EXDEV, …; NO_HARD_LINK) the file is
+ * created in place with open 'wx' instead — still exclusive, so still never an existing file — and removed again if
+ * its write fails, so no half file is left for Gemini to list.
+ */
+const NO_HARD_LINK = new Set(['EPERM', 'ENOTSUP', 'EOPNOTSUPP', 'EXDEV', 'ENOSYS', 'EMLINK', 'EACCES'])
+function writeSessionFile(env, slug, sessionId, records, now) {
+  const dir = path.join(homeOf(env), 'tmp', slug, 'chats')
+  fs.mkdirSync(dir, { recursive: true })
+  const short = String(sessionId).slice(0, 8)
+  const stamp = sessionStamp(now - 10 * 60000)
+  const content = records.map((record) => JSON.stringify(record)).join('\n') + '\n'
+  const names = function* () {
+    for (let index = 0; index < 1000; index++) yield path.join(dir, index === 0 ? `session-${stamp}-${short}.jsonl` : `session-${stamp}-${index}-${short}.jsonl`)
+  }
+  const temp = path.join(dir, `.import-${short}-${process.pid}-${randomUUID()}.tmp`)
+  fs.writeFileSync(temp, content, { flag: 'wx' })
+  let linkless = false
+  try {
+    for (const file of names()) {
+      if (fs.existsSync(file)) continue
+      try { fs.linkSync(temp, file); return file } catch (error) {
+        if (error?.code === 'EEXIST') continue
+        if (!NO_HARD_LINK.has(error?.code)) throw error
+        linkless = true
+        break
+      }
+    }
+    if (!linkless) throw new Error('No free Gemini CLI session file name.')
+  } finally { fs.rmSync(temp, { force: true }) }
+  for (const file of names()) {
+    let fd
+    try { fd = fs.openSync(file, 'wx') } catch (error) { if (error?.code === 'EEXIST') continue; throw error }
+    try {
+      fs.writeFileSync(fd, content, 'utf8')
+      fs.fsyncSync(fd)
+    } catch (error) {
+      try { fs.closeSync(fd) } catch {}
+      fd = null
+      fs.rmSync(file, { force: true })
+      throw error
+    } finally { if (fd !== null) fs.closeSync(fd) }
+    return file
+  }
+  throw new Error('No free Gemini CLI session file name.')
+}
+
 /**
  * A session file for a conversation Gemini deleted, from the bridge's history (thread.turns): every prompt and reply
  * as Gemini records them (user content parts, gemini content), tool calls left out. True when one was written.
@@ -501,7 +643,8 @@ export function restoreSession(env, sessionId, thread) {
   const turns = Array.isArray(thread?.turns) ? thread.turns : []
   const cwd = typeof thread?.cwd === 'string' ? thread.cwd : null
   if (!cwd || !turns.length) return false
-  const project = projectSlug(env, cwd)
+  // The folder Gemini itself resolves for cwd first; the realpath-tolerant lookup for a folder known otherwise.
+  const project = geminiProject(env, cwd) ?? projectSlug(env, cwd)
   if (!project) return false
   const messages = []
   const at = (ms, fallback) => new Date(Number.isFinite(ms) ? ms : fallback).toISOString()
@@ -516,16 +659,100 @@ export function restoreSession(env, sessionId, thread) {
     if (reply) messages.push({ id: randomUUID(), timestamp: at(turn.completedAtMs ?? turn.startedAtMs, Date.now()), type: 'gemini', content: reply, thoughts: [] })
   }
   if (!messages.some((message) => message.type === 'user')) return false
-  const now = new Date()
-  const started = messages[0].timestamp
-  const dir = path.join(homeOf(env), 'tmp', project.slug, 'chats')
-  fs.mkdirSync(dir, { recursive: true })
-  // Named for an earlier minute: Gemini starts the loaded session's recording in a file named for the current minute
-  // and would replace the restored conversation there (see beforeLoad).
-  const file = path.join(dir, `session-${new Date(now.getTime() - 10 * 60000).toISOString().slice(0, 16).replace(/:/g, '-')}-${String(sessionId).slice(0, 8)}.jsonl`)
-  const meta = { sessionId, projectHash: createHash('sha256').update(project.root ?? cwd).digest('hex'), startTime: started, lastUpdated: now.toISOString(), kind: 'main' }
-  fs.writeFileSync(file, [meta, ...messages, { $set: { lastUpdated: now.toISOString() } }].map((record) => JSON.stringify(record)).join('\n') + '\n')
+  const now = Date.now()
+  const meta = { sessionId, projectHash: createHash('sha256').update(project.root ?? cwd).digest('hex'), startTime: messages[0].timestamp, lastUpdated: new Date(now).toISOString(), kind: 'main' }
+  writeSessionFile(env, project.slug, sessionId, [meta, ...messages, { $set: { lastUpdated: new Date(now).toISOString() } }], now)
   return true
+}
+
+// Hard bounds on one import, as the DeepSeek bridge's (codex-app-server/src/thread-import.js IMPORT_MAX_*).
+export const GEMINI_IMPORT_MAX_MESSAGES = 5000
+export const GEMINI_IMPORT_MAX_CHARS = 4_000_000
+// The prompt that opens a conversation whose first recorded message is the assistant's (thread-import.js IMPORT_OPENING).
+export const GEMINI_IMPORT_OPENING = '(Continuing a conversation imported from another coding agent.)'
+// User text Gemini's resume drops from the model's history (core utils/sessionUtils.ts:97-105 isIgnoredUserContent,
+// applied in convertSessionToClientHistory :134-146) and its list never counts: an imported prompt that merely starts
+// so ("/Users/me/x fails", "?") keeps its place behind a zero-width space, which String.prototype.trim leaves alone.
+const IGNORED_USER_TEXT = /^(\/|\?|<session_context>|<hook_context>)/
+
+/**
+ * The import's messages as Gemini turns: user / assistant only, blank texts dropped, consecutive messages of one role
+ * joined (one prompt, one reply per turn), a conversation that opens with a reply led by GEMINI_IMPORT_OPENING; a
+ * trailing prompt keeps no reply (Gemini's own file after a failed turn looks the same).
+ */
+export function geminiImportMessages(raw) {
+  if (!Array.isArray(raw)) throw new RpcError(INVALID_PARAMS, 'messages must be an array of {role, text}.')
+  if (raw.length > GEMINI_IMPORT_MAX_MESSAGES) throw new RpcError(INVALID_PARAMS, `An imported conversation can have at most ${GEMINI_IMPORT_MAX_MESSAGES} messages.`)
+  let chars = 0
+  const out = []
+  for (const message of raw) {
+    const role = message?.role
+    if (role !== 'user' && role !== 'assistant') continue
+    const text = typeof message.text === 'string' ? message.text.trim() : ''
+    if (!text) continue
+    chars += text.length
+    if (chars > GEMINI_IMPORT_MAX_CHARS) throw new RpcError(INVALID_PARAMS, 'The imported conversation is too long.')
+    const ts = Number.isSafeInteger(message.ts) && message.ts > 0 ? message.ts : undefined
+    const last = out.at(-1)
+    if (last?.role === role) last.text += `\n\n${text}`
+    else out.push({ role, text, ...(ts ? { ts } : {}) })
+  }
+  if (!out.length) throw new RpcError(INVALID_PARAMS, 'The imported conversation has no messages.')
+  if (out[0].role === 'assistant') out.unshift({ role: 'user', text: GEMINI_IMPORT_OPENING, ...(out[0].ts ? { ts: out[0].ts } : {}) })
+  return out
+}
+
+/**
+ * codeDesktop/thread/import for Gemini CLI: writes another agent's conversation (already flattened to text: tool calls
+ * folded in, images dropped) as a NEW Gemini session that `session/load` opens like one Gemini recorded. Nothing
+ * existing is modified: a fresh randomUUID session id (ChatRecordingService uses the prompt id, a randomUUID,
+ * chatRecordingService.ts:690), whose 8-character prefix no file of the project carries yet; a new file; the project's
+ * slug folder claimed only when Gemini knows none for cwd (geminiProject).
+ *
+ * The file has the records Gemini writes for such a conversation: the initial metadata line {sessionId, projectHash
+ * (sha256 of the project root, core utils/paths.ts:318-320), startTime, lastUpdated, kind: 'main'} plus `summary`, the
+ * title (the field saveSummary sets, :1239-1246; legacy migration puts it on that line too, :736-744); then each
+ * prompt as recordMessage writes it, {id, timestamp, type: 'user', content: [{text}]} (:1064-1077, geminiChat.ts:563),
+ * and each reply as {id, timestamp, type: 'gemini', content: text, thoughts: [], tokens: null} (:1096-1102, model left
+ * out: none answered here); then {$set: {lastUpdated}} (:1104). lastUpdated is now, so the session-retention cleanup
+ * (cli utils/sessionCleanup.ts, by lastUpdated) keeps it and resolveSessionById (cli utils/sessionUtils.ts:513-580)
+ * prefers it over any other file of the id. Timestamps keep the source's times where given (never ahead of now, never
+ * going backwards).
+ *
+ * @param {{cwd: string, title?: string, messages: Array<{role: 'user'|'assistant', text: string, ts?: number}>,
+ *   home?: string, env?: object, now?: number}} params `home` stands in for HOME (GEMINI_CLI_HOME still wins, as in
+ *   Gemini's homedir(), core utils/paths.ts:22-27)
+ * @returns {{sessionId: string, file: string, slug: string, cwd: string}}
+ */
+export function importGeminiSession({ cwd, title, messages, home, env = process.env, now = Date.now(), taken = () => false } = {}) {
+  const base = { ...(env ?? {}), ...(home ? { HOME: home } : {}) }
+  if (typeof cwd !== 'string' || !path.isAbsolute(cwd)) throw new RpcError(INVALID_PARAMS, 'cwd must be an absolute folder.')
+  const turns = geminiImportMessages(messages)
+  const project = geminiProject(base, cwd, { claim: true })
+  const chats = path.join(homeOf(base), 'tmp', project.slug, 'chats')
+  let names = []
+  try { names = fs.readdirSync(chats) } catch {}
+  let sessionId
+  for (let tries = 0; tries < 100 && !sessionId; tries++) {
+    const candidate = randomUUID()
+    const short = candidate.slice(0, 8)
+    if (!taken(candidate) && !names.some((name) => name.endsWith(`-${short}.jsonl`) || name.endsWith(`-${short}.json`) || name === short)) sessionId = candidate
+  }
+  if (!sessionId) throw new Error('No free Gemini CLI session id.')
+  let clock = 0
+  const timeOf = (ts) => { clock = Math.max(clock, Math.min(Number.isSafeInteger(ts) && ts > 0 ? ts : now, now)); return new Date(clock).toISOString() }
+  const records = turns.map((turn) => {
+    const timestamp = timeOf(turn.ts)
+    const text = turn.role === 'user' && IGNORED_USER_TEXT.test(turn.text) ? `\u200b${turn.text}` : turn.text
+    return turn.role === 'user'
+      ? { id: randomUUID(), timestamp, type: 'user', content: [{ text }] }
+      : { id: randomUUID(), timestamp, type: 'gemini', content: text, thoughts: [], tokens: null }
+  })
+  const summary = typeof title === 'string' && title.trim() ? title.replace(/\s+/g, ' ').trim().slice(0, 200) : undefined
+  const lastUpdated = new Date(now).toISOString()
+  const meta = { sessionId, projectHash: createHash('sha256').update(project.root).digest('hex'), startTime: records[0].timestamp, lastUpdated, kind: 'main', ...(summary ? { summary } : {}) }
+  const file = writeSessionFile(base, project.slug, sessionId, [meta, ...records, { $set: { lastUpdated } }], now)
+  return { sessionId, file, slug: project.slug, cwd: project.root }
 }
 
 const BACKGROUND_NOTICE = /Command moved to background \(PID: (\d+)\)\.?/
@@ -1453,6 +1680,17 @@ export default {
       })
     }
     return [...rows.values()]
+  },
+
+  /**
+   * codeDesktop/thread/import: another agent's conversation written as a new native Gemini session
+   * (importGeminiSession), which the thread then opens through session/load like any session Gemini recorded.
+   * `env` is the bridge's agent environment (ctx.env: GEMINI_CLI_HOME / HOME pick the ~/.gemini written to).
+   */
+  async importSession({ cwd, title, messages, home, env, taken } = {}) {
+    const { sessionId, file, slug } = importGeminiSession({ cwd, title, messages, home, env: env ?? process.env, ...(typeof taken === 'function' ? { taken } : {}) })
+    // written: the file it created (never overwriting), what a failed import removes again.
+    return { sessionId, file, slug, written: [file] }
   },
 
   /** Whether Gemini saved anything of a session to reopen: it writes a session's file only once it records a prompt. */

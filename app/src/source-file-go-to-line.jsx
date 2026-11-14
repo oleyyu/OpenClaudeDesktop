@@ -1,5 +1,6 @@
 import React, { useLayoutEffect, useRef, useState } from 'react';
-import { CdsButton, CdsField, CdsTextInput } from './generated/view-tabs/index.js';
+// host-wiring code-a: 4.16336.0 cds-core Button / Field / TextInput through the semantic facade.
+import { CdsButton, CdsField, CdsTextInput } from './cds-core.mjs';
 import { parseEditorLocation, goToLineShortcut } from './file-editor-commands.mjs';
 import { t } from '../electron/i18n/index.mjs';
 import { suppressKeyRepeat } from './generated/code-editor-current/keyboard-repeat.mjs';

@@ -30,10 +30,16 @@ import { useSourceToasts } from "./source-toast.jsx";
 import { WebLinkContext } from "./web-link-context.mjs";
 import "./highlight-tokens.css";
 import "./source-file-viewer.css";
-import { CdsButton, CdsTextInput, CdsTooltipProvider } from "./generated/view-tabs/index.js";
+// host-wiring code-a: the Buttons, the find bar's TextInput and its TooltipProvider are the 4.16336.0 cds-core originals
+// (semantic facade), so the find bar's Button tooltips and their provider are one graph.
+import { CdsButton, CdsTextInput, CdsTooltipProvider } from "./cds-core.mjs";
 import { hasReplacementLoss } from "./generated/code-current/file-text-decoding.mjs";
 import { t } from "../electron/i18n/index.mjs";
 import { hostGrowthBookFlag } from "./host-growthbook.mjs";
+// useCdsDensity has no cds-core name, so it stays on view-tabs. host-wiring fix-code-a: the file viewer pane is not under
+// main.jsx's Code-pane CdsRoot (that one wraps only the composer region), so this reads the 3.6556.2 graph's default
+// density "comfortable" (shared-frame ba = ut("comfortable")); official 4.16336.0 c11959232 j_ wraps the whole pane in a
+// compact Root — left to the root lane.
 import { useCdsDensity } from "./generated/view-tabs/index.js";
 import { compileSearch } from "./generated/code-editor/search.mjs";
 import { Uc as PierreFile, fl as pierreContents, Rc as pierreLetterSpacing, zc as pierreWrapStyle } from "./generated/transcript-rows/outside-handlers.mjs";
@@ -46,6 +52,7 @@ import { AD as lineCount } from "./generated/transcript-rows/rows-shared-28-DNYl
 import { fileMetrics, codeSelectionCss } from "./generated/transcript-rows/rows-c82eca2bd-CImI7zNG.mjs";
 import { fileGutterCss, findLineOrdinal } from "./generated/transcript-rows/rows-cc3bc2027-CqmDBxcX.mjs";
 import { highlightFileFind, highlightFileLines, revealFileLine } from "./generated/transcript-rows/rows-cd2efac6e-Be7wcc4w.mjs";
+import { copyableImage } from './local-media-url.mjs';
 // W14-code r5 pierre: the rollback switch of the pierre File body (host-growthbook.mjs).
 export const PIERRE_FILE_VIEWER_SWITCH = "local_pierre_file_viewer";
 // Read once from the host table; a provider can pin either body (the rollback path stays testable under SSR).
@@ -874,7 +881,8 @@ export function SourceFileViewer({ file, presentation = "pane", displayPath, ful
     else if (item.action === "download-file") onDownload?.(file.text);
     // R4i-files FI1 (files-12): 2.42304.0 c26fb8b6b Le — addSuccess "Image copied to clipboard." (wxBR7bytpr), addError
     // "Couldn’t copy image." (mpiKUCMipZ). addSuccess is the neutral CDS toast here (source-routines-shared-adapters).
-    else if (item.action === 'copy-image') void Promise.resolve().then(() => onCopyImage(imagePng(loadedImage.element)))
+    // U-2: a claude-media image is copied from its bytes (c5259f582 K/Ae via copyableImage), not from the tainted canvas.
+    else if (item.action === 'copy-image') void Promise.resolve().then(() => copyableImage(loadedImage.element)).then((image) => onCopyImage(imagePng(image)))
       .then(() => toasts?.add(t('Image copied to clipboard.'), { variant: 'neutral' }), () => toasts?.add(t('Couldn’t copy image.'), { variant: 'danger' }));
     else fileMenu?.select(item, file.path);
   };

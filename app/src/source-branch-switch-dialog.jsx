@@ -1,5 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
-import { CdsAlertDialog, CdsButton, CdsRoot, CdsSplitDropdownButton } from "./generated/view-tabs/index.js";
+// 4.16336.0 host wiring (frame): the dialog renders its own Root, so Root / AlertDialog / Button / SplitDropdownButton are
+// all the cds-core graph (4.16336.0 shared-18 UC is still `CdsRoot {density:"compact", experimental:{naturalImageTiles:"sized"},
+// className:"contents"}`, and cc43287c9 draws the same AlertDialog / Footer align "between" / SplitDropdownButton call).
+import { CdsAlertDialog, CdsButton, CdsRoot, CdsSplitDropdownButton } from "./cds-core.mjs";
 import { codePaneExperimental } from "./generated/code-composer/code-pane-experimental.mjs";
 import { menuCollisionPadding } from "./generated/code-composer/menu-collision-padding.mjs";
 import { StartMessage, useStartIntl } from "./source-code-start-adapters.jsx";

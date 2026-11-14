@@ -6,6 +6,7 @@ import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'node:path';
 import fs from 'node:fs';
+import { withMemoCache } from './support/react-memo-cache.mjs';
 
 // SSR of the Changes/Plan pane body states through the real SourceFilePanel:
 // ke (2.2553.1 readable/panes-diff-states-current.js:54-92), rh
@@ -38,14 +39,19 @@ test('loading: centered rh wrapper, status named "Loading changes", no visible t
 
 test('failed: role=alert EmptyState with the Warning icon, "Couldn’t load the changes" and a secondary "Try again" (cb61be3a2 ze/W)', () => {
   const html = panel({ diffError: 'Could not load repository diff: fatal: secret-detail', diffScope: 'uncommitted', onRefresh: () => {} });
-  assert.match(html, /<div data-diff-pane-body="" tabindex="-1" class="h-full w-full outline-none source-pane-state"><div role="alert" class="flex h-full flex-col items-center justify-center gap-md px-lg py-lg text-center source-empty-state"><span aria-hidden="true" data-cds="Icon" class="!size-7 text-muted" style="font-size:24px;font-weight:[\d.]+">.<\/span><div class="flex flex-col items-center gap-1"><p class="max-w-\[36ch\] break-words text-body text-primary">Couldn’t load the changes<\/p><\/div><div class="flex flex-wrap items-center justify-center gap-1"><button type="button" data-cds="Button" class="[^"]*"><span aria-hidden="true" class="[^"]*"><span data-cds-part="paint" class="[^"]* bg-fill-secondary [^"]*"><\/span><\/span><span class="inline-flex min-w-0 items-center gap-1 ">Try again/);
+  assert.match(html, /<div data-diff-pane-body="" tabindex="-1" class="h-full w-full outline-none source-pane-state"><div role="alert" class="flex h-full flex-col items-center justify-center gap-md px-lg py-lg text-center source-empty-state"><span data-cds="Icon" style="font-size:calc\(1.5rem \* var\(--cds-rem-scale, 1\)\);font-weight:[\d.]+;font-variation-settings:&quot;opsz&quot; 24" class="!size-7 text-muted" aria-hidden="true">.<\/span><div class="flex flex-col items-center gap-1"><p class="max-w-\[36ch\] break-words text-body text-primary">Couldn’t load the changes<\/p><\/div><div class="flex flex-wrap items-center justify-center gap-1"><button type="button" data-cds="Button" class="[^"]*"><span aria-hidden="true" class="[^"]*"><span data-cds-part="paint" class="[^"]* bg-fill-secondary [^"]*"><\/span><\/span><span class="inline-flex min-w-0 items-center gap-1 ">Try again/);
   // W14-code r6 r6pa-04: shared-frame CdsButton (secondary = no data-variant, bg-fill-secondary paint), not the replica.
   assert.doesNotMatch(html, /aria-busy="true"/);
   assert.doesNotMatch(html, /secret-detail|fatal:|Could not load repository diff|Close and reopen/);
   assert.equal(P.CHANGES_FAILED_TITLE, 'Couldn’t load the changes');
   // While the refetch it started runs, the button is busy and named "Loading changes".
   const busy = panel({ diffError: 'boom', onRefresh: () => {}, diffRetrying: true });
-  assert.match(busy, /<button type="button" data-cds="Button" class="[^"]*" aria-busy="true" aria-disabled="true" aria-label="Loading changes"/);
+  // host-wiring fix-code-a: 4.16336.0 cds-core Button emits aria-label before aria-busy/aria-disabled (3.6556.2 Uu emitted
+  // aria-busy, aria-disabled, aria-label); assert all three on the same Try again button tag, order-independent.
+  const busyTag = busy.match(/<button type="button" data-cds="Button" class="[^"]*"[^>]*>(?=(?:(?!<\/button>).)*Try again)/s)?.[0] ?? '';
+  assert.match(busyTag, / aria-busy="true"/);
+  assert.match(busyTag, / aria-disabled="true"/);
+  assert.match(busyTag, / aria-label="Loading changes"/);
   // Without a refetch handler there is no button (never a dead control).
   assert.doesNotMatch(panel({ diffError: 'boom' }), /Try again/);
 });
@@ -54,6 +60,21 @@ test('Try again runs the pane Refresh', () => {
   let refreshed = 0, onClick = null;
   const element = React.createElement(P.SourceChangesState, { state: 'failed', onRetry: () => { refreshed += 1; } });
   // Walk the rendered element tree to the button's onClick (SSR has no events).
+  // integration-1 cds-core-api: the host Icon now renders the official 4.16336.0 CdsIcon (cds-core shared-frame Bs), which is
+  // React Compiler output (`useMemoCache` through react/compiler-runtime `c`), so calling it outside React needs a hook
+  // dispatcher. Install a one-shot dispatcher (tests/support/react-memo-cache.mjs withMemoCache) around the walk; every
+  // component is still rendered for real and the onClick is still the one found on the rendered Try again element.
+  const dispatcher = withMemoCache({
+    useContext: context => context._currentValue,
+    useState: initial => [typeof initial === 'function' ? initial() : initial, () => {}],
+    useReducer: (reducer, arg, init) => [init ? init(arg) : arg, () => {}],
+    useRef: initial => ({ current: initial }),
+    useMemo: fn => fn(),
+    useCallback: fn => fn,
+    useEffect() {}, useLayoutEffect() {}, useInsertionEffect() {}, useDebugValue() {},
+    useId: () => ':test:',
+    useSyncExternalStore: (subscribe, snapshot, server) => (server ?? snapshot)(),
+  });
   const visit = (node) => {
     if (!node || typeof node !== 'object') return;
     if (Array.isArray(node)) { node.forEach(visit); return; }
@@ -62,7 +83,9 @@ test('Try again runs the pane Refresh', () => {
     visit(rendered ?? node.props?.children);
     if (node.props?.actions) visit(node.props.actions);
   };
-  visit(element);
+  const internals = React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, previous = internals.H;
+  internals.H = dispatcher;
+  try { visit(element); } finally { internals.H = previous; }
   assert.equal(typeof onClick, 'function');
   onClick();
   assert.equal(refreshed, 1);
@@ -78,7 +101,7 @@ test('empty: data-diff-pane-body with "No uncommitted changes" (uncommitted scop
 
 test('plan empty: Checklist icon in the 28px box, "No plan yet" and the adapted body; tasks still render', () => {
   const html = panel({ tab: 'plan', plan: [] });
-  assert.match(html, new RegExp(EMPTY_ROOT.replace(/[[\]().]/g, '\\$&') + '<span aria-hidden="true" data-cds="Icon" class="!size-7 text-muted" style="font-size:24px;font-weight:[\\d.]+">.</span>' +
+  assert.match(html, new RegExp(EMPTY_ROOT.replace(/[[\]().]/g, '\\$&') + '<span data-cds="Icon" style="font-size:calc\\(1.5rem \\* var\\(--cds-rem-scale, 1\\)\\);font-weight:[\\d.]+;font-variation-settings:&quot;opsz&quot; 24" class="!size-7 text-muted" aria-hidden="true">.</span>' +
     '<div class="flex flex-col items-center gap-1"><p class="max-w-\\[36ch\\] break-words text-body text-primary">No plan yet</p><p class="max-w-\\[36ch\\] break-words text-footnote text-muted">DeepSeek writes the plan here as it explores\\. Keep chatting\\.</p></div></div>'));
   assert.doesNotMatch(html, /The plan will appear here/);
   assert.equal(panel({ tab: 'plan' }).includes('No plan yet'), true);
@@ -108,7 +131,7 @@ test('plan tasks: kp/Op wrapper and the ZO/VT list (Check, spinner, Placeholder,
   ]);
   // VT: 16px box; Check / Spinner sm / muted Placeholder; exact sr-only words.
   const box = 'shrink-0 size-\\[calc\\(1rem\\*var\\(--cds-rem-scale,1\\)\\)\\] mt-\\[1px\\] flex items-center justify-center';
-  assert.match(rows[0].inner, new RegExp(`^<span class="${box} text-primary"><span aria-hidden="true" data-cds="Icon" class="" style="font-size:16px;font-weight:[\\d.]+">.</span><span class="sr-only select-none">done</span></span>`));
+  assert.match(rows[0].inner, new RegExp(`^<span class="${box} text-primary"><span data-cds="Icon" style="font-size:calc\\(1rem \\* var\\(--cds-rem-scale, 1\\)\\);font-weight:[\\d.]+" aria-hidden="true">.</span><span class="sr-only select-none">done</span></span>`));
   assert.match(rows[1].inner, new RegExp(`^<span class="${box} text-primary"><span data-cds="Spinner"[^>]*style="width:calc\\(0\\.75rem`));
   // r8pa-03 / gen-final-8: 3.6556.2 cb6930dae Ta — the CDS Icon Placeholder sm (rem-scaled), muted, aria-hidden.
   assert.match(rows[2].inner, new RegExp(`^<span class="${box}"><span data-cds="Icon" style="font-size:calc\\(1rem \\* var\\(--cds-rem-scale, 1\\)\\);[^"]*" class="text-muted-as-secondary" aria-hidden="true">`));

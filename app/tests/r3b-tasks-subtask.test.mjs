@@ -9,17 +9,24 @@ import path from 'node:path';
 import { setLocale, DEFAULT_LOCALE } from '../electron/i18n/index.mjs';
 import { parseSessionCommand, matchCommands, sessionCommands, commandUnavailable, commandArgumentHint } from '../src/session-command-model.mjs';
 import { runSubtask, subtaskRefusal, SUBTASK_MESSAGES } from '../src/r3b-tasks-subtask.mjs';
+import { createHash } from 'node:crypto';
+import { parsers } from '../../tools/node_modules/prettier/plugins/babel.mjs';
 import { subtaskTitle } from '../src/generated/r3b-tasks/subtask-title.mjs';
-import { startsWithCommand, stripLeadingInvisible } from '../src/generated/r3b-tasks/command-prefix.mjs';
-import { extractR3bTasks } from '../scripts/extract-r3b-tasks.mjs';
+import { startsWithCommand, stripLeadingInvisible, startsWithCommandAfterInvisible, stripLeadingHidden } from '../src/generated/r3b-tasks/command-prefix.mjs';
+import { isInvisibleCharacter, isHiddenCharacter } from '../src/generated/r3b-tasks/invisible-character.mjs';
+import { extractR3bTasks, modules as contract, callSites as contractCallSites } from '../scripts/extract-r3b-tasks.mjs';
 
 const app = path.resolve(import.meta.dirname, '..');
 const reference = path.resolve(app, '../reference/installed-2.42304.0-20261017');
 const official = name => fs.readFileSync(path.join(reference, 'ion-dist/assets/v1', name), 'utf8');
-// The generated helpers (scripts/extract-r3b-tasks.mjs) moved to 3.6556.2 in w1-routines-a (RC-21); the host /subtask
-// port itself still mirrors the 2.42304.0 send handler checked by 'tasks-05 official'.
+// The generated helpers (scripts/extract-r3b-tasks.mjs) moved to 3.6556.2 in w1-routines-a (RC-21) and to 4.16336.0 in
+// region batch 2a (production directly: no generated area links them); the host /subtask port itself still mirrors the
+// 2.42304.0 send handler checked by 'tasks-05 official'.
 const v3 = path.resolve(app, '../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1');
 const official3 = name => fs.readFileSync(path.join(v3, name), 'utf8');
+const v4 = path.resolve(app, '../reference/snapshots/claude-4.16336.0-20261104/ion-dist/assets/v1');
+const official4 = name => fs.readFileSync(path.join(v4, name), 'utf8');
+const sha = text => createHash('sha256').update(text).digest('hex');
 const count = (text, needle) => text.split(needle).length - 1;
 const u = text => text.replaceAll('’', '\\u2019'); // the minified chunks spell ’ as ’
 
@@ -52,7 +59,7 @@ test('tasks-05 official: the /subtask row, its gate, the send handler refusals a
     assert.equal(count(main, text), 1, text);
 });
 
-test('tasks-05 3.6556.2 call sites: the send handler and the fork still use the generated helpers', () => {
+test('tasks-05 3.6556.2 call sites (history): the send handler and the fork used the then-generated helpers', () => {
   // cc43287c9 imports c8f38bf1f's `t` (startsWithCommand) and refuses a command-led task with it; caec4a2d4 imports
   // cef1e6037's `_` (subtaskTitle, Bn) and titles the background fork with it.
   const session = official3('cc43287c9-Me-M2ucD.js');
@@ -67,24 +74,142 @@ test('tasks-05 3.6556.2 call sites: the send handler and the fork still use the 
   assert.equal(count(official3('c8f38bf1f-Ba2QaQov.js'), 'export{r as n,i as t}'), 1);
 });
 
-test('tasks-05 generated: Bn (the fork\'s provisional title) and c8f38bf1f i (starts with a command) are the 3.6556.2 originals', async () => {
+test('tasks-05 4.16336.0 call sites: the /subtask refusal calls c8f38bf1f l (`n`), the background fork titles with cef1e6037 yr (`v`)', () => {
+  const session = official4('cc43287c9-dzfX-J5i.js');
+  for (const text of ['import{i as ZC,n as QC}from"./c8f38bf1f-B4N4qS0l.js"', 'if(s&&c&&QC(c))',
+    u('defaultMessage:"A subtask can’t start with a command, so nothing was sent. Describe the task in words.",id:"vYLcZuUvrF"'),
+    'defaultMessage:"Add a task after /subtask, then send it again.",id:"MbpoOYe8Db"',
+    'defaultMessage:"A fork of this session is still starting. Send this again in a moment.",id:"2veOTDyV4r"'])
+    assert.equal(count(session, text), 1, text);
+  const fork = official4('caec4a2d4-BQDPvHyW.js');
+  for (const text of ['import{u as ln,v as un}from"./cef1e6037-Dm5Rlsox.js"', 'let o=un(e.sendInBackground?.text)',
+    'defaultMessage:"Started the subtask in a new session.",id:"CAp88u+zH7"'])
+    assert.equal(count(fork, text), 1, text);
+  assert.equal(count(official4('cef1e6037-Dm5Rlsox.js'), 'yr as v'), 1);
+  assert.equal(count(official4('c8f38bf1f-B4N4qS0l.js'), 'export{c as i,l as n,o as r,s as t};'), 1);
+  // The generator found the same calls by AST (manifest callSites), with the caller bytes pinned.
+  const manifest = JSON.parse(fs.readFileSync(path.join(app, 'src/generated/r3b-tasks/manifest.json'), 'utf8'));
+  assert.deepEqual(manifest.callSites.map(site => [site.caller, site.from, site.alias, site.root, site.call]), [
+    ['cc43287c9-dzfX-J5i.js', 'c8f38bf1f-B4N4qS0l.js', 'n', 'l', 'QC(c)'],
+    ['caec4a2d4-BQDPvHyW.js', 'cef1e6037-Dm5Rlsox.js', 'v', 'yr', 'un(e.sendInBackground?.text)']]);
+  for (const site of manifest.callSites) assert.equal(site.callerSha256, sha(official4(site.caller)), site.caller);
+});
+
+test('tasks-05 generated: yr (the fork\'s provisional title) and c8f38bf1f l (starts with a command) are the 4.16336.0 originals', async () => {
   await extractR3bTasks({ check: true });
   const manifest = JSON.parse(fs.readFileSync(path.join(app, 'src/generated/r3b-tasks/manifest.json'), 'utf8'));
-  assert.equal(manifest.referenceVersion, '3.6556.2');
-  assert.equal(manifest.referenceSnapshot, 'snapshots/claude-3.6556.2-20261025-192807');
+  assert.equal(manifest.referenceVersion, '4.16336.0');
+  assert.equal(manifest.referenceSnapshot, 'snapshots/claude-4.16336.0-20261104');
+  assert.equal(manifest.sharedGraph, 'cds-core');
   assert.deepEqual(manifest.modules.map(entry => [entry.target, entry.source]), [
-    ['lazy-value.mjs', 'shared-0-DDOOdL6P.js'], ['invisible-character.mjs', 'shared-182-BI1KJccu.js'],
-    ['command-prefix.mjs', 'c8f38bf1f-Ba2QaQov.js'], ['subtask-title.mjs', 'cef1e6037-C9OZ_iaL.js']]);
-  assert.deepEqual(manifest.modules.map(entry => entry.exports), [{ Pa: 'lazyValue' }, { nm: 'isInvisibleCharacter' },
-    { r: 'stripLeadingInvisible', i: 'startsWithCommand' }, { Bn: 'subtaskTitle' }]);
+    ['lazy-value.mjs', 'shared-0-CnnWnVrT.js'], ['invisible-character.mjs', 'shared-212-BHMAi0oa.js'],
+    ['mention-prefix.mjs', 'shared-5-u8kha2eH.js'], ['path-basename.mjs', 'shared-92-BOgyxePb.js'],
+    ['command-prefix.mjs', 'c8f38bf1f-B4N4qS0l.js'], ['subtask-title.mjs', 'cef1e6037-Dm5Rlsox.js']]);
+  assert.deepEqual(manifest.modules.map(entry => entry.exports), [{ Tl: 'lazyValue' }, { M_: 'isInvisibleCharacter', kv: 'isHiddenCharacter' },
+    { ID: 'quotedMentionPrefix' }, { mk: 'pathBasename' },
+    { o: 'stripLeadingInvisible', s: 'startsWithCommandAfterInvisible', c: 'stripLeadingHidden', l: 'startsWithCommand' }, { yr: 'subtaskTitle' }]);
+  assert.deepEqual(manifest.modules.map(entry => entry.bindings.map(b => b.name)), [['Tl'], ['j_', 'M_', 'yv', 'Cv', 'Dv', 'kv'], ['ID'], ['mk'],
+    ['r', 'i', 'a', 'o', 's', 'c', 'l'], ['yr']]);
+  // Every binding is the official declaration, byte for byte; every module matches its recorded hash; only generated
+  // imports (routines-shared is 3.6556.2, so shared-0 Tl is cut here again). Since cds-core wave 5 cds-core holds Tl too
+  // (pure, without a publicName: shared-62 jF reads it), so lazy-value.mjs records it as held; nothing else is.
+  for (const entry of manifest.modules) {
+    const chunk = official4(entry.source);
+    assert.equal(entry.sourceSha256, sha(chunk), entry.source);
+    assert.equal(sha(fs.readFileSync(path.join(app, 'src/generated/r3b-tasks', entry.target), 'utf8')), entry.sha256, entry.target);
+    const declarations = new Map(parsers.babel.parse(chunk, {}).program.body.flatMap(node => node.type === 'FunctionDeclaration' ? [[node.id.name, node]]
+      : node.type === 'VariableDeclaration' ? node.declarations.map(d => [d.id.name, d]) : []));
+    for (const binding of entry.bindings) {
+      const node = declarations.get(binding.name);
+      assert.ok(node, `${entry.source} declares ${binding.name}`);
+      assert.equal(binding.sha256, sha(chunk.slice(node.start, node.end)), `${entry.target} ${binding.name}`);
+    }
+    assert.deepEqual(entry.heldByCdsCore, entry.target === 'lazy-value.mjs' ? ['Tl'] : [], entry.target);
+    for (const imported of entry.imports) assert.equal(imported.kind, 'generated', `${entry.target} ${imported.local}`);
+  }
+  for (const entry of manifest.modules) assert.doesNotMatch(fs.readFileSync(path.join(app, 'src/generated/r3b-tasks', entry.target), 'utf8'), /routines-shared|3\.6556\.2/);
+  // D1: no other 4.16336.0 graph slices these bindings (one copy). The one exception is the region-plan
+  // resliceInsteadOfLink pure function shared-0 Tl (lazyValue, which replaces the routines-shared Pa link): r4e-plugin
+  // (url-safety.mjs) re-cuts it under the same plan entry. That copy is allowed only from r4e-plugin, only while cds-core
+  // does not publish Tl (then both regions must link it), and only byte for byte the same declaration. cds-core holding
+  // it unpublished (wave 5) cannot be linked; its copy must be the same declaration.
+  const mine = new Map(manifest.modules.flatMap(entry => entry.bindings.map(b => [`${entry.source}#${b.name}`, b.sha256])));
+  // cds-core wave 5: cds-core itself holds Tl (pure, unpublished: it cannot be linked) and routines-shared-v4, whose link to
+  // lazy-value.mjs the generator now refuses ("cds-core holds it; link cds-core"), cuts it as cds-core's declaration.
+  // round5 integration (real-b): settings-desktop-v4 / settings-account-v4 (settings lane, 4.16 c71860c77 Vs / cf4f70727 pn
+  // closures) and transcript-rows-v4 (UserBashRun c19e90103 k_ closure) reach shared-0 Tl too; cds-core still holds it
+  // unpublished, so by the rule above they cannot link it and cut the same declaration (byte-identity is asserted below).
+  // When cds-core publishes Tl (addendum queue), every area here must link it instead and this set shrinks back.
+  // was: new Set(['r4e-plugin', 'cds-core', 'routines-shared-v4'])
+  const resliceAllowed = new Map([['shared-0-CnnWnVrT.js#Tl', new Set(['r4e-plugin', 'cds-core', 'routines-shared-v4', 'settings-desktop-v4', 'settings-account-v4', 'transcript-rows-v4'])]]);
+  const cdsCore = JSON.parse(fs.readFileSync(path.join(app, 'src/generated/cds-core/manifest.json'), 'utf8'));
+  for (const key of resliceAllowed.keys()) {
+    const [file, local] = key.split('#');
+    assert.ok(mine.has(key), `${key} is one of the r3b-tasks bindings`);
+    assert.equal(Object.values(cdsCore.publicNames).some(entry => entry.file === file && entry.local === local), false, `cds-core publishes ${key}: link it`);
+    const held = cdsCore.modules.find(entry => path.basename(entry.source ?? '') === file)?.bindings.find(b => b.name === local);
+    if (held) assert.equal(held.sha256, mine.get(key), `cds-core holds ${key} as the same declaration`);
+  }
+  // Every violation is collected first and asserted once, so an old re-cut cannot hide a new one (cds-integrate wave5b fix).
+  const violations = [];
+  const generated = path.join(app, 'src/generated');
+  for (const area of fs.readdirSync(generated, { withFileTypes: true }).filter(d => d.isDirectory() && d.name !== 'r3b-tasks').map(d => d.name)) {
+    const file = path.join(generated, area, 'manifest.json');
+    if (!fs.existsSync(file)) continue;
+    let other; try { other = JSON.parse(fs.readFileSync(file, 'utf8')); } catch { continue; }
+    if (!Array.isArray(other.modules)) continue;
+    for (const entry of other.modules) {
+      if ((entry.referenceVersion ?? other.referenceVersion) !== '4.16336.0' || typeof entry.source !== 'string') continue;
+      for (const b of entry.bindings ?? []) {
+        const key = `${path.basename(entry.source)}#${typeof b === 'string' ? b : b.name}`;
+        if (!mine.has(key)) continue;
+        if (!resliceAllowed.get(key)?.has(area)) violations.push(`${area}/${entry.target} ${key}`);
+        if ((typeof b === 'string' ? undefined : b.sha256) !== mine.get(key)) violations.push(`${area}/${entry.target} ${key} is not the same declaration`);
+      }
+    }
+  }
+  assert.deepEqual(violations, [], 'other 4.16336.0 graphs re-cut r3b-tasks bindings');
+
+  // Behaviour of the originals (4.16336.0).
   assert.equal(subtaskTitle('  Fix the flaky login test in the auth service  '), 'Fix the flaky login test in');
   assert.equal(subtaskTitle('Investigate\nwhy   it\tfails'), 'Investigate why it fails');
   const long = 'Supercalifragilisticexpialidocious-and-then-some-more-words-in-one-token here';
   assert.equal(subtaskTitle(long), `${Array.from(long.split(' ')[0] + ' here').slice(0, 59).join('')}…`);
   assert.equal(subtaskTitle('   '), undefined);
-  for (const text of ['/review the diff', '!ls', '​/compact', '﻿ !rm']) assert.equal(startsWithCommand(text), true, JSON.stringify(text));
+  assert.equal(subtaskTitle(undefined), undefined);
+  // New in 4.16336.0: leading @"<path>" mentions are dropped from the words, and name the title when nothing else is left.
+  assert.equal(subtaskTitle('@"src/app/main.jsx" Fix the crash'), 'Fix the crash');
+  assert.equal(subtaskTitle('@"src/app/main.jsx" @"C:\\work\\notes.md"'), 'main.jsx, notes.md');
+  for (const text of ['/review the diff', '!ls', '\u200b/compact', '\ufeff !rm', '\ue000/compact', '\u2800!ls']) assert.equal(startsWithCommand(text), true, JSON.stringify(text));
   for (const text of ['Fix /etc/hosts', 'a/b', '', 'Review it']) assert.equal(startsWithCommand(text), false, JSON.stringify(text));
-  assert.equal(stripLeadingInvisible('​⁠  task'), 'task');
+  // The /subtask check (l) also skips hidden characters (private use, U+2800 …); s, the 3.6556.2 shape, does not.
+  assert.equal(startsWithCommandAfterInvisible('\ue000/compact'), false);
+  assert.equal(startsWithCommandAfterInvisible('\u200b/compact'), true);
+  assert.equal(stripLeadingInvisible('\u200b\u2060  task'), 'task');
+  assert.equal(stripLeadingHidden('\u2800\ue000 task'), 'task');
+  assert.equal(stripLeadingInvisible('\u2800task'), '\u2800task');
+  // 4.16336.0 M_ no longer counts \n \r \t as invisible (the 3.6556.2 expression did, through \p{Cc}).
+  for (const char of ['\n', '\r', '\t']) assert.equal(isInvisibleCharacter(char), false, JSON.stringify(char));
+  for (const char of ['\u200b', '\u0000', '\ufff9']) assert.equal(isInvisibleCharacter(char), true, JSON.stringify(char));
+  for (const char of ['\ue000', '\u2800', '\ufffc', '\u{1D159}', '\u{13430}']) assert.equal(isHiddenCharacter(char), true, JSON.stringify(char));
+  assert.equal(isHiddenCharacter('a'), false);
+});
+
+test('tasks-05 generator fails closed: an ambiguous root, a re-pointed call site or a moved export stops generation', async () => {
+  const replace = (target, change) => contract.map(spec => (spec.target === target ? change(spec) : spec));
+  // s and l share `return/^[/!]/.test(x(e))`; without the `reads` feature neither is unique.
+  const ambiguous = replace('command-prefix.mjs', spec => ({ ...spec, features: { ...spec.features, l: ['/^[/!]/.test(', { loose: 'return/^[/!]/.test(c(e))' }] } }));
+  await assert.rejects(extractR3bTasks({ check: true, modules: ambiguous }), /root l is not the unique declaration of c8f38bf1f-B4N4qS0l\.js with its features \((s, l|l, s)\)/);
+  // The /subtask refusal calls l (`n`), not s (`t`, the 3.6556.2 shape).
+  const repointed = contractCallSites.map(site => (site.root === 'l' ? { ...site, root: 's' } : site));
+  await assert.rejects(extractR3bTasks({ check: true, callSites: repointed }), /calls c8f38bf1f-B4N4qS0l\.js:n \(l\), not s/);
+  const moved = replace('subtask-title.mjs', spec => ({ ...spec, officialExports: { _: 'yr' } }));
+  await assert.rejects(extractR3bTasks({ check: true, modules: moved }), /official export _ is .*, not yr/);
+  // The old (3.6556.2) title shape is not the 4.16336.0 declaration.
+  const oldShape = replace('subtask-title.mjs', spec => ({ ...spec, features: { yr: ['Array.from(t.slice(0,6).join(" "))'] } }));
+  await assert.rejects(extractR3bTasks({ check: true, modules: oldShape }), /subtask-title\.mjs: cef1e6037-Dm5Rlsox\.js:yr lacks/);
+  // A replaced contract is never written.
+  await assert.rejects(extractR3bTasks({ modules: moved }), /only checked, never written/);
 });
 
 const ready = { current: 't', connected: true, hasHistory: true };

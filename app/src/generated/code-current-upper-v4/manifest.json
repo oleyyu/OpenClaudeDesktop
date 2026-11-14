@@ -1,0 +1,1594 @@
+{
+  "referenceVersion": "4.16336.0",
+  "referenceSnapshot": "snapshots/claude-4.16336.0-20261104",
+  "generator": "scripts/extract-code-current-upper-v4.mjs",
+  "adapterModule": "src/source-code-current-upper-v4-adapters.jsx",
+  "linkedAreas": [
+    {
+      "area": "code-current-v4",
+      "modules": [
+        "electron-side-session-prompt.mjs",
+        "csv-parser.mjs",
+        "csv-model.mjs",
+        "btw-focus-intent.mjs",
+        "breadcrumb-within-root.mjs",
+        "environment-menu-controls.mjs",
+        "mention-output-files.mjs",
+        "environment-form-layout.mjs",
+        "file-index.mjs",
+        "environment-field-header.mjs",
+        "environment-machine-variables.mjs",
+        "document-frame.mjs",
+        "titlebar-focus-orphaned.mjs",
+        "pane-layout-icons.mjs",
+        "electron-environment-presets--c5272b93e.mjs",
+        "file-tree-style.mjs",
+        "csv-parser-vendor.mjs",
+        "electron-file-text-binary.mjs",
+        "terminal-commands.mjs",
+        "terminal-geometry.mjs",
+        "terminal-output.mjs",
+        "terminal-mouse.mjs",
+        "terminal-colors.mjs",
+        "terminal-link-selection.mjs",
+        "terminal-errors.mjs",
+        "titlebar-focus-lost.mjs",
+        "electron-btw-title.mjs",
+        "pane-focus-owner.mjs",
+        "titlebar-toggle-fold.mjs",
+        "titlebar-panels-scope.mjs",
+        "titlebar-title-skeleton.mjs",
+        "file-output-order.mjs",
+        "tab-focus-key-scroll.mjs",
+        "terminal-registry.mjs",
+        "tile-layout-flex.mjs",
+        "transcript-focus-landing.mjs",
+        "environment-name-parts.mjs",
+        "tab-focus-tracker.mjs",
+        "transcript-tab-focus.mjs",
+        "pane-focus-target.mjs",
+        "terminal-selection.mjs",
+        "terminal-clear-item.mjs",
+        "tab-focus-release.mjs",
+        "environment-dialog-draft.mjs",
+        "environment-dialog-model.mjs",
+        "sessions-page-load-hold.mjs",
+        "sessions-page-copy.mjs",
+        "sessions-page-selection-bar.mjs",
+        "sessions-page-bulk-actions.mjs",
+        "sessions-page-row.mjs",
+        "approval-read-gate.mjs",
+        "dev-server-description.mjs",
+        "session-menu-tooltip.mjs",
+        "titlebar-draft-title.mjs",
+        "tile-fit-opened.mjs",
+        "environment-menu-rows.mjs",
+        "electron-environment-presets.mjs",
+        "file-view-memory.mjs",
+        "file-text-decoding.mjs",
+        "electron-file-text-decoder.mjs",
+        "breadcrumb-paths.mjs",
+        "titlebar-fold-measure.mjs",
+        "csv-model--cd5fd9055.mjs",
+        "csv-view.mjs",
+        "environment-folder-view.mjs",
+        "breadcrumb-measure.mjs",
+        "tile-layout-math.mjs",
+        "terminal-description.mjs",
+        "terminal-titles.mjs",
+        "terminal-idle-cursor.mjs",
+        "terminal-title-invisibles.mjs",
+        "session-cycle-composer.mjs",
+        "session-cycle-chords--shared-1.mjs",
+        "surface-chord.mjs",
+        "environment-modifier-keys.mjs",
+        "nested-session-palette-copy.mjs",
+        "padded-top.mjs",
+        "titlebar-lead-parts.mjs",
+        "sidebar-remote-name.mjs",
+        "sidebar-menu-groups.mjs",
+        "session-cycle-chords.mjs",
+        "session-cycle-rows.mjs",
+        "file-output-paths.mjs",
+        "sidebar-row-primitive.mjs",
+        "sidebar-row-control.mjs",
+        "sidebar-pr-model.mjs",
+        "sidebar-pr-icon.mjs",
+        "sidebar-status-glyph.mjs",
+        "sidebar-fade-label.mjs",
+        "sidebar-row-view.mjs",
+        "sessions-page-band.mjs",
+        "sessions-page-awaiting-label.mjs",
+        "sidebar-group-copy.mjs",
+        "titlebar-title-rect.mjs",
+        "titlebar-lead-parts--shared-18.mjs",
+        "electron-environment-parent.mjs",
+        "nested-session-parts.mjs",
+        "session-cycle-focus.mjs",
+        "visible-box.mjs",
+        "surface-chord-layers.mjs",
+        "electron-string-grapheme-limit.mjs",
+        "grapheme-prefix.mjs",
+        "sidebar-pr-card.mjs",
+        "sidebar-details-model.mjs",
+        "sidebar-details-view.mjs",
+        "sessions-page-load-deadline.mjs",
+        "environment-wsl-folder.mjs",
+        "nested-session-copy.mjs",
+        "sidebar-family-sort.mjs",
+        "sidebar-sort-order.mjs",
+        "sidebar-search.mjs",
+        "nested-session-model.mjs",
+        "string-count.mjs",
+        "sidebar-date-pivot.mjs",
+        "sidebar-date-groups.mjs",
+        "split-drag-registry.mjs",
+        "owner-document.mjs",
+        "owner-window.mjs",
+        "terminal-title-wellformed.mjs",
+        "sidebar-session-priority.mjs",
+        "sessions-page-coordinator.mjs",
+        "nested-session-needs-input.mjs",
+        "file-output-root.mjs",
+        "attachment-file-name.mjs",
+        "file-document-types.mjs",
+        "file-output-normalize.mjs",
+        "path-parts.mjs",
+        "tab-focus-key-scroll--shared-31.mjs",
+        "session-cycle-terminal.mjs",
+        "titlebar-lead-classes.mjs",
+        "titlebar-origin-classes.mjs",
+        "sessions-page-model.mjs",
+        "sidebar-sort-model.mjs",
+        "nested-session-parent-tabs.mjs",
+        "sidebar-bulk-worktree-copy--shared-46.mjs",
+        "sidebar-upgrade-badge.mjs",
+        "composer-composition.mjs",
+        "sidebar-menu-order.mjs",
+        "sidebar-group-view.mjs",
+        "sidebar-bulk-family.mjs",
+        "sidebar-bulk-delete-copy.mjs",
+        "sidebar-bulk-worktree-copy.mjs",
+        "environment-picker-keys.mjs",
+        "path-tooltip.mjs",
+        "sidebar-nav-badge.mjs",
+        "sidebar-running-mark.mjs",
+        "sidebar-group-options.mjs",
+        "nested-session-separator.mjs",
+        "environment-common-copy.mjs",
+        "terminal-title-runs.mjs",
+        "sidebar-session-state.mjs",
+        "sessions-page-live-status.mjs",
+        "session-cycle-claims.mjs",
+        "sidebar-environment-copy.mjs",
+        "electron-environment-basename.mjs",
+        "environment-wsl-unc.mjs",
+        "terminal-title-text.mjs",
+        "button-press.mjs",
+        "dom-owner.mjs",
+        "display-text.mjs",
+        "environment-select-parts.mjs",
+        "chunk-c227f4d5e.mjs",
+        "chunk-c289d7154.mjs",
+        "chunk-c368caeab.mjs",
+        "chunk-c387a4508.mjs",
+        "chunk-c51596d2b.mjs",
+        "chunk-c5a01d531.mjs",
+        "chunk-c68c4283d.mjs",
+        "chunk-c784da984.mjs",
+        "chunk-cd96b5fdc.mjs",
+        "chunk-electron-shared-18.mjs",
+        "chunk-electron-shared-39.mjs",
+        "chunk-shared-0.mjs",
+        "chunk-shared-1.mjs",
+        "chunk-shared-100.mjs",
+        "chunk-shared-153.mjs",
+        "chunk-shared-18.mjs",
+        "chunk-shared-183.mjs",
+        "chunk-shared-19.mjs",
+        "chunk-shared-2.mjs",
+        "chunk-shared-20.mjs",
+        "chunk-shared-25.mjs",
+        "chunk-shared-26.mjs",
+        "chunk-shared-3.mjs",
+        "chunk-shared-31.mjs",
+        "chunk-shared-33.mjs",
+        "chunk-shared-36.mjs",
+        "chunk-shared-38.mjs",
+        "chunk-shared-39.mjs",
+        "chunk-shared-6.mjs",
+        "chunk-shared-62.mjs",
+        "chunk-shared-7.mjs",
+        "chunk-shared-92.mjs",
+        "chunk-shared-frame.mjs",
+        "chunk-vendor-frame.mjs",
+        "chunk-vendor-intl.mjs"
+      ]
+    },
+    "files-changes-v4",
+    "session-rail-kit-v4",
+    "session-rail-changes-v4",
+    "session-rail-sections-v4",
+    "sessions-page-v4",
+    "routines-shared-v4",
+    "code-composer-v4",
+    "code-editor-current-v4",
+    "cowork-scheduled-v4",
+    "cowork-progress-v4",
+    "r3b-transcript-v4"
+  ],
+  "sharedGraph": "cds-core",
+  "modules": [
+    {
+      "target": "shared-38.mjs",
+      "source": "shared-38-DyF0_Fim.js",
+      "sourceSha256": "7e4b9829ff53d9a2e0917de5fd1c2590bb54bca631c955f72b79905203f99f39",
+      "sha256": "c2e89334319f649107fbc56c7cdb44eb4933161bf83e35198652525c4512949c",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "_n",
+          "sha256": "d5da11f6c42158a6903c7127c3480eaced955d61b936384375bc9fdac403f12f"
+        }
+      ],
+      "initializers": [],
+      "imports": [],
+      "exports": {},
+      "sharedExports": [
+        "_n"
+      ],
+      "heldByViewTabs": []
+    },
+    {
+      "target": "c73f45bc3.mjs",
+      "source": "c73f45bc3-C7dtUSq8.js",
+      "sourceSha256": "2f8cd7efecdf027935ebfc602c8dd443c1d0fd5316211e0b28fe021cf892dea5",
+      "sha256": "a75c9cffd01c186e71a2c19b1b42219f19cc3cd6b7464323a8f5280546b02e6f",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "mb",
+          "sha256": "b34e16de92c9f0eee8f4ad41cbbde3ba5cb6e8c072f67fd9b3ae5a532109caa2"
+        },
+        {
+          "name": "_b",
+          "sha256": "fb01552c067506de866d32bb174be3d0fbead68ec041757044b697636acb97a1"
+        },
+        {
+          "name": "vb",
+          "sha256": "3b112d87c95c2dde99f220023491fc2a06513dae0478aa5a70fd956bc3e4b36e"
+        },
+        {
+          "name": "yb",
+          "sha256": "2e46db162952e62746f18e8c93dc6feda560d20ccac51a3a3f2ab2c08623d6cd"
+        },
+        {
+          "name": "bb",
+          "sha256": "153070ed4a5f2d02fc118bb44bd017df7a777a0c7465d99e22db51346a8b9991"
+        },
+        {
+          "name": "xb",
+          "sha256": "eb2b79613e66548f6c199d1e10f847749b7b4692cd40c1cceff0d4b29e8fefd2"
+        },
+        {
+          "name": "Sb",
+          "sha256": "1d7bc2896804efafcc61e3186ff60d9dbce77bedee0be0f4f2474f9733a86019"
+        },
+        {
+          "name": "Cb",
+          "sha256": "6ed0fafda86f85155f7e873a332f1713ab4ed8357f6fda2130a89a800319da33"
+        },
+        {
+          "name": "wb",
+          "sha256": "cb541209a68e7d183a084b7c022f4b8a68401eecc4475d2d99fc43362d965c6f"
+        },
+        {
+          "name": "Tb",
+          "sha256": "7241cb9d8ff93eb51ea1f545ae86a20d8f1caca682dd8386d428b19f59d29b71"
+        },
+        {
+          "name": "Eb",
+          "sha256": "eb60f081a8fcfaf38596d4214324a7ab846cf99603c1b12f57ec9140f89906f1"
+        },
+        {
+          "name": "Db",
+          "sha256": "a019383718b673d45fb3e2fbc6c745d42f462688866a28c0e350a5816c25878b"
+        },
+        {
+          "name": "Ob",
+          "sha256": "c2f24ba03c8d4295dbe5fab6dbd9846aecc6c2fd5eb49309a636b909e1ecd49c"
+        },
+        {
+          "name": "kb",
+          "sha256": "52010796a5bcdc913a48bca36d8ea03eada0d1f1d9d4351ccd8c1edf069c9364"
+        },
+        {
+          "name": "jb",
+          "sha256": "d92ea556647ee657195d45ab0def444aa7c23ae698f1db4f2265600f443ac61a"
+        },
+        {
+          "name": "Mb",
+          "sha256": "f76d3946b7ea94adca51cf99e8c2e5e926bad12955d7686a04ed7a6a925a4bbe"
+        },
+        {
+          "name": "Nb",
+          "sha256": "75b5492c52a3e8a73768d918a89fb0e4b7b9d8743a3c10ea8f5f3c62d1facb99"
+        },
+        {
+          "name": "Pb",
+          "sha256": "7c9d49e1e7b058eb0732a0f9083928861caddda4c0f3ca115c66e2cdf4ca3952"
+        },
+        {
+          "name": "Kb",
+          "sha256": "3fa34dbe045ad6739e9f834c14f2e3d8e068f1d86a5e8f010542c866739cbeaa"
+        },
+        {
+          "name": "qb",
+          "sha256": "db199c5d2a8bb0d10dea4878e91f72d3aab668f19d9e5cf89bd15fd3ce09b350"
+        },
+        {
+          "name": "Qb",
+          "sha256": "8b06b6be71da64e35e3127680955d4b7d3e907ebef92203477996781aaffffd3"
+        },
+        {
+          "name": "ex",
+          "sha256": "6016aec5a748aadd34f87de7e10b8d6e9e3260f421e8b6bab961dcd1de5d8225"
+        }
+      ],
+      "initializers": [],
+      "imports": [
+        {
+          "local": "$b",
+          "from": "../code-current-v4/titlebar-title-skeleton.mjs",
+          "name": "TitlebarTitleSkeleton",
+          "via": "c73f45bc3-C7dtUSq8.js#$b",
+          "kind": "linked",
+          "original": "$b"
+        },
+        {
+          "local": "Ci",
+          "from": "../session-rail-kit-v4/shared-38-DyF0_Fim.mjs",
+          "name": "hn",
+          "via": "shared-38-DyF0_Fim.js:zr",
+          "kind": "linked",
+          "original": "hn"
+        },
+        {
+          "local": "Ei",
+          "from": "../routines-shared-v4/shared-120-DCdTP1_5.mjs",
+          "name": "qe",
+          "via": "shared-120-DCdTP1_5.js:_n",
+          "kind": "linked",
+          "original": "qe"
+        },
+        {
+          "local": "Il",
+          "from": "../session-rail-kit-v4/cccebaa3a-DQt76PcF.mjs",
+          "name": "e",
+          "via": "cccebaa3a-DQt76PcF.js:t",
+          "kind": "linked",
+          "original": "e"
+        },
+        {
+          "local": "J0",
+          "from": "../r3b-transcript-v4/compiler-helpers.mjs",
+          "name": "memoIsEmpty",
+          "via": "shared-frame-CJdE5Ria.js:cm",
+          "kind": "linked",
+          "original": "J0"
+        },
+        {
+          "local": "J1",
+          "from": "../r3b-transcript-v4/compiler-helpers.mjs",
+          "name": "memoChanged1",
+          "via": "shared-frame-CJdE5Ria.js:lm",
+          "kind": "linked",
+          "original": "J1"
+        },
+        {
+          "local": "J2",
+          "from": "../r3b-transcript-v4/compiler-helpers.mjs",
+          "name": "memoChanged2",
+          "via": "shared-frame-CJdE5Ria.js:um",
+          "kind": "linked",
+          "original": "J2"
+        },
+        {
+          "local": "J3",
+          "from": "../r3b-transcript-v4/compiler-helpers.mjs",
+          "name": "memoChanged3",
+          "via": "shared-frame-CJdE5Ria.js:dm",
+          "kind": "linked",
+          "original": "J3"
+        },
+        {
+          "local": "J5",
+          "from": "../r3b-transcript-v4/compiler-helpers.mjs",
+          "name": "memoChanged5",
+          "via": "shared-frame-CJdE5Ria.js:pm",
+          "kind": "linked",
+          "original": "J5"
+        },
+        {
+          "local": "J9",
+          "from": "../r3b-transcript-v4/compiler-helpers.mjs",
+          "name": "reactMemoCache",
+          "via": "shared-frame-CJdE5Ria.js:hm",
+          "kind": "linked",
+          "original": "J9"
+        },
+        {
+          "local": "K0",
+          "from": "../r3b-transcript-v4/compiler-helpers.mjs",
+          "name": "memoStore0",
+          "via": "shared-frame-CJdE5Ria.js:gm",
+          "kind": "linked",
+          "original": "K0"
+        },
+        {
+          "local": "K1",
+          "from": "../r3b-transcript-v4/compiler-helpers.mjs",
+          "name": "memoStore1",
+          "via": "shared-frame-CJdE5Ria.js:_m",
+          "kind": "linked",
+          "original": "K1"
+        },
+        {
+          "local": "K2",
+          "from": "../r3b-transcript-v4/compiler-helpers.mjs",
+          "name": "memoStore2",
+          "via": "shared-frame-CJdE5Ria.js:vm",
+          "kind": "linked",
+          "original": "K2"
+        },
+        {
+          "local": "K3",
+          "from": "../r3b-transcript-v4/compiler-helpers.mjs",
+          "name": "memoStore3",
+          "via": "shared-frame-CJdE5Ria.js:ym",
+          "kind": "linked",
+          "original": "K3"
+        },
+        {
+          "local": "K5",
+          "from": "../r3b-transcript-v4/compiler-helpers.mjs",
+          "name": "memoStore5",
+          "via": "shared-frame-CJdE5Ria.js:xm",
+          "kind": "linked",
+          "original": "K5"
+        },
+        {
+          "local": "L",
+          "from": "../cds-core/shared-frame.mjs",
+          "name": "CdsIcon",
+          "via": "shared-frame-CJdE5Ria.js:lf",
+          "kind": "shared-graph",
+          "original": "Bs"
+        },
+        {
+          "local": "N",
+          "from": "../cds-core/shared-frame.mjs",
+          "name": "CdsTooltip",
+          "via": "shared-frame-CJdE5Ria.js:cd",
+          "kind": "shared-graph",
+          "original": "Kp"
+        },
+        {
+          "local": "Si",
+          "from": "../code-current-v4/titlebar-origin-classes.mjs",
+          "name": "originBoxClass",
+          "via": "shared-38-DyF0_Fim.js:tr",
+          "kind": "linked",
+          "original": "pn"
+        },
+        {
+          "local": "Z",
+          "from": "../../source-code-current-upper-v4-adapters.jsx",
+          "name": "FormattedMessage",
+          "via": "vendor-intl-BJgYK7RA.js:l",
+          "kind": "adapter",
+          "original": "Gt"
+        },
+        {
+          "local": "_i",
+          "from": "../code-current-v4/titlebar-origin-classes.mjs",
+          "name": "panelsOriginBoxClass",
+          "via": "shared-38-DyF0_Fim.js:Pn",
+          "kind": "linked",
+          "original": "mn"
+        },
+        {
+          "local": "bi",
+          "from": "../code-current-v4/titlebar-origin-classes.mjs",
+          "name": "panelsNoOriginClass",
+          "via": "shared-38-DyF0_Fim.js:Zn",
+          "kind": "linked",
+          "original": "gn"
+        },
+        {
+          "local": "i",
+          "from": "react/jsx-runtime",
+          "name": "jsxs",
+          "via": "vendor-frame-BckkO60Y.js:Ka",
+          "kind": "react"
+        },
+        {
+          "local": "ni",
+          "from": "../cowork-progress-v4/shared-212.mjs",
+          "name": "OU",
+          "via": "shared-212-BHMAi0oa.js:yc",
+          "kind": "linked",
+          "original": "OU"
+        },
+        {
+          "local": "o",
+          "from": "react/jsx-runtime",
+          "name": "Fragment",
+          "via": "vendor-frame-BckkO60Y.js:Wa",
+          "kind": "react"
+        },
+        {
+          "local": "r",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-BckkO60Y.js:Ga",
+          "kind": "react"
+        },
+        {
+          "local": "vi",
+          "from": "./shared-38.mjs",
+          "name": "_n",
+          "via": "shared-38-DyF0_Fim.js:Wr",
+          "kind": "generated"
+        }
+      ],
+      "exports": {
+        "ex": "TitlebarSpawnLead",
+        "Nb": "TitlebarOriginLabel",
+        "wb": "originPillBase",
+        "vb": "originPillSize",
+        "yb": "originPillPanelsSize",
+        "Eb": "originPillStaticClass",
+        "Ob": "originPillStaticPanelsClass",
+        "Db": "folderPillTriggerClass",
+        "kb": "folderPillTriggerPanelsClass",
+        "mb": "useEpisodeSeed"
+      },
+      "sharedExports": [],
+      "heldByViewTabs": []
+    },
+    {
+      "target": "shared-92.mjs",
+      "source": "shared-92-BOgyxePb.js",
+      "sourceSha256": "ef73b1ca0bd064d1d7e606cdedd6c457cb99ffb02f93b7f8b00d8226941a3ada",
+      "sha256": "33181e99ad8696f46aa9d70838cc72d8eddd5cacc29e704e63200a61d2a939ef",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "Jk",
+          "sha256": "a4829d532e9511c614a1efeb3d3b7da03302c5b36048f7ae82fcaa15e89fb9c3"
+        }
+      ],
+      "initializers": [],
+      "imports": [
+        {
+          "local": "pk",
+          "from": "../r3b-transcript-v4/file-basename.mjs",
+          "name": "fileBasename",
+          "via": "shared-92-BOgyxePb.js#pk",
+          "kind": "linked",
+          "original": "pk"
+        }
+      ],
+      "exports": {
+        "Jk": "spawnOrigin"
+      },
+      "sharedExports": [],
+      "heldByViewTabs": []
+    },
+    {
+      "target": "cd59309dc.mjs",
+      "source": "cd59309dc-Bi2OcXJ2.js",
+      "sourceSha256": "bbb262ab3cdafaf5a371f4ffbe384c29738d8ba61b53d25647d28d35d3cf787e",
+      "sha256": "52d7cabeb026e30dff196537e2ad38012f7108daeedf6fc0a953cdb075487e76",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "a",
+          "sha256": "eeb3a92c15508a83fae83725431a2ef093ea4d5eff19fe3463fdcf02cd4fb3d3"
+        }
+      ],
+      "initializers": [],
+      "imports": [
+        {
+          "local": "J1",
+          "from": "../r3b-transcript-v4/compiler-helpers.mjs",
+          "name": "memoChanged1",
+          "via": "shared-frame-CJdE5Ria.js:lm",
+          "kind": "linked",
+          "original": "J1"
+        },
+        {
+          "local": "J9",
+          "from": "../r3b-transcript-v4/compiler-helpers.mjs",
+          "name": "reactMemoCache",
+          "via": "shared-frame-CJdE5Ria.js:hm",
+          "kind": "linked",
+          "original": "J9"
+        },
+        {
+          "local": "K1",
+          "from": "../r3b-transcript-v4/compiler-helpers.mjs",
+          "name": "memoStore1",
+          "via": "shared-frame-CJdE5Ria.js:_m",
+          "kind": "linked",
+          "original": "K1"
+        },
+        {
+          "local": "r",
+          "from": "../cds-core/cd59309dc.mjs",
+          "name": "r",
+          "via": "cd59309dc-Bi2OcXJ2.js#r",
+          "kind": "shared-graph",
+          "original": "r"
+        },
+        {
+          "local": "t",
+          "from": "../cds-core/shared-frame.mjs",
+          "name": "useCdsOwnerWindow",
+          "via": "shared-frame-CJdE5Ria.js:Uf",
+          "kind": "shared-graph",
+          "original": "mo"
+        }
+      ],
+      "exports": {},
+      "sharedExports": [
+        "a"
+      ],
+      "heldByViewTabs": []
+    },
+    {
+      "target": "ceb49ada3.mjs",
+      "source": "ceb49ada3-COAk5936.js",
+      "sourceSha256": "7727f03bc951be20712032e2a2a5d9860bf1d2f6670b7ae04b48321c120a58c1",
+      "sha256": "1b3cae9712bcd2a60b2d4e0ff52024d713b94f6681dd70ccea7abb15cb33356a",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "c",
+          "sha256": "304d6cf29cccae46ebbb7f34495609892238a4d7525ee64028e0b9f61338d5a7"
+        },
+        {
+          "name": "l",
+          "sha256": "8a77f33e83b3daae44cdf37095794d8c69542a5b5e5ade29520ad9a8292cbd5d"
+        },
+        {
+          "name": "u",
+          "sha256": "ae3d593ae7ce6181ac38bd1b17c0519c1d7dccce72b9737127f2cb6631ffe8c4"
+        },
+        {
+          "name": "d",
+          "sha256": "efe23ae0bb790cfab2814cec7e0dc3cba676ffe010224bf30800c35794cf229b"
+        }
+      ],
+      "initializers": [],
+      "imports": [
+        {
+          "local": "J0",
+          "from": "../r3b-transcript-v4/compiler-helpers.mjs",
+          "name": "memoIsEmpty",
+          "via": "shared-frame-CJdE5Ria.js:cm",
+          "kind": "linked",
+          "original": "J0"
+        },
+        {
+          "local": "J1",
+          "from": "../r3b-transcript-v4/compiler-helpers.mjs",
+          "name": "memoChanged1",
+          "via": "shared-frame-CJdE5Ria.js:lm",
+          "kind": "linked",
+          "original": "J1"
+        },
+        {
+          "local": "J2",
+          "from": "../r3b-transcript-v4/compiler-helpers.mjs",
+          "name": "memoChanged2",
+          "via": "shared-frame-CJdE5Ria.js:um",
+          "kind": "linked",
+          "original": "J2"
+        },
+        {
+          "local": "J3",
+          "from": "../r3b-transcript-v4/compiler-helpers.mjs",
+          "name": "memoChanged3",
+          "via": "shared-frame-CJdE5Ria.js:dm",
+          "kind": "linked",
+          "original": "J3"
+        },
+        {
+          "local": "J9",
+          "from": "../r3b-transcript-v4/compiler-helpers.mjs",
+          "name": "reactMemoCache",
+          "via": "shared-frame-CJdE5Ria.js:hm",
+          "kind": "linked",
+          "original": "J9"
+        },
+        {
+          "local": "K0",
+          "from": "../r3b-transcript-v4/compiler-helpers.mjs",
+          "name": "memoStore0",
+          "via": "shared-frame-CJdE5Ria.js:gm",
+          "kind": "linked",
+          "original": "K0"
+        },
+        {
+          "local": "K1",
+          "from": "../r3b-transcript-v4/compiler-helpers.mjs",
+          "name": "memoStore1",
+          "via": "shared-frame-CJdE5Ria.js:_m",
+          "kind": "linked",
+          "original": "K1"
+        },
+        {
+          "local": "K2",
+          "from": "../r3b-transcript-v4/compiler-helpers.mjs",
+          "name": "memoStore2",
+          "via": "shared-frame-CJdE5Ria.js:vm",
+          "kind": "linked",
+          "original": "K2"
+        },
+        {
+          "local": "K3",
+          "from": "../r3b-transcript-v4/compiler-helpers.mjs",
+          "name": "memoStore3",
+          "via": "shared-frame-CJdE5Ria.js:ym",
+          "kind": "linked",
+          "original": "K3"
+        },
+        {
+          "local": "a",
+          "from": "../cds-core/shared-frame.mjs",
+          "name": "cdsSurfaceClass",
+          "via": "shared-frame-CJdE5Ria.js:id",
+          "kind": "shared-graph",
+          "original": "Cm"
+        },
+        {
+          "local": "e",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-BckkO60Y.js:Ga",
+          "kind": "react"
+        },
+        {
+          "local": "i",
+          "from": "../cds-core/shared-frame.mjs",
+          "name": "useIsMacPlatform",
+          "via": "shared-frame-CJdE5Ria.js:cf",
+          "kind": "shared-graph",
+          "original": "sc"
+        },
+        {
+          "local": "n",
+          "from": "react",
+          "name": "Fragment",
+          "via": "vendor-frame-BckkO60Y.js:Xa",
+          "kind": "react"
+        },
+        {
+          "local": "o",
+          "from": "../cds-core/shared-frame.mjs",
+          "name": "ariaKeyShortcuts",
+          "via": "shared-frame-CJdE5Ria.js:sf",
+          "kind": "shared-graph",
+          "original": "Tc"
+        },
+        {
+          "local": "r",
+          "from": "../cds-core/shared-frame.mjs",
+          "name": "CdsButton",
+          "via": "shared-frame-CJdE5Ria.js:Id",
+          "kind": "shared-graph",
+          "original": "Xu"
+        },
+        {
+          "local": "s",
+          "from": "./cd59309dc.mjs",
+          "name": "a",
+          "via": "cd59309dc-Bi2OcXJ2.js:n",
+          "kind": "generated"
+        },
+        {
+          "local": "t",
+          "from": "react/jsx-runtime",
+          "name": "jsxs",
+          "via": "vendor-frame-BckkO60Y.js:Ka",
+          "kind": "react"
+        }
+      ],
+      "exports": {
+        "u": "SelectionActionBar"
+      },
+      "sharedExports": [],
+      "heldByViewTabs": []
+    },
+    {
+      "target": "shared-19.mjs",
+      "source": "shared-19-UalAfDtn.js",
+      "sourceSha256": "17a7839fb39b22485dcb90f549bcdc92f115afbefa43e73d08d98e7bea4220f1",
+      "sha256": "d80f1fac3359547532bfbc40c6a83cbffcbf30edb2656398982f5dea2c97963a",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "WA",
+          "sha256": "0fd4e6214ee6572624556afb661bda0790f02c000935c9ade9604f7eabe3cabf"
+        },
+        {
+          "name": "GA",
+          "sha256": "1937e6cda4d70c29f23fe2a18fb0081aca023e4566d4a751024cc60fb9720da3"
+        }
+      ],
+      "initializers": [],
+      "imports": [
+        {
+          "local": "I2",
+          "from": "../r3b-transcript-v4/compiler-helpers.mjs",
+          "name": "memoStoreValueFirst2",
+          "via": "shared-frame-CJdE5Ria.js:im",
+          "kind": "linked",
+          "original": "I2"
+        },
+        {
+          "local": "J1",
+          "from": "../r3b-transcript-v4/compiler-helpers.mjs",
+          "name": "memoChanged1",
+          "via": "shared-frame-CJdE5Ria.js:lm",
+          "kind": "linked",
+          "original": "J1"
+        },
+        {
+          "local": "J2",
+          "from": "../r3b-transcript-v4/compiler-helpers.mjs",
+          "name": "memoChanged2",
+          "via": "shared-frame-CJdE5Ria.js:um",
+          "kind": "linked",
+          "original": "J2"
+        },
+        {
+          "local": "J9",
+          "from": "../r3b-transcript-v4/compiler-helpers.mjs",
+          "name": "reactMemoCache",
+          "via": "shared-frame-CJdE5Ria.js:hm",
+          "kind": "linked",
+          "original": "J9"
+        },
+        {
+          "local": "K2",
+          "from": "../r3b-transcript-v4/compiler-helpers.mjs",
+          "name": "memoStore2",
+          "via": "shared-frame-CJdE5Ria.js:vm",
+          "kind": "linked",
+          "original": "K2"
+        },
+        {
+          "local": "Mn",
+          "from": "../routines-shared-v4/shared-25-D-aF0gt9.mjs",
+          "name": "VB",
+          "via": "shared-25-D-aF0gt9.js:bi",
+          "kind": "linked",
+          "original": "VB"
+        },
+        {
+          "local": "Z1",
+          "from": "../r3b-transcript-v4/compiler-helpers.mjs",
+          "name": "memoStoreDeps1",
+          "via": "shared-frame-CJdE5Ria.js:Sm",
+          "kind": "linked",
+          "original": "Z1"
+        }
+      ],
+      "exports": {},
+      "sharedExports": [
+        "GA"
+      ],
+      "heldByViewTabs": []
+    },
+    {
+      "target": "cc3b500c8.mjs",
+      "source": "cc3b500c8-zdjI6Jju.js",
+      "sourceSha256": "6cee4de7b50ad1afe08672a8110d0ca7e3f6c370b908dba5cc0a6fcafeebc1b0",
+      "sha256": "975e06e9b4602dcc60c972e31ad51abdff72ed9cd38d081a9d16591c260d5991",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "_",
+          "sha256": "5cd34a9436e28716555dfcdacff6de4d0b0cfca018e27f3354f73d7050a6403b"
+        },
+        {
+          "name": "v",
+          "sha256": "448820c959cc6ba17db916e2be58cd42d8aa9f18830762df4901c6cfd5bab877"
+        },
+        {
+          "name": "y",
+          "sha256": "c44dc13d327cf92ee72750c4b969be7fb417b55cfec0e180bac2fa694a9b011a"
+        },
+        {
+          "name": "x",
+          "sha256": "794d66ff4ebd363e528d3546b2c9bcb26398f88aaba177b10b97dda04e64ceac"
+        },
+        {
+          "name": "S",
+          "sha256": "c7da65a34a5dba90761b6531cc76128b68ea4db947bc9902ee33dcfdcd646cb9"
+        },
+        {
+          "name": "C",
+          "sha256": "bd7f0cc4c70f6bd92965e27bef82cdff72281d8eb3d369f6a1a79e6f3bbf9a53"
+        },
+        {
+          "name": "E",
+          "sha256": "304f87cc8ba87d7f2309e7baff2fe8f8a14e07daf35273fb0d5339d31ad5b442"
+        },
+        {
+          "name": "D",
+          "sha256": "09f21abdcafd48f8f25d11186db8576890483c83d2e1104e2a3d586a9a2dd400"
+        },
+        {
+          "name": "O",
+          "sha256": "493257c56ba89ee2ce1f9fa730b799c80dfae03b7a2df6ee9e1a99ce33462432"
+        },
+        {
+          "name": "k",
+          "sha256": "abc0c4584aeb16f1d7fb5e6f943fef218df73cede1b8a05a8b758c0475253ec0"
+        }
+      ],
+      "initializers": [],
+      "imports": [
+        {
+          "local": "I1",
+          "from": "../r3b-transcript-v4/compiler-helpers.mjs",
+          "name": "memoStoreValueFirst1",
+          "via": "shared-frame-CJdE5Ria.js:rm",
+          "kind": "linked",
+          "original": "I1"
+        },
+        {
+          "local": "J0",
+          "from": "../r3b-transcript-v4/compiler-helpers.mjs",
+          "name": "memoIsEmpty",
+          "via": "shared-frame-CJdE5Ria.js:cm",
+          "kind": "linked",
+          "original": "J0"
+        },
+        {
+          "local": "J1",
+          "from": "../r3b-transcript-v4/compiler-helpers.mjs",
+          "name": "memoChanged1",
+          "via": "shared-frame-CJdE5Ria.js:lm",
+          "kind": "linked",
+          "original": "J1"
+        },
+        {
+          "local": "J2",
+          "from": "../r3b-transcript-v4/compiler-helpers.mjs",
+          "name": "memoChanged2",
+          "via": "shared-frame-CJdE5Ria.js:um",
+          "kind": "linked",
+          "original": "J2"
+        },
+        {
+          "local": "J4",
+          "from": "../r3b-transcript-v4/compiler-helpers.mjs",
+          "name": "memoChanged4",
+          "via": "shared-frame-CJdE5Ria.js:fm",
+          "kind": "linked",
+          "original": "J4"
+        },
+        {
+          "local": "J9",
+          "from": "../r3b-transcript-v4/compiler-helpers.mjs",
+          "name": "reactMemoCache",
+          "via": "shared-frame-CJdE5Ria.js:hm",
+          "kind": "linked",
+          "original": "J9"
+        },
+        {
+          "local": "K0",
+          "from": "../r3b-transcript-v4/compiler-helpers.mjs",
+          "name": "memoStore0",
+          "via": "shared-frame-CJdE5Ria.js:gm",
+          "kind": "linked",
+          "original": "K0"
+        },
+        {
+          "local": "K1",
+          "from": "../r3b-transcript-v4/compiler-helpers.mjs",
+          "name": "memoStore1",
+          "via": "shared-frame-CJdE5Ria.js:_m",
+          "kind": "linked",
+          "original": "K1"
+        },
+        {
+          "local": "K2",
+          "from": "../r3b-transcript-v4/compiler-helpers.mjs",
+          "name": "memoStore2",
+          "via": "shared-frame-CJdE5Ria.js:vm",
+          "kind": "linked",
+          "original": "K2"
+        },
+        {
+          "local": "K4",
+          "from": "../r3b-transcript-v4/compiler-helpers.mjs",
+          "name": "memoStore4",
+          "via": "shared-frame-CJdE5Ria.js:bm",
+          "kind": "linked",
+          "original": "K4"
+        },
+        {
+          "local": "Z1",
+          "from": "../r3b-transcript-v4/compiler-helpers.mjs",
+          "name": "memoStoreDeps1",
+          "via": "shared-frame-CJdE5Ria.js:Sm",
+          "kind": "linked",
+          "original": "Z1"
+        },
+        {
+          "local": "a",
+          "from": "react",
+          "name": "useEffect",
+          "via": "vendor-frame-BckkO60Y.js:go",
+          "kind": "react"
+        },
+        {
+          "local": "c",
+          "from": "../cds-core/shared-frame.mjs",
+          "name": "CdsAlertDialog",
+          "via": "shared-frame-CJdE5Ria.js:ql",
+          "kind": "shared-graph",
+          "original": "sx"
+        },
+        {
+          "local": "d",
+          "from": "../code-current-v4/environment-common-copy.mjs",
+          "name": "environmentCommonMessages",
+          "via": "shared-62-DoCqVpIq.js:Vc",
+          "kind": "linked",
+          "original": "fI"
+        },
+        {
+          "local": "e",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-BckkO60Y.js:Ga",
+          "kind": "react"
+        },
+        {
+          "local": "f",
+          "from": "../cowork-scheduled-v4/vendor-all-0-uUCo-eCX.mjs",
+          "name": "v",
+          "via": "vendor-all-0-uUCo-eCX.js:L",
+          "kind": "linked",
+          "original": "v"
+        },
+        {
+          "local": "h",
+          "from": "../../source-code-current-upper-v4-adapters.jsx",
+          "name": "useIntl",
+          "via": "vendor-intl-BJgYK7RA.js:p",
+          "kind": "adapter",
+          "original": "q"
+        },
+        {
+          "local": "i",
+          "from": "react",
+          "name": "memo",
+          "via": "vendor-frame-BckkO60Y.js:co",
+          "kind": "react"
+        },
+        {
+          "local": "m",
+          "from": "../r3b-transcript-v4/define-messages.mjs",
+          "name": "defineMessages",
+          "via": "vendor-intl-BJgYK7RA.js:f",
+          "kind": "linked",
+          "original": "tn"
+        },
+        {
+          "local": "n",
+          "from": "react",
+          "name": "useState",
+          "via": "vendor-frame-BckkO60Y.js:To",
+          "kind": "react"
+        },
+        {
+          "local": "o",
+          "from": "react",
+          "name": "useRef",
+          "via": "vendor-frame-BckkO60Y.js:wo",
+          "kind": "react"
+        },
+        {
+          "local": "p",
+          "from": "./shared-19.mjs",
+          "name": "GA",
+          "via": "shared-19-UalAfDtn.js:or",
+          "kind": "generated"
+        },
+        {
+          "local": "r",
+          "from": "react/jsx-runtime",
+          "name": "Fragment",
+          "via": "vendor-frame-BckkO60Y.js:Wa",
+          "kind": "react"
+        },
+        {
+          "local": "s",
+          "from": "../cds-core/shared-frame.mjs",
+          "name": "CdsButton",
+          "via": "shared-frame-CJdE5Ria.js:Id",
+          "kind": "shared-graph",
+          "original": "Xu"
+        },
+        {
+          "local": "t",
+          "from": "react/jsx-runtime",
+          "name": "jsxs",
+          "via": "vendor-frame-BckkO60Y.js:Ka",
+          "kind": "react"
+        }
+      ],
+      "exports": {
+        "C": "EnvironmentDeleteQuestionHost",
+        "S": "askEnvironmentDelete",
+        "v": "environmentDeleteQuestionText",
+        "_": "environmentDeleteQuestionMessages"
+      },
+      "sharedExports": [],
+      "heldByViewTabs": []
+    },
+    {
+      "target": "cd8a7d7c0.mjs",
+      "source": "cd8a7d7c0-DuH0T8rm.js",
+      "sourceSha256": "1c4698033de3a4791937d8c13d353c9a76c155059e87644bb62365c80f62b4d5",
+      "sha256": "bf7c1428524865f97abb0390102fc37dbbc3c59425b9706eb705eb88b9684cbd",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "g",
+          "sha256": "d1ceee64eeb5c95c1b1df40c307d6363853f9afc5c4916906f002b5bec6fa48f"
+        }
+      ],
+      "initializers": [],
+      "imports": [
+        {
+          "local": "m",
+          "from": "../r3b-transcript-v4/path-display-options.mjs",
+          "name": "m",
+          "via": "cd8a7d7c0-DuH0T8rm.js#m",
+          "kind": "linked",
+          "original": "m"
+        },
+        {
+          "local": "t",
+          "from": "react",
+          "name": "use",
+          "via": "vendor-frame-BckkO60Y.js:do",
+          "kind": "react"
+        }
+      ],
+      "exports": {},
+      "sharedExports": [
+        "g"
+      ],
+      "heldByViewTabs": []
+    },
+    {
+      "target": "cd2efac6e.mjs",
+      "source": "cd2efac6e-B38TGyig.js",
+      "sourceSha256": "57e6a3c3e9bf9304d01f0a96e3387499edffdb3c766d9ecad914c060f3e44981",
+      "sha256": "1ea508547d4ec2a80558c89a08701796798d54f3392f9168eafc7d85ee2b2eb4",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "ld",
+          "sha256": "fbe6a9779fec092b51888670908aaf44c3a6d0c39d9384c8b9c3c035018f2d9b"
+        },
+        {
+          "name": "dd",
+          "sha256": "4362933432d1302cbc1b98a63539eb9393ad681318c287442e60dcc44b6d5b16"
+        },
+        {
+          "name": "fd",
+          "sha256": "7ab8d5f0e95f2fb0644ddb97beae28e8ccab9e69873a22991d3ac9d7e4bb08dd"
+        },
+        {
+          "name": "pd",
+          "sha256": "fe6ddd82d92a5fb8cdbff7c29d7be1afdc41dfb96b93535b019e83dda1987a64"
+        },
+        {
+          "name": "md",
+          "sha256": "889cec1373664398fd2ec05420a289afa4b7ddd443ee601c12355fe0cfb9dcec"
+        },
+        {
+          "name": "hd",
+          "sha256": "8fbfe897dee5b38b0c72211015f1b52c48e014d3487ac0a16a99db8382c1cad5"
+        },
+        {
+          "name": "gd",
+          "sha256": "ab58064a783e7df6cbabb33a70afbd7499a48d7d353bea93af5f9a346129b476"
+        },
+        {
+          "name": "_d",
+          "sha256": "8d64b4aa4e4aa8ab70ffbb6f25f5f5199052ab0a9e69d83231e1d9c4147dc4e7"
+        },
+        {
+          "name": "vd",
+          "sha256": "e73ab3d5aaaa976f144aa7addebd8846e76c21a2f238e96f9654c940d9d140df"
+        },
+        {
+          "name": "wm",
+          "sha256": "1babe488d8dc0c1ceb5253246c1cc93a9d1a9d29b8a8a5c3ef1447fd755136a2"
+        }
+      ],
+      "initializers": [],
+      "imports": [
+        {
+          "local": "$u",
+          "from": "../files-changes-v4/breadcrumb-folder.mjs",
+          "name": "BreadcrumbFolderSegment",
+          "via": "cd2efac6e-B38TGyig.js#$u",
+          "kind": "linked",
+          "original": "$u"
+        },
+        {
+          "local": "C",
+          "from": "react",
+          "name": "useRef",
+          "via": "vendor-frame-BckkO60Y.js:wo",
+          "kind": "react"
+        },
+        {
+          "local": "I1",
+          "from": "../r3b-transcript-v4/compiler-helpers.mjs",
+          "name": "memoStoreValueFirst1",
+          "via": "shared-frame-CJdE5Ria.js:rm",
+          "kind": "linked",
+          "original": "I1"
+        },
+        {
+          "local": "I2",
+          "from": "../r3b-transcript-v4/compiler-helpers.mjs",
+          "name": "memoStoreValueFirst2",
+          "via": "shared-frame-CJdE5Ria.js:im",
+          "kind": "linked",
+          "original": "I2"
+        },
+        {
+          "local": "I4",
+          "from": "../cds-core/shared-frame.mjs",
+          "name": "I4",
+          "via": "shared-frame-CJdE5Ria.js:om",
+          "kind": "shared-graph",
+          "original": "I4"
+        },
+        {
+          "local": "J0",
+          "from": "../r3b-transcript-v4/compiler-helpers.mjs",
+          "name": "memoIsEmpty",
+          "via": "shared-frame-CJdE5Ria.js:cm",
+          "kind": "linked",
+          "original": "J0"
+        },
+        {
+          "local": "J1",
+          "from": "../r3b-transcript-v4/compiler-helpers.mjs",
+          "name": "memoChanged1",
+          "via": "shared-frame-CJdE5Ria.js:lm",
+          "kind": "linked",
+          "original": "J1"
+        },
+        {
+          "local": "J2",
+          "from": "../r3b-transcript-v4/compiler-helpers.mjs",
+          "name": "memoChanged2",
+          "via": "shared-frame-CJdE5Ria.js:um",
+          "kind": "linked",
+          "original": "J2"
+        },
+        {
+          "local": "J3",
+          "from": "../r3b-transcript-v4/compiler-helpers.mjs",
+          "name": "memoChanged3",
+          "via": "shared-frame-CJdE5Ria.js:dm",
+          "kind": "linked",
+          "original": "J3"
+        },
+        {
+          "local": "J4",
+          "from": "../r3b-transcript-v4/compiler-helpers.mjs",
+          "name": "memoChanged4",
+          "via": "shared-frame-CJdE5Ria.js:fm",
+          "kind": "linked",
+          "original": "J4"
+        },
+        {
+          "local": "J5",
+          "from": "../r3b-transcript-v4/compiler-helpers.mjs",
+          "name": "memoChanged5",
+          "via": "shared-frame-CJdE5Ria.js:pm",
+          "kind": "linked",
+          "original": "J5"
+        },
+        {
+          "local": "J9",
+          "from": "../r3b-transcript-v4/compiler-helpers.mjs",
+          "name": "reactMemoCache",
+          "via": "shared-frame-CJdE5Ria.js:hm",
+          "kind": "linked",
+          "original": "J9"
+        },
+        {
+          "local": "K0",
+          "from": "../r3b-transcript-v4/compiler-helpers.mjs",
+          "name": "memoStore0",
+          "via": "shared-frame-CJdE5Ria.js:gm",
+          "kind": "linked",
+          "original": "K0"
+        },
+        {
+          "local": "K1",
+          "from": "../r3b-transcript-v4/compiler-helpers.mjs",
+          "name": "memoStore1",
+          "via": "shared-frame-CJdE5Ria.js:_m",
+          "kind": "linked",
+          "original": "K1"
+        },
+        {
+          "local": "K2",
+          "from": "../r3b-transcript-v4/compiler-helpers.mjs",
+          "name": "memoStore2",
+          "via": "shared-frame-CJdE5Ria.js:vm",
+          "kind": "linked",
+          "original": "K2"
+        },
+        {
+          "local": "K3",
+          "from": "../r3b-transcript-v4/compiler-helpers.mjs",
+          "name": "memoStore3",
+          "via": "shared-frame-CJdE5Ria.js:ym",
+          "kind": "linked",
+          "original": "K3"
+        },
+        {
+          "local": "K4",
+          "from": "../r3b-transcript-v4/compiler-helpers.mjs",
+          "name": "memoStore4",
+          "via": "shared-frame-CJdE5Ria.js:bm",
+          "kind": "linked",
+          "original": "K4"
+        },
+        {
+          "local": "K5",
+          "from": "../r3b-transcript-v4/compiler-helpers.mjs",
+          "name": "memoStore5",
+          "via": "shared-frame-CJdE5Ria.js:xm",
+          "kind": "linked",
+          "original": "K5"
+        },
+        {
+          "local": "L",
+          "from": "../r3b-transcript-v4/path-tooltip.mjs",
+          "name": "PATH_TOOLTIP_PROPS",
+          "via": "shared-55-BRv2XBP7.js:D",
+          "kind": "linked",
+          "original": "mV"
+        },
+        {
+          "local": "Nn",
+          "from": "../r3b-transcript-v4/relative-path.mjs",
+          "name": "displayPath",
+          "via": "shared-3-IQTrO7Gx.js:rn",
+          "kind": "linked",
+          "original": "VM"
+        },
+        {
+          "local": "Oa",
+          "from": "../code-current-v4/breadcrumb-measure.mjs",
+          "name": "useBreadcrumbCut",
+          "via": "ce574895a-AyUKk43x.js:r",
+          "kind": "linked",
+          "original": "y"
+        },
+        {
+          "local": "Rn",
+          "from": "../../source-code-current-upper-v4-adapters.jsx",
+          "name": "useIntl",
+          "via": "vendor-intl-BJgYK7RA.js:p",
+          "kind": "adapter",
+          "original": "q"
+        },
+        {
+          "local": "Ta",
+          "from": "../session-rail-changes-v4/c0cdf4a08.mjs",
+          "name": "RowContextMenu",
+          "via": "c0cdf4a08-Ca7hJehs.js:t",
+          "kind": "linked",
+          "original": "g"
+        },
+        {
+          "local": "U",
+          "from": "../cds-core/ce574895a.mjs",
+          "name": "_",
+          "via": "ce574895a-AyUKk43x.js:n",
+          "kind": "shared-graph",
+          "original": "_"
+        },
+        {
+          "local": "Z1",
+          "from": "../r3b-transcript-v4/compiler-helpers.mjs",
+          "name": "memoStoreDeps1",
+          "via": "shared-frame-CJdE5Ria.js:Sm",
+          "kind": "linked",
+          "original": "Z1"
+        },
+        {
+          "local": "Z2",
+          "from": "../code-composer-v4/chunk-shared-frame.mjs",
+          "name": "Z2",
+          "via": "shared-frame-CJdE5Ria.js:Cm",
+          "kind": "linked",
+          "original": "Z2"
+        },
+        {
+          "local": "Z5",
+          "from": "../code-composer-v4/chunk-shared-frame.mjs",
+          "name": "Z5",
+          "via": "shared-frame-CJdE5Ria.js:Em",
+          "kind": "linked",
+          "original": "Z5"
+        },
+        {
+          "local": "c",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-BckkO60Y.js:Ga",
+          "kind": "react"
+        },
+        {
+          "local": "cd",
+          "from": "../code-current-v4/breadcrumb-paths.mjs",
+          "name": "segmentMenuTarget",
+          "via": "cd2efac6e-B38TGyig.js#cd",
+          "kind": "linked",
+          "original": "cd"
+        },
+        {
+          "local": "d",
+          "from": "react",
+          "name": "useState",
+          "via": "vendor-frame-BckkO60Y.js:To",
+          "kind": "react"
+        },
+        {
+          "local": "de",
+          "from": "../cds-core/shared-frame.mjs",
+          "name": "CdsTooltipProvider",
+          "via": "shared-frame-CJdE5Ria.js:ld",
+          "kind": "shared-graph",
+          "original": "_m"
+        },
+        {
+          "local": "f",
+          "from": "react/jsx-runtime",
+          "name": "Fragment",
+          "via": "vendor-frame-BckkO60Y.js:Wa",
+          "kind": "react"
+        },
+        {
+          "local": "fe",
+          "from": "../cds-core/shared-frame.mjs",
+          "name": "asElementNode",
+          "via": "shared-frame-CJdE5Ria.js:nm",
+          "kind": "shared-graph",
+          "original": "Pt"
+        },
+        {
+          "local": "h",
+          "from": "react",
+          "name": "memo",
+          "via": "vendor-frame-BckkO60Y.js:co",
+          "kind": "react"
+        },
+        {
+          "local": "jn",
+          "from": "../code-current-v4/chunk-shared-3.mjs",
+          "name": "RM",
+          "via": "shared-3-IQTrO7Gx.js:nn",
+          "kind": "linked",
+          "original": "RM"
+        },
+        {
+          "local": "ka",
+          "from": "../code-current-v4/breadcrumb-measure.mjs",
+          "name": "graphemeEnds",
+          "via": "ce574895a-AyUKk43x.js:t",
+          "kind": "linked",
+          "original": "d"
+        },
+        {
+          "local": "le",
+          "from": "../cds-core/shared-frame.mjs",
+          "name": "CdsTooltip",
+          "via": "shared-frame-CJdE5Ria.js:cd",
+          "kind": "shared-graph",
+          "original": "Kp"
+        },
+        {
+          "local": "oi",
+          "from": "../r3b-transcript-v4/path-display-options.mjs",
+          "name": "usePathHoverOptions",
+          "via": "cd8a7d7c0-DuH0T8rm.js:a",
+          "kind": "linked",
+          "original": "_"
+        },
+        {
+          "local": "ot",
+          "from": "../r3b-transcript-v4/path-tooltip.mjs",
+          "name": "pathTooltipText",
+          "via": "shared-55-BRv2XBP7.js:k",
+          "kind": "linked",
+          "original": "gV"
+        },
+        {
+          "local": "p",
+          "from": "react",
+          "name": "Fragment",
+          "via": "vendor-frame-BckkO60Y.js:Xa",
+          "kind": "react"
+        },
+        {
+          "local": "si",
+          "from": "./cd8a7d7c0.mjs",
+          "name": "g",
+          "via": "cd8a7d7c0-DuH0T8rm.js:o",
+          "kind": "generated"
+        },
+        {
+          "local": "u",
+          "from": "react/jsx-runtime",
+          "name": "jsxs",
+          "via": "vendor-frame-BckkO60Y.js:Ka",
+          "kind": "react"
+        },
+        {
+          "local": "ua",
+          "from": "../files-changes-v4/file-gone-check.mjs",
+          "name": "useFileGone",
+          "via": "c856385e2-Cqx37C-b.js:Dt",
+          "kind": "linked",
+          "original": "et"
+        },
+        {
+          "local": "ud",
+          "from": "../code-current-v4/breadcrumb-paths.mjs",
+          "name": "breadcrumbSegments",
+          "via": "cd2efac6e-B38TGyig.js#ud",
+          "kind": "linked",
+          "original": "ud"
+        }
+      ],
+      "exports": {
+        "wm": "FileBreadcrumb",
+        "dd": "BreadcrumbBody",
+        "pd": "BreadcrumbFileName",
+        "md": "BreadcrumbSegment",
+        "hd": "BreadcrumbSegmentLabel",
+        "fd": "BreadcrumbSizerText",
+        "ld": "preventBreadcrumbNativeMenu"
+      },
+      "sharedExports": [],
+      "heldByViewTabs": []
+    }
+  ],
+  "callSites": [],
+  "publicAssets": []
+}

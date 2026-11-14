@@ -880,6 +880,8 @@ export default {
   "Previous sidebar tab": "上一个侧边栏标签页",
   // shared-20 Qg (DZ4HgSiP72), the incognito header's exit button.
   "Exit incognito": "退出无痕模式",
+  // surfaces wave 3 (titlebar frame): 4.16336.0 cc43287c9 RX W90cZ2JcPO, the Code titlebar CdsToolbar's aria-label.
+  "Session tools": "会话工具",
   // V3-w13-close-main-jsx-tests end.
   // V3-w12b-frame-titlebar-sidebar: 3.6556.2 shared-21 l5 GY label (ABK5ECanMV), the Code New row's running mark.
   "Terminal or browser active on the New session page": "新建会话页面上有终端或浏览器处于活动状态",

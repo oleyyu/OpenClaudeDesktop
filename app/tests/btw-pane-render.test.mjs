@@ -11,6 +11,9 @@ import { withMemoCache } from './support/react-memo-cache.mjs';
 let server, Pane, Hook, Focus, Plan, TurnError, Notice, Registry;
 before(async()=>{
   server=await createServer({configFile:false,root:path.resolve(import.meta.dirname,'..'),plugins:[react()],server:{middlewareMode:true,hmr:false,watch:null},appType:'custom',logLevel:'error'});
+  // Round 4 queued-bar cutover: the child queue is the 4.16336.0 bar (generated/queued-bar-v4), whose "sent" mark gate asks the
+  // frame-sidebar-nav host table; main.jsx installs it (src/frame-sidebar-nav-host.jsx), so the test does too.
+  await server.ssrLoadModule('/src/frame-sidebar-nav-host.jsx');
   Pane=await server.ssrLoadModule('/src/source-btw-pane.jsx');Hook=await server.ssrLoadModule('/src/use-btw-pane.jsx');
   Focus=await server.ssrLoadModule('/src/generated/code-current/btw-focus-intent.mjs');Plan=await server.ssrLoadModule('/src/source-plan-card.jsx');
   TurnError=await server.ssrLoadModule('/src/source-turn-error.jsx');Notice=await server.ssrLoadModule('/src/btw-session-notice-model.mjs');
@@ -24,7 +27,7 @@ test('persistent child pane renders own rows and embedded composer, without pare
     {id:'child-answer',type:'agentMessage',text:'Child answer',turnId:'own'}];
   const html=renderToStaticMarkup(React.createElement(Pane.SourceBtwPane,{sessionId:'child',meta:{btw:{permission:'ask',ownTurnIds:['own']}},thread:{id:'child',cwd:'/repo'},tabs:[{id:'child',name:'btw: Question'}],state:s,connected:true,onLoad:noop,onSend:noop,onStop:noop,onSelect:noop,onCloseTab:noop,onError:noop}));
   assert.match(html,/data-side-session-pane="child"/);assert.match(html,/Child question/);assert.match(html,/Child answer/);
-  assert.doesNotMatch(html,/PARENT PRIVATE HISTORY|HIDDEN BOUNDARY/);assert.match(html,/Reply in this session/);
+  assert.doesNotMatch(html,/PARENT PRIVATE HISTORY|HIDDEN BOUNDARY/);assert.match(html,/Ask a quick question/);
   assert.match(html,/data-embedded="true"/);assert.doesNotMatch(html,/sc-permission|sc-model-trigger/);assert.match(html,/role="tablist"/);
 });
 // 3.6556.2 qP: a running tab stays closable (closing stops it first, CI-08 restored); a sending tab (host tabPending) does not.
@@ -174,7 +177,7 @@ test('side plan review keeps the composer mounted but hidden and offers only Man
   const props={sessionId:'child',meta:{btw:{permission:'plan'}},thread:{id:'child'},tabs:[{id:'child'}],state:s,connected:true,
     onLoad:noop,onSend:noop,onStop:noop,onSelect:noop,onCloseTab:noop,onError:noop,approvalRuntime:runtime,respond:noop};
   const html=renderToStaticMarkup(React.createElement(Pane.SourceBtwPane,props));
-  assert.match(html,/data-btw-composer-hidden="true"/);assert.match(html,/Reply in this session/);
+  assert.match(html,/data-btw-composer-hidden="true"/);assert.match(html,/Ask a quick question/);
   assert.match(html,/Accept and allow edits/);assert.doesNotMatch(html,/More accept options|Accept and auto mode|Accept and bypass/);
   assert.deepEqual(Plan.planCardActions('acceptEdits',false,{acceptModes:['acceptEdits']}).more,[]);
   assert.deepEqual(Plan.planCardActions('acceptEdits').more.map(value=>value.mode),['auto'],'main-session defaults stay available');
@@ -326,7 +329,7 @@ test('the child transcript draws its own failed turn (card, then markers); the t
   const thread={...failedChild(id,{ownError:null}),errors:{[id]:{message:'Thread-wide failure'}}};
   const notice=renderToStaticMarkup(React.createElement(Pane.SourceBtwPane,{...props,state:thread}));
   assert.match(notice,/data-turn-error="card" data-turn-id="thread"/);
-  const noticeScope=notice.indexOf('data-approval-hotkey-scope="btw:notice-ssr"'),noticeCard=notice.indexOf('data-turn-id="thread"'),composer=notice.indexOf('Reply in this session');
+  const noticeScope=notice.indexOf('data-approval-hotkey-scope="btw:notice-ssr"'),noticeCard=notice.indexOf('data-turn-id="thread"'),composer=notice.indexOf('Ask a quick question');
   assert.ok(noticeScope>=0&&noticeScope<noticeCard&&noticeCard<composer,'nT is the first child of the approval scope, before the composer');
   // W14-code r4 btw-error-card (E95): the main session's official card (cb1a6e506 j) — its own header Dismiss
   // (`span.-my-pad-xs -me-pad-xs flex shrink-0` > ghost sm icon-only X, "text-muted-as-secondary hover:text-primary").
@@ -411,7 +414,7 @@ test('a failed send toasts unless that failure put a new session error on screen
       onLoad:async()=>{},onError:message=>errors.push(message),
       onSend:async()=>{if(kind==='new-notice'){props.state={...props.state,errors:{[id]:{message:'Rejected'}}};f.render();}throw new Error('send failed');}};
     f=componentFixture(Pane.SourceBtwContent,props);f.flush();Hook.btwDrafts.set(id,'Question');
-    const composer=findNode(f.tree,n=>n.props?.placeholder==='Reply in this session…');
+    const composer=findNode(f.tree,n=>n.props?.placeholder==='Ask a quick question');
     await composer.props.onSubmit();
     assert.deepEqual(errors,kind==='new-notice'?[]:['send failed'],kind);assert.equal(Hook.btwDrafts.get(id),'Question','the draft is restored');f.close();
   }

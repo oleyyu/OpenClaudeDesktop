@@ -22,7 +22,7 @@ export function composerPlaceholder({ sessionId = null, mode = "code", firstRun 
 // overflows the editor swaps in "{queueKey} to queue" (FIL0bW8Kgx). The key labels are the original GM (was cM;
 // generated composer-key-label.mjs, over the CDS cap table): glyphs on a Mac, spoken names joined with "+"
 // (aria-description) or elsewhere. The copy and the condition are unchanged from 2.42304.0.
-import { shortcutLabel } from "./generated/code-composer/composer-key-label.mjs";
+import { shortcutLabel } from "./generated/code-composer-v4/composer-key-label.mjs";
 export const RUNNING_PLACEHOLDER = "{sendKey} to send, {queueKey} to queue for later";
 export const RUNNING_PLACEHOLDER_COMPACT = "{queueKey} to queue";
 export function runningPlaceholder({ mac = true, spoken = false, compact = false } = {}) {

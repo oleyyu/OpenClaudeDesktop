@@ -93,7 +93,10 @@ export function imageSource(part) {
   return null;
 }
 const isText = (part) => part?.type === "text" && typeof part.text === "string";
-const isImage = (part) => imageSource(part) !== null;
+// A localImage part is a picture by its absolute path, whether or not main can mint its claude-media URL right now
+// (U-2: a staged screenshot that is gone, or no desktop bridge) — the card stays a card, as with the file:// URL before.
+const LOCAL_PATH = (value) => typeof value === "string" && value.startsWith("/") && !/[\0\n\r]/.test(value);
+const isImage = (part) => (part?.type === "localImage" && LOCAL_PATH(part.path)) || imageSource(part) !== null;
 
 // Yz: the meta line before each picture.
 const IMAGE_META = /^\[\d+(?:\.\d+)?s\] (?:full screen|changed region) .+\):$/;

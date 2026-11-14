@@ -3,14 +3,15 @@ import { SettingRow } from './source-settings-kit.jsx';
 import { SourceSettingsButton } from './source-settings-button.jsx';
 import { SourceDialog, SourceDialogFooter } from './source-dialog.jsx';
 import { useSourceToasts } from './source-toast.jsx';
-import { CdsIcon, CdsSegmentedControl } from './generated/view-tabs/index.js';
-import { DateRangeSelector } from './generated/chat-export/date-range-selector.mjs';
-import { isValidDateRange } from './generated/chat-export/date-range.mjs';
+import { CdsIcon, CdsSegmentedControl } from './cds-core.mjs'; // 4.16336.0 host wiring (frame): cds-core Icon Bs / SegmentedControl
+import { DateRangeSelector } from './generated/chat-export-v4/date-range-selector.mjs';
+import { isValidDateRange } from './generated/chat-export-v4/date-range.mjs';
 import { loadThreadHistory, readParams } from './thread-history-model.mjs';
 import { shownThread, shownTurns } from './composer-attachments-model.mjs';
 import { transcriptMarkdown } from './slash-actions-model.mjs';
 import { rpcResult } from './rpc-error.mjs';
 import { t } from '../electron/i18n/index.mjs';
+import { SettingsPrivacyRoute } from './settings-routes-account.mjs'; // round 4 settings lane account: official 4.16336.0 Privacy route
 
 // w13-chatfn-history (research/w13-chatfn.md H8, chatfn-47): Settings › Privacy (shared-46 `e.push({id:"data-privacy-controls",
 // …label "Privacy"…,icon:Dp,testId:"data-privacy-controls"})`, Dp = LockShield; ca25db325 lists "Export data" in that
@@ -26,7 +27,8 @@ import { t } from '../electron/i18n/index.mjs';
 //        (c1751bc30 SIe) Export is disabled (uL `disabled: a.customRangeInvalid`).
 // Local differences: the export is written to a folder the user picks (electron/chat-export.mjs), not mailed, so the
 // dialog has no "A download link will be sent to your email…" description. The selector is imported directly
-// (src/generated/chat-export, scripts/extract-chat-export.mjs), not through c1751bc30's lazy loader (skeleton height 68).
+// (src/generated/chat-export-v4, contract CHAT_EXPORT_V4 in scripts/extract-chat-export.mjs, 4.16336.0 c71ba149d u /
+// c1751bc30 o; round 3 S1 cutover), not through c1751bc30's lazy loader (skeleton height 68).
 // The finished folder is shown in Finder.
 
 export const PRIVACY_COPY = Object.freeze({
@@ -119,8 +121,16 @@ export function ExportDataDialog({ open, onClose, onExport, today: todayProp }) 
   </SourceDialog>;
 }
 
-/** Settings › Privacy: the "Export data" row. Cowork tasks are exported with the chats while Cowork is on. */
-export function SourceSettingsPrivacy({ desktopCall, boot, initialOpen = false }) {
+/**
+ * Settings › Privacy. The page body is the official 4.16336.0 route (src/generated/settings-account-v4: cf4f70727 pn →
+ * cc5f29bb3 F, which on desktop renders only SettingsStack > div.pb-xl > ge, the "where your conversations go" card;
+ * host seam src/settings-routes-account.mjs). The official desktop page has no Export data row (F computes the claude.ai
+ * export gate Uh but never renders uL); the row below it is the OpenClaude local export (kept: local feature and data).
+ * Cowork tasks are exported with the chats while Cowork is on.
+ */
+// U-SET-LITE: compact (the simple Settings › Account) keeps only Export data under a 'Data' heading, without the
+// official provider notice.
+export function SourceSettingsPrivacy({ desktopCall, boot, initialOpen = false, compact = false }) {
   const [open, setOpen] = useState(initialOpen), [busy, setBusy] = useState(false), [error, setError] = useState('');
   const toasts = useSourceToasts?.() ?? null;
   const live = useRef(true);
@@ -137,7 +147,8 @@ export function SourceSettingsPrivacy({ desktopCall, boot, initialOpen = false }
     control: <SourceSettingsButton variant="secondary" size="sm" busy={busy} onClick={() => setOpen(true)}>{t(PRIVACY_COPY.exportData)}</SourceSettingsButton>,
     below: error ? <span className="ss-row-error" role="alert">{error}</span> : null };
   return <section className="ss-group" data-settings-privacy="">
-    <h3 tabIndex={-1} className="text-heading-semibold settings-row-title">{t(PRIVACY_COPY.title)}</h3>
+    <h3 tabIndex={-1} className="text-heading-semibold settings-row-title">{compact ? t('Data') : t(PRIVACY_COPY.title)}</h3>
+    {!compact && <SettingsPrivacyRoute/>}
     <div className="settings-group-dividers"><SettingRow row={row}/></div>
     <ExportDataDialog open={open} onClose={() => setOpen(false)} onExport={(period, range) => { void exportData(period, range); }}/>
   </section>;

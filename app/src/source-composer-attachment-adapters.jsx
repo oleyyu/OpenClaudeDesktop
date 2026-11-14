@@ -3,9 +3,11 @@
 // vr / mr / pr). Each export
 // names the original binding it stands in for.
 import React, { useEffect, useImperativeHandle, useRef } from 'react';
-import { AttachmentFile, AttachmentImage, AttachmentQuote, AttachmentVideo } from './generated/code-composer/chat-composer-attachments.mjs';
-import { pathTooltipContent, pathTooltipPlacement } from './generated/code-composer/path-tooltip-placement.mjs';
-import { CdsTooltip } from './generated/view-tabs/index.js';
+import { AttachmentFile, AttachmentImage, AttachmentQuote, AttachmentVideo } from './generated/code-composer-v4/chat-composer-attachments.mjs';
+import { pathTooltipContent, pathTooltipPlacement } from './generated/code-composer-v4/path-tooltip-placement.mjs';
+// 4.16336.0 (composer host cutover): the wrappers render in the v4 shell's Attachments (generated/code-composer-v4), so the
+// tooltip is the cds-core graph's (one tooltip provider / layer stack inside the shell).
+import { CdsTooltip } from './cds-core.mjs';
 import { StartMessage } from './source-code-start-adapters.jsx';
 
 // shared-2 th (exported `ry`, the wrappers' `it`; 2.42304.0 Hp / `zg`) is `Object.assign(eh, { Image: Im, Video: Um, File:

@@ -23,7 +23,7 @@ const official = (name) => fs.readFileSync(path.join(v1, name), 'utf8');
 const count = (text, needle) => text.split(needle).length - 1;
 const local = (file) => fs.readFileSync(path.join(app, file), 'utf8');
 
-let server, P, Tabs, M, I18n, V;
+let server, P, Tabs, M, I18n, V, C;
 before(async () => {
   server = await createServer({ configFile: false, root: app, plugins: [react()],
     server: { middlewareMode: true, hmr: false, ws: false, watch: null }, appType: 'custom', logLevel: 'error' });
@@ -33,6 +33,7 @@ before(async () => {
   Tabs = await server.ssrLoadModule('/src/source-preview-tabs.jsx');
   M = await server.ssrLoadModule('/src/preview-model.mjs');
   V = await server.ssrLoadModule('/src/generated/view-tabs/index.js');
+  C = await server.ssrLoadModule('/src/cds-core.mjs');
 });
 after(() => server?.close());
 
@@ -255,7 +256,8 @@ async function sketchWithMarks(dom, handlers = {}, { draw = true } = {}) {
   }
   return { desktop, host, root, instanceId, drawn, setState: next => { state = next; return act(async () => desktop.push({ kind: 'preview', sessionId: 't1', state: next })); } };
 }
-// w12b-terminal-preview-tabs TPT-3: Discard your annotations? is the view-tabs CdsConfirmationDialog (c9c84d68b w, `Xc as a`),
+// w12b-terminal-preview-tabs TPT-3: Discard your annotations? is the CDS CdsConfirmationDialog (c9c84d68b w, `Xc as a`);
+// host-wiring code-b: the pane draws the 4.16336.0 cds-core one (shared-frame-CJdE5Ria lx, facade), not the view-tabs one —
 // a Base UI alert dialog this fake DOM doesn't portal; the pane's element is read from React's tree and driven through its
 // own props (onConfirm = Discard, onOpenChange(false) = Keep editing / Escape).
 function confirmation(host) {
@@ -265,7 +267,9 @@ function confirmation(host) {
     const fiber = stack.pop();
     if (!fiber) continue;
     // (Clear browsing data? is a CdsConfirmationDialog too: c224804cc W, mounted closed by the settings menu.)
-    if ((fiber.elementType === V.CdsConfirmationDialog || fiber.type === V.CdsConfirmationDialog) && fiber.memoizedProps.title === 'Discard your annotations?') return fiber.memoizedProps;
+    if (fiber.memoizedProps?.title === 'Discard your annotations?' && (fiber.elementType === V.CdsConfirmationDialog || fiber.type === V.CdsConfirmationDialog))
+      throw new Error('Discard your annotations? is the 3.6556.2 view-tabs CdsConfirmationDialog, not the cds-core one');
+    if ((fiber.elementType === C.CdsConfirmationDialog || fiber.type === C.CdsConfirmationDialog) && fiber.memoizedProps.title === 'Discard your annotations?') return fiber.memoizedProps;
     stack.push(fiber.sibling, fiber.child);
   }
   return null;

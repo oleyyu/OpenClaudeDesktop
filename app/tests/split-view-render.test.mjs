@@ -6,6 +6,9 @@ import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'node:path';
 import { readFileSync } from 'node:fs';
+import { designEntryStylesheets } from '../scripts/current-design-assets.mjs';
+// design-production (4.16336.0): the loaded shared-styles entry sheet, named by current-design-assets.
+const SHARED_STYLES_CSS = designEntryStylesheets.find(name => name.startsWith('shared-styles-'));
 
 // Node-only SSR of the split view (source-split-view.jsx) and the session row's split / window items
 // (source-sidebar.jsx), over a split-view-store.mjs store: no browser, Electron or core.
@@ -130,8 +133,8 @@ test('the split CSS never sets cursor:pointer, keeps reduced motion, and the sto
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)/);
   assert.match(css, /html\[data-reduce-motion="true"\] \.split-host \.dframe-pane-extra/);
   // The grid rules are the reference's own (the loaded shared-styles sheet), not copies.
-  const sheet = readFileSync(path.resolve(import.meta.dirname, '../public/assets/v1/shared-styles-D_GJawPO.css'), 'utf8');
-  assert.match(readFileSync(path.resolve(import.meta.dirname, '../index.html'), 'utf8'), /href="\/assets\/v1\/shared-styles-D_GJawPO\.css"/);
+  const sheet = readFileSync(path.resolve(import.meta.dirname, '../public/assets/v1', SHARED_STYLES_CSS), 'utf8');
+  assert.ok(readFileSync(path.resolve(import.meta.dirname, '../index.html'), 'utf8').includes(`href="/assets/v1/${SHARED_STYLES_CSS}"`), SHARED_STYLES_CSS);
   for (const rule of ['.dframe-pane-host{', '.dframe-pane-col{', '.dframe-pane-resize-col{', '.dframe-pane-resize-row{', '.dframe-pane-resize-corner{', '.dframe-pane-grip{', '.dframe-drop-overlay-badge{', '.dframe-drop-overlay-label{'])
     assert.ok(sheet.includes(rule), rule);
   assert.equal(Split.SESSION_DRAG_TYPE, 'application/x-code-desktop-session');

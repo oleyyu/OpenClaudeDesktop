@@ -31,7 +31,8 @@ const occurrences = (text, needle) => text.split(needle).length - 1;
 const h = React.createElement;
 
 // D21: view-tabs' preload-helper calls document.createElement while it evaluates; sidebar-resize reads documentElement.
-const documentStub = { createElement: () => ({ relList: { supports: () => false } }),
+// W8-M9 stub contract (round4 integration, stub fields only): cds-core 9203795f reads these at load (official 4.16336.0): document.cookie.
+const documentStub = { cookie: '' /* W8-M9: shared-0 CQ / Wo document.cookie */, createElement: () => ({ relList: { supports: () => false } }),
   documentElement: { dir: 'ltr', getAttribute: () => null, hasAttribute: () => false } };
 let server, savedDocument, M = {};
 before(async () => {
