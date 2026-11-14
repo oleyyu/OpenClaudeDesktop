@@ -183,3 +183,54 @@ test('server.js importThread: the session is deleted on any failure after sessio
   assert.match(body, /return finishImport\(response, \{/)
   assert.match(server, /if \(!id\) throw new RpcError\(-32000, 'ZCode did not create a session\.'\)\n\s+created\?\.\(id\)/)
 })
+
+// ---- how an imported reply shows (import-display.js): ZCode keeps the text, the history shows tool rows -------------
+test('an imported reply shows its tool calls as tool rows; ZCode\'s message keeps the text', async () => {
+  const { importDisplayIndex } = await import('../packages/zcode-bridge/src/import-display.js')
+  await loadSqlite()
+  const dir = tmp()
+  const dbPath = path.join(dir, 'db.sqlite')
+  const db = new DatabaseSync(dbPath)
+  db.exec(SCHEMA)
+  // As chat-import convert.mjs toolBlock writes them; the first one's output ends with a line break.
+  const shell = '[Tool: shell]\nls\n[Result (exit 2)]\nls: no such file\n'
+  const read = '[Tool: Read]\n/w/a.txt\n[Result]\nhello'
+  const parts = [{ text: 'Looking.' }, { text: shell, tool: true }, { text: read, tool: true }, { text: 'Found it.' }]
+  const request = { title: 'Imported', messages: [
+    { role: 'user', text: 'Where is it?', ts: NOW - 500 },
+    { role: 'assistant', text: parts.map((part) => part.text).join('\n\n'), parts, ts: NOW - 400 },
+    { role: 'user', text: 'Thanks' },
+    { role: 'assistant', text: 'Any time.' },
+  ] }
+  const history = importedHistoryOf(request, NOW)
+  assertProtocolImportHistory(history)
+  assert.equal(history.messages[1].content, request.messages[1].text.trim(), 'ZCode is handed the reply as one text')
+  // What server.js importThread keeps with the thread before the history is first built.
+  const importBlocks = importDisplayIndex(request.messages, history.messages.filter((message) => message.role === 'assistant').map((message) => message.content))
+  assert.equal(Object.keys(importBlocks).length, 1)
+  assert.ok(!/Looking|hello|no such file/.test(JSON.stringify(importBlocks)), 'offsets only, no conversation text')
+  persistLikeZCode(db, 'sess_rows', history, dir)
+  db.close()
+  const messages = storedMessages(dbPath, 'sess_rows')
+  const shape = (turns) => turns.map((turn) => turn.items.map((item) => (item.type === 'dynamicToolCall' ? `${item.tool}:${item.status}` : item.type === 'agentMessage' ? item.text : item.type)))
+  const { turns } = turnsFromMessages(messages, { threadId: 'sess_rows', cwd: dir, importBlocks })
+  assert.deepEqual(shape(turns), [['userMessage', 'Looking.', 'shell:failed', 'Read:completed', 'Found it.'], ['userMessage', 'Any time.']])
+  const ids = turns.flatMap((turn) => turn.items.map((item) => item.id))
+  assert.equal(new Set(ids).size, ids.length, 'every item has an id of its own')
+  assert.deepEqual(turnsFromMessages(messages, { threadId: 'sess_rows', cwd: dir, importBlocks }).turns.flatMap((turn) => turn.items.map((item) => item.id)), ids, 'the same ids on every read')
+  const [, , row] = turns[0].items
+  assert.deepEqual([row.arguments, row.success, row.contentItems], [{ input: 'ls' }, false, [{ type: 'inputText', text: 'ls: no such file' }]])
+  assert.ok(turns.every((turn) => turn.status === 'completed'))
+  // Without the index (a thread that is not an import) the reply shows as ZCode holds it.
+  assert.deepEqual(shape(turnsFromMessages(messages, { threadId: 'sess_rows', cwd: dir }).turns)[0], ['userMessage', request.messages[1].text.trim()])
+  fs.rmSync(dir, { recursive: true, force: true })
+})
+
+test('server.js: the display index is kept before the history is first built, read by the history view, and copied to a fork', () => {
+  const server = fs.readFileSync(path.resolve(import.meta.dirname, '../packages/zcode-bridge/src/server.js'), 'utf8')
+  const body = server.slice(server.indexOf('  async function importThread(params) {'), server.indexOf('  /** Load a thread\'s session in ZCode (resume) if needed. */'))
+  assert.ok(body.indexOf('store.update(id, { importBlocks })') > 0 && body.indexOf('store.update(id, { importBlocks })') < body.indexOf('return finishImport(response, {'))
+  assert.match(body, /made\.history = null/)
+  assert.match(server, /turnsFromMessages\(messages, \{[^}]*importBlocks: meta\.importBlocks \}\)/)
+  assert.match(server, /store\.update\(id, \{ forkedFromId: threadId, importBlocks: store\.get\(threadId\)\?\.importBlocks,/)
+})

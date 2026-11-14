@@ -38,6 +38,7 @@ import path from 'node:path'
 import { LineTransport, RpcError, METHOD_NOT_FOUND, INVALID_PARAMS, INVALID_REQUEST, SERVER_ERROR, invalidParams } from './transport.js'
 import { AgentHost } from './agent-host.js'
 import { ThreadProjector, blockText, planSteps } from './projection.js'
+import { importReplyBlocks, splitImportedReplies } from './import-display.js'
 import { ThreadStore } from './store.js'
 import { settleOverlaysIn } from './overlay.js'
 import { UsageLedger, addUsage, normalizeUsage, threadTokenUsage, localDayKey } from './usage.js'
@@ -4396,6 +4397,9 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
       store.update(sessionId, { cwd, createdAt: now, updatedAt: now, source: 'bridge', ...(title ? { name: title } : {}), ...(importedFrom ? { importedFrom } : {}) })
       if (turns) store.writeHistory(sessionId, { turns })
       const thread = await openThread(sessionId)
+      // The replay shows a reply as the agent holds it, its tool calls folded into the text: the request's parts say
+      // where each call sits, so they show as tool rows (import-display.js). The agent's session stays as written.
+      if (!turns && splitImportedReplies(thread.projector.turns, importReplyBlocks(params.messages), (prefix) => thread.projector.nextId(prefix))) thread.save()
       lastCwd = cwd
       applySettings(thread, params)
       response = sessionResponse(thread, { includeTurns: params.excludeTurns !== true })

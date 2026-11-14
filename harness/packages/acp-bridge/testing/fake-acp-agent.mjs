@@ -49,6 +49,8 @@
  *                          own that only the main log records (turn.prompt origin 'task', a Bash call, a reply, usage,
  *                          turn.ended after <ms>); a prompt sent meanwhile is refused as busy (Kimi's engine queues it)
  *   reopen     $FAKE_ACP_REOPEN_AUTH=1: session/resume and session/load fail 'Authentication required' (-32000)
+ *   replay     $FAKE_ACP_REPLAY=<file>: session/load replays the file's messages ([{role, text}]), a prompt or a
+ *              reply each (a session that was written for it to open: an imported conversation)
  *   modes      $FAKE_ACP_MODES=1: sessions also report ACP modes (currentModeId always 'default', as Kimi does)
  *              and take session/set_mode
  */
@@ -471,6 +473,13 @@ const transport = new LineTransport(process.stdin, process.stdout, {
         sessions.set(sessionId, session)
         if (method === 'session/load' && sessionId === 'child-1') transport.notify('session/update', { sessionId, update: { sessionUpdate: 'user_message_chunk', content: { type: 'text', text: 'say hi' } } })
         if (method === 'session/load' && sessionId === 'child-1') chunk(sessionId, 'hi from child')
+        // $FAKE_ACP_REPLAY=<file>: the session's history, replayed message by message.
+        if (method === 'session/load' && process.env.FAKE_ACP_REPLAY) {
+          for (const message of JSON.parse(fs.readFileSync(process.env.FAKE_ACP_REPLAY, 'utf8'))) {
+            if (message.role === 'user') transport.notify('session/update', { sessionId, update: { sessionUpdate: 'user_message_chunk', content: { type: 'text', text: message.text } } })
+            else chunk(sessionId, message.text)
+          }
+        }
         // $FAKE_ACP_LATE_REPLAY=1: the history replay goes on after session/load answered (Gemini's unawaited streamHistory).
         if (method === 'session/load' && process.env.FAKE_ACP_LATE_REPLAY === '1') {
           setTimeout(() => {

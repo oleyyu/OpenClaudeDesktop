@@ -11,6 +11,7 @@
 
 import { childSessionIdOf, isRecord, planItem, todoPlan, toolItem } from './items.js'
 import { stripInstructions } from './instructions.js'
+import { importedItems } from './import-display.js'
 import { applyWorkflowToolResult, isWorkflowRunTool, workflowNoticeItems, workflowRunOf, workflowState, workflowSettingsNotice } from './workflows.js'
 
 const seconds = (ms) => (Number.isFinite(ms) ? Math.floor(ms / 1000) : null)
@@ -99,8 +100,9 @@ function agentChildOf(state) {
 
 /**
  * @param {Array<{info: object, parts: object[]}>} messages
- * @param {{ threadId: string, cwd: string, running?: boolean, activeTurnId?: string|null, inputs?: Record<string, object[]>, callIdPrefix?: string }} context
+ * @param {{ threadId: string, cwd: string, running?: boolean, activeTurnId?: string|null, inputs?: Record<string, object[]>, callIdPrefix?: string, importBlocks?: object }} context
  *   callIdPrefix: put before every tool call id (a sub-agent's calls carry `tool_subagent_<agentId>_` on the live stream)
+ *   importBlocks: an imported thread's display index (import-display.js importDisplayIndex)
  * @returns {{ turns: object[], plan: object[]|null, lastUsage: object|null, totalUsage: object|null, anchors: Record<string, string> }}
  *   anchors: per turn, the id of its first prompt message (what ZCode's `/rewind conversation <id>` cuts before)
  */
@@ -163,7 +165,9 @@ export function turnsFromMessages(messages, context) {
       if (part.type === 'text') {
         const index = texts++
         if (part.synthetic || part.ignored || !visible(info)) continue
-        turn.items.push({ type: 'agentMessage', id: `${messageId}#t${index}`, text: part.text ?? '', phase: null, memoryCitation: null, delivery: null, questions: null })
+        const prose = (id, text) => ({ type: 'agentMessage', id, text, phase: null, memoryCitation: null, delivery: null, questions: null })
+        // An imported reply (thread-import.js) shows block by block: prose, and each tool call as a settled tool row.
+        turn.items.push(...(importedItems(`${messageId}#t${index}`, part.text, context.importBlocks, prose) ?? [prose(`${messageId}#t${index}`, part.text ?? '')]))
       } else if (part.type === 'reasoning') {
         const index = reasonings++
         if (!(part.text ?? '').trim()) continue

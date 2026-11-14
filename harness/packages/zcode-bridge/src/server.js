@@ -56,6 +56,7 @@ import * as accounts from './accounts.js'
 import * as catalog from './catalog.js'
 import { accountUsage, codeStats, databaseActivity, deleteSessionRows, sessionRevert, storedMessages } from './usage.js'
 import { finishImport, importCreateParams, importedFromOf, importedHistoryOf, startParamsOf } from './thread-import.js'
+import { importDisplayIndex } from './import-display.js'
 
 const PACKAGE_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const BRIDGE_VERSION = JSON.parse(fs.readFileSync(path.join(PACKAGE_DIR, 'package.json'), 'utf8')).version
@@ -740,6 +741,14 @@ export async function main() {
       await discard()
       throw error
     }
+    // Where each reply's tool calls sit in its text, kept before the history is first built (and cached), so the
+    // history view shows them as tool rows (import-display.js).
+    const importBlocks = id ? importDisplayIndex(params.messages, importedHistory.messages.filter((message) => message.role === 'assistant').map((message) => message.content)) : null
+    if (importBlocks) {
+      store.update(id, { importBlocks })
+      const made = threads.get(id)
+      if (made) made.history = null
+    }
     return finishImport(response, {
       thread: threads.get(id), historyOf, excludeTurns: params.excludeTurns === true,
       remember: () => { if (importedFrom) store.update(id, { importedFrom }) },
@@ -792,7 +801,7 @@ export async function main() {
     const [stored, revert] = await Promise.all([messagesOf(thread.id), sessionRevert(paths.sessionDb, thread.id).catch(() => null)])
     const messages = activeMessages(stored, revert)
     const meta = store.get(thread.id) ?? {}
-    const built = turnsFromMessages(messages, { threadId: thread.id, cwd: thread.cwd, running: !!thread.projector.turn, activeTurnId: thread.projector.turnId, inputs: meta.inputs })
+    const built = turnsFromMessages(messages, { threadId: thread.id, cwd: thread.cwd, running: !!thread.projector.turn, activeTurnId: thread.projector.turnId, inputs: meta.inputs, importBlocks: meta.importBlocks })
     if (!meta.preview) {
       const preview = previewOf(messages)
       if (preview) store.update(thread.id, { preview })
@@ -2575,7 +2584,7 @@ export async function main() {
         // ZCode opens the fork with its parent's runtime, MCP servers included: OpenClaude Desktop's code_desktop server would
         // still name the parent. Reopened (it is persisted), the fork gets one named for itself.
         if (appTools) await request('session/close', { sessionId: id }).catch(() => {})
-        store.update(id, { forkedFromId: threadId, cwd: source.cwd, permission: source.permission, model: source.model ?? undefined, effort: source.effort ?? undefined, tools: source.tools ?? undefined, customization: source.customization ?? undefined, developerInstructions: source.developerInstructions ?? undefined })
+        store.update(id, { forkedFromId: threadId, importBlocks: store.get(threadId)?.importBlocks, cwd: source.cwd, permission: source.permission, model: source.model ?? undefined, effort: source.effort ?? undefined, tools: source.tools ?? undefined, customization: source.customization ?? undefined, developerInstructions: source.developerInstructions ?? undefined })
         const thread = await loadThread(id)
         applyRequestParams(thread, params)
         notify('thread/started', { thread: threadObject(thread) })
