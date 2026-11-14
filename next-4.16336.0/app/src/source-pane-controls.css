@@ -1,0 +1,16 @@
+/* Pane header trailing cluster (panes-toggle-current.js ka: trailing slot
+   with the settings menu, the Expand/Collapse arrange trigger and close). */
+.spc-controls {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex: none;
+  margin-left: auto;
+}
+
+/* W14-code r3 fr3-07: the arrange popup is the CDS Popover with c4db265df yt's own `flex min-w-44 flex-col gap-xs` and
+   padding "xs" (source-pane-controls.jsx), so the .spc-arrange copies are gone. */
+/* W14-code r2 fr2-19: the pick groups and the "Open in new window" row are c4db265df q / bt's own classes
+   (source-pane-controls.jsx), so their .spc-group / .spc-row / .spc-open-window copies are gone. */
+/* W14-code r3 fr3-08: the preview, background-task and plan header buttons are CDS ghost iconOnly Buttons too, so the
+   .spc-ghost[aria-pressed] stand-in for Button's aria-pressed:text-accent is gone. */

@@ -1,0 +1,56 @@
+/* CDS CoachMark (2.31226.0 shared-frame-DVFSKIcx mT/pT; tokens restated from the classes, since the bundled
+   c6a992d55 stylesheet predates them). Accent variant only, the one the Files tree NUX uses. */
+.scm-portal { pointer-events: auto; }
+.scm-portal > * { z-index: var(--cds-portal-z); }
+/* nT: drop-shadow(0 8px 24px shadow) drop-shadow(0 2px 6px shadow) on the positioner (it follows the arrow). */
+.scm-positioner {
+  position: fixed; top: 0; left: 0; width: max-content;
+  filter: drop-shadow(0 8px 24px var(--cds-shadow-color)) drop-shadow(0 2px 6px var(--cds-shadow-color));
+}
+.scm-positioner[data-anchor-hidden] { visibility: hidden; }
+/* rT + $w.accent + the NUX's max-w-xs: rounded-card bg-fill-accent text-on-accent p-lg text-body. */
+.scm-popup {
+  position: relative;
+  box-sizing: border-box;
+  max-width: 20rem;
+  padding: var(--cds-pad-lg);
+  border-radius: calc(var(--cds-radius, 6px) + .25rem * var(--cds-rem-scale, 1));
+  background: var(--cds-fill-accent);
+  color: var(--cds-on-accent);
+  font-family: var(--cds-font-sans, anthropic-sans), sans-serif;
+  font-size: var(--cds-font-size-body, 13px);
+  line-height: var(--cds-leading-body, 19px);
+  font-weight: 400;
+  cursor: default;
+  outline: none;
+  overflow-wrap: anywhere;
+  /* lT: the focus ring reads on the accent fill. */
+  --cds-focus-shadow: inset 0 0 0 1px var(--cds-page-bg), 0 0 0 1px var(--cds-on-accent), 0 0 6px 1px color-mix(in srgb, var(--cds-on-accent) 35%, transparent);
+  transition: opacity var(--cds-dur-base, .2s) ease-out, scale var(--cds-dur-base, .2s) ease-out;
+  -webkit-app-region: no-drag;
+}
+.scm-popup[data-starting-style] { opacity: 0; scale: .97; }
+html[data-reduce-motion="true"] .scm-popup { transition: none; }
+@media (prefers-reduced-motion: reduce) { .scm-popup { transition: none; } }
+/* iT/cT: the 28x12 arrow, fill-accent; on the bottom side it sits 10px above the popup, rotated. */
+.scm-arrow { position: absolute; display: block; line-height: 0; }
+.scm-arrow svg { display: block; overflow: visible; fill: var(--cds-fill-accent); }
+.scm-arrow[data-side="top"] { bottom: -10px; }
+.scm-arrow[data-side="bottom"] { top: -10px; rotate: 180deg; }
+.scm-arrow[data-side="left"] { right: -18px; rotate: -90deg; }
+.scm-arrow[data-side="right"] { left: -18px; rotate: 90deg; }
+/* O: flex flex-col gap-xs; the header row flex items-start gap-sm. */
+.scm-content { display: flex; flex-direction: column; gap: var(--cds-pad-xs); }
+.scm-head { display: flex; align-items: flex-start; gap: var(--cds-pad-sm); }
+.scm-title {
+  min-width: 0; margin: 0;
+  font: inherit;
+  /* .font-header only sets a weight role (--_cds-font-weight-role); the family stays the inherited sans. */
+  font-weight: var(--cds-font-weight-semibold, 600);
+  overflow-wrap: break-word;
+}
+/* mt-xs flex justify-end, a cds-dark-scope (uT: the page bg is the accent fill). */
+.scm-actions {
+  display: flex; justify-content: flex-end; margin-top: var(--cds-pad-xs);
+  --cds-page-bg: var(--cds-fill-accent);
+}

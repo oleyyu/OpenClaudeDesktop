@@ -1,0 +1,859 @@
+{
+  "referenceVersion": "4.16336.0",
+  "referenceSnapshot": "snapshots/claude-4.16336.0-20261104",
+  "generator": "scripts/extract-pierre-changes-v4.mjs",
+  "adapterModule": "src/source-pierre-changes-v4-adapters.jsx",
+  "gate": {
+    "flag": "local_pierre_changes_body",
+    "name": "local_pierre_changes_body",
+    "host": "src/host-growthbook.mjs HOST_GROWTHBOOK; src/source-diff.jsx pierreChangesBodyOn (3.6556.2 graph; the -v4 graph is staged, not mounted)"
+  },
+  "linkedAreas": [
+    "chat-knowledge-v4",
+    {
+      "area": "code-current-v4",
+      "modules": [
+        "electron-side-session-prompt.mjs",
+        "csv-parser.mjs",
+        "csv-model.mjs",
+        "btw-focus-intent.mjs",
+        "breadcrumb-within-root.mjs",
+        "environment-menu-controls.mjs",
+        "mention-output-files.mjs",
+        "environment-form-layout.mjs",
+        "file-index.mjs",
+        "environment-field-header.mjs",
+        "environment-machine-variables.mjs",
+        "document-frame.mjs",
+        "titlebar-focus-orphaned.mjs",
+        "pane-layout-icons.mjs",
+        "electron-environment-presets--c5272b93e.mjs",
+        "file-tree-style.mjs",
+        "csv-parser-vendor.mjs",
+        "electron-file-text-binary.mjs",
+        "terminal-commands.mjs",
+        "terminal-geometry.mjs",
+        "terminal-output.mjs",
+        "terminal-mouse.mjs",
+        "terminal-colors.mjs",
+        "terminal-link-selection.mjs",
+        "terminal-errors.mjs",
+        "titlebar-focus-lost.mjs",
+        "electron-btw-title.mjs",
+        "pane-focus-owner.mjs",
+        "titlebar-toggle-fold.mjs",
+        "titlebar-panels-scope.mjs",
+        "titlebar-title-skeleton.mjs",
+        "file-output-order.mjs",
+        "tab-focus-key-scroll.mjs",
+        "terminal-registry.mjs",
+        "tile-layout-flex.mjs",
+        "transcript-focus-landing.mjs",
+        "environment-name-parts.mjs",
+        "tab-focus-tracker.mjs",
+        "transcript-tab-focus.mjs",
+        "pane-focus-target.mjs",
+        "terminal-selection.mjs",
+        "terminal-clear-item.mjs",
+        "tab-focus-release.mjs",
+        "environment-dialog-draft.mjs",
+        "environment-dialog-model.mjs",
+        "sessions-page-load-hold.mjs",
+        "sessions-page-copy.mjs",
+        "sessions-page-selection-bar.mjs",
+        "sessions-page-bulk-actions.mjs",
+        "sessions-page-row.mjs",
+        "approval-read-gate.mjs",
+        "dev-server-description.mjs",
+        "session-menu-tooltip.mjs",
+        "titlebar-draft-title.mjs",
+        "tile-fit-opened.mjs",
+        "environment-menu-rows.mjs",
+        "electron-environment-presets.mjs",
+        "file-view-memory.mjs",
+        "file-text-decoding.mjs",
+        "electron-file-text-decoder.mjs",
+        "breadcrumb-paths.mjs",
+        "titlebar-fold-measure.mjs",
+        "csv-model--cd5fd9055.mjs",
+        "csv-view.mjs",
+        "environment-folder-view.mjs",
+        "breadcrumb-measure.mjs",
+        "tile-layout-math.mjs",
+        "terminal-description.mjs",
+        "terminal-titles.mjs",
+        "terminal-idle-cursor.mjs",
+        "terminal-title-invisibles.mjs",
+        "session-cycle-composer.mjs",
+        "session-cycle-chords--shared-1.mjs",
+        "surface-chord.mjs",
+        "environment-modifier-keys.mjs",
+        "nested-session-palette-copy.mjs",
+        "padded-top.mjs",
+        "titlebar-lead-parts.mjs",
+        "sidebar-remote-name.mjs",
+        "sidebar-menu-groups.mjs",
+        "session-cycle-chords.mjs",
+        "session-cycle-rows.mjs",
+        "file-output-paths.mjs",
+        "sidebar-row-primitive.mjs",
+        "sidebar-row-control.mjs",
+        "sidebar-pr-model.mjs",
+        "sidebar-pr-icon.mjs",
+        "sidebar-status-glyph.mjs",
+        "sidebar-fade-label.mjs",
+        "sidebar-row-view.mjs",
+        "sessions-page-band.mjs",
+        "sessions-page-awaiting-label.mjs",
+        "sidebar-group-copy.mjs",
+        "titlebar-title-rect.mjs",
+        "titlebar-lead-parts--shared-18.mjs",
+        "electron-environment-parent.mjs",
+        "nested-session-parts.mjs",
+        "session-cycle-focus.mjs",
+        "visible-box.mjs",
+        "surface-chord-layers.mjs",
+        "electron-string-grapheme-limit.mjs",
+        "grapheme-prefix.mjs",
+        "sidebar-pr-card.mjs",
+        "sidebar-details-model.mjs",
+        "sidebar-details-view.mjs",
+        "sessions-page-load-deadline.mjs",
+        "environment-wsl-folder.mjs",
+        "nested-session-copy.mjs",
+        "sidebar-family-sort.mjs",
+        "sidebar-sort-order.mjs",
+        "sidebar-search.mjs",
+        "nested-session-model.mjs",
+        "string-count.mjs",
+        "sidebar-date-pivot.mjs",
+        "sidebar-date-groups.mjs",
+        "split-drag-registry.mjs",
+        "owner-document.mjs",
+        "owner-window.mjs",
+        "terminal-title-wellformed.mjs",
+        "sidebar-session-priority.mjs",
+        "sessions-page-coordinator.mjs",
+        "nested-session-needs-input.mjs",
+        "file-output-root.mjs",
+        "attachment-file-name.mjs",
+        "file-document-types.mjs",
+        "file-output-normalize.mjs",
+        "path-parts.mjs",
+        "tab-focus-key-scroll--shared-31.mjs",
+        "session-cycle-terminal.mjs",
+        "titlebar-lead-classes.mjs",
+        "titlebar-origin-classes.mjs",
+        "sessions-page-model.mjs",
+        "sidebar-sort-model.mjs",
+        "nested-session-parent-tabs.mjs",
+        "sidebar-bulk-worktree-copy--shared-46.mjs",
+        "sidebar-upgrade-badge.mjs",
+        "composer-composition.mjs",
+        "sidebar-menu-order.mjs",
+        "sidebar-group-view.mjs",
+        "sidebar-bulk-family.mjs",
+        "sidebar-bulk-delete-copy.mjs",
+        "sidebar-bulk-worktree-copy.mjs",
+        "environment-picker-keys.mjs",
+        "path-tooltip.mjs",
+        "sidebar-nav-badge.mjs",
+        "sidebar-running-mark.mjs",
+        "sidebar-group-options.mjs",
+        "nested-session-separator.mjs",
+        "environment-common-copy.mjs",
+        "terminal-title-runs.mjs",
+        "sidebar-session-state.mjs",
+        "sessions-page-live-status.mjs",
+        "session-cycle-claims.mjs",
+        "sidebar-environment-copy.mjs",
+        "electron-environment-basename.mjs",
+        "environment-wsl-unc.mjs",
+        "terminal-title-text.mjs",
+        "button-press.mjs",
+        "dom-owner.mjs",
+        "display-text.mjs",
+        "environment-select-parts.mjs",
+        "chunk-c227f4d5e.mjs",
+        "chunk-c289d7154.mjs",
+        "chunk-c368caeab.mjs",
+        "chunk-c387a4508.mjs",
+        "chunk-c51596d2b.mjs",
+        "chunk-c5a01d531.mjs",
+        "chunk-c68c4283d.mjs",
+        "chunk-c784da984.mjs",
+        "chunk-cd96b5fdc.mjs",
+        "chunk-electron-shared-18.mjs",
+        "chunk-electron-shared-39.mjs",
+        "chunk-shared-0.mjs",
+        "chunk-shared-1.mjs",
+        "chunk-shared-100.mjs",
+        "chunk-shared-153.mjs",
+        "chunk-shared-18.mjs",
+        "chunk-shared-183.mjs",
+        "chunk-shared-19.mjs",
+        "chunk-shared-2.mjs",
+        "chunk-shared-20.mjs",
+        "chunk-shared-25.mjs",
+        "chunk-shared-26.mjs",
+        "chunk-shared-3.mjs",
+        "chunk-shared-31.mjs",
+        "chunk-shared-33.mjs",
+        "chunk-shared-36.mjs",
+        "chunk-shared-38.mjs",
+        "chunk-shared-39.mjs",
+        "chunk-shared-6.mjs",
+        "chunk-shared-62.mjs",
+        "chunk-shared-7.mjs",
+        "chunk-shared-92.mjs",
+        "chunk-shared-frame.mjs",
+        "chunk-vendor-frame.mjs",
+        "chunk-vendor-intl.mjs"
+      ]
+    },
+    "files-changes-v4",
+    "frame-sidebar-nav",
+    "review-findings-v4",
+    "routines-shared-v4",
+    "session-rail-changes-v4",
+    "session-rail-kit-v4",
+    "settings-pages-v4",
+    "turn-plan-v4",
+    "working-line-v4"
+  ],
+  "sharedGraph": "cds-core",
+  "modules": [
+    {
+      "target": "pierre-cd14a8022.mjs",
+      "source": "cd14a8022-DdgywyOs.js",
+      "sourceSha256": "0759829d4d4c4e0984fadb3f9bddce56b6bbdfb16200bef6c63666ae655c9fdd",
+      "sha256": "10fa07cf8205ee08312820b91f71faa84d97c5b5edfeb70eab52fc6aa6934bb5",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "F",
+          "sha256": "92f935cc8c1c409e1afaea404733372f5d9010f3f00e84149b21940232c6c792"
+        }
+      ],
+      "initializers": [],
+      "imports": [],
+      "exports": {},
+      "sharedExports": [
+        "F"
+      ],
+      "heldByViewTabs": []
+    },
+    {
+      "target": "pierre-shared-39.mjs",
+      "source": "shared-39-ZCs0lAwB.js",
+      "sourceSha256": "fbbdc3e3589752233fbb792abb01ef80fc15de2662c5a79456d7d44a766e7c4b",
+      "sha256": "30926f4337a9cdd2601d6d2ba4eaede2f320e3c073ddf4e2712318731c4aca10",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "Eg",
+          "sha256": "518d20224085c0acffac868d985ec5ddd440e933bb8e7ad8c48383bf35bdcd19"
+        },
+        {
+          "name": "Dg",
+          "sha256": "d7492246b3108d332823c413bc6c4e0ab850c2349f088298ba1c88fa331117c2"
+        },
+        {
+          "name": "Og",
+          "sha256": "1756f54a6c202c184ec907678269b98c8011e95d72c234d98d2df24b0c1bceec"
+        }
+      ],
+      "initializers": [],
+      "imports": [
+        {
+          "local": "wg",
+          "from": "../frame-sidebar-nav/shared-39.mjs",
+          "name": "wg",
+          "via": "shared-39-ZCs0lAwB.js#wg",
+          "kind": "linked",
+          "original": "wg"
+        }
+      ],
+      "exports": {},
+      "sharedExports": [
+        "Dg",
+        "Eg"
+      ],
+      "heldByViewTabs": []
+    },
+    {
+      "target": "pierre-changes.mjs",
+      "source": "c44d00c7f-DNez7133.js",
+      "sourceSha256": "9c480e082273de5440edd9667025e423ecef58ac226c421f9eacf161871fd6bf",
+      "sha256": "a4bc99daafd66a50fd80ed520dc6e4c62ea9ba48e54285c49c43457d126f02e9",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "sa",
+          "sha256": "4d690883f7d74eb8817cc051afb1798cd20986663b765ae729ba56683b1d90de"
+        },
+        {
+          "name": "ca",
+          "sha256": "dabf610917a3a344ebf4c5e02bb1dffbd783ecf1e901bd4181729b7ca311e248"
+        },
+        {
+          "name": "la",
+          "sha256": "33334c3fcaeb447f7555b7260ecd518aa222a36220bd92da375776aaf23405eb"
+        },
+        {
+          "name": "ua",
+          "sha256": "dab90bda28cddb934f8b94d0e2a2324d90d46afe4746b6847d9492164b2f22b5"
+        },
+        {
+          "name": "Va",
+          "sha256": "272c4959e8dec2259d14ca3efdf8a9099911ba2d24fa680e68141b567650493c"
+        },
+        {
+          "name": "Ha",
+          "sha256": "142beaf7e6d659afc7115ed4f66b219166822e5f569a01f949cf9bde6dfe68ae"
+        },
+        {
+          "name": "Ua",
+          "sha256": "7b4a94e7d407662d555193d11f434d0d887dbb68a0443edf282bc2bb908bc580"
+        },
+        {
+          "name": "Wa",
+          "sha256": "e1dfab00daf357083ba4039e2d3ca17cd47cfcdd4b18ca3c2c669235bb123e1e"
+        },
+        {
+          "name": "Ga",
+          "sha256": "55c8561ccad7e5fb6156a610e8814cc2cdcaa4b9ae716d73268f003d3e07e993"
+        },
+        {
+          "name": "Ka",
+          "sha256": "66040c0a67eddcfeb537e75b1a4a49a703c5ca36a716500b9d4212deebabfc7b"
+        },
+        {
+          "name": "qa",
+          "sha256": "a505a2a6f8c5488db77d63d61243cabc48d4d333236666a6b2df7c26be305dbe"
+        },
+        {
+          "name": "Ja",
+          "sha256": "0b69157b8bd90c8feab0bf273a878f9763b70c51d9044dfae8bd07d743aacddc"
+        },
+        {
+          "name": "Ya",
+          "sha256": "1a6192f48bb85c2354e99dcdea3624d1a69908dbdeeec2c51a4a2e4a65bec35b"
+        },
+        {
+          "name": "Xa",
+          "sha256": "a1cb5b8f6d743852e09d2aaa25aa92db475cbed09281f88edf147292190bdf3e"
+        },
+        {
+          "name": "Za",
+          "sha256": "da0b10a422f4dccf36ea4aab904bede7f3c2ad0991cb55b1b7f065db7c720085"
+        },
+        {
+          "name": "to",
+          "sha256": "674c2adc5c6e19de8bfff83240136b0d77b604300da7c417f2e23ddb438f4441"
+        },
+        {
+          "name": "ro",
+          "sha256": "719f71716aa5aa81df51aaed2e99fb1940cedd8d41275f702fe0c50c2c40886a"
+        },
+        {
+          "name": "io",
+          "sha256": "27280b94522ce6de1b112bdd153dede9b961aec2405f3e2d642b2caa3f7f0b6e"
+        },
+        {
+          "name": "ao",
+          "sha256": "c6fb5ac817247567764d67f5943cff2b70ca967673b7bb5e434d9e95a12f850b"
+        },
+        {
+          "name": "so",
+          "sha256": "ccb15773eac3790d5f14607eb4c1d99de2c5cc45c25cc74536a2f0d78ff9d902"
+        },
+        {
+          "name": "co",
+          "sha256": "285c0d0712c946b870afffd34a81bea4cfea394e6151e412ade21af36da51f23"
+        },
+        {
+          "name": "lo",
+          "sha256": "16978aa7f55f92085f53d3e7a1a683ff2e5e5a08f41a42902bbbbb900ebdea81"
+        },
+        {
+          "name": "uo",
+          "sha256": "4e066b6079de1062b160881a959835fb364771ef4a050cc7f39feae03de8f348"
+        },
+        {
+          "name": "fo",
+          "sha256": "dd96d3491c7ecde510e24dc38c8e9748bf5c5a9fcca236689b1f28f388880bb5"
+        },
+        {
+          "name": "po",
+          "sha256": "e80e60b137ddc0a72c1a960c012c5aa1d9c163d317595806950ebd7bea5787f1"
+        },
+        {
+          "name": "mo",
+          "sha256": "a5496efdea962dc1c0a2db6ee3d88df837de064c8384fd11da5c3a834b63af78"
+        },
+        {
+          "name": "ho",
+          "sha256": "999e5acca2e8a1624625bdc3408218d47c22c942eba356f4ed850c18557480ea"
+        },
+        {
+          "name": "go",
+          "sha256": "a94e4715cc876d0029e59c52986f0e0a82d14b1328961d1ef9b5b899d76ef847"
+        },
+        {
+          "name": "_o",
+          "sha256": "3ed11367e62f8b26bd7f86ee4da25d7d73f98ac55870d17a906d659f0049883b"
+        },
+        {
+          "name": "xo",
+          "sha256": "ddba5e9c5803838b1d8b01e9cee46f137453029f26f89685901981dce6f9f563"
+        },
+        {
+          "name": "Jl",
+          "sha256": "0428c9f281f4d902e5bbaf18bf978f8375c1063a211be8853be81e6f0227eaba"
+        },
+        {
+          "name": "Yl",
+          "sha256": "c197262fd43e35e98f7623418f10516d7cd8680638ba8bb3e4e9b15b8b6d7c9f"
+        },
+        {
+          "name": "Xl",
+          "sha256": "ac03b4291d6069e11e9b741c2365e8103c0b642fe807bfc2d29f17b7e280fbd8"
+        },
+        {
+          "name": "Zl",
+          "sha256": "08756e96aac93a5fd76b0fb8561550997198eeda068326f54e137b69030a31a1"
+        },
+        {
+          "name": "Ql",
+          "sha256": "9720f19a1ea45feb31198872629b5a5842eaa8386f8400d9014a739b7f8f348a"
+        },
+        {
+          "name": "ld",
+          "sha256": "83b5306132e20236e95763b753e3ca3f6bd7272be60c0e69f3c4730ff14583b1"
+        },
+        {
+          "name": "ud",
+          "sha256": "ef07d073f521ce57ff7b0da22448338a08bcf1979ae9f235f7129b9196fa08c3"
+        },
+        {
+          "name": "dd",
+          "sha256": "85f6e5ae0c41258232b802ff1aa3d3fb853daedd1924f26b94ab2ee7d604b633"
+        },
+        {
+          "name": "fd",
+          "sha256": "dbea45b616ac74bb0875a06b888ad8e3e5c828268bd75258d2c2aa6666e11d9b"
+        },
+        {
+          "name": "pd",
+          "sha256": "92ff523a462cf64ddce753e9730ebfc16f440dffc4fc0ae7cbb153a0824c59dd"
+        },
+        {
+          "name": "md",
+          "sha256": "e96040bc2386fbc60522df0c79214bacb0b128d207fe40e8e1743cdaaa05f857"
+        },
+        {
+          "name": "hd",
+          "sha256": "c43dff86d8b4363c1177ca04f9f28eed135e3b8af2f88c8c8c824595bdf64d75"
+        },
+        {
+          "name": "gd",
+          "sha256": "2abfba5836b4c5e9a2f572dda5b11421b058ab9153f6a86660a757377b3a4048"
+        },
+        {
+          "name": "_d",
+          "sha256": "5c62c7875dee41518f4c48dee70d7034b57c403affa516ed92de25c0ade3f610"
+        },
+        {
+          "name": "Ff",
+          "sha256": "16782c7b2bff749b70061e7670b4e6aec3bff0e8ea4c9f17e26f7a0b39678504"
+        }
+      ],
+      "initializers": [],
+      "imports": [
+        {
+          "local": "$n",
+          "from": "./pierre-cd14a8022.mjs",
+          "name": "F",
+          "via": "cd14a8022-DdgywyOs.js:o",
+          "kind": "generated"
+        },
+        {
+          "local": "A",
+          "from": "../cds-core/shared-frame.mjs",
+          "name": "CdsSkeleton",
+          "via": "shared-frame-CJdE5Ria.js:Ou",
+          "kind": "shared-graph",
+          "original": "Eg"
+        },
+        {
+          "local": "Ct",
+          "from": "./pierre-shared-39.mjs",
+          "name": "Dg",
+          "via": "shared-39-ZCs0lAwB.js:ki",
+          "kind": "generated"
+        },
+        {
+          "local": "I3",
+          "from": "../working-line-v4/shared-frame.mjs",
+          "name": "I3",
+          "via": "shared-frame-CJdE5Ria.js:am",
+          "kind": "linked",
+          "original": "I3"
+        },
+        {
+          "local": "I4",
+          "from": "../cds-core/shared-frame.mjs",
+          "name": "I4",
+          "via": "shared-frame-CJdE5Ria.js:om",
+          "kind": "shared-graph",
+          "original": "I4"
+        },
+        {
+          "local": "J0",
+          "from": "../working-line-v4/shared-frame.mjs",
+          "name": "J0",
+          "via": "shared-frame-CJdE5Ria.js:cm",
+          "kind": "linked",
+          "original": "J0"
+        },
+        {
+          "local": "J1",
+          "from": "../working-line-v4/shared-frame.mjs",
+          "name": "J1",
+          "via": "shared-frame-CJdE5Ria.js:lm",
+          "kind": "linked",
+          "original": "J1"
+        },
+        {
+          "local": "J2",
+          "from": "../working-line-v4/shared-frame.mjs",
+          "name": "J2",
+          "via": "shared-frame-CJdE5Ria.js:um",
+          "kind": "linked",
+          "original": "J2"
+        },
+        {
+          "local": "J3",
+          "from": "../working-line-v4/shared-frame.mjs",
+          "name": "J3",
+          "via": "shared-frame-CJdE5Ria.js:dm",
+          "kind": "linked",
+          "original": "J3"
+        },
+        {
+          "local": "J4",
+          "from": "../working-line-v4/shared-frame.mjs",
+          "name": "J4",
+          "via": "shared-frame-CJdE5Ria.js:fm",
+          "kind": "linked",
+          "original": "J4"
+        },
+        {
+          "local": "J5",
+          "from": "../working-line-v4/shared-frame.mjs",
+          "name": "J5",
+          "via": "shared-frame-CJdE5Ria.js:pm",
+          "kind": "linked",
+          "original": "J5"
+        },
+        {
+          "local": "J9",
+          "from": "../working-line-v4/shared-frame.mjs",
+          "name": "J9",
+          "via": "shared-frame-CJdE5Ria.js:hm",
+          "kind": "linked",
+          "original": "J9"
+        },
+        {
+          "local": "K0",
+          "from": "../working-line-v4/shared-frame.mjs",
+          "name": "K0",
+          "via": "shared-frame-CJdE5Ria.js:gm",
+          "kind": "linked",
+          "original": "K0"
+        },
+        {
+          "local": "K1",
+          "from": "../working-line-v4/shared-frame.mjs",
+          "name": "K1",
+          "via": "shared-frame-CJdE5Ria.js:_m",
+          "kind": "linked",
+          "original": "K1"
+        },
+        {
+          "local": "K2",
+          "from": "../working-line-v4/shared-frame.mjs",
+          "name": "K2",
+          "via": "shared-frame-CJdE5Ria.js:vm",
+          "kind": "linked",
+          "original": "K2"
+        },
+        {
+          "local": "K3",
+          "from": "../working-line-v4/shared-frame.mjs",
+          "name": "K3",
+          "via": "shared-frame-CJdE5Ria.js:ym",
+          "kind": "linked",
+          "original": "K3"
+        },
+        {
+          "local": "K4",
+          "from": "../working-line-v4/shared-frame.mjs",
+          "name": "K4",
+          "via": "shared-frame-CJdE5Ria.js:bm",
+          "kind": "linked",
+          "original": "K4"
+        },
+        {
+          "local": "K5",
+          "from": "../working-line-v4/shared-frame.mjs",
+          "name": "K5",
+          "via": "shared-frame-CJdE5Ria.js:xm",
+          "kind": "linked",
+          "original": "K5"
+        },
+        {
+          "local": "L",
+          "from": "../cds-core/shared-frame.mjs",
+          "name": "CdsDialog",
+          "via": "shared-frame-CJdE5Ria.js:Yl",
+          "kind": "shared-graph",
+          "original": "ax"
+        },
+        {
+          "local": "St",
+          "from": "./pierre-shared-39.mjs",
+          "name": "Eg",
+          "via": "shared-39-ZCs0lAwB.js:Oi",
+          "kind": "generated"
+        },
+        {
+          "local": "Wt",
+          "from": "../files-changes-v4/file-type-icon.mjs",
+          "name": "FileTypeIcon",
+          "via": "c280f9bbb-BOcpax9X.js:t",
+          "kind": "linked",
+          "original": "V"
+        },
+        {
+          "local": "Z",
+          "from": "../../source-pierre-changes-v4-adapters.jsx",
+          "name": "FormattedMessage",
+          "via": "vendor-intl-BJgYK7RA.js:l",
+          "kind": "adapter",
+          "original": "Gt"
+        },
+        {
+          "local": "Z1",
+          "from": "../working-line-v4/shared-frame.mjs",
+          "name": "Z1",
+          "via": "shared-frame-CJdE5Ria.js:Sm",
+          "kind": "linked",
+          "original": "Z1"
+        },
+        {
+          "local": "Z2",
+          "from": "../working-line-v4/shared-frame.mjs",
+          "name": "Z2",
+          "via": "shared-frame-CJdE5Ria.js:Cm",
+          "kind": "linked",
+          "original": "Z2"
+        },
+        {
+          "local": "_n",
+          "from": "../files-changes-v4/path-segments.mjs",
+          "name": "PathSegments",
+          "via": "c784da984-CRJnGT1U.js:n",
+          "kind": "linked",
+          "original": "m"
+        },
+        {
+          "local": "c",
+          "from": "react/jsx-runtime",
+          "name": "Fragment",
+          "via": "vendor-frame-BckkO60Y.js:Wa",
+          "kind": "react"
+        },
+        {
+          "local": "dt",
+          "from": "../working-line-v4/define-messages.mjs",
+          "name": "tn",
+          "via": "vendor-intl-BJgYK7RA.js:f",
+          "kind": "linked",
+          "original": "tn"
+        },
+        {
+          "local": "gt",
+          "from": "../chat-knowledge-v4/shared-4.mjs",
+          "name": "formatKnowledgeFileSize",
+          "via": "shared-4-C_EiQb9h.js:xt",
+          "kind": "linked",
+          "original": "Yj"
+        },
+        {
+          "local": "h",
+          "from": "react",
+          "name": "createContext",
+          "via": "vendor-frame-BckkO60Y.js:no",
+          "kind": "react"
+        },
+        {
+          "local": "i",
+          "from": "react/jsx-runtime",
+          "name": "jsxs",
+          "via": "vendor-frame-BckkO60Y.js:Ka",
+          "kind": "react"
+        },
+        {
+          "local": "me",
+          "from": "../routines-shared-v4/shared-0-CnnWnVrT.mjs",
+          "name": "yu",
+          "via": "shared-0-CnnWnVrT.js:zx",
+          "kind": "linked",
+          "original": "yu"
+        },
+        {
+          "local": "n",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-BckkO60Y.js:Ga",
+          "kind": "react"
+        },
+        {
+          "local": "p",
+          "from": "react",
+          "name": "useEffect",
+          "via": "vendor-frame-BckkO60Y.js:go",
+          "kind": "react"
+        },
+        {
+          "local": "pt",
+          "from": "../../source-pierre-changes-v4-adapters.jsx",
+          "name": "useIntl",
+          "via": "vendor-intl-BJgYK7RA.js:p",
+          "kind": "adapter",
+          "original": "q"
+        },
+        {
+          "local": "re",
+          "from": "../cds-core/shared-frame.mjs",
+          "name": "CdsIcon",
+          "via": "shared-frame-CJdE5Ria.js:lf",
+          "kind": "shared-graph",
+          "original": "Bs"
+        },
+        {
+          "local": "rr",
+          "from": "../session-rail-changes-v4/c761aa8b9.mjs",
+          "name": "Kn",
+          "via": "c761aa8b9-CdRbeywV.js:ct",
+          "kind": "linked",
+          "original": "Kn"
+        },
+        {
+          "local": "s",
+          "from": "react",
+          "name": "useState",
+          "via": "vendor-frame-BckkO60Y.js:To",
+          "kind": "react"
+        },
+        {
+          "local": "t",
+          "from": "../cds-core/vendor-frame.mjs",
+          "name": "clsx",
+          "via": "vendor-frame-BckkO60Y.js:Fa",
+          "kind": "shared-graph",
+          "original": "ke"
+        },
+        {
+          "local": "te",
+          "from": "../cds-core/shared-frame.mjs",
+          "name": "CdsTooltip",
+          "via": "shared-frame-CJdE5Ria.js:cd",
+          "kind": "shared-graph",
+          "original": "Kp"
+        },
+        {
+          "local": "u",
+          "from": "react",
+          "name": "memo",
+          "via": "vendor-frame-BckkO60Y.js:co",
+          "kind": "react"
+        },
+        {
+          "local": "ue",
+          "from": "../cds-core/shared-0.mjs",
+          "name": "useEventCallback",
+          "via": "shared-0-CnnWnVrT.js:PT",
+          "kind": "shared-graph",
+          "original": "xe"
+        },
+        {
+          "local": "vn",
+          "from": "../files-changes-v4/path-segments.mjs",
+          "name": "NameThenFolder",
+          "via": "c784da984-CRJnGT1U.js:t",
+          "kind": "linked",
+          "original": "g"
+        }
+      ],
+      "exports": {
+        "fo": "PierreChangesFileHeader",
+        "Ff": "pierreChangesMessages",
+        "ca": "comparisonFileEntries",
+        "Ql": "useDiffFetchScheduler",
+        "ud": "DiffImageViewerContext",
+        "dd": "DiffImageViewerShownContext",
+        "fd": "DiffImageViewerProvider"
+      },
+      "sharedExports": [],
+      "heldByViewTabs": []
+    }
+  ],
+  "callSites": [
+    {
+      "source": "c44d00c7f-DNez7133.js",
+      "binding": "Dm",
+      "role": "pc-1: the Changes pane (Dm): `mt = Re(!dt && !Ye)`; with mt the body is Cp (PierreChanges), the scheduler `Ct = Ql(r)`. Host: src/source-diff.jsx PierreChangesBody (local_pierre_changes_body)",
+      "sourceSha256": "9c480e082273de5440edd9667025e423ecef58ac226c421f9eacf161871fd6bf",
+      "sha256": "bd3cd2b9db69839544c499b4c1a51c72e4e17465488ec847fed0f63ea0d6092c",
+      "features": [
+        "mt = Re(!dt && !Ye),",
+        "Ct = Ql(r),",
+        "n(Cp, {",
+        "fetchScheduler: Ct,",
+        "onAnnotationSaved: ne,",
+        "onStepPrComment: Vt,"
+      ]
+    },
+    {
+      "source": "c44d00c7f-DNez7133.js",
+      "role": "pc-0: the image viewer contexts (ud = h(null), dd = h(!1)) and their one provider fd (exported s): dd outermost with fetchFileImages given, ud with {open, stale}",
+      "sourceSha256": "9c480e082273de5440edd9667025e423ecef58ac226c421f9eacf161871fd6bf",
+      "raw": true,
+      "features": [
+        "var ud=h(null),dd=h(!1);",
+        "let d=r!==void 0,",
+        "d?{open:p,stale:o}:null",
+        "i(ud,{value:m,children:[c,b]})",
+        "n(dd,{value:d,children:x})",
+        "fd as s"
+      ]
+    },
+    {
+      "source": "c44d00c7f-DNez7133.js",
+      "role": "pc-0: the file header memo and the pane scheduler (Ct = Ql(r)); the body memo Cp mounted under mt",
+      "sourceSha256": "9c480e082273de5440edd9667025e423ecef58ac226c421f9eacf161871fd6bf",
+      "raw": true,
+      "features": [
+        "var fo=u(co)",
+        "var Cp=u(Sp)",
+        "Ct=Ql(r)",
+        "mt=Re(!dt&&!Ye)",
+        "ca as C"
+      ]
+    }
+  ],
+  "publicAssets": []
+}

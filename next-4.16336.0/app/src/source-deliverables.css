@@ -1,0 +1,9 @@
+/* Deliverable file cards (client/ui-deliverables): a bordered row per file, CDS tokens for light and dark. */
+.sdl-root { display: flex; flex-direction: column; gap: var(--cds-gap-sm, 8px); margin-block: 6px; }
+.sdl-card { display: flex; align-items: center; gap: var(--cds-gap-md, 12px); max-width: 520px; padding: var(--cds-pad-md, 8px) var(--cds-pad-lg, 12px); border: 1px solid var(--cds-border); border-radius: 10px; background: var(--cds-surface-1); }
+.sdl-icon { display: inline-flex; flex-shrink: 0; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 8px; background: var(--cds-alpha-1); color: var(--cds-text-secondary); }
+.sdl-copy { display: flex; flex: 1; min-width: 0; flex-direction: column; }
+.sdl-name { overflow: hidden; color: var(--cds-text-primary); font-size: var(--cds-font-size-body, 13px); font-weight: var(--cds-font-weight-medium, 500); text-overflow: ellipsis; white-space: nowrap; }
+.sdl-description { overflow: hidden; color: var(--cds-text-secondary); font-size: var(--cds-font-size-footnote, 12px); text-overflow: ellipsis; white-space: nowrap; }
+.sdl-actions { display: flex; flex-shrink: 0; align-items: center; gap: var(--cds-gap-xs, 4px); }
+.sdl-error { margin: 0; color: var(--cds-text-danger); font-size: var(--cds-font-size-footnote, 12px); }

@@ -1,0 +1,2357 @@
+{
+ "source": "opencode 2.2.5 packages/protocol/openapi.json",
+ "routes": {
+  "GET /api/info": {
+   "query": [],
+   "body": null,
+   "responses": [
+    "200",
+    "400",
+    "401"
+   ]
+  },
+  "POST /api/pair": {
+   "query": [],
+   "body": null,
+   "responses": [
+    "200",
+    "400",
+    "401"
+   ]
+  },
+  "GET /auth/connect/{code}": {
+   "query": [],
+   "body": null,
+   "responses": [
+    "200",
+    "400",
+    "401"
+   ]
+  },
+  "GET /api/location": {
+   "query": [
+    "location"
+   ],
+   "body": null,
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "404"
+   ]
+  },
+  "POST /api/location/reload": {
+   "query": [],
+   "body": null,
+   "responses": [
+    "204",
+    "400",
+    "401",
+    "503"
+   ]
+  },
+  "GET /api/agent": {
+   "query": [
+    "location"
+   ],
+   "body": null,
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "404",
+    "503"
+   ]
+  },
+  "GET /api/agent/{agentID}": {
+   "query": [
+    "location"
+   ],
+   "body": null,
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "404"
+   ]
+  },
+  "GET /api/plugin": {
+   "query": [
+    "location"
+   ],
+   "body": null,
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "404"
+   ]
+  },
+  "GET /api/plugin/gui": {
+   "query": [
+    "id",
+    "location"
+   ],
+   "body": null,
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "404"
+   ]
+  },
+  "POST /api/plugin/check": {
+   "query": [
+    "location"
+   ],
+   "body": [
+    "target"
+   ],
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "404"
+   ]
+  },
+  "POST /api/plugin/update": {
+   "query": [
+    "location"
+   ],
+   "body": [
+    "targets"
+   ],
+   "required": [
+    "targets"
+   ],
+   "responses": [
+    "204",
+    "400",
+    "401",
+    "404",
+    "503"
+   ]
+  },
+  "GET /api/session": {
+   "query": [
+    "archived",
+    "cursor",
+    "directory",
+    "limit",
+    "order",
+    "parentID",
+    "project",
+    "search",
+    "subpath"
+   ],
+   "body": null,
+   "responses": [
+    "200",
+    "400",
+    "401"
+   ]
+  },
+  "POST /api/session": {
+   "query": [],
+   "body": [
+    "agent",
+    "id",
+    "location",
+    "metadata",
+    "model",
+    "parentID",
+    "permissions",
+    "title"
+   ],
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "404"
+   ]
+  },
+  "GET /api/experimental/session/stats": {
+   "query": [
+    "from",
+    "project",
+    "timezone",
+    "to",
+    "tools"
+   ],
+   "body": null,
+   "responses": [
+    "200",
+    "400",
+    "401"
+   ]
+  },
+  "POST /api/experimental/session/import": {
+   "query": [],
+   "body": [
+    "info",
+    "location",
+    "messages"
+   ],
+   "required": [
+    "info",
+    "messages"
+   ],
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "404",
+    "409"
+   ]
+  },
+  "GET /api/experimental/session/{sessionID}/export": {
+   "query": [
+    "sanitize"
+   ],
+   "body": null,
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "404",
+    "500"
+   ]
+  },
+  "GET /api/session/active": {
+   "query": [],
+   "body": null,
+   "responses": [
+    "200",
+    "400",
+    "401"
+   ]
+  },
+  "GET /api/session/{sessionID}": {
+   "query": [],
+   "body": null,
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "404"
+   ]
+  },
+  "DELETE /api/session/{sessionID}": {
+   "query": [],
+   "body": null,
+   "responses": [
+    "204",
+    "400",
+    "401",
+    "404"
+   ]
+  },
+  "PATCH /api/session/{sessionID}": {
+   "query": [],
+   "body": [
+    "archived",
+    "metadata",
+    "permissions",
+    "title"
+   ],
+   "responses": [
+    "204",
+    "400",
+    "401",
+    "404"
+   ]
+  },
+  "POST /api/session/{sessionID}/fork": {
+   "query": [],
+   "body": [
+    "before"
+   ],
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "404"
+   ]
+  },
+  "POST /api/session/{sessionID}/agent": {
+   "query": [],
+   "body": [
+    "agent"
+   ],
+   "required": [
+    "agent"
+   ],
+   "responses": [
+    "204",
+    "400",
+    "401",
+    "404"
+   ]
+  },
+  "POST /api/session/{sessionID}/model": {
+   "query": [],
+   "body": [
+    "model"
+   ],
+   "required": [
+    "model"
+   ],
+   "responses": [
+    "204",
+    "400",
+    "401",
+    "404"
+   ]
+  },
+  "POST /api/session/{sessionID}/move": {
+   "query": [],
+   "body": [
+    "delivery",
+    "directory"
+   ],
+   "required": [
+    "directory"
+   ],
+   "responses": [
+    "204",
+    "400",
+    "401",
+    "404"
+   ]
+  },
+  "POST /api/session/{sessionID}/prompt": {
+   "query": [],
+   "body": [
+    "agents",
+    "delivery",
+    "files",
+    "id",
+    "metadata",
+    "resume",
+    "skills",
+    "text"
+   ],
+   "required": [
+    "text"
+   ],
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "404",
+    "409"
+   ]
+  },
+  "POST /api/session/{sessionID}/command": {
+   "query": [],
+   "body": [
+    "agents",
+    "delivery",
+    "files",
+    "name",
+    "skills",
+    "text"
+   ],
+   "required": [
+    "name",
+    "text"
+   ],
+   "responses": [
+    "204",
+    "400",
+    "401",
+    "404",
+    "500"
+   ]
+  },
+  "POST /api/experimental/session/{sessionID}/skill": {
+   "query": [],
+   "body": [
+    "id",
+    "resume"
+   ],
+   "required": [
+    "id"
+   ],
+   "responses": [
+    "204",
+    "400",
+    "401",
+    "404"
+   ]
+  },
+  "POST /api/session/{sessionID}/synthetic": {
+   "query": [],
+   "body": [
+    "delivery",
+    "description",
+    "id",
+    "metadata",
+    "resume",
+    "text"
+   ],
+   "required": [
+    "text"
+   ],
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "404",
+    "409"
+   ]
+  },
+  "POST /api/session/{sessionID}/shell": {
+   "query": [],
+   "body": [
+    "command",
+    "id"
+   ],
+   "required": [
+    "command"
+   ],
+   "responses": [
+    "204",
+    "400",
+    "401",
+    "404"
+   ]
+  },
+  "POST /api/session/{sessionID}/compact": {
+   "query": [],
+   "body": [
+    "delivery",
+    "id"
+   ],
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "404",
+    "409"
+   ]
+  },
+  "POST /api/experimental/session/{sessionID}/wait": {
+   "query": [],
+   "body": null,
+   "responses": [
+    "204",
+    "400",
+    "401",
+    "404",
+    "503"
+   ]
+  },
+  "POST /api/session/{sessionID}/revert/stage": {
+   "query": [],
+   "body": [
+    "files",
+    "messageID"
+   ],
+   "required": [
+    "messageID"
+   ],
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "404",
+    "409",
+    "500"
+   ]
+  },
+  "DELETE /api/session/{sessionID}/revert": {
+   "query": [],
+   "body": null,
+   "responses": [
+    "204",
+    "400",
+    "401",
+    "404",
+    "409",
+    "500"
+   ]
+  },
+  "POST /api/session/{sessionID}/revert/commit": {
+   "query": [],
+   "body": null,
+   "responses": [
+    "204",
+    "400",
+    "401",
+    "404",
+    "409"
+   ]
+  },
+  "GET /api/session/{sessionID}/context": {
+   "query": [],
+   "body": null,
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "404",
+    "500"
+   ]
+  },
+  "GET /api/session/{sessionID}/diff": {
+   "query": [
+    "context",
+    "from",
+    "to"
+   ],
+   "body": null,
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "404",
+    "500"
+   ]
+  },
+  "GET /api/session/{sessionID}/inbox": {
+   "query": [],
+   "body": null,
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "404"
+   ]
+  },
+  "DELETE /api/session/{sessionID}/inbox/{inboxID}": {
+   "query": [],
+   "body": null,
+   "responses": [
+    "204",
+    "400",
+    "401",
+    "404"
+   ]
+  },
+  "PATCH /api/session/{sessionID}/inbox/{inboxID}": {
+   "query": [],
+   "body": [
+    "delivery"
+   ],
+   "required": [
+    "delivery"
+   ],
+   "responses": [
+    "204",
+    "400",
+    "401",
+    "404",
+    "409"
+   ]
+  },
+  "GET /api/experimental/session/{sessionID}/instructions/entries": {
+   "query": [],
+   "body": null,
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "404"
+   ]
+  },
+  "PUT /api/experimental/session/{sessionID}/instructions/entries/{key}": {
+   "query": [],
+   "body": [
+    "value"
+   ],
+   "required": [
+    "value"
+   ],
+   "responses": [
+    "204",
+    "400",
+    "401",
+    "404",
+    "413"
+   ]
+  },
+  "DELETE /api/experimental/session/{sessionID}/instructions/entries/{key}": {
+   "query": [],
+   "body": null,
+   "responses": [
+    "204",
+    "400",
+    "401",
+    "404"
+   ]
+  },
+  "POST /api/session/{sessionID}/generate": {
+   "query": [],
+   "body": [
+    "prompt"
+   ],
+   "required": [
+    "prompt"
+   ],
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "404",
+    "503"
+   ]
+  },
+  "GET /api/experimental/session/{sessionID}/log": {
+   "query": [
+    "after",
+    "follow"
+   ],
+   "body": null,
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "404"
+   ]
+  },
+  "POST /api/session/{sessionID}/interrupt": {
+   "query": [
+    "resume"
+   ],
+   "body": null,
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "404"
+   ]
+  },
+  "POST /api/session/{sessionID}/background": {
+   "query": [],
+   "body": null,
+   "responses": [
+    "204",
+    "400",
+    "401",
+    "404"
+   ]
+  },
+  "GET /api/session/{sessionID}/message/{messageID}": {
+   "query": [],
+   "body": null,
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "404"
+   ]
+  },
+  "GET /api/session/{sessionID}/form": {
+   "query": [],
+   "body": null,
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "404"
+   ]
+  },
+  "POST /api/session/{sessionID}/form": {
+   "query": [],
+   "body": [
+    "fields",
+    "id",
+    "metadata",
+    "title"
+   ],
+   "required": [
+    "fields",
+    "title"
+   ],
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "404",
+    "409"
+   ]
+  },
+  "GET /api/session/{sessionID}/form/{formID}": {
+   "query": [],
+   "body": null,
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "404"
+   ]
+  },
+  "DELETE /api/session/{sessionID}/form/{formID}": {
+   "query": [
+    "message"
+   ],
+   "body": null,
+   "responses": [
+    "204",
+    "400",
+    "401",
+    "404",
+    "409"
+   ]
+  },
+  "POST /api/session/{sessionID}/form/{formID}/reply": {
+   "query": [],
+   "body": [
+    "answer"
+   ],
+   "required": [
+    "answer"
+   ],
+   "responses": [
+    "204",
+    "400",
+    "401",
+    "404",
+    "409"
+   ]
+  },
+  "PUT /api/session/{sessionID}/environment": {
+   "query": [],
+   "body": [
+    "variables"
+   ],
+   "required": [
+    "variables"
+   ],
+   "responses": [
+    "204",
+    "400",
+    "401",
+    "404"
+   ]
+  },
+  "POST /api/session/{sessionID}/view": {
+   "query": [],
+   "body": [
+    "idle"
+   ],
+   "required": [
+    "idle"
+   ],
+   "responses": [
+    "204",
+    "400",
+    "401",
+    "404"
+   ]
+  },
+  "GET /api/session/{sessionID}/message": {
+   "query": [
+    "cursor",
+    "limit",
+    "order",
+    "type"
+   ],
+   "body": null,
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "404",
+    "500"
+   ]
+  },
+  "GET /api/model": {
+   "query": [
+    "location",
+    "types"
+   ],
+   "body": null,
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "404",
+    "503"
+   ]
+  },
+  "GET /api/model/default": {
+   "query": [
+    "location"
+   ],
+   "body": null,
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "404",
+    "503"
+   ]
+  },
+  "POST /api/experimental/generate/text": {
+   "query": [],
+   "body": [
+    "model",
+    "prompt"
+   ],
+   "required": [
+    "prompt"
+   ],
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "404",
+    "422",
+    "502",
+    "503"
+   ]
+  },
+  "POST /api/experimental/generate": {
+   "query": [],
+   "body": [
+    "model",
+    "prompt"
+   ],
+   "required": [
+    "prompt"
+   ],
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "404",
+    "422",
+    "502",
+    "503"
+   ]
+  },
+  "POST /api/experimental/generate/image": {
+   "query": [],
+   "body": [
+    "aspect",
+    "images",
+    "model",
+    "n",
+    "prompt",
+    "resolution"
+   ],
+   "required": [
+    "model",
+    "prompt"
+   ],
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "404",
+    "422",
+    "502",
+    "503"
+   ]
+  },
+  "POST /api/experimental/generate/decisions": {
+   "query": [],
+   "body": [
+    "input",
+    "model",
+    "questions"
+   ],
+   "required": [
+    "input",
+    "model",
+    "questions"
+   ],
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "404",
+    "422",
+    "502",
+    "503"
+   ]
+  },
+  "GET /api/experimental/voice/models": {
+   "query": [],
+   "body": null,
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "404",
+    "503"
+   ]
+  },
+  "POST /api/experimental/voice/session": {
+   "query": [],
+   "body": [
+    "model",
+    "session",
+    "transport"
+   ],
+   "required": [
+    "model",
+    "transport"
+   ],
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "404",
+    "503"
+   ]
+  },
+  "GET /api/provider": {
+   "query": [
+    "location"
+   ],
+   "body": null,
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "404",
+    "503"
+   ]
+  },
+  "GET /api/provider/{providerID}": {
+   "query": [
+    "location"
+   ],
+   "body": null,
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "404",
+    "503"
+   ]
+  },
+  "GET /api/integration": {
+   "query": [
+    "location"
+   ],
+   "body": null,
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "404"
+   ]
+  },
+  "GET /api/integration/{integrationID}": {
+   "query": [
+    "location"
+   ],
+   "body": null,
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "404"
+   ]
+  },
+  "POST /api/experimental/integration/wellknown": {
+   "query": [
+    "location"
+   ],
+   "body": [
+    "url"
+   ],
+   "required": [
+    "url"
+   ],
+   "responses": [
+    "204",
+    "400",
+    "401",
+    "404"
+   ]
+  },
+  "POST /api/integration/{integrationID}/connect/key": {
+   "query": [
+    "location"
+   ],
+   "body": [
+    "answer",
+    "key",
+    "label"
+   ],
+   "required": [
+    "key"
+   ],
+   "responses": [
+    "204",
+    "400",
+    "401",
+    "404"
+   ]
+  },
+  "POST /api/integration/{integrationID}/connect/external": {
+   "query": [
+    "location"
+   ],
+   "body": [
+    "answer",
+    "label",
+    "methodID"
+   ],
+   "required": [
+    "methodID"
+   ],
+   "responses": [
+    "204",
+    "400",
+    "401",
+    "404"
+   ]
+  },
+  "POST /api/integration/{integrationID}/connect/oauth": {
+   "query": [
+    "location"
+   ],
+   "body": [
+    "answer",
+    "label",
+    "methodID"
+   ],
+   "required": [
+    "methodID"
+   ],
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "404"
+   ]
+  },
+  "GET /api/integration/{integrationID}/connect/oauth/{attemptID}": {
+   "query": [
+    "location"
+   ],
+   "body": null,
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "404"
+   ]
+  },
+  "DELETE /api/integration/{integrationID}/connect/oauth/{attemptID}": {
+   "query": [
+    "location"
+   ],
+   "body": null,
+   "responses": [
+    "204",
+    "400",
+    "401",
+    "404"
+   ]
+  },
+  "POST /api/integration/{integrationID}/connect/oauth/{attemptID}/complete": {
+   "query": [
+    "location"
+   ],
+   "body": [
+    "code"
+   ],
+   "responses": [
+    "204",
+    "400",
+    "401",
+    "404"
+   ]
+  },
+  "POST /api/integration/{integrationID}/connect/command": {
+   "query": [
+    "location"
+   ],
+   "body": [
+    "label",
+    "methodID"
+   ],
+   "required": [
+    "methodID"
+   ],
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "404"
+   ]
+  },
+  "GET /api/integration/{integrationID}/connect/command/{attemptID}": {
+   "query": [
+    "location"
+   ],
+   "body": null,
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "404"
+   ]
+  },
+  "DELETE /api/integration/{integrationID}/connect/command/{attemptID}": {
+   "query": [
+    "location"
+   ],
+   "body": null,
+   "responses": [
+    "204",
+    "400",
+    "401",
+    "404"
+   ]
+  },
+  "GET /api/mcp": {
+   "query": [
+    "location"
+   ],
+   "body": null,
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "404"
+   ]
+  },
+  "PUT /api/experimental/mcp/{server}": {
+   "query": [
+    "location"
+   ],
+   "body": [
+    "config"
+   ],
+   "required": [
+    "config"
+   ],
+   "responses": [
+    "204",
+    "400",
+    "401",
+    "404"
+   ]
+  },
+  "DELETE /api/experimental/mcp/{server}": {
+   "query": [
+    "location"
+   ],
+   "body": null,
+   "responses": [
+    "204",
+    "400",
+    "401",
+    "404"
+   ]
+  },
+  "POST /api/experimental/mcp/{server}/connect": {
+   "query": [
+    "location"
+   ],
+   "body": null,
+   "responses": [
+    "204",
+    "400",
+    "401",
+    "404"
+   ]
+  },
+  "POST /api/experimental/mcp/{server}/disconnect": {
+   "query": [
+    "location"
+   ],
+   "body": null,
+   "responses": [
+    "204",
+    "400",
+    "401",
+    "404"
+   ]
+  },
+  "GET /api/mcp/resource": {
+   "query": [
+    "location"
+   ],
+   "body": null,
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "404"
+   ]
+  },
+  "POST /api/experimental/client-mcp/token": {
+   "query": [
+    "location",
+    "name"
+   ],
+   "body": null,
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "403",
+    "404"
+   ]
+  },
+  "GET /api/experimental/client-mcp": {
+   "query": [
+    "location",
+    "name",
+    "ticket"
+   ],
+   "body": null,
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "403",
+    "404"
+   ]
+  },
+  "GET /api/credential": {
+   "query": [],
+   "body": null,
+   "responses": [
+    "200",
+    "400",
+    "401"
+   ]
+  },
+  "POST /api/credential": {
+   "query": [],
+   "body": [
+    "activate",
+    "id",
+    "integrationID",
+    "label",
+    "value"
+   ],
+   "required": [
+    "integrationID",
+    "value"
+   ],
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "409"
+   ]
+  },
+  "PATCH /api/credential/{credentialID}": {
+   "query": [],
+   "body": [
+    "label"
+   ],
+   "required": [
+    "label"
+   ],
+   "responses": [
+    "204",
+    "400",
+    "401"
+   ]
+  },
+  "DELETE /api/credential/{credentialID}": {
+   "query": [],
+   "body": null,
+   "responses": [
+    "204",
+    "400",
+    "401"
+   ]
+  },
+  "POST /api/credential/{credentialID}/activate": {
+   "query": [],
+   "body": null,
+   "responses": [
+    "204",
+    "400",
+    "401"
+   ]
+  },
+  "GET /api/project": {
+   "query": [
+    "archived"
+   ],
+   "body": null,
+   "responses": [
+    "200",
+    "400",
+    "401"
+   ]
+  },
+  "PATCH /api/project/{projectID}": {
+   "query": [],
+   "body": [
+    "canonical",
+    "commands",
+    "icon",
+    "name"
+   ],
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "404"
+   ]
+  },
+  "GET /api/form": {
+   "query": [
+    "location"
+   ],
+   "body": null,
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "404"
+   ]
+  },
+  "GET /api/permission/request": {
+   "query": [
+    "location"
+   ],
+   "body": null,
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "404"
+   ]
+  },
+  "GET /api/permission/saved": {
+   "query": [
+    "projectID"
+   ],
+   "body": null,
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "404"
+   ]
+  },
+  "PATCH /api/permission/saved/{id}": {
+   "query": [],
+   "body": [
+    "action",
+    "resource"
+   ],
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "404",
+    "409"
+   ]
+  },
+  "DELETE /api/permission/saved/{id}": {
+   "query": [],
+   "body": null,
+   "responses": [
+    "204",
+    "400",
+    "401"
+   ]
+  },
+  "POST /api/session/{sessionID}/permission": {
+   "query": [],
+   "body": [
+    "action",
+    "agent",
+    "id",
+    "metadata",
+    "resources",
+    "save",
+    "source"
+   ],
+   "required": [
+    "action",
+    "resources"
+   ],
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "404"
+   ]
+  },
+  "GET /api/session/{sessionID}/permission": {
+   "query": [],
+   "body": null,
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "404"
+   ]
+  },
+  "GET /api/session/{sessionID}/permission/{requestID}": {
+   "query": [],
+   "body": null,
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "404"
+   ]
+  },
+  "POST /api/session/{sessionID}/permission/{requestID}/reply": {
+   "query": [],
+   "body": [
+    "decision",
+    "message"
+   ],
+   "required": [
+    "decision"
+   ],
+   "responses": [
+    "204",
+    "400",
+    "401",
+    "404"
+   ]
+  },
+  "GET /api/fs/read/*": {
+   "query": [
+    "location"
+   ],
+   "body": null,
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "404"
+   ]
+  },
+  "GET /api/fs/list": {
+   "query": [
+    "location",
+    "path"
+   ],
+   "body": null,
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "404"
+   ]
+  },
+  "GET /api/fs/find": {
+   "query": [
+    "limit",
+    "location",
+    "query",
+    "type"
+   ],
+   "body": null,
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "404"
+   ]
+  },
+  "POST /api/experimental/fs/write": {
+   "query": [
+    "location",
+    "path"
+   ],
+   "body": null,
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "404"
+   ]
+  },
+  "POST /api/experimental/fs/watch": {
+   "query": [
+    "location"
+   ],
+   "body": [
+    "path"
+   ],
+   "required": [
+    "path"
+   ],
+   "responses": [
+    "204",
+    "400",
+    "401",
+    "404",
+    "503"
+   ]
+  },
+  "DELETE /api/experimental/fs/watch": {
+   "query": [
+    "location"
+   ],
+   "body": [
+    "path"
+   ],
+   "required": [
+    "path"
+   ],
+   "responses": [
+    "204",
+    "400",
+    "401",
+    "404"
+   ]
+  },
+  "GET /api/command": {
+   "query": [
+    "location"
+   ],
+   "body": null,
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "404"
+   ]
+  },
+  "GET /api/skill": {
+   "query": [
+    "location"
+   ],
+   "body": null,
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "404"
+   ]
+  },
+  "POST /api/rpc/{rpcID}/{method}": {
+   "query": [
+    "location"
+   ],
+   "body": [
+    "input"
+   ],
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "404",
+    "500"
+   ]
+  },
+  "GET /api/event": {
+   "query": [
+    "types"
+   ],
+   "body": null,
+   "responses": [
+    "200",
+    "400",
+    "401"
+   ]
+  },
+  "GET /api/pty": {
+   "query": [
+    "location"
+   ],
+   "body": null,
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "404"
+   ]
+  },
+  "POST /api/pty": {
+   "query": [
+    "location"
+   ],
+   "body": [
+    "args",
+    "command",
+    "cwd",
+    "env",
+    "title"
+   ],
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "404"
+   ]
+  },
+  "GET /api/pty/{ptyID}": {
+   "query": [
+    "location"
+   ],
+   "body": null,
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "404"
+   ]
+  },
+  "PUT /api/pty/{ptyID}": {
+   "query": [
+    "location"
+   ],
+   "body": [
+    "size",
+    "title"
+   ],
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "404"
+   ]
+  },
+  "DELETE /api/pty/{ptyID}": {
+   "query": [
+    "location"
+   ],
+   "body": null,
+   "responses": [
+    "204",
+    "400",
+    "401",
+    "404"
+   ]
+  },
+  "POST /api/pty/{ptyID}/connect-token": {
+   "query": [
+    "location"
+   ],
+   "body": null,
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "403",
+    "404"
+   ]
+  },
+  "GET /api/pty/{ptyID}/connect": {
+   "query": [
+    "cursor",
+    "location[directory]",
+    "ticket"
+   ],
+   "body": null,
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "403",
+    "404"
+   ]
+  },
+  "GET /api/experimental/session/{sessionID}/terminal/read": {
+   "query": [
+    "lines"
+   ],
+   "body": null,
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "503"
+   ]
+  },
+  "GET /api/experimental/session/{sessionID}/terminal": {
+   "query": [],
+   "body": null,
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "503"
+   ]
+  },
+  "POST /api/experimental/session/{sessionID}/terminal": {
+   "query": [],
+   "body": [
+    "args",
+    "command",
+    "cwd",
+    "env",
+    "size",
+    "title"
+   ],
+   "required": [
+    "args",
+    "env",
+    "title"
+   ],
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "503"
+   ]
+  },
+  "POST /api/experimental/persistent-pty/shutdown": {
+   "query": [],
+   "body": null,
+   "responses": [
+    "204",
+    "400",
+    "401",
+    "503"
+   ]
+  },
+  "POST /api/experimental/persistent-pty/handoff": {
+   "query": [],
+   "body": null,
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "503"
+   ]
+  },
+  "GET /api/experimental/persistent-pty/{ptyID}": {
+   "query": [],
+   "body": null,
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "404",
+    "503"
+   ]
+  },
+  "PUT /api/experimental/persistent-pty/{ptyID}": {
+   "query": [],
+   "body": [
+    "attachmentID",
+    "size",
+    "title"
+   ],
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "404",
+    "501",
+    "503"
+   ]
+  },
+  "DELETE /api/experimental/persistent-pty/{ptyID}": {
+   "query": [],
+   "body": null,
+   "responses": [
+    "204",
+    "400",
+    "401",
+    "404",
+    "503"
+   ]
+  },
+  "GET /api/experimental/persistent-pty/{ptyID}/snapshot": {
+   "query": [],
+   "body": null,
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "404",
+    "503"
+   ]
+  },
+  "POST /api/experimental/persistent-pty/{ptyID}/connect-token": {
+   "query": [],
+   "body": null,
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "403",
+    "404",
+    "503"
+   ]
+  },
+  "GET /api/experimental/persistent-pty/{ptyID}/connect": {
+   "query": [
+    "attachment_id",
+    "cursor",
+    "input_protocol",
+    "role",
+    "takeover",
+    "ticket"
+   ],
+   "body": null,
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "403",
+    "404",
+    "503"
+   ]
+  },
+  "GET /api/experimental/media/{hash}": {
+   "query": [],
+   "body": null,
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "404"
+   ]
+  },
+  "POST /api/experimental/schedule": {
+   "query": [],
+   "body": [
+    "ends",
+    "if",
+    "name",
+    "prompt",
+    "sessionID",
+    "until",
+    "when"
+   ],
+   "required": [
+    "prompt",
+    "sessionID"
+   ],
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "403",
+    "404"
+   ]
+  },
+  "GET /api/experimental/schedule": {
+   "query": [
+    "sessionID"
+   ],
+   "body": null,
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "403",
+    "404"
+   ]
+  },
+  "GET /api/experimental/schedule/{scheduleID}": {
+   "query": [],
+   "body": null,
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "403",
+    "404"
+   ]
+  },
+  "DELETE /api/experimental/schedule/{scheduleID}": {
+   "query": [],
+   "body": null,
+   "responses": [
+    "204",
+    "400",
+    "401",
+    "403",
+    "404"
+   ]
+  },
+  "POST /api/experimental/schedule/{scheduleID}/pause": {
+   "query": [],
+   "body": null,
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "403",
+    "404"
+   ]
+  },
+  "POST /api/experimental/schedule/{scheduleID}/resume": {
+   "query": [],
+   "body": null,
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "403",
+    "404"
+   ]
+  },
+  "GET /api/experimental/artifacts/providers": {
+   "query": [
+    "location"
+   ],
+   "body": null,
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "403",
+    "404",
+    "503"
+   ]
+  },
+  "GET /api/experimental/artifacts": {
+   "query": [
+    "location",
+    "provider",
+    "sessionID"
+   ],
+   "body": null,
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "403",
+    "404",
+    "503"
+   ]
+  },
+  "POST /api/experimental/artifacts": {
+   "query": [
+    "location"
+   ],
+   "body": [
+    "entry",
+    "files",
+    "provider",
+    "sessionID",
+    "title"
+   ],
+   "required": [
+    "files",
+    "title"
+   ],
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "403",
+    "404",
+    "503"
+   ]
+  },
+  "GET /api/experimental/artifacts/{artifactID}": {
+   "query": [
+    "location"
+   ],
+   "body": null,
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "403",
+    "404",
+    "503"
+   ]
+  },
+  "PATCH /api/experimental/artifacts/{artifactID}": {
+   "query": [
+    "location"
+   ],
+   "body": [
+    "entry",
+    "files",
+    "sessionID",
+    "title"
+   ],
+   "required": [
+    "files"
+   ],
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "403",
+    "404",
+    "503"
+   ]
+  },
+  "DELETE /api/experimental/artifacts/{artifactID}": {
+   "query": [
+    "location"
+   ],
+   "body": null,
+   "responses": [
+    "204",
+    "400",
+    "401",
+    "403",
+    "404",
+    "503"
+   ]
+  },
+  "GET /api/experimental/artifacts/{artifactID}/view/*": {
+   "query": [
+    "location"
+   ],
+   "body": null,
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "403",
+    "404",
+    "503"
+   ]
+  },
+  "GET /api/shell": {
+   "query": [
+    "location"
+   ],
+   "body": null,
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "404"
+   ]
+  },
+  "POST /api/shell": {
+   "query": [
+    "location"
+   ],
+   "body": [
+    "command",
+    "cwd",
+    "metadata",
+    "timeout"
+   ],
+   "required": [
+    "command"
+   ],
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "404"
+   ]
+  },
+  "GET /api/shell/{id}": {
+   "query": [
+    "location"
+   ],
+   "body": null,
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "404"
+   ]
+  },
+  "DELETE /api/shell/{id}": {
+   "query": [
+    "location"
+   ],
+   "body": null,
+   "responses": [
+    "204",
+    "400",
+    "401",
+    "404"
+   ]
+  },
+  "GET /api/shell/{id}/output": {
+   "query": [
+    "cursor",
+    "limit",
+    "location"
+   ],
+   "body": null,
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "404"
+   ]
+  },
+  "GET /api/reference": {
+   "query": [
+    "location"
+   ],
+   "body": null,
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "404"
+   ]
+  },
+  "GET /api/worktree": {
+   "query": [
+    "projectID"
+   ],
+   "body": null,
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "404"
+   ]
+  },
+  "POST /api/worktree": {
+   "query": [],
+   "body": [
+    "branch",
+    "directory",
+    "from",
+    "name",
+    "projectID"
+   ],
+   "required": [
+    "projectID"
+   ],
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "404"
+   ]
+  },
+  "DELETE /api/worktree": {
+   "query": [],
+   "body": [
+    "directory",
+    "force",
+    "projectID"
+   ],
+   "required": [
+    "directory",
+    "force",
+    "projectID"
+   ],
+   "responses": [
+    "204",
+    "400",
+    "401",
+    "404"
+   ]
+  },
+  "POST /api/worktree/refresh": {
+   "query": [],
+   "body": [
+    "projectID"
+   ],
+   "required": [
+    "projectID"
+   ],
+   "responses": [
+    "204",
+    "400",
+    "401",
+    "404"
+   ]
+  },
+  "POST /api/vcs/init": {
+   "query": [
+    "location",
+    "provider"
+   ],
+   "body": null,
+   "responses": [
+    "204",
+    "400",
+    "401",
+    "404",
+    "409",
+    "501",
+    "503"
+   ]
+  },
+  "GET /api/vcs": {
+   "query": [
+    "location"
+   ],
+   "body": null,
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "404"
+   ]
+  },
+  "GET /api/vcs/base": {
+   "query": [
+    "location"
+   ],
+   "body": null,
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "404",
+    "503"
+   ]
+  },
+  "GET /api/vcs/status": {
+   "query": [
+    "location"
+   ],
+   "body": null,
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "404"
+   ]
+  },
+  "GET /api/vcs/branch": {
+   "query": [
+    "limit",
+    "location",
+    "search"
+   ],
+   "body": null,
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "404"
+   ]
+  },
+  "GET /api/vcs/diff": {
+   "query": [
+    "base",
+    "context",
+    "location",
+    "mode",
+    "untracked"
+   ],
+   "body": null,
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "404",
+    "503"
+   ]
+  },
+  "POST /api/debug/heap-dump": {
+   "query": [
+    "directory"
+   ],
+   "body": null,
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "500"
+   ]
+  },
+  "GET /api/debug/location": {
+   "query": [],
+   "body": null,
+   "responses": [
+    "200",
+    "400",
+    "401"
+   ]
+  },
+  "DELETE /api/debug/location": {
+   "query": [
+    "location"
+   ],
+   "body": null,
+   "responses": [
+    "204",
+    "400",
+    "401"
+   ]
+  },
+  "GET /api/experimental/migration/v1": {
+   "query": [],
+   "body": null,
+   "responses": [
+    "200",
+    "400",
+    "401"
+   ]
+  },
+  "GET /api/websearch/provider": {
+   "query": [
+    "location"
+   ],
+   "body": null,
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "404",
+    "503"
+   ]
+  },
+  "POST /api/websearch": {
+   "query": [
+    "location"
+   ],
+   "body": [
+    "providerID",
+    "query"
+   ],
+   "required": [
+    "query"
+   ],
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "404",
+    "503"
+   ]
+  },
+  "GET /api/experimental/usage/limits": {
+   "query": [
+    "location"
+   ],
+   "body": null,
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "404",
+    "503"
+   ]
+  },
+  "GET /api/config": {
+   "query": [
+    "location"
+   ],
+   "body": null,
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "404"
+   ]
+  },
+  "GET /api/config/shell": {
+   "query": [],
+   "body": null,
+   "responses": [
+    "200",
+    "400",
+    "401",
+    "404"
+   ]
+  },
+  "PATCH /api/experimental/config": {
+   "query": [],
+   "body": [
+    "shell"
+   ],
+   "required": [
+    "shell"
+   ],
+   "responses": [
+    "204",
+    "400",
+    "401",
+    "404"
+   ]
+  }
+ }
+}

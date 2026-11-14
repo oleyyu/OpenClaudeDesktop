@@ -1,0 +1,63 @@
+/* W14-code css-main-04: the 0.1 message rules (.message / .user-message / .assistant-message) are gone with their
+   classes; Code messages are .source-message (source-session.css).
+   W14-code r2 (DC-01 / css2-dead-legacy-rules, E84 "no dead rules"): the rest of the 0.1 rules went too — .markdown*,
+   .copy-message, .tool-card*, .thought*, .working, .pulsing, .approval*, .primary, .question*, .file-path*, .file-list*,
+   .file-preview, .muted, .error-text: no className / querySelector / classList in src or electron names them, and 3.6556.2
+   has none of these classes. The Code composer banner is the official card (r2-composer-01); .inline-error stays for Chat/Cowork only. */
+/* desktop-layout.css:1033-1039 under :root[data-dframe] (index.html): a CDS TextLink drawn as a control
+   (shared-frame-C_2npUJq.js:3562-3640 Fc -> span role=button.cds-text-link) keeps the pointer while enabled.
+   Local TextLinks are <button data-cds="TextLink">, which the dframe `button` rule would make an arrow. */
+:root[data-dframe] [data-cds="TextLink"]:not(:disabled):not([data-disabled]):not(.cursor-default) {
+  cursor: pointer;
+}
+/* Controls whose original cursor survives the dframe arrow: the tool screenshot button's cursor-zoom-in and the
+   session title's cursor-text (desktop-layout.css:1040-1047; c360a9e1c-GPs-MV9u.js:7385 fm), and the tile drag
+   handle's inline cursor:move (c360a9e1c-GPs-MV9u.js:9673-9688 dragHandle). Their local rules are re-scoped
+   here so the dframe `button` rule does not turn them into an arrow. */
+:root[data-dframe] .stimg-button:not(:disabled) { cursor: zoom-in; }
+:root[data-dframe] .st-toolbar .st-title:not(:disabled):not([data-disabled]):not([aria-disabled="true"]) { cursor: text; }
+:root[data-dframe] .tiles-drag-handle { cursor: move; }
+/* W14-code r2-composer-01: the composer error (main.jsx) is c3e34355f Hn's cb1a6e506 card ("w-fit min-w-[min(480px,100%)]
+   max-w-full"); its host wrapper only sits it in the composer column — W14-code r3 css3-band-column-width: the
+   .sc-zone.composer-zone column rules (source-composer.css), shared with .sqm-band and .ssn-list. */
+/* Chat/Cowork keep the host banner (main.jsx `mode !== "code"`, outside "Code only"): its pre-r2 rules, unchanged —
+   the 768px column (old style.css .composer-error) and the danger strip (old .inline-error). */
+.inline-error.composer-error {
+  width: calc(100% - 64px);
+  max-width: 768px;
+  align-self: center;
+}
+.inline-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  line-height: 1.5;
+  border: 1px solid var(--cds-border-danger);
+  background: var(--cds-bg-danger);
+  border-radius: var(--cds-radius);
+  padding: 9px 12px;
+  margin: 10px 0;
+  color: var(--cds-text-danger);
+  white-space: pre-wrap;
+}
+.inline-error > span {
+  flex: 1;
+}
+/* The side panes (source-file-panel detail-panel: files, preview, terminal, background tasks, side chat, runs) are a
+   flex column. The 0.1 width (340px) and the header's height / flex / padding / border are overridden by
+   .source-file-panel.detail-panel and .source-file-panel > .source-pane-header (source-session.css), so they are gone.
+   W14-code r3 css3-dead-rules ③: so are its flex-shrink and border-left — every panel sits in a .source-side-tile
+   (flex: 1, border-left: 0; source-tile-layout.css; the popout's too) or the block .section-surface (its own border).
+   The header's 13px stays: .source-pane-title inherits it. */
+.detail-panel {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.detail-panel > header {
+  font-size: 13px;
+}
+.detail-panel strong {
+  font-weight: 500;
+}

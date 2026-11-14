@@ -1,0 +1,286 @@
+{
+  "referenceVersion": "4.16336.0",
+  "referenceSnapshot": "snapshots/claude-4.16336.0-20261104",
+  "generator": "scripts/extract-code-transcript-v4.mjs",
+  "adapterModule": "src/source-code-transcript-v4-adapters.jsx",
+  "gate": {
+    "flag": "__gb__3413676205",
+    "name": "code_unified_renderer",
+    "host": "wired in step ct-3 (src/host-growthbook.mjs HOST_GROWTHBOOK; 3.6556.2: Uon always !0, E81)"
+  },
+  "linkedAreas": [
+    "transcript-rows-v4",
+    "r3b-transcript-v4",
+    "chat-renderer-v4",
+    "chat-markdown-v4",
+    "code-composer-v4",
+    "code-routines-v4",
+    "cowork-approval-v4",
+    "cowork-progress-v4",
+    "files-changes-v4",
+    "routines-shared-v4",
+    "session-rail-kit-v4",
+    "session-rail-sections-v4",
+    "sessions-page-v4",
+    "turn-plan-v4",
+    "working-line-v4"
+  ],
+  "sharedGraph": "cds-core",
+  "modules": [
+    {
+      "target": "session-providers.mjs",
+      "source": "c856385e2-Cqx37C-b.js",
+      "sourceSha256": "a5dcb600adcca7ff9acca169df06c073f1500ae76f3798bbbcedf75e966b5f5a",
+      "sha256": "ced6310457cf58728e5b9c196fe9fb695acf5b5a268e821f91045d632ce41ec8",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "At",
+          "sha256": "5f79538bce82e5d7b2698e30f543e328ceeb83dfd9c2e9bd7b859918d7b50de8"
+        },
+        {
+          "name": "Yt",
+          "sha256": "e6c5f3b800a9da50611547f0f4b6300046465ac8c9645708724ffc074c06cef9"
+        },
+        {
+          "name": "Qt",
+          "sha256": "c2f7a96a2afbe01a1e194543070413cf6c4887eadce2fc5a3b18d820e87e5d05"
+        }
+      ],
+      "initializers": [],
+      "imports": [
+        {
+          "local": "Jt",
+          "from": "../cds-core/c856385e2.mjs",
+          "name": "Jt",
+          "via": "c856385e2-Cqx37C-b.js#Jt",
+          "kind": "shared-graph",
+          "original": "Jt"
+        },
+        {
+          "local": "Zt",
+          "from": "../cds-core/c856385e2.mjs",
+          "name": "Zt",
+          "via": "c856385e2-Cqx37C-b.js#Zt",
+          "kind": "shared-graph",
+          "original": "Zt"
+        },
+        {
+          "local": "kt",
+          "from": "../cds-core/c856385e2.mjs",
+          "name": "kt",
+          "via": "c856385e2-Cqx37C-b.js#kt",
+          "kind": "shared-graph",
+          "original": "kt"
+        }
+      ],
+      "exports": {
+        "At": "SessionFileReadableProvider",
+        "Yt": "ImageLoaderProvider",
+        "Qt": "ContainedImageLoaderProvider"
+      },
+      "sharedExports": [],
+      "heldByViewTabs": []
+    },
+    {
+      "target": "background-tasks.mjs",
+      "source": "cea7057eb-BrXukOIp.js",
+      "sourceSha256": "0274493316da8edd1da49c0911108b0f407e45d251895cdb99f229a5274e2619",
+      "sha256": "9ed0af774eb8d1d756680e315d4c88fecf01f09b26fde9744068ace4cc47c496",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "E",
+          "sha256": "aa221069a51669a5a0bbc2ac172b3b001fb85ca745aa17cb85503df2e1c66acb"
+        },
+        {
+          "name": "X",
+          "sha256": "1a30f8f85f1ba2d0f085f159e13a19fa7bb7dd0c7d7a8c90d9960e044de1d0a6"
+        }
+      ],
+      "initializers": [],
+      "imports": [
+        {
+          "local": "t",
+          "from": "react",
+          "name": "createContext",
+          "via": "vendor-frame-BckkO60Y.js:no",
+          "kind": "react"
+        }
+      ],
+      "exports": {
+        "X": "BackgroundTasksContext"
+      },
+      "sharedExports": [],
+      "heldByViewTabs": []
+    },
+    {
+      "target": "transcript-rows-chrome.mjs",
+      "source": "c96d752d0-D9VB6ArX.js",
+      "sourceSha256": "0fdf7e459a4e03edf9e87bf76dde64243824299d88e80034cd7a56ccae4a9a49",
+      "sha256": "4450cc327df467627795993f61eecd6f42aa8473976d363b7e0700a96b136019",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "WM",
+          "sha256": "219de816d363e224d412d896c45348d425bfcbd5b609a18aac8bf97493adda4f"
+        }
+      ],
+      "initializers": [],
+      "imports": [
+        {
+          "local": "k",
+          "from": "react",
+          "name": "createContext",
+          "via": "vendor-frame-BckkO60Y.js:no",
+          "kind": "react"
+        }
+      ],
+      "exports": {
+        "WM": "UserRowChromeContext"
+      },
+      "sharedExports": [],
+      "heldByViewTabs": []
+    }
+  ],
+  "callSites": [
+    {
+      "source": "cf74bc599-BytvntCE.js",
+      "binding": "HT",
+      "role": "ct-2: the Code transcript: the renderer offered (transcriptRenderer present, not the overview layout), the live text held, then UT",
+      "sourceSha256": "8bb84ff612c95bafa8c6e9dbde405570f6e259c185c0b25839f89eedba4bb10e",
+      "sha256": "a77f5be14f9d9fb21815a6b34df0e1cd6e27c8e0ba14a1766de3e81a23d0c28f",
+      "features": [
+        "E = p !== void 0 && !a.overviewFeedLayout,",
+        "{ offered: E, liveTextHeld: T }",
+        "holdLiveText: k,",
+        "o(UT, {"
+      ]
+    },
+    {
+      "source": "cf74bc599-BytvntCE.js",
+      "binding": "UT",
+      "role": "ct-2: Ml (c96d752d0 live-text split) over the entries, Oc provides the live texts around the feed with the renderer props",
+      "sourceSha256": "8bb84ff612c95bafa8c6e9dbde405570f6e259c185c0b25839f89eedba4bb10e",
+      "sha256": "998ef6ca1e072719277c0620f6c6be6a86b08efdddc19578d14a2169d38c36a1",
+      "features": [
+        "{ entries: We, liveTexts: Ge, liveTextStore: Ke } = Ml(Ue, Me),",
+        "o(Oc, { liveTexts: Ge, liveTextStore: Ke, liveSnapshot: ot, children: ft })",
+        "transcriptRenderer: Ce,"
+      ]
+    },
+    {
+      "source": "c96d752d0-D9VB6ArX.js",
+      "binding": "UCt",
+      "role": "ct-2: the feed: the renderer host Ye, the fragments v(fft), the write Xe, then WSt around its list",
+      "sourceSha256": "0fdf7e459a4e03edf9e87bf76dde64243824299d88e80034cd7a56ccae4a9a49",
+      "sha256": "1fec3118735d4e85af516be2c274582784b1f3349430a2d6cbbfc7dd47d2c693",
+      "features": [
+        "[_e] = v(fft)",
+        "ue ? Se(tCt(s)) : YSt",
+        "{ baseEntries: Ce, hasEarlier: Ee, isResponding: O }",
+        "f(WSt, {",
+        "componentName: \"TranscriptRenderer\",",
+        "seedKeys: qe ? Oxt : kxt,",
+        "lastReplyClosingLine: be,",
+        "tailActionsOutlet: xe,",
+        "publishedTranscript: c,"
+      ]
+    },
+    {
+      "source": "c96d752d0-D9VB6ArX.js",
+      "binding": "WSt",
+      "role": "ct-2: USt (= V8, CodeTranscriptRenderer) with the stream snapshot (Brt) over the streaming prop",
+      "sourceSha256": "0fdf7e459a4e03edf9e87bf76dde64243824299d88e80034cd7a56ccae4a9a49",
+      "sha256": "dba5d2859dce54153a087a1d6119c5d47b1bd3507bdc73dea2b5c921ba55645e",
+      "features": [
+        "i = r === void 0 ? n : r;",
+        "f(USt, { ...t, streaming: i })"
+      ]
+    },
+    {
+      "source": "c5259f582-BaPt7VSi.js",
+      "role": "ct-1: the session provider stack mounts the three c856385e2 providers with its props (imported as S / h / n)",
+      "sourceSha256": "83b71b98f31fb1d6c9ed657dcb88b789387b14b7d46f896f31e9a02b0dbcb8d0",
+      "raw": true,
+      "features": [
+        "S as ne",
+        "h as de",
+        "n as pe",
+        "n(de,{value:t.imageLoader,children:x})",
+        "n(pe,{value:t.containedImageLoader,children:S})",
+        "n(ne,{value:t.sessionFileReadable,children:D})"
+      ]
+    },
+    {
+      "source": "c856385e2-Cqx37C-b.js",
+      "role": "ct-1: the three providers over cds-core's contexts (kt = l(!1), Jt / Zt = l(null)) and their readers",
+      "sourceSha256": "a5dcb600adcca7ff9acca169df06c073f1500ae76f3798bbbcedf75e966b5f5a",
+      "raw": true,
+      "features": [
+        "kt=l(!1)",
+        "At=kt.Provider",
+        "function jt(){return s(kt)}",
+        "Jt=l(null)",
+        "Yt=Jt.Provider",
+        "function Xt(){return s(Jt)}",
+        "Zt=l(null)",
+        "Qt=Zt.Provider",
+        "function $t(){return s(Zt)}",
+        "At as S",
+        "Yt as h",
+        "Qt as n"
+      ]
+    },
+    {
+      "source": "cea7057eb-BrXukOIp.js",
+      "role": "ct-1: the background task provider ve: X (the task array a = i.tasks) outermost, L (statuses, transcript-rows-v4) inside; _e (exported g) reads X",
+      "sourceSha256": "0274493316da8edd1da49c0911108b0f407e45d251895cdb99f229a5274e2619",
+      "raw": true,
+      "features": [
+        "var E=[],se={tasks:E,flaggedTaskIds:[]}",
+        "var X=t(E);function _e(){return e(X)}",
+        "a=i.tasks,s=fe(a)",
+        "n(X.Provider,{value:a},n(L.Provider,{value:s}",
+        "_e as g"
+      ]
+    },
+    {
+      "source": "c96d752d0-D9VB6ArX.js",
+      "role": "ct-1: UserRowChromeContext WM (k(!1)): provided around an aside reply, read by the user row bubble (j(WM))",
+      "sourceSha256": "0fdf7e459a4e03edf9e87bf76dde64243824299d88e80034cd7a56ccae4a9a49",
+      "raw": true,
+      "features": [
+        "WM=k(!1)",
+        "f(WM.Provider,{value:t.entry.aside===!0&&Ft!==!1&&X!==!0,children:f(Cit,{",
+        "f(WM.Provider,{value:!1,children:f(gM,{value:!1,children:t})})"
+      ]
+    },
+    {
+      "source": "c96d752d0-D9VB6ArX.js",
+      "role": "ct-1: the feed row switch draws ForkedFromRow (jgt = w(Agt)) and ForkMarkerRow (Ngt = w(Mgt))",
+      "sourceSha256": "0fdf7e459a4e03edf9e87bf76dde64243824299d88e80034cd7a56ccae4a9a49",
+      "raw": true,
+      "features": [
+        "f(jgt,{sessionId:e,parentSessionId:t.parentSessionId,linked:n})",
+        "f(Ngt,{childIds:t.childIds,linked:e})",
+        "var jgt=w(Agt)",
+        "var Ngt=w(Mgt)"
+      ]
+    },
+    {
+      "source": "c96d752d0-D9VB6ArX.js",
+      "role": "ct-2: the renderer module: its namespace names V8, the residency call keeps it, WSt draws it as USt; f8 reads d8",
+      "sourceSha256": "0fdf7e459a4e03edf9e87bf76dde64243824299d88e80034cd7a56ccae4a9a49",
+      "raw": true,
+      "features": [
+        "CodeTranscriptRenderer:()=>V8",
+        "Qdt(uht);",
+        "var USt=V8;",
+        "d8=k(null)",
+        "f(d8.Provider,{value:u,"
+      ]
+    }
+  ],
+  "publicAssets": []
+}

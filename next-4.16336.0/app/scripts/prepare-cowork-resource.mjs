@@ -1,0 +1,12 @@
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import {createHash} from 'node:crypto';
+const root=path.resolve(import.meta.dirname,'..');
+const snapshot=path.resolve(root,'../reference/installed-2.31226.0-20261012');
+const manifest=JSON.parse(await fs.readFile(path.join(snapshot,'manifest.json'),'utf8'));
+const entry=manifest.runtimeResources?.find(x=>x.path==='runtime-resources/smol-bin.arm64.img');
+if(!entry)throw Error('Re-extract the installed Claude app with scripts/extract.py --output reference/installed-2.31226.0-20261012; the Cowork smol-bin disk is required.');
+const bytes=await fs.readFile(path.join(snapshot,entry.path));
+if(createHash('sha256').update(bytes).digest('hex')!==entry.sha256)throw Error('Cowork smol-bin disk does not match the installed snapshot.');
+await fs.mkdir(path.join(root,'build/cowork'),{recursive:true});
+await fs.writeFile(path.join(root,'build/cowork/smol-bin.arm64.img'),bytes);

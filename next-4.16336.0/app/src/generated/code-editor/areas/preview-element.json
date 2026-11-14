@@ -1,0 +1,263 @@
+{
+  "area": "preview-element",
+  "referenceVersion": "3.6556.2",
+  "adapters": [
+    {
+      "name": "preview-element-serialization.mjs",
+      "sha256": "91d143697c690d9255f3ac11317757440090995e708c079ac7695297e7de8be7",
+      "sources": [
+        {
+          "name": "ce311b43f-pp3Qdi66.js",
+          "sha256": "5e3f0a503ebc9da3c9d6471bc7fc54df69385a969ef76f7e9e747e90e4f11932",
+          "base": "ion"
+        },
+        {
+          "name": "shared-1-BJhqMmkf.js",
+          "sha256": "07582bbc557071f2d83db84a7356eec7847d108771b043f876d26dfda38e4388",
+          "base": "ion"
+        }
+      ],
+      "referenceVersion": "3.6556.2"
+    },
+    {
+      "name": "preview-element-view.mjs",
+      "sha256": "815c233f2a3e67abd50aa672898fdd68b70f02c4ebcea39ef71bb13a6da01f70",
+      "sources": [
+        {
+          "name": "c06cf64bb-CdJdJuVd.js",
+          "sha256": "c4716431066229c723e7cae696b5ab164703ffc59d038995ac100da9495b4418",
+          "base": "ion"
+        },
+        {
+          "name": "shared-156-BLTosN8U.js",
+          "sha256": "807d6ddff2ec91c75865bd855af6373863eb93af7ebd698490e618fbc44f2a2b",
+          "base": "ion"
+        }
+      ],
+      "referenceVersion": "3.6556.2"
+    },
+    {
+      "name": "preview-element-label.mjs",
+      "sha256": "cbcced4720589b68ac79dc3fb3be1358cc597ea6cc8005ac0fa1b8d7db80dd09",
+      "sources": [
+        {
+          "name": "c0fbbe82d-COsmfHJY.js",
+          "sha256": "25e1b1af3deb2aba5f2fc9a2a6395ef3d5fc3ebd7bf98bff92f5fdb22c279b28",
+          "base": "ion"
+        },
+        {
+          "name": "shared-6-sd9jbJqs.js",
+          "sha256": "caf5dda5315ded77263c79a5cfa09006ee40381c9811c2c755535644be437ce8",
+          "base": "ion"
+        },
+        {
+          "name": "c06cf64bb-CdJdJuVd.js",
+          "sha256": "c4716431066229c723e7cae696b5ab164703ffc59d038995ac100da9495b4418",
+          "base": "ion"
+        }
+      ],
+      "referenceVersion": "3.6556.2"
+    },
+    {
+      "name": "preview-element-detail.mjs",
+      "sha256": "ac89812547f0f62de35008096369db9d01f52ea6c00f10183ed35179561cdda8",
+      "sources": [
+        {
+          "name": "c0fbbe82d-COsmfHJY.js",
+          "sha256": "25e1b1af3deb2aba5f2fc9a2a6395ef3d5fc3ebd7bf98bff92f5fdb22c279b28",
+          "base": "ion"
+        },
+        {
+          "name": "c1de660bb-CHZKPdIk.js",
+          "sha256": "79db5443e58f0a070f634e6fd8eec83d1c77bb8de1b2b561d1cc5dfa35e5a050",
+          "base": "ion"
+        },
+        {
+          "name": "c06cf64bb-CdJdJuVd.js",
+          "sha256": "c4716431066229c723e7cae696b5ab164703ffc59d038995ac100da9495b4418",
+          "base": "ion"
+        }
+      ],
+      "referenceVersion": "3.6556.2"
+    },
+    {
+      "name": "preview-element-chip.mjs",
+      "sha256": "ba4baf27a8820a86245244adff5047897a3a55f04ccf6a0fa8bcd44b255ebbde",
+      "sources": [
+        {
+          "name": "c0fbbe82d-COsmfHJY.js",
+          "sha256": "25e1b1af3deb2aba5f2fc9a2a6395ef3d5fc3ebd7bf98bff92f5fdb22c279b28",
+          "base": "ion"
+        },
+        {
+          "name": "shared-25-DOWZRSlq.js",
+          "sha256": "a279442d20a0b9bb6327db086d99fe9248ecc93955651d99166b8ce85282d1a1",
+          "base": "ion"
+        },
+        {
+          "name": "shared-1-BJhqMmkf.js",
+          "sha256": "07582bbc557071f2d83db84a7356eec7847d108771b043f876d26dfda38e4388",
+          "base": "ion"
+        },
+        {
+          "name": "vendor-all-0-DXM0MGjZ.js",
+          "sha256": "a9bcb496d6a94739de4cf2f924169442032e55416cb83e2395c789958272c772",
+          "base": "ion"
+        },
+        {
+          "name": "shared-2-TF8v67kg.js",
+          "sha256": "d30345487454935271d15e07a03026f8965584d83c9fcc4f5d7f9175687a14fc",
+          "base": "ion"
+        },
+        {
+          "name": "shared-18-D3y8YMFN.js",
+          "sha256": "ea0ef4b74193e2e73c04b942311076a0922533df2ddb3d333464d22003e3355b",
+          "base": "ion"
+        },
+        {
+          "name": "shared-19-DIKJVT7c.js",
+          "sha256": "d1cf17f173b5bc379212f11b92e173feceed10ecdb1fe8fdd85ebcbc0e57190f",
+          "base": "ion"
+        }
+      ],
+      "referenceVersion": "3.6556.2"
+    },
+    {
+      "name": "preview-element-parser.mjs",
+      "sha256": "b5ebb4900b493412dd57d8155abb03313cbc6f133c9fcf53bb3bd1a6931452a5",
+      "sources": [
+        {
+          "name": "c06cf64bb-CdJdJuVd.js",
+          "sha256": "c4716431066229c723e7cae696b5ab164703ffc59d038995ac100da9495b4418",
+          "base": "ion"
+        },
+        {
+          "name": "shared-104-CTONUSaz.js",
+          "sha256": "621e1186f00f5767be314b43a3f7c663adedfee5e2592ceda05c83be0baa58b6",
+          "base": "ion"
+        }
+      ],
+      "referenceVersion": "3.6556.2"
+    },
+    {
+      "name": "preview-element-transcript.mjs",
+      "sha256": "54710c6fb1f7bc2195f6647111753a7fb51dfbaa687cf936f9ad2d0040b9b1aa",
+      "sources": [
+        {
+          "name": "c2fd10b8d-DB1Sgoyz.js",
+          "sha256": "c08167da1452ae4154d08fd383445ba0d3e62f53ea61a0d3ac6325c0889aafa5",
+          "base": "ion"
+        },
+        {
+          "name": "c0fbbe82d-COsmfHJY.js",
+          "sha256": "25e1b1af3deb2aba5f2fc9a2a6395ef3d5fc3ebd7bf98bff92f5fdb22c279b28",
+          "base": "ion"
+        },
+        {
+          "name": "c26fb8b6b-B7Friu61.js",
+          "sha256": "2b70be32edd6d6f6a19ccd42245e76be7290ccbac145dd5af21a6b13d535c3cb",
+          "base": "ion"
+        },
+        {
+          "name": "preload-helper-D0dM6GpB.js",
+          "sha256": "07e10a7d6381c359ad25382bea60b373312701162217c2ca372a3a04b889eaef",
+          "base": "ion"
+        },
+        {
+          "name": "shared-0-DDOOdL6P.js",
+          "sha256": "6e8dd35d06f3483ca7a164d358560e34bdd02a0c4d4e67fec5e71e45c1009f61",
+          "base": "ion"
+        }
+      ],
+      "referenceVersion": "3.6556.2"
+    }
+  ],
+  "copies": [],
+  "sources": [
+    {
+      "name": "ce311b43f-pp3Qdi66.js",
+      "sha256": "5e3f0a503ebc9da3c9d6471bc7fc54df69385a969ef76f7e9e747e90e4f11932",
+      "base": "ion"
+    },
+    {
+      "name": "shared-1-BJhqMmkf.js",
+      "sha256": "07582bbc557071f2d83db84a7356eec7847d108771b043f876d26dfda38e4388",
+      "base": "ion"
+    },
+    {
+      "name": "c06cf64bb-CdJdJuVd.js",
+      "sha256": "c4716431066229c723e7cae696b5ab164703ffc59d038995ac100da9495b4418",
+      "base": "ion"
+    },
+    {
+      "name": "shared-156-BLTosN8U.js",
+      "sha256": "807d6ddff2ec91c75865bd855af6373863eb93af7ebd698490e618fbc44f2a2b",
+      "base": "ion"
+    },
+    {
+      "name": "c0fbbe82d-COsmfHJY.js",
+      "sha256": "25e1b1af3deb2aba5f2fc9a2a6395ef3d5fc3ebd7bf98bff92f5fdb22c279b28",
+      "base": "ion"
+    },
+    {
+      "name": "shared-6-sd9jbJqs.js",
+      "sha256": "caf5dda5315ded77263c79a5cfa09006ee40381c9811c2c755535644be437ce8",
+      "base": "ion"
+    },
+    {
+      "name": "c1de660bb-CHZKPdIk.js",
+      "sha256": "79db5443e58f0a070f634e6fd8eec83d1c77bb8de1b2b561d1cc5dfa35e5a050",
+      "base": "ion"
+    },
+    {
+      "name": "shared-25-DOWZRSlq.js",
+      "sha256": "a279442d20a0b9bb6327db086d99fe9248ecc93955651d99166b8ce85282d1a1",
+      "base": "ion"
+    },
+    {
+      "name": "vendor-all-0-DXM0MGjZ.js",
+      "sha256": "a9bcb496d6a94739de4cf2f924169442032e55416cb83e2395c789958272c772",
+      "base": "ion"
+    },
+    {
+      "name": "shared-2-TF8v67kg.js",
+      "sha256": "d30345487454935271d15e07a03026f8965584d83c9fcc4f5d7f9175687a14fc",
+      "base": "ion"
+    },
+    {
+      "name": "shared-18-D3y8YMFN.js",
+      "sha256": "ea0ef4b74193e2e73c04b942311076a0922533df2ddb3d333464d22003e3355b",
+      "base": "ion"
+    },
+    {
+      "name": "shared-19-DIKJVT7c.js",
+      "sha256": "d1cf17f173b5bc379212f11b92e173feceed10ecdb1fe8fdd85ebcbc0e57190f",
+      "base": "ion"
+    },
+    {
+      "name": "shared-104-CTONUSaz.js",
+      "sha256": "621e1186f00f5767be314b43a3f7c663adedfee5e2592ceda05c83be0baa58b6",
+      "base": "ion"
+    },
+    {
+      "name": "c2fd10b8d-DB1Sgoyz.js",
+      "sha256": "c08167da1452ae4154d08fd383445ba0d3e62f53ea61a0d3ac6325c0889aafa5",
+      "base": "ion"
+    },
+    {
+      "name": "c26fb8b6b-B7Friu61.js",
+      "sha256": "2b70be32edd6d6f6a19ccd42245e76be7290ccbac145dd5af21a6b13d535c3cb",
+      "base": "ion"
+    },
+    {
+      "name": "preload-helper-D0dM6GpB.js",
+      "sha256": "07e10a7d6381c359ad25382bea60b373312701162217c2ca372a3a04b889eaef",
+      "base": "ion"
+    },
+    {
+      "name": "shared-0-DDOOdL6P.js",
+      "sha256": "6e8dd35d06f3483ca7a164d358560e34bdd02a0c4d4e67fec5e71e45c1009f61",
+      "base": "ion"
+    }
+  ]
+}

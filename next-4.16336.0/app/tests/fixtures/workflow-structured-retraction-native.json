@@ -1,0 +1,638 @@
+[
+  {
+    "name": "closed-tool-truncated",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    "replies": [
+      {
+        "stream": "truncate",
+        "calls": [
+          {
+            "name": "StructuredOutput",
+            "input": {
+              "value": "discarded"
+            }
+          }
+        ],
+        "pause": 200
+      },
+      {
+        "calls": [
+          {
+            "name": "StructuredOutput",
+            "input": {
+              "value": "survived"
+            }
+          }
+        ]
+      }
+    ],
+    "expected": {
+      "name": "closed-tool-truncated",
+      "value": {
+        "ok": true,
+        "value": null
+      },
+      "agents": 1,
+      "schemas": [
+        {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "additionalProperties": false
+        }
+      ],
+      "modelCalls": 1,
+      "toolCalls": 1,
+      "progress": [
+        {
+          "type": "workflow_agent",
+          "index": 1,
+          "label": "SCHEMA_AGENT_CHILD",
+          "agentId": "a327d5d2e90466153",
+          "model": "claude-sonnet-5-5",
+          "state": "error",
+          "startedAt": 1791288438373,
+          "queuedAt": 1791288438296,
+          "attempt": 1,
+          "lastToolName": "StructuredOutput",
+          "lastToolSummary": "discarded",
+          "promptPreview": "SCHEMA_AGENT_CHILD",
+          "promptFramed": true,
+          "lastProgressAt": 1791288438694,
+          "error": "API Error: Connection lost mid-response. The response above may be incomplete.",
+          "tokens": 14,
+          "toolCalls": 1,
+          "durationMs": 320
+        }
+      ],
+      "marker": null
+    }
+  },
+  {
+    "name": "closed-tool-truncated-text",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    "replies": [
+      {
+        "stream": "truncate",
+        "calls": [
+          {
+            "name": "StructuredOutput",
+            "input": {
+              "value": "discarded"
+            }
+          }
+        ],
+        "pause": 200
+      },
+      {
+        "text": "PROSE_WITHOUT_RESULT"
+      }
+    ],
+    "expected": {
+      "name": "closed-tool-truncated-text",
+      "value": {
+        "ok": true,
+        "value": null
+      },
+      "agents": 1,
+      "schemas": [
+        {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "additionalProperties": false
+        }
+      ],
+      "modelCalls": 1,
+      "toolCalls": 1,
+      "progress": [
+        {
+          "type": "workflow_agent",
+          "index": 1,
+          "label": "SCHEMA_AGENT_CHILD",
+          "agentId": "a099c61aed2429658",
+          "model": "claude-sonnet-5-5",
+          "state": "error",
+          "startedAt": 1791288440080,
+          "queuedAt": 1791288439965,
+          "attempt": 1,
+          "lastToolName": "StructuredOutput",
+          "lastToolSummary": "discarded",
+          "promptPreview": "SCHEMA_AGENT_CHILD",
+          "promptFramed": true,
+          "lastProgressAt": 1791288440482,
+          "error": "API Error: Connection lost mid-response. The response above may be incomplete.",
+          "tokens": 14,
+          "toolCalls": 1,
+          "durationMs": 401
+        }
+      ],
+      "marker": null
+    }
+  },
+  {
+    "name": "partial-tool-truncated",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    "replies": [
+      {
+        "stream": "partial",
+        "calls": [
+          {
+            "name": "StructuredOutput",
+            "input": {
+              "value": "discarded"
+            }
+          }
+        ]
+      },
+      {
+        "calls": [
+          {
+            "name": "StructuredOutput",
+            "input": {
+              "value": "survived"
+            }
+          }
+        ]
+      }
+    ],
+    "expected": {
+      "name": "partial-tool-truncated",
+      "value": {
+        "ok": true,
+        "value": {
+          "value": "survived"
+        }
+      },
+      "agents": 1,
+      "schemas": [
+        {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "additionalProperties": false
+        }
+      ],
+      "modelCalls": 2,
+      "toolCalls": 1,
+      "progress": [
+        {
+          "type": "workflow_agent",
+          "index": 1,
+          "label": "SCHEMA_AGENT_CHILD",
+          "agentId": "aaa0a362139e8da02",
+          "model": "claude-sonnet-5-5",
+          "state": "done",
+          "startedAt": 1791288441774,
+          "queuedAt": 1791288441733,
+          "attempt": 1,
+          "lastToolName": "StructuredOutput",
+          "lastToolSummary": "survived",
+          "promptPreview": "SCHEMA_AGENT_CHILD",
+          "promptFramed": true,
+          "lastProgressAt": 1791288442500,
+          "tokens": 14,
+          "toolCalls": 1,
+          "durationMs": 726,
+          "resultPreview": "{\"value\":\"survived\"}"
+        }
+      ],
+      "marker": null
+    }
+  },
+  {
+    "name": "closed-tool-overloaded",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    "replies": [
+      {
+        "stream": "overloaded",
+        "calls": [
+          {
+            "name": "StructuredOutput",
+            "input": {
+              "value": "discarded"
+            }
+          }
+        ],
+        "pause": 200
+      },
+      {
+        "calls": [
+          {
+            "name": "StructuredOutput",
+            "input": {
+              "value": "survived"
+            }
+          }
+        ]
+      }
+    ],
+    "expected": {
+      "name": "closed-tool-overloaded",
+      "value": {
+        "ok": true,
+        "value": null
+      },
+      "agents": 1,
+      "schemas": [
+        {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "additionalProperties": false
+        }
+      ],
+      "modelCalls": 1,
+      "toolCalls": 1,
+      "progress": [
+        {
+          "type": "workflow_agent",
+          "index": 1,
+          "label": "SCHEMA_AGENT_CHILD",
+          "agentId": "ad80218ed1e84a3c9",
+          "model": "claude-sonnet-5-5",
+          "state": "error",
+          "startedAt": 1791288443944,
+          "queuedAt": 1791288443833,
+          "attempt": 1,
+          "lastToolName": "StructuredOutput",
+          "lastToolSummary": "discarded",
+          "promptPreview": "SCHEMA_AGENT_CHILD",
+          "promptFramed": true,
+          "lastProgressAt": 1791288444219,
+          "error": "API Error: Server error mid-response. The response above may be incomplete.",
+          "tokens": 14,
+          "toolCalls": 1,
+          "durationMs": 274
+        }
+      ],
+      "marker": null
+    }
+  },
+  {
+    "name": "write-truncated",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    "replies": [
+      {
+        "stream": "truncate",
+        "calls": [
+          {
+            "name": "Bash",
+            "input": {
+              "command": "printf x >> lifecycle-marker.txt",
+              "description": "Append own temporary marker"
+            }
+          }
+        ],
+        "pause": 200
+      },
+      {
+        "calls": [
+          {
+            "name": "StructuredOutput",
+            "input": {
+              "value": "survived"
+            }
+          }
+        ]
+      }
+    ],
+    "expected": {
+      "name": "write-truncated",
+      "value": {
+        "ok": true,
+        "value": {
+          "value": "survived"
+        }
+      },
+      "agents": 1,
+      "schemas": [
+        {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "additionalProperties": false
+        }
+      ],
+      "modelCalls": 2,
+      "toolCalls": 2,
+      "progress": [
+        {
+          "type": "workflow_agent",
+          "index": 1,
+          "label": "SCHEMA_AGENT_CHILD",
+          "agentId": "a71250a43e236e6e2",
+          "model": "claude-sonnet-5-5",
+          "state": "done",
+          "startedAt": 1791288444631,
+          "queuedAt": 1791288444618,
+          "attempt": 1,
+          "lastToolName": "StructuredOutput",
+          "lastToolSummary": "survived",
+          "promptPreview": "SCHEMA_AGENT_CHILD",
+          "promptFramed": true,
+          "lastProgressAt": 1791288444880,
+          "tokens": 14,
+          "toolCalls": 2,
+          "durationMs": 249,
+          "resultPreview": "{\"value\":\"survived\"}"
+        }
+      ],
+      "marker": "x"
+    }
+  },
+  {
+    "name": "invalid-tool-truncated",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    "replies": [
+      {
+        "stream": "truncate",
+        "calls": [
+          {
+            "name": "StructuredOutput",
+            "input": {
+              "value": 1
+            }
+          }
+        ],
+        "pause": 200
+      },
+      {
+        "calls": [
+          {
+            "name": "StructuredOutput",
+            "input": {
+              "value": "survived"
+            }
+          }
+        ]
+      }
+    ],
+    "expected": {
+      "name": "invalid-tool-truncated",
+      "value": {
+        "ok": true,
+        "value": {
+          "value": "survived"
+        }
+      },
+      "agents": 1,
+      "schemas": [
+        {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "additionalProperties": false
+        }
+      ],
+      "modelCalls": 2,
+      "toolCalls": 2,
+      "progress": [
+        {
+          "type": "workflow_agent",
+          "index": 1,
+          "label": "SCHEMA_AGENT_CHILD",
+          "agentId": "a204ada8f42ae0c64",
+          "model": "claude-sonnet-5-5",
+          "state": "done",
+          "startedAt": 1791288601793,
+          "queuedAt": 1791288601779,
+          "attempt": 1,
+          "lastToolName": "StructuredOutput",
+          "lastToolSummary": "survived",
+          "promptPreview": "SCHEMA_AGENT_CHILD",
+          "promptFramed": true,
+          "lastProgressAt": 1791288602021,
+          "tokens": 14,
+          "toolCalls": 2,
+          "durationMs": 227,
+          "resultPreview": "{\"value\":\"survived\"}"
+        }
+      ],
+      "marker": null
+    }
+  },
+  {
+    "name": "closed-tool-truncated-fast",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    "replies": [
+      {
+        "stream": "truncate",
+        "calls": [
+          {
+            "name": "StructuredOutput",
+            "input": {
+              "value": "discarded"
+            }
+          }
+        ]
+      },
+      {
+        "calls": [
+          {
+            "name": "StructuredOutput",
+            "input": {
+              "value": "survived"
+            }
+          }
+        ]
+      }
+    ],
+    "expected": {
+      "name": "closed-tool-truncated-fast",
+      "value": {
+        "ok": true,
+        "value": null
+      },
+      "agents": 1,
+      "schemas": [
+        {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "additionalProperties": false
+        }
+      ],
+      "modelCalls": 1,
+      "toolCalls": 1,
+      "progress": [
+        {
+          "type": "workflow_agent",
+          "index": 1,
+          "label": "SCHEMA_AGENT_CHILD",
+          "agentId": "ae6df6eef7cbccb50",
+          "model": "claude-sonnet-5-5",
+          "state": "error",
+          "startedAt": 1791288602423,
+          "queuedAt": 1791288602406,
+          "attempt": 1,
+          "lastToolName": "StructuredOutput",
+          "lastToolSummary": "discarded",
+          "promptPreview": "SCHEMA_AGENT_CHILD",
+          "promptFramed": true,
+          "lastProgressAt": 1791288602455,
+          "error": "API Error: Connection lost mid-response. The response above may be incomplete.",
+          "tokens": 14,
+          "toolCalls": 1,
+          "durationMs": 32
+        }
+      ],
+      "marker": null
+    }
+  }
+]

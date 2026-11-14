@@ -1,0 +1,54 @@
+/* 2.2553.1 shared-frame CDS Popover (C_2npUJq.js:12759-12960): yl portal at
+   al("popover"), the Base UI positioner, cx popup (max-w-[320px],
+   max-h-[var(--available-height)], Wd("popover") = rounded-card + bg-surface-3
+   + shadow-panel, cds-reset text-body font-normal text-primary) and the lx
+   body with the ux padding scale. Like the desktop menu, the popup has no
+   enter/exit transition (only the coarse-pointer sheet animates). */
+.sp-portal { pointer-events: auto; }
+.sp-portal > * { z-index: var(--cds-portal-z); }
+.sp-positioner { position: fixed; top: 0; left: 0; width: max-content; }
+.sp-popup {
+  position: relative;
+  box-sizing: border-box;
+  max-width: 320px;
+  max-height: var(--available-height);
+  border-radius: calc(var(--cds-radius, 6px) + .25rem * var(--cds-rem-scale, 1));
+  background: var(--cds-surface-3);
+  box-shadow:
+    inset 0 0 0 var(--cds-ring-inner, 0px) var(--cds-ring-color, transparent),
+    0 0 0 var(--cds-ring-outer, 0px) var(--cds-ring-color, transparent),
+    var(--cds-shadow-popover);
+  color: var(--cds-text-primary);
+  font-family: var(--cds-font-sans, anthropic-sans), sans-serif;
+  font-size: var(--cds-font-size-body, 13px);
+  line-height: var(--cds-leading-body, 19px);
+  font-weight: 400;
+  outline: none;
+  -webkit-app-region: no-drag;
+  -webkit-user-drag: none;
+}
+/* lx: the body inherits the popup's layout so a consumer's flex/gap reaches the content. */
+.sp-body {
+  display: inherit;
+  flex-direction: inherit;
+  flex-wrap: inherit;
+  align-items: inherit;
+  justify-content: inherit;
+  gap: inherit;
+  box-sizing: border-box;
+  max-height: inherit;
+  min-height: 0;
+  min-width: 0;
+  flex: 1 1 auto;
+  align-self: stretch;
+  overflow-y: auto;
+  border-radius: inherit;
+  outline: none;
+}
+.sp-body[data-padding="none"] { padding: 0; }
+.sp-body[data-padding="xs"] { padding: var(--cds-pad-xs); }
+.sp-body[data-padding="sm"] { padding: var(--cds-pad-sm); }
+.sp-body[data-padding="md"] { padding: var(--cds-pad-md); }
+.sp-body[data-padding="lg"] { padding: var(--cds-pad-lg); }
+/* Popover.Title (Base UI <h2>): typography comes from the consumer. */
+.sp-title { margin: 0; font: inherit; }

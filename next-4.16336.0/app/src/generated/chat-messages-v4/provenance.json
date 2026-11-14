@@ -1,0 +1,1260 @@
+{
+  "referenceVersion": "4.16336.0",
+  "referenceSnapshot": "snapshots/claude-4.16336.0-20261104",
+  "generator": "scripts/extract-chat-messages-v4.mjs",
+  "previous": {
+    "generator": "scripts/extract-chat-messages.mjs",
+    "output": "src/generated/chat-messages",
+    "referenceVersion": "3.6556.2"
+  },
+  "sharedGraph": {
+    "area": "cds-core",
+    "manifestSha256": "06d2026939e5c8992713c2a0dda1b1abc9adffe7a0c223fe3c1e79eecd08d62c"
+  },
+  "linkedAreas": {
+    "frame-sidebar-nav": "f050559d8d4736a10e502efd30f166d28900e800b146c6c8749608a326966487",
+    "routines-shared-v4": "a2a9b9a84b2705e48451025af38eb7582de5bb421c626e6bdf5b067eb8e00c8c",
+    "working-line-v4": "25610753870c1d676d772810433ca78b2413b2d93418b0e3ea8a904875d1deaa",
+    "session-rail-kit-v4": "8e3066efa4721cee2a5bb0b190fae471848c3456fa9b9424773baba5f2b9291a"
+  },
+  "roots": [
+    {
+      "file": "c49573414-CW4mWVDA.js",
+      "local": "rt",
+      "name": "ChatMessageFeedback",
+      "export": "c",
+      "declarationSha256": "0b5bea178c56d9a6dce933497d4845a3f214a72c5c789585cdefe7a490e5fecd",
+      "pinned": true
+    },
+    {
+      "file": "cc1aae219-BbSf__8R.js",
+      "local": "xM",
+      "name": "ChatVersionSelector",
+      "export": null,
+      "declarationSha256": "7cc4a8baf526ba4e2aad4af46797fdba27238bf691704a6b36905a71e1f5259d",
+      "pinned": true
+    },
+    {
+      "file": "cc1aae219-BbSf__8R.js",
+      "local": "tM",
+      "name": "MESSAGE_ACTIONS_INSET",
+      "export": "qr",
+      "declarationSha256": "353e0258ba4acac83f6f418c85054fc6fb6637d263777fdefad837242de1bd91",
+      "pinned": true
+    },
+    {
+      "file": "cc1aae219-BbSf__8R.js",
+      "local": "Vj",
+      "name": "ChatMessageWarning",
+      "export": null,
+      "declarationSha256": "9f9c3d4cb566b46ba26de93eca2a0d0eea79e8c77bb25a2fd7914ca9b20782f8",
+      "pinned": true
+    },
+    {
+      "file": "ca2ef848d-DA54buzo.js",
+      "local": "H9",
+      "name": "ChatDisclaimer",
+      "export": null,
+      "declarationSha256": "31a9938c0ca0372ab2bef3772dab2d8bd7048d32c2c551c65385069c6f6885ec",
+      "pinned": true
+    },
+    {
+      "file": "c79f7d2ef-snkGFUaN.js",
+      "local": "w",
+      "name": "MessageContextMenu",
+      "export": "MessageContextMenu",
+      "declarationSha256": "112933d2f3842cf82b90bec7763378bad076fa43fe748f39bb26f6aec5ecb03a",
+      "pinned": true
+    },
+    {
+      "file": "shared-6-2QYRw_Wv.js",
+      "local": "k_",
+      "name": "ChatFeedbackDialog",
+      "export": "Da",
+      "declarationSha256": "73361cacecebc494d1f28c4ca63ee1805fd3ff60ae0c4c1b78018078e0b67669",
+      "pinned": true
+    },
+    {
+      "file": "shared-4-C_EiQb9h.js",
+      "local": "ev",
+      "name": "ChatRetryAction",
+      "export": null,
+      "declarationSha256": "d068ca53e8378bc2d4f946e9363fbe7c6e8d39495c157dcd10f7b50e00484f40",
+      "pinned": true
+    },
+    {
+      "file": "shared-153-DMw2VzSq.js",
+      "local": "Kq",
+      "name": "messageTextFeatures",
+      "export": null,
+      "declarationSha256": "8054c728dab64d80ac1cde796a2842e4d543062b11d2312ea9b1580456c7bccb",
+      "pinned": true
+    }
+  ],
+  "inner": [
+    {
+      "key": "c49573414-CW4mWVDA.js#nt",
+      "sha256": "bf3fff483b635a28a8e766088b1c5980277f5f22bc0e4f2746245bba83601c63"
+    },
+    {
+      "key": "c79f7d2ef-snkGFUaN.js#S",
+      "sha256": "967d614739b7d295f503581b5fc3b2c73572b1c55e8fc2eac77a8654df423054"
+    }
+  ],
+  "adapters": [
+    {
+      "original": "c49573414-CW4mWVDA.js#qe",
+      "name": "useChatFeedbackRecorder",
+      "hostAdapter": "src/source-chat-messages-adapters.jsx",
+      "declarationSha256": "229cd1de20a208b16ac4136633ce3cf42c4d12875eebae43f03eebb230aa13f3",
+      "pinned": true
+    },
+    {
+      "original": "c49573414-CW4mWVDA.js#Ue",
+      "name": "ChatFeedbackForm",
+      "hostAdapter": "src/source-chat-messages-adapters.jsx",
+      "declarationSha256": "8ada679ea42821083697c05325f6aa95b9a611876de450cbdba8f7a71c1fe085",
+      "pinned": true
+    },
+    {
+      "original": "shared-4-C_EiQb9h.js#X_",
+      "name": "useRetryPacing",
+      "hostAdapter": "src/source-chat-messages-adapters.jsx",
+      "declarationSha256": "9e086f5e5d95b703048bef9a32fdd2dd94e7d1ddad9468ca290c5872aa7dedda",
+      "pinned": true
+    },
+    {
+      "original": "shared-3-IQTrO7Gx.js#Bd",
+      "name": "ChatMessageRetryParts",
+      "hostAdapter": "src/source-chat-messages-v4-adapters.jsx",
+      "declarationSha256": "3a400b7a657a5f15a2ce2000a499a531ce38b5731e68e687872eb7fd32454647",
+      "pinned": true
+    },
+    {
+      "original": "vendor-intl-BJgYK7RA.js#q",
+      "name": "useIntl",
+      "hostAdapter": "src/source-routines-shared-adapters.jsx",
+      "declarationSha256": "edf793bc7b87ae9a38cea39d25d752a5bcfef1d492e06a2219e120311feaaec0",
+      "pinned": true
+    },
+    {
+      "original": "vendor-intl-BJgYK7RA.js#Gt",
+      "name": "FormattedMessage",
+      "hostAdapter": "src/source-routines-shared-adapters.jsx",
+      "declarationSha256": "bde2ec1630e0a679fa4135cf75389568e77fa98fdcb08519af8104d5306ff5b5",
+      "pinned": true
+    },
+    {
+      "original": "ca2ef848d-DA54buzo.js#KB",
+      "name": "useChatConversationStale",
+      "hostAdapter": "src/source-chat-messages-adapters.jsx",
+      "declarationSha256": "61d0f6b0736c26d148d17904d6a7e5c47bc15c0324547d5dee4635ef5ac9da85",
+      "pinned": true
+    },
+    {
+      "original": "ca2ef848d-DA54buzo.js#vV",
+      "name": "useStaleBannerMessages",
+      "hostAdapter": "src/source-chat-messages-adapters.jsx",
+      "declarationSha256": "5321de1423766a5976542792a488fd264744cd1630bc373ba661ec1f5ccf5b6d",
+      "pinned": true
+    },
+    {
+      "original": "ca2ef848d-DA54buzo.js#yV",
+      "name": "ChatStaleSharedBanner",
+      "hostAdapter": "src/source-chat-messages-adapters.jsx",
+      "declarationSha256": "174dbcc6d71642646d62d8bdca4dea3444de0d71285fc9af88bcf3489cb91c61",
+      "pinned": true
+    },
+    {
+      "original": "ca2ef848d-DA54buzo.js#xle",
+      "name": "ChatQuestionKeyHint",
+      "hostAdapter": "src/source-chat-messages-adapters.jsx",
+      "declarationSha256": "60d55e45ca28fed0582841ba6d3693a62f0cf54128a0de89577eb1eac9bfaa5a",
+      "pinned": true
+    },
+    {
+      "original": "shared-33-DtdykY0y.js#VI",
+      "name": "useChatQuestionCard",
+      "hostAdapter": "src/source-chat-messages-adapters.jsx",
+      "declarationSha256": "84511ff2ae2274f9c21bb788ecb8541d615c3cf5122bb3fe9677ab037afdfce2",
+      "pinned": true
+    },
+    {
+      "original": "shared-36-fqRFYwOb.js#QD",
+      "name": "useChatSettingsPanel",
+      "hostAdapter": "src/source-chat-messages-adapters.jsx",
+      "declarationSha256": "8fa37b6bfa9a1cf44cf7ebf9a99e29279a32d75ecbc2f1275ea7cb27b160cba4",
+      "pinned": true
+    },
+    {
+      "original": "shared-7-D2e77H6v.js#HF",
+      "name": "useChatComposerLayout",
+      "hostAdapter": "src/source-chat-messages-v4-adapters.jsx",
+      "declarationSha256": "207e89574bd9d992b8f331d26b19ac26681e827012d85bf96f4b0953343e3a33",
+      "pinned": true
+    },
+    {
+      "original": "shared-36-fqRFYwOb.js#lC",
+      "name": "useIncognitoChat",
+      "hostAdapter": "src/source-chat-messages-adapters.jsx",
+      "declarationSha256": "e2f5a25fdc5d92068efa31f65dab0128f313d6623ba998199d7d3e3edf0982ba",
+      "pinned": true
+    },
+    {
+      "original": "shared-123-1Hc1RTKl.js#zS",
+      "name": "useIsLocalAgentModeContext",
+      "hostAdapter": "src/source-chat-messages-adapters.jsx",
+      "declarationSha256": "4dd107d7b80d8760f79d3de0791b0721f48fd02825ac94137259938591faa549",
+      "pinned": true
+    },
+    {
+      "original": "shared-123-1Hc1RTKl.js#NS",
+      "name": "useAgentRoute",
+      "hostAdapter": "src/source-chat-messages-adapters.jsx",
+      "declarationSha256": "1d6a2db05af914b5af8bf0986beb6457762b283fab00a1113afacc89ff839143",
+      "pinned": true
+    },
+    {
+      "original": "shared-212-BHMAi0oa.js#xC",
+      "name": "useChatRoute",
+      "hostAdapter": "src/source-chat-messages-adapters.jsx",
+      "declarationSha256": "d63d76bb2d6a5596c05a63cb01ced711325785c383a810a8777f841fbef82a5d",
+      "pinned": true
+    },
+    {
+      "original": "shared-212-BHMAi0oa.js#dB",
+      "name": "useIncognitoMemoryNotice",
+      "hostAdapter": "src/source-chat-messages-adapters.jsx",
+      "declarationSha256": "7affc388c6647f0ee30c425f83211803c69e1717c1fe1985d48bd4711edc14f8",
+      "pinned": true
+    },
+    {
+      "original": "shared-5-u8kha2eH.js#uJ",
+      "name": "useCanGiveChatFeedback",
+      "hostAdapter": "src/source-chat-messages-adapters.jsx",
+      "declarationSha256": "44946793e561138946a845d9d34fefa2fdfedc4e7d7132c9af84281b430da98d",
+      "pinned": true
+    },
+    {
+      "original": "shared-5-u8kha2eH.js#gJ",
+      "name": "useOpenChatFeedback",
+      "hostAdapter": "src/source-chat-messages-adapters.jsx",
+      "declarationSha256": "30bc2a469184ef525084f737ffb6c80ea149649ae1e0f8dbae844c0e5c7cbc4e",
+      "pinned": true
+    },
+    {
+      "original": "shared-25-D-aF0gt9.js#Ky",
+      "name": "ChatDisclaimerLink",
+      "hostAdapter": "src/source-chat-messages-adapters.jsx",
+      "declarationSha256": "4884879fdd5f05cd45263c786ab487acc75ba4998798ae34e579b75402024130",
+      "pinned": true
+    },
+    {
+      "original": "shared-31-C9BqSSuD.js#Jm",
+      "name": "useChatClientFlag",
+      "hostAdapter": "src/source-chat-messages-adapters.jsx",
+      "declarationSha256": "2f6652b613dee4ff3af4fe067818447e3c3794a1d25f6444c2815a3964e71b77",
+      "pinned": true
+    },
+    {
+      "original": "shared-153-DMw2VzSq.js#Ny",
+      "name": "useChatConversationQuery",
+      "hostAdapter": "src/source-chat-messages-adapters.jsx",
+      "declarationSha256": "fabf96433a7436c08724bc887f686194a238dea125a4ea53abe58712a95e8ade",
+      "pinned": true
+    },
+    {
+      "original": "shared-153-DMw2VzSq.js#YJ",
+      "name": "useChatConversationMessage",
+      "hostAdapter": "src/source-chat-messages-adapters.jsx",
+      "declarationSha256": "9a802187cea05b39fbade31e874ad1bc2916cd75b44b960b15c760d637988bb8",
+      "pinned": true
+    },
+    {
+      "original": "shared-153-DMw2VzSq.js#bx",
+      "name": "useSubmitChatFeedback",
+      "hostAdapter": "src/source-chat-messages-adapters.jsx",
+      "declarationSha256": "34dc04e702afac7f404a8b06a89f726b931befa887043172971fc8a9a8ccc6e4",
+      "pinned": true
+    },
+    {
+      "original": "shared-153-DMw2VzSq.js#Ep",
+      "name": "useChatConversationSettings",
+      "hostAdapter": "src/source-chat-messages-adapters.jsx",
+      "declarationSha256": "080b7fc9e7e8778296677accc9511caa4e06b8f79e9380689ccc8dc490ef3afc",
+      "pinned": true
+    },
+    {
+      "original": "shared-212-BHMAi0oa.js#qz",
+      "name": "useChatMemoryAvailability",
+      "hostAdapter": "src/source-chat-messages-adapters.jsx",
+      "declarationSha256": "76a305bdb210c7f5949e38ae516b07d00b3783e6da6379f1a6cfe5696a7c7976",
+      "pinned": true
+    },
+    {
+      "original": "shared-212-BHMAi0oa.js#dz",
+      "name": "useChatMemoryMode",
+      "hostAdapter": "src/source-chat-messages-adapters.jsx",
+      "declarationSha256": "ebabe48ed51df9af11c276919c83a5e4405400173278d518208eda65d3625860",
+      "pinned": true
+    },
+    {
+      "original": "shared-33-DtdykY0y.js#nq",
+      "name": "useMessageArtifactKind",
+      "hostAdapter": "src/source-chat-messages-adapters.jsx",
+      "declarationSha256": "d74993a35ba7010dd75c9740ba839c728550028ee54963042c694046f2f00533",
+      "pinned": true
+    },
+    {
+      "original": "shared-153-DMw2VzSq.js#ST",
+      "name": "chatMessageArtifacts",
+      "hostAdapter": "src/source-chat-messages-adapters.jsx",
+      "declarationSha256": "8906e70ba75335e778d18e2b7b63791cc27a463df2cfb45f4a1173beadc0135a",
+      "pinned": true
+    },
+    {
+      "original": "shared-153-DMw2VzSq.js#yW",
+      "name": "chatMessageFiles",
+      "hostAdapter": "src/source-chat-messages-adapters.jsx",
+      "declarationSha256": "5a4be3480166b4a04bd385754e2c76537cbc61e42300165f95ca54cf47f8e324",
+      "pinned": true
+    },
+    {
+      "original": "shared-123-1Hc1RTKl.js#Fm",
+      "name": "chatBackendVariant",
+      "hostAdapter": "src/source-chat-messages-adapters.jsx",
+      "declarationSha256": "64c0e106d278fab291feb7545e0cb285c1b22decadbd592c1cdde37198d7bc41",
+      "pinned": true
+    },
+    {
+      "original": "vendor-markdown-CoTLcoVs.js#ho",
+      "name": "ChatWarningMarkdown",
+      "hostAdapter": "src/source-chat-messages-adapters.jsx",
+      "declarationSha256": "7c54d5b8ce16b5b6d65f10ed1e1ee7edb8580ce50a02e049cde0decb87e7aa85",
+      "pinned": true
+    }
+  ],
+  "linkedCopies": {},
+  "imports": [
+    {
+      "module": "shared-frame.mjs",
+      "local": "Je",
+      "kind": "react",
+      "from": "react/compiler-runtime",
+      "name": "c",
+      "via": "vendor-frame-BckkO60Y.js:ko"
+    },
+    {
+      "module": "shared-26.mjs",
+      "local": "MG",
+      "kind": "linked",
+      "from": "../frame-sidebar-nav/shared-26.mjs",
+      "name": "MG",
+      "via": "shared-26-B-POtn5S.js#MG"
+    },
+    {
+      "module": "shared-26.mjs",
+      "local": "To",
+      "kind": "adapter",
+      "from": "../../source-chat-messages-v4-adapters.jsx",
+      "name": "useIntl",
+      "via": "vendor-intl-BJgYK7RA.js:p"
+    },
+    {
+      "module": "feedback.mjs",
+      "local": "S",
+      "kind": "linked",
+      "from": "../frame-sidebar-nav/shared-153.mjs",
+      "name": "qh",
+      "via": "shared-153-DMw2VzSq.js:xb"
+    },
+    {
+      "module": "feedback.mjs",
+      "local": "Ue",
+      "kind": "adapter",
+      "from": "../../source-chat-messages-v4-adapters.jsx",
+      "name": "ChatFeedbackForm",
+      "via": "c49573414-CW4mWVDA.js#Ue"
+    },
+    {
+      "module": "feedback.mjs",
+      "local": "a",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "Fragment",
+      "via": "vendor-frame-BckkO60Y.js:Wa"
+    },
+    {
+      "module": "feedback.mjs",
+      "local": "ae",
+      "kind": "linked",
+      "from": "../working-line-v4/shared-2.mjs",
+      "name": "m7",
+      "via": "shared-2-CsjIBQD8.js:t"
+    },
+    {
+      "module": "feedback.mjs",
+      "local": "c",
+      "kind": "react",
+      "from": "react",
+      "name": "useEffect",
+      "via": "vendor-frame-BckkO60Y.js:go"
+    },
+    {
+      "module": "feedback.mjs",
+      "local": "e",
+      "kind": "react",
+      "from": "react",
+      "name": "useReducer",
+      "via": "vendor-frame-BckkO60Y.js:Co"
+    },
+    {
+      "module": "feedback.mjs",
+      "local": "f",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "CdsButton",
+      "via": "shared-frame-CJdE5Ria.js:Id"
+    },
+    {
+      "module": "feedback.mjs",
+      "local": "i",
+      "kind": "react",
+      "from": "react",
+      "name": "useState",
+      "via": "vendor-frame-BckkO60Y.js:To"
+    },
+    {
+      "module": "feedback.mjs",
+      "local": "k",
+      "kind": "linked",
+      "from": "../frame-sidebar-nav/shared-26.mjs",
+      "name": "AG",
+      "via": "shared-26-B-POtn5S.js:fr"
+    },
+    {
+      "module": "feedback.mjs",
+      "local": "n",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "jsx",
+      "via": "vendor-frame-BckkO60Y.js:Ga"
+    },
+    {
+      "module": "feedback.mjs",
+      "local": "o",
+      "kind": "react",
+      "from": "react",
+      "name": "useEffectEvent",
+      "via": "vendor-frame-BckkO60Y.js:_o"
+    },
+    {
+      "module": "feedback.mjs",
+      "local": "p",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "CdsIcon",
+      "via": "shared-frame-CJdE5Ria.js:lf"
+    },
+    {
+      "module": "feedback.mjs",
+      "local": "qe",
+      "kind": "adapter",
+      "from": "../../source-chat-messages-v4-adapters.jsx",
+      "name": "useChatFeedbackRecorder",
+      "via": "c49573414-CW4mWVDA.js#qe"
+    },
+    {
+      "module": "feedback.mjs",
+      "local": "r",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "jsxs",
+      "via": "vendor-frame-BckkO60Y.js:Ka"
+    },
+    {
+      "module": "feedback.mjs",
+      "local": "s",
+      "kind": "react",
+      "from": "react",
+      "name": "memo",
+      "via": "vendor-frame-BckkO60Y.js:co"
+    },
+    {
+      "module": "feedback.mjs",
+      "local": "se",
+      "kind": "adapter",
+      "from": "../../source-chat-messages-v4-adapters.jsx",
+      "name": "useIntl",
+      "via": "vendor-intl-BJgYK7RA.js:p"
+    },
+    {
+      "module": "feedback.mjs",
+      "local": "u",
+      "kind": "react",
+      "from": "react",
+      "name": "useRef",
+      "via": "vendor-frame-BckkO60Y.js:wo"
+    },
+    {
+      "module": "message-row.mjs",
+      "local": "Hf",
+      "kind": "adapter",
+      "from": "../../source-chat-messages-v4-adapters.jsx",
+      "name": "useIntl",
+      "via": "vendor-intl-BJgYK7RA.js:p"
+    },
+    {
+      "module": "message-row.mjs",
+      "local": "V",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "CdsButton",
+      "via": "shared-frame-CJdE5Ria.js:Id"
+    },
+    {
+      "module": "message-row.mjs",
+      "local": "Vf",
+      "kind": "adapter",
+      "from": "../../source-chat-messages-v4-adapters.jsx",
+      "name": "FormattedMessage",
+      "via": "vendor-intl-BJgYK7RA.js:l"
+    },
+    {
+      "module": "message-row.mjs",
+      "local": "_",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "jsxs",
+      "via": "vendor-frame-BckkO60Y.js:Ka"
+    },
+    {
+      "module": "message-row.mjs",
+      "local": "f_",
+      "kind": "adapter",
+      "from": "../../source-chat-messages-v4-adapters.jsx",
+      "name": "ChatWarningMarkdown",
+      "via": "vendor-markdown-CoTLcoVs.js:c"
+    },
+    {
+      "module": "message-row.mjs",
+      "local": "m",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "jsx",
+      "via": "vendor-frame-BckkO60Y.js:Ga"
+    },
+    {
+      "module": "message-row.mjs",
+      "local": "ne",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "CdsBanner",
+      "via": "shared-frame-CJdE5Ria.js:Qa"
+    },
+    {
+      "module": "message-row.mjs",
+      "local": "p",
+      "kind": "shared-graph",
+      "from": "../cds-core/vendor-frame.mjs",
+      "name": "clsx",
+      "via": "vendor-frame-BckkO60Y.js:Fa"
+    },
+    {
+      "module": "message-row.mjs",
+      "local": "w",
+      "kind": "react",
+      "from": "react",
+      "name": "memo",
+      "via": "vendor-frame-BckkO60Y.js:co"
+    },
+    {
+      "module": "message-row.mjs",
+      "local": "wg",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-38-DyF0_Fim.mjs",
+      "name": "oo",
+      "via": "shared-38-DyF0_Fim.js:w"
+    },
+    {
+      "module": "shared-8.mjs",
+      "local": "Ii",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-153.mjs",
+      "name": "jC",
+      "via": "shared-153-DMw2VzSq.js:Mg"
+    },
+    {
+      "module": "shared-8.mjs",
+      "local": "L",
+      "kind": "react",
+      "from": "react",
+      "name": "useContext",
+      "via": "vendor-frame-BckkO60Y.js:po"
+    },
+    {
+      "module": "disclaimer.mjs",
+      "local": "$_",
+      "kind": "adapter",
+      "from": "../../source-chat-messages-v4-adapters.jsx",
+      "name": "useChatRoute",
+      "via": "shared-212-BHMAi0oa.js:$v"
+    },
+    {
+      "module": "disclaimer.mjs",
+      "local": "Ae",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "asElementNode",
+      "via": "shared-frame-CJdE5Ria.js:nm"
+    },
+    {
+      "module": "disclaimer.mjs",
+      "local": "Bc",
+      "kind": "adapter",
+      "from": "../../source-chat-messages-v4-adapters.jsx",
+      "name": "useAgentRoute",
+      "via": "shared-123-1Hc1RTKl.js:zv"
+    },
+    {
+      "module": "disclaimer.mjs",
+      "local": "H",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "CdsTextLink",
+      "via": "shared-frame-CJdE5Ria.js:Eu"
+    },
+    {
+      "module": "disclaimer.mjs",
+      "local": "Ig",
+      "kind": "adapter",
+      "from": "../../source-chat-messages-v4-adapters.jsx",
+      "name": "useOpenChatFeedback",
+      "via": "shared-5-u8kha2eH.js:U"
+    },
+    {
+      "module": "disclaimer.mjs",
+      "local": "KB",
+      "kind": "adapter",
+      "from": "../../source-chat-messages-v4-adapters.jsx",
+      "name": "useChatConversationStale",
+      "via": "ca2ef848d-DA54buzo.js#KB"
+    },
+    {
+      "module": "disclaimer.mjs",
+      "local": "Ky",
+      "kind": "adapter",
+      "from": "../../source-chat-messages-v4-adapters.jsx",
+      "name": "useIncognitoChat",
+      "via": "shared-36-fqRFYwOb.js:oi"
+    },
+    {
+      "module": "disclaimer.mjs",
+      "local": "Q",
+      "kind": "adapter",
+      "from": "../../source-chat-messages-v4-adapters.jsx",
+      "name": "FormattedMessage",
+      "via": "vendor-intl-BJgYK7RA.js:l"
+    },
+    {
+      "module": "disclaimer.mjs",
+      "local": "Sr",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-1.mjs",
+      "name": "vI",
+      "via": "shared-1-D1bGaTaN.js:Cd"
+    },
+    {
+      "module": "disclaimer.mjs",
+      "local": "Zy",
+      "kind": "adapter",
+      "from": "../../source-chat-messages-v4-adapters.jsx",
+      "name": "useChatSettingsPanel",
+      "via": "shared-36-fqRFYwOb.js:xn"
+    },
+    {
+      "module": "disclaimer.mjs",
+      "local": "c",
+      "kind": "react",
+      "from": "react",
+      "name": "useSyncExternalStore",
+      "via": "vendor-frame-BckkO60Y.js:Eo"
+    },
+    {
+      "module": "disclaimer.mjs",
+      "local": "f",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "jsxs",
+      "via": "vendor-frame-BckkO60Y.js:Ka"
+    },
+    {
+      "module": "disclaimer.mjs",
+      "local": "h",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "Fragment",
+      "via": "vendor-frame-BckkO60Y.js:Wa"
+    },
+    {
+      "module": "disclaimer.mjs",
+      "local": "hg",
+      "kind": "adapter",
+      "from": "../../source-chat-messages-v4-adapters.jsx",
+      "name": "useCanGiveChatFeedback",
+      "via": "shared-5-u8kha2eH.js:B"
+    },
+    {
+      "module": "disclaimer.mjs",
+      "local": "l",
+      "kind": "shared-graph",
+      "from": "../cds-core/vendor-frame.mjs",
+      "name": "clsx",
+      "via": "vendor-frame-BckkO60Y.js:Fa"
+    },
+    {
+      "module": "disclaimer.mjs",
+      "local": "le",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "useCdsOwnerWindow",
+      "via": "shared-frame-CJdE5Ria.js:Uf"
+    },
+    {
+      "module": "disclaimer.mjs",
+      "local": "oc",
+      "kind": "adapter",
+      "from": "../../source-chat-messages-v4-adapters.jsx",
+      "name": "useIsLocalAgentModeContext",
+      "via": "shared-123-1Hc1RTKl.js:Jv"
+    },
+    {
+      "module": "disclaimer.mjs",
+      "local": "u",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "jsx",
+      "via": "vendor-frame-BckkO60Y.js:Ga"
+    },
+    {
+      "module": "disclaimer.mjs",
+      "local": "vV",
+      "kind": "adapter",
+      "from": "../../source-chat-messages-v4-adapters.jsx",
+      "name": "useStaleBannerMessages",
+      "via": "ca2ef848d-DA54buzo.js#vV"
+    },
+    {
+      "module": "disclaimer.mjs",
+      "local": "xle",
+      "kind": "adapter",
+      "from": "../../source-chat-messages-v4-adapters.jsx",
+      "name": "ChatQuestionKeyHint",
+      "via": "ca2ef848d-DA54buzo.js#xle"
+    },
+    {
+      "module": "disclaimer.mjs",
+      "local": "xv",
+      "kind": "adapter",
+      "from": "../../source-chat-messages-v4-adapters.jsx",
+      "name": "useIncognitoMemoryNotice",
+      "via": "shared-212-BHMAi0oa.js:Ql"
+    },
+    {
+      "module": "disclaimer.mjs",
+      "local": "yS",
+      "kind": "adapter",
+      "from": "../../source-chat-messages-v4-adapters.jsx",
+      "name": "useChatQuestionCard",
+      "via": "shared-33-DtdykY0y.js:Xr"
+    },
+    {
+      "module": "disclaimer.mjs",
+      "local": "yV",
+      "kind": "adapter",
+      "from": "../../source-chat-messages-v4-adapters.jsx",
+      "name": "ChatStaleSharedBanner",
+      "via": "ca2ef848d-DA54buzo.js#yV"
+    },
+    {
+      "module": "disclaimer.mjs",
+      "local": "yn",
+      "kind": "adapter",
+      "from": "../../source-chat-messages-v4-adapters.jsx",
+      "name": "ChatDisclaimerLink",
+      "via": "shared-25-D-aF0gt9.js:Pu"
+    },
+    {
+      "module": "disclaimer.mjs",
+      "local": "zC",
+      "kind": "adapter",
+      "from": "../../source-chat-messages-v4-adapters.jsx",
+      "name": "useChatComposerLayout",
+      "via": "shared-7-D2e77H6v.js:T"
+    },
+    {
+      "module": "context-menu.mjs",
+      "local": "c",
+      "kind": "react",
+      "from": "react",
+      "name": "useRef",
+      "via": "vendor-frame-BckkO60Y.js:wo"
+    },
+    {
+      "module": "context-menu.mjs",
+      "local": "e",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "jsx",
+      "via": "vendor-frame-BckkO60Y.js:Ga"
+    },
+    {
+      "module": "context-menu.mjs",
+      "local": "h",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "asElementNode",
+      "via": "shared-frame-CJdE5Ria.js:nm"
+    },
+    {
+      "module": "context-menu.mjs",
+      "local": "l",
+      "kind": "react",
+      "from": "react",
+      "name": "useLayoutEffect",
+      "via": "vendor-frame-BckkO60Y.js:xo"
+    },
+    {
+      "module": "context-menu.mjs",
+      "local": "m",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "CdsIcon",
+      "via": "shared-frame-CJdE5Ria.js:lf"
+    },
+    {
+      "module": "context-menu.mjs",
+      "local": "n",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "jsxs",
+      "via": "vendor-frame-BckkO60Y.js:Ka"
+    },
+    {
+      "module": "context-menu.mjs",
+      "local": "o",
+      "kind": "react",
+      "from": "react",
+      "name": "memo",
+      "via": "vendor-frame-BckkO60Y.js:co"
+    },
+    {
+      "module": "context-menu.mjs",
+      "local": "r",
+      "kind": "react",
+      "from": "react",
+      "name": "useState",
+      "via": "vendor-frame-BckkO60Y.js:To"
+    },
+    {
+      "module": "context-menu.mjs",
+      "local": "s",
+      "kind": "react",
+      "from": "react",
+      "name": "useEffect",
+      "via": "vendor-frame-BckkO60Y.js:go"
+    },
+    {
+      "module": "context-menu.mjs",
+      "local": "t",
+      "kind": "react",
+      "from": "react-dom",
+      "name": "createPortal",
+      "via": "vendor-frame-BckkO60Y.js:Ia"
+    },
+    {
+      "module": "context-menu.mjs",
+      "local": "u",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "useCdsLayerAwareZIndex",
+      "via": "shared-frame-CJdE5Ria.js:Dd"
+    },
+    {
+      "module": "context-menu.mjs",
+      "local": "y",
+      "kind": "adapter",
+      "from": "../../source-chat-messages-v4-adapters.jsx",
+      "name": "FormattedMessage",
+      "via": "vendor-intl-BJgYK7RA.js:l"
+    },
+    {
+      "module": "shared-33.mjs",
+      "local": "Ap",
+      "kind": "adapter",
+      "from": "../../source-chat-messages-v4-adapters.jsx",
+      "name": "FormattedMessage",
+      "via": "vendor-intl-BJgYK7RA.js:l"
+    },
+    {
+      "module": "shared-33.mjs",
+      "local": "N",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "CdsTextLink",
+      "via": "shared-frame-CJdE5Ria.js:Eu"
+    },
+    {
+      "module": "shared-33.mjs",
+      "local": "s",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "jsx",
+      "via": "vendor-frame-BckkO60Y.js:Ga"
+    },
+    {
+      "module": "feedback-form.mjs",
+      "local": "$n",
+      "kind": "adapter",
+      "from": "../../source-chat-messages-v4-adapters.jsx",
+      "name": "chatMessageArtifacts",
+      "via": "shared-153-DMw2VzSq.js:Lh"
+    },
+    {
+      "module": "feedback-form.mjs",
+      "local": "A",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "CdsTextLink",
+      "via": "shared-frame-CJdE5Ria.js:Eu"
+    },
+    {
+      "module": "feedback-form.mjs",
+      "local": "Br",
+      "kind": "adapter",
+      "from": "../../source-chat-messages-v4-adapters.jsx",
+      "name": "chatMessageFiles",
+      "via": "shared-153-DMw2VzSq.js:la"
+    },
+    {
+      "module": "feedback-form.mjs",
+      "local": "C",
+      "kind": "react",
+      "from": "react",
+      "name": "createContext",
+      "via": "vendor-frame-BckkO60Y.js:no"
+    },
+    {
+      "module": "feedback-form.mjs",
+      "local": "D",
+      "kind": "react",
+      "from": "react",
+      "name": "useRef",
+      "via": "vendor-frame-BckkO60Y.js:wo"
+    },
+    {
+      "module": "feedback-form.mjs",
+      "local": "E",
+      "kind": "react",
+      "from": "react",
+      "name": "useId",
+      "via": "vendor-frame-BckkO60Y.js:vo"
+    },
+    {
+      "module": "feedback-form.mjs",
+      "local": "Ec",
+      "kind": "adapter",
+      "from": "../../source-chat-messages-v4-adapters.jsx",
+      "name": "useIntl",
+      "via": "vendor-intl-BJgYK7RA.js:p"
+    },
+    {
+      "module": "feedback-form.mjs",
+      "local": "It",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-25-D-aF0gt9.mjs",
+      "name": "VB",
+      "via": "shared-25-D-aF0gt9.js:bi"
+    },
+    {
+      "module": "feedback-form.mjs",
+      "local": "L",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "CdsBanner",
+      "via": "shared-frame-CJdE5Ria.js:Qa"
+    },
+    {
+      "module": "feedback-form.mjs",
+      "local": "M",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "CdsButton",
+      "via": "shared-frame-CJdE5Ria.js:Id"
+    },
+    {
+      "module": "feedback-form.mjs",
+      "local": "Or",
+      "kind": "adapter",
+      "from": "../../source-chat-messages-v4-adapters.jsx",
+      "name": "useChatConversationMessage",
+      "via": "shared-153-DMw2VzSq.js:cn"
+    },
+    {
+      "module": "feedback-form.mjs",
+      "local": "Pi",
+      "kind": "adapter",
+      "from": "../../source-chat-messages-v4-adapters.jsx",
+      "name": "chatBackendVariant",
+      "via": "shared-123-1Hc1RTKl.js:LS"
+    },
+    {
+      "module": "feedback-form.mjs",
+      "local": "S",
+      "kind": "react",
+      "from": "react",
+      "name": "useEffect",
+      "via": "vendor-frame-BckkO60Y.js:go"
+    },
+    {
+      "module": "feedback-form.mjs",
+      "local": "T",
+      "kind": "react",
+      "from": "react",
+      "name": "useContext",
+      "via": "vendor-frame-BckkO60Y.js:po"
+    },
+    {
+      "module": "feedback-form.mjs",
+      "local": "Ts",
+      "kind": "adapter",
+      "from": "../../source-chat-messages-v4-adapters.jsx",
+      "name": "useChatClientFlag",
+      "via": "shared-31-C9BqSSuD.js:Bi"
+    },
+    {
+      "module": "feedback-form.mjs",
+      "local": "V",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "CdsDialog",
+      "via": "shared-frame-CJdE5Ria.js:Yl"
+    },
+    {
+      "module": "feedback-form.mjs",
+      "local": "Yt",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-25-D-aF0gt9.mjs",
+      "name": "eV",
+      "via": "shared-25-D-aF0gt9.js:ta"
+    },
+    {
+      "module": "feedback-form.mjs",
+      "local": "Z",
+      "kind": "adapter",
+      "from": "../../source-chat-messages-v4-adapters.jsx",
+      "name": "FormattedMessage",
+      "via": "vendor-intl-BJgYK7RA.js:l"
+    },
+    {
+      "module": "feedback-form.mjs",
+      "local": "_",
+      "kind": "react",
+      "from": "react",
+      "name": "useState",
+      "via": "vendor-frame-BckkO60Y.js:To"
+    },
+    {
+      "module": "feedback-form.mjs",
+      "local": "_u",
+      "kind": "adapter",
+      "from": "../../source-chat-messages-v4-adapters.jsx",
+      "name": "useMessageArtifactKind",
+      "via": "shared-33-DtdykY0y.js:p"
+    },
+    {
+      "module": "feedback-form.mjs",
+      "local": "h",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "jsxs",
+      "via": "vendor-frame-BckkO60Y.js:Ka"
+    },
+    {
+      "module": "feedback-form.mjs",
+      "local": "j",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "CdsComboboxField",
+      "via": "shared-frame-CJdE5Ria.js:Gi"
+    },
+    {
+      "module": "feedback-form.mjs",
+      "local": "ll",
+      "kind": "adapter",
+      "from": "../../source-chat-messages-v4-adapters.jsx",
+      "name": "useChatMemoryAvailability",
+      "via": "shared-212-BHMAi0oa.js:hu"
+    },
+    {
+      "module": "feedback-form.mjs",
+      "local": "m",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "jsx",
+      "via": "vendor-frame-BckkO60Y.js:Ga"
+    },
+    {
+      "module": "feedback-form.mjs",
+      "local": "qa",
+      "kind": "linked",
+      "from": "../frame-sidebar-nav/shared-62.mjs",
+      "name": "iP",
+      "via": "shared-62-DoCqVpIq.js:Ll"
+    },
+    {
+      "module": "feedback-form.mjs",
+      "local": "qn",
+      "kind": "adapter",
+      "from": "../../source-chat-messages-v4-adapters.jsx",
+      "name": "useChatConversationSettings",
+      "via": "shared-153-DMw2VzSq.js:Ax"
+    },
+    {
+      "module": "feedback-form.mjs",
+      "local": "rr",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-153.mjs",
+      "name": "jC",
+      "via": "shared-153-DMw2VzSq.js:Mg"
+    },
+    {
+      "module": "feedback-form.mjs",
+      "local": "si",
+      "kind": "adapter",
+      "from": "../../source-chat-messages-v4-adapters.jsx",
+      "name": "useChatConversationQuery",
+      "via": "shared-153-DMw2VzSq.js:vv"
+    },
+    {
+      "module": "feedback-form.mjs",
+      "local": "tu",
+      "kind": "linked",
+      "from": "../frame-sidebar-nav/shared-33.mjs",
+      "name": "zG",
+      "via": "shared-33-DtdykY0y.js:K"
+    },
+    {
+      "module": "feedback-form.mjs",
+      "local": "ui",
+      "kind": "linked",
+      "from": "../frame-sidebar-nav/shared-153.mjs",
+      "name": "qh",
+      "via": "shared-153-DMw2VzSq.js:xb"
+    },
+    {
+      "module": "feedback-form.mjs",
+      "local": "us",
+      "kind": "linked",
+      "from": "../frame-sidebar-nav/shared-92.mjs",
+      "name": "F_",
+      "via": "shared-92-BOgyxePb.js:ly"
+    },
+    {
+      "module": "feedback-form.mjs",
+      "local": "v",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "Fragment",
+      "via": "vendor-frame-BckkO60Y.js:Wa"
+    },
+    {
+      "module": "feedback-form.mjs",
+      "local": "vl",
+      "kind": "adapter",
+      "from": "../../source-chat-messages-v4-adapters.jsx",
+      "name": "useChatMemoryMode",
+      "via": "shared-212-BHMAi0oa.js:nu"
+    },
+    {
+      "module": "feedback-form.mjs",
+      "local": "we",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-0.mjs",
+      "name": "useEventCallback",
+      "via": "shared-0-CnnWnVrT.js:PT"
+    },
+    {
+      "module": "feedback-form.mjs",
+      "local": "z",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "CdsTextArea",
+      "via": "shared-frame-CJdE5Ria.js:Va"
+    },
+    {
+      "module": "feedback-form.mjs",
+      "local": "zr",
+      "kind": "adapter",
+      "from": "../../source-chat-messages-v4-adapters.jsx",
+      "name": "useSubmitChatFeedback",
+      "via": "shared-153-DMw2VzSq.js:kv"
+    },
+    {
+      "module": "shared-3.mjs",
+      "local": "D",
+      "kind": "react",
+      "from": "react",
+      "name": "useContext",
+      "via": "vendor-frame-BckkO60Y.js:po"
+    },
+    {
+      "module": "shared-3.mjs",
+      "local": "T",
+      "kind": "react",
+      "from": "react",
+      "name": "createContext",
+      "via": "vendor-frame-BckkO60Y.js:no"
+    },
+    {
+      "module": "retry-action.mjs",
+      "local": "Ad",
+      "kind": "adapter",
+      "from": "../../source-chat-messages-v4-adapters.jsx",
+      "name": "ChatMessageRetryParts",
+      "via": "shared-3-IQTrO7Gx.js:vl"
+    },
+    {
+      "module": "retry-action.mjs",
+      "local": "B",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "cdsClassNames",
+      "via": "shared-frame-CJdE5Ria.js:tm"
+    },
+    {
+      "module": "retry-action.mjs",
+      "local": "Gd",
+      "kind": "adapter",
+      "from": "../../source-chat-messages-v4-adapters.jsx",
+      "name": "useIntl",
+      "via": "vendor-intl-BJgYK7RA.js:p"
+    },
+    {
+      "module": "retry-action.mjs",
+      "local": "X_",
+      "kind": "adapter",
+      "from": "../../source-chat-messages-v4-adapters.jsx",
+      "name": "useRetryPacing",
+      "via": "shared-4-C_EiQb9h.js#X_"
+    },
+    {
+      "module": "retry-action.mjs",
+      "local": "y",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "jsx",
+      "via": "vendor-frame-BckkO60Y.js:Ga"
+    }
+  ]
+}

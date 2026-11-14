@@ -1,0 +1,14 @@
+/* Only token paint. Card font, padding, wrapping, selection and Copy stay owned
+   by source-code-block.css. Both themes are already present in the same spans. */
+:is(.scb-code,.sdc-code,.sfv-editor) [data-code-token] {
+  color: var(--sch-light);
+  font-style: var(--sch-light-style);
+  font-weight: var(--sch-light-weight);
+  text-decoration: var(--sch-light-decoration);
+}
+[data-mode="dark"] :is(.scb-code,.sdc-code,.sfv-editor) [data-code-token] {
+  color: var(--sch-dark);
+  font-style: var(--sch-dark-style);
+  font-weight: var(--sch-dark-weight);
+  text-decoration: var(--sch-dark-decoration);
+}

@@ -1,0 +1,1069 @@
+// Codex data adaptation for the current non-dock jM/EM approval-card branch.
+// This model does not grant permissions, hold request identities or invoke IPC.
+import { assistantName, escapeRegExp } from "./persona-store.mjs";
+import { getLocale, t, tn } from "../electron/i18n/index.mjs";
+import { computerUseAction, computerUseLabel, computerUseAccessRequest, computerUseAccessRows, computerUseAccessTitle, computerUseTakeoverRequest, computerUseTeachRequest } from "./computer-use-model.mjs";
+import { displayCommand } from "./shell-command-model.mjs";
+import { devServerDescription } from "./generated/code-current/dev-server-description.mjs";
+// 3.6556.2 cc32965c2 cd / ud (scripts/extract-approval-titles.mjs): the tool card titles of the app's own servers.
+import { approvalToolSpec, approvalToolTitle } from "./generated/approval-titles/tool-titles.mjs";
+const COMMAND ="item/commandExecution/requestApproval";
+const FILE = "item/fileChange/requestApproval";
+const PERMISSIONS = "item/permissions/requestApproval";
+// McpServerElicitationRequest (codex-schema-0.155.1): MCP tool-call approvals
+// (_meta.codex_approval_kind "mcp_tool_call", empty schema) and an MCP server's own
+// form / url elicitations. Any core speaking the app-server protocol may send it.
+export const ELICITATION = "mcpServer/elicitation/request";
+
+function nonempty(value) {
+  return typeof value === "string" && value.trim() ? value : null;
+}
+
+function rawText(value) {
+  if (value == null) return null;
+  if (typeof value === "string") return nonempty(value);
+  if (Array.isArray(value) && value.length === 0) return null;
+  try { return JSON.stringify(value, null, 2) ?? null; }
+  catch { return null; } // IPC data is JSON; do not synthesize truncated details.
+}
+
+// The command box shows what will run: the script without Codex's `<shell> -lc '…'`
+// wrapper (tui approval_overlay.rs via strip_bash_lc_and_escape), so it names the same
+// command as the 'Always allow “…”' button. `raw` keeps the agent's string for a tooltip.
+// Any other argv stays JSON so its argument boundaries remain visible.
+function commandDetail(value) {
+  const { text: shown, raw } = displayCommand(value);
+  if (raw && nonempty(shown)) return { kind: "command", text: shown, value, raw: typeof value === "string" ? value : rawText(value) };
+  const text = rawText(value);
+  return text === null ? null : { kind: "command", text, value };
+}
+
+// OpenClaude Desktop's own agent tools (run_in_terminal, a launch.json dev server, Monitor) type or spawn the agent's free
+// text as it is: the box shows exactly that, never a `<shell> -c` unwrap, so a workspace program named sh/bash/zsh
+// can't hide behind the script it is handed.
+function exactCommandDetail(value) {
+  const text = rawText(value);
+  return text === null ? null : { kind: "command", text, value };
+}
+
+// approval-current.js:14521-14534 Write -> "write", Edit/MultiEdit -> "edit", each ...SM(file_path);
+// :15201-15205 SM = {meta: Yn(path) basename, detail: full path, clampTitle: true}. Codex
+// FileChangeRequestApprovalParams carries no paths, so only item.changes (FileUpdateChange
+// {path, kind: PatchChangeKind}) can name the file, and only when it is exactly one change.
+// Adaptation: PatchChangeKind "delete" has no source verb (no Delete tool) and stays "edit".
+// Legacy string kinds ("update", fixture codex-server.cjs:712) are accepted beside {type}.
+function fileHeading(changes) {
+  if (!Array.isArray(changes) || changes.length !== 1) return null;
+  const path = nonempty(changes[0]?.path);
+  if (!path) return null;
+  const meta = path.split(/[\\/]/).pop();
+  if (!meta) return null;
+  const type = typeof changes[0].kind === "string" ? changes[0].kind : changes[0].kind?.type;
+  return { action: type === "add" ? t("write") : t("edit"), meta };
+}
+
+const singleLine = value => nonempty(value)?.replace(/\s+/g, " ").trim() ?? null;
+const supportedKind = kind => kind === "command" || kind === "file" || kind === "permissions";
+// approval-current.js:14121-14133 Xj: a change over 200,000 characters gets no preview.
+export const PREVIEW_LIMIT = 200000;
+export const PREVIEW_TOO_LARGE = t("Preview unavailable \u2014 this change is too large to show here (over 200,000 characters). The full change appears in the conversation after it runs.");
+export const previewTooLarge = change => typeof change?.diff === "string" && change.diff.length > PREVIEW_LIMIT;
+// KS(path, {singleLine}) (ion-dist cba82325b d): control characters, newlines included,
+// show as [U+XXXX] escapes so a path stays one visible line; spaces are kept as spelled.
+const pathText = value => nonempty(value)?.replace(/[\u0000-\u001f\u007f-\u009f]/gu,
+  char => `[U+${char.codePointAt(0).toString(16).toUpperCase().padStart(4, "0")}]`) ?? null;
+const firstLine = value => singleLine(nonempty(value)?.trim().split("\n")[0]);
+function argumentsDetail(value) {
+  if (value == null || (typeof value === "object" && !Array.isArray(value) && Object.keys(value).length === 0)) return null;
+  const text = rawText(value);
+  return text === null ? null : { kind: "arguments", text, value };
+}
+
+// approval-current.js:14508-14595 per-tool copy, read from the transcript item the
+// card belongs to (Codex command approvals carry only a command string). Bash -> "run"
+// + description meta + command detail (clampTitle); Task/Agent -> "run an agent" +
+// description and no detail (:14570-14579); Skill -> "run skill /name"; WebFetch ->
+// "fetch url"; WebSearch -> "search the web" + query; anything else -> "use {label}" +
+// pretty JSON detail. Adaptations: the DeepSeek core's subagent/subagent_fork tools and
+// Codex spawnAgent are agents, whose prompt (first line) stands in for a missing
+// description; MCP labels are "tool (server)".
+function itemHeading(item, command) {
+  // Computer use in any shape: "Allow … to control your computer: Click (512, 300)?" (computer-use-model.mjs).
+  const computer = computerUseAction(item);
+  if (computer) {
+    const { label, meta } = computerUseLabel(computer, "busy");
+    return { heading: { action: t("control your computer"), meta: [label, meta].filter(Boolean).join(" ") }, detail: null };
+  }
+  switch (item?.type) {
+    case "commandExecution": {
+      const meta = singleLine(item.description);
+      if (!meta) return null;
+      const detail = commandDetail(command);
+      return { heading: { action: t("run"), meta }, detail, clampTitle: detail !== null };
+    }
+    case "dynamicToolCall": {
+      const tool = nonempty(item.tool);
+      if (!tool) return null;
+      const args = item.arguments && typeof item.arguments === "object" && !Array.isArray(item.arguments) ? item.arguments : {};
+      if (tool === "subagent" || tool === "subagent_fork") {
+        const description = singleLine(args.description);
+        return { heading: { action: t("run an agent"), meta: description ?? firstLine(args.prompt) }, detail: null, clampTitle: !description };
+      }
+      if (tool === "skill") {
+        const name = singleLine(args.name);
+        const { name: _name, ...rest } = args;
+        return { heading: { action: t("run skill"), meta: name ? `/${name}` : null }, detail: argumentsDetail(rest) };
+      }
+      if (tool === "web_fetch") return { heading: { action: t("fetch"), meta: singleLine(args.url) }, detail: null };
+      if (tool === "web_search") {
+        const queries = Array.isArray(args.queries) ? args.queries.filter(query => typeof query === "string") : [];
+        return { heading: { action: t("search the web"), meta: singleLine(queries.join(", ")) ?? singleLine(args.query) }, detail: null };
+      }
+      // A core's own dynamic workflow run (zcode-bridge askWorkflowRun; the DeepSeek core's askWorkflow): the bridge's
+      // command is the script summary.
+      if (["CreateWorkflow", "AmendWorkflow", "ResumeWorkflowRun", "Workflow", "RunWorkflow", "workflow"].includes(tool) && nonempty(command))
+        return { heading: { action: t("run a dynamic workflow"), meta: null }, detail: commandDetail(command) };
+      // cc32965c2 Wh O(): "use {label}" (VJ6z/l9Cq2) with the tool's own name as the label.
+      return { heading: { action: t("use {label}", { label: tool }), meta: null }, detail: argumentsDetail(item.arguments) };
+    }
+    case "mcpToolCall": {
+      const tool = nonempty(item.tool);
+      if (!tool) return null;
+      return { heading: { action: t("use {label}", { label: mcpToolLabel(tool, serverDisplayName(item.server)) }), meta: null }, detail: argumentsDetail(item.arguments) };
+    }
+    case "webSearch":
+      return item.action?.type === "openPage"
+        ? { heading: { action: t("fetch"), meta: singleLine(item.action.url) }, detail: null }
+        : { heading: { action: t("search the web"), meta: singleLine(item.action?.query) ?? singleLine(item.query) }, detail: null };
+    case "collabAgentToolCall": {
+      if (item.tool !== "spawnAgent") return null;
+      // The DeepSeek core keeps the delegation's description on the item (Codex has none).
+      const description = singleLine(item.description);
+      return { heading: { action: t("run an agent"), meta: description ?? firstLine(item.prompt) }, detail: null, clampTitle: !description };
+    }
+    default:
+      return null;
+  }
+}
+
+// ---- mcpServer/elicitation/request ------------------------------------------------
+// Mirrors the Codex TUI (tui/src/bottom_pane/mcp_server_elicitation.rs from_parts):
+// a null or empty-object schema is a message-only request (Allow / Allow for this
+// session when _meta.persist offers "session" / Deny); a form schema of primitive
+// fields becomes a small form; url mode opens a link. Unknown shapes can still be
+// declined, so the turn always continues.
+const plainObject = value => value && typeof value === "object" && !Array.isArray(value) ? value : null;
+const count = value => Number.isSafeInteger(value) && value >= 0 ? value : null;
+const finite = value => typeof value === "number" && Number.isFinite(value) ? value : null;
+export function elicitationPersistModes(meta) {
+  const persist = plainObject(meta)?.persist;
+  return new Set(typeof persist === "string" ? [persist] : Array.isArray(persist) ? persist.filter(mode => typeof mode === "string") : []);
+}
+export function isMessageOnlySchema(schema) {
+  if (schema == null) return true;
+  const value = plainObject(schema), properties = plainObject(value?.properties);
+  return value?.type === "object" && !!properties && Object.keys(properties).length === 0;
+}
+function enumOptions(schema) {
+  if (Array.isArray(schema.oneOf) || Array.isArray(schema.anyOf)) {
+    const options = (schema.oneOf ?? schema.anyOf).map(option => plainObject(option) && typeof option.const === "string"
+      ? { value: option.const, label: nonempty(option.title) ?? option.const } : null);
+    return options.length && !options.includes(null) ? options : null;
+  }
+  if (Array.isArray(schema.enum)) {
+    const names = Array.isArray(schema.enumNames) ? schema.enumNames : [];
+    const options = schema.enum.map((value, index) => typeof value === "string" ? { value, label: nonempty(names[index]) ?? value } : null);
+    return options.length && !options.includes(null) ? options : null;
+  }
+  return undefined;
+}
+/** One McpElicitationPrimitiveSchema property as a form field, or null when the
+ * property is not one of the schema's primitive shapes. */
+export function elicitationField(id, schema, required = false) {
+  const value = plainObject(schema);
+  if (!value) return null;
+  const base = { id, label: nonempty(value.title) ?? id, description: nonempty(value.description), required: !!required };
+  if (value.type === "string") {
+    const options = enumOptions(value);
+    if (options === null) return null;
+    if (options) return { ...base, type: "select", options, default: options.some(option => option.value === value.default) ? value.default : null };
+    return { ...base, type: "text", format: ["email", "uri", "date", "date-time"].includes(value.format) ? value.format : null,
+      minLength: count(value.minLength), maxLength: count(value.maxLength), default: typeof value.default === "string" ? value.default : null };
+  }
+  if (value.type === "number" || value.type === "integer")
+    return { ...base, type: value.type, minimum: finite(value.minimum), maximum: finite(value.maximum), default: finite(value.default) };
+  if (value.type === "boolean") return { ...base, type: "boolean", default: typeof value.default === "boolean" ? value.default : null };
+  if (value.type === "array") {
+    const items = plainObject(value.items), options = items && enumOptions(items);
+    if (!options || (items.type !== undefined && items.type !== "string" && !items.anyOf)) return null;
+    const defaults = Array.isArray(value.default) ? value.default.filter(entry => options.some(option => option.value === entry)) : [];
+    return { ...base, type: "multiselect", options, minItems: count(value.minItems), maxItems: count(value.maxItems), default: defaults };
+  }
+  return null;
+}
+/** The fields of a form-mode requestedSchema, or null when it cannot be shown. */
+export function elicitationFields(schema) {
+  const value = plainObject(schema), properties = plainObject(value?.properties);
+  if (value?.type !== "object" || !properties) return null;
+  const required = new Set(Array.isArray(value.required) ? value.required.filter(id => typeof id === "string") : []);
+  const fields = Object.entries(properties).map(([id, property]) => elicitationField(id, property, required.has(id)));
+  return fields.length && !fields.includes(null) ? fields : null;
+}
+// V3-W14-approvals: the form itself, its initial values and its validation are the 3.6556.2 originals
+// (generated/approval-elicitation, source-approval-card.jsx); elicitationFields above only decides which schemas the card
+// can show (the shapes main's respond-approval.cjs checks the answer against).
+// Codex's own wording when no template names the action (core mcp_tool_call.rs
+// build_mcp_tool_approval_fallback_message): 'Allow <actor> to run tool "<tool>"?'.
+const FALLBACK_TOOL = /^Allow .+ to run tool "(.+)"\?$/s;
+const openableUrl = value => { try { return ["http:", "https:"].includes(new URL(value).protocol); } catch { return false; } };
+function toolParamsDetail(meta) {
+  const display = Array.isArray(meta?.tool_params_display) ? meta.tool_params_display
+    .map(param => plainObject(param) && nonempty(param.name) && "value" in param ? param : null).filter(Boolean) : [];
+  if (display.length) {
+    const text = display.map(param => `${nonempty(param.display_name) ?? param.name}: ${typeof param.value === "string" ? param.value : rawText(param.value) ?? ""}`).join("\n");
+    return { kind: "arguments", text, value: display };
+  }
+  return argumentsDetail(plainObject(meta?.tool_params) ?? null);
+}
+// c96d752d0 Kk (2.42304.0) mcp__ branch: an MCP tool's "What Claude sent" rows carry a read gate,
+// `rowsReadGate: {hint: e.formatMessage(gD.rowsHint), ...(SD(d)?.server === "terminal" ? {} : {loose: !0})}`
+// ("5yDiNk/eg2"). Only a desktop connector's terminal server (mOe) is strict; OpenClaude has no desktop connectors, so
+// the gate is always loose (approval-read-gate-model.mjs: held only when the rows can't show whole or aren't laid out).
+// D23: the original wording keeps "Claude".
+export const rowsReadGate = () => ({ hint: t("Scroll through what Claude sent to allow it."), loose: true });
+
+// V3-w10-ccres-approval-card: the 3.6556.2 change card (cc32965c2-BQu1bA_w.js Wh, readable :9594-9614). A builder's
+// result becomes the card's own heading, its target and change groups (or, for a switch it cannot list, the served
+// text), its footnote and its allow label, with `..._p` (no Always allow, no scope tooltip):
+//   v (update / create): `{action:v.heading,heading:v.heading,overrideDescription:"",changeTarget:v.target,
+//     changeGroups:v.changeGroups,footnote:v.footnote,onceLabel:v.allowLabel,..._p,rowsReadGate:{hint,loose:!0}}`
+//   y (switch):          `...("servedText"in y?{servedText:y.servedText}:{changeTarget:y.target,changeGroups:y.changeGroups})`
+//     with no rows read gate.
+// The builders themselves (m_ / h_ / b_ for the Claude Code Remote environment tools, mcp__claude-code-remote__…) only
+// answer when o_(intl).delivered(): every line is a `secret:` message (um, e.g. updateHeading "1ew0lwy",
+// footnoteShared "mt4syb") that only the account service delivers; ion-dist/i18n carries none of them, so without an
+// account they return null and the official card falls back to the generic tool card. OpenClaude has no account and no
+// remote environment tools, so no local source builds one today; the shape below is what a source hands in.
+//   built: { heading, target?: {name, scope, scopeIcon, spoken}, changeGroups?: [{heading, lines: [{text, sign?}],
+//            exactLines?: [{name, literal}], script?, scriptWhole?, scriptMoreNote?, scriptEstimatedPastBlock?}],
+//            servedText?: {label, body}, footnote: string[], allowLabel }
+// A line's text keeps the official rich tags <b>, <code> and <sr> (cc32965c2 uv / dv / lv; changeLineParts).
+export function approvalChangeCard(card, built, { rowsGate = true } = {}) {
+  if (!card || !plainObject(built) || !nonempty(built.heading)) return card;
+  const served = "servedText" in built;
+  const primary = card.allows?.find(allow => allow.primary) ?? { key: "accept", label: t("Allow once"), primary: true };
+  const { heading: _heading, clampTitle: _clamp, rowsReadGate: _gate, ...rest } = card;
+  // The builder's result is the whole card body (Wh returns it in place of the generic tool card): no detail or
+  // context of the base card; the decision reason (the request's own) stays.
+  return { ...rest, title: built.heading, ownHeading: built.heading, detail: null, context: [],
+    ...(served ? { servedText: built.servedText } : { changeTarget: built.target, changeGroups: built.changeGroups }),
+    footnote: Array.isArray(built.footnote) ? built.footnote : [],
+    // _p: disableAlwaysAllow (only the once allow, labelled onceLabel) and suppressScopeTooltip.
+    allows: [{ ...primary, label: nonempty(built.allowLabel) ?? primary.label }],
+    ...(rowsGate && !served ? { rowsReadGate: rowsReadGate() } : {}) };
+}
+// cc32965c2 pv / mv: the sign column shows when there is a target or any line carries a sign.
+export const changeGroupsSigned = model => model?.changeTarget !== undefined || !!model?.changeGroups?.some(group => group.lines?.some(line => line.sign !== undefined));
+// u_: an exact variable line.
+export const exactLineText = line => `${line.name}=${line.literal}`;
+// The rich parts of a change line: plain text and the official <b> / <code> / <sr> tags (uv text-primary, dv code,
+// lv sr-only). Unknown or unbalanced tags stay text.
+export function changeLineParts(text) {
+  const parts = [], source = typeof text === "string" ? text : "";
+  const tag = /<(b|code|sr)>([\s\S]*?)<\/\1>/g;
+  let at = 0;
+  for (const match of source.matchAll(tag)) {
+    if (match.index > at) parts.push({ tag: null, text: source.slice(at, match.index) });
+    parts.push({ tag: match[1], text: match[2] });
+    at = match.index + match[0].length;
+  }
+  if (at < source.length) parts.push({ tag: null, text: source.slice(at) });
+  return parts;
+}
+// Pg(e, t): the line read as one string (sr text included).
+export const changeLineText = line => changeLineParts(line?.text).map(part => part.text).join("");
+// cc32965c2 I_ / L_ and the gate key yn (readable :11250-11259, :12801-12806): a card with a rows read gate, no rows and
+// change groups gates the change block itself, keyed by the JSON of [changeTarget, changeGroups, footnote].
+export function changeRowsGated(model) {
+  return !!model?.rowsReadGate && !model.detail && !model.rows?.length && !!model.changeGroups?.length;
+}
+export function changeRowsGateKey(identity, model) {
+  if (!changeRowsGated(model)) return null;
+  const id = typeof identity === "string" || typeof identity === "number" ? String(identity) : "";
+  return `${id}\nrows\n${JSON.stringify([model.changeTarget, model.changeGroups, model.footnote])}`;
+}
+/** The elicitation's presentation: mode, copy, fields and the actions it offers. */
+// V3-W14-approvals: cc32965c2 bs / Ss name the server as `L(Nn(r))` (shared-130 xz: underscores read as spaces). A
+// request without a name (the protocol requires one) takes the catalog's own nameless sentences ("A connector …",
+// en-US 2gTAbGLfyu / T3jOuRasEE) rather than a host name put in {serverName}.
+const serverDisplayName = value => nonempty(value)?.replace(/_+/g, " ") ?? null;
+// V3-W14-approvals: cc32965c2 Wh `f.startsWith("mcp__")`: one "use {label}" (VJ6z/l9Cq2), the whole action in <b> with no
+// meta, the label `${toolName.replace(/_+/g, " ")}${h ? ` (${h})` : ""}` (h the server's Nn name; a connector's display
+// name the same way).
+const mcpToolLabel = (tool, server) => `${tool.replace(/_+/g, " ")}${server ? ` (${server})` : ""}`;
+export function elicitationModel(params, item) {
+  const meta = plainObject(params?._meta) ?? {};
+  const named = serverDisplayName(params?.serverName);
+  const server = named ?? t("An MCP server");
+  const message = nonempty(params?.message);
+  const persist = elicitationPersistModes(meta);
+  const who = assistantName();
+  const decline = label => ({ key: "decline", label, primary: false });
+  // cc32965c2 Ss: "{serverName} wants to open a URL" (nfymUJgaww), the link's host (font-medium text-primary) over its
+  // address, Decline, then "I’m done, continue" (d91uaN3SMw) and the primary "Open link" (lFHiMpKnp3, the card's own).
+  if (params?.mode === "url") {
+    const url = nonempty(params.url);
+    let host = null;
+    try { host = url ? new URL(url).host || null : null; } catch { host = null; }
+    return { mode: "url", server, message, url, host, openable: !!url && openableUrl(url),
+      title: named ? t("{serverName} wants to open a URL", { serverName: named }) : t("A connector wants to open a URL"),
+      deny: decline(t("Decline")), allows: url ? [{ key: "accept", label: t("I’m done, continue"), primary: false }] : [] };
+  }
+  // A Codex tool suggestion (_meta.codex_approval_kind 'tool_suggestion', tui bottom_pane/mcp_server_elicitation.rs
+  // parse_tool_suggestion_request): Codex suggests installing or turning on an app (connector) or plugin for this
+  // request. As the TUI's AppLinkView: the reason and the tool, the install page to open, then 'I installed it'
+  // (accept) or 'Not now'; for an installed one, 'Turn on' turns it on and accepts (respond-approval enableSuggested).
+  if (params?.mode === "form" && isMessageOnlySchema(params.requestedSchema) && meta.codex_approval_kind === "tool_suggestion"
+    && (meta.tool_type === "connector" || meta.tool_type === "plugin") && (meta.suggest_type === "install" || meta.suggest_type === "enable")) {
+    const toolName = nonempty(meta.tool_name) ?? nonempty(meta.tool_id) ?? server;
+    const url = nonempty(meta.install_url);
+    const install = meta.suggest_type === "install";
+    const plugin = meta.tool_type === "plugin";
+    const canEnable = !install && !!nonempty(meta.tool_id);
+    return { mode: "toolSuggestion", server, message: nonempty(meta.suggest_reason), url, openable: !!url && openableUrl(url),
+      toolType: meta.tool_type, suggestType: meta.suggest_type, toolId: nonempty(meta.tool_id), toolName,
+      title: install ? (plugin ? t("Install the {tool} plugin?", { tool: toolName }) : t("Install {tool}?", { tool: toolName }))
+        : (plugin ? t("Turn on the {tool} plugin?", { tool: toolName }) : t("Turn on {tool}?", { tool: toolName })),
+      note: install ? (url ? t("Install it in your browser, then come back and choose I installed it.") : t("Install it, then choose I installed it."))
+        : t("{name} suggests turning it on for this request.", { name: who }),
+      deny: decline(t("Not now")),
+      allows: install ? [{ key: "accept", label: t("I installed it"), primary: true }]
+        : canEnable ? [{ key: "enableSuggested", label: t("Turn on"), primary: true }] : [{ key: "accept", label: t("Continue"), primary: true }] };
+  }
+  if (params?.mode === "form" && isMessageOnlySchema(params.requestedSchema)) {
+    const tool = meta.codex_approval_kind === "mcp_tool_call";
+    // _meta.persist 'always' (Codex's MCP tool approval 'Always allow', tui mcp_server_elicitation.rs): Claude's
+    // persistent 'Always allow' (⇧⌘↵). W14-code r6 r6pa-08: cc32965c2 `ur = q.suppressScopeTooltip || v || je || hn ? void 0 :
+    // (gn ?? "Don’t ask again for this tool")` on pr's `{key:"always",…,tooltip:ur}`: a tool call has no saved scope (gn),
+    // so its tooltip is the fallback sentence (source-approval-card.jsx turns `title` into the button tooltip).
+    const allows = [...(persist.has("always") ? [{ key: "acceptAlways", label: t("Always allow"), primary: false, persistent: true,
+      ...(tool ? { title: t("Don’t ask again for this tool") } : null) }] : []),
+      ...(persist.has("session") ? [{ key: "acceptForSession", label: t("Allow for this session"), primary: false }] : []),
+      { key: "accept", label: tool ? t("Allow once") : t("Allow"), primary: true }];
+    if (!tool) return { mode: "confirm", server, message, title: t("{server} is asking for your approval", { server }), deny: decline(t("Deny")), allows };
+    // A computer-use request_access call: the access card (official c96d752d0 JEe): the apps and capabilities asked for,
+    // Deny and one "Allow for this session" (no once / always, no per-app choice).
+    const access = computerUseAccessRequest(params, item);
+    if (access) {
+      const rows = computerUseAccessRows(access);
+      const accessTitle = computerUseAccessTitle(rows, who);
+      return { mode: "computerUseAccess", server, message: null, access, rows, accessTitle, title: accessTitle.text, deny: decline(t("Deny")),
+        allows: [{ key: persist.has("session") ? "acceptForSession" : "accept", label: t("Allow for this session"), primary: true }] };
+    }
+    // A request_full_control call: the take-over card (official c96d752d0 JEe with takeoverFrom): no app or capability
+    // rows, the "Take over the screen?" title, "Deny" (esc) and "Allow for this session" (⌘↵). (c96d752d0 reads
+    // "Stay in background" only with suppressAlwaysAllowRule, and then has no allow button; this page never sets that.)
+    const takeover = computerUseTakeoverRequest(params);
+    if (takeover) {
+      const titleText = takeover.becausePreferredBackground
+        ? t("Take over the screen? You’ve set Background as your preferred mode, so {name} is checking before switching to full-screen control.", { name: who })
+        : takeover.appName
+          ? t("Take over the screen? {name} was working on {app} in the background and now needs full-screen control.", { name: who, app: takeover.appName })
+          : t("Take over the screen? {name} was working in the background and now needs full-screen control.", { name: who });
+      return { mode: "computerUseTakeover", server, message: null, takeover, reason: takeover.reason, title: titleText,
+        deny: decline(t("Deny")),
+        allows: [{ key: persist.has("session") ? "acceptForSession" : "accept", label: t("Allow for this session"), primary: true }] };
+    }
+    // A request_teach_access call: the teach card (official ca31fdde5 Wa): "Let Claude guide you step by step?", the
+    // reason, the apps, Deny (⌘.) and Start guide (⌘↵).
+    const teach = computerUseTeachRequest(params);
+    if (teach) {
+      return { mode: "computerUseTeach", server, message: null, teach, reason: teach.reason || null, title: t("Let {name} guide you step by step?", { name: who }),
+        deny: decline(t("Deny")),
+        allows: [{ key: persist.has("session") ? "acceptForSession" : "accept", label: t("Start guide"), primary: true }] };
+    }
+    // The request describes the exact call it approves (Codex sends _meta.tool_title /
+    // tool_params for it, mcp_tool_call.rs build_mcp_tool_approval_elicitation_meta), so
+    // its own tool title (or the tool named by Codex's fallback wording) and arguments win.
+    // The correlated transcript item (elicitationItem, unambiguous matches only) fills in
+    // only what the request leaves out, e.g. a core that sends no _meta.
+    const fromItem = item?.type === "mcpToolCall" ? itemHeading(item) : null;
+    const fallback = message?.match(FALLBACK_TOOL)?.[1] ?? null;
+    const toolName = nonempty(meta.tool_title) ?? fallback;
+    const heading = toolName ? { action: t("use {label}", { label: mcpToolLabel(toolName, named) }), meta: null } : fromItem?.heading ?? null;
+    const metaParams = "tool_params" in meta || Array.isArray(meta.tool_params_display);
+    const detail = metaParams ? toolParamsDetail(meta) : fromItem?.detail ?? null;
+    return { mode: "approval", server, message: fallback ? null : message, heading,
+      title: heading ? t("Allow {name} to {action}?", { name: who, action: heading.action }) : t("Allow {name} to use a tool from {server}?", { name: who, server }),
+      toolDescription: nonempty(meta.tool_description), detail, ...(detail && { rowsReadGate: rowsReadGate() }), deny: decline(t("Deny")), allows };
+  }
+  const fields = params?.mode === "form" ? elicitationFields(params.requestedSchema) : null;
+  // cc32965c2 bs: "{serverName} requests your input" (8+GEYEqcFF) over the message, the fields, then the caution line.
+  if (fields) return { mode: "form", server, message, fields, schema: params.requestedSchema, title: named ? t("{serverName} requests your input", { serverName: named }) : t("A connector requests your input"),
+    deny: decline(t("Decline")), allows: [{ key: "accept", label: t("Submit"), primary: true }] };
+  // openai/form, a schema with non-primitive fields, or an unknown mode: declinable only.
+  return { mode: "unsupported", server, message, title: t("{server} sent a request that can’t be shown here", { server }),
+    deny: decline(t("Decline")), allows: [] };
+}
+
+// CommandExecutionRequestApprovalParams.availableDecisions (Codex 0.155.1; the TUI builds its options from it,
+// approval_overlay.rs): the plain decisions it accepts, and the persistent ones as Claude's 'Always allow' button —
+// acceptWithExecpolicyAmendment (a prefix rule Codex saves to its execpolicy: "don't ask again for commands that start
+// with …") and applyNetworkPolicyAmendment allow (a host rule). Each persistent button names the offer by its index
+// (key 'decision:<n>'); main answers with that exact entry of the request (respond-approval.cjs). null when the core
+// sends no list (the bridges): the fixed set stays.
+const clipped = (value, max = 40) => { const chars = [...value]; return chars.length > max ? `${chars.slice(0, max - 1).join("")}…` : value; };
+export function offeredDecisions(list) {
+  if (!Array.isArray(list) || !list.length) return null;
+  const strings = new Set(list.filter(entry => typeof entry === "string"));
+  const persistent = [];
+  list.forEach((entry, index) => {
+    const value = plainObject(entry);
+    if (!value) return;
+    // The prefix is worded as the command box shows it (approval_overlay.rs strip_bash_lc_and_escape): Codex's own
+    // `<shell> -lc` wrapper is dropped, the raw argv stays in the tooltip, and a prefix that spans lines is never
+    // offered as a permanent rule (the TUI hides it too).
+    const argv = Array.isArray(value.acceptWithExecpolicyAmendment?.execpolicy_amendment)
+      ? value.acceptWithExecpolicyAmendment.execpolicy_amendment.filter(part => typeof part === "string") : [];
+    const rawPrefix = argv.join(" ").trim();
+    const prefix = rawPrefix ? displayCommand(argv).text.trim() : "";
+    // A bridge's project-scoped rule (ZCode 'Always allow in this project': codeDesktop.scope 'project') says so.
+    if (prefix && !/[\r\n]/.test(prefix) && !persistent.some(action => action.rule === "prefix"))
+      // Worded as Codex's TUI words it: the rule is a prefix, so longer commands that start with it run unasked too.
+      // (The Cowork card reads this wording as its hint; the Code card relabels the offer, approvalCardModel below.)
+      persistent.push({ key: `decision:${index}`, rule: "prefix", primary: false, persistent: true,
+        scope: value.codeDesktop?.scope === "project" ? "project" : "user", prefix,
+        label: value.codeDesktop?.scope === "project" ? t("Always allow commands that start with “{prefix}” in this project", { prefix: clipped(prefix) }) : t("Always allow commands that start with “{prefix}”", { prefix: clipped(prefix) }),
+        title: value.codeDesktop?.scope === "project" ? t("Saved for this project: commands that start with “{prefix}” will run without asking.", { prefix: rawPrefix }) : t("Saved for every session and project: commands that start with “{prefix}” will run without asking.", { prefix: rawPrefix }) });
+    const network = plainObject(value.applyNetworkPolicyAmendment?.network_policy_amendment);
+    if (network?.action === "allow" && nonempty(network.host) && !persistent.some(action => action.rule === "host"))
+      persistent.push({ key: `decision:${index}`, rule: "host", label: t("Always allow {host}", { host: clipped(network.host) }), title: network.host, primary: false, persistent: true });
+  });
+  return { strings, persistent };
+}
+// V3-W14-approvals: the Code card's persistent offers as cc32965c2 Sv words them. A prefix rule is pr: "Always allow"
+// (lr3QX/nctD) with the save scope as its tooltip (S_): Codex's execpolicy is the user's ("Saves to user settings (all
+// projects)", yew/eTvhGh), a bridge's codeDesktop.scope "project" rule the project's ("Saves to project settings",
+// l8BwmnfrED); the prefix it saves stays readable as the button's description (IS aria-describedby). A host rule is the
+// site keep ki: "Always allow for this website" (IqIbyB46Wa), the host its tooltip.
+function cardPersistentOffer(offer) {
+  if (offer.rule === "prefix") return { ...offer, label: t("Always allow"),
+    title: offer.scope === "project" ? t("Saves to project settings") : t("Saves to user settings (all projects)"),
+    description: t("Commands that start with “{prefix}”", { prefix: offer.prefix }) };
+  if (offer.rule === "host") return { ...offer, label: t("Always allow for this website") };
+  return offer;
+}
+export function approvalCardModel(request, item) {
+  const params = request?.params ?? {};
+  const method = request?.method;
+  if (method === ELICITATION) {
+    const elicitation = elicitationModel(params, item);
+    const context = [];
+    if (elicitation.toolDescription) context.push({ key: "tool-description", text: elicitation.toolDescription });
+    if (elicitation.note) context.push({ key: "tool-suggestion", text: elicitation.note });
+    if ((elicitation.mode === "url" || elicitation.mode === "toolSuggestion") && elicitation.url && !elicitation.openable)
+      context.push({ key: "url-unopenable", text: t("This link can’t be opened from here. Copy it into a browser if you trust it.") });
+    const detail = (elicitation.mode === "url" || elicitation.mode === "toolSuggestion") && elicitation.url ? { kind: "url", text: elicitation.url, value: elicitation.url } : elicitation.detail ?? null;
+    const { deny, allows, title, heading } = elicitation;
+    // The access card's reason is the request's own (3-line Reason clamp, as every card's reason).
+    if (elicitation.mode === "computerUseAccess")
+      return { kind: "elicitation", supported: true, title, reason: elicitation.access.reason, message: null, context: [], detail: null,
+        deny, allows, elicitation, access: { rows: elicitation.rows, title: elicitation.accessTitle, note: elicitation.access.note ?? null } };
+    if (elicitation.mode === "computerUseTeach")
+      return { kind: "elicitation", supported: true, title, reason: elicitation.reason ?? null, message: null, context: [], detail: null,
+        deny, allows, elicitation, teach: elicitation.teach };
+    if (elicitation.mode === "computerUseTakeover")
+      return { kind: "elicitation", supported: true, title, reason: elicitation.reason ?? null, message: null, context: [], detail: null,
+        deny, allows, elicitation, takeover: elicitation.takeover };
+    return { kind: "elicitation", supported: true, title, ...(heading && { heading }), reason: null,
+      message: elicitation.message ?? null, context, detail, ...(elicitation.rowsReadGate && detail && { rowsReadGate: elicitation.rowsReadGate }), deny, allows, elicitation };
+  }
+  const kind = method === COMMAND ? "command" : method === FILE ? "file"
+    : method === PERMISSIONS ? "permissions" : "unsupported";
+  // A connector's model request (the OpenCode bridge's codeDesktop.sampling: MiMo MCP sampling): who asks, the model that
+  // will run, what it sends and short prompt previews, never a shell command box.
+  if (kind === "command" && plainObject(params.codeDesktop?.sampling)) return samplingCard(params);
+  // OpenClaude Desktop's own agent tools (main.cjs agentToolCard): a command typed into the terminal, an outside site or a
+  // launch.json dev server in the preview, a dynamic workflow; the app answers it, not the core.
+  if (kind === "command" && plainObject(params.codeDesktop?.agentTool)) return agentToolCard(params);
+  const context = [];
+  const add = (key, text) => { if (nonempty(text)) context.push({ key, text }); };
+  // approval-current.js:15275-15284 decision reason: its own block, not context.
+  // A bridge's fixed English reason ('Ask permissions mode is on.') reads in the UI language when the dictionary has it.
+  const reason = nonempty(params.reason) ? t(nonempty(params.reason)) : null;
+  // A terminal's stdin approval keeps its own copy; other command approvals name
+  // the tool from the item. Its detail wins over params.command (for a non-bash
+  // tool the DeepSeek core sends "<tool> <json>" there). The source card has no
+  // working-directory row (approval-current.js:15561-15591 EM blocks; Bash copy
+  // :14507-14515), so only the item-less fallback keeps that local line.
+  const derived = kind === "command" && params.kind !== "writeStdin"
+    ? itemHeading(item, params.command ?? item?.command) : null;
+  const cwd = nonempty(params.cwd) ?? nonempty(item?.cwd);
+  if (cwd && !derived) add("cwd", t("Working directory: {cwd}", { cwd }));
+  if (kind === "command" && params.networkApprovalContext) {
+    const { protocol, host } = params.networkApprovalContext;
+    const target = [nonempty(protocol), nonempty(host)].filter(Boolean).join("://");
+    if (target) add("network", t("Network access: {target}", { target }));
+  }
+  if (kind === "file" && nonempty(params.grantRoot))
+    add("grant-root", t("Requested write root: {root}", { root: params.grantRoot }));
+  if (kind === "permissions") add("scope", t("Applies to this turn only."));
+
+  let detail = null;
+  if (derived) detail = derived.detail;
+  else if (kind === "command") {
+    detail = commandDetail(params.command ?? item?.command);
+    if (detail === null) add("missing-detail", t("Command details were not provided."));
+  } else if (kind === "file") {
+    // approval-current.js:15201-15205 SM: the detail is the full path (KS singleLine)
+    // under the "{write|edit} {basename}" heading; several changes list every path.
+    // value keeps the changes for the in-card preview (:15596-15607 yce).
+    const value = params.changes ?? item?.changes;
+    if (Array.isArray(value) && value.length) {
+      detail = { kind: "path", text: value.map(change => pathText(change?.path)).filter(Boolean).join("\n"), value };
+      // :15501-15506 V / :14792-14798 fM (Xj: any string over 200,000 characters).
+      if (value.some(previewTooLarge))
+        add("too-large", PREVIEW_TOO_LARGE);
+    } else {
+      const text = rawText(value);
+      if (text !== null) detail = { kind: "changes", text, value };
+      else add("missing-detail", t("File change details were not provided."));
+    }
+  } else if (kind === "permissions") {
+    const value = params.permissions;
+    const text = rawText(value);
+    if (text !== null) detail = { kind: "permissions", text, value };
+    else add("missing-detail", t("Permission details were not provided."));
+  } else add("method", nonempty(method) ?? t("The request type was not provided."));
+
+  // V3-W14-approvals: every card title is one of cc32965c2 L's messages ("Allow Claude to <b>{action}</b> …?"): a
+  // command without an item description is Bash's `action: "run"` with the command as its detail (clampTitle), and the
+  // other requests name their action the same way (no sentence is assembled from pieces).
+  const heading = kind === "file" ? fileHeading(detail?.value) ?? (supportedKind(kind) ? { action: t("edit files"), meta: null } : null)
+    : derived?.heading ?? (kind === "command"
+      ? params.kind === "writeStdin" ? { action: t("send input to this terminal"), meta: null } : { action: t("run"), meta: null }
+      : kind === "permissions" ? { action: t("use these permissions"), meta: null } : null);
+  // EM y (approval-current.js:15254): a detail equal to the meta (a bare file name) is no
+  // detail at all, so the card has no path box, no preview (:15596-15607) and no toggle.
+  if (detail?.kind === "path" && heading?.meta && detail.text === heading.meta) detail = null;
+  const clampTitle = kind === "file" ? !!heading?.meta : derived ? !!derived.clampTitle : kind === "command" && params.kind !== "writeStdin" && detail !== null;
+  const who = assistantName(); // C2 persona; "DeepSeek" by default
+  const title = heading ? t("Allow {name} to {action}?", { name: who, action: `${heading.action}${heading.meta ? ` ${heading.meta}` : ""}` })
+    : t("Unsupported approval request");
+  const supported = kind !== "unsupported";
+  const offered = kind === "command" || kind === "file" ? offeredDecisions(params.availableDecisions) : null;
+  const deny = !supported ? null : kind === "permissions" ? { key: "deny", label: t("Deny"), primary: false }
+    // Codex lists what it accepts: Deny is its 'decline' when offered, else 'cancel' (stop and wait for the user).
+    : { key: offered && !offered.strings.has("decline") && offered.strings.has("cancel") ? "cancel" : "decline", label: t("Deny"), primary: false };
+  // sessionGrantable (DeepSeek core): false when the core would not remember the
+  // grant, e.g. a full-access file escalation (source disableAlwaysAllow).
+  const allows = !supported ? [] : kind === "permissions"
+    ? [{ key: "allow", label: t("Allow for this turn"), primary: true }]
+    : offered ? [...offered.persistent.map(cardPersistentOffer),
+        ...(offered.strings.has("acceptForSession") ? [{ key: "acceptForSession", label: t("Allow for this session"), primary: false }] : []),
+        { key: "accept", label: t("Allow once"), primary: true }]
+    : [...(params.sessionGrantable === false ? [] : [{ key: "acceptForSession", label: t("Allow for this session"), primary: false }]),
+       { key: "accept", label: t("Allow once"), primary: true }];
+  // codeDesktop.declineFeedback (the OpenCode bridge): Deny may carry what to do instead, which the core gets as the
+  // rejection's message (OpenCode continues with it); without it Deny stops the agent as the core decides.
+  const declineFeedback = supported && (kind === "command" || kind === "file") && deny?.key === "decline" && params.codeDesktop?.declineFeedback === true;
+  // Kk mcp__ branch: a core's command approval for an MCP tool call (the item names it) gates its arguments as the
+  // elicitation's tool card does.
+  const mcpRows = !!derived && item?.type === "mcpToolCall" && detail?.kind === "arguments";
+  return { kind, supported, title, ...(heading && { heading }), ...(clampTitle && { clampTitle }), reason, context, detail, ...(mcpRows && { rowsReadGate: rowsReadGate() }), deny, allows, ...(declineFeedback && { declineFeedback }) };
+}
+
+const byteSize = bytes => bytes >= 1048576 ? `${(bytes / 1048576).toFixed(1)} MB` : bytes >= 1024 ? `${Math.round(bytes / 1024)} KB` : tn(bytes, "{count} byte", "{count} bytes");
+function samplingCard(params) {
+  const sampling = params.codeDesktop.sampling;
+  const server = nonempty(sampling.server) ?? t("A connector");
+  const context = [];
+  const add = (key, text) => { if (nonempty(text)) context.push({ key, text }); };
+  if (nonempty(sampling.model)) add("sampling-model", t("Model: {model}", { model: sampling.model }));
+  const types = (Array.isArray(sampling.contentTypes) ? sampling.contentTypes : []).map(type => ({ text: t("text"), image: t("images"), audio: t("audio") })[type] ?? type);
+  if (types.length) add("sampling-content", t("Sends: {types}", { types: types.join(", ") }));
+  if (Number.isFinite(sampling.audioBytes) && sampling.audioBytes > 0) add("sampling-audio", tn(sampling.audioClips || 1, "Audio: {size} in {count} clip", "Audio: {size} in {count} clips", { size: byteSize(sampling.audioBytes) }));
+  if (Number.isSafeInteger(sampling.maxTokens)) add("sampling-tokens", t("Up to {count} output tokens", { count: sampling.maxTokens.toLocaleString() }));
+  const prompts = [nonempty(sampling.systemPrompt) && t("System prompt: {text}", { text: sampling.systemPrompt }), nonempty(sampling.textPrompt) && t("Prompt: {text}", { text: sampling.textPrompt })].filter(Boolean);
+  const detail = prompts.length ? { kind: "arguments", text: prompts.join("\n\n"), value: prompts } : null;
+  const allows = [...(params.sessionGrantable === false ? [] : [{ key: "acceptForSession", label: t("Allow for this session"), primary: false }]), { key: "accept", label: t("Allow once"), primary: true }];
+  return { kind: "command", supported: true, title: t("Allow {server} to run a model request on your account?", { server }), heading: { action: t("run a model request for {server}", { server }), meta: nonempty(sampling.model) ?? null },
+    reason: t("Model requests from a connector are billed like your own messages."), context, detail, deny: { key: "decline", label: t("Deny"), primary: false }, allows,
+    ...(params.codeDesktop?.declineFeedback === true ? { declineFeedback: true } : {}), sampling: true };
+}
+
+// wA's intl (the generated helper calls e.formatMessage({defaultMessage, id}, values)): the local dictionary keys
+// are the English source strings.
+const DEV_SERVER_INTL = Object.freeze({ formatMessage: (message, values) => t(message.defaultMessage, values) });
+
+// V3-w10-trans-approval-titles-host: the intl the generated title builders format with. The local dictionary keys are
+// the English source strings (t looks the defaultMessage up, then this fills it); the builders' messages use ICU select
+// ("Opens in {editor, select, vscode {VS Code} … other {your code editor}}."), which t's plain {name} fill doesn't
+// know, so the values are put in here: one pass over the looked-up text, a value is never read again as a pattern.
+function icuOptions(body) {
+  const options = new Map();
+  let index = 0;
+  while (index < body.length) {
+    const open = body.indexOf("{", index);
+    if (open < 0) break;
+    const key = body.slice(index, open).trim();
+    let depth = 0, close = open;
+    for (; close < body.length; close++) {
+      if (body[close] === "{") depth++;
+      else if (body[close] === "}" && --depth === 0) break;
+    }
+    if (!key || close >= body.length) return null;
+    options.set(key, body.slice(open + 1, close));
+    index = close + 1;
+  }
+  return options;
+}
+export function icuFormat(text, values = {}) {
+  let out = "", index = 0;
+  while (index < text.length) {
+    const open = text.indexOf("{", index);
+    if (open < 0) { out += text.slice(index); break; }
+    out += text.slice(index, open);
+    let depth = 0, close = open;
+    for (; close < text.length; close++) {
+      if (text[close] === "{") depth++;
+      else if (text[close] === "}" && --depth === 0) break;
+    }
+    if (close >= text.length) { out += text.slice(open); break; }
+    const inner = text.slice(open + 1, close);
+    const simple = /^\s*(\w+)\s*$/.exec(inner);
+    const complex = /^\s*(\w+)\s*,\s*(select|plural)\s*,([\s\S]*)$/.exec(inner);
+    const value = name => values && Object.hasOwn(values, name) && values[name] != null ? values[name] : undefined;
+    if (simple) out += value(simple[1]) === undefined ? text.slice(open, close + 1) : String(value(simple[1]));
+    else if (complex) {
+      const options = icuOptions(complex[3]), raw = value(complex[1]);
+      const pick = !options ? undefined : complex[2] === "select" ? options.get(String(raw)) ?? options.get("other")
+        : options.get(`=${raw}`) ?? (Number(raw) === 1 ? options.get("one") : undefined) ?? options.get("other");
+      out += pick === undefined ? text.slice(open, close + 1)
+        : icuFormat(complex[2] === "plural" ? pick.replace(/#/g, String(raw)) : pick, values);
+    } else out += text.slice(open, close + 1);
+    index = close + 1;
+  }
+  return out;
+}
+const TITLE_INTL = Object.freeze({
+  get locale() { return getLocale(); },
+  formatMessage: (message, values) => icuFormat(t(message.defaultMessage), values),
+});
+// cd's fourth argument as the card's caller (cc32965c2 readable :9640) passes it for one of the app's own tools: the
+// host has no session targets, consent stamps, connectors or CLI decision reason for these.
+// Returns null when the tool is not one of the official servers' or the builder fell back to Ul (its generic "use …"
+// rows card): the host keeps its own card then.
+function officialToolTitle(toolName, args) {
+  const spec = approvalToolSpec(toolName);
+  if (!spec) return null;
+  const built = approvalToolTitle(TITLE_INTL, spec, args, { targets: [], consentStamped: false, archivedWithTarget: false,
+    toolName, description: undefined, decisionReason: undefined, awayFromSession: false, connectors: undefined });
+  return built && built.fallback !== true ? built : null;
+}
+// The heading the card's L renders from cd's result: "Allow … to <b>{action}</b> <meta>{metaText}</meta>?" (official:
+// true marks the 3.6556.2 rich title), with the description (dg subtitle: overrideDescription) and how it shows.
+function officialHeading(built) {
+  return { action: built.action, meta: nonempty(built.meta) ?? null, official: true,
+    ...(nonempty(built.tail) && { tail: built.tail }),
+    ...(nonempty(built.overrideDescription) && { overrideDescription: built.overrideDescription }),
+    ...(built.descriptionAsTooltip === true && nonempty(built.overrideDescription) && { descriptionAsTooltip: true }),
+    ...(built.ownProse === true && { ownProse: true }) };
+}
+// The other fields of cd's result the card reads (clampTitle, detailFirst, footnote).
+function officialCardFields(built) {
+  return { ...(built.clampTitle === true && { clampTitle: true }), ...(built.detailFirst === true && { detailFirst: true }),
+    ...(Array.isArray(built.footnote) && built.footnote.length && { footnote: built.footnote }) };
+}
+// open_in_editor's editor argument is the editor's type (cc32965c2 _u: Ol("vscode", "cursor", "windsurf", "zed")); the
+// host's request names the editor it picked (agent-tools/host.mjs editor.name).
+const EDITOR_TYPES = Object.freeze({ "vs code": "vscode", "visual studio code": "vscode", cursor: "cursor", windsurf: "windsurf", zed: "zed" });
+
+// The tools whose card is the 3.6556.2 title builder's (V3-w10-trans-approval-titles-host): run_in_terminal (terminal
+// server, nd) and reveal_path / open_in_editor (ccd_host, _u). The rest are OpenClaude Desktop's own tools that no
+// official server has — preview-site / chrome-site / preview-server (preview), monitor, schedule (CronCreate, not the
+// scheduled-tasks server's create_scheduled_task: no taskId or description), workflow — and
+// keep the official 2.2553.1-era wording (notebook-edit and web-fetch take Wh's NotebookEdit / WebFetch headings below): 'preview this page', 'run a dynamic workflow {name}' with the token warning
+// and its Tasks pane pointer. The session tools (agent-tools/sessions.mjs, session.mjs) ask nothing, so the
+// ccd_session_mgmt titles have no local card.
+function agentToolCard(params) {
+  const tool = params.codeDesktop.agentTool;
+  const who = assistantName();
+  const context = [];
+  const add = (key, text) => { if (nonempty(text)) context.push({ key, text }); };
+  const folder = nonempty(params.cwd);
+  const deny = { key: "decline", label: t("Deny"), primary: false };
+  const once = [{ key: "accept", label: t("Allow once"), primary: true }];
+  const card = (heading, rest) => ({ kind: "command", supported: true, title: t("Allow {name} to {action}?", { name: who, action: `${heading.action}${heading.meta ? ` ${heading.meta}` : ""}` }),
+    heading, reason: null, context, detail: null, deny, allows: once, agentTool: tool.kind, ...rest });
+  if (tool.kind === "terminal-command") {
+    const tab = nonempty(tool.tabTitle);
+    // nd runInTerminal: the folder is always the session's or one inside it (agent-tools/terminal.mjs startFolder), so
+    // cwd_outside_session is false and the card has no folderLine; the folder and the tab name are its description
+    // ("In “{folder}”, in a tab named “{title}”"), a tooltip with an sr-only sentence (descriptionAsTooltip).
+    const built = officialToolTitle("mcp__terminal__run_in_terminal", { ...(typeof params.command === "string" && { command: params.command }),
+      ...(folder && { cwd: folder }), ...(tab && { title: tab }), cwd_outside_session: false });
+    // The reason stays the host's: the core sends no decision reason here, so nd's reasonLines have nothing to replace.
+    if (built) return card(officialHeading(built), { ...officialCardFields(built), detail: exactCommandDetail(params.command),
+      reason: t("It runs in your own shell, outside the sandbox, and keeps running after this turn. You can watch it and stop it in the Terminal pane.") });
+    add("cwd", folder && tab ? t("In {folder}, in a tab named {title}", { folder, title: tab }) : folder ? t("In {folder}", { folder }) : null);
+    add("note", tool.detail);
+    return card({ action: t("run a command in your terminal"), meta: null }, { detail: exactCommandDetail(params.command), reason: t("It runs in your own shell, outside the sandbox, and keeps running after this turn. You can watch it and stop it in the Terminal pane.") });
+  }
+  // An approved Chrome site or dev server stays approved for the rest of the session (chrome-bridge-service.cjs,
+  // preview-service.cjs approvedServers), so the one allow button says so.
+  const forSession = [{ key: "accept", label: t("Allow for this session"), primary: true }];
+  if (tool.kind === "preview-site") {
+    // W14-code r4 r4pa-c11 (E95): cc32965c2 Wh `case "browser:open_site": return { action: "act on" (GdSkjKAsw8), meta:
+    // m("origin") ?? m("domain"), overrideDescription: "Allow once applies to this page only. Always allow saves on this
+    // device (revoke in Settings). Claude won’t purchase, create accounts, or bypass captchas without asking."
+    // (G2uuEyevXT), suppressScopeTooltip: !0 }` — no detail block, and no scope tooltip (the host draws none); jPKPzV-P y2n asks with `{ origin: t, domain: a }`.
+    // Sv's decisions: Allow once (primary) and the persistent "Always allow" (lr3QX/nctD, ⇧⌘↵). The grant is the panes
+    // lane's (preview-service.cjs siteGrant / allowedOrigins; main.cjs maps "acceptForSession" to always). The
+    // financial (IVwjjSRxjO) and private-network (Vbzwu2zoa1) wordings need m("reason") / p.privateNetwork, which the
+    // local preview does not classify.
+    let origin = null;
+    try { origin = nonempty(tool.url) ? new URL(tool.url).origin : null; } catch {}
+    if (origin === "null") origin = null;
+    return card({ action: t("act on"), meta: origin ?? nonempty(tool.host) ?? null,
+      overrideDescription: t("Allow once applies to this page only. Always allow saves on this device (revoke in Settings). {assistant} won’t purchase, create accounts, or bypass captchas without asking.", { assistant: who }) }, {
+      allows: [{ key: "acceptForSession", label: t("Always allow"), primary: false, persistent: true }, { key: "accept", label: t("Allow once"), primary: true }] });
+  }
+  if (tool.kind === "chrome-site") {
+    const host = nonempty(tool.host) ?? nonempty(tool.url);
+    // V3-W14-approvals: cc32965c2 ep / Wh: a site grant with no single action is "Allow Claude to <b>access</b>
+    // <meta>{site}</meta>?" (ep.access kyd4+h3ZoV, ikkcVRCGjr).
+    return card({ action: t("access"), meta: host ?? null }, { detail: nonempty(tool.url) ? { kind: "url", text: tool.url, value: tool.url } : null,
+      reason: t("{assistant} will be able to read this site and click and type on it in Chrome in this session. Only allow sites you trust.", { assistant: who }), allows: forSession });
+  }
+  // chrome_javascript_tool write: true (agent-tools/browser.mjs): the page's site, its address and the code, once or for
+  // the rest of the session on that site (as WebFetch's card offers). The heading is the site grant's form above:
+  // cc32965c2 ep.script "Allow Claude to <b>execute JavaScript on</b> <meta>{site}</meta>?" (xrHcSLTDKP, 9GzsLomfX+).
+  if (tool.kind === "chrome-script") {
+    const host = nonempty(tool.host) ?? nonempty(tool.url);
+    add("url", nonempty(tool.url));
+    const code = nonempty(tool.code);
+    return card({ action: t("execute JavaScript on"), meta: host ?? null }, { detail: code ? { kind: "arguments", text: code, value: code } : null,
+      reason: t("The script runs in the page as you, like code typed into Chrome’s DevTools console: it can change the page, use the site’s cookies and send requests as you. Allow it for this session to let {assistant} run scripts on this site without asking.", { assistant: who }),
+      allows: [{ key: "acceptForSession", label: t("Allow for this session"), primary: false }, { key: "accept", label: t("Allow once"), primary: true }] });
+  }
+  if (tool.kind === "preview-server") {
+    // c96d752d0 Kk (2.42304.0) preview_start branch: `overrideDescription: wA(e, p("cwd"), port, f.portMayReassign === !0)`
+    // (generated devServerDescription; "Runs in {cwd} on port {port}" …). The launch.json port comes from
+    // preview-service.cjs approveServer; portMayReassign stays false there until the port policy is the original's
+    // next-free-port scan (preview-01), so the "(or the next free port)" suffix is never claimed.
+    add("description", devServerDescription(DEV_SERVER_INTL, folder ?? undefined, typeof tool.port === "number" ? tool.port : undefined, tool.portMayReassign === true));
+    // launch.json's env (main.cjs agentToolCard): every variable, and a warning for those that change what runs.
+    const env = Array.isArray(tool.env) ? tool.env.filter((line) => typeof line === "string" && line) : [];
+    if (env.length) add("env", [t("With these environment variables:"), ...env, ...(Number(tool.envMore) > 0 ? [t("and {count} more", { count: Number(tool.envMore) })] : [])].join("\n"));
+    const risky = Array.isArray(tool.envRisky) ? tool.envRisky.filter((name) => typeof name === "string" && name) : [];
+    if (risky.length) add("env-warning", t("Warning: {names} can make it run a different program or load other code than the command shows. Allow it only if you set these yourself.", { names: risky.join(", ") }));
+    // Kk: `action: t ? "start" ("zTylMMruGq") : "start a dev server" ("/dKfET3Xgr"), meta: t, clampTitle: !0` — the
+    // server's name is the title's meta ("Allow … to start web?").
+    const name = nonempty(tool.name);
+    return card({ action: name ? t("start") : t("start a dev server"), meta: name }, { detail: exactCommandDetail(params.command), clampTitle: true,
+      reason: t("The command runs on your computer outside {assistant}’s sandbox, with your permissions and network access. Only allow commands you trust.", { assistant: who }), allows: forSession });
+  }
+  // Monitor (agent-tools/monitor.mjs): the command, its folder, and where it is stopped.
+  if (tool.kind === "monitor") {
+    add("cwd", folder ? t("In {folder}", { folder }) : null);
+    return card({ action: t("watch a command in the background"), meta: nonempty(tool.description) }, { detail: exactCommandDetail(params.command),
+      reason: t("It runs in your own shell, outside the sandbox, until it ends or its time runs out, and each line it prints is sent to {assistant}. You can stop it in the Background tasks pane.", { assistant: who }) });
+  }
+  // CronCreate (agent-tools/schedule.mjs): Claude's "Scheduling prompt" / "Starting loop", the cadence and the prompt.
+  if (tool.kind === "schedule") {
+    const once = tool.recurring === false;
+    const prompt = nonempty(tool.prompt);
+    return card({ action: once ? t("schedule a prompt") : t("start a loop"), meta: nonempty(tool.humanSchedule) ?? nonempty(tool.cron) }, {
+      detail: prompt ? { kind: "arguments", text: prompt, value: prompt } : null,
+      reason: once ? t("The prompt runs once in this session when it’s due and the session is idle, with the session’s current permissions. You can stop it in the Background tasks pane.")
+        : t("The prompt runs in this session each time it’s due and the session is idle, with the session’s current permissions, for up to 7 days. You can stop it in the Background tasks pane.") });
+  }
+  // reveal_path / open_in_editor (agent-tools/host.mjs): the resolved path the card shows, as Claude's does.
+  if (tool.kind === "open-path") {
+    const file = nonempty(tool.path) ?? "";
+    // _u revealPath / openInEditor: "open the folder containing" / "open" with the file's name as meta and its full path
+    // as the detail (gu); open_in_editor's description names the editor and the line ("Opens in Zed at line 4.").
+    const editorType = EDITOR_TYPES[nonempty(tool.editor)?.trim().toLowerCase()];
+    const built = officialToolTitle(tool.action === "editor" ? "mcp__ccd_host__open_in_editor" : "mcp__ccd_host__reveal_path", {
+      path: file, ...(tool.action === "editor" && Number.isSafeInteger(tool.line) && tool.line > 0 && { line: tool.line }),
+      ...(tool.action === "editor" && editorType && { editor: editorType }) });
+    if (built) return card(officialHeading(built), { ...officialCardFields(built), detail: nonempty(built.detail) ? { kind: "arguments", text: built.detail, value: file } : null });
+    const name = file.split("/").pop() || file;
+    const action = tool.action === "editor" ? t("open {file} in {editor}", { file: name, editor: nonempty(tool.editor) ?? t("your editor") }) : t("show {file} in Finder", { file: name });
+    if (Number.isInteger(tool.line)) add("line", t("At line {line}", { line: tool.line }));
+    return card({ action, meta: null }, { detail: file ? { kind: "arguments", text: file, value: file } : null });
+  }
+  // NotebookEdit (agent-tools/notebook.mjs). V3-W14-approvals: cc32965c2 Wh `case "NotebookEdit": { action: "edit"
+  // (+vj0U3cN/c), ...x_(m("notebook_path")) }`, x_ = `{ meta: be(path), detail: J(path, { singleLine: !0 }), clampTitle: !0 }`:
+  // the notebook's name as meta and its path as the one-line detail, whatever the cell or edit mode.
+  if (tool.kind === "notebook-edit") {
+    const file = pathText(tool.path);
+    return card({ action: t("edit"), meta: file ? file.split("/").pop() || null : null }, { detail: file ? { kind: "arguments", text: file, value: file } : null, clampTitle: !!file });
+  }
+  // WebFetch (agent-tools/web.mjs): a site's page, once or for the rest of the session. V3-W14-approvals: cc32965c2 Wh T
+  // (`case "WebFetch"`): `action: "fetch"` (afBTrbaItm), `meta: J(url, { singleLine: !0 })`, `detail: prompt` when the
+  // call has one.
+  if (tool.kind === "web-fetch") {
+    const url = singleLine(tool.url) ?? nonempty(tool.host);
+    const prompt = nonempty(tool.prompt);
+    return card({ action: t("fetch"), meta: url ?? null }, { detail: prompt ? { kind: "arguments", text: prompt, value: prompt } : null,
+      reason: t("{assistant} will read this page’s content. Allow it for this session to let {assistant} read other pages from this site without asking.", { assistant: who }),
+      allows: [{ key: "acceptForSession", label: t("Allow for this session"), primary: false }, { key: "accept", label: t("Allow once"), primary: true }] });
+  }
+  if (tool.kind === "workflow") {
+    const phases = Array.isArray(tool.phases) ? tool.phases.filter(phase => nonempty(phase?.title)) : [];
+    // V3-W14-approvals: cc32965c2 Wh "Workflow": `action: "run a workflow"` (+dTxnpark1), the name as meta, the
+    // description as overrideDescription and `showTokenWarning: !0` (Z_ I: the eFJU0SPXS3 box), on the standard Deny /
+    // Allow once decisions. The phases and arguments are the detail.
+    const lines = [];
+    if (phases.length) lines.push(...phases.map((phase, index) => `${index + 1}. ${phase.title}${nonempty(phase.detail) ? ` — ${phase.detail}` : ""}`));
+    if (nonempty(tool.args)) lines.push("", t("Arguments: {args}", { args: tool.args }));
+    if (nonempty(tool.note)) lines.push("", tool.note);
+    const text = lines.filter((line, index, all) => line !== null && (line || (index > 0 && all[index - 1]))).join("\n").trim();
+    const name = nonempty(tool.name);
+    // The script sits in cc32965c2 a_'s fold ("script · N lines", source-session.jsx WorkflowApprovalDetail, r7pa-02):
+    // open when meta has no phases (all there is to read about the run), else folded.
+    const script = nonempty(tool.script);
+    const detail = script ? { kind: "workflow", text, value: text, script, scriptOpen: !phases.length, scriptTruncated: tool.scriptTruncated === true }
+      : text ? { kind: "arguments", text, value: text } : null;
+    const description = nonempty(tool.description);
+    return card({ action: t("run a workflow"), meta: name, ...(description && { overrideDescription: description }) }, {
+      detail, tokenWarning: true,
+      allows: [...(tool.always === true && name ? [{ key: "acceptForSession", label: t("Allow for this session"), primary: false }] : []), { key: "accept", label: t("Allow once"), primary: true }],
+    });
+  }
+  add("note", tool.detail);
+  return card({ action: nonempty(tool.title) ? tool.title.replace(/[?？]$/, "") : t("continue"), meta: null }, {});
+}
+
+// approval-current.js:14649-14658 iM: one whitespace-collapsed line, capped at 150
+// code points with ", truncated".
+function announceText(text) {
+  const line = text.replace(/\s+/g, " ").trim(), chars = [...line];
+  return chars.length <= 150 ? line : t("{head}, truncated", { head: chars.slice(0, 150).join("") });
+}
+// The card's action phrase without "Allow … to" and "?": its own heading, the heading's action (with a tail it runs
+// into), else the plain title's phrase.
+function cardAction(model) {
+  const heading = model.heading;
+  return nonempty(model.ownHeading) ? model.ownHeading : heading ? (heading.tail && !heading.meta ? `${heading.action} ${heading.tail}` : heading.action)
+    : model.title.replace(new RegExp(`^Allow ${escapeRegExp(assistantName())} to `), "").replace(/^Allow DeepSeek to /, "").replace(/[?？]$/, "");
+}
+/** cc32965c2 Sv Ii: the card's accessible name "Permission request: {action}" (Uyfuf4HKh8) takes hg's action — the
+ * heading's own (whole) or the action phrase capped at 150 code points with ", truncated" (pg). */
+// V3-W14-approvals (appr-05): cc32965c2 Sv `gr` / `Cr` — Allow once carries the "More allow options" menu (neJ+WAvag5)
+// with "Allow and switch to Auto" (OE8niFqRMN, "Auto reviews the rest of this session." /AOfoeDoA3) only on the tool card's
+// own Allow once (`q.onceLabel === void 0`, `q.allowWithheld === void 0`), outside the
+// config cards (`!Ag(r.name)`: an approvalChangeCard's own heading) and the cards that are not Sv's (the computer-use
+// access / take-over / teach cards, a url / form / confirm elicitation). The session half (`ye`, cc43287c9 _4 over
+// c227f4d5e's liveAutoSwitchOffered) is the caller's. `!ln` is the connector thread grant (c5da7eb42 `H = ue && …`,
+// connectorThreadGrant), which no Code card has: a Codex "Allow for this session" is the session-scoped lasting answer
+// (S_ "session"), as Always allow is, and does not withdraw the offer.
+export function autoSwitchApplies(model) {
+  if (!model?.supported || model.ownHeading || model.access || model.takeover || model.teach) return false;
+  if (model.elicitation && model.elicitation.mode !== "approval") return false;
+  const allows = Array.isArray(model.allows) ? model.allows : [];
+  const primary = allows.find(allow => allow.primary);
+  return primary?.key === "accept" && primary.label === t("Allow once");
+}
+export function approvalAriaAction(model) {
+  if (!model) return "";
+  const action = cardAction(model).replace(/\s+/g, " ").trim();
+  return nonempty(model.ownHeading) ? action : announceText(action);
+}
+/** pM (approval-current.js:14799-14905): the live-region text for a new request,
+ * "Permission requested: {action}. {detail}, {meta}" from the card copy (oM action,
+ * iM detail when it differs from the meta, sM meta), then each extra block as
+ * "{announcement}. {extra}" — the decision reason capped, the too-large sentence
+ * (dM) in full. A headingless local title announces its own phrase. */
+export function approvalAnnouncement(model) {
+  if (!model) return "";
+  const heading = model.heading;
+  const action = announceText(nonempty(model.ownHeading) ? model.ownHeading : heading ? heading.action : cardAction(model));
+  const meta = heading?.meta ? announceText(heading.meta) : null;
+  const detail = model.detail?.text && model.detail.text !== heading?.meta ? announceText(model.detail.text) : null;
+  let text = detail && meta ? t("Permission requested: {action}. {detail}, {meta}", { action, detail, meta })
+    : detail ? t("Permission requested: {action}. {detail}", { action, detail })
+    : meta ? t("Permission requested: {action}, {meta}", { action, meta })
+    : t("Permission requested: {action}", { action });
+  // 3.6556.2 cc32965c2 (readable :10433-10490): the served text and the change block (target, each line; a group with
+  // exact lines or lines past Yp=12 with values names itself and says the rest is on the card; a script group its
+  // heading, the script capped and its more note) lead; the footnote follows the reason; uncapped extras are one line.
+  const whole = text => typeof text === "string" ? text.replace(/\s+/g, " ").trim() : null;
+  const changeExtras = (model.changeGroups ?? []).flatMap(group => {
+    let valued = 0;
+    const lines = (group.lines ?? []).filter(line => !line.values || Object.keys(line.values).length === 0 || valued++ < 12);
+    const elided = !!group.exactLines?.length || lines.length < (group.lines?.length ?? 0);
+    return [...lines.map(line => whole(changeLineText(line))), elided ? whole(group.heading) : null,
+      elided ? t("Some of what was sent can’t be read out here. It is listed on the card.") : null,
+      group.script === undefined ? null : whole(group.heading), group.script === undefined ? null : announceText(group.script),
+      whole(group.scriptMoreNote)];
+  });
+  // V3-w10-trans-approval-titles-host: the description (dg subtitle, a title builder's overrideDescription) follows the
+  // change block, capped unless it is the builder's own prose (`capped: !(w.ownProse && w.overrideDescription !== void 0)`).
+  const description = nonempty(heading?.overrideDescription);
+  const extras = [model.servedText && whole(model.servedText.body), model.changeTarget && whole(model.changeTarget.spoken), ...changeExtras,
+    description && (heading.ownProse ? whole(description) : announceText(description)),
+    model.reason && announceText(model.reason), model.message && announceText(model.message),
+    ...model.context.filter(part => part.key === "too-large").map(part => part.text),
+    model.footnote?.length ? whole(model.footnote.join(" ")) : null];
+  for (const extra of extras) if (extra?.trim()) text = t("{text}. {extra}", { text, extra });
+  return text;
+}
+
+export function approvalActionIndex(key, current, count) {
+  const direction = key === "ArrowLeft" || key === "ArrowUp" ? -1
+    : key === "ArrowRight" || key === "ArrowDown" ? 1 : 0;
+  if (!direction || count <= 0) return null;
+  return current < 0 ? direction > 0 ? 0 : count - 1
+    : (current + direction + count) % count;
+}
+
+/** A key bubbling within this card (target "card", "actions", "content" or "editor"), or one the card's
+ * document-level hotkeys (use-card-hotkeys.js) took from the session's empty composer or an unfocused page,
+ * which they pass as "content". Root remains responsible for current-pane/menu state. */
+export function approvalKeyIntent(event, { target, model, busy = false,
+  active = true, menuOpen = false, armed = true } = {}) {
+  if (!model?.supported || busy || !active || menuOpen || event.defaultPrevented ||
+      event.isComposing || event.nativeEvent?.isComposing || event.keyCode === 229 || event.nativeEvent?.keyCode === 229 ||
+      target === "editor" || event.altKey) return null;
+  if (event.repeat) return ["Enter", " ", "Escape"].includes(event.key) ? { type: "suppress" } : null;
+  if (event.key === "Escape" && !event.metaKey && !event.ctrlKey && !event.shiftKey)
+    return { type: "action", action: model.deny.key };
+  // The teach card's Deny is ⌘. (official Ua: mt onCmdPeriod).
+  if (model.teach && event.key === "." && (event.metaKey || event.ctrlKey) && !event.shiftKey) return { type: "action", action: model.deny.key };
+  if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
+    if (!armed) return { type: "suppress" };
+    // The local permission adapter remains turn-only even for the shifted chord.
+    // The shifted chord is the persistent allow (Claude's 'Always allow', ⇧⌘↵) where one is offered, else the session one.
+    // The computer-use access card has one allow, "Allow for this session", which ⌘↵ takes (official JEe handleAllow).
+    const action = model.kind === "permissions" ? "allow"
+      : (model.access || model.takeover || model.teach) && !event.shiftKey ? model.allows.find(allow => allow.primary)?.key ?? "accept"
+      : event.shiftKey ? model.allows.find(allow => allow.persistent)?.key ?? "acceptForSession" : "accept";
+    // approval-hotkeys-current.js:100 allowPersistent?.(): no session grant, no action.
+    if (!model.allows.some(allow => allow.key === action)) return { type: "suppress" };
+    return { type: "action", action };
+  }
+  if (event.metaKey || event.ctrlKey || event.shiftKey) return null;
+  if (target === "card" && event.key === "Enter") return { type: "focus-primary" };
+  if ((target === "card" || target === "actions") && event.key.startsWith("Arrow"))
+    return approvalActionIndex(event.key, -1, 1) === null ? null : { type: "navigate", key: event.key };
+  return null;
+}
+
+export function detailsOverflow(metrics) {
+  return metrics.scrollHeight > metrics.clientHeight;
+}
+
+/** cf6ae6197 bv (approval-current.js Up): a clamped region takes keyboard focus,
+ * role group and its label (e.g. "Reason") only while its content overflows. */
+export function scrollRegionProps(label, overflow) {
+  return overflow ? { tabIndex: 0, role: "group", "aria-label": label } : {};
+}
+
+/** approval-hotkeys ep C/S + shared-6 aR. Visibility is observational here;
+ * eligibility still needs a fresh geometry check at the actual key event.
+ * This clock is deliberately independent of the allow-click arming clock. */
+export function createApprovalHotkeyArming({ now = Date.now, active = true } = {}) {
+  let requestOrReentryAt = now(), activationAt = -Infinity;
+  let wasActive = active, hiddenObserved = false;
+  return {
+    observeVisibility({ intersecting, visible }) {
+      if (!intersecting || !visible) { hiddenObserved = true; return false; }
+      if (!hiddenObserved) return false;
+      hiddenObserved = false;
+      requestOrReentryAt = now();
+      return true;
+    },
+    setActive(value) {
+      if (value && !wasActive) activationAt = now();
+      wasActive = value;
+    },
+    isArmed() {
+      const time = now();
+      return time - requestOrReentryAt >= 400 && time - activationAt >= 400;
+    },
+  };
+}
+
+/** shared-6 Zt -> nR/rR: partial intersection is eligible; fully clipped or
+ * offscreen cards yield. These are synchronous measurements, not IO state. */
+export function approvalHasVisibleIntersection({ rect, viewport, clips = [], visible = true } = {}) {
+  if (!visible || !rect || !viewport || viewport.width <= 0 || viewport.height <= 0 ||
+      rect.right <= rect.left || rect.bottom <= rect.top) return false;
+  let { top, bottom, left, right } = rect;
+  const pixels = value => typeof value === "string" && value.endsWith("px") ? parseFloat(value) || 0 : 0;
+  for (const clip of clips) {
+    if (clip.overflowY !== "visible") {
+      top = Math.max(top, clip.rect.top + pixels(clip.scrollPaddingTop));
+      bottom = Math.min(bottom, clip.rect.bottom - pixels(clip.scrollPaddingBottom));
+    }
+    if (clip.overflowX !== "visible") {
+      left = Math.max(left, clip.rect.left);
+      right = Math.min(right, clip.rect.right);
+    }
+  }
+  return bottom > Math.max(0, top) && top < viewport.height &&
+    right > Math.max(0, left) && left < viewport.width;
+}
+
+// ---- the transcript item a request belongs to --------------------------------------
+// Command, file and permission requests name their item (params.itemId). An MCP elicitation names none: it belongs
+// to an in-progress mcpToolCall of the same server in the same turn (Codex starts the item, then asks;
+// mcp_tool_call.rs handle_mcp_tool_call). A server that allows parallel calls can have several running at once, so
+// the request is tied to an item only when that is unambiguous: the one candidate whose tool matches Codex's
+// fallback wording and whose arguments deep-equal _meta.tool_params, or else the only candidate left. Anything
+// else names no item, and the card shows the request's own _meta. A request with no turn matches only an item
+// without one.
+const jsonValue = value => {
+  if (typeof value !== "string") return value;
+  try { return JSON.parse(value); } catch { return value; }
+};
+function sameJson(a, b) {
+  if (a === b) return true;
+  if (Array.isArray(a) || Array.isArray(b)) return Array.isArray(a) && Array.isArray(b) && a.length === b.length && a.every((value, index) => sameJson(value, b[index]));
+  if (!plainObject(a) || !plainObject(b)) return false;
+  const keys = Object.keys(a);
+  return keys.length === Object.keys(b).length && keys.every(key => Object.hasOwn(b, key) && sameJson(a[key], b[key]));
+}
+export function elicitationItem(request, items = []) {
+  if (request?.method !== ELICITATION) return undefined;
+  const params = request.params ?? {};
+  const server = nonempty(params.serverName);
+  if (!server || !Array.isArray(items)) return undefined;
+  const turnId = params.turnId ?? null;
+  const meta = plainObject(params._meta) ?? {};
+  const fallback = nonempty(params.message)?.match(FALLBACK_TOOL)?.[1] ?? null;
+  let candidates = items.filter(item => item?.type === "mcpToolCall" && item.status === "inProgress" && item.server === server
+    && (item.turnId ?? null) === turnId);
+  if (fallback) candidates = candidates.filter(item => typeof item.tool !== "string" || item.tool === fallback);
+  if ("tool_params" in meta) {
+    const matches = candidates.filter(item => sameJson(jsonValue(item.arguments) ?? null, meta.tool_params ?? null));
+    if (matches.length) return matches.length === 1 ? matches[0] : undefined;
+  }
+  // No argument match (a core without _meta, or Codex params rewritten by an approval template): only a lone call.
+  return candidates.length === 1 ? candidates[0] : undefined;
+}
+export function approvalItem(request, items = []) {
+  if (request?.method === ELICITATION) return elicitationItem(request, items);
+  const itemId = request?.params?.itemId;
+  return itemId && Array.isArray(items) ? items.find(item => item?.id === itemId) : undefined;
+}
+// Rows that read 'Needs approval' while an elicitation waits: the correlated mcpToolCall items (unambiguous only).
+export function pendingElicitationItemIds(approvals = [], items = []) {
+  const ids = new Set();
+  for (const approval of approvals) {
+    const item = elicitationItem(approval, items);
+    if (item?.id) ids.add(item.id);
+  }
+  return ids;
+}
+
+// ---- Plan → implement handoff (cores without permission hints) ---------------------
+// A core speaking the protocol natively ends a Plan turn with a plan item and waits: Codex's own client then asks
+// "Implement this plan?" (codex-rs tui chatwidget/plan_implementation.rs). The handoff is offered for the session's
+// newest turn when it holds a non-empty plan item, nothing runs or waits for an answer, the session is still in Plan
+// (code mode) and the user has not answered it for that turn. A core with permission hints has its own plan review
+// (the DeepSeek bridge's exit_plan_mode card), so it never gets one. Returns {turnId, planItemId} or null.
+export { planHandoff } from '../electron/plan-handoff.mjs';

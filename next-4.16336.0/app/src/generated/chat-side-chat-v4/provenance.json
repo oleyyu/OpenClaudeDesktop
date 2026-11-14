@@ -1,0 +1,540 @@
+{
+  "referenceVersion": "4.16336.0",
+  "referenceSnapshot": "snapshots/claude-4.16336.0-20261104",
+  "generator": "scripts/extract-chat-side-chat-v4.mjs",
+  "previous": {
+    "generator": "scripts/extract-chat-side-chat.mjs",
+    "output": "src/generated/chat-side-chat",
+    "referenceVersion": "3.6556.2"
+  },
+  "sharedGraph": {
+    "area": "cds-core",
+    "manifestSha256": "06d2026939e5c8992713c2a0dda1b1abc9adffe7a0c223fe3c1e79eecd08d62c"
+  },
+  "linkedAreas": {
+    "code-composer-v4": "dc5bfba3750b5f0468cadcf5b6123fe59ce856daf14f6aebf5b1bce1c2f1cf64",
+    "routines-shared-v4": "a2a9b9a84b2705e48451025af38eb7582de5bb421c626e6bdf5b067eb8e00c8c",
+    "session-rail-kit-v4": "8e3066efa4721cee2a5bb0b190fae471848c3456fa9b9424773baba5f2b9291a",
+    "cowork-progress-v4": "e5501ac28f6c72be0c01e5278e0b22159f48d63e1a3a61349e0c4eca8bd504a7"
+  },
+  "roots": [
+    {
+      "file": "shared-2-CsjIBQD8.js",
+      "local": "h0",
+      "name": "chatSideChatStore",
+      "export": "Gn",
+      "declarationSha256": "1d15cc15bfb23bc3bf3f5e600cf45a74b362fcde3f3e2511058bdc42380a545d",
+      "pinned": true
+    },
+    {
+      "file": "shared-2-CsjIBQD8.js",
+      "local": "v0",
+      "name": "useChatSideChatOpen",
+      "export": "Vn",
+      "declarationSha256": "52a07edf2c70758a2189e68dfe687e0c27f1134a87802d7916ba2ecfa1481dd0",
+      "pinned": true
+    },
+    {
+      "file": "shared-2-CsjIBQD8.js",
+      "local": "y0",
+      "name": "useChatSideChatMessages",
+      "export": "Hn",
+      "declarationSha256": "25e707635b5d4b7a2fb8ee056d73520805561eb16a83eb58126950e411e37223",
+      "pinned": true
+    },
+    {
+      "file": "shared-2-CsjIBQD8.js",
+      "local": "b0",
+      "name": "useChatSideChatStatus",
+      "export": "Wn",
+      "declarationSha256": "291214f53bc3f192a77e015fd8d7b8b157a67e20ff05d94376ff0c8939bd6ae1",
+      "pinned": true
+    },
+    {
+      "file": "shared-2-CsjIBQD8.js",
+      "local": "x0",
+      "name": "useChatSideChatPendingQuestion",
+      "export": "Un",
+      "declarationSha256": "e515fe1459731297d5cbdc99821b63d1f7b7c4041aa02e2684e992181b9cff56",
+      "pinned": true
+    },
+    {
+      "file": "ca2ef848d-DA54buzo.js",
+      "local": "b0",
+      "name": "ChatSideChat",
+      "export": null,
+      "declarationSha256": "62c9a3b97f2db956c5c632543278c917a98aa433cf41b267bc8cddc95068de54",
+      "pinned": true
+    },
+    {
+      "file": "ca2ef848d-DA54buzo.js",
+      "local": "h0",
+      "name": "ChatSideChatMessages",
+      "export": null,
+      "declarationSha256": "12f04bdf7feae5981069cd2b8cac23fbdf16c5ed4e0378c1524aee8875f9b23e",
+      "pinned": true
+    }
+  ],
+  "inner": [
+    {
+      "key": "ca2ef848d-DA54buzo.js#g0",
+      "sha256": "af157cfcc1b57a31caf9aa3f8bcafe8fc35cb05cfc0be5bea974a4384c2fedd5"
+    },
+    {
+      "key": "ca2ef848d-DA54buzo.js#m0",
+      "sha256": "1d68e9077ab78bd5a346ff1eac272ed45aa93fcf6176e7b544a07c1b6e96ea61"
+    },
+    {
+      "key": "ca2ef848d-DA54buzo.js#f0",
+      "sha256": "097d0b823b805728bf4810d7c77eec829ca35097dbd914fec7eb43f6007d0821"
+    },
+    {
+      "key": "ca2ef848d-DA54buzo.js#p0",
+      "sha256": "de47492dc2d99793142c7be16c931f03a49c5464890be5b8d519ffdcca4af10e"
+    },
+    {
+      "key": "ca2ef848d-DA54buzo.js#y0",
+      "sha256": "37b58f8c79704082b003652dd4f8982d3ad3ea78be4453be469507f4efb10529"
+    },
+    {
+      "key": "ca2ef848d-DA54buzo.js#_0",
+      "sha256": "324a12e481c262369e8e8fecb65d3ab30976766529752b2ef379258444c96557"
+    }
+  ],
+  "adapters": [
+    {
+      "original": "ca2ef848d-DA54buzo.js#c0",
+      "name": "useChatSideChatToggle",
+      "hostAdapter": "src/source-chat-side-chat-v4-adapters.jsx",
+      "declarationSha256": "8c65b9da69fbeee22cbcdf3934f1a3ab5c509c205393cfc0984894995b54efb6",
+      "pinned": true
+    },
+    {
+      "original": "shared-1-D1bGaTaN.js#C6",
+      "name": "useShortcut",
+      "hostAdapter": "src/source-chat-side-chat-adapters.jsx",
+      "declarationSha256": "05f2fc55fbc616ba5c8434c63158dd329eee83cd9b7a8c9782bd1ea3328131d4",
+      "pinned": true
+    },
+    {
+      "original": "c9451a5b2-CKJkvosR.js#o",
+      "name": "streamChatSideQuestion",
+      "hostAdapter": "src/source-chat-side-chat-adapters.jsx",
+      "declarationSha256": "71f32b953dec2e187dbd64622da53e3e52fd4560a13788beb664e49190a95575",
+      "pinned": true
+    },
+    {
+      "original": "shared-25-D-aF0gt9.js#$u",
+      "name": "useRouter",
+      "hostAdapter": "src/source-routines-shared-adapters.jsx",
+      "declarationSha256": "bca1b5a89e27f3817348b46b7fa0b6a3c14e1c60511c35cab275c6c0bfd2d2f7",
+      "pinned": true
+    },
+    {
+      "original": "shared-0-CnnWnVrT.js#qB",
+      "name": "reportError",
+      "hostAdapter": "src/source-routine-cowork-adapters.jsx",
+      "declarationSha256": "9786ddc2b863b95c734f9b0cf48201ae2302e49d990a43e9c6ffba102914843f",
+      "pinned": true
+    },
+    {
+      "original": "c89efce1a-CleBUUAy.js#Mu",
+      "name": "ChatMemoryMarkdown",
+      "hostAdapter": "src/source-chat-knowledge-adapters.jsx",
+      "declarationSha256": "5ecd5b925fb6e7537506abd250cb08d47fa423c3a8524f99eb15af104ebdc6b4",
+      "pinned": true
+    },
+    {
+      "original": "vendor-intl-BJgYK7RA.js#q",
+      "name": "useIntl",
+      "hostAdapter": "src/source-routines-shared-adapters.jsx",
+      "declarationSha256": "edf793bc7b87ae9a38cea39d25d752a5bcfef1d492e06a2219e120311feaaec0",
+      "pinned": true
+    },
+    {
+      "original": "vendor-intl-BJgYK7RA.js#Gt",
+      "name": "FormattedMessage",
+      "hostAdapter": "src/source-routines-shared-adapters.jsx",
+      "declarationSha256": "bde2ec1630e0a679fa4135cf75389568e77fa98fdcb08519af8104d5306ff5b5",
+      "pinned": true
+    }
+  ],
+  "imports": [
+    {
+      "module": "side-chat-store.mjs",
+      "local": "Ep",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/vendor-all-0-uUCo-eCX.mjs",
+      "name": "v",
+      "via": "vendor-all-0-uUCo-eCX.js:L"
+    },
+    {
+      "module": "side-chat-store.mjs",
+      "local": "J1",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J1",
+      "via": "shared-frame-CJdE5Ria.js:lm"
+    },
+    {
+      "module": "side-chat-store.mjs",
+      "local": "J9",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J9",
+      "via": "shared-frame-CJdE5Ria.js:hm"
+    },
+    {
+      "module": "side-chat-store.mjs",
+      "local": "K1",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "K1",
+      "via": "shared-frame-CJdE5Ria.js:_m"
+    },
+    {
+      "module": "side-chat-panel.mjs",
+      "local": "Ae",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "asElementNode",
+      "via": "shared-frame-CJdE5Ria.js:nm"
+    },
+    {
+      "module": "side-chat-panel.mjs",
+      "local": "B",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "useCdsLayerAwareZIndex",
+      "via": "shared-frame-CJdE5Ria.js:Dd"
+    },
+    {
+      "module": "side-chat-panel.mjs",
+      "local": "F",
+      "kind": "react",
+      "from": "react",
+      "name": "useLayoutEffect",
+      "via": "vendor-frame-BckkO60Y.js:xo"
+    },
+    {
+      "module": "side-chat-panel.mjs",
+      "local": "Fk",
+      "kind": "adapter",
+      "from": "../../source-chat-side-chat-v4-adapters.jsx",
+      "name": "ChatMemoryMarkdown",
+      "via": "c89efce1a-CleBUUAy.js:s"
+    },
+    {
+      "module": "side-chat-panel.mjs",
+      "local": "G",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "CdsButton",
+      "via": "shared-frame-CJdE5Ria.js:Id"
+    },
+    {
+      "module": "side-chat-panel.mjs",
+      "local": "I",
+      "kind": "react",
+      "from": "react",
+      "name": "useImperativeHandle",
+      "via": "vendor-frame-BckkO60Y.js:yo"
+    },
+    {
+      "module": "side-chat-panel.mjs",
+      "local": "I1",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "I1",
+      "via": "shared-frame-CJdE5Ria.js:rm"
+    },
+    {
+      "module": "side-chat-panel.mjs",
+      "local": "I4",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "I4",
+      "via": "shared-frame-CJdE5Ria.js:om"
+    },
+    {
+      "module": "side-chat-panel.mjs",
+      "local": "J0",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J0",
+      "via": "shared-frame-CJdE5Ria.js:cm"
+    },
+    {
+      "module": "side-chat-panel.mjs",
+      "local": "J1",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J1",
+      "via": "shared-frame-CJdE5Ria.js:lm"
+    },
+    {
+      "module": "side-chat-panel.mjs",
+      "local": "J2",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J2",
+      "via": "shared-frame-CJdE5Ria.js:um"
+    },
+    {
+      "module": "side-chat-panel.mjs",
+      "local": "J3",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J3",
+      "via": "shared-frame-CJdE5Ria.js:dm"
+    },
+    {
+      "module": "side-chat-panel.mjs",
+      "local": "J4",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J4",
+      "via": "shared-frame-CJdE5Ria.js:fm"
+    },
+    {
+      "module": "side-chat-panel.mjs",
+      "local": "J5",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J5",
+      "via": "shared-frame-CJdE5Ria.js:pm"
+    },
+    {
+      "module": "side-chat-panel.mjs",
+      "local": "J8",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J8",
+      "via": "shared-frame-CJdE5Ria.js:mm"
+    },
+    {
+      "module": "side-chat-panel.mjs",
+      "local": "J9",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J9",
+      "via": "shared-frame-CJdE5Ria.js:hm"
+    },
+    {
+      "module": "side-chat-panel.mjs",
+      "local": "K0",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "K0",
+      "via": "shared-frame-CJdE5Ria.js:gm"
+    },
+    {
+      "module": "side-chat-panel.mjs",
+      "local": "K1",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "K1",
+      "via": "shared-frame-CJdE5Ria.js:_m"
+    },
+    {
+      "module": "side-chat-panel.mjs",
+      "local": "K2",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "K2",
+      "via": "shared-frame-CJdE5Ria.js:vm"
+    },
+    {
+      "module": "side-chat-panel.mjs",
+      "local": "K3",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "K3",
+      "via": "shared-frame-CJdE5Ria.js:ym"
+    },
+    {
+      "module": "side-chat-panel.mjs",
+      "local": "K4",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "K4",
+      "via": "shared-frame-CJdE5Ria.js:bm"
+    },
+    {
+      "module": "side-chat-panel.mjs",
+      "local": "K5",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "K5",
+      "via": "shared-frame-CJdE5Ria.js:xm"
+    },
+    {
+      "module": "side-chat-panel.mjs",
+      "local": "N",
+      "kind": "react",
+      "from": "react",
+      "name": "useRef",
+      "via": "vendor-frame-BckkO60Y.js:wo"
+    },
+    {
+      "module": "side-chat-panel.mjs",
+      "local": "Ne",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "CdsShortcut",
+      "via": "shared-frame-CJdE5Ria.js:rf"
+    },
+    {
+      "module": "side-chat-panel.mjs",
+      "local": "Nm",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-2-CsjIBQD8.mjs",
+      "name": "m_",
+      "via": "shared-2-CsjIBQD8.js:Tv"
+    },
+    {
+      "module": "side-chat-panel.mjs",
+      "local": "Oe",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "CdsIcon",
+      "via": "shared-frame-CJdE5Ria.js:lf"
+    },
+    {
+      "module": "side-chat-panel.mjs",
+      "local": "Q",
+      "kind": "adapter",
+      "from": "../../source-chat-side-chat-v4-adapters.jsx",
+      "name": "FormattedMessage",
+      "via": "vendor-intl-BJgYK7RA.js:l"
+    },
+    {
+      "module": "side-chat-panel.mjs",
+      "local": "Wn",
+      "kind": "adapter",
+      "from": "../../source-chat-side-chat-v4-adapters.jsx",
+      "name": "useRouter",
+      "via": "shared-25-D-aF0gt9.js:em"
+    },
+    {
+      "module": "side-chat-panel.mjs",
+      "local": "Wt",
+      "kind": "adapter",
+      "from": "../../source-chat-side-chat-v4-adapters.jsx",
+      "name": "reportError",
+      "via": "shared-0-CnnWnVrT.js:zd"
+    },
+    {
+      "module": "side-chat-panel.mjs",
+      "local": "Z1",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "Z1",
+      "via": "shared-frame-CJdE5Ria.js:Sm"
+    },
+    {
+      "module": "side-chat-panel.mjs",
+      "local": "Zt",
+      "kind": "linked",
+      "from": "../code-composer-v4/owner-support.mjs",
+      "name": "ownerDocument",
+      "via": "shared-25-D-aF0gt9.js:Bp"
+    },
+    {
+      "module": "side-chat-panel.mjs",
+      "local": "a",
+      "kind": "linked",
+      "from": "../routines-shared-v4/preload-helper-BBljBeZo.mjs",
+      "name": "e",
+      "via": "preload-helper-BBljBeZo.js:n"
+    },
+    {
+      "module": "side-chat-panel.mjs",
+      "local": "c0",
+      "kind": "adapter",
+      "from": "../../source-chat-side-chat-v4-adapters.jsx",
+      "name": "useChatSideChatToggle",
+      "via": "ca2ef848d-DA54buzo.js#c0"
+    },
+    {
+      "module": "side-chat-panel.mjs",
+      "local": "eF",
+      "kind": "adapter",
+      "from": "../../source-chat-side-chat-v4-adapters.jsx",
+      "name": "streamChatSideQuestion",
+      "via": "c9451a5b2-CKJkvosR.js:t"
+    },
+    {
+      "module": "side-chat-panel.mjs",
+      "local": "f",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "jsxs",
+      "via": "vendor-frame-BckkO60Y.js:Ka"
+    },
+    {
+      "module": "side-chat-panel.mjs",
+      "local": "j_",
+      "kind": "adapter",
+      "from": "../../source-chat-side-chat-v4-adapters.jsx",
+      "name": "useIntl",
+      "via": "vendor-intl-BJgYK7RA.js:p"
+    },
+    {
+      "module": "side-chat-panel.mjs",
+      "local": "je",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "_a",
+      "via": "shared-frame-CJdE5Ria.js:np"
+    },
+    {
+      "module": "side-chat-panel.mjs",
+      "local": "ln",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-25.mjs",
+      "name": "ownerWindow",
+      "via": "shared-25-D-aF0gt9.js:Gp"
+    },
+    {
+      "module": "side-chat-panel.mjs",
+      "local": "m",
+      "kind": "react",
+      "from": "react",
+      "name": "useState",
+      "via": "vendor-frame-BckkO60Y.js:To"
+    },
+    {
+      "module": "side-chat-panel.mjs",
+      "local": "oe",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "CdsLayerProvider",
+      "via": "shared-frame-CJdE5Ria.js:Td"
+    },
+    {
+      "module": "side-chat-panel.mjs",
+      "local": "u",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "jsx",
+      "via": "vendor-frame-BckkO60Y.js:Ga"
+    },
+    {
+      "module": "side-chat-panel.mjs",
+      "local": "w",
+      "kind": "react",
+      "from": "react",
+      "name": "useEffect",
+      "via": "vendor-frame-BckkO60Y.js:go"
+    },
+    {
+      "module": "side-chat-panel.mjs",
+      "local": "zr",
+      "kind": "adapter",
+      "from": "../../source-chat-side-chat-v4-adapters.jsx",
+      "name": "useShortcut",
+      "via": "shared-1-D1bGaTaN.js:Vn"
+    }
+  ]
+}

@@ -1,0 +1,72 @@
+[
+  {
+    "name": "prosemirror-model",
+    "version": "1.25.12",
+    "license": "MIT",
+    "file": "prosemirror-model-1.25.12-LICENSE",
+    "sha256": "ef0b452ced6304db2ce78ca66de1fc7b97bab05bc1750c95df359ed3fe1d65c8"
+  },
+  {
+    "name": "prosemirror-state",
+    "version": "1.4.4",
+    "license": "MIT",
+    "file": "prosemirror-state-1.4.4-LICENSE",
+    "sha256": "ef0b452ced6304db2ce78ca66de1fc7b97bab05bc1750c95df359ed3fe1d65c8"
+  },
+  {
+    "name": "prosemirror-view",
+    "version": "1.42.5",
+    "license": "MIT",
+    "file": "prosemirror-view-1.42.5-LICENSE",
+    "sha256": "ef0b452ced6304db2ce78ca66de1fc7b97bab05bc1750c95df359ed3fe1d65c8"
+  },
+  {
+    "name": "prosemirror-commands",
+    "version": "1.7.2",
+    "license": "MIT",
+    "file": "prosemirror-commands-1.7.2-LICENSE",
+    "sha256": "ef0b452ced6304db2ce78ca66de1fc7b97bab05bc1750c95df359ed3fe1d65c8"
+  },
+  {
+    "name": "prosemirror-history",
+    "version": "1.5.0",
+    "license": "MIT",
+    "file": "prosemirror-history-1.5.0-LICENSE",
+    "sha256": "ef0b452ced6304db2ce78ca66de1fc7b97bab05bc1750c95df359ed3fe1d65c8"
+  },
+  {
+    "name": "prosemirror-keymap",
+    "version": "1.2.3",
+    "license": "MIT",
+    "file": "prosemirror-keymap-1.2.3-LICENSE",
+    "sha256": "ef0b452ced6304db2ce78ca66de1fc7b97bab05bc1750c95df359ed3fe1d65c8"
+  },
+  {
+    "name": "prosemirror-transform",
+    "version": "1.12.1",
+    "license": "MIT",
+    "file": "prosemirror-transform-1.12.1-LICENSE",
+    "sha256": "ef0b452ced6304db2ce78ca66de1fc7b97bab05bc1750c95df359ed3fe1d65c8"
+  },
+  {
+    "name": "orderedmap",
+    "version": "2.1.1",
+    "license": "MIT",
+    "file": "orderedmap-2.1.1-LICENSE",
+    "sha256": "869c30f368eb08735e779027b9f4bc9fea2f39624351856aebe42741f0bc0884"
+  },
+  {
+    "name": "rope-sequence",
+    "version": "1.3.4",
+    "license": "MIT",
+    "file": "rope-sequence-1.3.4-LICENSE",
+    "sha256": "530424aebdd0e73f53238d1f89df250057bc8d8ce090cf5954197fadce5bf226"
+  },
+  {
+    "name": "w3c-keyname",
+    "version": "2.2.8",
+    "license": "MIT",
+    "file": "w3c-keyname-2.2.8-LICENSE",
+    "sha256": "869c30f368eb08735e779027b9f4bc9fea2f39624351856aebe42741f0bc0884"
+  }
+]

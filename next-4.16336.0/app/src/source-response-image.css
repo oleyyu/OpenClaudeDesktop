@@ -1,0 +1,5 @@
+/* markdown-current Lc/Rc: image has natural dimensions and a 5px border. */
+.sri-frame { display:block; min-width:0; max-width:100%; }
+.sri-image { display:block; max-width:100%; height:auto; border:1px solid var(--cds-border); border-radius:5px; outline:none; }
+.sri-image[hidden] { display:none; }
+.sri-placeholder { display:block; width:100%; max-width:320px; height:120px; border-radius:var(--cds-radius,6px); background:var(--cds-skeleton-base,var(--cds-alpha-1)); }

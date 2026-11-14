@@ -1,0 +1,34 @@
+/* PN classic: code-card-common:150–160 / scroll-messages:17118–17151. */
+.sag { width:100%; }
+.sag-trigger { position:relative; display:flex; align-items:center; gap:3px; max-width:100%; border-radius:var(--radius-sm); color:var(--cds-text-muted); text-align:left; }
+.sag-trigger:focus-visible { outline:none; box-shadow:var(--cds-focus-shadow); }
+.sag-name { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.sag-verb,.sag-model,.sag-outcome { flex-shrink:0; }
+/* BOe: `text-body shrink-0 ${settled ? "text-muted-as-secondary" : "text-secondary"}`. */
+.sag-model { color:var(--muted-as-secondary, var(--cds-text-muted)); }
+/* he (approval-current.js:17127-17131): text-secondary while running, text-muted settled (Ve). */
+.sag[data-agent-state=running] .sag-model { color:var(--cds-text-secondary); }
+/* Ie in rE's `min-w-0` slot as `block truncate`; the plain verb stays whitespace-nowrap. */
+.sag-verb[data-described] { flex-shrink:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.sag-activity { min-width:0; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; color:var(--cds-text-secondary); }
+.sag-activity-count { flex-shrink:0; white-space:nowrap; color:var(--cds-text-secondary); }
+.sag-caret { flex-shrink:0; align-self:center; color:var(--cds-text-muted); }
+.sag-trigger:hover { color:var(--cds-text-secondary); }
+.sag[data-agent-state=failed] .sag-verb { color:var(--cds-text-danger); }
+.sag-outcome { color:var(--cds-text-secondary); }
+.sag-card-wrap { margin-block:6px; }
+.sag-card { isolation:isolate; width:318px; min-width:318px; max-width:318px; gap:var(--cds-gap-xs); padding:10px 0 10px var(--cds-pad-lg); border-radius:8px; }
+.sag-card > .icon { color:var(--cds-text-muted); flex-shrink:0; }
+.sag-surface { position:absolute; inset:0; border-radius:inherit; z-index:-1; box-shadow:inset 0 0 0 1px var(--cds-border); transition:transform var(--cds-dur-slow) var(--cds-btn-spring); }
+.sag-card:hover .sag-surface { background:var(--cds-fill-ghost-hover); }
+.sag-card:active .sag-surface { transform:scale(.99); transition-duration:var(--cds-dur-fast); }
+.sag-description { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; --source-shimmer-base:var(--cds-text-primary); }
+/* Mt/Tl pane title (shared-12 vm "text-body text-secondary select-none truncate pl-[4px]"). */
+.sag-pane-title { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:var(--cds-font-size-body); line-height:var(--cds-leading-body); font-weight:var(--cds-font-weight-regular,400); color:var(--cds-text-secondary); user-select:none; }
+.sag-transcript { flex:1; min-height:0; overflow-y:auto; overflow-x:hidden; contain:strict; scrollbar-gutter:stable both-edges; padding:var(--cds-pad-lg) var(--cds-pad-lg) 64px; }
+.sag-entries { display:flex; flex-direction:column; gap:var(--chat-turn-gap,15px); overflow-wrap:anywhere; }
+.sag-entries > .source-message.source-message { margin:0; }
+.sag-entries .source-user-message { align-self:stretch; }
+.sag-link { border:0; padding:0; background:none; color:var(--cds-text-secondary); text-decoration:underline; }
+@media(prefers-reduced-motion:reduce){.sag-surface{transition:none;}}
+html[data-reduce-motion="true"] .sag-surface { transition: none; }

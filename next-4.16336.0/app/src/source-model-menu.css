@@ -1,0 +1,37 @@
+/* 2.2553.1 shared-14 hS/kS/bS rows on the shared SourceMenu popup (pg/sg/Wg/Gg
+   geometry lives in source-menu.css). Only ModelSelector-specific hooks remain. */
+.sm-model-name { display: flex; align-items: center; min-width: 0; gap: 6px; white-space: nowrap; }
+.sm-model-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sm-model-trailing {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 var(--cds-icon, 16px);
+  width: var(--cds-icon, 16px);
+  height: var(--cds-icon, 16px);
+  margin-right: -4px;
+  color: var(--cds-fill-accent);
+}
+.sm-model-digit { color: var(--cds-text-muted); font-size: var(--cds-font-size-footnote, 12px); line-height: var(--cds-leading-footnote, 15px); }
+.sm-model-empty { padding: 4px 8px; color: var(--cds-text-muted); }
+@media (pointer: coarse) { .sm-model-digit { display: none; } }
+.sm-model-fast .ss-switch { --ss-switch-height: 16px; pointer-events: none; }
+/* shared-14 wS: "block min-w-0 whitespace-normal" copy, pS name row
+   ("flex min-w-0 items-center gap-xs" + truncate), description
+   "mt-1 block text-footnote text-muted" (real Codex tier description). */
+.sm-model-fast .smenu-label { white-space: normal; }
+.sm-fast-copy { display: block; min-width: 0; white-space: normal; }
+.sm-fast-name { display: flex; min-width: 0; align-items: center; gap: var(--cds-gap-xs, 6px); }
+.sm-fast-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sm-fast-description {
+  display: block;
+  margin-top: 4px;
+  color: var(--cds-text-muted);
+  font-size: var(--cds-font-size-footnote, 12px);
+  line-height: var(--cds-leading-footnote, 15px);
+}
+/* The role="none" wrapper a row's tooltip (shared-7 aw: catalog tooltip / notice text, a Fast tier's reason) sits on. */
+.sm-model-tip { display: block; width: 100%; }
+/* 4.16336.0 Effort popup header (X.Header "font-normal", thinking.description): muted footnote copy that wraps
+   within the popup instead of stretching it to one long line. */
+.sm-effort-description { max-width: 18rem; white-space: normal; font-weight: 400; }

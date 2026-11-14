@@ -1,0 +1,243 @@
+/* 2.2553.1 tile engine (c360a9e1c-GPs-MV9u.js): Vh gap 12 / padding 8, Gh
+   color tokens, injected affordance CSS at :8735 and hh inline styles at
+   :9640-9720. Independent implementation; only the tokens are shared. */
+.source-pane-layout {
+  --tile-indicator-color: var(--cds-fill-accent);
+  --tile-indicator-thickness: 3px;
+  --tile-resize-color: var(--cds-alpha-3);
+  --tile-resize-color-active: var(--cds-fill-primary);
+  --tile-resize-color-focus: var(--cds-fill-accent);
+  --tile-resize-color-disabled: var(--cds-alpha-2);
+  --tile-resize-thickness: 3px;
+  --tile-resize-length: 56px;
+  --tile-drag-color: var(--cds-alpha-3);
+  --tile-drag-color-active: var(--cds-fill-primary);
+  --tile-drag-color-focus: var(--cds-fill-accent);
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  position: relative;
+  overflow: clip;
+}
+/* hh.tileContainer carries a 1px transparent border officially; the local
+   container omits it so the already verified 8px inset (chat header at y=8,
+   frozen ui029/transcript-fade pane layouts) keeps its exact geometry. The
+   bottom edge alone takes the border back: 2.42304.0 shared-20 Zf pads the
+   bottom `n + r` (padding 8 + borderPx 1), so the docked composer and the
+   Home environment bar sit 9px above the window edge, not 8. */
+.source-pane-layout[data-has-pane="false"] > .tiles-container {
+  padding-bottom: 9px;
+}
+.tiles-container {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  border: 0;
+  background: transparent;
+}
+.tiles-stack {
+  display: flex;
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  overflow: visible;
+}
+.tiles-tile-wrap {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  overflow: visible;
+  transition: transform 300ms cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+.tiles-tile-wrap[data-tile-active] {
+  z-index: 24 !important;
+}
+.tiles-shell {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
+  width: 100%;
+  height: 100%;
+  container-type: inline-size;
+}
+.tiles-content-host {
+  display: contents;
+}
+.source-chat-tile > .tiles-shell {
+  position: absolute;
+}
+.source-chat-tile-content,
+.source-chat-body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+.source-chat-tile-content {
+  height: 100%;
+  padding-inline-start: var(--tile-covered-content-start, 0px);
+  padding-inline-end: var(--tile-covered-content-end, 0px);
+}
+.source-chat-tile-content > .st-toolbar {
+  margin-inline-start: var(--tile-covered-extra-start, 0px);
+  margin-inline-end: var(--tile-covered-extra-end, 0px);
+}
+.source-chat-body {
+  flex: 1;
+}
+.source-pane-layout[data-has-pane="true"] .source-chat-tile .workspace-toolbar.st-toolbar {
+  height: 32px;
+  min-height: 32px;
+  padding-top: 0;
+}
+.source-side-tile {
+  border-radius: 10px;
+  background: var(--cds-surface-2);
+}
+.source-side-tile > .tiles-shell {
+  overflow: hidden;
+  border-radius: 10px;
+}
+.source-side-tile .detail-panel {
+  position: relative;
+  inset: auto;
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  max-height: 100%;
+  flex: 1;
+  box-shadow: none;
+  background: var(--cds-surface-2);
+  border-left: 0;
+  z-index: auto;
+}
+/* Drag handle (Ah + hh.dragHandle): 44x16 top-center, 32x3 affordance. */
+.tiles-drag-handle {
+  position: absolute;
+  top: 0;
+  left: calc(50% - var(--top-left-clearance, 0px) / 2);
+  transform: translateX(-50%);
+  width: 44px;
+  height: 16px;
+  padding: 6px 0 0;
+  border: 0;
+  background: transparent;
+  outline: none;
+  cursor: move;
+  touch-action: none;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  -webkit-app-region: no-drag;
+}
+.tiles-drag-handle-affordance {
+  width: 32px;
+  height: 3px;
+  border-radius: 999px;
+  transition: opacity 120ms ease;
+  pointer-events: none;
+  background: var(--tile-drag-color);
+  opacity: 0;
+}
+.tiles-drag-handle:hover .tiles-drag-handle-affordance {
+  opacity: 1;
+}
+.tiles-drag-handle:focus-visible .tiles-drag-handle-affordance {
+  background: var(--tile-drag-color-focus);
+  opacity: 1;
+}
+.tiles-dragging .tiles-drag-handle.is-active .tiles-drag-handle-affordance {
+  background: var(--tile-drag-color-active);
+  opacity: 1;
+}
+.tiles-dragging,
+.tiles-dragging * {
+  cursor: move !important;
+}
+.source-pane-layout[data-dragging],
+.source-pane-layout[data-resizing] {
+  user-select: none;
+}
+.source-pane-layout[data-resizing] .tiles-handle.is-active,
+.source-pane-layout[data-resizing] .tiles-handle.is-active * {
+  cursor: inherit;
+}
+/* Boundary handle (Mh): gap-wide hit area, centred 3x56 affordance. */
+.tiles-handle {
+  position: relative;
+  flex: none;
+  padding: 0;
+  outline: none;
+  border: 0;
+  background: transparent;
+  touch-action: none;
+  -webkit-app-region: no-drag;
+}
+.tiles-handle-affordance {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  border-radius: 999px;
+  transform: translate(-50%, -50%);
+  transition: opacity 120ms ease;
+  background: var(--tile-resize-color);
+  opacity: 0;
+}
+.tiles-handle:hover .tiles-handle-affordance {
+  opacity: 1;
+}
+.tiles-handle.is-active .tiles-handle-affordance {
+  background: var(--tile-resize-color-active);
+  opacity: 1;
+}
+.tiles-handle:focus-visible .tiles-handle-affordance {
+  background: var(--tile-resize-color-focus);
+  opacity: 1;
+}
+.tiles-handle[aria-disabled="true"] .tiles-handle-affordance {
+  background: var(--tile-resize-color-disabled);
+}
+.tiles-handle[data-drop-target] .tiles-handle-affordance {
+  background: var(--tile-indicator-color);
+  opacity: 1;
+}
+.tiles-handle-corner {
+  position: absolute;
+  cursor: all-scroll;
+  touch-action: none;
+}
+/* Drop indicator (Nh): 3px accent bar, radius 999, outset by gap/2. */
+.tiles-drop-indicator {
+  position: absolute;
+  pointer-events: none;
+  border-radius: 999px;
+  background: var(--tile-indicator-color);
+  z-index: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .tiles-tile-wrap,
+  .tiles-drag-handle-affordance,
+  .tiles-handle-affordance {
+    transition: none;
+  }
+}
+html[data-local-motion="reduce"] .tiles-tile-wrap,
+html[data-local-motion="reduce"] .tiles-drag-handle-affordance,
+html[data-local-motion="reduce"] .tiles-handle-affordance {
+  transition: none;
+}
+/* 4.16336.0 Code session line mode (session-page lane item 2; tile-line-model.mjs). The divider, the shell ground and the
+   reach-back are the official c6a992d55-_JRfOmTh.css rules ([data-tiles-line] .tiles-handle:before / .tiles-shell /
+   .tiles-shell[data-after-line-x] / the lit handle line), loaded as is. What the host takes away here is only its own
+   2.2553.1 floating-card decoration above, which the 4.16336.0 viewport does not have: the docked pane is not rounded and
+   its content does not paint a second ground over the shell's (shared-20 h_ --tile-shell-ground, m_). */
+[data-tiles-line] .source-side-tile,
+[data-tiles-line] .source-side-tile > .tiles-shell {
+  border-radius: 0;
+}
+[data-tiles-line] .source-side-tile,
+[data-tiles-line] .source-side-tile .detail-panel {
+  background: transparent;
+}

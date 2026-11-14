@@ -1,0 +1,1 @@
+import{y as e}from"./c477e0dc6-CxsE6UcX.js";var t={...e,token(t,n){return t.sol()&&(t.string=t.string.replace(/[\n\r\u2028\u2029]/g," ")),e.token(t,n)}};export{t as toml};

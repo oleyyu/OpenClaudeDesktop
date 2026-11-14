@@ -1,0 +1,35 @@
+/* Session notices (source-session-notices.jsx): the 3.6556.2 Code notice stack (cc43287c9 Rde → shared-26 RM
+   ChatComposerNotices; each notice a CDS Banner, which draws its own tone, ring, padding, type, action and Dismiss
+   button). W14-code r4 shell css4-ssn-list-geometry: in Code the stack is inside the composer column with Rde's own class
+   only (no rule here); .ssn-list is Chat / Cowork's stack above their column, its width the column's (source-composer.css).
+   The rules below only lay out what a Codex notice adds inside the banner's text (details, code spans, a path, a Markdown
+   /recap answer). */
+.ssn-list { margin-top: 6px; }
+.ssn-summary, .ssn-details { margin: 0; overflow-wrap: anywhere; white-space: pre-wrap; }
+.ssn-details { color: var(--cds-text-secondary); }
+/* A code span in a notice (Codex's `model` / `config.key` / `path`): the reply's inline code chip. */
+.ssn-code {
+  font-family: var(--cds-font-mono);
+  font-size: 0.92em;
+  line-height: 1.4;
+  padding: 1px 3px;
+  border-radius: 4px;
+  background: var(--cds-alpha-1);
+  color: var(--code-chip-ink, var(--cds-text-primary));
+  overflow-wrap: anywhere;
+}
+/* Markdown details (a /recap answer): reply typography in a bounded scroller so a long catch-up never hides the transcript. */
+.ssn-markdown {
+  max-height: min(240px, 35vh);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  margin-top: 4px;
+  padding-inline-end: 4px;
+  white-space: normal;
+  color: var(--cds-text-primary);
+  font-size: var(--cds-font-size-body, 14px);
+  line-height: var(--cds-leading-body, 20px);
+  border-radius: 4px;
+}
+.ssn-markdown:focus-visible { outline: none; box-shadow: var(--cds-focus-shadow); }
+.ssn-path { font-family: var(--cds-font-code, anthropic-mono), monospace; font-size: 11px; }

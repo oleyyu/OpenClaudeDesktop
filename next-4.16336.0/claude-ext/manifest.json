@@ -1,0 +1,22 @@
+{
+  "manifest_version": 3,
+  "name": "OpenClaude Desktop Bridge",
+  "description": "Lets OpenClaude Desktop read and operate the pages you open in Chrome.",
+  "version": "0.1.0",
+  "minimum_chrome_version": "116",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA1T75W/BaF4Usd7KTQln7WRTr7B6xiFzbicy1CnAPyIsIK0a1Gi+37x9Ux0x/1lMVQcfhc14f0up55qWVnWLd3vjWII24+0x4pkZBsF/nIDU7njc/zkcVVw9Xx+9mn/CWsh+JJMTnPI5JM2vH8Bbyp2Kq8EjFSbWrC7+irRq8167/wHjjlyWjd9l4W5kUcJxQEMqucec3U5Xvh6gWqJwwkWhjRYkQz8N3jV8DOc0dE89CNGnN2jNhJnw4cNF/gxAONW6n5uRe0oDOCKAyjfEs78ab9IJMJLdNlxGH50q7jp87+13RhnWDZdAsSe58CibAtlMnXXT+lR5MZZHFQlimdwIDAQAB",
+  "permissions": [
+    "nativeMessaging",
+    "tabs",
+    "scripting",
+    "storage",
+    "debugger"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "service-worker.js",
+    "type": "module"
+  }
+}

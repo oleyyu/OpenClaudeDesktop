@@ -1,0 +1,106 @@
+/* Split view (source-split-view.jsx). The grid itself is the reference's: the loaded shared-styles sheet
+   (index.html) carries .dframe-pane-host (grid tracks from --df-col-tracks, rows from --df-pane-row), .dframe-pane-col
+   (a 1px --cds-border column line), the 12px .dframe-pane-resize-col / -row / -corner hit areas (3.6556.2: the column
+   area is clipped to its trailing 62.5% and only its .dframe-pane-resize-col-no-drag child, the row and the corner are
+   -webkit-app-region: no-drag, so no local app-region rule is added for the column), the extra pane fading
+   in (0.18s, none under reduced motion), the unfocused pane dimmed (filter opacity .75 saturate .85), the ⌘-held ring,
+   the .dframe-pane-grip and the .dframe-drop-overlay badge. These rules fit the local workspace into it. */
+.split-host {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  position: relative;
+  isolation: isolate;
+}
+.split-pane {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  position: relative;
+  /* The loaded 2.2553 sheet sets will-change: transform on .dframe-pane; that would make every pane the containing
+     block of position: fixed descendants. */
+  will-change: auto;
+}
+/* An extra pane's App portals into the slot; the slot adds no box, so the App's root lays out in the pane. */
+.split-pane-slot {
+  display: contents;
+}
+.split-pane-secondary > .split-pane-slot > .desktop-app.dframe-root {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+}
+/* The unfocused pane's titlebar actions step back (official .dframe-pane-actions at opacity 0) and fade in on hover,
+   so only the focused pane shows its row of run / terminal / pane / menu / close buttons. Keyboard focus inside the
+   group shows it too. */
+.split-host[data-split] .split-pane:not([data-focused]) .workspace-toolbar .st-trailing {
+  opacity: 0;
+  transition: opacity 0.12s ease-out;
+}
+.split-host[data-split] .split-pane:not([data-focused]):hover .workspace-toolbar .st-trailing,
+.split-host[data-split] .split-pane:not([data-focused]) .workspace-toolbar .st-trailing:focus-within {
+  opacity: 1;
+}
+/* surfaces wave 3 (titlebar frame): the Code titlebar is the 4.16336.0 frame (shared-20 s_), whose actions are the cluster
+   box before s_'s end clearance (shared-18 IS, [data-lined-row-end-clearance]) in the CdsToolbar's sections row; the same
+   host step-back applies to it. */
+.split-host[data-split] .split-pane:not([data-focused]) [data-perf-region="header"] [data-cds="Toolbar"] :has(+ [data-lined-row-end-clearance]) {
+  opacity: 0;
+  transition: opacity 0.12s ease-out;
+}
+.split-host[data-split] .split-pane:not([data-focused]):hover [data-perf-region="header"] [data-cds="Toolbar"] :has(+ [data-lined-row-end-clearance]),
+.split-host[data-split] .split-pane:not([data-focused]) [data-perf-region="header"] [data-cds="Toolbar"] :has(+ [data-lined-row-end-clearance]):focus-within {
+  opacity: 1;
+}
+/* The ⌘-held ring (.dframe-pane:before) sits above the pane's own content. */
+.split-host[data-split] > .dframe-pane::before {
+  z-index: 20;
+}
+/* A pane drag: no text selection, and embedded pages and webviews don't take the pointer. */
+.split-host[data-pane-dragging] {
+  user-select: none;
+}
+.split-host[data-pane-dragging] webview {
+  pointer-events: none;
+}
+.split-host .dframe-pane-grip {
+  -webkit-app-region: no-drag;
+}
+/* fN's label (2.31226.0 shared-styles: a sidebar-row pill centred on the pointer). */
+.dframe-pane-drag-label > span {
+  max-width: 240px;
+  height: var(--df-row-h, 32px);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  border: 0;
+  border-radius: var(--df-radius-pill, 999px);
+  background-color: var(--df-sidebar-bg, var(--cds-surface-1));
+  box-shadow: var(--df-shadow-float, var(--cds-shadow-sm));
+  backdrop-filter: none;
+  opacity: 0.9;
+  color: var(--cds-text-primary);
+  font-size: var(--df-row-font, 13px);
+  line-height: var(--df-row-h, 32px);
+  padding: 0 12px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  overflow: hidden;
+  transform: translate(-50%, -50%);
+}
+@media (prefers-reduced-motion: reduce) {
+  .split-host[data-split] .split-pane .workspace-toolbar .st-trailing,
+  .split-host[data-split] .split-pane [data-perf-region="header"] [data-cds="Toolbar"] :has(+ [data-lined-row-end-clearance]),
+  .split-host .dframe-pane-extra,
+  .split-host .dframe-pane {
+    transition: none;
+  }
+}
+html[data-reduce-motion="true"] .split-host[data-split] .split-pane .workspace-toolbar .st-trailing,
+html[data-reduce-motion="true"] .split-host[data-split] .split-pane [data-perf-region="header"] [data-cds="Toolbar"] :has(+ [data-lined-row-end-clearance]),
+html[data-reduce-motion="true"] .split-host .dframe-pane-extra,
+html[data-reduce-motion="true"] .split-host .dframe-pane,
+html[data-reduce-motion="true"] .split-host .dframe-drop-overlay-badge,
+html[data-reduce-motion="true"] .split-host .dframe-drop-overlay-label {
+  transition: none;
+}

@@ -1,0 +1,216 @@
+{
+  "area": "desktop",
+  "referenceVersion": "3.6556.2",
+  "adapters": [
+    {
+      "name": "search.mjs",
+      "sha256": "15d7ad2ced2f4377c723ff53ccb9eede8f5626f9b54e9eaeae839490b8455524",
+      "sources": [
+        {
+          "name": "cc3bc2027-CqmDBxcX.js",
+          "sha256": "09fa542429c6218548047ca7d0ffc1c190102361991b30cbc00d1cb213ed5fdd",
+          "base": "ion"
+        },
+        {
+          "name": "shared-15-BvlV43cI.js",
+          "sha256": "60b50b149da73e5f15e4c4d2a496a0203f105f9866e996d7c9c0523538557225",
+          "base": "ion"
+        },
+        {
+          "name": "shared-12-Dro5Rhl0.js",
+          "sha256": "adfb2b7fd89164d9fbf044e736c9438c97e1ed7ab2ff1351c06ac9bb0946c41c",
+          "base": "ion"
+        },
+        {
+          "name": "shared-52-uHFNjl7C.js",
+          "sha256": "83537e599f2f6720c2a0a245162e44a5c7431e22872a32ed16ea716e65ded08a",
+          "base": "ion"
+        }
+      ],
+      "referenceVersion": "3.6556.2"
+    },
+    {
+      "name": "editor-location.cjs",
+      "sha256": "96534ea1798c1d1a3c94881271ca23dc7b787516e2f02cd31d77667c71083b5d",
+      "sources": [
+        {
+          "name": "index.chunk-DNPOm2Zc.js",
+          "sha256": "6b27cd273bedd283c531bf6770e4cd6e576bbeece0e0b92dbc0b0705099c3379",
+          "base": "asar"
+        }
+      ],
+      "referenceVersion": "3.6556.2"
+    },
+    {
+      "name": "side-chat-history.cjs",
+      "sha256": "f666ddbfa4f40e97b6f8a3d77efb23898d9c887610253e0a034339b02f9f566a",
+      "sources": [
+        {
+          "name": "index.chunk-DNPOm2Zc.js",
+          "sha256": "6b27cd273bedd283c531bf6770e4cd6e576bbeece0e0b92dbc0b0705099c3379",
+          "base": "asar"
+        },
+        {
+          "name": "index.chunk-C1YVpIsP.js",
+          "sha256": "89f71c142121525b64bcfd945a8944dc2b7f24391618afbe4c5431777015ea0c",
+          "base": "asar"
+        }
+      ],
+      "referenceVersion": "3.6556.2"
+    },
+    {
+      "name": "preview-element-inspector.mjs",
+      "sha256": "cf25e7a12e776881c93c37f28e535bf8d57b176a40fc42ec78c621f4fbb94dae",
+      "sources": [
+        {
+          "name": "index.chunk-jPKPzV-P.js",
+          "sha256": "6e898798943b990e6eefa9209c61d977866b7898f681864f02c8cad3bb691ed5",
+          "base": "asar"
+        }
+      ],
+      "referenceVersion": "3.6556.2"
+    },
+    {
+      "name": "preview-address-parser.mjs",
+      "sha256": "4ff724961f2107cf41e509f36c71405f0cec0df2fd17d99d66ad3a16c227321b",
+      "sources": [
+        {
+          "name": "shared-25-DOWZRSlq.js",
+          "sha256": "a279442d20a0b9bb6327db086d99fe9248ecc93955651d99166b8ce85282d1a1",
+          "base": "ion"
+        },
+        {
+          "name": "c224804cc-Ct9XIdre.js",
+          "sha256": "28fe2664bc25c312d157a3bdddda45def6eed49f98ce6722b9cc0dbe642852c5",
+          "base": "ion"
+        }
+      ],
+      "referenceVersion": "3.6556.2"
+    },
+    {
+      "name": "preview-tab-shortcuts.mjs",
+      "sha256": "83c078dcc9d75421c6f51c07b425e3965d4a152dc44be92b3107fb545c580b48",
+      "sources": [
+        {
+          "name": "index.chunk-jPKPzV-P.js",
+          "sha256": "6e898798943b990e6eefa9209c61d977866b7898f681864f02c8cad3bb691ed5",
+          "base": "asar"
+        }
+      ],
+      "referenceVersion": "3.6556.2"
+    },
+    {
+      "name": "preview-link-decisions.mjs",
+      "sha256": "ababbbfe6371064aef70a8e15177aa81184cb77202285f0009dbfc8cf9c48ae8",
+      "sources": [
+        {
+          "name": "c11959232-TLc_9Vpx.js",
+          "sha256": "b8eca92e0200c48142b8e20ec7040bb1608c15ec07c4c43ea1de2240896e82b5",
+          "base": "ion"
+        }
+      ],
+      "referenceVersion": "3.6556.2"
+    },
+    {
+      "name": "preview-link-origin.mjs",
+      "sha256": "b60c562701b1f646014bdd922a70c0e0bdcc29f648239384c72c8638b2e8cfd8",
+      "sources": [
+        {
+          "name": "index.chunk-jPKPzV-P.js",
+          "sha256": "6e898798943b990e6eefa9209c61d977866b7898f681864f02c8cad3bb691ed5",
+          "base": "asar"
+        }
+      ],
+      "referenceVersion": "3.6556.2"
+    }
+  ],
+  "copies": [
+    {
+      "name": "search.mjs",
+      "target": "electron/generated/file-search.mjs",
+      "sha256": "15d7ad2ced2f4377c723ff53ccb9eede8f5626f9b54e9eaeae839490b8455524"
+    },
+    {
+      "name": "editor-location.cjs",
+      "target": "electron/generated/editor-location.cjs",
+      "sha256": "96534ea1798c1d1a3c94881271ca23dc7b787516e2f02cd31d77667c71083b5d"
+    },
+    {
+      "name": "preview-element-inspector.mjs",
+      "target": "electron/generated/preview-element-inspector.mjs",
+      "sha256": "cf25e7a12e776881c93c37f28e535bf8d57b176a40fc42ec78c621f4fbb94dae"
+    },
+    {
+      "name": "preview-address-parser.mjs",
+      "target": "electron/generated/preview-address-parser.mjs",
+      "sha256": "4ff724961f2107cf41e509f36c71405f0cec0df2fd17d99d66ad3a16c227321b"
+    },
+    {
+      "name": "preview-tab-shortcuts.mjs",
+      "target": "electron/generated/preview-tab-shortcuts.mjs",
+      "sha256": "83c078dcc9d75421c6f51c07b425e3965d4a152dc44be92b3107fb545c580b48"
+    },
+    {
+      "name": "side-chat-history.cjs",
+      "target": "electron/generated/side-chat-history.cjs",
+      "sha256": "f666ddbfa4f40e97b6f8a3d77efb23898d9c887610253e0a034339b02f9f566a"
+    },
+    {
+      "name": "preview-link-origin.mjs",
+      "target": "electron/generated/preview-link-origin.mjs",
+      "sha256": "b60c562701b1f646014bdd922a70c0e0bdcc29f648239384c72c8638b2e8cfd8"
+    }
+  ],
+  "sources": [
+    {
+      "name": "cc3bc2027-CqmDBxcX.js",
+      "sha256": "09fa542429c6218548047ca7d0ffc1c190102361991b30cbc00d1cb213ed5fdd",
+      "base": "ion"
+    },
+    {
+      "name": "shared-15-BvlV43cI.js",
+      "sha256": "60b50b149da73e5f15e4c4d2a496a0203f105f9866e996d7c9c0523538557225",
+      "base": "ion"
+    },
+    {
+      "name": "shared-12-Dro5Rhl0.js",
+      "sha256": "adfb2b7fd89164d9fbf044e736c9438c97e1ed7ab2ff1351c06ac9bb0946c41c",
+      "base": "ion"
+    },
+    {
+      "name": "shared-52-uHFNjl7C.js",
+      "sha256": "83537e599f2f6720c2a0a245162e44a5c7431e22872a32ed16ea716e65ded08a",
+      "base": "ion"
+    },
+    {
+      "name": "index.chunk-DNPOm2Zc.js",
+      "sha256": "6b27cd273bedd283c531bf6770e4cd6e576bbeece0e0b92dbc0b0705099c3379",
+      "base": "asar"
+    },
+    {
+      "name": "index.chunk-C1YVpIsP.js",
+      "sha256": "89f71c142121525b64bcfd945a8944dc2b7f24391618afbe4c5431777015ea0c",
+      "base": "asar"
+    },
+    {
+      "name": "index.chunk-jPKPzV-P.js",
+      "sha256": "6e898798943b990e6eefa9209c61d977866b7898f681864f02c8cad3bb691ed5",
+      "base": "asar"
+    },
+    {
+      "name": "shared-25-DOWZRSlq.js",
+      "sha256": "a279442d20a0b9bb6327db086d99fe9248ecc93955651d99166b8ce85282d1a1",
+      "base": "ion"
+    },
+    {
+      "name": "c224804cc-Ct9XIdre.js",
+      "sha256": "28fe2664bc25c312d157a3bdddda45def6eed49f98ce6722b9cc0dbe642852c5",
+      "base": "ion"
+    },
+    {
+      "name": "c11959232-TLc_9Vpx.js",
+      "sha256": "b8eca92e0200c48142b8e20ec7040bb1608c15ec07c4c43ea1de2240896e82b5",
+      "base": "ion"
+    }
+  ]
+}

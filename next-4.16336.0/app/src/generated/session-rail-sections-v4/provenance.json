@@ -1,0 +1,1423 @@
+{
+  "referenceVersion": "4.16336.0",
+  "referenceSnapshot": "snapshots/claude-4.16336.0-20261104",
+  "generator": "scripts/extract-session-rail-sections-v4.mjs",
+  "previous": {
+    "generator": "scripts/extract-session-rail-sections.mjs",
+    "output": "src/generated/session-rail-sections",
+    "referenceVersion": "3.6556.2"
+  },
+  "sharedGraph": {
+    "area": "cds-core",
+    "manifestSha256": "06d2026939e5c8992713c2a0dda1b1abc9adffe7a0c223fe3c1e79eecd08d62c"
+  },
+  "linkedAreas": {
+    "code-routines-v4": "8dee8be0e689fa69f13ede52d82d01c39c6a62d60940601e86d2c99d30b810a5",
+    "files-changes-v4": "35740c17397e4a05b8f5a12f408061040cdd39e4fb28ca86b43c02f786e1b93e",
+    "routines-shared-v4": "a2a9b9a84b2705e48451025af38eb7582de5bb421c626e6bdf5b067eb8e00c8c",
+    "session-rail-kit-v4": "8e3066efa4721cee2a5bb0b190fae471848c3456fa9b9424773baba5f2b9291a"
+  },
+  "notRooted": {
+    "useMinuteNow": {
+      "file": "shared-183-B2N6Zy4J.js",
+      "local": "_J",
+      "heldBy": "routines-shared-v4",
+      "why": "held with its minute clock state by routines-shared-v4 (D1): imported from there, a consumer links routines-shared-v4"
+    },
+    "pickFields": {
+      "file": "shared-123-1Hc1RTKl.js",
+      "local": "rG",
+      "why": "shared-123 holds a byte-identical twin (gq); emitted in the closure, not rooted"
+    }
+  },
+  "roots": [
+    {
+      "file": "cf74bc599-BytvntCE.js",
+      "local": "lP",
+      "name": "SessionRailServers",
+      "export": null,
+      "declarationSha256": "5c04cb6264e588c87883f1a33572e53adf0447e8f38ae20c2bf2f9aeb93af131",
+      "pinned": true
+    },
+    {
+      "file": "cf74bc599-BytvntCE.js",
+      "local": "KN",
+      "name": "SessionRailBackgroundTasks",
+      "export": null,
+      "declarationSha256": "bc4a0e4e393fc6c363614ebb997f1edd33b0a5857ec8f1950689bee530a7a1da",
+      "pinned": true
+    },
+    {
+      "file": "cf74bc599-BytvntCE.js",
+      "local": "oP",
+      "name": "RailServersCard",
+      "export": null,
+      "declarationSha256": "daf1fa2643241443d45bdd91ea2764c4765f24c0d305282dc864a866d6f5e489",
+      "pinned": true
+    },
+    {
+      "file": "cf74bc599-BytvntCE.js",
+      "local": "aP",
+      "name": "RailServerRow",
+      "export": null,
+      "declarationSha256": "ccd572be129fec6386b0e6f289ea3f779476a2150fab0de1576aa2538030f067",
+      "pinned": true
+    },
+    {
+      "file": "cf74bc599-BytvntCE.js",
+      "local": "QN",
+      "name": "useSessionDevServers",
+      "export": null,
+      "declarationSha256": "55f75a3c123c7393cfeb31339f8dc11d57aad110e7ececf64c52494c9fe2ba9a",
+      "pinned": true
+    },
+    {
+      "file": "cf74bc599-BytvntCE.js",
+      "local": "nP",
+      "name": "railServerState",
+      "export": null,
+      "declarationSha256": "2f97f29dfab54acdc38bcee9ded4a42f46a8686a5f44d81d67fa038dc9612fd7",
+      "pinned": true
+    },
+    {
+      "file": "cf74bc599-BytvntCE.js",
+      "local": "iP",
+      "name": "railServerName",
+      "export": null,
+      "declarationSha256": "4a691ac7882420a87be3dea2293be2654b73352e2eb13d98ae7a8093144f736d",
+      "pinned": true
+    },
+    {
+      "file": "cf74bc599-BytvntCE.js",
+      "local": "rP",
+      "name": "railServerAddress",
+      "export": null,
+      "declarationSha256": "4b39016db854d0baaac2cf681f08499a917fd0f8c2920def7b840b8ee7985f69",
+      "pinned": true
+    },
+    {
+      "file": "cf74bc599-BytvntCE.js",
+      "local": "tP",
+      "name": "railServerKey",
+      "export": null,
+      "declarationSha256": "e3400b0a1262acbfcbe677e4dba577263ee68ede4ee2af8753931de554c81a1a",
+      "pinned": true
+    },
+    {
+      "file": "cf74bc599-BytvntCE.js",
+      "local": "$N",
+      "name": "RAIL_SERVERS_LIMIT",
+      "export": null,
+      "declarationSha256": "524fc3698e51b52ec265f9a82210f587112d4d30ea41b9c262949389d8d0ba68",
+      "pinned": true
+    },
+    {
+      "file": "cf74bc599-BytvntCE.js",
+      "local": "eP",
+      "name": "SERVER_META_FIELDS",
+      "export": null,
+      "declarationSha256": "503683ce2c01a8c78cf3cecc6f28164568ce0b20096995bbd79140733fa47c32",
+      "pinned": true
+    },
+    {
+      "file": "cf74bc599-BytvntCE.js",
+      "local": "UN",
+      "name": "RailBackgroundTasksCard",
+      "export": null,
+      "declarationSha256": "ea305a19038618897d038d24355f19a6d3c6435366aea75b651cefa533fb5cde",
+      "pinned": true
+    },
+    {
+      "file": "cf74bc599-BytvntCE.js",
+      "local": "HN",
+      "name": "RailBackgroundTaskRow",
+      "export": null,
+      "declarationSha256": "29db8c252dd168ac552bf8c0b9538156614bac0a50c1fad6b273aaae25a95ce4",
+      "pinned": true
+    },
+    {
+      "file": "cf74bc599-BytvntCE.js",
+      "local": "WN",
+      "name": "railTaskTitle",
+      "export": null,
+      "declarationSha256": "bfc6fdd493300494fad023c8f5d77a045aa07b7fa93effec98e2379c09c78fa0",
+      "pinned": true
+    },
+    {
+      "file": "cf74bc599-BytvntCE.js",
+      "local": "RN",
+      "name": "railTaskIcon",
+      "export": null,
+      "declarationSha256": "88576a5fa8ee8d43b32e01936ce1157a9b12e052229450a5393ddff054601a17",
+      "pinned": true
+    },
+    {
+      "file": "cf74bc599-BytvntCE.js",
+      "local": "VN",
+      "name": "railStopLabel",
+      "export": null,
+      "declarationSha256": "77a72f6644667b5418541fbd4b0a68ccc8681f157f44e68c508c3fac3bcb5b15",
+      "pinned": true
+    },
+    {
+      "file": "cf74bc599-BytvntCE.js",
+      "local": "LN",
+      "name": "railTaskKey",
+      "export": null,
+      "declarationSha256": "2216a3ea781e723dbc8038328f48a0a7d9b1e238b19721a767a9f5895a5fab40",
+      "pinned": true
+    },
+    {
+      "file": "cf74bc599-BytvntCE.js",
+      "local": "PN",
+      "name": "RAIL_TASKS_LIMIT",
+      "export": null,
+      "declarationSha256": "b45a2ba83952668f497ef393fc8577bb318ed6ea52b557bcc9c4cdd331fd2f53",
+      "pinned": true
+    },
+    {
+      "file": "cf74bc599-BytvntCE.js",
+      "local": "IN",
+      "name": "TASK_META_FIELDS",
+      "export": null,
+      "declarationSha256": "6775b44bc62f0cd5c88adbf630065ac9df2071c2ec87adfbea841170836a82a3",
+      "pinned": true
+    },
+    {
+      "file": "shared-20-DUEo90UF.js",
+      "local": "Nj",
+      "name": "useAnnouncement",
+      "export": "pr",
+      "declarationSha256": "acd0e5159a14d779b0298bb9fde5e899e8b4133c610b979c91dd80f9af573694",
+      "pinned": true
+    },
+    {
+      "file": "shared-20-DUEo90UF.js",
+      "local": "Ij",
+      "name": "Announcement",
+      "export": "dr",
+      "declarationSha256": "3dee44d2153850d8e5720844a0491ea870e998bc1d6fe274df6b162525a14f06",
+      "pinned": true
+    },
+    {
+      "file": "c9bd7af9c-Bvb7EG4D.js",
+      "local": "_F",
+      "name": "isDismissedTask",
+      "export": "f",
+      "declarationSha256": "64e94477c98612d97cde80b7c13eb05c019b52f72dd0a89085d5959b5afca7c8",
+      "pinned": true
+    },
+    {
+      "file": "c9bd7af9c-Bvb7EG4D.js",
+      "local": "kF",
+      "name": "loopNextRunAt",
+      "export": "a",
+      "declarationSha256": "b0f3000e482d80b4723f79f1e978591ffe3efa538160bd22aeba08dc13c50fe4",
+      "pinned": true
+    },
+    {
+      "file": "c9bd7af9c-Bvb7EG4D.js",
+      "local": "jF",
+      "name": "formatCountdown",
+      "export": "i",
+      "declarationSha256": "60094a30379c703209834fdc9629899c5f5fd771de71ab788f3ac0f9508e2317",
+      "pinned": true
+    },
+    {
+      "file": "cea7057eb-BrXukOIp.js",
+      "local": "w",
+      "name": "loopExpired",
+      "export": "v",
+      "declarationSha256": "25fd7fb2068e215d6deb58a4b9f2b29cffb39e5c992a17ea57da5430668f4e2f",
+      "pinned": true
+    },
+    {
+      "file": "cea7057eb-BrXukOIp.js",
+      "local": "T",
+      "name": "isAmbientTask",
+      "export": "_",
+      "declarationSha256": "4eb4106ad8e51585f0edacbb113536e04861e79328ddb8374cba1736171298ee",
+      "pinned": true
+    },
+    {
+      "file": "cea7057eb-BrXukOIp.js",
+      "local": "Te",
+      "name": "taskAgentToolUseId",
+      "export": "n",
+      "declarationSha256": "60d0ab69dde50e304c149b14142487a9e6eb316f431b36e37c699c7df8701b12",
+      "pinned": true
+    },
+    {
+      "file": "c96d752d0-D9VB6ArX.js",
+      "local": "hZe",
+      "name": "groupTasks",
+      "export": "Qr",
+      "declarationSha256": "16ebb24052764460096277afb0eb79808954f6d0a34a261cde7bb36cdaf6909f",
+      "pinned": true
+    },
+    {
+      "file": "c96d752d0-D9VB6ArX.js",
+      "local": "mH",
+      "name": "taskDescriptionParts",
+      "export": "yi",
+      "declarationSha256": "f1bc3388b5710c62403c5f1e04562f6dbee4be51fe0eb03a5cee9a779d5506df",
+      "pinned": true
+    },
+    {
+      "file": "c96d752d0-D9VB6ArX.js",
+      "local": "hH",
+      "name": "taskDescriptionText",
+      "export": "bi",
+      "declarationSha256": "430f130b086308db4d30beee5bfa45f31aa33dff6054e5c66fd5d0bd539d09d2",
+      "pinned": true
+    },
+    {
+      "file": "c227f4d5e-DGDdGBTz.js",
+      "local": "_O",
+      "name": "originFolder",
+      "export": "jc",
+      "declarationSha256": "a6f52139dd163269ae995f2b304ab3e633bbc58069e8855c281e96f9b8562747",
+      "pinned": true
+    },
+    {
+      "file": "c227f4d5e-DGDdGBTz.js",
+      "local": "qO",
+      "name": "serverInSession",
+      "export": "xc",
+      "declarationSha256": "fb68b30c978a439998c55ea89b6219c03bff501a3696cba2aaa64acef143b3e6",
+      "pinned": true
+    },
+    {
+      "file": "c227f4d5e-DGDdGBTz.js",
+      "local": "oL",
+      "name": "remoteServerLive",
+      "export": "Qa",
+      "declarationSha256": "5e61da09a935a3ee3b98687403e48299bced6229eeac3a7f77fb6c3bccfa9e4f",
+      "pinned": true
+    },
+    {
+      "file": "c227f4d5e-DGDdGBTz.js",
+      "local": "wL",
+      "name": "nextPreviewNonce",
+      "export": "Za",
+      "declarationSha256": "c2e42759e5539edb44b76b46762b8779b4b8f36aee330c377c7cee3c0adbdead",
+      "pinned": true
+    },
+    {
+      "file": "shared-25-D-aF0gt9.js",
+      "local": "IW",
+      "name": "useStableValue",
+      "export": "Zn",
+      "declarationSha256": "6bddb9fb6d9bc2bfab4a71172bf41200ad0bfe0fe33bc7be39f445f342e3679a",
+      "pinned": true
+    },
+    {
+      "file": "c155b6b71-CtScXPSD.js",
+      "local": "g",
+      "name": "usePreviewTabs",
+      "export": "f",
+      "declarationSha256": "db19b5563d21743addd4b2b9212b9da5e4c6c87cda3b8d2c0b712f627c91dbc3",
+      "pinned": true
+    },
+    {
+      "file": "shared-0-CnnWnVrT.js",
+      "local": "aD",
+      "name": "DevServerStatus",
+      "export": "s_",
+      "declarationSha256": "13b272940fcea9bd9f8223dce458261ccf346d90675c5f5bb0873a9fc86ce548",
+      "pinned": true
+    },
+    {
+      "file": "cd4f82e77-Cuw99s6A.js",
+      "local": "Me",
+      "name": "useSecondNow",
+      "export": "vt",
+      "declarationSha256": "74398969f44a894481e99625f6f5811fc801ef6167ac7ad3eb6f5f7deb69090b",
+      "pinned": true
+    },
+    {
+      "file": "shared-123-1Hc1RTKl.js",
+      "local": "Ck",
+      "name": "isHostedPageUrl",
+      "export": "ih",
+      "declarationSha256": "f054e81e7bf4df45bdc8c58107a2f7c4150239974ad61e8c6b3f36800e02e727",
+      "pinned": true
+    }
+  ],
+  "adapters": [
+    {
+      "original": "vendor-intl-BJgYK7RA.js#q",
+      "name": "useIntl",
+      "hostAdapter": "src/source-session-rail-kit-adapters.jsx",
+      "previous": "vendor-intl-DYfox5Co.js#q",
+      "declarationSha256": "edf793bc7b87ae9a38cea39d25d752a5bcfef1d492e06a2219e120311feaaec0",
+      "pinned": true
+    },
+    {
+      "original": "vendor-intl-BJgYK7RA.js#Gt",
+      "name": "FormattedMessage",
+      "hostAdapter": "src/source-session-rail-kit-adapters.jsx",
+      "previous": "vendor-intl-DYfox5Co.js#Gt",
+      "declarationSha256": "bde2ec1630e0a679fa4135cf75389568e77fa98fdcb08519af8104d5306ff5b5",
+      "pinned": true
+    },
+    {
+      "original": "c5da7eb42-aEqbSKbC.js#LL",
+      "name": "useSessionRailMeta",
+      "hostAdapter": "src/source-session-rail-sections-adapters.jsx",
+      "previous": "c5da7eb42-XijZdwf1.js#QI",
+      "declarationSha256": "6b7105ae24f3ae257f8320347117a0f95159a2f96952da4134221c3550c95cca",
+      "pinned": true
+    },
+    {
+      "original": "c5da7eb42-aEqbSKbC.js#mR",
+      "name": "useRemoteSessionBridgeUp",
+      "hostAdapter": "src/source-session-rail-sections-adapters.jsx",
+      "previous": "c5da7eb42-XijZdwf1.js#jL",
+      "declarationSha256": "65d32cd52db375fa13d77cf70fb181a7856bbd943a2d2dc65cc1458a768bc133",
+      "pinned": true
+    },
+    {
+      "original": "c227f4d5e-DGDdGBTz.js#SL",
+      "name": "useRemoteSessionServers",
+      "hostAdapter": "src/source-session-rail-sections-adapters.jsx",
+      "previous": "c227f4d5e-B-FYKrwT.js#PU",
+      "declarationSha256": "d6859c88404ffd7787cb8a04245157c8571fd226a9afcc8097816ae517bbedb7",
+      "pinned": true
+    },
+    {
+      "original": "c227f4d5e-DGDdGBTz.js#SO",
+      "name": "usePreferredPreviewServers",
+      "hostAdapter": "src/source-session-rail-sections-adapters.jsx",
+      "previous": "c227f4d5e-B-FYKrwT.js#LH",
+      "declarationSha256": "35c332534c20e2cee92cba93d10452a7c56fd4b2cacf26a1f2920cf21c2fc33c",
+      "pinned": true
+    },
+    {
+      "original": "c227f4d5e-DGDdGBTz.js#BB",
+      "name": "useOpenTasksPane",
+      "hostAdapter": "src/source-session-rail-sections-adapters.jsx",
+      "previous": "c227f4d5e-B-FYKrwT.js#mQ",
+      "declarationSha256": "019f0b864f9dc18d9b97c08315e35bbb223c7cee523932d7dd8dbf82c82675e8",
+      "pinned": true
+    },
+    {
+      "original": "c9bd7af9c-Bvb7EG4D.js#xF",
+      "name": "useRailStoppingIds",
+      "hostAdapter": "src/source-session-rail-sections-adapters.jsx",
+      "previous": "cccc2cf0a-DhZC33Gc.js#Qj",
+      "declarationSha256": "2f36fd8d03bd3543fb22cfb79200bafa5ae818ed58ed904c79e2c8f94064bc52",
+      "pinned": true
+    },
+    {
+      "original": "c9bd7af9c-Bvb7EG4D.js#bF",
+      "name": "useDismissedTaskIds",
+      "hostAdapter": "src/source-session-rail-sections-adapters.jsx",
+      "previous": "cccc2cf0a-DhZC33Gc.js#Zj",
+      "declarationSha256": "d4587c5b6e70700468800fa5e076c74564a195c0eb3a8312768bfef2713cb14c",
+      "pinned": true
+    },
+    {
+      "original": "c9bd7af9c-Bvb7EG4D.js#CF",
+      "name": "useServerStop",
+      "hostAdapter": "src/source-session-rail-sections-adapters.jsx",
+      "previous": "cccc2cf0a-DhZC33Gc.js#eM",
+      "declarationSha256": "5b6e052e02d45716ca04f6bd223dd76fbdb59a1ca9a961273d15740f144e4ed6",
+      "pinned": true
+    },
+    {
+      "original": "c9bd7af9c-Bvb7EG4D.js#SF",
+      "name": "useLoopStop",
+      "hostAdapter": "src/source-session-rail-sections-adapters.jsx",
+      "previous": "cccc2cf0a-DhZC33Gc.js#$j",
+      "declarationSha256": "ba974c6dae55260d4476e1dab06c633a68ec42efbbd8fe176c4a151476636455",
+      "pinned": true
+    },
+    {
+      "original": "c9bd7af9c-Bvb7EG4D.js#EF",
+      "name": "useTaskStop",
+      "hostAdapter": "src/source-session-rail-sections-adapters.jsx",
+      "previous": "cccc2cf0a-DhZC33Gc.js#rM",
+      "declarationSha256": "3b8b6cc08e380847770c8a3dc40ce3e87d884ad3d92b55081f1285a144c5e435",
+      "pinned": true
+    },
+    {
+      "original": "shared-25-D-aF0gt9.js#ko",
+      "name": "useGrowthBookFeature",
+      "hostAdapter": "src/source-session-rail-sections-adapters.jsx",
+      "previous": "shared-25-DOWZRSlq.js#fs",
+      "declarationSha256": "e464cf91ab4b3e69b54bd9ab46a2b248691395fd4fb7d28be593006226268ffa",
+      "pinned": true
+    },
+    {
+      "original": "shared-123-1Hc1RTKl.js#yy",
+      "name": "usePreviewOpensInBrowser",
+      "hostAdapter": "src/source-session-rail-sections-adapters.jsx",
+      "previous": "shared-78-D5Fw2h0a.js#tE",
+      "declarationSha256": "d3ac0c5a7128562a47c91e15500c7fe95eca71502a55070030dc4b6ea90dd573",
+      "pinned": true
+    },
+    {
+      "original": "shared-1-D1bGaTaN.js#qm",
+      "name": "useActiveServers",
+      "hostAdapter": "src/source-session-rail-sections-adapters.jsx",
+      "previous": "shared-1-BJhqMmkf.js#nd",
+      "declarationSha256": "83170f95145934c0e86d87af1c29a042346ee0e48d7ad59a98b1c7af0a50bb00",
+      "pinned": true
+    },
+    {
+      "original": "shared-0-CnnWnVrT.js#GO",
+      "name": "claudeWebLaunch",
+      "hostAdapter": "src/source-session-rail-sections-adapters.jsx",
+      "previous": "shared-0-DDOOdL6P.js#dC",
+      "declarationSha256": "f17376a00b0e7c66b0299393a7fdf0f71d48f99348ee9b9b869dfd176e8227d3",
+      "pinned": true
+    },
+    {
+      "original": "c03935b01-BylKMWqe.js#wf",
+      "name": "useRailScopeStoreApi",
+      "hostAdapter": "src/source-session-rail-sections-adapters.jsx",
+      "previous": "c03935b01-yhcY34vt.js#fu",
+      "declarationSha256": "955fe933005a3eb32c3875981ca9f0bc7822eb63e2902250bdf8863d0a7b732d",
+      "pinned": true
+    },
+    {
+      "original": "c03935b01-BylKMWqe.js#Q",
+      "name": "useRailScopeState",
+      "hostAdapter": "src/source-session-rail-sections-adapters.jsx",
+      "previous": "c03935b01-yhcY34vt.js#Q",
+      "declarationSha256": "edb002966b51329ac5fb095961ab8e5496c17acc9c3d4e47583dbea64f71c6ca",
+      "pinned": true
+    },
+    {
+      "original": "c03935b01-BylKMWqe.js#Pf",
+      "name": "useRailPreviewViews",
+      "hostAdapter": "src/source-session-rail-sections-adapters.jsx",
+      "previous": "c03935b01-yhcY34vt.js#Su",
+      "declarationSha256": "368e1be09eba403f4e7b8df47771b69ba96cd5d3d0bd5784bb3340d548b3fc23",
+      "pinned": true
+    },
+    {
+      "original": "c03935b01-BylKMWqe.js#Jl",
+      "name": "railSidePaneOpen",
+      "hostAdapter": "src/source-session-rail-sections-adapters.jsx",
+      "previous": "c03935b01-yhcY34vt.js#lc",
+      "declarationSha256": "09abaf71ce77672d1b48ef1b4007e129e78dc8db5ff1ba412080aa689a7b7578",
+      "pinned": true
+    },
+    {
+      "original": "c155b6b71-CtScXPSD.js#u",
+      "name": "useSessionPreviewId",
+      "hostAdapter": "src/source-session-rail-sections-adapters.jsx",
+      "previous": "c155b6b71-66pw54FW.js#u",
+      "declarationSha256": "35b7a9f1b3095bf25775fbae05cee5a667a61c3dac9061aef70cd832cf8edf25",
+      "pinned": true
+    },
+    {
+      "original": "c68c4283d-FxwfdZSA.js#Hd",
+      "name": "logSidePaneOpened",
+      "hostAdapter": "src/source-session-rail-sections-adapters.jsx",
+      "previous": "c68c4283d-CWbOoVxS.js#sd",
+      "declarationSha256": "3122ada754afa8c01aeca079a3b69b804564d5c7f0230f06e31046704f6d7cd2",
+      "pinned": true
+    },
+    {
+      "original": "c68c4283d-FxwfdZSA.js#qf",
+      "name": "logRailStopPressed",
+      "hostAdapter": "src/source-session-rail-sections-adapters.jsx",
+      "previous": "c68c4283d-CWbOoVxS.js#mf",
+      "declarationSha256": "d5e8617065093db063662eab8795ddcec663ea27ae69168254f5a635345ab81e",
+      "pinned": true
+    },
+    {
+      "original": "cea7057eb-BrXukOIp.js#_e",
+      "name": "useSessionTasks",
+      "hostAdapter": "src/source-session-rail-sections-adapters.jsx",
+      "previous": "cea7057eb-De2BQu3K.js#_e",
+      "declarationSha256": "e6d97bd12bad6d285b85017747ab5f193e5c823049a492defb0ddba079870638",
+      "pinned": true
+    }
+  ],
+  "imports": [
+    {
+      "module": "shared-0.mjs",
+      "local": "ge",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-0.mjs",
+      "name": "ge",
+      "via": "shared-0-CnnWnVrT.js#ge"
+    },
+    {
+      "module": "shared-0.mjs",
+      "local": "ve",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-0-CnnWnVrT.mjs",
+      "name": "ve",
+      "via": "shared-0-CnnWnVrT.js#ve"
+    },
+    {
+      "module": "shared-123.mjs",
+      "local": "J1",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J1",
+      "via": "shared-frame-CJdE5Ria.js:lm"
+    },
+    {
+      "module": "shared-123.mjs",
+      "local": "J9",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J9",
+      "via": "shared-frame-CJdE5Ria.js:hm"
+    },
+    {
+      "module": "shared-123.mjs",
+      "local": "K1",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "K1",
+      "via": "shared-frame-CJdE5Ria.js:_m"
+    },
+    {
+      "module": "shared-123.mjs",
+      "local": "Sk",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-123.mjs",
+      "name": "Sk",
+      "via": "shared-123-1Hc1RTKl.js#Sk"
+    },
+    {
+      "module": "shared-123.mjs",
+      "local": "V",
+      "kind": "adapter",
+      "from": "../../source-session-rail-sections-v4-adapters.jsx",
+      "name": "useGrowthBookFeature",
+      "via": "shared-25-D-aF0gt9.js:Fg"
+    },
+    {
+      "module": "shared-123.mjs",
+      "local": "ce",
+      "kind": "adapter",
+      "from": "../../source-session-rail-sections-v4-adapters.jsx",
+      "name": "claudeWebLaunch",
+      "via": "shared-0-CnnWnVrT.js:Bh"
+    },
+    {
+      "module": "shared-123.mjs",
+      "local": "yk",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-123.mjs",
+      "name": "yk",
+      "via": "shared-123-1Hc1RTKl.js#yk"
+    },
+    {
+      "module": "shared-25.mjs",
+      "local": "J1",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J1",
+      "via": "shared-frame-CJdE5Ria.js:lm"
+    },
+    {
+      "module": "shared-25.mjs",
+      "local": "J3",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J3",
+      "via": "shared-frame-CJdE5Ria.js:dm"
+    },
+    {
+      "module": "shared-25.mjs",
+      "local": "J9",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J9",
+      "via": "shared-frame-CJdE5Ria.js:hm"
+    },
+    {
+      "module": "shared-25.mjs",
+      "local": "K1",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "K1",
+      "via": "shared-frame-CJdE5Ria.js:_m"
+    },
+    {
+      "module": "shared-25.mjs",
+      "local": "K3",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "K3",
+      "via": "shared-frame-CJdE5Ria.js:ym"
+    },
+    {
+      "module": "shared-25.mjs",
+      "local": "p",
+      "kind": "react",
+      "from": "react",
+      "name": "useState",
+      "via": "vendor-frame-BckkO60Y.js:To"
+    },
+    {
+      "module": "shared-20.mjs",
+      "local": "I2",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "I2",
+      "via": "shared-frame-CJdE5Ria.js:im"
+    },
+    {
+      "module": "shared-20.mjs",
+      "local": "J0",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J0",
+      "via": "shared-frame-CJdE5Ria.js:cm"
+    },
+    {
+      "module": "shared-20.mjs",
+      "local": "J1",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J1",
+      "via": "shared-frame-CJdE5Ria.js:lm"
+    },
+    {
+      "module": "shared-20.mjs",
+      "local": "J2",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J2",
+      "via": "shared-frame-CJdE5Ria.js:um"
+    },
+    {
+      "module": "shared-20.mjs",
+      "local": "J9",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J9",
+      "via": "shared-frame-CJdE5Ria.js:hm"
+    },
+    {
+      "module": "shared-20.mjs",
+      "local": "K0",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "K0",
+      "via": "shared-frame-CJdE5Ria.js:gm"
+    },
+    {
+      "module": "shared-20.mjs",
+      "local": "K1",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "K1",
+      "via": "shared-frame-CJdE5Ria.js:_m"
+    },
+    {
+      "module": "shared-20.mjs",
+      "local": "c",
+      "kind": "react",
+      "from": "react",
+      "name": "useState",
+      "via": "vendor-frame-BckkO60Y.js:To"
+    },
+    {
+      "module": "shared-20.mjs",
+      "local": "o",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "jsxs",
+      "via": "vendor-frame-BckkO60Y.js:Ka"
+    },
+    {
+      "module": "c155b6b71.mjs",
+      "local": "J0",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J0",
+      "via": "shared-frame-CJdE5Ria.js:cm"
+    },
+    {
+      "module": "c155b6b71.mjs",
+      "local": "J1",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J1",
+      "via": "shared-frame-CJdE5Ria.js:lm"
+    },
+    {
+      "module": "c155b6b71.mjs",
+      "local": "J3",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J3",
+      "via": "shared-frame-CJdE5Ria.js:dm"
+    },
+    {
+      "module": "c155b6b71.mjs",
+      "local": "J4",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J4",
+      "via": "shared-frame-CJdE5Ria.js:fm"
+    },
+    {
+      "module": "c155b6b71.mjs",
+      "local": "J9",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J9",
+      "via": "shared-frame-CJdE5Ria.js:hm"
+    },
+    {
+      "module": "c155b6b71.mjs",
+      "local": "K0",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "K0",
+      "via": "shared-frame-CJdE5Ria.js:gm"
+    },
+    {
+      "module": "c155b6b71.mjs",
+      "local": "K1",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "K1",
+      "via": "shared-frame-CJdE5Ria.js:_m"
+    },
+    {
+      "module": "c155b6b71.mjs",
+      "local": "K3",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "K3",
+      "via": "shared-frame-CJdE5Ria.js:ym"
+    },
+    {
+      "module": "c155b6b71.mjs",
+      "local": "K4",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "K4",
+      "via": "shared-frame-CJdE5Ria.js:bm"
+    },
+    {
+      "module": "c155b6b71.mjs",
+      "local": "e",
+      "kind": "react",
+      "from": "react",
+      "name": "useState",
+      "via": "vendor-frame-BckkO60Y.js:To"
+    },
+    {
+      "module": "c155b6b71.mjs",
+      "local": "i",
+      "kind": "adapter",
+      "from": "../../source-session-rail-sections-v4-adapters.jsx",
+      "name": "claudeWebLaunch",
+      "via": "shared-0-CnnWnVrT.js:Bh"
+    },
+    {
+      "module": "c155b6b71.mjs",
+      "local": "n",
+      "kind": "react",
+      "from": "react",
+      "name": "useEffect",
+      "via": "vendor-frame-BckkO60Y.js:go"
+    },
+    {
+      "module": "c155b6b71.mjs",
+      "local": "r",
+      "kind": "react",
+      "from": "react",
+      "name": "useRef",
+      "via": "vendor-frame-BckkO60Y.js:wo"
+    },
+    {
+      "module": "c155b6b71.mjs",
+      "local": "s",
+      "kind": "linked",
+      "from": "../code-routines-v4/vendor-query-Bl2Kfzgk.mjs",
+      "name": "E",
+      "via": "vendor-query-Bl2Kfzgk.js:k"
+    },
+    {
+      "module": "c155b6b71.mjs",
+      "local": "t",
+      "kind": "react",
+      "from": "react",
+      "name": "useEffectEvent",
+      "via": "vendor-frame-BckkO60Y.js:_o"
+    },
+    {
+      "module": "shared-3.mjs",
+      "local": "Mt",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-0.mjs",
+      "name": "ot",
+      "via": "shared-0-CnnWnVrT.js:mT"
+    },
+    {
+      "module": "cd4f82e77.mjs",
+      "local": "_",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-153-DMw2VzSq.mjs",
+      "name": "IN",
+      "via": "shared-153-DMw2VzSq.js:Vu"
+    },
+    {
+      "module": "cd4f82e77.mjs",
+      "local": "e",
+      "kind": "react",
+      "from": "react",
+      "name": "useSyncExternalStore",
+      "via": "vendor-frame-BckkO60Y.js:Eo"
+    },
+    {
+      "module": "cb6930dae.mjs",
+      "local": "J1",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J1",
+      "via": "shared-frame-CJdE5Ria.js:lm"
+    },
+    {
+      "module": "cb6930dae.mjs",
+      "local": "J9",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J9",
+      "via": "shared-frame-CJdE5Ria.js:hm"
+    },
+    {
+      "module": "cb6930dae.mjs",
+      "local": "K1",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "K1",
+      "via": "shared-frame-CJdE5Ria.js:_m"
+    },
+    {
+      "module": "cb6930dae.mjs",
+      "local": "i",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "jsx",
+      "via": "vendor-frame-BckkO60Y.js:Ga"
+    },
+    {
+      "module": "cf74bc599.mjs",
+      "local": "Af",
+      "kind": "adapter",
+      "from": "../../source-session-rail-sections-v4-adapters.jsx",
+      "name": "logRailStopPressed",
+      "via": "c68c4283d-FxwfdZSA.js:of"
+    },
+    {
+      "module": "cf74bc599.mjs",
+      "local": "Ay",
+      "kind": "linked",
+      "from": "../files-changes-v4/focus-return.mjs",
+      "name": "useFocusReturnOnUnmount",
+      "via": "c0a54ccd3-DO5tXxAj.js:t"
+    },
+    {
+      "module": "cf74bc599.mjs",
+      "local": "Dp",
+      "kind": "adapter",
+      "from": "../../source-session-rail-sections-v4-adapters.jsx",
+      "name": "useOpenTasksPane",
+      "via": "c227f4d5e-DGDdGBTz.js:Di"
+    },
+    {
+      "module": "cf74bc599.mjs",
+      "local": "Dr",
+      "kind": "linked",
+      "from": "../code-routines-v4/vendor-query-Bl2Kfzgk.mjs",
+      "name": "E",
+      "via": "vendor-query-Bl2Kfzgk.js:k"
+    },
+    {
+      "module": "cf74bc599.mjs",
+      "local": "Hf",
+      "kind": "adapter",
+      "from": "../../source-session-rail-sections-v4-adapters.jsx",
+      "name": "useRailScopeState",
+      "via": "c03935b01-BylKMWqe.js:Et"
+    },
+    {
+      "module": "cf74bc599.mjs",
+      "local": "I1",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "I1",
+      "via": "shared-frame-CJdE5Ria.js:rm"
+    },
+    {
+      "module": "cf74bc599.mjs",
+      "local": "I2",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "I2",
+      "via": "shared-frame-CJdE5Ria.js:im"
+    },
+    {
+      "module": "cf74bc599.mjs",
+      "local": "I3",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "I3",
+      "via": "shared-frame-CJdE5Ria.js:am"
+    },
+    {
+      "module": "cf74bc599.mjs",
+      "local": "J",
+      "kind": "adapter",
+      "from": "../../source-session-rail-sections-v4-adapters.jsx",
+      "name": "claudeWebLaunch",
+      "via": "shared-0-CnnWnVrT.js:Bh"
+    },
+    {
+      "module": "cf74bc599.mjs",
+      "local": "J0",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J0",
+      "via": "shared-frame-CJdE5Ria.js:cm"
+    },
+    {
+      "module": "cf74bc599.mjs",
+      "local": "J1",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J1",
+      "via": "shared-frame-CJdE5Ria.js:lm"
+    },
+    {
+      "module": "cf74bc599.mjs",
+      "local": "J2",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J2",
+      "via": "shared-frame-CJdE5Ria.js:um"
+    },
+    {
+      "module": "cf74bc599.mjs",
+      "local": "J3",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J3",
+      "via": "shared-frame-CJdE5Ria.js:dm"
+    },
+    {
+      "module": "cf74bc599.mjs",
+      "local": "J4",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J4",
+      "via": "shared-frame-CJdE5Ria.js:fm"
+    },
+    {
+      "module": "cf74bc599.mjs",
+      "local": "J5",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J5",
+      "via": "shared-frame-CJdE5Ria.js:pm"
+    },
+    {
+      "module": "cf74bc599.mjs",
+      "local": "J9",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J9",
+      "via": "shared-frame-CJdE5Ria.js:hm"
+    },
+    {
+      "module": "cf74bc599.mjs",
+      "local": "Jf",
+      "kind": "adapter",
+      "from": "../../source-session-rail-sections-v4-adapters.jsx",
+      "name": "useRailPreviewViews",
+      "via": "c03935b01-BylKMWqe.js:xt"
+    },
+    {
+      "module": "cf74bc599.mjs",
+      "local": "K0",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "K0",
+      "via": "shared-frame-CJdE5Ria.js:gm"
+    },
+    {
+      "module": "cf74bc599.mjs",
+      "local": "K1",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "K1",
+      "via": "shared-frame-CJdE5Ria.js:_m"
+    },
+    {
+      "module": "cf74bc599.mjs",
+      "local": "K2",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "K2",
+      "via": "shared-frame-CJdE5Ria.js:vm"
+    },
+    {
+      "module": "cf74bc599.mjs",
+      "local": "K3",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "K3",
+      "via": "shared-frame-CJdE5Ria.js:ym"
+    },
+    {
+      "module": "cf74bc599.mjs",
+      "local": "K4",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "K4",
+      "via": "shared-frame-CJdE5Ria.js:bm"
+    },
+    {
+      "module": "cf74bc599.mjs",
+      "local": "K5",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "K5",
+      "via": "shared-frame-CJdE5Ria.js:xm"
+    },
+    {
+      "module": "cf74bc599.mjs",
+      "local": "Kd",
+      "kind": "adapter",
+      "from": "../../source-session-rail-sections-v4-adapters.jsx",
+      "name": "useSessionPreviewId",
+      "via": "c155b6b71-CtScXPSD.js:p"
+    },
+    {
+      "module": "cf74bc599.mjs",
+      "local": "Kh",
+      "kind": "adapter",
+      "from": "../../source-session-rail-sections-v4-adapters.jsx",
+      "name": "useSessionTasks",
+      "via": "cea7057eb-BrXukOIp.js:g"
+    },
+    {
+      "module": "cf74bc599.mjs",
+      "local": "Mt",
+      "kind": "adapter",
+      "from": "../../source-session-rail-sections-v4-adapters.jsx",
+      "name": "usePreviewOpensInBrowser",
+      "via": "shared-123-1Hc1RTKl.js:_x"
+    },
+    {
+      "module": "cf74bc599.mjs",
+      "local": "O",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "CdsButton",
+      "via": "shared-frame-CJdE5Ria.js:Id"
+    },
+    {
+      "module": "cf74bc599.mjs",
+      "local": "Pm",
+      "kind": "adapter",
+      "from": "../../source-session-rail-sections-v4-adapters.jsx",
+      "name": "useRemoteSessionServers",
+      "via": "c227f4d5e-DGDdGBTz.js:eo"
+    },
+    {
+      "module": "cf74bc599.mjs",
+      "local": "Q",
+      "kind": "adapter",
+      "from": "../../source-session-rail-sections-v4-adapters.jsx",
+      "name": "FormattedMessage",
+      "via": "vendor-intl-BJgYK7RA.js:l"
+    },
+    {
+      "module": "cf74bc599.mjs",
+      "local": "Ru",
+      "kind": "adapter",
+      "from": "../../source-session-rail-sections-v4-adapters.jsx",
+      "name": "useSessionRailMeta",
+      "via": "c5da7eb42-aEqbSKbC.js:nt"
+    },
+    {
+      "module": "cf74bc599.mjs",
+      "local": "Sa",
+      "kind": "adapter",
+      "from": "../../source-session-rail-sections-v4-adapters.jsx",
+      "name": "useIntl",
+      "via": "vendor-intl-BJgYK7RA.js:p"
+    },
+    {
+      "module": "cf74bc599.mjs",
+      "local": "Su",
+      "kind": "adapter",
+      "from": "../../source-session-rail-sections-v4-adapters.jsx",
+      "name": "useRemoteSessionBridgeUp",
+      "via": "c5da7eb42-aEqbSKbC.js:W"
+    },
+    {
+      "module": "cf74bc599.mjs",
+      "local": "Sx",
+      "kind": "adapter",
+      "from": "../../source-session-rail-sections-v4-adapters.jsx",
+      "name": "useLoopStop",
+      "via": "c9bd7af9c-Bvb7EG4D.js:u"
+    },
+    {
+      "module": "cf74bc599.mjs",
+      "local": "Th",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/c227f4d5e-DGDdGBTz.mjs",
+      "name": "IE",
+      "via": "c227f4d5e-DGDdGBTz.js:xl"
+    },
+    {
+      "module": "cf74bc599.mjs",
+      "local": "Tm",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/c227f4d5e-DGDdGBTz.mjs",
+      "name": "aD",
+      "via": "c227f4d5e-DGDdGBTz.js:bl"
+    },
+    {
+      "module": "cf74bc599.mjs",
+      "local": "Uf",
+      "kind": "adapter",
+      "from": "../../source-session-rail-sections-v4-adapters.jsx",
+      "name": "railSidePaneOpen",
+      "via": "c03935b01-BylKMWqe.js:I"
+    },
+    {
+      "module": "cf74bc599.mjs",
+      "local": "Vb",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/cdbb20c70-MNoYKqNP.mjs",
+      "name": "M",
+      "via": "cdbb20c70-MNoYKqNP.js:t"
+    },
+    {
+      "module": "cf74bc599.mjs",
+      "local": "Vf",
+      "kind": "adapter",
+      "from": "../../source-session-rail-sections-v4-adapters.jsx",
+      "name": "useRailScopeStoreApi",
+      "via": "c03935b01-BylKMWqe.js:Dt"
+    },
+    {
+      "module": "cf74bc599.mjs",
+      "local": "Z1",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "Z1",
+      "via": "shared-frame-CJdE5Ria.js:Sm"
+    },
+    {
+      "module": "cf74bc599.mjs",
+      "local": "Z3",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "Z3",
+      "via": "shared-frame-CJdE5Ria.js:wm"
+    },
+    {
+      "module": "cf74bc599.mjs",
+      "local": "ae",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "CdsOverflowTooltip",
+      "via": "shared-frame-CJdE5Ria.js:sd"
+    },
+    {
+      "module": "cf74bc599.mjs",
+      "local": "b",
+      "kind": "react",
+      "from": "react",
+      "name": "useRef",
+      "via": "vendor-frame-BckkO60Y.js:wo"
+    },
+    {
+      "module": "cf74bc599.mjs",
+      "local": "bx",
+      "kind": "adapter",
+      "from": "../../source-session-rail-sections-v4-adapters.jsx",
+      "name": "useTaskStop",
+      "via": "c9bd7af9c-Bvb7EG4D.js:s"
+    },
+    {
+      "module": "cf74bc599.mjs",
+      "local": "c",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "jsxs",
+      "via": "vendor-frame-BckkO60Y.js:Ka"
+    },
+    {
+      "module": "cf74bc599.mjs",
+      "local": "eh",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/c227f4d5e-DGDdGBTz.mjs",
+      "name": "pE",
+      "via": "c227f4d5e-DGDdGBTz.js:nl"
+    },
+    {
+      "module": "cf74bc599.mjs",
+      "local": "go",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-33-DtdykY0y.mjs",
+      "name": "Cb",
+      "via": "shared-33-DtdykY0y.js:nl"
+    },
+    {
+      "module": "cf74bc599.mjs",
+      "local": "h",
+      "kind": "react",
+      "from": "react",
+      "name": "useEffect",
+      "via": "vendor-frame-BckkO60Y.js:go"
+    },
+    {
+      "module": "cf74bc599.mjs",
+      "local": "hp",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/c227f4d5e-DGDdGBTz.mjs",
+      "name": "TE",
+      "via": "c227f4d5e-DGDdGBTz.js:$c"
+    },
+    {
+      "module": "cf74bc599.mjs",
+      "local": "jn",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-183-B2N6Zy4J.mjs",
+      "name": "_J",
+      "via": "shared-183-B2N6Zy4J.js:Cr"
+    },
+    {
+      "module": "cf74bc599.mjs",
+      "local": "lh",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/c227f4d5e-DGDdGBTz.mjs",
+      "name": "oE",
+      "via": "c227f4d5e-DGDdGBTz.js:rl"
+    },
+    {
+      "module": "cf74bc599.mjs",
+      "local": "lx",
+      "kind": "adapter",
+      "from": "../../source-session-rail-sections-v4-adapters.jsx",
+      "name": "useRailStoppingIds",
+      "via": "c9bd7af9c-Bvb7EG4D.js:d"
+    },
+    {
+      "module": "cf74bc599.mjs",
+      "local": "mx",
+      "kind": "adapter",
+      "from": "../../source-session-rail-sections-v4-adapters.jsx",
+      "name": "useServerStop",
+      "via": "c9bd7af9c-Bvb7EG4D.js:l"
+    },
+    {
+      "module": "cf74bc599.mjs",
+      "local": "o",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "jsx",
+      "via": "vendor-frame-BckkO60Y.js:Ga"
+    },
+    {
+      "module": "cf74bc599.mjs",
+      "local": "oe",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "cdsClassNames",
+      "via": "shared-frame-CJdE5Ria.js:tm"
+    },
+    {
+      "module": "cf74bc599.mjs",
+      "local": "oh",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/c227f4d5e-DGDdGBTz.mjs",
+      "name": "vD",
+      "via": "c227f4d5e-DGDdGBTz.js:qc"
+    },
+    {
+      "module": "cf74bc599.mjs",
+      "local": "ot",
+      "kind": "adapter",
+      "from": "../../source-session-rail-sections-v4-adapters.jsx",
+      "name": "useActiveServers",
+      "via": "shared-1-D1bGaTaN.js:rb"
+    },
+    {
+      "module": "cf74bc599.mjs",
+      "local": "p",
+      "kind": "react",
+      "from": "react",
+      "name": "memo",
+      "via": "vendor-frame-BckkO60Y.js:co"
+    },
+    {
+      "module": "cf74bc599.mjs",
+      "local": "q",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "CdsTooltipProvider",
+      "via": "shared-frame-CJdE5Ria.js:ld"
+    },
+    {
+      "module": "cf74bc599.mjs",
+      "local": "rf",
+      "kind": "adapter",
+      "from": "../../source-session-rail-sections-v4-adapters.jsx",
+      "name": "logSidePaneOpened",
+      "via": "c68c4283d-FxwfdZSA.js:Cf"
+    },
+    {
+      "module": "cf74bc599.mjs",
+      "local": "u",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "Fragment",
+      "via": "vendor-frame-BckkO60Y.js:Wa"
+    },
+    {
+      "module": "cf74bc599.mjs",
+      "local": "vx",
+      "kind": "adapter",
+      "from": "../../source-session-rail-sections-v4-adapters.jsx",
+      "name": "useDismissedTaskIds",
+      "via": "c9bd7af9c-Bvb7EG4D.js:p"
+    },
+    {
+      "module": "cf74bc599.mjs",
+      "local": "x",
+      "kind": "shared-graph",
+      "from": "../cds-core/vendor-frame.mjs",
+      "name": "useDirection",
+      "via": "vendor-frame-BckkO60Y.js:xa"
+    },
+    {
+      "module": "cf74bc599.mjs",
+      "local": "yp",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/c227f4d5e-DGDdGBTz.mjs",
+      "name": "yE",
+      "via": "c227f4d5e-DGDdGBTz.js:Al"
+    },
+    {
+      "module": "cf74bc599.mjs",
+      "local": "zp",
+      "kind": "adapter",
+      "from": "../../source-session-rail-sections-v4-adapters.jsx",
+      "name": "usePreferredPreviewServers",
+      "via": "c227f4d5e-DGDdGBTz.js:Mc"
+    }
+  ]
+}

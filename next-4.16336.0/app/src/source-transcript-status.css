@@ -1,0 +1,35 @@
+/* Classic Y5, not the newer Jhe/min-h-control status branch. This row never
+   owns composer overlay compensation or the transcript's bottom reserve. */
+.source-transcript-status {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  margin: var(--chat-turn-gap, 15px) 0 0;
+  padding: 0;
+  border: 0;
+  font-family: var(--cds-font-sans, anthropic-sans), sans-serif;
+  color: var(--cds-text-secondary);
+}
+/* Working line (turnStatusRows, 2.42304.0 w8): the row inside is the original Het / CDS TurnStatus. The busy wrapper
+   keeps the legacy .source-working marker for the UI harnesses; this neutralizes that class's row layout. */
+.source-transcript-status.source-working { display: flex; flex-direction: column; align-items: stretch; gap: 0; min-height: 0; padding: 0; color: var(--cds-text-secondary); }
+/* Replace only the former last-row margin. The 8px body-to-footer gap and
+   toolbar's 24px placeholder remain owned by SourceTurnFooter's parent. */
+.source-transcript-content > :is(.source-message, .stf-footer):has(+ .source-transcript-status) {
+  margin-bottom: 0;
+}
+/* A running tool row whose turn-mark box sits in the tail outlet (turn-mark Wa: only its empty `contents` home is
+   left in place) draws nothing. The desktop's entry is a flex column with item gaps, where that home makes no flex
+   item; this host spaces rows with margins, so the empty row (and its wrapper) makes no box either and its
+   neighbours' margins meet as they do without it — otherwise every handoff of the mark between the row and the
+   working line moves the tail by a gap. */
+.source-transcript-content > .source-message:has(> :only-child > [data-turn-mark-home]:only-child:empty),
+.source-transcript-content > .source-message:has(> :only-child > [data-turn-mark-home]:only-child:empty) > * { display: contents; }
+/* The same for the 4.16336.0 rows (source-code-transcript.jsx renderPart): a reply part is `[data-row-gap=own] >
+   [data-transcript-row].mt-5 > AssistantMessage > column > home`, in its own flow-root list row. With the box in the
+   tail outlet that `mt-5` was all the row still drew: 20px on top of the working line's own turn gap (35px between
+   the text and the line instead of 15px). The emptied row keeps no gap; it comes back with the box. */
+.source-transcript-content [data-transcript-row]:has(> [data-cds="AssistantMessage"]:only-child > :only-child > [data-turn-mark-home]:only-child:empty),
+.source-transcript-content [data-transcript-row]:has(> [data-reply-scope]:only-child > [data-cds="AssistantMessage"]:only-child > :only-child > [data-turn-mark-home]:only-child:empty) { margin-top: 0; }
+/* A loaded but empty thread has no preceding row and therefore no turn gap. */
+.source-transcript-content > .source-transcript-status:first-child { margin-top: 0; }

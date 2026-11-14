@@ -1,0 +1,1055 @@
+{
+  "area": "desktop",
+  "referenceVersion": "4.16336.0",
+  "adapters": [
+    {
+      "name": "search.mjs",
+      "sha256": "17f491344c458ce03044b1d4b987c390ac43312ae02620a00411046441cbee56",
+      "referenceVersion": "4.16336.0",
+      "realm": "renderer",
+      "productionRealms": [
+        "renderer",
+        "main"
+      ],
+      "sources": [
+        {
+          "name": "shared-12-DVKzjo12.js",
+          "sha256": "3bf810c9e496da5d837e5eea3b4565d82dba8352938375e6d62e64d7e4dc46ca",
+          "base": "ion"
+        },
+        {
+          "name": "shared-100-BBQR7Gmd.js",
+          "sha256": "2667959abe40092ed520c34cfb3e66e4633df852ef0aec88850c88bd1a7a3d7b",
+          "base": "ion"
+        },
+        {
+          "name": "shared-62-DoCqVpIq.js",
+          "sha256": "15a90aabd711c4209050f53ef48b2754661e19b090936fdc6d37346bd4cf4e56",
+          "base": "ion"
+        },
+        {
+          "name": "c5fbdc8eb-D_9kA6bR.js",
+          "sha256": "227801f120bbf53309c92d733ab29b4ce7c3687b29da7368c26d9248075ff3f3",
+          "base": "ion"
+        }
+      ],
+      "roots": {
+        "defaultSearchOptions": {
+          "file": "c5fbdc8eb-D_9kA6bR.js",
+          "local": "o",
+          "sha256": "4758f5a09d3a59be29aaeabb323d9b1c1c260c39de87e49199205fef652154de",
+          "previous": "s"
+        },
+        "searchLimit": {
+          "file": "c5fbdc8eb-D_9kA6bR.js",
+          "local": "i",
+          "sha256": "04ddca79cdfb438c45f3ad70a3b51093ed5452defa1dd0794698eb045a6b3f66",
+          "previous": "a"
+        },
+        "compileSearch": {
+          "file": "c5fbdc8eb-D_9kA6bR.js",
+          "local": "v",
+          "sha256": "76bcc2f025eeac2427ad634ca023d6c1c4035fa56216a3f812334b074485f2a0",
+          "previous": "y"
+        },
+        "scanSearch": {
+          "file": "c5fbdc8eb-D_9kA6bR.js",
+          "local": "y",
+          "sha256": "902d76517d3e03f20bf8731657b1a793c01c964338ab3f866cfab24a01868764",
+          "previous": "b"
+        },
+        "searchIndexFromLine": {
+          "file": "c5fbdc8eb-D_9kA6bR.js",
+          "local": "b",
+          "sha256": "a2dfefbd7892f39a2f8d1430410c49d930a8559d2c3740d71969a3c40b265521",
+          "previous": "x"
+        },
+        "skipsLongLine": {
+          "file": "c5fbdc8eb-D_9kA6bR.js",
+          "local": "l",
+          "sha256": "21a644f78071aabc3b1af94ac517595ddacddcb94fe52d6e7e900081200c98b2",
+          "previous": "u"
+        },
+        "normalizeSearchText": {
+          "file": "shared-100-BBQR7Gmd.js",
+          "local": "mc",
+          "sha256": "c4799599bb9a638292588b975fa97ff32f855ac4e57e0067e7b832cd9ab96875",
+          "previous": "shared-15 ws"
+        }
+      },
+      "bindings": [
+        {
+          "name": "se",
+          "file": "shared-12-DVKzjo12.js",
+          "sha256": "389a6249db20e2dc1f88010a423dfc6722cac77dd7fb9e10ccfdcfb6c4e19e88"
+        },
+        {
+          "name": "dc",
+          "file": "shared-100-BBQR7Gmd.js",
+          "sha256": "0861d4ecabc60f093a7051866006f952731909cdab4be1e26502e062c58849d2"
+        },
+        {
+          "name": "fc",
+          "file": "shared-100-BBQR7Gmd.js",
+          "sha256": "19e49fb8a942dc26139335eac307f13de85c7986cea8750164125de9351e4e62"
+        },
+        {
+          "name": "pc",
+          "file": "shared-100-BBQR7Gmd.js",
+          "sha256": "f25b649e0f4b67d6f99a432301ec97cfa8cf1b6a920bbc68ec19e3b799b3e5ae"
+        },
+        {
+          "name": "mc",
+          "file": "shared-100-BBQR7Gmd.js",
+          "sha256": "c4799599bb9a638292588b975fa97ff32f855ac4e57e0067e7b832cd9ab96875"
+        },
+        {
+          "name": "Tc",
+          "file": "shared-100-BBQR7Gmd.js",
+          "sha256": "f75892d797b8261a44758fb9f30901a41533cd8e86fd05fb5d01ee275fb585d1"
+        },
+        {
+          "name": "Ec",
+          "file": "shared-100-BBQR7Gmd.js",
+          "sha256": "6f7a2b95911b0bbef30b45aec1c68efd054d62a3e7db86afc6065b05599c8cc1"
+        },
+        {
+          "name": "pC",
+          "file": "shared-62-DoCqVpIq.js",
+          "sha256": "4237c3adfb49695971e86b4284d5e43f69df512eecb2d210d6830d4e7fe87004"
+        },
+        {
+          "name": "r",
+          "file": "c5fbdc8eb-D_9kA6bR.js",
+          "sha256": "69bcf3fa021a2971393ab376abbd976e85388f94a8ae291a480918e31635ab2f"
+        },
+        {
+          "name": "i",
+          "file": "c5fbdc8eb-D_9kA6bR.js",
+          "sha256": "04ddca79cdfb438c45f3ad70a3b51093ed5452defa1dd0794698eb045a6b3f66"
+        },
+        {
+          "name": "o",
+          "file": "c5fbdc8eb-D_9kA6bR.js",
+          "sha256": "4758f5a09d3a59be29aaeabb323d9b1c1c260c39de87e49199205fef652154de"
+        },
+        {
+          "name": "s",
+          "file": "c5fbdc8eb-D_9kA6bR.js",
+          "sha256": "6d5c9a128d6499283ad5d66cd9e466cef34c4bfc4deb39802b6974b0d02e08e3"
+        },
+        {
+          "name": "c",
+          "file": "c5fbdc8eb-D_9kA6bR.js",
+          "sha256": "a05ce6204e20505a6dde967c7d1b038c42ad1eeef31db150a4aa19bddba2a7fd"
+        },
+        {
+          "name": "l",
+          "file": "c5fbdc8eb-D_9kA6bR.js",
+          "sha256": "21a644f78071aabc3b1af94ac517595ddacddcb94fe52d6e7e900081200c98b2"
+        },
+        {
+          "name": "u",
+          "file": "c5fbdc8eb-D_9kA6bR.js",
+          "sha256": "d1507d30047eded11fcd6f82176afe82cde2fdf4b250f24efd84f673957eca6f"
+        },
+        {
+          "name": "d",
+          "file": "c5fbdc8eb-D_9kA6bR.js",
+          "sha256": "d670f19cb032de4da2103c229125acd8e7f58ccdf7e387a727ab3c5c6ed70790"
+        },
+        {
+          "name": "f",
+          "file": "c5fbdc8eb-D_9kA6bR.js",
+          "sha256": "507fbf1633cd4911afcc76081a5a9b5b728a371ecf8d5538a9b81f4919f096b5"
+        },
+        {
+          "name": "p",
+          "file": "c5fbdc8eb-D_9kA6bR.js",
+          "sha256": "6f2aa1d594c726f9231b193d4ea11b23d8d2c51acbc6929a420ff30ffa446daf"
+        },
+        {
+          "name": "m",
+          "file": "c5fbdc8eb-D_9kA6bR.js",
+          "sha256": "b5d687f6ea2a0513337022a7760410805ee64b551789965c023c02be24f07248"
+        },
+        {
+          "name": "h",
+          "file": "c5fbdc8eb-D_9kA6bR.js",
+          "sha256": "ab0f3ff4c9ffab0f52865acc42c95768d71e27f629467304622d8f72c07070e4"
+        },
+        {
+          "name": "g",
+          "file": "c5fbdc8eb-D_9kA6bR.js",
+          "sha256": "4f07b80ca21a75c846a8d12b14cda666a12b3e53ddd05c750b73895b1ba4ce5b"
+        },
+        {
+          "name": "_",
+          "file": "c5fbdc8eb-D_9kA6bR.js",
+          "sha256": "b01274db6f0e5f24b46f4ad36bb0de619fbb76836144a2698471d6230f3779c3"
+        },
+        {
+          "name": "v",
+          "file": "c5fbdc8eb-D_9kA6bR.js",
+          "sha256": "76bcc2f025eeac2427ad634ca023d6c1c4035fa56216a3f812334b074485f2a0"
+        },
+        {
+          "name": "y",
+          "file": "c5fbdc8eb-D_9kA6bR.js",
+          "sha256": "902d76517d3e03f20bf8731657b1a793c01c964338ab3f866cfab24a01868764"
+        },
+        {
+          "name": "b",
+          "file": "c5fbdc8eb-D_9kA6bR.js",
+          "sha256": "a2dfefbd7892f39a2f8d1430410c49d930a8559d2c3740d71969a3c40b265521"
+        }
+      ],
+      "previous": "cc3bc2027-CqmDBxcX.js"
+    },
+    {
+      "name": "editor-location.cjs",
+      "sha256": "1c77d32ba0e32389f9c01b19fa63b577a6db30fef2a498106f91405e2e53a5f5",
+      "referenceVersion": "4.16336.0",
+      "realm": "main",
+      "productionRealms": [
+        "main"
+      ],
+      "sources": [
+        {
+          "name": "index.chunk-CqaSnEfn.js",
+          "sha256": "853d4fa866598277407f7cad991c57e203770d2853a6541e508a545a02f2872b",
+          "base": "asar"
+        }
+      ],
+      "roots": {
+        "encodeEditorPath": {
+          "file": "index.chunk-CqaSnEfn.js",
+          "local": "Xc",
+          "sha256": "febe2bacee5f1b6e1baaf5ec1724237f5542ff2728805844a0cff9951fa749eb",
+          "previous": "kh"
+        },
+        "editorURI": {
+          "file": "index.chunk-CqaSnEfn.js",
+          "text": "openInEditor suffix + local branch",
+          "sha256": "e218f6f6775627e741267eebd8f8d5b8f27e68611572312ee7b8925ce0b336dc"
+        }
+      },
+      "bindings": [
+        {
+          "name": "qc",
+          "file": "index.chunk-CqaSnEfn.js",
+          "sha256": "58d82b6a1cbaf0419ff57b95e78a504fb4cc79bca7b318caff53cb5ab51d82e4"
+        },
+        {
+          "name": "Xc",
+          "file": "index.chunk-CqaSnEfn.js",
+          "sha256": "febe2bacee5f1b6e1baaf5ec1724237f5542ff2728805844a0cff9951fa749eb"
+        }
+      ],
+      "previous": "index.chunk-DNPOm2Zc.js"
+    },
+    {
+      "name": "side-chat-history.cjs",
+      "sha256": "83828998d837d98bdb713e0475cc6d3880845dcd3c478bde6392f47ec9f9e14d",
+      "referenceVersion": "4.16336.0",
+      "realm": "main",
+      "productionRealms": [
+        "main"
+      ],
+      "sources": [
+        {
+          "name": "index.chunk-DSL69jku.js",
+          "sha256": "db3de28f69c70bd21d2e63a6dcacecc970ff6e32f32ae7e420a1a507f8ec06a9",
+          "base": "asar"
+        },
+        {
+          "name": "index.chunk-CqaSnEfn.js",
+          "sha256": "853d4fa866598277407f7cad991c57e203770d2853a6541e508a545a02f2872b",
+          "base": "asar"
+        }
+      ],
+      "roots": {
+        "SideChatHistory": {
+          "file": "index.chunk-CqaSnEfn.js",
+          "local": "D1",
+          "sha256": "d5d6bf74fab354abc8eab2b61a4315b948214e0a95a127b44bc6c81d5442167f",
+          "previous": "d0"
+        },
+        "escapeSideHistory": {
+          "file": "index.chunk-CqaSnEfn.js",
+          "local": "E1",
+          "sha256": "e0d02041dcc38384219d6658ac0a94900bd76a82826e6799ae904f20283f9868",
+          "previous": "u0"
+        }
+      },
+      "bindings": [
+        {
+          "name": "e",
+          "file": "index.chunk-DSL69jku.js",
+          "sha256": "973c1501777d70637bbbd96858ecf21f51266e81b1ae0839d4b9d4a9bc549d42"
+        },
+        {
+          "name": "C1",
+          "file": "index.chunk-CqaSnEfn.js",
+          "sha256": "f1337d24dd53b4f6848f8b4ab13c8da4ebac419ddbd089a592c1b0ba68f778d5"
+        },
+        {
+          "name": "w1",
+          "file": "index.chunk-CqaSnEfn.js",
+          "sha256": "0d60a7d73156d2232a4d6bd40a5e8db5d717e47924725e85fabca87e19f1efe7"
+        },
+        {
+          "name": "T1",
+          "file": "index.chunk-CqaSnEfn.js",
+          "sha256": "b681a536e52011ca8e7a25851e41d235144643b3ee4c9913c2e04f4b0fdb7f29"
+        },
+        {
+          "name": "E1",
+          "file": "index.chunk-CqaSnEfn.js",
+          "sha256": "e0d02041dcc38384219d6658ac0a94900bd76a82826e6799ae904f20283f9868"
+        },
+        {
+          "name": "D1",
+          "file": "index.chunk-CqaSnEfn.js",
+          "sha256": "d5d6bf74fab354abc8eab2b61a4315b948214e0a95a127b44bc6c81d5442167f"
+        }
+      ],
+      "previous": "index.chunk-DNPOm2Zc.js d0"
+    },
+    {
+      "name": "preview-element-inspector.mjs",
+      "sha256": "6dd0aea4b53e3ac52aa0070e003f0d442646b6f352066c60fb47bafa62d0229d",
+      "referenceVersion": "4.16336.0",
+      "realm": "main",
+      "productionRealms": [
+        "main"
+      ],
+      "sources": [
+        {
+          "name": "index.chunk-Du-Wqi0E.js",
+          "sha256": "fcc1026c3634f62ae40581c680389b807c49e85626ff9989838fa0dc931d7f1a",
+          "base": "asar"
+        }
+      ],
+      "roots": {
+        "inspectorMethods": {
+          "file": "index.chunk-Du-Wqi0E.js",
+          "methods": [
+            "enableInspectMode",
+            "disableInspectMode",
+            "stopInspectPicks",
+            "isInspecting",
+            "inspectBoxesUp",
+            "inInspectWorld",
+            "runInInspectWorld",
+            "withoutInspectBoxes",
+            "hideInspectBoxes",
+            "unhideInspectBoxes",
+            "cleanInspectFrame",
+            "dropInspectFrame",
+            "shootPage",
+            "resetInspectHighlightState",
+            "cancelInspectZoomOut",
+            "clearInspectHighlight",
+            "disableDomUnlessInspecting",
+            "releaseObjectGroup",
+            "captureReactComponent",
+            "captureElementContext"
+          ],
+          "fields": [
+            "REACT_COMPONENT_TIMEOUT_MS",
+            "SCREENSHOT_PADDING",
+            "inspectBoxesUntil",
+            "inspectCursor",
+            "inspectFrame",
+            "inspectFrameEpoch",
+            "inspectFrameQueue",
+            "inspectFrameTimer",
+            "inspectHides",
+            "inspectHighlightGeneration",
+            "inspectModeCallback",
+            "inspectMoveWatch",
+            "inspectPicks",
+            "inspectPointer",
+            "inspectPointerOver",
+            "inspectZoomOut"
+          ],
+          "sha256": "b429ad7facc6bc4ff946ae3d2ccb7d7d6e28fefac2f6d5ce2f0c85ddcd5b22ea"
+        }
+      },
+      "bindings": [
+        {
+          "name": "Ug",
+          "file": "index.chunk-Du-Wqi0E.js",
+          "sha256": "11b781b9484a4417afa597261be116cad2e6eeaf4b99296e21e30fdaa5e4b30c"
+        },
+        {
+          "name": "Wg",
+          "file": "index.chunk-Du-Wqi0E.js",
+          "sha256": "53fde7bf57dcdf31fda8b03fbe97e908a313a31e8c240a302767c99b65d4f9eb"
+        },
+        {
+          "name": "tLi",
+          "file": "index.chunk-Du-Wqi0E.js",
+          "sha256": "50210238d7736042dbfd94a3a10400a3abb0d483468c77c27cf301460ef25485"
+        },
+        {
+          "name": "aLi",
+          "file": "index.chunk-Du-Wqi0E.js",
+          "sha256": "2a38406fe409a7cc70dac2e84e97b076c1bd5a21233837681ac0b942ecfcf8f7"
+        },
+        {
+          "name": "oLi",
+          "file": "index.chunk-Du-Wqi0E.js",
+          "sha256": "27a409a3803644be023007ad722aacadabb86a1e059dc40eb6b0b72bab70ebfe"
+        },
+        {
+          "name": "sLi",
+          "file": "index.chunk-Du-Wqi0E.js",
+          "sha256": "3628e8a1cb4649e37ce32bd49732ed4c9d84bf0db04c7da646a31a493d86c557"
+        },
+        {
+          "name": "cLi",
+          "file": "index.chunk-Du-Wqi0E.js",
+          "sha256": "137c0112493df00a3b7dd2da99f3d7e0c69ebe2413bb4dfba02ae266776ea86b"
+        },
+        {
+          "name": "uLi",
+          "file": "index.chunk-Du-Wqi0E.js",
+          "sha256": "dcd1c5df9fd55a55e2221faf9714c9814bd48f450db8248e8fb0f889a6747881"
+        },
+        {
+          "name": "dLi",
+          "file": "index.chunk-Du-Wqi0E.js",
+          "sha256": "c2eb7bdc0e629b6439404d8e887f62b94b6c423257554b4b10065b28d90d83be"
+        },
+        {
+          "name": "fLi",
+          "file": "index.chunk-Du-Wqi0E.js",
+          "sha256": "8b34a80d5116e2e2c04138b11719a0e88c9da80150d4c867e3ccb5ad0e3fcfef"
+        },
+        {
+          "name": "pLi",
+          "file": "index.chunk-Du-Wqi0E.js",
+          "sha256": "be586859721f79a2a261f5b2ed1ad90ee03e1e3af0156b9154e7d45996a13c45"
+        },
+        {
+          "name": "mLi",
+          "file": "index.chunk-Du-Wqi0E.js",
+          "sha256": "3f18fd643e3e556951e7ae2cf9afb7d006d1e84411adc268f07b3f03cb2a6155"
+        },
+        {
+          "name": "hLi",
+          "file": "index.chunk-Du-Wqi0E.js",
+          "sha256": "64a1c0e5a0aa17a8f6f054de6602c81ba00e3ae19b9f1186f7e2412fd136a552"
+        },
+        {
+          "name": "gLi",
+          "file": "index.chunk-Du-Wqi0E.js",
+          "sha256": "90263578609bc49816245fc639ce7c2576a9f0261ccb4693d4107126a733fe0d"
+        },
+        {
+          "name": "_Li",
+          "file": "index.chunk-Du-Wqi0E.js",
+          "sha256": "6411c531710dc4239a263b57539d94b8c2276025b1b4bea46d0f5aac18389765"
+        },
+        {
+          "name": "vLi",
+          "file": "index.chunk-Du-Wqi0E.js",
+          "sha256": "49ca09c6a16e45ee59a4c188e1239c079a4903c0c7dc0b07882093e09cffd5fc"
+        },
+        {
+          "name": "yLi",
+          "file": "index.chunk-Du-Wqi0E.js",
+          "sha256": "d4d36d54904d5154a9c391a0d6550f6d9a6ff6fa9040c000fa6cc5106f7c051e"
+        },
+        {
+          "name": "bLi",
+          "file": "index.chunk-Du-Wqi0E.js",
+          "sha256": "ac1479f90e3b49aabf025aef3a1543769edcfcde524d25dd777b13f12b3cb018"
+        },
+        {
+          "name": "dQ",
+          "file": "index.chunk-Du-Wqi0E.js",
+          "sha256": "939f2a7d05e6fbe125de500450e5e6a135c961db22424a568f4e226164a50ecd"
+        },
+        {
+          "name": "xLi",
+          "file": "index.chunk-Du-Wqi0E.js",
+          "sha256": "662816dbc979155273ba978be5af961ee6723cbb32de09a40a91f1c3918a4e2e"
+        },
+        {
+          "name": "ZRi",
+          "file": "index.chunk-Du-Wqi0E.js",
+          "sha256": "942c78180ec1d16bf411e8c119a84bedc1008ad514b656c51e53f445145ae70e"
+        },
+        {
+          "name": "ezi",
+          "file": "index.chunk-Du-Wqi0E.js",
+          "sha256": "e15777ba5e13c12534597eb1e7a275fa49b673d52a39468f3363e926c046ace3"
+        },
+        {
+          "name": "tzi",
+          "file": "index.chunk-Du-Wqi0E.js",
+          "sha256": "8ca9910bffc8c8cdf471e7de5d58b045909c4bb7f77284157114dfc110a7b174"
+        },
+        {
+          "name": "nzi",
+          "file": "index.chunk-Du-Wqi0E.js",
+          "sha256": "7a533f1e4867369fbdd5dc4b20aba6e48bd15772a1b60a191eabf532048481d2"
+        },
+        {
+          "name": "rzi",
+          "file": "index.chunk-Du-Wqi0E.js",
+          "sha256": "a815d0d1dbac50e338e5debafbe9bff08ae17899f646cc317168d48ec99f91ec"
+        },
+        {
+          "name": "azi",
+          "file": "index.chunk-Du-Wqi0E.js",
+          "sha256": "0c55d43af9c77df99b5d0d419647078573b09f4abe4d4b872724019580463648"
+        },
+        {
+          "name": "SQ",
+          "file": "index.chunk-Du-Wqi0E.js",
+          "sha256": "f2e49bbc353a931194d9b5b4134d1de9620f80361aacd7be9bf68169371344c9"
+        },
+        {
+          "name": "uzi",
+          "file": "index.chunk-Du-Wqi0E.js",
+          "sha256": "795b548bf725d1013549e65f03a23d86f7eccdbf1df714f2cc3b76bbfcf7be54"
+        },
+        {
+          "name": "dzi",
+          "file": "index.chunk-Du-Wqi0E.js",
+          "sha256": "e8147c81261bdd4e03491cde8b1998749c55bd283401b2b3c00fe9b49fef7a07"
+        },
+        {
+          "name": "fzi",
+          "file": "index.chunk-Du-Wqi0E.js",
+          "sha256": "c3f54aea75d5928695b5be791d89110bb7cf2c2ad1af87c0f1bb48e2c5f97e4c"
+        },
+        {
+          "name": "pzi",
+          "file": "index.chunk-Du-Wqi0E.js",
+          "sha256": "84f21e0f0debfc947207a30c0168632e4c1e31c05b78287458604608a5b30439"
+        },
+        {
+          "name": "tBi",
+          "file": "index.chunk-Du-Wqi0E.js",
+          "sha256": "f357d416fd0147f9ce6558106aca1579984de0e85b286bc4c4690af31e66e121"
+        }
+      ],
+      "ownedState": {
+        "index.chunk-Du-Wqi0E.js#uzi": "official read-only lookup table of the computed-style capture (Map built at module load)",
+        "index.chunk-Du-Wqi0E.js#tBi": "official module-level object-group counter of captureElementContext (`element-context:${++n}`), shared by every inspector in the main process as in the official class"
+      },
+      "previous": "index.chunk-jPKPzV-P.js"
+    },
+    {
+      "name": "preview-address-parser.mjs",
+      "sha256": "d1d33148a25f1a67f62070a2b89659f11518e25f18a46688af70f6370c4a3743",
+      "referenceVersion": "4.16336.0",
+      "realm": "main",
+      "productionRealms": [
+        "main"
+      ],
+      "sources": [
+        {
+          "name": "shared-25-D-aF0gt9.js",
+          "sha256": "29089e649e4a1179c6a21019ba8d9c78732c4d70a3ce66587f311002189a7183",
+          "base": "ion"
+        },
+        {
+          "name": "cf790d7f8-C-RpKvlh.js",
+          "sha256": "a26a5e03a4ce619d3fb91b0362738cb535f77cc8d4ab81ca2e4e2e9ac4be27f6",
+          "base": "ion"
+        }
+      ],
+      "roots": {
+        "parsePreviewAddress": {
+          "file": "cf790d7f8-C-RpKvlh.js",
+          "local": "E",
+          "sha256": "0260120d350da5ff574448a311d7e9684366182d93c60c341b4af85e0801473c",
+          "previous": "me"
+        }
+      },
+      "bindings": [
+        {
+          "name": "MW",
+          "file": "shared-25-D-aF0gt9.js",
+          "sha256": "1ada31984e47e12f36686d7235ae4d9cb1f672def0fe566287d3bafbdd78227c"
+        },
+        {
+          "name": "NW",
+          "file": "shared-25-D-aF0gt9.js",
+          "sha256": "b4db5d9b7a92ba57a6a44ab679921c0769aa060b7954f6a48cf9b45f5e1dff01"
+        },
+        {
+          "name": "PW",
+          "file": "shared-25-D-aF0gt9.js",
+          "sha256": "368b514cf6de9eba61205a199c02057ecd3a9350ce67110feb67a9b813bdb3c1"
+        },
+        {
+          "name": "FW",
+          "file": "shared-25-D-aF0gt9.js",
+          "sha256": "d95fe693a2590faea18993d89710d956ff5c9ca53792c979d60280dd33e97f9e"
+        },
+        {
+          "name": "p",
+          "file": "cf790d7f8-C-RpKvlh.js",
+          "sha256": "5d087911b67189d4ffaa3d54d79dd7401687aa6d8c8d18aac806fb045edc6ca4"
+        },
+        {
+          "name": "m",
+          "file": "cf790d7f8-C-RpKvlh.js",
+          "sha256": "f00ab67dac48a214e9efb04e624e80d53cef1552403b3ec50089d9b0fa40c64a"
+        },
+        {
+          "name": "h",
+          "file": "cf790d7f8-C-RpKvlh.js",
+          "sha256": "e4cc0288739f4f27edb6d755965c13ee45499c926b732c629603e70570f59564"
+        },
+        {
+          "name": "ee",
+          "file": "cf790d7f8-C-RpKvlh.js",
+          "sha256": "87a399494d76fee233e1988af8b9400389180d8a5d9cc2ba04cb7f893940d95f"
+        },
+        {
+          "name": "g",
+          "file": "cf790d7f8-C-RpKvlh.js",
+          "sha256": "bef14ff786f224da34933eeeba5fa731e4a3aa9a842b64bf1e816b8a849eff2d"
+        },
+        {
+          "name": "_",
+          "file": "cf790d7f8-C-RpKvlh.js",
+          "sha256": "c3f083630e392fdef84c9d709c9cac60211e68e6f9d74bfde86506fd77e0b14e"
+        },
+        {
+          "name": "v",
+          "file": "cf790d7f8-C-RpKvlh.js",
+          "sha256": "3190707d1ca1d62f1e5d0b847be27eaad8a6706302d4184c08751dc4f5759a5c"
+        },
+        {
+          "name": "y",
+          "file": "cf790d7f8-C-RpKvlh.js",
+          "sha256": "cb6422ae62676d54d5875032ea6db06a27de54615661f678d022572baa023e03"
+        },
+        {
+          "name": "b",
+          "file": "cf790d7f8-C-RpKvlh.js",
+          "sha256": "6e3bc6b8c6c04a7ab1af8b00821011e065bfe78a833592a39537ce6ab4af6754"
+        },
+        {
+          "name": "x",
+          "file": "cf790d7f8-C-RpKvlh.js",
+          "sha256": "fb7d06dc7c163703d5d9d621eac6142870a6e0974017ef760876cb992538451c"
+        },
+        {
+          "name": "S",
+          "file": "cf790d7f8-C-RpKvlh.js",
+          "sha256": "1431ea88f1121af6bcd9a6a1d9c27cc2c69b34c85232c1d19b0e88741d51503e"
+        },
+        {
+          "name": "C",
+          "file": "cf790d7f8-C-RpKvlh.js",
+          "sha256": "d9938883073a2e8f9cf23755bcc0f503edda42fd3614d3977ebf7ffc4318945f"
+        },
+        {
+          "name": "w",
+          "file": "cf790d7f8-C-RpKvlh.js",
+          "sha256": "64751bdead0eb2778ed0f8452586199ec077ba6fe69a225f3c0fe5c5d29df2b7"
+        },
+        {
+          "name": "T",
+          "file": "cf790d7f8-C-RpKvlh.js",
+          "sha256": "dba0ab3e91359cdcf90ae34a0e291a44ec87215acc0f4567bcd7185e849ef832"
+        },
+        {
+          "name": "E",
+          "file": "cf790d7f8-C-RpKvlh.js",
+          "sha256": "0260120d350da5ff574448a311d7e9684366182d93c60c341b4af85e0801473c"
+        },
+        {
+          "name": "D",
+          "file": "cf790d7f8-C-RpKvlh.js",
+          "sha256": "e4a8eb56d753f321a884483a9fa02f6c251cd69462d2b10a00d79d5721fa9ae4"
+        }
+      ],
+      "ownedState": {
+        "cf790d7f8-C-RpKvlh.js#m": "official read-only Set of navigable URL schemes (http, https)"
+      },
+      "previous": "c224804cc-Ct9XIdre.js"
+    },
+    {
+      "name": "preview-tab-shortcuts.mjs",
+      "sha256": "37bbd7c310ab92572e82e700d2eed28eceaf56e8946bd99e2603debc1df7c44a",
+      "referenceVersion": "4.16336.0",
+      "realm": "main",
+      "productionRealms": [
+        "main",
+        "renderer"
+      ],
+      "sources": [
+        {
+          "name": "index.chunk-Du-Wqi0E.js",
+          "sha256": "fcc1026c3634f62ae40581c680389b807c49e85626ff9989838fa0dc931d7f1a",
+          "base": "asar"
+        }
+      ],
+      "roots": {
+        "reopenTabKey": {
+          "file": "index.chunk-Du-Wqi0E.js",
+          "local": "vGi",
+          "sha256": "66e2f71a6e75473e37a562aa829d48844885ed91b59d8fa6a750604743180ee4",
+          "previous": "pli"
+        },
+        "selectTabKey": {
+          "file": "index.chunk-Du-Wqi0E.js",
+          "local": "BGi",
+          "sha256": "340d67460b0c41060f8add049c4959d0b4d20cc68c9c68fa202f4a679cf1a893",
+          "previous": "Ali"
+        },
+        "cycleTabKey": {
+          "file": "index.chunk-Du-Wqi0E.js",
+          "local": "LGi",
+          "sha256": "c6d1836236442cbe0a21444e9eee13f78e7503773c378eab1069f2116f706087",
+          "previous": "Dli"
+        },
+        "beginSyntheticInput": {
+          "file": "index.chunk-Du-Wqi0E.js",
+          "local": "s1i",
+          "sha256": "0dc776d982b583c1ce7f7cfd50bbb61d1820c8b5c2ceab266dc3d87157b4adbe",
+          "previous": "Lgi"
+        },
+        "endSyntheticInput": {
+          "file": "index.chunk-Du-Wqi0E.js",
+          "local": "c1i",
+          "sha256": "0e199c384ceca823d1ed5d34132ba0e55597fd03e673785b8f69e9f46945a277",
+          "previous": "Rgi"
+        },
+        "closedTabsPerSession": {
+          "file": "index.chunk-Du-Wqi0E.js",
+          "local": "iYi",
+          "sha256": "cd50b3b1118cd99928fc39b1743653c84fbcaca4c3075bc77eb2deb799228e87",
+          "via": "rememberClosedTab",
+          "previous": "qst (wrong identity, see header)"
+        },
+        "closedTabSessions": {
+          "file": "index.chunk-Du-Wqi0E.js",
+          "local": "aYi",
+          "sha256": "47f3461b2d0f97f210305494830996a9ebfae7485cc7dfa86786719fd729d4f0",
+          "via": "rememberClosedTab",
+          "previous": "Dun (wrong identity, see header)"
+        }
+      },
+      "bindings": [
+        {
+          "name": "fWi",
+          "file": "index.chunk-Du-Wqi0E.js",
+          "sha256": "1c675a016d8bd25d5f926273c939fc4e75d2756ebbd406a277a93a31e615e877"
+        },
+        {
+          "name": "gGi",
+          "file": "index.chunk-Du-Wqi0E.js",
+          "sha256": "8a19320815b975d1f0ef79ff8828f5106e1bdadd5f6fc384e1d912f8db8be685"
+        },
+        {
+          "name": "vGi",
+          "file": "index.chunk-Du-Wqi0E.js",
+          "sha256": "66e2f71a6e75473e37a562aa829d48844885ed91b59d8fa6a750604743180ee4"
+        },
+        {
+          "name": "jGi",
+          "file": "index.chunk-Du-Wqi0E.js",
+          "sha256": "1bcaf5caf2cf9dc4ff2a711e871805e0b3f8f732f94ce7038dfabac7a6b7b4a0"
+        },
+        {
+          "name": "LGi",
+          "file": "index.chunk-Du-Wqi0E.js",
+          "sha256": "c6d1836236442cbe0a21444e9eee13f78e7503773c378eab1069f2116f706087"
+        },
+        {
+          "name": "RGi",
+          "file": "index.chunk-Du-Wqi0E.js",
+          "sha256": "d2171c7ba3a9ccf27f5dd99ea18dab83ffb690aafd4945b2734c9d7987b98c70"
+        },
+        {
+          "name": "zGi",
+          "file": "index.chunk-Du-Wqi0E.js",
+          "sha256": "aa46e0fc6df5999c826db36d305dec0730171aa636adcb238b799b1302939008"
+        },
+        {
+          "name": "BGi",
+          "file": "index.chunk-Du-Wqi0E.js",
+          "sha256": "340d67460b0c41060f8add049c4959d0b4d20cc68c9c68fa202f4a679cf1a893"
+        },
+        {
+          "name": "iYi",
+          "file": "index.chunk-Du-Wqi0E.js",
+          "sha256": "cd50b3b1118cd99928fc39b1743653c84fbcaca4c3075bc77eb2deb799228e87"
+        },
+        {
+          "name": "aYi",
+          "file": "index.chunk-Du-Wqi0E.js",
+          "sha256": "47f3461b2d0f97f210305494830996a9ebfae7485cc7dfa86786719fd729d4f0"
+        },
+        {
+          "name": "s1i",
+          "file": "index.chunk-Du-Wqi0E.js",
+          "sha256": "0dc776d982b583c1ce7f7cfd50bbb61d1820c8b5c2ceab266dc3d87157b4adbe"
+        },
+        {
+          "name": "c1i",
+          "file": "index.chunk-Du-Wqi0E.js",
+          "sha256": "0e199c384ceca823d1ed5d34132ba0e55597fd03e673785b8f69e9f46945a277"
+        }
+      ],
+      "previous": "index.chunk-jPKPzV-P.js"
+    },
+    {
+      "name": "preview-link-decisions.mjs",
+      "sha256": "e710dbae4444044ccda299ca9aae8bb83c3c986677460b517488abaa4fd80983",
+      "referenceVersion": "4.16336.0",
+      "realm": "renderer",
+      "productionRealms": [
+        "renderer"
+      ],
+      "sources": [
+        {
+          "name": "c11959232-D8gLbLAI.js",
+          "sha256": "5e00db02052a59a16c2337b6935b5de469d310111feb43ecd46190984100a6a9",
+          "base": "ion"
+        }
+      ],
+      "roots": {
+        "linkArrival": {
+          "file": "c11959232-D8gLbLAI.js",
+          "local": "Fp",
+          "sha256": "47376e2e395ad72a90ce258965d9b0973b8ed83289dfc14c1fd950d07929a91f",
+          "previous": "If"
+        },
+        "linkCapabilities": {
+          "file": "c11959232-D8gLbLAI.js",
+          "local": "Ip",
+          "sha256": "572d4278b6aaf0318a6188dfefa19346f2eb7c064f179bc783619ca167a55208",
+          "previous": "Lf"
+        },
+        "linkDispatch": {
+          "file": "c11959232-D8gLbLAI.js",
+          "local": "Lp",
+          "sha256": "49894a846adfd08b6cc22fa8cb5676bef0101387cdc9d144c4c854304b5f1f23",
+          "previous": "Rf"
+        },
+        "linkConfirmation": {
+          "file": "c11959232-D8gLbLAI.js",
+          "local": "Rp",
+          "sha256": "666ea28d20212f4707526a60382b4cecb37a30abbbcf0f1885b436a574070054",
+          "previous": "zf"
+        }
+      },
+      "bindings": [
+        {
+          "name": "Fp",
+          "file": "c11959232-D8gLbLAI.js",
+          "sha256": "47376e2e395ad72a90ce258965d9b0973b8ed83289dfc14c1fd950d07929a91f"
+        },
+        {
+          "name": "Ip",
+          "file": "c11959232-D8gLbLAI.js",
+          "sha256": "572d4278b6aaf0318a6188dfefa19346f2eb7c064f179bc783619ca167a55208"
+        },
+        {
+          "name": "Lp",
+          "file": "c11959232-D8gLbLAI.js",
+          "sha256": "49894a846adfd08b6cc22fa8cb5676bef0101387cdc9d144c4c854304b5f1f23"
+        },
+        {
+          "name": "Rp",
+          "file": "c11959232-D8gLbLAI.js",
+          "sha256": "666ea28d20212f4707526a60382b4cecb37a30abbbcf0f1885b436a574070054"
+        }
+      ],
+      "previous": "c11959232-TLc_9Vpx.js"
+    },
+    {
+      "name": "preview-link-origin.mjs",
+      "sha256": "6c8af102b11554ec024850ed1801cd7a481f6cbe6ea930d6edd738affe13546c",
+      "referenceVersion": "4.16336.0",
+      "realm": "renderer",
+      "productionRealms": [
+        "renderer",
+        "main"
+      ],
+      "sources": [
+        {
+          "name": "index.chunk-Du-Wqi0E.js",
+          "sha256": "fcc1026c3634f62ae40581c680389b807c49e85626ff9989838fa0dc931d7f1a",
+          "base": "asar"
+        }
+      ],
+      "roots": {
+        "previewLinkOrigin": {
+          "file": "index.chunk-Du-Wqi0E.js",
+          "local": "yV",
+          "sha256": "739fe208214ed18828fdd7f7c4c255fc57d193fb66a0bcf4156700a1c9b7b7d0",
+          "previous": "EI"
+        },
+        "chromeWebStoreLink": {
+          "file": "index.chunk-Du-Wqi0E.js",
+          "local": "frr",
+          "sha256": "267bffebf4db41a7e31b50af0ffaf66e6b1b3dbf79200dcf222977418c4ea3a5",
+          "previous": "gWn"
+        },
+        "externalOnlyLink": {
+          "file": "index.chunk-Du-Wqi0E.js",
+          "local": "iL",
+          "sha256": "b3318c905ebbc959d664c69c906b7ba5fa67180aaefcce46b2122388a592867c",
+          "via": "chromeWebStoreLink",
+          "previous": "YM"
+        }
+      },
+      "bindings": [
+        {
+          "name": "mN",
+          "file": "index.chunk-Du-Wqi0E.js",
+          "sha256": "513c898fc9359cd46083debf2b18877fdb79680b7169e6f46cb98c6f41cbfcc2"
+        },
+        {
+          "name": "drr",
+          "file": "index.chunk-Du-Wqi0E.js",
+          "sha256": "99e50e9ece72af8cd4e1a93e3822ae0f7fede2393422a1e37be52c93edeaf926"
+        },
+        {
+          "name": "frr",
+          "file": "index.chunk-Du-Wqi0E.js",
+          "sha256": "267bffebf4db41a7e31b50af0ffaf66e6b1b3dbf79200dcf222977418c4ea3a5"
+        },
+        {
+          "name": "iL",
+          "file": "index.chunk-Du-Wqi0E.js",
+          "sha256": "b3318c905ebbc959d664c69c906b7ba5fa67180aaefcce46b2122388a592867c"
+        },
+        {
+          "name": "yB",
+          "file": "index.chunk-Du-Wqi0E.js",
+          "sha256": "9bd1c37f74651810b45ee3ff5ed9f575c6fbd90a6b09fe875b7173dfcf00a161"
+        },
+        {
+          "name": "ufr",
+          "file": "index.chunk-Du-Wqi0E.js",
+          "sha256": "52eb79a338dc8b31b791eaffba2352e9aa92ebe8921a764db7ae656f195caf38"
+        },
+        {
+          "name": "bB",
+          "file": "index.chunk-Du-Wqi0E.js",
+          "sha256": "20e52e83179f6c4e46cfc995075c9a555ac142e9f3a05cc6ce2890d1dc3dcf89"
+        },
+        {
+          "name": "SB",
+          "file": "index.chunk-Du-Wqi0E.js",
+          "sha256": "a5940d9ff4f488a37be2720c0abd1b1f75b087dedf6bc571037bfb581b715e08"
+        },
+        {
+          "name": "yV",
+          "file": "index.chunk-Du-Wqi0E.js",
+          "sha256": "739fe208214ed18828fdd7f7c4c255fc57d193fb66a0bcf4156700a1c9b7b7d0"
+        },
+        {
+          "name": "dgr",
+          "file": "index.chunk-Du-Wqi0E.js",
+          "sha256": "e9fd33cdce580e31ff6d274e47ee06d82a9f55e849bc82fd6e9fb33f5e03f11e"
+        }
+      ],
+      "previous": "index.chunk-jPKPzV-P.js"
+    }
+  ],
+  "copyTargets": [
+    {
+      "name": "search.mjs",
+      "target": "electron/generated/file-search.mjs",
+      "written": false
+    },
+    {
+      "name": "editor-location.cjs",
+      "target": "electron/generated/editor-location.cjs",
+      "written": false
+    },
+    {
+      "name": "preview-element-inspector.mjs",
+      "target": "electron/generated/preview-element-inspector.mjs",
+      "written": false
+    },
+    {
+      "name": "preview-address-parser.mjs",
+      "target": "electron/generated/preview-address-parser.mjs",
+      "written": false
+    },
+    {
+      "name": "preview-tab-shortcuts.mjs",
+      "target": "electron/generated/preview-tab-shortcuts.mjs",
+      "written": false
+    },
+    {
+      "name": "side-chat-history.cjs",
+      "target": "electron/generated/side-chat-history.cjs",
+      "written": false
+    },
+    {
+      "name": "preview-link-origin.mjs",
+      "target": "electron/generated/preview-link-origin.mjs",
+      "written": false
+    }
+  ],
+  "sources": [
+    {
+      "name": "shared-12-DVKzjo12.js",
+      "sha256": "3bf810c9e496da5d837e5eea3b4565d82dba8352938375e6d62e64d7e4dc46ca",
+      "base": "ion"
+    },
+    {
+      "name": "shared-100-BBQR7Gmd.js",
+      "sha256": "2667959abe40092ed520c34cfb3e66e4633df852ef0aec88850c88bd1a7a3d7b",
+      "base": "ion"
+    },
+    {
+      "name": "shared-62-DoCqVpIq.js",
+      "sha256": "15a90aabd711c4209050f53ef48b2754661e19b090936fdc6d37346bd4cf4e56",
+      "base": "ion"
+    },
+    {
+      "name": "c5fbdc8eb-D_9kA6bR.js",
+      "sha256": "227801f120bbf53309c92d733ab29b4ce7c3687b29da7368c26d9248075ff3f3",
+      "base": "ion"
+    },
+    {
+      "name": "index.chunk-CqaSnEfn.js",
+      "sha256": "853d4fa866598277407f7cad991c57e203770d2853a6541e508a545a02f2872b",
+      "base": "asar"
+    },
+    {
+      "name": "index.chunk-DSL69jku.js",
+      "sha256": "db3de28f69c70bd21d2e63a6dcacecc970ff6e32f32ae7e420a1a507f8ec06a9",
+      "base": "asar"
+    },
+    {
+      "name": "index.chunk-Du-Wqi0E.js",
+      "sha256": "fcc1026c3634f62ae40581c680389b807c49e85626ff9989838fa0dc931d7f1a",
+      "base": "asar"
+    },
+    {
+      "name": "shared-25-D-aF0gt9.js",
+      "sha256": "29089e649e4a1179c6a21019ba8d9c78732c4d70a3ce66587f311002189a7183",
+      "base": "ion"
+    },
+    {
+      "name": "cf790d7f8-C-RpKvlh.js",
+      "sha256": "a26a5e03a4ce619d3fb91b0362738cb535f77cc8d4ab81ca2e4e2e9ac4be27f6",
+      "base": "ion"
+    },
+    {
+      "name": "c11959232-D8gLbLAI.js",
+      "sha256": "5e00db02052a59a16c2337b6935b5de469d310111feb43ecd46190984100a6a9",
+      "base": "ion"
+    }
+  ]
+}

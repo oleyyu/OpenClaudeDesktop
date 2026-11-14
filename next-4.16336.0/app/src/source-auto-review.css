@@ -1,0 +1,14 @@
+/* Codex auto-review lines under the reviewed row (source-auto-review.jsx): footnote size, muted, a denial in the
+   danger tone. */
+.sar-list { display: flex; flex-direction: column; gap: 2px; margin: -2px 0 6px; }
+.sar-line { display: flex; flex-wrap: wrap; gap: 0 8px; font-size: 12px; line-height: 1.5; color: var(--cds-text-secondary); }
+.sar-line[data-status="denied"] .sar-label, .sar-line[data-status="timedOut"] .sar-label { color: var(--cds-text-danger); }
+.sar-rationale { min-width: 0; overflow-wrap: anywhere; }
+/* 'Approve once' (Codex's /auto-review): a ghost button on the denied line, then an inline confirmation naming the action. */
+.sar-approve { margin-inline-start: auto; }
+.sar-confirm { flex-basis: 100%; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin-top: 4px; padding: 8px 10px;
+  border-radius: 8px; background: var(--cds-surface-2); color: var(--cds-text-primary); }
+.sar-action { font-family: var(--cds-font-mono, ui-monospace, monospace); font-size: 11px; overflow-wrap: anywhere; color: var(--cds-text-secondary); }
+.sar-confirm-actions { display: flex; gap: 6px; margin-inline-start: auto; }
+.sar-error { flex-basis: 100%; color: var(--cds-text-danger); }
+.sar-done { color: var(--cds-text-secondary); }

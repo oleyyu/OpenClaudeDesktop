@@ -1,0 +1,5 @@
+/* c96d752d0 gH / OLe recap card: the card, header, title, Dismiss and body are gH's utility class strings in
+   source-recap-card.jsx (W14-code r6 R6DC-02). What is left is the host transcript row: the section also carries
+   .source-message (row hook), so keep it full width with no row margin; h3 / p drop the host's default margins. */
+.src-recap.src-recap.source-message { box-sizing: border-box; width: 100%; max-width: 100%; margin: 0; }
+.src-recap-title, .src-recap-body { margin: 0; }

@@ -1,0 +1,32 @@
+/* V3-W14-approvals: the approval cards wear the 3.6556.2 utility classes (source-approval-card.jsx APPROVAL_CARD_SHELL /
+   TOOL_CARD_SHELL / APPROVAL_CARD_BODY, the shared-10 FS decision row and IS / CDS buttons). This sheet holds the two
+   style injections the original card modules make at load, verbatim and unlayered as they inject them, then the rules
+   for what has no official counterpart here (Deny with feedback and the error line).
+
+   c2d1aeb56 (cc32965c2 `ao`'s module) injects "c9bddf7be": in a narrow card the decision row and its allow group
+   stack, and the buttons and split buttons fill the width; the read-gate hint centres. */
+@container (width<=420px){.epitaxy-approval-actions,.epitaxy-approval-actions>div{flex-direction:column;align-items:stretch}.epitaxy-approval-actions>div>span>button,.epitaxy-approval-actions>div>span>span>button,.epitaxy-approval-actions>div>[data-cds=SplitDropdownButton],.epitaxy-approval-actions>div>span>[data-cds=SplitDropdownButton]{width:100%}.epitaxy-approval-actions>div>[data-cds=SplitDropdownButton]>[data-cds-segment]:first-child button,.epitaxy-approval-actions>div>span>[data-cds=SplitDropdownButton]>[data-cds-segment]:first-child button{flex:auto}}.epitaxy-approval-actions-inline{justify-content:flex-end}@container (width<=420px){.epitaxy-approval-read-hint{text-align:center}}
+/* cb6930dae injects "c031798b2"; its approval card rules: a card-presented card fades in over 160 ms (this, not the
+   animate-code-approval-promote utility, is what an inline card shows: unlayered over the utilities layer), and takes
+   the card padding and radius. (The rest of that injection styles the question receipt and the answer rows, which are
+   source-question-receipt.jsx's / source-question-card.jsx's.) */
+@keyframes epitaxy-approval-inline-enter{0%{opacity:0}to{opacity:1}}.epitaxy-root .epitaxy-approval-card[data-approval-presentation]{animation:.16s ease-out epitaxy-approval-inline-enter}.epitaxy-root [data-skip-approval-enter] .epitaxy-approval-card[data-approval-presentation],.epitaxy-root .epitaxy-approval-card[data-approval-presentation][data-skip-approval-enter]{animation:none}.epitaxy-root .epitaxy-approval-card[data-approval-presentation=card]{--approval-card-pad-l:var(--cds-pad-lg);--approval-card-pad-r:var(--cds-pad-lg);border-radius:calc(var(--cds-radius) + calc(.25rem * var(--cds-rem-scale,1)));padding:var(--cds-pad-lg) var(--approval-card-pad-r) var(--cds-pad-lg) var(--approval-card-pad-l)}@media (prefers-reduced-motion:reduce){.epitaxy-root .epitaxy-approval-card[data-approval-presentation]{animation:none}}.epitaxy-root .epitaxy-approval-card.epitaxy-question-card{gap:0;max-height:none;padding:0;overflow:clip}
+html[data-reduce-motion="true"] .epitaxy-root .epitaxy-approval-card[data-approval-presentation] { animation: none; }
+/* W14-code r3 R2T-TS6: the rest of c031798b2 that the card presentation (source-question-card.jsx SourceQuestionCardEn,
+   c2f6611a3 En) wears: a divider between answer rows (Tn and the Other row), and cn's radio mark. Its question receipt
+   rules are source-question-receipt.css's. */
+.epitaxy-root .epitaxy-answer-option+.epitaxy-answer-option{border-top:1px solid var(--cds-border)}.epitaxy-root .epitaxy-radio-mark{width:var(--cds-checkbox,1rem);height:var(--cds-checkbox,1rem);border:1px solid var(--cds-border-strong);background:0 0;border-radius:9999px;flex-shrink:0;justify-content:center;align-items:center;display:flex}.epitaxy-root .epitaxy-radio-mark[data-checked]{background:var(--cds-fill-accent);border:0}.epitaxy-root .epitaxy-radio-mark-dot{width:calc(var(--cds-checkbox,1rem) - calc(.625rem * var(--cds-rem-scale,1)));height:calc(var(--cds-checkbox,1rem) - calc(.625rem * var(--cds-rem-scale,1)));background:var(--cds-on-accent);border-radius:9999px}
+
+.sac-error { margin: 0; flex-shrink: 0; color: var(--cds-text-danger); font-size: var(--cds-font-size-body, 13px); line-height: var(--cds-leading-body, 19px); overflow-wrap: anywhere; }
+/* Deny with feedback (OpenCode's declineFeedback): a quiet text control leading the decision row, then a two-line
+   field above it. */
+.sac-feedback-toggle { border: 0; padding: 0 2px; border-radius: 3px; background: none; color: var(--cds-text-secondary); font: inherit; font-size: var(--cds-font-size-footnote, 12px); line-height: var(--cds-leading-footnote, 16px); cursor: default; }
+.sac-feedback-toggle:hover:not(:disabled) { color: var(--cds-text-primary); text-decoration: underline; text-underline-offset: 2px; }
+.sac-feedback-toggle:focus-visible { outline: none; box-shadow: var(--cds-focus-shadow); }
+.sac-feedback-toggle:disabled { opacity: var(--cds-opacity-disabled, .5); }
+.sac-feedback textarea { width: 100%; box-sizing: border-box; resize: vertical; min-height: 44px; max-height: 160px; padding: 6px 8px; border: 1px solid var(--cds-border); border-radius: var(--cds-radius, 6px); background: var(--cds-surface-1); color: var(--cds-text-primary); font: inherit; font-size: var(--cds-font-size-body, 13px); line-height: var(--cds-leading-body, 19px); }
+.sac-feedback textarea::placeholder { color: var(--cds-text-muted); }
+.sac-feedback textarea:focus-visible { outline: none; box-shadow: var(--cds-focus-shadow); }
+/* W14-code r7 r7pa-01/02: the detail bodies source-session.jsx draws (a file request's path, a workflow's phases and
+   script) are cc32965c2 N_ / $_ / D_ in their utility classes (source-approval-card.jsx ApprovalDetailValue /
+   ApprovalFold), so the host .sac-code / .sac-path / .sac-context / .sac-script rules are gone. */

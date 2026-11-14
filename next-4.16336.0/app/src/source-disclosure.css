@@ -1,0 +1,10 @@
+/* shared-frame W_/G_: 6px gap, sm caret, body/normal/secondary, .2s height. */
+.source-disclosure-trigger{display:inline-flex;align-items:center;width:fit-content;gap:6px;border:0;padding:0;border-radius:var(--cds-radius,6px);background:transparent;color:var(--cds-text-secondary);font:400 var(--cds-font-size-body,14px)/var(--cds-leading-body,20px) var(--cds-font-sans);user-select:none;outline:none;transition:box-shadow var(--cds-dur-fast,.06s)}
+.source-disclosure-trigger:hover{color:var(--cds-text-primary)}
+.source-disclosure-trigger:focus-visible{box-shadow:var(--cds-focus-shadow)}
+.source-disclosure-trigger>[data-cds=Icon]{flex-shrink:0;transition:transform var(--default-transition-duration,.15s) var(--default-transition-timing-function,cubic-bezier(.4,0,.2,1))}
+.source-disclosure-trigger[data-panel-open]>[data-cds=Icon]{transform:rotate(90deg)}
+.source-disclosure-panel{height:0;overflow:hidden;transition:height var(--cds-dur-base,.2s) ease-out}
+.source-disclosure-content{display:flow-root}
+@media(prefers-reduced-motion:reduce){.source-disclosure-panel,.source-disclosure-trigger>[data-cds=Icon]{transition:none}}
+html[data-reduce-motion="true"] .source-disclosure-panel, html[data-reduce-motion="true"] .source-disclosure-trigger>[data-cds=Icon] { transition: none; }

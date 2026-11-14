@@ -1,0 +1,27 @@
+/* vZ question receipt (approval-current.js:35628-35651) + design-system rules at :16269.
+   epitaxy-card-outline = an outer 0 0 0 1px --cds-border ring (design-system.css:56758-56768; only
+   epitaxy-card-outline-inset is inset), drawn just outside the 480px box; rounded-lg = --radius-lg; px-lg/py-md =
+   --cds-pad-lg/--cds-pad-md; gap-0.5 = 2px. The doubled class outranks .source-message.source-message
+   (margin:0) for the receipt's own margin-bottom; the sibling margin-top rule still applies. */
+.sqr.sqr.source-message {
+  display: flex; flex-direction: column; box-sizing: border-box; width: 100%; max-width: 480px;
+  overflow: clip; border-radius: var(--radius-lg, .5rem); box-shadow: 0 0 0 1px var(--cds-border);
+  margin-bottom: var(--chat-item-gap, 10px); user-select: text; -webkit-user-select: text;
+}
+.sqr-pair { display: flex; flex-direction: column; gap: 2px; padding: var(--cds-pad-md, 8px) var(--cds-pad-lg, 12px); }
+.sqr-pair + .sqr-pair { border-top: 1px solid var(--cds-border); }
+/* R4g-files FV1 (toolcards-09): 2.42304.0 cb6930dae da appends It = "[unicode-bidi:plaintext]" (c8187a2dc) to the
+   question and the answer classes. */
+.sqr-question {
+  overflow-wrap: break-word; color: var(--cds-text-primary); unicode-bidi: plaintext;
+  font-size: var(--cds-font-size-body); line-height: var(--cds-leading-body);
+  font-weight: var(--cds-font-weight-medium, 500);
+}
+.sqr-answer {
+  overflow-wrap: anywhere; color: var(--cds-text-secondary); unicode-bidi: plaintext;
+  font-size: var(--cds-font-size-body); line-height: var(--cds-leading-body);
+}
+@keyframes sqr-enter { from { opacity: 0; } to { opacity: 1; } }
+.sqr[data-enter] { animation: sqr-enter .2s ease-out; }
+@media (prefers-reduced-motion: reduce) { .sqr[data-enter] { animation: none; } }
+html[data-local-motion="reduce"] .sqr[data-enter] { animation: none; }

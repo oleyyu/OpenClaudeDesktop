@@ -1,0 +1,10 @@
+/* "Edit local environment" (c3f9f1667 Ne/Pe/Oe over c29df1c52 v). CDS tokens only, so light and dark follow the theme. */
+/* Pe: <form class="contents">. */
+.sle-form { display: contents; }
+/* 2.37337.1 c29df1c52 _/v supply the body and full-width footer utility classes.
+   Undo the host footer's unlayered margin so the source's mt-0 takes effect. */
+.sle-form > div > .sdlg-footer.mt-0 { margin-top: 0; }
+/* W14-code r5 cleanup fr5-04: the variables field is the shared-frame CdsTextAreaField (c3f9f1667 Z), so the hand-copied
+   .sle-field / label / textarea / hint / link / error rules are gone. */
+.sle-description { margin: 0; color: var(--cds-text-secondary); font-size: var(--cds-font-size-body); line-height: var(--cds-leading-body); }
+/* W14-code r5 cleanup css5-sr-only-handcopies: the hand-copied sr-only rule is gone; the JSX uses the official c6a992d55 .sr-only. */

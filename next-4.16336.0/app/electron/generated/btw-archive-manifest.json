@@ -1,0 +1,69 @@
+{
+  "referenceVersion": "3.6556.2",
+  "referenceSnapshot": "snapshots/claude-3.6556.2-20261025-192807",
+  "generator": "scripts/extract-btw-archive.mjs",
+  "output": "btw-archive.mjs",
+  "sources": [
+    {
+      "file": "../reference/snapshots/claude-3.6556.2-20261025-192807/asar/.vite/build/index.chunk-jPKPzV-P.js",
+      "sourceSha256": "6e898798943b990e6eefa9209c61d977866b7898f681864f02c8cad3bb691ed5",
+      "bindings": [
+        "Exa",
+        "Dxa"
+      ]
+    },
+    {
+      "file": "../reference/snapshots/claude-3.6556.2-20261025-192807/asar/.vite/build/index.chunk-BE87qAbH.js",
+      "sourceSha256": "74269bcb4eb15d71fd51d63e7a9ebbb06792c5f99c6d4bb97fed50e00b69836f",
+      "bindings": [
+        "t"
+      ],
+      "namespaces": {
+        "e": {
+          "file": "index.chunk-jPKPzV-P.js",
+          "members": [
+            "Br"
+          ]
+        }
+      }
+    },
+    {
+      "file": "../reference/snapshots/claude-3.6556.2-20261025-192807/asar/.vite/build/index.chunk-DNPOm2Zc.js",
+      "sourceSha256": "6b27cd273bedd283c531bf6770e4cd6e576bbeece0e0b92dbc0b0705099c3379",
+      "bindings": [
+        "KI",
+        "JI"
+      ],
+      "namespaces": {
+        "Je": {
+          "file": "index.chunk-BE87qAbH.js",
+          "members": [
+            "o"
+          ]
+        }
+      }
+    }
+  ],
+  "bindings": {
+    "Exa": {
+      "source": "index.chunk-jPKPzV-P.js",
+      "exportedAs": "prStateKind"
+    },
+    "Dxa": {
+      "source": "index.chunk-jPKPzV-P.js",
+      "exportedAs": "prStateSettled"
+    },
+    "t": {
+      "source": "index.chunk-BE87qAbH.js"
+    },
+    "KI": {
+      "source": "index.chunk-DNPOm2Zc.js",
+      "exportedAs": "hasOpenOwnPullRequest"
+    },
+    "JI": {
+      "source": "index.chunk-DNPOm2Zc.js",
+      "exportedAs": "sharesParentCheckout"
+    }
+  },
+  "sha256": "6c434014c25f4c6ba2be95548e85ccb78f26766d1672ce1f96ee3e0f23dea36c"
+}

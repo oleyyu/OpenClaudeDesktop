@@ -1,0 +1,262 @@
+/* 2.2553.1 shared-22 cw/XC, shared-21 Av/Fv; body/control tokens remain CDS. */
+/* 3.6556.2 shared-frame hy: bg-backdrop (#0006 light, #00000080 dark), no backdrop blur (2.2553.1 yf's blur-[2px] is gone). */
+.ss-backdrop { position:fixed; inset:0; z-index:500; display:flex; align-items:center; justify-content:center; background:var(--cds-backdrop); -webkit-app-region:no-drag; }
+.ss-dialog { position:relative; display:flex; width:calc(100vw - 32px); max-width:1024px; height:calc(100dvh - 88px); max-height:800px; min-height:0; overflow:hidden; border-radius:12px; background:var(--cds-surface-3); color:var(--cds-text-primary); box-shadow:inset 0 0 0 var(--cds-ring-inner) var(--cds-ring-color),0 0 0 var(--cds-ring-outer) var(--cds-ring-color),var(--cds-shadow-sm); font:400 var(--cds-font-size-body,14px)/var(--cds-leading-body,20px) var(--cds-font-sans,anthropic-sans),sans-serif; outline:none; }
+.ss-nav { display:flex; width:192px; flex-shrink:0; flex-direction:column; gap:var(--cds-gap-sm,8px); border-right:1px solid var(--cds-alpha-2); background:var(--cds-surface-1); }
+.ss-search { display:flex; min-width:0; height:32px; margin:12px 12px 0; padding:0 8px; gap:8px; align-items:center; border:1px solid var(--cds-alpha-2); border-radius:6px; color:var(--cds-text-muted); }
+.ss-search input { width:100%; min-width:0; border:0; padding:0; outline:none; background:transparent; color:var(--cds-text-primary); font:inherit; }
+.ss-search button { display:flex; border:0; padding:0; background:transparent; color:inherit; }
+.ss-nav-scroll { overflow:auto; flex:1; padding:0 12px 12px; }
+.ss-nav p { color:var(--cds-text-muted); font-size:11px; line-height:15px; padding:12px 8px 0; margin:4px 0 8px; }
+.ss-nav ul { display:flex; flex-direction:column; gap:1px; margin:0; padding:0; list-style:none; }
+.ss-nav li>button { display:flex; width:100%; height:32px; align-items:center; gap:12px; padding:0 8px; border:0; border-radius:6px; background:transparent; color:var(--cds-text-secondary); font:inherit; text-align:left; }
+.ss-nav li>button:hover { background:var(--cds-fill-ghost-hover); }
+.ss-nav li>button[aria-current] { background:var(--cds-fill-ghost-selected); color:var(--cds-text-primary); font-weight:500; }
+.ss-close { position:absolute; top:12px; right:12px; display:grid; place-items:center; width:32px; height:32px; border:0; border-radius:6px; color:inherit; background:transparent; }
+.ss-close:hover { background:var(--cds-fill-ghost-hover); }
+.ss-content { flex:1; min-width:0; min-height:0; overflow:auto; }
+.ss-group { margin:0 0 32px; }
+.ss-group:last-child { margin-bottom:0; }
+.ss-group>h3 { width:fit-content;max-width:100%;margin:0 0 var(--cds-gap-md,12px);outline:none; }
+.ss-row { display:flex; align-items:center; justify-content:space-between; gap:var(--cds-gap-lg,16px); padding:var(--cds-pad-md,8px) 0; }
+.ss-row+.ss-row { border-top:1px solid var(--cds-alpha-1); }
+.ss-row-copy { display:flex; flex:1; min-width:0; flex-direction:column; gap:4px; }
+.ss-row-copy p { margin:0; color:var(--cds-text-muted); overflow-wrap:anywhere; }
+.ss-control { display:flex; flex-shrink:0; align-items:center; }
+.ss-row-copy>.text-body>.settings-row-title { display:inline-block;vertical-align:top; }
+.ss-control select, .ss-control input { min-height:28px; padding:3px 10px; border:1px solid var(--cds-alpha-2); border-radius:6px; background:var(--cds-surface-3); color:inherit; font:inherit; max-width:100%; }
+.ss-control select { max-width:220px; }
+/* R03: Reconnect, the last plain row button, is a CDS Button now; the legacy row-button paint (28px, alpha-2 border,
+   .4 disabled, ghost hover) is gone, so it no longer also dims and fills the SourceSelect trigger. */
+.ss-error { color:var(--cds-text-danger,#bc3636); }
+/* desktop-settings-read lost the core: one short notice, never the raw RPC text. */
+.ss-connection-notice { margin:0 0 var(--cds-gap-md,12px); color:var(--cds-text-muted); }
+/* Search fields (the nav search, Customize's collapsible search) ring their wrapper instead; :where keeps the specificity. */
+.ss-dialog :is(button:not(.ss-switch):not(.source-settings-button),input:not(:where(.ss-search,.cz-search) input),select):focus-visible { outline:2px solid var(--cds-fill-accent); outline-offset:2px; }
+/* Official shared-styles: :root[data-dyslexic-font] .cds-root[data-font=system]{--cds-font-sans:var(--font-ui-dyslexic)}.
+   The local html element is itself the outer cds-root (portaled dialogs and menus inherit from it), so the same
+   assignment is repeated at root level; .cds-root[data-font=system] in c6a992d55 supplies the System branch. */
+html.cds-root[data-dyslexic-font][data-font=system] { --cds-font-sans:var(--font-ui-dyslexic); }
+.ss-text-button { display:inline; padding:0; border:0; background:none; color:var(--cds-text-primary); font:inherit; text-decoration:underline; text-underline-offset:2px; cursor:var(--cds-cursor-interactive,default); }
+.ss-text-button:hover { color:var(--cds-text-accent,var(--cds-fill-accent)); }
+.ss-backdrop-stacked { z-index:520; }
+/* c71860c77:1130-1135 Popup size lg (shared-frame Of.lg max-w-[720px]) with fullHeight (h-dvh under the
+   calc(100dvh - 2rem) cap). */
+.ss-dialog.ss-licenses { flex-direction:column; max-width:720px; max-height:calc(100dvh - 32px); }
+.ss-licenses-header { display:flex; align-items:center; min-height:56px; padding:0 56px 0 24px; }
+.ss-licenses-header h2 { margin:0; font:600 14px/20px var(--cds-font-sans,anthropic-sans); }
+.ss-licenses-body { flex:1; min-height:0; margin:0; padding:0 24px 24px; overflow-y:auto; white-space:pre-wrap; overflow-wrap:anywhere; font:var(--cds-font-size-code,12px)/var(--cds-leading-code,17px) var(--cds-font-mono,monospace); color:var(--cds-text-primary); outline:none; }
+.ss-licenses-body:focus-visible { box-shadow:var(--cds-focus-shadow); }
+/* Code appearance grid: grid-cols-2 gap-md; columns flex min-w-0 flex-col gap-sm. V3-w12b-settings-dialogs: 3.6556.2
+   c71860c77 code-appearance `o("div",{className:"grid grid-cols-2 gap-md",style:p,children:[T,N]})` drops 2.42304.0's py-md. */
+.ss-grid-row+.ss-row,.ss-row+.ss-grid-row { border-top:1px solid var(--cds-alpha-1); }
+.ss-theme-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:var(--cds-gap-md,12px); }
+.ss-theme-column { display:flex; min-width:0; flex-direction:column; gap:var(--cds-gap-sm,8px); }
+.ss-theme-column select { min-height:28px; padding:3px 10px; border:1px solid var(--cds-alpha-2); border-radius:6px; background:var(--cds-surface-3); color:inherit; font:inherit; max-width:100%; }
+.ss-theme-preview-frame { min-height:94px; overflow:clip; border-radius:var(--radius-lg); border:1px solid var(--cds-alpha-2); }
+.ss-theme-preview { min-height:94px; padding:var(--cds-pad-sm,6px) 0; }
+/* pierre unified gutter (ca7ba268c defaults, Claude overrides Zi/Ki): number cell padding-left calc(2ch + 5px),
+   padding-right 1ch, ≥3ch right-aligned figure, no gap border (--diffs-gap-style:0); classic indicators inset
+   the line by 2ch with the 1ch marker at its left edge; wrapped lines keep 1ch on the right. */
+.ss-theme-preview .sdiff-row { grid-template-columns:max-content minmax(0,1fr); column-gap:0; padding-inline:0; white-space:pre-wrap; }
+.ss-theme-preview .sdiff-row .sdiff-line-number { padding-left:calc(2ch + 5px); padding-right:1ch; }
+.ss-theme-preview .sdiff-row .sdiff-line-number > span { display:inline-block; min-width:3ch; text-align:right; white-space:pre; }
+.ss-theme-preview .ss-theme-preview-line { position:relative; min-width:0; padding-inline:2ch 1ch; }
+.ss-theme-preview .ss-theme-preview-line .sdiff-marker { position:absolute; top:0; left:0; width:1ch; height:1lh; }
+.ss-theme-preview .sdiff-line-content { white-space:pre-wrap; overflow-wrap:anywhere; }
+/* source-diff.css resets every span to inline-flex/normal for its own widgets; token spans keep pre-wrap text. */
+.ss-theme-preview .sdiff-line-content span { display:inline; white-space:inherit; }
+.ss-theme-preview .sdiff-row.context { color:inherit; }
+/* A column's forced mode wins over the application mode for token paint. */
+.ss-theme-preview[data-mode=light] .scb-code [data-code-token] { color:var(--sch-light); font-style:var(--sch-light-style); font-weight:var(--sch-light-weight); text-decoration:var(--sch-light-decoration); }
+.ss-theme-preview[data-mode=dark] .scb-code [data-code-token] { color:var(--sch-dark); font-style:var(--sch-dark-style); font-weight:var(--sch-dark-weight); text-decoration:var(--sch-dark-decoration); }
+/* 4.16336.0 c6a992d55-_JRfOmTh.css [data-chat-text-size=s|l] .epitaxy-transcript-typography (html[data-chat-text-size],
+   shared-20 Gh; snapshot ion-dist JS string index 1698342 / 1698470, UTF-8 byte offset 1698460 / 1698588): Small .875rem
+   over 1.4286, Large 1rem over 1.375, on the host transcript column. (3.6556.2 c6a992d55-Che1orl5 had Small .8125rem,
+   Large .9375rem over 1.46667.) */
+html[data-chat-text-size=s] .source-transcript-content { --chat-body:calc(.875rem * var(--cds-rem-scale,1)); --chat-leading:1.4286; }
+html[data-chat-text-size=l] .source-transcript-content { --chat-body:calc(1rem * var(--cds-rem-scale,1)); --chat-leading:1.375; }
+html[data-chat-text-size=s] .source-message.source-message,html[data-chat-text-size=l] .source-message.source-message { font-size:var(--chat-body); line-height:var(--chat-leading); --chat-item-gap:calc(var(--chat-body)*var(--chat-leading)*.5); --chat-turn-gap:calc(var(--chat-body)*var(--chat-leading)*.75); }
+/* 4.16336.0 c6a992d55-_JRfOmTh.css .cds-root:is([data-cds-fizzy-lake~=type],…)[data-chat-text-size=l] .epitaxy-transcript-typography
+   [data-transcript-row] [data-cds=AssistantMessage|UserMessage][data-turn-key], … [data-code-own-row]{--chat-leading:1.46667}
+   (JS string index 1822302, UTF-8 byte offset 1822420): with the type part on, Large message rows keep 1.46667 over the
+   1rem body. Host rows: .source-message[data-cds=AssistantMessage|UserMessage] (no data-turn-key / data-code-own-row
+   markers). The row spacing stays the transcript's (official --chat-item-gap / --chat-turn-gap are computed on
+   .epitaxy-transcript-typography at its Large --chat-leading:1.375, string index 1698470), so the row restates them. */
+html[data-cds-fizzy-lake~=type][data-chat-text-size=l] .source-message.source-message:is([data-cds=AssistantMessage],[data-cds=UserMessage]) { --chat-leading:1.46667; --chat-item-gap:calc(var(--chat-body)*1.375*.5); --chat-turn-gap:calc(var(--chat-body)*1.375*.75); }
+/* shared-6 Cg: [[data-transcript-width=m]_&] 960px, [[data-transcript-width=l]_&] 1280px (--chat-column-measure first). */
+html[data-transcript-width=m] { --local-transcript-width:var(--chat-column-measure,960px); }
+html[data-transcript-width=l] { --local-transcript-width:var(--chat-column-measure,1280px); }
+/* W14-code r2 css2-chat-gutter-shave: the column padding / composer max-width read --local-transcript-width themselves
+   (source-transcript.css, source-composer.css: shared-6 yg over the gutter variables). */
+/* W14-code css-main-02: the narrow gutter is the tile container's (source-transcript.css @container 560px → 16px). */
+/* Settings complete: shared-22:4548–4648, 3992–4245; shared-21 Av/Fv. */
+.ss-dialog{height:calc(100dvh - 32px);background:var(--cds-surface-2)}
+.ss-search{position:relative;height:var(--cds-h-control,24px);margin:var(--cds-pad-md,8px) var(--cds-pad-md,8px) 0;flex-shrink:0;background:var(--cds-fill-field);border:0;box-shadow:inset 0 0 0 1px var(--cds-fill-field-ring)}
+.ss-nav-scroll{display:flex;flex-direction:column;gap:var(--cds-gap-sm,8px);padding:0 var(--cds-pad-md,8px) var(--cds-pad-md,8px);min-height:0}.ss-nav-scroll>div{display:contents}.ss-nav p{padding:var(--cds-pad-md,8px) var(--cds-pad-sm,6px) 0;margin:0;font-size:var(--cds-font-size-caption,12px);line-height:var(--cds-leading-caption,16px)}
+.ss-nav li>button{height:var(--cds-h-control,24px);gap:var(--cds-gap-sm,8px);padding-inline:var(--cds-pad-sm,6px);border-radius:var(--cds-radius,6px)}
+.ss-nav li>button[aria-current]{background:var(--cds-fill-ghost-selected,var(--cds-alpha-2))}
+.ss-content{background:var(--cds-surface-2);padding:8px var(--cds-pad-xl,24px) var(--cds-pad-lg,16px)}.ss-group{margin-bottom:var(--cds-gap-xl,24px)}
+.ss-row{display:block;padding:var(--cds-pad-md,8px) 0}.ss-row-top{display:flex;align-items:center;justify-content:space-between;gap:var(--cds-gap-lg,16px)}.ss-row-copy [data-settings-desc]{font-size:var(--cds-font-size-body,14px);line-height:var(--cds-leading-body,20px);color:var(--cds-text-muted)}
+/* Av/Fv keep py-md on every ordinary row, including the first and last. */
+[data-settings-row][data-indent]{padding-left:var(--cds-pad-lg,16px)}.settings-group-dividers>[data-settings-row]+[data-settings-row]{border-top:1px solid var(--cds-alpha-1)}
+.ss-version{font-variant-numeric:tabular-nums}.ss-search-results{position:absolute;left:0;top:calc(100% + 4px);width:280px;max-width:calc(100vw - 64px);max-height:320px;overflow:auto;padding:4px;background:var(--cds-surface-3);border-radius:8px;box-shadow:var(--cds-shadow-popover,0 4px 20px #0003);z-index:5}
+/* cc011544b gt:720–830: fixed section icon, nested text, accent match. */
+.ss-search-results>button{display:flex;align-items:center;width:100%;padding:6px 4px;border-radius:var(--cds-radius,6px);color:var(--cds-text-primary);text-align:left;font:inherit}
+.ss-search-results>button[data-highlighted]{background:var(--cds-fill-ghost-hover)}
+.ss-search-hit{display:flex;min-width:0;flex:1;flex-direction:column}
+.ss-search-heading{display:flex;align-items:center;gap:var(--cds-gap-sm,8px)}
+.ss-search-heading>[data-cds=Icon]{flex-shrink:0;color:var(--cds-text-secondary)}
+.ss-search-heading>span:not([data-cds=Icon]),.ss-search-via,.ss-search-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ss-search-heading>span:not([data-cds=Icon]){flex:1}
+.ss-search-via,.ss-search-child{padding-left:calc(20px + var(--cds-gap-sm,8px))}
+.ss-search-via{color:var(--cds-text-muted);font-size:var(--cds-font-size-footnote,12px);line-height:var(--cds-leading-footnote,16px)}
+.ss-search-results>[data-kind=more]{color:var(--cds-text-muted)}
+.ss-search-match{color:var(--cds-text-accent)}
+.ss-search-empty{display:flex;min-height:120px;flex-direction:column;align-items:center;justify-content:center;gap:var(--cds-gap-sm,8px);padding-inline:var(--cds-pad-md,8px);text-align:center;color:var(--cds-text-muted)}
+/* cc011544b _t: `[&:hover:not(:focus-within)]:shadow-field-hover has-[:focus-visible]:shadow-focus transition
+   duration-fast cursor-text`; the mount focus uses focusVisible:false, so opening Settings draws no ring. */
+.ss-search{cursor:text;transition:box-shadow var(--cds-dur-fast,60ms) cubic-bezier(.4,0,.2,1)}
+.ss-search:hover:not(:focus-within){box-shadow:inset 0 0 0 1px var(--cds-border-strong)}
+.ss-search:has(input:focus-visible){box-shadow:var(--cds-focus-shadow)}
+/* The input itself is `hide-focus-ring outline-none focus-visible:!shadow-none`: the field draws the ring. */
+.ss-dialog .ss-search input:focus-visible{outline:none;box-shadow:none}
+/* Independently expressed source highlight: draw in 350ms, hold until 1050ms, fade by 1950ms. */
+.feature-anchor-highlight{position:relative;display:inline-block}.feature-anchor-highlight:after{content:"";position:absolute;left:0;right:0;bottom:-4px;height:5px;background:var(--cds-fill-warning);mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5' viewBox='0 0 8 5'%3E%3Cpath d='M0 2.5 Q2 .75 4 2.5 Q6 4.25 8 2.5' stroke='black' stroke-width='1.3' stroke-linecap='round' fill='none'/%3E%3C/svg%3E");mask-repeat:repeat-x;mask-size:8px 5px;animation:ss-anchor-line 1950ms ease-out forwards;pointer-events:none}
+.feature-anchor-row-fill{position:relative;isolation:isolate}.feature-anchor-row-fill:before{content:"";position:absolute;inset:4px -4px;z-index:-1;background:color-mix(in srgb,var(--cds-fill-warning) 22%,transparent);border-radius:6px;animation:ss-anchor-wash 1950ms ease-out forwards;pointer-events:none}
+@keyframes ss-anchor-line{0%{clip-path:inset(0 100% 0 0);opacity:1}17.9%,53.8%{clip-path:inset(0);opacity:1}100%{clip-path:inset(0);opacity:0}}@keyframes ss-anchor-wash{0%,100%{opacity:0}17.9%,53.8%{opacity:1}}
+@media(prefers-reduced-motion:reduce){.feature-anchor-highlight:after,.feature-anchor-row-fill:before{animation:none;opacity:1;clip-path:inset(0)}}
+html[data-reduce-motion="true"] .feature-anchor-highlight:after, html[data-reduce-motion="true"] .feature-anchor-row-fill:before { animation: none; opacity: 1; clip-path: inset(0); }
+/* shared-22 cw and cc011544b SettingsModalContent: fixed chrome + scrolling body. */
+.ss-settings-dialog { animation:none; border-radius:calc(var(--cds-radius,8px) + .25rem * var(--cds-rem-scale,1)); box-shadow:inset 0 0 0 var(--cds-ring-inner) var(--cds-ring-color),0 0 0 var(--cds-ring-outer) var(--cds-ring-color),var(--cds-shadow-sm); transition:opacity 200ms ease-out,scale 200ms ease-out; }
+/* shared-22-Cz3C_T8d.js:4579 cw: dark:border dark:border-alpha-1, scoped like the loaded dark: variant
+   (design-system.css:39521-39540): an explicit dark mode, or a system mode under a dark OS scheme. */
+.ss-settings-dialog:where([data-mode="dark"], [data-mode="dark"] *) { border:1px solid var(--cds-alpha-1); }
+@media (prefers-color-scheme: dark) {
+  .ss-settings-dialog:where([data-mode="system"], [data-mode="system"] *):not(:where([data-mode="system"] :is([data-mode="light"], [data-mode="dark"]), [data-mode="system"] :is([data-mode="light"], [data-mode="dark"]) *)),
+  .ss-settings-dialog:where(.cds-root, .cds-root *):not(:where([data-mode], [data-mode] *)) { border:1px solid var(--cds-alpha-1); }
+}
+.ss-settings-dialog[data-open=false] { opacity:0;scale:.98; }
+.ss-settings-backdrop { transition:opacity 200ms ease-out; }
+.ss-settings-backdrop[data-open=false] { opacity:0; }
+.ss-pane { display:flex;flex:1;min-width:0;min-height:0;flex-direction:column;position:relative;background:var(--cds-surface-2); }
+.ss-page-header { display:flex;flex-shrink:0;justify-content:flex-end;align-items:center;padding:var(--cds-pad-md,8px) var(--cds-pad-md,8px) var(--cds-pad-sm,6px) var(--cds-pad-xl,24px); }
+.ss-settings-dialog .ss-close { position:static;width:var(--cds-h-control,32px);height:var(--cds-h-control,32px);flex-shrink:0; }
+.ss-pane[data-customize=true] .ss-page-header { position:absolute;right:0;top:0;height:56px;padding:0 var(--cds-pad-md,8px) 0 0;z-index:2; }
+.ss-pane[data-customize=true]>.ss-content { display:flex;flex-direction:column;padding:0;overflow:hidden; }
+.ss-pane[data-customize=false]>.ss-content:before { content:"";display:block;position:sticky;top:-8px;z-index:1;height:8px;margin:-8px calc(-1 * var(--cds-pad-xl,24px)) 0;pointer-events:none;background:linear-gradient(to bottom,var(--cds-surface-2),transparent); }
+.ss-nav li>button>span:not([data-cds=Icon]) { flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+/* QC keeps its icon shrink-0; our icon is a font span, not an SVG. */
+.ss-nav li>button>[data-cds=Icon] { flex:0 0 auto; }
+/* shared-21 bv: text-secondary hover:bg-fill-ghost-hover hover:text-primary; shared-22:4135-4160 QC: the icon is
+   `shrink-0 text-secondary`, also on the current item. */
+.ss-nav li>button:hover { color:var(--cds-text-primary); }
+.ss-nav li>button>[data-cds=Icon] { color:var(--cds-text-secondary); }
+/* c71860c77:1820-1840 below slot: text-body text-muted. */
+.ss-row-error { color:var(--cds-text-muted); font-size:var(--cds-font-size-body,14px); line-height:var(--cds-leading-body,20px); }
+/* A value the field refused (not a failed save): the danger text the CDS field error uses, in light and dark alike. */
+.ss-row-error[data-validation] { color:var(--cds-text-danger); font-size:var(--cds-font-size-footnote,13px); line-height:var(--cds-leading-footnote,18px); }
+/* Settings › Dynamic workflows › Allowed workflows: one row per Workflow(<name>) rule. */
+.ss-workflow-rules { list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:var(--cds-gap-xs,4px); }
+.ss-workflow-rules>li { display:flex;align-items:center;justify-content:space-between;gap:var(--cds-gap-md,12px);min-height:var(--cds-h-control,32px); }
+.ss-workflow-rule-name { min-width:0;overflow-wrap:anywhere;font-family:var(--cds-font-mono,ui-monospace,monospace);font-size:var(--cds-font-size-footnote,13px);color:var(--cds-text-primary); }
+.ss-workflow-rule-kind,.ss-workflow-rules-empty { color:var(--cds-text-muted);font-size:var(--cds-font-size-footnote,13px); }
+/* Settings › Dynamic workflows › Saved workflows (source-saved-workflows.jsx). */
+.ss-saved-workflows { list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:var(--cds-gap-md,12px); }
+.ss-saved-workflows>li { display:flex;flex-direction:column;gap:2px;min-width:0; }
+.ss-saved-workflow-head { display:flex;align-items:center;gap:var(--cds-gap-sm,8px);min-height:var(--cds-h-control,32px); }
+.ss-saved-workflow-actions { display:flex;align-items:center;gap:4px;margin-left:auto; }
+.ss-saved-workflow-description,.ss-saved-workflows-empty { margin:0;color:var(--cds-text-secondary);font-size:var(--cds-font-size-footnote,13px); }
+.ss-saved-workflows-empty { color:var(--cds-text-muted); }
+.ss-saved-workflow-args,.ss-saved-workflow-runs { list-style:none;margin:2px 0 0;padding:0;display:flex;flex-direction:column;gap:2px;color:var(--cds-text-muted);font-size:var(--cds-font-size-footnote,13px); }
+.ss-saved-workflow-args code { font-family:var(--cds-font-mono,ui-monospace,monospace);color:var(--cds-text-secondary); }
+.ss-saved-workflow-runs>li { display:flex;gap:var(--cds-gap-sm,8px); }
+.ss-saved-workflow-confirm { display:flex;justify-content:flex-end;gap:var(--cds-gap-sm,8px);margin-top:var(--cds-gap-md,12px); }
+/* shared-21 Nv: group children that are not rows get py-md (the General fallback skeleton rows). */
+.settings-group-dividers>.ss-skeleton-row { padding-block:var(--cds-pad-md,8px); }
+/* menus W3 (3.6556.2 shared-46-BIbZBGFq ag/fg): stacked = useMediaQuery("(max-width: 767px)"), the host's narrow
+   (innerWidth<=767). fg's stacked branch is a plain CDS Dialog, not the panel popup: B.Popup size "lg" fullHeight
+   (shared-frame qy: Xv/Jv rounded-card bg-surface-3 shadow-panel-lg, wy.lg max-w-[720px], h-dvh under Yv's max-h, the
+   Zv body "overflow-y-auto scroll-fade-y p-xl break-words") holding B.Header (Zy: "mb-pad-md flex items-start gap-2", Jy
+   "text-title font-semibold font-header" in a "-mt-1" column, CloseButton flush "-me-pad-sm -mt-pad-sm"), then
+   "shrink-0 pb-md" around the Yh tabs, then the pane. The pane gets hideHeaderRow and popupScrolls (cc011544b kn): the
+   content drops "overflow-y-auto px-xl pb-lg pt-2" and the sticky top fade, and its root is gg(!0, O) — "flex min-w-0
+   shrink-0 grow flex-col" with no surface, or for Customize "flex min-h-0 min-w-0 flex-1 flex-col -mx-pad-xl -mb-pad-xl".
+   2.42304.0 (shared-19 pA/Zk) kept the panel popup under a bordered bg-surface-1 header strip ("Settings" text-heading
+   font-medium). W12: the popup (Xv) keeps the size, surface and ring and does not scroll; the host's .ss-stacked-body is
+   Zv and scrolls with the scroll-fade-y mask, so the mask never clips the popup's own shadow. The Yh tabs are CDS Tabs
+   (shared-46 Zh: Xd.List activateOnFocus false and, with kh() / __gb__2598786380 off, no Xh className), styled by
+   their own shared-10 classes. */
+.ss-settings-dialog:has(> .ss-stacked-body) {
+  --ss-stacked-height:calc(100dvh - max(2rem, 2 * var(--desktop-titlebar-inset, 0px)) - 2 * max(env(safe-area-inset-top, 0px), env(safe-area-inset-bottom, 0px)));
+  flex-direction:column; width:calc(100vw - 2rem - 2 * max(env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px))); max-width:720px;
+  height:var(--ss-stacked-height); max-height:var(--ss-stacked-height);
+  border:0; border-radius:calc(var(--cds-radius) + .25rem * var(--cds-rem-scale, 1)); background:var(--cds-surface-3);
+  box-shadow:inset 0 0 0 var(--cds-ring-inner) var(--cds-ring-color), 0 0 0 var(--cds-ring-outer) var(--cds-ring-color), var(--cds-shadow-lg);
+}
+/* shared-frame Zv: isolate flex min-h-0 flex-1 flex-col overflow-y-auto scroll-fade-y rounded-[inherit] p-xl break-words. */
+.ss-stacked-body { isolation:isolate; display:flex; min-height:0; flex:1 1 0%; flex-direction:column; overflow-y:auto; border-radius:inherit;
+  padding:var(--cds-pad-xl); overflow-wrap:break-word; }
+.ss-narrow { flex-shrink:0; }
+.ss-narrow-heading { display:flex; align-items:flex-start; gap:8px; margin-bottom:var(--cds-pad-md); }
+.ss-narrow-heading strong { flex:1; min-width:0; margin-top:-4px; overflow-wrap:break-word; color:var(--cds-text-primary);
+  font-family:var(--_cds-title-family, var(--cds-font-sans-display)); font-size:var(--cds-font-size-title); line-height:var(--cds-leading-title);
+  --_cds-font-weight-role:var(--cds-font-weight-header); font-weight:var(--_cds-font-weight-role, var(--cds-font-weight-semibold)); }
+.ss-settings-dialog .ss-narrow-heading .ss-close { margin-inline-end:calc(-1 * var(--cds-pad-sm)); margin-top:calc(-1 * var(--cds-pad-sm)); }
+.ss-stacked-body > .ss-pane { flex:1 0 auto; min-height:auto; background:none; }
+.ss-stacked-body > .ss-pane[data-customize=true] { flex:1 1 0%; min-height:0; margin:0 calc(-1 * var(--cds-pad-xl)) calc(-1 * var(--cds-pad-xl)); }
+.ss-stacked-body > .ss-pane[data-customize=false] > .ss-content { min-height:auto; overflow:visible; padding:0; background:none; }
+.ss-stacked-body > .ss-pane[data-customize=false] > .ss-content:before { content:none; }
+/* The host's dialog-wide focus outline (.ss-dialog :is(button…):focus-visible) stays off the CDS tabs, whose ring is
+   shared-10 qr "focus-visible:before:shadow-focus". */
+.ss-settings-dialog .ss-narrow button[role=tab]:focus-visible { outline:none; }
+@media(max-width:767px) { .ss-dialog{flex-direction:column} }
+@media(prefers-reduced-motion:reduce) { .ss-settings-dialog,.ss-settings-backdrop{transition:none} }
+html[data-reduce-motion="true"] .ss-settings-dialog, html[data-reduce-motion="true"] .ss-settings-backdrop { transition: none; }
+
+/* Preserve the existing independent font-license entry animation. */
+.ss-licenses { animation:ss-license-enter 200ms var(--cds-ease-out,ease-out); }
+@keyframes ss-license-enter { from{opacity:0;scale:.98}to{opacity:1;scale:1} }
+@media(prefers-reduced-motion:reduce){.ss-licenses{animation:none}}
+html[data-reduce-motion="true"] .ss-licenses { animation: none; }
+
+/* c71860c77:2376–2398: actual saved custom location below the select. */
+.ss-worktree-control { width:220px;max-width:100%;display:flex;flex-direction:column;justify-content:center;gap:8px;min-width:0; }
+.ss-worktree-path { font-size:14px;line-height:20px;color:var(--cds-text-secondary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+
+/* R03 layer base. Settings is a modal layer (c0db37792-DN29Sv5G.js:1411-1440 Theme segments carry tooltips;
+   shared-frame-C_2npUJq.js:4738-4770 the Tooltip popup takes il("tooltip") within the dialog's layer). SourceTooltip
+   reads --cds-layer-base from its trigger (source-tooltip.jsx:546-558, base + 130), so every portal opened from the
+   z-500 Settings backdrop layers above it, and from the z-520 nested dialogs above those. */
+.ss-backdrop { --cds-layer-base:500; }
+.ss-backdrop-stacked { --cds-layer-base:520; }
+/* R03 nested dialog (shared-frame-C_2npUJq.js:5569 yf `has-[~[data-nested]]:bg-transparent backdrop-blur-none`,
+   :5619-5620 Ef/Df): while Font licenses or Storage is open over Settings, their backdrop is clear and the Settings
+   popup (data-nested-dialog-open) dims itself through an ::after bg-backdrop overlay and blurs 2px, so the page
+   outside is dimmed once. vf transitions opacity, scale and filter over duration-base. */
+.ss-backdrop-stacked, .ss-backdrop.ss-storage-backdrop { background:transparent; backdrop-filter:none; }
+.ss-settings-dialog { transition:opacity 200ms ease-out, scale 200ms ease-out, filter 200ms ease-out; }
+.ss-settings-dialog::after { content:""; position:absolute; inset:0; z-index:50; border-radius:inherit; background:var(--cds-backdrop); opacity:0; pointer-events:none; transition:opacity var(--cds-dur-base) ease-out; }
+.ss-settings-dialog[data-nested-dialog-open] { filter:blur(2px); }
+.ss-settings-dialog[data-nested-dialog-open]::after { opacity:1; }
+@media(prefers-reduced-motion:reduce) { .ss-settings-dialog, .ss-settings-dialog::after { transition:none; } }
+html[data-reduce-motion="true"] .ss-settings-dialog, html[data-reduce-motion="true"] .ss-settings-dialog::after { transition: none; }
+/* DeepSeek settings rows (harnessSettingCopy): a short number field, its unit and Reset. */
+.ss-dsh-setting { display:inline-flex; align-items:center; gap:6px; }
+/* Remote control's pairing code: large monospace digits beside Cancel. */
+.ss-remote-code { display:inline-flex; align-items:center; gap:8px; }
+.ss-remote-code code { padding:2px 8px; border-radius:6px; background:var(--cds-alpha-2, rgba(127,127,127,.12)); color:var(--cds-text-primary);
+  font-family:var(--cds-font-mono, ui-monospace, monospace); font-size:15px; letter-spacing:.12em; user-select:all; }
+.ss-dsh-setting .cds-input { width:120px; }
+.ss-dsh-unit { color:var(--cds-text-secondary); font-size:12px; }
+/* shared-19 JD (:5649-5680): with the desktop rail (wide, not the stacked Usage dialog) the popup grows with the window,
+   max-w max(1024px,min(1280px,100vw-6rem)) and max-h max(50rem,min(60rem,100dvh-6rem)), at h calc(100dvh-2rem). Below
+   768px the stacked Dialog of menus W3 above (max-w 720px, Yv height) applies instead. Font licenses and Storage
+   (.ss-dialog) are unchanged. */
+.ss-settings-dialog { height:calc(100dvh - 2rem); }
+@media (min-width:768px) {
+  .ss-settings-dialog:not([data-usage]) { max-width:max(1024px,min(1280px,calc(100vw - 6rem))); max-height:max(50rem,min(60rem,calc(100dvh - 6rem))); }
+}
+/* c71860c77 xx: a titled group's description sits under its title inside the mb-md header (System › Computer use). */
+.ss-group>h3:has(+ .ss-group-description) { margin-bottom:0; }
+.ss-group-description { margin:2px 0 var(--cds-gap-md,12px); }

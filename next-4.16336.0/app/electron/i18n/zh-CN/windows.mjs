@@ -1,0 +1,57 @@
+// Multi-window and split view (window-registry.cjs, src/source-split-view.jsx, app-menu.cjs File › New Window and
+// View › Split View). Claude Desktop's own zh-CN wording is not shipped, so these follow this app's menu terms:
+// 会话 for a session, 窗口 for a window, 分屏 for split view.
+export default {
+  'New Window': '新建窗口',
+  'New window': '新建窗口',
+  'New session on the right': '在右侧新建会话',
+  'Focus next split view': '聚焦下一个分屏',
+  'Focus previous split view': '聚焦上一个分屏',
+  'Split View': '分屏',
+  'New Session on the Right': '在右侧新建会话',
+  'Focus Next Split View': '聚焦下一个分屏',
+  'Focus Previous Split View': '聚焦上一个分屏',
+  'Move Split View Left': '将分屏左移',
+  'Move Split View Right': '将分屏右移',
+  'Close Split View': '关闭分屏',
+  'Close a window before opening another.': '请先关闭一个窗口，再打开新窗口。',
+  'Resize split view': '调整分屏大小',
+  '{percent}% left, {rest}% right': '左侧 {percent}%，右侧 {rest}%',
+  'Split view': '分屏',
+  'Close split view': '关闭分屏',
+  'Primary pane': '主面板',
+  'Secondary pane': '副面板',
+  'Open in split view': '在分屏中打开',
+  'See multiple sessions side by side in split view.': '在分屏中并排查看多个会话。',
+  'Open session in split view': '在分屏中打开会话',
+  // A mouse gesture in a shortcut (⌥ Click).
+  'Click': '点按',
+  'Open here': '在此打开',
+  'Open in new window': '在新窗口中打开',
+  // ⇧⌘N (File › New Session with Current Settings, the shortcuts dialog).
+  'New Session with Current Settings': '使用当前设置新建会话',
+  'New session with current settings': '使用当前设置新建会话',
+  'Move here': '移到这里',
+  // The pane grid (2.31226.0 shared-23 a1 / qQ / p$ / h$, View › Split View Yxi, shared-1 new_session_pane_below).
+  'New Session Below': '在下方新建会话',
+  'New session below': '在下方新建会话',
+  'Move Split View Up': '将分屏上移',
+  'Move Split View Down': '将分屏下移',
+  'Swap': '交换',
+  'Resize pane columns': '调整面板列宽',
+  'Resize pane rows': '调整面板行高',
+  // The session header ⋮ menu's pane items (shared-21 Qse / J7).
+  'Move split view to top left': '将分屏移到左上',
+  'Move split view left': '将分屏左移',
+  'Move split view right': '将分屏右移',
+  'Move split view up': '将分屏上移',
+  'Move split view down': '将分屏下移',
+  'Move split view to bottom left': '将分屏移到左下',
+  'Move split view to new column': '将分屏移到新列',
+  // Quick Entry (electron/quick-entry). The placeholder is the official zh-Hans catalog's own (resources/i18n
+  // zh-Hans.json S3MXlbjkax); the target menu follows the native bar's English strings (en.lproj Localizable.strings).
+  'What can I help you with today?': '今天有什么可以帮您的？',
+  'Send to new chat': '发送到新聊天',
+  'Keep chatting about...': '继续聊聊…',
+  'Your Quick Entry message wasn’t sent. Try again.': '快速输入的消息未能发送，请重试。',
+};

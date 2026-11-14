@@ -1,0 +1,92 @@
+{
+  "referenceVersion": "4.16336.0",
+  "referenceSnapshot": "snapshots/claude-4.16336.0-20261104",
+  "generator": "scripts/extract-quick-window.mjs",
+  "output": "quick-window-official.cjs",
+  "sources": {
+    "asar/.vite/renderer/quick_window/quick-window.html": "145068e4b51e809f476d9106a743ceb46d1a0e3e7412316cfacc6fa86ffb5954",
+    "asar/.vite/renderer/quick_window/assets/main-BIvVfet_.js": "dee6f168e56246b217778a3f8e75efd20f2202c832ff28461fce6c6cd607be85",
+    "asar/.vite/renderer/quick_window/assets/main-CiwjW8Wn.css": "7b23cc44e4e805e2b51935b25256bfe1e872060a95342566be4767b3cf0bda57"
+  },
+  "slices": {
+    "htmlOpenTag": {
+      "bytes": 142,
+      "sha256": "578a4970924a54bc9209939fc69a64203b16f93b040c7663866d5cc34d36d267"
+    },
+    "styleSheet": {
+      "bytes": 242998,
+      "sha256": "f5a5d9eed13e3c520d4dee17025f7ab508ccb2a89363eecc3ce5658cdf940acc"
+    },
+    "bodyOpenTag": {
+      "bytes": 68,
+      "sha256": "0f66d3966b40649e9adc98c63e35e2b48d2c99dd0adda73bc0d4df30d2512242"
+    },
+    "bodyMarkup": {
+      "bytes": 3279,
+      "sha256": "9c50dd50e6bcfade419acbaac590662871a402a6d3d6173dfa26cdad70157722"
+    },
+    "fontSheet": {
+      "bytes": 2226,
+      "sha256": "7b23cc44e4e805e2b51935b25256bfe1e872060a95342566be4767b3cf0bda57"
+    },
+    "themeScript": {
+      "bytes": 197,
+      "sha256": "fa4c15eafd9624bac2bb26283285497cda0f9612dc3b6478ff4f53d3f2826d94"
+    },
+    "loadScript": {
+      "bytes": 1308,
+      "sha256": "72ebbe7ff9e14bde70ddf4534e81d0000e67fd1f58d215fe317e60bc60e38f6f"
+    }
+  },
+  "fonts": {
+    "AnthropicSans-Roman-Variable-DDVos-BJ.woff2": {
+      "shipped": "cc27851ad-DDVos-BJ.woff2",
+      "sha256": "542f0e8bf7a27f2300f4cfb4b8ad168bc4cf7dc1eeeb8471cac66802f58e137c"
+    },
+    "AnthropicSans-Italic-Variable-CJtkx3-S.woff2": {
+      "shipped": "c9d3a3a49-CJtkx3-S.woff2",
+      "sha256": "ad89863fd0eb36e001166ea2a51e5102d18ffbbe4a0b321291a94d3739a5696b"
+    },
+    "AnthropicSerif-Roman-Variable-2VcCjn5t.woff2": {
+      "shipped": "c66fc489e-2VcCjn5t.woff2",
+      "sha256": "ac9c19c70558c5152b92119f83ca37dded627b524d75552a26fcda015d4106be"
+    },
+    "AnthropicSerif-Italic-Variable-Dcb-9NUS.woff2": {
+      "shipped": "cc410af59-Dcb-9NUS.woff2",
+      "sha256": "d2fd488ae565a92da356c44e13cb3a5f7080f4ce1bfdd9ad11a30f0dcc3e6ba8"
+    }
+  },
+  "freeNames": {
+    "zf": "globalThis[\"claude.internal.ui\"].QuickWindow — { requestDismiss(text | null), requestSkooch(width, height) } (official preload quickWindow.js)",
+    "$u": "globalThis[\"claude.hybrid\"].DesktopIntl — { getInitialLocale(), onLocaleChanged(handler) }",
+    "ed": "the promise of { locale, messages } from $u.getInitialLocale()",
+    "ku": "react-intl createIntl({ locale, messages }, cache): the host returns { formatMessage({ id, defaultMessage }) }",
+    "Vf": "react-intl createIntlCache() result (Xl()), passed through to ku",
+    "Mf": "rxjs fromEvent(target, type)",
+    "Bf": "rxjs debounce by a timer of the given milliseconds (Bf(e) = debounce(() => timer(e)))"
+  },
+  "notSliced": {
+    "what": "The macOS native Quick Entry bar (target menu, send button, screenshots, dictation)",
+    "why": "SwiftUI compiled into @ant/claude-swift build/Release/swift_addon.node; no page or script exists for it",
+    "hostFile": "electron/quick-entry/page.cjs",
+    "nativeStrings": {
+      "source": "/Applications/Claude.app/Contents/Resources/en.lproj/Localizable.strings (5.1231.2) and strings(1) of 4.16336.0 swift_addon.node",
+      "targetNewChat": "New Chat",
+      "menuSendToNewChat": "Send to new chat",
+      "menuRecentHeading": "Recent",
+      "placeholderNewChat": "What can I help you with today?",
+      "placeholderExistingChat": "Keep chatting with Claude about...",
+      "tooShort": "Quick access prompts must be at least 3 characters"
+    },
+    "nativeAssets": {
+      "source": "assetutil --info /Applications/Claude.app/Contents/Resources/Assets.car (5.1231.2)",
+      "spark": {
+        "name": "ClaudeSpark",
+        "points": 26
+      },
+      "accent": "#D97757 (Claude_Assets/Color-2, P3 0.851 0.467 0.341)",
+      "recentChats": "ion-dist index-DN24_FmB.js QuickEntryApiRegistrar: setRecentChats(conversations.slice(0, QB = 5).map(({ uuid, name }) => ({ chatId: uuid, chatName: name || \"Untitled\" })), activeChatId)"
+    }
+  },
+  "sha256": "a52406c0f63cd8780939ada161727f4ea45608e588da2828f125356261445611"
+}

@@ -1,0 +1,11 @@
+/* Settings › Cores (source-settings-cores.jsx); shares the Commands row styles. */
+.cores-title { display:inline-flex; align-items:center; gap:6px; flex-wrap:wrap; }
+.cores-logo { margin-right:4px; }
+.cores-vendor { color:var(--cds-text-muted); font-weight:400; font-size:var(--cds-font-size-footnote, 12px); }
+.cores-desc { display:flex; flex-direction:column; gap:2px; min-width:0; }
+.cores-status { color:var(--cds-text-secondary); font-size:var(--cds-font-size-footnote, 12px); line-height:16px; }
+.cores-progress { display:block; width:100%; max-width:280px; height:4px; margin-top:4px; border-radius:2px; background:var(--cds-alpha-1, var(--cds-fill-secondary)); overflow:hidden; }
+.cores-progress > span { display:block; height:100%; background:var(--cds-fill-accent); transition:width var(--cds-dur-fast, 100ms) linear; }
+.cores-note { margin:4px 0 0; color:var(--cds-text-muted); font-size:var(--cds-font-size-footnote, 12px); }
+@media (prefers-reduced-motion: reduce) { .cores-progress > span { transition:none; } }
+html[data-reduce-motion="true"] .cores-progress > span { transition:none; }

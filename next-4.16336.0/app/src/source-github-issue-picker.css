@@ -1,0 +1,27 @@
+/* cc43287c9 U$/G$/K$/W$ (:28205-28420): the Import GitHub issue dialog and its rows; c7bad7a49 t the state glyph. */
+.sgi-title { display:flex; align-items:center; gap:8px; }
+.sgi-body { display:flex; flex-direction:column; gap:12px; }
+.sgi-search { position:relative; display:flex; align-items:center; gap:var(--cds-gap-xs,6px); height:var(--cds-h-control--sm,28px); padding:0 var(--cds-pad-sm,6px);
+  border-radius:var(--cds-radius,6px); background:var(--cds-fill-field); box-shadow:inset 0 0 0 1px var(--cds-fill-field-ring); }
+.sgi-search:hover:not(:focus-within) { box-shadow:inset 0 0 0 1px var(--cds-border-strong); }
+.sgi-search:focus-within { box-shadow:var(--cds-focus-shadow); }
+.sgi-search-icon { flex-shrink:0; color:var(--cds-text-muted); }
+.sgi-search-input { flex:1; min-width:0; height:100%; margin:0; padding:0; border:0; background:none; outline:none; color:var(--cds-text-primary);
+  font:400 var(--cds-font-size-body,13px)/var(--cds-leading-body,19px) var(--cds-font-sans); }
+.sgi-search-input::placeholder { color:var(--cds-text-muted); }
+.sgi-results { max-height:50vh; overflow-y:auto; }
+.sgi-message { margin:0; padding:5px 12px; color:var(--cds-text-muted); font:italic 400 var(--cds-font-size-body,13px)/var(--cds-leading-body,19px) var(--cds-font-sans); }
+.sgi-list { display:flex; flex-direction:column; gap:4px; margin:0; padding:0; list-style:none; }
+.sgi-option { display:flex; width:100%; align-items:flex-start; gap:12px; padding:10px 12px; margin:0; border:0; border-radius:8px; background:none; color:inherit; text-align:left; font:inherit; cursor:default; }
+.sgi-option:hover { background:var(--cds-fill-ghost-hover); }
+.sgi-option:active, .sgi-option[aria-selected=true] { background:var(--cds-fill-ghost-selected, var(--cds-fill-ghost-hover)); }
+.sgi-option:focus-visible { outline:none; box-shadow:var(--cds-focus-shadow); }
+.sgi-row-icon { display:flex; flex-shrink:0; margin-top:2px; }
+.sgi-row-text { display:flex; min-width:0; flex:1; flex-direction:column; gap:2px; }
+.sgi-row-title { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--cds-text-primary); font:400 var(--cds-font-size-body,13px)/var(--cds-leading-body,19px) var(--cds-font-sans); }
+.sgi-row-meta { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--cds-text-muted); font:400 var(--cds-font-size-footnote,12px)/var(--cds-leading-footnote,16px) var(--cds-font-sans); }
+.sgi-muted { color:var(--cds-text-muted); }
+.sgi-state-box { display:flex; width:16px; height:16px; flex-shrink:0; align-items:center; justify-content:center; }
+.sgi-state--open { display:flex; width:12px; height:12px; box-sizing:border-box; flex-shrink:0; align-items:center; justify-content:center; border:1.5px solid currentColor; border-radius:999px; color:var(--cds-text-git-opened); }
+.sgi-state-dot { width:4px; height:4px; border-radius:999px; background:currentColor; }
+.sgi-state--closed { flex-shrink:0; color:var(--cds-text-git-merged); }

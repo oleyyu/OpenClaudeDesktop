@@ -1,0 +1,6 @@
+/* Code Yc math + KaTeX's own pinned stylesheet and fonts. */
+.source-markdown .srm-display { min-width:0; max-width:100%; padding-block:2px; overflow:auto hidden; }
+.source-markdown .srm-display[data-math-fallback] { white-space:pre-wrap; overflow-wrap:anywhere; }
+.source-markdown .srm-display:has(.katex:focus-visible) { outline:2px solid transparent; outline-offset:2px; box-shadow:var(--cds-focus-shadow); }
+.source-markdown .srm-display .katex:focus-visible { outline:none; box-shadow:none; }
+.source-markdown .srm-display .katex-display { margin:1em 0; }

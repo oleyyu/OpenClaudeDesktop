@@ -1,0 +1,69 @@
+/* Plan pane (source-plan-pane.jsx). Layout comes from the source utility
+   classes in the loaded c6a992d55 stylesheet. Locally the pane body is a flex
+   column under the pane header (message-style.css .detail-panel), so the
+   scroller takes the remaining height instead of 100% of the pane. */
+.source-file-panel > .source-plan {
+  flex: 1 1 0;
+  min-height: 0;
+}
+/* ZO strikes a completed row through. The source icons are SVG; the local
+   icons are font glyphs that the row's decoration would strike as well, so
+   the stroke is drawn on the step text only (same line, same 1px thickness). */
+.source-plan-list > li.line-through {
+  text-decoration-line: none;
+}
+.source-plan-list > li.line-through > .source-plan-step {
+  text-decoration-line: line-through;
+  text-decoration-thickness: 1px;
+}
+/* Step text goes through the user-text inline renderer, but a ZO step is
+   markdown (Vf): its code chip is the response chip (.source-markdown code,
+   --code-chip-ink), not the user bubble's qQ chip. */
+.suc-text.source-plan-step > .suc-inline-code {
+  font-family: var(--cds-font-mono);
+  font-size: calc(var(--chat-body, var(--cds-font-size-body)) - 1px);
+  line-height: 1.4;
+  padding: 1px 2px;
+  border: 0;
+  border-radius: 4px;
+  background: var(--cds-alpha-1);
+  color: var(--code-chip-ink, var(--cds-text-primary));
+}
+.suc-text.source-plan-step {
+  overflow-wrap: anywhere;
+}
+/* Dp (panes-tile-current.js:1716-1750): the plan document sits in the CDS
+   Prose (Ti font sans, size sm; the .prose rules of the loaded c6a992d55
+   stylesheet). The local Markdown is the response renderer, which keeps its
+   own block rhythm (its margin:0 rules outrank the :where(.prose) ones); it
+   takes the Prose size, leading and heading scale. The Tasks section follows
+   the document inside the same 68ch column. */
+.source-plan-document > .source-markdown {
+  --chat-body: var(--_prose-size);
+  --chat-leading: var(--_prose-leading);
+}
+.source-plan-document > .source-markdown h1 {
+  font-size: var(--_prose-h1-size);
+  line-height: var(--_prose-h1-leading);
+}
+.source-plan-document > .source-markdown h2 {
+  font-size: var(--_prose-h2-size);
+  line-height: var(--_prose-h2-leading);
+}
+.source-plan-document > .source-markdown h3 {
+  font-size: var(--_prose-h3-size);
+  line-height: var(--_prose-h3-leading);
+}
+.source-plan-document > .source-markdown h4 {
+  font-size: var(--_prose-h4-size);
+  line-height: var(--_prose-h4-leading);
+}
+
+/* A task's own state beyond done / in progress (MiMo: abandoned, blocked): a small muted tag, never struck through. */
+.source-plan-step-state { display: inline-block; margin-inline-start: 6px; padding: 0 6px; border-radius: 999px; background: var(--cds-fill-ghost-hover); color: var(--cds-text-muted); font-size: var(--cds-font-size-footnote, 12px); text-decoration: none; }
+/* Plan comments (B22, 2.31226.0 cccc2cf0a Gh/Rh/Lh, cd5a31703 wot): the hint, the inline marks and the floating
+   editor take the source utility classes; these rules add what the utilities do not carry. The selection being
+   commented keeps the system selection colours (cd5a31703 c9bddf7be ::highlight(epitaxy-plan-selection)). */
+::highlight(epitaxy-plan-selection) { color: highlighttext; background-color: highlight; }
+.source-plan-document mark[data-plan-comment-id] { color: inherit; }
+.spp-comment-popover textarea { padding: 0; font-family: inherit; letter-spacing: inherit; }

@@ -1,0 +1,21 @@
+/* Extension Pack import (source-extension-import.jsx). */
+.sxi-drop { display:flex; align-items:center; flex-wrap:wrap; gap:10px; padding:12px 14px; border:1px dashed var(--cds-border-strong, var(--cds-border)); border-radius:var(--cds-radius--lg, 10px);
+  color:var(--cds-text-secondary); background:transparent; transition:background-color var(--cds-dur-fast, 100ms), border-color var(--cds-dur-fast, 100ms); }
+.sxi-drop[data-dragging] { border-color:var(--cds-fill-accent); background:color-mix(in srgb, var(--cds-fill-accent) 8%, transparent); }
+.sxi-drop[data-compact] { padding:8px 10px; }
+.sxi-drop-text { flex:1; min-width:160px; font-size:var(--cds-font-size-body, 13px); }
+.sxi-drop-error { flex-basis:100%; }
+@media (prefers-reduced-motion: reduce) { .sxi-drop { transition:none; } }
+html[data-reduce-motion="true"] .sxi-drop { transition:none; }
+.sxi-facts { display:grid; gap:6px; margin:0; }
+.sxi-facts > div { display:grid; grid-template-columns:96px 1fr; gap:8px; align-items:baseline; }
+.sxi-facts dt { color:var(--cds-text-muted); font-size:var(--cds-font-size-footnote, 12px); }
+.sxi-facts dd { margin:0; color:var(--cds-text-primary); font-size:var(--cds-font-size-body, 13px); overflow-wrap:anywhere; }
+.sxi-muted { color:var(--cds-text-muted); }
+.sxi-chips { display:flex; flex-wrap:wrap; gap:4px; }
+.sxi-chip { height:20px; display:inline-flex; align-items:center; padding:0 6px; border-radius:var(--cds-radius--xs, 4px); background:var(--cds-alpha-1, var(--cds-fill-secondary)); color:var(--cds-text-secondary); font-family:var(--cds-font-mono); font-size:11px; }
+.sxi-warning { display:flex; gap:8px; align-items:flex-start; margin:14px 0 0; padding:10px 12px; border-radius:var(--cds-radius); color:var(--cds-text-warning, var(--cds-text-primary));
+  background:var(--cds-bg-warning, color-mix(in srgb, #d97706 10%, transparent)); box-shadow:inset 0 0 0 1px var(--cds-border-warning, transparent); font-size:var(--cds-font-size-footnote, 12px); line-height:1.5; }
+.sxi-warning > [data-cds=Icon], .sxi-warning > svg, .sxi-warning > span:first-child { flex-shrink:0; }
+.sxi-note { margin:8px 0 0; color:var(--cds-text-muted); font-size:var(--cds-font-size-footnote, 12px); line-height:1.5; }
+.sxi-error { margin:8px 0 0; color:var(--cds-text-danger, var(--cds-fill-danger)); font-size:var(--cds-font-size-footnote, 12px); overflow-wrap:anywhere; }

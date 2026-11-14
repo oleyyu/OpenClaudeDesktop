@@ -1,0 +1,902 @@
+{
+  "referenceVersion": "4.16336.0",
+  "referenceSnapshot": "snapshots/claude-4.16336.0-20261104",
+  "generator": "scripts/extract-composer-chin-v4.mjs",
+  "previous": {
+    "host": "src/source-composer-row-chin.jsx + src/source-composer.jsx (X6 row transcription, pinned by code-composer-v4 contract4 composer-row-chin.mjs chunkFeatures)"
+  },
+  "sharedGraph": {
+    "area": "cds-core",
+    "manifestSha256": "06d2026939e5c8992713c2a0dda1b1abc9adffe7a0c223fe3c1e79eecd08d62c"
+  },
+  "linkedAreas": {
+    "code-composer-v4": "dc5bfba3750b5f0468cadcf5b6123fe59ce856daf14f6aebf5b1bce1c2f1cf64",
+    "routines-shared-v4": "a2a9b9a84b2705e48451025af38eb7582de5bb421c626e6bdf5b067eb8e00c8c",
+    "files-changes-v4": "35740c17397e4a05b8f5a12f408061040cdd39e4fb28ca86b43c02f786e1b93e",
+    "session-rail-kit-v4": "8e3066efa4721cee2a5bb0b190fae471848c3456fa9b9424773baba5f2b9291a"
+  },
+  "roots": [
+    {
+      "file": "c227f4d5e-DGDdGBTz.js",
+      "local": "X6",
+      "name": "ComposerSessionChin",
+      "export": "g",
+      "declarationSha256": "f54d3bebfa1bd432c0305e7038e7b1822f9bb7d10b1b9a936d373c41859d8378",
+      "pinned": true
+    }
+  ],
+  "adapters": [
+    {
+      "original": "c227f4d5e-DGDdGBTz.js#W6",
+      "name": "useComposerChinPickers",
+      "hostAdapter": "src/source-composer-chin-adapters.jsx",
+      "declarationSha256": "77813eb5452c7c11bce0396801ca3830aa1a0326007a518ef1481c40b6b32320",
+      "pinned": true
+    },
+    {
+      "original": "c227f4d5e-DGDdGBTz.js#w3",
+      "name": "ComposerChinUsageRing",
+      "hostAdapter": "src/source-composer-chin-adapters.jsx",
+      "declarationSha256": "5c6bd88a7f150d06802a37d93609ddf7ff5e11db47e9085d0e2e7a9a3af60d6c",
+      "pinned": true
+    },
+    {
+      "original": "c227f4d5e-DGDdGBTz.js#L6",
+      "name": "ComposerRailPickerKeys",
+      "hostAdapter": "src/source-composer-chin-adapters.jsx",
+      "declarationSha256": "9ceeb55c811eee2ce830bc85e9c1a69ca745e1a79c9269d4d062be1110573b04",
+      "pinned": true
+    },
+    {
+      "original": "c227f4d5e-DGDdGBTz.js#$6",
+      "name": "ComposerDictationButton",
+      "hostAdapter": "src/source-composer-chin-adapters.jsx",
+      "declarationSha256": "ace6b463cec4579030f07540a0e85ee1063b3438a50423da92e20aaf01347190",
+      "pinned": true
+    },
+    {
+      "original": "c227f4d5e-DGDdGBTz.js#wJ",
+      "name": "ComposerChinPlusMenu",
+      "hostAdapter": "src/source-composer-chin-adapters.jsx",
+      "declarationSha256": "1e9090e7c76e81247e8807cdb7dc6db36d3a492af72cedb12dbf0bb3eb810a22",
+      "pinned": true
+    },
+    {
+      "original": "c227f4d5e-DGDdGBTz.js#C6",
+      "name": "useEngineFooterRegistry",
+      "hostAdapter": "src/source-composer-chin-adapters.jsx",
+      "declarationSha256": "f3d8636d06a34e25afdf07e61984231553dcb3d5e3095c24a0fe1e0f95fcd76b",
+      "pinned": true
+    },
+    {
+      "original": "c227f4d5e-DGDdGBTz.js#O6",
+      "name": "ComposerCoordinatorToggle",
+      "hostAdapter": "src/source-composer-chin-adapters.jsx",
+      "declarationSha256": "68063950fd34baec9b9c5bf9559fbfc9aa5145e06dc01ee35403ad1c0c64bdc8",
+      "pinned": true
+    },
+    {
+      "original": "c227f4d5e-DGDdGBTz.js#nD",
+      "name": "ComposerRailModelRow",
+      "hostAdapter": "src/source-composer-chin-adapters.jsx",
+      "declarationSha256": "ff2e782b72c2b87747b80ace3a600f586d2ca86709d9e960920734c80fe1f8c7",
+      "pinned": true
+    },
+    {
+      "original": "c227f4d5e-DGDdGBTz.js#tD",
+      "name": "ComposerRailModeRow",
+      "hostAdapter": "src/source-composer-chin-adapters.jsx",
+      "declarationSha256": "46249ac4161aa997f3c18f3712db979f26d880112214a93387cd6357e027a41d",
+      "pinned": true
+    },
+    {
+      "original": "c227f4d5e-DGDdGBTz.js#m6",
+      "name": "isComposerOnRoute",
+      "hostAdapter": "src/source-composer-chin-adapters.jsx",
+      "declarationSha256": "72ef00540ed01b7d86173028edae1be24e90968fd556c74bd89c3ecd8dc10e42",
+      "pinned": true
+    },
+    {
+      "original": "c227f4d5e-DGDdGBTz.js#Q3",
+      "name": "useComposerRouteContext",
+      "hostAdapter": "src/source-composer-chin-adapters.jsx",
+      "declarationSha256": "fcd973311516629d70235b442d9708fa66559c35270ab7471220475ef8846a74",
+      "pinned": true
+    },
+    {
+      "original": "c5da7eb42-aEqbSKbC.js#pR",
+      "name": "useSessionHidesModePicker",
+      "hostAdapter": "src/source-composer-chin-adapters.jsx",
+      "declarationSha256": "4e6fb67fe93bd0ead0af65a9d00ff515a1e028e5287fa0d9d4b7458e992fce1b",
+      "pinned": true
+    },
+    {
+      "original": "shared-0-CnnWnVrT.js#FH",
+      "name": "useIsDesktopApp",
+      "hostAdapter": "src/source-composer-chin-adapters.jsx",
+      "declarationSha256": "48c5ac390eae53e7b9a93536657c342305c74ce97cafa85a7f0f17dd88cbec31",
+      "pinned": true
+    },
+    {
+      "original": "shared-5-u8kha2eH.js#hh",
+      "name": "ComposerChinShellParts",
+      "hostAdapter": "src/source-composer-chin-adapters.jsx",
+      "declarationSha256": "588a6b0b6a5bc824723311ed59236f99abb15d3ffb794fdbd157d4e5fc27a856",
+      "pinned": true
+    },
+    {
+      "original": "vendor-intl-BJgYK7RA.js#q",
+      "name": "useComposerIntl",
+      "hostAdapter": "src/source-composer-chin-adapters.jsx",
+      "declarationSha256": "edf793bc7b87ae9a38cea39d25d752a5bcfef1d492e06a2219e120311feaaec0",
+      "pinned": true
+    }
+  ],
+  "pinnedDeclarations": {
+    "c227f4d5e-DGDdGBTz.js#J6": "0c47a2d7ce4be786a3d9d14ef85818165946a6761c7eb5d5a2b692d7feb30756",
+    "c227f4d5e-DGDdGBTz.js#O3": "d30a7b7450e5f7eed266400973f016e6c329a66acfe2354d30405435598003df"
+  },
+  "linkedCopies": {},
+  "imports": [
+    {
+      "module": "shared-212.mjs",
+      "local": "D",
+      "kind": "react",
+      "from": "react",
+      "name": "useRef",
+      "via": "vendor-frame-BckkO60Y.js:wo"
+    },
+    {
+      "module": "shared-212.mjs",
+      "local": "DU",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-212.mjs",
+      "name": "DU",
+      "via": "shared-212-BHMAi0oa.js#DU"
+    },
+    {
+      "module": "shared-212.mjs",
+      "local": "J1",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J1",
+      "via": "shared-frame-CJdE5Ria.js:lm"
+    },
+    {
+      "module": "shared-212.mjs",
+      "local": "J2",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J2",
+      "via": "shared-frame-CJdE5Ria.js:um"
+    },
+    {
+      "module": "shared-212.mjs",
+      "local": "J9",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J9",
+      "via": "shared-frame-CJdE5Ria.js:hm"
+    },
+    {
+      "module": "shared-212.mjs",
+      "local": "K1",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "K1",
+      "via": "shared-frame-CJdE5Ria.js:_m"
+    },
+    {
+      "module": "shared-212.mjs",
+      "local": "K2",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "K2",
+      "via": "shared-frame-CJdE5Ria.js:vm"
+    },
+    {
+      "module": "shared-212.mjs",
+      "local": "K3",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "K3",
+      "via": "shared-frame-CJdE5Ria.js:ym"
+    },
+    {
+      "module": "shared-212.mjs",
+      "local": "O",
+      "kind": "react",
+      "from": "react",
+      "name": "useLayoutEffect",
+      "via": "vendor-frame-BckkO60Y.js:xo"
+    },
+    {
+      "module": "shared-212.mjs",
+      "local": "b",
+      "kind": "react",
+      "from": "react",
+      "name": "useState",
+      "via": "vendor-frame-BckkO60Y.js:To"
+    },
+    {
+      "module": "cf059c6df.mjs",
+      "local": "c",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/vendor-intl-BJgYK7RA.mjs",
+      "name": "tn",
+      "via": "vendor-intl-BJgYK7RA.js:f"
+    },
+    {
+      "module": "cfca6870a.mjs",
+      "local": "I2",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "I2",
+      "via": "shared-frame-CJdE5Ria.js:im"
+    },
+    {
+      "module": "cfca6870a.mjs",
+      "local": "J1",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J1",
+      "via": "shared-frame-CJdE5Ria.js:lm"
+    },
+    {
+      "module": "cfca6870a.mjs",
+      "local": "J2",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J2",
+      "via": "shared-frame-CJdE5Ria.js:um"
+    },
+    {
+      "module": "cfca6870a.mjs",
+      "local": "J3",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J3",
+      "via": "shared-frame-CJdE5Ria.js:dm"
+    },
+    {
+      "module": "cfca6870a.mjs",
+      "local": "J9",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J9",
+      "via": "shared-frame-CJdE5Ria.js:hm"
+    },
+    {
+      "module": "cfca6870a.mjs",
+      "local": "K2",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "K2",
+      "via": "shared-frame-CJdE5Ria.js:vm"
+    },
+    {
+      "module": "cfca6870a.mjs",
+      "local": "K3",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "K3",
+      "via": "shared-frame-CJdE5Ria.js:ym"
+    },
+    {
+      "module": "cfca6870a.mjs",
+      "local": "Z1",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "Z1",
+      "via": "shared-frame-CJdE5Ria.js:Sm"
+    },
+    {
+      "module": "cfca6870a.mjs",
+      "local": "a",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "CdsDropdown",
+      "via": "shared-frame-CJdE5Ria.js:Vs"
+    },
+    {
+      "module": "cfca6870a.mjs",
+      "local": "c",
+      "kind": "linked",
+      "from": "../files-changes-v4/popover-collision-padding.mjs",
+      "name": "popoverCollisionPadding",
+      "via": "shared-18-Cfqwgjc5.js:Cn"
+    },
+    {
+      "module": "cfca6870a.mjs",
+      "local": "e",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "jsx",
+      "via": "vendor-frame-BckkO60Y.js:Ga"
+    },
+    {
+      "module": "cfca6870a.mjs",
+      "local": "i",
+      "kind": "react",
+      "from": "react",
+      "name": "useEffect",
+      "via": "vendor-frame-BckkO60Y.js:go"
+    },
+    {
+      "module": "cfca6870a.mjs",
+      "local": "l",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-33-DtdykY0y.mjs",
+      "name": "Cb",
+      "via": "shared-33-DtdykY0y.js:nl"
+    },
+    {
+      "module": "cfca6870a.mjs",
+      "local": "n",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "Fragment",
+      "via": "vendor-frame-BckkO60Y.js:Wa"
+    },
+    {
+      "module": "cfca6870a.mjs",
+      "local": "o",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "CdsSpinner",
+      "via": "shared-frame-CJdE5Ria.js:Zd"
+    },
+    {
+      "module": "cfca6870a.mjs",
+      "local": "r",
+      "kind": "react",
+      "from": "react",
+      "name": "Fragment",
+      "via": "vendor-frame-BckkO60Y.js:Xa"
+    },
+    {
+      "module": "cfca6870a.mjs",
+      "local": "s",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "CdsTooltip",
+      "via": "shared-frame-CJdE5Ria.js:cd"
+    },
+    {
+      "module": "cfca6870a.mjs",
+      "local": "t",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "jsxs",
+      "via": "vendor-frame-BckkO60Y.js:Ka"
+    },
+    {
+      "module": "shared-62.mjs",
+      "local": "Vn",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-0-CnnWnVrT.mjs",
+      "name": "dF",
+      "via": "shared-0-CnnWnVrT.js:lm"
+    },
+    {
+      "module": "shared-1.mjs",
+      "local": "Uc",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-62.mjs",
+      "name": "isMacUserAgent",
+      "via": "shared-62-DoCqVpIq.js:sS"
+    },
+    {
+      "module": "composer-session-chin.mjs",
+      "local": "$6",
+      "kind": "adapter",
+      "from": "../../source-composer-chin-adapters.jsx",
+      "name": "ComposerDictationButton",
+      "via": "c227f4d5e-DGDdGBTz.js#$6"
+    },
+    {
+      "module": "composer-session-chin.mjs",
+      "local": "A",
+      "kind": "react",
+      "from": "react",
+      "name": "memo",
+      "via": "vendor-frame-BckkO60Y.js:co"
+    },
+    {
+      "module": "composer-session-chin.mjs",
+      "local": "Be",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "cdsClassNames",
+      "via": "shared-frame-CJdE5Ria.js:tm"
+    },
+    {
+      "module": "composer-session-chin.mjs",
+      "local": "C6",
+      "kind": "adapter",
+      "from": "../../source-composer-chin-adapters.jsx",
+      "name": "useEngineFooterRegistry",
+      "via": "c227f4d5e-DGDdGBTz.js#C6"
+    },
+    {
+      "module": "composer-session-chin.mjs",
+      "local": "Ce",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "CdsTooltip",
+      "via": "shared-frame-CJdE5Ria.js:cd"
+    },
+    {
+      "module": "composer-session-chin.mjs",
+      "local": "I",
+      "kind": "react",
+      "from": "react",
+      "name": "useContext",
+      "via": "vendor-frame-BckkO60Y.js:po"
+    },
+    {
+      "module": "composer-session-chin.mjs",
+      "local": "I1",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "I1",
+      "via": "shared-frame-CJdE5Ria.js:rm"
+    },
+    {
+      "module": "composer-session-chin.mjs",
+      "local": "I2",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "I2",
+      "via": "shared-frame-CJdE5Ria.js:im"
+    },
+    {
+      "module": "composer-session-chin.mjs",
+      "local": "J0",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J0",
+      "via": "shared-frame-CJdE5Ria.js:cm"
+    },
+    {
+      "module": "composer-session-chin.mjs",
+      "local": "J1",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J1",
+      "via": "shared-frame-CJdE5Ria.js:lm"
+    },
+    {
+      "module": "composer-session-chin.mjs",
+      "local": "J2",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J2",
+      "via": "shared-frame-CJdE5Ria.js:um"
+    },
+    {
+      "module": "composer-session-chin.mjs",
+      "local": "J3",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J3",
+      "via": "shared-frame-CJdE5Ria.js:dm"
+    },
+    {
+      "module": "composer-session-chin.mjs",
+      "local": "J4",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J4",
+      "via": "shared-frame-CJdE5Ria.js:fm"
+    },
+    {
+      "module": "composer-session-chin.mjs",
+      "local": "J5",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J5",
+      "via": "shared-frame-CJdE5Ria.js:pm"
+    },
+    {
+      "module": "composer-session-chin.mjs",
+      "local": "J9",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J9",
+      "via": "shared-frame-CJdE5Ria.js:hm"
+    },
+    {
+      "module": "composer-session-chin.mjs",
+      "local": "K0",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "K0",
+      "via": "shared-frame-CJdE5Ria.js:gm"
+    },
+    {
+      "module": "composer-session-chin.mjs",
+      "local": "K1",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "K1",
+      "via": "shared-frame-CJdE5Ria.js:_m"
+    },
+    {
+      "module": "composer-session-chin.mjs",
+      "local": "K2",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "K2",
+      "via": "shared-frame-CJdE5Ria.js:vm"
+    },
+    {
+      "module": "composer-session-chin.mjs",
+      "local": "K3",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "K3",
+      "via": "shared-frame-CJdE5Ria.js:ym"
+    },
+    {
+      "module": "composer-session-chin.mjs",
+      "local": "K4",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "K4",
+      "via": "shared-frame-CJdE5Ria.js:bm"
+    },
+    {
+      "module": "composer-session-chin.mjs",
+      "local": "K5",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "K5",
+      "via": "shared-frame-CJdE5Ria.js:xm"
+    },
+    {
+      "module": "composer-session-chin.mjs",
+      "local": "L6",
+      "kind": "adapter",
+      "from": "../../source-composer-chin-adapters.jsx",
+      "name": "ComposerRailPickerKeys",
+      "via": "c227f4d5e-DGDdGBTz.js#L6"
+    },
+    {
+      "module": "composer-session-chin.mjs",
+      "local": "N",
+      "kind": "react",
+      "from": "react",
+      "name": "useEffect",
+      "via": "vendor-frame-BckkO60Y.js:go"
+    },
+    {
+      "module": "composer-session-chin.mjs",
+      "local": "O",
+      "kind": "react",
+      "from": "react",
+      "name": "useEffectEvent",
+      "via": "vendor-frame-BckkO60Y.js:_o"
+    },
+    {
+      "module": "composer-session-chin.mjs",
+      "local": "O6",
+      "kind": "adapter",
+      "from": "../../source-composer-chin-adapters.jsx",
+      "name": "ComposerCoordinatorToggle",
+      "via": "c227f4d5e-DGDdGBTz.js#O6"
+    },
+    {
+      "module": "composer-session-chin.mjs",
+      "local": "Q3",
+      "kind": "adapter",
+      "from": "../../source-composer-chin-adapters.jsx",
+      "name": "useComposerRouteContext",
+      "via": "c227f4d5e-DGDdGBTz.js#Q3"
+    },
+    {
+      "module": "composer-session-chin.mjs",
+      "local": "R6",
+      "kind": "linked",
+      "from": "../code-composer-v4/composer-final-focus.mjs",
+      "name": "useComposerFinalFocus",
+      "via": "c227f4d5e-DGDdGBTz.js#R6"
+    },
+    {
+      "module": "composer-session-chin.mjs",
+      "local": "S",
+      "kind": "react",
+      "from": "react",
+      "name": "useState",
+      "via": "vendor-frame-BckkO60Y.js:To"
+    },
+    {
+      "module": "composer-session-chin.mjs",
+      "local": "T",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "Fragment",
+      "via": "vendor-frame-BckkO60Y.js:Wa"
+    },
+    {
+      "module": "composer-session-chin.mjs",
+      "local": "U",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "CdsLoadingSkeleton",
+      "via": "shared-frame-CJdE5Ria.js:Au"
+    },
+    {
+      "module": "composer-session-chin.mjs",
+      "local": "V",
+      "kind": "shared-graph",
+      "from": "../cds-core/vendor-frame.mjs",
+      "name": "useDirection",
+      "via": "vendor-frame-BckkO60Y.js:xa"
+    },
+    {
+      "module": "composer-session-chin.mjs",
+      "local": "W6",
+      "kind": "adapter",
+      "from": "../../source-composer-chin-adapters.jsx",
+      "name": "useComposerChinPickers",
+      "via": "c227f4d5e-DGDdGBTz.js#W6"
+    },
+    {
+      "module": "composer-session-chin.mjs",
+      "local": "Z1",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "Z1",
+      "via": "shared-frame-CJdE5Ria.js:Sm"
+    },
+    {
+      "module": "composer-session-chin.mjs",
+      "local": "Z2",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "Z2",
+      "via": "shared-frame-CJdE5Ria.js:Cm"
+    },
+    {
+      "module": "composer-session-chin.mjs",
+      "local": "Z3",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "Z3",
+      "via": "shared-frame-CJdE5Ria.js:wm"
+    },
+    {
+      "module": "composer-session-chin.mjs",
+      "local": "Z4",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "memoStoreDeps4",
+      "via": "shared-frame-CJdE5Ria.js:Tm"
+    },
+    {
+      "module": "composer-session-chin.mjs",
+      "local": "Z5",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "Z5",
+      "via": "shared-frame-CJdE5Ria.js:Em"
+    },
+    {
+      "module": "composer-session-chin.mjs",
+      "local": "_",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "jsxs",
+      "via": "vendor-frame-BckkO60Y.js:Ka"
+    },
+    {
+      "module": "composer-session-chin.mjs",
+      "local": "ad",
+      "kind": "adapter",
+      "from": "../../source-composer-chin-adapters.jsx",
+      "name": "useComposerIntl",
+      "via": "vendor-intl-BJgYK7RA.js:p"
+    },
+    {
+      "module": "composer-session-chin.mjs",
+      "local": "ae",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "useCdsOwnerWindowAnchor",
+      "via": "shared-frame-CJdE5Ria.js:Kf"
+    },
+    {
+      "module": "composer-session-chin.mjs",
+      "local": "ce",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "CdsBadge",
+      "via": "shared-frame-CJdE5Ria.js:Pu"
+    },
+    {
+      "module": "composer-session-chin.mjs",
+      "local": "de",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "useCdsOwnerWindow",
+      "via": "shared-frame-CJdE5Ria.js:Uf"
+    },
+    {
+      "module": "composer-session-chin.mjs",
+      "local": "f",
+      "kind": "shared-graph",
+      "from": "../cds-core/vendor-frame.mjs",
+      "name": "clsx",
+      "via": "vendor-frame-BckkO60Y.js:Fa"
+    },
+    {
+      "module": "composer-session-chin.mjs",
+      "local": "fp",
+      "kind": "linked",
+      "from": "../code-composer-v4/composer-tokens.mjs",
+      "name": "composerChinTrailingClass",
+      "via": "shared-38-DyF0_Fim.js:$t"
+    },
+    {
+      "module": "composer-session-chin.mjs",
+      "local": "g",
+      "kind": "react",
+      "from": "react-dom",
+      "name": "createPortal",
+      "via": "vendor-frame-BckkO60Y.js:Ia"
+    },
+    {
+      "module": "composer-session-chin.mjs",
+      "local": "j6",
+      "kind": "linked",
+      "from": "../code-composer-v4/composer-row-chin.mjs",
+      "name": "ModeTriggerLabel",
+      "via": "c227f4d5e-DGDdGBTz.js#j6"
+    },
+    {
+      "module": "composer-session-chin.mjs",
+      "local": "m6",
+      "kind": "adapter",
+      "from": "../../source-composer-chin-adapters.jsx",
+      "name": "isComposerOnRoute",
+      "via": "c227f4d5e-DGDdGBTz.js#m6"
+    },
+    {
+      "module": "composer-session-chin.mjs",
+      "local": "me",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "CdsDropdown",
+      "via": "shared-frame-CJdE5Ria.js:Vs"
+    },
+    {
+      "module": "composer-session-chin.mjs",
+      "local": "mp",
+      "kind": "linked",
+      "from": "../code-composer-v4/composer-tokens.mjs",
+      "name": "composerRowChinClass",
+      "via": "shared-38-DyF0_Fim.js:en"
+    },
+    {
+      "module": "composer-session-chin.mjs",
+      "local": "mx",
+      "kind": "linked",
+      "from": "../code-composer-v4/composer-glyph.mjs",
+      "name": "dockGlyphProps",
+      "via": "cfca6870a-CdqZXIck.js:r"
+    },
+    {
+      "module": "composer-session-chin.mjs",
+      "local": "nD",
+      "kind": "adapter",
+      "from": "../../source-composer-chin-adapters.jsx",
+      "name": "ComposerRailModelRow",
+      "via": "c227f4d5e-DGDdGBTz.js#nD"
+    },
+    {
+      "module": "composer-session-chin.mjs",
+      "local": "nd",
+      "kind": "linked",
+      "from": "../session-rail-kit-v4/vendor-intl-BJgYK7RA.mjs",
+      "name": "tn",
+      "via": "vendor-intl-BJgYK7RA.js:f"
+    },
+    {
+      "module": "composer-session-chin.mjs",
+      "local": "oh",
+      "kind": "adapter",
+      "from": "../../source-composer-chin-adapters.jsx",
+      "name": "useSessionHidesModePicker",
+      "via": "c5da7eb42-aEqbSKbC.js:q"
+    },
+    {
+      "module": "composer-session-chin.mjs",
+      "local": "p",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "jsx",
+      "via": "vendor-frame-BckkO60Y.js:Ga"
+    },
+    {
+      "module": "composer-session-chin.mjs",
+      "local": "ps",
+      "kind": "linked",
+      "from": "../files-changes-v4/popover-collision-padding.mjs",
+      "name": "popoverCollisionPadding",
+      "via": "shared-18-Cfqwgjc5.js:Cn"
+    },
+    {
+      "module": "composer-session-chin.mjs",
+      "local": "q",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "CdsSkeleton",
+      "via": "shared-frame-CJdE5Ria.js:Ou"
+    },
+    {
+      "module": "composer-session-chin.mjs",
+      "local": "re",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "CdsButton",
+      "via": "shared-frame-CJdE5Ria.js:Id"
+    },
+    {
+      "module": "composer-session-chin.mjs",
+      "local": "tD",
+      "kind": "adapter",
+      "from": "../../source-composer-chin-adapters.jsx",
+      "name": "ComposerRailModeRow",
+      "via": "c227f4d5e-DGDdGBTz.js#tD"
+    },
+    {
+      "module": "composer-session-chin.mjs",
+      "local": "tE",
+      "kind": "shared-graph",
+      "from": "../cds-core/c227f4d5e.mjs",
+      "name": "tE",
+      "via": "c227f4d5e-DGDdGBTz.js#tE"
+    },
+    {
+      "module": "composer-session-chin.mjs",
+      "local": "tl",
+      "kind": "adapter",
+      "from": "../../source-composer-chin-adapters.jsx",
+      "name": "ComposerChinShellParts",
+      "via": "shared-5-u8kha2eH.js:Cm"
+    },
+    {
+      "module": "composer-session-chin.mjs",
+      "local": "vt",
+      "kind": "adapter",
+      "from": "../../source-composer-chin-adapters.jsx",
+      "name": "useIsDesktopApp",
+      "via": "shared-0-CnnWnVrT.js:Yu"
+    },
+    {
+      "module": "composer-session-chin.mjs",
+      "local": "w3",
+      "kind": "adapter",
+      "from": "../../source-composer-chin-adapters.jsx",
+      "name": "ComposerChinUsageRing",
+      "via": "c227f4d5e-DGDdGBTz.js#w3"
+    },
+    {
+      "module": "composer-session-chin.mjs",
+      "local": "wJ",
+      "kind": "adapter",
+      "from": "../../source-composer-chin-adapters.jsx",
+      "name": "ComposerChinPlusMenu",
+      "via": "c227f4d5e-DGDdGBTz.js#wJ"
+    },
+    {
+      "module": "composer-session-chin.mjs",
+      "local": "z",
+      "kind": "react",
+      "from": "react",
+      "name": "useId",
+      "via": "vendor-frame-BckkO60Y.js:vo"
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "name": "@code-desktop/dsh-code-desktop-app",
+  "version": "0.1.0",
+  "private": true,
+  "description": "dsh profile bundle: Codex app-server compatible stdio for OpenClaude Desktop over dsh-base",
+  "type": "module",
+  "files": [
+    "cordis.patch.yml"
+  ],
+  "exports": {
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./package.json": "./package.json"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  }
+}

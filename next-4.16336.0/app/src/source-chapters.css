@@ -1,0 +1,29 @@
+/* Session chapters (source-chapters.jsx). */
+
+/* W14-code r8 css8-chapter-heading-handcopy: the chapter h2 and its rename input are 3.6556.2 c96d752d0 GY's own utility
+   class strings (source-chapters.jsx); the hand-copied .source-chapter / .source-chapter-input rules are gone. */
+
+/* M9 (shared-21 :30502-30560) with the shared-styles grapheme keyframes: 90ms per grapheme, 30ms apart. */
+/* W14-code r5 cleanup css5-sr-only-handcopies: the hand-copied sr-only rule is gone; the JSX uses the official c6a992d55 .sr-only. */
+.sch-reveal { display: inline-flex; }
+@keyframes sch-grapheme-reveal { 0% { opacity: 0; filter: blur(6px); } }
+[data-revealing] > .sch-grapheme { animation: 90ms cubic-bezier(.215, .61, .355, 1) both sch-grapheme-reveal; animation-delay: calc(var(--i, 0) * 30ms); }
+@media (prefers-reduced-motion: reduce) { [data-revealing] > .sch-grapheme { animation: none; } }
+html[data-reduce-motion="true"] [data-revealing] > .sch-grapheme { animation: none; }
+
+/* W14-code r6 css6-toc-position-gutter: the TOC root, nav, rail and popover are 3.6556.2 cf74bc599 NC's own utility class
+   strings (source-chapters.jsx: -start-[var(--session-rail-band-start,0px)], no left:0 / fixed --chat-gutter). The
+   gutter is the .epitaxy-root default (c6a992d55: --chat-gutter:32px).
+   shared-6 gg on the nav (`[.epitaxy-chat-panel_&]:[@container_tile-slot_(max-width:560px)]:[--chat-gutter:16px]`):
+   the host has no .epitaxy-chat-panel / tile-slot names, so it is the same narrow-tile container query the transcript
+   column uses (source-transcript.css css-main-02), not the old 780px window query. */
+@container (max-width: 560px) { .sch-toc-nav { --chat-gutter: 16px; } }
+/* c96d752d0's inline stylesheet c2e28a737 (injected at runtime by the official chunk, not in the shipped CSS files):
+   the root's fade-in once the active chapter is known. */
+@keyframes epitaxy-toc-fade-in { 0% { opacity: 0; } to { opacity: 1; } }
+.epitaxy-toc-fade-in { animation: .18s ease-out .12s both epitaxy-toc-fade-in; }
+@media (prefers-reduced-motion: reduce) { .epitaxy-toc-fade-in { animation-duration: 1ms; } }
+html[data-reduce-motion="true"] .epitaxy-toc-fade-in { animation-duration: 1ms; }
+
+/* W14-code r6 review: the chapter rows (.sch-toc-entry / -button / -mark / -mark-edit / -title / -input) are FC's utility
+   class strings in source-chapters.jsx now; nothing restates them here. */

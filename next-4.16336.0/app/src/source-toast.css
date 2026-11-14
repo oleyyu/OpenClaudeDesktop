@@ -1,0 +1,27 @@
+/* shared-21 tj/XA/KA/qA/JA and shared-25 Bg/Vg. Local portal layer adapts
+   the source Toast60 token to this application's existing modal stack. */
+.source-toast-scope{position:fixed;right:calc(var(--launch-drawer-width,0px) + 16px);bottom:calc(max(var(--dev-dashboard-height,0px) + var(--session-expiry-banner-height,0px),var(--toast-clearance,0px)) + 16px);width:360px;max-width:calc(100vw - 32px);z-index:calc(2000 + var(--cds-z-toast,60));pointer-events:none;display:flex;flex-direction:column-reverse;gap:var(--cds-gap-md)}
+.source-toast-viewport{position:relative;pointer-events:auto;outline:none}
+.source-toast-card{position:absolute;width:100%;bottom:0;right:0;transform-origin:bottom;transform:translateY(calc(var(--toast-index) * -14px)) scale(calc(1 - var(--toast-index) * .04));transition:transform var(--cds-dur-base,.2s) ease-out,opacity var(--cds-dur-base,.2s) ease-out;outline:none}
+.source-toast-card[data-phase=starting]{opacity:0;transform:translateY(100%) scale(calc(1 - var(--toast-index) * .04))}
+.source-toast-card[data-phase=ending]{opacity:0;transform:translateY(calc(var(--toast-index) * -14px)) scale(.85);pointer-events:none}
+.source-toast-card[data-limited]{opacity:0;pointer-events:none}
+.source-toast-surface{border-radius:calc(var(--cds-radius) + .25rem * var(--cds-rem-scale,1));background:var(--cds-surface-3);color:var(--cds-text-primary);box-shadow:inset 0 0 0 var(--cds-ring-inner) var(--cds-ring-color),0 0 0 var(--cds-ring-outer) var(--cds-ring-color),var(--cds-shadow-md)}
+.source-toast-card[data-variant=warning] .source-toast-surface{color:var(--cds-text-warning);background-image:linear-gradient(0deg,var(--cds-bg-warning),var(--cds-bg-warning));box-shadow:inset 0 0 0 1px var(--cds-border-warning)}
+.source-toast-card[data-variant=danger] .source-toast-surface{color:var(--cds-text-danger);background-image:linear-gradient(0deg,var(--cds-bg-danger),var(--cds-bg-danger));box-shadow:inset 0 0 0 1px var(--cds-border-danger)}
+.source-toast-content{display:flex;align-items:flex-start;gap:var(--cds-gap-sm);padding:var(--cds-pad-md) var(--cds-pad-lg);overflow:hidden;border-radius:inherit;font:400 var(--cds-font-size-body)/var(--cds-leading-body) var(--cds-font-sans);transition:opacity var(--cds-dur-base,.2s) ease-out,visibility var(--cds-dur-base,.2s) ease-out}
+.source-toast-content[data-behind]{visibility:hidden;opacity:0}
+.source-toast-content>[data-cds=Icon]{flex-shrink:0}
+.source-toast-card[data-variant=neutral] .source-toast-content>[data-cds=Icon]{color:var(--cds-text-secondary)}
+/* aV nV "min-w-0 flex-1 text-pretty break-words": title font-medium, description font-normal, action mt-pad-md.
+   pre-line keeps a multi-line notice (staged attachment infos joined with \n) on separate lines. */
+.source-toast-text{flex:1;min-width:0;text-wrap:pretty;overflow-wrap:break-word}
+.source-toast-message{font-weight:500;white-space:pre-line}
+.source-toast-description{margin:0;font-weight:400;white-space:pre-line}
+.source-toast-action{margin-top:var(--cds-pad-md)}
+.source-toast-action:empty{display:none}
+.source-toast-dismiss{display:flex;flex-shrink:0;align-items:center;justify-content:center;margin:-2px -4px -4px;padding:4px;border:0;border-radius:var(--cds-radius);background:transparent;color:inherit;outline:none;transition:background-color var(--cds-dur-fast)}
+.source-toast-dismiss:hover{background:var(--cds-fill-ghost-hover)}
+.source-toast-dismiss:focus-visible,.source-toast-card:focus-visible .source-toast-surface{box-shadow:var(--cds-focus-shadow)}
+@media(prefers-reduced-motion:reduce){.source-toast-card,.source-toast-content{transition:none}}
+html[data-local-motion=reduce] .source-toast-card,html[data-local-motion=reduce] .source-toast-content{transition:none}

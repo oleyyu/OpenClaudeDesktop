@@ -1,0 +1,926 @@
+import { version as clientVersion } from "../package.json";
+import React, {
+  useCallback,
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { Icon } from "./icons";
+import { ToolButton } from "./code-ui";
+// surfaces wave 2 (titlebar): Back / Forward, the pane toggles, the View options glyph and the pane icons are 4.16336.0 slices.
+import { SidebarHistoryNav, TitlebarPaneToggle, titlebarOverflowIcon } from "./titlebar-host.jsx";
+// R6: SourceCollapsedChrome's trigger is shared-21 gI, a CDS Tooltip around a CDS Button (main.jsx graph, not E41's).
+// 4.16336.0 host wiring (frame): Badge / Button / Icon / TextLink / Tooltip are the cds-core facade's (the Show-sidebar
+// Tooltip passes hoverable false itself, the 4.16336.0 default).
+import { CdsBadge, CdsButton, CdsIcon, CdsTextLink, CdsTooltip } from "./cds-core.mjs";
+// shared-19 Dj (shared-21 `xn as nx`): a held Enter / Space does not repeat the click.
+const suppressKeyRepeat = (event) => { event.repeat && (event.key === "Enter" || event.key === " ") && event.preventDefault(); };
+import { SourceTooltip, SourceTooltipGroup } from "./source-tooltip";
+import { menuTriggerProps } from "./source-menu";
+import { SourceDialog } from "./source-dialog.jsx";
+import { SourceShortcut } from "./source-shortcut.jsx";
+import { ACTION_ERROR_COPY } from "./action-error-model.mjs";
+import { sessionMenuTriggerLabel, sessionMenuTriggerTooltip, titleOverflows, titleTooltipContent, viewOptionsLabel } from "./session-title-menu-model.mjs";
+// W14-code r8 fr8-03 (E84-2): the Code title button is c9543da06 Mp (cc43287c9 `contextMenuTrigger: p(sd, {ref, title, bleed:
+// Zs("panels") && w ? Fp : void 0, onStartEdit})`, bleed off with panels, so jp). Mp's closure (shared-4 rt title stop,
+// c4db265df Ze reading order, shared-18 px) is not sliced; its strings are copied verbatim: Ap(jp.pad, false) =
+// `${Mt} mx-outset h-control ${pad} rounded text-start bg-transparent border-0 hover:bg-fill-ghost-hover
+// focus-visible:outline-hidden hide-focus-ring focus-visible:shadow-focus cursor-text` with Mt = shared-6 ig
+// (generated titleTextClass) and jp = {pad: "px-xs", style: {"--cds-outset-x": "var(--cds-pad-xs)"}}.
+// verify:titlebar: 4.16336.0 c9543da06 pp keeps the same template (`dp(e)` = `${yr} mx-outset h-control ${e} rounded …`,
+// `fp = {pad: "px-xs", style: {"--cds-outset-x": "var(--cds-pad-xs)"}}` when no bleed); cc43287c9 FX passes
+// `bleed: jb() ? Pd : void 0` (jb = shared-120 qe, Pd = shared-18 Iw), so inside the titlebar frame the button takes Iw
+// (generated/titlebar-frame titleBleedPanels) and elsewhere fp.
+const codeTitleButtonClass = (pad) => `${titleTextClass} mx-outset h-control ${pad} rounded text-start bg-transparent border-0 hover:bg-fill-ghost-hover focus-visible:outline-hidden hide-focus-ring focus-visible:shadow-focus cursor-text`;
+const CODE_TITLE_BLEED_DEFAULT = { pad: "px-xs", style: { "--cds-outset-x": "var(--cds-pad-xs)" } };
+// fr8-06: Mp's aria-label `i ?? _.formatMessage({defaultMessage: "{name}, rename session", id: "Z444Es4IIr"}, {name: u})`.
+const CODE_TITLE_RENAME_LABEL = { defaultMessage: "{name}, rename session", id: "Z444Es4IIr" };
+import { titlebarDraftTitle } from "./generated/code-current/titlebar-draft-title.mjs";
+import { TitlebarTitleSkeleton } from "./generated/code-current/titlebar-title-skeleton.mjs";
+import { titleLeadClass, titleSlotClass, titleTextClass } from "./generated/code-current/titlebar-lead-classes.mjs";
+import { titleDirection } from "./generated/code-current/titlebar-lead-parts.mjs";
+import { useStartIntl } from "./source-code-start-adapters.jsx";
+import { SourceTitlebarSpawnLead } from "./source-titlebar-spawn-lead.jsx";
+import { TitlebarOriginLabel, originPillStaticClass, originPillStaticPanelsClass } from "./generated/code-current/titlebar-spawn-lead.mjs";
+import { folderPillTriggerClass, folderPillTriggerPanelsClass } from "./generated/code-current/titlebar-folder-pill.mjs";
+// surfaces wave 3 (titlebar frame): the Code titlebar is the 4.16336.0 frame shared-20 o_ (generated/titlebar-frame,
+// src/titlebar-frame-host.jsx), assembled here as cc43287c9 RX does; the panels scope is its shared-120 qe over cds-core Ke
+// (true only inside the frame's OS provider).
+import { TitlebarFrame, TITLEBAR_LEAD_CLASS, perfRegion, titlebarTextVars, useTitlebarPanelsScope,
+  titlebarLeadNoOriginPanelsClass, titleBleedPanels, titleGroupPanelsClass } from "./titlebar-frame-host.jsx";
+import { CdsTooltipProvider } from "./cds-core.mjs";
+import { useTitlebarFold, titlebarFoldLimits } from "./generated/code-current/titlebar-fold-measure.mjs";
+import { foldTitlebarToggles } from "./generated/code-current/titlebar-toggle-fold.mjs";
+import { CLOSE_PANE_SHORTCUT, CLOSE_PANE_KEYSHORTCUTS, titlebarControlClass, titlebarOwnerSpecs,
+  titlebarSessionState, TITLEBAR_RAIL_SEPARATOR, titlebarRailRuleShown, createRailFoldFocus, titlebarRailToggleFoldable } from "./titlebar-controls-model.mjs";
+// R4f-rail SR-6: the 2.42304.0 session rail toggle, cc43287c9 EH (generated by extract-session-rail-kit.mjs).
+import { SessionRailToggle } from "./generated/session-rail-kit/rail-shell.mjs";
+import { LEAD_NO_ORIGIN_CLASS } from "./generated/session-rail-kit/rail-column.mjs";
+import { useFoldFocusHandoff } from "./titlebar-fold-focus.mjs";
+import { LOCAL_RELEASE_NOTE_VERSIONS, RELEASE_NOTE_KINDS, RELEASE_NOTE_KIND_LABELS, releaseNoteDate, releaseNoteSegments, releaseNotesFor } from "./release-notes.mjs";
+import "./source-titlebar.css";
+import { t } from "../electron/i18n/index.mjs";
+
+// surfaces wave 2 (titlebar): a host toggle spec (titlebar-controls-model.mjs, hy's order and icons over the local panes) as
+// 4.16336.0 c73f45bc3 hy hands it to SY: `{pane, icon, label, shortcut, active, toggle}` with the label translated and
+// toggle = main.jsx's pane toggle. (hy's preview `intent` (lt(_p / ec), the preview chunk preload) is not set: the host
+// preview pane is not a lazily loaded official chunk.) The Changes toggle is hy's diff spec ("Changes" dgqhUM6BxJ,
+// Ce("toggleDiff") ⇧⌘D); SY draws its tooltip from these fields (CdsTooltip side "bottom").
+export function paneToggleSpec(spec, onTogglePane) {
+  return { pane: spec.pane, icon: spec.icon, label: t(spec.label), shortcut: spec.shortcut, active: spec.active, toggle: () => onTogglePane?.(spec.pane) };
+}
+
+// 3.6556.2 shared-21-R7LldJ05.js CI (exported `CI as ho`, shared-22 `ho as Sy`): while the sidebar is collapsed, GI
+// renders `l ? I ? null : o(Sy, {withNavButtons: X, onPointerEnter: ve, onClusterPointerEnter: ge})` in the aside in
+// place of its df-titlebar, so the collapsed chrome is the [data-collapsed] pill of .dframe-sidebar (shared-styles
+// `.dframe-root[data-collapsed] .dframe-sidebar{…flex-direction:row;…inset-inline-start:var(--df-collapsed-left)…}`).
+// main.jsx hands it to SourceSidebar (collapsedChrome); no titlebar renders it any more.
+// CI: div.df-collapsed-chrome.flex.items-center (onPointerEnter = the cluster's: it only keeps an open peek, ge →
+// `En.getState().hovering && S(e)`) holding gI and, withNavButtons, div.df-collapsed-nav.draggable-none.relative.flex
+// .items-center around xI (w_ placement "sidebar"). Its layout effect writes the chrome's right edge and the nav's
+// extent past the trigger onto the root as --df-trigger-right / --df-nav-extent (removed again when they equal the
+// derived pill edge), which the [data-collapsed] clearance rules read.
+// frame-sidebar 4.16336.0 (src/frame-sidebar-host.jsx): the official KR mounts this as its SidebarCollapsedChrome slot
+// (shared-21 yO, `o($v, {withNavButtons, onPointerEnter, onClusterPointerEnter})`) and passes `trigger`, the sliced
+// 4.16336.0 compact trigger (generated/frame-sidebar SidebarCollapsedTrigger = shared-21 fO), in place of the host one.
+export function SourceCollapsedChrome({ onExpand, peekOpen = false, onPeekEnter, onPeekLeave, withNavButtons = true, trafficLightSpacer, trigger }) {
+  const chrome = useRef(null);
+  useLayoutEffect(() => {
+    const node = chrome.current, root = node?.closest(".dframe-root");
+    if (!root || !node) return;
+    const rtl = getComputedStyle(root).direction === "rtl";
+    let written = { right: "", extent: "" };
+    const measure = () => {
+      const box = node.getBoundingClientRect();
+      if (box.width === 0) return;
+      const edge = (rect) => (rtl ? root.clientWidth - rect.left : rect.right);
+      const right = edge(box), rounded = Math.round(right);
+      const trigger = node.querySelector(".df-compact-trigger");
+      const triggerEnd = trigger
+        ? Math.round(edge(trigger.getBoundingClientRect()) + (parseFloat(rtl ? getComputedStyle(trigger).marginLeft : getComputedStyle(trigger).marginRight) || 0))
+        : null;
+      const extent = triggerEnd === null ? 0 : Math.max(0, rounded - triggerEnd);
+      const derived = parseFloat(getComputedStyle(root).getPropertyValue("--df-trigger-right-derived"));
+      const next = Math.abs(derived - right) < 1 && extent === 0 ? { right: "", extent: "" } : { right: `${rounded}px`, extent: `${extent}px` };
+      if (next.right === written.right && next.extent === written.extent) return;
+      written = next;
+      if (next.right === "") { root.style.removeProperty("--df-trigger-right"); root.style.removeProperty("--df-nav-extent"); }
+      else { root.style.setProperty("--df-trigger-right", next.right); root.style.setProperty("--df-nav-extent", next.extent); }
+    };
+    const Observer = typeof ResizeObserver === "undefined" ? undefined : node.ownerDocument.defaultView?.ResizeObserver;
+    if (withNavButtons || !Observer) measure();
+    const observer = Observer ? new Observer(measure) : undefined;
+    observer?.observe(node);
+    observer?.observe(root);
+    return () => {
+      observer?.disconnect();
+      if (written.right !== "") { root.style.removeProperty("--df-trigger-right"); root.style.removeProperty("--df-nav-extent"); }
+    };
+    // CI deps [trafficLightSpacerWidth, withNavButtons, rtl]: the pill moves with the spacer without resizing.
+  }, [trafficLightSpacer, withNavButtons]);
+  return (
+    <div ref={chrome} className="df-collapsed-chrome flex items-center" onPointerEnter={peekOpen ? onPeekEnter : undefined}>
+      {/* 3.6556.2 shared-21 gI: `u(U,{content:T,shortcut:"cmd+b",hoverable:!1,children:u(R,{ref:m,iconOnly:!0,tooltip:!1,
+          variant:"ghost",size:O,icon:j,"data-testid":"sidebar-compact-trigger",…,onKeyDown:nx,onPointerEnter:t,
+          "aria-expanded":r,"aria-controls":wC,"aria-label":T,shortcut:"cmd+b",className:N})})` — U = CdsTooltip (Kl),
+          R = CdsButton (Eu), O = `_ === "compact" ? "lg" : …` (the aside is compact: lg, the 28px --df-pill-size pill),
+          j = CdsIcon (fe) `{size:"sm",name:Gn(),className:pI}` with pI "text-secondary" and Gn() "Sidebar" (shared-1 TV,
+          LTR), N = `c(p,"df-compact-trigger draggable-none")` (p is the static-composer boot fade, absent here), wC =
+          "frame-peek-popover", nx = shared-19 Dj (no Enter/Space key repeat). The ghost Button has no aria-haspopup, so
+          an open peek paints no background. Host additions: the focus-region marks and the peek pointerleave grace. */}
+      {trigger ?? <CdsTooltip content={t("Show sidebar")} shortcut="cmd+b" hoverable={false}>
+        <CdsButton iconOnly tooltip={false} variant="ghost" size="lg"
+          icon={<CdsIcon size="sm" name="Sidebar" className="text-secondary" />}
+          data-testid="sidebar-compact-trigger" onClick={onExpand} onKeyDown={suppressKeyRepeat}
+          onPointerEnter={onPeekEnter} onPointerLeave={onPeekLeave}
+          aria-expanded={peekOpen} aria-controls="frame-peek-popover" aria-label={t("Show sidebar")} shortcut="cmd+b"
+          className="df-compact-trigger draggable-none"
+          // ca1d33d05 kt: with the peek card hidden, the "navigation" stop is this trigger, focused without a ring.
+          data-focus-region="navigation" data-focus-region-fallback="" data-focus-region-ring="none" />
+      </CdsTooltip>}
+      {/* 4.16336.0 shared-21 yO: `t && l("div", {className: "df-collapsed-nav draggable-none relative flex items-center",
+          children: l(_O, {})})`, _O = the sliced SidebarHistoryNav (generated/titlebar, its own size and history store). */}
+      {withNavButtons && <div className="df-collapsed-nav draggable-none relative flex items-center">
+        <SidebarHistoryNav />
+      </div>}
+    </div>
+  );
+}
+
+// Hp → Hf → kf/Bp/bp; shared-12 Wm/Km/Ym/qm/th.
+// See analysis/source-titlebar-batch1.md for source/version boundaries.
+// 3.6556.2 cc43287c9 rG (compact, panels off: w = vn() false): `v("div", { className: A, children: [M, I, C, L] })`, A = Fl
+// (shared-6 cg, titleLeadClass, no gap) holding M = `p("span", { className: Vl, children: j })` (sg, titleSlotClass: the
+// title or its edit field) and I, the CaretDown menu trigger; the folder pill sits outside it (c73f45bc3 ry gap-xs).
+// verify:titlebar: 4.16336.0 cc43287c9 FX `h("div", {className: A, children: [N, L, C, R]})`, A = `w ? Df : jf` (w = jb() =
+// shared-120 qe): inside the titlebar frame the group is shared-18 Bw (titleGroupPanelsClass); outside it stays cg.
+function TitleLead({ wrap, children }) {
+  const titlebarPanels = useTitlebarPanelsScope();
+  if (!wrap) return children;
+  const parts = React.Children.toArray(children);
+  return <div className={titlebarPanels ? titleGroupPanelsClass : titleLeadClass}><span className={titleSlotClass}>{parts[0]}</span>{parts.slice(1)}</div>;
+}
+// c73f45bc3 wy `x = Sr()` (shared-120 qe): the folder pill reads the panels scope where it renders, inside the frame's OS
+// provider (a read in SourceTitlebar's own body would be outside it, so always false).
+function TitlebarPanelsScoped({ render }) {
+  return render(useTitlebarPanelsScope());
+}
+
+export function SourceTitlebar({
+  surface = "code",
+  activityOpen = false,
+  onToggleActivity,
+  // w13-close-main-jsx-tests (coworkui-panel-03): main.jsx binds c21f11e6d cN's ⇧⌘S for this side (shared-16 Oc `C = vc(kc)`).
+  activityShortcut = false,
+  // w13-close-main-jsx-tests: shared-20 Iy's toggle while the Chat page or chat is incognito (main.jsx incognitoKey).
+  onExitIncognito,
+  collapsed,
+  onExpand,
+  // cc43287c9 Vh data-top-left: this header is the frame's top-left pane header (the primary session pane).
+  topLeft = true,
+  section,
+  sectionLabel,
+  session,
+  panes = new Set(),
+  onTogglePane,
+  onMenu,
+  menuKind,
+  // The open titlebar menu was opened by a right-click at the cursor (main.jsx menu.point): the title's context menu,
+  // which is not the caret's popup, so the caret stays collapsed (c593f7513 Om: separate Dm instances).
+  menuAtPointer = false,
+  onRename,
+  // c593f7513 wm onRenameStart: the header session menu's Rename asks for the inline title edit ({ id, token };
+  // a new token for this session starts it).
+  renameRequest,
+  onWhatsNew,
+  showWhatsNew = false,
+  loading,
+  historyAt = 0,
+  historyLength = 1,
+  travel,
+  changesDirty = false,
+  // Terminal pane toggle (cc70f2bdf Hc terminal item, icon CommandLinePrompt): shown when main.jsx can open the pane;
+  // terminalBusy draws the activity dot while the pane is hidden; the name stays "Terminal" (c73f45bc3 pane items:
+  // `e("terminal", !!C, "Terminal" GE7Vqpsyct, …)`, `"Preview" GD2Vvn5YZe`; en-US has no "(command running)" form).
+  terminalAvailable = false,
+  terminalBusy = false,
+  // Preview pane toggle (R4g-small SM1, D36: c73f45bc3 Rh's gate-off row, Play + "Preview" + ⇧⌘P on Code; other
+  // surfaces Globe + "Browser", titlebarToggleSpecs); previewRunning draws the activity dot ("Preview (dev server
+  // running)", D15) while the pane is closed.
+  previewAvailable = false,
+  previewRunning = false,
+  // R4g-small SM1 home-07 (2.42304.0 shared-20 ah `e&&n==="draft"&&!t`, cc43287c9 jre `draftTitle:lh({…,phase:le})`):
+  // the draft title is only for phase "draft"; main.jsx passes its spawnPhase (the first send's worktree spawn, jre's
+  // phase "spawning") so the h1 is gone until the session opens.
+  spawning = false,
+  // w12c-wiring (w12b-titlebar-spawn-lead §6; cc43287c9 oG `t||o?p(EP,{origin:pe&&{kind:pe,label:ve},title:J,bare:M})`):
+  // the spawn oG's `o` (main.jsx titlebarSpawnSource), drawn as the EP lead while the draft spawns.
+  spawn = null,
+  // R2-topbar TT-02 (2.42304.0 c73f45bc3 Rh landing branch `[...terminal, ...preview, ...files]`): the New session
+  // page's Files toggle, offered where main.jsx can open the Files pane on its folder (the host counterpart of the
+  // landing's trusted folder + listDirectoryAtCwd, cfac349aa I). A session's titlebar always lists Files.
+  filesAvailable = false,
+  // R3-topbar TT-03 (cc43287c9 wW → c73f45bc3 Zh `hiddenMainPaneCount`): told how many toggles the titlebar folded
+  // into ⋮, so main.jsx's View options lists them (titlebarFoldedToggles).
+  onFoldChange,
+  // Split view (shared-21 VT, an extra pane's paneHost): a secondary pane's titlebar ends with a ghost "Close pane"
+  // X (label, and a tooltip naming ⌃⌘W as 2.42304.0 wW does) that closes that pane; the primary pane has none (it
+  // closes through View › Split View or ⌃⌘W).
+  onCloseSplit,
+  // B27 session popout (main.jsx SESSION_POPOUT; shared-18 yx/hx): the window's header ends with Open in main window
+  // (ArrowInSquare) and Keep window on top (Pin / PinFilled, pressed while on top). { alwaysOnTop, onDock, onTogglePin }.
+  popoutWindow = null,
+  // R4f-rail SR-6 (2.42304.0 cc43287c9 wW `railToggle` / `railToggleRef`): jre's rail model { onScreen, raises,
+  // panelId, onToggle } while the session has a rail (`on ? bn : void 0`; none until the rail is mounted), and the ref
+  // jre shares with the overlay rail (jH toggleRef). onRailToggleFoldChange is told whether the toggle folded into ⋮,
+  // so main.jsx's ⋮ menu can list it first (tE).
+  railToggle,
+  railToggleRef,
+  onRailToggleFoldChange,
+  // R4f-rail fix (cc43287c9 jre `railMode: tn` → wW `railMode: g` → c73f45bc3 w_): in rail mode the session lead is t_
+  // with `origin: null, pill: null` — no origin glyph (an empty Ih slot instead) and no folder pill, the rail's
+  // Environment card carrying both. Off by default; main.jsx does not pass it yet (see the R4f-rail fix report).
+  railMode = false,
+  // w10-shell-titlebar (3.6556.2 cc43287c9 oG `isSessionNotFound: T`, N): the core has no history for this Code session
+  // (main.jsx historyUnavailable, as the rail is told). oG then draws no lead, no pane toggles and no ⋮, and the rail
+  // toggle stays inert and unseen (titlebarSessionState).
+  sessionNotFound = false,
+  // TF-O1 (oG ce / le → FW startingId): the draft's first send is starting its session (main.jsx spawn phase), so the
+  // titlebar's toggles are FW's "starting" owner — the landing's, not held.
+  starting = false,
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [renameError, setRenameError] = useState("");
+  // Host guard: narrower than the lead's floor (glyph, a 32px title, the gap, the folder icon chip), the chip is
+  // dropped instead of showing as a clipped sliver beside the actions.
+  const [folderHidden, setFolderHidden] = useState(false);
+  // c73f45bc3 wy `x = Sr()`: inside the panels titlebar scope the folder pill takes the control-height sizes (Iv / Fv); the
+  // pill reads it in place (TitlebarPanelsScoped), inside the frame's provider.
+  // surfaces wave 3 (titlebar frame): the Code New-section titlebar (session, landing, spawn, not-found) is cc43287c9 RX over
+  // the sliced shared-20 o_ (TitlebarFrame). A session popout window keeps the host header: its traffic-light clearance is
+  // the host [data-session-popout] .workspace-toolbar rule (style.css), with no frame root for o_'s NS / IS clearances.
+  const framed = surface === "code" && section === "new" && !popoutWindow;
+  const input = useRef(null),
+    titleButton = useRef(null),
+    bar = useRef(null),
+    inner = useRef(null),
+    trailing = useRef(null),
+    toggleGroup = useRef(null);
+  const transaction = useRef(0),
+    submitted = useRef(false),
+    sessionId = useRef(session?.id);
+  const restoreTitleFocus = useRef(false),
+    keyboardEntry = useRef(false);
+  const errorId = useId();
+  // fr8-03: Mp `v = nn()` (shared-18 px: "auto" under RTL) and `_ = Ht()` for Z444Es4IIr.
+  const titleDir = titleDirection();
+  const intl = useStartIntl();
+  const title = session?.name || session?.preview || t("Untitled");
+  const folder =
+    session?.cwd?.split(/[\\/]/).filter(Boolean).at(-1) || t("Workspace");
+  sessionId.current = session?.id;
+  // R3-topbar TT-03 (2.42304.0 cc43287c9 wW; 3.6556.2 oG): the official fold measure (3.6556.2 cd54a5401 nn, generated
+  // titlebar-fold-measure.mjs, W2 w2-titlebar-current) watches the row (.st-inner, wW's sectionsRef) and the toggle group (wW `he`) and
+  // returns how many toggles to fold (hiddenCount, capped by qt's maxHidden: 6 without a rail toggle) and whether
+  // the lead's pills compact (pillsCompact, the folder chip's icon-only state). Its titleRef goes on the title the
+  // lead shows: the title button when ready, the skeleton's span[data-pane-title] while loading. The cluster is
+  // mounted for any session (wW `clusterMounted: re && e !== null`), interactive once it is not held (`z && !C`).
+  // The local open panes stand in for wW's tileLayout; there is no expanded tile or trailing slot here.
+  // Other surfaces never fold (maxHidden 0): their titlebar has no ⋮ to fold into.
+  // R4f-rail SR-6: with a rail toggle (wW Te, titlebarRailToggleFoldable) qt allows 7 folds and folds the rail toggle
+  // first (railToggleFolded); the measure samples the toggle (wW `sampleRef: b`) once every pane toggle is folded.
+  // w10-shell-titlebar: oG's G / ae / le / ue over the host state (titlebar-controls-model.mjs titlebarSessionState).
+  // N is the Code session titlebar's (oG); other surfaces have no not-found state here.
+  const notFound = surface === "code" && !!session && sessionNotFound;
+  const sessionState = titlebarSessionState({ session, loading, spawning, sessionNotFound: notFound, starting });
+  // oG mounts FW only for `ae||o||re.origin` (sessionState.togglesMounted): a not-found session has no pane toggles.
+  const specs = sessionState.togglesMounted
+    ? titlebarOwnerSpecs(sessionState.toggleOwner, { surface, terminalAvailable, previewAvailable, filesAvailable, panes }) : [];
+  const foldable = surface === "code" && !!session && section === "new";
+  const ownRailToggleRef = useRef(null);
+  const railRef = railToggleRef ?? ownRailToggleRef;
+  const railFoldable = titlebarRailToggleFoldable({ foldable, railToggle });
+  const { hiddenCount, pillsCompact, titleRef: foldTitleRef } = useTitlebarFold({
+    rootRef: inner,
+    togglesRef: toggleGroup,
+    sampleRef: railRef,
+    title,
+    // oG `He=te&&!N,Ue=ae&&t!==null`.
+    interactive: !loading && !notFound,
+    clusterMounted: sessionState.clusterMounted,
+    tileLayout: [...panes].sort().join(" "),
+    sessionId: session?.id,
+    maxHidden: foldable ? titlebarFoldLimits({ railToggleFoldable: railFoldable, hiddenCount: 0 }).maxHidden : 0,
+  });
+  const { railToggleFolded, hiddenMainPanes } = titlebarFoldLimits({ railToggleFoldable: railFoldable, hiddenCount });
+  // panes:C1-14 (3.6556.2 cc43287c9 oG `G=(te||!t&&!o)&&!N`, `ae=G||ie&&!o&&!re.origin&&!N`, then
+  // `p(TH,{…,inert:!G,unseen:!ae}),ae&&!Ee&&p(Fne,{})`): the rail toggle is inert while the session is held (G is the
+  // host's !loading) and unseen (TH's style CH/wH, opacity 0) until oG would show the session at all (ae). Host
+  // mapping of ae: ie = shared c5da7eb42 fR (a local session whose kind is known and not remote) holds for every host
+  // session (they all run locally, kind known from the thread list); o is the host's spawn (`spawning`); the host
+  // keeps no pending-launch origin (re.origin). w10-shell-titlebar (notdone 20): N is main.jsx's not-found
+  // (`sessionNotFound`), so a missing session's toggle is inert (!G) and unseen (!ae), without the rule.
+  const railSeen = sessionState.seen;
+  // wW Oe / ke and its layout effect over [De, y, b]: a focused rail toggle that folds hands focus to ⋮.
+  const [railFoldFocus] = useState(createRailFoldFocus);
+  useLayoutEffect(() => {
+    railFoldFocus.commit(railToggleFolded, railRef);
+  }, [railFoldFocus, railToggleFolded, railToggle, railRef]);
+  useEffect(() => {
+    onRailToggleFoldChange?.(railToggleFolded);
+  }, [onRailToggleFoldChange, railToggleFolded]);
+  // uW `LN(specs, hiddenCount).inline` renders; Vh lists `.folded` (main.jsx, from the same specs and this count).
+  const { inline } = foldTitlebarToggles(specs, foldable ? hiddenMainPanes : 0);
+  useEffect(() => {
+    onFoldChange?.(foldable ? hiddenMainPanes : 0);
+  }, [onFoldChange, foldable, hiddenMainPanes]);
+  // uW h / P: a keyboard-focused toggle that folds away hands focus to the toggle that took its place.
+  const foldRef = useFoldFocusHandoff(inline.map((spec) => spec.pane), specs.length > 0);
+  // CY's E (`(e, t) => …`, pane and node): the toggle Buttons register with the fold hand-off by pane.
+  const attachPaneToggle = useCallback((pane, node) => foldRef(pane)(node), [foldRef]);
+  const setTitleButton = useCallback((node) => {
+    titleButton.current = node;
+    foldTitleRef(node);
+  }, [foldTitleRef]);
+  useEffect(() => {
+    transaction.current++;
+    submitted.current = false;
+    restoreTitleFocus.current = false;
+    setEditing(false);
+    setSaving(false);
+    setRenameError("");
+  }, [session?.id]);
+  useEffect(
+    () => () => {
+      transaction.current++;
+    },
+    [],
+  );
+  useLayoutEffect(() => {
+    if (editing) {
+      input.current?.focus();
+      input.current?.select();
+    } else if (restoreTitleFocus.current) {
+      restoreTitleFocus.current = false;
+      titleButton.current?.focus({ preventScroll: true });
+    }
+  }, [editing]);
+  // R3-topbar TT-03: the pill compaction and the toggle folding are the official measure's (useTitlebarFold above),
+  // which replaced the local all-or-nothing data-cramped and its separate compact budget. Only the host floor guard
+  // stays: the room left beside the actions, against origin glyph + 32px title + caret + gap + folder icon chip.
+  useLayoutEffect(() => {
+    const row = inner.current;
+    if (!row || !session || section !== "new") {
+      setFolderHidden(false);
+      return;
+    }
+    let frame;
+    const measure = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        // The header session caret (c593f7513 Om) sits between the title and the folder chip, with its gap.
+        const caret = row.querySelector(".st-session-caret");
+        const caretWidth = caret ? caret.offsetWidth + 4 : 0;
+        // In the frame the actions sit in s_'s cluster div (the toggle group's parent, RX's Tt in Pt), not .st-trailing.
+        const actions = framed ? toggleGroup.current?.parentElement : trailing.current;
+        const available = row.clientWidth - (actions?.offsetWidth || 0) - 12;
+        setFolderHidden(available < 32 + 32 + caretWidth + 4 + 24);
+      });
+    };
+    const observer = new ResizeObserver(measure);
+    [row, framed ? toggleGroup.current?.parentElement : trailing.current].filter(Boolean).forEach((node) => observer.observe(node));
+    measure();
+    return () => {
+      cancelAnimationFrame(frame);
+      observer.disconnect();
+    };
+  }, [session?.id, section, collapsed]);
+  // shared-21 IV m() → wm Ct = bm start() with no event: the edit opens on the session it was asked for, and a
+  // keyboard-focused trigger (the menu hands focus back to it) makes Enter/Escape return focus to the title.
+  const lastRenameToken = useRef(renameRequest?.token);
+  useEffect(() => {
+    const token = renameRequest?.token;
+    if (token === undefined || token === lastRenameToken.current) return;
+    lastRenameToken.current = token;
+    if (renameRequest.id !== session?.id) return;
+    beginEdit();
+  }, [renameRequest?.token]);
+  function beginEdit(event) {
+    if (loading || saving || !onRename) return;
+    event?.preventDefault();
+    event?.stopPropagation();
+    transaction.current++;
+    submitted.current = false;
+    keyboardEntry.current = event
+      ? event.detail === 0 || event.currentTarget.matches(":focus-visible")
+      : document.activeElement?.matches?.(":focus-visible") === true;
+    setDraft(title);
+    setRenameError("");
+    setEditing(true);
+  }
+  async function commit() {
+    if (submitted.current || !session?.id) return;
+    submitted.current = true;
+    const value = draft.trim();
+    if (!value || value === title) {
+      setEditing(false);
+      return;
+    }
+    const id = session.id,
+      token = transaction.current;
+    setSaving(true);
+    setRenameError("");
+    try {
+      const succeeded = await onRename(id, value);
+      if (token !== transaction.current || id !== sessionId.current) return;
+      if (succeeded !== false) setEditing(false);
+      else {
+        submitted.current = false;
+        setRenameError(t(ACTION_ERROR_COPY.rename));
+      }
+    } catch (error) {
+      if (token === transaction.current && id === sessionId.current) {
+        submitted.current = false;
+        // sidebar-groups.js:15393-15402: the catalog copy; the raw reason is for the console only.
+        console.warn("Rename failed:", error);
+        setRenameError(t(ACTION_ERROR_COPY.rename));
+      }
+    } finally {
+      if (token === transaction.current && id === sessionId.current)
+        setSaving(false);
+    }
+  }
+  function cancelEdit() {
+    transaction.current++;
+    submitted.current = true;
+    restoreTitleFocus.current = keyboardEntry.current;
+    setEditing(false);
+    setSaving(false);
+    setRenameError("");
+  }
+  // c593f7513 Om: the title's context menu and the CaretDown trigger open the same header session menu (k);
+  // main.jsx 'session-title'. Other surfaces keep the full 'session' menu. w13-close-cowork-sidebar (chatui-sidebar-star-02):
+  // a Chat title is ca2ef848d F5, its own title menu (main.jsx 'session-title' for mode chat), trigger worded by w5.
+  const titleMenuSurface = surface === "code" || surface === "chat";
+  const sessionMenuKind = titleMenuSurface ? "session-title" : "session";
+  function openSessionMenu(event, entry) {
+    event.preventDefault();
+    onMenu?.(sessionMenuKind, event.currentTarget, session, entry);
+  }
+  // shared-21 IV contextMenuTrigger: the title's right-click opens the same menu as a ContextMenu at the cursor
+  // (contextMenuAt), as the sidebar rows' context menu does.
+  function openSessionContextMenu(event) {
+    event.preventDefault();
+    onMenu?.(sessionMenuKind, event.currentTarget, session, undefined, { x: event.clientX, y: event.clientY });
+  }
+  const sessionMenuLabel = titleMenuSurface ? sessionMenuTriggerLabel(title) : t("Session options");
+  // R2-topbar TT-02 (3.6556.2 cc43287c9 YW `Xe`): the caret's tooltip cuts the title at 80 graphemes; the aria-label stays full.
+  const sessionMenuTooltip = sessionMenuTriggerTooltip(title);
+  // surfaces wave 3 (titlebar frame): the lead box is RX's gt in the frame (`group/lead relative z-[1] ${fn} ${En}
+  // draggable-none`, data-pills-compact) and the host st-lead box elsewhere; its content is the same host lead either way.
+  const leadClassName = framed ? TITLEBAR_LEAD_CLASS : "st-lead group/lead";
+  const leadNode = (section !== "new" ? (
+    <span className="session-title st-section-title">
+      {sectionLabel ?? t(section[0].toUpperCase() + section.slice(1))}
+    </span>
+  ) : notFound ? (
+    // w10-shell-titlebar (notdone 20, oG `lt=N?null:…` inside `p("div",{"data-pills-compact":ct,className:`group/lead …`})`):
+    // a session the core has no history for keeps the empty lead box, with no origin, title, caret or folder pill.
+    <div className={leadClassName} data-pills-compact={pillsCompact || undefined} />
+  ) : session ? (
+    // wW `Ne` is `group/lead …` with `data-pills-compact`: the skeleton's group-data-[pills-compact]/lead widths key off it.
+    <div className={leadClassName} data-pills-compact={pillsCompact || undefined} data-folder-hidden={folderHidden || undefined}>
+      {/* c360a9e1c-GPs-MV9u.js:6347-6360 yp: the labelled origin glyph is
+          wrapped in Zt (shared-frame Nu, `no as Zt` :177; default side
+          "top", which flips below at the window top) with content =
+          label; no native title. */}
+      {/* R4f-rail fix (c73f45bc3 w_ → t_ `e===null?c("span",{className:o?Kt:Bt})`): no origin in rail mode. */}
+      {/* verify:titlebar: 4.16336.0 c73f45bc3 Qb `t === null ? r("span", {className: l ? bi : Ci})` (l = Ei() = shared-120 qe,
+          bi = shared-38 gn "ps-md shrink-0", Ci = hn, the 3.6556.2 qh copy): the panels box inside the frame. */}
+      {surface === "code" && railMode && <TitlebarPanelsScoped render={(titlebarPanels) => <span className={titlebarPanels ? titlebarLeadNoOriginPanelsClass : LEAD_NO_ORIGIN_CLASS} />} />}
+      {surface === "code" && !railMode && <span className="st-origin">
+        <SourceTooltip content={t("Local")}>
+          <span
+            className="st-origin-glyph"
+            data-testid="epitaxy-origin-indicator"
+            role="img"
+            aria-label={t("Local")}
+          >
+            <Icon name="Laptop" size={18} />
+          </span>
+        </SourceTooltip>
+      </span>}
+      <div className="st-title-and-pill">
+        <TitleLead wrap={surface === "code" && !loading}>
+        {editing ? (
+          <input
+            ref={input}
+            className="st-title-input"
+            aria-label={t("Session name")}
+            aria-invalid={!!renameError}
+            aria-describedby={renameError ? errorId : undefined}
+            title={renameError || undefined}
+            value={draft}
+            readOnly={saving}
+            aria-busy={saving || undefined}
+            size={Math.min(30, Math.max(10, draft.length))}
+            onChange={(event) => {
+              setDraft(event.target.value);
+              setRenameError("");
+            }}
+            onBlur={commit}
+            onKeyDown={(event) => {
+              event.stopPropagation();
+              if (event.nativeEvent.isComposing || event.repeat) return;
+              if (event.key === "Enter") {
+                event.preventDefault();
+                restoreTitleFocus.current = keyboardEntry.current;
+                commit();
+              }
+              if (event.key === "Escape" && !saving) {
+                event.preventDefault();
+                cancelEdit();
+              }
+            }}
+          />
+        ) : loading && surface === "code" ? (
+          // R3-topbar TT-02 (2.42304.0 cc43287c9 wW `R ? xW : Wee`): until the session is ready the lead is
+          // c73f45bc3 n_ (generated titlebar-title-skeleton.mjs): the known title as span[data-pane-title] with
+          // an aria-hidden caret slot, or the pulsing title ghost when none is known yet (wW `ue`).
+          <TitlebarTitleSkeleton title={session.name || session.preview || undefined} titleRef={foldTitleRef} />
+        ) : loading && !session.name && !session.preview ? (
+          <span className="st-title-skeleton" aria-hidden="true" />
+        ) : surface === "code" ? (
+          // W14-code r8 fr8-03: Mp. With onStartEdit it is the button (data-pane-title, dir, aria-label Z444Es4IIr
+          // "{name}, rename session" (fr8-06), Ap classes, jp style; a repeated Enter is swallowed) in a tooltip of
+          // the full title while truncated, "Rename" (FPJlgifNwD) otherwise; without it (no rename here) Mp is a
+          // span[data-pane-title] in Mt whose tooltip is only the truncated title. The F6 header stop (shared-4 rt
+          // kind "codeTitle", `p && t !== void 0`) is the host focus-region attributes.
+          // verify:titlebar: the bleed is FX's `jb() ? Pd : void 0`, read where the title renders (inside the frame's provider).
+          <TitlebarPanelsScoped render={(titlebarPanels) => { const bleed = titlebarPanels ? titleBleedPanels : CODE_TITLE_BLEED_DEFAULT; return (
+          <SourceTooltip content={() => onRename ? titleTooltipContent(titleButton.current, title) : titleOverflows(titleButton.current) ? title : undefined}>
+          {onRename ? <button
+            ref={setTitleButton}
+            type="button"
+            data-focus-region="header" data-focus-region-ring="none" data-focus-region-order="pane"
+            data-pane-title=""
+            dir={titleDir}
+            aria-label={intl.formatMessage(CODE_TITLE_RENAME_LABEL, { name: title })}
+            className={codeTitleButtonClass(bleed.pad)}
+            style={bleed.style}
+            onClick={beginEdit}
+            onContextMenu={openSessionContextMenu}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" && event.repeat)
+                event.preventDefault();
+            }}
+          >
+            {title}
+          </button> : <span ref={setTitleButton} data-pane-title="" dir={titleDir} className={titleTextClass} onContextMenu={openSessionContextMenu}>{title}</span>}
+          </SourceTooltip>); }} />
+        ) : (
+          // c360a9e1c:7387-7420 mm: the title button sits in Zt (Nu defaults) and has no native title.
+          // c593f7513 vm (7270-7300): its content is the full title while it is truncated, "Rename" otherwise.
+          <SourceTooltip content={() => titleTooltipContent(titleButton.current, title)}>
+          <button
+            ref={setTitleButton}
+            type="button"
+            className="session-title st-title"
+            // ca1d33d05 St (codeTitle, c593f7513 vm titleStop): the renamable title is the pane's "header"
+            // F6 stop, focused without a ring.
+            data-focus-region={loading || !onRename ? undefined : "header"} data-focus-region-ring="none" data-focus-region-order="pane"
+            aria-label={t("{title}, rename session", { title })}
+            disabled={loading || !onRename}
+            onClick={beginEdit}
+            onContextMenu={openSessionContextMenu}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" && event.repeat)
+                event.preventDefault();
+            }}
+          >
+            {title}
+          </button>
+          </SourceTooltip>
+        )}
+        {/* c593f7513 Om (8180-8205): beside the title, a ghost icon-only CaretDown (sm) Button in text-secondary
+            with the trigger label as aria-label and as its bottom tooltip; it opens the header session menu. */}
+        {/* R3-topbar TT-02 (cc43287c9 wW): the xW caret exists only once the session is ready (R); until then
+            n_ holds its place with the aria-hidden caret slot, so there is no disabled caret. */}
+        {surface === "code" && !loading && <ToolButton label={sessionMenuLabel} className={titlebarControlClass(false, "st-session-caret")}
+          {...menuTriggerProps({
+            open: menuKind === "session-title" && !menuAtPointer,
+            onOpen: (entry, event) => onMenu?.(sessionMenuKind, event.currentTarget, session, entry),
+          })}
+          tooltip={{ content: sessionMenuTooltip, side: "bottom", hoverable: true, automatic: false, open: menuKind ? false : undefined }}
+          onClick={(event) => openSessionMenu(event, event.detail === 0 ? "first" : undefined)}>
+          <Icon name="CaretDown" size={16} />
+        </ToolButton>}
+        </TitleLead>
+        {/* c360a9e1c:6760-6810 Fp: Zt {content [environmentName, cwd,
+            repoNames].filter(Boolean).join(" · "), open:false while the
+            folder menu is open}. Local adaptation: there is no
+            environment or repo name, so the content is the cwd only
+            (none without a cwd). The Gt.Trigger opens main.jsx 'folder',
+            the 'Working directory' menu (side bottom, align start). */}
+        {/* R3-topbar TT-02 (c73f45bc3 T_ `fe`): while the session is not ready (interactive false) the pill is
+            the static Bg (`span … cursor-default`, no menu, no tooltip without an environment name), shown only
+            once the title is known (titleKnown); the local chip keeps its look and label there. */}
+        {/* R4f-rail fix (w_ `pill: null`): neither pill in rail mode. */}
+        {/* W14-code frame fr-sb-09: c73f45bc3 wy `O.Trigger({className, onContextMenu, children: Bv})` has no
+            aria-label, so the pill's accessible name is its own content (the folder label). */}
+        {/* W14-code r2 fr2-21: both pills are c73f45bc3 wy's own classes over its Bv content (glyph Ov
+            `hidden group-data-[pills-compact]/lead:inline-flex`, label `truncate group-data-[pills-compact]/lead:sr-only`,
+            so a compact pill keeps its accessible name): loading `${x ? Fv : Nv} cursor-default`, ready
+            `O.Trigger({className: x ? Iv : Pv})`. st-folder is only the host fold's data-folder-hidden hook. */}
+        {surface === "code" && !railMode && loading && (session.name || session.preview) && <TitlebarPanelsScoped render={(titlebarPanels) => <span className={`${titlebarPanels ? originPillStaticPanelsClass : originPillStaticClass} cursor-default st-folder`}>
+          <TitlebarOriginLabel label={folder} />
+        </span>} />}
+        {surface === "code" && !railMode && !loading && <TitlebarPanelsScoped render={(titlebarPanels) => <SourceTooltip content={session.cwd || undefined} open={menuKind === "folder" ? false : undefined}>
+        <button
+          type="button"
+          className={`${titlebarPanels ? folderPillTriggerPanelsClass : folderPillTriggerClass} st-folder`}
+          aria-haspopup="menu"
+          aria-expanded={menuKind === "folder"}
+          data-popup-open={menuKind === "folder" ? "" : undefined}
+          onClick={(event) => onMenu?.("folder", event.currentTarget, undefined, event.detail === 0 ? "first" : undefined)}
+          onContextMenu={(event) => {
+            event.preventDefault();
+            onMenu?.("folder", event.currentTarget);
+          }}
+        >
+          <TitlebarOriginLabel label={folder} />
+        </button>
+        </SourceTooltip>} />}
+        {/* F5's trigger (chat): `J {content: I}` over a ghost iconOnly CaretDown with aria-label F (w5), tooltip I. */}
+        {surface !== "code" && <ToolButton label={sessionMenuLabel} icon="CaretDown"
+          tooltip={surface === "chat" ? { content: sessionMenuTooltip, side: "bottom", hoverable: true, automatic: false, open: menuKind ? false : undefined } : undefined}
+          aria-haspopup="menu" aria-expanded={menuKind === sessionMenuKind && !menuAtPointer} onClick={(event) => openSessionMenu(event)} />}
+      </div>
+      {renameError && (
+        <span id={errorId} className="sr-only" role="alert">
+          {renameError}
+        </span>
+      )}
+      {loading && (
+        <span className="sr-only" role="status">
+          {t("Loading session")}
+        </span>
+      )}
+    </div>
+  ) : surface === "code" && section === "new" && !spawning
+    // R2-topbar TT-02 (2.42304.0 cc43287c9 wW `Me`, generated titlebar-draft-title.mjs): the draft page's
+    // h1[data-pane-title] "draggable truncate ps-2.5 text-body font-medium font-control text-muted-as-secondary".
+    // R4g-small SM1: not while the first send spawns (shared-20 ah needs phase "draft").
+    // surfaces wave 3: in the frame the draft h1 is RX's staticTitle (pt) and the lead is RX's gt box with no content
+    // (ht = null: no session, no spawn).
+    ? framed ? <div className={leadClassName} data-pills-compact={pillsCompact || undefined} /> : titlebarDraftTitle(null, undefined, t("New session"))
+    // w12c-wiring (cc43287c9 oG `t||o?p(EP,…):Y?null:st`): while the first send spawns, the lead is EP
+    // (c73f45bc3 ay, source-titlebar-spawn-lead.jsx) instead of nothing.
+    : surface === "code" && section === "new" && spawning
+      ? <SourceTitlebarSpawnLead spawn={spawn} episodeKey="draft" railMode={railMode} pillsCompact={pillsCompact} leadClassName={leadClassName} /> : null);
+  // RX Pt's order over the host controls: the trailing slot (bt: Exit incognito / What's new), the rail toggle and its rule
+  // (St), the toggle group (Tt), View options (Et), Close pane (jt), the popout controls (Nt).
+  const clusterNode = (<>
+    {/* w13-close-main-jsx-tests: shared-20 Fy (the desktopTopBar header, IFr "supported") ends with
+        `div.flex-1.flex.items-center.justify-end` [U, W, …], U = Iy: null on an agent (Cowork) route or unless
+        incognitoModeEnabled, else Qg `{enabled: r, onToggle, shortcut: Yt("incognito") (⇧⌘I), tooltipSide:
+        "left", className: "draggable-none"}`: CdsButton ghost iconOnly, icon "X", tooltip:false, aria-label
+        "Exit incognito" (DZ4HgSiP72), className n("group", s), in a CdsTooltip {hoverable:!1, side, shortcut,
+        content}. w13-close-chat-surface (E77): the main window's incognito shell draws Iy in its own Fy row with
+        Qg's inverted CdsRoot over Jy's frame (source-incognito-shell.jsx), and main.jsx then passes no
+        onExitIncognito; this plain X is left for a pane that has no shell (the split view's second side). */}
+    {onExitIncognito && <ToolButton label={t("Exit incognito")} icon="X" className={titlebarControlClass(false, "group draggable-none")}
+      tooltip={{content:t("Exit incognito"), shortcut:"cmd+shift+i", side:"left", hoverable:false, automatic:false, open:menuKind ? false : undefined}}
+      onClick={onExitIncognito} />}
+    {/* 3.6556.2 cb63ed069 V: `t(c, { variant: "ghost", onClick: () => a(!0), className: "text-accent", children: "What’s
+        new" m/7Y4kJLsg })` (c = the CDS Button), only while `justUpdated || modalOpen` (whats-new-model.mjs). */}
+    {!session && section === "new" && showWhatsNew && (
+      <CdsButton variant="ghost" onClick={onWhatsNew} className="text-accent">
+        {t("What’s new")}
+      </CdsButton>
+    )}
+    {(session || surface === "code") && section === "new" && (
+      <>
+        {/* R2-topbar TT-02 (2.42304.0 cc43287c9 wW): the toggles (uW) sit in
+            div.flex.items-center.gap-1.empty:hidden with `inert: !B`, so a held (loading) session keeps
+            them in place at full colour instead of drawing them disabled. R3-topbar TT-03: only the inline
+            specs render (uW `LN(specs, hiddenCount).inline`, in Rh order); folded ones are View options rows. */}
+        {/* R4f-rail SR-6 (cc43287c9 wW `y && !De && [EH {model: y, buttonRef: b, onUnmountFocused: ke, inert: !B},
+            re && !_e && TI]`): the session rail toggle and its rule head the cluster, before the pane toggles,
+            until it folds into ⋮. Only a session with a mounted rail passes railToggle. 3.6556.2 oG keeps the
+            shape (`x && !Qe && [TH {…, inert: !G, unseen: !ae}, ae && !Ee && Fne]`), TH's aria-label is fixed
+            to "Session rail" (FUvHAfJy+j) and Hide / Show session rail is only its tooltip (panes:C1-14). */}
+        {session && railToggle && !railToggleFolded && <>
+          <SessionRailToggle model={railToggle} buttonRef={railRef} onUnmountFocused={railFoldFocus.unmountFocused} inert={!sessionState.live} unseen={!railSeen} />
+          {/* integration-4: 4.16336.0 RX draws the rule only on a lifted titlebar (`se && !Te`, Te = !lifted); the host
+              titlebar is never lifted (titlebarRailRuleShown in titlebar-controls-model.mjs). */}
+          {titlebarRailRuleShown(railSeen) && <span {...TITLEBAR_RAIL_SEPARATOR} />}
+        </>}
+        {/* w10-shell-titlebar (oG `p("div",{ref:we,inert:ue,…})`, ue=!G&&le===void 0): held while the session is not
+            ready, and while a spawn has no starting owner; a starting draft's toggles (TF-O1) are live. */}
+        <div ref={toggleGroup} className="flex items-center gap-1 empty:hidden" inert={sessionState.held}>
+        {/* surfaces wave 2 (titlebar): 4.16336.0 cc43287c9 CY `vL(g, s, _).inline.map(e => p(SY, {spec: e, ownerId:
+            f.id, onButton: E}, e.pane))`: each inline toggle is the sliced SY (generated/titlebar TitlebarPaneToggle:
+            ghost iconOnly cds-core Button, icon Dp(spec.icon), pressed / pressedVariant "selected", aria-label and
+            a bottom Tooltip of the label + shortcut, onMouseDown preventDefault, click = spec.toggle) in hy's order
+            over the host panes (titlebar-controls-model.mjs). onButton is CY's E: the fold focus hand-off's ref by
+            pane (foldRef). hy's specs carry no activity indicator, so the 3.6556.2 / D15 dots are gone. */}
+        {inline.map((spec) => <TitlebarPaneToggle key={spec.pane} spec={paneToggleSpec(spec, onTogglePane)}
+          ownerId={session?.id ?? "landing"} onButton={attachPaneToggle} />)}
+        </div>
+        {/* w13-coworkui-panel (cwui-25): shared-16 Oc as c21f11e6d KM mounts it in the title row (showActiveState,
+            inTitleRow): aria-label "Activity panel", pressed, icon TV("end") = SidebarRight, tooltip "Sidebar";
+            the "cmd+shift+s" shortcut shows only while cN binds KeyS (`C = vc(kc)`): main.jsx activityKeyBound.
+            w12c-wiring (coworkui-panel-05; shared-1 `function TV(e){let t=p()!=="rtl";return e==="start"===t?"Sidebar":"SidebarRight"}`,
+            p = vendor-frame Ia useDirection): under an RTL document TV("end") is Sidebar. */}
+        {surface !== "code" && onToggleActivity && <ToolButton label={t("Activity panel")} icon={globalThis.document?.documentElement?.dir === "rtl" ? "Sidebar" : "SidebarRight"}
+          className={titlebarControlClass(activityOpen)} active={activityOpen} aria-pressed={activityOpen}
+          tooltip={{content:t("Sidebar"), shortcut:activityShortcut ? "cmd+shift+s" : undefined, side:"bottom", automatic:false, open:menuKind ? false : undefined}} onClick={onToggleActivity} />}
+        {/* c73f45bc3 Zh: the ⋮ trigger is `inert: held` (no disabled look) and text-secondary. */}
+        {/* R4f-rail SR-6 (wW `railToggleRef: De ? b : void 0`, Zh `te`): while the rail toggle is folded, ⋮
+            holds its ref, so the overlay rail and the fold hand-off focus ⋮ instead. */}
+        {/* w10-shell-titlebar (oG `ae&&t&&be.overflowMenuProps&&p(cP,…)`): no ⋮ until oG shows the session (ae). */}
+        {sessionState.seen && <>
+        {/* surfaces wave 2 (titlebar): 4.16336.0 cc43287c9 QJ's trigger is `icon: UJ` (UJ = Dp("DotsHorizontal"), the
+            sliced titlebarOverflowIcon) with aria-label DX's lt "View options"; QJ draws no activity dot (the D15 dot
+            left with the toggles' own). The menu itself stays main.jsx's 'titlebar' menu (QJ not sliced). */}
+        {surface === "code" && session && <ToolButton
+          label={viewOptionsLabel(false)}
+          ref={railToggleFolded ? railRef : undefined}
+          icon={titlebarOverflowIcon}
+          className={titlebarControlClass()}
+          {...menuTriggerProps({
+            open: menuKind === "titlebar",
+            disabled: loading,
+            onOpen: (entry, event) => onMenu?.("titlebar", event.currentTarget, session, entry),
+          })}
+          inert={!!loading}
+          tooltip={{
+            side: "bottom",
+            hoverable: true,
+            automatic: false,
+            open: menuKind ? false : undefined,
+          }}
+          onClick={(event) =>
+            // Base UI: only a keyboard press (detail 0) opens with the first item highlighted.
+            onMenu?.("titlebar", event.currentTarget, session, event.detail === 0 ? "first" : undefined)
+          }
+        />}
+        </>}
+      </>
+    )}
+    {/* R2-topbar TT-02 (cc43287c9 wW): Close pane stays outside the held cluster; its Button carries
+        `shortcut: Dh(Ni())` (⌃⌘W, the local split close chord) and `rm("text-secondary")`. */}
+    {onCloseSplit && (
+      <ToolButton
+        label={t("Close pane")}
+        icon="X"
+        className={titlebarControlClass(false, "epitaxy-pane-close-control")}
+        data-split-close=""
+        aria-keyshortcuts={CLOSE_PANE_KEYSHORTCUTS}
+        tooltip={{
+          content: t("Close pane"),
+          shortcut: CLOSE_PANE_SHORTCUT,
+          side: "bottom",
+          hoverable: true,
+          automatic: false,
+          open: menuKind ? false : undefined,
+        }}
+        onMouseDown={(event) => event.preventDefault()}
+        onClick={onCloseSplit}
+      />
+    )}
+    {popoutWindow && <>
+      <ToolButton
+        label={t("Open in main window")}
+        icon="ArrowInSquare"
+        className={titlebarControlClass()}
+        data-popout-dock=""
+        tooltip={{ content: t("Open in main window"), side: "bottom", hoverable: true, automatic: false, open: menuKind ? false : undefined }}
+        onMouseDown={(event) => event.preventDefault()}
+        onClick={popoutWindow.onDock}
+      />
+      <ToolButton
+        label={popoutWindow.alwaysOnTop ? t("Stop keeping window on top") : t("Keep window on top")}
+        icon={popoutWindow.alwaysOnTop ? "PinFilled" : "Pin"}
+        className={titlebarControlClass(popoutWindow.alwaysOnTop === true)}
+        active={popoutWindow.alwaysOnTop === true}
+        aria-pressed={popoutWindow.alwaysOnTop === true}
+        data-popout-pin=""
+        tooltip={{ content: popoutWindow.alwaysOnTop ? t("Stop keeping window on top") : t("Keep window on top"), side: "bottom", hoverable: true, automatic: false, open: menuKind ? false : undefined }}
+        onMouseDown={(event) => event.preventDefault()}
+        onClick={popoutWindow.onTogglePin}
+      />
+    </>}
+  </>);
+  if (framed) {
+    // cc43287c9 RX: `p(xp, {lifted: F, label: "Session tools" (W90cZ2JcPO), barRef: xe, sectionsRef: Se, startScreen: !t && !o,
+    // paneAtEnd: !1, staticTitle: pt, lead: gt, grip: l, cluster: Pt, seeThrough: L, "data-top-left": c || void 0,
+    // "data-top-right": z || void 0, ...on("header"), style: {...kp, "--titlebar-pill-max": je}})`, Pt = Ee (shared-frame _m,
+    // CdsTooltipProvider) around the cluster. Host values: never lifted (no strip line, no rule), no grip (the host pane has
+    // no drag handle here), never see-through; no data-top-right (RX's Gd(), the top-right clearance owner, has no host
+    // counterpart) and no --titlebar-pill-max (RX's pill room measure qd is not sliced). The host keeps its own tooltip group
+    // (SourceTooltipGroup) inside the provider for the host-tooltip controls, and aria-busy while a session loads or renames.
+    return (
+      <TitlebarFrame lifted={false} label={t("Session tools")} barRef={bar} sectionsRef={inner} startScreen={!session && !spawning}
+        paneAtEnd={false} staticTitle={!session && !spawning ? titlebarDraftTitle(null, undefined, t("New session")) : null}
+        lead={leadNode} grip={undefined} cluster={<CdsTooltipProvider><SourceTooltipGroup>{clusterNode}</SourceTooltipGroup></CdsTooltipProvider>}
+        seeThrough={false} data-top-left={topLeft || undefined} {...perfRegion("header")} style={titlebarTextVars}
+        aria-busy={loading || saving || undefined} />
+    );
+  }
+  return (
+    // 3.6556.2 cc43287c9 Vh `"data-top-left": Dt` (Dt = c || void 0, the pane at the frame's top left): while the root
+    // is [data-collapsed], shared-styles `.dframe-root[data-collapsed] .dframe-pane-primary .epitaxy-root [data-top-left]
+    // {margin-left:calc(var(--df-traffic-light-spacer,74px) + 38px + var(--df-nav-extent,0px));…}` clears the aside's
+    // collapsed pill (SourceCollapsedChrome), which no longer sits in this header.
+    <header className="workspace-toolbar st-toolbar window-drag" data-surface={surface} data-top-left={topLeft || undefined}>
+      <div
+        ref={inner}
+        className="st-inner epitaxy-titlebar"
+        aria-busy={loading || saving || undefined}
+      >
+        {leadNode}
+        <SourceTooltipGroup>
+          <div ref={trailing} className="st-trailing panel-toggles">{clusterNode}</div>
+        </SourceTooltipGroup>
+      </div>
+    </header>
+  );
+}
+
+// P (titlebar-release-notes.js:5059-5069) `n`: the nudge shows only for a running version that has an entry
+// in the bundled list (release-notes.mjs); main.jsx reads it through this export.
+export { LOCAL_RELEASE_NOTE_VERSIONS };
+
+// I (:5071-5094): [[keys]] render as Shortcut keycaps and `code` as an inline code span.
+function ReleaseNoteText({ text }) {
+  return releaseNoteSegments(text).map((segment, index) =>
+    segment.type === "keys" ? <SourceShortcut key={index} keys={segment.value} />
+      : segment.type === "code" ? <code key={index} className="rounded bg-alpha-1 px-1 py-0.5 text-code text-primary">{segment.value}</code>
+        : <React.Fragment key={index}>{segment.value}</React.Fragment>);
+}
+
+// R (:5100-5131): one group per kind, omitted when the entry has none of that kind. W14-code r2 fr2-18: the classes
+// are 3.6556.2 cb63ed069 L's own strings (div "flex flex-col gap-xs", h5 "… text-muted-as-secondary", ul "flex
+// list-disc flex-col gap-xs ps-lg text-body text-secondary"); F's code span is "rounded bg-alpha-1 px-1 py-0.5 …".
+function ReleaseNoteGroup({ kind, items }) {
+  const shown = items.filter((item) => item.kind === kind);
+  if (!shown.length) return null;
+  return (
+    <div className="flex flex-col gap-xs">
+      <h5 className="text-caption font-medium uppercase tracking-wide text-muted-as-secondary">{t(RELEASE_NOTE_KIND_LABELS[kind])}</h5>
+      <ul className="flex list-disc flex-col gap-xs ps-lg text-body text-secondary">{shown.map((item, index) => <li key={index}><ReleaseNoteText text={item.text} /></li>)}</ul>
+    </div>
+  );
+}
+
+// cb63ed069 R / z: "… may be one release behind. See the <changelogLink>online changelog</changelogLink> for the latest."
+// (RlffS0HJJO); z is the external CDS TextLink to https://claude.com/docs/cowork/changelog, opened in the browser.
+const RELEASE_NOTES_CHANGELOG_URL = "https://claude.com/docs/cowork/changelog";
+function ReleaseNotesLagNote() {
+  const [before, label, after = ""] = t("These release notes are included with this version of the app and may be one release behind. See the <changelogLink>online changelog</changelogLink> for the latest.")
+    .split(/<changelogLink>(.*?)<\/changelogLink>/);
+  if (label === undefined) return before;
+  return <>{before}<CdsTextLink external href={RELEASE_NOTES_CHANGELOG_URL} rel="noopener"
+    onClick={(event) => { event.preventDefault(); void globalThis.desktop?.call?.("external", { url: RELEASE_NOTES_CHANGELOG_URL })?.catch?.(() => {}); }}>{label}</CdsTextLink>{after}</>;
+}
+
+// B (:5156-5236) WhatsNewModal: the shared Dialog at size md (initial focus on the popup, Escape/Close/outside
+// press dismiss it, exit transition kept by main.jsx useDialogRetention) with the 'What’s new' header (V3-w12b-settings-dialogs:
+// 3.6556.2 cb63ed069 B `E = t(u.Header, { showClose: !0, … "What’s new" })`, the standard Zc Header, not a bleed bar),
+// the lag note R (W14-code frame fr-sb-10: cb63ed069 R's own `p` classes, "pt-md text-caption text-muted-as-secondary
+// in-data-cds-fizzy:pt-0 in-data-cds-fizzy:pb-md"; W14-code r4 fr4-11 / E95: both sentences of RlffS0HJJO, the
+// <changelogLink> chunk is z, `t(f /* hu = CdsTextLink */, {external: !0, render: t(x, {href:
+// "https://claude.com/docs/cowork/changelog", desktopBehavior: "open-in-browser", …})})`, opened through the external
+// opener), then one section per bundled entry up to the running version, newest first: the h4 date beside a
+// neutral font-mono version Badge, then New / Improved / Fixed (H has nothing after the groups: the host-only
+// "Known limits" footnote is gone, E95). W14-code r2 fr2-18: the popup, scroll area,
+// empty line and entry H are cb63ed069 B / H's own class strings and the version is CdsBadge (shared-frame ad)
+// `{variant:"neutral", className:"font-mono"}` (it was a hand-copied span[data-cds=Badge]).
+export function LocalReleaseNotes({ open = true, onClose, onExited }) {
+  const entries = useMemo(() => releaseNotesFor(clientVersion), []);
+  return (
+    <SourceDialog open={open} onExited={onExited} onClose={onClose} size="md" title={t("What’s new")} className="flex max-h-[min(720px,85vh)] flex-col">
+      <p className="pt-md text-caption text-muted-as-secondary in-data-cds-fizzy:pt-0 in-data-cds-fizzy:pb-md"><ReleaseNotesLagNote /></p>
+      <div className="-mx-pad-xl -mb-pad-xl flex min-h-0 flex-1 flex-col gap-lg overflow-y-auto px-xl pb-xl pt-md in-data-cds-fizzy:flex-none in-data-cds-fizzy:overflow-visible in-data-cds-fizzy:pt-0">
+        {entries.length === 0
+          ? <p className="p-lg text-center text-body text-secondary">{t("No release notes yet.")}</p>
+          : entries.map((entry) => (
+            <section key={entry.version} className="flex flex-col gap-md border-b pb-lg last:border-0 last:pb-0">
+              <div className="flex items-center justify-between gap-sm">
+                <h4 className="text-heading font-semibold text-primary">{releaseNoteDate(entry.date)}</h4>
+                <CdsBadge variant="neutral" className="font-mono">{entry.version}</CdsBadge>
+              </div>
+              {RELEASE_NOTE_KINDS.map((kind) => <ReleaseNoteGroup key={kind} kind={kind} items={entry.items} />)}
+            </section>
+          ))}
+      </div>
+    </SourceDialog>
+  );
+}

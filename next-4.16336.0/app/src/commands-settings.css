@@ -1,0 +1,28 @@
+/* Settings › Commands (C3). Built on the CDS tokens, so light and dark follow the theme. */
+.ccmd-page { display:contents; }
+.ccmd-actions { display:flex; align-items:center; justify-content:flex-end; gap:var(--cds-gap-xs, 4px); flex-wrap:wrap; }
+/* One path treatment across Settings (c71860c77 folder rows: the path is its own `block break-all` line in muted body
+   type, ~-abbreviated); status and extra facts go in the control slot as .ss-control-status. */
+.ccmd-path, .ss-path { display:block; min-width:0; color:var(--cds-text-muted); word-break:break-all; }
+.ss-control-status { color:var(--cds-text-secondary); font-size:var(--cds-font-size-footnote, 12px); line-height:16px; white-space:nowrap; font-variant-numeric:tabular-nums; }
+.ccmd-muted { color:var(--cds-text-muted); }
+.ccmd-hint { color:var(--cds-text-muted); font-family:var(--cds-font-mono); font-size:var(--cds-font-size-footnote, 12px); }
+.ccmd-badge { display:inline-flex; align-items:center; height:20px; padding:0 6px; border-radius:var(--cds-radius--xs, 4px); background:var(--cds-alpha-1, var(--cds-fill-secondary)); color:var(--cds-text-secondary); font-size:var(--cds-font-size-footnote, 12px); white-space:nowrap; }
+
+.ccmd-form { display:flex; flex-direction:column; gap:var(--cds-gap-md, 12px); min-width:0; }
+.ccmd-field { display:flex; flex-direction:column; gap:4px; min-width:0; }
+.ccmd-label { color:var(--cds-text-secondary); font-size:var(--cds-font-size-footnote, 12px); font-weight:var(--cds-font-weight-medium, 500); }
+.ccmd-help { color:var(--cds-text-muted); font-size:var(--cds-font-size-footnote, 12px); }
+.ccmd-help code { font-family:var(--cds-font-mono); }
+.ccmd-error { margin:0; color:var(--cds-text-danger, var(--cds-fill-danger)); font-size:var(--cds-font-size-footnote, 12px); overflow-wrap:anywhere; }
+.ccmd-name-input { display:flex; align-items:center; gap:4px; color:var(--cds-text-muted); font-family:var(--cds-font-mono); }
+.ccmd-name-input > input { flex:1; font-family:var(--cds-font-mono) !important; }
+
+.ccmd-form :is(input[data-cds=TextInput], textarea[data-cds=TextArea]) { box-sizing:border-box; width:100%; min-width:0; padding:0 var(--cds-pad-md); border:0; border-radius:var(--cds-radius); background:var(--cds-fill-field); box-shadow:inset 0 0 0 1px var(--cds-fill-field-ring); color:var(--cds-text-primary); font:400 var(--cds-font-size-body)/var(--cds-leading-body) var(--cds-font-sans); outline:none; transition:box-shadow var(--cds-dur-fast); }
+.ccmd-form input[data-cds=TextInput] { height:var(--cds-h-control); }
+.ccmd-form textarea[data-cds=TextArea] { min-height:180px; max-height:50vh; padding:8px var(--cds-pad-md); resize:vertical; font-family:var(--cds-font-mono); font-size:var(--cds-font-size-footnote, 12px); line-height:1.5; }
+.ccmd-form :is(input, textarea)::placeholder { color:var(--cds-text-muted); }
+.ccmd-form :is(input, textarea):hover:not(:focus):not([aria-invalid=true]) { box-shadow:inset 0 0 0 1px var(--cds-border-strong); }
+.ccmd-form :is(input, textarea)[aria-invalid=true] { box-shadow:inset 0 0 0 1px var(--cds-fill-danger); }
+.ccmd-form :is(input, textarea):focus-visible { outline:none; box-shadow:var(--cds-focus-shadow); }
+.ccmd-form .sselect { align-self:flex-start; min-width:180px; }

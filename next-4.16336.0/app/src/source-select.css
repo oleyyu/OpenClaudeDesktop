@@ -1,0 +1,35 @@
+/* 2.2553.1 shared-frame xb/Tb/Eb, Ry/By/Hy/qy/Jy/Yy/Zy/Qy. */
+/* Source callers use utility classes for minimum widths and alignment. Keep
+   defaults below the original utilities layer; :where alone cannot override
+   the cascade precedence of an unlayered rule. */
+@layer components {
+  :where(.sselect) { display:inline-flex;align-items:center;gap:6px;width:100%;min-width:0;height:var(--cds-h-control);border-radius:var(--cds-radius);background:var(--cds-fill-field);box-shadow:inset 0 0 0 1px var(--cds-fill-field-ring);padding-right:var(--cds-pad-sm);color:var(--cds-text-primary);font:400 var(--cds-font-size-body)/var(--cds-leading-body) var(--cds-font-sans);transition:box-shadow var(--cds-dur-fast); }
+}
+.sselect:hover:not(:has(:focus-visible)):not([data-disabled]) { box-shadow:inset 0 0 0 1px var(--cds-border-strong); }
+.sselect:has(:focus-visible) { box-shadow:var(--cds-focus-shadow); }
+.sselect[data-disabled] { opacity:var(--cds-opacity-disabled,.4);pointer-events:none; }
+.sselect[data-variant=ghost] { background:transparent;box-shadow:none;color:var(--cds-text-secondary); }
+.sselect[data-variant=ghost]:hover:not([data-disabled]) { background:var(--cds-fill-ghost-hover);box-shadow:none;color:var(--cds-text-primary); }
+.sselect[data-variant=ghost]:has(:focus-visible) { box-shadow:var(--cds-focus-shadow); }
+/* Explicitly isolate this CDS field from the old generic settings buttons. */
+.sselect[data-cds=Combobox]>.sselect-trigger { display:flex;flex:1;align-items:center;align-self:stretch;gap:6px;width:100%;min-width:0;min-height:0;height:auto;padding:0 0 0 var(--cds-pad-sm);border:0;border-radius:0;background:transparent;color:inherit;font:inherit;text-align:left;box-shadow:none;outline:none; }
+.sselect[data-cds=Combobox]>.sselect-trigger:hover,.sselect[data-cds=Combobox]>.sselect-trigger:focus-visible { background:transparent;outline:none;box-shadow:none; }
+.sselect[data-cds=Combobox]>.sselect-trigger:disabled { opacity:1; }
+.sselect-value { flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+.sselect-caret { margin-right:2px;flex-shrink:0;color:var(--cds-text-muted); }
+.sselect:hover .sselect-caret { color:var(--cds-text-secondary); }
+.sselect-portal { position:relative;pointer-events:auto; }
+.sselect-popup { position:fixed;display:flex;flex-direction:column;max-height:320px;min-width:0;border-radius:calc(var(--cds-radius) + .25rem * var(--cds-rem-scale,1));background:var(--cds-surface-3);box-shadow:inset 0 0 0 var(--cds-ring-inner,0px) var(--cds-ring-color,transparent),0 0 0 var(--cds-ring-outer,0px) var(--cds-ring-color,transparent),var(--cds-shadow-popover);color:var(--cds-text-primary);font:400 var(--cds-font-size-body)/var(--cds-leading-body) var(--cds-font-sans);outline:none;-webkit-app-region:no-drag; }
+.sselect-body { display:flex;flex:1;flex-direction:column;min-height:0;overflow:hidden;border-radius:inherit;padding:4px; }
+.sselect-search { display:block;flex-shrink:0;width:calc(100% + 8px);margin:-4px -4px 4px;padding:8px calc(var(--cds-pad-md) + 4px);border:0;border-bottom:1px solid var(--cds-border);border-radius:0;outline:none;background:transparent;color:inherit;font:inherit; }
+.sselect-list { min-height:0;overflow-x:hidden;overflow-y:auto;outline:none; }
+.sselect-option { display:flex;align-items:center;gap:8px;width:100%;min-height:var(--cds-h-control);padding:4px var(--cds-pad-md);border-radius:var(--cds-radius);color:var(--cds-text-primary);font:inherit;user-select:none;outline:none; }
+.sselect-option-copy { display:flex;flex:1;min-width:0;flex-direction:column;gap:2px; }
+.sselect-option-label { overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+.sselect-option-description { font-size:var(--cds-font-size-footnote);line-height:1.375;color:var(--cds-text-muted);white-space:normal;overflow-wrap:break-word; }
+.sselect-option[data-highlighted] { background:var(--cds-fill-ghost-hover); }
+.sselect-option[data-disabled] { opacity:var(--cds-opacity-disabled,.4);pointer-events:none; }
+.sselect-check { flex-shrink:0;color:var(--cds-text-accent); }
+.sselect-empty { padding:6px var(--cds-pad-md);color:var(--cds-text-muted);user-select:none; }
+.ss-control>.sselect { width:220px;max-width:100%; }
+.ss-control>.sselect.sselect-width-160 { width:160px; }

@@ -1,0 +1,9 @@
+/* Pane body states (source-pane-states.jsx). The source bodies are h-full inside
+   a full-height pane body slot; locally .source-file-panel is a flex column
+   (message-style.css .detail-panel) under the pane header, so the state takes
+   the remaining height instead of 100% of the pane. */
+.source-file-panel > .source-pane-state,
+.source-file-panel > .source-empty-state {
+  flex: 1 1 0;
+  min-height: 0;
+}

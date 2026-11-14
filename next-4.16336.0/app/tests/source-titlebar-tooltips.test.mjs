@@ -1,0 +1,405 @@
+import test, { before, after } from 'node:test';
+import assert from 'node:assert/strict';
+import React from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { createServer } from 'vite';
+import react from '@vitejs/plugin-react';
+import path from 'node:path';
+import fs from 'node:fs';
+import { createRequire } from 'node:module';
+import { RELEASE_NOTES } from '../src/release-notes.mjs';
+
+// c360a9e1c-GPs-MV9u.js yp (6347-6360), mm (7387-7420) and Fp (6760-6810): the
+// origin glyph, title button and folder pill use CDS tooltips (Zt), so the SSR
+// lead carries no native title.
+let server, T, PILL_TRIGGER, PILL_STATIC;
+before(async () => {
+  server = await createServer({ configFile: false, root: path.resolve(import.meta.dirname, '..'), plugins: [react()],
+    server: { middlewareMode: true, hmr: false, watch: null }, appType: 'custom', logLevel: 'error' });
+  // SourceDialog portals to <body>; the server renderer has no portals, so render them inline (as
+  // settings-shell-render does) before the first ESM import of react-dom.
+  createRequire(path.resolve(import.meta.dirname, '../package.json'))('react-dom').createPortal = (children) => children;
+  T = await server.ssrLoadModule('/src/source-titlebar.jsx');
+  // W14-code r2 fr2-21: c73f45bc3 Pv (ready Trigger) and Nv (loading span), generated. surfaces wave 3 (titlebar frame): the
+  // Code titlebar is the 4.16336.0 frame, whose OS provides the panels scope (shared-120 Ke true), so wy's `x = Sr()` picks
+  // the panels sizes: Iv (ready Trigger) and Fv (loading span).
+  PILL_TRIGGER = (await server.ssrLoadModule('/src/generated/code-current/titlebar-folder-pill.mjs')).folderPillTriggerPanelsClass.replaceAll("'", '&#x27;');
+  PILL_STATIC = (await server.ssrLoadModule('/src/generated/code-current/titlebar-spawn-lead.mjs')).originPillStaticPanelsClass.replaceAll("'", '&#x27;');
+});
+after(() => server?.close());
+// verify:titlebar: inside the 4.16336.0 frame the title takes cc43287c9 FX's bleed (shared-18 Iw: px-md, --cds-outset-x pad-md).
+const CODE_TITLE = 'truncate text-body font-medium font-control text-primary select-none mx-outset h-control px-md rounded text-start bg-transparent border-0 hover:bg-fill-ghost-hover focus-visible:outline-hidden hide-focus-ring focus-visible:shadow-focus cursor-text';
+const render = (props) => renderToStaticMarkup(React.createElement(T.SourceTitlebar, { section: 'new', session: { id: 'a', name: 'A title', cwd: '/tmp/work' }, onRename() {}, ...props }));
+// R3-topbar TT-03: the lead ends where the trailing cluster starts (the local measurement spans are gone).
+// surfaces wave 3 (titlebar frame): the Code titlebar is the 4.16336.0 frame; its lead is RX's gt box (`group/lead relative z-[1] …`)
+// and its actions the frame's cluster box (`relative z-[1] epitaxy-titlebar-end …`), not .st-lead / .st-trailing.
+const lead = (html) => html.includes('<div class="group/lead') ? html.slice(html.indexOf('<div class="group/lead'), html.indexOf('<div class="relative z-[1] epitaxy-titlebar-end')) : html.slice(html.indexOf('<div class="st-lead'), html.indexOf('<div class="st-trailing'));
+// RX's gt box: `group/lead relative z-[1] ${shared-38 fn} ${shared-38 En} draggable-none` (generated/titlebar-frame).
+const FRAME_LEAD = '<div class="group/lead relative z-[1] flex min-w-0 items-center [[data-tile-overflow-anchor]_&amp;]:[@container_tile-slot_(max-width:320px)]:[clip-path:inset(-32px_-12px)] draggable-none"';
+// surfaces wave 2 (titlebar): the pane toggles are the sliced 4.16336.0 cc43287c9 SY (no host data-pane-toggle attribute);
+// a toggle is named by its spec label (hy: "Terminal", "Changes", "Preview" / "Browser", "Files").
+const PANE_OF = { Terminal: 'terminal', Changes: 'changes', Preview: 'preview', Browser: 'preview', Files: 'files' };
+const toggleGroup = (html) => { const at = html.indexOf('<div class="flex items-center gap-1 empty:hidden"'); return at < 0 ? '' : html.slice(at, html.indexOf('aria-label="View options', at) < 0 ? undefined : html.indexOf('aria-label="View options', at)); };
+const toggles = (html) => [...toggleGroup(html).matchAll(/<button[^>]*aria-label="(Terminal|Changes|Preview|Browser|Files)"/g)].map((match) => PANE_OF[match[1]]);
+const toggleButton = (html, label) => toggleGroup(html).match(new RegExp(`<button[^>]*aria-label="${label}"[^>]*>`))?.[0];
+
+test('no native title on .st-origin, .st-title or .st-folder', () => {
+  for (const props of [{}, { menuKind: 'folder' }, { session: { id: 'b', name: 'No folder' } }]) {
+    const html = lead(render(props));
+    // W14-code r8 fr8-03: the Code title is c9543da06 Mp (Ap + jp verbatim), no host st-title class.
+    for (const name of ['st-origin', 'st-origin-glyph', CODE_TITLE, '[^"]* st-folder']) {
+      const tag = html.match(new RegExp(`<[a-z]+[^>]*class="${name}"[^>]*>`))?.[0];
+      assert.ok(tag, name + ' renders');
+      assert.doesNotMatch(tag, /\stitle=/, name); // r8: Mp's data-pane-title="" is not a native title
+    }
+    assert.doesNotMatch(html, /\stitle="/);
+  }
+  const html = lead(render({}));
+  assert.match(html, /aria-label="A title, rename session"/);
+  assert.match(html, /role="img" aria-label="Local"/);
+  // c73f45bc3 wy: the folder pill names itself by its content (no aria-label).
+  assert.doesNotMatch(html, /aria-label="Folder:/);
+  // W14-code r2 fr2-21: c73f45bc3 wy `O.Trigger({className: Pv, children: i(Bv, …)})`; Bv's label is
+  // `truncate group-data-[pills-compact]/lead:sr-only` (compact keeps the name), its glyph Ov.
+  assert.match(html, new RegExp(`<button type="button" class="${PILL_TRIGGER.replace(/[[\]().*+?^$|\\/]/g, '\\$&')} st-folder" aria-haspopup="menu"[^>]*><span class="hidden group-data-\\[pills-compact\\]/lead:inline-flex">.*<span class="truncate group-data-\\[pills-compact\\]/lead:sr-only" data-testid="epitaxy-origin-label">work</span></button>`));
+});
+
+// titlebar-release-notes.js:5238-5256 V: the home nudge renders only while
+// `justUpdated || modalOpen`; main.jsx passes that as showWhatsNew.
+test('home What’s new button follows showWhatsNew', async () => {
+  const home = (props) => renderToStaticMarkup(React.createElement(T.SourceTitlebar, { section: 'new', session: null, onRename() {}, ...props }));
+  assert.doesNotMatch(home({ showWhatsNew: false }), /What’s new/);
+  assert.doesNotMatch(home({}), /What’s new/);
+  // 3.6556.2 cb63ed069 V: the CDS ghost Button with className text-accent (no host st-whats-new class).
+  const nudge = home({ showWhatsNew: true }).match(/<button[^>]*>(?:(?!<\/button>).)*What’s new(?:(?!<\/button>).)*<\/button>/)?.[0];
+  assert.ok(nudge);
+  assert.match(nudge, /data-variant="ghost"|cds-btn/);
+  assert.match(nudge, /text-accent/);
+  assert.doesNotMatch(nudge, /st-whats-new/);
+  assert.doesNotMatch(render({ showWhatsNew: true }), /What’s new/);
+  // R03: the nudge versions come from the bundled, versioned release notes, not from the running package version.
+  const notes = await server.ssrLoadModule('/src/release-notes.mjs');
+  assert.deepEqual([...T.LOCAL_RELEASE_NOTE_VERSIONS], notes.RELEASE_NOTES.map((entry) => entry.version));
+});
+
+// Fidelity F02 (shared-frame-C_2npUJq.js:4572-4580 Mu → Qa variant "text"): tooltip shortcuts are key specs
+// that the tooltip draws as one <kbd> per key in io modifier order, so Changes reads ⇧ ⌘ D, not ⌘⇧D.
+test('titlebar tooltips carry key specs; the text-variant Shortcut draws Changes as ⇧ ⌘ D', async () => {
+  const S = await server.ssrLoadModule('/src/source-shortcut.jsx');
+  // surfaces wave 2: the Changes toggle is hy's diff spec through SY (tooltip content label, shortcut Ce("toggleDiff") ⇧⌘D);
+  // Back / Forward name cmd+[ / cmd+] in the sliced uv (source-nav-buttons.test.mjs).
+  const changes = T.paneToggleSpec({ pane: 'changes', icon: 'ChangesPlusMinus', label: 'Changes', shortcut: 'cmd+shift+d', active: false });
+  assert.equal(changes.shortcut, 'cmd+shift+d');
+  assert.equal(changes.label, 'Changes');
+  const nav = fs.readFileSync(path.resolve(import.meta.dirname, '../src/generated/titlebar/history-nav.mjs'), 'utf8');
+  assert.ok(nav.includes('_ = g ? "cmd+[" : "alt+left"') && nav.includes('v = g ? "cmd+]" : "alt+right"'));
+  const glyphs = (keys) => [...renderToStaticMarkup(React.createElement(S.SourceShortcut, { keys, variant: 'text', mac: true }))
+    .matchAll(/<kbd class="scds-text-key">(?:<span aria-hidden="true">)?([^<]+)/g)].map((match) => match[1]);
+  assert.deepEqual(glyphs(changes.shortcut), ['⇧', '⌘', 'D']);
+  // W14-code r2 closeout-2 (DC-05): code-ui's SIDEBAR_TOGGLE_TOOLTIP had no reader and is gone; the sidebar toggle's
+  // cmd+b key spec still draws ⌘ B.
+  assert.deepEqual(glyphs('cmd+b'), ['⌘', 'B']);
+  assert.deepEqual(glyphs('cmd+['), ['⌘', '[']);
+  assert.deepEqual(glyphs('cmd+shift+\\'), ['⇧', '⌘', '\\']);
+  assert.deepEqual(glyphs('enter'), ['⏎']);
+  // The tooltip renders that variant for `shortcut` and `secondaryHint.shortcut`.
+  const tooltip = fs.readFileSync(path.resolve(import.meta.dirname, '../src/source-tooltip.jsx'), 'utf8');
+  assert.match(tooltip, /<SourceShortcut variant="text" keys=\{keys\} className="source-tooltip-shortcut" \/>/);
+  assert.match(tooltip, /\{shortcut && <TooltipShortcut keys=\{shortcut\} \/>\}/);
+  assert.match(tooltip, /<TooltipShortcut keys=\{secondaryHint\.shortcut\} \/>/);
+});
+
+// R03 (titlebar-release-notes.js:5156-5236 B): What’s new is the shared CDS Dialog at size md with the standard Header
+// (V3-w12b-settings-dialogs: 3.6556.2 cb63ed069 B `t(u.Header, { showClose: !0, … })`, Zy: flush Close) and
+// a single 'Close'; the lag note z; one section per entry up to the running version with an h4 date and a neutral
+// font-mono version Badge; New / Improved / Fixed groups (empty ones omitted); `code` spans. W14-code r4 fr4-11 / E95:
+// the lag note is both sentences of cb63ed069 R (RlffS0HJJO) with z's external TextLink to the online changelog, and
+// the host-only Known limits footnote is gone (H renders only the groups).
+test('LocalReleaseNotes is the md SourceDialog (standard Header) with versioned entries', () => {
+  const hadDocument = 'document' in globalThis;
+  if (!hadDocument) globalThis.document = { body: {}, documentElement: { getAttribute: () => null } };
+  let html;
+  try { html = renderToStaticMarkup(React.createElement(T.LocalReleaseNotes, { onClose() {} })); }
+  finally { if (!hadDocument) delete globalThis.document; }
+  assert.match(html, /<section[^>]*role="dialog"[^>]*data-cds="Dialog"[^>]*class="sdlg-popup draggable-none [^"]* max-w-\[520px\] flex max-h-\[min\(720px,85vh\)\] flex-col"/);
+  assert.match(html, /<div class="sdlg-header mb-pad-md flex items-start gap-2"><div class="-mt-1 flex min-w-0 flex-1 flex-col gap-1"><h2 id="[^"]+" class="text-primary text-title font-semibold font-header break-words">What’s new<\/h2><\/div><button[^>]*class="[^"]*-me-pad-sm -mt-pad-sm/);
+  assert.doesNotMatch(html, /sdlg-bleed/);
+  assert.deepEqual([...html.matchAll(/aria-label="([^"]+)"/g)].map((match) => match[1]), ['Close']);
+  assert.match(html, /<p class="pt-md text-caption text-muted-as-secondary in-data-cds-fizzy:pt-0 in-data-cds-fizzy:pb-md">These release notes are included with this version of the app and may be one release behind\. See the <a [^>]*data-cds="TextLink"[^>]*>online changelog<span [^>]*class="sr-only">\(opens in new tab\)<\/span><\/a> for the latest\.<\/p>/);
+  const changelog = html.match(/<a [^>]*data-cds="TextLink"[^>]*>/)[0];
+  assert.match(changelog, /href="https:\/\/claude\.com\/docs\/cowork\/changelog"/);
+  assert.match(changelog, /target="_blank"/);
+  // W14-code r2 fr2-18: cb63ed069 B / H / L / F's own class strings; the version is CdsBadge neutral font-mono.
+  assert.ok(html.includes('<div class="-mx-pad-xl -mb-pad-xl flex min-h-0 flex-1 flex-col gap-lg overflow-y-auto px-xl pb-xl pt-md in-data-cds-fizzy:flex-none in-data-cds-fizzy:overflow-visible in-data-cds-fizzy:pt-0"><section class="flex flex-col gap-md border-b pb-lg last:border-0 last:pb-0">'));
+  assert.match(html, /<div class="flex items-center justify-between gap-sm"><h4 class="text-heading font-semibold text-primary">October 1, 2026<\/h4><span data-cds="Badge"[^>]*>(<[^>]*>)*0\.2\.130(<\/[a-z]+>)*<\/div>/);
+  assert.match(html, /<span data-cds="Badge" class="[^"]* font-mono[^"]*"[^>]*>(<[^>]*>)*0\.2\.130</);
+  assert.deepEqual([...html.matchAll(/<h5 class="text-caption font-medium uppercase tracking-wide text-muted-as-secondary">([^<]+)<\/h5>/g)].map((match) => match[1]), RELEASE_NOTES.flatMap(() => ['New', 'Improved']));
+  assert.match(html, /<div class="flex flex-col gap-xs"><h5 [^>]*>New<\/h5><ul class="flex list-disc flex-col gap-xs ps-lg text-body text-secondary"><li>/);
+  assert.match(html, /<code class="rounded bg-alpha-1 px-1 py-0\.5 text-code text-primary">~\/\.dsh<\/code>/);
+  assert.doesNotMatch(html, /st-release-limits|Known limits/);
+  assert.ok(RELEASE_NOTES.every((entry) => !('limits' in entry)));
+  assert.doesNotMatch(html, /aren’t available yet|Background jobs don’t appear/);
+  // The notes are core-neutral: they describe the frame and name DeepSeek Harness only as the built-in core.
+  assert.match(html, /OpenClaude Desktop is now a frame for agent cores: choose one in Settings › Cores\./);
+  assert.match(html, /DeepSeek Harness is built in; the others install on demand/);
+  assert.doesNotMatch(html, /powered by DeepSeek|run on DeepSeek models/);
+  assert.equal([...html.matchAll(/<li[ >]/g)].length, RELEASE_NOTES.reduce((sum, entry) => sum + entry.items.length, 0), 'one list item per bundled note');
+  assert.doesNotMatch(html, /Codex|modal-backdrop|st-release-header|Close release notes|title="/);
+});
+
+// Split view (2.31226.0 shared-21 VT): an extra pane's titlebar ends with a ghost 'Close pane' X
+// (epitaxy-pane-close-control); main.jsx passes onCloseSplit to secondary panes only, so the primary pane and an
+// unsplit window have none. R2-topbar TT-02 (2.42304.0 cc43287c9 wW): its Button carries `shortcut: Dh(Ni())`
+// (shared-20 UO: "cmd+ctrl+w" on macOS, the local ⌃⌘W split close) and `rm("text-secondary")`.
+test('a secondary pane closes itself from the end of its own titlebar, naming ⌃⌘W', async () => {
+  const plain = render({});
+  assert.doesNotMatch(plain, /data-split-close|Close split view|Close pane/);
+  const html = render({ onCloseSplit() {} });
+  const trailing = html.slice(html.indexOf('epitaxy-titlebar-end'));
+  const close = trailing.match(/<button[^>]*data-split-close=""[^>]*>/)?.[0];
+  assert.ok(close, 'close control renders in the trailing actions');
+  assert.match(close, /data-cds-ghost="" class="[^"]* epitaxy-pane-close-control text-secondary"/);
+  assert.match(close, /aria-label="Close pane"/);
+  assert.match(close, /aria-keyshortcuts="Control\+Meta\+w"/);
+  assert.doesNotMatch(close, /title=/);
+  assert.ok(trailing.lastIndexOf('data-split-close') > trailing.lastIndexOf('View options'), 'after View options');
+  // Close pane is not part of the held cluster: a loading session's close stays live.
+  assert.doesNotMatch(render({ onCloseSplit() {}, loading: true }).match(/<button[^>]*data-split-close=""[^>]*>/)[0], /\s(inert|disabled)(=|\s|>)/);
+  // No session (a new-session pane) still has its close.
+  assert.match(render({ session: null, onCloseSplit() {} }), /data-split-close=""/);
+  const source = fs.readFileSync(path.resolve(import.meta.dirname, '../src/source-titlebar.jsx'), 'utf8');
+  const control = source.slice(source.indexOf('{onCloseSplit && ('), source.indexOf('onClick={onCloseSplit}'));
+  assert.match(control, /shortcut: CLOSE_PANE_SHORTCUT,/);
+  const M = await server.ssrLoadModule('/src/titlebar-controls-model.mjs');
+  assert.equal(M.CLOSE_PANE_SHORTCUT, 'cmd+ctrl+w');
+  const official = fs.readFileSync(path.resolve(import.meta.dirname, '../../reference/installed-2.42304.0-20261017/ion-dist/assets/v1/shared-20-B7UqYfsi.js'), 'utf8');
+  assert.ok(official.includes('function UO(e){return e?"cmd+ctrl+w":"ctrl+alt+w"}'));
+  // The keycap text the tooltip draws for it (macOS order ⌃ ⌘ W).
+  const S = await server.ssrLoadModule('/src/source-shortcut.jsx');
+  const glyphs = [...renderToStaticMarkup(React.createElement(S.SourceShortcut, { keys: M.CLOSE_PANE_SHORTCUT, variant: 'text', mac: true }))
+    .matchAll(/<kbd class="scds-text-key">(?:<span aria-hidden="true">)?([^<]+)/g)].map((match) => match[1]);
+  assert.deepEqual(glyphs, ['⌃', '⌘', 'W']);
+});
+
+// R2-topbar TT-02 (2.42304.0 cc43287c9 wW `Me`, c73f45bc3 Rh landing branch): the Code New session page's title is
+// the official h1[data-pane-title], and its toggles are Terminal, Preview, then Files (filesAvailable, main.jsx).
+const DRAFT_H1 = '<h1 data-pane-title="" class="draggable truncate ps-2.5 text-body font-medium font-control text-muted-as-secondary">New session</h1>';
+test('Code draft page: the official h1 title and the landing toggles Terminal → Preview → Files', () => {
+  const draft = (props) => render({ session: null, ...props });
+  const html = draft({ terminalAvailable: true, previewAvailable: true, filesAvailable: true });
+  assert.ok(html.includes(DRAFT_H1), html);
+  assert.doesNotMatch(html, /st-draft-title/);
+  assert.deepEqual(toggles(html), ['terminal', 'preview', 'files']);
+  // Landing: no Changes, no ⋮ (Zh needs a session).
+  assert.doesNotMatch(html, /aria-label="Changes"|View options/);
+  // SY: a ghost iconOnly cds-core Button, pressed state as aria-pressed, the shortcut written by the Button (SSR spells
+  // "cmd" Control: no platform on the server), no host class (4.16336.0 drops lW's text-secondary).
+  const files = toggleButton(html, 'Files');
+  assert.match(files, /data-cds="Button" data-cds-icon-only="" data-cds-ghost=""/);
+  assert.match(files, /aria-pressed="false" aria-label="Files" aria-keyshortcuts="(?:Meta|Control)\+Shift\+f"/);
+  assert.doesNotMatch(files, /text-secondary|data-pane-toggle/);
+  // Files only where main.jsx can open the pane on the page's folder.
+  assert.deepEqual(toggles(draft({ terminalAvailable: true, previewAvailable: true })), ['terminal', 'preview']);
+  // Only Code has the draft title; other surfaces and other sections keep theirs.
+  assert.doesNotMatch(draft({ surface: 'cowork' }), /data-pane-title/);
+  assert.doesNotMatch(render({ section: 'routines', session: null, sectionLabel: 'Routines' }), /data-pane-title/);
+  // A session's title bar has no draft h1 and always lists Files (after Changes and Preview).
+  const session = render({ previewAvailable: true, terminalAvailable: true });
+  // W14-code r8 fr8-03: the session title is c9543da06 Mp's button[data-pane-title] (not the draft h1).
+  assert.doesNotMatch(session, /<h1[^>]*data-pane-title/);
+  assert.match(session, /<button[^>]*data-pane-title=""/);
+  assert.deepEqual(toggles(session), ['terminal', 'changes', 'preview', 'files']);
+  const css = fs.readFileSync(path.resolve(import.meta.dirname, '../src/source-titlebar.css'), 'utf8');
+  assert.doesNotMatch(css, /\.st-draft-title\s*\{/, 'no local rule over the official utilities');
+  const official = (name) => fs.readFileSync(path.resolve(import.meta.dirname, '../../reference/installed-2.42304.0-20261017/ion-dist/assets/v1', name), 'utf8');
+  assert.ok(official('c73f45bc3-CFrHin0p.js').includes('return i?[...o,...r,...s]'));
+  assert.ok(official('cc43287c9-DAfOi8yP.js').includes('"data-pane-title":"",className:"draggable truncate ps-2.5 text-body font-medium font-control text-muted-as-secondary"'));
+});
+
+// R4g-small SM1 home-07 (shared-20 ah `function ah({environments:e,sessionId:t,phase:n}){return e&&n==="draft"&&!t}`,
+// cc43287c9 jre `draftTitle:lh({environments:ie,sessionId:_e,phase:le})?yre:void 0`): no draft title while spawning.
+test('home-07: the Code draft title is hidden while the first send spawns', () => {
+  const count = (text, needle) => text.split(needle).length - 1;
+  const official = (name) => fs.readFileSync(path.resolve(import.meta.dirname, '../../reference/installed-2.42304.0-20261017/ion-dist/assets/v1', name), 'utf8');
+  assert.equal(count(official('shared-20-B7UqYfsi.js'), 'function ah({environments:e,sessionId:t,phase:n}){return e&&n==="draft"&&!t}'), 1);
+  assert.equal(count(official('shared-20-B7UqYfsi.js'), 'ah as Qa'), 1);
+  const jre = official('cc43287c9-DAfOi8yP.js');
+  assert.equal(count(jre, 'draftTitle:lh({environments:ie,sessionId:_e,phase:le})?yre:void 0'), 1);
+  assert.equal(count(jre, ',Qa as lh,'), 1);
+  const draft = (props) => render({ session: null, terminalAvailable: true, previewAvailable: true, ...props });
+  assert.ok(draft({}).includes(DRAFT_H1));
+  assert.ok(draft({ spawning: false }).includes(DRAFT_H1));
+  const spawning = draft({ spawning: true });
+  assert.doesNotMatch(spawning, /data-pane-title/);
+  // Only the title goes: the landing toggles stay.
+  assert.deepEqual(toggles(spawning), ['terminal', 'preview']);
+  // main.jsx hands the titlebar its spawn phase while no session is open.
+  const main = fs.readFileSync(path.resolve(import.meta.dirname, '../src/main.jsx'), 'utf8');
+  assert.equal(count(main, 'spawning={!current && !!spawnPhase}'), 1);
+});
+
+// R4g-small SM1 topbar-04 (D36) on 4.16336.0: c73f45bc3 hy's preview row is `icon: e === "preview" && D ? "Globe" : vl[e]`,
+// label `D ? "Browser" : "Preview"`, shortcut Ce("togglePreview", E, {externalPreviewAvailable: D}) with D = shared-123 yy
+// (`e === "remote" ? fy() && n : t`, cy() = `!!ce && V(sy) && !$v()`, ce = globalThis["claude.web"].Launch): the host has no
+// Launch bridge, so D is false — vl.preview "Play" (cc44b66a7 M), "Preview", ⇧⌘P. Other surfaces keep Globe + Browser
+// (the Cowork view's yE counterpart). Icons render client-side, so the glyph is checked through the spec and SY's Dp call.
+test('topbar-04: Code preview toggle is Play + Preview + ⇧⌘P (gate off: no Launch bridge), other surfaces Globe + Browser', async () => {
+  const M = await server.ssrLoadModule('/src/titlebar-controls-model.mjs');
+  for (const session of [true, false]) {
+    const [preview] = M.titlebarToggleSpecs({ session, previewAvailable: true }).filter((spec) => spec.pane === 'preview');
+    assert.deepEqual(preview, { pane: 'preview', icon: 'Play', label: 'Preview', shortcut: 'cmd+shift+p', active: false });
+  }
+  const [cowork] = M.titlebarToggleSpecs({ surface: 'cowork', session: true, previewAvailable: true });
+  assert.deepEqual([cowork.icon, cowork.label], ['Globe', 'Browser']);
+  for (const props of [{}, { session: null }, { previewRunning: true }]) {
+    const button = toggleButton(render({ previewAvailable: true, ...props }), 'Preview');
+    assert.match(button, /aria-label="Preview" aria-keyshortcuts="(?:Meta|Control)\+Shift\+p"/);
+    assert.doesNotMatch(button, /dev server running/);
+  }
+  assert.match(toggleButton(render({ surface: 'cowork', previewAvailable: true }), 'Browser'), /aria-label="Browser" aria-keyshortcuts="(?:Meta|Control)\+Shift\+p"/);
+  const v4 = (name) => fs.readFileSync(path.resolve(import.meta.dirname, '../../reference/snapshots/claude-4.16336.0-20261104/ion-dist/assets/v1', name), 'utf8');
+  assert.ok(v4('c73f45bc3-C7dtUSq8.js').includes('icon:e===`preview`&&D?`Globe`:vl[e]') || v4('c73f45bc3-C7dtUSq8.js').includes('icon:e==="preview"&&D?"Globe":vl[e]'));
+  assert.ok(v4('shared-0-CnnWnVrT.js').includes('GO=globalThis["claude.web"]?.Launch') || v4('shared-0-CnnWnVrT.js').includes('GO=globalThis[`claude.web`]?.Launch'));
+  assert.ok(fs.readFileSync(path.resolve(import.meta.dirname, '../src/generated/titlebar/pane-toggle.mjs'), 'utf8').includes('I1($, 3, Dp(t.icon), t.icon)'));
+});
+
+// R2-topbar TT-02 (cc43287c9 wW `div{ref:he,inert:!B,className:"flex items-center gap-1 empty:hidden"}`, c73f45bc3
+// Zh `inert:l`): a held (loading) session keeps its toggles and ⋮ in place, inert, at full colour (no disabled).
+test('a loading session holds the toggle group and ⋮ inert instead of disabled', () => {
+  const props = { terminalAvailable: true, previewAvailable: true, loading: true };
+  const html = render(props);
+  const trailing = html.slice(html.indexOf('epitaxy-titlebar-end'));
+  const group = trailing.match(/<div class="flex items-center gap-1 empty:hidden"[^>]*>/)?.[0];
+  assert.ok(group, 'the toggle group wraps the toggles');
+  assert.match(group, /\sinert=""/);
+  const inside = trailing.slice(trailing.indexOf(group), trailing.indexOf('aria-label="View options'));
+  assert.deepEqual(toggles(trailing), ['terminal', 'changes', 'preview', 'files']);
+  assert.ok(inside.includes('aria-label="Changes"'));
+  for (const button of trailing.match(/<button[^>]*>/g)) assert.doesNotMatch(button, /\sdisabled(=|\s|>)/, button);
+  const more = trailing.match(/<button[^>]*aria-label="View options"[^>]*>/)[0];
+  assert.match(more, /\sinert=""/);
+  assert.match(more, /data-cds-ghost="" class="[^"]* text-secondary"/);
+  // Ready: neither is inert.
+  const ready = render({ ...props, loading: false });
+  assert.doesNotMatch(ready.slice(ready.indexOf('epitaxy-titlebar-end')), /\sinert=/);
+  // The draft page is never held; an empty group hides itself (empty:hidden) and renders no children.
+  assert.match(render({ session: null }), /<div class="flex items-center gap-1 empty:hidden"><\/div>/);
+  // surfaces wave 2: the pane toggles are 4.16336.0 SY — CDS ghost Buttons, `pressed: t.active, pressedVariant:
+  // "selected"` (aria-pressed, the Button's own pressed paint), no className (4.16336.0 drops lW's text-secondary); the
+  // other cluster controls (⋮, popout dock / pin) keep it.
+  const open = render({ terminalAvailable: true, panes: new Set(['terminal', 'changes']) });
+  assert.match(toggleButton(open, 'Terminal'), /data-cds-ghost="" class="[^"]*" aria-pressed="true" aria-label="Terminal"/);
+  assert.doesNotMatch(toggleButton(open, 'Terminal'), /text-secondary/);
+  assert.match(toggleButton(open, 'Changes'), /aria-pressed="true"/);
+  assert.match(toggleButton(open, 'Files'), /aria-pressed="false"/);
+  const popout = render({ popoutWindow: { alwaysOnTop: true, onDock() {}, onTogglePin() {} } });
+  assert.match(popout.match(/<button[^>]*data-popout-dock=""[^>]*>/)[0], /data-cds-ghost="" class="[^"]* text-secondary"/);
+  assert.match(popout.match(/<button[^>]*data-popout-pin=""[^>]*>/)[0], /data-cds-ghost="" class="[^"]* text-secondary" aria-pressed="true"/);
+  const official = fs.readFileSync(path.resolve(import.meta.dirname, '../../reference/installed-2.42304.0-20261017/ion-dist/assets/v1/c73f45bc3-CFrHin0p.js'), 'utf8');
+  assert.ok(official.includes('className:f,"aria-label":d,inert:l'));
+});
+
+// R2-topbar TT-02 (cc43287c9 _W): the caret's tooltip is `Ge` (title cut to 80 graphemes), its aria-label `He` (full).
+test('the caret keeps the full title as its label and the 80-grapheme cut as its tooltip', () => {
+  const name = 'A'.repeat(120);
+  const caret = lead(render({ session: { id: 'a', name, cwd: '/tmp/work' } })).match(/<button[^>]*st-session-caret[^>]*>/)[0];
+  assert.match(caret, new RegExp(`aria-label="More options for ${name}"`));
+  assert.match(caret, /data-cds-ghost="" class="[^"]* st-session-caret text-secondary"/);
+  const source = fs.readFileSync(path.resolve(import.meta.dirname, '../src/source-titlebar.jsx'), 'utf8');
+  assert.match(source, /const sessionMenuTooltip = sessionMenuTriggerTooltip\(title\);/);
+  assert.match(source, /tooltip=\{\{ content: sessionMenuTooltip, side: "bottom"/);
+});
+
+// B09 (c593f7513 Om/wm, 7520-7540 and 8150-8210): the Code title is followed by the header session menu's CaretDown
+// trigger ('More options for {title}', CDS tooltip, opens 'session-title'), then the folder chip; the trailing ⋮ is
+// 'View options'. vm (7270-7300): the title tooltip resolves lazily (truncated title, else Rename).
+test('Code title bar: CaretDown session menu beside the title and the View options overflow', () => {
+  const opened = [];
+  const html = render({ onMenu: (...args) => opened.push(args) });
+  const leadHtml = lead(html);
+  const caret = leadHtml.match(/<button[^>]*data-cds-ghost="" class="[^"]* st-session-caret text-secondary"[^>]*>/)?.[0];
+  assert.ok(caret, 'caret renders in the lead');
+  assert.match(caret, /aria-label="More options for A title"/);
+  assert.match(caret, /aria-haspopup="menu"/);
+  assert.match(caret, /aria-expanded="false"/);
+  assert.doesNotMatch(caret, /title=/);
+  assert.ok(leadHtml.indexOf('st-session-caret') > leadHtml.indexOf(`class="${CODE_TITLE}"`), 'after the title');
+  assert.ok(leadHtml.indexOf('st-session-caret') < leadHtml.indexOf(' st-folder"'), 'before the folder chip');
+  assert.match(render({ menuKind: 'session-title' }), /data-cds-ghost="" class="[^"]* st-session-caret text-secondary"[^>]*aria-expanded="true" data-popup-open=""/);
+  // shared-21 IV contextMenuAt: the title's right-click is a ContextMenu at the cursor, not the caret's popup.
+  assert.match(render({ menuKind: 'session-title', menuAtPointer: true }), /data-cds-ghost="" class="[^"]* st-session-caret text-secondary"[^>]*aria-expanded="false"/);
+  const trailing = html.slice(html.indexOf('epitaxy-titlebar-end'));
+  assert.match(trailing, /aria-label="View options"/);
+  assert.doesNotMatch(html, /Session options/);
+  // Other surfaces keep their own CaretDown 'Session options' and no Code caret.
+  const cowork = lead(render({ surface: 'cowork' }));
+  assert.doesNotMatch(cowork, /st-session-caret/);
+  assert.match(cowork, /aria-label="Session options"/);
+  const source = fs.readFileSync(path.resolve(import.meta.dirname, '../src/source-titlebar.jsx'), 'utf8');
+  assert.match(source, /<SourceTooltip content=\{\(\) => titleTooltipContent\(titleButton\.current, title\)\}>/);
+  assert.match(source, /onContextMenu=\{openSessionContextMenu\}/);
+  assert.match(source, /onMenu\?\.\(sessionMenuKind, event\.currentTarget, session, undefined, \{ x: event\.clientX, y: event\.clientY \}\)/);
+});
+
+// R3-topbar TT-02 (2.42304.0 cc43287c9 wW `R ? xW : Wee`, c73f45bc3 n_ and T_; 3.6556.2 oG `ee ? rG : SP`, c73f45bc3 iy,
+// W2 w2-titlebar-current): until the session is ready the Code lead is iy (generated titlebar-title-skeleton.mjs, a
+// React Compiler component rendered here through the host's real React): the known title as a non-interactive span[data-pane-title] beside an
+// aria-hidden caret slot, or the pulsing title ghost when no title is known; there is no caret, and the folder pill is
+// the static Bg branch (a cursor-default span) only once the title is known. Ready, the title button, caret and folder
+// menu button are back, none of them disabled.
+const SKELETON = '<span class="flex items-center min-w-[calc(32px+var(--cds-h-control,24px))] group-data-[pills-compact]/lead:min-w-[calc(8px+var(--cds-h-control,24px))]">'
+  + '<span class="flex items-center min-w-[32px] group-data-[pills-compact]/lead:min-w-[8px]"><span data-slot="title-preview" data-pane-title="" class="truncate text-body font-medium font-control text-primary select-none">A title</span></span>'
+  + '<span aria-hidden="true" data-slot="title-caret-slot" class="aspect-square w-control shrink-0"></span></span>';
+const GHOST = '<span aria-hidden="true" data-slot="title-ghost" class="h-[1lh] w-[24ch] max-w-full shrink text-body-medium rounded-[3px] bg-alpha-2 motion-safe:animate-pulse"></span>';
+test('a loading Code session shows the official title skeleton, no caret, and a static folder pill', () => {
+  const known = lead(render({ loading: true }));
+  assert.ok(known.includes(SKELETON), known);
+  assert.ok(known.startsWith(`${FRAME_LEAD}>`), known);
+  assert.doesNotMatch(known, /st-session-caret|<button[^>]*data-pane-title|More options/);
+  assert.doesNotMatch(known, /\sdisabled(=|\s|>)/);
+  // W14-code r2 fr2-21: the loading pill is c73f45bc3 wy's `${Nv} cursor-default` span over Bv.
+  assert.ok(known.includes(`<span class="${PILL_STATIC} cursor-default st-folder"><span class="hidden group-data-[pills-compact]/lead:inline-flex">`), known);
+  assert.ok(known.includes('<span class="truncate group-data-[pills-compact]/lead:sr-only" data-testid="epitaxy-origin-label">work</span></span>'), known);
+  assert.doesNotMatch(known, /<button[^>]*st-folder"/);
+  assert.match(known, /<span class="sr-only" role="status">Loading session<\/span>/);
+  // LTR: qb gives no dir attribute.
+  assert.doesNotMatch(known, /\sdir=/);
+  // The preview text is the known title (wW `ue`): the name, else the first prompt.
+  assert.ok(lead(render({ loading: true, session: { id: 'a', preview: 'A title', cwd: '/tmp/work' } })).includes(SKELETON));
+  // No title yet: the ghost only, no folder pill (T_ `l && de`).
+  const unknown = lead(render({ loading: true, session: { id: 'a', cwd: '/tmp/work' } }));
+  assert.ok(unknown.includes(`<div class="st-title-and-pill">${GHOST}</div>`), unknown);
+  assert.doesNotMatch(unknown, /st-folder|st-title-skeleton|Untitled/);
+  // Ready: title button, caret and folder button, nothing disabled.
+  const ready = lead(render({}));
+  // r8 fr8-03: Mp's button — data-pane-title, (dir only under RTL), aria-label Z444Es4IIr, Ap classes, jp style.
+  assert.ok(ready.includes(`data-pane-title="" aria-label="A title, rename session" class="${CODE_TITLE}" style="--cds-outset-x:var(--cds-pad-md)">A title</button>`), ready);
+  assert.doesNotMatch(ready, /st-title"/);
+  // Without onRename Mp is the span[data-pane-title] in Mt (no button, no rename label).
+  const fixed = lead(render({ onRename: undefined }));
+  assert.ok(fixed.includes('<span data-pane-title="" class="truncate text-body font-medium font-control text-primary select-none">A title</span>'), fixed);
+  assert.doesNotMatch(fixed, /rename session/);
+  assert.match(ready, /data-cds-ghost="" class="[^"]* st-session-caret text-secondary"/);
+  // c73f45bc3 wy: the folder Trigger has no aria-label (its name is the pill content).
+  assert.ok(ready.includes(`<button type="button" class="${PILL_TRIGGER} st-folder" aria-haspopup="menu"`), ready);
+  assert.doesNotMatch(ready, /aria-label="Folder:/);
+  assert.doesNotMatch(ready, /\sdisabled(=|\s|>)|data-slot="title-/);
+  // Other surfaces keep their own lead: the local skeleton while an untitled session loads.
+  assert.match(lead(render({ surface: 'cowork', loading: true, session: { id: 'a' } })), /<span class="st-title-skeleton" aria-hidden="true"><\/span>/);
+  const css = fs.readFileSync(path.resolve(import.meta.dirname, '../src/source-titlebar.css'), 'utf8');
+  assert.doesNotMatch(css, /\.st-folder:disabled/);
+  // W14-code r2 fr2-21: the hand-copied pill rules are gone (hover / expanded are Mv's hover:before:bg-alpha-3).
+  assert.doesNotMatch(css, /\.st-folder-label|button\.st-folder:hover|\.st-toolbar \.st-folder \{/);
+  const official = (name) => fs.readFileSync(path.resolve(import.meta.dirname, '../../reference/installed-2.42304.0-20261017/ion-dist/assets/v1', name), 'utf8');
+  const wW = official('cc43287c9-DAfOi8yP.js');
+  assert.ok(wW.includes('R?v(xW,{model:de,titleButtonRef:Ee}):v(Wee,{title:ue,titleRef:Ee})'));
+  const c73 = official('c73f45bc3-CFrHin0p.js');
+  assert.ok(c73.includes('function n_({title:e,titleRef:t}){'));
+  assert.ok(c73.includes('className:`${n?Pg:Mg} cursor-default`'));
+  // 3.6556.2: the same branch (oG `ee ? rG : SP`, SP = c73f45bc3 iy) and the static folder pill (`${Sr()?Fv:Nv} cursor-default`).
+  const v3 = (name) => fs.readFileSync(path.resolve(import.meta.dirname, '../../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1', name), 'utf8');
+  assert.ok(v3('cc43287c9-Me-M2ucD.js').includes('ee?p(rG,{model:be,titleButtonRef:Ze}):p(SP,{title:J,titleRef:Ze})'));
+  assert.match(v3('cc43287c9-Me-M2ucD.js'), /import\{[^}]*(?<![\w$])I as SP[,}][^;]*?from"\.\/c73f45bc3-B7hbL7H9\.js"/);
+  assert.ok(v3('c73f45bc3-B7hbL7H9.js').includes('function iy(e){let $=J9(5),{title:t,titleRef:n}=e'));
+  assert.ok(v3('c73f45bc3-B7hbL7H9.js').includes('a=`${Sr()?Fv:Nv} cursor-default`'));
+});

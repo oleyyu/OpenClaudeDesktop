@@ -1,0 +1,49 @@
+/* U-SET-HANDWRITE (2026-11-12): the hand-written simple Settings shell (source-settings.jsx). A title bar with the
+   close button, a left nav (search, icon rows in groups, API keys at the bottom), and a page of title + rows. */
+.ss-dialog.sl-dialog { flex-direction:column; max-width:1000px; max-height:780px; background:var(--cds-surface-1); }
+.sl-header { display:flex; flex-shrink:0; align-items:center; justify-content:space-between; height:56px; padding:0 12px 0 22px; border-bottom:1px solid var(--cds-alpha-2); }
+.sl-header h2 { margin:0; font-size:16px; line-height:22px; font-weight:500; color:var(--cds-text-primary); }
+.sl-dialog .sl-header .ss-close { position:static; width:32px; height:32px; }
+.sl-body { display:flex; flex:1; min-width:0; min-height:0; }
+
+.sl-nav { display:flex; flex-direction:column; flex-shrink:0; width:208px; gap:12px; padding:16px 12px 12px; border-right:1px solid var(--cds-alpha-2); background:var(--cds-surface-1); }
+.sl-nav .ss-search { margin:0; height:34px; padding:0 10px; border-radius:8px; border-color:var(--cds-alpha-2); }
+.sl-nav-list { display:flex; flex:1; min-height:0; flex-direction:column; gap:2px; overflow-y:auto; }
+.sl-nav-item { display:flex; flex-shrink:0; align-items:center; gap:12px; height:36px; padding:0 10px; border:0; border-radius:8px; background:transparent; color:var(--cds-text-primary); font:inherit; font-size:14.5px; text-align:left; }
+.sl-nav-item > :first-child { color:var(--cds-text-secondary); }
+.sl-nav-item:hover { background:var(--cds-fill-ghost-hover); }
+.sl-nav-item[aria-current] { background:var(--cds-fill-ghost-selected); }
+.sl-nav-item[aria-current] > :first-child { color:var(--cds-text-primary); }
+.sl-sep { flex-shrink:0; margin:8px 12px; border:0; border-top:1px solid var(--cds-alpha-2); }
+.sl-nav-footer { display:flex; flex-shrink:0; align-items:center; justify-content:space-between; height:32px; padding:0 10px; border:0; border-radius:8px; background:transparent; color:var(--cds-text-secondary); font:inherit; font-size:13px; }
+.sl-nav-footer:hover { background:var(--cds-fill-ghost-hover); color:var(--cds-text-primary); }
+
+.ss-pane.sl-pane { background:var(--cds-surface-1); }
+.ss-content.sl-content { padding:24px 32px 40px; background:var(--cds-surface-1); }
+.sl-pane[data-customize=false] > .ss-content.sl-content:before { background:linear-gradient(to bottom,var(--cds-surface-1),transparent); margin:-8px -32px 0; }
+.sl-page-title { margin:0 0 16px; font-size:17px; line-height:24px; font-weight:500; color:var(--cds-text-primary); }
+.sl-content .ss-group { margin-bottom:28px; }
+.sl-content .ss-group > h3 { font-size:15px; }
+
+.sl-subtabs { display:flex; flex-wrap:wrap; gap:6px; margin:0 0 20px; }
+.sl-subtabs > button { height:30px; padding:0 14px; border:1px solid var(--cds-alpha-2); border-radius:999px; background:transparent; color:var(--cds-text-secondary); font:inherit; font-size:13px; }
+.sl-subtabs > button:hover { color:var(--cds-text-primary); }
+.sl-subtabs > button[aria-selected=true] { border-color:transparent; background:var(--cds-fill-ghost-selected); color:var(--cds-text-primary); }
+
+.sl-advanced { margin-top:12px; padding-top:8px; border-top:1px solid var(--cds-alpha-2); }
+.sl-advanced > summary { display:flex; align-items:center; gap:8px; width:fit-content; padding:8px 0; color:var(--cds-text-secondary); font-size:13.5px; list-style:none; cursor:default; }
+.sl-advanced > summary::-webkit-details-marker { display:none; }
+.sl-advanced > summary:before { content:""; width:6px; height:6px; border-right:1.5px solid currentColor; border-bottom:1.5px solid currentColor; transform:rotate(-45deg); transition:transform .15s ease-out; }
+.sl-advanced[open] > summary:before { transform:rotate(45deg); }
+.sl-advanced > summary:hover { color:var(--cds-text-primary); }
+.sl-advanced[open] > summary { margin-bottom:12px; }
+.sl-advanced-page + .sl-advanced-page { margin-top:24px; }
+.sl-advanced-title { margin:0 0 12px; font-size:15px; font-weight:500; color:var(--cds-text-primary); }
+
+@media (max-width:767px) {
+  .sl-body { flex-direction:column; }
+  .sl-nav { width:auto; border-right:0; border-bottom:1px solid var(--cds-alpha-2); }
+  .sl-nav-list { flex:none; flex-direction:row; overflow-x:auto; }
+  .sl-sep, .sl-nav-footer { display:none; }
+}
+.sl-content [data-sl-dup] { display:none; }

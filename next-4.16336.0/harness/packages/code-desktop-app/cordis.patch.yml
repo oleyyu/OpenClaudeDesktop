@@ -1,0 +1,149 @@
+# OpenClaude Desktop over dsh-base: a Codex app-server compatible JSON-RPC endpoint on
+# stdio. Stdout belongs to the protocol; diagnostics go to stderr.
+
+# OpenClaude Desktop owns its confinement contract; shared DSH Purge stays as-is.
+- id: fs-sandbox
+  disabled: true
+
+- id: sandbox
+  disabled: true
+
+- id: approval
+  disabled: true
+
+# Shared request recovery for root turns and Workflow children.
+- id: llm-deepseek
+  config:
+    retryPolicy:
+      mode: normal
+      strategy: claude-code
+
+- id: llm-deepseek-account
+  config:
+    retryPolicy:
+      mode: normal
+      strategy: claude-code
+
+- id: tool-bash
+  config:
+    exitCodePolicy: claude-code
+
+- id: tool-jobs
+  config:
+    claudeCodeTaskStop: true
+
+- id: tool-workflow
+  config:
+    inputMode: claude-code
+    toolName: Workflow
+    maxScriptBytes: 524288
+    maxResultChars: 100000
+
+- id: workflow-ptc
+  config:
+    sessionMirror: true
+
+- id: subagent-spawn-in-process
+  config:
+    claudeModelSelection:
+      aliases:
+        deepseek-official: { haiku: deepseek-flash, sonnet: deepseek-v4-pro, opus: deepseek-v4-pro }
+        deepseek-account: { haiku: deepseek-flash, sonnet: deepseek-v4-pro, opus: deepseek-v4-pro }
+
+- id: sandbox-policy
+  config:
+    mode: workspace-write
+    workspaceRoot: !!js process.cwd()
+
+- id: system-prompt
+  config:
+    personaSuffix: Your working directory is {{cwd}}.
+    personaPrefix: >-
+      You are a coding agent powered by the {{model}} model, working inside
+      OpenClaude Desktop, a local desktop client for DeepSeek Harness.
+
+# Session titles: dsh-base's session-title-llm (dsh-session-title-first-prompt-llm) writes a short summary title from
+# the first prompt, as the official DeepSeek app does; the bridge forwards it as thread/name/updated, which is why it
+# reports capabilities.generatesTitles (the app then sends no title of its own). The workflow runner's own core
+# (CODE_DESKTOP_WORKFLOW_RUNNER=1) starts workflow agents, which are never listed: no title request for them.
+- id: session-title-llm
+  disabled: !!js process.env.CODE_DESKTOP_WORKFLOW_RUNNER === '1'
+
+- insert:
+    - id: code-desktop-fs-sandbox
+      name: '@code-desktop/dsh-codex-app-server/sandbox-fs'
+
+    - id: code-desktop-sandbox
+      name: '@code-desktop/dsh-codex-app-server/sandbox-shell'
+
+    - id: code-desktop-approval
+      name: '@code-desktop/dsh-codex-app-server/sandbox-approval'
+      config:
+        policy: ask
+
+    # ask_user_question (legacy: blocks the tool call until answered). The
+    # bridge answers 'user-questions/request' with the Codex question card,
+    # which also carries exit_plan_mode's plan review.
+    - id: tool-ask-user
+      name: '@deepseek-ai/dsh-tool-ask-user'
+
+    - id: code-desktop-startup
+      name: '@code-desktop/dsh-codex-app-server/startup'
+
+    # Good / Bad response on a reply (the official web-app's message-feedback row): log-only ratings in the session
+    # log, served to the app by codeDesktop/messageFeedback/* (the bridge's messageFeedback).
+    - id: message-feedback
+      name: '@deepseek-ai/dsh-message-feedback'
+      config:
+        maxNoteBytes: 8192
+
+    # present: the files the agent hands over (deliverables/presented), shown as file cards (the official standard,
+    # ptc and cordis presets mount it).
+    - id: tool-present
+      name: '@deepseek-ai/dsh-tool-present'
+      config:
+        maxFiles: 8
+
+    - id: codex-app-server
+      name: '@code-desktop/dsh-codex-app-server'
+      inject: [codeDesktopStartup]
+      config:
+        provider: deepseek-official
+        model: deepseek-flash
+
+- id: hmr
+  disabled: true
+
+# Sub-agent model selection (the official subagent-model-selection-settings row) is not mounted: dsh-tool-subagent's
+# standing modelSelectionSettings needs a scoped agent preset Context, which this top-level profile has not (verified
+# on 0.2.0-rc.2: 'requires a scoped preset Context', and the subagent tool then never registers).
+
+# What goes to DeepSeek besides the model request is the user's choice (Settings › Code › Privacy), off by default:
+# main.cjs sets CODE_DESKTOP_SHARE_SESSION_LOG / CODE_DESKTOP_SHARE_FEEDBACK for the core process. The official app
+# has the same switch (Upload Session Log when using the official model API); stock dsh-session-log-deepseek and
+# the package inventory default to on. A row's config is replaced whole, so the telemetry row repeats dsh-base's.
+- id: session-log-deepseek
+  config:
+    enabled: !!js process.env.CODE_DESKTOP_SHARE_SESSION_LOG === '1'
+
+- id: plugin-package-inventory-deepseek
+  config:
+    enabled: !!js process.env.CODE_DESKTOP_SHARE_SESSION_LOG === '1'
+
+# /feedback (dsh-command-feedback) releases the session so far to DeepSeek's collector only while feedback sharing
+# is on; DISABLED builds no exporter, so feedback stays local.
+- id: session-telemetry-otel
+  config:
+    # Quoted: a bare `? … :` scalar parses as a YAML mapping key, so the row never activated.
+    mode: !!js "process.env.CODE_DESKTOP_SHARE_FEEDBACK === '1' ? (process.env.DSH_TELEMETRY_MODE || 'FEEDBACK_ONLY') : 'DISABLED'"
+    shutdownTimeoutMillis: 3000
+    maxRequestBytes: 4000000
+    exporter:
+      url: !!js "process.env.DSH_TELEMETRY_OTLP_URL ?? 'https://dsh-otel-collector.deepseeksvc.com/v1/logs'"
+      compression: gzip
+      timeoutMillis: 1000
+    processor:
+      scheduledDelayMillis: 10000
+      maxQueueSize: 2048
+      maxExportBatchSize: 2048
+      exportTimeoutMillis: 1500

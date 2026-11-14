@@ -1,0 +1,16 @@
+/* C2 persona: spark glyph alternatives and the Settings persona rows. */
+.source-spark.persona-spark { display: inline-flex; align-items: center; justify-content: center; overflow: hidden; line-height: 1; }
+.source-spark.persona-spark > [data-cds="Icon"] { display: block; line-height: 1; color: inherit; }
+.source-spark.persona-spark > img { display: block; width: 100%; height: 100%; object-fit: contain; user-select: none; -webkit-user-select: none; }
+.source-spark.persona-spark[data-spark-state]:not([data-spark-state="idle"]) { animation: persona-spark-pulse 1.4s ease-in-out infinite; }
+@keyframes persona-spark-pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .55; transform: scale(.92); } }
+@media (prefers-reduced-motion: reduce) { .source-spark.persona-spark { animation: none !important; } }
+html[data-reduce-motion="true"] .source-spark.persona-spark,
+html[data-local-motion="reduce"] .source-spark.persona-spark { animation: none !important; }
+
+.persona-field { display: flex; flex-direction: column; gap: 8px; width: 100%; }
+.persona-icon-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: flex-start; min-width: 0; max-width: 100%; }
+.persona-preview { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 6px; flex: none; }
+.persona-preview .source-spark { width: 24px; height: 24px; }
+/* The icon picker (preview, segments, Choose image…) is in the row's below slot, so it never crowds the label or
+   scrolls Settings sideways; on a narrow window its controls wrap among themselves. */

@@ -1,0 +1,186 @@
+/* Current c219730b0 file header → cdf69fdd3 subheader. Shared diff renderer
+   ca7ba268c Gi/Ki supplies CDS code tokens and a minimum 3ch number column. */
+.sdiff-view.source-diff {
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+  overflow: visible;
+  white-space: normal;
+  font: var(--cds-font-size-code, 12px)/var(--cds-leading-code, 17px) var(--cds-font-mono, monospace);
+  color: var(--cds-text-primary);
+  user-select: text;
+}
+.sdiff-file { min-width: 0; }
+/* W14 diff: the c49d7f557 @pierre/diffs :host variables (verbatim formulas) fed by the CDS FileDiff hostStyle ca7ba268c
+   ja (ua + da + `--cds-filediff-bg`, ya `:host{--diffs-bg:var(--cds-filediff-bg,var(--cds-surface-1))}`, ba the selection
+   base). The Changes pane passes backgroundColor c6e73333a x() / b = light-dark(var(--code-theme-light-bg,
+   var(--cds-surface-2)), var(--code-theme-dark-bg, var(--cds-surface-2))). The host renders its own light-DOM rows (the
+   pierre engine is not wired here: W14 diff report), so the cell rules below port the [data-line] / [data-column-number]
+   rules onto .sdiff-code-cell / .sdiff-line-number with these same variables. */
+.sdiff-view {
+  --diffs-bg-hover-override: var(--cds-fill-ghost-hover);
+  --diffs-bg-context-override: transparent;
+  --diffs-bg-separator-override: transparent;
+  --diffs-fg-number-override: var(--cds-text-stays-secondary, var(--cds-text-muted));
+  --diffs-fg-number-addition-override: var(--cds-text-git-added);
+  --diffs-fg-number-deletion-override: var(--cds-text-git-removed);
+  --diffs-addition-color-override: var(--cds-text-git-added);
+  --diffs-deletion-color-override: var(--cds-text-git-removed);
+  --diffs-modified-color-override: var(--cds-text-git-modified);
+  --diffs-selection-color-override: var(--cds-text-accent);
+  --diffs-bg-selection-override: var(--cds-fill-accent);
+  --diffs-bg-selection-number-override: var(--cds-fill-accent);
+  --cds-filediff-bg: light-dark(var(--code-theme-light-bg, var(--cds-surface-2)), var(--code-theme-dark-bg, var(--cds-surface-2)));
+  --diffs-mixer: light-dark(#000, #fff);
+  --diffs-bg: var(--cds-filediff-bg, var(--cds-surface-1));
+  /* --diffs-light / --diffs-dark come from the shiki theme's foreground; the host's are the code-theme fg tokens. */
+  --diffs-fg: light-dark(var(--code-theme-light-fg, #000), var(--code-theme-dark-fg, #fff));
+  --diffs-fg-number: var(--diffs-fg-number-override, light-dark(color-mix(in lab, var(--diffs-fg) 65%, var(--diffs-bg)), color-mix(in lab, var(--diffs-fg) 65%, var(--diffs-bg))));
+  --diffs-deletion-base: var(--diffs-deletion-color-override, light-dark(#ff2e3f, #ff6762));
+  --diffs-addition-base: var(--diffs-addition-color-override, light-dark(#0dbe4e, #5ecc71));
+  --diffs-modified-base: var(--diffs-modified-color-override, light-dark(#009fff, #69b1ff));
+  --diffs-bg-deletion-emphasis: light-dark(rgb(from var(--diffs-deletion-base) r g b / .15), rgb(from var(--diffs-deletion-base) r g b / .2));
+  --diffs-bg-addition-emphasis: light-dark(rgb(from var(--diffs-addition-base) r g b / .15), rgb(from var(--diffs-addition-base) r g b / .2));
+  --diffs-selection-base: var(--diffs-selection-color-override, var(--diffs-modified-base));
+  --diffs-selection-number-fg: light-dark(color-mix(in lab, var(--diffs-selection-base) 65%, var(--diffs-mixer)), color-mix(in lab, var(--diffs-selection-base) 75%, var(--diffs-mixer)));
+}
+/* Changes header: the trigger and the button carry c44d00c7f Xu's own classes (trigger `group/diff-file @container/diff-file
+   relative`, button ma = c82eca2bd Ce + `w-full select-none text-left …` with style backgroundColor en, the code
+   background under the linear-gradient alpha-1 / hover alpha-2 layer), all layered utilities of the loaded sheets. The
+   official header is light-DOM slot content and inherits the pane's sans font (the diffs code font lives in the shadow
+   root); the host root carries the code font, so the header restates the pane font. The CodeView's stickyHeaders
+   (c44d00c7f qu `stickyHeaders: !0`) keep each file's header at the top of the scroller: sticky, top 0, over the rows. */
+.sdiff-view[data-placement=changes] .sdiff-header { position: sticky; top: 0; z-index: 4;
+  font: var(--cds-font-size-body, 13px)/var(--cds-leading-body, 19px) var(--cds-font-sans, sans-serif); }
+/* Changes placement (c44d00c7f aa / la / _a): the markup carries the source utility classes (the layered c6a992d55
+   copy). W14-code css-main-03 removed message-style's legacy `.diff span` rules and the `diff` root class, so no
+   revert-layer release is needed. The disabled-reason trigger around the 'View image' button stays inline-flex. */
+.sdiff-view[data-placement=changes] .sdiff-view-image .source-tooltip-disabled-trigger { display: inline-flex; white-space: normal; }
+.sdiff-path-directory[data-clipped] { opacity: 0; }
+/* _a reveal (Open file): its own layered utilities (opacity-0, group-hover/diff-file:opacity-100,
+   group-focus-within/diff-file:opacity-100, pointer-coarse:opacity-100) are all in the loaded 3.6556.2 sheets now, so no
+   unlayered restatement here. */
+/* pierre `pre, code { background-color: var(--diffs-bg) }`. */
+.sdiff-file-body { min-width:0;padding-block:var(--cds-pad-xs,4px);background:var(--diffs-bg); }
+.sdiff-hunk { min-width:0; }
+.sdiff-note { min-height: var(--cds-leading-code, 17px); padding: 0 var(--cds-pad-md, 8px); white-space: pre; color: var(--cds-text-muted); }
+/* ca7ba268c Jn/Ut and final CDS Gi/Qi injection (:8463–8582).
+   Gi overrides the library separator background to transparent. */
+.sdiff-hunk-separator { height:32px; margin-block:8px; padding-inline:8px; user-select:none; }
+.sdiff-hunk-separator[data-separator-first] { margin-top:0; }
+.sdiff-separator-content { display:flex; align-items:center; height:100%; min-width:0; padding-inline:1ch; border-radius:6px;
+  background:transparent;
+  color:var(--diffs-fg-number); }
+.sdiff-separator-content { padding-inline:0; }
+.sdiff-hunk-separator[data-separator-last] { margin-bottom:0; }
+.sdiff-separator-wrapper { display:grid;grid-template-columns:16px minmax(0,1fr);gap:4px;height:100%;min-width:0; }
+.sdiff-separator-wrapper[data-multi-button] { grid-template-columns:16px 16px minmax(0,1fr); }
+.sdiff-context-gap button { border:0;background:transparent;font:inherit;padding:0;min-height:0;height:auto;text-align:left; }
+.sdiff-context-gap .sdiff-separator-content { grid-column-start:-2;border-top-left-radius:0;border-bottom-left-radius:0; }
+.sdiff-context-gap .sdiff-separator-content:hover { text-decoration:underline; }
+.sdiff-expand { display:flex;align-items:center;justify-content:center;min-width:16px;color:var(--diffs-fg-number); }
+.sdiff-expand svg { flex:none; }
+.sdiff-expand [data-expand-direction=down] { transform:scaleY(-1); }
+.sdiff-separator-wrapper:hover :is(.sdiff-expand,.sdiff-separator-content) { color:var(--cds-text-secondary); }
+.sdiff-context-gap button:focus-visible,.sdiff-file-body:focus-visible { outline:none;box-shadow:var(--cds-focus-shadow); }
+@media (pointer:fine) {
+  .sdiff-separator-wrapper[data-multi-button] { grid-template-rows:50% 50%; }
+  .sdiff-separator-wrapper[data-multi-button] .sdiff-expand { grid-column:1; }
+  .sdiff-separator-wrapper[data-multi-button] .sdiff-separator-content { grid-area:1 / 2 / -1;grid-column-start:-2; }
+}
+.sdiff-separator-content>span { overflow:hidden; white-space:nowrap; text-overflow:ellipsis; min-width:0; }
+.sdiff-hunk-separator[data-separator=metadata] { margin-block:0; }
+.sdiff-row { display: grid; grid-template-columns: max-content minmax(0, 1fr);
+  column-gap:0;padding-inline:0; min-height: var(--cds-leading-code, 17px); white-space: pre;
+  font: var(--cds-font-size-code, 12px)/var(--cds-leading-code, 17px) var(--cds-font-mono, monospace); }
+.sdiff-line-number { text-align: right; color: var(--diffs-fg-number); user-select: none; font-variant-numeric: tabular-nums; }
+.sdiff-marker { user-select: none; }
+.sdiff-line-content { display: block; min-width: 0; font: inherit; tab-size: 4; }
+/* c49d7f557 `:where([data-background])` change lines: the content ([data-line] / [data-no-newline]) mixes the code
+   background with the git colour in lab at 88% / 80% (light / dark), the number column ([data-column-number]) at 91% /
+   85%; the number turns --diffs-fg-number-{addition,deletion}-override, the classic "+" / "-" indicator the base colour.
+   The row paints the content mix and its number cell its own (it covers the row's first grid column). */
+.sdiff-view .sdiff-row, .sdiff-view .sdiff-raw-code > code { --mix-light: 88%; --mix-dark: 80%; --diffs-diff-line-mix-target: var(--diffs-bg); }
+.sdiff-view .sdiff-row > .sdiff-line-number { --mix-light: 91%; --mix-dark: 85%; --diffs-diff-line-mix-target: var(--diffs-bg); }
+.sdiff-view .sdiff-row.removed, .sdiff-view .sdiff-row.removed > .sdiff-line-number, .sdiff-view .sdiff-raw-code > .removed { --diffs-diff-line-mix-target: var(--diffs-bg-deletion-override, var(--diffs-deletion-base)); }
+.sdiff-view .sdiff-row.added, .sdiff-view .sdiff-row.added > .sdiff-line-number, .sdiff-view .sdiff-raw-code > .added { --diffs-diff-line-mix-target: var(--diffs-bg-addition-override, var(--diffs-addition-base)); }
+.sdiff-view .sdiff-row, .sdiff-view .sdiff-row > .sdiff-line-number, .sdiff-view .sdiff-raw-code > code { --diffs-computed-diff-line-bg: var(--diffs-bg); }
+.sdiff-view :is(.sdiff-row, .sdiff-raw-code > code):is(.added, .removed), .sdiff-view .sdiff-row:is(.added, .removed) > .sdiff-line-number {
+  --diffs-computed-diff-line-bg: light-dark(color-mix(in lab, var(--diffs-bg) var(--mix-light), var(--diffs-diff-line-mix-target)), color-mix(in lab, var(--diffs-bg) var(--mix-dark), var(--diffs-diff-line-mix-target)));
+  background-color: var(--diffs-computed-diff-line-bg); }
+.sdiff-view :is(.sdiff-row, .sdiff-raw-code > code).added { color: var(--diffs-addition-base); }
+.sdiff-view :is(.sdiff-row, .sdiff-raw-code > code).removed { color: var(--diffs-deletion-base); }
+.sdiff-view .sdiff-row.added > .sdiff-line-number { color: var(--diffs-fg-number-addition-override, var(--diffs-addition-base)); }
+.sdiff-view .sdiff-row.removed > .sdiff-line-number { color: var(--diffs-fg-number-deletion-override, var(--diffs-deletion-base)); }
+.sdiff-notice { padding: var(--cds-pad-xs, 4px) var(--cds-pad-md, 8px); color: var(--cds-text-muted); font: var(--cds-font-size-body, 13px)/var(--cds-leading-body, 19px) var(--cds-font-sans, sans-serif); }
+.sdiff-raw-code { overflow: auto; margin: 0; padding: 4px 0; white-space: pre; font: inherit; }
+.sdiff-raw-code > code { display: block; min-width: max-content; padding-inline: 8px; white-space: pre; font: inherit; }
+.sdiff-note code { font: inherit; }
+/* [data-no-newline] (c49d7f557): the preceding line's background, user-select none, its words (span) at opacity .6 in
+   the code colour --diffs-fg; CDS Da `[data-indicators="classic"] [data-no-newline]{padding-inline-start:2ch}`. */
+.sdiff-no-newline, .sdiff-note[data-no-newline] { user-select: none; }
+.sdiff-no-newline .sdiff-no-newline-text, .sdiff-note[data-no-newline] > span { color: var(--diffs-fg); opacity: .6; }
+
+/* ca7ba268c unified classic: one displayed number, old/new facts retained on
+   the row; content wraps at available pane width without losing whitespace. */
+.sdiff-view .sdiff-row { white-space:pre-wrap;overflow-wrap:anywhere;font-feature-settings:"liga","clig","calt";letter-spacing:calc(round(up,1ch,1px / 64) - 1ch); }
+.sdiff-view .sdiff-line-number { box-sizing:content-box;min-width:var(--sdiff-number-width,3ch);padding-left:calc(2ch + 5px);padding-right:1ch; }
+.sdiff-code-cell { min-width:0;position:relative;padding-inline:2ch 1ch; }
+.sdiff-code-cell>.sdiff-marker { display:block;padding:0;min-width:0;position:absolute;inset-inline-start:0;top:0;width:1ch;height:1lh; }
+.sdiff-view .sdiff-line-content { white-space:pre-wrap;overflow-wrap:anywhere;color:light-dark(var(--code-theme-light-fg,var(--cds-text-primary)),var(--code-theme-dark-fg,var(--cds-text-primary))); }
+.sdiff-view .sdiff-note { white-space:pre-wrap;overflow-wrap:anywhere; }
+
+.sdiff-split-row { display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:stretch; }
+.sdiff-split-side { min-width:0; }
+/* c49d7f557 split: [data-deletions] border-right and [data-additions] border-left, each 1px solid var(--diffs-bg). */
+.sdiff-split-side+.sdiff-split-side { border-inline-start:2px solid var(--diffs-bg); }
+.sdiff-split-side .sdiff-note { padding-inline:0; }
+.sdiff-view[data-word-wrap=false] .sdiff-hunk { min-width:max-content; }
+.sdiff-view[data-word-wrap=false] .sdiff-row,.sdiff-view[data-word-wrap=false] .sdiff-line-content { white-space:pre;overflow-wrap:normal; }
+.sdiff-view[data-layout=split][data-word-wrap=false] .sdiff-hunk { display:grid;grid-template-columns:repeat(2,minmax(max-content,1fr)); }
+.sdiff-view[data-layout=split][data-word-wrap=false] .sdiff-hunk-separator { grid-column:1 / -1; }
+.sdiff-view[data-layout=split][data-word-wrap=false] .sdiff-split-row { grid-column:1 / -1;grid-template-columns:subgrid; }
+
+/* R10 Changes body with the "Changed files" column (panes-diff-view-current.js
+   :5530-5590): a flex row [column | edge handle | main], the main column holds
+   the large-diff banner above the .source-changes scroller (source-session.css). */
+.sdiff-changes-layout { position:relative; display:flex; flex:1; min-height:0; min-width:0; }
+.sdiff-changes-main { display:flex; flex-direction:column; flex:1; min-width:0; min-height:0; }
+.sdiff-changes-main > .source-changes { flex:1; min-height:0; }
+/* R3-files FT-07: the column's edge is the official border-e (c44d00c7f, colour from the c6a992d55 base layer) and the
+   Changed files rows carry the 2.42304.0 ca7840910 row classes; with D26's layered button reset nothing here restates
+   them (an unlayered background would also hide the rows' --file-tree-kept-guides / --file-tree-guides images). */
+/* c44d00c7f Jr's path tooltips ask for max-w-[min(480px,var(--available-width))] (c0fbbe82d mn); the host tooltip
+   (SourceTooltip) keeps 240px on its positioner and popup unlayered and has no Floating UI size middleware, so the cap is
+   restated here for those popups, with the viewport less SourceTooltip's 5px collision padding on each side standing in
+   for --available-width. */
+.source-tooltip-positioner:has(> .source-tooltip-popup[class~="max-w-[min(480px,var(--available-width))]"]),
+.source-tooltip-popup[class~="max-w-[min(480px,var(--available-width))]"] { max-width: min(480px, 100vw - 10px); }
+/* B15 Commits section (3.6556.2 c44d00c7f Ni/Fi/Bi): the host button reset is in @layer base now, so the rows' and the
+   header's official utilities (row fills, px-xs py-[6px], text-start, scroll-mt-(--cds-pad-md), text-secondary-control,
+   focus ring) win as loaded; no unlayered restatement. */
+/* W12: the column's handles are the generated c44d00c7f Ir / Lr over shared-9 bm and the drag shield Rr (a fixed
+   cursor-col-resize layer; bm itself sets the body cursor and user-select while it drags), so nothing is restated here. */
+/* Line comments: Ca (c44d00c7f 2925-2943) in the @pierre/diffs gutter utility slot (absolute,
+   top/bottom 0, my-auto, -left-0.5): cda9b4504 "flex size-4 items-center justify-center rounded bg-fill-accent
+   text-on-accent hover:bg-fill-accent-hover", shown on the hovered line (or while it has keyboard focus). */
+.sdiff-row[data-commentable] { position: relative; }
+/* Uc: geometry and colours are the button's own utilities and inline style (source-diff.jsx GUTTER_ADD_*); the host
+   only reveals it on the hovered row (the @pierre/diffs gutter utility slot does that officially). */
+.sdiff-gutter-add { z-index: 1; opacity: 0; pointer-events: none; }
+.sdiff-row[data-commentable]:hover > .sdiff-gutter-add, .sdiff-gutter-add:focus-visible { opacity: 1; pointer-events: auto; }
+.sdiff-gutter-add:focus-visible { outline: none; box-shadow: var(--cds-focus-shadow); }
+.sdiff-row[data-commentable] > .sdiff-line-number { grid-column: 1; }
+.sdiff-row[data-commentable] > .sdiff-code-cell { grid-column: 2; }
+/* B14: c44d00c7f ha/ga comment cards sit in the row's annotation slot (full width, sans text, selectable), and the
+   @pierre/diffs line-number drag tints the picked rows. */
+.sdiff-comment-row { min-width: 0; letter-spacing: normal; font-feature-settings: normal; }
+.sdiff-row[data-commentable] > .sdiff-line-number { cursor: var(--cds-cursor-interactive, pointer); }
+/* c49d7f557 [data-selected-line]: the line's diff background mixed in lab with --diffs-bg-selection-override (fill-accent)
+   at 82% / 75% for the content, 75% / 60% for the number column, whose number turns --diffs-selection-number-fg. No row
+   hover tint: pierre's [data-hovered] needs lineHoverHighlight, which defaults to "disabled" (c64baa838 setHoveredLine)
+   and the Changes CodeView (c44d00c7f qu) does not set it. */
+.sdiff-view .sdiff-row:is([data-line-selected], [data-comment-range]) { --mix-selection-light: 82%; --mix-selection-dark: 75%; }
+.sdiff-view .sdiff-row:is([data-line-selected], [data-comment-range]) > .sdiff-line-number { --mix-selection-light: 75%; --mix-selection-dark: 60%; color: var(--diffs-selection-number-fg); }
+.sdiff-view .sdiff-row:is([data-line-selected], [data-comment-range]), .sdiff-view .sdiff-row:is([data-line-selected], [data-comment-range]) > .sdiff-line-number {
+  background-color: light-dark(color-mix(in lab, var(--diffs-computed-diff-line-bg) var(--mix-selection-light), var(--diffs-bg-selection-override)), color-mix(in lab, var(--diffs-computed-diff-line-bg) var(--mix-selection-dark), var(--diffs-bg-selection-override))); }

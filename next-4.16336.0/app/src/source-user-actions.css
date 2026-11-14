@@ -1,0 +1,67 @@
+/* 2.2553.1 ordinary user turn: BY reservation -> bO toolbar / CO Copy, base size.
+   The user article owns the 8px bubble-to-row gap and is the reveal scope. */
+.sua-row { position: relative; min-width: 0; min-height: var(--cds-h-control, 24px); }
+.sua-deferred, .sua-toolbar { display: flex; align-items: center; min-height: var(--cds-h-control, 24px); }
+.sua-placeholder { display: block; flex: none; width: 1px; height: var(--cds-h-control, 24px); }
+.sua-toolbar[data-cds="MessageActions"][data-reveal] {
+  --cds-message-actions-opacity: 0;
+  opacity: var(--cds-message-actions-opacity); scale: none;
+  user-select: none; outline: none;
+  transition-property: opacity; transition-duration: var(--cds-dur-fast, 60ms);
+  transition-timing-function: var(--cds-ease-snap, cubic-bezier(.32, .72, 0, 1)); transition-delay: 0s;
+}
+@media (hover: hover) {
+  .source-user-message:hover .sua-toolbar[data-cds="MessageActions"][data-reveal] {
+    --cds-message-actions-opacity: 1;
+    transition-duration: var(--cds-dur-snap, 120ms); transition-delay: .1s;
+  }
+  @starting-style {
+    .source-user-message:hover .sua-toolbar[data-cds="MessageActions"][data-reveal] { --cds-message-actions-opacity: 0; }
+  }
+}
+/* Focus inside the user turn reveals immediately, ahead of any hover delay. */
+.source-user-message:focus-within .sua-toolbar[data-cds="MessageActions"][data-reveal] {
+  --cds-message-actions-opacity: 1;
+  transition-duration: var(--cds-dur-snap, 120ms); transition-delay: 0s;
+}
+@starting-style {
+  .source-user-message:focus-within .sua-toolbar[data-cds="MessageActions"][data-reveal] { --cds-message-actions-opacity: 0; }
+}
+.sua-copy {
+  position: relative; isolation: isolate; display: inline-flex; flex: none;
+  align-items: center; justify-content: center; box-sizing: border-box;
+  width: var(--cds-h-control, 24px); height: var(--cds-h-control, 24px);
+  margin: 0; padding: 0; border: 0; border-radius: var(--cds-radius, 6px);
+  background: transparent; color: var(--cds-text-muted); outline: none;
+  font-family: var(--cds-font-sans); font-size: var(--cds-font-size-body, 13px); line-height: var(--cds-leading-body, 19px);
+  cursor: var(--cds-cursor-interactive, default); user-select: none;
+  transition: box-shadow var(--cds-dur-fast, 60ms);
+}
+.sua-copy:hover { color: var(--cds-text-primary); }
+.sua-copy:disabled { opacity: var(--cds-opacity-disabled, .5); pointer-events: none; }
+.sua-copy:focus-visible { outline: none; box-shadow: var(--cds-focus-shadow); }
+.sua-button-backdrop {
+  position: absolute; inset: 0; z-index: -1; pointer-events: none; border-radius: inherit;
+  transition: transform var(--cds-dur-slow) var(--cds-btn-spring); transform-origin: center;
+}
+.sua-button-backdrop > [data-cds-part="paint"] {
+  position: absolute; inset: 0; border-radius: inherit; background: transparent;
+  transition: background-color var(--cds-dur-fast, 60ms);
+}
+.sua-copy:hover .sua-button-backdrop > [data-cds-part="paint"] { background: var(--cds-fill-ghost-hover); }
+.sua-copy:active .sua-button-backdrop { transform: scale(var(--cds-btn-press-sx, .975), var(--cds-btn-press-sy, .975)); transition: transform var(--cds-dur-fast, 60ms) ease-out; }
+/* W14-code r5 cleanup css5-sr-only-handcopies: the hand-copied sr-only rule is gone; the JSX uses the official c6a992d55 .sr-only. */
+@media (pointer: coarse), (hover: none) {
+  .sua-toolbar[data-cds="MessageActions"][data-reveal] { --cds-message-actions-opacity: 1; transition: none; }
+}
+/* design-system.css:51631-51640: reduced motion sets transition-property:none (and scale:none) on the MessageActions
+   reveal; the declared hover/focus durations stay. The global clamp (:1423-1438) only shortens animations. */
+@media (prefers-reduced-motion: reduce) {
+  .sua-toolbar[data-cds="MessageActions"][data-reveal] { transition-property: none; scale: none; }
+  .sua-copy, .sua-button-backdrop, .sua-button-backdrop > [data-cds-part="paint"] { transition: none; }
+  .sua-copy:active .sua-button-backdrop { transform: none; }
+}
+html[data-reduce-motion="true"] .sua-copy, html[data-reduce-motion="true"] .sua-button-backdrop, html[data-reduce-motion="true"] .sua-button-backdrop > [data-cds-part="paint"] { transition: none; }
+html[data-reduce-motion="true"] .sua-copy:active .sua-button-backdrop { transform: none; }
+html[data-reduce-motion="true"] .sua-toolbar[data-cds="MessageActions"][data-reveal],
+html[data-local-motion="reduce"] .sua-toolbar[data-cds="MessageActions"][data-reveal] { transition-property: none; scale: none; }

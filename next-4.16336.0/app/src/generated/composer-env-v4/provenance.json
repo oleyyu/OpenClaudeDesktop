@@ -1,0 +1,261 @@
+{
+  "referenceVersion": "4.16336.0",
+  "referenceSnapshot": "snapshots/claude-4.16336.0-20261104",
+  "generator": "scripts/extract-composer-env-v4.mjs",
+  "sharedGraph": {
+    "area": "cds-core",
+    "manifestSha256": "06d2026939e5c8992713c2a0dda1b1abc9adffe7a0c223fe3c1e79eecd08d62c"
+  },
+  "linked": {
+    "area": "code-composer-v4",
+    "modules": [
+      "environment-bar.mjs",
+      "path-tooltip-placement.mjs"
+    ],
+    "manifestSha256": "dc5bfba3750b5f0468cadcf5b6123fe59ce856daf14f6aebf5b1bce1c2f1cf64"
+  },
+  "labelContext": {
+    "area": "code-routines-v4",
+    "module": "cd8a7d7c0-DuH0T8rm.mjs",
+    "home": "y",
+    "noHome": "p",
+    "chosenBy": "localKind",
+    "jge": "oe = u ? ae : iT",
+    "moduleSha256": "6af7a0d946e2eebf0cd605f77abbe454c0229dfe4f0849bf56fe81a8b9ac95f9"
+  },
+  "roots": [
+    {
+      "file": "cc43287c9-dzfX-J5i.js",
+      "local": "Exe",
+      "declarationSha256": "ed07cc743ad7313932b2e3083ebecdce74ed528d1f0ff61d0fdf9c847dfae267",
+      "pinned": true
+    },
+    {
+      "file": "cc43287c9-dzfX-J5i.js",
+      "local": "Uye",
+      "declarationSha256": "8e89cba579017f0c70b9b45a15053d2eb129cfe0ee95c81b843254d4be42fdcb",
+      "pinned": true
+    },
+    {
+      "file": "cc43287c9-dzfX-J5i.js",
+      "local": "Hye",
+      "declarationSha256": "9305bf46fc843405b39d469856349a146879a038d996c391ddf363214f179b43",
+      "pinned": true
+    },
+    {
+      "file": "cc43287c9-dzfX-J5i.js",
+      "local": "dxe",
+      "declarationSha256": "e709e6181ea5eb361944f419c83f4c1ac6722713e58f492658b6578663a32321",
+      "pinned": true
+    },
+    {
+      "file": "cc43287c9-dzfX-J5i.js",
+      "local": "Jge",
+      "declarationSha256": "e39d79e18634ed3367926944af677a01dbb5621481f414c99ce68a31dfaee322",
+      "pinned": true
+    },
+    {
+      "file": "cc43287c9-dzfX-J5i.js",
+      "local": "Kge",
+      "declarationSha256": "fb1ac92e1c35b39047c5ea16c519f134109155f8eb02101cea007296f952fcab",
+      "pinned": true
+    },
+    {
+      "file": "cc43287c9-dzfX-J5i.js",
+      "local": "$3",
+      "declarationSha256": "e472753924c854ae69c810b867c904b36936df5f87ba597215d0521e223b4bc6",
+      "pinned": true
+    }
+  ],
+  "picks": [
+    {
+      "name": "tail.fields",
+      "root": "Uye",
+      "sha256": "e9f8b0902299a4058f16affe58be7f507d7a162eccf6d3364818e5db82065f16"
+    },
+    {
+      "name": "tail.toggle",
+      "root": "Uye",
+      "sha256": "7b229308e29b345e56b69a49f94b7729d49992dc3e7313f33fda1d7b408acbea"
+    },
+    {
+      "name": "tail.class",
+      "root": "Uye",
+      "sha256": "a1eaafbf835eab85cfbb56f070f004926b14c91272e2e848a85ae188613763ad"
+    },
+    {
+      "name": "tail.lead",
+      "root": "Uye",
+      "sha256": "23d0b8638d94b26a87dcc9d4cfb7ed4b0af6914ce89022c744a7e561691f466a"
+    },
+    {
+      "name": "tail.onlyBar",
+      "root": "Uye",
+      "sha256": "115638c8c096f103eceb1b38781ddfe2d936808e530c2b463e1c1744e86339ba"
+    },
+    {
+      "name": "bar",
+      "root": "Uye",
+      "sha256": "60d3730074f0475bfd9f1f539b630bd9b9914d07db21e4aff96e6997e6d4a53b"
+    },
+    {
+      "name": "trigger",
+      "root": "Uye",
+      "sha256": "e7f36af0650fe98da7cb80d417c82e52e0fce5624af8c0068293506d93d961da"
+    },
+    {
+      "name": "label",
+      "root": "Uye",
+      "sha256": "9b8d1a2775a3961e510602483e95b6703c7287853fb5cb13ad3874917e6d761d"
+    },
+    {
+      "name": "aria",
+      "root": "Uye",
+      "sha256": "3919b5a570962de26540ef48cd6eb91cf4c1c5935e57b474281c6c13711e5a55"
+    },
+    {
+      "name": "permission.class",
+      "root": "Hye",
+      "sha256": "00903aebdae4e8dba58d658c0ce7953c7679336ce30de7de2ca77f6953d40eef"
+    },
+    {
+      "name": "permission.inBar",
+      "root": "Hye",
+      "sha256": "a076229e334c46a89d4c4a7ee8a7b7de8691adb9a1009496cf33a94b6e8e4131"
+    },
+    {
+      "name": "permission.testId",
+      "root": "Hye",
+      "sha256": "c99a19e6386a31611689a40b2ac779b545cc82bcbf6843603e6468bc574b58ad"
+    },
+    {
+      "name": "rail",
+      "root": "dxe",
+      "sha256": "737b87a49c8278dd3ecfd1b86156ef2fb1d7fb74b3f0a8b6c97e8d16145f440f"
+    },
+    {
+      "name": "railMenu",
+      "root": "dxe",
+      "sha256": "b67f33f723e86f8952c804362c680027d849a5fd05e0dead618fc9a46a634c64"
+    },
+    {
+      "name": "place",
+      "root": "Jge",
+      "sha256": "6bb0d5582b1f16042715b0b393f14ea39b6d1a89f7ea2f7193babe8adb63a0f5"
+    },
+    {
+      "name": "folder",
+      "root": "Jge",
+      "sha256": "9432cfc3f4d80460409e95f96a04f93f5aad5cc1745c273a93acdbd8f4242ddc"
+    },
+    {
+      "name": "folderTooltip",
+      "root": "Jge",
+      "sha256": "41ae6b51133a589010b9ca557bd276eda6ed4e4ca4e792175f848983df7805c9"
+    },
+    {
+      "name": "folderSlot",
+      "root": "Jge",
+      "sha256": "b3aa228b3df1fbd851e5fc2d0d47fa564bd7f9f8bcd6b0129c43c2e05fc1dd52"
+    },
+    {
+      "name": "folderSlot.cloud",
+      "root": "Jge",
+      "sha256": "6f8f513676a3d5f62db0a55ca73d09da56e5796e9647b3e82504a1d758c024cc"
+    },
+    {
+      "name": "labelContext",
+      "root": "Jge",
+      "sha256": "9d64e10c111b8c2804a8d2e819440a703083da524af2fce41b6ed48b5d29381f"
+    },
+    {
+      "name": "labelContext.localKind",
+      "root": "Jge",
+      "sha256": "46c942d8d89015fd336d82e4fe402ef41ad090564223925a41fc6731726a999f"
+    },
+    {
+      "name": "folderSlot.names",
+      "root": "Jge",
+      "sha256": "0328baed36faf29fffb69187392ce77c9842a2d2957fbeb7f77e231b8a54ce16"
+    },
+    {
+      "name": "messages.choose",
+      "root": "Jge",
+      "sha256": "9cf7ad7c7bc255fedb4a7ad138a98a1644a345cfb8423249598b2a0f780cb46d"
+    },
+    {
+      "name": "messages.extraCount",
+      "root": "Jge",
+      "sha256": "ff36e1b7a4e453f5dab3b0e43aae62bd7880c25af5a5794cb5048353735aa182"
+    },
+    {
+      "name": "messages.folderExtra",
+      "root": "Jge",
+      "sha256": "63a1c8e736e70d0a505953c50d7473934228b9d84707f8f24158f280ffa4930e"
+    },
+    {
+      "name": "messages.folder",
+      "root": "Jge",
+      "sha256": "3d7ea715be4ec897a11980c3f01646db06fc71113eb05de116168956f0c73457"
+    },
+    {
+      "name": "detail",
+      "root": "Kge",
+      "sha256": "40952a635f681e3a93eed8fb09fa660f86cfc34b0d564d4ed9855b640358a015"
+    },
+    {
+      "name": "detailNames",
+      "root": "Kge",
+      "sha256": "5a89d0b7ca1ced3a45402e36ad29ce2f5f1e55ce704cfe40d9381127425f6bd5"
+    },
+    {
+      "name": "placeTooltip.content",
+      "root": "$3",
+      "sha256": "653a97e5d9c341806e9c9ea88a8f4eed8467119cd4dfabd9aef8daafc9938ffd"
+    },
+    {
+      "name": "placeTooltip.padding",
+      "root": "$3",
+      "sha256": "27f9b8a551e5b92e369a8dd754108494bc96094af1ec9598a54de68790612b27"
+    },
+    {
+      "name": "placeTooltip.call",
+      "root": "$3",
+      "sha256": "183774dba0d105cbf51d7b6167391284a05a6370a2e2c226949634aefb2e2f14"
+    }
+  ],
+  "imports": [
+    {
+      "module": "model-effort.mjs",
+      "local": "h",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "jsxs",
+      "via": "vendor-frame-BckkO60Y.js:Ka"
+    },
+    {
+      "module": "model-effort.mjs",
+      "local": "p",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "jsx",
+      "via": "vendor-frame-BckkO60Y.js:Ga"
+    },
+    {
+      "module": "model-effort.mjs",
+      "local": "u8",
+      "kind": "linked",
+      "from": "../code-composer-v4/environment-bar.mjs",
+      "name": "EnvironmentChipGroup",
+      "via": "cc43287c9-dzfX-J5i.js#u8"
+    },
+    {
+      "module": "model-effort.mjs",
+      "local": "y",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "Fragment",
+      "via": "vendor-frame-BckkO60Y.js:Wa"
+    }
+  ]
+}

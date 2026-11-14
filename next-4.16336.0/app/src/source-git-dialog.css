@@ -1,0 +1,8 @@
+/* B29 nY: VJ code spans (font-mono-ui text-code px-0.75 rounded-[3px] bg-alpha-1); the startup error as a block. */
+.sgd-dialog { overflow-wrap: break-word; }
+.sgd-code { padding: 0 3px; border-radius: 3px; background: var(--cds-alpha-1); font-family: var(--cds-font-mono, ui-monospace, monospace); font-size: var(--cds-font-size-code, 12px); }
+.sgd-code-block { display: block; margin-top: var(--cds-pad-sm, 8px); white-space: pre-wrap; }
+.sgd-download { margin-top: var(--cds-pad-sm, 8px); }
+.sgd-download a { color: var(--cds-text-accent); --_text-link-line: color-mix(in srgb, currentColor, transparent 60%); text-decoration-line: underline; text-underline-offset: 3px; text-decoration-color: var(--_text-link-line); border-radius: 2px; outline: none; }
+.sgd-download a:is(:hover, :focus-visible) { --_text-link-line: currentColor; }
+.sgd-download a:focus-visible { box-shadow: var(--cds-focus-shadow); }

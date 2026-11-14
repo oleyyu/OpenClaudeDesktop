@@ -1,0 +1,511 @@
+{
+  "referenceVersion": "4.16336.0",
+  "referenceSnapshot": "snapshots/claude-4.16336.0-20261104",
+  "generator": "scripts/extract-chat-export.mjs",
+  "adapterModule": "src/source-chat-export-adapters.jsx",
+  "linkedAreas": [
+    {
+      "area": "cowork-scheduled-v4",
+      "modules": [
+        "cff2bf6cb-HE-LaYyC.mjs"
+      ]
+    }
+  ],
+  "sharedGraph": "cds-core",
+  "extraGlobals": {
+    "IS_REACT_ACT_ENVIRONMENT": "react-aria live announcer (cff2bf6cb dn): announces at once in a test environment, read behind `typeof IS_REACT_ACT_ENVIRONMENT == \"boolean\"`",
+    "jest": "the same announcer check: `typeof jest < \"u\"`",
+    "HTMLSelectElement": "react-aria focus tracking (cff2bf6cb): `r instanceof HTMLSelectElement`, a platform DOM class",
+    "MessagePort": "react-aria form reset (cff2bf6cb): `Z(window.event) instanceof MessagePort` tells a reset dispatched from a message, a platform class"
+  },
+  "modules": [
+    {
+      "target": "date-range.mjs",
+      "source": "c1751bc30-CvXSylS4.js",
+      "sourceSha256": "3ddec3be24c3211317136b7a3d64ebe4808a98f88fe7b3256abcf67fa26bcd15",
+      "sha256": "89d6f681be369d96d59d3073228f00e4c0bd90e58b082437e48489f38370c3cf",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "i",
+          "sha256": "dd15694124c3ddccfac576621e0b34276eb80682785884c64965c08ee4e1ae2b"
+        },
+        {
+          "name": "a",
+          "sha256": "26660d6e56865c3fa421d7906e8e3e4594864c6ae6f349d3dba935ccae63f57b"
+        },
+        {
+          "name": "o",
+          "sha256": "2ed7f0a06faa57cae4aea70fcf6a582ccdb0ff4cc9b2082126b6b99b80c48f7e"
+        }
+      ],
+      "initializers": [],
+      "imports": [],
+      "exports": {
+        "o": "isValidDateRange"
+      },
+      "sharedExports": [
+        "a",
+        "i"
+      ],
+      "heldByViewTabs": []
+    },
+    {
+      "target": "shared-frame.mjs",
+      "source": "shared-frame-CJdE5Ria.js",
+      "sourceSha256": "b6a5f61e0f243a48215fab7f3d65958d693d715e565f57af4e0ff35ae14697bc",
+      "sha256": "0faa544e826d5259232b05bd1c659728d78b5b02ab28172555c004d2fedd6e29",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "J9",
+          "sha256": "ca7ddb6034a5a5374320a12a4daca9ac6443bce6f91d7df5d979795e575805fb"
+        },
+        {
+          "name": "J8",
+          "sha256": "eb5d795f0739cc3c17f8a0c98006f81d73ae4c3af3e4769afcbf8c5bfb2c9ed0"
+        },
+        {
+          "name": "J0",
+          "sha256": "2be922c4a5c9f4b2ce3834a6c2445d46bac9d12f13e80edad0ce00ae3c597061"
+        },
+        {
+          "name": "J1",
+          "sha256": "90115ec6fab3fa87e5595ba8510be0d8358228a2ebaa4f401f3f57cc68da1c02"
+        },
+        {
+          "name": "J2",
+          "sha256": "59d967dff21fbdf7fdd4cc4a9fb5c16c477c0c8d716bbdf2b812ed4ba8993eb4"
+        },
+        {
+          "name": "J3",
+          "sha256": "a3a151da51d4962a782d5de1c3f201d436f6f005690149fd8e54064016e76c22"
+        },
+        {
+          "name": "J4",
+          "sha256": "f413d19ac30f7bb64a90764af85cd29c66a8824d1a15e7a5b94d4a36e6b005c5"
+        },
+        {
+          "name": "J5",
+          "sha256": "101acb075573001f1756e985e6a9198860130b55bd62c9b50a2cd8eba6a0dfef"
+        },
+        {
+          "name": "K0",
+          "sha256": "36ecfa9d21d34e63ba007e2188f58eecccc9197999c1e5ec6c501794e1400f4c"
+        },
+        {
+          "name": "K1",
+          "sha256": "3ba1df1b203477e5f87a3385a3cca1c53d9c5b253a9c765e72bdc6ac93e0dfc5"
+        },
+        {
+          "name": "K2",
+          "sha256": "7d4968137ebec422b65baa77806c57a6be36ff55d62953d1e2321748c0ab4751"
+        },
+        {
+          "name": "K3",
+          "sha256": "aedf510a103c06562de3370ca0eaf1572c6d6f7725ab1b51730bfb0ec71e8f5f"
+        },
+        {
+          "name": "K4",
+          "sha256": "6b31ef4b8b3ba1c4ff286ba20697b1a4969bcc3e2605ddecf752480f0cc8c3d1"
+        },
+        {
+          "name": "K5",
+          "sha256": "8dd1688fcd9c8fa0fc20a0dac16b580576133b6739eb1810b05f049bddb0ed8a"
+        }
+      ],
+      "initializers": [],
+      "imports": [
+        {
+          "local": "Je",
+          "from": "react/compiler-runtime",
+          "name": "c",
+          "via": "vendor-frame-BckkO60Y.js:ko",
+          "kind": "react"
+        }
+      ],
+      "exports": {},
+      "sharedExports": [
+        "J0",
+        "J1",
+        "J2",
+        "J3",
+        "J4",
+        "J5",
+        "J9",
+        "K0",
+        "K1",
+        "K2",
+        "K3",
+        "K4",
+        "K5"
+      ],
+      "heldByViewTabs": [
+        "J0",
+        "J1",
+        "J2",
+        "J3",
+        "J4",
+        "J5",
+        "J8",
+        "J9",
+        "K0",
+        "K1",
+        "K2",
+        "K3",
+        "K4",
+        "K5"
+      ]
+    },
+    {
+      "target": "date-field.mjs",
+      "source": "cb499b8fa-BHm49DAk.js",
+      "sourceSha256": "0bed649c41198a5bc89902f789e9085e17d3d8bc2b305fe799468b4c718cd7d9",
+      "sha256": "1f2f4f1266d2f94951f9be646c02c632a0c105bea0926c1b1a1d1e73635e1de9",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "s",
+          "sha256": "25d5013aac7dcee0033c6ebd6e4c7df937867466f670e82d9e0d743496f51e37"
+        },
+        {
+          "name": "c",
+          "sha256": "acf79f78ed9f48b6efbcfba8c115c1dfde2af8bdfbec359998e430d8736acbaf"
+        }
+      ],
+      "initializers": [],
+      "imports": [
+        {
+          "local": "J1",
+          "from": "./shared-frame.mjs",
+          "name": "J1",
+          "via": "shared-frame-CJdE5Ria.js:lm",
+          "kind": "generated"
+        },
+        {
+          "local": "J2",
+          "from": "./shared-frame.mjs",
+          "name": "J2",
+          "via": "shared-frame-CJdE5Ria.js:um",
+          "kind": "generated"
+        },
+        {
+          "local": "J3",
+          "from": "./shared-frame.mjs",
+          "name": "J3",
+          "via": "shared-frame-CJdE5Ria.js:dm",
+          "kind": "generated"
+        },
+        {
+          "local": "J5",
+          "from": "./shared-frame.mjs",
+          "name": "J5",
+          "via": "shared-frame-CJdE5Ria.js:pm",
+          "kind": "generated"
+        },
+        {
+          "local": "J9",
+          "from": "./shared-frame.mjs",
+          "name": "J9",
+          "via": "shared-frame-CJdE5Ria.js:hm",
+          "kind": "generated"
+        },
+        {
+          "local": "K1",
+          "from": "./shared-frame.mjs",
+          "name": "K1",
+          "via": "shared-frame-CJdE5Ria.js:_m",
+          "kind": "generated"
+        },
+        {
+          "local": "K2",
+          "from": "./shared-frame.mjs",
+          "name": "K2",
+          "via": "shared-frame-CJdE5Ria.js:vm",
+          "kind": "generated"
+        },
+        {
+          "local": "K3",
+          "from": "./shared-frame.mjs",
+          "name": "K3",
+          "via": "shared-frame-CJdE5Ria.js:ym",
+          "kind": "generated"
+        },
+        {
+          "local": "K5",
+          "from": "./shared-frame.mjs",
+          "name": "K5",
+          "via": "shared-frame-CJdE5Ria.js:xm",
+          "kind": "generated"
+        },
+        {
+          "local": "a",
+          "from": "../cds-core/shared-frame.mjs",
+          "name": "CdsField",
+          "via": "shared-frame-CJdE5Ria.js:ta",
+          "kind": "shared-graph",
+          "original": "OI"
+        },
+        {
+          "local": "e",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-BckkO60Y.js:Ga",
+          "kind": "react"
+        },
+        {
+          "local": "i",
+          "from": "../cds-core/shared-frame.mjs",
+          "name": "CdsFieldLabel",
+          "via": "shared-frame-CJdE5Ria.js:ea",
+          "kind": "shared-graph",
+          "original": "kI"
+        },
+        {
+          "local": "n",
+          "from": "../cds-core/shared-frame.mjs",
+          "name": "CdsFieldError",
+          "via": "shared-frame-CJdE5Ria.js:$i",
+          "kind": "shared-graph",
+          "original": "NI"
+        },
+        {
+          "local": "o",
+          "from": "../cowork-scheduled-v4/cff2bf6cb-HE-LaYyC.mjs",
+          "name": "nu",
+          "via": "cff2bf6cb-HE-LaYyC.js:t",
+          "kind": "linked",
+          "original": "nu"
+        },
+        {
+          "local": "r",
+          "from": "../cds-core/shared-frame.mjs",
+          "name": "CdsFieldDescription",
+          "via": "shared-frame-CJdE5Ria.js:Qi",
+          "kind": "shared-graph",
+          "original": "AI"
+        },
+        {
+          "local": "t",
+          "from": "react/jsx-runtime",
+          "name": "jsxs",
+          "via": "vendor-frame-BckkO60Y.js:Ka",
+          "kind": "react"
+        }
+      ],
+      "exports": {
+        "c": "DateField"
+      },
+      "sharedExports": [],
+      "heldByViewTabs": []
+    },
+    {
+      "target": "date-range-selector.mjs",
+      "source": "c71ba149d-BCmc0sgr.js",
+      "sourceSha256": "cc1cea837d68c44d881bc9ab45ad0a1a2391890ae01c4594b4d7dd0ba1620863",
+      "sha256": "85dfc08471cecd23eac55382fc849847a0dca3e5a814bc313bb18ce92de48f33",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "c",
+          "sha256": "45eee604858a1c28004fd73f76211f771045f6b9c9e5078d87b8c34c3d69db09"
+        },
+        {
+          "name": "l",
+          "sha256": "386e19908671e2190c3ba5da5ffc2cdf9445f96bdccc6b2bdd6a5948e7ca94ea"
+        },
+        {
+          "name": "u",
+          "sha256": "b809cb569050f8ab023aaa375d5e9525ffab9a7594ed948645551dafde8b100c"
+        }
+      ],
+      "initializers": [],
+      "imports": [
+        {
+          "local": "J0",
+          "from": "./shared-frame.mjs",
+          "name": "J0",
+          "via": "shared-frame-CJdE5Ria.js:cm",
+          "kind": "generated"
+        },
+        {
+          "local": "J1",
+          "from": "./shared-frame.mjs",
+          "name": "J1",
+          "via": "shared-frame-CJdE5Ria.js:lm",
+          "kind": "generated"
+        },
+        {
+          "local": "J2",
+          "from": "./shared-frame.mjs",
+          "name": "J2",
+          "via": "shared-frame-CJdE5Ria.js:um",
+          "kind": "generated"
+        },
+        {
+          "local": "J4",
+          "from": "./shared-frame.mjs",
+          "name": "J4",
+          "via": "shared-frame-CJdE5Ria.js:fm",
+          "kind": "generated"
+        },
+        {
+          "local": "J5",
+          "from": "./shared-frame.mjs",
+          "name": "J5",
+          "via": "shared-frame-CJdE5Ria.js:pm",
+          "kind": "generated"
+        },
+        {
+          "local": "J9",
+          "from": "./shared-frame.mjs",
+          "name": "J9",
+          "via": "shared-frame-CJdE5Ria.js:hm",
+          "kind": "generated"
+        },
+        {
+          "local": "K0",
+          "from": "./shared-frame.mjs",
+          "name": "K0",
+          "via": "shared-frame-CJdE5Ria.js:gm",
+          "kind": "generated"
+        },
+        {
+          "local": "K1",
+          "from": "./shared-frame.mjs",
+          "name": "K1",
+          "via": "shared-frame-CJdE5Ria.js:_m",
+          "kind": "generated"
+        },
+        {
+          "local": "K2",
+          "from": "./shared-frame.mjs",
+          "name": "K2",
+          "via": "shared-frame-CJdE5Ria.js:vm",
+          "kind": "generated"
+        },
+        {
+          "local": "K4",
+          "from": "./shared-frame.mjs",
+          "name": "K4",
+          "via": "shared-frame-CJdE5Ria.js:bm",
+          "kind": "generated"
+        },
+        {
+          "local": "K5",
+          "from": "./shared-frame.mjs",
+          "name": "K5",
+          "via": "shared-frame-CJdE5Ria.js:xm",
+          "kind": "generated"
+        },
+        {
+          "local": "a",
+          "from": "./date-field.mjs",
+          "name": "DateField",
+          "via": "cb499b8fa-BHm49DAk.js:t",
+          "kind": "generated"
+        },
+        {
+          "local": "e",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-BckkO60Y.js:Ga",
+          "kind": "react"
+        },
+        {
+          "local": "i",
+          "from": "../../source-chat-export-adapters.jsx",
+          "name": "useIntl",
+          "via": "vendor-intl-BJgYK7RA.js:p",
+          "kind": "adapter",
+          "original": "q"
+        },
+        {
+          "local": "n",
+          "from": "react",
+          "name": "useState",
+          "via": "vendor-frame-BckkO60Y.js:To",
+          "kind": "react"
+        },
+        {
+          "local": "o",
+          "from": "./date-range.mjs",
+          "name": "i",
+          "via": "c1751bc30-CvXSylS4.js:a",
+          "kind": "generated"
+        },
+        {
+          "local": "r",
+          "from": "../../source-chat-export-adapters.jsx",
+          "name": "FormattedMessage",
+          "via": "vendor-intl-BJgYK7RA.js:l",
+          "kind": "adapter",
+          "original": "Gt"
+        },
+        {
+          "local": "s",
+          "from": "./date-range.mjs",
+          "name": "a",
+          "via": "c1751bc30-CvXSylS4.js:i",
+          "kind": "generated"
+        },
+        {
+          "local": "t",
+          "from": "react/jsx-runtime",
+          "name": "jsxs",
+          "via": "vendor-frame-BckkO60Y.js:Ka",
+          "kind": "react"
+        }
+      ],
+      "exports": {
+        "u": "DateRangeSelector"
+      },
+      "sharedExports": [],
+      "heldByViewTabs": []
+    }
+  ],
+  "callSites": [
+    {
+      "source": "cf400e6a4-Czw_18bE.js",
+      "binding": "G2e",
+      "role": "The \"Custom\" period segment and the range under the period row (a member export: maxDate only)",
+      "sourceSha256": "8141de73df2e51d6c0cd6497f152a8d8d9a8d42cdffa55d36fdd698adc4a7d6b",
+      "sha256": "d25da81b38f911873fa994a5c199221f9b2b4ed4928d42c75c10ef6ec3946f59",
+      "features": [
+        "{ value: \"custom\", label: t.formatMessage({ defaultMessage: \"Custom\", id: \"Sjo1P44FYy\" }) }",
+        "f === \"custom\" && b(gHe, { fromDate: r, toDate: a, onFromDateChange: i, onToDateChange: o, maxDate: c })",
+        "Ou(mHe, !0);"
+      ]
+    },
+    {
+      "source": "cf400e6a4-Czw_18bE.js",
+      "binding": "U2e",
+      "role": "The range defaults (from 180 days before today, to today), its check, and the dates it sends; \"File content\" behind data_export_skip_files, as in 3.6556.2 cYe",
+      "sourceSha256": "8141de73df2e51d6c0cd6497f152a8d8d9a8d42cdffa55d36fdd698adc4a7d6b",
+      "sha256": "b0cf8c4de1105708cd3fd184bf05b62bd4281f021575e6674726635d5cd441e8",
+      "features": [
+        "e.setDate(e.getDate() - 180)",
+        "_ = p ?? f",
+        "v = h ?? d",
+        "O = (e ? w : S) === \"custom\" && !hHe({ fromDate: _, toDate: v, minDate: e ? f : void 0, maxDate: d })",
+        "r.conversations_start_date = new Date(`${_}T00:00:00`).toISOString();",
+        "e.setDate(e.getDate() + 1), (r.conversations_end_date = e.toISOString())",
+        "showIncludeFileContent: o && !e && !t,",
+        "customRangeInvalid: O,"
+      ]
+    },
+    {
+      "source": "cf400e6a4-Czw_18bE.js",
+      "binding": "LL",
+      "role": "Export is disabled while the custom range is invalid",
+      "sourceSha256": "8141de73df2e51d6c0cd6497f152a8d8d9a8d42cdffa55d36fdd698adc4a7d6b",
+      "sha256": "6f507cd5bf891145433d6f16f904906965e59f6873bf14241e4921db839c90f1",
+      "features": [
+        "b(G2e, { form: a })",
+        "disabled: a.customRangeInvalid,",
+        "\"data-testid\": \"export-confirm-button\""
+      ]
+    }
+  ],
+  "publicAssets": []
+}

@@ -1,0 +1,86 @@
+.source-transcript-frame {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+}
+.source-transcript-frame > .transcript {
+  /* Keep source fade strips at scrollport width; the column owns its gutters. */
+  padding: 0;
+  overflow-anchor: none;
+  scroll-behavior: auto;
+}
+.source-transcript-content {
+  /* Match the source typography scope so inherited turn-gap uses the actual
+     14px transcript body, not the application chrome body fallback (13px). */
+  --chat-body: 14px;
+  --chat-leading: 1.4286; /* 3.6556.2 (TR-T7): .epitaxy-transcript-typography --chat-leading 1.42857 -> 1.4286 */
+  --chat-turn-gap: calc(var(--chat-body) * var(--chat-leading) * .75);
+  --chat-item-gap: calc(var(--chat-body) * var(--chat-leading) * .5);
+  position: relative;
+  display: flow-root;
+  min-width: 0;
+  /* W14-code r2 css2-chat-gutter-shave: shared-6 vg / yg. The column gutters are --chat-column-gutter-start / -end
+     (`var(--chat-gutter-start,var(--chat-gutter,32px))`, --chat-gutter 32px on .epitaxy-root), shaved by the chat
+     tile's data-chat-gutter-start / -end (source-tile-layout.jsx); yg centres a box of the measure plus both gutters
+     (`mx-auto max-w-[calc(var(--max-content-width)+gutters)] ps-[start] pe-[end]`), which is this padding. The
+     measure is Cg's --max-content-width (768px, or html[data-transcript-width]'s --local-transcript-width). */
+  --chat-column-gutter-start: var(--chat-gutter-start, var(--chat-gutter, 32px));
+  --chat-column-gutter-end: var(--chat-gutter-end, var(--chat-gutter, 32px));
+  padding-block: 0;
+  padding-inline:
+    max(var(--chat-column-gutter-start), calc((100% - var(--local-transcript-width, 768px) + var(--chat-column-gutter-start) - var(--chat-column-gutter-end)) / 2))
+    max(var(--chat-column-gutter-end), calc((100% - var(--local-transcript-width, 768px) - var(--chat-column-gutter-start) + var(--chat-column-gutter-end)) / 2));
+}
+/* vg `[[data-chat-gutter-start=shave]_&]` / `[[data-chat-gutter-end=shave]_&]`: a chat tile off the window's leading /
+   trailing edge gives the tile gap's excess over the container padding back (32 - (12 - 8) = 28px). */
+[data-chat-gutter-start=shave] .source-transcript-content { --chat-column-gutter-start: var(--chat-gutter-start, calc(var(--chat-gutter) - (var(--tiles-gap) - var(--tiles-padding)))); }
+[data-chat-gutter-end=shave] .source-transcript-content { --chat-column-gutter-end: var(--chat-gutter-end, calc(var(--chat-gutter) - (var(--tiles-gap) - var(--tiles-padding)))); }
+/* W14-code r4 fr4-13: vg `[[data-chat-gutter-end=bleed]_&]`: a top-trailing chat tile has no container end padding
+   (source-tile-layout.jsx), so its end gutter takes --tiles-padding back (32 + 8 = 40px). */
+[data-chat-gutter-end=bleed] .source-transcript-content { --chat-column-gutter-end: var(--chat-gutter-end, calc(var(--chat-gutter) + var(--tiles-padding))); }
+/* Current Code host omits compact; both transcript engines default it false.
+   V9 has ordinary 48px top/bottom reserve. No local history-page extra room
+   or composer overlay is added: our composer already occupies flex height. */
+.source-transcript-content[data-transcript-spacing="regular"] {
+  padding-block: 48px;
+}
+.source-transcript-content[data-transcript-spacing="regular"] > .source-message:first-child {
+  margin-top: 0;
+}
+/* W14-code css-main-02: shared-6 gg `[.epitaxy-chat-panel_&]:[@container_tile-slot_(max-width:560px)]:[--chat-gutter:16px]`
+   (the default --chat-gutter is 32px): the gutter follows the chat tile's width (the tile shell, source-tile-layout.css
+   .tiles-shell `container-type: inline-size`; the /btw pane its own), not the window's. r2 css2-chat-gutter-shave: gg
+   sets --chat-gutter itself, so the column gutters (and a shave, 16 - 4 = 12px) follow it. */
+@container (max-width: 560px) {
+  .source-transcript-content {
+    --chat-gutter: 16px;
+  }
+}
+.source-transcript-end {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  pointer-events: none;
+}
+
+/* BY/w5 puts the completed-turn action toolbar 8px below its body. Keep all
+   existing item anchors and intra-turn gaps; the footer is a sibling, not an item. */
+.source-transcript-content > .source-message:has(+ .stf-footer) { margin-bottom: 0; }
+.source-transcript-content > .stf-footer { margin-top: 8px; margin-bottom: 10px; }
+.source-transcript-content > .stf-footer + .source-message { margin-top: 10px; }
+.source-transcript-content > .stf-footer + .source-message:is(.source-user-message,[data-turn-start]) { margin-top: 15px; }
+
+/* Current ceb49ada3 split selection toolbar; cd5a31703 Eot positions its first line. */
+/* W14-code TR-H6: ceb49ada3 `${r("popover")} !rounded` (c6a992d55 .rounded = var(--cds-radius)). */
+.source-selection-toolbar { position:fixed;left:0;top:0;z-index:455;display:flex;width:max-content;max-width:calc(100vw - 24px);isolation:isolate;will-change:transform;pointer-events:auto;-webkit-app-region:no-drag;border-radius:var(--cds-radius,6px);background:var(--cds-surface-3);box-shadow:var(--cds-shadow-popover);color:var(--cds-text-primary); }
+.source-selection-divider { width:1px;flex-shrink:0;margin:7px 0;background:var(--cds-alpha-2);transition:opacity .15s; }
+.source-selection-toolbar:hover .source-selection-divider,.source-selection-toolbar:focus-within .source-selection-divider { opacity:0; }
+@media (prefers-reduced-motion:reduce) { .source-selection-divider { transition:none; } }
+/* The session's start line (save-environment Mx, "Started on {place} · Save as environment") sits centred in the
+   column, in line with the empty transcript's "No messages yet" below it (user fix, 2026-11-13). */
+.source-transcript-content [data-testid="epitaxy-save-start-line"] { text-align: center; }

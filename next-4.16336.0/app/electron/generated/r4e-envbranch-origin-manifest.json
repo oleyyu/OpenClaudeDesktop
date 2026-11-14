@@ -1,0 +1,149 @@
+{
+  "referenceVersion": "4.16336.0",
+  "referenceSnapshot": "snapshots/claude-4.16336.0-20261104",
+  "generator": "scripts/extract-r4e-envbranch.mjs",
+  "output": "r4e-envbranch-origin.cjs",
+  "service": {
+    "file": "index.chunk-DeY_BH2u.js",
+    "sourceSha256": "0cda11d0d34c58f578a392e73c067cd84058ca0496f22082203e8d16e0e613b3",
+    "class": "ue",
+    "exported": "t",
+    "methods": [
+      {
+        "name": "isBranchOnOrigin",
+        "sha256": "96749735bda6e759cad629f285048ce4480a2543125d3012d4b415b96b62106e"
+      },
+      {
+        "name": "pushLeavesOriginRef",
+        "sha256": "59e006abcece816792d7bf338e4681692d78778bc5722a35f711d126671cfe32"
+      }
+    ],
+    "namespaces": {
+      "u": {
+        "require": "./index.chunk-kQsFPJyA.js",
+        "members": [
+          "n"
+        ]
+      },
+      "s": {
+        "require": "./index.chunk-BHwKNgSL.js",
+        "members": [
+          "r"
+        ]
+      },
+      "i": {
+        "require": "./index.chunk-CLQBepLq.js",
+        "members": [
+          "v"
+        ]
+      },
+      "a": {
+        "require": "./index.chunk-DcO4MHOu.js",
+        "members": [
+          "a",
+          "o"
+        ]
+      }
+    },
+    "thisMembers": [
+      "git",
+      "isKnownNonGitDir",
+      "pushLeavesOriginRef",
+      "requireTrustedCwd"
+    ],
+    "constants": [
+      {
+        "name": "w",
+        "sha256": "0cf2d21ac671a6930df30d89923098845bb006fcc2a2c3117a8ebd66e95bc9ef"
+      }
+    ]
+  },
+  "functions": [
+    {
+      "file": "index.chunk-kQsFPJyA.js",
+      "exported": "n",
+      "binding": "F",
+      "as": "isPlausibleBranchName",
+      "sourceSha256": "547fa92f38841f11e88a13d6631813baefafbf35a7ed8235a24495079bcd0314",
+      "bindings": [
+        {
+          "name": "F",
+          "sha256": "4d4050cafe5bcdaa918267c5cc216538f236696f17335c2dd31ed3e7a3b6746a"
+        }
+      ]
+    },
+    {
+      "file": "index.chunk-BHwKNgSL.js",
+      "exported": "r",
+      "binding": "r",
+      "as": "gitExitCode",
+      "sourceSha256": "b09d1905dadfa1dde9a787de658a9382b41883f67ccb268050937963933f7f21",
+      "bindings": [
+        {
+          "name": "r",
+          "sha256": "3ebf04cbaebae90c8f82230459aa69e8fde5cb4add740ea02254272647e64bdb"
+        }
+      ]
+    },
+    {
+      "file": "index.chunk-DcO4MHOu.js",
+      "exported": "a",
+      "binding": "_",
+      "as": "parseFetchRefspecs",
+      "sourceSha256": "00314042b5d0d140f629764d45dd0a434ae5caef4135582befe89cb12dc2cd13",
+      "bindings": [
+        {
+          "name": "_",
+          "sha256": "2181c28aa9a9453dd210cbb672319ada7cdf7eb003a209895eeb7c5b35fc556f"
+        },
+        {
+          "name": "b",
+          "sha256": "3fbc103a8a56b9dacee61fdd5424844b8640a0dce9c952931067e1bef1e6af81"
+        },
+        {
+          "name": "y",
+          "sha256": "186fa124c663e174f45edeeab8fc4fbe147666e4bdde9124753c7c9e2e82010f"
+        }
+      ]
+    },
+    {
+      "file": "index.chunk-DcO4MHOu.js",
+      "exported": "o",
+      "binding": "v",
+      "as": "refspecsCoverBranch",
+      "sourceSha256": "00314042b5d0d140f629764d45dd0a434ae5caef4135582befe89cb12dc2cd13",
+      "bindings": [
+        {
+          "name": "v",
+          "sha256": "1c409fe1e60f2daeab721686cefd710eec8fcb65718e044e8662e517432eca99"
+        }
+      ]
+    }
+  ],
+  "host": {
+    "file": "index.chunk-CLQBepLq.js",
+    "exported": "v",
+    "binding": "Er",
+    "sourceSha256": "e0fbc7864239eadea367923fcc2b9692a9abc615b93bd8ee2ce2f98a7a2882c1"
+  },
+  "callers": [
+    {
+      "file": "index.chunk-yo8W6L7k.js",
+      "needle": "async isBranchOnOrigin(e,t){return r.gitStatus.isBranchOnOrigin(e,t)}",
+      "sourceSha256": "9deb9e960ae75d11d77d6a597322133825bfae5665d8e0e01e37c9d45a65ac03"
+    },
+    {
+      "file": "index.chunk-Du-Wqi0E.js",
+      "needle": "[\"isBranchOnOrigin\",[[\"cwd\",I],[\"branch\",I]],z(L)]",
+      "sourceSha256": "fcc1026c3634f62ae40581c680389b807c49e85626ff9989838fa0dc931d7f1a"
+    }
+  ],
+  "exports": [
+    "createBranchOnOrigin",
+    "isPlausibleBranchName",
+    "gitExitCode",
+    "parseFetchRefspecs",
+    "refspecsCoverBranch"
+  ],
+  "sha256": "3c3ed75ab3d5888e2f1691efe5fabe356ac23ca60807794adb8310163f222e82"
+}

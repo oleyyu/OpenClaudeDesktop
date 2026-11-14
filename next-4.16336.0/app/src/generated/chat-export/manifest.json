@@ -1,0 +1,414 @@
+{
+  "referenceVersion": "3.6556.2",
+  "referenceSnapshot": "snapshots/claude-3.6556.2-20261025-192807",
+  "generator": "scripts/extract-chat-export.mjs",
+  "adapterModule": "src/source-chat-export-adapters.jsx",
+  "linkedAreas": [
+    {
+      "area": "cowork-scheduled",
+      "modules": [
+        "cff2bf6cb-PfnEo01t.mjs"
+      ]
+    }
+  ],
+  "modules": [
+    {
+      "target": "date-range.mjs",
+      "source": "c1751bc30-D9BmGCFy.js",
+      "sourceSha256": "e3dc2df98be669e7f27b4f6b0612c7d77d2a4506c9628b35785a3a57d59e350f",
+      "sha256": "9803d9d33c15ec33c945654206158fae1222abf7de550b36b237bba9c37a6d23",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "i",
+          "sha256": "dd15694124c3ddccfac576621e0b34276eb80682785884c64965c08ee4e1ae2b"
+        },
+        {
+          "name": "a",
+          "sha256": "26660d6e56865c3fa421d7906e8e3e4594864c6ae6f349d3dba935ccae63f57b"
+        },
+        {
+          "name": "o",
+          "sha256": "2ed7f0a06faa57cae4aea70fcf6a582ccdb0ff4cc9b2082126b6b99b80c48f7e"
+        }
+      ],
+      "initializers": [],
+      "imports": [],
+      "exports": {
+        "o": "isValidDateRange"
+      },
+      "sharedExports": [
+        "a",
+        "i"
+      ],
+      "heldByViewTabs": []
+    },
+    {
+      "target": "date-field.mjs",
+      "source": "cb499b8fa-BgRV8jkQ.js",
+      "sourceSha256": "4481c081003dc66a067d824320a95c0c6b518de2d0e5d2c7c8c5f008c95792ce",
+      "sha256": "08ee0320c232e569cc35d55c9b70168104466a85cd597ddbeb793480fd2a3227",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "s",
+          "sha256": "25d5013aac7dcee0033c6ebd6e4c7df937867466f670e82d9e0d743496f51e37"
+        },
+        {
+          "name": "c",
+          "sha256": "98ec37f874cb786e178358ebbddeb07738df280b1fa076ed10baf0a9efe5006d"
+        }
+      ],
+      "initializers": [],
+      "imports": [
+        {
+          "local": "J1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged1",
+          "via": "shared-frame-6jtSkIit.js:Qf",
+          "kind": "view-tabs",
+          "original": "J1"
+        },
+        {
+          "local": "J2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged2",
+          "via": "shared-frame-6jtSkIit.js:$f",
+          "kind": "view-tabs",
+          "original": "J2"
+        },
+        {
+          "local": "J3",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged3",
+          "via": "shared-frame-6jtSkIit.js:ep",
+          "kind": "view-tabs",
+          "original": "J3"
+        },
+        {
+          "local": "J5",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged5",
+          "via": "shared-frame-6jtSkIit.js:np",
+          "kind": "view-tabs",
+          "original": "J5"
+        },
+        {
+          "local": "J9",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "reactMemoCache",
+          "via": "shared-frame-6jtSkIit.js:ip",
+          "kind": "view-tabs",
+          "original": "J9"
+        },
+        {
+          "local": "K1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore1",
+          "via": "shared-frame-6jtSkIit.js:op",
+          "kind": "view-tabs",
+          "original": "K1"
+        },
+        {
+          "local": "K2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore2",
+          "via": "shared-frame-6jtSkIit.js:sp",
+          "kind": "view-tabs",
+          "original": "K2"
+        },
+        {
+          "local": "K3",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore3",
+          "via": "shared-frame-6jtSkIit.js:cp",
+          "kind": "view-tabs",
+          "original": "K3"
+        },
+        {
+          "local": "K5",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore5",
+          "via": "shared-frame-6jtSkIit.js:up",
+          "kind": "view-tabs",
+          "original": "K5"
+        },
+        {
+          "local": "a",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "CdsFieldDescription",
+          "via": "shared-frame-6jtSkIit.js:ki",
+          "kind": "view-tabs",
+          "original": "Xj"
+        },
+        {
+          "local": "e",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-CnSY1sxv.js:Ha",
+          "kind": "react"
+        },
+        {
+          "local": "i",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "CdsFieldLabel",
+          "via": "shared-frame-6jtSkIit.js:ji",
+          "kind": "view-tabs",
+          "original": "Yj"
+        },
+        {
+          "local": "n",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "CdsFieldError",
+          "via": "shared-frame-6jtSkIit.js:Ai",
+          "kind": "view-tabs",
+          "original": "Zj"
+        },
+        {
+          "local": "o",
+          "from": "../cowork-scheduled/cff2bf6cb-PfnEo01t.mjs",
+          "name": "nu",
+          "via": "cff2bf6cb-PfnEo01t.js:t",
+          "kind": "linked",
+          "original": "nu"
+        },
+        {
+          "local": "r",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "CdsField",
+          "via": "shared-frame-6jtSkIit.js:Mi",
+          "kind": "view-tabs",
+          "original": "Jj"
+        },
+        {
+          "local": "t",
+          "from": "react/jsx-runtime",
+          "name": "jsxs",
+          "via": "vendor-frame-CnSY1sxv.js:Ua",
+          "kind": "react"
+        }
+      ],
+      "exports": {},
+      "sharedExports": [
+        "c"
+      ],
+      "heldByViewTabs": []
+    },
+    {
+      "target": "date-range-selector.mjs",
+      "source": "c71ba149d-CFslfKFj.js",
+      "sourceSha256": "291427da5ff2c3bd7cdeb3334610e6be7e153d5a2782e459365f0143cc43c547",
+      "sha256": "986774e28dadcfd7174d5d4d26d15673d92dad40fbc10ce8fc0698a698a15c00",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "c",
+          "sha256": "45eee604858a1c28004fd73f76211f771045f6b9c9e5078d87b8c34c3d69db09"
+        },
+        {
+          "name": "l",
+          "sha256": "386e19908671e2190c3ba5da5ffc2cdf9445f96bdccc6b2bdd6a5948e7ca94ea"
+        },
+        {
+          "name": "u",
+          "sha256": "b809cb569050f8ab023aaa375d5e9525ffab9a7594ed948645551dafde8b100c"
+        }
+      ],
+      "initializers": [],
+      "imports": [
+        {
+          "local": "J0",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoIsEmpty",
+          "via": "shared-frame-6jtSkIit.js:Zf",
+          "kind": "view-tabs",
+          "original": "J0"
+        },
+        {
+          "local": "J1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged1",
+          "via": "shared-frame-6jtSkIit.js:Qf",
+          "kind": "view-tabs",
+          "original": "J1"
+        },
+        {
+          "local": "J2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged2",
+          "via": "shared-frame-6jtSkIit.js:$f",
+          "kind": "view-tabs",
+          "original": "J2"
+        },
+        {
+          "local": "J4",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged4",
+          "via": "shared-frame-6jtSkIit.js:tp",
+          "kind": "view-tabs",
+          "original": "J4"
+        },
+        {
+          "local": "J5",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged5",
+          "via": "shared-frame-6jtSkIit.js:np",
+          "kind": "view-tabs",
+          "original": "J5"
+        },
+        {
+          "local": "J9",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "reactMemoCache",
+          "via": "shared-frame-6jtSkIit.js:ip",
+          "kind": "view-tabs",
+          "original": "J9"
+        },
+        {
+          "local": "K0",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore0",
+          "via": "shared-frame-6jtSkIit.js:ap",
+          "kind": "view-tabs",
+          "original": "K0"
+        },
+        {
+          "local": "K1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore1",
+          "via": "shared-frame-6jtSkIit.js:op",
+          "kind": "view-tabs",
+          "original": "K1"
+        },
+        {
+          "local": "K2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore2",
+          "via": "shared-frame-6jtSkIit.js:sp",
+          "kind": "view-tabs",
+          "original": "K2"
+        },
+        {
+          "local": "K4",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore4",
+          "via": "shared-frame-6jtSkIit.js:lp",
+          "kind": "view-tabs",
+          "original": "K4"
+        },
+        {
+          "local": "K5",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore5",
+          "via": "shared-frame-6jtSkIit.js:up",
+          "kind": "view-tabs",
+          "original": "K5"
+        },
+        {
+          "local": "a",
+          "from": "./date-field.mjs",
+          "name": "c",
+          "via": "cb499b8fa-BgRV8jkQ.js:t",
+          "kind": "generated"
+        },
+        {
+          "local": "e",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-CnSY1sxv.js:Ha",
+          "kind": "react"
+        },
+        {
+          "local": "i",
+          "from": "../../source-chat-export-adapters.jsx",
+          "name": "useIntl",
+          "via": "vendor-intl-DYfox5Co.js:p",
+          "kind": "adapter",
+          "original": "q"
+        },
+        {
+          "local": "n",
+          "from": "react",
+          "name": "useState",
+          "via": "vendor-frame-CnSY1sxv.js:wo",
+          "kind": "react"
+        },
+        {
+          "local": "o",
+          "from": "./date-range.mjs",
+          "name": "i",
+          "via": "c1751bc30-D9BmGCFy.js:a",
+          "kind": "generated"
+        },
+        {
+          "local": "r",
+          "from": "../../source-chat-export-adapters.jsx",
+          "name": "FormattedMessage",
+          "via": "vendor-intl-DYfox5Co.js:l",
+          "kind": "adapter",
+          "original": "Gt"
+        },
+        {
+          "local": "s",
+          "from": "./date-range.mjs",
+          "name": "a",
+          "via": "c1751bc30-D9BmGCFy.js:i",
+          "kind": "generated"
+        },
+        {
+          "local": "t",
+          "from": "react/jsx-runtime",
+          "name": "jsxs",
+          "via": "vendor-frame-CnSY1sxv.js:Ua",
+          "kind": "react"
+        }
+      ],
+      "exports": {
+        "u": "DateRangeSelector"
+      },
+      "sharedExports": [],
+      "heldByViewTabs": []
+    }
+  ],
+  "callSites": [
+    {
+      "source": "cf400e6a4-BID2ahY5.js",
+      "binding": "lYe",
+      "role": "The \"Custom\" period segment and the range under the period row (a member export: maxDate only)",
+      "sourceSha256": "697a6cd26ac9b3235845443a3ff5cb92c5e8487bc037069a9dcb11a74352f46b",
+      "sha256": "407c26523a5e075c017ab1c3c6c2e16b4405233fe9f160c8f498332247b83580",
+      "features": [
+        "{ value: \"custom\", label: t.formatMessage({ defaultMessage: \"Custom\", id: \"Sjo1P44FYy\" }) }",
+        "f === \"custom\" && y(qO, { fromDate: r, toDate: a, onFromDateChange: i, onToDateChange: o, maxDate: c })"
+      ]
+    },
+    {
+      "source": "cf400e6a4-BID2ahY5.js",
+      "binding": "cYe",
+      "role": "The range defaults (from 180 days before today, to today), its check, and the dates it sends",
+      "sourceSha256": "697a6cd26ac9b3235845443a3ff5cb92c5e8487bc037069a9dcb11a74352f46b",
+      "sha256": "3079cab2388853cb46aed63ccecb4e8ae17c0cf3adecd4e82f4a331c373c02d0",
+      "features": [
+        "e.setDate(e.getDate() - 180)",
+        "p = l ?? c",
+        "m = d ?? s",
+        "(e ? b : _) === \"custom\" && !SIe({ fromDate: p, toDate: m, minDate: e ? c : void 0, maxDate: s })",
+        "r.conversations_start_date = new Date(`${p}T00:00:00`).toISOString();",
+        "e.setDate(e.getDate() + 1), (r.conversations_end_date = e.toISOString())",
+        "customRangeInvalid: S,"
+      ]
+    },
+    {
+      "source": "cf400e6a4-BID2ahY5.js",
+      "binding": "uL",
+      "role": "Export is disabled while the custom range is invalid",
+      "sourceSha256": "697a6cd26ac9b3235845443a3ff5cb92c5e8487bc037069a9dcb11a74352f46b",
+      "sha256": "8093d5cec9d1c2a2953a2e4bd6b66c5356a51af7128507f773d40716a477ead5",
+      "features": [
+        "disabled: a.customRangeInvalid,",
+        "\"data-testid\": \"export-confirm-button\""
+      ]
+    }
+  ],
+  "publicAssets": []
+}

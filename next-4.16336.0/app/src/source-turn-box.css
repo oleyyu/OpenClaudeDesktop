@@ -1,0 +1,8 @@
+/* R4g-turnbox TB-3: the epitaxy Markdown rule the turn box's todo list (cb6930dae Lu, generated/turn-box/todo-list.mjs)
+   relies on. Copied verbatim from 2.42304.0 ion-dist/assets/v1/c19e90103-CuNz46ca.css (unlayered there too); the host
+   does not load that stylesheet. The status icon cell is one line of the todo's text tall.
+   R4i-transcript TR1: the second rule of that sheet TB-3 copied, `.epitaxy-markdown-inherit-color .epitaxy-markdown
+   {color:inherit}`, is not kept: Lu puts `epitaxy-markdown-inherit-color` on the row's text cell, but the host renders a
+   todo's text with SourceInlineRuns (source-turn-box-adapters.jsx TodoMarkdown), which emits no `.epitaxy-markdown`
+   element, so the rule matched nothing; the inline runs take the row's colour by plain inheritance. */
+.epitaxy-markdown-first-line{height:1lh;font-size:var(--chat-body,var(--cds-font-size-body));line-height:var(--chat-leading,var(--cds-leading-body))}

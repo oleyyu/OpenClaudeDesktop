@@ -1,0 +1,27 @@
+/* J4e's card row (3.6556.2 c96d752d0): `${hf} flex min-w-0 flex-col empty:hidden`, hf = c8ba53634
+   ps-[var(--cds-assistant-message-text-inset,0px)]; its margin is the transcript's row gap (.source-message + .source-message). */
+.source-task-events.source-message { display: flex; flex-direction: column; min-width: 0; padding-inline-start: var(--cds-assistant-message-text-inset, 0px); }
+.source-task-events.source-message:empty { display: none; }
+/* L2 (approval-current.js:44262-44296) settled row: group/tool flex flex-col gap-1 py-0 max-w-full items-start text-left
+   rounded-sm, focus-visible:shadow-focus; aue's line: flex min-w-0 items-center gap-1 max-w-full of text-body parts. */
+.source-task-event { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; max-width: 100%; margin: 0; padding: 0; border: 0; border-radius: var(--radius-sm, .25rem); background: none; color: inherit; font: inherit; text-align: left; outline: none; }
+.source-task-event:focus-visible { box-shadow: var(--cds-focus-shadow); }
+.stev-line { display: flex; align-items: center; gap: 4px; min-width: 0; max-width: 100%; font-size: var(--cds-font-size-body); line-height: var(--cds-leading-body); }
+.stev-label { flex-shrink: 0; color: var(--cds-text-secondary); }
+.stev-description { min-width: 0; overflow: hidden; color: var(--cds-text-secondary); text-overflow: ellipsis; white-space: nowrap; }
+.stev-elapsed { flex-shrink: 0; color: var(--cds-text-secondary); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.stev-merged { min-width: 0; color: var(--cds-text-secondary); overflow-wrap: break-word; }
+.stev-part { white-space: nowrap; }
+.stev-part:first-child { white-space: normal; }
+button.source-task-event:hover :is(.stev-label, .stev-description, .stev-elapsed, .stev-merged) { color: var(--cds-text-primary); }
+.stev-label[data-danger], .stev-part[data-danger] { color: var(--cds-text-danger); }
+button.source-task-event:hover .stev-label[data-danger] { color: var(--cds-text-danger); }
+
+/* A workflow agent's question to the main agent (ZCode escalation): the line opens the question and its context. */
+details.source-workflow-question > summary { list-style: none; border-radius: var(--radius-sm, .25rem); outline: none; }
+details.source-workflow-question > summary::-webkit-details-marker { display: none; }
+details.source-workflow-question > summary:focus-visible { box-shadow: var(--cds-focus-shadow); }
+details.source-workflow-question > summary:hover .stev-label { color: var(--cds-text-primary); }
+.stev-question, .stev-context { margin: 0; max-width: 100%; white-space: pre-wrap; overflow-wrap: anywhere; font-size: var(--cds-font-size-body); line-height: var(--cds-leading-body); }
+.stev-question { color: var(--cds-text-primary); }
+.stev-context { color: var(--cds-text-muted); }

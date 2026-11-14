@@ -1,0 +1,2342 @@
+{
+  "referenceVersion": "4.16336.0",
+  "referenceSnapshot": "snapshots/claude-4.16336.0-20261104",
+  "generator": "scripts/extract-artifact-library-v4.mjs",
+  "previous": {
+    "generator": "scripts/extract-artifact-library.mjs",
+    "output": "src/generated/artifact-library",
+    "referenceVersion": "3.6556.2"
+  },
+  "sharedGraph": {
+    "area": "cds-core",
+    "manifestSha256": "06d2026939e5c8992713c2a0dda1b1abc9adffe7a0c223fe3c1e79eecd08d62c"
+  },
+  "linkedAreas": {
+    "routines-shared-v4": "a2a9b9a84b2705e48451025af38eb7582de5bb421c626e6bdf5b067eb8e00c8c",
+    "code-routines-v4": "8dee8be0e689fa69f13ede52d82d01c39c6a62d60940601e86d2c99d30b810a5",
+    "cowork-scheduled-v4": "1af355ba22cc6cee9062edb2710c581d7808d95812d240d343ad995cf96ceb78",
+    "home-chat-cowork": "bc7fc0df32ed47b67714630e32038231d558d74a71af18ed2871ce24f0b684eb",
+    "transcript-rows-v4": "78a6fba1cc34e50cbd11f242247a0361851ad33988ef2df04afc104e4853d7fe",
+    "frame-sidebar-nav": "f050559d8d4736a10e502efd30f166d28900e800b146c6c8749608a326966487"
+  },
+  "roots": [
+    {
+      "file": "c230724a2-qhV7Crzy.js",
+      "local": "vc",
+      "name": "ArtifactLibraryPage",
+      "export": null,
+      "declarationSha256": "240ac6c427b3156537e45cb115596a9d9a1722d2ff6536da27e6de3dfcdfa20f",
+      "pinned": true
+    },
+    {
+      "file": "c230724a2-qhV7Crzy.js",
+      "local": "Fs",
+      "name": "ArtifactMenuTrigger",
+      "export": "Mn",
+      "declarationSha256": "0e0c08c079493378f128488c95335fadb68e422586a75cde8b5a96377d750452",
+      "pinned": true
+    },
+    {
+      "file": "c33ae67d6-D8ma6JPd.js",
+      "local": "B",
+      "name": "ArtifactThumbnail",
+      "export": "r",
+      "declarationSha256": "39b4cf79251808ec0dce24cbfcfe1c2114c0a6d437d438326c62355d33b39ea3",
+      "pinned": true
+    },
+    {
+      "file": "c33ae67d6-D8ma6JPd.js",
+      "local": "P",
+      "name": "ArtifactGlyph",
+      "export": null,
+      "declarationSha256": "be48b1d8874ec0a73c33030ec2637b5fa40a70b5681c5fb437dba3955c9a85f4",
+      "pinned": true
+    },
+    {
+      "file": "c2bb74286-pk_O67sD.js",
+      "local": "mt",
+      "name": "ArtifactTitle",
+      "export": "r",
+      "declarationSha256": "1556800a812054e0b3f5ca3e3b5b7859ac832425f58a9720ae7b78963b561c14",
+      "pinned": true
+    },
+    {
+      "file": "c2bb74286-pk_O67sD.js",
+      "local": "bt",
+      "name": "ArtifactAction",
+      "export": null,
+      "declarationSha256": "5119cb818fed07db906ec206b1c4361f90d6816eded34a34ddc355baf664fb74",
+      "pinned": true
+    },
+    {
+      "file": "shared-38-DyF0_Fim.js",
+      "local": "xa",
+      "name": "artifactFrameClass",
+      "export": "K",
+      "declarationSha256": "818ed6bf4eff406049fd8b8497209c8309ab35820a8a9dae08191a6026f21e7c",
+      "pinned": true
+    },
+    {
+      "file": "shared-38-DyF0_Fim.js",
+      "local": "Sa",
+      "name": "artifactHeaderClass",
+      "export": "G",
+      "declarationSha256": "c0300c699ffb95318f7f7b1bb82e82fe8d5e296202014a429221257abcb16978",
+      "pinned": true
+    },
+    {
+      "file": "shared-38-DyF0_Fim.js",
+      "local": "Ca",
+      "name": "artifactBodyClass",
+      "export": "U",
+      "declarationSha256": "8e9dbdae5dd532a42578cd993d06299187cbf57bfd2847ce1c9f918853401595",
+      "pinned": true
+    }
+  ],
+  "inner": [
+    {
+      "key": "c230724a2-qhV7Crzy.js#Ns",
+      "sha256": "1805b0133c842f1b6a71fb2bc8a1c32a5f7d0483dd714a482dfc81f2d1b408ee"
+    },
+    {
+      "key": "c230724a2-qhV7Crzy.js#Ps",
+      "sha256": "decd3c476754c34e03e2e384890b187b7f7d0362d9bcd6d43389ad348426d22f"
+    }
+  ],
+  "adapters": [
+    {
+      "original": "shared-140-DfG6VwpK.js#zo",
+      "name": "artifactMenuItemsLazy",
+      "hostAdapter": "src/source-artifact-library-v4-adapters.jsx",
+      "declarationSha256": "a70dbd2a2c37565af70dc4ef530c05f82c47a3294c0cda6003d874e70cb58367",
+      "pinned": true,
+      "difference": "The official artifact menu chunk (ce9de3a9d: rename, duplicate, copy link, delete over the claude.ai artifact APIs) is not loaded; the idle preload has no handle."
+    },
+    {
+      "original": "shared-140-DfG6VwpK.js#wo",
+      "name": "artifactMenuActions",
+      "hostAdapter": "src/source-artifact-library-v4-adapters.jsx",
+      "declarationSha256": "d57484721c3c0ba2efe93190397db849759a7d2518f1e2f136eaba4e3396e61f",
+      "pinned": true,
+      "difference": "The official per-item action list (claude.ai artifact APIs) is empty on the host; items bring their local actions as menuExtras."
+    },
+    {
+      "original": "shared-140-DfG6VwpK.js#Xo",
+      "name": "ArtifactItemMenu",
+      "hostAdapter": "src/source-artifact-library-v4-adapters.jsx",
+      "declarationSha256": "6deb52ff52cb27563a69ba2473e8495e5317c602b0f125fa75906eb84b2bdfeb",
+      "pinned": true,
+      "difference": "The official artifact actions (claude.ai artifact APIs) are not offered; the menu lists only the host item's menuExtras, in the cds-core CdsContextMenu (right click) or CdsDropdown (the official Fs trigger)."
+    },
+    {
+      "original": "c1b2dcb06-Cb9ZmAdr.js#v",
+      "name": "useArtifactOwners",
+      "hostAdapter": "src/source-artifact-library-v4-adapters.jsx",
+      "declarationSha256": "0aff60cb11bb56e0644767941c4e5c1c80fd7b23055526fdaf6c53357d6f9364",
+      "pinned": true,
+      "difference": "Shared-artifact owner names (org members query) are not available: the host has no account; every row answers undefined, as for a card of your own."
+    },
+    {
+      "original": "c33ae67d6-D8ma6JPd.js#j",
+      "name": "ChatArtifactPreview",
+      "hostAdapter": "src/source-artifact-library-v4-adapters.jsx",
+      "declarationSha256": "5f800cf622d0d054c749ba8f9dc4c1af3bc196f1ce206b71242ee83fd5c839c2",
+      "pinned": true,
+      "difference": "claude.ai chat artifact previews (published screenshot, markdown excerpt) are not shown: host items are local cowork files (source \"cowork\"); null."
+    },
+    {
+      "original": "shared-25-D-aF0gt9.js#Ky",
+      "name": "RouterLink",
+      "hostAdapter": "src/source-routines-shared-adapters.jsx",
+      "declarationSha256": "4884879fdd5f05cd45263c786ab487acc75ba4998798ae34e579b75402024130",
+      "pinned": true,
+      "difference": "In-app links go through the host router (RoutinesSharedHost navigate), as for the 3.6556.2 graph."
+    },
+    {
+      "original": "shared-5-u8kha2eH.js#bC",
+      "name": "beginStarDrag",
+      "hostAdapter": "src/source-artifact-library-v4-adapters.jsx",
+      "declarationSha256": "f7ed70d298904d9d06eb0c828acf5ca67a0d59daa3a4aa22b05e51e37db6851b",
+      "pinned": true,
+      "difference": "Dragging a card onto the sidebar Starred list is not offered: host items are local files (source \"cowork\" / \"chat\", never \"frame\") and GrowthBook __gb__2021363468 is not served, so the official drag start answers false."
+    },
+    {
+      "original": "vendor-intl-BJgYK7RA.js#q",
+      "name": "useIntl",
+      "hostAdapter": "src/source-routines-shared-adapters.jsx",
+      "declarationSha256": "edf793bc7b87ae9a38cea39d25d752a5bcfef1d492e06a2219e120311feaaec0",
+      "pinned": true,
+      "difference": "react-intl over the local catalog."
+    },
+    {
+      "original": "vendor-intl-BJgYK7RA.js#Gt",
+      "name": "FormattedMessage",
+      "hostAdapter": "src/source-routines-shared-adapters.jsx",
+      "declarationSha256": "bde2ec1630e0a679fa4135cf75389568e77fa98fdcb08519af8104d5306ff5b5",
+      "pinned": true,
+      "difference": "react-intl over the local catalog."
+    }
+  ],
+  "imports": [
+    {
+      "module": "shared-123-1Hc1RTKl.mjs",
+      "local": "J1",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "J1",
+      "via": "shared-frame-CJdE5Ria.js:lm"
+    },
+    {
+      "module": "shared-123-1Hc1RTKl.mjs",
+      "local": "J9",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "J9",
+      "via": "shared-frame-CJdE5Ria.js:hm"
+    },
+    {
+      "module": "shared-123-1Hc1RTKl.mjs",
+      "local": "K1",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "K1",
+      "via": "shared-frame-CJdE5Ria.js:_m"
+    },
+    {
+      "module": "shared-123-1Hc1RTKl.mjs",
+      "local": "x",
+      "kind": "react",
+      "from": "react",
+      "name": "useState",
+      "via": "vendor-frame-BckkO60Y.js:To"
+    },
+    {
+      "module": "shared-26-B-POtn5S.mjs",
+      "local": "Cr",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-123.mjs",
+      "name": "hu",
+      "via": "shared-123-1Hc1RTKl.js:uw"
+    },
+    {
+      "module": "shared-26-B-POtn5S.mjs",
+      "local": "J1",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "J1",
+      "via": "shared-frame-CJdE5Ria.js:lm"
+    },
+    {
+      "module": "shared-26-B-POtn5S.mjs",
+      "local": "J9",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "J9",
+      "via": "shared-frame-CJdE5Ria.js:hm"
+    },
+    {
+      "module": "shared-26-B-POtn5S.mjs",
+      "local": "K1",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "K1",
+      "via": "shared-frame-CJdE5Ria.js:_m"
+    },
+    {
+      "module": "shared-92-BOgyxePb.mjs",
+      "local": "Zu",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-92.mjs",
+      "name": "Zu",
+      "via": "shared-92-BOgyxePb.js#Zu"
+    },
+    {
+      "module": "shared-183-B2N6Zy4J.mjs",
+      "local": "F",
+      "kind": "react",
+      "from": "react",
+      "name": "useRef",
+      "via": "vendor-frame-BckkO60Y.js:wo"
+    },
+    {
+      "module": "shared-183-B2N6Zy4J.mjs",
+      "local": "I1",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "I1",
+      "via": "shared-frame-CJdE5Ria.js:rm"
+    },
+    {
+      "module": "shared-183-B2N6Zy4J.mjs",
+      "local": "J1",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "J1",
+      "via": "shared-frame-CJdE5Ria.js:lm"
+    },
+    {
+      "module": "shared-183-B2N6Zy4J.mjs",
+      "local": "J5",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "J5",
+      "via": "shared-frame-CJdE5Ria.js:pm"
+    },
+    {
+      "module": "shared-183-B2N6Zy4J.mjs",
+      "local": "J9",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "J9",
+      "via": "shared-frame-CJdE5Ria.js:hm"
+    },
+    {
+      "module": "shared-183-B2N6Zy4J.mjs",
+      "local": "K1",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "K1",
+      "via": "shared-frame-CJdE5Ria.js:_m"
+    },
+    {
+      "module": "shared-183-B2N6Zy4J.mjs",
+      "local": "K5",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "K5",
+      "via": "shared-frame-CJdE5Ria.js:xm"
+    },
+    {
+      "module": "shared-183-B2N6Zy4J.mjs",
+      "local": "N",
+      "kind": "react",
+      "from": "react",
+      "name": "startTransition",
+      "via": "vendor-frame-BckkO60Y.js:uo"
+    },
+    {
+      "module": "shared-183-B2N6Zy4J.mjs",
+      "local": "b",
+      "kind": "react",
+      "from": "react-dom",
+      "name": "flushSync",
+      "via": "vendor-frame-BckkO60Y.js:La"
+    },
+    {
+      "module": "shared-183-B2N6Zy4J.mjs",
+      "local": "bu",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-92.mjs",
+      "name": "ad",
+      "via": "shared-92-BOgyxePb.js:Lb"
+    },
+    {
+      "module": "shared-183-B2N6Zy4J.mjs",
+      "local": "ee",
+      "kind": "react",
+      "from": "react",
+      "name": "useLayoutEffect",
+      "via": "vendor-frame-BckkO60Y.js:xo"
+    },
+    {
+      "module": "shared-183-B2N6Zy4J.mjs",
+      "local": "x",
+      "kind": "react",
+      "from": "react",
+      "name": "useState",
+      "via": "vendor-frame-BckkO60Y.js:To"
+    },
+    {
+      "module": "shared-183-B2N6Zy4J.mjs",
+      "local": "xJ",
+      "kind": "linked",
+      "from": "../home-chat-cowork/shared-183.mjs",
+      "name": "xJ",
+      "via": "shared-183-B2N6Zy4J.js#xJ"
+    },
+    {
+      "module": "shared-9-BgdM6Y1f.mjs",
+      "local": "F",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "useCdsDensity",
+      "via": "shared-frame-CJdE5Ria.js:Ff"
+    },
+    {
+      "module": "shared-9-BgdM6Y1f.mjs",
+      "local": "I1",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "I1",
+      "via": "shared-frame-CJdE5Ria.js:rm"
+    },
+    {
+      "module": "shared-9-BgdM6Y1f.mjs",
+      "local": "I3",
+      "kind": "linked",
+      "from": "../home-chat-cowork/shared-frame.mjs",
+      "name": "I3",
+      "via": "shared-frame-CJdE5Ria.js:am"
+    },
+    {
+      "module": "shared-9-BgdM6Y1f.mjs",
+      "local": "I4",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "I4",
+      "via": "shared-frame-CJdE5Ria.js:om"
+    },
+    {
+      "module": "shared-9-BgdM6Y1f.mjs",
+      "local": "J0",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "J0",
+      "via": "shared-frame-CJdE5Ria.js:cm"
+    },
+    {
+      "module": "shared-9-BgdM6Y1f.mjs",
+      "local": "J1",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "J1",
+      "via": "shared-frame-CJdE5Ria.js:lm"
+    },
+    {
+      "module": "shared-9-BgdM6Y1f.mjs",
+      "local": "J2",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "J2",
+      "via": "shared-frame-CJdE5Ria.js:um"
+    },
+    {
+      "module": "shared-9-BgdM6Y1f.mjs",
+      "local": "J3",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "J3",
+      "via": "shared-frame-CJdE5Ria.js:dm"
+    },
+    {
+      "module": "shared-9-BgdM6Y1f.mjs",
+      "local": "J4",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "J4",
+      "via": "shared-frame-CJdE5Ria.js:fm"
+    },
+    {
+      "module": "shared-9-BgdM6Y1f.mjs",
+      "local": "J9",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "J9",
+      "via": "shared-frame-CJdE5Ria.js:hm"
+    },
+    {
+      "module": "shared-9-BgdM6Y1f.mjs",
+      "local": "K0",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "K0",
+      "via": "shared-frame-CJdE5Ria.js:gm"
+    },
+    {
+      "module": "shared-9-BgdM6Y1f.mjs",
+      "local": "K1",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "K1",
+      "via": "shared-frame-CJdE5Ria.js:_m"
+    },
+    {
+      "module": "shared-9-BgdM6Y1f.mjs",
+      "local": "K3",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "K3",
+      "via": "shared-frame-CJdE5Ria.js:ym"
+    },
+    {
+      "module": "shared-9-BgdM6Y1f.mjs",
+      "local": "K4",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "K4",
+      "via": "shared-frame-CJdE5Ria.js:bm"
+    },
+    {
+      "module": "shared-9-BgdM6Y1f.mjs",
+      "local": "Os",
+      "kind": "linked",
+      "from": "../frame-sidebar-nav/shared-3.mjs",
+      "name": "ed",
+      "via": "shared-3-IQTrO7Gx.js:Vl"
+    },
+    {
+      "module": "shared-9-BgdM6Y1f.mjs",
+      "local": "Z2",
+      "kind": "linked",
+      "from": "../home-chat-cowork/shared-frame.mjs",
+      "name": "Z2",
+      "via": "shared-frame-CJdE5Ria.js:Cm"
+    },
+    {
+      "module": "shared-9-BgdM6Y1f.mjs",
+      "local": "a",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "jsx",
+      "via": "vendor-frame-BckkO60Y.js:Ga"
+    },
+    {
+      "module": "shared-9-BgdM6Y1f.mjs",
+      "local": "fe",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "bs",
+      "via": "shared-frame-CJdE5Ria.js:df"
+    },
+    {
+      "module": "shared-9-BgdM6Y1f.mjs",
+      "local": "fs",
+      "kind": "linked",
+      "from": "../frame-sidebar-nav/shared-3.mjs",
+      "name": "Wu",
+      "via": "shared-3-IQTrO7Gx.js:Fl"
+    },
+    {
+      "module": "shared-9-BgdM6Y1f.mjs",
+      "local": "i",
+      "kind": "shared-graph",
+      "from": "../cds-core/vendor-frame.mjs",
+      "name": "clsx",
+      "via": "vendor-frame-BckkO60Y.js:Fa"
+    },
+    {
+      "module": "shared-9-BgdM6Y1f.mjs",
+      "local": "me",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "CdsIcon",
+      "via": "shared-frame-CJdE5Ria.js:lf"
+    },
+    {
+      "module": "shared-18-Cfqwgjc5.mjs",
+      "local": "A",
+      "kind": "react",
+      "from": "react",
+      "name": "useContext",
+      "via": "vendor-frame-BckkO60Y.js:po"
+    },
+    {
+      "module": "shared-18-Cfqwgjc5.mjs",
+      "local": "A_",
+      "kind": "linked",
+      "from": "../code-routines-v4/shared-9-BgdM6Y1f.mjs",
+      "name": "lm",
+      "via": "shared-9-BgdM6Y1f.js:vn"
+    },
+    {
+      "module": "shared-18-Cfqwgjc5.mjs",
+      "local": "I",
+      "kind": "react",
+      "from": "react",
+      "name": "useLayoutEffect",
+      "via": "vendor-frame-BckkO60Y.js:xo"
+    },
+    {
+      "module": "shared-18-Cfqwgjc5.mjs",
+      "local": "J0",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "J0",
+      "via": "shared-frame-CJdE5Ria.js:cm"
+    },
+    {
+      "module": "shared-18-Cfqwgjc5.mjs",
+      "local": "J1",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "J1",
+      "via": "shared-frame-CJdE5Ria.js:lm"
+    },
+    {
+      "module": "shared-18-Cfqwgjc5.mjs",
+      "local": "J2",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "J2",
+      "via": "shared-frame-CJdE5Ria.js:um"
+    },
+    {
+      "module": "shared-18-Cfqwgjc5.mjs",
+      "local": "J3",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "J3",
+      "via": "shared-frame-CJdE5Ria.js:dm"
+    },
+    {
+      "module": "shared-18-Cfqwgjc5.mjs",
+      "local": "J5",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "J5",
+      "via": "shared-frame-CJdE5Ria.js:pm"
+    },
+    {
+      "module": "shared-18-Cfqwgjc5.mjs",
+      "local": "J9",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "J9",
+      "via": "shared-frame-CJdE5Ria.js:hm"
+    },
+    {
+      "module": "shared-18-Cfqwgjc5.mjs",
+      "local": "K0",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "K0",
+      "via": "shared-frame-CJdE5Ria.js:gm"
+    },
+    {
+      "module": "shared-18-Cfqwgjc5.mjs",
+      "local": "K1",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "K1",
+      "via": "shared-frame-CJdE5Ria.js:_m"
+    },
+    {
+      "module": "shared-18-Cfqwgjc5.mjs",
+      "local": "K2",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "K2",
+      "via": "shared-frame-CJdE5Ria.js:vm"
+    },
+    {
+      "module": "shared-18-Cfqwgjc5.mjs",
+      "local": "K3",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "K3",
+      "via": "shared-frame-CJdE5Ria.js:ym"
+    },
+    {
+      "module": "shared-18-Cfqwgjc5.mjs",
+      "local": "K5",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "K5",
+      "via": "shared-frame-CJdE5Ria.js:xm"
+    },
+    {
+      "module": "shared-18-Cfqwgjc5.mjs",
+      "local": "O",
+      "kind": "react",
+      "from": "react",
+      "name": "createContext",
+      "via": "vendor-frame-BckkO60Y.js:no"
+    },
+    {
+      "module": "shared-18-Cfqwgjc5.mjs",
+      "local": "P",
+      "kind": "react",
+      "from": "react",
+      "name": "useRef",
+      "via": "vendor-frame-BckkO60Y.js:wo"
+    },
+    {
+      "module": "shared-18-Cfqwgjc5.mjs",
+      "local": "Z",
+      "kind": "adapter",
+      "from": "../../source-artifact-library-v4-adapters.jsx",
+      "name": "FormattedMessage",
+      "via": "vendor-intl-BJgYK7RA.js:l"
+    },
+    {
+      "module": "shared-18-Cfqwgjc5.mjs",
+      "local": "Zn",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-25.mjs",
+      "name": "getResizeObserverClass",
+      "via": "shared-25-D-aF0gt9.js:Up"
+    },
+    {
+      "module": "shared-18-Cfqwgjc5.mjs",
+      "local": "b",
+      "kind": "react",
+      "from": "react",
+      "name": "useState",
+      "via": "vendor-frame-BckkO60Y.js:To"
+    },
+    {
+      "module": "shared-18-Cfqwgjc5.mjs",
+      "local": "g",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "jsxs",
+      "via": "vendor-frame-BckkO60Y.js:Ka"
+    },
+    {
+      "module": "shared-18-Cfqwgjc5.mjs",
+      "local": "m",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "jsx",
+      "via": "vendor-frame-BckkO60Y.js:Ga"
+    },
+    {
+      "module": "shared-18-Cfqwgjc5.mjs",
+      "local": "p",
+      "kind": "shared-graph",
+      "from": "../cds-core/vendor-frame.mjs",
+      "name": "clsx",
+      "via": "vendor-frame-BckkO60Y.js:Fa"
+    },
+    {
+      "module": "shared-18-Cfqwgjc5.mjs",
+      "local": "q",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "CdsSkeleton",
+      "via": "shared-frame-CJdE5Ria.js:Ou"
+    },
+    {
+      "module": "shared-5-u8kha2eH.mjs",
+      "local": "J0",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "J0",
+      "via": "shared-frame-CJdE5Ria.js:cm"
+    },
+    {
+      "module": "shared-5-u8kha2eH.mjs",
+      "local": "J9",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "J9",
+      "via": "shared-frame-CJdE5Ria.js:hm"
+    },
+    {
+      "module": "shared-5-u8kha2eH.mjs",
+      "local": "K0",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "K0",
+      "via": "shared-frame-CJdE5Ria.js:gm"
+    },
+    {
+      "module": "shared-5-u8kha2eH.mjs",
+      "local": "Nl",
+      "kind": "adapter",
+      "from": "../../source-artifact-library-v4-adapters.jsx",
+      "name": "FormattedMessage",
+      "via": "vendor-intl-BJgYK7RA.js:l"
+    },
+    {
+      "module": "shared-5-u8kha2eH.mjs",
+      "local": "d",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "jsx",
+      "via": "vendor-frame-BckkO60Y.js:Ga"
+    },
+    {
+      "module": "shared-5-u8kha2eH.mjs",
+      "local": "jl",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-vendor-intl.mjs",
+      "name": "tn",
+      "via": "vendor-intl-BJgYK7RA.js:f"
+    },
+    {
+      "module": "c0e0087fe-qRckTYK0.mjs",
+      "local": "J1",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "J1",
+      "via": "shared-frame-CJdE5Ria.js:lm"
+    },
+    {
+      "module": "c0e0087fe-qRckTYK0.mjs",
+      "local": "J3",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "J3",
+      "via": "shared-frame-CJdE5Ria.js:dm"
+    },
+    {
+      "module": "c0e0087fe-qRckTYK0.mjs",
+      "local": "J4",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "J4",
+      "via": "shared-frame-CJdE5Ria.js:fm"
+    },
+    {
+      "module": "c0e0087fe-qRckTYK0.mjs",
+      "local": "J5",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "J5",
+      "via": "shared-frame-CJdE5Ria.js:pm"
+    },
+    {
+      "module": "c0e0087fe-qRckTYK0.mjs",
+      "local": "J9",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "J9",
+      "via": "shared-frame-CJdE5Ria.js:hm"
+    },
+    {
+      "module": "c0e0087fe-qRckTYK0.mjs",
+      "local": "K1",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "K1",
+      "via": "shared-frame-CJdE5Ria.js:_m"
+    },
+    {
+      "module": "c0e0087fe-qRckTYK0.mjs",
+      "local": "K4",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "K4",
+      "via": "shared-frame-CJdE5Ria.js:bm"
+    },
+    {
+      "module": "c0e0087fe-qRckTYK0.mjs",
+      "local": "K5",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "K5",
+      "via": "shared-frame-CJdE5Ria.js:xm"
+    },
+    {
+      "module": "c0e0087fe-qRckTYK0.mjs",
+      "local": "e",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "jsx",
+      "via": "vendor-frame-BckkO60Y.js:Ga"
+    },
+    {
+      "module": "c0e0087fe-qRckTYK0.mjs",
+      "local": "i",
+      "kind": "react",
+      "from": "react",
+      "name": "useRef",
+      "via": "vendor-frame-BckkO60Y.js:wo"
+    },
+    {
+      "module": "c0e0087fe-qRckTYK0.mjs",
+      "local": "n",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "Fragment",
+      "via": "vendor-frame-BckkO60Y.js:Wa"
+    },
+    {
+      "module": "c0e0087fe-qRckTYK0.mjs",
+      "local": "r",
+      "kind": "react",
+      "from": "react",
+      "name": "useEffect",
+      "via": "vendor-frame-BckkO60Y.js:go"
+    },
+    {
+      "module": "c0e0087fe-qRckTYK0.mjs",
+      "local": "t",
+      "kind": "react",
+      "from": "react",
+      "name": "useState",
+      "via": "vendor-frame-BckkO60Y.js:To"
+    },
+    {
+      "module": "c33ae67d6-D8ma6JPd.mjs",
+      "local": "I1",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "I1",
+      "via": "shared-frame-CJdE5Ria.js:rm"
+    },
+    {
+      "module": "c33ae67d6-D8ma6JPd.mjs",
+      "local": "I3",
+      "kind": "linked",
+      "from": "../home-chat-cowork/shared-frame.mjs",
+      "name": "I3",
+      "via": "shared-frame-CJdE5Ria.js:am"
+    },
+    {
+      "module": "c33ae67d6-D8ma6JPd.mjs",
+      "local": "I4",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "I4",
+      "via": "shared-frame-CJdE5Ria.js:om"
+    },
+    {
+      "module": "c33ae67d6-D8ma6JPd.mjs",
+      "local": "I5",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "I5",
+      "via": "shared-frame-CJdE5Ria.js:sm"
+    },
+    {
+      "module": "c33ae67d6-D8ma6JPd.mjs",
+      "local": "J0",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "J0",
+      "via": "shared-frame-CJdE5Ria.js:cm"
+    },
+    {
+      "module": "c33ae67d6-D8ma6JPd.mjs",
+      "local": "J1",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "J1",
+      "via": "shared-frame-CJdE5Ria.js:lm"
+    },
+    {
+      "module": "c33ae67d6-D8ma6JPd.mjs",
+      "local": "J2",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "J2",
+      "via": "shared-frame-CJdE5Ria.js:um"
+    },
+    {
+      "module": "c33ae67d6-D8ma6JPd.mjs",
+      "local": "J3",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "J3",
+      "via": "shared-frame-CJdE5Ria.js:dm"
+    },
+    {
+      "module": "c33ae67d6-D8ma6JPd.mjs",
+      "local": "J4",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "J4",
+      "via": "shared-frame-CJdE5Ria.js:fm"
+    },
+    {
+      "module": "c33ae67d6-D8ma6JPd.mjs",
+      "local": "J5",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "J5",
+      "via": "shared-frame-CJdE5Ria.js:pm"
+    },
+    {
+      "module": "c33ae67d6-D8ma6JPd.mjs",
+      "local": "J9",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "J9",
+      "via": "shared-frame-CJdE5Ria.js:hm"
+    },
+    {
+      "module": "c33ae67d6-D8ma6JPd.mjs",
+      "local": "K0",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "K0",
+      "via": "shared-frame-CJdE5Ria.js:gm"
+    },
+    {
+      "module": "c33ae67d6-D8ma6JPd.mjs",
+      "local": "K1",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "K1",
+      "via": "shared-frame-CJdE5Ria.js:_m"
+    },
+    {
+      "module": "c33ae67d6-D8ma6JPd.mjs",
+      "local": "K2",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "K2",
+      "via": "shared-frame-CJdE5Ria.js:vm"
+    },
+    {
+      "module": "c33ae67d6-D8ma6JPd.mjs",
+      "local": "K3",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "K3",
+      "via": "shared-frame-CJdE5Ria.js:ym"
+    },
+    {
+      "module": "c33ae67d6-D8ma6JPd.mjs",
+      "local": "S",
+      "kind": "adapter",
+      "from": "../../source-artifact-library-v4-adapters.jsx",
+      "name": "useIntl",
+      "via": "vendor-intl-BJgYK7RA.js:p"
+    },
+    {
+      "module": "c33ae67d6-D8ma6JPd.mjs",
+      "local": "Z1",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "Z1",
+      "via": "shared-frame-CJdE5Ria.js:Sm"
+    },
+    {
+      "module": "c33ae67d6-D8ma6JPd.mjs",
+      "local": "Z2",
+      "kind": "linked",
+      "from": "../home-chat-cowork/shared-frame.mjs",
+      "name": "Z2",
+      "via": "shared-frame-CJdE5Ria.js:Cm"
+    },
+    {
+      "module": "c33ae67d6-D8ma6JPd.mjs",
+      "local": "a",
+      "kind": "react",
+      "from": "react",
+      "name": "useState",
+      "via": "vendor-frame-BckkO60Y.js:To"
+    },
+    {
+      "module": "c33ae67d6-D8ma6JPd.mjs",
+      "local": "b",
+      "kind": "linked",
+      "from": "../frame-sidebar-nav/shared-3.mjs",
+      "name": "yd",
+      "via": "shared-3-IQTrO7Gx.js:bl"
+    },
+    {
+      "module": "c33ae67d6-D8ma6JPd.mjs",
+      "local": "c",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "useCdsOwnerWindowAnchor",
+      "via": "shared-frame-CJdE5Ria.js:Kf"
+    },
+    {
+      "module": "c33ae67d6-D8ma6JPd.mjs",
+      "local": "d",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "CdsIcon",
+      "via": "shared-frame-CJdE5Ria.js:lf"
+    },
+    {
+      "module": "c33ae67d6-D8ma6JPd.mjs",
+      "local": "e",
+      "kind": "shared-graph",
+      "from": "../cds-core/vendor-frame.mjs",
+      "name": "clsx",
+      "via": "vendor-frame-BckkO60Y.js:Fa"
+    },
+    {
+      "module": "c33ae67d6-D8ma6JPd.mjs",
+      "local": "f",
+      "kind": "linked",
+      "from": "../cowork-scheduled-v4/shared-25-D-aF0gt9.mjs",
+      "name": "yd",
+      "via": "shared-25-D-aF0gt9.js:Bp"
+    },
+    {
+      "module": "c33ae67d6-D8ma6JPd.mjs",
+      "local": "g",
+      "kind": "adapter",
+      "from": "../../source-artifact-library-v4-adapters.jsx",
+      "name": "beginStarDrag",
+      "via": "shared-5-u8kha2eH.js:jd"
+    },
+    {
+      "module": "c33ae67d6-D8ma6JPd.mjs",
+      "local": "i",
+      "kind": "react",
+      "from": "react-dom",
+      "name": "flushSync",
+      "via": "vendor-frame-BckkO60Y.js:La"
+    },
+    {
+      "module": "c33ae67d6-D8ma6JPd.mjs",
+      "local": "j",
+      "kind": "adapter",
+      "from": "../../source-artifact-library-v4-adapters.jsx",
+      "name": "ChatArtifactPreview",
+      "via": "c33ae67d6-D8ma6JPd.js#j"
+    },
+    {
+      "module": "c33ae67d6-D8ma6JPd.mjs",
+      "local": "l",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "CdsSurface",
+      "via": "shared-frame-CJdE5Ria.js:ed"
+    },
+    {
+      "module": "c33ae67d6-D8ma6JPd.mjs",
+      "local": "m",
+      "kind": "linked",
+      "from": "../cowork-scheduled-v4/shared-25-D-aF0gt9.mjs",
+      "name": "vd",
+      "via": "shared-25-D-aF0gt9.js:Wp"
+    },
+    {
+      "module": "c33ae67d6-D8ma6JPd.mjs",
+      "local": "n",
+      "kind": "react",
+      "from": "react-dom",
+      "name": "createPortal",
+      "via": "vendor-frame-BckkO60Y.js:Ia"
+    },
+    {
+      "module": "c33ae67d6-D8ma6JPd.mjs",
+      "local": "o",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "Fragment",
+      "via": "vendor-frame-BckkO60Y.js:Wa"
+    },
+    {
+      "module": "c33ae67d6-D8ma6JPd.mjs",
+      "local": "p",
+      "kind": "adapter",
+      "from": "../../source-artifact-library-v4-adapters.jsx",
+      "name": "RouterLink",
+      "via": "shared-25-D-aF0gt9.js:Pu"
+    },
+    {
+      "module": "c33ae67d6-D8ma6JPd.mjs",
+      "local": "r",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "jsxs",
+      "via": "vendor-frame-BckkO60Y.js:Ka"
+    },
+    {
+      "module": "c33ae67d6-D8ma6JPd.mjs",
+      "local": "s",
+      "kind": "react",
+      "from": "react",
+      "name": "useRef",
+      "via": "vendor-frame-BckkO60Y.js:wo"
+    },
+    {
+      "module": "c33ae67d6-D8ma6JPd.mjs",
+      "local": "t",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "jsx",
+      "via": "vendor-frame-BckkO60Y.js:Ga"
+    },
+    {
+      "module": "c33ae67d6-D8ma6JPd.mjs",
+      "local": "u",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "CdsPortalRoot",
+      "via": "shared-frame-CJdE5Ria.js:gd"
+    },
+    {
+      "module": "c33ae67d6-D8ma6JPd.mjs",
+      "local": "x",
+      "kind": "linked",
+      "from": "../frame-sidebar-nav/shared-3.mjs",
+      "name": "sd",
+      "via": "shared-3-IQTrO7Gx.js:wl"
+    },
+    {
+      "module": "c33ae67d6-D8ma6JPd.mjs",
+      "local": "y",
+      "kind": "linked",
+      "from": "../frame-sidebar-nav/shared-3.mjs",
+      "name": "ed",
+      "via": "shared-3-IQTrO7Gx.js:Vl"
+    },
+    {
+      "module": "cff9648a4-G8f3hGry.mjs",
+      "local": "D",
+      "kind": "linked",
+      "from": "../cowork-scheduled-v4/c90d7fd86-iWqdaSNP.mjs",
+      "name": "t",
+      "via": "c90d7fd86-iWqdaSNP.js:t"
+    },
+    {
+      "module": "cff9648a4-G8f3hGry.mjs",
+      "local": "I1",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "I1",
+      "via": "shared-frame-CJdE5Ria.js:rm"
+    },
+    {
+      "module": "cff9648a4-G8f3hGry.mjs",
+      "local": "I2",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "I2",
+      "via": "shared-frame-CJdE5Ria.js:im"
+    },
+    {
+      "module": "cff9648a4-G8f3hGry.mjs",
+      "local": "I3",
+      "kind": "linked",
+      "from": "../home-chat-cowork/shared-frame.mjs",
+      "name": "I3",
+      "via": "shared-frame-CJdE5Ria.js:am"
+    },
+    {
+      "module": "cff9648a4-G8f3hGry.mjs",
+      "local": "I4",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "I4",
+      "via": "shared-frame-CJdE5Ria.js:om"
+    },
+    {
+      "module": "cff9648a4-G8f3hGry.mjs",
+      "local": "J0",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "J0",
+      "via": "shared-frame-CJdE5Ria.js:cm"
+    },
+    {
+      "module": "cff9648a4-G8f3hGry.mjs",
+      "local": "J1",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "J1",
+      "via": "shared-frame-CJdE5Ria.js:lm"
+    },
+    {
+      "module": "cff9648a4-G8f3hGry.mjs",
+      "local": "J2",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "J2",
+      "via": "shared-frame-CJdE5Ria.js:um"
+    },
+    {
+      "module": "cff9648a4-G8f3hGry.mjs",
+      "local": "J3",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "J3",
+      "via": "shared-frame-CJdE5Ria.js:dm"
+    },
+    {
+      "module": "cff9648a4-G8f3hGry.mjs",
+      "local": "J4",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "J4",
+      "via": "shared-frame-CJdE5Ria.js:fm"
+    },
+    {
+      "module": "cff9648a4-G8f3hGry.mjs",
+      "local": "J5",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "J5",
+      "via": "shared-frame-CJdE5Ria.js:pm"
+    },
+    {
+      "module": "cff9648a4-G8f3hGry.mjs",
+      "local": "J8",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "J8",
+      "via": "shared-frame-CJdE5Ria.js:mm"
+    },
+    {
+      "module": "cff9648a4-G8f3hGry.mjs",
+      "local": "J9",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "J9",
+      "via": "shared-frame-CJdE5Ria.js:hm"
+    },
+    {
+      "module": "cff9648a4-G8f3hGry.mjs",
+      "local": "K0",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "K0",
+      "via": "shared-frame-CJdE5Ria.js:gm"
+    },
+    {
+      "module": "cff9648a4-G8f3hGry.mjs",
+      "local": "K1",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "K1",
+      "via": "shared-frame-CJdE5Ria.js:_m"
+    },
+    {
+      "module": "cff9648a4-G8f3hGry.mjs",
+      "local": "K2",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "K2",
+      "via": "shared-frame-CJdE5Ria.js:vm"
+    },
+    {
+      "module": "cff9648a4-G8f3hGry.mjs",
+      "local": "K3",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "K3",
+      "via": "shared-frame-CJdE5Ria.js:ym"
+    },
+    {
+      "module": "cff9648a4-G8f3hGry.mjs",
+      "local": "K4",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "K4",
+      "via": "shared-frame-CJdE5Ria.js:bm"
+    },
+    {
+      "module": "cff9648a4-G8f3hGry.mjs",
+      "local": "K5",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "K5",
+      "via": "shared-frame-CJdE5Ria.js:xm"
+    },
+    {
+      "module": "cff9648a4-G8f3hGry.mjs",
+      "local": "Z1",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "Z1",
+      "via": "shared-frame-CJdE5Ria.js:Sm"
+    },
+    {
+      "module": "cff9648a4-G8f3hGry.mjs",
+      "local": "_",
+      "kind": "adapter",
+      "from": "../../source-artifact-library-v4-adapters.jsx",
+      "name": "useIntl",
+      "via": "vendor-intl-BJgYK7RA.js:p"
+    },
+    {
+      "module": "cff9648a4-G8f3hGry.mjs",
+      "local": "c",
+      "kind": "react",
+      "from": "react",
+      "name": "useRef",
+      "via": "vendor-frame-BckkO60Y.js:wo"
+    },
+    {
+      "module": "cff9648a4-G8f3hGry.mjs",
+      "local": "d",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "asElementNode",
+      "via": "shared-frame-CJdE5Ria.js:nm"
+    },
+    {
+      "module": "cff9648a4-G8f3hGry.mjs",
+      "local": "e",
+      "kind": "shared-graph",
+      "from": "../cds-core/vendor-frame.mjs",
+      "name": "clsx",
+      "via": "vendor-frame-BckkO60Y.js:Fa"
+    },
+    {
+      "module": "cff9648a4-G8f3hGry.mjs",
+      "local": "f",
+      "kind": "linked",
+      "from": "../cowork-scheduled-v4/shared-25-D-aF0gt9.mjs",
+      "name": "vd",
+      "via": "shared-25-D-aF0gt9.js:Wp"
+    },
+    {
+      "module": "cff9648a4-G8f3hGry.mjs",
+      "local": "h",
+      "kind": "linked",
+      "from": "../frame-sidebar-nav/shared-3.mjs",
+      "name": "Ku",
+      "via": "shared-3-IQTrO7Gx.js:Pl"
+    },
+    {
+      "module": "cff9648a4-G8f3hGry.mjs",
+      "local": "i",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "Fragment",
+      "via": "vendor-frame-BckkO60Y.js:Wa"
+    },
+    {
+      "module": "cff9648a4-G8f3hGry.mjs",
+      "local": "n",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "jsxs",
+      "via": "vendor-frame-BckkO60Y.js:Ka"
+    },
+    {
+      "module": "cff9648a4-G8f3hGry.mjs",
+      "local": "r",
+      "kind": "react",
+      "from": "react",
+      "name": "useState",
+      "via": "vendor-frame-BckkO60Y.js:To"
+    },
+    {
+      "module": "cff9648a4-G8f3hGry.mjs",
+      "local": "s",
+      "kind": "react",
+      "from": "react",
+      "name": "useId",
+      "via": "vendor-frame-BckkO60Y.js:vo"
+    },
+    {
+      "module": "cff9648a4-G8f3hGry.mjs",
+      "local": "t",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "jsx",
+      "via": "vendor-frame-BckkO60Y.js:Ga"
+    },
+    {
+      "module": "cff9648a4-G8f3hGry.mjs",
+      "local": "u",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "CdsButton",
+      "via": "shared-frame-CJdE5Ria.js:Id"
+    },
+    {
+      "module": "cff9648a4-G8f3hGry.mjs",
+      "local": "w",
+      "kind": "adapter",
+      "from": "../../source-artifact-library-v4-adapters.jsx",
+      "name": "ChatArtifactPreview",
+      "via": "c33ae67d6-D8ma6JPd.js:o"
+    },
+    {
+      "module": "ccc2ee5e6-DeK3Sd72.mjs",
+      "local": "e",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-vendor-intl.mjs",
+      "name": "tn",
+      "via": "vendor-intl-BJgYK7RA.js:f"
+    },
+    {
+      "module": "ce716e031-BTBhe5Tj.mjs",
+      "local": "I1",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "I1",
+      "via": "shared-frame-CJdE5Ria.js:rm"
+    },
+    {
+      "module": "ce716e031-BTBhe5Tj.mjs",
+      "local": "I2",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "I2",
+      "via": "shared-frame-CJdE5Ria.js:im"
+    },
+    {
+      "module": "ce716e031-BTBhe5Tj.mjs",
+      "local": "J1",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "J1",
+      "via": "shared-frame-CJdE5Ria.js:lm"
+    },
+    {
+      "module": "ce716e031-BTBhe5Tj.mjs",
+      "local": "J2",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "J2",
+      "via": "shared-frame-CJdE5Ria.js:um"
+    },
+    {
+      "module": "ce716e031-BTBhe5Tj.mjs",
+      "local": "J9",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "J9",
+      "via": "shared-frame-CJdE5Ria.js:hm"
+    },
+    {
+      "module": "ce716e031-BTBhe5Tj.mjs",
+      "local": "Z1",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "Z1",
+      "via": "shared-frame-CJdE5Ria.js:Sm"
+    },
+    {
+      "module": "ce716e031-BTBhe5Tj.mjs",
+      "local": "e",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "jsx",
+      "via": "vendor-frame-BckkO60Y.js:Ga"
+    },
+    {
+      "module": "ce716e031-BTBhe5Tj.mjs",
+      "local": "i",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-2.mjs",
+      "name": "CdsRelativeTime",
+      "via": "shared-2-CsjIBQD8.js:r"
+    },
+    {
+      "module": "ce716e031-BTBhe5Tj.mjs",
+      "local": "o",
+      "kind": "adapter",
+      "from": "../../source-artifact-library-v4-adapters.jsx",
+      "name": "FormattedMessage",
+      "via": "vendor-intl-BJgYK7RA.js:l"
+    },
+    {
+      "module": "ce716e031-BTBhe5Tj.mjs",
+      "local": "s",
+      "kind": "adapter",
+      "from": "../../source-artifact-library-v4-adapters.jsx",
+      "name": "useIntl",
+      "via": "vendor-intl-BJgYK7RA.js:p"
+    },
+    {
+      "module": "shared-25-D-aF0gt9.mjs",
+      "local": "J1",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "J1",
+      "via": "shared-frame-CJdE5Ria.js:lm"
+    },
+    {
+      "module": "shared-25-D-aF0gt9.mjs",
+      "local": "J2",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "J2",
+      "via": "shared-frame-CJdE5Ria.js:um"
+    },
+    {
+      "module": "shared-25-D-aF0gt9.mjs",
+      "local": "J9",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "J9",
+      "via": "shared-frame-CJdE5Ria.js:hm"
+    },
+    {
+      "module": "shared-25-D-aF0gt9.mjs",
+      "local": "K1",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "K1",
+      "via": "shared-frame-CJdE5Ria.js:_m"
+    },
+    {
+      "module": "shared-25-D-aF0gt9.mjs",
+      "local": "K2",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "K2",
+      "via": "shared-frame-CJdE5Ria.js:vm"
+    },
+    {
+      "module": "shared-25-D-aF0gt9.mjs",
+      "local": "p",
+      "kind": "react",
+      "from": "react",
+      "name": "useState",
+      "via": "vendor-frame-BckkO60Y.js:To"
+    },
+    {
+      "module": "shared-25-D-aF0gt9.mjs",
+      "local": "xi",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-25-D-aF0gt9.mjs",
+      "name": "xi",
+      "via": "shared-25-D-aF0gt9.js#xi"
+    },
+    {
+      "module": "c230724a2-qhV7Crzy.mjs",
+      "local": "A",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "CdsBadge",
+      "via": "shared-frame-CJdE5Ria.js:Pu"
+    },
+    {
+      "module": "c230724a2-qhV7Crzy.mjs",
+      "local": "Aa",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-vendor-intl.mjs",
+      "name": "tn",
+      "via": "vendor-intl-BJgYK7RA.js:f"
+    },
+    {
+      "module": "c230724a2-qhV7Crzy.mjs",
+      "local": "Bn",
+      "kind": "linked",
+      "from": "../code-routines-v4/shared-18-Cfqwgjc5.mjs",
+      "name": "rE",
+      "via": "shared-18-Cfqwgjc5.js:Hd"
+    },
+    {
+      "module": "c230724a2-qhV7Crzy.mjs",
+      "local": "Bo",
+      "kind": "linked",
+      "from": "../cowork-scheduled-v4/c90d7fd86-iWqdaSNP.mjs",
+      "name": "t",
+      "via": "c90d7fd86-iWqdaSNP.js:t"
+    },
+    {
+      "module": "c230724a2-qhV7Crzy.mjs",
+      "local": "Da",
+      "kind": "linked",
+      "from": "../frame-sidebar-nav/shared-3.mjs",
+      "name": "Ml",
+      "via": "shared-3-IQTrO7Gx.js:uu"
+    },
+    {
+      "module": "c230724a2-qhV7Crzy.mjs",
+      "local": "E",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "CdsButton",
+      "via": "shared-frame-CJdE5Ria.js:Id"
+    },
+    {
+      "module": "c230724a2-qhV7Crzy.mjs",
+      "local": "Fa",
+      "kind": "adapter",
+      "from": "../../source-artifact-library-v4-adapters.jsx",
+      "name": "ArtifactItemMenu",
+      "via": "shared-140-DfG6VwpK.js:Oi"
+    },
+    {
+      "module": "c230724a2-qhV7Crzy.mjs",
+      "local": "H",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "CdsIcon",
+      "via": "shared-frame-CJdE5Ria.js:lf"
+    },
+    {
+      "module": "c230724a2-qhV7Crzy.mjs",
+      "local": "I1",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "I1",
+      "via": "shared-frame-CJdE5Ria.js:rm"
+    },
+    {
+      "module": "c230724a2-qhV7Crzy.mjs",
+      "local": "I2",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "I2",
+      "via": "shared-frame-CJdE5Ria.js:im"
+    },
+    {
+      "module": "c230724a2-qhV7Crzy.mjs",
+      "local": "I3",
+      "kind": "linked",
+      "from": "../home-chat-cowork/shared-frame.mjs",
+      "name": "I3",
+      "via": "shared-frame-CJdE5Ria.js:am"
+    },
+    {
+      "module": "c230724a2-qhV7Crzy.mjs",
+      "local": "I4",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "I4",
+      "via": "shared-frame-CJdE5Ria.js:om"
+    },
+    {
+      "module": "c230724a2-qhV7Crzy.mjs",
+      "local": "I5",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "I5",
+      "via": "shared-frame-CJdE5Ria.js:sm"
+    },
+    {
+      "module": "c230724a2-qhV7Crzy.mjs",
+      "local": "Ia",
+      "kind": "adapter",
+      "from": "../../source-artifact-library-v4-adapters.jsx",
+      "name": "artifactMenuActions",
+      "via": "shared-140-DfG6VwpK.js:Pi"
+    },
+    {
+      "module": "c230724a2-qhV7Crzy.mjs",
+      "local": "J0",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "J0",
+      "via": "shared-frame-CJdE5Ria.js:cm"
+    },
+    {
+      "module": "c230724a2-qhV7Crzy.mjs",
+      "local": "J1",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "J1",
+      "via": "shared-frame-CJdE5Ria.js:lm"
+    },
+    {
+      "module": "c230724a2-qhV7Crzy.mjs",
+      "local": "J2",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "J2",
+      "via": "shared-frame-CJdE5Ria.js:um"
+    },
+    {
+      "module": "c230724a2-qhV7Crzy.mjs",
+      "local": "J3",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "J3",
+      "via": "shared-frame-CJdE5Ria.js:dm"
+    },
+    {
+      "module": "c230724a2-qhV7Crzy.mjs",
+      "local": "J4",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "J4",
+      "via": "shared-frame-CJdE5Ria.js:fm"
+    },
+    {
+      "module": "c230724a2-qhV7Crzy.mjs",
+      "local": "J5",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "J5",
+      "via": "shared-frame-CJdE5Ria.js:pm"
+    },
+    {
+      "module": "c230724a2-qhV7Crzy.mjs",
+      "local": "J9",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "J9",
+      "via": "shared-frame-CJdE5Ria.js:hm"
+    },
+    {
+      "module": "c230724a2-qhV7Crzy.mjs",
+      "local": "Jn",
+      "kind": "linked",
+      "from": "../code-routines-v4/shared-18-Cfqwgjc5.mjs",
+      "name": "nE",
+      "via": "shared-18-Cfqwgjc5.js:Ud"
+    },
+    {
+      "module": "c230724a2-qhV7Crzy.mjs",
+      "local": "K0",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "K0",
+      "via": "shared-frame-CJdE5Ria.js:gm"
+    },
+    {
+      "module": "c230724a2-qhV7Crzy.mjs",
+      "local": "K1",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "K1",
+      "via": "shared-frame-CJdE5Ria.js:_m"
+    },
+    {
+      "module": "c230724a2-qhV7Crzy.mjs",
+      "local": "K2",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "K2",
+      "via": "shared-frame-CJdE5Ria.js:vm"
+    },
+    {
+      "module": "c230724a2-qhV7Crzy.mjs",
+      "local": "K3",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "K3",
+      "via": "shared-frame-CJdE5Ria.js:ym"
+    },
+    {
+      "module": "c230724a2-qhV7Crzy.mjs",
+      "local": "K4",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "K4",
+      "via": "shared-frame-CJdE5Ria.js:bm"
+    },
+    {
+      "module": "c230724a2-qhV7Crzy.mjs",
+      "local": "K5",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "K5",
+      "via": "shared-frame-CJdE5Ria.js:xm"
+    },
+    {
+      "module": "c230724a2-qhV7Crzy.mjs",
+      "local": "M",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "useCdsOwnerWindow",
+      "via": "shared-frame-CJdE5Ria.js:Uf"
+    },
+    {
+      "module": "c230724a2-qhV7Crzy.mjs",
+      "local": "Ma",
+      "kind": "adapter",
+      "from": "../../source-artifact-library-v4-adapters.jsx",
+      "name": "FormattedMessage",
+      "via": "vendor-intl-BJgYK7RA.js:l"
+    },
+    {
+      "module": "c230724a2-qhV7Crzy.mjs",
+      "local": "Na",
+      "kind": "adapter",
+      "from": "../../source-artifact-library-v4-adapters.jsx",
+      "name": "useIntl",
+      "via": "vendor-intl-BJgYK7RA.js:p"
+    },
+    {
+      "module": "c230724a2-qhV7Crzy.mjs",
+      "local": "Pa",
+      "kind": "adapter",
+      "from": "../../source-artifact-library-v4-adapters.jsx",
+      "name": "artifactMenuItemsLazy",
+      "via": "shared-140-DfG6VwpK.js:Ai"
+    },
+    {
+      "module": "c230724a2-qhV7Crzy.mjs",
+      "local": "Qo",
+      "kind": "linked",
+      "from": "../code-routines-v4/cd75b47e6-BcflIwff.mjs",
+      "name": "C",
+      "via": "cd75b47e6-BcflIwff.js:t"
+    },
+    {
+      "module": "c230724a2-qhV7Crzy.mjs",
+      "local": "So",
+      "kind": "linked",
+      "from": "../code-routines-v4/c365fd3fe-BLyjNvkI.mjs",
+      "name": "n",
+      "via": "c365fd3fe-BLyjNvkI.js:t"
+    },
+    {
+      "module": "c230724a2-qhV7Crzy.mjs",
+      "local": "T",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "CdsTextLink",
+      "via": "shared-frame-CJdE5Ria.js:Eu"
+    },
+    {
+      "module": "c230724a2-qhV7Crzy.mjs",
+      "local": "V",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "CdsTooltipProvider",
+      "via": "shared-frame-CJdE5Ria.js:ld"
+    },
+    {
+      "module": "c230724a2-qhV7Crzy.mjs",
+      "local": "Yo",
+      "kind": "adapter",
+      "from": "../../source-artifact-library-v4-adapters.jsx",
+      "name": "useArtifactOwners",
+      "via": "c1b2dcb06-Cb9ZmAdr.js:l"
+    },
+    {
+      "module": "c230724a2-qhV7Crzy.mjs",
+      "local": "Z1",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "Z1",
+      "via": "shared-frame-CJdE5Ria.js:Sm"
+    },
+    {
+      "module": "c230724a2-qhV7Crzy.mjs",
+      "local": "_",
+      "kind": "react",
+      "from": "react",
+      "name": "useId",
+      "via": "vendor-frame-BckkO60Y.js:vo"
+    },
+    {
+      "module": "c230724a2-qhV7Crzy.mjs",
+      "local": "a",
+      "kind": "shared-graph",
+      "from": "../cds-core/vendor-frame.mjs",
+      "name": "clsx",
+      "via": "vendor-frame-BckkO60Y.js:Fa"
+    },
+    {
+      "module": "c230724a2-qhV7Crzy.mjs",
+      "local": "b",
+      "kind": "react",
+      "from": "react",
+      "name": "useLayoutEffect",
+      "via": "vendor-frame-BckkO60Y.js:xo"
+    },
+    {
+      "module": "c230724a2-qhV7Crzy.mjs",
+      "local": "c",
+      "kind": "react",
+      "from": "react",
+      "name": "useState",
+      "via": "vendor-frame-BckkO60Y.js:To"
+    },
+    {
+      "module": "c230724a2-qhV7Crzy.mjs",
+      "local": "co",
+      "kind": "linked",
+      "from": "../code-routines-v4/shared-9-BgdM6Y1f.mjs",
+      "name": "sm",
+      "via": "shared-9-BgdM6Y1f.js:fn"
+    },
+    {
+      "module": "c230724a2-qhV7Crzy.mjs",
+      "local": "f",
+      "kind": "react",
+      "from": "react",
+      "name": "memo",
+      "via": "vendor-frame-BckkO60Y.js:co"
+    },
+    {
+      "module": "c230724a2-qhV7Crzy.mjs",
+      "local": "fr",
+      "kind": "linked",
+      "from": "../code-routines-v4/shared-18-Cfqwgjc5.mjs",
+      "name": "HT",
+      "via": "shared-18-Cfqwgjc5.js:nf"
+    },
+    {
+      "module": "c230724a2-qhV7Crzy.mjs",
+      "local": "g",
+      "kind": "react",
+      "from": "react",
+      "name": "useContext",
+      "via": "vendor-frame-BckkO60Y.js:po"
+    },
+    {
+      "module": "c230724a2-qhV7Crzy.mjs",
+      "local": "h",
+      "kind": "react",
+      "from": "react",
+      "name": "createContext",
+      "via": "vendor-frame-BckkO60Y.js:no"
+    },
+    {
+      "module": "c230724a2-qhV7Crzy.mjs",
+      "local": "l",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "Fragment",
+      "via": "vendor-frame-BckkO60Y.js:Wa"
+    },
+    {
+      "module": "c230724a2-qhV7Crzy.mjs",
+      "local": "lo",
+      "kind": "linked",
+      "from": "../code-routines-v4/shared-9-BgdM6Y1f.mjs",
+      "name": "im",
+      "via": "shared-9-BgdM6Y1f.js:gn"
+    },
+    {
+      "module": "c230724a2-qhV7Crzy.mjs",
+      "local": "m",
+      "kind": "react",
+      "from": "react",
+      "name": "useEffect",
+      "via": "vendor-frame-BckkO60Y.js:go"
+    },
+    {
+      "module": "c230724a2-qhV7Crzy.mjs",
+      "local": "ne",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "CdsOverflowTooltip",
+      "via": "shared-frame-CJdE5Ria.js:sd"
+    },
+    {
+      "module": "c230724a2-qhV7Crzy.mjs",
+      "local": "o",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "jsx",
+      "via": "vendor-frame-BckkO60Y.js:Ga"
+    },
+    {
+      "module": "c230724a2-qhV7Crzy.mjs",
+      "local": "oe",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-0.mjs",
+      "name": "safeLocalStorage",
+      "via": "shared-0-CnnWnVrT.js:CC"
+    },
+    {
+      "module": "c230724a2-qhV7Crzy.mjs",
+      "local": "s",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "jsxs",
+      "via": "vendor-frame-BckkO60Y.js:Ka"
+    },
+    {
+      "module": "c230724a2-qhV7Crzy.mjs",
+      "local": "u",
+      "kind": "react",
+      "from": "react",
+      "name": "Fragment",
+      "via": "vendor-frame-BckkO60Y.js:Xa"
+    },
+    {
+      "module": "c230724a2-qhV7Crzy.mjs",
+      "local": "v",
+      "kind": "react",
+      "from": "react",
+      "name": "useRef",
+      "via": "vendor-frame-BckkO60Y.js:wo"
+    },
+    {
+      "module": "c230724a2-qhV7Crzy.mjs",
+      "local": "y",
+      "kind": "shared-graph",
+      "from": "../cds-core/vendor-frame.mjs",
+      "name": "useDirection",
+      "via": "vendor-frame-BckkO60Y.js:xa"
+    },
+    {
+      "module": "c230724a2-qhV7Crzy.mjs",
+      "local": "z",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "CdsTooltip",
+      "via": "shared-frame-CJdE5Ria.js:cd"
+    },
+    {
+      "module": "c1f772aa0-njHQEMPb.mjs",
+      "local": "J1",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "J1",
+      "via": "shared-frame-CJdE5Ria.js:lm"
+    },
+    {
+      "module": "c1f772aa0-njHQEMPb.mjs",
+      "local": "J2",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "J2",
+      "via": "shared-frame-CJdE5Ria.js:um"
+    },
+    {
+      "module": "c1f772aa0-njHQEMPb.mjs",
+      "local": "J4",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "J4",
+      "via": "shared-frame-CJdE5Ria.js:fm"
+    },
+    {
+      "module": "c1f772aa0-njHQEMPb.mjs",
+      "local": "J5",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "J5",
+      "via": "shared-frame-CJdE5Ria.js:pm"
+    },
+    {
+      "module": "c1f772aa0-njHQEMPb.mjs",
+      "local": "J9",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "J9",
+      "via": "shared-frame-CJdE5Ria.js:hm"
+    },
+    {
+      "module": "c1f772aa0-njHQEMPb.mjs",
+      "local": "K1",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "K1",
+      "via": "shared-frame-CJdE5Ria.js:_m"
+    },
+    {
+      "module": "c1f772aa0-njHQEMPb.mjs",
+      "local": "K2",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "K2",
+      "via": "shared-frame-CJdE5Ria.js:vm"
+    },
+    {
+      "module": "c1f772aa0-njHQEMPb.mjs",
+      "local": "K4",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "K4",
+      "via": "shared-frame-CJdE5Ria.js:bm"
+    },
+    {
+      "module": "c1f772aa0-njHQEMPb.mjs",
+      "local": "K5",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "K5",
+      "via": "shared-frame-CJdE5Ria.js:xm"
+    },
+    {
+      "module": "c1f772aa0-njHQEMPb.mjs",
+      "local": "a",
+      "kind": "react",
+      "from": "react",
+      "name": "useContext",
+      "via": "vendor-frame-BckkO60Y.js:po"
+    },
+    {
+      "module": "c1f772aa0-njHQEMPb.mjs",
+      "local": "e",
+      "kind": "shared-graph",
+      "from": "../cds-core/vendor-frame.mjs",
+      "name": "clsx",
+      "via": "vendor-frame-BckkO60Y.js:Fa"
+    },
+    {
+      "module": "c1f772aa0-njHQEMPb.mjs",
+      "local": "i",
+      "kind": "react",
+      "from": "react",
+      "name": "createContext",
+      "via": "vendor-frame-BckkO60Y.js:no"
+    },
+    {
+      "module": "c1f772aa0-njHQEMPb.mjs",
+      "local": "l",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "CdsIcon",
+      "via": "shared-frame-CJdE5Ria.js:lf"
+    },
+    {
+      "module": "c1f772aa0-njHQEMPb.mjs",
+      "local": "o",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "CdsButton",
+      "via": "shared-frame-CJdE5Ria.js:Id"
+    },
+    {
+      "module": "c1f772aa0-njHQEMPb.mjs",
+      "local": "t",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "jsx",
+      "via": "vendor-frame-BckkO60Y.js:Ga"
+    },
+    {
+      "module": "shared-120-DCdTP1_5.mjs",
+      "local": "l",
+      "kind": "shared-graph",
+      "from": "../cds-core/vendor-frame.mjs",
+      "name": "useDirection",
+      "via": "vendor-frame-BckkO60Y.js:xa"
+    },
+    {
+      "module": "frame-shell-header-BgKXZK73.mjs",
+      "local": "e",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "jsx",
+      "via": "vendor-frame-BckkO60Y.js:Ga"
+    },
+    {
+      "module": "frame-shell-header-BgKXZK73.mjs",
+      "local": "x",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "CdsSkeleton",
+      "via": "shared-frame-CJdE5Ria.js:Ou"
+    },
+    {
+      "module": "frame-shell-header-BgKXZK73.mjs",
+      "local": "y",
+      "kind": "linked",
+      "from": "../cowork-scheduled-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "uo",
+      "via": "shared-frame-CJdE5Ria.js:If"
+    },
+    {
+      "module": "c63885269-Bcw6iQVr.mjs",
+      "local": "J5",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "J5",
+      "via": "shared-frame-CJdE5Ria.js:pm"
+    },
+    {
+      "module": "c63885269-Bcw6iQVr.mjs",
+      "local": "J9",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "J9",
+      "via": "shared-frame-CJdE5Ria.js:hm"
+    },
+    {
+      "module": "c63885269-Bcw6iQVr.mjs",
+      "local": "K5",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "K5",
+      "via": "shared-frame-CJdE5Ria.js:xm"
+    },
+    {
+      "module": "c63885269-Bcw6iQVr.mjs",
+      "local": "n",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "CdsTooltip",
+      "via": "shared-frame-CJdE5Ria.js:cd"
+    },
+    {
+      "module": "c63885269-Bcw6iQVr.mjs",
+      "local": "t",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "jsx",
+      "via": "vendor-frame-BckkO60Y.js:Ga"
+    },
+    {
+      "module": "c2bb74286-pk_O67sD.mjs",
+      "local": "H",
+      "kind": "adapter",
+      "from": "../../source-artifact-library-v4-adapters.jsx",
+      "name": "useIntl",
+      "via": "vendor-intl-BJgYK7RA.js:p"
+    },
+    {
+      "module": "c2bb74286-pk_O67sD.mjs",
+      "local": "J1",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "J1",
+      "via": "shared-frame-CJdE5Ria.js:lm"
+    },
+    {
+      "module": "c2bb74286-pk_O67sD.mjs",
+      "local": "J2",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "J2",
+      "via": "shared-frame-CJdE5Ria.js:um"
+    },
+    {
+      "module": "c2bb74286-pk_O67sD.mjs",
+      "local": "J3",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "J3",
+      "via": "shared-frame-CJdE5Ria.js:dm"
+    },
+    {
+      "module": "c2bb74286-pk_O67sD.mjs",
+      "local": "J4",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "J4",
+      "via": "shared-frame-CJdE5Ria.js:fm"
+    },
+    {
+      "module": "c2bb74286-pk_O67sD.mjs",
+      "local": "J5",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "J5",
+      "via": "shared-frame-CJdE5Ria.js:pm"
+    },
+    {
+      "module": "c2bb74286-pk_O67sD.mjs",
+      "local": "J9",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "J9",
+      "via": "shared-frame-CJdE5Ria.js:hm"
+    },
+    {
+      "module": "c2bb74286-pk_O67sD.mjs",
+      "local": "K2",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "K2",
+      "via": "shared-frame-CJdE5Ria.js:vm"
+    },
+    {
+      "module": "c2bb74286-pk_O67sD.mjs",
+      "local": "K3",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "K3",
+      "via": "shared-frame-CJdE5Ria.js:ym"
+    },
+    {
+      "module": "c2bb74286-pk_O67sD.mjs",
+      "local": "K4",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "K4",
+      "via": "shared-frame-CJdE5Ria.js:bm"
+    },
+    {
+      "module": "c2bb74286-pk_O67sD.mjs",
+      "local": "K5",
+      "kind": "linked",
+      "from": "../transcript-rows-v4/rows-shared-frame.mjs",
+      "name": "K5",
+      "via": "shared-frame-CJdE5Ria.js:xm"
+    },
+    {
+      "module": "c2bb74286-pk_O67sD.mjs",
+      "local": "a",
+      "kind": "react",
+      "from": "react",
+      "name": "memo",
+      "via": "vendor-frame-BckkO60Y.js:co"
+    },
+    {
+      "module": "c2bb74286-pk_O67sD.mjs",
+      "local": "e",
+      "kind": "shared-graph",
+      "from": "../cds-core/vendor-frame.mjs",
+      "name": "clsx",
+      "via": "vendor-frame-BckkO60Y.js:Fa"
+    },
+    {
+      "module": "c2bb74286-pk_O67sD.mjs",
+      "local": "t",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "jsx",
+      "via": "vendor-frame-BckkO60Y.js:Ga"
+    }
+  ]
+}

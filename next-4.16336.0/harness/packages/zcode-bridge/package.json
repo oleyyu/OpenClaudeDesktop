@@ -1,0 +1,10 @@
+{
+  "name": "@code-desktop/zcode-bridge",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Codex app-server protocol bridge for the official ZCode agent (zcode app-server --stdio, ZCode Protocol)",
+  "type": "module",
+  "main": "src/server.js",
+  "bin": { "zcode-codex-app-server": "bin/app-server.mjs" },
+  "license": "Apache-2.0"
+}

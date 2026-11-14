@@ -1,0 +1,81 @@
+/* Failed-turn error surfaces. Card: cf6ae6197 Bp (approval-shared-current.js:4214-4299)
+   "flex w-fit min-w-[min(480px,100%)] max-w-full flex-col gap-md rounded-lg p-lg
+   epitaxy-card-outline-inset select-text". Marker: scroll-messages uJ (32289-32330).
+   Tokens resolve in design-system.css: p-lg=--cds-pad-lg, gap-md=--cds-gap-md,
+   gap-xs=--cds-gap-xs, rounded-lg=--radius-lg, epitaxy-card-outline-inset =
+   inset 0 0 0 1px --cds-border, text-body-medium = body size/leading + medium. */
+/* Doubled class outranks .source-message.source-message (source-session.css min-width:0). */
+.ste-card.ste-card.source-message {
+  display: flex; flex-direction: column; box-sizing: border-box;
+  width: fit-content; min-width: min(480px, 100%); max-width: 100%;
+  gap: var(--cds-gap-md, 12px); border-radius: var(--radius-lg, .5rem); padding: var(--cds-pad-lg, 12px);
+  box-shadow: inset 0 0 0 1px var(--cds-border); user-select: text; -webkit-user-select: text;
+}
+.ste-body { display: flex; flex-direction: column; gap: var(--cds-gap-xs, 6px); contain: inline-size; }
+.ste-header { display: flex; align-items: center; gap: var(--cds-gap-xs, 6px); }
+.ste-icon { flex-shrink: 0; }
+.ste-tone-danger { color: var(--cds-text-danger); }
+/* A settled failure (Signed in again): the quiet marker’s muted check. */
+.ste-tone-muted { color: var(--cds-text-secondary); }
+.ste-headline {
+  min-width: 0; flex-grow: 1; overflow-wrap: break-word; color: var(--cds-text-primary);
+  font-size: var(--cds-font-size-body); line-height: var(--cds-leading-body);
+  font-weight: var(--cds-font-weight-medium, 500); --cds-font-axis-wght: var(--cds-font-axis-wght-medium);
+}
+.ste-hint {
+  font-size: var(--cds-font-size-body); line-height: var(--cds-leading-body); color: var(--cds-text-secondary);
+  white-space: pre-line; overflow-wrap: break-word;
+}
+/* Rp: "flex flex-wrap items-center self-stretch". */
+.ste-details { display: flex; flex-wrap: wrap; align-items: center; align-self: stretch; min-width: 0; }
+/* Wt.Trigger hideCaret "shrink-0 whitespace-nowrap py-xs text-footnote" + trailing
+   CaretRight size sm, "group-data-[panel-open]/clp:-rotate-90". */
+.ste-details .ste-details-trigger {
+  flex-shrink: 0; white-space: nowrap; padding-block: var(--cds-pad-xs, 4px);
+  font-size: var(--cds-font-size-footnote, 12px); line-height: var(--cds-leading-footnote, 16px);
+}
+.ste-details .ste-details-trigger[data-panel-open] > [data-cds=Icon] { transform: rotate(-90deg); }
+/* Wt.Panel "order-first basis-full contain-inline-size". */
+.ste-details > .source-disclosure-panel { order: -9999; flex-basis: 100%; contain: inline-size; }
+/* zp: "pb-md" > "flex flex-col gap-xs rounded-lg bg-alpha-1 px-md py-sm text-footnote text-secondary". */
+.ste-details-panel { padding-bottom: var(--cds-pad-md, 8px); }
+/* 3.6556.2 cb1a6e506 k: "flex flex-col gap-sm" around the (absent) guide line and the box. */
+.ste-details-stack { display: flex; flex-direction: column; gap: var(--cds-gap-sm, 8px); }
+.ste-details-box {
+  display: flex; flex-direction: column; gap: var(--cds-gap-xs, 6px); border-radius: var(--radius-lg, .5rem);
+  background: var(--cds-alpha-1); padding: var(--cds-pad-sm, 6px) var(--cds-pad-md, 8px);
+  font-size: var(--cds-font-size-footnote, 12px); line-height: var(--cds-leading-footnote, 16px); color: var(--cds-text-secondary);
+}
+.ste-details-text { white-space: pre-wrap; overflow-wrap: break-word; user-select: text; -webkit-user-select: text; }
+.ste-details-facts { display: flex; flex-direction: column; color: var(--cds-text-muted); word-break: break-all; user-select: text; -webkit-user-select: text; }
+.ste-details-copy { display: flex; }
+/* Lp: ghost sm, flush start (CdsButton flush="start" = ms-outset), text-secondary hover:text-primary. */
+.ste-details-copy .ste-copy { color: var(--cds-text-secondary); }
+.ste-details-copy .ste-copy:hover { color: var(--cds-text-primary); }
+/* "ml-auto flex min-w-0 max-w-full flex-wrap items-center justify-end gap-1 ps-md". */
+.ste-actions {
+  margin-left: auto; display: flex; min-width: 0; max-width: 100%; flex-wrap: wrap; align-items: center;
+  justify-content: flex-end; gap: calc(var(--spacing, .25rem) * 1); padding-inline-start: var(--cds-pad-md, 8px);
+}
+/* uJ: "flex w-full max-w-[480px] flex-col items-start gap-1 self-start" + gf
+   ps-[var(--cds-assistant-message-text-inset,0px)]. */
+.ste-marker.ste-marker.source-message {
+  display: flex; box-sizing: border-box; width: 100%; max-width: 480px; flex-direction: column; align-items: flex-start;
+  gap: calc(var(--spacing, .25rem) * 1); align-self: flex-start; padding-inline-start: var(--cds-assistant-message-text-inset, 0px);
+}
+.ste-marker-row { display: flex; min-width: 0; align-items: center; gap: calc(var(--spacing, .25rem) * 1.25); user-select: text; -webkit-user-select: text; }
+.ste-marker-label { min-width: 0; font-size: var(--cds-font-size-body); line-height: var(--cds-leading-body); color: var(--cds-text-secondary); }
+.ste-marker .ste-details { align-self: stretch; }
+/* Codex's 'Review findings' view (misalignment_policy.rs): the findings in the details box style, scrollable. */
+.ste-findings {
+  display: flex; flex-direction: column; gap: var(--cds-gap-xs, 6px); max-height: 240px; overflow: auto;
+  border-radius: var(--radius-lg, .5rem); background: var(--cds-alpha-1, color-mix(in srgb, currentColor 4%, transparent));
+  padding: var(--cds-pad-sm, 6px) var(--cds-pad-md, 8px); color: var(--cds-text-secondary);
+  font-size: var(--cds-font-size-footnote, 12px); line-height: var(--cds-leading-footnote, 16px);
+  white-space: pre-wrap; overflow-wrap: anywhere;
+}
+/* 'Auto-continue when limits reset' (approval-current.js:34430-34480 xs Switch). */
+.ste-auto { display: inline-flex; align-items: center; gap: 6px; margin-right: auto; font-size: var(--cds-font-size-footnote, 12px); color: var(--cds-text-secondary); }
+/* R4i-cowork CW3: cb55fb7c6 N's Go back hint, `p.text-secondary` under the official preflight (margin 0); the body
+   size and the secondary colour are .ste-hint's. */
+.ste-go-back-hint { margin: 0; }

@@ -1,0 +1,13 @@
+{
+  "name": "code-desktop-dsh-profile",
+  "private": true,
+  "dependencies": {},
+  "dsh": {
+    "profile": {
+      "bundles": [
+        "@deepseek-ai/dsh-base",
+        "@code-desktop/dsh-code-desktop-app"
+      ]
+    }
+  }
+}

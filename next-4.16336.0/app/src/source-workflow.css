@@ -1,0 +1,31 @@
+/* Claude Desktop 2.19675.0: workspace.js 64072–65230. Local launcher adapts the app dialog. */
+.swf-compact{position:relative;isolation:isolate;display:flex;align-items:flex-start;width:318px;min-width:318px;max-width:318px;gap:4px;padding:10px 8px 10px 12px;margin:6px 0;border-radius:8px;text-align:left;font-size:13px;line-height:19px}.swf-surface{position:absolute;inset:0;border-radius:inherit;z-index:-1;box-shadow:inset 0 0 0 1px var(--cds-border)}.swf-compact:hover .swf-surface{background:var(--cds-fill-ghost-hover)}.swf-compact-content{display:flex;flex:1;min-width:0;flex-direction:column;gap:4px}.swf-title{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.swf-meta{display:flex;flex-wrap:wrap;gap:4px 12px;color:var(--cds-text-muted);font-size:12px;line-height:15px;font-variant-numeric:tabular-nums}.swf-compact .swf-meta{min-height:19px;align-items:center}.swf-grid-wrap{padding:4px 0 2px}.swf-terminal{display:flex;gap:3px;align-items:center;font-size:13px;line-height:19px;color:var(--cds-text-secondary);max-width:100%}.swf-terminal-title{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left}.swf-terminal [data-status=failed]{color:var(--cds-text-danger)}.swf-cells{display:grid;grid-template-columns:repeat(16,6px);gap:2px;width:max-content;max-width:100%;min-height:6px}.swf-cells-compact{width:100%;grid-template-columns:repeat(auto-fill,6px);max-height:62px;overflow:hidden}.swf-cell{display:block;width:6px;height:6px;box-sizing:border-box;border:1px solid transparent;border-radius:2px;transition:background-color 160ms,border-color 160ms,opacity 160ms,filter 160ms}.swf-cell[data-state=done]{background:var(--cds-alpha-3)}.swf-cell[data-state=running]{background:var(--cds-fill-accent);animation:swf-pulse var(--pulse-duration) ease-in-out var(--pulse-delay) infinite}.swf-cell[data-state=stalled]{background:var(--cds-fill-warning)}.swf-cell[data-state=error]{background:var(--cds-fill-danger)}.swf-cell[data-state=skipped]{background:var(--cds-alpha-2);border-color:var(--cds-alpha-3)}@keyframes swf-pulse{50%{opacity:.72}}.swf-cell:hover{filter:brightness(.9)}[data-mode=dark] .swf-cell:hover{filter:brightness(1.1)}.swf-launch{display:flex;flex-direction:column;gap:12px}.swf-launch label{display:flex;flex-direction:column;gap:4px}.swf-launch input,.swf-launch textarea{padding:8px;border:1px solid var(--cds-border);border-radius:4px;background:var(--cds-surface-1);color:inherit}.swf-launch textarea{min-height:96px;font-family:var(--font-mono)}.swf-launch p{font-size:12px;color:var(--cds-text-muted)}
+.swf-compact:focus-visible,.swf-terminal button:focus-visible{outline:none;box-shadow:var(--cds-focus-shadow)}@media(prefers-reduced-motion:reduce){.swf-cell{transition:none;animation:none!important}}
+html[data-reduce-motion="true"] .swf-cell { transition: none; animation: none !important; }
+
+.swf-surface{transform-origin:50%;transition:transform var(--cds-dur-slow) var(--cds-btn-spring)}.swf-compact:active .swf-surface{transform:scale(.99);transition-duration:var(--cds-dur-fast)}@media(prefers-reduced-motion:reduce){.swf-surface{transition:none}}
+html[data-reduce-motion="true"] .swf-surface { transition: none; }
+
+/* ipe/npe/fpe/upe source layout: nested header, CDS density and literal grid dimensions. */
+.swf-compact,.swf-terminal{font-size:var(--cds-font-size-body);line-height:var(--cds-leading-body)}
+.swf-compact{gap:var(--cds-gap-xs);padding-left:var(--cds-pad-lg)}
+.swf-meta{font-size:var(--cds-font-size-footnote);line-height:var(--cds-leading-footnote)}
+.swf-compact .swf-meta{min-height:var(--cds-leading-body);gap:var(--cds-gap-md);flex-wrap:nowrap}
+.swf-compact .swf-meta>span{flex-shrink:0}
+.swf-compact .swf-meta>span:first-child,.swf-compact .swf-value{color:var(--cds-text-secondary)}
+.swf-caret-slot{display:flex;flex-shrink:0;align-items:center;height:var(--cds-leading-body);color:var(--cds-text-muted)}
+.swf-grid-wrap{padding-top:var(--cds-pad-sm)}
+.swf-terminal[data-status=failed]>span:first-child{color:var(--cds-text-danger)}
+
+.swf-title,.swf-terminal{font-size:var(--chat-body,var(--cds-font-size-body));line-height:var(--chat-leading,var(--cds-leading-body))}
+
+/* Anticipation is a decoration, never an invented queued agent. */
+.swf-cell[data-state=pending],.swf-cell[data-state=ghost]{border-color:var(--cds-alpha-3)}
+.swf-cell[data-state=ghost]{animation:swf-ghost-pulse 2.2s ease-in-out infinite}
+@keyframes swf-ghost-pulse{0%,100%{opacity:.25}50%{opacity:.9}}
+@media(prefers-reduced-motion:reduce){.swf-cell[data-state=ghost]{opacity:.45;animation:none}}
+html[data-reduce-motion="true"] .swf-cell[data-state=ghost]{opacity:.45;animation:none}
+/* The large-workflow warning on the host's transcript row (WorkflowRow). W14-code r4 R4T-08b (E95): the Tasks pane's run is
+   the desktop's N$ card, so the host card's rules (phases, agent table and details, member controls, questions, deliverables,
+   settings, compatibility notes) are gone. */
+.swf-large{display:inline-flex;align-items:center;gap:3px;color:var(--cds-text-warning)}

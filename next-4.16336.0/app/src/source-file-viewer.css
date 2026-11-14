@@ -1,0 +1,206 @@
+/* Files pane file viewer (source-file-viewer.jsx; 2.2553.1 cd2efac6e jo).
+   gc (:3517-3530): "h-full flex flex-col overflow-hidden"; the body slot is
+   "flex-1 min-h-0". */
+.source-file-view {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  outline: none;
+}
+/* qn flush (cdf69fdd3-DM0fGX-C.js:13-36): epitaxy-panel-subheader flex
+   items-center gap-[4px] shrink-0 px-md h-[calc(2rem*var(--cds-rem-scale,1))]. */
+.sfv-subheader {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 4px;
+  height: calc(2rem * var(--cds-rem-scale, 1));
+  padding-inline: var(--cds-pad-md);
+  min-width: 0;
+}
+/* The current source owns breadcrumb classes and geometry; its buttons' utilities apply over the layered
+   native-button reset (D26). */
+.source-file-breadcrumb { display: contents; }
+.sfv-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+.sfv-body > .source-pane-state,
+.sfv-body > .source-empty-state {
+  flex: 1 1 0;
+  min-height: 0;
+}
+/* [data-file-viewer] "epitaxy-diff flex-1 min-h-0 [contain:strict]" around the
+   File renderer's "h-full overflow-y-auto select-text" scroller. The file pane
+   scroller reserves stable both-edges gutters (panes-tile-current.js:1728). The
+   code takes the selected code theme's foreground and background (the
+   --code-theme-* variables main.jsx writes), as the Changes body does.
+   W14-code r5 pierre: with local_pierre_file_viewer on (default) the body is 3.6556.2 pierre File in the official
+   utility classes (SourceFilePierreCode) and none of the .sfv-viewer / .sfv-scroller / .sfv-line / .sfv-number /
+   .sfv-plain-note / whitespace rules below apply; they style only the rollback body (switch off). Delete them with
+   the switch once the pierre body has passed the GUI check. */
+.sfv-viewer {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  contain: strict;
+}
+.sfv-scroller {
+  flex: 1;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-gutter: stable both-edges;
+  padding-block: var(--cds-pad-xs);
+  background: light-dark(var(--code-theme-light-bg, transparent), var(--code-theme-dark-bg, transparent));
+  color: light-dark(var(--code-theme-light-fg, var(--cds-text-primary)), var(--code-theme-dark-fg, var(--cds-text-primary)));
+  font: var(--cds-font-size-code) / var(--cds-leading-code) var(--cds-font-mono);
+  font-feature-settings: "liga", "clig", "calt";
+  user-select: text;
+}
+/* ji (cd2efac6e :990-1012) note: text-footnote text-muted. */
+.sfv-plain-note {
+  margin: 0 0 var(--cds-pad-xs);
+  padding-inline: var(--cds-pad-md);
+  color: var(--cds-text-muted);
+  font-family: var(--cds-font-sans);
+  font-size: var(--cds-font-size-footnote);
+  line-height: var(--cds-leading-footnote);
+  user-select: none;
+}
+.sfv-line {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  min-height: 1lh;
+}
+/* Jump range (da :1519-1549): the theme's editor.lineHighlightBackground, or
+   ca = color-mix(in srgb, currentColor 8%, transparent); the local code themes
+   define no line highlight colour, so ca applies (light and dark follow the
+   code foreground). */
+.sfv-line[data-active] {
+  background: color-mix(in srgb, currentColor 8%, transparent);
+}
+/* Gutter as .sft-read-number: muted tabular digits, content-box width sized by
+   the last line's digit count, 2ch + 5px before and 1ch after. */
+.sfv-number {
+  box-sizing: content-box;
+  min-width: var(--sfv-number-width, 3ch);
+  padding-left: calc(2ch + 5px);
+  padding-right: 1ch;
+  text-align: right;
+  color: var(--cds-text-muted);
+  font-variant-numeric: tabular-nums;
+  user-select: none;
+}
+.sfv-number::before {
+  content: attr(data-number);
+}
+.sfv-line > code {
+  display: block;
+  padding-right: 1ch;
+  font: inherit;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+/* Previews (cd2efac6e q, :4478-4480): the scroller classes are the loaded
+   source utilities; the body slot is a flex column, so the scroller takes the
+   remaining height. */
+.sfv-preview {
+  min-width: 0;
+}
+/* B13: the HTML preview frame paints a page the way a browser tab would (a white canvas, light form controls)
+   whatever the app theme; an opaque-origin document cannot read the app's tokens. */
+.sfv-frame-document {
+  background: #fff;
+  color-scheme: light;
+}
+/* .epitaxy-markdown.epitaxy-file-prose (c19e90103-B6esh4pG.css): a 16px item
+   gap and the file heading scale (h1 22/28, h2 17/22 text-primary, h3 15,
+   h4-h6 semibold), the first heading flush with the top. The local response
+   renderer is a flex column whose gap replaces the block margins, so each
+   source margin is written as its difference from the 16px gap. */
+.sfv-prose {
+  --chat-item-gap: 16px;
+}
+.sfv-prose > .source-markdown h1 {
+  margin-block: 12px 0;
+  font-size: 22px;
+  line-height: 28px;
+}
+.sfv-prose > .source-markdown h2 {
+  margin-block: 8px -8px;
+  font-size: 17px;
+  line-height: 22px;
+  color: var(--cds-text-primary);
+}
+.sfv-prose > .source-markdown h3 {
+  margin-block: 4px -10px;
+  font-size: 15px;
+}
+.sfv-prose > .source-markdown :is(h4, h5, h6) {
+  margin-block: 0 -12px;
+  font-weight: var(--cds-font-weight-semibold, 600);
+  font-variation-settings: var(--cds-font-wght-semibold, normal);
+}
+.sfv-prose > .source-markdown > :is(h1, h2, h3, h4, h5, h6):first-child {
+  margin-top: 0;
+}
+/* The ji plain <pre>. (R3-files FT-18: the frontmatter <dl> is the generated c3fde7009 Ei; its dl/dd margins come from
+   the official preflight, c6a992d55 @layer base `*{margin:0;padding:0}`, as in the source.) */
+.sfv-plain-source {
+  margin: 0;
+}
+/* Progressive chunks (.epitaxy-markdown.epitaxy-file-prose-chunk,
+   c19e90103-B6esh4pG.css): the item gap between chunks, and a chunk that
+   starts with a heading keeps the heading's own top margin (h1 28, h2 24,
+   h3 20, h4-h6 and hr 16), written as the difference from the gap like the
+   in-chunk heading rules above. A chunk that ends on a heading already
+   narrows the gap through that heading's negative bottom margin (h2 8,
+   h3 6, h4-h6 4). */
+.sfv-prose.epitaxy-file-prose-chunk {
+  margin-bottom: var(--chat-item-gap);
+}
+.sfv-prose.epitaxy-file-prose-chunk:last-child {
+  margin-bottom: 0;
+}
+.sfv-prose.epitaxy-file-prose-chunk + .sfv-prose.epitaxy-file-prose-chunk > .source-markdown > h1:first-child {
+  margin-top: 12px;
+}
+.sfv-prose.epitaxy-file-prose-chunk + .sfv-prose.epitaxy-file-prose-chunk > .source-markdown > h2:first-child {
+  margin-top: 8px;
+}
+.sfv-prose.epitaxy-file-prose-chunk + .sfv-prose.epitaxy-file-prose-chunk > .source-markdown > h3:first-child {
+  margin-top: 4px;
+}
+
+/* R3-files FT-16: the "Files in {folder}" popover is cfac349aa Pt / Lt with ca7840910's compact tree (generated
+   files-changes breadcrumb-folder.mjs, file-tree-compact.mjs); its classes are the official utilities. The host popup
+   (source-popover.css .sp-popup) caps max-height at --available-height unlayered, which would beat Pt's
+   max-h-[min(24rem,var(--available-height))] in @layer utilities: release it to that layer (like .oc-start-popup's
+   max-width in source-code-start.css). */
+.sp-popup.sfv-folder-popover { max-height: revert-layer; }
+
+.sfv-line[data-find-active] { background: rgba(255, 213, 0, .08); }
+/* R3-files (correcting FT-16): no host reduce-motion rule for the folder tree caret. The official motion-reduce:transition-none
+   covers both the media query and the in-app setting (c6a992d55: `.motion-reduce\:transition-none:where([data-reduce-motion=true],
+   [data-reduce-motion=true] *)`), which appearance-root.mjs writes as html[data-reduce-motion="true"]. */
+
+/* 2.31226.0 Files view options, adapted to the existing read-only token renderer. */
+.sfv-scroller[data-word-wrap="false"] { overflow-x: auto; }
+.sfv-scroller[data-word-wrap="false"] .sfv-line { min-width: max-content; }
+.sfv-scroller[data-word-wrap="false"] .sfv-line > code { white-space: pre; overflow-wrap: normal; }
+.sfv-scroller[data-scroll-past-end] { padding-bottom: var(--sfv-scroll-padding); }
+.sfv-space { background-image: var(--sfv-space-paint); background-size: 1ch 100%; }
+.sfv-tab { background-image: var(--sfv-tab-paint); background-position: left center; background-repeat: no-repeat; }
+
+/* 2.37337.1 CodeMirror file viewer: original ia theme owns editor paint. */
+.sfv-editor { flex: 1; min-height: 0; height: 100%; overflow: hidden; font: var(--cds-font-size-code) / var(--cds-leading-code) var(--cds-font-mono); background: light-dark(var(--code-theme-light-bg, transparent), var(--code-theme-dark-bg, transparent)); color: light-dark(var(--code-theme-light-fg, var(--cds-text-primary)), var(--code-theme-dark-fg, var(--cds-text-primary))); }
+.sfv-editor-shell { position: relative; flex: 1; min-height: 0; height: 100%; }

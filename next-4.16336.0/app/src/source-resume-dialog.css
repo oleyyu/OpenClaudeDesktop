@@ -1,0 +1,25 @@
+/* SourceResumeDialog: search + scope on one row, then the sessions as full-width rows (title, folder, last active). */
+.resume-dialog .resume-intro { margin: 0 0 12px; color: var(--cds-text-secondary); }
+.resume-dialog .resume-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 8px; }
+.resume-dialog .resume-search { flex: 1 1 220px; min-width: 0; }
+.resume-dialog .resume-list { display: flex; flex-direction: column; gap: 2px; max-height: min(420px, 50vh); overflow: auto; margin: 0 -8px; padding: 0 8px; }
+.resume-dialog .resume-row {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 2px; width: 100%; min-width: 0; padding: 8px; border: 0;
+  border-radius: var(--cds-radius, 6px); background: transparent; color: var(--cds-text-primary); font: inherit; text-align: start; cursor: default;
+  transition: background-color .12s;
+}
+.resume-dialog .resume-row:hover:not(:disabled) { background: var(--cds-fill-ghost-hover); }
+.resume-dialog .resume-row:focus-visible { outline: none; box-shadow: var(--cds-focus-shadow); }
+.resume-dialog .resume-row:disabled { opacity: .6; }
+.resume-dialog .resume-row[aria-busy] { opacity: 1; background: var(--cds-fill-ghost-hover); }
+.resume-dialog .resume-title { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.resume-dialog .resume-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; color: var(--cds-text-muted); font-size: var(--cds-font-size-footnote, 12px); }
+.resume-dialog .resume-folder { max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--cds-font-mono); }
+.resume-dialog .resume-badge { padding: 0 6px; border-radius: 999px; background: var(--cds-fill-ghost-hover); color: var(--cds-text-secondary); }
+.resume-dialog .resume-muted { margin: 8px 0; color: var(--cds-text-muted); }
+.resume-dialog .resume-error { margin: 8px 0 0; color: var(--cds-text-danger); }
+.resume-dialog .resume-more { align-self: center; margin-top: 4px; }
+@media (prefers-reduced-motion: reduce) { .resume-dialog .resume-row { transition: none; } }
+html[data-reduce-motion="true"] .resume-dialog .resume-row { transition: none; }
+/* A conversation match (thread/search): its snippet, muted, two lines at most. */
+.resume-snippet { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; font-size: 12px; line-height: 1.45; color: var(--cds-text-secondary); text-align: start; }

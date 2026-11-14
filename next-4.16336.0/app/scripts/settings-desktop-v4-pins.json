@@ -1,0 +1,311 @@
+{
+  "referenceVersion": "4.16336.0",
+  "referenceSnapshot": "snapshots/claude-4.16336.0-20261104",
+  "reviewedAt": "2026-11-08T21:55:18.391Z",
+  "reviewedBy": "round4/settings/desktop/tools/pin.mjs",
+  "sources": {
+    "preload-helper-BBljBeZo.js": "eaca89d983d210116ad54e23c289ba7e36d993ab760a62264603d744601fa614",
+    "vendor-query-Bl2Kfzgk.js": "d469d340abafece53944c2606dee0378e00cadf69ee77997febb2b3035be240b",
+    "vendor-all-0-uUCo-eCX.js": "3b07702e173cffed44ac6394d2be390a2db09506d66baf378c247840a3aacfd8",
+    "shared-0-CnnWnVrT.js": "eb5fb89d8b47627c28969bd1df41f25a49a3e1d6ed91c5af2d980d5847d78ae1",
+    "vendor-router-Cs51FAGQ.js": "ae369ad46bb0d9947f016f78d8c82b64bb09dac0d702d69b25faa8240e2fe35f",
+    "shared-25-D-aF0gt9.js": "29089e649e4a1179c6a21019ba8d9c78732c4d70a3ce66587f311002189a7183",
+    "vendor-frame-BckkO60Y.js": "a6fc2b67130323b94e7bc2632ada64bda76d3c56b776a8be327213a00d9fecd4",
+    "shared-frame-CJdE5Ria.js": "b6a5f61e0f243a48215fab7f3d65958d693d715e565f57af4e0ff35ae14697bc",
+    "vendor-zod-fszujTq6.js": "0b9da2958619bbd2d4d0f5fe66458dda44d85fbf3ace121356ae182d3eae6512",
+    "vendor-intl-BJgYK7RA.js": "dd77dcb059497cc4e67d90952fe82af856b23fdd623d9aa333c0646e036c7abd",
+    "shared-153-DMw2VzSq.js": "7e609971286c1de3bb64e01d2567c0dc95a1407a6c4b5b6d8525c44093aedea9",
+    "shared-62-DoCqVpIq.js": "15a90aabd711c4209050f53ef48b2754661e19b090936fdc6d37346bd4cf4e56",
+    "shared-92-BOgyxePb.js": "ef73b1ca0bd064d1d7e606cdedd6c457cb99ffb02f93b7f8b00d8226941a3ada",
+    "shared-123-1Hc1RTKl.js": "38122e6a90c5a0af58a5f3d2c98176fd6de1f4a8055529e304317cda513e098a",
+    "shared-212-BHMAi0oa.js": "839d794782807b9e4aff3cca942f6b14ab442de2eacfb978578086d4d5eae178",
+    "shared-1-D1bGaTaN.js": "bc66aa8473c6bb2c7f6c179732a63f6cb9b8b69572abc2ebaf7c1e31d5eeb0ea",
+    "shared-36-fqRFYwOb.js": "46b37c8c361e9b83b9e10257008f0ace79f91e1ec68a8d20b136de35644b7719",
+    "c0fe64a00-Bijs8_8F.js": "be9e665ce5ecd9dcb656b1610e253fd06c508376b6e826b747f8f3f8255640fb",
+    "shared-26-B-POtn5S.js": "c908911d08e9fa275c39f71e0f1f35c1ac65961c285bdd1a233b9745f3b6f5ed",
+    "cd55d696d-FUob_YwE.js": "9c97ba9858b37c23e61a56cb23cdc99bc0582a1c8893c2c27ed8bd7021011c2f",
+    "shared-4-C_EiQb9h.js": "814c53812f2cab378d3d69b9ca35d4f05f7f4fa1e28857c0b1675a0e6b0fcbc5",
+    "shared-18-Cfqwgjc5.js": "6828aa7109628e08360fd1e7b4ddc2ff022f5f369a297ce690cd4b19e4205436",
+    "cd14a8022-CCTq5nc1.js": "3d80520789d7c1341af7e052b4fab6717d147bc15e36989987f0cb0ce7a1d26b",
+    "shared-8-BqfCbkJd.js": "d9aa7c7f690b43147e921fbef5473f2311a1474e316c44e6db5ef07e9fede5bc",
+    "c27343114-Bh0Hy-eV.js": "8581bb31f9ae85cf26087ee35ad0c797d2763584ed61ae33a1ff68955a0ab485",
+    "c51ac4bf6-BiJ5KnQb.js": "f4c7e90ee9d1a19118b6fafef48d5cf4a6a39c21c509d0eec4f9003dbb4f1679",
+    "c7357c32b-CYgkZ_Hd.js": "471dddd428f57ca486da9c068d4d7f84fc1497d769f823745d38dcb39fc6cc32",
+    "c1e3f823e-Dly84_dq.js": "cb0851e8e74570be12f747e9613d513f6a3d9bf5d6f407787e54073bd26caa7d",
+    "c6ad19bb9-BHM84I90.js": "998a8d190545c46938d3e07e9a88e0eab74ceab5d18b578285c7caa7e98ddb43",
+    "shared-5-u8kha2eH.js": "7e36ddc101d5b0a8b4427f9b882472b1f01636a60aa22fbb6062f45292f4e7e7",
+    "shared-183-B2N6Zy4J.js": "ef19933e2d466d6f2024d69a025682fee0a0ce82c175d4afd30b1109920e4001",
+    "cee6df3f4-D3si2fZf.js": "edc5b05d0e273843ee74f8378d764f281b4f1f2a9b6d6fb6e3bc0e3a7ff40679",
+    "cfea69990-Cqha5dsf.js": "2bb7c63c9362fbd04ca6503a8f4fc5997523ce4cd74331bfc4b09d14e1f9d867",
+    "shared-33-DtdykY0y.js": "1fcaa039b040c657e69517217d0defa2cf5c92cb4485911ea9b3d3698dcaa7a9",
+    "c03547424-CImlgKdT.js": "d8228af2ad74ac514ce2ac29828587211bce262d1486c77ae1d5c8649800a5c0",
+    "c2d87f9e7-Bk6d74Ey.js": "453d8fd5287f646bf36a3fb20d8f661fbcca241ed09ff20b6533352d43560b90",
+    "cabd7b1c1-CAF7rZLU.js": "9e1df80db2326d5ec6ea6008fb5228f06213cb66da15c11768e7070265629713",
+    "c0db37792-BTkaIv78.js": "c800debb9ba135f18077253a76c2ac23ecae67960b5601769bb649150b2f4b6a",
+    "shared-7-D2e77H6v.js": "533490907692f1574ae5782524482bed9bae6a2908a1bbba1e52dcdd54573e76",
+    "c7b47b35d-BJQdl9_g.js": "d62b1c74ffdc75c3c352ff2392df9f5e25680ab39192cc252006f8c7670d09e4",
+    "shared-6-2QYRw_Wv.js": "a5e6885abc21539c4729012fc1fab423776f45331ace70f5da6679cca6af6a20",
+    "ce61829b3-DN3TmwtQ.js": "e663580c213433cd3be665fdf969ae69fb8257b588a9892df0631483287e818f",
+    "cdc95db1a-Dwi18fP3.js": "3ea5ceca2f848ef67b8027b1f33cb479fc62ce3ad819a9e4366800fe0ef4a8cb",
+    "c50f7afa0-BtrOkGFw.js": "a596643a3f6ac95542fa9a243dbbbdfd34801006a7ae6e1571219e59900c85f5",
+    "c9599aae9-CBm-7_M3.js": "b902ed051f2530b5a8a13f7ec14ebc48db197ab62b3cce4e49055757ca41cbc3",
+    "ce2191564-CJxaAbMh.js": "a8513ac2b756e5876497ed7da9c73b011748a92e000e2f82a0c74af831ac9cda",
+    "ca537d078-DPuNs3bK.js": "db076b614bf642dbce1153ddf02ff42d4b230ba4bd554555d3cf304aed202a4d",
+    "c70925de4-QmzvmFns.js": "2617af8bbd7ad72f53dd3ee10e4e7207f528dd51f2fd3e566a5e709c3d8972a9",
+    "ce02c3e31-DYHdW2G3.js": "69fb275554477d61b4f46c71b22c418f595098384f9a84d87ea1e571da36e595",
+    "c60a8dc71-BhziJe6P.js": "d892add885969a8c54157d0359a2eb27408ee88858d51e53bf1034b1dcfebe88",
+    "c71860c77-B4INzBZs.js": "2af7d7dc649ddcdef8d3e6460d4cc9bfc4a250232b6b65b1f8ebee8b1e518e79",
+    "ce3a18f86-Dmeg0yYT.js": "01555753c2656c4b0178a4b39255e4adf6144d707537efe2bab14b03c99cdea0"
+  },
+  "roots": {
+    "DesktopSettingsPage": {
+      "file": "c71860c77-B4INzBZs.js",
+      "local": "Vs",
+      "export": "default",
+      "start": 120832,
+      "end": 120942,
+      "declarationSha256": "542e22b2ce320d96dfa37a6be72af6a750c5bb34d38accf1b115b6cc28494e5e",
+      "uniqueByFeatures": true,
+      "oldCounterpart": "3.6556.2 c71860c77-B72Ova_w It (host System group in src/source-settings.jsx)"
+    }
+  },
+  "cuts": {
+    "useIntl": {
+      "importer": "c71860c77-B4INzBZs.js#Y",
+      "file": "vendor-intl-BJgYK7RA.js",
+      "local": "q",
+      "export": "p",
+      "declarationSha256": "edf793bc7b87ae9a38cea39d25d752a5bcfef1d492e06a2219e120311feaaec0",
+      "unreachable": false
+    },
+    "FormattedMessage": {
+      "importer": "c71860c77-B4INzBZs.js#J",
+      "file": "vendor-intl-BJgYK7RA.js",
+      "local": "Gt",
+      "export": "l",
+      "declarationSha256": "bde2ec1630e0a679fa4135cf75389568e77fa98fdcb08519af8104d5306ff5b5",
+      "unreachable": false
+    },
+    "hostStartup": {
+      "importer": "c71860c77-B4INzBZs.js#de",
+      "file": "shared-25-D-aF0gt9.js",
+      "local": "Pi",
+      "export": "K_",
+      "declarationSha256": "0e490b136f8ed8f5bc4da178fde6502789086c2f53f51ebf095fd883d60e6f36",
+      "unreachable": false
+    },
+    "hostGlobalShortcut": {
+      "importer": "c71860c77-B4INzBZs.js#ue",
+      "file": "shared-25-D-aF0gt9.js",
+      "local": "Ii",
+      "export": "H_",
+      "declarationSha256": "c895f7277e7d7319235e10d196f33acec4960bbbd194b60cd2443e853766b872",
+      "unreachable": false
+    },
+    "hostAppPreferences": {
+      "importer": "c71860c77-B4INzBZs.js#G",
+      "file": "shared-25-D-aF0gt9.js",
+      "local": "Bi",
+      "export": "M_",
+      "declarationSha256": "3383b48d9b1bd92c0a2024ed43dd902c7e05ec87d743f8d1e84ddeda0dfdb9f5",
+      "unreachable": false
+    },
+    "hostAppFeatures": {
+      "importer": "c71860c77-B4INzBZs.js#ye",
+      "file": "shared-25-D-aF0gt9.js",
+      "local": "Vi",
+      "export": "j_",
+      "declarationSha256": "ddb198da4c8ad15fed745fa2a84721c80464060ace4f31895112e39f0d283ee5",
+      "unreachable": false
+    },
+    "desktopAppVersion": {
+      "importer": "c71860c77-B4INzBZs.js#Lo",
+      "file": "c71860c77-B4INzBZs.js",
+      "local": "Lo",
+      "export": null,
+      "declarationSha256": "f81ead25906289da733d3d4707cd83226c1177f881c09aa0f911f99547efc33f",
+      "unreachable": false
+    },
+    "useServerGatedFeature": {
+      "importer": "c71860c77-B4INzBZs.js#Me",
+      "file": "shared-123-1Hc1RTKl.js",
+      "local": "kB",
+      "export": "Zc",
+      "declarationSha256": "971b211ba80c09f0e038f1ba12f7d48ce523fb858475816ffb4b2d393de548ee",
+      "unreachable": false
+    },
+    "StockDesktopPrefSetting": {
+      "importer": "c51ac4bf6-BiJ5KnQb.js#Oe",
+      "file": "c51ac4bf6-BiJ5KnQb.js",
+      "local": "Oe",
+      "export": null,
+      "declarationSha256": "a90c30104081ea9bc1721b1bfa50def416e5e413f760b696b0c7f24d93a34f76",
+      "unreachable": true
+    },
+    "BrowserUseSection": {
+      "importer": "c71860c77-B4INzBZs.js#ho",
+      "file": "c71860c77-B4INzBZs.js",
+      "local": "ho",
+      "export": null,
+      "declarationSha256": "2574de921ff75fe246cd78fdceb0755760bd0ce87dfac58568736359e6c1bc4b",
+      "unreachable": true
+    },
+    "IntlProviderOverlay": {
+      "importer": "c9599aae9-CBm-7_M3.js#i",
+      "file": "vendor-intl-BJgYK7RA.js",
+      "local": "Jt",
+      "export": "c",
+      "declarationSha256": "bf4dc2e58e39c9e382ad5ab612b5ea637b0f9e5098867124cbad5ea29c391061",
+      "unreachable": true
+    },
+    "useDispatchAllowed": {
+      "importer": "cfea69990-Cqha5dsf.js#S",
+      "file": "shared-18-Cfqwgjc5.js",
+      "local": "ZV",
+      "export": "Da",
+      "declarationSha256": "fa32aeb8d9ad5ab44091391e6bd2d902f64faf01f6c7d44802a18396fa76a6dc",
+      "unreachable": false
+    },
+    "useStorageSettingsAvailable": {
+      "importer": "c71860c77-B4INzBZs.js#dt",
+      "file": "shared-5-u8kha2eH.js",
+      "local": "yA",
+      "export": "_c",
+      "declarationSha256": "7086c8e407702c582cf7e730b006b664e01e7b38a409fb2b2cce9c35b4241f30",
+      "unreachable": false
+    },
+    "StorageDialog": {
+      "importer": "c71860c77-B4INzBZs.js#Fa",
+      "file": "c71860c77-B4INzBZs.js",
+      "local": "Fa",
+      "export": null,
+      "declarationSha256": "412344e54912a3c1941d3f51d8d35e16f3513c6dd9a00af261343e5fa333e91c",
+      "unreachable": false
+    },
+    "useCurrentAccount": {
+      "importer": "shared-25-D-aF0gt9.js#Z",
+      "file": "shared-25-D-aF0gt9.js",
+      "local": "Z",
+      "export": null,
+      "declarationSha256": "65456efed4ffae1a16e739336c231a59f0f8fd4f0523de0d58b1ae8c18f0eb74",
+      "unreachable": false
+    },
+    "useOptionalCurrentAccount": {
+      "importer": "shared-25-D-aF0gt9.js#VB",
+      "file": "shared-25-D-aF0gt9.js",
+      "local": "VB",
+      "export": null,
+      "declarationSha256": "61e10f89cf1191741a44a33da872216f7a176b30d5fb7f23c25fe746526a7ef0",
+      "unreachable": false
+    },
+    "useErrors": {
+      "importer": "shared-62-DoCqVpIq.js#rP",
+      "file": "shared-62-DoCqVpIq.js",
+      "local": "rP",
+      "export": null,
+      "declarationSha256": "8cc2e61ff0e38fe5049f326f836c21d0376246138aa501f16e392a882f9a8129",
+      "unreachable": false
+    },
+    "useKeepAwakeAvailable": {
+      "importer": "c1e3f823e-Dly84_dq.js#o",
+      "file": "c1e3f823e-Dly84_dq.js",
+      "local": "o",
+      "export": null,
+      "declarationSha256": "0b267988df7d6d92324a1c5127b1693385a20c41801fc592efb09eb0a4c35531",
+      "unreachable": false
+    },
+    "useKeepAwakeEnabled": {
+      "importer": "c1e3f823e-Dly84_dq.js#a",
+      "file": "c1e3f823e-Dly84_dq.js",
+      "local": "a",
+      "export": null,
+      "declarationSha256": "d2e17dac12cfd6b6217924fd10b488b701f3ee24f3a0e92ea2f46b1e71485aee",
+      "unreachable": false
+    },
+    "useKeepAwakeWriter": {
+      "importer": "c1e3f823e-Dly84_dq.js#l",
+      "file": "c1e3f823e-Dly84_dq.js",
+      "local": "l",
+      "export": null,
+      "declarationSha256": "639b18da9ee9554fb7a4adae6f22f51d7360b2a834132e964ff9afd1b1c60cd7",
+      "unreachable": false
+    },
+    "EffortControlSlot": {
+      "importer": "shared-7-D2e77H6v.js#FI",
+      "file": "shared-7-D2e77H6v.js",
+      "local": "FI",
+      "export": null,
+      "declarationSha256": "e01940289da0fb82ee1988ae7e95c0bc9df26d03496127b6a0f035270bef152a",
+      "unreachable": true
+    },
+    "PreviewAllowedSitesModal": {
+      "importer": "ce3a18f86-Dmeg0yYT.js#r",
+      "file": "ce3a18f86-Dmeg0yYT.js",
+      "local": "r",
+      "export": null,
+      "declarationSha256": "7ae27883a18b3dfbd5928310fda8698187c7526e39ba2d171978bdf9528e8957",
+      "unreachable": false
+    },
+    "AncientJournalNotice": {
+      "importer": "c71860c77-B4INzBZs.js#Mo",
+      "file": "c71860c77-B4INzBZs.js",
+      "local": "Mo",
+      "export": null,
+      "declarationSha256": "33509eec28fcca22b125efc8c867d1dc6ad7aa6d233b642a981caca4b8dfd987",
+      "unreachable": true
+    },
+    "useSearchParams": {
+      "importer": "shared-25-D-aF0gt9.js#sd",
+      "file": "shared-25-D-aF0gt9.js",
+      "local": "sd",
+      "export": null,
+      "declarationSha256": "0f326b89607e78107652d0641d79f8e75e4b457a3ab1bf6990d4acd6d62be524",
+      "unreachable": false
+    },
+    "useGrowthBookFeature": {
+      "importer": "shared-25-D-aF0gt9.js#go",
+      "file": "shared-25-D-aF0gt9.js",
+      "local": "go",
+      "export": null,
+      "declarationSha256": "89564857b4d28dd13b7532d71998b48bbe17ce7c03000b63eab82e4b60c465a6",
+      "unreachable": false
+    },
+    "useGrowthBookFeatureValue": {
+      "importer": "shared-25-D-aF0gt9.js#Go",
+      "file": "shared-25-D-aF0gt9.js",
+      "local": "Go",
+      "export": null,
+      "declarationSha256": "d9d19b866d62d135bf54cdf27e65a19ce658fb89212c882fee6cd7b55e523d9f",
+      "unreachable": false
+    },
+    "useDynamicConfig": {
+      "importer": "shared-25-D-aF0gt9.js#is",
+      "file": "shared-25-D-aF0gt9.js",
+      "local": "is",
+      "export": null,
+      "declarationSha256": "62061fdc02343a94c46408e593261e423838ed729d1bac0ac62887b24397f263",
+      "unreachable": false
+    },
+    "useAppConfiguration": {
+      "importer": "shared-0-CnnWnVrT.js#y4",
+      "file": "shared-0-CnnWnVrT.js",
+      "local": "y4",
+      "export": null,
+      "declarationSha256": "9fa093a3d42128a03fa2a78f1f98e8d6525bda99c4f66bed1e6b630c621ae2d3",
+      "unreachable": false
+    }
+  },
+  "hostAdapterSha256": "944678564c167c8b0e297321338196b1a27817573c2f25dbda8e4b3b80e04431",
+  "cdsCore": {
+    "manifest": "app/src/generated/cds-core/manifest.json",
+    "manifestSha256": "06d2026939e5c8992713c2a0dda1b1abc9adffe7a0c223fe3c1e79eecd08d62c"
+  },
+  "settingsNav": {
+    "manifest": "app/src/generated/settings-nav/manifest.json",
+    "manifestSha256": "435f5b7252e981860470a2e95daf50f60eb6fe14bf70caf26cace55915d2da8d"
+  },
+  "settingsPages": {
+    "manifest": "app/src/generated/settings-pages-v4/manifest.json",
+    "manifestSha256": "10c5fe1c4bf21bf43298bab9e58dddc91af58217aceea8ce915423157f448aa7"
+  }
+}

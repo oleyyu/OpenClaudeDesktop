@@ -1,0 +1,248 @@
+{
+  "referenceVersion": "4.16336.0",
+  "referenceSnapshot": "snapshots/claude-4.16336.0-20261104",
+  "generator": "scripts/extract-chat-knowledge-v4.mjs",
+  "previous": {
+    "generator": "scripts/extract-chat-knowledge.mjs",
+    "output": "src/generated/chat-knowledge",
+    "referenceVersion": "3.6556.2"
+  },
+  "sharedGraph": {
+    "area": "cds-core",
+    "manifestSha256": "06d2026939e5c8992713c2a0dda1b1abc9adffe7a0c223fe3c1e79eecd08d62c"
+  },
+  "linkedAreas": {
+    "chat-markdown-v4": "063b9d3ee925f971b8ee7ca6f7922bb52ff2ea5eb4eeba670410c80bfa80dd3b",
+    "code-routines-v4": "8dee8be0e689fa69f13ede52d82d01c39c6a62d60940601e86d2c99d30b810a5",
+    "sessions-page-v4": "e032e0d7b6a33954227b893a26a05623a18d548bc04a06bd1dc18e632e34df7b",
+    "routines-shared-v4": "a2a9b9a84b2705e48451025af38eb7582de5bb421c626e6bdf5b067eb8e00c8c",
+    "working-line-v4": "25610753870c1d676d772810433ca78b2413b2d93418b0e3ea8a904875d1deaa"
+  },
+  "roots": [
+    {
+      "file": "shared-36-fqRFYwOb.js",
+      "local": "U_",
+      "name": "KnowledgeFileThumbnail",
+      "export": "Aa",
+      "declarationSha256": "463c9bdff33f115a0ca70754be8a0ac85c04c8ca7134c0be300bc29d1e9bdab2"
+    },
+    {
+      "file": "shared-36-fqRFYwOb.js",
+      "local": "rv",
+      "name": "KnowledgeFileTag",
+      "export": "Ma",
+      "declarationSha256": "4014e8b2fd78db9b031d2a015f42e54cf6dbfd242f6214af0692dd1942034ac7"
+    },
+    {
+      "file": "shared-36-fqRFYwOb.js",
+      "local": "b_",
+      "name": "knowledgeFileTagName",
+      "export": "Ha",
+      "declarationSha256": "c6c1105a79081362f5bc7c8c14847cd2cf6c87e22b5f821716de42a8b24ac569"
+    },
+    {
+      "file": "shared-4-C_EiQb9h.js",
+      "local": "Yj",
+      "name": "formatKnowledgeFileSize",
+      "export": "xt",
+      "declarationSha256": "432764bef2402e1d02bdd9aa334156911dedeee41f17c3c989c5f5b8d044fe42"
+    },
+    {
+      "file": "c52b32660-CmYsbpbF.js",
+      "local": "be",
+      "name": "KnowledgeCapacityBar",
+      "export": null,
+      "declarationSha256": "ec0b3afaea9239b4ce4a611cca6870c0e13e57d930ca6b4c28e614ca6a29b31b"
+    },
+    {
+      "file": "cf2f34ee4-CGe8SQnD.js",
+      "local": "vi",
+      "name": "AddTextContentDialog",
+      "export": null,
+      "declarationSha256": "c396eed84df175bc4f09031d98b47f3db021f4bf47a0a824a5e63f3e9a82dc14"
+    },
+    {
+      "file": "cf2f34ee4-CGe8SQnD.js",
+      "local": "si",
+      "name": "createTextContentDraft",
+      "export": null,
+      "declarationSha256": "f7442f5f359b941b4f5f7c15b653385587b5efa8561bef11eaa4b4e72eea97b9"
+    },
+    {
+      "file": "cf2f34ee4-CGe8SQnD.js",
+      "local": "oi",
+      "name": "KnowledgeAddMenu",
+      "export": "m",
+      "declarationSha256": "7399fa6860f9f9105799a690243c575d820aad948885e39f7d70f6effa8e344d"
+    },
+    {
+      "file": "cffc9ea71-Do_Jrd6d.js",
+      "local": "C",
+      "name": "MemoryPreviewContent",
+      "export": "n",
+      "declarationSha256": "39449f2ecdab8b4510af93ecd3a96ed8e29cad1c539ff50a4c27394b18052d21"
+    }
+  ],
+  "adapters": [
+    {
+      "original": "vendor-intl-BJgYK7RA.js#q",
+      "name": "useIntl",
+      "hostAdapter": "src/source-routines-shared-adapters.jsx",
+      "declarationSha256": "edf793bc7b87ae9a38cea39d25d752a5bcfef1d492e06a2219e120311feaaec0"
+    },
+    {
+      "original": "vendor-intl-BJgYK7RA.js#Gt",
+      "name": "FormattedMessage",
+      "hostAdapter": "src/source-routines-shared-adapters.jsx",
+      "declarationSha256": "bde2ec1630e0a679fa4135cf75389568e77fa98fdcb08519af8104d5306ff5b5"
+    },
+    {
+      "original": "shared-62-DoCqVpIq.js#rP",
+      "name": "useErrors",
+      "hostAdapter": "src/source-routines-shared-adapters.jsx",
+      "declarationSha256": "8cc2e61ff0e38fe5049f326f836c21d0376246138aa501f16e392a882f9a8129"
+    },
+    {
+      "original": "shared-25-D-aF0gt9.js#ko",
+      "name": "useFeatureIsOn",
+      "hostAdapter": "src/source-routines-shared-adapters.jsx",
+      "declarationSha256": "e464cf91ab4b3e69b54bd9ab46a2b248691395fd4fb7d28be593006226268ffa"
+    },
+    {
+      "original": "c274117ff-CGNUUDgh.js#_",
+      "name": "useChatMemoryAvailable",
+      "hostAdapter": "src/source-chat-knowledge-adapters.jsx",
+      "declarationSha256": "fb853975d5c0e866c23482e09c02e0785f26858553b2e761fbb8fba1847bdfba"
+    },
+    {
+      "original": "shared-212-BHMAi0oa.js#Oz",
+      "name": "useChatMemoryQuery",
+      "hostAdapter": "src/source-chat-knowledge-adapters.jsx",
+      "declarationSha256": "dc1fb761c90a74da91e5385f9e5efcb2fb58c004149fa020c033a09514f4fb4a"
+    },
+    {
+      "original": "shared-212-BHMAi0oa.js#Rz",
+      "name": "useUpdateChatMemoryControls",
+      "hostAdapter": "src/source-chat-knowledge-adapters.jsx",
+      "declarationSha256": "7b75719b08c33a5e4986a49cf63c0bbecd34c5d8349cf69ca80e79b8f224e404"
+    },
+    {
+      "original": "c89efce1a-CleBUUAy.js#Mu",
+      "name": "ChatMemoryMarkdown",
+      "hostAdapter": "src/source-chat-knowledge-adapters.jsx",
+      "declarationSha256": "5ecd5b925fb6e7537506abd250cb08d47fa423c3a8524f99eb15af104ebdc6b4"
+    },
+    {
+      "original": "shared-212-BHMAi0oa.js#cB",
+      "name": "useMemoryMaxControlChars",
+      "hostAdapter": "src/source-chat-knowledge-v4-adapters.jsx",
+      "declarationSha256": "fd80baa2541aff202e279bd05bb54ccaf4104ba772537927ce985f3b36eee4dd"
+    },
+    {
+      "original": "shared-212-BHMAi0oa.js#sB",
+      "name": "useMemoryMaxControls",
+      "hostAdapter": "src/source-chat-knowledge-v4-adapters.jsx",
+      "declarationSha256": "1a08384bed559f28b9c982602ca698e3a39f1dc5c88ef34180e423235c9ff4e3"
+    },
+    {
+      "original": "shared-212-BHMAi0oa.js#GQ",
+      "name": "useCreateKnowledgeText",
+      "hostAdapter": "src/source-chat-knowledge-adapters.jsx",
+      "declarationSha256": "3675fed5eb2b47afe449d26d8c2c96b8cbf5e614c2811b0a0672f421106cbf4b"
+    },
+    {
+      "original": "shared-212-BHMAi0oa.js#RW",
+      "name": "useKnowledgeProject",
+      "hostAdapter": "src/source-chat-knowledge-adapters.jsx",
+      "declarationSha256": "9c3d713161e38989622847a9bf02c86cc1c557b2f3d75f3262d919efa689f048"
+    },
+    {
+      "original": "shared-183-B2N6Zy4J.js#nN",
+      "name": "useKnowledgeGithubAvailable",
+      "hostAdapter": "src/source-chat-knowledge-adapters.jsx",
+      "declarationSha256": "905aded1f3c7de1f12349f107236b696c1fce9a42f8bfa5a3ae63371ab133c88"
+    },
+    {
+      "original": "shared-183-B2N6Zy4J.js#ZM",
+      "name": "useKnowledgeGithubAuth",
+      "hostAdapter": "src/source-chat-knowledge-adapters.jsx",
+      "declarationSha256": "cf22a8ac0e9a9f952a174e5dbe091a72f5b465f9c5ab06ef04b717cf0535baab"
+    },
+    {
+      "original": "shared-183-B2N6Zy4J.js#rw",
+      "name": "useKnowledgeMcpServers",
+      "hostAdapter": "src/source-chat-knowledge-adapters.jsx",
+      "declarationSha256": "58aa041e37ef0943bf8f69b747c251a1b687b66334e5e7635369714d6004d358"
+    },
+    {
+      "original": "cf2f34ee4-CGe8SQnD.js#hi",
+      "name": "KnowledgeMcpSourceItems",
+      "hostAdapter": "src/source-chat-knowledge-adapters.jsx",
+      "declarationSha256": "eacd44750e6b74038a73331145bf6f87dedd827fbdef35073fcf0facfebedeca"
+    },
+    {
+      "original": "shared-36-fqRFYwOb.js#Mb",
+      "name": "KnowledgeGithubSyncModal",
+      "hostAdapter": "src/source-chat-knowledge-adapters.jsx",
+      "declarationSha256": "2d801a255c7327c5c2fb0eca41ae12d161ef1bceced1c9d56395bbf581b8b7f0"
+    },
+    {
+      "original": "cf2f34ee4-CGe8SQnD.js#$r",
+      "name": "ExampleProjectTooltip",
+      "hostAdapter": "src/source-project-v3-adapters.jsx",
+      "declarationSha256": "1094d50cb033710a7551d83fa38c502823c20d1ae70748193af1fab3a3275fe6"
+    },
+    {
+      "original": "shared-4-C_EiQb9h.js#QI",
+      "name": "useKnowledgeTokens",
+      "hostAdapter": "src/source-chat-knowledge-adapters.jsx",
+      "declarationSha256": "3fef896e41bb4586e5437069d362d69b5f648c14e73fab4bfc5363277910347a"
+    },
+    {
+      "original": "shared-4-C_EiQb9h.js#JI",
+      "name": "useKnowledgeCapacity",
+      "hostAdapter": "src/source-chat-knowledge-adapters.jsx",
+      "declarationSha256": "20639199186a1dcc14e222f75c15dc2b8883d288010539fdb283f37a2d39e2c7"
+    },
+    {
+      "original": "shared-4-C_EiQb9h.js#_L",
+      "name": "useKnowledgeFileUpload",
+      "hostAdapter": "src/source-chat-knowledge-adapters.jsx",
+      "declarationSha256": "66fc77da1d2c938f7824d2f9a74cb45aec2b222b66dee2c9da9191fa91f85a42"
+    },
+    {
+      "original": "shared-4-C_EiQb9h.js#KI",
+      "name": "useKnowledgeSearchRollout",
+      "hostAdapter": "src/source-chat-knowledge-adapters.jsx",
+      "declarationSha256": "c8d34ad237c1535e9cb2c79dc556815d9fc20a28bf35d46d99bb361041372032"
+    },
+    {
+      "original": "shared-4-C_EiQb9h.js#mL",
+      "name": "useKnowledgeSearchThreshold",
+      "hostAdapter": "src/source-chat-knowledge-adapters.jsx",
+      "declarationSha256": "0ba00dbe497af0242486e53c09f006cac6a1ff439af29c0739e8ac44afeda556"
+    },
+    {
+      "original": "shared-4-C_EiQb9h.js#qI",
+      "name": "useKnowledgeSearchActive",
+      "hostAdapter": "src/source-chat-knowledge-adapters.jsx",
+      "declarationSha256": "fd16036b8e653e505d49b777943082154e9be5cc5364212bac98a09ef4b652f0"
+    },
+    {
+      "original": "shared-62-DoCqVpIq.js#KM",
+      "name": "knowledgeTileAppRoute",
+      "hostAdapter": "src/source-chat-knowledge-adapters.jsx",
+      "declarationSha256": "7fc4660dcb1552460be9e8eb9c01cad130751e6aaca9701b93788dd3692ad76b"
+    }
+  ],
+  "notPorted": [
+    {
+      "previous": "3.6556.2 helper modules (shared-52, shared-5, shared-78, shared-182, shared-2, shared-25, shared-frame To, …)",
+      "why": "sliced inside the closure under their 4.16336.0 chunks and locals, or linked from the 4.16336.0 graph that holds them; this graph exports only the semantic roots"
+    },
+    {
+      "previous": "viewTabsCopies shared-frame-6jtSkIit.js#To (3.6556.2 manifest)",
+      "why": "no copy: the CDS names this closure reads are cds-core publicNames (sharedGraph cds-core)"
+    }
+  ]
+}

@@ -1,0 +1,337 @@
+@import "./message-style.css";
+/* Original design-system/dframe resources from 2.2553.1.
+   Component provenance and remaining differences: analysis/batch-20260920/. */
+:root {
+  /* The --font-anthropic-* chains (CJK, ui-monospace and the metric-matched
+     serif fallbacks) come from the loaded design-system :root
+     (design-system.css:181-211); local CSS must not redeclare them. */
+  --app-bg: var(--cds-surface-1);
+  --app-ink: var(--cds-text-primary);
+  --app-muted: var(--cds-text-muted);
+  --app-line: var(--cds-border);
+  /* Claude ships no --cds-font-code: every path and code block renders in the
+     design-system mono chain (design-system.css:206 --font-anthropic-mono,
+     surfaced as --cds-font-mono). Local rules that read --cds-font-code get
+     that same chain; a user Code font overrides both on the root inline. */
+  --cds-font-code: var(--cds-font-mono);
+  font-family: var(--cds-font-sans, anthropic-sans), sans-serif;
+  color: var(--app-ink);
+  background: var(--app-bg);
+  -webkit-font-smoothing: antialiased;
+}
+/* ion-dist/index.html inline style: focus shadows outside main read the page
+   background from the root. */
+html.cds-root {
+  --cds-page-bg: var(--cds-surface-1);
+}
+/* round4 navfix (d), the Chat disclaimer band: the window's page background is the root CdsRoot's pageBackground
+   "surface-1" (shared-46 St, shared-23 FD), and every nested 4.16336.0 CdsRoot passes it on — shared-frame xo
+   `te = o ?? X(Ua)` (its own pageBackground, else the enclosing root's) inlined as `ro(te)` = --cds-page-bg:
+   var(--cds-surface-1) — so the official epitaxy root (c11959232 j_, a CdsRoot without pageBackground) and everything
+   under it, the Chat disclaimer's `bg-page` (ca2ef848d H9) included, paint the ground the chat tile shell paints
+   (shared-20 m_ chat: var(--tile-page-ground, var(--df-bg-page, …)), --df-bg-page from --cds-surface-1 under fizzy-lake color).
+   main.epitaxy-root.cds-root is the host's own root element (no official CdsRoot of its own, see main.jsx U-1): it takes
+   the page background it sits in instead of resetting it to the stylesheet's `.cds-root{--cds-page-bg:var(--cds-surface-0)}`. */
+main.epitaxy-root.cds-root {
+  --cds-page-bg: inherit;
+}
+* {
+  box-sizing: border-box;
+  /* design-system.css:1260-1265 base layer: every scroller uses the thin
+     native scrollbar. Overlay mode reserves nothing; classic mode reserves the
+     small legacy lane, measured by the scrollbar-mode suite, never hard-coded.
+     The lane's paint is the loaded design-system rule html,[data-theme]
+     { scrollbar-color: hsla(var(--border-300) / 35%) transparent }
+     (design-system.css:1266-1268, /assets/v1/c6a992d55-C0zTICcS.css) which
+     index.html's data-theme="claude" root matches; scrollbar-color inherits,
+     and no local scroller overrides it (the scrollbar-mode suite asserts this). */
+  scrollbar-width: thin;
+}
+body {
+  margin: 0;
+}
+/* D26 (R3-style): the native-control resets sit in @layer base, the layer of the 2.42304.0 preflight they shadow
+   (c6a992d55-sXiDGMFQ.css @layer base: `button,input,select,optgroup,textarea{font:inherit;color:inherit;…;
+   background-color:#0000;border-radius:0}`, `*{border:0 solid;padding:0}`, `:where(.cds-root) :where(button,…)
+   {cursor:var(--cds-cursor-interactive)}`, default under .cds-root[data-platform=desktop], and `:where(a,button,
+   input,…){app-region:no-drag}`). Unlayered they beat every @layer components / utilities class on a control,
+   whatever its specificity: R1 TT-04, the revert-layer releases (source-code-start, source-composer, …) and the
+   .df-user-menu-btn restatement, all since removed. In base those classes win as in the source; these rules come after the official
+   preflight, so where the two differ the host value stays (border-style none, -webkit-app-region and the host-only
+   disabled text colour: the source has none, its Buttons dim with opacity). */
+@layer base {
+  button,
+  input,
+  textarea,
+  select {
+    font: inherit;
+    color: inherit;
+  }
+  button {
+    cursor: default;
+    border: 0;
+    background: transparent;
+    padding: 0;
+  }
+  button:disabled {
+    color: var(--cds-text-disabled);
+    cursor: default;
+  }
+  button,
+  input,
+  textarea,
+  select {
+    -webkit-app-region: no-drag;
+  }
+}
+/* Hand-written host controls whose own unlayered colour lost to the old unlayered button:disabled (0,1,1), a one-class
+   rule or a (0,1,1) one from a sheet the bundle orders before this one, keep that disabled colour: same specificity,
+   same place in the bundle, so their cascade is the old one. tests/style-control-reset-layer.test.mjs derives the
+   list from the JSX and the sheets; official classes on every other control are no longer overridden. */
+button:where(.msx-image-chip, .sac-feedback-toggle,
+  .sca-remove, .session-title, .slp-option,
+  .sob-agent, .sob-chip, .sob-preset, .sua-copy, .suc-show-more):disabled {
+  color: var(--cds-text-disabled);
+}
+/* end D26 control resets */
+/* Buttons and links keep the loaded @layer base ring (design-system.css
+   :1200-1216, outline 2px hsl(var(--accent-100)), offset 2px); an unlayered
+   rule here would override it. ToolButtons are the CDS ghost icon Button,
+   whose focus is focus-visible:shadow-focus (shared-frame-C_2npUJq.js:2689
+   rs, :2714-2718 outline-hidden). */
+input:focus,
+textarea:focus {
+  outline: none;
+}
+#root {
+  height: 100dvh;
+  overflow: hidden;
+}
+.desktop-app.dframe-root {
+  display: flex;
+  height: 100%;
+  width: 100%;
+  font-size: 13px;
+  background: var(--app-bg);
+  --df-sidebar-left: 0px;
+  /* W14-code r2 DC-11: --df-row-h / --df-row-font are shared-styles' own .dframe-root defaults (26px / 13px). */
+}
+.window-drag {
+  -webkit-app-region: drag;
+}
+.app-sidebar.dframe-sidebar {
+  position: relative;
+  inset: auto;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  width: var(--df-sidebar-width);
+  height: 100%;
+  /* W14-code r2 DC-11: no background / end border here; shared-styles' (0,4,0) `.dframe-root[data-variant=web]:not(
+     [data-collapsed]) .dframe-sidebar{border-inline-end:…;background-color:var(--df-web-sidebar-bg)…}` always won. */
+  border-radius: 0;
+  box-shadow: none;
+  /* The source .dframe-sidebar card does not clip (its body clips itself,
+     [overflow:clip]) so the resize handle can straddle the edge; the toolbar
+     and footer rows clip locally instead. */
+  overflow: visible;
+}
+.sidebar-toolbar.df-titlebar {
+  height: 46px;
+  min-height: 46px;
+  display: flex;
+  align-items: center;
+  padding: 2px 8px 0;
+  gap: 0;
+  overflow: hidden;
+}
+/* titlebar-shared-21.js _v / sidebar-main.js:15392: the spacer follows the
+   zoom (--df-traffic-light-spacer on the dframe root, round(74 / min(zoom, 1))). */
+.traffic-space {
+  width: var(--df-traffic-light-spacer, 74px);
+  flex-shrink: 0;
+}
+[data-fullscreen] .traffic-space {
+  display: none;
+}
+/* W14-code r3 fr3-01 / R3DC-01: no .code-icon-button / .icon-button rules. ToolButton is the CDS ghost iconOnly Button
+   (code-ui.jsx), whose hover / open wash is its paint layer's (shared-frame-6jtSkIit ju ghost), and the last
+   .code-icon-button (the Chat / Cowork row More) and main.jsx's dead IconButton (.icon-button) are gone. */
+/* W12b-FTS-2: the sidebar titlebar holds no code-icon-button any more (Hide sidebar is shared-21 Pz, a CdsButton
+   df-chrome-btn like Cm's Back / Forward), so the 24x28 host sizing rule is gone. */
+.sidebar-toolbar [data-cds="Icon"] {
+  font-weight: 533.3 !important;
+}
+/* R2-appswitch: the titlebar mode switch is the original df-app-switch + CDS SegmentedControl
+   (source-app-switch.jsx); its sizes and colours are the loaded shared-styles-Bl9zqrv-.css rules. */
+/* W14-code r2 fr2-05: the sidebar body is shared-22 GI's own utility string (source-sidebar.jsx SIDEBAR_BODY_CLASS). */
+/* Account footer (sidebar-groups.js:5225-5310 pw in sidebar-main.js:14187-14202 hL, inside the df-bottom-tray). The
+   button's metrics are pw's own utilities and the loaded shared-styles copy of desktop-layout.css supplies the tray
+   (margin -8px -8px -6px against GI's gap-2 / pb-1.5, hairline, footer row padding, suffix mask and font); W14-code r2
+   fr2-05 removed the local side-margin stand-in now that the body is GI's. */
+/* Sidebar resize handle (sidebar-groups.js uw -> shared-19 Os): geometry,
+   ring and pill come from Os's utility classes; the loaded shared-styles copy
+   of desktop-layout.css supplies :1462-1468 (z-index 25, clip-path inset(0 0
+   0 37.5%) except :focus-visible), :2032-2036 (web top / 0.5px ring),
+   :1459-1461 ([data-resizing] no sidebar transition) and the collapsed hide
+   (.dframe-root[data-collapsed] .dframe-resize-handle{display:none}). */
+/* w11-frame-root-cont: the collapsed frame is the official 3.6556.2 one. The root writes [data-collapsed] (shared-22
+   oR) and the loaded shared-styles-D_GJawPO.css lays it out: .dframe-sidebar becomes the trigger pill holding
+   SourceCollapsedChrome (`.dframe-root[data-collapsed] .dframe-sidebar{width:auto;bottom:auto;top:calc(10px + var(
+   --df-chrome-bar-height));…;flex-direction:row;…;inset-inline-start:var(--df-collapsed-left);overflow:visible}`),
+   .dframe-sidebar-body the full-height drawer (`.dframe-root[data-variant=web][data-collapsed] .dframe-sidebar
+   .dframe-sidebar-body{--df-peek-band:44px;inset-inline-start:-8px;width:var(--df-peek-width);height:var(
+   --app-content-height,100dvh);…;top:-10px;transform:translate(-4px)}`, 46px band and spacer offset on the macOS
+   desktop), the peek bridge, the peek-mode switch in the band and the no-drag strip. The only host rule left undoes
+   this file's own expanded aside (.app-sidebar.dframe-sidebar above: an in-flow column, position relative, height
+   100%) back to the official pill's box: base `.dframe-sidebar{…position:absolute;…}` with no height of its own (W14-code
+   r2 DC-11: the aside has no local border any more, so nothing is undone there). */
+.dframe-root[data-collapsed] .app-sidebar.dframe-sidebar {
+  position: absolute;
+  height: auto;
+}
+.workspace {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--cds-surface-1);
+}
+.workspace-toolbar {
+  height: 46px;
+  min-height: 46px;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  gap: 8px;
+}
+/* A session popout or pane window has no sidebar (main.jsx NO_SIDEBAR, no [data-collapsed]): its titlebar clears the
+   traffic lights itself. With a sidebar, the collapsed titlebar's clearance is the official [data-top-left] margin. */
+[data-session-popout]:not([data-fullscreen]) .workspace-toolbar,
+[data-pane-window]:not([data-fullscreen]) .workspace-toolbar {
+  padding-left: calc(var(--df-traffic-light-spacer, 74px) + 14px);
+}
+.session-title {
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--cds-text-secondary);
+}
+.panel-toggles {
+  margin-left: auto;
+  display: flex;
+  gap: 4px;
+}
+.conversation {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.transcript {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0 max(32px, calc((100% - 768px) / 2));
+  scrollbar-width: thin;
+  scrollbar-gutter: stable both-edges;
+  /* scrollbar-color: inherited from html (design-system.css:1266-1268); the
+     official feed class string (scroll-messages-current.js:63963) sets none. */
+}
+.composer-zone {
+  width: 100%;
+  max-width: 832px;
+  padding: 0 32px;
+  margin: 0 auto;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+/* Home key / sign-in cards (main.jsx): the Lw outline card (code-home.js:13752-13754, .sh-card.is-outline
+   in source-home.css: 480px, 8/12/12 padding, radius 8, 1px border ring, gap 20) with Jw's text-body
+   text-primary title (:13895-13924), a text-secondary body and CDS Buttons (SourceSettingsButton sm,
+   theme tokens in light and dark). Only the 12px spacing around the card is local. */
+.connection-card {
+  margin: 12px 0;
+}
+.connection-card-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  font-size: 13px;
+  line-height: 19px;
+}
+.connection-card-title {
+  color: var(--cds-text-primary);
+}
+.connection-card-body {
+  color: var(--cds-text-secondary);
+  overflow-wrap: anywhere;
+}
+.connection-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.secondary-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--cds-border);
+  background: var(--cds-surface-3);
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-size: 12px;
+}
+/* The rename dialog's surface, title and footer are the shared Dialog's (source-dialog.css); its field is the CDS
+   TextInput (W14-code r3 css3-dialog-text-fields, main.jsx). */
+.section-surface {
+  max-width: 840px;
+  width: 100%;
+  padding: 24px 32px;
+  margin: auto;
+}
+.section-surface > header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.section-surface h1 {
+  font-size: 24px;
+  font-weight: 400;
+}
+.section-surface > p {
+  color: var(--cds-text-muted);
+  font-size: 13px;
+  line-height: 1.6;
+  margin-top: 24px;
+}
+.section-surface .detail-panel {
+  width: 100%;
+  height: 400px;
+  border: 1px solid var(--app-line);
+  margin-top: 24px;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (max-width: 1000px) {
+  .traffic-space {
+    width: calc(var(--df-traffic-light-spacer, 74px) - 6px);
+  }
+}
+/* Reduced motion has no blanket kill (the source has none): each local
+   animation or movement transition carries its own reduce rule keyed on
+   @media (prefers-reduced-motion: reduce) and html[data-reduce-motion=true]
+   (the in-app setting; data-local-motion=reduce is its older alias), next to
+   the loaded CSS's motion-reduce variants and its global animation clamp
+   (design-system.css:1423-1428). */

@@ -1,0 +1,112 @@
+.source-tooltip-scope {
+  position: absolute;
+  inset: 0 auto auto 0;
+  width: 100%;
+  height: 0;
+  pointer-events: none;
+}
+.source-tooltip-positioner {
+  position: absolute;
+  width: max-content;
+  max-width: 240px;
+  pointer-events: none;
+}
+.source-tooltip-popup {
+  padding-inline: 8px;
+  max-width: 240px;
+  border-radius: calc(0.375rem * var(--cds-rem-scale, 1));
+  background: var(--cds-tooltip-bg);
+  color: var(--cds-tooltip-fg);
+  box-shadow: var(--cds-shadow-sm);
+  font-family: var(--cds-font-sans);
+  font-size: calc(0.8125rem * var(--cds-rem-scale, 1));
+  line-height: calc(1.125rem * var(--cds-rem-scale, 1));
+  font-weight: 400;
+  transform-origin: var(--transform-origin);
+  opacity: 1;
+  scale: 1;
+  transition:
+    opacity 120ms cubic-bezier(0.32, 0.72, 0, 1),
+    scale 120ms cubic-bezier(0.32, 0.72, 0, 1);
+  pointer-events: auto;
+  -webkit-app-region: no-drag;
+}
+.source-tooltip-scope[data-mode="dark"] .source-tooltip-popup {
+  box-shadow:
+    inset 0 0 0 var(--cds-ring-inner) var(--cds-ring-color),
+    0 0 0 var(--cds-ring-outer) var(--cds-ring-color),
+    var(--cds-shadow-sm);
+}
+.source-tooltip-popup[data-state="starting"],
+.source-tooltip-popup[data-state="ending"] {
+  opacity: 0;
+  scale: 0.98;
+}
+.source-tooltip-popup[data-instant] {
+  transition-duration: 0s;
+}
+.source-tooltip-popup[data-hoverable="false"] {
+  pointer-events: none;
+}
+.source-tooltip-popup:not([data-has-shortcut]) {
+  text-wrap: balance;
+}
+.source-tooltip-single {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: calc(1.5rem * var(--cds-rem-scale, 1));
+  padding-block: calc(0.1875rem * var(--cds-rem-scale, 1));
+}
+.source-tooltip-multiline {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-block: 6px;
+  white-space: normal;
+}
+.source-tooltip-ink {
+  display: contents;
+}
+.source-tooltip-label-line {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+  gap: 8px;
+}
+.source-tooltip-label {
+  min-width: 0;
+  overflow-wrap: break-word;
+}
+/* Mu: text-[calc(0.75rem*var(--cds-rem-scale,1))] [--cds-shortcut-cap-ink:var(--cds-text-muted)];
+   twMerge drops Ya.text's text-caption, so the line height stays the tooltip's own. */
+.source-tooltip-shortcut.scds-text {
+  --cds-shortcut-cap-ink: var(--cds-text-muted);
+  font-size: calc(0.75rem * var(--cds-rem-scale, 1));
+  line-height: inherit;
+  font-weight: 400;
+}
+.source-tooltip-single .source-tooltip-shortcut {
+  align-self: flex-start;
+}
+.source-tooltip-detail {
+  overflow-wrap: break-word;
+  color: var(--cds-text-secondary);
+  font-size: calc(0.6875rem * var(--cds-rem-scale, 1));
+  line-height: calc(0.875rem * var(--cds-rem-scale, 1));
+}
+.source-tooltip-disabled-trigger {
+  display: inline-flex;
+  vertical-align: middle;
+}
+.source-tooltip-disabled-trigger:focus-visible {
+  outline: none;
+  box-shadow: var(--cds-focus-shadow);
+  border-radius: var(--cds-radius);
+}
+@media (prefers-reduced-motion: reduce) {
+  .source-tooltip-popup {
+    transition: none;
+  }
+}
+html[data-reduce-motion="true"] .source-tooltip-popup { transition: none; }

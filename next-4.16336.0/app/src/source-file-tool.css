@@ -1,0 +1,70 @@
+/* UO approval-current:6784–6837; gy/Cy; cf6ae6197:6903–6962. */
+.sft-outer { padding-block: var(--cds-pad-md); }
+.sft-card { display:flex; flex-direction:column; overflow:clip; border-radius:var(--radius-lg,8px); box-shadow:inset 0 0 0 1px var(--cds-border); background:light-dark(var(--code-theme-light-bg,var(--cds-alpha-1)),var(--code-theme-dark-bg,var(--cds-alpha-1))); }
+.sft-header { display:flex; align-items:center; gap:4px; padding:var(--cds-pad-sm) var(--cds-pad-md); }
+.sft-path { display:inline-flex; min-width:0; max-width:100%; white-space:nowrap; border-radius:var(--radius-sm); color:inherit; }
+.sft-path:hover { text-decoration:underline; text-underline-offset:3px; }
+.sft-path:focus-visible { outline:none; box-shadow:var(--cds-focus-shadow); }
+.sft-path-full { flex:1; overflow:hidden; font-size:var(--cds-font-size-footnote); line-height:var(--cds-leading-footnote); color:var(--cds-text-secondary); }
+.sft-directory { min-width:0; overflow:hidden; text-overflow:ellipsis; }
+.sft-basename { flex-shrink:0; max-width:100%; overflow:hidden; text-overflow:ellipsis; }
+.sft-code { max-height:400px; overflow-y:auto; font:var(--cds-font-size-code)/var(--cds-leading-code) var(--cds-font-mono); }
+.sft-read { margin:0; padding:var(--cds-pad-xs) var(--cds-pad-md); font:inherit; white-space:pre-wrap; overflow-wrap:anywhere; }
+.sft-read code { font:inherit; }
+.sft-diff { padding-block:var(--cds-pad-xs); }
+.sft-diff-line { display:flex; min-height:1lh; padding-inline:var(--cds-pad-md); white-space:pre-wrap; overflow-wrap:anywhere; }
+.sft-diff-line code { min-width:0; flex:1; font:inherit; }
+.sft-number { width:4ch; flex-shrink:0; text-align:right; user-select:none; opacity:.7; margin-right:var(--cds-pad-md); }
+.sft-sign { width:2ch; flex-shrink:0; user-select:none; }
+.sft-diff-line[data-kind=added] { background:var(--cds-bg-git-added); }
+.sft-diff-line[data-kind=removed] { background:var(--cds-bg-git-removed); }
+.sft-diff-line[data-kind=added] :is(.sft-number,.sft-sign) { color:var(--cds-text-git-added); }
+.sft-diff-line[data-kind=removed] :is(.sft-number,.sft-sign) { color:var(--cds-text-git-removed); }
+.sft-separator { border-top:1px solid var(--cds-border); margin-block:var(--cds-pad-xs); }
+/* inCard (classic tool-group rows, m8 approval-current:54035-54063): UO
+   :6784-6837 inCard branch. Wrapper group/body flex w-full flex-col pt-xs;
+   header flex items-center gap-1 pb-xs (no px) outside the code box; the code
+   box is its own epitaxy-code-card rounded-lg overflow-clip with background Tv
+   and no epitaxy-card-outline-layer. RO keeps max-h-[400px] overflow-y-auto. */
+.sft-outer[data-in-card] { display:flex; flex-direction:column; width:100%; padding-block:var(--cds-pad-xs) 0; }
+.sft-outer[data-in-card] > .sft-header { padding:0 0 var(--cds-pad-xs); }
+.sft-outer[data-in-card] > .sft-code { overflow-x:clip; border-radius:var(--radius-lg,8px); background:light-dark(var(--code-theme-light-bg,var(--cds-alpha-1)),var(--code-theme-dark-bg,var(--cds-alpha-1))); color:light-dark(var(--code-theme-light-fg,var(--cds-text-primary)),var(--code-theme-dark-fg,var(--cds-text-primary))); }
+.sft-outer[data-in-card]:hover .src-cmd-copy, .sft-outer[data-in-card]:focus-within .src-cmd-copy { opacity:1; }
+/* Classic NN, approval-current:16797–16805: body text, no DiffIndicator size scope. */
+.sft-counts { display:inline-flex;flex-shrink:0;align-items:center;gap:2px;height:auto;border-radius:0;overflow:visible;font:inherit;font-variant-numeric:tabular-nums; }
+.sft-counts > :not(.sr-only) { padding:0;background:none; }
+.sft-added { color:var(--cds-text-git-added); }
+.sft-removed { color:var(--cds-text-git-removed); }
+.sft-card:hover .src-cmd-copy, .sft-card:focus-within .src-cmd-copy, .sft-details:hover .src-cmd-copy, .sft-details:focus-within .src-cmd-copy { opacity:1; }
+.sft-details { display:flex; gap:5px; padding-top:var(--cds-pad-xs); color:var(--cds-text-secondary); font-size:var(--cds-font-size-body); white-space:pre-wrap; overflow-wrap:break-word; }
+.sft-details > [role=group] { min-width:0; flex:1; display:flex; flex-direction:column; gap:5px; max-height:400px; overflow-y:auto; }
+.sft-key { font-family:var(--cds-font-mono); opacity:.7; }
+.sft-command { font-family:var(--cds-font-mono); word-break:break-all; }
+/* An exec-backed step's output (Codex 'Listed …' / 'Searched …') reads in the mono code face, as under 'Ran …'. */
+.sft-details .src-cmd-output { font-family:var(--cds-font-mono); font-size:var(--cds-font-size-code, 12px); line-height:var(--cds-leading-code, 17px); }
+.sft-step[data-state=failed] .source-step-label { color:var(--cds-text-danger); }
+
+/* File/default unified gutter from ca7ba268c; response Read/Edit options leave
+   line numbers enabled. Numbers are UI chrome, excluded from copied text. */
+.sft-card { color:light-dark(var(--code-theme-light-fg,var(--cds-text-primary)),var(--code-theme-dark-fg,var(--cds-text-primary))); }
+.sft-code { font-feature-settings:"liga","clig","calt"; letter-spacing:calc(round(up,1ch,1px / 64) - 1ch); }
+.sft-numbered-read { padding:var(--cds-pad-xs,4px) 0; }
+.sft-read-line { display:grid; grid-template-columns:max-content minmax(0,1fr); min-height:1lh; }
+.sft-read-number { box-sizing:content-box; min-width:3ch; padding-left:calc(2ch + 5px); padding-right:1ch; text-align:right; color:var(--cds-text-muted); user-select:none; font-variant-numeric:tabular-nums; }
+.sft-read-number:before { content:attr(data-number); }
+.sft-read-line>code { display:block; padding-right:1ch; white-space:pre-wrap; overflow-wrap:anywhere; }
+.sft-diff-line { padding-inline:0; }
+.sft-number { box-sizing:content-box; min-width:3ch; width:auto; margin:0; padding-left:calc(2ch + 5px); padding-right:1ch; color:var(--cds-text-muted); opacity:1; font-variant-numeric:tabular-nums; }
+.sft-sign { width:2ch; }
+.sft-diff-line>code { padding-right:1ch; white-space:pre-wrap; overflow-wrap:anywhere; }
+.sft-diff-note { padding-inline:var(--cds-pad-md,8px); color:var(--cds-text-muted); font-size:var(--cds-font-size-caption,12px); }
+
+/* YO pure side (approval-current.js:7189-7210): the sign sits in the gutter before the
+   number ("+ 1"), inline-block min-width 1ch in the git colour; no indicator column. */
+.sft-number-sign { display:inline-block; min-width:1ch; text-align:left; }
+/* design-system.css:56758-56768: under the default Claude Light/Dark code themes
+   (html[data-code-theme-light|dark], main.jsx) every non-fence .epitaxy-diff code box
+   gets the 0 0 0 1px border ring (UT command block, UO code box; the standalone card's
+   ring is clipped by .sft-card, leaving the header/code hairline). Fences are untouched. */
+:is([data-mode=light][data-code-theme-light=claude-light],[data-mode=dark][data-code-theme-dark=claude-dark]) :is(.src-cmd-line,.sft-code) { box-shadow:0 0 0 1px var(--cds-border); }
+html .sft-outer .sft-code:focus-visible { outline:none; box-shadow:var(--cds-focus-shadow); }

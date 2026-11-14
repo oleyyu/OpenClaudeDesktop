@@ -1,0 +1,140 @@
+/* Standalone layout: user Usage reference, with shared-22 cw panel tokens.
+   Meter: c17c9c40b Track/Indicator sm and shared-14 gT thresholds. */
+.ss-settings-dialog[data-usage=true]{flex-direction:column}
+.ss-usage-header{display:flex;align-items:center;justify-content:space-between;flex-shrink:0;min-height:calc(2.75rem * var(--cds-rem-scale,1));padding-inline:calc(.875rem * var(--cds-rem-scale,1));border-bottom:1px solid var(--cds-border);background:var(--cds-surface-1)}
+.ss-usage-header h2{margin:0}
+.ss-usage-header .ss-close{position:static;flex-shrink:0}
+.ss-settings-dialog[data-usage=true] .ss-content{padding:calc(1.5rem * var(--cds-rem-scale,1))}
+.source-usage{min-width:0;color:var(--cds-text-primary)}
+.source-usage h3{margin:0}
+.su-heading{display:flex;align-items:baseline;gap:calc(.75rem * var(--cds-rem-scale,1));margin-bottom:calc(2rem * var(--cds-rem-scale,1))}
+.su-heading>span{color:var(--cds-text-secondary);overflow-wrap:anywhere}
+.su-limits{border-top:1px solid var(--cds-alpha-1)}
+.su-row{--usage-bg:var(--cds-bg-accent);--usage-fill:var(--cds-fill-accent);display:grid;grid-template-columns:calc(14rem * var(--cds-rem-scale,1)) minmax(0,1fr) calc(5rem * var(--cds-rem-scale,1));column-gap:calc(1rem * var(--cds-rem-scale,1));align-items:center;padding-block:calc(1rem * var(--cds-rem-scale,1))}
+.su-row[data-variant=warning]{--usage-bg:var(--cds-bg-warning);--usage-fill:var(--cds-fill-warning)}
+.su-row[data-variant=danger]{--usage-bg:var(--cds-bg-danger);--usage-fill:var(--cds-fill-danger)}
+.su-row-copy{min-width:0;overflow-wrap:anywhere}
+.su-row-copy p,.su-section>p{margin:calc(.375rem * var(--cds-rem-scale,1)) 0 0;color:var(--cds-text-secondary);font-size:var(--cds-font-size-footnote);line-height:var(--cds-leading-footnote);overflow-wrap:anywhere}
+.su-meter{height:calc(.25rem * var(--cds-rem-scale,1));overflow:hidden;border-radius:9999px;background:var(--usage-bg);box-shadow:inset 0 0 0 1px var(--cds-alpha-1)}
+.su-meter[data-empty]{background:var(--cds-bg-neutral)}
+.su-indicator{height:100%;width:100%;border-radius:inherit;background:var(--usage-fill);transform:translateX(calc(var(--usage-direction,-1) * (100% - min(100%,max(var(--usage-percent),4px)))));transition:transform var(--cds-dur-base,.2s) var(--cds-ease-out,ease-out)}
+.su-indicator:dir(rtl){--usage-direction:1}
+.su-percent{text-align:end;white-space:nowrap;font-size:var(--cds-font-size-footnote);color:var(--cds-text-secondary);font-variant-numeric:tabular-nums}
+.su-row[data-variant=danger] .su-percent{color:var(--cds-text-danger)}
+.su-row[data-variant=warning] .su-percent{color:var(--cds-text-warning)}
+.su-section{margin-top:calc(2.5rem * var(--cds-rem-scale,1))}
+.su-section-heading{display:flex;align-items:baseline;justify-content:space-between;gap:16px}
+.su-section-heading strong{font-weight:580;overflow-wrap:anywhere;text-align:end}
+.su-daily{width:100%;border-collapse:collapse;margin-top:12px;font-variant-numeric:tabular-nums}
+.su-daily :is(th,td){padding:12px 0;border-bottom:1px solid var(--cds-alpha-1);text-align:start;overflow-wrap:anywhere}
+.su-daily th{font-weight:500;color:var(--cds-text-secondary)}
+.su-daily :is(th,td):last-child{text-align:end}
+.su-footer{display:flex;align-items:center;justify-content:flex-end;gap:12px;margin-top:32px}
+.su-note,.su-footer>span,.su-empty,.su-loading{color:var(--cds-text-secondary)}
+.su-footer>.su-updated{color:var(--cds-text-muted)}
+/* The empty limits list keeps a row's block padding under the list's top rule (it sat flush against the rule). */
+.su-empty{margin:0;padding-block:calc(1rem * var(--cds-rem-scale,1))}
+.su-daily tfoot :is(th,td){border-bottom:0}
+.su-error{color:var(--cds-text-danger);overflow-wrap:anywhere;margin-top:20px}
+.su-loading{border-top:1px solid var(--cds-alpha-1);padding-top:16px}
+.su-skeleton{display:flex;align-items:center;gap:32px;height:72px}
+.su-skeleton i{display:block;width:192px;height:16px;background:var(--cds-alpha-1);border-radius:4px}
+.su-skeleton i+i{flex:1;height:4px}
+@media(max-width:767px){.su-row{grid-template-columns:minmax(0,1fr) auto;row-gap:12px}.su-row-copy{grid-column:1/-1}.su-meter{grid-column:1}.su-percent{grid-column:2}.su-heading{margin-bottom:24px}.su-section-heading{flex-wrap:wrap}.su-section-heading strong{margin-inline-start:auto}}
+@media(prefers-reduced-motion:reduce){.su-indicator{transition:none}}
+html[data-reduce-motion="true"] .su-indicator { transition: none; }
+
+/* DeepSeek estimated cost (account/usage/read `deepseek`, usage-cost-model.mjs). Tiles follow the home stats
+   tiles (source-home.css .sh-tile: alpha-2 surface, muted label, tabular semibold value) at dialog scale;
+   categories use the CDS categorical chart palette, which has its own dark-mode values. */
+.source-usage{--su-input:var(--cds-chart-categorical-1,hsl(217 70% 58%));--su-cached:var(--cds-chart-categorical-3,hsl(180 50% 50%));--su-output:var(--cds-chart-categorical-2,hsl(25 80% 60%));--su-bar:var(--cds-chart-categorical-1,hsl(217 70% 58%))}
+.source-usage[data-cost] .su-heading{margin-bottom:calc(1.25rem * var(--cds-rem-scale,1))}
+.su-tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.su-tile{display:flex;flex-direction:column;gap:2px;min-width:0;padding:12px 14px;border-radius:8px;background:var(--cds-alpha-2)}
+.su-tile-label{font-size:var(--cds-font-size-footnote);line-height:var(--cds-leading-footnote);color:var(--cds-text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.su-tile-value{color:var(--cds-text-primary);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.su-tile-unit{font-size:var(--cds-font-size-footnote);font-weight:400;color:var(--cds-text-muted)}
+.su-tile-cost{font-size:var(--cds-font-size-body);line-height:var(--cds-leading-body);color:var(--cds-text-secondary);font-variant-numeric:tabular-nums;white-space:nowrap}
+.su-cost-panels{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:8px}
+.su-panel{min-width:0;padding:12px 14px;border-radius:8px;box-shadow:inset 0 0 0 1px var(--cds-alpha-1)}
+.su-panel-heading{display:flex;align-items:baseline;justify-content:space-between;gap:12px;min-width:0}
+.su-panel-heading h4{margin:0}
+.su-panel-heading>span{font-size:var(--cds-font-size-footnote);line-height:var(--cds-leading-footnote);color:var(--cds-text-muted);white-space:nowrap}
+.su-stack{display:flex;gap:2px;height:8px;margin:12px 0 10px;overflow:hidden;border-radius:9999px;background:var(--cds-alpha-1)}
+.su-stack i{display:block;min-width:3px;flex-basis:0;background:var(--su-swatch)}
+:is(.su-stack i,.su-legend li)[data-key=input]{--su-swatch:var(--su-input)}
+:is(.su-stack i,.su-legend li)[data-key=cached]{--su-swatch:var(--su-cached)}
+:is(.su-stack i,.su-legend li)[data-key=output]{--su-swatch:var(--su-output)}
+.su-legend,.su-models{display:flex;flex-direction:column;gap:6px;margin:0;padding:0;list-style:none}
+.su-models{margin-top:12px}
+:is(.su-legend,.su-models) li{display:grid;grid-template-columns:auto minmax(0,1fr) auto calc(4.75rem * var(--cds-rem-scale,1));align-items:center;column-gap:8px;font-size:var(--cds-font-size-footnote);line-height:var(--cds-leading-footnote);font-variant-numeric:tabular-nums}
+.su-models li{grid-template-columns:minmax(4.5rem,auto) minmax(0,1fr) auto calc(4.75rem * var(--cds-rem-scale,1))}
+.su-swatch{width:8px;height:8px;border-radius:2px;background:var(--su-swatch)}
+.su-legend-name{min-width:0;color:var(--cds-text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.su-legend-tokens{color:var(--cds-text-muted);text-align:end;white-space:nowrap}
+.su-legend-cost{color:var(--cds-text-primary);text-align:end;white-space:nowrap}
+.su-bar{display:block;height:6px;min-width:0;overflow:hidden;border-radius:9999px;background:var(--cds-alpha-1)}
+.su-bar i{display:block;height:100%;min-width:3px;border-radius:inherit;background:var(--su-bar)}
+.su-days-section{margin-top:calc(2rem * var(--cds-rem-scale,1))}
+.su-days{width:100%;border-collapse:collapse;margin-top:8px;font-variant-numeric:tabular-nums;table-layout:fixed}
+.su-days td{padding:7px 0;border-bottom:1px solid var(--cds-alpha-1);white-space:nowrap}
+.su-days tr:last-child td{border-bottom:0}
+.su-days :is(th,td):nth-child(1){width:calc(5.5rem * var(--cds-rem-scale,1))}
+.su-days :is(th,td):nth-child(3){width:calc(5.5rem * var(--cds-rem-scale,1))}
+.su-days :is(th,td):nth-child(4){width:calc(5.5rem * var(--cds-rem-scale,1))}
+.su-day-date{color:var(--cds-text-secondary)}
+.su-days td.su-day-bar{padding-inline-end:8px}
+.su-day-tokens{text-align:end;color:var(--cds-text-primary)}
+.su-day-cost{text-align:end;color:var(--cds-text-secondary)}
+/* Column headers stay in the table model (they size the fixed columns) but take no space: screen readers keep them. */
+.su-days-head th{height:0;padding:0;border:0;overflow:hidden;font-size:0;line-height:0}
+.su-footnote{margin:20px 0 0;font-size:var(--cds-font-size-footnote);line-height:var(--cds-leading-footnote);color:var(--cds-text-muted)}
+.su-link{padding:0;border:0;background:none;font:inherit;color:var(--cds-text-secondary);text-decoration:underline;text-underline-offset:2px}
+.su-link:hover{color:var(--cds-text-primary)}
+.su-link:focus-visible{outline:none;border-radius:2px;box-shadow:var(--cds-focus-shadow)}
+@media(max-width:767px){.su-cost-panels{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:520px){.su-tiles{grid-template-columns:minmax(0,1fr)}}
+/* SourceTimestamp is display:flex (AO); keep it on the label's line. */
+.su-footer>.su-updated{display:inline-flex;align-items:center;gap:.25em;white-space:nowrap}
+/* Limit notice: Claude's inline callout (rounded-lg, tinted background, footnote body) above the meters. Tones use the
+   CDS danger/accent backgrounds, so light and dark follow the theme tokens. */
+.su-notice{display:flex;align-items:flex-start;justify-content:space-between;gap:calc(1rem * var(--cds-rem-scale,1));margin:calc(-1rem * var(--cds-rem-scale,1)) 0 calc(1.5rem * var(--cds-rem-scale,1));padding:calc(.75rem * var(--cds-rem-scale,1)) calc(1rem * var(--cds-rem-scale,1));border-radius:calc(var(--cds-radius,.5rem) + .125rem);background:var(--cds-bg-accent);box-shadow:inset 0 0 0 1px var(--cds-alpha-1);color:var(--cds-text-primary)}
+.su-notice[data-tone=danger]{background:var(--cds-bg-danger);box-shadow:inset 0 0 0 1px var(--cds-border-danger,var(--cds-alpha-1))}
+.su-notice-copy{min-width:0;overflow-wrap:anywhere}
+.su-notice-copy p{margin:calc(.25rem * var(--cds-rem-scale,1)) 0 0;font-size:var(--cds-font-size-footnote);line-height:var(--cds-leading-footnote);color:var(--cds-text-secondary)}
+.su-notice-copy .su-notice-result{color:var(--cds-text-primary)}
+.su-notice-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px;flex-shrink:0}
+/* Credits: the balance is the group's value; a spend limit is one more meter row inside the group. */
+.su-credits .su-section-heading strong[data-state=none]{color:var(--cds-text-secondary);font-weight:500}
+.su-credit-limit{margin-top:calc(.75rem * var(--cds-rem-scale,1))}
+p.su-credit-limit{color:var(--cds-text-secondary)}
+/* Earned resets: the count, a start button, then an inline confirmation panel (radio cards when there is a choice). */
+.su-reset-start{display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin-top:calc(.75rem * var(--cds-rem-scale,1))}
+.su-reset-hint,.su-reset-note{font-size:var(--cds-font-size-footnote);line-height:var(--cds-leading-footnote);color:var(--cds-text-secondary)}
+.su-reset-confirm{margin-top:calc(.75rem * var(--cds-rem-scale,1));padding:calc(1rem * var(--cds-rem-scale,1));border-radius:calc(var(--cds-radius,.5rem) + .125rem);background:var(--cds-surface-1,transparent);box-shadow:inset 0 0 0 1px var(--cds-border-strong,var(--cds-alpha-2))}
+.su-reset-confirm h4{margin:0 0 calc(.75rem * var(--cds-rem-scale,1))}
+.su-reset-options{display:flex;flex-direction:column;gap:8px}
+.su-reset-option{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-radius:var(--cds-radius,.5rem);box-shadow:inset 0 0 0 1px var(--cds-alpha-2);transition:box-shadow var(--cds-dur-base,.2s) var(--cds-ease-out,ease-out),background-color var(--cds-dur-base,.2s) var(--cds-ease-out,ease-out)}
+.su-reset-option[data-checked]{box-shadow:inset 0 0 0 1px var(--cds-border-accent,var(--cds-fill-accent));background:var(--cds-bg-accent-muted,transparent)}
+.su-reset-option input{margin:3px 0 0;accent-color:var(--cds-fill-accent)}
+.su-reset-option input:focus-visible{outline:none;box-shadow:var(--cds-focus-shadow);border-radius:50%}
+.su-reset-option-copy{display:flex;flex-direction:column;gap:2px;min-width:0;overflow-wrap:anywhere}
+.su-reset-option-title{font-weight:500;color:var(--cds-text-primary)}
+.su-reset-option-detail{font-size:var(--cds-font-size-footnote);line-height:var(--cds-leading-footnote);color:var(--cds-text-secondary)}
+.su-reset-note{margin:calc(.75rem * var(--cds-rem-scale,1)) 0 0}
+.su-reset-error{margin:8px 0 0;color:var(--cds-text-danger);font-size:var(--cds-font-size-footnote)}
+.su-reset-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:calc(1rem * var(--cds-rem-scale,1))}
+.su-section>p.su-reset-result{color:var(--cds-text-primary)}
+@media(max-width:767px){.su-notice{flex-direction:column}.su-notice-actions{justify-content:flex-start}}
+@media(prefers-reduced-motion:reduce){.su-reset-option{transition:none}}
+/* Tokens counted on this Mac (LocalUsage): no cost column; the daily table's caption is a muted label above it. */
+/* One column grid for every model row (li display:contents), so each bar starts at the same x whatever its label's
+   width; the bars are the plan meters' 4px Track/Indicator on bg-accent. */
+.su-models.su-local-models{--usage-bg:var(--cds-bg-accent);--usage-fill:var(--cds-fill-accent);display:grid;grid-template-columns:max-content minmax(0,1fr) auto;align-items:center;column-gap:8px;row-gap:6px}
+.su-models.su-local-models li{display:contents}
+.su-local-models .su-legend-name{max-width:calc(14rem * var(--cds-rem-scale,1))}
+.su-local-models .su-meter,.su-local-models .su-indicator{display:block;min-width:0}
+.su-local-caption{caption-side:top;text-align:start;padding-top:12px;font-weight:500;color:var(--cds-text-secondary)}
+/* c71860c77-29nOu6oI W: the Chart metric and Time range segmented controls (size sm) above the per-day rows. */
+.su-days-controls{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:var(--cds-gap-sm,8px);margin-top:var(--cds-gap-sm,8px)}
+.su-days-controls>.su-range{margin-inline-start:auto}

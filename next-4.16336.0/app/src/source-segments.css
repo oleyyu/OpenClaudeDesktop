@@ -1,0 +1,24 @@
+/* shared-7 dR/SR: CDS contained SegmentedControl; typography inherits density. The item rules are not scoped to
+   .ss-control: the control also sits in rows' below slots (Assistant icon) and in Customize dialogs. */
+.ss-segments[data-cds=SegmentedControl] { position:relative;display:inline-flex;flex-shrink:0;align-items:stretch;width:fit-content;height:var(--cds-h-control);padding:1px;border-radius:var(--cds-radius);background:var(--cds-segmented-control-track);font-family:var(--cds-font-sans); }
+.ss-segment-track { position:absolute;inset:0;overflow:clip;border-radius:inherit;pointer-events:none; }
+.ss-segment-thumb { position:absolute;left:0;top:1px;bottom:1px;transform-origin:left;visibility:hidden;border-radius:calc(var(--cds-radius) - 1px);background:var(--cds-segmented-control-thumb);box-shadow:inset 0 0 0 1px var(--cds-border),0 1px 2px rgb(0 0 0 / .05); }
+.ss-segments[data-cds=SegmentedControl] button[role=radio] { position:relative;z-index:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;flex-shrink:0;height:100%;min-height:0;max-width:none;padding:0 var(--cds-pad-md);border:0;border-radius:calc(var(--cds-radius) - 2px);background:transparent;color:var(--cds-text-muted);font:400 var(--cds-font-size-body)/var(--cds-leading-body) var(--cds-font-sans);user-select:none;white-space:nowrap;outline:none;box-shadow:none;transition:box-shadow var(--cds-dur-fast); }
+.ss-segments[data-cds=SegmentedControl] button[role=radio][data-icon-only] { aspect-ratio:1;padding:0; }
+.ss-segments[data-cds=SegmentedControl] button[role=radio][aria-checked=true],.ss-segments[data-cds=SegmentedControl] button[role=radio]:hover:not(:disabled) { color:var(--cds-text-primary);background:transparent; }
+.ss-segments[data-cds=SegmentedControl] button[role=radio]:disabled { opacity:var(--cds-opacity-disabled); }
+.ss-segments[data-cds=SegmentedControl] button[role=radio]:focus-visible { outline:none;box-shadow:var(--cds-focus-shadow); }
+/* shared-7 SR variant "uncontained" (root gap-[1px], no track or p-px; xR thumb inset-y-0 with the
+   inset --cds-border ring; dR + vR items: text-secondary, hover text-primary and, unless checked,
+   bg-fill-ghost-hover; checked text-primary at font-normal; rounded-[calc(var(--cds-radius)-2px)];
+   fR px-md). Not scoped to .ss-control: the Customize pages render it outside settings rows. */
+.ss-segments[data-cds=SegmentedControl][data-variant=uncontained] { gap:1px;padding:0;border-radius:0;background:transparent; }
+.ss-segments[data-variant=uncontained]>.ss-segment-track { border-radius:0; }
+.ss-segments[data-variant=uncontained] .ss-segment-thumb { top:0;bottom:0;box-shadow:inset 0 0 0 1px var(--cds-border); }
+.ss-segments[data-cds=SegmentedControl][data-variant=uncontained] button[role=radio] { position:relative;z-index:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;flex-shrink:0;height:100%;min-height:0;max-width:none;padding:0 var(--cds-pad-md);border:0;border-radius:calc(var(--cds-radius) - 2px);background:transparent;color:var(--cds-text-secondary);font:var(--cds-font-weight-regular) var(--cds-font-size-body)/var(--cds-leading-body) var(--cds-font-sans);user-select:none;white-space:nowrap;outline:none;box-shadow:none;transition:box-shadow var(--cds-dur-fast); }
+.ss-segments[data-cds=SegmentedControl][data-variant=uncontained] button[role=radio][data-icon-only] { aspect-ratio:1;padding:0; }
+.ss-segments[data-cds=SegmentedControl][data-variant=uncontained] button[role=radio]:hover:not(:disabled),
+.ss-segments[data-cds=SegmentedControl][data-variant=uncontained] button[role=radio][aria-checked=true] { color:var(--cds-text-primary); }
+.ss-segments[data-cds=SegmentedControl][data-variant=uncontained] button[role=radio]:not([aria-checked=true]):hover:not(:disabled) { background:var(--cds-fill-ghost-hover); }
+.ss-segments[data-cds=SegmentedControl][data-variant=uncontained] button[role=radio]:disabled { opacity:var(--cds-opacity-disabled); }
+.ss-segments[data-cds=SegmentedControl][data-variant=uncontained] button[role=radio]:focus-visible { outline:none;box-shadow:var(--cds-focus-shadow); }

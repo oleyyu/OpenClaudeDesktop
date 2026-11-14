@@ -1,0 +1,588 @@
+{
+  "referenceVersion": "3.6556.2",
+  "referenceSnapshot": "snapshots/claude-3.6556.2-20261025-192807",
+  "generator": "scripts/extract-cowork-runs.mjs",
+  "adapterModule": "src/source-cowork-runs-adapters.jsx",
+  "sharedAdapterModule": "src/source-routines-shared-adapters.jsx",
+  "publicNames": {
+    "CoworkRunsSection": {
+      "file": "c21f11e6d-Cyd8_HO8.js",
+      "local": "Ew"
+    },
+    "CoworkUpcomingSection": {
+      "file": "c21f11e6d-Cyd8_HO8.js",
+      "local": "eT"
+    }
+  },
+  "modules": [
+    {
+      "target": "c21f11e6d-Cyd8_HO8.mjs",
+      "source": "c21f11e6d-Cyd8_HO8.js",
+      "sourceSha256": "6ed66dcf3b2f5aa49f7e9e77c41ade6fb31bce367fabbaf61c11a2bb6e6ffbdb",
+      "sha256": "3e41db54b17c6ad52b2640fdaf118934a422fb18e371fb5b37479cd6ec252a33",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "Tw",
+          "sha256": "a3718ca32eb92ba3145dcdc7d69c38e0aeb1770271a096b98ad32e69221db1ad"
+        },
+        {
+          "name": "Ew",
+          "sha256": "b4465a6b59b4f1fb4a04ffcf63e0744275c51a80db8cb92fcae8f3ed269c705a"
+        },
+        {
+          "name": "Dw",
+          "sha256": "1ef998683bf137a07d7127a4b59155a5da54d3fb90f77ecce45b3254314b3fc4"
+        },
+        {
+          "name": "Ow",
+          "sha256": "eb1c95e2fb99946a6eb14533ce8e1376b5bc2c914ba17f46c09422a78bb8858d"
+        },
+        {
+          "name": "kw",
+          "sha256": "1a1d831977f90cce55e4e997a7f0433e23c7ca06c4e1000eecf84a8755c8fbda"
+        },
+        {
+          "name": "Aw",
+          "sha256": "77bad830ddf22b68e41b7fbf647614167694d15983e008b59871d7c864a34156"
+        },
+        {
+          "name": "jw",
+          "sha256": "f69e34eb98bd1e24e13a949cfb9e68d6477985c465e87e5bef469d410eb9ae7f"
+        },
+        {
+          "name": "Mw",
+          "sha256": "920a75d9c443ef3e0c3101e626a89b3e036dad4e2e24c541d92ec78a461fd648"
+        },
+        {
+          "name": "Nw",
+          "sha256": "1898c68b9d2cadcdc618eef48dec37931a9cd272b67af41911d3e713a09670bb"
+        },
+        {
+          "name": "Pw",
+          "sha256": "4b054252faec7a4b4d4d2f80837c5f4a3c3a53fd85484760b22378db1649eabd"
+        },
+        {
+          "name": "Fw",
+          "sha256": "5b4073fad2a76b5ffc00c0f5df40e45244c11285e42955edb361c0996e56de90"
+        },
+        {
+          "name": "Qw",
+          "sha256": "c401836c1244deeb0d8f4bfeb37e90f47ebce83e151e72ca8ffbf97f75b5dbff"
+        },
+        {
+          "name": "$w",
+          "sha256": "485216084b81153a7fc9eb60be2dbea1df70ba639f4eae821deacd04ef3ac9fa"
+        },
+        {
+          "name": "eT",
+          "sha256": "d424c8dad782ae0e4d840bb7c78cb6741a945e8a276d04c8981831341dbe27af"
+        }
+      ],
+      "imports": [
+        {
+          "local": "J9",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "reactMemoCache",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#J9"
+        },
+        {
+          "local": "Ar",
+          "from": "../../source-cowork-runs-adapters.jsx",
+          "name": "useCoworkScheduledTasksStatus",
+          "kind": "adapter",
+          "via": "shared-78-D5Fw2h0a.js#yE"
+        },
+        {
+          "local": "zi",
+          "from": "../../source-cowork-runs-adapters.jsx",
+          "name": "useScheduledTaskDisplayName",
+          "kind": "adapter",
+          "via": "shared-4-DUB1Oi0O.js#l_"
+        },
+        {
+          "local": "Pt",
+          "from": "../cowork-home/shared-0-DDOOdL6P.mjs",
+          "name": "ia",
+          "kind": "linked",
+          "via": "shared-0-DDOOdL6P.js#ia"
+        },
+        {
+          "local": "Xi",
+          "from": "../../source-cowork-runs-adapters.jsx",
+          "name": "useScheduledTaskSessions",
+          "kind": "adapter",
+          "via": "shared-4-DUB1Oi0O.js#R_"
+        },
+        {
+          "local": "Js",
+          "from": "../../source-cowork-runs-adapters.jsx",
+          "name": "useCoworkRunsReadState",
+          "kind": "adapter",
+          "via": "shared-2-TF8v67kg.js#OG"
+        },
+        {
+          "local": "J1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged1",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#J1"
+        },
+        {
+          "local": "K1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore1",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#K1"
+        },
+        {
+          "local": "gn",
+          "from": "../proposal-group/shared-52-uHFNjl7C.js",
+          "name": "H_",
+          "kind": "linked",
+          "via": "shared-52-uHFNjl7C.js#rd"
+        },
+        {
+          "local": "J3",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged3",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#J3"
+        },
+        {
+          "local": "J2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged2",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#J2"
+        },
+        {
+          "local": "K2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore2",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#K2"
+        },
+        {
+          "local": "mi",
+          "from": "./shared-26-CGuBxVt9.mjs",
+          "name": "jT",
+          "kind": "generated",
+          "via": "shared-26-CGuBxVt9.js#jT"
+        },
+        {
+          "local": "ps",
+          "from": "../routines-shared/shared-2-TF8v67kg.mjs",
+          "name": "eK",
+          "kind": "routines-shared",
+          "via": "shared-2-TF8v67kg.js#eK"
+        },
+        {
+          "local": "K3",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore3",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#K3"
+        },
+        {
+          "local": "J5",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged5",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#J5"
+        },
+        {
+          "local": "K5",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore5",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#K5"
+        },
+        {
+          "local": "p",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "kind": "react",
+          "via": "vendor-frame-CnSY1sxv.js#K"
+        },
+        {
+          "local": "kc",
+          "from": "../routines-shared/vendor-intl-DYfox5Co.mjs",
+          "name": "tn",
+          "kind": "routines-shared",
+          "via": "vendor-intl-DYfox5Co.js#tn"
+        },
+        {
+          "local": "E",
+          "from": "react",
+          "name": "memo",
+          "kind": "react",
+          "via": "vendor-frame-CnSY1sxv.js#k"
+        },
+        {
+          "local": "Q",
+          "from": "../../source-routines-shared-adapters.jsx",
+          "name": "useIntl",
+          "kind": "shared-adapter",
+          "via": "vendor-intl-DYfox5Co.js#q"
+        },
+        {
+          "local": "zn",
+          "from": "./shared-52-uHFNjl7C.mjs",
+          "name": "gl",
+          "kind": "generated",
+          "via": "shared-52-uHFNjl7C.js#gl"
+        },
+        {
+          "local": "d",
+          "from": "../view-tabs/vendor-frame-CnSY1sxv.js",
+          "name": "clsx",
+          "kind": "view-tabs",
+          "via": "vendor-frame-CnSY1sxv.js#ve"
+        },
+        {
+          "local": "jg",
+          "from": "../cowork-scheduled/c1dd841c3-BM8bL70i.mjs",
+          "name": "o",
+          "kind": "linked",
+          "via": "c1dd841c3-BM8bL70i.js#o"
+        },
+        {
+          "local": "_",
+          "from": "react/jsx-runtime",
+          "name": "jsxs",
+          "kind": "react",
+          "via": "vendor-frame-CnSY1sxv.js#ge"
+        },
+        {
+          "local": "J4",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged4",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#J4"
+        },
+        {
+          "local": "K4",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore4",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#K4"
+        },
+        {
+          "local": "xe",
+          "from": "../../source-routines-shared-adapters.jsx",
+          "name": "RouterLink",
+          "kind": "shared-adapter",
+          "via": "shared-25-DOWZRSlq.js#Cx"
+        },
+        {
+          "local": "Eu",
+          "from": "../routines-shared/shared-156-BLTosN8U.mjs",
+          "name": "fK",
+          "kind": "routines-shared",
+          "via": "shared-156-BLTosN8U.js#fK"
+        },
+        {
+          "local": "cm",
+          "from": "../cowork-scheduled/shared-16-ByfgAyLr.mjs",
+          "name": "Xp",
+          "kind": "linked",
+          "via": "shared-16-ByfgAyLr.js#Xp"
+        },
+        {
+          "local": "Or",
+          "from": "../../source-cowork-runs-adapters.jsx",
+          "name": "useDesktopFrame",
+          "kind": "adapter",
+          "via": "shared-78-D5Fw2h0a.js#gK"
+        },
+        {
+          "local": "C",
+          "from": "react",
+          "name": "useContext",
+          "kind": "react",
+          "via": "vendor-frame-CnSY1sxv.js#F"
+        },
+        {
+          "local": "qh",
+          "from": "../cowork-progress/cc5a62f6f-CwJjes2b.mjs",
+          "name": "ne",
+          "kind": "linked",
+          "via": "cc5a62f6f-CwJjes2b.js#ne"
+        },
+        {
+          "local": "Gh",
+          "from": "../cowork-progress/cc5a62f6f-CwJjes2b.mjs",
+          "name": "w",
+          "kind": "linked",
+          "via": "cc5a62f6f-CwJjes2b.js#w"
+        },
+        {
+          "local": "Y",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "CdsIcon",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#us"
+        },
+        {
+          "local": "J0",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoIsEmpty",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#J0"
+        },
+        {
+          "local": "K0",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore0",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#K0"
+        },
+        {
+          "local": "Z",
+          "from": "../../source-routines-shared-adapters.jsx",
+          "name": "FormattedMessage",
+          "kind": "shared-adapter",
+          "via": "vendor-intl-DYfox5Co.js#Gt"
+        },
+        {
+          "local": "Kn",
+          "from": "../routines-shared/shared-52-uHFNjl7C.mjs",
+          "name": "Rl",
+          "kind": "routines-shared",
+          "via": "shared-52-uHFNjl7C.js#Rl"
+        },
+        {
+          "local": "I2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStoreValueFirst2",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#I2"
+        },
+        {
+          "local": "H",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "CdsTooltip",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#Xm"
+        },
+        {
+          "local": "I4",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStoreValueFirst4",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#I4"
+        },
+        {
+          "local": "ne",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "CdsBadge",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#Ps"
+        },
+        {
+          "local": "Xo",
+          "from": "../routines-shared/shared-2-TF8v67kg.mjs",
+          "name": "pA",
+          "kind": "routines-shared",
+          "via": "shared-2-TF8v67kg.js#pA"
+        },
+        {
+          "local": "I1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStoreValueFirst1",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#I1"
+        },
+        {
+          "local": "Jh",
+          "from": "../cowork-progress/cc5a62f6f-CwJjes2b.mjs",
+          "name": "T",
+          "kind": "linked",
+          "via": "cc5a62f6f-CwJjes2b.js#T"
+        },
+        {
+          "local": "tg",
+          "from": "../cowork-progress/cc5a62f6f-CwJjes2b.mjs",
+          "name": "L",
+          "kind": "linked",
+          "via": "cc5a62f6f-CwJjes2b.js#L"
+        },
+        {
+          "local": "Qh",
+          "from": "../cowork-progress/cc5a62f6f-CwJjes2b.mjs",
+          "name": "ie",
+          "kind": "linked",
+          "via": "cc5a62f6f-CwJjes2b.js#ie"
+        },
+        {
+          "local": "le",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "CdsSkeleton",
+          "kind": "view-tabs",
+          "via": "shared-frame-6jtSkIit.js#af"
+        }
+      ]
+    },
+    {
+      "target": "shared-26-CGuBxVt9.mjs",
+      "source": "shared-26-CGuBxVt9.js",
+      "sourceSha256": "ae470abead4f769bdf0661897b47c2b17f3a7f706c725e97b29f49e6060e57b3",
+      "sha256": "1e9191d08886605a7816b54d61e75f6cd5f8ceda49f25f20d8bb962615711609",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "jT",
+          "sha256": "91fdda8fe8f91781c6f8f8cddbe29cc7334bc37a124119d0d20fc375e671197a"
+        }
+      ],
+      "imports": []
+    },
+    {
+      "target": "shared-52-uHFNjl7C.mjs",
+      "source": "shared-52-uHFNjl7C.js",
+      "sourceSha256": "83537e599f2f6720c2a0a245162e44a5c7431e22872a32ed16ea716e65ded08a",
+      "sha256": "05fa2148e002ca9feff66f8841d662fd732f9348e4612c928ced436de4306093",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "gl",
+          "sha256": "efdd21851c111babab6d78b854454f0d629d77d261f012f3295fda43b1e9bb14"
+        }
+      ],
+      "imports": []
+    }
+  ],
+  "contexts": [],
+  "callSites": [
+    {
+      "source": "c21f11e6d-Cyd8_HO8.js",
+      "role": "AT mounts Runs only for a session a scheduled task started, first in the panel body",
+      "sourceSha256": "6ed66dcf3b2f5aa49f7e9e77c41ade6fb31bce367fabbaf61c11a2bb6e6ffbdb",
+      "raw": true,
+      "features": [
+        {
+          "loose": "de&&p(Ew,{scheduledTaskId:de,currentSessionId:J,isExpanded:nn,onToggle:()=>rn(!nn)})"
+        }
+      ]
+    },
+    {
+      "source": "c21f11e6d-Cyd8_HO8.js",
+      "role": "AT always mounts Upcoming with the session triggers right after Runs",
+      "sourceSha256": "6ed66dcf3b2f5aa49f7e9e77c41ade6fb31bce367fabbaf61c11a2bb6e6ffbdb",
+      "raw": true,
+      "features": [
+        {
+          "loose": "p(eT,{triggers:U,isExpanded:an,onToggle:()=>on(!an)})"
+        }
+      ]
+    },
+    {
+      "source": "c21f11e6d-Cyd8_HO8.js",
+      "role": "The run rows: \"Run - {time}\" (sr-only) and the \"Unread completed run\" dot",
+      "sourceSha256": "6ed66dcf3b2f5aa49f7e9e77c41ade6fb31bce367fabbaf61c11a2bb6e6ffbdb",
+      "raw": true,
+      "features": [
+        "{defaultMessage:\"Run - {time}\",id:\"28KG348KqB\"}",
+        "unreadCompletedRun:{defaultMessage:\"Unread completed run\",id:\"gN5ix3ELxz\"}",
+        "{defaultMessage:\"Runs\",id:\"pYmrK6Njpr\"}"
+      ]
+    },
+    {
+      "source": "cb1e253a0-DgeDleLc.js",
+      "role": "Upcoming triggers are the successful send_later tool results not deleted or fired since",
+      "sourceSha256": "9e0bfa7f6ac110838c39c3c48212b2db708bc15e3d751d0899775a2dd138d04a",
+      "raw": true,
+      "features": [
+        "En(r.name,\"send_later\")",
+        "En(r.name,\"delete_trigger\")||En(r.name,\"fire_trigger\")"
+      ]
+    }
+  ],
+  "adapters": [
+    {
+      "original": "shared-78-D5Fw2h0a.js#yE",
+      "name": "useCoworkScheduledTasksStatus"
+    },
+    {
+      "original": "shared-78-D5Fw2h0a.js#gK",
+      "name": "useDesktopFrame"
+    },
+    {
+      "original": "shared-4-DUB1Oi0O.js#l_",
+      "name": "useScheduledTaskDisplayName"
+    },
+    {
+      "original": "shared-4-DUB1Oi0O.js#R_",
+      "name": "useScheduledTaskSessions"
+    },
+    {
+      "original": "shared-2-TF8v67kg.js#OG",
+      "name": "useCoworkRunsReadState"
+    }
+  ],
+  "sharedAdapters": [
+    {
+      "original": "shared-25-DOWZRSlq.js#Cx",
+      "name": "RouterLink"
+    },
+    {
+      "original": "vendor-intl-DYfox5Co.js#Gt",
+      "name": "FormattedMessage"
+    },
+    {
+      "original": "vendor-intl-DYfox5Co.js#q",
+      "name": "useIntl"
+    }
+  ],
+  "routinesSharedImports": 5,
+  "linkedImports": [
+    {
+      "original": "c1dd841c3-BM8bL70i.js#o",
+      "from": "../cowork-scheduled/c1dd841c3-BM8bL70i.mjs",
+      "name": "o"
+    },
+    {
+      "original": "cc5a62f6f-CwJjes2b.js#L",
+      "from": "../cowork-progress/cc5a62f6f-CwJjes2b.mjs",
+      "name": "L"
+    },
+    {
+      "original": "cc5a62f6f-CwJjes2b.js#T",
+      "from": "../cowork-progress/cc5a62f6f-CwJjes2b.mjs",
+      "name": "T"
+    },
+    {
+      "original": "cc5a62f6f-CwJjes2b.js#ie",
+      "from": "../cowork-progress/cc5a62f6f-CwJjes2b.mjs",
+      "name": "ie"
+    },
+    {
+      "original": "cc5a62f6f-CwJjes2b.js#ne",
+      "from": "../cowork-progress/cc5a62f6f-CwJjes2b.mjs",
+      "name": "ne"
+    },
+    {
+      "original": "cc5a62f6f-CwJjes2b.js#w",
+      "from": "../cowork-progress/cc5a62f6f-CwJjes2b.mjs",
+      "name": "w"
+    },
+    {
+      "original": "shared-0-DDOOdL6P.js#ia",
+      "from": "../cowork-home/shared-0-DDOOdL6P.mjs",
+      "name": "ia"
+    },
+    {
+      "original": "shared-16-ByfgAyLr.js#Xp",
+      "from": "../cowork-scheduled/shared-16-ByfgAyLr.mjs",
+      "name": "Xp"
+    },
+    {
+      "original": "shared-52-uHFNjl7C.js#rd",
+      "from": "../proposal-group/shared-52-uHFNjl7C.js",
+      "name": "H_"
+    }
+  ],
+  "pendingDedupe": []
+}

@@ -1,0 +1,75 @@
+{
+  "referenceVersion": "4.16336.0",
+  "referenceSnapshot": "snapshots/claude-4.16336.0-20261104",
+  "generator": "scripts/extract-composer-env-v4.mjs",
+  "adapterModule": "src/source-composer-env-adapters.jsx",
+  "linkedAreas": [
+    {
+      "area": "code-composer-v4",
+      "modules": [
+        "environment-bar.mjs"
+      ]
+    },
+    {
+      "area": "code-routines-v4",
+      "modules": [
+        "cd8a7d7c0-DuH0T8rm.mjs"
+      ]
+    }
+  ],
+  "sharedGraph": "cds-core",
+  "modules": [
+    {
+      "target": "model-effort.mjs",
+      "source": "cc43287c9-dzfX-J5i.js",
+      "sourceSha256": "4a6893cf4d24a16a99c88d0793529ff39cd1cc0abd9527ce263a54d8d26d7f43",
+      "sha256": "41bc3f61b77ff0ed097e6fe34db8604b635ad32d63c7e846e540d9f2f8a4055f",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "Exe",
+          "sha256": "ed07cc743ad7313932b2e3083ebecdce74ed528d1f0ff61d0fdf9c847dfae267"
+        }
+      ],
+      "initializers": [],
+      "imports": [
+        {
+          "local": "h",
+          "from": "react/jsx-runtime",
+          "name": "jsxs",
+          "via": "vendor-frame-BckkO60Y.js:Ka",
+          "kind": "react"
+        },
+        {
+          "local": "p",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-BckkO60Y.js:Ga",
+          "kind": "react"
+        },
+        {
+          "local": "u8",
+          "from": "../code-composer-v4/environment-bar.mjs",
+          "name": "EnvironmentChipGroup",
+          "via": "cc43287c9-dzfX-J5i.js#u8",
+          "kind": "linked",
+          "original": "u8"
+        },
+        {
+          "local": "y",
+          "from": "react/jsx-runtime",
+          "name": "Fragment",
+          "via": "vendor-frame-BckkO60Y.js:Wa",
+          "kind": "react"
+        }
+      ],
+      "exports": {
+        "Exe": "EnvironmentModelEffort"
+      },
+      "sharedExports": [],
+      "heldByViewTabs": []
+    }
+  ],
+  "callSites": [],
+  "publicAssets": []
+}

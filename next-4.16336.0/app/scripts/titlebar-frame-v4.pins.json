@@ -1,0 +1,135 @@
+{
+  "referenceVersion": "4.16336.0",
+  "referenceSnapshot": "snapshots/claude-4.16336.0-20261104",
+  "sources": {
+    "shared-20-DUEo90UF.js": "28c50cf76aa77031056343ebb0dcd4505ffe22671779d25852ebc47ff0cbfccc",
+    "shared-120-DCdTP1_5.js": "b1a1dc9691fe9e451db638c8bec3f6df98fd4b0b8dbf10503f3d118fb29ec32e",
+    "shared-38-DyF0_Fim.js": "7e4b9829ff53d9a2e0917de5fd1c2590bb54bca631c955f72b79905203f99f39",
+    "shared-18-Cfqwgjc5.js": "6828aa7109628e08360fd1e7b4ddc2ff022f5f369a297ce690cd4b19e4205436",
+    "shared-31-C9BqSSuD.js": "7b554823056e9df24d9b258e505fd0d0a2fc1e3bdd8e35d9bcf8c16fdaf0ef7d",
+    "shared-frame-CJdE5Ria.js": "b6a5f61e0f243a48215fab7f3d65958d693d715e565f57af4e0ff35ae14697bc",
+    "shared-0-CnnWnVrT.js": "eb5fb89d8b47627c28969bd1df41f25a49a3e1d6ed91c5af2d980d5847d78ae1"
+  },
+  "roots": {
+    "TitlebarFrame": {
+      "file": "shared-20-DUEo90UF.js",
+      "local": "o_",
+      "export": "Uc",
+      "declarationSha256": "261e59964774e9a1aac49b686698858129e90343e8a83669e353c5261341fa46",
+      "features": [
+        "lifted: t, ...n } = e",
+        "t && !r && !n.startScreen && i(xl, {})",
+        "o(Es, { compact: t, children: [a, s] })"
+      ]
+    },
+    "TitlebarLiftedHiddenContext": {
+      "file": "shared-20-DUEo90UF.js",
+      "local": "Rg",
+      "export": null,
+      "declarationSha256": "dc37c1c8f9fc4d81ee9541b3f9b75d2e603eb3c7461a55d5f4acf79162bc7e1c",
+      "features": [
+        "Rg = g(!1)"
+      ]
+    },
+    "titlebarTextVars": {
+      "file": "shared-20-DUEo90UF.js",
+      "local": "Ug",
+      "export": "Yc",
+      "declarationSha256": "adbb0e758a5f03f32e29e0a5a51624ba06d1289b3b1b9f8faec7aeda3a51e38c",
+      "features": [
+        "\"--titlebar-text-primary\": \"var(--cds-text-primary)\""
+      ]
+    },
+    "useTitlebarPanelsScope": {
+      "file": "shared-120-DCdTP1_5.js",
+      "local": "qe",
+      "export": "_n",
+      "declarationSha256": "7c6e147f8833439c4338313768e401e273cc646d05a49a98ff624271f1c10382",
+      "features": [
+        "return c(Ke) === !0;"
+      ]
+    },
+    "titlebarLeadRowClass": {
+      "file": "shared-38-DyF0_Fim.js",
+      "local": "fn",
+      "export": "Br",
+      "declarationSha256": "09a6906f5f82d559e67c6fde4d82851814b63dc02cbbb1209a43bbc15e2d8726",
+      "features": [
+        "fn = \"flex min-w-0 items-center\""
+      ]
+    },
+    "titlebarLeadClipClass": {
+      "file": "shared-38-DyF0_Fim.js",
+      "local": "En",
+      "export": "Hr",
+      "declarationSha256": "467ee713d042f818fdd879e1b009b7caf8353b341d3ef499ded2a3ba4fc4f34f",
+      "features": [
+        "[clip-path:inset(-32px_-12px)]"
+      ]
+    },
+    "titlebarLeadNoOriginPanelsClass": {
+      "file": "shared-38-DyF0_Fim.js",
+      "local": "gn",
+      "export": "Zn",
+      "declarationSha256": "7f866cdc7f7821f02f8df13e5d93f16e0380c0dfd7d9fda11aad753e828be1da",
+      "features": [
+        "gn = \"ps-md shrink-0\""
+      ]
+    },
+    "titleBleedPanels": {
+      "file": "shared-18-Cfqwgjc5.js",
+      "local": "Iw",
+      "export": "Rf",
+      "declarationSha256": "f39006b853703ddf9877129997cb0cdf54514cf107845d1cc6f42c1fffc3e87a",
+      "features": [
+        "Iw = { pad: Fw, style: { \"--cds-outset-x\": \"var(--cds-pad-md)\" } }"
+      ]
+    },
+    "titleGroupPanelsClass": {
+      "file": "shared-18-Cfqwgjc5.js",
+      "local": "Bw",
+      "export": "xf",
+      "declarationSha256": "d7a2ef1cbecd9d75721341816be6384b39145b6e29d2f553e507de18094b2bc2",
+      "features": [
+        "gap-[calc(var(--cds-pad-md)_-_--spacing(1.5))]"
+      ]
+    }
+  },
+  "also": {
+    "TitlebarRow": {
+      "file": "shared-20-DUEo90UF.js",
+      "local": "s_",
+      "export": null,
+      "declarationSha256": "a898e7a7b8195a253c6026ad4235c92d952a3ba058ff0b609d52a3e223ab54f3",
+      "features": [
+        "i(re, { label: a, divider: P, flush: F, ...I, className: L, children: H })",
+        "P = D ? void 0 : !1",
+        "\"--title-row-lane\": `${S}px`",
+        "className: v ? \"flex min-w-0 items-center ps-md\" : \"contents\""
+      ]
+    },
+    "TitlebarDensityRoot": {
+      "file": "shared-18-Cfqwgjc5.js",
+      "local": "OS",
+      "export": "Am",
+      "declarationSha256": "b2eb13021c37c5e9c49f834f26f9055fc42b109ed11ece311698011474e93905",
+      "features": [
+        "density: \"comfortable\"",
+        "children: m(iv, { value: r, children: n })"
+      ]
+    }
+  },
+  "boundaries": {
+    "shared-0-CnnWnVrT.js#FH": {
+      "name": "useIsDesktopApp",
+      "kind": "hook",
+      "export": "Yu",
+      "declarationSha256": "48c5ac390eae53e7b9a93536657c342305c74ce97cafa85a7f0f17dd88cbec31",
+      "head": "function FH(e) {"
+    }
+  },
+  "cdsCore": {
+    "manifestSha256": "06d2026939e5c8992713c2a0dda1b1abc9adffe7a0c223fe3c1e79eecd08d62c",
+    "adapterSha256": "7d63624afd6a3e7eaa2c42803aacdcf1a74ca479ffbed4d9c1f40c60e233ff1e"
+  }
+}

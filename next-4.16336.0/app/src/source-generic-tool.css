@@ -1,0 +1,44 @@
+/* approval-current KO/GO/RO/qO: default tool details and standalone MCP card. */
+.source-generic-step .source-step-trigger{padding:0;margin:0;min-height:0;max-width:100%;gap:3px}
+.source-generic-step .source-step-detail{padding-top:0}
+.source-generic-step .source-step-detail:not([hidden]){display:flow-root}
+.source-generic-step .source-step-meta{color:var(--cds-text-muted)}
+.source-generic-step[data-state=busy] .source-step-meta,.source-generic-step[data-state=blocked] .source-step-meta{color:var(--cds-text-secondary)}
+.source-generic-step .source-step-trigger:hover .source-step-meta{color:var(--cds-text-secondary)}
+.source-generic-step:is([data-state=busy],[data-state=blocked]) .source-step-trigger:hover .source-step-meta{color:var(--cds-text-primary)}
+.sgt-body{min-width:0;color:var(--cds-text-secondary);font:inherit}
+.sgt-body-inner{position:relative;display:flex;width:100%;padding-top:var(--cds-pad-xs,4px)}
+.sgt-details{display:flex;flex:1;min-width:0;flex-direction:column;gap:5px;max-height:400px;overflow-y:auto;white-space:pre-wrap;overflow-wrap:anywhere;outline:none}
+.sgt-details:focus-visible{box-shadow:var(--cds-focus-shadow)}
+.sgt-inputs{display:flex;flex-direction:column;gap:3px}
+.sgt-input-key,.sgt-code-value{font-family:var(--cds-font-mono);font-size:var(--cds-font-size-code);line-height:var(--cds-leading-code)}
+.sgt-input-key{opacity:.7}
+.sgt-code-value{white-space:pre-wrap;overflow-wrap:anywhere}
+.sgt-error{color:var(--cds-text-danger)}
+/* An MCP App's interactive view that isn't hosted (Qwen mcp_app). */
+.sgt-note{color:var(--cds-text-muted)}
+.sgt-body[data-standalone]{padding-block:var(--cds-pad-md,8px)}
+.sgt-body[data-standalone]>.sgt-body-inner{padding:var(--cds-pad-sm,6px) var(--cds-pad-md,8px);border-radius:var(--radius-lg,8px);box-shadow:inset 0 0 0 1px var(--cds-border)}
+.sgt-body-inner:hover>.src-cmd-copy,.sgt-body-inner:focus-within>.src-cmd-copy{opacity:1;transition-delay:0s}
+.sgt-path{display:inline;padding:0;border:0;background:none;color:inherit;text-align:inherit;border-radius:4px;font:inherit;cursor:var(--cds-cursor-interactive,default)}
+.sgt-path:focus-visible{outline:none;box-shadow:var(--cds-focus-shadow)}
+.sgt-path:hover{text-decoration:underline;text-underline-offset:3px}
+.sgt-path-code{font-family:var(--cds-font-mono);font-size:calc(var(--chat-body,var(--cds-font-size-body)) - 1px);line-height:1.4;background:var(--cds-alpha-1);color:var(--cds-text-primary);border-radius:4px;padding:1px 2px;overflow-wrap:anywhere}
+.sgt-path>.sgt-path-code{font:inherit;line-height:inherit;background:none;color:var(--cds-text-accent)}
+.sgt-path:hover>.sgt-path-code{background:color-mix(in srgb,var(--cds-fill-accent) 10%,transparent)}
+/* todo_write: the shared ZO checklist (its ul carries gap-xs and py-xs) at
+   row text size; text-body is not remapped to the chat size locally. */
+.source-plan-list.source-plan-list-inline{font-size:inherit;line-height:inherit}
+/* ask_user_question Qoe (approval-current.js:7349-7395). */
+.sgt-qa{display:flex;flex-direction:column;gap:var(--cds-gap-md,12px);padding-top:var(--cds-pad-xs,4px)}
+.sgt-qa-entry{display:flex;flex-direction:column;overflow-wrap:anywhere}
+.sgt-qa-question{color:var(--cds-text-secondary)}
+.sgt-qa-answer{color:var(--cds-text-muted)}
+/* QO tool output images (approval-current.js:7389-7445): "flex flex-col items-start gap-1 pt-md";
+   button "max-w-full cursor-zoom-in rounded-sm focus-visible:shadow-focus"; $oe img "max-w-full
+   max-h-[360px] w-auto rounded-[5px] border". Hoisted under a standalone row the column sits in the
+   row root right after the trigger/body (RN :17302), so pt-md is the only gap. */
+.stimg{display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding-top:var(--cds-pad-md,8px)}
+.stimg-button{display:block;max-width:100%;padding:0;margin:0;border:0;background:none;border-radius:var(--radius-sm,.25rem);cursor:zoom-in;font:inherit;color:inherit}
+.stimg-button:focus-visible{outline:none;box-shadow:var(--cds-focus-shadow)}
+.stimg-img{display:block;max-width:100%;max-height:360px;width:auto;border:1px solid var(--cds-border);border-radius:5px;box-sizing:border-box}

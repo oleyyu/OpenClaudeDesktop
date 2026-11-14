@@ -1,0 +1,219 @@
+import test, {before,after} from 'node:test';
+import assert from 'node:assert/strict';
+import React from 'react';
+import {renderToStaticMarkup} from 'react-dom/server';
+import {createServer} from 'vite';
+import react from '@vitejs/plugin-react';
+import path from 'node:path';
+import {withMemoCache} from './support/react-memo-cache.mjs';
+let server,Tabs,Frame,Host;
+before(async()=>{
+  server=await createServer({configFile:false,root:path.resolve(import.meta.dirname,'..'),plugins:[react()],server:{middlewareMode:true,hmr:false,ws:false,watch:null},appType:'custom',logLevel:'error'});
+  Tabs=await server.ssrLoadModule('/src/generated/view-tabs/cfe7c4b3b-BF79K6ux.js');
+  Frame=await server.ssrLoadModule('/src/generated/view-tabs/vendor-frame-CnSY1sxv.js');
+  Host=await server.ssrLoadModule('/src/source-view-tabs.jsx');
+});
+after(()=>server?.close());
+const noop=()=>{};
+test('the original lazy popup module retains its public export instead of only a minified local name',async()=>{
+  const module=await server.ssrLoadModule('/src/generated/view-tabs/c86ccec3d-CIt4iOS0.js');
+  assert.equal(typeof module.SheetPopupHost,'function');
+});
+function fixture(component,props,{direction='ltr'}={}) {
+  const cells=[],effects=[];let cursor=0,tree;
+  const same=(a,b)=>a&&b&&a.length===b.length&&a.every((v,i)=>Object.is(v,b[i]));
+  const dispatcher={
+    useContext:c=>c===Frame.DirectionContext?{direction}:c._currentValue,
+    useState(initial){const i=cursor++;cells[i]??={value:typeof initial==='function'?initial():initial};return [cells[i].value,next=>{cells[i].value=typeof next==='function'?next(cells[i].value):next;}];},
+    useRef(initial){return dispatcher.useState(()=>({current:initial}))[0];},
+    useMemo(fn,deps){const i=cursor++;if(!cells[i]||!same(cells[i].deps,deps))cells[i]={value:fn(),deps};return cells[i].value;},
+    useCallback(fn,deps){return dispatcher.useMemo(()=>fn,deps);},
+    useId(){return dispatcher.useState(()=>`tab-fixture-${cursor}`)[0];},
+    useEffectEvent(fn){const ref=dispatcher.useRef(fn);ref.current=fn;return dispatcher.useMemo(()=>(...args)=>ref.current(...args),[]);},
+    useEffect(fn,deps){const i=cursor++;if(!cells[i]||!same(cells[i].deps,deps)){const old=cells[i];cells[i]={deps};effects.push(()=>{old?.cleanup?.();cells[i].cleanup=fn();});}},
+    useLayoutEffect(fn,deps){dispatcher.useEffect(fn,deps);},
+  };
+  // 3.6556.2 is React Compiler output (cds:C9): components start with useMemoCache (R5 helper, cache kept per slot).
+  withMemoCache(dispatcher);
+  const render=()=>{cursor=0;const internal=React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,previous=internal.H;internal.H=dispatcher;try{tree=component(props);return tree;}finally{internal.H=previous;}};
+  render();return {render,get tree(){return tree;},flush(){for(const effect of effects.splice(0))effect();return render();},close(){for(const cell of cells)cell?.cleanup?.();}};
+}
+function find(tree,predicate){if(!tree||typeof tree!=='object')return null;if(predicate(tree))return tree;for(const child of [...React.Children.toArray(tree.props?.children),tree.props?.render]){const result=find(child,predicate);if(result)return result;}return null;}
+function event(key,fields={}){return {key,ctrlKey:false,metaKey:false,altKey:false,shiftKey:false,repeat:false,defaultPrevented:false,stopped:false,nativeEvent:{isComposing:false},preventDefault(){this.defaultPrevented=true;},stopPropagation(){this.stopped=true;},preventBaseUIHandler(){this.basePrevented=true;},...fields};}
+function events(){const map=new Map();return {addEventListener(name,fn){if(!map.has(name))map.set(name,new Set());map.get(name).add(fn);},removeEventListener(name,fn){map.get(name)?.delete(fn);},send(name,e){for(const fn of [...map.get(name)??[]])fn(e);},count(){return [...map.values()].reduce((n,s)=>n+s.size,0);}};}
+
+test('original Base UI renders manual-activation tabs with current geometry and explicit RTL text direction',()=>{
+  const html=renderToStaticMarkup(React.createElement(Host.SourceViewTabBar,{direction:'rtl',tabs:[{id:'a',label:'א',closable:true},{id:'b',label:'B',closable:false}],activeId:'a',onActivate:noop,onClose:noop,minTabWidth:92,'aria-label':'Side chat tabs'}));
+  assert.match(html,/role="tablist"/);assert.match(html,/role="tab" tabindex="0" aria-selected="true"/);
+  assert.match(html,/role="tab" tabindex="-1" aria-selected="false"/);assert.match(html,/data-vtb-label="true" dir="auto"/);
+  assert.match(html,/overflow-x-hidden p-\[4px\]/);assert.match(html,/min-width:92px/);assert.match(html,/data-vtb-end-slack=""[^>]+width:96px/);
+  assert.equal((html.match(/aria-label="Close tab"/g)||[]).length,1);
+});
+
+test('source tab Delete closes once and consumes the held key until release; locked tab keeps its handler inert',()=>{
+  const view=events(),doc={defaultView:view},closed=[];
+  const props={tab:{id:'child',label:'Child',closable:true},selected:true,sizes:Tabs.viewTabSizes,labels:Tabs.viewTabLabels,posinset:1,setsize:2,onClose:id=>closed.push(id)};
+  const f=fixture(Tabs.ViewTab.type,props),tab=find(f.tree,n=>n.props?.value==='child'&&n.props?.onKeyDown);
+  const first=event('Delete',{currentTarget:{ownerDocument:doc}});tab.props.onKeyDown(first);assert.deepEqual(closed,['child']);assert.equal(view.count(),2);
+  const held=event('Delete',{repeat:true});view.send('keydown',held);assert.equal(held.defaultPrevented,true);assert.equal(held.stopped,true);assert.deepEqual(closed,['child']);
+  view.send('keyup',event('Delete'));assert.equal(view.count(),0);
+  props.tab={...props.tab,closable:false};f.render();find(f.tree,n=>n.props?.value==='child'&&n.props?.onKeyDown).props.onKeyDown(event('Backspace',{currentTarget:{ownerDocument:doc}}));assert.deepEqual(closed,['child']);f.close();
+});
+
+test('original overflow row closes with the directional arrow, Backspace or Delete; repeated and modified keys do not close again',()=>{
+  for(const direction of ['ltr','rtl']){
+    const closed=[],f=fixture(Tabs.ViewTabOverflowItem,{tab:{id:'hidden',label:'Hidden',closable:true},arrowCloses:true,rtl:direction==='rtl',onActivate:noop,onClose:id=>closed.push(id),sizes:Tabs.viewTabSizes});
+    const closeKey=direction==='rtl'?'ArrowLeft':'ArrowRight',other=direction==='rtl'?'ArrowRight':'ArrowLeft';
+    f.tree.props.onKeyDown(event(other));f.tree.props.onKeyDown(event(closeKey,{ctrlKey:true}));assert.equal(closed.length,0);
+    const e=event(closeKey);f.tree.props.onKeyDown(e);assert.deepEqual(closed,['hidden']);assert.equal(e.stopped,true);
+    f.tree.props.onKeyDown(event(closeKey,{repeat:true}));assert.equal(closed.length,1);
+    f.tree.props.onKeyDown(event('Backspace'));assert.equal(closed.length,2);f.close();
+  }
+});
+
+test('typeahead Backspace is consumed in overflow capture before it can close a tab',()=>{
+  const f=fixture(Tabs.ViewTabOverflowMenu,{tabs:[{id:'hidden',label:'Hidden',closable:true}],labels:Tabs.viewTabLabels,onActivate:noop,onClose:noop,sizes:Tabs.viewTabSizes});
+  const popup=find(f.tree,n=>n.props?.onKeyDownCapture),capture=popup.props.onKeyDownCapture;
+  capture(event('h'));const removeLetter=event('Backspace');capture(removeLetter);assert.equal(removeLetter.stopped,true);
+  const closeTab=event('Backspace');capture(closeTab);assert.equal(closeTab.stopped,false);
+  capture(event('h'));capture(event('ArrowDown'));const afterNavigation=event('Backspace');capture(afterNavigation);assert.equal(afterNavigation.stopped,false);f.close();
+});
+
+function measurement(direction='ltr') {
+  const observers=[],view={...events(),getComputedStyle:node=>({direction,columnGap:'4px',width:node.width??'96px'}),ResizeObserver:class{constructor(fn){this.fn=fn;observers.push(this);}observe(){}disconnect(){this.disconnected=true;}}};
+  const doc={nodeType:9,defaultView:view,body:{}};doc.activeElement=doc.body;
+  const list={...events(),nodeType:1,ownerDocument:doc,clientWidth:212,scrollWidth:324,scrollLeft:0,querySelectorAll:()=>nodes,querySelector:()=>null};
+  const nodes=['a','b','c'].map((id,index)=>({nodeType:1,ownerDocument:doc,dataset:{vtbId:id},offsetWidth:100,
+    get offsetLeft(){return direction==='rtl'?list.clientWidth-4-index*104-100:4+index*104;},
+    hasAttribute:name=>false,querySelector:()=>({scrollWidth:55,clientWidth:60}),contains:node=>node===doc.activeElement&&doc.activeElement.tabId===id}));
+  const root={...events(),nodeType:1,ownerDocument:doc,children:[],contains:node=>node===list||nodes.includes(node),querySelector:()=>null};
+  const args={root:{current:root},list:{current:list},slack:{current:{ownerDocument:doc,width:'96px'}},ids:['a','b','c'],active:'a'};
+  const f=fixture(p=>Tabs.useViewTabOverflow(p.root,p.list,p.slack,p.ids,p.active,0),args,{direction});f.flush();
+  const measure=()=>{observers.filter(o=>!o.disconnected).at(-1).fn();return f.render();};
+  return {f,args,doc,root,list,nodes,measure};
+}
+test('original measurements overflow full tabs, keep the active tab in view, and clear overflow when width returns',()=>{
+  const m=measurement();assert.deepEqual(m.measure().hiddenIds,['c']);assert.equal(m.f.tree.endSlack,true);
+  m.args.active='c';m.f.render();m.f.flush();const last=m.measure();assert.deepEqual(last.hiddenIds,['a']);assert.equal(m.list.scrollLeft,104);
+  m.list.clientWidth=400;const wide=m.measure();assert.deepEqual(wide.hiddenIds,[]);assert.equal(wide.endSlack,false);assert.equal(m.list.scrollLeft,0);m.f.close();
+});
+test('RTL overflow uses logical starts and a negative scroll offset for the selected final tab',()=>{
+  const m=measurement('rtl');assert.deepEqual(m.measure().hiddenIds,['c']);m.args.active='c';m.f.render();m.f.flush();
+  assert.deepEqual(m.measure().hiddenIds,['a']);assert.equal(m.list.scrollLeft,-104);m.f.close();
+});
+
+// 2.42304.0 additions to the original bar (still in 3.6556.2), exercised through its own functions.
+const pair=[{id:'a',label:'A',closable:true},{id:'b',label:'B',closable:true}];
+test('original create control becomes the CDS split dropdown only when a create menu accompanies onCreate',()=>{
+  const bar=props=>renderToStaticMarkup(React.createElement(Host.SourceViewTabBar,{tabs:pair,activeId:'a',onActivate:noop,onClose:noop,'aria-label':'Tabs',...props}));
+  const split=bar({onCreate:noop,createMenu:{label:'More new tab options',items:[{label:'Terminal',onClick:noop}]}});
+  assert.match(split,/data-cds="SplitDropdownButton"/);assert.match(split,/aria-label="New tab"/);
+  const plain=bar({onCreate:noop});
+  assert.doesNotMatch(plain,/SplitDropdownButton/);assert.match(plain,/data-cds="Button"[^>]*data-cds-ghost=""|data-cds-ghost=""[^>]*data-cds="Button"/);assert.match(plain,/aria-label="New tab"/);
+  assert.doesNotMatch(bar({createMenu:{label:'More',items:[]}}),/SplitDropdownButton|aria-label="New tab"/);
+});
+test('fizzy-lake panels stay off for the host: tabs keep the default size table and never read --vtb-room',()=>{
+  const html=renderToStaticMarkup(React.createElement(Host.SourceViewTabBar,{tabs:pair,activeId:'a',onActivate:noop,onClose:noop,density:'comfortable','aria-label':'Tabs'}));
+  assert.match(html,/basis-\[192px\]/);assert.doesNotMatch(html,/--vtb-room|basis-\[212px\]/);
+  assert.equal(Tabs.viewTabSizes.basis,'basis-[192px]');assert.equal(Tabs.viewTabSizes.roomVar,undefined);
+});
+// cds:C12 (3.6556.2): the overflow row closes with the directional arrow only when arrowCloses is set; the bar passes
+// overflowArrowCloses, which defaults to true, so the host's bar keeps the arrow close.
+test('overflow row arrow close is opt-in on the row and on by default through the bar',()=>{
+  const closed=[],f=fixture(Tabs.ViewTabOverflowItem,{tab:{id:'hidden',label:'Hidden',closable:true},rtl:false,onActivate:noop,onClose:id=>closed.push(id),sizes:Tabs.viewTabSizes});
+  f.tree.props.onKeyDown(event('ArrowRight'));assert.deepEqual(closed,[]);f.tree.props.onKeyDown(event('Delete'));assert.deepEqual(closed,['hidden']);f.close();
+  const bar=Tabs.ViewTabBar.toString();assert.match(bar,/overflowArrowCloses:/);
+});
+// cds:C10 (3.6556.2): createBusy marks the create control busy (aria-busy + spinner) and its wrapper drops out of the
+// window drag region (draggable-none); with a create menu (split button) a role="status" sr-only span announces
+// "Opening new tab…".
+test('createBusy announces the busy create control and keeps it out of the drag region',()=>{
+  const bar=props=>renderToStaticMarkup(React.createElement(Tabs.ViewTabBar,{tabs:pair,activeId:'a',onActivate:noop,onClose:noop,onCreate:noop,'aria-label':'Tabs',...props}));
+  const menu={label:'More new tab options',items:[{label:'Terminal',onClick:noop}]};
+  const busy=bar({createBusy:true}),idle=bar({}),busySplit=bar({createBusy:true,createMenu:menu}),idleSplit=bar({createMenu:menu});
+  assert.match(busy,/<span class="inline-flex shrink-0 draggable-none" role="presentation">/);
+  assert.match(busy,/aria-busy="true"[^>]*aria-label="New tab"/);assert.match(busy,/data-cds="Spinner"/);
+  assert.match(idle,/<span class="inline-flex shrink-0" role="presentation">/);
+  assert.doesNotMatch(idle,/aria-busy="true"|data-cds="Spinner"|Opening new tab…/);
+  assert.match(busySplit,/<span role="status" class="sr-only">Opening new tab…<\/span>/);
+  assert.match(idleSplit,/<span role="status" class="sr-only"><\/span>/);
+  // The tab list itself already carried draggable-none in 2.42304.0 (E37: not a 3.6556.2 change).
+  assert.match(idle,/overflow-x-hidden p-\[4px\] draggable-none/);
+});
+// w2-cds-followup (cds:C10, E20): the host bar passes createBusy through and supplies the translated newTabBusy label;
+// a caller's own labels win. Official 3.6556.2 cccc2cf0a passes onCreate/createBusy only on the side-chat strip, gated
+// by c73f45bc3 Op (startBtwChild); the host strip passes no onCreate (E16/E31), so nothing shows there today.
+test('host bar forwards createBusy with the translated busy status and keeps caller labels',async()=>{
+  const i18n=await server.ssrLoadModule('/electron/i18n/index.mjs');
+  const menu={label:'More new tab options',items:[{label:'Terminal',onClick:noop}]};
+  const bar=props=>renderToStaticMarkup(React.createElement(Host.SourceViewTabBar,{tabs:pair,activeId:'a',onActivate:noop,onClose:noop,onCreate:noop,createMenu:menu,'aria-label':'Tabs',...props}));
+  const before=i18n.getLocale();
+  try {
+    i18n.setLocale('en-US');assert.match(bar({createBusy:true}),/<span role="status" class="sr-only">Opening new tab…<\/span>/);
+    i18n.setLocale('zh-CN');
+    const zh=bar({createBusy:true});
+    assert.match(zh,/<span role="status" class="sr-only">正在打开新标签页…<\/span>/);assert.match(zh,/<span class="inline-flex shrink-0 draggable-none" role="presentation">/);
+    assert.match(bar({createBusy:false}),/<span role="status" class="sr-only"><\/span>/);
+    assert.match(bar({createBusy:true,labels:{newTabBusy:'Starting…'}}),/<span role="status" class="sr-only">Starting…<\/span>/);
+  } finally {i18n.setLocale(before);}
+  const source=(await import('node:fs')).readFileSync(path.resolve(import.meta.dirname,'../src/source-view-tabs.jsx'),'utf8');
+  assert.match(source,/from '\.\/generated\/view-tabs\/index\.js';/,'R6: the host reads view-tabs through the facade');
+  assert.doesNotMatch(source,/generated\/view-tabs\/(?!index\.js)/);
+});
+// R4g SM2 (global-10 / X7-21), 3.6556.2: shared-23's spa:fizzy-lake writer PD=[ND(AD)] still has an empty switch table
+// (AD={}); the part gate (shared-4 lp -> shared-52 th) filters <html data-cds-fizzy-lake> through Qm=[] (cds:C25), so
+// every part is always false. No host code sets the attribute or the storage keys (E12); index.html's <html> carries the
+// 4.16336.0 official value (html-root), which the 3.6556.2 gate still filters to nothing.
+test('global-10: the official build compiles fizzy-lake off and the host never turns a part on',async()=>{
+  const fs=await import('node:fs/promises');
+  const count=(text,s)=>text.split(s).length-1;
+  const ref=path.resolve(import.meta.dirname,'../../reference/snapshots/claude-3.6556.2-20261025-192807/ion-dist/assets/v1');
+  const s23=await fs.readFile(path.join(ref,'shared-23-BZ6ZY5fu.js'),'utf8'),s52=await fs.readFile(path.join(ref,'shared-52-uHFNjl7C.js'),'utf8');
+  assert.equal(count(s23,'AD={},jD={panels:'),1);assert.equal(count(s23,'var PD=[ND(AD)]'),1);
+  assert.equal(count(s52,'Qm=[]'),1);assert.equal(count(s52,'Ym="data-cds-fizzy-lake"'),1);
+  const gate=await server.ssrLoadModule('/src/generated/view-tabs/shared-52-uHFNjl7C.js');
+  assert.deepEqual(gate.Qm,[]);assert.equal(gate.Ym,'data-cds-fizzy-lake');assert.deepEqual(gate.Xm('panels color bubbles',gate.Qm),[]);
+  const parts=await server.ssrLoadModule('/src/generated/view-tabs/shared-4-DUB1Oi0O.js');
+  for(const part of ['panels','color','bubbles'])assert.equal(parts.isFizzyLakePartEnabled(part),false,part);
+  const app=path.resolve(import.meta.dirname,'..'),hits=[];
+  for(const dir of ['src','electron'])for(const name of await fs.readdir(path.join(app,dir),{recursive:true})){
+    if(name.split(path.sep).includes('generated')||!/\.(jsx?|mjs|cjs|css|html)$/.test(name))continue;
+    // Code only: comments that explain why fizzy-lake stays off (e.g. the adapters' isFizzyLakePart notes) write nothing.
+    const text=(await fs.readFile(path.join(app,dir,name),'utf8')).replace(/\/\*[\s\S]*?\*\//g,'').replace(/(^|\s)\/\/.*$/gm,'$1');
+    // html-root fix (integration-2): source-settings.css's one selector reads (never writes) the official type part for the
+    // 4.16336.0 c6a992d55 Large message-row leading; any other mention still counts.
+    const typeReader='html[data-cds-fizzy-lake~=type][data-chat-text-size=l] .source-message.source-message:is([data-cds=AssistantMessage],[data-cds=UserMessage]) {';
+    if(name==='source-settings.css'&&dir==='src'&&text.split(typeReader).length-1!==1)hits.push(`${dir}/${name}: type reader`);
+    // titlebar relink T1 (round3/relink/rl-main-entry): main.jsx hands the window root the official 4.16336.0 reader's
+    // answer, shared-92 St's `fizzyLake:_` with `_=A()` = cds-core readFizzyLakeParts (shared-92 ib, pinned below: it only
+    // getAttribute()s the <html> value and caches it). Exactly that one reader; any other mention still counts.
+    const rootReader='const cdsWindowExperimental = { fizzyLake: readFizzyLakeParts() };';
+    if(name==='main.jsx'&&dir==='src'&&text.split(rootReader).length-1!==1)hits.push(`${dir}/${name}: root reader`);
+    for(const s of ['data-cds-fizzy-lake','spa:fizzy-lake','fizzyLake'])if(text.split(typeReader).join('').split(rootReader).join('').includes(s))hits.push(`${dir}/${name}: ${s}`);
+  }
+  // html-root (integration-2): index.html's <html> carries the 4.16336.0 official data-cds-fizzy-lake="color panels type" (the
+  // 3.6556.2 gate above still answers false for every part under it); nothing else in index.html mentions fizzy-lake.
+  const index=await fs.readFile(path.join(app,'index.html'),'utf8');
+  if(index.split('fizzy-lake').length-1!==1||!/<html\b[^>]*\sdata-cds-fizzy-lake="color panels type"[\s>]/.test(index))hits.push('index.html');
+  const s92=await fs.readFile(path.resolve(import.meta.dirname,'../../reference/snapshots/claude-4.16336.0-20261104/ion-dist/assets/v1/shared-92-BOgyxePb.js'),'utf8');
+  assert.equal(count(s92,'function ib(){return rb??={parts:typeof document>"u"?[]:eb(document.documentElement.getAttribute($y),nb)},rb}'),1);
+  assert.match(await fs.readFile(path.join(app,'src/cds-core.mjs'),'utf8'),/\bib as readFizzyLakeParts,/);
+  assert.deepEqual(hits,[]);
+});
+test('original tab menu names the close-to-end action by reading direction: right in LTR, left in RTL',()=>{
+  for(const [direction,label] of [['ltr','Close tabs to the right'],['rtl','Close tabs to the left']]){
+    const f=fixture(Tabs.ViewTab.type,{tab:{id:'a',label:'A',closable:true},selected:true,sizes:Tabs.viewTabSizes,labels:Tabs.viewTabLabels,posinset:1,setsize:2,onClose:noop,onCloseToRight:noop},{direction});
+    assert.ok(find(f.tree,n=>n.props?.children===label),direction);
+    assert.equal(find(f.tree,n=>n.props?.children===(direction==='rtl'?'Close tabs to the right':'Close tabs to the left')),null,direction);f.close();
+  }
+  assert.equal(Tabs.viewTabLabels.closeTabsToRightRtl,'Close tabs to the left');
+});
+test('closing from the overflow menu consumes the held key on its owner window until release',()=>{
+  const view=events(),closed=[];
+  const f=fixture(Tabs.ViewTabOverflowItem,{tab:{id:'hidden',label:'Hidden',closable:true},rtl:false,onActivate:noop,onClose:id=>closed.push(id),sizes:Tabs.viewTabSizes});
+  const first=event('Delete',{currentTarget:{ownerDocument:{defaultView:view}}});f.tree.props.onKeyDown(first);
+  assert.deepEqual(closed,['hidden']);assert.equal(view.count(),2);
+  const held=event('Delete',{repeat:true});view.send('keydown',held);assert.equal(held.defaultPrevented,true);assert.equal(held.stopped,true);
+  view.send('keyup',event('Delete'));assert.equal(view.count(),0);
+  f.tree.props.onKeyDown(event('Backspace'));assert.deepEqual(closed,['hidden','hidden']);f.close();
+});

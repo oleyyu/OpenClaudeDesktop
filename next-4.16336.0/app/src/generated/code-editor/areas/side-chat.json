@@ -1,0 +1,360 @@
+{
+  "area": "side-chat",
+  "referenceVersion": "3.6556.2",
+  "adapters": [
+    {
+      "name": "side-chat-geometry.mjs",
+      "sha256": "9dd5b98490735204b0fcb4c0c5b959241517dbccaaa72f47879358ba542015d5",
+      "sources": [
+        {
+          "name": "cd97b284f-Cpvb2TuL.js",
+          "sha256": "9a985317a58616c37b2eba247a38513e0e693d0e1eec96833351e8aa9c5a80ae",
+          "base": "ion"
+        },
+        {
+          "name": "cccc2cf0a-DhZC33Gc.js",
+          "sha256": "821cbb54743d9b600ada60e61c362d4c74570cad409bb3b199e8fcf960933c51",
+          "base": "ion"
+        }
+      ],
+      "referenceVersion": "3.6556.2"
+    },
+    {
+      "name": "side-chat-context.mjs",
+      "sha256": "173de3ae329821169c0939cc12ae0c59293efdfb6885cc85113752910b895c2e",
+      "sources": [
+        {
+          "name": "c4d199b75-D3cQB-UP.js",
+          "sha256": "3aa727264c387910bbabdce067b11f4e86adfe54c123cefcd193dffe51b4d1e4",
+          "base": "ion"
+        },
+        {
+          "name": "c96d752d0-CWv_7-n9.js",
+          "sha256": "f7d5200fa26eaa42b4fa9dbad4533222628692ca02e0bb73becfaa33d12a576c",
+          "base": "ion"
+        }
+      ],
+      "referenceVersion": "3.6556.2"
+    },
+    {
+      "name": "transcript-selection.mjs",
+      "sha256": "fc520f442fbb389b36ee6d3876bc83dbf9a63732263947bb04d45c4d8ac09a68",
+      "sources": [
+        {
+          "name": "c80ec48f8-D2IVcRNS.js",
+          "sha256": "ec95e9dd7bd279b343dc37c0e5494157d815be20b5a9651ec78e270ec9413c26",
+          "base": "ion"
+        },
+        {
+          "name": "shared-25-DOWZRSlq.js",
+          "sha256": "a279442d20a0b9bb6327db086d99fe9248ecc93955651d99166b8ce85282d1a1",
+          "base": "ion"
+        }
+      ],
+      "referenceVersion": "3.6556.2"
+    },
+    {
+      "name": "side-chat-scroll.mjs",
+      "sha256": "39d6783bed6befe90210acdb5dc058c59fbb438fdbadff6b4e276c296f7d04c5",
+      "sources": [
+        {
+          "name": "c2fd10b8d-DB1Sgoyz.js",
+          "sha256": "c08167da1452ae4154d08fd383445ba0d3e62f53ea61a0d3ac6325c0889aafa5",
+          "base": "ion"
+        },
+        {
+          "name": "cccc2cf0a-DhZC33Gc.js",
+          "sha256": "821cbb54743d9b600ada60e61c362d4c74570cad409bb3b199e8fcf960933c51",
+          "base": "ion"
+        }
+      ],
+      "referenceVersion": "3.6556.2"
+    },
+    {
+      "name": "side-chat-persistence.mjs",
+      "sha256": "07819ccb0affe67b96fa77c21c4b8f91875741bd290cb86c8140383a96caf042",
+      "sources": [
+        {
+          "name": "c03935b01-yhcY34vt.js",
+          "sha256": "473ccdd15e417c375b938e853107ab23a30b5401a379fcc296d9c3f4e5d31be2",
+          "base": "ion"
+        },
+        {
+          "name": "c03935b01-yhcY34vt.js",
+          "sha256": "473ccdd15e417c375b938e853107ab23a30b5401a379fcc296d9c3f4e5d31be2",
+          "base": "ion"
+        }
+      ],
+      "referenceVersion": "3.6556.2"
+    },
+    {
+      "name": "side-chat-status.mjs",
+      "sha256": "10d509d9c573af39663afacddbe720f1338b53c1ff2c49f7d79968c0b1d92fd4",
+      "sources": [
+        {
+          "name": "c96d752d0-CWv_7-n9.js",
+          "sha256": "f7d5200fa26eaa42b4fa9dbad4533222628692ca02e0bb73becfaa33d12a576c",
+          "base": "ion"
+        }
+      ],
+      "referenceVersion": "3.6556.2"
+    },
+    {
+      "name": "side-chat-user-segments.mjs",
+      "sha256": "5bfaa86fda0b475e8b9b5f18cca66a64533a56be7ce899a1d735272d4214460d",
+      "sources": [
+        {
+          "name": "shared-frame-6jtSkIit.js",
+          "sha256": "22b990df9384da0621c5197a060f6c2c8fe1ccf5a79ee1f8c6e7a6cb033b259c",
+          "base": "ion"
+        },
+        {
+          "name": "shared-182-BI1KJccu.js",
+          "sha256": "203e9b9995696f7458a97c9bf0f4a61b2c969b9dc7ec3f1789cd85818424a96d",
+          "base": "ion"
+        },
+        {
+          "name": "shared-7-DBAgAi5H.js",
+          "sha256": "02dd2a97b533d6c9f3f700d07a682db038be119397578ee0c49055079164c35a",
+          "base": "ion"
+        },
+        {
+          "name": "c4d199b75-D3cQB-UP.js",
+          "sha256": "3aa727264c387910bbabdce067b11f4e86adfe54c123cefcd193dffe51b4d1e4",
+          "base": "ion"
+        }
+      ],
+      "referenceVersion": "3.6556.2"
+    },
+    {
+      "name": "side-chat-user-render.mjs",
+      "sha256": "f4904ceaa0f70f29d71f44a70a7faa73627b259380a5fc6407c579d15793223f",
+      "sources": [
+        {
+          "name": "c96d752d0-CWv_7-n9.js",
+          "sha256": "f7d5200fa26eaa42b4fa9dbad4533222628692ca02e0bb73becfaa33d12a576c",
+          "base": "ion"
+        },
+        {
+          "name": "c8187a2dc-Dp9Zia_4.js",
+          "sha256": "6e06053ae85c95fd91033c1f5044b44d2efcf6c1755061aafe35de274389217f",
+          "base": "ion"
+        },
+        {
+          "name": "shared-5-Bg6ZMqvt.js",
+          "sha256": "ab6ce985aae8269c3afca209ee59140a7f61b47dd5004bacc3f1fe94cda6dbe6",
+          "base": "ion"
+        },
+        {
+          "name": "shared-52-uHFNjl7C.js",
+          "sha256": "83537e599f2f6720c2a0a245162e44a5c7431e22872a32ed16ea716e65ded08a",
+          "base": "ion"
+        },
+        {
+          "name": "shared-10-D6FXWZph.js",
+          "sha256": "8837dfa879cf65829f2a0dbfa945571d8a4f92d67aff84be895e130429b3bc0a",
+          "base": "ion"
+        }
+      ],
+      "referenceVersion": "3.6556.2"
+    },
+    {
+      "name": "side-chat-secrets.mjs",
+      "sha256": "a2f143961221a5ff2d1a70ff3d54b09d92547b65a52b015f97a47eed28b2ef23",
+      "sources": [
+        {
+          "name": "shared-104-CTONUSaz.js",
+          "sha256": "621e1186f00f5767be314b43a3f7c663adedfee5e2592ceda05c83be0baa58b6",
+          "base": "ion"
+        }
+      ],
+      "referenceVersion": "3.6556.2"
+    },
+    {
+      "name": "side-chat-activity.mjs",
+      "sha256": "215d6a2ddae634c63f0495aec155cab07c64a922302d596e474857e428a2cb33",
+      "sources": [
+        {
+          "name": "cccc2cf0a-DhZC33Gc.js",
+          "sha256": "821cbb54743d9b600ada60e61c362d4c74570cad409bb3b199e8fcf960933c51",
+          "base": "ion"
+        }
+      ],
+      "referenceVersion": "3.6556.2"
+    },
+    {
+      "name": "side-chat-chrome.mjs",
+      "sha256": "1b3e1f68bb7ef7b5c4cd002085aaa7337296c61db5a8ed066b894c1c3ca020e7",
+      "sources": [
+        {
+          "name": "cccc2cf0a-DhZC33Gc.js",
+          "sha256": "821cbb54743d9b600ada60e61c362d4c74570cad409bb3b199e8fcf960933c51",
+          "base": "ion"
+        },
+        {
+          "name": "c2fd10b8d-DB1Sgoyz.js",
+          "sha256": "c08167da1452ae4154d08fd383445ba0d3e62f53ea61a0d3ac6325c0889aafa5",
+          "base": "ion"
+        },
+        {
+          "name": "shared-2-TF8v67kg.js",
+          "sha256": "d30345487454935271d15e07a03026f8965584d83c9fcc4f5d7f9175687a14fc",
+          "base": "ion"
+        },
+        {
+          "name": "shared-6-sd9jbJqs.js",
+          "sha256": "caf5dda5315ded77263c79a5cfa09006ee40381c9811c2c755535644be437ce8",
+          "base": "ion"
+        },
+        {
+          "name": "c4db265df-fNhlkQCj.js",
+          "sha256": "272a3558bcd643e745286681de1a2e78f1a2d90fc6854197d62c3e792f68f02f",
+          "base": "ion"
+        }
+      ],
+      "referenceVersion": "3.6556.2"
+    },
+    {
+      "name": "side-chat-attachments.mjs",
+      "sha256": "8a22a1ae810443da866a3ffa2c183ad59e9324900d998733cd44bbf309c79545",
+      "sources": [
+        {
+          "name": "shared-18-D3y8YMFN.js",
+          "sha256": "ea0ef4b74193e2e73c04b942311076a0922533df2ddb3d333464d22003e3355b",
+          "base": "ion"
+        },
+        {
+          "name": "c2fd10b8d-DB1Sgoyz.js",
+          "sha256": "c08167da1452ae4154d08fd383445ba0d3e62f53ea61a0d3ac6325c0889aafa5",
+          "base": "ion"
+        }
+      ],
+      "referenceVersion": "3.6556.2"
+    },
+    {
+      "name": "side-chat-pane-events.mjs",
+      "sha256": "bba1f4f75ab8dc585d9925809b2b3bdb1708d44a7971cd0d8ce47aa4e0c146f8",
+      "sources": [
+        {
+          "name": "shared-156-BLTosN8U.js",
+          "sha256": "807d6ddff2ec91c75865bd855af6373863eb93af7ebd698490e618fbc44f2a2b",
+          "base": "ion"
+        },
+        {
+          "name": "c4db265df-fNhlkQCj.js",
+          "sha256": "272a3558bcd643e745286681de1a2e78f1a2d90fc6854197d62c3e792f68f02f",
+          "base": "ion"
+        }
+      ],
+      "referenceVersion": "3.6556.2"
+    }
+  ],
+  "copies": [],
+  "sources": [
+    {
+      "name": "cd97b284f-Cpvb2TuL.js",
+      "sha256": "9a985317a58616c37b2eba247a38513e0e693d0e1eec96833351e8aa9c5a80ae",
+      "base": "ion"
+    },
+    {
+      "name": "cccc2cf0a-DhZC33Gc.js",
+      "sha256": "821cbb54743d9b600ada60e61c362d4c74570cad409bb3b199e8fcf960933c51",
+      "base": "ion"
+    },
+    {
+      "name": "c4d199b75-D3cQB-UP.js",
+      "sha256": "3aa727264c387910bbabdce067b11f4e86adfe54c123cefcd193dffe51b4d1e4",
+      "base": "ion"
+    },
+    {
+      "name": "c96d752d0-CWv_7-n9.js",
+      "sha256": "f7d5200fa26eaa42b4fa9dbad4533222628692ca02e0bb73becfaa33d12a576c",
+      "base": "ion"
+    },
+    {
+      "name": "c80ec48f8-D2IVcRNS.js",
+      "sha256": "ec95e9dd7bd279b343dc37c0e5494157d815be20b5a9651ec78e270ec9413c26",
+      "base": "ion"
+    },
+    {
+      "name": "shared-25-DOWZRSlq.js",
+      "sha256": "a279442d20a0b9bb6327db086d99fe9248ecc93955651d99166b8ce85282d1a1",
+      "base": "ion"
+    },
+    {
+      "name": "c2fd10b8d-DB1Sgoyz.js",
+      "sha256": "c08167da1452ae4154d08fd383445ba0d3e62f53ea61a0d3ac6325c0889aafa5",
+      "base": "ion"
+    },
+    {
+      "name": "c03935b01-yhcY34vt.js",
+      "sha256": "473ccdd15e417c375b938e853107ab23a30b5401a379fcc296d9c3f4e5d31be2",
+      "base": "ion"
+    },
+    {
+      "name": "shared-frame-6jtSkIit.js",
+      "sha256": "22b990df9384da0621c5197a060f6c2c8fe1ccf5a79ee1f8c6e7a6cb033b259c",
+      "base": "ion"
+    },
+    {
+      "name": "shared-182-BI1KJccu.js",
+      "sha256": "203e9b9995696f7458a97c9bf0f4a61b2c969b9dc7ec3f1789cd85818424a96d",
+      "base": "ion"
+    },
+    {
+      "name": "shared-7-DBAgAi5H.js",
+      "sha256": "02dd2a97b533d6c9f3f700d07a682db038be119397578ee0c49055079164c35a",
+      "base": "ion"
+    },
+    {
+      "name": "c8187a2dc-Dp9Zia_4.js",
+      "sha256": "6e06053ae85c95fd91033c1f5044b44d2efcf6c1755061aafe35de274389217f",
+      "base": "ion"
+    },
+    {
+      "name": "shared-5-Bg6ZMqvt.js",
+      "sha256": "ab6ce985aae8269c3afca209ee59140a7f61b47dd5004bacc3f1fe94cda6dbe6",
+      "base": "ion"
+    },
+    {
+      "name": "shared-52-uHFNjl7C.js",
+      "sha256": "83537e599f2f6720c2a0a245162e44a5c7431e22872a32ed16ea716e65ded08a",
+      "base": "ion"
+    },
+    {
+      "name": "shared-10-D6FXWZph.js",
+      "sha256": "8837dfa879cf65829f2a0dbfa945571d8a4f92d67aff84be895e130429b3bc0a",
+      "base": "ion"
+    },
+    {
+      "name": "shared-104-CTONUSaz.js",
+      "sha256": "621e1186f00f5767be314b43a3f7c663adedfee5e2592ceda05c83be0baa58b6",
+      "base": "ion"
+    },
+    {
+      "name": "shared-2-TF8v67kg.js",
+      "sha256": "d30345487454935271d15e07a03026f8965584d83c9fcc4f5d7f9175687a14fc",
+      "base": "ion"
+    },
+    {
+      "name": "shared-6-sd9jbJqs.js",
+      "sha256": "caf5dda5315ded77263c79a5cfa09006ee40381c9811c2c755535644be437ce8",
+      "base": "ion"
+    },
+    {
+      "name": "c4db265df-fNhlkQCj.js",
+      "sha256": "272a3558bcd643e745286681de1a2e78f1a2d90fc6854197d62c3e792f68f02f",
+      "base": "ion"
+    },
+    {
+      "name": "shared-18-D3y8YMFN.js",
+      "sha256": "ea0ef4b74193e2e73c04b942311076a0922533df2ddb3d333464d22003e3355b",
+      "base": "ion"
+    },
+    {
+      "name": "shared-156-BLTosN8U.js",
+      "sha256": "807d6ddff2ec91c75865bd855af6373863eb93af7ebd698490e618fbc44f2a2b",
+      "base": "ion"
+    }
+  ]
+}

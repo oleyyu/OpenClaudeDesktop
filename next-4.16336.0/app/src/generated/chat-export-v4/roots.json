@@ -1,0 +1,90 @@
+{
+  "referenceVersion": "4.16336.0",
+  "referenceSnapshot": "snapshots/claude-4.16336.0-20261104",
+  "roots": {
+    "isValidDateRange": {
+      "chunk": "c1751bc30-CvXSylS4.js",
+      "local": "o",
+      "alias": "r",
+      "sha256": "2ed7f0a06faa57cae4aea70fcf6a582ccdb0ff4cc9b2082126b6b99b80c48f7e"
+    },
+    "DateField": {
+      "chunk": "cb499b8fa-BHm49DAk.js",
+      "local": "c",
+      "alias": "t",
+      "sha256": "acf79f78ed9f48b6efbcfba8c115c1dfde2af8bdfbec359998e430d8736acbaf"
+    },
+    "DateRangeSelector": {
+      "chunk": "c71ba149d-BCmc0sgr.js",
+      "local": "u",
+      "alias": "DateRangeSelector",
+      "sha256": "b809cb569050f8ab023aaa375d5e9525ffab9a7594ed948645551dafde8b100c"
+    },
+    "DatePicker": {
+      "chunk": "cff2bf6cb-HE-LaYyC.js",
+      "local": "nu",
+      "alias": "t",
+      "sha256": "7a412b3c438fcbcb86547497fa82ca5b016d6a51504570ee694bad33e8e7dd84"
+    }
+  },
+  "callSites": {
+    "G2e": {
+      "chunk": "cf400e6a4-Czw_18bE.js",
+      "sha256": "d25da81b38f911873fa994a5c199221f9b2b4ed4928d42c75c10ef6ec3946f59"
+    },
+    "U2e": {
+      "chunk": "cf400e6a4-Czw_18bE.js",
+      "sha256": "b0cf8c4de1105708cd3fd184bf05b62bd4281f021575e6674726635d5cd441e8"
+    },
+    "LL": {
+      "chunk": "cf400e6a4-Czw_18bE.js",
+      "sha256": "6f507cd5bf891145433d6f16f904906965e59f6873bf14241e4921db839c90f1"
+    }
+  },
+  "imports": {
+    "c71ba149d-BCmc0sgr.js": {
+      "a": "cb499b8fa-BHm49DAk.js:t",
+      "o": "c1751bc30-CvXSylS4.js:a",
+      "s": "c1751bc30-CvXSylS4.js:i"
+    },
+    "cb499b8fa-BHm49DAk.js": {
+      "o": "cff2bf6cb-HE-LaYyC.js:t"
+    },
+    "cf400e6a4-Czw_18bE.js": {
+      "gHe": "c1751bc30-CvXSylS4.js:t",
+      "hHe": "c1751bc30-CvXSylS4.js:r",
+      "mHe": "c1751bc30-CvXSylS4.js:n"
+    }
+  },
+  "lazySelector": {
+    "chunk": "c1751bc30-CvXSylS4.js",
+    "local": "s",
+    "sha256": "3329b549412e5dbec3a1648cc4b8c24430520a0cbe8bc331e81e30a097c7da57"
+  },
+  "withheld": {
+    "c1751bc30-CvXSylS4.js#s": "the lazy loader of c71ba149d (T2, skeleton height 68): the host imports DateRangeSelector directly",
+    "cf400e6a4-Czw_18bE.js#G2e Ou(mHe, !0)": "prefetch of that lazy chunk: nothing to prefetch on the host",
+    "cf400e6a4-Czw_18bE.js#U2e includeFileContent": "\"File content\" (unchanged from 3.6556.2 cYe): shown when the GrowthBook flag data_export_skip_files is on outside audit logs (LL passes no ownDataOnly); the host's local export has nothing to do with that flag"
+  },
+  "extraGlobals": {
+    "IS_REACT_ACT_ENVIRONMENT": "react-aria live announcer (cff2bf6cb dn): announces at once in a test environment, read behind `typeof IS_REACT_ACT_ENVIRONMENT == \"boolean\"`",
+    "jest": "the same announcer check: `typeof jest < \"u\"`",
+    "HTMLSelectElement": "react-aria focus tracking (cff2bf6cb): `r instanceof HTMLSelectElement`, a platform DOM class",
+    "MessagePort": "react-aria form reset (cff2bf6cb): `Z(window.event) instanceof MessagePort` tells a reset dispatched from a message, a platform class"
+  },
+  "previous": {
+    "referenceVersion": "3.6556.2",
+    "output": "src/generated/chat-export",
+    "roots": {
+      "isValidDateRange": "c1751bc30-D9BmGCFy.js#o",
+      "DateRangeSelector": "c71ba149d-CFslfKFj.js#u",
+      "DateField": "cb499b8fa-BgRV8jkQ.js#c",
+      "DatePicker": "cff2bf6cb-PfnEo01t.js#nu (linked from cowork-scheduled)"
+    },
+    "callSites": {
+      "lYe": "G2e",
+      "cYe": "U2e",
+      "uL": "LL"
+    }
+  }
+}

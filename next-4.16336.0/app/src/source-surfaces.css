@@ -1,0 +1,50 @@
+/* Layout is the 3.6556.2 home (shared-23 new page, src/generated/cowork-home) + the chat composer shell. These rules
+   only connect the existing application frame and ProseMirror host to that layout. */
+.source-chat-tile-content[data-surface]:not([data-surface="code"])[data-home] .source-transcript-frame { display: none; }
+.surface-greeting { flex: 0 0 auto; }
+/* shared-19 composer card Ti = p("isolate", Ne, …): Ne is "max-w-2xl" (42rem) with voyage_composer_marlin off, the same
+   width as the below-composer slot (src/source-cowork-home.jsx). */
+.source-chat-tile-content[data-surface]:not([data-surface="code"]) .composer-zone {
+  width: 100%; max-width: 42rem; padding: 0; margin-inline: auto; gap: 0; flex: 0 0 auto;
+}
+.source-chat-tile-content[data-surface]:not([data-surface="code"]):not([data-home]) .composer-zone { margin-bottom: 16px; max-width: 768px; }
+.surface-form { display: block; width: 100%; margin: 0; padding: 0; border: 0; background: transparent; }
+.source-chat-editor .sc-input { display: block; width: 100%; min-height: 0; max-height: none; margin: 0; padding: 0; border: 0; outline: none; background: transparent; color: inherit; font: inherit; line-height: inherit; border-radius: 0; }
+.source-chat-editor .sc-input p { margin: 0; }
+.source-chat-editor .sc-input[contenteditable][data-placeholder]:after { font: inherit; line-height: inherit; }
+.source-chat-composer .surface-folder-trigger { min-width: 0; }
+.source-chat-composer .surface-folder-trigger .ssb-content { overflow: hidden; }
+.source-chat-composer .surface-folder-trigger .ssb-content > span { overflow: hidden; text-overflow: ellipsis; }
+.source-chat-tile-content:not([data-surface="code"]) .source-chat-body { flex-direction: row; }
+.source-chat-tile-content[data-surface]:not([data-surface="code"]) .source-transcript-content { --chat-body: 16px; --chat-leading: 1.6; }
+
+.source-sidebar[data-surface]:not([data-surface="code"]) .traffic-space { display: none; }
+.surface-sidebar-search { display: flex; align-items: center; gap: var(--df-row-gap); height: var(--df-row-h); width: calc(100% - 4px); margin: 4px 2px 0; padding: 0 var(--df-row-px); border-radius: var(--df-radius-pill); background: var(--cds-fill-field); box-shadow: inset 0 0 0 .5px var(--cds-border), 0 1px 2px #0000000d; color: var(--cds-text-muted); font-size: var(--df-row-font); text-align: left; }
+.surface-sidebar-search:focus-visible { outline: none; box-shadow: var(--cds-focus-shadow); }
+.source-sidebar[data-surface]:not([data-surface="code"]) .source-session-list { padding-top: 16px; }
+
+.source-chat-editor .sc-input.ProseMirror { position: relative; white-space: pre-wrap; overflow-wrap: break-word; }
+.source-chat-editor .sc-input.ProseMirror[data-empty=true]::after { content: attr(data-placeholder); pointer-events: none; position: absolute; inset: 0; color: var(--cds-text-muted); white-space: pre-wrap; }
+
+.source-chat-tile-content[data-section="projects"] .conversation { padding: 0; justify-content: flex-start; }
+.surface-projects { width: 100%; padding-bottom: 24px; }
+
+.surface-project-detail { width: 100%; }
+.source-chat-tile-content[data-section="projects"] .surface-project-detail .composer-zone { max-width: none; }
+
+.source-chat-tile-content:not([data-surface="code"])[data-section="artifacts"] .conversation { padding: 0; justify-content: flex-start; }
+.surface-artifact-library { width: 100%; }
+
+.surface-artifact-open { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.surface-artifact-viewer { flex: 1; width: 100%; outline: none; }
+
+.source-chat-tile-content:not([data-surface="code"])[data-section="routines"] .conversation { padding: 0; justify-content: flex-start; }
+.surface-routines { width: 100%; padding-bottom: 24px; }
+
+/* Installed shared-23 NH serif preset: user sans, assistant serif. */
+.source-chat-tile-content:not([data-surface="code"]) .source-assistant-message .source-markdown { font-family: var(--font-serif); }
+/* Installed chat-header DQ/LQ: 48px row, title + adjacent caret, without Code origin/folder chips. */
+.source-chat-tile-content:not([data-surface="code"]) > .workspace-toolbar.st-toolbar { height: 48px; min-height: 48px; padding: 0; }
+.st-toolbar:not([data-surface="code"]) .st-inner { padding-inline: 24px 12px; }
+.st-toolbar:not([data-surface="code"]) .st-title { font-size: 16px; font-weight: 500; }
+

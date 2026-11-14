@@ -1,0 +1,9 @@
+/* A fork's lineage row above its transcript: muted, one line, the parent link underlined on hover only. */
+.source-fork-lineage { display: flex; align-items: center; gap: 6px; max-width: var(--transcript-max-width, 760px); margin: 0 auto 8px; padding: 0 4px; color: var(--cds-text-muted); font-size: var(--cds-font-size-footnote, 12px); }
+.source-fork-lineage-link { min-width: 0; padding: 0; border: 0; background: none; color: inherit; font: inherit; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: default; }
+.source-fork-lineage-link:hover { color: var(--cds-text-secondary); text-decoration: underline; text-underline-offset: 2px; }
+.source-fork-lineage-link:focus-visible { outline: none; border-radius: 4px; box-shadow: var(--cds-focus-shadow); }
+/* The parent's "Forked here: {title}" rows after the turn a fork was made at (SourceForkMarker). */
+.source-fork-marker { display: flex; flex-direction: column; gap: 2px; margin: 8px 0; }
+.source-fork-marker .source-fork-lineage { margin-bottom: 0; }
+.source-fork-lineage-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

@@ -1,0 +1,9 @@
+/* W12 frame: no host rules. 3.6556.2 shared-20 Cm draws the Back/Forward cluster with official classes only: the wrapper
+   "flex items-center draggable-none" (sidebar placement) / "flex items-center gap-0.5 draggable-none", and Sm
+   "aria-disabled:pointer-events-none aria-disabled:*:opacity-50" on each CDS Button; all are loaded c6a992d55 utilities.
+   w11-sweep-shell-a: the collapsed chrome (3.6556.2 shared-21 CI: div.df-collapsed-chrome.flex.items-center holding
+   gI and, withNavButtons, div.df-collapsed-nav.draggable-none.relative.flex.items-center around Cm, placement sidebar)
+   lives in the aside since w11-frame-root-cont, so its layout is the official markup classes plus shared-styles
+   (`.dframe-root[data-variant=web]:not([data-web]):not([data-wco])[data-collapsed] .dframe-sidebar:not([data-density=comfortable])
+   .df-collapsed-nav{margin-inline-start:-2px}` and the nav z-index rules; main.jsx root data-variant="web", no data-web/data-wco). No host rule restates them; the old `.st-toolbar .df-collapsed-chrome` 8px titlebar clearance has no
+   element left to match. */

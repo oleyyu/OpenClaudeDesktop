@@ -1,0 +1,7 @@
+/* Codex's asynchronous questions sit in the transcript flow under their message (no official counterpart): only the
+   placement is the host's; the card itself wears the question card's 3.6556.2 classes (source-async-questions.jsx). */
+.source-async-questions {
+  width: 100%;
+  max-width: 480px;
+  margin-top: 8px;
+}

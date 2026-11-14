@@ -1,0 +1,134 @@
+/* Terminal pane (3.6556.2 cccc2cf0a Zx / iS, c6bf19e8f): the source-file-panel shell with the official ViewTabBar in its
+   header (styled by its own utilities and source-view-tabs.css), and the xterm body: padding --cds-pad-md 0, the gutter
+   on the left of .xterm, a transparent viewport over the theme background, a 6px rounded scrollbar thumb. */
+.stp-pane.source-file-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+.stp-pane > .source-pane-header {
+  flex: none;
+}
+.stp-body {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  padding: var(--cds-pad-md) 0;
+  --terminal-gutter: var(--cds-pad-md);
+}
+.stp-host {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+.stp-xterm {
+  width: 100%;
+  height: 100%;
+}
+.stp-xterm .xterm {
+  height: 100%;
+  padding-left: var(--terminal-gutter, 0);
+  cursor: text;
+}
+.stp-xterm .xterm.xterm-cursor-pointer,
+.stp-xterm .xterm .xterm-cursor-pointer {
+  cursor: text;
+}
+.stp-xterm .xterm-viewport {
+  background-color: transparent !important;
+}
+.stp-xterm textarea {
+  caret-color: transparent;
+}
+.stp-xterm .xterm .xterm-scrollable-element > .scrollbar.vertical > .slider {
+  width: 6px !important;
+  left: 6px !important;
+  border-radius: 3px;
+  background: var(--cds-alpha-4, rgba(128, 128, 128, 0.3));
+}
+.stp-xterm .xterm .xterm-scrollable-element > .scrollbar.vertical > .slider:hover {
+  background: var(--cds-alpha-5, rgba(128, 128, 128, 0.45));
+}
+.stp-xterm .xterm .xterm-scrollable-element > .scrollbar.vertical > .slider.active {
+  background: var(--cds-alpha-6, rgba(128, 128, 128, 0.6));
+}
+.stp-xterm .xterm .xterm-scrollable-element > .shadow {
+  box-shadow: none !important;
+}
+/* The find bar (3.6556.2 c6bf19e8f rn) is styled by its official utilities alone (Surface panel classes, absolute
+   top-2 right-5 flex items-center gap-xs p-xs, the w-48 field), no local rule. */
+.stp-error {
+  position: absolute;
+  left: var(--cds-pad-md);
+  right: var(--cds-pad-md);
+  bottom: var(--cds-pad-md);
+  z-index: 4;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--cds-pad-sm, 6px);
+  margin: 0;
+  padding: var(--cds-pad-sm, 6px) var(--cds-pad-md);
+  border: 0.5px solid var(--cds-border);
+  border-radius: var(--radius-lg, .5rem);
+  background: var(--cds-surface-3);
+  box-shadow: var(--cds-shadow-lg);
+  color: var(--cds-text-secondary);
+  font-size: var(--cds-font-size-footnote);
+  line-height: var(--cds-leading-footnote);
+}
+.stp-error > span {
+  flex: 1 1 12rem;
+  min-width: 0;
+}
+.stp-error {
+  color: var(--cds-text-danger, var(--cds-text-primary));
+}
+/* The limited-terminal note sits above the output, in flow, so it never covers the prompt. */
+.stp-note {
+  flex: none;
+  margin: 0 var(--cds-pad-md) var(--cds-pad-sm, 6px);
+  color: var(--cds-text-muted);
+  font-size: var(--cds-font-size-footnote);
+  line-height: var(--cds-leading-footnote);
+}
+/* The idle cursor is cf718f694 B (generated/code-current/terminal-idle-cursor.mjs): its pointer-events-none block
+   h-[1lh] w-[1ch] opacity-50 / motion-safe:animate-blink and the pane's group-has-[[data-ccd-terminal]]/terminal:hidden
+   come from the loaded c6a992d55 utilities, so no local rule styles it. */
+
+/* c6bf19e8f exited shell / cccc2cf0a Bg load failure: "absolute inset-0 bg-surface-1" over the terminal surface,
+   holding the centered EmptyState. */
+.stp-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  background: var(--cds-surface-1);
+}
+/* cc63499d2 Qm on-target drop ring (z-index layer 40): inset 2px accent ring, then a 24px inner accent glow. */
+.stp-drop-ring {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  pointer-events: none;
+  border-radius: var(--cds-radius, 6px);
+  box-shadow: inset 0 0 0 2px var(--cds-fill-accent);
+  animation: stp-drop-ring-in 0.15s cubic-bezier(0.215, 0.61, 0.355, 1);
+}
+.stp-drop-ring > div {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 24px 0 color-mix(in srgb, var(--cds-fill-accent) 20%, transparent);
+  animation: stp-drop-fade-in 0.2s cubic-bezier(0.215, 0.61, 0.355, 1) 0.08s backwards;
+}
+@keyframes stp-drop-ring-in { 0% { opacity: 0; transform: scale(1.005); } }
+@keyframes stp-drop-fade-in { 0% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .stp-drop-ring, .stp-drop-ring > div { animation: none; }
+}
+html[data-reduce-motion="true"] .stp-drop-ring,
+html[data-reduce-motion="true"] .stp-drop-ring > div { animation: none; }

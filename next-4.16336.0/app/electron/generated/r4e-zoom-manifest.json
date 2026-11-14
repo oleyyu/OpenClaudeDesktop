@@ -1,0 +1,150 @@
+{
+  "referenceVersion": "3.6556.2",
+  "referenceSnapshot": "snapshots/claude-3.6556.2-20261025-192807",
+  "generator": "scripts/extract-r4e-zoom.mjs",
+  "output": "r4e-zoom.cjs",
+  "source": "../reference/snapshots/claude-3.6556.2-20261025-192807/asar/.vite/build/index.chunk-jPKPzV-P.js",
+  "sourceSha256": "6e898798943b990e6eefa9209c61d977866b7898f681864f02c8cad3bb691ed5",
+  "bindings": [
+    {
+      "name": "T4n",
+      "kind": "var",
+      "scope": "module",
+      "sha256": "2539ed9a9aea3c0d9865f947b36c6a100cd08abaf6689becfdc20307f59864b8",
+      "features": [
+        "T4n=.25"
+      ]
+    },
+    {
+      "name": "E4n",
+      "kind": "var",
+      "scope": "module",
+      "sha256": "3443cc7294a731c818a332b3996654d377df875893535460a173f33c15448df3",
+      "features": [
+        "E4n=Math.log(1.2)"
+      ]
+    },
+    {
+      "name": "D4n",
+      "kind": "var",
+      "scope": "module",
+      "sha256": "60959a4ad3b6b2bc14fb7a1c0490132ddbd7498c919755988afc1505dbce26d4",
+      "features": [
+        "D4n=Math.log(T4n)/E4n"
+      ]
+    },
+    {
+      "name": "O4n",
+      "kind": "var",
+      "scope": "module",
+      "sha256": "1c69b9b76410dc316948d9940bc7411359dac5ffc043568457916e460e619532",
+      "features": [
+        "O4n=Math.log(5)/E4n"
+      ]
+    },
+    {
+      "name": "k4n",
+      "kind": "function",
+      "scope": "module",
+      "sha256": "bac6b3d11f04865c2d906b82eabeb0c2194cd011cc526459b4bbdda7d851e213",
+      "features": [
+        "return Math.min(O4n,Math.max(D4n,e))"
+      ]
+    },
+    {
+      "name": "rTi",
+      "kind": "var",
+      "scope": "module",
+      "sha256": "d4ff10cf3aa12efa36610feb6cb7b5bab3da3f864e379c097fc16c28c93389eb",
+      "features": [
+        "rTi=.5"
+      ]
+    },
+    {
+      "name": "aTi",
+      "kind": "var",
+      "scope": "bindZoomMenu",
+      "sha256": "cb2439a4eab5105d79c16de39a69e25a38ef5b0dfd96041a298bb56d7733f3bd",
+      "features": [
+        "V?.webContents!=null&&!V.webContents.isDestroyed()?V.webContents.getZoomLevel():void 0"
+      ]
+    },
+    {
+      "name": "oTi",
+      "kind": "var",
+      "scope": "bindZoomMenu",
+      "sha256": "b4e386a422315d7515696c4c4439c0c542a6e1c41e6feb9adaa8c4e7ef44d5f0",
+      "features": [
+        "oTi=(e=aTi())=>e===void 0||e<O4n"
+      ]
+    },
+    {
+      "name": "sTi",
+      "kind": "var",
+      "scope": "bindZoomMenu",
+      "sha256": "12a7c5b52ca4ab73b6b9d491c3a5c84390b13f85ee437a6d21bd572945a7c6d3",
+      "features": [
+        "sTi=(e=aTi())=>e===void 0||e>D4n"
+      ]
+    },
+    {
+      "name": "wTi",
+      "kind": "function",
+      "scope": "bindZoomMenu",
+      "sha256": "bec7f089cf4d5306f3f4ca49115f4f25cbb655b456b40d4b89e2b8c91a880cd7",
+      "features": [
+        "if(!V?.webContents||V.webContents.isDestroyed())return;",
+        "let e=V.webContents.getZoomLevel(),t=a.Menu.getApplicationMenu()",
+        "n=[[\"actual-size\",e!==0],[\"actual-size-numpad\",e!==0],[\"zoom-in\",oTi(e)],[\"zoom-out\",sTi(e)]]",
+        "for(let[e,r]of n){let n=t?.getMenuItemById(e);n&&(n.enabled=r)}"
+      ]
+    }
+  ],
+  "exportsAs": {
+    "D4n": "ZOOM_LEVEL_MIN",
+    "O4n": "ZOOM_LEVEL_MAX",
+    "k4n": "clampZoomLevel",
+    "rTi": "ZOOM_STEP"
+  },
+  "boundAs": {
+    "aTi": "zoomLevel",
+    "oTi": "canZoomIn",
+    "sTi": "canZoomOut",
+    "wTi": "refreshZoomMenu"
+  },
+  "hostParams": {
+    "V": [
+      "webContents"
+    ],
+    "a": [
+      "Menu"
+    ]
+  },
+  "callers": {
+    "cTi": [
+      "{id:\"actual-size\",",
+      "enabled:iTi(),click:bTi}",
+      "{id:\"zoom-in\",",
+      "accelerator:\"CmdOrCtrl+Plus\",enabled:oTi(),click:STi}",
+      "{id:\"zoom-out\",",
+      "accelerator:\"CmdOrCtrl+-\",enabled:sTi(),click:CTi}",
+      "{id:\"actual-size-numpad\",label:\"Actual Size (numpad)\""
+    ],
+    "bTi": [
+      "V.webContents.setZoomLevel(0),xTi(0),x0(),b0()"
+    ],
+    "TTi": [
+      "n=k4n(e===0?t:Math.round((t+e)/rTi)*rTi+0);V.webContents.setZoomLevel(n),xTi(n),x0(),b0()"
+    ],
+    "STi": [
+      "TTi(rTi)"
+    ],
+    "CTi": [
+      "TTi(-.5)"
+    ],
+    "x0": [
+      "function x0(){wTi()}"
+    ]
+  },
+  "sha256": "9aa2c6358c8082d5d030e11f50e51c2debb7c40a3c2e2de74a09f14d22419728"
+}

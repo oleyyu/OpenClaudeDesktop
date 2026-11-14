@@ -1,0 +1,168 @@
+/* Plain counterpart of current oi/Jr; not the generic .prose pre styling. W14-code TR-H11: the block's margins are only
+   c19e90103's `>.epitaxy-codeblock` / `:is(li,td,th)>` bumps (source-session.css); nested elsewhere (a blockquote) it
+   has none. */
+.source-markdown .scb-flow { min-width: 0; }
+.scb-block {
+  position: relative; width: fit-content; min-width: min(100%, 318px); max-width: 100%;
+  --scb-control: var(--cds-h-control, 24px);
+  /* c19e90103 Bg Ae = _g(1 + run + secrets): one 24px control per action (Run/Cancel, the secret toggle, Copy) with
+     3px between them; --scb-controls is set by the block. */
+  --scb-padding-end: calc(var(--scb-control) * var(--scb-controls, 1) + 3px * (var(--scb-controls, 1) - 1) + var(--cds-pad-xs, 4px) * 3 + 2px);
+  --scb-background: var(--code-theme-light-bg, #fff);
+}
+[data-mode="dark"] .scb-block { --scb-background: var(--code-theme-dark-bg, #1a1a19); }
+/* code-block-current.js:1325 Kr(n): the inline-end reserve grows by one 24px
+   control and the 3px gap for the secret toggle (Ee = Kr(1 + !!R)) — and for Run (B20), via --scb-controls. */
+/* Bg: a block showing run output takes the full width ("w-full" instead of "w-fit"). */
+.scb-block[data-output] { width: 100%; }
+.scb-fence { position: relative; }
+.scb-body { position: relative; border-radius: 8px; overflow: clip; }
+.scb-body::after {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  box-shadow: inset 0 0 0 1px var(--cds-border), inset 0 0 0 1px var(--epitaxy-transcript-surface, var(--cds-surface-1));
+}
+.source-markdown .scb-pre {
+  margin: 0; border: 0; border-radius: 0; overflow: visible;
+  padding: var(--cds-pad-md, 8px) calc(var(--scb-padding-end) + 1ch) var(--cds-pad-md, 8px) calc(10px + 1ch);
+  background: var(--scb-background); color: var(--cds-text-primary);
+  font: var(--cds-font-size-code, 12px)/var(--cds-leading-code, 17px) var(--cds-font-mono, monospace);
+  font-feature-settings: "liga", "clig", "calt";
+  letter-spacing: calc(round(up, 1ch, 1px / 64) - 1ch);
+  tab-size: 2; white-space: pre-wrap; overflow-wrap: break-word;
+}
+.source-markdown .scb-pre > .scb-code {
+  display: block; contain: content; padding: 0; margin: 0; border: 0; border-radius: 0;
+  font: inherit; letter-spacing: inherit; font-feature-settings: inherit; color: inherit;
+  background: none; white-space: inherit; overflow-wrap: inherit; tab-size: inherit;
+}
+/* R4i-files FI1: c19e90103 wg is one rail for every overflow mode, "pointer-events-none absolute inset-y-0 right-1.75 flex
+   items-start overflow-y-clip pb-0.5". */
+.scb-actions-track {
+  position: absolute; inset-block: 0; right: 7px; pointer-events: none;
+  display: flex; align-items: flex-start; overflow-y: clip; padding-bottom: 2px;
+}
+.scb-actions {
+  display: flex; gap: 3px; position: sticky; pointer-events: auto; margin-top: 5px;
+  top: calc(max(var(--epitaxy-top-fade-height, 0px), var(--fade-top, 0px)) + 5px);
+}
+.scb-actions.scb-single-line {
+  margin-top: calc(var(--cds-pad-md, 8px) + var(--cds-leading-code, 17px) / 2 - var(--scb-control) / 2);
+}
+.scb-copy {
+  display: inline-flex; align-items: center; justify-content: center; flex: none;
+  width: var(--scb-control); height: var(--scb-control); border: 0; padding: 0;
+  border-radius: var(--cds-radius, 6px); background: transparent; color: var(--cds-text-primary);
+  cursor: var(--cds-cursor-interactive, default); user-select: none;
+  transition: box-shadow var(--cds-dur-fast, 120ms), background-color var(--cds-dur-fast, 120ms);
+}
+.scb-copy:hover { background: var(--cds-fill-ghost-hover); }
+/* Pr (:1185-1215): ghost, text-secondary; pressed takes Nr's overrides of the
+   accent pair (bg-accent -> fill-control, text-accent -> text-primary). */
+.scb-reveal { color: var(--cds-text-secondary); }
+.scb-reveal[aria-pressed="true"], .scb-reveal[aria-pressed="true"]:hover { background: var(--cds-fill-control); color: var(--cds-text-primary); }
+.scb-copy:focus-visible { outline: none; box-shadow: var(--cds-focus-shadow); }
+.source-markdown .scb-language-placeholder { margin: 0; padding: 0; border: 0; background: none; }
+/* W14-code r5 cleanup css5-sr-only-handcopies: the hand-copied sr-only rule is gone; the JSX uses the official c6a992d55 .sr-only. */
+@media (prefers-reduced-motion: reduce) { .scb-copy { transition: none; } }
+html[data-reduce-motion="true"] .scb-copy { transition: none; }
+
+/* B20 Ng (c19e90103 6862-6877): while a run is going, Run is Cancel: the spinner, swapped for an X on hover/focus. */
+.scb-cancel-icon { display: grid; place-items: center; }
+.scb-cancel-icon > span { grid-area: 1 / 1; display: flex; transition: opacity var(--cds-dur-fast, 120ms); }
+.scb-cancel-x { opacity: 0; }
+.scb-cancel:hover .scb-cancel-spin, .scb-cancel:focus-visible .scb-cancel-spin { opacity: 0; }
+.scb-cancel:hover .scb-cancel-x, .scb-cancel:focus-visible .scb-cancel-x { opacity: 1; }
+/* Lg (6919-6977): "relative mt-1.25"; the box "rounded-lg epitaxy-card-outline-overlay text-code max-h-[160px]
+   overflow-y-auto px-[calc(10px+1ch)] py-1.25", its end padding one control wide while Open in terminal shows. */
+.scb-output-wrap { position: relative; margin-top: 5px; }
+.scb-output {
+  border-radius: 8px; outline: 1px solid var(--cds-border); outline-offset: -1px;
+  font-size: var(--cds-font-size-code, 12px); line-height: var(--cds-leading-code, 17px); font-family: var(--cds-font-mono, monospace);
+  max-height: 160px; overflow-y: auto; padding: 5px calc(10px + 1ch);
+}
+/* epitaxy-card-outline-overlay:focus-visible (the scrollable box can take keyboard focus). */
+.scb-output:focus-visible { outline: 2px solid transparent; outline-offset: 2px; box-shadow: var(--cds-focus-shadow); }
+.scb-output[data-openable] { padding-inline-end: calc(var(--scb-control) + var(--cds-pad-xs, 4px) * 3 + 2px); }
+.source-markdown .scb-output-pre, .scb-output-pre {
+  margin: 0; padding: 0; border: 0; border-radius: 0; background: none; overflow: visible;
+  font: inherit; color: var(--cds-text-secondary); white-space: pre-wrap; word-break: break-all;
+}
+.scb-output-error { color: var(--cds-text-danger); }
+.scb-output-diff { display: block; }
+.scb-output-diff[data-kind="added"] { background: var(--cds-bg-git-added); }
+.scb-output-diff[data-kind="removed"] { background: var(--cds-bg-git-removed); }
+/* "absolute right-1.75 top-1.25 flex h-[1lh] items-center text-code" */
+.scb-output-open {
+  position: absolute; right: 7px; top: 5px; display: flex; align-items: center; height: 1lh;
+  font-size: var(--cds-font-size-code, 12px); line-height: var(--cds-leading-code, 17px);
+}
+@media (prefers-reduced-motion: reduce) { .scb-cancel-icon > span { transition: none; } }
+html[data-reduce-motion="true"] .scb-cancel-icon > span { transition: none; }
+
+/* R4g-files FV1 (toolcards-05): the scroll + beside-actions fence of 2.42304.0 c19e90103 Bg/Sg/wg, which only the
+   Markdown document typography (c3fde7009 ya: Je "scroll", Ye "beside-actions") provides. The pre keeps whitespace
+   ("whitespace-pre epitaxy-code-card", xg scrolls) and reserves --scb-line-end (st ?? rt, 0px for one line). */
+.source-markdown .scb-block[data-overflow="scroll"] .scb-pre {
+  white-space: pre; overflow-wrap: normal;
+  padding-inline-end: calc(var(--scb-line-end, 0px) + 1ch);
+}
+/* Sg "relative" on the code card background. */
+.scb-scroll-frame { position: relative; background: var(--scb-background); }
+/* "box-content flex min-h-control items-center pt-1.25", font yg, padding-left calc(10px + 1ch), end gutter fg. */
+.scb-language-row {
+  box-sizing: content-box; display: flex; align-items: center; min-height: var(--scb-control); padding-top: 5px;
+  padding-left: calc(10px + 1ch);
+  font: var(--cds-font-size-code, 12px)/var(--cds-leading-code, 17px) var(--cds-font-mono, monospace);
+}
+/* "w-0 flex-1 break-all font-sans text-caption text-secondary before:content-[attr(data-code-language)]" */
+.scb-language {
+  width: 0; flex: 1 1 0%; word-break: break-all; font-family: var(--cds-font-sans);
+  font-size: var(--cds-font-size-caption); line-height: var(--cds-leading-caption); color: var(--cds-text-secondary);
+}
+.scb-language::before { content: attr(data-code-language); }
+/* hh "epitaxy-code-scroll overflow-y-hidden" (c19e90103-CuNz46ca.css rules below) around "w-max min-w-full". The
+   scroller and the fade take the code font so 1lh and 1ch match the pre (bg / Cg). */
+.scb-scroller {
+  overflow-y: hidden;
+  font: var(--cds-font-size-code, 12px)/var(--cds-leading-code, 17px) var(--cds-font-mono, monospace);
+}
+.scb-scroll-content { width: max-content; min-width: 100%; }
+.epitaxy-code-scroll { scrollbar-width: auto; scrollbar-color: auto; overflow-x: auto; }
+.epitaxy-code-scroll::-webkit-scrollbar { background: 0 0; width: 8px; height: 8px; }
+.epitaxy-code-scroll::-webkit-scrollbar-track, .epitaxy-code-scroll::-webkit-scrollbar-corner { background: var(--cds-alpha-1); }
+.epitaxy-code-scroll::-webkit-scrollbar-thumb { background: var(--cds-alpha-3); background-clip: padding-box; border: 2px solid #0000; border-radius: 9999px; }
+.epitaxy-code-scroll::-webkit-scrollbar-thumb:hover { background: var(--cds-alpha-4); background-clip: padding-box; }
+.epitaxy-code-scroll:focus-visible { outline-offset: -2px; outline: 2px solid #0000; }
+/* .epitaxy-fence:has(.epitaxy-code-scroll:focus-visible) — the local fence is .scb-body. */
+.scb-body:has(.epitaxy-code-scroll:focus-visible) { box-shadow: var(--cds-focus-shadow); }
+/* Cg + fade: "pointer-events-none absolute", top pad-md, 1lh tall, 1ch wide, at the endInset, into the card bg. */
+.scb-scroll-fade {
+  pointer-events: none; position: absolute; top: var(--cds-pad-md, 8px); height: 1lh; width: 1ch;
+  font: var(--cds-font-size-code, 12px)/var(--cds-leading-code, 17px) var(--cds-font-mono, monospace);
+  background: linear-gradient(to right, transparent, var(--scb-background));
+}
+/* wg's cardSurface sets --epitaxy-code-card-bg to the card background. */
+.scb-actions-track[data-card-surface] { --epitaxy-code-card-bg: var(--scb-background); }
+/* I && !L: "rounded backdrop-blur-md"; L: "-me-1.25 rounded pe-1.25" on Dg (the card background). */
+.scb-block[data-overflow="scroll"] .scb-actions {
+  border-radius: var(--cds-radius, 6px);
+  -webkit-backdrop-filter: blur(var(--blur-md, 12px)); backdrop-filter: blur(var(--blur-md, 12px));
+}
+.scb-block[data-label="beside-actions"] .scb-actions {
+  margin-inline-end: -5px; padding-inline-end: 5px; background: var(--epitaxy-code-card-bg);
+  -webkit-backdrop-filter: none; backdrop-filter: none;
+}
+/* The label: "pointer-events-none flex h-control box-content max-w-[20ch] items-center overflow-hidden whitespace-nowrap
+   pe-0.75 font-sans text-caption text-muted-as-secondary before:content-[attr(data-code-label)]" + ct, on Eg (a 0.75rem
+   leading fade into --epitaxy-code-card-bg). */
+.scb-code-label {
+  pointer-events: none; display: flex; box-sizing: content-box; height: var(--scb-control); max-width: 20ch;
+  align-items: center; overflow: hidden; white-space: nowrap; padding-inline-end: 3px; margin-top: 5px;
+  font-family: var(--cds-font-sans); font-size: var(--cds-font-size-caption); line-height: var(--cds-leading-caption);
+  color: var(--muted-as-secondary, var(--cds-text-muted));
+  padding-inline-start: 0.75rem; background: linear-gradient(to right, transparent, var(--epitaxy-code-card-bg) 0.75rem);
+}
+.scb-code-label::before { content: attr(data-code-label); }
+.scb-code-label.scb-single-line {
+  margin-top: calc(var(--cds-pad-md, 8px) + var(--cds-leading-code, 17px) / 2 - var(--scb-control) / 2);
+}

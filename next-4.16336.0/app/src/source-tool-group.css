@@ -1,0 +1,75 @@
+/* Classic Wv/Gv, approval-current:53915–54010; c425fb3cf:142–155. */
+.stg { display:flex; flex-direction:column; width:100%; }
+.stg-trigger { display:flex; align-self:flex-start; align-items:center; gap:2px; padding:0; border:0; border-radius:var(--radius-sm); background:none; color:var(--cds-text-muted); text-align:left; max-width:100%; font:inherit; }
+.stg-trigger:hover, .stg-trigger:focus-visible, .stg-trigger[aria-expanded=true] { color:var(--cds-text-secondary); }
+.stg-trigger:focus-visible { box-shadow:var(--cds-focus-shadow); outline:none; }
+.stg-morph { min-width:0; }
+.stg-label { display:inline-flex;align-items:center;gap:4px;min-width:0; }
+.stg-summary { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.stg-counts { display:flex; flex-shrink:0; align-items:center; gap:2px; font-variant-numeric:tabular-nums; }
+.stg-add { color:var(--cds-text-git-added); }
+.stg-remove { color:var(--cds-text-git-removed); }
+.stg-warning { color:var(--cds-text-warning); }
+.stg[data-summary-state="busy"] .stg-trigger { color:var(--cds-text-secondary); }
+.stg[data-summary-state="busy"] .source-shimmer { --source-shimmer-base:var(--cds-text-primary); }
+.source-step-classic[data-state="failed"] .source-step-label { color:var(--cds-text-danger); }
+.source-step-classic .source-step-trigger { gap:3px; }
+.source-step-classic .source-step-caret { opacity:1; }
+.stg-caret { flex-shrink:0; transition:transform var(--cds-dur-fast,60ms); }
+.stg-trigger[aria-expanded=true] .stg-caret { transform:rotate(90deg); }
+.stg-body:not([hidden]) { display:flow-root; }
+.stg-list { position:relative;display:flex; flex-direction:column; margin-top:var(--cds-pad-md); border-radius:var(--radius-lg,8px); overflow:clip; }
+/* design-system:56781 epitaxy-card-outline-layer sits above expanded row paint. */
+.stg-list::after { content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;box-shadow:inset 0 0 0 1px var(--cds-border),inset 0 0 0 1px var(--epitaxy-transcript-surface,var(--cds-surface-1)); }
+.stg-row { padding:var(--cds-pad-md) 10px; }
+.stg-row + .stg-row { border-top:1px solid var(--cds-border); }
+.stg-row > .source-message.source-message { margin:0; padding-bottom:0; }
+.stg-row .source-step-trigger { padding:0; margin:0; min-height:0; gap:3px; }
+.stg-row .source-step-caret { opacity:1; }
+.sft-step .source-step-trigger { gap:3px; }
+.sft-step .source-step-caret { opacity:1; }
+@media (prefers-reduced-motion:reduce) { .stg-caret { transition:none; } }
+html[data-reduce-motion="true"] .stg-caret { transition: none; }
+
+/* Classic Npe:53908–53926 colors only a fully failed category verb. */
+.stg-summary [data-summary-error=true] { color:var(--cds-text-danger); }
+
+/* Standalone classic tool row (not a .stg-row member): approval-current.js:17288-17300
+   renders `div[role=button]` with `${zv} cursor-pointer`; zv = c425fb3cf:143-144 Y
+   (export `_`): relative group/tool flex self-start max-w-full items-center py-0
+   gap-0.75 text-left focus-visible:outline-hidden focus-visible:shadow-focus
+   rounded-sm. No padding, min-height or overhang, so the row is one text-body line.
+   rounded-sm is c6a992d55 `.rounded-sm{border-radius:var(--radius-sm)}` (--radius-sm
+   .25rem); the CDS has no --cds-radius-sm token. cursor-pointer is an arrow under
+   :root[data-dframe] (desktop-layout.css:1026-1032), so no cursor is declared here.
+   Group members keep their own .stg-row rules above. */
+.source-step-classic:not(.stg-row *) > .source-step-trigger { padding:0; margin:0; min-height:0; max-width:100%; gap:3px; border-radius:var(--radius-sm,.25rem); }
+.source-step-classic:not(.stg-row *) > .source-step-trigger:focus-visible { outline:none; box-shadow:var(--cds-focus-shadow); }
+/* Colour states, approval-current.js:17099-17101 (aliases :1424-1433 -> c425fb3cf
+   :149-153): Ve = !(running Y || awaiting approval K || failed-not-benign Ne).
+   Local data-state mapping: busy = Y, blocked = K, failed = Ne (Codex reports no
+   errorIsBenign, :16920, so every Codex `failed` status is not benign); done,
+   denied (je rejected/policyDenied), stopped (Ee interrupted) and unknown (local
+   transport interruption) are settled (Ve). */
+/* Ue caret, c425fb3cf ie :156-166 (CaretRight 14, always visible). Settled: Jv =
+   text-muted + group-hover/focus-visible/has-[:focus-visible] text-secondary;
+   expanded: ey = text-secondary. Motion: ie `transition-transform duration-fast`, whose
+   shipped .transition-transform easing is var(--tw-ease,var(--default-transition-timing-function))
+   = cubic-bezier(.4,0,.2,1) (same fallback as .source-tree-caret, source-session.css:723). */
+.source-step-classic:not(.stg-row *) > .source-step-trigger .source-step-caret { opacity:1; color:var(--cds-text-muted); transition:transform var(--cds-dur-fast) var(--default-transition-timing-function,cubic-bezier(.4,0,.2,1)); }
+.source-step-classic:not(.stg-row *) > .source-step-trigger:is(:hover,:focus-visible,:has(:focus-visible),[aria-expanded=true]) .source-step-caret { color:var(--cds-text-secondary); }
+/* Not settled: ry = text-secondary group-hover/tool:text-primary (expanded too). */
+.source-step-classic:is([data-state=busy],[data-state=blocked],[data-state=failed]):not(.stg-row *) > .source-step-trigger .source-step-caret { color:var(--cds-text-secondary); }
+.source-step-classic:is([data-state=busy],[data-state=blocked],[data-state=failed]):not(.stg-row *) > .source-step-trigger:hover .source-step-caret { color:var(--cds-text-primary); }
+/* c425fb3cf ie motion-reduce:transition-none, plus the local motion override. */
+@media (prefers-reduced-motion:reduce) { .source-step-classic:not(.stg-row *) > .source-step-trigger .source-step-caret { transition:none; } }
+html[data-local-motion=reduce] .source-step-classic:not(.stg-row *) > .source-step-trigger .source-step-caret { transition:none; }
+/* He verb, :17125-17130. Settled: ny = text-muted group-hover/tool:text-secondary
+   (the base .source-step-label rules). Blocked: ry = secondary, hover primary. */
+.source-step-classic[data-state=blocked]:not(.stg-row *) > .source-step-trigger .source-step-label { color:var(--cds-text-secondary); }
+.source-step-classic[data-state=blocked]:not(.stg-row *) > .source-step-trigger:hover .source-step-label { color:var(--cds-text-primary); }
+/* Failed (Ne): `text-body text-danger`, no hover change. */
+.source-step-classic[data-state=failed]:not(.stg-row *) > .source-step-trigger .source-step-label { color:var(--cds-text-danger); }
+/* Running tool labels use the same steady secondary gray as the status line.
+   Keep the text gray through hover and reduced-motion states as well. */
+.source-step-classic[data-state=busy]:not(.stg-row *) > .source-step-trigger .source-step-label { color:var(--cds-text-secondary); background:none; -webkit-text-fill-color:currentColor; animation:none; }

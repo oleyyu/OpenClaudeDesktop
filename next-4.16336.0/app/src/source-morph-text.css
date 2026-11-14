@@ -1,0 +1,5 @@
+/* approval-current rE/oE: one grid cell, outgoing hidden from accessibility. */
+.source-morph-text { display:inline-grid;align-items:center;justify-items:start;min-width:0; }
+.source-morph-text[data-gliding] { overflow-x:clip; }
+.source-morph-slot { grid-column-start:1;grid-row-start:1;min-width:0;max-width:100%; }
+.source-morph-text[data-gliding]>.source-morph-slot { max-width:none; }

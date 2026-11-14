@@ -1,0 +1,168 @@
+{
+  "referenceVersion": "4.16336.0",
+  "referenceSnapshot": "snapshots/claude-4.16336.0-20261104",
+  "generator": "scripts/extract-chat-renderer-v4.mjs",
+  "unit": "round2 chat-renderer:a (LaTeX + Markdown root groups), chat-renderer:b (remark-math root; pending-closure survey against the main-workflow -v4 graphs, draft boundaries, link-surface.json)",
+  "previous": {
+    "generator": "scripts/extract-chat-renderer.mjs",
+    "output": "src/generated/chat-renderer",
+    "referenceVersion": "3.6556.2",
+    "roots": {
+      "ChatTextMarkdown": "cc1aae219-CeSwM-tp.js#OR",
+      "StandardMarkdown": "c89efce1a-C_nlrFif.js#rc",
+      "loadLatexPlugins": "c851b27a8-BxvTOAx3.js#Jr",
+      "markLatexStylesheetSettled": "c851b27a8-BxvTOAx3.js#Hr (4.16336.0: the settle is qr inside Ai/Ni, no separate root)",
+      "requestLatexFontWait": "c851b27a8-BxvTOAx3.js#Gr (4.16336.0: fi, reached from Ii)",
+      "rehypeKatexGuardedAndChecked": "ca129fbf3-CdfQB5sF.js#at",
+      "rehypeKatexChecked": "ca129fbf3-CdfQB5sF.js#it",
+      "remarkMath": "c6369e48b-Cz3VPKCm.js#h"
+    },
+    "linkedSharedPushAll": {
+      "from": "cowork-approval shared-52-uHFNjl7C.mjs Qq",
+      "to": "shared-123-1Hc1RTKl.js#ZS (frame-sidebar-nav shared-123.mjs)"
+    }
+  },
+  "isolatedGraph": {
+    "productionOutput": "src/generated/chat-renderer",
+    "productionSwitchNotBeforeBatch": 11,
+    "consumers": [
+      "code-transcript",
+      "pierre-changes",
+      "sidebar-hover-card"
+    ]
+  },
+  "sharedGraph": {
+    "area": "cds-core",
+    "manifestSha256": "06d2026939e5c8992713c2a0dda1b1abc9adffe7a0c223fe3c1e79eecd08d62c"
+  },
+  "linkedAreas": {
+    "chat-markdown-v4": "063b9d3ee925f971b8ee7ca6f7922bb52ff2ea5eb4eeba670410c80bfa80dd3b",
+    "r3b-transcript-v4": "6bcda4070823d55dfc00e8a5641c8a4dce1d0aa39d0dd5370fb853532dcd2301",
+    "routines-shared-v4": "a2a9b9a84b2705e48451025af38eb7582de5bb421c626e6bdf5b067eb8e00c8c",
+    "working-line-v4": "25610753870c1d676d772810433ca78b2413b2d93418b0e3ea8a904875d1deaa",
+    "cowork-progress-v4": "e5501ac28f6c72be0c01e5278e0b22159f48d63e1a3a61349e0c4eca8bd504a7",
+    "turn-plan-v4": "120180f4946ca49f0a8cb0302a85c1ff5f155733e1ef1bb35000ece88b1ceb2e",
+    "frame-sidebar-nav": {
+      "shared-123.mjs": "3b75614e73bfb42284a135c8a26eff6ad02de27a415a5ceb0afab74019594c20"
+    }
+  },
+  "linkRequests": {},
+  "roots": [
+    {
+      "file": "ca129fbf3-HnH_eJBK.js",
+      "local": "it",
+      "name": "rehypeKatexChecked",
+      "export": "rehypeKatexChecked",
+      "declarationSha256": "9feb947abcdd5d1be4486e0ffc869df39d1882a4f3218d2b0c3139644fe19d48",
+      "pinned": true
+    },
+    {
+      "file": "ca129fbf3-HnH_eJBK.js",
+      "local": "at",
+      "name": "rehypeKatexGuardedAndChecked",
+      "export": "rehypeKatexGuardedAndChecked",
+      "declarationSha256": "5d7eefe6331b68b461d7cd93bd10d50655bdc567b78169a3fa546d1aa577ffc2",
+      "pinned": true
+    },
+    {
+      "file": "c6369e48b-jalMQaq2.js",
+      "local": "h",
+      "name": "remarkMath",
+      "export": "default",
+      "declarationSha256": "2027c5849606a992d2a4fca1072a8e2e833703abf3ce09302d2459e56f13552f",
+      "pinned": true
+    }
+  ],
+  "pendingRoots": [
+    {
+      "file": "cc1aae219-BbSf__8R.js",
+      "local": "EP",
+      "name": "ChatTextMarkdown",
+      "export": null,
+      "declarationSha256": "5b4643a838008b404cdba4f4c96990c31cf02710be39946d2cf9a96c69e751cc",
+      "pinned": true,
+      "pending": true,
+      "blockedBy": "closure (through Uv = c89efce1a Mu) writes cds-core module state; see Mu"
+    },
+    {
+      "file": "c89efce1a-CleBUUAy.js",
+      "local": "Mu",
+      "name": "StandardMarkdown",
+      "export": "s",
+      "declarationSha256": "5ecd5b925fb6e7537506abd250cb08d47fa423c3a8524f99eb15af104ebdc6b4",
+      "pinned": true,
+      "pending": true,
+      "blockedBy": "closure re-slices writers of cds-core-held module state (c851b27a8 Ai/ki/Ti/Si/wi/Ei/fi/$r/qr/ht, shared-0 mC/bC, shared-62 Va/Ha, vendor-zod k): writes to read-only imports"
+    },
+    {
+      "file": "c851b27a8-Chd9-72r.js",
+      "local": "Ai",
+      "name": "loadLatexPlugins",
+      "export": null,
+      "declarationSha256": "e5b9436796e335b2a5de0fd0a952998f6958fc1bdf352dab1db72efb2aa6610f",
+      "pinned": true,
+      "pending": true,
+      "blockedBy": "assigns cds-core-held c851b27a8 xr/Ar/Ir/Lr/Z/jr/Mr/Pr/Fr (wave6 unblocks: state_c851b27a8_Ai blocked by vendor-markdown ee document-at-load and the ki dynamic imports)"
+    }
+  ],
+  "adapters": [
+    {
+      "original": "shared-0-CnnWnVrT.js#eP",
+      "name": "reportHandledError",
+      "hostAdapter": "src/source-chat-renderer-v4-adapters.jsx",
+      "declarationSha256": "cc9c7858d1d485031e8d798e43b910389b27f8487bf21cbe86b3e3513a77f671",
+      "pinned": true
+    }
+  ],
+  "linkedCopies": {},
+  "imports": [
+    {
+      "module": "vendor-markdown.mjs",
+      "local": "Sr",
+      "kind": "shared-graph",
+      "from": "../cds-core/vendor-markdown.mjs",
+      "name": "Sr",
+      "via": "vendor-markdown-CoTLcoVs.js#Sr"
+    },
+    {
+      "module": "shared-31.mjs",
+      "local": "c",
+      "kind": "linked",
+      "from": "../working-line-v4/preload-helper.mjs",
+      "name": "e",
+      "via": "preload-helper-BBljBeZo.js:n"
+    },
+    {
+      "module": "shared-11.mjs",
+      "local": "ad",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-11.mjs",
+      "name": "ad",
+      "via": "shared-11-CNsu0Zu8.js#ad"
+    },
+    {
+      "module": "ca129fbf3-HnH_eJBK.js",
+      "local": "n",
+      "kind": "linked",
+      "from": "../r3b-transcript-v4/error-stack.mjs",
+      "name": "withOriginalStack",
+      "via": "shared-0-CnnWnVrT.js:Zm"
+    },
+    {
+      "module": "ca129fbf3-HnH_eJBK.js",
+      "local": "r",
+      "kind": "adapter",
+      "from": "../../source-chat-renderer-v4-adapters.jsx",
+      "name": "reportHandledError",
+      "via": "shared-0-CnnWnVrT.js:xm"
+    },
+    {
+      "module": "ca129fbf3-HnH_eJBK.js",
+      "local": "t",
+      "kind": "linked",
+      "from": "../working-line-v4/preload-helper.mjs",
+      "name": "e",
+      "via": "preload-helper-BBljBeZo.js:n"
+    }
+  ]
+}

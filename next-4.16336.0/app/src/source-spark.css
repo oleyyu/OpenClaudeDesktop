@@ -1,0 +1,6 @@
+/* Shared-frame uv: shared by transcript footer and Ex subagent status. */
+.source-spark { display:block; flex-shrink:0; width:var(--cds-spark-size); height:var(--cds-spark-size); }
+.source-spark[data-spark-rendering=sprite] { position:relative; display:inline-block; overflow:hidden; user-select:none; -webkit-user-select:none; }
+.source-spark [data-cds-spark-strip] { position:absolute; left:0; right:0; top:0; display:block; }
+.source-spark [data-cds-spark-strip] > svg { display:block; width:100%; fill:currentColor; }
+@media(max-resolution:1.99dppx){.source-spark[data-spark-rendering=sprite]{clip-path:inset(1px 0);}}

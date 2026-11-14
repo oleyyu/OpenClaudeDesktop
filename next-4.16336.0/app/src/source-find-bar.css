@@ -1,0 +1,12 @@
+/* W14-code r5 cleanup css5-transcript-find-icons: the bar itself is styled by the official shared-23 SM / wM class
+   strings in source-find-bar.jsx; only the match highlights stay here. */
+/* shared-18 Eo: every match rgb(255 213 0), the active one rgb(255 150 50),
+   both over Pe.black (the same pair in light and dark). */
+::highlight(transcript-find) {
+  background-color: rgb(255 213 0);
+  color: var(--cds-black);
+}
+::highlight(transcript-find-active) {
+  background-color: rgb(255 150 50);
+  color: var(--cds-black);
+}

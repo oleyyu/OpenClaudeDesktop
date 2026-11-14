@@ -1,0 +1,166 @@
+/* Settings › Models (C5, source-settings-models.jsx). Fields follow the Code font field
+   (shared-frame plain TextInput); every color is a CDS token, so light and dark both follow the theme. */
+.msx-page { display:flex;flex-direction:column; }
+.msx-note { margin:0 0 var(--cds-gap-lg,16px);color:var(--cds-text-muted);font-size:var(--cds-font-size-footnote); }
+.msx-notice { margin-bottom:var(--cds-gap-md,12px); }
+.msx-empty { margin:0;padding:var(--cds-pad-md,8px) 0;color:var(--cds-text-muted); }
+
+.msx-page input[data-cds=TextInput] { box-sizing:border-box;min-width:0;height:var(--cds-h-control);min-height:0;padding:0 var(--cds-pad-md);border:0;border-radius:var(--cds-radius);background:var(--cds-fill-field);box-shadow:inset 0 0 0 1px var(--cds-fill-field-ring);color:var(--cds-text-primary);font:400 var(--cds-font-size-body)/var(--cds-leading-body) var(--cds-font-sans);outline:none;transition:box-shadow var(--cds-dur-fast); }
+.msx-page input[data-cds=TextInput]::placeholder { color:var(--cds-text-muted); }
+.msx-page input[data-cds=TextInput]:hover:not(:focus):not([data-invalid]):not(:disabled) { box-shadow:inset 0 0 0 1px var(--cds-border-strong); }
+.msx-page input[data-cds=TextInput][data-invalid] { box-shadow:inset 0 0 0 1px var(--cds-fill-danger); }
+.msx-page input[data-cds=TextInput]:focus-visible { outline:none;box-shadow:var(--cds-focus-shadow); }
+.msx-page input[data-cds=TextInput]:disabled { opacity:.5;cursor:not-allowed; }
+.msx-number { width:160px;max-width:100%;font-variant-numeric:tabular-nums; }
+.msx-number::-webkit-inner-spin-button,.msx-number::-webkit-outer-spin-button { -webkit-appearance:none;margin:0; }
+.msx-text { width:200px;max-width:100%; }
+
+.msx-actions { display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:var(--cds-gap-sm,8px); }
+
+.msx-prices { display:flex;flex-direction:column; }
+.msx-price { padding:var(--cds-pad-md,8px) 0;border-top:1px solid var(--cds-alpha-1); }
+.msx-price-head { display:flex;flex-wrap:wrap;align-items:center;gap:var(--cds-gap-sm,8px);margin-bottom:var(--cds-gap-sm,8px);min-height:var(--cds-h-control); }
+.msx-price-id { color:var(--cds-text-muted);font:400 12px/1.4 var(--cds-font-mono);overflow-wrap:anywhere; }
+.msx-badge { padding:0 6px;border-radius:var(--cds-radius--sm,4px);background:var(--cds-fill-secondary);box-shadow:inset 0 0 0 1px var(--cds-fill-secondary-ring);color:var(--cds-text-secondary,var(--cds-text-muted));font-size:12px;line-height:18px; }
+.msx-price-remove { margin-inline-start:auto; }
+.msx-price-table { width:100%;border-collapse:separate;border-spacing:0 4px;table-layout:fixed; }
+.msx-price-table th { padding:0 var(--cds-pad-sm,6px) 0 0;color:var(--cds-text-muted);font-weight:400;font-size:var(--cds-font-size-footnote);text-align:start; }
+.msx-price-table thead th:first-child,.msx-price-table tbody th { width:84px; }
+.msx-price-table td { padding:0 var(--cds-pad-sm,6px) 0 0; }
+.msx-price-table .msx-price-input { width:100%; }
+.msx-price .ss-row-below { margin-top:4px; }
+
+.msx-add-row { padding:var(--cds-pad-md,8px) 0;border-top:1px solid var(--cds-alpha-1); }
+.msx-add { display:flex;flex-wrap:wrap;align-items:center;gap:var(--cds-gap-sm,8px); }
+.msx-add-error { flex-basis:100%; }
+
+@media (max-width: 560px) {
+  .msx-number { width:120px; }
+  .msx-price-table thead th:first-child,.msx-price-table tbody th { width:64px; }
+}
+
+/* Custom providers: the Add/Edit dialog renders in a portal, so its fields are styled on the form. */
+.msx-provider-actions { display:flex;flex-wrap:wrap;align-items:center;gap:var(--cds-gap-sm,8px); }
+.msx-pending { color:var(--cds-text-muted);font-size:var(--cds-font-size-footnote); }
+.msx-provider-error { display:block;margin:var(--cds-gap-sm,8px) 0 0; }
+.msx-form { display:flex;flex-direction:column;gap:var(--cds-gap-md,12px);min-width:0; }
+.msx-field { display:flex;flex-direction:column;gap:4px;min-width:0; }
+.msx-label { color:var(--cds-text-secondary);font-size:var(--cds-font-size-footnote,12px);font-weight:var(--cds-font-weight-medium,500); }
+.msx-help { color:var(--cds-text-muted);font-size:var(--cds-font-size-footnote,12px);overflow-wrap:anywhere; }
+.msx-error { margin:0;color:var(--cds-text-danger,var(--cds-fill-danger));font-size:var(--cds-font-size-footnote,12px);overflow-wrap:anywhere; }
+/* CDS Checkbox row (shared-frame Ux: inline-flex gap-xs, text-body text-primary, opacity-disabled when off). */
+.msx-check { align-self:flex-start; } /* the CDS Checkbox (xP) row; only its placement in the form column is the host's */
+.msx-form :is(input[data-cds=TextInput], textarea[data-cds=TextArea]) { box-sizing:border-box;width:100%;min-width:0;padding:0 var(--cds-pad-md);border:0;border-radius:var(--cds-radius);background:var(--cds-fill-field);box-shadow:inset 0 0 0 1px var(--cds-fill-field-ring);color:var(--cds-text-primary);font:400 var(--cds-font-size-body)/var(--cds-leading-body) var(--cds-font-sans);outline:none;transition:box-shadow var(--cds-dur-fast); }
+.msx-form input[data-cds=TextInput] { height:var(--cds-h-control); }
+.msx-form textarea.msx-models { min-height:88px;max-height:160px;field-sizing:content;overflow-y:auto;padding:8px var(--cds-pad-md);resize:none;font-family:var(--cds-font-mono);font-size:var(--cds-font-size-footnote,12px);line-height:1.5; }
+.msx-form :is(input, textarea)::placeholder { color:var(--cds-text-muted); }
+.msx-form :is(input[data-cds], textarea):hover:not(:focus) { box-shadow:inset 0 0 0 1px var(--cds-border-strong); }
+.msx-form :is(input[data-cds], textarea):focus-visible { outline:none;box-shadow:var(--cds-focus-shadow); }
+.msx-form .sselect { align-self:flex-start;min-width:220px; }
+
+/* API connection (top of the page) and the Advanced disclosure below it. */
+.msx-wide { width:280px;max-width:100%; }
+.msx-link { padding:0;border:0;background:none;color:var(--cds-text-accent);font:inherit;text-decoration:underline;text-underline-offset:2px; }
+.msx-link:hover { color:var(--cds-text-primary); }
+.msx-link:focus-visible { outline:none;border-radius:2px;box-shadow:var(--cds-focus-shadow); }
+.msx-connection { display:contents; }
+/* The form box is display:contents, so its group is the form's last child: keep the gap to the next group. */
+.msx-connection > .ss-group:last-child { margin-bottom:var(--cds-gap-xl,24px); }
+.msx-connection-footer { display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:var(--cds-gap-sm,8px);padding:var(--cds-pad-md,8px) 0;border-top:1px solid var(--cds-alpha-1); }
+.msx-connection-status { margin-inline-end:auto;min-width:0;color:var(--cds-text-muted);font-size:var(--cds-font-size-footnote);overflow-wrap:anywhere; }
+.msx-advanced { display:flex;flex-direction:column;margin-top:var(--cds-gap-sm,8px); }
+.msx-advanced-trigger { align-items:center;padding:var(--cds-pad-sm,6px) 0;color:var(--cds-text-primary); }
+.msx-advanced-label { display:inline-flex;flex-wrap:wrap;align-items:baseline;gap:var(--cds-gap-sm,8px); }
+.msx-advanced-hint { color:var(--cds-text-muted);font-size:var(--cds-font-size-footnote); }
+.msx-advanced-body { padding-top:var(--cds-gap-md,12px); }
+.msx-page textarea.msx-relay-models { box-sizing:border-box;width:100%;min-height:88px;max-height:160px;field-sizing:content;overflow-y:auto;margin-top:var(--cds-gap-sm,8px);padding:8px var(--cds-pad-md);border:0;border-radius:var(--cds-radius);background:var(--cds-fill-field);box-shadow:inset 0 0 0 1px var(--cds-fill-field-ring);color:var(--cds-text-primary);font:400 var(--cds-font-size-footnote,12px)/1.5 var(--cds-font-mono);resize:none;outline:none; }
+.msx-page textarea.msx-relay-models::placeholder { color:var(--cds-text-muted); }
+.msx-page textarea.msx-relay-models:focus-visible { box-shadow:var(--cds-focus-shadow); }
+.msx-page textarea.msx-relay-models:disabled { opacity:.5; }
+
+/* Cores other than DeepSeek Harness: the Codex endpoint (OpenAI or a custom Responses endpoint) and the
+   running core's model list. Tokens only; the top effort tier uses the documented --cds-text-pro accent. */
+.msx-callout { margin:var(--cds-gap-sm,8px) 0 0;padding:var(--cds-pad-md,8px) var(--cds-pad-md,10px);border-radius:var(--cds-radius);background:var(--cds-fill-secondary);box-shadow:inset 0 0 0 1px var(--cds-fill-secondary-ring);color:var(--cds-text-secondary,var(--cds-text-muted));font-size:var(--cds-font-size-footnote);line-height:1.5;overflow-wrap:anywhere; }
+.msx-ok { color:var(--cds-text-success,var(--cds-text-secondary));font-size:var(--cds-font-size-footnote); }
+.msx-page textarea.msx-relay-models[aria-invalid=true] { box-shadow:inset 0 0 0 1px var(--cds-fill-danger); }
+.msx-model-name { display:inline-flex;flex-wrap:wrap;align-items:center;gap:var(--cds-gap-sm,8px); }
+.msx-model-name .msx-badge { font-weight:400; }
+.msx-model-desc { display:flex;flex-direction:column;gap:4px;overflow-wrap:anywhere; }
+.msx-model-meta { display:flex;flex-wrap:wrap;align-items:center;gap:4px var(--cds-gap-sm,8px);color:var(--cds-text-muted);font-size:var(--cds-font-size-footnote); }
+.msx-model-meta-label { color:var(--cds-text-secondary,var(--cds-text-muted)); }
+.msx-model-meta [data-top-tier] { color:var(--cds-text-pro);font-weight:500; }
+.msx-models-note { margin-top:calc(-1 * var(--cds-gap-md,12px)); }
+.msx-image-models { display:flex;flex-direction:column;gap:6px;min-width:0; }
+.msx-image-models-label { color:var(--cds-text-primary);font-size:var(--cds-font-size-footnote,12px);font-weight:500; }
+.msx-image-chips { display:flex;flex-wrap:wrap;gap:6px; }
+.msx-image-chip { display:inline-flex;align-items:center;gap:6px;max-width:100%;min-height:26px;padding:0 10px;border:0;border-radius:999px;background:var(--cds-fill-field);box-shadow:inset 0 0 0 1px var(--cds-fill-field-ring);color:var(--cds-text-secondary,var(--cds-text-muted));font:400 var(--cds-font-size-footnote,12px)/1 var(--cds-font-mono);cursor:default;overflow-wrap:anywhere;transition:background-color .15s,color .15s,box-shadow .15s; }
+.msx-image-chip:hover:not(:disabled) { color:var(--cds-text-primary); }
+.msx-image-chip[aria-pressed=true] { background:color-mix(in srgb, var(--cds-fill-accent) 14%, transparent);box-shadow:inset 0 0 0 1px var(--cds-fill-accent);color:var(--cds-text-primary); }
+.msx-image-chip:focus-visible { outline:none;box-shadow:var(--cds-focus-shadow); }
+.msx-image-chip:disabled { opacity:.5;cursor:default; }
+.msx-image-chip-mark { width:10px;text-align:center;color:var(--cds-text-muted); }
+.msx-image-chip[aria-pressed=true] .msx-image-chip-mark { color:var(--cds-fill-accent); }
+.msx-page .msx-image-models { margin-top:var(--cds-gap-sm,8px); }
+/* Per-model context windows (ContextWindowFields): one id + a short token field per row. */
+.msx-context-windows { display:flex;flex-direction:column;gap:6px;min-width:0; }
+.msx-context-list { display:grid;grid-template-columns:minmax(0,1fr) 112px;gap:6px 10px;align-items:center; }
+.msx-context-row { display:contents; }
+.msx-context-id { min-width:0;color:var(--cds-text-primary);font:400 var(--cds-font-size-footnote,12px)/1.3 var(--cds-font-sans);overflow-wrap:anywhere; }
+.msx-context-raw { margin-left:4px;color:var(--cds-text-muted);font-family:var(--cds-font-mono); }
+.msx-context-input { width:100%;min-width:0;font-family:var(--cds-font-mono); }
+.msx-page .msx-context-windows { margin-top:var(--cds-gap-sm,8px); }
+@media (prefers-reduced-motion: reduce) { .msx-image-chip { transition:none; } }
+html[data-reduce-motion="true"] .msx-image-chip { transition:none; }
+/* A long catalog's search field above the model rows. */
+.msx-page .msx-model-search { width: 100%; max-width: 320px; margin: 0 0 var(--cds-gap-sm, 8px); }
+/* Codex › Local model (LM Studio / Ollama on this Mac): one button per server with a running dot. */
+.msx-local { display:inline-flex; flex-wrap:wrap; align-items:center; gap:6px; }
+.msx-local-dot { display:inline-block; width:6px; height:6px; margin-inline-end:6px; border-radius:9999px; background:var(--cds-alpha-2); vertical-align:middle; }
+.msx-local-dot[data-running] { background:var(--cds-fill-success, #3a9d5d); }
+/* Settings › Models per-model options (source-settings-model-names.jsx): each model a collapsible entry over its rows. */
+.msx-model-entry { border-bottom:0.5px solid var(--cds-alpha-2); }
+.msx-model-entry:last-of-type { border-bottom:0; }
+.msx-model-trigger { width:100%;align-items:flex-start;gap:var(--cds-gap-sm,8px);padding:var(--cds-pad-md,12px) 0;text-align:start;color:var(--cds-text-primary); }
+.msx-model-trigger > svg { margin-top:2px;flex-shrink:0; }
+.msx-model-head { display:flex;flex-direction:column;gap:4px;min-width:0;flex:1; }
+.msx-model-ids { display:inline-flex;flex-wrap:wrap;align-items:baseline;gap:var(--cds-gap-sm,8px);color:var(--cds-text-muted);font-size:var(--cds-font-size-footnote,12px); }
+.msx-model-rows { padding:0 0 var(--cds-pad-sm,6px) 24px; }
+.msx-name-control { display:inline-flex; align-items:center; gap:6px; }
+.msx-name-id { font-family:var(--cds-font-mono, ui-monospace, monospace); font-size:12px; color:var(--cds-text-secondary); }
+
+/* U-SET-LITE (2026-11-12): the simple Settings › Models page. Every group is a quiet card under a small section label;
+   a model is one line (name, id, chips, caret at the end) and opens to its options. Tokens only, light and dark. */
+.sl-content[data-entry=models] { --msx-card-fill:color-mix(in srgb, var(--cds-text-primary) 2.5%, transparent); --msx-chip-fill:color-mix(in srgb, var(--cds-text-primary) 6%, transparent); }
+.sl-content[data-entry=models] .ss-group { margin-bottom:26px; }
+.sl-content[data-entry=models] .ss-group > h3 { margin:0 0 8px 4px; font-size:13px; line-height:18px; font-weight:500; color:var(--cds-text-secondary); }
+.sl-content[data-entry=models] .ss-group > .settings-group-dividers { padding:0 18px; border:1px solid var(--cds-alpha-2); border-radius:14px; background:var(--msx-card-fill); }
+.sl-content[data-entry=models] .ss-group > .settings-group-dividers > .ss-row { padding:14px 0; }
+.sl-content[data-entry=models] .ss-row-copy [data-settings-desc] { font-size:13px; line-height:18px; }
+.sl-content[data-entry=models] .msx-connection-footer { padding:10px 0 12px; }
+.sl-content[data-entry=models] .msx-connection-status:empty { display:none; }
+.sl-content[data-entry=models] .ss-group .msx-note { margin:0; padding:10px 0 12px; border-top:1px solid var(--cds-alpha-1); font-size:12.5px; }
+.sl-content[data-entry=models] .msx-callout { margin:0 0 12px; }
+/* Model entries: one line, the caret on the right. */
+.sl-content[data-entry=models] .msx-model-entry { border-bottom:1px solid var(--cds-alpha-1); }
+.sl-content[data-entry=models] .msx-model-entry:last-child { border-bottom:0; }
+.sl-content[data-entry=models] .msx-model-trigger { align-items:center; gap:12px; padding:13px 0; border-radius:0; }
+.sl-content[data-entry=models] .msx-model-trigger > svg { margin:0; color:var(--cds-text-muted); }
+.msx-model-head { flex-direction:row; align-items:center; gap:12px; }
+.msx-model-main { display:flex; flex:1; flex-direction:column; gap:2px; min-width:0; }
+.msx-model-name { font-weight:500; }
+.msx-model-aside { display:flex; flex-shrink:0; align-items:center; }
+.msx-model-chips { display:inline-flex; flex-wrap:wrap; justify-content:flex-end; gap:6px; }
+.msx-chip { padding:2px 9px; border-radius:999px; background:var(--msx-chip-fill, var(--cds-fill-secondary)); color:var(--cds-text-secondary); font-size:12px; line-height:18px; white-space:nowrap; }
+.msx-model-desc { color:var(--cds-text-muted); font-size:12.5px; line-height:18px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.msx-model-ids .msx-name-id { color:var(--cds-text-muted); }
+.sl-content[data-entry=models] .msx-model-rows { margin-bottom:10px; padding:2px 14px; border-radius:10px; background:var(--msx-card-fill); }
+.sl-content[data-entry=models] .msx-badge { padding:0 7px; border-radius:999px; box-shadow:none; background:var(--msx-chip-fill); font-size:11.5px; }
+/* Cores on the Models page: no intro row (the section label says it), no install paths. */
+.sl-content[data-entry=models] [data-setting-id=cores-intro] { display:none; }
+.sl-content[data-entry=models] [data-setting-id=cores-intro] + [data-settings-row] { border-top:0; }
+.sl-content[data-entry=models] .cores-page .ccmd-path { display:none; }
+.sl-content[data-entry=models] .cores-desc { font-size:13px; line-height:18px; color:var(--cds-text-muted); }
+.sl-content[data-entry=models] .cores-note { margin:-14px 0 0 4px; font-size:12px; }
+.sl-content[data-entry=models] .cores-desc { flex-direction:row; flex-wrap:wrap; align-items:baseline; gap:0 6px; }
+.sl-content[data-entry=models] .cores-desc > .cores-status { color:var(--cds-text-muted); font-size:13px; line-height:18px; }
+.sl-content[data-entry=models] .cores-desc > .cores-status:not(:empty)::before { content:"·"; margin-right:6px; }

@@ -1,0 +1,117 @@
+/* ⌘K command palette (2.2553.1 shared-22 XP + c2771e1f6 vm/gd/qp/Pu/Uf), source-sidebar-palette.jsx. */
+.spal-portal > * { z-index: 140; } /* al("modal"): the palette sits in the modal layer. */
+/* XP backdrop: the Dialog's bg-backdrop + 2px blur, fade 50ms ease-out in, none out. */
+.spal-backdrop {
+  position: fixed; inset: 0; background-color: var(--cds-backdrop); backdrop-filter: blur(2px);
+  animation: spal-fade 50ms ease-out forwards; -webkit-app-region: no-drag;
+}
+/* XP popup (desktop HP): fixed left-1/2 -translate-x-1/2 top-[var(--cp-top)], w-[calc(100vw-2rem)]
+   md:w-[calc(100vw-5rem)] max-w-2xl, bg-surface-3 rounded-xl border-0.5 border-strong shadow-2xl
+   overflow-hidden, [animation:zoom_50ms_ease-out_forwards]. */
+.spal-popup {
+  --cp-clearance: calc(var(--desktop-titlebar-inset, 45px) + 1rem);
+  --cp-top: var(--cp-clearance);
+  --cp-settled-h: 545px;
+  position: fixed; left: 50%; top: var(--cp-top); translate: -50% 0; box-sizing: border-box;
+  width: calc(100vw - 2rem); max-width: 42rem; overflow: hidden;
+  background: var(--cds-surface-3); color: var(--cds-text-primary);
+  border: .5px solid var(--cds-border-strong); border-radius: var(--radius-xl, 12px);
+  box-shadow: 0 25px 50px -12px #00000040;
+  font-family: var(--cds-font-sans); font-size: var(--cds-font-size-body); line-height: var(--cds-leading-body);
+  outline: none; -webkit-app-region: no-drag;
+  animation: spal-zoom 50ms ease-out forwards;
+}
+@media (min-width: 640px) { .spal-popup { --cp-cap: 15vh; --cp-top: clamp(var(--cp-clearance), calc((100vh - var(--cp-settled-h) - 2rem) / 2), var(--cp-cap)); } }
+@media (min-width: 768px) { .spal-popup { width: calc(100vw - 5rem); } }
+@media (min-width: 1024px) { .spal-popup { --cp-cap: 25vh; } }
+@keyframes spal-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes spal-zoom { from { opacity: 0; scale: .98; } to { opacity: 1; scale: 1; } }
+@media (prefers-reduced-motion: reduce) { .spal-popup, .spal-backdrop { animation: none; } }
+html[data-reduce-motion="true"] .spal-popup, html[data-reduce-motion="true"] .spal-backdrop { animation: none; }
+/* KP: flex flex-col max-h-[calc(100vh-var(--cp-top)-2rem)]. */
+.spal-body { display: flex; flex-direction: column; max-height: calc(100vh - var(--cp-top) - 2rem); }
+.spal-head { flex-shrink: 0; }
+/* flex items-center gap-2 pl-[1.5rem] pt-[1.1rem] pr-2.5 pb-[0.9rem]. */
+.spal-input-row { display: flex; align-items: center; gap: 8px; padding: 1.1rem .625rem .9rem 1.5rem; }
+.spal-input {
+  flex: 1; min-width: 0; margin: 0; padding: 0; border: 0; outline: none; box-shadow: none; background: transparent;
+  color: var(--cds-text-primary); font: inherit; font-size: var(--cds-font-size-body); line-height: var(--cds-leading-body);
+}
+.spal-input::placeholder { color: var(--cds-text-muted); opacity: .8; }
+/* hu: the search glyph (-ml-1 mr-1) / the bordered Actions chip (border-0.5 rounded-lg p-0.5 pl-2 -my-1.5 -ml-2). */
+.spal-mode-icon { display: flex; flex-shrink: 0; align-items: center; margin: 0 4px 0 -4px; color: var(--cds-text-muted); }
+.spal-mode-chip {
+  display: flex; flex-shrink: 0; align-items: center; gap: 4px; margin: -6px 0 -6px -8px; padding: 2px 2px 2px 8px;
+  border: .5px solid var(--cds-border); border-radius: var(--radius-lg, 8px); color: var(--cds-text-muted);
+}
+.spal-mode-chip > span { display: flex; }
+.spal-spinner-slot { display: flex; flex-shrink: 0; align-items: center; justify-content: center; width: 16px; height: 16px; }
+/* Pu: flow-root pb-[0.9rem] around the sm type tabs. */
+.spal-filters { display: flex; align-items: center; gap: 8px; padding: 0 1.5rem .9rem; overflow-x: auto; scrollbar-width: none; }
+.spal-filters::-webkit-scrollbar { display: none; }
+.spal-tabs { display: flex; flex-shrink: 0; align-items: center; gap: 2px; }
+.spal-filters-rule { flex-shrink: 0; width: .5px; height: 16px; background: var(--cds-border); }
+.spal-tab {
+  display: inline-flex; align-items: center; height: 24px; padding: 0 8px; border: 0; border-radius: var(--radius-lg, 8px);
+  background: transparent; color: var(--cds-text-secondary); font: inherit; font-size: var(--cds-font-size-caption); line-height: var(--cds-leading-caption);
+  white-space: nowrap;
+}
+.spal-tab:hover { color: var(--cds-text-primary); }
+.spal-tab[aria-selected="true"], .spal-tab[aria-pressed="true"] { background: var(--cds-fill-ghost-hover); color: var(--cds-text-primary); }
+/* h-[0.5px] bg-border w-full. */
+.spal-rule { width: 100%; height: .5px; background: var(--cds-border); }
+/* p-2.5 min-h-0 overflow-y-auto flex flex-col; the listbox flex shrink-0 flex-col gap-1. */
+.spal-results { display: flex; flex-direction: column; min-height: 0; padding: .625rem; overflow-y: auto; }
+.spal-listbox { display: flex; flex-shrink: 0; flex-direction: column; gap: 4px; }
+/* Group title: px-3.5 pt-3 pb-2 font-small text-muted flex gap-2 items-center. */
+.spal-group-title {
+  display: flex; align-items: center; gap: 8px; padding: 12px 14px 8px; color: var(--cds-text-muted);
+  font-size: var(--cds-font-size-caption); line-height: var(--cds-leading-caption);
+}
+.spal-group-link { display: flex; align-items: center; gap: 4px; margin: 0; padding: 0; border: 0; background: none; color: inherit; font: inherit; transition: color var(--cds-dur-fast, .1s); }
+.spal-group-link:hover { color: var(--cds-text-secondary); }
+.spal-group-caret { opacity: .75; translate: 0 .5px; }
+/* gd row: w-full text-left px-3 py-2 rounded-lg flex items-center justify-between gap-3 truncate font-base;
+   selected bg-fill-ghost-hover text-primary, otherwise text-secondary. */
+.spal-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; box-sizing: border-box;
+  margin: 0; padding: 8px 12px; border: 0; border-radius: var(--radius-lg, 8px); background: transparent; text-align: left;
+  color: var(--cds-text-secondary); font: inherit; font-size: var(--cds-font-size-body); line-height: var(--cds-leading-body);
+  overflow: hidden; white-space: nowrap;
+}
+.spal-row.is-selected { background: var(--cds-fill-ghost-hover); color: var(--cds-text-primary); }
+.spal-row-main { display: flex; flex: 1; align-items: center; gap: 8px; min-width: 0; }
+.spal-row-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.spal-row-meta { min-width: 0; max-width: 40%; flex-shrink: 1; overflow: hidden; text-overflow: ellipsis; color: var(--cds-text-muted); font-size: 12px; }
+.spal-match { font-weight: var(--cds-font-weight-semibold, 600); color: inherit; }
+.spal-send-text { margin-left: 6px; opacity: .5; }
+.spal-quote { opacity: .5; }
+.spal-glyph { position: relative; display: flex; flex-shrink: 0; }
+.spal-dot { position: absolute; top: -1px; right: -1px; }
+/* fd: text-xs text-muted shrink-0; the accent badge is bg-brand-100 text-oncolor-100 size-6 rounded-md. */
+.spal-trailing { display: flex; flex-shrink: 0; align-items: center; color: var(--cds-text-muted); font-size: 12px; line-height: 16px; }
+.spal-return-badge {
+  display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; margin: -4px -6px -4px 0;
+  border-radius: 6px; background: var(--cds-fill-brand); color: var(--cds-on-brand);
+}
+/* sd: neutral xxs Badge with the Archive glyph. */
+.spal-badge {
+  display: inline-flex; align-items: center; gap: 4px; padding: 0 6px; height: 18px; border-radius: 5px;
+  background: var(--cds-alpha-3, rgba(127, 127, 127, .16)); color: var(--cds-text-secondary); font-size: 11px;
+}
+/* _a small: *:!bg-transparent *:border-0.5 *:border-border-300 *:font-small. */
+.spal-keys { display: inline-flex; align-items: center; gap: 2px; }
+.spal-keys kbd {
+  display: inline-flex; align-items: center; justify-content: center; min-width: 16px; height: 16px; box-sizing: border-box; padding: 0 4px;
+  border: .5px solid var(--cds-border-strong); border-radius: 4px; background: transparent; color: inherit;
+  font-family: var(--cds-font-sans); font-size: var(--cds-font-size-caption); line-height: 1;
+}
+/* Uf: flex min-h-fit flex-1 flex-col items-center justify-center gap-3 px-6 text-center. */
+.spal-empty { display: flex; flex: 1; flex-direction: column; align-items: center; justify-content: center; gap: 12px; min-height: 96px; padding: 0 24px; text-align: center; }
+.spal-empty-words { margin: 0; max-width: 100%; overflow-wrap: break-word; color: var(--cds-text-secondary); }
+/* qp: border-t-0.5 pr-4 pl-5 py-2.5 bg-surface-3; flex min-h-5 items-center justify-between text-xs text-muted. */
+.spal-footer { flex-shrink: 0; padding: 10px 16px 10px 20px; border-top: .5px solid var(--cds-border); background: var(--cds-surface-3); }
+.spal-footer-hints { display: flex; align-items: center; gap: 20px; min-height: 20px; color: var(--cds-text-muted); font-size: 12px; line-height: 16px; }
+.spal-hint { display: flex; align-items: center; gap: 8px; }
+@media (pointer: coarse) { .spal-footer { display: none; } }
+/* W14-code r5 cleanup css5-sr-only-handcopies: the hand-copied sr-only rule is gone; the JSX uses the official c6a992d55 .sr-only. */

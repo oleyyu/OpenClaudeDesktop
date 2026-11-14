@@ -1,0 +1,336 @@
+/* 2.2553.1 Customize pages (customize-page-shell U/De/q/Y, c51c45b79 CDS Table). Tokens resolve on the html cds-root
+   (data-density=comfortable): --cds-h-control 32px, pad-sm 8px, pad-md 12px, pad-lg 16px, gap-sm 12px, footnote 13/17,
+   body 14/20. Row = h-7 (28px) content box + 2×pad-sm + 1px alpha-1 border. */
+/* --cds-layer-base: Customize renders inside the Settings dialog (.ss-backdrop z-index 500, source-settings.css),
+   so portals opened from the page (SourceTooltip reads it; MoreMenu passes it to SourceMenu) layer above it,
+   as al() does inside a modal layer (same convention as .ss-storage-dialog). */
+.cz-page { --cds-layer-base:500; --cz-radius:var(--cds-radius,8px); display:flex; flex:1; height:100%; min-height:0; flex-direction:column; min-width:0; container-type:inline-size; container-name:cz; }
+/* Source U: fixed header, independently scrolling body; the dialog owns
+   the close control in the reserved right-hand square. */
+.cz-header { display:flex; flex-shrink:0; align-items:center; gap:var(--cds-gap-sm,12px); min-height:56px; padding-inline:var(--cds-pad-lg,16px) calc(var(--cds-pad-md,12px) + var(--cds-h-control,32px) + var(--cds-gap-sm,12px)); }
+.cz-header-controls { display:flex; min-width:0; align-items:center; justify-content:flex-end; gap:var(--cds-gap-sm,12px); }
+/* customize-page-shell :410-424 body "flex min-h-0 flex-1 flex-col overflow-y-auto px-lg pb-lg": no gap; children
+   space themselves (q table mt-sm, the connectors gap-lg / gap-sm blocks). */
+.cz-page-body { display:flex; min-height:0; min-width:0; flex:1; flex-direction:column; overflow-y:auto; padding:0 var(--cds-pad-lg,16px) var(--cds-pad-lg,16px); }
+.cz-page-body>* { flex-shrink:0; }
+.cz-title { flex:1; min-width:0; margin:0; overflow:hidden;text-overflow:ellipsis;white-space:nowrap; color:var(--cds-text-primary); }
+/* ccefd43d9 x → shared-frame Bh. Classic pageLayout=false uses w-48;
+   the larger w-64 belongs to the separate pageLayout branch. */
+.cz-search-toggle { display:grid; flex-shrink:0; place-items:center; width:var(--cds-h-control); height:var(--cds-h-control); padding:0; border:0; border-radius:var(--cds-radius); background:transparent; color:var(--cds-text-secondary); cursor:var(--cds-cursor-interactive,default); }
+.cz-search-toggle:hover { background:var(--cds-fill-ghost-hover); color:var(--cds-text-primary); }
+.cz-search { display:inline-flex; flex-shrink:0; align-items:center; gap:var(--cds-pad-sm); width:192px; max-width:100%; min-width:0; height:var(--cds-h-control); padding:0 var(--cds-pad-md); border:0; border-radius:var(--cds-radius); color:var(--cds-text-muted); background:var(--cds-fill-field); box-shadow:inset 0 0 0 1px var(--cds-fill-field-ring); font:var(--cds-font-weight-regular) var(--cds-font-size-body)/var(--cds-leading-body) var(--cds-font-sans); cursor:text; transition:box-shadow var(--cds-dur-fast); }
+.cz-search[data-clearable] { padding-right:0; }
+.cz-search:hover:not(:has(:focus-visible)) { box-shadow:inset 0 0 0 1px var(--cds-border-strong); }
+.cz-search:has(:focus-visible) { box-shadow:var(--cds-focus-shadow); }
+.cz-search-end { --cz-field-height:var(--cds-h-control); --cz-field-nested:var(--cds-h-control-nested); --cz-field-radius:var(--cds-radius); display:flex; flex-shrink:0; align-items:center; justify-content:center; width:var(--cds-h-control); height:var(--cds-h-control); }
+.cz-search-clear { display:grid; flex-shrink:0; place-items:center; width:var(--cz-field-nested); height:var(--cz-field-nested); padding:0; border:0; border-radius:calc(var(--cz-field-radius) - (var(--cz-field-height) - var(--cz-field-nested))/2); background:transparent; color:var(--cds-text-primary); cursor:var(--cds-cursor-interactive,default); }
+.cz-search-clear:hover { background:var(--cds-fill-ghost-hover); }
+.cz-search input { flex:1; width:100%; min-width:0; height:100%; border:0; padding:0; outline:none; background:transparent; box-shadow:none; color:var(--cds-text-primary); font:inherit; -webkit-appearance:none; appearance:none; }
+.cz-search input::placeholder { color:var(--cds-text-muted); }
+.cz-search input::-webkit-search-cancel-button { -webkit-appearance:none; }
+/* One focus ring, on the field wrapper (:has(:focus-visible) above): the input draws none of its own. [role=search]
+   lifts this over the dialog's generic input outline (source-settings.css), which has the same specificity otherwise. */
+.ss-dialog .cz-page .cz-search[role=search] input:focus-visible { outline:none;box-shadow:none; }
+.ss-dialog .cz-page :is(.cz-search-toggle,.cz-search-clear):focus-visible { outline:none;box-shadow:var(--cds-focus-shadow); }
+@media(prefers-reduced-motion:reduce) { .cz-search { transition:none; } }
+html[data-reduce-motion="true"] .cz-search { transition: none; }
+.cz-actions { display:flex; flex-shrink:0; align-items:center; gap:8px; }
+/* DeepSeek core: the profile-entry hint inside the connectors empty-state copy (Ee span.block). */
+.cz-empty [data-cz-config-hint] { overflow-wrap:anywhere; }
+.cz-error { margin:0; color:var(--cds-text-danger,#bc3636); }
+.cz-muted { color:var(--cds-text-muted); }
+/* Y: horizontal scroller with stable gutter; q: fixed table, min-w-xl. */
+.cz-scroller { margin:0 calc(-1 * var(--cds-pad-lg,16px)) -8px; padding:0 var(--cds-pad-lg,16px) 8px; overflow-x:auto; scrollbar-gutter:stable; }
+.cz-table.cz-table-flush { margin-top:0; }
+.cz-table { width:100%; min-width:576px; margin-top:var(--cds-pad-sm,8px); border-collapse:separate; border-spacing:0; table-layout:fixed; white-space:nowrap; font-family:var(--cds-font-sans,anthropic-sans); font-size:var(--cds-font-size-body,14px); line-height:var(--cds-leading-body,20px); font-weight:400; color:var(--cds-text-primary); }
+.cz-table thead { text-align:left; }
+.cz-table th { box-sizing:border-box; height:var(--cds-h-control,32px); padding:0 var(--cds-pad-md,12px); overflow:hidden; text-overflow:ellipsis; font-size:var(--cds-font-size-footnote,13px); line-height:var(--cds-leading-footnote,17px); font-weight:500; color:var(--cds-text-secondary); text-align:left; vertical-align:middle; }
+.cz-col-20 { width:80px; }
+.cz-col-32 { width:128px; }
+.cz-col-40 { width:160px; }
+.cz-table td { box-sizing:content-box; height:28px; padding:var(--cds-pad-sm,8px) var(--cds-pad-md,12px); border-bottom:1px solid var(--cds-alpha-1); vertical-align:middle; overflow:hidden; background-clip:padding-box; }
+.cz-table tbody tr:first-child td { border-top:1px solid var(--cds-alpha-1); }
+.cz-table tr[data-hoverable] { position:relative; transform:translate(0,0); }
+.cz-table tr[data-clickable] { cursor:var(--cds-cursor-interactive,default); }
+.cz-table tr[data-hoverable]:hover td, .cz-table tr[data-selected=true] td { background-color:var(--cds-fill-ghost-hover); border-color:transparent; }
+.cz-table tr[data-hoverable]:hover td:first-child, .cz-table tr[data-selected=true] td:first-child { border-top-left-radius:var(--cz-radius,8px); border-bottom-left-radius:var(--cz-radius,8px); }
+.cz-table tr[data-hoverable]:hover td:last-child, .cz-table tr[data-selected=true] td:last-child { border-top-right-radius:var(--cz-radius,8px); border-bottom-right-radius:var(--cz-radius,8px); }
+.cz-table tr:has(+ tr[data-hoverable]:hover) td, .cz-table tr:has(+ tr[data-selected=true]) td { border-bottom-color:transparent; }
+/* G :558-561: focus-visible:shadow-focus focus-visible:outline-none, and V `[&:has(button:hover)>td]:!bg-transparent`
+   so hovering an inline Connect / Reconnect / Sign in clears the row fill (keepHoverOnActions is never set here). */
+.cz-table tr:focus-visible { outline:none; box-shadow:var(--cds-focus-shadow); }
+.cz-table tr[data-hoverable]:has(button:hover)>td { background-color:transparent !important; }
+.cz-cell-primary { color:var(--cds-text-primary); }
+.cz-cell-secondary { color:var(--cds-text-secondary); }
+.cz-tabular { font-variant-numeric:tabular-nums; }
+.cz-name { display:flex; min-width:0; align-items:center; gap:var(--cds-gap-sm,12px); }
+.cz-truncate { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.cz-block { display:block; }
+/* Badge (shared-frame :1958-1975): h-control-nested, px-sm, rounded-chip
+   (= nested/4), text-caption. data-size=xs re-maps those tokens through the
+   loaded design system (.cds-root [data-size=xs]); under the dialog's
+   comfortable density that is 18px / 6px / 4.5px / 11px. */
+.cz-badge { display:inline-flex; flex-shrink:0; align-items:center; height:var(--cds-h-control-nested,18px); padding:0 var(--cds-pad-sm,6px); border-radius:calc(var(--cds-h-control-nested,18px) / 4); background:var(--cds-alpha-2); color:var(--cds-text-secondary); font-size:var(--cds-font-size-caption,11px); line-height:var(--cds-leading-caption,15px); font-weight:500; white-space:nowrap; }
+.cz-chip { display:inline-flex; flex-shrink:0; align-items:center; height:20px; padding:0 8px; border:1px solid var(--cds-alpha-2); border-radius:999px; background:transparent; color:var(--cds-text-secondary); font:inherit; font-size:12px; line-height:18px; cursor:var(--cds-cursor-interactive,default); }
+.cz-chip:hover { background:var(--cds-fill-ghost-hover); color:var(--cds-text-primary); }
+.cz-status { display:inline-flex; align-items:center; gap:8px; min-width:0; color:var(--cds-text-secondary); }
+/* customize-connectors ca (:2027-2048): "flex min-w-0 items-center gap-xs text-warning" around Warning sm + tooltip-wrapped button. */
+.cz-status:is([data-status=unreachable],[data-status=sign-in]) { display:flex; gap:var(--cds-gap-xs); color:var(--cds-text-warning); }
+.cz-status-icon { flex-shrink:0; }
+.cz-status-action { display:inline-flex; min-width:0; }
+.cz-status[data-status=connected] { color:var(--cds-text-primary); }
+/* W14-code r5 cleanup css5-sr-only-handcopies: the hand-copied sr-only rule is gone; the JSX uses the official c6a992d55 .sr-only. */
+/* Load failure (so() / Ie) fills the page below the fixed header; source h-full /
+   flex-1 resolve against a full-height slot, the local page is a flex column. */
+.cz-page > .cz-load-error { flex:1 1 0; min-height:0; }
+.cz-text-button { display:inline; padding:0; border:0; background:none; color:var(--cds-text-primary); font:inherit; text-decoration:underline; text-underline-offset:2px; cursor:var(--cds-cursor-interactive,default); }
+/* Empty states are page-shell Ee utility markup (flex-1 centred column, gap-lg, py-lg, max-w-xs copy); the
+   pictogram is source-pictogram.jsx. Local actions: the core's skill folders and the profile-entry hint. */
+.cz-roots { margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:4px; color:var(--cds-text-muted); }
+.cz-roots code, .cz-empty code { font-family:var(--cds-font-mono,monospace); font-size:12px; }
+.cz-skill-roots { display:flex; flex-direction:column; gap:6px; margin:16px 0 12px; font-size:13px; line-height:18px; }
+.cz-skill-roots p { margin:0; }
+.cz-skill-roots code { overflow-wrap:anywhere; }
+/* AS InfoTip (shared-frame :13895-13960 DS): "cds-reset inline-flex shrink-0 items-center justify-center rounded
+   p-1 -m-1 text-muted outline-none transition-colors duration-fast hover:text-secondary focus-visible:text-secondary
+   focus-visible:shadow-focus". */
+.cz-infotip { display:inline-flex; flex-shrink:0; align-items:center; justify-content:center; margin:-4px; padding:4px; border:0; border-radius:var(--cds-radius); background:transparent; color:var(--cds-text-muted); outline:none; transition:color var(--cds-dur-fast); }
+.cz-infotip:hover, .cz-infotip:focus-visible { color:var(--cds-text-secondary); }
+.cz-tool-list { margin:0; padding:0; list-style:none; }
+/* A native core's connector settings: the default approval row, then each tool's approval select and switch. */
+.cz-connector-setting { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:16px; padding:10px 0; border-bottom:1px solid var(--cds-border); }
+.cz-connector-setting-text { display:flex; flex-direction:column; gap:2px; min-width:0; }
+.cz-tool-row .cz-tool-approval { flex:none; max-width:220px; }
+/* The connector-wide approval select keeps a control width at the row end instead of filling the row. */
+.cz-connector-setting > .sselect { flex:none; width:220px; max-width:50%; }
+/* Add custom connector form */
+.cz-form { display:grid; gap:10px; padding:16px; border:1px solid var(--cds-alpha-2); border-radius:8px; background:var(--cds-surface-3); }
+.cz-form h3 { margin:0; font:600 14px/20px var(--cds-font-sans,anthropic-sans); }
+.cz-form > p { margin:0; }
+.cz-field { display:grid; grid-template-columns:96px minmax(0,1fr); align-items:center; gap:8px; }
+.cz-field input { min-height:28px; padding:3px 10px; border:1px solid var(--cds-alpha-2); border-radius:6px; background:var(--cds-surface-3); color:inherit; font:inherit; min-width:0; }
+.cz-form-actions { display:flex; justify-content:flex-end; gap:8px; }
+/* Inline page controls (chips, text buttons, plugin tabs and items, the InfoTip) take the CDS focus shadow like
+   CDS Buttons (shared-frame rs) instead of the dialog's generic 2px outline (source-settings.css), which only
+   the form fields keep; switches and CDS Buttons keep their own rules. */
+.ss-dialog .cz-page button:not(.source-settings-button):not(.ss-switch):focus-visible { outline:none; box-shadow:var(--cds-focus-shadow); }
+.ss-dialog .cz-page input:focus-visible { outline:2px solid var(--cds-fill-accent); outline-offset:2px; }
+@media(max-width:780px) { .cz-header{flex-wrap:wrap;} .cz-field{grid-template-columns:minmax(0,1fr);} }
+
+/* Drill-ins (page shell W): ArrowLeft back header + the detail body. The skill body is c9a7e510b D's utility
+   markup ("flex flex-col h-full px-6 pb-6 gap-3", header "min-h-14 items-center py-3 -me-6 pe-md"); the
+   connector body is c08e79e85 En's. */
+.cz-drill { display:flex; min-height:0; flex:1; flex-direction:column; }
+.cz-drill-header { display:flex; flex-shrink:0; min-height:56px; align-items:center; gap:var(--cds-gap-sm,12px); padding-inline:var(--cds-pad-xl,24px) calc(var(--cds-pad-md,12px) + var(--cds-h-control,32px)); }
+.cz-drill-scroll { position:relative;min-height:0;min-width:0;flex:1;overflow-y:auto; }
+.cz-skill-detail { min-width:0; }
+.cz-skill-actions { flex-shrink:0; }
+.cz-file-empty { margin:0; padding:var(--cds-pad-md,12px) 0; color:var(--cds-text-secondary); }
+/* c36b3644c ye/_e + c26e90ba3 qt + c26958849 c, classic plugin drill. */
+.cz-plugin-detail { display:flex; min-width:0; flex-direction:column; }
+.cz-plugin-head { display:flex; align-items:center; justify-content:space-between; gap:var(--cds-gap-sm,12px); padding:var(--cds-pad-md,12px) var(--cds-pad-xl,24px); }
+.cz-plugin-head h2 { margin:0; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--cds-text-primary); }
+.cz-plugin-metadata { display:flex; gap:64px; padding:12px 24px; }
+.cz-plugin-metadata:empty { display:none; }
+.cz-plugin-metadata>div { display:flex; min-width:0; flex-direction:column; gap:var(--cds-gap-xs,6px); color:var(--cds-text-secondary); font-size:var(--cds-font-size-body,14px); line-height:var(--cds-leading-body,20px); }
+.cz-plugin-metadata>div>span { color:var(--cds-text-muted); font-size:var(--cds-font-size-footnote,13px); line-height:var(--cds-leading-footnote,17px); }
+.cz-plugin-message { padding:12px 24px; }
+.cz-plugin-contents { display:flex; flex-direction:column; gap:12px; padding:16px 24px; }
+.cz-plugin-controls { display:flex; align-items:center; justify-content:space-between; gap:var(--cds-gap-sm,12px); min-width:0; }
+.cz-plugin-controls>[data-cds=Tabs] { min-width:0; overflow-x:auto; }
+.cz-plugin-tabs { display:flex; align-items:center; font-family:var(--cds-font-sans,anthropic-sans); }
+.cz-plugin-tabs button { position:relative; isolation:isolate; flex-shrink:0; display:inline-flex; align-items:center; justify-content:center; height:var(--cds-h-control,32px); padding:0 var(--cds-pad-md,12px); border:0; background:transparent; color:var(--cds-text-muted); font:500 var(--cds-font-size-body,14px)/var(--cds-leading-body,20px) var(--cds-font-sans,anthropic-sans); white-space:nowrap; }
+.cz-plugin-tabs button::before { position:absolute; inset:0 1px; border-radius:var(--cz-radius,8px); z-index:-1; content:''; }
+.cz-plugin-tabs button:first-child::before { left:0; }
+.cz-plugin-tabs button:last-child::before { right:0; }
+.cz-plugin-tabs button[aria-selected=true] { color:var(--cds-text-primary); }
+.cz-plugin-tabs button[aria-selected=true]::before,.cz-plugin-tabs button:not(:disabled):hover::before { background:var(--cds-fill-ghost-hover); }
+.cz-plugin-tabs button:disabled { opacity:var(--cds-opacity-disabled,.5); pointer-events:none; }
+.cz-plugin-tab-description { margin:0 0 12px; color:var(--cds-text-muted); font-size:var(--cds-font-size-footnote,13px); line-height:var(--cds-leading-footnote,17px); }
+.cz-plugin-items { display:flex; flex-direction:column; gap:1px; margin:0 calc(-1 * var(--cds-pad-md,12px)); padding:0; list-style:none; }
+.cz-plugin-item { display:flex; width:100%; min-width:0; flex-direction:column; align-items:flex-start; padding:6px 12px; border:0; border-radius:8px; background:transparent; color:var(--cds-text-primary); font:400 14px/20px var(--cds-font-sans,anthropic-sans); text-align:left; }
+button.cz-plugin-item:hover { background:var(--cds-surface-0); }
+.cz-plugin-item>span:first-child,.cz-plugin-item>small { max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.cz-plugin-item>small { color:var(--cds-text-muted); font-size:var(--cds-font-size-footnote,13px); line-height:var(--cds-leading-footnote,17px); }
+.cz-plugin-no-match { margin:0; padding:var(--cds-pad-md,12px) 0; color:var(--cds-text-muted); }
+/* "Connectors that stopped working" card (customize-connectors ba :2300-2530, rows Ca :2644-2750). */
+.cz-broken { display:flex; flex-direction:column; gap:var(--cds-gap-xs,6px); padding:var(--cds-pad-md,12px) var(--cds-pad-lg,16px); border:1px solid var(--cds-alpha-2); border-radius:var(--cz-radius,8px); background:var(--cds-surface-3); }
+/* "-mx-pad-lg flex items-center justify-between gap-md border-b border-alpha-1 px-lg pb-lg" */
+.cz-broken-head { display:flex; align-items:center; justify-content:space-between; gap:var(--cds-gap-md,16px); margin-inline:calc(var(--cds-pad-lg,16px) * -1); padding:0 var(--cds-pad-lg,16px) var(--cds-pad-lg,16px); border-bottom:1px solid var(--cds-alpha-1); }
+.cz-broken-head h3 { display:flex; min-width:0; align-items:flex-start; gap:var(--cds-gap-xs,6px); margin:0; font:500 14px/20px var(--cds-font-sans,anthropic-sans); color:var(--cds-text-primary); }
+.cz-broken-icon { display:inline-flex; flex-shrink:0; height:1lh; align-items:center; color:var(--cds-text-warning,#9a6700); }
+/* ul "mt-xs grid gap-x-sm grid-cols-[auto_minmax(0,1fr)_auto]"; li "col-span-full grid grid-cols-subgrid items-center border-t border-alpha-1 py-sm first:border-t-0". */
+.cz-broken-list { display:grid; grid-template-columns:auto minmax(0,1fr) auto; column-gap:var(--cds-gap-sm,12px); margin:var(--cds-gap-xs,6px) 0 0; padding:0; list-style:none; }
+.cz-broken-list li { display:grid; grid-column:1/-1; grid-template-columns:subgrid; align-items:center; padding:var(--cds-pad-sm,8px) 0; border-top:1px solid var(--cds-alpha-1); }
+.cz-broken-list li:first-child { border-top:0; }
+/* _r size 24 → shared-13 Jk: 24px, radius size*.27, "shrink-0 bg-bg-000 border-border-300 border-0.5 shadow-sm flex items-center justify-center"
+   (design-system.css: bg-bg-000 = --cds-surface-3, border-border-300 = --cds-border, shadow-sm = --cds-shadow-sm). */
+.cz-connector-tile { display:flex; flex-shrink:0; align-items:center; justify-content:center; box-sizing:border-box; width:24px; height:24px; border:.5px solid var(--cds-border); border-radius:6.48px; background:var(--cds-surface-3); box-shadow:var(--cds-shadow-sm); color:var(--cds-text-secondary); }
+/* hn size 56 / imageSize 40 (the not-connected and checking drill views): radius 56 × .27. */
+.cz-connector-tile.cz-connector-tile-lg { width:56px; height:56px; border-radius:15.12px; }
+.cz-broken-text { display:flex; min-width:0; align-items:center; gap:var(--cds-gap-sm,12px); font-size:var(--cds-font-size-body,14px); line-height:var(--cds-leading-body,20px); }
+.cz-broken-name { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--cds-text-primary); }
+.cz-broken-reason { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--cds-text-secondary); }
+.cz-broken-action { display:flex; align-items:center; justify-self:end; }
+.cz-broken-more { align-self:flex-start; }
+@media(max-width:767px) { .cz-header,.cz-drill-header { padding-right:var(--cds-pad-lg,16px); } }
+/* shared-22 jC kC "box-content flex h-7 … py-sm": the row cell is content-box (28px + 2 × pad-sm
+   + the alpha-1 rule). The loaded .box-content sits in @layer utilities (c6a992d55-C0zTICcS.css)
+   and loses to the unlayered `* { box-sizing:border-box }` (style.css:17), as noted for the
+   transcript skeleton (source-transcript-states.css); restate it for the catalog skeleton only. */
+[data-cz-skeleton] .box-content { box-sizing:content-box; }
+
+/* Plugin management (DeepSeek core): install output, build approval, detail controls. */
+.cz-plugin-log { max-height:220px; overflow:auto; margin:4px 0 0; padding:8px; border-radius:6px; background:var(--cds-surface-1); color:var(--cds-text-secondary); font:12px/16px var(--cds-font-mono,ui-monospace,monospace); white-space:pre-wrap; overflow-wrap:anywhere; }
+.cz-plugin-builds { display:grid; gap:8px; justify-items:start; }
+.cz-plugin-builds p { margin:0; color:var(--cds-text-secondary); }
+.cz-plugin-manage { display:flex; flex-shrink:0; align-items:center; gap:var(--cds-gap-md,12px); margin-left:auto; }
+/* c36b3644c :563-590 notices row below the header: "flex flex-col gap-sm px-xl pt-lg pb-md empty:hidden". */
+.cz-plugin-notices { display:flex; flex-direction:column; gap:var(--cds-gap-sm,12px); padding:var(--cds-pad-lg,16px) var(--cds-pad-xl,24px) var(--cds-pad-md,12px); }
+.cz-plugin-notices:empty { display:none; }
+.cz-plugin-notices .cz-plugin-message { padding:0; }
+.cz-badge[data-variant="danger"] { color:var(--cds-text-danger, var(--cds-text-warning)); }
+
+/* Built-in plugins (DeepSeek core): a bundle the app can install itself, above the installed table. */
+.cz-builtin { display:flex; flex-direction:column; gap:6px; margin-bottom:12px; padding:12px; border:1px solid var(--cds-alpha-2); border-radius:8px; background:var(--cds-surface-3); }
+.cz-builtin-head { display:flex; align-items:center; justify-content:space-between; gap:var(--cds-gap-sm,12px); }
+.cz-builtin-head h3 { margin:0; color:var(--cds-text-primary); font:600 13px/18px var(--cds-font-sans,anthropic-sans); }
+.cz-builtin-list { display:flex; flex-direction:column; gap:1px; margin:0; padding:0; list-style:none; }
+.cz-builtin-row { display:flex; align-items:center; justify-content:space-between; gap:var(--cds-gap-sm,12px); padding:8px 0; }
+.cz-builtin-row + .cz-builtin-row { border-top:1px solid var(--cds-alpha-1); }
+.cz-builtin-text { display:flex; min-width:0; flex-direction:column; gap:2px; }
+.cz-builtin-name { display:flex; min-width:0; align-items:center; gap:6px; color:var(--cds-text-primary); font-size:14px; line-height:20px; }
+.cz-builtin-description { color:var(--cds-text-secondary); font-size:13px; line-height:17px; overflow-wrap:anywhere; }
+/* A native core's Available list (marketplace plugins) reuses these rows, with the manifest version beside the name. */
+.cz-builtin-version { flex-shrink:0; color:var(--cds-text-muted); font-size:12px; line-height:16px; font-variant-numeric:tabular-nums; }
+.cz-builtin-source { color:var(--cds-text-muted); font:12px/16px var(--cds-font-mono,ui-monospace,monospace); overflow-wrap:anywhere; }
+.cz-builtin-action { display:flex; flex-shrink:0; align-items:center; }
+.cz-builtin .cz-error { margin:0; }
+
+/* Plugins › Official (Harness OPTIONAL_BUNDLES) as Claude Directory cards (ca0e5677a):
+   grid gap-4 grid-cols-1 md:grid-cols-2; card rounded-2xl border-0.5 bg-surface-3 p-4 shadow-sm gap-3;
+   hover border-strong + the soft lift shadow; icon tile size-10 rounded-lg border-0.5 bg-surface-1. */
+.cz-section-head { display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 8px; margin:0 0 8px; }
+.cz-section-head h3 { margin:0; color:var(--cds-text-primary); font:600 13px/18px var(--cds-font-sans,anthropic-sans); }
+.cz-section-head span { color:var(--cds-text-muted); font-size:12px; line-height:16px; }
+.cz-official { margin-bottom:20px; }
+.cz-official-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; margin:0; padding:0; list-style:none; }
+@media (max-width: 767px) { .cz-official-grid { grid-template-columns:minmax(0,1fr); } }
+.cz-official-card { position:relative; display:flex; min-width:0; flex-direction:column; gap:12px; padding:16px; border-radius:16px; background:var(--cds-surface-3); box-shadow:inset 0 0 0 .5px var(--cds-border),0 1px 2px color-mix(in srgb,var(--cds-black,#000) 5%,transparent); transition:box-shadow var(--cds-dur-fast,.06s); }
+.cz-official-card:hover, .cz-official-card:focus-within { box-shadow:inset 0 0 0 .5px var(--cds-border-strong),0 4px 20px color-mix(in srgb,var(--cds-black,#000) 4%,transparent); }
+.cz-official-open { position:absolute; inset:0; z-index:0; border:0; border-radius:inherit; background:transparent; outline:none; }
+.cz-official-open:focus-visible { box-shadow:var(--cds-focus-shadow); }
+.cz-official-top { display:flex; align-items:flex-start; gap:12px; pointer-events:none; }
+.cz-official-title { display:flex; min-width:0; flex:1; flex-direction:column; gap:2px; }
+.cz-official-name { overflow:hidden; color:var(--cds-text-primary); font:500 14px/20px var(--cds-font-sans,anthropic-sans); text-overflow:ellipsis; white-space:nowrap; }
+.cz-official-meta { overflow:hidden; color:var(--cds-text-muted); font-size:12px; line-height:16px; text-overflow:ellipsis; white-space:nowrap; }
+.cz-official-action { position:relative; z-index:1; display:flex; flex-shrink:0; align-items:center; pointer-events:auto; }
+.cz-official-description { display:-webkit-box; margin:0; overflow:hidden; color:var(--cds-text-muted); font-size:12px; line-height:17px; pointer-events:none; -webkit-box-orient:vertical; -webkit-line-clamp:2; }
+.cz-official-badges { display:flex; flex-wrap:wrap; gap:6px; pointer-events:none; }
+.cz-official .cz-error { margin:8px 0 0; }
+
+.cz-plugin-icon { display:inline-flex; flex-shrink:0; align-items:center; justify-content:center; overflow:hidden; border-radius:8px; background:var(--cds-surface-1,var(--cds-surface-2)); box-shadow:inset 0 0 0 .5px var(--cds-border); color:var(--cds-text-secondary); }
+.cz-plugin-icon img { display:block; width:60%; height:60%; object-fit:contain; }
+.cz-plugin-icon-sm { width:20px; height:20px; border-radius:5px; }
+.cz-plugin-icon-sm img { width:70%; height:70%; }
+.cz-plugin-icon-md { width:40px; height:40px; }
+.cz-plugin-icon-lg { width:44px; height:44px; border-radius:10px; }
+.cz-plugin-head .cz-plugin-icon { align-self:flex-start; }
+.cz-plugin-title { display:flex; min-width:0; flex:1; flex-direction:column; gap:2px; }
+.cz-plugin-title-row { display:flex; min-width:0; flex-wrap:wrap; align-items:center; gap:8px; }
+.cz-plugin-title-row h2 { margin:0; }
+.cz-plugin-byline { margin:0; color:var(--cds-text-muted); font-size:12px; line-height:16px; overflow-wrap:anywhere; }
+.cz-registry-control { display:flex; max-width:100%; min-width:0; }
+/* Add custom connector › Advanced: env / header lines, styled like the inputs above. */
+.cz-field textarea { min-height:44px; padding:5px 10px; border:1px solid var(--cds-alpha-2); border-radius:6px; background:var(--cds-surface-3); color:inherit; font:inherit; font-family:var(--cds-font-mono); font-size:var(--cds-font-size-code, 12px); min-width:0; resize:vertical; }
+.cz-field small { grid-column:2; }
+@media(max-width:780px) { .cz-field small { grid-column:1; } }
+
+/* A Codex plugin's apps still to connect, and marketplaces that failed to load. */
+.cz-plugin-apps { display:flex; flex-direction:column; gap:8px; margin-bottom:12px; padding:12px; border-radius:var(--cds-radius--lg, 10px); background:var(--cds-fill-ghost-hover); }
+.cz-plugin-apps-title { margin:0; color:var(--cds-text-primary); font-size:var(--cds-font-size-body, 13px); }
+.cz-plugin-apps-list { display:flex; flex-direction:column; gap:6px; margin:0; padding:0; list-style:none; }
+.cz-plugin-apps-list > li { display:flex; align-items:center; justify-content:space-between; gap:8px; min-width:0; }
+.cz-marketplace-errors { display:flex; align-items:flex-start; gap:8px; margin-bottom:12px; padding:10px 12px; border-radius:var(--cds-radius--lg, 10px); color:var(--cds-text-warning); background:color-mix(in srgb, var(--cds-text-warning) 8%, transparent); }
+.cz-plugin-share{display:flex;flex-wrap:wrap;align-items:center;gap:var(--cds-gap-sm,8px)}
+.cz-plugin-share > .sselect{flex:none;width:220px;max-width:100%}
+/* ChatGPT Apps on Codex (AppsSection): one row per app with its icon, status and Connect / Manage and the on/off switch. */
+.cz-apps { margin-top:24px; }
+.cz-apps-head { justify-content:space-between; align-items:center; }
+.cz-apps-list { list-style:none; margin:8px 0 0; padding:0; display:flex; flex-direction:column; }
+.cz-apps-row { display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid var(--cds-alpha-1); }
+.cz-apps-icon { flex-shrink:0; display:inline-flex; width:24px; height:24px; border-radius:6px; overflow:hidden; }
+.cz-apps-icon img { width:24px; height:24px; object-fit:contain; }
+.cz-apps-text { display:flex; flex-direction:column; min-width:0; flex:1; }
+.cz-apps-name { color:var(--cds-text-primary); font-size:13px; line-height:18px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.cz-apps-meta { color:var(--cds-text-secondary); font-size:12px; line-height:16px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.cz-apps-actions { display:flex; align-items:center; gap:8px; flex-shrink:0; }
+/* MiMo's per-connector model requests (ConnectorSampling): a labelled select under the connector's description. */
+.cz-sampling { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:16px; padding:10px 12px; border-radius:10px; background:var(--cds-surface-2); }
+.cz-sampling-copy { display:flex; flex-direction:column; gap:2px; min-width:0; }
+.cz-sampling-title { color:var(--cds-text-primary); font-size:13px; line-height:18px; }
+/* A plugin's MCP server with its own switch (Kimi plugin servers): the connector row, then the switch. */
+.cz-plugin-server { display:flex; align-items:center; gap:8px; }
+.cz-plugin-server > :first-child { flex:1; min-width:0; }
+/* Skill folders with Open (SkillFoldersNote): a muted footnote below the table and under the empty state's Add. */
+.cz-root-row { display:flex; align-items:center; gap:8px; }
+.cz-skill-roots { color:var(--cds-text-muted); }
+.cz-empty .cz-skill-roots { align-items:center; margin:0; }
+/* Customize dialogs (Create a skill, Add custom connector, Add marketplace): the official custom connector dialog
+   (ion-dist ce99eb202) — a md Dialog capped at 33.5rem, stacked full-width fields whose placeholder is the label,
+   a muted hint under each, Advanced settings, then the muted footnote and the Cancel / Add footer. */
+.sdlg-popup.cz-connector-dialog { max-width:33.5rem; }
+.cz-dialog-form { display:flex; min-width:0; flex-direction:column; gap:var(--cds-gap-md,12px); }
+.cz-dialog-field { display:flex; min-width:0; flex-direction:column; gap:4px; }
+.cz-dialog-field > .cds-input, .cz-dialog-field > .cz-dialog-textarea { width:100%; min-width:0; }
+.cz-dialog-hint { color:var(--cds-text-muted); font-size:var(--cds-font-size-footnote,13px); line-height:var(--cds-leading-footnote,17px); }
+.cz-dialog-note { margin:0; color:var(--cds-text-muted); font-size:var(--cds-font-size-footnote,13px); line-height:var(--cds-leading-footnote,17px); overflow-wrap:anywhere; }
+.cz-dialog-segments { align-self:flex-start; }
+.cz-dialog-advanced-body { display:flex; flex-direction:column; gap:var(--cds-gap-md,12px); padding-top:var(--cds-pad-sm,8px); }
+.cz-dialog-textarea { display:block; box-sizing:border-box; margin:0; padding:var(--cds-pad-sm,6px) var(--cds-pad-md,8px); border:0; border-radius:var(--cds-radius,6px);
+  background:var(--cds-fill-field); box-shadow:inset 0 0 0 1px var(--cds-fill-field-ring); color:var(--cds-text-primary);
+  font-family:var(--cds-font-mono,ui-monospace,monospace); font-size:var(--cds-font-size-code,12px); line-height:var(--cds-leading-body,19px); resize:vertical; outline:none; }
+.cz-dialog-textarea::placeholder { color:var(--cds-text-muted); }
+.cz-dialog-textarea:focus-visible { box-shadow:var(--cds-focus-shadow); }
+/* The dialogs' text fields (data-cds=TextInput cds-input): the CDS field the other forms draw (.msx-page, .ccmd-form) —
+   a control-height box on --cds-fill-field with its inset ring, a stronger ring on hover, the danger ring when invalid
+   and the focus shadow. The shipped .cds-input rule zeroes padding, background and radius, so they are set here; the
+   tokens follow the loaded light or dark theme. The textarea gets the same hover and disabled states. */
+.cz-dialog-field > input[data-cds=TextInput] { box-sizing:border-box; width:100%; min-width:0; height:var(--cds-h-control,32px); min-height:0; margin:0; padding:0 var(--cds-pad-md,8px);
+  border:0; border-radius:var(--cds-radius,6px); background:var(--cds-fill-field); box-shadow:inset 0 0 0 1px var(--cds-fill-field-ring); color:var(--cds-text-primary);
+  font:400 var(--cds-font-size-body,14px)/var(--cds-leading-body,20px) var(--cds-font-sans); outline:none; transition:box-shadow var(--cds-dur-fast,100ms); }
+.cz-dialog-field > input[data-cds=TextInput]:focus { box-shadow:inset 0 0 0 1px var(--cds-fill-field-ring); }
+.cz-dialog-field > input[data-cds=TextInput]::placeholder { color:var(--cds-text-muted); }
+.cz-dialog-field > :is(input[data-cds=TextInput], .cz-dialog-textarea):hover:not(:focus):not([aria-invalid=true]):not(:disabled) { box-shadow:inset 0 0 0 1px var(--cds-border-strong); }
+.cz-dialog-field > :is(input[data-cds=TextInput], .cz-dialog-textarea)[aria-invalid=true] { box-shadow:inset 0 0 0 1px var(--cds-fill-danger); }
+.cz-dialog-field > input[data-cds=TextInput]:focus-visible { outline:none; box-shadow:var(--cds-focus-shadow); }
+.cz-dialog-field > :is(input[data-cds=TextInput], .cz-dialog-textarea):disabled { opacity:var(--cds-opacity-disabled,.5); }
+.cz-dialog-textarea { transition:box-shadow var(--cds-dur-fast,100ms); }
+@media (prefers-reduced-motion: reduce) { .cz-dialog-field > :is(input[data-cds=TextInput], .cz-dialog-textarea) { transition:none; } }
+html[data-reduce-motion="true"] .cz-dialog-field > :is(input[data-cds=TextInput], .cz-dialog-textarea) { transition:none; }
+/* A failing connector's drill: below the centred Reconnect, the startup error and the saved config, left-aligned. */
+.cz-connector-failure { display:flex; flex-direction:column; gap:var(--cds-gap-md,12px); }
+.cz-connector-error { display:flex; flex-direction:column; gap:4px; }
+.cz-connector-error-text { display:block; overflow:hidden; white-space:pre-wrap; overflow-wrap:anywhere; border-radius:var(--cds-radius,6px); background:var(--cds-surface-1); padding:4px 8px;
+  box-shadow:inset 0 0 0 1px var(--cds-border); color:var(--cds-text-danger); font-family:var(--cds-font-mono,ui-monospace,monospace); font-size:var(--cds-font-size-footnote,13px); line-height:var(--cds-leading-footnote,18px); }
+.cz-connector-error-more { margin:0; color:var(--cds-text-muted); font-size:var(--cds-font-size-footnote,13px); line-height:var(--cds-leading-footnote,18px); }
+.cz-connector-error-more .cz-text-button { color:var(--cds-text-secondary); }
+
+/* Customize › Agents › Create agent (OpenCode / MiMo agent files). */
+.cz-agent-form { display:flex; flex-direction:column; gap:var(--cds-gap-md,12px); }
+.cz-agent-form label, .cz-agent-field { display:flex; flex-direction:column; gap:4px; color:var(--cds-text-secondary); font-size:13px; }
+.cz-agent-field { align-items:flex-start; }
+.cz-agent-form input:not([type=checkbox]), .cz-agent-form textarea { padding:6px 8px; border:1px solid var(--cds-border); border-radius:var(--radius-md,6px); background:var(--cds-surface-1, transparent); color:var(--cds-text-primary); font:inherit; }
+.cz-agent-form textarea { resize:vertical; min-height:96px; }
+.cz-agent-form input:focus-visible, .cz-agent-form textarea:focus-visible { outline:none; box-shadow:var(--cds-focus-shadow); }
+.cz-agent-permissions { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:4px 12px; margin:0; padding:0; border:0; }
+.cz-agent-permissions legend { padding:0; margin-bottom:4px; color:var(--cds-text-secondary); font-size:13px; }
+.cz-agent-permissions label { flex-direction:row; align-items:center; gap:6px; color:var(--cds-text-primary); }
+.cz-agents .cz-builtin-action { gap:4px; }
+
+/* 2.31226.0 tabbed list (source-customize-list.jsx; class strings are the source's, utilities from the loaded
+   c6a992d55 CSS). ccefd43d9 b inDialog: the title keeps its width and the list toolbar (c3c330885 D) follows it. */
+.cz-title-row > .cz-title { flex:0 1 auto; }
+.cz-list-tabs[data-size=sm] button { height:var(--cds-h-control--sm, var(--cds-h-control,32px)); }
+/* The New / Disabled badges and the plugin chip are the CDS Badge (ListBadge: shared-frame Xo classes). */
+[data-cz-plugin-chip] { pointer-events:auto; }

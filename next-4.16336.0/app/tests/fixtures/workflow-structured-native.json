@@ -1,0 +1,753 @@
+[
+  {
+    "name": "open-required",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "missing"
+      ]
+    },
+    "replies": [
+      {
+        "missing": true
+      }
+    ],
+    "expected": {
+      "name": "open-required",
+      "value": {
+        "ok": true,
+        "value": {
+          "missing": true
+        }
+      },
+      "agents": 1,
+      "schemas": [
+        {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "missing"
+          ]
+        }
+      ],
+      "modelCalls": 1,
+      "toolCalls": 1
+    }
+  },
+  {
+    "name": "explicit-open-required",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "missing"
+      ],
+      "additionalProperties": true
+    },
+    "replies": [
+      {
+        "missing": true
+      }
+    ],
+    "expected": {
+      "name": "explicit-open-required",
+      "value": {
+        "ok": true,
+        "value": {
+          "missing": true
+        }
+      },
+      "agents": 1,
+      "schemas": [
+        {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "missing"
+          ],
+          "additionalProperties": true
+        }
+      ],
+      "modelCalls": 1,
+      "toolCalls": 1
+    }
+  },
+  {
+    "name": "closed-required",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "missing"
+      ],
+      "additionalProperties": false
+    },
+    "replies": [
+      {
+        "missing": true
+      }
+    ],
+    "expected": {
+      "name": "closed-required",
+      "value": {
+        "ok": false,
+        "error": "agent({schema}) received an unusable JSON Schema — no output can satisfy this schema, so StructuredOutput validation would fail on every attempt: the root object lists \"missing\" in required but does not declare it in properties, and additionalProperties is false, so no object can satisfy it — declare the property or drop it from required. The subagent was not started — fix the schema and call agent() again."
+      },
+      "agents": 1,
+      "schemas": [],
+      "modelCalls": 0,
+      "toolCalls": 0
+    }
+  },
+  {
+    "name": "pattern-required",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "missing"
+      ],
+      "patternProperties": {
+        "^missing$": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "replies": [
+      {
+        "missing": true
+      }
+    ],
+    "expected": {
+      "name": "pattern-required",
+      "value": {
+        "ok": true,
+        "value": {
+          "missing": true
+        }
+      },
+      "agents": 1,
+      "schemas": [
+        {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "missing"
+          ],
+          "patternProperties": {
+            "^missing$": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        }
+      ],
+      "modelCalls": 1,
+      "toolCalls": 1
+    }
+  },
+  {
+    "name": "syntax-invalid",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": "value"
+    },
+    "replies": [
+      {
+        "value": "ok"
+      }
+    ],
+    "expected": {
+      "name": "syntax-invalid",
+      "value": {
+        "ok": false,
+        "error": "agent({schema}) received an invalid JSON Schema: data/required must be array"
+      },
+      "agents": 1,
+      "schemas": [],
+      "modelCalls": 0,
+      "toolCalls": 0
+    }
+  },
+  {
+    "name": "numeric-impossible",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "number",
+          "minimum": 4,
+          "maximum": 2
+        }
+      },
+      "required": [
+        "value"
+      ]
+    },
+    "replies": [
+      {
+        "value": 3
+      }
+    ],
+    "expected": {
+      "name": "numeric-impossible",
+      "value": {
+        "ok": false,
+        "error": "agent({schema}) received an unusable JSON Schema — no output can satisfy this schema, so StructuredOutput validation would fail on every attempt: the sub-schema at /properties/value has minimum 4 and maximum 2, which admit no number, so no value can satisfy it. The subagent was not started — fix the schema and call agent() again."
+      },
+      "agents": 1,
+      "schemas": [],
+      "modelCalls": 0,
+      "toolCalls": 0
+    }
+  },
+  {
+    "name": "valid-first",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "value"
+      ]
+    },
+    "replies": [
+      {
+        "value": "ok"
+      }
+    ],
+    "expected": {
+      "name": "valid-first",
+      "value": {
+        "ok": true,
+        "value": {
+          "value": "ok"
+        }
+      },
+      "agents": 1,
+      "schemas": [
+        {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "value"
+          ]
+        }
+      ],
+      "modelCalls": 1,
+      "toolCalls": 1
+    }
+  },
+  {
+    "name": "repair-second",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "value"
+      ]
+    },
+    "replies": [
+      {
+        "value": 1
+      },
+      {
+        "value": "fixed"
+      }
+    ],
+    "expected": {
+      "name": "repair-second",
+      "value": {
+        "ok": true,
+        "value": {
+          "value": "fixed"
+        }
+      },
+      "agents": 1,
+      "schemas": [
+        {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "value"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "value"
+          ]
+        }
+      ],
+      "modelCalls": 2,
+      "toolCalls": 2
+    }
+  },
+  {
+    "name": "repair-fifth",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "value"
+      ]
+    },
+    "replies": [
+      {
+        "value": 1
+      },
+      {
+        "value": 2
+      },
+      {
+        "value": 3
+      },
+      {
+        "value": 4
+      },
+      {
+        "value": "fifth"
+      }
+    ],
+    "expected": {
+      "name": "repair-fifth",
+      "value": {
+        "ok": true,
+        "value": {
+          "value": "fifth"
+        }
+      },
+      "agents": 1,
+      "schemas": [
+        {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "value"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "value"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "value"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "value"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "value"
+          ]
+        }
+      ],
+      "modelCalls": 5,
+      "toolCalls": 5
+    }
+  },
+  {
+    "name": "invalid-cap",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "value"
+      ]
+    },
+    "replies": [
+      {
+        "value": 1
+      }
+    ],
+    "expected": {
+      "name": "invalid-cap",
+      "value": {
+        "ok": false,
+        "error": "agent({schema}): StructuredOutput retry cap (5) exceeded — 5 failed calls with no valid output — last StructuredOutput error: Output does not match required schema: /value: must be string"
+      },
+      "agents": 1,
+      "schemas": [
+        {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "value"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "value"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "value"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "value"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "value"
+          ]
+        }
+      ],
+      "modelCalls": 5,
+      "toolCalls": 5
+    }
+  },
+  {
+    "name": "invalid-cap-2",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "value"
+      ]
+    },
+    "replies": [
+      {
+        "value": 1
+      }
+    ],
+    "cap": 2,
+    "expected": {
+      "name": "invalid-cap-2",
+      "value": {
+        "ok": false,
+        "error": "agent({schema}): StructuredOutput retry cap (2) exceeded — 2 failed calls with no valid output — last StructuredOutput error: Output does not match required schema: /value: must be string"
+      },
+      "agents": 1,
+      "schemas": [
+        {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "value"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "value"
+          ]
+        }
+      ],
+      "modelCalls": 2,
+      "toolCalls": 2
+    }
+  },
+  {
+    "name": "text-only",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "value"
+      ]
+    },
+    "replies": [
+      "not a tool result"
+    ],
+    "expected": {
+      "name": "text-only",
+      "value": {
+        "ok": false,
+        "error": "agent({schema}): subagent completed without calling StructuredOutput (after in-conversation nudge)"
+      },
+      "agents": 1,
+      "schemas": [
+        {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "value"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "value"
+          ]
+        }
+      ],
+      "modelCalls": 2,
+      "toolCalls": 0
+    }
+  },
+  {
+    "name": "invalid-then-text",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "value"
+      ]
+    },
+    "replies": [
+      {
+        "value": 1
+      },
+      "not a tool result"
+    ],
+    "expected": {
+      "name": "invalid-then-text",
+      "value": {
+        "ok": false,
+        "error": "agent({schema}): subagent completed without calling StructuredOutput (after in-conversation nudge)"
+      },
+      "agents": 1,
+      "schemas": [
+        {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "value"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "value"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "value"
+          ]
+        }
+      ],
+      "modelCalls": 3,
+      "toolCalls": 1
+    }
+  },
+  {
+    "name": "text-then-tool",
+    "schema": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "value"
+      ]
+    },
+    "replies": [
+      "not a tool result",
+      {
+        "value": "after-nudge"
+      }
+    ],
+    "expected": {
+      "name": "text-then-tool",
+      "value": {
+        "ok": true,
+        "value": {
+          "value": "after-nudge"
+        }
+      },
+      "agents": 1,
+      "schemas": [
+        {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "value"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "value"
+          ]
+        }
+      ],
+      "modelCalls": 2,
+      "toolCalls": 1
+    }
+  }
+]

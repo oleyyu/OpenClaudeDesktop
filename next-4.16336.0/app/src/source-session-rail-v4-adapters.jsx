@@ -1,0 +1,9 @@
+// Host adapters of the 4.16336.0 session rail graph (src/generated/session-rail-v4, scripts/extract-session-rail-v4.mjs).
+// Re-exports only: every boundary is an existing host adapter of the 3.6556.2 graph (src/source-session-rail-adapters.jsx,
+// src/source-session-rail-kit-adapters.jsx) or routines-shared (useAnalytics), now answering the same official binding at
+// its 4.16336.0 chunk / local; the generator pins each original by features and raw declaration sha256 (ADAPTER_PINS).
+export { useIntl, FormattedMessage, logRailSectionEvent } from "./source-session-rail-kit-adapters.jsx";
+export { SessionFileRef, useScratchCopyOf, useLiveCheckoutBranch, useSessionOutputPaths, useGoneOutputPaths, RemoteControlRow, ProgressCardBody, ArtifactOutputRow, useEnvironmentStore, recordSessionEnvironment, addRemoteEnvironment, localEnvironmentDialogHandle, cloudEnvironmentDialogHandle, useBandErrors, previewStateHook, useSessionBandFields, useSessionBandRunning, subscribeSessionSendBegun, useStopSessionMutation, useBandSend, useCanContinueInCloud, useCloudEnvironments, useCloudEnvironmentList, useCloudResumeOn, clearTeleportMarker, CloudResumeBanner, TeleportToCloudDialog, useBandFeatureState, useKeepAwakeSettingLoaded, useKeepAwakeWhileWorking, useKeepAwakeOnBattery, useWriteKeepAwakeSetting, useBandPersistedPreference, useAccountPreferencesReady, useOnSessionScopeHiddenChange, useSessionBandInputWaiting, useHubToolApprovalBodyShown, useLocalSessionsStore, canonicalModelId } from "./source-session-rail-adapters.jsx";
+export { useAnalytics } from "./source-routines-shared-adapters.jsx";
+// round4 relink-w8 (SessionRail sN): shared-62 Ha, the public suffix list loader, answered as for cowork-live-v4 / cowork-approval-v4.
+export { loadPublicSuffixList } from "./source-code-transcript-adapters.jsx";

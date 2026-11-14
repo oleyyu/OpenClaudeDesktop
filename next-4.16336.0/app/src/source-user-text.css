@@ -1,0 +1,194 @@
+/* Ordinary user o1/u1. Geometry belongs to the file renderer, not assistant oi. */
+.suc-segments {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--spacing, .25rem) * 1.25);
+  min-width: 0;
+}
+.suc-segments > .suc-text {
+  min-width: 0;
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  text-wrap: pretty;
+}
+.suc-segments > .suc-code-card {
+  min-width: 0;
+  max-width: 100%;
+  border-radius: 5px;
+  overflow: clip;
+  /* Current local theme pair is fixed; equivalent to the source theme-gated
+     epitaxy-diff outline without claiming arbitrary/custom theme support. */
+  box-shadow: 0 0 0 1px var(--cds-border);
+  background: var(--suc-light-bg);
+  color: var(--suc-light-fg);
+}
+[data-mode="dark"] .suc-segments > .suc-code-card {
+  background: var(--suc-dark-bg);
+  color: var(--suc-dark-fg);
+}
+.suc-code-card > .suc-pre {
+  display: block;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  padding: var(--cds-pad-xs, 4px) 1ch;
+  min-width: 0;
+  background: inherit;
+  color: inherit;
+  font: var(--cds-font-size-code, 12px)/var(--cds-leading-code, 17px) var(--cds-font-mono, monospace);
+  font-feature-settings: "liga", "clig", "calt";
+  letter-spacing: calc(round(up, 1ch, 1px / 64) - 1ch);
+  white-space: pre-wrap;
+  overflow-wrap: normal;
+  word-break: break-word;
+  overflow: clip;
+  tab-size: 2;
+}
+.suc-pre > .suc-code {
+  display: block;
+  min-height: 1lh;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  contain: content;
+  font: inherit;
+  font-feature-settings: inherit;
+  letter-spacing: inherit;
+  color: inherit;
+  background: none;
+  white-space: inherit;
+  word-break: inherit;
+  tab-size: inherit;
+}
+
+/* Inline chips, links and the leading /command pill inside ordinary text
+   paragraphs (2.2553.1 qQ/BQ/U/W/cd). Tokens come from the shipped CDS
+   stylesheet; compact code size is 12px with leading-none. */
+.suc-text > .suc-inline-code {
+  display: inline;
+  box-sizing: border-box;
+  margin: 0;
+  font: var(--cds-font-size-code, 12px) / 1 var(--cds-font-mono, monospace);
+  line-height: 1;
+  color: var(--cds-text-danger);
+  background: var(--cds-alpha-1);
+  border: 0.5px solid var(--cds-border);
+  border-radius: 0.4em;
+  padding: 0.0625em 0.25em;
+  overflow-wrap: anywhere;
+  white-space: inherit;
+  vertical-align: baseline;
+}
+/* zQ on Bn's span: inline-block, underline offset 3px with a 60% transparent
+   decoration, alpha-2 hover, hidden outline and the focus shadow. */
+.suc-text > .suc-inline-link {
+  display: inline-block;
+  cursor: var(--cds-cursor-interactive, pointer);
+  outline: none;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: color-mix(in srgb, currentColor, transparent 60%);
+}
+.suc-text > .suc-inline-link:hover {
+  background: var(--cds-alpha-2);
+  text-decoration-color: currentColor;
+}
+.suc-text > .suc-inline-link:focus-visible { box-shadow: var(--cds-focus-shadow); }
+.suc-text > .suc-link {
+  color: var(--cds-text-accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: color-mix(in srgb, currentColor, transparent 60%);
+  overflow-wrap: anywhere;
+}
+.suc-text > a.suc-link { cursor: var(--cds-cursor-interactive, pointer); }
+.suc-text > a.suc-link:hover { text-decoration-color: currentColor; }
+.suc-text > .suc-link > .suc-link-host { opacity: 0.7; }
+/* cd: inline-flex relative text-accent rounded-md; eN inside: relative pl-2
+   name box, absolutely positioned aria-hidden slash glyph (w-2 h-5 centered,
+   font-base-bold = sans/body/medium, opacity-50) beside the bare name. */
+.suc-text > .suc-slash {
+  display: inline-flex;
+  position: relative;
+  color: var(--cds-text-accent);
+  border-radius: 0.375rem;
+  overflow-wrap: anywhere;
+  outline: none;
+}
+.suc-slash > .suc-slash-name {
+  position: relative;
+  padding-left: calc(var(--spacing, 0.25rem) * 2);
+}
+.suc-slash-name > .suc-slash-glyph {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  translate: 0 -50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: calc(var(--spacing, 0.25rem) * 2);
+  height: calc(var(--spacing, 0.25rem) * 5);
+  font-family: var(--cds-font-sans);
+  font-size: var(--cds-font-size-body);
+  font-weight: var(--cds-font-weight-medium, 500);
+  opacity: 0.5;
+}
+/* Collapsed ordinary body: max-h-[16rem] overflow-clip with a 3rem bottom mask. */
+.suc-segments.suc-collapsed {
+  max-height: 16rem;
+  overflow: clip;
+  -webkit-mask-image: linear-gradient(to bottom, black calc(100% - 3rem), transparent);
+  mask-image: linear-gradient(to bottom, black calc(100% - 3rem), transparent);
+}
+/* Ghost xxs flush Button (data-step=1 tokens: 20px control, 6px pad-md, 5px
+   radius, 12px/17px body, all times rem-scale) aligned to the column start. */
+.suc-show-more {
+  position: relative;
+  isolation: isolate;
+  display: inline-flex;
+  flex: none;
+  align-self: flex-start;
+  align-items: center;
+  justify-content: center;
+  gap: calc(0.375rem * var(--cds-rem-scale, 1));
+  box-sizing: border-box;
+  height: calc(1.25rem * var(--cds-rem-scale, 1));
+  margin: 0;
+  margin-inline-start: calc(-0.375rem * var(--cds-rem-scale, 1));
+  padding: 0 calc(0.375rem * var(--cds-rem-scale, 1));
+  border: 0;
+  border-radius: calc(0.3125rem * var(--cds-rem-scale, 1));
+  background: transparent;
+  color: var(--cds-text-primary);
+  font-family: var(--cds-font-sans, anthropic-sans), sans-serif;
+  font-size: calc(0.75rem * var(--cds-rem-scale, 1));
+  font-weight: 400;
+  line-height: calc(1.0625rem * var(--cds-rem-scale, 1));
+  white-space: nowrap;
+  user-select: none;
+  cursor: var(--cds-cursor-interactive, default);
+  outline: none;
+  transition: box-shadow var(--cds-dur-fast, 60ms);
+}
+.suc-show-more:focus-visible { box-shadow: var(--cds-focus-shadow); }
+.suc-show-more-backdrop {
+  position: absolute; inset: 0; z-index: -1; pointer-events: none; border-radius: inherit;
+  transition: transform var(--cds-dur-slow) var(--cds-btn-spring); transform-origin: center;
+}
+.suc-show-more-backdrop > [data-cds-part="paint"] {
+  position: absolute; inset: 0; border-radius: inherit; background: transparent;
+  transition: background-color var(--cds-dur-fast, 60ms);
+}
+.suc-show-more:hover .suc-show-more-backdrop > [data-cds-part="paint"] { background: var(--cds-fill-ghost-hover); }
+.suc-show-more:active .suc-show-more-backdrop { transform: scale(var(--cds-btn-press-sx, .975), var(--cds-btn-press-sy, .975)); transition: transform var(--cds-dur-fast, 60ms) ease-out; }
+.suc-show-more-label { display: inline-flex; min-width: 0; align-items: center; }
+@media (prefers-reduced-motion: reduce) {
+  .suc-show-more, .suc-show-more-backdrop, .suc-show-more-backdrop > [data-cds-part="paint"] { transition: none; }
+  .suc-show-more:active .suc-show-more-backdrop { transform: none; }
+}
+html[data-reduce-motion="true"] .suc-show-more, html[data-reduce-motion="true"] .suc-show-more-backdrop, html[data-reduce-motion="true"] .suc-show-more-backdrop > [data-cds-part="paint"] { transition: none; }
+html[data-reduce-motion="true"] .suc-show-more:active .suc-show-more-backdrop { transform: none; }

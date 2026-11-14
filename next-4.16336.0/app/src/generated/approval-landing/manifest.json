@@ -1,0 +1,725 @@
+{
+  "referenceVersion": "3.6556.2",
+  "referenceSnapshot": "snapshots/claude-3.6556.2-20261025-192807",
+  "generator": "scripts/extract-approval-landing.mjs",
+  "modules": [
+    {
+      "target": "owner-globals.mjs",
+      "source": "shared-25-DOWZRSlq.js",
+      "sourceSha256": "a279442d20a0b9bb6327db086d99fe9248ecc93955651d99166b8ce85282d1a1",
+      "sha256": "7f0e2a7f3e00812972778c2dcc7dd3e14149f57fbb5e11b69476734e4c19e0c4",
+      "bindings": [
+        {
+          "name": "df",
+          "sha256": "776a37386d0fd339cf9d940848119b9c00146c97380fe751e6a093f4196c93bd"
+        },
+        {
+          "name": "ff",
+          "sha256": "22b4e0b1aa9ba0d2363c5fdb031356c425b635127a507b334efc3f8ed78c0842"
+        },
+        {
+          "name": "pf",
+          "sha256": "93001519d2b9ca0b34225be7d90f80ce554a31ae71b82668139b873325e4b827"
+        },
+        {
+          "name": "_f",
+          "sha256": "00d91f155fb02e826833b83c65a62ab76b4bbda9a7ccc76c7936fdb7c88f915a"
+        },
+        {
+          "name": "_v",
+          "sha256": "55e7c1540eb259d2c2e2df0c53054dabb1253ab969a0b31310d8abbcabad80b2"
+        },
+        {
+          "name": "vv",
+          "sha256": "36204a47a90033a8dcf755ccb6ea158e1ca8b2badfefa6fd72acb23aaa141e34"
+        },
+        {
+          "name": "yv",
+          "sha256": "0d4d91ebd27de9bc323e275dc27823e915b08ef3ca117dfb129873f18319fd13"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "_f": "mutationObserverOf",
+        "yv": "eventInputDelay"
+      }
+    },
+    {
+      "target": "question-stop-name.mjs",
+      "source": "shared-5-Bg6ZMqvt.js",
+      "sourceSha256": "ab6ce985aae8269c3afca209ee59140a7f61b47dd5004bacc3f1fe94cda6dbe6",
+      "sha256": "efac5be9561c96bdba0352761bca0abefc01fa490cf2f17d1d0fd88314e11ec1",
+      "bindings": [
+        {
+          "name": "EL",
+          "sha256": "2a2200ad7bdb629114277a2be14a58aad73fbd1463c887609c41644714034d5e"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "EL": "questionStopNameAttribute"
+      }
+    },
+    {
+      "target": "focus-name.mjs",
+      "source": "cd8405c1a--1nGPcIc.js",
+      "sourceSha256": "6dd7827210fb98f49fb8e0d9a9466cdf1acdd6fc782bd0da4c8251bb97120e41",
+      "sha256": "d53d13581f65499b555fd87de627b5ea1ec733832fb087f980a7f73dc95af7c5",
+      "bindings": [
+        {
+          "name": "t",
+          "sha256": "85e3325768e4f4e4beeefec82a00333c68c1a622466db9accc05548302aa735d"
+        },
+        {
+          "name": "n",
+          "sha256": "3436d5ce28ca227b8420bb2737933e691e454feecf7493c290aeab0cae1ee413"
+        },
+        {
+          "name": "i",
+          "sha256": "b47083e37cc7a66f5f9f4b545c2f8fc21199676c7bb866666a0178ca3bcedc80"
+        },
+        {
+          "name": "a",
+          "sha256": "84f661655f30882001a499ce12cd8f6e96f252dc735c7ed1a95b5c9b9e306d7b"
+        }
+      ],
+      "imports": [
+        {
+          "local": "e",
+          "from": "./question-stop-name.mjs",
+          "name": "questionStopNameAttribute",
+          "via": "shared-5-Bg6ZMqvt.js:Z",
+          "kind": "generated",
+          "original": "EL"
+        }
+      ],
+      "exports": {
+        "i": "nameByMarkedParts"
+      }
+    },
+    {
+      "target": "focus-ring.mjs",
+      "source": "c6dc54e94-E5GA6ry5.js",
+      "sourceSha256": "1a572bd4fa458a605bd0acbb8fde77eeeb4af915a206cfa2236e112a1a4b6d85",
+      "sha256": "1f58f9116c30f3d13b97fd4ababcda4475b027524b0852371405cc516f3caed1",
+      "bindings": [
+        {
+          "name": "m",
+          "sha256": "6c234d887f7c8005bd36dbe2cf2b01db70605d4f50abe1e984dff56abe924697"
+        },
+        {
+          "name": "h",
+          "sha256": "c3b16234503ab13e163cadb61150af45027ef76aef387bdd6aa971854192eea3"
+        },
+        {
+          "name": "_",
+          "sha256": "c329bc3de5eb3932a5a90ba415c9f9e314b7e969df6e12d413f54a7f978197ff"
+        }
+      ],
+      "imports": [
+        {
+          "local": "t",
+          "from": "./owner-globals.mjs",
+          "name": "mutationObserverOf",
+          "via": "shared-25-DOWZRSlq.js:sp",
+          "kind": "generated",
+          "original": "_f"
+        },
+        {
+          "local": "f",
+          "from": "./focus-name.mjs",
+          "name": "nameByMarkedParts",
+          "via": "cd8405c1a--1nGPcIc.js:r",
+          "kind": "generated",
+          "original": "i"
+        }
+      ],
+      "exports": {
+        "_": "focusWithRing",
+        "m": "ringClasses",
+        "h": "ringClassesPositioned"
+      }
+    },
+    {
+      "target": "window-attention.mjs",
+      "source": "shared-10-D6FXWZph.js",
+      "sourceSha256": "8837dfa879cf65829f2a0dbfa945571d8a4f92d67aff84be895e130429b3bc0a",
+      "sha256": "73afad03ce841aa50aecbe0f67d5276655a1105689722f24132d09bb2fbbb480",
+      "bindings": [
+        {
+          "name": "mx",
+          "sha256": "02a401be9a02380104f9dd5c4591564ab6884c3bcd5219253333e1626f614df0"
+        },
+        {
+          "name": "yx",
+          "sha256": "d09858b2c1bd6ec4fc57404c8689ba047313a1b376ba27190e214aab88d95099"
+        },
+        {
+          "name": "bx",
+          "sha256": "050907ac561709818ac5c901a390fe949df7fa3fff4866764ae0ee29078fb35e"
+        },
+        {
+          "name": "xx",
+          "sha256": "5b048d2086cd53902044f26c4a1a3f1b497d32f21ebc3e09567b260b5a6b1ab9"
+        },
+        {
+          "name": "Cx",
+          "sha256": "0a64d8245bdcc8fa4416b105f055e9410b3df491842b1e67e82827b43023b530"
+        },
+        {
+          "name": "wx",
+          "sha256": "019a8674f2000749f78791153c5b9b4da4feea4f160651e1f62c35a93ab11d38"
+        },
+        {
+          "name": "Tx",
+          "sha256": "d575e4b1e2275bf3fb40544fa7d885edce33dfe3c9b7dbd21d6de5c6c26b5183"
+        },
+        {
+          "name": "Ex",
+          "sha256": "47cb061b9a9e412fc2712cea30e73e3250d9d4496e2f77422896e6e778fba831"
+        },
+        {
+          "name": "Dx",
+          "sha256": "f9721f7e4c3bcf0445d941cb7dad6956e3104298abd38fc29cf8a34c4199a5b9"
+        },
+        {
+          "name": "Ox",
+          "sha256": "de9b02841b1ca4016687ded4a8fd2322cafde69fb0ee7f0fec4317002b0e9485"
+        },
+        {
+          "name": "kx",
+          "sha256": "549b58a36d3b519ce9854b83542f9e7bc057709f4061c9d7eceff95685a19f69"
+        },
+        {
+          "name": "Ax",
+          "sha256": "48befd4fa0819fc0e1f5681ef5ca6ea55a5b2a625350b801f7454581f8330fda"
+        },
+        {
+          "name": "jx",
+          "sha256": "fbec4df8eb4bbdfbc9d5d341cf5901c22cc629fe66b4f8c68c9fdb7a47b2b79b"
+        },
+        {
+          "name": "Mx",
+          "sha256": "a767b4df5ace76d2efba10985bfd3955f7a31b494c918be776652d4f77f88fd0"
+        },
+        {
+          "name": "Nx",
+          "sha256": "4d6a4c253ee3485a3273c6bd233bdbecb19f5dcde27774d2cbd7e169a549ca0e"
+        },
+        {
+          "name": "Ix",
+          "sha256": "df10049a23c3f242bc4303714901849ea8ab4b0417bdb59ec700875c784d2658"
+        },
+        {
+          "name": "Lx",
+          "sha256": "1b7a33edc669c5355ba92782f0e55aed72a8f537a51a8a03a47bfabf9cfd7e7b"
+        },
+        {
+          "name": "Rx",
+          "sha256": "fefc0bc1b9e6f4ea1ba3c8e52f4e4077c4d85fece53bbf9e88c9cad30493ce14"
+        },
+        {
+          "name": "zx",
+          "sha256": "3b9a573b26ab8baf5d28849a9fa22b8b5b6fd59e5c152c1395941b18c8561c23"
+        },
+        {
+          "name": "Bx",
+          "sha256": "5c0277678ec167b6a5b6c32fd8c93bfcbabed4cfabd98122be269ec790c17433"
+        }
+      ],
+      "imports": [
+        {
+          "local": "Te",
+          "from": "./owner-globals.mjs",
+          "name": "eventInputDelay",
+          "via": "shared-25-DOWZRSlq.js:Pu",
+          "kind": "generated",
+          "original": "yv"
+        },
+        {
+          "local": "P",
+          "from": "../btw-pane/focus-guard.mjs",
+          "name": "elementOf",
+          "via": "shared-frame-6jtSkIit.js:Iu",
+          "kind": "linked",
+          "original": "Uc"
+        }
+      ],
+      "exports": {
+        "Nx": "watchWindowAttention",
+        "zx": "windowAttended",
+        "Lx": "justGainedFocus",
+        "bx": "isTrustedEvent",
+        "mx": "eventDelay",
+        "Ix": "windowUnattended",
+        "Dx": "attentionChangeListeners",
+        "yx": "trustedEventTest",
+        "xx": "focusGraceMs",
+        "Cx": "modifierKeyNames",
+        "wx": "attentionStates",
+        "Tx": "trackedWindows",
+        "Ex": "attentionStateOf",
+        "Ox": "setAttentionMark",
+        "kx": "focusSettledAt",
+        "Ax": "inputCountsAsAttention",
+        "jx": "windowHiddenAt",
+        "Mx": "trackWindowAttention",
+        "Rx": "isEmbeddedFrame",
+        "Bx": "attentionStateAttended"
+      }
+    },
+    {
+      "target": "window-attention-hook.mjs",
+      "source": "shared-10-D6FXWZph.js",
+      "sourceSha256": "8837dfa879cf65829f2a0dbfa945571d8a4f92d67aff84be895e130429b3bc0a",
+      "sha256": "3e8b97fbf5efdaec6b96c5cc760b557eabf021f53a76758ae4784d4e53bcbd2a",
+      "bindings": [
+        {
+          "name": "Fx",
+          "sha256": "1486caa249e4eb070c865911afad7827a9a7d87d8282362132c485e1b323bec4"
+        }
+      ],
+      "imports": [
+        {
+          "local": "b",
+          "from": "react",
+          "name": "useEffect",
+          "via": "vendor-frame-CnSY1sxv.js:ho",
+          "kind": "react"
+        },
+        {
+          "local": "T",
+          "from": "react",
+          "name": "useState",
+          "via": "vendor-frame-CnSY1sxv.js:wo",
+          "kind": "react"
+        },
+        {
+          "local": "z",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "useCdsOwnerWindow",
+          "via": "shared-frame-6jtSkIit.js:Nd",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "J1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged1",
+          "via": "shared-frame-6jtSkIit.js:Qf",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "J9",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "reactMemoCache",
+          "via": "shared-frame-6jtSkIit.js:ip",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "K1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore1",
+          "via": "shared-frame-6jtSkIit.js:op",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "K2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore2",
+          "via": "shared-frame-6jtSkIit.js:sp",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "Dx",
+          "from": "./window-attention.mjs",
+          "name": "attentionChangeListeners",
+          "via": "shared-10-D6FXWZph.js#Dx",
+          "kind": "generated",
+          "original": "Dx"
+        },
+        {
+          "local": "Ix",
+          "from": "./window-attention.mjs",
+          "name": "windowUnattended",
+          "via": "shared-10-D6FXWZph.js#Ix",
+          "kind": "generated",
+          "original": "Ix"
+        }
+      ],
+      "exports": {
+        "Fx": "useWindowUnattended"
+      }
+    },
+    {
+      "target": "card-landing.mjs",
+      "source": "c9ed5627b-BSPWYeYQ.js",
+      "sourceSha256": "75f81439acefd29267214df7c0561beae0f567491ae03243b826bdb56e89a40f",
+      "sha256": "cc0e6d83cfd9e19e9eb046e02226b0c94ca0b6bfe1f06de3c272392cbc9c6bc2",
+      "bindings": [
+        {
+          "name": "E",
+          "sha256": "317a666b5d7f21cac4fc0c76a501ea9b9a8b3537c36c8913ec5bd89adb40a384"
+        },
+        {
+          "name": "D",
+          "sha256": "f0df6bc8d3612653b7319477e5cff0919432504ffcc393d726f5f8e79dd7da51"
+        },
+        {
+          "name": "O",
+          "sha256": "74ee7ff62dec2fe56e6b42d6fea12c376de22d9da831f3799f08d748d82cb9e5"
+        },
+        {
+          "name": "k",
+          "sha256": "19d27e37eb1dd8739b867ccaf7ec24a1b5279dcac878527f5357c23ba3e737ec"
+        },
+        {
+          "name": "nt",
+          "sha256": "62daccba955740e94ea15a5cd0feb738163a986f1e1382f0eca2f8c333d4979e"
+        },
+        {
+          "name": "rt",
+          "sha256": "a58fc46e7de17477320c421dd2779d776b00e9c14b0350743dd7087b594b749e"
+        },
+        {
+          "name": "it",
+          "sha256": "407f6ddf975bd5a95a304bbbbbd7a91bd27a86094bf66e7ad0e56493a829408e"
+        },
+        {
+          "name": "A",
+          "sha256": "3e5b65417460aa8b3e5236673f47ebbc1f8470c63a4da82904cbbb8f8b6eb580"
+        }
+      ],
+      "imports": [
+        {
+          "local": "e",
+          "from": "react",
+          "name": "useRef",
+          "via": "vendor-frame-CnSY1sxv.js:Co",
+          "kind": "react"
+        },
+        {
+          "local": "t",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-CnSY1sxv.js:Ha",
+          "kind": "react"
+        },
+        {
+          "local": "r",
+          "from": "react",
+          "name": "useLayoutEffect",
+          "via": "vendor-frame-CnSY1sxv.js:bo",
+          "kind": "react"
+        },
+        {
+          "local": "s",
+          "from": "react",
+          "name": "useState",
+          "via": "vendor-frame-CnSY1sxv.js:wo",
+          "kind": "react"
+        },
+        {
+          "local": "J2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged2",
+          "via": "shared-frame-6jtSkIit.js:$f",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "d",
+          "from": "../btw-pane/focus-guard.mjs",
+          "name": "guardStrayEnter",
+          "via": "shared-frame-6jtSkIit.js:Nf",
+          "kind": "linked",
+          "original": "dn"
+        },
+        {
+          "local": "J1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged1",
+          "via": "shared-frame-6jtSkIit.js:Qf",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "J0",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoIsEmpty",
+          "via": "shared-frame-6jtSkIit.js:Zf",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "K0",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore0",
+          "via": "shared-frame-6jtSkIit.js:ap",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "J9",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "reactMemoCache",
+          "via": "shared-frame-6jtSkIit.js:ip",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "J5",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged5",
+          "via": "shared-frame-6jtSkIit.js:np",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "K1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore1",
+          "via": "shared-frame-6jtSkIit.js:op",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "K2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore2",
+          "via": "shared-frame-6jtSkIit.js:sp",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "K5",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore5",
+          "via": "shared-frame-6jtSkIit.js:up",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "m",
+          "from": "../btw-pane/owner-window.mjs",
+          "name": "ownerWindowOrGlobal",
+          "via": "shared-25-DOWZRSlq.js:lp",
+          "kind": "linked",
+          "original": "mf"
+        },
+        {
+          "local": "Se",
+          "from": "./window-attention.mjs",
+          "name": "windowAttended",
+          "via": "shared-10-D6FXWZph.js:Gt",
+          "kind": "generated",
+          "original": "zx"
+        },
+        {
+          "local": "b",
+          "from": "./window-attention.mjs",
+          "name": "watchWindowAttention",
+          "via": "shared-10-D6FXWZph.js:Yt",
+          "kind": "generated",
+          "original": "Nx"
+        },
+        {
+          "local": "Ve",
+          "from": "./focus-ring.mjs",
+          "name": "ringClassesPositioned",
+          "via": "c6dc54e94-E5GA6ry5.js:F",
+          "kind": "generated",
+          "original": "h"
+        },
+        {
+          "local": "He",
+          "from": "./focus-ring.mjs",
+          "name": "focusWithRing",
+          "via": "c6dc54e94-E5GA6ry5.js:I",
+          "kind": "generated",
+          "original": "_"
+        },
+        {
+          "local": "C",
+          "from": "../btw-pane/focus-lost.mjs",
+          "name": "focusIsLost",
+          "via": "c6dc54e94-E5GA6ry5.js:L",
+          "kind": "linked",
+          "original": "g"
+        },
+        {
+          "local": "Ue",
+          "from": "./focus-ring.mjs",
+          "name": "ringClasses",
+          "via": "c6dc54e94-E5GA6ry5.js:P",
+          "kind": "generated",
+          "original": "m"
+        },
+        {
+          "local": "l",
+          "from": "../btw-pane/focus-guard.mjs",
+          "name": "elementOf",
+          "via": "shared-frame-6jtSkIit.js:Iu",
+          "kind": "linked",
+          "original": "Uc"
+        },
+        {
+          "local": "v",
+          "from": "../btw-pane/modifier-keys.mjs",
+          "name": "modifierKeys",
+          "via": "shared-1-BJhqMmkf.js:ou",
+          "kind": "linked",
+          "original": "lC"
+        },
+        {
+          "local": "Ce",
+          "from": "./window-attention.mjs",
+          "name": "isTrustedEvent",
+          "via": "shared-10-D6FXWZph.js:Jt",
+          "kind": "generated",
+          "original": "bx"
+        },
+        {
+          "local": "x",
+          "from": "./window-attention.mjs",
+          "name": "eventDelay",
+          "via": "shared-10-D6FXWZph.js:en",
+          "kind": "generated",
+          "original": "mx"
+        },
+        {
+          "local": "S",
+          "from": "./window-attention.mjs",
+          "name": "justGainedFocus",
+          "via": "shared-10-D6FXWZph.js:qt",
+          "kind": "generated",
+          "original": "Lx"
+        },
+        {
+          "local": "_",
+          "from": "../btw-pane/focus-hand-back.mjs",
+          "name": "useFocusHandBack",
+          "via": "shared-1-BJhqMmkf.js:au",
+          "kind": "linked",
+          "original": "mC"
+        }
+      ],
+      "exports": {
+        "A": "useApprovalCardLanding",
+        "E": "approvalCardRoot",
+        "k": "guardWindowAfterCard",
+        "D": "afterCardState",
+        "it": "ApprovalCardWatch",
+        "nt": "deliberateCardKey",
+        "rt": "markCardPick"
+      }
+    },
+    {
+      "target": "reveal-guard.mjs",
+      "source": "c227f4d5e-B-FYKrwT.js",
+      "sourceSha256": "2c0354bdee6fb13985d759692e43f0ef91f15991b8adb68cb3ab576561d9bc28",
+      "sha256": "59664a8d710e337416ecee409748fec0a36c58f29a324f4f0d20d2d9135dd8a9",
+      "bindings": [
+        {
+          "name": "uD",
+          "sha256": "c51bf8fab66fc27ab8785597d61ffc4e47c9154f9c4c6b254d56ceced48ae5a1"
+        },
+        {
+          "name": "dD",
+          "sha256": "4acff82f7382b043573c81edc64eda7f20d45e4e9a3c884549383990de4554ee"
+        },
+        {
+          "name": "fD",
+          "sha256": "925a8ca0c20b3fda31e77e8ca73be12bee6f06114a2a54b9e5b0da143d2ae035"
+        },
+        {
+          "name": "pD",
+          "sha256": "9701f80f0ffbeea05d454802d9f0355a4ea05a58db465e9652c524d112aa6970"
+        },
+        {
+          "name": "mD",
+          "sha256": "da18f3373903ecdec488010c36e180de0521258a27bacf5bccc747815278a858"
+        },
+        {
+          "name": "hD",
+          "sha256": "331124af237cfa2f0464619aa3aa20e409829aa0e2c0d47348cbb2270daa26cd"
+        },
+        {
+          "name": "gD",
+          "sha256": "e7f91f0f25316023e1f7d155d25df971d92eaade9006eceac0e399dbaa5b257e"
+        },
+        {
+          "name": "_D",
+          "sha256": "6754497896597704d856f6a71111d2b8890e40a7857789079a094c6c9c54cec8"
+        },
+        {
+          "name": "vD",
+          "sha256": "5ea3e3ee38f07771af38c88c7ddcf7a81ea81ad2bed3a4e9a16a499398a2cf5c"
+        },
+        {
+          "name": "yD",
+          "sha256": "093ac7315b0b5b0382e20e914efb441f43dedd35f7eb0ea26fa95b18ef02ea64"
+        },
+        {
+          "name": "bD",
+          "sha256": "67466f62e7b25ac218125a249d591f36f93b1614a4463eaf1652f5b4858df8a4"
+        },
+        {
+          "name": "xD",
+          "sha256": "b63e4ed22982c6587bf64e7ef543b141dc053d149fc0d1300a0a26aea9fce0e5"
+        },
+        {
+          "name": "SD",
+          "sha256": "315a03079b549c1d3b828f3b4d08b6a2ed93b39a96ccf54872c0513b42c135d6"
+        },
+        {
+          "name": "CD",
+          "sha256": "9c00032a713e05baa9e622072eb82bb0742c0684398c4e9f632e0dfa7b72a51c"
+        },
+        {
+          "name": "wD",
+          "sha256": "3591e4ab27646cef117570b58006cdff8501fb83dae8f2400f5aba2e5edfcb54"
+        },
+        {
+          "name": "TD",
+          "sha256": "a0450a8f6cc7b70e2b68e489ee1087c675aaa326a096caafdb962456f0498d48"
+        },
+        {
+          "name": "ED",
+          "sha256": "9f00ccc1c08c2046d616943845fd407ae9fe6f6a60329e3952685a690216620c"
+        }
+      ],
+      "imports": [
+        {
+          "local": "R",
+          "from": "react",
+          "name": "useEffect",
+          "via": "vendor-frame-CnSY1sxv.js:ho",
+          "kind": "react"
+        },
+        {
+          "local": "W",
+          "from": "react",
+          "name": "useState",
+          "via": "vendor-frame-CnSY1sxv.js:wo",
+          "kind": "react"
+        },
+        {
+          "local": "J1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged1",
+          "via": "shared-frame-6jtSkIit.js:Qf",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "J9",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "reactMemoCache",
+          "via": "shared-frame-6jtSkIit.js:ip",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "K2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore2",
+          "via": "shared-frame-6jtSkIit.js:sp",
+          "kind": "view-tabs"
+        }
+      ],
+      "exports": {
+        "uD": "useRevealSettled",
+        "ED": "revealClickGuard"
+      }
+    }
+  ]
+}

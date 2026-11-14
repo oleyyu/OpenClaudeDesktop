@@ -1,0 +1,82 @@
+/* 2.2553.1 BY -> bO/CO, default base size. Parent owns the true 8px body gap. */
+.stf-footer { position: relative; min-width: 0; min-height: var(--cds-h-control, 24px); }
+.stf-deferred, .stf-toolbar { display: flex; align-items: center; min-height: var(--cds-h-control, 24px); }
+.stf-placeholder { display: block; flex: none; width: 1px; height: var(--cds-h-control, 24px); }
+.stf-footer .stf-toolbar[data-cds="MessageActions"][data-reveal] {
+  --cds-message-actions-opacity: 0;
+  opacity: var(--cds-message-actions-opacity); scale: none;
+  user-select: none; outline: none;
+  transition-property: opacity; transition-duration: var(--cds-dur-fast, 60ms);
+  transition-timing-function: var(--cds-ease-snap, cubic-bezier(.32, .72, 0, 1)); transition-delay: 0s;
+}
+@media (hover: hover) {
+  .stf-footer:is(:hover, [data-row-hovered]) .stf-toolbar[data-cds="MessageActions"][data-reveal] {
+    --cds-message-actions-opacity: 1;
+    transition-duration: var(--cds-dur-snap, 120ms); transition-delay: .1s;
+  }
+  @starting-style {
+    .stf-footer:is(:hover, [data-row-hovered]) .stf-toolbar[data-cds="MessageActions"][data-reveal] {
+      --cds-message-actions-opacity: 0;
+    }
+  }
+}
+/* Focus wins if pointer and focus are both present: source delay is zero. */
+.stf-footer:is(:focus-within, [data-row-focused]) .stf-toolbar[data-cds="MessageActions"][data-reveal] {
+  --cds-message-actions-opacity: 1;
+  transition-duration: var(--cds-dur-snap, 120ms); transition-delay: 0s;
+}
+@starting-style {
+  .stf-footer:is(:focus-within, [data-row-focused]) .stf-toolbar[data-cds="MessageActions"][data-reveal] {
+    --cds-message-actions-opacity: 0;
+  }
+}
+.stf-copy {
+  position: relative; isolation: isolate; display: inline-flex; flex: none;
+  align-items: center; justify-content: center; box-sizing: border-box;
+  width: var(--cds-h-control, 24px); height: var(--cds-h-control, 24px);
+  margin: 0; padding: 0; border: 0; border-radius: var(--cds-radius, 6px);
+  background: transparent; outline: none;
+  font-family: var(--cds-font-sans); font-size: var(--cds-font-size-body, 13px); line-height: var(--cds-leading-body, 19px);
+  cursor: var(--cds-cursor-interactive, default); user-select: none;
+  transition: box-shadow var(--cds-dur-fast, 60ms);
+}
+/* Text colour comes from the official classes only, all in c6a992d55's @layer utilities: the toolbar carries shared-2
+   lX's "[&_button]:text-muted [&_button:hover:not([aria-pressed=true])]:text-primary" and Pin / Good / Bad their Il
+   ghost aria-pressed:text-accent, so a pressed button (0,2,0) beats the toolbar muted (0,1,1), hover included. An
+   unlayered colour here would beat every layer whatever its specificity (R1 had .stf-copy muted, which hid the
+   pressed accent). style.css's `button { color: inherit }` reset sits in @layer base (D26, R3-style), below those
+   utilities, so the button needs no colour release of its own. Disabled (a rating in flight) is Il's
+   "[&:disabled:not([aria-busy])]:opacity-disabled disabled:pointer-events-none" on the button: the colour stays. */
+.stf-copy:focus-visible { outline: none; box-shadow: var(--cds-focus-shadow); }
+.stf-button-backdrop {
+  position: absolute; inset: 0; z-index: -1; pointer-events: none; border-radius: inherit;
+  transition: transform var(--cds-dur-slow) var(--cds-btn-spring); transform-origin: center;
+}
+/* No background here: an unpressed paint is transparent by default, and a pressed one takes the official
+   group-aria-pressed/btn:bg-accent (shared-frame gc) without competing with a local rule of equal specificity. */
+.stf-button-backdrop > [data-cds-part="paint"] {
+  position: absolute; inset: 0; border-radius: inherit;
+  transition: background-color var(--cds-dur-fast, 60ms);
+}
+/* Hl ghost "group-hover/btn:bg-fill-ghost-hover"; on a pressed button gc's group-hover/btn:group-aria-pressed/btn:bg-accent
+   wins in the source, so the local hover fill leaves pressed buttons alone. */
+.stf-copy:hover:not([aria-pressed="true"]) .stf-button-backdrop > [data-cds-part="paint"] { background: var(--cds-fill-ghost-hover); }
+.stf-copy:active .stf-button-backdrop { transform: scale(var(--cds-btn-press-sx, .975), var(--cds-btn-press-sy, .975)); transition: transform var(--cds-dur-fast, 60ms) ease-out; }
+/* W14-code r5 cleanup css5-sr-only-handcopies: the hand-copied sr-only rule is gone; the JSX uses the official c6a992d55 .sr-only. */
+@media (pointer: coarse), (hover: none) {
+  .stf-footer .stf-toolbar[data-cds="MessageActions"][data-reveal] {
+    --cds-message-actions-opacity: 1; transition: none;
+  }
+}
+/* design-system.css:51631-51640: reduced motion turns the MessageActions reveal into an instant swap with
+   transition-property:none (and scale:none); the hover/focus durations stay declared, as in the source. The global
+   reduce clamp (design-system.css:1423-1438) only shortens animations, never transitions. */
+@media (prefers-reduced-motion: reduce) {
+  .stf-footer .stf-toolbar[data-cds="MessageActions"][data-reveal] { transition-property: none; scale: none; }
+  .stf-copy, .stf-button-backdrop, .stf-button-backdrop > [data-cds-part="paint"] { transition: none; }
+  .stf-copy:active .stf-button-backdrop { transform: none; }
+}
+html[data-reduce-motion="true"] .stf-copy, html[data-reduce-motion="true"] .stf-button-backdrop, html[data-reduce-motion="true"] .stf-button-backdrop > [data-cds-part="paint"] { transition: none; }
+html[data-reduce-motion="true"] .stf-copy:active .stf-button-backdrop { transform: none; }
+html[data-reduce-motion="true"] .stf-footer .stf-toolbar[data-cds="MessageActions"][data-reveal],
+html[data-local-motion="reduce"] .stf-footer .stf-toolbar[data-cds="MessageActions"][data-reveal] { transition-property: none; scale: none; }

@@ -1,0 +1,7 @@
+/* Vendor logo tile (source-brand-logo.jsx): an app-icon-like rounded square on the raised surface with a hairline
+   ring; the mark is 60% of the tile. Monochrome marks follow the text colour, so they invert in dark mode. */
+.sbl { display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; width:var(--sbl-size, 40px); height:var(--sbl-size, 40px);
+  border-radius:calc(var(--sbl-size, 40px) * .26); background:var(--cds-surface-3, #fff); color:var(--cds-text-primary);
+  box-shadow:0 0 0 .5px var(--cds-border-strong, var(--cds-border)), 0 1px 2px rgb(0 0 0 / 5%); }
+.sbl-mark { display:inline-flex; width:60%; height:60%; }
+.sbl-mark > svg { width:100%; height:100%; display:block; }

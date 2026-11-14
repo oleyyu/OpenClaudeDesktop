@@ -1,0 +1,7 @@
+/* Runs pane (source-runs-pane.jsx). Its classes are the 3.6556.2 cccc2cf0a strings, defined by the loaded original
+   stylesheets. The original body (jb, "h-full") fills the pane's body slot; locally .source-file-panel is a flex column
+   under the pane header, so the body takes the remaining height instead of 100% of the pane. */
+.source-file-panel > [data-pane-retry-body] {
+  flex: 1 1 0;
+  min-height: 0;
+}

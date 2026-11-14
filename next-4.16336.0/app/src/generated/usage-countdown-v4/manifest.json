@@ -1,0 +1,179 @@
+{
+  "referenceVersion": "4.16336.0",
+  "referenceSnapshot": "snapshots/claude-4.16336.0-20261104",
+  "generator": "scripts/extract-usage-countdown-v4.mjs",
+  "adapterModule": "src/source-usage-countdown-v4-adapters.jsx",
+  "linkedAreas": [
+    "routines-shared-v4"
+  ],
+  "sharedGraph": "cds-core",
+  "modules": [
+    {
+      "target": "usage-countdown.mjs",
+      "source": "c227f4d5e-DGDdGBTz.js",
+      "sourceSha256": "5fd91f00568b82a2c636e6dd557e9f3386cc96fbeafad9d38e6c79cd9fd1a7bc",
+      "sha256": "7d04295d11cab6235f9820925978a4506b61c1cc208a870c451175e6e6033d63",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "xQ",
+          "sha256": "764dc64202509ea46e653c0ed3035d789d9dc4500604d5368529d3b082e12339"
+        },
+        {
+          "name": "SQ",
+          "sha256": "df04a072ab4421089b34ca1cd5a7bacae79166b0168f91ed5cc0db92ae369906"
+        },
+        {
+          "name": "CQ",
+          "sha256": "18ed920e0eb7f675c99a4e17c902783b1f04e69f1d1de0b85dee84fca9634220"
+        }
+      ],
+      "initializers": [],
+      "imports": [
+        {
+          "local": "F",
+          "from": "react",
+          "name": "createContext",
+          "via": "vendor-frame-BckkO60Y.js:no",
+          "kind": "react"
+        },
+        {
+          "local": "I",
+          "from": "react",
+          "name": "useContext",
+          "via": "vendor-frame-BckkO60Y.js:po",
+          "kind": "react"
+        },
+        {
+          "local": "I1",
+          "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+          "name": "I1",
+          "via": "shared-frame-CJdE5Ria.js:rm",
+          "kind": "linked",
+          "original": "I1"
+        },
+        {
+          "local": "J0",
+          "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+          "name": "J0",
+          "via": "shared-frame-CJdE5Ria.js:cm",
+          "kind": "linked",
+          "original": "J0"
+        },
+        {
+          "local": "J1",
+          "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+          "name": "J1",
+          "via": "shared-frame-CJdE5Ria.js:lm",
+          "kind": "linked",
+          "original": "J1"
+        },
+        {
+          "local": "J2",
+          "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+          "name": "J2",
+          "via": "shared-frame-CJdE5Ria.js:um",
+          "kind": "linked",
+          "original": "J2"
+        },
+        {
+          "local": "J9",
+          "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+          "name": "J9",
+          "via": "shared-frame-CJdE5Ria.js:hm",
+          "kind": "linked",
+          "original": "J9"
+        },
+        {
+          "local": "K0",
+          "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+          "name": "K0",
+          "via": "shared-frame-CJdE5Ria.js:gm",
+          "kind": "linked",
+          "original": "K0"
+        },
+        {
+          "local": "K1",
+          "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+          "name": "K1",
+          "via": "shared-frame-CJdE5Ria.js:_m",
+          "kind": "linked",
+          "original": "K1"
+        },
+        {
+          "local": "K2",
+          "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+          "name": "K2",
+          "via": "shared-frame-CJdE5Ria.js:vm",
+          "kind": "linked",
+          "original": "K2"
+        },
+        {
+          "local": "Q",
+          "from": "../../source-usage-countdown-v4-adapters.jsx",
+          "name": "FormattedMessage",
+          "via": "vendor-intl-BJgYK7RA.js:l",
+          "kind": "adapter",
+          "original": "Gt"
+        },
+        {
+          "local": "T",
+          "from": "react/jsx-runtime",
+          "name": "Fragment",
+          "via": "vendor-frame-BckkO60Y.js:Wa",
+          "kind": "react"
+        },
+        {
+          "local": "Ua",
+          "from": "../routines-shared-v4/shared-183-B2N6Zy4J.mjs",
+          "name": "_J",
+          "via": "shared-183-B2N6Zy4J.js:Cr",
+          "kind": "linked",
+          "original": "_J"
+        },
+        {
+          "local": "_",
+          "from": "react/jsx-runtime",
+          "name": "jsxs",
+          "via": "vendor-frame-BckkO60Y.js:Ka",
+          "kind": "react"
+        },
+        {
+          "local": "p",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-BckkO60Y.js:Ga",
+          "kind": "react"
+        }
+      ],
+      "exports": {
+        "SQ": "UsageResetCountdown",
+        "xQ": "UsageNoticeCardContext"
+      },
+      "sharedExports": [],
+      "heldByViewTabs": []
+    }
+  ],
+  "callSites": [
+    {
+      "source": "c227f4d5e-DGDdGBTz.js",
+      "role": "The usage limit band (d$, export Tn) puts SQ in the reached limit's detail, at the window's reset time je",
+      "sourceSha256": "5fd91f00568b82a2c636e6dd557e9f3386cc96fbeafad9d38e6c79cd9fd1a7bc",
+      "raw": true,
+      "features": [
+        "je=S?.type===\"exceeded_limit\"&&j?.status?.status!==\"exceeded_limit\"?k:j?.status?.resets_at??k",
+        "lt=je?p(SQ,{resetsAtSeconds:je,absolute:XQ(je,m)}):void 0"
+      ]
+    },
+    {
+      "source": "c227f4d5e-DGDdGBTz.js",
+      "role": "The usage limit card (h$) provides xQ around its headline and detail",
+      "sourceSha256": "5fd91f00568b82a2c636e6dd557e9f3386cc96fbeafad9d38e6c79cd9fd1a7bc",
+      "raw": true,
+      "features": [
+        "K2($,25,D,O,_(xQ.Provider,{value:!0,children:[D,O]}))"
+      ]
+    }
+  ],
+  "publicAssets": []
+}

@@ -1,0 +1,515 @@
+{
+  "referenceVersion": "4.16336.0",
+  "referenceSnapshot": "snapshots/claude-4.16336.0-20261104",
+  "generator": "scripts/extract-cowork-runs-v4.mjs",
+  "previous": {
+    "generator": "scripts/extract-cowork-runs.mjs",
+    "output": "src/generated/cowork-runs",
+    "referenceVersion": "3.6556.2"
+  },
+  "sharedGraph": {
+    "area": "cds-core",
+    "manifestSha256": "06d2026939e5c8992713c2a0dda1b1abc9adffe7a0c223fe3c1e79eecd08d62c"
+  },
+  "linkedAreas": {
+    "cowork-progress-v4": "e5501ac28f6c72be0c01e5278e0b22159f48d63e1a3a61349e0c4eca8bd504a7",
+    "cowork-scheduled-v4": "1af355ba22cc6cee9062edb2710c581d7808d95812d240d343ad995cf96ceb78",
+    "routines-shared-v4": "a2a9b9a84b2705e48451025af38eb7582de5bb421c626e6bdf5b067eb8e00c8c"
+  },
+  "roots": [
+    {
+      "file": "c21f11e6d-Cyj5xu_D.js",
+      "local": "gT",
+      "name": "CoworkRunsSection",
+      "export": null,
+      "declarationSha256": "4130ba3c940cc3a181c14baca7e28ef0aa6234a13fd10ffaa177400b5b0181d9",
+      "pinned": true
+    },
+    {
+      "file": "c21f11e6d-Cyj5xu_D.js",
+      "local": "WT",
+      "name": "CoworkUpcomingSection",
+      "export": null,
+      "declarationSha256": "5056743457e41f46e0efd90d400dd32bdfdc261036e74f77e6301cfc9b722bc1",
+      "pinned": true
+    }
+  ],
+  "removedRoots": [],
+  "adapters": [
+    {
+      "original": "shared-123-1Hc1RTKl.js#By",
+      "name": "useCoworkScheduledTasksStatus",
+      "hostAdapter": "src/source-cowork-runs-adapters.jsx",
+      "declarationSha256": "4c89d9f4b89324048ca65aeae5cb23f0bbcc135e73fe215f5992b50da5e60131",
+      "pinned": true
+    },
+    {
+      "original": "shared-31-C9BqSSuD.js#Yp",
+      "name": "useScheduledTaskDisplayName",
+      "hostAdapter": "src/source-cowork-runs-adapters.jsx",
+      "declarationSha256": "30c88729979ea4279a0e1c724f05cb81b5f4c254bd39664f42dfda574c4604eb",
+      "pinned": true
+    },
+    {
+      "original": "shared-31-C9BqSSuD.js#Tm",
+      "name": "useScheduledTaskSessions",
+      "hostAdapter": "src/source-cowork-runs-adapters.jsx",
+      "declarationSha256": "dc2c5196e227585b8d1f484fa3cee31069e7c9bd9cf5c539dc2fb14f9d0a8398",
+      "pinned": true
+    },
+    {
+      "original": "shared-2-CsjIBQD8.js#wH",
+      "name": "useCoworkRunsReadState",
+      "hostAdapter": "src/source-cowork-runs-adapters.jsx",
+      "declarationSha256": "5e501cfc80b27348e53b250409849de7b0401278881c707c388a438674a8630d",
+      "pinned": true
+    },
+    {
+      "original": "shared-123-1Hc1RTKl.js#_L",
+      "name": "useDesktopFrame",
+      "hostAdapter": "src/source-cowork-progress-v3-adapters.jsx",
+      "declarationSha256": "0783ed367cf5de2bfa80c4046f05108112d45505b9ebbd4d876a10e482a4fb2a",
+      "pinned": true
+    },
+    {
+      "original": "shared-25-D-aF0gt9.js#Ky",
+      "name": "RouterLink",
+      "hostAdapter": "src/source-routines-shared-adapters.jsx",
+      "declarationSha256": "4884879fdd5f05cd45263c786ab487acc75ba4998798ae34e579b75402024130",
+      "pinned": true
+    },
+    {
+      "original": "vendor-intl-BJgYK7RA.js#q",
+      "name": "useIntl",
+      "hostAdapter": "src/source-routines-shared-adapters.jsx",
+      "declarationSha256": "edf793bc7b87ae9a38cea39d25d752a5bcfef1d492e06a2219e120311feaaec0",
+      "pinned": true
+    },
+    {
+      "original": "vendor-intl-BJgYK7RA.js#Gt",
+      "name": "FormattedMessage",
+      "hostAdapter": "src/source-routines-shared-adapters.jsx",
+      "declarationSha256": "bde2ec1630e0a679fa4135cf75389568e77fa98fdcb08519af8104d5306ff5b5",
+      "pinned": true
+    }
+  ],
+  "linkedCopies": {},
+  "imports": [
+    {
+      "module": "shared-120.mjs",
+      "local": "J1",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J1",
+      "via": "shared-frame-CJdE5Ria.js:lm"
+    },
+    {
+      "module": "shared-120.mjs",
+      "local": "J9",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J9",
+      "via": "shared-frame-CJdE5Ria.js:hm"
+    },
+    {
+      "module": "shared-120.mjs",
+      "local": "K1",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "K1",
+      "via": "shared-frame-CJdE5Ria.js:_m"
+    },
+    {
+      "module": "shared-120.mjs",
+      "local": "Xe",
+      "kind": "linked",
+      "from": "../cowork-progress-v4/shared-120.mjs",
+      "name": "Xe",
+      "via": "shared-120-DCdTP1_5.js#Xe"
+    },
+    {
+      "module": "shared-120.mjs",
+      "local": "l",
+      "kind": "shared-graph",
+      "from": "../cds-core/vendor-frame.mjs",
+      "name": "useDirection",
+      "via": "vendor-frame-BckkO60Y.js:xa"
+    },
+    {
+      "module": "c21f11e6d.mjs",
+      "local": "Bc",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-2-CsjIBQD8.mjs",
+      "name": "$T",
+      "via": "shared-2-CsjIBQD8.js:ym"
+    },
+    {
+      "module": "c21f11e6d.mjs",
+      "local": "H",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "CdsSkeleton",
+      "via": "shared-frame-CJdE5Ria.js:Ou"
+    },
+    {
+      "module": "c21f11e6d.mjs",
+      "local": "I1",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "I1",
+      "via": "shared-frame-CJdE5Ria.js:rm"
+    },
+    {
+      "module": "c21f11e6d.mjs",
+      "local": "I2",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "I2",
+      "via": "shared-frame-CJdE5Ria.js:im"
+    },
+    {
+      "module": "c21f11e6d.mjs",
+      "local": "I4",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "I4",
+      "via": "shared-frame-CJdE5Ria.js:om"
+    },
+    {
+      "module": "c21f11e6d.mjs",
+      "local": "J0",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J0",
+      "via": "shared-frame-CJdE5Ria.js:cm"
+    },
+    {
+      "module": "c21f11e6d.mjs",
+      "local": "J1",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J1",
+      "via": "shared-frame-CJdE5Ria.js:lm"
+    },
+    {
+      "module": "c21f11e6d.mjs",
+      "local": "J2",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J2",
+      "via": "shared-frame-CJdE5Ria.js:um"
+    },
+    {
+      "module": "c21f11e6d.mjs",
+      "local": "J3",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J3",
+      "via": "shared-frame-CJdE5Ria.js:dm"
+    },
+    {
+      "module": "c21f11e6d.mjs",
+      "local": "J4",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J4",
+      "via": "shared-frame-CJdE5Ria.js:fm"
+    },
+    {
+      "module": "c21f11e6d.mjs",
+      "local": "J5",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J5",
+      "via": "shared-frame-CJdE5Ria.js:pm"
+    },
+    {
+      "module": "c21f11e6d.mjs",
+      "local": "J9",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "J9",
+      "via": "shared-frame-CJdE5Ria.js:hm"
+    },
+    {
+      "module": "c21f11e6d.mjs",
+      "local": "K0",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "K0",
+      "via": "shared-frame-CJdE5Ria.js:gm"
+    },
+    {
+      "module": "c21f11e6d.mjs",
+      "local": "K1",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "K1",
+      "via": "shared-frame-CJdE5Ria.js:_m"
+    },
+    {
+      "module": "c21f11e6d.mjs",
+      "local": "K2",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "K2",
+      "via": "shared-frame-CJdE5Ria.js:vm"
+    },
+    {
+      "module": "c21f11e6d.mjs",
+      "local": "K3",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "K3",
+      "via": "shared-frame-CJdE5Ria.js:ym"
+    },
+    {
+      "module": "c21f11e6d.mjs",
+      "local": "K4",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "K4",
+      "via": "shared-frame-CJdE5Ria.js:bm"
+    },
+    {
+      "module": "c21f11e6d.mjs",
+      "local": "K5",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-frame-CJdE5Ria.mjs",
+      "name": "K5",
+      "via": "shared-frame-CJdE5Ria.js:xm"
+    },
+    {
+      "module": "c21f11e6d.mjs",
+      "local": "Kg",
+      "kind": "linked",
+      "from": "../cowork-progress-v4/cc5a62f6f.mjs",
+      "name": "CoworkPanelMergedContext",
+      "via": "cc5a62f6f-CsfnfFRu.js:_"
+    },
+    {
+      "module": "c21f11e6d.mjs",
+      "local": "Kr",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-62-DoCqVpIq.mjs",
+      "name": "hu",
+      "via": "shared-62-DoCqVpIq.js:Pv"
+    },
+    {
+      "module": "c21f11e6d.mjs",
+      "local": "M_",
+      "kind": "linked",
+      "from": "../cowork-scheduled-v4/c1dd841c3-1sytfYmN.mjs",
+      "name": "o",
+      "via": "c1dd841c3-1sytfYmN.js:t"
+    },
+    {
+      "module": "c21f11e6d.mjs",
+      "local": "Q",
+      "kind": "adapter",
+      "from": "../../source-cowork-runs-v4-adapters.jsx",
+      "name": "FormattedMessage",
+      "via": "vendor-intl-BJgYK7RA.js:l"
+    },
+    {
+      "module": "c21f11e6d.mjs",
+      "local": "S",
+      "kind": "react",
+      "from": "react",
+      "name": "useEffect",
+      "via": "vendor-frame-BckkO60Y.js:go"
+    },
+    {
+      "module": "c21f11e6d.mjs",
+      "local": "Tc",
+      "kind": "adapter",
+      "from": "../../source-cowork-runs-v4-adapters.jsx",
+      "name": "useCoworkRunsReadState",
+      "via": "shared-2-CsjIBQD8.js:ms"
+    },
+    {
+      "module": "c21f11e6d.mjs",
+      "local": "Tm",
+      "kind": "linked",
+      "from": "../cowork-progress-v4/shared-120.mjs",
+      "name": "Xn",
+      "via": "shared-120-DCdTP1_5.js:q"
+    },
+    {
+      "module": "c21f11e6d.mjs",
+      "local": "U",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "CdsBadge",
+      "via": "shared-frame-CJdE5Ria.js:Pu"
+    },
+    {
+      "module": "c21f11e6d.mjs",
+      "local": "Y",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "CdsIcon",
+      "via": "shared-frame-CJdE5Ria.js:lf"
+    },
+    {
+      "module": "c21f11e6d.mjs",
+      "local": "Zi",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-183-B2N6Zy4J.mjs",
+      "name": "_J",
+      "via": "shared-183-B2N6Zy4J.js:Cr"
+    },
+    {
+      "module": "c21f11e6d.mjs",
+      "local": "Zn",
+      "kind": "adapter",
+      "from": "../../source-cowork-runs-v4-adapters.jsx",
+      "name": "useDesktopFrame",
+      "via": "shared-123-1Hc1RTKl.js:Nu"
+    },
+    {
+      "module": "c21f11e6d.mjs",
+      "local": "_t",
+      "kind": "adapter",
+      "from": "../../source-cowork-runs-v4-adapters.jsx",
+      "name": "RouterLink",
+      "via": "shared-25-D-aF0gt9.js:Pu"
+    },
+    {
+      "module": "c21f11e6d.mjs",
+      "local": "a_",
+      "kind": "linked",
+      "from": "../cowork-progress-v4/cc5a62f6f.mjs",
+      "name": "ie",
+      "via": "cc5a62f6f-CsfnfFRu.js:s"
+    },
+    {
+      "module": "c21f11e6d.mjs",
+      "local": "ae",
+      "kind": "shared-graph",
+      "from": "../cds-core/shared-frame.mjs",
+      "name": "CdsTooltip",
+      "via": "shared-frame-CJdE5Ria.js:cd"
+    },
+    {
+      "module": "c21f11e6d.mjs",
+      "local": "cu",
+      "kind": "linked",
+      "from": "../cowork-scheduled-v4/shared-140-DfG6VwpK.mjs",
+      "name": "sd",
+      "via": "shared-140-DfG6VwpK.js:Jn"
+    },
+    {
+      "module": "c21f11e6d.mjs",
+      "local": "e_",
+      "kind": "linked",
+      "from": "../cowork-progress-v4/cc5a62f6f.mjs",
+      "name": "CoworkPanelLayoutContext",
+      "via": "cc5a62f6f-CsfnfFRu.js:m"
+    },
+    {
+      "module": "c21f11e6d.mjs",
+      "local": "f",
+      "kind": "shared-graph",
+      "from": "../cds-core/vendor-frame.mjs",
+      "name": "clsx",
+      "via": "vendor-frame-BckkO60Y.js:Fa"
+    },
+    {
+      "module": "c21f11e6d.mjs",
+      "local": "h",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "jsxs",
+      "via": "vendor-frame-BckkO60Y.js:Ka"
+    },
+    {
+      "module": "c21f11e6d.mjs",
+      "local": "nc",
+      "kind": "linked",
+      "from": "../routines-shared-v4/shared-2-CsjIBQD8.mjs",
+      "name": "XH",
+      "via": "shared-2-CsjIBQD8.js:Qo"
+    },
+    {
+      "module": "c21f11e6d.mjs",
+      "local": "ou",
+      "kind": "linked",
+      "from": "../routines-shared-v4/vendor-intl-BJgYK7RA.mjs",
+      "name": "tn",
+      "via": "vendor-intl-BJgYK7RA.js:f"
+    },
+    {
+      "module": "c21f11e6d.mjs",
+      "local": "p",
+      "kind": "react",
+      "from": "react/jsx-runtime",
+      "name": "jsx",
+      "via": "vendor-frame-BckkO60Y.js:Ga"
+    },
+    {
+      "module": "c21f11e6d.mjs",
+      "local": "pr",
+      "kind": "adapter",
+      "from": "../../source-cowork-runs-v4-adapters.jsx",
+      "name": "useCoworkScheduledTasksStatus",
+      "via": "shared-123-1Hc1RTKl.js:Zy"
+    },
+    {
+      "module": "c21f11e6d.mjs",
+      "local": "qg",
+      "kind": "linked",
+      "from": "../cowork-progress-v4/cc5a62f6f.mjs",
+      "name": "coworkPanelRow",
+      "via": "cc5a62f6f-CsfnfFRu.js:a"
+    },
+    {
+      "module": "c21f11e6d.mjs",
+      "local": "ss",
+      "kind": "adapter",
+      "from": "../../source-cowork-runs-v4-adapters.jsx",
+      "name": "useScheduledTaskDisplayName",
+      "via": "shared-31-C9BqSSuD.js:ba"
+    },
+    {
+      "module": "c21f11e6d.mjs",
+      "local": "su",
+      "kind": "adapter",
+      "from": "../../source-cowork-runs-v4-adapters.jsx",
+      "name": "useIntl",
+      "via": "vendor-intl-BJgYK7RA.js:p"
+    },
+    {
+      "module": "c21f11e6d.mjs",
+      "local": "t_",
+      "kind": "linked",
+      "from": "../cowork-progress-v4/cc5a62f6f.mjs",
+      "name": "CoworkPanelSection",
+      "via": "cc5a62f6f-CsfnfFRu.js:n"
+    },
+    {
+      "module": "c21f11e6d.mjs",
+      "local": "ts",
+      "kind": "adapter",
+      "from": "../../source-cowork-runs-v4-adapters.jsx",
+      "name": "useScheduledTaskSessions",
+      "via": "shared-31-C9BqSSuD.js:Sa"
+    },
+    {
+      "module": "c21f11e6d.mjs",
+      "local": "w",
+      "kind": "react",
+      "from": "react",
+      "name": "useContext",
+      "via": "vendor-frame-BckkO60Y.js:po"
+    },
+    {
+      "module": "c21f11e6d.mjs",
+      "local": "x",
+      "kind": "react",
+      "from": "react",
+      "name": "memo",
+      "via": "vendor-frame-BckkO60Y.js:co"
+    }
+  ]
+}

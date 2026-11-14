@@ -1,0 +1,12 @@
+/* ClaudeImportDialog: the detected items as a checkbox list (description under the type), results after. */
+.claude-import-dialog .claude-import-list { display: flex; flex-direction: column; gap: 8px; max-height: 320px; overflow: auto; margin-top: 12px; }
+.claude-import-dialog .claude-import-item { display: flex; align-items: flex-start; gap: 8px; }
+.claude-import-dialog .claude-import-item input { margin-top: 3px; }
+.claude-import-dialog .claude-import-item > span { display: flex; flex-direction: column; min-width: 0; gap: 2px; }
+.claude-import-dialog .claude-import-muted { color: var(--cds-text-secondary); overflow-wrap: anywhere; }
+.claude-import-dialog .claude-import-error { color: var(--cds-text-danger); }
+.claude-import-dialog .claude-import-failures { margin: 8px 0 0; padding-left: 18px; color: var(--cds-text-secondary); }
+.claude-import-dialog .codex-feedback-note { display: block; box-sizing: border-box; width: 100%; margin-top: 12px; padding: 6px 8px; border: 0; border-radius: var(--cds-radius, 6px);
+  background: var(--cds-fill-field); box-shadow: inset 0 0 0 1px var(--cds-fill-field-ring); color: var(--cds-text-primary); font: inherit; resize: vertical; outline: none; }
+.claude-import-dialog .codex-feedback-note:focus-visible { box-shadow: var(--cds-focus-shadow); }
+.claude-import-dialog > .claude-import-item, .claude-import-dialog label.claude-import-item:last-of-type { margin-top: 12px; }

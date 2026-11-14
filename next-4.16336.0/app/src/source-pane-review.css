@@ -1,0 +1,11 @@
+/* Changes pane review findings bar (source-pane-review.jsx): the bar, the status and the buttons carry cccc2cf0a ES's own
+   layered classes; the buttons are the shared-frame CdsButton (W14-code r5 cleanup css5-settings-button-replica), so
+   the old .spr-step / .spr-action / .spr-dismiss restatements of the host replica button are gone. */
+
+/* The finding card is the original 2.42304.0 c44d00c7f ya (generated/review-findings/review-finding-card.mjs): its
+   own classes (px-md py-xs slot, the --diff-widget-* skin, the header, badges, buttons and footer) come from the loaded
+   official CSS. The slot here only sits in the local diff's row flow (DiffHunk renderAfter, inside pre-wrap rows):
+   the official diff renders annotations in their own slot, outside the code text. */
+.spr-card-slot { white-space: normal; }
+/* W14-code css-main-03: the Changes diff root no longer carries the legacy `diff` class and message-style.css has no
+   `.diff span` rule, so the card's spans keep their layered utilities (CdsBadge inline-flex, truncate) unreleased. */

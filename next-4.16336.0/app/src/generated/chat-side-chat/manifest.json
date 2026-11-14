@@ -1,0 +1,673 @@
+{
+  "referenceVersion": "3.6556.2",
+  "referenceSnapshot": "snapshots/claude-3.6556.2-20261025-192807",
+  "generator": "scripts/extract-chat-side-chat.mjs",
+  "adapterModule": "src/source-chat-side-chat-adapters.jsx",
+  "modules": [
+    {
+      "target": "side-chat-store.mjs",
+      "source": "shared-2-TF8v67kg.js",
+      "referenceVersion": "3.6556.2",
+      "sourceSha256": "d30345487454935271d15e07a03026f8965584d83c9fcc4f5d7f9175687a14fc",
+      "sha256": "169f227796d7df89b264b36061928da19cf93a8df25318ce897feffab7601a2b",
+      "bindings": [
+        {
+          "name": "e2",
+          "sha256": "fdd4326f5315bb58081b37bf2af27204e9c85cf9f7b76247d622e7d2909d520a"
+        },
+        {
+          "name": "t2",
+          "sha256": "1c4b7d39167873d9dfa89e79cb537038079c5dfd9ea211a17a4eaa8ede218a57"
+        },
+        {
+          "name": "n2",
+          "sha256": "df101a258ef74c8a2704e29ed80ed02cf849edc623f8e754ca5f5b0f2654292e"
+        },
+        {
+          "name": "r2",
+          "sha256": "7417e030221ef47e04757490fa03b573497b33554d1d11768874a8bd321f6df0"
+        },
+        {
+          "name": "i2",
+          "sha256": "e256dec646b60c4a5902960f2dacd1e4daa9bc41c4ae54d4aaf1e7b38b4d2ae2"
+        },
+        {
+          "name": "o2",
+          "sha256": "7786d83a85d5ccd84384ec554eb9f71b57a0db1e3be01f0b2f2230658a56c443"
+        },
+        {
+          "name": "s2",
+          "sha256": "017504de0cba16fae7ab97d29d3e1107bdd8047e8e5a3e4b9175d8470bbc162f"
+        },
+        {
+          "name": "c2",
+          "sha256": "4984c33801d7edc964740b1551f3f0040d9afa5b05574432e60c5c0dc8107b8b"
+        },
+        {
+          "name": "l2",
+          "sha256": "59e990215e77c747ad45eff511cf2bf2135a862f19c72b85519c7bafbf1a56c9"
+        },
+        {
+          "name": "u2",
+          "sha256": "ecdc22e6c0574d68253fda9553840e953f5216195c17de51d9f949b90fdd4a75"
+        }
+      ],
+      "imports": [
+        {
+          "local": "Nd",
+          "from": "../session-rail-kit/react-store.mjs",
+          "name": "create",
+          "via": "vendor-all-0-DXM0MGjZ.js:F",
+          "kind": "linked",
+          "original": "v"
+        },
+        {
+          "local": "J1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged1",
+          "via": "shared-frame-6jtSkIit.js:Qf",
+          "kind": "view-tabs",
+          "original": "J1"
+        },
+        {
+          "local": "J9",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "reactMemoCache",
+          "via": "shared-frame-6jtSkIit.js:ip",
+          "kind": "view-tabs",
+          "original": "J9"
+        },
+        {
+          "local": "K1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore1",
+          "via": "shared-frame-6jtSkIit.js:op",
+          "kind": "view-tabs",
+          "original": "K1"
+        }
+      ],
+      "exports": {
+        "i2": "chatSideChatStore",
+        "s2": "useChatSideChatOpen",
+        "c2": "useChatSideChatMessages",
+        "l2": "useChatSideChatStatus",
+        "u2": "useChatSideChatPendingQuestion"
+      },
+      "features": {
+        "i2": [
+          "openByConversation: {},",
+          "messagesByConversation: {},",
+          "pendingQuestionByConversation: {},",
+          "openWith: (t, n) =>",
+          "clearPendingQuestion: (t) =>",
+          "popLastIfUser: (t) =>",
+          "appendAssistantDelta: (t, n) =>",
+          "[...r, { role: \"assistant\", text: n }]"
+        ],
+        "s2": [
+          "t.openByConversation[e] ?? !1"
+        ],
+        "c2": [
+          "t.messagesByConversation[e] ?? o2"
+        ],
+        "l2": [
+          "t.statusByConversation[e] ?? \"idle\""
+        ],
+        "u2": [
+          "t.pendingQuestionByConversation[e]"
+        ]
+      }
+    },
+    {
+      "target": "side-chat-panel.mjs",
+      "source": "ca2ef848d-ChLvq6yZ.js",
+      "referenceVersion": "3.6556.2",
+      "sourceSha256": "a7f9fd99dd46c51cd9fd53cf9eca3cfc8c0df8539b00de8c35498a19651844b3",
+      "sha256": "5c83a39823f5409cf9bddeb94a0dc781421fde63bfb190b0814daff708248c1f",
+      "bindings": [
+        {
+          "name": "_1",
+          "sha256": "ee1b062509395a2ca3b8b69f30488b198a5c2d6b452aca9447efaf67bbf157a3"
+        },
+        {
+          "name": "v1",
+          "sha256": "35030eb0bb478d6d039d48656021ecb681f8dab2377771d03200fd6b3495e0a6"
+        },
+        {
+          "name": "y1",
+          "sha256": "bea4483ae08850439dae23af6ba057e0aafd1832de9b4db37284434ab2e0e01b"
+        },
+        {
+          "name": "b1",
+          "sha256": "2230012e1c5c906f4209f220004f9d131ac5598234f5481ff6e0eff9f54d964a"
+        },
+        {
+          "name": "x1",
+          "sha256": "a32efedccb2736c5139689025a5ab59c052af662b1a5d391e79a1e2214cbfa7c"
+        },
+        {
+          "name": "S1",
+          "sha256": "2f538f01cc41904d71a3e355a87ada04b3b2d661fee30a86d03f987fd42ef5eb"
+        },
+        {
+          "name": "C1",
+          "sha256": "7f67a4344e4804dc9d3dd952b0fe4710f6df1b0e2cb17d4a33bc60fd196d9a18"
+        },
+        {
+          "name": "w1",
+          "sha256": "c098a7f70bea034fae705d9d488f8945ddc3cf39e4ece4f3d01949102a058fad"
+        },
+        {
+          "name": "T1",
+          "sha256": "44986bcc5c43659e19ed2b5a68f5848c099d8e35624d731ba7e30c7910abba9f"
+        },
+        {
+          "name": "E1",
+          "sha256": "fb50040bbae6ea80a0bd55c3fba0025a983532f01e9fe0bdffa424ec4879e4cb"
+        },
+        {
+          "name": "D1",
+          "sha256": "7d310a3754c82e2880bd82bf17de408042e6bf59876a9154b073fbb5ac7116a2"
+        }
+      ],
+      "imports": [
+        {
+          "local": "d",
+          "from": "react",
+          "name": "useRef",
+          "via": "vendor-frame-CnSY1sxv.js:Co",
+          "kind": "react",
+          "original": "Co"
+        },
+        {
+          "local": "f",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-CnSY1sxv.js:Ha",
+          "kind": "react",
+          "original": "Ha"
+        },
+        {
+          "local": "_",
+          "from": "react/jsx-runtime",
+          "name": "jsxs",
+          "via": "vendor-frame-CnSY1sxv.js:Ua",
+          "kind": "react",
+          "original": "Ua"
+        },
+        {
+          "local": "E",
+          "from": "react",
+          "name": "useEffect",
+          "via": "vendor-frame-CnSY1sxv.js:ho",
+          "kind": "react",
+          "original": "ho"
+        },
+        {
+          "local": "J2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged2",
+          "via": "shared-frame-6jtSkIit.js:$f",
+          "kind": "view-tabs",
+          "original": "J2"
+        },
+        {
+          "local": "H",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "CdsButton",
+          "via": "shared-frame-6jtSkIit.js:Eu",
+          "kind": "view-tabs",
+          "original": "Uu"
+        },
+        {
+          "local": "G",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "asElementNode",
+          "via": "shared-frame-6jtSkIit.js:Iu",
+          "kind": "view-tabs",
+          "original": "Uc"
+        },
+        {
+          "local": "ne",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "CdsShortcut",
+          "via": "shared-frame-6jtSkIit.js:Ku",
+          "kind": "view-tabs",
+          "original": "oc"
+        },
+        {
+          "local": "J1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged1",
+          "via": "shared-frame-6jtSkIit.js:Qf",
+          "kind": "view-tabs",
+          "original": "J1"
+        },
+        {
+          "local": "J0",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoIsEmpty",
+          "via": "shared-frame-6jtSkIit.js:Zf",
+          "kind": "view-tabs",
+          "original": "J0"
+        },
+        {
+          "local": "K0",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore0",
+          "via": "shared-frame-6jtSkIit.js:ap",
+          "kind": "view-tabs",
+          "original": "K0"
+        },
+        {
+          "local": "K3",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore3",
+          "via": "shared-frame-6jtSkIit.js:cp",
+          "kind": "view-tabs",
+          "original": "K3"
+        },
+        {
+          "local": "xe",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "useCdsLayerAwareZIndex",
+          "via": "shared-frame-6jtSkIit.js:cu",
+          "kind": "view-tabs",
+          "original": "Uf"
+        },
+        {
+          "local": "J3",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged3",
+          "via": "shared-frame-6jtSkIit.js:ep",
+          "kind": "view-tabs",
+          "original": "J3"
+        },
+        {
+          "local": "J9",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "reactMemoCache",
+          "via": "shared-frame-6jtSkIit.js:ip",
+          "kind": "view-tabs",
+          "original": "J9"
+        },
+        {
+          "local": "K4",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore4",
+          "via": "shared-frame-6jtSkIit.js:lp",
+          "kind": "view-tabs",
+          "original": "K4"
+        },
+        {
+          "local": "J5",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged5",
+          "via": "shared-frame-6jtSkIit.js:np",
+          "kind": "view-tabs",
+          "original": "J5"
+        },
+        {
+          "local": "K1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore1",
+          "via": "shared-frame-6jtSkIit.js:op",
+          "kind": "view-tabs",
+          "original": "K1"
+        },
+        {
+          "local": "Ae",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "CdsLayerProvider",
+          "via": "shared-frame-6jtSkIit.js:ou",
+          "kind": "view-tabs",
+          "original": "Lf"
+        },
+        {
+          "local": "K2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore2",
+          "via": "shared-frame-6jtSkIit.js:sp",
+          "kind": "view-tabs",
+          "original": "K2"
+        },
+        {
+          "local": "J4",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged4",
+          "via": "shared-frame-6jtSkIit.js:tp",
+          "kind": "view-tabs",
+          "original": "J4"
+        },
+        {
+          "local": "K5",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore5",
+          "via": "shared-frame-6jtSkIit.js:up",
+          "kind": "view-tabs",
+          "original": "K5"
+        },
+        {
+          "local": "jt",
+          "from": "../code-composer/owner-support.mjs",
+          "name": "ownerDocument",
+          "via": "shared-25-DOWZRSlq.js:ap",
+          "kind": "linked",
+          "original": "hf"
+        },
+        {
+          "local": "an",
+          "from": "../view-tabs/shared-25-DOWZRSlq.js",
+          "name": "ownerWindow",
+          "via": "shared-25-DOWZRSlq.js:up",
+          "kind": "view-tabs",
+          "original": "pf"
+        },
+        {
+          "local": "gn",
+          "from": "../../source-routines-shared-adapters.jsx",
+          "name": "useRouter",
+          "via": "shared-25-DOWZRSlq.js:yp",
+          "kind": "shared-adapter",
+          "original": "Jd"
+        },
+        {
+          "local": "Ar",
+          "from": "../../source-chat-side-chat-adapters.jsx",
+          "name": "useShortcut",
+          "via": "shared-1-BJhqMmkf.js:Pn",
+          "kind": "adapter",
+          "original": "WV"
+        },
+        {
+          "local": "xd",
+          "from": "./side-chat-store.mjs",
+          "name": "useChatSideChatMessages",
+          "via": "shared-2-TF8v67kg.js:fn",
+          "kind": "generated",
+          "original": "c2"
+        },
+        {
+          "local": "Td",
+          "from": "./side-chat-store.mjs",
+          "name": "chatSideChatStore",
+          "via": "shared-2-TF8v67kg.js:hn",
+          "kind": "generated",
+          "original": "i2"
+        },
+        {
+          "local": "Ld",
+          "from": "../routines-shared/shared-2-TF8v67kg.mjs",
+          "name": "A_",
+          "via": "shared-2-TF8v67kg.js:lv",
+          "kind": "linked",
+          "original": "A_"
+        },
+        {
+          "local": "zd",
+          "from": "./side-chat-store.mjs",
+          "name": "useChatSideChatStatus",
+          "via": "shared-2-TF8v67kg.js:mn",
+          "kind": "generated",
+          "original": "l2"
+        },
+        {
+          "local": "Wd",
+          "from": "./side-chat-store.mjs",
+          "name": "useChatSideChatPendingQuestion",
+          "via": "shared-2-TF8v67kg.js:pn",
+          "kind": "generated",
+          "original": "u2"
+        },
+        {
+          "local": "Q",
+          "from": "../../source-routines-shared-adapters.jsx",
+          "name": "FormattedMessage",
+          "via": "vendor-intl-DYfox5Co.js:l",
+          "kind": "shared-adapter",
+          "original": "Gt"
+        },
+        {
+          "local": "Kf",
+          "from": "../../source-routines-shared-adapters.jsx",
+          "name": "useIntl",
+          "via": "vendor-intl-DYfox5Co.js:p",
+          "kind": "shared-adapter",
+          "original": "q"
+        },
+        {
+          "local": "p1",
+          "from": "../../source-chat-side-chat-adapters.jsx",
+          "name": "useChatSideChatToggle",
+          "via": "ca2ef848d-ChLvq6yZ.js#p1",
+          "kind": "adapter",
+          "original": "p1"
+        },
+        {
+          "local": "J8",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoSentinel",
+          "via": "shared-frame-6jtSkIit.js:rp",
+          "kind": "view-tabs",
+          "original": "J8"
+        },
+        {
+          "local": "En",
+          "from": "../../source-routine-cowork-adapters.jsx",
+          "name": "reportError",
+          "via": "shared-0-DDOOdL6P.js:Id",
+          "kind": "shared-adapter",
+          "original": "bN"
+        },
+        {
+          "local": "nN",
+          "from": "../../source-chat-side-chat-adapters.jsx",
+          "name": "streamChatSideQuestion",
+          "via": "c9451a5b2-Dri8I3GN.js:t",
+          "kind": "adapter",
+          "original": "o"
+        },
+        {
+          "local": "F",
+          "from": "react",
+          "name": "useImperativeHandle",
+          "via": "vendor-frame-CnSY1sxv.js:vo",
+          "kind": "react",
+          "original": "vo"
+        },
+        {
+          "local": "I",
+          "from": "react",
+          "name": "useState",
+          "via": "vendor-frame-CnSY1sxv.js:wo",
+          "kind": "react",
+          "original": "wo"
+        },
+        {
+          "local": "S",
+          "from": "react",
+          "name": "useLayoutEffect",
+          "via": "vendor-frame-CnSY1sxv.js:bo",
+          "kind": "react",
+          "original": "bo"
+        },
+        {
+          "local": "q",
+          "from": "../session-rail-kit/window-actions.mjs",
+          "name": "writeClipboardText",
+          "via": "shared-frame-6jtSkIit.js:Kd",
+          "kind": "linked",
+          "original": "ca"
+        },
+        {
+          "local": "I1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStoreValueFirst1",
+          "via": "shared-frame-6jtSkIit.js:Kf",
+          "kind": "view-tabs",
+          "original": "I1"
+        },
+        {
+          "local": "I4",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStoreValueFirst4",
+          "via": "shared-frame-6jtSkIit.js:Yf",
+          "kind": "view-tabs",
+          "original": "I4"
+        },
+        {
+          "local": "Z1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStoreDeps1",
+          "via": "shared-frame-6jtSkIit.js:dp",
+          "kind": "view-tabs",
+          "original": "Z1"
+        },
+        {
+          "local": "DA",
+          "from": "../../source-chat-knowledge-adapters.jsx",
+          "name": "ChatMemoryMarkdown",
+          "via": "c89efce1a-C_nlrFif.js:s",
+          "kind": "shared-adapter",
+          "original": "rc"
+        },
+        {
+          "local": "ke",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "CdsIcon",
+          "via": "shared-frame-6jtSkIit.js:od",
+          "kind": "view-tabs",
+          "original": "us"
+        }
+      ],
+      "exports": {
+        "T1": "ChatSideChat",
+        "b1": "ChatSideChatMessages"
+      },
+      "features": {
+        "T1": [
+          "organizationUuid: t,",
+          "conversationUuid: n,",
+          "parentMessageUuid: r,",
+          "inheritedMessageCount: i",
+          "s = Ld() ?? o,",
+          "{ shortcutString: p } = Ar(\"btw_side_chat\"),",
+          "defaultMessage: \"Side chat\", id: \"0MBP0bdWwx\"",
+          "defaultMessage: \"Clear side chat\", id: \"1vPf0BAKqe\"",
+          "defaultMessage: \"Close side chat\", id: \"fyPrl4HbZ6\"",
+          "defaultMessage: \"Follow up\\u2026\", id: \"D6oMwpWrX4\"",
+          "defaultMessage: \"Ask a quick question\\u2026\", id: \"SUYgJ2XuFk\"",
+          "id: \"UAw9rsyXsu\"",
+          "s.push(`/new?q=${encodeURIComponent(r)}`);",
+          "f(\"aside\", {",
+          "\"fixed bottom-4 end-4 flex w-[400px] max-w-[calc(100vw-2rem)] max-h-[min(560px,calc(100dvh-6rem))] flex-col overflow-hidden rounded-2xl border-0.5 border-strong bg-surface-3 shadow-[0_24px_60px_color-mix(in_srgb,var(--cds-black)_18%,transparent),0_4px_16px_color-mix(in_srgb,var(--cds-black)_8%,transparent)] transition-[opacity,transform] duration-200 ease-out origin-bottom-right [&:where(:root[dir=rtl]_:dir(rtl))]:origin-bottom-left opacity-0 scale-95 pointer-events-none data-[open]:opacity-100 data-[open]:scale-100 data-[open]:pointer-events-auto\"",
+          "\"flex shrink-0 items-center gap-1 border-b-0.5 px-3 py-2\""
+        ],
+        "b1": [
+          "messages: t,",
+          "onBranch: r,",
+          "renderUrlsAsText: i",
+          "defaultMessage:\n                  \"Ask on the side without touching the main chat. Claude sees the full context, and nothing here is added to it.\",",
+          "id: \"ctWkktQM0M\"",
+          "defaultMessage: \"Copy answer\", id: \"9Kp4ZgNuBk\"",
+          "icon: \"GitBranch\",",
+          "onClick: () => r(i),",
+          "defaultMessage: \"Branch to new chat\",",
+          "id: \"9904KlI+jU\",",
+          "defaultMessage: \"Thinking\\u2026\", id: \"P1QHV0AhYD\"",
+          "\"flex gap-0.5 px-1 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100 pointer-coarse:opacity-100\"",
+          "\"max-w-[85%] rounded-xl bg-neutral-30 px-3 py-2 font-base text-primary whitespace-pre-wrap break-words\"",
+          "\"flex-1 min-h-0 overflow-y-auto px-3 py-3 flex flex-col gap-3\""
+        ]
+      }
+    }
+  ],
+  "adapters": [
+    {
+      "original": "c9451a5b2-Dri8I3GN.js#o",
+      "name": "streamChatSideQuestion",
+      "features": [
+        "/chat_conversations/${s}/side_question",
+        "btw_history:l",
+        "parent_message_uuid:u??null",
+        "t.delta?.type===\"text_delta\"&&t.delta.text&&m(t.delta.text)"
+      ]
+    },
+    {
+      "original": "ca2ef848d-ChLvq6yZ.js#p1",
+      "name": "useChatSideChatToggle",
+      "features": [
+        "t = Tt(\"claudified_btw_side_chat\"),",
+        "{ matchShortcut: n } = Ar(\"btw_side_chat\"),",
+        "e.startsWith(\"/epitaxy\") || e.startsWith(\"/code\")",
+        "Aa() === \"cowork\"",
+        "r.addEventListener(\"keydown\", i, !0)",
+        "enabled: t,",
+        "isOpen: s,",
+        "toggle: p"
+      ]
+    },
+    {
+      "original": "shared-1-BJhqMmkf.js#WV",
+      "name": "useShortcut",
+      "features": [
+        "o=RV[e]",
+        "l=n?\"mac\":\"non-mac\"",
+        "{description:h,shortcutString:m,matchShortcut:p,bindings:g}"
+      ]
+    }
+  ],
+  "sharedAdapters": [
+    {
+      "original": "shared-25-DOWZRSlq.js#Jd",
+      "graph": "routines-shared",
+      "name": "useRouter"
+    },
+    {
+      "original": "vendor-intl-DYfox5Co.js#Gt",
+      "graph": "routines-shared",
+      "name": "FormattedMessage"
+    },
+    {
+      "original": "vendor-intl-DYfox5Co.js#q",
+      "graph": "routines-shared",
+      "name": "useIntl"
+    },
+    {
+      "original": "shared-0-DDOOdL6P.js#bN",
+      "graph": "cowork-scheduled",
+      "name": "reportError"
+    },
+    {
+      "original": "c89efce1a-C_nlrFif.js#rc",
+      "graph": "chat-knowledge",
+      "name": "ChatMemoryMarkdown"
+    }
+  ],
+  "linked": [
+    {
+      "original": "vendor-all-0-DXM0MGjZ.js#v",
+      "graph": "session-rail-kit",
+      "target": "react-store.mjs",
+      "name": "create"
+    },
+    {
+      "original": "shared-25-DOWZRSlq.js#hf",
+      "graph": "code-composer",
+      "target": "owner-support.mjs",
+      "name": "ownerDocument"
+    },
+    {
+      "original": "shared-2-TF8v67kg.js#A_",
+      "graph": "routines-shared",
+      "target": "shared-2-TF8v67kg.mjs",
+      "name": "A_"
+    },
+    {
+      "original": "shared-frame-6jtSkIit.js#ca",
+      "graph": "session-rail-kit",
+      "target": "window-actions.mjs",
+      "name": "writeClipboardText"
+    }
+  ]
+}

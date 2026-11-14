@@ -1,0 +1,137 @@
+/* First-run setup (source-onboarding.jsx). Geometry from the original desktop sign-in
+   (work/onboarding-reference/NOTES.md): Rt shell `fixed inset-0 bg-page flex-col items-center
+   justify-center-safe overflow-y-auto p-8` + 36px drag strip; Ad welcome (64px clay spark mb-14, 30px
+   serif title, 18px muted tagline pt-4, button stack bottom-12 left/right-20 max-w-md gap-3); vr card
+   (p-7, rounded-[2rem], .5px border, four-layer soft shadow, dark neutral-30). The card is wider than the
+   original's 448px email card because it holds the connection form. */
+.sob-layer { position:fixed; inset:0; z-index:400; }
+.sob-shell { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:safe center;
+  overflow-y:auto; padding:32px; background:var(--cds-page-bg, var(--cds-surface-1)); color:var(--cds-text-primary); }
+.sob-drag { position:fixed; top:0; left:0; right:0; z-index:1; height:36px; -webkit-app-region:drag; }
+.sob-spark { margin-bottom:56px; }
+.sob-title, .sob-heading { margin:0; text-align:center; font-family:var(--font-ui-serif, var(--font-anthropic-serif, ui-serif, Georgia, serif)); font-size:1.875rem; line-height:2.25rem; font-weight:500; color:var(--cds-text-primary); }
+.sob-title em { font-style:italic; }
+.sob-heading { margin-bottom:32px; }
+.sob-tagline { margin:0; padding-top:16px; font-size:1.125rem; line-height:1.75rem; color:var(--cds-text-muted); text-align:center; }
+.sob-bottom { position:absolute; bottom:48px; left:80px; right:80px; margin:0 auto; max-width:28rem; display:flex; flex-direction:column; gap:12px; }
+.sob-wide { width:100%; }
+.sob-text-button { align-self:center; border:0; background:none; padding:4px 8px; color:var(--cds-text-secondary); font:inherit; font-size:var(--cds-font-size-body, 13px); cursor:default; border-radius:var(--cds-radius); }
+.sob-text-button:hover { color:var(--cds-text-primary); }
+.sob-text-button:focus-visible, .sob-link:focus-visible, .sob-preset:focus-visible, .sob-chip:focus-visible, .sob-disclosure:focus-visible { outline:none; box-shadow:var(--cds-focus-shadow); }
+
+.sob-card { box-sizing:border-box; width:100%; max-width:560px; margin:0 16px; padding:28px; display:flex; flex-direction:column; gap:16px; text-align:left;
+  border:.5px solid var(--cds-border); border-radius:2rem; background:var(--cds-surface-1);
+  box-shadow:0 4px 24px 0 color-mix(in srgb, var(--cds-black, #000) 1.57%, transparent), 0 4px 32px 0 color-mix(in srgb, var(--cds-black, #000) 1.57%, transparent),
+    0 2px 64px 0 color-mix(in srgb, var(--cds-black, #000) 1.18%, transparent), 0 16px 32px 0 color-mix(in srgb, var(--cds-black, #000) 1.18%, transparent); }
+[data-mode=dark] .sob-card { background:var(--cds-neutral-30, var(--cds-surface-2)); }
+.sob-section, .sob-field { display:flex; flex-direction:column; gap:6px; min-width:0; }
+.sob-label { color:var(--cds-text-secondary); font-size:var(--cds-font-size-footnote, 12px); font-weight:var(--cds-font-weight-medium, 500); }
+.sob-label-row { display:flex; align-items:baseline; justify-content:space-between; gap:8px; }
+.sob-link { border:0; background:none; padding:0; color:var(--cds-text-accent, var(--cds-fill-accent)); font:inherit; font-size:var(--cds-font-size-footnote, 12px); cursor:default; border-radius:3px; }
+.sob-link:hover:not(:disabled) { text-decoration:underline; }
+.sob-link:disabled { color:var(--cds-text-disabled, var(--cds-text-muted)); }
+
+.sob-presets { display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:6px; }
+.sob-preset-copy { display:flex; flex-direction:column; gap:1px; min-width:0; }
+.sob-preset { display:flex; flex-direction:row; align-items:center; gap:8px; min-width:0; padding:8px 10px; border:0; border-radius:var(--cds-radius--lg, 10px);
+  background:var(--cds-fill-secondary); box-shadow:inset 0 0 0 1px var(--cds-fill-secondary-ring); color:var(--cds-text-primary); font:inherit; text-align:left; cursor:default;
+  transition:box-shadow var(--cds-dur-fast, 100ms), background-color var(--cds-dur-fast, 100ms); }
+.sob-preset:hover:not(:disabled) { background:var(--cds-fill-secondary-hover, var(--cds-alpha-1)); }
+.sob-preset[aria-checked=true] { box-shadow:inset 0 0 0 1.5px var(--cds-fill-accent); }
+.sob-preset-name { font-size:var(--cds-font-size-body, 13px); font-weight:var(--cds-font-weight-medium, 500); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%; }
+.sob-preset-vendor { font-size:11px; color:var(--cds-text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%; }
+
+.sob-card input[data-cds=TextInput] { box-sizing:border-box; width:100%; min-width:0; height:var(--cds-h-control, 32px); padding:0 var(--cds-pad-md, 10px); border:0; border-radius:var(--cds-radius);
+  background:var(--cds-fill-field); box-shadow:inset 0 0 0 1px var(--cds-fill-field-ring); color:var(--cds-text-primary); font:400 var(--cds-font-size-body, 13px)/var(--cds-leading-body, 19px) var(--cds-font-sans); outline:none; }
+.sob-card input[data-cds=TextInput]::placeholder { color:var(--cds-text-muted); }
+.sob-card input[data-cds=TextInput]:hover:not(:focus):not(:disabled) { box-shadow:inset 0 0 0 1px var(--cds-border-strong); }
+.sob-card input[data-cds=TextInput]:focus-visible { box-shadow:var(--cds-focus-shadow); }
+.sob-card input[data-cds=TextInput]:disabled { opacity:.6; }
+.sob-card .sselect { align-self:stretch; }
+
+.sob-chips { display:flex; flex-wrap:wrap; gap:4px; max-height:96px; overflow-y:auto; }
+.sob-chip { height:22px; padding:0 8px; border:0; border-radius:var(--cds-radius--xs, 4px); background:var(--cds-alpha-1, var(--cds-fill-secondary)); color:var(--cds-text-secondary);
+  font-family:var(--cds-font-mono); font-size:11px; cursor:default; }
+.sob-chip:hover:not(:disabled) { color:var(--cds-text-primary); }
+.sob-chip[aria-selected=true] { background:color-mix(in srgb, var(--cds-fill-accent) 14%, transparent); color:var(--cds-text-primary); }
+
+.sob-disclosure { align-self:flex-start; display:inline-flex; align-items:center; gap:6px; border:0; background:none; padding:2px 4px 2px 0; color:var(--cds-text-secondary); font:inherit; font-size:var(--cds-font-size-body, 13px); cursor:default; border-radius:var(--cds-radius); }
+.sob-disclosure:hover { color:var(--cds-text-primary); }
+.sob-caret { display:inline-flex; width:12px; }
+.sob-advanced { display:flex; flex-direction:column; gap:12px; padding:12px; border-radius:var(--cds-radius--lg, 10px); background:var(--cds-alpha-1, var(--cds-fill-secondary)); }
+.sob-muted { margin:0; color:var(--cds-text-muted); font-size:var(--cds-font-size-footnote, 12px); line-height:1.5; }
+.sob-error { margin:0; color:var(--cds-text-danger, var(--cds-fill-danger)); font-size:var(--cds-font-size-footnote, 12px); line-height:1.5; overflow-wrap:anywhere; }
+.sob-actions { display:flex; flex-direction:column; align-items:center; gap:6px; margin-top:4px; }
+.sob-legal { margin:0; text-align:center; font-size:.75rem; line-height:1.625; color:var(--cds-text-muted); }
+
+/* Choose your agent (AgentCard): the usable agents as one rounded card holding a radio list (logo, name, one plain
+   line, status, radio), hairline dividers between rows, like a Claude settings list; agents still being adapted are a
+   single muted row of chips under it. Generous whitespace, one screen tall. */
+.sob-agents { width:100%; max-width:560px; display:flex; flex-direction:column; align-items:stretch; gap:20px; margin:0 16px; border-radius:2rem; }
+.sob-agents[data-dragging] { outline:2px dashed var(--cds-fill-accent); outline-offset:12px; }
+.sob-subtitle { margin:-22px 0 6px; text-align:center; color:var(--cds-text-muted); font-size:.9375rem; line-height:1.4rem; }
+.sob-agent-list { display:flex; flex-direction:column; padding:6px; border:.5px solid var(--cds-border); border-radius:1.25rem; background:var(--cds-surface-1);
+  box-shadow:0 4px 24px 0 color-mix(in srgb, var(--cds-black, #000) 1.57%, transparent), 0 2px 64px 0 color-mix(in srgb, var(--cds-black, #000) 1.18%, transparent), 0 16px 32px 0 color-mix(in srgb, var(--cds-black, #000) 1.18%, transparent); }
+[data-mode=dark] .sob-agent-list { background:var(--cds-neutral-30, var(--cds-surface-2)); }
+.sob-agent-loading { padding:14px; }
+.sob-agent { position:relative; display:flex; align-items:center; gap:14px; min-width:0; padding:14px 14px; border:0; border-radius:.875rem; text-align:left; cursor:default;
+  background:transparent; color:var(--cds-text-primary); font:inherit; transition:background-color var(--cds-dur-fast, 100ms); }
+.sob-agent + .sob-agent::before { content:""; position:absolute; top:0; left:64px; right:14px; height:.5px; background:var(--cds-border); }
+.sob-agent:hover:not(:disabled) { background:var(--cds-alpha-1, var(--cds-fill-secondary)); }
+.sob-agent[aria-checked=true] { background:color-mix(in srgb, var(--cds-fill-accent) 7%, transparent); }
+.sob-agent:hover::before, .sob-agent:hover + .sob-agent::before, .sob-agent[aria-checked=true]::before, .sob-agent[aria-checked=true] + .sob-agent::before { opacity:0; }
+.sob-agent:focus-visible { outline:none; box-shadow:var(--cds-focus-shadow); }
+.sob-agent-copy { display:flex; flex-direction:column; gap:2px; min-width:0; flex:1; }
+.sob-agent-head { display:flex; align-items:center; gap:8px; min-width:0; }
+.sob-agent-name { font-size:.9375rem; line-height:1.3rem; font-weight:var(--cds-font-weight-medium, 500); white-space:nowrap; }
+.sob-agent-tagline { color:var(--cds-text-muted); font-size:var(--cds-font-size-footnote, 12px); line-height:1.4; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
+.sob-agent-side { display:flex; align-items:center; gap:12px; flex-shrink:0; }
+.sob-agent-status { color:var(--cds-text-muted); font-size:11.5px; white-space:nowrap; }
+.sob-radio { width:18px; height:18px; border-radius:50%; box-shadow:inset 0 0 0 1.5px var(--cds-border-strong, var(--cds-border)); transition:box-shadow var(--cds-dur-fast, 100ms); }
+.sob-agent[aria-checked=true] .sob-radio { box-shadow:inset 0 0 0 5px var(--cds-fill-accent); }
+.sob-badge { display:inline-flex; align-items:center; height:18px; padding:0 7px; border-radius:9px; font-size:10.5px; font-weight:var(--cds-font-weight-medium, 500);
+  color:var(--cds-text-secondary); background:var(--cds-alpha-1, var(--cds-fill-secondary)); white-space:nowrap; }
+.sob-badge[data-tone=accent] { color:var(--cds-text-accent, var(--cds-fill-accent)); background:color-mix(in srgb, var(--cds-fill-accent) 12%, transparent); }
+.sob-soon { display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:6px 8px; margin-top:-4px; }
+.sob-soon-label { color:var(--cds-text-muted); font-size:var(--cds-font-size-footnote, 12px); margin-right:2px; }
+.sob-soon-chip { display:inline-flex; align-items:center; gap:6px; height:26px; padding:0 10px 0 4px; border-radius:13px; color:var(--cds-text-secondary); font-size:var(--cds-font-size-footnote, 12px);
+  box-shadow:inset 0 0 0 .5px var(--cds-border-strong, var(--cds-border)); }
+.sob-soon-chip .sbl { box-shadow:none; background:transparent; opacity:.8; }
+.sob-center { text-align:center; }
+/* Nine agents outgrow a short window: Continue/Back stay pinned to the shell's bottom edge (-32px cancels its
+   padding), over a fade of the page colour, while the list scrolls behind them. */
+.sob-agent-actions { position:sticky; bottom:-32px; z-index:1; align-self:stretch; padding:12px 0 16px;
+  background:linear-gradient(to bottom, transparent, var(--cds-page-bg, var(--cds-surface-1)) 12px); }
+.sob-agent-actions > .sob-wide { max-width:28rem; }
+.sob-heading:focus { outline:none; }
+@media (prefers-reduced-motion: reduce) { .sob-agent, .sob-preset, .sob-radio { transition:none; } }
+html[data-reduce-motion="true"] .sob-agent, html[data-reduce-motion="true"] .sob-preset, html[data-reduce-motion="true"] .sob-radio { transition:none; }
+
+/* Sign in to <core> (SignInCard): the original sign-in card — a centred logo and one plain line, full-width stacked
+   buttons, an "or" rule, then the API key. */
+.sob-signin { max-width:448px; gap:14px; }
+.sob-signin-head { display:flex; flex-direction:column; align-items:center; gap:12px; text-align:center; margin-bottom:4px; }
+.sob-signin-lead { margin:0; color:var(--cds-text-secondary); font-size:var(--cds-font-size-body, 13px); line-height:1.5; max-width:34ch; }
+.sob-signin-options { display:flex; flex-direction:column; gap:10px; }
+.sob-or { display:flex; align-items:center; gap:10px; color:var(--cds-text-muted); font-size:var(--cds-font-size-footnote, 12px); margin:4px 0; }
+.sob-or::before, .sob-or::after { content:""; flex:1; height:.5px; background:var(--cds-border); }
+.sob-signin-key { height:40px !important; }
+.sob-signin-wait { display:flex; flex-direction:column; align-items:center; gap:12px; padding:8px 0; }
+.sob-signin-wait-text { color:var(--cds-text-secondary); font-size:var(--cds-font-size-body, 13px); }
+.sob-signin-code { font-family:var(--cds-font-mono); font-size:1.75rem; letter-spacing:.12em; padding:8px 16px; border-radius:var(--cds-radius--lg, 10px); background:var(--cds-alpha-1, var(--cds-fill-secondary)); user-select:all; }
+.sob-signin-row { display:flex; flex-direction:column; align-items:center; gap:6px; width:100%; }
+.sob-signin-done { margin:8px 0; text-align:center; color:var(--cds-text-secondary); }
+.sob-signin-skip { align-self:center; }
+
+/* Connect a model (ConnectCard): wide and short so it fits one screen — providers as a compact two-column grid on
+   the left, the connection form on the right. Narrow windows fall back to one column. */
+.sob-card.sob-connect { max-width:920px; display:grid; grid-template-columns:minmax(0, 340px) minmax(0, 1fr); align-items:start; gap:28px; padding:24px 28px; }
+.sob-connect-pane { display:flex; flex-direction:column; gap:12px; min-width:0; }
+.sob-connect .sob-presets { grid-template-columns:repeat(2, minmax(0, 1fr)); }
+.sob-connect .sob-actions { flex-direction:row; justify-content:flex-end; margin-top:2px; }
+.sob-connect .sob-actions > .sob-wide { width:auto; min-width:180px; order:2; }
+.sob-connect .sob-legal { text-align:left; }
+@media (max-width: 760px) {
+  .sob-card.sob-connect { grid-template-columns:minmax(0, 1fr); }
+  .sob-connect .sob-presets { grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); }
+}

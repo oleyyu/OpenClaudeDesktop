@@ -1,0 +1,1773 @@
+{
+  "referenceVersion": "4.16336.0",
+  "referenceSnapshot": "snapshots/claude-4.16336.0-20261104",
+  "generator": "scripts/extract-workflow-card-v4.mjs",
+  "adapterModule": "src/source-workflow-card-v4-adapters.jsx",
+  "linkedAreas": [
+    "artifact-library-v4",
+    "cowork-progress-v4",
+    "cowork-scheduled-v4",
+    "files-changes-v4",
+    "frame-sidebar-nav",
+    "proposal-group-v4",
+    "routines-shared-v4",
+    "session-rail-changes-v4",
+    "session-rail-context-v4",
+    "session-rail-kit-v4",
+    "session-rail-sections-v4",
+    "settings-desktop-v4",
+    "settings-nav",
+    "transcript-rows-v4",
+    "turn-plan-v4",
+    "working-line-v4"
+  ],
+  "sharedGraph": "cds-core",
+  "modules": [
+    {
+      "target": "c966e2bd9.mjs",
+      "source": "c966e2bd9-D2U_Ub6d.js",
+      "sourceSha256": "caf5743401e7d65083dfc38d63ae7645b210dc6189eeb997b3b3fd4dff12013d",
+      "sha256": "61d5b184544e30b2a4df3e0ac8d25e8adca37cefb0bb1c0d20f967369ee1ea30",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "e",
+          "sha256": "3ca430c5c1647285a37aa627f95c745d226ddc48abc8992048bcd31685c7dd49"
+        },
+        {
+          "name": "t",
+          "sha256": "fe0447d8101a443838b6c2d0f88998fc73e712900dbd809434bedf1182e36aa0"
+        },
+        {
+          "name": "n",
+          "sha256": "70d8a23d69ca4592593259cb021a9ec7e32edeffac32f04d101d0cf8d9ba918e"
+        },
+        {
+          "name": "a",
+          "sha256": "dcf8cccb1cbb737d07fd0e072a8ebaad9b43f04816e37ad4fa9623f3b522ad89"
+        },
+        {
+          "name": "o",
+          "sha256": "a0d98cf34cdaa23ddfec5b4181780a2c789209cffd97c21daefd7e6bdd6940e3"
+        },
+        {
+          "name": "s",
+          "sha256": "a40404eb66a307b69f5adf5051cea7e15cb16f0124e661388fd1a703071d20e3"
+        }
+      ],
+      "initializers": [],
+      "imports": [],
+      "exports": {},
+      "sharedExports": [
+        "a",
+        "o",
+        "s"
+      ],
+      "heldByViewTabs": []
+    },
+    {
+      "target": "shared-183.mjs",
+      "source": "shared-183-B2N6Zy4J.js",
+      "sourceSha256": "ef19933e2d466d6f2024d69a025682fee0a0ce82c175d4afd30b1109920e4001",
+      "sha256": "c029e65e4fd6dcf732b9a5f82ccdbd4320be6d8c2b321ec0e8cfb010d09e1cb0",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "$U",
+          "sha256": "3016e49f6d37251394862190cb12beec96cd4323ad2e36ebc7b4605ea348bccd"
+        },
+        {
+          "name": "xW",
+          "sha256": "34cc467bb95b28a2b3608d3e94c73656666787803269933280d85606a8acfd93"
+        },
+        {
+          "name": "SW",
+          "sha256": "4cd0a30a1dfb283e5be9d4eeba806e44078b72e34358bc4d671d2b5d8d9f979c"
+        }
+      ],
+      "initializers": [],
+      "imports": [
+        {
+          "local": "bW",
+          "from": "../frame-sidebar-nav/shared-183.mjs",
+          "name": "bW",
+          "via": "shared-183-B2N6Zy4J.js#bW",
+          "kind": "linked",
+          "original": "bW"
+        }
+      ],
+      "exports": {},
+      "sharedExports": [
+        "SW"
+      ],
+      "heldByViewTabs": []
+    },
+    {
+      "target": "c62da1b56.mjs",
+      "source": "c62da1b56-Blm2zUF0.js",
+      "sourceSha256": "5ea040ad4db877654d378d6af18260d130e884ff3db308644d6a005b599582a4",
+      "sha256": "6839c39e6f647150f1df3f36d820dfe8defe046ebe5194e16506581931cfdeb8",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "Ge",
+          "sha256": "354410755167980089087afe5fbfa657c165ffc7fdb58e3da311f5dfae541b11"
+        },
+        {
+          "name": "E",
+          "sha256": "d11e6d7893a9fed6aaa14c1a993eab80f149bc1a4a38a289a3c762ca2071704f"
+        },
+        {
+          "name": "Qe",
+          "sha256": "816c9e6d3db3d954fda522321b6708bd3ce00616e3769776a5b18cedf5ab5401"
+        },
+        {
+          "name": "$e",
+          "sha256": "c18c7cc0ed1bb33f39d5814b3c13c33890336731aa1020a0179f34e7eabef7be"
+        },
+        {
+          "name": "et",
+          "sha256": "2ade589d721fb5ce7438ffff57fad615833a4cf269205da05e4facb087c282b5"
+        },
+        {
+          "name": "tt",
+          "sha256": "668393f70c12916da486caf14be5fa01ffe91c12787485b8c1421111ce100f3f"
+        },
+        {
+          "name": "nt",
+          "sha256": "21dcccc20dbf226d24b016299d1de1e58846ee7603c97a983a322b69baafbe60"
+        },
+        {
+          "name": "rt",
+          "sha256": "1ab8842c2ef715315240467f071fc32acb871ba71fc5293571ac9a7d4bdeb2d6"
+        },
+        {
+          "name": "D",
+          "sha256": "07e649556fa521307d5dce4bc48fd25b2e1956ada1ba46df4d8dc5587a326e30"
+        },
+        {
+          "name": "it",
+          "sha256": "e0b1c055453d411438ad62d2bbad19bff04895594c04d5f0f8ba75735a56ebf5"
+        },
+        {
+          "name": "at",
+          "sha256": "5088a5e92db2959956a7c57d8535b71cc2f45fcbb7b61adbb0d4d0e400f12f14"
+        },
+        {
+          "name": "ot",
+          "sha256": "3b095f59c8c1ad54893fb22524bcf86b9a90f937e77c6307bbcfebf7cae51c01"
+        },
+        {
+          "name": "st",
+          "sha256": "b46c9a4bb85f517b70a5b93c833b4342537edd1318a8e200f44f349b1819ea16"
+        },
+        {
+          "name": "ct",
+          "sha256": "bb7d43ca7b38ecf9fca63b9b773ba4202e6b6f648e16f7a1208313cefc5a8d27"
+        },
+        {
+          "name": "lt",
+          "sha256": "69969345b0e51450ba6f9d8e68289facc28d71d5d387c5fd6653ec8b6f82b765"
+        },
+        {
+          "name": "ut",
+          "sha256": "c9259c7365c4cb625e50530c75a29b51f3b5f5aa955c0e3cd5f452be5f6993df"
+        },
+        {
+          "name": "dt",
+          "sha256": "aabbe91231aac3c1f53dbd8ef3619223013f9cb1ad38b842321279f2a2f5b44c"
+        },
+        {
+          "name": "ft",
+          "sha256": "b00ca5d2774014eba39acb4f70b4a0bf6c041f41d7d60bf3ab0d202a64073685"
+        },
+        {
+          "name": "Sn",
+          "sha256": "098bf96f867b6893bfa4e9051f00e13c628e32deca3b50a65968c64de6824dac"
+        }
+      ],
+      "initializers": [],
+      "imports": [
+        {
+          "local": "d",
+          "from": "../turn-plan-v4/shared-183.mjs",
+          "name": "mW",
+          "via": "shared-183-B2N6Zy4J.js:xa",
+          "kind": "linked",
+          "original": "mW"
+        },
+        {
+          "local": "ie",
+          "from": "./c966e2bd9.mjs",
+          "name": "a",
+          "via": "c966e2bd9-D2U_Ub6d.js:s",
+          "kind": "generated"
+        },
+        {
+          "local": "m",
+          "from": "../turn-plan-v4/shared-92.mjs",
+          "name": "eM",
+          "via": "shared-92-BOgyxePb.js:hf",
+          "kind": "linked",
+          "original": "eM"
+        },
+        {
+          "local": "ne",
+          "from": "./c966e2bd9.mjs",
+          "name": "s",
+          "via": "c966e2bd9-D2U_Ub6d.js:n",
+          "kind": "generated"
+        },
+        {
+          "local": "re",
+          "from": "../transcript-rows-v4/rows-c966e2bd9.mjs",
+          "name": "i",
+          "via": "c966e2bd9-D2U_Ub6d.js:o",
+          "kind": "linked",
+          "original": "i"
+        },
+        {
+          "local": "te",
+          "from": "./c966e2bd9.mjs",
+          "name": "o",
+          "via": "c966e2bd9-D2U_Ub6d.js:c",
+          "kind": "generated"
+        },
+        {
+          "local": "u",
+          "from": "./shared-183.mjs",
+          "name": "SW",
+          "via": "shared-183-B2N6Zy4J.js:Sa",
+          "kind": "generated"
+        }
+      ],
+      "exports": {},
+      "sharedExports": [
+        "D",
+        "E",
+        "Sn",
+        "at",
+        "ct",
+        "ft",
+        "lt",
+        "ot",
+        "rt",
+        "st"
+      ],
+      "heldByViewTabs": []
+    },
+    {
+      "target": "shared-153.mjs",
+      "source": "shared-153-DMw2VzSq.js",
+      "sourceSha256": "7e609971286c1de3bb64e01d2567c0dc95a1407a6c4b5b6d8525c44093aedea9",
+      "sha256": "d57c1ade108602e8736df599bc64969ec0952a5dda8d6358e2d5495af2d61122",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "ug",
+          "sha256": "3c8f1a9e0a5608aedb0192bb0cd657f80d705b39904127a12db7721a48043eda"
+        }
+      ],
+      "initializers": [],
+      "imports": [],
+      "exports": {},
+      "sharedExports": [
+        "ug"
+      ],
+      "heldByViewTabs": [
+        "ug"
+      ]
+    },
+    {
+      "target": "c425fb3cf.mjs",
+      "source": "c425fb3cf-Gc8R9PSy.js",
+      "sourceSha256": "a2177662ba1279d24bdfd8945f5749e3a5aa572b431912975b6634ebd1a267ef",
+      "sha256": "7711f7a4ae3e2f51e87e4d42f10c063e3235f99258ae0e7173c7688b7e675090",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "z",
+          "sha256": "d71b0d27d5ba6291a13853a7fba09ec98f51842abc84a4686da6dd5142b83e11"
+        }
+      ],
+      "initializers": [],
+      "imports": [],
+      "exports": {},
+      "sharedExports": [
+        "z"
+      ],
+      "heldByViewTabs": []
+    },
+    {
+      "target": "shared-140.mjs",
+      "source": "shared-140-DfG6VwpK.js",
+      "sourceSha256": "c23715333142677854aedb06a57a4993941dbe8da6b7dba8f687d7d8428433d3",
+      "sha256": "e18888d2efadd41d9a2891aece0a5545f4b8d81a9676c539d7cb0a604f9b6ac0",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "Ef",
+          "sha256": "d72728ae2e3270835477a31e162c271156e29048f5ee4036f597ea371806b907"
+        }
+      ],
+      "initializers": [],
+      "imports": [],
+      "exports": {},
+      "sharedExports": [
+        "Ef"
+      ],
+      "heldByViewTabs": []
+    },
+    {
+      "target": "shared-123.mjs",
+      "source": "shared-123-1Hc1RTKl.js",
+      "sourceSha256": "38122e6a90c5a0af58a5f3d2c98176fd6de1f4a8055529e304317cda513e098a",
+      "sha256": "01c9f27765dccf62f38ccebdd53b98fa64370f4de9d1910e9b7ba8836033ebf3",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "TW",
+          "sha256": "fcf8c811c2f1cdc84251b6660323147c313baa9d4962ced2926b069181d438e8"
+        },
+        {
+          "name": "PW",
+          "sha256": "6bb36ce0cc16e675ce1544793dd3f136b5a0b3c579aeca6f9e067c7ff7e387d2"
+        },
+        {
+          "name": "FW",
+          "sha256": "305c4926ce32f94ef316f9f3ea70f343b66e569cf8619ed826bb3d66bc628707"
+        }
+      ],
+      "initializers": [],
+      "imports": [
+        {
+          "local": "X",
+          "from": "../cowork-progress-v4/shared-123.mjs",
+          "name": "X",
+          "via": "shared-123-1Hc1RTKl.js#X",
+          "kind": "linked",
+          "original": "X"
+        }
+      ],
+      "exports": {},
+      "sharedExports": [
+        "FW",
+        "PW",
+        "TW"
+      ],
+      "heldByViewTabs": []
+    },
+    {
+      "target": "c5da7eb42.mjs",
+      "source": "c5da7eb42-aEqbSKbC.js",
+      "sourceSha256": "0f6b4227402f0cf436078f7e09ff9e6bb93edc714e14554b63d8a4c0a5d5bcaa",
+      "sha256": "ab7c65f6cc77e51288304ac76e31a5ec903e3f9c859092e68a75e47d505a9487",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "$L",
+          "sha256": "ce4757484e837b2b170bf576d3e5db850d02e60efffbce12945d53c20f8b7c24"
+        },
+        {
+          "name": "Nz",
+          "sha256": "59294e721d11ac4c6f13917708296afac9204d01e96c58cd83767b1c5efaa622"
+        },
+        {
+          "name": "Pz",
+          "sha256": "16423bd82b9ce1fe00709bbd6d76763479b73e4c0767c75893a3355aa62f0fc1"
+        },
+        {
+          "name": "jV",
+          "sha256": "6efc37a0714acb2c16c28fb4f1c4c3fad865caa7068595669ba275036eca836c"
+        },
+        {
+          "name": "PV",
+          "sha256": "b742ff3dc30e5838651b7a2bc07284031f8316fb39d63482e910d183766bd4f8"
+        }
+      ],
+      "initializers": [],
+      "imports": [
+        {
+          "local": "K",
+          "from": "../settings-desktop-v4/shared-25.mjs",
+          "name": "ko",
+          "via": "shared-25-D-aF0gt9.js:Fg",
+          "kind": "linked",
+          "original": "ko"
+        },
+        {
+          "local": "LL",
+          "from": "../../source-workflow-card-v4-adapters.jsx",
+          "name": "useSessionBandFields",
+          "via": "c5da7eb42-aEqbSKbC.js#LL",
+          "kind": "adapter",
+          "original": "LL"
+        },
+        {
+          "local": "NV",
+          "from": "../cds-core/c5da7eb42.mjs",
+          "name": "NV",
+          "via": "c5da7eb42-aEqbSKbC.js#NV",
+          "kind": "shared-graph",
+          "original": "NV"
+        },
+        {
+          "local": "V",
+          "from": "../settings-desktop-v4/shared-0.mjs",
+          "name": "HY",
+          "via": "shared-0-CnnWnVrT.js:Ra",
+          "kind": "linked",
+          "original": "HY"
+        },
+        {
+          "local": "bn",
+          "from": "./shared-123.mjs",
+          "name": "TW",
+          "via": "shared-123-1Hc1RTKl.js:_o",
+          "kind": "generated"
+        },
+        {
+          "local": "dn",
+          "from": "./shared-123.mjs",
+          "name": "FW",
+          "via": "shared-123-1Hc1RTKl.js:Pa",
+          "kind": "generated"
+        },
+        {
+          "local": "on",
+          "from": "./shared-123.mjs",
+          "name": "PW",
+          "via": "shared-123-1Hc1RTKl.js:Ma",
+          "kind": "generated"
+        },
+        {
+          "local": "uN",
+          "from": "../cds-core/c5da7eb42.mjs",
+          "name": "uN",
+          "via": "c5da7eb42-aEqbSKbC.js#uN",
+          "kind": "shared-graph",
+          "original": "uN"
+        },
+        {
+          "local": "v",
+          "from": "react",
+          "name": "use",
+          "via": "vendor-frame-BckkO60Y.js:do",
+          "kind": "react"
+        }
+      ],
+      "exports": {},
+      "sharedExports": [
+        "Nz",
+        "PV"
+      ],
+      "heldByViewTabs": []
+    },
+    {
+      "target": "c0a74d72b.mjs",
+      "source": "c0a74d72b-BELp4TMv.js",
+      "sourceSha256": "e29841db5533e91e31dde0fa44200248da5695c71f388631975d8160aaa84051",
+      "sha256": "50e792a78758a192dca3589a77cf67ce3369c603aae02dbfaded29f951f442f6",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "Za",
+          "sha256": "be0a1a2b73533c5452528a31824a5e6068f2c0d019a33a95fb2c845e85899f7a"
+        },
+        {
+          "name": "Qa",
+          "sha256": "35f9ed3d89a31b2382ece3abf6337dd27ea59f7a90ce283df4abd90af6bc5e4f"
+        }
+      ],
+      "initializers": [],
+      "imports": [
+        {
+          "local": "C",
+          "from": "react",
+          "name": "useRef",
+          "via": "vendor-frame-BckkO60Y.js:wo",
+          "kind": "react"
+        },
+        {
+          "local": "J3",
+          "from": "../working-line-v4/shared-frame.mjs",
+          "name": "J3",
+          "via": "shared-frame-CJdE5Ria.js:dm",
+          "kind": "linked",
+          "original": "J3"
+        },
+        {
+          "local": "J9",
+          "from": "../working-line-v4/shared-frame.mjs",
+          "name": "J9",
+          "via": "shared-frame-CJdE5Ria.js:hm",
+          "kind": "linked",
+          "original": "J9"
+        },
+        {
+          "local": "K3",
+          "from": "../working-line-v4/shared-frame.mjs",
+          "name": "K3",
+          "via": "shared-frame-CJdE5Ria.js:ym",
+          "kind": "linked",
+          "original": "K3"
+        },
+        {
+          "local": "Zn",
+          "from": "../../source-workflow-card-v4-adapters.jsx",
+          "name": "sessionBucketsStore",
+          "via": "c06cf64bb-CoZso5N4.js:kt",
+          "kind": "adapter",
+          "original": "vO"
+        }
+      ],
+      "exports": {},
+      "sharedExports": [
+        "Za"
+      ],
+      "heldByViewTabs": []
+    },
+    {
+      "target": "workflow-card.mjs",
+      "source": "c96d752d0-D9VB6ArX.js",
+      "sourceSha256": "0fdf7e459a4e03edf9e87bf76dde64243824299d88e80034cd7a56ccae4a9a49",
+      "sha256": "7b88aec6e4b225fb1dc3d3a871c82d57b652a760e344107f37a08e3067f760d3",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "CH",
+          "sha256": "7699ea379c26c019fc46d4d20fdd56d90d061345f3ebabb74378f40411bd4d32"
+        },
+        {
+          "name": "wH",
+          "sha256": "65f46b9c76713f64cbc9571f24a8aefcea8c3a7236fc5cdd67080602ad6176d5"
+        },
+        {
+          "name": "TH",
+          "sha256": "526d312e2e046a2f966125b55040a770170eaad69bf75cb1f9f4289833bb59c0"
+        },
+        {
+          "name": "EH",
+          "sha256": "4976ddb8383b0d7cf88e53fe7437a9b6791105f3fa22dd4114309b4f94ba4400"
+        },
+        {
+          "name": "DH",
+          "sha256": "71d01f3ee1550693a7d65c4812e165c856b62e3cf4e130ea5ee399ea04426d19"
+        },
+        {
+          "name": "OH",
+          "sha256": "ce3b92393817bf6037fd5dd7517cdcaad8f7d63be9b5363dd7794e1437d7b236"
+        },
+        {
+          "name": "kH",
+          "sha256": "92c722340e587f8dae4827f3cd38f0e03683978cc486b9b4b497b327788cb396"
+        },
+        {
+          "name": "AH",
+          "sha256": "914eb67cb1b70222e89fef34dd56c6ff0bbf96c40b27c1ad54f55f940cd7d134"
+        },
+        {
+          "name": "uZe",
+          "sha256": "4f6adcf4451542766856f105d65ed8741053c987bee8904879f52cb7c803e9cf"
+        },
+        {
+          "name": "jH",
+          "sha256": "a90c0f22641966c739c3d9ac8c86bb2af867b0d8936d583e24a1ce5b1fe81fe5"
+        },
+        {
+          "name": "MH",
+          "sha256": "9204387f12d4b8c1ad713b278d22dbd4e6d859cfd0c7f075526ead677000c6f8"
+        },
+        {
+          "name": "NH",
+          "sha256": "a6a431cb2bdea7477bcbcc42643e2c74965f8b10967c40744441d3073cce1cb3"
+        },
+        {
+          "name": "PH",
+          "sha256": "4c21cb769cb78b6de7a593c9046b2373aec9137b3ae461ea04b5fc2446f92a4c"
+        },
+        {
+          "name": "FH",
+          "sha256": "8df6934b31bf5f0dcaf9889847cdebf9a10340093bf16c3c4222e9ae508d9439"
+        },
+        {
+          "name": "dZe",
+          "sha256": "4ab29689d266e52eba337efbcec11bd853a2953c457392b75a2a87f1255cde27"
+        },
+        {
+          "name": "fZe",
+          "sha256": "f8af6bf2b6c3989c852bd163ededb3fc6358824ac5e0ea8a77e7d06239ae1c51"
+        },
+        {
+          "name": "IH",
+          "sha256": "a9656bee57b114e2a9aae6c251fde149212bd6b92312744f96412b20a82f899d"
+        },
+        {
+          "name": "LH",
+          "sha256": "dace8c9ac024063cf614e45b6d5b2ca373c41dc57554fce78a879af035880b87"
+        },
+        {
+          "name": "RH",
+          "sha256": "625644aea8d7c9a69224ccf4409c4fa9522495585d7a0e52719b81ee75dd4374"
+        },
+        {
+          "name": "zH",
+          "sha256": "c0cfb9bfddfaf116e7282ac2276d9cde79a7c88d4d532b9d6083ecbb60eec3ae"
+        },
+        {
+          "name": "qH",
+          "sha256": "167beb797fdde5fd955ccf198ee5bbf48aa59cf98b4db7ab03f106c9f09125db"
+        },
+        {
+          "name": "YH",
+          "sha256": "d94643e5c624af098e05128e4d097a4edb19c79ddfc6c6fa9cdf68b392b24c1b"
+        },
+        {
+          "name": "vZe",
+          "sha256": "a3936402be1049e4d08b506aba2931340dff387e5d5d48d723bdd6b132da3db5"
+        },
+        {
+          "name": "QH",
+          "sha256": "1fbf6fac9b5696816dfa266501a7f00b4273bed83d4cf2db834b89d4c428a310"
+        },
+        {
+          "name": "$H",
+          "sha256": "2fe187e3deaa85dbf80da463ecf322a3ed373b4024149518206f8bc43b5b5ec6"
+        },
+        {
+          "name": "eU",
+          "sha256": "1a7630dadb4e2c8a00ba76f9e4cb3a2d19af70ddb887c3c5f4b938f070690c82"
+        },
+        {
+          "name": "EZe",
+          "sha256": "fd0a7af4022080ee8d8250e5f03f8dac4c5750dd585938ebc0b9a8deb40d5429"
+        },
+        {
+          "name": "DZe",
+          "sha256": "b3a49318cc860487ad48e15876d7929de329548e9712dca3ec666c684bc49bd4"
+        },
+        {
+          "name": "OZe",
+          "sha256": "4ecc77da65b3ab17c378cee3ec762d2fa1b9eaa465bd08edadcda5651bd490c3"
+        },
+        {
+          "name": "kZe",
+          "sha256": "4d91f246b528f80b7f546ccc88b6341f0ed048e4579bf33fae468665357d2d68"
+        },
+        {
+          "name": "AZe",
+          "sha256": "7caf04e88a00e63e5d052d7c1e8222c15f81d29c860b1e14973704b628e29536"
+        },
+        {
+          "name": "jZe",
+          "sha256": "180557dfd6563bce4003211330a2b6154e254283989e3bb8fd1eb02bb644295b"
+        },
+        {
+          "name": "tU",
+          "sha256": "d6bd62ad31c2d958a679bc001539ed999c12ebe320f168c0ecf0668ee44d3893"
+        },
+        {
+          "name": "MZe",
+          "sha256": "aee3c86da32689fca2781cb502d6031907d8dbce6edcebd758d1bcd0578c10e8"
+        },
+        {
+          "name": "NZe",
+          "sha256": "021b93a74605b7e0bfa4f8dccd40f80e1988c4bf1d5f2b93471575cf849b1aa4"
+        },
+        {
+          "name": "PZe",
+          "sha256": "9c057053aed1ee19f39a3434c0c13d60a1fc1052fde0ab8f31f1682b9144e6fc"
+        },
+        {
+          "name": "FZe",
+          "sha256": "8467c4928c54983e3fc6f22eaf5d8ca6b235024904f144818822d9cdbbd1da1b"
+        },
+        {
+          "name": "IZe",
+          "sha256": "2ca598344b3840ae5e2f2011db86c926fcbf42e29c0c6f3212f3bbf79651d38d"
+        },
+        {
+          "name": "LZe",
+          "sha256": "3f1493af6880749ce232e0e1a0713c687918dda46d840f65110d6728bb506e17"
+        },
+        {
+          "name": "RZe",
+          "sha256": "82e9cadeb23b174970e51586ded816f91ac72f87bddacb616f5622cab333d167"
+        },
+        {
+          "name": "nU",
+          "sha256": "0394b7442cddc82ca92c7b9b38a8047a50bccab281d2ed8dad0c7c99f6d071da"
+        },
+        {
+          "name": "rU",
+          "sha256": "03e07d6ae768ce42186bfa2255864bab92017c510427efe1c7b04ef83866c97b"
+        },
+        {
+          "name": "iU",
+          "sha256": "389c9de467b07bbb3877f1f42a3c8368aac56d38c12d441c0e09b0e42774f767"
+        },
+        {
+          "name": "zZe",
+          "sha256": "adab39099a4bb26ff81a47c1a828c7162c047d679048ddc3ba089491bf871032"
+        },
+        {
+          "name": "aU",
+          "sha256": "7866660f144fad6146df4b64f182296adbacb45d126607be91d551f3582fa704"
+        },
+        {
+          "name": "oU",
+          "sha256": "821d358985cfe24559568af0985772a2c8aa236daaf1e5f3376aa71652500a4d"
+        },
+        {
+          "name": "sU",
+          "sha256": "5e94b822e46037d6e784e7cacfead7adb2550b8ea0dd9aa1499dd8e218e4294b"
+        },
+        {
+          "name": "cU",
+          "sha256": "8440b20578deb350ddf9813a145eb8181ed649fbaaea46f9b40a195d33dcf372"
+        },
+        {
+          "name": "BZe",
+          "sha256": "9a518e91bc1701a940edebb343cac60bcf817b62e16f585bf13c093823516e88"
+        },
+        {
+          "name": "VZe",
+          "sha256": "6aa79716ff1fba2dbea1aeff05e265bd442b079dbcc39929c19e3aec079c4016"
+        },
+        {
+          "name": "HZe",
+          "sha256": "fc7f4e166b71874fd774adfacb1b827a51f2c5a3fa061a225b3414846ab4d066"
+        },
+        {
+          "name": "lU",
+          "sha256": "21a6a7109ef8fc73240df13a699887b62e163836a16712b95370f75bcc9efd65"
+        },
+        {
+          "name": "UZe",
+          "sha256": "0d3f6cd33a6ea546fac8f4760aa1b6ce9575eeac42806c53116661e9c42786be"
+        },
+        {
+          "name": "uU",
+          "sha256": "c07a738d80ef80a57ec7e51b2c2738186a2aaf3fdd782a7b5db6390eea6df956"
+        },
+        {
+          "name": "dU",
+          "sha256": "5aaf83b8a37df32608269520edd6e4baf6da8f97074c4cb9850335776a838909"
+        },
+        {
+          "name": "WZe",
+          "sha256": "61aa06b4c325c28c4744fbfaa5dc493cc46895085399f54e5654fd73c1d1f2f7"
+        },
+        {
+          "name": "GZe",
+          "sha256": "75275db8accab46d3ec7bc88d040acee59ff20ede7fd1d560da673516aa3e118"
+        },
+        {
+          "name": "KZe",
+          "sha256": "6a71ae19e6ccef3188a8730c8dee3ceb0bb357fa760b18becf16d70d2792de87"
+        },
+        {
+          "name": "fU",
+          "sha256": "bd891817c42b0589a21925654b3814e8f8525a68d539b8e747cea876cbef489b"
+        },
+        {
+          "name": "qZe",
+          "sha256": "b8fdff18dfc84b53888982e5138ef39d58ebd5cf4a794c1fe1eada0572837fda"
+        },
+        {
+          "name": "pU",
+          "sha256": "6307a157f5d0684e91f0b2ac58f47bfaa931f398fbeeadad9aaa2aa49d943add"
+        },
+        {
+          "name": "mU",
+          "sha256": "10abaffc2b6f893591478111ff17e03d1c99080cae6c0bcce4dfb77a6c6ed7c2"
+        },
+        {
+          "name": "JZe",
+          "sha256": "80cb463bc812134ab797dd7e7573323919ba1ed2ae59dccb00d0c5adb607ee41"
+        },
+        {
+          "name": "YZe",
+          "sha256": "a724476abfde9e8de5da844154697ff4899f7425097c9c2ec3c3cfae0a551afd"
+        },
+        {
+          "name": "hU",
+          "sha256": "7ce9b0a156c7c01628de1454793160bc50b5a52997af845862be04d685c6b472"
+        },
+        {
+          "name": "gU",
+          "sha256": "cc9ee20beaadd9d0ba22f1cffd97f78961cde151769f6335cff43f8d495c1c4f"
+        },
+        {
+          "name": "XZe",
+          "sha256": "8b6b51efc0a629b6b9b527f87a5d03ff252b90abe4e0ef6043728a3af2d36334"
+        },
+        {
+          "name": "ZZe",
+          "sha256": "edb1d4600bb13a64e294a231c10534e678447aed07369d4fcce8be2d3b94c60d"
+        },
+        {
+          "name": "QZe",
+          "sha256": "98635c06f1d6948fdfbdce99cf9cb25a41d544648ebe584d3ff5cd2911655ff6"
+        },
+        {
+          "name": "_U",
+          "sha256": "e8f6d051c0509323c74c066fdd3be96faf97c4d064e40f453c11fc177fc12d5a"
+        },
+        {
+          "name": "$Ze",
+          "sha256": "c52b8a4abf7a0c01fbf4fe95ebaead37a3c34479557539bbacc66298221b56b7"
+        },
+        {
+          "name": "eQe",
+          "sha256": "975cd1d27189359ee6404e1fe121b121254fc22782e6ccf346503c9aaba6336d"
+        },
+        {
+          "name": "tQe",
+          "sha256": "17e4eae124e669781ba0fd6080df437667dec767926467263a6f8c36221461af"
+        },
+        {
+          "name": "nQe",
+          "sha256": "bbe9c492fb8f897216acc56192148f4bb4f4e22a501b79fc11a092b49ea55a1d"
+        },
+        {
+          "name": "vU",
+          "sha256": "b831c182ee2c4a961477a96d18ea8e85466c81edd684a9542563154709280312"
+        },
+        {
+          "name": "rQe",
+          "sha256": "1e6b625ddf41ded63495290c3762ab8f7883053f98521606ebbff32db3eec36a"
+        },
+        {
+          "name": "yU",
+          "sha256": "0048caccdcc359c973c7f554d2e63a7fc6e78671e549d13500aa331a3da6b35e"
+        },
+        {
+          "name": "bU",
+          "sha256": "ccb2f458410777810066e9817b5f72e0a36e3c5403421b20fa06bbb29d876749"
+        },
+        {
+          "name": "xU",
+          "sha256": "fc9c2999bed5107ff13686263a12aca93443da89d9ba50743f8662e4a105c448"
+        },
+        {
+          "name": "SU",
+          "sha256": "30cb747aade10651f783c5e1811afe7f2eb35262dc75db23011c4d95ba874815"
+        },
+        {
+          "name": "CU",
+          "sha256": "060024a972bcdc5af1c5a3e2cb1d7f623ccf75998eda14b3bea1eb07cad82671"
+        },
+        {
+          "name": "wU",
+          "sha256": "42e67d5d0df03cda13159e5434113aa0f4684ee99a3d789631c0d347f933af85"
+        },
+        {
+          "name": "TU",
+          "sha256": "078e130fc479da6b50e429b7a78ee370bd4d7e2f111e2d2571c174b5c568a679"
+        },
+        {
+          "name": "iQe",
+          "sha256": "81c49a19fc66ceeeb1a7a6a0ea2c278723d1cb5efd0b9f48c8d4bcf5225169d5"
+        },
+        {
+          "name": "aQe",
+          "sha256": "1d08416a9148c37c779bdd9c6c1fe2ab0205e91c832edea1745b78275aa920cc"
+        },
+        {
+          "name": "oQe",
+          "sha256": "93a0ee83a37ae145cb1f70692f05904d7ac9647f944348c6677ead949cbad41c"
+        },
+        {
+          "name": "sQe",
+          "sha256": "5ff08d0ff87bd7adc7ede5a642168d2b29f4048085f609a64867a809684394db"
+        },
+        {
+          "name": "cQe",
+          "sha256": "2640bb995280ace152beb8f74e33751af12f02cb7e2457a003f0dbb2133e28b4"
+        },
+        {
+          "name": "lQe",
+          "sha256": "3db2182d693da535ef035608ae6ceaa72f30d4535ad54d8eacbfa97b05f100cd"
+        },
+        {
+          "name": "uQe",
+          "sha256": "e7b6cde57e6d60b9423a0b2c522d975ae2e8a4960a38fa55abe299943b604081"
+        },
+        {
+          "name": "dQe",
+          "sha256": "daa1b4b949caa1a9ab28e11f231097c3e0fd7955dc6db9620e8d615aabee0d5e"
+        },
+        {
+          "name": "fQe",
+          "sha256": "fc6fb4f375050bfd44188f54b9f030f5b8600872a762fa02851fe71d432e8217"
+        },
+        {
+          "name": "pQe",
+          "sha256": "381d862edc2810b84b433906928662c0746a6e9bcfc05f2074e98ebfa6d2ad39"
+        },
+        {
+          "name": "mQe",
+          "sha256": "32ccede0d20525289377898be153080e7282151457a307595bd88721e9522ebc"
+        },
+        {
+          "name": "EU",
+          "sha256": "af9212f8b406fb23b7d3ad8ba86259835343fd87076347afbab1a1225eb79683"
+        },
+        {
+          "name": "DU",
+          "sha256": "bf71701a18fbeef9ddba25a4e26a4be0d1f1bbba4bd6923b48278b7f381952e5"
+        },
+        {
+          "name": "hQe",
+          "sha256": "39b08b71621c50f0b19f7c019b182b58f34987f4f04d0d52c884915f0db63bfa"
+        },
+        {
+          "name": "gQe",
+          "sha256": "3df4465c37d1331e563cf751e399b3357ccad7d7bd8e0825eedb57d8189fb09a"
+        },
+        {
+          "name": "_Qe",
+          "sha256": "49763502ef0c6c277f1f86565eefdbc7d06aa783447fca8b7310bc4cf397bcfc"
+        },
+        {
+          "name": "vQe",
+          "sha256": "faada2391f1bb8ffada92e0a9d14b0673ae2a70bf25c4c620db5a44b0ffb57f5"
+        },
+        {
+          "name": "yQe",
+          "sha256": "bba4ff819d282a6d364d56a3f791685f417fd77a5d41c1c559ed0dd5f7da275f"
+        },
+        {
+          "name": "bQe",
+          "sha256": "0cfd370be8d143245265f1b60bc6438d7399ed43008a4b7a1acc42ec9d8a9bab"
+        },
+        {
+          "name": "xQe",
+          "sha256": "f374aa24424c0eec1568beed1645dcdb77546884472a290457765b16a83be7fd"
+        },
+        {
+          "name": "SQe",
+          "sha256": "a1d6d0530ba7669542bb8228f8fde4b19c7575d2ff561b960e90b57091d9dbd1"
+        },
+        {
+          "name": "CQe",
+          "sha256": "4e67ccf36963335b817c12b52ac129d7b228e8a310dff3919cd1a5929047aa51"
+        },
+        {
+          "name": "wQe",
+          "sha256": "a833ef88b96fc45cb03ef1dfe1503818bd5e2b4d96a7dd78f7bc4baea7e54697"
+        },
+        {
+          "name": "TQe",
+          "sha256": "2ffe6c75edcc7f1212eb800f442dad663b2e632832deeb72ff91130b7b0b0497"
+        },
+        {
+          "name": "EQe",
+          "sha256": "52589cc9e9ddec699fccb43fc9c630348e19df04fee558abb050b864a72ab91a"
+        },
+        {
+          "name": "OU",
+          "sha256": "6487f3a71db28475b377e779a5ffb03150a6ef51a7d8ea2f1866f56608289da0"
+        },
+        {
+          "name": "kU",
+          "sha256": "aeea7383e054cdb48a88ab4514558041b8292cb444b5295e018574a675cd1737"
+        },
+        {
+          "name": "AU",
+          "sha256": "3351d218c373192c2b0dfedca6a57b8c20a6a31c175995753b1e7179311312b8"
+        },
+        {
+          "name": "jU",
+          "sha256": "65c35bcdcbb5137c85d692c5050c06da5e9539b7dbead851b9992dea71750ad1"
+        },
+        {
+          "name": "DQe",
+          "sha256": "4918a3f8c33ced3dc992216f4e299667b4ce8daff3cc0803e21f68b382c418b2"
+        },
+        {
+          "name": "OQe",
+          "sha256": "00761351a1006c6d49b6fdd85561f368cdb63577aa6a194bc00bdd83c74e762a"
+        },
+        {
+          "name": "kQe",
+          "sha256": "e2cdd21b0aab62749d58b43b9ab9c34eda422970693a710765dbbb97e042bd86"
+        },
+        {
+          "name": "AQe",
+          "sha256": "2c8af15d0a9a55347e5e821d726aaec3fdfccbaccb1469ceb36ff22c1f7631d9"
+        },
+        {
+          "name": "jQe",
+          "sha256": "038cbd0b7dfca93dd9a6eba2f63634ef604e34ccd24926f91adcf9c61424619a"
+        }
+      ],
+      "initializers": [],
+      "imports": [
+        {
+          "local": "$d",
+          "from": "./c62da1b56.mjs",
+          "name": "at",
+          "via": "c62da1b56-Blm2zUF0.js:E",
+          "kind": "generated"
+        },
+        {
+          "local": "$ie",
+          "from": "../session-rail-changes-v4/vendor-intl.mjs",
+          "name": "FormattedList",
+          "via": "vendor-intl-BJgYK7RA.js:r",
+          "kind": "linked",
+          "original": "sn"
+        },
+        {
+          "local": "Dn",
+          "from": "../cowork-scheduled-v4/shared-0-CnnWnVrT.mjs",
+          "name": "fE",
+          "via": "shared-0-CnnWnVrT.js:xv",
+          "kind": "linked",
+          "original": "fE"
+        },
+        {
+          "local": "F",
+          "from": "react",
+          "name": "useId",
+          "via": "vendor-frame-BckkO60Y.js:vo",
+          "kind": "react"
+        },
+        {
+          "local": "Fe",
+          "from": "../cds-core/shared-frame.mjs",
+          "name": "CdsShimmer",
+          "via": "shared-frame-CJdE5Ria.js:aa",
+          "kind": "shared-graph",
+          "original": "wI"
+        },
+        {
+          "local": "HTe",
+          "from": "./c0a74d72b.mjs",
+          "name": "Za",
+          "via": "c0a74d72b-BELp4TMv.js:w",
+          "kind": "generated"
+        },
+        {
+          "local": "Hbe",
+          "from": "./c425fb3cf.mjs",
+          "name": "z",
+          "via": "c425fb3cf-Gc8R9PSy.js:p",
+          "kind": "generated"
+        },
+        {
+          "local": "Hu",
+          "from": "./shared-140.mjs",
+          "name": "Ef",
+          "via": "shared-140-DfG6VwpK.js:$t",
+          "kind": "generated"
+        },
+        {
+          "local": "I",
+          "from": "react",
+          "name": "useRef",
+          "via": "vendor-frame-BckkO60Y.js:wo",
+          "kind": "react"
+        },
+        {
+          "local": "I1",
+          "from": "../working-line-v4/shared-frame.mjs",
+          "name": "I1",
+          "via": "shared-frame-CJdE5Ria.js:rm",
+          "kind": "linked",
+          "original": "I1"
+        },
+        {
+          "local": "I2",
+          "from": "../working-line-v4/shared-frame.mjs",
+          "name": "I2",
+          "via": "shared-frame-CJdE5Ria.js:im",
+          "kind": "linked",
+          "original": "I2"
+        },
+        {
+          "local": "I3",
+          "from": "../working-line-v4/shared-frame.mjs",
+          "name": "I3",
+          "via": "shared-frame-CJdE5Ria.js:am",
+          "kind": "linked",
+          "original": "I3"
+        },
+        {
+          "local": "I4",
+          "from": "../cds-core/shared-frame.mjs",
+          "name": "I4",
+          "via": "shared-frame-CJdE5Ria.js:om",
+          "kind": "shared-graph",
+          "original": "I4"
+        },
+        {
+          "local": "I5",
+          "from": "../working-line-v4/shared-frame.mjs",
+          "name": "I5",
+          "via": "shared-frame-CJdE5Ria.js:sm",
+          "kind": "linked",
+          "original": "I5"
+        },
+        {
+          "local": "Ie",
+          "from": "../cds-core/shared-frame.mjs",
+          "name": "CdsTooltip",
+          "via": "shared-frame-CJdE5Ria.js:cd",
+          "kind": "shared-graph",
+          "original": "Kp"
+        },
+        {
+          "local": "Ioe",
+          "from": "./c62da1b56.mjs",
+          "name": "st",
+          "via": "c62da1b56-Blm2zUF0.js:T",
+          "kind": "generated"
+        },
+        {
+          "local": "J0",
+          "from": "../working-line-v4/shared-frame.mjs",
+          "name": "J0",
+          "via": "shared-frame-CJdE5Ria.js:cm",
+          "kind": "linked",
+          "original": "J0"
+        },
+        {
+          "local": "J1",
+          "from": "../working-line-v4/shared-frame.mjs",
+          "name": "J1",
+          "via": "shared-frame-CJdE5Ria.js:lm",
+          "kind": "linked",
+          "original": "J1"
+        },
+        {
+          "local": "J2",
+          "from": "../working-line-v4/shared-frame.mjs",
+          "name": "J2",
+          "via": "shared-frame-CJdE5Ria.js:um",
+          "kind": "linked",
+          "original": "J2"
+        },
+        {
+          "local": "J3",
+          "from": "../working-line-v4/shared-frame.mjs",
+          "name": "J3",
+          "via": "shared-frame-CJdE5Ria.js:dm",
+          "kind": "linked",
+          "original": "J3"
+        },
+        {
+          "local": "J4",
+          "from": "../working-line-v4/shared-frame.mjs",
+          "name": "J4",
+          "via": "shared-frame-CJdE5Ria.js:fm",
+          "kind": "linked",
+          "original": "J4"
+        },
+        {
+          "local": "J5",
+          "from": "../working-line-v4/shared-frame.mjs",
+          "name": "J5",
+          "via": "shared-frame-CJdE5Ria.js:pm",
+          "kind": "linked",
+          "original": "J5"
+        },
+        {
+          "local": "J8",
+          "from": "../working-line-v4/shared-frame.mjs",
+          "name": "J8",
+          "via": "shared-frame-CJdE5Ria.js:mm",
+          "kind": "linked",
+          "original": "J8"
+        },
+        {
+          "local": "J9",
+          "from": "../working-line-v4/shared-frame.mjs",
+          "name": "J9",
+          "via": "shared-frame-CJdE5Ria.js:hm",
+          "kind": "linked",
+          "original": "J9"
+        },
+        {
+          "local": "Jp",
+          "from": "./c5da7eb42.mjs",
+          "name": "PV",
+          "via": "c5da7eb42-aEqbSKbC.js:Dt",
+          "kind": "generated"
+        },
+        {
+          "local": "Js",
+          "from": "../routines-shared-v4/shared-183-B2N6Zy4J.mjs",
+          "name": "_J",
+          "via": "shared-183-B2N6Zy4J.js:Cr",
+          "kind": "linked",
+          "original": "_J"
+        },
+        {
+          "local": "K0",
+          "from": "../working-line-v4/shared-frame.mjs",
+          "name": "K0",
+          "via": "shared-frame-CJdE5Ria.js:gm",
+          "kind": "linked",
+          "original": "K0"
+        },
+        {
+          "local": "K1",
+          "from": "../working-line-v4/shared-frame.mjs",
+          "name": "K1",
+          "via": "shared-frame-CJdE5Ria.js:_m",
+          "kind": "linked",
+          "original": "K1"
+        },
+        {
+          "local": "K2",
+          "from": "../working-line-v4/shared-frame.mjs",
+          "name": "K2",
+          "via": "shared-frame-CJdE5Ria.js:vm",
+          "kind": "linked",
+          "original": "K2"
+        },
+        {
+          "local": "K3",
+          "from": "../working-line-v4/shared-frame.mjs",
+          "name": "K3",
+          "via": "shared-frame-CJdE5Ria.js:ym",
+          "kind": "linked",
+          "original": "K3"
+        },
+        {
+          "local": "K4",
+          "from": "../working-line-v4/shared-frame.mjs",
+          "name": "K4",
+          "via": "shared-frame-CJdE5Ria.js:bm",
+          "kind": "linked",
+          "original": "K4"
+        },
+        {
+          "local": "K5",
+          "from": "../working-line-v4/shared-frame.mjs",
+          "name": "K5",
+          "via": "shared-frame-CJdE5Ria.js:xm",
+          "kind": "linked",
+          "original": "K5"
+        },
+        {
+          "local": "Ke",
+          "from": "../cds-core/shared-frame.mjs",
+          "name": "CdsTooltipProvider",
+          "via": "shared-frame-CJdE5Ria.js:ld",
+          "kind": "shared-graph",
+          "original": "_m"
+        },
+        {
+          "local": "L",
+          "from": "../cds-core/vendor-frame.mjs",
+          "name": "useDirection",
+          "via": "vendor-frame-BckkO60Y.js:xa",
+          "kind": "shared-graph",
+          "original": "Xn"
+        },
+        {
+          "local": "Loe",
+          "from": "./c62da1b56.mjs",
+          "name": "Sn",
+          "via": "c62da1b56-Blm2zUF0.js:b",
+          "kind": "generated"
+        },
+        {
+          "local": "My",
+          "from": "../proposal-group-v4/c425fb3cf.mjs",
+          "name": "re",
+          "via": "c425fb3cf-Gc8R9PSy.js:D",
+          "kind": "linked",
+          "original": "re"
+        },
+        {
+          "local": "Ny",
+          "from": "../proposal-group-v4/c425fb3cf.mjs",
+          "name": "ie",
+          "via": "c425fb3cf-Gc8R9PSy.js:E",
+          "kind": "linked",
+          "original": "ie"
+        },
+        {
+          "local": "O_",
+          "from": "../session-rail-kit-v4/c227f4d5e-DGDdGBTz.mjs",
+          "name": "TE",
+          "via": "c227f4d5e-DGDdGBTz.js:$c",
+          "kind": "linked",
+          "original": "TE"
+        },
+        {
+          "local": "Poe",
+          "from": "./c62da1b56.mjs",
+          "name": "ct",
+          "via": "c62da1b56-Blm2zUF0.js:A",
+          "kind": "generated"
+        },
+        {
+          "local": "Q",
+          "from": "../transcript-rows-v4/rows-vendor-intl.mjs",
+          "name": "Gt",
+          "via": "vendor-intl-BJgYK7RA.js:l",
+          "kind": "linked",
+          "original": "Gt"
+        },
+        {
+          "local": "Qd",
+          "from": "./c62da1b56.mjs",
+          "name": "rt",
+          "via": "c62da1b56-Blm2zUF0.js:D",
+          "kind": "generated"
+        },
+        {
+          "local": "Rw",
+          "from": "../files-changes-v4/focus-return.mjs",
+          "name": "useFocusReturnOnUnmount",
+          "via": "c0a54ccd3-DO5tXxAj.js:t",
+          "kind": "linked",
+          "original": "n"
+        },
+        {
+          "local": "Si",
+          "from": "./shared-153.mjs",
+          "name": "ug",
+          "via": "shared-153-DMw2VzSq.js:Zy",
+          "kind": "generated"
+        },
+        {
+          "local": "T",
+          "from": "react",
+          "name": "use",
+          "via": "vendor-frame-BckkO60Y.js:do",
+          "kind": "react"
+        },
+        {
+          "local": "Ve",
+          "from": "../frame-sidebar-nav/shared-frame.mjs",
+          "name": "nI",
+          "via": "shared-frame-CJdE5Ria.js:ia",
+          "kind": "linked",
+          "original": "nI"
+        },
+        {
+          "local": "Vh",
+          "from": "../session-rail-context-v4/c25d7186f.mjs",
+          "name": "i",
+          "via": "c25d7186f-CHE_J2eY.js:t",
+          "kind": "linked",
+          "original": "i"
+        },
+        {
+          "local": "Vu",
+          "from": "../../source-workflow-card-v4-adapters.jsx",
+          "name": "useIntl",
+          "via": "vendor-intl-BJgYK7RA.js:p",
+          "kind": "adapter",
+          "original": "q"
+        },
+        {
+          "local": "X",
+          "from": "../working-line-v4/shared-frame.mjs",
+          "name": "bz",
+          "via": "shared-frame-CJdE5Ria.js:Hi",
+          "kind": "linked",
+          "original": "bz"
+        },
+        {
+          "local": "Y_",
+          "from": "../session-rail-kit-v4/c227f4d5e-DGDdGBTz.mjs",
+          "name": "aD",
+          "via": "c227f4d5e-DGDdGBTz.js:bl",
+          "kind": "linked",
+          "original": "aD"
+        },
+        {
+          "local": "Z",
+          "from": "../cds-core/shared-frame.mjs",
+          "name": "CdsButton",
+          "via": "shared-frame-CJdE5Ria.js:Id",
+          "kind": "shared-graph",
+          "original": "Xu"
+        },
+        {
+          "local": "Z1",
+          "from": "../working-line-v4/shared-frame.mjs",
+          "name": "Z1",
+          "via": "shared-frame-CJdE5Ria.js:Sm",
+          "kind": "linked",
+          "original": "Z1"
+        },
+        {
+          "local": "Z2",
+          "from": "../working-line-v4/shared-frame.mjs",
+          "name": "Z2",
+          "via": "shared-frame-CJdE5Ria.js:Cm",
+          "kind": "linked",
+          "original": "Z2"
+        },
+        {
+          "local": "Z3",
+          "from": "../settings-nav/shared-frame.mjs",
+          "name": "Z3",
+          "via": "shared-frame-CJdE5Ria.js:wm",
+          "kind": "linked",
+          "original": "Z3"
+        },
+        {
+          "local": "Za",
+          "from": "./shared-123.mjs",
+          "name": "TW",
+          "via": "shared-123-1Hc1RTKl.js:_o",
+          "kind": "generated"
+        },
+        {
+          "local": "Zy",
+          "from": "../proposal-group-v4/c425fb3cf.mjs",
+          "name": "V",
+          "via": "c425fb3cf-Gc8R9PSy.js:m",
+          "kind": "linked",
+          "original": "V"
+        },
+        {
+          "local": "af",
+          "from": "./c62da1b56.mjs",
+          "name": "D",
+          "via": "c62da1b56-Blm2zUF0.js:w",
+          "kind": "generated"
+        },
+        {
+          "local": "cb",
+          "from": "../session-rail-kit-v4/cced621b6-BzJn1GRx.mjs",
+          "name": "t",
+          "via": "cced621b6-BzJn1GRx.js:t",
+          "kind": "linked",
+          "original": "t"
+        },
+        {
+          "local": "cl",
+          "from": "../settings-desktop-v4/vendor-query.mjs",
+          "name": "tt",
+          "via": "vendor-query-Bl2Kfzgk.js:s",
+          "kind": "linked",
+          "original": "tt"
+        },
+        {
+          "local": "dpe",
+          "from": "../session-rail-sections-v4/cd4f82e77.mjs",
+          "name": "useSecondNow",
+          "via": "cd4f82e77-Cuw99s6A.js:vt",
+          "kind": "linked",
+          "original": "Me"
+        },
+        {
+          "local": "dv",
+          "from": "../session-rail-kit-v4/c227f4d5e-DGDdGBTz.mjs",
+          "name": "aE",
+          "via": "c227f4d5e-DGDdGBTz.js:ol",
+          "kind": "linked",
+          "original": "aE"
+        },
+        {
+          "local": "ec",
+          "from": "../cds-core/shared-183.mjs",
+          "name": "CdsPreviewCard",
+          "via": "shared-183-B2N6Zy4J.js:Ka",
+          "kind": "shared-graph",
+          "original": "dU"
+        },
+        {
+          "local": "ef",
+          "from": "./c62da1b56.mjs",
+          "name": "E",
+          "via": "c62da1b56-Blm2zUF0.js:I",
+          "kind": "generated"
+        },
+        {
+          "local": "f",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-BckkO60Y.js:Ga",
+          "kind": "react"
+        },
+        {
+          "local": "h",
+          "from": "react/jsx-runtime",
+          "name": "jsxs",
+          "via": "vendor-frame-BckkO60Y.js:Ka",
+          "kind": "react"
+        },
+        {
+          "local": "hl",
+          "from": "../frame-sidebar-nav/shared-18.mjs",
+          "name": "OJ",
+          "via": "shared-18-Cfqwgjc5.js:Cn",
+          "kind": "linked",
+          "original": "OJ"
+        },
+        {
+          "local": "hu",
+          "from": "../session-rail-context-v4/shared-8.mjs",
+          "name": "bZ",
+          "via": "shared-8-BqfCbkJd.js:L",
+          "kind": "linked",
+          "original": "bZ"
+        },
+        {
+          "local": "it",
+          "from": "../cds-core/shared-frame.mjs",
+          "name": "CdsOverflowTooltip",
+          "via": "shared-frame-CJdE5Ria.js:sd",
+          "kind": "shared-graph",
+          "original": "dm"
+        },
+        {
+          "local": "ki",
+          "from": "../routines-shared-v4/shared-153-DMw2VzSq.mjs",
+          "name": "_g",
+          "via": "shared-153-DMw2VzSq.js:nb",
+          "kind": "linked",
+          "original": "_g"
+        },
+        {
+          "local": "me",
+          "from": "../cds-core/shared-frame.mjs",
+          "name": "CdsPopover",
+          "via": "shared-frame-CJdE5Ria.js:Ua",
+          "kind": "shared-graph",
+          "original": "JM"
+        },
+        {
+          "local": "mf",
+          "from": "../cowork-progress-v4/shared-120.mjs",
+          "name": "Ye",
+          "via": "shared-120-DCdTP1_5.js:mn",
+          "kind": "linked",
+          "original": "Ye"
+        },
+        {
+          "local": "moe",
+          "from": "../settings-nav/shared-33.mjs",
+          "name": "Cb",
+          "via": "shared-33-DtdykY0y.js:nl",
+          "kind": "linked",
+          "original": "Cb"
+        },
+        {
+          "local": "nf",
+          "from": "./c62da1b56.mjs",
+          "name": "ft",
+          "via": "c62da1b56-Blm2zUF0.js:j",
+          "kind": "generated"
+        },
+        {
+          "local": "o",
+          "from": "../working-line-v4/preload-helper.mjs",
+          "name": "e",
+          "via": "preload-helper-BBljBeZo.js:n",
+          "kind": "linked",
+          "original": "e"
+        },
+        {
+          "local": "pf",
+          "from": "../cds-core/shared-120.mjs",
+          "name": "Je",
+          "via": "shared-120-DCdTP1_5.js:gn",
+          "kind": "shared-graph",
+          "original": "Je"
+        },
+        {
+          "local": "pfe",
+          "from": "../../source-workflow-card-v4-adapters.jsx",
+          "name": "localSessionClient",
+          "via": "cef1e6037-Dm5Rlsox.js:o",
+          "kind": "adapter",
+          "original": "Z"
+        },
+        {
+          "local": "qe",
+          "from": "../cds-core/shared-frame.mjs",
+          "name": "CdsIcon",
+          "via": "shared-frame-CJdE5Ria.js:lf",
+          "kind": "shared-graph",
+          "original": "Bs"
+        },
+        {
+          "local": "rf",
+          "from": "./c62da1b56.mjs",
+          "name": "lt",
+          "via": "c62da1b56-Blm2zUF0.js:k",
+          "kind": "generated"
+        },
+        {
+          "local": "st",
+          "from": "../cds-core/shared-frame.mjs",
+          "name": "cdsClassNames",
+          "via": "shared-frame-CJdE5Ria.js:tm",
+          "kind": "shared-graph",
+          "original": "Q"
+        },
+        {
+          "local": "tde",
+          "from": "./c5da7eb42.mjs",
+          "name": "Nz",
+          "via": "c5da7eb42-aEqbSKbC.js:l",
+          "kind": "generated"
+        },
+        {
+          "local": "tf",
+          "from": "./c62da1b56.mjs",
+          "name": "ot",
+          "via": "c62da1b56-Blm2zUF0.js:O",
+          "kind": "generated"
+        },
+        {
+          "local": "v",
+          "from": "react",
+          "name": "useState",
+          "via": "vendor-frame-BckkO60Y.js:To",
+          "kind": "react"
+        },
+        {
+          "local": "w",
+          "from": "react",
+          "name": "memo",
+          "via": "vendor-frame-BckkO60Y.js:co",
+          "kind": "react"
+        },
+        {
+          "local": "wp",
+          "from": "../cowork-scheduled-v4/c1c6ea9ac-BbaFmNAA.mjs",
+          "name": "a",
+          "via": "c1c6ea9ac-BbaFmNAA.js:t",
+          "kind": "linked",
+          "original": "a"
+        },
+        {
+          "local": "xi",
+          "from": "../artifact-library-v4/shared-153-DMw2VzSq.mjs",
+          "name": "mg",
+          "via": "shared-153-DMw2VzSq.js:Xy",
+          "kind": "linked",
+          "original": "mg"
+        },
+        {
+          "local": "y",
+          "from": "react/jsx-runtime",
+          "name": "Fragment",
+          "via": "vendor-frame-BckkO60Y.js:Wa",
+          "kind": "react"
+        },
+        {
+          "local": "ze",
+          "from": "../cds-core/shared-frame.mjs",
+          "name": "CdsCollapsible",
+          "via": "shared-frame-CJdE5Ria.js:eo",
+          "kind": "shared-graph",
+          "original": "LA"
+        },
+        {
+          "local": "zu",
+          "from": "../working-line-v4/define-messages.mjs",
+          "name": "tn",
+          "via": "vendor-intl-BJgYK7RA.js:f",
+          "kind": "linked",
+          "original": "tn"
+        }
+      ],
+      "exports": {
+        "jU": "WorkflowTaskCard",
+        "QH": "TaskStopButton"
+      },
+      "sharedExports": [],
+      "heldByViewTabs": []
+    }
+  ],
+  "callSites": [
+    {
+      "source": "c9bd7af9c-Bvb7EG4D.js",
+      "role": "The Background tasks pane row (c9bd7af9c RI) draws a local_workflow task as c96d752d0 jU (Wr as ds), detailed",
+      "sourceSha256": "78619621ed4fe40e505a3a91e7e0b92a4482cb4b9c5fc87237b9b6fea7bf736b",
+      "raw": true,
+      "features": [
+        "Wr as ds",
+        "u(ds,{task:r,variant:\"detailed\",sessionRef:i,onStop:a,stopping:o?.has(r.taskId),inRunning:t.inRunning,depth:t.depth,tasksFollow:t.tasksFollow})"
+      ]
+    },
+    {
+      "source": "c9bd7af9c-Bvb7EG4D.js",
+      "role": "The pane's other task cards stop through c96d752d0 QH (Kr as Zo)",
+      "sourceSha256": "78619621ed4fe40e505a3a91e7e0b92a4482cb4b9c5fc87237b9b6fea7bf736b",
+      "raw": true,
+      "features": [
+        "Kr as Zo",
+        "u(Zo,{quiet:b===\"line\",busy:i,busyLabel:k.formatMessage({defaultMessage:\"Stopping\\u2026\",id:\"NACfNicI6z\"}),onClick:U,ariaLabel:k.formatMessage({defaultMessage:\"Stop this task\",id:\"+ZLTl3VMv+\"})"
+      ]
+    },
+    {
+      "source": "c4db265df-CHyZjtsm.js",
+      "role": "The pane frame (c4db265df Tn) sets the panels context (shared-120 Je, gn as we) around the pane body",
+      "sourceSha256": "fcf338553d4fe5524b8d704f1b6758df8f63737570f7775e34aaea8817bd76f7",
+      "raw": true,
+      "features": [
+        "gn as we",
+        "et=J1($,0,je)?K1($,0,je,t(fe,{value:!1,children:je})):$[1]",
+        "t(we,{value:!0,children:t(Yt,{value:null,children:et})})"
+      ]
+    },
+    {
+      "source": "c96d752d0-D9VB6ArX.js",
+      "role": "kQe draws a running workflow as CQe under the panels context; CQe ends in \"Up next: {phases}\" (Poe = c62da1b56 ct); QH sizes its StopFilled button by the panels context",
+      "sourceSha256": "0fdf7e459a4e03edf9e87bf76dde64243824299d88e80034cd7a56ccae4a9a49",
+      "raw": true,
+      "features": [
+        "import{gn as pf,mn as mf,nn as Yoe}from\"./shared-120-DCdTP1_5.js\"",
+        "import{A as Poe,",
+        "E=T(pf),D=!!m&&m.phases.length>0;if(E&&u)",
+        "return f(CQe,{task:t,title:x,phases:m?.phases.map(t=>t.index===af?{...t,title:e}:t)??[],counts:m?.counts,stallNow:d,stopping:a,onStop:i&&w,depth:o,tasksFollow:c})",
+        "T=Poe(r)",
+        "defaultMessage:\"Up next: {phases}\",id:\"AbOFlWPZyk\"",
+        "l=T(pf),u=J1($,0,t)",
+        "icon:\"StopFilled\"",
+        "jU as Wr",
+        "QH as Kr"
+      ]
+    },
+    {
+      "source": "c96d752d0-D9VB6ArX.js",
+      "role": "U-BT-KEEP (user customisation, not official): the official pieces the panel card's agents + tokens line is built from (REWRITES): the non-panels card's counts / tokens cell, SQe's line box and CQe's description cell it replaces",
+      "sourceSha256": "0fdf7e459a4e03edf9e87bf76dde64243824299d88e80034cd7a56ccae4a9a49",
+      "raw": true,
+      "features": [
+        "R=J2($,99,u,m)||J1($,101,t.usage)?I1($,101,Z2($,99,m&&m.counts.total>0||t.usage?",
+        "h(\"span\",{className:\"flex flex-wrap items-baseline gap-x-sm gap-y-0.75\",children:[m&&m.counts.total>0?f(cU,{counts:m.counts,muted:!u}):null,t.usage?f(\"span\",{children:f(Q,{defaultMessage:\"<v>{n}</v> tokens\",id:\"q8yC2bH6mD\",values:{n:hu(t.usage.totalTokens),v:u?EQe:OU}})}):null]})",
+        "let e=st(\"flex min-h-5 min-w-0 items-center\",RH)",
+        "ee=J2($,69,O,s)||J1($,71,t.description)?I1($,71,Z2($,69,O?f(\"div\",{className:s?FH:void 0,children:f(SQe,{text:t.description})}):null,O,s),t.description):$[72]"
+      ]
+    },
+    {
+      "source": "c62da1b56-Blm2zUF0.js",
+      "role": "The phases model: a workflow_phase entry opens a phase with no agents (counts.total 0); ct (exported A) is the upcoming ones",
+      "sourceSha256": "5ea040ad4db877654d378d6af18260d130e884ff3db308644d6a005b599582a4",
+      "raw": true,
+      "features": [
+        "if(n.type===\"workflow_phase\"){a(n.index,n.title);continue}",
+        "function ct(e){let t=Math.max(-1,...e.filter(e=>e.index!==D&&e.counts.total>0).map(e=>e.index));return e.filter(e=>e.counts.total===0&&e.index>t)}",
+        "ct as A"
+      ]
+    }
+  ],
+  "rewrites": [
+    {
+      "binding": "c96d752d0-D9VB6ArX.js#CQe",
+      "why": "User customisation U-BT-KEEP (2026-11-11), not official: the panel card's description line reads agents + tokens (the non-panels card's official counts / tokens cell, running branch) instead of task.description",
+      "fromSha256": "b16b1a75c9ab445b7990c0e4c42dafae368c7dca7fd75dc1b02f48f444496879",
+      "toSha256": "5e3af84e22c7fcf3d722a2333b0d61138068cfdc9b78dbb4e51daf11c030fa41",
+      "from": "ee=J2($,69,O,s)||J1($,71,t.description)?I1($,71,Z2($,69,O?f(\"div\",{className:s?FH:void 0,children:f(SQe,{text:t.description})}):null,O,s),t.description):$[72]",
+      "to": "ee=/* U-BT-KEEP user customisation, not official 4.16336.0: agents + tokens replace the description (scripts/extract-workflow-card-v4.mjs REWRITES) */i&&i.total>0||t.usage?f(\"div\",{className:s?FH:void 0,children:f(\"div\",{className:st(\"flex min-h-5 min-w-0 items-center\",RH),children:h(\"span\",{className:\"flex flex-wrap items-baseline gap-x-sm gap-y-0.75\",children:[i&&i.total>0?f(cU,{counts:i,muted:!1}):null,t.usage?f(\"span\",{children:f(Q,{defaultMessage:\"<v>{n}</v> tokens\",id:\"q8yC2bH6mD\",values:{n:hu(t.usage.totalTokens),v:EQe}})}):null]})})}):null"
+    }
+  ],
+  "publicAssets": []
+}

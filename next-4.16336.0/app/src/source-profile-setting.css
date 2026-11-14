@@ -1,0 +1,9 @@
+/* Av below + Bh full-width plain field + Lv nonsticky dirty actions. */
+.ss-profile-setting { display:flex;min-width:0;flex-direction:column;gap:var(--cds-gap-sm); }
+.ss-profile-setting input[data-cds=TextInput] { box-sizing:border-box;width:100%;min-width:0;height:var(--cds-h-control);padding:0 var(--cds-pad-md);border:0;border-radius:var(--cds-radius);background:var(--cds-fill-field);box-shadow:inset 0 0 0 1px var(--cds-fill-field-ring);color:var(--cds-text-primary);font:400 var(--cds-font-size-body)/var(--cds-leading-body) var(--cds-font-sans);outline:none;transition:box-shadow var(--cds-dur-fast); }
+.ss-profile-setting input[data-cds=TextInput]::placeholder { color:var(--cds-text-muted); }
+.ss-profile-setting input[data-cds=TextInput]:hover:not(:focus):not([data-invalid]) { box-shadow:inset 0 0 0 1px var(--cds-border-strong); }
+.ss-profile-setting input[data-cds=TextInput][data-invalid] { box-shadow:inset 0 0 0 1px var(--cds-fill-danger); }
+.ss-profile-setting input[data-cds=TextInput]:focus-visible { outline:none;box-shadow:var(--cds-focus-shadow); }
+.ss-profile-actions { display:flex;min-height:var(--cds-h-control);align-items:center;gap:var(--cds-gap-sm);border-top:0; }
+.ss-profile-setting>[role=alert] { overflow-wrap:anywhere; }

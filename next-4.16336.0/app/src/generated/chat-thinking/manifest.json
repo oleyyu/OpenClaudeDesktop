@@ -1,0 +1,104 @@
+{
+  "referenceVersion": "4.16336.0",
+  "referenceSnapshot": "snapshots/claude-4.16336.0-20261104",
+  "generator": "scripts/extract-chat-thinking.mjs",
+  "modules": [
+    {
+      "target": "thinking-labels.mjs",
+      "source": "c05b96c7f-3na38kSt.js",
+      "referenceVersion": "4.16336.0",
+      "sourceSha256": "04eadbc4f8a4fb4fe3ec30d62ab7646d92b77ef66e18dec8ab7440c7cec00dfc",
+      "sha256": "0579177e173cb9b024d147021c79c19dcf5630c97aa59a80cd1976d39022ee73",
+      "bindings": [
+        {
+          "name": "ua",
+          "sha256": "de389c2298f9afc5dcef3ce2436a62239af6cb24fb04883559acd94c3421b08a"
+        },
+        {
+          "name": "da",
+          "sha256": "1b4d5e16c53693571cd54a92b14e14b3de5903c027cb48f66d67c00cfe13bbba"
+        },
+        {
+          "name": "gd",
+          "sha256": "91f0825229df74296ec1498cac217691766d29e8377b54e4b408762255248239"
+        },
+        {
+          "name": "_d",
+          "sha256": "c062bc1f8943618862e9c557f81e029c766c82c52cecd8a72354a3e8d23ee63c"
+        }
+      ],
+      "exports": {
+        "ua": "thinkingDurationMs",
+        "da": "thinkingDurationLabel",
+        "_d": "thinkingGroupLabel",
+        "gd": "thinkingBlockLabel"
+      },
+      "features": {
+        "ua": [
+          "if (!e || !t) return;",
+          "new Date(e).getTime()",
+          "r <= n ? void 0 : r - n"
+        ],
+        "da": [
+          "Math.round(t / 1e3)",
+          "if (n <= 0) return;",
+          "defaultMessage: \"Thought for {seconds}s\", id: \"Jj0DasG7Mx\"",
+          "defaultMessage: \"Thought for {minutes}m {seconds}s\", id: \"4LM6AdGWNg\"",
+          "defaultMessage: \"Thought for {minutes}m\", id: \"vFyvc213kN\"",
+          "defaultMessage: \"Thought for {hours}h {minutes}m\", id: \"voTuOb/ijW\"",
+          "defaultMessage: \"Thought for {hours}h\", id: \"MFx4UWu2HS\""
+        ],
+        "_d": [
+          "t.length === 1 ? t[0]?.title : void 0",
+          "ua(e.start_timestamp, e.stop_timestamp) ?? 0",
+          "defaultMessage: \"Thought process\", id: \"zl6fNbo7RW\""
+        ],
+        "gd": [
+          "t.title ?? da(e, ua(t.start_timestamp, t.stop_timestamp) ?? 0)"
+        ]
+      }
+    },
+    {
+      "target": "tool-group-label.mjs",
+      "source": "shared-153-DMw2VzSq.js",
+      "referenceVersion": "4.16336.0",
+      "sourceSha256": "7e609971286c1de3bb64e01d2567c0dc95a1407a6c4b5b6d8525c44093aedea9",
+      "sha256": "85fdc60c0f2f4be6a4ce171c0624bfdd17edeb4f85950114b4965bb8e44420e7",
+      "bindings": [
+        {
+          "name": "cq",
+          "sha256": "fa9b304ca13f34a1adc89cae9a00972641f02901ce5fff822e442393b0922dc1"
+        },
+        {
+          "name": "hq",
+          "sha256": "a3b4f8a845e539835617610a7f3238dafff83e93292f3341235e65fce253d565"
+        }
+      ],
+      "exports": {
+        "hq": "toolGroupLabel",
+        "cq": "TOOL_KINDS"
+      },
+      "features": {
+        "hq": [
+          "case \"web\":",
+          "defaultMessage: \"Searched the web\", id: \"4+310Bnuvz\"",
+          "case \"web_fetch\":",
+          "defaultMessage: \"Read a page\", id: \"XJU1UZCozL\"",
+          "case \"project_knowledge\":",
+          "defaultMessage: \"Searched project knowledge\", id: \"4GCi2qH3xL\"",
+          "case \"past_chats\":",
+          "defaultMessage: \"Searched past chats\", id: \"kFCjIUtnx0\"",
+          "case \"drive_search\":"
+        ],
+        "cq": [
+          "project_knowledge_search: \"project_knowledge\"",
+          "web_fetch: \"web_fetch\"",
+          "web_search: \"web\"",
+          "web_search_fast: \"web\"",
+          "conversation_search: \"past_chats\"",
+          "drive_search: \"drive_search\""
+        ]
+      }
+    }
+  ]
+}

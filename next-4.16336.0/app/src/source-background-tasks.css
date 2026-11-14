@@ -1,0 +1,7 @@
+/* The background tasks pane (source-background-tasks.jsx) wears 3.6556.2 cccc2cf0a's own utility classes throughout, so
+   this sheet holds no rules:
+   - rw: the header's Clear finished tasks is the CDS ghost Button with aria-disabled:opacity-disabled (W14-code r3 fr3-08);
+   - r4pa-05: the empty list is the official EmptyState (cc0a875c8);
+   - r6pa-03 / r6pa-06: the Stop buttons are c96d752d0 UQ (TaskStopButton), the loop / preview server cards $M / tN / nN;
+   - W14-code r7 r7pa-07: the pane root and column (pN `Se` / `Ce`), the Running / Finished sections (EN), the task row
+     (QM card variant) and its open output (AM / kM, DM / OM). The panes-tile-current .sbt-* restatements are gone. */

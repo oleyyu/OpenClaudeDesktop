@@ -1,0 +1,20 @@
+/* Home: what is left of the 2.2553.1 draft home. The Jk greeting and the code-home
+   stats card (qw/Jw/Yw/Xw/$w/eT/cT/lT) are gone (W14-code r4 closeout R4DC-N2, E95:
+   3.6556.2's Home is the presets start card). The Lw outline card below stays: the
+   DeepSeek key card and the core sign-in card in main.jsx use it (.sh-card.is-outline,
+   code-home.js:13752-13754). Values are the compact desktop token set. */
+.welcome { padding: 0; }
+
+/* Lw card */
+.sh-card {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 8px 12px 12px;
+  border-radius: 8px;
+  max-width: 480px;
+  width: 100%;
+  font-family: var(--cds-font-sans, anthropic-sans);
+  color: var(--cds-text-primary);
+}
+.sh-card.is-outline { box-shadow: 0 0 0 1px var(--cds-border); }

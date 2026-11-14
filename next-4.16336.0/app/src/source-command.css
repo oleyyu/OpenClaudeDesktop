@@ -1,0 +1,226 @@
+/* Run-a-command body. Geometry and tokens from the official chain:
+   WO approval-current.js:6838, Uoe :6907-6940, UT :2164-2200,
+   RO :6741-6760, KE :2894-2926, ty c425fb3cf:oe, code-card background
+   c6e73333a:44. Token values from c6a992d55-Vcbdv79k.css. */
+
+.src-cmd-card-outer {
+  display: block;
+  padding-block: var(--cds-pad-md, 8px);
+}
+.src-cmd-card {
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--radius-lg, 8px);
+  box-shadow: inset 0 0 0 1px var(--cds-border);
+}
+.src-cmd-head {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing, 4px);
+  padding: var(--cds-pad-sm, 6px) var(--cds-pad-md, 8px);
+}
+.src-cmd-title {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--cds-font-size-body);
+  line-height: var(--cds-leading-body);
+  color: var(--cds-text-secondary);
+}
+.src-cmd-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cds-gap-md, 12px);
+  min-width: 0;
+  padding: 0 var(--cds-pad-md, 8px) var(--cds-pad-lg, 12px);
+  font-size: var(--cds-font-size-code, 12px);
+  line-height: var(--cds-leading-code, 17px);
+  font-family: var(--cds-font-mono, monospace);
+}
+
+/* inCard (classic tool-group rows, m8 approval-current.js:54035-54063 ->
+   RN{inCard:true}): GO non-standalone :6847-6862. The wrapper is
+   group/body relative flex w-full pt-xs, with no WO card, no outline and no
+   title; the column is flex-1 min-w-0 flex flex-col gap-md text-code
+   (text-code design-system.css:20553-20557) with no padding. */
+.src-cmd-card-outer[data-in-card] {
+  position: relative;
+  display: flex;
+  width: 100%;
+  padding-block: var(--cds-pad-xs, 4px) 0;
+}
+.src-cmd-card-outer[data-in-card] > .src-cmd-content {
+  flex: 1;
+  padding: 0;
+}
+
+/* UT: the command block. Tv falls back to alpha-1 when no code theme is set. */
+.src-cmd-line {
+  display: flex;
+  overflow: clip;
+  border-radius: var(--radius-lg, 8px);
+  padding: var(--cds-pad-xs, 4px) var(--cds-pad-md, 8px);
+  background: light-dark(
+    var(--code-theme-light-bg, var(--cds-alpha-1)),
+    var(--code-theme-dark-bg, var(--cds-alpha-1))
+  );
+  color: var(--cds-text-primary);
+}
+/* design-system.css:56758-56768 ring under the default Claude code themes; the shared
+   rule (also covering .sft-code) lives in source-file-tool.css, repeated here so the
+   command body keeps it on its own. */
+:is([data-mode=light][data-code-theme-light=claude-light],[data-mode=dark][data-code-theme-dark=claude-dark]) .src-cmd-line {
+  box-shadow: 0 0 0 1px var(--cds-border);
+}
+.src-cmd-prompt {
+  user-select: none;
+  white-space: pre;
+  color: var(--cds-text-secondary);
+}
+.src-cmd-code {
+  min-width: 0;
+  flex: 1;
+}
+.src-cmd-pre {
+  margin: 0;
+  padding: 0;
+  background: none;
+  font: inherit;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.src-cmd-text {
+  font: inherit;
+  background: none;
+  white-space: inherit;
+  overflow-wrap: inherit;
+}
+.src-cmd-line-action {
+  display: flex;
+  height: 1lh;
+  flex-shrink: 0;
+  align-items: center;
+}
+
+/* RO: the output group. 2.31226.0 cb6930dae: u(Z,{slot:"bash",className:"whitespace-pre-wrap break-all ..."}) inside
+   Z's max-h-[400px] overflow-y-auto clamp. */
+.src-cmd-output {
+  max-height: 400px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+  color: var(--cds-text-secondary);
+}
+.src-cmd-output[data-error] {
+  color: var(--cds-text-danger);
+}
+
+/* KE: the running footer. gap-1.25 is 5px. */
+.src-cmd-footer {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-height: var(--cds-h-control, 24px);
+  font-family: var(--cds-font-sans, sans-serif);
+  font-size: var(--cds-font-size-body);
+  line-height: var(--cds-leading-body);
+  color: var(--cds-text-secondary);
+}
+.src-cmd-footer-status {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing, 4px);
+  white-space: nowrap;
+  line-height: 1;
+}
+.src-cmd-elapsed {
+  font-variant-numeric: tabular-nums;
+}
+.src-cmd-footer-end {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing, 4px);
+}
+
+/* ty: ghost icon-only Copy. Hidden until the body is hovered or focused
+   unless it is the always-visible footer control. */
+.src-cmd-copy {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--cds-h-control, 24px);
+  height: var(--cds-h-control, 24px);
+  flex-shrink: 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--cds-radius, 6px);
+  background: transparent;
+  color: var(--cds-text-primary);
+  opacity: 0;
+  transition:
+    opacity var(--cds-dur-fast, 60ms) linear 100ms,
+    background-color var(--cds-dur-snap, 0.12s);
+}
+.src-cmd-copy[data-compact] {
+  width: var(--cds-h-control--xs, 20px);
+  height: var(--cds-h-control--xs, 20px);
+}
+.src-cmd-copy[data-always-visible] {
+  opacity: 1;
+  transition: background-color var(--cds-dur-snap, 0.12s);
+}
+.src-cmd-card:hover .src-cmd-copy,
+.src-cmd-card:focus-within .src-cmd-copy,
+.src-cmd-card-outer[data-in-card]:hover .src-cmd-copy,
+.src-cmd-card-outer[data-in-card]:focus-within .src-cmd-copy {
+  opacity: 1;
+  transition-delay: 0s;
+}
+.src-cmd-copy:hover {
+  background: var(--cds-fill-ghost-hover);
+}
+.src-cmd-copy:focus-visible {
+  outline: none;
+  box-shadow: var(--cds-focus-shadow);
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .src-cmd-copy {
+    transition: none;
+  }
+}
+html[data-reduce-motion="true"] .src-cmd-copy { transition: none; }
+
+/* approval-current.js:16345-16365 XM, rendered in the row heading (:17279):
+   shrink-0 text-body text-primary hover:underline underline-offset-[3px]
+   focus-visible:outline-hidden hide-focus-ring focus-visible:shadow-focus rounded-[3px]. */
+.src-cmd-live{flex-shrink:0;margin:0;font-family:var(--cds-font-sans, anthropic-sans),sans-serif;font-weight:400;font-size:var(--cds-font-size-body);line-height:var(--cds-leading-body);color:var(--cds-text-primary);background:none;border:0;padding:0;border-radius:3px;text-underline-offset:3px;cursor:var(--cds-cursor-interactive, default)}
+.src-cmd-live:hover{text-decoration:underline}
+.src-cmd-live:focus-visible{outline:none;box-shadow:var(--cds-focus-shadow)}
+
+/* What Codex typed into the running process (terminalInteraction stdin): muted 'Sent input' lines under the output. */
+.src-cmd-inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 4px;
+}
+.src-cmd-input {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+  font-size: var(--cds-font-size-footnote, 12px);
+}
+.src-cmd-input-label {
+  flex: none;
+  color: var(--cds-text-muted);
+}
+.src-cmd-input-text {
+  min-width: 0;
+  color: var(--cds-text-secondary, var(--cds-text-muted));
+  font-family: var(--cds-font-mono);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}

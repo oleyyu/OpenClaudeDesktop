@@ -1,0 +1,26 @@
+{
+  "name": "@code-desktop/dsh-codex-app-server",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Cordis plugin serving the Codex app-server JSON-RPC protocol on stdio from a DeepSeek Harness runtime",
+  "type": "module",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./startup": "./src/startup.js",
+    "./sandbox-fs": "./src/sandbox-fs.js",
+    "./sandbox-shell": "./src/sandbox-shell.js",
+    "./sandbox-approval": "./src/sandbox-approval.js",
+    "./package.json": "./package.json"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "*",
+    "@deepseek-ai/dsh-cmdline": "*",
+    "@deepseek-ai/dsh-llm": "*",
+    "@deepseek-ai/dsh-tool-workflow": "*"
+  },
+  "dependencies": {
+    "commander": "^15.0.0",
+    "zod": "^4.4.3"
+  }
+}

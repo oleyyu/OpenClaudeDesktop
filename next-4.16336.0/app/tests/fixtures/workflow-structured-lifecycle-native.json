@@ -1,0 +1,1031 @@
+[
+  {
+    "schema": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    "name": "text-only",
+    "replies": [
+      "plain",
+      "still plain"
+    ],
+    "expected": {
+      "name": "text-only",
+      "value": {
+        "ok": false,
+        "error": "agent({schema}): subagent completed without calling StructuredOutput (after in-conversation nudge)"
+      },
+      "agents": 1,
+      "schemas": [
+        {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "additionalProperties": false
+        }
+      ],
+      "modelCalls": 2,
+      "toolCalls": 0,
+      "progress": [
+        {
+          "type": "workflow_agent",
+          "index": 1,
+          "label": "SCHEMA_AGENT_CHILD",
+          "agentId": "ad8ea94a9120d4a30",
+          "model": "claude-sonnet-5-5",
+          "state": "done",
+          "startedAt": 1791286050943,
+          "queuedAt": 1791286050934,
+          "attempt": 1,
+          "promptPreview": "SCHEMA_AGENT_CHILD",
+          "promptFramed": true,
+          "lastProgressAt": 1791286050974,
+          "tokens": 14,
+          "toolCalls": 0,
+          "durationMs": 31
+        }
+      ]
+    }
+  },
+  {
+    "schema": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    "name": "api-400",
+    "replies": [
+      {
+        "http": 400
+      }
+    ],
+    "expected": {
+      "name": "api-400",
+      "value": {
+        "ok": true,
+        "value": null
+      },
+      "agents": 1,
+      "schemas": [
+        {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "additionalProperties": false
+        }
+      ],
+      "modelCalls": 1,
+      "toolCalls": 0,
+      "progress": [
+        {
+          "type": "workflow_agent",
+          "index": 1,
+          "label": "SCHEMA_AGENT_CHILD",
+          "agentId": "a34c25ae6c8ca552a",
+          "model": "claude-sonnet-5-5",
+          "state": "error",
+          "startedAt": 1791286051329,
+          "queuedAt": 1791286051316,
+          "attempt": 1,
+          "promptPreview": "SCHEMA_AGENT_CHILD",
+          "promptFramed": true,
+          "lastProgressAt": 1791286051358,
+          "error": "API Error: 400 LIFECYCLE_API_FAILURE",
+          "tokens": 0,
+          "toolCalls": 0,
+          "durationMs": 29
+        }
+      ]
+    }
+  },
+  {
+    "schema": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    "name": "api-401-recovered",
+    "replies": [
+      {
+        "http": 401
+      },
+      [
+        {
+          "name": "StructuredOutput",
+          "input": {
+            "value": "after-auth"
+          }
+        }
+      ]
+    ],
+    "expected": {
+      "name": "api-401-recovered",
+      "value": {
+        "ok": true,
+        "value": {
+          "value": "after-auth"
+        }
+      },
+      "agents": 1,
+      "schemas": [
+        {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "additionalProperties": false
+        }
+      ],
+      "modelCalls": 2,
+      "toolCalls": 1,
+      "progress": [
+        {
+          "type": "workflow_agent",
+          "index": 1,
+          "label": "SCHEMA_AGENT_CHILD",
+          "agentId": "adb54b2b5d42fb6c4",
+          "model": "claude-sonnet-5-5",
+          "state": "done",
+          "startedAt": 1791286051662,
+          "queuedAt": 1791286051653,
+          "attempt": 1,
+          "lastToolName": "StructuredOutput",
+          "lastToolSummary": "after-auth",
+          "promptPreview": "SCHEMA_AGENT_CHILD",
+          "promptFramed": true,
+          "lastProgressAt": 1791286052250,
+          "tokens": 14,
+          "toolCalls": 1,
+          "durationMs": 588,
+          "resultPreview": "{\"value\":\"after-auth\"}"
+        }
+      ]
+    }
+  },
+  {
+    "schema": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    "name": "text-then-api-error",
+    "replies": [
+      "plain",
+      {
+        "http": 400
+      }
+    ],
+    "expected": {
+      "name": "text-then-api-error",
+      "value": {
+        "ok": true,
+        "value": null
+      },
+      "agents": 1,
+      "schemas": [
+        {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "additionalProperties": false
+        }
+      ],
+      "modelCalls": 2,
+      "toolCalls": 0,
+      "progress": [
+        {
+          "type": "workflow_agent",
+          "index": 1,
+          "label": "SCHEMA_AGENT_CHILD",
+          "agentId": "ad485b0280eb21aa6",
+          "model": "claude-sonnet-5-5",
+          "state": "error",
+          "startedAt": 1791286052534,
+          "queuedAt": 1791286052522,
+          "attempt": 1,
+          "promptPreview": "SCHEMA_AGENT_CHILD",
+          "promptFramed": true,
+          "lastProgressAt": 1791286052569,
+          "error": "API Error: 400 LIFECYCLE_API_FAILURE",
+          "tokens": 14,
+          "toolCalls": 0,
+          "durationMs": 35
+        }
+      ]
+    }
+  },
+  {
+    "schema": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    "name": "valid-twice",
+    "replies": [
+      [
+        {
+          "name": "StructuredOutput",
+          "input": {
+            "value": "first"
+          }
+        },
+        {
+          "name": "StructuredOutput",
+          "input": {
+            "value": "second"
+          }
+        }
+      ]
+    ],
+    "expected": {
+      "name": "valid-twice",
+      "value": {
+        "ok": true,
+        "value": {
+          "value": "second"
+        }
+      },
+      "agents": 1,
+      "schemas": [
+        {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "additionalProperties": false
+        }
+      ],
+      "modelCalls": 1,
+      "toolCalls": 2,
+      "progress": [
+        {
+          "type": "workflow_agent",
+          "index": 1,
+          "label": "SCHEMA_AGENT_CHILD",
+          "agentId": "a9e939ca2d7e1d4ce",
+          "model": "claude-sonnet-5-5",
+          "state": "done",
+          "startedAt": 1791286052883,
+          "queuedAt": 1791286052875,
+          "attempt": 1,
+          "lastToolName": "StructuredOutput",
+          "lastToolSummary": "second",
+          "promptPreview": "SCHEMA_AGENT_CHILD",
+          "promptFramed": true,
+          "lastProgressAt": 1791286052908,
+          "tokens": 14,
+          "toolCalls": 2,
+          "durationMs": 25,
+          "resultPreview": "{\"value\":\"second\"}"
+        }
+      ]
+    }
+  },
+  {
+    "schema": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    "name": "invalid-valid",
+    "replies": [
+      [
+        {
+          "name": "StructuredOutput",
+          "input": {
+            "value": 1
+          }
+        },
+        {
+          "name": "StructuredOutput",
+          "input": {
+            "value": "fixed"
+          }
+        }
+      ]
+    ],
+    "expected": {
+      "name": "invalid-valid",
+      "value": {
+        "ok": true,
+        "value": {
+          "value": "fixed"
+        }
+      },
+      "agents": 1,
+      "schemas": [
+        {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "additionalProperties": false
+        }
+      ],
+      "modelCalls": 1,
+      "toolCalls": 2,
+      "progress": [
+        {
+          "type": "workflow_agent",
+          "index": 1,
+          "label": "SCHEMA_AGENT_CHILD",
+          "agentId": "a626cb7b9a970a5ac",
+          "model": "claude-sonnet-5-5",
+          "state": "done",
+          "startedAt": 1791286053141,
+          "queuedAt": 1791286053132,
+          "attempt": 1,
+          "lastToolName": "StructuredOutput",
+          "lastToolSummary": "fixed",
+          "promptPreview": "SCHEMA_AGENT_CHILD",
+          "promptFramed": true,
+          "lastProgressAt": 1791286053170,
+          "tokens": 14,
+          "toolCalls": 2,
+          "durationMs": 29,
+          "resultPreview": "{\"value\":\"fixed\"}"
+        }
+      ]
+    }
+  },
+  {
+    "schema": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    "name": "valid-invalid",
+    "replies": [
+      [
+        {
+          "name": "StructuredOutput",
+          "input": {
+            "value": "valid"
+          }
+        },
+        {
+          "name": "StructuredOutput",
+          "input": {
+            "value": 1
+          }
+        }
+      ]
+    ],
+    "expected": {
+      "name": "valid-invalid",
+      "value": {
+        "ok": true,
+        "value": {
+          "value": "valid"
+        }
+      },
+      "agents": 1,
+      "schemas": [
+        {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "additionalProperties": false
+        }
+      ],
+      "modelCalls": 1,
+      "toolCalls": 2,
+      "progress": [
+        {
+          "type": "workflow_agent",
+          "index": 1,
+          "label": "SCHEMA_AGENT_CHILD",
+          "agentId": "ab3fa3427e4e4c259",
+          "model": "claude-sonnet-5-5",
+          "state": "done",
+          "startedAt": 1791286053407,
+          "queuedAt": 1791286053397,
+          "attempt": 1,
+          "lastToolName": "StructuredOutput",
+          "promptPreview": "SCHEMA_AGENT_CHILD",
+          "promptFramed": true,
+          "lastProgressAt": 1791286053449,
+          "tokens": 14,
+          "toolCalls": 2,
+          "durationMs": 42,
+          "resultPreview": "{\"value\":\"valid\"}"
+        }
+      ]
+    }
+  },
+  {
+    "schema": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    "name": "two-invalid-then-valid",
+    "cap": 2,
+    "replies": [
+      [
+        {
+          "name": "StructuredOutput",
+          "input": {
+            "value": 1
+          }
+        },
+        {
+          "name": "StructuredOutput",
+          "input": {
+            "value": 1
+          }
+        },
+        {
+          "name": "StructuredOutput",
+          "input": {
+            "value": "third"
+          }
+        }
+      ]
+    ],
+    "expected": {
+      "name": "two-invalid-then-valid",
+      "value": {
+        "ok": false,
+        "error": "agent({schema}): StructuredOutput retry cap (2) exceeded — 2 failed calls with no valid output — last StructuredOutput error: Output does not match required schema: /value: must be string"
+      },
+      "agents": 1,
+      "schemas": [
+        {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "additionalProperties": false
+        }
+      ],
+      "modelCalls": 1,
+      "toolCalls": 2,
+      "progress": [
+        {
+          "type": "workflow_agent",
+          "index": 1,
+          "label": "SCHEMA_AGENT_CHILD",
+          "agentId": "a8f3e590d90123b9a",
+          "model": "claude-sonnet-5-5",
+          "state": "error",
+          "startedAt": 1791286053718,
+          "queuedAt": 1791286053709,
+          "attempt": 1,
+          "lastToolName": "StructuredOutput",
+          "promptPreview": "SCHEMA_AGENT_CHILD",
+          "promptFramed": true,
+          "lastProgressAt": 1791286053744,
+          "error": "agent({schema}): StructuredOutput retry cap (2) exceeded — 2 failed calls with no valid output — last StructuredOutput error: Output does not match required schema: /value: must be string",
+          "tokens": 14,
+          "toolCalls": 2,
+          "durationMs": 25
+        }
+      ]
+    }
+  },
+  {
+    "schema": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    "name": "valid-read",
+    "replies": [
+      [
+        {
+          "name": "StructuredOutput",
+          "input": {
+            "value": "valid"
+          }
+        },
+        {
+          "name": "Read",
+          "input": {
+            "file_path": "FIXTURE_FILE"
+          }
+        }
+      ]
+    ],
+    "expected": {
+      "name": "valid-read",
+      "value": {
+        "ok": true,
+        "value": {
+          "value": "valid"
+        }
+      },
+      "agents": 1,
+      "schemas": [
+        {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "additionalProperties": false
+        }
+      ],
+      "modelCalls": 1,
+      "toolCalls": 2,
+      "progress": [
+        {
+          "type": "workflow_agent",
+          "index": 1,
+          "label": "SCHEMA_AGENT_CHILD",
+          "agentId": "a04718ecee7ce4d54",
+          "model": "claude-sonnet-5-5",
+          "state": "done",
+          "startedAt": 1791286053991,
+          "queuedAt": 1791286053981,
+          "attempt": 1,
+          "lastToolName": "Read",
+          "lastToolSummary": "/var/folders/d1/tf1bk0ld6rb82mpgqdnmq0j80000gn/T/native-sch…",
+          "promptPreview": "SCHEMA_AGENT_CHILD",
+          "promptFramed": true,
+          "lastProgressAt": 1791286054023,
+          "tokens": 14,
+          "toolCalls": 2,
+          "durationMs": 32,
+          "resultPreview": "{\"value\":\"valid\"}"
+        }
+      ]
+    }
+  },
+  {
+    "schema": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    "name": "read-valid",
+    "replies": [
+      [
+        {
+          "name": "Read",
+          "input": {
+            "file_path": "FIXTURE_FILE"
+          }
+        },
+        {
+          "name": "StructuredOutput",
+          "input": {
+            "value": "valid"
+          }
+        }
+      ]
+    ],
+    "expected": {
+      "name": "read-valid",
+      "value": {
+        "ok": true,
+        "value": {
+          "value": "valid"
+        }
+      },
+      "agents": 1,
+      "schemas": [
+        {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "additionalProperties": false
+        }
+      ],
+      "modelCalls": 1,
+      "toolCalls": 2,
+      "progress": [
+        {
+          "type": "workflow_agent",
+          "index": 1,
+          "label": "SCHEMA_AGENT_CHILD",
+          "agentId": "ab3ca4e71154537c4",
+          "model": "claude-sonnet-5-5",
+          "state": "done",
+          "startedAt": 1791286054286,
+          "queuedAt": 1791286054277,
+          "attempt": 1,
+          "lastToolName": "StructuredOutput",
+          "lastToolSummary": "valid",
+          "promptPreview": "SCHEMA_AGENT_CHILD",
+          "promptFramed": true,
+          "lastProgressAt": 1791286054318,
+          "tokens": 14,
+          "toolCalls": 2,
+          "durationMs": 32,
+          "resultPreview": "{\"value\":\"valid\"}"
+        }
+      ]
+    }
+  },
+  {
+    "schema": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    "name": "valid-read-valid",
+    "replies": [
+      [
+        {
+          "name": "StructuredOutput",
+          "input": {
+            "value": "first"
+          }
+        },
+        {
+          "name": "Read",
+          "input": {
+            "file_path": "FIXTURE_FILE"
+          }
+        },
+        {
+          "name": "StructuredOutput",
+          "input": {
+            "value": "second"
+          }
+        }
+      ]
+    ],
+    "expected": {
+      "name": "valid-read-valid",
+      "value": {
+        "ok": true,
+        "value": {
+          "value": "second"
+        }
+      },
+      "agents": 1,
+      "schemas": [
+        {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "additionalProperties": false
+        }
+      ],
+      "modelCalls": 1,
+      "toolCalls": 3,
+      "progress": [
+        {
+          "type": "workflow_agent",
+          "index": 1,
+          "label": "SCHEMA_AGENT_CHILD",
+          "agentId": "a90f7acc1e6e30621",
+          "model": "claude-sonnet-5-5",
+          "state": "done",
+          "startedAt": 1791286054600,
+          "queuedAt": 1791286054592,
+          "attempt": 1,
+          "lastToolName": "StructuredOutput",
+          "lastToolSummary": "second",
+          "promptPreview": "SCHEMA_AGENT_CHILD",
+          "promptFramed": true,
+          "lastProgressAt": 1791286054634,
+          "tokens": 14,
+          "toolCalls": 3,
+          "durationMs": 34,
+          "resultPreview": "{\"value\":\"second\"}"
+        }
+      ]
+    }
+  },
+  {
+    "schema": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    "name": "valid-write-marker",
+    "replies": [
+      [
+        {
+          "name": "StructuredOutput",
+          "input": {
+            "value": "valid"
+          }
+        },
+        {
+          "name": "Bash",
+          "input": {
+            "command": "printf 'LIFECYCLE_WRITE_MARKER' > lifecycle-marker.txt"
+          }
+        }
+      ]
+    ],
+    "expected": {
+      "name": "valid-write-marker",
+      "value": {
+        "ok": true,
+        "value": {
+          "value": "valid"
+        }
+      },
+      "agents": 1,
+      "schemas": [
+        {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "additionalProperties": false
+        }
+      ],
+      "modelCalls": 1,
+      "toolCalls": 2,
+      "progress": [
+        {
+          "type": "workflow_agent",
+          "index": 1,
+          "label": "SCHEMA_AGENT_CHILD",
+          "agentId": "ad817327ecb5bfcde",
+          "model": "claude-sonnet-5-5",
+          "state": "done",
+          "startedAt": 1791286439840,
+          "queuedAt": 1791286439816,
+          "attempt": 1,
+          "lastToolName": "Bash",
+          "lastToolSummary": "printf 'LIFECYCLE_WRITE_MARKER' > lifecycle-marker.txt",
+          "promptPreview": "SCHEMA_AGENT_CHILD",
+          "promptFramed": true,
+          "lastProgressAt": 1791286439985,
+          "tokens": 14,
+          "toolCalls": 2,
+          "durationMs": 144,
+          "resultPreview": "{\"value\":\"valid\"}"
+        }
+      ],
+      "marker": "LIFECYCLE_WRITE_MARKER"
+    }
+  },
+  {
+    "schema": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    "name": "cap-write-marker",
+    "cap": 2,
+    "replies": [
+      [
+        {
+          "name": "StructuredOutput",
+          "input": {
+            "value": 1
+          }
+        },
+        {
+          "name": "StructuredOutput",
+          "input": {
+            "value": 1
+          }
+        },
+        {
+          "name": "Bash",
+          "input": {
+            "command": "printf 'LIFECYCLE_WRITE_MARKER' > lifecycle-marker.txt"
+          }
+        }
+      ]
+    ],
+    "expected": {
+      "name": "cap-write-marker",
+      "value": {
+        "ok": false,
+        "error": "agent({schema}): StructuredOutput retry cap (2) exceeded — 2 failed calls with no valid output — last StructuredOutput error: Output does not match required schema: /value: must be string"
+      },
+      "agents": 1,
+      "schemas": [
+        {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "additionalProperties": false
+        }
+      ],
+      "modelCalls": 1,
+      "toolCalls": 2,
+      "progress": [
+        {
+          "type": "workflow_agent",
+          "index": 1,
+          "label": "SCHEMA_AGENT_CHILD",
+          "agentId": "a6ee5d498e89442f5",
+          "model": "claude-sonnet-5-5",
+          "state": "error",
+          "startedAt": 1791286440827,
+          "queuedAt": 1791286440797,
+          "attempt": 1,
+          "lastToolName": "StructuredOutput",
+          "promptPreview": "SCHEMA_AGENT_CHILD",
+          "promptFramed": true,
+          "lastProgressAt": 1791286440893,
+          "error": "agent({schema}): StructuredOutput retry cap (2) exceeded — 2 failed calls with no valid output — last StructuredOutput error: Output does not match required schema: /value: must be string",
+          "tokens": 14,
+          "toolCalls": 2,
+          "durationMs": 66
+        }
+      ],
+      "marker": null
+    }
+  }
+]

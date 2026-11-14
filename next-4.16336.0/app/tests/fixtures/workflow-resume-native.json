@@ -1,0 +1,794 @@
+[
+  {
+    "name": "parallel-changed-middle",
+    "body": "const values=await parallel(['A',args.resumed?'edited':'B','C','D'].map(x=>()=>agent('RESUME_CHAIN_CHILD:'+x,{label:x}))); return [values,await agent('RESUME_CHAIN_CHILD:after',{label:'after'})];",
+    "modelCalls": 9,
+    "first": {
+      "result": [
+        [
+          "A",
+          "B",
+          "C",
+          "D"
+        ],
+        "after"
+      ],
+      "agents": [
+        {
+          "label": "A",
+          "cached": false,
+          "state": "done"
+        },
+        {
+          "label": "B",
+          "cached": false,
+          "state": "done"
+        },
+        {
+          "label": "C",
+          "cached": false,
+          "state": "done"
+        },
+        {
+          "label": "D",
+          "cached": false,
+          "state": "done"
+        },
+        {
+          "label": "after",
+          "cached": false,
+          "state": "done"
+        }
+      ]
+    },
+    "resumed": {
+      "result": [
+        [
+          "A",
+          "edited",
+          "C",
+          "D"
+        ],
+        "after"
+      ],
+      "agents": [
+        {
+          "label": "A",
+          "cached": true,
+          "state": "done"
+        },
+        {
+          "label": "edited",
+          "cached": false,
+          "state": "done"
+        },
+        {
+          "label": "C",
+          "cached": false,
+          "state": "done"
+        },
+        {
+          "label": "D",
+          "cached": false,
+          "state": "done"
+        },
+        {
+          "label": "after",
+          "cached": false,
+          "state": "done"
+        }
+      ]
+    },
+    "requests": [
+      {
+        "token": "A",
+        "resumed": false
+      },
+      {
+        "token": "B",
+        "resumed": false
+      },
+      {
+        "token": "C",
+        "resumed": false
+      },
+      {
+        "token": "D",
+        "resumed": false
+      },
+      {
+        "token": "after",
+        "resumed": false
+      },
+      {
+        "token": "edited",
+        "resumed": true
+      },
+      {
+        "token": "C",
+        "resumed": true
+      },
+      {
+        "token": "D",
+        "resumed": true
+      },
+      {
+        "token": "after",
+        "resumed": true
+      }
+    ]
+  },
+  {
+    "name": "pipeline-completion-order",
+    "body": "let release;const gate=new Promise(r=>release=r);const values=await pipeline(['a','b'],x=>agent('RESUME_CHAIN_CHILD:s1-'+x,{label:'s1-'+x}),async x=>{if(!args.resumed&&x==='a')await gate;if(x==='b')release();return await agent('RESUME_CHAIN_CHILD:s2-'+x,{label:'s2-'+x});}); return [values,await agent('RESUME_CHAIN_CHILD:after',{label:'after'})];",
+    "modelCalls": 8,
+    "first": {
+      "result": [
+        [
+          "s2-a",
+          "s2-b"
+        ],
+        "after"
+      ],
+      "agents": [
+        {
+          "label": "s1-a",
+          "cached": false,
+          "state": "done"
+        },
+        {
+          "label": "s1-b",
+          "cached": false,
+          "state": "done"
+        },
+        {
+          "label": "s2-b",
+          "cached": false,
+          "state": "done"
+        },
+        {
+          "label": "s2-a",
+          "cached": false,
+          "state": "done"
+        },
+        {
+          "label": "after",
+          "cached": false,
+          "state": "done"
+        }
+      ]
+    },
+    "resumed": {
+      "result": [
+        [
+          "s2-a",
+          "s2-b"
+        ],
+        "after"
+      ],
+      "agents": [
+        {
+          "label": "s1-a",
+          "cached": true,
+          "state": "done"
+        },
+        {
+          "label": "s1-b",
+          "cached": true,
+          "state": "done"
+        },
+        {
+          "label": "s2-a",
+          "cached": false,
+          "state": "done"
+        },
+        {
+          "label": "s2-b",
+          "cached": false,
+          "state": "done"
+        },
+        {
+          "label": "after",
+          "cached": false,
+          "state": "done"
+        }
+      ]
+    },
+    "requests": [
+      {
+        "token": "s1-a",
+        "resumed": false
+      },
+      {
+        "token": "s1-b",
+        "resumed": false
+      },
+      {
+        "token": "s2-b",
+        "resumed": false
+      },
+      {
+        "token": "s2-a",
+        "resumed": false
+      },
+      {
+        "token": "after",
+        "resumed": false
+      },
+      {
+        "token": "s2-a",
+        "resumed": true
+      },
+      {
+        "token": "s2-b",
+        "resumed": true
+      },
+      {
+        "token": "after",
+        "resumed": true
+      }
+    ]
+  },
+  {
+    "name": "empty-combinator",
+    "body": "const a=await agent('RESUME_CHAIN_CHILD:A',{label:'A'}); if(args.resumed){await parallel([]);await pipeline([],x=>x);} return [a,await agent('RESUME_CHAIN_CHILD:B',{label:'B'})];",
+    "modelCalls": 2,
+    "first": {
+      "result": [
+        "A",
+        "B"
+      ],
+      "agents": [
+        {
+          "label": "A",
+          "cached": false,
+          "state": "done"
+        },
+        {
+          "label": "B",
+          "cached": false,
+          "state": "done"
+        }
+      ]
+    },
+    "resumed": {
+      "result": [
+        "A",
+        "B"
+      ],
+      "agents": [
+        {
+          "label": "A",
+          "cached": true,
+          "state": "done"
+        },
+        {
+          "label": "B",
+          "cached": true,
+          "state": "done"
+        }
+      ]
+    },
+    "requests": [
+      {
+        "token": "A",
+        "resumed": false
+      },
+      {
+        "token": "B",
+        "resumed": false
+      }
+    ]
+  },
+  {
+    "name": "nested-rewrap",
+    "body": "const a=await agent('RESUME_CHAIN_CHILD:A',{label:'A'}); const b=args.resumed?await workflow({scriptPath:args.childPath}):await agent('RESUME_CHAIN_CHILD:B',{label:'B'});return [a,b,await agent('RESUME_CHAIN_CHILD:C',{label:'C'})];",
+    "child": "return await agent('RESUME_CHAIN_CHILD:B',{label:'B'});",
+    "modelCalls": 3,
+    "first": {
+      "result": [
+        "A",
+        "B",
+        "C"
+      ],
+      "agents": [
+        {
+          "label": "A",
+          "cached": false,
+          "state": "done"
+        },
+        {
+          "label": "B",
+          "cached": false,
+          "state": "done"
+        },
+        {
+          "label": "C",
+          "cached": false,
+          "state": "done"
+        }
+      ]
+    },
+    "resumed": {
+      "result": [
+        "A",
+        "B",
+        "C"
+      ],
+      "agents": [
+        {
+          "label": "A",
+          "cached": true,
+          "state": "done"
+        },
+        {
+          "label": "B",
+          "cached": true,
+          "state": "done"
+        },
+        {
+          "label": "C",
+          "cached": true,
+          "state": "done"
+        }
+      ]
+    },
+    "requests": [
+      {
+        "token": "A",
+        "resumed": false
+      },
+      {
+        "token": "B",
+        "resumed": false
+      },
+      {
+        "token": "C",
+        "resumed": false
+      }
+    ]
+  },
+  {
+    "name": "failed-admission",
+    "body": "const values=await parallel(['A','B','C','D'].map(x=>()=>agent('RESUME_CHAIN_CHILD:'+x,{label:x,...x==='B'?{agentType:'resume-chain-missing-fixture'}:{}}))); return [values,await agent('RESUME_CHAIN_CHILD:after',{label:'after'})];",
+    "modelCalls": 7,
+    "first": {
+      "result": [
+        [
+          "A",
+          null,
+          "C",
+          "D"
+        ],
+        "after"
+      ],
+      "agents": [
+        {
+          "label": "A",
+          "cached": false,
+          "state": "done"
+        },
+        {
+          "label": "B",
+          "cached": false,
+          "state": "error"
+        },
+        {
+          "label": "C",
+          "cached": false,
+          "state": "done"
+        },
+        {
+          "label": "D",
+          "cached": false,
+          "state": "done"
+        },
+        {
+          "label": "after",
+          "cached": false,
+          "state": "done"
+        }
+      ]
+    },
+    "resumed": {
+      "result": [
+        [
+          "A",
+          null,
+          "C",
+          "D"
+        ],
+        "after"
+      ],
+      "agents": [
+        {
+          "label": "A",
+          "cached": true,
+          "state": "done"
+        },
+        {
+          "label": "B",
+          "cached": false,
+          "state": "error"
+        },
+        {
+          "label": "C",
+          "cached": false,
+          "state": "done"
+        },
+        {
+          "label": "D",
+          "cached": false,
+          "state": "done"
+        },
+        {
+          "label": "after",
+          "cached": false,
+          "state": "done"
+        }
+      ]
+    },
+    "requests": [
+      {
+        "token": "A",
+        "resumed": false
+      },
+      {
+        "token": "C",
+        "resumed": false
+      },
+      {
+        "token": "D",
+        "resumed": false
+      },
+      {
+        "token": "after",
+        "resumed": false
+      },
+      {
+        "token": "C",
+        "resumed": true
+      },
+      {
+        "token": "D",
+        "resumed": true
+      },
+      {
+        "token": "after",
+        "resumed": true
+      }
+    ]
+  },
+  {
+    "name": "interrupted-middle",
+    "body": "const values=await parallel(['A','B','C','D'].map(x=>()=>agent('RESUME_CHAIN_CHILD:'+x,{label:x}))); return [values,await agent('RESUME_CHAIN_CHILD:after',{label:'after'})];",
+    "journalEdit": "started-only",
+    "modelCalls": 6,
+    "first": {
+      "result": [
+        [
+          "A",
+          "B",
+          "C",
+          "D"
+        ],
+        "after"
+      ],
+      "agents": [
+        {
+          "label": "A",
+          "cached": false,
+          "state": "done"
+        },
+        {
+          "label": "B",
+          "cached": false,
+          "state": "done"
+        },
+        {
+          "label": "C",
+          "cached": false,
+          "state": "done"
+        },
+        {
+          "label": "D",
+          "cached": false,
+          "state": "done"
+        },
+        {
+          "label": "after",
+          "cached": false,
+          "state": "done"
+        }
+      ]
+    },
+    "resumed": {
+      "result": [
+        [
+          "A",
+          "B",
+          "C",
+          "D"
+        ],
+        "after"
+      ],
+      "agents": [
+        {
+          "label": "A",
+          "cached": true,
+          "state": "done"
+        },
+        {
+          "label": "B",
+          "cached": false,
+          "state": "done"
+        },
+        {
+          "label": "C",
+          "cached": true,
+          "state": "done"
+        },
+        {
+          "label": "D",
+          "cached": true,
+          "state": "done"
+        },
+        {
+          "label": "after",
+          "cached": true,
+          "state": "done"
+        }
+      ]
+    },
+    "requests": [
+      {
+        "token": "A",
+        "resumed": false
+      },
+      {
+        "token": "B",
+        "resumed": false
+      },
+      {
+        "token": "C",
+        "resumed": false
+      },
+      {
+        "token": "D",
+        "resumed": false
+      },
+      {
+        "token": "after",
+        "resumed": false
+      },
+      {
+        "token": "B",
+        "resumed": true
+      }
+    ]
+  },
+  {
+    "name": "failed-then-started",
+    "body": "const values=await parallel(['A','B','C','D'].map(x=>()=>agent('RESUME_CHAIN_CHILD:'+x,{label:x}))); return [values,await agent('RESUME_CHAIN_CHILD:after',{label:'after'})];",
+    "journalEdit": "failed-then-started",
+    "modelCalls": 9,
+    "first": {
+      "result": [
+        [
+          "A",
+          "B",
+          "C",
+          "D"
+        ],
+        "after"
+      ],
+      "agents": [
+        {
+          "label": "A",
+          "cached": false,
+          "state": "done"
+        },
+        {
+          "label": "B",
+          "cached": false,
+          "state": "done"
+        },
+        {
+          "label": "C",
+          "cached": false,
+          "state": "done"
+        },
+        {
+          "label": "D",
+          "cached": false,
+          "state": "done"
+        },
+        {
+          "label": "after",
+          "cached": false,
+          "state": "done"
+        }
+      ]
+    },
+    "resumed": {
+      "result": [
+        [
+          "A",
+          "B",
+          "C",
+          "D"
+        ],
+        "after"
+      ],
+      "agents": [
+        {
+          "label": "A",
+          "cached": true,
+          "state": "done"
+        },
+        {
+          "label": "B",
+          "cached": false,
+          "state": "done"
+        },
+        {
+          "label": "C",
+          "cached": false,
+          "state": "done"
+        },
+        {
+          "label": "D",
+          "cached": false,
+          "state": "done"
+        },
+        {
+          "label": "after",
+          "cached": false,
+          "state": "done"
+        }
+      ]
+    },
+    "requests": [
+      {
+        "token": "A",
+        "resumed": false
+      },
+      {
+        "token": "B",
+        "resumed": false
+      },
+      {
+        "token": "C",
+        "resumed": false
+      },
+      {
+        "token": "D",
+        "resumed": false
+      },
+      {
+        "token": "after",
+        "resumed": false
+      },
+      {
+        "token": "B",
+        "resumed": true
+      },
+      {
+        "token": "C",
+        "resumed": true
+      },
+      {
+        "token": "D",
+        "resumed": true
+      },
+      {
+        "token": "after",
+        "resumed": true
+      }
+    ]
+  },
+  {
+    "name": "result-then-failed",
+    "body": "const values=await parallel(['A','B','C','D'].map(x=>()=>agent('RESUME_CHAIN_CHILD:'+x,{label:x}))); return [values,await agent('RESUME_CHAIN_CHILD:after',{label:'after'})];",
+    "journalEdit": "result-then-failed",
+    "modelCalls": 5,
+    "first": {
+      "result": [
+        [
+          "A",
+          "B",
+          "C",
+          "D"
+        ],
+        "after"
+      ],
+      "agents": [
+        {
+          "label": "A",
+          "cached": false,
+          "state": "done"
+        },
+        {
+          "label": "B",
+          "cached": false,
+          "state": "done"
+        },
+        {
+          "label": "C",
+          "cached": false,
+          "state": "done"
+        },
+        {
+          "label": "D",
+          "cached": false,
+          "state": "done"
+        },
+        {
+          "label": "after",
+          "cached": false,
+          "state": "done"
+        }
+      ]
+    },
+    "resumed": {
+      "result": [
+        [
+          "A",
+          "B",
+          "C",
+          "D"
+        ],
+        "after"
+      ],
+      "agents": [
+        {
+          "label": "A",
+          "cached": true,
+          "state": "done"
+        },
+        {
+          "label": "B",
+          "cached": true,
+          "state": "done"
+        },
+        {
+          "label": "C",
+          "cached": true,
+          "state": "done"
+        },
+        {
+          "label": "D",
+          "cached": true,
+          "state": "done"
+        },
+        {
+          "label": "after",
+          "cached": true,
+          "state": "done"
+        }
+      ]
+    },
+    "requests": [
+      {
+        "token": "A",
+        "resumed": false
+      },
+      {
+        "token": "B",
+        "resumed": false
+      },
+      {
+        "token": "C",
+        "resumed": false
+      },
+      {
+        "token": "D",
+        "resumed": false
+      },
+      {
+        "token": "after",
+        "resumed": false
+      }
+    ]
+  }
+]

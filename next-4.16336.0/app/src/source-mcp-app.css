@@ -1,0 +1,7 @@
+/* R4g-mcp MA-7: host layout glue for the MCP App row (source-mcp-app.jsx). No official rule: the official transcript
+   spaces its rows with a flex gap, the host with .source-message adjacency (source-session.css). The row is one
+   .source-message; while kQe draws the host's own row instead of the widget (its fallback), that inner row keeps no
+   margins of its own, so the gap is counted once. */
+.source-mcp-app-row.source-message > .source-message.source-message {
+  margin: 0;
+}

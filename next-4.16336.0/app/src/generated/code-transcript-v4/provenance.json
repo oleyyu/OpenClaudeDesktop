@@ -1,0 +1,862 @@
+{
+  "referenceVersion": "4.16336.0",
+  "referenceSnapshot": "snapshots/claude-4.16336.0-20261104",
+  "generator": "scripts/extract-code-transcript-v4.mjs",
+  "steps": [
+    "ct-0",
+    "ct-1"
+  ],
+  "previous": {
+    "generator": "scripts/extract-code-transcript.mjs",
+    "output": "src/generated/code-transcript",
+    "referenceVersion": "3.6556.2"
+  },
+  "sharedGraph": {
+    "area": "cds-core",
+    "manifestSha256": "06d2026939e5c8992713c2a0dda1b1abc9adffe7a0c223fe3c1e79eecd08d62c"
+  },
+  "roots": [
+    {
+      "file": "c856385e2-Cqx37C-b.js",
+      "local": "At",
+      "name": "SessionFileReadableProvider",
+      "step": "ct-1",
+      "sliced": true,
+      "previous": "c856385e2-aEyDzrcK.js#rt",
+      "exports": [
+        "S"
+      ],
+      "constraint": "sessionProviderValue:sessionFileReadable",
+      "shapeAlternatives": 17,
+      "declarationSha256": "5f79538bce82e5d7b2698e30f543e328ceeb83dfd9c2e9bd7b859918d7b50de8",
+      "pinned": true
+    },
+    {
+      "file": "c856385e2-Cqx37C-b.js",
+      "local": "Yt",
+      "name": "ImageLoaderProvider",
+      "step": "ct-1",
+      "sliced": true,
+      "previous": "c856385e2-aEyDzrcK.js#xt",
+      "exports": [
+        "h"
+      ],
+      "constraint": "sessionProviderValue:imageLoader",
+      "shapeAlternatives": 17,
+      "declarationSha256": "e6c5f3b800a9da50611547f0f4b6300046465ac8c9645708724ffc074c06cef9",
+      "pinned": true
+    },
+    {
+      "file": "c856385e2-Cqx37C-b.js",
+      "local": "Qt",
+      "name": "ContainedImageLoaderProvider",
+      "step": "ct-1",
+      "sliced": true,
+      "previous": "c856385e2-aEyDzrcK.js#wt",
+      "exports": [
+        "n"
+      ],
+      "constraint": "sessionProviderValue:containedImageLoader",
+      "shapeAlternatives": 17,
+      "declarationSha256": "c2f7a96a2afbe01a1e194543070413cf6c4887eadce2fc5a3b18d820e87e5d05",
+      "pinned": true
+    },
+    {
+      "file": "cea7057eb-BrXukOIp.js",
+      "local": "X",
+      "name": "BackgroundTasksContext",
+      "step": "ct-1",
+      "sliced": true,
+      "previous": "cea7057eb-De2BQu3K.js#X",
+      "exports": [],
+      "constraint": "sessionTasksProvider",
+      "shapeAlternatives": 1,
+      "declarationSha256": "1a30f8f85f1ba2d0f085f159e13a19fa7bb7dd0c7d7a8c90d9960e044de1d0a6",
+      "pinned": true
+    },
+    {
+      "file": "c96d752d0-D9VB6ArX.js",
+      "local": "WM",
+      "name": "UserRowChromeContext",
+      "step": "ct-1",
+      "sliced": true,
+      "previous": "c96d752d0-CWv_7-n9.js#uD",
+      "exports": [],
+      "constraint": "asideReplyChrome",
+      "shapeAlternatives": 14,
+      "declarationSha256": "219de816d363e224d412d896c45348d425bfcbd5b609a18aac8bf97493adda4f",
+      "pinned": true
+    },
+    {
+      "file": "c96d752d0-D9VB6ArX.js",
+      "local": "jgt",
+      "name": "ForkedFromRow",
+      "step": "ct-1",
+      "sliced": false,
+      "previous": "c96d752d0-CWv_7-n9.js#Cet",
+      "exports": [],
+      "constraint": "feedCase:forkedFrom",
+      "shapeAlternatives": 1,
+      "declarationSha256": "1726bceb617e7091458f0a167e5382391d99738078f98aa3c25c95e6a74cd6a8",
+      "pinned": true
+    },
+    {
+      "file": "c96d752d0-D9VB6ArX.js",
+      "local": "Ngt",
+      "name": "ForkMarkerRow",
+      "step": "ct-1",
+      "sliced": false,
+      "previous": "c96d752d0-CWv_7-n9.js#Tet",
+      "exports": [],
+      "constraint": "feedCase:forkMarker",
+      "shapeAlternatives": 1,
+      "declarationSha256": "4bc38826eefb21cb4f50750f905462af454b83fdfe06da7ee0b82477f937dad7",
+      "pinned": true
+    },
+    {
+      "file": "c96d752d0-D9VB6ArX.js",
+      "local": "V8",
+      "name": "CodeTranscriptRenderer",
+      "step": "ct-2",
+      "sliced": false,
+      "previous": "c96d752d0-CWv_7-n9.js#R3",
+      "exports": [],
+      "constraint": "namespaceMember:CodeTranscriptRenderer",
+      "shapeAlternatives": 1,
+      "declarationSha256": "63241ebbff6e4018fb38645bf0f4cb5f6d25823a11ab5ba199bf2b596725c207",
+      "pinned": true
+    },
+    {
+      "file": "c96d752d0-D9VB6ArX.js",
+      "local": "f8",
+      "name": "RendererTurnRow",
+      "step": "ct-2",
+      "sliced": false,
+      "previous": "c96d752d0-CWv_7-n9.js#l3",
+      "exports": [],
+      "constraint": "rendererRowContext",
+      "shapeAlternatives": 1,
+      "declarationSha256": "38828af4fe4e528de1308ceb7c27f6f07015c4bd574825264be59b7ca2f9017d",
+      "pinned": true
+    }
+  ],
+  "callSites": [
+    {
+      "file": "cf74bc599-BytvntCE.js",
+      "local": "HT",
+      "previous": "cf74bc599-CRYqipWN.js#uw",
+      "declarationSha256": "a77f5be14f9d9fb21815a6b34df0e1cd6e27c8e0ba14a1766de3e81a23d0c28f",
+      "pinned": true
+    },
+    {
+      "file": "cf74bc599-BytvntCE.js",
+      "local": "UT",
+      "previous": "cf74bc599-CRYqipWN.js#dw",
+      "declarationSha256": "998ef6ca1e072719277c0620f6c6be6a86b08efdddc19578d14a2169d38c36a1",
+      "pinned": true
+    },
+    {
+      "file": "c96d752d0-D9VB6ArX.js",
+      "local": "UCt",
+      "previous": "c96d752d0-CWv_7-n9.js#bat",
+      "declarationSha256": "1fec3118735d4e85af516be2c274582784b1f3349430a2d6cbbfc7dd47d2c693",
+      "pinned": true
+    },
+    {
+      "file": "c96d752d0-D9VB6ArX.js",
+      "local": "WSt",
+      "previous": "c96d752d0-CWv_7-n9.js#Zit",
+      "declarationSha256": "dba5d2859dce54153a087a1d6119c5d47b1bd3507bdc73dea2b5c921ba55645e",
+      "pinned": true
+    }
+  ],
+  "dynamicImports": [
+    {
+      "file": "c96d752d0-D9VB6ArX.js",
+      "holder": "wE",
+      "specifier": "./c9f7f3e21-CMadu0yK.js",
+      "sha256": "790e33763c2d180b49c26dd3a77157b666fe009431f5cbf3ab90ba38dc4c3783",
+      "what": "epitaxy_thread_diff_dialog (lazy registry entry)",
+      "reachedBy": null,
+      "computed": false
+    },
+    {
+      "file": "c96d752d0-D9VB6ArX.js",
+      "holder": "MO",
+      "specifier": "./ce3a1e571-DOV2KwvB.js",
+      "sha256": "92e368fdc977e3d1966357a5dbbaf9bebf1ef95be1c1f5b0f156e3bb8f4cea1c",
+      "what": "epitaxy_pr_bar (lazy registry entry)",
+      "reachedBy": null,
+      "computed": false
+    },
+    {
+      "file": "c96d752d0-D9VB6ArX.js",
+      "holder": "vk",
+      "specifier": "./c841a2d68-CCT_KyUS.js",
+      "sha256": "e10aff2685c0cebd7a21acea0cce59669202072c7d0df841aea0e6cb6ff48221",
+      "what": "cds_emoji_picker_body",
+      "reachedBy": null,
+      "computed": false
+    },
+    {
+      "file": "c96d752d0-D9VB6ArX.js",
+      "holder": "PB",
+      "specifier": "./cd9b7fccf-CzNhbnyC.js",
+      "sha256": "c461591a535bd931bcce792c21a3d87cb83864f44b636d82b7994240f60454b3",
+      "what": "lazy registry entry (T1, priority 120)",
+      "reachedBy": null,
+      "computed": false
+    },
+    {
+      "file": "c96d752d0-D9VB6ArX.js",
+      "holder": "mK",
+      "specifier": "./cd335949d-CxlSo-0B.js",
+      "sha256": "1526af548b8e166dba194a1b3674579b45aaa562b84a5e13e16d950e165a19e4",
+      "what": "project_blocks_card_row (lazy registry entry)",
+      "reachedBy": null,
+      "computed": false
+    },
+    {
+      "file": "c96d752d0-D9VB6ArX.js",
+      "holder": "p9e",
+      "specifier": "./cc1a17de9-m7izsjgJ.js",
+      "sha256": "40c21a07f714254e207ed5280a267c4fd7e0800c733b187028d082e1a0eeec4e",
+      "what": "rc_capacity_suggestions (lazy registry entry)",
+      "reachedBy": null,
+      "computed": false
+    },
+    {
+      "file": "c96d752d0-D9VB6ArX.js",
+      "holder": "P7",
+      "specifier": "./c9f414608-CCeBXbMm.js",
+      "sha256": "8d4ef55397be5ec4810ddfa0a1628895005da673eafdf16b4d3ba4a37325804d",
+      "what": "code_tab_focus_release (`.then(e=>e.n)`)",
+      "reachedBy": "useFeedKeyboard (3.6556.2 Cat → b8 → c9f414608 attachTabFocusRelease, ct-4)",
+      "computed": false
+    }
+  ],
+  "pendingRoots": [
+    {
+      "name": "CodeTranscriptRenderer",
+      "previous": "c96d752d0-CWv_7-n9.js#R3",
+      "candidate": "c96d752d0-D9VB6ArX.js#V8",
+      "step": "ct-2",
+      "note": "shape-equal",
+      "structure": "top-level-declaration"
+    },
+    {
+      "name": "CODE_TRANSCRIPT_SPEC",
+      "previous": "c96d752d0-CWv_7-n9.js#E3",
+      "candidate": "c96d752d0-D9VB6ArX.js#A8",
+      "step": "ct-2",
+      "structure": "top-level-declaration"
+    },
+    {
+      "name": "createRendererFragments",
+      "previous": "c96d752d0-CWv_7-n9.js#E4e",
+      "candidate": null,
+      "step": "ct-2",
+      "structure": "unsurveyed"
+    },
+    {
+      "name": "RendererItemRow",
+      "previous": "c96d752d0-CWv_7-n9.js#e7e",
+      "candidate": "c96d752d0-D9VB6ArX.js#cmt",
+      "step": "ct-2",
+      "structure": "top-level-declaration"
+    },
+    {
+      "name": "RendererTurnRow",
+      "previous": "c96d752d0-CWv_7-n9.js#l3",
+      "candidate": "c96d752d0-D9VB6ArX.js#f8",
+      "step": "ct-2",
+      "note": "shape-equal",
+      "structure": "top-level-declaration"
+    },
+    {
+      "name": "useLiveTexts",
+      "previous": "c96d752d0-CWv_7-n9.js#LSe",
+      "candidate": null,
+      "step": "ct-2",
+      "structure": "unsurveyed"
+    },
+    {
+      "name": "LiveTextProvider",
+      "previous": "c96d752d0-CWv_7-n9.js#S2e",
+      "candidate": "c96d752d0-D9VB6ArX.js#zrt",
+      "step": "ct-2",
+      "structure": "top-level-declaration"
+    },
+    {
+      "name": "rendererTurnKey",
+      "previous": "c96d752d0-CWv_7-n9.js#kN",
+      "candidate": null,
+      "step": "ct-2",
+      "structure": "unsurveyed"
+    },
+    {
+      "name": "entryIndexById",
+      "previous": "c96d752d0-CWv_7-n9.js#ON",
+      "candidate": null,
+      "step": "ct-2",
+      "structure": "unsurveyed"
+    },
+    {
+      "name": "createValueStore",
+      "previous": "c96d752d0-CWv_7-n9.js#U0",
+      "candidate": null,
+      "step": "ct-2",
+      "structure": "unsurveyed"
+    },
+    {
+      "name": "seedKeysOwn",
+      "previous": "c96d752d0-CWv_7-n9.js#lit",
+      "candidate": null,
+      "step": "ct-2",
+      "structure": "unsurveyed"
+    },
+    {
+      "name": "seedKeysWithTurnEdits",
+      "previous": "c96d752d0-CWv_7-n9.js#cit",
+      "candidate": null,
+      "step": "ct-2",
+      "structure": "unsurveyed"
+    },
+    {
+      "name": "isDeferrableEntry",
+      "previous": "c96d752d0-CWv_7-n9.js#TN",
+      "candidate": null,
+      "step": "ct-2",
+      "structure": "unsurveyed"
+    },
+    {
+      "name": "entriesThroughProvisional",
+      "previous": "c96d752d0-CWv_7-n9.js#rat",
+      "candidate": null,
+      "step": "ct-2",
+      "structure": "unsurveyed"
+    },
+    {
+      "name": "createEntrySharer",
+      "previous": "c96d752d0-CWv_7-n9.js#X3",
+      "candidate": null,
+      "step": "ct-2",
+      "structure": "unsurveyed"
+    },
+    {
+      "name": "epitaxyChapterStore",
+      "previous": "c96d752d0-CWv_7-n9.js#GT",
+      "candidate": null,
+      "step": "ct-2",
+      "note": "stateful store: D1 owner check first",
+      "structure": "unsurveyed"
+    },
+    {
+      "name": "messageRatingStore",
+      "previous": "c96d752d0-CWv_7-n9.js#l0",
+      "candidate": null,
+      "step": "ct-2",
+      "note": "stateful store: D1 owner check first",
+      "structure": "unsurveyed"
+    },
+    {
+      "name": "ForkedFromRow",
+      "previous": "c96d752d0-CWv_7-n9.js#Cet",
+      "candidate": "c96d752d0-D9VB6ArX.js#jgt",
+      "step": "ct-2",
+      "note": "located and pinned in ct-1 (ROOTS slice:false)",
+      "structure": "top-level-declaration"
+    },
+    {
+      "name": "ForkMarkerRow",
+      "previous": "c96d752d0-CWv_7-n9.js#Tet",
+      "candidate": "c96d752d0-D9VB6ArX.js#Ngt",
+      "step": "ct-2",
+      "note": "located and pinned in ct-1 (ROOTS slice:false)",
+      "structure": "top-level-declaration"
+    },
+    {
+      "name": "RewindDisabledReasonProvider",
+      "previous": "c96d752d0-CWv_7-n9.js#tDe",
+      "candidate": "c96d752d0-D9VB6ArX.js#dLe",
+      "step": "ct-2",
+      "structure": "top-level-declaration"
+    },
+    {
+      "name": "UserEntryRow",
+      "previous": "c96d752d0-CWv_7-n9.js#kI",
+      "candidate": "c96d752d0-D9VB6ArX.js#JR",
+      "step": "ct-2",
+      "note": "feature-jaccard 0.953; the feed passes WM.Provider around JR (ct-1 asideReplyChrome callers)",
+      "structure": "top-level-declaration"
+    },
+    {
+      "name": "WorkflowToolRow",
+      "previous": "c96d752d0-CWv_7-n9.js#F$",
+      "candidate": "c96d752d0-D9VB6ArX.js#MU",
+      "step": "ct-2",
+      "note": "feature-jaccard 0.656: re-locate through group-status",
+      "structure": "top-level-declaration"
+    },
+    {
+      "name": "WorkflowTaskCard",
+      "previous": "c96d752d0-CWv_7-n9.js#N$",
+      "candidate": "c96d752d0-D9VB6ArX.js#jU",
+      "step": "ct-2",
+      "note": "feature-jaccard 0.563: re-locate through WorkflowToolRow",
+      "structure": "top-level-declaration"
+    },
+    {
+      "name": "TranscriptSessionNotice",
+      "previous": "c96d752d0-CWv_7-n9.js#GG",
+      "candidate": "c96d752d0-D9VB6ArX.js#QW",
+      "step": "ct-2",
+      "structure": "top-level-declaration"
+    },
+    {
+      "name": "TranscriptInsetRow",
+      "previous": "c96d752d0-CWv_7-n9.js#e9",
+      "candidate": "c96d752d0-D9VB6ArX.js#RCt",
+      "step": "ct-2",
+      "structure": "top-level-declaration"
+    },
+    {
+      "name": "useFeedKeyboard",
+      "previous": "c96d752d0-CWv_7-n9.js#Cat",
+      "candidate": null,
+      "step": "ct-2",
+      "structure": "unsurveyed"
+    },
+    {
+      "name": "FEED_WINDOWING",
+      "previous": "c96d752d0-CWv_7-n9.js#c9",
+      "candidate": "c96d752d0-D9VB6ArX.js#owt",
+      "step": "ct-2",
+      "structure": "top-level-declaration"
+    },
+    {
+      "name": "feedViewportEstimate",
+      "previous": "c96d752d0-CWv_7-n9.js#Nat",
+      "candidate": null,
+      "step": "ct-2",
+      "structure": "unsurveyed"
+    },
+    {
+      "name": "buildFeedRows",
+      "previous": "c96d752d0-CWv_7-n9.js#lP",
+      "candidate": null,
+      "step": "ct-2",
+      "structure": "unsurveyed"
+    },
+    {
+      "name": "splitsRendererEntry",
+      "previous": "c96d752d0-CWv_7-n9.js#hit",
+      "candidate": null,
+      "step": "ct-2",
+      "structure": "unsurveyed"
+    },
+    {
+      "name": "useRendererFragmentsVersion",
+      "previous": "c96d752d0-CWv_7-n9.js#w4e",
+      "candidate": null,
+      "step": "ct-2",
+      "structure": "unsurveyed"
+    },
+    {
+      "name": "isEntryPartRow",
+      "previous": "c96d752d0-CWv_7-n9.js#pN",
+      "candidate": null,
+      "step": "ct-2",
+      "structure": "unsurveyed"
+    },
+    {
+      "name": "isArticlelessRow",
+      "previous": "c96d752d0-CWv_7-n9.js#VN",
+      "candidate": null,
+      "step": "ct-2",
+      "structure": "unsurveyed"
+    },
+    {
+      "name": "RendererRowActions",
+      "previous": "c96d752d0-CWv_7-n9.js#M7",
+      "candidate": "c96d752d0-D9VB6ArX.js#I9",
+      "step": "ct-2",
+      "structure": "top-level-declaration"
+    },
+    {
+      "name": "rendererItemOfKey",
+      "previous": "c96d752d0-CWv_7-n9.js#TM",
+      "candidate": null,
+      "step": "ct-2",
+      "structure": "unsurveyed"
+    },
+    {
+      "name": "rendererPinItemKey",
+      "previous": "c96d752d0-CWv_7-n9.js#EM",
+      "candidate": null,
+      "step": "ct-2",
+      "structure": "unsurveyed"
+    },
+    {
+      "name": "TaskStopButton",
+      "previous": "c96d752d0-CWv_7-n9.js#UQ",
+      "candidate": "c96d752d0-D9VB6ArX.js#QH",
+      "step": "ct-2",
+      "note": "feature-jaccard 0.833",
+      "structure": "top-level-declaration"
+    },
+    {
+      "name": "feedPressKeepsFollow",
+      "previous": "c96d752d0-CWv_7-n9.js#i7",
+      "candidate": null,
+      "step": "ct-2",
+      "structure": "unsurveyed"
+    },
+    {
+      "name": "feedRepinAfterClick",
+      "previous": "c96d752d0-CWv_7-n9.js#a7",
+      "candidate": null,
+      "step": "ct-2",
+      "structure": "unsurveyed"
+    },
+    {
+      "name": "TranscriptMessageMenuHost",
+      "previous": "c96d752d0-CWv_7-n9.js#TA",
+      "candidate": "c96d752d0-D9VB6ArX.js#nA",
+      "step": "ct-2",
+      "note": "feature-jaccard 0.945",
+      "structure": "top-level-declaration"
+    },
+    {
+      "name": "applyStreamSnapshot",
+      "previous": "c96d752d0-CWv_7-n9.js#fO",
+      "candidate": null,
+      "step": "ct-2",
+      "structure": "unsurveyed"
+    },
+    {
+      "name": "TurnErrorRecoveryProvider",
+      "previous": "c227f4d5e-B-FYKrwT.js#PZ",
+      "candidate": "c227f4d5e-DGDdGBTz.js#KF",
+      "step": "ct-2",
+      "note": "feature-jaccard 0.882",
+      "structure": "top-level-declaration"
+    },
+    {
+      "name": "classifyFeedKeyScroll",
+      "previous": "c227f4d5e-B-FYKrwT.js#S2",
+      "candidate": null,
+      "step": "ct-2",
+      "structure": "unsurveyed"
+    },
+    {
+      "name": "useTranscriptList",
+      "previous": "c4a9ee384-RLCjceOL.js#ba",
+      "candidate": null,
+      "step": "ct-2",
+      "structure": "unsurveyed"
+    },
+    {
+      "name": "useHoldPlaceOnWidthChange",
+      "previous": "c4a9ee384-RLCjceOL.js#Zp",
+      "candidate": null,
+      "step": "ct-2",
+      "structure": "unsurveyed"
+    },
+    {
+      "name": "useFeedScroller",
+      "previous": "c4a9ee384-RLCjceOL.js#Hp",
+      "candidate": null,
+      "step": "ct-2",
+      "structure": "unsurveyed"
+    },
+    {
+      "name": "useResnapBeforeInput",
+      "previous": "c4a9ee384-RLCjceOL.js#Wp",
+      "candidate": null,
+      "step": "ct-2",
+      "structure": "unsurveyed"
+    },
+    {
+      "name": "transcriptStreamStore",
+      "previous": "c06cf64bb-CdJdJuVd.js#W",
+      "candidate": null,
+      "step": "ct-2",
+      "note": "stateful store: D1 owner check first",
+      "structure": "unsurveyed"
+    },
+    {
+      "name": "useStreamSnapshot",
+      "previous": "cd4f82e77-CAMIsQ30.js#zt",
+      "candidate": null,
+      "step": "ct-2",
+      "structure": "unsurveyed"
+    },
+    {
+      "name": "EpitaxyMermaidFence",
+      "previous": "c9e4d0c57-DoEW0Gy_.js#J",
+      "candidate": "c9e4d0c57-DvzRE6N8.js#we",
+      "step": "ct-4",
+      "note": "lazy chunk, own name",
+      "structure": "top-level-declaration"
+    },
+    {
+      "name": "HELD_HEIGHT_ATTR",
+      "previous": "cb264bc23-DxMA33A4.js#d",
+      "candidate": "cb264bc23-DwbYs7Ip.js#p",
+      "step": "ct-4",
+      "note": "lazy chunk, own name (with createHoldPlace / createHoldPlaceKeepingPress)",
+      "structure": "top-level-declaration"
+    },
+    {
+      "name": "attachTabFocusRelease",
+      "previous": "c9f414608-BplIKcn2.js#i",
+      "candidate": "c9f414608-CCeBXbMm.js#o",
+      "step": "ct-4",
+      "note": "lazy chunk, own name: c96d752d0 P7 loads it (`.then(e=>e.n)`, n = r = {attachTabFocusRelease: () => o}); DYNAMIC_IMPORTS",
+      "structure": "top-level-declaration"
+    },
+    {
+      "name": "ImagePreviewModal",
+      "previous": "cb1b78cfa-VqsYNxqp.js#g",
+      "candidate": "shared-36-fqRFYwOb.js#r_",
+      "step": "ct-4",
+      "note": "moved from its lazy chunk into shared-36 (feature-jaccard 0.944)",
+      "structure": "top-level-declaration"
+    }
+  ],
+  "pendingLinkedAreas": [
+    {
+      "area": "transcript-rows-v4",
+      "steps": "tr-2..tr-5 (real tree: tr-0 / tr-1 only)",
+      "overlap": 9404,
+      "why": "transcript-rows probe (account2/plan-explore/transcript-rows.json) holds 9404 of the 10930 bindings of the V8 / f8 closure"
+    },
+    {
+      "area": "turn-box-v4",
+      "steps": "all (not in the real tree)",
+      "overlap": 7952,
+      "why": "turn-box probe holds 7952 of them"
+    }
+  ],
+  "linkPlan": [
+    {
+      "region": "chat-markdown",
+      "graph": "chat-markdown-v4",
+      "status": "linked",
+      "why": "prose / markdown helpers (shared-11 J_ context held unexported: link-export request)",
+      "linked": true
+    },
+    {
+      "region": "chat-renderer",
+      "graph": "chat-renderer-v4",
+      "status": "linked",
+      "why": "round2/chat-renderer-b/link-surface.json (Markdown roots still pending there)",
+      "linked": true
+    },
+    {
+      "region": "code-composer",
+      "graph": "code-composer-v4",
+      "status": "linked",
+      "why": "composer helpers the feed reads",
+      "linked": true
+    },
+    {
+      "region": "code-current:base",
+      "graph": "code-current-v4",
+      "status": "not-reached",
+      "why": "the V8 / f8 closure (4.16336.0) takes no binding code-current-v4 holds",
+      "linked": false
+    },
+    {
+      "region": "code-routines",
+      "graph": "code-routines-v4",
+      "status": "linked",
+      "why": "routine rows / helpers",
+      "linked": true
+    },
+    {
+      "region": "cowork-approval",
+      "graph": "cowork-approval-v4",
+      "status": "linked",
+      "why": "3.6556.2 shared-52 Qq is shared-123#ZS (frame-sidebar-nav) now; cowork-approval-v4 holds other closure bindings",
+      "linked": true
+    },
+    {
+      "region": "cowork-progress",
+      "graph": "cowork-progress-v4",
+      "status": "linked",
+      "why": "progress rows",
+      "linked": true
+    },
+    {
+      "region": "files-changes",
+      "graph": "files-changes-v4",
+      "status": "linked",
+      "why": "changed-file rows",
+      "linked": true
+    },
+    {
+      "region": "r3b-settings",
+      "graph": null,
+      "status": "no-graph",
+      "why": "staging only (regions/batch1/r3b-settings); logger / logCategory are shared-0 Rc / N, resolved through turn-plan-v4",
+      "linked": false
+    },
+    {
+      "region": "r3b-transcript",
+      "graph": "r3b-transcript-v4",
+      "status": "linked",
+      "why": "SessionFileOpenerProvider (ct-0) and the transcript file access",
+      "linked": true
+    },
+    {
+      "region": "routines-shared",
+      "graph": "routines-shared-v4",
+      "status": "linked",
+      "why": "routine helpers",
+      "linked": true
+    },
+    {
+      "region": "session-rail",
+      "graph": "session-rail-v4",
+      "status": "pending",
+      "why": "main workflow batch 6; not in the real tree on 4.16336.0 yet",
+      "linked": false
+    },
+    {
+      "region": "session-rail-kit",
+      "graph": "session-rail-kit-v4",
+      "status": "linked",
+      "why": "rail kit helpers",
+      "linked": true
+    },
+    {
+      "region": "session-rail-sections",
+      "graph": "session-rail-sections-v4",
+      "status": "linked",
+      "why": "main workflow batch 5 (in the real tree on 4.16336.0)",
+      "linked": true
+    },
+    {
+      "region": "sessions-page",
+      "graph": "sessions-page-v4",
+      "status": "linked",
+      "why": "main workflow batch 5 (in the real tree on 4.16336.0)",
+      "linked": true
+    },
+    {
+      "region": "transcript-rows",
+      "graph": "transcript-rows-v4",
+      "status": "linked",
+      "why": "tr-0 / tr-1 in the real tree; tr-2..tr-5 pending (PENDING_LINKED_AREAS)",
+      "linked": true
+    },
+    {
+      "region": "turn-box",
+      "graph": "turn-box-v4",
+      "status": "pending",
+      "why": "main workflow batch 7; not in the real tree yet (PENDING_LINKED_AREAS)",
+      "linked": false
+    },
+    {
+      "region": "turn-plan",
+      "graph": "turn-plan-v4",
+      "status": "linked",
+      "why": "turn plan rows; shared-0 Rc / N (logger, r3b-settings)",
+      "linked": true
+    },
+    {
+      "region": "working-line",
+      "graph": "working-line-v4",
+      "status": "linked",
+      "why": "working line + the shared-0 / shared-frame helpers it exports",
+      "linked": true
+    }
+  ],
+  "linkRequests": {},
+  "cdsCoreWriterNeeds": [
+    "shared-25-D-aF0gt9.js#Uy",
+    "shared-0-CnnWnVrT.js#g9",
+    "ca41b3815-k7z3sa_r.js#De",
+    "ca41b3815-k7z3sa_r.js#ft",
+    "ca41b3815-k7z3sa_r.js#ht",
+    "ca41b3815-k7z3sa_r.js#gt",
+    "ca41b3815-k7z3sa_r.js#_t",
+    "ca41b3815-k7z3sa_r.js#vt",
+    "ca41b3815-k7z3sa_r.js#Y",
+    "ca41b3815-k7z3sa_r.js#xt",
+    "ca41b3815-k7z3sa_r.js#St",
+    "ca41b3815-k7z3sa_r.js#Ct",
+    "ca41b3815-k7z3sa_r.js#X",
+    "ca41b3815-k7z3sa_r.js#Ot",
+    "vendor-zod-fszujTq6.js#k",
+    "c03935b01-BylKMWqe.js#Kt",
+    "c03935b01-BylKMWqe.js#C",
+    "c03935b01-BylKMWqe.js#Rl",
+    "c03935b01-BylKMWqe.js#du",
+    "shared-7-D2e77H6v.js#lS",
+    "shared-7-D2e77H6v.js#xS",
+    "c06cf64bb-CoZso5N4.js#vO",
+    "c2d03a751-CMPZg8NP.js#s",
+    "c851b27a8-Chd9-72r.js#ht",
+    "c851b27a8-Chd9-72r.js#qr",
+    "c851b27a8-Chd9-72r.js#$r",
+    "c851b27a8-Chd9-72r.js#Si",
+    "c851b27a8-Chd9-72r.js#wi",
+    "c851b27a8-Chd9-72r.js#Ti",
+    "c851b27a8-Chd9-72r.js#ki",
+    "c851b27a8-Chd9-72r.js#Ai",
+    "cb8c5a88f-Cxti0pWl.js#go",
+    "c34e6410a-BLtdknyP.js#s",
+    "cfa45e123-hxjKjDwM.js#k",
+    "cfa45e123-hxjKjDwM.js#qe",
+    "cfa45e123-hxjKjDwM.js#Je",
+    "cfa45e123-hxjKjDwM.js#vt",
+    "cfa45e123-hxjKjDwM.js#Br",
+    "cfa45e123-hxjKjDwM.js#is",
+    "cfa45e123-hxjKjDwM.js#Os"
+  ],
+  "imports": [
+    {
+      "module": "session-providers.mjs",
+      "local": "Jt",
+      "kind": "shared-graph",
+      "from": "../cds-core/c856385e2.mjs",
+      "name": "Jt",
+      "via": "c856385e2-Cqx37C-b.js#Jt"
+    },
+    {
+      "module": "session-providers.mjs",
+      "local": "Zt",
+      "kind": "shared-graph",
+      "from": "../cds-core/c856385e2.mjs",
+      "name": "Zt",
+      "via": "c856385e2-Cqx37C-b.js#Zt"
+    },
+    {
+      "module": "session-providers.mjs",
+      "local": "kt",
+      "kind": "shared-graph",
+      "from": "../cds-core/c856385e2.mjs",
+      "name": "kt",
+      "via": "c856385e2-Cqx37C-b.js#kt"
+    },
+    {
+      "module": "background-tasks.mjs",
+      "local": "t",
+      "kind": "react",
+      "from": "react",
+      "name": "createContext",
+      "via": "vendor-frame-BckkO60Y.js:no"
+    },
+    {
+      "module": "transcript-rows-chrome.mjs",
+      "local": "k",
+      "kind": "react",
+      "from": "react",
+      "name": "createContext",
+      "via": "vendor-frame-BckkO60Y.js:no"
+    }
+  ]
+}

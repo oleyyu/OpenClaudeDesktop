@@ -1,0 +1,4534 @@
+{
+  "referenceVersion": "3.6556.2",
+  "referenceSnapshot": "snapshots/claude-3.6556.2-20261025-192807",
+  "generator": "scripts/extract-files-changes.mjs",
+  "adapterModule": "src/source-files-changes-adapters.jsx",
+  "modules": [
+    {
+      "target": "owner-window.mjs",
+      "source": "shared-25-DOWZRSlq.js",
+      "sourceSha256": "a279442d20a0b9bb6327db086d99fe9248ecc93955651d99166b8ce85282d1a1",
+      "sha256": "b78a8d9b57dd4e301992fe3e550f7c524b01c312defa43c5724e5df21b43f5b7",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "df",
+          "sha256": "776a37386d0fd339cf9d940848119b9c00146c97380fe751e6a093f4196c93bd"
+        },
+        {
+          "name": "ff",
+          "sha256": "22b4e0b1aa9ba0d2363c5fdb031356c425b635127a507b334efc3f8ed78c0842"
+        },
+        {
+          "name": "pf",
+          "sha256": "93001519d2b9ca0b34225be7d90f80ce554a31ae71b82668139b873325e4b827"
+        },
+        {
+          "name": "mf",
+          "sha256": "67d421798b13d0fad2508c130fd91513aa785c4dcd0ec3b1a44f6eb3ac2f2887"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "pf": "ownerWindow",
+        "mf": "ownerWindowOrGlobal"
+      }
+    },
+    {
+      "target": "editable-target.mjs",
+      "source": "shared-156-BLTosN8U.js",
+      "sourceSha256": "807d6ddff2ec91c75865bd855af6373863eb93af7ebd698490e618fbc44f2a2b",
+      "sha256": "a89e10a9e38b14bc2359f056553a0dc965b31123d22a78c63ef44c38557a5446",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "PK",
+          "sha256": "8cd1323e5aa1068e317536fbac8139b62bd4cd5b6c6603e0582aa4723067f8fe"
+        },
+        {
+          "name": "IK",
+          "sha256": "321091aaa9c5d2df1b3e5e8882e64786cf069650752677dcd58ef7b7cec346d3"
+        },
+        {
+          "name": "RK",
+          "sha256": "85dae8f427d005f20e91e0bfb3cd4da3cdf5da65245cccaf746b7685b29f19c7"
+        },
+        {
+          "name": "zK",
+          "sha256": "18d8b67e26f9d93551d4cca3a90ad5c0cda3ba42ea2550948f7db5e05cc5300e"
+        },
+        {
+          "name": "BK",
+          "sha256": "11d3d3e78a40602ad9312c991cd00eb25c181abf41d67b3477150134388c45a0"
+        },
+        {
+          "name": "VK",
+          "sha256": "69ca52a909fc2a4ea0a174d8dd52bf84a63f2e36ad4f18c64bca8519a0782293"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "BK": "isEditableTarget"
+      }
+    },
+    {
+      "target": "menu-context-guard.mjs",
+      "source": "ca5db7aaf-qq5selW3.js",
+      "sourceSha256": "059c9eb7d7eb8aba870f60db1298542b65ea684edfdab34000eca57a8f45c824",
+      "sha256": "6354cdccc4e710ed670e79960accdad3089edd51c2cf17bbecc1d2dfc46ca890",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "P",
+          "sha256": "f192560ec2460b82bdba557c71cc9c4e1cf6004dd680ed0afee8d9b2ded55571"
+        }
+      ],
+      "imports": [
+        {
+          "local": "y",
+          "from": "./editable-target.mjs",
+          "name": "isEditableTarget",
+          "via": "shared-156-BLTosN8U.js:xr",
+          "kind": "generated"
+        }
+      ],
+      "exports": {
+        "P": "suppressNativeContextMenu"
+      }
+    },
+    {
+      "target": "diff-context-guard.mjs",
+      "source": "shared-1-BJhqMmkf.js",
+      "sourceSha256": "07582bbc557071f2d83db84a7356eec7847d108771b043f876d26dfda38e4388",
+      "sha256": "603d38341f3383edd40ca355e8e4d0041cfd0bfd09c9521041aa6d5ee58b05e8",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "iK",
+          "sha256": "fe8e9924bd16e53ab7234f896848bc59ccaf638ff73af75134e61e14508e0c2f"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "iK": "preventContextMenu"
+      }
+    },
+    {
+      "target": "diff-scope-memory.mjs",
+      "source": "c03935b01-yhcY34vt.js",
+      "sourceSha256": "473ccdd15e417c375b938e853107ab23a30b5401a379fcc296d9c3f4e5d31be2",
+      "sha256": "5b50452f502b2fd950a75217c08799a47066b46f0ad3ce05b777f8c73b36eb08",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "Un",
+          "sha256": "5d6edc4fdf9b001922360308c307401049ca4db38a0ad5ccbd442803580176e9"
+        },
+        {
+          "name": "Wn",
+          "sha256": "b7845c0107ca05d910dd40aba93dab47a96209359ec06586cf597c7760b93c30"
+        },
+        {
+          "name": "Gn",
+          "sha256": "5cebd29d8898e7e3e0d6403b9c01ae97609390abee2790e308002a0dc9679fac"
+        },
+        {
+          "name": "Kn",
+          "sha256": "c5b66a66c0e2d2e41ec3bc25e284a00e61c8c1e4534dbecde11256d9188b6d68"
+        },
+        {
+          "name": "qn",
+          "sha256": "bc539bf786806faa257063d9df569b4d503155e988cd2c7cf8bdf286ad9ec582"
+        },
+        {
+          "name": "Jn",
+          "sha256": "769b2e673f4589e6f767e106c3c1ddaee90d5b542eb9d5d7e01eb9abe2872149"
+        },
+        {
+          "name": "Yn",
+          "sha256": "fe2c1146cbab50a0b9f5e78437c92b76983a2347c3739262fd2366c7b7d336a5"
+        },
+        {
+          "name": "Xn",
+          "sha256": "dd75de88f0464be823ee59bfc7b471a67fa19ba62b11429333d2525c6071fcc9"
+        },
+        {
+          "name": "Zn",
+          "sha256": "a3b15b4b79f98877eb1d7c5725633ad99d1d534429725488df02b1a875a2c9b1"
+        }
+      ],
+      "imports": [
+        {
+          "local": "et",
+          "from": "../../source-files-changes-adapters.jsx",
+          "name": "usePersistedValue",
+          "via": "shared-28-DNYlf4wu.js:Uc",
+          "kind": "adapter"
+        },
+        {
+          "local": "Qe",
+          "from": "../../source-files-changes-adapters.jsx",
+          "name": "readPersistedValue",
+          "via": "shared-28-DNYlf4wu.js:Fc",
+          "kind": "adapter"
+        },
+        {
+          "local": "$e",
+          "from": "../../source-files-changes-adapters.jsx",
+          "name": "persistedValuesLoading",
+          "via": "shared-28-DNYlf4wu.js:Mc",
+          "kind": "adapter"
+        },
+        {
+          "local": "tt",
+          "from": "../../source-files-changes-adapters.jsx",
+          "name": "writePersistedValue",
+          "via": "shared-28-DNYlf4wu.js:Wc",
+          "kind": "adapter"
+        }
+      ],
+      "exports": {
+        "qn": "uncommittedSessionsKey",
+        "Jn": "uncommittedSessionsDefault",
+        "Yn": "uncommittedSessionIds",
+        "Xn": "useStoredDiffScope",
+        "Zn": "rememberDiffScope",
+        "Un": "branchDiffScope",
+        "Wn": "uncommittedDiffScope",
+        "Gn": "diffScopeKey",
+        "Kn": "sameDiffScope"
+      }
+    },
+    {
+      "target": "worktree-checking.mjs",
+      "source": "shared-46-BIbZBGFq.js",
+      "sourceSha256": "ab4d599f5c2e563a1365c06f58ef96edb025106aea10e73a9c329cac899e3540",
+      "sha256": "0372fc53e404b82eac0af8b6d4cbd32b1f69e057af1c00dc8e760ea5ba8d7e68",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "GD",
+          "sha256": "a60429cb37337376d87b9654416d5865c13111ef39c66f93b8bb759e82d942b3"
+        }
+      ],
+      "imports": [
+        {
+          "local": "o",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-CnSY1sxv.js:Ha",
+          "kind": "react"
+        },
+        {
+          "local": "O",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "cdsClassNames",
+          "via": "shared-frame-6jtSkIit.js:Hf",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "J1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged1",
+          "via": "shared-frame-6jtSkIit.js:Qf",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "J0",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoIsEmpty",
+          "via": "shared-frame-6jtSkIit.js:Zf",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "V",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "CdsShimmer",
+          "via": "shared-frame-6jtSkIit.js:_i",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "K0",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore0",
+          "via": "shared-frame-6jtSkIit.js:ap",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "K3",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore3",
+          "via": "shared-frame-6jtSkIit.js:cp",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "J3",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged3",
+          "via": "shared-frame-6jtSkIit.js:ep",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "J9",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "reactMemoCache",
+          "via": "shared-frame-6jtSkIit.js:ip",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "K1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore1",
+          "via": "shared-frame-6jtSkIit.js:op",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "Z",
+          "from": "../../source-files-changes-adapters.jsx",
+          "name": "FormattedMessage",
+          "via": "vendor-intl-DYfox5Co.js:l",
+          "kind": "adapter"
+        }
+      ],
+      "exports": {
+        "GD": "WorktreeChecking"
+      }
+    },
+    {
+      "target": "vanilla-store.mjs",
+      "source": "vendor-all-0-DXM0MGjZ.js",
+      "sourceSha256": "a9bcb496d6a94739de4cf2f924169442032e55416cb83e2395c789958272c772",
+      "sha256": "63b3aacba7695b4e451fb706500c7e3465400e3ed22550dbecfdcb6137f3f565",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "p",
+          "sha256": "ef7e1e618576ac6a329b578b7757d085c8a3a7a9b3afdadcd93d0ecaae43f746"
+        },
+        {
+          "name": "m",
+          "sha256": "0e3652983f970068e21f5596b85430ab126d1105685b316143fcffe063c17b58"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "m": "createStore"
+      }
+    },
+    {
+      "target": "windows-path.mjs",
+      "source": "shared-26-CGuBxVt9.js",
+      "sourceSha256": "ae470abead4f769bdf0661897b47c2b17f3a7f706c725e97b29f49e6060e57b3",
+      "sha256": "890069829432ad22ff638448ea75749cac0f4d28b70c3551a3ab87e8e7c2b808",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "DS",
+          "sha256": "9728ec5fe88c171d63c4d6dc8bf26973d44d6842477e80b891e1db10c222e972"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "DS": "windowsAbsolutePath"
+      }
+    },
+    {
+      "target": "path-absolute.mjs",
+      "source": "shared-28-DNYlf4wu.js",
+      "sourceSha256": "2ddef8f0244506ab515b6f088920aea37167e2008dd217fdabcc7de8f78c80b7",
+      "sha256": "3c4f5018d44fe9599842fd187e035ab135622e28f5862371ea2b80094d51392e",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "vM",
+          "sha256": "ddb0d025aea2c7e90fbae1c0b14470888dfc7c0f96455c666b74890ebb086dd7"
+        },
+        {
+          "name": "RM",
+          "sha256": "f3f9ae23fe23e27843a834bac06e71b8eb0493bf221aa3692e98e51d40e5ed70"
+        },
+        {
+          "name": "UM",
+          "sha256": "f439292a558d917e4dfaeeac240a11d3a32442766756e1e8391cd726402a04e6"
+        }
+      ],
+      "imports": [
+        {
+          "local": "Ni",
+          "from": "./windows-path.mjs",
+          "name": "windowsAbsolutePath",
+          "via": "shared-26-CGuBxVt9.js:nl",
+          "kind": "generated"
+        }
+      ],
+      "exports": {
+        "UM": "isAbsolutePathFor",
+        "vM": "isRelativePath"
+      }
+    },
+    {
+      "target": "image-path.mjs",
+      "source": "shared-104-CTONUSaz.js",
+      "sourceSha256": "621e1186f00f5767be314b43a3f7c663adedfee5e2592ceda05c83be0baa58b6",
+      "sha256": "9b962aaa9cc6271a080819aeceacf63dc95cb0db60910764b243402d71cbb512",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "KI",
+          "sha256": "42bf67eb2ee5439a8a23db76ab7fb75c864dda25f96c2972b40cc58e96a39343"
+        },
+        {
+          "name": "qI",
+          "sha256": "9c0c2435d514f78b6dae98bcb84dcdf6eb50dd637411088af8d85d6de7cc0de9"
+        },
+        {
+          "name": "$I",
+          "sha256": "677b493f5588a50486ead91ee723ccb1c24dec888fb015094a527572bb444480"
+        },
+        {
+          "name": "tL",
+          "sha256": "0bef26c20d6c7ab6db42779cb5195b2bb59d65998ba71b62f6e6d48a1c7b7e38"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "tL": "isImagePath",
+        "KI": "rasterImageExtensions"
+      }
+    },
+    {
+      "target": "file-editor-path.mjs",
+      "source": "shared-28-DNYlf4wu.js",
+      "sourceSha256": "2ddef8f0244506ab515b6f088920aea37167e2008dd217fdabcc7de8f78c80b7",
+      "sha256": "528914e75cd69419123450129e28803a49a296b247fad129b88bf0f1564215e5",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "nN",
+          "sha256": "58ee1f3a435eed1b587e40c4ee1000cf3190a889a4dfbd7d2b7d80df5e4163e6"
+        },
+        {
+          "name": "vN",
+          "sha256": "cb82dc9144264e1d8c513cb3bab7030f6e1c3c71f3b737d77c24798117da1d01"
+        },
+        {
+          "name": "yN",
+          "sha256": "32921892a36fc087aee4302f929051055b23316b039f40785765de264084a8b1"
+        }
+      ],
+      "imports": [
+        {
+          "local": "qi",
+          "from": "./image-path.mjs",
+          "name": "isImagePath",
+          "via": "shared-104-CTONUSaz.js:in",
+          "kind": "generated"
+        }
+      ],
+      "exports": {
+        "yN": "canOpenFileInEditor"
+      }
+    },
+    {
+      "target": "promise-timeout.mjs",
+      "source": "shared-104-CTONUSaz.js",
+      "sourceSha256": "621e1186f00f5767be314b43a3f7c663adedfee5e2592ceda05c83be0baa58b6",
+      "sha256": "b4baa890079893d14adbd66c825fa8a33619a0371e186fb35e33559ab75f5ef7",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "Pu",
+          "sha256": "4f6fe592ea5e9a268b29f7d38cf207cae0475dd7fbdee6adcbfa1ece63488f9f"
+        },
+        {
+          "name": "Fu",
+          "sha256": "72f1f666d432f89440daff717a52a289c5a9722a50f46d0c3ed9b7cf1d9cb885"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "Fu": "withTimeout"
+      }
+    },
+    {
+      "target": "windows-platform.mjs",
+      "source": "shared-78-D5Fw2h0a.js",
+      "sourceSha256": "ec00f19ca6b3a2b80e9da842e0033f17402d42119b0548619445315da7c00545",
+      "sha256": "174b30fd9e4f0699a829d3d5b00535ecb39d1226891b6e25507e84822b1302c8",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "ko",
+          "sha256": "874b10e2bc81b15efb06093c9d1b9eb0fb85510599eed580a7d810cb1af5d472"
+        },
+        {
+          "name": "Ao",
+          "sha256": "a08902a408df5440ba330a97713261a3046f0931aebc79ae5473ca90fc6984a7"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "Ao": "isWindowsPlatform"
+      }
+    },
+    {
+      "target": "session-context.mjs",
+      "source": "c9b8e0296-DE2P0m6e.js",
+      "sourceSha256": "5ba1584b75277209cf2d67df1ee2d3d6dc2b78009f37e51ffe4ef231b12c98ca",
+      "sha256": "04f22ba2b2ae3ec65ec6dea2448663b5d06fe29750d217a864d4f45419916835",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "r",
+          "sha256": "c377c47fafa6c1be16658ae7195aaa192b890750602ecd975a5399a6f79b4d8d"
+        }
+      ],
+      "imports": [
+        {
+          "local": "t",
+          "from": "react",
+          "name": "createContext",
+          "via": "vendor-frame-CnSY1sxv.js:to",
+          "kind": "react"
+        }
+      ],
+      "exports": {
+        "r": "CurrentSessionIdContext"
+      }
+    },
+    {
+      "target": "file-gone-check.mjs",
+      "source": "c856385e2-aEyDzrcK.js",
+      "sourceSha256": "07946cdfee5c9a27ccc4e4343560a09c7628f02d4d216a20ce38ccf93a4a91d8",
+      "sha256": "cc58e03def5e0255a2945e12976a7b9ee9740b11f1e69317929f5e6124d16a35",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "Fe",
+          "sha256": "95e5b73b9136c249b7fe9f46af324f20fc301e80f3f5e54ef933cc6fb1fe24dc"
+        },
+        {
+          "name": "Ie",
+          "sha256": "c3d77ddd172884ba9aa2fd19f41901d96571fce0b9aa557c63c7f514f2584438"
+        },
+        {
+          "name": "Le",
+          "sha256": "2ad5c6e91801ae909837682af46dc63e39e6ba6df641ba7d4bdad95edd6af5bc"
+        },
+        {
+          "name": "Re",
+          "sha256": "5d092aea0121f65392c1a10dcbb29eec26dce6916317c0619c55a85c1972ab1a"
+        },
+        {
+          "name": "q",
+          "sha256": "32895bfa675205ad0fcee57dae93f89b4014fe28f20c48da7c0dbf5583b7ced9"
+        },
+        {
+          "name": "ze",
+          "sha256": "47e2f92b023eb722b627601697a9171fc8fc203e85bb66c34ed48961ea59121f"
+        }
+      ],
+      "imports": [
+        {
+          "local": "e",
+          "from": "react",
+          "name": "useRef",
+          "via": "vendor-frame-CnSY1sxv.js:Co",
+          "kind": "react"
+        },
+        {
+          "local": "c",
+          "from": "react",
+          "name": "use",
+          "via": "vendor-frame-CnSY1sxv.js:uo",
+          "kind": "react"
+        },
+        {
+          "local": "l",
+          "from": "react",
+          "name": "useState",
+          "via": "vendor-frame-CnSY1sxv.js:wo",
+          "kind": "react"
+        },
+        {
+          "local": "J2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged2",
+          "via": "shared-frame-6jtSkIit.js:$f",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "J9",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "reactMemoCache",
+          "via": "shared-frame-6jtSkIit.js:ip",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "K4",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore4",
+          "via": "shared-frame-6jtSkIit.js:lp",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "K2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore2",
+          "via": "shared-frame-6jtSkIit.js:sp",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "J4",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged4",
+          "via": "shared-frame-6jtSkIit.js:tp",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "_",
+          "from": "../../source-files-changes-adapters.jsx",
+          "name": "growthBookOn",
+          "via": "shared-0-DDOOdL6P.js:_b",
+          "kind": "adapter"
+        },
+        {
+          "local": "v",
+          "from": "../../source-files-changes-adapters.jsx",
+          "name": "LocalSessions",
+          "via": "shared-0-DDOOdL6P.js:dh",
+          "kind": "adapter"
+        },
+        {
+          "local": "O",
+          "from": "./windows-platform.mjs",
+          "name": "isWindowsPlatform",
+          "via": "shared-78-D5Fw2h0a.js:yE",
+          "kind": "generated"
+        },
+        {
+          "local": "j",
+          "from": "./promise-timeout.mjs",
+          "name": "withTimeout",
+          "via": "shared-104-CTONUSaz.js:Lf",
+          "kind": "generated"
+        },
+        {
+          "local": "de",
+          "from": "./path-absolute.mjs",
+          "name": "isRelativePath",
+          "via": "shared-28-DNYlf4wu.js:vr",
+          "kind": "generated"
+        },
+        {
+          "local": "pe",
+          "from": "./session-context.mjs",
+          "name": "CurrentSessionIdContext",
+          "via": "c9b8e0296-DE2P0m6e.js:t",
+          "kind": "generated"
+        },
+        {
+          "local": "Oe",
+          "from": "../../source-files-changes-adapters.jsx",
+          "name": "localSessionTarget",
+          "via": "c7fa71d26-Cx2DrEBa.js:t",
+          "kind": "adapter"
+        },
+        {
+          "local": "te",
+          "from": "./path-absolute.mjs",
+          "name": "isAbsolutePathFor",
+          "via": "shared-28-DNYlf4wu.js:Or",
+          "kind": "generated"
+        }
+      ],
+      "exports": {
+        "q": "useFileGone",
+        "Re": "goneCheckablePath",
+        "Le": "cloudStoragePath",
+        "Fe": "fileGoneKillSwitch",
+        "Ie": "fileGoneDeadlineMs"
+      }
+    },
+    {
+      "target": "file-selection.mjs",
+      "source": "c856385e2-aEyDzrcK.js",
+      "sourceSha256": "07946cdfee5c9a27ccc4e4343560a09c7628f02d4d216a20ce38ccf93a4a91d8",
+      "sha256": "ab551426400a85f207eb9d19a1fa2789301f876e51b963ad8d30ec5ffb0640d8",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "J",
+          "sha256": "f47fc6d68049386ff9256f82c0e6784c734e9194990acc5ff869b1ce589a1941"
+        },
+        {
+          "name": "Ke",
+          "sha256": "8c6f51bd96610ab29c709eed567dfbb40827e32ef35a0a8becf474153fcee42a"
+        },
+        {
+          "name": "qe",
+          "sha256": "8b902858b72ffc2ad21386e7973e33c2db454783f49194e58a79c67e435773e0"
+        },
+        {
+          "name": "Je",
+          "sha256": "77c818c4c085620489100ec798f66b97d1733e2c6097211e885c58c3e88a9fc0"
+        },
+        {
+          "name": "Qe",
+          "sha256": "8caf40a00c0bc9839b697481f1980edb40785d281e0d9ae37e142bef62f3018a"
+        }
+      ],
+      "imports": [
+        {
+          "local": "F",
+          "from": "./vanilla-store.mjs",
+          "name": "createStore",
+          "via": "vendor-all-0-DXM0MGjZ.js:L",
+          "kind": "generated"
+        }
+      ],
+      "exports": {
+        "Ke": "createFileSelectionStore",
+        "qe": "selectFileRange",
+        "Je": "selectAllFiles",
+        "Qe": "inMultiSelection"
+      }
+    },
+    {
+      "target": "file-content-results.mjs",
+      "source": "cccc2cf0a-DhZC33Gc.js",
+      "sourceSha256": "821cbb54743d9b600ada60e61c362d4c74570cad409bb3b199e8fcf960933c51",
+      "sha256": "aea496f8e9ed95b99f7f967ce4fbc081b7a1b3f1b36ec1242c379daf5eaa44ae",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "cT",
+          "sha256": "cb8e68ac18811ee3c677980bc1b10c7fd9c998fcd2f9e84161f7353bf31d63fe"
+        },
+        {
+          "name": "dT",
+          "sha256": "3f7e0250ebf41b3967ba180e5ffe53633a2676b1cc7edfcb379fae6da6535981"
+        },
+        {
+          "name": "fT",
+          "sha256": "3ce593f43081ed336a90b569d225c3813f01173faad96fd1401cb9af6965b5aa"
+        },
+        {
+          "name": "pT",
+          "sha256": "0ad69fce745f47490c443206b0a6bd3b11e824047fddb1d8e729e9d42a9d0875"
+        },
+        {
+          "name": "mT",
+          "sha256": "cf7cd435d1625dc02d89f49e2ea5171b7879753b00be8a57763a5dd9dc0c0c8b"
+        },
+        {
+          "name": "hT",
+          "sha256": "613389a745b5e6cb505fb9ecce63692ea35dcb65700b61c57792b4fd5efa4e1f"
+        },
+        {
+          "name": "gT",
+          "sha256": "be046f64c006b10fd522d686b3fd944abfa937946b57384571e9648d2690eb4c"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "cT": "groupContentResults",
+        "pT": "collapseContentWhitespace",
+        "gT": "contentSnippetLayout"
+      }
+    },
+    {
+      "target": "file-tree-pointer.mjs",
+      "source": "cccc2cf0a-DhZC33Gc.js",
+      "sourceSha256": "821cbb54743d9b600ada60e61c362d4c74570cad409bb3b199e8fcf960933c51",
+      "sha256": "226b2769f739054367c976fc0b49d1eb54e6318a856666172ff4652781892588",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "Ww",
+          "sha256": "9fcb2480c39e2800a1219213c29ae9e731c47e72e0a8b0a2bce049943aa6689f"
+        },
+        {
+          "name": "Gw",
+          "sha256": "7c5b685bafe42ce4edaeeea77640ac1299a8b27809b238713a258d4e1f58bf8f"
+        },
+        {
+          "name": "Kw",
+          "sha256": "77f3a5515bab4542ab3dd29b3fea71c088605552f1ffce1e3f33874fd4997e06"
+        }
+      ],
+      "imports": [
+        {
+          "local": "je",
+          "from": "./owner-window.mjs",
+          "name": "ownerWindowOrGlobal",
+          "via": "shared-25-DOWZRSlq.js:lp",
+          "kind": "generated"
+        }
+      ],
+      "exports": {
+        "Ww": "isBlankTreeTarget",
+        "Gw": "isBlankTreePress"
+      }
+    },
+    {
+      "target": "file-context-drag.mjs",
+      "source": "c052e27aa-DlzVwnbz.js",
+      "sourceSha256": "1a2f9e5dd25c3943af0141e7f77e7854e947876e3f93088ca898a42b90354606",
+      "sha256": "cc8c1b94e939a375a9ad445399c00dfdd8e8f4c23d546e3ee33649428542ace7",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "r",
+          "sha256": "cfa167c4acb80a7a62d107fafb4d68e83495045ea3d456c82a9771b48b2e9585"
+        },
+        {
+          "name": "i",
+          "sha256": "356026067e4c5ab24ab3c79360407a4f8ad491ac405d94a7cdbbc31b04df6cff"
+        },
+        {
+          "name": "a",
+          "sha256": "b09d8a60bf4fe4745dd72c55eb602c8389f59692782376cbabdf11d7ae347aec"
+        },
+        {
+          "name": "o",
+          "sha256": "9b6666b9051d0bb79be3088d4dd1e4885ee170d6cbb33832eb5ad59642687d26"
+        },
+        {
+          "name": "s",
+          "sha256": "d3d7c91647a74f7fd6807fc10a49e7bd97c94308d291e36e60acd0da5cfb4129"
+        },
+        {
+          "name": "c",
+          "sha256": "191db350ffbfe41c3c845dec61cde252d96735794dfec813d1903735c82e280f"
+        },
+        {
+          "name": "l",
+          "sha256": "2fc1ac9343db2dc7998fbc972bd14c68377cf3b0034cd140617a27ae6580833e"
+        },
+        {
+          "name": "u",
+          "sha256": "f77324a6f671f76c4542777706683039beca0bc8fc9f9d323a3cb5c8110d9db1"
+        },
+        {
+          "name": "d",
+          "sha256": "a43173be8702c1c3bb7f0cbcf986560f85e16c9dd9de62f79b6a116b5f43cf2c"
+        }
+      ],
+      "imports": [
+        {
+          "local": "e",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "matchesCoarseOrHoverlessPointer",
+          "via": "shared-frame-6jtSkIit.js:Rf",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "t",
+          "from": "../../source-files-changes-adapters.jsx",
+          "name": "growthBookValue",
+          "via": "shared-0-DDOOdL6P.js:yb",
+          "kind": "adapter"
+        }
+      ],
+      "exports": {
+        "i": "fileContextDragType",
+        "s": "fileContextDragEnabled",
+        "c": "beginFileContextDrag",
+        "l": "isFileContextDrag",
+        "u": "draggedFilePaths",
+        "d": "commitFileContextDrag",
+        "o": "clearFileContextDrag"
+      }
+    },
+    {
+      "target": "array-min.mjs",
+      "source": "cf80fba0c-CT5qqVq9.js",
+      "sourceSha256": "574ad3d88136d8ed6d49adae1507f740cc62637e0cbd9fe0fb103606d7408012",
+      "sha256": "54fd03bef132f7fba3e8081d5f96223d669739646dd35f3b85a6598499b90822",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "e",
+          "sha256": "cdeb1cabe4ace3189cdf4474929bfe70dff977f6b78d2aa48e9d4707707e2da4"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "e": "iterableMin"
+      }
+    },
+    {
+      "target": "file-frontmatter.mjs",
+      "source": "c3fde7009-LYGOoUpG.js",
+      "sourceSha256": "3c653ac62d5f1220f0f6591e23862d6d249200aca58f7a6ea198c3f48963c778",
+      "sha256": "94219747b68d51cd9f223dd7d055780522fad2ce319a3a1d6974723ff12e93c5",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "Zi",
+          "sha256": "9d3cbe681b096d72ea9e7a7e48e4117ad6e58751a48a5f0ee9a6fdecf8cd8f98"
+        },
+        {
+          "name": "Qi",
+          "sha256": "684448ac3a91d11f62d161ac9627f9ec9f5e9a19c9a4fabcbcca68dd90a06063"
+        },
+        {
+          "name": "$i",
+          "sha256": "1199d3cd3d3076773a87a4926a2a44f1fb742062f44c35874b0024b36b72e786"
+        },
+        {
+          "name": "X",
+          "sha256": "c2f018ddf8cc9db9c72ed9a0f9b46d31c4e6d21b4a469dff1d17dfb0ca8fafc9"
+        },
+        {
+          "name": "Z",
+          "sha256": "a253540e82c6a996890e1ef22c9d5fc0e9eb7be4bcc56bd7bfefcd87aaec8ae7"
+        },
+        {
+          "name": "Q",
+          "sha256": "ef86363669be6213386cb5849c681185e815b1406898d9cbf3f0e57afcbcddec"
+        },
+        {
+          "name": "ea",
+          "sha256": "10c4948cacaadf8791251cb2dfee0c7caa71d225c6f0bd9787891490e40026c1"
+        },
+        {
+          "name": "ta",
+          "sha256": "71fb0be9c1ae60c725be26d5f34a0abe8ba4af796d64f94614f717f07b8ed081"
+        },
+        {
+          "name": "na",
+          "sha256": "c3042f5a979d503d2e7c6ef0201b36d807a84e2e1681bce58ebcf6c280bfc8e9"
+        },
+        {
+          "name": "ra",
+          "sha256": "fc33a6cb90b0443bb74ac1aa9590779ad4830a281ade988d9980389ab78e36e7"
+        },
+        {
+          "name": "ia",
+          "sha256": "694e2636a5fd0287080f237af33510ff354a7f55c0fae33b8476a3f5d317105d"
+        },
+        {
+          "name": "aa",
+          "sha256": "c8b1e72ff6c68609ed51be0dff88547c50407efb83b065cf1716a08f1f40b59f"
+        },
+        {
+          "name": "oa",
+          "sha256": "532d968440ff5b38919cf5671a01b66bd46e53ace9718343c477032d2f26f958"
+        },
+        {
+          "name": "sa",
+          "sha256": "c7e101b0695e2304a041eef7888c82b77284253b28a4dd54d641e5bc660bd24d"
+        },
+        {
+          "name": "ca",
+          "sha256": "3f993cbecaaeee33ce408be5e21314cfbc6d773efba05a257b3fc0ab9309c130"
+        },
+        {
+          "name": "la",
+          "sha256": "a11fabe2a9ad3d95a46a8a48e675b03ac2adbc1541525346f88e002573411d6f"
+        },
+        {
+          "name": "ua",
+          "sha256": "49fd448b0774a3a26c374e6f75cfb390b2a03a8adfaa72de0b37ad063b2fc726"
+        },
+        {
+          "name": "da",
+          "sha256": "18fb3adafbfdadca7422b08325083fed8296e571840d2e86a87fbc005e0931aa"
+        },
+        {
+          "name": "fa",
+          "sha256": "08d250024c41b549ff17437cd5a9852e864eff204ba153c043e97f80330fea58"
+        },
+        {
+          "name": "pa",
+          "sha256": "6d1f8d5958436ad252c04bf579d6ad78ad26c162316c0dd704eafd94f2f75fd5"
+        },
+        {
+          "name": "ma",
+          "sha256": "caa052a3434e9911699f07d0cb906f821cb2b3b6098725ef26d412bfefc56d88"
+        },
+        {
+          "name": "ha",
+          "sha256": "f64247117a23f43f2da44216b71ebcb1850674062958c826dcbc7fd3cfc5b5cf"
+        },
+        {
+          "name": "ga",
+          "sha256": "791d883923491deac4b016489f5876ce661a62d0092eb8c4d1c745cb1ecc06a6"
+        },
+        {
+          "name": "_a",
+          "sha256": "c789deab20b39e55a5b876b464de9e380d21a83d9deb3a02a8fbd46ac267ec50"
+        },
+        {
+          "name": "va",
+          "sha256": "24e7f4f81af92381e7ab591a368f781f90531c87cab5f4cfccd0afd6a5e94d65"
+        },
+        {
+          "name": "ya",
+          "sha256": "a68d35aed4409a83ca3877039b40a3aae759d57e642ac7158cd99705cc48157a"
+        },
+        {
+          "name": "ba",
+          "sha256": "b105821ecd3d5830f57d9b4570427bab08bab7a3bfbe0e743db3224e5f033f6c"
+        },
+        {
+          "name": "xa",
+          "sha256": "ab0b875476d2e43c2a36e7a22c6af5cd34b9cec5bedb5a51d21a2ca23f8ba19d"
+        },
+        {
+          "name": "Sa",
+          "sha256": "a382761a7200cbe389ad19a61a51374eaf82060c39e3ca70746ade54cb07c7c8"
+        },
+        {
+          "name": "Ca",
+          "sha256": "71a3714f9126c4cf3b072ccd9077b7c99562dc2c1d9475c229e3e24d5d5b6fac"
+        },
+        {
+          "name": "wa",
+          "sha256": "a1660cbbccf859408e8f3a34add0b087688de73b6d0fc378df4a6c1641bffc84"
+        },
+        {
+          "name": "Ta",
+          "sha256": "f20c81d3b4835be81c6035b47374e61a714c1a0f48eb29a717031b9a79bd65f5"
+        },
+        {
+          "name": "Ea",
+          "sha256": "00a891d9178eaa908a945328f037b373e33bb4ff868be3f16950327ff295eccb"
+        },
+        {
+          "name": "Da",
+          "sha256": "f67d7bf8c804ca85317876594bc05811fd7fcb20e031d8a083e86e866c1749a9"
+        },
+        {
+          "name": "Oa",
+          "sha256": "9bb1a530dd231168a29540e9efd277dcfc1cc25e77ee156a84e6d58a150f539f"
+        },
+        {
+          "name": "ka",
+          "sha256": "6fc4b0952a12c62c18098edf87bba154296c673bbfade00627383e2c81aa5c8d"
+        },
+        {
+          "name": "Aa",
+          "sha256": "9fc57ca366bf881c4b128d02a6c6b917b7a3d7e2c97fd395b3f0dbce797d5202"
+        },
+        {
+          "name": "ja",
+          "sha256": "97ba69bec3cf7fc4adb63c9c6248b3e574aeff4b5e749b7614d2a618b94da0a7"
+        }
+      ],
+      "imports": [
+        {
+          "local": "e",
+          "from": "../view-tabs/preload-helper-D0dM6GpB.js",
+          "name": "tagErrorText",
+          "via": "preload-helper-D0dM6GpB.js:n",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "nt",
+          "from": "./array-min.mjs",
+          "name": "iterableMin",
+          "via": "cf80fba0c-CT5qqVq9.js:t",
+          "kind": "generated"
+        }
+      ],
+      "exports": {
+        "$i": "splitFrontmatter",
+        "sa": "frontmatterFields",
+        "Qi": "emptyFrontmatterBlock",
+        "Zi": "frontmatterBlock"
+      }
+    },
+    {
+      "target": "diff-change-nav.mjs",
+      "source": "c44d00c7f-Cr1FDL2F.js",
+      "sourceSha256": "31874ce56a3c398f49d0a45143082e60f53a56f163fe23ffe99e3379a36754c0",
+      "sha256": "ee43d293a5566edafce69ac2ddbb055c475fea6c33f22c0d074f91a6a9152500",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "Vi",
+          "sha256": "516ae2ee11b4f15feff02c36027070cfd19854122eca89a3a1a6c28bdb0c28a0"
+        },
+        {
+          "name": "Hi",
+          "sha256": "ae5f35e10c6185827f0ac94edd9d7992cf12cd18c7e67a5d9b071e2353f91ec2"
+        },
+        {
+          "name": "Ui",
+          "sha256": "7a18b7c78b9c38c0eda220bc947dac0a8c32c82588484440a722b27d06dcfbe7"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "Ui": "adjacentChange",
+        "Hi": "sameChangeAnchor",
+        "Vi": "changeAnchors"
+      }
+    },
+    {
+      "target": "diff-tree-expand.mjs",
+      "source": "c44d00c7f-Cr1FDL2F.js",
+      "sourceSha256": "31874ce56a3c398f49d0a45143082e60f53a56f163fe23ffe99e3379a36754c0",
+      "sha256": "964cec77ebbd745c052deff94468360eacdcee60c10573eca280ac4993075c15",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "Zo",
+          "sha256": "25eee479ddcfe8a8ce53877652f157ef119d4ba1415f57a59730f0c3c9638dca"
+        },
+        {
+          "name": "Qo",
+          "sha256": "8d1c95b509f147448668fc3c3f88a42f21d52fe57a5f472c7f41120713dabf49"
+        },
+        {
+          "name": "$o",
+          "sha256": "da138cbd3f9318eacf332b1e237c909984784f008857d97e812c013bbfac5ae0"
+        }
+      ],
+      "imports": [
+        {
+          "local": "i",
+          "from": "react-dom",
+          "name": "flushSync",
+          "via": "vendor-frame-CnSY1sxv.js:Sa",
+          "kind": "react"
+        }
+      ],
+      "exports": {
+        "$o": "revealExpandedSubtree",
+        "Qo": "diffTreeRowLevel",
+        "Zo": "diffTreeRowSelector"
+      }
+    },
+    {
+      "target": "diff-tree-memory.mjs",
+      "source": "c44d00c7f-Cr1FDL2F.js",
+      "sourceSha256": "31874ce56a3c398f49d0a45143082e60f53a56f163fe23ffe99e3379a36754c0",
+      "sha256": "f3479fc737694bf0f94640d0c58f43f66639942acde8ebf47aa593aec9fd47df",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "Ta",
+          "sha256": "0852a279ef741d81a0be1c1aadfbb1c93b85e35f2dac1dbb24b5d69edfeac4c5"
+        },
+        {
+          "name": "Ea",
+          "sha256": "7bfd9fa01447ca888bf009744a04bcb5fdf73ac729f03991fb7ce1ccf52b989c"
+        },
+        {
+          "name": "Da",
+          "sha256": "250eb30cf1ff8513479899fbecafaf88258cc667cbc22c89679e1c8733a588f3"
+        },
+        {
+          "name": "Oa",
+          "sha256": "42257437e0e46bd80f74f8cbbba481a25988ecc7d3cd943a4527f98aa26f1530"
+        },
+        {
+          "name": "ka",
+          "sha256": "64a743a21fb7052866a2c96c2c85ace0a815f00ba8956908631f7f7f71f40ac2"
+        },
+        {
+          "name": "Aa",
+          "sha256": "e505aa73d7bef325c569d9bf53ae6300ac5fd2a2dd6a331fe4b1ad450484193a"
+        },
+        {
+          "name": "ja",
+          "sha256": "a4f5ec3e1c72cc41d8284a44ccb031bd8fe4d73c09fe676204071c351e14ef44"
+        },
+        {
+          "name": "Ma",
+          "sha256": "9853797d2cf57177f0724df9eb3802b14045b1e6d98f9912db9de3b9a0a956fa"
+        },
+        {
+          "name": "Na",
+          "sha256": "bdbf192622f9907dbf7453fe1c4bc11731a7273a1f26c7be58f1e199c87b71cb"
+        },
+        {
+          "name": "Pa",
+          "sha256": "914b1e633384f79e5296e7e766ee5ed956f30c6aa1f3aa0735ac4bf401615bb8"
+        },
+        {
+          "name": "Fa",
+          "sha256": "39702ff8e8e167b5c369882294e36e5c56e414093b9efe1dca59b3fc067f1c5c"
+        },
+        {
+          "name": "Ia",
+          "sha256": "c34b611f5537293815c609e888fca8c80f393c5e9f76a98be35125004f63381e"
+        },
+        {
+          "name": "La",
+          "sha256": "d5de5ff80e8f4e812d73d2e313b5ce41bf293ac64dde97c283da21bc2401e507"
+        },
+        {
+          "name": "Ra",
+          "sha256": "69517ef232914da4daf9bed3f84d5a24dc1a42bcbd8cf9ab593ac9957604d928"
+        },
+        {
+          "name": "Uo",
+          "sha256": "7db84011cd64a2543e23f47d467cc61cdb33f91560e3f867f5f1b16a204c9210"
+        },
+        {
+          "name": "Wo",
+          "sha256": "730fe08e7a23a0866bb78965e2d70f003dddb7cab310215fec5d473072e59e3e"
+        },
+        {
+          "name": "Go",
+          "sha256": "c96e0039b24db9d26aa48213314d3c8a1445e501bbb48331a05c17238433364c"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "Oa": "readTreeCollapsed",
+        "ka": "writeTreeCollapsed",
+        "ja": "readTreeSectionOpen",
+        "Ma": "writeTreeSectionOpen",
+        "Fa": "treeScrollKey",
+        "Ia": "readTreeScroll",
+        "La": "forgetTreeScroll",
+        "Ra": "writeTreeScroll",
+        "Uo": "initialTreeCollapsed",
+        "Wo": "initialTreeSectionOpen",
+        "Go": "revealCollapsedFolders"
+      }
+    },
+    {
+      "target": "diff-pane-body.mjs",
+      "source": "shared-1-BJhqMmkf.js",
+      "sourceSha256": "07582bbc557071f2d83db84a7356eec7847d108771b043f876d26dfda38e4388",
+      "sha256": "24276bc3e085df3c20976b4940d1a1a6be1591a6be9b1f1548f6baab4b8f1f25",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "tC",
+          "sha256": "503bb75df8e442f9a8016afdd76b096c16687239a3f5ebc7a9ecce5a6c5922dd"
+        },
+        {
+          "name": "nC",
+          "sha256": "b0b6c6ceade4b3a99a3f495934a53cd86a5749d62c4e7d6c0a0ed5a7dfbbaaa8"
+        },
+        {
+          "name": "rC",
+          "sha256": "be275b188d2ef218283ddc66ac1b5cfd26ca22e35e02095f3b22b66ce6b1d823"
+        },
+        {
+          "name": "iC",
+          "sha256": "b330cf140d312fa59a1f5abd2b5d25b278a20569c99391e68182443135c5f099"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "iC": "diffPaneFocusRoot"
+      }
+    },
+    {
+      "target": "node-hidden.mjs",
+      "source": "c91a5e4a6-xMjQN7Gn.js",
+      "sourceSha256": "7b74ec1122627d4db3b9793d4162df575a62085374801d545b7fc98139637ac3",
+      "sha256": "a75bfc35966852ee96fb4bb081ff4a502e830b9ec619955f9d0e6fd34bdcc5a1",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "_",
+          "sha256": "85a567c5d613b9b32ca51068fc39aaf02e6c5ecd55a431739a531b27435b9f13"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "_": "isNodeHidden"
+      }
+    },
+    {
+      "target": "diff-scope-label.mjs",
+      "source": "cccc2cf0a-DhZC33Gc.js",
+      "sourceSha256": "821cbb54743d9b600ada60e61c362d4c74570cad409bb3b199e8fcf960933c51",
+      "sha256": "7f8e69230b3d5c7d1ed572061f16e215124736812c2816429c5017eb5c2fa5c9",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "QS",
+          "sha256": "2624158c2ee2b0a28cd173d54031297740e439a9586b592d8f4656183192d426"
+        },
+        {
+          "name": "iC",
+          "sha256": "9845f7ac19c1e6293e9b2fafc61a9e050dc3a941e7639b9f93c11176b811a20c"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "QS": "scopeLabelClipped",
+        "iC": "commitScopeTriggerLabel"
+      }
+    },
+    {
+      "target": "diff-scope-base-label.mjs",
+      "source": "c5da7eb42-XijZdwf1.js",
+      "sourceSha256": "a9a121c9652d6e90b0aef9af18932c6f98cba278970d503cd7c369c207eef22c",
+      "sha256": "2216c80e20f588a70ad0c5fba0aa840722f4dcefba14c3c4e3b709ecc13c93dd",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "Zf",
+          "sha256": "69f2865ae2ea3e746a469744d9d2776c63e5c45e12987394fb8363500ed15b4f"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "Zf": "scopeBranchLabel"
+      }
+    },
+    {
+      "target": "diff-whitespace-pause.mjs",
+      "source": "c44d00c7f-Cr1FDL2F.js",
+      "sourceSha256": "31874ce56a3c398f49d0a45143082e60f53a56f163fe23ffe99e3379a36754c0",
+      "sha256": "dc1bb7683ffce3a04f83e5c4ee35b14a549907e6d12bfbc91eea6aab61076774",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "Dc",
+          "sha256": "5e39f5a5f2e808a613e6eae1795eb67e665e7e3a5de2f948c661f0e4be0ffbdd"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "Dc": "whitespaceHidingPaused"
+      }
+    },
+    {
+      "target": "file-tree-row-classes.mjs",
+      "source": "c621b1e2d-CU5cG_mP.js",
+      "sourceSha256": "ff431a6eec4cb2ff61142c690ce8c5639fb9895e674ed5a775c0be66d0015c4a",
+      "sha256": "3a68929e6fd6a75443bd1bca38d6381360a4396403cc6f36d2e0653324a38c8c",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "c",
+          "sha256": "b5acbb4b1deed72b1584363075bfe0beaf83d9e7a49e710e0b6d6a348a5a6dff"
+        },
+        {
+          "name": "l",
+          "sha256": "7a7a7f1efa95ce3e9f62e73af9c614601fa67675957c4b9c4a6211a389ad701e"
+        },
+        {
+          "name": "u",
+          "sha256": "7b62fdc0779f46135aa675826e2288dff7789c5f4f2787341ca4b1cd503b0dd8"
+        },
+        {
+          "name": "d",
+          "sha256": "82d8f16b83fee4f709690052ce0a701f11b213a6f65e884bcdbd8d766a77600a"
+        },
+        {
+          "name": "f",
+          "sha256": "c9c845c55a4af444f63b3c41ec4aa461197bcdc7e0245e531fd6018763767e05"
+        },
+        {
+          "name": "p",
+          "sha256": "e9f8e61e33ab1eb378e96458a6798a889f3d0ed6fb8970f83dca687cd667ceff"
+        },
+        {
+          "name": "m",
+          "sha256": "5f1d1b80e5a797152245cd4c14ec99f955d50d246ec6c49ccfd3ce918c8f1767"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "d": "fileTreePadding",
+        "u": "fileTreeRowGap",
+        "c": "fileTreeGroup",
+        "l": "fileTreeKeptGuides",
+        "f": "fileTreeCompactRow",
+        "m": "fileTreeRowCurrent",
+        "p": "fileTreeRowIdle"
+      }
+    },
+    {
+      "target": "menu-pending.mjs",
+      "source": "shared-156-BLTosN8U.js",
+      "sourceSha256": "807d6ddff2ec91c75865bd855af6373863eb93af7ebd698490e618fbc44f2a2b",
+      "sha256": "0f453e24661e4bdea74425904b3eb784734fb0a0f275689955f0ab7ae9723985",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "oq",
+          "sha256": "d5abffed3bbb7c754dd5eda59983688bbcdf5124901e98c526c3a88cdc19238f"
+        },
+        {
+          "name": "sq",
+          "sha256": "8f4d5ceac0c34b34d587b364803d4e58e52750b64fe6d85503f66d7dfa1b245c"
+        },
+        {
+          "name": "cq",
+          "sha256": "6f65be10f6cf471612232e9a010bc6d0fc555531e2c865d1a9634fdf604407be"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "sq": "holdMenuPending",
+        "cq": "menuPending"
+      }
+    },
+    {
+      "target": "escape-repeat.mjs",
+      "source": "shared-19-DIKJVT7c.js",
+      "sourceSha256": "d1cf17f173b5bc379212f11b92e173feceed10ecdb1fe8fdd85ebcbc0e57190f",
+      "sha256": "91bca7e58073f2aca4100bc8c74cd12e8259fb3be79861cda3e89724270b8491",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "Uj",
+          "sha256": "ca23c1f04216d26b342375b8fa95944a2b3e524028c469209563897d2cc8643b"
+        },
+        {
+          "name": "Gj",
+          "sha256": "63ef7bf38de51367dce63004d0c924ec6040cd052f8062eda91c48b35b0a03d6"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "Gj": "suppressEscapeRepeat"
+      }
+    },
+    {
+      "target": "event-element.mjs",
+      "source": "shared-frame-6jtSkIit.js",
+      "sourceSha256": "22b990df9384da0621c5197a060f6c2c8fe1ccf5a79ee1f8c6e7a6cb033b259c",
+      "sha256": "54d6f331b15c0ae6ec71c273a7f40beb11d6fb7f73781888244f353a0e0f1946",
+      "referenceVersion": "3.6556.2",
+      "bindings": [],
+      "imports": [
+        {
+          "local": "Uc",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "asElementNode",
+          "via": "shared-frame-6jtSkIit.js:Uc",
+          "kind": "view-tabs"
+        }
+      ],
+      "exports": {
+        "Uc": "elementTarget"
+      },
+      "reexport": "view-tabs"
+    },
+    {
+      "target": "menu-open-gate.mjs",
+      "source": "c0cdf4a08-C69Ng1c8.js",
+      "sourceSha256": "c978ff57a969f50403194ec7bb3f46d3af2f88517deed53dafe9dc7c35ab61a0",
+      "sha256": "ea3f58d34c108163f2ddcd21506b73576452ba5b74569dffc050bad095af12ea",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "p",
+          "sha256": "9e88aa1cfb5d5f6335f6a649dcb0c31dfb73940a42e754d2146aab90a8094351"
+        },
+        {
+          "name": "m",
+          "sha256": "37cc1579f3c6f37387bcc7375c47fc36f3708964f8d15b7314a5183e196af2fe"
+        },
+        {
+          "name": "h",
+          "sha256": "3e580c2f1248e7aa96b49b61262bc611a613246bbe6035ca86174e693733bb4d"
+        }
+      ],
+      "imports": [
+        {
+          "local": "s",
+          "from": "../view-tabs/shared-25-DOWZRSlq.js",
+          "name": "ownerWindow",
+          "via": "shared-25-DOWZRSlq.js:up",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "c",
+          "from": "../view-tabs/shared-78-D5Fw2h0a.js",
+          "name": "isMacUserAgent",
+          "via": "shared-78-D5Fw2h0a.js:mE",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "l",
+          "from": "./menu-pending.mjs",
+          "name": "holdMenuPending",
+          "via": "shared-156-BLTosN8U.js:$n",
+          "kind": "generated"
+        },
+        {
+          "local": "u",
+          "from": "./escape-repeat.mjs",
+          "name": "suppressEscapeRepeat",
+          "via": "shared-19-DIKJVT7c.js:cn",
+          "kind": "generated"
+        },
+        {
+          "local": "i",
+          "from": "react",
+          "name": "useState",
+          "via": "vendor-frame-CnSY1sxv.js:wo",
+          "kind": "react"
+        },
+        {
+          "local": "J2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged2",
+          "via": "shared-frame-6jtSkIit.js:$f",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "a",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "asElementNode",
+          "via": "shared-frame-6jtSkIit.js:Iu",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "J1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged1",
+          "via": "shared-frame-6jtSkIit.js:Qf",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "J9",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "reactMemoCache",
+          "via": "shared-frame-6jtSkIit.js:ip",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "K1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore1",
+          "via": "shared-frame-6jtSkIit.js:op",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "K2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore2",
+          "via": "shared-frame-6jtSkIit.js:sp",
+          "kind": "view-tabs"
+        }
+      ],
+      "exports": {
+        "m": "openAfterCheck",
+        "h": "useMenuOpenGate"
+      }
+    },
+    {
+      "target": "noop.mjs",
+      "source": "shared-0-DDOOdL6P.js",
+      "sourceSha256": "6e8dd35d06f3483ca7a164d358560e34bdd02a0c4d4e67fec5e71e45c1009f61",
+      "sha256": "ed72bc7e4b3ed0428afd15dbe32348cbe43602e697a35d9435155805065ec86a",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "nz",
+          "sha256": "26d78880c774ada69628cff042e915d7576f5b5c9d6503704a7c4aa313090078"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "nz": "noop"
+      }
+    },
+    {
+      "target": "react-store.mjs",
+      "source": "vendor-all-0-DXM0MGjZ.js",
+      "sourceSha256": "a9bcb496d6a94739de4cf2f924169442032e55416cb83e2395c789958272c772",
+      "sha256": "770776fbfb8aa68cf9c6d8cba4007fb8d20d1e80dca255153afffdae924162f5",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "h",
+          "sha256": "a82f5e68b5d8b1d3b009280fae0efad4129079027432195fd4d11b0e0e45fdb0"
+        },
+        {
+          "name": "g",
+          "sha256": "fcd7c6af42a88546ea739e047fcaf0bd851b780081034ca5535ed6443e692b40"
+        },
+        {
+          "name": "_",
+          "sha256": "b61678e8808452813fd2abf6a1ac1d0b956a9b63935a08cbbe2079a76853daf5"
+        },
+        {
+          "name": "v",
+          "sha256": "bc2323aaca24c37a31bd4775f0721a2b4173057576adce68c875ec4ede43edd3"
+        }
+      ],
+      "imports": [
+        {
+          "local": "m",
+          "from": "./vanilla-store.mjs",
+          "name": "createStore",
+          "via": "vendor-all-0-DXM0MGjZ.js:m",
+          "kind": "generated"
+        },
+        {
+          "local": "o",
+          "from": "react",
+          "name": "default",
+          "via": "vendor-frame-CnSY1sxv.js:co",
+          "kind": "react"
+        }
+      ],
+      "exports": {
+        "v": "create"
+      }
+    },
+    {
+      "target": "file-browser-query.mjs",
+      "source": "vendor-query-DVJ0goAF.js",
+      "sourceSha256": "012776c86e56c08cc79c30f99e2ffa54c5083a56939cc09c97c51047dbc41abc",
+      "sha256": "e2fca39c567bb07f726b1b880fe8e49a4dfa800845b2ec71c5a3f2b4d76c6a37",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "l",
+          "sha256": "89d650766f26b27415867f19116a1cdd434c3d86290964676a21ac8483a49b64"
+        },
+        {
+          "name": "u",
+          "sha256": "77d89aeea3061adf20bd84e396d37060b288ce1ed35594ef545daf8bcbd5f706"
+        },
+        {
+          "name": "d",
+          "sha256": "58f9b47fdba761dcb45ddb32d9bae36ae32637cd6dad4afb72ae3864cb0a0a48"
+        },
+        {
+          "name": "f",
+          "sha256": "041cef02f1d414d906c7e8a104ed2683205057987b2323ff606ee338ba2eab93"
+        },
+        {
+          "name": "p",
+          "sha256": "34a36b92e840ef0744ad0661e2760fa1d09e10ea06af2c240e444d0115c1f823"
+        },
+        {
+          "name": "m",
+          "sha256": "a79f1c3c9904f5257af0bd37995d50b9a9f8ba47448658db8e0f021b4f1552a2"
+        },
+        {
+          "name": "h",
+          "sha256": "b5d77d563c3f9f676944e9238f044ded38cb15f6ffb9e609a0011d7a05b90f5b"
+        },
+        {
+          "name": "g",
+          "sha256": "daab47d79c4d833e02153cbd477cea3e7ce1346c2a637d5b43eadac973dba802"
+        },
+        {
+          "name": "_",
+          "sha256": "ff27ce2dca24c23f0f3b1966e09d66d7ef1d13a5263bcb69522ccbcabb5ad896"
+        },
+        {
+          "name": "v",
+          "sha256": "9834baee4bdbbeed78e6fa0a24577724fe3f2ae1cc3b9dd24835bd67e3fea4fa"
+        },
+        {
+          "name": "y",
+          "sha256": "f4e52684aef0b94863f5d968bd86d2789296bd928df31fffaf7ad4f8315b1fa2"
+        },
+        {
+          "name": "b",
+          "sha256": "abef944ec6267959716b15e9b0cd5a3458e4283fa1075ddb73853ccf7fd610f5"
+        },
+        {
+          "name": "x",
+          "sha256": "9e1336fc99568bba9aac5cb13db460c7c2047600c3c32d0dd734c620258226b8"
+        },
+        {
+          "name": "S",
+          "sha256": "df56f6a1786094f41c413399bebfd4985a61317b835f5c0a9808967f5ac2a2d2"
+        },
+        {
+          "name": "C",
+          "sha256": "e9a6140f4b132836c36f731a0eafcb515993d913cb945541f065e4e44c10fabb"
+        },
+        {
+          "name": "w",
+          "sha256": "bf74682b257d17b7dd849f651604636be28a3fd338e51fd4ec69221e92bb2976"
+        },
+        {
+          "name": "T",
+          "sha256": "a0b8cdda705cb2514dc4f5ba27c6175e364ef4304cec4557563e12bd956bdd0a"
+        },
+        {
+          "name": "ee",
+          "sha256": "7bed0ff12afef8ce1fc4988f1c2078f8adea5943b71abace38e5c2900487fac6"
+        },
+        {
+          "name": "E",
+          "sha256": "bf7c9e473805793497887901ad596e67f34f4861371b50f07f1d4a9f8731ce79"
+        },
+        {
+          "name": "D",
+          "sha256": "c1cd69fce743cd8a4aa43781809e3a36494de1f0bcb1b5febf7b02fb045e92de"
+        },
+        {
+          "name": "te",
+          "sha256": "231dccf0fa0bc5e5290202bbd4712adc87ab3119d3b974c19c3d6c3976ee1ab7"
+        },
+        {
+          "name": "O",
+          "sha256": "2097a6e7b569fa9b94969a0db9b47d9a50f38d765df9c97dea1c6bc7c14e879e"
+        },
+        {
+          "name": "ne",
+          "sha256": "45a7dd8872aeac87f8d01d7e7136138b58509c503f50296a357d5849445cd82e"
+        },
+        {
+          "name": "re",
+          "sha256": "065f3d1811174b342aeb858205309309e23dab614cf5e0a256aee6921074f6d7"
+        },
+        {
+          "name": "k",
+          "sha256": "df29476851caeef9d4336a567350e9568040561347190ae4a0fa1f0cddbc2312"
+        },
+        {
+          "name": "ae",
+          "sha256": "68436ab4e88403fada8299555ecf9fb22b391dbfac335e5d85e1302834415ea7"
+        },
+        {
+          "name": "oe",
+          "sha256": "eb3c324c5decc888da76ee639a33f31fe29a2e7cc96d154538eab0e896d3ce85"
+        },
+        {
+          "name": "A",
+          "sha256": "b80dcba4ec11d4fe87c4ae1f6a96f446ad7b17f7e3d94f3bc0a6d4b79cf35a0f"
+        },
+        {
+          "name": "j",
+          "sha256": "ad43264049fa93e2d9e007df71b0071f5d4bb2f8efcf405bf1362ca64f8f49bb"
+        },
+        {
+          "name": "M",
+          "sha256": "aa68c78dd7ff7d4bbd26343a4cfc6194ac104a2280e746672f284139a1585fe7"
+        },
+        {
+          "name": "se",
+          "sha256": "36f353a8d583f1de7deb953900abc76ee213b5e54049c160a6bb1d71b522b238"
+        },
+        {
+          "name": "N",
+          "sha256": "42e45f3384904cefaf1a41bbbc51be01a442c8ce90d8694523084184c9917d30"
+        },
+        {
+          "name": "P",
+          "sha256": "998f45949087bd4384bbdade7090714c180a8e8a53922f10b710ee10356a1ddd"
+        },
+        {
+          "name": "I",
+          "sha256": "6b89d8a432397831b4922fd035a10a93e89b07c1a5b72bab4db367057883c12e"
+        },
+        {
+          "name": "ge",
+          "sha256": "fab84200cca53acdc2bcab95c48224f53d1f55cabf18f3b2599b3a1c4cb6a82f"
+        },
+        {
+          "name": "L",
+          "sha256": "4370d97d28a0d5d7154a1e8f74a268c7973957876a3435e483194832b45587ef"
+        },
+        {
+          "name": "R",
+          "sha256": "98ec9a2b09b328e4ec70ed29d270472be6102c8421befe61a42ed1a77a6451ac"
+        },
+        {
+          "name": "_e",
+          "sha256": "6a33918aec8e9f8732c2379060a70e07da03339c51b97b6f6953ecbee50128cc"
+        },
+        {
+          "name": "z",
+          "sha256": "02e75d249cc314e5df22662e4c1554c6f35e1177a3a1ffca303c6c2913364ed8"
+        },
+        {
+          "name": "B",
+          "sha256": "f8dc3f7b039c0463a679179ebf0099f3704008f104e825decf12c4ca194677ea"
+        },
+        {
+          "name": "V",
+          "sha256": "b95d6e5050c66955104c000d88900e63973bdea4f735f28b5a6b35511ec62051"
+        },
+        {
+          "name": "ye",
+          "sha256": "be1a33a5f80f218e51c85f6a74d84e4f3b455be1a42cb42fda6f0d5adfa0be3a"
+        },
+        {
+          "name": "be",
+          "sha256": "b16a1c456fd6e0324e1f7de9ee6a82758081036fe87de1769ff5e61660560fa2"
+        },
+        {
+          "name": "H",
+          "sha256": "2fc6ea7b3e486f2641ac6f9a1e4294629c7493a7a546fec70b5420275331dc02"
+        },
+        {
+          "name": "xe",
+          "sha256": "bf9f877151ee8e2aff0492d0952a4fd81881cd8621bc8df66900f1ef96f071c6"
+        },
+        {
+          "name": "we",
+          "sha256": "bce6558e63bf98ba29c08fc5d4b3fdf76e70eaa4965600780d921c2ba82f1677"
+        },
+        {
+          "name": "Te",
+          "sha256": "52abdf82bdfcad8e4501b63eb7f7e4de88877557bf386e02478b58e56ad0e9ab"
+        },
+        {
+          "name": "Ee",
+          "sha256": "dd38d46c8e8ba360576564b1e0d9b62697dd38dd47a467b9cc7c55352e171ec4"
+        },
+        {
+          "name": "De",
+          "sha256": "234edc9bf463233dfa64c215bc45dfb3e984ccdac28d2c213f4f829c4d075adc"
+        },
+        {
+          "name": "U",
+          "sha256": "d7606dd71b5d6c38d67d0c1e70df1aacfb9bcc5ba740b490a3550d0da6ce68a6"
+        },
+        {
+          "name": "Oe",
+          "sha256": "f321a2ea00a0aaf391783f1f510ffecd5fe4f6dd02f28433f57d22b635e5019a"
+        },
+        {
+          "name": "ke",
+          "sha256": "5f8a117d630220485f82dfa3ddebf053ad8b3639a7c3f033dcdc6caabefe2401"
+        },
+        {
+          "name": "W",
+          "sha256": "ebba95c3b085cb479cba6325143cbae2d57b70770c914438aca9711d7781420a"
+        },
+        {
+          "name": "Ae",
+          "sha256": "74aa3bfd790e162655d7b560f8974d596cbdba29432c675be2432df1fb21f7ae"
+        },
+        {
+          "name": "G",
+          "sha256": "3829ea89704813194346c486531ea795b04f8794f524b73983fb4a2843d8056f"
+        },
+        {
+          "name": "je",
+          "sha256": "fbedd3c818edef96c692d51dcb1ae1aa09a6c315206766ec3a6ca2b7979243f0"
+        },
+        {
+          "name": "Ne",
+          "sha256": "590b98f129ca3e18e6d63d8089a868a770eaee92f04db7c85dcdbf26dedab4b0"
+        },
+        {
+          "name": "Pe",
+          "sha256": "d6a2c3fa00e350465091fe5d2942afb17c1f3e129339a586a51db3ecfa627731"
+        },
+        {
+          "name": "Fe",
+          "sha256": "def66796684e48df93ab99f56fbb534e7e86a3847b18162f02c88869d204dc70"
+        },
+        {
+          "name": "K",
+          "sha256": "676393eeaedff5964b0e4644ed0e25837b5a81b4d3f6a028a4b17e4927af8d43"
+        },
+        {
+          "name": "Be",
+          "sha256": "39fdb4483b840debe7d672d2ed6d613559161fb7a72e358f928eaf06116d70e3"
+        },
+        {
+          "name": "Ve",
+          "sha256": "fe0b0825647e00ec5eba0131eec4ae87ac3d017124cea6026a044ff827733adc"
+        },
+        {
+          "name": "q",
+          "sha256": "c33e5e5320136f33d80847d7827109b4e65683867bb575c84fd049b84d9d4ffd"
+        },
+        {
+          "name": "J",
+          "sha256": "c088b083b8c33702caeaf1ae7ef400ec630bacbd8cf8db92b2e1604fafe6f51f"
+        },
+        {
+          "name": "He",
+          "sha256": "660ef115da7404dcecf979e5c595673eb1436b6d636d8bdf20f5cb04ef171978"
+        },
+        {
+          "name": "Ue",
+          "sha256": "6df2adc1141ab79c9e2a0936561992dfc62ac716c7dccbf6f3701ad791bfdebc"
+        },
+        {
+          "name": "Y",
+          "sha256": "999958afc10d38d1446fbf59facaca5f84ab7f4363b23969abe0ed3e4410797c"
+        },
+        {
+          "name": "Ge",
+          "sha256": "a67955103dd06d107ca68be76e8660fedecbb8e55189011a3e4daaf0ad70efac"
+        },
+        {
+          "name": "Ke",
+          "sha256": "77b5567cee070dae3808c46713e89d60d3504f2cbb832b96232f6174ce2f88f1"
+        },
+        {
+          "name": "qe",
+          "sha256": "4243b3400b1d151d27d09ba3966474361246da3eb7a77f31c728a3be81318271"
+        },
+        {
+          "name": "Je",
+          "sha256": "24fe9ec6ad23105430abc5f567954035f1689cc6189ccf6b17d08848dd6e56f4"
+        },
+        {
+          "name": "Ye",
+          "sha256": "68fcf287b6aa29d54e678125b95bbb2569a16bfb4a87e038db40cacac3106e68"
+        },
+        {
+          "name": "Xe",
+          "sha256": "cd52b9b76965256a0354a0fba184914af1b0c72cd13a5d31189c65acc52544f1"
+        },
+        {
+          "name": "Ze",
+          "sha256": "43a4b0e70f181b16b11e9e4cab3d189bb00c4906e38f3e0aff46381f3e1a29bc"
+        },
+        {
+          "name": "Qe",
+          "sha256": "977415e674bd99eacb749bacfaccf0341187136127aa393dfcb179c47834fa51"
+        },
+        {
+          "name": "X",
+          "sha256": "72fd5cd6ea2e6d53499febe236d0a3db486c6fa371dd712ec85def715ad9eb11"
+        },
+        {
+          "name": "Z",
+          "sha256": "6a9b9ec86b97fb5c2ce103eadd7dc65b97f916cc0188be61edbc27070d8bbc71"
+        },
+        {
+          "name": "et",
+          "sha256": "db420fca9a0b20ec88f5123eb7e16441637596a78e8c499ad66ac70ab4369759"
+        },
+        {
+          "name": "tt",
+          "sha256": "c96a8a94f572c90251dcdb9c87fb112e24c5950ad436e2178a42be18895c1a71"
+        },
+        {
+          "name": "nt",
+          "sha256": "0adb2ed79ea94a8f1830a6237628cf702d307dc772d2a2924d40aeb089587c6f"
+        }
+      ],
+      "imports": [
+        {
+          "local": "t",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-CnSY1sxv.js:Ha",
+          "kind": "react"
+        },
+        {
+          "local": "a",
+          "from": "react",
+          "name": "useEffect",
+          "via": "vendor-frame-CnSY1sxv.js:ho",
+          "kind": "react"
+        },
+        {
+          "local": "o",
+          "from": "react",
+          "name": "createContext",
+          "via": "vendor-frame-CnSY1sxv.js:to",
+          "kind": "react"
+        },
+        {
+          "local": "i",
+          "from": "react",
+          "name": "useContext",
+          "via": "vendor-frame-CnSY1sxv.js:fo",
+          "kind": "react"
+        },
+        {
+          "local": "n",
+          "from": "react",
+          "name": "useSyncExternalStore",
+          "via": "vendor-frame-CnSY1sxv.js:To",
+          "kind": "react"
+        },
+        {
+          "local": "r",
+          "from": "react",
+          "name": "useCallback",
+          "via": "vendor-frame-CnSY1sxv.js:do",
+          "kind": "react"
+        },
+        {
+          "local": "s",
+          "from": "react",
+          "name": "useState",
+          "via": "vendor-frame-CnSY1sxv.js:wo",
+          "kind": "react"
+        }
+      ],
+      "exports": {
+        "Ve": "QueryClient",
+        "He": "QueryClientProvider",
+        "J": "useQueryClient",
+        "tt": "useQuery",
+        "nt": "queryOptions",
+        "q": "QueryClientContext",
+        "Ue": "IsRestoringContext",
+        "Ke": "QueryErrorResetBoundaryContext"
+      }
+    },
+    {
+      "target": "file-entry-order.mjs",
+      "source": "shared-18-D3y8YMFN.js",
+      "sourceSha256": "ea0ef4b74193e2e73c04b942311076a0922533df2ddb3d333464d22003e3355b",
+      "sha256": "7a356c885e9403bf72b09b9d2c6571e5a07a0767c82806c5c17ed7d77c3f43ba",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "uU",
+          "sha256": "421867b2b0beaa7109b6a125930e89074685a61612ce4388331831dc4686b33a"
+        },
+        {
+          "name": "dU",
+          "sha256": "ddf863a3028522255322eac60d8a89cc895dd9b6849e51fac2affe7f50589b62"
+        },
+        {
+          "name": "fU",
+          "sha256": "d56b5f2b5f2413e81cd0ec7a6ce7ed980393af6745d98fe8ba8bf5c4aa0c26a4"
+        },
+        {
+          "name": "wU",
+          "sha256": "8f936185be28e8d3d6f587c874864273aaff9486f4e21e009420ecc614519d8f"
+        }
+      ],
+      "imports": [
+        {
+          "local": "rn",
+          "from": "../routines-shared/shared-0-DDOOdL6P.mjs",
+          "name": "Pa",
+          "via": "shared-0-DDOOdL6P.js:Lb",
+          "kind": "routines-shared"
+        }
+      ],
+      "exports": {
+        "fU": "compareFileEntries",
+        "wU": "popoverCollisionPadding",
+        "uU": "numericCollator",
+        "dU": "compareNames"
+      }
+    },
+    {
+      "target": "windows-path-kinds.mjs",
+      "source": "shared-26-CGuBxVt9.js",
+      "sourceSha256": "ae470abead4f769bdf0661897b47c2b17f3a7f706c725e97b29f49e6060e57b3",
+      "sha256": "1e67c1560230d48f8b0b267bb34fdfe6e605600439958431318d0e3b8a1e47ff",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "OS",
+          "sha256": "f2f16ffcf0050e44385f4ba51630628afa1d5a247ceb475713bd210dddbf9049"
+        },
+        {
+          "name": "kS",
+          "sha256": "0d3f6c141c6b7ecc218354692377674f3da5906609695de16a6ac15770e7166d"
+        },
+        {
+          "name": "AS",
+          "sha256": "d1219b980ca8ef2939deed1c6e2ee2c0c2148be001ae1e0898804f825854a8a5"
+        },
+        {
+          "name": "jS",
+          "sha256": "1ca79f7f2b10b1ec3e48d3e5b6c3c59526e5d7da6accb984d678e616573a6640"
+        }
+      ],
+      "imports": [
+        {
+          "local": "DS",
+          "from": "./windows-path.mjs",
+          "name": "windowsAbsolutePath",
+          "via": "shared-26-CGuBxVt9.js:DS",
+          "kind": "generated"
+        }
+      ],
+      "exports": {
+        "OS": "uncPathPattern",
+        "jS": "isWindowsRootedPath"
+      }
+    },
+    {
+      "target": "file-relative-path.mjs",
+      "source": "shared-28-DNYlf4wu.js",
+      "sourceSha256": "2ddef8f0244506ab515b6f088920aea37167e2008dd217fdabcc7de8f78c80b7",
+      "sha256": "d596e4dde061ebbab390a0b46a301117b7fcc4254bb3453905705ddaa6e69ad4",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "$h",
+          "sha256": "9ca7006cf3846a2aae897fa2e80861db1c4fc7fa8e7ad3b69eef7a172782502c"
+        },
+        {
+          "name": "_M",
+          "sha256": "e90ea44e67e77b8ec7d17bac428e925d456eebd6a871a29db3ff20b557fa9548"
+        },
+        {
+          "name": "CM",
+          "sha256": "1f5c344308438b8cf3e0ee4ee56c0ac81a5327fb6864a293d93792dc4dbdaa57"
+        },
+        {
+          "name": "wM",
+          "sha256": "4831bebeb00ebdf9e1f3330bce7bd0268b6497443e8da720d44abde86e408e61"
+        },
+        {
+          "name": "TM",
+          "sha256": "7eba88f571df50f2575e3b025639feadc98a521e41cf1abea6439b1a5ef8f8cb"
+        },
+        {
+          "name": "EM",
+          "sha256": "64aa4ab2f42eda5a820cf0145062ebc00e630d09ae2f5ec63db9a5a293cdd225"
+        }
+      ],
+      "imports": [
+        {
+          "local": "Fi",
+          "from": "./windows-path-kinds.mjs",
+          "name": "uncPathPattern",
+          "via": "shared-26-CGuBxVt9.js:tl",
+          "kind": "generated"
+        },
+        {
+          "local": "Ni",
+          "from": "./windows-path.mjs",
+          "name": "windowsAbsolutePath",
+          "via": "shared-26-CGuBxVt9.js:nl",
+          "kind": "generated"
+        },
+        {
+          "local": "Ai",
+          "from": "./windows-path-kinds.mjs",
+          "name": "isWindowsRootedPath",
+          "via": "shared-26-CGuBxVt9.js:al",
+          "kind": "generated"
+        }
+      ],
+      "exports": {
+        "TM": "relativeToRoot",
+        "$h": "physicalSide"
+      }
+    },
+    {
+      "target": "loading-flag.mjs",
+      "source": "shared-104-CTONUSaz.js",
+      "sourceSha256": "621e1186f00f5767be314b43a3f7c663adedfee5e2592ceda05c83be0baa58b6",
+      "sha256": "4af5260681e12f45d56b72102ec953841279eb878ec5151cb08810ecb801784f",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "Cm",
+          "sha256": "0640859bc77e057055115badb7500f2fc0785e8ec7bddf55f7bb859101264605"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "Cm": "withLoadingFlag"
+      }
+    },
+    {
+      "target": "code-language-ids.mjs",
+      "source": "shared-104-CTONUSaz.js",
+      "sourceSha256": "621e1186f00f5767be314b43a3f7c663adedfee5e2592ceda05c83be0baa58b6",
+      "sha256": "1b0e6f26d335e495ec65c6e8e494a305e19e35980e84c1b6ebf4abe98a821042",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "fL",
+          "sha256": "6bdee5ac5ab783affc1561213893648fd9e466c95242d97cc017c473c389002d"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "fL": "highlightLanguageIds"
+      }
+    },
+    {
+      "target": "arrow-key-direction.mjs",
+      "source": "c7037f09e-DXK8RSre.js",
+      "sourceSha256": "4fe14ff803f12eb58322892592f580478fe618d6be942f7ee396834dfd3fd247",
+      "sha256": "0fb8ac8a38291fc72f8bda4e6f7972032ff376fc73289082c464bc86ff35237e",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "e",
+          "sha256": "59a4519cec783c8b0ddfa0e07634eba42e32188a7b6f8ddaaefb8cf92364d098"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "e": "logicalArrowKey"
+      }
+    },
+    {
+      "target": "source-code-extensions.mjs",
+      "source": "shared-6-sd9jbJqs.js",
+      "sourceSha256": "caf5dda5315ded77263c79a5cfa09006ee40381c9811c2c755535644be437ce8",
+      "sha256": "2235e680e7477bbf31d0a728ba9aef8da2d153ef952acae16d46229c8e9aa727",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "DM",
+          "sha256": "6fc30524f3e1494893b890cb9aab29dc2bf596ddf05d8c0e99ae61a50567bdce"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "DM": "sourceCodeExtensions"
+      }
+    },
+    {
+      "target": "file-icon-overrides.mjs",
+      "source": "shared-2-TF8v67kg.js",
+      "sourceSha256": "d30345487454935271d15e07a03026f8965584d83c9fcc4f5d7f9175687a14fc",
+      "sha256": "214c5a54bc61fc7564d69d7c66dde954ba97b7db75da693c560aceefd8558ef3",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "S2",
+          "sha256": "b1ab7841317b3b514b0397628c1a2448898d0bf55d47de27d1e29ffc599a6ac7"
+        },
+        {
+          "name": "C2",
+          "sha256": "793b25a07df06e66bdbaf4245d1045125a455b643a71b9f2dcf9db7f971abc8d"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "C2": "fileIconOverride"
+      }
+    },
+    {
+      "target": "file-kind-icon-name.mjs",
+      "source": "shared-9-CM21XrJw.js",
+      "sourceSha256": "7df52ad2089a9f4d40a6fe762ee3a839f8a705c9c4e6a8cd16eb68584e89f1ad",
+      "sha256": "3d8883a87d3ef6fe32e1a3899c91ed5dabefe93019acf4e74528993a74e3f7d3",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "CC",
+          "sha256": "c5dc8cd1fa7f99205e869446897fdf890acafe3f6929d69c4d08d0aa16fabc0c"
+        },
+        {
+          "name": "VC",
+          "sha256": "a159fd13a1bd981652bd6b65562cee9b16bfa488136052e772ced667836a0e4c"
+        },
+        {
+          "name": "UC",
+          "sha256": "fe4959af79e171f67c9f8c3337f0f303b28bee4c6eab4bbf3f6ad3c77aa863fe"
+        },
+        {
+          "name": "WC",
+          "sha256": "686ee1a00e0c5f1fc414e8545f302572c34fc5c9083c69c297b3ffc863138d84"
+        },
+        {
+          "name": "GC",
+          "sha256": "18a9b2e21a15d2cb5956e848f40c3a22fb13fec603b8f4d1470b2953f1ab23d4"
+        },
+        {
+          "name": "KC",
+          "sha256": "762a842a6e99ff6d109b048c8f6f5ee1081ec7354fd66c030ea00196871da271"
+        },
+        {
+          "name": "qC",
+          "sha256": "5025b1731118f852010f278773659f43e321e893ee97eee35970fc77b04d258c"
+        },
+        {
+          "name": "JC",
+          "sha256": "7df0367894cf4779f3459e62215bf999d4e9f755040ae76f8d0b293748e20d56"
+        },
+        {
+          "name": "YC",
+          "sha256": "051c67f334a669644fce9b2b8df4aac2630ae2c3c8e2e7820c9f0acbca466c51"
+        },
+        {
+          "name": "XC",
+          "sha256": "107d7299d69de40fc71b9bdd8f657b067d0d09165807c860c2a6187fd7dbaf7b"
+        },
+        {
+          "name": "$C",
+          "sha256": "9e72bf0a293450ef6dfc57ecf85c17df253cdab12012e775ee22b70cc16f43b4"
+        },
+        {
+          "name": "ew",
+          "sha256": "6548de2e08b865945d95aabbbf66128c21f528297415fd27be345f4093a753f7"
+        },
+        {
+          "name": "tw",
+          "sha256": "604ad19931559b5f59987ab91ef20b6340d95261f512e0a9d3ac3b5a4150377c"
+        },
+        {
+          "name": "nw",
+          "sha256": "b8054284052d2b62283e899d7ae7ca892fa7e08b6c7f56b573c447f60471cbe0"
+        }
+      ],
+      "imports": [
+        {
+          "local": "Ii",
+          "from": "./file-icon-overrides.mjs",
+          "name": "fileIconOverride",
+          "via": "shared-2-TF8v67kg.js:in",
+          "kind": "generated"
+        },
+        {
+          "local": "Wr",
+          "from": "./source-code-extensions.mjs",
+          "name": "sourceCodeExtensions",
+          "via": "shared-6-sd9jbJqs.js:Oa",
+          "kind": "generated"
+        },
+        {
+          "local": "jr",
+          "from": "./image-path.mjs",
+          "name": "rasterImageExtensions",
+          "via": "shared-104-CTONUSaz.js:Yt",
+          "kind": "generated"
+        },
+        {
+          "local": "Mr",
+          "from": "./code-language-ids.mjs",
+          "name": "highlightLanguageIds",
+          "via": "shared-104-CTONUSaz.js:fn",
+          "kind": "generated"
+        }
+      ],
+      "exports": {
+        "nw": "fileKindIconName"
+      }
+    },
+    {
+      "target": "path-basename.mjs",
+      "source": "shared-52-uHFNjl7C.js",
+      "sourceSha256": "83537e599f2f6720c2a0a245162e44a5c7431e22872a32ed16ea716e65ded08a",
+      "sha256": "eff8b75eaff66cc8c9c2a4452f5d481085ba83552d6a73a58c1277b93fc5b5dc",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "nk",
+          "sha256": "b3b638a5544b40ed2674fc2d91796e4db98abe2a19dc0ecabdc2680f701b3e88"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "nk": "pathBasename"
+      }
+    },
+    {
+      "target": "subscribe-never.mjs",
+      "source": "shared-25-DOWZRSlq.js",
+      "sourceSha256": "a279442d20a0b9bb6327db086d99fe9248ecc93955651d99166b8ce85282d1a1",
+      "sha256": "d5237a86e1737c8d7dde36a85ac821ea8c93c2634716a4cfd7960015108dbcf1",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "ni",
+          "sha256": "f55c62debc2afa153152106d3acb8454add6d5ef02827e05df5531685043028c"
+        },
+        {
+          "name": "ri",
+          "sha256": "41f179106e29f89b44a75a34864dd90759b4ed405324927b87f6cd101cbcd160"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "ni": "subscribeNever"
+      }
+    },
+    {
+      "target": "file-type-icon.mjs",
+      "source": "c280f9bbb-CutcMso2.js",
+      "sourceSha256": "fda181f73d0e67d7a347412b1c43a3c9df2d4e4ca6d1ac9945b5b40f2b9c6718",
+      "sha256": "bb9dde0ad4573db39950db5143f3d01422a86b99a464a16204e63201efc56cc7",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "h",
+          "sha256": "08dd0c0641d6214008a2ce3811ab899333b1cec5973c90f22c88dd5e0dfd1b04"
+        },
+        {
+          "name": "g",
+          "sha256": "fbfd3c964cd3378dd55652ceec16296731903dae83baef8b19f06cae065c4c00"
+        },
+        {
+          "name": "_",
+          "sha256": "dbb0a34cc7f417bf2fc6ae7837d97eada5f389e366018fc10f67fd6a7761e45f"
+        },
+        {
+          "name": "v",
+          "sha256": "4c94485e0c21ae6c41ce1dfe7b6bfaceea5ab68e40a2476f50208e526f506080"
+        },
+        {
+          "name": "y",
+          "sha256": "a1fce4363854ff888cff4b8e7875d600c2682390412a8cf79b37d0b11148b0fa"
+        },
+        {
+          "name": "b",
+          "sha256": "e3462c7ac2d91c82d4a31523a07e4784db978a4613337dad87e9d0acec9df5b0"
+        },
+        {
+          "name": "x",
+          "sha256": "56a3ee65a3fdee3acbf89d855720ccfd8da024f392eb9a68d6b489ab37eb7af6"
+        },
+        {
+          "name": "S",
+          "sha256": "48576ba998fc72be1c096ec728f7531cc32f83a22af6d13b992c1befc7010ef8"
+        },
+        {
+          "name": "C",
+          "sha256": "d0fc95486163599e33337be4262d539e9efe0038a8f7bf4e60665ea6097c240b"
+        },
+        {
+          "name": "w",
+          "sha256": "d5cd0828782fcd008a6191731c87cca9d10ab14c048fe382929bf78be1438f94"
+        },
+        {
+          "name": "T",
+          "sha256": "405819b393a97d9bf5ddd7ea3f4a792e670f55c7b3bd66e7e95b5ac9e29d96b9"
+        },
+        {
+          "name": "E",
+          "sha256": "1685f522526c5bd5657074397fa99101ad30d6fb1460a155ae08478657bddc8a"
+        },
+        {
+          "name": "D",
+          "sha256": "5b9258522de136bab031391b239e21a6b6519bd45350a75ced1877cffad40967"
+        },
+        {
+          "name": "O",
+          "sha256": "a02fab66b65c0b253f2b6b61d964e40bf19d495d02d423dcd09cfe01e8b30fec"
+        },
+        {
+          "name": "k",
+          "sha256": "fefe1c06f21ad975212bf39a3bc0a693038abee103eeef886c28052e93211056"
+        },
+        {
+          "name": "A",
+          "sha256": "2651e78e324946d6e50b9440e95bc1e1843996b1256327c382631392fa361b5f"
+        },
+        {
+          "name": "j",
+          "sha256": "09c543e7eb5443fe2ef54ba58b3d255e8efa99f5896394042196b495cbc08a5e"
+        },
+        {
+          "name": "M",
+          "sha256": "40f7bb9e69ff6c140df1f58ed381a8cc78fec98c3aeeac4db127de93a08ee2ce"
+        },
+        {
+          "name": "F",
+          "sha256": "4b298a7f6fe5d2316ae0e5441923b6254cbf3ab575cc1601465b834bf1746e8e"
+        },
+        {
+          "name": "I",
+          "sha256": "222a629c520a9a8facff5acddc831ec487757cce14da23337d8c72fd5f3577f9"
+        },
+        {
+          "name": "L",
+          "sha256": "5985ccd5ca3f91e81464bcb8f291110236d72d9ab85e85c4dabd18012cf53876"
+        },
+        {
+          "name": "R",
+          "sha256": "638effd173aa1564f883d31f2ac3a34734f241ffc295a26bf98a396329ce17e8"
+        },
+        {
+          "name": "z",
+          "sha256": "9734b82393463d332f940b61a7e952b46a74bf8067770e1751a894b47a453aeb"
+        },
+        {
+          "name": "B",
+          "sha256": "15b8a77ac7b1e8797431d359c40d96387e13c410afe3fbc76f89a625785d672a"
+        }
+      ],
+      "imports": [
+        {
+          "local": "t",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-CnSY1sxv.js:Ha",
+          "kind": "react"
+        },
+        {
+          "local": "n",
+          "from": "react",
+          "name": "useSyncExternalStore",
+          "via": "vendor-frame-CnSY1sxv.js:To",
+          "kind": "react"
+        },
+        {
+          "local": "J1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged1",
+          "via": "shared-frame-6jtSkIit.js:Qf",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "a",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "useCdsDensity",
+          "via": "shared-frame-6jtSkIit.js:Td",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "K3",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore3",
+          "via": "shared-frame-6jtSkIit.js:cp",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "J3",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged3",
+          "via": "shared-frame-6jtSkIit.js:ep",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "o",
+          "from": "../../source-files-changes-adapters.jsx",
+          "name": "cdsRem",
+          "via": "shared-frame-6jtSkIit.js:fd",
+          "kind": "adapter"
+        },
+        {
+          "local": "J9",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "reactMemoCache",
+          "via": "shared-frame-6jtSkIit.js:ip",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "s",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "CdsIcon",
+          "via": "shared-frame-6jtSkIit.js:od",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "K1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore1",
+          "via": "shared-frame-6jtSkIit.js:op",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "l",
+          "from": "./subscribe-never.mjs",
+          "name": "subscribeNever",
+          "via": "shared-25-DOWZRSlq.js:z_",
+          "kind": "generated"
+        },
+        {
+          "local": "d",
+          "from": "./path-basename.mjs",
+          "name": "pathBasename",
+          "via": "shared-52-uHFNjl7C.js:Ou",
+          "kind": "generated"
+        },
+        {
+          "local": "m",
+          "from": "./file-kind-icon-name.mjs",
+          "name": "fileKindIconName",
+          "via": "shared-9-CM21XrJw.js:jt",
+          "kind": "generated"
+        },
+        {
+          "local": "u",
+          "from": "./noop.mjs",
+          "name": "noop",
+          "via": "shared-0-DDOOdL6P.js:$l",
+          "kind": "generated"
+        },
+        {
+          "local": "c",
+          "from": "../../source-files-changes-adapters.jsx",
+          "name": "growthBookOn",
+          "via": "shared-25-DOWZRSlq.js:Yh",
+          "kind": "adapter"
+        },
+        {
+          "local": "f",
+          "from": "../view-tabs/shared-4-DUB1Oi0O.js",
+          "name": "isFizzyLakePartEnabled",
+          "via": "shared-4-DUB1Oi0O.js:Yo",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "e",
+          "from": "../view-tabs/vendor-frame-CnSY1sxv.js",
+          "name": "clsx",
+          "via": "vendor-frame-CnSY1sxv.js:Ba",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "J2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged2",
+          "via": "shared-frame-6jtSkIit.js:$f",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "i",
+          "from": "../../source-files-changes-adapters.jsx",
+          "name": "useCdsMode",
+          "via": "shared-frame-6jtSkIit.js:Ad",
+          "kind": "adapter"
+        },
+        {
+          "local": "K2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore2",
+          "via": "shared-frame-6jtSkIit.js:sp",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "r",
+          "from": "react",
+          "name": "createElement",
+          "via": "vendor-frame-CnSY1sxv.js:no",
+          "kind": "react"
+        }
+      ],
+      "exports": {
+        "B": "FileTypeIcon"
+      }
+    },
+    {
+      "target": "retry-button.mjs",
+      "source": "c30c42d34-B0SRB643.js",
+      "sourceSha256": "c4bc539abf1938aabd921bcd30df72d7499056b42e421165fc54301d681802d4",
+      "sha256": "331c2f0df438d2cd8767154424b2688af3ebd562fbf0937d94fd1911b7d3e176",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "l",
+          "sha256": "c5ff97236cde3f65a5bde4a1b4e8a4db575b4d2d34ed2d28de748217ca05143e"
+        },
+        {
+          "name": "u",
+          "sha256": "ae73ed892a86f1a25dec91ef6027072eb99501e34d91c9225524efdbbdc69e3c"
+        },
+        {
+          "name": "d",
+          "sha256": "3d1b04f9467b99e9d5286f71a6c9e8bc68891d35be6dd3bcc7fa5cb0190aa3c1"
+        },
+        {
+          "name": "p",
+          "sha256": "d5d269dbdbe4d654022b38388ec13878a317152969574712b1a2b04c7787efee"
+        },
+        {
+          "name": "m",
+          "sha256": "d69acdd289fe92d514b13f426fdd30c1434c7949908b613161125b02489680ef"
+        }
+      ],
+      "imports": [
+        {
+          "local": "e",
+          "from": "react",
+          "name": "useRef",
+          "via": "vendor-frame-CnSY1sxv.js:Co",
+          "kind": "react"
+        },
+        {
+          "local": "t",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-CnSY1sxv.js:Ha",
+          "kind": "react"
+        },
+        {
+          "local": "n",
+          "from": "react/jsx-runtime",
+          "name": "jsxs",
+          "via": "vendor-frame-CnSY1sxv.js:Ua",
+          "kind": "react"
+        },
+        {
+          "local": "r",
+          "from": "react/jsx-runtime",
+          "name": "Fragment",
+          "via": "vendor-frame-CnSY1sxv.js:Va",
+          "kind": "react"
+        },
+        {
+          "local": "a",
+          "from": "react",
+          "name": "useState",
+          "via": "vendor-frame-CnSY1sxv.js:wo",
+          "kind": "react"
+        },
+        {
+          "local": "J2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged2",
+          "via": "shared-frame-6jtSkIit.js:$f",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "o",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "CdsButton",
+          "via": "shared-frame-6jtSkIit.js:Eu",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "J1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged1",
+          "via": "shared-frame-6jtSkIit.js:Qf",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "J0",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoIsEmpty",
+          "via": "shared-frame-6jtSkIit.js:Zf",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "K0",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore0",
+          "via": "shared-frame-6jtSkIit.js:ap",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "J9",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "reactMemoCache",
+          "via": "shared-frame-6jtSkIit.js:ip",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "K4",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore4",
+          "via": "shared-frame-6jtSkIit.js:lp",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "K1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore1",
+          "via": "shared-frame-6jtSkIit.js:op",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "K2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore2",
+          "via": "shared-frame-6jtSkIit.js:sp",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "J4",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged4",
+          "via": "shared-frame-6jtSkIit.js:tp",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "s",
+          "from": "../../source-files-changes-adapters.jsx",
+          "name": "FormattedMessage",
+          "via": "vendor-intl-DYfox5Co.js:l",
+          "kind": "adapter"
+        },
+        {
+          "local": "i",
+          "from": "react",
+          "name": "useLayoutEffect",
+          "via": "vendor-frame-CnSY1sxv.js:bo",
+          "kind": "react"
+        },
+        {
+          "local": "K5",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore5",
+          "via": "shared-frame-6jtSkIit.js:up",
+          "kind": "view-tabs"
+        }
+      ],
+      "exports": {
+        "p": "RetryButton"
+      }
+    },
+    {
+      "target": "diff-widget-background.mjs",
+      "source": "c6e73333a-DjPHi7Jv.js",
+      "sourceSha256": "6538e3514b920e602190fbd796ed8bbc7969cd323bce225e98562f64fc9fc788",
+      "sha256": "5d08f011b3fb43a1b1a5bc3ae0bb02c763bf9918b043e40e01ab4811acdfac57",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "y",
+          "sha256": "36901b9bdad983826731b59a9e48ba675a18b186c92b1e29ccf46f584ee67a05"
+        },
+        {
+          "name": "b",
+          "sha256": "0bab6a3f3b1a735b2d833cd26b2b4e053de59a7acec7a36e2d96b0006874ecd2"
+        },
+        {
+          "name": "C",
+          "sha256": "14a503b23ba0a18f4cf5628982aa564d6751a096226d1542c45b8900bb52bf1c"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "C": "diffWidgetBackground",
+        "b": "codeBackground"
+      }
+    },
+    {
+      "target": "tree-context-menu-keys.mjs",
+      "source": "shared-18-D3y8YMFN.js",
+      "sourceSha256": "ea0ef4b74193e2e73c04b942311076a0922533df2ddb3d333464d22003e3355b",
+      "sha256": "27ff9f94f0648fb5e74f132a77ddcaab81a74094e17ce020fa9c94a609a64d32",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "nk",
+          "sha256": "c1331eecc1c47f914a77d44d183d1d5abc21142a3cf5ecf518b003d0c49986d9"
+        },
+        {
+          "name": "rk",
+          "sha256": "808b35fbe8ea81461ca9cadaa36eac1aeed00ec6ce58f1a410bfa550bd736d7f"
+        },
+        {
+          "name": "ik",
+          "sha256": "7e9e34ecc0a63ab155e59267863fe46867117ecdb8df1f4ac9f5b4c37a254f1d"
+        },
+        {
+          "name": "ak",
+          "sha256": "a22b8b3a6b7d9d5eda79d835c1a879807ece5951d43fecc00745148e0aba3093"
+        },
+        {
+          "name": "ok",
+          "sha256": "cb1a40a19a68e18bd43995a4208bf16e96291042f31b178e4de7a90f63894814"
+        },
+        {
+          "name": "sk",
+          "sha256": "ba03894f32dbcf6b54fb8f348884a004c3777dcf9a191375a2e43f63cdf12e1c"
+        }
+      ],
+      "imports": [
+        {
+          "local": "K",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "asElementNode",
+          "via": "shared-frame-6jtSkIit.js:Iu",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "ws",
+          "from": "../view-tabs/shared-78-D5Fw2h0a.js",
+          "name": "isMacUserAgent",
+          "via": "shared-78-D5Fw2h0a.js:mE",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "Cm",
+          "from": "./editable-target.mjs",
+          "name": "isEditableTarget",
+          "via": "shared-156-BLTosN8U.js:xr",
+          "kind": "generated"
+        },
+        {
+          "local": "Et",
+          "from": "./owner-window.mjs",
+          "name": "ownerWindowOrGlobal",
+          "via": "shared-25-DOWZRSlq.js:lp",
+          "kind": "generated"
+        }
+      ],
+      "exports": {
+        "sk": "preventMenuItemEnterRepeat",
+        "ok": "openContextMenuFromKey"
+      }
+    },
+    {
+      "target": "file-tree-compact.mjs",
+      "source": "ca7840910-By5J0kGX.js",
+      "sourceSha256": "282132a86e67363396af18e0a808fde5ff786f930f4b19f67f0fd5b68f5af4ff",
+      "sha256": "5cdf0fd50664cc995ecae05b012d2af16b1320067c362a8440ba8d15d7e5bca3",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "E",
+          "sha256": "3bd6b14766bd1d9ea753b3785022bb122dc410ac142869572fe5acbcd3819849"
+        },
+        {
+          "name": "D",
+          "sha256": "0329f16c79325587744c612794c6c90b622e458e3a356eb9b04797e2a7480691"
+        },
+        {
+          "name": "O",
+          "sha256": "d33b61724c09a7d7250650d403e09f41113d45a725ba266612468106c2fe4a4e"
+        },
+        {
+          "name": "k",
+          "sha256": "2999d85eb00c26ba50b5f86db3db1d2a5f5ef6f9fd2033093e2e529e8d4f3cf0"
+        },
+        {
+          "name": "A",
+          "sha256": "31274d75e5d46880a505f89b7562e5c5a6712f18296cfbe32fadf7a2640c5a1c"
+        },
+        {
+          "name": "j",
+          "sha256": "be3bed5225740bd4f66d37559acbf995eb85e3ac6cce04640389acc3c0e3258c"
+        },
+        {
+          "name": "M",
+          "sha256": "d6995ede7b657776dd33efe867ed0e26c02971e386eef88f296736e74959a307"
+        },
+        {
+          "name": "N",
+          "sha256": "40edcebd6ab732c5fe869f170164e27a5a6e907259b723fa8422058af3267e1f"
+        },
+        {
+          "name": "P",
+          "sha256": "76b09e041bbaadffd2ce040638be8e9a0e89afedad49122fcc531ffa4771eecf"
+        },
+        {
+          "name": "F",
+          "sha256": "c9f0c34e57fa9ad27dfcc0370f57198cd2b6d9b4647a839b4b68902e41d38826"
+        },
+        {
+          "name": "I",
+          "sha256": "20a959344f7a7fe6a49ea00fb3c9bf5465cffd602993ee1f27be83b08cd58cb2"
+        },
+        {
+          "name": "L",
+          "sha256": "1413f5562280b60eb9eca79a3c974ad743bdd78e9a75efcdf79b84eb58726476"
+        }
+      ],
+      "imports": [
+        {
+          "local": "e",
+          "from": "../view-tabs/vendor-frame-CnSY1sxv.js",
+          "name": "clsx",
+          "via": "vendor-frame-CnSY1sxv.js:Ba",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "t",
+          "from": "react",
+          "name": "useRef",
+          "via": "vendor-frame-CnSY1sxv.js:Co",
+          "kind": "react"
+        },
+        {
+          "local": "n",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-CnSY1sxv.js:Ha",
+          "kind": "react"
+        },
+        {
+          "local": "i",
+          "from": "react/jsx-runtime",
+          "name": "jsxs",
+          "via": "vendor-frame-CnSY1sxv.js:Ua",
+          "kind": "react"
+        },
+        {
+          "local": "o",
+          "from": "react",
+          "name": "useEffect",
+          "via": "vendor-frame-CnSY1sxv.js:ho",
+          "kind": "react"
+        },
+        {
+          "local": "s",
+          "from": "react",
+          "name": "memo",
+          "via": "vendor-frame-CnSY1sxv.js:so",
+          "kind": "react"
+        },
+        {
+          "local": "J2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged2",
+          "via": "shared-frame-6jtSkIit.js:$f",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "J1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged1",
+          "via": "shared-frame-6jtSkIit.js:Qf",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "J0",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoIsEmpty",
+          "via": "shared-frame-6jtSkIit.js:Zf",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "K0",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore0",
+          "via": "shared-frame-6jtSkIit.js:ap",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "K3",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore3",
+          "via": "shared-frame-6jtSkIit.js:cp",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "J3",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged3",
+          "via": "shared-frame-6jtSkIit.js:ep",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "J9",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "reactMemoCache",
+          "via": "shared-frame-6jtSkIit.js:ip",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "J5",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged5",
+          "via": "shared-frame-6jtSkIit.js:np",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "K1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore1",
+          "via": "shared-frame-6jtSkIit.js:op",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "K2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore2",
+          "via": "shared-frame-6jtSkIit.js:sp",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "K5",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore5",
+          "via": "shared-frame-6jtSkIit.js:up",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "g",
+          "from": "./tree-context-menu-keys.mjs",
+          "name": "preventMenuItemEnterRepeat",
+          "via": "shared-18-D3y8YMFN.js:Ms",
+          "kind": "generated"
+        },
+        {
+          "local": "b",
+          "from": "../code-current/file-tree-style.mjs",
+          "name": "fileTreeIconSize",
+          "via": "c621b1e2d-CU5cG_mP.js:c",
+          "kind": "code-current"
+        },
+        {
+          "local": "x",
+          "from": "../code-current/file-tree-style.mjs",
+          "name": "treeIndent",
+          "via": "c621b1e2d-CU5cG_mP.js:d",
+          "kind": "code-current"
+        },
+        {
+          "local": "S",
+          "from": "./file-tree-row-classes.mjs",
+          "name": "fileTreeRowCurrent",
+          "via": "c621b1e2d-CU5cG_mP.js:i",
+          "kind": "generated"
+        },
+        {
+          "local": "C",
+          "from": "./file-tree-row-classes.mjs",
+          "name": "fileTreeCompactRow",
+          "via": "c621b1e2d-CU5cG_mP.js:r",
+          "kind": "generated"
+        },
+        {
+          "local": "w",
+          "from": "./file-tree-row-classes.mjs",
+          "name": "fileTreeRowIdle",
+          "via": "c621b1e2d-CU5cG_mP.js:s",
+          "kind": "generated"
+        },
+        {
+          "local": "h",
+          "from": "./file-entry-order.mjs",
+          "name": "compareFileEntries",
+          "via": "shared-18-D3y8YMFN.js:Dn",
+          "kind": "generated"
+        },
+        {
+          "local": "r",
+          "from": "../view-tabs/vendor-frame-CnSY1sxv.js",
+          "name": "useDirection",
+          "via": "vendor-frame-CnSY1sxv.js:Ia",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "a",
+          "from": "react/jsx-runtime",
+          "name": "Fragment",
+          "via": "vendor-frame-CnSY1sxv.js:Va",
+          "kind": "react"
+        },
+        {
+          "local": "c",
+          "from": "react",
+          "name": "useState",
+          "via": "vendor-frame-CnSY1sxv.js:wo",
+          "kind": "react"
+        },
+        {
+          "local": "I3",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStoreValueFirst3",
+          "via": "shared-frame-6jtSkIit.js:Jf",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "I1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStoreValueFirst1",
+          "via": "shared-frame-6jtSkIit.js:Kf",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "l",
+          "from": "../../source-files-changes-adapters.jsx",
+          "name": "FilesTooltip",
+          "via": "shared-frame-6jtSkIit.js:Kl",
+          "kind": "adapter"
+        },
+        {
+          "local": "I5",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStoreValueFirst5",
+          "via": "shared-frame-6jtSkIit.js:Xf",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "I4",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStoreValueFirst4",
+          "via": "shared-frame-6jtSkIit.js:Yf",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "Z1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStoreDeps1",
+          "via": "shared-frame-6jtSkIit.js:dp",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "Z2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStoreDeps2",
+          "via": "shared-frame-6jtSkIit.js:fp",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "K4",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore4",
+          "via": "shared-frame-6jtSkIit.js:lp",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "u",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "CdsIcon",
+          "via": "shared-frame-6jtSkIit.js:od",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "Z3",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStoreDeps3",
+          "via": "shared-frame-6jtSkIit.js:pp",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "I2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStoreValueFirst2",
+          "via": "shared-frame-6jtSkIit.js:qf",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "d",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "CdsContextMenu",
+          "via": "shared-frame-6jtSkIit.js:qi",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "J4",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged4",
+          "via": "shared-frame-6jtSkIit.js:tp",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "f",
+          "from": "./loading-flag.mjs",
+          "name": "withLoadingFlag",
+          "via": "shared-104-CTONUSaz.js:jd",
+          "kind": "generated"
+        },
+        {
+          "local": "m",
+          "from": "../../source-files-changes-adapters.jsx",
+          "name": "useIntl",
+          "via": "vendor-intl-DYfox5Co.js:p",
+          "kind": "adapter"
+        },
+        {
+          "local": "v",
+          "from": "./file-relative-path.mjs",
+          "name": "physicalSide",
+          "via": "shared-28-DNYlf4wu.js:js",
+          "kind": "generated"
+        },
+        {
+          "local": "T",
+          "from": "./file-type-icon.mjs",
+          "name": "FileTypeIcon",
+          "via": "c280f9bbb-CutcMso2.js:t",
+          "kind": "generated"
+        },
+        {
+          "local": "_",
+          "from": "./tree-context-menu-keys.mjs",
+          "name": "openContextMenuFromKey",
+          "via": "shared-18-D3y8YMFN.js:js",
+          "kind": "generated"
+        },
+        {
+          "local": "y",
+          "from": "./arrow-key-direction.mjs",
+          "name": "logicalArrowKey",
+          "via": "c7037f09e-DXK8RSre.js:t",
+          "kind": "generated"
+        },
+        {
+          "local": "p",
+          "from": "../../source-files-changes-adapters.jsx",
+          "name": "FormattedMessage",
+          "via": "vendor-intl-DYfox5Co.js:l",
+          "kind": "adapter"
+        }
+      ],
+      "exports": {
+        "F": "FolderTree",
+        "k": "currentFolderTreeRow"
+      }
+    },
+    {
+      "target": "folder-list-key.mjs",
+      "source": "c0fbbe82d-COsmfHJY.js",
+      "sourceSha256": "25e1b1af3deb2aba5f2fc9a2a6395ef3d5fc3ebd7bf98bff92f5fdb22c279b28",
+      "sha256": "080df6acff25c7456817b6951d8c15bbfd524a375e90428adbe5897e5800d0e7",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "ri",
+          "sha256": "8393b1a69bf15ae2bf6d68f8894e7442fd53974b61b100646d6b5eba169488c0"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "ri": "folderListQueryKey"
+      }
+    },
+    {
+      "target": "breadcrumb-folder.mjs",
+      "source": "cd2efac6e-Be7wcc4w.js",
+      "sourceSha256": "94369164a65586255173bf7b30193f5c190477acd47dccfa4d737f38d858f680",
+      "sha256": "b081d3dd6a915011b110a2e67d6823efbaa5778840742123110c6ef1c7e25ad5",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "Rc",
+          "sha256": "f9cf9e4169ca70b9c5b9a5fde0f66959b576f92270afa12d6c8b6c97200ca9e7"
+        },
+        {
+          "name": "zc",
+          "sha256": "1c0243f6855acd54b55364f9f2bc159031b34eeb1034aab04bb0bfe0f5940579"
+        },
+        {
+          "name": "Bc",
+          "sha256": "b29f3015c6b5f5ee0e5f77028ad10446850eeec5fe57221da259ce2c299dbbdc"
+        },
+        {
+          "name": "Vc",
+          "sha256": "d4f3da70ec7b1239462517a7d22a6a8905824e536c34fa403a7cc1c682d54f9c"
+        },
+        {
+          "name": "Uc",
+          "sha256": "203b72104b506b567182fe3fdc0ed4f515a1db79b92bf49b27f94e056c9df49f"
+        },
+        {
+          "name": "Wc",
+          "sha256": "2fba34da10b772637e1ff46cabf2d393682c0e945244de2be3d7c016ddaa1030"
+        },
+        {
+          "name": "Gc",
+          "sha256": "175a198cc83c2f7ea910c9f3052cca431c78e98d98ac248322ea49c891fc95c2"
+        },
+        {
+          "name": "Kc",
+          "sha256": "de9ca9beeae389b88cfac6378581bbaf9912cdef169174fa61013f13e2970233"
+        },
+        {
+          "name": "Jc",
+          "sha256": "72111db0eec8bc0ddf4555148b688aabc4ebaa3a00d0126495cc10731f2e2eec"
+        },
+        {
+          "name": "Xc",
+          "sha256": "4f2ae6e3476a070ded964cdeb4ae151f741dbd33394abc42783ba2d8dae73a85"
+        },
+        {
+          "name": "Zc",
+          "sha256": "ea474d302123f2cbf98f9bdafbc1d9e3bb613ed4c027dda7cf6cae853e948e26"
+        },
+        {
+          "name": "Qc",
+          "sha256": "959b4accd660b00fe429afdb14c3cb000d241b6f37a1a347ba31cb6e0cef66e8"
+        },
+        {
+          "name": "$c",
+          "sha256": "0965f20aa71dacb841a56db6a9ed32c8143a3ab3a9ebb742ad11cf0be6345afc"
+        },
+        {
+          "name": "el",
+          "sha256": "3a0c09fabf024ec87cbaea1bac37904ba4d0a34c8ee1b90d22fb1e7b89d2ecf2"
+        },
+        {
+          "name": "tl",
+          "sha256": "361d174cdfa0938b7e4377509b6c99d4e1afacf6cb9e4c8dd5af5ebb16f7866c"
+        },
+        {
+          "name": "nl",
+          "sha256": "a9c74bb0c3819170401b4b39771405049c785874e5a9d90d6fb34e25d44fee6e"
+        },
+        {
+          "name": "rl",
+          "sha256": "6f1804e3da5eb80d457ba6809014d4ef33e310d83d41540fbc36a1ab38a41f1b"
+        },
+        {
+          "name": "bl",
+          "sha256": "80fb2ab84d941e8c1e1d65a0a2da03c49fcb89dbb378cbc7feb3870e350cfa4d"
+        },
+        {
+          "name": "xl",
+          "sha256": "1cdfdcea38d25f17f0f36b3fe70051d26e443df53fdf273273d4613e7d035ab0"
+        },
+        {
+          "name": "Sl",
+          "sha256": "070417c0ddf20436c23aa24019ab71fb6fd09cf32824556f1a428dbd3d9391cc"
+        },
+        {
+          "name": "Cl",
+          "sha256": "e4980bf037b68da8d7d28b398e60f07dd74ded1e00f2b3fd20708c7bfcd545db"
+        },
+        {
+          "name": "wl",
+          "sha256": "5375e4ff40823900fcef1439367388674cf6cec6caede03d81eacc1fc6839e39"
+        },
+        {
+          "name": "Tl",
+          "sha256": "75f7bdf8d95ff051d9059c8f74d94f52716dace94066e7713f3d19f668040851"
+        },
+        {
+          "name": "Ol",
+          "sha256": "84853b16189bbfa20464c769d530f323af078c7981f88dd2c1d1a1586018da38"
+        },
+        {
+          "name": "kl",
+          "sha256": "983c7bfc4b69ff12648e422f34cc77906f57e83fc1b804124e466abd399c19ec"
+        },
+        {
+          "name": "Al",
+          "sha256": "537cbb20339c3785b86de8b27a9d18f252c9e07a71903e0f139706775cd55d2e"
+        },
+        {
+          "name": "jl",
+          "sha256": "7758c909639f95951b3add0c372464b6908c3fb8f9a7d37bea55105f8cd1b260"
+        },
+        {
+          "name": "Ml",
+          "sha256": "aa4f761a8a676341288661a1c7e977ac5cad445778a3818cd536f8dd056f51d6"
+        },
+        {
+          "name": "Nl",
+          "sha256": "d1e67effa95bbae2dfba7ac5ebc2b85c3928fd1fc3945869d4677f560a0ea5c6"
+        },
+        {
+          "name": "Pl",
+          "sha256": "8e34d180f9b640a41fbca3089a204ffcaf3b10e1fa6d4d5721406de15d7e841a"
+        },
+        {
+          "name": "Fl",
+          "sha256": "3a5f161d14e1c27fd5e7f8723f2602acec2f6b45a4fed253fd96eb1b834713a2"
+        },
+        {
+          "name": "Il",
+          "sha256": "5e5277ce488f0be71969ab8a27ed10effc9d1c9baba7db58321213338591c7ea"
+        }
+      ],
+      "imports": [
+        {
+          "local": "r",
+          "from": "../view-tabs/vendor-frame-CnSY1sxv.js",
+          "name": "clsx",
+          "via": "vendor-frame-CnSY1sxv.js:Ba",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "i",
+          "from": "react",
+          "name": "useRef",
+          "via": "vendor-frame-CnSY1sxv.js:Co",
+          "kind": "react"
+        },
+        {
+          "local": "a",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-CnSY1sxv.js:Ha",
+          "kind": "react"
+        },
+        {
+          "local": "c",
+          "from": "react/jsx-runtime",
+          "name": "jsxs",
+          "via": "vendor-frame-CnSY1sxv.js:Ua",
+          "kind": "react"
+        },
+        {
+          "local": "J2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged2",
+          "via": "shared-frame-6jtSkIit.js:$f",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "j",
+          "from": "../../source-files-changes-adapters.jsx",
+          "name": "FilesTooltip",
+          "via": "shared-frame-6jtSkIit.js:Kl",
+          "kind": "adapter"
+        },
+        {
+          "local": "J1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged1",
+          "via": "shared-frame-6jtSkIit.js:Qf",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "K3",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore3",
+          "via": "shared-frame-6jtSkIit.js:cp",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "J3",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged3",
+          "via": "shared-frame-6jtSkIit.js:ep",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "J9",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "reactMemoCache",
+          "via": "shared-frame-6jtSkIit.js:ip",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "K4",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore4",
+          "via": "shared-frame-6jtSkIit.js:lp",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "J5",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged5",
+          "via": "shared-frame-6jtSkIit.js:np",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "K1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore1",
+          "via": "shared-frame-6jtSkIit.js:op",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "K2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore2",
+          "via": "shared-frame-6jtSkIit.js:sp",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "J4",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged4",
+          "via": "shared-frame-6jtSkIit.js:tp",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "se",
+          "from": "../../source-files-changes-adapters.jsx",
+          "name": "FilesPopover",
+          "via": "shared-frame-6jtSkIit.js:ua",
+          "kind": "adapter"
+        },
+        {
+          "local": "K5",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore5",
+          "via": "shared-frame-6jtSkIit.js:up",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "jt",
+          "from": "../../source-files-changes-adapters.jsx",
+          "name": "useIntl",
+          "via": "vendor-intl-DYfox5Co.js:p",
+          "kind": "adapter"
+        },
+        {
+          "local": "Ht",
+          "from": "./file-entry-order.mjs",
+          "name": "popoverCollisionPadding",
+          "via": "shared-18-D3y8YMFN.js:Sn",
+          "kind": "generated"
+        },
+        {
+          "local": "Qa",
+          "from": "../code-current/path-tooltip.mjs",
+          "name": "pathTooltipContent",
+          "via": "cc5c56f5c-BoRtnbt1.js:n",
+          "kind": "code-current"
+        },
+        {
+          "local": "$a",
+          "from": "../code-current/path-tooltip.mjs",
+          "name": "pathTooltipOptions",
+          "via": "cc5c56f5c-BoRtnbt1.js:t",
+          "kind": "code-current"
+        },
+        {
+          "local": "Vi",
+          "from": "./diff-widget-background.mjs",
+          "name": "diffWidgetBackground",
+          "via": "c6e73333a-DjPHi7Jv.js:r",
+          "kind": "generated"
+        },
+        {
+          "local": "El",
+          "from": "../code-current/breadcrumb-paths.mjs",
+          "name": "segmentClass",
+          "via": "cd2efac6e-Be7wcc4w.js:El",
+          "kind": "code-current"
+        },
+        {
+          "local": "Dl",
+          "from": "../code-current/breadcrumb-paths.mjs",
+          "name": "segmentKeys",
+          "via": "cd2efac6e-Be7wcc4w.js:Dl",
+          "kind": "code-current"
+        },
+        {
+          "local": "x",
+          "from": "react",
+          "name": "useState",
+          "via": "vendor-frame-CnSY1sxv.js:wo",
+          "kind": "react"
+        },
+        {
+          "local": "Se",
+          "from": "./noop.mjs",
+          "name": "noop",
+          "via": "shared-0-DDOOdL6P.js:$l",
+          "kind": "generated"
+        },
+        {
+          "local": "Ft",
+          "from": "./file-browser-query.mjs",
+          "name": "useQueryClient",
+          "via": "vendor-query-DVJ0goAF.js:p",
+          "kind": "generated"
+        },
+        {
+          "local": "Pt",
+          "from": "./file-browser-query.mjs",
+          "name": "queryOptions",
+          "via": "vendor-query-DVJ0goAF.js:o",
+          "kind": "generated"
+        },
+        {
+          "local": "Rt",
+          "from": "./file-entry-order.mjs",
+          "name": "compareFileEntries",
+          "via": "shared-18-D3y8YMFN.js:Dn",
+          "kind": "generated"
+        },
+        {
+          "local": "Sn",
+          "from": "./file-relative-path.mjs",
+          "name": "relativeToRoot",
+          "via": "shared-28-DNYlf4wu.js:pr",
+          "kind": "generated"
+        },
+        {
+          "local": "Ji",
+          "from": "./folder-list-key.mjs",
+          "name": "folderListQueryKey",
+          "via": "c0fbbe82d-COsmfHJY.js:O",
+          "kind": "generated"
+        },
+        {
+          "local": "wr",
+          "from": "./file-tree-compact.mjs",
+          "name": "currentFolderTreeRow",
+          "via": "ca7840910-By5J0kGX.js:n",
+          "kind": "generated"
+        },
+        {
+          "local": "I1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStoreValueFirst1",
+          "via": "shared-frame-6jtSkIit.js:Kf",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "J0",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoIsEmpty",
+          "via": "shared-frame-6jtSkIit.js:Zf",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "K0",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore0",
+          "via": "shared-frame-6jtSkIit.js:ap",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "ae",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "CdsLoadingSkeleton",
+          "via": "shared-frame-6jtSkIit.js:bu",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "Z2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStoreDeps2",
+          "via": "shared-frame-6jtSkIit.js:fp",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "le",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "CdsSkeleton",
+          "via": "shared-frame-6jtSkIit.js:vu",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "B",
+          "from": "../../source-files-changes-adapters.jsx",
+          "name": "FormattedMessage",
+          "via": "vendor-intl-DYfox5Co.js:l",
+          "kind": "adapter"
+        },
+        {
+          "local": "It",
+          "from": "./file-browser-query.mjs",
+          "name": "useQuery",
+          "via": "vendor-query-DVJ0goAF.js:s",
+          "kind": "generated"
+        },
+        {
+          "local": "Tr",
+          "from": "./file-tree-compact.mjs",
+          "name": "FolderTree",
+          "via": "ca7840910-By5J0kGX.js:t",
+          "kind": "generated"
+        },
+        {
+          "local": "xo",
+          "from": "./retry-button.mjs",
+          "name": "RetryButton",
+          "via": "c30c42d34-B0SRB643.js:t",
+          "kind": "generated"
+        },
+        {
+          "local": "Mt",
+          "from": "./react-store.mjs",
+          "name": "create",
+          "via": "vendor-all-0-DXM0MGjZ.js:F",
+          "kind": "generated"
+        },
+        {
+          "local": "At",
+          "from": "../../source-files-changes-adapters.jsx",
+          "name": "defineMessages",
+          "via": "vendor-intl-DYfox5Co.js:f",
+          "kind": "adapter"
+        }
+      ],
+      "exports": {
+        "kl": "BreadcrumbFolderSegment",
+        "Ol": "useFolderPopover",
+        "Nl": "BreadcrumbFolderList",
+        "nl": "folderListQuery",
+        "rl": "fetchFolderList",
+        "Ji": "folderListQueryKey",
+        "tl": "folderListFailed",
+        "Il": "folderTreeEntries",
+        "bl": "folderEntryLimit",
+        "xl": "folderSkeletonRows",
+        "wl": "folderHoldMs"
+      }
+    },
+    {
+      "target": "app-list-row.mjs",
+      "source": "shared-6-sd9jbJqs.js",
+      "sourceSha256": "caf5dda5315ded77263c79a5cfa09006ee40381c9811c2c755535644be437ce8",
+      "sha256": "c415d73604dc08783382a6fbbe5668bde19588597abe26ddd5ac4714f97bbb02",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "Th",
+          "sha256": "39b781f9baf0cbf4eac347b1ba1ae4c286402a466790d52830a3136fe3e8f79e"
+        },
+        {
+          "name": "Eh",
+          "sha256": "4cea80bdbd0f6063769abceffa53fc08ac8d9ed5cd27719e9ccbd5830562089f"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "Th": "appListRow",
+        "Eh": "appListRowMin"
+      }
+    },
+    {
+      "target": "menu-item-classes.mjs",
+      "source": "shared-frame-6jtSkIit.js",
+      "sourceSha256": "22b990df9384da0621c5197a060f6c2c8fe1ccf5a79ee1f8c6e7a6cb033b259c",
+      "sha256": "58a70582388cbff5d38d8d8ed2bc6673d00421425d3767b7b3bc0a4eb63f711d",
+      "referenceVersion": "3.6556.2",
+      "bindings": [],
+      "imports": [
+        {
+          "local": "FC",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "cdsMenuItemClass",
+          "via": "shared-frame-6jtSkIit.js:FC",
+          "kind": "view-tabs"
+        }
+      ],
+      "exports": {
+        "FC": "menuItemClasses"
+      },
+      "reexport": "view-tabs"
+    },
+    {
+      "target": "file-tree-row.mjs",
+      "source": "cccc2cf0a-DhZC33Gc.js",
+      "sourceSha256": "821cbb54743d9b600ada60e61c362d4c74570cad409bb3b199e8fcf960933c51",
+      "sha256": "6e75607056052d12684d749ce0f4e61abcdb0e9a72ad2fc5ffba3e3fc3bae52b",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "dw",
+          "sha256": "548373a079e3395d8c7824c7393d5cb45eb361cd870dc7e7d6f428f8177a3475"
+        },
+        {
+          "name": "fw",
+          "sha256": "a600f179fd72390e770567053df616a1518d2f61e440d014abf10a598bb38b79"
+        },
+        {
+          "name": "pw",
+          "sha256": "1ce704039e174bcd373e6c84cb741eb7ae8c2491223bd74175d5d61dd64faefc"
+        },
+        {
+          "name": "wT",
+          "sha256": "e849052ccb277b0d831ea83f8fff7924e9e5082ae80884c206fac0bfe3707c36"
+        },
+        {
+          "name": "TT",
+          "sha256": "86e60137c79350f287e37f393128ed51da290c8da2d19c8bfe0afc1add329060"
+        }
+      ],
+      "imports": [
+        {
+          "local": "dr",
+          "from": "./app-list-row.mjs",
+          "name": "appListRow",
+          "via": "shared-6-sd9jbJqs.js:Nf",
+          "kind": "generated"
+        },
+        {
+          "local": "Qc",
+          "from": "./file-tree-row-classes.mjs",
+          "name": "fileTreeRowGap",
+          "via": "c621b1e2d-CU5cG_mP.js:a",
+          "kind": "generated"
+        },
+        {
+          "local": "rl",
+          "from": "../code-current/file-tree-style.mjs",
+          "name": "guideGradient",
+          "via": "c621b1e2d-CU5cG_mP.js:l",
+          "kind": "code-current"
+        }
+      ],
+      "exports": {
+        "dw": "fileTreeRowBase",
+        "fw": "fileTreeRowSelected",
+        "pw": "fileTreeRowPrimary",
+        "wT": "keptGuideFolders",
+        "TT": "keptGuidesOfRow"
+      }
+    },
+    {
+      "target": "path-within.mjs",
+      "source": "shared-28-DNYlf4wu.js",
+      "sourceSha256": "2ddef8f0244506ab515b6f088920aea37167e2008dd217fdabcc7de8f78c80b7",
+      "sha256": "a93b0542b903d957a11b2d909e163d90f7787656222eb9f20a3325e2acfe5399",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "_M",
+          "sha256": "e90ea44e67e77b8ec7d17bac428e925d456eebd6a871a29db3ff20b557fa9548"
+        },
+        {
+          "name": "xM",
+          "sha256": "601e63da41f8765d2202ab4e7e43050ae912e78d54a9471e62b5ba238276ad77"
+        },
+        {
+          "name": "kM",
+          "sha256": "26b91d8ca6cf9629ec566b93837251bd8c34561a286e29540dbee238b0a50c11"
+        }
+      ],
+      "imports": [
+        {
+          "local": "Ni",
+          "from": "./windows-path.mjs",
+          "name": "windowsAbsolutePath",
+          "via": "shared-26-CGuBxVt9.js:nl",
+          "kind": "generated"
+        },
+        {
+          "local": "Ai",
+          "from": "./windows-path-kinds.mjs",
+          "name": "isWindowsRootedPath",
+          "via": "shared-26-CGuBxVt9.js:al",
+          "kind": "generated"
+        }
+      ],
+      "exports": {
+        "kM": "pathWithinRoot",
+        "xM": "joinPath"
+      }
+    },
+    {
+      "target": "git-info-key.mjs",
+      "source": "shared-0-DDOOdL6P.js",
+      "sourceSha256": "6e8dd35d06f3483ca7a164d358560e34bdd02a0c4d4e67fec5e71e45c1009f61",
+      "sha256": "f7f9c977efbefec5368f0cd2c33e3c98d7f683ca3daad49ff5287b9d4bc5acf6",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "mU",
+          "sha256": "56bf1f41a424a22be74d5878de9f39f7e94e63075c219a5a77a490929de90a73"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "mU": "gitInfoQueryKey"
+      }
+    },
+    {
+      "target": "git-info-query.mjs",
+      "source": "shared-11-_AVGLHEz.js",
+      "sourceSha256": "f9171920e9098288a8aceb2642c56c6a4ac6d4aba632fb7e1c8cbf312cfc0011",
+      "sha256": "2fbb6e52710d51fd4fcd287a3f14a1e0ef27df0a195980cf2ca04c7bab208443",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "wm",
+          "sha256": "830d0bbf3eb72c5a9eadb78ed0e07aded26e6412a4ae41b4e82e4e8fa1d8fbcc"
+        },
+        {
+          "name": "Tm",
+          "sha256": "f6f4e6571a9ccd038193899360339885b9426ce33e297ed2c2f94c94c6132862"
+        }
+      ],
+      "imports": [
+        {
+          "local": "ke",
+          "from": "./git-info-key.mjs",
+          "name": "gitInfoQueryKey",
+          "via": "shared-0-DDOOdL6P.js:Ds",
+          "kind": "generated"
+        },
+        {
+          "local": "G",
+          "from": "../../source-files-changes-adapters.jsx",
+          "name": "LocalSessions",
+          "via": "shared-0-DDOOdL6P.js:dh",
+          "kind": "adapter"
+        }
+      ],
+      "exports": {
+        "Tm": "gitInfoQuery"
+      }
+    },
+    {
+      "target": "file-tree-start-folder.mjs",
+      "source": "cccc2cf0a-DhZC33Gc.js",
+      "sourceSha256": "821cbb54743d9b600ada60e61c362d4c74570cad409bb3b199e8fcf960933c51",
+      "sha256": "daffcd793f7f5333260f8b3b1243508ba9da3f500c09197f10d04323330cee18",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "Rw",
+          "sha256": "e5369fd4f1feee93ad3e76335107d87bd17681ea2945a6a5017549827c5296c7"
+        },
+        {
+          "name": "zw",
+          "sha256": "495a0d09842b3519a208742b32e576849bef5407ecb582cad4ad1424e24703e8"
+        },
+        {
+          "name": "Bw",
+          "sha256": "684de3ea3a8f8e24496e60c171543b70a7303f2ceda7fc8e94ca80d8c3b279fe"
+        },
+        {
+          "name": "Hw",
+          "sha256": "1a5ba12d8e00ec7ef180641b6a101d2367c8bc7507c61ad17da979792ed1c9a6"
+        }
+      ],
+      "imports": [
+        {
+          "local": "J2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged2",
+          "via": "shared-frame-6jtSkIit.js:$f",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "J1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged1",
+          "via": "shared-frame-6jtSkIit.js:Qf",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "J9",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "reactMemoCache",
+          "via": "shared-frame-6jtSkIit.js:ip",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "K1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore1",
+          "via": "shared-frame-6jtSkIit.js:op",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "K2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore2",
+          "via": "shared-frame-6jtSkIit.js:sp",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "qr",
+          "from": "./file-browser-query.mjs",
+          "name": "useQuery",
+          "via": "vendor-query-DVJ0goAF.js:s",
+          "kind": "generated"
+        },
+        {
+          "local": "Qi",
+          "from": "./path-within.mjs",
+          "name": "joinPath",
+          "via": "shared-28-DNYlf4wu.js:Ar",
+          "kind": "generated"
+        },
+        {
+          "local": "ca",
+          "from": "./path-within.mjs",
+          "name": "pathWithinRoot",
+          "via": "shared-28-DNYlf4wu.js:Pr",
+          "kind": "generated"
+        },
+        {
+          "local": "lo",
+          "from": "./git-info-query.mjs",
+          "name": "gitInfoQuery",
+          "via": "shared-11-_AVGLHEz.js:yi",
+          "kind": "generated"
+        },
+        {
+          "local": "Ln",
+          "from": "./windows-path-kinds.mjs",
+          "name": "isWindowsRootedPath",
+          "via": "shared-26-CGuBxVt9.js:al",
+          "kind": "generated"
+        }
+      ],
+      "exports": {
+        "zw": "useWorktreeStartFolder",
+        "Hw": "normalizeRevealPath",
+        "Rw": "startRevealNonce"
+      }
+    },
+    {
+      "target": "file-selection-escape.mjs",
+      "source": "c856385e2-aEyDzrcK.js",
+      "sourceSha256": "07946cdfee5c9a27ccc4e4343560a09c7628f02d4d216a20ce38ccf93a4a91d8",
+      "sha256": "c9425401f9a02cc343526b4af0bcf1abdcabf876797140f9791591d114e1b5ba",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "Ye",
+          "sha256": "d51dd5c736fe52956e0385d6613ab07ef93a61bafdf8392c509f57499c6d7060"
+        }
+      ],
+      "imports": [
+        {
+          "local": "o",
+          "from": "react",
+          "name": "useEffect",
+          "via": "vendor-frame-CnSY1sxv.js:ho",
+          "kind": "react"
+        },
+        {
+          "local": "J2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged2",
+          "via": "shared-frame-6jtSkIit.js:$f",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "K3",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore3",
+          "via": "shared-frame-6jtSkIit.js:cp",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "J9",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "reactMemoCache",
+          "via": "shared-frame-6jtSkIit.js:ip",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "m",
+          "from": "../view-tabs/shared-25-DOWZRSlq.js",
+          "name": "ownerWindow",
+          "via": "shared-25-DOWZRSlq.js:up",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "me",
+          "from": "./escape-repeat.mjs",
+          "name": "suppressEscapeRepeat",
+          "via": "shared-19-DIKJVT7c.js:cn",
+          "kind": "generated"
+        }
+      ],
+      "exports": {
+        "Ye": "useMultiSelectionEscape"
+      }
+    },
+    {
+      "target": "file-frontmatter-label.mjs",
+      "source": "c3fde7009-LYGOoUpG.js",
+      "sourceSha256": "3c653ac62d5f1220f0f6591e23862d6d249200aca58f7a6ea198c3f48963c778",
+      "sha256": "7f77e1f2561f366df27456111db8c3caaae8535911860be4bbef48ac890849b5",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "Ki",
+          "sha256": "59fc77cda96e6b324e25a9dfc4cb94d57e5fead9be7dc1e1bbedecdc9824060d"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "Ki": "frontmatterLabel"
+      }
+    },
+    {
+      "target": "file-frontmatter-view.mjs",
+      "source": "c3fde7009-LYGOoUpG.js",
+      "sourceSha256": "3c653ac62d5f1220f0f6591e23862d6d249200aca58f7a6ea198c3f48963c778",
+      "sha256": "a1b57ce13e6485e5ce4305ac97186180fcef8c8f40c487fe7c6b6e1c1c528ebb",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "Hi",
+          "sha256": "5c1f703ab5dd93e89013029d3f1a1628e938d86fe8aa5e3c0daa83c04b64beac"
+        },
+        {
+          "name": "Ui",
+          "sha256": "9daa03a01d844cf1fb38721ddbaad05d38fca8b85b56ffc0e851b04beae1db7c"
+        },
+        {
+          "name": "Wi",
+          "sha256": "470d18c141ab19b287d65ccb8a0dd89997f3030140026258673fdf967c1e746b"
+        },
+        {
+          "name": "Gi",
+          "sha256": "f2624a018fe35b006b1cbc020ca186b68f246c6bad1968da90e82cb921962b25"
+        },
+        {
+          "name": "qi",
+          "sha256": "7db65301ce439fd4b6846b8249acdcac58195b668b5f668ebed389ee60384e3a"
+        },
+        {
+          "name": "Ji",
+          "sha256": "3673dc587894f4db14cc335bad9a025eb866cd6d035d11486aee3ca567566f5c"
+        },
+        {
+          "name": "Yi",
+          "sha256": "9461eb958a6b5e7d2b24209e212e4c4dc6f5eaaf02ffd2d7950a14e9f1629e16"
+        },
+        {
+          "name": "Xi",
+          "sha256": "981fe51f58034e4adc5c36d6fad3970ea4b20eccc3abcaf17024baf72258f94f"
+        }
+      ],
+      "imports": [
+        {
+          "local": "r",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-CnSY1sxv.js:Ha",
+          "kind": "react"
+        },
+        {
+          "local": "I1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStoreValueFirst1",
+          "via": "shared-frame-6jtSkIit.js:Kf",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "J1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged1",
+          "via": "shared-frame-6jtSkIit.js:Qf",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "J9",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "reactMemoCache",
+          "via": "shared-frame-6jtSkIit.js:ip",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "K1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore1",
+          "via": "shared-frame-6jtSkIit.js:op",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "o",
+          "from": "react/jsx-runtime",
+          "name": "jsxs",
+          "via": "vendor-frame-CnSY1sxv.js:Ua",
+          "kind": "react"
+        },
+        {
+          "local": "c",
+          "from": "react",
+          "name": "Fragment",
+          "via": "vendor-frame-CnSY1sxv.js:Ya",
+          "kind": "react"
+        },
+        {
+          "local": "Ki",
+          "from": "./file-frontmatter-label.mjs",
+          "name": "frontmatterLabel",
+          "via": "c3fde7009-LYGOoUpG.js:Ki",
+          "kind": "generated"
+        }
+      ],
+      "exports": {
+        "qi": "Frontmatter",
+        "Ki": "frontmatterLabel"
+      }
+    },
+    {
+      "target": "path-segments.mjs",
+      "source": "c784da984-Bk3OYRhM.js",
+      "sourceSha256": "58d74e00640147b64b7bce6b186a44cf59585d99d1357cd6cfaed4efb519a0d0",
+      "sha256": "525fcb7cea9f10a04b2ec0eaf77e230e114e523ca77c1ff23ec653a06fbb782d",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "l",
+          "sha256": "6bfe6ae6ac1f7170c8edd0b6982abe6c65a43c94155cd3bb25aa959b06806642"
+        },
+        {
+          "name": "u",
+          "sha256": "1c1bf8d786f8a8da1ea81037456bcb19af7336c2cd63d8332480066114627679"
+        },
+        {
+          "name": "d",
+          "sha256": "26ad3d287364f5d25b79addd9f95199a22b9a4eae6116b764d8286738549c9d0"
+        },
+        {
+          "name": "f",
+          "sha256": "66a2496e652f03a51261582a668da2d4bf7ae3999c4d430433d3c39c7989448f"
+        },
+        {
+          "name": "p",
+          "sha256": "05573504f4e3feb67db0b54778b4f328e42353d6961820e17bdb7d4eb8d67f8e"
+        }
+      ],
+      "imports": [
+        {
+          "local": "e",
+          "from": "react",
+          "name": "useRef",
+          "via": "vendor-frame-CnSY1sxv.js:Co",
+          "kind": "react"
+        },
+        {
+          "local": "t",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-CnSY1sxv.js:Ha",
+          "kind": "react"
+        },
+        {
+          "local": "n",
+          "from": "react/jsx-runtime",
+          "name": "jsxs",
+          "via": "vendor-frame-CnSY1sxv.js:Ua",
+          "kind": "react"
+        },
+        {
+          "local": "r",
+          "from": "react/jsx-runtime",
+          "name": "Fragment",
+          "via": "vendor-frame-CnSY1sxv.js:Va",
+          "kind": "react"
+        },
+        {
+          "local": "J2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged2",
+          "via": "shared-frame-6jtSkIit.js:$f",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "a",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "cdsClassNames",
+          "via": "shared-frame-6jtSkIit.js:Hf",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "J1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged1",
+          "via": "shared-frame-6jtSkIit.js:Qf",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "K3",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore3",
+          "via": "shared-frame-6jtSkIit.js:cp",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "J3",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged3",
+          "via": "shared-frame-6jtSkIit.js:ep",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "J9",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "reactMemoCache",
+          "via": "shared-frame-6jtSkIit.js:ip",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "J5",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged5",
+          "via": "shared-frame-6jtSkIit.js:np",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "K1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore1",
+          "via": "shared-frame-6jtSkIit.js:op",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "K2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore2",
+          "via": "shared-frame-6jtSkIit.js:sp",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "K5",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore5",
+          "via": "shared-frame-6jtSkIit.js:up",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "o",
+          "from": "../code-current/path-parts.mjs",
+          "name": "splitPath",
+          "via": "shared-28-DNYlf4wu.js:Vr",
+          "kind": "code-current"
+        },
+        {
+          "local": "c",
+          "from": "../code-current/breadcrumb-measure.mjs",
+          "name": "useHeadCut",
+          "via": "ce574895a-sBAnWI9w.js:n",
+          "kind": "code-current"
+        },
+        {
+          "local": "i",
+          "from": "react",
+          "name": "useLayoutEffect",
+          "via": "vendor-frame-CnSY1sxv.js:bo",
+          "kind": "react"
+        },
+        {
+          "local": "J0",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoIsEmpty",
+          "via": "shared-frame-6jtSkIit.js:Zf",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "K0",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore0",
+          "via": "shared-frame-6jtSkIit.js:ap",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "s",
+          "from": "../code-current/breadcrumb-measure.mjs",
+          "name": "observeWidth",
+          "via": "ce574895a-sBAnWI9w.js:i",
+          "kind": "code-current"
+        }
+      ],
+      "exports": {
+        "u": "PathSegments",
+        "f": "NameThenFolder",
+        "l": "LitText"
+      }
+    },
+    {
+      "target": "diff-tree-tooltip.mjs",
+      "source": "c44d00c7f-Cr1FDL2F.js",
+      "sourceSha256": "31874ce56a3c398f49d0a45143082e60f53a56f163fe23ffe99e3379a36754c0",
+      "sha256": "e57cf1f380ac3dada4d511b2cd9a8f2bc9bcb03c289d3d9799387a21c24b05c2",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "vi",
+          "sha256": "f0e05e2bcf6a9de1fe09098ceeff0087ceb637b77d023a0e10ce798ff658757d"
+        },
+        {
+          "name": "yi",
+          "sha256": "ec3a04eb9c6e9cc1a050d8396cba4905cacebccf09042ee12541bdebf2acf1b5"
+        },
+        {
+          "name": "bi",
+          "sha256": "e3a764b8f7db2da9b2dc211149feae08395d2034cf3a0b8a89f224d35de49bf3"
+        },
+        {
+          "name": "xi",
+          "sha256": "625e6a55d36dfc63a65cabbd82e02ca098afa8d01712386c3e6ced87f4b3b042"
+        },
+        {
+          "name": "Si",
+          "sha256": "450f60d8b71eb32b6589ef97febc0a7d5875f1735b27f65e2ab597999f189c16"
+        }
+      ],
+      "imports": [
+        {
+          "local": "n",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-CnSY1sxv.js:Ha",
+          "kind": "react"
+        },
+        {
+          "local": "f",
+          "from": "react",
+          "name": "cloneElement",
+          "via": "vendor-frame-CnSY1sxv.js:eo",
+          "kind": "react"
+        },
+        {
+          "local": "I1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStoreValueFirst1",
+          "via": "shared-frame-6jtSkIit.js:Kf",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "M",
+          "from": "../../source-files-changes-adapters.jsx",
+          "name": "FilesTooltip",
+          "via": "shared-frame-6jtSkIit.js:Kl",
+          "kind": "adapter"
+        },
+        {
+          "local": "J1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged1",
+          "via": "shared-frame-6jtSkIit.js:Qf",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "K3",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore3",
+          "via": "shared-frame-6jtSkIit.js:cp",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "Z1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStoreDeps1",
+          "via": "shared-frame-6jtSkIit.js:dp",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "J3",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged3",
+          "via": "shared-frame-6jtSkIit.js:ep",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "J9",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "reactMemoCache",
+          "via": "shared-frame-6jtSkIit.js:ip",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "K4",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore4",
+          "via": "shared-frame-6jtSkIit.js:lp",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "J5",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged5",
+          "via": "shared-frame-6jtSkIit.js:np",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "K1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore1",
+          "via": "shared-frame-6jtSkIit.js:op",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "J4",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged4",
+          "via": "shared-frame-6jtSkIit.js:tp",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "K5",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore5",
+          "via": "shared-frame-6jtSkIit.js:up",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "In",
+          "from": "../code-current/path-tooltip.mjs",
+          "name": "pathTooltipContent",
+          "via": "cc5c56f5c-BoRtnbt1.js:n",
+          "kind": "code-current"
+        },
+        {
+          "local": "Ln",
+          "from": "../code-current/path-tooltip.mjs",
+          "name": "pathTooltipOptions",
+          "via": "cc5c56f5c-BoRtnbt1.js:t",
+          "kind": "code-current"
+        },
+        {
+          "local": "t",
+          "from": "react",
+          "name": "useRef",
+          "via": "vendor-frame-CnSY1sxv.js:Co",
+          "kind": "react"
+        },
+        {
+          "local": "J0",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoIsEmpty",
+          "via": "shared-frame-6jtSkIit.js:Zf",
+          "kind": "view-tabs"
+        },
+        {
+          "local": "K0",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore0",
+          "via": "shared-frame-6jtSkIit.js:ap",
+          "kind": "view-tabs"
+        }
+      ],
+      "exports": {
+        "Si": "DiffTreeRowTooltip",
+        "vi": "rowNameClipped"
+      }
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+/* Host layout of the sketch layer only. w11-sweep-rest: the 3.6556.2 toolbar/canvas carry their own classes; the
+   bar-drop utilities are in the linked c6a992d55-Che1orl5.css, the control resets are in @layer base (D26), and the
+   2.42304.0 swatch / substitute-button rules matched nothing in the 3.6556.2 output, so those local rules are gone. */
+/* R4i-small SM3: sketch glyphs use the official Anthropicons-Variable face (public shared-frame-CegduNQ2.css). */
+.spv-sketch-layer { position:absolute;inset:0;pointer-events:none; }
+.spv-pane[data-page-tools] .spv-viewport { overflow:visible; }
+.spv-sketch-layer[data-drawing] { pointer-events:auto; }
+.spv-sketch-reservation { flex:none;height:calc(var(--cds-h-control) + var(--cds-pad-xs)*2 + 1.25rem); }

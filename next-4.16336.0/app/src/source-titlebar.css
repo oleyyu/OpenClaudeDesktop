@@ -1,0 +1,218 @@
+/* Code tile paddingTop=8px + titlebar=32px. Sidebar chrome owns its separate 46px band. */
+.workspace-toolbar.st-toolbar {
+  height: 40px;
+  min-height: 40px;
+  padding: 8px 0 0;
+  gap: 0;
+}
+.st-toolbar .st-inner {
+  height: calc(2rem * var(--cds-rem-scale, 1));
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  flex: 1;
+  padding-right: var(--titlebar-end-inset, 12px);
+  position: relative;
+}
+/* W14-code r2 closeout-2 review fix: shared-6 tg (exported mp; shared-19 Gb's Code epitaxy-titlebar `${ts}`)
+   `pe-[var(--titlebar-end-inset,12px)] [[data-chat-gutter-end=shave]_&]:pe-[var(--titlebar-end-inset,0px)]`.
+   shared-18 Rb only sets --titlebar-end-inset behind the fizzy-lake "panels" gate (closed here), so the
+   trailing padding is 12px, and 0 when the chat tile's end gutter is shaved. */
+[data-chat-gutter-end=shave] .st-toolbar .st-inner { padding-right: var(--titlebar-end-inset, 0px); }
+.st-lead {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  /* Never paint over the actions when the row is narrower than the lead's floor. */
+  overflow: clip;
+  overflow-clip-margin: 3px;
+  -webkit-app-region: no-drag;
+}
+.st-origin {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--chat-gutter-start, 32px);
+  height: calc(1.5rem * var(--cds-rem-scale, 1));
+  flex: none;
+}
+/* W14-code r2 css2-chat-gutter-shave: shared-6 Wh (code-current titlebar-origin-classes originBoxClass)
+   `[[data-chat-gutter-start=shave]_&]:w-[var(--chat-gutter-start,calc(var(--chat-gutter)-(var(--tiles-gap)-var(--tiles-padding))))]`. */
+[data-chat-gutter-start=shave] .st-origin { width: var(--chat-gutter-start, calc(var(--chat-gutter) - (var(--tiles-gap) - var(--tiles-padding)))); }
+.st-origin-glyph {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--cds-h-control, 24px);
+  height: var(--cds-h-control, 24px);
+  color: var(--cds-text-primary);
+  border-radius: var(--cds-radius, 6px);
+}
+.st-title-and-pill {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: var(--cds-gap-xs, 4px);
+}
+.st-toolbar .st-title {
+  font-size: var(--cds-font-size-body, 13px);
+  font-weight: 500;
+  line-height: var(--cds-leading-body, 19px);
+  color: var(--cds-text-primary);
+}
+.st-toolbar .st-title {
+  height: var(--cds-h-control, 24px);
+  min-width: 32px;
+  padding: 0 var(--cds-pad-xs, 4px);
+  margin: 0 calc(-1 * var(--cds-pad-xs, 4px));
+  border: 0;
+  background: transparent;
+  border-radius: var(--cds-radius, 6px);
+  cursor: text;
+  text-align: left;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  user-select: none;
+}
+.st-toolbar .st-title:hover:not(:disabled) {
+  background: var(--cds-fill-ghost-hover);
+}
+.st-toolbar .st-title:disabled {
+  color: var(--cds-text-primary);
+  cursor: default;
+}
+.st-toolbar .st-title:focus-visible {
+  outline: 0;
+  box-shadow: var(--cds-focus-shadow);
+}
+/* surfaces wave 3: unscoped, the Code rename field also sits in the 4.16336.0 titlebar frame (no .st-toolbar there). */
+.st-title-input {
+  min-width: 32px;
+  max-width: min(30ch, 100%);
+  field-sizing: content;
+  height: var(--cds-leading-body, 19px);
+  background: transparent;
+  border: 0;
+  padding: 0;
+  border-radius: 3px;
+  font-size: var(--cds-font-size-body, 13px);
+  line-height: var(--cds-leading-body, 19px);
+  font-weight: 500;
+  outline: 1.5px solid var(--cds-fill-accent) !important;
+  outline-offset: 1px;
+}
+.st-title-input[aria-busy="true"] {
+  opacity: 0.65;
+}
+.st-title-input[aria-invalid="true"] {
+  outline-color: var(--cds-fill-danger) !important;
+}
+/* c593f7513 Om (8180-8205): the header session caret, a ghost icon-only Button (CaretDown sm) in text-secondary
+   between the title and the folder chip. */
+.st-session-caret {
+  flex: none;
+  color: var(--cds-text-secondary);
+}
+/* W14-code r2 fr2-21: the pill's look is c73f45bc3 Pv / Nv (titlebar-folder-pill.mjs, titlebar-spawn-lead.mjs); only the
+   host fold's floor guard stays. */
+/* surfaces wave 3: the lead box is .st-lead or, in the titlebar frame, RX's group/lead box; both carry the guard. */
+[data-folder-hidden] .st-folder {
+  display: none;
+}
+.st-toolbar .st-trailing {
+  margin-left: auto;
+  padding-left: 24px;
+  display: flex;
+  align-items: center;
+  flex: none;
+  gap: 4px;
+  -webkit-app-region: no-drag;
+}
+/* R3-topbar TT-03: no data-cramped rules. The official fold measure (cd54a5401 un) folds the toggles one by one
+   into ⋮ View options (c73f45bc3 jh / Vh); the trailing keeps its 24px (zh ps-[24px]) at every width. */
+/* W14-code r2 fr2-16 / css2-toolbutton-cds: the titlebar controls are the CDS ghost iconOnly Button (code-ui.jsx
+   ToolButton), whose own `aspect-square w-control`, rounded radius and pressed paint (group-aria-pressed/btn:bg-accent
+   under aria-pressed:text-accent) replace the hand-copied code-icon-button size and pressed rules. */
+.st-toolbar .st-section-title {
+  padding-left: var(--chat-gutter-start, 32px);
+  color: var(--cds-text-primary);
+  font-size: var(--cds-font-size-body, 13px);
+  font-weight: 500;
+}
+/* shared-6 `ps-[var(--chat-gutter-start,32px)] [[data-chat-gutter-start=shave]_&]:ps-[var(--chat-gutter-start,calc(…))]`. */
+[data-chat-gutter-start=shave] .st-toolbar .st-section-title { padding-left: var(--chat-gutter-start, calc(var(--chat-gutter) - (var(--tiles-gap) - var(--tiles-padding)))); }
+.st-title-skeleton {
+  height: 1lh;
+  width: 24ch;
+  max-width: 100%;
+  min-width: 32px;
+  background: var(--cds-alpha-2);
+  border-radius: 3px;
+  animation: st-title-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+/* W14-code r5 cleanup css5-sr-only-handcopies: the hand-copied sr-only rule is gone; the JSX uses the official c6a992d55 .sr-only. */
+
+/* B (titlebar-release-notes.js:5156-5236; 3.6556.2 cb63ed069 B): the shared Dialog (source-dialog.jsx) at size md with
+   the standard Header 'What’s new'; the popup is `flex max-h-[min(720px,85vh)] flex-col`, so only the entry list scrolls
+   (the list fills the popup to its side and bottom edges and takes the leftover height, so the popup has nothing to scroll). */
+/* W14-code r2 fr2-18: the What’s new popup, scroll area, entries, badge, groups and code spans are cb63ed069 B / H / L /
+   F's own utility classes (source-titlebar.jsx LocalReleaseNotes); the lag note is R's (fr-sb-10). */
+.archive-notice {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  color: var(--app-muted);
+  font-size: 12px;
+  padding: 8px;
+}
+.archive-notice button {
+  color: var(--cds-text-accent);
+  text-decoration: underline;
+}
+@media (prefers-reduced-motion: reduce) {
+  .st-title-skeleton {
+    animation: none;
+  }
+}
+html[data-reduce-motion="true"] .st-title-skeleton { animation: none; }
+@keyframes st-title-pulse {
+  50% {
+    opacity: 0.5;
+  }
+}
+/* Button indicator grid (shared-frame-C_2npUJq.js:2885-2905): "grid"; icon span
+   col-start-1 row-start-1; span[data-cds-part=indicator] "relative col-start-1
+   row-start-1 -me-px -mt-px self-start justify-self-end" holding sl
+   (panes-toggle-current.js:3565-3570) "block size-[4px] -me-px -mt-px
+   rounded-full bg-fill-accent" (design-system.css .rounded-full 2147483647px). */
+.st-indicator-grid {
+  display: grid;
+}
+.st-indicator-icon,
+.st-indicator {
+  grid-column-start: 1;
+  grid-row-start: 1;
+}
+.st-indicator-icon {
+  display: inline-flex;
+}
+.st-indicator {
+  position: relative;
+  margin-inline-end: -1px;
+  margin-top: -1px;
+  align-self: start;
+  justify-self: end;
+}
+.st-indicator-dot {
+  display: block;
+  width: 4px;
+  height: 4px;
+  margin-inline-end: -1px;
+  margin-top: -1px;
+  border-radius: 2147483647px;
+  background-color: var(--cds-fill-accent);
+}
+/* R2-topbar TT-02: the draft page's title is the 2.42304.0 h1[data-pane-title] (generated titlebar-draft-title.mjs),
+   styled only by its official utilities (draggable truncate ps-2.5 text-body font-medium font-control
+   text-muted-as-secondary); no local rule targets it, so nothing outside @layer utilities overrides them. */

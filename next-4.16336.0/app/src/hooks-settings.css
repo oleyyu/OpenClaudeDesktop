@@ -1,0 +1,15 @@
+/* Settings › Customize › Hooks (source-hooks-settings.jsx): the review banner and Codex's trust / on-off controls over
+   the Customize page shell (.cz-page / .cz-header / .cz-page-body, ListTable, Badge, Ee from source-customize.css).
+   Tokens only, so light and dark follow the theme. */
+.hk-body { gap: var(--cds-gap-sm, 12px); }
+.hk-intro { margin: 0; color: var(--cds-text-muted); }
+.hk-muted { margin: 0; color: var(--cds-text-secondary); line-height: 1.5; }
+.hk-review { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 12px; border-radius: 10px;
+  background: var(--cds-surface-2); color: var(--cds-text-primary); }
+.hk-error { margin: 0; color: var(--cds-text-danger); overflow-wrap: anywhere; }
+.hk-matcher, .hk-command { font-family: var(--cds-font-mono, ui-monospace, monospace); font-size: 12px; }
+.hk-command { color: var(--cds-text-primary); }
+/* The trailing cell: Trust (sm) then the switch, at the cell's end. */
+.hk-controls { display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
+/* The empty page's Open hooks.json (your Codex folder) and Open project hooks.json, side by side and centred. */
+.hk-empty-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px; }

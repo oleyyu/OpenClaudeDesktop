@@ -1,0 +1,38 @@
+reference/
+readable/
+analysis/
+tools/node_modules/
+__pycache__/
+app/node_modules/
+app/dist/
+app/public/assets/
+app/public/ui-provenance.json
+app/build/
+releases/
+harness/node_modules/
+vendor/
+work/deepseek-live-*/*-*/
+
+# work/: keep only reusable harnesses, specs and logs
+work/*
+!work/offscreen-app-integration-20260922/
+!work/deepseek-live-20261001/
+work/deepseek-live-20261001/*/
+!work/restore-batches/
+!work/fidelity-batches/
+!work/fidelity-r3/
+!work/customization/
+work/**/snapshots/
+work/**/snapshot/
+work/**/*.png
+.DS_Store
+*.log
+
+# Local scratch: Python one-offs, class dumps, the preview launcher, stale vendor builds (the referenced
+# harness/vendor-packages/*.tgz are tracked; add a newly referenced one with `git add -f`).
+output/
+.claude/
+.t5-host-test.sh
+app/cur-classes.json
+app/old-classes.json
+harness/vendor-packages/*.tgz

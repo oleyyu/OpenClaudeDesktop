@@ -1,0 +1,9 @@
+/* QueuedMessageBar: W14-code r7 r7c-01 — the bar is the original cf74bc599 VE (generated/queued-bar), drawn with its own
+   utility classes; the hand-copied .sqm-* rules of the host's restatement are gone. Its entry is shared-styles' own
+   `.epitaxy-root [data-band-enter] .epitaxy-band-enter` (opacity 0 / translate 0 6px over --cds-dur-snap,
+   --cds-ease-out, none under reduced motion), under the composer column's data-band-enter (main.jsx useBandEnter,
+   cc43287c9 Zre). Width, measure and gutters are the composer column's (`.sqm-band` in source-composer.css). */
+/* W14-code r3 review fix: shared-styles only stills the band entry under @media (prefers-reduced-motion); the local
+   "reduce motion" preference (html[data-local-motion=reduce]) keeps stilling it, on the official selector so the queued
+   bar and the archived banner both stop animating. */
+html[data-local-motion="reduce"] .epitaxy-root [data-band-enter] .epitaxy-band-enter { transition: none; }

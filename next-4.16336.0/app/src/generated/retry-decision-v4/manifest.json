@@ -1,0 +1,757 @@
+{
+  "referenceVersion": "4.16336.0",
+  "referenceSnapshot": "snapshots/claude-4.16336.0-20261104",
+  "generator": "scripts/extract-retry-decision.mjs",
+  "adapterModule": null,
+  "sharedGraph": "cds-core",
+  "sharedGraphManifestSha256": "06d2026939e5c8992713c2a0dda1b1abc9adffe7a0c223fe3c1e79eecd08d62c",
+  "isolatedGraph": {
+    "productionGraph": "src/generated/retry-decision",
+    "productionSwitchNotBeforeBatch": 6,
+    "heldBy": "session-rail sleep-band.mjs imports retryNudgeMessages from ../retry-decision/retry-nudge-messages.mjs as c73f45bc3-B7hbL7H9.js:l_ (original identity, resolved only against 3.6556.2 modules); the host imports src/generated/retry-decision"
+  },
+  "modules": [
+    {
+      "target": "define-messages.mjs",
+      "source": "vendor-intl-BJgYK7RA.js",
+      "sourceSha256": "dd77dcb059497cc4e67d90952fe82af856b23fdd623d9aa333c0646e036c7abd",
+      "sha256": "d6cf31a8e28767c7104e7501c3ec3c2899bd5f4ee0d1ddacb9740e0c9254ccd2",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "tn",
+          "sha256": "e8bcfdd6704487bca47d7ebe2c3a799667e4da8daef469e53da344bbb77d91e2"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "tn": "defineMessages"
+      }
+    },
+    {
+      "target": "logger.mjs",
+      "source": "shared-0-CnnWnVrT.js",
+      "sourceSha256": "eb5fb89d8b47627c28969bd1df41f25a49a3e1d6ed91c5af2d980d5847d78ae1",
+      "sha256": "1c233eb2d8a32b2144b5d872913d5eab9f4769eaa390b3e6457933fe29a6557d",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "N",
+          "sha256": "3af72c3d7ce0c9a457874a812d7335ab7b0007b90acda6355d05ae28f34de33c"
+        },
+        {
+          "name": "Ic",
+          "sha256": "79ddfdac8f41933c2d26fedf9856a17ef6326a67173524c795791eb1ecf1cbbf"
+        },
+        {
+          "name": "Lc",
+          "sha256": "361e0e2f898442500c699181b6730d7c2d5bb4e81bf3ee1c070bd09aa980716b"
+        },
+        {
+          "name": "Rc",
+          "sha256": "7a07e72b179a7886db563ee75b5a8bbd5115628fda0b23a9b88120a0193bda65"
+        }
+      ],
+      "imports": [
+        {
+          "local": "Fc",
+          "from": "../cds-core/shared-0.mjs",
+          "name": "Fc",
+          "via": "shared-0-CnnWnVrT.js#Fc",
+          "kind": "shared-graph",
+          "original": "Fc"
+        },
+        {
+          "local": "Ac",
+          "from": "../cds-core/shared-0.mjs",
+          "name": "Ac",
+          "via": "shared-0-CnnWnVrT.js#Ac",
+          "kind": "shared-graph",
+          "original": "Ac"
+        },
+        {
+          "local": "Pc",
+          "from": "../cds-core/shared-0.mjs",
+          "name": "Pc",
+          "via": "shared-0-CnnWnVrT.js#Pc",
+          "kind": "shared-graph",
+          "original": "Pc"
+        },
+        {
+          "local": "jc",
+          "from": "../cds-core/shared-0.mjs",
+          "name": "jc",
+          "via": "shared-0-CnnWnVrT.js#jc",
+          "kind": "shared-graph",
+          "original": "jc"
+        }
+      ],
+      "exports": {
+        "Rc": "logger",
+        "N": "logCategory"
+      }
+    },
+    {
+      "target": "prompt-text.mjs",
+      "source": "shared-62-DoCqVpIq.js",
+      "sourceSha256": "15a90aabd711c4209050f53ef48b2754661e19b090936fdc6d37346bd4cf4e56",
+      "sha256": "30c846f02869b3379888da8698b4b5c6f49a858477d2270d206b9acdbffb8eb8",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "LG",
+          "sha256": "8e13f0de782135b8792fb1f6662e15486d7b7d555403b1037675fa4a6a76f0a7"
+        },
+        {
+          "name": "RG",
+          "sha256": "de3210fd3f41692e19f07a1ab8941b1a279545c5d17b714b3504a804f46d1a17"
+        },
+        {
+          "name": "zG",
+          "sha256": "c8106e5baa0dd44ad267647bec1bc423e196f86bb83d47c4fe18d84e5f1dd7db"
+        },
+        {
+          "name": "BG",
+          "sha256": "3df23e3fca11e1653a883c355ac9e936cf171e015de7e3992f8eb29fe74c86b8"
+        },
+        {
+          "name": "WG",
+          "sha256": "de49a5c6b2523a953e080aa51a4b4d8cb28612c1763f4b20d6dd533c23184e66"
+        },
+        {
+          "name": "GG",
+          "sha256": "175f5b9f84a1d4215b46b697d2f114d8849cdca5e5fca2b38470c7ac3723a3d1"
+        },
+        {
+          "name": "KG",
+          "sha256": "896d05dab7e7408a2ca7d491c03f91f55591263150be496ec361c74667320800"
+        },
+        {
+          "name": "qG",
+          "sha256": "81adb9850f83b6457c07be641036525a78746b9f431c01304611e0f4c21e32f3"
+        },
+        {
+          "name": "JG",
+          "sha256": "d39a0e0c0611eb6eaceb955cb7871ecc911aa9902c7048071fa4b45daca0ea27"
+        },
+        {
+          "name": "YG",
+          "sha256": "5687bdb82e67d41b17f6ba3bdcb0c0db59e8b3dc289f0daaf287c12f41f2570f"
+        },
+        {
+          "name": "XG",
+          "sha256": "feecab7ced818b021acfa5ae54010b53f412e8721de383b4da80477b350443c7"
+        },
+        {
+          "name": "ZG",
+          "sha256": "b3f1177f29c4099311733a6fa616cd6b6e6a62f5f8b621cf6b1a982cc3436f9c"
+        },
+        {
+          "name": "QG",
+          "sha256": "02f8307eb419f416cd15f9d208d9c159863eb36c0e9e8c2013eb52b228eeead5"
+        },
+        {
+          "name": "_K",
+          "sha256": "98fb77c01d933b8811679ba5cf16ede495190927372d6c2acf31d8593eb19c11"
+        },
+        {
+          "name": "tq",
+          "sha256": "d52ac2cdcd41fa98cfb1960f350db3afee0eec533dd04cc67b788ae8a5921882"
+        }
+      ],
+      "imports": [
+        {
+          "local": "pG",
+          "from": "../cds-core/shared-62.mjs",
+          "name": "pG",
+          "via": "shared-62-DoCqVpIq.js#pG",
+          "kind": "shared-graph",
+          "original": "pG"
+        }
+      ],
+      "exports": {
+        "_K": "hasToolResultBlock",
+        "JG": "stripTrailingContextBlocks",
+        "tq": "isInterruptMarker",
+        "QG": "stripLeadingContextBlocks"
+      }
+    },
+    {
+      "target": "transcript-rows.mjs",
+      "source": "shared-92-BOgyxePb.js",
+      "sourceSha256": "ef73b1ca0bd064d1d7e606cdedd6c457cb99ffb02f93b7f8b00d8226941a3ada",
+      "sha256": "dce63d63abecf13b368d9c33c08f776db54e9a1f19aef89b9d9fedf5271c44c4",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "BK",
+          "sha256": "895c71ecde388b3b0e38fa2262c53f46eb227b18b3c472412b2f93eaa3f708e8"
+        },
+        {
+          "name": "VK",
+          "sha256": "5593f832ffb5f1cd19de581d1e80eb277d8037e01d2dc71b7955fe70d9f1cddc"
+        },
+        {
+          "name": "UK",
+          "sha256": "7dcabd0a3a96c544750e5580c216cece959941c5e0efc92845e117567d9c858a"
+        },
+        {
+          "name": "WK",
+          "sha256": "c338cefaba2ba60779e1a5bbe6d135e2a30e9daf7e9282d86d99048340777372"
+        },
+        {
+          "name": "GK",
+          "sha256": "15b359e296013a9ad14e9c1aeefcb4faab5489cfa26db0603cd5ad442d714253"
+        },
+        {
+          "name": "KK",
+          "sha256": "9856cf44c0a05d4d4072642fd29205558b864df0baa2befc70d00ee423b1e6fc"
+        },
+        {
+          "name": "ZK",
+          "sha256": "c8a0873d2418efc11d2105cdfb6a3d06a3ccc2bf6366b88ca8142030effa8a45"
+        },
+        {
+          "name": "aq",
+          "sha256": "01d0f9163c5edc68d1bf280ec3b108e268aade139524b3e25e1a453d67d297c8"
+        },
+        {
+          "name": "oq",
+          "sha256": "e80a6a0d306c6eea570b4868bcf980fd2bf49ff0dee2c2bd4a9870d6690f316e"
+        },
+        {
+          "name": "sq",
+          "sha256": "7f6d171881e69008b8c52065c71f494debc3b7679b22ea1676c901e8437b29d0"
+        },
+        {
+          "name": "cq",
+          "sha256": "656d1a6fb85cfedb86433c0ca237e61c257715ba240dfb30b5eba4fb717d5ed1"
+        },
+        {
+          "name": "lq",
+          "sha256": "39b0eba12ae590bb24bd3dedf1eb73b57022e2fa59bcd2e81320e7b6f5463d85"
+        },
+        {
+          "name": "uq",
+          "sha256": "897ce9be412dc10db86a617fa1af7296e316444aebfe9f9349c48a7dfa1ff673"
+        },
+        {
+          "name": "dq",
+          "sha256": "ea4540771b8b436d79d955dd24d3c5a02dbd66010e137f3f6ed0282556910cbb"
+        },
+        {
+          "name": "fq",
+          "sha256": "fed770635f26edc37a050b22a327e9fea5a4043d4b15df14518ad51e6bf4cb96"
+        },
+        {
+          "name": "mq",
+          "sha256": "01dfb1b411402f3b6eeedb3345d18673cd854466dae5519ea834164a7dbf5b22"
+        },
+        {
+          "name": "Cq",
+          "sha256": "b9b8401ec572b23bd0a8c9cf8793944924bfcff8d4311c74886f2b24aea9f954"
+        },
+        {
+          "name": "kq",
+          "sha256": "555ff6ea6e30f6269f9a7db1d2228923fe19c799efd38c743bdacf9ec7bc0802"
+        },
+        {
+          "name": "jq",
+          "sha256": "341f072155f933c1be9e8875a27c36e1ad16fdeac8e5ee60a72a829be1a63bad"
+        },
+        {
+          "name": "Mq",
+          "sha256": "198c70bbff3d55a529a47ba8d38dacfdd675b5985368e30f479e02a488b8fd1b"
+        },
+        {
+          "name": "Nq",
+          "sha256": "9be3d8ec266a6cfc8ec358c5fbf1c699593325bf31e9c90e29d5661c8f3efd24"
+        },
+        {
+          "name": "Iq",
+          "sha256": "fdd50e01f641b0c849f69323824c431f023f098856bef455c6fd2e95e753cbcc"
+        },
+        {
+          "name": "Rq",
+          "sha256": "63659ef1a0b2c96d21ed0b647e6615020b8f94d646cbc283b65cc20cd0dbb95c"
+        },
+        {
+          "name": "Hq",
+          "sha256": "7ac133acd91187ed4224a064c6a4e902958d3c9d53c97362c324758255d0e7fa"
+        },
+        {
+          "name": "Wq",
+          "sha256": "d1176dd2d1baf20af64434a542fdedb87548725ffeb5fb97961a5a4214e05808"
+        },
+        {
+          "name": "Gq",
+          "sha256": "a6a055ce2588a6f4fe32e83d52a62f5d86ad81715bd384eb28cdc396498aa8ca"
+        },
+        {
+          "name": "qq",
+          "sha256": "8720081fb2b3715a9139684a7f5cbc9c873661b63e8dc3a42b2c8c5df9baead4"
+        },
+        {
+          "name": "DJ",
+          "sha256": "5e2c81877eced9d856ff6f83babfe83b3ee619f645813e8505a913fb5480ebba"
+        },
+        {
+          "name": "OJ",
+          "sha256": "c58df4d7b3fc01135a84efb9864b134942aef0c64614b4b5ad98326ba6c8a595"
+        },
+        {
+          "name": "kJ",
+          "sha256": "f46575caa8ab9f194a869099eb5112f3dc5cf40a2c0f5e04623c9cedb8708027"
+        },
+        {
+          "name": "AJ",
+          "sha256": "741249a1f175a9b4943363c65afaca2431d9e7362abe50683e980a0eac89c1f3"
+        },
+        {
+          "name": "jJ",
+          "sha256": "d04a229c40effcb006b70775dc098c6c9a7967824289768fd54576735068fc94"
+        },
+        {
+          "name": "MJ",
+          "sha256": "ac4eabf53dffab526dadc272bfdfe8c8a71caea4bb10e875a5e66fc14c658f01"
+        },
+        {
+          "name": "NJ",
+          "sha256": "1831092c99856b176de1cf234da6f115b644655d0a73112747f5193b55157b6b"
+        },
+        {
+          "name": "FJ",
+          "sha256": "073800771db38c9ed2190259b35070618c66d946bf8b4de9433248c3767131a1"
+        },
+        {
+          "name": "IJ",
+          "sha256": "b9d78c7caa20f38dd780876d37789e4269a8f6a53b89c07ee4c6dd48020682b5"
+        },
+        {
+          "name": "LJ",
+          "sha256": "2f70455468773e6a64d7d1368954a62cba82aa0dc38fa4175353ab8d859bef7c"
+        },
+        {
+          "name": "RJ",
+          "sha256": "91d6ad09c7971706027dd52628d30b513dc1dca7c43f3cf0d54c95a3ccaa58e1"
+        },
+        {
+          "name": "zJ",
+          "sha256": "b1cdd89cca8bb5932899180ac70539410f8dc350c0afec8689af5cde1cbb7c0b"
+        },
+        {
+          "name": "BJ",
+          "sha256": "9a0b6fd958a6d7be777ab8e0326482778c2ae19bc798fb80b5a7ea47712cca09"
+        },
+        {
+          "name": "VJ",
+          "sha256": "287bc6192e5fcd029631a144695e6a7c49582bd3a4a58b1732b5c58ed0dec6eb"
+        },
+        {
+          "name": "HJ",
+          "sha256": "31105a3a3a352cc13e29705a88b6502a37c780298016ddf9db0c8a3e078ab2e5"
+        },
+        {
+          "name": "UJ",
+          "sha256": "b955bf5cf29f5e99e7eec0494e12e0be5540557ee4fb4c01dad4cc4df0bd5750"
+        },
+        {
+          "name": "WJ",
+          "sha256": "8d93406012018d3ade5e02de17f6e35b2c0bab6ff43f02ca009c0e96b1e90c9a"
+        },
+        {
+          "name": "GJ",
+          "sha256": "51715d0a93e8e31f39fd332973b46deeb520968f4531046472d2f3896efe0c56"
+        },
+        {
+          "name": "KJ",
+          "sha256": "9593acad97549095cc2a8b83f740e296157c03ba09342a934725104b3e14733d"
+        }
+      ],
+      "imports": [
+        {
+          "local": "ki",
+          "from": "./prompt-text.mjs",
+          "name": "hasToolResultBlock",
+          "via": "shared-62-DoCqVpIq.js:Kn",
+          "kind": "generated",
+          "original": "_K"
+        },
+        {
+          "local": "PJ",
+          "from": "../cds-core/shared-92.mjs",
+          "name": "PJ",
+          "via": "shared-92-BOgyxePb.js#PJ",
+          "kind": "shared-graph",
+          "original": "PJ"
+        },
+        {
+          "local": "Ga",
+          "from": "./prompt-text.mjs",
+          "name": "stripTrailingContextBlocks",
+          "via": "shared-62-DoCqVpIq.js:ur",
+          "kind": "generated",
+          "original": "JG"
+        },
+        {
+          "local": "he",
+          "from": "./logger.mjs",
+          "name": "logger",
+          "via": "shared-0-CnnWnVrT.js:IS",
+          "kind": "generated",
+          "original": "Rc"
+        },
+        {
+          "local": "P",
+          "from": "./logger.mjs",
+          "name": "logCategory",
+          "via": "shared-0-CnnWnVrT.js:FS",
+          "kind": "generated",
+          "original": "N"
+        },
+        {
+          "local": "eo",
+          "from": "./prompt-text.mjs",
+          "name": "isInterruptMarker",
+          "via": "shared-62-DoCqVpIq.js:yn",
+          "kind": "generated",
+          "original": "tq"
+        },
+        {
+          "local": "ua",
+          "from": "./prompt-text.mjs",
+          "name": "stripLeadingContextBlocks",
+          "via": "shared-62-DoCqVpIq.js:dr",
+          "kind": "generated",
+          "original": "QG"
+        }
+      ],
+      "exports": {
+        "Gq": "lastTerminalRowIndex",
+        "Wq": "pendingPromptUuid",
+        "qq": "isFailedTerminalRow",
+        "Iq": "isTerminalRow",
+        "Rq": "isHumanPromptRow"
+      }
+    },
+    {
+      "target": "non-resendable.mjs",
+      "source": "c06cf64bb-CoZso5N4.js",
+      "sourceSha256": "4c38a62c80851ebac9c1da5510d1f636dd2a160bf6ee345a88c6f9670370d8e3",
+      "sha256": "bbf7d6125b6362a91d4da7c8b1f8227d1b5a074fd10f8c36b228510602341b85",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "$w",
+          "sha256": "f8719bff2d2e76e13181a0c5b8704041376a06390969a17ef0133869707b9da8"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "$w": "NON_RESENDABLE_REJECTION"
+      }
+    },
+    {
+      "target": "common-messages.mjs",
+      "source": "c90d7fd86-iWqdaSNP.js",
+      "sourceSha256": "c9a999abc98825a99e9de34e3832a1d8d27fbc80c82c924f4caea0ef27bdcbb6",
+      "sha256": "b71b5dfd73e715fbc3158624ee64c76e2235ea5ee67d3ffac85bcfd2b9499d08",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "e",
+          "sha256": "54b1d2bab4a636017a6d404005cdc1996b698770919d3e4647a44ecc4f731f17"
+        },
+        {
+          "name": "t",
+          "sha256": "87af156cbbf8650caac50c28ebdc89f400efe894bf9e1feabf990ecc58e629f3"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "t": "commonMessages"
+      }
+    },
+    {
+      "target": "retry-nudge-messages.mjs",
+      "source": "c73f45bc3-C7dtUSq8.js",
+      "sourceSha256": "2f8cd7efecdf027935ebfc602c8dd443c1d0fd5316211e0b28fe021cf892dea5",
+      "sha256": "b0bed5852a14da1c70ebc7ee45f4f4ba5be4be2c9f92a2d4b26d60e47061a443",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "Xv",
+          "sha256": "bec3bda295d21fdf84a9e23badd43f8cd5549a7e4e6037943a5736881d444838"
+        },
+        {
+          "name": "Zv",
+          "sha256": "f12ed19ddd1f479ce2fa85d88f42ad011d4a0fc63b71ddfede70cc5e7d528e5b"
+        }
+      ],
+      "imports": [
+        {
+          "local": "Gr",
+          "from": "./define-messages.mjs",
+          "name": "defineMessages",
+          "via": "vendor-intl-BJgYK7RA.js:f",
+          "kind": "generated",
+          "original": "tn"
+        },
+        {
+          "local": "wa",
+          "from": "./common-messages.mjs",
+          "name": "commonMessages",
+          "via": "c90d7fd86-iWqdaSNP.js:t",
+          "kind": "generated",
+          "original": "t"
+        }
+      ],
+      "exports": {
+        "Xv": "retryNudgeMessages",
+        "Zv": "cannedNudges"
+      }
+    },
+    {
+      "target": "retry-decision.mjs",
+      "source": "c3e34355f-DeHzeGRt.js",
+      "sourceSha256": "58fbe6767727f0d133c4ed6e5b348c3a8185ca8f8da2d8527b7a3b2dbdf2bab4",
+      "sha256": "94ee8757081216e83f56aba60ca926d9b6ee0b546758dbc7a85f2778af4cd574",
+      "referenceVersion": "4.16336.0",
+      "bindings": [
+        {
+          "name": "Bt",
+          "sha256": "33ade5bcebe435fd5bd79bde38bba803b3487cce4d10919b0f2d4ae57915567b"
+        },
+        {
+          "name": "Vt",
+          "sha256": "554a5117b0b4e3c9cc81f2e105da95534f4a8fca280825255f0c575972201687"
+        },
+        {
+          "name": "Ht",
+          "sha256": "f305b60a5531275940f7e1d0f385ae40b50b776c6bf7657f7f28dc3076ecce24"
+        },
+        {
+          "name": "Ut",
+          "sha256": "3d6b8cc61972cbfe9eaffa0c82f0342dcef2985f088fdb1a656f76cb69593c63"
+        },
+        {
+          "name": "Wt",
+          "sha256": "0188d140ff56e0ad0444872f57cde9c8eb952bf71035b743226a15c640b43d67"
+        },
+        {
+          "name": "G",
+          "sha256": "9c03958a18b6eed61fe5997df3ccfd7c94b7f69fe16455e7ef4351ecf1135fc7"
+        },
+        {
+          "name": "Yt",
+          "sha256": "e373fa2479af08cbfd41dcdb44d6c1f336d08ac85a647f73b84fed3cff633714"
+        }
+      ],
+      "imports": [
+        {
+          "local": "dt",
+          "from": "./non-resendable.mjs",
+          "name": "NON_RESENDABLE_REJECTION",
+          "via": "c06cf64bb-CoZso5N4.js:t",
+          "kind": "generated",
+          "original": "$w"
+        },
+        {
+          "local": "F",
+          "from": "./transcript-rows.mjs",
+          "name": "lastTerminalRowIndex",
+          "via": "shared-92-BOgyxePb.js:$r",
+          "kind": "generated",
+          "original": "Gq"
+        },
+        {
+          "local": "I",
+          "from": "./transcript-rows.mjs",
+          "name": "pendingPromptUuid",
+          "via": "shared-92-BOgyxePb.js:Wr",
+          "kind": "generated",
+          "original": "Wq"
+        },
+        {
+          "local": "be",
+          "from": "./transcript-rows.mjs",
+          "name": "isFailedTerminalRow",
+          "via": "shared-92-BOgyxePb.js:Ar",
+          "kind": "generated",
+          "original": "qq"
+        }
+      ],
+      "exports": {
+        "G": "decideErrorRetry",
+        "Yt": "rejectedDraftRetryState",
+        "Bt": "lastTurnFailed",
+        "Vt": "unansweredPromptUuid",
+        "Ut": "conversationNotFound",
+        "Wt": "REPEAT_PROMPT_WINDOW_MS"
+      }
+    }
+  ],
+  "callSites": [
+    {
+      "source": "c3e34355f-DeHzeGRt.js",
+      "binding": "Kt",
+      "role": "Decision input (exported D, `qR` in cc43287c9) from the session bucket: messages snapshot, conversationLost = shownCategory cli_resume_not_found or (new in 4.16336.0) worktree_resume_refused, lastPrompt only for a desktop session (host: the WI-5 projection)",
+      "sourceSha256": "58fbe6767727f0d133c4ed6e5b348c3a8185ca8f8da2d8527b7a3b2dbdf2bab4",
+      "sha256": "0cb635acb3a0ca1073e2bf3aea901c1a25c66ea3f5b26eae5aae1e5f9edf80c0",
+      "features": [
+        "let n = e.messages.getSnapshot();",
+        "errorKilledTurn: e.errorKilledTurn,",
+        "errorRejectedPrompt: e.errorRejectedPrompt,",
+        "heldInput: e.heldInput,",
+        "desktopSession: t.desktopSession,",
+        "t.shownCategory === \"cli_resume_not_found\" ||",
+        "t.shownCategory === \"worktree_resume_refused\",",
+        {
+          "loose": "lastPrompt: (t.desktopSession && ht(n, t.canned)) || void 0,"
+        }
+      ]
+    },
+    {
+      "source": "c3e34355f-DeHzeGRt.js",
+      "binding": "qt",
+      "role": "The card's retryWouldSend (Jt, exported N, over the bucket store): ownWords / nothing / (new in 4.16336.0) heldMessage / nudge from G with an empty composer (only remote categories carry retryNeeds; not ported)",
+      "sourceSha256": "58fbe6767727f0d133c4ed6e5b348c3a8185ca8f8da2d8527b7a3b2dbdf2bab4",
+      "sha256": "ce2a2ffbe44a3346fa6031d96268a294526fb05259b1d7449e9ef18687ef7614",
+      "features": [
+        "if (e.error !== null && e.errorRejectedPrompt !== null) return \"ownWords\";",
+        {
+          "loose": "let t = G(e, { text: \"\", isEmpty: !0 });"
+        },
+        "return t === \"focus\"",
+        "? \"nothing\"",
+        ": t === \"deliver\"",
+        "? \"heldMessage\"",
+        "(t !== \"nudge\" && t !== \"nudgeBesideDraft\") ||",
+        "(e.error !== null && !e.messages.some((e) => e.type === \"assistant\"))",
+        "? \"ownWords\"",
+        ": \"nudge\";"
+      ]
+    },
+    {
+      "source": "c3e34355f-DeHzeGRt.js",
+      "binding": "Jt",
+      "role": "retryWouldSend reads the bucket store (c06cf64bb Dt) through a compiler-memoised selector — store-bound, not emitted",
+      "sourceSha256": "58fbe6767727f0d133c4ed6e5b348c3a8185ca8f8da2d8527b7a3b2dbdf2bab4",
+      "sha256": "14afc5643731c96c33e0798fa99b3eaa7d33937743323988b1c2cb7da222d0ea",
+      "features": [
+        {
+          "loose": "n = J1($, 0, t) ? K1($, 0, t, (e) => e && qt(Kt(e, t))) : $[1];"
+        },
+        {
+          "loose": "return ut(e, n);"
+        }
+      ]
+    },
+    {
+      "source": "c3e34355f-DeHzeGRt.js",
+      "role": "The decision chunk reads NON_RESENDABLE (dt) and the bucket store (ut) from c06cf64bb and the transcript rows (F / I / be) from shared-92",
+      "sourceSha256": "58fbe6767727f0d133c4ed6e5b348c3a8185ca8f8da2d8527b7a3b2dbdf2bab4",
+      "raw": true,
+      "features": [
+        "import{Dt as ut,t as dt}from\"./c06cf64bb-CoZso5N4.js\"",
+        "import{$r as F,Ar as be,Wr as I,ay as L,ey as xe,rs as Se}from\"./shared-92-BOgyxePb.js\"",
+        "G as E,",
+        "Yt as M,",
+        "Ht as A,",
+        "Kt as D,",
+        "Jt as N,"
+      ]
+    },
+    {
+      "source": "cc43287c9-dzfX-J5i.js",
+      "role": "Error-card retry handler bC (handleErrorRetry = xC): input from the bucket or the restored draft, then the outcome dispatch (new in 4.16336.0: resend carries the rejected send, personSent follows the retry timer, deliver flushes the held input and focuses only beside a draft or a held error)",
+      "sourceSha256": "4a6893cf4d24a16a99c88d0793529ff39cd1cc0abd9527ce263a54d8d26d7f43",
+      "raw": true,
+      "features": [
+        "n=(t&&qR(t,{desktopSession:_R(q),shownCategory:hS,canned:fL(I)}))??XR(dS?.restoredDraft),r=t?.errorRejectedSend??void 0",
+        "let a=dS?.retryAtMs===void 0||void 0,o=JR(n,{text:i.getText(),isEmpty:!i.hasDraft()});return o===\"resend\"?(i.submit({resendOf:r,personSent:a}),!0):o===\"nudgeBesideDraft\"&&q?(vC(q,a),i.scheduleFocus(),!0):o===\"nudge\"?(Vs(),Is(I.formatMessage(hL.retryNudge)),i.submit({retryNudge:!0,personSent:a}),!0):o===\"repeatPrompt\"&&n?.lastPrompt!==void 0?(Vs(),Is(n.lastPrompt.text),i.submit({personSent:a}),!0):(o===\"refillPrompt\"&&n?.lastPrompt!==void 0&&(Vs(),Hs(n.lastPrompt.text)),o===\"deliver\"?(w(),Pc(),(i.hasDraft()||t!==void 0&&t.error!==null&&rE(t.heldHostRedial)===null)&&i.scheduleFocus(),!0):(i.scheduleFocus(),!1))",
+        "()=>bC()?!0:(jd(Nf),!1)",
+        "handleErrorRetry:xC",
+        "retryLastTurn:SC",
+        "()=>{let e=!!(J&&C_(J));return xC(),!e}"
+      ]
+    },
+    {
+      "source": "cc43287c9-dzfX-J5i.js",
+      "role": "nudgeBesideDraft (vC over _C): a separate \"error_retry\" sendWithOutcome of the formatted retryNudge that leaves the composer draft alone",
+      "sourceSha256": "4a6893cf4d24a16a99c88d0793529ff39cd1cc0abd9527ce263a54d8d26d7f43",
+      "raw": true,
+      "features": [
+        "{sendWithOutcome:gC}=UF(\"error_retry\")",
+        "gC({ref:t,text:I.formatMessage(hL.retryNudge),uuid:crypto.randomUUID(),retryNudge:!0,personSent:n,model:Ay(t)})",
+        "\"epitaxy: error retry send failed\""
+      ]
+    },
+    {
+      "source": "cc43287c9-dzfX-J5i.js",
+      "role": "Send core (one): a local nudge never arms lastSentText (ue) and skips the failed-send restores",
+      "sourceSha256": "4a6893cf4d24a16a99c88d0793529ff39cd1cc0abd9527ce263a54d8d26d7f43",
+      "raw": true,
+      "features": [
+        "vt=ve?.retryNudge===!0&&J.type===\"local\"",
+        "vt||ue(We,_t)"
+      ]
+    },
+    {
+      "source": "cc43287c9-dzfX-J5i.js",
+      "role": "The restored-draft retry (session never started) only resends (4.16336.0 keeps the categorized one only)",
+      "sourceSha256": "4a6893cf4d24a16a99c88d0793529ff39cd1cc0abd9527ce263a54d8d26d7f43",
+      "raw": true,
+      "features": [
+        "JR(XR(Ad?.kind===\"categorized\"?Ad.restoredDraft:void 0),{text:e.getText(),isEmpty:e.isEmpty()})===\"resend\""
+      ]
+    },
+    {
+      "source": "c6b8adeaf-qnfs920E.js",
+      "role": "sendWithOutcome onError: a failed local send records NON_RESENDABLE (Jn) unless it was the retry nudge",
+      "sourceSha256": "c2aae6b8e2c98211e1d74a3b1de62b700167c4193e5a859c23f0aec7b4b65261",
+      "raw": true,
+      "features": [
+        "let{ref:a,uuid:o,isSynthetic:c,remoteRejectionCard:l,retryNudge:u}=t;",
+        "u!==!0&&B.getState().buckets[a.id]?.error===r&&B.getState().recordRejectedPrompt(a.id,Jn,h)"
+      ]
+    },
+    {
+      "source": "c06cf64bb-CoZso5N4.js",
+      "role": "Bucket store: recordRejectedPrompt (sets local_send_rejected when no error yet; new in 4.16336.0: an echoed send is dropped instead, and the rejected send is kept beside the prompt) and the NON_RESENDABLE selector",
+      "sourceSha256": "4c38a62c80851ebac9c1da5510d1f636dd2a160bf6ee345a88c6f9670370d8e3",
+      "raw": true,
+      "features": [
+        "recordRejectedPrompt(e,n,r,i,a){let o=J(e);if(o){if(a!==void 0&&t().hasEchoedUuid(e,a.uuid)){Y(e,e=>({...e,...eT}));return}if(o.error===null){if(o.pendingTurn!==null||n===null)return;D(e,{kind:\"error\",error:r,errorCategory:i?.category??\"local_send_rejected\",sshFailureReason:i?.sshFailureReason})}Y(e,e=>({...e,errorRejectedPrompt:n,errorRejectedSend:a??null}))}}",
+        "function dA(e){return e?.errorRejectedPrompt===$w}"
+      ]
+    }
+  ],
+  "importPins": [
+    {
+      "source": "cc43287c9-dzfX-J5i.js",
+      "from": "./c73f45bc3-C7dtUSq8.js",
+      "names": {
+        "lt": "hL",
+        "ct": "fL"
+      }
+    },
+    {
+      "source": "cc43287c9-dzfX-J5i.js",
+      "from": "./c3e34355f-DeHzeGRt.js",
+      "names": {
+        "E": "JR",
+        "M": "XR",
+        "D": "qR",
+        "N": "ZR"
+      }
+    },
+    {
+      "source": "c6b8adeaf-qnfs920E.js",
+      "from": "./c06cf64bb-CoZso5N4.js",
+      "names": {
+        "t": "Jn"
+      }
+    }
+  ]
+}

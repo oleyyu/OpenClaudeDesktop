@@ -1,0 +1,249 @@
+// R2-files (FT-08 / FT-10 / FT-11): the 2.42304.0 originals in src/generated/files-changes (scripts/extract-files-changes.mjs)
+// and their host wiring: generator check, controlled events for the right-click guards and Escape-repeat suppression, the
+// remembered "Uncommitted changes" set, and the CDS ShimmerText "Checking for uncommitted changes…" line.
+import test, { before, after } from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
+import React from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { createServer } from 'vite';
+import react from '@vitejs/plugin-react';
+import { extractFilesChanges } from '../scripts/extract-files-changes.mjs';
+import { withMemoCache } from './support/react-memo-cache.mjs';
+import * as official3 from '../scripts/official-3.6556.2.mjs';
+import { designEntryStylesheets } from '../scripts/current-design-assets.mjs';
+
+const ROOT = path.resolve(import.meta.dirname, '..');
+const values = new Map();
+const previousStorage = Object.getOwnPropertyDescriptor(globalThis, 'localStorage');
+let server;
+before(async () => {
+  Object.defineProperty(globalThis, 'localStorage', { configurable: true, value: { getItem: (k) => values.get(k) ?? null, setItem: (k, v) => values.set(k, String(v)), removeItem: (k) => values.delete(k) } });
+  server = await createServer({ configFile: false, root: ROOT, plugins: [react()], server: { middlewareMode: true, hmr: false, watch: null }, appType: 'custom', logLevel: 'error' });
+});
+after(async () => {
+  await server?.close();
+  if (previousStorage) Object.defineProperty(globalThis, 'localStorage', previousStorage); else delete globalThis.localStorage;
+});
+
+test('generator: the committed modules match the 3.6556.2 sources (check mode) and name their originals', async () => {
+  await extractFilesChanges({ check: true });
+  const manifest = JSON.parse(fs.readFileSync(path.join(ROOT, 'src/generated/files-changes/manifest.json'), 'utf8'));
+  assert.equal(manifest.referenceVersion, official3.referenceVersion);
+  assert.equal(manifest.referenceSnapshot, official3.referenceSnapshot);
+  const byTarget = Object.fromEntries(manifest.modules.map((entry) => [entry.target, entry]));
+  // R3-files adds the Files pane / Changes tree originals (tests/files-current-source.test.mjs covers them).
+  assert.deepEqual(Object.keys(byTarget).filter((target) => ['diff-context-guard.mjs', 'diff-scope-memory.mjs', 'editable-target.mjs', 'menu-context-guard.mjs',
+    'owner-window.mjs', 'worktree-checking.mjs'].includes(target)).sort(), ['diff-context-guard.mjs', 'diff-scope-memory.mjs', 'editable-target.mjs', 'menu-context-guard.mjs',
+    'owner-window.mjs', 'worktree-checking.mjs']);
+  // W14-code r2 closeout-2 (DC-06): the unimported shimmer-text / coarse-pointer / error-text / attribute-escape are retired.
+  for (const retired of ['shimmer-text.mjs', 'coarse-pointer.mjs', 'error-text.mjs', 'attribute-escape.mjs']) {
+    assert.equal(byTarget[retired], undefined, retired);
+    assert.equal(fs.existsSync(path.join(ROOT, 'src/generated/files-changes', retired)), false, retired);
+  }
+  // R3-files FT-16 adds the breadcrumb folder popover, its compact tree and their runtime (breadcrumb-current.test.mjs);
+  // FT-14 / FT-18 the tree rows, the worktree start folder, the multi-selection Escape and the frontmatter view
+  // (file-tree-current.test.mjs); FT-07 the Changes tree tooltip and path forms (changes-tree-current.test.mjs).
+  // 3.6556.2 (w2-files) adds folder-list-key (c0fbbe82d ri) and tree-context-menu-keys (shared-18 sk/ok); E42 splits the
+  // pure frontmatter label (c3fde7009 Ki) out of the compiled view as file-frontmatter-label. W12 diff-scope-tree adds the
+  // Changes tree memory (c44d00c7f Ta/Aa/Na), the pane body (shared-1 iC), c91a5e4a6 _ and the scope label (cccc2cf0a QS/iC);
+  // W12 diff-cont the Compare against branch label (c5da7eb42 Zf, cccc2cf0a kc).
+  assert.equal(Object.keys(byTarget).length, 67);
+  assert.deepEqual(['diff-tree-memory.mjs', 'diff-pane-body.mjs', 'node-hidden.mjs', 'diff-scope-label.mjs', 'diff-scope-base-label.mjs'].map((target) => byTarget[target]?.source),
+    ['c44d00c7f-Cr1FDL2F.js', 'shared-1-BJhqMmkf.js', 'c91a5e4a6-xMjQN7Gn.js', 'cccc2cf0a-DhZC33Gc.js', 'c5da7eb42-XijZdwf1.js']);
+  assert.equal(byTarget['menu-context-guard.mjs'].source, 'ca5db7aaf-qq5selW3.js');
+  assert.deepEqual(byTarget['menu-context-guard.mjs'].exports, { P: 'suppressNativeContextMenu' });
+  assert.equal(byTarget['diff-context-guard.mjs'].source, 'shared-1-BJhqMmkf.js');
+  assert.deepEqual(byTarget['diff-context-guard.mjs'].exports, { iK: 'preventContextMenu' });
+  assert.equal(byTarget['diff-scope-memory.mjs'].source, 'c03935b01-yhcY34vt.js');
+  assert.equal(byTarget['worktree-checking.mjs'].source, 'shared-46-BIbZBGFq.js');
+  assert.deepEqual(byTarget['worktree-checking.mjs'].exports, { GD: 'WorktreeChecking' });
+  // The ShimmerText line is the view-tabs CdsShimmer itself (D1): worktree-checking imports it, no second copy.
+  assert.deepEqual(byTarget['worktree-checking.mjs'].imports.find((entry) => entry.local === 'V'),
+    { local: 'V', from: '../view-tabs/shared-frame-6jtSkIit.js', name: 'CdsShimmer', via: 'shared-frame-6jtSkIit.js:_i', kind: 'view-tabs' });
+  const official = (name) => fs.readFileSync(path.join(official3.ionSource, name), 'utf8');
+  assert.match(official('ca5db7aaf-qq5selW3.js'), /function P\(e\)\{y\(e\.target\)\|\|e\.preventDefault\(\)\}/);
+  assert.match(official('shared-1-BJhqMmkf.js'), /function iK\(e\)\{e\.preventDefault\(\)\}/);
+  assert.match(official('c03935b01-yhcY34vt.js'), /var Un=\{kind:"branch"\},Wn=\{kind:"uncommitted"\}/);
+  assert.match(official('c03935b01-yhcY34vt.js'), /\w+\(e=>Zn\(e,"branch"\)\)/);
+});
+
+// An element stand-in for the guards: nodeType/tagName/closest/isContentEditable as the official checks read them.
+const element = (tagName, { editable } = {}) => ({ nodeType: 1, tagName, ...(editable === undefined ? {} : { isContentEditable: editable }), closest: () => null, shadowRoot: null });
+const contextEvent = (target) => ({ target, defaultPrevented: false, preventDefault() { this.defaultPrevented = true; } });
+
+test('FT-10 diffgit-17: the menu Popup guard prevents the native menu except in a text field; the Changes guard always does', async () => {
+  const { suppressNativeContextMenu } = await server.ssrLoadModule('/src/generated/files-changes/menu-context-guard.mjs');
+  const { preventContextMenu } = await server.ssrLoadModule('/src/generated/files-changes/diff-context-guard.mjs');
+  const row = contextEvent(element('DIV', { editable: false }));
+  suppressNativeContextMenu(row);
+  assert.equal(row.defaultPrevented, true, 'a menu row');
+  for (const tag of ['INPUT', 'TEXTAREA', 'SELECT']) {
+    const field = contextEvent(element(tag));
+    suppressNativeContextMenu(field);
+    assert.equal(field.defaultPrevented, false, `${tag}: the native edit menu stays`);
+  }
+  const editable = contextEvent(element('DIV', { editable: true }));
+  suppressNativeContextMenu(editable);
+  assert.equal(editable.defaultPrevented, false, 'contenteditable');
+  const changes = contextEvent(element('INPUT'));
+  preventContextMenu(changes);
+  assert.equal(changes.defaultPrevented, true);
+});
+
+// A hook dispatcher for one component call: the tree it returns, without React DOM.
+function renderOnce(component, props) {
+  const hooks = {
+    useContext: (context) => context._currentValue, useId: () => ':menu:', useState: (initial) => [typeof initial === 'function' ? initial() : initial, () => {}],
+    useRef: (initial) => ({ current: initial }), useMemo: (fn) => fn(), useCallback: (fn) => fn, useEffect() {}, useLayoutEffect() {},
+    useSyncExternalStore: (subscribe, getSnapshot, getServerSnapshot) => (getServerSnapshot ?? getSnapshot)(),
+  };
+  const internal = React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, old = internal.H;
+  internal.H = withMemoCache(hooks);
+  try { return component(props); } finally { internal.H = old; }
+}
+function find(tree, predicate) {
+  if (!tree || typeof tree !== 'object') return null;
+  if (Array.isArray(tree)) { for (const node of tree) { const hit = find(node, predicate); if (hit) return hit; } return null; }
+  if (tree.props && predicate(tree)) return tree;
+  return find(tree.props?.children ?? tree.children, predicate);
+}
+
+// R3-menu (D25) made the guard opt-in, as the 2.42304.0 call sites pass it: no handler by default, contextMenuGuard picks
+// ca5db7aaf F (true / "editable") or c82eca2bd Be ("always"), an explicit onContextMenu wins.
+test('FT-10 diffgit-17: SourceMenu.Popup opts in to ca5db7aaf F (contextMenuGuard) or takes the caller\'s handler (the Changes menu: Be)', async () => {
+  const { SourceMenu } = await server.ssrLoadModule('/src/source-menu.jsx');
+  const { suppressNativeContextMenu } = await server.ssrLoadModule('/src/generated/files-changes/menu-context-guard.mjs');
+  const { preventContextMenu } = await server.ssrLoadModule('/src/generated/files-changes/diff-context-guard.mjs');
+  const hadDocument = 'document' in globalThis;
+  if (!hadDocument) globalThis.document = { body: { nodeType: 1 }, documentElement: null };
+  try {
+    const popup = (props) => {
+      const element = renderOnce(SourceMenu.Popup, { label: 'Menu', onClose() {}, children: null, ...props });
+      return find(renderOnce(element.type, element.props), (node) => node.props.role === 'menu');
+    };
+    assert.equal(popup({}).props.onContextMenu, undefined);
+    assert.equal(popup({ contextMenuGuard: true }).props.onContextMenu, suppressNativeContextMenu);
+    assert.equal(popup({ contextMenuGuard: 'always' }).props.onContextMenu, preventContextMenu);
+    assert.equal(popup({ onContextMenu: preventContextMenu }).props.onContextMenu, preventContextMenu);
+  } finally { if (!hadDocument) delete globalThis.document; }
+  const source = fs.readFileSync(path.join(ROOT, 'src/source-diff-comments.jsx'), 'utf8');
+  assert.match(source, /dataCds="ContextMenu"\n\s+\/\/ c44d00c7f En \(c82eca2bd Be\)[^\n]*\n\s+onContextMenu=\{preventContextMenu\}/);
+});
+
+// The window stand-in: an EventTarget that receives the capture listeners keyboard-repeat (shared-19 dZ/pZ) installs.
+// Node's EventTarget reads a boolean third argument as capture in addEventListener but not in removeEventListener;
+// a browser window honours it in both, so the stand-in passes it on as {capture}.
+class OwnerWindow extends EventTarget {
+  addEventListener(type, listener, options) { super.addEventListener(type, listener, typeof options === 'boolean' ? { capture: options } : options); }
+  removeEventListener(type, listener, options) { super.removeEventListener(type, listener, typeof options === 'boolean' ? { capture: options } : options); }
+}
+function keyEvent(type, key, repeat = false) {
+  const event = new Event(type, { cancelable: true });
+  Object.assign(event, { key, repeat });
+  return event;
+}
+
+// W14-code r8 (r8pa-02): the comment card is the official c82eca2bd st (generated/pierre-changes, Changes rows and the Files
+// editor alike), its field keydown ke's own: Escape → `let t = ee(e.currentTarget); t && pe(t)` (shared-25 up, shared-19 Gj =
+// pZ) before onCancel. Gj is run here on an owner window: the held Escape's repeats are swallowed until the key is released
+// or another key is pressed.
+test('FT-10 diffgit-16: Escape in a comment field cancels and swallows its auto-repeat until the key is released', async () => {
+  const { Gj } = await server.ssrLoadModule('/src/generated/code-transcript/shared-19-DIKJVT7c.mjs');
+  const card = fs.readFileSync(path.resolve(import.meta.dirname, '../src/generated/pierre-changes/pierre-c82eca2bd-CImI7zNG.mjs'), 'utf8');
+  assert.match(card, /import \{ Gj as pe \} from "\.\.\/code-transcript\/shared-19-DIKJVT7c\.mjs";/);
+  assert.match(card, /let t = ee\(e\.currentTarget\);\s*t && pe\(t\);\s*\}\s*fe\(\);/);
+  const view = new OwnerWindow();
+  Gj(view);
+  const held = keyEvent('keydown', 'Escape', true);
+  view.dispatchEvent(held);
+  assert.equal(held.defaultPrevented, true, 'the held key repeats are swallowed');
+  view.dispatchEvent(keyEvent('keyup', 'Escape'));
+  const after = keyEvent('keydown', 'Escape', true);
+  view.dispatchEvent(after);
+  assert.equal(after.defaultPrevented, false, 'released: nothing is swallowed any more');
+  Gj(view);
+  view.dispatchEvent(keyEvent('keydown', 'a'));
+  const later = keyEvent('keydown', 'Escape', true);
+  view.dispatchEvent(later);
+  assert.equal(later.defaultPrevented, false, 'another key stops the suppression');
+});
+
+test('FT-10 diffgit-16: the selection chip hides on Escape and swallows the repeat; a text field or an open menu keeps Escape', async () => {
+  const { selectionChipEscape } = await server.ssrLoadModule('/src/source-diff-comments.jsx');
+  const view = new OwnerWindow();
+  let menuOpen = false, active = null, hidden = 0;
+  const doc = { defaultView: view, get activeElement() { return active; }, querySelector: () => (menuOpen ? {} : null) };
+  const listener = selectionChipEscape(doc, () => { hidden += 1; });
+  const press = (key, extra = {}) => {
+    const event = { key, isComposing: false, prevented: false, stopped: false, preventDefault() { this.prevented = true; }, stopPropagation() { this.stopped = true; }, ...extra };
+    listener(event);
+    return event;
+  };
+  const first = press('Escape');
+  assert.deepEqual([hidden, first.prevented, first.stopped], [1, true, true]);
+  const held = keyEvent('keydown', 'Escape', true);
+  view.dispatchEvent(held);
+  assert.equal(held.defaultPrevented, true);
+  view.dispatchEvent(keyEvent('keyup', 'Escape'));
+  press('Escape', { isComposing: true });
+  menuOpen = true; press('Escape'); menuOpen = false;
+  active = { closest: () => ({}) }; press('Escape'); active = null;
+  press('Enter');
+  assert.equal(hidden, 1);
+});
+
+test('FT-08: c03935b01 Rn keeps at most 50 sessions (least recent out), "branch" forgets, an unknown "branch" writes nothing', async () => {
+  const memory = await server.ssrLoadModule('/src/generated/files-changes/diff-scope-memory.mjs');
+  const { persistedValues } = await server.ssrLoadModule('/src/source-files-changes-adapters.jsx');
+  const KEY = `persisted.${memory.uncommittedSessionsKey}`;
+  assert.equal(KEY, 'persisted.epitaxy-diff-uncommitted-sessions');
+  values.delete(KEY);
+  for (let index = 0; index < 51; index++) memory.rememberDiffScope(`s${index}`, 'uncommitted');
+  let ids = Object.keys(JSON.parse(values.get(KEY)));
+  assert.equal(ids.length, 50);
+  assert.equal(ids.includes('s0'), false, 'the 51st pick drops the least recent session');
+  assert.equal(ids.at(-1), 's50');
+  memory.rememberDiffScope('s1', 'uncommitted');
+  ids = Object.keys(JSON.parse(values.get(KEY)));
+  assert.equal(ids.at(-1), 's1', 'picking again makes it the most recent');
+  memory.rememberDiffScope('s2', 'branch');
+  assert.equal(Object.keys(JSON.parse(values.get(KEY))).includes('s2'), false);
+  const before = values.get(KEY);
+  let writes = 0;
+  const stop = persistedValues.subscribe(memory.uncommittedSessionsKey, () => { writes += 1; });
+  memory.rememberDiffScope('never-picked', 'branch');
+  stop();
+  assert.equal(writes, 0);
+  assert.equal(values.get(KEY), before);
+  assert.deepEqual(memory.uncommittedSessionIds(null), []);
+  assert.equal(memory.sameDiffScope({ kind: 'commit', sha: 'a' }, { kind: 'commit', sha: 'a' }), true);
+});
+
+test('FT-11 diffgit-10: "Checking for uncommitted changes…" is shared-46 GD (2.42304.0 shared-19 jY) over the CDS ShimmerText', async () => {
+  const dialog = await server.ssrLoadModule('/src/source-worktree-dispose-dialog.jsx');
+  const generated = await server.ssrLoadModule('/src/generated/files-changes/worktree-checking.mjs');
+  assert.equal(dialog.WorktreeChecking, generated.WorktreeChecking);
+  const reserve = renderToStaticMarkup(React.createElement(dialog.WorktreeChecking, { hold: 'reserve' }));
+  assert.equal(reserve, '<p class="text-footnote text-muted-as-secondary mt-md invisible"><span data-cds="ShimmerText" data-shimmering="false">Checking for uncommitted changes…</span></p>');
+  const reveal = renderToStaticMarkup(React.createElement(dialog.WorktreeChecking, { hold: 'reveal' }));
+  assert.match(reveal, /^<p class="text-footnote text-muted-as-secondary mt-md animate-placeholder-reveal" aria-busy="true"><span data-cds="ShimmerText" data-shimmering="true" class="[^"]*bg-clip-text[^"]*">Checking for uncommitted changes…<\/span><\/p>$/);
+  // 3.6556.2 CdsShimmer (view-tabs, panes W9): the muted variant sets the ink variable, the gradient reads it.
+  assert.match(reveal, /\[--cds-shimmer-text-ink:var\(--cds-text-muted\)\]/, 'variant muted');
+  assert.match(reveal, /var\(--cds-shimmer-text-ink\)_37\.5%/);
+  assert.match(reveal, /animate-\[cds-shimmer-text-shine_3s_linear_infinite\]/);
+  const after = renderToStaticMarkup(React.createElement(dialog.WorktreeChecking, { hold: 'reveal', afterHeader: true }));
+  assert.doesNotMatch(after, /mt-md/, 'afterHeader (the nested-sessions confirm) drops the top margin');
+  // The classes come from the official stylesheet (utilities layer) and no local rule overrides them. The loaded utilities
+  // sheet is the current design's c6a992d55 entry sheet (current-design-assets.mjs), linked by index.html.
+  const utilitiesSheet = designEntryStylesheets.find((name) => name.startsWith('c6a992d55-'));
+  assert.ok(utilitiesSheet, 'the current design pins a c6a992d55 utilities sheet');
+  assert.ok(fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8').includes(`<link rel="stylesheet" href="/assets/v1/${utilitiesSheet}" />`));
+  const css = fs.readFileSync(path.join(ROOT, 'public/assets/v1', utilitiesSheet), 'utf8');
+  for (const name of ['.text-muted-as-secondary{', '.bg-clip-text{', '@keyframes cds-shimmer-text-shine', '[data-cds-shimmer-clone]'])
+    assert.ok(css.includes(name), name);
+  const local = fs.readdirSync(path.join(ROOT, 'src')).filter((name) => name.endsWith('.css')).map((name) => fs.readFileSync(path.join(ROOT, 'src', name), 'utf8'))
+    .join('\n').replace(/\/\*[\s\S]*?\*\//g, ''); // rules only: a comment may name the class (source-turn-error.css)
+  assert.doesNotMatch(local, /\.text-muted-as-secondary\b|\.text-footnote\s*[,{]|\[data-cds=["']?ShimmerText/);
+});

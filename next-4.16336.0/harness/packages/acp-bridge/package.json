@@ -1,0 +1,11 @@
+{
+  "name": "@code-desktop/acp-bridge",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Codex app-server protocol bridge for OpenClaude Desktop over ACP agents (Gemini CLI, Qwen Code, Kimi Code, MiniMax Code)",
+  "type": "module",
+  "main": "src/server.js",
+  "bin": { "code-desktop-acp-bridge": "bin/app-server.mjs" },
+  "engines": { "node": ">=22" },
+  "dependencies": {}
+}

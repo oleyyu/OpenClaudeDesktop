@@ -1,0 +1,122 @@
+{
+  "referenceVersion": "4.16336.0",
+  "referenceSnapshot": "snapshots/claude-4.16336.0-20261104",
+  "cdsCoreManifestSha256": "06d2026939e5c8992713c2a0dda1b1abc9adffe7a0c223fe3c1e79eecd08d62c",
+  "sourcePins": {
+    "shared-23-BRmsPtuN.js": "f52e23053cdcb6378fb347c14ff7a6243e4d89a5dfb63cf27d4b2217d2cb01c9",
+    "ce266b9be-DwMu7QWG.js": "7bc02618202f1a5008ca76f4041c55e75d1cc07267529a16658992d3535e2e86",
+    "c2bf50d9e-C85ZHUZy.js": "723e1c3426dc409b519eb4a5810e002364f3ca7b5a8dac13468ec20006230db7"
+  },
+  "roots": {
+    "useChatGreeting": {
+      "chunk": "shared-23-BRmsPtuN.js",
+      "local": "ix",
+      "alias": null,
+      "sha256": "a10b45da6abac199984c4ff5c4f2a8464d82f146d6d852d7d7f520e66b500c54"
+    },
+    "personalizedGreeting": {
+      "chunk": "shared-23-BRmsPtuN.js",
+      "local": "Hb",
+      "alias": null,
+      "sha256": "71d171b903f713aaa9b69e510c1d0d4754056dc14515f71c9c9c8ac28defa95d"
+    },
+    "HomeGreeting": {
+      "chunk": "shared-23-BRmsPtuN.js",
+      "local": "lx",
+      "alias": null,
+      "sha256": "91578fefae6991bf50fbe52389a2be556847f3754f60f214055941beacdd998c"
+    },
+    "CoworkHome": {
+      "chunk": "shared-23-BRmsPtuN.js",
+      "local": "dw",
+      "alias": null,
+      "sha256": "f4bbe9943b85a1cb251d3ae6b66b2399c375b4dffbd97532a0ef7793a9ca0c3b"
+    },
+    "homeSurfaceSlots": {
+      "chunk": "shared-23-BRmsPtuN.js",
+      "local": "uw",
+      "alias": null,
+      "sha256": "bfb42917f52ee82855fd63003f424c950457a6104d08774cc55220c8f7c02c2f"
+    },
+    "CoworkTaskList": {
+      "chunk": "shared-23-BRmsPtuN.js",
+      "local": "ZC",
+      "alias": "vn",
+      "sha256": "da248aa1044973858973f4e47ed62d83633f450cc2bda39b2d79916a0e1ffd15"
+    },
+    "ChorusCoworkSuggestions": {
+      "chunk": "ce266b9be-DwMu7QWG.js",
+      "local": "Le",
+      "alias": "ChorusCoworkSuggestions",
+      "sha256": "6e56d4e1f56c55ec40a19984e44ad4313122675bcf4aa9b20db340ec65960259"
+    },
+    "homeLayout": {
+      "chunk": "shared-19-UalAfDtn.js",
+      "local": "pS",
+      "alias": "ya",
+      "sha256": "b50a8a7e22930f3cf6b3d8f6a0e8b6bada90a2747dfcab9c539e11a62cd75975"
+    },
+    "greetingFrameClass": {
+      "chunk": "shared-19-UalAfDtn.js",
+      "local": "eS",
+      "alias": "Sa",
+      "sha256": "35d5c1a788dab3ad8c3ee6222b1839c126d31961d0f3ddef57233fa8ab2ce1d3"
+    },
+    "homeGreetingSeatClass": {
+      "chunk": "shared-33-DtdykY0y.js",
+      "local": "Ik",
+      "alias": "Zo",
+      "sha256": "624daa0dfc9002b9497aa34c28b98603f2cb5ca6de9a0a3268df64426642e3f1"
+    },
+    "COWORK_HOME_IDEAS_CATALOG": {
+      "chunk": "c2bf50d9e-C85ZHUZy.js",
+      "local": "o",
+      "alias": "COWORK_HOME_IDEAS_CATALOG",
+      "sha256": "a83df521489af574afa7d6ca7c35b0ef930a5b1b95b6d145b5099138a3ab5639"
+    }
+  },
+  "inner": {
+    "QC": {
+      "chunk": "shared-23-BRmsPtuN.js",
+      "local": "QC",
+      "alias": null,
+      "sha256": "fc03e8b2c8fa64220479d46044a4a50a35d46088a26c385adb8ec3ee74f7b51b"
+    },
+    "sw": {
+      "chunk": "shared-23-BRmsPtuN.js",
+      "local": "sw",
+      "alias": null,
+      "sha256": "9f4163b968736dc35e52dd11fd4b5a3da29c39ceabb10261b521be7ea55305f6"
+    },
+    "cw": {
+      "chunk": "shared-23-BRmsPtuN.js",
+      "local": "cw",
+      "alias": null,
+      "sha256": "db8d1cba053695072f3f168202e5756a1588eaeaf07de4c59e15f3e5a2bb8d8c"
+    },
+    "XC": {
+      "chunk": "shared-23-BRmsPtuN.js",
+      "local": "XC",
+      "alias": "gn",
+      "sha256": "2f1142723288f4b46a0d33fd6ee21caa7892753b3175dfb4fc47046d10385bac"
+    }
+  },
+  "justifiedCopies": {},
+  "previous": {
+    "referenceVersion": "3.6556.2",
+    "outputs": [
+      "src/generated/chat-home",
+      "src/generated/cowork-home"
+    ],
+    "roots": {
+      "useChatGreeting": "Dy",
+      "personalizedGreeting": "dy",
+      "HomeGreeting": "My",
+      "CoworkHome": "FS",
+      "homeSurfaceSlots": "PS",
+      "CoworkTaskList": "xS (export un)",
+      "ChorusCoworkSuggestions": "Re",
+      "COWORK_HOME_IDEAS_CATALOG": "c2bf50d9e o"
+    }
+  }
+}

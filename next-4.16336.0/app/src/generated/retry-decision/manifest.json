@@ -1,0 +1,730 @@
+{
+  "referenceVersion": "3.6556.2",
+  "referenceSnapshot": "snapshots/claude-3.6556.2-20261025-192807",
+  "generator": "scripts/extract-retry-decision.mjs",
+  "adapterModule": null,
+  "modules": [
+    {
+      "target": "define-messages.mjs",
+      "source": "vendor-intl-DYfox5Co.js",
+      "sourceSha256": "5fe49d3a34f7583ec9f95b03817a66af29352be20d8f4a49d742bd0758f6761e",
+      "sha256": "57f4e3cee5768d56e720a16d915164cef2eaee9337240a1cbbbbf53fde099eb8",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "tn",
+          "sha256": "e8bcfdd6704487bca47d7ebe2c3a799667e4da8daef469e53da344bbb77d91e2"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "tn": "defineMessages"
+      }
+    },
+    {
+      "target": "logger.mjs",
+      "source": "shared-0-DDOOdL6P.js",
+      "sourceSha256": "6e8dd35d06f3483ca7a164d358560e34bdd02a0c4d4e67fec5e71e45c1009f61",
+      "sha256": "26be682f47e23f968363cc774449af508d97ae9df346ade232667f217dffb525",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "Ni",
+          "sha256": "6ab1306a98803da82070f3ff78ba4423c4f2e77db88e1aeaf53e940dacf4adf3"
+        },
+        {
+          "name": "Fi",
+          "sha256": "0671dd1e09225ca42d44d7537a883a218b80aca9e30a453180a9fc87c8586145"
+        },
+        {
+          "name": "Ii",
+          "sha256": "1297494ed0a29faefec57e71559c05ee6e904412df247e773af3608608d09bd3"
+        },
+        {
+          "name": "Li",
+          "sha256": "66721047537e2cade0ad01c4585b1350fea754393fa8e3e78580eb446abd7df4"
+        },
+        {
+          "name": "Ri",
+          "sha256": "c1e4315688f09eeca9be08ccebd8b8fe8748bcd41ff0cc90530f61d4adbe9f46"
+        },
+        {
+          "name": "F",
+          "sha256": "5e45fc163f638fbc4ad307a94e711f0b5d23088587cbd45efb4c293b649fe846"
+        },
+        {
+          "name": "zi",
+          "sha256": "b45673ac0cc43571010aac148163d3d879bd3d64e42ff2699f3926bc96653d6d"
+        },
+        {
+          "name": "Bi",
+          "sha256": "1d174b6b23ca1987a5c466114ec7f3b3915ee5c965c0f85afeb6a7c2116b1f51"
+        },
+        {
+          "name": "Vi",
+          "sha256": "a5c245441e24387e5fc6f38d35747e8ab7d3451e930f5a56bcbf3e9d78ec6257"
+        },
+        {
+          "name": "Hi",
+          "sha256": "1b3838cce9c7f92324ea1a09f23e3fda44a07a0adc7682721936d610f1d8a027"
+        },
+        {
+          "name": "Ui",
+          "sha256": "3e19d765966edff14020cc6002dbd6f5707bfba3e1c695b6d688a915b616031c"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "Ui": "logger",
+        "F": "logCategory"
+      }
+    },
+    {
+      "target": "prompt-text.mjs",
+      "source": "shared-52-uHFNjl7C.js",
+      "sourceSha256": "83537e599f2f6720c2a0a245162e44a5c7431e22872a32ed16ea716e65ded08a",
+      "sha256": "dc96d413a3cb2d56f12f0e009d384e8058591a23e0e53bfea9434d7e2a6595f9",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "UW",
+          "sha256": "4e81a470a6ada99277939aacbaf7e87a05d7e503348033d967d0a81d6a845cc0"
+        },
+        {
+          "name": "WW",
+          "sha256": "249f4b5ddb2fab0b2a4dbe86caa660ae2d1eaa8885d89f66793d462d8560978f"
+        },
+        {
+          "name": "GW",
+          "sha256": "4d165a7931899dd1bfd0ac51e0a47fdf9397f0b6c73cb59fd8a73b7fe7cd467a"
+        },
+        {
+          "name": "KW",
+          "sha256": "b70d233774ecdfdb894f0e955a8f23480c9e27df43759d9d965bd02324cf31e2"
+        },
+        {
+          "name": "XW",
+          "sha256": "4c01476ac4c73e52a35bf5ba6775afa55b8565e6bf7c6c5a07a069eb5837708f"
+        },
+        {
+          "name": "ZW",
+          "sha256": "db3530eba351e399f93e25bdde1b325b030894515421e6829e96542f5de8fc14"
+        },
+        {
+          "name": "QW",
+          "sha256": "14f4ee7b4eee5acb5325fd1bb597bed56c3740100f6c1a042821d35e2db65d6c"
+        },
+        {
+          "name": "$W",
+          "sha256": "c66c4aa42659920ae53c07d67d383304114ae4f73323bf3395d29fbe7304932d"
+        },
+        {
+          "name": "eG",
+          "sha256": "fcf418f4237cc694b312fa6a0a348a2cdf2f64dc1021183f8745c4e884522171"
+        },
+        {
+          "name": "tG",
+          "sha256": "2b8db03de671d652e92b5873f22d43ef5c141581b920d9680bd9be7341219eed"
+        },
+        {
+          "name": "nG",
+          "sha256": "b132a5d2820a010795c5454de84730030520a1e53598e3775cb0789b9bee4eee"
+        },
+        {
+          "name": "rG",
+          "sha256": "478cd753d72042ad0714148bb3ee0ff4b5180ec1b170ed7d6c34857a85c3fd9f"
+        },
+        {
+          "name": "iG",
+          "sha256": "76d9d20ba3a5a63db14e3e6179e64111f80dbeabf7f41600cd13583ad1ac9090"
+        },
+        {
+          "name": "oG",
+          "sha256": "92449d38a89ba168efe4aa1033fe1034bc4c33b677866344fadd47059af51a04"
+        },
+        {
+          "name": "mG",
+          "sha256": "bdd5dde748146c9984e02c834717a72d851e3ff45c55c24a662515ebc55fac64"
+        },
+        {
+          "name": "TK",
+          "sha256": "288ff811353e4cd94b53a17534ed75e363d2296e8d964def82a370beba98cba9"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "oG": "hasToolResultBlock",
+        "eG": "stripTrailingContextBlocks",
+        "TK": "isInterruptMarker",
+        "iG": "stripLeadingContextBlocks"
+      }
+    },
+    {
+      "target": "transcript-rows.mjs",
+      "source": "shared-104-CTONUSaz.js",
+      "sourceSha256": "621e1186f00f5767be314b43a3f7c663adedfee5e2592ceda05c83be0baa58b6",
+      "sha256": "01490d187baa1a1b9af0b955a11ae8ebd722d6a6751d1032de5240ad9fad94f8",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "MC",
+          "sha256": "3ac198187248738858286c946a70abf30d81cb9e0392a240a2f8b4f1278823ae"
+        },
+        {
+          "name": "NC",
+          "sha256": "c20e02be476ee2deda901bb955d7c0bbd32c3daa28f96fe0f971df7c3684eb54"
+        },
+        {
+          "name": "FC",
+          "sha256": "e30181cb64ecd9b5f1465dac8a6c02e3b3e0cf8e98df0a1d9d6cc239aeff47de"
+        },
+        {
+          "name": "IC",
+          "sha256": "3322044b5f03cc22a6f4941691b4927b2daf6573187cc42fb2ed172e7902022c"
+        },
+        {
+          "name": "LC",
+          "sha256": "d0a53a19d4c9d1190d14508d2da822dbc5106c507e889f38f29197aa7f2f86f3"
+        },
+        {
+          "name": "RC",
+          "sha256": "b2e803c5694ccd59936ff84b6b1df27ee44ae9ea8a58a5977ccab6713d219e1e"
+        },
+        {
+          "name": "UC",
+          "sha256": "690f09f3761fd5d65cfccc7ea33678e688658d5750e5d03178b4b50f499ef00b"
+        },
+        {
+          "name": "ZC",
+          "sha256": "6e9ab9ec478f5a129002ab760d8b249cd738228af151cec383c4702fef793671"
+        },
+        {
+          "name": "QC",
+          "sha256": "97e2aca2a4564d0593786ccef541fa1563e7104d8723a23c7a9f3756e3ba7596"
+        },
+        {
+          "name": "$C",
+          "sha256": "e8a9d689b5eae53d4ba3c7f1b70b40d2cb8cb617a240e7d384f39ea1f8453ea3"
+        },
+        {
+          "name": "ew",
+          "sha256": "6cacfe47e0e82820de9ae9aaf45efc8bd7f983ffdc15e31aac81828f4670562d"
+        },
+        {
+          "name": "tw",
+          "sha256": "a2004011a3fd41c77f94362eb550ef5959f2b613eee3edd3ca15b4a977bef6e1"
+        },
+        {
+          "name": "nw",
+          "sha256": "dd1aef3d23f4f538f4a2ba1207c1477a0d2b1af3db4ce54acab1c4bef67de011"
+        },
+        {
+          "name": "rw",
+          "sha256": "686d37bc4c653b2dc32ac0cafd17ac6201895f5e90373f547212c736cc0a1d7f"
+        },
+        {
+          "name": "iw",
+          "sha256": "cf591627fc6d41ace347b092a30da28843ccd11d5f16fdd6ec288b5586f177b2"
+        },
+        {
+          "name": "ow",
+          "sha256": "71861f7a07c55bbe0335b22d961c954a4de532867710030e9cf4066d44079bd5"
+        },
+        {
+          "name": "hw",
+          "sha256": "fe3f4b6953f3bca950814d49773a788f7a7cefb053bc973c3266a69ce21a16a7"
+        },
+        {
+          "name": "xw",
+          "sha256": "03a2fd53dc8fe6bea66fe8475b4766a7bcd1a1cbbd430993025c7f5945d45aa6"
+        },
+        {
+          "name": "Cw",
+          "sha256": "5552fd7e2e5370a694b79282ffad0b5d17f29f5e5e433d31ecde4fa214c350b4"
+        },
+        {
+          "name": "ww",
+          "sha256": "225586789c12e9457e98410a537736357788ab0e6d1173c59f976d61b234b515"
+        },
+        {
+          "name": "Tw",
+          "sha256": "ff31b289ca974a4b715a1567abc2e528072143d5c04d88d5dff4d247f5f5e88b"
+        },
+        {
+          "name": "Ow",
+          "sha256": "a0762d822bd12567ba84ffbbb66cbf7e55eb69ec14117233a8483540e08a0298"
+        },
+        {
+          "name": "Aw",
+          "sha256": "4e2967ebbaa306355b9e5a0b663bfa4256f483ea9745864f3e34e4ae71edfb59"
+        },
+        {
+          "name": "Pw",
+          "sha256": "3d7177fd25e071a067490d8453206f648c71cebd9d5d478fa3a93f3ea79a6721"
+        },
+        {
+          "name": "Iw",
+          "sha256": "031d245a33b0e17f4511d83562055b58e0b7be9553a27ad826d19fceb285b568"
+        },
+        {
+          "name": "Lw",
+          "sha256": "495dace44db4f5e2ade404050b1d55a619bb92452ee1faba8fd2f2ec23cf5b9c"
+        },
+        {
+          "name": "zw",
+          "sha256": "2b0ae240290e2caae70cf042c00c330bc4173559c2b40fd5df37b0878c694223"
+        },
+        {
+          "name": "vT",
+          "sha256": "4b26e0228dab79bc80f527a29a429c89d76776e50fb54b48a4a0532c86b7d290"
+        },
+        {
+          "name": "yT",
+          "sha256": "ff1dd98af6c9b7bfaba9ee964be97e668db87eb89168660ed02f4ce8525bdeae"
+        },
+        {
+          "name": "bT",
+          "sha256": "f132f88111e8e425a59b1b90a1e59b5e12544b7679ff60a13f106f50351bda39"
+        },
+        {
+          "name": "xT",
+          "sha256": "655ba981536ab271189e7de9c010406b07269035e10575a1f9028b987a2981b3"
+        },
+        {
+          "name": "ST",
+          "sha256": "622e28bb5f1e7eccb8c73dd2e197dcacb21aed542441b8f668cb7a462b648367"
+        },
+        {
+          "name": "CT",
+          "sha256": "504ddc9cb09c1eb0bde79939b4325bf0e5b8aa5b4b44d3536d43a025d1a308cb"
+        },
+        {
+          "name": "wT",
+          "sha256": "a41270fae08f45f58d88fa738485d009794c995b0c678e8ad6c9913fead9c924"
+        },
+        {
+          "name": "TT",
+          "sha256": "0e3cb5e7e900cfd21e6a328bca398e5a017ac3805142c4e733a4afb72040887a"
+        },
+        {
+          "name": "ET",
+          "sha256": "0db203c2c97efd9cd3a4a393a79418e9af80cd7c7a849695d53defcade8ff748"
+        },
+        {
+          "name": "DT",
+          "sha256": "4f61e818d7a4abf6ea78a28482fa9ba8fdeb7c85b747a7a4b9ce602db8e236c8"
+        },
+        {
+          "name": "OT",
+          "sha256": "d6730b49365d21e18a45621fef4e68e7b82bc48058b8841d84f9e970aa1eb013"
+        },
+        {
+          "name": "kT",
+          "sha256": "ab09eeab41580f812ab69aff56716a68eb93ded039c75f46ae1e1f913e491115"
+        },
+        {
+          "name": "AT",
+          "sha256": "482cbd5cd2b89f312b04f9f19661c9eae194b7ab2b10b2144a394d6c1dfa8fd4"
+        },
+        {
+          "name": "jT",
+          "sha256": "81de8c7cf52d505e63395025ca62c8f7334888391930a599bfc0792a40a4c5db"
+        },
+        {
+          "name": "MT",
+          "sha256": "84c6b56ab342775469dbc975f487783df43999ba14bf154a1db3f2d7158e4900"
+        },
+        {
+          "name": "NT",
+          "sha256": "222139fb2546c8bfbacc328a1b7848f7a9c1aaac9d86d752488afe81393cf7cc"
+        },
+        {
+          "name": "PT",
+          "sha256": "c95161395ff70cf7d4b301a014325a7f896e0972906206f45338dde19375d3ab"
+        },
+        {
+          "name": "FT",
+          "sha256": "e3feb301b5689e77dd5e4f9c26d01fd2652937b6962da735a93b53bc1f50f35c"
+        },
+        {
+          "name": "IT",
+          "sha256": "45917d4714979692a973e44f384ed88987b1975f958ea9f7f93eba76472a1895"
+        },
+        {
+          "name": "LT",
+          "sha256": "f16f08ed1f29293eb59913775237816320d6307f195b11f80843cb06dc779ad3"
+        }
+      ],
+      "imports": [
+        {
+          "local": "cr",
+          "from": "./prompt-text.mjs",
+          "name": "hasToolResultBlock",
+          "via": "shared-52-uHFNjl7C.js:dn",
+          "kind": "generated",
+          "original": "oG"
+        },
+        {
+          "local": "Tr",
+          "from": "./prompt-text.mjs",
+          "name": "stripTrailingContextBlocks",
+          "via": "shared-52-uHFNjl7C.js:vn",
+          "kind": "generated",
+          "original": "eG"
+        },
+        {
+          "local": "On",
+          "from": "./logger.mjs",
+          "name": "logger",
+          "via": "shared-0-DDOOdL6P.js:vx",
+          "kind": "generated",
+          "original": "Ui"
+        },
+        {
+          "local": "K",
+          "from": "./logger.mjs",
+          "name": "logCategory",
+          "via": "shared-0-DDOOdL6P.js:_x",
+          "kind": "generated",
+          "original": "F"
+        },
+        {
+          "local": "gr",
+          "from": "./prompt-text.mjs",
+          "name": "isInterruptMarker",
+          "via": "shared-52-uHFNjl7C.js:mt",
+          "kind": "generated",
+          "original": "TK"
+        },
+        {
+          "local": "jr",
+          "from": "./prompt-text.mjs",
+          "name": "stripLeadingContextBlocks",
+          "via": "shared-52-uHFNjl7C.js:yn",
+          "kind": "generated",
+          "original": "iG"
+        }
+      ],
+      "exports": {
+        "Lw": "lastTerminalRowIndex",
+        "Iw": "pendingPromptUuid",
+        "zw": "isFailedTerminalRow",
+        "Ow": "isTerminalRow",
+        "Aw": "isHumanPromptRow"
+      }
+    },
+    {
+      "target": "non-resendable.mjs",
+      "source": "c06cf64bb-CdJdJuVd.js",
+      "sourceSha256": "c4716431066229c723e7cae696b5ab164703ffc59d038995ac100da9495b4418",
+      "sha256": "317eb482716541e4667dfd48701732179c6604775f5bedf96f68238227b9ad05",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "HC",
+          "sha256": "e31422b5d338d9758ed1678d6fadaa89838aaa50c545ba1930f14d720697702e"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "HC": "NON_RESENDABLE_REJECTION"
+      }
+    },
+    {
+      "target": "common-messages.mjs",
+      "source": "shared-9-CM21XrJw.js",
+      "sourceSha256": "7df52ad2089a9f4d40a6fe762ee3a839f8a705c9c4e6a8cd16eb68584e89f1ad",
+      "sha256": "c5bf658eeb012eebb9fa74f9830f9a4de160cdc6ec79a083256ffcf953c5886a",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "DT",
+          "sha256": "664c69fb9faac1d7e0270f983ad3274b417835a14d84cd675f52973d9bbc6acb"
+        },
+        {
+          "name": "OT",
+          "sha256": "3ebb87370b8343964c72e0d81307996073424b9da6ae6b7c26ed4b11460b340f"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "OT": "commonMessages"
+      }
+    },
+    {
+      "target": "retry-nudge-messages.mjs",
+      "source": "c73f45bc3-B7hbL7H9.js",
+      "sourceSha256": "3ae666a35e6e0d28e1b13a2e5a64384cc114f4b6f51f87c88e8bc4712c146491",
+      "sha256": "ceae0ed8e6bc92fb3c3480834b34059ee22ea091682cbb7614867ebbef8e5199",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "l_",
+          "sha256": "5895e101ee59ac9fb2a77a71c84813c46ebe694f94e8ef8c1981d138829a4e53"
+        },
+        {
+          "name": "u_",
+          "sha256": "b1a2b6ff48d479022b908bd00c390d26a314913ba57ba4f3893ca1bd092a9056"
+        }
+      ],
+      "imports": [
+        {
+          "local": "wn",
+          "from": "./define-messages.mjs",
+          "name": "defineMessages",
+          "via": "vendor-intl-DYfox5Co.js:f",
+          "kind": "generated",
+          "original": "tn"
+        },
+        {
+          "local": "ti",
+          "from": "./common-messages.mjs",
+          "name": "commonMessages",
+          "via": "shared-9-CM21XrJw.js:at",
+          "kind": "generated",
+          "original": "OT"
+        }
+      ],
+      "exports": {
+        "l_": "retryNudgeMessages",
+        "u_": "cannedNudges"
+      }
+    },
+    {
+      "target": "retry-decision.mjs",
+      "source": "cee72b629-BMo5PDZM.js",
+      "sourceSha256": "4a8f4bc1f3d9e419c1d7903cfa0c3d91f71466ebe6d598d77f58f1c18ac398c5",
+      "sha256": "3a2c5f14d65da16ec6c9f12861d4b19afb0aeeaddccc795b053a75fb0be254cd",
+      "referenceVersion": "3.6556.2",
+      "bindings": [
+        {
+          "name": "s",
+          "sha256": "fbb5ba2719f31579909e0be096349fcd0c235fdc1bc428ce5eb1737f8835a90e"
+        },
+        {
+          "name": "c",
+          "sha256": "a96742a0e7bef56ca245ae34e4fdddbc9fce8214715386bcc866e1da49268134"
+        },
+        {
+          "name": "l",
+          "sha256": "6f3d6a9fda3e5e60761ca6dc49ab77d08bb0920734310b57b565d5ac08fe9bdb"
+        },
+        {
+          "name": "u",
+          "sha256": "81ca15714f1561d30cf011bbb9e6e49eaa4b8e9a52ad59131a2d83d36fb1a8a3"
+        },
+        {
+          "name": "d",
+          "sha256": "41db22f7b1c163da32b927ac3b469b151d1e4ee7fb8f790fd1767acee4b27dbf"
+        },
+        {
+          "name": "f",
+          "sha256": "f5f6fe1f840f7c2de59571d8e6ab5c678a6e4529e0b55f7947ae17e3c7db8044"
+        },
+        {
+          "name": "g",
+          "sha256": "bb83112f72305ec16d3c0e901b0b9feea023eb547161a568c05942edd6c22d40"
+        }
+      ],
+      "imports": [
+        {
+          "local": "r",
+          "from": "./non-resendable.mjs",
+          "name": "NON_RESENDABLE_REJECTION",
+          "via": "c06cf64bb-CdJdJuVd.js:t",
+          "kind": "generated",
+          "original": "HC"
+        },
+        {
+          "local": "t",
+          "from": "./transcript-rows.mjs",
+          "name": "lastTerminalRowIndex",
+          "via": "shared-104-CTONUSaz.js:Ks",
+          "kind": "generated",
+          "original": "Lw"
+        },
+        {
+          "local": "n",
+          "from": "./transcript-rows.mjs",
+          "name": "pendingPromptUuid",
+          "via": "shared-104-CTONUSaz.js:Ls",
+          "kind": "generated",
+          "original": "Iw"
+        },
+        {
+          "local": "e",
+          "from": "./transcript-rows.mjs",
+          "name": "isFailedTerminalRow",
+          "via": "shared-104-CTONUSaz.js:Cs",
+          "kind": "generated",
+          "original": "zw"
+        }
+      ],
+      "exports": {
+        "f": "decideErrorRetry",
+        "g": "rejectedDraftRetryState",
+        "s": "lastTurnFailed",
+        "c": "unansweredPromptUuid",
+        "u": "conversationNotFound",
+        "d": "REPEAT_PROMPT_WINDOW_MS"
+      }
+    }
+  ],
+  "callSites": [
+    {
+      "source": "cee72b629-BMo5PDZM.js",
+      "binding": "p",
+      "role": "Decision input (exported n, `tR` in cc43287c9) from the session bucket: messages snapshot, conversationLost = shownCategory cli_resume_not_found, lastPrompt only for a desktop session (host: the WI-5 projection)",
+      "sourceSha256": "4a8f4bc1f3d9e419c1d7903cfa0c3d91f71466ebe6d598d77f58f1c18ac398c5",
+      "sha256": "073104ba1ab5c3f51d6e2f782c91eef3addd36f02c6da95460ef15b5cb71bc4e",
+      "features": [
+        "let n = e.messages.getSnapshot();",
+        "errorKilledTurn: e.errorKilledTurn,",
+        "errorRejectedPrompt: e.errorRejectedPrompt,",
+        "heldInput: e.heldInput,",
+        "desktopSession: t.desktopSession,",
+        "conversationLost: t.shownCategory === \"cli_resume_not_found\",",
+        {
+          "loose": "lastPrompt: (t.desktopSession && a(n, t.canned)) || void 0,"
+        }
+      ]
+    },
+    {
+      "source": "cee72b629-BMo5PDZM.js",
+      "binding": "m",
+      "role": "The card's retryWouldSend (h, exported o, over the bucket store): ownWords / nothing / nudge from f with an empty composer (only remote categories carry retryNeeds; not ported)",
+      "sourceSha256": "4a8f4bc1f3d9e419c1d7903cfa0c3d91f71466ebe6d598d77f58f1c18ac398c5",
+      "sha256": "0f7b237b51a425249f6ced18e6734ee8dd50359f2caa4ac2a4495bcdbf7cf33c",
+      "features": [
+        "if (e.error !== null && e.errorRejectedPrompt !== null) return \"ownWords\";",
+        {
+          "loose": "let t = f(e, { text: \"\", isEmpty: !0 });"
+        },
+        "return t === \"focus\"",
+        "? \"nothing\"",
+        "(t !== \"nudge\" && t !== \"nudgeBesideDraft\") ||",
+        "(e.error !== null && !e.messages.some((e) => e.type === \"assistant\"))",
+        "? \"ownWords\"",
+        ": \"nudge\";"
+      ]
+    },
+    {
+      "source": "cee72b629-BMo5PDZM.js",
+      "binding": "h",
+      "role": "retryWouldSend reads the bucket store (c06cf64bb wt) through a compiler-memoised selector — store-bound, not emitted",
+      "sourceSha256": "4a8f4bc1f3d9e419c1d7903cfa0c3d91f71466ebe6d598d77f58f1c18ac398c5",
+      "sha256": "d91aea65964735bcabde6b2a5bf95458c0d38a08870f8fb786a3452d73408d57",
+      "features": [
+        {
+          "loose": "n = J1($, 0, t) ? K1($, 0, t, (e) => e && m(p(e, t))) : $[1];"
+        },
+        {
+          "loose": "return i(e, n);"
+        }
+      ]
+    },
+    {
+      "source": "cee72b629-BMo5PDZM.js",
+      "role": "Module exports: iR = f (t), eR = g (a), tR = p (n), nR = h (o), rR = o (r), tb = l (i)",
+      "sourceSha256": "4a8f4bc1f3d9e419c1d7903cfa0c3d91f71466ebe6d598d77f58f1c18ac398c5",
+      "raw": true,
+      "features": [
+        "export{g as a,l as i,p as n,h as o,o as r,f as t}",
+        "import{t as r,wt as i}from\"./c06cf64bb-CdJdJuVd.js\"",
+        "import{Cs as e,Ks as t,Ls as n}from\"./shared-104-CTONUSaz.js\""
+      ]
+    },
+    {
+      "source": "cc43287c9-Me-M2ucD.js",
+      "role": "Error-card retry handler ES (handleErrorRetry / retryLastTurn = DS): input from the bucket or the restored draft, then the outcome dispatch",
+      "sourceSha256": "fe2e064c6172162094dff263210a6e7e8f163b703471fe20e5f5bf0a1a12ccf2",
+      "raw": true,
+      "features": [
+        "import{a as eR,n as tR,o as nR,r as rR,t as iR}from\"./cee72b629-BMo5PDZM.js\"",
+        "n=(t&&tR(t,{desktopSession:eI(q),shownCategory:Sx,canned:gF(I)}))??eR(gx?.restoredDraft)",
+        "a=iR(n,{text:r.getText(),isEmpty:!r.hasDraft()});return a===\"resend\"?(r.submit({personSent:i}),!0):a===\"nudgeBesideDraft\"&&q?(TS(q,i),r.scheduleFocus(),!0):a===\"nudge\"?(ic(),$s(I.formatMessage(rF.retryNudge)),r.submit({retryNudge:!0,personSent:i}),!0):a===\"repeatPrompt\"&&n?.lastPrompt!==void 0?(ic(),$s(n.lastPrompt.text),r.submit({personSent:i}),!0):(a===\"refillPrompt\"&&n?.lastPrompt!==void 0&&(ic(),ac(n.lastPrompt.text)),a===\"deliver\"?(Qc(),!0):(r.scheduleFocus(),!1))",
+        "()=>ES()?!0:(jd(J_),!1)",
+        "handleErrorRetry:DS",
+        "retryLastTurn:DS"
+      ]
+    },
+    {
+      "source": "cc43287c9-Me-M2ucD.js",
+      "role": "nudgeBesideDraft (TS over wS): a separate \"error_retry\" sendWithOutcome of the formatted retryNudge that leaves the composer draft alone",
+      "sourceSha256": "fe2e064c6172162094dff263210a6e7e8f163b703471fe20e5f5bf0a1a12ccf2",
+      "raw": true,
+      "features": [
+        "{sendWithOutcome:bS}=GM(\"error_retry\")",
+        "bS({ref:t,text:I.formatMessage(rF.retryNudge),uuid:crypto.randomUUID(),retryNudge:!0,personSent:n,",
+        "\"epitaxy: error retry send failed\""
+      ]
+    },
+    {
+      "source": "cc43287c9-Me-M2ucD.js",
+      "role": "Send core (one): a local nudge never arms lastSentText (ue) and skips the failed-send restores",
+      "sourceSha256": "fe2e064c6172162094dff263210a6e7e8f163b703471fe20e5f5bf0a1a12ccf2",
+      "raw": true,
+      "features": [
+        "ft=ve?.retryNudge===!0&&be.type===\"local\"",
+        "ft||ue(We,dt)"
+      ]
+    },
+    {
+      "source": "cc43287c9-Me-M2ucD.js",
+      "role": "The restored-draft retries (session never started / without worktree) only resend",
+      "sourceSha256": "fe2e064c6172162094dff263210a6e7e8f163b703471fe20e5f5bf0a1a12ccf2",
+      "raw": true,
+      "features": [
+        "iR(eR(Ad?.kind===\"categorized\"?Ad.restoredDraft:void 0),{text:e.getText(),isEmpty:e.isEmpty()})===\"resend\"",
+        "iR(eR(_S),{text:e.getText(),isEmpty:!e.hasDraft()})===\"resend\""
+      ]
+    },
+    {
+      "source": "c6b8adeaf-bLEQVSWL.js",
+      "role": "sendWithOutcome onError: a failed local send records NON_RESENDABLE (Ln) unless it was the retry nudge",
+      "sourceSha256": "a4816f285164664272b3c1c879a564205b6625361b169467694bc1b9cbd31ba8",
+      "raw": true,
+      "features": [
+        "let{ref:a,uuid:o,isSynthetic:c,remoteRejectionCard:l,retryNudge:u}=t;",
+        "u!==!0&&z.getState().buckets[a.id]?.error===r&&z.getState().recordRejectedPrompt(a.id,Ln,f)"
+      ]
+    },
+    {
+      "source": "c06cf64bb-CdJdJuVd.js",
+      "role": "Bucket store: recordRejectedPrompt (sets local_send_rejected when no error yet) and the NON_RESENDABLE selector",
+      "sourceSha256": "c4716431066229c723e7cae696b5ab164703ffc59d038995ac100da9495b4418",
+      "raw": true,
+      "features": [
+        "recordRejectedPrompt(e,t,n,r){let i=J(e);if(i){if(i.error===null){if(i.pendingTurn!==null||t===null)return;O(e,{kind:\"error\",error:n,errorCategory:r?.category??\"local_send_rejected\",sshFailureReason:r?.sshFailureReason})}Y(e,e=>({...e,errorRejectedPrompt:t}))}}",
+        "function qO(e){return e?.errorRejectedPrompt===HC}"
+      ]
+    }
+  ],
+  "importPins": [
+    {
+      "source": "cc43287c9-Me-M2ucD.js",
+      "from": "./c73f45bc3-B7hbL7H9.js",
+      "names": {
+        "ct": "rF",
+        "st": "gF"
+      }
+    },
+    {
+      "source": "cc43287c9-Me-M2ucD.js",
+      "from": "./cee72b629-BMo5PDZM.js",
+      "names": {
+        "t": "iR",
+        "a": "eR",
+        "n": "tR",
+        "o": "nR"
+      }
+    },
+    {
+      "source": "c6b8adeaf-bLEQVSWL.js",
+      "from": "./c06cf64bb-CdJdJuVd.js",
+      "names": {
+        "t": "Ln"
+      }
+    }
+  ]
+}

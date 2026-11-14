@@ -1,0 +1,27 @@
+/* ca1d33d05-syscFDea.js inline css "cdc7c802e" (readable :49): the F6 landing ring. A landing that cannot hold an
+   overlay draws the CDS focus shadow on itself; an "overlay" landing (positioned) draws it on an inset ::after above
+   its content, so a pane's own chrome does not cover it. */
+[data-focus-region-landing=""]:focus,
+[data-focus-region-landing=""][data-focus-region-around]:focus-within {
+  outline-offset: 2px;
+  box-shadow: var(--cds-focus-shadow);
+  outline: 2px solid #0000;
+}
+[data-focus-region-landing="overlay"]:focus,
+[data-focus-region-landing="overlay"][data-focus-region-around]:focus-within,
+[data-focus-region-inside]:focus {
+  outline: none;
+}
+[data-focus-region-landing="overlay"]:focus::after,
+[data-focus-region-landing="overlay"][data-focus-region-around]:focus-within::after {
+  content: "";
+  z-index: 2147483647;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 1;
+  outline-offset: -2px;
+  box-shadow: var(--cds-focus-shadow);
+  outline: 2px solid #0000;
+  position: absolute;
+  inset: 2px;
+}

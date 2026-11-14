@@ -1,0 +1,33 @@
+/* Settings → Instructions (C1). CDS tokens only, so light and dark follow the theme. */
+.ins-editor { gap:var(--cds-gap-sm); }
+/* shared-frame TextArea (cds-input rounded bg-fill-field shadow-field-ring), monospace. c0db37792 Wt: rows 3, autosize,
+   max-h-40 min-h-[5.5rem] (88px → 160px, then it scrolls), no resize grip. */
+.ins-textarea {
+  display:block; box-sizing:border-box; width:100%; min-width:0; min-height:5.5rem; max-height:10rem; margin:0; field-sizing:content; overflow-y:auto;
+  padding:var(--cds-pad-sm) var(--cds-pad-md); border:0; border-radius:var(--cds-radius);
+  background:var(--cds-fill-field); box-shadow:inset 0 0 0 1px var(--cds-fill-field-ring);
+  color:var(--cds-text-primary); font-family:var(--cds-font-code); font-weight:400; font-size:13px; line-height:19px;
+  resize:none; outline:none; tab-size:2; transition:box-shadow var(--cds-dur-fast);
+}
+.ins-textarea::placeholder { color:var(--cds-text-muted); }
+.ins-textarea:enabled:hover:not(:focus):not([data-invalid]) { box-shadow:inset 0 0 0 1px var(--cds-border-strong); }
+.ins-textarea[data-invalid] { box-shadow:inset 0 0 0 1px var(--cds-fill-danger); }
+.ins-textarea:focus-visible { box-shadow:var(--cds-focus-shadow); }
+.ins-textarea:disabled { opacity:.5; }
+.ins-editor-footer { display:flex; align-items:center; justify-content:space-between; gap:var(--cds-gap-sm); min-height:var(--cds-h-control); }
+.ins-count { color:var(--cds-text-warning, var(--cds-text-secondary)); font-size:12px; line-height:16px; font-variant-numeric:tabular-nums; }
+.ins-count[data-over] { color:var(--cds-text-danger); }
+.ins-file { display:flex; flex-wrap:wrap; align-items:center; gap:var(--cds-gap-sm); min-width:0; }
+.ins-file-path { flex:1 1 220px; min-width:0; color:var(--cds-text-muted); word-break:break-all; }
+.ins-file-status { color:var(--cds-text-secondary); font-size:12px; line-height:16px; white-space:nowrap; }
+.ins-file-actions { display:flex; align-items:center; gap:var(--cds-gap-sm); }
+.ins-preview {
+  box-sizing:border-box; width:100%; max-height:320px; margin:0; overflow:auto; padding:var(--cds-pad-sm) var(--cds-pad-md);
+  border-radius:var(--cds-radius); background:var(--cds-alpha-1); color:var(--cds-text-primary);
+  font-family:var(--cds-font-code); font-size:12px; line-height:18px; white-space:pre-wrap; overflow-wrap:anywhere; user-select:text;
+}
+.ins-preview[data-empty] { color:var(--cds-text-muted); }
+.ins-preview:focus-visible { outline:none; box-shadow:var(--cds-focus-shadow); }
+.ins-editor-actions { margin-inline-start:auto; }
+.ins-warning { margin:var(--cds-gap-sm) 0 0; color:var(--cds-text-warning, var(--cds-text-secondary)); font-size:12px; line-height:16px; }
+.ins-system-prompt { max-height:420px; }

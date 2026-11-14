@@ -1,0 +1,57 @@
+{
+  "format": 1,
+  "version": "0.162.1",
+  "description": "OpenAI Codex for OpenClaude Desktop: the official open-source Codex CLI, whose app-server speaks OpenClaude Desktop's protocol itself.",
+  "core": {
+    "id": "codex",
+    "assistant": "Codex",
+    "brand": "codex",
+    "tagline": "OpenAI’s coding agent. Sign in with your ChatGPT account or an OpenAI key.",
+    "name": "Codex",
+    "vendor": "OpenAI",
+    "engine": "codex",
+    "kind": "native",
+    "models": "OpenAI models, signed in with ChatGPT or an OpenAI API key",
+    "homepage": "https://github.com/openai/codex",
+    "license": "Apache-2.0",
+    "implies": {
+      "nativeTools": ["AskUserQuestion"],
+      "reviewReadOnly": "sandbox",
+      "codexProvider": true,
+      "collaborationModes": true,
+      "structuredOutput": true,
+      "sideQuestion": true,
+      "fileMentions": false,
+      "sandboxNetwork": "policy",
+      "shellCommands": true,
+      "hooksList": true,
+      "appsDirectory": true,
+      "threadSearch": true,
+      "titleRequest": true,
+      "agentsList": true
+    },
+    "login": {
+      "browser": [{ "type": "chatgpt", "label": "Continue with ChatGPT" }],
+      "deviceCode": [{ "type": "chatgptDeviceCode", "label": "Use a device code" }],
+      "apiKey": [{ "label": "OpenAI API key", "keyUrl": "https://platform.openai.com/api-keys" }],
+      "store": "~/.codex"
+    },
+    "home": "~/.codex",
+    "configFile": "~/.codex/config.toml",
+    "skillRoots": ["~/.codex/skills", "~/.agents/skills", "<workspace>/.agents/skills"],
+    "agent": {
+      "binary": "codex",
+      "systemPaths": ["~/.local/bin/codex", "/opt/homebrew/bin/codex", "/usr/local/bin/codex"],
+      "release": {
+        "type": "tar.gz",
+        "version": "0.162.1",
+        "tag": "rust-v0.162.1",
+        "assets": {
+          "arm64": { "name": "codex-aarch64-apple-darwin.tar.gz", "size": 98104184, "sha256": "b293a0fcdd871900a44c0a4f40a1aa401b31e02854f790ebdb8bd5d1177fd1fe" },
+          "x64": { "name": "codex-x86_64-apple-darwin.tar.gz", "size": 107055460, "sha256": "d68e39d8f62639f33f7d00656554cb9c3ef7809e664a3827e62ab3ace3c21b21" }
+        },
+        "url": "https://github.com/openai/codex/releases/download/{tag}/{name}"
+      }
+    }
+  }
+}

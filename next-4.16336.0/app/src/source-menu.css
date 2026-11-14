@@ -1,0 +1,229 @@
+/* 2.2553.1 shared-frame CDS Menu: yl portal root, Base UI positioner, pg/sg popup
+   and body, Wg/Gg items, h_ separator, g_ group label/header, p_ submenu
+   trigger, c_ shortcut, R_/yc pending skeleton, ih/oh/lh/dh sheet branch.
+   Desktop popups carry no transition or animation (pg has none and no menu
+   selector targets [data-starting-style]); only the (pointer: coarse) sheet
+   transitions. Tokens resolve through the official stylesheet's .cds-root
+   compact values: h-control 24, icon 16, radius 6 (card 10), gap-xs 6,
+   gap-md 12, footnote 12/15, opacity-disabled .4, shadow-popover. */
+.smenu-portal { pointer-events: auto; }
+.smenu-portal > * { z-index: var(--cds-portal-z); }
+.smenu-positioner { position: fixed; top: 0; left: 0; width: max-content; }
+.smenu-popup {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 128px;
+  max-width: 320px;
+  max-height: var(--available-height);
+  border-radius: calc(var(--cds-radius, 6px) + .25rem * var(--cds-rem-scale, 1));
+  background: var(--cds-surface-3);
+  box-shadow:
+    inset 0 0 0 var(--cds-ring-inner, 0px) var(--cds-ring-color, transparent),
+    0 0 0 var(--cds-ring-outer, 0px) var(--cds-ring-color, transparent),
+    var(--cds-shadow-popover);
+  color: var(--cds-text-primary);
+  font-family: var(--cds-font-sans, anthropic-sans), sans-serif;
+  font-size: var(--cds-font-size-body, 13px);
+  line-height: var(--cds-leading-body, 19px);
+  font-weight: 400;
+  outline: none;
+  -webkit-app-region: no-drag;
+}
+.smenu-popup[data-cds="ModelSelector"] { max-width: min(26rem, var(--available-width, 100vw)); }
+/* Footer account menu: pw passes lr className "w-[17rem]" (sidebar-groups.js:5250-5253), which
+   shared-21 ZB hands to $B's J.Popup (:15918-15924, :15995-16000); its Learn more child popup is
+   "min-w-[208px]" (sidebar-rows.js:16362). Declared before .smenu-sheet, which keeps full width. */
+.smenu-popup.account-menu { width: 17rem; }
+.smenu-popup.account-learn-more { min-width: 208px; }
+/* 3.6556.2 shared-frame-6jtSkIit QC (plain body) and $C (the list under a header) both begin "relative min-h-0
+   overflow-y-auto overflow-x-hidden scroll-fade-y …": the body is the containing block of its absolutely placed rows'
+   parts and never scrolls sideways. */
+.smenu-body {
+  position: relative;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  border-radius: inherit;
+  border-bottom: var(--cds-ring-inner, 0px) solid transparent;
+  padding: 4px;
+}
+/* 2.42304.0 shared-frame Hx with a header or footer: "flex min-h-0 flex-col overflow-hidden rounded-[inherit]";
+   header zx "shrink-0 px-[var(--cds-menu-gutter,0.25rem)] pt-[var(--cds-menu-gutter,0.25rem)]"; the list Rx
+   "min-h-0 flex-1 overflow-y-auto …" with " pt-0" under a header (its border-radius stays on the frame); footer Bx
+   "-mt-[var(--cds-menu-gutter,0.25rem)] shrink-0 px-[…] pb-[…]". forced-colors:border-b-0 as in Lx/Rx. */
+.smenu-frame { display: flex; min-height: 0; flex-direction: column; overflow: hidden; border-radius: inherit; }
+.smenu-frame-header { flex-shrink: 0; padding: var(--cds-menu-gutter, .25rem) var(--cds-menu-gutter, .25rem) 0; }
+.smenu-frame > .smenu-body { flex: 1; border-radius: 0; }
+.smenu-body[data-after-header] { padding-top: 0; }
+.smenu-frame-footer {
+  flex-shrink: 0;
+  margin-top: calc(-1 * var(--cds-menu-gutter, .25rem));
+  padding: 0 var(--cds-menu-gutter, .25rem) var(--cds-menu-gutter, .25rem);
+}
+@media (forced-colors: active) { .smenu-body { border-bottom-width: 0; } }
+
+/* Wg/Gg item */
+.smenu-item {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  gap: var(--cds-gap-xs, 6px);
+  padding: calc((var(--cds-h-control, 24px) - var(--cds-leading-body, 19px)) / 2) 8px;
+  border: 0;
+  border-radius: var(--cds-radius, 6px);
+  background: transparent;
+  color: var(--cds-text-primary);
+  font: inherit;
+  font-weight: 400;
+  text-align: left;
+  user-select: none;
+  cursor: default;
+  outline: none;
+}
+.smenu-item[data-description] {
+  padding-bottom: calc((var(--cds-h-control, 24px) - var(--cds-font-size-body, 13px) - var(--cds-leading-footnote, 15px) + var(--cds-font-size-footnote, 12px)) / 2);
+}
+.smenu-item[data-highlighted] { background: var(--cds-fill-ghost-hover); }
+.smenu-item[data-variant="danger"] { color: var(--cds-text-danger); }
+.smenu-item[data-variant="danger"][data-highlighted] { background: var(--cds-fill-danger); color: var(--cds-on-danger); }
+.smenu-item[data-variant="danger"][data-highlighted] .smenu-description,
+.smenu-item[data-variant="danger"][data-highlighted] .smenu-hint { color: var(--cds-on-danger); }
+/* shared-frame :8671 danger item: data-[highlighted]:[--cds-shortcut-cap-ink:currentColor]. */
+.smenu-item[data-variant="danger"][data-highlighted] { --cds-shortcut-cap-ink: currentColor; }
+.smenu-item[data-disabled] { opacity: var(--cds-opacity-disabled, .4); pointer-events: none; }
+.smenu-item[data-popup-open] { background: var(--cds-fill-ghost-hover); }
+.smenu-submenu-trigger { justify-content: space-between; }
+.smenu-reason { display: block; width: 100%; }
+.smenu-icon { display: flex; flex-shrink: 0; align-items: center; justify-content: center; width: var(--cds-icon, 16px); height: var(--cds-icon, 16px); }
+.smenu-copy { display: flex; flex: 1; min-width: 0; flex-direction: column; }
+.smenu-copy-single { flex: 1; min-width: 0; }
+.smenu-label, .smenu-description { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.smenu-description {
+  padding-block: .125em;
+  margin-block: -.125em;
+  color: var(--cds-text-muted);
+  font-size: var(--cds-font-size-footnote, 12px);
+  line-height: var(--cds-leading-footnote, 15px);
+}
+.smenu-trailing { display: flex; flex-shrink: 0; align-items: center; gap: var(--cds-gap-xs, 6px); margin-left: var(--cds-gap-md, 12px); }
+.smenu-check {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: var(--cds-icon, 16px);
+  height: var(--cds-icon, 16px);
+  color: var(--cds-fill-accent);
+}
+.smenu-check[data-bare] { margin-right: -4px; }
+.smenu-hint {
+  max-width: 160px;
+  flex-shrink: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding-block: .125em;
+  margin-block: -.125em;
+  color: var(--cds-text-muted);
+  font-size: var(--cds-font-size-footnote, 12px);
+  line-height: var(--cds-leading-footnote, 15px);
+}
+.smenu-hint[data-accent] { color: var(--cds-fill-accent); }
+/* c_: the Shortcut text variant (source-shortcut.css .scds-text, glyphs in --cds-shortcut-cap-ink)
+   at text-footnote; tabular-nums for a digit-only key (s_). */
+.smenu-shortcut.scds-text {
+  font-size: var(--cds-font-size-footnote, 12px);
+  line-height: var(--cds-leading-footnote, 15px);
+  white-space: nowrap;
+}
+.smenu-hint[data-numeric], .smenu-shortcut[data-numeric] { font-variant-numeric: tabular-nums; }
+.smenu-caret { flex-shrink: 0; margin-right: -4px; color: var(--cds-text-muted); }
+.smenu-separator { height: 1px; margin: 4px 8px; background: var(--cds-border); }
+.smenu-group-label, .smenu-header {
+  padding: 4px 8px;
+  color: var(--cds-text-muted);
+  font-size: var(--cds-font-size-footnote, 12px);
+  line-height: var(--cds-leading-footnote, 15px);
+  font-weight: 500;
+}
+.smenu-header-line { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.smenu-header-secondary { font-weight: 400; }
+@media (pointer: coarse) {
+  .smenu-shortcut.scds-shortcut, .smenu-trailing[data-shortcut-only] { display: none; }
+  .smenu-check[data-coarse-bare] { margin-right: -4px; }
+}
+
+/* R_/yc pending skeleton */
+.smenu-pending { overflow: hidden; }
+.smenu-skeleton-row { display: flex; align-items: center; height: var(--cds-h-control, 24px); gap: var(--cds-gap-xs, 6px); padding-inline: 8px; }
+.smenu-skeleton {
+  position: relative;
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  border-radius: var(--cds-radius, 6px);
+  background: var(--cds-skeleton-base, var(--cds-alpha-1));
+}
+.smenu-skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, var(--cds-skeleton-sheen, var(--cds-alpha-1)), transparent);
+  animation: cds-shimmer 2s linear infinite;
+}
+/* W14-code r5 cleanup css5-sr-only-handcopies: the hand-copied sr-only rule is gone; the JSX uses the official c6a992d55 .sr-only. */
+@media (prefers-reduced-motion: reduce) { .smenu-skeleton::after { display: none; } }
+[data-reduce-motion="true"] .smenu-skeleton::after, html[data-local-motion="reduce"] .smenu-skeleton::after { display: none; }
+
+/* Sheet branch (pointer: coarse only): ih/oh/lh/dh/fh classes. */
+.smenu-sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  background: var(--cds-backdrop);
+  transition: opacity var(--cds-dur-sheet, .3s) var(--cds-ease-out, cubic-bezier(.165, .84, .44, 1));
+}
+.smenu-sheet-backdrop[data-starting-style], .smenu-sheet-backdrop[data-ending-style] { opacity: 0; }
+.smenu-popup.smenu-sheet {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  min-width: 0;
+  max-width: none;
+  max-height: calc(100dvh - 2rem);
+  overflow: hidden;
+  border-radius: calc(var(--cds-radius, 6px) + .25rem * var(--cds-rem-scale, 1)) calc(var(--cds-radius, 6px) + .25rem * var(--cds-rem-scale, 1)) 0 0;
+  padding-bottom: max(env(safe-area-inset-bottom), .5rem);
+  transform-origin: top;
+  transition:
+    translate var(--cds-dur-sheet, .3s) var(--cds-ease-out, cubic-bezier(.165, .84, .44, 1)),
+    height var(--cds-dur-sheet, .3s) var(--cds-ease-out, cubic-bezier(.165, .84, .44, 1)),
+    scale var(--cds-dur-sheet, .3s) var(--cds-ease-out, cubic-bezier(.165, .84, .44, 1));
+}
+.smenu-popup.smenu-sheet::after {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--cds-backdrop);
+  opacity: 0;
+  transition: opacity var(--cds-dur-sheet, .3s) var(--cds-ease-out, cubic-bezier(.165, .84, .44, 1));
+}
+.smenu-popup.smenu-sheet[data-starting-style], .smenu-popup.smenu-sheet[data-ending-style] { translate: 0 calc(100% + 1.5rem); }
+.smenu-popup.smenu-sheet[data-cds-sheet-covered]:not([data-starting-style]):not([data-ending-style]) { translate: 0 -12px; }
+.smenu-popup.smenu-sheet[data-cds-sheet-covered] { scale: .94; }
+.smenu-popup.smenu-sheet[data-cds-sheet-covered]::after { opacity: 1; }
+.smenu-sheet .smenu-body { overscroll-behavior: contain; }
+@media (prefers-reduced-motion: reduce) {
+  .smenu-sheet-backdrop, .smenu-popup.smenu-sheet, .smenu-popup.smenu-sheet::after { transition: none; }
+}
+html[data-reduce-motion="true"] .smenu-popup.smenu-sheet::after { transition: none; }
+[data-reduce-motion="true"] .smenu-sheet-backdrop, [data-reduce-motion="true"] .smenu-popup.smenu-sheet,
+html[data-local-motion="reduce"] .smenu-sheet-backdrop, html[data-local-motion="reduce"] .smenu-popup.smenu-sheet { transition: none; }
+
+/* The skill description (3.6556.2 c17e03edc-fLVjIlvB d) is the view-tabs CDS Tooltip; it carries its own classes. */

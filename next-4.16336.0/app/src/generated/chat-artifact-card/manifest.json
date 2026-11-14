@@ -1,0 +1,1085 @@
+{
+  "referenceVersion": "3.6556.2",
+  "referenceSnapshot": "snapshots/claude-3.6556.2-20261025-192807",
+  "generator": "scripts/extract-chat-artifact-card.mjs",
+  "adapterModule": "src/source-chat-artifact-card-adapters.jsx",
+  "modules": [
+    {
+      "target": "artifact-type.mjs",
+      "source": "shared-104-CTONUSaz.js",
+      "referenceVersion": "3.6556.2",
+      "sourceSha256": "621e1186f00f5767be314b43a3f7c663adedfee5e2592ceda05c83be0baa58b6",
+      "sha256": "4e53e791ec50c89d70b7afcdc6ca9291351afce8e1b3898b73e9b0fec3098b01",
+      "bindings": [
+        {
+          "name": "Q",
+          "sha256": "6a516722a86b9b61393df4ead653ade0bd23e8299312231180d8f5a52da23aaf"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "Q": "ArtifactType"
+      },
+      "features": {
+        "Q": [
+          "(e.Text = \"text/plain\")",
+          "(e.Markdown = \"text/markdown\")",
+          "(e.Html = \"text/html\")",
+          "(e.Code = \"application/vnd.ant.code\")",
+          "(e.Svg = \"image/svg+xml\")",
+          "(e.Mermaid = \"application/vnd.ant.mermaid\")",
+          "(e.React = \"application/vnd.ant.react\")"
+        ]
+      }
+    },
+    {
+      "target": "artifact-icons.mjs",
+      "source": "vendor-icons-BplZ6UOJ.js",
+      "referenceVersion": "3.6556.2",
+      "sourceSha256": "3b83720e6e8dd9d4d09c7a28948054a65b2137e5f55b764d38aca75122e4117a",
+      "sha256": "7af040c84de957245c83dc4e4a741b7e0e8d4b4f15053d0b86dd0c224443022e",
+      "bindings": [
+        {
+          "name": "P",
+          "sha256": "f011857544cc66cb822fcc483bde71ee9c397a3729fa5d8bc63d04ed0a96bb7c"
+        },
+        {
+          "name": "F",
+          "sha256": "e7c5557c07e2dee315080450792b50ea127c6258f3f6165a8eb1a012ad1fad30"
+        },
+        {
+          "name": "I",
+          "sha256": "3e6569ebee42312f343760a5935f3baccf1ecc2d67bcd42c064a700d52d5ba6d"
+        },
+        {
+          "name": "L",
+          "sha256": "cd56da63ab49bc2e9c6a45ed175ed21b60e19298a68581d2d7619f19466f42cd"
+        },
+        {
+          "name": "R",
+          "sha256": "387b4e5aabaf87dc749ed9a38a71cc3b452d443802c3c9b74eae6932dbe59f55"
+        },
+        {
+          "name": "z",
+          "sha256": "0772734ff2f170b93c8a3be012db9d4361cce8245177f891e7d4464607ce82d1"
+        },
+        {
+          "name": "B",
+          "sha256": "0795e06678e0ef415b5945e165eaf4accf6568d62c956d3e80501cb591ffa7ec"
+        },
+        {
+          "name": "V",
+          "sha256": "74535b775e00b8c077fe5b42c6a9c9231ca5ed4f6b4291222f195c1e7bd35682"
+        }
+      ],
+      "imports": [
+        {
+          "local": "n",
+          "from": "react",
+          "name": "forwardRef",
+          "via": "vendor-frame-CnSY1sxv.js:io",
+          "kind": "react",
+          "original": "io"
+        },
+        {
+          "local": "r",
+          "from": "react",
+          "name": "createElement",
+          "via": "vendor-frame-CnSY1sxv.js:no",
+          "kind": "react",
+          "original": "no"
+        },
+        {
+          "local": "o",
+          "from": "../cowork-scheduled/vendor-icons-BplZ6UOJ.mjs",
+          "name": "o",
+          "via": "vendor-icons-BplZ6UOJ.js#o",
+          "kind": "linked",
+          "original": "o"
+        },
+        {
+          "local": "e",
+          "from": "react",
+          "name": "Fragment",
+          "via": "vendor-frame-CnSY1sxv.js:Ya",
+          "kind": "react",
+          "original": "Ya"
+        }
+      ],
+      "exports": {
+        "V": "ImageIcon",
+        "z": "CodeIcon",
+        "I": "AtomIcon"
+      },
+      "features": {
+        "V": [
+          "weights: B"
+        ],
+        "z": [
+          "z = R"
+        ],
+        "I": [
+          "I = F"
+        ]
+      }
+    },
+    {
+      "target": "transcript-layout.mjs",
+      "source": "shared-2-TF8v67kg.js",
+      "referenceVersion": "3.6556.2",
+      "sourceSha256": "d30345487454935271d15e07a03026f8965584d83c9fcc4f5d7f9175687a14fc",
+      "sha256": "60e95bf1d45b3aebc04cb32d5419609ef967371ac1f2561a94755b7146386012",
+      "bindings": [
+        {
+          "name": "mT",
+          "sha256": "904a14acdaeb6dcd3d1337f1c42234ebf8415c777b752266c79f9d57a02b40bc"
+        },
+        {
+          "name": "hT",
+          "sha256": "ddf4c12d0dc8a6ca9c4890bbd5a2c054a563c542ca5a1a6711dbf646bc83db01"
+        },
+        {
+          "name": "gT",
+          "sha256": "580af2eff4d2b3bacdd85f20310371c655a2aa8432eef805f6dd4eadbeae22cf"
+        },
+        {
+          "name": "_T",
+          "sha256": "124b64b3be570e10876f08d7816b8083b2ee0c45ebf629705f12e671b6eeeb2a"
+        },
+        {
+          "name": "vT",
+          "sha256": "8d8b863642275b814598cc689faadbad16214b989e1e7a0252ef19f1af3fdcaa"
+        },
+        {
+          "name": "_2",
+          "sha256": "99af7941bd7704f48d5f6b9dd68e24b3ee1b24b24ab7576ae07f3c5134ffb63c"
+        },
+        {
+          "name": "y2",
+          "sha256": "c1f8f9a5a9c6d4e85a09916b05372d89147d49e22995a62642e7c6b8b8b752f7"
+        },
+        {
+          "name": "b2",
+          "sha256": "d97f03839953451b7782110bc8909d6f1f1b610d4ec3f2a9336a41ee518bb9f9"
+        },
+        {
+          "name": "x2",
+          "sha256": "9b8037b664200c8d41a05c1f9d2bdc25193bceecd9a9bb37818eb8ae0a5f1fb9"
+        }
+      ],
+      "imports": [
+        {
+          "local": "x",
+          "from": "react",
+          "name": "useContext",
+          "via": "vendor-frame-CnSY1sxv.js:fo",
+          "kind": "react",
+          "original": "fo"
+        },
+        {
+          "local": "O",
+          "from": "react",
+          "name": "createContext",
+          "via": "vendor-frame-CnSY1sxv.js:to",
+          "kind": "react",
+          "original": "to"
+        },
+        {
+          "local": "Qt",
+          "from": "../code-composer/owner-support.mjs",
+          "name": "ownerDocument",
+          "via": "shared-25-DOWZRSlq.js:ap",
+          "kind": "linked",
+          "original": "hf"
+        },
+        {
+          "local": "Nd",
+          "from": "../sidebar-sections/zustand.mjs",
+          "name": "create",
+          "via": "vendor-all-0-DXM0MGjZ.js:F",
+          "kind": "linked",
+          "original": "v"
+        },
+        {
+          "local": "xn",
+          "from": "../code-composer/owner-support.mjs",
+          "name": "ownerWindowOrGlobal",
+          "via": "shared-25-DOWZRSlq.js:lp",
+          "kind": "linked",
+          "original": "mf"
+        }
+      ],
+      "exports": {
+        "y2": "useTranscriptLayoutName",
+        "b2": "useTranscriptLayoutIsCustom",
+        "x2": "useTranscriptLayoutCard",
+        "vT": "drawerTriggerStore"
+      },
+      "features": {
+        "y2": [
+          "return x(_2)?.name ?? \"classic\";"
+        ],
+        "b2": [
+          "return y2() !== \"classic\";"
+        ],
+        "x2": [
+          "return x(_2)?.Card;"
+        ],
+        "vT": [
+          "triggerElement: null,",
+          "focusRequestId: 0,",
+          "t?.closest(\"[data-no-chat-drawer]\")",
+          "restoreFocusToTrigger: (n) =>",
+          "r.focus({ preventScroll: !0 })"
+        ]
+      }
+    },
+    {
+      "target": "transcript-stays-put.mjs",
+      "source": "c7f8992b4-DUZwS58e.js",
+      "referenceVersion": "3.6556.2",
+      "sourceSha256": "d21aeb13fb0b7c201c1cadc101f27cf582f34ffbd403c45bf84eef4de59ea9fc",
+      "sha256": "33fff70966a6d9bc6ff98683fec62a66cb86143e12371ed3fcb6c92a60a003eb",
+      "bindings": [
+        {
+          "name": "l",
+          "sha256": "f3ece034e25e67f68b32dde85194bc66516cb0ba4f39ac1d803d5a571fd759f8"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "l": "transcriptStaysPutAttribute"
+      },
+      "features": {
+        "l": [
+          "l = \"data-transcript-stays-put\""
+        ]
+      }
+    },
+    {
+      "target": "artifact-block.mjs",
+      "source": "shared-9-CM21XrJw.js",
+      "referenceVersion": "3.6556.2",
+      "sourceSha256": "7df52ad2089a9f4d40a6fe762ee3a839f8a705c9c4e6a8cd16eb68584e89f1ad",
+      "sha256": "bb8dd732becab4508b249be6d1f79eb6a61a2f1a8ba706a0ef456553f2a25395",
+      "bindings": [
+        {
+          "name": "VD",
+          "sha256": "a80969595c64b131151a35b51dea8930260a98108ebbc486e5031446c9e998b9"
+        },
+        {
+          "name": "HD",
+          "sha256": "8ddfb805fa3a1542e082c474d98084eb68a0c69bce1633becdd9b1260725eaff"
+        },
+        {
+          "name": "UD",
+          "sha256": "5e85f8b3453c76fe7854a194dca1c21f196e06a7aef5f7049c7f34ae649ff967"
+        },
+        {
+          "name": "KD",
+          "sha256": "124007d631a2ced68a65bd5a3eadc102bd2ee456de8613246ef7707c93c1dc41"
+        },
+        {
+          "name": "qD",
+          "sha256": "0cc0ae0f3d4294232ec67b9565242705c4cb5458f5f6558537f1faf0c7a68680"
+        },
+        {
+          "name": "JD",
+          "sha256": "eec008259c0cfbc23d284a9a8c8807a8612f8e7aef4605bcb1a14c429e6e248d"
+        },
+        {
+          "name": "YD",
+          "sha256": "18f97dc108dd0bc5d5d577fd52075e6fb26f85ee242324c0fc48d1ce92655cc5"
+        },
+        {
+          "name": "XD",
+          "sha256": "0755596abf10f79cb492fa4f351d67d03331bc00f5b47b39f329af8f5301399f"
+        },
+        {
+          "name": "ZD",
+          "sha256": "d07c07453d96542ed06c3daca043294a882ed4d99da42ec049912ac8e36d0925"
+        },
+        {
+          "name": "QD",
+          "sha256": "28ba511b1faeaf5b4dbffd100a65f1d159e2ab2dd23862db6a4fa150c1bdc3b5"
+        },
+        {
+          "name": "$D",
+          "sha256": "161f5b714a1f6d044a90fb0643234ed02a9e268605e9784b55e722d32c745b9f"
+        },
+        {
+          "name": "eO",
+          "sha256": "580197f59a9a655b524c3b0be861ff9f98043af18e7d56a4ac82de5545ff32d0"
+        },
+        {
+          "name": "rO",
+          "sha256": "e20f791885b4f2f02802fe0287d23a34e759a6d8c2c8db87cc2ca7850f2a117b"
+        },
+        {
+          "name": "aO",
+          "sha256": "dd9b6a915df0e539d4433f9f608c0bf5fe60c1fb2c7d5352735f78f878230e8b"
+        },
+        {
+          "name": "oO",
+          "sha256": "a18c46f3d2976f3399c27f2b94a8fd1639a64ecf282092697fb08db7b1f0a6df"
+        },
+        {
+          "name": "sO",
+          "sha256": "7153ce09ec3fb597587b0ac682ec449832d73c6154fffec097eb879905170580"
+        },
+        {
+          "name": "cO",
+          "sha256": "946a3a5f3eb16e8a0084b665f8ba391d002c8375b3205440b54ad9bea5ee5fd0"
+        },
+        {
+          "name": "_O",
+          "sha256": "83ad575f8c56fee3ef70c826020872f42dc28e993f11ae1fabca14ca4df60987"
+        },
+        {
+          "name": "yO",
+          "sha256": "4bfae85517b1ca3c3c5ebba925542c811b13c76396dfd275ebef647ec36632dc"
+        }
+      ],
+      "imports": [
+        {
+          "local": "O",
+          "from": "react",
+          "name": "memo",
+          "via": "vendor-frame-CnSY1sxv.js:so",
+          "kind": "react",
+          "original": "so"
+        },
+        {
+          "local": "o",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-CnSY1sxv.js:Ha",
+          "kind": "react",
+          "original": "Ha"
+        },
+        {
+          "local": "T",
+          "from": "react",
+          "name": "createElement",
+          "via": "vendor-frame-CnSY1sxv.js:no",
+          "kind": "react",
+          "original": "no"
+        },
+        {
+          "local": "J2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged2",
+          "via": "shared-frame-6jtSkIit.js:$f",
+          "kind": "view-tabs",
+          "original": "J2"
+        },
+        {
+          "local": "J9",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "reactMemoCache",
+          "via": "shared-frame-6jtSkIit.js:ip",
+          "kind": "view-tabs",
+          "original": "J9"
+        },
+        {
+          "local": "K2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore2",
+          "via": "shared-frame-6jtSkIit.js:sp",
+          "kind": "view-tabs",
+          "original": "K2"
+        },
+        {
+          "local": "Wi",
+          "from": "./transcript-layout.mjs",
+          "name": "useTranscriptLayoutCard",
+          "via": "shared-2-TF8v67kg.js:on",
+          "kind": "generated",
+          "original": "x2"
+        },
+        {
+          "local": "i",
+          "from": "../view-tabs/vendor-frame-CnSY1sxv.js",
+          "name": "clsx",
+          "via": "vendor-frame-CnSY1sxv.js:Ba",
+          "kind": "view-tabs",
+          "original": "Ba"
+        },
+        {
+          "local": "l",
+          "from": "react/jsx-runtime",
+          "name": "jsxs",
+          "via": "vendor-frame-CnSY1sxv.js:Ua",
+          "kind": "react",
+          "original": "Ua"
+        },
+        {
+          "local": "I3",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStoreValueFirst3",
+          "via": "shared-frame-6jtSkIit.js:Jf",
+          "kind": "view-tabs",
+          "original": "I3"
+        },
+        {
+          "local": "J1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged1",
+          "via": "shared-frame-6jtSkIit.js:Qf",
+          "kind": "view-tabs",
+          "original": "J1"
+        },
+        {
+          "local": "K3",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore3",
+          "via": "shared-frame-6jtSkIit.js:cp",
+          "kind": "view-tabs",
+          "original": "K3"
+        },
+        {
+          "local": "Z1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStoreDeps1",
+          "via": "shared-frame-6jtSkIit.js:dp",
+          "kind": "view-tabs",
+          "original": "Z1"
+        },
+        {
+          "local": "J3",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged3",
+          "via": "shared-frame-6jtSkIit.js:ep",
+          "kind": "view-tabs",
+          "original": "J3"
+        },
+        {
+          "local": "Z5",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStoreDeps5",
+          "via": "shared-frame-6jtSkIit.js:hp",
+          "kind": "view-tabs",
+          "original": "Z5"
+        },
+        {
+          "local": "K4",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore4",
+          "via": "shared-frame-6jtSkIit.js:lp",
+          "kind": "view-tabs",
+          "original": "K4"
+        },
+        {
+          "local": "J5",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged5",
+          "via": "shared-frame-6jtSkIit.js:np",
+          "kind": "view-tabs",
+          "original": "J5"
+        },
+        {
+          "local": "K1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore1",
+          "via": "shared-frame-6jtSkIit.js:op",
+          "kind": "view-tabs",
+          "original": "K1"
+        },
+        {
+          "local": "I2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStoreValueFirst2",
+          "via": "shared-frame-6jtSkIit.js:qf",
+          "kind": "view-tabs",
+          "original": "I2"
+        },
+        {
+          "local": "J4",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged4",
+          "via": "shared-frame-6jtSkIit.js:tp",
+          "kind": "view-tabs",
+          "original": "J4"
+        },
+        {
+          "local": "K5",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore5",
+          "via": "shared-frame-6jtSkIit.js:up",
+          "kind": "view-tabs",
+          "original": "K5"
+        },
+        {
+          "local": "x",
+          "from": "react",
+          "name": "useEffect",
+          "via": "vendor-frame-CnSY1sxv.js:ho",
+          "kind": "react",
+          "original": "ho"
+        },
+        {
+          "local": "Ie",
+          "from": "../../source-chat-markdown-adapters.jsx",
+          "name": "setChatLocalValue",
+          "via": "shared-25-DOWZRSlq.js:In",
+          "kind": "shared-adapter",
+          "original": "OH"
+        },
+        {
+          "local": "kr",
+          "from": "./artifact-type.mjs",
+          "name": "ArtifactType",
+          "via": "shared-104-CTONUSaz.js:Pt",
+          "kind": "generated",
+          "original": "Q"
+        },
+        {
+          "local": "P",
+          "from": "react",
+          "name": "useMemo",
+          "via": "vendor-frame-CnSY1sxv.js:xo",
+          "kind": "react",
+          "original": "xo"
+        },
+        {
+          "local": "_o",
+          "from": "../../source-routines-shared-adapters.jsx",
+          "name": "useIntl",
+          "via": "vendor-intl-DYfox5Co.js:p",
+          "kind": "shared-adapter",
+          "original": "q"
+        },
+        {
+          "local": "wi",
+          "from": "./transcript-layout.mjs",
+          "name": "drawerTriggerStore",
+          "via": "shared-2-TF8v67kg.js:ah",
+          "kind": "generated",
+          "original": "vT"
+        },
+        {
+          "local": "u",
+          "from": "react/jsx-runtime",
+          "name": "Fragment",
+          "via": "vendor-frame-CnSY1sxv.js:Va",
+          "kind": "react",
+          "original": "Va"
+        },
+        {
+          "local": "J0",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoIsEmpty",
+          "via": "shared-frame-6jtSkIit.js:Zf",
+          "kind": "view-tabs",
+          "original": "J0"
+        },
+        {
+          "local": "me",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "CdsShimmer",
+          "via": "shared-frame-6jtSkIit.js:_i",
+          "kind": "view-tabs",
+          "original": "zF"
+        },
+        {
+          "local": "K0",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore0",
+          "via": "shared-frame-6jtSkIit.js:ap",
+          "kind": "view-tabs",
+          "original": "K0"
+        },
+        {
+          "local": "go",
+          "from": "../../source-routines-shared-adapters.jsx",
+          "name": "FormattedMessage",
+          "via": "vendor-intl-DYfox5Co.js:l",
+          "kind": "shared-adapter",
+          "original": "Gt"
+        },
+        {
+          "local": "d",
+          "from": "react",
+          "name": "Fragment",
+          "via": "vendor-frame-CnSY1sxv.js:Ya",
+          "kind": "react",
+          "original": "Ya"
+        },
+        {
+          "local": "Z2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStoreDeps2",
+          "via": "shared-frame-6jtSkIit.js:fp",
+          "kind": "view-tabs",
+          "original": "Z2"
+        },
+        {
+          "local": "fp",
+          "from": "./artifact-icons.mjs",
+          "name": "AtomIcon",
+          "via": "vendor-icons-BplZ6UOJ.js:i",
+          "kind": "generated",
+          "original": "I"
+        },
+        {
+          "local": "mp",
+          "from": "./artifact-icons.mjs",
+          "name": "ImageIcon",
+          "via": "vendor-icons-BplZ6UOJ.js:n",
+          "kind": "generated",
+          "original": "V"
+        },
+        {
+          "local": "_p",
+          "from": "./artifact-icons.mjs",
+          "name": "CodeIcon",
+          "via": "vendor-icons-BplZ6UOJ.js:r",
+          "kind": "generated",
+          "original": "z"
+        },
+        {
+          "local": "v",
+          "from": "react",
+          "name": "useContext",
+          "via": "vendor-frame-CnSY1sxv.js:fo",
+          "kind": "react",
+          "original": "fo"
+        },
+        {
+          "local": "k",
+          "from": "react",
+          "name": "createContext",
+          "via": "vendor-frame-CnSY1sxv.js:to",
+          "kind": "react",
+          "original": "to"
+        }
+      ],
+      "exports": {
+        "sO": "ArtifactBlock",
+        "yO": "useArtifactBlockGrouped",
+        "_O": "ArtifactBlockGroupedContext"
+      },
+      "features": {
+        "sO": [
+          "n.id === r.id &&",
+          "e.isNotLastEdit === t.isNotLastEdit &&",
+          "e.titleIsFileName === t.titleIsFileName &&"
+        ],
+        "yO": [
+          "return v(_O);"
+        ],
+        "_O": [
+          "_O = k(!1)"
+        ]
+      }
+    },
+    {
+      "target": "artifact-tool-block.mjs",
+      "source": "cc1aae219-CeSwM-tp.js",
+      "referenceVersion": "3.6556.2",
+      "sourceSha256": "665bfb18bdd4da836a9fac982f3beb78526c6cb86589f9c917d054627e000ba0",
+      "sha256": "7d8cb9393e7bd0577001d63711a4d166572ca8742a13b0cd896594047aaccf46",
+      "bindings": [
+        {
+          "name": "AB",
+          "sha256": "95eb350157b7f00e3c6a2c8fba25027e34b3e9691b39b46dbfccc6691edb195f"
+        },
+        {
+          "name": "jB",
+          "sha256": "8bcd0130ff64e151e079916263823151d323bd0c141bf30ffa701a6e914b1e43"
+        },
+        {
+          "name": "PB",
+          "sha256": "7ff968c7a37fc3653e5aa401304e796d98363ed64880c5adac44d65bf737a1a3"
+        },
+        {
+          "name": "q3",
+          "sha256": "d604988be3a84450c3279f092cae3a30fbf43c9cf0cd7bbf221dc2a76a903e94"
+        },
+        {
+          "name": "Y3",
+          "sha256": "29875463440fb1df91f253eda2e3919499bd97111517d27d5fa480d23ecbd274"
+        }
+      ],
+      "imports": [
+        {
+          "local": "p",
+          "from": "../view-tabs/vendor-frame-CnSY1sxv.js",
+          "name": "clsx",
+          "via": "vendor-frame-CnSY1sxv.js:Ba",
+          "kind": "view-tabs",
+          "original": "Ba"
+        },
+        {
+          "local": "h",
+          "from": "react/jsx-runtime",
+          "name": "jsx",
+          "via": "vendor-frame-CnSY1sxv.js:Ha",
+          "kind": "react",
+          "original": "Ha"
+        },
+        {
+          "local": "D",
+          "from": "react",
+          "name": "useEffect",
+          "via": "vendor-frame-CnSY1sxv.js:ho",
+          "kind": "react",
+          "original": "ho"
+        },
+        {
+          "local": "J2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged2",
+          "via": "shared-frame-6jtSkIit.js:$f",
+          "kind": "view-tabs",
+          "original": "J2"
+        },
+        {
+          "local": "I3",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStoreValueFirst3",
+          "via": "shared-frame-6jtSkIit.js:Jf",
+          "kind": "view-tabs",
+          "original": "I3"
+        },
+        {
+          "local": "I1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStoreValueFirst1",
+          "via": "shared-frame-6jtSkIit.js:Kf",
+          "kind": "view-tabs",
+          "original": "I1"
+        },
+        {
+          "local": "J1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged1",
+          "via": "shared-frame-6jtSkIit.js:Qf",
+          "kind": "view-tabs",
+          "original": "J1"
+        },
+        {
+          "local": "J0",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoIsEmpty",
+          "via": "shared-frame-6jtSkIit.js:Zf",
+          "kind": "view-tabs",
+          "original": "J0"
+        },
+        {
+          "local": "K0",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore0",
+          "via": "shared-frame-6jtSkIit.js:ap",
+          "kind": "view-tabs",
+          "original": "K0"
+        },
+        {
+          "local": "K3",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore3",
+          "via": "shared-frame-6jtSkIit.js:cp",
+          "kind": "view-tabs",
+          "original": "K3"
+        },
+        {
+          "local": "Z1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStoreDeps1",
+          "via": "shared-frame-6jtSkIit.js:dp",
+          "kind": "view-tabs",
+          "original": "Z1"
+        },
+        {
+          "local": "J3",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged3",
+          "via": "shared-frame-6jtSkIit.js:ep",
+          "kind": "view-tabs",
+          "original": "J3"
+        },
+        {
+          "local": "J9",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "reactMemoCache",
+          "via": "shared-frame-6jtSkIit.js:ip",
+          "kind": "view-tabs",
+          "original": "J9"
+        },
+        {
+          "local": "K4",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore4",
+          "via": "shared-frame-6jtSkIit.js:lp",
+          "kind": "view-tabs",
+          "original": "K4"
+        },
+        {
+          "local": "J5",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged5",
+          "via": "shared-frame-6jtSkIit.js:np",
+          "kind": "view-tabs",
+          "original": "J5"
+        },
+        {
+          "local": "K1",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore1",
+          "via": "shared-frame-6jtSkIit.js:op",
+          "kind": "view-tabs",
+          "original": "K1"
+        },
+        {
+          "local": "Z3",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStoreDeps3",
+          "via": "shared-frame-6jtSkIit.js:pp",
+          "kind": "view-tabs",
+          "original": "Z3"
+        },
+        {
+          "local": "I2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStoreValueFirst2",
+          "via": "shared-frame-6jtSkIit.js:qf",
+          "kind": "view-tabs",
+          "original": "I2"
+        },
+        {
+          "local": "K2",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore2",
+          "via": "shared-frame-6jtSkIit.js:sp",
+          "kind": "view-tabs",
+          "original": "K2"
+        },
+        {
+          "local": "J4",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoChanged4",
+          "via": "shared-frame-6jtSkIit.js:tp",
+          "kind": "view-tabs",
+          "original": "J4"
+        },
+        {
+          "local": "K5",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "memoStore5",
+          "via": "shared-frame-6jtSkIit.js:up",
+          "kind": "view-tabs",
+          "original": "K5"
+        },
+        {
+          "local": "Xa",
+          "from": "../../source-chat-artifact-card-adapters.jsx",
+          "name": "useChatTranscriptCapability",
+          "via": "shared-4-DUB1Oi0O.js:_r",
+          "kind": "adapter",
+          "original": "DS"
+        },
+        {
+          "local": "vo",
+          "from": "../../source-chat-artifact-card-adapters.jsx",
+          "name": "chatArtifactsInputSchema",
+          "via": "shared-104-CTONUSaz.js:Bt",
+          "kind": "adapter",
+          "original": "VI"
+        },
+        {
+          "local": "lc",
+          "from": "../../source-chat-artifact-card-adapters.jsx",
+          "name": "useChatArtifactDrawer",
+          "via": "shared-2-TF8v67kg.js:Jm",
+          "kind": "adapter",
+          "original": "tE"
+        },
+        {
+          "local": "Ec",
+          "from": "./transcript-layout.mjs",
+          "name": "useTranscriptLayoutName",
+          "via": "shared-2-TF8v67kg.js:an",
+          "kind": "generated",
+          "original": "y2"
+        },
+        {
+          "local": "Gc",
+          "from": "./transcript-layout.mjs",
+          "name": "useTranscriptLayoutIsCustom",
+          "via": "shared-2-TF8v67kg.js:sn",
+          "kind": "generated",
+          "original": "b2"
+        },
+        {
+          "local": "Yd",
+          "from": "../../source-chat-artifact-card-adapters.jsx",
+          "name": "useChatArtifactRecord",
+          "via": "shared-130-dWztbTO1.js:Ft",
+          "kind": "adapter",
+          "original": "AY"
+        },
+        {
+          "local": "bf",
+          "from": "../../source-chat-artifact-card-adapters.jsx",
+          "name": "useChatArtifactEntry",
+          "via": "shared-130-dWztbTO1.js:Mt",
+          "kind": "adapter",
+          "original": "kY"
+        },
+        {
+          "local": "fh",
+          "from": "./artifact-block.mjs",
+          "name": "useArtifactBlockGrouped",
+          "via": "shared-9-CM21XrJw.js:F",
+          "kind": "generated",
+          "original": "yO"
+        },
+        {
+          "local": "Eh",
+          "from": "./artifact-block.mjs",
+          "name": "ArtifactBlock",
+          "via": "shared-9-CM21XrJw.js:R",
+          "kind": "generated",
+          "original": "sO"
+        },
+        {
+          "local": "mv",
+          "from": "./transcript-stays-put.mjs",
+          "name": "transcriptStaysPutAttribute",
+          "via": "c7f8992b4-DUZwS58e.js:d",
+          "kind": "generated",
+          "original": "l"
+        },
+        {
+          "local": "wS",
+          "from": "../../source-chat-artifact-card-adapters.jsx",
+          "name": "useChatArtifactDrawerSelected",
+          "via": "c7d03f0bf-_kWSkIg-.js:r",
+          "kind": "adapter",
+          "original": "s"
+        }
+      ],
+      "exports": {
+        "Y3": "ChatArtifactToolBlock",
+        "PB": "artifactCellType",
+        "jB": "artifactToolUseId"
+      },
+      "features": {
+        "Y3": [
+          "artifactCellType: c,",
+          "isFirstBlockOfMessage: l,",
+          "isLastBlockOfMessage: u,",
+          "q3(vo.parse(t))",
+          "Xa(\"toolResultMarkersTrusted\")",
+          "c !== \"multi_edit_not_last\"",
+          "(R ? \"hidden\" : \"h-0\")",
+          "\"ps-[var(--msg-block-inset,0.5rem)]\"",
+          "openTestId: \"artifact-card-open\",",
+          "isExpanded: k,",
+          "a?.(e, o.uuid, d.version_uuid, { toolUseId: s });"
+        ],
+        "PB": [
+          "c = \"individual_cell_create\"",
+          "create: \"individual_cell_create\",",
+          "update: \"individual_cell_update\",",
+          "rewrite: \"individual_cell_rewrite\"",
+          "\"multi_edit_last\"",
+          "\"multi_edit_not_last\""
+        ],
+        "jB": [
+          "e?.type !== \"tool_use\" || e.name !== \"artifacts\"",
+          "e.input?.id ?? e.partial_json?.match(AB)?.[1]"
+        ]
+      }
+    }
+  ],
+  "adapters": [
+    {
+      "original": "c7d03f0bf-_kWSkIg-.js#s",
+      "name": "useChatArtifactDrawerSelected",
+      "features": [
+        "t(e.selectedDrawerItem)"
+      ]
+    },
+    {
+      "original": "shared-104-CTONUSaz.js#VI",
+      "name": "chatArtifactsInputSchema",
+      "features": [
+        "command:s([\"create\",\"update\",\"rewrite\"]).optional().catch(void 0)",
+        "version_number:u().int().optional().catch(void 0)",
+        "type:a(Q).optional().catch(void 0)"
+      ]
+    },
+    {
+      "original": "shared-130-dWztbTO1.js#AY",
+      "name": "useChatArtifactRecord",
+      "features": [
+        "DY(n,e).artifacts[t]"
+      ]
+    },
+    {
+      "original": "shared-130-dWztbTO1.js#kY",
+      "name": "useChatArtifactEntry",
+      "features": [
+        "let{artifacts:r,streamingArtifacts:i}=DY(n,e);return t in i?i[t]:r[t]"
+      ]
+    },
+    {
+      "original": "shared-2-TF8v67kg.js#tE",
+      "name": "useChatArtifactDrawer",
+      "features": [
+        "function tE(){return x(eE)}"
+      ]
+    },
+    {
+      "original": "shared-4-DUB1Oi0O.js#DS",
+      "name": "useChatTranscriptCapability",
+      "features": [
+        "function DS(e){return j(ES)[e]===!0}"
+      ]
+    }
+  ],
+  "sharedAdapters": [
+    {
+      "original": "shared-25-DOWZRSlq.js#OH",
+      "graph": "chat-markdown",
+      "name": "setChatLocalValue"
+    },
+    {
+      "original": "vendor-intl-DYfox5Co.js#q",
+      "graph": "routines-shared",
+      "name": "useIntl"
+    },
+    {
+      "original": "vendor-intl-DYfox5Co.js#Gt",
+      "graph": "routines-shared",
+      "name": "FormattedMessage"
+    }
+  ],
+  "linked": [
+    {
+      "original": "vendor-icons-BplZ6UOJ.js#o",
+      "graph": "cowork-scheduled",
+      "target": "vendor-icons-BplZ6UOJ.mjs",
+      "name": "o"
+    },
+    {
+      "original": "shared-25-DOWZRSlq.js#hf",
+      "graph": "code-composer",
+      "target": "owner-support.mjs",
+      "name": "ownerDocument"
+    },
+    {
+      "original": "vendor-all-0-DXM0MGjZ.js#v",
+      "graph": "sidebar-sections",
+      "target": "zustand.mjs",
+      "name": "create"
+    },
+    {
+      "original": "shared-25-DOWZRSlq.js#mf",
+      "graph": "code-composer",
+      "target": "owner-support.mjs",
+      "name": "ownerWindowOrGlobal"
+    }
+  ]
+}

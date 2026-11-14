@@ -1,0 +1,28 @@
+/* CDS Shortcut keycap (2.2553.1 shared-frame-C_2npUJq.js:2031-2046 Ua/Wa/Ga/Ka/qa, :2038 Ya.keycap).
+   Tokens come from the loaded official stylesheet (design-system.css:53426-53428 light,
+   :53630-53631 dark): ink gray-500, fill transparent, line currentColor 18%. */
+.scds-shortcut {
+  display: inline-flex; flex-shrink: 0; align-items: center; gap: 2px; /* Ya.keycap */
+  font-size: var(--cds-font-size-caption); line-height: var(--cds-leading-caption); /* text-caption design-system.css:20907 */
+}
+.scds-on-fill { --cds-shortcut-cap-ink: currentColor; } /* Ua */
+.scds-key { /* Wa */
+  display: inline-flex; flex-shrink: 0; align-items: center; justify-content: center;
+  box-sizing: border-box; height: calc(1em + 6px); margin: 0;
+  border: 1px solid var(--cds-shortcut-cap-line); border-radius: 4px; /* Wa rounded-[var(--cds-keycap-radius,4px)]: no CDS stylesheet defines the token */
+  color: var(--cds-shortcut-cap-ink); background-color: var(--cds-shortcut-cap-fill);
+  font-family: inherit; font-size: inherit; font-variation-settings: inherit; line-height: 1;
+}
+.scds-key-square { width: calc(1em + 6px); padding: 0; } /* Ga */
+.scds-key-wide { min-width: calc(1em + 6px); padding: 0 3px; } /* Ka */
+.scds-then { padding: 0 2px; color: var(--cds-shortcut-cap-ink); } /* Xa separator :2066-2070 */
+/* W14-code r5 cleanup css5-sr-only-handcopies: the spoken key name is shared-frame's own "sr-only select-none" (official
+   utilities), so the hand-copied .scds-sr rule is gone. */
+/* Ya.text + Ja (shared-frame-C_2npUJq.js:2039-2045, :2077-2084): bare glyphs in cap ink with a 0.15em gap,
+   baseline-aligned; off mac the "+" joiner sits in the gap (mx-[-0.15em]). Callers set the size (Mu tooltip
+   12px with muted ink, c_ menu text-footnote), as twMerge drops text-caption for theirs. */
+.scds-shortcut.scds-text { gap: .15em; align-items: baseline; }
+.scds-text-key { margin: 0; font-family: inherit; font-size: inherit; font-variation-settings: inherit; color: var(--cds-shortcut-cap-ink); }
+.scds-joiner { margin-inline: -.15em; color: var(--cds-shortcut-cap-ink); }
+/* Inside a CDS Button (ks :2936-2944): aria-hidden, `pointer-coarse:hidden ms-1`, and for an
+   unjoined button the trailing gs (:2716) end margin that re-centres the cap in the end padding. */ /* design-system.css:45342 */

@@ -1,0 +1,144 @@
+/* Dimensions translated from shared-11, code-footer, code-effort and code-slider.
+   Original CDS tokens continue to supply palette, fonts and compact sizing. */
+/* z-index: the transcript's sticky bottom fade strip (z-index 1, opaque at its edge) ends where the card
+   begins and would paint over the card's outset hairline ring once scrolled up. */
+.sc-zone.composer-zone { position: relative; z-index: 2; container-type: inline-size; gap: 6px; }
+/* The Code column's row gap is density-driven (4.23118.1 shared-33 KS "gap-1.5 compact:gap-1.5 comfortable:gap-2", the
+   code column YS that holds the card and the environment bar slot): 8px between the card and the bar in comfortable
+   density, 6px in compact. Chat / Cowork (.surface-form card) keep the zone's 6px. */
+.sc-zone.composer-zone:has(> .sc-composer):where([data-density=comfortable], [data-density=comfortable] *) { gap: 8px; }
+/* W14-code css2-composer-gutter-780: the chat column gutter (shared-6-sd9jbJqs.js yg, vg var(--chat-gutter,32px); gg
+   `[.epitaxy-chat-panel_&]:[@container_tile-slot_(max-width:560px)]:[--chat-gutter:16px]`) follows the chat tile's width,
+   as the transcript column does (source-transcript.css), not the window's (the old @media (max-width: 780px) 20px is gone). */
+/* W14-code r2 css2-chat-gutter-shave: the composer column is shared-6 yg too (mx-auto, max-w of the measure plus the
+   gutters, ps / pe the gutters), over vg's --chat-column-gutter-start / -end and the chat tile's shave; gg sets
+   --chat-gutter 16px in a narrow tile. */
+.sc-zone.composer-zone {
+  --chat-column-gutter-start: var(--chat-gutter-start, var(--chat-gutter, 32px));
+  --chat-column-gutter-end: var(--chat-gutter-end, var(--chat-gutter, 32px));
+  max-width: calc(var(--local-transcript-width, 768px) + var(--chat-column-gutter-start) + var(--chat-column-gutter-end));
+  padding-inline: var(--chat-column-gutter-start) var(--chat-column-gutter-end);
+}
+[data-chat-gutter-start=shave] .sc-zone.composer-zone { --chat-column-gutter-start: var(--chat-gutter-start, calc(var(--chat-gutter) - (var(--tiles-gap) - var(--tiles-padding)))); }
+[data-chat-gutter-end=shave] .sc-zone.composer-zone { --chat-column-gutter-end: var(--chat-gutter-end, calc(var(--chat-gutter) - (var(--tiles-gap) - var(--tiles-padding)))); }
+[data-chat-gutter-end=bleed] .sc-zone.composer-zone { --chat-column-gutter-end: var(--chat-gutter-end, calc(var(--chat-gutter) + var(--tiles-padding))); }
+@container (max-width: 560px) { .sc-zone.composer-zone { --chat-gutter: 16px; } }
+/* W14-code r3 css3-band-column-width: the bands above the card (the composer error card, the notice stack, the queued /
+   pending-steer band) sit in that same yg column (cf74bc599 VE, cc43287c9 Rde / Hn render inside it), so they take the
+   same measure, gutters, shave and narrow-tile 16px instead of a fixed calc(100% - 64px) / 768px. A plain selector list,
+   so each keeps its own specificity and `.btw-pane .sqm-band` (source-btw-pane.css, full width) still wins; Chat /
+   Cowork's .inline-error.composer-error keeps its own box (message-style.css). */
+.composer-error:not(.inline-error), .ssn-list, .sqm-band {
+  --chat-column-gutter-start: var(--chat-gutter-start, var(--chat-gutter, 32px));
+  --chat-column-gutter-end: var(--chat-gutter-end, var(--chat-gutter, 32px));
+  width: 100%;
+  max-width: calc(var(--local-transcript-width, 768px) + var(--chat-column-gutter-start) + var(--chat-column-gutter-end));
+  padding-inline: var(--chat-column-gutter-start) var(--chat-column-gutter-end);
+  align-self: center;
+}
+[data-chat-gutter-start=shave] :is(.composer-error:not(.inline-error), .ssn-list, .sqm-band) { --chat-column-gutter-start: var(--chat-gutter-start, calc(var(--chat-gutter) - (var(--tiles-gap) - var(--tiles-padding)))); }
+[data-chat-gutter-end=shave] :is(.composer-error:not(.inline-error), .ssn-list, .sqm-band) { --chat-column-gutter-end: var(--chat-gutter-end, calc(var(--chat-gutter) - (var(--tiles-gap) - var(--tiles-padding)))); }
+[data-chat-gutter-end=bleed] :is(.composer-error:not(.inline-error), .ssn-list, .sqm-band) { --chat-column-gutter-end: var(--chat-gutter-end, calc(var(--chat-gutter) + var(--tiles-padding))); }
+@container (max-width: 560px) { .composer-error:not(.inline-error), .ssn-list, .sqm-band { --chat-gutter: 16px; } }
+.btw-pane .sqm-band { padding-inline: 0; }
+/* R3-composer step 3 (composer-shell): the Code card is the 2.42304.0 CDS ChatComposer shell (shared-5 Af / jf,
+   source-composer-shell.jsx) with uM's root class (shared-6 d_ = Hc: the presets 1.75rem control and 0.875rem radius,
+   --cmp-font-size / --cmp-line-height from the prompt text size) and the shell's own card, editor box, actions, overlays
+   and chin utilities, all in the loaded @layer utilities sheet; the presets zone's hand-written sizes are gone. What is
+   left here for the card is host-only: the local editor's placeholder, the host + button and the drag-over ring.
+   W14-code r8 css8-classic-context-row-dead (E95): the classic context row and its host chips (.sc-context-row,
+   .sc-button / .sc-icon-button, .sc-context-chip, .sc-folder-chip, .sc-extra-folder, .sc-add-folder, .sc-tooltip-path,
+   the "local" menu's .sc-env-menu) went with the row. */
+/* W14-code r3 css3-side-chat-composer / css3-dead-rules ①: the side chat's hand-built card (sc-surface > sc-input-row >
+   sc-input: the hand-copied surface-3 ground, shadow and hairline ring, 14px / 20px editor, its hover / focus / dark /
+   disabled / drag-over states) is gone; cccc2cf0a UF renders the main composer (fp = c227f4d5e jF), so SourceComposer's
+   Code card draws it (source-side-chat.jsx). */
+/* The Send/Stop cell is the original 2.42304.0 c227f4d5e lM (generated composer-send-cell.mjs) with its own utility
+   classes (Ra, $j, eM, the Ij layers Nj/Pj/Fj and the view-tabs CdsButton), all in the loaded @layer utilities sheet,
+   reduced motion included (motion-safe there excludes [data-reduce-motion=true]). No local geometry and no release:
+   the host's native-button reset sits in @layer base (style.css, D26), below the CdsButton utilities. */
+/* composer-env-bar: the Home draft's environment bar is the original 2.42304.0 cc43287c9 l0 / u0 / c0 (generated
+   environment-bar.mjs) with its own utility classes (Vc/zc/Qc/xl, o0, the ghost CdsButton chips). Its host wrapper only
+   keeps the composer's chin scope for the chin shortcuts and the reused Mode / Model / Effort / usage triggers: no box of
+   its own, and none of the chin's text styles inherited into the bar. The chips need no release from the native-button
+   reset either (layered since D26, R3-style). */
+.sc-zone .sc-chin.sc-env-bar-scope { display: contents; font: inherit; color: inherit; }
+/* composer-shell: uM's suggestion ghost and placeholder fit probe are lc.Overlay children now (the shell's
+   ChatComposerOverlay: absolute inset-0 over the editor row with its row padding, start inset and trailing reserve), with
+   their own classes; nothing local styles them. R4g-composer CP2: the placeholder is cm's span (source-composer-shell.jsx),
+   the shell's editor carries no data-placeholder; R4i-graph GR3 dropped the two rules that placed its ::before inside
+   the shell's editor box (the box's float notch, ProseMirror::before, is the official sheet's alone now), and the
+   in-card .sc-add size rule (CP3 replaced that button with the official Oj trigger). */
+/* A Finder drop over a Code card outside a pane zone: the shell's own ChatComposerDropPanel (onFileDrop, see
+   source-composer.jsx cardFileDrop), drawn with the official classes; no host rule (W14-code composer review). */
+/* W14-code r3 gen-final-3: no .sc-sr-only; the editor hint and the slash argument status use the official sr-only
+   utility (c6a992d55 `.sr-only{clip-path:inset(50%);…position:absolute;overflow:hidden}`, as r3-composer-05 did). */
+/* Footnote warning row above the composer: cc43287c9 wpe "flex flex-wrap items-center gap-sm text-footnote text-warning
+   select-text" (W14-code css/composer-warning-row: it wraps, and its text can be selected). */
+.sc-warning-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; min-width: 0; font-size: var(--cds-font-size-footnote, 12px); line-height: var(--cds-leading-footnote, 15px); color: var(--cds-text-warning); user-select: text; }
+.sc-warning-text { flex: 1; min-width: 0; }
+.sc-warning-action { flex-shrink: 0; padding: 0; border: 0; background: transparent; color: inherit; font: inherit; text-decoration: underline; cursor: default; }
+/* The Home pet sprite (cc43287c9 O7, generated/code-start/pet.mjs: an 80px box at right-[-13px], in the z-index 2
+   slot) overlaps the row's right end; keep its text and Retry clear of it, and above it so the sprite's paths never
+   take the click. */
+.sc-warning-row[data-pet] { padding-right: 68px; }
+/* A neutral status (still connecting) rather than a warning. */
+.sc-warning-row[data-tone="info"] { color: var(--cds-text-muted); }
+.sc-warning-action { position: relative; z-index: 3; }
+.sc-warning-action:focus-visible { outline: none; box-shadow: var(--cds-focus-shadow); border-radius: 3px; }
+/* composer-shell: the chin box is the shell's Chin part (shared-5 Kd: its leading 'flex items-center self-start' and
+   trailing 'ms-auto flex min-w-0 items-center gap-1 ps-2' slots, the xs data-size, text-footnote text-secondary, the
+   @max-[25rem] caption size), so the host's box, slot and narrow-container rules are gone (W14-code r8: and with no host
+   .sc-button left in it, its xs button sizes too). */
+/* Purple top tier on the chip (a local extension of the shared-14 :6565 'text-pro font-medium' menu row; the
+   source chip is plain). R3 composer-row-chin: keyed on the official effort trigger (c8e04f916 data-cds
+   ModelSelectorEffort, a ghost CdsButton); unlayered, so it outranks the trigger's own text / font-weight utilities. */
+.sc-chin [data-cds="ModelSelectorEffort"][data-top-tier] { color: var(--cds-text-pro); font-weight: 500; }
+/* R4i-graph GR3: the classic chin's + is the official Oj trigger (c73f45bc3 tv, size "base" with the dock glyph), sized by
+   its own CdsButton / CdsIcon utilities; the host .sc-add sizes are gone. */
+/* R3 composer-row-chin: the chin's Model / Effort / usage triggers are the official ModelSelector pill, EffortControl
+   trigger and yZ ring button (source-composer-row-chin.jsx) with their own utility classes (min-w-0 max-w-full +
+   truncate, the Va grid's minmax(0,max-content) columns, the shared-8 KV svg); no local geometry. The chat composer's
+   own model button (source-chat-composer.jsx, not a ModelSelector) keeps the truncating label. */
+.sc-model-trigger:not([data-cds="ModelSelector"]) > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.sc-pet-slot { position: relative; height: 0; margin-bottom: -6px; pointer-events: none; }
+.sc-pet-animation { display: block; width: 100%; height: 100%; opacity: 0; }
+.sc-pet-animation[data-ready] { opacity: 1; transition: opacity 200ms; }
+.sc-pet-animation > svg { display: block; width: 100%; height: 100%; }
+
+/* W14-code r6-composer-02: the effort popover is the generated c8e04f916 EffortControl (official classes only); the
+   host's .sc-effort-* / .sc-slider-* / lit rules went with its hand-drawn control. */
+@media (prefers-reduced-motion: reduce) { .sc-pet-animation { transition: none; } }
+html[data-reduce-motion="true"] .sc-pet-animation { transition: none; }
+
+/* R3 composer-row-chin: the Mode trigger is tQ's ghost CdsButton (min-w-0 shrink) with rQ's truncating label and _Q's
+   loading label (relative block > invisible label under absolute inset-0 flex items-center); the host skeleton bar that
+   stands in for the CDS Skeleton fills that box's height. */
+.sc-permission .sc-permission-skeleton { align-self: stretch; margin-block: 2px; }
+
+/* Prompt-history strip: its row is the shell's Header part (shared-5 Jd: flex min-h-[var(--cds-h-control-nested)]
+   min-w-0 items-center gap-xs text-footnote font-normal, the stays-secondary tone and the start inset), entering and
+   leaving through the shell's Presence (grid-rows-[1fr] overflow-hidden, the cds-grid-rows enter, height-0 exit); uM
+   puts the history hint (Rk) in it, aria-hidden whitespace-nowrap. W14-code composer-09: the hint's pieces are NA's own
+   utility classes and the CDS Kbd (no local rule). */
+
+
+/* Usage popover: c227f4d5e V3's popup and body classes are the official utilities (source-composer.jsx); the unlayered
+   .sp-popup caps (source-popover.css) are released to its max-w-[calc(100vw-2rem)] / max-h-[min(…,640px)]. The yc
+   panel (c2d611398 V/L/I) follows. W14-code r6 css6-usage-panel-body: the context column, header, bar and separators are
+   c2d611398 Le / ze / Oe's own utilities in the JSX, and (r6 复核修复) the plan section is c1564829c g / y / v's (the H
+   that c2d611398 renders), so its 15 hand-written plan rules are gone; these rules are left for the host-only session
+   spend row (gen-final-6: the See detailed breakdown row is c2d611398 Ne's CdsButton now, so .sc-usage-link is gone).
+   W14-code r8 css8-composer-leftover-handcopies: that spend row is in Pe's own utilities now (source-composer.jsx), so
+   .sc-usage-row / -muted / -summary are gone; so are the emoji glyph's .sed-char (ceb864fac's classes in
+   source-emoji-dropdown.jsx) and .sc-git-required (cc43287c9 Nu's "text-footnote text-danger select-text"). */
+.sp-popup.sc-usage-popover { max-width: revert-layer; max-height: revert-layer; }
+
+
+/* Bash mode: uM's card class tM 'inset-ring-1 inset-ring-pro' (cardClassName) and the view-tabs CdsBadge {pro, sm}
+   'bash' in lc.Actions' trailing slot — both the originals' own classes; no local rule. */
+/* Dynamic workflows: the "ultracode" keyword's notice and ultracode's status line (muted, the keyword in the purple
+   top-tier color), and the keyword itself in the editor. */
+.sc-warning-row[data-tone="workflow"] { color: var(--cds-text-muted); }
+.sc-workflow-notice .sc-ultracode-word { color: var(--cds-text-pro); font-weight: 500; }

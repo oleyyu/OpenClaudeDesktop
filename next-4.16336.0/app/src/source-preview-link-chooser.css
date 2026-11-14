@@ -1,0 +1,17 @@
+/* Original shared-frame PN card tokens; scoped restoration after the app button reset. */
+.preview-link-chooser [role=radio] {
+  display: flex; align-items: flex-start; gap: var(--cds-gap-md); width: 100%;
+  padding: var(--cds-pad-md); border: 1px solid var(--cds-border);
+  border-radius: calc(var(--cds-radius) + .25rem * var(--cds-rem-scale, 1)); background: var(--cds-surface-1);
+  color: var(--cds-text-primary); text-align: start; font: inherit;
+}
+.preview-link-chooser [role=radio]:hover { border-color: var(--cds-border-strong); }
+.preview-link-chooser [role=radio][data-checked] { border-color: var(--cds-border-accent); background: var(--cds-radio-group-card-selected); }
+.preview-link-chooser [role=radio]:focus-visible { outline: none; box-shadow: var(--cds-focus-shadow); }
+.preview-link-radio-indicator { display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  width: var(--cds-checkbox, 16px); height: var(--cds-checkbox, 16px); border: 1px solid var(--cds-border-strong); border-radius: 50%;
+  margin-top: calc((1lh - var(--cds-checkbox, 16px)) / 2); }
+.preview-link-radio-indicator[data-checked] { background: var(--cds-fill-accent); border: 0; }
+.preview-link-chooser [role=radio]:hover .preview-link-radio-indicator:not([data-checked]) { border-color: var(--cds-border-stronger); }
+.preview-link-chooser [role=radio]:hover .preview-link-radio-indicator[data-checked] { background: var(--cds-fill-accent-hover); }
+.preview-link-radio-indicator > span { width: calc(var(--cds-checkbox, 16px) - 10px * var(--cds-rem-scale, 1)); height: calc(var(--cds-checkbox, 16px) - 10px * var(--cds-rem-scale, 1)); border-radius: 50%; background: var(--cds-on-accent); }

@@ -1,0 +1,450 @@
+{
+  "referenceVersion": "4.16336.0",
+  "referenceSnapshot": "snapshots/claude-4.16336.0-20261104",
+  "generator": "scripts/extract-chat-composer-menus.mjs",
+  "hostModule": "src/source-chat-tools-menu.jsx",
+  "roots": {
+    "kF": {
+      "source": "shared-8-BqfCbkJd.js",
+      "local": "TP",
+      "sourceSha256": "d9aa7c7f690b43147e921fbef5473f2311a1474e316c44e6db5ef07e9fede5bc",
+      "sha256": "5ee8655cfbd57e0e151ed80611a81040df04d419224ad0a2058ad733e365772c",
+      "features": [
+        "\"data-chorus-callout\": \"attach\"",
+        "id: \"OnsnuZtVJO\"",
+        "tooltip: !1"
+      ]
+    },
+    "iN": {
+      "source": "shared-8-BqfCbkJd.js",
+      "local": "Wj",
+      "sourceSha256": "d9aa7c7f690b43147e921fbef5473f2311a1474e316c44e6db5ef07e9fede5bc",
+      "sha256": "687d32520373d7ea0c67d1b8be3dbd405a28ac7996cb24b015b05970c8adc18b",
+      "features": [
+        "[\"uploadFile\", \"artifactFile\", \"artifactDrive\", \"addPeople\", \"googleDrive\", \"addFolder\", \"teach\", \"screenshot\", \"shareScreen\", \"project\", \"github\",",
+        "[\"skills\", \"connectors\", \"designSystem\", \"plugins\", \"devices\"]",
+        "[\"haystack\", \"research\", \"webSearch\", \"memory\", \"permissionMode\"]"
+      ]
+    },
+    "oN": {
+      "source": "shared-8-BqfCbkJd.js",
+      "local": "Kj",
+      "sourceSha256": "d9aa7c7f690b43147e921fbef5473f2311a1474e316c44e6db5ef07e9fede5bc",
+      "sha256": "711991797a6ae6ab1add4a529eeb4e6937e71cd59263a0048bad56c2b873b861",
+      "features": [
+        "new Set([\"project\", \"github\", ...",
+        ".filter((e) => e !== \"memory\" && e !== \"permissionMode\")"
+      ]
+    },
+    "sN": {
+      "source": "shared-8-BqfCbkJd.js",
+      "local": "qj",
+      "sourceSha256": "d9aa7c7f690b43147e921fbef5473f2311a1474e316c44e6db5ef07e9fede5bc",
+      "sha256": "cdde69c9252d84d19fb8ba1013fe00859707247cccb8995d1715193b8431892c",
+      "features": [
+        "new Set([\"designSystem\", \"googleDrive\", \"artifactDrive\"])"
+      ]
+    },
+    "cN": {
+      "source": "shared-8-BqfCbkJd.js",
+      "local": "Jj",
+      "sourceSha256": "d9aa7c7f690b43147e921fbef5473f2311a1474e316c44e6db5ef07e9fede5bc",
+      "sha256": "a2aa1108f110ec5135a45fe734dd0dae019be04e1ec0a6381cdf0144ad3d7844",
+      "features": [
+        "\"googleDrive\", \"artifactDrive\", \"teach\", \"haystack\", \"memory\"]"
+      ]
+    },
+    "Yj": {
+      "source": "shared-8-BqfCbkJd.js",
+      "local": "Yj",
+      "sourceSha256": "d9aa7c7f690b43147e921fbef5473f2311a1474e316c44e6db5ef07e9fede5bc",
+      "sha256": "93cd35d069df0303514ec12c281e4f4f68dc3c38ced2b61d13fd82e92e21ba3c",
+      "features": [
+        "= new Set([\"designSystem\"])"
+      ]
+    },
+    "lN": {
+      "source": "shared-8-BqfCbkJd.js",
+      "local": "Xj",
+      "sourceSha256": "d9aa7c7f690b43147e921fbef5473f2311a1474e316c44e6db5ef07e9fede5bc",
+      "sha256": "656854a8786c7ec3269ea7354523f58f83ff0e7c95505709f18780a1558dfa1a",
+      "features": [
+        "return r && !o(t) ? [n(t, r)] : [];",
+        "return [s(iN[0]), s(iN[1]), s(iN[2])];",
+        "(e, t, n = (e, t) => t, r = !1, i = !1, a = !1)",
+        "(a && Yj.has(e)) || (t && oN.has(e)) || (r && sN.has(e)) || (i && cN.has(e))"
+      ]
+    },
+    "na": {
+      "source": "c752b32f8-NSBu06gO.js",
+      "local": "Ia",
+      "sourceSha256": "d43e30d2b93beb8c52e0628a13f2573bb57c78c9693b457ec8a123e13e2ca55b",
+      "sha256": "0dc1bd4731102530968eb9cbc06eedc48a5cadf80d8628500a8316cd2f3eea43",
+      "features": [
+        "uploadFile: \"add-menu-upload-file\"",
+        "screenshot: \"add-menu-screenshot\"",
+        "webSearch: \"add-menu-web-search\""
+      ]
+    },
+    "ra": {
+      "source": "c752b32f8-NSBu06gO.js",
+      "local": "La",
+      "sourceSha256": "d43e30d2b93beb8c52e0628a13f2573bb57c78c9693b457ec8a123e13e2ca55b",
+      "sha256": "12c0741babeb44e587ffced029465f6359e2a75a68b6a4005851b408df6edd91",
+      "features": [
+        "for (let e of Object.keys(na))",
+        "n && r && (t[e] = ia(n, r));"
+      ]
+    },
+    "ia": {
+      "source": "c752b32f8-NSBu06gO.js",
+      "local": "Ra",
+      "sourceSha256": "d43e30d2b93beb8c52e0628a13f2573bb57c78c9693b457ec8a123e13e2ca55b",
+      "sha256": "08b5cefbf40917e4faa24aa2769baf20b68bc4fb913936cb09d6db861f9c6ff3",
+      "features": [
+        "case \"toggle\":",
+        "case \"submenu\":",
+        "return { ...e, testId: t };"
+      ]
+    },
+    "Js": {
+      "source": "c752b32f8-NSBu06gO.js",
+      "local": "Vc",
+      "sourceSha256": "d43e30d2b93beb8c52e0628a13f2573bb57c78c9693b457ec8a123e13e2ca55b",
+      "sha256": "7c35b8a424c163cde1bc9a1796d13c5291a20875ae603ff5da1d9a0e77c9643d",
+      "features": [
+        "\"separator-tools\"",
+        "\"separator-modes\"",
+        "\"composer.plus_menu.upload_file\"",
+        "\"composer.plus_menu.web_search\""
+      ]
+    },
+    "Ws": {
+      "source": "c752b32f8-NSBu06gO.js",
+      "local": "Rc",
+      "sourceSha256": "d43e30d2b93beb8c52e0628a13f2573bb57c78c9693b457ec8a123e13e2ca55b",
+      "sha256": "b4c05a80abad4783f14f2dcc1036dd53e82485531842217141b6511ea322ea17",
+      "features": [
+        "id: \"vVSGqeakjA\"",
+        "icon: \"Attachment\"",
+        "focusesNothing: !0"
+      ]
+    },
+    "Fs": {
+      "source": "c752b32f8-NSBu06gO.js",
+      "local": "kc",
+      "sourceSha256": "d43e30d2b93beb8c52e0628a13f2573bb57c78c9693b457ec8a123e13e2ca55b",
+      "sha256": "af26f8248fbe2a3647c517728a61f86259bbcfc678fba51fc7b0f74b6ae5aa31",
+      "features": [
+        "id: \"fVVgugcqfW\"",
+        "id: \"uGOETn5bfV\"",
+        "\"screenshot.png\""
+      ]
+    },
+    "ks": {
+      "source": "c752b32f8-NSBu06gO.js",
+      "local": "wc",
+      "sourceSha256": "d43e30d2b93beb8c52e0628a13f2573bb57c78c9693b457ec8a123e13e2ca55b",
+      "sha256": "a56cfc4ce1c793a0eb9e9975315a2ea08cc9834644d135bd2ff396f4c1294a06",
+      "features": [
+        "id: \"VTbz0vOf5i\"",
+        "icon: \"Projects\""
+      ]
+    },
+    "Es": {
+      "source": "c752b32f8-NSBu06gO.js",
+      "local": "xc",
+      "sourceSha256": "d43e30d2b93beb8c52e0628a13f2573bb57c78c9693b457ec8a123e13e2ca55b",
+      "sha256": "87fab8fae5a14ba575e2c29d42a5259e6a013e53348629b22b0c20ca807aabe8",
+      "features": [
+        "id: \"x1GW6kgtFG\"",
+        "id: \"C1IFDydllb\"",
+        "id: \"gkvdf7tU5r\"",
+        "id: \"ld45uLSco8\""
+      ]
+    },
+    "Ms": {
+      "source": "c752b32f8-NSBu06gO.js",
+      "local": "Ec",
+      "sourceSha256": "d43e30d2b93beb8c52e0628a13f2573bb57c78c9693b457ec8a123e13e2ca55b",
+      "sha256": "2822604505d6f974547407884b5b63b0f4ee38cda2c3bfc33d1c3cb760c2a887",
+      "features": [
+        "{ popup: t } = e,",
+        "leadingRows: i, rows: a, maxVisibleItems:"
+      ]
+    },
+    "Tz": {
+      "source": "shared-33-DtdykY0y.js",
+      "local": "Cq",
+      "sourceSha256": "1fcaa039b040c657e69517217d0defa2cf5c92cb4485911ea9b3d3698dcaa7a9",
+      "sha256": "3539323c0eb1df6578002ce84ee5479e5d12605eac5e49116b71e96600f57a0e",
+      "features": [
+        "id: \"0/w13aoHrd\"",
+        "icon: \"Globe\"",
+        "icon: \"Lock\""
+      ]
+    },
+    "yz": {
+      "source": "shared-33-DtdykY0y.js",
+      "local": "_q",
+      "sourceSha256": "1fcaa039b040c657e69517217d0defa2cf5c92cb4485911ea9b3d3698dcaa7a9",
+      "sha256": "0bbc9506a86112c6ad54a30fbef7ffd249a0e272e594570eb760e4cd65846626",
+      "features": [
+        "id: \"C5I8J3lxs3\"",
+        "icon: \"Research\"",
+        "id: \"CzjOV5rgPZ\"",
+        "id: \"WyiVeak7w5\""
+      ]
+    }
+  },
+  "resolved": {
+    "artifactFileRows": {
+      "source": "shared-8-BqfCbkJd.js",
+      "export": "Qi",
+      "local": "kN",
+      "sha256": "c425e33b652d829c65b6ad0f6b35b6e8b13543e695ee929f5f78bccb1c54c5dc"
+    },
+    "triggerTestId": {
+      "source": "shared-1-D1bGaTaN.js",
+      "export": "Ob",
+      "local": "_p",
+      "value": "chat-input-attach"
+    },
+    "projectMaxVisibleItems": {
+      "source": "shared-212-BHMAi0oa.js",
+      "export": "bs",
+      "local": "_W",
+      "value": 8.5
+    }
+  },
+  "modules": [
+    {
+      "target": "add-menu-slots.mjs",
+      "sources": [
+        "shared-8-BqfCbkJd.js",
+        "c752b32f8-NSBu06gO.js"
+      ],
+      "sha256": "971641b4de0cd210ae08f6d5b4b70ff118dfe3dea72031f8730d3a98f82f9672",
+      "sliced": [
+        "iN",
+        "oN",
+        "sN",
+        "cN",
+        "Yj",
+        "lN",
+        "na",
+        "ia",
+        "ra"
+      ],
+      "exports": [
+        "addMenuSlotGroups",
+        "splitAddMenuSlots",
+        "addMenuTestIds",
+        "withAddMenuTestIds"
+      ]
+    },
+    {
+      "target": "add-menu.mjs",
+      "sources": [
+        "shared-8-BqfCbkJd.js",
+        "shared-1-D1bGaTaN.js",
+        "c752b32f8-NSBu06gO.js",
+        "shared-33-DtdykY0y.js",
+        "shared-212-BHMAi0oa.js"
+      ],
+      "sha256": "75839f45171757e69ae6cdf4af1dd0d343de332d0e12a3f6920ac2a40108e1b0",
+      "exports": [
+        "chatAddMenuMessages",
+        "chatAddMenu"
+      ]
+    }
+  ],
+  "picks": [
+    {
+      "name": "messages.addFilesConnectorsAndMore",
+      "root": "kF",
+      "source": "shared-8-BqfCbkJd.js",
+      "sha256": "3d5816dcf82f9f183de1143cf73db36bf7c18e9e836581593c155570cadca413"
+    },
+    {
+      "name": "trigger.button",
+      "root": "kF",
+      "source": "shared-8-BqfCbkJd.js",
+      "sha256": "80f654769c76141d58bcc50cf70b8381c8ccde2bd216d51698130541285310b8"
+    },
+    {
+      "name": "trigger.icon",
+      "root": "kF",
+      "source": "shared-8-BqfCbkJd.js",
+      "sha256": "6f807359ec1782d42568ecca2c711d1a53ccde6a226c287ce595a2cda3f35d32"
+    },
+    {
+      "name": "trigger.className",
+      "root": "kF",
+      "source": "shared-8-BqfCbkJd.js",
+      "sha256": "9c9134776bc1a8e1eb1f4d377f008235c498f57727b75e9ff0df26088cbfc954"
+    },
+    {
+      "name": "trigger.shortcut",
+      "root": "kF",
+      "source": "shared-8-BqfCbkJd.js",
+      "sha256": "8dd8b86c2ea987f0001f2c0d2397142338fbf4f5b82495bf00a36456bfca87f8"
+    },
+    {
+      "name": "trigger.tooltip",
+      "root": "kF",
+      "source": "shared-8-BqfCbkJd.js",
+      "sha256": "c83f2df30a808cc40574327cd4627a7584e4d28b0bb531c8d7a6983a65c316d1"
+    },
+    {
+      "name": "separators",
+      "root": "Js",
+      "source": "c752b32f8-NSBu06gO.js",
+      "sha256": "1c221ee6d2cf9057687bda89af6c6cc8ba486dd4a3bc02e33bb7a1225aa8b3f5"
+    },
+    {
+      "name": "assembly",
+      "root": "Js",
+      "source": "c752b32f8-NSBu06gO.js",
+      "sha256": "a61de8e2e1e71d9ead0edc0217c16b50cce0f71063f5feb6dbb0c823f30ec343"
+    },
+    {
+      "name": "messages.addFilesOrPhotos",
+      "root": "Ws",
+      "source": "c752b32f8-NSBu06gO.js",
+      "sha256": "7eeccfd10ccda8f9c1845c5a747bf78594e86cbf8cb7fdc804f7acf46d64d4f1"
+    },
+    {
+      "name": "items.uploadFile",
+      "root": "Ws",
+      "source": "c752b32f8-NSBu06gO.js",
+      "sha256": "0cfc8f94f0f63ddf3dcdab3d95f33aaa3894f83b46001e5b7313b64c2303209f"
+    },
+    {
+      "name": "messages.takeAScreenshot",
+      "root": "Fs",
+      "source": "c752b32f8-NSBu06gO.js",
+      "sha256": "b3fb86844abc704ce2ebdbfc930e99dad4309c685fb9e762ec10d44467b503e9"
+    },
+    {
+      "name": "messages.couldNotCaptureScreen",
+      "root": "Fs",
+      "source": "c752b32f8-NSBu06gO.js",
+      "sha256": "ec8cb466efa314334b7e3511ff3d1a8a20f3dabde3edbc73c5dd62293595a88b"
+    },
+    {
+      "name": "items.screenshot",
+      "root": "Fs",
+      "source": "c752b32f8-NSBu06gO.js",
+      "sha256": "2d389a9f4d430371838c189aa8e4b621cd98252bebee20d41df0d18c9bcb15f8"
+    },
+    {
+      "name": "messages.addToProject",
+      "root": "ks",
+      "source": "c752b32f8-NSBu06gO.js",
+      "sha256": "ebf20a5f7bbd97eb93851e2228db6709dcf6a000440b6bfbd7f423384430ff80"
+    },
+    {
+      "name": "items.project",
+      "root": "ks",
+      "source": "c752b32f8-NSBu06gO.js",
+      "sha256": "a7cf5b801fb8a3e1c3bc8d3f86283b6b3a80501eb66d3de1cc4c59ed4c3e4d48"
+    },
+    {
+      "name": "messages.searchOrCreateProject",
+      "root": "Es",
+      "source": "c752b32f8-NSBu06gO.js",
+      "sha256": "d19c63e275a634e6ce5b2e098152b1d87fe42df9ce957a3543bdc5714f39d8a3"
+    },
+    {
+      "name": "messages.searchProjects",
+      "root": "Es",
+      "source": "c752b32f8-NSBu06gO.js",
+      "sha256": "5ef72d8c507b7478a4e7ef8a56c108415b1f36481e5c9fee98275de72cb0e45d"
+    },
+    {
+      "name": "messages.noMatches",
+      "root": "Es",
+      "source": "c752b32f8-NSBu06gO.js",
+      "sha256": "c1add9d71a39b45443e1ba3a06f2e67f5442b01d3768cf866924b1f56666b526"
+    },
+    {
+      "name": "messages.noProjectsYet",
+      "root": "Es",
+      "source": "c752b32f8-NSBu06gO.js",
+      "sha256": "071cf6112e66b3c589c84ab75d4efd40bb1bac44e009adcb9c6c8ab8cf0b9a8c"
+    },
+    {
+      "name": "messages.noProjectsAvailable",
+      "root": "Es",
+      "source": "c752b32f8-NSBu06gO.js",
+      "sha256": "f3dab25e911f4626d88e496e0b1a17a37b7c4afc9f803e0da9e01e52ec73315d"
+    },
+    {
+      "name": "messages.failedToLoadProjects",
+      "root": "Es",
+      "source": "c752b32f8-NSBu06gO.js",
+      "sha256": "b33df6b876ba2af50ab32c26dbc7f87af015906f5ed22c3a845a0498b56b099b"
+    },
+    {
+      "name": "items.projectRow",
+      "root": "Es",
+      "source": "c752b32f8-NSBu06gO.js",
+      "sha256": "bfea5c11975fffbaa3c8467d48ad840b2183322e041051fb1528b0c6c5c02623"
+    },
+    {
+      "name": "items.projectNotice",
+      "root": "Es",
+      "source": "c752b32f8-NSBu06gO.js",
+      "sha256": "bd5f313826866ee509f735a28a87c5a2a0e0c6bc73019183b067c55f78d7417d"
+    },
+    {
+      "name": "projectPopup",
+      "root": "Ms",
+      "source": "c752b32f8-NSBu06gO.js",
+      "sha256": "9f4f23d82fc60be9539f8c038ab17531cf5354e987788028b3916bbd8dae478e"
+    },
+    {
+      "name": "messages.webSearch",
+      "root": "Tz",
+      "source": "shared-33-DtdykY0y.js",
+      "sha256": "77f562b4364ef75e991febd944e82fa4b08bdbdf1434fb19c0172fc4b3ca3c09"
+    },
+    {
+      "name": "items.webSearch",
+      "root": "Tz",
+      "source": "shared-33-DtdykY0y.js",
+      "sha256": "466afc8ed29d8e7078a2a08e50f42813a4f1fb3f5461134f771c78ea76fa421a"
+    },
+    {
+      "name": "items.webSearchBlocked",
+      "root": "Tz",
+      "source": "shared-33-DtdykY0y.js",
+      "sha256": "b1adc0a87b3f66c097bad5205b39eeb0a655cb67e2e712b5bc0b4ed8b5ec1a30"
+    },
+    {
+      "name": "messages.research",
+      "root": "yz",
+      "source": "shared-33-DtdykY0y.js",
+      "sha256": "4baab740721a6b157a2510f33d828017e81392ad9b6a5ea77577801b2f233bdb"
+    },
+    {
+      "name": "messages.researchNeedsSearchTool",
+      "root": "yz",
+      "source": "shared-33-DtdykY0y.js",
+      "sha256": "7c0103217f023575f943e1dfa5432b99e871891b3fcafec97de44df4ba9d946b"
+    },
+    {
+      "name": "messages.researchNeedsSearchIntegration",
+      "root": "yz",
+      "source": "shared-33-DtdykY0y.js",
+      "sha256": "da700701fc5ec5cba08e5f929cc6b7c7d8d817bfc27d840aaf89def86ec257b1"
+    },
+    {
+      "name": "items.research",
+      "root": "yz",
+      "source": "shared-33-DtdykY0y.js",
+      "sha256": "aec5feb9eeb601220932a9d3d57b034e2a1df7fb958cb6b494d9027adfa5f9a9"
+    }
+  ]
+}

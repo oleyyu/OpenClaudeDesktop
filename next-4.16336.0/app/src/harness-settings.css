@@ -1,0 +1,31 @@
+/* Settings › Harness (C6). Built on the ss-* settings rows; only the banner,
+   the inline control cluster and the Add server form are new. CDS tokens
+   carry light and dark mode. */
+.hs-notice { margin-top: var(--cds-gap-md, 12px); }
+.hs-banner {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--cds-gap-md, 12px);
+  margin: 0 0 var(--cds-gap-lg, 16px); padding: var(--cds-pad-sm, 6px) var(--cds-pad-sm, 6px) var(--cds-pad-sm, 6px) var(--cds-pad-lg, 12px);
+  border-radius: var(--cds-radius, 6px); background: var(--cds-surface-2); box-shadow: inset 0 0 0 1px var(--cds-alpha-2);
+  color: var(--cds-text-primary); font-size: var(--cds-font-size-body, 14px); line-height: var(--cds-leading-body, 20px);
+}
+.hs-banner[data-tone="danger"] { color: var(--cds-text-danger, #bc3636); }
+.hs-controls { display: flex; align-items: center; gap: var(--cds-gap-sm, 8px); flex-wrap: wrap; justify-content: flex-end; }
+.hs-required { color: var(--cds-text-muted); font-size: var(--cds-font-size-body, 14px); white-space: nowrap; }
+.hs-empty { margin: 0; padding: var(--cds-pad-md, 8px) 0; color: var(--cds-text-muted); font-size: var(--cds-font-size-body, 14px); line-height: var(--cds-leading-body, 20px); }
+.hs-group-actions { display: flex; gap: var(--cds-gap-sm, 8px); flex-wrap: wrap; padding: var(--cds-pad-md, 8px) 0; }
+.hs-page .ss-row [data-settings-desc] { overflow-wrap: anywhere; }
+.hs-form { display: grid; gap: var(--cds-gap-md, 12px); }
+.hs-field { display: grid; gap: 4px; min-width: 0; color: var(--cds-text-primary); font-size: var(--cds-font-size-body, 14px); }
+.hs-field > span { color: var(--cds-text-secondary); }
+.hs-field > small { color: var(--cds-text-muted); font-size: 12px; line-height: 16px; }
+.hs-field .sselect { width: 100%; }
+.hs-textarea {
+  display: block; box-sizing: border-box; width: 100%; min-width: 0; margin: 0;
+  padding: var(--cds-pad-sm, 6px) var(--cds-pad-md, 8px); border: 0; border-radius: var(--cds-radius, 6px);
+  background: var(--cds-fill-field); box-shadow: inset 0 0 0 1px var(--cds-fill-field-ring);
+  color: var(--cds-text-primary); font-family: var(--cds-font-mono, ui-monospace, monospace);
+  font-size: var(--cds-font-size-body, 13px); line-height: var(--cds-leading-body, 19px); resize: vertical; outline: none;
+}
+.hs-textarea::placeholder { color: var(--cds-text-muted); }
+.hs-textarea:focus-visible { box-shadow: var(--cds-focus-shadow); }
+@media (max-width: 560px) { .hs-banner { flex-direction: column; align-items: stretch; } }

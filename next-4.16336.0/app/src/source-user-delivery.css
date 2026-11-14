@@ -1,0 +1,21 @@
+/* The optimistic user message (approval-current.js:39548, :39632-39668, :39779-39823). While turn/start is pending
+   the row is opacity-60 (transition-opacity duration-base) with a role=status 'Sending…' footnote (text-footnote
+   leading-none text-secondary, -mt-[8px] under the bubble group); a refused send keeps the bubble with the
+   epitaxy-failed-send row: a text-footnote text-danger Warning note, then ghost xxs Retry and Discard. */
+.source-user-message[data-delivery-status] .source-user-group {
+  transition: opacity var(--cds-dur-base, 200ms) var(--cds-ease-out, ease-out);
+}
+.source-user-message[data-delivery-status="sending"] .source-user-group { opacity: .6; }
+.source-user-delivery { display: flex; align-items: center; justify-content: flex-end; gap: 3px; min-height: var(--cds-h-control, 24px); }
+.source-user-delivery-status {
+  display: flex; align-items: center; gap: 3px;
+  font-size: var(--cds-font-size-footnote, 12px); line-height: 1; color: var(--cds-text-secondary);
+}
+.source-user-failed-send { display: flex; align-items: center; justify-content: flex-end; gap: 4px; padding-top: 4px; }
+.source-user-failed-note {
+  display: flex; align-items: center; gap: 3px;
+  font-size: var(--cds-font-size-footnote, 12px); line-height: var(--cds-leading-footnote, 16px); color: var(--cds-text-danger);
+}
+@media (prefers-reduced-motion: reduce) {
+  .source-user-message[data-delivery-status] .source-user-group { transition: none; }
+}

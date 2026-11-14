@@ -1,0 +1,28 @@
+/* CDS InfoTip popup (2.31226.0 shared-frame-DVFSKIcx.js pw dw = kf Mf jf over the Popover popup, tailwind-merged):
+   kf "rounded-[calc(0.375rem*var(--cds-rem-scale,1))] bg-[var(--cds-tooltip-bg)] text-[var(--cds-tooltip-fg)] shadow-sm
+   dark:shadow-panel-sm text-[calc(0.8125rem…)]/[calc(1.125rem…)] font-normal", Mf "max-w-[240px] whitespace-normal",
+   jf the snap scale/opacity transition; the content span fw "block px-2 py-1.5 min-w-0 break-words". */
+.sp-popup.sit-popup {
+  max-width: 240px;
+  border-radius: calc(0.375rem * var(--cds-rem-scale, 1));
+  background: var(--cds-tooltip-bg);
+  color: var(--cds-tooltip-fg);
+  box-shadow: var(--cds-shadow-sm);
+  font-size: calc(0.8125rem * var(--cds-rem-scale, 1));
+  line-height: calc(1.125rem * var(--cds-rem-scale, 1));
+  font-weight: 400;
+  white-space: normal;
+  transform-origin: var(--transform-origin);
+  transition: opacity 120ms cubic-bezier(0.32, 0.72, 0, 1), scale 120ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+.sp-portal[data-mode="dark"] .sp-popup.sit-popup {
+  box-shadow: inset 0 0 0 var(--cds-ring-inner, 0px) var(--cds-ring-color, transparent), 0 0 0 var(--cds-ring-outer, 0px) var(--cds-ring-color, transparent), var(--cds-shadow-sm);
+}
+.sp-popup.sit-popup[data-starting-style] { opacity: 0; scale: 0.98; }
+.sit-content { display: block; min-width: 0; padding: 6px 8px; overflow-wrap: break-word; }
+@media (prefers-reduced-motion: reduce) { .sp-popup.sit-popup { transition: none; } }
+html[data-local-motion="reduce"] .sp-popup.sit-popup { transition: none; }
+/* uw data-[popup-open]:text-secondary */
+[data-cds="InfoTip"][data-popup-open] { color: var(--cds-text-secondary); }
+/* uw focus-visible:text-secondary focus-visible:shadow-focus (the trigger draws no outline of its own). */
+[data-cds="InfoTip"]:focus-visible { color: var(--cds-text-secondary); box-shadow: var(--cds-focus-shadow); }

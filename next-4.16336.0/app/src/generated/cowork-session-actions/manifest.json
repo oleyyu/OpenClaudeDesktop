@@ -1,0 +1,204 @@
+{
+  "referenceVersion": "4.16336.0",
+  "referenceSnapshot": "snapshots/claude-4.16336.0-20261104",
+  "generator": "scripts/extract-cowork-session-actions.mjs",
+  "rootMatch": "looseFeature, unique per chunk",
+  "adapterModule": "src/source-cowork-session-actions-adapters.jsx",
+  "modules": [
+    {
+      "target": "refusal.mjs",
+      "source": "shared-0-CnnWnVrT.js",
+      "sourceSha256": "eb5fb89d8b47627c28969bd1df41f25a49a3e1d6ed91c5af2d980d5847d78ae1",
+      "sha256": "0775dcb22454b6105f9279eb44e66793a2c2d20e6f62c94ef017cee4aa23404c",
+      "bindings": [
+        {
+          "name": "jee",
+          "sha256": "6fa0692a5cfb3d3a62168d9ed016419b24cb38644f30c9690f9c861eb7763643"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "jee": "LocalRewindRefusal"
+      },
+      "features": {
+        "jee": [
+          "e.Dead = \"dead\"",
+          "e.NoText = \"no_text\"",
+          "e.Unsupported = \"unsupported\"",
+          "e.Unknown = \"unknown\""
+        ]
+      }
+    },
+    {
+      "target": "error-text.mjs",
+      "source": "preload-helper-BBljBeZo.js",
+      "sourceSha256": "eaca89d983d210116ad54e23c289ba7e36d993ab760a62264603d744601fa614",
+      "sha256": "795f5131ff02bd72f66f667f98648aa3c668873424116012a6d7aa08f2b3e9f2",
+      "bindings": [
+        {
+          "name": "e",
+          "sha256": "ae3a24deb2952bf4ae6ec64cd91df0be80ff083fa511d11220eebc272b2d36cf"
+        }
+      ],
+      "imports": [],
+      "exports": {
+        "e": "withErrorText"
+      },
+      "features": {
+        "e": [
+          "Symbol.for(\"ant.o11y.errorText\")",
+          "value: { text: t, kind: n }"
+        ]
+      }
+    },
+    {
+      "target": "rewind-bridge.mjs",
+      "source": "cb1e253a0-Ct0IcfPp.js",
+      "sourceSha256": "3858c618d9e83798462473a91058efbb0f8be2c4ca449a0335e20e7c36e756c4",
+      "sha256": "e74607a2714b76b7865609a6e0095d2b9f602e0ec9b07b0c84902ec4daae47fa",
+      "bindings": [
+        {
+          "name": "vg",
+          "sha256": "995bd852e01a09bc335fa26d10250eb9e0ca4cc0bfa6518a2e143b27b4820055"
+        },
+        {
+          "name": "bg",
+          "sha256": "9b97a47bcd1d287bea95487d58d5ee6d19f637fec85750de9d37b79e7909aeda"
+        },
+        {
+          "name": "xg",
+          "sha256": "f52402d30204f86fd3c3fe5589842a5f525a3d940927016246ba93098d5aa7a6"
+        }
+      ],
+      "imports": [
+        {
+          "local": "c",
+          "from": "./error-text.mjs",
+          "name": "withErrorText",
+          "via": "preload-helper-BBljBeZo.js:n",
+          "kind": "generated",
+          "original": "e"
+        },
+        {
+          "local": "V",
+          "from": "./refusal.mjs",
+          "name": "LocalRewindRefusal",
+          "via": "shared-0-CnnWnVrT.js:Ug",
+          "kind": "generated",
+          "original": "jee"
+        }
+      ],
+      "exports": {
+        "bg": "hasRewindBridge",
+        "xg": "rewindLocalSession"
+      },
+      "features": {
+        "bg": [
+          "e?.rewindV2 ?? e?.rewind"
+        ],
+        "xg": [
+          "await e.rewindV2(t, n)",
+          "!eh.has(i) ? Me.Unknown : i",
+          "await e.rewind(t, n)",
+          "\"rewind IPC unavailable\"",
+          "\"literal\""
+        ]
+      }
+    },
+    {
+      "target": "rewind-messages.mjs",
+      "source": "c21f11e6d-Cyj5xu_D.js",
+      "sourceSha256": "447d453f1060221fbc7dba61a01b4b2ecff7fc10d1fbcd7a060e2a7269045145",
+      "sha256": "fdf1a319ea67908f30573933d5641cf166013cc6d2183e2e472b173be8f198fa",
+      "bindings": [
+        {
+          "name": "eP",
+          "sha256": "0cef56d96455e67c308931400d595032284e07b712eccb4654f329f3580269e7"
+        },
+        {
+          "name": "tP",
+          "sha256": "41e17bf5980220029c1a829cd3d3263f9e8699b13f0d9fdbe524dbab1e0c1071"
+        },
+        {
+          "name": "nP",
+          "sha256": "bf7dd907cb054db3227dabd9b3afce6164efa36ba01b14c9133514a338679e14"
+        },
+        {
+          "name": "rP",
+          "sha256": "baa8d87120167a4d10bd2c172358c1d773efd639876c9e3ba037730fcc377cb9"
+        },
+        {
+          "name": "zF",
+          "sha256": "0ece4c5a5d288aff9a506416ad6eb89d0c64f353f2f8f11fd4eefa1bf7bf10f9"
+        }
+      ],
+      "imports": [
+        {
+          "local": "ke",
+          "from": "./refusal.mjs",
+          "name": "LocalRewindRefusal",
+          "via": "shared-0-CnnWnVrT.js:Ug",
+          "kind": "generated",
+          "original": "jee"
+        }
+      ],
+      "exports": {
+        "eP": "remoteRewindRejectionMessage",
+        "tP": "localRewindRefusalMessage",
+        "nP": "rewindFailureMessage",
+        "rP": "rewindOutcomeToast",
+        "zF": "lastHumanBubbleWhenRewindable"
+      },
+      "features": {
+        "eP": [
+          "case \"turn running\":",
+          "case \"commands queued\":",
+          "case \"stale target\":",
+          "case \"unseen later turn\":",
+          "case \"target not found\":",
+          "id: \"QfDweriZQj\"",
+          "id: \"N4pAEIJK4/\"",
+          "id: \"K1/egsMFpR\"",
+          "id: \"cnZntAZvlD\"",
+          "id: \"TW8yay5oV+\"",
+          "id: \"pcv56liZj9\""
+        ],
+        "tP": [
+          "case ke.Dead:",
+          "case Et.NoText:",
+          "case Et.Unsupported:",
+          "id: \"YmzbNCp+kq\"",
+          "id: \"/FZxzzWOs5\"",
+          "id: \"SC1NI+O8Y4\""
+        ],
+        "nP": [
+          "case \"restart\":",
+          "case \"refusal_retry\":",
+          "case \"edit\":",
+          "id: \"N6n//LvbO8\"",
+          "id: \"EMw1vE8dOU\"",
+          "id: \"fUE4seXTv0\""
+        ],
+        "rP": [
+          "let { surface: r } = t",
+          "case \"sent\":",
+          "case \"timeout\":",
+          "case \"rejected\":",
+          "case \"error\":",
+          "case \"empty\":",
+          "id: \"JAqfKwYq8j\"",
+          "id: \"SgdArTNAT/\"",
+          "id: \"kvjiUWTVfc\"",
+          "t.isRemoteSession",
+          "\"CoworkSessionView edit rewind timeout\"",
+          "eP(e.error.reason, n)",
+          "tP(e.refusal, n)"
+        ],
+        "zF": [
+          "e.canRewindToMessage",
+          "e.findLastHumanBubble()"
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+/* Shared CDS Dialog. W14-code r2-shared-06 / css2-dialog-body: the backdrop, popup, Zv body, header, footer and sizes
+   are the 3.6556.2 shared-frame-6jtSkIit.js utility classes themselves (hy/gy, Sy/Xv/my/Cy/wy, Zv, Zy, eb; see
+   source-dialog.jsx), so only the portal stacking and two local behaviours stay here. */
+.sdlg-portal > * { z-index: var(--cds-portal-z); } /* nl: [&>*]:z-[var(--cds-portal-z)] */
+/* Local: a closing dialog hands focus back at once, so presses pass through the layer while it plays its exit. */
+.sdlg-portal > [data-ending-style] { pointer-events: none; }
+/* Local: the app's Reduce motion setting (html[data-reduce-motion]) as well as prefers-reduced-motion (motion-reduce:). */
+html[data-reduce-motion="true"] .sdlg-popup, html[data-reduce-motion="true"] .sdlg-backdrop { transition: none; }

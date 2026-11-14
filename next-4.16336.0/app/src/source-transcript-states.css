@@ -1,0 +1,45 @@
+/* Transcript pane states (source-transcript-states.jsx). The source renders
+   them in place of the transcript scroller (_d role=status h-full, EmptyState
+   h-full); locally they sit inside .source-transcript-content, so that column
+   takes the scrollport height while it holds one of them. The fade strips are
+   net zero height and the end sentinel is absolute, so this never overflows. */
+.source-transcript-content:has(> .source-transcript-pending, > .source-empty-state) {
+  height: 100%;
+}
+/* The status wrapper of _d keeps the .loading-state hook the GUI suites wait on.
+   With cached rows it is only the sr-only announcement: zero height. */
+.loading-state {
+  margin: 0;
+  padding: 0;
+}
+.source-transcript-pending {
+  height: 100%;
+}
+/* Zw reserves the both-edge gutter because it replaces the scroller; here the
+   local .transcript scroller already reserves it once. */
+.source-transcript-pending > [data-transcript-skeleton] {
+  scrollbar-gutter: auto;
+}
+/* EmptyState u root r (cc0a875c8-B6xI6vLN.js) restated with the cds tokens the
+   utilities resolve to (design-system.css gap-md/px-lg/py-lg). */
+.source-empty-state {
+  display: flex;
+  height: 100%;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--cds-gap-md);
+  padding: var(--cds-pad-lg);
+  text-align: center;
+}
+.source-empty-state p {
+  margin: 0;
+}
+/* shared-8 k_ bubble Skeleton "box-content h-[1lh] … py-md text-heading": the
+   source bar is content-box, 1lh + 2 x --cds-pad-md tall. The loaded .box-content
+   utility sits in @layer utilities (c6a992d55-C0zTICcS.css), so the unlayered
+   local `* { box-sizing: border-box }` (style.css) would beat it and collapse the
+   bar to 1lh; restate it unlayered for the skeleton only. */
+[data-transcript-skeleton] .box-content {
+  box-sizing: content-box;
+}

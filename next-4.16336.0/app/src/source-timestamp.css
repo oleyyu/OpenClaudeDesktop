@@ -1,0 +1,13 @@
+/* AO base merged with OY (Ca = tailwind-merge): "flex h-control items-center
+   first:ps-0 last:pe-0 font-normal select-none" + "text-body text-muted
+   tabular-nums ps-md pe-md" (text-caption and ps-sm/pe-sm are overridden). */
+.source-timestamp {
+  display: flex; align-items: center; box-sizing: border-box;
+  height: var(--cds-h-control, 24px);
+  padding-inline-start: var(--cds-pad-md, 8px); padding-inline-end: var(--cds-pad-md, 8px);
+  font-size: var(--cds-font-size-body, 13px); line-height: var(--cds-leading-body, 19px); font-weight: 400;
+  color: var(--cds-text-muted); font-variant-numeric: tabular-nums;
+  user-select: none; -webkit-user-select: none;
+}
+.source-timestamp:first-child { padding-inline-start: 0; }
+.source-timestamp:last-child { padding-inline-end: 0; }

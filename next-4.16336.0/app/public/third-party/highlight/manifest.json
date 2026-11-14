@@ -1,0 +1,834 @@
+{
+  "scope": "Pinned syntax-highlighter runtime and grammar notices (all 235 bundled grammars of the original table ship as lazy chunks; tm-grammars-1.32.3-NOTICE.txt covers every grammar, selected-grammars-NOTICE.txt is the earlier subset); copied from installed packages, independently verified against scratch provenance; @shikijs/themes 4.4.3 supplies the 24 third-party code themes listed under \"themes\" (each loaded on demand as its own module); also includes the pinned streaming-inline CommonMark string decoder and character-reference dependencies. Includes pinned response-math KaTeX 0.16.47 / remark-math 6.0.0 and resolved dependency notices, including type/CLI dependencies.",
+  "grammars": [
+    "abap",
+    "actionscript-3",
+    "ada",
+    "angular-html",
+    "angular-ts",
+    "apache",
+    "apex",
+    "apl",
+    "applescript",
+    "ara",
+    "asciidoc",
+    "asm",
+    "astro",
+    "awk",
+    "ballerina",
+    "bat",
+    "beancount",
+    "berry",
+    "bibtex",
+    "bicep",
+    "bird2",
+    "blade",
+    "bsl",
+    "c",
+    "c3",
+    "cadence",
+    "cairo",
+    "clarity",
+    "clojure",
+    "cmake",
+    "cobol",
+    "codeowners",
+    "codeql",
+    "coffee",
+    "common-lisp",
+    "coq",
+    "cpp",
+    "crystal",
+    "csharp",
+    "css",
+    "csv",
+    "cue",
+    "cypher",
+    "d",
+    "dart",
+    "dax",
+    "desktop",
+    "diff",
+    "docker",
+    "dotenv",
+    "dream-maker",
+    "edge",
+    "elixir",
+    "elm",
+    "emacs-lisp",
+    "erb",
+    "erlang",
+    "fennel",
+    "fish",
+    "fluent",
+    "fortran-fixed-form",
+    "fortran-free-form",
+    "fsharp",
+    "gdresource",
+    "gdscript",
+    "gdshader",
+    "genie",
+    "gherkin",
+    "git-commit",
+    "git-rebase",
+    "gleam",
+    "glimmer-js",
+    "glimmer-ts",
+    "glsl",
+    "gn",
+    "gnuplot",
+    "go",
+    "graphql",
+    "groovy",
+    "hack",
+    "haml",
+    "handlebars",
+    "haskell",
+    "haxe",
+    "hcl",
+    "hjson",
+    "hlsl",
+    "html",
+    "html-derivative",
+    "http",
+    "hurl",
+    "hxml",
+    "hy",
+    "imba",
+    "ini",
+    "java",
+    "javascript",
+    "jinja",
+    "jison",
+    "json",
+    "json5",
+    "jsonc",
+    "jsonl",
+    "jsonnet",
+    "jssm",
+    "jsx",
+    "julia",
+    "just",
+    "kdl",
+    "kotlin",
+    "kusto",
+    "latex",
+    "lean",
+    "less",
+    "liquid",
+    "llvm",
+    "log",
+    "logo",
+    "lua",
+    "luau",
+    "make",
+    "markdown",
+    "marko",
+    "matlab",
+    "mdc",
+    "mdx",
+    "mermaid",
+    "mipsasm",
+    "mojo",
+    "moonbit",
+    "move",
+    "narrat",
+    "nextflow",
+    "nextflow-groovy",
+    "nginx",
+    "nim",
+    "nix",
+    "nushell",
+    "objective-c",
+    "objective-cpp",
+    "ocaml",
+    "odin",
+    "openscad",
+    "pascal",
+    "perl",
+    "php",
+    "pkl",
+    "plsql",
+    "po",
+    "polar",
+    "postcss",
+    "powerquery",
+    "powershell",
+    "prisma",
+    "prolog",
+    "proto",
+    "pug",
+    "puppet",
+    "purescript",
+    "python",
+    "qml",
+    "qmldir",
+    "qss",
+    "r",
+    "racket",
+    "raku",
+    "razor",
+    "reg",
+    "regexp",
+    "rel",
+    "riscv",
+    "ron",
+    "rosmsg",
+    "rst",
+    "ruby",
+    "rust",
+    "sas",
+    "sass",
+    "scala",
+    "scheme",
+    "scss",
+    "sdbl",
+    "shaderlab",
+    "shellscript",
+    "shellsession",
+    "smalltalk",
+    "solidity",
+    "soy",
+    "sparql",
+    "splunk",
+    "sql",
+    "ssh-config",
+    "stata",
+    "stylus",
+    "surrealql",
+    "svelte",
+    "swift",
+    "system-verilog",
+    "systemd",
+    "talonscript",
+    "tasl",
+    "tcl",
+    "templ",
+    "terraform",
+    "tex",
+    "toml",
+    "ts-tags",
+    "tsv",
+    "tsx",
+    "turtle",
+    "twig",
+    "typescript",
+    "typespec",
+    "typst",
+    "v",
+    "vala",
+    "vb",
+    "verilog",
+    "vhdl",
+    "viml",
+    "vue",
+    "vue-html",
+    "vue-vine",
+    "vyper",
+    "wasm",
+    "wenyan",
+    "wgsl",
+    "wikitext",
+    "wit",
+    "wolfram",
+    "xml",
+    "xsl",
+    "yaml",
+    "zenscript",
+    "zig"
+  ],
+  "entries": [
+    {
+      "file": "@shikijs-core-4.4.3-LICENSE",
+      "name": "@shikijs/core",
+      "version": "4.4.3",
+      "license": "MIT",
+      "sha256": "7a9d8d01038aeacf9e5bcdabbddf2a7815200dce9fc1118468cc553e00ae3eee"
+    },
+    {
+      "file": "@shikijs-engine-javascript-4.4.3-LICENSE",
+      "name": "@shikijs/engine-javascript",
+      "version": "4.4.3",
+      "license": "MIT",
+      "sha256": "7a9d8d01038aeacf9e5bcdabbddf2a7815200dce9fc1118468cc553e00ae3eee"
+    },
+    {
+      "file": "@shikijs-langs-4.4.3-LICENSE",
+      "name": "@shikijs/langs",
+      "version": "4.4.3",
+      "license": "MIT",
+      "sha256": "7a9d8d01038aeacf9e5bcdabbddf2a7815200dce9fc1118468cc553e00ae3eee"
+    },
+    {
+      "file": "@shikijs-primitive-4.4.3-LICENSE",
+      "name": "@shikijs/primitive",
+      "version": "4.4.3",
+      "license": "MIT",
+      "sha256": "7a9d8d01038aeacf9e5bcdabbddf2a7815200dce9fc1118468cc553e00ae3eee"
+    },
+    {
+      "file": "@shikijs-themes-4.4.3-LICENSE",
+      "name": "@shikijs/themes",
+      "version": "4.4.3",
+      "license": "MIT",
+      "sha256": "7a9d8d01038aeacf9e5bcdabbddf2a7815200dce9fc1118468cc553e00ae3eee"
+    },
+    {
+      "file": "@shikijs-types-4.4.3-LICENSE",
+      "name": "@shikijs/types",
+      "version": "4.4.3",
+      "license": "MIT",
+      "sha256": "7a9d8d01038aeacf9e5bcdabbddf2a7815200dce9fc1118468cc553e00ae3eee"
+    },
+    {
+      "file": "@shikijs-vscode-textmate-10.0.2-LICENSE.md",
+      "name": "@shikijs/vscode-textmate",
+      "version": "10.0.2",
+      "license": "MIT",
+      "sha256": "b5cb7ff7859e7d282d98fc43ab081b0dda5dc659dc3385cf65740c759a7e6a6c"
+    },
+    {
+      "file": "ccount-2.0.1-license",
+      "name": "ccount",
+      "version": "2.0.1",
+      "license": "MIT",
+      "sha256": "63cb98b3f6abfb3c3592c16f88253c1bdc834087bf52671e8ce5609e4eb693cf"
+    },
+    {
+      "file": "character-entities-html4-2.1.0-license",
+      "name": "character-entities-html4",
+      "version": "2.1.0",
+      "license": "MIT",
+      "sha256": "63cb98b3f6abfb3c3592c16f88253c1bdc834087bf52671e8ce5609e4eb693cf"
+    },
+    {
+      "file": "character-entities-legacy-3.0.0-license",
+      "name": "character-entities-legacy",
+      "version": "3.0.0",
+      "license": "MIT",
+      "sha256": "63cb98b3f6abfb3c3592c16f88253c1bdc834087bf52671e8ce5609e4eb693cf"
+    },
+    {
+      "file": "comma-separated-tokens-2.0.3-license",
+      "name": "comma-separated-tokens",
+      "version": "2.0.3",
+      "license": "MIT",
+      "sha256": "ca4662cb5d1b738fbe5350c0d5485ba11773b4b7208974082ae6e129a52d631d"
+    },
+    {
+      "file": "hast-util-to-html-9.0.5-license",
+      "name": "hast-util-to-html",
+      "version": "9.0.5",
+      "license": "MIT",
+      "sha256": "dd1081884a92952802f4803110a6bb543acea9a814c786d58605b4c1219b5ebb"
+    },
+    {
+      "file": "hast-util-whitespace-3.0.0-license",
+      "name": "hast-util-whitespace",
+      "version": "3.0.0",
+      "license": "MIT",
+      "sha256": "ca4662cb5d1b738fbe5350c0d5485ba11773b4b7208974082ae6e129a52d631d"
+    },
+    {
+      "file": "html-void-elements-3.0.0-license",
+      "name": "html-void-elements",
+      "version": "3.0.0",
+      "license": "MIT",
+      "sha256": "ca4662cb5d1b738fbe5350c0d5485ba11773b4b7208974082ae6e129a52d631d"
+    },
+    {
+      "file": "oniguruma-parser-0.12.2-LICENSE",
+      "name": "oniguruma-parser",
+      "version": "0.12.2",
+      "license": "MIT",
+      "sha256": "5fe78c91b36c6147ed0b6ab1631ce731165b7dd5e00482be1f027d46d12a8082"
+    },
+    {
+      "file": "oniguruma-to-es-4.3.6-LICENSE",
+      "name": "oniguruma-to-es",
+      "version": "4.3.6",
+      "license": "MIT",
+      "sha256": "c1a5a1ebc88f3e0f3caa04c0af52bf8f3a5405a467337a09594ae1ad149cec83"
+    },
+    {
+      "file": "property-information-7.2.0-license",
+      "name": "property-information",
+      "version": "7.2.0",
+      "license": "MIT",
+      "sha256": "5d0698266086f217bb11ea0499d33453e401fe479fb9126ad04e625e63d3557b"
+    },
+    {
+      "file": "regex-6.1.0-LICENSE",
+      "name": "regex",
+      "version": "6.1.0",
+      "license": "MIT",
+      "sha256": "3d19c2b6246b3072547af2bd05e6b4c09bd3d15955590f1f1e1d20382c919a49"
+    },
+    {
+      "file": "regex-recursion-6.0.2-LICENSE",
+      "name": "regex-recursion",
+      "version": "6.0.2",
+      "license": "MIT",
+      "sha256": "3d19c2b6246b3072547af2bd05e6b4c09bd3d15955590f1f1e1d20382c919a49"
+    },
+    {
+      "file": "regex-utilities-2.3.0-LICENSE",
+      "name": "regex-utilities",
+      "version": "2.3.0",
+      "license": "MIT",
+      "sha256": "8ca7af4f6c753e5ab8388e1078d94ce4650723bba4b0d4dfe562fbd45fb4a4e6"
+    },
+    {
+      "file": "space-separated-tokens-2.0.2-license",
+      "name": "space-separated-tokens",
+      "version": "2.0.2",
+      "license": "MIT",
+      "sha256": "ca4662cb5d1b738fbe5350c0d5485ba11773b4b7208974082ae6e129a52d631d"
+    },
+    {
+      "file": "stringify-entities-4.0.4-license",
+      "name": "stringify-entities",
+      "version": "4.0.4",
+      "license": "MIT",
+      "sha256": "9f084fac69d8cf1e6ce983ba5a3499c7695ed74a26ec625c38f0fd19fddd5e10"
+    },
+    {
+      "file": "zwitch-2.0.4-license",
+      "name": "zwitch",
+      "version": "2.0.4",
+      "license": "MIT",
+      "sha256": "ca4662cb5d1b738fbe5350c0d5485ba11773b4b7208974082ae6e129a52d631d"
+    },
+    {
+      "file": "selected-grammars-NOTICE.txt",
+      "name": "tm-grammars",
+      "version": "1.32.3",
+      "sha256": "6d76048fc8f9e85657f2b44737d5b1cd19c72db75e2b0f394006df93c8265c39"
+    },
+    {
+      "file": "tm-grammars-1.32.3-NOTICE.txt",
+      "name": "tm-grammars",
+      "version": "1.32.3",
+      "sha256": "891a322f68bde2f18f5ce84592c03cf7cda3197f648df71b5a31d647f5892586"
+    },
+    {
+      "version": "2.9.1",
+      "license": "ISC",
+      "file": "yaml-LICENSE.txt",
+      "sha256": "5bba27375d93e9119f76c1015f7672cf9ad5f70952296e0842fb2243d6376869",
+      "name": "yaml"
+    },
+    {
+      "file": "micromark-util-decode-string-2.0.1-license",
+      "name": "micromark-util-decode-string",
+      "version": "2.0.1",
+      "license": "MIT",
+      "sha256": "dd1081884a92952802f4803110a6bb543acea9a814c786d58605b4c1219b5ebb"
+    },
+    {
+      "file": "micromark-util-decode-numeric-character-reference-2.0.2-license",
+      "name": "micromark-util-decode-numeric-character-reference",
+      "version": "2.0.2",
+      "license": "MIT",
+      "sha256": "dd1081884a92952802f4803110a6bb543acea9a814c786d58605b4c1219b5ebb"
+    },
+    {
+      "file": "decode-named-character-reference-1.3.0-license",
+      "name": "decode-named-character-reference",
+      "version": "1.3.0",
+      "license": "MIT",
+      "sha256": "dd1081884a92952802f4803110a6bb543acea9a814c786d58605b4c1219b5ebb"
+    },
+    {
+      "file": "character-entities-2.0.2-license",
+      "name": "character-entities",
+      "version": "2.0.2",
+      "license": "MIT",
+      "sha256": "63cb98b3f6abfb3c3592c16f88253c1bdc834087bf52671e8ce5609e4eb693cf"
+    },
+    {
+      "file": "katex-0.16.47-LICENSE",
+      "name": "katex",
+      "version": "0.16.47",
+      "license": "MIT",
+      "sha256": "766ccc1f306c885aa45542a9846bbd0a505b27a0374f146778171c2254ce18e3"
+    },
+    {
+      "file": "commander-8.3.0-LICENSE",
+      "name": "commander",
+      "version": "8.3.0",
+      "license": "MIT",
+      "sha256": "04512a63dce4d2d506ad612dc0bd7681ccf6e3655f7b6eaef7dfac8323d1ec0b"
+    },
+    {
+      "file": "remark-math-6.0.0-LICENSE",
+      "name": "remark-math",
+      "version": "6.0.0",
+      "license": "MIT",
+      "sha256": "cb992262f361a5359e6771c28740d33c7041e15332ae8537fae40538992591a9",
+      "source": "https://raw.githubusercontent.com/remarkjs/remark-math/d5d0660b150810a535bbb07eac6cc96a4510aa24/license"
+    },
+    {
+      "file": "@types-mdast-4.0.4-LICENSE",
+      "name": "@types/mdast",
+      "version": "4.0.4",
+      "license": "MIT",
+      "sha256": "c2cfccb812fe482101a8f04597dfc5a9991a6b2748266c47ac91b6a5aae15383"
+    },
+    {
+      "file": "@types-unist-3.0.3-LICENSE",
+      "name": "@types/unist",
+      "version": "3.0.3",
+      "license": "MIT",
+      "sha256": "c2cfccb812fe482101a8f04597dfc5a9991a6b2748266c47ac91b6a5aae15383"
+    },
+    {
+      "file": "mdast-util-math-3.0.0-LICENSE",
+      "name": "mdast-util-math",
+      "version": "3.0.0",
+      "license": "MIT",
+      "sha256": "536804b3adbff17dbbb9ed0d2bf9655b78f07640278581e37e3d7475282d5e61"
+    },
+    {
+      "file": "@types-hast-3.0.5-LICENSE",
+      "name": "@types/hast",
+      "version": "3.0.5",
+      "license": "MIT",
+      "sha256": "c2cfccb812fe482101a8f04597dfc5a9991a6b2748266c47ac91b6a5aae15383"
+    },
+    {
+      "file": "devlop-1.1.0-LICENSE",
+      "name": "devlop",
+      "version": "1.1.0",
+      "license": "MIT",
+      "sha256": "6f296a5eccc1dc96714bb94ebaa9cac25b0a1467d74cc5263ac4d0646ab01f62"
+    },
+    {
+      "file": "dequal-2.0.3-LICENSE",
+      "name": "dequal",
+      "version": "2.0.3",
+      "license": "MIT",
+      "sha256": "306fa513e39b23a6e8747520de761809d206b99800ef41907b530226574c59ae"
+    },
+    {
+      "file": "longest-streak-3.1.0-LICENSE",
+      "name": "longest-streak",
+      "version": "3.1.0",
+      "license": "MIT",
+      "sha256": "9f084fac69d8cf1e6ce983ba5a3499c7695ed74a26ec625c38f0fd19fddd5e10"
+    },
+    {
+      "file": "mdast-util-from-markdown-2.0.3-LICENSE",
+      "name": "mdast-util-from-markdown",
+      "version": "2.0.3",
+      "license": "MIT",
+      "sha256": "dd1081884a92952802f4803110a6bb543acea9a814c786d58605b4c1219b5ebb"
+    },
+    {
+      "file": "mdast-util-to-string-4.0.0-LICENSE",
+      "name": "mdast-util-to-string",
+      "version": "4.0.0",
+      "license": "MIT",
+      "sha256": "63cb98b3f6abfb3c3592c16f88253c1bdc834087bf52671e8ce5609e4eb693cf"
+    },
+    {
+      "file": "micromark-4.0.2-LICENSE",
+      "name": "micromark",
+      "version": "4.0.2",
+      "license": "MIT",
+      "sha256": "dd1081884a92952802f4803110a6bb543acea9a814c786d58605b4c1219b5ebb"
+    },
+    {
+      "file": "@types-debug-4.1.13-LICENSE",
+      "name": "@types/debug",
+      "version": "4.1.13",
+      "license": "MIT",
+      "sha256": "c2cfccb812fe482101a8f04597dfc5a9991a6b2748266c47ac91b6a5aae15383"
+    },
+    {
+      "file": "@types-ms-2.1.0-LICENSE",
+      "name": "@types/ms",
+      "version": "2.1.0",
+      "license": "MIT",
+      "sha256": "c2cfccb812fe482101a8f04597dfc5a9991a6b2748266c47ac91b6a5aae15383"
+    },
+    {
+      "file": "debug-4.4.3-LICENSE",
+      "name": "debug",
+      "version": "4.4.3",
+      "license": "MIT",
+      "sha256": "3a61c6c96caf5c1d9b623fb9b04c822b783dfcb78aa7e49c76a3f643e6ed7f95"
+    },
+    {
+      "file": "ms-2.1.3-LICENSE",
+      "name": "ms",
+      "version": "2.1.3",
+      "license": "MIT",
+      "sha256": "1662fae9b5314d11cf51284e2dcd1f006a354f7343f08712a730fcff9a359801"
+    },
+    {
+      "file": "micromark-core-commonmark-2.0.3-LICENSE",
+      "name": "micromark-core-commonmark",
+      "version": "2.0.3",
+      "license": "MIT",
+      "sha256": "dd1081884a92952802f4803110a6bb543acea9a814c786d58605b4c1219b5ebb"
+    },
+    {
+      "file": "micromark-factory-destination-2.0.1-LICENSE",
+      "name": "micromark-factory-destination",
+      "version": "2.0.1",
+      "license": "MIT",
+      "sha256": "dd1081884a92952802f4803110a6bb543acea9a814c786d58605b4c1219b5ebb"
+    },
+    {
+      "file": "micromark-util-character-2.1.1-LICENSE",
+      "name": "micromark-util-character",
+      "version": "2.1.1",
+      "license": "MIT",
+      "sha256": "dd1081884a92952802f4803110a6bb543acea9a814c786d58605b4c1219b5ebb"
+    },
+    {
+      "file": "micromark-util-symbol-2.0.1-LICENSE",
+      "name": "micromark-util-symbol",
+      "version": "2.0.1",
+      "license": "MIT",
+      "sha256": "dd1081884a92952802f4803110a6bb543acea9a814c786d58605b4c1219b5ebb"
+    },
+    {
+      "file": "micromark-util-types-2.0.2-LICENSE",
+      "name": "micromark-util-types",
+      "version": "2.0.2",
+      "license": "MIT",
+      "sha256": "dd1081884a92952802f4803110a6bb543acea9a814c786d58605b4c1219b5ebb"
+    },
+    {
+      "file": "micromark-factory-label-2.0.1-LICENSE",
+      "name": "micromark-factory-label",
+      "version": "2.0.1",
+      "license": "MIT",
+      "sha256": "dd1081884a92952802f4803110a6bb543acea9a814c786d58605b4c1219b5ebb"
+    },
+    {
+      "file": "micromark-factory-space-2.0.1-LICENSE",
+      "name": "micromark-factory-space",
+      "version": "2.0.1",
+      "license": "MIT",
+      "sha256": "dd1081884a92952802f4803110a6bb543acea9a814c786d58605b4c1219b5ebb"
+    },
+    {
+      "file": "micromark-factory-title-2.0.1-LICENSE",
+      "name": "micromark-factory-title",
+      "version": "2.0.1",
+      "license": "MIT",
+      "sha256": "dd1081884a92952802f4803110a6bb543acea9a814c786d58605b4c1219b5ebb"
+    },
+    {
+      "file": "micromark-factory-whitespace-2.0.1-LICENSE",
+      "name": "micromark-factory-whitespace",
+      "version": "2.0.1",
+      "license": "MIT",
+      "sha256": "dd1081884a92952802f4803110a6bb543acea9a814c786d58605b4c1219b5ebb"
+    },
+    {
+      "file": "micromark-util-chunked-2.0.1-LICENSE",
+      "name": "micromark-util-chunked",
+      "version": "2.0.1",
+      "license": "MIT",
+      "sha256": "dd1081884a92952802f4803110a6bb543acea9a814c786d58605b4c1219b5ebb"
+    },
+    {
+      "file": "micromark-util-classify-character-2.0.1-LICENSE",
+      "name": "micromark-util-classify-character",
+      "version": "2.0.1",
+      "license": "MIT",
+      "sha256": "dd1081884a92952802f4803110a6bb543acea9a814c786d58605b4c1219b5ebb"
+    },
+    {
+      "file": "micromark-util-html-tag-name-2.0.1-LICENSE",
+      "name": "micromark-util-html-tag-name",
+      "version": "2.0.1",
+      "license": "MIT",
+      "sha256": "dd1081884a92952802f4803110a6bb543acea9a814c786d58605b4c1219b5ebb"
+    },
+    {
+      "file": "micromark-util-normalize-identifier-2.0.1-LICENSE",
+      "name": "micromark-util-normalize-identifier",
+      "version": "2.0.1",
+      "license": "MIT",
+      "sha256": "dd1081884a92952802f4803110a6bb543acea9a814c786d58605b4c1219b5ebb"
+    },
+    {
+      "file": "micromark-util-resolve-all-2.0.1-LICENSE",
+      "name": "micromark-util-resolve-all",
+      "version": "2.0.1",
+      "license": "MIT",
+      "sha256": "dd1081884a92952802f4803110a6bb543acea9a814c786d58605b4c1219b5ebb"
+    },
+    {
+      "file": "micromark-util-subtokenize-2.1.0-LICENSE",
+      "name": "micromark-util-subtokenize",
+      "version": "2.1.0",
+      "license": "MIT",
+      "sha256": "dd1081884a92952802f4803110a6bb543acea9a814c786d58605b4c1219b5ebb"
+    },
+    {
+      "file": "micromark-util-combine-extensions-2.0.1-LICENSE",
+      "name": "micromark-util-combine-extensions",
+      "version": "2.0.1",
+      "license": "MIT",
+      "sha256": "dd1081884a92952802f4803110a6bb543acea9a814c786d58605b4c1219b5ebb"
+    },
+    {
+      "file": "micromark-util-encode-2.0.1-LICENSE",
+      "name": "micromark-util-encode",
+      "version": "2.0.1",
+      "license": "MIT",
+      "sha256": "dd1081884a92952802f4803110a6bb543acea9a814c786d58605b4c1219b5ebb"
+    },
+    {
+      "file": "micromark-util-sanitize-uri-2.0.1-LICENSE",
+      "name": "micromark-util-sanitize-uri",
+      "version": "2.0.1",
+      "license": "MIT",
+      "sha256": "dd1081884a92952802f4803110a6bb543acea9a814c786d58605b4c1219b5ebb"
+    },
+    {
+      "file": "unist-util-stringify-position-4.0.0-LICENSE",
+      "name": "unist-util-stringify-position",
+      "version": "4.0.0",
+      "license": "MIT",
+      "sha256": "ca4662cb5d1b738fbe5350c0d5485ba11773b4b7208974082ae6e129a52d631d"
+    },
+    {
+      "file": "mdast-util-to-markdown-2.1.2-LICENSE",
+      "name": "mdast-util-to-markdown",
+      "version": "2.1.2",
+      "license": "MIT",
+      "sha256": "dd1081884a92952802f4803110a6bb543acea9a814c786d58605b4c1219b5ebb"
+    },
+    {
+      "file": "mdast-util-phrasing-4.1.0-LICENSE",
+      "name": "mdast-util-phrasing",
+      "version": "4.1.0",
+      "license": "MIT",
+      "sha256": "b6d1a4e1831b177acc96f22a817d4f0f4c18419355badc3125754445fc69e3a7"
+    },
+    {
+      "file": "unist-util-is-6.0.1-LICENSE",
+      "name": "unist-util-is",
+      "version": "6.0.1",
+      "license": "MIT",
+      "sha256": "82974dbf2639d13edab95c32ed9cb6c0867ede272cd2e07ce47ce8548fe55c05"
+    },
+    {
+      "file": "unist-util-visit-5.1.0-LICENSE",
+      "name": "unist-util-visit",
+      "version": "5.1.0",
+      "license": "MIT",
+      "sha256": "63cb98b3f6abfb3c3592c16f88253c1bdc834087bf52671e8ce5609e4eb693cf"
+    },
+    {
+      "file": "unist-util-visit-parents-6.0.2-LICENSE",
+      "name": "unist-util-visit-parents",
+      "version": "6.0.2",
+      "license": "MIT",
+      "sha256": "ca4662cb5d1b738fbe5350c0d5485ba11773b4b7208974082ae6e129a52d631d"
+    },
+    {
+      "file": "unist-util-remove-position-5.0.0-LICENSE",
+      "name": "unist-util-remove-position",
+      "version": "5.0.0",
+      "license": "MIT",
+      "sha256": "ca4662cb5d1b738fbe5350c0d5485ba11773b4b7208974082ae6e129a52d631d"
+    },
+    {
+      "file": "micromark-extension-math-3.1.0-LICENSE",
+      "name": "micromark-extension-math",
+      "version": "3.1.0",
+      "license": "MIT",
+      "sha256": "536804b3adbff17dbbb9ed0d2bf9655b78f07640278581e37e3d7475282d5e61"
+    },
+    {
+      "file": "@types-katex-0.16.8-LICENSE",
+      "name": "@types/katex",
+      "version": "0.16.8",
+      "license": "MIT",
+      "sha256": "c2cfccb812fe482101a8f04597dfc5a9991a6b2748266c47ac91b6a5aae15383"
+    },
+    {
+      "file": "unified-11.0.5-LICENSE",
+      "name": "unified",
+      "version": "11.0.5",
+      "license": "MIT",
+      "sha256": "05811400116ed61f1a7693b78fe8ca6598c155a12f3978e609db4df648a4cb3d"
+    },
+    {
+      "file": "bail-2.0.2-LICENSE",
+      "name": "bail",
+      "version": "2.0.2",
+      "license": "MIT",
+      "sha256": "63cb98b3f6abfb3c3592c16f88253c1bdc834087bf52671e8ce5609e4eb693cf"
+    },
+    {
+      "file": "extend-3.0.2-LICENSE",
+      "name": "extend",
+      "version": "3.0.2",
+      "license": "MIT",
+      "sha256": "97af7428f93afbab9bf79cd09254da1357161794f4255eb1b4599f04dd2d2e7c"
+    },
+    {
+      "file": "is-plain-obj-4.1.0-LICENSE",
+      "name": "is-plain-obj",
+      "version": "4.1.0",
+      "license": "MIT",
+      "sha256": "5c932d88256b4ab958f64a856fa48e8bd1f55bc1d96b8149c65689e0c61789d3"
+    },
+    {
+      "file": "trough-2.2.0-LICENSE",
+      "name": "trough",
+      "version": "2.2.0",
+      "license": "MIT",
+      "sha256": "6c03fd41cfd7c92d8aa8a2fa521b94b2683f059123281dcf921ddea9216b6254"
+    },
+    {
+      "file": "vfile-6.0.3-LICENSE",
+      "name": "vfile",
+      "version": "6.0.3",
+      "license": "MIT",
+      "sha256": "05811400116ed61f1a7693b78fe8ca6598c155a12f3978e609db4df648a4cb3d"
+    },
+    {
+      "file": "vfile-message-4.0.3-LICENSE",
+      "name": "vfile-message",
+      "version": "4.0.3",
+      "license": "MIT",
+      "sha256": "dd1081884a92952802f4803110a6bb543acea9a814c786d58605b4c1219b5ebb"
+    }
+  ],
+  "themes": [
+    "github-light",
+    "github-dark",
+    "github-dark-dimmed",
+    "one-dark-pro",
+    "one-light",
+    "dracula",
+    "dracula-soft",
+    "catppuccin-latte",
+    "catppuccin-mocha",
+    "nord",
+    "solarized-dark",
+    "solarized-light",
+    "vitesse-dark",
+    "vitesse-light",
+    "min-dark",
+    "min-light",
+    "monokai",
+    "tokyo-night",
+    "night-owl",
+    "rose-pine",
+    "rose-pine-dawn",
+    "ayu-dark",
+    "slack-dark",
+    "slack-ochin"
+  ]
+}
