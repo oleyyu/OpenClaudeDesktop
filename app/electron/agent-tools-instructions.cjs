@@ -26,6 +26,9 @@ const INSTRUCTIONS = [
   "4. Check the result: read_page or get_page_text for content and structure, preview_inspect for styles and layout, click/type/press to try an interaction, resize_window for other sizes or a color scheme.",
   "5. Share proof: if you can see images, take a screenshot of the changed state; if you can't, rely on read_page, get_page_text and preview_inspect, and never claim you saw a screenshot. Say briefly what you verified. If something is broken, fix it and check again.",
   "Skip this for changes nothing in the app shows (tests, docs, tooling), or when the user asks you not to.",
+  "",
+  // devtools-mcp/: the chrome-devtools server every core gets next to this one, on the same preview tabs.
+  "Deeper debugging in the preview: keep using the preview tools above (navigate, click, read_page, screenshot…) for everyday work on a page. When you need more than they show — a performance trace, a network response body, an error's stack mapped through source maps, memory — use the chrome-devtools MCP server's tools if they are in your tool list: they see the same preview tabs (only those), not a separate Chrome. Call its list_pages first and select_page the tab you mean before its other tools; it can't open outside sites the preview hasn't been allowed to open (use navigate for that).",
 ].join("\n");
 
 module.exports = { INSTRUCTIONS };

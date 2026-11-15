@@ -144,3 +144,37 @@ test('an imported tool call is its own content block and a collapsed tool row, n
   assert.equal(importedToolItem('x', '[Tool: Bash]\nnpm test\n[Result]\nok\n\n[Tool: Read]\n/a\n[Result]\nbody\n\nRefactored.'), null)
   assert.equal(importedToolItem('x', '[Tool: Bash]\necho hi\n[Result]\n[Tool: x] is mentioned, not opened').tool, 'Bash')
 })
+
+test('with the blocks\' calls the seeded reply shows the rows a native call shows; the model reads the same text; the seed stays valid', async () => {
+  const shell = '[Tool: Bash]\nnpm test\n[Result (exit 1)]\n1 failing'
+  const edit = '[Tool: Edit]\nupdate /w/a.js\n[Result]\nok'
+  const fetch = '[Tool: WebFetch]\nhttps://e.com\n[Result (error)]\nHTTP 404'
+  const diff = '@@ -1,1 +1,1 @@\n-a\n+b\n'
+  const parts = [{ text: 'Looking.' },
+    { text: shell, tool: true, call: { type: 'commandExecution', command: 'npm test', cwd: '/w' } },
+    { text: edit, tool: true, call: { type: 'fileChange', changes: [{ path: '/w/a.js', kind: { type: 'update', move_path: null }, diff }] } },
+    { text: fetch, tool: true, call: { type: 'webSearch', query: 'https://e.com', action: { type: 'openPage', url: 'https://e.com' }, junk: 1 } },
+    { text: 'Fixed.', call: { type: 'commandExecution', command: 'ignored on prose' } }]
+  const messages = importMessages([{ role: 'user', text: 'Fix it' }, { role: 'assistant', text: parts.map((part) => part.text).join('\n\n'), parts }])
+  const built = importSeed(messages, ROUTE)
+  const [reply] = built.seed.filter((event) => event.type === 'assistant/message')
+  assert.deepEqual(reply.data.message.content.map((block) => block.text), ['Looking.', shell, edit, fetch, 'Fixed.'], 'the model reads the same text')
+  assert.deepEqual(reply.data.importedCalls, [null, { type: 'commandExecution', command: 'npm test', cwd: '/w' },
+    { type: 'fileChange', changes: [{ path: '/w/a.js', kind: { type: 'update', move_path: null }, diff }] }, { type: 'webSearch', query: 'https://e.com', action: { type: 'openPage', url: 'https://e.com' } }, null])
+  assert.ok(!JSON.stringify(reply.data.message).includes('importedCalls'), 'never in the message the model is handed')
+  const session = seededSession(built, 'import-calls')
+  assert.deepEqual(await invariantFailures(session), [])
+  const projector = new ThreadProjector({ threadId: 'import-calls', cwd: '/w' })
+  for (const event of session.snapshotEvents()) projector.apply(event)
+  const items = projector.snapshot(projector.turns[0]).items
+  assert.deepEqual(items.map((item) => item.type), ['userMessage', 'agentMessage', 'commandExecution', 'fileChange', 'webSearch', 'agentMessage'])
+  const [, , ran, change, web] = items
+  assert.deepEqual([ran.command, ran.cwd, ran.exitCode, ran.status, ran.aggregatedOutput], ['npm test', '/w', 1, 'failed', '1 failing'])
+  assert.deepEqual([change.changes[0].diff, change.status], [diff, 'completed'])
+  assert.deepEqual([web.action, web.results, web.error, web.status], [{ type: 'openPage', url: 'https://e.com' }, null, { message: 'HTTP 404' }, 'failed'])
+  // A seed written before calls rode on the event shows the rows from their text, as it did.
+  const old = built.seed.map((event) => (event.type === 'assistant/message' ? { ...event, data: { ...event.data, importedCalls: undefined } } : event))
+  const before = new ThreadProjector({ threadId: 'import-old', cwd: '/w' })
+  for (const event of old) before.apply(event)
+  assert.deepEqual(before.snapshot(before.turns[0]).items.map((item) => item.type), ['userMessage', 'agentMessage', 'dynamicToolCall', 'dynamicToolCall', 'dynamicToolCall', 'agentMessage'])
+})

@@ -23,6 +23,43 @@ const addTokens = (a, b) => ({
 })
 const DENIED = /doesn't want to proceed|was rejected|denied by|declined/i
 
+const httpStatus = (value) => (Number.isInteger(value) && value >= 100 && value < 600 ? value : typeof value === 'string' && /^[1-5]\d\d$/.test(value) ? Number(value) : null)
+const QUOTA = /quota|insufficient balance|余额|usage limit|套餐|limit will reset|额度|用量/
+
+/**
+ * A ZCode failure's Codex identity (CodexErrorInfo), status first: a turn.failed payload's ErrorPayload carries the
+ * provider's HTTP status in attribution.statusCode with ZCode's own code and reason (failure-classifier.ts: 401/403 →
+ * provider_not_configured / auth_failed, 429 → model_rate_limited / rate_limited, 529 → provider_overloaded, 5xx →
+ * server_error, 400/422 → invalid_model_request or model_context_exceeded), a stored reply's error
+ * (AssistantErrorInfo {name: 'APIError', data: {message, statusCode, isRetryable}}) has it in data.statusCode, and a
+ * retry notice in its errorStatus ({code}). The message only decides what none of them names (a bare string, a
+ * provider's own wording in any language).
+ */
+export function zcodeErrorInfo(error) {
+  const value = isRecord(error) ? error : {}
+  const message = typeof error === 'string' ? error : String(value.message ?? value.data?.message ?? '')
+  const status = httpStatus(value.attribution?.statusCode) ?? httpStatus(value.statusCode) ?? httpStatus(value.data?.statusCode) ?? httpStatus(value.status) ?? httpStatus(value.code)
+  const code = typeof value.code === 'string' ? value.code : ''
+  const reason = typeof value.attribution?.reason === 'string' ? value.attribution.reason : typeof value.reason === 'string' ? value.reason : ''
+  const lower = `${code || value.name || ''} ${message}`.toLowerCase()
+  if (status === 401 || status === 403 || code === 'provider_not_configured' || reason === 'auth_failed') return 'unauthorized'
+  if (code === 'model_context_exceeded' || reason === 'context_exceeded') return 'contextWindowExceeded'
+  if (status === 429 || status === 402 || code === 'model_rate_limited' || reason === 'rate_limited') return QUOTA.test(lower) || status === 402 ? 'usageLimitExceeded' : 'rateLimitExceeded'
+  if (status === 529 || status === 503 || reason === 'provider_overloaded') return 'serverOverloaded'
+  if ((status !== null && status >= 500) || reason === 'server_error') return 'internalServerError'
+  if (code === 'model_request_timeout' || /^(?:timeout|stream_idle_timeout|network_error|tls_error|proxy_error)$/.test(reason)) return { responseStreamConnectionFailed: { httpStatusCode: status } }
+  if (status === 400 || status === 404 || status === 422 || code === 'invalid_model_request' || code === 'model_not_found' || reason === 'invalid_request') return 'badRequest'
+  if (/401|403|unauthori[sz]ed|invalid api key|authentication|鉴权|未登录|credential/.test(lower)) return 'unauthorized'
+  if (/429|rate.?limit|too many requests|频率/.test(lower)) return QUOTA.test(lower) ? 'usageLimitExceeded' : 'rateLimitExceeded'
+  if (QUOTA.test(lower)) return 'usageLimitExceeded'
+  if (/context.?(window|length)|too long|maximum context/.test(lower)) return 'contextWindowExceeded'
+  if (/503|529|overload/.test(lower)) return 'serverOverloaded'
+  if (/500|502|internal server/.test(lower)) return 'internalServerError'
+  if (/econnrefused|enotfound|fetch failed|network|timed? ?out|socket/.test(lower)) return { responseStreamConnectionFailed: { httpStatusCode: null } }
+  if (/400|invalid request|bad request/.test(lower)) return 'badRequest'
+  return null
+}
+
 /** Codex user-input parts for a ZCode user message (the original parts when the bridge recorded them). */
 export function userContent(message, recorded) {
   if (Array.isArray(recorded) && recorded.length) return recorded
@@ -205,7 +242,7 @@ export function turnsFromMessages(messages, context) {
     }
     if (info.error && !running) {
       turn.status = /abort|cancel/i.test(String(info.error.name ?? info.error.message ?? '')) ? 'interrupted' : 'failed'
-      if (turn.status === 'failed') turn.error = { message: String(info.error.message ?? info.error.data?.message ?? 'The turn failed.'), codexErrorInfo: null, additionalDetails: info.error.name ?? null, misalignment: null }
+      if (turn.status === 'failed') turn.error = { message: String(info.error.message ?? info.error.data?.message ?? 'The turn failed.'), codexErrorInfo: zcodeErrorInfo(info.error), additionalDetails: info.error.name ?? null, misalignment: null }
     }
     if (info.finish === 'cancelled' || info.finish === 'aborted') turn.status = 'interrupted'
     if (running) turn.status = 'inProgress'

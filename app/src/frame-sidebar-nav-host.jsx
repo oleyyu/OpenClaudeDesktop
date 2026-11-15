@@ -25,7 +25,9 @@ import { useStartIntl } from "./source-code-start-adapters.jsx";
 import { useSourceToasts } from "./source-toast.jsx";
 // cds-core wave 8 (W8-M6): shared-25 tu, the official frame pathname store (store_shared25_tu), is held by cds-core; the host
 // projects main.jsx's route into it through its own setState (no shadow store). shared-62 Qk: the one host answer.
-import { store_shared25_tu as officialPathnameStore } from "./cds-core.mjs";
+import { store_shared25_tu as officialPathnameStore, store_shared8_Y_ as officialUnreadStore } from "./cds-core.mjs";
+import { ownerThreadId } from "./state.js";
+import { routineUnreadState } from "./sidebar-routines-model.mjs";
 import { useServedDeploymentConfig } from "./source-routine-cowork-adapters.jsx";
 // shared-7 zg (useEffectiveErrorCategory): the one host answer the home and the Code sidebar status glyph (code-current-v4
 // sidebar-status-glyph.mjs W_) already use — the official no-billing result `{effectiveCategory: e, billingNotSelfManageable}`.
@@ -183,16 +185,56 @@ const tanStackRouter = Object.freeze({
 // sessions in every mode (the manager's list does not follow the shown surface) and their load state (localSessionsState).
 // The local session is a Codex thread (name, createdAt / updatedAt in seconds); the official record's times are epoch
 // milliseconds (Date.now(); sidebar-model.js timestampMs) and its title is the shown name (sessionName: the thread name, else its preview).
-export function officialLocalSession(session, meta = {}) {
+//   isRunning / pendingToolPermissions are the row's status inputs (shared-39 dp: `mp(e) ? "requires_action" : e.isRunning ||
+//     … ? "running" : "idle"`, mp = pendingToolPermissions with an entry that is not a `confirm_` CLI tool use; shared-39 GT →
+//     liveStatus → shared-57 lC → shared-20 hN: the 6px status dot, muted while running, warning while awaiting input, none
+//     when idle). The host's facts come from main.jsx's engine state (officialSessionLive below), not from the session record.
+export function officialLocalSession(session, meta = {}, live = {}) {
   return {
     sessionId: session.id, cwd: session.cwd, originCwd: session.originCwd ?? session.cwd,
-    isRunning: !!session.running, turnRunning: !!session.running,
+    isRunning: !!live.running, turnRunning: !!live.running,
+    pendingToolPermissions: live.pendingToolPermissions,
     createdAt: timestampMs(session.createdAt ?? session.updatedAt), lastActivityAt: timestampMs(session.updatedAt ?? session.createdAt),
     title: meta.title ?? session.title ?? (sessionName(session) || undefined), model: session.model, branch: session.branch,
     worktreePath: session.worktreePath, worktreeName: session.worktreeName,
     isArchived: !!(meta.archived ?? session.archived), isStarred: !!meta.pinned,
   };
 }
+// The engine facts of one Code session for officialLocalSession, as the classic sidebar reads them
+// (sidebar-session-current-model.mjs currentSidebarSession): a turn is active, and the approvals waiting on the session (a
+// sub-agent's count for the session that owns it). The list keeps its identity while the same requests wait, so the bridge's
+// record comparison (sameSessionRecord) does not report an unchanged session.
+const pendingLists = new Map(); // sessionId -> { key, list }
+export function officialSessionLive(session, state = {}) {
+  const running = !!state.active?.[session.id] || session.status?.type === "active";
+  const waiting = (state.approvals ?? []).filter((approval) => approval.params?.threadId && ownerThreadId(state, approval.params.threadId) === session.id);
+  if (!waiting.length) { pendingLists.delete(session.id); return { running, pendingToolPermissions: undefined }; }
+  const key = waiting.map((approval, index) => String(approval.id ?? index)).join("\n");
+  let held = pendingLists.get(session.id);
+  if (held?.key !== key) pendingLists.set(session.id, held = { key, list: Object.freeze(waiting.map((approval, index) => Object.freeze({ requestId: String(approval.id ?? index) }))) });
+  return { running, pendingToolPermissions: held.list };
+}
+// Unread (shared-8 Z_ / $_ / ev over cds-core shared-8 Y_, the official renderer unread store; shared-39 GT `s = e.isUnread ||
+// o.has(e.id)` → "ready", the accent dot): the host's truth is sessionMetadata[id].unread / explicitUnread (main.cjs
+// sidebar-state "metadata"), mirrored into the official store after each commit. A change the official code makes in the
+// store itself (markRead / markUnread / markUnreadExplicit) is written back to the host's metadata.
+let mirroring = false;
+const sameIds = (a, b) => a.length === b.length && a.every((id, index) => id === b[index]);
+export function syncUnread(metadata) {
+  const next = routineUnreadState(metadata), held = officialUnreadStore.getState();
+  // (the official store is persisted, "epitaxy-unread-v1": what it hydrated with is replaced by the host's metadata too)
+  if (sameIds(next.unreadIds, held.unreadIds) && sameIds(next.explicitUnreadIds, held.explicitUnreadIds)) return;
+  mirroring = true;
+  try { officialUnreadStore.setState({ unreadIds: next.unreadIds, explicitUnreadIds: next.explicitUnreadIds }); } finally { mirroring = false; }
+}
+officialUnreadStore.subscribe((state, previous) => {
+  if (mirroring) return;
+  // electron/sidebar-read-state.cjs: explicitUnread = unread && !automatic.
+  const write = (id, patch, options) => { try { void Promise.resolve(live?.updateSessionMetadata?.(id, patch, options)).catch(() => {}); } catch {} };
+  const now = new Set(state.unreadIds), explicit = new Set(state.explicitUnreadIds), before = new Set(previous.unreadIds), wasExplicit = new Set(previous.explicitUnreadIds);
+  for (const id of before) if (!now.has(id)) write(id, { unread: false });
+  for (const id of now) if (!before.has(id) || explicit.has(id) !== wasExplicit.has(id)) write(id, { unread: true }, { automatic: !explicit.has(id) });
+});
 // The bridge follows the official LocalSessionManager (asar/.vite/build/index.chunk-CqaSnEfn.js), whose renderer side is the
 // sliced shared-8 ccdSessionsStore (ky boots once, from shared-22 bB: wy reads getSessionList, then ut.onOnEvent applies the
 // manager's events):
@@ -436,6 +478,7 @@ export function FrameSidebarNavHost({ value, children }) {
   // The LocalSessions bridge's load / events follow main.jsx's list after commit (syncLocalSessions above).
   useEffect(() => { syncLocalSessions(value); }, [value.localSessionsState, value.localSessions]);
   useEffect(() => { syncSupportedFeatures(value.supportedFeatures); }, [value.supportedFeatures]);
+  useEffect(() => { syncUnread(value.sessionMetadata); }, [value.sessionMetadata]);
   return (
     <FrameSidebarNavHostContext.Provider value={value}>
       <QueryClientProvider client={navQueryClient}>{children}</QueryClientProvider>

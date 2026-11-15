@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Hardened-runtime entitlements for the Developer ID build (scripts/sign-local.mjs). V8 needs JIT and unsigned
+     executable memory; native modules and the bundled core runtimes are not signed by the app's team, so library
+     validation is off. The microphone (dictation, watch-record narration) and the camera (web previews) are refused under
+     the hardened runtime without their entitlements; Apple Events drive other apps for computer use; the Swift VM
+     (Cowork) needs virtualization. -->
+<plist version="1.0">
+<dict>
+  <key>com.apple.security.cs.allow-jit</key><true/>
+  <key>com.apple.security.cs.allow-unsigned-executable-memory</key><true/>
+  <key>com.apple.security.cs.disable-library-validation</key><true/>
+  <key>com.apple.security.device.audio-input</key><true/>
+  <key>com.apple.security.device.camera</key><true/>
+  <key>com.apple.security.automation.apple-events</key><true/>
+  <key>com.apple.security.virtualization</key><true/>
+</dict>
+</plist>

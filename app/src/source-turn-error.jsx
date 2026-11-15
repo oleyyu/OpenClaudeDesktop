@@ -3,7 +3,7 @@ import React, { useLayoutEffect, useRef, useState } from "react";
 import { Icon } from "./icons";
 import { SourceDisclosure } from "./source-disclosure.jsx";
 import { createClipboardFeedback } from "./clipboard-feedback.mjs";
-import { describeTurnError, officialErrorFix, TURN_ERROR_ICONS, turnErrorDetails, turnErrorHint, turnErrorStatus } from "./turn-error-model.mjs";
+import { apiErrorStatusOf, describeTurnError, officialErrorFix, TURN_ERROR_ICONS, turnErrorDetails, turnErrorHint, turnErrorStatus } from "./turn-error-model.mjs";
 // W14-code transcript-rest TR-H1: the Code transcript's error card is the original 3.6556.2 card (cb1a6e506 j, sliced by
 // extract-code-transcript.mjs; c96d752d0 pK draws it as `hC`), its actions the CDS Buttons and Checkbox c3e34355f / pK use.
 import { j as OfficialErrorCard } from "./generated/code-transcript/cb1a6e506-CGO9mb0Y.mjs";
@@ -97,14 +97,34 @@ export function turnErrorText(error) {
 // card and is gone with the host card (E95 replaces E93's split; Chat keeps the host card). Returns {turnId: {message,
 // status?}} for code-transcript-entries; W14-code r5 R5T-02: `status` is the HTTP status (c06cf64bb `Xn(r)`, the
 // turn_error item's apiErrorStatus, which V2 / j1 branch on: 400, 401).
+// display-bugs-20261114 D-03: the status is apiErrorStatusOf's (a string CodexErrorInfo too: 'unauthorized' → 401,
+// 'rateLimitExceeded' → 429, …; a plan / daily quota 'usageLimitExceeded' stays statusless) and the text the desktop's own API error text, "API Error: {status} {body}"
+// (rendererTurnErrorText), which code-transcript k1 (shared-3 x3 / C3: S3 `API error:? (4xx|5xx)`) reads — the card's hint
+// (i2e: 401 "Authentication failed. Sign in again to continue.", 429 "Rate limited…", 5xx "Service is busy…") and an older
+// turn's marker (a2e: "Authentication failed", "Rate limited", …). The headline stays L1's. The host card is unchanged.
 export function rendererTurnErrors(turnErrors) {
   const out = {};
   for (const [turnId, error] of Object.entries(turnErrors && typeof turnErrors === "object" ? turnErrors : {})) {
     if (!error) continue;
-    const status = turnErrorStatus(error?.codexErrorInfo);
-    out[turnId] = { message: turnErrorText(error), ...(status !== undefined ? { status } : {}) };
+    const status = apiErrorStatusOf(error);
+    out[turnId] = { message: rendererTurnErrorText(error, status), ...(status !== undefined ? { status } : {}) };
   }
   return out;
+}
+
+// D-03: shared-3 S3, the status k1 reads from an error text.
+const TEXT_STATUS = /(?:API error:?|HTTP(?:\/\d(?:\.\d)?)?|status(?:\s*code)?:?)\s*(4\d{2}|5\d{2})\b/i;
+/**
+ * D-03: a turn_error item's text with its status where k1 finds it: "API Error: 401 {body}". The details box (c7fb5ec3d y)
+ * reads the same text back: `API Error:` then `u = /^(\d{3})\s+(?=[A-Z[{(])/` for the muted Status line, and a JSON body's
+ * error.message (S) for its message — so a body that does not open with a capital or a bracket is that JSON, as the API's own
+ * error bodies are. A text that already names a status (either form) is left as it is.
+ */
+export function rendererTurnErrorText(error, status) {
+  const details = turnErrorDetails(error?.message ? { ...error, message: localizeBridgeText(error.message) } : error);
+  if (!details || status === undefined || TEXT_STATUS.test(details) || /^\s*API Error\s*\(\d{3}\)/i.test(details)) return details;
+  const body = details.replace(/^\s*API Error:?\s*/i, "");
+  return `API Error: ${status} ${/^[A-Z[{(]/.test(body) ? body : JSON.stringify({ error: { message: body } })}`;
 }
 
 // c3e34355f's recovery Buttons (shared-frame Eu = CdsButton, no size); `variant` / `onClick` / children as the host's.

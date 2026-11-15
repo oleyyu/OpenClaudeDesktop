@@ -189,8 +189,12 @@ const { recordActivity, readableLedger, ledgerStats, statsShape, statsCoreKey, k
 const { workspaceGitStatus, workspaceGitDiff, workspaceGitComparison, workspaceGitCommits, workspaceGitBranches, workspaceGitImage, workspaceGitFilePatch, workspaceGitFileText } = require("./git-status.cjs");
 const { porcelainEntries, wouldBranchSwitchConflict } = require("./branch-switch.cjs");
 app.setName("OpenClaude Desktop");
+// The installed 0.3 keeps its own data folder beside 0.2's "OpenClaude Desktop", so going back to an installed 0.2 finds
+// its sessions as it left them (the two UIs store some things differently).
 if (process.env.CODE_DESKTOP_DATA)
   app.setPath("userData", process.env.CODE_DESKTOP_DATA);
+else if (app.isPackaged)
+  app.setPath("userData", path.join(app.getPath("appData"), "OpenClaude Desktop v0.3"));
 // Bridge cores read Settings › Models custom providers from here (codex.cjs resolveCore).
 process.env.CODE_DESKTOP_DATA_DIR = app.getPath("userData");
 // The main window focused last (windowRegistry has them all): dialogs, the menu bar, the tray and notifications act on it.
@@ -410,6 +414,8 @@ const { createPreviewService } = require("./preview-service.cjs");
 const { createTaskBacklog, publicItem: publicBacklogItem, folderKey: taskBacklogFolderKey } = require("./task-backlog.cjs");
 const { sessionErrorPatch } = require("./session-attention.cjs");
 let previewService = null;
+// devtools-mcp/: the chrome-devtools MCP server every core gets, on the preview tabs (created with previewService).
+let devtoolsMcp = null;
 const agentToolSession = (id) => {
   if (typeof id !== "string" || !config || ![...config.threadIds, ...config.archivedThreadIds].includes(id)) return null;
   const cwd = config.threadMetadata[id]?.cwd;
@@ -455,6 +461,20 @@ const computerUseSelfBundleIds = (() => {
 // module; ax-helper.cjs routes those three to its focusWindow / menu / listApps). app_zoom crops the last screenshot with
 // nativeImage, as JPEG at the screenshots' quality (budget.cjs).
 const computerUseNative = require("./computer-use/native.cjs").createNative();
+// Composer dictation (dictation.cjs) over the same native module, created on first use. Development only:
+// CODE_DESKTOP_DICTATION_FIXTURE=1 swaps in a scripted recognizer (tests/fixtures/dictation-native-fixture.cjs) for the
+// UI test, and CODE_DESKTOP_DICTATION_TEST_AUDIO=<file> feeds an audio file to the real recognizer instead of the microphone.
+let composerDictationService = null;
+function composerDictation() {
+  if (composerDictationService) return composerDictationService;
+  const { app, systemPreferences, shell } = require("electron");
+  let native = computerUseNative;
+  if (!app.isPackaged && process.env.CODE_DESKTOP_DICTATION_FIXTURE === "1") native = require(path.join(__dirname, "../tests/fixtures/dictation-native-fixture.cjs")).createFixture();
+  const testAudioFile = !app.isPackaged && process.env.CODE_DESKTOP_DICTATION_TEST_AUDIO ? process.env.CODE_DESKTOP_DICTATION_TEST_AUDIO : null;
+  composerDictationService = require("./dictation.cjs").createDictation({ native, systemPreferences, testAudioFile,
+    openExternal: (url) => shell.openExternal(url) });
+  return composerDictationService;
+}
 const computerUseAxHelper = require("./computer-use/ax-helper.cjs").createAxHelper({ native: computerUseNative });
 const computerUseImage = {
   crop: async ({ dataUrl, rect, width, height }) => ({
@@ -2793,11 +2813,13 @@ app.whenReady().then(async () => {
   });
   windowRegistry.onWindowClosed((window) => previewService?.windowClosed(window));
   try { await agentTools.start(); } catch (error) { console.warn(`Agent tools unavailable: ${error?.message ?? error}`); }
-  require("./codex.cjs").setAgentToolsLaunch(() => ({ env: agentTools.launchEnv(), codexArgs: agentTools.codexArgs() }));
+  devtoolsMcp = require("./devtools-mcp/index.cjs").createDevtoolsMcp({ previewService, enabled: () => agentToolGroupEnabled("preview") });
+  require("./codex.cjs").setAgentToolsLaunch(devtoolsMcp.wrapLaunch(() => ({ env: agentTools.launchEnv(), codexArgs: agentTools.codexArgs() })));
   // The first spawn of any client (often the Home stats card's, before connect() runs) waits for Settings › Models'
   // launch: a saved Codex custom endpoint's -c args and the exported keys. Once: connect() refreshes it after that.
   let launchPrepared = null;
-  require("./codex.cjs").setBeforeSpawn(() => (launchPrepared ??= Promise.resolve().then(() => modelSettings.ready?.()).catch((error) => { console.warn("Couldn’t prepare the core launch:", error?.message ?? error); })));
+  // The chrome-devtools proxy starts here too (lazily: the first core spawn), so its server is in that spawn's launch.
+  require("./codex.cjs").setBeforeSpawn(() => (launchPrepared ??= Promise.resolve().then(() => modelSettings.ready?.()).catch((error) => { console.warn("Couldn’t prepare the core launch:", error?.message ?? error); }).then(() => devtoolsMcp?.start().catch(() => null))));
   client = new CodexClient();
   client.on("event", receive);
   const firstClient = client;
@@ -3573,10 +3595,18 @@ app.whenReady().then(async () => {
     // parts (chat-import convert.mjs toDshSeed): the reply block by block, tool calls marked, so a core that seeds
     // content blocks gives each its own row instead of one wall of text. The core spells the message out of them, so
     // they travel only while they still spell exactly this text — a capped or disagreeing one goes as text alone.
+    // A tool block's call (convert.mjs toolCallDisplay, redacted in targets.mjs) is how its row shows; the core checks it.
     const partsOf = (message, value) => {
       if (message?.role !== "assistant" || !Array.isArray(message?.parts) || !message.parts.length || message.parts.length > 5000) return null;
-      const parts = message.parts.map((part) => ({ text: str(part?.text, 4000000), ...(part?.tool === true ? { tool: true } : {}) }));
+      const parts = message.parts.map((part) => {
+        const call = part?.tool === true ? callOf(part.call) : null;
+        return { text: str(part?.text, 4000000), ...(part?.tool === true ? { tool: true, ...(call ? { call } : {}) } : {}) };
+      });
       return parts.map((part) => part.text).join("\n\n") === value ? parts : null;
+    };
+    const callOf = (value) => {
+      if (!value || typeof value !== "object" || Array.isArray(value) || typeof value.type !== "string") return null;
+      try { const json = JSON.stringify(value); return json.length <= 64000 ? JSON.parse(json) : null; } catch { return null; }
     };
     const messages = (Array.isArray(input?.messages) ? input.messages : []).slice(-5000)
       .map((message) => {
@@ -4853,6 +4883,8 @@ app.whenReady().then(async () => {
           .map((match) => ({ id: match.thread.id, snippet: typeof match.snippet === "string" ? match.snippet.slice(0, 300) : "" })) };
       }
       case "resume-add": return addCoreSession(p.threadId);
+      // Composer dictation (dictation.cjs): on-device speech to text for the chin's Dictate button.
+      case "dictation": return composerDictation().call(p, e.sender);
       // Import history (chat-import/index.cjs): other agents' sessions listed, previewed and brought into the
       // running core. Another core as the target answers {code: 'needs-core-switch'}: the page switches first.
       case "chat-import": {
@@ -5319,6 +5351,7 @@ installShutdownHandler(app, {
     await quitChatHistory?.quit().catch(() => {});
     await Promise.all([stopAllCodexClients(), coworkSessions?.stop(), fileSearch.dispose(), workflowService?.dispose()]);
     agentTools.stop();
+    devtoolsMcp?.stop();
     await Promise.all([terminalsStopped, previewsStopped]);
   },
 });

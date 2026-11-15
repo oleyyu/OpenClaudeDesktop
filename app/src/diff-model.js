@@ -115,15 +115,27 @@ function readHunk(lines, start) {
 
 const startsGit = (line) => line?.startsWith("diff --git ");
 const startsPair = (lines, at) => lines[at]?.text.startsWith("--- ") && lines[at + 1]?.text.startsWith("+++ ");
+// jsdiff's formatPatch (createTwoFilesPatch: OpenCode's and MiMo's edit/write diffs) and Subversion open a file with
+// `Index: <path>` and a line of `=` before its ---/+++ pair. Those lines are part of that file's header, but only
+// when the pair follows at once: a line of `=` anywhere else is left as it was. Answers how many lines they take.
+const UNDERLINE = /^={3,}$/;
+function indexHeaderLines(lines, at) {
+  const line = lines[at]?.text ?? "";
+  if (line.startsWith("Index: ")) return UNDERLINE.test(lines[at + 1]?.text ?? "") && startsPair(lines, at + 2) ? 2 : startsPair(lines, at + 1) ? 1 : 0;
+  return UNDERLINE.test(line) && startsPair(lines, at + 1) ? 1 : 0;
+}
+const startsFile = (lines, at) => startsGit(lines[at].text) || startsPair(lines, at) || indexHeaderLines(lines, at) > 0;
 function readFile(lines, start, raw) {
   const first = lines[start].text;
   const file = { type: "file", id: `file-${start}`, oldPath: null, newPath: null, hunks: [], binary: false,
     added: 0, removed: 0, oldMode: null, newMode: null, renamedFrom: null, copiedFrom: null, status: "modified", fallbackReason: null };
   let at = start, pathsRead = false, opaqueBinary = false, renameTo = false, copyTo = false;
   if (startsGit(first)) { Object.assign(file, gitHeaderPaths(first.slice(11))); at++; }
+  else at += indexHeaderLines(lines, start);
   while (at < lines.length) {
     const line = lines[at].text;
-    if (startsGit(line) || (pathsRead && file.hunks.length && startsPair(lines, at))) break;
+    // The next file's Index header ends this one (a turn diff joins one jsdiff patch per file).
+    if (startsGit(line) || (pathsRead && file.hunks.length && startsPair(lines, at)) || indexHeaderLines(lines, at)) break;
     if (file.fallbackReason || opaqueBinary) { at++; continue; }
     if (startsPair(lines, at)) {
       const old = headerPath(line.slice(4)), next = headerPath(lines[at + 1].text.slice(4));
@@ -194,12 +206,12 @@ export function parseUnifiedDiff(value = "") {
   const lines = chunks.map((chunk) => { const line = { text: chunk.replace(/\n$/, "").replace(/\r$/, ""), offset }; offset += chunk.length; return line; });
   let at = 0;
   while (at < lines.length) {
-    if (startsGit(lines[at].text) || startsPair(lines, at)) {
+    if (startsFile(lines, at)) {
       const parsed = readFile(lines, at, raw);
       result.files.push(parsed.file); result.sections.push(parsed.file); at = parsed.end;
     } else {
       const start = at++;
-      while (at < lines.length && !startsGit(lines[at].text) && !startsPair(lines, at)) at++;
+      while (at < lines.length && !startsFile(lines, at)) at++;
       result.sections.push({ type: "raw", id: `raw-${start}`, reason: null,
         raw: raw.slice(lines[start].offset, at < lines.length ? lines[at].offset : raw.length) });
     }

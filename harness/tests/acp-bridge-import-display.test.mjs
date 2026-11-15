@@ -120,6 +120,42 @@ test('importedToolItem: exactly one tool block, in the app\'s text form', () => 
   assert.equal(importedToolItem('x', null), null)
 })
 
+test('importedToolItem with the block\'s call: the row a native call of that kind shows, settled from the block\'s result', () => {
+  const shell = importedToolItem('x', SHELL, { type: 'commandExecution', command: 'npm test', cwd: '/w' })
+  assert.deepEqual(shell, { type: 'commandExecution', id: 'x', command: 'npm test', cwd: '/w', processId: null, source: 'agent', status: 'failed',
+    commandActions: [{ type: 'unknown', command: 'npm test' }], aggregatedOutput: '1 failing\n\nAssertionError\n', exitCode: 1, durationMs: null })
+  // The call's own exit code (Gemini names it only in its wrapper) and output (the wrapper taken off) win over the text.
+  const gemini = importedToolItem('x', '[Tool: run_shell_command]\nls\n[Result]\n<untrusted_context>\nOutput: a\nExit Code: 2\n</untrusted_context>',
+    { type: 'commandExecution', command: 'ls', cwd: '', exitCode: 2, output: 'a' })
+  assert.deepEqual([gemini.status, gemini.exitCode, gemini.aggregatedOutput], ['failed', 2, 'a'])
+  const read = importedToolItem('x', READ, { type: 'commandExecution', command: 'Read /w/parser.js', commandActions: [{ type: 'read', command: 'Read /w/parser.js', name: 'parser.js', path: '/w/parser.js' }] })
+  assert.deepEqual([read.type, read.commandActions, read.aggregatedOutput, read.status], ['commandExecution', [{ type: 'read', command: 'Read /w/parser.js', name: 'parser.js', path: '/w/parser.js' }], 'export function parse() {}', 'completed'])
+  const edit = importedToolItem('x', '[Tool: replace]\nupdate /w/a.js\n[Result]\nok', { type: 'fileChange', changes: [{ path: '/w/a.js', kind: { type: 'update', move_path: null }, diff: '@@ -1,1 +1,1 @@\n-a\n+b\n' }] })
+  assert.deepEqual(edit, { type: 'fileChange', id: 'x', changes: [{ path: '/w/a.js', kind: { type: 'update', move_path: null }, diff: '@@ -1,1 +1,1 @@\n-a\n+b\n' }], status: 'completed' })
+  const search = importedToolItem('x', '[Tool: google_web_search]\nnode zstd\n[Result]\nresults', { type: 'webSearch', query: 'node zstd', action: { type: 'search', query: 'node zstd', queries: null } })
+  assert.deepEqual([search.type, search.query, search.action, search.results, search.status], ['webSearch', 'node zstd', { type: 'search', query: 'node zstd', queries: null }, 'results', 'completed'])
+  const fetch = importedToolItem('x', '[Tool: web_fetch]\nhttps://e.com\n[Result (error)]\n404', { type: 'webSearch' })
+  assert.deepEqual([fetch.query, fetch.action, fetch.results, fetch.error, fetch.status], ['https://e.com', { type: 'openPage', url: 'https://e.com' }, null, { message: '404' }, 'failed'])
+  const mcp = importedToolItem('x', '[Tool: mcp__docs__search]\n{"q":"x"}\n[Result]\nfound', { type: 'mcpToolCall', server: 'docs', tool: 'search' })
+  assert.deepEqual([mcp.server, mcp.tool, mcp.arguments, mcp.result.content, mcp.error], ['docs', 'search', { q: 'x' }, [{ type: 'text', text: 'found' }], null], 'arguments the call left out come from the text')
+  const other = importedToolItem('x', '[Tool: write_todos]\n{"todos":[]}\n[Result]\nok', { type: 'dynamicToolCall', tool: 'write_todos', arguments: { todos: [] } })
+  assert.deepEqual([other.type, other.tool, other.arguments, other.success], ['dynamicToolCall', 'write_todos', { todos: [] }, true])
+  // A call that is no call: the row of the text alone, as before.
+  for (const bad of [null, 'x', { type: 'nope' }, { type: 'fileChange', changes: [] }, { type: 'fileChange', changes: [{ path: '', kind: { type: 'update' } }] }])
+    assert.deepEqual(importedToolItem('x', READ, bad), importedToolItem('x', READ), JSON.stringify(bad))
+  assert.equal(importedToolItem('x', 'prose', { type: 'commandExecution', command: 'ls' }), null, 'a call never makes prose a row')
+})
+
+test('importReplyBlocks / splitImportedReplies: a tool block\'s call travels to its row; a prose part\'s call is ignored', () => {
+  const call = { type: 'commandExecution', command: 'npm test', cwd: '/w', extra: 'dropped', commandActions: [{ type: 'bogus' }] }
+  const messages = [{ role: 'user', text: 'q' }, reply({ text: 'Looking.', call }, { text: SHELL, tool: true, call }, { text: READ, tool: true, call: { type: 'nope' } })]
+  const replies = importReplyBlocks(messages)
+  assert.deepEqual(replies, [[{ text: 'Looking.', tool: false }, { text: SHELL.trim(), tool: true, call: { type: 'commandExecution', command: 'npm test', cwd: '/w' } }, { text: READ, tool: true }]])
+  const turns = turnsOf(messages[1].text)
+  assert.equal(splitImportedReplies(turns, replies, ids()), 2, 'two rows')
+  assert.deepEqual(turns[0].items.slice(1).map((item) => [item.type, item.command ?? item.tool ?? item.text]), [['agentMessage', 'Looking.'], ['commandExecution', 'npm test'], ['dynamicToolCall', 'Read']])
+})
+
 function bridge(adapter, { home, env = {} }) {
   const toServer = new PassThrough()
   const toClient = new PassThrough()

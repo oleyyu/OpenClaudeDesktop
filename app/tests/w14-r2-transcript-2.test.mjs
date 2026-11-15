@@ -60,13 +60,14 @@ test('R2T-12: the official recovery scope is sliced (c227f4d5e PZ, exported _r; 
 test('R2T-12: a plain failed turn is the renderer\'s turn_error card inside the reply, Try again from pg', () => {
   const errors = { t1: { message: 'upstream unavailable', codexErrorInfo: { responseStreamDisconnected: { httpStatusCode: 503 } } } };
   const turnErrors = T.rendererTurnErrors(errors);
-  // The status rides in the text (c7fb5ec3d y parses "API Error (503): …" into the muted Status line); W14-code r5
-  // R5T-02: and as the item's apiErrorStatus (c06cf64bb `...(Xn(r) !== void 0 && { apiErrorStatus: Xn(r) })`).
-  assert.deepEqual(turnErrors, { t1: { message: 'API Error (503): upstream unavailable', status: 503 } });
+  // The status rides in the text (c7fb5ec3d y parses "API Error: 503 {…}" into the muted Status line and the JSON's
+  // message); W14-code r5 R5T-02: and as the item's apiErrorStatus (c06cf64bb `...(Xn(r) !== void 0 && { apiErrorStatus: Xn(r) })`).
+  // display-bugs-20261114 D-03: "API Error: N", not "API Error (N)", so k1 (shared-3 S3) reads it: the 5xx hint (i2e).
+  assert.deepEqual(turnErrors, { t1: { message: 'API Error: 503 {"error":{"message":"upstream unavailable"}}', status: 503 } });
   const html = render({ items: ITEMS, turnErrors, host: { recovery: { onRetry() {}, onCompact() {} } } });
   const shown = text(html.slice(html.indexOf('Working</p>')));
   // Inside the turn row, before the reply's MessageActions.
-  assert.match(shown, /Claude couldn’t process that message\|Try sending your message again\.\|View details[^A-Za-z]*Try again/);
+  assert.match(shown, /Claude couldn’t process that message\|Service is busy\. Try again in a moment, or switch to a different model\.\|View details[^A-Za-z]*Try again/);
   assert.ok(html.indexOf('Try again') < html.indexOf('data-testid="message-actions"'));
   // Read-only (archived / offline): pg offers no Try again.
   assert.doesNotMatch(render({ items: ITEMS, turnErrors, host: { recovery: { readOnly: true, onRetry() {} } } }), />Try again</);

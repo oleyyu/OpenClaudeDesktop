@@ -9,6 +9,16 @@
 // nudge never comes back after an update.
 export const RELEASE_NOTES = Object.freeze([
   {
+    version: "0.3.1",
+    date: "2026-11-15",
+    items: [
+      { kind: "feat", text: "The third-generation interface, recreated from Claude Desktop 4.16336.0. It is still in development: not every area is restored yet." },
+      { kind: "feat", text: "Import chat history from other coding agents into any core: tool calls are kept and secrets are redacted." },
+      { kind: "feat", text: "Dictate into the message box: speech is turned into text on this Mac, and nothing is sent anywhere. Right-click the microphone to pick the microphone and language." },
+      { kind: "improvement", text: "This version keeps its own data folder, OpenClaude Desktop v0.3, so an installed 0.2 keeps its sessions." },
+    ],
+  },
+  {
     version: "0.2.186",
     date: "2026-10-15",
     items: [

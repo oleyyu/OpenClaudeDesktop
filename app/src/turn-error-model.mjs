@@ -176,6 +176,32 @@ export function turnErrorStatus(info) {
   return undefined;
 }
 
+// display-bugs-20261114 D-03: the HTTP status a string CodexErrorInfo stands for (codex-rs maps the provider's answer onto
+// it: 401 → Unauthorized, 429 → RateLimitExceeded, 400 → BadRequest, 5xx → InternalServerError,
+// overloaded → ServerOverloaded, which the desktop's overloaded status 529 names: shared-3 m3 / code-transcript F1).
+// UsageLimitExceeded is not here: it is a plan / daily quota (Codex's plan window, Gemini's per-day quota), and the
+// official card has no quota copy for a status — at 429 i2e says "Rate limited. Try again in a moment." with Retry, which
+// is wrong for a quota that resets hours later. Statusless, the card keeps L1's generic copy and the details box (no_status
+// "keep") shows the provider's own reason, as the host's usage-limit card does.
+const STRING_INFO_STATUS = Object.freeze({ unauthorized: 401, rateLimitExceeded: 429, serverOverloaded: 529,
+  internalServerError: 500, badRequest: 400 });
+/**
+ * D-03: the desktop turn_error item's apiErrorStatus for a TurnError (c06cf64bb `...(Xn(r) !== void 0 && {apiErrorStatus:
+ * Xn(r)})`, the SDK result's api_error_status), which the official card reads with the status in its text (code-transcript
+ * k1 → i2e's hint, a2e's marker; j1 at 401, the mode actions at 400): an object variant's upstream status; a balance the
+ * bridge marked billing (DEEPSEEK_BILLING_CODES / BILLING_DETAILS: the provider's 402, which the DeepSeek bridge reports as
+ * usageLimitExceeded) as 402; a string variant by STRING_INFO_STATUS; else 401 for a failure the host reads as signed out
+ * (turnErrorCategory "auth": the 401 / missing-credentials text). Undefined otherwise (the card keeps its generic copy).
+ */
+export function apiErrorStatusOf(error) {
+  if (!error || typeof error !== "object") return undefined;
+  const forwarded = turnErrorStatus(error.codexErrorInfo);
+  if (forwarded !== undefined) return forwarded;
+  if (DEEPSEEK_BILLING_CODES.includes(error.additionalDetails) || error.additionalDetails === BILLING_DETAILS) return 402;
+  if (typeof error.codexErrorInfo === "string" && own(STRING_INFO_STATUS, error.codexErrorInfo)) return STRING_INFO_STATUS[error.codexErrorInfo];
+  return turnErrorCategory(error) === "auth" ? 401 : undefined;
+}
+
 // c1298 xe for one category: unknown retries only for no status / 429 / 5xx
 // (shared-18 Br), otherwise its hint becomes X.invalidRequest.
 export function presentTurnError(category, { message = "", canRewind = false } = {}) {

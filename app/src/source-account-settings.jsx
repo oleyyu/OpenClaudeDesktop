@@ -5,9 +5,22 @@ import {signOutConfirmText} from './settings-core-copy.mjs';
 import {SourceSelect} from './source-select.jsx';
 import {t} from '../electron/i18n/index.mjs';
 import {planLabel} from './usage-model.mjs';
+import {coreForEngine} from '../electron/core-registry.mjs';
+import {signInBrand,keyBrand} from './account-brand-model.mjs';
+import {SourceBrandLogo} from './source-brand-logo.jsx';
+import {Icon} from './icons';
 import './source-account-settings.css';
 
 const PENDING_PHASES=['starting','waiting','cancelling'];
+// A row's leading mark (SettingRow row.leading): the vendor's logo, or a glyph on the same tile where there is none
+// (an API key type brand-logos.mjs has no logo for).
+const Mark=({brand,glyph='Key'})=>brand?<SourceBrandLogo brand={brand} size={32}/>:<span className="sbl ss-account-glyph" style={{'--sbl-size':'32px'}} aria-hidden="true"><Icon name={glyph} size={16}/></span>;
+// The key type select is as wide as its longest label, within 24–46ch: its menu is as wide as the select, so a
+// narrower one cut Qwen Code's "Alibaba Cloud Model Studio key (Hong Kong)" short. A letter is about 0.8ch in the
+// interface font and a CJK character 1.7ch; 9ch more for the padding, the caret and the chosen option's check mark.
+const keyTypeWidth=labels=>`${Math.min(46,Math.max(24,Math.ceil(9+Math.max(0,...labels.map(label=>[...String(label)].reduce((n,c)=>n+(c.codePointAt(0)>0x2e7f?1.7:.8),0))))))}ch`;
+// A row of the same group without a mark keeps the slot, so its copy lines up with the rows that have one.
+const NO_MARK=<span aria-hidden="true"/>;
 
 export function useAccountSettings({snapshot,auth,connected,busy,engine,onLogin,onAccountAction,onRefreshAccount,onOpenExternal}) {
   const [working,setWorking]=useState(null),[error,setError]=useState(''),[confirm,setConfirm]=useState(false);
@@ -54,32 +67,41 @@ export function useAccountSettings({snapshot,auth,connected,busy,engine,onLogin,
   const options=plan.kind==='bridge'?plan:signInOptions(engine), name=options.name;
   // Who is signed in, Refresh, and a two-step Sign out: account-operations refuses a logout without confirmed:true, and
   // the confirmation says the core's own sign-in on this Mac goes too (signOutConfirmText).
-  const accountRow=(description,searchText,showAlert=true)=>({id:'account',label:t('Account'),description,searchText,control:<div className="ss-account-controls">
+  const accountRow=(description,searchText,showAlert=true,leading=null)=>({id:'account',label:t('Account'),description,searchText,...(leading?{leading}:{}),control:<div className="ss-account-controls">
     {refreshButton}
     {account&&onAccountAction&&<Button ref={signoutRef} size="sm" disabled={disabled||busy||confirm} onClick={()=>setConfirm(true)}>{t('Sign out')}</Button>}
   </div>,below:<>{notice}{account&&confirm&&<div className="ss-account-confirm"><p>{signOutConfirmText(engine)}</p><div className="ss-account-controls"><Button ref={cancelRef} size="sm" disabled={!!working||signingOut} onClick={()=>setConfirm(false)}>{t('Cancel')}</Button><Button size="sm" variant="primary" busy={signingOut} disabled={!!(working&&!signingOut)||busy||!connected} onClick={async()=>{if(await run(()=>onAccountAction({operation:'logout',confirmed:true}),'logout'))setConfirm(false);}}>{t('Confirm sign out')}</Button></div></div>}{showAlert&&alert}</>});
-  // An API key (descriptor login.apiKey): a key type when there are several, the write-only field and Get a key.
+  // An API key (descriptor login.apiKey): Get a key beside the label; below it one line with the key type (when there
+  // are several), the write-only field and Save key. marked: the row leads with the chosen key type's logo.
   const keyId=(entry,index)=>entry.template??String(index);
-  const apiKeyRow=keys=>{
+  const apiKeyRow=(keys,marked=false)=>{
     const index=Math.max(0,keys.findIndex((entry,i)=>keyId(entry,i)===keyTemplate)), template=keys[index];
     if(!template)return null;
-    return {id:'apikey',label:t('API key'),searchText:`${name} API key ${keys.map(entry=>entry.label).join(' ')}`,description:<span className="ss-account-key">
-      {keys.length>1&&<SourceSelect label={t('Key type')} value={keyId(template,index)} items={keys.map((entry,i)=>({value:keyId(entry,i),label:t(entry.label)}))} onChange={setKeyTemplate}/>}
-      <input type="password" data-cds="TextInput" className="cds-input cds-reset ss-account-key-input" aria-label={t('API key')} placeholder={template.keyPlaceholder||t(template.label)} value={keyValue} autoComplete="off" spellCheck={false}
-        onChange={event=>setKeyValue(event.target.value)}/>
-      {template.keyUrl&&onOpenExternal&&<button type="button" className="ss-account-link" onClick={()=>onOpenExternal(template.keyUrl)}>{t('Get a key')} ↗</button>}
-    </span>,control:<div className="ss-account-controls"><Button size="sm" variant="primary" busy={working==='apikey'} disabled={!connected||!onLogin||!keyValue.trim()||!!(working||active)}
-      onClick={async()=>{if(await run(()=>onLogin('apiKey',{apiKey:keyValue,...(template.template?{codeDesktop:{template:template.template}}:{})}),'apikey'))setKeyValue('');}}>{t('Save key')}</Button></div>};
+    const save=async()=>{if(await run(()=>onLogin('apiKey',{apiKey:keyValue,...(template.template?{codeDesktop:{template:template.template}}:{})}),'apikey'))setKeyValue('');};
+    const canSave=!!connected&&!!onLogin&&!!keyValue.trim()&&!(working||active);
+    // The field's hint: the descriptor's own, else the key's name; beside a key type select, which already names it,
+    // how such a key starts (keyPrefix, "sk-ant-…") or just "API key".
+    const keyPlaceholder=template.keyPlaceholder||(keys.length>1?(template.keyPrefix?`${template.keyPrefix}…`:t('API key')):t(template.label));
+    return {id:'apikey',label:t('API key'),searchText:`${name} API key ${keys.map(entry=>entry.label).join(' ')}`,...(marked?{leading:<Mark brand={keyBrand(template)}/>}:{}),
+      control:template.keyUrl&&onOpenExternal?<button type="button" className="ss-account-link" onClick={()=>onOpenExternal(template.keyUrl)}>{t('Get a key')} ↗</button>:null,
+      below:<form className="ss-account-key" style={{'--ss-key-type-width':keyTypeWidth(keys.map(entry=>t(entry.label)))}} onSubmit={event=>{event.preventDefault();if(canSave)void save();}}>
+        {keys.length>1&&<SourceSelect label={t('Key type')} value={keyId(template,index)} items={keys.map((entry,i)=>({value:keyId(entry,i),label:t(entry.label)}))} onChange={setKeyTemplate}/>}
+        <input type="password" data-cds="TextInput" className="cds-input cds-reset ss-account-key-input" aria-label={t('API key')} placeholder={keyPlaceholder} value={keyValue} autoComplete="off" spellCheck={false}
+          onChange={event=>setKeyValue(event.target.value)}/>
+        <Button size="sm" variant="primary" busy={working==='apikey'} disabled={!canSave} onClick={save}>{t('Save key')}</Button>
+      </form>};
   };
   if(plan.kind==='bridge'){
     // Bridge core (e.g. ZCode, OpenCode, the ACP agents): who is signed in, its plan, browser sign-ins, device codes and API keys.
     const who=account?.email||(account?.type==='apiKey'?t('Signed in with an API key'):account?t('Signed in'):snapshot==null?t('Account unavailable'):t('Not signed in'));
-    const rows=[accountRow(who,`${name} account Sign out Refresh`)];
+    // Every row leads with a logo: the core's own on the account row, each sign-in's vendor on its row.
+    const coreBrand=coreForEngine(typeof engine==='string'?engine:engine?.engine).brand??null;
+    const rows=[accountRow(who,`${name} account Sign out Refresh`,true,<Mark brand={coreBrand} glyph="User"/>)];
     // The core's own next step while nothing is signed in (account/read codeDesktop.hint, e.g. how Qwen Code takes a provider).
-    if(!account&&typeof snapshot?.codeDesktop?.hint==='string'&&snapshot.codeDesktop.hint.trim())rows.push({id:'hint',label:t('How to sign in'),description:t(snapshot.codeDesktop.hint.trim())});
+    if(!account&&typeof snapshot?.codeDesktop?.hint==='string'&&snapshot.codeDesktop.hint.trim())rows.push({id:'hint',leading:NO_MARK,label:t('How to sign in'),description:t(snapshot.codeDesktop.hint.trim())});
     // planLabel: a Codex PlanType id reads as its product name, 'unknown' (an ACP sign-in without a plan) is no row; a
     // bridge's list of sign-in providers (OpenCode: 'OpenAI, GitHub Copilot') isn't a plan.
-    if(planLabel(account?.planType))rows.push({id:'plan',label:/,\s/.test(account.planType)?t('Signed in with'):t('Plan'),description:planLabel(account.planType)});
+    if(planLabel(account?.planType))rows.push({id:'plan',leading:NO_MARK,label:/,\s/.test(account.planType)?t('Signed in with'):t('Plan'),description:planLabel(account.planType)});
     // While a sign-in is pending, the row that started it shows its next step: the one clicked here, else the one
     // account-operations names (login.provider, e.g. a sign-in started from setup); with neither, every row does.
     const startedRow=pendingRow||(login?.provider?`${login.type==='chatgptDeviceCode'?'device':'browser'}-${login.provider}`:null);
@@ -92,27 +114,30 @@ export function useAccountSettings({snapshot,auth,connected,busy,engine,onLogin,
         onChange={event=>setCodeValue(event.target.value)}/>
       <Button type="submit" size="sm" busy={working==='code'} disabled={!connected||!onAccountAction||!codeValue.trim()||!!(working&&working!=='code')}>{t('Submit code')}</Button>
     </form>:null;
+    // One accent button at most: with several ways in, none is the obvious one, and a column of accent buttons shouts.
+    const signInVariant=!account&&options.browser.length+options.deviceCode.length===1?'primary':'secondary';
     const codeBelow=row=>mine(row)&&login?.userCode?<code className="ss-account-code" aria-label={t('Sign-in code')}>{login.userCode}</code>:null;
     for(const option of options.browser){
       const key=option.provider||option.type||'browser', row=`browser-${key}`, deviceRow=`device-${key}`;
       const pendingHere=mine(row)||(option.deviceCode===true&&mine(deviceRow));
-      rows.push({id:`signin-${key}`,label:t(option.label),searchText:`${option.label} sign in${option.deviceCode===true?' device code':''}`,
+      rows.push({id:`signin-${key}`,leading:<Mark brand={signInBrand(option,coreBrand)} glyph="User"/>,label:t(option.label),searchText:`${option.label} sign in${option.deviceCode===true?' device code':''}`,
         description:pendingHere?(login?.userCode?t('Enter this code on the sign-in page.'):login?.openedByAgent?t('Finish signing in in the browser tab {core} opened.',{core:name}):t('Finish signing in in your browser.')):t('Opens your browser to sign in.'),control:<div className="ss-account-controls">
+        {/* Sign in comes last, so every row's Sign in sits in one column at the right edge. */}
         {pendingHere?waitingControls:<>
-          <Button size="sm" variant={account?'secondary':'primary'} busy={working===row} disabled={!connected||!onLogin||!!(working||active)} onClick={()=>start(row,option.type||'chatgpt',option.provider)}>{t('Sign in')}</Button>
-          {option.deviceCode===true&&<Button size="sm" busy={working===deviceRow} disabled={!connected||!onLogin||!!(working||active)} onClick={()=>start(deviceRow,'chatgptDeviceCode',option.provider)}>{t('Use device code')}</Button>}
+          {option.deviceCode===true&&<Button size="sm" variant="ghost" busy={working===deviceRow} disabled={!connected||!onLogin||!!(working||active)} onClick={()=>start(deviceRow,'chatgptDeviceCode',option.provider)}>{t('Use device code')}</Button>}
+          <Button size="sm" variant={signInVariant} busy={working===row} disabled={!connected||!onLogin||!!(working||active)} onClick={()=>start(row,option.type||'chatgpt',option.provider)}>{t('Sign in')}</Button>
         </>}
       </div>,below:<>{codeBelow(deviceRow)}{mine(row)&&pasteCode}</>});
     }
     options.deviceCode.forEach((option,index)=>{
       const row=`device-${option.provider||index}`, pendingHere=mine(row);
-      rows.push({id:`device-${option.provider||index}`,label:t(option.label),searchText:`${option.label} sign in device code`,
+      rows.push({id:`device-${option.provider||index}`,leading:<Mark brand={signInBrand(option,coreBrand)} glyph="User"/>,label:t(option.label),searchText:`${option.label} sign in device code`,
         description:pendingHere?(login?.userCode?t('Enter this code on the sign-in page.'):t('Finish signing in in your browser.')):t('Shows a code to enter on the sign-in page.'),control:<div className="ss-account-controls">
-        {pendingHere?waitingControls:<Button size="sm" variant={account||options.browser.length?'secondary':'primary'} busy={working===row} disabled={!connected||!onLogin||!!(working||active)}
+        {pendingHere?waitingControls:<Button size="sm" variant={signInVariant} busy={working===row} disabled={!connected||!onLogin||!!(working||active)}
           onClick={()=>start(row,option.type||'chatgptDeviceCode',option.provider)}>{t('Sign in')}</Button>}
       </div>,below:codeBelow(row)});
     });
-    const keyRow=apiKeyRow(options.apiKey);
+    const keyRow=apiKeyRow(options.apiKey,true);
     if(keyRow)rows.push(keyRow);
     return rows;
   }

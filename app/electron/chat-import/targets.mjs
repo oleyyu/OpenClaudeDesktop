@@ -28,7 +28,7 @@
 //            minimaxHandoffLimit / fitHandoffInstructions keep its newest messages within the AGENTS.md cap).
 // inject and handoff keep a display prefix (convert.mjs toCodexTurns) the transcript shows before the new session's
 // own turns (src/import-history-display.mjs); fork and native sessions show their history themselves.
-import { redactSecrets } from './redact.mjs';
+import { redactSecrets, redactValue } from './redact.mjs';
 import { estimateTokens } from './text-budget.mjs';
 
 export const STRATEGIES = Object.freeze(["fork", "native", "inject", "handoff"]);
@@ -91,6 +91,7 @@ export const SOURCE_LABELS = Object.freeze({
 });
 
 const text = (value) => (typeof value === "string" ? value : "");
+const isRecord = (value) => !!value && typeof value === "object" && !Array.isArray(value);
 const oneLine = (value) => text(value).replace(/\s+/g, " ").trim();
 
 /** A source id's display name. */
@@ -209,6 +210,22 @@ export function boundedTurns(turns) {
   return drop ? list.slice(drop) : list;
 }
 
+// The tool calls' displays a seed carries beside its text (convert.mjs toolCallDisplay, at most 32 000 characters
+// each), in all: the newest keep theirs, older calls show from their text alone (each core's fallback).
+export const SEED_CALLS_MAX_CHARS = 2_000_000;
+/** Drops the oldest tool calls' displays from `messages` (trimMessages' answer, in place) past SEED_CALLS_MAX_CHARS. */
+export function boundCalls(messages) {
+  let chars = 0;
+  for (const message of [...(Array.isArray(messages) ? messages : [])].reverse()) {
+    for (const part of [...(Array.isArray(message?.parts) ? message.parts : [])].reverse()) {
+      if (!part?.call) continue;
+      chars += JSON.stringify(part.call).length;
+      if (chars > SEED_CALLS_MAX_CHARS) delete part.call;
+    }
+  }
+  return messages;
+}
+
 /** The SessionSummary half of an ImportedSession (no items). */
 export function summaryOf(session) {
   if (!session || typeof session !== "object") return null;
@@ -236,19 +253,28 @@ export function prepareImport(session, { convert, budgets = importBudgets(null) 
     }
     // parts (convert.mjs toDshSeed): redacted one by one, then their join once more — redact.mjs's PEM rule is the one
     // that spans lines, so a key opening in one block and closing in the next outlives block-by-block redaction.
+    // A tool block's call (its row's display, convert.mjs toolCallDisplay) is redacted string by string the same way
+    // (redactValue), and its strings join that second pass. The count stays what the model was spared: a call repeats
+    // its block's command or arguments, so its masks are not counted again.
     let count = 0;
+    const strings = [];
     const parts = message.parts.map((part) => {
       const clean = redactSecrets(text(part?.text));
       count += clean.count;
-      return { text: clean.text, ...(part?.tool === true ? { tool: true } : {}) };
+      const call = part?.tool === true && isRecord(part.call) ? redactValue(part.call) : null;
+      if (call) strings.push(...call.strings);
+      return { text: clean.text, ...(part?.tool === true ? { tool: true, ...(call ? { call: call.value } : {}) } : {}) };
     });
     const joined = redactSecrets(parts.map((part) => part.text).join("\n\n"));
+    const across = !joined.count && strings.length ? redactSecrets([joined.text, ...strings].join("\n\n")).count : 0;
     seedRedacted += count + joined.count;
     // The blocks have to spell the text out; once the join has redacted something of its own they no longer do, so
-    // that message travels as text alone (no tool rows for it) instead of carrying the key on in its blocks.
-    return joined.count ? { role: message?.role, text: joined.text, ...tsOf(message) } : { role: message?.role, text: joined.text, parts, ...tsOf(message) };
+    // that message travels as text alone (no tool rows for it) instead of carrying the key on in its blocks — and so
+    // does one whose calls, read together with the text, spell a key no single string held.
+    return joined.count || across ? { role: message?.role, text: joined.text, ...tsOf(message) } : { role: message?.role, text: joined.text, parts, ...tsOf(message) };
   });
   const seed = { ...trimMessages(masked, { maxTokens: budgets.seedTokens }), redacted: seedRedacted };
+  boundCalls(seed.messages);
   let transcript;
   try {
     const build = (maxTokens) => {

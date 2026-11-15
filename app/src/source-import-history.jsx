@@ -159,7 +159,7 @@ export function ImportHistoryDialog({ desktopCall, coreLabel = "", sessionMetada
   const failedCount = ran.filter((session) => run.status[session.key] === "failed").length;
   const settled = doneCount + failedCount;
 
-  return <ActionDialog {...dialog} title={t("Import history")} size="2xl" className="import-history-dialog" initialFocusRef={searchRef}
+  return <ActionDialog {...dialog} title={t("Import Chats")} size="2xl" className="import-history-dialog" initialFocusRef={searchRef}
     description={t("Pick conversations from other coding agents on this Mac and continue them in {core}. The originals are not changed.", { core })}
     onClose={() => !busy && onClose()}>
     <div className="ih-body" data-view={run ? "run" : "pick"}>

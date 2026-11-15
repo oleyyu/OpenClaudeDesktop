@@ -7,15 +7,20 @@
 .ss-account-code{display:block;width:fit-content;font-family:var(--cds-font-mono);user-select:text;color:var(--cds-text-primary)}
 .ss-row-below{display:flex;flex-direction:column;gap:var(--cds-gap-sm,8px);margin-top:var(--cds-gap-sm,8px)}
 .ss-row-below:empty{display:none}
-@media(max-width:639px){:is([data-setting-id^=signin],[data-setting-id^=device-])>.ss-row-top{align-items:flex-start;flex-direction:column}:is([data-setting-id^=signin],[data-setting-id^=device-]) .ss-account-controls{justify-content:flex-start}}
+/* Narrow: the buttons drop under the copy (past the logo, where there is one) instead of squeezing it. */
+@media(max-width:639px){:is([data-setting-id^=signin],[data-setting-id^=device-])>.ss-row-top{flex-wrap:wrap}:is([data-setting-id^=signin],[data-setting-id^=device-])>.ss-row-top>.ss-control{flex-basis:100%}:is([data-setting-id^=signin],[data-setting-id^=device-])[data-leading]>.ss-row-top>.ss-control{padding-inline-start:44px}:is([data-setting-id^=signin],[data-setting-id^=device-]) .ss-account-controls{justify-content:flex-start}}
 
 [data-setting-id=account] [data-settings-desc]{overflow-wrap:anywhere}
 
-/* A bridge core's API key row (plan.kind 'bridge'). */
-.ss-account-key{display:flex;flex-wrap:wrap;align-items:center;gap:var(--cds-gap-sm,8px);margin-top:4px}
-.ss-account-key .sselect{min-width:200px}
-.ss-account-key-input{box-sizing:border-box;flex:1;min-width:180px;height:var(--cds-h-control,32px);padding:0 var(--cds-pad-md,10px);border:0;border-radius:var(--cds-radius);background:var(--cds-fill-field);box-shadow:inset 0 0 0 1px var(--cds-fill-field-ring);color:var(--cds-text-primary);font:400 var(--cds-font-size-body,13px)/var(--cds-leading-body,19px) var(--cds-font-sans);outline:none}
+/* A row's leading glyph where there is no vendor logo (source-brand-logo.css .sbl tile). */
+.ss-account-glyph{color:var(--cds-text-secondary)}
+
+/* The API key row's below slot: key type, the field and Save key on one line; the field takes what is left. */
+.ss-account-key{display:flex;flex-wrap:wrap;align-items:center;gap:var(--cds-gap-sm,8px);margin:0}
+.ss-account-key>.sselect{flex:0 1 var(--ss-key-type-width,240px);width:var(--ss-key-type-width,240px);min-width:180px;max-width:100%}
+.ss-account-key-input{box-sizing:border-box;flex:1 1 120px;min-width:120px;height:var(--cds-h-control,32px);padding:0 var(--cds-pad-md,10px);border:0;border-radius:var(--cds-radius);background:var(--cds-fill-field);box-shadow:inset 0 0 0 1px var(--cds-fill-field-ring);color:var(--cds-text-primary);font:400 var(--cds-font-size-body,13px)/var(--cds-leading-body,19px) var(--cds-font-sans);outline:none}
 .ss-account-key-input:focus-visible{box-shadow:var(--cds-focus-shadow)}
-.ss-account-link{border:0;background:none;padding:0;color:var(--cds-text-accent,var(--cds-fill-accent));font:inherit;font-size:var(--cds-font-size-footnote,12px);cursor:default}
+.ss-account-link{border:0;border-radius:var(--cds-radius--sm,4px);background:none;padding:0;color:var(--cds-text-accent,var(--cds-fill-accent));font:inherit;font-size:var(--cds-font-size-footnote,12px);white-space:nowrap;cursor:default}
+.ss-account-link:focus-visible{outline:none;box-shadow:var(--cds-focus-shadow)}
 .ss-account-link:hover{text-decoration:underline}
 .ss-account-paste{margin-top:6px}

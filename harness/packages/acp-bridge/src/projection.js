@@ -284,11 +284,16 @@ export function completeToolItem(item, rawCall, { failed, declined, durationMs, 
     case 'fileChange': {
       const changes = changesOf(call.content, call.locations, cwd, call.kind, call.rawInput)
       const artifacts = failed || declined ? [] : callArtifacts(call, cwd)
-      return { ...item, changes: changes.length ? changes : item.changes, status: declined ? 'declined' : failed ? 'failed' : 'completed', ...(failed && text ? { error: text } : {}),
+      // Why it failed: the call's text, else its rawOutput (MiniMax Code's failed edit carries only the diff it tried).
+      const reason = failed ? text || rawOutputText(raw, { failed: true }) : ''
+      return { ...item, changes: changes.length ? changes : item.changes, status: declined ? 'declined' : failed ? 'failed' : 'completed', ...(reason ? { error: { message: reason } } : {}),
         ...(artifacts.length ? { codeDesktop: { ...item.codeDesktop, artifacts } } : {}) }
     }
-    case 'webSearch':
-      return { ...item, status: failed ? 'failed' : 'completed', results: failed ? null : text || null, ...(failed ? { error: { message: text } } : {}) }
+    case 'webSearch': {
+      // The results, else the rawOutput text (MiniMax Code's web_search / web_fetch send no tool-call content).
+      const shown = text || rawOutputText(raw, { failed })
+      return { ...item, status: failed ? 'failed' : 'completed', results: failed ? null : shown || null, ...(failed ? { error: { message: shown } } : {}) }
+    }
     case 'mcpToolCall': {
       if (failed) return { ...item, status: 'failed', durationMs, result: null, error: { message: text || mcpErrorText(raw) || 'The tool failed.' } }
       // An MCP App (Qwen's interactive connector view: rawOutput {type: 'mcp_app', serverName, resourceUri, html,
@@ -314,7 +319,9 @@ export function completeToolItem(item, rawCall, { failed, declined, durationMs, 
       return { ...item, review: findingsReview(argsOf(call.rawInput), cwd) }
     default: {
       const artifacts = failed ? [] : callArtifacts(call, cwd)
-      return { ...item, status: failed ? 'failed' : 'completed', success: !failed, durationMs, contentItems: [...(text ? [{ type: 'inputText', text }] : []), ...imagesOf(call.content)],
+      // The result, else the rawOutput text (MiniMax Code's website_deploy: 'Website deployed: <url>' only there).
+      const shown = text || rawOutputText(raw, { failed })
+      return { ...item, status: failed ? 'failed' : 'completed', success: !failed, durationMs, contentItems: [...(shown ? [{ type: 'inputText', text: shown }] : []), ...imagesOf(call.content)],
         ...(artifacts.length ? { codeDesktop: { ...item.codeDesktop, artifacts } } : {}) }
     }
   }
@@ -382,6 +389,45 @@ function mcpErrorText(raw) {
   const unwrapped = rawMcpResult(value)
   const text = (unwrapped?.content ?? []).filter((block) => block.type === 'text').map((block) => block.text).join('\n').trim()
   if (text) return text
+  if (typeof value.error === 'string') return value.error.trim()
+  if (typeof value.error?.message === 'string') return value.error.message.trim()
+  return typeof value.message === 'string' ? value.message.trim() : ''
+}
+
+/**
+ * A finished commandExecution row with what the agent recorded of its run apart from the tool call (adapter.commandOutput:
+ * {output, exitCode, failed}): a finished run's output and exit code replace the row's (a non-zero exit fails it);
+ * exitCode undefined (the record says nothing of the run) fills only a row with no output. null: nothing changes.
+ */
+export function withCommandOutput(item, found) {
+  if (!item || item.type !== 'commandExecution' || !found || item.status === 'declined' || item.status === 'inProgress') return null
+  const next = { ...item }
+  // A replayed row's title is the tool's name (Gemini's session/load: 'Shell'): the recorded command replaces it.
+  if (typeof found.command === 'string' && found.command && !String(item.command ?? '').includes(found.command)) {
+    next.command = found.command
+    next.commandActions = [{ type: 'unknown', command: found.command }]
+  }
+  if (typeof found.output === 'string' && found.output && (found.exitCode !== undefined || !item.aggregatedOutput)) next.aggregatedOutput = found.output
+  if (found.exitCode === null || Number.isInteger(found.exitCode)) next.exitCode = found.exitCode
+  if (found.failed) next.status = 'failed'
+  return next.aggregatedOutput === item.aggregatedOutput && next.exitCode === item.exitCode && next.status === item.status && next.command === item.command ? null : next
+}
+
+/**
+ * The text of a result an agent put only in rawOutput (MiniMax Code's web_search, web_fetch, website_deploy and failed
+ * edit: {text, content: [{type: 'text', text}], details}; a refused call: {error}), or ''. A failure may also be read from
+ * the object's own error or message; a success only from its result text.
+ */
+export function rawOutputText(raw, { failed = false } = {}) {
+  if (typeof raw === 'string') return raw.trim()
+  const value = object(raw)
+  if (!value) return ''
+  if (typeof value.text === 'string' && value.text.trim()) return value.text.trim()
+  if (typeof value.output === 'string' && value.output.trim()) return value.output.trim()
+  const unwrapped = rawMcpResult(value)
+  const text = (unwrapped?.content ?? []).filter((block) => block.type === 'text').map((block) => block.text).join('\n').trim()
+  if (text) return text
+  if (!failed) return ''
   if (typeof value.error === 'string') return value.error.trim()
   if (typeof value.error?.message === 'string') return value.error.message.trim()
   return typeof value.message === 'string' ? value.message.trim() : ''

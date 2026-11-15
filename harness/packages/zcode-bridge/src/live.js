@@ -32,7 +32,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { backgroundTaskIdOf, childSessionIdOf, isRecord, planItem, todoPlan, toolItem } from './items.js'
-import { turnsFromMessages } from './history.js'
+import { turnsFromMessages, zcodeErrorInfo } from './history.js'
 import { applyWorkflowEvents, applyWorkflowInterrupted, applyWorkflowResumed, applyWorkflowSummary, applyWorkflowTaskEnd, applyWorkflowToolResult, bindWorkflowRun, isWorkflowRunTool, workflowNoticeItems, workflowRunOf, workflowState, workflowSettingsNotice, workflowReplacement } from './workflows.js'
 
 const seconds = (ms) => Math.floor(ms / 1000)
@@ -41,19 +41,10 @@ const LIVE_TASK = new Set(['running', 'pending', 'queued', 'starting'])
 
 /** Codex TurnError from a ZCode failure ({code, message} or an error string). */
 export function turnError(error) {
-  const message = typeof error === 'string' ? error : String(error?.message ?? 'The turn failed.')
+  const message = typeof error === 'string' ? error : String(error?.message ?? error?.data?.message ?? 'The turn failed.')
   const code = typeof error === 'object' ? error?.code ?? error?.name ?? null : null
-  const lower = `${code ?? ''} ${message}`.toLowerCase()
-  let info = null
-  if (/401|403|unauthori[sz]ed|invalid api key|authentication|鉴权|未登录|credential/.test(lower)) info = 'unauthorized'
-  else if (/429|rate.?limit|too many requests|频率/.test(lower)) info = 'rateLimitExceeded'
-  else if (/quota|insufficient balance|余额|usage limit|套餐/.test(lower)) info = 'usageLimitExceeded'
-  else if (/context.?(window|length)|too long|maximum context/.test(lower)) info = 'contextWindowExceeded'
-  else if (/503|529|overload/.test(lower)) info = 'serverOverloaded'
-  else if (/500|502|internal server/.test(lower)) info = 'internalServerError'
-  else if (/econnrefused|enotfound|fetch failed|network|timed? ?out|socket/.test(lower)) info = { responseStreamConnectionFailed: { httpStatusCode: null } }
-  else if (/400|invalid request|bad request/.test(lower)) info = 'badRequest'
-  return { message, codexErrorInfo: info, additionalDetails: code === null ? null : String(code), misalignment: null }
+  // The provider's HTTP status and ZCode's code and reason before the wording (zcodeErrorInfo).
+  return { message, codexErrorInfo: zcodeErrorInfo(error), additionalDetails: code === null ? null : String(code), misalignment: null }
 }
 
 export class LiveProjector {

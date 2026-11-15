@@ -794,8 +794,9 @@ export class ThreadProjector {
         content.forEach(({ block, index }) => {
           const id = assistantItemId(data.turn, data.step, index)
           if (block.type === 'text') {
-            // A settled (never streamed) block in the imported tool-call form is a tool row, not prose (thread-import.js).
-            const item = (!stream && data.stream?.length === 0 && importedToolItem(id, block.text)) || { type: 'agentMessage', id, text: block.text ?? '', phase: null, memoryCitation: null, delivery: null, questions: null }
+            // A settled (never streamed) block in the imported tool-call form is a tool row, not prose, shown as the
+            // import's call for it says (thread-import.js; importedCalls by content index).
+            const item = (!stream && data.stream?.length === 0 && importedToolItem(id, block.text, data.importedCalls?.[index])) || { type: 'agentMessage', id, text: block.text ?? '', phase: null, memoryCitation: null, delivery: null, questions: null }
             this.replaceItem(turn, item)
             stream?.items.add(id)
             notes.push({ method: 'item/completed', params: { item, threadId: this.threadId, turnId: turn.id, completedAtMs: time } })

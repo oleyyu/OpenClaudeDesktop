@@ -71,7 +71,7 @@ test("main.jsx feeds the current session id into the composer placeholder; Sourc
   assert.match(main, /composerPlaceholder\(\{ sessionId: current, mode, firstRun: composerFirstRun\(\{ sessionsLoaded, sessionCount: sessions\.length \+ \(hiddenSessions\?\.otherEngine \|\| 0\) \+ \(hiddenSessions\?\.missing \|\| 0\), stats: statsSnapshot \}\) \}\)\}/);
   // A core's suggested next prompt (codeDesktop/promptSuggestion) clears the placeholder (c099c328d :8988) and is drawn
   // bare by the ghost overlay; bash mode reads 'Enter a shell command'.
-  assert.match(composer, /placeholder=\{showSuggestion \? "" : fittedPlaceholder\}/);
+  assert.match(composer, /placeholder=\{showSuggestion \? "" : dictationRecording \? t\("Listening\.\.\."\) : fittedPlaceholder\}/);
   assert.match(composer, /const fullPlaceholder = runningHint \? runningPlaceholder\(\{ mac: macKeys \}\) : bashMode \? t\("Enter a shell command"\) : placeholder \?\? composerPlaceholder\(\{ mode \}\);/);
   assert.doesNotMatch(composer, /Tab to use/);
   const editor = await fs.readFile(path.join(root, "src/source-composer-editor.jsx"), "utf8");

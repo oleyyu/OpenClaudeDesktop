@@ -71,6 +71,8 @@ import { loadThreadHistory, historyMissing, historyRoute, readParams as historyR
 import { Icon } from "./icons";
 import { ToolButton } from "./code-ui";
 import "./style.css";
+// 3.6556.2 card outline + question receipt rules the 4.16336.0 sheets no longer carry (settled wrap-up receipt etc.).
+import "./source-epitaxy-card-outline.css";
 import { SIDEBAR_WIDTH, clampSidebarWidth, effectiveSidebarWidth, narrowViewportQuery, storedSidebarWidth, trafficLightSpacerWidth } from "./sidebar-width-model.mjs";
 // W14-code r4 closeout R4DC-N2 (E95): the 2.x home greeting (Jk) and stats card (code-home Lw/qw) were replaced by
 // 3.6556.2's presets home and never mounted; only the Lw outline card rules the key / sign-in cards share stay.
@@ -280,7 +282,7 @@ import { HostFrameRoot, hostRouteGutter } from "./frame-sidebar-host.jsx"; // fr
 // the session lists) under its host (frame-sidebar-nav-body.jsx installs the host table before the nav body evaluates).
 import { HostSidebarNavBody } from "./frame-sidebar-nav-body.jsx";
 import { hostSupportedFeaturesV4 } from "./host-app-features.mjs";
-import { officialLocalSession, officialPathToHostRoute } from "./frame-sidebar-nav-host.jsx";
+import { officialLocalSession, officialSessionLive, officialPathToHostRoute } from "./frame-sidebar-nav-host.jsx";
 import { SourceSessionDeleteDialog, SourceWorktreeDirtyDialog } from "./source-worktree-dispose-dialog.jsx";
 import { SidebarBulkWorktreeConfirm } from "./source-sidebar-bulk-worktree.jsx";
 import { connectWorktreeConfirmQueue, worktreeConfirmVariant, sessionWorktreeGate, worktreeGatedAction, settleWorktreeQueue, connectNestedFamilies, nestedSessionFamily, nestedFamilyAsks, familyWorktreeProbe, singleDeleteStep, confirmCouldntCheck, familyUnknownRead, connectWorktreeProbes, archiveWorktreeGate, lateArchiveWorktree, prefetchWorktreeProbes, mapConcurrent } from "./sidebar-bulk-model.mjs";
@@ -6311,7 +6313,9 @@ function App({ side = 0, initialSession = null }) {
   const codeSessions = useMemo(() => surfaceSessions(sessions, "code", sessionMetadata), [sessions, sessionMetadata]);
   // frame-sidebar-nav LocalSessions (frame-sidebar-nav-host.jsx): the Code sessions in the official record shape, in every
   // mode (the official LocalSessionManager list does not follow the shown surface), one array per change of the list.
-  const navLocalSessions = useMemo(() => codeSessions.map((session) => officialLocalSession(session, sessionMetadata[session.id])), [codeSessions, sessionMetadata]);
+  // The row's status dot (running / awaiting input) follows the engine state: active turns, pending approvals and their owners.
+  const navLocalSessions = useMemo(() => codeSessions.map((session) => officialLocalSession(session, sessionMetadata[session.id], officialSessionLive(session, { active: state.active, approvals: state.approvals, threadParents: state.threadParents }))),
+    [codeSessions, sessionMetadata, state.active, state.approvals, state.threadParents]);
   // The sidebar's list keeps its identity across renders: a fresh filter per render re-ran the sidebar's [sessionById]
   // effects on every keystroke, and their queued updates chained into React #185 under fast typing.
   const sidebarSessions = useMemo(() => surfaceSessions(sessions, mode, sessionMetadata), [sessions, mode, sessionMetadata]);
@@ -7927,6 +7931,8 @@ function App({ side = 0, initialSession = null }) {
     navigateOfficial: (pathname) => { const routed = officialPathToHostRoute(pathname, sidebarNavRoutes, { mode }); if (!routed) console.warn(`frame-sidebar-nav: no host route for ${pathname}`); return routed; },
     travel, account: { display_name: accountButton.name, full_name: accountButton.avatarName },
     markUnread: (id) => updateSessionMetadata(id, { unread: true }),
+    // The official unread store (cds-core shared-8 Y_) mirrors this metadata and writes its own changes back (syncUnread).
+    sessionMetadata, updateSessionMetadata,
     // U-NAV-MENU: the official session row's right-click / ⋯ menu (frame-sidebar-nav-session-actions.jsx; c39a247c4 / ce4f4374c
     // are not shipped) opens the host's own session menu, SourceSidebarSessionMenu over sessionAction, as the classic sidebar did.
     openSessionMenu: (id, { anchor = null, point, starred } = {}) => {

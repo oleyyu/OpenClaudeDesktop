@@ -439,6 +439,59 @@ test('import-display: blocks, spans and the index', () => {
   assert.equal(importedToolItem('x', '[Tool: a]\n\n[Result]').tool, 'a')
 })
 
+// The same conversation with each tool block's call (chat-import convert.mjs toolCallDisplay): the rows a native call shows.
+const SHELL_CALL = { type: 'commandExecution', command: 'npm ci', cwd: '/w' }
+const READ_CALL = { type: 'commandExecution', command: 'Read /w/package.json', cwd: '', commandActions: [{ type: 'read', command: 'Read /w/package.json', name: 'package.json', path: '/w/package.json' }] }
+const CALL_CONVERSATION = [
+  TOOL_CONVERSATION[0],
+  withParts({ text: 'Looking.' }, { text: SHELL, tool: true, call: SHELL_CALL }, { text: READ, tool: true, call: READ_CALL }, { text: 'The lockfile is stale.' }),
+  ...TOOL_CONVERSATION.slice(2),
+]
+const rowsOf = (turns) => turns[0].items.slice(1).map((item) => [item.type, item.command ?? item.text, item.status ?? null])
+
+for (const flavor of ['mimo', 'opencode']) {
+  test(`${flavor}: with the blocks' calls the rows are the command and the read a native call shows, on every read`, async () => {
+    const { bridge, cwd } = fake(flavor)
+    const response = await bridge.handle('codeDesktop/thread/import', { cwd, title: 'Build failure', messages: CALL_CONVERSATION, model: 'xiaomi/mimo-v2' })
+    const shown = [['agentMessage', 'Looking.', null], ['commandExecution', 'npm ci', 'failed'], ['commandExecution', 'Read /w/package.json', 'completed'], ['agentMessage', 'The lockfile is stale.', null]]
+    assert.deepEqual(rowsOf(response.thread.turns), shown)
+    const [, , shell, read] = response.thread.turns[0].items
+    assert.deepEqual([shell.cwd, shell.exitCode, shell.aggregatedOutput, shell.commandActions], ['/w', 1, 'npm error\n\ncode ELOCK', [{ type: 'unknown', command: 'npm ci' }]])
+    assert.deepEqual([read.commandActions, read.aggregatedOutput], [READ_CALL.commandActions, '{}'])
+    const again = await bridge.handle('thread/read', { threadId: response.thread.id, includeTurns: true })
+    assert.deepEqual(rowsOf(again.thread.turns), shown)
+    assert.deepEqual(idsOf(again.thread.turns), idsOf(response.thread.turns))
+    // The index keeps only what the text does not say: the shell's cwd, the read's action.
+    const [spans] = Object.values(bridge.store.get(response.thread.id).importBlocks)
+    assert.deepEqual(spans.map((span) => span[3] ?? null), [null, { type: 'commandExecution', cwd: '/w' }, { type: 'commandExecution', command: 'Read /w/package.json', commandActions: READ_CALL.commandActions }, null])
+  })
+}
+
+test('import-display: slimCall keeps the rest of a call; the index bounds each call and all of them, the newest replies first', async () => {
+  const { slimCall, CALL_INDEX_CHARS, INDEX_CALLS_CHARS } = await import('../packages/opencode-bridge/src/import-display.js')
+  assert.deepEqual(slimCall(SHELL_CALL, SHELL.trim()), { type: 'commandExecution', cwd: '/w' })
+  assert.deepEqual(slimCall({ type: 'webSearch', query: 'q', action: { type: 'search', query: 'q', queries: null } }, '[Tool: web]\nq\n[Result]\nr'), { type: 'webSearch' })
+  assert.deepEqual(slimCall({ type: 'mcpToolCall', server: 'docs', tool: 'search', arguments: { q: 'x' } }, '[Tool: search]\n{"q":"x"}\n[Result]\nok'), { type: 'mcpToolCall', server: 'docs' })
+  assert.equal(slimCall(SHELL_CALL, 'prose'), null)
+  assert.equal(slimCall({ type: 'nope' }, SHELL.trim()), null)
+  // A call past CALL_INDEX_CHARS is not kept: its row shows from its text.
+  const big = { type: 'fileChange', changes: [{ path: '/w/a.js', kind: { type: 'update', move_path: null }, diff: `@@ -1,1 +1,1 @@\n-${'a'.repeat(CALL_INDEX_CHARS)}\n+b\n` }] }
+  const edit = '[Tool: Edit]\nupdate /w/a.js\n[Result]\nok'
+  const messages = [{ role: 'user', text: 'q' }, withParts({ text: edit, tool: true, call: big })]
+  const index = importDisplayIndex(messages, [edit])
+  assert.deepEqual(Object.values(index)[0], [[0, edit.length, 1]])
+  assert.equal(importedItems('p', edit, index, () => null)[0].type, 'dynamicToolCall')
+  // All of them: past INDEX_CALLS_CHARS the oldest replies' calls are left out.
+  const each = { type: 'fileChange', changes: [{ path: '/w/a.js', kind: { type: 'update', move_path: null }, diff: `@@ -1,1 +1,1 @@\n-${'a'.repeat(15000)}\n+b\n` }] }
+  const many = Array.from({ length: 30 }, (_, n) => `[Tool: Edit]\nupdate /w/${n}.js\n[Result]\nok`)
+  const conversation = many.flatMap((text) => [{ role: 'user', text: 'q' }, withParts({ text, tool: true, call: each })])
+  const kept = Object.entries(importDisplayIndex(conversation, many))
+  const withCall = many.filter((text) => kept.find(([, spans]) => spans[0][1] === text.length && importedItems('p', text, Object.fromEntries(kept), () => null)[0].type === 'fileChange'))
+  assert.ok(withCall.length > 0 && withCall.length < many.length)
+  assert.ok(withCall.includes(many.at(-1)) && !withCall.includes(many[0]), 'the newest keep theirs')
+  assert.ok(withCall.length * JSON.stringify(slimCall(each, many[0])).length <= INDEX_CALLS_CHARS)
+})
+
 test('the OpenCode and ZCode bridges carry the same import-display.js', () => {
   const read = (name) => fs.readFileSync(path.resolve(import.meta.dirname, `../packages/${name}/src/import-display.js`), 'utf8')
   assert.equal(read('zcode-bridge'), read('opencode-bridge'))

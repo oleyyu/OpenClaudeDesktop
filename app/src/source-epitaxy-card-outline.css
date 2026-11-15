@@ -1,0 +1,21 @@
+/* 4.16336.0 dropped two rules the 3.6556.2 slices still in this tree depend on; the host restates them here.
+
+   1. `.epitaxy-card-outline` / `.epitaxy-card-outline-inset`: 3.6556.2 c6a992d55-Che1orl5.css defined them (an outer,
+      resp. inset, 1px --cds-border ring). 4.16336.0 c6a992d55-_JRfOmTh.css no longer does — its components write the
+      ring as the utility `shadow-[0_0_0_1px_var(--cds-border)]` instead (e.g. cb6930dae's question receipt takes
+      shared-33 iG). The 3.6556.2-generated slices (turn-plan cb6930dae Da settled receipt, code-transcript, proposal
+      group, question / approval cards) still emit the old class names, so without this they draw no outline at all.
+      prepare-style-compatibility.mjs only carries over utilities, not component rules like these.
+      Copied verbatim from the 3.6556.2 sheet, minus the `.epitaxy-diff` theme selectors that 4.16336.0 restates itself.
+
+   2. cb6930dae's injected question-receipt rules (both versions inject them from JS, not a stylesheet, and the host does
+      not load that chunk): the receipt's bottom gap, the divider between question/answer pairs, the enter fade. The
+      keyframes `epitaxy-approval-inline-enter` are source-approval-card.css's. */
+.epitaxy-root .epitaxy-card-outline,.epitaxy-root .epitaxy-card-outline-inset{--epitaxy-card-outline:0 0 0 1px var(--cds-border);box-shadow:var(--epitaxy-card-outline)}
+.epitaxy-root .epitaxy-card-outline-inset{box-shadow:inset var(--epitaxy-card-outline)}
+
+.epitaxy-root .epitaxy-question-receipt{margin-bottom:var(--chat-item-gap)}
+.epitaxy-root .epitaxy-question-receipt>div+div{border-top:1px solid var(--cds-border)}
+.epitaxy-root .epitaxy-question-receipt-enter{animation:.2s ease-out epitaxy-approval-inline-enter}
+@media (prefers-reduced-motion:reduce){.epitaxy-root .epitaxy-question-receipt-enter{animation:none}}
+html[data-reduce-motion="true"] .epitaxy-root .epitaxy-question-receipt-enter{animation:none}

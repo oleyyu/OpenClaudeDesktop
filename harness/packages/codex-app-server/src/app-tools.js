@@ -35,6 +35,20 @@ export function appToolsServer(env = process.env) {
 }
 
 /**
+ * The chrome-devtools server (app/electron/devtools-mcp/index.cjs): Google's chrome-devtools-mcp on the app's preview tabs,
+ * {name, command, args, env} from CODE_DESKTOP_DEVTOOLS_MCP_SERVER, or null. Every thread that gets code_desktop gets it too.
+ */
+export function devtoolsServer(env = process.env) {
+  const raw = env?.CODE_DESKTOP_DEVTOOLS_MCP_SERVER
+  if (typeof raw !== 'string' || !raw) return null
+  let value
+  try { value = JSON.parse(raw) } catch { return null }
+  if (!value || typeof value.command !== 'string' || !value.command || !Array.isArray(value.args) || value.args.some((arg) => typeof arg !== 'string')) return null
+  const own = value.env && typeof value.env === 'object' && !Array.isArray(value.env) ? Object.entries(value.env).filter(([, item]) => typeof item === 'string') : []
+  return { name: typeof value.name === 'string' && /^[A-Za-z0-9_-]{1,32}$/.test(value.name) ? value.name : 'chrome-devtools', command: value.command, args: [...value.args], env: Object.fromEntries(own) }
+}
+
+/**
  * A session's own credential for the app's channel (app/electron/agent-tools-host.cjs sessionTokenFor): the server
  * started for one session carries it instead of the channel's secret, so whatever can read that server's environment
  * (or a config file naming it) can act for that session only.
@@ -65,6 +79,12 @@ export function installAppTools(agentCtx, server, { session, cwd, logger = conso
       toolCallTimeoutMs: 600000, failOnStartupError: false,
     })
     const fiber = agentCtx.plugin({ name: 'code-desktop-agent-tools', apply: async (inner) => { await activateMcpClient(inner, config) } })
+    // The chrome-devtools server next to it, on the same scope (its readiness isn't waited for: it connects on first use).
+    const devtools = devtoolsServer(process.env)
+    if (devtools) {
+      const devtoolsConfig = Config({ transport: 'stdio', serverName: devtools.name, command: devtools.command, args: devtools.args, env: devtools.env, cwd: typeof cwd === 'string' ? cwd : '', toolCallTimeoutMs: 600000, failOnStartupError: false })
+      Promise.resolve(agentCtx.plugin({ name: 'code-desktop-devtools-mcp', apply: async (inner) => { await activateMcpClient(inner, devtoolsConfig) } })).catch((error) => logger.warn?.(`chrome-devtools for ${session}: ${error?.message ?? error}`))
+    }
     // Settles (never rejects) once the client is up: the thread's open waits for it (index.js createThread/openThread).
     return Promise.resolve(fiber).then(() => undefined, warn)
   } catch (error) {

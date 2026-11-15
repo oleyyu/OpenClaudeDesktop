@@ -39,6 +39,9 @@ public final class WatchRecordVoiceover: @unchecked Sendable {
 
     init() { queue.maxConcurrentOperationCount = 1; queue.name = "watch-record-voiceover" }
 
+    /// Narration is running (the composer's Dictation refuses to start meanwhile: one microphone session at a time).
+    public var isActive: Bool { lock.lock(); defer { lock.unlock() }; return active }
+
     /// Whether narration can run: the usage strings are in the bundle, an on-device recognizer exists for the current
     /// language, and speech recognition is not denied. `reason` names the first thing missing.
     public static func availability() -> [String: Any] {
@@ -104,6 +107,7 @@ public final class WatchRecordVoiceover: @unchecked Sendable {
         guard SFSpeechRecognizer.authorizationStatus() == .authorized else {
             throw CUError("speech_recognition_denied", "Speech recognition is not allowed for this app.")
         }
+        if Dictation.shared.isActive { throw CUError("microphone_busy", "Composer dictation is using the microphone.") }
         lock.lock(); defer { lock.unlock() }
         if active { throw CUError("already_active", "WatchRecordVoiceover.start called while already active") }
         stopEngineLocked()

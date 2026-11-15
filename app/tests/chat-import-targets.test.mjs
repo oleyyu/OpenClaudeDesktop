@@ -11,7 +11,8 @@ import path from 'node:path';
 import { createRequire } from 'node:module';
 import {
   DEFAULT_CONTEXT_WINDOW, DEFAULT_INSTRUCTIONS, IMPORT_MAX_MESSAGES, INJECT_BATCH, IMPORTED_LEFT_OUT, MINIMAX_GLOBAL_MAX_BYTES, MINIMAX_HANDOFF_MARGIN,
-  fitHandoffInstructions, handoffInstructions, importBudgets, importInto, minimaxHandoffLimit, planStrategies, prepareImport, responseItemsOf, trimMessages,
+  SEED_CALLS_MAX_CHARS, boundCalls, fitHandoffInstructions, handoffInstructions, importBudgets, importInto, minimaxHandoffLimit, planStrategies, prepareImport,
+  responseItemsOf, trimMessages,
 } from '../electron/chat-import/targets.mjs';
 import { redactSecrets, REDACTED } from '../electron/chat-import/redact.mjs';
 import { estimateTokens, headWithinTokens, tailWithinTokens } from '../electron/chat-import/text-budget.mjs';
@@ -726,10 +727,97 @@ test('main.cjs importCoreThread sends a reply\'s parts only while they spell its
   assert.match(body, /return \{ role: message\?\.role === "assistant" \? "assistant" : "user", text: value, \.\.\.\(parts \? \{ parts \} : \{\}\), \.\.\.ts \};/, 'parts are no longer stripped');
   assert.match(body, /const ts = Number\.isSafeInteger\(message\?\.ts\) && message\.ts > 0 \? \{ ts: message\.ts \} : \{\};/, 'the source time travels, a valid one only');
   const str = (value, max) => (typeof value === 'string' ? value.slice(0, max) : '');
-  const partsOf = new Function('str', `${/const partsOf = [\s\S]*?\n {4}\};/.exec(body)[0]}\nreturn partsOf;`)(str);
+  const partsOf = new Function('str', `${/const partsOf = [\s\S]*?\n {4}\};\n {4}const callOf = [\s\S]*?\n {4}\};/.exec(body)[0]}\nreturn partsOf;`)(str);
   const tool = '[Tool: Bash]\nnpm test\n[Result]\nok', parts = [{ text: tool, tool: true }, { text: 'Done.' }];
   assert.deepEqual(partsOf({ role: 'assistant', parts }, `${tool}\n\nDone.`), parts);
   assert.equal(partsOf({ role: 'user', parts }, `${tool}\n\nDone.`), null, 'replies only');
   assert.equal(partsOf({ role: 'assistant', parts }, 'something else'), null, 'parts that do not spell the text stay behind');
-  assert.deepEqual(partsOf({ role: 'assistant', parts: [{ text: 'a', tool: 'yes', extra: 1 }] }, 'a'), [{ text: 'a' }], 'only the text and a true tool flag travel');
+  assert.deepEqual(partsOf({ role: 'assistant', parts: [{ text: 'a', tool: 'yes', extra: 1, call: { type: 'commandExecution' } }] }, 'a'), [{ text: 'a' }], 'only the text and a true tool flag travel');
+  // A tool block's call (its row's display) travels with it: a plain JSON object with a type, at most 64 000 characters.
+  const call = { type: 'commandExecution', command: 'npm test', cwd: '/w' };
+  assert.deepEqual(partsOf({ role: 'assistant', parts: [{ text: tool, tool: true, call }] }, tool), [{ text: tool, tool: true, call }]);
+  assert.notEqual(partsOf({ role: 'assistant', parts: [{ text: tool, tool: true, call }] }, tool)[0].call, call, 'a copy');
+  for (const bad of [null, 'x', [call], { command: 'no type' }, { type: 'dynamicToolCall', arguments: { big: 'x'.repeat(64000) } }])
+    assert.deepEqual(partsOf({ role: 'assistant', parts: [{ text: tool, tool: true, call: bad }] }, tool), [{ text: tool, tool: true }], JSON.stringify(bad)?.slice(0, 60));
+});
+
+test('prepareImport: a tool call\'s structured display (its row) is redacted string by string; no key in its arguments reaches a core', () => {
+  const pem = '-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC\n-----END PRIVATE KEY-----';
+  const secrets = {
+    bearer: 'abcdefghijklmnopqrstuvwxyz012345', sk: 'sk-proj-abcdefghijklmnopqrstuvwx', field: 'zq81-not-a-pattern', ghp: 'ghp_abcdefghijklmnopqrstuvwxyz0123',
+    body: 'MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC', clipped: 'MIIClippedKeyBodyPastTheDisplayBound0123456789',
+  };
+  const list = new ItemList();
+  const ask = (text) => list.push('user', { parts: [{ text }] });
+  const call = (callId, name, raw, result) => { list.toolCall({ callId, name, raw: JSON.stringify(raw) }); list.toolResult({ callId, text: result }); list.push('assistant', { parts: [{ text: 'ok' }] }); };
+  ask('Call the API');
+  call('c1', 'Bash', { command: `curl -H "Authorization: Bearer ${secrets.bearer}" https://api.example.com` }, '200');
+  ask('Search for the key');
+  call('c2', 'Grep', { pattern: secrets.sk, path: '/w' }, 'none');
+  ask('Deploy');
+  call('c3', 'mcp__deploy__run', { api_key: secrets.field, token: secrets.ghp, target: 'prod' }, 'deployed');
+  ask('Write the key file');
+  call('c4', 'Write', { file_path: '/w/key.pem', content: pem }, 'written');
+  // Past the text's argument bound (2 000 characters) but inside the row's diff bound (20 000): the row holds a key the
+  // model's text does not, clipped before its closing line.
+  ask('Write the big file');
+  call('c5', 'Write', { file_path: '/w/big.txt', content: `${'x'.repeat(19940)}\n-----BEGIN PRIVATE KEY-----\n${secrets.clipped}\n-----END PRIVATE KEY-----` }, 'written');
+  ask('Edit the key');
+  call('c6', 'Edit', { file_path: '/w/key.pem', old_string: pem, new_string: 'gone' }, 'edited');
+  const s = makeSession(makeSummary('claude-code', 'calls', { title: 'Calls' }), list.items);
+
+  const prepared = prepare(s, null, realConvert);
+  const sent = JSON.stringify(prepared.seed.messages);
+  for (const [name, value] of Object.entries(secrets)) assert.ok(!sent.includes(value), `${name} reaches no core`);
+  const calls = prepared.seed.messages.flatMap((message) => (message.parts ?? []).filter((part) => part.call).map((part) => part.call));
+  assert.equal(calls.length, 6, 'every reply keeps its tool row');
+  const [bash, grep, mcp, write, big, edit] = calls;
+  assert.equal(bash.type, 'commandExecution');
+  assert.equal(bash.command, `curl -H "Authorization: Bearer ${REDACTED}" https://api.example.com`);
+  assert.equal(grep.commandActions[0].query, REDACTED);
+  assert.deepEqual([mcp.type, mcp.arguments], ['mcpToolCall', { api_key: REDACTED, token: REDACTED, target: 'prod' }], 'a field named like a secret is masked whole');
+  assert.deepEqual([write.type, write.changes[0].kind.type, write.changes[0].diff], ['fileChange', 'add', REDACTED]);
+  assert.ok(big.changes[0].diff.startsWith('x'.repeat(100)) && big.changes[0].diff.endsWith(REDACTED), 'a key clipped before its closing line loses what is left of it');
+  assert.equal(edit.type, 'fileChange');
+  assert.equal(edit.changes[0].diff, `@@ -1,3 +1,1 @@\n-${REDACTED}\n+gone\n`, 'the hunk keeps its counts; the removed key is one mask');
+  // The count is what the model was spared: the same as without any rows.
+  const textOnly = { ...realConvert, toDshSeed: (x) => ({ messages: realConvert.toDshSeed(x).messages.map((message) => ({ ...message, ...(message.parts ? { parts: message.parts.map(({ call: _drop, ...part }) => part) } : {}) })) }) };
+  const plain = prepare(s, null, textOnly);
+  assert.equal(prepared.seed.redacted, plain.seed.redacted);
+  assert.deepEqual(prepared.seed.messages.map((message) => message.text), plain.seed.messages.map((message) => message.text), 'the model\'s text is the same with or without rows');
+});
+
+test('prepareImport: a private key that a reply\'s text opens and its tool row closes sends that reply as text alone', () => {
+  const body = 'MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC';
+  const opening = 'Here:\n-----BEGIN PRIVATE KEY-----', tool = '[Tool: Note]\n(the rest)\n[Result]\nok';
+  const ran = '[Tool: Bash]\nnpm test\n[Result]\nok';
+  const prepared = prepare(session('claude-code'), null, { ...convert, toDshSeed: () => ({ messages: [
+    { role: 'user', text: 'Print the key' },
+    { role: 'assistant', text: `${opening}\n\n${tool}`, parts: [{ text: opening }, { text: tool, tool: true, call: { type: 'dynamicToolCall', tool: 'Note', arguments: { rest: `${body}\n-----END PRIVATE KEY-----` } } }] },
+    { role: 'user', text: 'Now run it' },
+    { role: 'assistant', text: ran, parts: [{ text: ran, tool: true, call: { type: 'commandExecution', command: 'npm test', cwd: '/w' } }] },
+  ] }) });
+  const [, split, , clean] = prepared.seed.messages;
+  assert.ok(!JSON.stringify(prepared.seed.messages).includes(body), 'the key reaches no core');
+  assert.equal(split.parts, undefined, 'its text alone, no rows');
+  assert.equal(split.text, `${opening}\n\n${tool}`, 'the model\'s text is what it was');
+  assert.equal(prepared.seed.redacted, 0, 'nothing the model reads was masked');
+  assert.deepEqual(clean.parts, [{ text: ran, tool: true, call: { type: 'commandExecution', command: 'npm test', cwd: '/w' } }], 'other replies keep their rows');
+});
+
+test('prepareImport: rows travel only on tool blocks; boundCalls drops the oldest rows past SEED_CALLS_MAX_CHARS', () => {
+  const ran = '[Tool: Bash]\nls\n[Result]\nok';
+  const prepared = prepare(session('claude-code'), null, { ...convert, toDshSeed: () => ({ messages: [
+    { role: 'user', text: 'List' },
+    { role: 'assistant', text: `Sure\n\n${ran}`, parts: [{ text: 'Sure', call: { type: 'commandExecution', command: 'x' } }, { text: ran, tool: true, call: 'not an object' }] },
+  ] }) });
+  assert.deepEqual(prepared.seed.messages[1].parts, [{ text: 'Sure' }, { text: ran, tool: true }]);
+  const big = (n) => ({ type: 'dynamicToolCall', tool: `T${n}`, arguments: { text: 'y'.repeat(30000) } });
+  const messages = Array.from({ length: 80 }, (_, n) => ({ role: 'assistant', text: 't', parts: [{ text: 't', tool: true, call: big(n) }] }));
+  boundCalls(messages);
+  const kept = messages.filter((message) => message.parts[0].call);
+  assert.ok(kept.length > 0 && kept.length < 80);
+  assert.equal(kept[0], messages[80 - kept.length], 'the newest keep theirs');
+  assert.ok(kept.reduce((sum, message) => sum + JSON.stringify(message.parts[0].call).length, 0) <= SEED_CALLS_MAX_CHARS);
+  assert.ok(messages.every((message) => message.parts[0].text === 't' && message.parts[0].tool === true), 'their blocks stay');
 });

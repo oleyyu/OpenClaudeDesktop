@@ -4,7 +4,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { buildHome, IDS } from './fixtures/chat-import/build-home.mjs';
 import { readSession, clearCache } from '../electron/chat-import/catalog.mjs';
-import { toCodexTurns, toDshSeed, toTranscriptText, pairTools, patchChanges } from '../electron/chat-import/convert.mjs';
+import { displayDiff, toCodexTurns, toDshSeed, toolCallDisplay, toTranscriptText, pairTools, patchChanges } from '../electron/chat-import/convert.mjs';
 import {
   ItemList, NO_RESULT_TEXT, isClaudeInjected, isCodexInjected, makeSession, makeSummary, parseKey, sessionKey, sourceLabel, toMs, toolCategory,
 } from '../electron/chat-import/model.mjs';
@@ -64,7 +64,8 @@ test('toCodexTurns: Codex Thread items the host renders, one turn per user messa
   assert.deepEqual(reasoning.summary, ['Thinking about listing']);
   assert.deepEqual([command.command, command.aggregatedOutput, command.exitCode, command.status, command.cwd], ['ls -la', 'a.txt\nb.txt\n', 0, 'completed', '/work/alpha']);
   assert.deepEqual(command.commandActions, [{ type: 'unknown', command: 'ls -la' }]);
-  assert.deepEqual(change.changes, [{ path: '/work/alpha/a.txt', kind: { type: 'update', move_path: null }, diff: '@@\n-old\n+new\n' }]);
+  // The apply_patch hunk gets a numbered header, so the transcript counts and draws it (transcript-sdk-tools structuredPatch).
+  assert.deepEqual(change.changes, [{ path: '/work/alpha/a.txt', kind: { type: 'update', move_path: null }, diff: '@@ -1,1 +1,1 @@\n-old\n+new\n' }]);
   assert.deepEqual([mcp.server, mcp.tool, mcp.arguments, mcp.result.content[0].text, mcp.error], ['docs', 'search', { q: 'x' }, 'found', null]);
   assert.deepEqual([web.query, web.action.type], ['node zstd', 'search']);
   assert.equal(agent.text, 'There are two files.');
@@ -78,7 +79,11 @@ test('toCodexTurns: Codex Thread items the host renders, one turn per user messa
   assert.ok(!items.some(item => item.type === 'userMessage' && item.content.some(part => /system-reminder|command-name/.test(part.text ?? ''))));
   const edit = items.find(item => item.type === 'fileChange');
   assert.deepEqual(edit.changes[0].path, '/work/claude/p.js');
-  assert.equal(items.find(item => item.type === 'dynamicToolCall').tool, 'Read');
+  assert.equal(edit.changes[0].diff, '@@ -1,1 +1,1 @@\n-a\n+b\n', 'the edit\'s old and new text as a hunk');
+  // Read shows as the read action the bridges give their agents' reads (was a dynamicToolCall 'Read').
+  const readRow = items.find(item => item.type === 'commandExecution' && item.commandActions[0].type === 'read');
+  assert.deepEqual(readRow.commandActions, [{ type: 'read', command: 'Read /work/claude/p.js', name: 'p.js', path: '/work/claude/p.js' }]);
+  assert.ok(!items.some(item => item.type === 'dynamicToolCall'));
   assert.ok(items.find(item => item.type === 'userMessage' && item.content.some(part => part.type === 'image')));
 });
 
@@ -167,4 +172,60 @@ test('toDshSeed: user/assistant messages, tools as assistant text, same roles me
   assert.match(all, /Summary of the earlier conversation:\nThis session is being continued/);
   const grok = toDshSeed(await read(`grok:${IDS.grok}`)).messages.map(message => message.text).join('\n');
   assert.doesNotMatch(grok, /XENC|grok thinking|project rules|system prompt/);
+});
+
+test('toDshSeed: each tool block carries its row (toolCallDisplay) beside the same text', async () => {
+  const { messages } = toDshSeed(await read(`claude-code:${IDS.claude}`));
+  const tools = messages.flatMap(message => message.parts ?? []).filter(part => part.tool);
+  const bash = tools.find(part => /^\[Tool: Bash\]/.test(part.text));
+  assert.deepEqual([bash.call.type, bash.call.command], ['commandExecution', 'npm test']);
+  const edit = tools.find(part => /^\[Tool: Edit\]/.test(part.text));
+  assert.deepEqual(edit.call, { type: 'fileChange', changes: [{ path: '/work/claude/p.js', kind: { type: 'update', move_path: null }, diff: '@@ -1,1 +1,1 @@\n-a\n+b\n' }] });
+  assert.ok(messages.flatMap(message => message.parts ?? []).every(part => part.tool === true || part.call === undefined), 'only tool blocks carry one');
+});
+
+test('toolCallDisplay: each source\'s calls as the row a native call of that kind shows', () => {
+  const call = (name, args, result = null, category) => toolCallDisplay({ name, args, category: category ?? toolCategory(name) }, result);
+  // Shell: Claude Code Bash, Gemini / Qwen run_shell_command, Codex shell (an argv), OpenCode bash.
+  assert.deepEqual(call('Bash', { command: 'npm test' }, { text: 'ok' }), { type: 'commandExecution', command: 'npm test', cwd: '' });
+  assert.deepEqual(call('run_shell_command', { command: 'ls', dir_path: '/w' }, { text: 'Output: a', display: { text: 'a', exitCode: 2 } }),
+    { type: 'commandExecution', command: 'ls', cwd: '', exitCode: 2, output: 'a' }, 'the display text and its exit code (Gemini\'s wrapper)');
+  assert.deepEqual(call('shell', { command: ['bash', '-lc', 'git status'], workdir: '/w' }, { text: '', exitCode: 1 }), { type: 'commandExecution', command: 'bash -lc git status', cwd: '/w', exitCode: 1 });
+  // Edits: old / new text as a numbered hunk, an added file with its content, apply_patch sections numbered.
+  assert.deepEqual(call('replace', { file_path: '/w/a.js', old_string: 'x\n\ny', new_string: 'z' }).changes,
+    [{ path: '/w/a.js', kind: { type: 'update', move_path: null }, diff: '@@ -1,3 +1,1 @@\n-x\n-\n-y\n+z\n' }], 'blank lines stay');
+  assert.deepEqual(call('write_file', { file_path: '/w/n.txt', content: 'hi\n' }, null, 'edit').changes, [{ path: '/w/n.txt', kind: { type: 'add' }, diff: 'hi\n' }]);
+  const patch = '*** Begin Patch\n*** Update File: src/x.js\n@@ fn\n-a\n+b\n@@ other\n c\n-d\n*** Add File: src/n.js\n+new\n*** End Patch';
+  assert.deepEqual(call('apply_patch', { input: patch }).changes, [
+    { path: 'src/x.js', kind: { type: 'update', move_path: null }, diff: '@@ -1,1 +1,1 @@\n-a\n+b\n@@ -2,2 +2,1 @@\n c\n-d\n' },
+    { path: 'src/n.js', kind: { type: 'add' }, diff: 'new\n' },
+  ]);
+  assert.deepEqual(call('Edit', { file_path: '/w/a.js' }), { type: 'dynamicToolCall', tool: 'Edit', arguments: { file_path: '/w/a.js' } }, 'no diff: the file it edited');
+  // Reads, searches and listings as the bridges' file rows.
+  assert.deepEqual(call('read_file', { absolute_path: '/w/a.js' }).commandActions, [{ type: 'read', command: 'Read /w/a.js', name: 'a.js', path: '/w/a.js' }]);
+  assert.deepEqual(call('grep_search', { pattern: 'TODO', dir_path: '/w', include: '*.js' }).commandActions,
+    [{ type: 'search', command: 'grep_search TODO', query: 'TODO', path: '/w', tool: 'grep', arguments: { pattern: 'TODO', path: '/w', glob: '*.js' } }]);
+  assert.deepEqual(call('Glob', { pattern: '**/*.md' }).commandActions, [{ type: 'search', command: 'Glob **/*.md', query: '**/*.md', path: null, tool: 'glob', arguments: { pattern: '**/*.md' } }]);
+  assert.deepEqual(call('list_directory', { dir_path: '/w' }).commandActions, [{ type: 'listFiles', command: 'ls /w', path: '/w' }]);
+  // Web: a search with its query, a fetch with its URL.
+  assert.deepEqual(call('google_web_search', { query: 'node zstd' }, null, 'web'), { type: 'webSearch', query: 'node zstd', action: { type: 'search', query: 'node zstd', queries: null } });
+  assert.deepEqual(call('WebFetch', { url: 'https://e.com/x', prompt: 'p' }, null, 'web'), { type: 'webSearch', query: 'https://e.com/x', action: { type: 'openPage', url: 'https://e.com/x' } });
+  // MCP and anything else: its arguments as JSON.
+  assert.deepEqual(toolCallDisplay({ name: 'mcp__docs__search', args: { q: 'x' }, category: 'mcp', mcp: { server: 'docs', tool: 'search' } }), { type: 'mcpToolCall', server: 'docs', tool: 'search', arguments: { q: 'x' } });
+  assert.deepEqual(call('write_todos', { todos: [{ description: 'a' }] }, null, 'other'), { type: 'dynamicToolCall', tool: 'write_todos', arguments: { todos: [{ description: 'a' }] } });
+  // Bounded: a long argument is clipped, a call past 32 000 characters loses its diffs, then its arguments.
+  assert.ok(call('Bash', { command: 'x'.repeat(9000) }).command.length < 4100);
+  const huge = call('apply_patch', { changes: ['/w/a.js', '/w/b.js'].map(path => ({ path, kind: 'update', diff: `@@ -1,1 +1,1 @@\n-${'a'.repeat(18000)}\n+b\n` })) });
+  assert.deepEqual(huge, { type: 'dynamicToolCall', tool: 'Edit', arguments: { file_path: '/w/a.js' } });
+  assert.deepEqual(call('Other', Object.fromEntries(Array.from({ length: 40 }, (_, n) => [`k${n}`, 'v'.repeat(3000)])), null, 'other'), { type: 'dynamicToolCall', tool: 'Other' });
+});
+
+test('displayDiff: numbered hunks pass through; apply_patch hunks get numbers; an added file\'s + lines become its content', () => {
+  assert.equal(displayDiff('update', '@@ -3,1 +3,1 @@\n-a\n+b\n'), '@@ -3,1 +3,1 @@\n-a\n+b\n');
+  assert.equal(displayDiff('update', '--- a/x\n+++ b/x\n@@ -1 +1 @@\n-a\n+b\n'), '--- a/x\n+++ b/x\n@@ -1 +1 @@\n-a\n+b\n');
+  assert.equal(displayDiff('update', '@@\n-a\n+b\n'), '@@ -1,1 +1,1 @@\n-a\n+b\n');
+  assert.equal(displayDiff('add', '+one\n+two\n'), 'one\ntwo\n');
+  assert.equal(displayDiff('add', 'plain content'), 'plain content');
+  assert.equal(displayDiff('delete', '-gone\n'), '-gone\n');
+  assert.equal(displayDiff('update', ''), '');
 });

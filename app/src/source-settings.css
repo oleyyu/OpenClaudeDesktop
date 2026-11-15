@@ -98,6 +98,9 @@ html[data-transcript-width=l] { --local-transcript-width:var(--chat-column-measu
 .ss-nav li>button[aria-current]{background:var(--cds-fill-ghost-selected,var(--cds-alpha-2))}
 .ss-content{background:var(--cds-surface-2);padding:8px var(--cds-pad-xl,24px) var(--cds-pad-lg,16px)}.ss-group{margin-bottom:var(--cds-gap-xl,24px)}
 .ss-row{display:block;padding:var(--cds-pad-md,8px) 0}.ss-row-top{display:flex;align-items:center;justify-content:space-between;gap:var(--cds-gap-lg,16px)}.ss-row-copy [data-settings-desc]{font-size:var(--cds-font-size-body,14px);line-height:var(--cds-leading-body,20px);color:var(--cds-text-muted)}
+/* SettingRow row.leading (source-settings-kit.jsx): a 32px slot before the copy, 12px from it; the below slot lines up with the copy. */
+.ss-row-leading{display:flex;flex-shrink:0;align-items:center;justify-content:center;width:32px;margin-inline-end:calc(12px - var(--cds-gap-lg,16px))}
+.ss-row[data-leading]>.ss-row-below{padding-inline-start:44px}
 /* Av/Fv keep py-md on every ordinary row, including the first and last. */
 [data-settings-row][data-indent]{padding-left:var(--cds-pad-lg,16px)}.settings-group-dividers>[data-settings-row]+[data-settings-row]{border-top:1px solid var(--cds-alpha-1)}
 .ss-version{font-variant-numeric:tabular-nums}.ss-search-results{position:absolute;left:0;top:calc(100% + 4px);width:280px;max-width:calc(100vw - 64px);max-height:320px;overflow:auto;padding:4px;background:var(--cds-surface-3);border-radius:8px;box-shadow:var(--cds-shadow-popover,0 4px 20px #0003);z-index:5}

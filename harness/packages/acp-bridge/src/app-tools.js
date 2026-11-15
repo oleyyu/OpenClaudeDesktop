@@ -77,6 +77,28 @@ export function appToolsServer(env = process.env) {
   }
 }
 
+/**
+ * The chrome-devtools server (app/electron/devtools-mcp/index.cjs: Google's chrome-devtools-mcp on the app's preview tabs)
+ * from CODE_DESKTOP_DEVTOOLS_MCP_SERVER, {name, command, args, env}, or null. A session that gets code_desktop gets it too.
+ */
+export function devtoolsServer(env = process.env) {
+  const raw = env?.CODE_DESKTOP_DEVTOOLS_MCP_SERVER
+  if (typeof raw !== 'string' || !raw) return null
+  let value
+  try { value = JSON.parse(raw) } catch { return null }
+  if (!value || typeof value.command !== 'string' || !value.command || !Array.isArray(value.args) || value.args.some((arg) => typeof arg !== 'string')) return null
+  const own = value.env && typeof value.env === 'object' && !Array.isArray(value.env) ? Object.entries(value.env).filter(([, item]) => typeof item === 'string') : []
+  return { name: typeof value.name === 'string' && /^[A-Za-z0-9_-]{1,64}$/.test(value.name) ? value.name : 'chrome-devtools', command: value.command, args: [...value.args], env: Object.fromEntries(own) }
+}
+
+/** The chrome-devtools ACP stdio mcpServers entry (null without one); ELECTRON_RUN_AS_NODE in the command where the agent drops it. */
+export function acpDevtoolsServer(server, { runAsNodeInCommand = false } = {}) {
+  if (!server) return null
+  let entry = { name: server.name, command: server.command, args: [...server.args], env: { ...server.env } }
+  if (runAsNodeInCommand) entry = withRunAsNodeInCommand(entry)
+  return { ...entry, env: Object.entries(entry.env).map(([name, value]) => ({ name, value })) }
+}
+
 /** The start token a thread/start or thread/fork carries (params.config[SESSION_CONFIG_KEY]), else null. */
 export function sessionIdentityOf(params) {
   const value = params?.config?.[SESSION_CONFIG_KEY]

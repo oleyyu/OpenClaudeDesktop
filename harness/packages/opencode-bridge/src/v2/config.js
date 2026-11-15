@@ -42,7 +42,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { BridgeConfig, ROUTE, agentShell, parseJsonc, providerKeyEnv, readJson, sdkBaseURL, writeAtomic } from '../config.js'
 import { storedCoreSettings } from '../core-settings.js'
-import { appToolsServer } from '../app-tools.js'
+import { appToolsServer, devtoolsServer, devtoolsEnv } from '../app-tools.js'
 import { PLUGIN_ENTRY, PLUGIN_ID, pluginSourceV2 } from './plugin.js'
 import { shellWrapperV2 } from './sandbox.js'
 
@@ -345,6 +345,9 @@ export class BridgeConfigV2 extends BridgeConfig {
     // OpenClaude Desktop's own tools (app-tools.js): never in a workflow runner's config.
     const appTools = this.runnerDir ? null : appToolsServer(this.env)
     if (appTools && !mcp.disabled.includes(appTools.name)) servers[appTools.name] = appToolsEntryV2(appTools, this.runtimeDir)
+    // The chrome-devtools server beside it (app-tools.js devtoolsServer), on the app's preview tabs.
+    const devtools = appTools ? devtoolsServer(this.env) : null
+    if (devtools && !mcp.disabled.includes(devtools.name)) servers[devtools.name] = { type: 'local', command: [devtools.command, ...devtools.args], environment: { ...devtools.env }, codemode: false, timeout: { ...APP_TOOLS_TIMEOUT } }
     // share 'manual': a user's `share: "auto"` would publish every session the bridge creates.
     let config = { share: 'manual' }
     const providers = providerOverlayV2(this.providers(), this.env)
@@ -421,6 +424,7 @@ export class BridgeConfigV2 extends BridgeConfig {
       CODE_DESKTOP_OPENCODE_STATE: this.stateDir,
       SHELL: shell,
       ...appTools,
+      ...(appToolsServer(this.env) && !this.runnerDir ? devtoolsEnv(devtoolsServer(this.env)) : {}),
     }
   }
 

@@ -53,7 +53,7 @@ export default {
   '{core} received the earlier conversation as context.': '{core} 已将之前的对话作为上下文接收。',
   'The core': '内核',
   // The Import history dialog (source-import-history.jsx).
-  'Import history': '导入记录',
+  'Import Chats': '导入对话',
   'Pick conversations from other coding agents on this Mac and continue them in {core}. The originals are not changed.': '从这台 Mac 上其他编程智能体的对话里挑选，导入到 {core} 接着聊。原始记录不会被修改。',
   'Sources': '来源',
   '{count} conversation': '{count} 个对话',

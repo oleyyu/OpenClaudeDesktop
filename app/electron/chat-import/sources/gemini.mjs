@@ -237,6 +237,24 @@ function resultText(result, display) {
     : typeof part.text === 'string' ? part.text : part.inlineData ? `[${part.inlineData.mimeType ?? 'binary'} data]` : '').filter(Boolean);
   return texts.join('\n') || (typeof display === 'string' ? display : '');
 }
+/**
+ * How a result shows, when Gemini wrapped it for its model: core wrapUntrusted puts a tool's output inside
+ * `<untrusted_context>…</untrusted_context>` (closing tags in it escaped), and run_shell_command reports
+ * `Output: …` then `Error:` / `Exit Code:` / `Signal:` / `Background PIDs:` / `Process Group PGID:` lines (shell.ts
+ * llmContentParts). The model keeps that text as recorded; a transcript shows the output, and the exit code it names.
+ * undefined for a result that is not wrapped.
+ */
+export function resultDisplay(text) {
+  const inner = typeof text === 'string' ? /^\s*<untrusted_context>\n?([\s\S]*?)\n?<\/untrusted_context>\s*$/.exec(text)?.[1] : undefined;
+  if (inner === undefined) return undefined;
+  const plain = inner.replaceAll('&lt;/untrusted_context&gt;', '</untrusted_context>');
+  const shell = /^Output: ([\s\S]*?)((?:\n(?:Error|Exit Code|Signal|Background PIDs|Process Group PGID): .*)*)$/.exec(plain);
+  if (!shell) return { text: plain };
+  const exit = /\nExit Code: (-?\d+)/.exec(shell[2]);
+  const error = /\nError: (.*)/.exec(shell[2]);
+  const output = shell[1] === '(empty)' ? '' : shell[1];
+  return { text: [output, error ? `Error: ${error[1]}` : ''].filter(Boolean).join('\n'), ...(exit ? { exitCode: Number(exit[1]) } : {}) };
+}
 /** Gemini names MCP tools mcp_<server>_<tool>, the server up to the first '_' (core tools/mcp-tool.ts:37-65). */
 const mcpOfName = name => { const match = /^mcp_([^_]+)_(.+)$/.exec(String(name ?? '')); return match ? { server: match[1], tool: match[2] } : null; };
 
@@ -256,7 +274,7 @@ export function itemsOf(messages) {
     const mcp = mcpOfName(name);
     list.toolCall({ callId, name, raw: args ?? {}, ts, ...(mcp ? { mcp, category: 'mcp' } : {}) });
   };
-  const result = (callId, fields) => { answered.add(callId); list.toolResult({ callId, ...fields }); };
+  const result = (callId, fields) => { answered.add(callId); const display = resultDisplay(fields.text); list.toolResult({ callId, ...fields, ...(display ? { display } : {}) }); };
   for (const message of messages) {
     const ts = message.timestamp;
     const parts = partsOf(message.content);

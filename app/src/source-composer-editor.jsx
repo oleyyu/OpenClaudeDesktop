@@ -200,8 +200,10 @@ export function SourceComposerEditor({value,onChange,inputRef,scope,disabled,onK
    placeCaret:caret=>{const doc=editor.state.doc,selection=caret==='start'?Selection.atStart(doc):caret==='end'?Selection.atEnd(doc):caret==='all'?new AllSelection(doc):null;
     editor.dispatch((selection?editor.state.tr.setSelection(selection):editor.state.tr).scrollIntoView());editor.focus();},
    focusView:()=>{if(view.current===editor&&!editor.isDestroyed)editor.focus();}});
+  // Composer dictation runs (input.beginDictation below): each maps its range through every transaction.
+  const dictationRuns=new Set();
   const editor=new EditorView({mount:input},{state:EditorState.create({schema:composerSchema,doc:documentFor(latest.current.value),plugins:plugins()}),editable:()=>!latest.current.disabled,attributes:()=>({class:latest.current.props.className}),nodeViews:{command_chip:commandNodeView,mention:(node,current,getPos)=>mentionNodeView(node,current,getPos,latest)},
-   dispatchTransaction(tr){const state=editor.state.applyTransaction(tr).state;editor.updateState(state);input.dataset.empty=composerText(state.doc)?'false':'true';if(tr.docChanged&&!pendingValue.current){echoes.current.sent(composerText(state.doc));latest.current.onChange?.({target:input,currentTarget:input});}},
+   dispatchTransaction(tr){const state=editor.state.applyTransaction(tr).state;editor.updateState(state);if(tr.docChanged)for(const run of dictationRuns)run(tr);input.dataset.empty=composerText(state.doc)?'false':'true';if(tr.docChanged&&!pendingValue.current){echoes.current.sent(composerText(state.doc));latest.current.onChange?.({target:input,currentTarget:input});}},
    handleDOMEvents:{keydown(_view,event){if(latest.current.disabled)return true;
     // c227f4d5e OP keydown: a repeated Enter, or one inside the ignoreStrayEnter() window, is swallowed before any
     // popup or the composer's own keys see it (composer-focus-api.mjs).
@@ -267,6 +269,24 @@ export function SourceComposerEditor({value,onChange,inputRef,scope,disabled,onK
   input.insertSkill=command=>{if(latest.current.disabled)return false;editor.dispatch(closeHistory(skillTransaction(editor.state,command)));editor.dispatch(closeHistory(editor.state.tr));return true;};
   // An emoji pick (Kd command: deleteRange + insertContent(char)): the text offsets [start,end) become `text`.
   input.replaceText=(start,end,text)=>{if(latest.current.disabled)return;const doc=editor.state.doc,from=composerPosition(doc,start,1),to=Math.max(from,composerPosition(doc,end,-1));editor.dispatch(editor.state.tr.insertText(text,from,to).scrollIntoView());editor.focus();};
+  // Composer dictation (use-composer-dictation.js; cc43287c9 yee with preserveMidRecordingEdits): the dictated run is a
+  // range of the document, replaced as the transcript grows. Other edits move it (typing at either edge stays outside
+  // it), so what the user types elsewhere mid-recording is kept. A selection at the start is replaced by the run.
+  // unspaced (Chinese, Japanese…): no space before the run; otherwise one after a non-space character.
+  input.beginDictation=({unspaced=false}={})=>{if(latest.current.disabled||editor.isDestroyed)return null;
+   editor.dispatch(closeHistory(editor.state.tr));
+   let range={from:editor.state.selection.from,to:editor.state.selection.to},lead=null,written='';
+   const run=tr=>{if(tr.getMeta('composer-dictation'))return;range={from:tr.mapping.map(range.from,1),to:Math.max(tr.mapping.map(range.from,1),tr.mapping.map(range.to,-1))};};
+   dictationRuns.add(run);
+   return {
+    update(text){if(typeof text!=='string'||editor.isDestroyed||editor.composing||latest.current.disabled||!text)return false;
+     if(lead===null){const before=range.from>0?editor.state.doc.textBetween(Math.max(0,range.from-1),range.from,'\n','\ufffc'):'';lead=!unspaced&&before&&!/\s/.test(before)?' ':'';}
+     const value=lead+text;if(value===written)return true;
+     const from=Math.min(range.from,editor.state.doc.content.size),to=Math.min(Math.max(from,range.to),editor.state.doc.content.size);
+     let tr=editor.state.tr.insertText(value,from,to).setMeta('composer-dictation',true);if(editor.hasFocus())tr=tr.scrollIntoView();
+     editor.dispatch(tr);range={from,to:from+value.length};written=value;return true;},
+    end(){dictationRuns.delete(run);if(!editor.isDestroyed)editor.dispatch(closeHistory(editor.state.tr));},
+   };};
   // cc43287c9 :43979 focusAndInsert / ca80fca8d :15852-15866 br: a printable key typed while the focus was elsewhere in
   // the session pane lands at the end of the draft (the editor scrolls to it unless the draft was empty). onFocusInsert
   // lets the composer take a key itself ('!' on an empty editor turns bash mode on). False: the editor takes no typing.
@@ -285,7 +305,7 @@ export function SourceComposerEditor({value,onChange,inputRef,scope,disabled,onK
   input.resetComposer=()=>{pendingValue.current=null;echoes.current.clear();editor.updateState(EditorState.create({schema:composerSchema,doc:documentFor(latest.current.value),plugins:plugins()}));};
   syncValue.current=text=>{if(text===''&&composerText(editor.state.doc)!=='')input.resetComposer();else {const tr=reconcileComposerText(editor.state,text,{mentions:latest.current.mentions||[],chips:latest.current.chips||[]});if(tr)editor.dispatch(tr);}input.dataset.empty=composerText(editor.state.doc)?'false':'true';};
   input.dataset.empty=value?'false':'true';latest.current.inputRef?.(input);
-  return()=>{latest.current.inputRef?.(null);view.current=null;syncValue.current=null;pendingValue.current=null;resize.disconnect();children.disconnect();editor.destroy();editor.dom.removeEventListener('focus',report);editor.dom.removeEventListener('blur',report);setBubble(null);for(const key of ['value','selectionStart','selectionEnd','textRunStart','caretInCode','shellTextOnlyRefused','setSelectionRange','focus','insertCommand','insertMention','insertSkill','getCaretViewportRect','caretAtEdge','recallText','resetComposer','replaceText','focusAndInsert','scheduleFocus','focusPreservingSelection','ignoreStrayEnter','placeCaretAtDom'])delete input[key];};
+  return()=>{latest.current.inputRef?.(null);view.current=null;syncValue.current=null;pendingValue.current=null;resize.disconnect();children.disconnect();editor.destroy();editor.dom.removeEventListener('focus',report);editor.dom.removeEventListener('blur',report);setBubble(null);for(const key of ['value','selectionStart','selectionEnd','textRunStart','caretInCode','shellTextOnlyRefused','setSelectionRange','focus','insertCommand','insertMention','insertSkill','getCaretViewportRect','caretAtEdge','recallText','resetComposer','replaceText','focusAndInsert','scheduleFocus','focusPreservingSelection','ignoreStrayEnter','placeCaretAtDom','beginDictation'])delete input[key];};
  },[]);
  const previousScope=useRef(scope);
  // The keyword highlight follows Dynamic workflows, the trigger setting and alt+w (keywordHighlight).

@@ -42,8 +42,17 @@ function createRelayProxy({ fetchImpl = (...args) => systemFetch(...args) } = {}
     let body = chunks.length ? Buffer.concat(chunks) : null;
     if (body && /json/i.test(req.headers["content-type"] || "")) body = Buffer.from(rewriteBody(body.toString("utf8")));
     const headers = Object.fromEntries(Object.entries(req.headers).filter(([key]) => !HOP_BY_HOP.has(key.toLowerCase())));
+    // The core went away (Stop, a closed connection) before the reply ended: the relay must stop too, or it keeps
+    // generating, and billing, a reply nobody reads. The abort closes the upstream request; cancelling the reader
+    // also stops the copy below at once, even if the upstream is silent or the fetch in use ignores a late abort
+    // (writes to a destroyed response only return false, they never throw).
     const controller = new AbortController();
-    res.on("close", () => { if (!res.writableFinished) controller.abort(); });
+    let reader = null;
+    res.on("close", () => {
+      if (res.writableFinished) return;
+      controller.abort();
+      reader?.cancel().catch(() => {});
+    });
     let upstream;
     try {
       upstream = await fetchImpl(`${target}${req.url}`, { method: req.method, headers, body: body ?? undefined, signal: controller.signal, redirect: "manual" });
@@ -54,8 +63,14 @@ function createRelayProxy({ fetchImpl = (...args) => systemFetch(...args) } = {}
     }
     res.writeHead(upstream.status, Object.fromEntries([...upstream.headers].filter(([key]) => !RESPONSE_SKIP.has(key.toLowerCase()))));
     if (!upstream.body) { res.end(); return; }
+    if (controller.signal.aborted) { upstream.body.cancel().catch(() => {}); return; }
+    reader = upstream.body.getReader();
     try {
-      for await (const chunk of upstream.body) res.write(chunk);
+      for (;;) {
+        const { value, done } = await reader.read();
+        if (done || controller.signal.aborted) break;
+        res.write(value);
+      }
       res.end();
     } catch { res.destroy(); }
   }

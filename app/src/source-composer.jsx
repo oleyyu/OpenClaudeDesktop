@@ -28,6 +28,8 @@ import { composerTextStore, useComposerIntl } from "./source-composer-current-ad
 import { ComposerShellParts, SourceComposerShell } from "./source-composer-shell.jsx";
 // R4g-composer CP3 (X7-09): the presets card's + is c73f45bc3 pv's Oj trigger (source-composer-add-menu.jsx).
 import { CARD_ADD_TRIGGER, CHIN_ADD_TRIGGER, ComposerAddTrigger } from "./source-composer-add-menu.jsx";
+import { ComposerDictationButton } from "./source-composer-dictation.jsx";
+import { useComposerDictation } from "./use-composer-dictation.js";
 import { composerCardRootClass, composerRowChinClass } from "./generated/code-composer-v4/composer-tokens.mjs";
 import { bashModeRingClass, shelfStartInset, shelfStartPaddingClass, shelfStartProperty } from "./generated/code-composer-v4/composer-card-tokens.mjs";
 // host-wiring/chat (4.16336.0): what this file draws in host markup is the cds-core graph's (shared-frame-CJdE5Ria Xu → Id
@@ -474,6 +476,9 @@ export function SourceComposer({
   const command = parseSessionCommand(draft, commandContext);
   const hostCommand = !!command && !command.skill && !command.custom;
   const disabled = !editable;
+  // Dictation (c47a58ae1 mS over the host's on-device recognizer, use-composer-dictation.js): the Code composer only.
+  const dictation = useComposerDictation({ editorRef: editor, enabled: mode === "code" && !embedded });
+  const dictationRecording = dictation.status === "recording" || dictation.status === "connecting";
   const hasContent = !!editorText.trim() || attachments.length > 0 || contextPills.some((pill) => pill.content === true);
   // w13-close-chat-composer (chatfn-attachments-04): a Chat document still converting to text (convert-document has not
   // answered: chat-attachment-model pendingConversions without the in-flight filter) holds the send like an upload in
@@ -766,7 +771,7 @@ export function SourceComposer({
               // uM `placeholder: K ? "" : Je ? Xe : qe`: a shown suggestion clears the placeholder (the ghost overlay below
               // draws it); otherwise the fitted copy (fittedPlaceholder above: running hint, bash mode, or the composer's
               // own). extraEditorAttributes lt: aria-description We, and title Ve while the compact copy shows.
-              placeholder={showSuggestion ? "" : fittedPlaceholder}
+              placeholder={showSuggestion ? "" : dictationRecording ? t("Listening...") : fittedPlaceholder}
               aria-description={placeholderDescription}
               title={placeholderDescription !== undefined && fittedPlaceholder !== fullPlaceholder ? fullPlaceholder : undefined}
               onBlur={() => { setCommandFocus(false); setMention(null); setEmoji(null); }} onFocus={() => setCommandFocus(true)}
@@ -856,11 +861,10 @@ export function SourceComposer({
               no longer the host ComposerButton.sc-add. */}
           {!singleRowCard && <ComposerAddTrigger {...CHIN_ADD_TRIGGER} open={menuKind === "add"} tooltipOpen={menuKind ? false : undefined}
             onOpen={(entry, event) => onMenu("add", event.currentTarget, undefined, entry)} />}
-          {/* No dictation slot: c360a9e1c-GPs-MV9u.js:4892-4907 renders bH{squareSeam, 'flex shrink-0 items-center
-              empty:hidden gap-xs', children:[P ? null : (ce ?? nf{…}), null]} and nf (:5067-5095) returns null when
-              hideDictation; Code passes hideDictation:!Bu (cc43287c9-BMbiZYzF.js:36836, Bu = Sd(…).dictationEnabled
-              :32338-32360). This Codex client has no dictation, so bH is an empty div → empty:hidden (display:none)
-              and the mn.Chin leading slot (shared-11 cu 'flex items-center self-start', no gap) holds Add then Mode. */}
+          {/* c227f4d5e X6 Xt = [Gt (the +), Yt]: Yt is div 'flex shrink-0 items-center empty:hidden gap-xs' holding $6, the
+              Dictate button (mS with settingsMenu "caret", iconSize px = cfca6870a "auto"); empty (display:none) while
+              dictation is not shown. The presets card has no + here: its dictation is the send cell's idle slot. */}
+          {!singleRowCard && <div className="flex shrink-0 items-center empty:hidden gap-xs"><ComposerDictationButton dictation={dictation} /></div>}
           {singleRowCard ? <RowChinLeading shown={!!permissionControl} /> : permissionControl}
         </>}
         trailing={<div className={chinTrailingClass(singleRowCard)}>
@@ -967,7 +971,7 @@ export function SourceComposer({
             // R4g-composer CP2 (X7-08): uM's `placeholder: K ? "" : Je ? Xe : qe` and `placeholderFit: He === void 0 || U ?
             // "grow" : "clamp"` go to cm's placeholder span (source-composer-shell.jsx), not the editor's ::before: the copy
             // wraps (grow ghost) unless a compact copy exists to swap in. No dictation "Listening..." (Je) in the host.
-            placeholder: showSuggestion ? "" : fittedPlaceholder, placeholderFit: compactPlaceholder === undefined || bashMode ? "grow" : "clamp" }}>
+            placeholder: showSuggestion ? "" : dictationRecording ? t("Listening...") : fittedPlaceholder, placeholderFit: compactPlaceholder === undefined || bashMode ? "grow" : "clamp" }}>
           {/* lc.Header {aria-hidden, whitespace-nowrap}: the history hint (Rk: the search, or the History strip). */}
           {/* W14-code composer-09: c227f4d5e NA's markup — the failed search label text-danger, the query font-mono-ui
               text-primary with the motion-safe:animate-pulse ▎, the delayed hints (ms-auto … transition-opacity duration-300,
@@ -1001,8 +1005,8 @@ export function SourceComposer({
             send={
               /* 2.42304.0 c227f4d5e lM (generated composer-send-cell.mjs): Send/Stop crossfade (Ij) in the presets card's
                  code-prompt-trailing-controls > code-prompt-send-cell with the invisible size-control placeholder, Send only
-                 with a draft (sendOnDraftOnly) and the empty idle slot of a core without dictation (idleSendAction null, as
-                 mv under hideDictation). Elsewhere (the side session) the plain row keeps a disabled Send (idleSendAction
+                 with a draft (sendOnDraftOnly) and the Dictate button in the idle slot (idleSendAction, c73f45bc3 kS; null
+                 while dictation is not shown, as under hideDictation). Elsewhere (the side session) the plain row keeps a disabled Send (idleSendAction
                  undefined). Stop stamps stopClickAt, and a Send within Qj (500ms) of it is ignored. */
               <ComposerSendCell hasTextStore={hasTextStore} hasAttachments={attachments.length > 0 || contextPills.some((pill) => pill.content === true)}
               submitBlocked={submitBlocked} blockedSendPress={blockedSendPress} submitQueued={sending || submitHeld} sendBusyLabel={t("Sending")}
@@ -1012,7 +1016,9 @@ export function SourceComposer({
               // Not while a turn is still busy (sending, or interrupting until the core confirms): send({priority:'fork'}) refuses then.
               enableForkSubmit={forkAvailable && !running && !sending && !stopping} forkSubmitLabel={t("Send in a forked session")}
               stayOnDraftHint={stayOnDraft} escapeClaimed={!!menuKind || escapeClaimed} cmdEnterClaimed={cmdEnterClaimed}
-              sendOnDraftOnly={singleRowCard} idleSendAction={singleRowCard ? null : undefined} />} />
+              sendOnDraftOnly={singleRowCard}
+              // c73f45bc3 kS: the presets card's idle slot is the Dictate button (mS, settingsMenu "contextMenu", iconSize "md").
+              idleSendAction={singleRowCard ? (dictation.shown ? <ComposerDictationButton dictation={dictation} settingsMenu="contextMenu" iconSize="md" /> : null) : undefined} />} />
           {/* lc.Overlay: the prompt suggestion alone (`truncate text-muted-as-secondary`, aria-hidden), then uM's
               placeholder fit probe (an invisible line holding the full placeholder; useOverflowing swaps in the compact copy). */}
           <ComposerShellParts.Overlay>{showSuggestion ? <div aria-hidden data-prompt-suggestion-ghost className="truncate text-muted-as-secondary">{suggestion}</div> : null}</ComposerShellParts.Overlay>

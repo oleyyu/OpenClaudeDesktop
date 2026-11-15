@@ -46,7 +46,7 @@ import { activeMessages, turnsFromMessages, previewOf } from './history.js'
 import { WORKFLOW_RUN_APPROVAL_REASON, WORKFLOW_RUN_TOOLS, WORKFLOW_SESSION_GRANT_TOOLS, applyWorkflowEvents, applyWorkflowInterrupted, applyWorkflowSummary, bindWorkflowRun, workflowApprovalSummary, workflowReplacement, workflowState } from './workflows.js'
 import { goalObjective, instructionsBlock, instructionsKey, placeInstructions, stripInstructions } from './instructions.js'
 import { MCP_TOOL, isRecord } from './items.js'
-import { appToolsServer, sessionIdentityOf, zcodeAppToolsServer } from './app-tools.js'
+import { appToolsServer, sessionIdentityOf, zcodeAppToolsServer, zcodeDevtoolsServer } from './app-tools.js'
 import { approvalRequest, codexPolicy, isPlanApproval, isReadOnlyMode, noApprovalAnswer, permissionAnswer, permissionOf, questionAnswer, questionRequest, sessionGrant, zcodeMode } from './permissions.js'
 import { ProviderConfigMirror, ProviderProxy } from './provider-proxy.js'
 import { contextUsageCounts } from './context-usage.js'
@@ -615,12 +615,15 @@ export async function main() {
   function sessionMcpServers(thread, session = thread.id) {
     const disabled = new Set(thread.tools?.disabledServers ?? [])
     const own = appTools && !disabled.has(appTools.name) ? zcodeAppToolsServer(appTools, session) : null
+    // The chrome-devtools server (app-tools.js) beside OpenClaude Desktop's own, on the app's preview tabs.
+    const devtools = own ? zcodeDevtoolsServer(env) : null
+    const extra = devtools && !disabled.has(devtools.name) ? devtools : null
     if (!disabled.size && !own) return undefined
     const config = catalog.readConfig(paths.cliConfig)
     const cwd = thread.cwd ?? home
     // With MCP off in ZCode's config (features.mcp false) only OpenClaude Desktop's own server runs.
-    const configured = config?.features?.mcp === false && own ? [] : catalog.protocolMcpServers({ mcp: { servers: catalog.effectiveMcpServers(config, cwd) } }, { cwd }).filter((server) => !disabled.has(server.name) && server.name !== own?.name)
-    return own ? [...configured, own] : configured
+    const configured = config?.features?.mcp === false && own ? [] : catalog.protocolMcpServers({ mcp: { servers: catalog.effectiveMcpServers(config, cwd) } }, { cwd }).filter((server) => !disabled.has(server.name) && server.name !== own?.name && server.name !== extra?.name)
+    return own ? [...configured, own, ...(extra ? [extra] : [])] : configured
   }
 
   async function syncSessionSettings(thread) {

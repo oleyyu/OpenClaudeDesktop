@@ -340,7 +340,48 @@ test('LocalSessions: getSessionList waits for the loaded list; events follow mai
   const main = read('src/main.jsx');
   assert.match(main, /localSessions: navLocalSessions,/);
   assert.match(main, /localSessionsState: sessionsLoaded \? "loaded" : initSettled && !loading \? "failed" : "loading",/);
-  assert.match(main, /const navLocalSessions = useMemo\(\(\) => codeSessions\.map\(\(session\) => officialLocalSession\(session, sessionMetadata\[session\.id\]\)\), \[codeSessions, sessionMetadata\]\);/);
+  assert.match(main, /const navLocalSessions = useMemo\(\(\) => codeSessions\.map\(\(session\) => officialLocalSession\(session, sessionMetadata\[session\.id\], officialSessionLive\(session, \{ active: state\.active, approvals: state\.approvals, threadParents: state\.threadParents \}\)\)\),\n    \[codeSessions, sessionMetadata, state\.active, state\.approvals, state\.threadParents\]\);/);
+});
+
+// The row's status dot (shared-57 lC → shared-20 hN → SidebarStatusGlyph: .status-dot 6px, muted while running, warning while
+// awaiting, accent when unread, nothing when idle) reads the record's isRunning / pendingToolPermissions (shared-39 dp / mp)
+// and the official unread store (cds-core shared-8 Y_). The host fills them from the engine state and the session metadata.
+test('session status: running, awaiting and unread reach the official record and unread store', async () => {
+  await load();
+  const session = { id: 's-1', cwd: '/fixture', name: 'One', createdAt: 1700000000, updatedAt: 1700000100 };
+  const live = (state) => NavHost.officialSessionLive(session, state);
+  assert.deepEqual(live({}), { running: false, pendingToolPermissions: undefined });
+  assert.equal(live({ active: { 's-1': true } }).running, true);
+  assert.equal(NavHost.officialSessionLive({ ...session, status: { type: 'active' } }, {}).running, true);
+  assert.equal(live({ active: { 's-2': true } }).running, false);
+  // An approval counts for the session that owns its thread (a sub-agent's for its parent); the list keeps its identity.
+  const waiting = { active: { 's-1': true }, approvals: [{ id: 7, params: { threadId: 'child' } }, { id: 8, params: { threadId: 's-2' } }], threadParents: { child: 's-1' } };
+  const first = live(waiting).pendingToolPermissions;
+  assert.deepEqual(first, [{ requestId: '7' }]);
+  assert.equal(live({ ...waiting }).pendingToolPermissions, first);
+  assert.equal(live({ active: { 's-1': true }, approvals: [] }).pendingToolPermissions, undefined);
+  // The official record: shared-39 dp reads isRunning, mp reads pendingToolPermissions.
+  const idle = NavHost.officialLocalSession(session), running = NavHost.officialLocalSession(session, {}, live({ active: { 's-1': true } })), awaiting = NavHost.officialLocalSession(session, {}, live(waiting));
+  assert.equal(idle.isRunning, false); assert.equal(idle.pendingToolPermissions, undefined);
+  assert.equal(running.isRunning, true); assert.equal(running.turnRunning, true);
+  assert.deepEqual(awaiting.pendingToolPermissions, [{ requestId: '7' }]);
+  assert.match(read('src/generated/frame-sidebar-nav/shared-39.mjs'), /function dp\(e\) \{\n  return mp\(e\)\n    \? "requires_action"\n    : e\.isRunning \|\| e\.starting \|\| e\.awaitingBrief\n      \? "running"\n      : "idle";/);
+  // Unread: the host's metadata is mirrored into the official store; a change made in the store is written back.
+  const { store_shared8_Y_: unread } = await server.ssrLoadModule('/src/cds-core.mjs'); // the instance the host module links
+  const writes = [];
+  renderToStaticMarkup(el(NavHost.FrameSidebarNavHost, { value: { ...navValue('code'), updateSessionMetadata: (...args) => { writes.push(args); } } }, null));
+  NavHost.syncUnread({ 's-1': { unread: true }, 's-2': { unread: true, explicitUnread: true }, 's-3': { unread: false } });
+  assert.deepEqual(unread.getState().unreadIds, ['s-1', 's-2']);
+  assert.deepEqual(unread.getState().explicitUnreadIds, ['s-2']);
+  assert.deepEqual(writes, [], 'mirroring does not write back');
+  unread.getState().markRead('s-1');
+  unread.getState().markUnreadExplicit('s-3');
+  unread.getState().markUnread('s-4');
+  assert.deepEqual(writes, [['s-1', { unread: false }, undefined], ['s-3', { unread: true }, { automatic: false }], ['s-4', { unread: true }, { automatic: true }]]);
+  NavHost.syncUnread({});
+  assert.deepEqual(unread.getState().unreadIds, []);
+  const main = read('src/main.jsx');
+  assert.match(main, /sessionMetadata, updateSessionMetadata,\n/);
 });
 
 // round-4 wave 8c sidebar lane: a Code session row (shared-57 Ok) pushes `/epitaxy/${id}` through the reused router boundary;

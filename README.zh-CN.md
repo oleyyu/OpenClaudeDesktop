@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="docs/images/logo.png" alt="OpenClaude Desktop logo" width="128" height="128">
+
 # OpenClaude Desktop
 
 ### 1:1 复刻 Claude Desktop 的开源版，跑你自己选的 AI

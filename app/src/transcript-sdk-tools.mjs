@@ -67,6 +67,15 @@ export const DYNAMIC_TOOLS = Object.freeze({
   task: "Task", Task: "Task", Agent: "Agent", SendMessage: "SendMessage",
   TaskCreate: "TaskCreate", TaskUpdate: "TaskUpdate", TaskGet: "TaskGet",
   EnterWorktree: "EnterWorktree", ExitWorktree: "ExitWorktree",
+  // Other agents' tool names, as an imported conversation's rows carry them (chat-import: Codex shell / exec_command /
+  // apply_patch, Gemini and Qwen run_shell_command / replace / grep_search / google_web_search, Kimi Shell / ReadFile /
+  // StrReplaceFile / SearchWeb / FetchURL, OpenCode bash / read / edit / write / list): the rows of the same tools.
+  shell: "Bash", bash: "Bash", Shell: "Bash", exec_command: "Bash", local_shell: "Bash", run_shell_command: "Bash", run_terminal_cmd: "Bash",
+  read: "Read", ReadFile: "Read", view: "Read",
+  write: "Write", WriteFile: "Write", create_file: "Write",
+  edit: "Edit", replace: "Edit", apply_patch: "Edit", StrReplaceFile: "Edit", str_replace: "Edit", search_replace: "Edit",
+  grep_search: "Grep", search_file_content: "Grep", list: "LS", ls: "LS", list_dir: "LS",
+  google_web_search: "WebSearch", SearchWeb: "WebSearch", FetchURL: "WebFetch",
 });
 /**
  * The host's app tools (the code_desktop MCP server) under the names Claude Desktop gives the same tools: its built-in
@@ -187,15 +196,20 @@ function outputImages(item) {
   }
   return images;
 }
+// An item's error text: `{message}` (the Codex shape), or the plain string some bridges give (the ACP bridge's
+// fileChange error).
+const errorText = (item) => (typeof item?.error === "string" ? item.error : str(item?.error?.message));
 function outputText(item) {
   if (item.type === "commandExecution") return str(item.aggregatedOutput);
   if (item.type === "webSearch") {
+    // A failed search or fetch has no results (DeepSeek: results null, the reason in error.message): its reason shows.
     const results = item.results ?? item.result;
-    if (typeof results === "string") return results;
-    try { return results == null ? "" : JSON.stringify(results); } catch { return ""; }
+    if (typeof results === "string" && results) return results;
+    if (results != null && typeof results !== "string") { try { return JSON.stringify(results) ?? ""; } catch { return ""; } }
+    return errorText(item) || str(results);
   }
   const text = resultParts(item).filter((part) => typeof part?.text === "string").map((part) => part.text).join("\n");
-  return text || str(item.error?.message) || str(item.output);
+  return text || errorText(item) || str(item.output);
 }
 
 const RUNNING = new Set(["inProgress", "running", "pending"]);
@@ -212,6 +226,58 @@ export function sdkToolStatus(item, awaiting = false) {
   if (DECLINED.has(status)) return { status: "error", isError: true, rejected: true };
   if (failed(item)) return { status: "error", isError: true };
   return { status: "completed", isError: false };
+}
+
+// A dynamic tool's arguments as the official rows read them. A conversation imported before its calls' arguments
+// travelled whole (chat-import convert.mjs toolCallDisplay) holds only their text form's arguments line, {input}: the
+// command, `update <path>` for an edit, the query or URL, else the arguments as JSON — so a lone JSON object there is the
+// arguments, and the line is the command / file / query / URL of a call that has none. Other agents name the same
+// arguments otherwise (absolute_path, dir_path, …): the official names are added beside theirs.
+const firstText = (...values) => values.find((value) => typeof value === "string" && value) ?? "";
+function dynamicInput(input) {
+  if (typeof input.input !== "string" || Object.keys(input).length !== 1) return input;
+  try { const value = JSON.parse(input.input); if (record(value)) return value; } catch {}
+  return input;
+}
+function aliasedInput(name, input) {
+  const line = typeof input.input === "string" && Object.keys(input).length === 1 ? input.input : "";
+  const rest = line ? {} : input;
+  switch (name) {
+    case "Bash": {
+      if (str(input.command)) return input;
+      const command = str(input.code) || (Array.isArray(input.cmd) ? input.cmd.filter((part) => typeof part === "string").join(" ") : firstText(input.cmd, input.script)) || line;
+      return { ...rest, command };
+    }
+    case "Read": {
+      const file = str(input.file_path) || firstText(input.absolute_path, input.filePath, input.path, input.target_file, input.notebook_path) || line.split("\n")[0];
+      return file && !str(input.file_path) ? { ...rest, file_path: file } : input;
+    }
+    case "Edit": case "Write": case "MultiEdit": case "NotebookEdit": {
+      const named = /^(?:add|update|delete) (.+)$/.exec(line.split("\n")[0])?.[1] ?? "";
+      const file = str(input.file_path) || firstText(input.filePath, input.path, input.absolute_path, input.target_file, input.notebook_path) || named;
+      return file && !str(input.file_path) ? { ...rest, file_path: file } : input;
+    }
+    case "Grep": case "Glob": {
+      const pattern = str(input.pattern) || firstText(input.query, input.regex, input.glob_pattern);
+      const dir = str(input.path) || firstText(input.dir_path, input.directory, input.dir);
+      const include = name === "Grep" ? str(input.glob) || firstText(input.include, input.file_pattern) : "";
+      if (!pattern) return input;
+      return { ...input, pattern, ...(dir ? { path: dir } : {}), ...(include ? { glob: include } : {}) };
+    }
+    case "LS": {
+      const dir = str(input.path) || firstText(input.dir_path, input.directory, input.relative_workspace_path, input.target_directory) || line;
+      return dir && !str(input.path) ? { ...rest, path: dir } : input;
+    }
+    case "WebSearch": {
+      const query = str(input.query) || (Array.isArray(input.queries) ? input.queries.filter((value) => typeof value === "string").join(", ") : "") || line;
+      return query && !str(input.query) ? { ...rest, query } : input;
+    }
+    case "WebFetch": {
+      const url = str(input.url) || (/^https?:\/\/\S+$/.test(line) ? line : "");
+      return url && !str(input.url) ? { ...rest, url } : input;
+    }
+    default: return input;
+  }
 }
 
 /** The input of an engine item's tool_use (fileChange: the first change; see sdkTools for the others). */
@@ -240,11 +306,10 @@ export function sdkToolInput(item) {
         ...(item.receiverThreadIds?.[0] ? { to: item.receiverThreadIds[0] } : {}) };
     }
     case "dynamicToolCall": {
-      const input = args(item);
+      const input = dynamicInput(args(item));
       const name = sdkToolName(item);
       if (name === "Skill" && !str(input.skill) && str(input.name)) return { ...input, skill: input.name };
-      if (name === "Bash" && !str(input.command)) return { ...input, command: str(input.code) || str(input.command) };
-      return input;
+      return aliasedInput(name, input);
     }
     default: return args(item);
   }

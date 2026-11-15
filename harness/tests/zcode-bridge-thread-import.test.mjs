@@ -226,6 +226,43 @@ test('an imported reply shows its tool calls as tool rows; ZCode\'s message keep
   fs.rmSync(dir, { recursive: true, force: true })
 })
 
+test('with the blocks\' calls an imported reply shows a command row, an edit with its diff and a search; old indexes still show', async () => {
+  const { importDisplayIndex } = await import('../packages/zcode-bridge/src/import-display.js')
+  await loadSqlite()
+  const dir = tmp()
+  const dbPath = path.join(dir, 'db.sqlite')
+  const db = new DatabaseSync(dbPath)
+  db.exec(SCHEMA)
+  const shell = '[Tool: Bash]\nls\n[Result (exit 2)]\nls: no such file\n'
+  const edit = '[Tool: Edit]\nupdate /w/a.txt\n[Result]\nok'
+  const grep = '[Tool: Grep]\n{"pattern":"TODO","path":"/w"}\n[Result]\na.txt:1'
+  const diff = '@@ -1,1 +1,1 @@\n-old\n+new\n'
+  const parts = [{ text: 'Looking.' },
+    { text: shell, tool: true, call: { type: 'commandExecution', command: 'ls', cwd: '/w' } },
+    { text: edit, tool: true, call: { type: 'fileChange', changes: [{ path: '/w/a.txt', kind: { type: 'update', move_path: null }, diff }] } },
+    { text: grep, tool: true, call: { type: 'commandExecution', command: 'Grep TODO', cwd: '', commandActions: [{ type: 'search', command: 'Grep TODO', query: 'TODO', path: '/w', tool: 'grep', arguments: { pattern: 'TODO', path: '/w' } }] } },
+    { text: 'Fixed.' }]
+  const request = { title: 'Imported', messages: [{ role: 'user', text: 'Fix it', ts: NOW - 500 }, { role: 'assistant', text: parts.map((part) => part.text).join('\n\n'), parts, ts: NOW - 400 }] }
+  const history = importedHistoryOf(request, NOW)
+  assert.equal(history.messages[1].content, request.messages[1].text.trim(), 'ZCode is handed the reply as one text, as before')
+  const importBlocks = importDisplayIndex(request.messages, history.messages.filter((message) => message.role === 'assistant').map((message) => message.content))
+  persistLikeZCode(db, 'sess_calls', history, dir)
+  db.close()
+  const messages = storedMessages(dbPath, 'sess_calls')
+  const [turn] = turnsFromMessages(messages, { threadId: 'sess_calls', cwd: dir, importBlocks }).turns
+  assert.deepEqual(turn.items.map((item) => item.type), ['userMessage', 'agentMessage', 'commandExecution', 'fileChange', 'commandExecution', 'agentMessage'])
+  const [, , ran, change, search] = turn.items
+  assert.deepEqual([ran.command, ran.cwd, ran.exitCode, ran.status, ran.aggregatedOutput], ['ls', '/w', 2, 'failed', 'ls: no such file'])
+  assert.deepEqual([change.changes, change.status], [[{ path: '/w/a.txt', kind: { type: 'update', move_path: null }, diff }], 'completed'])
+  assert.deepEqual([search.commandActions[0].type, search.commandActions[0].query, search.commandActions[0].path, search.aggregatedOutput], ['search', 'TODO', '/w', 'a.txt:1'])
+  // An index written before calls were kept (spans of three) shows the rows from their text, as it did.
+  const old = Object.fromEntries(Object.entries(importBlocks).map(([key, spans]) => [key, spans.map((span) => span.slice(0, 3))]))
+  const [before] = turnsFromMessages(messages, { threadId: 'sess_calls', cwd: dir, importBlocks: old }).turns
+  assert.deepEqual(before.items.map((item) => (item.type === 'dynamicToolCall' ? `${item.tool}:${JSON.stringify(item.arguments)}` : item.type)),
+    ['userMessage', 'agentMessage', 'Bash:{"input":"ls"}', 'Edit:{"input":"update /w/a.txt"}', 'Grep:{"input":"{\\"pattern\\":\\"TODO\\",\\"path\\":\\"/w\\"}"}', 'agentMessage'])
+  fs.rmSync(dir, { recursive: true, force: true })
+})
+
 test('server.js: the display index is kept before the history is first built, read by the history view, and copied to a fork', () => {
   const server = fs.readFileSync(path.resolve(import.meta.dirname, '../packages/zcode-bridge/src/server.js'), 'utf8')
   const body = server.slice(server.indexOf('  async function importThread(params) {'), server.indexOf('  /** Load a thread\'s session in ZCode (resume) if needed. */'))
