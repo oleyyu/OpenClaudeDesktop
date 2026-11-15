@@ -187,15 +187,21 @@ function outputImages(item) {
   }
   return images;
 }
+// An item's error text: `{message}` (the Codex shape), or the plain string some bridges give (an older ACP bridge's
+// fileChange error).
+const errorText = (item) => (typeof item?.error === "string" ? item.error : str(item?.error?.message));
 function outputText(item) {
   if (item.type === "commandExecution") return str(item.aggregatedOutput);
   if (item.type === "webSearch") {
+    // A failed search or fetch has no results (DeepSeek, the ACP bridge: results null, the reason in error.message, e.g.
+    // the missing official key or a refused private address): its reason shows instead of a bare "Failed".
     const results = item.results ?? item.result;
-    if (typeof results === "string") return results;
-    try { return results == null ? "" : JSON.stringify(results); } catch { return ""; }
+    if (typeof results === "string" && results) return results;
+    if (results != null && typeof results !== "string") { try { return JSON.stringify(results) ?? ""; } catch { return ""; } }
+    return errorText(item) || str(results);
   }
   const text = resultParts(item).filter((part) => typeof part?.text === "string").map((part) => part.text).join("\n");
-  return text || str(item.error?.message) || str(item.output);
+  return text || errorText(item) || str(item.output);
 }
 
 const RUNNING = new Set(["inProgress", "running", "pending"]);

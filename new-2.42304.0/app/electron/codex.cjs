@@ -112,13 +112,29 @@ function currentCodexLaunch() {
  * Harness-managed keys). Undefined drops an inherited variable at spawn.
  */
 function foreignCoreEnv() {
-  const blank = { DEEPSEEK_API_KEY: undefined, DEEPSEEK_BASE_URL: undefined };
+  // CODE_DESKTOP_DEEPSEEK_SEARCH_KEY: relay mode's official key for web search (model-settings.cjs SEARCH_KEY_ENV).
+  const blank = { DEEPSEEK_API_KEY: undefined, DEEPSEEK_BASE_URL: undefined, CODE_DESKTOP_DEEPSEEK_SEARCH_KEY: undefined };
   let providerPrefix = null, codexKey = null;
   try { providerPrefix = require("./prefs/model-settings.mjs").providerKeyEnv(""); } catch {}
   try { codexKey = require("./prefs/codex-provider.mjs").CODEX_KEY_ENV; } catch {}
   if (codexKey) blank[codexKey] = undefined;
   if (providerPrefix) for (const key of Object.keys(process.env)) if (key.startsWith(providerPrefix)) blank[key] = undefined;
   for (const key of Object.keys(currentCodexLaunch().env)) blank[key] = undefined;
+  return blank;
+}
+/**
+ * A bridge core's adapter starts a third-party agent program, which (and every command it runs) inherits the
+ * adapter's environment: the same secrets are dropped as for a native pack (integration D7). The OpenCode-based
+ * adapters (OpenCode, MiMo) keep the custom providers' keys, which their config references by {env:…}
+ * (opencode-bridge config.js providerOverlay); the DeepSeek and Codex keys are never theirs.
+ */
+function bridgeCoreEnv(core) {
+  const blank = foreignCoreEnv();
+  if (/(^|[\\/])opencode-bridge[\\/]/.test(String(core?.bridge?.script ?? ""))) {
+    let providerPrefix = null;
+    try { providerPrefix = require("./prefs/model-settings.mjs").providerKeyEnv(""); } catch {}
+    if (providerPrefix) for (const key of Object.keys(blank)) if (key.startsWith(providerPrefix)) delete blank[key];
+  }
   return blank;
 }
 function chosenCore() {
@@ -158,7 +174,7 @@ function resolveCore() {
     // The adapter runs on Node and starts the agent program it is told about (CODE_DESKTOP_AGENT_*).
     const agent = coreChoice.agents[core.id] ?? {};
     return { command: nodeBinary(), prefix: [bridgeScript(core) || core.bridge.script], kind: core.id,
-      env: { CODE_DESKTOP_CORE_ID: core.id, ...(process.env.CODE_DESKTOP_DATA_DIR ? { CODE_DESKTOP_PROVIDERS_FILE: path.join(process.env.CODE_DESKTOP_DATA_DIR, "harness/providers.json") } : {}), CODE_DESKTOP_AGENT_BINARY: agent.path ?? "", CODE_DESKTOP_AGENT_RUNNER: agent.runner ?? "", CODE_DESKTOP_AGENT_VERSION: agent.version ?? "", CODE_DESKTOP_BRIDGE_STATE: agent.state ?? "", CODE_DESKTOP_NODE_BINARY: nodeBinary() } };
+      env: { ...bridgeCoreEnv(core), CODE_DESKTOP_CORE_ID: core.id, ...(process.env.CODE_DESKTOP_DATA_DIR ? { CODE_DESKTOP_PROVIDERS_FILE: path.join(process.env.CODE_DESKTOP_DATA_DIR, "harness/providers.json") } : {}), CODE_DESKTOP_AGENT_BINARY: agent.path ?? "", CODE_DESKTOP_AGENT_RUNNER: agent.runner ?? "", CODE_DESKTOP_AGENT_VERSION: agent.version ?? "", CODE_DESKTOP_BRIDGE_STATE: agent.state ?? "", CODE_DESKTOP_NODE_BINARY: nodeBinary() } };
   }
   if (core.kind === "native" && core.id !== "codex") return nativeCore(core);
   const launch = currentCodexLaunch();

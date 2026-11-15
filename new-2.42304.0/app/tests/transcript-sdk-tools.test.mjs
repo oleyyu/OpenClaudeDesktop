@@ -120,3 +120,20 @@ test('a run flattens coalesced reads and marks the awaited calls', () => {
   const tools = sdkToolRun([{ ...a, fileRun: [a, { ...a, id: 'a2' }] }, b, { type: 'agentMessage', id: 'x' }], { awaitingIds: new Set(['b']) });
   assert.deepEqual(tools.map(tool => [tool.id, tool.name, tool.status]), [['a', 'Read', 'completed'], ['a2', 'Read', 'completed'], ['b', 'Bash', 'awaiting_approval']]);
 });
+
+test('D-05: a failed web search or fetch shows its reason; a string error shows like {message} (DeepSeek web_fetch, ACP fileChange)', () => {
+  // DeepSeek: results null, the reason in error.message (was output "" and the row said only "Failed").
+  const [fetch] = sdkTools({ id: 'w', type: 'webSearch', status: 'failed', query: 'http://127.0.0.1/x', action: { type: 'openPage', url: 'http://127.0.0.1/x' }, results: null, error: { message: 'Refusing to fetch a non-public address (127.0.0.1).' } });
+  assert.deepEqual([fetch.name, fetch.status, fetch.output], ['WebFetch', 'error', 'Refusing to fetch a non-public address (127.0.0.1).']);
+  const [search] = sdkTools({ id: 'w', type: 'webSearch', status: 'failed', query: 'q', action: { type: 'search' }, results: null, error: { message: 'Web search needs an official DeepSeek API key: add one in Settings › Models › API connection.' } });
+  assert.equal(search.output, 'Web search needs an official DeepSeek API key: add one in Settings › Models › API connection.');
+  // Results win over the error; a successful search with no results stays empty.
+  assert.equal(sdkTools({ id: 'w', type: 'webSearch', status: 'completed', query: 'q', results: 'found' })[0].output, 'found');
+  assert.equal(sdkTools({ id: 'w', type: 'webSearch', status: 'completed', query: 'q', results: [{ title: 't' }] })[0].output, '[{"title":"t"}]');
+  assert.equal(sdkTools({ id: 'w', type: 'webSearch', status: 'completed', query: 'q', results: null })[0].output, '');
+  // An ACP bridge fileChange error kept as a plain string (threads stored before the bridge sent {message}).
+  const [edit] = sdkTools({ id: 'f', type: 'fileChange', status: 'failed', changes: [{ path: '/w/a.js', kind: { type: 'update' }, diff: '' }], error: 'permission denied' });
+  assert.deepEqual([edit.status, edit.output], ['error', 'permission denied']);
+  const [mcp] = sdkTools({ id: 'm', type: 'mcpToolCall', server: 's', tool: 't', status: 'failed', result: null, error: { message: 'tool crashed' } });
+  assert.equal(mcp.output, 'tool crashed');
+});

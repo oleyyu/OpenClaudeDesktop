@@ -83,7 +83,8 @@ const validId = id => typeof id === 'string' && id.length > 0 && id.length <= 51
 function createBtwSessions({ getClient, getConfig, save, decorateThread = (_method, params) => params,
   onThreadCreated = () => {}, onChanged = () => {},
   busy = () => false, reserve = () => () => {}, hasParentLoop = () => false,
-  hasBackgroundWork = async () => false, hasQueuedInput = async () => false, defaultTitle = () => 'Side chat', now = Date.now }) {
+  hasBackgroundWork = async () => false, hasQueuedInput = async () => false, defaultTitle = () => 'Side chat', now = Date.now,
+  autoReviewOff = () => false }) {
   // A retry of one UI opening is idempotent; different openings may fork the
   // same *running* parent concurrently. A transport timeout retains its ticket.
   const owners = new WeakMap();
@@ -137,7 +138,8 @@ function createBtwSessions({ getClient, getConfig, save, decorateThread = (_meth
     if (refusal) return { status: 'disabled', reason: refusal };
     if (hasParentLoop(parentId)) return { status: 'disabled', reason: 'live_loop' };
     const overrides = threadPermissionParams({ permission, mode: 'code',
-      autoReview: owner.connection?.enabledFeatures?.has('guardian_approval') === true });
+      // integration D2: never Codex's auto-review on a custom endpoint (main.cjs autoReviewOff: model-settings codexOnCustomEndpoint).
+      autoReview: owner.connection?.enabledFeatures?.has('guardian_approval') === true && !autoReviewOff(owner) });
     await validateBypassRequest(overrides, getConfig, () => owner.request('configRequirements/read', {}));
     checkOwner(owner, expected); config = activeParent(parentId);
     const metadata = config.sessionMetadata?.[parentId] ?? {};

@@ -34,7 +34,7 @@ import os from 'node:os'
 import path from 'node:path'
 import { LineTransport, RpcError, METHOD_NOT_FOUND, INVALID_PARAMS, INVALID_REQUEST, SERVER_ERROR, invalidParams } from './transport.js'
 import { AgentHost } from './agent-host.js'
-import { ThreadProjector, blockText, planSteps } from './projection.js'
+import { ThreadProjector, blockText, planSteps, withCommandOutput } from './projection.js'
 import { ThreadStore } from './store.js'
 import { settleOverlaysIn } from './overlay.js'
 import { UsageLedger, addUsage, normalizeUsage, threadTokenUsage, localDayKey } from './usage.js'
@@ -1256,6 +1256,7 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
       if (kind === 'tool_call_update' && update.status === 'completed' && adapter.toolPlan) toolPlan(thread, update)
       // After this update's own notifications (below): the filled item is announced last.
       if (kind === 'tool_call_update' && (update.status === 'completed' || update.status === 'failed') && adapter.toolArguments) setImmediate(() => fillToolArguments(thread, update.toolCallId))
+      if (kind === 'tool_call_update' && (update.status === 'completed' || update.status === 'failed') && adapter.commandOutput) setImmediate(() => fillCommandOutput(thread, update.toolCallId))
     }
     emit(notes)
     // An agent's own dynamic workflow (Qwen's workflow tool): the call's updates move its run (item.workflowRun).
@@ -1448,8 +1449,60 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
 
   /** At a turn's end: every call of the turn still without its arguments is read once more. */
   function fillTurnArguments(thread) {
+    if (adapter.commandOutput) for (const item of thread.projector.activeTurn?.items ?? []) if (item?.type === 'commandExecution') fillCommandOutput(thread, item.id, 4)
     if (!adapter.toolArguments) return
     for (const item of thread.projector.activeTurn?.items ?? []) if (item && 'arguments' in item && !Object.keys(item.arguments ?? {}).length) fillToolArguments(thread, item.id, 4)
+  }
+
+  /**
+   * A command's output and exit code the agent streams without them (adapter.commandOutput: Gemini's shell calls, read
+   * from its session file once it recorded the result; a few short retries, once more at the turn's end, and for a
+   * replayed history): set on the row, a non-zero exit failing it, announced again (item/completed) and kept with the
+   * thread. Read from the turns, not the turn's calls (cleared when it ends), so a late read still lands.
+   */
+  function fillCommandOutput(thread, itemId, attempt = 0, { quiet = false } = {}) {
+    const filled = (thread.commandsFilled ??= new Set())
+    if (filled.has(itemId)) return false
+    const turns = [...thread.projector.turns]
+    if (thread.projector.current && !turns.includes(thread.projector.current)) turns.push(thread.projector.current)
+    const turn = turns.findLast((candidate) => candidate.items.some((item) => item?.id === itemId))
+    const index = turn ? turn.items.findIndex((item) => item?.id === itemId) : -1
+    const item = index >= 0 ? turn.items[index] : null
+    if (item?.type !== 'commandExecution' || item.status === 'inProgress' || item.status === 'declined') return false
+    let found
+    try { found = adapter.commandOutput(ctx, thread.id, itemId) } catch (error) { log(`command output: ${error?.message ?? error}`); return false }
+    if (found === undefined) return false
+    if (!found) {
+      if (attempt < 5) setTimeout(() => fillCommandOutput(thread, itemId, attempt + 1, { quiet }), 150 * (attempt + 1)).unref?.()
+      return false
+    }
+    filled.add(itemId)
+    const next = withCommandOutput(item, found)
+    if (!next) return false
+    turn.items[index] = next
+    const entry = thread.projector.calls.get(itemId)
+    if (entry?.item?.id === itemId) entry.item = next
+    if (quiet) return true
+    // No completedAtMs: the row keeps the time it first completed.
+    notify('item/completed', { item: next, threadId: thread.id, turnId: turn.id })
+    if (!thread.prompt) thread.save()
+    return true
+  }
+
+  /**
+   * A history's commands without their output (adapter.commandOutput): a replayed session (session/load sends Gemini's
+   * shell rows bare), or one kept before the bridge read them. Filled in place, before the thread is shown; true if any.
+   */
+  function fillHistoryCommands(thread, { onlyBare = false } = {}) {
+    if (!adapter.commandOutput) return false
+    let changed = false
+    for (const turn of thread.projector.turns) {
+      for (const item of [...turn.items]) {
+        if (item?.type !== 'commandExecution' || (onlyBare && (item.aggregatedOutput || item.exitCode !== 0))) continue
+        if (fillCommandOutput(thread, item.id, 5, { quiet: true })) changed = true
+      }
+    }
+    return changed
   }
 
   /**
@@ -2118,17 +2171,26 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
     let result, failure
     let localReply = null
     let retries = null
+    // A stop while the agent is still starting (a cold start takes seconds: a reopened app's first message, the next one
+    // after a crash, a restart for new settings): nothing reaches the agent after it. interrupt() ends such a turn at once
+    // (state.started is still false); these checks keep the prompt from going out once the start finishes.
+    const stopped = () => { if (state.cancelled) throw new Error('Stopped before the prompt was sent.') }
     try {
       let host = await ensureHost(thread)
       thread.suppress = false
+      stopped()
       // OpenClaude Desktop's tools, where the agent declares them only once their server has connected (awaitSessionTools).
       if (thread.toolsReady) { const ready = thread.toolsReady; thread.toolsReady = null; await ready }
       // A model or effort picked since the session opened (the process stays up across turns).
       await applyModel(thread)
       await ensureModelApplied(thread)
+      stopped()
       host = thread.host ?? host
       try { adapter.beforeTurn?.(ctx, thread) } catch (error) { log(`before turn: ${error?.message ?? error}`) }
       const capabilities = host.capabilities?.promptCapabilities ?? {}
+      // A turn the bridge runs itself (a review's own agent process) stops through state.cancelled: from here on a stop
+      // waits for it as for a prompt.
+      if (local) state.started = true
       const expanded = local ? { reply: await local(state) } : promptOverride || continuation ? null : await expandCommand(thread, input)
       // A command the bridge answers itself (Gemini's /init when the project already has its GEMINI.md): no prompt.
       if (expanded && !Array.isArray(expanded) && typeof expanded.reply === 'string') localReply = expanded.reply
@@ -2139,9 +2201,10 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
       if (adapter.turnEvents && localReply === null) retries = setInterval(() => publishTurnEvents(thread, state), 500)
       // An agent still winding down a stopped turn refuses a new prompt for a moment (MiniMax, Kimi): retry.
       for (let attempt = 0; localReply === null; attempt++) {
-        // Stopped while the agent was still starting (or between retries): the prompt never goes out.
-        if (state.cancelled) break
         try {
+          // Stopped while the agent was still starting (or between retries): the prompt never goes out.
+          stopped()
+          state.started = true
           result = await host.call('session/prompt', { sessionId: thread.id, prompt: blocks, ...(continuation && adapter.continueMeta ? { _meta: { ...adapter.continueMeta } } : {}) }, 0)
           break
         } catch (error) {
@@ -2487,6 +2550,14 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
     state.cancelled = true
     thread.compaction?.resolve?.()
     if (process.env.CODE_DESKTOP_ACP_TRACE) fs.appendFileSync(process.env.CODE_DESKTOP_ACP_TRACE, `interrupt ${thread.id} turn ${state.turnId}\n${new Error().stack}\n`)
+    // Stopped before session/prompt went out (the agent is still starting, a model switch is pending, a command is being
+    // expanded): the agent has nothing to cancel (a session/cancel during its initialize is ignored), so the turn ends now
+    // instead of when the start finishes, and no grace timer restarts a start that runs past it. runTurnBody sees the
+    // flag and sends nothing; the start itself carries on (ensureHost is serialized), so the next turn reuses the process.
+    if (!state.started) {
+      finishTurn(thread, { status: 'interrupted', error: null })
+      return
+    }
     try { thread.host?.notify('session/cancel', { sessionId: thread.id }) } catch {}
     // An agent that does not answer the cancel in time is restarted; the turn ends interrupted.
     setTimeout(() => {
@@ -2689,6 +2760,7 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
       const thread = new Thread(id, meta)
       threads.set(id, thread)
       if (load && !thread.hasHistory) await replayHistory(thread)
+      else if (thread.hasHistory && fillHistoryCommands(thread, { onlyBare: true })) thread.save()
       // A goal kept in the agent's own log (adapter.readGoal) shows once the session is open (after this request).
       if (adapter.readGoal) setTimeout(() => { try { const goal = adapter.readGoal(ctx, thread); if (goal) applyGoal(thread, goal) } catch {} }, 0)
       return thread
@@ -2725,6 +2797,7 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
       projector.completeTurn({})
       thread.projector.turns = projector.turns.map((turn) => ({ ...turn, status: turn.status === 'inProgress' ? 'completed' : turn.status }))
       thread.projector.current = null
+      fillHistoryCommands(thread)
       thread.host = host
       thread.hostKey = keyOf(config)
       thread.hostConfig = config

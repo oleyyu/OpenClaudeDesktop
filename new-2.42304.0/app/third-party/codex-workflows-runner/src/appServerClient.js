@@ -78,6 +78,19 @@ export class AppServerClient extends EventEmitter {
       this.#state = "disconnected";
       this.emit("transport", { stage: "error", error: err });
     });
+    // Local: a request written while the server is dying fails on the pipe itself (EPIPE), before its exit is seen.
+    // Unhandled, that stream 'error' ended the whole runner — and the run — although its agents retry on a fresh
+    // server. A broken pipe is a lost connection: fail what waits, and make sure the server is gone.
+    const child = this.#child;
+    const pipeFailed = (err) => {
+      if (generation !== this.#generation) return;
+      this.#closePending(err);
+      this.#state = "disconnected";
+      this.emit("transport", { stage: "error", error: err });
+      const terminate = typeof this.options.terminate === "function" ? this.options.terminate : null;
+      try { if (terminate) terminate(child, "SIGTERM"); else child.kill(); } catch { try { child.kill(); } catch {} }
+    };
+    for (const stream of [child.stdin, child.stdout, child.stderr]) stream.on("error", pipeFailed);
 
     // Local: the initialize result (userAgent …) tells the tool-narrowing seam which core answers (toolNarrowing.js).
     this.serverInfo = await this.request(
