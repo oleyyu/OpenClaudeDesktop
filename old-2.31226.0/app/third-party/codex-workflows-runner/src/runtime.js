@@ -38,8 +38,18 @@ export function concurrencyCap(env = process.env, parallelism = os.availablePara
   return Math.min(16, Math.max(2, parallelism - 2));
 }
 const CAP = concurrencyCap();
-// Claude Code 2.1.280: an agent with no progress for 180s is restarted (up to 5 times).
-const STALL_MS = 180_000;
+// Claude Code 2.1.280: an agent with no progress for 180s is restarted (up to 5 times). Its API stream always reports
+// (thinking deltas, pings). Local: an app-server core reports nothing while its model thinks without a summary, so 180s
+// restarted healthy agents from scratch — 13 times across 46 agents of the recorded runs, each time losing the agent's
+// work, and a sixth stall fails the call. The window is 600s: a turn's own inactivity timeout (codexAgent.js runTurn),
+// and past the point where Codex retries a silent response stream itself, inside the turn. CODE_DESKTOP_WORKFLOW_STALL_MS
+// (whole milliseconds; 0 = never restart) replaces it; a call's opts.stallMs still wins.
+export function stallWindowMs(env = process.env) {
+  const text = String(env.CODE_DESKTOP_WORKFLOW_STALL_MS ?? '').trim(), chosen = Number(text);
+  if (text && Number.isSafeInteger(chosen) && chosen >= 0) return chosen;
+  return 600_000;
+}
+const STALL_MS = stallWindowMs();
 const CANCEL_GRACE_MS = 6_000; // the app waits up to 8s (workflow-service.cjs STOP_GRACE_MS) once the runner says it is stopping
 
 // Local: scopes namespace human()/session extensions in nested workflows.

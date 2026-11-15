@@ -66,7 +66,6 @@ import { isAbsolute, join } from 'node:path'
 import { realpath, readdir, lstat, rm } from 'node:fs/promises'
 import z from '@deepseek-ai/schemastery'
 import { createUserMessage, errorChain } from '@deepseek-ai/dsh-llm'
-import { buildForkSeed } from '@deepseek-ai/dsh-session/fork'
 import { assembleContextFor, installModelSelection } from '@deepseek-ai/dsh-agent'
 import { credentialRef } from '@deepseek-ai/dsh-credentials'
 import { resolveDshHome } from '@deepseek-ai/dsh-home-paths'
@@ -100,7 +99,7 @@ import { profileReadResponse } from './profile.js'
 import { runSideQuestion, sessionTranscript, sideQuestionPrompt } from './side-question.js'
 import { ALIASES as PRICE_ALIASES, DEEPSEEK_PRICES, PEAK_WINDOWS, PRICING_URL } from './pricing.js'
 import { backgroundTerminal, chunkText, isLiveJobStatus, pageOf } from './jobs.js'
-import { forkBoundary } from './fork.js'
+import { forkBoundary, forkSeed } from './fork.js'
 import { rewindAppends, rewindBoundary, rewindRuns } from './rewind.js'
 import { REVIEW_FIELD, reviewRequest } from './review.js'
 import { executeCommand, listedCommands } from './commands.js'
@@ -890,7 +889,8 @@ export function apply(ctx, config) {
     // sub-agent's call is refused here on its root thread's selection.
     const owner = thread ?? rootThreadFor(exec.agent, threads, headerOf)
     if (owner && isToolDenied(exec.name, owner.tools?.current)) return Promise.resolve({ kind: 'deny', reason: 'This tool is turned off for this session in OpenClaude Desktop.' })
-    if (!thread && exec.name === 'mcp__code_desktop__Workflow') return Promise.resolve({ kind: 'deny', reason: 'A sub-agent can’t start a dynamic workflow. Report back to the main agent instead.' })
+    // Native spellings too (Workflow, its RunWorkflow alias): a delegated sub-agent keeps the tool in its schema.
+    if (!thread && (exec.name === 'mcp__code_desktop__Workflow' || isWorkflowTool(exec.name))) return Promise.resolve({ kind: 'deny', reason: 'A sub-agent can’t start a dynamic workflow. Report back to the main agent instead.' })
     if (!thread) {
       const root = rootThreadFor(exec.agent, threads, headerOf)
       if (!root || childDecision({ rootPolicy: root.permission.approvalPolicy, toolName: exec.name }) !== 'ask-client') return next()
@@ -1270,7 +1270,7 @@ export function apply(ctx, config) {
     }
     if (!Array.isArray(events)) throw new RpcError(-32000, 'The session history could not be read.')
     const boundary = forkBoundary({ turns: history.projector.turns, events, lastTurnId: params.lastTurnId, beforeTurnId: params.beforeTurnId })
-    const seed = buildForkSeed(events, boundary)
+    const seed = forkSeed(events, boundary)
     const instructions = developerInstructionsOf(params) ?? developerInstructionsOf(store.get(sourceId))
     return createThread({ ...params, cwd: params.cwd || history.header?.cwd, ...(instructions ? { developerInstructions: instructions } : {}) }, {
       seed, inheritedEventCount: boundary + 1, parentSession: sourceId, route: history.child?.route() ?? routeOf(history.live, events),

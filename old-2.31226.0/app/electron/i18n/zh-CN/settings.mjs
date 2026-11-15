@@ -978,6 +978,8 @@ export default {
   'Codex supports only the Responses API. Add a Chat Completions endpoint as a custom provider on DeepSeek Harness.': 'Codex 仅支持 Responses API。请将 Chat Completions 端点作为 DeepSeek Harness 的自定义提供方添加。',
   'Choose an available model.': '请选择可用的模型。',
   'The Codex endpoint can’t be changed here.': '无法在此更改 Codex 端点。',
+  'The relay’s base URL is on a different host now, and the saved key is only sent to the relay it was saved for. Enter the new relay’s API key.': '中转的 Base URL 已换到另一台主机，已保存的密钥只会发给原来的中转。请填写新中转的 API 密钥。',
+  'The endpoint’s base URL is on a different host now, and the saved key is only sent to the endpoint it was saved for. Enter the new endpoint’s API key.': '端点的 Base URL 已换到另一台主机，已保存的密钥只会发给原来的端点。请填写新端点的 API 密钥。',
   'Runs {core} {version}.': '运行 {core} {version}。',
   'Runs {core}.': '运行 {core}。',
   'Settings here do not rewrite its own configuration in {config}.': '此处的设置不会改写它自己在 {config} 中的配置。',

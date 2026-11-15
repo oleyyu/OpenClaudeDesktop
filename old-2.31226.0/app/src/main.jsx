@@ -232,6 +232,7 @@ import { normalizeCustomCommands } from "../electron/prefs/custom-commands.mjs";
 import { setPersona } from "./persona-store.mjs";
 import { SourceLanguagePicker } from "./source-language-picker.jsx";
 import { sideChatStore } from "./side-chat-store.mjs";
+import { popoutsAfterDocked } from "./popout-docked.mjs";
 import { SourceSideChat, askSideQuestion } from "./source-side-chat.jsx";
 import { t, tn } from "../electron/i18n/index.mjs";
 import { coreAssistant, coreById, coreForEngine, coreName, coreSupports, hasSignInOptions, registerCores } from "../electron/core-registry.mjs";
@@ -2357,6 +2358,9 @@ function App({ side = 0, initialSession = null }) {
       if (e.kind === "window") setFullScreen(e.fullScreen);
       if (e.kind === "zoom-factor" && Number.isFinite(e.zoomFactor)) setZoomFactor(e.zoomFactor);
       if (e.kind === "popouts") setPopouts(Array.isArray(e.popouts) ? e.popouts : []);
+      // User bug #15: the docked window has closed; drop it now, with the card opening below, rather than wait for
+      // the popouts broadcast (otherwise the popped-out effect reopens an empty side chat window and hides the card).
+      if (e.kind === "popout-docked" && typeof e.sessionId === "string") setPopouts(list => popoutsAfterDocked(list, e));
       // B27: the side chat window closed. Its conversation comes back into this window's store; Open in main window
       // shows the panel again, while its X or the window's close button closed the side chat (cd377abb5 _i onClose).
       if (e.kind === "popout-docked" && e.pane === "side-chat" && typeof e.sessionId === "string" && side === 0) {
@@ -4804,17 +4808,19 @@ function App({ side = 0, initialSession = null }) {
       setPlanHandoffBusy(false);
     }
   }
+  // The speed is a preference; the session's model is only what it is checked against (speedModel), so turning Fast
+  // on in a session never makes that model the default for new sessions (user bug #3).
   async function changeFastMode(value) {
     if (fastSaving) return;
     setFastSaving(true);
-    try { await updatePreferences({model, fastMode:value}); }
+    try { await updatePreferences({fastMode:value, speedModel:model}); }
     finally { setFastSaving(false); }
   }
   // A speed by key ('standard', 'fast', 'ultrafast'…): the model menu's Speed rows and /fast <speed>.
   async function changeSpeed(value) {
     if (fastSaving) return;
     setFastSaving(true);
-    try { await updatePreferences({model, speed:value}); }
+    try { await updatePreferences({speed:value, speedModel:model}); }
     finally { setFastSaving(false); }
   }
   // Cmd+Alt+F: on/off with one faster tier; with several, Standard → each tier in catalog order → Standard.
