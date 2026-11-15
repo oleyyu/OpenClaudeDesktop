@@ -1281,7 +1281,7 @@ function coreInfo(owner) {
   // A per-token account bills per token whatever the core (a Codex API key): the Usage copy says so (usage-model.mjs).
   const account = owner === client ? accountOperations.accountSnapshot() : null;
   const capabilities = { ...(info?.capabilities ?? {}), ...(perTokenAccount(account) ? { perTokenBilling: true } : {}),
-    ...(owner.connection?.enabledFeatures?.has("guardian_approval") ? { autoReview: true } : {}),
+    ...(owner.connection?.enabledFeatures?.has("guardian_approval") && !modelSettings.codexOnCustomEndpoint?.(owner) ? { autoReview: true } : {}),
     // Goals: Codex's feature flag, or a bridge that serves the agent's own goals (capabilities.goals: Qwen's /goal).
     ...(owner.connection?.enabledFeatures?.has("goals") || info?.capabilities?.goals === true ? { nativeGoals: true } : {}) };
   // Codex reports no engineVersion: its initialize userAgent ("<client>/0.155.1 (Mac OS …)") carries the version.
@@ -1333,10 +1333,12 @@ function coreFeatures(owner) {
     .then((enabled) => { connection.enabledFeatures = enabled; return enabled; });
   return connection.features;
 }
-// …and only where the core's requirements allow that reviewer (ConfigRequirements.allowedApprovalsReviewers).
+// …and only where the core's requirements allow that reviewer (ConfigRequirements.allowedApprovalsReviewers). Never
+// on a custom endpoint (model-settings codexOnCustomEndpoint; integration bug D2): the review model is
+// OpenAI's (codex-auto-review), so every review would fail and refuse the escalation; approvals go to the user there.
 function autoReviewFeature(owner) {
   const connection = owner?.connection;
-  if (!connection) return Promise.resolve(false);
+  if (!connection || modelSettings.codexOnCustomEndpoint?.(owner)) return Promise.resolve(false);
   connection.autoReviewAllowed ??= owner.request("configRequirements/read", {}, 10000, connection)
     .then((result) => { const allowed = result?.requirements?.allowedApprovalsReviewers; return !Array.isArray(allowed) || allowed.includes("auto_review"); }, () => true);
   return Promise.all([coreFeatures(owner), connection.autoReviewAllowed]).then(([features, allowed]) => features.has("guardian_approval") && allowed);
@@ -1532,8 +1534,9 @@ async function openPopout({ sessionId, pane, position, bounds: requestedBounds =
     if (appPane) windowRegistry.unregister(window);
     // entryPoint "close": the side chat's own X closed the side chat with its window (cd377abb5 _i onClose), so the
     // owner does not dock it back. handback: the side chat's conversation for the owner's store.
-    emit({ kind: "popout-docked", sessionId, pane, entryPoint: entry.closed ? "close" : entry.docked ? "dock" : "window-close", ...(entry.handback ? { data: entry.handback } : {}), ...(entry.ownerId !== null ? { windowId: entry.ownerId } : {}) });
+    // The list goes first, so a window that reopens the docked pane no longer sees it popped out (user bug #15).
     broadcastPopouts();
+    emit({ kind: "popout-docked", sessionId, pane, entryPoint: entry.closed ? "close" : entry.docked ? "dock" : "window-close", ...(entry.handback ? { data: entry.handback } : {}), ...(entry.ownerId !== null ? { windowId: entry.ownerId } : {}) });
   });
   const query = appPane ? { window: "pane", popout: sessionId, pane, cwd } : { popout: sessionId, pane, cwd };
   if (process.env.CODE_DESKTOP_DEV_URL) {

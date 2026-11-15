@@ -1,6 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { forkBoundary } from '../packages/codex-app-server/src/fork.js'
+import { buildForkSeed } from '@deepseek-ai/dsh-session/fork'
+import { forkBoundary, forkSeed, pendingInbox } from '../packages/codex-app-server/src/fork.js'
 import { ThreadProjector } from '../packages/codex-app-server/src/projection.js'
 
 /** A log with contiguous seqs from 0, projected as the bridge does. */
@@ -58,4 +59,28 @@ test('a compaction turn the next turn cut off ends before that turn starts', () 
   ])
   assert.deepEqual(turns.map((turn) => [turn.id, turn.status]), [['turn-u1', 'completed'], ['turn-ck', 'interrupted'], ['turn-u2', 'inProgress']])
   assert.equal(forkBoundary({ turns, events, lastTurnId: 'turn-ck' }), 5)
+})
+
+test('a prompt queued while the cut turn ran is not carried into the fork as pending input', () => {
+  const queued = { id: 'u2', content: [{ type: 'text', text: 'P_NEXT' }], source: { kind: 'user' } }
+  const { events, turns } = session([
+    ['session/start'], ['turn/start', { turn: 1 }], prompt('u1'), // 0-2
+    ['agent/inbox/spliced', { target: 'next-turn', start: 0, inserted: [queued] }], // 3: sent/queued while turn 1 runs
+    reply(1), ['turn/end', { turn: 1, reason: { kind: 'completed' } }], // 4-5
+    ['turn/start', { turn: 2 }], ['agent/inbox/spliced', { target: 'next-turn', start: 0, removedCount: 1, inserted: [] }], // 6-7: claimed by turn 2
+    ['user/message', queued, { surfaceOp: 'append' }], reply(2), ['turn/end', { turn: 2, reason: { kind: 'completed' } }], // 8-10
+  ])
+  const boundary = forkBoundary({ turns, events, lastTurnId: 'turn-u1' })
+  assert.equal(boundary, 5)
+  // The raw prefix still holds the queued prompt: the fork's next turn would claim it first (integration D1).
+  assert.deepEqual(pendingInbox(buildForkSeed(events, boundary)), { 'next-turn': 1, 'next-step': 0 })
+  const seed = forkSeed(events, boundary)
+  assert.deepEqual(pendingInbox(seed), { 'next-turn': 0, 'next-step': 0 })
+  // The inherited prefix is unchanged; the cancel follows the seed marker, with contiguous seqs.
+  assert.deepEqual(seed.slice(0, boundary + 1), events.slice(0, boundary + 1))
+  assert.equal(seed[boundary + 1].type, 'session/end-seed')
+  assert.deepEqual(seed.map((event) => event.seq), seed.map((_, index) => index))
+  assert.deepEqual(seed.at(-1).data, { target: 'next-turn', start: 0, removedCount: 1, inserted: [], outcome: 'canceled' })
+  // Nothing pending (the latest turn): the seed is buildForkSeed's own.
+  assert.deepEqual(forkSeed(events, 10), buildForkSeed(events, 10))
 })

@@ -275,9 +275,10 @@ test('main: preferences.json is read before config loads; Codex and old cores ar
   assert.equal('MY_PROVIDER_KEY' in f.env, false);
   assert.throws(() => f.harness.setCoreEnv('bad key', 'x'), /Invalid/);
   await f.harness.setManagedRow('llm-pi-ai', { config: { providers: { x: {} } } });
-  assert.deepEqual(JSON.parse(fs.readFileSync(path.join(f.dir, 'overlay.json'), 'utf8')).rows, { 'llm-pi-ai': { config: { providers: { x: {} } } } });
+  assert.deepEqual(JSON.parse(fs.readFileSync(path.join(f.dir, 'managed.json'), 'utf8')).rows, { 'llm-pi-ai': { config: { providers: { x: {} } } } });
+  assert.equal(fs.existsSync(path.join(f.dir, 'overlay.json')), false, 'managed rows are not the page’s overlay');
   await f.harness.removeManagedRow('llm-pi-ai');
-  assert.equal(fs.existsSync(path.join(f.dir, 'overlay.patch.yml')), false);
+  assert.equal(fs.existsSync(path.join(f.dir, 'managed.patch.yml')), false);
 });
 
 // ------------------------------------------------------------- page render

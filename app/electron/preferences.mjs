@@ -129,7 +129,11 @@ export function settingsPatch(config, patch, models = []) {
   // faster speed already chosen, else Fast.
   if ('fastMode' in patch && typeof patch.fastMode !== 'boolean') throw new Error('Invalid Fast mode setting.');
   if ('speed' in patch && (typeof patch.speed !== 'string' || !/^[a-z0-9][a-z0-9 _-]{0,39}$/.test(patch.speed))) throw new Error('Invalid speed setting.');
-  const catalogModel = selectedCatalogModel(models, next.model);
+  // speedModel: the model the open session runs, which a Fast mode/speed change is checked against; only a
+  // check, never saved, so a session's speed toggle leaves the default model for new sessions alone.
+  if ('speedModel' in patch && (typeof patch.speedModel !== 'string' || patch.speedModel.length > 200 || /[\x00-\x1f]/.test(patch.speedModel)))
+    throw new Error('Invalid speedModel setting.');
+  const catalogModel = selectedCatalogModel(models, 'speedModel' in patch && !('model' in patch) ? patch.speedModel : next.model);
   let speed = savedSpeed(next);
   if ('fastMode' in patch) speed = patch.fastMode ? (speed !== STANDARD_SPEED && tierForSpeed(catalogModel, speed) ? speed : 'fast') : STANDARD_SPEED;
   if ('speed' in patch) speed = patch.speed;

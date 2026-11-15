@@ -315,7 +315,7 @@ test('relay forwarder renames <system-reminder> in request bodies and streams th
   const proxy = createRelayProxy();
   t.after(async () => { await proxy.stop(); relay.close(); });
   const base = await proxy.start(`http://127.0.0.1:${relay.address().port}/anthropic/`);
-  assert.match(base, /^http:\/\/127\.0\.0\.1:\d+\/anthropic$/);
+  assert.match(base, /^http:\/\/127\.0\.0\.1:\d+\/[0-9a-f]{32}\/anthropic$/, 'a route of its own, then the relay’s base path');
   const response = await fetch(`${base}/v1/messages`, { method: 'POST', headers: { 'content-type': 'application/json', 'x-api-key': 'k' }, body: JSON.stringify({ messages: [{ role: 'user', content: [{ type: 'text', text: 'hi' }, { type: 'text', text: '<system-reminder>skills</system-reminder>' }] }] }) });
   assert.equal(response.status, 200);
   assert.equal(await response.text(), 'data: one\n\ndata: two\n\n');
@@ -365,6 +365,11 @@ test('Codex endpoint: key encrypted under @codex, launch env scoped to Codex, ca
   for (const method of ['thread/resume', 'thread/fork']) assert.deepEqual(settings.decorateThread(method, { threadId: 't' }, spawned([])), { threadId: 't' }, `${method} before the restart`);
   assert.equal(settings.decorateThread('thread/resume', { threadId: 't' }, spawned(customArgs)).modelProvider, 'codedesktop', 'after the restart');
   assert.deepEqual(settings.decorateThread('thread/resume', { threadId: 't' }, { ...codex(), options: { binary: '/fixture' } }), { threadId: 't' });
+  // integration bug D2: 'Approve for me' (Codex auto-review) is off only while the running child is on the custom endpoint.
+  assert.equal(settings.codexOnCustomEndpoint(spawned(customArgs)), true, 'launched on the endpoint');
+  assert.equal(settings.codexOnCustomEndpoint(spawned([])), false, 'saved, not restarted: still OpenAI');
+  assert.equal(settings.codexOnCustomEndpoint({ ...codex(), options: { binary: '/fixture' } }), false, 'a binary of its own never gets the endpoint');
+  assert.equal(settings.codexOnCustomEndpoint({ serverInfo: { engine: 'dsh' }, child: { spawnargs: ['x', ...customArgs] } }), false, 'not Codex');
   const override = process.env.CODEX_BINARY;
   process.env.CODEX_BINARY = '/fixture/server';
   try { assert.deepEqual(settings.decorateThread('thread/resume', { threadId: 't' }), { threadId: 't' }, 'CODEX_BINARY never gets the launch args'); }
@@ -458,6 +463,16 @@ test('Codex endpoint: key encrypted under @codex, launch env scoped to Codex, ca
   const bare = createModelSettings({ getConfig: () => ({}), getClient: () => codex(), safeStorage, dir });
   assert.equal((await bare.run({ op: 'codex-provider-read' })).available, false);
   await assert.rejects(bare.run({ op: 'codex-provider-save', provider: { mode: 'openai' } }), /can’t be changed/);
+});
+
+test('main.cjs: Codex on its custom endpoint never offers or keeps Approve for me (its review model is OpenAI\'s; integration D2)', () => {
+  const main = readFileSync(new URL('../electron/main.cjs', import.meta.url), 'utf8');
+  const start = main.indexOf('function autoReviewFeature(owner) {');
+  const body = main.slice(start, main.indexOf('\n}\n', start));
+  assert.match(body, /if \(!connection \|\| modelSettings\.codexOnCustomEndpoint\?\.\(owner\)\) return Promise\.resolve\(false\);/);
+  assert.match(main, /enabledFeatures\?\.has\("guardian_approval"\) && !modelSettings\.codexOnCustomEndpoint\?\.\(owner\) \? \{ autoReview: true \} : \{\}/);
+  // turn/start, thread/start and thread/resume keep auto_review only where autoReviewFeature says so; else the user.
+  assert.match(main, /params\.sandboxPolicy\?\.type !== "dangerFullAccess" && await autoReviewFeature\(owner\);[\s\S]{0,200}if \(auto\) params\.approvalsReviewer = "auto_review";\s*else if [^\n]*params\.approvalsReviewer = "user";/);
 });
 
 test('main.cjs gives model-settings the Codex launch hook and reconciles the default model on connect', () => {
