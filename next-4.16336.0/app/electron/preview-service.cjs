@@ -188,6 +188,8 @@ function createPreviewService({ electron, getSession, spawnEnv = async () => ({ 
   // R4e-preview (preview-15): each tab's frame and geometry at the agent's last screenshot (r4e-preview-coordinates.mjs).
   const coordinates = createPreviewCoordinateGuard({ geometry: (entry) => viewportGeometry(entry) });
   const listening = new WeakSet(); // page contents whose debugger events are wired
+  // devtools-mcp (the chrome-devtools MCP server's CDP proxy): debugger message taps and tab-change listeners.
+  const cdpTaps = new Set(), devtoolsListeners = new Set();
   let parking = null;
   const partitionsReady = new Set();
   let selectedStorageMode = previewStorageMode(getStorageMode(), keepCookies());
@@ -682,8 +684,12 @@ function createPreviewService({ electron, getSession, spawnEnv = async () => ({ 
     if (listening.has(contents)) { for (const domain of ["Runtime.enable", "Log.enable", "Network.enable", "Page.enable"]) contents.debugger.sendCommand(domain).catch(() => {}); applyEmulation(entry).catch(() => {}); return; }
     listening.add(contents);
     contents.debugger.on("detach", () => { if (entry.view?.webContents === contents) entry.debugger = false; });
-    contents.debugger.on("message", (_event, method, params) => {
+    contents.debugger.on("message", (_event, method, params, sessionId) => {
       if (entry.view?.webContents !== contents) return;
+      // devtools-mcp/cdp-proxy.cjs: every message is fanned out to it; a message of another CDP session on this debugger
+      // (the proxy's page sessions and their iframes / workers) is never the preview's own console or network.
+      for (const tap of cdpTaps) { try { tap(contents, method, params, sessionId); } catch (error) { logger.warn?.(`preview: devtools tap: ${error.message}`); } }
+      if (sessionId) return;
       if (method === 'Overlay.inspectNodeRequested') {
         if (params.backendNodeId) entry.elementInspector?.inspectModeCallback?.(params.backendNodeId);
         return;
@@ -992,6 +998,7 @@ function createPreviewService({ electron, getSession, spawnEnv = async () => ({ 
     };
   }
   function notify(entry, now = false) {
+    for (const listener of devtoolsListeners) { try { listener(); } catch { /* the proxy's own */ } }
     entry = previews.get(entry.id) ?? entry;
     clearTimeout(entry.notifyTimer);
     const send = () => {
@@ -2070,7 +2077,48 @@ function createPreviewService({ electron, getSession, spawnEnv = async () => ({ 
     }
     return false;
   }
-  return { call, forSession, snapshot: (id) => snapshot(preview(id)), dispose, launchInfo, windowClosed, reloadFocused, PARTITION, EPHEMERAL_PARTITION, _previews: previews, _servers: servers };
+  // The host side of devtools-mcp/cdp-proxy.cjs (chrome-devtools MCP): the live preview tabs, keyed by tab id, and what a
+  // devtools client may do to them — the same navigation rules as the preview's own tools, tab switches without focus.
+  const devtoolsEntry = (key) => {
+    const entry = allPreviews().find((tab) => tab.tabId === key && tab.group.tabs.get(tab.tabId) === tab);
+    if (!entry) throw new Error("The preview tab was closed.");
+    return entry;
+  };
+  const devtools = {
+    targets: () => allPreviews().filter((entry) => alive(entry) && entry.group.tabs.get(entry.tabId) === entry)
+      .map((entry) => ({ key: entry.tabId, sessionId: entry.id, contents: entry.view.webContents, active: previews.get(entry.id) === entry })),
+    onChange(listener) { devtoolsListeners.add(listener); return () => devtoolsListeners.delete(listener); },
+    onMessage(tap) { cdpTaps.add(tap); return () => cdpTaps.delete(tap); },
+    // An outside site opens only where this tab may already use it (an Allow once, or Settings › Allowed sites); the
+    // preview's navigate tool is the one that asks.
+    checkNavigation(key, url) {
+      const entry = devtoolsEntry(key);
+      const allowed = launch.navigationAllowed(url, entry.cwd);
+      if (!allowed.ok) throw new Error(allowed.reason);
+      const host = outsideHost(allowed.url);
+      if (host && !siteAllowed(entry, host, allowed.url)) throw new Error(`${host} isn’t allowed in this preview tab yet. Open it with the preview’s navigate tool first (it asks the user), then debug it here.`);
+      return allowed.url;
+    },
+    activate(key) { const entry = devtoolsEntry(key); activateTab(entry.id, entry.tabId); },
+    async close(key) { const entry = devtoolsEntry(key); await closeTab(entry.id, entry.tabId, { decision: "keep" }); },
+    // A new tab in the session of the tab the client used last, else of the newest page shown.
+    async create(url, nearKey) {
+      let sessionId = null;
+      try { sessionId = nearKey ? devtoolsEntry(nearKey).id : null; } catch { sessionId = null; }
+      sessionId ??= devtools.targets().at(-1)?.sessionId ?? null;
+      if (!sessionId) throw new Error("No preview is open. Open one with preview_start or navigate first.");
+      const sample = preview(sessionId);
+      const allowed = launch.navigationAllowed(url, sample.cwd);
+      if (!allowed.ok) throw new Error(allowed.reason);
+      const host = outsideHost(allowed.url);
+      if (host && !savedAllows(allowed.url)) throw new Error(`${host} isn’t allowed in the preview yet. Open it with the preview’s navigate tool first (it asks the user).`);
+      const state = newTab(sessionId), entry = tabEntry(sessionId, state.activeTabId);
+      navigate(sessionId, allowed.url, { tabId: entry.tabId }).catch((error) => logger.warn?.(`preview: devtools new tab: ${error.message}`));
+      return entry.tabId;
+    },
+  };
+
+  return { call, forSession, snapshot: (id) => snapshot(preview(id)), dispose, launchInfo, windowClosed, reloadFocused, devtools, PARTITION, EPHEMERAL_PARTITION, _previews: previews, _servers: servers };
 }
 
 module.exports = { createPreviewService, previewShortcut, previewErrorPage, previewErrorPageHtml, previewPageAddress, PARTITION, EPHEMERAL_PARTITION, PRESETS, REAP_HIDDEN_MS, RECLAIMED_NOTE };

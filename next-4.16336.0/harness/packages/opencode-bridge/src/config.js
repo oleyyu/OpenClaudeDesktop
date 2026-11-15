@@ -22,7 +22,7 @@ import path from 'node:path'
 import { pluginSource, PLUGIN_FILE } from './plugin.js'
 import { shellWrapper } from './sandbox.js'
 import { coreSettingsConfig } from './core-settings.js'
-import { appToolsServer, opencodeAppToolsEntry } from './app-tools.js'
+import { appToolsServer, opencodeAppToolsEntry, devtoolsServer, devtoolsEnv, opencodeDevtoolsEntry } from './app-tools.js'
 
 export const ROUTE = /^[a-z0-9][a-z0-9-]{0,31}$/
 const isRecord = (value) => !!value && typeof value === 'object' && !Array.isArray(value)
@@ -305,6 +305,9 @@ export class BridgeConfig {
     // OpenClaude Desktop's own tools (app-tools.js): one server for every session, each call naming its app thread.
     const appTools = appToolsServer(this.env)
     if (appTools && !mcp.disabled.includes(appTools.name)) servers[appTools.name] = opencodeAppToolsEntry(appTools)
+    // The chrome-devtools server beside it (app-tools.js devtoolsServer), on the app's preview tabs.
+    const devtools = appTools ? devtoolsServer(this.env) : null
+    if (devtools && !mcp.disabled.includes(devtools.name)) servers[devtools.name] = opencodeDevtoolsEntry(devtools)
     // MiMo's mcp.<name>.sampling, merged over the connector's own entry (the overlay is the highest config layer).
     if (this.flavor.id === 'mimo') for (const [name, policy] of Object.entries(mcp.sampling ?? {})) servers[name] = { ...(servers[name] ?? {}), sampling: policy }
     // OpenCode reads `shell` from config before $SHELL (a user's own `shell` would bypass the
@@ -351,6 +354,7 @@ export class BridgeConfig {
       CODE_DESKTOP_OPENCODE_STATE: this.stateDir,
       SHELL: shell,
       ...appTools,
+      ...(appToolsServer(this.env) ? devtoolsEnv(devtoolsServer(this.env)) : {}),
     }
   }
 

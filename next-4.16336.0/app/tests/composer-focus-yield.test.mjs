@@ -136,7 +136,7 @@ test('SourceComposerEditor puts the API on its element and guards Enter before p
   assert.match(editor, /nativeFocus:options=>HTMLElement\.prototype\.focus\.call\(input,options\)/);
   assert.match(editor, /caret==='start'\?Selection\.atStart\(doc\):caret==='end'\?Selection\.atEnd\(doc\):caret==='all'\?new AllSelection\(doc\):null/);
   // R3-composer step 3: placeCaretAtDom (the ChatComposer shell's storeCaret, shared-5 vp) goes with them.
-  assert.match(editor, /'focusAndInsert','scheduleFocus','focusPreservingSelection','ignoreStrayEnter','placeCaretAtDom'\]\)delete input\[key\]/, 'removed with the editor');
+  assert.match(editor, /'focusAndInsert','scheduleFocus','focusPreservingSelection','ignoreStrayEnter','placeCaretAtDom','beginDictation'\]\)delete input\[key\]/, 'removed with the editor');
 });
 
 // R3-composer step 3: the six cc43287c9 call sites now run through src/composer-focus-handoff.mjs, and

@@ -73,8 +73,13 @@ export function codeSessionLiveMeta(info = {}) {
 const EMPTY = Object.freeze([]);
 const NO_MESSAGES = Object.freeze({ generation: 0, getSnapshot: () => EMPTY, subscribe: () => () => {} });
 /** One store as rows-c06cf64bb `q` holds them (`getState`, `subscribe`), with the idle values its other readers take. */
+// display-bugs-20261114 (D-02 follow-up): the slices read readWhileWaiting (c06cf64bb zk: `e?.readWhileWaiting.includes(t)`,
+// for a user bubble still awaiting pickup, i.e. a message sent while the turn runs) and queuedSteered / queuedDeferred
+// (Tk, shared-104 HT) unguarded once the store exists; without them a steer threw (React #520) and the session fell back
+// to host rows. The desktop's store starts them empty.
 export function createLiveSessionStore(liveMeta) {
-  let state = Object.freeze({ liveMeta, messages: NO_MESSAGES, pendingTurn: null, heldInput: EMPTY, compactionStatus: null, sshHostOffline: false });
+  let state = Object.freeze({ liveMeta, messages: NO_MESSAGES, pendingTurn: null, heldInput: EMPTY, compactionStatus: null, sshHostOffline: false,
+    readWhileWaiting: EMPTY, queuedSteered: EMPTY, queuedDeferred: EMPTY });
   const listeners = new Set();
   return {
     getState: () => state,

@@ -60,3 +60,18 @@ export function zcodeAppToolsServer(server, session) {
   const env = { ...server.env, CODE_DESKTOP_AGENT_TOOLS_TOKEN: sessionToken(server.env.CODE_DESKTOP_AGENT_TOOLS_TOKEN, session), CODE_DESKTOP_AGENT_SESSION: session }
   return { name: server.name, command: server.command, args: [...server.args], env: Object.entries(env).map(([name, value]) => ({ name, value })), isolation: 'session', timeoutMs: 600000 }
 }
+
+/**
+ * The chrome-devtools server (app/electron/devtools-mcp/index.cjs: Google's chrome-devtools-mcp on the app's preview tabs)
+ * from CODE_DESKTOP_DEVTOOLS_MCP_SERVER, as a ZCode stdio mcpServers entry (one process per session), or null.
+ */
+export function zcodeDevtoolsServer(env = process.env) {
+  const raw = env?.CODE_DESKTOP_DEVTOOLS_MCP_SERVER
+  if (typeof raw !== 'string' || !raw) return null
+  let value
+  try { value = JSON.parse(raw) } catch { return null }
+  if (!value || typeof value.command !== 'string' || !value.command || !Array.isArray(value.args) || value.args.some((arg) => typeof arg !== 'string')) return null
+  const own = value.env && typeof value.env === 'object' && !Array.isArray(value.env) ? Object.entries(value.env).filter(([, item]) => typeof item === 'string') : []
+  const name = typeof value.name === 'string' && /^[A-Za-z0-9_-]{1,64}$/.test(value.name) ? value.name : 'chrome-devtools'
+  return { name, command: value.command, args: [...value.args], env: own.map(([key, item]) => ({ name: key, value: item })), isolation: 'session', timeoutMs: 600000 }
+}

@@ -338,3 +338,161 @@ test('a failure inside thread/start\'s own steps, once the agent made the sessio
   assert.equal(bridge.store.get('ses_fff0001').deleted, true)
   assert.equal(bridge.threads.has('ses_fff0001'), false)
 })
+
+// ---- how an imported reply shows (import-display.js): the agent keeps the text, the history shows tool rows ----------
+const { importDisplayIndex, importedBlocks, importedItems, importedToolItem, importReplyBlocks, blockSpans } = await import('../packages/opencode-bridge/src/import-display.js')
+const { Projector } = await import('../packages/opencode-bridge/src/projection.js')
+
+// As chat-import convert.mjs toolBlock writes them; the first one's output ends with a line break, as command output does.
+const SHELL = '[Tool: shell]\nnpm ci\n[Result (exit 1)]\nnpm error\n\ncode ELOCK\n'
+const READ = '[Tool: Read]\n/w/package.json\n[Result]\n{}'
+const withParts = (...parts) => ({ role: 'assistant', text: parts.map((part) => part.text).join('\n\n'), parts })
+const TOOL_CONVERSATION = [
+  { role: 'user', text: 'Why does the build fail?' },
+  withParts({ text: 'Looking.' }, { text: SHELL, tool: true }, { text: READ, tool: true }, { text: 'The lockfile is stale.' }),
+  { role: 'user', text: 'Fix it' },
+  { role: 'assistant', text: 'Done: regenerated the lockfile.' },
+]
+const shapeOf = (turns) => turns.map((turn) => turn.items.map((item) => (item.type === 'dynamicToolCall' ? `${item.tool}:${item.status}` : item.type === 'agentMessage' ? item.text : item.type)))
+const SHOWN = [['userMessage', 'Looking.', 'shell:failed', 'Read:completed', 'The lockfile is stale.'], ['userMessage', 'Done: regenerated the lockfile.']]
+const idsOf = (turns) => turns.flatMap((turn) => turn.items.map((item) => item.id))
+
+for (const flavor of ['mimo', 'opencode']) {
+  test(`${flavor}: an imported reply shows its tool calls as tool rows; the agent's message keeps the text`, async () => {
+    const { bridge, server, cwd } = fake(flavor)
+    const response = await bridge.handle('codeDesktop/thread/import', { cwd, title: 'Build failure', messages: TOOL_CONVERSATION, model: 'xiaomi/mimo-v2' })
+    assert.deepEqual(response.import, { mode: 'history', messages: 4 })
+    assert.deepEqual(shapeOf(response.thread.turns), SHOWN)
+    const shell = response.thread.turns[0].items[2]
+    assert.deepEqual([shell.arguments, shell.success, shell.contentItems], [{ input: 'npm ci' }, false, [{ type: 'inputText', text: 'npm error\n\ncode ELOCK' }]])
+    const ids = idsOf(response.thread.turns)
+    assert.equal(new Set(ids).size, ids.length, 'every item has an id of its own')
+    // Read again: the same rows under the same ids.
+    const read = await bridge.handle('thread/read', { threadId: response.thread.id, includeTurns: true })
+    assert.deepEqual(shapeOf(read.thread.turns), SHOWN)
+    assert.deepEqual(idsOf(read.thread.turns), ids)
+    // What the agent holds (and replays to the model) is one text part per message, as before.
+    const parts = server.replayed.filter((event) => event.type === 'message.part.updated.1').map((event) => event.data.part)
+    assert.deepEqual(parts.map((part) => part.type), ['text', 'text', 'text', 'text'])
+    assert.equal(parts[1].text, TOOL_CONVERSATION[1].text.trim())
+    // The index kept with the thread: one reply, offsets only.
+    const index = bridge.store.get(response.thread.id).importBlocks
+    assert.equal(Object.keys(index).length, 1)
+    assert.ok(!/npm|Looking|lockfile/.test(JSON.stringify(index)), 'no conversation text in threads.json')
+  })
+}
+
+test('a conversation taken only as the transcript, or one without tool calls, keeps no display index', async () => {
+  const missing = fake('opencode', { replay: 'missing' })
+  const transcript = await missing.bridge.handle('codeDesktop/thread/import', { cwd: missing.cwd, messages: TOOL_CONVERSATION })
+  assert.equal(transcript.import.mode, 'transcript')
+  assert.equal(missing.bridge.store.get(transcript.thread.id).importBlocks, undefined)
+  const plain = fake('mimo')
+  const response = await plain.bridge.handle('codeDesktop/thread/import', { cwd: plain.cwd, messages: CONVERSATION, model: 'xiaomi/mimo-v2' })
+  assert.equal(plain.bridge.store.get(response.thread.id).importBlocks, undefined)
+  assert.deepEqual(turnTexts(response), ['U:Why does the build fail?', 'A:The lockfile is stale.\n\n[tool bash: npm ci → exit 1]', 'U:Fix it', 'A:Done: regenerated the lockfile.'])
+})
+
+test('the index finds a reply by its text: a fork (the same texts under new ids) shows the rows, a changed text shows as it is', () => {
+  const reply = TOOL_CONVERSATION[1].text.trim()
+  const index = importDisplayIndex(TOOL_CONVERSATION, [reply, 'Done: regenerated the lockfile.'])
+  const messagesOf = (text) => [
+    { info: { id: 'msg_a', sessionID: 'ses_fork', role: 'user', time: { created: 1 } }, parts: [{ id: 'prt_a', sessionID: 'ses_fork', messageID: 'msg_a', type: 'text', text: 'q' }] },
+    { info: { id: 'msg_b', sessionID: 'ses_fork', role: 'assistant', parentID: 'msg_a', time: { created: 2, completed: 3 } }, parts: [{ id: 'prt_b', sessionID: 'ses_fork', messageID: 'msg_b', type: 'text', text }] },
+  ]
+  const view = (text, meta) => { const projector = new Projector({ threadId: 'ses_fork', cwd: '/w', meta }); projector.load(messagesOf(text)); return projector.turns() }
+  const forked = view(reply, { importBlocks: index })
+  assert.deepEqual(shapeOf(forked), [SHOWN[0]])
+  assert.deepEqual(idsOf(forked).slice(1), ['prt_b', 'prt_b-import-1', 'prt_b-import-2', 'prt_b-import-3'])
+  assert.deepEqual(shapeOf(view(`${reply} (edited)`, { importBlocks: index })), [['userMessage', `${reply} (edited)`]])
+  assert.deepEqual(shapeOf(view(reply, {})), [['userMessage', reply]], 'a thread without the index is untouched')
+  // The live path never takes an imported part for several items (itemsOf feeds the stream).
+  const projector = new Projector({ threadId: 'ses_fork', cwd: '/w', meta: { importBlocks: index } })
+  projector.load(messagesOf(reply))
+  const [, message] = messagesOf(reply)
+  assert.equal(projector.itemsOf(message.parts[0], message).length, 1)
+})
+
+test('import-display: blocks, spans and the index', () => {
+  const [blocks] = importReplyBlocks(TOOL_CONVERSATION)
+  assert.deepEqual(blocks.map((block) => block.tool), [false, true, true, false])
+  const reply = TOOL_CONVERSATION[1].text.trim()
+  const spans = blockSpans(reply, blocks)
+  assert.deepEqual(spans.map(([start, end]) => reply.slice(start, end)), blocks.map((block) => block.text))
+  assert.deepEqual(spans.map((span) => span[2]), [0, 1, 1, 0])
+  assert.equal(blockSpans(`A note.\n\n${reply}`, blocks), null, 'text before the blocks: not this reply')
+  assert.equal(blockSpans(reply.replace('Looking.\n\n', 'Looking. '), blocks), null, 'a block has to start a line')
+  assert.equal(importDisplayIndex(CONVERSATION, CONVERSATION.filter((message) => message.role === 'assistant').map((message) => message.text)), null, 'no tool call marked: nothing to keep')
+  assert.equal(importDisplayIndex(TOOL_CONVERSATION, ['Another text.']), null)
+  const index = importDisplayIndex(TOOL_CONVERSATION, [reply])
+  assert.deepEqual(importedBlocks(`\n${reply}\n`, index), blocks)
+  assert.equal(importedBlocks('Another text.', index), null)
+  assert.equal(importedBlocks(reply, null), null)
+  // A damaged index (spans out of order or out of range) cuts nothing.
+  const [key] = Object.keys(index)
+  assert.equal(importedBlocks(reply, { [key]: [[5, 2, 0]] }), null)
+  assert.equal(importedBlocks(reply, { [key]: [[0, reply.length + 1, 0]] }), null)
+  assert.equal(importedBlocks(reply, { [key]: 'x' }), null)
+  const items = importedItems('p', reply, index, (id, text) => ({ type: 'agentMessage', id, text }))
+  assert.deepEqual(items.map((item) => [item.type, item.id]), [['agentMessage', 'p'], ['dynamicToolCall', 'p-import-1'], ['dynamicToolCall', 'p-import-2'], ['agentMessage', 'p-import-3']])
+  assert.equal(importedToolItem('x', 'Prose that mentions [Tool: shell]\nls\n[Result]\nok'), null)
+  assert.equal(importedToolItem('x', '[Tool: a]\n\n[Result]').tool, 'a')
+})
+
+// The same conversation with each tool block's call (chat-import convert.mjs toolCallDisplay): the rows a native call shows.
+const SHELL_CALL = { type: 'commandExecution', command: 'npm ci', cwd: '/w' }
+const READ_CALL = { type: 'commandExecution', command: 'Read /w/package.json', cwd: '', commandActions: [{ type: 'read', command: 'Read /w/package.json', name: 'package.json', path: '/w/package.json' }] }
+const CALL_CONVERSATION = [
+  TOOL_CONVERSATION[0],
+  withParts({ text: 'Looking.' }, { text: SHELL, tool: true, call: SHELL_CALL }, { text: READ, tool: true, call: READ_CALL }, { text: 'The lockfile is stale.' }),
+  ...TOOL_CONVERSATION.slice(2),
+]
+const rowsOf = (turns) => turns[0].items.slice(1).map((item) => [item.type, item.command ?? item.text, item.status ?? null])
+
+for (const flavor of ['mimo', 'opencode']) {
+  test(`${flavor}: with the blocks' calls the rows are the command and the read a native call shows, on every read`, async () => {
+    const { bridge, cwd } = fake(flavor)
+    const response = await bridge.handle('codeDesktop/thread/import', { cwd, title: 'Build failure', messages: CALL_CONVERSATION, model: 'xiaomi/mimo-v2' })
+    const shown = [['agentMessage', 'Looking.', null], ['commandExecution', 'npm ci', 'failed'], ['commandExecution', 'Read /w/package.json', 'completed'], ['agentMessage', 'The lockfile is stale.', null]]
+    assert.deepEqual(rowsOf(response.thread.turns), shown)
+    const [, , shell, read] = response.thread.turns[0].items
+    assert.deepEqual([shell.cwd, shell.exitCode, shell.aggregatedOutput, shell.commandActions], ['/w', 1, 'npm error\n\ncode ELOCK', [{ type: 'unknown', command: 'npm ci' }]])
+    assert.deepEqual([read.commandActions, read.aggregatedOutput], [READ_CALL.commandActions, '{}'])
+    const again = await bridge.handle('thread/read', { threadId: response.thread.id, includeTurns: true })
+    assert.deepEqual(rowsOf(again.thread.turns), shown)
+    assert.deepEqual(idsOf(again.thread.turns), idsOf(response.thread.turns))
+    // The index keeps only what the text does not say: the shell's cwd, the read's action.
+    const [spans] = Object.values(bridge.store.get(response.thread.id).importBlocks)
+    assert.deepEqual(spans.map((span) => span[3] ?? null), [null, { type: 'commandExecution', cwd: '/w' }, { type: 'commandExecution', command: 'Read /w/package.json', commandActions: READ_CALL.commandActions }, null])
+  })
+}
+
+test('import-display: slimCall keeps the rest of a call; the index bounds each call and all of them, the newest replies first', async () => {
+  const { slimCall, CALL_INDEX_CHARS, INDEX_CALLS_CHARS } = await import('../packages/opencode-bridge/src/import-display.js')
+  assert.deepEqual(slimCall(SHELL_CALL, SHELL.trim()), { type: 'commandExecution', cwd: '/w' })
+  assert.deepEqual(slimCall({ type: 'webSearch', query: 'q', action: { type: 'search', query: 'q', queries: null } }, '[Tool: web]\nq\n[Result]\nr'), { type: 'webSearch' })
+  assert.deepEqual(slimCall({ type: 'mcpToolCall', server: 'docs', tool: 'search', arguments: { q: 'x' } }, '[Tool: search]\n{"q":"x"}\n[Result]\nok'), { type: 'mcpToolCall', server: 'docs' })
+  assert.equal(slimCall(SHELL_CALL, 'prose'), null)
+  assert.equal(slimCall({ type: 'nope' }, SHELL.trim()), null)
+  // A call past CALL_INDEX_CHARS is not kept: its row shows from its text.
+  const big = { type: 'fileChange', changes: [{ path: '/w/a.js', kind: { type: 'update', move_path: null }, diff: `@@ -1,1 +1,1 @@\n-${'a'.repeat(CALL_INDEX_CHARS)}\n+b\n` }] }
+  const edit = '[Tool: Edit]\nupdate /w/a.js\n[Result]\nok'
+  const messages = [{ role: 'user', text: 'q' }, withParts({ text: edit, tool: true, call: big })]
+  const index = importDisplayIndex(messages, [edit])
+  assert.deepEqual(Object.values(index)[0], [[0, edit.length, 1]])
+  assert.equal(importedItems('p', edit, index, () => null)[0].type, 'dynamicToolCall')
+  // All of them: past INDEX_CALLS_CHARS the oldest replies' calls are left out.
+  const each = { type: 'fileChange', changes: [{ path: '/w/a.js', kind: { type: 'update', move_path: null }, diff: `@@ -1,1 +1,1 @@\n-${'a'.repeat(15000)}\n+b\n` }] }
+  const many = Array.from({ length: 30 }, (_, n) => `[Tool: Edit]\nupdate /w/${n}.js\n[Result]\nok`)
+  const conversation = many.flatMap((text) => [{ role: 'user', text: 'q' }, withParts({ text, tool: true, call: each })])
+  const kept = Object.entries(importDisplayIndex(conversation, many))
+  const withCall = many.filter((text) => kept.find(([, spans]) => spans[0][1] === text.length && importedItems('p', text, Object.fromEntries(kept), () => null)[0].type === 'fileChange'))
+  assert.ok(withCall.length > 0 && withCall.length < many.length)
+  assert.ok(withCall.includes(many.at(-1)) && !withCall.includes(many[0]), 'the newest keep theirs')
+  assert.ok(withCall.length * JSON.stringify(slimCall(each, many[0])).length <= INDEX_CALLS_CHARS)
+})
+
+test('the OpenCode and ZCode bridges carry the same import-display.js', () => {
+  const read = (name) => fs.readFileSync(path.resolve(import.meta.dirname, `../packages/${name}/src/import-display.js`), 'utf8')
+  assert.equal(read('zcode-bridge'), read('opencode-bridge'))
+})

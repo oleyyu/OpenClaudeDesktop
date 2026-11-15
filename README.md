@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="next-4.16336.0/docs/images/logo.png" alt="OpenClaude Desktop logo" width="128" height="128">
+
 # OpenClaude Desktop
 
 ### A 1:1 open-source recreation of Claude Desktop, running the AI you choose
@@ -35,7 +37,7 @@ The official Claude Desktop Code interface, recreated 1:1. Not a look-alike: the
 
 | Folder | UI | Recreated from |
 |---|---|---|
-| [`next-4.16336.0/`](next-4.16336.0/) | Next UI (v0.3, in development: not every area is restored yet) | Claude Desktop 4.16336.0 |
+| [`next-4.16336.0/`](next-4.16336.0/) | Next UI (v0.3, in development: not every area is restored yet; [0.3.1 pre-release](https://github.com/oleyyu/OpenClaudeDesktop/releases/tag/v0.3.1)) | Claude Desktop 4.16336.0 |
 | [`new-2.42304.0/`](new-2.42304.0/) | **New UI** (recommended) | Claude Desktop 2.42304.0 |
 | [`old-2.31226.0/`](old-2.31226.0/) | Old UI (0.2.186, before Claude 2.1.302 / October 16) | Claude Desktop 2.31226.0 |
 

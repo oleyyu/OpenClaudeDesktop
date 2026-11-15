@@ -1,4 +1,4 @@
-// U-NAV-IMPORT (2026-11-12): the host's "Import history" row in the sidebar's top nav, right under the official
+// U-NAV-IMPORT (2026-11-12): the host's "Import Chats" row in the sidebar's top nav, right under the official
 // Customize row (user request: bring other agents' chats in from the sidebar). It opens the Import history dialog
 // (source-import-history.jsx: every conversation on this Mac listed, previewed and picked one by one).
 // The top rows are the official registry (generated/frame-sidebar-nav shared-21 HN, rendered by shared-57 Dk), which has
@@ -46,7 +46,7 @@ export function NavImportRow({ onOpen }) {
       <span className="df-leading-slot">
         <span data-cds="Icon" aria-hidden="true" ref={(node) => { if (node) node.setAttribute("style", slot.iconStyle); }}>{IMPORT_GLYPH}</span>
       </span>
-      <span className="flex min-w-0 flex-1 items-center"><span className="min-w-0 truncate">{t("Import history")}</span></span>
+      <span className="flex min-w-0 flex-1 items-center"><span className="min-w-0 truncate">{t("Import Chats")}</span></span>
     </button>,
     hostRef.current,
   );

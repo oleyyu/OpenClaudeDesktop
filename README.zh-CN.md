@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="next-4.16336.0/docs/images/logo.png" alt="OpenClaude Desktop logo" width="128" height="128">
+
 # OpenClaude Desktop
 
 ### 1:1 复刻 Claude Desktop 的开源版，跑你自己选的 AI
@@ -35,7 +37,7 @@
 
 | 文件夹 | 界面 | 复刻自 |
 |---|---|---|
-| [`next-4.16336.0/`](next-4.16336.0/) | 第三代界面（v0.3，开发中：还没有全部还原） | Claude Desktop 4.16336.0 |
+| [`next-4.16336.0/`](next-4.16336.0/) | 第三代界面（v0.3，开发中：还没有全部还原；[0.3.1 预发布版](https://github.com/oleyyu/OpenClaudeDesktop/releases/tag/v0.3.1)） | Claude Desktop 4.16336.0 |
 | [`new-2.42304.0/`](new-2.42304.0/) | **新界面**（推荐） | Claude Desktop 2.42304.0 |
 | [`old-2.31226.0/`](old-2.31226.0/) | 旧界面（0.2.186，Claude 2.1.302 / 10 月 16 日之前） | Claude Desktop 2.31226.0 |
 

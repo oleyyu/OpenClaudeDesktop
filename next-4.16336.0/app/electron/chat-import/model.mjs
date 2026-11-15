@@ -8,7 +8,7 @@
 //   ImportedSession { ...SessionSummary, items: Item[] }
 //   Item            { seq, kind, ts (epoch ms | null), parts: [{text} | {image:{mime, data?, url?, path?}} | {file:{name, path?, mime?}}],
 //                     reasoning?: {text?, opaque?: {vendor, model, payload}}, tool?: {callId, name, rawArgs, args, category, mcp?},
-//                     result?: {callId, text, isError, exitCode?, patch?}, compaction?: {summary} }
+//                     result?: {callId, text, isError, exitCode?, patch?, display?: {text, exitCode?}}, compaction?: {summary} }
 //                   kind: user | assistant | reasoning | tool_call | tool_result | compaction | injected | subagent_ref.
 //                   Parsers keep injected context (kind 'injected') so a preview may show it; converters never replay it.
 
@@ -170,9 +170,12 @@ export class ItemList {
     return this.push('tool_call', { ts, parts, tool: { callId: String(callId ?? ''), name: String(name ?? 'tool'), rawArgs, args,
       category: category ?? toolCategory(name, { mcp: descriptor }), ...(descriptor ? { mcp: descriptor } : {}) } });
   }
-  toolResult({ callId, text, isError = false, exitCode, patch, ts }) {
+  // display: {text, exitCode?} when the transcript should show the result otherwise than the model reads it (Gemini's
+  // wrapper around tool output, sources/gemini.mjs); the model's text and exit code stay.
+  toolResult({ callId, text, isError = false, exitCode, patch, display, ts }) {
     return this.push('tool_result', { ts, result: { callId: String(callId ?? ''), text: clip(typeof text === 'string' ? text : text == null ? '' : JSON.stringify(text)),
-      isError: isError === true, ...(Number.isFinite(exitCode) ? { exitCode } : {}), ...(patch !== undefined ? { patch } : {}) } });
+      isError: isError === true, ...(Number.isFinite(exitCode) ? { exitCode } : {}), ...(patch !== undefined ? { patch } : {}),
+      ...(typeof display?.text === 'string' ? { display: { text: clip(display.text), ...(Number.isFinite(display.exitCode) ? { exitCode: display.exitCode } : {}) } } : {}) } });
   }
 }
 

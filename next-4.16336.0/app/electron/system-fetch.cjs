@@ -47,16 +47,23 @@ function requestWith(net, url, { method = "GET", headers = {}, body = null, sign
         credentials: "omit", useSessionCookies: false, cache: "no-store" });
     } catch (error) { reject(error); return; }
     let settled = false;
-    const finish = (fn, value) => {
+    // The body still streams after "response", so the signal keeps the request until the body is done: a late abort
+    // (the relay's core pressed Stop, an AbortSignal.timeout) then closes the connection and errors the body, as
+    // fetch's does. Releasing it at "response" let the request read a reply nobody wanted to its end.
+    let streaming = null;
+    const release = () => signal?.removeEventListener?.("abort", onAbort);
+    const finish = (fn, value, keepSignal = false) => {
       if (settled) return;
       settled = true;
-      signal?.removeEventListener?.("abort", onAbort);
+      if (!keepSignal) release();
       fn(value);
     };
     const onAbort = () => {
-      try { request.abort(); } catch { /* gone */ }
       const reason = signal?.reason;
-      finish(reject, reason instanceof Error ? reason : Object.assign(new Error("The request was stopped."), { name: "AbortError" }));
+      const error = reason instanceof Error ? reason : Object.assign(new Error("The request was stopped."), { name: "AbortError" });
+      try { streaming?.destroy(error); } catch { /* gone */ }
+      try { request.abort(); } catch { /* gone */ }
+      finish(reject, error);
     };
     if (signal?.aborted) { onAbort(); return; }
     signal?.addEventListener?.("abort", onAbort, { once: true });
@@ -67,10 +74,17 @@ function requestWith(net, url, { method = "GET", headers = {}, body = null, sign
       try { request.setHeader(key, Array.isArray(value) ? value.map(String) : String(value)); } catch { /* skipped */ }
     }
     // Manual mode is one hop per call: the 3xx answers as a Response carrying its Location, as net.fetch does.
-    request.on("redirect", (status, _method, location) => finish(resolve, responseOf(null, status, "", { location })));
+    // Only then: Electron emits "redirect" in follow mode too (for information, the hop happens regardless), so
+    // answering it there would hand the caller the 302 itself instead of the page it leads to (a GitHub release
+    // asset always redirects to its CDN).
+    if (redirect === "manual") request.on("redirect", (status, _method, location) => finish(resolve, responseOf(null, status, "", { location })));
     request.on("response", (incoming) => {
       const stream = NO_BODY_STATUS.has(incoming.statusCode) ? null : Readable.toWeb(incoming);
-      finish(resolve, responseOf(stream, incoming.statusCode, incoming.statusMessage, incoming.headers));
+      if (stream) {
+        streaming = incoming;
+        for (const event of ["end", "error", "close"]) incoming.once(event, release);
+      }
+      finish(resolve, responseOf(stream, incoming.statusCode, incoming.statusMessage, incoming.headers), !!stream);
     });
     request.on("error", (error) => finish(reject, error));
     if (body !== null && body !== undefined) request.write(body);

@@ -152,3 +152,24 @@ test('gemini: GEMINI_CLI_HOME moves the runtime folder; replayChat accepts raw l
   assert.deepEqual(replay.messages.map(message => message.content), ['b'], 'a rewritten message replaces the earlier one in place');
   assert.deepEqual(gemini.replayChat([{ id: 'm', type: 'user', content: 'x' }]), { meta: {}, messages: [] }, 'no metadata: no conversation');
 });
+
+test('gemini resultDisplay: the untrusted_context wrapper and the shell report shown as the output (and exit code); the model\'s text stays', async () => {
+  const wrap = text => `<untrusted_context>\n${text}\n</untrusted_context>`;
+  assert.equal(gemini.resultDisplay('plain result'), undefined, 'not wrapped: nothing to show otherwise');
+  assert.deepEqual(gemini.resultDisplay(wrap('file contents &lt;/untrusted_context&gt; here')), { text: 'file contents </untrusted_context> here' });
+  assert.deepEqual(gemini.resultDisplay(wrap('Output: a.txt\nb.txt\nProcess Group PGID: 4242')), { text: 'a.txt\nb.txt' });
+  assert.deepEqual(gemini.resultDisplay(wrap('Output: (empty)\nError: boom\nExit Code: 2\nProcess Group PGID: 1')), { text: 'Error: boom', exitCode: 2 });
+  assert.deepEqual(gemini.resultDisplay(wrap('Output: x\nExit Code: 0')), { text: 'x', exitCode: 0 });
+
+  const recorded = wrap('Output: hi\nExit Code: 3\nProcess Group PGID: 77');
+  const items = gemini.itemsOf([
+    { id: 'm1', type: 'user', timestamp: iso(1), content: [{ text: 'run it' }] },
+    { id: 'm2', type: 'gemini', timestamp: iso(2), content: [{ text: 'Running.' }], toolCalls: [
+      { id: 'c1', name: 'run_shell_command', args: { command: 'echo hi; exit 3' }, status: 'success', timestamp: iso(2),
+        result: [{ functionResponse: { id: 'c1', name: 'run_shell_command', response: { output: recorded } } }] },
+    ] },
+  ]);
+  const result = items.find(item => item.kind === 'tool_result').result;
+  assert.equal(result.text, recorded, 'the model reads what Gemini recorded');
+  assert.deepEqual(result.display, { text: 'hi', exitCode: 3 });
+});

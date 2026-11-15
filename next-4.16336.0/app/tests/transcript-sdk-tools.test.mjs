@@ -120,3 +120,41 @@ test('a run flattens coalesced reads and marks the awaited calls', () => {
   const tools = sdkToolRun([{ ...a, fileRun: [a, { ...a, id: 'a2' }] }, b, { type: 'agentMessage', id: 'x' }], { awaitingIds: new Set(['b']) });
   assert.deepEqual(tools.map(tool => [tool.id, tool.name, tool.status]), [['a', 'Read', 'completed'], ['a2', 'Read', 'completed'], ['b', 'Bash', 'awaiting_approval']]);
 });
+
+test('a failed web search or fetch shows its reason; a string error shows like {message} (DeepSeek web_fetch, ACP fileChange)', () => {
+  // DeepSeek: results null, the reason in error.message (was output "" and the row said only "Failed").
+  const [fetch] = sdkTools({ id: 'w', type: 'webSearch', status: 'failed', query: 'https://a.b', action: { type: 'openPage', url: 'https://a.b' }, results: null, error: { message: 'HTTP 404 Not Found' } });
+  assert.deepEqual([fetch.name, fetch.status, fetch.output], ['WebFetch', 'error', 'HTTP 404 Not Found']);
+  const [search] = sdkTools({ id: 'w', type: 'webSearch', status: 'failed', query: 'q', action: { type: 'search' }, results: null, error: { message: 'search backend unavailable' } });
+  assert.equal(search.output, 'search backend unavailable');
+  // Results win over the error; a successful search with no results stays empty.
+  assert.equal(sdkTools({ id: 'w', type: 'webSearch', status: 'completed', query: 'q', results: 'found' })[0].output, 'found');
+  assert.equal(sdkTools({ id: 'w', type: 'webSearch', status: 'completed', query: 'q', results: [{ title: 't' }] })[0].output, '[{"title":"t"}]');
+  assert.equal(sdkTools({ id: 'w', type: 'webSearch', status: 'completed', query: 'q', results: null })[0].output, '');
+  // The ACP bridge's fileChange error is a string.
+  const [edit] = sdkTools({ id: 'f', type: 'fileChange', status: 'failed', changes: [{ path: '/w/a.js', kind: { type: 'update' }, diff: '' }], error: 'permission denied' });
+  assert.deepEqual([edit.status, edit.output], ['error', 'permission denied']);
+  const [mcp] = sdkTools({ id: 'm', type: 'mcpToolCall', server: 's', tool: 't', status: 'failed', result: null, error: { message: 'tool crashed' } });
+  assert.equal(mcp.output, 'tool crashed');
+});
+
+test('imported rows of other agents\' tools read as the official rows, also from the old {input} text form', () => {
+  const dyn = (tool, args) => ({ type: 'dynamicToolCall', namespace: null, tool, arguments: args });
+  for (const [tool, name] of [['shell', 'Bash'], ['run_shell_command', 'Bash'], ['exec_command', 'Bash'], ['read_file', 'Read'], ['ReadFile', 'Read'],
+    ['write_file', 'Write'], ['replace', 'Edit'], ['apply_patch', 'Edit'], ['StrReplaceFile', 'Edit'], ['grep_search', 'Grep'], ['search_file_content', 'Grep'],
+    ['glob', 'Glob'], ['list_directory', 'LS'], ['google_web_search', 'WebSearch'], ['SearchWeb', 'WebSearch'], ['web_fetch', 'WebFetch'], ['FetchURL', 'WebFetch']])
+    assert.equal(sdkToolName(dyn(tool, {})), name, tool);
+  // The old text form: {input: <the arguments line>}.
+  assert.deepEqual(sdkToolInput(dyn('shell', { input: 'npm test' })), { command: 'npm test' });
+  assert.deepEqual(sdkToolInput(dyn('read_file', { input: '{"absolute_path":"/w/a.js"}' })), { absolute_path: '/w/a.js', file_path: '/w/a.js' });
+  assert.deepEqual(sdkToolInput(dyn('replace', { input: 'update /w/a.js' })), { file_path: '/w/a.js' });
+  assert.deepEqual(sdkToolInput(dyn('write_file', { input: 'add /w/n.txt' })), { file_path: '/w/n.txt' });
+  assert.deepEqual(sdkToolInput(dyn('google_web_search', { input: 'node zstd' })), { query: 'node zstd' });
+  assert.deepEqual(sdkToolInput(dyn('web_fetch', { input: 'https://e.com/x' })), { url: 'https://e.com/x' });
+  assert.deepEqual(sdkToolInput(dyn('grep_search', { input: '{"pattern":"TODO","dir_path":"/w","include":"*.js"}' })), { pattern: 'TODO', dir_path: '/w', include: '*.js', path: '/w', glob: '*.js' });
+  assert.deepEqual(sdkToolInput(dyn('list_directory', { input: '/w' })), { path: '/w' });
+  // A line that is not the arguments' JSON stays a line; arguments with the official names stay as they are.
+  assert.deepEqual(sdkToolInput(dyn('some_core_tool', { input: 'free text' })), { input: 'free text' });
+  assert.deepEqual(sdkToolInput(dyn('Read', { file_path: '/w/a.js' })), { file_path: '/w/a.js' });
+  assert.deepEqual(sdkToolInput(dyn('run_shell_command', { command: 'ls', dir_path: '/w' })), { command: 'ls', dir_path: '/w' });
+});

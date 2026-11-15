@@ -65,6 +65,9 @@ import ComputerUseCore
 ///   voiceoverAvailability / voiceoverDevices / voiceoverStart {uid?, perTurn?} / voiceoverStop / voiceoverDrain →
 ///                 {narrations [{t, text}], micStates [{on, level, error?}]} / voiceoverPreviewStart {uid?} /
 ///                 voiceoverPreviewStop: on-device narration (WatchRecordVoiceover.swift)
+///   dictationAvailability {locale?} / dictationDevices / dictationStart {uid?, locale?, file?} → {session, locale} /
+///                 dictationStop / dictationCancel / dictationDrain → {state, session, text, level, error?}: the
+///                 composer's on-device dictation (Dictation.swift)
 ///   requestScreenCapture / requestAccessibility → {granted}: the Screen Recording / Accessibility prompt
 ///                 (watch-record's permissions dialog)
 ///   saveSheetFolderAndParents {pid} → {names} | {menuWasOpen: true} | null: the save sheet's folder path, read from
@@ -349,6 +352,22 @@ func dispatch(_ method: String, _ params: Params) throws -> Any {
     case "voiceoverPreviewStop":
         WatchRecordVoiceover.shared.stopPreview()
         return ["stopped": true]
+    // Composer dictation (Dictation.swift): on-device speech to text for the chin's Dictate button. The main process
+    // polls dictationDrain while a session runs; `file` is for tests only (an audio file instead of the microphone).
+    case "dictationAvailability":
+        return Dictation.availability(locale: params.string("locale"))
+    case "dictationDevices":
+        return ["devices": WatchRecordVoiceover.listInputDevices()]
+    case "dictationStart":
+        return try Dictation.shared.start(uid: params.string("uid"), locale: params.string("locale"), file: params.string("file"))
+    case "dictationStop":
+        Dictation.shared.stop()
+        return ["stopped": true]
+    case "dictationCancel":
+        Dictation.shared.cancel()
+        return ["cancelled": true]
+    case "dictationDrain":
+        return Dictation.shared.drain()
     // Watch-record's permissions dialog (official rj "Request" for Screen recording): the system's own prompt the first
     // time, then only the answer (granted or not) — System Settings is opened by the main process when it is not.
     case "requestScreenCapture":

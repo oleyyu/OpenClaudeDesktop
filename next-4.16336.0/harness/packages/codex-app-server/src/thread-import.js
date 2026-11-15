@@ -49,8 +49,11 @@ export function importMessages(raw) {
     const role = message?.role
     if (role !== 'user' && role !== 'assistant') continue
     // parts (the app's toDshSeed): the message block by block, tool calls marked; the message's text is then their
-    // join, so the model reads exactly what the blocks hold.
-    const given = role === 'assistant' && Array.isArray(message.parts) ? message.parts.filter((part) => typeof part?.text === 'string' && part.text.trim()).map((part) => ({ text: part.text.trim(), ...(part.tool === true ? { tool: true } : {}) })) : []
+    // join, so the model reads exactly what the blocks hold. A tool block's call (importedCall) is how its row shows.
+    const given = role === 'assistant' && Array.isArray(message.parts) ? message.parts.filter((part) => typeof part?.text === 'string' && part.text.trim()).map((part) => {
+      const call = part.tool === true ? importedCall(part.call) : null
+      return { text: part.text.trim(), ...(part.tool === true ? { tool: true, ...(call ? { call } : {}) } : {}) }
+    }) : []
     const parts = given.length ? given : [{ text: typeof message.text === 'string' ? message.text.trim() : '' }]
     const text = parts.map((part) => part.text).join('\n\n')
     if (!text) continue
@@ -99,10 +102,13 @@ export function importSeed(messages, { provider, model, now = Date.now() }) {
     const ended = reply ? timeOf(reply.ts) : started
     if (reply) {
       // One text block per part: the model reads the same text, and projection.js shows a `[Tool: …]` block of a
-      // seeded reply as a collapsed tool row instead of prose (importedToolItem).
-      const content = (reply.parts ?? [{ text: reply.text }]).map((part) => ({ type: 'text', text: part.text }))
+      // seeded reply as a collapsed tool row instead of prose (importedToolItem). The blocks' calls ride on the event,
+      // beside the message (importedCalls, by content index): the model is never handed them.
+      const parts = reply.parts ?? [{ text: reply.text }]
+      const content = parts.map((part) => ({ type: 'text', text: part.text }))
       const message = createAssistantMessage({ content, source: { provider, model } })
-      push('assistant/message', { turn, step: 1, message, stream: [] }, ended, true)
+      const calls = parts.map((part) => part.call ?? null)
+      push('assistant/message', { turn, step: 1, message, stream: [], ...(calls.some(Boolean) ? { importedCalls: calls } : {}) }, ended, true)
     }
     push('step/end', { turn, step: 1 }, ended)
     push('turn/end', { turn, reason: { kind: 'completed' } }, ended)
@@ -140,17 +146,89 @@ const IMPORTED_TOOL = /^\[Tool: ([^\n]{1,300})\]\n(?:([\s\S]*?)\n)?\[Result(?: \
 // the reply's own prose into this one row's output.
 const IMPORTED_TOOL_NEXT = /^\[Tool: [^\n]{1,300}\]$/m
 
+// A tool block's `call` (the app's chat-import convert.mjs toolCallDisplay, redacted like the text): the item the
+// transcript shows for the call, without its id, status or result — a command row, a file change with its diff, a
+// read / search / listing, a web call, an MCP or other tool with its arguments. Only these types and fields are taken
+// (the same check as the other bridges' import-display.js).
+const CALL_TYPES = new Set(['commandExecution', 'fileChange', 'webSearch', 'mcpToolCall', 'dynamicToolCall'])
+const ACTION_TYPES = new Set(['unknown', 'read', 'search', 'listFiles'])
+const CHANGE_KINDS = new Set(['add', 'update', 'delete'])
+const isRecord = (value) => !!value && typeof value === 'object' && !Array.isArray(value)
+const strings = (value, fields) => Object.fromEntries(fields.filter((field) => typeof value[field] === 'string').map((field) => [field, value[field]]))
+
 /**
- * The display item of an imported tool call: a settled dynamicToolCall (the app's collapsed tool row) for a text
- * block that is exactly one `[Tool: …]` block, else null. Display only; the session keeps the text for the model.
+ * A part's call, checked: {type, command?, cwd?, commandActions?, exitCode?, changes?, query?, action?, server?, tool?,
+ * arguments?, output?}, or null (no call, an unknown type, a file change without a file).
+ * @param {unknown} value
+ */
+export function importedCall(value) {
+  if (!isRecord(value) || !CALL_TYPES.has(value.type)) return null
+  const out = { type: value.type, ...strings(value, ['command', 'cwd', 'query', 'server', 'tool', 'output']) }
+  if (Number.isSafeInteger(value.exitCode)) out.exitCode = value.exitCode
+  if (isRecord(value.arguments)) out.arguments = value.arguments
+  const actions = Array.isArray(value.commandActions) ? value.commandActions.filter((action) => isRecord(action) && ACTION_TYPES.has(action.type)).slice(0, 4)
+    .map((action) => ({ ...strings(action, ['type', 'command', 'name', 'path', 'query', 'tool']), ...(action.path === null ? { path: null } : {}), ...(isRecord(action.arguments) ? { arguments: action.arguments } : {}) })) : []
+  if (actions.length) out.commandActions = actions
+  if (isRecord(value.action) && ['search', 'openPage', 'findInPage'].includes(value.action.type)) {
+    out.action = { ...strings(value.action, ['type', 'url', 'query', 'pattern']), ...(Array.isArray(value.action.queries) ? { queries: value.action.queries.filter((query) => typeof query === 'string') } : value.action.type === 'search' ? { queries: null } : {}) }
+  }
+  const changes = Array.isArray(value.changes) ? value.changes.filter((change) => isRecord(change) && typeof change.path === 'string' && change.path && CHANGE_KINDS.has(change.kind?.type)).slice(0, 100)
+    .map((change) => ({ path: change.path, kind: change.kind.type === 'update' ? { type: 'update', move_path: typeof change.kind.move_path === 'string' ? change.kind.move_path : null } : { type: change.kind.type }, diff: typeof change.diff === 'string' ? change.diff : '' })) : []
+  if (changes.length) out.changes = changes
+  return out.type === 'fileChange' && !out.changes ? null : out
+}
+
+/** A tool block's arguments line as an arguments object: its JSON object, else {input}. */
+function argumentsOf(input) {
+  if (!input) return {}
+  try { const value = JSON.parse(input); if (isRecord(value)) return value } catch {}
+  return { input }
+}
+
+/**
+ * The display item of an imported tool call for a text block that is exactly one `[Tool: …]` block, else null.
+ * Display only; the session keeps the text for the model. With the block's call (importedCall, the event's
+ * importedCalls): the item it names — commandExecution, fileChange, webSearch, mcpToolCall or dynamicToolCall —, settled
+ * from the block's result (its output, `(error)` or `(exit N)`), whatever the call leaves out read from the block.
+ * Without one (a sender that gave no call, a session imported before calls were sent): a settled dynamicToolCall (the
+ * app's collapsed tool row) holding the text's arguments line.
  * @param {string} id item id
  * @param {string} text the block's text
+ * @param {unknown} [call] the block's call
  */
-export function importedToolItem(id, text) {
+export function importedToolItem(id, text, call) {
   const match = typeof text === 'string' ? IMPORTED_TOOL.exec(text) : null
   if (!match) return null
-  if (match[4] && IMPORTED_TOOL_NEXT.test(match[4])) return null
-  const failed = match[3] !== undefined
-  return { type: 'dynamicToolCall', id, namespace: null, tool: match[1], arguments: match[2] ? { input: match[2] } : {}, status: failed ? 'failed' : 'completed',
-    contentItems: match[4] ? [{ type: 'inputText', text: match[4] }] : [], success: !failed, durationMs: null }
+  const shown = importedCall(call)
+  if (!shown) {
+    if (match[4] && IMPORTED_TOOL_NEXT.test(match[4])) return null
+    const failed = match[3] !== undefined
+    return { type: 'dynamicToolCall', id, namespace: null, tool: match[1], arguments: match[2] ? { input: match[2] } : {}, status: failed ? 'failed' : 'completed',
+      contentItems: match[4] ? [{ type: 'inputText', text: match[4] }] : [], success: !failed, durationMs: null }
+  }
+  const input = match[2] ?? ''
+  const output = shown.output ?? match[4] ?? ''
+  const exit = /^exit (-?\d+)$/.exec(match[3] ?? '')
+  const exitCode = shown.exitCode ?? (exit ? Number(exit[1]) : match[3] ? 1 : 0)
+  const failed = match[3] !== undefined || (shown.type === 'commandExecution' && exitCode !== 0)
+  const status = failed ? 'failed' : 'completed'
+  switch (shown.type) {
+    case 'commandExecution': {
+      const command = shown.command ?? input
+      return { type: 'commandExecution', id, command, cwd: shown.cwd ?? '', processId: null, source: 'agent', status, commandActions: shown.commandActions ?? [{ type: 'unknown', command }],
+        aggregatedOutput: output, exitCode, durationMs: null }
+    }
+    case 'fileChange': return { type: 'fileChange', id, changes: shown.changes, status }
+    case 'webSearch': {
+      const query = shown.query ?? input
+      const action = shown.action ?? (/^https?:\/\/\S+$/.test(query) ? { type: 'openPage', url: query } : { type: 'search', query, queries: null })
+      return { type: 'webSearch', id, query, action, results: failed || !output ? null : output, ...(failed ? { error: { message: output } } : {}), status }
+    }
+    case 'mcpToolCall':
+      return { type: 'mcpToolCall', id, server: shown.server ?? '', tool: shown.tool ?? match[1], status, arguments: shown.arguments ?? argumentsOf(input), appContext: null, pluginId: null, readOnlyHint: null,
+        result: failed ? null : { content: output ? [{ type: 'text', text: output }] : [], structuredContent: null }, error: failed ? { message: output } : null, durationMs: null }
+    default:
+      return { type: 'dynamicToolCall', id, namespace: null, tool: shown.tool ?? match[1], arguments: shown.arguments ?? argumentsOf(input), status,
+        contentItems: output ? [{ type: 'inputText', text: output }] : [], success: !failed, durationMs: null }
+  }
 }

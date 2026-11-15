@@ -108,6 +108,21 @@ test("system-fetch: redirect manual answers the 3xx itself, carrying its Locatio
   assert.equal(response.body, null);
 });
 
+// Electron emits "redirect" in follow mode as well (the hop happens regardless) and then "response" for the final
+// page. A GitHub release asset always answers 302 to its CDN: Settings › Cores' download failed with
+// "<url> answered 302." while the 302 was taken for the answer.
+test("system-fetch: redirect follow ignores the informational redirect event and answers the final response", async () => {
+  const { net, calls } = fakeNet((record, request) => {
+    request.emit("redirect", 302, "GET", "https://cdn.example.test/asset.zip");
+    queueMicrotask(() => respond(200, "archive bytes")(record, request));
+  });
+  const response = await requestWith(net, "https://example.test/releases/asset.zip", { redirect: "follow" });
+  assert.equal(calls[0].options.redirect, "follow");
+  assert.equal(response.status, 200);
+  assert.equal(response.ok, true);
+  assert.equal(await response.text(), "archive bytes");
+});
+
 test("system-fetch: a 204 has no body, as fetch's does", async () => {
   const { net } = fakeNet(respond(204, null));
   const response = await requestWith(net, "https://example.test/empty");

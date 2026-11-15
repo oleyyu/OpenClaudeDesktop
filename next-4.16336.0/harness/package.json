@@ -45,7 +45,8 @@
     "@deepseek-ai/dsh-subagent-fork-in-process": "file:vendor-packages/deepseek-ai-dsh-subagent-fork-in-process-0.2.0-rc.2-d6e49e9d7f2f.tgz",
     "@deepseek-ai/dsh-sdk-client": "file:vendor-packages/deepseek-ai-dsh-sdk-client-0.2.0-rc.2-917937b90791.tgz",
     "@deepseek-ai/dsh-tool-subagent": "file:vendor-packages/deepseek-ai-dsh-tool-subagent-0.2.0-rc.2-e1d13134dbcb.tgz",
-    "@deepseek-ai/dsh-llm-retry": "file:vendor-packages/deepseek-ai-dsh-llm-retry-0.2.0-rc.2-b858f3859cfe.tgz"
+    "@deepseek-ai/dsh-llm-retry": "file:vendor-packages/deepseek-ai-dsh-llm-retry-0.2.0-rc.2-b858f3859cfe.tgz",
+    "chrome-devtools-mcp": "file:vendor-packages/chrome-devtools-mcp-1.13.0.tgz"
   },
   "version": "0.1.0",
   "scripts": {

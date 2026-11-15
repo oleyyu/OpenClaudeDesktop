@@ -47,11 +47,14 @@ function changeHunks(change) {
   hunkCache.set(change, hunks);
   return hunks;
 }
+// A jsdiff patch (OpenCode / MiMo: createTwoFilesPatch) opens with `Index: <path>` and a line of `=` before its
+// ---/+++ pair (diff-model.js indexHeaderLines); only that exact lead counts, so file contents are never taken for one.
+const JSDIFF_HEADER = /^(?:Index: [^\n]*\n(?:={3,}\n)?|={3,}\n)--- [^\n]*\n\+\+\+ /;
 function deriveHunks(change) {
   const raw = typeof change.diff === "string" ? change.diff.replace(/\r\n/g, "\n") : "";
   if (!raw.trim()) return null;
   const at = raw.startsWith("@@") ? 0 : raw.search(/^@@ /m);
-  if (at >= 0 && (at === 0 || /^(diff --git |--- |\+\+\+ |index |new file|deleted file|similarity|rename )/.test(raw))) {
+  if (at >= 0 && (at === 0 || /^(diff --git |--- |\+\+\+ |index |new file|deleted file|similarity|rename )/.test(raw) || JSDIFF_HEADER.test(raw))) {
     const hunks = raw.slice(at);
     const parsed = parseUnifiedDiff(`--- a/file\n+++ b/file\n${hunks.endsWith("\n") ? hunks : `${hunks}\n`}`);
     if (parsed.files.length && parsed.files.every((file) => !file.fallbackReason && file.hunks.length)) return hunks.endsWith("\n") ? hunks : `${hunks}\n`;

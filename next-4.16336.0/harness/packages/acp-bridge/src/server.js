@@ -37,7 +37,8 @@ import os from 'node:os'
 import path from 'node:path'
 import { LineTransport, RpcError, METHOD_NOT_FOUND, INVALID_PARAMS, INVALID_REQUEST, SERVER_ERROR, invalidParams } from './transport.js'
 import { AgentHost } from './agent-host.js'
-import { ThreadProjector, blockText, planSteps } from './projection.js'
+import { ThreadProjector, blockText, planSteps, withCommandOutput } from './projection.js'
+import { importReplyBlocks, splitImportedReplies } from './import-display.js'
 import { ThreadStore } from './store.js'
 import { settleOverlaysIn } from './overlay.js'
 import { UsageLedger, addUsage, normalizeUsage, threadTokenUsage, localDayKey } from './usage.js'
@@ -50,7 +51,7 @@ import { probeMcpServer, mcpServerStatus, clearMcpCache, getMcpPrompt, parseProm
 import { RateLimitWatch } from './rate-limit-watch.js'
 import { agentProgram, commandLine, agentVersion } from './agents/index.js'
 import { sessionTranscript, sideQuestionPrompt, SIDE_QUESTION_SYSTEM } from './side-question.js'
-import { appToolsServer, acpAppToolsServer, appToolsLaunchEntry, sessionIdentityOf } from './app-tools.js'
+import { appToolsServer, acpAppToolsServer, appToolsLaunchEntry, sessionIdentityOf, devtoolsServer, acpDevtoolsServer } from './app-tools.js'
 
 export const BRIDGE_VERSION = '0.1.0'
 const UTILITY_IDLE_MS = 60000
@@ -148,11 +149,14 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
   fs.mkdirSync(stateDir, { recursive: true })
   // OpenClaude Desktop's own tools (app-tools.js): one code_desktop server per app session, never in throwaway sessions.
   const appTools = appToolsServer(env)
+  const devtoolsMcp = devtoolsServer(env)
   const sessionMcpServers = (thread, session) => {
     // An agent that got the server in its launch config (adapter.appToolsInLaunch: MiniMax's mcp.json) gets none here.
     if (thread?.appToolsInLaunch) return []
     const entry = (thread?.tools?.disabledServers ?? []).includes(appTools?.name) ? null : acpAppToolsServer(appTools, session, { runAsNodeInCommand: adapter?.mcpDropsRunAsNode === true })
-    return entry ? [entry] : []
+    // The chrome-devtools server (app-tools.js devtoolsServer) beside it, on the app's preview tabs.
+    const devtools = entry && !(thread?.tools?.disabledServers ?? []).includes(devtoolsMcp?.name) ? acpDevtoolsServer(devtoolsMcp, { runAsNodeInCommand: adapter?.mcpDropsRunAsNode === true }) : null
+    return entry ? (devtools ? [entry, devtools] : [entry]) : []
   }
   // The server as the agent's own config declares it, for an adapter that takes it at launch (appToolsInLaunch): named
   // by the app's start token for a new session, else by the thread id; none while the user switched it off.
@@ -1270,6 +1274,7 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
       if (kind === 'tool_call_update' && update.status === 'completed' && adapter.toolPlan) toolPlan(thread, update)
       // After this update's own notifications (below): the filled item is announced last.
       if (kind === 'tool_call_update' && (update.status === 'completed' || update.status === 'failed') && adapter.toolArguments) setImmediate(() => fillToolArguments(thread, update.toolCallId))
+      if (kind === 'tool_call_update' && (update.status === 'completed' || update.status === 'failed') && adapter.commandOutput) setImmediate(() => fillCommandOutput(thread, update.toolCallId))
     }
     emit(notes)
     // An agent's own dynamic workflow (Qwen's workflow tool): the call's updates move its run (item.workflowRun).
@@ -1462,8 +1467,60 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
 
   /** At a turn's end: every call of the turn still without its arguments is read once more. */
   function fillTurnArguments(thread) {
+    if (adapter.commandOutput) for (const item of thread.projector.activeTurn?.items ?? []) if (item?.type === 'commandExecution') fillCommandOutput(thread, item.id, 4)
     if (!adapter.toolArguments) return
     for (const item of thread.projector.activeTurn?.items ?? []) if (item && 'arguments' in item && !Object.keys(item.arguments ?? {}).length) fillToolArguments(thread, item.id, 4)
+  }
+
+  /**
+   * A command's output and exit code the agent streams without them (adapter.commandOutput: Gemini's shell calls, read
+   * from its session file once it recorded the result; a few short retries, once more at the turn's end, and for a
+   * replayed history): set on the row, a non-zero exit failing it, announced again (item/completed) and kept with the
+   * thread. Read from the turns, not the turn's calls (cleared when it ends), so a late read still lands.
+   */
+  function fillCommandOutput(thread, itemId, attempt = 0, { quiet = false } = {}) {
+    const filled = (thread.commandsFilled ??= new Set())
+    if (filled.has(itemId)) return false
+    const turns = [...thread.projector.turns]
+    if (thread.projector.current && !turns.includes(thread.projector.current)) turns.push(thread.projector.current)
+    const turn = turns.findLast((candidate) => candidate.items.some((item) => item?.id === itemId))
+    const index = turn ? turn.items.findIndex((item) => item?.id === itemId) : -1
+    const item = index >= 0 ? turn.items[index] : null
+    if (item?.type !== 'commandExecution' || item.status === 'inProgress' || item.status === 'declined') return false
+    let found
+    try { found = adapter.commandOutput(ctx, thread.id, itemId) } catch (error) { log(`command output: ${error?.message ?? error}`); return false }
+    if (found === undefined) return false
+    if (!found) {
+      if (attempt < 5) setTimeout(() => fillCommandOutput(thread, itemId, attempt + 1, { quiet }), 150 * (attempt + 1)).unref?.()
+      return false
+    }
+    filled.add(itemId)
+    const next = withCommandOutput(item, found)
+    if (!next) return false
+    turn.items[index] = next
+    const entry = thread.projector.calls.get(itemId)
+    if (entry?.item?.id === itemId) entry.item = next
+    if (quiet) return true
+    // No completedAtMs: the row keeps the time it first completed.
+    notify('item/completed', { item: next, threadId: thread.id, turnId: turn.id })
+    if (!thread.prompt) thread.save()
+    return true
+  }
+
+  /**
+   * A history's commands without their output (adapter.commandOutput): a replayed session (session/load sends Gemini's
+   * shell rows bare), or one kept before the bridge read them. Filled in place, before the thread is shown; true if any.
+   */
+  function fillHistoryCommands(thread, { onlyBare = false } = {}) {
+    if (!adapter.commandOutput) return false
+    let changed = false
+    for (const turn of thread.projector.turns) {
+      for (const item of [...turn.items]) {
+        if (item?.type !== 'commandExecution' || (onlyBare && (item.aggregatedOutput || item.exitCode !== 0))) continue
+        if (fillCommandOutput(thread, item.id, 5, { quiet: true })) changed = true
+      }
+    }
+    return changed
   }
 
   /**
@@ -2236,14 +2293,16 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
       // A plan quota that ran out (Gemini's RESOURCE_EXHAUSTED / TerminalQuotaError, any 'quota exceeded'): Codex's
       // usage-limit error, so the card says so and offers the Usage page instead of a generic failure.
       const quota = !auth && /RESOURCE_EXHAUSTED|TerminalQuotaError|quota (?:exceeded|exhausted)|exceeded your (?:current )?(?:token )?quota|insufficient (?:account )?balance/i.test(message)
-      // The agent's own wording first (adapter.errorInfo: Gemini rewrites its quota and 429 errors). An adapter may
-      // answer {codexErrorInfo, message, additionalDetails}: MiniMax names its usage-limit and balance codes, and drops
-      // its internal 'Runtime failed: BYOK provider …' wrapping from the message.
-      const own = auth ? null : adapter.errorInfo?.(message, failure) ?? null
+      // The agent's own wording first (adapter.errorInfo, given the error with its JSON-RPC code). An adapter may answer
+      // {codexErrorInfo, message, additionalDetails}: Gemini names a bad key (400 API_KEY_INVALID, no 'auth' in it) and its
+      // quota and 5xx errors and puts the API's sentence in place of its JSON body; MiniMax names its usage-limit and
+      // balance codes, and drops its internal 'Runtime failed: BYOK provider …' wrapping. A name it gives wins over the
+      // wording ('auth', 'quota') read here.
+      const own = adapter.errorInfo?.(message, failure) ?? null
       const named = own && typeof own === 'object' ? own.codexErrorInfo ?? null : own
       const shown = own && typeof own === 'object' && typeof own.message === 'string' && own.message ? own.message : message
       const details = own && typeof own === 'object' && typeof own.additionalDetails === 'string' ? own.additionalDetails : failure?.data ? JSON.stringify(failure.data).slice(0, 500) : null
-      finishTurn(thread, { status: state.cancelled ? 'interrupted' : 'failed', error: state.cancelled ? null : { message: namedMessage(shown), codexErrorInfo: auth ? 'unauthorized' : named ?? (quota ? 'usageLimitExceeded' : null), additionalDetails: details }, result })
+      finishTurn(thread, { status: state.cancelled ? 'interrupted' : 'failed', error: state.cancelled ? null : { message: namedMessage(shown), codexErrorInfo: named ?? (auth ? 'unauthorized' : quota ? 'usageLimitExceeded' : null), additionalDetails: details }, result })
     } else if (stop === 'cancelled' || state.cancelled) {
       finishTurn(thread, { status: 'interrupted', error: null, result })
     } else if (stop === 'refusal') {
@@ -2703,6 +2762,7 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
       const thread = new Thread(id, meta)
       threads.set(id, thread)
       if (load && !thread.hasHistory) await replayHistory(thread)
+      else if (thread.hasHistory && fillHistoryCommands(thread, { onlyBare: true })) thread.save()
       // A goal kept in the agent's own log (adapter.readGoal) shows once the session is open (after this request).
       if (adapter.readGoal) setTimeout(() => { try { const goal = adapter.readGoal(ctx, thread); if (goal) applyGoal(thread, goal) } catch {} }, 0)
       return thread
@@ -2739,6 +2799,7 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
       projector.completeTurn({})
       thread.projector.turns = projector.turns.map((turn) => ({ ...turn, status: turn.status === 'inProgress' ? 'completed' : turn.status }))
       thread.projector.current = null
+      fillHistoryCommands(thread)
       thread.host = host
       thread.hostKey = keyOf(config)
       thread.hostConfig = config
@@ -4396,6 +4457,9 @@ export function serve({ input, output, env = process.env, adapter, log = (line) 
       store.update(sessionId, { cwd, createdAt: now, updatedAt: now, source: 'bridge', ...(title ? { name: title } : {}), ...(importedFrom ? { importedFrom } : {}) })
       if (turns) store.writeHistory(sessionId, { turns })
       const thread = await openThread(sessionId)
+      // The replay shows a reply as the agent holds it, its tool calls folded into the text: the request's parts say
+      // where each call sits, so they show as tool rows (import-display.js). The agent's session stays as written.
+      if (!turns && splitImportedReplies(thread.projector.turns, importReplyBlocks(params.messages), (prefix) => thread.projector.nextId(prefix))) thread.save()
       lastCwd = cwd
       applySettings(thread, params)
       response = sessionResponse(thread, { includeTurns: params.excludeTurns !== true })

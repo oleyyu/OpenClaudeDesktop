@@ -33,6 +33,7 @@
 import path from 'node:path'
 import { SESSION_ARG } from './app-tools.js'
 import { attributeTurns, beforeRevert } from './v2/history.js'
+import { importedItems } from './import-display.js'
 
 const seconds = (ms) => (Number.isFinite(ms) ? Math.floor(ms / 1000) : null)
 const EDIT_TOOLS = new Set(['edit', 'write', 'apply_patch', 'patch', 'multiedit', 'notebook_edit'])
@@ -913,6 +914,16 @@ export class Projector {
     return { ...part, state: { ...part.state, errorType: 'aborted', error: 'The user declined this tool call' } }
   }
 
+  /**
+   * An imported reply's text part (thread-import.js) as its blocks: prose and settled tool rows, along the thread's
+   * importBlocks (import-display.js). null for every other part. History only: an imported part never streams.
+   */
+  importedItemsOf(part, message) {
+    const index = this.meta?.importBlocks
+    if (!index || part.type !== 'text' || part.synthetic || part.ignored || message.info.role !== 'assistant' || message.info.summary) return null
+    return importedItems(part.id, part.text, index, (id, text) => ({ type: 'agentMessage', id, text, phase: null, memoryCitation: null, delivery: null, questions: null }))
+  }
+
   /** One part → its Codex items: MiMo's exec script, then each tool it called. */
   itemsOf(part, message) {
     const item = this.itemOf(part, message)
@@ -958,7 +969,7 @@ export class Projector {
       const turn = byUser.get(info.parentID) ?? current
       if (!turn) continue
       turn.assistant.push(message)
-      for (const part of message.parts) turn.items.push(...this.itemsOf(part, message))
+      for (const part of message.parts) turn.items.push(...(this.importedItemsOf(part, message) ?? this.itemsOf(part, message)))
       // The summary OpenCode wrote when it compacted (an assistant message with info.summary): what it now remembers,
       // shown under the compaction marker (codeDesktop.summary, as the DeepSeek bridge reports it).
       if (info.summary) {

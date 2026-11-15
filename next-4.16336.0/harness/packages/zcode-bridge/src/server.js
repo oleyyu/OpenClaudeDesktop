@@ -46,7 +46,7 @@ import { activeMessages, turnsFromMessages, previewOf } from './history.js'
 import { WORKFLOW_RUN_APPROVAL_REASON, WORKFLOW_RUN_TOOLS, WORKFLOW_SESSION_GRANT_TOOLS, applyWorkflowEvents, applyWorkflowInterrupted, applyWorkflowSummary, bindWorkflowRun, workflowApprovalSummary, workflowReplacement, workflowState } from './workflows.js'
 import { goalObjective, instructionsBlock, instructionsKey, placeInstructions, stripInstructions } from './instructions.js'
 import { MCP_TOOL, isRecord } from './items.js'
-import { appToolsServer, sessionIdentityOf, zcodeAppToolsServer } from './app-tools.js'
+import { appToolsServer, sessionIdentityOf, zcodeAppToolsServer, zcodeDevtoolsServer } from './app-tools.js'
 import { approvalRequest, codexPolicy, isPlanApproval, isReadOnlyMode, noApprovalAnswer, permissionAnswer, permissionOf, questionAnswer, questionRequest, sessionGrant, zcodeMode } from './permissions.js'
 import { ProviderConfigMirror, ProviderProxy } from './provider-proxy.js'
 import { contextUsageCounts } from './context-usage.js'
@@ -56,6 +56,7 @@ import * as accounts from './accounts.js'
 import * as catalog from './catalog.js'
 import { accountUsage, codeStats, databaseActivity, deleteSessionRows, sessionRevert, storedMessages } from './usage.js'
 import { finishImport, importCreateParams, importedFromOf, importedHistoryOf, startParamsOf } from './thread-import.js'
+import { importDisplayIndex } from './import-display.js'
 
 const PACKAGE_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const BRIDGE_VERSION = JSON.parse(fs.readFileSync(path.join(PACKAGE_DIR, 'package.json'), 'utf8')).version
@@ -614,12 +615,15 @@ export async function main() {
   function sessionMcpServers(thread, session = thread.id) {
     const disabled = new Set(thread.tools?.disabledServers ?? [])
     const own = appTools && !disabled.has(appTools.name) ? zcodeAppToolsServer(appTools, session) : null
+    // The chrome-devtools server (app-tools.js) beside OpenClaude Desktop's own, on the app's preview tabs.
+    const devtools = own ? zcodeDevtoolsServer(env) : null
+    const extra = devtools && !disabled.has(devtools.name) ? devtools : null
     if (!disabled.size && !own) return undefined
     const config = catalog.readConfig(paths.cliConfig)
     const cwd = thread.cwd ?? home
     // With MCP off in ZCode's config (features.mcp false) only OpenClaude Desktop's own server runs.
-    const configured = config?.features?.mcp === false && own ? [] : catalog.protocolMcpServers({ mcp: { servers: catalog.effectiveMcpServers(config, cwd) } }, { cwd }).filter((server) => !disabled.has(server.name) && server.name !== own?.name)
-    return own ? [...configured, own] : configured
+    const configured = config?.features?.mcp === false && own ? [] : catalog.protocolMcpServers({ mcp: { servers: catalog.effectiveMcpServers(config, cwd) } }, { cwd }).filter((server) => !disabled.has(server.name) && server.name !== own?.name && server.name !== extra?.name)
+    return own ? [...configured, own, ...(extra ? [extra] : [])] : configured
   }
 
   async function syncSessionSettings(thread) {
@@ -740,6 +744,14 @@ export async function main() {
       await discard()
       throw error
     }
+    // Where each reply's tool calls sit in its text, kept before the history is first built (and cached), so the
+    // history view shows them as tool rows (import-display.js).
+    const importBlocks = id ? importDisplayIndex(params.messages, importedHistory.messages.filter((message) => message.role === 'assistant').map((message) => message.content)) : null
+    if (importBlocks) {
+      store.update(id, { importBlocks })
+      const made = threads.get(id)
+      if (made) made.history = null
+    }
     return finishImport(response, {
       thread: threads.get(id), historyOf, excludeTurns: params.excludeTurns === true,
       remember: () => { if (importedFrom) store.update(id, { importedFrom }) },
@@ -792,7 +804,7 @@ export async function main() {
     const [stored, revert] = await Promise.all([messagesOf(thread.id), sessionRevert(paths.sessionDb, thread.id).catch(() => null)])
     const messages = activeMessages(stored, revert)
     const meta = store.get(thread.id) ?? {}
-    const built = turnsFromMessages(messages, { threadId: thread.id, cwd: thread.cwd, running: !!thread.projector.turn, activeTurnId: thread.projector.turnId, inputs: meta.inputs })
+    const built = turnsFromMessages(messages, { threadId: thread.id, cwd: thread.cwd, running: !!thread.projector.turn, activeTurnId: thread.projector.turnId, inputs: meta.inputs, importBlocks: meta.importBlocks })
     if (!meta.preview) {
       const preview = previewOf(messages)
       if (preview) store.update(thread.id, { preview })
@@ -2575,7 +2587,7 @@ export async function main() {
         // ZCode opens the fork with its parent's runtime, MCP servers included: OpenClaude Desktop's code_desktop server would
         // still name the parent. Reopened (it is persisted), the fork gets one named for itself.
         if (appTools) await request('session/close', { sessionId: id }).catch(() => {})
-        store.update(id, { forkedFromId: threadId, cwd: source.cwd, permission: source.permission, model: source.model ?? undefined, effort: source.effort ?? undefined, tools: source.tools ?? undefined, customization: source.customization ?? undefined, developerInstructions: source.developerInstructions ?? undefined })
+        store.update(id, { forkedFromId: threadId, importBlocks: store.get(threadId)?.importBlocks, cwd: source.cwd, permission: source.permission, model: source.model ?? undefined, effort: source.effort ?? undefined, tools: source.tools ?? undefined, customization: source.customization ?? undefined, developerInstructions: source.developerInstructions ?? undefined })
         const thread = await loadThread(id)
         applyRequestParams(thread, params)
         notify('thread/started', { thread: threadObject(thread) })

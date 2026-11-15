@@ -176,7 +176,11 @@ test('account rows: bridge Sign out confirms first, device codes and Codex API k
   const codexOut = rows({ engine: core('codex'), snapshot: { account: null, requiresOpenaiAuth: true } });
   assert.deepEqual(codexOut.rows.map(row => row.id), ['account', 'signin', 'apikey']);
   assert.ok(codexOut.html.includes('placeholder="OpenAI API key"') && codexOut.html.includes('Get a key'));
-  assert.ok(findButton(codexOut.rows.find(row => row.id === 'apikey').control, 'Save key'));
+  // The key row: Get a key beside the label; the field and Save key share one line in the row's below slot.
+  const codexKey = codexOut.rows.find(row => row.id === 'apikey');
+  assert.ok(findButton(codexKey.below, 'Save key'));
+  assert.ok(findButton(codexKey.control, 'Get a key'), 'Get a key sits beside the label');
+  assert.equal(codexKey.leading, undefined, 'Codex’s rows carry no logo, so its key row has none either');
   const codexIn = rows({ engine: core('codex'), snapshot: { account: { type: 'chatgpt', email: 'a@example.invalid', planType: 'plus' }, requiresOpenaiAuth: true } });
   assert.deepEqual(codexIn.rows.map(row => row.id), ['account', 'plan']);
   assert.match(codexIn.rows[0].searchText, /^Codex account/);

@@ -239,12 +239,12 @@ export function SourceCoresSettings({ boot, busy = false, coreBusy = busy, deskt
   });
 
   return <div className="ccmd-page cores-page">
-    <SettingsGroup title={t('Cores')} rowErrors={rowErrors} rows={[
+    <SettingsGroup title={t('Cores')} rowErrors={rowErrors} showErrorReason rows={[
       settingRow('cores-intro', t('Agent cores'), t('OpenClaude Desktop is the frame; the core is the agent that runs your sessions. Download only the cores you use. Your instructions, tools and permission modes apply to whichever core is running.'), null),
       ...(state ? rows : [settingRow('cores-loading', t('Loading…'), '', null)]),
       ...migrationRow,
     ]}/>
-    <SettingsGroup title={t('Extension packs')} rowErrors={rowErrors} rows={[
+    <SettingsGroup title={t('Extension packs')} rowErrors={rowErrors} showErrorReason rows={[
       ...packs.map(pack => settingRow(`pack-${pack.id}`, <span className="cores-title"><SourceBrandLogo brand={coreForEngine(pack.id).brand} size={28} className="cores-logo" />{pack.name}<span className="cores-vendor">{pack.vendor}</span><span className="ccmd-badge">{pack.version}</span></span>,
         <span className="cores-desc"><span>{pack.description || pack.models}</span><span className="ccmd-path" title={pack.dir}>{tail(pack.dir)}</span></span>,
         <div className="ccmd-actions"><SourceSettingsButton size="sm" variant="ghost" disabled={!!pending} data-pack-remove={pack.id}

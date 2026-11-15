@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="docs/images/logo.png" alt="OpenClaude Desktop logo" width="128" height="128">
+
 # OpenClaude Desktop
 
 ### A 1:1 open-source recreation of Claude Desktop, running the AI you choose

@@ -47,6 +47,7 @@ import { PLUGIN_FILE } from './plugin.js'
 import { OAuthCallbacks, callbackOf } from './oauth-callback.js'
 import { UsageCache, accountUsage, codeStats, foldSession, localDayKey } from './usage.js'
 import { importMessages, importTitle, importedFromOf, lowId, replayEvents, replayHistory, transcriptText } from './thread-import.js'
+import { importDisplayIndex } from './import-display.js'
 import { AgentServerV2 } from './v2/server.js'
 import { V2Api } from './v2/api.js'
 import { CATALOG_EVENTS, SeqFilter, normalizeEvent } from './v2/events.js'
@@ -905,6 +906,9 @@ export class Bridge {
       thread = await this.createThread(start, { created: (info) => { made = info } })
       const mode = await this.appendHistory(thread, messages, { title, source: importedFrom?.source })
       if (importedFrom) this.store.update(thread.id, { importedFrom })
+      // Where each reply's tool calls sit in its text, so the history shows them as tool rows (import-display.js).
+      const importBlocks = mode === 'history' ? importDisplayIndex(params.messages, messages.filter((message) => message.role === 'assistant').map((message) => message.text)) : null
+      if (importBlocks) this.store.update(thread.id, { importBlocks })
       if (title) await this.renameSession(thread.id, title)
       await thread.reload()
       const response = thread.sessionResponse({ includeTurns: params.excludeTurns !== true })
@@ -2804,7 +2808,7 @@ export class Bridge {
     }
     const info = await this.api('POST', `/session/${encodeURIComponent(source.id)}/fork`, { directory: source.cwd, body: messageID ? { messageID } : {} })
     const meta = this.store.get(source.id)
-    this.store.update(info.id, { cwd: info.directory ?? source.cwd, forkedFrom: source.id, lastActivity: Date.now(), preview: meta.preview, permission: meta.permission, tools: meta.tools, custom: meta.custom })
+    this.store.update(info.id, { cwd: info.directory ?? source.cwd, forkedFrom: source.id, lastActivity: Date.now(), preview: meta.preview, permission: meta.permission, tools: meta.tools, custom: meta.custom, importBlocks: meta.importBlocks })
     const thread = await this.openThread(info.id)
     await thread.applyParams(params)
     const response = thread.sessionResponse({ includeTurns: params.excludeTurns !== true })

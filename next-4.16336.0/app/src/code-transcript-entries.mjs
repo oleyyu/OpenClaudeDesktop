@@ -251,8 +251,11 @@ export function codeSubagents(items, viewOf) {
     const view = viewOf(item);
     if (!view || !["running", "completed", "failed", "stopped"].includes(view.status)) continue;
     const latest = (Array.isArray(view.items) ? view.items : []).map((one) => sdkToolName(one)).filter(Boolean).at(-1);
-    out.set(str(item.id), { status: view.status, activity: { toolCallCount: Number.isFinite(view.toolCallCount) ? view.toolCallCount : 0,
-      ...(latest ? { latestToolName: latest } : {}), ...(str(view.model) ? { model: view.model } : {}) } });
+    // display-bugs-20261114 D-02: the desktop builds subagentActivity on the sub-agent's first tool_use only
+    // (`{latestToolName: O(e.name), toolCallCount, model}`); its heartbeat (`e.subagentActivity !== void 0` → rx(…,
+    // latestToolName)) calls startsWith on the name, so a sub-agent with no tool call yet has none (React #520 otherwise).
+    out.set(str(item.id), latest ? { status: view.status, activity: { toolCallCount: Number.isFinite(view.toolCallCount) ? view.toolCallCount : 0,
+      latestToolName: latest, ...(str(view.model) ? { model: view.model } : {}) } } : { status: view.status });
   }
   return out;
 }
@@ -379,6 +382,9 @@ export function codeTranscriptEntries(items, { view = "normal", responding = fal
     }
     row = shownRow;
     if (lastTurn && item.turnId !== lastTurn && item.type !== "userMessage") { flushError(lastTurn); }
+    // display-bugs-20261114 D-06: another turn's item starts that turn's own entry (it never joins the open reply of an
+    // earlier turn, even with no prompt in between); an item with no turn identity joins the open entry as before.
+    if (item.type !== "userMessage" && assistant?.turnId && item.turnId && assistant.turnId !== item.turnId) close();
     if (item.type === "userMessage") {
       if (lastTurn) flushError(lastTurn);
       close();

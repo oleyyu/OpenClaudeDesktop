@@ -571,7 +571,18 @@ const ROW_GAP_CLASS = Object.freeze({ own: undefined, none: "[&>[data-transcript
  */
 export function partRowId(part, entry, fallback) {
   if (!part || part.isFirst) return fallback;
-  return partRowIds(part, entry)[0] ?? fallback;
+  const id = partRowIds(part, entry)[0];
+  if (id !== undefined) return id;
+  // display-bugs-20261114 D-07: the turn's error card draws no host row; it names itself (`${turnId}:turn-error`), not the
+  // turn's first row — the first fragment of a reply a retry cut, whose part already carries that id.
+  const item = partItem(part, entry);
+  return item?.kind === "turn_error" && typeof item.id === "string" && item.id ? item.id : fallback;
+}
+
+// The entry item a part of a split reply draws (lP's `assistantItem` carries it, a rendererItem names it by key: TM).
+function partItem(part, entry) {
+  return part.kind === "assistantItem" ? part.item
+    : typeof part.itemKey === "string" ? rendererItemOfKey(part.turnKey, part.itemKey, entry?.items ?? []) : undefined;
 }
 
 /**
@@ -585,8 +596,7 @@ export function partRowIds(part, entry) {
   // yet (index >= rendererEntryCount) through WN into `assistantItem` rows, which carry the item itself and no itemKey
   // (TM's key argument is always a string in the official caller: `p = f === "" ? (d?.key ?? "") : f`). Such a part
   // names its own item; a row with neither draws no host row.
-  const item = part.kind === "assistantItem" ? part.item
-    : typeof part.itemKey === "string" ? rendererItemOfKey(part.turnKey, part.itemKey, entry?.items ?? []) : undefined;
+  const item = partItem(part, entry);
   const owns = item?.kind === "tools" ? (item.tools ?? []).map((tool) => tool?.hostItem?.id ?? String(tool?.id ?? "").replace(/#\d+$/, "")) : [item?.id];
   const out = [];
   for (const own of owns) {
@@ -867,34 +877,60 @@ function useCodeTranscriptActions(sessionId, all, baseEntries, activeTurnId, act
 export class CodeTranscriptBoundary extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { failed: null };
+    this.state = { sessionId: props.sessionId, failed: null, held: false };
   }
   static getDerivedStateFromError() {
-    return { failed: true };
+    return { failed: true, held: false };
+  }
+  // display-bugs-20261114 D-02: a failure is held, not final. A failure just caught (not yet held) marks the session here,
+  // in the render phase, before the fallback renders (React 19's #520 recovery re-renders the root synchronously and
+  // never commits componentDidCatch: main.jsx must already see the session off); a held one gives the renderer back once
+  // its retry is due (markCodeTranscriptFailed's backoff), so a boundary that stays mounted (a sub-agent's rows) retries
+  // too. Never both in one render, so a renderer that throws again is held again — no retry loop.
+  static getDerivedStateFromProps(props, state) {
+    if (props.sessionId !== state.sessionId) return { sessionId: props.sessionId, failed: null, held: false };
+    if (!state.failed) return null;
+    if (!state.held) {
+      markCodeTranscriptFailed(props.sessionId);
+      return { held: true };
+    }
+    return codeTranscriptRetryDue(props.sessionId) ? { sessionId: props.sessionId, failed: null, held: false } : null;
   }
   componentDidCatch(error) {
     console.error("[CodeTranscriptRenderer]", error);
     markCodeTranscriptFailed(this.props.sessionId);
     this.props.onFallback?.(this.props.sessionId, error);
   }
-  componentDidUpdate(previous) {
-    if (previous.sessionId !== this.props.sessionId && this.state.failed) this.setState({ failed: null });
-  }
   render() {
     if (!this.state.failed) return this.props.children;
-    // getDerivedStateFromError renders this before componentDidCatch commits: the session is marked here, so the host
-    // rows the fallback draws (codeTranscriptRendererOn false) are its own rows, not the renderer's (null) ones.
-    markCodeTranscriptFailed(this.props.sessionId);
+    // getDerivedStateFromError renders this before componentDidCatch commits: the session is marked (getDerivedStateFromProps,
+    // or here when that did not run), so the host rows the fallback draws (codeTranscriptRendererOn false) are its own rows,
+    // not the renderer's (null) ones.
+    if (!this.state.held) markCodeTranscriptFailed(this.props.sessionId);
     return this.props.fallback?.() ?? null;
   }
 }
 
 // cf74bc599 uw: `transcriptRenderer: Rn ? Tn(E3) : void 0` — the renderer is offered while code_unified_renderer
 // (3413676205, Uon `always !0`) is on and the session's renderer has not failed (the boundary above).
-const failedSessions = new Set();
-export function codeTranscriptRendererOn(sessionId) {
-  return hostGrowthBookFlag("__gb__3413676205") && !failedSessions.has(sessionId);
+// display-bugs-20261114 D-02 (known #21): a failure turns the session's renderer off for a while, not for the app's life:
+// it is offered again 5s, 30s, then 2min after the 1st, 2nd and 3rd failure in a row, and the 4th keeps the host rows
+// (the session's failures stop counting once its renderer has been back 10min). main.jsx reads codeTranscriptRendererOn
+// as it renders, so the renderer comes back with the session's next render after the delay.
+const RETRY_DELAYS_MS = [5_000, 30_000, 120_000];
+const HEALTHY_MS = 600_000;
+const failedSessions = new Map();
+function codeTranscriptRetryDue(sessionId, now = Date.now()) {
+  const failure = failedSessions.get(sessionId);
+  return !failure || now >= failure.retryAt;
 }
-export function markCodeTranscriptFailed(sessionId) {
-  failedSessions.add(sessionId);
+export function codeTranscriptRendererOn(sessionId, now = Date.now()) {
+  return hostGrowthBookFlag("__gb__3413676205") && codeTranscriptRetryDue(sessionId, now);
+}
+export function markCodeTranscriptFailed(sessionId, now = Date.now()) {
+  const last = failedSessions.get(sessionId);
+  // The same failure marked again (getDerivedStateFromProps, render, componentDidCatch) before its retry is one failure.
+  if (last && now < last.retryAt) return;
+  const count = last && now - last.retryAt < HEALTHY_MS ? last.count + 1 : 1;
+  failedSessions.set(sessionId, { count, retryAt: count > RETRY_DELAYS_MS.length ? Infinity : now + RETRY_DELAYS_MS[count - 1] });
 }
