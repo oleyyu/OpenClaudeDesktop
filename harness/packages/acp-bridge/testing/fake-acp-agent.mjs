@@ -48,10 +48,18 @@
  *              "kimi-self <ms>"  as Kimi Code: the turn ends, then a background task's completion starts a turn of its
  *                          own that only the main log records (turn.prompt origin 'task', a Bash call, a reply, usage,
  *                          turn.ended after <ms>); a prompt sent meanwhile is refused as busy (Kimi's engine queues it)
+ *              "gemini-shell"  two run_shell_command calls as Gemini CLI 0.64 streams them (status 'completed', content [],
+ *                          no rawOutput), their results recorded just after in the session file ($GEMINI_CLI_HOME or
+ *                          $HOME/.gemini/tmp/<slug>/chats/session-…-<id8>.jsonl): 'echo hi; exit 3' exits 3
+ *              "gemini-retry"  two model retries in $GEMINI_DEBUG_LOG_FILE as Gemini CLI's debugLogger writes them (a
+ *                          503 with its stack, a 429 with its retry delay), then a reply 1.2 s later
+ *   sessions   $FAKE_ACP_UUID_SESSIONS=1: new sessions get UUIDs (Gemini's; its session files are named by their first 8)
+ *   cold start $FAKE_ACP_INIT_DELAY=<ms>: initialize answers after <ms> (a slow agent start)
  *   reopen     $FAKE_ACP_REOPEN_AUTH=1: session/resume and session/load fail 'Authentication required' (-32000)
  *   modes      $FAKE_ACP_MODES=1: sessions also report ACP modes (currentModeId always 'default', as Kimi does)
  *              and take session/set_mode
  */
+import { randomUUID } from 'node:crypto'
 import fs from 'node:fs'
 import path from 'node:path'
 import { LineTransport, RpcError } from '../src/transport.js'
@@ -418,6 +426,39 @@ async function prompt(params) {
     chunk(id, 'declined')
     return { stopReason: 'end_turn' }
   }
+  if (text === 'gemini-shell') {
+    const geminiHome = path.join(process.env.GEMINI_CLI_HOME || process.env.HOME, '.gemini')
+    const file = path.join(geminiHome, 'tmp', 'fake-project', 'chats', `session-2026-11-14T10-00-${String(id).slice(0, 8)}.jsonl`)
+    fs.mkdirSync(path.dirname(file), { recursive: true })
+    const stamp = new Date().toISOString()
+    fs.writeFileSync(file, `${JSON.stringify({ sessionId: id, projectHash: 'fake', startTime: stamp, lastUpdated: stamp })}\n${JSON.stringify({ id: 'u1', type: 'user', timestamp: stamp, content: [{ text }] })}\n`)
+    const wrap = (body) => `<untrusted_context>\n${body}\n</untrusted_context>`
+    const calls = [
+      { id: 'run_shell_command-1', command: 'echo hi; exit 3', output: wrap('Output: hi\nExit Code: 3\nProcess Group PGID: 4100') },
+      { id: 'run_shell_command-2', command: 'mkdir -p out', output: wrap('Output: (empty)\nProcess Group PGID: 4101') },
+    ]
+    const recorded = []
+    for (const call of calls) {
+      toolUpdate(id, { sessionUpdate: 'tool_call', toolCallId: call.id, status: 'in_progress', title: call.command, content: [], locations: [], kind: 'execute' })
+      toolUpdate(id, { sessionUpdate: 'tool_call_update', toolCallId: call.id, status: 'completed', title: call.command, content: [], locations: [], kind: 'execute' })
+      await sleep(40)
+      // recordCompletedToolCalls: the whole model message again (same id) with every call so far.
+      recorded.push({ id: call.id, name: 'run_shell_command', args: { command: call.command }, result: [{ functionResponse: { id: call.id, name: 'run_shell_command', response: { output: call.output } } }], status: 'success', timestamp: new Date().toISOString() })
+      fs.appendFileSync(file, `${JSON.stringify({ id: 'g1', type: 'gemini', timestamp: new Date().toISOString(), content: '', toolCalls: recorded })}\n`)
+    }
+    chunk(id, 'ran')
+    return { stopReason: 'end_turn' }
+  }
+  if (text === 'gemini-retry' && process.env.GEMINI_DEBUG_LOG_FILE) {
+    const entry = (level, message) => fs.appendFileSync(process.env.GEMINI_DEBUG_LOG_FILE, `[${new Date().toISOString()}] [${level}] ${message}\n`)
+    entry('DEBUG', 'Experiments loaded {\n  experimentIds: [],\n  flags: []\n}')
+    entry('WARN', 'Attempt 1 failed with status 503. Retrying with backoff... _ApiError: {"error":{"code":503,"message":"The model is overloaded. Please try again later.","status":"UNAVAILABLE"}}\n    at throwErrorIfNotOK (file:///gemini/bundle/chunk.js:1:1)\n    at async Models.generateContentStream (file:///gemini/bundle/chunk.js:2:2)')
+    await sleep(700)
+    entry('WARN', 'Attempt 2 failed: You exceeded your current quota, please check your plan and billing details.\n* Quota exceeded for metric: generate_content_free_tier_requests, limit: 5\nPlease retry in 20.5s.\nSuggested retry after 20s.. Retrying after 2150ms...')
+    await sleep(700)
+    chunk(id, 'recovered')
+    return { stopReason: 'end_turn' }
+  }
   // Usage only in the PromptResponse (Gemini's _meta.quota), as Gemini CLI reports it.
   if (text.startsWith('slow ')) {
     const until = Date.now() + Number(text.slice(5))
@@ -470,6 +511,7 @@ const transport = new LineTransport(process.stdin, process.stdout, {
     log(method, params)
     switch (method) {
       case 'initialize':
+        if (Number(process.env.FAKE_ACP_INIT_DELAY) > 0) await sleep(Number(process.env.FAKE_ACP_INIT_DELAY))
         // $FAKE_ACP_NO_RESUME=1: no session/resume (Gemini CLI): a reopen goes through session/load.
         return { protocolVersion: 1, agentCapabilities: { loadSession: true, promptCapabilities: { image: false, embeddedContext: false }, sessionCapabilities: { ...(process.env.FAKE_ACP_NO_RESUME === '1' ? {} : { resume: {} }), close: {} } } }
       case 'session/new':
@@ -477,7 +519,7 @@ const transport = new LineTransport(process.stdin, process.stdout, {
       case 'session/load': {
         // $FAKE_ACP_REOPEN_AUTH=1: reopening a session fails as Gemini CLI's session/load does without a selected sign-in.
         if (method !== 'session/new' && process.env.FAKE_ACP_REOPEN_AUTH === '1') throw new RpcError(-32000, 'Authentication required')
-        const sessionId = method === 'session/new' ? `fake-${process.pid}-${++counter}` : params.sessionId
+        const sessionId = method === 'session/new' ? (process.env.FAKE_ACP_UUID_SESSIONS === '1' ? randomUUID() : `fake-${process.pid}-${++counter}`) : params.sessionId
         const model = sessions.get(sessionId)?.model ?? process.env.FAKE_ACP_MODEL ?? 'm-plain'
         const session = sessions.get(sessionId) ?? { model, effort: defaultEffort(model) }
         sessions.set(sessionId, session)

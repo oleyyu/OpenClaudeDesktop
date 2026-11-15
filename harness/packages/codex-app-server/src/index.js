@@ -66,7 +66,6 @@ import { isAbsolute, join } from 'node:path'
 import { realpath, readdir, lstat, rm } from 'node:fs/promises'
 import z from '@deepseek-ai/schemastery'
 import { createUserMessage, errorChain } from '@deepseek-ai/dsh-llm'
-import { buildForkSeed } from '@deepseek-ai/dsh-session/fork'
 import { assembleContextFor, installModelSelection } from '@deepseek-ai/dsh-agent'
 import { credentialRef } from '@deepseek-ai/dsh-credentials'
 import { resolveDshHome } from '@deepseek-ai/dsh-home-paths'
@@ -101,7 +100,7 @@ import { profileReadResponse } from './profile.js'
 import { runSideQuestion, sessionTranscript, sideQuestionPrompt } from './side-question.js'
 import { ALIASES as PRICE_ALIASES, DEEPSEEK_PRICES, PEAK_WINDOWS, PRICING_URL } from './pricing.js'
 import { SHELL_TOOLS, backgroundTerminal, chunkText, isLiveJobStatus, pageOf } from './jobs.js'
-import { forkBoundary } from './fork.js'
+import { forkBoundary, forkSeed } from './fork.js'
 import { rewindAppends, rewindBoundary, rewindRuns } from './rewind.js'
 import { REVIEW_FIELD, reviewRequest } from './review.js'
 import { executeCommand, listedCommands } from './commands.js'
@@ -1331,7 +1330,7 @@ export function apply(ctx, config) {
     }
     if (!Array.isArray(events)) throw new RpcError(-32000, 'The session history could not be read.')
     const boundary = forkBoundary({ turns: history.projector.turns, events, lastTurnId: params.lastTurnId, beforeTurnId: params.beforeTurnId })
-    const seed = buildForkSeed(events, boundary)
+    const seed = forkSeed(events, boundary)
     const instructions = developerInstructionsOf(params) ?? developerInstructionsOf(store.get(sourceId))
     return createThread({ ...params, cwd: params.cwd || history.header?.cwd, ...(instructions ? { developerInstructions: instructions } : {}) }, {
       seed, inheritedEventCount: boundary + 1, parentSession: sourceId, route: history.child?.route() ?? routeOf(history.live, events),

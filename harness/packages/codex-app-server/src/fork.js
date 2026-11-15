@@ -15,9 +15,16 @@
  * latestCompletedPrefixBoundary, which also stops at a manual compaction so a
  * later compaction turn is not carried into the fork).
  *
+ * A prompt sent or queued while the cut turn was still running is spliced into
+ * the agent inbox inside that turn (agent.followup → `agent/inbox/spliced`) and
+ * only claimed by the next turn, after the cut. forkSeed cancels whatever the
+ * copied prefix still has pending, so the fork's first prompt does not replay
+ * the cut-off one ahead of it.
+ *
  * @module @code-desktop/dsh-codex-app-server/fork
  */
 
+import { buildForkSeed } from '@deepseek-ai/dsh-session/fork'
 import { invalidParams } from './transport.js'
 
 /** Events after a turn's end that start the next unit of the log (not part of the turn). */
@@ -62,4 +69,39 @@ export function forkBoundary({ turns, events, lastTurnId, beforeTurnId }) {
   }
   if (events[boundary]?.seq !== boundary) throw invalidParams('The session log cannot be forked at that turn.')
   return boundary
+}
+
+/**
+ * How many messages each agent inbox list holds at the end of `events`
+ * (dsh-agent-loop's inbox projection, counted).
+ * @param {ReadonlyArray<{type: string, data?: any}>} events
+ * @returns {{ 'next-turn': number, 'next-step': number }}
+ */
+export function pendingInbox(events) {
+  const pending = { 'next-turn': 0, 'next-step': 0 }
+  for (const event of events) {
+    if (event.type !== 'agent/inbox/spliced') continue
+    const { target, removedCount = 0, inserted = [] } = event.data ?? {}
+    if (target in pending) pending[target] = Math.max(0, pending[target] - removedCount + inserted.length)
+  }
+  return pending
+}
+
+/**
+ * The fork's seed: the source prefix through `boundary` (buildForkSeed), then, outside the
+ * inherited prefix like its closers, a cancelling splice for each inbox list the prefix
+ * leaves pending: prompts the source had queued belong to the source's next turn, not the fork.
+ * @param {ReadonlyArray<{seq: number, type: string, time: number, data?: any}>} events
+ * @param {number} boundary inclusive source seq (forkBoundary)
+ */
+export function forkSeed(events, boundary) {
+  const seed = buildForkSeed(events, boundary)
+  const pending = pendingInbox(seed)
+  const time = seed.at(-1).time
+  for (const target of ['next-step', 'next-turn']) {
+    if (pending[target] > 0) {
+      seed.push({ type: 'agent/inbox/spliced', seq: seed.length, time, data: { target, start: 0, removedCount: pending[target], inserted: [], outcome: 'canceled' } })
+    }
+  }
+  return seed
 }

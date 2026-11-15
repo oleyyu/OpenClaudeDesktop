@@ -9,7 +9,16 @@
 // rewrite) and everything else, the response stream included, passes through.
 // The server listens on 127.0.0.1 only, on a free port, and keeps the relay's
 // base path so the adapter's /v1 handling stays the same.
+//
+// Each relay gets a route of its own, `/<token><relay path>`, fixed to that
+// relay for good (integration D9): a core keeps forwarding to the relay it was
+// started with, together with the key it was started with, until it restarts.
+// A Settings › Models save only hands the next spawn a new route; switching to
+// another relay or back to the official API neither redirects nor cuts off a
+// running core, and a save never waits for a reply that is still streaming.
+// The server closes only when the app quits (stop).
 const http = require("node:http");
+const crypto = require("node:crypto");
 
 const HOP_BY_HOP = new Set(["host", "connection", "content-length", "transfer-encoding", "keep-alive", "upgrade", "proxy-connection", "te", "trailer"]);
 const RESPONSE_SKIP = new Set(["content-encoding", "content-length", "transfer-encoding", "connection", "keep-alive"]);
@@ -20,9 +29,18 @@ function rewriteBody(text) {
 }
 
 function createRelayProxy({ fetchImpl = (...args) => globalThis.fetch(...args) } = {}) {
-  let server = null, target = null, port = 0;
+  let server = null, port = 0, listening = null;
+  const routes = new Map(), tokens = new Map();
 
   async function handle(req, res) {
+    const match = /^\/([0-9a-f]{32})(.*)$/s.exec(req.url || "");
+    const target = match && routes.get(match[1]);
+    if (!target) {
+      req.resume();
+      res.writeHead(404, { "content-type": "application/json" });
+      res.end(JSON.stringify({ type: "error", error: { type: "not_found_error", message: "OpenClaude Desktop has no relay at this address. Restart the core." } }));
+      return;
+    }
     const chunks = [];
     for await (const chunk of req) chunks.push(chunk);
     let body = chunks.length ? Buffer.concat(chunks) : null;
@@ -32,7 +50,7 @@ function createRelayProxy({ fetchImpl = (...args) => globalThis.fetch(...args) }
     res.on("close", () => { if (!res.writableFinished) controller.abort(); });
     let upstream;
     try {
-      upstream = await fetchImpl(`${target.origin}${req.url}`, { method: req.method, headers, body: body ?? undefined, signal: controller.signal, redirect: "manual" });
+      upstream = await fetchImpl(`${target.origin}${match[2] || "/"}`, { method: req.method, headers, body: body ?? undefined, signal: controller.signal, redirect: "manual" });
     } catch (error) {
       if (!res.headersSent) res.writeHead(502, { "content-type": "application/json" });
       res.end(JSON.stringify({ type: "error", error: { type: "api_error", message: `OpenClaude Desktop couldn’t reach the relay: ${error?.message || error}` } }));
@@ -46,23 +64,34 @@ function createRelayProxy({ fetchImpl = (...args) => globalThis.fetch(...args) }
     } catch { res.destroy(); }
   }
 
-  /** Forward to `relayBaseURL`; resolves with the loopback base URL for the core. */
+  /** A route forwarding to `relayBaseURL` for good; resolves with its loopback base URL for the core. Same relay, same route. */
   async function start(relayBaseURL) {
-    target = new URL(relayBaseURL);
+    const target = new URL(relayBaseURL);
+    const pathname = target.pathname.replace(/\/+$/, "");
+    const id = `${target.origin}${pathname}`;
+    // One listener for every route; concurrent first calls share its start.
     if (!server) {
-      server = http.createServer((req, res) => { handle(req, res).catch(() => { try { res.destroy(); } catch {} }); });
-      await new Promise((resolve, reject) => { server.once("error", reject); server.listen(0, "127.0.0.1", () => { server.off("error", reject); resolve(); }); });
-      server.unref();
-      port = server.address().port;
+      const next = server = http.createServer((req, res) => { handle(req, res).catch(() => { try { res.destroy(); } catch {} }); });
+      listening = new Promise((resolve, reject) => { next.once("error", reject); next.listen(0, "127.0.0.1", () => { next.off("error", reject); resolve(); }); });
+      next.unref();
     }
-    return `http://127.0.0.1:${port}${target.pathname.replace(/\/+$/, "")}`;
+    const current = server;
+    try { await listening; } catch (error) { if (server === current) server = null; throw error; }
+    if (server !== current) throw new Error("The relay forwarder stopped.");
+    port = current.address().port;
+    let token = tokens.get(id);
+    if (!token) {
+      token = crypto.randomBytes(16).toString("hex");
+      tokens.set(id, token);
+      routes.set(token, new URL(`${target.origin}${pathname}`));
+    }
+    return `http://127.0.0.1:${port}/${token}${pathname}`;
   }
 
+  /** App quit: no new connections; a reply still streaming finishes on its own (never waited for). */
   async function stop() {
     const current = server;
-    server = null; target = null; port = 0;
-    // No new connections from here on; a reply still streaming (a running turn) finishes on its own. Waiting for it
-    // would hold a Settings › Models save until the turn ends.
+    server = null; port = 0; routes.clear(); tokens.clear();
     if (current) { current.close(); current.closeIdleConnections?.(); }
   }
 

@@ -403,6 +403,143 @@ function readChatTail(file) {
   return tail.chat.meta ? tail.chat : null
 }
 
+/** The session's chat read as it grows (readChatTail): its authoritative file (bestChat), or null. */
+function tailChat(env, sessionId) {
+  const now = Date.now()
+  for (const [file, tail] of chatTails) if (now - tail.readAt > CHAT_TAIL_IDLE_MS) chatTails.delete(file)
+  const short = String(sessionId).slice(0, 8)
+  const chats = chatFiles(env).filter((entry) => entry.short === short).map((entry) => ({ ...entry, chat: readChatTail(entry.file) }))
+    .filter((entry) => entry.chat?.meta?.sessionId === sessionId)
+    .sort((a, b) => (Date.parse(a.chat.meta.lastUpdated) || 0) - (Date.parse(b.chat.meta.lastUpdated) || 0))
+  return bestChat(chats)?.chat ?? null
+}
+
+// Gemini CLI's shell result as the model gets it (core tools/shell.ts: 'Output: …' then optional Error, Exit Code, Signal,
+// Background PIDs and Process Group PGID lines), wrapped in <untrusted_context> (utils wrapUntrusted).
+const SHELL_TRAILER = /^(Error|Exit Code|Signal|Background PIDs|Process Group PGID): (.*)$/
+
+/**
+ * A recorded run_shell_command's {output, exitCode, failed} (the session file's toolCalls[] entry: result =
+ * [{functionResponse: {response: {output} | {error}}}]). Gemini's ACP sends neither (its display is an ANSI screen it
+ * drops: status 'completed', content []), and a non-zero exit code reaches only the model. exitCode null: the run
+ * never finished (cancelled, timed out, killed by a signal); undefined: the text says nothing of it (a summary, a
+ * tool error), and it shows only where the row has nothing. null: no result recorded, or a command moved to the
+ * background (its row keeps its own notice).
+ */
+export function geminiShellResult(record) {
+  const parts = Array.isArray(record?.result) ? record.result : record?.result ? [record.result] : []
+  const response = parts.map((part) => part?.functionResponse?.response).find((value) => value && typeof value === 'object')
+  if (!response) return null
+  if (typeof response.error === 'string') return { output: response.error, exitCode: undefined, failed: true }
+  if (typeof response.output !== 'string') return null
+  let text = response.output
+  const wrapped = /^\s*<untrusted_context>\n?([\s\S]*?)\n?<\/untrusted_context>\s*$/.exec(text)
+  if (wrapped) text = wrapped[1].replaceAll('&lt;/untrusted_context&gt;', '</untrusted_context>')
+  if (/^Command moved to background \(PID: \d+\)/.test(text)) return null
+  if (/^Command was cancelled by user/.test(text)) return { output: text.trim(), exitCode: null, failed: false }
+  if (/^Command was automatically cancelled because it exceeded the timeout/.test(text)) return { output: text.trim(), exitCode: null, failed: true }
+  // Earlier Gemini CLI releases put 'Command: …' and 'Directory: …' lines first.
+  const head = /^(?:(?:Command|Directory): .*\n)*Output: /.exec(text)
+  if (!head) return { output: text.trim(), exitCode: undefined, failed: false }
+  const lines = text.slice(head[0].length).split('\n')
+  const trailers = {}
+  while (lines.length > 1) {
+    const match = SHELL_TRAILER.exec(lines.at(-1))
+    if (!match || match[1] in trailers) break
+    trailers[match[1]] = match[2]
+    lines.pop()
+  }
+  const body = lines.join('\n')
+  const exitCode = /^-?\d+$/.test(trailers['Exit Code'] ?? '') ? Number(trailers['Exit Code']) : trailers.Signal ? null : 0
+  const output = [body === '(empty)' ? '' : body, trailers.Error ? `Error: ${trailers.Error}` : '', trailers.Signal ? `Signal: ${trailers.Signal}` : ''].filter(Boolean).join('\n')
+  return { output, exitCode, failed: exitCode !== 0 || Boolean(trailers.Error) }
+}
+
+/** The thread's Gemini debug log (GEMINI_DEBUG_LOG_FILE), in its launch folder: its model retries are read from it. */
+const DEBUG_LOG = 'gemini-debug.log'
+/** A debug log of the thread's own past this size starts over at the next turn (Gemini appends: O_APPEND). */
+const DEBUG_LOG_MAX = 1 << 20
+const DEBUG_ENTRY = /^\[\d{4}-\d\d-\d\dT[\d:.]+Z\] \[(?:LOG|WARN|ERROR|DEBUG)\] /gm
+
+/** The JSON error inside an API error's text (ApiError: '{"error": {code, message, status}}', or after 'got status: …'). */
+function apiErrorOf(text) {
+  const value = String(text ?? '')
+  const start = value.indexOf('{')
+  const end = value.lastIndexOf('}')
+  if (start < 0 || end <= start) return null
+  try {
+    const parsed = JSON.parse(value.slice(start, end + 1))
+    const error = Array.isArray(parsed) ? parsed[0]?.error : parsed?.error ?? parsed
+    return error && typeof error === 'object' && !Array.isArray(error) ? error : null
+  } catch { return null }
+}
+
+/**
+ * Gemini CLI's own retries of a failed model request in its debug log (core utils/retry.ts retryWithBackoff and
+ * logRetryAttempt, written by utils/debugLogger.ts as '[time] [WARN] Attempt N failed …. Retrying …' with the error after):
+ * Codex retry notices ({retry: {attempt, maxRetries, delayMs}, error: {message, codexErrorInfo}}). Its ACP mode sends
+ * none, so a 429 / 5xx loop of up to 10 attempts over minutes reads as a hang. The last attempt ('… Max attempts
+ * reached') is no retry: the turn's own error follows. maxAttempts: the request's limit, when known.
+ */
+export function geminiRetryEvents(text, { maxAttempts = null } = {}) {
+  const value = String(text ?? '')
+  const heads = []
+  DEBUG_ENTRY.lastIndex = 0
+  for (let match; (match = DEBUG_ENTRY.exec(value));) heads.push({ at: match.index, body: match.index + match[0].length })
+  const events = []
+  for (const [index, head] of heads.entries()) {
+    const entry = value.slice(head.body, heads[index + 1]?.at ?? value.length).replace(/\s+$/, '')
+    const event = geminiRetryEntry(entry, maxAttempts)
+    if (event) events.push(event)
+  }
+  return events
+}
+
+function geminiRetryEntry(entry, maxAttempts) {
+  const head = /^Attempt (\d+) failed/.exec(entry)
+  if (!head) return null
+  const attempt = Number(head[1])
+  const rest = entry.slice(head[0].length)
+  let status = null
+  let delayMs = null
+  let detail = ''
+  let match
+  // A retryable quota error (per-minute limits) with the delay the API asked for: '…: <message>. Retrying after Nms...'.
+  if ((match = /^: ([\s\S]*)\. Retrying after (\d+)ms\.\.\.$/.exec(rest))) { status = 429; delayMs = Number(match[2]); detail = match[1] }
+  else if ((match = /^ with status (\d+)\. Retrying with backoff\.\.\.\s*([\s\S]*)$/.exec(rest))) { status = Number(match[1]); detail = match[2] }
+  else if ((match = /^ with 429 error \(no Retry-After header\)\. Retrying with backoff\.\.\.\s*([\s\S]*)$/.exec(rest))) { status = 429; detail = match[1] }
+  else if ((match = /^ with 5xx error\. Retrying with backoff\.\.\.\s*([\s\S]*)$/.exec(rest))) { detail = match[1]; status = Number(/\b(5\d\d)\b/.exec(detail)?.[1]) || 500 }
+  else if ((match = /^\. Retrying with backoff\.\.\.\s*([\s\S]*)$/.exec(rest))) detail = match[1]
+  else return null
+  // The error's own words: the API's JSON message, else its first line without the error's class name or stack.
+  const first = detail.split(/\n\s+at /)[0].trim()
+  const api = apiErrorOf(first)
+  if (status === null && Number.isInteger(api?.code)) status = api.code
+  const message = (typeof api?.message === 'string' && api.message.trim()) || first.split('\n')[0].replace(/^[\w$]*Error:\s*/, '').trim() || 'The model request failed.'
+  const codexErrorInfo = status === 429 ? 'rateLimitExceeded' : status === 503 || status === 529 ? 'serverOverloaded'
+    : status >= 500 && status < 600 ? 'internalServerError' : status === null ? { responseStreamConnectionFailed: { httpStatusCode: null } } : null
+  const max = Number.isInteger(maxAttempts) && maxAttempts > attempt ? maxAttempts - 1 : null
+  return { retry: { attempt, maxRetries: max, delayMs }, error: { message, codexErrorInfo } }
+}
+
+/**
+ * How many attempts Gemini CLI gives a chat request: an auto-routed model's policy (model/policyCatalog.ts: 3 for its
+ * Pro step), else general.maxAttempts (at most 10, config.ts). A request past it (a fallback model's own count) shows
+ * its retries without a total.
+ */
+function geminiMaxAttempts(env, model) {
+  const settings = readJsonFile(userSettingsFile(env), {}) ?? {}
+  const name = String((model && model !== 'auto' ? model : null) ?? env.GEMINI_MODEL ?? settings.model?.name ?? 'auto')
+  if (/^auto/i.test(name)) return 3
+  const configured = Number(settings.general?.maxAttempts)
+  return Math.min(Number.isInteger(configured) && configured > 0 ? configured : 10, 10)
+}
+
+/** Where a thread's Gemini writes its debug log: the user's own GEMINI_DEBUG_LOG_FILE, else the thread's (launch). */
+function debugLogOf(env, threadDir) {
+  return env.GEMINI_DEBUG_LOG_FILE || (threadDir ? path.join(threadDir, DEBUG_LOG) : null)
+}
+
 /** How far before the bridge sent a prompt Gemini may stamp it (clocks of two processes). */
 const PROMPT_SKEW_MS = 5_000
 
@@ -412,13 +549,7 @@ const PROMPT_SKEW_MS = 5_000
  * turn's), and the context fill of the latest call. Gemini reports a turn's tokens only once it ends.
  */
 export function liveSessionUsage(env, sessionId, since = 0) {
-  const now = Date.now()
-  for (const [file, tail] of chatTails) if (now - tail.readAt > CHAT_TAIL_IDLE_MS) chatTails.delete(file)
-  const short = String(sessionId).slice(0, 8)
-  const chats = chatFiles(env).filter((entry) => entry.short === short).map((entry) => ({ ...entry, chat: readChatTail(entry.file) }))
-    .filter((entry) => entry.chat?.meta?.sessionId === sessionId)
-    .sort((a, b) => (Date.parse(a.chat.meta.lastUpdated) || 0) - (Date.parse(b.chat.meta.lastUpdated) || 0))
-  const chat = bestChat(chats)?.chat
+  const chat = tailChat(env, sessionId)
   const turn = sessionTurnUsage(chat, { since })
   if (!turn) return null
   const tokens = chat.messages.findLast((message) => message?.type === 'gemini' && message.tokens)?.tokens
@@ -1174,6 +1305,8 @@ export default {
       env.GEMINI_CLI_HOME = home
     }
     if (config.model && config.model !== 'auto') env.GEMINI_MODEL = config.model
+    // Gemini's own model retries are written only to its debug log (turnEvents reads them while a turn runs).
+    if (!config.utility && !config.ephemeral) env.GEMINI_DEBUG_LOG_FILE = debugLogOf(ctx.env, dir)
     // No self-relaunch into a bigger-heap child: the bridge stops exactly the process it started.
     env.GEMINI_CLI_NO_RELAUNCH = 'true'
     Object.assign(env, NO_OWN_SANDBOX)
@@ -1342,6 +1475,40 @@ export default {
     return thread?.id ? liveSessionUsage(ctx.env, thread.id, since) : null
   },
 
+  /** Where this turn's entries start in the thread's debug log (turnEvents); the thread's own log starts over when large. */
+  beforeTurn(ctx, thread) {
+    const file = debugLogOf(ctx.env, thread?.hostConfig?.threadDir)
+    if (!file) { if (thread) thread.geminiRetryLog = null; return }
+    let size = 0
+    try { size = fs.statSync(file).size } catch {}
+    if (size > DEBUG_LOG_MAX && file !== ctx.env.GEMINI_DEBUG_LOG_FILE) { try { fs.truncateSync(file, 0); size = 0 } catch {} }
+    thread.geminiRetryLog = { file, offset: size, rest: Buffer.alloc(0) }
+  },
+
+  /**
+   * While a turn runs: Gemini CLI's retries of a failed model request (geminiRetryEvents), read from the debug log as it
+   * grows (whole entries only: a line still being written waits for the next read).
+   */
+  turnEvents(ctx, thread) {
+    const log = thread?.geminiRetryLog
+    if (!log) return []
+    let size
+    try { size = fs.statSync(log.file).size } catch { return [] }
+    if (size < log.offset) { log.offset = 0; log.rest = Buffer.alloc(0) }
+    if (size === log.offset) return []
+    const added = Buffer.alloc(Math.min(size - log.offset, 4 << 20))
+    try {
+      const fd = fs.openSync(log.file, 'r')
+      try { fs.readSync(fd, added, 0, added.length, log.offset) } finally { fs.closeSync(fd) }
+    } catch { return [] }
+    log.offset += added.length
+    const bytes = Buffer.concat([log.rest, added])
+    const end = bytes.lastIndexOf(0x0a)
+    log.rest = Buffer.from(bytes.subarray(end + 1))
+    if (end < 0) return []
+    return geminiRetryEvents(bytes.subarray(0, end + 1).toString('utf8'), { maxAttempts: geminiMaxAttempts(ctx.env, thread.model) })
+  },
+
   /** The context fill after a turn: the last model message's prompt + reply tokens in the session file. */
   contextUsage(ctx, sessionId) {
     const found = findChat(ctx.env, sessionId)
@@ -1378,6 +1545,25 @@ export default {
     const records = (found?.chat?.messages ?? []).flatMap((message) => (Array.isArray(message?.toolCalls) ? message.toolCalls : []))
     const record = records.findLast((entry) => entry?.id === id)
     return record?.args && typeof record.args === 'object' && !Array.isArray(record.args) ? record.args : null
+  },
+
+  /**
+   * A run_shell_command's output and exit code (geminiShellResult), which Gemini CLI's ACP never sends (its tool_call_update
+   * is status 'completed', content [] even for a non-zero exit): read from the session file once Gemini recorded the result
+   * (recordCompletedToolCalls runs just after that update). undefined: not a shell call, or nothing to show (a command
+   * moved to the background); null: not recorded yet (server.js asks again a little later, and at the turn's end).
+   */
+  commandOutput(ctx, sessionId, toolCallId) {
+    const id = String(toolCallId ?? '')
+    if (!id) return undefined
+    const chat = tailChat(ctx.env, sessionId)
+    const record = (chat?.messages ?? []).flatMap((message) => (Array.isArray(message?.toolCalls) ? message.toolCalls : []))
+      .findLast((entry) => entry?.id === id && entry.result)
+    if (!record) return null
+    if (record.name !== 'run_shell_command') return undefined
+    const result = geminiShellResult(record)
+    const command = typeof record.args?.command === 'string' ? record.args.command : null
+    return result ? { ...result, ...(command ? { command } : {}) } : command ? { command, exitCode: undefined, failed: false, output: '' } : undefined
   },
 
   /**

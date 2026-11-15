@@ -131,7 +131,9 @@ function createModelSettings({ getConfig, getClient, app, getHarnessProfile = ()
   function readConnection() {
     try { return prefs().normalizeConnection(JSON.parse(fs.readFileSync(connectionFile(), "utf8"))); } catch { return prefs().normalizeConnection(null); }
   }
-  // Relay mode routes the core through the loopback forwarder (relay-proxy.cjs).
+  // Relay mode routes the core through the loopback forwarder (relay-proxy.cjs). Everything here is for the next
+  // spawn only (integration D9): each relay has its own forwarder route, and leaving relay mode keeps the forwarder
+  // up, so a running core goes on talking to the relay, with the key, it was started with until "Restart core".
   async function exportConnection(connection = readConnection(), keys = readKeys()) {
     const profile = getHarnessProfile();
     if (!profile?.setCoreEnv) return;
@@ -141,7 +143,7 @@ function createModelSettings({ getConfig, getClient, app, getHarnessProfile = ()
     if (relay) {
       try { base = await relayProxy.start(connection.relayBaseURL); }
       catch (error) { console.warn("Couldn’t start the relay forwarder; using the relay directly:", error?.message || error); base = connection.relayBaseURL; }
-    } else await relayProxy.stop();
+    }
     // The key the app was launched with is for DeepSeek (or its own base URL), never for a third-party relay.
     profile.setCoreEnv("DEEPSEEK_API_KEY", key ?? (relay ? null : inherited.DEEPSEEK_API_KEY) ?? null);
     profile.setCoreEnv("DEEPSEEK_BASE_URL", base);
@@ -390,6 +392,14 @@ function createModelSettings({ getConfig, getClient, app, getHarnessProfile = ()
           keys[name] = value.trim();
         } else if (value === null) delete keys[name];
       }
+      // The saved relay key belongs to the relay it was saved with: a base URL on another origin (host, scheme or port)
+      // never inherits it (integration D8). Relay mode asks for the new relay's key; saved for later (official mode),
+      // the old key is dropped rather than kept for a host it was never given for.
+      const relaySlot = prefs().CONNECTION_KEY_RELAY;
+      if (keys[relaySlot] && !(typeof p.relayKey === "string" && p.relayKey.trim()) && originOf(connection.relayBaseURL) !== originOf(readConnection().relayBaseURL)) {
+        if (connection.mode === "relay") throw new Error(i18n.t("The relay’s base URL is on a different host now, and the saved key is only sent to the relay it was saved for. Enter the new relay’s API key."));
+        delete keys[relaySlot];
+      }
       if (connection.mode === "relay" && !keys[prefs().CONNECTION_KEY_RELAY]) throw new Error("Enter the relay’s API key.");
       // The key first: a failed key write (no secure storage) changes nothing, and a failed connection.json write
       // puts the previous keys back, so relay mode is never saved without its key.
@@ -482,6 +492,12 @@ function createModelSettings({ getConfig, getClient, app, getHarnessProfile = ()
           if (p.apiKey.length > 4096 || /[\x00-\x1f\x7f]/.test(p.apiKey.trim())) throw new Error("Invalid API key.");
           keys[codex.CODEX_KEY_SLOT] = p.apiKey.trim();
         } else if (p.apiKey === null) delete keys[codex.CODEX_KEY_SLOT];
+        // The saved key belongs to the endpoint it was saved with: a base URL on another origin never inherits it
+        // (integration D8). A remote endpoint asks for its own key; a local model server runs keyless instead.
+        if (keys[codex.CODEX_KEY_SLOT] && !(typeof p.apiKey === "string" && p.apiKey.trim()) && originOf(provider.baseURL) !== originOf(readCodexProvider().baseURL)) {
+          if (provider.mode === "custom" && !codex.codexLocalEndpoint(provider.baseURL)) throw new Error(i18n.t("The endpoint’s base URL is on a different host now, and the saved key is only sent to the endpoint it was saved for. Enter the new endpoint’s API key."));
+          delete keys[codex.CODEX_KEY_SLOT];
+        }
         // A local model server (LM Studio, Ollama on this Mac) needs no key.
         if (provider.mode === "custom" && !keys[codex.CODEX_KEY_SLOT] && !codex.codexLocalEndpoint(provider.baseURL)) throw new Error("Enter the API key.");
         // The key first: a failed key write (no secure storage) changes nothing, and a failed provider.json write
@@ -543,7 +559,12 @@ function createModelSettings({ getConfig, getClient, app, getHarnessProfile = ()
       connection: readConnection(), keys: readKeys(), inherited: { ...inherited },
       officialKeySlot: prefs().CONNECTION_KEY_OFFICIAL, relayKeySlot: prefs().CONNECTION_KEY_RELAY, officialBaseURL: prefs().OFFICIAL_BASE_URL });
   }
-  return { decorate, decorateThread, run, codexLaunch, codexCustomModels, coworkConnection, ready, dispose: () => relayProxy.stop() };
+  // integration bug D2: Codex launched on the saved custom endpoint (its own `-c model_provider=…`,
+  // launchedProvider). Codex's auto-review asks a model of its own (codex-auto-review) that such an endpoint (a relay,
+  // LM Studio, Ollama) does not serve, so 'Approve for me' would refuse every escalation instead of asking (main.cjs
+  // autoReviewFeature, btw-sessions autoReviewOff).
+  const codexOnCustomEndpoint = (client = getClient()) => !!codexPrefs() && isCodex(client) && launchedProvider(client) === codexPrefs().CODEX_PROVIDER_ID;
+  return { decorate, decorateThread, run, codexLaunch, codexCustomModels, codexOnCustomEndpoint, coworkConnection, ready, dispose: () => relayProxy.stop() };
 }
 
 module.exports = { createModelSettings, bundledCatalog };

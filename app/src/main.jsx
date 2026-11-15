@@ -301,6 +301,7 @@ import { useBtwPane } from "./use-btw-pane.jsx";
 import { SourceBtwPane, SourceBtwApprovalSlot } from "./source-btw-pane.jsx";
 // R4i-transcript TR3 (layout-08): the /btw side pane's popout window (2.42304.0 epitaxy-side-pane, paneTileId "session").
 import { btwPopoutView, btwPopoutRequest, btwPopoutHolds, btwDockTarget, seedBtwPaneWindow } from "./popout-restore-btw.mjs";
+import { popoutsAfterDocked } from "./popout-docked.mjs";
 import { btwPaneTabs, nextBtwTab } from "./btw-pane-controller.mjs";
 import { btwTabMenuState } from "./btw-tab-menu-model.mjs";
 // R2-btw NBS-5: 2.42304.0 shared-11 v_/x_ (shown-session registry) over the local unread host.
@@ -2665,6 +2666,9 @@ function App({ side = 0, initialSession = null }) {
       if (e.kind === "window") setFullScreen(e.fullScreen);
       if (e.kind === "zoom-factor" && Number.isFinite(e.zoomFactor)) setZoomFactor(e.zoomFactor);
       if (e.kind === "popouts") setPopouts(Array.isArray(e.popouts) ? e.popouts : []);
+      // User bug #15: the docked window has closed; drop it now, with the card opening below, rather than wait for
+      // the popouts broadcast (otherwise the popped-out effect reopens an empty side chat window and hides the card).
+      if (e.kind === "popout-docked" && typeof e.sessionId === "string") setPopouts(list => popoutsAfterDocked(list, e));
       // TR3 (c5638815a U parks the tile back): a docked /btw popout's tile shows its child again in this window.
       const btwDock = side === 0 ? btwDockTarget(e) : null;
       if (btwDock) tileStore.setSession(btwDock.parentId, { btwSessionId: btwDock.childId });
@@ -5255,17 +5259,19 @@ function App({ side = 0, initialSession = null }) {
       setPlanHandoffBusy(false);
     }
   }
+  // The speed is a preference; the session's model is only what it is checked against (speedModel), so turning Fast
+  // on in a session never makes that model the default for new sessions (user bug #3).
   async function changeFastMode(value) {
     if (fastSaving) return;
     setFastSaving(true);
-    try { await updatePreferences({model, fastMode:value}); }
+    try { await updatePreferences({fastMode:value, speedModel:model}); }
     finally { setFastSaving(false); }
   }
   // A speed by key ('standard', 'fast', 'ultrafast'…): the model menu's Speed rows and /fast <speed>.
   async function changeSpeed(value) {
     if (fastSaving) return;
     setFastSaving(true);
-    try { await updatePreferences({model, speed:value}); }
+    try { await updatePreferences({speed:value, speedModel:model}); }
     finally { setFastSaving(false); }
   }
   // Cmd+Alt+F: on/off with one faster tier; with several, Standard → each tier in catalog order → Standard.

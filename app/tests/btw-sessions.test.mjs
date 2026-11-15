@@ -66,6 +66,17 @@ function setup(handler = () => undefined, overrides = {}) {
     replaceConfig: () => { config = { ...config, threadIds: [...config.threadIds], sessionMetadata: { ...config.sessionMetadata } }; },
     saves: () => saves };
 }
+test('integration D2: an Auto side chat asks Codex auto-review only off a custom endpoint (autoReviewOff)', async () => {
+  const forkReviewer = async (overrides) => {
+    const s = setup(undefined, overrides);
+    s.client.connection.enabledFeatures = new Set(['guardian_approval']);
+    await s.service.start({ ...s.payload, permission: 'auto' });
+    return s.requests.find(r => r.method === 'thread/fork').params.approvalsReviewer;
+  };
+  assert.equal(await forkReviewer({}), 'auto_review', 'OpenAI: Approve for me');
+  assert.equal(await forkReviewer({ autoReviewOff: () => false }), 'auto_review');
+  assert.equal(await forkReviewer({ autoReviewOff: owner => owner?.serverInfo?.engine === 'codex' }), 'user', 'custom endpoint: approvals go to the user');
+});
 test('a running parent forks in parallel without interrupt/resume; child is persistent and owns its app tools', async () => {
   const s = setup((method, params) => method === 'thread/read' ? { thread: { id: params.threadId, status: { type: 'active' }, historyMode: 'paginated', cwd: '/repo' } } : undefined,
     { decorateThread: (method, params) => ({ ...params, config: { identity: 'new-child-credential' } }) });

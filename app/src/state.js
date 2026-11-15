@@ -96,6 +96,14 @@ function threadNotice(method, p) {
 // Delta-only items can arrive before the resume response or item/started.
 // Symbols stay local to reducer objects and are never sent to Codex or persisted.
 const deltaOnlyFields = Symbol("deltaOnlyFields");
+// display bug D-07: an agentMessage still streaming when its turn
+// retried (ErrorNotification willRetry:true). Codex abandons it (no
+// item/completed) and streams the retry as a new item, so the turn's next new
+// agentMessage drops it; one that goes on (a delta, a restart or completion
+// under its own id: the bridges' retries) is kept.
+const retriedOut = Symbol("retriedOut");
+const withoutRetriedOut = (items, turnId) => items.some((item) => item[retriedOut] && item.turnId === turnId)
+  ? items.filter((item) => !(item[retriedOut] && item.turnId === turnId)) : items;
 const streamFields = ["text", "aggregatedOutput", "reasoningText", "rawReasoningText"];
 const owns = (object, key) => Object.prototype.hasOwnProperty.call(object, key);
 // The summaryIndex a streaming thought's reasoningText last reached. Codex sends
@@ -154,6 +162,40 @@ function withTurnTimes(state, id, turns) {
   return next === bucket ? state : { ...state, turnTimes: { ...state.turnTimes, [id]: next } };
 }
 
+// display bug D-06: the live-only items a hydrate keeps (`extra`, in
+// their live order `live`), each in its own turn: after the item it followed
+// live when that one is of the same turn, else after its turn's prompt; a turn
+// the snapshot names but holds nothing of goes where the snapshot puts that
+// turn. An item of a turn the snapshot does not hold (newer than this page, or
+// with no turn) is appended, as before.
+function withLiveItems(items, live, extra, seen, turns) {
+  const out = items.slice();
+  const order = new Map(turns.map((turn, index) => [turn?.id, index]));
+  let previous = null;
+  for (const item of live) {
+    if (!extra.has(item)) {
+      if (seen.has(item.id)) previous = item.id;
+      continue;
+    }
+    let index = out.length;
+    if (item.turnId && order.has(item.turnId)) {
+      const after = previous === null ? -1 : out.findIndex((one) => one.id === previous);
+      const first = out.findIndex((one) => one.turnId === item.turnId);
+      if (after >= 0 && out[after].turnId === item.turnId) index = after + 1;
+      else if (first >= 0) {
+        index = first;
+        while (index < out.length && out[index].turnId === item.turnId && out[index].type === "userMessage") index++;
+      } else {
+        const later = out.findIndex((one) => order.has(one.turnId) && order.get(one.turnId) > order.get(item.turnId));
+        if (later >= 0) index = later;
+      }
+    }
+    out.splice(index, 0, item);
+    previous = item.id;
+  }
+  return out;
+}
+
 function hydrate(state, action) {
   state = startThread(state, {...action.thread, id:action.id});
   // Turn.startedAt/completedAt from thread/read, resume initialTurnsPage and
@@ -180,7 +222,11 @@ function hydrate(state, action) {
     });
     // A stream can introduce items absent from the in-flight snapshot. Preserve
     // known history too: a partial snapshot cannot justify deleting local rows.
-    for (const item of current.values()) if (!seen.has(item.id) && (!action.replaceHistory || !baseline.has(item.id) || item !== baseline.get(item.id))) items.push(item);
+    // display bug D-06: each goes back into its own turn (Codex's
+    // thread/read leaves out a declined call, a cut or a failed turn's reply),
+    // not after the last turn.
+    const extra = new Set([...current.values()].filter((item) => !seen.has(item.id) && (!action.replaceHistory || !baseline.has(item.id) || item !== baseline.get(item.id))));
+    if (extra.size) items = withLiveItems(items, [...current.values()], extra, seen, action.thread.turns || []);
   }
   const activeChanged = owns(action, "baselineActiveVersion")
     ? (state.activeVersions?.[action.id] || 0) !== (action.baselineActiveVersion || 0)
@@ -583,9 +629,16 @@ export function reduce(state, action) {
     // is partial: it must not read as a finished plan ready to implement.
     const cutPlan = (item) => item.type === "plan" && item.status === undefined && (p.turn.status === "interrupted" || p.turn.error)
       && state.itemPhases?.[id]?.[item.id] === "streaming";
+    // display bug D-07: Turn.items, when the core sends them (Codex: the
+    // turn's final reply), say which of the turn's messages it kept: one that never
+    // completed and is not among them was an abandoned attempt. No items (or an
+    // empty list: every bridge, and Codex's failed turns) drop nothing.
+    const kept = Array.isArray(p.turn.items) && p.turn.items.length ? new Set(p.turn.items.map((item) => item?.id)) : null;
+    const settled = kept ? items.filter((item) => !(item.type === "agentMessage" && item.turnId === p.turn.id && !kept.has(item.id)
+      && state.itemPhases?.[id]?.[item.id] === "streaming")) : items;
     return {
       ...state,
-      items: { ...state.items, [id]: items.map(item =>
+      items: { ...state.items, [id]: settled.map(item =>
         (["inProgress", "running"].includes(item.status) || item[connectionInterrupted] || cutPlan(item)) && (!item.turnId || item.turnId === p.turn.id)
           ? settleObservedItem(item, p.turn.status === "interrupted" ? "interrupted" : p.turn.error ? "failed" : "completed")
           : item,
@@ -612,6 +665,11 @@ export function reduce(state, action) {
       // hours for a usage limit, says when it tries again and what fixes it.
       const extra = p.codeDesktop && typeof p.codeDesktop === "object" ? p.codeDesktop : {};
       const action = extra.action && typeof extra.action === "object" ? extra.action : null;
+      // display bug D-07: the turn's messages still streaming are the attempt being retried.
+      const retriedTurn = p.turnId || state.active[id] || null;
+      const cut = (item) => retriedTurn && item.type === "agentMessage" && item.turnId === retriedTurn && !item[retriedOut]
+        && state.itemPhases?.[id]?.[item.id] === "streaming";
+      if (items.some(cut)) state = { ...state, items: { ...state.items, [id]: items.map((item) => cut(item) ? { ...item, [retriedOut]: true } : item) } };
       return { ...state, retrying: { ...state.retrying, [id]: { turnId: p.turnId || state.active[id] || null,
         message: p.error?.message || "", codexErrorInfo: p.error?.codexErrorInfo ?? null,
         attempt: count(p.retry?.attempt), maxRetries: count(p.retry?.maxRetries),
@@ -663,7 +721,10 @@ export function reduce(state, action) {
     else next[found] = { ...next[found], ...item };
     if (thought && e.method === "item/started") delete next[found < 0 ? next.length - 1 : found].completedAtMs;
     delete next[found < 0 ? next.length - 1 : found][connectionInterrupted];
+    // D-07: a retried message that restarts or completes under its own id goes on; a new one replaces the cut attempt.
+    delete next[found < 0 ? next.length - 1 : found][retriedOut];
     if (e.method === "item/completed") delete next[found < 0 ? next.length - 1 : found][deltaOnlyFields];
+    const shown = found < 0 && p.item.type === "agentMessage" ? withoutRetriedOut(next, item.turnId) : next;
     let backgroundStarts=state.backgroundStarts;
     if(p.item.type==='commandExecution'){
       const starts={...state.backgroundStarts?.[id]};
@@ -671,7 +732,7 @@ export function reduce(state, action) {
       else delete starts[p.item.id];
       backgroundStarts={...state.backgroundStarts,[id]:starts};
     }
-    return { ...state, items: { ...state.items, [id]: next },
+    return { ...state, items: { ...state.items, [id]: shown },
       backgroundStarts,
       ...(e.method === "item/completed" && p.item.type === "plan" && typeof p.item.text === "string" && p.item.text
         ? { planDocs: withPlanDocument(state.planDocs, id, p.item) } : {}),
@@ -717,8 +778,10 @@ export function reduce(state, action) {
             ? "rawReasoningText"
             : null;
   if (field) {
-    const next = items.slice();
+    // D-07: a new message's first delta (no item/started yet) replaces the turn's cut attempt too.
+    let next = items.slice();
     let at = next.findIndex((i) => i.id === p.itemId);
+    if (at < 0 && field === "text" && !planDelta) next = withoutRetriedOut(next, p.turnId || state.active[id]);
     if (at < 0) {
       at = next.length;
       next.push({
@@ -737,6 +800,7 @@ export function reduce(state, action) {
     }
     if (field === "reasoningText") next[at] = withSummarySection(next[at], p.summaryIndex);
     next[at] = { ...next[at], [field]: (next[at][field] || "") + p.delta };
+    delete next[at][retriedOut];
     // Output arrived: a wait on this process (terminalInteraction with empty stdin) is over.
     if (field === "aggregatedOutput" && next[at].terminalWaitingAt) delete next[at].terminalWaitingAt;
     return { ...state, items: { ...state.items, [id]: next },
