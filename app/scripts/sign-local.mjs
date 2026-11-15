@@ -25,7 +25,7 @@ const machO=(file)=>{
 
 if(identity){
   console.log(`sign-local: signing with "${identity.name}" (${identity.hash}), hardened runtime.`);
-  const {signAsync}=await import('@electron/osx-sign');
+  const {sign:signAsync}=await import('@electron/osx-sign');
   await signAsync({
     app, identity:identity.hash, platform:'darwin', type:'distribution', preAutoEntitlements:false,
     // Only Mach-O files carry a code signature; resources (app.asar, the Cowork VM image, scripts) are sealed by the
