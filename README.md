@@ -16,8 +16,8 @@
 <br>
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="new-2.42304.0/docs/images/session-dark-en.png">
-  <img src="new-2.42304.0/docs/images/session-en.png" alt="OpenClaude Desktop" width="100%">
+  <source media="(prefers-color-scheme: dark)" srcset="next-4.16336.0/docs/images/session-dark-en.png">
+  <img src="next-4.16336.0/docs/images/session-en.png" alt="OpenClaude Desktop" width="100%">
 </picture>
 
 </div>
@@ -47,12 +47,12 @@ Each folder is a complete source tree. Run the commands below inside the one you
 
 <table>
   <tr>
-    <td width="50%"><img src="new-2.42304.0/docs/images/home-en.png" alt="Home"></td>
-    <td width="50%"><img src="new-2.42304.0/docs/images/session-dark-en.png" alt="Dark mode"></td>
+    <td width="50%"><img src="next-4.16336.0/docs/images/home-en.png" alt="Home"></td>
+    <td width="50%"><img src="next-4.16336.0/docs/images/session-dark-en.png" alt="Dark mode"></td>
   </tr>
   <tr>
-    <td width="50%"><img src="new-2.42304.0/docs/images/slash-commands-en.png" alt="Slash commands"></td>
-    <td width="50%"><img src="new-2.42304.0/docs/images/settings-models-en.png" alt="Models"></td>
+    <td width="50%"><img src="next-4.16336.0/docs/images/slash-commands-en.png" alt="Slash commands"></td>
+    <td width="50%"><img src="next-4.16336.0/docs/images/settings-models-en.png" alt="Models"></td>
   </tr>
 </table>
 
@@ -60,20 +60,20 @@ Each folder is a complete source tree. Run the commands below inside the one you
 
 <table>
   <tr>
-    <td width="50%"><img src="new-2.42304.0/docs/images/workflow-en.png" alt="Dynamic Workflow"><br><b>Dynamic Workflow</b>: phases and agents, live in Background tasks</td>
-    <td width="50%"><img src="new-2.42304.0/docs/images/task-list-en.png" alt="Task list"><br><b>Task list</b> and the working line with the running tool</td>
+    <td width="50%"><img src="next-4.16336.0/docs/images/workflow-en.png" alt="Dynamic Workflow"><br><b>Dynamic Workflow</b>: phases and agents, live in Background tasks</td>
+    <td width="50%"><img src="next-4.16336.0/docs/images/task-list-en.png" alt="Task list"><br><b>Task list</b> and the working line with the running tool</td>
   </tr>
   <tr>
-    <td width="50%"><img src="new-2.42304.0/docs/images/next-step-en.png" alt="Next step"><br><b>Next step</b> box at the end of a turn</td>
-    <td width="50%"><img src="new-2.42304.0/docs/images/context-en.png" alt="Context"><br><b>Context</b> breakdown in the session rail</td>
+    <td width="50%"><img src="next-4.16336.0/docs/images/next-step-en.png" alt="Next step"><br><b>Next step</b> box at the end of a turn</td>
+    <td width="50%"><img src="next-4.16336.0/docs/images/context-en.png" alt="Context"><br><b>Context</b> breakdown in the session rail</td>
   </tr>
   <tr>
-    <td width="50%"><img src="new-2.42304.0/docs/images/approval-en.png" alt="Approval"><br><b>Approval</b> card for a command</td>
-    <td width="50%"><img src="new-2.42304.0/docs/images/side-chat-en.png" alt="Side chat"><br><b>/btw</b> side chat next to the session</td>
+    <td width="50%"><img src="next-4.16336.0/docs/images/approval-en.png" alt="Approval"><br><b>Approval</b> card for a command</td>
+    <td width="50%"><img src="next-4.16336.0/docs/images/side-chat-en.png" alt="Side chat"><br><b>/btw</b> side chat next to the session</td>
   </tr>
   <tr>
-    <td width="50%"><img src="new-2.42304.0/docs/images/changes-en.png" alt="Changes"><br><b>Changes</b> pane with the session diff</td>
-    <td width="50%"><img src="new-2.42304.0/docs/images/model-effort-dark-en.png" alt="Effort"><br>Model menu with the <b>Effort</b> submenu (dark)</td>
+    <td width="50%"><img src="next-4.16336.0/docs/images/changes-en.png" alt="Changes"><br><b>Changes</b> pane with the session diff</td>
+    <td width="50%"><img src="next-4.16336.0/docs/images/model-effort-dark-en.png" alt="Effort"><br>Model menu with the <b>Effort</b> submenu (dark)</td>
   </tr>
 </table>
 

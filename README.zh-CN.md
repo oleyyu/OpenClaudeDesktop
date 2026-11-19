@@ -16,8 +16,8 @@
 <br>
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="new-2.42304.0/docs/images/session-dark.png">
-  <img src="new-2.42304.0/docs/images/session.png" alt="OpenClaude Desktop" width="100%">
+  <source media="(prefers-color-scheme: dark)" srcset="next-4.16336.0/docs/images/session-dark.png">
+  <img src="next-4.16336.0/docs/images/session.png" alt="OpenClaude Desktop" width="100%">
 </picture>
 
 </div>
@@ -47,12 +47,12 @@
 
 <table>
   <tr>
-    <td width="50%"><img src="new-2.42304.0/docs/images/home.png" alt="首页"></td>
-    <td width="50%"><img src="new-2.42304.0/docs/images/session-dark.png" alt="暗色模式"></td>
+    <td width="50%"><img src="next-4.16336.0/docs/images/home.png" alt="首页"></td>
+    <td width="50%"><img src="next-4.16336.0/docs/images/session-dark.png" alt="暗色模式"></td>
   </tr>
   <tr>
-    <td width="50%"><img src="new-2.42304.0/docs/images/slash-commands.png" alt="斜杠命令"></td>
-    <td width="50%"><img src="new-2.42304.0/docs/images/settings-models.png" alt="模型设置"></td>
+    <td width="50%"><img src="next-4.16336.0/docs/images/slash-commands.png" alt="斜杠命令"></td>
+    <td width="50%"><img src="next-4.16336.0/docs/images/settings-models.png" alt="模型设置"></td>
   </tr>
 </table>
 
@@ -60,20 +60,20 @@
 
 <table>
   <tr>
-    <td width="50%"><img src="new-2.42304.0/docs/images/workflow.png" alt="动态工作流"><br><b>动态工作流</b>：阶段与智能体，在后台任务里实时显示</td>
-    <td width="50%"><img src="new-2.42304.0/docs/images/task-list.png" alt="任务清单"><br><b>任务清单</b>与加载行、运行中的工具</td>
+    <td width="50%"><img src="next-4.16336.0/docs/images/workflow.png" alt="动态工作流"><br><b>动态工作流</b>：阶段与智能体，在后台任务里实时显示</td>
+    <td width="50%"><img src="next-4.16336.0/docs/images/task-list.png" alt="任务清单"><br><b>任务清单</b>与加载行、运行中的工具</td>
   </tr>
   <tr>
-    <td width="50%"><img src="new-2.42304.0/docs/images/next-step.png" alt="下一步"><br>回合结束时的<b>下一步</b>框</td>
-    <td width="50%"><img src="new-2.42304.0/docs/images/context.png" alt="上下文"><br>会话右栏的<b>上下文</b>分类明细</td>
+    <td width="50%"><img src="next-4.16336.0/docs/images/next-step.png" alt="下一步"><br>回合结束时的<b>下一步</b>框</td>
+    <td width="50%"><img src="next-4.16336.0/docs/images/context.png" alt="上下文"><br>会话右栏的<b>上下文</b>分类明细</td>
   </tr>
   <tr>
-    <td width="50%"><img src="new-2.42304.0/docs/images/approval.png" alt="审批"><br>命令<b>审批</b>卡</td>
-    <td width="50%"><img src="new-2.42304.0/docs/images/side-chat.png" alt="侧边对话"><br><b>/btw</b> 侧边对话</td>
+    <td width="50%"><img src="next-4.16336.0/docs/images/approval.png" alt="审批"><br>命令<b>审批</b>卡</td>
+    <td width="50%"><img src="next-4.16336.0/docs/images/side-chat.png" alt="侧边对话"><br><b>/btw</b> 侧边对话</td>
   </tr>
   <tr>
-    <td width="50%"><img src="new-2.42304.0/docs/images/changes.png" alt="更改"><br><b>更改</b>面板：本会话的 diff</td>
-    <td width="50%"><img src="new-2.42304.0/docs/images/model-effort-dark.png" alt="推理强度"><br>模型菜单的<b>推理强度</b>子菜单（暗色）</td>
+    <td width="50%"><img src="next-4.16336.0/docs/images/changes.png" alt="更改"><br><b>更改</b>面板：本会话的 diff</td>
+    <td width="50%"><img src="next-4.16336.0/docs/images/model-effort-dark.png" alt="推理强度"><br>模型菜单的<b>推理强度</b>子菜单（暗色）</td>
   </tr>
 </table>
 

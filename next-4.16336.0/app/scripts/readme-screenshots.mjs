@@ -189,6 +189,7 @@ async function send(text){
  for(let i=0;i<50&&await composer().evaluate(n=>n.value??n.textContent)!==text;i++)await page.waitForTimeout(100);
  await page.locator('[data-testid="code-prompt-send"]:not([inert] *)').click();
 }
+async function closePreview(){const b=page.getByRole('button',{name:T('Preview'),exact:true,pressed:true});if(await b.count()){await b.first().click();await page.waitForTimeout(500);}}
 async function openSession(name){await page.getByText(name,{exact:true}).first().click();await page.waitForTimeout(400);}
 
 try{
@@ -209,7 +210,7 @@ try{
  await (await page.locator('[data-tool-group] button').count()?page.locator('[data-tool-group] button'):page.getByText(D.group).locator('visible=true')).first().click({force:true});
  await shot('session.png');
  const editor=page.locator('[data-cds="ChatComposerEditor"]').first();
- await editor.focus();await page.keyboard.insertText('/');
+ await editor.click();await page.keyboard.type('/');await page.getByRole('listbox').or(page.getByRole('menu')).first().waitFor().catch(()=>{});
  await shot('slash-commands.png');
  await page.keyboard.press('Escape');await editor.press('Meta+A');await editor.press('Backspace');
  await page.keyboard.press('Meta+,');
@@ -253,7 +254,10 @@ try{
  // The next-step box after wrap_up, then the Context card's breakdown of the same session.
  await openSession(D.footer[0]);await send(D.footer[1]);
  await page.locator('[data-turn-next]').waitFor();await page.getByText(D.footer[2]).first().waitFor();
+ // 0.3 opens the Preview pane for an edited HTML file; close it so the session has the window.
+ await closePreview();
  await shot('next-step.png');
+ // 0.3: the session rail's Context row (the rail is back once the Preview pane is closed).
  const contextCard=page.getByRole('button',{name:new RegExp('^'+T('Context'))}).first();
  await contextCard.click();await page.getByText('System prompt',{exact:true}).first().waitFor();
  await shot('context.png');
@@ -288,10 +292,13 @@ try{
  await openSession(D.audit[0]);await send('/workflow '+JSON.stringify(wfFile));
  const launcher=page.getByRole('dialog',{name:T('Run workflow')});
  await launcher.getByRole('button',{name:T('Run workflow'),exact:true}).click();await launcher.waitFor({state:'hidden'});
- const pane=page.getByRole('complementary',{name:T('Background tasks'),exact:true});await pane.locator('.swf-card').waitFor();
- await pane.getByRole('button',{name:T('Expand'),exact:true}).click();
- // Stable: the first phase and two audits finished, two audits still running.
- await page.waitForFunction(()=>document.querySelectorAll('.swf-card .swf-table ul>li').length>=5&&document.body.innerText.includes('2/4'),null,{timeout:20000});
+ // 0.3: the Background tasks pane (its controls toolbar, the workflow's group with a Phases list).
+ const controls=page.getByRole('toolbar',{name:new RegExp('^'+T('Background tasks'))});await controls.waitFor();
+ const wf=page.getByRole('group',{name:D.audit[1]});await wf.waitFor();
+ await controls.getByRole('button',{name:T('Expand'),exact:true}).click();
+ // Stable: the first phase and two audits finished, two audits still running; open the running phase's agents.
+ await page.waitForFunction(()=>document.body.innerText.includes('2/4'),null,{timeout:20000});
+ await wf.getByRole('list').getByRole('button').nth(1).click();
  await settle(1500);await shot('workflow.png');
  await close();
  }
@@ -306,6 +313,7 @@ try{
  }
 }catch(error){
  if(process.env.README_FAILURE_SHOT)await page?.screenshot({path:process.env.README_FAILURE_SHOT}).catch(()=>{});
+ if(process.env.README_FAILURE_ARIA&&page)await fs.writeFile(process.env.README_FAILURE_ARIA,await page.locator('body').ariaSnapshot().catch(e=>String(e)));
  throw error;
 }finally{
  await close();
