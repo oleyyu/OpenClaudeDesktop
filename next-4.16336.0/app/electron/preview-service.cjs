@@ -175,6 +175,63 @@ function createPreviewService({ electron, getSession, spawnEnv = async () => ({ 
   const subscriberCleanup = new Map(); // one destruction hook per renderer, across its sessions
   const closedTabs = new Map(); // current-source WZ: at most 25 URLs per session / 50 sessions
   const allPreviews = () => [...previews.values()].flatMap(entry => [...entry.group.tabs.values()]);
+  // U-37: 4.16336.0 PreviewContext heuristicTabBaseColor (VGi(scheme, isStaticHtml, usesBrowserDefaults)): the view's
+  // base colour is white only for a page that uses browser defaults -- a file: page or an http(s) page off this machine
+  // (nYi / rYi) -- and otherwise the theme's preview ground (#131312 dark / #f5f5f5 light), so a local page that has not
+  // painted yet (loading, retrying) is not a white block in the dark theme. Re-applied as each navigation starts
+  // (applyTabBaseColor) and when the theme changes.
+  // U-37 round 2: the rest of that PreviewContext (externalPreviewEnabled) path -- applyTabBaseColor / usesBrowserDefaults
+  // / holdsBrowserDefaults / samplePageColors with the page script xJi (resampled at bJi 500 / 2000 ms after the main
+  // frame loads, on dom-ready and on a theme change). A loaded page with no background, no image and no dark color
+  // scheme sets documentUsesBrowserDefaults, so it gets white (#ffffff) again; a page with its own background lends it
+  // to the view (pageBackgroundColor).
+  const SAMPLEABLE_PAGE = /^(https?|file):/; // _Ki
+  const PAGE_COLOR_RESAMPLE_MS = [500, 2000]; // bJi
+  const PAGE_COLOR_SAMPLE = `const eff = (el) => { const c = getComputedStyle(el).backgroundColor; return c && c !== "transparent" && !/^rgba\\(\\s*\\d+\\s*,\\s*\\d+\\s*,\\s*\\d+\\s*,\\s*0\\s*\\)$/.test(c) ? c : null; }; const walk = (el) => { let n = el; while (n && n !== document.documentElement) { const c = eff(n); if (c) return c; n = n.parentElement; } return null; }; const body = (document.body && eff(document.body)) || eff(document.documentElement) || ""; const at = (y) => { const el = document.elementFromPoint(Math.floor(innerWidth / 2), y); return (el && walk(el)) || body; }; const cs = (el) => (el && getComputedStyle(el).colorScheme) || ""; const rootCs = cs(document.documentElement); const meta = document.querySelector('meta[name="color-scheme" i]'); const dark = /dark/i.test(rootCs && rootCs !== "normal" ? rootCs : cs(document.body)) || /dark/i.test((meta && meta.content) || ""); const paints = (el) => /^(canvas|video|img|iframe|svg|embed|object)$/i.test(el.tagName) || getComputedStyle(el).backgroundImage !== "none"; const edgePaints = (y) => { let n = document.elementFromPoint(Math.floor(innerWidth / 2), y); while (n && n !== document.documentElement) { if (paints(n)) return true; n = n.parentElement; } return false; }; const img = [document.documentElement, document.body].some((el) => !!el && getComputedStyle(el).backgroundImage !== "none") || edgePaints(1) || edgePaints(Math.max(0, innerHeight - 2)); return JSON.stringify({ body, top: at(1), bottom: at(Math.max(0, innerHeight - 2)), dark, img, w: innerWidth, h: innerHeight });`; // xJi
+  const pageUrlOf = (entry) => { try { return entry.view.webContents.getURL() || entry.url || ""; } catch { return entry.url || ""; } };
+  const offMachinePage = (url) => { try { const parsed = new URL(url); return /^https?:$/.test(parsed.protocol) && !launch.isLocalHost(parsed.hostname); } catch { return false; } }; // nYi
+  const usesBrowserDefaults = (entry, url) => { const page = url ?? pageUrlOf(entry); return page.startsWith("file:") || offMachinePage(page) || entry.documentUsesBrowserDefaults === true; };
+  const holdsBrowserDefaults = (entry, url) => entry.pageBackgroundColor === undefined && !entry.colorSampleFailed && offMachinePage(url ?? pageUrlOf(entry));
+  const heuristicTabBaseColor = (entry, browserDefaults = usesBrowserDefaults(entry)) => browserDefaults ? "#ffffff" : nativeTheme?.shouldUseDarkColors ? PLACEHOLDER.dark : PLACEHOLDER.light; // VGi
+  const tabBaseColor = (entry, url) => entry.pageBackgroundColor ?? heuristicTabBaseColor(entry, usesBrowserDefaults(entry, url) && !holdsBrowserDefaults(entry, url));
+  const applyTabBaseColor = (entry, url) => {
+    if (!alive(entry)) return;
+    if (url !== undefined && !SAMPLEABLE_PAGE.test(url)) { entry.pageBackgroundColor = undefined; entry.pageTopEdgeColor = undefined; entry.pageBottomEdgeColor = undefined; entry.pageBackgroundSeq = (entry.pageBackgroundSeq ?? 0) + 1; }
+    if (url !== undefined) { entry.colorSampleFailed = false; entry.documentUsesBrowserDefaults = undefined; }
+    try { entry.view.setBackgroundColor(tabBaseColor(entry, url)); } catch { /* gone */ }
+  };
+  const samplePageColors = (entry, waitForSize = false) => {
+    if (!alive(entry)) return;
+    const view = entry.view, frame = view.webContents.mainFrame;
+    if (!frame || typeof frame.executeJavaScript !== "function" || !SAMPLEABLE_PAGE.test(view.webContents.getURL?.() ?? "")) return;
+    const seq = (entry.pageBackgroundSeq ?? 0) + 1;
+    entry.pageBackgroundSeq = seq;
+    const epoch = entry.documentEpoch, loaded = () => entry.documentEpoch === epoch && entry.loadFinishedDocumentEpoch === epoch && !entry.loadFailed, loadedBefore = loaded();
+    const current = () => entry.pageBackgroundSeq === seq && entry.view === view && alive(entry);
+    const script = waitForSize ? `new Promise((resolve) => { const sample = () => { ${PAGE_COLOR_SAMPLE} }; const go = () => { if (innerWidth > 0 && innerHeight > 0) { removeEventListener("resize", go); resolve(sample()); } }; addEventListener("resize", go); go(); })` : `(() => { ${PAGE_COLOR_SAMPLE} })()`;
+    frame.executeJavaScript(script, false).then((raw) => {
+      if (!current()) return;
+      const colour = (value) => { const m = typeof value === "string" ? /^rgba?\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*(?:,\s*(0|1|0?\.\d+)\s*)?\)$/.exec(value) : null; return m !== null && Number(m[1]) <= 255 && Number(m[2]) <= 255 && Number(m[3]) <= 255 && (m[4] === undefined || Number(m[4]) >= 0.99) ? value : undefined; };
+      let facts;
+      try { const parsed = JSON.parse(typeof raw === "string" && raw.length <= 512 ? raw : "{}"); facts = typeof parsed === "object" && parsed ? parsed : {}; } catch { facts = {}; }
+      const plain = facts.body === "" && facts.top === "" && facts.bottom === "" && facts.img === false;
+      const size = (value) => typeof value === "number" && Number.isInteger(value) && value > 0, sized = size(facts.w) && size(facts.h), settled = loadedBefore && loaded();
+      let flipped = false;
+      if (settled && sized) { const defaults = plain && facts.dark === false; flipped = defaults !== (entry.documentUsesBrowserDefaults ?? false); entry.documentUsesBrowserDefaults = defaults; }
+      if (entry.documentEpoch === epoch) entry.sampledDocumentEpoch = epoch;
+      const body = colour(facts.body) ?? heuristicTabBaseColor(entry), top = colour(facts.top) ?? body, bottom = colour(facts.bottom) ?? body;
+      if (flipped || body !== entry.pageBackgroundColor || top !== entry.pageTopEdgeColor || bottom !== entry.pageBottomEdgeColor) {
+        entry.pageBackgroundColor = body; entry.pageTopEdgeColor = top; entry.pageBottomEdgeColor = bottom;
+        applyTabBaseColor(entry);
+      }
+      if (settled && !sized && !waitForSize) samplePageColors(entry, true);
+    }).catch(() => {
+      if (!current()) return;
+      const missed = loadedBefore && loaded() && entry.sampledDocumentEpoch !== epoch;
+      if (holdsBrowserDefaults(entry) || missed) { entry.colorSampleFailed = true; entry.pageBackgroundColor = undefined; entry.pageTopEdgeColor = undefined; entry.pageBottomEdgeColor = undefined; applyTabBaseColor(entry); }
+    });
+  };
+  if (typeof nativeTheme?.on === "function") nativeTheme.on("updated", () => { for (const entry of allPreviews()) { applyTabBaseColor(entry); samplePageColors(entry); } });
   const servers = new Map(); // cwd \0 name → server
   const launchCache = new Map(); // cwd → { mtime, parsed }
   // The original's a2.servers rows for the port policy (r3b-preview-host.mjs): command servers only (an attach entry
@@ -552,7 +609,7 @@ function createPreviewService({ electron, getSession, spawnEnv = async () => ({ 
         backgroundThrottling: false, disableDialogs: true, plugins: false, spellcheck: false, navigateOnDragDrop: false, safeDialogs: true,
       },
     });
-    view.setBackgroundColor("#ffffff");
+    view.setBackgroundColor(tabBaseColor(entry, entry.url || ""));
     entry.view = view;
     entry.crashed = false;
     entry.reclaimed = false;
@@ -590,11 +647,24 @@ function createPreviewService({ electron, getSession, spawnEnv = async () => ({ 
       });
       return { action: "deny" };
     });
+    contents.on("did-start-navigation", mine((details) => { if (details?.isMainFrame !== false && !details?.isSameDocument && typeof details?.url === "string") applyTabBaseColor(entry, details.url); }));
+    // U-37 round 2 (PreviewContext did-frame-finish-load / dom-ready): sample the loaded document's colours.
+    contents.on("did-frame-finish-load", mine((_event, isMainFrame) => {
+      if (!isMainFrame || contents.isDestroyed()) return;
+      if (!entry.loadFailed) {
+        const epoch = entry.documentEpoch;
+        entry.loadFinishedDocumentEpoch = epoch;
+        for (const delay of PAGE_COLOR_RESAMPLE_MS) setTimeout(() => { if (entry.view === view && entry.documentEpoch === epoch && !contents.isDestroyed()) samplePageColors(entry); }, delay);
+      }
+      samplePageColors(entry);
+    }));
+    contents.on("dom-ready", mine(() => samplePageColors(entry)));
     contents.on("did-start-loading", mine(() => { stopSelection(entry);entry.loading = true; entry.loadFailed = false; if (entry.errorPageLoading) entry.errorPageLoading = false; else entry.error = null; notify(entry); }));
     // r5pa-02 (jPKPzV-P did-stop-loading): a page that loaded ends its retries.
     contents.on("did-stop-loading", mine(() => { entry.loading = false; if (!entry.loadFailed) resetLoadRetryBudget(entry); notify(entry); }));
     // r4pa-c04 (n.errorPages): the tab keeps the address that failed while its error page shows.
     contents.on("did-navigate", mine((_event, url) => {
+      entry.documentEpoch = (entry.documentEpoch ?? 0) + 1; // U-37 round 2: PreviewContext documentEpoch (a new main-frame document)
       if (entry.errorPage && entry.errorPage.pageUrl !== url) entry.errorPage = null;
       // r4pa-c11: an Allow once ends when the tab commits a page on another site (an error page stands in for its address).
       if (entry.siteGrant && !entry.errorPage) { let host = null; try { host = new URL(url).host; } catch { /* not a web page */ } if (host !== entry.siteGrant) entry.siteGrant = null; }
@@ -607,6 +677,7 @@ function createPreviewService({ electron, getSession, spawnEnv = async () => ({ 
       if (!isMainFrame || code === -3) return; // -3: aborted by a newer navigation
       if (entry.errorPage && url === entry.errorPage.pageUrl) return;
       entry.loadFailed = true;
+      entry.loadFinishedDocumentEpoch = undefined; entry.documentUsesBrowserDefaults = undefined; // U-37 round 2: as PreviewContext did-fail-load
       if (entry.retryTimer) { clearTimeout(entry.retryTimer); entry.retryTimer = null; }
       const address = previewPageAddress(url || entry.url);
       entry.error = { code: String(code), description, url: address };

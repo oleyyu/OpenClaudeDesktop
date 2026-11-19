@@ -1,0 +1,19 @@
+/* chat-conversation r1-01 (source-chat-message-row.jsx): the reply row only groups the turn's response rows; the
+   transcript's row spacing (source-session.css adjacency rules) stays what it was when the rows were siblings. */
+.source-message + [data-chat-reply-row] > .source-message:first-child { margin-top: var(--chat-item-gap); }
+.source-message.source-user-message + [data-chat-reply-row] > .source-message:first-child { margin-top: var(--chat-turn-gap); }
+[data-chat-reply-row=""] > .source-message:last-of-type { margin-bottom: 0; }
+/* chat-conversation r2-02 / r2-03: the host's row spacing (source-session.css `.source-message…` adjacency / last-of-type
+   margins, unlayered) would override the official utilities the Chat rows now carry. A Chat prompt's row is cc1aae219's
+   `mb-1 mt-[var(--msg-gap,1.5rem)]`; a Chat answer (c7dd2633f re with `pb-[var(--msg-assistant-pb,0.75rem)]`) ends with
+   its own padding, no extra margin. These restate exactly those utilities over the host rules. */
+.source-transcript-content .source-message.source-user-message[data-chat-user-row] { margin-bottom: .25rem; }
+.source-transcript-content .source-message.source-user-message[data-chat-user-row]:not(:first-child) { margin-top: var(--msg-gap, 1.5rem); }
+.source-transcript-content .source-message.source-user-message[data-chat-user-row] + [data-chat-reply-row] > .source-message:first-child { margin-top: 0; }
+.source-transcript-content [data-chat-reply-row] > .source-message[data-testid="assistant-message"] { margin-bottom: 0; }
+/* chat-conversation r3-03: the reply's rows are the content blocks of its one kw / jw (cc1aae219 JY's Qt), not transcript
+   rows: the host's row spacing (source-session.css `.source-message + .source-message`, `[data-turn-start]`,
+   `:last-of-type`) stays off them; each block brings its own spacing (the artifact card's pt / pb, the step's row,
+   the markdown's blocks), as in jw. */
+.source-transcript-content [data-chat-reply-row] > [data-testid="assistant-message"] > div > .source-message { margin: 0; }
+.source-transcript-content [data-chat-reply-row] > [data-testid="assistant-message"] { margin-top: 0; }

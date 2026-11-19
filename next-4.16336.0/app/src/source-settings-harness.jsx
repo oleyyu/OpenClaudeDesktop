@@ -8,12 +8,14 @@ import { SettingsGroup, settingRow } from './source-settings-kit.jsx';
 import { SourceSwitch } from './source-switch.jsx';
 import { SourceSettingsButton } from './source-settings-button.jsx';
 import { SourceSelect } from './source-select.jsx';
-import { SourceDialog, SourceDialogFooter } from './source-dialog.jsx';
+import { SourceConfirmationDialog, SourceDialog, SourceDialogFooter } from './source-dialog.jsx';
 import { normalizeHarnessProfile, toggleSafe, parseEnvLines, parseHeaderLines, splitArgs } from '../electron/prefs/harness-profile.mjs';
 import { harnessView } from './harness-settings-model.mjs';
 import { t, tn } from '../electron/i18n/index.mjs';
 import './harness-settings.css';
 import { coreSupports } from '../electron/core-registry.mjs';
+// Both pages that open these dialogs (Settings › Harness, Settings › Customize › Connectors) sit in the Settings dialog.
+import { SETTINGS_CONFIRM_LAYER } from './settings-layers.jsx';
 
 const TRANSPORTS = [{ value: 'stdio', label: t('Local command (stdio)') }, { value: 'streamable-http', label: t('Remote URL (HTTP)') }];
 
@@ -41,7 +43,7 @@ export function AddServerDialog({ onClose, onAdd, description = null }) {
     try { await onAdd(params); onClose(); } catch (failure) { setError(failure.message); setBusy(false); }
   };
   const ready = draft.serverName.trim() && (draft.transport === 'stdio' ? draft.command.trim() : draft.url.trim());
-  return <SourceDialog title={t('Add server')} description={description} onClose={busy ? undefined : onClose} className="hs-dialog">
+  return <SourceDialog title={t('Add server')} description={description} layer={SETTINGS_CONFIRM_LAYER} onClose={busy ? undefined : onClose} className="hs-dialog">
     <form className="hs-form" onSubmit={submit}>
       <label className="hs-field"><span>{t('Name')}</span>
         <input data-autofocus data-cds="TextInput" className="cds-input cds-reset" aria-label={t('Server name')} placeholder="github" maxLength={32} value={draft.serverName} onChange={set('serverName')} disabled={busy}/></label>
@@ -76,7 +78,8 @@ export function AddServerDialog({ onClose, onAdd, description = null }) {
 const required = <span className="hs-required">{t('Required')}</span>;
 // Rows Settings › Code › Privacy controls (code-desktop-app cordis.patch.yml): never 'Required', they say where.
 const PRIVACY_ROWS = new Set(['session-log-deepseek', 'plugin-package-inventory-deepseek', 'session-telemetry-otel']);
-const privacy = <span className="hs-required">{t('Set in Code › Privacy')}</span>;
+// fix-r2 U-26: those switches are on Account › Data sharing (source-settings.jsx retabs Code's 'Privacy' group there).
+const privacy = <span className="hs-required">{t('Set in Account › Data sharing')}</span>;
 // This group is the Harness profile, not Preferences › Profile: its own key, English copy unchanged.
 const PROFILE_TITLE = t('Harness profile') === 'Harness profile' ? 'Profile' : t('Harness profile');
 
@@ -85,6 +88,9 @@ export function SourceHarnessSettings({ config, boot, engine, busy, desktopCall,
   const [state, setState] = useState(initialState), [loadError, setLoadError] = useState('');
   const [rowErrors, setRowErrors] = useState({}), [working, setWorking] = useState(null);
   const [expanded, setExpanded] = useState({}), [adding, setAdding] = useState(false);
+  // The destructive confirm (Reset overlay, the recovery banner's Reset overlay, an added MCP server's Remove): what is
+  // asked and the run it confirms. Reset drops every server added here with its env and headers, which no file keeps.
+  const [confirming, setConfirming] = useState(null);
   // A restart this page started that left the core down (cleared once it connects).
   const [restartFailed, setRestartFailed] = useState(false);
   const live = useRef(true);
@@ -149,7 +155,7 @@ export function SourceHarnessSettings({ config, boot, engine, busy, desktopCall,
     settingRow('harness-overlay-enabled', t('Use overlays'), t('Start the core with the app overlay and your profile patch. Turn off to start with the shipped profile only.'),
       <SourceSwitch label={t('Use overlays')} checked={prefs.overlayEnabled} disabled={disabled} onChange={value => act('harness-overlay-enabled', async () => { await onSave({ harnessProfile: { ...prefs, overlayEnabled: value } }); return call({ op: 'sync' }); })}/>),
     settingRow('harness-restart', t('Restart core'), connected ? t('Restarts the DeepSeek core. Running sessions stop.') : t('The DeepSeek core isn’t running.'), button('harness-restart', t('Restart core'), () => restart())),
-    settingRow('harness-reset', t('Reset overlay'), t('Remove every change made on this page.'), button('harness-reset', t('Reset overlay'), () => op('harness-reset', { op: 'reset-overlay' }), { disabled: disabled || view.overlayEmpty })),
+    settingRow('harness-reset', t('Reset overlay'), t('Remove every change made on this page.'), button('harness-reset', t('Reset overlay'), () => setConfirming({ kind: 'reset', id: 'harness-reset', run: () => op('harness-reset', { op: 'reset-overlay' }) }), { disabled: disabled || view.overlayEmpty })),
   ];
 
   const pluginRows = [];
@@ -162,7 +168,7 @@ export function SourceHarnessSettings({ config, boot, engine, busy, desktopCall,
 
   const mcpRows = view.mcp.map(entry => settingRow(`harness-row-${entry.id}`, entry.serverName || entry.id,
     `${entry.transport === 'streamable-http' ? 'HTTP' : entry.transport === 'stdio' ? t('Local command') : t('MCP server')} · ${entry.added ? t('Added in OpenClaude Desktop') : entry.bundle ? t('From {bundle}', { bundle: entry.bundle }) : t('From your profile patch')}${failedNote(entry)}`,
-    <div className="hs-controls">{entry.added && button(`harness-row-${entry.id}`, t('Remove'), () => op(`harness-row-${entry.id}`, { op: 'mcp-remove', id: entry.id }))}{toggle(entry, t('Enable {name}', { name: entry.serverName || entry.id }))}</div>));
+    <div className="hs-controls">{entry.added && button(`harness-row-${entry.id}`, t('Remove'), () => setConfirming({ kind: 'mcp', id: `harness-row-${entry.id}`, name: entry.serverName || entry.id, run: () => op(`harness-row-${entry.id}`, { op: 'mcp-remove', id: entry.id }) }))}{toggle(entry, t('Enable {name}', { name: entry.serverName || entry.id }))}</div>));
 
   const skillRows = view.skillDirs.map(dir => settingRow(`harness-skill-${dir}`, dir, t('Skill folder'), button(`harness-skill-${dir}`, t('Remove'), () => op('harness-skill-dirs', { op: 'skill-dirs', dirs: view.skillDirs.filter(item => item !== dir) }))));
   const addSkillDir = () => act('harness-skill-dirs', async () => {
@@ -179,9 +185,16 @@ export function SourceHarnessSettings({ config, boot, engine, busy, desktopCall,
     return call({ op: 'hooks-add', format, configPath: picked.path });
   });
 
+  const resetBody = t('Every change made on this page is removed, including the MCP servers you added with their environment variables and headers. Your profile patch stays.');
+  const confirmDialog = confirming && <SourceConfirmationDialog layer={SETTINGS_CONFIRM_LAYER} confirmVariant="danger" pending={working === confirming.id}
+    title={confirming.kind === 'mcp' ? t('Remove {name}?', { name: confirming.name }) : t('Reset the app overlay?')}
+    body={confirming.kind === 'mcp' ? t('Its command, environment variables and headers are removed from the app overlay. To use it again, add it again.') : resetBody}
+    confirmLabel={confirming.kind === 'mcp' ? t('Remove') : confirming.kind === 'recover' ? t('Reset and restart') : t('Reset overlay')}
+    onCancel={() => setConfirming(null)} onConfirm={async () => { await confirming.run(); if (live.current) setConfirming(null); }}/>;
+
   return <div className="hs-page">
     {brokenCore && <div className="hs-banner" role="alert" data-tone="danger"><span>{t('The core didn’t start with your profile changes.')}</span>
-      <div className="hs-controls">{button('harness-recover-reset', t('Reset overlay'), () => act('harness-recover-reset', async () => { await call({ op: 'reset-overlay' }); return restartAndRead(); }))}
+      <div className="hs-controls">{button('harness-recover-reset', t('Reset overlay'), () => setConfirming({ kind: 'recover', id: 'harness-recover-reset', run: () => act('harness-recover-reset', async () => { await call({ op: 'reset-overlay' }); return restartAndRead(); }) }))}
         {button('harness-recover-safe', t('Restart without overlay'), () => act('harness-recover-safe', async () => { await onSave({ harnessProfile: { ...prefs, overlayEnabled: false } }); await call({ op: 'sync' }); return restartAndRead(); }))}</div></div>}
     {state.pending && !brokenCore && <div className="hs-banner" role="status"><span>{t('Restart the core to apply your changes.')}</span>{button('harness-banner-restart', t('Restart'), () => restart('harness-banner-restart'))}</div>}
     {state.error && <p className="ss-connection-notice" role="status">{t('Couldn’t read the running profile.')} {state.error}</p>}
@@ -205,6 +218,7 @@ export function SourceHarnessSettings({ config, boot, engine, busy, desktopCall,
       {['harness-hooks-claude-code', 'harness-hooks-codex'].map(id => rowErrors[id] && <p key={id} className="ss-row-error" title={rowErrors[id]}>{t('Couldn’t save the setting. Try again.')}</p>)}
     </SettingsGroup>
     {rowErrors['harness-mcp-add'] && <p className="ss-row-error" title={rowErrors['harness-mcp-add']}>{t('Couldn’t save the setting. Try again.')}</p>}
+    {confirmDialog}
     {adding && <AddServerDialog onClose={() => setAdding(false)} onAdd={async params => { const next = await call({ op: 'mcp-add', ...params }); if (live.current) setState(next); }}/>}
   </div>;
 }

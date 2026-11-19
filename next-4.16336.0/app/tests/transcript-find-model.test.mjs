@@ -53,6 +53,29 @@ test("omitted, aria-hidden, sr-only and hidden subtrees are not searched; data-f
   assert.equal(findMatches(root, "alpha", { exclude: new Set([root.firstChild]) }).length, 2);
 });
 
+test("U-11: an open shadow root is searched instead of its host's light children; a slot reads its assigned nodes", () => {
+  // A code block (diffs-container): its text lives in the shadow root; the light child is shown through the slot.
+  const shadow = { nodeType: 11, host: null, firstChild: null, nextSibling: null };
+  const lightChild = h("span", {}, "slotted needle");
+  const slot = h("slot", {}, "fallback needle");
+  slot.localName = "slot";
+  slot.assignedNodes = () => [lightChild];
+  const empty = h("slot", {}, "fallback only");
+  empty.localName = "slot";
+  empty.assignedNodes = () => [];
+  link(shadow, [h("pre", {}, h("span", {}, "const "), h("span", {}, "needle"), h("span", {}, " = 1;")), slot, empty]);
+  const host = h("diffs-container", {}, lightChild);
+  host.shadowRoot = shadow;
+  shadow.host = host;
+  const root = h("div", {}, h("p", {}, "prose needle"), host);
+  const matches = findMatches(root, "needle");
+  assert.deepEqual(matches.map((match) => match.startNode.data), ["prose needle", "needle", "slotted needle"]);
+  assert.equal(findMatches(root, "const needle").length, 1, "inline spans in the shadow tree join one run");
+  assert.equal(findMatches(root, "fallback needle").length, 0, "an assigned slot does not read its fallback");
+  assert.equal(findMatches(root, "fallback only").length, 1, "an empty slot reads its fallback");
+  assert.equal(findMatches(root, "needleslotted").length, 0, "the shadow root is a run of its own");
+});
+
 test("case-insensitive counts: inline runs join, blocks never do", () => {
   const root = h("div", {},
     h("p", {}, "Apple and ", h("strong", {}, "APPLE"), " pie"),

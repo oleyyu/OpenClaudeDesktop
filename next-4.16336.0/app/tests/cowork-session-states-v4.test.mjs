@@ -92,7 +92,8 @@ test('the production graph and session-rail are untouched: no host file links th
   await walk(path.join(ROOT, 'src'));
   const GENERATED = path.join(ROOT, 'src/generated');
   const inGenerated = file => !path.relative(GENERATED, path.join(ROOT, file)).startsWith('..');
-  assert.deepEqual(linking.filter(file => !inGenerated(file)), [], 'no host file names cowork-session-states-v4/');
+  // chat-cowork-1to1 r1 (cowork-r1-11): the host's ended notice is cut over to the -v4 graph; no other host file names it.
+  assert.deepEqual(linking.filter(file => !inGenerated(file)), ['src/source-cowork-session-states.jsx'], 'only the cutover host file names cowork-session-states-v4/');
   const linkedNames = m => { const la = m?.linkedAreas; return !la ? [] : Array.isArray(la) ? la.map(e => typeof e === 'string' ? e : e.area) : Object.keys(la); };
   const byArea = new Map();
   for (const file of linking.filter(inGenerated)) {

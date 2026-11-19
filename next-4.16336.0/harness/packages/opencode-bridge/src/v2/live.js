@@ -52,7 +52,7 @@ export const newSessionId = () => `ses_${identifier(true)}`
 /** The message id v2 gives what an event recorded (SessionMessage.ID.fromEvent). */
 export const messageIdOfEvent = (eventID) => (typeof eventID === 'string' && eventID.startsWith('evt_') ? `msg_${eventID.slice(4)}` : newMessageId())
 
-const pathUrl = (file) => 'file://' + encodeURI(file).replace(/#/g, '%23').replace(/\?/g, '%3F')
+const pathUrl = (file) => /^data:/i.test(file) ? file : 'file://' + encodeURI(file).replace(/#/g, '%23').replace(/\?/g, '%3F')
 
 /**
  * Whether a standalone .md (not a SKILL.md) is a command file rather than a skill file. v2 takes a skill .md only right
@@ -136,7 +136,10 @@ export class LiveAdapterV2 {
   reset(messages = [], inbox = []) {
     this.raw.clear()
     for (const message of messages) if (isRecord(message) && typeof message.id === 'string') this.raw.set(message.id, structuredClone(message))
-    for (const item of inbox) if (isRecord(item) && typeof item.id === 'string' && !this.inbox.has(item.id)) this.inbox.set(item.id, { type: item.type, payload: item.payload ?? {}, delivery: item.delivery })
+    if (Array.isArray(inbox)) {
+      this.inbox.clear()
+      for (const item of inbox) if (isRecord(item) && typeof item.id === 'string') this.inbox.set(item.id, { type: item.type, payload: item.payload ?? {}, delivery: item.delivery })
+    }
   }
 
   /** Write a message back to the projector (in place when it has one). */
@@ -184,6 +187,7 @@ export class LiveAdapterV2 {
         if (typeof id !== 'string') return []
         const item = this.inbox.get(id) ?? { type: 'user', payload: {} }
         this.inbox.delete(id)
+        if (this.raw.has(id)) return []
         const payload = isRecord(item.payload) ? item.payload : {}
         const time = { created }
         if (item.type === 'user') {
@@ -258,7 +262,7 @@ export class LiveAdapterV2 {
         return touched(step, textPartId(step.id, data.ordinal))
       case 'session.text.delta': {
         const item = step && nth(step.content, 'text', data.ordinal)
-        if (!item) return []
+        if (!item || step.time?.completed != null) return []
         item.text += data.delta ?? ''
         return touched(step, textPartId(step.id, data.ordinal))
       }
@@ -274,7 +278,7 @@ export class LiveAdapterV2 {
         return touched(step, reasoningPartId(step.id, data.ordinal))
       case 'session.reasoning.delta': {
         const item = step && nth(step.content, 'reasoning', data.ordinal)
-        if (!item) return []
+        if (!item || step.time?.completed != null) return []
         item.text += data.delta ?? ''
         return touched(step, reasoningPartId(step.id, data.ordinal))
       }

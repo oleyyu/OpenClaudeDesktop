@@ -11,6 +11,7 @@
 // after reading preferences and rebuilds its menus.
 import zhCN from './zh-CN/index.mjs';
 import { conciseCopy } from './concise.mjs';
+import { PERSONA_COPY } from './persona-copy.mjs';
 
 export const DEFAULT_LOCALE = 'en-US';
 // name: in English (the secondary line); localName: in the language itself.
@@ -70,12 +71,25 @@ const named = (text) => (assistant === 'DeepSeek' || typeof text !== 'string' ||
 
 export function t(source, values) {
   if (typeof source !== 'string') return source;
+  // fix-r2 U-14 (E83): an official sentence whose "Claude" is the assistant or this app reads as its persona form.
+  if (Object.hasOwn(PERSONA_COPY, source)) source = PERSONA_COPY[source];
   // U-SET-LITE: a long setting description has a short line (concise.mjs) in every locale.
   const short = conciseCopy(source, current);
   if (short !== null) return interpolate(named(short), values);
   const table = DICTIONARIES[current];
   const text = table && Object.hasOwn(table, source) ? table[source] : source;
   return interpolate(named(text), values);
+}
+
+/**
+ * Translate an official message by its react-intl id first: one English word can be two things ('System' is the theme
+ * choice 跟随系统 and the Settings › System group heading I2acb3TGcT 系统; 'New' is the 新建 button and the What’s new
+ * group EGsjZ8G4k5 新增). A dictionary entry keyed '#<id>' wins; otherwise the English source is looked up as by t().
+ */
+export function tId(id, source, values) {
+  const table = DICTIONARIES[current], key = typeof id === 'string' && id ? `#${id}` : null;
+  if (key && table && Object.hasOwn(table, key)) return interpolate(named(table[key]), values);
+  return t(source, values);
 }
 
 /** Singular/plural pick on the English side; both forms are dictionary keys. */

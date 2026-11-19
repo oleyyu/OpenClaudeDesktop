@@ -7180,8 +7180,10 @@
       ],
       "heldByViewTabs": [
         "Bg",
+        "Bn",
         "Ca",
         "Cn",
+        "Hn",
         "Om",
         "Rg",
         "Sn",
@@ -7194,9 +7196,11 @@
         "mw",
         "pw",
         "qx",
+        "uo",
         "uw",
         "xn",
-        "zg"
+        "zg",
+        "zn"
       ]
     },
     {

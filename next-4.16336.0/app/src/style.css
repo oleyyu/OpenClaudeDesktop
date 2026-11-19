@@ -35,6 +35,17 @@ html.cds-root {
 main.epitaxy-root.cds-root {
   --cds-page-bg: inherit;
 }
+/* U-25: the host page wrappers below carry .cds-root as well (no official CdsRoot of their own; the official pages
+   render inside the enclosing root), so their sticky `bg-page` headers keep the page background they sit on. */
+.surface-projects.cds-root, .surface-project-detail.cds-root, .surface-artifact-library.cds-root, .surface-routines.cds-root {
+  --cds-page-bg: inherit;
+}
+/* marlin-chin (U-MARLIN): the Chat / Cowork card's host wrapper (source-chat-composer.jsx `source-chat-composer cds-root`)
+   is no official CdsRoot either; the marlin chin's mask (shared-5 jp `masked`: bg-page + a page-bg shadow) must paint the
+   page it sits on, not the stylesheet's surface-0 reset. */
+.source-chat-composer.cds-root {
+  --cds-page-bg: inherit;
+}
 * {
   box-sizing: border-box;
   /* design-system.css:1260-1265 base layer: every scroller uses the thin

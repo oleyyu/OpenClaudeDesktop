@@ -61,7 +61,8 @@ const kids = (node) => (node?.children ?? []).filter((n) => n.tag);
 // main.jsx renderMainComposer: the view-tabs root, the cds-core root inside it, then (in the shell) the Attachments part's
 // transition scope — 4.16336.0 shared-5 `d(Cc.Provider, { value: ht, children: ne })`, Cc = shared-2 km — under which the
 // tiles' shared-3 Ac stamps data-cds-attachment and the view-transition name. The fixture scope runs the update at once.
-const inScope = (child) => h(Shared2v4.km.Provider, { value: (update) => update() }, child);
+// cds-core wave cc2 owns shared-2 km (facade ctx_shared2_km); code-composer-v4 links it (was: Shared2v4.km, its own copy).
+const inScope = (child) => h(CdsCore.ctx_shared2_km.Provider, { value: (update) => update() }, child);
 const inRoot = (child) => h(ViewTabs.CdsRoot, { platform: 'desktop', density: 'compact', className: 'contents', experimental: Experimental3.codePaneExperimental },
   h(CdsCore.CdsRoot, { platform: 'desktop', density: 'compact', className: 'contents', experimental: Experimental.codePaneExperimental }, inScope(child)));
 const image = { id: 'i1', kind: 'image', name: 'shot.png', previewUrl: 'blob:shot', status: 'ready', path: '/w/shot.png' };

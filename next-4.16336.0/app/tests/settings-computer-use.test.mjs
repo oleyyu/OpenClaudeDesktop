@@ -209,7 +209,7 @@ test('r4 shell: turning on asks first (ce2191564 "Turn on computer use?"); off t
     assert.ok(chunk.includes(text), text);
   // E83: the copy names the assistant where the chunk says Claude (the source keys say DeepSeek).
   assert.ok(warning.includes('Close anything sensitive. DeepSeek can see what’s on screen in the apps you approve, and your whole screen when DeepSeek has full control.'));
-  assert.ok(warning.includes('DeepSeek will see the apps you approve and click and type in them, working in the background while you keep using your computer or taking full control of your screen. Which of those DeepSeek does by default is set under Settings → This computer → Computer use. You’ll approve each app, but not confirm each step DeepSeek performs.'));
+  assert.ok(warning.includes('DeepSeek will see the apps you approve and click and type in them, working in the background while you keep using your computer or taking full control of your screen. Which of those DeepSeek does by default is set under Settings → Desktop app → Computer use. You’ll approve each app, but not confirm each step DeepSeek performs.'));
   const perms = render(React.createElement(mod.ComputerUseTurnOnBody, { step: 'permissions', permissions: { accessibility: true, screenRecording: false }, onClose() {} }));
   for (const text of ['Computer use is on. To finish setup, grant the macOS permissions below.', 'class="border border-border-300 rounded-lg divide-y divide-border-300 "',
     'Required for mouse and keyboard tracking and control.', 'Required for screen visibility. macOS may ask you to restart OpenClaude Desktop.', 'Not yet granted', '>Request<', '>Done<'])

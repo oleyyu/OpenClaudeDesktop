@@ -2,8 +2,8 @@
 const {coreError}=require('./codex.cjs');
 const {coreForEngine,coreSupports}=require('./core-registry.mjs');
 const i18n=require('./i18n/index.mjs');
-function createAccountOperations({getClient,openExternal,onState=()=>{},onAccount=()=>{}}) {
-  let state={phase:'idle',login:null,error:'',notice:''},attempt=null,epoch=0,readRevision=0,accountSnapshot=null;
+function createAccountOperations({getClient,openExternal,onState=()=>{},onAccount=()=>{},onModels=null,modelsDelay=250}) {
+  let state={phase:'idle',login:null,error:'',notice:''},attempt=null,epoch=0,readRevision=0,accountSnapshot=null,modelsTimer=null;
   const accountChanged=value=>{accountSnapshot=value;onAccount(value);};
   const publish=patch=>{state={...state,...patch};onState(state);return state;};
   const current=t=>attempt===t&&t.epoch===epoch&&t.owner===getClient();
@@ -19,12 +19,26 @@ function createAccountOperations({getClient,openExternal,onState=()=>{},onAccoun
     }catch(error){if(owner!==getClient()||generation!==epoch||revision!==readRevision)return null;throw error;}
   }
 
+  // A sign-in or sign-out changes what a core lists (OpenCode's providers, an ACP agent's account models), and model/list
+  // is otherwise read only on connect: once the change settles (a burst of account/updated is one read) the list is read
+  // again and handed to onModels (main.cjs: initial.models and the renderers' {kind:'models'}). Codex's catalog is built
+  // in main.cjs connect (custom endpoint, config.toml models), so it is left to a reconnect.
+  function modelsChanged(owner=getClient()) {
+    if(typeof onModels!=='function'||coreForEngine(owner?.serverInfo?.engine).id==='codex')return;
+    clearTimeout(modelsTimer);const generation=epoch;
+    modelsTimer=setTimeout(async()=>{
+      modelsTimer=null;
+      try{const result=await owner.request('model/list',{limit:100});if(owner===getClient()&&generation===epoch&&Array.isArray(result?.data))onModels(result.data,owner);}catch{}
+    },modelsDelay);
+    modelsTimer.unref?.();
+  }
   async function finish(t,event) {
     if(!current(t))return;
     attempt=null;readRevision++;
     if(!event.success){publish({phase:'idle',login:null,error:event.error||'Sign-in failed. Try again.'});return;}
     // signedInAt: when a sign-in last succeeded here, so an older 'Authentication failed' card reads 'Signed in again'.
     const generation=epoch;publish({phase:'refreshing',login:null,error:'',signedInAt:Date.now()});
+    modelsChanged(t.owner);
     try {await refresh(t.owner);if(generation===epoch&&t.owner===getClient()&&!attempt)publish({phase:'idle',error:''});}
     catch(error){if(generation===epoch&&t.owner===getClient()&&!attempt)publish({phase:'idle',error:error.message});}
   }
@@ -40,7 +54,7 @@ function createAccountOperations({getClient,openExternal,onState=()=>{},onAccoun
     try {
       await owner.start();
       await owner.request('account/login/start',{type:'apiKey',apiKey,...(options.codeDesktop&&typeof options.codeDesktop==='object'?{codeDesktop:options.codeDesktop}:{})});
-      publish({phase:'refreshing',login:null,error:'',signedInAt:Date.now()});
+      publish({phase:'refreshing',login:null,error:'',signedInAt:Date.now()});modelsChanged(owner);
       await refresh(owner);publish({phase:'idle',error:''});
       return state;
     } catch(error){
@@ -92,8 +106,9 @@ function createAccountOperations({getClient,openExternal,onState=()=>{},onAccoun
       if(type==='chatgptDeviceCode'&&(typeof result.userCode!=='string'||!result.userCode))throw coreError(t.owner,'{core} returned an invalid device code.');
       // codeDesktop.openedByAgent: the agent opened its own sign-in tab (MiMo), so a second one would only confuse;
       // acceptsCode: the provider's page may end on a one-time code to paste back (codeDesktop/login/code).
-      const opened=result.codeDesktop?.openedByAgent===true,acceptsCode=result.codeDesktop?.acceptsCode===true;
-      t.login={...t.login,url:target,...(type==='chatgptDeviceCode'?{userCode:result.userCode}:{}),...(opened?{openedByAgent:true}:{}),...(acceptsCode?{acceptsCode:true}:{})};publish({login:t.login});
+      // connecting: nothing to sign in to in a browser (OpenCode reusing Claude Code's existing sign-in); the row waits.
+      const connecting=result.codeDesktop?.connecting===true,opened=connecting||result.codeDesktop?.openedByAgent===true,acceptsCode=result.codeDesktop?.acceptsCode===true;
+      t.login={...t.login,url:target,...(type==='chatgptDeviceCode'?{userCode:result.userCode}:{}),...(opened?{openedByAgent:true}:{}),...(connecting?{connecting:true}:{}),...(acceptsCode?{acceptsCode:true}:{})};publish({login:t.login});
       if(!opened)await openExternal(target);if(current(t))publish({error:''});
       return state;
     } catch(error) {
@@ -152,15 +167,15 @@ function createAccountOperations({getClient,openExternal,onState=()=>{},onAccoun
       const notice=typeof result?.codeDesktop?.notice==='string'?result.codeDesktop.notice.slice(0,500):'';
       // The logout succeeded, but an environment-provided credential may remain.
       // Invalidate the old snapshot; only account/read determines the new identity.
-      accountChanged(null);await refresh(owner);
+      accountChanged(null);modelsChanged(owner);await refresh(owner);
       if(owner===getClient()&&generation===epoch)publish({phase:'idle',login:null,error:'',notice});
       return state;
     }catch(error){if(owner===getClient()&&generation===epoch)publish({phase:'idle',error:error.message});throw error;}
   }
   function observe(event) {
-    if(event.kind==='connection'&&!event.connected){epoch++;readRevision++;attempt=null;accountSnapshot=null;publish({phase:'idle',login:null,error:''});return;}
+    if(event.kind==='connection'&&!event.connected){epoch++;readRevision++;attempt=null;accountSnapshot=null;clearTimeout(modelsTimer);modelsTimer=null;publish({phase:'idle',login:null,error:''});return;}
     if(event.method==='account/updated'){
-      const owner=getClient(),generation=epoch;
+      const owner=getClient(),generation=epoch;modelsChanged(owner);
       void refresh(owner).catch(error=>{if(owner===getClient()&&generation===epoch)publish({error:error.message});});return;
     }
     if(event.method!=='account/login/completed')return;

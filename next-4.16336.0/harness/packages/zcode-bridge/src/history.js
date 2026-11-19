@@ -144,6 +144,7 @@ function agentChildOf(state) {
  *   anchors: per turn, the id of its first prompt message (what ZCode's `/rewind conversation <id>` cuts before)
  */
 export function turnsFromMessages(messages, context) {
+  const importedRepliesSeen = new Map()
   const turns = []
   const anchors = {}
   const byId = new Map()
@@ -204,7 +205,7 @@ export function turnsFromMessages(messages, context) {
         if (part.synthetic || part.ignored || !visible(info)) continue
         const prose = (id, text) => ({ type: 'agentMessage', id, text, phase: null, memoryCitation: null, delivery: null, questions: null })
         // An imported reply (thread-import.js) shows block by block: prose, and each tool call as a settled tool row.
-        turn.items.push(...(importedItems(`${messageId}#t${index}`, part.text, context.importBlocks, prose) ?? [prose(`${messageId}#t${index}`, part.text ?? '')]))
+        turn.items.push(...(importedItems(`${messageId}#t${index}`, part.text, context.importBlocks, prose, importedRepliesSeen) ?? [prose(`${messageId}#t${index}`, part.text ?? '')]))
       } else if (part.type === 'reasoning') {
         const index = reasonings++
         if (!(part.text ?? '').trim()) continue

@@ -108,7 +108,7 @@ test('Hooks: the Customize page shell — header with search and a Refresh toolt
   const html = el(H.SourceHooksSettings, { boot: { connected: true }, engine: 'codex', customize: { call: noBackend }, cwd: '/w', initialState: { status: 'ready', view, error: '' } });
   assert.match(html, /<header class="cz-header"><h2 class="cz-title text-heading-medium">Hooks<\/h2><div class="cz-header-controls"><button type="button" class="cz-search-toggle"[^>]*aria-label="Search hooks"/);
   assert.match(html, /aria-label="Refresh"/);
-  assert.match(html, /<table class="cz-table" data-cds="Table" aria-label="Hooks"><thead><tr><th scope="col" class="cz-col-40">Event<\/th><th scope="col" class="cz-col-20">Matcher<\/th><th scope="col">Command<\/th><th scope="col" class="cz-col-32">Source<\/th>/);
+  assert.match(html, /<table class="cz-table" data-cds="Table" aria-label="Hooks"><thead><tr><th scope="col" class="cz-col-40">Event<\/th><th scope="col" class="cz-col-22">Matcher<\/th><th scope="col">Command<\/th><th scope="col" class="cz-col-32">Source<\/th>/);
   assert.match(html, /<tr data-hook="a" data-hook-active="false">/);
   assert.match(html, /<span class="cz-badge" data-variant="default" data-size="xs" title="New: review it before it runs">Needs review<\/span>/);
   assert.match(html, /<span class="cz-badge" data-variant="default" data-size="xs">Managed<\/span>/);

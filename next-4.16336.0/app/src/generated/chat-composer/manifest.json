@@ -248,6 +248,220 @@
         "dropScope: C, cardClassName: w, className: T, rootRef: E, rootProps: D",
         "editorMinLines: R, editorMaxHeight: ne"
       ]
+    },
+    "BD": {
+      "source": "shared-9-BgdM6Y1f.js",
+      "local": "BD",
+      "sourceSha256": "216efe74f323608b469149c24d4168c15d82711d93a9b5ba7fcdb3dca94931d7",
+      "sha256": "f73caee52809dfba1666b3a061a5fe0b96d7a7e1f69687f07737192a85635c0d",
+      "features": [
+        "role: \"textbox\"",
+        "\"aria-required\": \"false\"",
+        "id: \"uxkiTeN6WU\"",
+        "\"aria-describedby\": \"claude-code-nudge-body\""
+      ]
+    },
+    "VR": {
+      "source": "shared-8-BqfCbkJd.js",
+      "local": "VR",
+      "sourceSha256": "d9aa7c7f690b43147e921fbef5473f2311a1474e316c44e6db5ef07e9fede5bc",
+      "sha256": "fbe513e6905b6e8e7a3d585116a05983433c0a5c0106d801cc5179dfcbbc876e",
+      "features": [
+        "inCdsComposer: k",
+        "replySendLook: A",
+        "\"claude.cowork.task.stop_button\""
+      ]
+    },
+    "GR": {
+      "source": "shared-8-BqfCbkJd.js",
+      "local": "GR",
+      "sourceSha256": "d9aa7c7f690b43147e921fbef5473f2311a1474e316c44e6db5ef07e9fede5bc",
+      "sha256": "7e6cbb4b54df8c287fd5f53d8e0f491013088c92b9d1afe1902407e52c1bada5",
+      "features": [
+        "{ frozen: t, skipEnter: n, children: r } = e"
+      ]
+    },
+    "WR": {
+      "source": "shared-8-BqfCbkJd.js",
+      "local": "WR",
+      "sourceSha256": "d9aa7c7f690b43147e921fbef5473f2311a1474e316c44e6db5ef07e9fede5bc",
+      "sha256": "e4d35721c411df7721c19c110300e00643d225050d0115b9319193e8b964f8d8",
+      "features": [
+        "{ shown: t, sendDisabled: n, children: r } = e"
+      ]
+    },
+    "tz": {
+      "source": "shared-8-BqfCbkJd.js",
+      "local": "tz",
+      "sourceSha256": "d9aa7c7f690b43147e921fbef5473f2311a1474e316c44e6db5ef07e9fede5bc",
+      "sha256": "91d5f03af6b8313dd8c290a5cb88879e65da43c5dc6e8e0e45b8de76050c9ae8",
+      "features": [
+        "id: \"Xx0WZVz8QS\"",
+        "\"aria-keyshortcuts\": ",
+        "secondaryHint: "
+      ]
+    },
+    "JR": {
+      "source": "shared-8-BqfCbkJd.js",
+      "local": "JR",
+      "sourceSha256": "d9aa7c7f690b43147e921fbef5473f2311a1474e316c44e6db5ef07e9fede5bc",
+      "sha256": "01343a0544ba1c10cdab34990f2ca323d7714402744d093793b051de32652cc8",
+      "features": [
+        "\"CdsPrimaryActionCluster\"",
+        "id: \"9PawskFnw4\"",
+        "sendSecondaryHint: "
+      ]
+    },
+    "OR": {
+      "source": "shared-8-BqfCbkJd.js",
+      "local": "OR",
+      "sourceSha256": "d9aa7c7f690b43147e921fbef5473f2311a1474e316c44e6db5ef07e9fede5bc",
+      "sha256": "a8d2c06979defd8ca51bc9711d100b70d9c63cc96d2965ff36ee49577dc2ddfc",
+      "features": [
+        "\"animate-primary-action-in\""
+      ]
+    },
+    "MR": {
+      "source": "shared-8-BqfCbkJd.js",
+      "local": "MR",
+      "sourceSha256": "d9aa7c7f690b43147e921fbef5473f2311a1474e316c44e6db5ef07e9fede5bc",
+      "sha256": "7e4ebfbd70f8ec421ea7f7b3e34fdc843d0a4d9614d7b7e0c1df66e8fa0d849c",
+      "features": [
+        "\"relative flex items-center justify-end\""
+      ]
+    },
+    "NR": {
+      "source": "shared-8-BqfCbkJd.js",
+      "local": "NR",
+      "sourceSha256": "d9aa7c7f690b43147e921fbef5473f2311a1474e316c44e6db5ef07e9fede5bc",
+      "sha256": "fd81fb405af4d74b88363666042bc509870653cb95c8916b05a6d7cf08216a0f",
+      "features": [
+        "\"flex items-center opacity-100 motion-safe:[transition:opacity_120ms_ease-out_80ms,visibility_0s_linear_80ms]\""
+      ]
+    },
+    "PR": {
+      "source": "shared-8-BqfCbkJd.js",
+      "local": "PR",
+      "sourceSha256": "d9aa7c7f690b43147e921fbef5473f2311a1474e316c44e6db5ef07e9fede5bc",
+      "sha256": "27cec0ebc0fa96d7f9897f46b8c1f06d74afb374a61a821c670cdef80510a661",
+      "features": [
+        "\"flex items-center absolute inset-y-0 end-0 invisible pointer-events-none opacity-0 motion-safe:[transition:opacity_80ms_ease-out,visibility_0s_linear_80ms]\""
+      ]
+    },
+    "kR": {
+      "source": "shared-8-BqfCbkJd.js",
+      "local": "kR",
+      "sourceSha256": "d9aa7c7f690b43147e921fbef5473f2311a1474e316c44e6db5ef07e9fede5bc",
+      "sha256": "aa1a44155ddeb37dc8a9a68718187514defb0ac6abc1e02565275c9491a5ab9a",
+      "features": [
+        "exit: { opacity: 0, transition: { duration: 0.08 } }"
+      ]
+    },
+    "GQ": {
+      "source": "shared-8-BqfCbkJd.js",
+      "local": "GQ",
+      "sourceSha256": "d9aa7c7f690b43147e921fbef5473f2311a1474e316c44e6db5ef07e9fede5bc",
+      "sha256": "2caa2b56567b44fc39a592e635344b07eece668c0920fdbc2927d62bf2913409",
+      "features": [
+        "handoffLayoutId: r,",
+        "withoutModePicker: a,",
+        "modePickerHeld: o,",
+        "modePickerHoldable: s"
+      ]
+    },
+    "KQ": {
+      "source": "shared-8-BqfCbkJd.js",
+      "local": "KQ",
+      "sourceSha256": "d9aa7c7f690b43147e921fbef5473f2311a1474e316c44e6db5ef07e9fede5bc",
+      "sha256": "ac7b19fa2ca214a6dfd1293f3a4b7542f06bb5566615727ead381b1856a75ccc",
+      "features": [
+        "\"group/chin-trail flex min-w-0 items-center text-muted-as-secondary\"",
+        "modelControlsInChin: r,",
+        "designSystemChip: o,"
+      ]
+    },
+    "HQ": {
+      "source": "shared-8-BqfCbkJd.js",
+      "local": "HQ",
+      "sourceSha256": "d9aa7c7f690b43147e921fbef5473f2311a1474e316c44e6db5ef07e9fede5bc",
+      "sha256": "3914d0eff5ff62ae0b17ae730ad2b47768ce6b304aa859b5158d7d5cf2bf88a7",
+      "features": [
+        "\"animate-marlin-chin-fade motion-reduce:animate-none\""
+      ]
+    },
+    "lC": {
+      "source": "shared-36-fqRFYwOb.js",
+      "local": "lC",
+      "sourceSha256": "46b37c8c361e9b83b9e10257008f0ace79f91e1ec68a8d20b136de35644b7719",
+      "sha256": "5ae8ef225e6ea22b5daf3f265c682bd77420e55a5d8c33da83d9744fdc14eefa",
+      "features": [
+        "isLocalAgentRoute: e }",
+        "return !e && t;"
+      ]
+    },
+    "mC": {
+      "source": "shared-36-fqRFYwOb.js",
+      "local": "mC",
+      "sourceSha256": "46b37c8c361e9b83b9e10257008f0ace79f91e1ec68a8d20b136de35644b7719",
+      "sha256": "ce09a4c8b91c638906cd292954a4e3eed7a4a668ddb3fc2ad08c8c0b3422b426",
+      "features": [
+        "\"pointer-events-none absolute inset-x-0 flex h-control items-center justify-center\"",
+        "\"whitespace-nowrap text-muted-as-secondary\"",
+        "[data-cds=\"ChatComposerChin\"]"
+      ]
+    },
+    "PT": {
+      "source": "shared-36-fqRFYwOb.js",
+      "local": "PT",
+      "sourceSha256": "46b37c8c361e9b83b9e10257008f0ace79f91e1ec68a8d20b136de35644b7719",
+      "sha256": "15922c1ed1c0f81e13dc5eeb4dc9ade5e9cefab2b3ad8c6fd81df8f31731056c",
+      "features": [
+        "id: \"9HU8vwHwVV\"",
+        "id: \"CI9xffp7fP\"",
+        "isExternalConversation: a = !1"
+      ]
+    },
+    "tO": {
+      "source": "shared-9-BgdM6Y1f.js",
+      "local": "tO",
+      "sourceSha256": "216efe74f323608b469149c24d4168c15d82711d93a9b5ba7fcdb3dca94931d7",
+      "sha256": "9a7599a2d0e2d6e39ddf6116ac83c1a4c5b2f88af861a0145a208bd37c55d40e",
+      "features": [
+        "hubChinControls: t,",
+        "relocateControlsToChin: _, chinControlsInCard: g",
+        "f = d && i && a && o && !s && c && !u,"
+      ]
+    },
+    "t_": {
+      "source": "shared-9-BgdM6Y1f.js",
+      "local": "t_",
+      "sourceSha256": "216efe74f323608b469149c24d4168c15d82711d93a9b5ba7fcdb3dca94931d7",
+      "sha256": "404dba9d6f4cca729fcc5124d3dadda492d81c84eb62e240176c49cdd2fcc999",
+      "features": [
+        "stableDictationAvailable: n, stableVoiceAvailable: r",
+        "return t && (n || r);"
+      ]
+    },
+    "n_": {
+      "source": "shared-9-BgdM6Y1f.js",
+      "local": "n_",
+      "sourceSha256": "216efe74f323608b469149c24d4168c15d82711d93a9b5ba7fcdb3dca94931d7",
+      "sha256": "a9fea19c1d4609bac93377ced3c1d6fb90311b80f8105895f21504f32dfefeaa",
+      "features": [
+        "\"data-testid\": \"chin-mic\"",
+        "holdSecondControlWidth: !0"
+      ]
+    },
+    "k_": {
+      "source": "shared-9-BgdM6Y1f.js",
+      "local": "k_",
+      "sourceSha256": "216efe74f323608b469149c24d4168c15d82711d93a9b5ba7fcdb3dca94931d7",
+      "sha256": "efbfd7be3f3df89e60a8dfa7d2dd7de5a1d30214691d2ee5bc0e17504f5704b8",
+      "features": [
+        "\"flex items-center [&_button]:!rounded\"",
+        "split: !0",
+        "holdSecondControlWidth: o,"
+      ]
     }
   },
   "modules": [
@@ -255,11 +469,26 @@
       "target": "card.mjs",
       "sources": [
         "shared-9-BgdM6Y1f.js",
-        "shared-3-IQTrO7Gx.js"
+        "shared-3-IQTrO7Gx.js",
+        "shared-1-D1bGaTaN.js"
       ],
-      "sha256": "27eac60e509dbe91d4b518bce4f19b78647098f41806bb2ab4ceecb158253bcd",
+      "sha256": "1db49080bcdfb5f52b906cb1dbc0a4595792d3a6d0a0f8f76ecebb260522f5d3",
       "exports": [
-        "chatComposerCard"
+        "chatComposerCard",
+        "chatComposerEditor"
+      ]
+    },
+    {
+      "target": "chin.mjs",
+      "sources": [
+        "shared-8-BqfCbkJd.js",
+        "shared-36-fqRFYwOb.js",
+        "shared-9-BgdM6Y1f.js"
+      ],
+      "sha256": "76451bdc880b82d96b017d3939494192ddd751febd236976d79befa1843f2aae",
+      "exports": [
+        "chatComposerChin",
+        "chatComposerChinMessages"
       ]
     },
     {
@@ -282,7 +511,7 @@
         "shared-33-DtdykY0y.js",
         "shared-19-UalAfDtn.js"
       ],
-      "sha256": "434db38a539104824c6c68c12e75dc73a277b2dec5cc3ed100b3836d4cca2f0a",
+      "sha256": "40c0ea6f3c8fec5c96ce5ef356c15c8330fdd1a6d019bdb463acba9a474325da",
       "sliced": [
         "kH",
         "ZH",
@@ -295,6 +524,19 @@
         "modelSelectorMessages",
         "modelSelector",
         "effortMenuMessages"
+      ]
+    },
+    {
+      "target": "send-action.mjs",
+      "sources": [
+        "shared-8-BqfCbkJd.js",
+        "shared-1-D1bGaTaN.js",
+        "shared-36-fqRFYwOb.js"
+      ],
+      "sha256": "c6919e232659b46704ac52e4e28f2cd9864c4342bd7ce9e0250d19ec72082266",
+      "exports": [
+        "chatSendAction",
+        "chatSendMessages"
       ]
     }
   ],
@@ -319,6 +561,38 @@
       "local": "Lp",
       "sourceSha256": "8e08befdcac208adfcd30309fcc4e292a698b253f7accc2c79bdf44fa202b919",
       "value": "tight"
+    },
+    "editorTestId": {
+      "source": "shared-1-D1bGaTaN.js",
+      "export": "Mb",
+      "local": "mp",
+      "sourceSha256": "bc66aa8473c6bb2c7f6c179732a63f6cb9b8b69572abc2ebaf7c1e31d5eeb0ea",
+      "value": "chat-input"
+    },
+    "editorKindAttribute": {
+      "source": "shared-1-D1bGaTaN.js",
+      "export": "Pb",
+      "local": "yp",
+      "sourceSha256": "bc66aa8473c6bb2c7f6c179732a63f6cb9b8b69572abc2ebaf7c1e31d5eeb0ea",
+      "value": "data-composer-editor"
+    },
+    "sendMotionStyle": {
+      "source": "shared-36-fqRFYwOb.js",
+      "export": "_r",
+      "local": "MT",
+      "sourceSha256": "46b37c8c361e9b83b9e10257008f0ace79f91e1ec68a8d20b136de35644b7719"
+    },
+    "sendTestId": {
+      "source": "shared-1-D1bGaTaN.js",
+      "export": "Ab",
+      "local": "hp",
+      "sourceSha256": "bc66aa8473c6bb2c7f6c179732a63f6cb9b8b69572abc2ebaf7c1e31d5eeb0ea",
+      "value": "chat-input-send"
+    },
+    "marlinBandGap": {
+      "source": "shared-36-fqRFYwOb.js",
+      "local": "pC",
+      "value": 12
     }
   },
   "picks": [
@@ -387,6 +661,18 @@
       "root": "$H",
       "source": "shared-8-BqfCbkJd.js",
       "sha256": "e5c3e5f0deb155e6caab69f7a95720b620f3be0300af8207a3f54608e32c4e30"
+    },
+    {
+      "name": "popupCollision",
+      "root": "$H",
+      "source": "shared-8-BqfCbkJd.js",
+      "sha256": "c5ff308b62203fddc9b00eb73cf65f1f13e3c7297d75a6e77b28c11331d3b06d"
+    },
+    {
+      "name": "popupCollisionTop",
+      "root": "$H",
+      "source": "shared-8-BqfCbkJd.js",
+      "sha256": "8de3627d0422bd47430f8733a3caac6d68cb623c4bee1ff0b3b924c4e312cfc7"
     },
     {
       "name": "alignDefault",
@@ -813,6 +1099,258 @@
       "root": "fO",
       "source": "shared-9-BgdM6Y1f.js",
       "sha256": "43a1241cd01274e4bab6a4d36c6f591d6e63f8dd5819a17f78f01d81ccde7264"
+    },
+    {
+      "name": "editor.ariaLabel",
+      "root": "BD",
+      "source": "shared-9-BgdM6Y1f.js",
+      "sha256": "9cb24b0c5a8bbaec02b20871dc8cd82376b2458c4510d7de24bff4730aadb265"
+    },
+    {
+      "name": "editor.attributes",
+      "root": "BD",
+      "source": "shared-9-BgdM6Y1f.js",
+      "sha256": "ca5d3b72653d23680e4927b970ce30cb827c99b10d2f10f126f90dd8388c7604"
+    },
+    {
+      "name": "send.idleArm",
+      "root": "VR",
+      "source": "shared-8-BqfCbkJd.js",
+      "sha256": "c674d8446e6de7d7d95c0099f3b05afe987ea811b82567c81e359c91dad7ca38"
+    },
+    {
+      "name": "send.idleKey",
+      "root": "VR",
+      "source": "shared-8-BqfCbkJd.js",
+      "sha256": "9f8ee4238d004467eee49c33e9feb708c59e81747c6262f95b33f890ad8f37b6"
+    },
+    {
+      "name": "send.stopArm",
+      "root": "VR",
+      "source": "shared-8-BqfCbkJd.js",
+      "sha256": "0322776b89488c0de205c81d09ca5e34f04717dc59ba994ac5ab1802d4322b89"
+    },
+    {
+      "name": "send.gr",
+      "root": "GR",
+      "source": "shared-8-BqfCbkJd.js",
+      "sha256": "365e4144b7795576f2c37e0839273cfd69a3a6478aeda5c995e4feb3b32b4bae"
+    },
+    {
+      "name": "send.wr",
+      "root": "WR",
+      "source": "shared-8-BqfCbkJd.js",
+      "sha256": "1139e90499ff10beabc55e985e5194b2a43c22fa941939c6ad8a7d773f1c9187"
+    },
+    {
+      "name": "send.tzEnter",
+      "root": "tz",
+      "source": "shared-8-BqfCbkJd.js",
+      "sha256": "c04db887bf36bc977fd25026cd223db124500d675ec568c9c781564597305553"
+    },
+    {
+      "name": "send.look",
+      "root": "tz",
+      "source": "shared-8-BqfCbkJd.js",
+      "sha256": "32c7a1e48ede57aa91666a07370517c6453c42061b6fb44c5487dbc903d9c576"
+    },
+    {
+      "name": "send.button",
+      "root": "tz",
+      "source": "shared-8-BqfCbkJd.js",
+      "sha256": "6d0ad176e57169cefd91b983f41d0ce64d32c19cb5dabe36f54a30dc9b6b7437"
+    },
+    {
+      "name": "send.tooltip",
+      "root": "tz",
+      "source": "shared-8-BqfCbkJd.js",
+      "sha256": "565812b7c4fa1253e561d7c63669622db98819714bab550adab971ebfd184b95"
+    },
+    {
+      "name": "send.messages.sendMessage",
+      "root": "tz",
+      "source": "shared-8-BqfCbkJd.js",
+      "sha256": "1e4b37d5fa3cbf4973a0dcdcd7d8fe25458706f81a3b9777ae9f41405ccb400c"
+    },
+    {
+      "name": "send.motionStyle",
+      "root": "kR",
+      "source": "shared-8-BqfCbkJd.js",
+      "sha256": "e8acb4845115b3a360b1a09fe45e929da80522a45b3d2e84baf0e177acb3941c"
+    },
+    {
+      "name": "stop.messages.stopResponse",
+      "root": "JR",
+      "source": "shared-8-BqfCbkJd.js",
+      "sha256": "c921d13232456c820be46e4d75988f89a919baa53201f5d76bc21bba5e967c97"
+    },
+    {
+      "name": "stop.states",
+      "root": "JR",
+      "source": "shared-8-BqfCbkJd.js",
+      "sha256": "2c645ff84d75981ebd083bdd91b32d0c48ea8ba518133eeeba9a9bc00ffe5f21"
+    },
+    {
+      "name": "stop.escapeHint",
+      "root": "JR",
+      "source": "shared-8-BqfCbkJd.js",
+      "sha256": "2de0050535952ec61d385e7b83d0bd5e7da71ebf32b7b6f437eca9759494c63a"
+    },
+    {
+      "name": "marlin.leading",
+      "root": "KQ",
+      "source": "shared-8-BqfCbkJd.js",
+      "sha256": "41c76f0f9871a70d16a1e37ee97f5d9b1b1bbebdb41fb57a99cdbfa7aaf6040e"
+    },
+    {
+      "name": "marlin.trailing",
+      "root": "KQ",
+      "source": "shared-8-BqfCbkJd.js",
+      "sha256": "066805f4533df4bd77bca4ef5fdfca0421977bf5ee5c5398f5f0830543c703ab"
+    },
+    {
+      "name": "marlin.trail",
+      "root": "KQ",
+      "source": "shared-8-BqfCbkJd.js",
+      "sha256": "88b8cbfe5effc8ce2037aedd0bda2d4479bac104bd66b185c212ad3336959ea5"
+    },
+    {
+      "name": "marlin.centredArm",
+      "root": "KQ",
+      "source": "shared-8-BqfCbkJd.js",
+      "sha256": "3d17da497b730d8a1b4e21d2d69cb24726cd955c1a7bd5f791118cde6abe1536"
+    },
+    {
+      "name": "marlin.part",
+      "root": "KQ",
+      "source": "shared-8-BqfCbkJd.js",
+      "sha256": "3c2d406b786b133ef0d11b346bc5b338b07bd43cbef595e17c3b8909fc900eb2"
+    },
+    {
+      "name": "marlin.fade",
+      "root": "HQ",
+      "source": "shared-8-BqfCbkJd.js",
+      "sha256": "7046777b0c4fc4429cf7c853e50117589a507b4adc53aaca8259977a83a72f3d"
+    },
+    {
+      "name": "marlin.centredSource",
+      "root": "GQ",
+      "source": "shared-8-BqfCbkJd.js",
+      "sha256": "4286c488fc867847fcc4410f0ba63ac8ba4d8487bfc36718c77d29824ed6b527"
+    },
+    {
+      "name": "marlin.band.frame",
+      "root": "mC",
+      "source": "shared-36-fqRFYwOb.js",
+      "sha256": "f7ddf27c32557d87ad6183e1573c73b78bd1c1d6caee50abe9a0d804a97e5fa2"
+    },
+    {
+      "name": "marlin.band.text",
+      "root": "mC",
+      "source": "shared-36-fqRFYwOb.js",
+      "sha256": "4082160b1dc139d8b813b7eaea4127aec069be299737e0d01032eed978166cdc"
+    },
+    {
+      "name": "marlin.band.gap",
+      "root": "mC",
+      "source": "shared-36-fqRFYwOb.js",
+      "sha256": "8d417bbb7c965fa0383401d1c49a18d8f1e25343a286949516eed39323587d03"
+    },
+    {
+      "name": "marlin.band.placement",
+      "root": "mC",
+      "source": "shared-36-fqRFYwOb.js",
+      "sha256": "987616befb896153af122979cfc417584150bbd2991f44c5635d92114ca70ec1"
+    },
+    {
+      "name": "marlin.end",
+      "root": "FQ",
+      "source": "shared-8-BqfCbkJd.js",
+      "sha256": "a346b3dbb47dd46d62151f5885a15b5b7a042dc25b800da0b81a4048ae05389a"
+    },
+    {
+      "name": "marlin.ring",
+      "root": "FQ",
+      "source": "shared-8-BqfCbkJd.js",
+      "sha256": "508ee64e64cc643ba10e13cb2f3dc8a783c7c612e968338a63888ee32f67f3ba"
+    },
+    {
+      "name": "marlin.relocated",
+      "root": "fO",
+      "source": "shared-9-BgdM6Y1f.js",
+      "sha256": "59c989f2f5e03cfcac785c14be13da5f6b5222ae82312f8bcaa5c44ac20d7485"
+    },
+    {
+      "name": "marlin.relocateRule",
+      "root": "tO",
+      "source": "shared-9-BgdM6Y1f.js",
+      "sha256": "af58fe581e79d4fdd61a612a2802eeb35dbd9ca006a5f1b0169465eea3a0e8a3"
+    },
+    {
+      "name": "marlin.hubSource",
+      "root": "gO",
+      "source": "shared-9-BgdM6Y1f.js",
+      "sha256": "79324b13f8c196f36c250fa232ef1b5b0637071701a44661061043e7d3726316"
+    },
+    {
+      "name": "marlin.hubRule",
+      "root": "lC",
+      "source": "shared-36-fqRFYwOb.js",
+      "sha256": "eb47bdf10d00f40f0a9f0ca21d121be8d63ab930bd8d4b1075d38b3e246c5cb7"
+    },
+    {
+      "name": "marlin.placeholderGate",
+      "root": "PT",
+      "source": "shared-36-fqRFYwOb.js",
+      "sha256": "12924864a26132e4017bda890316726e3e80d6b1cc0b0bcc3a08a0e550fa795a"
+    },
+    {
+      "name": "marlin.messages.reply",
+      "root": "PT",
+      "source": "shared-36-fqRFYwOb.js",
+      "sha256": "5f5b9753c4384cd4d658dd252a6c95fea13687cc11acdf821a1e54703feeb907"
+    },
+    {
+      "name": "marlin.messages.writeMessage",
+      "root": "PT",
+      "source": "shared-36-fqRFYwOb.js",
+      "sha256": "5be2168dc68a6b20c7bc0214174d31a30dd26b72f4883e7c459d5fe2cfc6829f"
+    },
+    {
+      "name": "marlin.mic.rule",
+      "root": "t_",
+      "source": "shared-9-BgdM6Y1f.js",
+      "sha256": "00999f860dc80204994f8e101324279902a2c9a9cf9b82a2fbbc332f74f4378a"
+    },
+    {
+      "name": "marlin.mic.frame",
+      "root": "n_",
+      "source": "shared-9-BgdM6Y1f.js",
+      "sha256": "5349a36f3d74aac1e4ad1cfa428198177f37092fc422ff92b448577e25e74670"
+    },
+    {
+      "name": "marlin.mic.testId",
+      "root": "n_",
+      "source": "shared-9-BgdM6Y1f.js",
+      "sha256": "72a8747dfa41fc17cdf4ca13d6fd3bfaf1e6bbd304ad7fa61b72e7eec4175150"
+    },
+    {
+      "name": "marlin.mic.states",
+      "root": "n_",
+      "source": "shared-9-BgdM6Y1f.js",
+      "sha256": "f7c525db5911276786e984cbec6bfbae01b5e25ae5399bbc13f4d4d672bef929"
+    },
+    {
+      "name": "marlin.mic.inert",
+      "root": "n_",
+      "source": "shared-9-BgdM6Y1f.js",
+      "sha256": "872ea1766982d4ab13fb7f9a3c3b62e67c1d2f396f9503740ceb59bc8e78f9c2"
+    },
+    {
+      "name": "marlin.mic.split",
+      "root": "k_",
+      "source": "shared-9-BgdM6Y1f.js",
+      "sha256": "c7a6dd7ed80916b0de41f93a07fe708be9bddb6ea5cfc1f3f3f37d747989fbcd"
     }
   ]
 }

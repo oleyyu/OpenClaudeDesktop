@@ -3,19 +3,26 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 // cowork-progress (vT Progress, xT Outputs / Working folder, kT / Bb dialogs, cc5a62f6f F / L / contexts), cowork-runs
 // (Ew Runs, eT Upcoming), cowork-live (hb Claude in Chrome, bb Computer use, pb the running signal) and cowork-context
 // (TT Context) — and the home column, layout table and greeting (scripts/extract-cowork-home.mjs).
+// chat-cowork-1to1 r1 (cowork-r1-01): cut over to the 4.16336.0 graphs — c21f11e6d-Cyj5xu_D xE over lE Progress,
+// fE Outputs, the folder instructions dialog, cc5a62f6f h / contexts / s (cowork-progress-v4), gT Runs / WT Upcoming
+// (cowork-runs-v4), jb Claude in Chrome / Ib Computer use (cowork-live-v4) and gE Context (cowork-context-v4). 4.16 has no
+// file browser dialog (Bb, a REMOVED_ROOT) and no running-signal hook (pb): xE reads the pending flags inline.
 import { CoworkProgressSection as ProgressSection, CoworkOutputsSection as OutputsSection, CoworkPanel as Panel,
-  CoworkFolderInstructionsDialog as FolderInstructionsDialog, CoworkFileBrowserDialog as FileBrowserDialog,
+  CoworkFolderInstructionsDialog as FolderInstructionsDialog,
   CoworkPanelMergedContext as MergedContext, CoworkPanelLayoutContext as LayoutContext,
-  coworkPanelCardLayout as cardLayout } from './generated/cowork-progress/index.mjs';
-// cc5a62f6f `re` (official export m, AT's Xh): the section-header toggle display context, by its published name.
-import { CoworkPanelSectionToggleContext as SectionToggleDisplayContext } from './generated/cowork-progress/index.mjs';
-import { CoworkRunsSection as RunsSection, CoworkUpcomingSection as UpcomingSection } from './generated/cowork-runs/index.mjs';
+  coworkPanelCardLayout as cardLayout } from './generated/cowork-progress-v4/index.mjs';
+// cc5a62f6f (xE's Zg): the section-header toggle display context, by its published name.
+import { CoworkPanelSectionToggleContext as SectionToggleDisplayContext } from './generated/cowork-progress-v4/index.mjs';
+// shared-120 Xn (xE's Tm): the docked panel's card chrome.
+import { Xn as coworkPanelChrome } from './generated/cowork-progress-v4/shared-120.mjs';
+import { CoworkRunsSection as RunsSection, CoworkUpcomingSection as UpcomingSection } from './generated/cowork-runs-v4/index.mjs';
 import { CoworkBrowserSection as BrowserSection, CoworkComputerUseSection as ComputerUseSection,
-  useCoworkToolRunning, useCoworkBrowserActivityText, useCoworkBrowserScreenshot } from './generated/cowork-live/index.mjs';
-import { CoworkContextSection as ContextSection } from './generated/cowork-context/index.mjs';
-import { CdsTooltipProvider } from './generated/view-tabs/index.js';
-import { HomeColumn, homeBannerOffsetClass as bannerOffset, homeDockHeightClass as dockHeight,
-  homeColumnClass } from './generated/cowork-home/index.mjs';
+  useCoworkBrowserActivityText, useCoworkBrowserScreenshot } from './generated/cowork-live-v4/index.mjs';
+import { CoworkContextSection as ContextSection } from './generated/cowork-context-v4/index.mjs';
+// xE `h(ce, { delay: 300, closeDelay: 150 })`: ce is the 4.16336.0 cds-core CdsTooltipProvider (shared-frame ld).
+import { CdsTooltipProvider } from './cds-core.mjs';
+// chat-home-r3-02: shared-23 TT's column (shared-18 uO with Se's classes) from the 4.16336.0 graph (was 3.6556.2 cowork-home).
+import { NewPageColumn, newPageColumn } from './generated/home-chat-cowork/new-page-column.mjs';
 import { homeLayout } from './generated/home-chat-cowork/shared-19.mjs';
 import { SourceChatGreeting, newPageLayoutVariant } from './source-chat-home.jsx';
 import { FileSystem } from './source-cowork-progress-v3-adapters.jsx';
@@ -33,7 +40,10 @@ import { planStepStatus } from './source-plan-checklist.jsx';
 import { t } from '../electron/i18n/index.mjs';
 import './source-surfaces.css';
 
-export { homeScrollClass } from './generated/cowork-home/index.mjs';
+export const homeScrollClass = newPageColumn.scrollClass;
+// chat-cowork-1to1 r3 (chat-home-r3-02): 4.16336.0 shared-23 TT — the scroll column (scrollClass) holds shared-18 uO (Cl)
+// with Se = u(columnClass, `${pS(variant).columnTopOffsetClass} ${Jx}`, hT = false, yk) (generated/home-chat-cowork/
+// new-page-column.mjs). The notes below are the 3.6556.2 history of the same call; the class strings are byte-equal.
 // 3.6556.2 shared-23 new page: the scrolling viewport (homeScrollClass) holds shared-18 AC (Gd) with
 // o("relative flex flex-col items-center gap-6 max-sm:!px-1 md:px-14", `${zg(n).columnTopOffsetClass} ${mg}`, NC, cu)
 // — the new-page layout (shared-19 rS / nS), the banner offset (shared-19 Rx, mg) and the dock height (shared-5 HS, cu).
@@ -47,9 +57,9 @@ export { homeScrollClass } from './generated/cowork-home/index.mjs';
 const homeVariant = homeLayout(newPageLayoutVariant);
 export function SourceSurfaceHome({ active, children }) {
   if (!active) return children;
-  return <HomeColumn className={`surface-home-column ${homeColumnClass} ${homeVariant.columnTopOffsetClass} ${bannerOffset} ${dockHeight}`}>
+  return <NewPageColumn className={`surface-home-column ${newPageColumn.columnClass} ${homeVariant.columnTopOffsetClass} ${newPageColumn.bannerOffsetClass} ${newPageColumn.dockHeightClass}`}>
     {children}
-  </HomeColumn>;
+  </NewPageColumn>;
 }
 
 // w13-close-cowork-ui (chatui-home-01): the Cowork new page greets with the same shared-23 Fy as Chat. 3.6556.2 has one
@@ -76,7 +86,9 @@ export function SourceSurfaceGreeting() {
 //   - the in-panel toggle (`!Oe && …`, Oe = `!a && !o && (Se || xe)`) is not rendered: the title bar has it.
 const headerHosted = false;
 const PANEL_WIDTH = '20rem'; // aT
-const PANEL_CHROME = 'dframe-card rounded-lg bg-[var(--df-sidebar-bg,var(--cds-surface-1))] [box-shadow:var(--df-shadow-card,none)]'; // Nc
+// 4.16336.0 xE `nn = Qt ? void 0 : X ? n_ : qe ? Tm : a_`: Tm is shared-120 Xn (export q), the 3.6556.2 Nc string plus the
+// shared-frame Sm forced-colors border suffix; read from the cowork-progress-v4 graph rather than restated.
+const PANEL_CHROME = coworkPanelChrome;
 const sectionHeight = (_count, fallback = '24rem') => ({ maxContentHeight: fallback }); // gt with ht false
 const sectionToggles = headerHosted ? 'hover' : 'always'; // wi
 // shared-52 nk: a folder's display name (AT si = `Tn(oe[0]) || oe[0]` for one selected folder).
@@ -175,7 +187,7 @@ function useOutputsExpansion(hasOutputs, multipleFolders) {
  * hideEmptySections (`u`) is false, so the emptyState branch (`Si = u && xi === 0`) never shows.
  */
 export function SourceCoworkProgress({ call = noCall, sessionId, plan, items = [], cwd, running, sessions, metadata, state,
-  scheduledTasks, gates = NO_GATES, onOpenFile, onOpenSession, onOpenRoutine, onRevealStep, canRevealStep }) {
+  scheduledTasks, gates = NO_GATES, onOpenFile, onOpenSession, onOpenRoutine, onRevealStep, canRevealStep, overlay = false, onCloseOverlay, shown = true }) {
   const steps = Array.isArray(plan) ? plan : plan?.plan ?? NO_STEPS;
   const todos = useMemo(() => steps.map(step => ({ ...step, content: step.content ?? step.step, status: planStepStatus(step.status) })), [steps]);
   const allTodosCompleted = todos.length > 0 && todos.every(step => step.status === 'completed'); // Qi
@@ -232,17 +244,34 @@ export function SourceCoworkProgress({ call = noCall, sessionId, plan, items = [
   const browserText = useCoworkBrowserActivityText(activity.resourceActivity);
   // sb (AT `n = sb(W)`, w13-close-cowork-ui panel-live-02): the newest Claude in Chrome result image.
   const browserScreenshot = useCoworkBrowserScreenshot(activity.resourceActivity);
-  const live = coworkLiveSectionProps(activity, { sessionId, isSessionActive, panelShown: true, browserText, browserScreenshot });
-  const isBrowserToolRunning = useCoworkToolRunning(activity.isBrowserToolPending, isSessionActive, sessionId); // Gr
-  const isComputerUseToolRunning = useCoworkToolRunning(activity.isComputerUseToolPending, isSessionActive, sessionId); // qr
+  const live = coworkLiveSectionProps(activity, { sessionId, isSessionActive, panelShown: shown, browserText, browserScreenshot });
+  // 4.16336.0 xE: `isBrowserToolRunning: ra` / `isComputerUseToolRunning: aa` are the inline pending flags (an mcp_tool
+  // event of that server without mcpToolResult) — no linger, no session gate (cowork-r1-07).
+  const isBrowserToolRunning = activity.isBrowserToolPending; // ra
+  const isComputerUseToolRunning = activity.isComputerUseToolPending; // aa
   const computerUseCard = gates[COMPUTER_USE_CARD_GATE] === true; // Vn
 
   // AT returns a fragment: the aside (`...oT`, data-activity-peek-zone; "h-full flex-shrink-0" with ht false, then
   // "relative z-20"; no overflow-hidden in the desktop frame while shown; width aT) and, beside it, the folder
-  // instructions dialog (`Yr && !Bn && J && kT`) and the file browser (`Wn && Yr && Bb`).
-  return <><aside data-activity-peek-zone="" className="cds-root h-full flex-shrink-0 relative z-20" data-density="comfortable"
-    style={{ width: PANEL_WIDTH }} aria-label={t('Session activity panel')}>
-    <div className="flex flex-col pe-[var(--df-pane-trailing-gutter,8px)] h-full ps-2 pt-0 pb-2" style={{ width: PANEL_WIDTH }}>
+  // instructions dialog (`Yr && !Bn && J && kT`). (4.16336.0 has no file browser dialog: 3.6556.2 Bb is a removed root.)
+  // U-05 overlay (4.16336.0 AT, the session body under 768px, shared-6 Cg): `ht = isViewportNarrow && isOverlayOpen`
+  // draws the backdrop `as` ("absolute inset-0 z-10 bg-neutral-50/20", a click closes) and the aside's `ln` arm
+  // ("absolute end-[var(--df-ceded-gutter,0px)] top-0 z-20 bg-surface-3", stacks:bg-surface-2, shown: "shadow-xl
+  // border-s border-strong"), no overflow-hidden; its inner column takes `ht ? "pe-2" : …`.
+  // 4.16336.0 xE gs = f(ps, ms, overlay arm | "relative z-20", …) with `...XT` = { "data-activity-peek-zone": "" }: no
+  // cds-root and no data-density on the aside (cowork-r1-08; the frame root above it is already comfortable).
+  // chat-cowork-1to1 r2 (cowork-r2-04): xE always returns the aside (`sc` is unconditional); `shown` is its `cn`. Closed, it
+  // keeps its arm's classes plus `overflow-hidden` (`(!qe || !cn) && !ht && !Qt`, qe the desktop frame), width 0
+  // (`cn || Jt ? YT : 0`), inert and aria-hidden (`!cn || void 0`); the overlay arm's shadow / border is `cn && …`. Docked
+  // and shown it gives way to a viewer (`fs`: un = !ln && !Qt && !X && lt && !bt, no selected item here). The backdrop `as`
+  // is `ht && !X` (narrow and the overlay open) with no attribute of its own.
+  const asideClass = ['h-full flex-shrink-0', ...(overlay
+    ? ['absolute end-[var(--df-ceded-gutter,0px)] top-0 z-20 bg-surface-3', 'stacks:bg-surface-2', shown && 'shadow-xl border-s border-strong']
+    : ['relative z-20']), !shown && 'overflow-hidden'].filter(Boolean).join(' ');
+  return <>{overlay && shown && <div className="absolute inset-0 z-10 bg-neutral-50/20" onClick={() => onCloseOverlay?.()} aria-hidden="true" />}
+    <aside {...(!overlay && shown ? { 'data-gives-way-to-viewer': '' } : null)} data-activity-peek-zone="" className={asideClass}
+    style={{ width: shown ? PANEL_WIDTH : 0 }} inert={!shown || undefined} aria-hidden={!shown || undefined} aria-label={t('Session activity panel')}>
+    <div className={`flex flex-col ${overlay ? 'pe-2' : 'pe-[var(--df-pane-trailing-gutter,8px)]'} h-full ps-2 pt-0 pb-2`} style={{ width: PANEL_WIDTH }}>
       <div className="overflow-y-auto flex-1 min-h-0 -ms-8 -me-2 ps-8 pe-2 pointer-events-none">
         <div className="flex flex-col gap-3 pt-2 pb-4 pointer-events-auto">
           <MergedContext.Provider value={true}><SectionToggleDisplayContext.Provider value={sectionToggles}>
@@ -260,7 +289,7 @@ export function SourceCoworkProgress({ call = noCall, sessionId, plan, items = [
                     isArtifactsExpanded={outputsOpen} setIsArtifactsExpanded={setOutputsOpen} artifactsSeedSnap={false}
                     conversationUuid={sessionId} sessionId={sessionId} handleOpenFileExplorer={() => setBrowserOpen(true)}
                     handleOpenFolder={handleOpenFolder} setIsFolderInstructionsModalOpen={setInstructionsOpen}
-                    handleOutputsActivityClick={handleOutputsActivityClick} panelShown selectedPath={null}
+                    handleOutputsActivityClick={handleOutputsActivityClick} panelShown={shown} selectedPath={null}
                     isFolderExpanded={(folder, index) => coworkFolderExpanded(folderState, folder, index)}
                     toggleFolder={(folder, index) => setFolderState(value => toggleCoworkFolder(value, folder, index))}
                     isScratchpadExpanded={scratchpadOpen} setIsScratchpadExpanded={setScratchpadOpen}
@@ -283,8 +312,6 @@ export function SourceCoworkProgress({ call = noCall, sessionId, plan, items = [
   </aside>
     {folders.length > 0 && sessionId && <FolderInstructionsDialog isOpen={instructionsOpen} setIsOpen={setInstructionsOpen}
       folderPath={folders[0]} sessionId={sessionId} />}
-    {outputs.fileExplorerAvailable && folders.length > 0 && <FileBrowserDialog isOpen={browserOpen} onClose={() => setBrowserOpen(false)}
-      folders={folders} sessionId={sessionId} />}
   </>;
 }
 

@@ -16,10 +16,11 @@ export const CHAT_PROJECTS_V4_OUTPUT = 'src/generated/chat-projects-v4';
 const ADAPTER_FILE = 'src/source-chat-projects-v4-adapters.jsx';
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
 
-export const CDS_CORE_MANIFEST_SHA256 = '06d2026939e5c8992713c2a0dda1b1abc9adffe7a0c223fe3c1e79eecd08d62c';
+export const CDS_CORE_MANIFEST_SHA256 = 'a0f228ae3f997f54f3e3ebafc254794bd26d8f1fc6999943a08b1d5730f638cd';
 
 const SPACES = 'c17beaa76-CF6cnZoR.js', EMPTY = 'cbef3b9e7-CCVzzPIb.js', KEYS = 'c444bcdd7-BCWTQytB.js', S140 = 'shared-140-DfG6VwpK.js';
 const TOOLS = 'c9b54eb90-D0FvVL5w.js', RAIL = 'cf2f34ee4-CGe8SQnD.js', PROJECT = 'c71dee58b-CV9X9s_h.js';
+const S19 = 'shared-19-UalAfDtn.js'; const REMOVAL = 'c9260427e-CQ_106hh.js';
 
 export const ROOTS = {
   [SPACES]: {
@@ -72,6 +73,21 @@ export const ROOTS = {
     // 3.6556.2 cf2f34ee4 Jr: the project memory section ("Memory", "Only you", the memory text, "Edit memory").
     Li: { name: 'ProjectMemorySection', export: null, probe: 'load project memory', features: ['defaultMessage: "Couldn\\u2019t load project memory.",',
       'defaultMessage: "Edit memory",', '"Resynthesize memory (team only)"', 'a.memoryAfterAFew', 'defaultMessage: "Last updated {time}",'] },
+  },
+  [REMOVAL]: {
+    // 4.16336.0 c9260427e ue (exported s): the knowledge rail's remove confirmation. c52b32660 ge/_e pass onAskToRemove,
+    // which keeps { fileName, remove }; xe renders ue over it: I is shared-frame Jl (CdsConfirmationDialog) titled
+    // "Remove {name}?", "This can’t be undone.", confirm "Remove file" (danger, closeOnConfirm). library-pages r3-02.
+    ue: { name: 'KnowledgeRemoveDialog', export: 's', probe: '{removal:t,onClose:r}=e', features: ['{ removal: t, onClose: r } = e,',
+      'n(I, { removal: o, isOpen: s.open, onClose: r })'] },
+  },
+  [S19]: {
+    // 4.16336.0 shared-19 NI (exported W): the project's "Edit details" dialog the projects page card menu (c17beaa76 wr
+    // `t(ot,{isOpen,onClose,spaceId,spaceName,spaceDescription})`) and the space menu open: Dialog md over FI (Name
+    // TextInputField maxLength 100, Description TextAreaField rows 6, Cancel / Save) saving through CoworkSpaces.updateSpace
+    // (shared-0 PO, the host bridge src/source-project-spaces-bridge.mjs). library-pages r2-02.
+    NI: { name: 'ProjectEditDetailsDialog', export: 'W', probe: 'spaceDescription:a', features: ['spaceDescription: a,', 'defaultMessage: "Edit details",',
+      'v(ce.Popup, { size: "md", initialFocus: o, children: [l, u] }),'] },
   },
   [PROJECT]: {
     // 3.6556.2 c71dee58b Ol: the SpaceSessionTable (CdsDataTable over one content column, chat / cowork rows).
@@ -146,6 +162,9 @@ export const HOST_ADAPTERS = {
   'shared-183-B2N6Zy4J.js#Lh': { name: 'markNavigation', from: SP, features: ['performance.mark(Cn);', 'case "new-chat":'] },
   'shared-25-D-aF0gt9.js#Jo': { name: 'useGrowthBookFeatureOn', from: 'src/settings-nav-adapter.mjs', features: ['t = _(Jr);', '.on;'] },
   'shared-2-CsjIBQD8.js#Ly': { name: 'markConversationNavigationIntent', from: SP4, features: ['t.metaKey === !0 ||'] },
+  // shared-0 PO (globalThis["claude.web"].CoworkSpaces): the local projects as cowork spaces; NI's FI saves through
+  // updateSpace (library-pages r2-02).
+  'shared-0-CnnWnVrT.js#PO': { name: 'CoworkSpaces', from: 'src/source-project-spaces-bridge.mjs', features: ['PO = globalThis["claude.web"]?.CoworkSpaces'] },
 };
 export const LINKED_AREAS = ['code-routines-v4', 'cowork-scheduled-v4', 'routines-shared-v4', 'working-line-v4', 'cowork-runs-v4', 'sessions-page-v4',
   { area: 'code-current-v4', modules: ['chunk-shared-2.mjs'] }];
@@ -156,6 +175,7 @@ export const CHUNKS = [
   'cb4e4d5b7-BCjE4rlU.js', 'c9260427e-CQ_106hh.js', 'c1883549e-LUBWCQ3P.js', 'c409e37e0-B2oDxzoO.js', 'shared-0-CnnWnVrT.js', 'shared-1-D1bGaTaN.js',
   'shared-2-CsjIBQD8.js', 'shared-8-BqfCbkJd.js', 'shared-18-Cfqwgjc5.js', 'shared-19-UalAfDtn.js', 'shared-25-D-aF0gt9.js', 'shared-31-C9BqSSuD.js',
   'shared-33-DtdykY0y.js', 'shared-36-fqRFYwOb.js', 'shared-62-DoCqVpIq.js', 'shared-183-B2N6Zy4J.js', 'shared-212-BHMAi0oa.js', official.sharedFrame,
+  'shared-123-1Hc1RTKl.js',
 ];
 
 // Roots another 4.16336.0 graph already slices (D1: one copy): the index re-exports them from that graph's module, after
@@ -201,6 +221,8 @@ const rawCallSites = [
   { source: SPACES, role: 'The projects page sorts recent / created / alphabetical and lists tr cards; the card menu (Pin / Unpin, Edit details, Archive)',
     features: ['var Dr=["recent","created","alphabetical"]', 't(tr,{space:r.space,sortBy:_==="created"?"created_at":"updated_at"', '"data-testid":"star-space-trigger"',
       '"data-testid":"archive-space-trigger"'] },
+  { source: SPACES, role: 'The projects page card menu opens the Edit details dialog (shared-19 NI, imported as ot)',
+    features: ['t(ot,{isOpen:h,onClose:P,spaceId:a.id,spaceName:a.name,spaceDescription:a.description})'] },
 ];
 const modules = () => [
   ...Object.entries(ROOTS).map(([file, roots]) => ({
@@ -236,6 +258,8 @@ export const ROOT_PINS = {
   'c71dee58b-CV9X9s_h.js#mc': '5b1903b5f8ea9759c0e543094822d86ddc71ccfbee85ce3189752e5a5d0d6925',
   'c71dee58b-CV9X9s_h.js#iu': '7c2492f83a36a559eb52905fa59e0c7b9053b41ca91e4985045b36266575fc4f',
   'c71dee58b-CV9X9s_h.js#Ad': '0894a48b25c088c5279cded10fe7f30d63b5765632353096aa0e3718669dbb15',
+  'shared-19-UalAfDtn.js#NI': '8308edb22fca95a5b58467e8cb28491707f67f29928d33eca8c831a541d49ed0',
+  'c9260427e-CQ_106hh.js#ue': 'd81b97cf705df6ed288eea21266a1b674a8a67d73354fdd395d70bc193e3b297',
 };
 export const ADAPTER_PINS = {
   'shared-26-B-POtn5S.js#EX': '246834f1d16d3b31bc99770e6d5b9df80aaaf8d30e5a6d50ddfa2bd800656054',
@@ -286,6 +310,7 @@ export const ADAPTER_PINS = {
   'shared-183-B2N6Zy4J.js#Lh': 'a49e5bc888633cc9f6ecffeceaec30ae58e94b145945991006c56425cb061a9f',
   'shared-25-D-aF0gt9.js#Jo': '0b5c05bc16d74da69449d73ac79d66fccd5e0ee2ec8259fa9e9787deed4aa96d',
   'shared-2-CsjIBQD8.js#Ly': 'c585df371a4918a63ce998eec5c5e49619716b1fcea1a57266915e3dea3f9e3d',
+  'shared-0-CnnWnVrT.js#PO': '98d12052c76deb8deb299b35cc8777a8662452bbfe0407a19a8433ecad9f150e',
 };
 
 // AST location of every root (the only top-level declaration of its chunk whose raw text has the probe and whose

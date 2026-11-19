@@ -54,11 +54,25 @@ function fakeClaude({ files = [CLAUDE], heads = {}, answers = {}, env = {}, conf
     const answer = typeof answers[key] === 'function' ? answers[key]() : answers[key]
     setImmediate(() => answer instanceof Error ? callback(answer, '', '') : callback(answer?.code ? Object.assign(new Error('exit'), { code: answer.code }) : null, answer?.stdout ?? answer ?? '', ''))
   }
+  // `claude auth login`: a fake child printing the manual link (answers.login: {url, exitCode, onCode}), never a real process.
+  const logins = []
+  const spawn = (command, args, options) => {
+    const child = new EventEmitter()
+    child.exitCode = null; child.signalCode = null
+    child.stdout = new PassThrough(); child.stderr = new PassThrough()
+    const typed = []
+    child.stdin = { write: (text) => { typed.push(text); answers.login?.onCode?.(child, text) } }
+    child.kill = (signal) => { child.signalCode = signal; setImmediate(() => child.emit('exit', null, signal)); return true }
+    child.finish = (code) => { child.exitCode = code; child.emit('exit', code, null) }
+    logins.push({ command, args, env: options.env, child, typed })
+    setImmediate(() => { if (answers.login?.url) child.stdout.write(`Opening browser to sign in…\nIf the browser didn't open, visit: ${answers.login.url}\nPaste code here if prompted > `); if (answers.login?.exitCode !== undefined) setImmediate(() => child.finish(answers.login.exitCode)) })
+    return child
+  }
   const claude = new ClaudeCode({
-    env: { HOME: '/Users/me', SHELL: '/bin/zsh', PATH: '/usr/bin:/bin', ...env }, exec, configured: () => configured,
+    env: { HOME: '/Users/me', SHELL: '/bin/zsh', PATH: '/usr/bin:/bin', ...env }, exec, spawn, configured: () => configured,
     executable: (file) => files.includes(file), readHead: (file) => heads[file] ?? '\xcf\xfa\xed\xfe',
   })
-  return { claude, calls }
+  return { claude, calls, logins }
 }
 
 /** Fake time for watchLogin: each wait moves the clock (and runs onTick) at once. */
@@ -425,11 +439,11 @@ test('a sign-in cancelled: the attempt is deleted and nothing completes; a code 
 
 // ---------------------------------------------------------------- Claude Code
 
-test('Claude: what is known at once is an error with the steps — not installed, too old, signed out — and nothing is connected', async () => {
+test('Claude: what is known at once is an error with the steps — not installed, too old, a sign-in that can\'t start — and nothing is connected', async () => {
   const cases = [
     [fakeClaude({ files: [], answers: { shell: '' } }), /Install Claude Code first \(https:\/\/code\.claude\.com\/docs\/en\/setup\), then run `claude auth login`/],
     [fakeClaude({ answers: { shell: `${CLAUDE}\n`, version: '2.1.100 (Claude Code)\n', status: SIGNED_IN } }), /Claude Code 2\.1\.100 is too old; 2\.1\.248 or later is required\. Run `claude update`\./],
-    [fakeClaude({ answers: { shell: `${CLAUDE}\n`, version: '2.1.311 (Claude Code)\n', status: SIGNED_OUT } }), /Claude Code is not signed in\. Run `claude auth login` in a terminal/],
+    [fakeClaude({ answers: { shell: `${CLAUDE}\n`, version: '2.1.311 (Claude Code)\n', status: SIGNED_OUT, login: { exitCode: 1 } } }), /Claude Code couldn’t start its sign-in \(claude auth login exited \(1\) before printing a sign-in link\)\. Run `claude auth login` in a terminal/],
   ]
   for (const [claude, message] of cases) {
     const { bridge, fake } = await v2Bridge({ claude })
@@ -440,7 +454,7 @@ test('Claude: what is known at once is an error with the steps — not installed
   }
 })
 
-test('Claude: answered at once (openedByAgent, the setup page), then connect/external, old credentials deleted, success once models come with no status', async () => {
+test('Claude signed in: answered at once (connecting: nothing to open), then connect/external, old credentials deleted, success once models come with no status', async () => {
   const { bridge, fake, notes, clock, spawns } = await v2Bridge()
   try {
     assert.equal(spawns[0].OPENCODE_CLAUDE_PATH, CLAUDE)
@@ -452,8 +466,7 @@ test('Claude: answered at once (openedByAgent, the setup page), then connect/ext
     const tick = clock.wait
     clock.wait = async (ms) => { await tick(ms); clock.onModels?.() }
     const start = await bridge.handle('account/login/start', { type: 'chatgpt', codeDesktop: { provider: 'claude-agent' } })
-    assert.deepEqual(start.codeDesktop, { openedByAgent: true, instructions: 'Run `claude auth login` in a terminal, then wait here.' })
-    assert.equal(start.authUrl, 'https://code.claude.com/docs/en/setup')
+    assert.deepEqual(start.codeDesktop, { openedByAgent: true, connecting: true }, 'signed in: nothing to open, the app shows it connecting')
     await until(() => completed(notes).length === 1, 'completed')
     assert.deepEqual(completed(notes)[0].params, { loginId: start.loginId, success: true, error: null })
     assert.deepEqual(requests(fake, 'POST', '/api/integration/claude-agent/connect/external')[0].body, { methodID: 'claude-login' })
@@ -463,6 +476,53 @@ test('Claude: answered at once (openedByAgent, the setup page), then connect/ext
     assert.ok(notes.some((note) => note.method === 'account/updated'))
     assert.deepEqual(fake.state.violations, [])
   } finally { await bridge.stop() }
+})
+
+test('Claude signed out: `claude auth login` opens claude.ai, its manual link is the sign-in page, a pasted code goes to it, then OpenCode connects', async () => {
+  const URL = 'https://claude.com/cai/oauth/authorize?code=true&client_id=x&redirect_uri=https%3A%2F%2Fplatform.claude.com%2Foauth%2Fcode%2Fcallback'
+  let status = SIGNED_OUT
+  const claude = fakeClaude({ answers: { shell: `${CLAUDE}\n`, version: '2.1.322 (Claude Code)\n', status: () => status, login: { url: URL, onCode: (child, text) => { if (text === 'the-code\n') { status = SIGNED_IN; setImmediate(() => child.finish(0)) } } } } })
+  const { bridge, fake, notes } = await v2Bridge({ claude })
+  try {
+    bridge.v2.clock = undefined
+    bridge.v2.accountTiming = { debounceMs: 5, pollMs: 5 }
+    fake.state.models.push(CLAUDE_MODEL)
+    const start = await bridge.handle('account/login/start', { type: 'chatgpt', codeDesktop: { provider: 'claude-agent' } })
+    assert.equal(start.authUrl, URL, 'the claude.ai sign-in page, not the setup docs')
+    assert.deepEqual(start.codeDesktop, { openedByAgent: true, acceptsCode: true })
+    assert.deepEqual(claude.logins[0].args, ['auth', 'login', '--claudeai'])
+    assert.equal(claude.logins[0].env.OPENCODE_CLAUDE_PATH, CLAUDE, 'run with the PATH serve gets')
+    assert.equal(requests(fake, 'POST', /connect\/external$/).length, 0, 'nothing connected before Claude Code is signed in')
+    assert.deepEqual(await bridge.handle('codeDesktop/login/code', { loginId: start.loginId, code: 'the-code' }), { status: 'submitted' })
+    assert.deepEqual(claude.logins[0].typed, ['the-code\n'])
+    await until(() => completed(notes).length === 1, 'completed')
+    assert.deepEqual(completed(notes)[0].params, { loginId: start.loginId, success: true, error: null })
+    assert.equal(requests(fake, 'POST', '/api/integration/claude-agent/connect/external').length, 1)
+  } finally { await bridge.stop() }
+})
+
+test('Claude signed out: claude exiting without a sign-in fails it; cancel stops `claude auth login`', async () => {
+  const URL = 'https://claude.com/cai/oauth/authorize?x=1'
+  const failing = fakeClaude({ answers: { shell: `${CLAUDE}\n`, version: '2.1.322 (Claude Code)\n', status: SIGNED_OUT, login: { url: URL } } })
+  const first = await v2Bridge({ claude: failing })
+  try {
+    const start = await first.bridge.handle('account/login/start', { type: 'chatgpt', codeDesktop: { provider: 'claude-agent' } })
+    failing.logins[0].child.finish(1)
+    await until(() => completed(first.notes).length === 1, 'failed')
+    assert.equal(completed(first.notes)[0].params.success, false)
+    assert.match(completed(first.notes)[0].params.error, /Claude Code’s sign-in didn’t finish/)
+    assert.equal(requests(first.fake, 'POST', /connect\/external$/).length, 0)
+    await assert.rejects(first.bridge.handle('codeDesktop/login/code', { loginId: start.loginId, code: 'late' }), /already finished/)
+  } finally { await first.bridge.stop() }
+  const cancelled = fakeClaude({ answers: { shell: `${CLAUDE}\n`, version: '2.1.322 (Claude Code)\n', status: SIGNED_OUT, login: { url: URL } } })
+  const second = await v2Bridge({ claude: cancelled })
+  try {
+    const start = await second.bridge.handle('account/login/start', { type: 'chatgpt', codeDesktop: { provider: 'claude-agent' } })
+    assert.deepEqual(await second.bridge.handle('account/login/cancel', { loginId: start.loginId }), { status: 'canceled' })
+    assert.equal(cancelled.logins[0].child.signalCode, 'SIGTERM', 'claude auth login stopped')
+    await new Promise((resolve) => setTimeout(resolve, 30))
+    assert.equal(completed(second.notes).length, 0)
+  } finally { await second.bridge.stop() }
 })
 
 test('Claude: a needs_auth status fails it with v2\'s message; 120 s without an answer times out (fake time)', async () => {

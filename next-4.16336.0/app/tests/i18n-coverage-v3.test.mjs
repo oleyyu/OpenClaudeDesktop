@@ -13,7 +13,8 @@ import { parseAst } from 'rolldown/parseAst';
 import zh from '../electron/i18n/zh-CN/index.mjs';
 
 const app = path.resolve(import.meta.dirname, '..');
-const VERSION = '3.6556.2';
+// U-15 (ui-display-bugs-20261116): the 4.16336.0 areas the migration added are scanned too.
+const VERSIONS = new Set(['3.6556.2', '4.16336.0']);
 const CODE = /\.(?:m?js|cjs|jsx)$/;
 
 // Messages the scan may find without a zh-CN key of the same text, each with its reason. Keep this list short.
@@ -26,6 +27,12 @@ const ALLOWED = new Map([
   [' ', 'D5 (w2-mcp-host): shared-78 CG blank placeholder for a missing message id, not copy'],
 ]);
 
+// Non-literal defaultMessage sites that are framework plumbing, not copy (U-15: found once the 4.16336.0 areas joined).
+const DYNAMIC_ALLOWED = new Map([
+  ['src/generated/settings-desktop-v4/shared-153.mjs: defaultMessage: n', 'the server-supplied-text formatter re-wraps its caller\'s descriptor for an error report'],
+  ['src/generated/transcript-rows-v4/rows-vendor-intl.mjs: defaultMessage: c', 'react-intl FormattedMessage (Wt) passes its props on to formatMessage'],
+]);
+
 const readJson = (file) => { try { return JSON.parse(fs.readFileSync(file, 'utf8')); } catch { return null; } };
 const versionOf = (manifest) => manifest?.referenceVersion ?? manifest?.reference ?? null;
 const codeFilesIn = (dir) => fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
@@ -35,7 +42,7 @@ const codeFilesIn = (dir) => fs.readdirSync(dir, { withFileTypes: true }).flatMa
 // A file a manifest names: relative to the manifest's directory, else to app/ (visualize writes app-relative paths).
 const named = (dir, name) => [path.join(dir, name), path.join(app, name)].find((file) => fs.existsSync(file)) ?? path.join(dir, name);
 const moduleTargets = (manifest, dir) => (Array.isArray(manifest?.modules) ? manifest.modules : [])
-  .filter((module) => module?.referenceVersion === VERSION && typeof module.target === 'string').map((module) => named(dir, module.target));
+  .filter((module) => VERSIONS.has(module?.referenceVersion) && typeof module.target === 'string').map((module) => named(dir, module.target));
 // The outputs a single-file electron manifest names: `output`, the keys of `targets`, or its modules' targets.
 const namedOutputs = (manifest, dir) => [
   ...(typeof manifest.output === 'string' ? [named(dir, manifest.output)] : []),
@@ -54,7 +61,7 @@ export function v3Scopes() {
   for (const area of fs.readdirSync(generated, { withFileTypes: true }).filter((entry) => entry.isDirectory())) {
     const dir = path.join(generated, area.name), file = path.join(dir, 'manifest.json'), manifest = readJson(file);
     if (!manifest) continue;
-    if (versionOf(manifest) === VERSION) add(file, codeFilesIn(dir));
+    if (VERSIONS.has(versionOf(manifest))) add(file, codeFilesIn(dir));
     else { const targets = moduleTargets(manifest, dir); if (targets.length) add(file, targets); }
   }
   const electron = path.join(app, 'electron/generated');
@@ -67,7 +74,7 @@ export function v3Scopes() {
     if (!manifest) continue;
     // A directory of its own (turn-plan/, visualize/) is that area's output; a root *-manifest.json names its files.
     const ownDir = path.basename(file) === 'manifest.json' && dir !== electron;
-    if (versionOf(manifest) === VERSION) add(file, ownDir ? codeFilesIn(dir) : namedOutputs(manifest, dir));
+    if (VERSIONS.has(versionOf(manifest))) add(file, ownDir ? codeFilesIn(dir) : namedOutputs(manifest, dir));
     else { const targets = moduleTargets(manifest, dir); if (targets.length) add(file, targets); }
   }
   return scopes;
@@ -123,7 +130,7 @@ test('the collector: literal and template defaultMessages, secret ids skipped, n
   assert.deepEqual(messagesOf(code), ['Hello {name}', 'Plain', { dynamic: 'n' }, 'Quoted key']);
 });
 
-test('3.6556.2 scopes are found from the manifests (whole area directories and named electron outputs)', () => {
+test('3.6556.2 and 4.16336.0 scopes are found from the manifests (whole area directories and named electron outputs)', () => {
   const scopes = v3Scopes();
   for (const { scope, manifest, files } of scopes) {
     assert.ok(files.length > 0, `${scope} (${manifest}): names no code file that exists`);
@@ -136,9 +143,9 @@ test('3.6556.2 scopes are found from the manifests (whole area directories and n
   }
 });
 
-test('every defaultMessage of the generated 3.6556.2 output has a zh-CN entry', () => {
+test('every defaultMessage of the generated 3.6556.2 and 4.16336.0 output has a zh-CN entry', () => {
   const { all, dynamic } = v3Messages();
-  assert.deepEqual(dynamic, [], 'every defaultMessage is a literal the catalog can key');
+  assert.deepEqual(dynamic.filter((site) => !DYNAMIC_ALLOWED.has(site)), [], 'every defaultMessage is a literal the catalog can key');
   const missing = [...all].filter(([message]) => !Object.hasOwn(zh, message) && !ALLOWED.has(message))
     .map(([message, files]) => `${message}  [${[...files].join(', ')}]`);
   assert.deepEqual(missing, []);

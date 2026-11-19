@@ -482,7 +482,8 @@ test("every emitted declaration has the original v4 AST and exact source interva
   // bindings 10522 -> 10522); was: 10522.
   // wave 8c (R4-K1 addendum C): 10527 + 6 (cds-integrate/wave8c/union.json: every stage-12b binding kept identical); was: 10527.
   // wave 8d (R4-Q1 addendum D): 10533 + 80 (cds-integrate/wave8d/union.json: every stage-13c binding kept identical); was: 10533.
-  assert.equal(count, 10613);
+  // wave cc2 (chat-cowork r2 Core step): 10613 + 173 (cds-integrate/wavecc2/union.json: every stage-14d binding kept identical); was: 10613.
+  assert.equal(count, 10786);
   // TextInput clear (ww) and text insertion at the selection (PD) set the native value via
   // `(Object.getOwnPropertyDescriptor(...)?.set)?.call(...)`; wave 2 adds CheckboxRow's label click guard (c09817156 m,
   // `(d(e.target)?.closest(...))?.matches(...)`) and a Base UI vendor declaration (ty). Prettier drops the parentheses
@@ -1005,8 +1006,11 @@ test("independent official traversal finds exactly the 146-root, published-state
   // appended in the same order (was: 2786; the list ended with ...pins5.merge.wave8b.publicNames).
   // wave 8d (R4-Q1, merge-pins-wave8d.mjs, cds-integrate/wave8d/union.json publicNames 3198 -> 3209): the 11 addendum-D
   // bindings, appended in the same order (was: 2791; the list ended with ...pins5.merge.wave8c.publicNames).
-  assert.equal(Object.keys(pins5.publicBindings).length, 2802);
-  assert.deepEqual(Object.keys(pins5.publicBindings), [...pins5.merge.wave5.publicNames, ...pins5.merge.wave5b.publicNames, ...pins5.merge.wave6.publicNames, ...pins5.merge.wave7.publicNames, ...pins5.merge.wave8.publicNames, ...pins5.merge.wave8s.publicNames, ...pins5.merge.wave8a.publicNames, ...pins5.merge.wave8b.publicNames, ...pins5.merge.wave8c.publicNames, ...pins5.merge.wave8d.publicNames].map((e) => e.name));
+  // wave cc2 (chat-cowork r2 Core step, merge-pins-wavecc2.mjs, cds-integrate/wavecc2/union.json publicNames 3209 -> 3220): the 11
+  // wave-cc2 bindings (vendor-frame Fp, shared-3 Bd and Bd's closure state), appended in the same order (was: 2802; the list ended
+  // with ...pins5.merge.wave8d.publicNames).
+  assert.equal(Object.keys(pins5.publicBindings).length, 2813);
+  assert.deepEqual(Object.keys(pins5.publicBindings), [...pins5.merge.wave5.publicNames, ...pins5.merge.wave5b.publicNames, ...pins5.merge.wave6.publicNames, ...pins5.merge.wave7.publicNames, ...pins5.merge.wave8.publicNames, ...pins5.merge.wave8s.publicNames, ...pins5.merge.wave8a.publicNames, ...pins5.merge.wave8b.publicNames, ...pins5.merge.wave8c.publicNames, ...pins5.merge.wave8d.publicNames, ...pins5.merge.wavecc2.publicNames].map((e) => e.name));
   for (const [name, b] of Object.entries(pins5.publicBindings)) {
     assert.equal(sha(sources.get(b.file).code.slice(b.start, b.end)), b.sha256, name);
     visit(b.file, b.local);
@@ -1049,7 +1053,8 @@ test("independent official traversal finds exactly the 146-root, published-state
   // bindings 10522 -> 10527, every wave-8s binding kept identical; was: 10522).
   // wave 8c (R4-K1 addendum C, cds-integrate/wave8c/union.json bindings 10527 -> 10533; was: 10527).
   // wave 8d (R4-Q1 addendum D, cds-integrate/wave8d/union.json bindings 10533 -> 10613; was: 10533).
-  assert.equal(selected.size, 10613);
+  // wave cc2 (chat-cowork r2 Core step, cds-integrate/wavecc2/union.json bindings 10613 -> 10786; was: 10613).
+  assert.equal(selected.size, 10786);
   assert.deepEqual([...adapters].sort(), [...boundary, ...growthBook, ...hostIntl, ...localAdapters].sort());
   const proof = JSON.parse(await fs.readFile(path.join(pilot, "provenance.json"), "utf8"));
   const bindings = new Map(proof.modules.flatMap(m => m.bindings.map(b => [b.id, b])));
@@ -1075,7 +1080,8 @@ test("independent official traversal finds exactly the 146-root, published-state
   // 8415 / 7671 / 7468 / 6959; wave 8c (R4-K1 addendum C) added 6 to the 10527 of wave 8b, cds-integrate/wave8c/union.json, so every
   // count below is the wave-8b one + 6, was: 9459 / 9069 / 8420 / 7676 / 7473 / 6964; wave 8d (R4-Q1 addendum D) added 80 to the
   // 10533 of wave 8c, cds-integrate/wave8d/union.json, so every count below is the wave-8c one + 80, was: 9465 / 9075 / 8426 / 7682 /
-  // 7479 / 6970), and except the official preload-helper a, which every one of them held and which wave 5
+  // 7479 / 6970; wave cc2 (chat-cowork r2 Core step) added 173 to the 10613 of wave 8d, cds-integrate/wavecc2/union.json, so every
+  // count below is the wave-8d one + 173, was: 9545 / 9155 / 8506 / 7762 / 7559 / 7050), and except the official preload-helper a, which every one of them held and which wave 5
   // replaces by the host viteAssetUrl (pins.localAdapterBoundaries: no binding record any more).
   const sameExceptImportedContext = (now, was, id) => {
     if (localAdapters.has(id)) { assert.equal(now, undefined, id); return; }
@@ -1083,15 +1089,15 @@ test("independent official traversal finds exactly the 146-root, published-state
     assert.deepEqual(now, was, id);
   };
   for (const [file, count, added, roots] of [
-    ["../cds-providers/before/provenance.json", 1069, 9545, ["CdsButton", "CdsIcon", "CdsSpinner", "CdsBadge"]],
-    ["../cds-integrate/before/provenance.json", 1459, 9155, ["CdsButton", "CdsIcon", "CdsSpinner", "CdsBadge", "CdsRoot", "CdsTooltipProvider"]],
-    ["../cds-integrate/wave2/before/pilot-provenance.json", 2108, 8506, ["CdsButton", "CdsIcon", "CdsSpinner", "CdsBadge", "CdsRoot", "CdsTooltipProvider",
+    ["../cds-providers/before/provenance.json", 1069, 9718, ["CdsButton", "CdsIcon", "CdsSpinner", "CdsBadge"]],
+    ["../cds-integrate/before/provenance.json", 1459, 9328, ["CdsButton", "CdsIcon", "CdsSpinner", "CdsBadge", "CdsRoot", "CdsTooltipProvider"]],
+    ["../cds-integrate/wave2/before/pilot-provenance.json", 2108, 8679, ["CdsButton", "CdsIcon", "CdsSpinner", "CdsBadge", "CdsRoot", "CdsTooltipProvider",
       "CdsTextInputField", "CdsTextAreaField", "CdsPage", "CdsBanner", "CdsTabs", "CdsTextLink"]],
-    ["../cds-integrate/wave3/before/pilot-provenance.json", 2852, 7762, Object.keys(JSON.parse(await fs.readFile(path.join(pilot, "../cds-integrate/wave3/before/pins.json"), "utf8")).roots)],
+    ["../cds-integrate/wave3/before/pilot-provenance.json", 2852, 7935, Object.keys(JSON.parse(await fs.readFile(path.join(pilot, "../cds-integrate/wave3/before/pins.json"), "utf8")).roots)],
     // the 107-root owner before wave 4
-    ["../cds-integrate/wave4/before/pilot-provenance.json", 3055, 7559, Object.keys(JSON.parse(await fs.readFile(path.join(pilot, "../cds-integrate/wave4/before/pins.json"), "utf8")).roots)],
+    ["../cds-integrate/wave4/before/pilot-provenance.json", 3055, 7732, Object.keys(JSON.parse(await fs.readFile(path.join(pilot, "../cds-integrate/wave4/before/pins.json"), "utf8")).roots)],
     // the 146-root owner before wave 5
-    ["../cds-integrate/wave5/before/pilot-provenance.json", 3564, 7050, Object.keys(JSON.parse(await fs.readFile(path.join(pilot, "../cds-integrate/wave5/before/pins.json"), "utf8")).roots)],
+    ["../cds-integrate/wave5/before/pilot-provenance.json", 3564, 7223, Object.keys(JSON.parse(await fs.readFile(path.join(pilot, "../cds-integrate/wave5/before/pins.json"), "utf8")).roots)],
   ]) {
     const before = JSON.parse(await fs.readFile(path.join(pilot, file), "utf8"));
     const old = before.modules.flatMap(m => m.bindings);
@@ -1179,7 +1185,10 @@ test("isolated output import graph closes without old UI, extra services or unre
   // Wave 8d (R4-Q1, modules 164 -> 164): Pu's closure bindings folded into existing modules add 6 relative imports and no host
   // import (was: [254, 119]; counted on the real tree before and on the wave-8d mirror after,
   // cds-integrate/wave8d/scripts/pilot-imports-d.mjs, logs/pilot-imports-{real,mirror}.json).
-  assert.equal(output.size, 165); assert.deepEqual([relative, bare], [260, 119]);
+  // Wave cc2 (chat-cowork r2 Core step, modules 164 -> 164): Bd's closure bindings folded into shared-2 / shared-3 add 4 relative
+  // imports (shared-2 -> ./shared-1.mjs, ./shared-183.mjs; shared-3 -> ./shared-2.mjs, ./vendor-frame.mjs) and 2 host framework
+  // imports (shared-2 "react-dom", shared-3 "react/jsx-runtime") (was: [260, 119]; diff of the staging output before / after).
+  assert.equal(output.size, 165); assert.deepEqual([relative, bare], [264, 121]);
   // Wave 5: the adapter's one re-export, the host viteAssetUrl (app/src/view-tabs-asset-url.mjs, a leaf without imports).
   // Wave 8 (W8-M1 / W8-M2, pins.merge.wave8 localAdapterBoundaries): the GrowthBook readers shared-0 Ru / Ku and the window
   // state reader uO re-export their host answers, hostGrowthBookIsOn / hostGrowthBookValue (app/src/host-growthbook.mjs, the

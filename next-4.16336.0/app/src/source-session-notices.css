@@ -5,6 +5,14 @@
    The rules below only lay out what a Codex notice adds inside the banner's text (details, code spans, a path, a Markdown
    /recap answer). */
 .ssn-list { margin-top: 6px; }
+/* U-08: the official stack holds at most one notice per slot (cc43287c9 Rde over rI), the host's Codex warnings add one
+   banner each, so the stack is bounded and scrolls itself: the transcript above and the composer below keep their room. */
+[data-code-column-notices] {
+  max-height: min(40vh, 16rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
 .ssn-summary, .ssn-details { margin: 0; overflow-wrap: anywhere; white-space: pre-wrap; }
 .ssn-details { color: var(--cds-text-secondary); }
 /* A code span in a notice (Codex's `model` / `config.key` / `path`): the reply's inline code chip. */

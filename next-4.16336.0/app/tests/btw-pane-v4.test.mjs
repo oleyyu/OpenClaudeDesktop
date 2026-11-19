@@ -147,10 +147,11 @@ test('sharedGraph cds-core: no view-tabs, held pure bindings equal cds-core\'s d
   }
   assert.deepEqual([...kinds].sort(), ['generated', 'host', 'react', 'shared-graph']);
   // Every pure binding cds-core holds without a publicName is cut again only as the very declaration cds-core holds
-  // (cds-core wave 6 also holds shared-25 vd, closure of its published bindings).
+  // (cds-core wave 6 also holds shared-25 vd, closure of its published bindings; wave cc2 publishes UserMessage
+  // shared-3 Bd, whose closure holds the pure focus-guard Bn/Hn/zn — was: 'focus-guard.mjs': []).
   assert.deepEqual(Object.fromEntries(manifest.modules.map(m => [m.target, m.heldByCdsCore.slice().sort()])), {
     'compiler-helpers.mjs': ['J0', 'J2', 'J8', 'J9', 'K0', 'K3'], 'owner-window.mjs': ['vd'], 'use-event.mjs': [],
-    'focus-guard.mjs': [], 'focus-on-click.mjs': [], 'modifier-keys.mjs': [], 'focus-lost.mjs': [],
+    'focus-guard.mjs': ['Bn', 'Hn', 'zn'], 'focus-on-click.mjs': [], 'modifier-keys.mjs': [], 'focus-lost.mjs': [],
     'focus-hand-back.mjs': ['oI', 'sI'], 'shown-session.mjs': [], 'detach-eligibility.mjs': [] });
   // cds-core wave 4 publishes shared-25 _d (ownerWindow) and shared-0 xe (useEventCallback): owner-window links _d instead
   // of holding _d / gd / hd, and use-event re-exports cds-core's xe as useEvent (no xe / ye copy).

@@ -2028,14 +2028,33 @@ export async function main() {
     return false
   }
 
+  /**
+   * account/logout: OpenClaude Desktop's API-key providers and the Coding Plan sign-in (`zcode logout`). Providers the
+   * user set up in ZCode itself stay (accounts.removeApiKeyProviders): their key keeps the account signed in, so the
+   * answer says so (codeDesktop.notice), or refuses when nothing here was signed in; a sign-in `zcode logout` left fails.
+   */
   async function logout() {
-    accounts.removeApiKeyProviders(paths.personalProviders)
+    const before = readAccounts()
+    const removed = accounts.removeApiKeyProviders(paths.personalProviders)
     mirror?.syncPersonal()
-    if (located?.command) await new Promise((resolve) => execFile(located.command, [...located.prefix, 'logout'], { env: { ...env }, timeout: 15000 }, () => resolve()))
-    await pushAccountOverlay().catch(() => {})
-    modelCache = null
-    notify('account/updated', { authMode: null })
-    return {}
+    let failure = null
+    if (located?.command) {
+      failure = await new Promise((resolve) => execFile(located.command, [...located.prefix, 'logout'], { env: { ...env }, timeout: 15000 }, (error, stdout, stderr) =>
+        resolve(error ? String(stderr || stdout || error.message || error).trim().split('\n').pop().slice(0, 300) : null)))
+    }
+    const after = readAccounts()
+    const signedOut = removed > 0 || Object.keys(before.signedIn).length > Object.keys(after.signedIn).length
+    if (signedOut) {
+      await pushAccountOverlay().catch(() => {})
+      modelCache = null
+      notify('account/updated', { authMode: null })
+    }
+    if (Object.keys(after.signedIn).length) throw new RpcError(-32000, `Couldn’t sign out of your Coding Plan: ${failure || 'ZCode still has the sign-in'}. Run \`zcode logout\` in a terminal.`)
+    const kept = accounts.apiKeyProviders(after.personal).filter((provider) => provider.keyed && provider.enabled).map((provider) => provider.name)
+    if (!kept.length) return {}
+    const where = `${kept.join(', ')} ${kept.length > 1 ? 'were' : 'was'} set up in the ZCode app; remove ${kept.length > 1 ? 'their keys' : 'its key'} in ZCode’s provider settings`
+    if (!signedOut) throw new RpcError(-32000, `Nothing to sign out of in ZCode: ${where}.`)
+    return { codeDesktop: { notice: `ZCode still uses an API key: ${where}.` } }
   }
 
   // ---------------------------------------------------------------- plugins

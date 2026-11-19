@@ -7,6 +7,8 @@ import React, { useEffect, useState } from 'react';
 import { t } from '../electron/i18n/index.mjs';
 import { SourceSettingsButton } from './source-settings-button.jsx';
 import { ActionDialog } from './source-session-actions.jsx';
+// The list sits in Settings › Dynamic workflows: its confirm opens over the Settings dialog.
+import { SETTINGS_LAYER } from './settings-layers.jsx';
 
 const RUN_STATUS = { pending: 'Queued', running: 'Running', completed: 'Completed', errored: 'Failed', stopped: 'Stopped' };
 const argList = (args) => Object.entries(args && typeof args === 'object' ? args : {}).filter(([, value]) => value && typeof value === 'object');
@@ -68,7 +70,7 @@ export function SavedWorkflowsList({ desktopCall, cwd, connected = true, revisio
         </li>)}</ul> : <p className="ss-saved-workflows-empty">{t('It hasn’t run in this project yet.')}</p>)}
       </li>;
     })}</ul>
-    {confirm && <ActionDialog title={t('Delete {name}?', { name: confirm.name })} onClose={() => setConfirm(null)}>
+    {confirm && <ActionDialog title={t('Delete {name}?', { name: confirm.name })} layer={SETTINGS_LAYER} onClose={() => setConfirm(null)}>
       <p>{t('Its file is removed. Runs that already happened keep their results.')}</p>
       {rowError?.id === `delete:${key(confirm)}` && <p className="ss-row-error" role="alert">{rowError.message}</p>}
       <div className="ss-saved-workflow-confirm">

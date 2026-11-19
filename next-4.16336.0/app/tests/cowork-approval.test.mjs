@@ -98,10 +98,10 @@ test('the generated graph pins the official 3.6556.2 roots, call sites and servi
     assert.ok(out.includes(s), s);
 });
 
-test('a Cowork command request: Claude wants to use Bash, Allow for this task first, then Allow once and Deny', () => {
+test('a Cowork command request: DeepSeek wants to use Bash (fix-r2 U-14, E83: the running assistant, was Claude), Allow for this task first, then Allow once and Deny', () => {
   const html = render(command());
   const words = text(html);
-  assert.match(words, /Claude wants to use Bash/);
+  assert.match(words, /DeepSeek wants to use Bash/);
   assert.ok(words.indexOf('Allow for this task') >= 0, words);
   assert.ok(words.indexOf('Allow once') > words.indexOf('Allow for this task'), words);
   assert.match(words, /Deny/);
@@ -149,15 +149,15 @@ test('offers: a persistent rule goes under More allow options; no session offer 
 
 test('names: Edit / Write for file changes, Bash for commands, the app tool’s own title as the headline', () => {
   const edit = request('item/fileChange/requestApproval', { changes: [{ path: '/Users/x/Docs/a.md', kind: { type: 'update' } }] });
-  assert.match(text(render(edit)), /Claude wants to use Edit/);
+  assert.match(text(render(edit)), /DeepSeek wants to use Edit/);
   const write = request('item/fileChange/requestApproval', { changes: [{ path: '/Users/x/Docs/b.md', kind: { type: 'add' } }] });
-  assert.match(text(render(write)), /Claude wants to use Write/);
+  assert.match(text(render(write)), /DeepSeek wants to use Write/);
   assert.deepEqual(host.coworkApprovalTool(write, null), { toolName: 'Write', input: { file_path: '/Users/x/Docs/b.md' } });
   assert.deepEqual(host.coworkApprovalTool(command(), null), { toolName: 'Bash', input: { command: 'rm -rf build', cwd: '/Users/x/Docs' } });
   const folder = agentTool({ kind: 'other', title: 'Allow access to “Reports”?', detail: '/Users/x/Reports' }, { sessionGrantable: true });
   const words = text(render(folder));
   assert.match(words, /Allow access to “Reports”/);
-  assert.doesNotMatch(words, /Claude wants to use/);
+  assert.doesNotMatch(words, /(Claude|DeepSeek) wants to use/);
   assert.match(words, /Allow for this task/);
   assert.match(text(render(folder, { scheduledRun: true })), /Allow for this task/);
   // Without sessionGrantable the app tool's card is one plain allow.
@@ -188,7 +188,7 @@ test('app tools: the card names the tool the model called (cc1aae219 toolName: v
     assert.equal(named.rawToolName, name, tool.kind);
     assert.equal(named.headline, undefined, tool.kind);
     const words = text(render(req));
-    assert.match(words, new RegExp(`Claude wants to use ${name}`), tool.kind);
+    assert.match(words, new RegExp(`DeepSeek wants to use ${name}`), tool.kind);
     assert.match(words, /Allow once/, tool.kind);
   }
   assert.equal(host.coworkApprovalTool(agentTool(cases[0][0]), null).glyph, 'Globe');
@@ -253,11 +253,11 @@ test('each rung sends its decision through the approval runtime, and main maps i
   assert.deepEqual(policy.coworkRespondPayload(owner, payloads[0], { cowork: () => true }), payloads[0]);
 });
 
-test('zh-CN: the official copy reads in Chinese, Claude kept (D23)', () => {
+test('zh-CN: the official copy reads in Chinese, the running assistant named (fix-r2 U-14 supersedes D23 here)', () => {
   i18n.setLocale('zh-CN');
   try {
     const words = text(render(command()));
-    assert.match(words, /Claude 想要使用 Bash/);
+    assert.match(words, /DeepSeek 想要使用 Bash/);
     assert.match(words, /允许此任务/);
     assert.match(words, /允许一次/);
     assert.match(words, /拒绝/);

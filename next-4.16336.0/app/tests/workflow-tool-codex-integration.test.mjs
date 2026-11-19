@@ -1,3 +1,4 @@
+import { registerCodexPack } from './codex-pack.mjs';
 // Opt-in: the real Codex binary (0.155.1) lists OpenClaude Desktop's Workflow tool over the app's MCP server and a model call
 // round-trips: the tool launches a background run on OpenClaude Desktop's engine (workflow-tool-service.cjs over the real
 // workflow-service.cjs, the runner's core being the isolated app-server fixture), answers with Claude's launch text, and
@@ -79,6 +80,7 @@ test('Codex lists OpenClaude Desktop\'s Workflow tool; a model call launches a r
     resolveSession: (id, meta) => threads.get(id ?? meta.threadId) ?? null });
   host.provide('workflows', (session) => ({ launch: (args) => toolService.launch(args, { sessionId: session.id, cwd: session.cwd }) }));
   await host.start();
+  registerCodexPack();
   setCoreChoice({ core: 'codex', agents: { codex: { path: binary } } });
   setCodexLaunch({ args: ['-c', 'model_provider="dummy"', '-c', `model_providers.dummy={name="dummy",base_url="${base}",wire_api="responses",env_key="DUMMY_KEY"}`, '-c', 'model="dummy-model"'], env: {} });
   setAgentToolsLaunch(() => ({ env: host.launchEnv(), codexArgs: host.codexArgs() }));
@@ -106,7 +108,7 @@ test('Codex lists OpenClaude Desktop\'s Workflow tool; a model call launches a r
     if (status?.runtimeStatus === 'connected' && Object.keys(status.tools).length) break;
     await new Promise((resolve) => setTimeout(resolve, 250));
   }
-  assert.equal(status?.runtimeStatus, 'connected', JSON.stringify(status));
+  assert.equal(status?.runtimeStatus, 'connected', JSON.stringify(status) ?? 'The code_desktop MCP server was not listed');
   assert.ok(status.tools.Workflow, 'Workflow is listed');
   assert.match(status.tools.Workflow.description ?? '', /ONLY when the user has explicitly opted into multi-agent orchestration/);
 

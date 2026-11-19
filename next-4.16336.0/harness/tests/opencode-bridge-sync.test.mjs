@@ -147,6 +147,13 @@ test('slash commands and /review send the selected effort as the OpenCode varian
   thread.effort = 'default'
   await assert.rejects(thread.review({}), /stop/)
   assert.equal('variant' in bodies.at(-1).body, false, 'the provider default sends no variant')
+  await assert.rejects(thread.startTurn({ input: [
+    { type: 'text', text: '/init-old compare' },
+    { type: 'text', text: 'Additional workspace directories for this task:\n/w/docs' },
+    { type: 'text', text: '<document>PDF content</document>' },
+    { type: 'skill', name: 'init', path: 'command:init', commandArgumentsSeparated: true },
+  ] }), /stop/)
+  assert.equal(bodies.at(-1).body.arguments, '/init-old compare\n\nAdditional workspace directories for this task:\n/w/docs\n\n<document>PDF content</document>')
 })
 
 // ------------------------------------------------------------------ MiMo exec scripts

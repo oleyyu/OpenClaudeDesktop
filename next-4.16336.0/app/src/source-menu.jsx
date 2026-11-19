@@ -169,7 +169,7 @@ function PopupImpl({
   submenu, anchor: anchorProp, trigger: triggerProp, point, side, align = "start", sideOffset, alignOffset = 0, collisionPadding = 8,
   layer: layerKind = "menu", label, labelledBy, dataCds = "Menu", className = "", onClose, finalFocus, initialHighlight, children, id: idProp,
   onKeyDown: consumerKeyDown, style, popupRef: externalPopupRef, layerBase: rootLayerBase, onContextMenu: contextMenuHandler, contextMenuGuard,
-  header, footer, maxVisibleItems,
+  header, footer, maxVisibleItems, stableWhileOpen = false,
 }) {
   const onContextMenu = menuContextMenuHandler(contextMenuGuard, contextMenuHandler);
   const parentTree = useContext(TreeContext);
@@ -190,6 +190,8 @@ function PopupImpl({
   const highlightedRef = useRef(null);
   highlightedRef.current = highlighted;
   const closing = useRef(false), alive = useRef(true), typing = useRef(null), outsideTimer = useRef(null);
+  // stableWhileOpen (shared-frame RC): the settled side/align and the held height of this open popup.
+  const stable = useRef({ placed: null, frame: 0, height: undefined });
   const [covered, setCovered] = useState(false);
   const popups = useMemo(() => parentTree?.popups ?? new Set(), [parentTree]);
   const anchor = nested ? submenu.triggerRef.current : anchorProp;
@@ -309,11 +311,27 @@ function PopupImpl({
         anchorRect = nestedAnchor(submenu.triggerRef.current.closest('[role="menu"]')?.getBoundingClientRect(), row);
       } else anchorRect = anchor?.getBoundingClientRect();
       if (!anchorRect) return;
-      const size = popup.getBoundingClientRect();
+      // U-32 stableWhileOpen (shared-frame nD `N = stableWhileOpen && !contextmenu` → RC): once a placement has
+      // settled (PC = 2 frames) it becomes the requested side/align, so a popup whose content shrinks or grows (a
+      // search narrowing its rows) keeps its side and only flips when it no longer fits. While that placement grows
+      // from its far edge (LC: side top, or a non-bottom side aligned end) the positioner holds the tallest height
+      // seen (min(h, --available-height), flex column justify-end; pointer-events only on the popup).
+      const keep = stableWhileOpen && !point ? stable.current : null;
+      const placed = keep?.placed ?? null;
+      const hold = !!placed && (placed.side === "top" || (placed.side !== "bottom" && placed.align === "end"));
+      if (keep) {
+        const height = popup.getBoundingClientRect().height;
+        keep.height = hold && keep.height !== undefined && height <= keep.height ? keep.height : height;
+      }
+      Object.assign(positioner.style, hold
+        ? { minHeight: `min(${Math.floor(keep.height)}px, var(--available-height))`, display: "flex", flexDirection: "column", justifyContent: "flex-end", pointerEvents: "none" }
+        : { minHeight: "", display: "", flexDirection: "", justifyContent: "", pointerEvents: "" });
+      popup.style.pointerEvents = hold ? "auto" : "";
+      const size = (hold ? positioner : popup).getBoundingClientRect();
       const result = positionMenu({
         anchor: anchorRect, size: { width: size.width, height: size.height },
         viewport: { width: window.innerWidth, height: window.innerHeight },
-        side: resolvedSide, align, sideOffset: resolvedOffset, alignOffset, collisionPadding,
+        side: placed?.side ?? resolvedSide, align: placed?.align ?? align, sideOffset: resolvedOffset, alignOffset, collisionPadding,
       });
       positioner.style.left = `${result.left}px`;
       positioner.style.top = `${result.top}px`;
@@ -321,13 +339,22 @@ function PopupImpl({
       positioner.style.setProperty("--available-width", `${result.availableWidth}px`);
       positioner.style.visibility = "";
       for (const node of [positioner, popup]) { node.setAttribute("data-side", result.side); node.setAttribute("data-align", result.align); }
+      if (keep && (placed?.side !== result.side || placed?.align !== result.align)) {
+        cancelAnimationFrame(keep.frame);
+        let frames = 0;
+        const settle = () => {
+          if (++frames < 2) { keep.frame = requestAnimationFrame(settle); return; }
+          keep.frame = 0; keep.placed = { side: result.side, align: result.align }; place();
+        };
+        keep.frame = requestAnimationFrame(settle);
+      }
     };
     place();
     const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(place);
     observer?.observe(popup);
     window.addEventListener("resize", place);
-    return () => { observer?.disconnect(); window.removeEventListener("resize", place); };
-  }, [sheet, anchor, point, nested, submenu, resolvedSide, align, resolvedOffset, alignOffset, collisionPadding]);
+    return () => { observer?.disconnect(); window.removeEventListener("resize", place); cancelAnimationFrame(stable.current.frame); };
+  }, [sheet, anchor, point, nested, submenu, resolvedSide, align, resolvedOffset, alignOffset, collisionPadding, stableWhileOpen]);
 
   // Initial highlight: first item (keyboard-opened root or submenu) or last
   // (ArrowUp from the trigger); "popup" focuses the popup with no highlighted
@@ -415,6 +442,14 @@ function PopupImpl({
       event.preventDefault(); event.stopPropagation();
       if (key === "Escape" && submenu.closeParentOnEsc) { requestClose("escape-key"); return; }
       submenu.close({ focusTrigger: true });
+      return;
+    }
+    // A root popup is portaled to <body>, but React still bubbles its keydown through the component tree; a
+    // host ancestor with its own Escape handler (the Settings dialog root) would close along with the menu.
+    // Base UI useDismiss: the topmost popup consumes Escape, so close only the menu here.
+    if (!nested && key === "Escape") {
+      event.preventDefault(); event.stopPropagation();
+      requestClose("escape-key");
       return;
     }
     if (event.metaKey || event.ctrlKey || event.altKey) return;

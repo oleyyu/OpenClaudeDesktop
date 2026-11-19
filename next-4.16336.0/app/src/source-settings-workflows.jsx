@@ -60,7 +60,7 @@ export function workflowSettingsGroup({ config, boot, engine, shownValue, save, 
     rows.push(row('workflowEngine', t('Workflow engine'), choice === 'native' ? engineText : withNote(engineText),
     <SourceSelect label={t('Workflow engine')} align="end" className="sselect-width-220" value={choice}
       onChange={(value) => save('workflowEngines', { ...(shown('workflowEngines') || {}), [id]: value === 'codeDesktop' ? 'codeDesktop' : null }, 'workflowEngine')}
-      items={[{ value: 'native', label: t('{core}’s own workflows (default)', { core: name }) }, { value: 'codeDesktop', label: t('OpenClaude Desktop') }]} />, { indent: true, searchText: engineText }));
+      items={[{ value: 'native', label: t('Built-in (default)') }, { value: 'codeDesktop', label: t('OpenClaude Desktop') }]} />, { indent: true, searchText: engineText }));
   } else {
     rows.push(row('workflowEngine', t('Workflow engine'), withNote(t('{core} has no workflow engine of its own, so OpenClaude Desktop runs its workflows.', { core: name })), <span>{t('OpenClaude Desktop')}</span>,
       { indent: true, searchText: t('{core} has no workflow engine of its own, so OpenClaude Desktop runs its workflows.', { core: name }) }));

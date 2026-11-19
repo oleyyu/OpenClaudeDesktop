@@ -134,13 +134,16 @@ test('D1: bindings the linked areas hold are imported from them, never cut again
   assert.equal(imports.get('a_')?.name, 'ie', 'a_ (cc5a62f6f ie)');
 });
 
-test('the staged double output: the 3.6556.2 graph is still the one the host reads', () => {
+// chat-cowork-1to1 r1 (cowork-r1-01): the panel host (source-surfaces.jsx) is cut over to the -v4 graph; the 3.6556.2
+// output stays for its other readers, and no other host file imports the -v4 graph.
+test('the double output after the cutover: only the panel host reads the -v4 graph', () => {
   const old = JSON.parse(local('src/generated/cowork-runs/manifest.json'));
   assert.equal(old.referenceVersion, '3.6556.2');
   for (const name of fs.readdirSync(path.join(app, 'src'))) {
-    if (!/\.(jsx|mjs|js)$/.test(name) || name === 'source-cowork-runs-v4-adapters.jsx') continue;
+    if (!/\.(jsx|mjs|js)$/.test(name) || name === 'source-cowork-runs-v4-adapters.jsx' || name === 'source-surfaces.jsx') continue;
     assert.ok(!local(`src/${name}`).includes('generated/cowork-runs-v4'), `src/${name} does not import the staged graph`);
   }
+  assert.match(local('src/source-surfaces.jsx'), /from '\.\/generated\/cowork-runs-v4\/index\.mjs';/);
 });
 
 test('SSR: a session a scheduled task started (card layout): task title, open-task link, newest run first, the current run', () => {

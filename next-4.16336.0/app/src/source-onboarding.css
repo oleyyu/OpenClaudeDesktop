@@ -19,7 +19,7 @@
 .sob-text-button:hover { color:var(--cds-text-primary); }
 .sob-text-button:focus-visible, .sob-link:focus-visible, .sob-preset:focus-visible, .sob-chip:focus-visible, .sob-disclosure:focus-visible { outline:none; box-shadow:var(--cds-focus-shadow); }
 
-.sob-card { box-sizing:border-box; width:100%; max-width:560px; margin:0 16px; padding:28px; display:flex; flex-direction:column; gap:16px; text-align:left;
+.sob-card { box-sizing:border-box; width:100%; max-width:560px; margin:0; padding:28px; display:flex; flex-direction:column; gap:16px; text-align:left;
   border:.5px solid var(--cds-border); border-radius:2rem; background:var(--cds-surface-1);
   box-shadow:0 4px 24px 0 color-mix(in srgb, var(--cds-black, #000) 1.57%, transparent), 0 4px 32px 0 color-mix(in srgb, var(--cds-black, #000) 1.57%, transparent),
     0 2px 64px 0 color-mix(in srgb, var(--cds-black, #000) 1.18%, transparent), 0 16px 32px 0 color-mix(in srgb, var(--cds-black, #000) 1.18%, transparent); }
@@ -67,7 +67,9 @@
 /* Choose your agent (AgentCard): the usable agents as one rounded card holding a radio list (logo, name, one plain
    line, status, radio), hairline dividers between rows, like a Claude settings list; agents still being adapted are a
    single muted row of chips under it. Generous whitespace, one screen tall. */
-.sob-agents { width:100%; max-width:560px; display:flex; flex-direction:column; align-items:stretch; gap:20px; margin:0 16px; border-radius:2rem; }
+.sob-agents { width:100%; max-width:560px; display:flex; flex-direction:column; align-items:stretch; gap:20px; margin:0; border-radius:2rem; }
+/* U-48: no side margin on .sob-card / .sob-agents: .sob-shell already pads 32px, and width:100% plus a 16px margin
+   overflowed the shell sideways by 16px (8px for the 920px connect card at 1000 wide). */
 .sob-agents[data-dragging] { outline:2px dashed var(--cds-fill-accent); outline-offset:12px; }
 .sob-subtitle { margin:-22px 0 6px; text-align:center; color:var(--cds-text-muted); font-size:.9375rem; line-height:1.4rem; }
 .sob-agent-list { display:flex; flex-direction:column; padding:6px; border:.5px solid var(--cds-border); border-radius:1.25rem; background:var(--cds-surface-1);

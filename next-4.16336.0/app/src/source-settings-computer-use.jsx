@@ -228,7 +228,7 @@ export function ComputerUseTurnOnBody({ step = 'warning', permissions = null, ca
   return step === 'warning' ? <>
     <div className="text-secondary">
       <div className="flex flex-col gap-3 pt-1">
-        <p>{t('DeepSeek will see the apps you approve and click and type in them, working in the background while you keep using your computer or taking full control of your screen. Which of those DeepSeek does by default is set under Settings → This computer → Computer use. You’ll approve each app, but not confirm each step DeepSeek performs.')}</p>
+        <p>{t('DeepSeek will see the apps you approve and click and type in them, working in the background while you keep using your computer or taking full control of your screen. Which of those DeepSeek does by default is set under Settings → Desktop app → Computer use. You’ll approve each app, but not confirm each step DeepSeek performs.')}</p>
         <div>
           <div className="font-semibold mb-1.5">{t('Keep in mind:')}</div>
           <ul className="list-disc ps-5 flex flex-col gap-1">

@@ -54,6 +54,7 @@ import { basename, shownUserItem, userMessageContent } from "./composer-attachme
 import { commandText } from "./shell-command-model.mjs";
 import { parseSelectedElementMessage } from "./generated/code-editor/preview-element-parser.mjs";
 import { workflowTaskEvent } from "./task-event-model.mjs";
+import { chapterOf } from "./agent-tool-titles.mjs";
 import { demonstrationOf } from "./watch-record-model.mjs";
 
 // W14-code r8 R8T-02: Codex's sleep item is a tool call like imageGeneration (transcript-sdk-tools: no SDK counterpart, its
@@ -439,10 +440,21 @@ export function codeTranscriptEntries(items, { view = "normal", responding = fal
       open(item.turnId, item.id, row).items.push({ kind: "thinking", id: str(item.id), text: reasoningText(item) });
       continue;
     }
+    // U-10: a mark_chapter call is the chapter heading, not a tool row (cb0636f7b V: `{kind: "chapter", id: <tool_use id>,
+    // title, summary}`, pushed only with a title; c96d752d0 "code.chapter" → KY). The id is chapterOf's, the one the
+    // Session chapters rail (main.jsx sessionChapters), its hide and its renames use.
+    const chapter = chapterOf(item);
+    if (chapter) {
+      tools = null;
+      open(item.turnId, item.id, row).items.push({ kind: "chapter", ...chapter });
+      continue;
+    }
     // R2T-05 / W14-code r4 R4T-08e: a Codex plan is an ExitPlanMode call (the "Proposed plan" row, stands-alone);
     // R4T-08b: a workflow run (officialWorkflow) is its Workflow call.
     if (TOOL_TYPES.has(item.type) || item.type === "plan" || workflow) {
-      const calls = workflow ? workflowRunTool(item, { awaiting: awaitingIds.has(item.id) }) : item.type === "plan" ? codexPlanTool(item)
+      // fix-r2 U-36: a plan's review request names the exit_plan_mode call (`call-…`); the plan item is `plan-<call id>`.
+      const calls = workflow ? workflowRunTool(item, { awaiting: awaitingIds.has(item.id) })
+        : item.type === "plan" ? codexPlanTool(item, { awaiting: awaitingIds.has(item.id) || awaitingIds.has(str(item.id).replace(/^plan-/, "")) })
         : sdkTools(item, { awaiting: awaitingIds.has(item.id) });
       if (!calls) continue;
       for (const call of calls) {

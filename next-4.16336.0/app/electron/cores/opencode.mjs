@@ -68,8 +68,11 @@ export default Object.freeze({
     // with a device code (Copilot on github.com; GitHub Enterprise needs its URL, which only `opencode auth login` asks for).
     // OpenCode 2.x: these are integration methods (POST /api/integration/:id/connect/oauth), ChatGPT by token sharing only
     // (no device code there); claude-agent uses the user's own Claude Code sign-in (`claude auth login`): the bridge
-    // checks it and waits while OpenCode does (openedByAgent, Reopen shows the setup page). OpenCode 1.x refuses it.
-    browser: Object.freeze([Object.freeze({ provider: "openai", label: "ChatGPT Pro/Plus", deviceCode: true }), Object.freeze({ provider: "poe", label: "Poe" }),
+    // checks it; signed out, it runs `claude auth login` (claude.ai's sign-in page, a code to paste as the fallback),
+    // signed in, it only connects (codeDesktop.connecting). OpenCode 1.x refuses it.
+    // deviceCodeBefore: the device code is offered only below that major version (boot.core.engineVersion): 2.x refuses
+    // ChatGPT's headless sign-in ("2.x signs in to ChatGPT in the browser only", opencode-bridge v2/account.js).
+    browser: Object.freeze([Object.freeze({ provider: "openai", label: "ChatGPT Pro/Plus", deviceCode: true, deviceCodeBefore: 2 }), Object.freeze({ provider: "poe", label: "Poe" }),
       Object.freeze({ provider: "claude-agent", label: "Claude (Claude Code login)" })]),
     deviceCode: Object.freeze([Object.freeze({ type: "chatgptDeviceCode", provider: "github-copilot", label: "GitHub Copilot" }),
       Object.freeze({ type: "chatgptDeviceCode", provider: "xai", label: "SuperGrok (xAI)" })]),
@@ -86,8 +89,11 @@ export default Object.freeze({
     ]),
     // The agent's auth store (opencode-bridge credentials.js): account/logout deletes every sign-in in it, saved API keys too.
     // OpenCode 2.x keeps sign-ins in the bridge's own database (<state>/opencode-v2/opencode.db, opencode-bridge v2/db.js),
-    // which copies this folder's API keys (auth.json) once; account/logout deletes them there, connectors' sign-ins kept.
+    // which copies this folder's API keys (auth.json) once; account/logout deletes them there, connectors' sign-ins kept,
+    // and leaves auth.json alone (its keys are not copied in again): privateStoreFrom names that major version, so the
+    // sign-out confirmation says so (settings-core-copy signOutConfirmText).
     store: "~/.local/share/opencode",
+    privateStoreFrom: 2,
     signOutRemovesKeys: true,
   }),
   agent: Object.freeze({

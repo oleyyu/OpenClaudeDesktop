@@ -124,7 +124,8 @@ test('css3-archived-band-enter / fr3-04: the composer column carries c0b46114c\'
   assert.ok(generated.includes('(e.dataset.bandEnter = ""),') && generated.includes('export { m as useBandEnter, f as BAND_ENTER_CLASS };'));
   const main = read('src/main.jsx');
   assert.ok(main.includes('const bandEnterRef = useBandEnter(current && !loading ? current : null);'));
-  assert.ok(main.includes('<div ref={bandEnterRef} className={`conversation '));
+  // chat-home r1-06: the new Chat page's scroll column also carries shared-23 TT's data-new-page-scroll-column.
+  assert.ok(main.includes('<div ref={bandEnterRef} {...(!current && mode === \'chat\' && section === \'new\' ? { [NEW_PAGE_SCROLL_COLUMN]: "" } : {})} className={`conversation '));
   assert.ok(fs.readFileSync(path.join(app, 'public/assets/v1/shared-styles-D_GJawPO.css'), 'utf8').includes('@starting-style{.epitaxy-root [data-band-enter] .epitaxy-band-enter{opacity:0;translate:0 6px}'));
   const queued = rules(read('src/source-queued-messages.css'));
   assert.doesNotMatch(queued, /@starting-style|\.sqm-band \{[^}]*transition/);
@@ -144,7 +145,8 @@ test('css3-side-chat-composer: the side chat draws the main Code card (cccc2cf0a
   assert.doesNotMatch(read('src/source-side-chat.css'), /\.ssc-field|\.ssc-submit|\.ssc-input/);
   const composer = read('src/source-composer.jsx');
   assert.ok(composer.includes('<ComposerShellParts.Attachments>{attachmentStrip ? <div className="epitaxy-attachment-shelf w-full">{attachmentStrip}</div>'));
-  assert.ok(composer.includes('data-mention-open={mentionOpen || emojiOpen || undefined}>'));
+  // U-MARLIN fix2: the zone also carries data-composer-marlin (40rem vs 42rem follows the gate); the mention flag is unchanged.
+  assert.ok(composer.includes('data-mention-open={mentionOpen || emojiOpen || undefined} data-composer-marlin={COMPOSER_MARLIN_DESIGN || undefined}>'));
   assert.ok(composer.includes('caret={mention.caret} container={mentionContainer}'));
 });
 

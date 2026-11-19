@@ -100,6 +100,7 @@ test('KH render: WH rows (radio, descriptions in the main group only, muted vers
   const tree = menu({ isNewConversation: true });
   const popup = tree;
   assert.ok(popup.props.className.includes('max-w-[min(26rem,var(--available-width))]'), 'ZH');
+  assert.equal(popup.props.side, 'top', '$H: placement "bottom" → side "top"');
   assert.equal(popup.props.align, 'end');
   assert.equal(popup.props.sideOffset, 4);
   const all = rows(tree);
@@ -155,9 +156,15 @@ test('wE: the Effort submenu with its header, TE level rows (effort-option-*, De
   assert.deepEqual(toggles, ['extended', 'off']);
 });
 
+// chat-home r1-05: the menu is no longer the host's global popup anchored on the trigger (the old assertion encoded that);
+// it is $H's own CDS Dropdown: the composer renders Q.Root / Q.Trigger and main.jsx hands it KH's Popup (chatModelMenu).
 test('main.jsx: Chat / Cowork open SourceChatModelMenu with the effort levels and Chat\'s thinking rows; Code keeps its menu', () => {
   const main = local('src/main.jsx');
-  assert.ok(main.includes('{menu?.kind === "model" && mode !== "code" ? <SourceChatModelMenu key={menu.token ?? "model"}'));
+  assert.ok(main.includes('chatModelMenu={mode !== "code" ? <SourceChatModelMenu models={models} selected={model}'));
+  assert.ok(main.includes('{menu?.kind === "model" && mode !== "code" ? null'), 'no host popup for the Chat / Cowork card');
+  assert.ok(local('src/source-composer.jsx').includes('modelMenuOpen={modelOpen} modelMenu={chatModelMenu}'));
+  const composer = local('src/source-chat-composer.jsx');
+  assert.match(composer, /<CdsDropdown\.Root open=\{menuOpen && !\(disabled \|\| loading\)\} onOpenChange=\{onMenuOpenChange\}>\s*<div className=\{trigger\.tooltipWrapperClass\}>\s*<CdsDropdown\.Trigger ref=\{triggerRef\} disabled=\{disabled \|\| loading\} render=\{<CdsButton/);
   assert.ok(main.includes('effort={efforts.length > 0 ? { levels: markDefaultEffort(efforts, chosen?.defaultReasoningEffort), value: effort, onPick: pickEffort } : null}'));
   assert.ok(main.includes('thinking={chatThinking && { ...chatThinking, onToggle: toggleChatThinking }} />'));
   assert.ok(main.includes(': menu?.kind === "model" ? <SourceModelMenu key={menu.token ?? "model"}'));

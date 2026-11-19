@@ -13,13 +13,14 @@
  *              (claude/probe.ts MINIMUM_VERSION), older ones fail every chat
  *   sign-in    `claude auth status --json` ({loggedIn, authMethod, apiProvider, email, orgName, subscriptionType, …},
  *              Claude Code 2.1.311): whether a sign-in can work before v2's own check (a 30–60 s probe) says so
+ *   login      signed out: `claude auth login --claudeai` (startLogin), which opens claude.ai's sign-in page itself
  *   ANTHROPIC_*  claude inherits serve's environment (claude/query-options.ts clears only three variables): with
  *              ANTHROPIC_API_KEY / ANTHROPIC_AUTH_TOKEN / ANTHROPIC_BASE_URL set, Claude Code bills that key or gateway,
  *              not the subscription. Reported, never removed (removing them would also sign `anthropic` out)
  *
  * Every process call is injectable (`exec`, execFile-shaped); nothing here runs at import.
  */
-import { execFile } from 'node:child_process'
+import { execFile, spawn as spawnProcess } from 'node:child_process'
 import fs from 'node:fs'
 import path from 'node:path'
 import { parseVersion } from '../flavor.js'
@@ -31,6 +32,7 @@ const SHELL_TIMEOUT_MS = 5000
 const VERSION_TIMEOUT_MS = 10000
 const STATUS_TIMEOUT_MS = 10000
 const STATUS_TTL_MS = 60000
+const LOGIN_URL_TIMEOUT_MS = 20000
 const isRecord = (value) => !!value && typeof value === 'object' && !Array.isArray(value)
 
 /** Where Claude Code's installers put `claude` (native installer, its old local install, Homebrew, bun, npm -g prefix). */
@@ -79,12 +81,13 @@ const absoluteLines = (text) => String(text ?? '').split('\n').map((line) => lin
 
 export class ClaudeCode {
   /**
-   * @param {{ env?: Record<string, string | undefined>, configured?: () => string | null, exec?: typeof execFile, executable?: (file: string) => boolean, readHead?: (file: string) => string, log?: (line: string) => void, now?: () => number }} [options]
+   * @param {{ env?: Record<string, string | undefined>, configured?: () => string | null, exec?: typeof execFile, spawn?: typeof spawnProcess, executable?: (file: string) => boolean, readHead?: (file: string) => string, log?: (line: string) => void, now?: () => number }} [options]
    */
-  constructor({ env = process.env, configured = () => null, exec = execFile, executable = isExecutable, readHead = readScriptHead, log = () => {}, now = Date.now } = {}) {
+  constructor({ env = process.env, configured = () => null, exec = execFile, spawn = spawnProcess, executable = isExecutable, readHead = readScriptHead, log = () => {}, now = Date.now } = {}) {
     this.env = env
     this.configured = configured
     this.exec = exec
+    this.spawn = spawn
     this.executable = executable
     this.readHead = readHead
     this.log = log
@@ -197,6 +200,40 @@ export class ClaudeCode {
     if (value.loggedIn === null) this.log(`claude auth status said nothing usable (${answer.error?.code ?? answer.error?.message ?? 'no JSON'})`)
     this.status = { path: found.path, at: this.now(), value }
     return value
+  }
+
+  /**
+   * `claude auth login --claudeai`, the sign-in a signed-out Claude Code needs (Claude Code 2.1.322): it opens the
+   * claude.ai sign-in page itself (its redirect is a localhost callback it listens on) and prints a manual link
+   * ("If the browser didn't open, visit: <url>") whose page ends on a code it reads from stdin ("Paste code here if
+   * prompted >"). Resolves once that link is printed; rejects when claude exits or prints none within `timeout`.
+   * @returns {Promise<{ url: string, exited: Promise<{ code: number | null, output: string }>, submit: (code: string) => void, stop: () => void }>}
+   */
+  startLogin(found = this.found, { timeout = LOGIN_URL_TIMEOUT_MS } = {}) {
+    if (!found?.path) return Promise.reject(new Error('Claude Code was not found'))
+    let child
+    try { child = this.spawn(found.path, ['auth', 'login', '--claudeai'], { env: this.commandEnv(found), stdio: ['pipe', 'pipe', 'pipe'] }) } catch (error) { return Promise.reject(error) }
+    let output = ''
+    const exited = new Promise((resolve) => {
+      let done = false
+      const settle = (code) => { if (!done) { done = true; resolve({ code, output: output.slice(-2000) }) } }
+      child.on('exit', (code) => settle(code))
+      child.on('error', (error) => { output += `\n${error?.message ?? error}`; settle(null) })
+    })
+    const stop = () => { try { if (child.exitCode === null && child.signalCode === null) child.kill('SIGTERM') } catch {} }
+    const submit = (code) => { child.stdin?.write(`${code}\n`) }
+    return new Promise((resolve, reject) => {
+      const timer = setTimeout(() => { stop(); reject(new Error(`no sign-in link within ${Math.round(timeout / 1000)} s`)) }, timeout)
+      timer.unref?.()
+      const read = (chunk) => {
+        output += String(chunk)
+        const url = /visit:\s*(https:\/\/\S+)/.exec(output)?.[1]
+        if (url) { clearTimeout(timer); resolve({ url, exited, submit, stop }) }
+      }
+      child.stdout?.on('data', read)
+      child.stderr?.on('data', (chunk) => { output += String(chunk) })
+      void exited.then(({ code }) => { clearTimeout(timer); reject(new Error(`claude auth login exited (${code ?? 'no code'}) before printing a sign-in link${output.trim() ? `: ${output.trim().slice(-200)}` : ''}`)) })
+    })
   }
 
   /** The ANTHROPIC_* variables serve (so claude) inherits. */

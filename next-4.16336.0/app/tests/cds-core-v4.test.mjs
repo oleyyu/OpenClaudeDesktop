@@ -97,12 +97,16 @@ const WAVE8C = pins.merge.wave8c.publicNames;
 // wave 8d (cds-integrate/merge-pins-wave8d.mjs, R4-Q1 addendum D replayed over addendum C, R4-K1, stage 14d): 11 names (shared-39
 // Pu, its closure state $l / eu / nu / Mu / kc / Su and writers cu / ru / wu, shared-25 Mz) appended after the wave-8c names.
 const WAVE8D = pins.merge.wave8d.publicNames;
+// wave cc2 (cds-integrate/merge-pins-wavecc2.mjs, chat-cowork-1to1-20261117 r2 Core step, stage 15cc): 11 names (vendor-frame Fp
+// BaseMenuCheckboxItem, shared-3 Bd UserMessage, its closure state shared-2 km / zm / W8 / Q8 / Y5 / X5, writers Bm / G8, shared-3 ll).
+const WAVECC2 = pins.merge.wavecc2.publicNames;
 
 test("generator --check: production output is current", async () => {
   const manifest = await extract({ check: true });
   // wave 8c (R4-K1 addendum C, wave8c/union.json: the 10527 kept identical, + 6: rO / eD / BH, BH's pure closure and the writer w_; Es was held); was: 10527
   // wave 8d (R4-Q1 addendum D, wave8d/union.json: the 10533 kept identical, + 80: Pu's closure); was: 10533
-  assert.equal(manifest.modules.reduce((n, m) => n + m.bindings.length, 0), 10613); // wave 8a/8b (R4-K1, wave8ab/union.json: the 10522 kept identical, + 5 bindings the wave-8b names reach in shared-92 / shared-8 / shared-4 / c227f4d5e; wave 8a adds none); wave 8s: 10522 (W8S-M1, wave8s/union.json); wave 8: 9746 (wave8/union.json); wave 7: 7321
+  // wave cc2 (wavecc2/union.json: the 10613 kept identical, + 173: Bd's closure; Fp was held); was: 10613
+  assert.equal(manifest.modules.reduce((n, m) => n + m.bindings.length, 0), 10786); // wave 8a/8b (R4-K1, wave8ab/union.json: the 10522 kept identical, + 5 bindings the wave-8b names reach in shared-92 / shared-8 / shared-4 / c227f4d5e; wave 8a adds none); wave 8s: 10522 (W8S-M1, wave8s/union.json); wave 8: 9746 (wave8/union.json); wave 7: 7321
 });
 
 test("manifest: 4.16336.0 snapshot, pinned source hashes, module bytes, no view-tabs graph", async () => {
@@ -216,16 +220,18 @@ test("host adapter is the reviewed framework boundary; provenance records roots,
 // 260 wave-8a and 6 wave-8b names follow, asserted below).
 // wave 8c (R4-K1 addendum C): title was "… 397 wave-8s, 260 wave-8a and 6 wave-8b names, each an exported binding of the generated graph".
 // wave 8d (R4-Q1 addendum D): title was "… 6 wave-8b and 5 wave-8c names, each an exported binding of the generated graph".
-test("publicNames: 107 pinned roots and twelve Contexts, then the 288 wave-4, 50 wave-5, 96 wave-5b, 1747 wave-6, 77 wave-7, 153 wave-8, 397 wave-8s, 260 wave-8a, 6 wave-8b, 5 wave-8c and 11 wave-8d names, each an exported binding of the generated graph", async () => {
+// wave cc2: title was "… 5 wave-8c and 11 wave-8d names, each an exported binding of the generated graph".
+test("publicNames: 107 pinned roots and twelve Contexts, then the 288 wave-4, 50 wave-5, 96 wave-5b, 1747 wave-6, 77 wave-7, 153 wave-8, 397 wave-8s, 260 wave-8a, 6 wave-8b, 5 wave-8c, 11 wave-8d and 11 wave-cc2 names, each an exported binding of the generated graph", async () => {
   const manifest = await json(path.join(output, "manifest.json"));
   // The 64 earlier names keep their order; the stage-3 roots and Contexts follow, then the wave-4, wave-5, wave-5b and wave-6 names.
   const wave4Names = WAVE4.map((e) => e.name), wave5Names = WAVE5.map((e) => e.name), wave5bNames = WAVE5B.map((e) => e.name), wave6Names = WAVE6.map((e) => e.name), wave7Names = WAVE7.map((e) => e.name), wave8Names = WAVE8.map((e) => e.name), wave8sNames = WAVE8S.map((e) => e.name); // wave 8s (W8S-M1)
   const wave8aNames = WAVE8A.map((e) => e.name), wave8bNames = WAVE8B.map((e) => e.name); // wave 8a/8b (R4-K1)
   const wave8cNames = WAVE8C.map((e) => e.name); // wave 8c (R4-K1 addendum C)
   const wave8dNames = WAVE8D.map((e) => e.name); // wave 8d (R4-Q1 addendum D)
+  const wavecc2Names = WAVECC2.map((e) => e.name); // wave cc2 (chat-cowork r2 Core step)
   // wave 8c: the next two lists were [..., ...wave8aNames, ...wave8bNames] (the wave-8c names follow).
   assert.deepEqual(Object.keys(manifest.publicNames), [...Object.keys(pins.roots).filter((n) => !ROOTS3.includes(n) && !wave4Names.includes(n)), ...CONTEXTS,
-    ...ROOTS3, ...CONTEXTS3, ...wave4Names, ...wave5Names, ...wave5bNames, ...wave6Names, ...wave7Names, ...wave8Names, ...wave8sNames, ...wave8aNames, ...wave8bNames, ...wave8cNames, ...wave8dNames]); // wave 8d: appended last (wave 8c: ended with ...wave8cNames); wave 8a/8b (R4-K1): appended last (wave 8s: ended with ...wave8sNames); wave 8s (W8S-M1): appended last (wave 8: ended with ...wave8Names)
+    ...ROOTS3, ...CONTEXTS3, ...wave4Names, ...wave5Names, ...wave5bNames, ...wave6Names, ...wave7Names, ...wave8Names, ...wave8sNames, ...wave8aNames, ...wave8bNames, ...wave8cNames, ...wave8dNames, ...wavecc2Names]); // wave cc2: appended last (wave 8d: ended with ...wave8dNames); wave 8d: appended last (wave 8c: ended with ...wave8cNames); wave 8a/8b (R4-K1): appended last (wave 8s: ended with ...wave8sNames); wave 8s (W8S-M1): appended last (wave 8: ended with ...wave8Names)
   assert.deepEqual(pins.merge.wave3.roots, ROOTS3);
   assert.deepEqual(pins.merge.wave3.contexts, CONTEXTS3);
   assert.equal(ROOTS.length + ROOTS3.length, 107);
@@ -241,8 +247,9 @@ test("publicNames: 107 pinned roots and twelve Contexts, then the 288 wave-4, 50
   assert.equal(wave8bNames.length, 6); // wave 8b (R4-K1 addendum B)
   assert.equal(wave8cNames.length, 5); // wave 8c (R4-K1 addendum C)
   assert.equal(wave8dNames.length, 11); // wave 8d (R4-Q1 addendum D: 13 decisions, settings_shared62_AS / settings_shared25_ki dropped on replay)
-  assert.deepEqual(Object.keys(manifest.publicNames).sort(), [...ROOTS, ...ROOTS3, ...CONTEXTS, ...CONTEXTS3, ...wave4Names, ...wave5Names, ...wave5bNames, ...wave6Names, ...wave7Names, ...wave8Names, ...wave8sNames, ...wave8aNames, ...wave8bNames, ...wave8cNames, ...wave8dNames].sort()); // wave 8d: + ...wave8dNames; wave 8a/8b (R4-K1; wave 8s: without ...wave8aNames, ...wave8bNames); wave 8s (W8S-M1; wave 8: without ...wave8sNames)
-  for (const dir of ["wave3", "wave4", "wave5", "wave5b", "wave6", "wave7", "wave8", "wave8s", "wave8a", "wave8b", "wave8c", "wave8d"]) { // wave 8d: + its frozen stage-13c owner (was: ended with "wave8c"); wave 8c: + its frozen stage-12b owner (was: ended with "wave8b"); wave 8a/8b (R4-K1): + their frozen stage-10s / 11a owners; wave 8s (W8S-M1): + its frozen stage-9 owner
+  assert.equal(wavecc2Names.length, 11); // wave cc2 (wavecc2/inputs/decisions.json: Fp, Bd and Bd's 9 closure states / writers)
+  assert.deepEqual(Object.keys(manifest.publicNames).sort(), [...ROOTS, ...ROOTS3, ...CONTEXTS, ...CONTEXTS3, ...wave4Names, ...wave5Names, ...wave5bNames, ...wave6Names, ...wave7Names, ...wave8Names, ...wave8sNames, ...wave8aNames, ...wave8bNames, ...wave8cNames, ...wave8dNames, ...wavecc2Names].sort()); // wave cc2: + ...wavecc2Names; wave 8d: + ...wave8dNames; wave 8a/8b (R4-K1; wave 8s: without ...wave8aNames, ...wave8bNames); wave 8s (W8S-M1; wave 8: without ...wave8sNames)
+  for (const dir of ["wave3", "wave4", "wave5", "wave5b", "wave6", "wave7", "wave8", "wave8s", "wave8a", "wave8b", "wave8c", "wave8d", "wavecc2"]) { // wave cc2: + its frozen stage-14d owner (was: ended with "wave8d"); wave 8d: + its frozen stage-13c owner (was: ended with "wave8c"); wave 8c: + its frozen stage-12b owner (was: ended with "wave8b"); wave 8a/8b (R4-K1): + their frozen stage-10s / 11a owners; wave 8s (W8S-M1): + its frozen stage-9 owner
     const before = await json(path.join(app, `../analysis/claude-4.16336.0-migrate-20261104/cds-integrate/${dir}/before/prod-manifest.json`));
     for (const [name, entry] of Object.entries(before.publicNames)) assert.deepEqual(manifest.publicNames[name], entry, `${name} moved`);
   }
@@ -251,7 +258,7 @@ test("publicNames: 107 pinned roots and twelve Contexts, then the 288 wave-4, 50
     assert.equal(m.source, entry.file, name);
     const binding = m.bindings.find((b) => b.name === entry.local);
     assert.ok(binding, name);
-    const w4 = WAVE4.find((e) => e.name === name), w5 = WAVE5.find((e) => e.name === name) ?? WAVE5B.find((e) => e.name === name) ?? WAVE6.find((e) => e.name === name) ?? WAVE7.find((e) => e.name === name) ?? WAVE8.find((e) => e.name === name) ?? WAVE8S.find((e) => e.name === name) ?? WAVE8A.find((e) => e.name === name) ?? WAVE8B.find((e) => e.name === name) ?? WAVE8C.find((e) => e.name === name) ?? WAVE8D.find((e) => e.name === name); // wave 8d: + WAVE8D; wave 8c: + WAVE8C; wave 8a/8b (R4-K1: + WAVE8A, WAVE8B); wave 8s (W8S-M1)
+    const w4 = WAVE4.find((e) => e.name === name), w5 = WAVE5.find((e) => e.name === name) ?? WAVE5B.find((e) => e.name === name) ?? WAVE6.find((e) => e.name === name) ?? WAVE7.find((e) => e.name === name) ?? WAVE8.find((e) => e.name === name) ?? WAVE8S.find((e) => e.name === name) ?? WAVE8A.find((e) => e.name === name) ?? WAVE8B.find((e) => e.name === name) ?? WAVE8C.find((e) => e.name === name) ?? WAVE8D.find((e) => e.name === name) ?? WAVECC2.find((e) => e.name === name); // wave cc2: + WAVECC2; wave 8d: + WAVE8D; wave 8c: + WAVE8C; wave 8a/8b (R4-K1: + WAVE8A, WAVE8B); wave 8s (W8S-M1)
     if (w4) assert.deepEqual([w4.file, w4.local], [entry.file, entry.local], name);
     // A wave-5 / 5b / 6 / 7 / 8 name is a pinned binding (pins.publicBindings: declaration hash, export name), never a root.
     if (w5) {

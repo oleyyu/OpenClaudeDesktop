@@ -5,12 +5,14 @@ import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from 
 // are re-exported there from code-routines-v4 / routines-shared-v4 (D1, one copy).
 import { GalleryPageLayout, ProjectSpaceCard, ProjectsEmptyState as EmptyState, ProjectsLoadingSkeleton, projectsSearchMessages,
   useProjectsSearchKeys, useProjectsSearchAnnouncement, ProjectInstructionsSection, ProjectRailDivider, ProjectSessionsHeading, useProjectRecommendations,
-  ProjectPageHeader, ProjectBreadcrumb, ProjectKnowledgeDropZone, ProjectMemorySection, ProjectSessionTable, RenameChatDialog } from './generated/chat-projects-v4/index.mjs';
+  ProjectPageHeader, ProjectBreadcrumb, ProjectKnowledgeDropZone, ProjectMemorySection, ProjectSessionTable, RenameChatDialog, ProjectEditDetailsDialog } from './generated/chat-projects-v4/index.mjs';
+// library-pages r2-02: the sliced Edit details form saves through the CoworkSpaces bridge the page installs.
+import { installProjectSpacesHost } from './source-project-spaces-bridge.mjs';
 // 4.16336.0 host wiring (frame): CdsButton stays view-tabs (the primaryAction goes to the 3.6556.2 chat-projects page
 // header, whose compact-primary context the Button reads; the menu trigger renders inside the 3.6556.2 CdsDropdown);
 // the empty-state glyph and the host create / edit dialogs' name fields are the cds-core Icon (Bs) and TextInput.
 import { CdsButton, CdsDropdown } from './generated/view-tabs/index.js';
-import { CdsIcon, CdsTextInput as TextInput, CdsRouterContext } from './cds-core.mjs';
+import { CdsIcon, CdsTextInput as TextInput, CdsRouterContext, CdsButton as CoreButton, CdsDropdown as CoreDropdown } from './cds-core.mjs';
 import { SourceSettingsButton as Button } from './source-settings-button.jsx';
 // 3.6556.2 shared-frame nk: the one sliced copy is cowork-scheduled's (its routine form and the native field
 // registry use it); view-tabs does not publish nk, and a second copy there would break D1.
@@ -77,7 +79,10 @@ export function SourceProjects({ call, onOpen, composer, sessions, sessionMetada
   };
   const toggleRef = useRef(toggleStarred); toggleRef.current = toggleStarred;
   const spaces = useMemo(() => ({ starredIds, toggleStarred: id => toggleRef.current(id) }), [starredIds]);
-  const [editing, setEditing] = useState(null);
+  // library-pages r2-02: c17beaa76 wr's Edit details is shared-19 NI (sliced), over the last project its menu edited.
+  const [editing, setEditing] = useState(null), [editOpen, setEditOpen] = useState(false);
+  const replaceRef = useRef(replace); replaceRef.current = replace;
+  useEffect(() => installProjectSpacesHost({ call, onUpdated: project => { replaceRef.current(project); setSelected(value => value?.id === project.id ? project : value); } }), [call]);
   // Fn links to `/space/<id>` (shared-52 Zl); RouterLink (routines-shared) hands the push to this router.
   const router = useMemo(() => ({ navigate: href => { const project = (projects ?? []).find(entry => `${SPACE_ROUTE}${entry.id}` === href); if (project) openRef.current(project); }, pathname: '/projects', search: '', bridge: undefined, models: [] }), [projects]);
   // 4.16336.0 cf8745532 u links the card through shared-frame Card.Link (Fh → wh → fa, useCdsLinkProps), which navigates
@@ -103,7 +108,7 @@ export function SourceProjects({ call, onOpen, composer, sessions, sessionMetada
           `t.origin==="import"` spaces with a twin; local projects carry no origin, so it is null (w11-sweep-curchat). */}
       {rows.map(({ project, space }) => <li key={project.id} className="row-span-2 mb-3 grid grid-rows-subgrid md:mb-6">
         <ProjectSpaceCard space={space} sortBy={sort === 'created' ? 'created_at' : 'updated_at'} updatedAtMs={space.updatedAt}
-          overlay={<ProjectCardMenu space={space} isStarred={starredIds.includes(project.id)} onToggleStarred={() => spaces.toggleStarred(project.id)} onEdit={() => setEditing(project)} />} />
+          overlay={<ProjectCardMenu space={space} isStarred={starredIds.includes(project.id)} onToggleStarred={() => spaces.toggleStarred(project.id)} onEdit={() => { setEditing(project); setEditOpen(true); }} />} />
       </li>)}
     </ul>;
   return <div className="surface-projects cds-root" data-density="comfortable">
@@ -119,26 +124,25 @@ export function SourceProjects({ call, onOpen, composer, sessions, sessionMetada
       </LocalProjectSpacesContext.Provider>
     </CdsRouterContext.Provider></RoutinesSharedHost.Provider>
     {creating && <CreateProject call={call} onClose={() => setCreating(false)} onCreated={project => { setProjects(value => [...(value ?? []), project]); setQuery(''); setCreating(false); }} />}
-    {editing && <EditProject key={editing.id} project={editing} kind="details" onClose={() => setEditing(null)}
-      update={async patch => { const next = await call('local-projects', { action: 'update', id: editing.id, ...patch }); replace(next); return next; }} />}
+    <ProjectEditDetailsDialog isOpen={editOpen && !!editing} onClose={() => setEditOpen(false)} spaceId={editing?.id} spaceName={editing?.name ?? ''} spaceDescription={editing?.description} />
   </div>;
 }
 
 const stopPropagation = event => event.stopPropagation();
-// c17beaa76 ir (w13-chatui-project-detail, P1b): the card's overlay menu. The DotsVertical ghost trigger ("More options for
-// {label}", clicks kept off the card link), then Pin / Unpin (star-space-trigger; shared-78 gK is true, so the pin
-// wording and Pin / PinSlash icons) and Edit details (rename-space-trigger). Its Archive item (archive-space-trigger, the
+// c17beaa76 wr (4.16336.0; 3.6556.2 ir, w13-chatui-project-detail P1b): the card's overlay menu over the cds-core Dropdown /
+// Button (wr's b / p). The DotsHorizontal ghost trigger ("More options for {label}", clicks kept off the card link), then
+// Pin / Unpin (star-space-trigger; shared-78 gK is true, so the pin wording and Pin / PinSlash icons) and Edit details (rename-space-trigger). Its Archive item (archive-space-trigger, the
 // claude.ai space delete with its "Archive project" confirmation) is not offered: a local project has no archive.
 export function ProjectCardMenu({ space, isStarred, onToggleStarred, onEdit }) {
   const label = space.name?.trim() ? t('More options for {label}', { label: space.name }) : t('More options');
-  return <CdsDropdown.Root>
-    <CdsDropdown.Trigger render={<CdsButton iconOnly icon="DotsVertical" variant="ghost" tooltip={false} className="pointer-events-auto"
+  return <CoreDropdown.Root>
+    <CoreDropdown.Trigger render={<CoreButton iconOnly icon="DotsHorizontal" variant="ghost" tooltip={false} className="pointer-events-auto"
       onClick={stopPropagation} onMouseDown={stopPropagation} aria-label={label} />} />
-    <CdsDropdown.Popup align="end">
-      <CdsDropdown.Item data-testid="star-space-trigger" onClick={onToggleStarred} icon={isStarred ? 'PinSlash' : 'Pin'}>{t(isStarred ? 'Unpin' : 'Pin')}</CdsDropdown.Item>
-      <CdsDropdown.Item data-testid="rename-space-trigger" onClick={() => setTimeout(onEdit, 100)} icon="Edit">{t('Edit details')}</CdsDropdown.Item>
-    </CdsDropdown.Popup>
-  </CdsDropdown.Root>;
+    <CoreDropdown.Popup align="end">
+      <CoreDropdown.Item data-testid="star-space-trigger" onClick={onToggleStarred} icon={isStarred ? 'PinSlash' : 'Pin'}>{t(isStarred ? 'Unpin' : 'Pin')}</CoreDropdown.Item>
+      <CoreDropdown.Item data-testid="rename-space-trigger" onClick={() => setTimeout(onEdit, 100)} icon="Edit">{t('Edit details')}</CoreDropdown.Item>
+    </CoreDropdown.Popup>
+  </CoreDropdown.Root>;
 }
 
 function CreateProject({ call, onClose, onCreated }) {
@@ -295,6 +299,10 @@ export function ProjectDetail({ project, call, composer, sessions, sessionMetada
     try { const result = await onSessionAction(action, target, payload); setError(''); return result; }
     catch (reason) { setError(reason?.message ?? String(reason)); throw reason; }
   };
+  // library-pages r2-02: the Edit details form (shared-19 NI / FI) saves through the CoworkSpaces bridge; the saved
+  // project repaints this page (the last installed host answers, so this page's while it is shown).
+  const updatedRef = useRef(onUpdated); updatedRef.current = onUpdated;
+  useEffect(() => installProjectSpacesHost({ call, onUpdated: next => updatedRef.current(next) }), [call]);
   // w13-chatfn-tools (chatfn-23): `tools` feeds the recommended tools strip's adapters (source-project-v3-adapters.jsx).
   const host = { update, save, optimistic: patch => onUpdated({ ...project, ...patch }), edit: setEditing, tools: projectTools, toggleStarred, memory,
     sessionAction: (action, id, payload) => sessionAction(action, id, payload).catch(() => false), renameChat: setRenaming,
@@ -332,7 +340,7 @@ export function ProjectDetail({ project, call, composer, sessions, sessionMetada
                     <ProjectSessionsHeading>{t('Recents')}</ProjectSessionsHeading>
                     <ProjectSessionTable items={items(recents.slice(0, shown))} />
                     {recents.length > shown && <button type="button" onClick={() => setShown(value => value + ZL_PAGE)}
-                      className="self-center text-sm text-muted-as-secondary hover:text-secondary transition-colors py-2 disabled:opacity-50">{t('Show more')}</button>}
+                      className="self-center text-sm text-muted-as-secondary hover:text-secondary enabled:hover:text-secondary-control transition-colors py-2 disabled:opacity-50">{t('Show more')}</button>}
                   </section>}
                 </>}
               </div>
@@ -358,7 +366,7 @@ export function ProjectDetail({ project, call, composer, sessions, sessionMetada
         </div>
       </div>
     </div>
-    {editing === 'details' && <EditProject key={editing} project={project} kind={editing} update={update} onClose={() => setEditing(null)} />}
+    <ProjectEditDetailsDialog isOpen={editing === 'details'} onClose={() => setEditing(null)} spaceId={project.id} spaceName={project.name} spaceDescription={project.description} />
     {renaming && <RenameChatDialog isOpen initialName={renaming.name} conversationUuid={renaming.uuid} projectUuid={project.id} onClose={() => setRenaming(null)} />}
     {deleting && <ChatDeleteDialog open conversation={deleting} onClose={() => setDeleting(null)} onDelete={target => sessionAction('delete', target.id)} />}
   </RoutinesSharedHost.Provider></LocalProjectContext.Provider>;
@@ -373,23 +381,5 @@ function ProjectRecommendations({ project, children }) {
   return <ProjectRecommendationsContext.Provider value={value}>{children}</ProjectRecommendationsContext.Provider>;
 }
 
-// The host's Edit details dialog (name / description of the local project). The instructions are edited in the
-// official c9b54eb90 ze dialog the rail's Instructions section opens (w13-chatui-project-detail).
-function EditProject({ project, update, onClose }) {
-  const [name, setName] = useState(project.name), [description, setDescription] = useState(project.description);
-  const [busy, setBusy] = useState(false), [error, setError] = useState('');
-  async function save() {
-    if (busy) return;
-    setBusy(true); setError('');
-    try { await update({ name, description }); onClose(); }
-    catch (error) { setError(error.message); setBusy(false); }
-  }
-  return <SourceDialog title={t('Edit project')} density="comfortable" onClose={busy ? undefined : onClose}
-    footer={<><Button variant="ghost" disabled={busy} onClick={onClose}>{t('Cancel')}</Button><Button variant="primary" busy={busy} disabled={busy || !name.trim()} onClick={save}>{t('Save')}</Button></>}>
-    <form className="surface-project-form flex flex-col gap-lg pt-3" onSubmit={event => { event.preventDefault(); save(); }}>
-      <label className="flex flex-col gap-sm text-body">{t('Name')}<TextInput size="lg" autoFocus required maxLength={200} value={name} onChange={event => setName(event.target.value)} disabled={busy} /></label>
-      <label className="flex flex-col gap-sm text-body">{t('Description')}<TextArea resize="y" rows={3} maxLength={4000} value={description} onChange={event => setDescription(event.target.value)} disabled={busy} /></label>
-      {error && <p role="alert" className="text-danger text-body">{error}</p>}
-    </form>
-  </SourceDialog>;
-}
+// The instructions are edited in the official c9b54eb90 ze dialog the rail's Instructions section opens
+// (w13-chatui-project-detail); name / description in the sliced shared-19 NI above (library-pages r2-02).

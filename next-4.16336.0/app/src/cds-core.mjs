@@ -3805,3 +3805,26 @@ export {
 export {
   Mz as ctx_shared25_Mz,
 } from "./generated/cds-core/shared-25.mjs";
+// Wave cc2 (cds-integrate/merge-pins-wavecc2.mjs, wavecc2/inputs/decisions.json; chat-cowork-1to1-20261117 r2 Core step):
+// base-ui Menu.CheckboxItem (vendor-frame Fp, official export `on`), the official UserMessage compound (shared-3 Bd, official
+// export vl: zd with Attachments / Actions / Timestamp / Copy / Edit / Retry / Speak / feedback actions) and the module state
+// Bd's closure brings into cds-core (shared-2 km / zm / W8 / Q8 / Y5 / X5 with writers Bm / G8, shared-3 ll) are owned here
+// once; the two graphs that held a copy (the code composer and working line graphs) link them instead (sharedGraph 'cds-core'). Same rule:
+// each name re-exports the binding listed under it in manifest.json publicNames.
+export {
+  Fp as BaseMenuCheckboxItem,
+} from "./generated/cds-core/vendor-frame.mjs";
+export {
+  Bd as UserMessage,
+  ll as ctx_shared3_ll,
+} from "./generated/cds-core/shared-3.mjs";
+export {
+  km as ctx_shared2_km,
+  zm as state_shared2_zm,
+  Bm as writer_shared2_Bm,
+  W8 as state_shared2_W8,
+  G8 as writer_shared2_G8,
+  Q8 as state_shared2_Q8,
+  Y5 as ctx_shared2_Y5,
+  X5 as ctx_shared2_X5,
+} from "./generated/cds-core/shared-2.mjs";

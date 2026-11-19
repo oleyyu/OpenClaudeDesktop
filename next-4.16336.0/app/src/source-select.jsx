@@ -70,9 +70,11 @@ function SelectPopup({ id, label, items, value, searchable, trigger, initial, al
       const source = owner?.closest(`[${attr}]`) || root;
       const text = source.getAttribute(attr); if (text != null) attrs[attr] = text;
     }
-    // Settings is a local modal portal, outside the shared Menu provider.
-    const modal = owner?.closest('[role=dialog],[role=alertdialog]')?.parentElement;
-    const base = modal ? Number.parseInt(getComputedStyle(modal).zIndex, 10) || 0 : 0;
+    // Settings is a local modal portal, outside the shared Menu provider. Settings puts its z-index on the dialog's
+    // backdrop, a SourceDialog (Add provider, layered over Settings) on the dialog itself: take the highest of both.
+    let base = 0;
+    for (let node = owner?.closest('[role=dialog],[role=alertdialog]'); node && node !== document.body; node = node.parentElement)
+      base = Math.max(base, Number.parseInt(getComputedStyle(node).zIndex, 10) || 0);
     return { attrs, layer: base + 100 + 20 };
   }, [trigger]);
   useLayoutEffect(() => {

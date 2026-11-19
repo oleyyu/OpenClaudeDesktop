@@ -7,7 +7,6 @@ import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { createServer } from 'vite';
 import react from '@vitejs/plugin-react';
-import { withMemoCache } from './support/react-memo-cache.mjs';
 
 // w13-chatui-home (research/w13-chatui.md chatui-H2): the Chat new-page greeting is the 3.6556.2 shared-23 Dy choice
 // (scripts/extract-chat-home.mjs → src/generated/chat-home) rendered through the official My (HomeGreeting). Source only:
@@ -31,48 +30,17 @@ globalThis.window ??= { document: globalThis.document, navigator: { userAgent: '
   matchMedia: () => ({ matches: false, addEventListener() {}, removeEventListener() {} }), localStorage: { getItem: () => null, setItem() {} },
   location: { pathname: '/', search: '', hash: '', href: 'app://local/' }, history: { state: null, replaceState() {} } };
 
-let server, i18n, home, adapters, greeting, coworkHome;
+let server, i18n, home, greeting;
 before(async () => {
   server = await createServer({ configFile: false, root: app, plugins: [react()],
     server: { middlewareMode: true, hmr: false, ws: false, watch: null }, appType: 'custom', logLevel: 'error' });
   i18n = await server.ssrLoadModule('/electron/i18n/index.mjs');
   i18n.setLocale('en-US');
   home = await server.ssrLoadModule('/src/source-chat-home.jsx');
-  adapters = await server.ssrLoadModule('/src/source-chat-home-adapters.jsx');
   greeting = await server.ssrLoadModule('/src/generated/chat-home/greeting.mjs');
-  coworkHome = await server.ssrLoadModule('/src/generated/cowork-home/index.mjs');
 });
 after(async () => { i18n?.setLocale('en-US'); await server?.close(); });
 
-// One component call under a hand-built client dispatcher (createRoot, no hydration: useSyncExternalStore reads the
-// client snapshot, so shared-25 si's `ii()` is true and Dy's clock `Ee(Oy, null)` is a Date).
-function clientCall(component, props, contexts = new Map()) {
-  let cursor = 0;
-  const cells = [], same = (a, b) => a && b && a.length === b.length && a.every((v, i) => Object.is(v, b[i]));
-  const hooks = {
-    useContext: c => (contexts.has(c) ? contexts.get(c) : c._currentValue),
-    useState(initial) { const i = cursor++; cells[i] ??= { value: typeof initial === 'function' ? initial() : initial }; return [cells[i].value, value => { cells[i].value = typeof value === 'function' ? value(cells[i].value) : value; }]; },
-    useRef(initial) { const i = cursor++; cells[i] ??= { value: { current: initial } }; return cells[i].value; },
-    useMemo(fn, deps) { const i = cursor++; if (!cells[i] || !same(cells[i].deps, deps)) cells[i] = { value: fn(), deps }; return cells[i].value; },
-    useCallback(fn, deps) { return hooks.useMemo(() => fn, deps); },
-    useEffect() { cursor++; },
-    useSyncExternalStore(subscribe, getSnapshot) { return getSnapshot(); },
-  };
-  hooks.useLayoutEffect = hooks.useEffect;
-  const internal = React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, old = internal.H;
-  internal.H = withMemoCache(hooks);
-  try { return component(props); } finally { internal.H = old; }
-}
-// w13-close-chat-composer (chatui-home-02): Fy's `div { className: fg }` (shared-19 Wx) frames My; the helper returns
-// the framed My element after checking the frame.
-const clientGreeting = (greetings = [], props = {}) => {
-  // surfaces-prod home-chat-cowork: the 3.6556.2 greeting is kept as ChatGreetingTextV3 (main.jsx mounts the 4.16336.0
-  // ChatGreetingText, tests/home-v4.test.mjs) until the screenshot acceptance retires it.
-  const frame = clientCall(home.ChatGreetingTextV3, props, new Map([[adapters.ChatGreetingHost, { greetings }]]));
-  assert.equal(frame.type, 'div');
-  assert.equal(frame.props.className, 'mx-auto flex w-full flex-col items-center gap-7 max-md:pt-4 max-w-2xl');
-  return frame.props.children;
-};
 const greetingText = html => html.match(/<span[^>]*data-new-page-greeting-text=""[^>]*>([^<]*)<\/span>/)?.[1];
 
 test('generator: --check passes and the manifest pins the 3.6556.2 originals, adapters and linked bindings', async () => {
@@ -125,7 +93,11 @@ test('Fy: fg (shared-19 Wx, export Hi) frames My; UC passes zg(n).greetingLockup
   assert.ok(s19.includes('Wx="mx-auto flex w-full flex-col items-center gap-7 max-md:pt-4 max-w-2xl"'));
   assert.match(s19, /Wx as Hi\b/);
   assert.equal(local('src/generated/chat-home/greeting-frame.mjs').includes('export { Wx as greetingFrameClass };'), true);
-  assert.match(local('src/source-chat-home.jsx'), /const homeVariant = homeLayout\('classic'\);/);
+  // chat-cowork-1to1 r3 (chat-home-r3-03): the host no longer mounts or exports this 3.6556.2 greeting (was ChatGreetingTextV3 /
+  // SourceChatGreetingV3 over homeLayout('classic')); src/source-chat-home.jsx imports neither generated/chat-home nor cowork-home.
+  assert.doesNotMatch(local('src/source-chat-home.jsx'), /generated\/chat-home\/|generated\/cowork-home\//);
+  assert.equal('ChatGreetingTextV3' in home, false);
+  assert.equal('SourceChatGreetingV3' in home, false);
 });
 
 test('official text: Dy falls back to "You’re here!" (y1XRP1BJQF); 3.6556.2 has no "{name} returns!"', () => {
@@ -160,56 +132,39 @@ test('dy: the surface entry, its day slots or default_slots, the first slot befo
   assert.equal(dy({ surface: 'chat' }, 'chat', monday9), undefined);
 });
 
-test('client render: an empty local table shows the official "You’re here!" in the original My greeting', () => {
-  const element = clientGreeting();
-  assert.equal(element.type, coworkHome.HomeGreeting);
-  assert.equal(element.props.text, 'You’re here!');
-  assert.equal(element.props.layout, 'inline');
-  const html = renderToStaticMarkup(element);
-  assert.equal(greetingText(html), 'You’re here!');
-  assert.match(html, /data-new-page-greeting-spark=""/);
-  assert.doesNotMatch(html, /returns!/);
-});
-
-test('client render: a local "chat" slot that covers this hour replaces the fallback; other surfaces do not', () => {
-  const allDay = [{ until: 24, text: 'Welcome back to Chat' }];
-  assert.equal(clientGreeting([{ surface: 'chat', days: null, default_slots: allDay }]).props.text, 'Welcome back to Chat');
-  const everyDay = greeting.GREETING_DAYS.map(day => ({ day, slots: [{ until: 24, text: `Happy ${day}` }] }));
-  const day = greeting.GREETING_DAYS[new Date().getDay()];
-  const html = renderToStaticMarkup(clientGreeting([{ surface: 'chat', days: everyDay, default_slots: allDay }]));
-  assert.equal(greetingText(html), `Happy ${day}`);
-  assert.equal(clientGreeting([{ surface: 'cowork', days: null, default_slots: allDay }]).props.text, 'You’re here!');
-  assert.equal(clientGreeting([{ surface: 'chat', days: null, default_slots: [{ until: 0, text: 'never' }] }]).props.text, 'You’re here!');
-});
-
-test('client render: the incognito branch is generated (shared-23 PYLVhIC8DX) and zh-CN translates both texts', () => {
-  assert.equal(clientGreeting([], { incognito: true }).props.text, 'You’re incognito');
-  i18n.setLocale('zh-CN');
-  try {
-    assert.equal(clientGreeting().props.text, '很高兴见到你！');
-    assert.equal(clientGreeting([], { incognito: true }).props.text, '你正处于无痕模式');
-  } finally { i18n.setLocale('en-US'); }
-});
-
+// chat-cowork-1to1 r3 (chat-home-r3-03): the client-render tests of the 3.6556.2 component (empty table, local chat slot,
+// incognito / zh-CN) went with ChatGreetingTextV3; tests/home-v4.test.mjs covers the same cases on the mounted 4.16336.0 ix.
 test('server render: before the client clock exists Dy is "" (official `l === null` branch), in the classic greeting seat', async () => {
   const html = renderToStaticMarkup(h(home.SourceChatGreeting, {}));
-  assert.match(html, /^<header class="surface-greeting /);
+  assert.match(html, /^<div data-surface-greeting="" class="/); // chat-home r1-07: shared-19 SD's div (was header.surface-greeting)
   assert.equal(greetingText(html), '​');
   assert.match(html, /class="[^"]*invisible/);
   // The same seat classes as the Cowork greeting (source-surfaces.jsx SourceSurfaceGreeting).
   const surfaces = await server.ssrLoadModule('/src/source-surfaces.jsx');
-  const seat = markup => markup.match(/^<header class="([^"]*)"/)[1];
+  const seat = markup => markup.match(/^<div data-surface-greeting="" class="([^"]*)"/)[1];
   assert.equal(seat(html), seat(renderToStaticMarkup(h(surfaces.SourceSurfaceGreeting, {}))));
   // w13-close-cowork-ui (chatui-home-01): the Cowork greeting is this same Fy (one new-page greeting for both tabs).
   assert.match(local('src/source-surfaces.jsx'), /export function SourceSurfaceGreeting\(\) \{\n  return <SourceChatGreeting \/>;/);
-  assert.match(local('src/source-chat-home.jsx'), /<header className=\{`surface-greeting \$\{homeVariant\.greetingSlotClass\} \$\{greetingSeat\(homeVariant\.greetingPhoneSeat\)\}`\}>/);
 });
 
 test('main.jsx: the Chat home uses SourceChatGreeting; Cowork keeps SourceSurfaceGreeting', () => {
   const main = local('src/main.jsx');
-  assert.match(main, /import \{ SourceChatGreeting \} from '\.\/source-chat-home\.jsx';/);
+  assert.match(main, /import \{ SourceChatGreeting, SourceNewPageFrame, SourceNewPageCardSlot, NEW_PAGE_SCROLL_COLUMN \} from '\.\/source-chat-home\.jsx';/); // + chat-home r1-06 frame, r2-05 card slot (ED's data-chorus-card-slot column)
+  assert.ok(main.includes(": !current && mode === 'chat' ? <SourceNewPageCardSlot>{renderMainComposer({ notices: true })}</SourceNewPageCardSlot>"), 'r2-05: the New chat card sits in ED\'s card slot');
   // w13-chatfn-history: the incognito New chat page passes Dy's `incognito` ("You’re incognito").
   assert.match(main, /\{!current && mode === 'chat' && <SourceChatGreeting incognito=\{incognitoDraft \|\| undefined\} \/>\}/);
   assert.match(main, /\{!current && mode === 'cowork' && <SourceSurfaceGreeting name=\{boot\?\.config\?\.displayName\} \/>\}/);
   assert.doesNotMatch(main, /mode !== 'code' && <SourceSurfaceGreeting/);
+});
+
+// chat-cowork-1to1 r2 (chat-home-r2-05/06): the New chat card sits in shared-19 ED's card column as shared-23 TT passes it
+// (shared-33 xk / Ck / Pk / Dk): slot [data-chorus-card-slot] > [band, card block > div.relative.z-10 > card, closed kw tray];
+// the home layout with free headroom (vt) adds the md: classes. Literals: generated/home-chat-cowork/new-page-card-slot.mjs.
+test('SSR: SourceNewPageCardSlot is ED\'s card column with the home layout\'s headroom classes', async () => {
+  const { newPageCardSlot: slot } = await server.ssrLoadModule('/src/generated/home-chat-cowork/new-page-card-slot.mjs');
+  const html = renderToStaticMarkup(React.createElement(home.SourceNewPageCardSlot, null, React.createElement('i', { 'data-card': '' })));
+  assert.match(html, new RegExp(`^<div class="isolate mx-auto w-full max-w-2xl dock:contents md:contents" data-chorus-card-slot="">`));
+  assert.ok(html.includes(`<div class="relative -z-10 ${slot.band.dockClass} md:z-0 md:-mb-6 md:w-full md:max-w-[inherit]"></div>`), 'band');
+  assert.ok(html.includes(`<div class="${slot.cardBlock.dockClass} md:isolate md:w-full md:max-w-[inherit]"><div class="relative z-10"><i data-card=""></i></div>`), 'card block');
+  assert.ok(html.includes(`aria-hidden="true" inert="" class="${slot.tray.className} grid-rows-[0fr]"><div class="flex min-h-0 flex-col justify-end"></div></div>`), 'closed tray');
 });

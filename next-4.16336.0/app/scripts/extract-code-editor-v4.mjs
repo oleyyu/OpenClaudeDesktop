@@ -29,7 +29,7 @@ export const areaOrder = Object.freeze(['desktop', 'side-chat', 'preview-element
 if (path.relative(root, output).split(path.sep).join('/') !== outputLabel || outputLabel !== 'src/generated/code-editor-v4') throw Error(`code-editor-v4 output moved: ${output}`);
 const areasDir = path.join(output, 'areas');
 const genDir = path.join(import.meta.dirname, 'code-editor-v4-gen');
-export const cdsCoreManifestSha256 = '06d2026939e5c8992713c2a0dda1b1abc9adffe7a0c223fe3c1e79eecd08d62c';
+export const cdsCoreManifestSha256 = 'a0f228ae3f997f54f3e3ebafc254794bd26d8f1fc6999943a08b1d5730f638cd';
 const cdsCoreManifest = path.join(root, 'src/generated/cds-core/manifest.json');
 const lockDir = path.resolve(root, '../analysis/claude-4.16336.0-migrate-20261104/round2/locks/code-editor-v4');
 

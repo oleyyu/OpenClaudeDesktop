@@ -96,7 +96,14 @@ test('topbar-04: the Code preview toggle is the gate-off x_ row (Play, Preview, 
   // Other surfaces are not x_: the 2.42304.0 Cowork session view's yE is Globe + "Browser" (not migrated in W2).
   const ye = official('c21f11e6d-Bd0v2A97.js');
   assert.equal(count(ye, 'v(As,{content:r.formatMessage({defaultMessage:"Browser",id:"E3oB+tM0Ou"}),shortcut:"cmd+shift+b"'), 1);
-  assert.deepEqual([row(titlebarToggleSpecs({ ...input, surface: 'cowork' })).icon, row(titlebarToggleSpecs({ ...input, surface: 'chat' })).label], ['Globe', 'Browser']);
+  assert.deepEqual([row(titlebarToggleSpecs({ ...input, surface: 'cowork' })).icon, row(titlebarToggleSpecs({ ...input, surface: 'cowork' })).label], ['Globe', 'Browser']);
+  // r3 sidebar-titlebar-r3-01: yE has no Chat counterpart (4.16336.0 ca2ef848d draws no header Browser toggle; its one
+  // "Browser" string is the pane header), so the chat surface lists no preview row. The old assertion here expected
+  // Browser on chat, a host-only row.
+  assert.equal(row(titlebarToggleSpecs({ ...input, surface: 'chat' })), undefined);
+  const chat4 = fs.readFileSync(path.resolve(app, '../reference/snapshots/claude-4.16336.0-20261104/ion-dist/assets/v1/ca2ef848d-DA54buzo.js'), 'utf8');
+  assert.equal(count(chat4, 'defaultMessage:"Browser",id:"E3oB+tM0Ou"'), 1);
+  assert.equal(count(chat4, 'paneName:c,skeletonLabel:'), 1);
 });
 
 test('p_ folds inactive toggles first, one per hidden count, and both lists keep the toggle order', () => {

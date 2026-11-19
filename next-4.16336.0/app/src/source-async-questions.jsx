@@ -7,17 +7,20 @@
 // (context.presentation "card") it wears c2f6611a3 En's structure instead, like the question card there.
 import React, { createContext, useContext, useId, useRef, useState } from "react";
 // host-wiring/chat (4.16336.0): what the card draws in host markup — its Buttons, the Other TextArea and the class joins — is
-// the cds-core graph's (shared-frame-CJdE5Ria Xu → Id, oN, Q). The Other mark's top-align class goes into QuestionRadioMark
-// (src/generated/question-card, 3.6556.2), so it stays the 3.6556.2 view-tabs value (below).
-import { CdsButton, CdsTextArea, cdsClassNames } from "./cds-core.mjs";
+// the cds-core graph's (shared-frame-CJdE5Ria Xu → Id, oN, Q). chat-cowork-1to1 r2 (cowork-r2-02): the rows and the Other
+// mark are the 4.16336.0 question-card-v4 originals (as source-question-card.jsx), so the mark takes the cds-core top-align
+// class c2f6611a3 Wr gives Dr.
+import { CdsButton, CdsTextArea, cdsClassNames, cdsCheckboxTopAlignClass } from "./cds-core.mjs";
 import { asyncAnswerText, asyncQuestionsOf } from "./async-questions-model.mjs";
-import { QuestionOptionRow, selectedRowClass, preventMouseDown, otherFieldArrowKeys, stopClickPropagation } from "./generated/question-card/option-row.mjs";
-import { QuestionCardHeader, questionDisplayText } from "./generated/question-card/card-header.mjs";
+import { QuestionOptionRow, selectedRowClass, preventMouseDown, otherFieldArrowKeys, stopClickPropagation } from "./generated/question-card-v4/option-row.mjs";
+// chat-cowork-1to1 r1 (cowork-r1-10, partial): the card header is the 4.16336.0 one (shared-33-DtdykY0y rG / _I,
+// src/generated/question-card-v4: "text-primary min-h-[24px] shrink-0 …" inside a `contents` wrapper). It holds no state;
+// the rows / digit shortcuts stay 3.6556.2 until the approval-landing store moves with them (notes.md).
+import { QuestionCardHeader, questionDisplayText } from "./generated/question-card-v4/card-header.mjs";
 // W14-code r4 R4T-02: the En title's rich text (c2f6611a3 Nn → cb8c5a88f ii), as source-question-card.jsx.
 import { ii as questionRichText } from "./generated/code-transcript/cb8c5a88f-h6ooJ7Al.mjs";
-import { questionRowMouseDown, questionEndsDragSelect } from "./generated/question-card/row-pointer.mjs";
-import { QuestionAnswerOption, QuestionRadioMark, endsAnswerSelection, preventAnswerMouseDown, stopAnswerClick } from "./generated/question-card/answer-option.mjs";
-import { cdsCheckboxTopAlignClass } from "./generated/view-tabs/index.js";
+import { questionRowMouseDown, questionEndsDragSelect } from "./generated/question-card-v4/row-pointer.mjs";
+import { QuestionAnswerOption, QuestionRadioMark, endsAnswerSelection, preventAnswerMouseDown, stopAnswerClick } from "./generated/question-card-v4/answer-option.mjs";
 import { QUESTION_CARD_EN } from "./source-question-card.jsx";
 import "./source-async-questions.css";
 import { t } from "../electron/i18n/index.mjs";
@@ -40,7 +43,7 @@ export function SourceAsyncQuestions({ item }) {
   const [error, setError] = useState("");
   const questionId = useId();
   const pressRef = useRef(null), pressAbort = useRef(null), pointer = useRef(null);
-  pointer.current ??= { down: questionRowMouseDown({ un: pressRef, dn: pressAbort }), ends: questionEndsDragSelect({ un: pressRef }) };
+  pointer.current ??= { down: questionRowMouseDown({ jn: pressAbort, An: pressRef }), ends: questionEndsDragSelect({ An: pressRef }) };
   if (!context || !questions.length || context.settled?.has(item.id)) return null;
   const question = questions[Math.min(page, questions.length - 1)];
   const at = Math.min(page, questions.length - 1);
@@ -107,7 +110,7 @@ export function SourceAsyncQuestions({ item }) {
           ))}
           {hasOptions ? (
             <div className={QUESTION_CARD_EN.otherRow}>
-              <button type="button" disabled={unavailable} aria-pressed={custom} aria-label={t("Other")} className={QUESTION_CARD_EN.otherHit}
+              <button type="button" disabled={unavailable} aria-pressed={custom} aria-label={t("Other")} className={QUESTION_CARD_EN.otherHit} data-question-answer=""
                 onClick={(event) => { if (!endsAnswerSelection(event) && !unavailable) setChoices((all) => ({ ...all, [at]: { kind: "other" } })); }} />
               <div aria-hidden="true" className={QUESTION_CARD_EN.otherLabel}>
                 <QuestionRadioMark checked={custom} className={cdsCheckboxTopAlignClass} />
@@ -149,7 +152,7 @@ export function SourceAsyncQuestions({ item }) {
           ))}
           <div className={`flex flex-col gap-[12px] rounded-[5px] px-md py-md ${custom && hasOptions ? selectedRowClass : "bg-alpha-1 hover:bg-alpha-2"}`}>
             {hasOptions && (
-              <button type="button" onMouseDown={pointer.current.down}
+              <button type="button" onMouseDown={pointer.current.down} data-question-answer=""
                 className="flex items-center gap-sm text-body text-primary text-start focus-visible:outline-hidden hide-focus-ring focus-visible:shadow-focus"
                 onClick={(event) => { if (!pointer.current.ends(event) && !unavailable) setChoices((all) => ({ ...all, [at]: { kind: "other" } })); }}>
                 <span className="flex-1 select-text">{t("Other")}</span>

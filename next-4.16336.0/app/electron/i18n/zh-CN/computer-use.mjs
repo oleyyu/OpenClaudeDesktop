@@ -195,7 +195,7 @@ export default {
   "Close anything sensitive. DeepSeek can see what’s on screen in the apps you approve, and your whole screen when DeepSeek has full control.": "请关闭任何敏感内容。DeepSeek 能看到你批准的应用里屏幕上的内容；完整控制时能看到整个屏幕。",
   "This is a research preview. Start with tasks where mistakes are easy to fix. <link>Read safe use tips</link>": "这是研究预览版。请先从出错后容易补救的任务开始。<link>阅读安全使用提示</link>",
   "Read safe use tips": "阅读安全使用提示",
-  "DeepSeek will see the apps you approve and click and type in them, working in the background while you keep using your computer or taking full control of your screen. Which of those DeepSeek does by default is set under Settings → This computer → Computer use. You’ll approve each app, but not confirm each step DeepSeek performs.": "DeepSeek 会看到你批准的应用并在其中点击和输入：可以在你继续使用电脑时于后台工作，也可以完整控制你的屏幕。默认采用哪种方式，在“设置 → 这台电脑 → 电脑使用”中设置。你需要批准每个应用，但不需要确认 DeepSeek 执行的每一步。",
+  "DeepSeek will see the apps you approve and click and type in them, working in the background while you keep using your computer or taking full control of your screen. Which of those DeepSeek does by default is set under Settings → Desktop app → Computer use. You’ll approve each app, but not confirm each step DeepSeek performs.": "DeepSeek 会看到你批准的应用并在其中点击和输入：可以在你继续使用电脑时于后台工作，也可以完整控制你的屏幕。默认采用哪种方式，在“设置 → 桌面应用 → 电脑使用”中设置。你需要批准每个应用，但不需要确认 DeepSeek 执行的每一步。",
   "Computer use is on. To finish setup, grant the macOS permissions below.": "电脑使用已开启。要完成设置，请授予下方的 macOS 权限。",
   "Required for screen visibility. macOS may ask you to restart OpenClaude Desktop.": "用于查看屏幕。macOS 可能会要求你重新启动 OpenClaude Desktop。",
   "Granted": "已授予",

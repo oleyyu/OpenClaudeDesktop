@@ -119,7 +119,13 @@ export const absentChunks = {
   'c961a3a0f-BAf1beVJ.js': 'shared-18 x$ project_edit_dialog_body: claude.ai project edit, no backend on the host',
   'c18965559-C9vTWERn.js': 'shared-19 RL code_project_menu (EpitaxyProjectMenuItems): project group menu, not shipped in this pass',
   'ccd576adc-NRWrW8Wm.js': 'shared-19 UL project_report_modal: claude.ai project report, no backend on the host',
-  'ca0409d7c-C0M8y8aL.js': 'shared-20 TP code_session_awaiting_body (AwaitingHoverCardBody): awaiting-session hover body, not shipped in this pass',
+  // U-01 (2026-11-16): TP (no fail-open) loads this when an awaiting session row is hovered; its ChunkLoadError took down the
+  // whole nav ("Sidebar failed to load."). The host answers its one export with the resident body it already slices
+  // (src/frame-sidebar-nav-awaiting-body.jsx: generated/sidebar-hover-card awaiting-body.mjs under SidebarHoverCardHost).
+  'ca0409d7c-C0M8y8aL.js': {
+    why: 'shared-20 TP code_session_awaiting_body (AwaitingHoverCardBody): awaiting-session hover body; its closure is the official Code session runtime and tool cards, not shipped in this pass',
+    host: { module: '../../frame-sidebar-nav-awaiting-body.jsx', exports: ['AwaitingHoverCardBody'] },
+  },
   'c44373cde-B2dcJvRb.js': 'shared-21 CI home_sidebar_bulk (fail-open): bulk actions host, not shipped',
   'c54fcf96d-B-hJe5G4.js': 'shared-21 vE post_upgrade_cowork_carousel (fail-open): Cowork upsell, no backend on the host',
   'c8b63a9e0-BjbrL9BG.js': 'shared-22 AA hub_row_artifact_thumb_host (fail-open): artifact thumbnails, no Artifacts backend on the host',
@@ -256,6 +262,12 @@ export const boundaries = [
   // PerformanceMetricsProvider root above; was: { key: 'shared-4-C_EiQb9h.js#tA', name: 'usePerformanceMetrics', kind: 'hook',
   // reads: [], host: 'gap: PerformanceMetricsProvider value (host has no metrics): the official no-op shape' })
   { key: 'shared-100-BBQR7Gmd.js#Xn', name: 'useCommandPaletteToggleContext', kind: 'hook', reads: [], host: 'host search palette: main.jsx showSearch / setShowSearch (the Search ⌘K row opens it)' },
+  // chat-cowork 1:1 r2 (sidebar-titlebar-r2-01): shared-100 Zn (official export Qt, useOptionalCommandPaletteToggle) is what the
+  // classic Search row reads (shared-20 Fw "search" -> tf = Zn: r?.openCommandPalette(n)). Sliced, it read this graph's own
+  // context qn = p(void 0) with no Provider (the official one is shared-100 Jn at the app root), so Fw returned null and the
+  // row had no onClick. One host answer for both hooks: the official Jn value shape {isOpen, entrypoint, openedBy,
+  // openCommandPalette, closeCommandPalette, toggleCommandPalette} over main.jsx showSearch.
+  { key: 'shared-100-BBQR7Gmd.js#Zn', name: 'useOptionalCommandPaletteToggle', kind: 'hook', reads: [], host: 'host search palette: the same official Jn value as useCommandPaletteToggleContext (main.jsx showSearch)' },
   { key: 'shared-33-DtdykY0y.js#EA', name: 'useNux', kind: 'hook', reads: [], host: 'gate: no NUX on the host (official not-eligible answer)' },
   { key: 'shared-1-D1bGaTaN.js#C6', name: 'useShortcut', kind: 'hook', reads: ['id'], host: 'host shortcut table (main.jsx key handling)' },
   { key: 'shared-1-D1bGaTaN.js#MP', name: 'useIncognitoMode', kind: 'hook', reads: ['incognitoModeEnabled', 'setIncognitoModeEnabled'], host: 'host incognito (chat-incognito-model.mjs)' },
@@ -293,7 +305,16 @@ export const boundaries = [
   { key: `${S25}#Bi`, name: 'AppPreferences', kind: 'bridge', reads: ['getPreferences', 'onPreferencesChanged', 'setPreference'], host: 'host preferences' },
   // (wave 8c sidebar lane: + onSupportedFeaturesChanged, read by shared-92 Uv `Wr.onSupportedFeaturesChanged?.(Jv)`, root AppFeaturesBootstrap.)
   { key: `${S25}#Vi`, name: 'AppFeatures', kind: 'bridge', reads: ['getSupportedFeatures', 'onSupportedFeaturesChanged'], host: 'host-app-features getSupportedFeatures; onSupportedFeaturesChanged when main.jsx\'s answer changes (core connect)' },
-  { key: `${S0}#kO`, name: 'LocalAgentModeSessions', kind: 'absent', reads: [], host: 'no Cowork agent-mode sessions bridge on the host' },
+  // U-03 (2026-11-16): was absent, so the merged Chat / Cowork rail's "Chats and tasks" never listed a session (shared-123 _x
+  // reads this bridge's list into the local agent store; the served claude.ai lists need an organization).
+  // sidebar-titlebar r1-01 (2026-11-17): + calls archive / delete / updateSession. shared-2 reads them at module load
+  // (`var vq = ze?.archive; var yq = ze?.delete; var bq = ze?.updateSession`), and Eq (the CoworkSessionRow actions, nav-body
+  // VC `Yd()`) offers rename / archive / delete — and so the row's ⋯ button and right-click menu (VC `le ? {sessionTitle,
+  // onRename, onArchive, onDelete, …}` → shared-140 Pd) — only when they are there, as the desktop bridge has them. shared-2
+  // evaluates before the host table is installed (main.jsx → … → workflow-card-v4 → shared-18 → shared-140 → shared-2), so
+  // these are `calls`: stable members that forward to the host answer when called (a getter would read the table too early).
+  // Folder grants, tab groups, scheduled-task runs, releaseRemoteCuLock / closeRemoteSessionTabGroup stay absent.
+  { key: `${S0}#kO`, name: 'LocalAgentModeSessions', kind: 'bridge', reads: ['getAll', 'getSessionList', 'getSession', 'getSessionMissReason', 'onOnEvent'], calls: ['archive', 'delete', 'updateSession'], host: 'the host\'s Chat and Cowork sessions in the official local agent session shape (frame-sidebar-nav-host.jsx agentModeSessions); archive / delete / updateSession over main.jsx sessionAction (calls: forwarded at call time, since shared-2 reads them at module load, before the host table is installed); the members the host has no service for (folder grants, tab groups, scheduled-task runs, remote CU locks) are not on the bridge object and read undefined' },
   { key: 'shared-1-D1bGaTaN.js#Rm', name: 'LocalAgentModeSessionsStatus', kind: 'absent', reads: [], host: 'same bridge as shared-0 kO: absent' },
   { key: `${S0}#ek`, name: 'CoworkScheduledTasks', kind: 'absent', reads: [], host: 'absent' },
   { key: `${S0}#PO`, name: 'CoworkSpaces', kind: 'absent', reads: [], host: 'absent (no spaces locally)' },
@@ -449,7 +470,8 @@ export function adapterSource() {
     else if (b.kind === 'store')
       lines.push(`export const ${b.name} = Object.assign((...args) => cap(${n})(...args), { getState: () => cap(${n}).getState(), setState: (...a) => cap(${n}).setState(...a), subscribe: (...a) => cap(${n}).subscribe(...a) }); // ${where}`);
     else if (b.kind === 'bridge')
-      lines.push(`export const ${b.name} = Object.freeze({ ${b.reads.map(m => `get ${m}() { return cap(${n})[${JSON.stringify(m)}]; }`).join(', ')} }); // ${where}`);
+      lines.push(`export const ${b.name} = Object.freeze({ ${[...b.reads.map(m => `get ${m}() { return cap(${n})[${JSON.stringify(m)}]; }`),
+        ...(b.calls ?? []).map(m => `${JSON.stringify(m)}: (...args) => cap(${n})[${JSON.stringify(m)}](...args)`)].join(', ')} }); // ${where}`);
     else if (b.kind === 'hook' || b.kind === 'effect' || b.kind === 'render')
       lines.push(`export function ${b.name}(...args) { return cap(${n})(...args); } // ${where}`);
     else throw Error(`boundary ${b.name}: unknown kind ${b.kind}`);

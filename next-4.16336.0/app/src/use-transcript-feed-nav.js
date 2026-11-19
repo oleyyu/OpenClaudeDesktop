@@ -26,13 +26,18 @@ function rowKey(element) {
   if (id != null) return id;
   return `group:${element.getAttribute("data-tool-group")}`;
 }
-function describeRows(content) {
-  const rows = [];
+// chat-conversation r2-01: a Chat reply's response rows sit in one `div[data-chat-reply-row].group/message-row`
+// (source-chat-message-row.jsx, cc1aae219 JY's Ln); they are still the transcript's rows (c4a9ee384: every reply is
+// a `[role="feed"] [role="article"][aria-posinset]`), so the wrapper is walked, not taken as a boundary.
+const REPLY_ROW = "[data-chat-reply-row]";
+const OWN_HEADING = ':scope[data-testid="assistant-message"] > h3, [data-testid="assistant-message"] > h3';
+export function describeRows(content, rows = []) {
   for (const element of content.children) {
     if (element.classList.contains("source-message") && element.matches(ROW)) {
       rows.push({ element, key: rowKey(element), kind: element.matches('[data-cds="UserMessage"]') ? "user" : "response",
         hidden: element.hidden || element.getClientRects().length === 0, turnStart: element.hasAttribute("data-turn-start") });
-    } else if (element.getAttribute("aria-hidden") !== "true") rows.push({ element, kind: "boundary" });
+    } else if (element.matches(REPLY_ROW)) describeRows(element, rows);
+    else if (element.getAttribute("aria-hidden") !== "true") rows.push({ element, kind: "boundary" });
   }
   return rows;
 }
@@ -102,9 +107,12 @@ export function useTranscriptFeedNav({ viewportRef, contentRef, api, responding 
     }
     return null;
   }
+  const observerRef = useRef(null);
   function sync() {
     const content = contentRef.current;
     const next = new Map();
+    // r2-01: a reply row's own rows come and go inside its wrapper (the content's childList does not see them).
+    if (content && observerRef.current) for (const wrapper of content.querySelectorAll(`:scope > ${REPLY_ROW}`)) observerRef.current.observe(wrapper, { childList: true });
     if (content && latest.current.enabled) {
       const rows = describeRows(content);
       const articles = feedArticles(rows);
@@ -122,7 +130,9 @@ export function useTranscriptFeedNav({ viewportRef, contentRef, api, responding 
         element.setAttribute("aria-setsize", String(articles.length));
         element.setAttribute("aria-label", articleLabel({ position: index + 1, streaming }));
         element.tabIndex = index === current ? 0 : -1;
-        if (article.kind === "response") setHeading(element, headingFor(article, streaming));
+        // r2-02: a Chat answer carries its own sr-only h3 (cc1aae219 JY's "Claude responded: …"); no second heading.
+        const ownHeading = article.kind === "response" && article.rows.some((key) => elements.get(key)?.querySelector?.(OWN_HEADING));
+        if (article.kind === "response" && !ownHeading) setHeading(element, headingFor(article, streaming));
         else setHeading(element, null);
       });
       // A non-head row rendered as <article> would otherwise read as an
@@ -151,8 +161,11 @@ export function useTranscriptFeedNav({ viewportRef, contentRef, api, responding 
       if (!frame) frame = view.requestAnimationFrame(() => { frame = 0; syncRef.current(); });
     });
     observer.observe(content, { childList: true });
+    observerRef.current = observer;
+    syncRef.current();
     return () => {
       observer.disconnect();
+      observerRef.current = null;
       if (frame) view.cancelAnimationFrame(frame);
       for (const element of applied.current.keys()) clearRow(element);
       applied.current = new Map();

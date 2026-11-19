@@ -1,7 +1,7 @@
 import React,{useEffect,useRef,useState} from 'react';
 import {SourceSettingsButton as Button} from './source-settings-button.jsx';
 import {accountSettingsPlan,signInOptions} from './account-settings-model.mjs';
-import {signOutConfirmText} from './settings-core-copy.mjs';
+import {signOutConfirmText,engineMajor} from './settings-core-copy.mjs';
 import {SourceSelect} from './source-select.jsx';
 import {t} from '../electron/i18n/index.mjs';
 import {planLabel} from './usage-model.mjs';
@@ -21,6 +21,23 @@ const Mark=({brand,glyph='Key'})=>brand?<SourceBrandLogo brand={brand} size={32}
 const keyTypeWidth=labels=>`${Math.min(46,Math.max(24,Math.ceil(9+Math.max(0,...labels.map(label=>[...String(label)].reduce((n,c)=>n+(c.codePointAt(0)>0x2e7f?1.7:.8),0))))))}ch`;
 // A row of the same group without a mark keeps the slot, so its copy lines up with the rows that have one.
 const NO_MARK=<span aria-hidden="true"/>;
+
+// What a pending sign-in (account-operations login) asks of the user, for Settings › Account and setup's Sign in step:
+// a device code to enter; nothing (connecting: the core reuses a sign-in already on this Mac, so there is no page to
+// reopen); the tab the agent opened itself (openedByAgent: reopen shows the manual page); else the browser.
+export function pendingSignIn(login,core){
+  const reopen=login?.connecting?null:login?.openedByAgent?t('Open sign-in page'):t('Open browser');
+  const text=login?.userCode?t('Enter this code on the sign-in page.'):login?.connecting?t('Connecting with the sign-in already on this Mac. This can take a minute.')
+    :login?.openedByAgent?t('Finish signing in in the browser tab {core} opened.',{core}):t('Finish signing in in your browser.');
+  return {text,reopen};
+}
+// A browser sign-in's device code (deviceCode: true), unless the running core's version is past deviceCodeBefore
+// (OpenCode 2.x signs in to ChatGPT in the browser only).
+const offersDeviceCode=(option,engine)=>{
+  if(option.deviceCode!==true)return false;
+  const before=option.deviceCodeBefore,major=engineMajor(engine);
+  return !(Number.isFinite(before)&&major!==null&&major>=before);
+};
 
 export function useAccountSettings({snapshot,auth,connected,busy,engine,onLogin,onAccountAction,onRefreshAccount,onOpenExternal}) {
   const [working,setWorking]=useState(null),[error,setError]=useState(''),[confirm,setConfirm]=useState(false);
@@ -67,10 +84,14 @@ export function useAccountSettings({snapshot,auth,connected,busy,engine,onLogin,
   const options=plan.kind==='bridge'?plan:signInOptions(engine), name=options.name;
   // Who is signed in, Refresh, and a two-step Sign out: account-operations refuses a logout without confirmed:true, and
   // the confirmation says the core's own sign-in on this Mac goes too (signOutConfirmText).
+  // A bridge that says its sign-out can't remove this account (ACP codeDesktop.canSignOut false: a Kimi or MiniMax key in the
+  // agent's own config, Gemini's GEMINI_API_KEY) gets no Sign out, unless the core's sign-out removes keys (signOutRemovesKeys: Qwen).
+  const signOutRemovesKeys=coreForEngine(typeof engine==='string'?engine:engine?.engine).login?.signOutRemovesKeys===true;
+  const keptKey=!!account&&account.type==='apiKey'&&snapshot?.codeDesktop?.canSignOut===false&&!signOutRemovesKeys;
   const accountRow=(description,searchText,showAlert=true,leading=null)=>({id:'account',label:t('Account'),description,searchText,...(leading?{leading}:{}),control:<div className="ss-account-controls">
     {refreshButton}
-    {account&&onAccountAction&&<Button ref={signoutRef} size="sm" disabled={disabled||busy||confirm} onClick={()=>setConfirm(true)}>{t('Sign out')}</Button>}
-  </div>,below:<>{notice}{account&&confirm&&<div className="ss-account-confirm"><p>{signOutConfirmText(engine)}</p><div className="ss-account-controls"><Button ref={cancelRef} size="sm" disabled={!!working||signingOut} onClick={()=>setConfirm(false)}>{t('Cancel')}</Button><Button size="sm" variant="primary" busy={signingOut} disabled={!!(working&&!signingOut)||busy||!connected} onClick={async()=>{if(await run(()=>onAccountAction({operation:'logout',confirmed:true}),'logout'))setConfirm(false);}}>{t('Confirm sign out')}</Button></div></div>}{showAlert&&alert}</>});
+    {account&&onAccountAction&&!keptKey&&<Button ref={signoutRef} size="sm" disabled={disabled||busy||confirm} onClick={()=>setConfirm(true)}>{t('Sign out')}</Button>}
+  </div>,below:<>{notice}{keptKey&&<p role="status" className="ss-account-notice">{t('Signing out here can’t remove this key. Remove it where it is set to sign out of {core}.',{core:name})}</p>}{account&&confirm&&!keptKey&&<div className="ss-account-confirm"><p>{signOutConfirmText(engine)}</p><div className="ss-account-controls"><Button ref={cancelRef} size="sm" disabled={!!working||signingOut} onClick={()=>setConfirm(false)}>{t('Cancel')}</Button><Button size="sm" variant="primary" busy={signingOut} disabled={!!(working&&!signingOut)||busy||!connected} onClick={async()=>{if(await run(()=>onAccountAction({operation:'logout',confirmed:true}),'logout'))setConfirm(false);}}>{t('Confirm sign out')}</Button></div></div>}{showAlert&&alert}</>});
   // An API key (descriptor login.apiKey): Get a key beside the label; below it one line with the key type (when there
   // are several), the write-only field and Save key. marked: the row leads with the chosen key type's logo.
   const keyId=(entry,index)=>entry.template??String(index);
@@ -93,7 +114,9 @@ export function useAccountSettings({snapshot,auth,connected,busy,engine,onLogin,
   };
   if(plan.kind==='bridge'){
     // Bridge core (e.g. ZCode, OpenCode, the ACP agents): who is signed in, its plan, browser sign-ins, device codes and API keys.
-    const who=account?.email||(account?.type==='apiKey'?t('Signed in with an API key'):account?t('Signed in'):snapshot==null?t('Account unavailable'):t('Not signed in'));
+    // A key's detail (ACP codeDesktop.detail: "From GEMINI_API_KEY") says where it is set.
+    const detail=account?.type==='apiKey'&&typeof snapshot?.codeDesktop?.detail==='string'&&snapshot.codeDesktop.detail.trim()?snapshot.codeDesktop.detail.trim():null;
+    const who=account?.email||(account?.type==='apiKey'?(detail?t('Signed in with an API key ({detail})',{detail}):t('Signed in with an API key')):account?t('Signed in'):snapshot==null?t('Account unavailable'):t('Not signed in'));
     // Every row leads with a logo: the core's own on the account row, each sign-in's vendor on its row.
     const coreBrand=coreForEngine(typeof engine==='string'?engine:engine?.engine).brand??null;
     const rows=[accountRow(who,`${name} account Sign out Refresh`,true,<Mark brand={coreBrand} glyph="User"/>)];
@@ -107,8 +130,8 @@ export function useAccountSettings({snapshot,auth,connected,busy,engine,onLogin,
     const startedRow=pendingRow||(login?.provider?`${login.type==='chatgptDeviceCode'?'device':'browser'}-${login.provider}`:null);
     const mine=row=>waiting&&(!startedRow||startedRow===row);
     const start=(row,type,provider)=>{setPendingRow(row);return run(()=>onLogin(type,provider?{codeDesktop:{provider}}:{}),row);};
-    // login.openedByAgent: the agent opened its own sign-in tab, so the button reopens the manual page instead.
-    const waitingControls=<><Button size="sm" disabled={!connected||!login?.url} onClick={()=>action('open')}>{login?.openedByAgent?t('Open sign-in page'):t('Open browser')}</Button><Button size="sm" busy={cancelling} onClick={()=>action('cancel')}>{t('Cancel sign-in')}</Button></>;
+    const next=pendingSignIn(login,name);
+    const waitingControls=<>{next.reopen&&<Button size="sm" disabled={!connected||!login?.url} onClick={()=>action('open')}>{next.reopen}</Button>}<Button size="sm" busy={cancelling} onClick={()=>action('cancel')}>{t('Cancel sign-in')}</Button></>;
     const pasteCode=login?.acceptsCode?<form className="ss-account-key ss-account-paste" onSubmit={async event=>{event.preventDefault();if(codeValue.trim()&&await run(()=>onAccountAction({operation:'code',code:codeValue.trim()}),'code'))setCodeValue('');}}>
       <input data-cds="TextInput" className="cds-input cds-reset ss-account-key-input" aria-label={t('Code from the browser')} placeholder={t('If the page shows a code, paste it here')} value={codeValue} autoComplete="off" spellCheck={false}
         onChange={event=>setCodeValue(event.target.value)}/>
@@ -119,12 +142,12 @@ export function useAccountSettings({snapshot,auth,connected,busy,engine,onLogin,
     const codeBelow=row=>mine(row)&&login?.userCode?<code className="ss-account-code" aria-label={t('Sign-in code')}>{login.userCode}</code>:null;
     for(const option of options.browser){
       const key=option.provider||option.type||'browser', row=`browser-${key}`, deviceRow=`device-${key}`;
-      const pendingHere=mine(row)||(option.deviceCode===true&&mine(deviceRow));
-      rows.push({id:`signin-${key}`,leading:<Mark brand={signInBrand(option,coreBrand)} glyph="User"/>,label:t(option.label),searchText:`${option.label} sign in${option.deviceCode===true?' device code':''}`,
-        description:pendingHere?(login?.userCode?t('Enter this code on the sign-in page.'):login?.openedByAgent?t('Finish signing in in the browser tab {core} opened.',{core:name}):t('Finish signing in in your browser.')):t('Opens your browser to sign in.'),control:<div className="ss-account-controls">
+      const deviceCode=offersDeviceCode(option,engine), pendingHere=mine(row)||(deviceCode&&mine(deviceRow));
+      rows.push({id:`signin-${key}`,leading:<Mark brand={signInBrand(option,coreBrand)} glyph="User"/>,label:t(option.label),searchText:`${option.label} sign in${deviceCode?' device code':''}`,
+        description:pendingHere?next.text:t('Opens your browser to sign in.'),control:<div className="ss-account-controls">
         {/* Sign in comes last, so every row's Sign in sits in one column at the right edge. */}
         {pendingHere?waitingControls:<>
-          {option.deviceCode===true&&<Button size="sm" variant="ghost" busy={working===deviceRow} disabled={!connected||!onLogin||!!(working||active)} onClick={()=>start(deviceRow,'chatgptDeviceCode',option.provider)}>{t('Use device code')}</Button>}
+          {deviceCode&&<Button size="sm" variant="ghost" busy={working===deviceRow} disabled={!connected||!onLogin||!!(working||active)} onClick={()=>start(deviceRow,'chatgptDeviceCode',option.provider)}>{t('Use device code')}</Button>}
           <Button size="sm" variant={signInVariant} busy={working===row} disabled={!connected||!onLogin||!!(working||active)} onClick={()=>start(row,option.type||'chatgpt',option.provider)}>{t('Sign in')}</Button>
         </>}
       </div>,below:<>{codeBelow(deviceRow)}{mine(row)&&pasteCode}</>});

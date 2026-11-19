@@ -71,10 +71,11 @@ test('Actions mode rows: Settings → / Customize → sections and app commands'
   const opened = [];
   const actions = paletteActions({ onNew() {}, setSection() {}, onToggleSidebar() {}, onOpenSettings: (id) => opened.push(id) });
   const labels = actions.map((a) => a.label);
-  for (const label of ['New session', 'Toggle sidebar', 'Settings', 'Settings → Theme', 'Customize → Skills', 'Customize → Connectors']) assert.ok(labels.includes(label), label);
+  for (const label of ['New session', 'Toggle sidebar', 'Settings', 'Settings → Appearance', 'Customize → Skills', 'Customize → Connectors']) assert.ok(labels.includes(label), label);
   actions.find((a) => a.label === 'Customize → Skills').run();
   assert.deepEqual(opened, ['customize-skills']);
-  assert.deepEqual(filterPaletteActions(actions, 'theme').map((a) => a.label), ['Settings → Theme']);
+  // fix-r2 U-28: rows are the visible nav pages; a folded page's old name (Theme) finds the page that draws it.
+  assert.deepEqual(filterPaletteActions(actions, 'theme').map((a) => a.label), ['Settings → Appearance']);
   assert.equal(movePaletteSelection(-1, 3, 'ArrowDown'), 0);
   assert.equal(movePaletteSelection(0, 3, 'ArrowUp'), 2);
   assert.equal(stepPaletteType(null, 1), 'session');

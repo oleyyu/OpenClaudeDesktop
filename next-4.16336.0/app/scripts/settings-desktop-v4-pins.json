@@ -295,10 +295,10 @@
       "unreachable": false
     }
   },
-  "hostAdapterSha256": "944678564c167c8b0e297321338196b1a27817573c2f25dbda8e4b3b80e04431",
+  "hostAdapterSha256": "a53cb3c0581bab9c8b8a2426dd79c761729bcf4628dd0aa8da8b60264863c1a2",
   "cdsCore": {
     "manifest": "app/src/generated/cds-core/manifest.json",
-    "manifestSha256": "06d2026939e5c8992713c2a0dda1b1abc9adffe7a0c223fe3c1e79eecd08d62c"
+    "manifestSha256": "a0f228ae3f997f54f3e3ebafc254794bd26d8f1fc6999943a08b1d5730f638cd"
   },
   "settingsNav": {
     "manifest": "app/src/generated/settings-nav/manifest.json",
@@ -306,6 +306,6 @@
   },
   "settingsPages": {
     "manifest": "app/src/generated/settings-pages-v4/manifest.json",
-    "manifestSha256": "10c5fe1c4bf21bf43298bab9e58dddc91af58217aceea8ce915423157f448aa7"
+    "manifestSha256": "f6a0579888ca74f8a97bff68f33c0b800665bf168a43e6071df964a58485f8f2"
   }
 }

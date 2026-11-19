@@ -28,7 +28,9 @@ export function titlebarToggleSpecs({ surface = "code", session = false, termina
   const code = surface === "code";
   const spec = (pane, shown, icon, label, shortcut) => (shown ? [{ pane, icon, label, shortcut, active: panes.has(pane) }] : []);
   const terminal = spec("terminal", code && terminalAvailable, PANE_ICONS[PANE_ICON_KIND.terminal], "Terminal", "cmd+j");
-  const preview = spec("preview", previewAvailable, code ? PANE_ICONS[PANE_ICON_KIND.preview] : "Globe", code ? "Preview" : "Browser", "cmd+shift+p");
+  // r3 sidebar-titlebar-r3-01: yE is the Cowork session view's toggle; the Chat page (ca2ef848d) has no header Browser
+  // toggle (its only "Browser" string is the pane header label), so the chat surface lists no preview row.
+  const preview = spec("preview", previewAvailable && surface !== "chat", code ?PANE_ICONS[PANE_ICON_KIND.preview] : "Globe", code ? "Preview" : "Browser", "cmd+shift+p");
   const files = spec("files", code && (session || filesAvailable), PANE_ICONS[PANE_ICON_KIND.files], "Files", "cmd+shift+f");
   return session
     ? [...terminal, ...spec("changes", code, PANE_ICONS[PANE_ICON_KIND.changes], "Changes", "cmd+shift+d"), ...preview, ...files]

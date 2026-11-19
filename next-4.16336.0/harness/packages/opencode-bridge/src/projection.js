@@ -192,7 +192,7 @@ export function toolItem(part, context) {
   const id = part.id
   const output = typeof state.output === 'string' ? state.output : null
   const absolute = (file) => (typeof file === 'string' && file && !path.isAbsolute(file) && cwd ? path.resolve(cwd, file) : file)
-  const base = { pluginId: null, scriptPath: null, processId: null, source: 'agent', exitCode: null, durationMs: durationOf(state) }
+  const base = { pluginId: null, scriptPath: null, processId: null, source: part.source === 'userShell' ? 'userShell' : 'agent', exitCode: null, durationMs: durationOf(state) }
 
   if (isExecScript(part)) return execItem(part)
   if (tool === 'bash' || tool === 'shell' || tool === 'exec') {
@@ -578,9 +578,16 @@ export function userContent(parts) {
       if (String(part.mime ?? '').startsWith('image/')) content.push(file ? { type: 'localImage', path: file } : { type: 'image', url: part.url })
       else content.push({ type: 'mention', name: part.filename ?? (file ? path.basename(file) : 'file'), path: file ?? part.url ?? '' })
     } else if (part.type === 'agent' && part.name) content.push({ type: 'text', text: `@${part.name}`, text_elements: [] })
+    else if (part.type === 'skill' && part.name) content.push({ type: 'skill', name: part.name, path: '' })
     else if (part.type === 'subtask' && part.prompt) content.push({ type: 'text', text: part.description ? `${part.description}` : part.prompt, text_elements: [] })
   }
   return content
+}
+
+/** A completed assistant message whose JSON answer is stored on info, outside its text parts. */
+export function structuredMessageItem(info) {
+  if (info.structured === undefined || !info.time?.completed) return null
+  return { type: 'agentMessage', id: `${info.id}-structured`, text: JSON.stringify(info.structured), phase: null, memoryCitation: null, delivery: null, questions: null }
 }
 
 /**
@@ -802,6 +809,11 @@ export class Projector {
     // OpenCode 2.x: as listed (seq order; live messages are appended), a staged revert hiding its message and after.
     if (this.api === 'v2') return beforeRevert([...this.messages.values()], this.revert)
     const list = [...this.messages.values()].filter((entry) => this.owns(entry.info))
+    if (this.meta.repairedCreated) for (let i = 0; i < list.length; i++) {
+      const entry = list[i]
+      const created = this.meta.repairedCreated[entry.info.id]
+      if (Number.isFinite(created)) list[i] = { ...entry, info: { ...entry.info, time: { ...entry.info.time, created } } }
+    }
     list.sort((a, b) => (a.info.time?.created ?? 0) - (b.info.time?.created ?? 0) || (a.info.id < b.info.id ? -1 : a.info.id > b.info.id ? 1 : 0))
     if (this.revert?.messageID) return list.filter((entry) => entry.info.id < this.revert.messageID)
     return list
@@ -918,10 +930,10 @@ export class Projector {
    * An imported reply's text part (thread-import.js) as its blocks: prose and settled tool rows, along the thread's
    * importBlocks (import-display.js). null for every other part. History only: an imported part never streams.
    */
-  importedItemsOf(part, message) {
+  importedItemsOf(part, message, seen) {
     const index = this.meta?.importBlocks
     if (!index || part.type !== 'text' || part.synthetic || part.ignored || message.info.role !== 'assistant' || message.info.summary) return null
-    return importedItems(part.id, part.text, index, (id, text) => ({ type: 'agentMessage', id, text, phase: null, memoryCitation: null, delivery: null, questions: null }))
+    return importedItems(part.id, part.text, index, (id, text) => ({ type: 'agentMessage', id, text, phase: null, memoryCitation: null, delivery: null, questions: null }), seen)
   }
 
   /** One part → its Codex items: MiMo's exec script, then each tool it called. */
@@ -940,6 +952,7 @@ export class Projector {
   turns({ busy = false } = {}) {
     if (this.api === 'v2') return this.turnsV2({ busy })
     const turns = []
+    const importedRepliesSeen = new Map()
     const byUser = new Map()
     const steer = new Set(this.meta.steers ?? [])
     const reviews = this.meta.reviews ?? {}
@@ -969,7 +982,9 @@ export class Projector {
       const turn = byUser.get(info.parentID) ?? current
       if (!turn) continue
       turn.assistant.push(message)
-      for (const part of message.parts) turn.items.push(...(this.importedItemsOf(part, message) ?? this.itemsOf(part, message)))
+      for (const part of message.parts) turn.items.push(...(this.importedItemsOf(part, message, importedRepliesSeen) ?? this.itemsOf(part, message)))
+      const structured = structuredMessageItem(info)
+      if (structured) turn.items.push(structured)
       // The summary OpenCode wrote when it compacted (an assistant message with info.summary): what it now remembers,
       // shown under the compaction marker (codeDesktop.summary, as the DeepSeek bridge reports it).
       if (info.summary) {
@@ -1063,7 +1078,11 @@ export class Projector {
         const text = [...turn.items].reverse().find((item) => item.type === 'agentMessage')?.text ?? ''
         turn.items.push({ type: 'exitedReviewMode', id: `${turn.id}-review-done`, review: text })
       }
-      if (turn.status !== 'inProgress' && !(turn.closed && turn.incomplete)) for (const item of turn.items) if (item.status === 'inProgress') item.status = turn.status === 'completed' ? 'completed' : 'failed'
+      if (turn.status !== 'inProgress' && !(turn.closed && turn.incomplete)) for (const item of turn.items) {
+        if (item.status === 'inProgress' && !(item.type === 'commandExecution' && item.source === 'user')) {
+          item.status = turn.status === 'completed' ? 'completed' : 'failed'
+        }
+      }
     }
     return turns
   }

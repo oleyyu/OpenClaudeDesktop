@@ -11,6 +11,7 @@ const STOP_KILL_MS=1500,STOP_GRACE_MS=8000;
 // orphaned-workflow <task-notification> reached the model (workflow-tool-service.cjs turnStart; Claude Code 2.1.280
 // reports background workflows orphaned by the previous process exit on resume). Written once per run.
 const ORPHAN_FILE='orphaned.json';
+const noticeFilePattern=/^completion-(w[a-z0-9]{8})\.json$/;
 // Run ids: Claude Code's wf_<12 characters of a UUID> (workflow-tool-model.mjs newRunId); older runs kept a UUID.
 const idPattern=/^(?:[a-f0-9-]{36}|wf_[a-z0-9-]{6,})$/;
 // Never handed to the runner's own core: one nesting level, so workflow agents never get OpenClaude Desktop's Workflow tool.
@@ -48,7 +49,7 @@ function workflowLaunch(core){
 // read and written beside .claude/workflows.
 function createWorkflowService({root,getConfig,emit,command:fixedCommand,args:fixedArgs,env:fixedEnv,core:currentCore,version,spawn=fork,enabled,runnerEnv=()=>({}),onSettled=()=>{},home=require('node:os').homedir(),workflowFolders=()=>[]}){
  const folders=()=>{try{const value=workflowFolders();return Array.isArray(value)?value:[];}catch{return [];}};
- const running=new Map(),runs=new Map();let disposed=false;
+ const running=new Map(),runs=new Map(),recoveredNotices=new Map();let disposed=false;
  const workflowsOn=()=>typeof enabled==='function'?enabled():getConfig().dynamicWorkflows!==false;
  fs.mkdirSync(root,{recursive:true});
  const model=import(pathToFileURL(path.join(__dirname,'../src/workflow-progress-model.mjs')).href);
@@ -60,13 +61,21 @@ function createWorkflowService({root,getConfig,emit,command:fixedCommand,args:fi
    if(fs.existsSync(origin)){try{for(const line of fs.readFileSync(path.join(directory,'events.jsonl'),'utf8').split('\n')){if(!line)continue;let entry;try{entry=JSON.parse(line);}catch{break;}if(entry.sequence!==run.sequence+1||!Number.isFinite(entry.at))break;run=workflowEvent(run,entry.event,entry.at);}}catch{}}
    if(run.status==='running'){run=workflowEvent(run,{type:'settled',status:'failed',recovered:true,error:'The workflow runner is no longer connected. Its exit time is unknown.'},Date.now());persist(run);if(run.origin==='tool')markOrphan(id);}
    runs.set(id,run);
+   for(const name of fs.readdirSync(directory)){
+    if(!noticeFilePattern.test(name))continue;
+    const file=path.join(directory,name);
+    try{
+     const text=JSON.parse(fs.readFileSync(file,'utf8'));
+     if(typeof text==='string')recoveredNotices.set(file,{threadId:run.threadId,text});
+    }catch{}
+   }
   }catch{}}})();
  async function list(threadId){await ready;return [...runs.values()].filter(r=>r.threadId===threadId).sort((a,b)=>a.startedAt-b.startedAt);}
  function trusted(id){if(!idPattern.test(id)||!runs.has(id))throw fail('Unknown workflow.');const run=runs.get(id);if(!getConfig().threadIds.includes(run.threadId))throw fail('Unknown session.');return run;}
  // source: an inline script (the Workflow tool), persisted at `file` by the caller; else `file` is read. origin 'tool': the
  // model started it (its notification goes back to the model); taskId/toolUseId/scriptPath: what the tool reported.
  // No per-app limit on concurrent runs (as in Claude Code). structuredOutput false: the core has no outputSchema/dynamic tools.
- async function startRun({threadId,file,source:inline,args,plan=false,access='read-only',resumeId,model:chosenModel,effort,cwd:requestedCwd,after,runId,origin='user',taskId,toolUseId,scriptPath,structuredOutput,engine,userRequest,budgetTotal,budgetSpent,budgetPool}){
+ async function startRun({threadId,file,source:inline,args,plan=false,access='read-only',resumeId,model:chosenModel,effort,cwd:requestedCwd,after,runId,origin='user',taskId,toolUseId,scriptPath,persistScript,structuredOutput,engine,userRequest,budgetTotal,budgetSpent,budgetPool}){
   await ready;if(disposed)throw fail('Application is closing.');const config=getConfig();
   if(!workflowsOn())throw fail('Dynamic workflows are disabled.');
   if(!config.threadIds.includes(threadId))throw fail('Choose a session before starting a workflow.');
@@ -83,21 +92,37 @@ function createWorkflowService({root,getConfig,emit,command:fixedCommand,args:fi
    else if(nameOnly)throw new Error(saved.error);
    else{const dirs=[path.join(cwd,'.claude/workflows'),path.join(home,'.claude/workflows')];const match=dirs.flatMap(dir=>[file+'.js',file+'.workflow.js',file+'.mjs'].map(name=>path.join(dir,name))).find(f=>fs.existsSync(f));if(!match)throw new Error(saved.error);file=match;}}
   const script=typeof inline==='string'?path.resolve(cwd,file):fs.realpathSync(path.resolve(cwd,file));
-  if(typeof inline!=='string'&&(!/\.(?:m?js|cjs)$/.test(script)||fs.statSync(script).size>1048576))throw fail('Select a JavaScript workflow smaller than 1 MB.');
-  const source=typeof inline==='string'?inline:fs.readFileSync(script,'utf8'),hash=crypto.createHash('sha256').update(source).update(args===undefined?'':JSON.stringify(args)).update(cwd).update(chosenModel||'').update(effort||'').update(access==='read-only'?'':access).digest('hex');
+  const [{workflowEvent},{MAX_SCRIPT_BYTES}]=await Promise.all([model,toolModel()]);
+  if(disposed)throw fail('Application is closing.');
+  const stat=typeof inline==='string'?null:fs.statSync(script);
+  if(stat&&(!stat.isFile()||!/\.(?:m?js|cjs)$/.test(script)||stat.size>MAX_SCRIPT_BYTES))
+   throw fail('Select a JavaScript workflow no larger than 512 KB.');
+  const source=typeof inline==='string'?inline:fs.readFileSync(script,'utf8');
+  if(Buffer.byteLength(source,'utf8')>MAX_SCRIPT_BYTES)throw fail('Select a JavaScript workflow no larger than 512 KB.');
   // A resume continues the same run (Claude Code: resumeFromRunId is the run id and its transcript folder): its journal
   // replays unchanged authored agent() calls even when the host model, effort, Mode or folder has changed. Refused only for another session's run, a run still running, or one with no journal — before anything
   // is written.
-  if(resumeId){const previous=trusted(resumeId);if(previous.threadId!==threadId)throw fail('Unknown workflow.');
+  const launch=typeof currentCore==='function'?currentCore({threadId,access,cwd})||{}:{command:fixedCommand,args:fixedArgs,env:fixedEnv};
+  const scripts=engine==='codeDesktop'?{workflowScripts:false}:typeof launch.workflowScripts==='boolean'?{workflowScripts:launch.workflowScripts}:{};
+  let previous, requiresHostedResume=false;
+  if(resumeId){previous=trusted(resumeId);if(previous.threadId!==threadId)throw fail('Unknown workflow.');
    if(previous.status==='running'||running.has(resumeId))throw new Error(i18n.t('Workflow {id} is still running. Stop it first in the Tasks pane before resuming.',{id:resumeId}));
-   if(!fs.existsSync(path.join(root,resumeId,'journal.jsonl')))throw new Error(i18n.t('No journal found for workflow run {id}, so there is nothing to resume. To run the workflow from the start, call Workflow again without resumeFromRunId.',{id:resumeId}));}
+   const files=path.join(root,resumeId);
+   requiresHostedResume=!fs.existsSync(path.join(files,'journal.jsonl'));
+   if(requiresHostedResume&&
+      (origin==='tool'||scripts.workflowScripts===false||plan||!fs.existsSync(path.join(files,'engine.json'))))throw new Error(i18n.t('No journal found for workflow run {id}, so there is nothing to resume. To run the workflow from the start, call Workflow again without resumeFromRunId.',{id:resumeId}));}
+  if(args===undefined)args=previous?.args;
+  const hash=crypto.createHash('sha256').update(source).update(args===undefined?'':JSON.stringify(args)).update(cwd).update(chosenModel||'').update(effort||'').update(access==='read-only'?'':access).digest('hex');
+  if(persistScript&&origin==='tool'&&typeof inline==='string'){
+   fs.mkdirSync(path.dirname(script),{recursive:true,mode:0o700});
+   fs.writeFileSync(script,source,{encoding:'utf8',mode:0o600});
+  }
   const id=resumeId?resumeId:typeof runId==='string'&&idPattern.test(runId)&&!runs.has(runId)?runId:`wf_${crypto.randomUUID().slice(0,12)}`,directory=path.join(root,id);fs.mkdirSync(directory,{recursive:!!resumeId});
   // The resumed run's event log starts over (its journal, engine state and agent transcripts stay).
   if(resumeId){fs.writeFileSync(path.join(directory,'events.jsonl'),'');fs.rmSync(path.join(directory,ORPHAN_FILE),{force:true});}
   fs.writeFileSync(path.join(directory,'source.workflow.js'),source);
   fs.writeFileSync(path.join(directory,'result.json'),'',{flag:resumeId?'w':'wx',mode:0o600,flush:true});
-  const {workflowEvent}=await model;
-  let run={id,threadId,after:typeof after==='string'?after:undefined,identity:hash,file:script,cwd,...(args!==undefined?{args}:{}),model:chosenModel,effort,plan:!!plan,access,description:path.basename(script),status:'running',startedAt:Date.now(),sequence:0,workflowProgress:[],
+  let run={id,threadId,after:typeof after==='string'?after:undefined,identity:hash,file:script,cwd,...(args!==undefined?{args}:{}),model:chosenModel,effort,plan:!!plan,access,description:path.basename(script),status:'running',startedAt:Date.now(),sequence:previous ? (previous.sequence??0)+1 : 0,workflowProgress:[],
    origin:origin==='tool'?'tool':'user',transcriptDir:directory,...(typeof taskId==='string'?{taskId}:{}),...(typeof toolUseId==='string'?{toolUseId}:{}),...(typeof scriptPath==='string'?{scriptPath}:{}),...(resumeId?{resumedFrom:resumeId}:{})};
   runs.set(id,run);fs.writeFileSync(path.join(directory,'origin.json'),JSON.stringify(run));persist(run);emit({kind:'workflow',run});
   // The run's state in memory comes first: a run folder that can't be written (a full disk, a removed data folder)
@@ -105,8 +130,7 @@ function createWorkflowService({root,getConfig,emit,command:fixedCommand,args:fi
   // settling (its notification to the model, Stop's answer).
   function record(event,at=Date.now()) {run=workflowEvent(run,event,at);runs.set(id,run);try{fs.appendFileSync(path.join(directory,'events.jsonl'),JSON.stringify({sequence:run.sequence,at,event})+'\n');persist(run);}catch(error){console.warn('Workflow run not saved:',error?.message??error);}emit({kind:'workflow',run});}
   if(disposed){record({type:'settled',status:'failed',error:'Application is closing.'});return run;}
-  // The core getter learns the run's session and access (a Codex core adds that session's sandbox settings).
-  const launch=typeof currentCore==='function'?currentCore({threadId,access,cwd})||{}:{command:fixedCommand,args:fixedArgs,env:fixedEnv},command=launch.command,commandArgs=launch.args;
+  const {command,args:commandArgs}=launch;
   // The Settings values reach the runner as Claude's variables. They are the resolved values (a valid variable in the
   // app's environment already decided them; an invalid one was ignored), so they replace the inherited ones: Settings
   // and the run always agree, and a stray MAX_STRUCTURED_OUTPUT_RETRIES=abc never fails every schema agent.
@@ -135,8 +159,7 @@ function createWorkflowService({root,getConfig,emit,command:fixedCommand,args:fi
   running.set(id,{stop,quit,completion,pid:child.pid});
   // engine 'codeDesktop': Settings chose OpenClaude Desktop's engine for a core that has its own, so the launcher script is
   // never handed to the core's engine (workflow-harness.mjs); structuredOutput false: schema agents ask for JSON.
-  const scripts=engine==='codeDesktop'?{workflowScripts:false}:typeof launch.workflowScripts==='boolean'?{workflowScripts:launch.workflowScripts}:{};
-  child.send({directory,source,cwd,...(args!==undefined?{args}:{}),plan:!!plan,access,resume:!!resumeId,model:chosenModel,effort,command,commandArgs,version,runId:id,...scripts,...(structuredOutput===false||structuredOutput==='outputSchema'?{structuredOutput}:{}),...(typeof userRequest==='string'&&userRequest.trim()?{userRequest}:{}),...(Number.isSafeInteger(budgetTotal)&&budgetTotal>0?{budgetTotal,...(Number.isSafeInteger(budgetSpent)&&budgetSpent>0?{budgetSpent}:{})}:{}),...(budgetPool?{budgetPool}:{}),...(folders().length?{workflowFolders:folders()}:{})});return run;
+  child.send({directory,source,cwd,...(requiresHostedResume?{requiresHostedResume}:{}),...(args!==undefined?{args}:{}),plan:!!plan,access,resume:!!resumeId,model:chosenModel,effort,command,commandArgs,version,runId:id,...scripts,...(structuredOutput===false||structuredOutput==='outputSchema'?{structuredOutput}:{}),...(typeof userRequest==='string'&&userRequest.trim()?{userRequest}:{}),...(Number.isSafeInteger(budgetTotal)&&budgetTotal>0?{budgetTotal,...(Number.isSafeInteger(budgetSpent)&&budgetSpent>0?{budgetSpent}:{})}:{}),...(budgetPool?{budgetPool}:{}),...(folders().length?{workflowFolders:folders()}:{})});return run;
   function settle(){try{onSettled(run);}catch(error){console.warn('Workflow settle hook failed:',error);}}
  }
  async function start(params){return startRun(params);}
@@ -153,13 +176,32 @@ function createWorkflowService({root,getConfig,emit,command:fixedCommand,args:fi
  // The core threads every run's agents ran in (the journal's and result.json's agentId): never the user's sessions
  // ('Resume a session'). A settled run's set is read once.
  const agentCache=new Map();
- const runAgentIds=run=>{const cached=agentCache.get(run.id);if(cached&&cached.status===run.status&&run.status!=='running')return cached.ids;const ids=new Set();
+ const runAgentIds=run=>{const cached=agentCache.get(run.id);if(cached?.run===run&&run.status!=='running')return cached.ids;const ids=new Set();
   const take=value=>{if(typeof value==='string'&&value&&value.length<=200)ids.add(value);};
   try{for(const line of fs.readFileSync(path.join(root,run.id,'journal.jsonl'),'utf8').split('\n')){if(!line)continue;try{take(JSON.parse(line)?.agentId);}catch{}}}catch{}
   try{const text=fs.readFileSync(path.join(root,run.id,'result.json'),'utf8');if(text){const value=JSON.parse(text);for(const entry of Array.isArray(value?.workflowProgress)?value.workflowProgress:[])if(entry?.type==='workflow_agent')take(entry.agentId);}}catch{}
   for(const entry of run.workflowProgress||[])if(entry?.type==='workflow_agent')take(entry.agentId);
-  agentCache.set(run.id,{status:run.status,ids});return ids;};
+  agentCache.set(run.id,{run,ids});return ids;};
  const agentIds=()=>{const out=new Set();for(const run of runs.values())for(const id of runAgentIds(run))out.add(id);return out;};
- return {list,start,stop,get,dispose,ready,agentIds,orphans,orphanDelivered};
+ function storeCompletionNotice(run,text){
+  const name=`completion-${run.taskId}.json`;
+  if(!idPattern.test(run.id)||!noticeFilePattern.test(name))return null;
+  const file=path.join(root,run.id,name);
+  try{
+   fs.writeFileSync(file+'.tmp',JSON.stringify(text),{mode:0o600,flush:true});
+   fs.renameSync(file+'.tmp',file);
+   return file;
+  }catch(error){console.warn('Workflow completion notification not saved:',error.message);return null;}
+ }
+ async function completionNotices(threadId){
+  await ready;
+  return [...recoveredNotices].filter(([,entry])=>entry.threadId===threadId)
+   .map(([file,entry])=>({file,text:entry.text}));
+ }
+ function completionNoticeDelivered(file){
+  recoveredNotices.delete(file);
+  try{fs.rmSync(file,{force:true});}catch(error){console.warn('Workflow completion notification not cleared:',error.message);}
+ }
+ return {list,start,stop,get,dispose,ready,agentIds,orphans,orphanDelivered,storeCompletionNotice,completionNotices,completionNoticeDelivered};
 }
 module.exports={createWorkflowService,workflowCoreCommand};

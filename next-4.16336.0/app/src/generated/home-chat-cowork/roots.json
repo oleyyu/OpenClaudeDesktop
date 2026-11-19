@@ -1,7 +1,7 @@
 {
   "referenceVersion": "4.16336.0",
   "referenceSnapshot": "snapshots/claude-4.16336.0-20261104",
-  "cdsCoreManifestSha256": "06d2026939e5c8992713c2a0dda1b1abc9adffe7a0c223fe3c1e79eecd08d62c",
+  "cdsCoreManifestSha256": "a0f228ae3f997f54f3e3ebafc254794bd26d8f1fc6999943a08b1d5730f638cd",
   "sourcePins": {
     "shared-23-BRmsPtuN.js": "f52e23053cdcb6378fb347c14ff7a6243e4d89a5dfb63cf27d4b2217d2cb01c9",
     "ce266b9be-DwMu7QWG.js": "7bc02618202f1a5008ca76f4041c55e75d1cc07267529a16658992d3535e2e86",
@@ -61,6 +61,12 @@
       "local": "eS",
       "alias": "Sa",
       "sha256": "35d5c1a788dab3ad8c3ee6222b1839c126d31961d0f3ddef57233fa8ab2ce1d3"
+    },
+    "greetingSlotLiftClass": {
+      "chunk": "shared-19-UalAfDtn.js",
+      "local": "aC",
+      "alias": null,
+      "sha256": "7d3fd6fc0add7b2084927a6cc64cd2e0ddc0bb3eda3b98d77defd63a60b3afe9"
     },
     "homeGreetingSeatClass": {
       "chunk": "shared-33-DtdykY0y.js",

@@ -22,14 +22,31 @@ export function splitModel(id) {
   return { providerID: id.slice(0, index), modelID: id.slice(index + 1) }
 }
 
+/**
+ * Settings › Models custom providers → route → the model ids the user listed. OpenCode merges a configured provider
+ * with the models.dev provider of the same id (2.x config/plugin/provider.ts; 1.x provider.ts), so a route named like
+ * a catalog provider (a relay such as `refuseless`) would also list that catalog's models, ones the user never added
+ * and the endpoint may not serve. Only the listed ones are offered.
+ */
+export function declaredModels(providers) {
+  const out = new Map()
+  for (const provider of Array.isArray(providers) ? providers : []) {
+    if (!isRecord(provider) || typeof provider.route !== 'string' || !provider.route || !Array.isArray(provider.models)) continue
+    out.set(provider.route, new Set(provider.models.filter((id) => typeof id === 'string' && id)))
+  }
+  return out
+}
+
 export class ModelCatalog {
   /**
    * @param {() => Promise<object>} fetchProviders - GET /config/providers
    * @param {{ rank?: (provider: object) => number }} [options] - credentials.js providerRank
    *   (0 has a credential, 1 a free tier, 2 missing its key); without it OpenCode Zen ranks free.
+   * @param {() => Map<string, Set<string>>} [options.declared] - declaredModels of the custom providers, read per load
    */
-  constructor(fetchProviders, { rank } = {}) {
+  constructor(fetchProviders, { rank, declared } = {}) {
     this.fetchProviders = fetchProviders
+    this.declared = declared ?? (() => new Map())
     this.rank = rank ?? ((provider) => (provider?.id === 'opencode' ? 1 : 0))
     this.cached = null
     this.at = 0
@@ -43,9 +60,13 @@ export class ModelCatalog {
     const providers = Array.isArray(value?.providers) ? value.providers : []
     const defaults = isRecord(value?.default) ? value.default : {}
     const entries = []
+    let declared = new Map()
+    try { declared = this.declared() ?? new Map() } catch {}
     for (const provider of providers) {
+      const listed = declared.get(provider.id)
       for (const model of Object.values(isRecord(provider.models) ? provider.models : {})) {
         if (!model?.id || model.status === 'deprecated') continue
+        if (listed && !listed.has(model.id)) continue
         entries.push({ provider, model, id: wireId(provider.id, model.id) })
       }
     }

@@ -377,6 +377,27 @@ test('thread/compact/start: POST …/compact {id}; the compaction message is the
   } finally { await bridge.stop() }
 })
 
+test('fork retries child hydration and keeps an inherited steer in its original turn', async () => {
+  const { bridge, fake } = await v2Bridge()
+  try {
+    const info = fake.makeSession({ location: { directory: '/w' }, agent: 'build', model: MODEL })
+    fake.addMessages(info.id, [user('msg_first', 10, 'hello'), user('msg_steer', 11, 'more'), assistant('msg_answer', 12, [text('ok')]), idle('msg_end', 13)])
+    bridge.store.addTo(info.id, 'steers', 'msg_steer')
+    const open = bridge.openThread.bind(bridge)
+    let fail = true
+    bridge.openThread = async (id) => {
+      if (id !== info.id && fail) { fail = false; throw new Error('Temporary failure reading the child') }
+      return open(id)
+    }
+    const params = { threadId: info.id }
+    await assert.rejects(bridge.handle('thread/fork', params), /Temporary failure/)
+    const result = await bridge.handle('thread/fork', params)
+    assert.equal(requests(fake, 'POST', `/api/session/${info.id}/fork`).length, 1)
+    assert.deepEqual(result.thread.turns.map((turn) => turn.status), ['completed'])
+    assert.equal(result.thread.turns[0].items.filter((item) => item.type === 'userMessage').length, 2)
+  } finally { await bridge.stop() }
+})
+
 test('fork before a turn, revert (stage then commit, files only when asked; busy is refused), the side question in one answer', async () => {
   const { bridge, fake, notes } = await v2Bridge()
   try {
@@ -499,6 +520,115 @@ test('a reconnection resyncs from REST (messages, active, inbox, asks) with the 
       ['item/started', 'agentMessage', 'msg_a1:text:1'], ['item/agentMessage/delta', 'Done.'], ['item/completed', 'agentMessage', 'msg_a1:text:1'], ['turn/completed', 'msg_u1', 'completed'],
     ])
   } finally { await bridge.stop() }
+})
+
+test('a failed activity request preserves the turn, and an idle resync emits the missed final answer before completion', async () => {
+  const { bridge, fake, notes } = await v2Bridge()
+  try {
+    const info = fake.makeSession({ title: 'Busy', location: { directory: '/w' }, agent: 'build', model: MODEL })
+    fake.addMessages(info.id, [user('msg_u1', 10, 'go'), assistant('msg_a1', 11, [text('draft')])])
+    fake.state.active.add(info.id)
+    await bridge.handle('thread/resume', { threadId: info.id })
+    const live = bridge.threads.get(info.id)
+    const fetch = bridge.server.fetch
+    bridge.server.fetch = (url, init) => new URL(url).pathname === '/api/session/active'
+      ? Promise.resolve(new Response('down', { status: 503 })) : fetch(url, init)
+    const from = notes.length
+    await live.resyncV2()
+    assert.equal(live.activeTurn.id, 'msg_u1')
+    assert.ok(!notes.slice(from).some((note) => note.method === 'turn/completed'))
+    bridge.server.fetch = fetch
+    fake.state.active.delete(info.id)
+    fake.addMessages(info.id, [assistant('msg_a2', 20, [text('answer')]), idle('msg_idle', 30)])
+    await live.resyncV2()
+    assert.deepEqual(seq(notes, info.id, from).filter(([method]) => method.startsWith('item/') || method === 'turn/completed'), [
+      ['item/completed', 'agentMessage', 'msg_a1:text:0', 'msg_u1'],
+      ['item/started', 'agentMessage', 'msg_a2:text:0', 'msg_u1'],
+      ['item/agentMessage/delta', 'answer'],
+      ['item/completed', 'agentMessage', 'msg_a2:text:0', 'msg_u1'],
+      ['turn/completed', 'msg_u1', 'completed'],
+    ])
+  } finally { await bridge.stop() }
+})
+
+test('a second resync requested during a history snapshot reads history again', async () => {
+  const { bridge } = await v2Bridge()
+  try {
+    const live = await startThread(bridge)
+    let finish
+    let announce
+    const entered = new Promise((resolve) => { announce = resolve })
+    let snapshots = 0
+    live.reload = async () => {
+      if (++snapshots !== 1) return
+      await new Promise((resolve) => { finish = resolve; announce() })
+    }
+    const first = live.resyncV2()
+    await entered
+    await live.resyncV2()
+    finish()
+    await first
+    await until(() => snapshots === 2 && !live.resyncBufferV2, 'second resync')
+  } finally { await bridge.stop() }
+})
+
+test('Stop and steer with a superseded turn ID cannot affect the current turn', async () => {
+  const { bridge, fake } = await v2Bridge()
+  try {
+    const live = await startThread(bridge)
+    const { turn } = await bridge.handle('turn/start', { threadId: live.id, input: [{ type: 'text', text: 'current' }] })
+    const from = fake.state.requests.length
+    await bridge.handle('turn/interrupt', { threadId: live.id, turnId: 'msg_older' })
+    assert.equal(live.activeTurn.id, turn.id)
+    assert.equal(requests(fake, 'POST', `/api/session/${live.id}/interrupt`, from).length, 0)
+    let release
+    live.bridge.bridgePluginGuardV2 = () => new Promise((resolve) => { release = resolve })
+    const steer = bridge.handle('turn/steer', { threadId: live.id, expectedTurnId: turn.id, input: [{ type: 'text', text: 'for old turn' }] })
+    await until(() => release, 'steer validation started')
+    live.openExternalTurnV2('msg_newer')
+    release()
+    await assert.rejects(steer, /No active turn to steer/)
+    assert.equal(requests(fake, 'POST', `/api/session/${live.id}/prompt`, from).length, 0)
+  } finally { await bridge.stop() }
+})
+
+test('concurrent user prompts cannot be claimed as an OpenCode slash command', async () => {
+  const { bridge, fake } = await v2Bridge()
+  try {
+    fake.state.commands.audit = 'prompt'
+    const live = await startThread(bridge)
+    const fetch = bridge.server.fetch
+    const url = `/api/session/${live.id}/command`
+    bridge.server.fetch = (resource, init) => {
+      if (new URL(resource).pathname === url) {
+        fake.emit('session.inbox.enqueued', {
+          sessionID: live.id, inboxID: 'msg_other', item: { type: 'user', payload: { text: 'another client' }, delivery: 'steer' },
+        })
+      }
+      return fetch(resource, init)
+    }
+    const input = [
+      { type: 'text', text: '/audit/staging' }, { type: 'text', text: 'Project directory context' },
+      { type: 'skill', name: 'audit', path: 'command:audit', commandArgumentsSeparated: true },
+    ]
+    await bridge.handle('turn/start', { threadId: live.id, input })
+    const command = requests(fake, 'POST', url).at(-1).body
+    assert.equal(command.text, '/audit/staging\n\nProject directory context')
+    assert.equal(bridge.store.get(live.id).inputs.msg_other, undefined)
+    assert.ok(!live.ownInboxV2.has('msg_other'))
+  } finally { await bridge.stop() }
+})
+
+test('OpenCode 2.x workflow sessions are removed before their runner bridge stops', async () => {
+  const { bridge, fake } = await v2Bridge()
+  try {
+    bridge.clientName = 'code-desktop-workflows'
+    const live = await startThread(bridge)
+    assert.equal(bridge.store.get(live.id).workflowAgent, true)
+    await bridge.shutdown()
+    assert.equal(requests(fake, 'DELETE', `/api/session/${live.id}`).length, 1)
+    assert.equal(fake.state.sessions.some((session) => session.id === live.id), false)
+  } finally { await bridge.shutdown() }
 })
 
 test('a resync replays the events it held over a reload that already has their items: one text, one tool card that completes', async () => {

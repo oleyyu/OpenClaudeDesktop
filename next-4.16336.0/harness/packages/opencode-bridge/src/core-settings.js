@@ -28,8 +28,12 @@ export function coreSettingDefs(flavor) {
   // set), written to the overlay (v2/config.js) and reloaded without a restart; it no longer reads
   // OPENCODE_ENABLE_EXA. Background sub-agents are always available there (the subagent tool's `background`), so that
   // switch is not offered.
+  // models.zen: OpenCode Zen, the model service OpenCode ships with (provider `opencode`; signed out, its free models on
+  // the public key). Off denies that provider (v2/config.js `policies` provider.use), so the model menu lists only the
+  // user's own providers; on is OpenCode's own behaviour.
   if (flavor?.api === 'v2') return [
     { key: 'websearch.enabled', type: 'boolean', default: true, kind: 'config' },
+    { key: 'models.zen', type: 'boolean', default: true, kind: 'config' },
   ]
   return [
     // OpenCode's websearch tool exists only on OpenCode Zen / Go unless OPENCODE_ENABLE_EXA is set (tool/registry.ts);

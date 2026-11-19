@@ -4035,7 +4035,7 @@
     {
       "original": "cbbbbbd87-VKX81sbm.js#N",
       "adapter": "ChatArtifactPreview",
-      "difference": "claude.ai chat artifact previews (published screenshot, markdown excerpt) are not shown: host items are local cowork files (source \"cowork\"); null."
+      "difference": "Chat artifact previews follow the original (markdown / text / code excerpt from previewText, else the type icon) in src/source-artifact-chat-preview.jsx; no published screenshot (no claude.ai publishing)."
     }
   ],
   "viewTabsCopies": []

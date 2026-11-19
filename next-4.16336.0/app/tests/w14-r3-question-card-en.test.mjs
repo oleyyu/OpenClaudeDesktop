@@ -103,9 +103,11 @@ test('En card: shell, header with the pager, Tn rows with the preselected radio,
   assert.match(markup, />1 of 2</);
   assert.match(markup, /aria-label="Show next question"/);
   // Tn rows: options[0] preselected (En `_n`), the radio mark's dot, the description in text-secondary.
-  assert.match(markup, /<button type="button" aria-pressed="true" class="epitaxy-answer-option flex w-full items-start gap-md px-lg py-lg [^"]*"><span aria-hidden="true" data-checked="" class="epitaxy-radio-mark [^"]*"><span class="epitaxy-radio-mark-dot"><\/span><\/span>/);
-  assert.match(markup, /class="text-body text-secondary [^"]*">Server</);
-  assert.match(markup, /aria-pressed="false" class="epitaxy-answer-option/);
+  // chat-cowork-1to1 r2 (cowork-r2-02): the rows are 4.16336.0 c2f6611a3 Wr over hr, which spreads data-question-answer.
+  assert.match(markup, /<button type="button" aria-pressed="true" data-question-answer="" class="epitaxy-answer-option flex w-full items-start gap-md px-lg py-lg [^"]*"><span aria-hidden="true" data-checked="" class="epitaxy-radio-mark [^"]*"><span class="epitaxy-radio-mark-dot"><\/span><\/span>/);
+  // 4.16336.0 hr: the description is `whitespace-pre-wrap ${descriptionClassName} ${lr}`.
+  assert.match(markup, /class="whitespace-pre-wrap text-body text-secondary [^"]*">Server</);
+  assert.match(markup, /aria-pressed="false" data-question-answer="" class="epitaxy-answer-option/);
   // The Other row: the hit button, the hidden mark and label; no field until Other is chosen.
   assert.match(markup, /<div class="epitaxy-answer-option relative grid grid-cols-\[auto_1fr\] items-start gap-x-md gap-y-sm px-lg py-lg"><button type="button" aria-pressed="false" aria-label="Other" class="absolute inset-0 /);
   assert.match(markup, /<div aria-hidden="true" class="pointer-events-none contents text-body text-primary"><span aria-hidden="true" data-unchecked="" class="epitaxy-radio-mark /);
@@ -196,7 +198,7 @@ test('En card keeps the runtime\'s error line and goes inert while sending (En m
   const pending = runtime.submit(ticket, null, () => new Promise((resolve) => { release = resolve; }), { getVisibleThreadId: () => 'T' });
   const busy = html();
   assert.match(busy, /aria-busy="true"/);
-  assert.match(busy, /<button type="button" disabled="" aria-pressed="true" class="epitaxy-answer-option/);
+  assert.match(busy, /<button type="button" disabled="" aria-pressed="true" data-question-answer="" class="epitaxy-answer-option/);
   release({ ok: true, identity: req.bridgeApproval });
   assert.equal((await pending).status, 'answered');
 });
@@ -210,7 +212,7 @@ test('Codex async questions follow the Code card: En header, pager, Tn rows, Oth
   assert.match(code, /^<div class="source-async-questions epitaxy-approval-card [^"]* epitaxy-card-outline epitaxy-question-card max-w-\[480px\] outline-none" role="group" aria-label="Which database should I target\?" data-async-questions="m1">/);
   assert.match(code, /<div class="bg-alpha-1 px-lg flex gap-md py-md items-center">/);
   assert.match(code, />1 of 2</);
-  assert.match(code, /aria-pressed="false" class="epitaxy-answer-option flex w-full/);
+  assert.match(code, /aria-pressed="false" data-question-answer="" class="epitaxy-answer-option flex w-full/);
   assert.match(code, /aria-label="Other" class="absolute inset-0 /);
   assert.match(code, /<div class="epitaxy-approval-actions flex items-center justify-end gap-sm px-lg pb-lg pt-md">/);
   assert.doesNotMatch(code, />Back</);

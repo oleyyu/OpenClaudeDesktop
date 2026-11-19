@@ -26,7 +26,7 @@ import { randomUUID } from 'node:crypto'
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
-import { readJsonFile, normalizeMcpServer, scanSkills, writeJsonFile, pluginSummary, projectDirs } from '../catalog.js'
+import { readJsonFile, normalizeMcpServer, scanSkills, writeJsonFile, pluginSummary, projectDirs, removeProjectMcpServer } from '../catalog.js'
 import { pathsOf } from '../permissions.js'
 import { APP_TOOL_NAMES } from '../app-tools.js'
 import { isQwenWorkflowCall, qwenWorkflowRun, workflowFromCall, applyWorkflowTask, workflowInterrupted, workflowLost, workflowApprovalTool } from './qwen-workflow.js'
@@ -77,6 +77,21 @@ export function qwenLanguage(locale) {
 const qwenKeysFile = (env) => path.join(env.CODE_DESKTOP_BRIDGE_STATE || path.join(env.HOME || os.homedir(), '.code-desktop-acp'), 'qwen-provider-keys.json')
 const homeOf = (env) => env.QWEN_HOME || path.join(env.HOME || os.homedir(), '.qwen')
 const userSettingsFile = (env) => path.join(homeOf(env), 'settings.json')
+// What qwen/providers/connect selects besides the key (upstream install.ts applyProviderInstallPlan), restored on sign-out.
+const QWEN_CONNECT_FIELDS = ['security.auth.selectedType', 'model.name', 'model.baseUrl']
+const isPlainRecord = (value) => Boolean(value) && typeof value === 'object' && !Array.isArray(value)
+const settingAtPath = (settings, key) => key.split('.').reduce((value, part) => (isPlainRecord(value) ? value[part] : undefined), settings)
+/** Sets (undefined: removes) a dotted setting, copying each object on the way so a shared one isn't changed. */
+function setSettingAtPath(settings, key, value) {
+  const parts = key.split('.')
+  let node = settings
+  for (const part of parts.slice(0, -1)) {
+    if (!isPlainRecord(node[part])) { if (value === undefined) return; node[part] = {} } else node[part] = { ...node[part] }
+    node = node[part]
+  }
+  if (value === undefined) delete node[parts.at(-1)]
+  else node[parts.at(-1)] = value
+}
 const mergeUnique = (a, b) => [...new Set([...(Array.isArray(a) ? a : []), ...(Array.isArray(b) ? b : [])])]
 
 // ------------------------------------------------------------ Qwen's skill settings
@@ -863,7 +878,7 @@ export default {
     const lang = qwenLanguage(ctx.env.CODE_DESKTOP_LOCALE)
     if (lang && !ctx.env.QWEN_CODE_LANG && !user?.general?.language) env.QWEN_CODE_LANG = lang
     const settingsPath = path.join(dir, 'qwen-system-settings.json')
-    writeJsonFile(settingsPath, overlay)
+    writeJsonFile(settingsPath, overlay, { replace: true })
     env.QWEN_CODE_SYSTEM_SETTINGS_PATH = settingsPath
     return { args, env }
   },
@@ -1077,15 +1092,16 @@ export default {
    * A remote connector's OAuth sign-in, run by Qwen itself on the utility host (acpAgent.ts workspaceMcpManage
    * 'authenticate': its MCPOAuthProvider with its own callback; the tokens land in its token storage, which mcpAuth
    * reads). Answers the page to open; mcpLoginStatus follows it (qwen/status/workspace/mcp authenticationState).
+   * A project's own connector runs on its session's process (options.host, server.js mcpManageHost), which knows it.
    */
-  async mcpLogin(ctx, server) {
-    const host = await ctx.utility()
+  async mcpLogin(ctx, server, { host: sessionHost = null } = {}) {
+    const host = sessionHost ?? await ctx.utility()
     const result = await host.call('qwen/control/workspace/mcp/manage', { serverName: server.name, action: 'authenticate' }, 90000)
     if (typeof result?.authUrl !== 'string' || !/^https?:\/\//.test(result.authUrl)) throw new Error(`Qwen Code didn’t return a sign-in page for ${server.name}.`)
     return { authorizationUrl: result.authUrl }
   },
-  async mcpLoginStatus(ctx, server) {
-    const host = await ctx.utility()
+  async mcpLoginStatus(ctx, server, { host: sessionHost = null } = {}) {
+    const host = sessionHost ?? await ctx.utility()
     const status = await host.call('qwen/status/workspace/mcp', {}, 30000)
     const list = Array.isArray(status?.servers) ? status.servers : status?.servers && typeof status.servers === 'object' ? Object.values(status.servers) : []
     const entry = list.find((item) => item?.name === server.name)
@@ -1093,8 +1109,8 @@ export default {
     return this.mcpAuth(ctx, server) ? { state: 'succeeded', error: null } : null
   },
   /** Sign out of a connector: Qwen deletes its stored tokens and disconnects it ('clear-auth'). */
-  async mcpLogout(ctx, server) {
-    const host = await ctx.utility()
+  async mcpLogout(ctx, server, { host: sessionHost = null } = {}) {
+    const host = sessionHost ?? await ctx.utility()
     await host.call('qwen/control/workspace/mcp/manage', { serverName: server.name, action: 'clear-auth' }, 30000)
   },
 
@@ -1270,7 +1286,15 @@ export default {
     if (written.length) {
       const file = qwenKeysFile(ctx.env)
       const known = readJsonFile(file, {}) ?? {}
-      writeJsonFile(file, { envKeys: [...new Set([...(Array.isArray(known.envKeys) ? known.envKeys : []), ...written])] })
+      // The selection connect changed (security.auth.selectedType, model.name, model.baseUrl), with what it was before
+      // the first connect: sign-out puts it back while it is still what a connect left.
+      const restore = { ...(isPlainRecord(known.restore) ? known.restore : {}) }
+      for (const key of QWEN_CONNECT_FIELDS) {
+        const now = settingAtPath(after, key)
+        if (JSON.stringify(now) === JSON.stringify(settingAtPath(before, key))) continue
+        restore[key] = { before: Object.hasOwn(restore, key) ? restore[key].before : settingAtPath(before, key) ?? null, after: now ?? null }
+      }
+      writeJsonFile(file, { envKeys: [...new Set([...(Array.isArray(known.envKeys) ? known.envKeys : []), ...written])], restore }, { replace: true })
     }
     return result
   },
@@ -1299,18 +1323,34 @@ export default {
    */
   logout(ctx) {
     const file = qwenKeysFile(ctx.env)
-    const keys = new Set(Array.isArray(readJsonFile(file, {})?.envKeys) ? readJsonFile(file, {}).envKeys : [])
+    const saved = readJsonFile(file, {}) ?? {}
+    const keys = new Set(Array.isArray(saved.envKeys) ? saved.envKeys : [])
     if (!keys.size) throw new Error('OpenClaude Desktop saved no Qwen Code key to remove. Keys set up in Qwen Code itself are removed with /auth there.')
     const settingsFile = userSettingsFile(ctx.env)
     const settings = readJsonFile(settingsFile, {}) ?? {}
     if (settings.env && typeof settings.env === 'object') for (const key of keys) delete settings.env[key]
+    const emptied = new Set()
     if (settings.modelProviders && typeof settings.modelProviders === 'object') {
       for (const [type, list] of Object.entries(settings.modelProviders)) {
         if (!Array.isArray(list)) continue
         const kept = list.filter((model) => !keys.has(model?.envKey))
         if (kept.length) settings.modelProviders[type] = kept
-        else delete settings.modelProviders[type]
+        else { delete settings.modelProviders[type]; emptied.add(type) }
       }
+    }
+    // The provider selection goes too, else Qwen keeps the account selected (account(): signed in) with no key behind it:
+    // each field connect changed is put back while it still holds what connect left (a later /auth choice stays).
+    const restore = isPlainRecord(saved.restore) ? saved.restore : null
+    if (restore) {
+      for (const key of QWEN_CONNECT_FIELDS) {
+        const entry = restore[key]
+        if (!isPlainRecord(entry) || JSON.stringify(settingAtPath(settings, key) ?? null) !== JSON.stringify(entry.after ?? null)) continue
+        setSettingAtPath(settings, key, entry.before ?? undefined)
+      }
+    } else {
+      // A key saved before the selection was recorded: the selection whose providers all just went is cleared.
+      const selected = settings.security?.auth?.selectedType
+      if (typeof selected === 'string' && emptied.has(selected)) setSettingAtPath(settings, 'security.auth.selectedType', undefined)
     }
     writeJsonFile(settingsFile, settings)
     try { fs.rmSync(file, { force: true }) } catch {}
@@ -1333,10 +1373,12 @@ export default {
     return [...servers.values()]
   },
 
-  writeMcpServer(ctx, name, value) {
+  writeMcpServer(ctx, name, value, { cwd = null } = {}) {
     const file = userSettingsFile(ctx.env)
     const settings = readJsonFile(file, {}) ?? {}
     settings.mcpServers = { ...settings.mcpServers }
+    // A project's own connector goes from the file it came from (removeProjectMcpServer), else it would come right back.
+    if (value === null && !Object.hasOwn(settings.mcpServers, name)) return removeProjectMcpServer(cwd ? path.join(cwd, '.qwen', 'settings.json') : null, name, `${name} isn’t in your Qwen Code settings. It comes from a project’s .qwen/settings.json or an extension; remove it there.`)
     if (value === null) delete settings.mcpServers[name]
     else settings.mcpServers[name] = value.url ? { httpUrl: value.url, ...(value.http_headers ? { headers: value.http_headers } : {}) } : { command: value.command, ...(value.args ? { args: value.args } : {}), ...(value.env ? { env: value.env } : {}) }
     writeJsonFile(file, settings)

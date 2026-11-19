@@ -140,12 +140,15 @@ test('D1: the activity list, its illustration frame, the panel Section and the b
   assert.equal(imports.get('St')?.name, 'getResizeObserverClass');
 });
 
-test('the staged double output: the 3.6556.2 graph is still the one the host reads', () => {
+// chat-cowork-1to1 r1 (cowork-r1-01): the panel host (source-surfaces.jsx) is cut over to the -v4 graph; the 3.6556.2
+// output stays for its other readers, and no other host file imports the -v4 graph.
+test('the double output after the cutover: only the panel host reads the -v4 graph', () => {
   assert.equal(JSON.parse(local('src/generated/cowork-context/manifest.json')).referenceVersion, '3.6556.2');
   for (const name of fs.readdirSync(path.join(app, 'src'))) {
-    if (!/\.(jsx|mjs|js)$/.test(name) || name === 'source-cowork-context-v4-adapters.jsx') continue;
+    if (!/\.(jsx|mjs|js)$/.test(name) || name === 'source-cowork-context-v4-adapters.jsx' || name === 'source-surfaces.jsx') continue;
     assert.ok(!local(`src/${name}`).includes('generated/cowork-context-v4'), `src/${name} does not import the staged graph`);
   }
+  assert.match(local('src/source-surfaces.jsx'), /from '\.\/generated\/cowork-context-v4\/index\.mjs';/);
 });
 
 const cwd = '/Users/me/Work';

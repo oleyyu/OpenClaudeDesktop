@@ -3,34 +3,341 @@
 import {
   useProjectPermissions as Ef,
   useIntl as Lu,
+  FormattedMessage as Q,
   DeferredProjectMenu as XL,
   useProjectMenuItems as YL,
+  useAnalytics as Ya,
   DeferredProjectMenu as ZL,
+  CoworkSpaces as je,
+  useErrors as uo,
 } from "../../source-chat-projects-v4-adapters.jsx";
 import {
   cdsClassNames as Ce,
   CdsButton as W,
   CdsDropdown as Y,
+  CdsDialog as ce,
   CdsTooltip as de,
+  CdsTextInputField as le,
+  CdsTextAreaField as oe,
   CdsContextMenu as ye,
 } from "../cds-core/shared-frame.mjs";
+import { nn as Fu } from "../working-line-v4/define-messages.mjs";
+import { e as f } from "../working-line-v4/preload-helper.mjs";
 import {
   I2,
+  I3,
+  I5,
+  J0,
   J1,
   J2,
   J3,
   J4,
   J5,
   J9,
+  K0,
   K1,
   K2,
   K3,
   K4,
   K5,
+  Z1,
 } from "../working-line-v4/shared-frame.mjs";
+import { sb as Ei, MR as Qi, PR as sa } from "./shared-123.mjs";
 import { A$ as Pc } from "./shared-18.mjs";
 import { y1 as Pd } from "./shared-212.mjs";
+import { zG as sp } from "./shared-33.mjs";
+import { useRef as N, useState as x } from "react";
 import { Fragment as S, jsx as g, jsxs as v } from "react/jsx-runtime";
+function jI() {
+  Ei("sessionHostProjectsFailureLine");
+  let e = Fu({
+    defaultMessage: "Your change wasn\u2019t saved. {reason}",
+    id: "2Ly32a7ucD",
+  });
+  function t(t) {
+    let $ = J9(2),
+      { reason: n } = t;
+    return J1($, 0, n)
+      ? K1($, 0, n, g(Q, { ...e, values: { reason: g(Q, { ...n }) } }))
+      : $[1];
+  }
+  return (
+    (t.isPlainText = !0),
+    (e) => {
+      let n = sa(e);
+      if (!n) return;
+      let { message: r, connectFault: i } = Qi(n);
+      return i ? g(t, { reason: r }) : g(Q, { ...r });
+    }
+  );
+}
+var MI = jI();
+function NI(e) {
+  let $ = J9(16),
+    {
+      isOpen: t,
+      onClose: n,
+      spaceId: r,
+      spaceName: i,
+      spaceDescription: a,
+    } = e,
+    o = N(null),
+    s = sp(t);
+  if (!s.present) return null;
+  let c = J1($, 0, n) ? K1($, 0, n, (e) => !e && n()) : $[1],
+    l = J0($, 2)
+      ? K0(
+          $,
+          2,
+          g(ce.Header, {
+            children: g(Q, {
+              defaultMessage: "Edit details",
+              id: "h6iaDH57nU",
+            }),
+          }),
+        )
+      : $[2],
+    u = J5($, 3, s.open, n, a, r, i)
+      ? I5(
+          $,
+          3,
+          s.open &&
+            g(FI, {
+              nameInputRef: o,
+              spaceId: r,
+              spaceName: i,
+              spaceDescription: a,
+              onClose: n,
+            }),
+          s.open,
+          n,
+          a,
+          r,
+          i,
+        )
+      : $[8],
+    d = J1($, 9, u)
+      ? K1(
+          $,
+          9,
+          u,
+          v(ce.Popup, { size: "md", initialFocus: o, children: [l, u] }),
+        )
+      : $[10];
+  return J1($, 11, s.onOpenChangeComplete) || J3($, 12, s.open, c, d)
+    ? I3(
+        $,
+        12,
+        Z1(
+          $,
+          11,
+          g(ce.Root, {
+            open: s.open,
+            onOpenChange: c,
+            onOpenChangeComplete: s.onOpenChangeComplete,
+            children: d,
+          }),
+          s.onOpenChangeComplete,
+        ),
+        s.open,
+        c,
+        d,
+      )
+    : $[15];
+}
+async function PI(e, t) {
+  if (!(await je?.updateSpace?.(e, t)))
+    throw f(
+      Error("updateSpace returned falsy"),
+      "updateSpace returned falsy",
+      "literal",
+    );
+}
+function FI(e) {
+  let $ = J9(56),
+    {
+      nameInputRef: t,
+      spaceId: n,
+      spaceName: r,
+      spaceDescription: i,
+      onClose: a,
+    } = e,
+    o = Lu(),
+    { addError: s } = uo(),
+    { track: c } = Ya(),
+    [l, u] = x(r),
+    [d, f] = x(i ?? ""),
+    [p, m] = x(!1),
+    h = J1($, 0, r) ? K1($, 0, r, r.trim()) : $[1],
+    [_] = x(h),
+    y = i ?? "",
+    b = J1($, 2, y) ? K1($, 2, y, y.trim()) : $[3],
+    [S] = x(b),
+    C = J1($, 4, l) ? K1($, 4, l, l.trim()) : $[5],
+    w = J4($, 6, d, S, _, C)
+      ? K4($, 6, d, S, _, C, C !== _ || d.trim() !== S)
+      : $[10],
+    T = J5($, 11, s, d, a, S, _, n, c, C)
+      ? K5($, 11, s, d, a, S, _, n, c, C, async () => {
+          if (!C) return;
+          m(!0);
+          let e = {
+            ...(C === _ ? {} : { name: C }),
+            ...(d.trim() === S ? {} : { description: d.trim() }),
+          };
+          try {
+            (await PI(n, e),
+              c({
+                event_key: "claudeai.cowork.space.renamed",
+                space_id: n,
+                name_changed: C !== _,
+                description_changed: d.trim() !== S,
+              }),
+              a());
+          } catch (e) {
+            let t = e;
+            (s(
+              MI(t) ??
+                Fu({
+                  defaultMessage:
+                    "Failed to update project. You can try again.",
+                  id: "HRW0C+a9Kx",
+                }),
+              {
+                error: t,
+                errorContext: {
+                  tags: { source: "space_edit_name_description" },
+                },
+              },
+            ),
+              m(!1));
+          }
+        })
+      : $[19],
+    E = J1($, 20, T)
+      ? K1($, 20, T, (e) => {
+          (e.preventDefault(), T());
+        })
+      : $[21],
+    D = J1($, 22, o)
+      ? K1(
+          $,
+          22,
+          o,
+          o.formatMessage({ defaultMessage: "Name", id: "HAlOn1ZsuY" }),
+        )
+      : $[23],
+    O = J0($, 24) ? K0($, 24, (e) => u(e.target.value)) : $[24],
+    k = J4($, 25, p, l, t, D)
+      ? K4(
+          $,
+          25,
+          p,
+          l,
+          t,
+          D,
+          g(le, {
+            ref: t,
+            autoFocus: !0,
+            required: !0,
+            label: D,
+            value: l,
+            onChange: O,
+            disabled: p,
+            maxLength: 100,
+          }),
+        )
+      : $[29],
+    A = J1($, 30, o)
+      ? K1(
+          $,
+          30,
+          o,
+          o.formatMessage({ defaultMessage: "Description", id: "Q8Qw5BZ1VA" }),
+        )
+      : $[31],
+    j = J1($, 32, o)
+      ? K1(
+          $,
+          32,
+          o,
+          o.formatMessage({
+            defaultMessage: "Description (optional)",
+            id: "bZenNCYfSI",
+          }),
+        )
+      : $[33],
+    M = J0($, 34) ? K0($, 34, (e) => f(e.target.value)) : $[34],
+    N = J4($, 35, d, p, A, j)
+      ? K4(
+          $,
+          35,
+          d,
+          p,
+          A,
+          j,
+          g(oe, {
+            label: A,
+            placeholder: j,
+            value: d,
+            onChange: M,
+            disabled: p,
+            maxLength: 500,
+            rows: 6,
+            className: "max-h-60",
+          }),
+        )
+      : $[39],
+    P = J0($, 40)
+      ? K0($, 40, g(Q, { defaultMessage: "Cancel", id: "47FYwba+bI" }))
+      : $[40],
+    F = J2($, 41, p, a)
+      ? K2(
+          $,
+          41,
+          p,
+          a,
+          g(W, { type: "button", onClick: a, disabled: p, children: P }),
+        )
+      : $[43],
+    I = !C || !w,
+    L = J0($, 44)
+      ? K0($, 44, g(Q, { defaultMessage: "Save", id: "jvo0vs3nF0" }))
+      : $[44],
+    R = J2($, 45, p, I)
+      ? K2(
+          $,
+          45,
+          p,
+          I,
+          g(W, {
+            variant: "primary",
+            type: "submit",
+            disabled: I,
+            busy: p,
+            children: L,
+          }),
+        )
+      : $[47],
+    z = J2($, 48, F, R)
+      ? K2($, 48, F, R, v(ce.Footer, { align: "end", children: [F, R] }))
+      : $[50];
+  return J4($, 51, k, N, z, E)
+    ? K4(
+        $,
+        51,
+        k,
+        N,
+        z,
+        E,
+        v("form", {
+          className: "flex flex-col gap-4",
+          onSubmit: E,
+          children: [k, N, z],
+        }),
+      )
+    : $[55];
+}
 function GL(e) {
   let $ = J9(4);
   return KL(e)
@@ -157,4 +464,4 @@ function $L(e) {
       : $[44];
   return J2($, 45, O, P) ? K2($, 45, O, P, v(S, { children: [P, O] })) : $[47];
 }
-export { GL };
+export { NI as ProjectEditDetailsDialog, GL };

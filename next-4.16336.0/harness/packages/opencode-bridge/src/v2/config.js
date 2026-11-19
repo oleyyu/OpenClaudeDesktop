@@ -16,6 +16,7 @@
  *     plugins     Plugins added in OpenClaude Desktop
  *     websearch   false when '{core} settings' › web search is off (on or unset: OpenCode's own selection, so the
  *                 provider a user's own config chose stands)
+ *     policies    provider.use deny `opencode` when '{core} settings' › OpenCode Zen models is off
  *     share       'manual'
  *     + the file the user's own OPENCODE_CONFIG named (merged under the bridge's keys, its relative paths anchored: a
  *       copy, so a key written literally in it is copied too; it is re-read at the bridge's next rewrite only)
@@ -40,7 +41,7 @@
  */
 import fs from 'node:fs'
 import path from 'node:path'
-import { BridgeConfig, ROUTE, agentShell, parseJsonc, providerKeyEnv, readJson, sdkBaseURL, writeAtomic } from '../config.js'
+import { BridgeConfig, ROUTE, agentShell, parseJsonc, providerKeyEnv, providerModelInfo, readJson, sdkBaseURL, writeAtomic } from '../config.js'
 import { storedCoreSettings } from '../core-settings.js'
 import { appToolsServer, devtoolsServer, devtoolsEnv } from '../app-tools.js'
 import { PLUGIN_ENTRY, PLUGIN_ID, pluginSourceV2 } from './plugin.js'
@@ -90,8 +91,11 @@ export function providerOverlayV2(providers, env = process.env) {
     const models = {}
     for (const id of Array.isArray(provider.models) ? provider.models : []) {
       if (typeof id !== 'string' || !id) continue
-      const meta = isRecord(provider.modelInfo?.[id]) ? provider.modelInfo[id] : {}
+      // The user's image and context-window marks win over the app's family facts (../config.js providerModelInfo); its
+      // output 0 means "the agent's default", which v2 would read as a real cap.
+      const meta = providerModelInfo(provider, id)
       const limit = ints(meta.limit)
+      if (limit?.output === 0) delete limit.output
       // Unset capabilities fall back to v2's defaults, which take images: a model without attachments says text only.
       models[id] = {
         name: meta.name ?? id,
@@ -362,6 +366,9 @@ export class BridgeConfigV2 extends BridgeConfig {
     // '{core} settings' › web search (core-settings.js): off is `websearch: false`; on is OpenCode's own selection (a
     // provider written here would come after the user's documents and override the one they chose).
     if (storedCoreSettings(settings, this.flavor)['websearch.enabled'] === false) config.websearch = false
+    // '{core} settings' › OpenCode Zen models off: OpenCode's own provider is denied (v1's disabled_providers, as v2
+    // normalizes it: config/normalize.ts normalizePolicies), so neither its model list nor its default offers it.
+    if (storedCoreSettings(settings, this.flavor)['models.zen'] === false) config.policies = [{ action: 'provider.use', resource: 'opencode', effect: 'deny' }]
     const user = this.userConfigFile()
     if (user) {
       let value = null

@@ -51,7 +51,7 @@ const ADAPTER_FILE = 'src/source-artifact-library-v4-adapters.jsx';
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
 
 // The cds-core graph this area was reviewed against (cds-core wave 6, cds-integrate/wave6/apply-real.json).
-export const CDS_CORE_MANIFEST_SHA256 = '06d2026939e5c8992713c2a0dda1b1abc9adffe7a0c223fe3c1e79eecd08d62c';
+export const CDS_CORE_MANIFEST_SHA256 = 'a0f228ae3f997f54f3e3ebafc254794bd26d8f1fc6999943a08b1d5730f638cd';
 
 export const PAGE = 'c230724a2-qhV7Crzy.js';
 export const THUMB = 'c33ae67d6-D8ma6JPd.js';
@@ -140,9 +140,9 @@ export const HOST_ADAPTERS = {
     why: 'Shared-artifact owner names (org members query) are not available: the host has no account; every row answers undefined, as for a card of your own.' },
   // 3.6556.2 cbbbbbd87 N: the claude.ai chat artifact preview (published screenshot or a markdown / code excerpt); B
   // renders it only for source "chat".
-  'c33ae67d6-D8ma6JPd.js#j': { name: 'ChatArtifactPreview', from: null,
+  'c33ae67d6-D8ma6JPd.js#j': { name: 'ChatArtifactPreview', from: 'src/source-artifact-chat-preview.jsx',
     features: ['{ title: n, type: r, preview: i, publishedArtifactUuid: o } = e,', '`/public/artifacts/${o}/screenshot`', 'className: "artifact-markdown-preview",'],
-    why: 'claude.ai chat artifact previews (published screenshot, markdown excerpt) are not shown: host items are local cowork files (source "cowork"); null.' },
+    why: 'Chat artifact previews follow the original (markdown / text / code excerpt from previewText, else the type icon) in src/source-artifact-chat-preview.jsx; no published screenshot (no claude.ai publishing).' },
   // 3.6556.2 shared-25 Cx (RouterLink): B's card anchor for an in-app href; RoutinesSharedHost's navigate.
   'shared-25-D-aF0gt9.js#Ky': { name: 'RouterLink', from: RS, features: ['href: t,', 'replace: a,', 'scroll: s,', 'prefetch: r,', 'onClick: n,', 'target: c,', 'ref: i,'],
     why: 'In-app links go through the host router (RoutinesSharedHost navigate), as for the 3.6556.2 graph.' },

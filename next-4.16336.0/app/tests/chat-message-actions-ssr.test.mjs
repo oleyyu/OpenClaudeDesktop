@@ -42,7 +42,7 @@ after(async () => { i18n?.setLocale('en-US'); await closeWhenSettled(server); aw
 
 const attrs = (html, testid) => html.match(new RegExp(`<button [^>]*data-testid="${testid}"[^>]*>`))?.[0] ?? '';
 const toolbar = (props = {}) => renderToStaticMarkup(h(actions.SourceChatMessageActions, { conversationUuid: 't1', itemId: 'i1', text: 'Hi',
-  onFeedback: async () => {}, onRetry: () => {}, onVersion: () => {}, ...props }));
+  onFeedback: async () => {}, onRetry: () => {}, onVersion: () => {}, /* chat-conversation r1-01: the last reply's toolbar is drawn (JY alwaysVisible: Pt); an earlier one defers (He) */ last: true, ...props }));
 
 test('official evidence: lI (cc1aae219) and its copy ids in the 3.6556.2 catalog', () => {
   const text = official('cc1aae219-CeSwM-tp.js');

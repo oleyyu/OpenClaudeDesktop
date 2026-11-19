@@ -36,7 +36,7 @@ import { AgentServer } from './server.js'
 import { BridgeConfig, readJson, toCodexMcp, toOpencodeMcp, writeAtomic } from './config.js'
 import { appToolsServer, appToolsPrefix, SESSION_ARG } from './app-tools.js'
 import { ThreadStore } from './store.js'
-import { ModelCatalog, splitModel, variantOf, workingWindow } from './models.js'
+import { ModelCatalog, declaredModels, splitModel, variantOf, workingWindow } from './models.js'
 import { authFile, credentialOf, providerRank, storedCredentials } from './credentials.js'
 import { freeTierActive } from './flavor.js'
 import { MIMO_TOP_RUN, Projector, actorErrorLine, actorThreadId, errorInfoOf, execSubParts, isDefaultTitle, isExecScript, mcpServerOf, messageSliceQuery, parseActorThreadId, planOf, taskPlanOf, tokenBreakdown, addBreakdown, emptyBreakdown, toolItem, turnDiff } from './projection.js'
@@ -340,9 +340,11 @@ export class Bridge {
     this.appTools = appToolsServer(env)
     this.store = new ThreadStore(stateDir)
     this.settingsFile = path.join(stateDir, 'settings.json')
+    // Custom providers list only the models the user added (models.js declaredModels).
+    const declared = () => declaredModels(this.config.providers())
     this.catalog = flavor?.api === 'v2'
-      ? new CatalogV2(() => this.v2Api(), { location: () => this.homeDir() })
-      : new ModelCatalog(() => this.api('GET', '/config/providers', { directory: this.homeDir() }), { rank: (provider) => providerRank(provider, this.credentialContext()) })
+      ? new CatalogV2(() => this.v2Api(), { location: () => this.homeDir(), declared })
+      : new ModelCatalog(() => this.api('GET', '/config/providers', { directory: this.homeDir() }), { rank: (provider) => providerRank(provider, this.credentialContext()), declared })
     this.mcpTools = new McpToolCache({ log })
     this.usageCache = new UsageCache()
     /** @type {Map<string, LiveThread>} root threads loaded here */
@@ -876,12 +878,23 @@ export class Bridge {
   async renameSession(id, name) {
     this.store.update(id, { name: name || undefined })
     if (!name || parseActorThreadId(id)) return
+    this.pendingRenames ??= new Map()
+    const writeTitle = async () => {
+      try {
+        // MiMo guards renames with the title revision it last reported.
+        const info = this.flavor.id === 'mimo' ? await this.sessionInfo(id) : null
+        if (this.v2) await (await this.v2Api()).patch(`/api/session/${encodeURIComponent(id)}`, { title: name })
+        else await this.api('PATCH', `/session/${encodeURIComponent(id)}`, { directory: this.store.get(id).cwd, body: { title: name, ...(Number.isInteger(info?.titleRevision) ? { expectedRevision: info.titleRevision } : {}) } })
+      } catch (error) { this.log(`rename ${id}: ${error?.message}`) }
+    }
+    const previous = this.pendingRenames.get(id)
+    const pending = previous ? previous.then(writeTitle) : writeTitle()
+    this.pendingRenames.set(id, pending)
     try {
-      // MiMo guards renames with the title revision it last reported.
-      const info = this.flavor.id === 'mimo' ? await this.sessionInfo(id) : null
-      if (this.v2) await (await this.v2Api()).patch(`/api/session/${encodeURIComponent(id)}`, { title: name })
-      else await this.api('PATCH', `/session/${encodeURIComponent(id)}`, { directory: this.store.get(id).cwd, body: { title: name, ...(Number.isInteger(info?.titleRevision) ? { expectedRevision: info.titleRevision } : {}) } })
-    } catch (error) { this.log(`rename ${id}: ${error?.message}`) }
+      await pending
+    } finally {
+      if (this.pendingRenames.get(id) === pending) this.pendingRenames.delete(id)
+    }
   }
 
   /**
@@ -1482,10 +1495,14 @@ export class Bridge {
     return true
   }
 
-  /** Restart the agent server when nothing runs (threads reload their history on the new stream). */
+  /**
+   * Restart the agent server when nothing runs (threads reload their history on the new stream). False when it
+   * didn't (a chat runs or an ask waits: the config reloads instead); the caller sets pendingRestart.
+   */
   async restartServer() {
     const busy = [...this.threads.values(), ...this.children.values()].some((thread) => thread.busy || thread.activeTurn || thread.pending.size)
-    if (busy || !this.server) return this.reloadConfig()
+    if (busy) { await this.reloadConfig(); return false }
+    if (!this.server) return this.reloadConfig()
     const old = this.server
     this.stopEvents?.()
     this.server = null
@@ -1611,9 +1628,11 @@ export class Bridge {
           try { await this.api('DELETE', `/auth/${encodeURIComponent(provider)}`, {}) } catch (error) { this.log(`sign out ${provider}: ${error?.message}`) }
         }
         // Provider state is cached per instance: idle instances reload without the credential
-        // (MiMo keeps its provider list for the life of the server: it restarts when idle).
-        if (this.flavor.id === 'mimo') await this.restartServer()
-        else await this.reloadConfig()
+        // (MiMo keeps its provider list for the life of the server: it restarts now, or once nothing runs).
+        if (this.flavor.id === 'mimo') {
+          const restarted = await this.restartServer().catch((error) => { this.log(`restart after sign out: ${error?.message}`); return false })
+          if (!restarted) this.pendingRestart = true
+        } else await this.reloadConfig()
         this.notify('account/updated', { authMode: null })
         return {}
       }
@@ -1709,7 +1728,7 @@ export class Bridge {
         const id = this.requireId(params.threadId)
         const name = typeof params.name === 'string' ? params.name.trim() : ''
         await this.renameSession(id, name)
-        this.notify('thread/name/updated', { threadId: id, ...(name ? { threadName: name } : {}) })
+        if ((this.store.get(id).name ?? '') === name) this.notify('thread/name/updated', { threadId: id, ...(name ? { threadName: name } : {}) })
         return {}
       }
       case 'thread/archive': {
@@ -1811,7 +1830,8 @@ export class Bridge {
         // A MiMo actor can't be stopped on its own: aborting its session would stop every sub-agent and the main turn
         // while the app showed only this one stopped. Stopping the main turn stops them all.
         if (thread?.actor || (!thread && parseActorThreadId(id))) throw new RpcError(-32600, 'MiMo can’t stop one sub-agent on its own. Stop the main turn to stop all of its sub-agents.')
-        if (thread) await thread.interrupt()
+        if (thread) await thread.interrupt(params.turnId)
+        else if (params.turnId) return {}
         else if (this.v2) await this.v2Api().then((api) => api.interrupt(id)).catch(() => {})
         else await this.api('POST', `/session/${encodeURIComponent(id)}/abort`, { directory: this.store.get(id).cwd }).catch(() => {})
         return {}
@@ -2035,6 +2055,7 @@ export class Bridge {
     if (!entry || entry.done) throw new RpcError(INVALID_PARAMS, 'This sign-in has already finished. Start it again.')
     const code = typeof params.code === 'string' ? params.code.trim() : ''
     if (!code || code.length > 8192 || /\s/.test(code)) throw new RpcError(INVALID_PARAMS, 'Paste the whole code from the browser.')
+    if (entry.claudeLogin) return this.claudeLoginCodeV2(entry, code)
     if (entry.v2 || this.v2) return this.loginCodeV2(entry, params.loginId, code)
     try {
       await this.api('POST', `/provider/${encodeURIComponent(entry.provider)}/oauth/callback`, { directory: this.homeDir(), body: { method: entry.method, code }, timeout: 60000 })
@@ -2806,11 +2827,50 @@ export class Bridge {
       if (turns[index].status === 'inProgress') throw invalidParams('The turn to fork through is still running.')
       messageID = turns[index + 1]?.id
     }
-    const info = await this.api('POST', `/session/${encodeURIComponent(source.id)}/fork`, { directory: source.cwd, body: messageID ? { messageID } : {} })
+    return this.finishFork(source, params, async () => this.api('POST', `/session/${encodeURIComponent(source.id)}/fork`, {
+      directory: source.cwd, body: messageID ? { messageID } : {},
+    }))
+  }
+
+  /** Retry the hydration of a fork already accepted by the native core. */
+  async finishFork(source, params, create) {
+    const key = JSON.stringify([source.id, params.lastTurnId ?? null, params.cwd ?? null])
+    const unfinished = this.unfinishedForks ??= new Map()
+    const now = Date.now()
+    for (const [entry, value] of unfinished) if (value.expires <= now) unfinished.delete(entry)
+    const prior = unfinished.get(key)
+    const info = prior?.info ?? await create()
+    unfinished.delete(key)
     const meta = this.store.get(source.id)
     this.store.update(info.id, { cwd: info.directory ?? source.cwd, forkedFrom: source.id, lastActivity: Date.now(), preview: meta.preview, permission: meta.permission, tools: meta.tools, custom: meta.custom, importBlocks: meta.importBlocks })
-    const thread = await this.openThread(info.id)
-    await thread.applyParams(params)
+    let thread
+    try {
+      thread = await this.openThread(info.id)
+      const sourceUsers = source.projector.ordered().filter((entry) => entry.info.role === 'user')
+      const forkUsers = thread.projector.ordered().filter((entry) => entry.info.role === 'user')
+      const inputs = {}
+      const steers = []
+      const repairedCreated = {}
+      const sourceSteers = new Set(meta.steers ?? [])
+      // Both cores copy the prefix's user messages in order, possibly under new ids.
+      for (const [index, entry] of forkUsers.entries()) {
+        const original = sourceUsers[index]?.info
+        if (!original) continue
+        const sourceCreated = source.projector.messages.get(original.id)?.info.time?.created
+        if (original.id !== entry.info.id && sourceCreated !== entry.info.time?.created) continue
+        if (sourceSteers.has(original.id)) steers.push(entry.info.id)
+        if (meta.inputs?.[original.id]) inputs[entry.info.id] = meta.inputs[original.id]
+        if (Number.isFinite(meta.repairedCreated?.[original.id])) repairedCreated[entry.info.id] = meta.repairedCreated[original.id]
+      }
+      if (steers.length || Object.keys(inputs).length || Object.keys(repairedCreated).length) {
+        this.store.update(info.id, { steers, inputs, repairedCreated })
+        thread.projector.meta = this.store.get(info.id)
+      }
+      await thread.applyParams(params)
+    } catch (error) {
+      unfinished.set(key, { info, expires: Date.now() + 60_000 })
+      throw error
+    }
     const response = thread.sessionResponse({ includeTurns: params.excludeTurns !== true })
     this.notify('thread/started', { thread: response.thread })
     return response
@@ -3013,7 +3073,11 @@ export class Bridge {
     for (const thread of this.threads.values()) thread.close('OpenClaude Desktop core stopped.')
     // A workflow runner's bridge takes its agents' sessions with it (the runner never deletes them itself).
     // (Only while the agent server still runs: a dead one is not restarted for it; the app's next sweep gets them.)
-    if (!this.v2 && this.server?.child && this.server.url && (this.config.runnerDir || this.clientName === WORKFLOW_CLIENT)) await this.removeWorkflowSessions({ own: true, timeoutMs: 800 }).catch(() => {})
+    const server = this.server
+    if (server?.child && server.url && (this.config.runnerDir || this.clientName === WORKFLOW_CLIENT)) {
+      const api = this.v2 ? new V2Api({ request: server.send.bind(server) }, { retryDelays: [] }) : undefined
+      await this.removeWorkflowSessions({ own: true, timeoutMs: 800, api }).catch(() => {})
+    }
     this.store.flush()
     await this.server?.stop()
   }
@@ -3023,7 +3087,7 @@ export class Bridge {
    * own, the ones this runner bridge created or resumed; otherwise (the app's bridge, once per start) the ones a runner
    * that is gone left behind (it was killed before it could). A failure leaves the session for the next sweep.
    */
-  async removeWorkflowSessions({ own = false, limit = 500, timeoutMs = 8000, concurrency = 6 } = {}) {
+  async removeWorkflowSessions({ own = false, limit = 500, timeoutMs = 8000, concurrency = 6, api } = {}) {
     const alive = (pid) => {
       if (!Number.isInteger(pid) || pid <= 0) return false
       if (pid === process.pid) return true
@@ -3044,7 +3108,7 @@ export class Bridge {
         if (Date.now() > deadline) return
         try {
           const timeout = Math.max(300, deadline - Date.now())
-          if (this.v2) await (await this.v2Api()).delete(`/api/session/${encodeURIComponent(id)}`, { timeout })
+          if (this.v2) await (api ?? await this.v2Api()).delete(`/api/session/${encodeURIComponent(id)}`, { timeout })
           else await this.api('DELETE', `/session/${encodeURIComponent(id)}`, { directory: this.store.get(id).cwd, timeout })
         } catch (error) {
           if (error?.status !== 404) { this.log(`workflow session ${id}: ${error?.message}`); continue }
@@ -3241,8 +3305,13 @@ export class LiveThread {
         body: { messageID, noReply: true, parts: parts.length ? parts : fallback.length ? fallback : [{ type: 'text', text: '(structured request)' }], ...(info.agent ? { agent: info.agent } : {}), ...(info.model ? { model: { providerID: info.model.providerID, modelID: info.model.modelID } } : {}) },
       })
     } finally { setTimeout(() => this.repairing?.delete(messageID), 5000).unref?.() }
-    const structured = (this.store.get(this.sessionID).structured ?? []).filter((id) => id !== messageID)
-    this.store.update(this.sessionID, { structured: structured.length ? structured : undefined })
+    const meta = this.store.get(this.sessionID)
+    const structured = (meta.structured ?? []).filter((id) => id !== messageID)
+    // Recreating the user row gives it a later timestamp than its own answer.
+    const originalCreated = info.time?.created
+    this.store.update(this.sessionID, { structured: structured.length ? structured : undefined,
+      ...(Number.isFinite(originalCreated) ? { repairedCreated: { ...meta.repairedCreated, [messageID]: originalCreated } } : {}) })
+    this.projector.meta = this.store.get(this.id)
   }
 
   async reload() {
@@ -3306,11 +3375,13 @@ export class LiveThread {
   }
 
   async readV2({ live }) {
+    const observedTurn = this.activeTurn
     const api = await this.bridge.v2Api()
-    const [info, messages, active] = await Promise.all([
+    // Read activity before history so an idle sample cannot close a turn using a snapshot taken before its last write.
+    const active = await api.active().catch((error) => { this.bridge.log(`active sessions: ${error?.message || error}`); return null })
+    const [info, messages] = await Promise.all([
       this.bridge.sessionInfo(this.id),
       readMessages(api, this.sessionID),
-      api.active().catch((error) => { this.bridge.log(`active sessions: ${error?.message || error}`); return {} }),
       this.bridge.refreshMcpNames(this.cwd),
     ])
     if (info) { this.info = info; this.projector.revert = info.revert ?? null }
@@ -3319,23 +3390,34 @@ export class LiveThread {
     // Live events continue from what was read (v2/turns.js): its messages, the inbox not yet delivered, open asks.
     if (live) await this.reloadedV2(messages)
     // As reload() does on 1.x, from here on.
-    const busy = Object.hasOwn(active, this.sessionID)
-    if (!busy && (this.busy || this.activeTurn)) this.finishTurn()
+    const busy = active ? Object.hasOwn(active, this.sessionID) : this.busy || Boolean(this.activeTurn)
+    const current = this.activeTurn
+    const projected = live && current ? this.projector.turns().find((turn) => turn.id === current.id) : null
+    const waitingForDelivery = live && current && this.liveV2().inbox.has(current.id)
+    const runningShell = current?.kind === 'shell' && projected?.status === 'inProgress'
+    if (current === observedTurn && (projected?.idle || (!busy && !waitingForDelivery && !runningShell && (this.busy || current)))) {
+      this.finishTurn({ continuing: busy, recoverHistory: live })
+    }
     this.busy = busy
     if (busy && !this.activeTurn) {
       const last = this.projector.turns({ busy: true }).at(-1)
       if (last?.status === 'inProgress') {
-        this.activeTurn = { id: last.id, startedMs: last.startedMs ?? Date.now() }
-        for (const item of last.items) this.items.set(item.id, { started: true, completed: item.status && item.status !== 'inProgress', len: item.text?.length ?? item.aggregatedOutput?.length ?? 0 })
+        const kind = last.kind === 'compaction' || last.kind === 'shell' ? last.kind : 'external'
+        this.activeTurn = { id: last.id, startedMs: last.startedMs ?? Date.now(), kind }
+        for (const item of last.items) this.items.set(item.id, { started: true, completed: item.status && item.status !== 'inProgress', len: item.text?.length ?? item.aggregatedOutput?.length ?? 0, item })
       }
     }
     this.mapTurns()
     this.totals = this.projector.usage().total
+    this.usageSeen = new Set([...this.projector.messages.values()].filter(({ info }) => info.role === 'assistant' && info.tokens).map(({ info }) => info.id))
   }
 
   mapTurns() {
     for (const turn of this.projector.turns({ busy: this.busy })) {
       for (const message of turn.assistant) this.turnOf.set(message.info.id, turn.id)
+      if (this.bridge.v2) for (const item of turn.items) {
+        if (item.type === 'commandExecution' && item.id.endsWith(':shell')) this.turnOf.set(item.id.slice(0, -6), turn.id)
+      }
       this.turnOf.set(turn.id, turn.id)
     }
     for (const steer of this.store.get(this.id).steers ?? []) if (!this.turnOf.has(steer)) this.turnOf.set(steer, this.activeTurn?.id ?? steer)
@@ -3405,11 +3487,22 @@ export class LiveThread {
   }
 
   pageTurns({ limit, sortDirection, cursor, itemsView = 'full' } = {}) {
-    const ordered = this.turns().map((turn) => this.projector.snapshot(turn, itemsView === 'notLoaded' ? 'notLoaded' : 'full'))
+    const ordered = this.turns().slice()
     if (sortDirection !== 'asc') ordered.reverse()
-    const start = cursor ? Number.parseInt(String(cursor), 10) || 0 : 0
+    let start = 0
+    if (typeof cursor === 'string' && cursor.startsWith('after:')) {
+      const index = ordered.findIndex((turn) => turn.id === cursor.slice('after:'.length))
+      // A rewind can remove the anchor. Ask for a fresh first page in that case.
+      if (index < 0) throw invalidParams('The history changed. Reload before continuing to page through turns.')
+      start = index + 1
+    } else if (cursor) {
+      // Accept offsets issued by older builds.
+      start = Math.max(0, Number.parseInt(String(cursor), 10) || 0)
+    }
     const size = Number.isInteger(limit) && limit > 0 ? limit : 25
-    return { data: ordered.slice(start, start + size), nextCursor: start + size < ordered.length ? String(start + size) : null, backwardsCursor: null }
+    const page = ordered.slice(start, start + size)
+    const view = itemsView === 'notLoaded' ? 'notLoaded' : 'full'
+    return { data: page.map((turn) => this.projector.snapshot(turn, view)), nextCursor: start + size < ordered.length ? `after:${page.at(-1).id}` : null, backwardsCursor: null }
   }
 
   /** Replay what only live notifications carry (context usage, the plan) after a resume. */
@@ -3440,6 +3533,8 @@ export class LiveThread {
     // codeDesktop.dynamicWorkflows: whether MiMo's own `workflow` tool is offered (absent keeps the last value; never set = off).
     const workflows = params.codeDesktop?.dynamicWorkflows
     if (typeof workflows === 'boolean' && workflows !== this.dynamicWorkflows) { this.dynamicWorkflows = workflows; rulesChanged = true }
+    // codeDesktop.promptSuggestions: Settings › Prompt suggestions (absent keeps the last value; never set = on).
+    if (typeof params.codeDesktop?.promptSuggestions === 'boolean') this.promptSuggestions = params.codeDesktop.promptSuggestions
     const custom = params.codeDesktop?.customization
     if (isRecord(custom)) {
       const next = { ...this.custom }
@@ -3589,7 +3684,8 @@ export class LiveThread {
       else if (item?.type === 'mention' && typeof item.path === 'string') {
         let directory = false
         try { directory = fs.statSync(item.path).isDirectory() } catch {}
-        parts.push({ type: 'file', mime: directory ? 'application/x-directory' : mimeOf(item.path, 'text/plain'), filename: item.name || path.basename(item.path), url: pathUrl(item.path) })
+        const inlineMime = /^data:([^;,]+)[;,]/i.exec(item.path)?.[1]
+        parts.push({ type: 'file', mime: inlineMime ?? (directory ? 'application/x-directory' : mimeOf(item.path, 'text/plain')), filename: item.name || path.basename(item.path), url: inlineMime ? item.path : pathUrl(item.path) })
       } else if (item?.type === 'skill' && typeof item.name === 'string') {
         // A slash command: the agent's own or an MCP prompt (command:<name>), or one the user wrote, listed with its file.
         const file = String(item.path ?? '')
@@ -3685,7 +3781,7 @@ export class LiveThread {
   }
 
   async startTurn(params) {
-    if (this.busy || this.activeTurn || (this.bridge.v2 && this.startingTurn)) throw new RpcError(-32600, 'A turn is already running. Steer it or queue the message.', { codexErrorInfo: { activeTurnNotSteerable: { turnKind: 'regular' } } })
+    if (this.busy || this.activeTurn || (this.bridge.v2 && (this.startingTurn || this.interruptingV2))) throw new RpcError(-32600, 'A turn is already running. Steer it or queue the message.', { codexErrorInfo: { activeTurnNotSteerable: { turnKind: 'regular' } } })
     // OpenCode 2.x: claimed until its user message arrives (onMessage sets activeTurn; planApprovedV2 claims it the same
     // way): another start meanwhile would post a prompt too.
     if (this.bridge.v2) {
@@ -3713,7 +3809,14 @@ export class LiveThread {
     let info
     try {
       if (command) {
-        const args = firstText.replace(new RegExp(`^\\s*/${command.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b\\s*`), '')
+        const texts = parts.filter((part) => part.type === 'text')
+        const separated = params.input?.some((item) => item?.type === 'skill' && item.commandArgumentsSeparated === true)
+        const token = `/${command}`.toLowerCase()
+        const prepared = firstText.trimStart()
+        const rest = prepared.slice(token.length)
+        const raw = !separated && prepared.slice(0, token.length).toLowerCase() === token && (!rest || /^\s/.test(rest))
+          ? rest.trimStart() : firstText
+        const args = [raw, ...texts.slice(texts.findIndex((part) => !part.synthetic) + 1).map((part) => part.text)].filter(Boolean).join('\n\n')
         const model = this.turnModel() ?? ''
         const variant = this.variant()
         info = await this.post('command', params.input, `/session/${encodeURIComponent(this.sessionID)}/command`, { command, arguments: args, agent: this.agentName(), ...(model ? { model } : {}), ...(variant ? { variant } : {}), parts: parts.filter((part) => part.type === 'file') })
@@ -3758,9 +3861,14 @@ export class LiveThread {
   async steer(params) {
     if (this.bridge.v2) return this.steerV2(params)
     const active = this.activeTurn
-    if (!active || (params.expectedTurnId && params.expectedTurnId !== active.id) || active.kind === 'compaction')
-      throw new RpcError(-32600, 'No active turn to steer.', { codexErrorInfo: { activeTurnNotSteerable: { turnKind: active?.kind === 'compaction' ? 'compact' : 'regular' } } })
-    const { parts } = await this.parts(params.input)
+    const checkActive = () => {
+      if (!active || this.activeTurn !== active || (params.expectedTurnId && params.expectedTurnId !== active.id) || active.kind === 'compaction')
+        throw new RpcError(-32600, 'No active turn to steer.', { codexErrorInfo: { activeTurnNotSteerable: { turnKind: active?.kind === 'compaction' ? 'compact' : 'regular' } } })
+    }
+    checkActive()
+    const { parts, command } = await this.parts(params.input)
+    if (command) throw invalidParams('An OpenCode command cannot be steered into an active turn. Queue it to run after the current turn.')
+    checkActive()
     this.held = true
     let info
     try { info = await this.post('steer', params.input, this.promptRoute('steer'), this.promptBody(parts)) } catch (error) { this.release(); throw error }
@@ -3814,13 +3922,14 @@ export class LiveThread {
     return { turn, reviewThreadId: this.id }
   }
 
-  async interrupt() {
+  async interrupt(expectedTurnId) {
+    if (expectedTurnId && expectedTurnId !== this.activeTurn?.id) return
     if (this.bridge.v2) return this.interruptV2()
+    const turnId = this.activeTurn?.id
     for (const entry of [...this.pending.values()]) entry.abort('Turn interrupted.')
     this.interrupted = true
     await this.bridge.api('POST', `/session/${encodeURIComponent(this.sessionID)}/abort`, { directory: this.cwd }).catch((error) => this.bridge.log(`abort ${this.id}: ${error?.message}`))
     // A turn whose session is already idle (aborted before it started) closes here.
-    const turnId = this.activeTurn?.id
     setTimeout(() => { if (turnId && this.activeTurn?.id === turnId && !this.busy) this.finishTurn() }, 1500)
   }
 
@@ -3888,7 +3997,7 @@ export class LiveThread {
   }
 
   startNext() {
-    if (this.closed || this.busy || this.activeTurn || (this.bridge.v2 && this.startingTurn) || !this.queue.length || this.pausedQueue) return
+    if (this.closed || this.busy || this.activeTurn || (this.bridge.v2 && (this.startingTurn || this.interruptingV2)) || !this.queue.length || this.pausedQueue) return
     const entry = this.queue.shift()
     this.queueChanged()
     void this.startTurn({ input: entry.input }).catch((error) => {
@@ -4381,7 +4490,7 @@ export class LiveThread {
    * runs on into the next turn (OpenCode 2.x: a queued prompt delivered in the same execution), so it stays busy and the
    * queue waits.
    */
-  finishTurn({ continuing = false } = {}) {
+  finishTurn({ continuing = false, recoverHistory = false } = {}) {
     const active = this.activeTurn
     if (this.reviewRestore) void this.endReview().catch((error) => this.bridge.log(`end review ${this.id}: ${error?.message ?? error}`))
     if (!continuing) this.busy = false
@@ -4397,10 +4506,11 @@ export class LiveThread {
     else if (this.interrupted) { status = 'interrupted'; error = null }
     else if (this.turnError) { status = 'failed'; error = this.turnError }
     else if (status === 'interrupted') error = null
+    const finalAnswer = recoverHistory ? turn?.items?.findLast((item) => item.type === 'agentMessage') : null
     for (const item of turn?.items ?? []) {
       const state = this.items.get(item.id)
-      if (state?.completed || item.type === 'userMessage' || item.type === 'enteredReviewMode') continue
-      if (item.type === 'exitedReviewMode' || item.type === 'contextCompaction' || state?.started) this.emitItem(active.id, item, { done: true })
+      if (state?.completed || item.type === 'userMessage' || item.type === 'enteredReviewMode' || this.isRunningShellV2?.(item.id)) continue
+      if (item === finalAnswer || item.type === 'exitedReviewMode' || item.type === 'contextCompaction' || state?.started) this.emitItem(active.id, item, { done: true })
     }
     this.activeTurn = null
     this.interrupted = false
@@ -4411,14 +4521,15 @@ export class LiveThread {
     this.store.update(this.id, { lastActivity: completed })
     this.emit('turn/completed', { threadId: this.id, turn: { id: active.id, items: [], itemsView: 'notLoaded', status, error, startedAt: seconds(active.startedMs), completedAt: seconds(completed), durationMs: Math.max(0, completed - active.startedMs) } })
     this.publishStatus()
-    this.items.clear()
+    for (const id of this.items.keys()) if (!this.isRunningShellV2?.(id)) this.items.delete(id)
     if (continuing) return
     if (this.root) this.publishStatus({ type: 'idle' })
     this.bridge.maybePendingReload()
     // MiMo's next-prompt prediction (experimental.predict_next_prompt, on by default; the TUI's ghost text after each
     // turn): POST /session/:id/predict, sent to the app as codeDesktop/promptSuggestion. Root sessions only, and not a
-    // workflow agent's (the runner shows no composer: a model request nobody would see).
-    if (this.flavor.id === 'mimo' && !this.root && !this.actor && status === 'completed' && this.bridge.clientName !== WORKFLOW_CLIENT) void this.predictNext(active.id)
+    // workflow agent's (the runner shows no composer: a model request nobody would see), and not with Settings ›
+    // Prompt suggestions off (turn/start codeDesktop.promptSuggestions false: the app would only hide it).
+    if (this.flavor.id === 'mimo' && !this.root && !this.actor && status === 'completed' && this.promptSuggestions !== false && this.bridge.clientName !== WORKFLOW_CLIENT) void this.predictNext(active.id)
     const repairs = this.actor ? [] : this.store.get(this.sessionID).structured ?? []
     const next = () => { if (status !== 'interrupted' || this.queue.length) this.startNext() }
     if (repairs.length) void Promise.all(repairs.map((id) => this.repairStructured(id).catch((error) => this.bridge.log(`structured repair ${id}: ${error?.message}`)))).finally(next)
@@ -4612,6 +4723,8 @@ export class LiveThread {
     } finally {
       this.pending.delete(id)
       if (!this.closed) this.publishStatus()
+      // The last ask of an idle thread answered: a restart or reload held for it runs now (a turn's end does the rest).
+      if (!this.closed && !this.pending.size && !this.busy && !this.activeTurn) this.bridge.maybePendingReload()
     }
   }
 

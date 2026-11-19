@@ -121,19 +121,15 @@ export const BRIDGE_V2 = {
       if (turns[index].status === 'inProgress') throw invalidParams('The turn to fork through is still running.')
       before = this.turnMessageV2(source, turns[index + 1])
     }
-    const api = await this.v2Api()
-    const info = source.projector.messages.size
-      ? toV1Session(await api.post(`/api/session/${encodeURIComponent(source.id)}/fork`, before ? { before } : {}))
-      : (await this.createSessionV2(params, source.cwd)).info
-    // Its own root for its sub-agents (a fork may copy the source's metadata).
-    await api.patch(`/api/session/${encodeURIComponent(info.id)}`, { metadata: { ...(isRecord(info.metadata) ? info.metadata : {}), codeDesktop: { root: info.id } } }).catch((error) => this.log(`fork metadata ${info.id}: ${error?.message}`))
-    const meta = this.store.get(source.id)
-    this.store.update(info.id, { cwd: info.directory ?? source.cwd, forkedFrom: source.id, lastActivity: Date.now(), preview: meta.preview, permission: meta.permission, tools: meta.tools, custom: meta.custom })
-    const thread = await this.openThread(info.id)
-    await thread.applyParams(params)
-    const response = thread.sessionResponse({ includeTurns: params.excludeTurns !== true })
-    this.notify('thread/started', { thread: response.thread })
-    return response
+    return this.finishFork(source, params, async () => {
+      const api = await this.v2Api()
+      const info = source.projector.messages.size
+        ? toV1Session(await api.post(`/api/session/${encodeURIComponent(source.id)}/fork`, before ? { before } : {}))
+        : (await this.createSessionV2(params, source.cwd)).info
+      // Its own root for its sub-agents (a fork may copy the source's metadata).
+      await api.patch(`/api/session/${encodeURIComponent(info.id)}`, { metadata: { ...(isRecord(info.metadata) ? info.metadata : {}), codeDesktop: { root: info.id } } }).catch((error) => this.log(`fork metadata ${info.id}: ${error?.message}`))
+      return info
+    })
   },
 
   async revertV2(params) {

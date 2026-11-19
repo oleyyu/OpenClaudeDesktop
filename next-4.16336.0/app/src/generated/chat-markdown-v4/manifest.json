@@ -175,7 +175,8 @@
         "uo": "If"
       },
       "heldByCdsCore": [
-        "Ca"
+        "Ca",
+        "uo"
       ]
     },
     {
@@ -473,7 +474,10 @@
       "roots": {
         "J$": "Ei"
       },
-      "heldByCdsCore": []
+      "heldByCdsCore": [
+        "J$",
+        "Y$"
+      ]
     },
     {
       "target": "chat-prose.mjs",

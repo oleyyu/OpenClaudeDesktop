@@ -4,10 +4,10 @@
   "generator": "scripts/extract-session-rail-kit.mjs (4.16336.0 contract: scripts/extract-session-rail-kit-v4.mjs)",
   "adapterModule": "src/source-session-rail-kit-adapters.jsx",
   "sharedGraph": "cds-core",
-  "sharedGraphManifestSha256": "06d2026939e5c8992713c2a0dda1b1abc9adffe7a0c223fe3c1e79eecd08d62c",
+  "sharedGraphManifestSha256": "a0f228ae3f997f54f3e3ebafc254794bd26d8f1fc6999943a08b1d5730f638cd",
   "linkedAreas": {
-    "files-changes-v4": "35740c17397e4a05b8f5a12f408061040cdd39e4fb28ca86b43c02f786e1b93e",
-    "routines-shared-v4": "a2a9b9a84b2705e48451025af38eb7582de5bb421c626e6bdf5b067eb8e00c8c"
+    "files-changes-v4": "708013539535ccec0498a3f2272b037af2628234eca68c6d1f94353c24b2848b",
+    "routines-shared-v4": "79aa397be0c7daa4745103bbe2ea06fdcdbade14633a50d27248c2aea2b31649"
   },
   "pendingLinks": {
     "code-current-v4": [
@@ -4460,7 +4460,7 @@
     "shared-25.mjs": "fdd6c48ae5afe8b641caa601cc1d314be287d94ccffd8de16edd75abcdf70524",
     "shared-38.mjs": "0065b57d163262862b3d8b309e0adc3863e8aa690090488a4815903955b8fd82",
     "shared-92.mjs": "fc6acf52994d1fbb9a0fc48acd3029bcfeb60354ec1b4cb0d5ec83a070c4752b",
-    "shared-frame.mjs": "7a8f2192bcc5002cd72deccec3750f982ccfa0c59633e732f9dc88356317c0e6",
+    "shared-frame.mjs": "b1997a3e0d10ea243a4a9e44f1d417a6df34cb6c224711390f2386026a6a349e",
     "vendor-frame.mjs": "a923a956696beb9f7f50cba5751272a523b9ec050223fa066e370498d5fa9969"
   },
   "linkedGraphModules": {

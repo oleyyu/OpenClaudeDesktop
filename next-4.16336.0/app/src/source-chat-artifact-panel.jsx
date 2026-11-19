@@ -7,7 +7,7 @@ import { SourceFileViewer } from './source-file-viewer.jsx';
 import { SourceMarkdown } from './source-session.jsx';
 import { SourceLoadingPane } from './source-pane-states.jsx';
 import { artifactActions, artifactFileName, artifactReadFailure, artifactRenderer, artifactVersionRows } from './chat-artifact-model.mjs';
-import { t, tn } from '../electron/i18n/index.mjs';
+import { t } from '../electron/i18n/index.mjs';
 import './source-chat-artifact-panel.css';
 
 // w13-chatfn-artifacts (research/w13-chatfn.md A3–A5, chatfn-25..31). Chat artifacts are written by the local
@@ -46,7 +46,7 @@ export function svgToPng(svg) {
 }
 
 // w13-chatui-artifact-inline: `initialVersion`, the version an artifact block opened (cc1aae219 Y3 onOpenArtifact(id, message, versionUuid)).
-export function SourceChatArtifactPanel({ call, threadId, artifactId, initialVersion = null, refreshKey = 0, onClose, onNotice, initialData = null }) {
+export function SourceChatArtifactPanel({ call, threadId, artifactId, initialVersion = null, refreshKey = 0, onClose, onNotice, initialData = null, overlay = false }) {
   const opened = Number.isInteger(initialVersion) ? initialVersion : null;
   const [version, setVersion] = useState(opened);
   const [data, setData] = useState(initialData), [error, setError] = useState('');
@@ -104,20 +104,34 @@ export function SourceChatArtifactPanel({ call, threadId, artifactId, initialVer
     finally { setBusy(false); }
   }
   const label = (row) => t(row.message, row.values);
-  const versionMenu = versions.length > 0 && <CdsDropdown.Root>
-    <CdsDropdown.TriggerButton variant="secondary" size="sm" data-testid="chat-artifact-versions"
-      aria-label={tn(versions.length, 'Version history, {count} version', 'Version history, {count} versions', { count: versions.length })}>
-      <span className="truncate">{t('Version {n}', { n: shown.shown })}</span>
+  // chat-conversation r2-06 (stop-gap until cbaae0d6d's pane header is generated): 4.16336.0's trigger reads `v{n}` and, on
+  // the newest version, `·` (text-muted-as-secondary) + "Latest" (adThp5MDl0); aria-label "Switch artifact version,
+  // currently version {versionNum}" (ig8B3bgm/r).
+  const onLatest = versions.some((row) => row.latest && row.n === shown?.shown);
+  // cbaae0d6d: only past one version (`a > 1 ? i(b.Root, …) : null`); the trigger is `b.Trigger` rendering a ghost sm Button
+  // (icon CaretDown at the end, "data-testid": "artifact-version-trigger"); the popup (align start) is one Group of radio
+  // items newest first, "Version {versionNum}" (iMMX+ZCJ/I) with the newest hinted "Latest", "data-testid": "version-dropdown".
+  const versionMenu = versions.length > 1 && <CdsDropdown.Root>
+    <CdsDropdown.TriggerButton variant="ghost" size="sm" data-testid="artifact-version-trigger"
+      aria-label={t('Switch artifact version, currently version {versionNum}', { versionNum: shown.shown })}>
+      {`v${shown.shown}`}{onLatest && <><span className="text-muted-as-secondary">{'\u00B7'}</span>{t('Latest')}</>}
     </CdsDropdown.TriggerButton>
-    <CdsDropdown.Popup align="end" className="min-w-[180px]">
-      {versions.map((row) => <CdsDropdown.Item key={row.n} icon={row.current ? 'Check' : undefined} data-version={row.n}
-        onClick={() => setVersion(row.latest ? null : row.n)}>{label(row)}</CdsDropdown.Item>)}
+    <CdsDropdown.Popup align="start">
+      <CdsDropdown.Group>
+        {versions.map((row) => <CdsDropdown.Item key={row.n} data-testid="version-dropdown" checked={row.current} checkedRole="radio"
+          hint={row.latest ? t('Latest') : undefined} data-version={row.n}
+          onClick={() => setVersion(row.latest ? null : row.n)}>{t('Version {versionNum}', { versionNum: row.n })}</CdsDropdown.Item>)}
+      </CdsDropdown.Group>
     </CdsDropdown.Popup>
   </CdsDropdown.Root>;
-  return <section tabIndex={-1} aria-label={shown?.title || t('Artifact')} data-testid="chat-artifact-panel" data-artifact-type={shown?.type}
+  // U-05: a session body under 768px (session-panel-narrow.mjs) gets the panel as an overlay over the conversation, with
+  // the activity panel's backdrop (c21f11e6d `as`, a click closes) — the same narrow rule as the Cowork activity panel.
+  return <>{overlay && <div className="absolute inset-0 z-10 bg-neutral-50/20" onClick={() => onClose?.()} aria-hidden="true" data-artifact-overlay-backdrop="" />}
+    <section tabIndex={-1} aria-label={shown ? t('Artifact panel{title}', { title: shown.title ? `: ${shown.title}` : '' }) : t('Artifact')} data-testid="chat-artifact-panel" data-artifact-type={shown?.type} data-overlay={overlay || undefined}
     className="chat-artifact-panel flex h-full flex-col relative outline-none bg-surface-3"
     onKeyDown={(event) => { if (event.key === 'Escape' && !event.defaultPrevented && !event.nativeEvent?.isComposing) { event.preventDefault(); onClose?.(); } }}>
-    <div className="chat-artifact-panel-header flex items-center gap-1 ps-3 pe-2">
+    {/* r2-06: cbaae0d6d hn() `pe-2 ps-3 flex items-center justify-between gap-2 select-none` (gap-2, not gap-1). */}
+    <div className="chat-artifact-panel-header flex items-center justify-between gap-2 select-none ps-3 pe-2">
       <div className="flex items-center gap-2 flex-1 overflow-hidden">
         <h2 className="text-sm font-normal text-secondary min-w-0 truncate" title={shown?.title}>{shown?.title ?? ''}</h2>
         <div className="flex-1" />
@@ -126,9 +140,9 @@ export function SourceChatArtifactPanel({ call, threadId, artifactId, initialVer
         </div>}
       </div>
       {versionMenu}
-      {shown && <CdsSplitDropdownButton variant="secondary" size="sm" className="!rounded-lg" label={t('Copy')} onPrimaryClick={() => void run('copy')} busy={busy}
+      {shown && <CdsSplitDropdownButton variant="secondary" size="sm" className="!rounded-lg" label={t('Copy')} aria-label={t('Copy')} menuLabel={t('Copy options')} onPrimaryClick={() => void run('copy')} busy={busy}
         items={<>{actions.map((action) => <CdsDropdown.Item key={action.id} data-action={action.id} onClick={() => void run(action.id)}>{label(action)}</CdsDropdown.Item>)}</>} />}
-      <CdsButton variant="ghost" size="sm" iconOnly icon="X" aria-label={t('Close')} onClick={() => onClose?.()} />
+      <CdsButton variant="ghost" size="sm" iconOnly icon="X" aria-label={t('Close artifact')} onClick={() => onClose?.()} />
     </div>
     {/* w13-chatui-artifact-inline: the "artifact" focus region (cbaae0d6d `xe({kind:"artifact",boxRef:Pe,…})`), Jump to artifact lands here. */}
     {/* ca1d33d05 tn: the landing's group label is the title trimmed, else "Artifact" (07/fBlW5U3). */}
@@ -146,5 +160,5 @@ export function SourceChatArtifactPanel({ call, threadId, artifactId, initialVer
           {t('Artifacts are user-generated and may contain unverified or potentially unsafe content.')}</p>}
       </div>
     </div>
-  </section>;
+  </section></>;
 }

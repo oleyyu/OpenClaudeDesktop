@@ -14,9 +14,9 @@ export { RouterLink, useIntl, FormattedMessage } from './source-routines-shared-
 export const useArtifactOwners = () => noOwner;
 const noOwner = () => undefined;
 
-// c33ae67d6 j (3.6556.2 cbbbbbd87 N): the claude.ai chat artifact preview (published screenshot / markdown excerpt); the
-// thumbnail renders it only for source "chat".
-export const ChatArtifactPreview = () => null;
+// c33ae67d6 j (3.6556.2 cbbbbbd87 N): the chat artifact preview (published screenshot / markdown excerpt); the thumbnail
+// renders it only for source "chat". U-49: the host follows it (source-artifact-chat-preview.jsx; no published screenshot).
+export { ChatArtifactPreview } from './source-artifact-chat-preview.jsx';
 
 // shared-140 zo (3.6556.2 shared-16 $l): the lazy artifact menu chunk handle the page preloads on idle; none here.
 export const artifactMenuItemsLazy = null;

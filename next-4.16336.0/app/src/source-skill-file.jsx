@@ -21,7 +21,10 @@ function FileLink({ href, children }) {
 
 // Images require the separate authenticated file/image preview capability;
 // this single-file surface preserves their alt text without a network fetch.
-const components = { a: FileLink, img: ({ alt }) => <span>{alt}</span>, pre: DocumentPre };
+// U-45: a table scrolls on its own, as the official file preview's prose markdown wraps it (`div.prose-scroll` around
+// the table, c34ad4fd5 typography "prose" → c89efce1a); a long URL or path in a cell no longer pans the whole preview.
+const components = { a: FileLink, img: ({ alt }) => <span>{alt}</span>, pre: DocumentPre,
+  table: ({ node, ...props }) => <div className="skf-table-scroll"><table {...props} /></div> };
 
 export function SkillMarkdown({ content }) {
   return <div className="skf-markdown"><Markdown remarkPlugins={[remarkGfm]} components={components} skipHtml>{content}</Markdown></div>;

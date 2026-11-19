@@ -322,7 +322,11 @@ test("merged bindings are exactly the union of the 107-root owner and the three 
     // wave 8d (R4-Q1 addendum D replayed over addendum C, R4-K1, stage 14d): the applied wave-8c owner (production manifest
     // c5da39b7, wave8d/before) and the wave-8d lane dry run (w8-explore over the stage-13c config with the 11 entries and the 3
     // local adapters, wave8d/scripts/lane-w8d.sh, wave8d/lane/SHA256SUMS). Wave 8d: the list ended with "wave8c/lane/lane-manifest.json".
-    "wave8d/before/prod-manifest.json", "wave8d/lane/lane-manifest.json"]) {
+    "wave8d/before/prod-manifest.json", "wave8d/lane/lane-manifest.json",
+    // wave cc2 (chat-cowork-1to1-20261117 r2 Core step, stage 15cc): the applied wave-8d owner (production manifest 06d20269,
+    // wavecc2/before) and the wave-cc2 lane dry run (w8-explore over a stage-14d clone with the 11 entries, wavecc2/lane/SHA256SUMS).
+    // Wave cc2: the list ended with "wave8d/lane/lane-manifest.json".
+    "wavecc2/before/prod-manifest.json", "wavecc2/lane/lane-manifest.json"]) {
     const input = await json(path.join(integrate, file));
     for (const m of input.modules)
       for (const b of m.bindings) {
@@ -338,7 +342,7 @@ test("merged bindings are exactly the union of the 107-root owner and the three 
   const writers = (await json(path.join(pilot, "pins.json"))).merge.wave4.integrator.filter((r) => r.export).map((r) => r.binding);
   assert.deepEqual(writers, ["shared-frame-CJdE5Ria.js#kn", "shared-11-CNsu0Zu8.js#_n"]);
   assert.deepEqual([...merged.keys()].sort(), [...union, ...writers.filter((w) => !union.has(w))].sort());
-  assert.equal(merged.size, 10613); // wave 8d (R4-Q1: wave8d/union.json bindings.after; was 10533); wave 8c (R4-K1: wave8c/union.json bindings.after; was 10527); wave 8a/8b (R4-K1: wave8b/union.json bindings.after); wave 8s: 10522 (W8S-M1: wave8s/union.json bindings.after); wave 8: 9746 (W8-M1: wave8/union.json bindings.after); wave 7: 7321
+  assert.equal(merged.size, 10786); // wave cc2 (wavecc2/union.json bindings.after; was 10613); wave 8d (R4-Q1: wave8d/union.json bindings.after; was 10533); wave 8c (R4-K1: wave8c/union.json bindings.after; was 10527); wave 8a/8b (R4-K1: wave8b/union.json bindings.after); wave 8s: 10522 (W8S-M1: wave8s/union.json bindings.after); wave 8: 9746 (W8-M1: wave8/union.json bindings.after); wave 7: 7321
   // wave 6 union proof (scripts/union-check.mjs): every wave-5b module, binding, export and initializer kept, 0 moved names.
   const union6 = await json(path.join(integrate, "wave6/union.json"));
   assert.deepEqual(union6.problems, []);
@@ -390,6 +394,13 @@ test("merged bindings are exactly the union of the 107-root owner and the three 
   assert.deepEqual([union8d.bindings.before, union8d.bindings.after, union8d.bindings.existingKeptIdentical, union8d.publicNames.before, union8d.publicNames.after, union8d.publicNames.moved],
     [10533, 10613, 10533, 3198, 3209, 0]);
   assert.equal(sha(await fs.readFile(path.join(integrate, "wave8d/lane/lane-manifest.json"))), "096f6c022727c46223d4279652dd8d3ec22626be2cf3abbef37bfa8ec2a25710");
+  // wave cc2 union proof (chat-cowork r2 Core step over the applied stage-14d owner, wavecc2/scripts/union-check-wcc2.mjs): every
+  // stage-14d binding kept identical (no declared initializer change), 0 moved names, 11 names added.
+  const unioncc2 = await json(path.join(integrate, "wavecc2/union.json"));
+  assert.deepEqual([unioncc2.problems, unioncc2.declaredInitializerChanges], [[], []]);
+  assert.deepEqual([unioncc2.bindings.before, unioncc2.bindings.after, unioncc2.bindings.existingKeptIdentical, unioncc2.publicNames.before, unioncc2.publicNames.after, unioncc2.publicNames.moved],
+    [10613, 10786, 10613, 3209, 3220, 0]);
+  assert.equal(sha(await fs.readFile(path.join(integrate, "wavecc2/lane/lane-manifest.json"))), "b0a8f2b0485c7da2c3610fb07914ac3be54cd988d976cc5ea008c08c2fb9956a");
   const closure5b = await json(path.join(integrate, "wave5b/closure.json"));
   assert.equal(closure5b.verdict, "PASS");
   assert.deepEqual([closure5b.owner.bindings.before, closure5b.owner.bindings.wave5, closure5b.owner.bindings.after, closure5b.owner.publicNames.before, closure5b.owner.publicNames.after],

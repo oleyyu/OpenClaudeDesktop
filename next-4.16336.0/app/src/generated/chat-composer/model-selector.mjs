@@ -37,6 +37,7 @@ const modelSelector = Object.freeze({
     alignDefault: "end",
     ariaNameJoin: " ",
     popupSideOffset: 4,
+    popupCollisionTop: 52,
     typeClassRule: { inherit: "inherit", footnote: "footnote" },
   },
   chin: {

@@ -4,7 +4,7 @@
   "generator": "scripts/extract-r3b-transcript.mjs",
   "adapterModule": "src/source-r3b-transcript-adapters.jsx",
   "sharedGraph": "cds-core",
-  "cdsCoreManifestSha256": "06d2026939e5c8992713c2a0dda1b1abc9adffe7a0c223fe3c1e79eecd08d62c",
+  "cdsCoreManifestSha256": "a0f228ae3f997f54f3e3ebafc254794bd26d8f1fc6999943a08b1d5730f638cd",
   "isolatedGraph": {
     "legacyOutput": "src/generated/r3b-transcript",
     "productionSwitchNotBeforeBatch": 10,
@@ -1724,7 +1724,11 @@
         "Hm": "Wu",
         "Um": "Uu"
       },
-      "heldByCdsCore": []
+      "heldByCdsCore": [
+        "Hm",
+        "Vm",
+        "Um"
+      ]
     },
     {
       "target": "icon-override.mjs",

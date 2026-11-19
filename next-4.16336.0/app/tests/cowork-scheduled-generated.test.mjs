@@ -123,8 +123,12 @@ test('the generated graph is current (--check), its roots and adapters exist, an
 test('the page imports the cowork-scheduled pieces; the 2.31226.0 current-chat graph is retired', () => {
   const source = local('src/source-routines.jsx');
   assert.doesNotMatch(source, /generated\/current-chat/);
-  assert.match(source, /from '\.\/generated\/cowork-scheduled\/index\.mjs';/);
-  assert.match(source, /ScheduledTaskStatusLine as RoutineStatus, ScheduledTaskDivider as RoutineDivider \} from '\.\/generated\/routines-shared\/index\.mjs';/);
+  // library-pages-r1-03 (old assertions named the 3.6556.2 graphs): the page mounts cowork-scheduled-v4 / routines-shared-v4.
+  assert.match(source, /from '\.\/generated\/cowork-scheduled-v4\/index\.mjs';/);
+  assert.match(source, /ScheduledTaskStatusLine as RoutineStatus, ScheduledTaskDivider as RoutineDivider \} from '\.\/generated\/routines-shared-v4\/index\.mjs';/);
+  const pageAdapters = local('src/source-routine-cowork-page-adapters.jsx');
+  assert.match(pageAdapters, /import \{ ScheduledTaskCard \} from '\.\/generated\/routines-shared-v4\/index\.mjs';/);
+  assert.match(pageAdapters, /import \{ ScheduledTaskDetail, UpsertScheduledTaskModal \} from '\.\/generated\/cowork-scheduled-v4\/index\.mjs';/);
   // w10-curchat-retire (CC-14 / CC-16): the generator, its prepare script and the whole folder are gone, so its
   // unreached scheduled-task adapter rows (ccd3f68fe, c97b955f1, cdbc75b4b, ...) went with them.
   for (const rel of ['src/generated/current-chat', 'scripts/extract-current-chat-ui.mjs', 'scripts/prepare-current-chat-ui.mjs'])
@@ -164,8 +168,11 @@ test('card: the routines-shared card inside the page host, linking to the task a
   const task = routine.sourceRoutine(row());
   const html = renderToStaticMarkup(inPage(host, h(page.CoworkScheduledTaskCard, { task, title: task.displayName,
     statusChip: h(shared.ScheduledTaskStatusLine, { task }), isRunning: false, onRunNow() {}, onEdit() {}, onDelete() {} })));
-  assert.match(html, /^<div style="display:contents"><div data-grid-cell="" class="group relative flex h-full flex-col gap-xs rounded-card bg-surface-1 p-lg shadow-card-ring/);
-  assert.match(html, /<a href="\/scheduled-task\/t1" data-primary="true"/);
+  // library-pages-r1-03: the 4.16336.0 card (routines-shared-v4 cdbc75b4b Jr) is the cds-core Card with a CardLink (the
+  // 3.6556.2 plain div `… bg-surface-1 p-lg shadow-card-ring` and bare <a> were the old assertion).
+  assert.match(html, /^<div style="display:contents"><div data-cds="Card" data-grid-cell="" class="group\/card relative isolate flex flex-col rounded-card /);
+  assert.match(html, /group h-full gap-xs">/);
+  assert.match(html, /<a data-cds="CardLink" data-primary="true" href="\/scheduled-task\/t1"/);
   assert.match(html, /aria-label="More options for Daily digest"/);
   assert.match(text(html), /Daily digest Morning summary Active\W+Daily at 9:00 AM/);
 });

@@ -12,6 +12,8 @@
 import { createContext, createElement, useContext, useEffect, useMemo, useState } from 'react';
 import { getLocale } from '../electron/i18n/index.mjs';
 import { useHostIntl, HostFormattedMessage } from './cds-core-adapter.mjs';
+import { hostGrowthBookFlag } from './host-growthbook.mjs';
+import { COMPOSER_MARLIN_DESIGN } from './composer-marlin.mjs';
 
 // The preload helper's assetsURL (preload-helper a) and the GrowthBook value reader (shared-0 Uu): the host answers every
 // generated area shares (integration-1 preload-helper; D29 / D31).
@@ -108,9 +110,12 @@ export const useHomeLandingSkipsPlugins = () => false;
 // shared-1 MP: the home reads incognitoModeEnabled only (Cowork has no incognito).
 const NO_INCOGNITO = Object.freeze({ incognitoModeEnabled: false, temporaryConversationUuid: undefined, setTemporaryConversationUuid: noop });
 export const useHomeIncognito = () => NO_INCOGNITO;
-export const useHomePluginsInChat = () => false; // shared-153 nD: claude_ai_plugins_in_chat, default off
+// r2 chat-home-r2-02: shared-153 nD reads claude_ai_plugins_in_chat, which the host gate table answers (on). shared-23 dw
+// still gets no Chat setup card from it: `u = … && !U()` with U = useIsClaudeDesktopApp (true here).
+export const useHomePluginsInChat = () => hostGrowthBookFlag('claude_ai_plugins_in_chat');
 export const useIsClaudeDesktopApp = () => true; // shared-0 FH: the host is the desktop app
-export const useHomeMarlinDesign = () => false; // shared-123 s_: voyage composer "marlin", default classic
+// shared-123 s_: voyage composer "marlin". U-MARLIN (2026-11-18): the host's one answer, src/composer-marlin.mjs (on).
+export const useHomeMarlinDesign = () => COMPOSER_MARLIN_DESIGN;
 export const useHomeRemoteCoworkSession = () => false; // shared-33 Fj
 export const subscribeHomeSessionEvents = noop; // shared-123 _x: the bridge session feed; the host feeds `rows` instead
 export const useHomeReadStateSync = noop; // shared-2 IH: account-scoped read-state persistence; the host owns read state

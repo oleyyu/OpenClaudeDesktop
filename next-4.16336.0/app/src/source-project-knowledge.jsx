@@ -19,6 +19,8 @@ import { CdsBadge, CdsSegmentedControl } from './cds-core.mjs'; // 4.16336.0 hos
 // FD; the Add files control is the sliced cf2f34ee4 _r; the capacity bar the sliced c52b32660 ge.
 import { KnowledgeFileThumbnail, KnowledgeFileTag, knowledgeFileTagName, formatKnowledgeFileSize, KnowledgeAddMenu, KnowledgeCapacityBar } from './generated/chat-knowledge-v4/index.mjs';
 import { ChatKnowledgeHostContext } from './source-chat-knowledge-adapters.jsx';
+// library-pages r3-02: c52b32660 xe's remove confirmation is the sliced c9260427e ue (chat-projects-v4 holds that chunk).
+import { KnowledgeRemoveDialog } from './generated/chat-projects-v4/index.mjs';
 import { useIntl } from './source-routines-shared-adapters.jsx';
 import { SourceMenu } from './source-menu';
 // Sf's SearchablePopup is the host's (shared-frame yC over SourceMenu.Popup), as the + menu's Es popup uses it; it reads the
@@ -83,6 +85,9 @@ const noop = () => {};
 export function SourceProjectKnowledge({ project, call, initial = null }) {
   const [files, setFiles] = useState(initial?.files ?? null), [stats, setStats] = useState(initial?.stats ?? null);
   const [busy, setBusy] = useState(false), [errors, setErrors] = useState([]);
+  // c52b32660 xe `[G, ue] = r(null)`: the card's Remove asks first (q keeps { fileName, remove } for this project); ue
+  // (Jl "Remove {name}?" / "Remove file", closeOnConfirm) removes on confirm. A removal kept for another project is dropped.
+  const [pendingRemoval, setPendingRemoval] = useState(null);
   const apply = useCallback(result => { if (Array.isArray(result?.files)) setFiles(result.files); if (result?.stats) setStats(result.stats); }, []);
   useEffect(() => {
     let active = true;
@@ -94,6 +99,9 @@ export function SourceProjectKnowledge({ project, call, initial = null }) {
     try { apply(await call('local-projects', { action: 'knowledge-remove', id: project.id, fileId: file.id })); }
     catch { setErrors([t(KNOWLEDGE_COPY.deleteFailed)]); }
   }
+  const askToRemove = file => setPendingRemoval({ projectId: project.id, removal: { fileName: file.name, remove: () => { void remove(file); } } });
+  const removal = pendingRemoval?.projectId === project.id ? pendingRemoval.removal : null;
+  const removeDialog = <KnowledgeRemoveDialog key="remove-dialog" removal={removal} onClose={() => setPendingRemoval(null)} />;
   const host = useMemo(() => ({
     tokens: stats?.tokens ?? 0,
     capacity: stats?.capacity ?? 200000,
@@ -132,23 +140,25 @@ export function SourceProjectKnowledge({ project, call, initial = null }) {
   return <ChatKnowledgeHostContext.Provider value={host}>
     <div className="w-full px-[1.375rem] py-4 flex flex-col gap-2 mb-1" data-project-knowledge="">
       <div className="h-6 w-full flex flex-row items-center justify-between gap-4">
-        <h3 className="text-secondary font-base-bold">{t(KNOWLEDGE_COPY.files)}</h3>
+        <h3 className="text-secondary text-body-medium">{t(KNOWLEDGE_COPY.files)}</h3>
         <div className="flex flex-row items-center gap-2">
           <KnowledgeAddMenu projectUuid={project.id} isStarterProject={false} isUploading={busy} setIsUploadingDoc={setBusy}
             setIsUploadingGithubSync={noop} setIsUploadingMcpSync={noop} />
         </div>
       </div>
       {files === null ? <div className="h-[10rem] w-full bg-surface-0 rounded-2xl" />
-        : !list.length ? <div className="text-center h-[10rem] bg-surface-0 rounded-2xl flex flex-col gap-3 items-center justify-center text-muted-as-secondary font-small">
+        : !list.length ? <div className="text-center h-[10rem] bg-surface-0 rounded-2xl flex flex-col gap-3 items-center justify-center text-muted-as-secondary text-caption-regular">
           <div className="max-w-[14.5rem]">{t(KNOWLEDGE_COPY.empty)}</div>
+          {removeDialog}
         </div>
         : <div className="flex flex-col mb-1">
           <div className="mb-3 grid grid-rows-[1fr] animate-knowledge-expand">
             <div className="min-h-0 min-w-0 self-start"><KnowledgeCapacityBar projectUuid={project.id} /></div>
           </div>
           <ul className="grid grid-cols-[repeat(auto-fill,minmax(120px,1fr))] gap-3 mt-3">
-            {list.map(file => <KnowledgeFileCard key={file.id} file={file} onRemove={remove} />)}
+            {list.map(file => <KnowledgeFileCard key={file.id} file={file} onRemove={askToRemove} />)}
           </ul>
+          {removeDialog}
         </div>}
       {stats?.over && <p role="alert" className="text-danger text-body mt-2">{t(KNOWLEDGE_COPY.exceeds)}</p>}
       {errors.map((message, index) => <p key={index} role="alert" className="text-danger text-body mt-2">{message}</p>)}

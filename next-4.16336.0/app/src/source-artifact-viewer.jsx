@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-// 3.6556.2 viewer title / action (c2bb74286 Lt / Bt) and frame classes (shared-9 fh / ph / mh, exported dr / ur / cr).
-import { ArtifactTitle, ArtifactAction, artifactFrameClass, artifactHeaderClass, artifactBodyClass } from './generated/artifact-library/index.mjs';
+// 4.16336.0 viewer title / action (c2bb74286 mt / bt) and frame classes (shared-38 xa / Sa / Ca, exported K / G / U).
+import { ArtifactTitle, ArtifactAction, artifactFrameClass, artifactHeaderClass, artifactBodyClass } from './generated/artifact-library-v4/index.mjs';
 import { filePreviewKind } from './file-preview-model.mjs';
 import { SourceFileViewer } from './source-file-viewer.jsx';
 import { SourceMarkdown } from './source-session.jsx';

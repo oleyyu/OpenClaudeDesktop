@@ -253,18 +253,20 @@ test('global-13 TextLink inheritColor: official vd rests at 35%; the local routi
   // (b) local, the routine form: the generated routine form (cowork-scheduled c97b955f1, 3.6556.2 La since
   // w3-cowork-scheduled; mounted by source-routines.jsx through source-routine-cowork-page-adapters.jsx) takes the official
   // TextLink and passes inheritColor at four sites. Its module is found by the stable chunk prefix in the manifest.
-  const coworkManifest = JSON.parse(local('src/generated/cowork-scheduled/manifest.json'));
+  // library-pages-r1-03: the page mounts the 4.16336.0 form (cowork-scheduled-v4 c97b955f1 Xa); the old assertions named the
+  // 3.6556.2 graph, whose La had one `external, inheritColor, href` call (4.16336.0 has three, as 2.42304.0 Ca above).
+  const coworkManifest = JSON.parse(local('src/generated/cowork-scheduled-v4/manifest.json'));
   const formModule = coworkManifest.modules.filter(entry => entry.source.startsWith('c97b955f1-'));
   assert.equal(formModule.length, 1);
-  const form = local(`src/generated/cowork-scheduled/${formModule[0].target}`);
+  const form = local(`src/generated/cowork-scheduled-v4/${formModule[0].target}`);
   // D1/D46 (R4i-graph GR3 published CdsTextLink): cowork-scheduled imports the TextLink by its semantic name from view-tabs
   // instead of slicing its own shared-frame copy.
   const textLink = form.match(/\n  CdsTextLink as ([\w$]+),\n/)?.[1];
   assert.ok(textLink, 'CdsTextLink import');
-  assert.equal(count(form, `(${textLink}, { external: !0, inheritColor: !0, href: `), 1);
+  assert.equal(count(form, `(${textLink}, { external: !0, inheritColor: !0, href: `), 3);
   assert.equal(count(form, 'inheritColor: !0'), 4);
   once(local('src/source-routines.jsx'), ["CoworkUpsertScheduledTaskModal as OriginalRoutineForm } from './source-routine-cowork-page-adapters.jsx';"]);
-  once(local('src/source-routine-cowork-page-adapters.jsx'), ["import { ScheduledTaskDetail, UpsertScheduledTaskModal } from './generated/cowork-scheduled/index.mjs';"]);
+  once(local('src/source-routine-cowork-page-adapters.jsx'), ["import { ScheduledTaskDetail, UpsertScheduledTaskModal } from './generated/cowork-scheduled-v4/index.mjs';"]);
   // w10-cleanup-final: the 2.31226.0 form's host FormLink (source-routine-form-adapters.jsx) is gone with that form.
   assert.doesNotMatch(local('src/source-routine-form-adapters.jsx'), /FormLink|TEXT_LINK_CLASS/);
   const officialVd = frame.match(/,vd="([^"]+)"/)[1];

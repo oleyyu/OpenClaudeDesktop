@@ -9,6 +9,16 @@
 // nudge never comes back after an update.
 export const RELEASE_NOTES = Object.freeze([
   {
+    version: "0.3.2",
+    date: "2026-11-19",
+    items: [
+      { kind: "feat", text: "Chat conversations use the new message box from Claude Desktop 4.16336.0: Reply sits in a single-line card, and the attach button, microphone, notice and model now sit in the row under it." },
+      { kind: "feat", text: "The file viewer opens files outside the working folder too, instead of a “This file is outside the working directory” card." },
+      { kind: "improvement", text: "Chat and Cowork pages, the sidebar, settings and the transcript were checked against the official interface again; dozens of spacing, wording and layout differences are fixed." },
+      { kind: "improvement", text: "Fixes for settings layers, model settings, sign-in and several agent cores’ connections and sign-out." },
+    ],
+  },
+  {
     version: "0.3.1",
     date: "2026-11-15",
     items: [
@@ -67,6 +77,8 @@ export const RELEASE_NOTES = Object.freeze([
 // F (:5070): groups render in this order, labelled New / Improved / Fixed (L, :5095-5099).
 export const RELEASE_NOTE_KINDS = Object.freeze(["feat", "improvement", "fix"]);
 export const RELEASE_NOTE_KIND_LABELS = Object.freeze({ feat: "New", improvement: "Improved", fix: "Fixed" });
+// 4.16336.0 cb63ed069 I: the labels' message ids. "New" here is 新增, not the 新建 button (U-19: the catalog keys it by id).
+export const RELEASE_NOTE_KIND_IDS = Object.freeze({ feat: "EGsjZ8G4k5", improvement: "RGAbslYMBE", fix: "BNEz9MFGbU" });
 
 // P (:5059-5069) `n`: the nudge needs an entry whose version is the running version.
 export const LOCAL_RELEASE_NOTE_VERSIONS = Object.freeze(RELEASE_NOTES.map((entry) => entry.version));

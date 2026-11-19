@@ -17,7 +17,7 @@
       "target": "shared-frame.mjs",
       "source": "shared-frame-CJdE5Ria.js",
       "sourceSha256": "b6a5f61e0f243a48215fab7f3d65958d693d715e565f57af4e0ff35ae14697bc",
-      "sha256": "a793b368a6c803faf93c62eee83c2f5ab56e70af6b2d4c88bfd3b5035c7bdf5e",
+      "sha256": "fc3fb667705576443d1707565c0087bebcb7895d5a8e65d63528726df479d1de",
       "referenceVersion": "4.16336.0",
       "bindings": [
         {
@@ -151,14 +151,6 @@
         {
           "name": "mr",
           "sha256": "f6e00a3283bdb67688312065a00993d7dbc722ee37ca4dfa9d0d086723027e7d"
-        },
-        {
-          "name": "Or",
-          "sha256": "2bd667664e38c54f376a5fcd7ace93866e99a490c6152f9c2ed94f22ffb6ce1d"
-        },
-        {
-          "name": "kr",
-          "sha256": "c2633a90a2854e7406b0bb0cde466ac2b4be76bb4cf4a0d88b03630d216f8e3f"
         },
         {
           "name": "gi",
@@ -917,7 +909,6 @@
         "iB",
         "iu",
         "jA",
-        "kr",
         "kz",
         "mr",
         "nB",
@@ -935,6 +926,7 @@
         "xB"
       ],
       "heldByViewTabs": [
+        "$d",
         "Ad",
         "An",
         "Bg",
@@ -942,10 +934,12 @@
         "Dn",
         "Ed",
         "En",
+        "Hm",
         "I1",
         "I2",
         "I3",
         "I5",
+        "Im",
         "J0",
         "J1",
         "J2",
@@ -960,16 +954,20 @@
         "K3",
         "K4",
         "K5",
+        "Km",
+        "Lm",
         "Od",
-        "Or",
         "Rg",
         "Tn",
+        "Um",
+        "Vm",
         "Xn",
         "Yt",
         "Z1",
         "Z2",
         "Z5",
         "_i",
+        "au",
         "ca",
         "co",
         "dr",
@@ -977,14 +975,15 @@
         "gi",
         "hF",
         "io",
+        "iu",
         "jA",
-        "kr",
         "la",
         "mr",
         "no",
         "pr",
         "sr",
         "tM",
+        "uo",
         "vi",
         "zg"
       ]
@@ -2005,7 +2004,10 @@
       "sharedExports": [
         "J$"
       ],
-      "heldByViewTabs": [],
+      "heldByViewTabs": [
+        "J$",
+        "Y$"
+      ],
       "linkExports": [
         "J$"
       ]
@@ -2078,21 +2080,9 @@
       "target": "shared-2.mjs",
       "source": "shared-2-CsjIBQD8.js",
       "sourceSha256": "afd4bee5585cd387fdb8dc97eac37ef14c3a5cf5edc473f52739ca7c7cc9165f",
-      "sha256": "3ca77d0e7b723849cbcb0ca3cb00ccac936ee04ae3cd793e7a5397f501547335",
+      "sha256": "f6b25aa3430bae29ed5af18b8067bb6aa08a95c388b235c3ceb053f227bfed28",
       "referenceVersion": "4.16336.0",
       "bindings": [
-        {
-          "name": "W8",
-          "sha256": "b0e1b004d766f6613a5e8e6baba5d23bdde56c45da2efe4ddba95747be98f28d"
-        },
-        {
-          "name": "G8",
-          "sha256": "b1d8912ae53f8447e58a46873b2b6c5667ac4bdd6d5f8b4a41a48dc0a79ba374"
-        },
-        {
-          "name": "Q8",
-          "sha256": "68f52ebf27926ce363a63f8d05acc0eff291b37c6f2b596853b25ff28e49f8cd"
-        },
         {
           "name": "$8",
           "sha256": "ba094e921dcea4c44898b457c79f1e8da45187087d724f36ebf78426e900a5db"
@@ -2124,14 +2114,6 @@
         {
           "name": "q5",
           "sha256": "38e7a06d0e0f770c896c4ec75d17cd3b074db6265f7305b38186b66c0e73a4e8"
-        },
-        {
-          "name": "Y5",
-          "sha256": "05bc3ce8563c819b611272f959580ce8a98692e70615b38348fc7087aa76a5cd"
-        },
-        {
-          "name": "X5",
-          "sha256": "e73be74538011609a8dfd4214d0968e6e855913cc5b227c18eb20dfb5300f6ee"
         },
         {
           "name": "Q5",
@@ -2354,6 +2336,14 @@
           "kind": "generated"
         },
         {
+          "local": "Q8",
+          "from": "../cds-core/shared-2.mjs",
+          "name": "Q8",
+          "via": "shared-2-CsjIBQD8.js#Q8",
+          "kind": "shared-graph",
+          "original": "Q8"
+        },
+        {
           "local": "R",
           "from": "./shared-frame.mjs",
           "name": "iu",
@@ -2373,6 +2363,22 @@
           "name": "J$",
           "via": "shared-1-D1bGaTaN.js:Ei",
           "kind": "generated"
+        },
+        {
+          "local": "X5",
+          "from": "../cds-core/shared-2.mjs",
+          "name": "X5",
+          "via": "shared-2-CsjIBQD8.js#X5",
+          "kind": "shared-graph",
+          "original": "X5"
+        },
+        {
+          "local": "Y5",
+          "from": "../cds-core/shared-2.mjs",
+          "name": "Y5",
+          "via": "shared-2-CsjIBQD8.js#Y5",
+          "kind": "shared-graph",
+          "original": "Y5"
         },
         {
           "local": "ae",
@@ -2435,13 +2441,6 @@
           "kind": "react"
         },
         {
-          "local": "ie",
-          "from": "./shared-frame.mjs",
-          "name": "kr",
-          "via": "shared-frame-CJdE5Ria.js:bp",
-          "kind": "generated"
-        },
-        {
           "local": "j",
           "from": "../cds-core/shared-frame.mjs",
           "name": "CdsButton",
@@ -2501,13 +2500,6 @@
           "original": "In"
         },
         {
-          "local": "u",
-          "from": "react-dom",
-          "name": "flushSync",
-          "via": "vendor-frame-BckkO60Y.js:La",
-          "kind": "react"
-        },
-        {
           "local": "ue",
           "from": "../cds-core/shared-frame.mjs",
           "name": "useCdsToolbarRovingFocus",
@@ -2523,13 +2515,6 @@
           "kind": "react"
         },
         {
-          "local": "y",
-          "from": "react",
-          "name": "createContext",
-          "via": "vendor-frame-BckkO60Y.js:no",
-          "kind": "react"
-        },
-        {
           "local": "z",
           "from": "../cds-core/shared-frame.mjs",
           "name": "useCdsOwnerWindow",
@@ -2541,19 +2526,40 @@
       "exports": {},
       "sharedExports": [
         "$8",
-        "G8",
-        "Q8",
-        "X5",
         "e5",
         "m7",
         "n5",
         "t5"
       ],
-      "heldByViewTabs": [],
+      "heldByViewTabs": [
+        "$5",
+        "$8",
+        "G5",
+        "Q5",
+        "U5",
+        "W5",
+        "a7",
+        "c7",
+        "d7",
+        "e5",
+        "e7",
+        "f7",
+        "i7",
+        "l7",
+        "m7",
+        "n5",
+        "n7",
+        "o7",
+        "p7",
+        "q5",
+        "r7",
+        "s7",
+        "t5",
+        "t7",
+        "u7"
+      ],
       "linkExports": [
         "$8",
-        "Q8",
-        "X5",
         "e5",
         "m7",
         "n5",
@@ -3413,7 +3419,7 @@
       "target": "turn-status.mjs",
       "source": "c734f318c-CGzPyTBU.js",
       "sourceSha256": "e350d97b524e2d1320879accab2b2222514a43385bf948390812ea3371e0ff40",
-      "sha256": "0051b0def2ba194c651f005435ccc356b42ccb54b16972d747fc6980c5e2c0de",
+      "sha256": "669deeea55b9dc5ad2201fe5d242339890154baee3cc37f2ff4a81e6372a50b0",
       "referenceVersion": "4.16336.0",
       "bindings": [
         {
@@ -3713,10 +3719,11 @@
       "imports": [
         {
           "local": "A",
-          "from": "./shared-2.mjs",
+          "from": "../cds-core/shared-2.mjs",
           "name": "G8",
           "via": "shared-2-CsjIBQD8.js:v",
-          "kind": "generated"
+          "kind": "shared-graph",
+          "original": "G8"
         },
         {
           "local": "Ae",

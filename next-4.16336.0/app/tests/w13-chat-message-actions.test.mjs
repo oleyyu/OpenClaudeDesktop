@@ -48,7 +48,7 @@ before(async () => {
 after(async () => { i18n?.setLocale('en-US'); await closeWhenSettled(server); await server?.close(); });
 
 const toolbar = (props = {}) => renderToStaticMarkup(h(actions.SourceChatMessageActions, { conversationUuid: 't1', itemId: 'i1', text: 'Hello **there**',
-  onFeedback: async () => {}, onRetry: () => {}, ...props }));
+  onFeedback: async () => {}, onRetry: () => {}, /* chat-conversation r1-01: the last reply's toolbar is drawn (JY alwaysVisible: Pt); an earlier one defers (He) */ last: true, ...props }));
 const attrs = (html, testid) => html.match(new RegExp(`<[a-z]+ [^>]*data-testid="${testid}"[^>]*>`))?.[0] ?? '';
 
 test('generator: --check passes and the manifest pins the 3.6556.2 originals, adapters and the linked MessageActions', async () => {
@@ -130,6 +130,26 @@ test('SSR: the reply toolbar is the MessageActions compound with Copy, Good / Ba
   assert.match(attrs(toolbar({ streaming: true }), 'message-actions'), /-mt-1 invisible"/);
 });
 
+// chat-conversation r1-01: cc1aae219 JY classic `h(Sd, { wrap: !0, defer: He, alwaysVisible: Pt, showActionsLabel: jt, … })` —
+// the last reply's toolbar is always visible; an earlier one is the deferred placeholder (sr-only "Show message actions for …").
+test('SSR: the last reply keeps its toolbar visible; an earlier reply defers it (4.16336.0 MessageActions)', () => {
+  const v4dir = path.join(app, '../reference/snapshots/claude-4.16336.0-20261104/ion-dist/assets/v1');
+  const cc1v4 = fs.readFileSync(path.join(v4dir, fs.readdirSync(v4dir).find((f) => f.startsWith('cc1aae219-') && f.endsWith('.js'))), 'utf8');
+  assert.ok(cc1v4.includes('"data-testid":"message-actions",wrap:!0,defer:He,alwaysVisible:Pt,showActionsLabel:jt,'));
+  assert.ok(cc1v4.includes('Ln="group group/message-row"'));
+  const last = attrs(toolbar(), 'message-actions');
+  assert.match(last, /data-reveal="fade"/);
+  assert.match(last, /data-always-visible=""/);
+  assert.match(last, /touch:flex-wrap/);
+  const earlier = toolbar({ last: false });
+  assert.match(attrs(earlier, 'message-actions'), /data-deferred=""/);
+  assert.doesNotMatch(earlier, /action-bar-copy/);
+  assert.match(earlier, /<button type="button" class="sr-only" aria-label="Show message actions for [^"]+ responded: Hello there"/);
+  const main = fs.readFileSync(path.join(app, 'src/main.jsx'), 'utf8');
+  assert.match(main, /mode === "chat" \? chatMessageRows\(rows, render\)/);
+  assert.match(main, /last=\{footer\.turnId === latestTurnId/);
+});
+
 test('SSR: the disclaimer is U9 where the conversation ends, linking the support article', () => {
   const html = renderToStaticMarkup(h(actions.SourceChatDisclaimer, { conversationUuid: 't1', onOpenLink: () => {} }));
   // was: assert.match(html, /^<div role="note" data-disclaimer="true" class="pointer-events-auto relative z-0 -mt-10 bg-surface-1 pb-2 pt-12 text-center text-xs text-muted-as-secondary">/);
@@ -142,10 +162,10 @@ test('SSR: the disclaimer is U9 where the conversation ends, linking the support
   assert.ok(ca2v4.includes('className:"not-hover:not-focus-visible:text-muted-as-tertiary hover:text-secondary transition",children:i?'));
   assert.ok(ca2v4.includes('defaultMessage:"Claude is AI and can make mistakes. Please double-check responses."'));
   assert.match(html, /^<div role="note" data-disclaimer="true" class="pointer-events-auto relative z-0 -mt-10 bg-page pb-2 pt-12 text-center text-xs text-muted-as-secondary">/);
-  assert.match(html, /<a href="https:\/\/support\.anthropic\.com\/en\/articles\/8525154-claude-is-providing-incorrect-or-misleading-responses-what-s-going-on" target="_blank" rel="noopener noreferrer" class="not-hover:not-focus-visible:text-muted-as-tertiary hover:text-secondary transition">Claude is AI and can make mistakes\. Please double-check responses\.<\/a>/);
+  assert.match(html, /<a href="https:\/\/support\.anthropic\.com\/en\/articles\/8525154-claude-is-providing-incorrect-or-misleading-responses-what-s-going-on" target="_blank" rel="noopener noreferrer" class="not-hover:not-focus-visible:text-muted-as-tertiary hover:text-secondary transition">DeepSeek is AI and can make mistakes\. Please double-check responses\.<\/a>/); // fix-r2 U-14 (E83): the running assistant, was Claude
   i18n.setLocale('zh-CN');
   try {
-    assert.match(renderToStaticMarkup(h(actions.SourceChatDisclaimer, { conversationUuid: 't1' })), /Claude 是 AI，可能会出错。请核实回答内容。/);
+    assert.match(renderToStaticMarkup(h(actions.SourceChatDisclaimer, { conversationUuid: 't1' })), /DeepSeek 是 AI，可能会出错。请核实回答内容。/); // fix-r2 U-14 (E83), was Claude
   } finally { i18n.setLocale('en-US'); }
 });
 

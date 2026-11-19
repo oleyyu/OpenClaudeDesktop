@@ -449,6 +449,19 @@ const CALL_CONVERSATION = [
 ]
 const rowsOf = (turns) => turns[0].items.slice(1).map((item) => [item.type, item.command ?? item.text, item.status ?? null])
 
+test('identical imported shell replies retain their own working directories', async () => {
+  const { bridge, cwd } = fake('opencode')
+  const reply = (dir) => withParts({ text: SHELL, tool: true, call: { ...SHELL_CALL, cwd: dir } })
+  const response = await bridge.handle('codeDesktop/thread/import', {
+    cwd, model: 'xiaomi/mimo-v2',
+    messages: [{ role: 'user', text: 'First' }, reply('/project/A'), { role: 'user', text: 'Second' }, reply('/project/B')],
+  })
+  const dirs = (result) => result.thread.turns.flatMap((turn) => turn.items.filter((item) => item.type === 'commandExecution').map((item) => item.cwd))
+  assert.deepEqual(dirs(response), ['/project/A', '/project/B'])
+  const stored = await bridge.handle('thread/read', { threadId: response.thread.id, includeTurns: true })
+  assert.deepEqual(dirs(stored), ['/project/A', '/project/B'])
+})
+
 for (const flavor of ['mimo', 'opencode']) {
   test(`${flavor}: with the blocks' calls the rows are the command and the read a native call shows, on every read`, async () => {
     const { bridge, cwd } = fake(flavor)

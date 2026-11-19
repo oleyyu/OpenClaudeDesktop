@@ -17,7 +17,7 @@ import { PassThrough } from 'node:stream'
 import { pathToFileURL } from 'node:url'
 import { FLAVORS, withApi } from '../packages/opencode-bridge/src/flavor.js'
 import { Bridge } from '../packages/opencode-bridge/src/index.js'
-import { CANCELLED_V2, DECLINED_V2, DISMISSED_V2, OTHER_FORM_V2, PLAN_APPROVED_V2, UNATTENDED_V2, decideV2, formAnswerV2, questionsOfFormV2, sessionGrantV2 } from '../packages/opencode-bridge/src/v2/asks.js'
+import { DECLINED_V2, DISMISSED_V2, OTHER_FORM_V2, PLAN_APPROVED_V2, UNATTENDED_V2, decideV2, formAnswerV2, questionsOfFormV2, sessionGrantV2 } from '../packages/opencode-bridge/src/v2/asks.js'
 import { PLUGIN_ID, pluginSourceV2 } from '../packages/opencode-bridge/src/v2/plugin.js'
 import { createV2Fake, noClaude } from './fixtures/v2-fake.mjs'
 
@@ -252,7 +252,7 @@ test('an interrupt drops the session\'s asks with no permission.replied: the tur
   } finally { await bridge.stop() }
 })
 
-test('a failed interrupt leaves the asks open in v2: a plain Deny rejects with a message, a Stop cancels the open cards with one', async () => {
+test('a failed interrupt: plain Deny rejects with a message, Stop reports the error and keeps the turn and its asks', async () => {
   const { bridge, fake, cards, notes } = await v2Bridge()
   try {
     // v2 unreachable for the interrupt only (a 5xx): every other call goes through.
@@ -270,23 +270,47 @@ test('a failed interrupt leaves the asks open in v2: a plain Deny rejects with a
     failInterrupt = true
     let from = notes.length
     answer(cards[0], { decision: 'decline' })
-    await until(() => notes.slice(from).some((note) => note.method === 'turn/completed'), 'the turn ended here')
-    await settle()
+    await until(() => fake.state.replies.length === 1 && cards[1].withdrawn, 'the permission reply')
     // The denied ask is rejected with a message (v2 rejects the other with it): nothing is left waiting in v2.
     assert.deepEqual(fake.state.replies, [{ sessionID: sid, requestID: 'per_1', decision: 'reject', message: DECLINED_V2 }])
     assert.deepEqual([...fake.state.asks.keys()], [])
     assert.ok(cards[1].withdrawn)
     assert.deepEqual(bridge.store.get(sid).declined, ['msg_a1:tool:call_1'])
-    // A Stop that fails: the open card is cancelled with a message (not settled unanswered by the turn's end).
+    assert.ok(!notes.slice(from).some((note) => note.method === 'turn/completed'))
+    fake.emit('session.execution.succeeded', { sessionID: sid })
+    await until(() => live.activeTurn === null, 'the real turn end')
+    // A failed Stop does not change the still-running execution or its open card.
     await runningTurn(bridge, fake, live, [['call_9', 'shell', { command: 'deploy' }]], 'msg_a2')
     fake.ask(shellAsk(sid, 'per_9', 'deploy', { source: { type: 'tool', messageID: 'msg_a2', id: 'call_9' } }))
     await until(() => cards.length === 3, 'the third card')
     from = notes.length
-    await bridge.handle('turn/interrupt', { threadId: sid, turnId: live.activeTurn.id })
-    await until(() => fake.state.replies.length === 2, 'the cancel')
-    assert.equal(cards[2].withdrawn, 'Turn interrupted.')
-    assert.deepEqual(fake.state.replies[1], { sessionID: sid, requestID: 'per_9', decision: 'reject', message: CANCELLED_V2 })
-    assert.ok(notes.slice(from).some((note) => note.method === 'turn/completed'))
+    const turnId = live.activeTurn.id
+    await assert.rejects(bridge.handle('turn/interrupt', { threadId: sid, turnId }), /down/)
+    assert.deepEqual(fake.state.replies.map((reply) => reply.requestID), ['per_1'])
+    assert.equal(cards[2].withdrawn, undefined)
+    assert.equal(live.activeTurn.id, turnId)
+    assert.ok(!notes.slice(from).some((note) => note.method === 'turn/completed'))
+  } finally { await bridge.stop() }
+})
+
+test('a transient form reply failure retries the submitted answer without dismissing the question', async () => {
+  const { bridge, fake, cards } = await v2Bridge()
+  try {
+    const live = await startThread(bridge)
+    await runningTurn(bridge, fake, live, [])
+    const form = fake.form({ sessionID: live.id, metadata: { kind: 'question' }, fields: [{ key: 'color', type: 'string', title: 'Color', custom: true }] })
+    const fetch = bridge.server.fetch
+    let attempts = 0
+    bridge.server.fetch = (url, init) => {
+      if (new URL(url).pathname.endsWith(`/form/${form.id}/reply`) && ++attempts === 1) return Promise.resolve(new Response('down', { status: 503 }))
+      return fetch(url, init)
+    }
+    await until(() => cards.length === 1, 'the question card')
+    answer(cards[0], { answers: { color: { answers: ['Blue'] } } })
+    await until(() => fake.state.formReplies.length === 1, 'the retried answer')
+    assert.equal(attempts, 2)
+    assert.deepEqual(fake.state.formReplies[0].answer, { color: 'Blue' })
+    assert.deepEqual(fake.state.formCancels, [])
   } finally { await bridge.stop() }
 })
 

@@ -29,3 +29,14 @@ export const ChatMessageRetryParts = Object.freeze({ RetryAction: MessageActions
 // (3.6556.2 shared-7 bC read a context whose default was undefined; this one is false, so the disclaimer's inline
 // placement takes `C = x && S === !1` as the official default does.)
 export function useChatComposerLayout() { return false; }
+
+// chat-conversation r3-02: shared-33 KH (export in) = `PH(() => void WH())`, s$'s mount effect (ca2ef848d c$ → a$ → DS):
+// an idle-time dynamic import that warms the clay activity sprite sheets before the footer dots first draw. The sprite
+// players themselves (SU) come from working-line-v4's activity-sprites.mjs (D1); the host bundles them with the app, so
+// there is nothing to warm and the hint answers nothing.
+export function preloadChatActivitySprites() {}
+
+// chat-conversation r3-02: shared-100 _r (export Pt), W$'s mount effect (ca2ef848d K$ → Tb): at idle time it warms the
+// CDS spark sprites (gr: shared-frame Bg reduced-motion probe, else sM's sprite import). cds-core's CdsAnimatedSpark (dM)
+// loads those sprites itself when it first animates (lM's effect calls sM()), so this hint answers nothing.
+export function preloadChatSparkSprites() {}

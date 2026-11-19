@@ -706,6 +706,8 @@
       ],
       "heldByViewTabs": [
         "$w",
+        "Bn",
+        "Hn",
         "I1",
         "I2",
         "I3",
@@ -727,6 +729,8 @@
         "K5",
         "Nl",
         "Qw",
+        "Um",
+        "Vm",
         "Xw",
         "Yt",
         "Z1",
@@ -745,7 +749,8 @@
         "pm",
         "qw",
         "sT",
-        "tn"
+        "tn",
+        "zn"
       ]
     },
     {
@@ -38004,6 +38009,7 @@
         "HR",
         "IR",
         "Iz",
+        "J$",
         "JR",
         "KR",
         "Kz",
@@ -38023,6 +38029,7 @@
         "VR",
         "WR",
         "XR",
+        "Y$",
         "YR",
         "ZR",
         "_L",
@@ -69852,7 +69859,7 @@
       "target": "shared-100.mjs",
       "source": "shared-100-BBQR7Gmd.js",
       "sourceSha256": "2667959abe40092ed520c34cfb3e66e4633df852ef0aec88850c88bd1a7a3d7b",
-      "sha256": "cdc1241a1cae5ebd2e14a7f5b18d5f2c842360ac3e426f7a915a621f6e5a35cb",
+      "sha256": "822ae8f56ecc09192c2f8df9262e45172dc52cc6f3341068160bd29f92bdfb88",
       "referenceVersion": "4.16336.0",
       "bindings": [
         {
@@ -69890,14 +69897,6 @@
         {
           "name": "Un",
           "sha256": "5ae589be12d904edfed4f2f5586015c6e4368a8623f2b98b644656d58b13e4f9"
-        },
-        {
-          "name": "qn",
-          "sha256": "4c85bfb098b22fb3901398da989831bdc539fdb4f930bb33dc01f70d2f34552d"
-        },
-        {
-          "name": "Zn",
-          "sha256": "b3028b99dc210c68ec273714e34a25f5c07b3b1a98d0710fd56f5ee6044cfdcd"
         }
       ],
       "initializers": [],
@@ -69908,20 +69907,6 @@
           "name": "ky",
           "via": "shared-25-D-aF0gt9.js:ud",
           "kind": "generated"
-        },
-        {
-          "local": "m",
-          "from": "react",
-          "name": "useContext",
-          "via": "vendor-frame-BckkO60Y.js:po",
-          "kind": "react"
-        },
-        {
-          "local": "p",
-          "from": "react",
-          "name": "createContext",
-          "via": "vendor-frame-BckkO60Y.js:no",
-          "kind": "react"
         }
       ],
       "exports": {},
@@ -69930,8 +69915,7 @@
         "In",
         "Nn",
         "Pn",
-        "Un",
-        "Zn"
+        "Un"
       ],
       "heldByViewTabs": []
     },
@@ -79168,7 +79152,7 @@
       "target": "shared-20.mjs",
       "source": "shared-20-DUEo90UF.js",
       "sourceSha256": "28c50cf76aa77031056343ebb0dcd4505ffe22671779d25852ebc47ff0cbfccc",
-      "sha256": "3504f6c63909d00dbb7ea8688fbe7a21b27a9e3f23b8ab13d84014c157064a16",
+      "sha256": "aab3f89b22699506dd7bad0a1b22a1fb88f8fc3f531f5230768b32d3a3c6115c",
       "referenceVersion": "4.16336.0",
       "bindings": [
         {
@@ -83466,10 +83450,11 @@
         },
         {
           "local": "tf",
-          "from": "./shared-100.mjs",
-          "name": "Zn",
+          "from": "../../frame-sidebar-nav-adapter.mjs",
+          "name": "useOptionalCommandPaletteToggle",
           "via": "shared-100-BBQR7Gmd.js:Qt",
-          "kind": "generated"
+          "kind": "adapter",
+          "original": "Zn"
         },
         {
           "local": "th",
@@ -108584,11 +108569,17 @@
     {
       "chunk": "ca0409d7c-C0M8y8aL.js",
       "sourceSha256": "411166ee94b5697e5ce71eab463d9016b84961d1ab9d7209ae832f990608eb54",
-      "sha256": "fb84da8379c06460fc73161e489c6ef22275d218ffc1b5d60664ea643ab2ded8",
+      "sha256": "3acceec725ba5af805aee63fc6dd486adc282db72fc16688e4d076242ca62267",
       "importers": [
         "shared-20-DUEo90UF.js#TP"
       ],
-      "why": "shared-20 TP code_session_awaiting_body (AwaitingHoverCardBody): awaiting-session hover body, not shipped in this pass"
+      "why": "shared-20 TP code_session_awaiting_body (AwaitingHoverCardBody): awaiting-session hover body; its closure is the official Code session runtime and tool cards, not shipped in this pass",
+      "host": {
+        "module": "../../frame-sidebar-nav-awaiting-body.jsx",
+        "exports": [
+          "AwaitingHoverCardBody"
+        ]
+      }
     },
     {
       "chunk": "ca5811b6a-DqM8dlb4.js",

@@ -85,6 +85,10 @@ test('official branches: not unified (no tabs, no filter, subtitle, Sort by drop
   assert.doesNotMatch(source, /Deviation \(cwui-32 partial\)/);
   assert.match(source, /<CdsConfirmationDialog open [\s\S]*?><RemoveTaskFilesCheckbox checked=\{removeFiles\} onCheckedChange=\{setRemoveFiles\} \/><\/CdsConfirmationDialog>/);
   assert.match(source, /canRemoveFiles onDelete=\{async files => \{/);
+  // library-pages-r3-01: ccd3f68fe Iu `[Dn, On] = a(!0)` and the delete request calls `On(!0)` before opening the dialog,
+  // so the box starts checked every time (the detail page's os dialog does the same).
+  assert.match(source, /\[removeFiles, setRemoveFiles\] = useState\(true\)/);
+  assert.match(source, /onDelete=\{task => \{ setRemoveFiles\(true\); setDeleting\(task\); \}\}/);
   assert.match(source, /mutate\(\{ action: 'delete', id: task\.id, \.\.\.\(files === true && \{ removeFiles: true \}\) \}\)/);
   const box = renderToStaticMarkup(h(page.RemoveTaskFilesCheckbox, { checked: false, onCheckedChange() {} }));
   assert.match(box, /^<div class="mt-3">/);
@@ -154,10 +158,12 @@ test('delete confirmation copy and the sessions it archives', async () => {
 test('source: official copy, CDS parts through the facade, Create with Claude prompt, zh-CN entries', async () => {
   const source = local('src/source-routines.jsx');
   assert.doesNotMatch(source, /Search scheduled tasks\.\.\.|This removes the schedule|OpenClaude Desktop is open|SourceDialog/);
-  // 4.16336.0 host wiring (frame): the page's Banner / Checkbox / ConfirmationDialog / Dropdown are the cds-core facade's; only
-  // TextInput stays view-tabs, because registerNativeFieldComponents hands it to the 3.6556.2 cowork-scheduled form.
-  assert.match(source, /import \{ CdsTextInput as TextInput \} from '\.\/generated\/view-tabs\/index\.js';/);
-  assert.match(source, /import \{ CdsBanner, CdsCheckbox, CdsConfirmationDialog, CdsDropdown \} from '\.\/cds-core\.mjs';/);
+  // 4.16336.0 host wiring (frame): the page's Banner / Checkbox / ConfirmationDialog / Dropdown are the cds-core facade's.
+  // library-pages-r1-03 (old assertion encoded the 3.6556.2 form): the page now mounts cowork-scheduled-v4 (Field family from
+  // cds-core shared-frame), so TextInput is cds-core's too, not view-tabs'.
+  assert.match(source, /import \{ CdsBanner, CdsCheckbox, CdsConfirmationDialog, CdsDropdown, CdsTextInput as TextInput \} from '\.\/cds-core\.mjs';/);
+  assert.match(source, /from '\.\/generated\/cowork-scheduled-v4\/index\.mjs';/);
+  assert.doesNotMatch(source, /generated\/(?:cowork-scheduled|routines-shared|view-tabs)\/index/);
   assert.match(source, /registerNativeFieldComponents\(\{ Field, Label, Description, ErrorText, TextInput, TextArea \}\);/);
   assert.match(source, /<CdsDropdown\.Item icon="Chat" onClick=\{onCreateWithClaude\}>\{t\('Create with Claude'\)\}<\/CdsDropdown\.Item>/);
   assert.match(source, /<CdsDropdown\.Item icon="Settings" onClick=\{onSetUpManually\}>\{t\('Set up manually'\)\}<\/CdsDropdown\.Item>/);
@@ -196,7 +202,7 @@ test('templates: the official prompt starts a Cowork task (send in English, a co
     'i(su,{template:e,busy:L===e.id,disabled:(d||L!==null)&&L!==e.id,onSelect:()=>he(e,t)},e.id)', 'i("div",{"aria-busy":ge,className:"w-full",children:_e})'])
     assert.equal(count(zu, needle), 1, needle);
   assert.ok(official('shared-18-D3y8YMFN.js').includes('let s=o===a?"send":"draft";return{text:r===void 0?o:o.replaceAll(pK,()=>r),delivery:s}'));
-  const template = (await server.ssrLoadModule('/src/generated/cowork-scheduled/index.mjs')).SCHEDULED_TASK_TEMPLATES.find(entry => entry.id === 'daily_briefing');
+  const template = (await server.ssrLoadModule('/src/generated/cowork-scheduled-v4/index.mjs')).SCHEDULED_TASK_TEMPLATES.find(entry => entry.id === 'daily_briefing');
   const english = page.templatePrompt(template, 'en-US');
   assert.equal(english.delivery, 'send');
   assert.equal(english.text, 'Set up a scheduled task that gives me a morning brief each weekday at 8am: what’s on my calendar, important unread emails or messages, and anything that needs my attention today. Keep it short and scannable.');
@@ -277,7 +283,8 @@ test('banner: the official Keep awake switch once the desktop preference is know
     const html = list({ tasks: [] });
     assert.match(html, /<div class="flex items-center pe-md">/);
     assert.match(html, /aria-label="Keep awake"/);
-    assert.match(html, /<span class="font-base ">Keep awake<\/span>/);
+    // library-pages-r1-03: 4.16336.0 c6ad19bb9 m's md textClass is "text-body-regular" (3.6556.2: "font-base"; old assertion).
+    assert.match(html, /<span class="text-body-regular ">Keep awake<\/span>/);
     model.keepAwakeStore.set(true);
     await new Promise(resolve => setTimeout(resolve, 0));
     assert.deepEqual(calls, [['keep-awake-read', undefined], ['settings', { keepAwakeEnabled: true }]]);

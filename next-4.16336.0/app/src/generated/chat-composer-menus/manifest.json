@@ -195,9 +195,162 @@
         "id: \"CzjOV5rgPZ\"",
         "id: \"WyiVeak7w5\""
       ]
+    },
+    "wP": {
+      "source": "shared-8-BqfCbkJd.js",
+      "local": "wP",
+      "sourceSha256": "d9aa7c7f690b43147e921fbef5473f2311a1474e316c44e6db5ef07e9fede5bc",
+      "sha256": "d003491a9586e04885cf33afe21984791f29935d7e7241e3723fcde468c16236",
+      "features": [
+        "sheetTitle: ",
+        "id: \"alWu/MbgXB\"",
+        "collisionPadding: 10",
+        "\"max-h-[min(var(--available-height),24rem)]\""
+      ]
+    },
+    "vP": {
+      "source": "shared-8-BqfCbkJd.js",
+      "local": "vP",
+      "sourceSha256": "d9aa7c7f690b43147e921fbef5473f2311a1474e316c44e6db5ef07e9fede5bc",
+      "sha256": "85397feaa7702e935bdf0fad5e8818ecc2e5ef5605b40fadad5a25b6592a58c3",
+      "features": [
+        "id: \"composer_add_menu\"",
+        "tier: \"T1\"",
+        "pick: (e) => e.MenuItems"
+      ]
+    },
+    "bP": {
+      "source": "shared-8-BqfCbkJd.js",
+      "local": "bP",
+      "sourceSha256": "d9aa7c7f690b43147e921fbef5473f2311a1474e316c44e6db5ef07e9fede5bc",
+      "sha256": "0a2644a0da25e176c54ddb821bcb871dbe4c32475ddcf7b3d4b4b713bdf3ad60",
+      "features": [
+        "(vP.handle.id)"
+      ]
+    },
+    "ha": {
+      "source": "c752b32f8-NSBu06gO.js",
+      "local": "ha",
+      "sourceSha256": "d43e30d2b93beb8c52e0628a13f2573bb57c78c9693b457ec8a123e13e2ca55b",
+      "sha256": "03f93278ffde14e8a3dfb955ac602185dc93415cbd826abfa3684ce25ca1ada8",
+      "features": [
+        "(\"composer_add_menu\")"
+      ]
+    },
+    "ga": {
+      "source": "c752b32f8-NSBu06gO.js",
+      "local": "ga",
+      "sourceSha256": "d43e30d2b93beb8c52e0628a13f2573bb57c78c9693b457ec8a123e13e2ca55b",
+      "sha256": "45a9dba5eda1f497beb9f9e91aa4a7d50bb3fdcfdc354e0a3b2e25625a2f9274",
+      "features": [
+        "e.type === \"section-header\"",
+        "\"flex h-control items-center gap-xs px-2.5\"",
+        "hoverable: !0"
+      ]
+    },
+    "_a": {
+      "source": "c752b32f8-NSBu06gO.js",
+      "local": "_a",
+      "sourceSha256": "d43e30d2b93beb8c52e0628a13f2573bb57c78c9693b457ec8a123e13e2ca55b",
+      "sha256": "dfe960728573f4fd22ec9791e1014e4515d25df0461b9cc3d4e1d77356b9a691",
+      "features": [
+        "case \"connector-tool\":",
+        "focusesNothing: y,",
+        "case \"toggle-submenu\":"
+      ]
+    },
+    "ba": {
+      "source": "c752b32f8-NSBu06gO.js",
+      "local": "ba",
+      "sourceSha256": "d43e30d2b93beb8c52e0628a13f2573bb57c78c9693b457ec8a123e13e2ca55b",
+      "sha256": "4354bb381c583776400aa986724234f841bfd074a41cb513bfb8784291c21ba2",
+      "features": [
+        "\"renderPopup\" in i",
+        "hintDir: \"auto\"",
+        "openOnHover: l,"
+      ]
+    },
+    "Sa": {
+      "source": "c752b32f8-NSBu06gO.js",
+      "local": "Sa",
+      "sourceSha256": "d43e30d2b93beb8c52e0628a13f2573bb57c78c9693b457ec8a123e13e2ca55b",
+      "sha256": "07c9dcdb3536336747465c787a6745efe951301a0ce1d932778ba111f96ee2fa",
+      "features": [
+        "collisionPadding: 10",
+        "SearchablePopup",
+        "footerItems: p"
+      ]
+    },
+    "Aa": {
+      "source": "c752b32f8-NSBu06gO.js",
+      "local": "Aa",
+      "sourceSha256": "d43e30d2b93beb8c52e0628a13f2573bb57c78c9693b457ec8a123e13e2ca55b",
+      "sha256": "a2b93d0dd10cc024cd926f6223d888a57b7c1b46bfada39bc5bbc7435c17ba60",
+      "features": [
+        "{ label: t, subtitle: i } = e",
+        "\"flex min-w-0 flex-col\""
+      ]
+    },
+    "Da": {
+      "source": "c752b32f8-NSBu06gO.js",
+      "local": "Da",
+      "sourceSha256": "d43e30d2b93beb8c52e0628a13f2573bb57c78c9693b457ec8a123e13e2ca55b",
+      "sha256": "2c28705f5ea2bc534318db337dc2f2f4c76c95e5d40b36bfdefe1c376b0d0b50",
+      "features": [
+        "\"block truncate\"",
+        "scrollWidth > "
+      ]
+    },
+    "ka": {
+      "source": "c752b32f8-NSBu06gO.js",
+      "local": "ka",
+      "sourceSha256": "d43e30d2b93beb8c52e0628a13f2573bb57c78c9693b457ec8a123e13e2ca55b",
+      "sha256": "01b68f2341f57fc69bff375c8a6b2110fc48e19daa4f397100a8472c6d194553",
+      "features": [
+        "\"truncate text-footnote text-muted-as-secondary\"",
+        "{ text: t } = e"
+      ]
+    },
+    "ja": {
+      "source": "c752b32f8-NSBu06gO.js",
+      "local": "ja",
+      "sourceSha256": "d43e30d2b93beb8c52e0628a13f2573bb57c78c9693b457ec8a123e13e2ca55b",
+      "sha256": "cbb67bd263fb11a0d3da94c589c9f447b3caa04848e61f36defee9a410283d39",
+      "features": [
+        "labelDir: \"auto\"",
+        "sourcePluginTitle: p",
+        "onMouseLeave: C"
+      ]
+    },
+    "ma": {
+      "source": "c752b32f8-NSBu06gO.js",
+      "local": "ma",
+      "sourceSha256": "d43e30d2b93beb8c52e0628a13f2573bb57c78c9693b457ec8a123e13e2ca55b",
+      "sha256": "42222f14ae930f70aa0f4a435feb92598be518476214a8d2a1b3def98e5889f7",
+      "features": [
+        "{ checked: t, disabled: r } = e",
+        "\"pointer-events-none inline-flex items-center\"",
+        "inert: !0"
+      ]
     }
   },
   "resolved": {
+    "perfAttributes": {
+      "popup": {
+        "source": "shared-0-CnnWnVrT.js",
+        "export": "_b",
+        "local": "Y_",
+        "attr": "__",
+        "sha256": "891a6c18eff35451ebff8111535fdc4fd28543227c65645058b2b6f7aedd9539"
+      },
+      "submenu": {
+        "source": "shared-0-CnnWnVrT.js",
+        "export": "_b",
+        "local": "Y_",
+        "attr": "__",
+        "sha256": "891a6c18eff35451ebff8111535fdc4fd28543227c65645058b2b6f7aedd9539"
+      }
+    },
     "artifactFileRows": {
       "source": "shared-8-BqfCbkJd.js",
       "export": "Qi",
@@ -215,6 +368,32 @@
       "export": "bs",
       "local": "_W",
       "value": 8.5
+    },
+    "toggleRow": {
+      "classHelper": {
+        "source": "shared-frame-CJdE5Ria.js",
+        "export": "tc",
+        "local": "yT",
+        "publicName": "cdsMenuItemClass"
+      },
+      "itemComponent": {
+        "source": "vendor-frame-BckkO60Y.js",
+        "export": "on",
+        "local": "Fp",
+        "publicName": "BaseMenuCheckboxItem"
+      },
+      "icon": {
+        "source": "shared-frame-CJdE5Ria.js",
+        "export": "lf",
+        "local": "Bs",
+        "publicName": "CdsIcon"
+      },
+      "switch": {
+        "source": "shared-frame-CJdE5Ria.js",
+        "export": "oa",
+        "local": "tI",
+        "publicName": "CdsSwitch"
+      }
     }
   },
   "modules": [
@@ -252,7 +431,7 @@
         "shared-33-DtdykY0y.js",
         "shared-212-BHMAi0oa.js"
       ],
-      "sha256": "75839f45171757e69ae6cdf4af1dd0d343de332d0e12a3f6920ac2a40108e1b0",
+      "sha256": "b04a0b665e414e0f162c01c583b00b5b78c3cab13040db27ecaa3bcb71190d01",
       "exports": [
         "chatAddMenuMessages",
         "chatAddMenu"
@@ -445,6 +624,162 @@
       "root": "yz",
       "source": "shared-33-DtdykY0y.js",
       "sha256": "aec5feb9eeb601220932a9d3d57b034e2a1df7fb958cb6b494d9027adfa5f9a9"
+    },
+    {
+      "name": "messages.add",
+      "root": "wP",
+      "source": "shared-8-BqfCbkJd.js",
+      "sha256": "269262d50af1ae90a4cb74a08ecad1bbc059f208002ac423e0103fb086fbb7bb"
+    },
+    {
+      "name": "popup.props",
+      "root": "wP",
+      "source": "shared-8-BqfCbkJd.js",
+      "sha256": "e84565d567c37183b8f5ba44f1048aa11dc59c31c7978ed0714acb2acd9f81f3"
+    },
+    {
+      "name": "popup.root",
+      "root": "wP",
+      "source": "shared-8-BqfCbkJd.js",
+      "sha256": "3a68536677e7ed01b219ab65f325ae05dfc2f1fcefb93ab390e8e31f79d66bd8"
+    },
+    {
+      "name": "popup.perfId",
+      "root": "vP",
+      "source": "shared-8-BqfCbkJd.js",
+      "sha256": "c8f0b14188b9dc41a6c177710cb7f6b09a235477d7db3e5f263ae810761cf75b"
+    },
+    {
+      "name": "popup.perfCall",
+      "root": "bP",
+      "source": "shared-8-BqfCbkJd.js",
+      "sha256": "0a2644a0da25e176c54ddb821bcb871dbe4c32475ddcf7b3d4b4b713bdf3ad60"
+    },
+    {
+      "name": "rows.submenuPerf",
+      "root": "ha",
+      "source": "c752b32f8-NSBu06gO.js",
+      "sha256": "03f93278ffde14e8a3dfb955ac602185dc93415cbd826abfa3684ce25ca1ada8"
+    },
+    {
+      "name": "rows.loadingIcon",
+      "root": "ga",
+      "source": "c752b32f8-NSBu06gO.js",
+      "sha256": "1485ce01c7e9b0bea2c0d80a22fa837e35b2f8d628da55675b89728b22555b85"
+    },
+    {
+      "name": "rows.loadingRow",
+      "root": "ga",
+      "source": "c752b32f8-NSBu06gO.js",
+      "sha256": "28baef8e72d28554ea7d40b065456ba541997fb08a789ec34c39ec1c676cd1bf"
+    },
+    {
+      "name": "rows.tooltip",
+      "root": "ga",
+      "source": "c752b32f8-NSBu06gO.js",
+      "sha256": "2e7104ba368b295186062f96114aa45e2bca470e81d0b8dc527555cc207bd4fc"
+    },
+    {
+      "name": "rows.groupClass",
+      "root": "_a",
+      "source": "c752b32f8-NSBu06gO.js",
+      "sha256": "866d3ff0d3a8fa9cdb20fbc0e7af355e0b248049eea4e0938da6ed782185f27d"
+    },
+    {
+      "name": "rows.subtitleStackClass",
+      "root": "Aa",
+      "source": "c752b32f8-NSBu06gO.js",
+      "sha256": "6894063ae994519c9e323043d869de0ba36434ddbdbd91badaa0207cb2400977"
+    },
+    {
+      "name": "rows.labelClass",
+      "root": "Da",
+      "source": "c752b32f8-NSBu06gO.js",
+      "sha256": "8a0cc1770700f26aa37429e311cf1668c474644fb0eda63478a020d5c7540674"
+    },
+    {
+      "name": "rows.labelTooltip",
+      "root": "Da",
+      "source": "c752b32f8-NSBu06gO.js",
+      "sha256": "f3b02c1ecbb2e155d1ac572c10508fad834cac99d14303960677cd3ee1b26311"
+    },
+    {
+      "name": "rows.labelTooltipSide",
+      "root": "Da",
+      "source": "c752b32f8-NSBu06gO.js",
+      "sha256": "84be81134b7e558cc323cd33bafaff8de4bedc0c48673309c19cfb1c37c8db00"
+    },
+    {
+      "name": "rows.subtitleClass",
+      "root": "ka",
+      "source": "c752b32f8-NSBu06gO.js",
+      "sha256": "8ea3ccd05d101af4422cf5f8d64d9a9c49f68f370d3f9c58855cb551132c7be5"
+    },
+    {
+      "name": "rows.submenuAlign",
+      "root": "ba",
+      "source": "c752b32f8-NSBu06gO.js",
+      "sha256": "35559394e2f0f3d71e056bdd5f84ac41f962bf0ffd9fc5fea408a3dec6fa7db8"
+    },
+    {
+      "name": "rows.submenuHintDir",
+      "root": "ba",
+      "source": "c752b32f8-NSBu06gO.js",
+      "sha256": "5d710a8b0e714bb2905d374433481412960edb397f86194658b93ca6a8af280a"
+    },
+    {
+      "name": "rows.submenuPopup",
+      "root": "Sa",
+      "source": "c752b32f8-NSBu06gO.js",
+      "sha256": "2d90a93ac000efaada11148f0b60257693df606685d975558b565a54cce14645"
+    },
+    {
+      "name": "rows.submenuMaxVisible",
+      "root": "Sa",
+      "source": "c752b32f8-NSBu06gO.js",
+      "sha256": "0c15057fba059577cc12f4b948b910414ad298a3f5a62a3c942d09fe390e2f11"
+    },
+    {
+      "name": "rows.toggle.closeOnClick",
+      "root": "_aToggle",
+      "source": "c752b32f8-NSBu06gO.js",
+      "sha256": "00f9df19e3449bb316111e0b1ef00be0c8499fe26636b17b7e9ffb51f53e1ab9"
+    },
+    {
+      "name": "rows.toggle.item",
+      "root": "_aToggle",
+      "source": "c752b32f8-NSBu06gO.js",
+      "sha256": "1047c492730170b55c639b37e65ffb9b4a2a65147443c076677ee30106260c4c"
+    },
+    {
+      "name": "rows.toggle.icon",
+      "root": "_aToggle",
+      "source": "c752b32f8-NSBu06gO.js",
+      "sha256": "2f6bf67adfcab7d884af419c56ea44c0620dd34433b30237d91b11b8c8d296b7"
+    },
+    {
+      "name": "rows.toggle.stacks",
+      "root": "_aToggle",
+      "source": "c752b32f8-NSBu06gO.js",
+      "sha256": "3d4749fc350c612b29995807d4f7fe2ad5882f8507b2c08e6108b308ddb70dc7"
+    },
+    {
+      "name": "rows.toggle.element",
+      "root": "_aToggle",
+      "source": "c752b32f8-NSBu06gO.js",
+      "sha256": "4bb11b612da61635ce2ea8249b6cf244dd82e028b1ab070facfd5185ea147f19"
+    },
+    {
+      "name": "rows.toggle.switch",
+      "root": "ma",
+      "source": "c752b32f8-NSBu06gO.js",
+      "sha256": "5c88b348dd94b54c6064f72c08e59ede70803c5ca2abe3039f30076a163066ff"
+    },
+    {
+      "name": "rows.skill",
+      "root": "ja",
+      "source": "c752b32f8-NSBu06gO.js",
+      "sha256": "e8035607d48fc4a9f63700ec5aadec16264a105e3dae96cab49ef92876973163"
     }
   ]
 }

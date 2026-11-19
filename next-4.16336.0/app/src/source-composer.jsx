@@ -30,6 +30,8 @@ import { ComposerShellParts, SourceComposerShell } from "./source-composer-shell
 import { CARD_ADD_TRIGGER, CHIN_ADD_TRIGGER, ComposerAddTrigger } from "./source-composer-add-menu.jsx";
 import { ComposerDictationButton } from "./source-composer-dictation.jsx";
 import { useComposerDictation } from "./use-composer-dictation.js";
+import { stableDictationAvailable } from "./composer-dictation-model.mjs";
+import { COMPOSER_MARLIN_DESIGN } from "./composer-marlin.mjs"; // marlin-chin U-MARLIN: the Chat conversation's chin-mic
 import { composerCardRootClass, composerRowChinClass } from "./generated/code-composer-v4/composer-tokens.mjs";
 import { bashModeRingClass, shelfStartInset, shelfStartPaddingClass, shelfStartProperty } from "./generated/code-composer-v4/composer-card-tokens.mjs";
 // host-wiring/chat (4.16336.0): what this file draws in host markup is the cds-core graph's (shared-frame-CJdE5Ria Xu → Id
@@ -75,6 +77,8 @@ import { SourcePopover, SourcePopoverTitle, useSourcePopover } from "./source-po
 import "./source-composer.css";
 import { permissionLabel } from "./source-permission-menu.jsx";
 import { t, getLocale } from "../electron/i18n/index.mjs";
+// chat-home-r3-05: shared-9 BD (the classic editor) root attributes and default aria-label (scripts/extract-chat-composer.mjs).
+import { chatComposerEditor } from "./generated/chat-composer/card.mjs";
 
 // composer-send-held: c227f4d5e `XP = 1500` (the hold after a failed send restores its draft).
 const SEND_HOLD_MS = 1500;
@@ -189,6 +193,8 @@ export function DraftGroupNotice({ group, onClear, placement = "block" }) {
 
 export function SourceComposer({
   embedded = false, isPanelActive = true,
+  // marlin-chin (U-MARLIN): the inline disclaimer (ca2ef848d H9 `inline: !0`) a Chat conversation's chin centres.
+  chatDisclaimer = null,
   surfacePreviewPrompt, onClearSurfacePreview,
   codeLayout = "presets",
   fastMode = false, fastAvailable = false, speedLabel = null,
@@ -208,7 +214,7 @@ export function SourceComposer({
   // Esc Esc (code-workspace.js Gl): opens Rewind from an empty, idle composer; null where the session can't rewind.
   onRewind = null,
   mentions = [], mentionActions, onStop, onReconnect, reconnectLabel, warning, connectingHint, gitRequired, workdir, environmentName, environmentLine = null, environmentMenu = false, onMenu,
-  model, effort = "", permission, permissionOpen = false, modelOpen = false, modelsLoading = false, menuKind, usage, usageFresh = false, planUsage = null, mode = "code", onCodeMode, onFolder, surfaceFolder, surfaceFolderLabel, incognito = false,
+  model, effort = "", permission, permissionOpen = false, modelOpen = false, chatModelMenu, chatAddMenu, modelsLoading = false, menuKind, usage, usageFresh = false, planUsage = null, mode = "code", onCodeMode, onFolder, surfaceFolder, surfaceFolderLabel, incognito = false,
   folderMenu = true,
   showPet = false, showContext = showPet, additionalFolders = [], beforeComposer, afterComposer, draftGroup = null, onClearDraftGroup,
   // W14-code composer-03: cc43287c9's spawn notice {text, action?: {command}} and Ufe's onUseCommand.
@@ -365,22 +371,10 @@ export function SourceComposer({
     // The Code card's editor sits in the CDS ChatComposer shell, whose ChatComposerEditor box (shared-26 qa: grid, the
     // row's min-h / py, max-h-96) sizes and scrolls it; the editor turns its own autoHeight off there. A 24px floor on
     // the editor itself made the one-row presets card 4px taller than uM's (48 vs 44) and pushed the line above the +.
-    if (mode === "code") { element.style.height = ""; return; }
-    const measure = () => {
-      element.style.height = "auto";
-      // CDS editor qc max-h-96: grows to 24rem (384px) before it scrolls.
-      element.style.height = `${Math.max(24, Math.min(element.scrollHeight, parseFloat(getComputedStyle(element).maxHeight) || 384))}px`;
-    };
-    measure();
-    let width = element.getBoundingClientRect().width;
-    const observer = new ResizeObserver(() => {
-      const next = element.getBoundingClientRect().width;
-      if (next === width) return;
-      width = next;
-      measure();
-    });
-    observer.observe(element);
-    return () => observer.disconnect();
+    // marlin-height (2026-11-19): Chat / Cowork sit in the same CDS shell since the 4.16336.0 composer host cutover
+    // (source-chat-composer.jsx), so the floor is dropped there too: a reply card was 47px (8 + 3.5 + 24 + 3.5 + 8)
+    // where shared-5's py-2 card around a min-h-[var(--cmp-row-h)] editor (21px leading + 2 × 3.5) is 44px.
+    element.style.height = "";
   }, [draft, showContext, mode]);
 
   // "@" mention lookup: the caret token drives a debounced files:search
@@ -476,8 +470,10 @@ export function SourceComposer({
   const command = parseSessionCommand(draft, commandContext);
   const hostCommand = !!command && !command.skill && !command.custom;
   const disabled = !editable;
-  // Dictation (c47a58ae1 mS over the host's on-device recognizer, use-composer-dictation.js): the Code composer only.
-  const dictation = useComposerDictation({ editorRef: editor, enabled: mode === "code" && !embedded });
+  // Dictation (c47a58ae1 mS over the host's on-device recognizer, use-composer-dictation.js): the Code composer, and
+  // (marlin-chin U-MARLIN) the marlin Chat conversation's chin-mic slot (shared-9 n_ → k_ → shared-8 BL, source-chat-composer.jsx).
+  const chatChinMic = mode === "chat" && COMPOSER_MARLIN_DESIGN && !!commandContext?.current;
+  const dictation = useComposerDictation({ editorRef: editor, enabled: (mode === "code" || chatChinMic) && !embedded });
   const dictationRecording = dictation.status === "recording" || dictation.status === "connecting";
   const hasContent = !!editorText.trim() || attachments.length > 0 || contextPills.some((pill) => pill.content === true);
   // w13-close-chat-composer (chatfn-attachments-04): a Chat document still converting to text (convert-document has not
@@ -762,9 +758,15 @@ export function SourceComposer({
   // W14-code r4 (r4-composer-01): c227f4d5e-B-FYKrwT.js wF names the Code editor `Fa = formatMessage({defaultMessage:
   // "Prompt", id:"iWKE8shLIt"})` with enterkeyhint:"enter" (set on SourceComposerEditor's root). The Chat composer keeps
   // its own name (this wave changes Code only).
+  // chat-home-r3-05: the Chat / Cowork editor takes shared-9 BD's classic attributes — data-testid "chat-input",
+  // data-composer-editor "classic", aria-required / aria-invalid "false" — and BD's default aria-label "Write your prompt to
+  // Claude" (uxkiTeN6WU; persona-copy.mjs reads Claude as the running assistant). role / aria-multiline are the editor's own.
+  // BD's host-shape / draft-persisted attributes and aria-describedby (the Claude Code nudge, absent here) are not carried.
+  const classicEditor = mode === "code" ? null : { "data-testid": chatComposerEditor.testId, [chatComposerEditor.kindAttribute]: chatComposerEditor.kind,
+    "aria-required": chatComposerEditor.ariaRequired, "aria-invalid": chatComposerEditor.ariaInvalid };
   const editorElement = (
 <SourceComposerEditor className={mode === "code" ? "sc-input" : "sc-input epitaxy-prompt-input"} {...{ [tileFocusTargetAttribute]: "" }} data-cds="ChatComposerEditor" data-focus-region={disabled ? undefined : "composer"} data-focus-region-order="pane" data-focus-region-clear-on-input="" data-focus-region-holds=".epitaxy-prompt" data-focus-region-ring-on={'[data-cds="ChatComposer"] > *, .epitaxy-prompt'}
-              inputRef={assignEditor} scope={commandScope} aria-label={mode === "code" ? t("Prompt") : t("Message DeepSeek")} rows={1} disabled={disabled}
+              inputRef={assignEditor} scope={commandScope} aria-label={mode === "code" ? t("Prompt") : t(chatComposerEditor.ariaLabel.defaultMessage)} {...classicEditor} rows={1} disabled={disabled}
               keywordHighlight={!!workflowKeyword && !workflowKeyword.ignored}
               mentions={mentions} chips={chipCatalog} mentionActions={mentionActions}
               aria-autocomplete="list" aria-controls={showCommands ? commandId : undefined} aria-expanded={showCommands || mentionOpen || emojiOpen} aria-activedescendant={showCommands && suggestions[selected] ? `${commandId}-${selected}` : undefined}
@@ -887,7 +889,7 @@ export function SourceComposer({
   const toastSafeRegion = embedded ? undefined : mode === "code" ? "near-bottom" : "";
   return (
     <div className="composer-zone sc-zone" data-embedded={embedded || undefined} data-code-layout={singleRowCard ? "presets" : undefined} data-epitaxy-chat-column data-toast-safe-region={toastSafeRegion}
-      data-mention-open={mentionOpen || emojiOpen || undefined}>
+      data-mention-open={mentionOpen || emojiOpen || undefined} data-composer-marlin={COMPOSER_MARLIN_DESIGN || undefined}>
       {/* W14-code r8 css8-classic-context-row-dead (E95): the classic layout's context row (Local environment chip, folder
           chip, the bL branch / worktree split pill, extra folders, the draft-group chip, Add another folder) is gone: the
           Code composer is always the presets layout (cc43287c9 Dle draws that row only off presets, and
@@ -955,7 +957,11 @@ export function SourceComposer({
           disabled={disabled} busy={running || sending} sending={sending} canSend={canSend} showStop={showStop}
           onStop={onStop} submit={submit} onMenu={onMenu} model={model} effort={effort} effortLabel={effortLabel}
           modelsLoading={modelsLoading} permission={permission} workdir={surfaceFolder} folderLabel={surfaceFolderLabel} onFolder={onFolder}
-          onDrop={drop} canAttach={acceptsFiles} addMenuOpen={menuKind === "add"} /> : (
+          onDrop={drop} canAttach={acceptsFiles} addMenuOpen={menuKind === "add"} modelMenuOpen={modelOpen} modelMenu={chatModelMenu} addMenu={chatAddMenu} disclaimer={chatDisclaimer}
+          // marlin-chin fix2: shared-9 n_ returns null unless t_ (hideAddMenu && (stableDictationAvailable || voice)); a build
+          // or Mac that cannot dictate hides the slot instead of showing the disabled Microphone the Code chin keeps.
+          dictationControl={chatChinMic && stableDictationAvailable(dictation) ? <ComposerDictationButton dictation={dictation} /> : null}
+          dictationPlaceholder={!chatChinMic ? null : dictation.status === "connecting" ? t("Connecting...") : dictation.status === "recording" ? t("Listening...") : null} /> : (
         // c227f4d5e uM `v(lc, {…})`: busy, disabled, hasDraftContent (attachments), multiline `!ve && void 0` (the presets
         // card stays one row: the + leads, Send floats in the editor's notch), onClusterWidthsChange for the shelf, and
         // cardClassName (bash ring; sc-card the host hook); onFileDrop (cardFileDrop: the shell's drop panel outside a pane). 3.6556.2 qM: `ue(U && zM, Ee)`, the

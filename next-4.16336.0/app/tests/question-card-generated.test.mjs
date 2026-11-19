@@ -90,13 +90,19 @@ test('the host card is dt: c2d1aeb56 shell / body, bL title row with the n/m pil
   assert.match(html, /^<div class="source-message source-question-card epitaxy-approval-card relative isolate flex flex-col rounded-card p-\[12px\] gap-\[12px\] max-h-\[60vh\] [^"]* epitaxy-card-outline outline-none" role="group" tabindex="0"/);
   assert.match(html, /data-approval-presentation="card"/);
   assert.match(html, /<div class="epitaxy-scroll-clamp scroll-fade-y [^"]*epitaxy-approval-body flex min-h-0 flex-col gap-\[12px\]/);
-  assert.match(html, /<div class="text-primary min-h-\[24px\] flex items-center gap-1">/);
+  // chat-cowork-1to1 r1 (cowork-r1-10): the header is 4.16336.0 shared-33 rG (a `contents` wrapper, the row shrink-0).
+  assert.match(html, /<div class="contents"><div class="text-primary min-h-\[24px\] shrink-0 flex items-center gap-1">/);
   assert.match(html, /<span class="grid shrink-0 place-items-center rounded-full bg-warning px-sm text-caption tabular-nums text-warning" style="height:var\(--cds-leading-body\)">1\/2<\/span>/);
   assert.match(html, /<span data-question-stop-name="" class="text-body-semibold min-w-0 break-words"><span id="[^"]+" class="block select-text whitespace-pre-wrap \[unicode-bidi:plaintext\]">Which database\?<\/span>/);
   assert.match(html, /aria-label="View question options" aria-expanded="true"/);
   assert.match(html, /aria-label="Dismiss question"/);
   assert.equal(count(html, '<span class="pointer-events-none flex pointer-coarse:hidden">'), 3, 'keycaps 1, 2 and Other 3');
-  assert.match(html, /<div class="flex flex-col gap-\[12px\] rounded-\[5px\] px-md py-md bg-alpha-1 hover:bg-alpha-2"><button type="button" class="flex items-center gap-sm text-body text-primary text-start [^"]*"><span class="flex-1 select-text">Other<\/span>/);
+  // chat-cowork-1to1 r2 (cowork-r2-02): 4.16336.0 dt spreads `...pr` = { "data-question-answer": "" } on the Other button.
+  assert.match(html, /<div class="flex flex-col gap-\[12px\] rounded-\[5px\] px-md py-md bg-alpha-1 hover:bg-alpha-2"><button type="button" class="flex items-center gap-sm text-body text-primary text-start [^"]*" data-question-answer=""><span class="flex-1 select-text">Other<\/span>/);
+  // The option rows are 4.16336.0 c9ed5627b _t over c2f6611a3 hr: data-question-answer, no transition-[background-color], the
+  // text column `relative flex min-w-0 flex-1 flex-col select-text gap-0.5` with its id.
+  assert.match(html, /<button type="button" data-question-answer="" class="flex items-center gap-sm rounded-\[5px\] px-md py-md text-start [^"]*focus-visible:outline-hidden hide-focus-ring focus-visible:shadow-focus"><div id="[^"]+" class="relative flex min-w-0 flex-1 flex-col select-text gap-0\.5">/);
+  assert.doesNotMatch(html, /transition-\[background-color\]/);
   assert.match(html, /<textarea data-cds="TextArea" rows="1" style="max-height:calc\(4lh \+ 2 \* var\(--cds-pad-sm\)\)[^"]*" tabindex="-1" aria-label="Other option" placeholder="Type your own answer here"/);
   assert.match(html, /<div class="epitaxy-expanding-body flow-root"><div class="flex items-center justify-end gap-\[8px\]">/);
   assert.doesNotMatch(html, />Back</, 'no Back on the first page');

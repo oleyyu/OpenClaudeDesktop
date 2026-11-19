@@ -10,6 +10,16 @@ import { FLAVORS } from '../packages/opencode-bridge/src/flavor.js'
 import { taskPlanOf, toolItem } from '../packages/opencode-bridge/src/projection.js'
 import { Bridge, LiveThread } from '../packages/opencode-bridge/src/index.js'
 
+test('new turns do not shift a descending turn cursor back onto an earlier page', () => {
+  const turns = ['A', 'B', 'C'].map((id) => ({ id }))
+  const thread = { turns: () => turns, projector: { snapshot: (turn) => turn } }
+  const first = LiveThread.prototype.pageTurns.call(thread, { limit: 2 })
+  assert.deepEqual(first.data.map((turn) => turn.id), ['C', 'B'])
+  turns.push({ id: 'D' })
+  const next = LiveThread.prototype.pageTurns.call(thread, { limit: 2, cursor: first.nextCursor })
+  assert.deepEqual(next.data.map((turn) => turn.id), ['A'])
+})
+
 const made = []
 const tmp = () => { const dir = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'ocb-paging-'))); made.push(dir); return dir }
 test.after(() => { for (const dir of made) fs.rmSync(dir, { recursive: true, force: true }) })

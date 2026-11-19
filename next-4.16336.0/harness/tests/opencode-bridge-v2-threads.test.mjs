@@ -254,6 +254,23 @@ test('v1Providers / CatalogV2 alone: models grouped by provider, providers missi
   assert.equal(await catalog.defaultId(), null)
 })
 
+test('a custom provider named like a models.dev provider lists only the models the user added', async () => {
+  const { declaredModels } = await import('../packages/opencode-bridge/src/models.js')
+  const model = (providerID, id) => ({ id, providerID, name: id, capabilities: { input: ['text'] }, variants: [], cost: [], enabled: true })
+  // OpenCode merged the catalog's `refuseless` models (one of them a "-free" id the relay never served) into the route.
+  const listed = [model('refuseless', 'deepseek-v4.1-flash-abliterated'), model('refuseless', 'deepseek-v4.1-flash-abliterated-free'), model('refuseless', 'glm-5.3-abliterated'), model('opencode', 'big-pickle')]
+  const api = async () => ({ get: async (route) => (route === '/api/model' ? listed : route === '/api/model/default' ? model('refuseless', 'deepseek-v4.1-flash-abliterated-free') : []) })
+  let providers = [{ route: 'refuseless', models: ['deepseek-v4.1-flash-abliterated'] }]
+  const catalog = new CatalogV2(api, { location: () => '/h', declared: () => declaredModels(providers) })
+  assert.deepEqual((await catalog.codexModels()).map((entry) => entry.id), ['refuseless/deepseek-v4.1-flash-abliterated', 'opencode/big-pickle'])
+  assert.equal(await catalog.defaultId(), 'refuseless/deepseek-v4.1-flash-abliterated', 'OpenCode\'s default among the merged ones is not offered either')
+  // Read per load: a provider removed in Settings › Models no longer filters.
+  providers = []
+  catalog.invalidate()
+  assert.equal((await catalog.codexModels()).length, 4)
+  assert.deepEqual(declaredModels([{ route: 'r', models: ['a', '', 3] }, { route: '', models: ['x'] }, null]), new Map([['r', new Set(['a'])]]))
+})
+
 test('agents by id: the primary agent a turn runs, Customize\'s agent list keyed by id', async () => {
   const { bridge, fake } = v2Bridge()
   fake.state.agents = [

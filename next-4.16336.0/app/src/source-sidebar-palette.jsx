@@ -4,6 +4,7 @@ import { Icon } from "./icons";
 import { holdModalInert } from "./modal-inert.mjs";
 // W14-code r6 R6DC-02: c2771e1f6 / ce8be540f palette buttons are shared-frame Uu (E41 direct import).
 import { CdsButton } from "./cds-core.mjs"; // 4.16336.0 host wiring (frame): cds-core Button (Xu)
+import { CdsLayerProvider } from "./cds-core.mjs"; // U-23: shared-frame yd, the CDS layer context
 import { SourceSpinner } from "./source-pane-states.jsx";
 import { hasPendingApproval } from "./state.js";
 import { sessionArchived, sessionName, sessionState, sessionUpdatedAt } from "./sidebar-model";
@@ -239,7 +240,10 @@ export function SourceSidebarPalette({
   let index = 0;
   const placeholder = palettePlaceholder(mode, { surface }); // V3-w13-surfaces-shortcuts: c2771e1f6 P (code list) by surface
   const listLabel = mode === "search" ? t("Search results") : mode === "actions" ? t("Actions") : t("Command palette options");
+  // U-23: the palette sits in the modal layer (al("modal") base 100, z 140, source-sidebar-palette.css); like the
+  // shared-frame Dialog it hands that base to its content, so the Close / Clear filter tooltips stack above it.
   const tree = (
+    <CdsLayerProvider base={100}>
     <div className="spal-portal cds-root" data-cds-portal="" {...portalAttributes()}>
       <div className="spal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) { event.preventDefault(); close(); } }} />
       <div ref={popup} role="dialog" aria-modal="true" className="spal-popup cds-reset" data-palette-mode={mode}
@@ -299,6 +303,7 @@ export function SourceSidebarPalette({
           : null}</div>
       </div>
     </div>
+    </CdsLayerProvider>
   );
   return inline ? tree : createPortal(tree, document.body);
 }

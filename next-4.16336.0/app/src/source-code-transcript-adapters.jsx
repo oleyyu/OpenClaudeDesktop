@@ -33,6 +33,23 @@ import "./generated/code-transcript/agent-cell.css";
 export * from "./source-transcript-rows-adapters.jsx";
 // W14-code r4 ct-feed: the feed slices' host side (the Workflow tool row F$, the workflow card N$).
 export * from "./source-code-feed-adapters.jsx";
+import { useStartIntl } from "./source-code-start-adapters.jsx";
+import { getAssistantName } from "../electron/i18n/index.mjs";
+
+// fix-r2 U-14 (E83): c96d752d0 Sk, the user message's read receipt, formats "Read by {name}" (FFgIGfn7o1) with the
+// literal name "Claude" (4.16336.0 c2fd10b8d passes the reading agent's own name there); the reader here is the running
+// core's assistant. Only that message with that value changes; every other message is the transcript rows' intl as is.
+const READ_RECEIPT_ID = "FFgIGfn7o1";
+export function useIntl() {
+  const intl = useStartIntl();
+  return React.useMemo(() => ({ ...intl, formatMessage: (message, values) => intl.formatMessage(message,
+    message?.id === READ_RECEIPT_ID && values?.name === "Claude" ? { ...values, name: getAssistantName() } : values) }), [intl]);
+}
+
+// fix-r2 U-34: shared-7 jg, the editor prefs store the reply prose reads its text size from: the desktop's one store per
+// renderer, the 4.16336.0 shared-36 Om that Settings writes (settings-pages-v4 editor-prefs.mjs), so a size change shows
+// at once (not a second "epitaxy-editor-prefs" copy that only read localStorage at load).
+export { useEditorPrefsStore as useTranscriptEditorPrefsStore } from "./generated/settings-pages-v4/editor-prefs.mjs";
 
 const never = () => new Promise(() => {});
 const unavailable = (what) => () => Promise.reject(Object.assign(new Error(`${what} is not available in OpenClaude Desktop`), { name: "Unavailable" }));

@@ -1,6 +1,9 @@
 import React from 'react';
-import { ChatArtifactToolBlock, artifactCellType } from './generated/chat-artifact-card/artifact-tool-block.mjs';
-import { drawerTriggerStore } from './generated/chat-artifact-card/transcript-layout.mjs';
+// chat-conversation r1-04: the 4.16336.0 block (cc1aae219 c1 → shared-38 qa, generated/chat-artifact-card-v4 over
+// source-chat-artifact-card-v4-adapters.jsx; was the 3.6556.2 generated/chat-artifact-card). Its open button records the
+// trigger in cds-core shared-2 Y_ (the drawer focus store qa calls), so closing the panel restores focus from there.
+import { ChatArtifactToolBlock, artifactCellType } from './generated/chat-artifact-card-v4/index.mjs';
+import { Y_ as drawerTriggerStore } from './generated/cds-core/shared-2.mjs';
 import { ChatArtifactCardContext } from './source-chat-artifact-card-adapters.jsx';
 import { artifactToolCall } from './chat-artifact-model.mjs';
 

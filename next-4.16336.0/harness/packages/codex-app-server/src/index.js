@@ -1548,15 +1548,18 @@ export function apply(ctx, config) {
     }
   }
 
-  function routeOf(thread, events) {
-    if (thread?.selection.current) return thread.selection.current
-    if (events) {
-      for (let index = events.length - 1; index >= 0; index--) {
-        const event = events[index]
-        if (event.type === 'request/header' && event.data?.header?.config) return event.data.header.config
-      }
+  /** The route of a log's last request, if it made one. */
+  function loggedRoute(events) {
+    if (!events) return undefined
+    for (let index = events.length - 1; index >= 0; index--) {
+      const event = events[index]
+      if (event.type === 'request/header' && event.data?.header?.config) return event.data.header.config
     }
-    return catalog.defaultRoute()
+    return undefined
+  }
+
+  function routeOf(thread, events) {
+    return thread?.selection.current ?? loggedRoute(events) ?? catalog.defaultRoute()
   }
 
   /**
@@ -1565,8 +1568,16 @@ export function apply(ctx, config) {
    * or turn bound, never earlier than creation (a fork's copied history).
    */
   function threadObject({ id, header, projector, live, child, events, cold }, { includeTurns = false } = {}) {
-    const route = child?.route() ?? routeOf(live, events)
-    const meta = store.get(id)
+    let meta = store.get(id)
+    // The route the thread really runs on, when this call can tell: a sub-agent's own, the live selection, or its
+    // log's last request. It is remembered in the store, because a row built without the log (thread/list, a cold
+    // thread/read, a finished sub-agent) used to name the catalog's default model instead of the one the thread used.
+    const actual = child?.route() ?? live?.selection.current ?? loggedRoute(events)
+    if (actual?.provider && actual?.model && (meta.route?.provider !== actual.provider || meta.route?.model !== actual.model || meta.route?.reasoningEffort !== actual.reasoningEffort)) {
+      meta = store.update(id, { route: { provider: actual.provider, model: actual.model, ...(actual.reasoningEffort ? { reasoningEffort: actual.reasoningEffort } : {}) } })
+    }
+    // Unloaded and unread: the remembered route, else none (model null) rather than a model it may never have used.
+    const route = actual ?? (live || events ? catalog.defaultRoute() : meta.route ?? null)
     const createdMs = header?.createdAt ?? Date.now()
     const activityMs = live?.lastActivityMs ?? projector?.lastActivityMs ?? cold?.updatedAtMs ?? null
     const updatedMs = Math.max(createdMs, activityMs ?? createdMs)

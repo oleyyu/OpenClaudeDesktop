@@ -5,7 +5,6 @@ import {
   useState as _,
   forwardRef as x,
   useRef as A,
-  createContext as T,
   useContext as D,
   useId as k,
 } from "react";
@@ -65,18 +64,18 @@ import {
   Vm as ys,
   bm as Ps,
   pm as vs,
-  Bm as ss,
   um as ts,
   ym as ks,
 } from "./chunk-shared-2.mjs";
+import { ll } from "../cds-core/shared-3.mjs";
 import { clsx as f } from "../cds-core/vendor-frame.mjs";
+import { Bm as ss, hm as Uo } from "../cds-core/shared-2.mjs";
 import {
   attachmentAttribute as ms,
   attachmentTransitionName as js,
   attachmentTransitionNameProperty as Ms,
   scrollParentOf as is,
 } from "./chat-composer-attachment-transition.mjs";
-import { hm as Uo } from "../cds-core/shared-2.mjs";
 var gc = { uploadFailed: "Upload failed", playVideo: "Play video: {item}" };
 function _c(e) {
   e.preventDefault();
@@ -655,7 +654,6 @@ function cl(e, t, n) {
   let a = Math.max(1, e / i / sl, t / i / sl);
   return { width: e / i / a, height: t / i / a };
 }
-var ll = T(null);
 var ul = x((e, t) => {
   let $ = J9(110),
     n,

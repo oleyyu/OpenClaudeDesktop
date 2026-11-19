@@ -94,7 +94,9 @@ test('form settings persist, validate model and permission, and preserve complet
   assert.equal(renamed.enabled, false);
   assert.equal(renamed.nextRunAt, null);
   await assert.rejects(f.service.request({ action: 'update', id: once.id, name: once.name, prompt: once.prompt, fireAt: once.fireAt, enabled: true }), /future time/);
-  assert.throws(() => captureRoutineOptions({ config: f.options, coreId: 'other', models: [], previous: task.options, execution: { model: 'alternate' } }), /Switch to fixture/);
+  assert.throws(() => captureRoutineOptions({ config: f.options, coreId: 'other', models: [], previous: task.options, execution: { model: 'fixture-model' } }), /Switch to fixture/);
+  // bugfix lane F (§63): the saved values sent back unchanged (a rename on another core) keep the task's options.
+  assert.equal(captureRoutineOptions({ config: f.options, coreId: 'other', models: [], previous: task.options, execution: { model: 'alternate', permission: 'plan' } }), task.options);
 });
 
 test('one-shot failures are visible and cannot loop', async t => {

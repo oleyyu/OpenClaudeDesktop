@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { CdsBadge, CdsDropdown } from './cds-core.mjs';
 // w13-chatfn-tools (the review's 补做: the Chat + menu's Add to project). 3.6556.2 c752b32f8 ks is the project slot
 // ({type:"submenu", icon:"Projects", label:"Add to project", renderPopup:As}); As → Ms renders the menu host's popup
 // (c752b32f8 Gi: the CDS SearchablePopup with maxVisibleItems shared-182 es = 8.5) over Es's
@@ -52,4 +53,28 @@ export function ChatProjectPopup({ projects = [], currentProjectId = null, onPic
       return <>{leading}{list}{trailing}</>;
     }}
   </EnvironmentSearchablePopup>;
+}
+
+// r2 chat-home-r2-01: the same rows as c752b32f8 ks / Ms / Es hand them to ba's renderPopup (the + menu is the CDS Dropdown
+// now): `popup({ search: {label, value, onChange, onSubmit}, items, leadingRows, rows, maxVisibleItems })` — project rows
+// as Es's checkbox rows (icon Projects, closeOnClick), the "No matches" / "No projects yet" notice as a disabled button,
+// and shared-140 In's create rows (New project + separator before the list, "Create {name}" while typing) as CDS Items.
+function ChatProjectMenuContent({ popup, projects, currentProjectId, onPick, onCreate }) {
+  const [query, setQuery] = useState('');
+  const m = chatAddMenuMessages, { project: slot, projectRow, projectNotice } = chatAddMenu.items;
+  const create = typeof onCreate === 'function';
+  const typed = query.trim();
+  const rows = chatProjectRows({ projects, currentProjectId, query });
+  const items = rows.length ? rows.map(row => ({ ...projectRow, label: row.label, checked: row.checked, onAction: () => onPick?.(chatProjectPick(row.id, currentProjectId)) }))
+    : typed && create ? [] : [{ ...projectNotice, label: t((typed ? m.noMatches : m.noProjectsYet).defaultMessage) }];
+  const leadingRows = create && !typed ? <><CdsDropdown.Item data-testid="picker-create-project" icon="Add" onClick={() => onCreate('')}>{t('New project')}</CdsDropdown.Item><CdsDropdown.Separator /></> : undefined;
+  const typedRows = create && typed ? <CdsDropdown.Item data-testid="picker-create-project" icon="Add" onClick={() => onCreate(typed)} aria-label={t('Create project {projectName}', { projectName: typed })}>
+    <span className="flex min-w-0 items-center gap-xs">{t('Create')}<CdsBadge variant="neutral" truncate>{typed}</CdsBadge></span></CdsDropdown.Item> : undefined;
+  return popup({ search: { label: t((create ? m.searchOrCreateProject : m.searchProjects).defaultMessage), value: query, onChange: setQuery,
+    onSubmit: create ? value => { const name = String(value ?? '').trim(); if (name) onCreate(name); } : undefined },
+  items, leadingRows, rows: typedRows, maxVisibleItems: slot.maxVisibleItems });
+}
+/** The + menu's project slot for the CDS rows: ks's `{ renderPopup }` (source-chat-tools-menu.jsx chatAddMenuSlots). */
+export function chatProjectSlot({ projects = [], currentProjectId = null, onPick, onCreate = null }) {
+  return { renderPopup: popup => <ChatProjectMenuContent popup={popup} projects={projects} currentProjectId={currentProjectId} onPick={onPick} onCreate={onCreate} /> };
 }

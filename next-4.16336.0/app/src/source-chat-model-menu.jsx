@@ -24,16 +24,18 @@ import React from 'react';
 //     only for an Anthropic account (`ue = Lr(account)`, shared-52 sd: an @anthropic.com address), so here it is the
 //     plain popup.
 // Every class, test id and message comes from generated/chat-composer (scripts/extract-chat-composer.mjs). Host
-// differences: the popup is the host menu (SourceMenu) anchored on the trigger, so the CdsDropdown root is not
-// rendered; the card is docked at the bottom, so the side is "top"; there are no plan tags, notices, credits or
+// differences: the card is docked at the bottom, so the side is "top"; there are no plan tags, notices, credits or
 // capability conflicts locally (WH's tag / leading column / tooltip stay empty). E41: view-tabs from the concrete
 // shared-frame file (this menu belongs to the composer graph).
-// host-wiring/chat (4.16336.0): the rows' Badges are the cds-core graph's (shared-frame-CJdE5Ria vh → Pu) inside the host menu.
-import { CdsBadge } from './cds-core.mjs';
+// host-wiring/chat (4.16336.0): the rows' Badges are the cds-core graph's (shared-frame-CJdE5Ria vh → Pu) inside the menu.
+// chat-home r1-05: the popup, rows, submenus and switch are the cds-core CDS Dropdown (shared-frame UD: Popup rD, Item cD,
+// Group, Header, Separator, Submenu, SubmenuTrigger) and CdsSwitch, as KH / WH / wE / TE / hE render them (`Q` / `ie`), not
+// the host SourceMenu; the Root and Trigger are the composer's ($H: `Q.Root { open, onOpenChange }` around `Q.Trigger
+// render: Button`, source-chat-composer.jsx), so this module renders $H's `Q.Popup` and its KH content.
+import { CdsBadge, CdsDropdown, CdsSwitch, CdsTooltip } from './cds-core.mjs';
+import { useDirection } from './source-sidebar-resize-adapters.jsx';
 import { effortMenuMessages, modelSelector, modelSelectorMessages, modelSelectorPopupClass, modelSelectorSubmenuPopupClass, splitModelName } from './generated/chat-composer/model-selector.mjs';
 import { effortId, effortName, modelMenuSections } from './model-menu-model.mjs';
-import { SourceMenu } from './source-menu.jsx';
-import { SourceSwitch } from './source-switch.jsx';
 import { t } from '../electron/i18n/index.mjs';
 
 const message = descriptor => t(descriptor.defaultMessage);
@@ -66,43 +68,56 @@ function RowName({ name }) {
   return tail ? <>{base}<span className={modelSelector.menu.mutedTailClass}>{` ${tail}`}</span></> : name;
 }
 
-/** shared-8 WH (no plan tag, notice or tooltip locally). */
+/** shared-8 WH (RU): the row under its Tooltip (side `qg("inline-end", dir)`, multiline; a disabled row in a div). No plan
+ * tag, notice, credits or leading column locally. data-model-id is the host's (probes / tests read the row's model). */
+/** RU's `Tooltip {content, side: qg("inline-end", dir), multiline}`; qg (shared-33 Cb) is "right" unless right-to-left. */
+function ModelRowTooltip({ content, children }) {
+  const side = useDirection() === 'rtl' ? 'left' : 'right';
+  return <CdsTooltip content={content} side={side} multiline>{children}</CdsTooltip>;
+}
+
 function ModelRow({ model, checked, showDescription, onPick }) {
   const { menu } = modelSelector;
   const name = modelName(model);
   const disabled = !checked && !!model.disabled;
   const badge = typeof model.badge?.message === 'string' && model.badge.message ? model.badge : null;
-  return <SourceMenu.Item data-testid={menu.row.testId} className="sm-model-item" label={name} checked={checked} checkedRole={menu.row.checkedRole}
-    disabled={disabled} disabledReason={disabled ? model.disabled_reason?.message : undefined} data-model-id={modelKey(model)}
-    description={showDescription && hasText(model.description) ? model.description : undefined}
-    onClick={() => { if (!checked && !disabled) onPick?.(model); }}>
+  const item = <CdsDropdown.Item data-testid={menu.row.testId} onClick={() => { if (!checked && !disabled) onPick?.(model); }} disabled={disabled}
+    checked={checked} checkedRole={menu.row.checkedRole} description={showDescription && hasText(model.description) ? model.description : undefined}
+    data-model-id={modelKey(model)}>
     <span className={menu.rowNameClass}><RowName name={name} />
       {badge && <CdsBadge variant={badge.variant} size={menu.badge.size} truncate data-testid={menu.badge.testId}>{badge.message}</CdsBadge>}</span>
-  </SourceMenu.Item>;
+  </CdsDropdown.Item>;
+  return <ModelRowTooltip content={disabled ? model.disabled_reason?.message : undefined}>{disabled ? <div>{item}</div> : item}</ModelRowTooltip>;
 }
 
-/** shared-8 GH: one CdsDropdown Group of WH rows. */
+/** shared-8 GH (zU): one CdsDropdown Group of WH rows. */
 function ModelGroup({ models, currentId, showDescription = true, onPick }) {
-  return <SourceMenu.Group>{models.map(model => <ModelRow key={modelKey(model)} model={model} checked={modelKey(model) === currentId}
-    showDescription={showDescription} onPick={onPick} />)}</SourceMenu.Group>;
+  return <CdsDropdown.Group>{models.map(model => <ModelRow key={modelKey(model)} model={model} checked={modelKey(model) === currentId}
+    showDescription={showDescription} onPick={onPick} />)}</CdsDropdown.Group>;
 }
 
-/** shared-28 hE rows as gE lists them: every thinking mode but "off" / "standard"; a toggle picks it, or none. */
+/** shared-33 hE (Jx) rows as gE lists them: every thinking mode but "off" / "standard"; a toggle picks it, or none. The
+ * trailing switch sits in a span that stops the click (Zx) so only the row toggles. */
 function ThinkingRows({ options = [], value, onToggle }) {
   const { thinkingRow } = modelSelector;
   return <>{options.filter(option => option.id !== 'off' && option.id !== 'standard').map(option => {
     const active = value === option.id;
     const toggle = () => onToggle?.(active ? 'off' : option.id);
-    return <SourceMenu.Item key={option.id} data-testid={thinkingRow.testId} data-thinking-mode={option.id} keepOpen label={option.name} onClick={toggle}
-      trailing={<span onClick={event => event.stopPropagation()}><SourceSwitch label={option.name} checked={active} onChange={toggle} /></span>}>
+    return <CdsDropdown.Item key={option.id} data-testid={thinkingRow.testId} data-thinking-mode={option.id} keepOpen onClick={toggle}
+      trailing={<span onClick={event => event.stopPropagation()}><CdsSwitch aria-label={option.name} checked={active} onCheckedChange={toggle} tabIndex={-1} /></span>}>
       <span className={thinkingRow.copyClass}><span className={thinkingRow.titleClass}>{option.name}</span>
         {hasText(option.description) && <span className={thinkingRow.descriptionClass}>{option.description}</span>}</span>
-    </SourceMenu.Item>;
+    </CdsDropdown.Item>;
   })}</>;
 }
 
-/** shared-28 wE: the Effort submenu, its level rows (TE) and gE's thinking rows after them. */
-function EffortSubmenu({ levels = [], value, onPick, thinking }) {
+// shared-33 wE (rS) passes the levels popup `collisionAvoidance: zo(y) ? { side: "shift", align: "shift" } : { align: "shift" }`;
+// zo is the narrow-surface test, off for the composer card.
+const EFFORT_POPUP_COLLISION = Object.freeze({ align: 'shift' });
+const MODEL_POPUP_COLLISION = Object.freeze({ top: modelSelector.trigger.popupCollisionTop });
+
+/** shared-33 wE: the Effort submenu, its level rows (TE) and gE's thinking rows after them. */
+function EffortSubmenu({ levels = [], value, onPick, thinking, defaultOpen = false }) {
   const { effortMenu } = modelSelector;
   const options = levels.map(level => ({ id: effortId(level), name: effortName(effortId(level), levels), badge: typeof level === 'object' ? level.badge : undefined }))
     .filter(option => option.id);
@@ -110,61 +125,65 @@ function EffortSubmenu({ levels = [], value, onPick, thinking }) {
   const selected = options.find(option => option.id === value);
   const label = message(effortMenuMessages.effort);
   return <>
-    <SourceMenu.Separator />
-    <SourceMenu.Submenu>
-      <SourceMenu.SubmenuTrigger data-testid={effortMenu.trigger.testId} className="sm-model-item" label={label}>
+    <CdsDropdown.Separator />
+    <CdsDropdown.Submenu defaultOpen={defaultOpen}>
+      <CdsDropdown.SubmenuTrigger data-testid={effortMenu.trigger.testId}>
         <span className={effortMenu.trigger.rowClass}><span className={effortMenu.labelClass}><span className={effortMenu.labelTextClass}>{label}</span></span>
           {selected?.name && <span className={effortMenu.hintClass}>{selected.name}</span>}</span>
-      </SourceMenu.SubmenuTrigger>
-      <SourceMenu.Popup label={label} align={effortMenu.popupAlign} dataCds="ModelSelector" className="sm-model-menu sm-model-submenu">
-        <SourceMenu.Header className={effortMenu.headerClass}>{message(effortMenuMessages.header)}</SourceMenu.Header>
-        <SourceMenu.Group>{options.map(option => {
+      </CdsDropdown.SubmenuTrigger>
+      <CdsDropdown.Popup align={effortMenu.popupAlign} collisionAvoidance={EFFORT_POPUP_COLLISION}>
+        <CdsDropdown.Header className={effortMenu.headerClass}>{message(effortMenuMessages.header)}</CdsDropdown.Header>
+        <CdsDropdown.Group>{options.map(option => {
           const warning = option.badge?.variant === 'warning';
-          return <SourceMenu.Item key={option.id} data-testid={`${effortMenu.optionTestIdPrefix}${option.id}`} className="sm-model-item" label={option.name}
-            checked={option.id === value} checkedRole="radio" onClick={() => { if (option.id !== value) onPick?.(option.id); }}>
+          return <CdsDropdown.Item key={option.id} onClick={() => { if (option.id !== value) onPick?.(option.id); }} data-testid={`${effortMenu.optionTestIdPrefix}${option.id}`}
+            checked={option.id === value} checkedRole="radio">
             <span className={effortMenu.optionNameClass}>{option.name}
               {option.badge?.message && (warning
                 ? <CdsBadge variant="warning" size={effortMenu.defaultBadge.size} icon="Warning" className="min-w-0 shrink"><span className="truncate">{option.badge.message}</span></CdsBadge>
                 : <CdsBadge variant={option.badge.variant ?? effortMenu.defaultBadge.variant} size={effortMenu.defaultBadge.size} truncate>{option.badge.message}</CdsBadge>)}</span>
-          </SourceMenu.Item>;
-        })}</SourceMenu.Group>
-        {thinking && <><SourceMenu.Separator /><ThinkingRows {...thinking} /></>}
-      </SourceMenu.Popup>
-    </SourceMenu.Submenu>
+          </CdsDropdown.Item>;
+        })}</CdsDropdown.Group>
+        {thinking && <><CdsDropdown.Separator /><ThinkingRows {...thinking} /></>}
+      </CdsDropdown.Popup>
+    </CdsDropdown.Submenu>
   </>;
 }
 
 /**
- * The Chat / Cowork model menu (KH under $H's popup). effort {levels, value, onPick} | null; thinking {options, value,
- * onToggle} | null; isNewConversation: no conversation is open yet.
+ * The Chat / Cowork model menu: $H's `Q.Popup {side: placement === "bottom" ? "top" : "bottom", sideOffset: 4, align,
+ * className: ZH}` with KH inside (the card's composer is on the page, placement "bottom", so the side is "top"). The Root
+ * and Trigger are the composer's (source-chat-composer.jsx ChatModelMenuRoot). effort {levels, value, onPick} | null;
+ * thinking {options, value, onToggle} | null; isNewConversation: no conversation is open yet; effortOpen: the host's
+ * `{effortOpen}` entry (the effort chord / slash command) opens the Effort submenu with the menu.
  */
-export function SourceChatModelMenu({ anchor, models = [], selected = null, defaultModel = null, isNewConversation = true, onSelect, onClose,
-  effort = null, thinking = null, initialHighlight }) {
+export function SourceChatModelMenu({ models = [], selected = null, defaultModel = null, isNewConversation = true, onSelect,
+  effort = null, thinking = null, effortOpen = false }) {
   const { menu } = modelSelector;
   const { legacy, current, main, more } = chatModelMenuGroups({ models, selected, defaultModel, isNewConversation });
   const currentId = modelKey(current);
   const pick = model => { if (modelKey(model) !== currentId) onSelect?.(model); };
   const levels = Array.isArray(effort?.levels) ? effort.levels : [];
-  return <SourceMenu.Popup anchor={anchor} side="top" align={modelSelector.trigger.alignDefault} sideOffset={modelSelector.trigger.popupSideOffset}
-    label={t('Models')} dataCds="ModelSelector" className={`sm-model-menu ${modelSelectorPopupClass}`} onClose={onClose} initialHighlight={initialHighlight}>
-    {legacy && <SourceMenu.Header>{t(modelSelectorMessages.legacyModel.defaultMessage, { legacyModel: legacy, defaultModel: modelName(current) })}</SourceMenu.Header>}
+  // r2 chat-home-r2-04: $H's `collisionPadding: { top: gt }`, gt = 52 on the mac desktop window.
+  return <CdsDropdown.Popup side="top" sideOffset={modelSelector.trigger.popupSideOffset} align={modelSelector.trigger.alignDefault}
+    collisionPadding={MODEL_POPUP_COLLISION} className={modelSelectorPopupClass}>
+    {legacy && <CdsDropdown.Header>{t(modelSelectorMessages.legacyModel.defaultMessage, { legacyModel: legacy, defaultModel: modelName(current) })}</CdsDropdown.Header>}
     <ModelGroup models={main} currentId={currentId} onPick={pick} />
     {levels.length > 0
-      ? <EffortSubmenu levels={levels} value={effort.value} onPick={effort.onPick} thinking={thinking} />
-      : thinking ? <><SourceMenu.Separator /><ThinkingRows {...thinking} /></> : null}
+      ? <EffortSubmenu levels={levels} value={effort.value} onPick={effort.onPick} thinking={thinking} defaultOpen={effortOpen} />
+      : thinking ? <><CdsDropdown.Separator /><ThinkingRows {...thinking} /></> : null}
     {more.length > 0 && <>
-      <SourceMenu.Separator />
-      <SourceMenu.Submenu>
-        <SourceMenu.SubmenuTrigger data-testid={menu.moreModelsTestId} className="sm-model-item" label={message(modelSelectorMessages.moreModels)}>
+      <CdsDropdown.Separator />
+      <CdsDropdown.Submenu>
+        <CdsDropdown.SubmenuTrigger data-testid={menu.moreModelsTestId}>
           <span className={menu.moreModelsRowClass}>{message(modelSelectorMessages.moreModels)}</span>
-        </SourceMenu.SubmenuTrigger>
-        <SourceMenu.Popup label={message(modelSelectorMessages.moreModels)} dataCds="ModelSelector" className={`sm-model-menu sm-model-submenu ${modelSelectorSubmenuPopupClass}`}>
+        </CdsDropdown.SubmenuTrigger>
+        <CdsDropdown.Popup className={modelSelectorSubmenuPopupClass}>
           {more.map((group, index) => <React.Fragment key={modelKey(group[0])}>
-            {index > 0 && <SourceMenu.Separator />}
+            {index > 0 && <CdsDropdown.Separator />}
             <ModelGroup models={group} currentId={currentId} showDescription={false} onPick={pick} />
           </React.Fragment>)}
-        </SourceMenu.Popup>
-      </SourceMenu.Submenu>
+        </CdsDropdown.Popup>
+      </CdsDropdown.Submenu>
     </>}
-  </SourceMenu.Popup>;
+  </CdsDropdown.Popup>;
 }

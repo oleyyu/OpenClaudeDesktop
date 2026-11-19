@@ -57,7 +57,7 @@ const exportsOf = text => new Set([...text.matchAll(/export\s*\{([^}]*)\}\s*;/g)
 test('area records: 4.16336.0, file and source hashes, pinned roots, no production copy', () => {
   const manifest = JSON.parse(fs.readFileSync(path.join(dir, 'manifest.json'), 'utf8'));
   assert.equal(manifest.referenceVersion, referenceVersion);
-  assert.equal(manifest.cdsCoreManifestSha256, '06d2026939e5c8992713c2a0dda1b1abc9adffe7a0c223fe3c1e79eecd08d62c');
+  assert.equal(manifest.cdsCoreManifestSha256, 'a0f228ae3f997f54f3e3ebafc254794bd26d8f1fc6999943a08b1d5730f638cd');
   for (const [name, adapters] of Object.entries(AREAS)) {
     assert.ok(manifest.areas.includes(name), name);
     const rec = area(name);

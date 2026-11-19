@@ -43,6 +43,7 @@
 // Applied when the core restarts.
 const fs = require("node:fs");
 const path = require("node:path");
+const { createHash } = require("node:crypto");
 const { createRelayProxy } = require("./relay-proxy.cjs");
 // The model listing, the Test button and the relay listing follow the system proxy (system-fetch.cjs).
 const { systemFetch } = require("./system-fetch.cjs");
@@ -104,21 +105,42 @@ function createModelSettings({ getConfig, getClient, app, getHarnessProfile = ()
   function readProviders() {
     try { return prefs().normalizeProviders(JSON.parse(fs.readFileSync(providersFile(), "utf8")).providers); } catch { return []; }
   }
-  function readKeys() {
+  // The saved keys, {} when there is no keys file. A file that is there but can't be decrypted (the keychain denied
+  // "OpenClaude Desktop Safe Storage", or its entry was recreated after a re-sign) throws KEYS_LOCKED: a write starting
+  // from {} would delete or overwrite every saved key, and allowing keychain access later brings them back.
+  function readKeysStrict() {
     let data;
-    try { data = fs.readFileSync(keysFile()); } catch { return {}; }
+    try { data = fs.readFileSync(keysFile()); }
+    catch (error) { if (error?.code === "ENOENT") return {}; throw keysLockedError(error); }
     try {
       const parsed = JSON.parse(storage().decryptString(data));
-      return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? Object.fromEntries(Object.entries(parsed).filter(([, key]) => typeof key === "string" && key)) : {};
-    } catch (error) {
-      console.warn("Couldn’t read the provider keys:", error?.message || error);
-      return {};
-    }
+      if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("not a key table");
+      return Object.fromEntries(Object.entries(parsed).filter(([, key]) => typeof key === "string" && key));
+    } catch (error) { throw keysLockedError(error); }
   }
+  function keysLockedError(cause) {
+    return Object.assign(new Error(i18n.t("The saved API keys can’t be read, so nothing was changed. Allow OpenClaude Desktop to use “OpenClaude Desktop Safe Storage” in the keychain, then try again.")), { code: "KEYS_LOCKED", cause });
+  }
+  // Read paths (views, the core's environment): a locked file reads as no keys; keysLocked() tells the page why.
+  function readKeys() {
+    try { return readKeysStrict(); }
+    catch (error) { console.warn("Couldn’t read the provider keys:", error?.cause?.message || error?.message || error); return {}; }
+  }
+  const keysLocked = () => { try { readKeysStrict(); return false; } catch { return true; } };
+  // Never deletes or replaces a keys file it can't read (readKeysStrict throws first).
   function writeKeys(keys) {
+    readKeysStrict();
     if (!Object.keys(keys).length) { fs.rmSync(keysFile(), { force: true }); return; }
     if (!storage()?.isEncryptionAvailable?.()) throw new Error("Secure storage is unavailable, so the API key can’t be saved.");
     writeAtomic(keysFile(), storage().encryptString(JSON.stringify(keys)));
+  }
+  // Keys first, then the file that uses them: a failed key write changes nothing, and a failed config write puts the
+  // previous keys back, so a provider, relay or endpoint is never saved without its key.
+  function writeKeysThen(keys, writeConfig) {
+    const previous = readKeysStrict();
+    writeKeys(keys);
+    try { writeConfig(); }
+    catch (error) { try { writeKeys(previous); } catch {} throw error; }
   }
   // Export every stored key to the core's environment (before its next spawn).
   function exportKeys(providers = readProviders(), keys = readKeys(), previous = []) {
@@ -141,7 +163,10 @@ function createModelSettings({ getConfig, getClient, app, getHarnessProfile = ()
       try { base = await relayProxy.start(connection.relayBaseURL); }
       catch (error) { console.warn("Couldn’t start the relay forwarder; using the relay directly:", error?.message || error); base = connection.relayBaseURL; }
     } else await relayProxy.stop();
-    profile.setCoreEnv("DEEPSEEK_API_KEY", key ?? inherited.DEEPSEEK_API_KEY ?? null);
+    // Relay mode sends only the relay's own key: the launch environment's DEEPSEEK_API_KEY is an official key unless
+    // it was launched for this relay's origin. Without one, an empty value outranks the inherited variable.
+    const inheritedKey = !relay || (inherited.DEEPSEEK_BASE_URL && originOf(inherited.DEEPSEEK_BASE_URL) === originOf(connection.relayBaseURL)) ? inherited.DEEPSEEK_API_KEY : null;
+    profile.setCoreEnv("DEEPSEEK_API_KEY", key ?? inheritedKey ?? (relay ? "" : null));
     profile.setCoreEnv("DEEPSEEK_BASE_URL", base);
     await exportSearchKey(relay, keys);
   }
@@ -159,6 +184,23 @@ function createModelSettings({ getConfig, getClient, app, getHarnessProfile = ()
       else await profile.removeManagedRow?.(SEARCH_ROW_ID);
     } catch (error) { console.warn("Couldn’t point web search at the official key:", error?.message || error); }
   }
+  // providers.json also carries what the app knows of each model (modelInfo: name, reasoning, images) for the OpenCode
+  // bridge, which has no family table: without reasoning it declares the model non-reasoning and OpenCode lists no
+  // efforts for it. Only a save wrote it, so a provider saved by an older build (or before its family was known) is
+  // brought up to date before the core starts; the keys are untouched.
+  const providersDocument = providers => ({ version: 1, providers: providers.map(provider => ({ ...provider, modelInfo: prefs().providerModelInfo(provider) })) });
+  function writeProviders(providers) {
+    writeAtomic(providersFile(), JSON.stringify(providersDocument(providers), null, 2) + "\n", 0o644);
+  }
+  function refreshProviderInfo() {
+    let stored;
+    try { stored = JSON.parse(fs.readFileSync(providersFile(), "utf8")).providers; } catch { return; }
+    const providers = readProviders();
+    if (!providers.length) return;
+    const infoOf = route => (Array.isArray(stored) ? stored : []).find(item => item?.route === route)?.modelInfo ?? null;
+    if (providersDocument(providers).providers.every(provider => JSON.stringify(infoOf(provider.route)) === JSON.stringify(provider.modelInfo))) return;
+    writeProviders(providers);
+  }
   async function refreshCatalogRows() {
     const profile = getHarnessProfile();
     if (!profile?.setManagedRow) return;
@@ -166,21 +208,44 @@ function createModelSettings({ getConfig, getClient, app, getHarnessProfile = ()
     if (relay) await profile.setManagedRow(prefs().DEEPSEEK_ROW_ID, relay);
     if (providers) await profile.setManagedRow(prefs().PROVIDER_ROW_ID, providers);
   }
+  // The running core read providers.json, connection.json, codex/provider.json and the keys when it spawned (the Harness
+  // overlay row and env, a bridge's generated config, Codex's `-c` args), so a change shows only after a restart.
+  // Remember, per core process, what it started with — taken before the first write while it runs; a process spawned
+  // after the last write read the current files — so Settings can still offer "Restart core" after it was closed and
+  // opened again, and a change undone needs no restart.
+  const startedWith = new WeakMap();
+  const keyHash = key => key ? createHash("sha256").update(key).digest("hex") : null;
+  const signatures = {
+    providers: () => { const keys = readKeys(); return JSON.stringify(readProviders().map(provider => [provider, keyHash(keys[provider.route])])); },
+    connection: () => { const keys = readKeys(); return JSON.stringify([readConnection(), keyHash(keys[prefs().CONNECTION_KEY_OFFICIAL]), keyHash(keys[prefs().CONNECTION_KEY_RELAY])]); },
+    codex: () => { const keys = readKeys(); return JSON.stringify([readCodexProvider(), keyHash(codexPrefs() && keys[codexPrefs().CODEX_KEY_SLOT])]); },
+  };
+  const coreProcess = () => getClient?.()?.child ?? null;
+  function rememberCore() {
+    const child = coreProcess();
+    if (child && !startedWith.has(child)) startedWith.set(child, Object.fromEntries(Object.entries(signatures).map(([kind, signature]) => [kind, signature()])));
+  }
+  function pendingFor(kind) {
+    const child = coreProcess();
+    return !!child && startedWith.has(child) && startedWith.get(child)[kind] !== signatures[kind]();
+  }
   function connectionView() {
-    const keys = readKeys();
+    const keys = readKeys(), locked = keysLocked();
     return {
       available: !!getHarnessProfile()?.setCoreEnv,
       ...readConnection(),
       officialKey: !!keys[prefs().CONNECTION_KEY_OFFICIAL],
       relayKey: !!keys[prefs().CONNECTION_KEY_RELAY],
       inheritedKey: !!inherited.DEEPSEEK_API_KEY,
+      ...(locked ? { keysUnreadable: true } : {}),
+      ...(pendingFor("connection") ? { pending: true } : {}),
     };
   }
   async function applyProviders(providers, keys, previousRoutes) {
+    rememberCore();
     const profile = getHarnessProfile();
     if (!profile?.setManagedRow) throw new Error("Custom providers need Settings › Harness, which isn’t available.");
-    writeAtomic(providersFile(), JSON.stringify({ version: 1, providers }, null, 2) + "\n", 0o644);
-    writeKeys(keys);
+    writeKeysThen(keys, () => writeProviders(providers));
     const row = prefs().providerOverlayRow(providers);
     if (row) await profile.setManagedRow(prefs().PROVIDER_ROW_ID, row);
     else await profile.removeManagedRow(prefs().PROVIDER_ROW_ID);
@@ -192,6 +257,8 @@ function createModelSettings({ getConfig, getClient, app, getHarnessProfile = ()
       available: !!getHarnessProfile()?.setManagedRow,
       protocols: [...prefs().PROVIDER_PROTOCOLS],
       providers: readProviders().map(provider => ({ ...provider, keyEnv: prefs().providerKeyEnv(provider.route), hasKey: !!keys[provider.route] })),
+      changed: pendingFor("providers"),
+      ...(keysLocked() ? { keysUnreadable: true } : {}),
     };
   }
   // ---- Codex endpoint
@@ -199,7 +266,8 @@ function createModelSettings({ getConfig, getClient, app, getHarnessProfile = ()
     try { return codexPrefs().normalizeCodexProvider(JSON.parse(fs.readFileSync(codexProviderFile(), "utf8"))); } catch { return codexPrefs()?.normalizeCodexProvider(null) ?? null; }
   }
   function codexProviderView(provider = readCodexProvider(), keys = readKeys()) {
-    return { available: !!setCodexLaunch, ...provider, hasKey: !!keys[codexPrefs().CODEX_KEY_SLOT] };
+    return { available: !!setCodexLaunch, ...provider, hasKey: !!keys[codexPrefs().CODEX_KEY_SLOT], ...(keysLocked() ? { keysUnreadable: true } : {}),
+      ...(pendingFor("codex") ? { pending: true } : {}) };
   }
   // The variables the Codex child must not inherit: the DeepSeek connection and every Harness-managed key.
   function codexBlankEnv() {
@@ -336,6 +404,7 @@ function createModelSettings({ getConfig, getClient, app, getHarnessProfile = ()
   const exported = !app?.whenReady ? Promise.resolve() : app.whenReady().then(async () => {
     await loading;
     try { if (prefs()) { exportKeys(); await exportConnection(); } } catch (error) { console.warn("Couldn’t export the provider keys:", error?.message || error); }
+    try { if (prefs()) refreshProviderInfo(); } catch (error) { console.warn("Couldn’t refresh the custom providers’ model facts:", error?.message || error); }
     // Rewrite the managed catalog rows so facts added since they were saved (image input) reach the core.
     try { if (prefs()) await refreshCatalogRows(); } catch (error) { console.warn("Couldn’t refresh the model catalog rows:", error?.message || error); }
   });
@@ -377,7 +446,7 @@ function createModelSettings({ getConfig, getClient, app, getHarnessProfile = ()
     if (p.op === "connection-save") {
       if (!getHarnessProfile()?.setCoreEnv) throw new Error("The API connection needs Settings › Harness, which isn’t available.");
       const connection = prefs().validateConnection({ ...readConnection(), ...p.connection });
-      const keys = readKeys();
+      const keys = readKeysStrict();
       for (const [field, name] of [["officialKey", prefs().CONNECTION_KEY_OFFICIAL], ["relayKey", prefs().CONNECTION_KEY_RELAY]]) {
         const value = p[field];
         if (typeof value === "string" && value.trim()) {
@@ -391,8 +460,8 @@ function createModelSettings({ getConfig, getClient, app, getHarnessProfile = ()
       if (!(typeof p.relayKey === "string" && p.relayKey.trim()) && keys[prefs().CONNECTION_KEY_RELAY]
         && connection.relayBaseURL && originOf(connection.relayBaseURL) !== originOf(savedRelay)) delete keys[prefs().CONNECTION_KEY_RELAY];
       if (connection.mode === "relay" && !keys[prefs().CONNECTION_KEY_RELAY]) throw new Error("Enter the relay’s API key.");
-      writeAtomic(connectionFile(), JSON.stringify({ version: 1, ...connection }, null, 2) + "\n", 0o644);
-      writeKeys(keys);
+      rememberCore();
+      writeKeysThen(keys, () => writeAtomic(connectionFile(), JSON.stringify({ version: 1, ...connection }, null, 2) + "\n", 0o644));
       await exportConnection(connection, keys);
       // The relay's model ids replace the adapter's catalog (deepseek-flash / deepseek-v4-pro).
       const profile = getHarnessProfile(), row = prefs().relayCatalogRow(connection);
@@ -425,10 +494,11 @@ function createModelSettings({ getConfig, getClient, app, getHarnessProfile = ()
     if (p.op === "provider-save") {
       const provider = prefs().validateProvider(p.provider);
       const providers = readProviders(), previousRoutes = providers.map(item => item.route);
-      const index = providers.findIndex(item => item.route === (typeof p.previousRoute === "string" ? p.previousRoute : provider.route));
+      // Only an edit (previousRoute) replaces an entry: an add (Add provider, Quick setup) with a taken id is refused.
+      const index = typeof p.previousRoute === "string" ? providers.findIndex(item => item.route === p.previousRoute) : -1;
       if (providers.some((item, at) => item.route === provider.route && at !== index)) throw new Error("A provider with that id already exists.");
       if (index < 0 && providers.length >= prefs().MAX_PROVIDERS) throw new Error(`Use ${prefs().MAX_PROVIDERS} providers or fewer.`);
-      const keys = readKeys(), oldRoute = index >= 0 ? providers[index].route : null;
+      const keys = readKeysStrict(), oldRoute = index >= 0 ? providers[index].route : null;
       if (oldRoute && oldRoute !== provider.route) { if (keys[oldRoute]) keys[provider.route] = keys[oldRoute]; delete keys[oldRoute]; }
       if (typeof p.apiKey === "string" && p.apiKey.trim()) {
         if (p.apiKey.length > 4096 || /[\x00-\x1f\x7f]/.test(p.apiKey.trim())) throw new Error("Invalid API key.");
@@ -442,7 +512,7 @@ function createModelSettings({ getConfig, getClient, app, getHarnessProfile = ()
       const providers = readProviders(), previousRoutes = providers.map(item => item.route);
       const next = providers.filter(item => item.route !== p.route);
       if (next.length === providers.length) throw new Error("Unknown provider.");
-      const keys = readKeys(); delete keys[p.route];
+      const keys = readKeysStrict(); delete keys[p.route];
       await applyProviders(next, keys, previousRoutes);
       return providersView();
     }
@@ -451,7 +521,7 @@ function createModelSettings({ getConfig, getClient, app, getHarnessProfile = ()
       const providers = readProviders(), previousRoutes = providers.map(item => item.route);
       const index = providers.findIndex(item => item.route === p.route);
       if (index < 0 || typeof p.id !== "string" || !providers[index].models.includes(p.id)) throw new Error("Unknown model.");
-      const rest = prefs().providerWithoutModel(providers[index], p.id), keys = readKeys();
+      const rest = prefs().providerWithoutModel(providers[index], p.id), keys = readKeysStrict();
       const next = rest ? providers.map((item, at) => at === index ? prefs().validateProvider(rest) : item) : providers.filter((_, at) => at !== index);
       if (!rest) delete keys[p.route];
       await applyProviders(next, keys, previousRoutes);
@@ -484,7 +554,7 @@ function createModelSettings({ getConfig, getClient, app, getHarnessProfile = ()
       if (p.op === "codex-provider-save") {
         if (!setCodexLaunch) throw new Error(i18n.t("The Codex endpoint can’t be changed here."));
         const provider = codex.validateCodexProvider({ ...readCodexProvider(), ...(p.provider && typeof p.provider === "object" ? p.provider : {}) });
-        const keys = readKeys();
+        const keys = readKeysStrict();
         if (typeof p.apiKey === "string" && p.apiKey.trim()) {
           if (p.apiKey.length > 4096 || /[\x00-\x1f\x7f]/.test(p.apiKey.trim())) throw new Error("Invalid API key.");
           keys[codex.CODEX_KEY_SLOT] = p.apiKey.trim();
@@ -496,14 +566,12 @@ function createModelSettings({ getConfig, getClient, app, getHarnessProfile = ()
           && provider.baseURL && originOf(provider.baseURL) !== originOf(savedBase)) delete keys[codex.CODEX_KEY_SLOT];
         // A local model server (LM Studio, Ollama on this Mac) needs no key.
         if (provider.mode === "custom" && !keys[codex.CODEX_KEY_SLOT] && !codex.codexLocalEndpoint(provider.baseURL)) throw new Error("Enter the API key.");
-        // The key first: a failed key write (no secure storage) changes nothing, and a failed provider.json write
-        // puts the previous keys back, so custom mode is never saved without its key.
-        const previousKeys = readKeys();
-        writeKeys(keys);
-        try { writeAtomic(codexProviderFile(), JSON.stringify({ version: 1, ...provider }, null, 2) + "\n", 0o644); }
-        catch (error) { try { writeKeys(previousKeys); } catch {} throw error; }
+        // The key first (writeKeysThen), so custom mode is never saved without its key.
+        rememberCore();
+        writeKeysThen(keys, () => writeAtomic(codexProviderFile(), JSON.stringify({ version: 1, ...provider }, null, 2) + "\n", 0o644));
         await refreshCodexLaunch(provider, keys);
-        return { ...codexProviderView(provider, keys), pending: true };
+        // pending: the running Codex child started with another endpoint or key (none running: the next spawn has it).
+        return { ...codexProviderView(provider, keys), pending: pendingFor("codex") };
       }
       if (p.op === "codex-provider-models" || p.op === "codex-provider-test") {
         const saved = readCodexProvider();
@@ -551,8 +619,10 @@ function createModelSettings({ getConfig, getClient, app, getHarnessProfile = ()
   async function coworkConnection(model) {
     await ready();
     const { coworkProvider } = await import('./cowork-runtime/provider.mjs');
+    // As exportConnection: a relay never gets the launch environment's DEEPSEEK_API_KEY unless it was launched for that relay.
+    const connection = readConnection(), foreignRelay = connection.mode === "relay" && originOf(inherited.DEEPSEEK_BASE_URL) !== originOf(connection.relayBaseURL);
     return coworkProvider({ model: model || getConfig()?.model, providers: readProviders().map(provider => ({ ...provider, keyEnv: prefs().providerKeyEnv(provider.route) })),
-      connection: readConnection(), keys: readKeys(), inherited: { ...inherited },
+      connection, keys: readKeys(), inherited: foreignRelay ? { ...inherited, DEEPSEEK_API_KEY: undefined } : { ...inherited },
       officialKeySlot: prefs().CONNECTION_KEY_OFFICIAL, relayKeySlot: prefs().CONNECTION_KEY_RELAY, officialBaseURL: prefs().OFFICIAL_BASE_URL });
   }
   // Codex launched on the saved custom endpoint (its own `-c model_provider=…`, launchedProvider): Codex's auto-review

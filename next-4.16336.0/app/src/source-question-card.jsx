@@ -13,10 +13,11 @@ import { flushSync } from "react-dom";
 // host-wiring/chat (4.16336.0): what the card draws in its own markup is the cds-core graph's (shared-frame-CJdE5Ria): Back /
 // Skip and the En pager Buttons (Xu → Id), the Other TextArea (oN), the digit Shortcut (ic), the multi-select
 // CheckboxIndicator (GC) with its top-align class (HC), and the class joins (Q). The title row's collapse / dismiss Buttons are
-// QuestionCardHeader's `trailing` value and the single-select mark is QuestionRadioMark (src/generated/question-card, 3.6556.2):
-// that region renders them, so they keep the 3.6556.2 view-tabs Button / Icon / top-align class (ViewTabs*).
-import { CdsButton as ViewTabsCdsButton, CdsIcon as ViewTabsCdsIcon, cdsCheckboxTopAlignClass as viewTabsCheckboxTopAlignClass } from "./generated/view-tabs/index.js";
-import { CdsButton, CdsTextArea, CdsShortcut, CdsCheckboxIndicator, cdsCheckboxTopAlignClass, cdsClassNames } from "./cds-core.mjs";
+// QuestionCardHeader's `trailing` value and the single-select mark is QuestionRadioMark. chat-cowork-1to1 r2 (cowork-r2-02): the
+// header and the rows are the 4.16336.0 question-card-v4 graph now, so `trailing` is dt's cds-core Button / Icon (c9ed5627b
+// `e(l, { size: "base", variant: "ghost", iconOnly: !0, icon: s, … })`, l = shared-frame Id, ee = lf) and the mark takes the
+// cds-core top-align class (c2f6611a3 Wr passes shared-frame HC to Dr).
+import { CdsButton, CdsIcon, CdsTextArea, CdsShortcut, CdsCheckboxIndicator, cdsCheckboxTopAlignClass, cdsClassNames } from "./cds-core.mjs";
 import { useApprovalDraft } from "./use-approval-draft.js";
 import {
   dismissQuestionPayload,
@@ -25,6 +26,13 @@ import {
   questionCardKeyDown,
   QUESTION_USER_DISMISSED_ANSWER,
 } from "./approval-draft-model.mjs";
+// chat-cowork-1to1 r2 (cowork-r2-02, partial): the option rows, the row pointer handlers, the answer options and the bidi
+// class are the 4.16336.0 originals (src/generated/question-card-v4: c9ed5627b _t over c2f6611a3 hr QuestionOptionButton,
+// with data-question-answer, the `relative … gap-0.5` text column with its id, and the link-row arm). What is bound to the
+// approval-landing store stays 3.6556.2 — markCardPick, the digit listener (its 4.16 body is the same statement for
+// statement, only reading the 4.16336.0 landing graph) and the primary button (its window-attention copy is watched only by the
+// landing hook): the old proposal-group / cowork-approval FS-IS-OS graphs the host still renders share that store, and
+// it moves with them (the 4.16336.0 landing graph's heldBy cluster, productionSwitchNotBeforeBatch 8).
 import { markCardPick } from "./generated/approval-landing/card-landing.mjs";
 import {
   QuestionOptionRow,
@@ -32,12 +40,15 @@ import {
   preventMouseDown,
   otherFieldArrowKeys,
   stopClickPropagation,
-} from "./generated/question-card/option-row.mjs";
-import { QuestionCardHeader, questionDisplayText } from "./generated/question-card/card-header.mjs";
+} from "./generated/question-card-v4/option-row.mjs";
+// chat-cowork-1to1 r1 (cowork-r1-10, partial): the card header is the 4.16336.0 one (shared-33-DtdykY0y rG / _I,
+// src/generated/question-card-v4: "text-primary min-h-[24px] shrink-0 …" inside a `contents` wrapper). It holds no state;
+// the rows / digit shortcuts stay 3.6556.2 until the approval-landing store moves with them (notes.md).
+import { QuestionCardHeader, questionDisplayText } from "./generated/question-card-v4/card-header.mjs";
 // W14-code r4 R4T-02: En's title is c2f6611a3 Nn → cb8c5a88f ii (`T(e, t, n || void 0, void 0, void 0, void 0, void 0, !0)`):
 // the question's links, inline code and paths drawn as the transcript draws prose.
 import { ii as questionRichText } from "./generated/code-transcript/cb8c5a88f-h6ooJ7Al.mjs";
-import { questionRowMouseDown, questionEndsDragSelect } from "./generated/question-card/row-pointer.mjs";
+import { questionRowMouseDown, questionEndsDragSelect } from "./generated/question-card-v4/row-pointer.mjs";
 import { questionDigitShortcuts } from "./generated/question-card/digit-shortcuts.mjs";
 import { QuestionPrimaryButton } from "./generated/question-card/primary-button.mjs";
 import {
@@ -47,8 +58,8 @@ import {
   answerOptionInset,
   preventAnswerMouseDown,
   stopAnswerClick,
-} from "./generated/question-card/answer-option.mjs";
-import { e as bidiPlaintext } from "./generated/question-card/c8187a2dc.mjs";
+} from "./generated/question-card-v4/answer-option.mjs";
+import { bidiPlaintext } from "./generated/question-card-v4/bidi.mjs";
 import { ApprovalAllowArm, currentlyVisible } from "./source-approval-card.jsx";
 import { useCardHotkeys } from "./use-card-hotkeys.js";
 import { t } from "../electron/i18n/index.mjs";
@@ -112,15 +123,15 @@ export function SourceQuestionCardDt({
     )
       root.current?.focus({ preventScroll: true });
   }, [ticket, page]);
-  // dt A (collapsed), H (focus the card after a page change), Yt / Xt (when the card last became active), un / dn
-  // (the row press being watched and its mouseup listener).
+  // dt A (collapsed), H (focus the card after a page change), Yt / Xt (when the card last became active), An / jn
+  // (4.16336.0 c9ed5627b: the row press being watched and its mouseup listener's AbortController).
   const [collapsed, setCollapsed] = useState(false);
   const focusOnPage = useRef(false), activeSince = useRef(-1 / 0), wasActive = useRef(isActive && isFocusedPane);
   const pressRef = useRef(null), pressAbort = useRef(null);
   const rowPointer = useRef(null);
   rowPointer.current ??= {
-    onRowMouseDown: questionRowMouseDown({ un: pressRef, dn: pressAbort }),
-    endsDragSelect: questionEndsDragSelect({ un: pressRef }),
+    onRowMouseDown: questionRowMouseDown({ jn: pressAbort, An: pressRef }),
+    endsDragSelect: questionEndsDragSelect({ An: pressRef }),
   };
   useLayoutEffect(() => () => pressAbort.current?.abort(), []);
   // dt Zt: Yt is stamped when the card becomes active (w && T).
@@ -378,11 +389,11 @@ export function SourceQuestionCardDt({
             ? <span className={PROGRESS_PILL} style={{ height: "var(--cds-leading-body)" }}>{page + 1}/{view.questions.length}</span>
             : undefined}
           trailing={<span className="flex items-center gap-0.5">
-            <ViewTabsCdsButton size="base" variant="ghost" iconOnly
-              icon={<ViewTabsCdsIcon name="CaretRight" size="auto" rotate={collapsed ? 0 : 90}
+            <CdsButton size="base" variant="ghost" iconOnly
+              icon={<CdsIcon name="CaretRight" size="auto" rotate={collapsed ? 0 : 90}
                 className="transition-transform duration-fast motion-reduce:transition-none" />}
               onMouseDown={preventMouseDown} aria-expanded={!collapsed} aria-label={t("View question options")} onClick={toggleCollapsed} />
-            {dismissResponse && <ViewTabsCdsButton size="base" variant="ghost" iconOnly icon="X" onMouseDown={preventMouseDown}
+            {dismissResponse && <CdsButton size="base" variant="ghost" iconOnly icon="X" onMouseDown={preventMouseDown}
               aria-label={t("Dismiss question")} disabled={unavailable || menuOpen} onClick={() => void dismiss()} />}
           </span>}
         >
@@ -412,6 +423,7 @@ export function SourceQuestionCardDt({
                     onMouseDown={onRowMouseDown}
                     aria-pressed={multi ? custom : undefined}
                     className="flex items-center gap-sm text-body text-primary text-start focus-visible:outline-hidden hide-focus-ring focus-visible:shadow-focus"
+                    data-question-answer=""
                     onClick={(event) => {
                       if (endsDragSelect(event) || unavailable || menuOpen) return;
                       markHighlight(-1);
@@ -473,8 +485,8 @@ export function SourceQuestionCardDt({
 }
 
 // ── The card presentation: c2f6611a3 En (exported `t`; cc32965c2 `ho`) ──────────────────────────────────────────────
-// En's rows are the originals (src/generated/question-card/answer-option.mjs: Tn answer row, cn radio mark, Sn, bn, xn,
-// Cn). En itself keeps its draft in module-level tables (c6dc54e94 ut / ct / ht / st, c8367fa19 Ne / Pe / Fe) and answers
+// En's rows are the 4.16336.0 originals (src/generated/question-card-v4/answer-option.mjs: c2f6611a3 Wr answer row, Dr
+// radio mark, Vr, zr, Br, Hr). En itself keeps its draft in module-level tables (c6dc54e94 ut / ct / ht / st, c8367fa19 Ne / Pe / Fe) and answers
 // with a Claude Code tool result through onSubmit; here the host's approval-draft runtime is that state (it already
 // follows En's question hook: a single-select question preselects options[0] (`_n`), Skip marks the page skipped and on
 // the last page goes to the first unanswered one or submits (`Mt`), Other with an empty field answers "Something else"),
@@ -614,7 +626,7 @@ function SourceQuestionCardEn(props) {
   // En B: the Other row's mark, the CDS checkbox indicator (multiSelect) or cn, both with shared-frame OS.
   const mark = (checked) => multi
     ? <CdsCheckboxIndicator checked={checked} className={cdsCheckboxTopAlignClass} />
-    : <QuestionRadioMark checked={checked} className={viewTabsCheckboxTopAlignClass} />;
+    : <QuestionRadioMark checked={checked} className={cdsCheckboxTopAlignClass} />;
   const fieldProps = {
     ref: otherField,
     value: answer.customText,
@@ -639,7 +651,7 @@ function SourceQuestionCardEn(props) {
     ? <div className={QUESTION_CARD_EN.freeRow}>{field}</div>
     : (
       <div className={EN_OTHER_ROW}>
-        <button type="button" disabled={inert} aria-pressed={otherOn} aria-label={t("Other")} className={EN_OTHER_HIT}
+        <button type="button" disabled={inert} aria-pressed={otherOn} aria-label={t("Other")} className={EN_OTHER_HIT} data-question-answer=""
           onClick={(event) => { if (!endsAnswerSelection(event)) pressOther(); }} />
         <div aria-hidden="true" className={EN_OTHER_LABEL}>
           {mark(otherOn)}

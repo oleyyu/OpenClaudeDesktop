@@ -73,6 +73,11 @@
 .source-transcript-content > .source-message:has(+ .stf-footer) { margin-bottom: 0; }
 .source-transcript-content > .stf-footer { margin-top: 8px; margin-bottom: 10px; }
 .source-transcript-content > .stf-footer + .source-message { margin-top: 10px; }
+/* U-09: ca2ef848d H9's non-inline band (`relative z-0 -mt-10 bg-page pt-12`) is drawn after the composer, and its -mt-10
+   tucks under the composer card. The host ends a Chat transcript with it, where nothing sits above but the last row:
+   pulled up 40px with an opaque ground, it painted over an approval / error card's bottom (its buttons). No tuck here;
+   pt-12 still spaces it. */
+.source-transcript-content > [data-disclaimer] { margin-top: 0; }
 .source-transcript-content > .stf-footer + .source-message:is(.source-user-message,[data-turn-start]) { margin-top: 15px; }
 
 /* Current ceb49ada3 split selection toolbar; cd5a31703 Eot positions its first line. */

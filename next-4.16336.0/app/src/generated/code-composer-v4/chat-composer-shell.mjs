@@ -102,7 +102,7 @@ import {
   dockMaskedClass as Xo,
   dockGroupAttribute as cs,
 } from "./chat-composer-dock.mjs";
-import { km as Cc, Am as wc } from "./chunk-shared-2.mjs";
+import { km as Cc } from "../cds-core/shared-2.mjs";
 import {
   useAttachmentTransition as Vc,
   scrollParentOf as zc,
@@ -112,6 +112,7 @@ import {
   presenceMotion as Od,
 } from "./chat-composer-presence.mjs";
 import { jl as xl } from "./chunk-shared-3.mjs";
+import { Am as wc } from "./chunk-shared-2.mjs";
 function Wd(e, t, n) {
   let $ = J9(7),
     r = n !== void 0 && n,
@@ -1903,6 +1904,9 @@ var Rp = Object.assign(Lp, {
   Quote: xl.Quote,
 });
 var zp = "cdsChatComposerPart";
+function Bp(e) {
+  return ((e[zp] = "Chin"), e);
+}
 function Vp(e) {
   return D(e) && typeof e.type != "string" && e.type[zp] === "Chin";
 }
@@ -3105,4 +3109,5 @@ export {
   pm as chatComposerFormPlaceholder,
   Bm as useResolvedPlaceholder,
   zm as placeholderGhostLines,
+  Bp as markChatComposerChin,
 };

@@ -20,7 +20,11 @@ import { SourceTimestamp } from './source-timestamp.jsx';
 import { ChatVersionSelector } from './generated/chat-messages-v4/index.mjs';
 import { showVersionNav } from './chat-branches-model.mjs';
 import './source-user-actions.css';
-import { t } from '../electron/i18n/index.mjs';
+import { getLocale, t } from '../electron/i18n/index.mjs';
+// chat-conversation r2-04: a Chat prompt's toolbar is cc1aae219's `Ff.Actions` (shared-3 Bd.Actions = shared-2 `t`, the
+// MessageActions compound working-line-v4 generates as m7, the reply toolbar's too) with the official Retry (ChatRetryAction).
+import { m7 as MessageActions } from './generated/working-line-v4/shared-2.mjs';
+import { ChatRetryAction } from './generated/chat-messages-v4/index.mjs';
 
 function useCoarseInput(root) {
   const [coarse, setCoarse] = useState(false);
@@ -142,13 +146,35 @@ function UserActions({ identity, itemId, text, startedAtMs, interacted, rewind =
   </div>;
 }
 
+// chat-conversation r2-04: cc1aae219's sent prompt (n !== "head"):
+//   _(Ff.Actions, { "data-testid": "user-message-actions", ref: Rn, wrap: !0, defer: Fe, alwaysVisible: Pn, showActionsLabel: Nn,
+//     children: [E.created_at && !Oe && m(Ff.Timestamp, { date: E.created_at, locale: vt.locale }), kn] })
+//   kn = [bn, xn, Sn, wn, rn, Tn, En, Dn, On]: bn `Ie.showHumanRetry && m(om, {"data-testid": "user-message-retry", blocked, blockedReason,
+//   onRetry})`, xn rewind (not offered on Chat), Sn `m(Ff.EditAction, {...$Y ({"data-message-edit": ""}), "data-testid": "user-message-edit",
+//   …, onClick})`, wn `m(Ff.CopyAction, {"data-testid": "user-message-copy", onClick: Qe, getText: Yt, getRichText})`, Dn the version
+//   selector xM. Fe = t.deferActions === !0 && … (ca2ef848d passes deferActions: !0; a loaded row never streamed: true);
+//   Pn = qN(…) (the rowActionExtras gate, off here: false); Nn = fM(Mn) "Show message actions for {heading}", Mn "You said: {prompt}".
+function ChatUserActions({ itemId, text, startedAtMs, chat, heading, interacted = false }) {
+  const chatVersions = chat?.versions && typeof chat.onVersion === 'function' && showVersionNav({ optionCount: chat.versions.nOptions }) ? chat.versions : null;
+  return <MessageActions data-testid="user-message-actions" data-user-actions-id={itemId} wrap={true} defer={!interacted} alwaysVisible={false}
+    showActionsLabel={heading ? t('Show message actions for {heading}', { heading }) : undefined}>
+    {startedAtMs != null && <MessageActions.Timestamp date={startedAtMs} locale={getLocale()} />}
+    {typeof chat?.onRetry === 'function' && <ChatRetryAction data-testid="user-message-retry" blocked={false} onRetry={() => chat.onRetry()} />}
+    {typeof chat?.onEdit === 'function' && <MessageActions.EditAction data-message-edit="" data-testid="user-message-edit" onClick={() => chat.onEdit()} />}
+    <MessageActions.CopyAction data-testid="user-message-copy" getText={() => text ?? ''}
+      getRichText={() => { try { return markdownToClipboardHtml(text ?? ''); } catch { return ''; } }} />
+    {chatVersions && <ChatVersionSelector message={{ ...chatVersions, sender: 'human' }} changeDisplayedConversationPath={chat.onVersion} />}
+  </MessageActions>;
+}
+
 /** Mounted by the user article only when the message has copyable text. The
  * article owns the pointer/focus latch and the hover reveal scope. */
 // rewind: null (not offered) | {onClick} | {disabledReason} (offered, unavailable while the agent works)
 //   | {kind: 'restart', onClick} (a Cowork session's Restart conversation from here, R4i-cowork CW3); onFork: null | fn.
 // chat: null off Chat | { onRetry: fn|null, onEdit: fn|null, versions: lI's {selectedOption, nOptions, previous, next}|null, onVersion }
 //   (source-chat-message-actions.jsx useChatBranches forUserTurn).
-export function SourceUserActions({ sessionKey, itemId, text = '', startedAtMs = null, interacted = false, rewind = null, onFork = null, chat = null }) {
+export function SourceUserActions({ sessionKey, itemId, text = '', startedAtMs = null, interacted = false, rewind = null, onFork = null, chat = null, heading = null }) {
   const identity = JSON.stringify(['user', sessionKey, itemId]);
+  if (chat && !rewind && !onFork) return <ChatUserActions key={identity} itemId={itemId} text={text} startedAtMs={startedAtMs} chat={chat} heading={heading} interacted={interacted} />;
   return <UserActions key={identity} identity={identity} itemId={itemId} text={text} startedAtMs={startedAtMs} interacted={interacted} rewind={rewind} onFork={onFork} chat={chat} />;
 }

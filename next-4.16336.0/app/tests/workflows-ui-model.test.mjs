@@ -75,3 +75,10 @@ test('c62da1b56 ge/he: a phaseless run is one Agents group; a settled run never 
  assert.deepEqual(workflowPhases({status:'stopped',workflowProgress:rows},0).map(p=>[p.title,p.status]),[['Scan','done'],['Fix','notRun']]);
  assert.deepEqual(workflowPhases({status:'completed',workflowProgress:[{type:'workflow_phase',index:3,title:'Later'}]},0).map(p=>p.status),['notRun']);
 });
+
+test('workflow options outside quoted paths preserve absent arguments', () => {
+  assert.deepEqual(parseWorkflowLaunch('"/tmp/review --args demo.js" --plan'), {
+    file: '/tmp/review --args demo.js', plan: true, resumeId: undefined, args: undefined,
+  });
+  assert.throws(() => parseWorkflowLaunch('demo.js --resume --plan'), /Provide a run id/);
+});

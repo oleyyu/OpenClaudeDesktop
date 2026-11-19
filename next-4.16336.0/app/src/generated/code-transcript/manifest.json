@@ -50174,49 +50174,9 @@
       "target": "shared-7-DBAgAi5H.mjs",
       "source": "shared-7-DBAgAi5H.js",
       "sourceSha256": "02dd2a97b533d6c9f3f700d07a682db038be119397578ee0c49055079164c35a",
-      "sha256": "d27e7d7fb4c121b4bde457bc0e3cd82b5b192e3f47762290fb51bd252a2f6a6f",
+      "sha256": "7f8128fd5adbb693976c728a43a9814a2c95af41465e20d841b8241c3574f889",
       "referenceVersion": "3.6556.2",
       "bindings": [
-        {
-          "name": "Sg",
-          "sha256": "6be8bc092b0913052162be04ab316d093d565d9a428c144c7474739d5e5f3b79"
-        },
-        {
-          "name": "Cg",
-          "sha256": "c868436b99b891a599a545b76e35286c6681726e215812500bd0292a9d528ed8"
-        },
-        {
-          "name": "wg",
-          "sha256": "1bbe36fe1b32455761ef2f1b730b797d6cce02be8e36cdb8080e9792122d8b0d"
-        },
-        {
-          "name": "Tg",
-          "sha256": "b84ca661329dbb2215c8f6ebb45fd7ea5ffbfeecab006c6a7076cb742e2be5ab"
-        },
-        {
-          "name": "Eg",
-          "sha256": "43a4b95aee7c96e1f5d414e89fdf3eba9ac928d1cf6edb658f40ada73cad3653"
-        },
-        {
-          "name": "Dg",
-          "sha256": "edeb39506db00f81549f79cd792a6ea07cc7fabb172f8860f0dffada06de6a11"
-        },
-        {
-          "name": "Og",
-          "sha256": "08a81cd9c1cbd46c14f92927bef7f120741783dd40af772384ddb39472b51cfc"
-        },
-        {
-          "name": "kg",
-          "sha256": "3a00387dfd24e0583684fee7ac0c3c400556df44a5db06d4fb0ce01bc1494757"
-        },
-        {
-          "name": "Ag",
-          "sha256": "e5a5a617db5a6de6525e2e693656fd313d8ee9f6122cddbdd5123e89de5b84a0"
-        },
-        {
-          "name": "jg",
-          "sha256": "62762b23e3a4695d5d96e9c91e289e53f09dd5c3bfdb86e5a6d17999b73f6f66"
-        },
         {
           "name": "Hg",
           "sha256": "85ffc5f931c32c0d11636a40b47f116a5c8d09db774b05581791ab9aa48a5bfe"
@@ -50379,14 +50339,6 @@
           "original": "Fk"
         },
         {
-          "local": "Fu",
-          "from": "../transcript-rows/rows-vendor-all-0-DXM0MGjZ.mjs",
-          "name": "ue",
-          "via": "vendor-all-0-DXM0MGjZ.js:E",
-          "kind": "linked",
-          "original": "ue"
-        },
-        {
           "local": "Ik",
           "from": "../session-rail/connector-icon-parts.mjs",
           "name": "ConnectorLetterIcon",
@@ -50487,14 +50439,6 @@
           "name": "co",
           "via": "shared-frame-6jtSkIit.js:zd",
           "kind": "generated"
-        },
-        {
-          "local": "Mr",
-          "from": "../turn-plan/shared-52.mjs",
-          "name": "Qh",
-          "via": "shared-52-uHFNjl7C.js:Ph",
-          "kind": "linked",
-          "original": "Qh"
         },
         {
           "local": "Nu",
@@ -50604,6 +50548,14 @@
           "kind": "react"
         },
         {
+          "local": "jg",
+          "from": "../../source-code-transcript-adapters.jsx",
+          "name": "useTranscriptEditorPrefsStore",
+          "via": "shared-7-DBAgAi5H.js#jg",
+          "kind": "adapter",
+          "original": "jg"
+        },
+        {
           "local": "kf",
           "from": "./shared-156-BLTosN8U.mjs",
           "name": "Nh",
@@ -50645,14 +50597,6 @@
           "name": "Jd",
           "via": "shared-25-DOWZRSlq.js:yp",
           "kind": "generated"
-        },
-        {
-          "local": "zu",
-          "from": "../transcript-rows/rows-vendor-all-0-DXM0MGjZ.mjs",
-          "name": "le",
-          "via": "vendor-all-0-DXM0MGjZ.js:T",
-          "kind": "linked",
-          "original": "le"
         }
       ],
       "exports": {},
@@ -50665,7 +50609,6 @@
         "ME",
         "Pv",
         "hv",
-        "jg",
         "qD",
         "zV"
       ],
@@ -66286,7 +66229,7 @@
       "target": "c19e90103-BQFzF8EA.mjs",
       "source": "c19e90103-BQFzF8EA.js",
       "sourceSha256": "50ed94a878c39f8ae0417ffcf82ee2ef083cdccc1760004ffc41793140926499",
-      "sha256": "6bc679e4ba0b2efd7a9dcb6c544a0c61eea148e45a9363cb8c9c1d936065e3eb",
+      "sha256": "8cd6c8bb888e0ad4877be812328e97bc65be6a1d3dc30a509947b08f7213250b",
       "referenceVersion": "3.6556.2",
       "bindings": [
         {
@@ -67434,6 +67377,10 @@
           "sha256": "efdbf0e398fa6883bc6ffaf9701683176d934590b82170b931c9df2e96b3dc90"
         },
         {
+          "name": "Fg",
+          "sha256": "1e52776f0e8432ae0a6019605bda9cd840773057f8bb658e3da227ba8492c59c"
+        },
+        {
           "name": "Ig",
           "sha256": "b62a5a44a35b06fa47a43e72577f3bfb5f38242eef6a35e98384a4f6f4d6a095"
         },
@@ -67444,6 +67391,14 @@
         {
           "name": "Rg",
           "sha256": "d0451b388e56dc8129b7740ec4a741fc01c18bf39179b68f01795f04026965b2"
+        },
+        {
+          "name": "zg",
+          "sha256": "5618333494f31d6e483f9d971bf8c8a7da350c17bc0c2fdbaf125a616f33f22e"
+        },
+        {
+          "name": "Bg",
+          "sha256": "63f9c672202fd2bacedda090310c6ed99911072bb91ba30a9948f7df1c3fe354"
         },
         {
           "name": "Vg",
@@ -67460,6 +67415,22 @@
         {
           "name": "Wg",
           "sha256": "f30cd55b0a93f4685d332ebf8580f0510ca42d41126086f15c40a9ed37c50a99"
+        },
+        {
+          "name": "Gg",
+          "sha256": "66be7ffaeba61e84b863e4ab45300335353e1bb507b60a9538324d86f89fda3d"
+        },
+        {
+          "name": "Kg",
+          "sha256": "9b76c2c3c4242089662438bd531d7cac65781a1e4fd51ec852621d9989869924"
+        },
+        {
+          "name": "qg",
+          "sha256": "82c740a8d687b6e42c24363035f2e61003a351acc3bfd3d17b1174454857a55f"
+        },
+        {
+          "name": "Jg",
+          "sha256": "90e8f65253fdab4323649e0f3706ba60eb6ac390ce766193a898a9bab7a653cb"
         },
         {
           "name": "Xg",
@@ -69851,6 +69822,14 @@
           "kind": "generated"
         },
         {
+          "local": "V",
+          "from": "../view-tabs/shared-frame-6jtSkIit.js",
+          "name": "CdsDialog",
+          "via": "shared-frame-6jtSkIit.js:Zc",
+          "kind": "view-tabs",
+          "original": "nb"
+        },
+        {
           "local": "Va",
           "from": "./ca3dcfb8a-BfxvMwc5.mjs",
           "name": "h",
@@ -70027,6 +70006,14 @@
           "name": "uc",
           "via": "c7b19a753-Damdv4oQ.js:n",
           "kind": "generated"
+        },
+        {
+          "local": "Xt",
+          "from": "../chat-renderer/shared-5-Bg6ZMqvt.mjs",
+          "name": "$L",
+          "via": "shared-5-Bg6ZMqvt.js:R",
+          "kind": "linked",
+          "original": "$L"
         },
         {
           "local": "Y",
@@ -71528,6 +71515,14 @@
           "kind": "generated"
         },
         {
+          "local": "tn",
+          "from": "../transcript-rows/rows-vendor-all-0-DXM0MGjZ.mjs",
+          "name": "m",
+          "via": "vendor-all-0-DXM0MGjZ.js:L",
+          "kind": "linked",
+          "original": "m"
+        },
+        {
           "local": "to",
           "from": "./cb8c5a88f-h6ooJ7Al.mjs",
           "name": "Zn",
@@ -71929,7 +71924,11 @@
           "original": "ss"
         }
       ],
-      "exports": {},
+      "exports": {
+        "Fg": "createTableExpandStore",
+        "Ig": "TableExpandStoreContext",
+        "zg": "TableExpandDialog"
+      },
       "sharedExports": [
         "Ah",
         "Au",
@@ -71941,7 +71940,6 @@
         "Hl",
         "Hy",
         "Id",
-        "Ig",
         "Iu",
         "Lf",
         "Mf",
@@ -94539,7 +94537,7 @@
       "target": "code-transcript.mjs",
       "source": "c96d752d0-CWv_7-n9.js",
       "sourceSha256": "f7d5200fa26eaa42b4fa9dbad4533222628692ca02e0bb73becfaa33d12a576c",
-      "sha256": "dd4924d30c5d1f229314df0af2746fc9f4a1ecbefa7cc64fc7a533183c626b62",
+      "sha256": "925e18d63b4f68205f25be01027fdb8e3d694e9ed79d82f7b39dd04319c33e93",
       "referenceVersion": "3.6556.2",
       "bindings": [
         {
@@ -104333,7 +104331,7 @@
         {
           "local": "Jm",
           "from": "./c19e90103-BQFzF8EA.mjs",
-          "name": "Ig",
+          "name": "TableExpandStoreContext",
           "via": "c19e90103-BQFzF8EA.js:X",
           "kind": "generated"
         },
@@ -105834,10 +105832,11 @@
         },
         {
           "local": "Ru",
-          "from": "./shared-7-DBAgAi5H.mjs",
-          "name": "jg",
+          "from": "../../source-code-transcript-adapters.jsx",
+          "name": "useTranscriptEditorPrefsStore",
           "via": "shared-7-DBAgAi5H.js:as",
-          "kind": "generated"
+          "kind": "adapter",
+          "original": "jg"
         },
         {
           "local": "Rx",

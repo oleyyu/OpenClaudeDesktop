@@ -39,7 +39,7 @@ const ADAPTER_FILE = 'src/source-sessions-page-v4-adapters.jsx';
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
 
 // The cds-core graph this area was reviewed against (cds-core wave 6).
-export const CDS_CORE_MANIFEST_SHA256 = '06d2026939e5c8992713c2a0dda1b1abc9adffe7a0c223fe3c1e79eecd08d62c';
+export const CDS_CORE_MANIFEST_SHA256 = 'a0f228ae3f997f54f3e3ebafc254794bd26d8f1fc6999943a08b1d5730f638cd';
 
 export const PAGE = 'cbd6c85c8-CxDdK_2w.js';
 const S0 = 'shared-0-CnnWnVrT.js', S1 = 'shared-1-D1bGaTaN.js', S2 = 'shared-2-CsjIBQD8.js', S3 = 'shared-3-IQTrO7Gx.js', S8 = 'shared-8-BqfCbkJd.js';

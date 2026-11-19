@@ -652,7 +652,7 @@
       "target": "shared-19.mjs",
       "source": "shared-19-UalAfDtn.js",
       "sourceSha256": "17a7839fb39b22485dcb90f549bcdc92f115afbefa43e73d08d98e7bea4220f1",
-      "sha256": "b5d8564c7f57a8f2f24b332e526ec397e0e0690cff192ffa2ea8212f5685783c",
+      "sha256": "449b67e41c1039f47104d00862d1d9d26aa7d4dd7b715449bd2290ae438a9d02",
       "referenceVersion": "4.16336.0",
       "bindings": [
         {
@@ -738,6 +738,10 @@
         {
           "name": "pS",
           "sha256": "b50a8a7e22930f3cf6b3d8f6a0e8b6bada90a2747dfcab9c539e11a62cd75975"
+        },
+        {
+          "name": "aC",
+          "sha256": "7d3fd6fc0add7b2084927a6cc64cd2e0ddc0bb3eda3b98d77defd63a60b3afe9"
         }
       ],
       "initializers": [],
@@ -752,7 +756,8 @@
       ],
       "exports": {
         "pS": "homeLayout",
-        "eS": "greetingFrameClass"
+        "eS": "greetingFrameClass",
+        "aC": "greetingSlotLiftClass"
       },
       "sharedExports": [
         "$x",

@@ -12,6 +12,7 @@ import {
   useEngineSurface as OE,
   LiveOutputButton as PE,
   FormattedMessage as Q,
+  useTranscriptEditorPrefsStore as Ru,
   datadogRum as Sn,
   useVerboseTranscript as Sp,
   reportHandledError as Tn,
@@ -581,7 +582,7 @@ import {
   Wl as Gde,
   Su as Hm,
   dy as Jde,
-  Ig as Jm,
+  TableExpandStoreContext as Jm,
   Bl as Kde,
   ny as Km,
   Hl as Lde,
@@ -1285,12 +1286,7 @@ import {
   EM as xs,
   JE as ys,
 } from "./shared-6-sd9jbJqs.mjs";
-import {
-  Pv as Iu,
-  jg as Ru,
-  Hg as Uu,
-  $V as Vu,
-} from "./shared-7-DBAgAi5H.mjs";
+import { Pv as Iu, Hg as Uu, $V as Vu } from "./shared-7-DBAgAi5H.mjs";
 import {
   VD as $i,
   bD as Ai,

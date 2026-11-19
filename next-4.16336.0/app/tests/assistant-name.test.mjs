@@ -91,3 +91,26 @@ test("the core descriptors' sign-in labels are translated", async () => {
     if (/^(Sign in|Continue|Use)\b/.test(entry.label)) assert.ok(Object.hasOwn(zh, entry.label), `${core.id}: ${entry.label}`);
   }
 });
+
+// fix-r2 U-14 (E83): official sentences whose "Claude" is the assistant read as the running core's assistant; those
+// whose "Claude" is this app read OpenClaude Desktop. Other "Claude" (product names, the D11 mode switch) are untouched.
+test("official Claude-as-assistant / Claude-as-app copy follows the persona, in both languages", async () => {
+  const { PERSONA_COPY } = await import("../electron/i18n/persona-copy.mjs");
+  const { dictionary } = await import("../electron/i18n/index.mjs");
+  setAssistantName("Codex");
+  assert.equal(t("Claude wants to use {toolName}", { toolName: "Bash" }), "Codex wants to use Bash");
+  assert.equal(t("Reply to Claude…"), "Reply to Codex…");
+  assert.equal(t("Tell Claude what to change"), "Tell Codex what to change");
+  assert.equal(t("Show Claude in the menu bar."), "Show OpenClaude Desktop in the menu bar.");
+  assert.equal(t("Space Claude uses on this computer."), "Space OpenClaude Desktop uses on this computer.");
+  assert.equal(t("Claude Code"), "Claude Code", "product names keep Claude");
+  setLocale("zh-CN");
+  assert.equal(t("Claude wants to use {toolName}", { toolName: "Bash" }), "Codex 想要使用 Bash");
+  assert.equal(t("Show Claude in the menu bar."), "在菜单栏中显示 OpenClaude Desktop。");
+  const zh = dictionary("zh-CN");
+  for (const [source, persona] of Object.entries(PERSONA_COPY)) {
+    assert.ok(!/\bClaude\b(?! Desktop)/.test(persona.replace("OpenClaude Desktop", "")), `${source}: no Claude left`);
+    assert.ok(Object.hasOwn(zh, persona) || t(source) !== persona, `${persona}: zh-CN entry or concise line`);
+    assert.doesNotMatch(t(source), /(?<!Open)Claude/, `${source}: zh-CN shows no Claude`);
+  }
+});

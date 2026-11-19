@@ -66,6 +66,11 @@
 //     nu / Mu / kc / Su, writers cu / ru / wu, the shared-25 Mz context). The settings line's shared-62 AS / shared-25 ki are
 //     wave-8s names already (settings_shared62_AS / settings_shared25_ki): dropped on replay (fragment droppedOnReplay), linked.
 //     Each is a pinned published binding, exported under its own local.
+//   - wave cc2 (pins.merge.wavecc2.publicNames, cds-integrate/merge-pins-wavecc2.mjs, stage 15cc): names appended after the
+//     wave-8d ones in fragment order (chat-cowork-1to1-20261117 r2 Core step): base-ui Menu.CheckboxItem vendor-frame Fp
+//     (BaseMenuCheckboxItem), the UserMessage compound shared-3 Bd (UserMessage) and the module state its closure brings
+//     along (shared-2 km / zm / Bm / W8 / G8 / Q8 / Y5 / X5, shared-3 ll). Each is a pinned published binding, exported under
+//     its own local.
 // Edit this file or the pilot config, never src/generated/cds-core.
 import fs from "node:fs/promises";
 import path from "node:path";
@@ -177,6 +182,15 @@ for (const e of wave8d) {
   if (!pin || pin.file !== e.file || pin.local !== e.local) throw Error(`cds-core wave-8d name ${e.name} is not pinned as a published binding ${e.file}#${e.local}`);
   if (stage4.has(e.name) || stage5.has(e.name) || stage5b.has(e.name) || stage6.has(e.name) || stage7.has(e.name) || stage8.has(e.name) || stage8s.has(e.name) || stage8a.has(e.name) || stage8b.has(e.name) || stage8c.has(e.name) || pins.roots[e.name] || contexts[e.name]) throw Error(`cds-core wave-8d name ${e.name} is already published`);
 }
+const stage8d = new Set(wave8d.map((e) => e.name));
+// wave cc2 (pins.merge.wavecc2.publicNames, cds-integrate/merge-pins-wavecc2.mjs, stage 15cc; chat-cowork-1to1-20261117 r2 Core
+// step): base-ui Menu.CheckboxItem (vendor-frame Fp), the UserMessage compound (shared-3 Bd) and its closure's module state.
+const wavecc2 = pins.merge.wavecc2?.publicNames ?? [];
+for (const e of wavecc2) {
+  const pin = e.kind === "binding" ? pins.publicBindings?.[e.name] : null;
+  if (!pin || pin.file !== e.file || pin.local !== e.local) throw Error(`cds-core wave-cc2 name ${e.name} is not pinned as a published binding ${e.file}#${e.local}`);
+  if (stage4.has(e.name) || stage5.has(e.name) || stage5b.has(e.name) || stage6.has(e.name) || stage7.has(e.name) || stage8.has(e.name) || stage8s.has(e.name) || stage8a.has(e.name) || stage8b.has(e.name) || stage8c.has(e.name) || stage8d.has(e.name) || pins.roots[e.name] || contexts[e.name]) throw Error(`cds-core wave-cc2 name ${e.name} is already published`);
+}
 
 // Earlier roots, earlier Contexts, then the stage-3 roots and Contexts (so the 64 existing names keep their order), then
 // the wave-4 names in their pinned publication order (so the 119 existing names keep theirs), then the wave-5 names (so
@@ -184,7 +198,8 @@ for (const e of wave8d) {
 // (so the 553 wave-5b names keep theirs), then the wave-7 names (so the 2300 wave-6 names keep theirs), then the wave-8 names
 // (so the 2377 wave-7 names keep theirs), then the wave-8s names (so the 2530 wave-8 names keep theirs), then the wave-8a
 // names (so the 2927 wave-8s names keep theirs), then the wave-8b names (so the 3187 wave-8a names keep theirs), then the
-// wave-8c names (so the 3193 wave-8b names keep theirs), then the wave-8d names (so the 3198 wave-8c names keep theirs).
+// wave-8c names (so the 3193 wave-8b names keep theirs), then the wave-8d names (so the 3198 wave-8c names keep theirs), then
+// the wave-cc2 names (so the 3209 wave-8d names keep theirs).
 const named = [
   ...Object.entries(pins.roots).map(([name, root]) => [name, { file: root.file, local: root.local }]),
   ...Object.entries(contexts).map(([name, c]) => [name, { file: c.file, local: c.local }]),
@@ -200,7 +215,7 @@ const publicNames = Object.fromEntries([...named.filter(([n]) => !stage3.has(n))
   ...wave7.map((e) => [e.name, { file: e.file, local: e.local }]), ...wave8.map((e) => [e.name, { file: e.file, local: e.local }]),
   ...wave8s.map((e) => [e.name, { file: e.file, local: e.local }]), ...wave8a.map((e) => [e.name, { file: e.file, local: e.local }]),
   ...wave8b.map((e) => [e.name, { file: e.file, local: e.local }]), ...wave8c.map((e) => [e.name, { file: e.file, local: e.local }]),
-  ...wave8d.map((e) => [e.name, { file: e.file, local: e.local }])]);
+  ...wave8d.map((e) => [e.name, { file: e.file, local: e.local }]), ...wavecc2.map((e) => [e.name, { file: e.file, local: e.local }])]);
 
 async function checkContexts() {
   const cache = new Map(), proof = {};

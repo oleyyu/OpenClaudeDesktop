@@ -5,6 +5,7 @@ import React, { useCallback, useRef, useState } from "react";
 import { SourceDialog, SourceDialogFooter } from "./source-dialog.jsx";
 import { SourceSettingsButton } from "./source-settings-button.jsx";
 import { cleanErrorReason } from "./action-error-model.mjs";
+import { packCapabilityLabels } from "./extension-pack-capabilities.mjs";
 import { Icon } from "./icons";
 import { t } from "../electron/i18n/index.mjs";
 import "./source-extension-import.css";
@@ -13,15 +14,16 @@ const mb = (bytes) => (bytes < 1048576 ? `${Math.max(1, Math.round(bytes / 1024)
 
 function ConfirmDialog({ pack, layer, busy, error, onCancel, onConfirm }) {
   const confirm = useRef(null);
+  const supports = packCapabilityLabels(pack.capabilities); // U-18: readable feature names, never the raw implies keys
   return <SourceDialog open size="md" layer={layer} title={pack.replaces ? t("Update {name}?", { name: pack.name }) : t("Add {name}?", { name: pack.name })}
-    description={pack.description || pack.models || undefined} initialFocusRef={confirm} className="sxi-dialog" onClose={() => { if (!busy) onCancel(); }}>
+    description={t(pack.description || pack.models || undefined)} initialFocusRef={confirm} className="sxi-dialog" onClose={() => { if (!busy) onCancel(); }}>
     <dl className="sxi-facts">
       <div><dt>{t("Made by")}</dt><dd>{pack.vendor || t("Unknown")}</dd></div>
       <div><dt>{t("Version")}</dt><dd>{pack.version}{pack.replaces ? <span className="sxi-muted"> {t("(replaces {version})", { version: pack.replaces })}</span> : null}</dd></div>
-      {pack.models && pack.description ? <div><dt>{t("Models")}</dt><dd>{pack.models}</dd></div> : null}
+      {pack.models && pack.description ? <div><dt>{t("Models")}</dt><dd>{t(pack.models)}</dd></div> : null}
       <div><dt>{t("Size")}</dt><dd>{t("{files} files · {size}", { files: pack.files, size: mb(pack.bytes) })}</dd></div>
       {pack.license ? <div><dt>{t("License")}</dt><dd>{pack.license}</dd></div> : null}
-      {pack.capabilities.length ? <div><dt>{t("Supports")}</dt><dd className="sxi-chips">{pack.capabilities.map((name) => <span key={name} className="sxi-chip">{name}</span>)}</dd></div> : null}
+      {supports.length ? <div><dt>{t("Supports")}</dt><dd className="sxi-chips">{supports.map((label) => <span key={label} className="sxi-chip">{t(label)}</span>)}</dd></div> : null}
     </dl>
     {pack.runsCode && <p className="sxi-warning" role="note"><Icon name="Warning" size={16} />
       <span>{t("This pack runs code on your Mac with your permissions. Only add packs from sources you trust.")}</span></p>}

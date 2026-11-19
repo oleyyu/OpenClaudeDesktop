@@ -138,7 +138,7 @@ export function slimCall(call, text) {
  * @param {unknown} messages params.messages ({role, text, parts?: [{text, tool?, call?}]})
  * @returns {Array<Array<{text: string, tool: boolean, call?: object}>>}
  */
-export function importReplyBlocks(messages) {
+export function importReplyBlocks(messages, { includePlain = false } = {}) {
   const replies = []
   let current = null
   for (const message of Array.isArray(messages) ? messages : []) {
@@ -157,7 +157,7 @@ export function importReplyBlocks(messages) {
     if (!current) { current = []; replies.push(current) }
     current.push(...blocks)
   }
-  return replies.filter((reply) => reply.some((block) => block.tool))
+  return includePlain ? replies : replies.filter((reply) => reply.some((block) => block.tool))
 }
 
 // White space as String.prototype.trim sees it (the blocks are trimmed with it).
@@ -202,23 +202,35 @@ export const INDEX_CALLS_CHARS = 256000
  * @returns {Record<string, Array<[number, number, number] | [number, number, number, object]>> | null}
  */
 export function importDisplayIndex(messages, replies) {
-  const known = importReplyBlocks(messages)
+  const known = importReplyBlocks(messages, { includePlain: true })
   const index = {}
-  let room = INDEX_CALLS_CHARS
-  for (const reply of (Array.isArray(replies) ? replies : []).slice().reverse()) {
+  const matches = []
+  let next = 0
+  for (const reply of Array.isArray(replies) ? replies : []) {
     const text = typeof reply === 'string' ? reply.trim() : ''
     if (!text) continue
-    for (const blocks of known) {
-      const spans = blockSpans(text, blocks)
-      if (!spans) continue
-      spans.forEach((span, n) => {
-        const call = blocks[n].tool ? slimCall(blocks[n].call, blocks[n].text) : null
-        const size = call ? JSON.stringify(call).length : 0
-        if (call && size <= CALL_INDEX_CHARS && size <= room) { room -= size; span.push(call) }
-      })
-      index[keyOf(text)] = spans
-      break
+    // Match copies in their source order, even when two replies have identical text.
+    const match = known.findIndex((blocks, i) => i >= next && blockSpans(text, blocks))
+    if (match >= 0) {
+      matches.push({ key: keyOf(text), spans: blockSpans(text, known[match]), blocks: known[match] })
+      next = match + 1
     }
+  }
+  let room = INDEX_CALLS_CHARS
+  const byKey = new Map()
+  for (const { key, spans, blocks } of matches.reverse()) {
+    const hasTools = blocks.some((block) => block.tool)
+    if (hasTools) spans.forEach((span, n) => {
+      const call = blocks[n].tool ? slimCall(blocks[n].call, blocks[n].text) : null
+      const size = call ? JSON.stringify(call).length : 0
+      if (call && size <= CALL_INDEX_CHARS && size <= room) { room -= size; span.push(call) }
+    })
+    const entries = byKey.get(key) ?? []
+    entries.push(hasTools ? spans : null)
+    byKey.set(key, entries)
+  }
+  for (const [key, entries] of byKey) {
+    if (entries.some(Boolean)) index[key] = entries.length > 1 ? { occurrences: entries.reverse() } : entries[0]
   }
   return Object.keys(index).length ? index : null
 }
@@ -237,11 +249,18 @@ function lengthsOf(index) {
  * @param {unknown} index importDisplayIndex's answer (the thread's importBlocks)
  * @returns {Array<{text: string, tool: boolean, call?: object}> | null}
  */
-export function importedBlocks(text, index) {
+export function importedBlocks(text, index, seen) {
   if (typeof text !== 'string' || !index || typeof index !== 'object' || Array.isArray(index)) return null
   const reply = text.trim()
   if (!reply || !lengthsOf(index).has(reply.length)) return null
-  const spans = index[keyOf(reply)]
+  const key = keyOf(reply)
+  const entry = index[key]
+  let spans = entry
+  if (Array.isArray(entry?.occurrences)) {
+    const occurrence = seen?.get(key) ?? 0
+    seen?.set(key, occurrence + 1)
+    spans = entry.occurrences[occurrence]
+  }
   if (!Array.isArray(spans) || !spans.length) return null
   const blocks = []
   let position = 0
@@ -264,8 +283,8 @@ export function importedBlocks(text, index) {
  * @param {(id: string, text: string) => object} prose the bridge's agentMessage item
  * @returns {object[] | null}
  */
-export function importedItems(id, text, index, prose) {
-  const blocks = importedBlocks(text, index)
+export function importedItems(id, text, index, prose, seen) {
+  const blocks = importedBlocks(text, index, seen)
   if (!blocks) return null
   return blocks.map((block, n) => {
     const itemId = n ? `${id}-import-${n}` : id

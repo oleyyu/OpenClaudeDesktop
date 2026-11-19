@@ -277,11 +277,17 @@ test('SB-1 routes: officialPathToHostRoute maps the official pathnames back to h
   assert.equal(go('/code/routines'), true); assert.equal(go('/code/routines/r1'), true); assert.equal(go('/epitaxy/scheduled'), true); assert.equal(go('/scheduled-task', 'chat'), true);
   assert.equal(go('/customize'), true); assert.equal(go('/projects', 'chat'), true); assert.equal(go('/artifacts', 'chat'), true); assert.equal(go('/code/artifacts'), true);
   assert.equal(go('/chats', 'chat'), true); assert.equal(go('/security'), false);
+  // U-12: the Cowork rail's Artifacts row pushes shared-62 xu "/cowork-artifact" (exact path only; /cowork-artifact/<id> is one artifact).
+  assert.equal(go('/cowork-artifact', 'cowork'), true); assert.equal(go('/cowork-artifact/a1', 'cowork'), false);
   assert.deepEqual(calls, [['openSurface', 'code', null], ['openSurface', 'code', 'abc d'], ['openSurface', 'chat', null], ['openSurface', 'chat', 'x1'],
     ['openRoutines', null], ['openRoutines', 'r1'], ['openRoutines', null], ['openRoutines', null],
-    ['openSettings', 'customize-skills'], ['openSection', 'projects'], ['openSection', 'artifacts'], ['openSection', 'artifacts'], ['showSessionsPage', 'chat']]);
+    ['openSettings', 'customize-skills'], ['openSection', 'projects'], ['openSection', 'artifacts'], ['openSection', 'artifacts'], ['showSessionsPage', 'chat'],
+    ['openSection', 'artifacts']]);
+  // The Artifacts page publishes the row's own href, so the row is lit there (shared-21 LN: pathname === href).
+  assert.equal(NavHost.officialPathname({ mode: 'cowork', section: 'artifacts' }), '/cowork-artifact');
   // officialPathname round-trips through it for the host's own routes.
-  for (const route of [{ mode: 'code' }, { mode: 'code', current: 's1' }, { mode: 'chat' }, { mode: 'chat', current: 'c1' }, { mode: 'code', section: 'routines', routineId: 'r2' }])
+  for (const route of [{ mode: 'code' }, { mode: 'code', current: 's1' }, { mode: 'chat' }, { mode: 'chat', current: 'c1' }, { mode: 'code', section: 'routines', routineId: 'r2' },
+    { mode: 'cowork', section: 'artifacts' }, { mode: 'chat', section: 'projects' }])
     assert.equal(go(NavHost.officialPathname(route), route.mode), true, JSON.stringify(route));
 });
 
@@ -446,4 +452,87 @@ test('CCDScheduledTasks: members follow the app-level scheduler bridge (absent b
   assert.equal(bridge.createScheduledTask, undefined, 'a member the connected bridge lacks stays absent');
   for (const m of ['getAllScheduledTasks', 'updateScheduledTask']) assert.match(read('src/frame-sidebar-nav-adapter.mjs'), new RegExp(`get ${m}\\(\\) \\{ return cap\\("CCDScheduledTasks"\\)`));
   Routines.sidebarRoutinesStore.reset();
+});
+
+// U-01 (2026-11-16): hovering an awaiting session row loads shared-20 TP's chunk ca0409d7c (no fail-open, and no recovery kit:
+// cds-core shared-123 w$ = null), whose not-shipped module threw ChunkLoadError up to the nav boundary ("Sidebar failed to
+// load."). The generator now emits it as a re-export of the host body (frame-sidebar-nav-awaiting-body.jsx).
+test('U-01: the awaiting hover body chunk is answered by the host, not a ChunkLoadError module', async () => {
+  const chunk = read('src/generated/frame-sidebar-nav/ca0409d7c-C0M8y8aL.js');
+  assert.match(chunk, /export \{ AwaitingHoverCardBody \} from "\.\.\/\.\.\/frame-sidebar-nav-awaiting-body\.jsx";/);
+  assert.doesNotMatch(chunk, /ChunkLoadError/);
+  const manifest = JSON.parse(read('src/generated/frame-sidebar-nav/manifest.json'));
+  assert.deepEqual(manifest.absentChunks.find((c) => c.chunk === 'ca0409d7c-C0M8y8aL.js').host.exports, ['AwaitingHoverCardBody']);
+  const host = read('src/frame-sidebar-nav-awaiting-body.jsx');
+  assert.match(host, /from "\.\/generated\/sidebar-hover-card\/awaiting-body\.mjs"/);
+  assert.match(read('src/main.jsx'), /hoverCard: \{\n\s+requestsFor: \(id\) =>/);
+});
+
+// U-03 (2026-11-16): the merged Chat / Cowork rail. (1) Its "Chats and tasks" reads the LocalAgentModeSessions bridge
+// (shared-123 _x → store J → shared-2 bK Dx → shared-39 ME / IT); it was absent, so the section only drew "View all".
+// (2) The frame mode is clamped to the enabled modes (shared-123 PV): an open chat is the "cowork" rail, not the chat one.
+test('U-03: LocalAgentModeSessions lists the host Chat / Cowork sessions; the frame mode is clamped to the enabled modes', async () => {
+  await load();
+  const [kind, bridge] = NavHost.HOST_ANSWERS.LocalAgentModeSessions;
+  assert.equal(kind, 'host');
+  for (const member of ['getAll', 'getSessionList', 'getSession', 'onOnEvent']) assert.equal(typeof bridge[member], 'function', member);
+  // sidebar-titlebar r1-01: archive / delete / updateSession are host actions (shared-2 Eq offers the CoworkSessionRow ⋯ /
+  // right-click menu only with them). shared-2 reads them at module load, before the table is installed, so the adapter
+  // carries call-time forwarders, never a getter that reads the table (was: the members were absent, so no row menu).
+  for (const member of ['archive', 'delete', 'updateSession']) assert.equal(typeof bridge[member], 'function', member);
+  const adapterSrc = read('src/frame-sidebar-nav-adapter.mjs');
+  assert.doesNotMatch(adapterSrc, /get (archive|delete|updateSession)\(\) \{ return cap\("LocalAgentModeSessions"\)/);
+  for (const member of ['archive', 'delete', 'updateSession'])
+    assert.match(adapterSrc, new RegExp(`"${member}": \\(\\.\\.\\.args\\) => cap\\("LocalAgentModeSessions"\\)\\["${member}"\\]\\(\\.\\.\\.args\\)`), member);
+  for (const member of ['releaseRemoteCuLock', 'closeRemoteSessionTabGroup']) assert.equal(bridge[member], undefined, member);
+  const record = (id, title, extra = {}) => NavHost.officialAgentSession({ id, cwd: '/fixture', name: title, createdAt: 1700000000, updatedAt: 1700000100, ...extra }, extra.meta);
+  const chat = record('chat-1', 'Chat one'), task = record('cw-1', 'Task one', { meta: { pinned: true } });
+  assert.equal(chat.sessionType, undefined, 'not "agent" / "radar", which the rail does not list (cds-core vx)');
+  assert.deepEqual([chat.sessionId, chat.title, chat.createdAt, chat.lastActivityAt, chat.isArchived], ['chat-1', 'Chat one', 1700000000000, 1700000100000, false]);
+  assert.equal(task.isStarred, true);
+  const events = [];
+  const off = bridge.onOnEvent((event) => events.push(event));
+  const value = (agentSessions, state = 'loaded') => ({ ...navValue('cowork'), localSessionsState: state, agentSessions });
+  let settled = null;
+  renderToStaticMarkup(el(NavHost.FrameSidebarNavHost, { value: value([], 'loading') }, null));
+  const list = bridge.getSessionList().then((v) => (settled = v));
+  await new Promise((resolve) => setTimeout(resolve, 5));
+  assert.equal(settled, null, 'getSessionList waits for the loaded list');
+  NavHost.syncAgentSessions(value([chat, task]));
+  await list;
+  assert.deepEqual(settled.sessions.map((s) => s.sessionId), ['chat-1', 'cw-1']);
+  assert.equal(settled.restPending, false);
+  assert.deepEqual(events, [{ type: 'initialized', sessionId: '' }]);
+  assert.equal((await bridge.getSession('cw-1')).title, 'Task one');
+  events.length = 0;
+  NavHost.syncAgentSessions(value([record('chat-1', 'Chat renamed'), task]));
+  assert.deepEqual(events, [{ type: 'session_updated', sessionId: 'chat-1' }]);
+  events.length = 0;
+  NavHost.syncAgentSessions(value([task]));
+  assert.deepEqual(events, [{ type: 'initialized', sessionId: '' }], 'a row gone is a reload');
+  off();
+  // the row actions run main.jsx's session actions (archive / delete / rename) and the pin metadata
+  const acted = [];
+  renderToStaticMarkup(el(NavHost.FrameSidebarNavHost, { value: { ...value([task]), sessionAction: async (...a) => { acted.push(a); return true; }, updateSessionMetadata: async (...a) => { acted.push(['meta', ...a]); } } }, null));
+  await bridge.archive('cw-1'); await bridge.delete('cw-1');
+  await bridge.updateSession('cw-1', { title: 'New name', titleSource: 'user' }); await bridge.updateSession('cw-1', { isStarred: false });
+  assert.deepEqual(acted, [['archive', 'cw-1', undefined], ['delete', 'cw-1', undefined], ['rename', 'cw-1', { name: 'New name' }], ['meta', 'cw-1', { pinned: false }]]);
+  await assert.rejects(bridge.updateSession('cw-1', { userSelectedProjectUuids: [] }), /no host service for userSelectedProjectUuids/);
+  assert.match(read('src/main.jsx'), /sessionAction: \(action, id, payload\) => \["fork", "archive", "delete", "rename"\]\.includes\(action\)/);
+  // main.jsx hands the non-Code sessions to the bridge
+  assert.match(read('src/main.jsx'), /localSessions: navLocalSessions, agentSessions: navAgentSessions,/);
+  assert.match(read('src/main.jsx'), /const navAgentSessions = useMemo\(\(\) => surfaceSessions\(sessions, "cowork", sessionMetadata\)\.map\(\(session\) => officialAgentSession\(/);
+  // rows route back to the host session (shared-92 tw `/cowork/${id}`), and the open session publishes its row's href
+  const calls = [];
+  const actions = Object.fromEntries(['openSurface', 'openRoutines', 'openSection', 'openSettings', 'showSessionsPage'].map((k) => [k, (...a) => calls.push([k, ...a])]));
+  assert.equal(NavHost.officialPathToHostRoute('/cowork/chat-1', actions, { mode: 'cowork' }), true);
+  assert.equal(NavHost.officialPathToHostRoute('/cowork/projects', actions, { mode: 'cowork' }), true); // the Projects page, not a session
+  assert.equal(NavHost.officialPathToHostRoute('/cowork/agent', actions, { mode: 'cowork' }), false);
+  assert.deepEqual(calls, [['openSurface', 'cowork', 'chat-1'], ['openSection', 'projects']]);
+  assert.equal(NavHost.officialPathname({ mode: 'chat', current: 'chat-1' }), '/cowork/chat-1');
+  // shared-123 PV over [homeMode, "code"]
+  assert.equal(FrameHost.frameModeFor('chat', 'cowork'), 'cowork');
+  assert.equal(FrameHost.frameModeFor('cowork', 'cowork'), 'cowork');
+  assert.equal(FrameHost.frameModeFor('code', 'cowork'), 'code');
+  assert.equal(FrameHost.frameModeFor('chat', 'chat'), 'chat');
 });

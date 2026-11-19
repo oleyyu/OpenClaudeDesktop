@@ -8,20 +8,40 @@
 
 .sl-nav { display:flex; flex-direction:column; flex-shrink:0; width:208px; gap:12px; padding:16px 12px 12px; border-right:1px solid var(--cds-alpha-2); background:var(--cds-surface-1); }
 .sl-nav .ss-search { margin:0; height:34px; padding:0 10px; border-radius:8px; border-color:var(--cds-alpha-2); }
-.sl-nav-list { display:flex; flex:1; min-height:0; flex-direction:column; gap:2px; overflow-y:auto; }
+/* U-55: 4px of padding taken back by a negative margin (admin-settings-nav-scroll "p-1 -m-1") leaves the items where
+   they were and gives their focus outline (2px + 2px offset) room inside the scroller, which would clip it. */
+.sl-nav-list { display:flex; flex:1; min-height:0; flex-direction:column; gap:2px; overflow-y:auto; padding:4px; margin:-4px; }
 .sl-nav-item { display:flex; flex-shrink:0; align-items:center; gap:12px; height:36px; padding:0 10px; border:0; border-radius:8px; background:transparent; color:var(--cds-text-primary); font:inherit; font-size:14.5px; text-align:left; }
 .sl-nav-item > :first-child { color:var(--cds-text-secondary); }
 .sl-nav-item:hover { background:var(--cds-fill-ghost-hover); }
 .sl-nav-item[aria-current] { background:var(--cds-fill-ghost-selected); }
 .sl-nav-item[aria-current] > :first-child { color:var(--cds-text-primary); }
-.sl-sep { flex-shrink:0; margin:8px 12px; border:0; border-top:1px solid var(--cds-alpha-2); }
+/* U-40: 6px (was 8px) so the full list fits the column at 800x600 instead of scrolling by 3–5px. */
+.sl-sep { flex-shrink:0; margin:6px 12px; border:0; border-top:1px solid var(--cds-alpha-2); }
 .sl-nav-footer { display:flex; flex-shrink:0; align-items:center; justify-content:space-between; height:32px; padding:0 10px; border:0; border-radius:8px; background:transparent; color:var(--cds-text-secondary); font:inherit; font-size:13px; }
 .sl-nav-footer:hover { background:var(--cds-fill-ghost-hover); color:var(--cds-text-primary); }
 
 .ss-pane.sl-pane { background:var(--cds-surface-1); }
 .ss-content.sl-content { padding:24px 32px 40px; background:var(--cds-surface-1); }
-.sl-pane[data-customize=false] > .ss-content.sl-content:before { background:linear-gradient(to bottom,var(--cds-surface-1),transparent); margin:-8px -32px 0; }
+/* U-39: the sticky fade (source-settings.css .ss-content:before, sized for 8px top padding) follows this box's 24px
+   top padding: it sticks to the scroller's top edge (top = -padding-top), and the 16px bottom margin keeps the first
+   line where the padding puts it. U-38: source-usage.css restates the inline margins for the standalone Usage box. */
+.sl-pane[data-customize=false] > .ss-content.sl-content:before { background:linear-gradient(to bottom,var(--cds-surface-1),transparent); top:-24px; margin:-24px -32px 16px; }
 .sl-page-title { margin:0 0 16px; font-size:17px; line-height:24px; font-weight:500; color:var(--cds-text-primary); }
+/* U-04: a Customize page brings its own fixed header and scrolling body (customize-page-shell U, source-customize.css
+   .cz-page / .cz-page-body / .cz-drill-scroll): it fills what the title and subtabs leave, so the page has one
+   scroller and the content box no longer scrolls around it (the page's body pads its own bottom, pb-lg). In a short
+   window there is no room for a fixed title + subtabs + page header over the list (600x400 left 29px of it), so there
+   the page's own scrollers size to their content and the content box is the one scroller instead. */
+@media (min-height:561px) {
+  .ss-content.sl-content:has(> .cz-page) { display:flex; flex-direction:column; overflow:hidden; padding-bottom:0; }
+  .sl-content:has(> .cz-page) > * { flex-shrink:0; }
+  .sl-content:has(> .cz-page) > .cz-page { flex:1 1 0; height:auto; min-height:0; }
+}
+@media (max-height:560px) {
+  .sl-content > .cz-page { height:auto; }
+  .sl-content > .cz-page :is(.cz-page-body,.cz-drill,.cz-drill-scroll,.skf-card,.skf-scroll) { flex:none; height:auto; min-height:0; }
+}
 .sl-content .ss-group { margin-bottom:28px; }
 .sl-content .ss-group > h3 { font-size:15px; }
 
@@ -42,8 +62,23 @@
 
 @media (max-width:767px) {
   .sl-body { flex-direction:column; }
-  .sl-nav { width:auto; border-right:0; border-bottom:1px solid var(--cds-alpha-2); }
-  .sl-nav-list { flex:none; flex-direction:row; overflow-x:auto; }
-  .sl-sep, .sl-nav-footer { display:none; }
+  /* U-40: the strip scrolls without a scrollbar and fades at the clipped ends (scroll-fade-x scroll-fade-size-16 on
+     the list, as admin-settings-nav-scroll); API keys stays, beside the strip. */
+  .sl-nav { width:auto; flex-direction:row; flex-wrap:wrap; align-items:center; column-gap:8px; border-right:0; border-bottom:1px solid var(--cds-alpha-2); }
+  .sl-nav .ss-search { flex:1 0 100%; }
+  .sl-nav-list { flex:1 1 0; min-width:0; flex-direction:row; overflow-x:auto; overflow-y:hidden; scrollbar-width:none; }
+  .sl-sep { display:none; }
 }
 .sl-content [data-sl-dup] { display:none; }
+/* U-52: one rhythm where official page blocks (main / section.mb-xl) and host groups (.ss-group) meet on a merged page.
+   An official section whose only header is a hidden duplicate heading drops the empty header too (its 16px margin). */
+.sl-content section > .mb-md:has([data-sl-dup]):not(:has(p, button, a, input, select)) { display:none; }
+/* A block with no heading of its own (a host group whose title is hidden, or such an official section) continues the
+   block above it: the gap between them collapses to 0 and its first row takes the row divider instead. */
+.sl-content > section.mb-xl + :is(.ss-group[data-sl-untitled], section:not(.ss-group):has(> .mb-md [data-sl-dup]):not(:has(> .mb-md :is(p, button, a, input, select)))) { margin-top:calc(-1 * var(--cds-gap-xl)); }
+.sl-content > .ss-group + :is(.ss-group[data-sl-untitled], section:not(.ss-group):has(> .mb-md [data-sl-dup]):not(:has(> .mb-md :is(p, button, a, input, select)))) { margin-top:-28px; }
+.sl-content > :is(main, section.mb-xl, .ss-group) + :is(.ss-group[data-sl-untitled], section:not(.ss-group):has(> .mb-md [data-sl-dup]):not(:has(> .mb-md :is(p, button, a, input, select)))) > .settings-group-dividers > :first-child { border-top:1px solid var(--cds-alpha-1); }
+/* An official page (its last section has last:mb-0) followed by a titled host group gets the groups' 28px; an official
+   page made to fill a page of its own (Local MCP servers, h-full) sizes to its content when more follows it. */
+.sl-content > main + .ss-group:not([data-sl-untitled]) { margin-top:28px; }
+.sl-content > main.h-full:not(:last-child) { height:auto; }

@@ -112,10 +112,13 @@ test('Quick setup takeover: Escape goes Back, the app behind it is inert, focus 
   const onboarding = read('source-onboarding.jsx');
   assert.match(onboarding, /step === "connect" \? \(startAt === "connect" \? onSkip : \(\) => setStep\("agent"\)\)/);
   assert.match(onboarding, /doc\.addEventListener\("keydown", escape\)/);
-  assert.match(onboarding, /sibling\.inert = true;/);
-  assert.match(onboarding, /for \(const sibling of inerted\) sibling\.inert = false;/);
+  assert.match(onboarding, /releases\.push\(holdModalInert\(sibling\)\);/);
+  assert.match(onboarding, /for \(const release of releases\) release\(\);/);
   assert.match(onboarding, /new MutationObserver\(settle\)/);
   assert.match(onboarding, /<div ref=\{layer\} className="sob-layer">/);
+  // U-02: portalled to <body>, out of main.dframe-content's isolate (the sidebar / titlebar painted over it).
+  assert.match(onboarding, /createPortal\(node, portal\)/);
+  assert.match(onboarding, /document\.body\.appendChild\(portal\);/);
 });
 
 test('instructions: any customization core applies changes from the next message', () => {

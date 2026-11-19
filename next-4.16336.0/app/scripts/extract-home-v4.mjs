@@ -34,7 +34,7 @@ const sha256 = text => createHash('sha256').update(text).digest('hex');
 
 // The finalized cds-core this graph links (wave 4, cds-integrate/wave4/wave4-merged.json manifestSha256.production).
 // A regenerated cds-core changes this hash: re-run this generator (--check fails until then, as for every cds-core area).
-export const CDS_CORE_MANIFEST_SHA256 = '06d2026939e5c8992713c2a0dda1b1abc9adffe7a0c223fe3c1e79eecd08d62c';
+export const CDS_CORE_MANIFEST_SHA256 = 'a0f228ae3f997f54f3e3ebafc254794bd26d8f1fc6999943a08b1d5730f638cd';
 
 // Official chunks this area slices its roots from, pinned (a changed snapshot stops generation).
 export const sourcePins = {
@@ -204,6 +204,9 @@ const rootsV4 = {
   'shared-19-UalAfDtn.js': {
     pS: { name: 'homeLayout', alias: 'ya', probe: 'fS', features: ['return fS[e];'], sha256: 'b50a8a7e22930f3cf6b3d8f6a0e8b6bada90a2747dfcab9c539e11a62cd75975' },
     eS: { name: 'greetingFrameClass', alias: 'Sa', probe: 'max-md', features: ['"mx-auto flex w-full flex-col items-center gap-7 max-md:pt-4 max-w-2xl"'], sha256: '35d5c1a788dab3ad8c3ee6222b1839c126d31961d0f3ddef57233fa8ab2ce1d3' },
+    // chat-home r1-07: SD (ED's greeting slot) draws `div { className: h(n, aC, opacity-0 while held) }` — the caller's
+    // greetingSlotClass + seat, then aC, the md: margin that pulls the greeting up by the composer / band lift.
+    aC: { name: 'greetingSlotLiftClass', alias: null, probe: 'band-slot-lift', features: ['"md:mt-[calc(0.75rem_-_min(var(--chorus-composer-lift,0px)_+_var(--band-slot-lift,0px),5rem))]"'], sha256: '7d3fd6fc0add7b2084927a6cc64cd2e0ddc0bb3eda3b98d77defd63a60b3afe9' },
   },
   'shared-33-DtdykY0y.js': {
     Ik: { name: 'homeGreetingSeatClass', alias: 'Zo', probe: 'center', features: ['return e === "center" ? Fk : "";'], sha256: '624daa0dfc9002b9497aa34c28b98603f2cb5ca6de9a0a3268df64426642e3f1' },
@@ -247,8 +250,8 @@ const modules = [
   { target: 'shared-62.mjs', source: 'shared-62-DoCqVpIq.js' },
   { target: 'vendor-intl.mjs', source: v4.vendorIntl },
   { target: 'shared-123.mjs', source: 'shared-123-1Hc1RTKl.js' },
-  { target: 'shared-19.mjs', source: 'shared-19-UalAfDtn.js', exports: { pS: 'homeLayout', eS: 'greetingFrameClass' },
-    features: { pS: rootsV4['shared-19-UalAfDtn.js'].pS.features, eS: rootsV4['shared-19-UalAfDtn.js'].eS.features } },
+  { target: 'shared-19.mjs', source: 'shared-19-UalAfDtn.js', internal: true, exports: { pS: 'homeLayout', eS: 'greetingFrameClass', aC: 'greetingSlotLiftClass' },
+    features: { pS: rootsV4['shared-19-UalAfDtn.js'].pS.features, eS: rootsV4['shared-19-UalAfDtn.js'].eS.features, aC: rootsV4['shared-19-UalAfDtn.js'].aC.features } },
   { target: 'shared-3.mjs', source: 'shared-3-IQTrO7Gx.js' },
   { target: 'shared-153.mjs', source: 'shared-153-DMw2VzSq.js' },
   { target: 'shared-92.mjs', source: 'shared-92-BOgyxePb.js' },
@@ -367,10 +370,120 @@ function rootsJson(located) {
       roots: { useChatGreeting: 'Dy', personalizedGreeting: 'dy', HomeGreeting: 'My', CoworkHome: 'FS', homeSurfaceSlots: 'PS', CoworkTaskList: 'xS (export un)',
         ChorusCoworkSuggestions: 'Re', COWORK_HOME_IDEAS_CATALOG: 'c2bf50d9e o' } } }, null, 2) + '\n';
 }
+// r2 chat-home-r2-05 / r2-06: shared-19 ED's card column around the composer, as picked literals (new-page-card-slot.mjs):
+// the slot `div { className: h("isolate", Be, K, ea), [Sp]: "" }` (Be = the caller's className ?? "mx-auto w-full max-w-2xl",
+// K = shared-23's cardSlotClassName = shared-33 xk, ea = `vt && "md:contents"`, Sp = shared-33 Dk via its export Vo); the
+// band slot `div { className: h("relative -z-10", q, ra) }` (q = bandSlotClassName = shared-33 Ck); the card block
+// `ac { className: h(J, ua) }` (J = cardBlockClassName = shared-33 Pk with chorusUnifiedComposerDesign off); the composer's
+// `div { className: "relative z-10" }`; and kw's closed tray (`aria-hidden`, inert, grid-rows-[0fr]) under it. vt is ED's
+// `greetingHeadroomFree && layoutVariant === "home"`. Read from the minified chunks (each pattern must match once).
+const CARD_SLOT_PICKS = {
+  'shared-33-DtdykY0y.js': {
+    cardSlotClass: /(?<![\w$])xk="(dock:contents)"/, cardSlotAttribute: /(?<![\w$])Dk="(data-chorus-card-slot)"/,
+    bandSlotClass: /(?<![\w$])Ck="(dock:order-last dock:mt-auto [^"]*)"/, cardBlockClass: /(?<![\w$])Pk="(dock:order-last dock:mt-0 dock:sticky dock:bottom-0 dock:z-10 dock:bg-surface-1 dock:pb-\[3\.75rem\][^"]*)"/,
+    cardPxProperty: /(?<![\w$])Sk="(--new-page-card-px)"/, cardPxExport: /(?<![\w$])Sk as (Bo)[,}]/,
+    cardSlotAttributeExport: /(?<![\w$])Dk as (Vo)[,}]/, cardSlotExport: /(?<![\w$])xk as (Yo)[,}]/, bandSlotExport: /(?<![\w$])Ck as (Ro)[,}]/, cardBlockExport: /(?<![\w$])Pk as (Ko)[,}]/,
+  },
+  'shared-19-UalAfDtn.js': {
+    slotWidthClass: /Be=H\?\?\(Ie\?"mx-auto w-full max-w-\[40rem\]":"([^"]+)"\)/, slotHeadroomClass: /ea=vt&&"([^"]+)",ta=/,
+    slotBaseClass: /K3\(\$,301,K,ea,Be,h\("([^"]+)",Be,K,ea\)\)/, slotAttribute: /K0\(\$,305,\{\[(Sp)\]:""\}\)/, slotAttributeImport: /(?<![\w$])(Vo) as Sp[,}]/,
+    bandBaseClass: /h\("([^"]+)",q,ra\)/, bandHeadroomClass: /ra=vt&&"([^"]+)",ia=/, cardBlockHeadroomClass: /ua=vt&&"([^"]+)",da=/,
+    composerClass: /g\("div",\{ref:jt,className:"([^"]+)",children:v\(ZT,/,
+    trayClass: /h\("(relative z-0 mx-2 -mt-5 grid [^"]+)",ee\)/, trayClosedRows: /ee=L\?"grid-rows-\[1fr\]":"([^"]+)"/,
+    trayInnerClass: /g\("div",\{className:"([^"]+)",children:g\(El,\{initial:!1,children:q\}\)\}/,
+    trayAttributes: /"aria-hidden":U,inert:W,"(data-chorus-tray-open)":G,className:te/,
+  },
+  [S23]: {
+    cardSlotProp: /cardSlotClassName:(Ch),oneLineBelowSm:!0/, bandSlotProp: /bandSlotClassName:(gh),belowSlotClassName/, cardBlockProp: /ke=r\?Vh:(dh),/,
+    // r3 chat-home-r3-06: TT's resize effect writes Sk (imported as th) on the band slot, the card block's height, below 40rem.
+    cardPxImport: /(?<![\w$])(Bo) as th[,}]/,
+    cardPxWrite: /if\(!matchMedia\("(\(width < 40rem\))"\)\.matches\)\{[\w$]+\.set\(!1\),[\w$]+=null;return\}let\{bandSlot:([\w$]+),card:([\w$]+)\}=[\w$]+\(\);if\(\2 instanceof HTMLElement&&\3&&\2\.style\.setProperty\(th,`\$\{\3\.getBoundingClientRect\(\)\.height\}px`\)/,
+    cardSlotImport: /(?<![\w$])(Yo) as Ch[,}]/, bandSlotImport: /(?<![\w$])(Ro) as gh[,}]/, cardBlockImport: /(?<![\w$])(Ko) as dh[,}]/,
+  },
+};
+async function cardSlotArtifact() {
+  const picked = {}, records = [];
+  for (const [chunk, table] of Object.entries(CARD_SLOT_PICKS)) {
+    const code = await fs.readFile(path.join(v4.ionSource, chunk), 'utf8');
+    for (const [name, pattern] of Object.entries(table)) {
+      const all = [...code.matchAll(new RegExp(pattern.source, 'g'))];
+      if (all.length !== 1) throw Error(`card slot pick ${name}: ${all.length} matches in ${chunk}, expected 1`);
+      picked[name] = all[0][1];
+      records.push({ name, chunk, sha256: sha256(all[0][0]) });
+    }
+  }
+  // E5: shared-23 hands ED the shared-33 constants (through their exports), and ED's slot attribute is shared-33's Dk.
+  if (picked.cardSlotImport !== picked.cardSlotExport || picked.bandSlotImport !== picked.bandSlotExport || picked.cardBlockImport !== picked.cardBlockExport)
+    throw Error('shared-23 no longer passes shared-33 xk / Ck / Pk as ED\'s card slot / band slot / card block classes');
+  if (picked.slotAttributeImport !== picked.cardSlotAttributeExport) throw Error('shared-19 ED\'s slot attribute is no longer shared-33 Dk');
+  if (picked.cardPxImport !== picked.cardPxExport) throw Error('shared-23 TT no longer writes shared-33 Sk on the band slot');
+  const out = {
+    slot: { baseClass: picked.slotBaseClass, widthClass: picked.slotWidthClass, dockClass: picked.cardSlotClass, headroomClass: picked.slotHeadroomClass, attribute: picked.cardSlotAttribute },
+    band: { baseClass: picked.bandBaseClass, dockClass: picked.bandSlotClass, headroomClass: picked.bandHeadroomClass,
+      cardHeightProperty: picked.cardPxProperty, cardHeightQuery: picked.cardPxWrite },
+    cardBlock: { dockClass: picked.cardBlockClass, headroomClass: picked.cardBlockHeadroomClass },
+    composerClass: picked.composerClass,
+    tray: { className: picked.trayClass, closedRows: picked.trayClosedRows, innerClass: picked.trayInnerClass, openAttribute: picked.trayAttributes },
+  };
+  return `// Original Claude Desktop ${v4.referenceVersion} literals: shared-19-UalAfDtn.js ED (card slot, band slot, card block, composer wrapper) and kw (closed tray),\n` +
+    `// shared-33-DtdykY0y.js xk / Ck / Pk / Dk, as shared-23-BRmsPtuN.js TT passes them; generated by extract-home-v4.mjs. Edit the extractor, never this file.\n` +
+    `// picks: ${records.map(r => `${r.chunk}#${r.name}:${r.sha256.slice(0, 12)}`).join(' ')}\n` +
+    `export const newPageCardSlot = Object.freeze(${JSON.stringify(out, null, 2)});\n`;
+}
+// chat-cowork-1to1 r3 (chat-home-r3-02): shared-23 TT's new-page column, as picked literals (new-page-column.mjs), replacing
+// the 3.6556.2 cowork-home HomeColumn / homeColumnClass / Rx / HS / scroll class. TT draws the scroll column `div { [Oh]:
+// "", className: <scroll class>, children: p(Cl, { className: Se, … }) }` with Se = u("relative flex flex-col items-center
+// gap-6 max-sm:!px-1 md:px-14", be, hT, xe): be = `${zu(n).columnTopOffsetClass} ${fu}` without topContent (fu = shared-19
+// Jx, the organization banner offset, via its export Oa), hT = !1, and xe = xh without topContent (shared-33 yk, the dock
+// height, via its export Wo). Cl is shared-18 uO (export Ku), the page column; its one 4.16336.0 owner is
+// cowork-scheduled-v4 (shared-18-Cfqwgjc5.mjs exports uO), so the artifact re-exports it from there (D1: no second slice).
+const COLUMN_OWNER = { area: 'cowork-scheduled-v4', target: 'shared-18-Cfqwgjc5.mjs', source: 'shared-18-Cfqwgjc5.js', local: 'uO' };
+const NEW_PAGE_COLUMN_PICKS = {
+  [S23]: {
+    scrollClass: /className:"(min-h-0 flex-1 overflow-x-hidden overflow-y-auto \[scrollbar-gutter:stable_both-edges\])",children:[\w$]+\((Cl),\{className:Se,/,
+    columnClass: /Se=[\w$]+\(\$,\d+,be,xe\)\?[\w$]+\(\$,\d+,be,xe,[\w$]+\("(relative flex flex-col items-center gap-6 [^"]*)",be,(hT),xe\)\)/,
+    offset: /be=[\w$]+\(\$,\d+,n,t\)\?[\w$]+\(\$,\d+,n,t,t===void 0\?`\$\{[\w$]+\(n\)\.columnTopOffsetClass\} \$\{(fu)\}`:"[^"]*"\):\$\[\d+\]/,
+    dock: /xe=t===void 0\?(xh):lh,/, falseFlag: /(?<![\w$])hT=(!1)[,;]/,
+    columnImport: /(?<![\w$])(Ku) as Cl[,}]/, offsetImport: /(?<![\w$])(Oa) as fu[,}]/, dockImport: /(?<![\w$])(Wo) as xh[,}]/,
+  },
+  'shared-18-Cfqwgjc5.js': { columnExport: /(?<![\w$])uO as (Ku)[,}]/ },
+  'shared-19-UalAfDtn.js': { offsetClass: /(?<![\w$])Jx="(!mt-\[calc\(-1\*min\(var\(--organization-banner-column-height[^"]*)"/, offsetExport: /(?<![\w$])Jx as (Oa)[,}]/ },
+  'shared-33-DtdykY0y.js': { dockClass: /(?<![\w$])yk="(dock:h-auto dock:min-h-\[calc\(100%\+min[^"]*)"/, dockExport: /(?<![\w$])yk as (Wo)[,}]/ },
+};
+async function newPageColumnArtifact() {
+  const picked = {}, records = [];
+  for (const [chunk, table] of Object.entries(NEW_PAGE_COLUMN_PICKS)) {
+    const code = await fs.readFile(path.join(v4.ionSource, chunk), 'utf8');
+    for (const [name, pattern] of Object.entries(table)) {
+      const all = [...code.matchAll(new RegExp(pattern.source, 'g'))];
+      if (all.length !== 1) throw Error(`new-page column pick ${name}: ${all.length} matches in ${chunk}, expected 1`);
+      picked[name] = all[0][1];
+      records.push({ name, chunk, sha256: sha256(all[0][0]) });
+    }
+  }
+  // E5: TT's column, offset and dock bindings are the shared-18 / shared-19 / shared-33 exports the picks read, and hT is false.
+  if (picked.columnImport !== picked.columnExport || picked.offsetImport !== picked.offsetExport || picked.dockImport !== picked.dockExport || picked.falseFlag !== '!1')
+    throw Error('shared-23 TT no longer builds its column from shared-18 uO, shared-19 Jx and shared-33 yk');
+  const owner = JSON.parse(await fs.readFile(path.join(HOME_V4.generatedRoot, COLUMN_OWNER.area, 'manifest.json'), 'utf8'));
+  const module = owner.modules.find(m => m.target === COLUMN_OWNER.target);
+  if (owner.referenceVersion !== v4.referenceVersion || path.basename(module?.source ?? '') !== COLUMN_OWNER.source
+    || !module.bindings.some(b => (typeof b === 'string' ? b : b.name) === COLUMN_OWNER.local)
+    || module.sourceSha256 !== sha256(await fs.readFile(path.join(v4.ionSource, COLUMN_OWNER.source))))
+    throw Error(`${COLUMN_OWNER.area}/${COLUMN_OWNER.target} no longer holds ${COLUMN_OWNER.source}#${COLUMN_OWNER.local}`);
+  const out = { scrollClass: picked.scrollClass, columnClass: picked.columnClass, bannerOffsetClass: picked.offsetClass, dockHeightClass: picked.dockClass };
+  return `// Original Claude Desktop ${v4.referenceVersion} literals: shared-23-BRmsPtuN.js TT's new-page scroll column and page column (Se), with\n` +
+    `// shared-19-UalAfDtn.js Jx (banner offset) and shared-33-DtdykY0y.js yk (dock height); the column is shared-18-Cfqwgjc5.js uO from\n` +
+    `// its one owner, ${COLUMN_OWNER.area}. Generated by extract-home-v4.mjs. Edit the extractor, never this file.\n` +
+    `// picks: ${records.map(r => `${r.chunk}#${r.name}:${r.sha256.slice(0, 12)}`).join(' ')}\n` +
+    `export { ${COLUMN_OWNER.local} as NewPageColumn } from "../${COLUMN_OWNER.area}/${COLUMN_OWNER.target}";\n` +
+    `export const newPageColumn = Object.freeze(${JSON.stringify(out, null, 2)});\n`;
+}
 const quiet = async run => { const log = console.log; console.log = () => {}; try { return await run(); } finally { console.log = log; } };
 export async function extractHomeV4({ check = false, dryRun = false } = {}) {
   const located = await preflight();
-  const cfg = { ...HOME_V4, artifacts: () => ({ 'roots.json': rootsJson(located) }) };
+  const cardSlot = await cardSlotArtifact();
+  const column = await newPageColumnArtifact();
+  const cfg = { ...HOME_V4, artifacts: () => ({ 'roots.json': rootsJson(located), 'new-page-card-slot.mjs': cardSlot, 'new-page-column.mjs': column }) };
   const planned = await quiet(() => runSlicer(cfg, { dryRun: true }));
   const unseen = await unseenHeldState(planned);
   if (unseen.length) throw Error(`module state cds-core holds without a semantic name, unseen by the engine (D46):\n  ${unseen.join('\n  ')}`);

@@ -154,13 +154,15 @@ test('sharedGraph cds-core: linked by publicName, held copies equal, compiler he
   assert.deepEqual(mod('compiler-helpers.mjs').bindings.map(b => b.name).sort(), Object.keys(mod('compiler-helpers.mjs').exports).sort());
   for (const [local, name] of Object.entries(mod('compiler-helpers.mjs').exports)) assert.equal(proved[name].local, local);
   for (const m of manifest.modules) for (const name of m.heldByCdsCore) assert.equal(held.get(`${m.source}#${name}`), sha(rawDeclaration(m.source, name)), `${m.target}#${name}`);
-  assert.deepEqual(mod('cds-parts.mjs').heldByCdsCore, ['Ca']);
+  // cds-core wave cc2 (UserMessage shared-3 Bd closure) also holds the pure uo — was: ['Ca'].
+  assert.deepEqual(mod('cds-parts.mjs').heldByCdsCore, ['Ca', 'uo']);
   const cut = manifest.modules.flatMap(m => m.bindings.map(b => `${m.source}#${b.name}`)).filter(key => held.has(key));
   assert.deepEqual(cut.sort(), manifest.modules.flatMap(m => m.heldByCdsCore.map(n => `${m.source}#${n}`)).sort());
   // None of them is module state (a context or a module-level collection): functions, the runtime alias, the sentinel.
   for (const key of cut) {
     const [file, name] = key.split('#'), text = rawDeclaration(file, name);
-    assert.ok(/^function /.test(text) || /^J9=[\w$]+$/.test(text) || /^J8=Symbol\.for\("react\.memo_cache_sentinel"\)$/.test(text), `${key}: ${text.slice(0, 60)}`);
+    // wave cc2 adds clipboard Y$, an async function (was: /^function /).
+    assert.ok(/^(async )?function /.test(text) || /^J9=[\w$]+$/.test(text) || /^J8=Symbol\.for\("react\.memo_cache_sentinel"\)$/.test(text), `${key}: ${text.slice(0, 60)}`);
   }
   // No dynamic import, no 3.6556.2 view-tabs / working-line / chat-markdown import.
   for (const m of manifest.modules) {

@@ -187,13 +187,16 @@ test('E63 chatfn-memory-08 (locked): the gated / account memory entries stay off
   assert.ok(!/<a[ >]/.test(Object.values((local('src/source-settings-memory.jsx').match(/export const MEMORY_COPY = Object\.freeze\(\{[\s\S]*?\}\);/) ?? [''])[0]).join('')));
 });
 
-test('memory-01 + Privacy: the ⌘K Settings rows list Privacy, Memory and Cowork as the nav does', () => {
+test('memory-01 + Privacy: the ⌘K Settings rows find Privacy, Memory and Cowork on the nav pages that draw them', () => {
+  // fix-r2 U-28: rows are the hand-written nav's pages (Privacy → Account, Memory → Your Claude, Cowork → Code), the
+  // folded page names are their search hints.
   const ids = PALETTE_SETTINGS_SECTIONS.map(([id]) => id);
-  assert.deepEqual(ids.slice(0, 4), ['preferences', 'privacy', 'usage', 'memory']);
-  assert.ok(ids.includes('cowork'));
-  assert.deepEqual(PALETTE_SETTINGS_SECTIONS.find(([id]) => id === 'privacy'), ['privacy', 'Privacy', 'LockShield']);
-  const labels = paletteActions({ onOpenSettings() {} }).map(action => action.label);
-  assert.ok(labels.includes('Settings → Privacy') && labels.includes('Settings → Memory'));
+  assert.deepEqual(ids.slice(0, 4), ['account', 'usage', 'preferences', 'instructions']);
+  assert.deepEqual(PALETTE_SETTINGS_SECTIONS.find(([id]) => id === 'account'), ['account', 'Account', 'User', ['Privacy', 'Data sharing', 'Export data']]);
+  const actions = paletteActions({ onOpenSettings() {} }), labels = actions.map(action => action.label);
+  assert.ok(labels.includes('Settings → Account') && labels.includes('Settings → Your Claude'));
+  assert.ok(!labels.includes('Settings → Privacy') && !labels.includes('Settings → Memory'));
+  assert.ok(actions.find(action => action.label === 'Settings → Your Claude').hints.includes('Memory'));
   assert.match(local('src/source-settings.jsx'), /\{id:'privacy',label:'Privacy',icon:'LockShield',group:'Settings'/);
   assert.ok(raw('shared-46').includes('id:"data-privacy-controls"'));
 });

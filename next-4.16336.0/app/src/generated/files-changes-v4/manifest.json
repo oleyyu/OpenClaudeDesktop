@@ -4,7 +4,7 @@
   "generator": "scripts/extract-files-changes.mjs",
   "sharedGraph": "cds-core",
   "linkedAreas": {
-    "routines-shared-v4": "a2a9b9a84b2705e48451025af38eb7582de5bb421c626e6bdf5b067eb8e00c8c",
+    "routines-shared-v4": "79aa397be0c7daa4745103bbe2ea06fdcdbade14633a50d27248c2aea2b31649",
     "r3b-tasks": "c688c59960a0542885a98d1626187fd2170cc1c2854fb916f6b815d2e1367d20"
   },
   "isolatedGraph": {
@@ -88,7 +88,12 @@
         "Um": "Uu",
         "qm": "Vu"
       },
-      "heldByCdsCore": []
+      "heldByCdsCore": [
+        "Um",
+        "Vm",
+        "Km",
+        "Hm"
+      ]
     },
     {
       "target": "owner-window.mjs",
@@ -5787,12 +5792,12 @@
   ],
   "sharedGraphModules": {
     "ce574895a.mjs": "c8734e27b1043e4e5d43451a33908eb6c44c21f6de46f037b5810097b0950326",
-    "shared-183.mjs": "b66089456cf84fd1e744d499815043044c788d072b9a0b3efadb056079afe509",
+    "shared-183.mjs": "b30f542438802e1f8804ed8a99296f57c59bb8210b2eb03c7d3869bad28058c6",
     "shared-25.mjs": "fdd6c48ae5afe8b641caa601cc1d314be287d94ccffd8de16edd75abcdf70524",
     "shared-6.mjs": "99dd13a63aebee7b23e4aac6982fa7b49c221662ab12ff995db22fd6b4d1d1d6",
     "shared-62.mjs": "514d877303d4af43f5693aa961c40ec9534c7ac15b0747ec308601a87ca5b816",
     "shared-9.mjs": "2c742eea680683c8b40bf68146fcd5a9ed914f1ac1591f51da988cec2d4e92fc",
-    "shared-frame.mjs": "7a8f2192bcc5002cd72deccec3750f982ccfa0c59633e732f9dc88356317c0e6",
+    "shared-frame.mjs": "b1997a3e0d10ea243a4a9e44f1d417a6df34cb6c224711390f2386026a6a349e",
     "vendor-frame.mjs": "a923a956696beb9f7f50cba5751272a523b9ec050223fa066e370498d5fa9969",
     "vendor-query.mjs": "a9aaf28bf900d8d59b7400cece4cae54d88553a1d44bfd14b8ef14d941a8126e"
   },

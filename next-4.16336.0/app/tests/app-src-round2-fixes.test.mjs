@@ -72,12 +72,13 @@ test('a submenu trigger reads its hint before the caret, which stays last', () =
 
 test('Customize dialogs: text fields are CDS fields and the segmented control is not scoped to settings rows', () => {
   const css = read('source-customize.css');
-  const rule = css.match(/\.cz-dialog-field > input\[data-cds=TextInput\] \{([^}]+)\}/)?.[1] ?? '';
+  // U-24: the harness Add server fields (.hs-field) share the rule.
+  const rule = css.match(/:is\(\.cz-dialog-field, \.hs-field\) > input\[data-cds=TextInput\] \{([^}]+)\}/)?.[1] ?? '';
   for (const part of ['height:var(--cds-h-control', 'padding:0 var(--cds-pad-md', 'border-radius:var(--cds-radius', 'background:var(--cds-fill-field)', 'box-shadow:inset 0 0 0 1px var(--cds-fill-field-ring)'])
     assert.ok(rule.includes(part), part);
-  assert.match(css, /\.cz-dialog-field > input\[data-cds=TextInput\]:focus-visible \{ outline:none; box-shadow:var\(--cds-focus-shadow\); \}/);
+  assert.match(css, /:is\(\.cz-dialog-field, \.hs-field\) > input\[data-cds=TextInput\]:focus-visible \{ outline:none; box-shadow:var\(--cds-focus-shadow\); \}/);
   assert.match(css, /:hover:not\(:focus\):not\(\[aria-invalid=true\]\):not\(:disabled\) \{ box-shadow:inset 0 0 0 1px var\(--cds-border-strong\); \}/);
-  assert.match(css, /html\[data-reduce-motion="true"\] \.cz-dialog-field/);
+  assert.match(css, /html\[data-reduce-motion="true"\] :is\(\.cz-dialog-field, \.hs-field\)/);
   assert.doesNotMatch(css, /cursor:\s*pointer/);
   assert.match(read('source-segments.css'), /^\.ss-segments\[data-cds=SegmentedControl\] button\[role=radio\] \{ position:relative;/m);
 });

@@ -5,7 +5,7 @@
   "scope": "Settings › Privacy route (cf4f70727 pn → cc5f29bb3 t: SettingsStack > the \"where your conversations go\" card); Usage (c71860c77-DaFphJRS ae) not sliced: blocked by vendor-motion frame-clock state (see usageBlocked); Account (c71860c77-CDFXHgkP q) is the official closed branch on desktop",
   "sharedGraph": {
     "area": "cds-core",
-    "manifestSha256": "06d2026939e5c8992713c2a0dda1b1abc9adffe7a0c223fe3c1e79eecd08d62c"
+    "manifestSha256": "a0f228ae3f997f54f3e3ebafc254794bd26d8f1fc6999943a08b1d5730f638cd"
   },
   "linkedAreas": [
     {

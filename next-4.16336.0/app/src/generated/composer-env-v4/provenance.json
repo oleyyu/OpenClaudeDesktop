@@ -4,7 +4,7 @@
   "generator": "scripts/extract-composer-env-v4.mjs",
   "sharedGraph": {
     "area": "cds-core",
-    "manifestSha256": "06d2026939e5c8992713c2a0dda1b1abc9adffe7a0c223fe3c1e79eecd08d62c"
+    "manifestSha256": "a0f228ae3f997f54f3e3ebafc254794bd26d8f1fc6999943a08b1d5730f638cd"
   },
   "linked": {
     "area": "code-composer-v4",
@@ -12,7 +12,7 @@
       "environment-bar.mjs",
       "path-tooltip-placement.mjs"
     ],
-    "manifestSha256": "dc5bfba3750b5f0468cadcf5b6123fe59ce856daf14f6aebf5b1bce1c2f1cf64"
+    "manifestSha256": "8bc461c9b527667c1f1a21a7c06600bd549fda04b0af793429305de8580ca20d"
   },
   "labelContext": {
     "area": "code-routines-v4",

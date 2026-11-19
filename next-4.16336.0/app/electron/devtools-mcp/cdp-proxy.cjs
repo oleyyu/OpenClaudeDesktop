@@ -26,7 +26,7 @@
 //   onMessage(fn)             every debugger message of a preview page: fn(contents, method, params, sessionId)
 //   checkNavigation(key, url) throws when the preview wouldn't open that address in that tab without asking
 //   activate(key), close(key), create(url, nearKey) → key
-//   enabled()                 false: connections are refused (Settings › the preview tools are off)
+//   enabled()                 false: connections are refused, and open ones are closed (Settings › the preview tools are off)
 "use strict";
 const http = require("node:http");
 const crypto = require("node:crypto");
@@ -58,7 +58,23 @@ function createCdpProxy({ host, logger = console, token: fixedToken = null } = {
   const clients = new Set();
   const owners = new Map(); // real CDP session id (page or child) → { client, page }
   let server = null, port = 0, starting = null, unsubscribers = [];
-  let refreshing = Promise.resolve(), refreshTimer = null;
+  let refreshing = Promise.resolve(), refreshTimer = null, watchTimer = null;
+  const OFF = "The preview tools are turned off in OpenClaude Desktop.";
+  const isEnabled = () => { try { return host.enabled?.() !== false; } catch { return false; } };
+  // Turning the tools off closes the sessions already open, not only new connections: checked before every command and
+  // event, and every second while a client is connected (an idle client gets no message to trip on).
+  function disconnectAll() {
+    for (const client of [...clients]) for (const page of [...client.pages.values()]) dropPage(client, page, { notify: false });
+    wss.closeAll(1008, OFF);
+  }
+  function watchEnabled() {
+    if (watchTimer || !clients.size) return;
+    watchTimer = setInterval(() => {
+      if (!clients.size) { clearInterval(watchTimer); watchTimer = null; return; }
+      if (!isEnabled()) disconnectAll();
+    }, 1000);
+    watchTimer.unref?.();
+  }
 
   // ------------------------------------------------------------------ targets
   const recordId = (target) => `${target.key}|${target.contents.id}`;
@@ -175,6 +191,7 @@ function createCdpProxy({ host, logger = console, token: fixedToken = null } = {
     }
     const owner = owners.get(sessionId);
     if (!owner) return;
+    if (!isEnabled()) { disconnectAll(); return; }
     if (method === "Target.attachedToTarget" && params?.sessionId) { owner.page.children.set(params.sessionId, params.targetInfo?.targetId ?? null); owners.set(params.sessionId, owner); }
     else if (method === "Target.detachedFromTarget" && params?.sessionId) { owner.page.children.delete(params.sessionId); owners.delete(params.sessionId); }
     owner.client.event(method, params, sessionId);
@@ -304,7 +321,9 @@ function createCdpProxy({ host, logger = console, token: fixedToken = null } = {
       event(method, params, sessionId) { ws.send(JSON.stringify(sessionId ? { method, params, sessionId } : { method, params })); },
     };
     clients.add(client);
+    watchEnabled();
     ws.on("message", (text) => {
+      if (!isEnabled()) { disconnectAll(); return; }
       let message;
       try { message = JSON.parse(text); } catch { ws.close(1003, "Invalid JSON"); return; }
       const { id, method, sessionId } = message ?? {};
@@ -341,9 +360,7 @@ function createCdpProxy({ host, logger = console, token: fixedToken = null } = {
     const match = /^\/devtools\/browser\/([0-9a-f]{64})$/.exec(pathname);
     // A web page can open a WebSocket to 127.0.0.1 too: it always sends Origin; a CDP client doesn't.
     if (!match || !safeEqual(match[1], token) || request.headers.origin || !expectedHost.has(String(request.headers.host || ""))) { refuse(socket, "403", "Forbidden"); return; }
-    let enabled = true;
-    try { enabled = host.enabled?.() !== false; } catch { enabled = false; }
-    if (!enabled) { refuse(socket, "403", "The preview tools are turned off in OpenClaude Desktop."); return; }
+    if (!isEnabled()) { refuse(socket, "403", OFF); return; }
     wss.handleUpgrade(request, socket, head);
   }
 
@@ -372,6 +389,7 @@ function createCdpProxy({ host, logger = console, token: fixedToken = null } = {
     for (const client of [...clients]) for (const page of [...client.pages.values()]) dropPage(client, page, { notify: false });
     wss.closeAll(1001, "OpenClaude Desktop is quitting.");
     clearTimeout(refreshTimer); refreshTimer = null;
+    clearInterval(watchTimer); watchTimer = null;
     try { server?.close(); } catch { /* closed */ }
     server = null; port = 0;
     records.clear(); owners.clear(); clients.clear();

@@ -36,7 +36,7 @@ import fs from 'node:fs'
 import { createRequire } from 'node:module'
 import os from 'node:os'
 import path from 'node:path'
-import { readJsonFile, normalizeMcpServer, scanSkills, writeJsonFile, pluginSummary, projectDirs, frontmatter } from '../catalog.js'
+import { readJsonFile, normalizeMcpServer, scanSkills, writeJsonFile, pluginSummary, projectDirs, frontmatter, removeProjectMcpServer } from '../catalog.js'
 import { createOverlay } from '../overlay.js'
 import { withoutBrowser } from '../no-browser.js'
 import { threadConfigYaml, threadPermissionFile, AGENT_TOOL_IDS, topLevelBlocks, parseYamlBlock, withTopLevel, writeYamlBlock } from './minimax-config.js'
@@ -1414,11 +1414,13 @@ export default {
 
   mcpServers: (ctx, cwd) => mcpServersOf(ctx, cwd),
 
-  writeMcpServer(ctx, name, value) {
+  writeMcpServer(ctx, name, value, { cwd = null } = {}) {
     const home = homeOf(ctx.env)
     const file = fs.existsSync(path.join(home, 'mcp', 'mcp.json')) && !fs.existsSync(path.join(home, 'mcp.json')) ? path.join(home, 'mcp', 'mcp.json') : path.join(home, 'mcp.json')
     const config = readJsonFile(file, {}) ?? {}
     config.mcpServers = { ...config.mcpServers }
+    // A project's own connector goes from the file it came from (removeProjectMcpServer), else it would come right back.
+    if (value === null && !Object.hasOwn(config.mcpServers, name)) return removeProjectMcpServer(cwd ? path.join(cwd, '.mcp.json') : null, name, `${name} isn’t in your MiniMax Code connectors. It comes from a project’s .mcp.json; remove it there.`)
     if (value === null) delete config.mcpServers[name]
     else config.mcpServers[name] = value.url ? { url: value.url, type: 'http', ...(value.http_headers ? { headers: value.http_headers } : {}) } : { command: value.command, ...(value.args ? { args: value.args } : {}), ...(value.env ? { env: value.env } : {}) }
     writeJsonFile(file, config)

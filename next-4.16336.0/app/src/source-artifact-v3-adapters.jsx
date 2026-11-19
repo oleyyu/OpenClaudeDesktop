@@ -10,8 +10,9 @@ import { CdsContextMenu, CdsDropdown } from './generated/view-tabs/shared-frame-
 export const useArtifactOwners = () => noOwner;
 const noOwner = () => undefined;
 
-// cbbbbbd87 N: the claude.ai chat artifact preview (published screenshot / markdown excerpt); only for source "chat".
-export const ChatArtifactPreview = () => null;
+// cbbbbbd87 N: the chat artifact preview (published screenshot / markdown excerpt); only for source "chat". U-49: the host
+// follows it (markdown / text / code excerpt from the library row's previewText, else the type icon; no published screenshot).
+export { ChatArtifactPreview } from './source-artifact-chat-preview.jsx';
 
 // shared-16 $l: the lazy artifact menu chunk handle Ns preloads on idle (`t && e?.enqueueIdle()`); none here.
 export const artifactMenuItemsLazy = null;

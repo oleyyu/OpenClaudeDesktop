@@ -39,6 +39,34 @@ function renderedMatch(range) {
   if (element.ownerDocument.defaultView?.getComputedStyle(element).visibility !== "visible") return false;
   return range.getBoundingClientRect().height > 0;
 }
+// 4.16336.0 shared-100 Ic: the parent across a shadow root (an element at the top of one goes on to its host).
+function parentOf(element) {
+  if (element.parentElement) return element.parentElement;
+  const root = element.getRootNode?.();
+  return root && root !== element.ownerDocument && root.host ? root.host : null;
+}
+// U-11, 4.16336.0 shared-100 pl / hl: the document's ::highlight rules do not reach into a shadow tree, so a match in
+// one (a code block's diffs-container) adopts a constructed sheet with the same pair — fl resolves --cds-black first.
+const HIGHLIGHT_SHEETS = new WeakMap();
+function highlightSheet(document) {
+  const view = document.defaultView;
+  if (!view || typeof view.CSSStyleSheet !== "function") return null;
+  let sheet = HIGHLIGHT_SHEETS.get(document);
+  if (sheet) return sheet;
+  const black = view.getComputedStyle(document.documentElement).getPropertyValue("--cds-black").trim();
+  const color = black && view.CSS?.supports?.("color", black) ? black : "var(--cds-black)";
+  sheet = new view.CSSStyleSheet();
+  sheet.insertRule(`::highlight(${FIND_HIGHLIGHT}) { background-color: rgb(255 213 0); color: ${color}; }`, 0);
+  sheet.insertRule(`::highlight(${FIND_ACTIVE_HIGHLIGHT}) { background-color: rgb(255 150 50); color: ${color}; }`, 1);
+  HIGHLIGHT_SHEETS.set(document, sheet);
+  return sheet;
+}
+function adoptHighlightSheet(range) {
+  const root = range.startContainer.getRootNode?.();
+  if (!root?.host || !Array.isArray(root.adoptedStyleSheets)) return;
+  const sheet = highlightSheet(range.startContainer.ownerDocument);
+  if (sheet && !root.adoptedStyleSheets.includes(sheet)) root.adoptedStyleSheets = [...root.adoptedStyleSheets, sheet];
+}
 function scrolls(element) {
   if (element.scrollHeight <= element.clientHeight) return false;
   return /auto|scroll|overlay/.test(element.ownerDocument.defaultView?.getComputedStyle(element).overflowY ?? "");
@@ -68,6 +96,7 @@ export const SourceFindBar = forwardRef(function SourceFindBar({ enabled = true,
       highlights.delete(FIND_ACTIVE_HIGHLIGHT);
       return;
     }
+    for (const match of matches) adoptHighlightSheet(match.range);
     // shared-18 Oo: the active pair outranks the match pair (priority 1 vs 0).
     const all = new globalThis.Highlight(...matches.map((match) => match.range));
     all.priority = 0;
@@ -82,7 +111,9 @@ export const SourceFindBar = forwardRef(function SourceFindBar({ enabled = true,
     const scope = latest.current.getScope?.();
     let rect = match.range.getBoundingClientRect();
     if (rect.height === 0) return;
-    for (let element = elementOf(match.range.startContainer); element && element !== scope && scope?.contains(element); element = element.parentElement) {
+    // The walk crosses a code block's shadow root to its host (shared-100 Ic); a light-DOM step stays inside scope.
+    const inScope = (element) => element.getRootNode?.() !== element.ownerDocument || !!scope?.contains(element);
+    for (let element = elementOf(match.range.startContainer); element && element !== scope && inScope(element); element = parentOf(element)) {
       if (!scrolls(element)) continue;
       const offset = centerScrollOffset(rect, element.getBoundingClientRect());
       if (offset === null) continue;

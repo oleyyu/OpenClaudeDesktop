@@ -68,7 +68,7 @@ test("no-key home: Lw outline key card with sm CDS Buttons, composer warning and
   assert.match(card, /<CdsButton size="sm" variant="primary" onClick=\{\(\) => setOnboarding\("connect"\)\}>\{t\("Add key"\)\}<\/CdsButton>/);
   assert.doesNotMatch(card, /<button|<strong>|<Icon/);
   assert.doesNotMatch(main, /<strong>Set up DeepSeek<\/strong>/, "the Codex card no longer says Set up DeepSeek above ChatGPT copy");
-  assert.match(main, /warning=\{boot !== null && boot\?\.connected === false && !loading \? t\("Connection to \{core\} lost\.", \{ core: coreName\(boot\?\.core\) \}\)\s*: boot\?\.connected && boot\.account\?\.deepseek && !boot\.account\.account \? t\("Add a DeepSeek API key to start a session\."\)\s*: signInRequired \? t\("Sign in to \{name\} to start a session\.", \{ name: signInPrompt\.name \}\) : undefined\}/);
+  assert.match(main, /warning=\{boot !== null && boot\?\.connected === false && !loading \? t\("Connection to \{core\} lost\.", \{ core: coreName\(boot\?\.core \?\? bootEngine\(boot\)\) \}\)\s*: boot\?\.connected && boot\.account\?\.deepseek && !boot\.account\.account \? t\("Add a DeepSeek API key to start a session\."\)\s*: signInRequired \? t\("Sign in to \{name\} to start a session\.", \{ name: signInPrompt\.name \}\) : undefined\}/);
   const send = main.slice(main.indexOf("async function send({ priority, title } = {}) {"));
   assert.match(send, /^async function send\(\{ priority, title \} = \{\}\) \{\n\s+if \(boot\?\.account\?\.deepseek && !boot\.account\.account\) return;/, "the guard is the first line of send()");
   const style = await fs.readFile(path.join(app, "src/style.css"), "utf8");

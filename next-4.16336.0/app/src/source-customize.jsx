@@ -586,7 +586,7 @@ function SkillsPage({ store, cwd, call, onUseSkill, onRevealPath, onNavigate, fo
   // The skill's Delete (copy.skillInstall: a skill the core installed), from its page or its list row's Remove.
   // ccea1f474 Js: a list row's Remove asks "Remove skill?" (confirm "Remove"); the skill page keeps its Delete.
   const deleteDialog = <SourceConfirmationDialog open={!!deleting} title={deleting?.fromList ? t("Remove skill?") : t("Delete {name}?", { name: deleting?.name ?? "" })}
-    confirmLabel={deleting?.fromList ? t("Remove") : t("Delete")} confirmVariant="danger" pending={skillBusy}
+    confirmLabel={deleting?.fromList ? t("Remove") : t("Delete")} confirmVariant="danger" pending={skillBusy} layer={SETTINGS_CONFIRM_LAYER}
     body={t("The skill’s folder is removed from your skills. Sessions stop offering it.")}
     onCancel={() => setDeleting(null)} onConfirm={async () => {
       setSkillBusy(true); setToggleError("");
@@ -660,7 +660,9 @@ function SkillsPage({ store, cwd, call, onUseSkill, onRevealPath, onNavigate, fo
     if (row.kind === "error") return <ListRow key={row.id} testId="skills-tabbed-list-row" icon="Warning" reserveMenuColumn data-row-id={row.id} data-skill-error="">
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
         <span className="truncate text-body-medium text-primary" title={row.path}>{row.name}</span>
-        <RowCredit plain segments={[row.message]} />
+        {/* U-46: the load error wraps (up to three lines) and its full text is the tooltip; the row's content layer
+            is pointer-events-none, so the message takes the pointer back for the tooltip and text selection. */}
+        <span className="cz-row-error-message pointer-events-auto text-footnote text-secondary" title={row.message} data-skill-error-message="">{row.message}</span>
       </div>
     </ListRow>;
     const off = copy.skillToggle && !row.enabled;
@@ -800,7 +802,7 @@ export function AgentsSection({ store, cwd, query = "", onRevealPath, copy }) {
   return <section className="cz-builtin cz-agents" aria-label={t("Agents")} data-cz-agents="">
     <div className="cz-builtin-head"><h3>{t("Agents")}</h3>{writable && <Button variant="secondary" size="sm" onClick={() => { setError(""); setCreating(true); }}>{t("Create agent")}</Button>}</div>
     {creating && <AgentCreateDialog cwd={cwd} copy={copy} onClose={() => setCreating(false)} onCreate={(agent) => store.writeAgent(cwd, agent)} />}
-    <SourceConfirmationDialog open={!!deleting} title={t("Delete {name}?", { name: deleting?.name ?? "" })} confirmLabel={t("Delete")} confirmVariant="danger" pending={busy}
+    <SourceConfirmationDialog open={!!deleting} title={t("Delete {name}?", { name: deleting?.name ?? "" })} confirmLabel={t("Delete")} confirmVariant="danger" pending={busy} layer={SETTINGS_CONFIRM_LAYER}
       body={t("The agent’s file is removed. {core} stops offering it.", { core: copy.name })} onCancel={() => { setDeleting(null); setError(""); }} onConfirm={() => void remove()}>
       {error && <p className="cz-error" role="alert">{error}</p>}
     </SourceConfirmationDialog>
@@ -809,7 +811,7 @@ export function AgentsSection({ store, cwd, query = "", onRevealPath, copy }) {
       {shown.map((agent) => <li key={`${agent.scope}:${agent.name}`} className="cz-builtin-row" data-agent={agent.name}>
         <div className="cz-builtin-text">
           {/* A display name of the agent's own (MiniMax), else its name; the tools it may use when it lists them. */}
-          <span className="cz-builtin-name"><span className="cz-truncate" title={agent.displayName ? agent.name : undefined}>{agent.displayName || agent.name}</span>{agent.model && <span className="cz-builtin-version">{agent.model}</span>}</span>
+          <span className="cz-builtin-name"><span className="cz-truncate" title={agent.displayName ? `${agent.displayName}\n${agent.name}` : agent.name}>{agent.displayName || agent.name}</span>{agent.model && <span className="cz-builtin-version cz-agent-model" title={agent.model}>{agent.model}</span>}</span>
           {agent.description && <span className="cz-builtin-description">{agent.description}</span>}
           {Array.isArray(agent.tools) && agent.tools.length > 0 && <span className="cz-builtin-description" data-agent-tools="">{t("Tools: {tools}", { tools: agent.tools.filter((tool) => typeof tool === "string").slice(0, 12).join(", ") + (agent.tools.length > 12 ? "…" : "") })}</span>}
           <span className="cz-builtin-source" title={agent.path || undefined}>{scopeLabel(agent.scope)}</span>
@@ -840,7 +842,7 @@ function AgentCreateDialog({ cwd, copy, onCreate, onClose }) {
     catch (failure) { setError(localizeBridgeText(cleanErrorReason(failure?.message || "")) || t("Couldn’t create the agent.")); setBusy(false); }
   };
   const toggle = (key) => setDenied((current) => { const next = new Set(current); if (next.has(key)) next.delete(key); else next.add(key); return next; });
-  return <SourceDialog open title={t("Create agent")} onClose={() => { if (!busy) onClose(); }} size="md"
+  return <SourceDialog open title={t("Create agent")} onClose={() => { if (!busy) onClose(); }} size="md" layer={SETTINGS_CONFIRM_LAYER}
     footer={<><Button variant="secondary" disabled={busy} onClick={onClose}>{t("Cancel")}</Button><Button variant="primary" busy={busy} disabled={!ready} onClick={() => void submit()}>{t("Create")}</Button></>}>
     <form className="cz-agent-form" onSubmit={(event) => void submit(event)}>
       <label>{t("Name")}<input value={name} placeholder="reviewer" spellCheck={false} aria-invalid={!!name && !nameOk} onChange={(event) => setName(event.target.value.toLowerCase())} /></label>
@@ -1129,11 +1131,11 @@ export function connectorActions({ call, store, toasts, threadId = null, onOpenE
       await onOpenExternal(result.authorizationUrl);
     }, CONNECTOR_TOASTS.connectFailed),
     signOut: (row) => run(`sign out of ${row.name}`, async () => {
-      await call({ operation: "mcp-logout", name: row.name });
+      await call({ operation: "mcp-logout", name: row.name, threadId: threadId ?? null });
       await store.loadMcp({ force: true });
     }, t("Couldn’t sign out of {name}.", { name: row.title ?? row.name }), t("Signed out of {name}.", { name: row.title ?? row.name })),
     remove: (row) => run(`remove ${row.name}`, async () => {
-      await call({ operation: "mcp-remove", name: row.name });
+      await call({ operation: "mcp-remove", name: row.name, threadId: threadId ?? null });
       await store.loadMcp({ force: true });
     }, CONNECTOR_TOASTS.removeFailed, copy.connectorRemoved(row.name)),
     // Edit config opens the core's own file; its failure is app copy (main.cjs editConfigTarget).

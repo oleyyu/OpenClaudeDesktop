@@ -15,8 +15,10 @@ import React, { useContext, useMemo } from 'react';
 import { RoutineContext, sourceRoutine } from './source-routine-adapters.jsx';
 import { RoutinesSharedHost } from './source-routines-shared-adapters.jsx';
 import { setActiveCoworkBridge } from './source-routine-cowork-adapters.jsx';
-import { ScheduledTaskCard } from './generated/routines-shared/index.mjs';
-import { ScheduledTaskDetail, UpsertScheduledTaskModal } from './generated/cowork-scheduled/index.mjs';
+// library-pages-r1-03/04: the 4.16336.0 card (routines-shared-v4 cdbc75b4b Jr), detail (cowork-scheduled-v4 ccd3f68fe os)
+// and form (c97b955f1 Xa); same props contract and the same RoutinesSharedHost adapters as the 3.6556.2 Jr / ps / La.
+import { ScheduledTaskCard } from './generated/routines-shared-v4/index.mjs';
+import { ScheduledTaskDetail, UpsertScheduledTaskModal } from './generated/cowork-scheduled-v4/index.mjs';
 
 // Official permission mode names to the host's (ask / bypass), and back (source-routine-form-adapters.jsx does the same
 // for the old form).

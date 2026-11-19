@@ -305,6 +305,11 @@ export default {
   "Account": "账户",
   "API key": "API 密钥",
   "Session": "会话",
+  // U-20: names and notes the main process writes for a fork (electron/session-operations.cjs).
+  "Fork of {name}": "分叉：{name}",
+  "{name} ({folder})": "{name}（{folder}）",
+  "The session continues in {folder}: {core} kept its folder.": "会话将在 {folder} 中继续：{core} 保留了它的文件夹。",
+  "The fork was created, but its title could not be updated.": "分叉已创建，但无法更新其标题。",
   "Untitled session": "未命名会话",
   "New session": "新建会话",
   "Task state": "任务状态",
@@ -401,6 +406,7 @@ export default {
   "Choose a workflow file.": "请选择工作流文件。",
   "No saved workflow with this name.": "没有此名称的已保存工作流。",
   "Select a JavaScript workflow smaller than 1 MB.": "请选择小于 1 MB 的 JavaScript 工作流。",
+  "Select a JavaScript workflow no larger than 512 KB.": "请选择不大于 512 KB 的 JavaScript 工作流。",
   "Resume requires the same model, effort, access and working directory from a finished run.": "恢复运行需要已结束的运行，且模型、推理强度、访问权限和工作目录都相同。",
   "Unknown workflow.": "未知的工作流。",
   "This workflow is no longer running.": "此工作流已不在运行。",
@@ -931,7 +937,7 @@ export default {
   "Share feedback with DeepSeek?": "与 DeepSeek 共享反馈？",
   "Your feedback and this session so far are uploaded to DeepSeek: your prompts, file contents the agent read, command output and the working folder, with an anonymous ID.": "你的反馈和此会话到目前为止的内容将上传给 DeepSeek：包括你的提示词、代理读取的文件内容、命令输出和工作文件夹，并附带匿名 ID。",
   "Share feedback": "共享反馈",
-  "Feedback saved on this computer. To send it to DeepSeek, turn on Share feedback with DeepSeek in Settings › Code › Privacy.": "反馈已保存在这台电脑上。若要发送给 DeepSeek，请在“设置 › Code › 隐私”中打开“与 DeepSeek 共享反馈”。",
+  "Feedback saved on this computer. To send it to DeepSeek, turn on Share feedback with DeepSeek in Settings › Account › Data sharing.": "反馈已保存在这台电脑上。若要发送给 DeepSeek，请在“设置 › 账户 › 数据共享”中打开“与 DeepSeek 共享反馈”。",
   "Giving this request a little extra thought": "正在为这个请求多花一点时间",
   "If you’d rather not wait, retry with a faster model. It may be less capable of handling complex requests.": "如果不想等待，可以换用更快的模型重试。它处理复杂请求的能力可能较弱。",
   "No action is required. {core} will keep waiting, and this notice closes when the response is ready.": "无需任何操作。{core} 会继续等待，回复就绪后此通知会自动关闭。",
@@ -1420,6 +1426,13 @@ export default {
   "{n, plural, one {# file} other {# files}}": "{n, plural, other {# 个文件}}",
   "Artifact": "工件",
   "Open artifact {label}": "打开工件 {label}",
+  // chat-conversation r2-06: 4.16336.0 cbaae0d6d artifact pane header (+1j1W0j1Pv, 92qI2JZM2l, ig8B3bgm/r, QRpL6J6Txn, adThp5MDl0, 2kvXTlOKnF).
+  "Artifact panel{title}": "工件面板{title}",
+  "Close artifact": "关闭工件",
+  "Switch artifact version": "切换工件版本",
+  "Switch artifact version, currently version {versionNum}": "切换工件版本，当前为版本 {versionNum}",
+  "Latest": "最新",
+  "Copy options": "复制选项",
   // R4g-turnbox (TB-6): the Code session turn box (2.42304.0 cccc2cf0a DT l1PWymZINI / R8nH2v8dD8 / # more to go, OT
   // # running tasks, bT gOjlODkpSi; hT _T CGdqguPBap / NLWXKo4edj, vT kRoFBJb/rf — "Claude" kept as written, D23).
   "Plan from before your last message": "上一条消息之前的计划",

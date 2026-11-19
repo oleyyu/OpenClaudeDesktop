@@ -155,6 +155,23 @@ test('pure helpers: provider/MCP shapes, websearch on, merge rules', () => {
   assert.deepEqual(anchorConfig({ plugins: ['-x', 'npm-pkg'] }, '/d'), { plugins: ['-x', 'npm-pkg'] })
 })
 
+test('\'{core} settings\' › OpenCode Zen models: off denies OpenCode\'s own provider, kept with the user\'s policies', async () => {
+  const { coreSettingDefs } = await import('../packages/opencode-bridge/src/core-settings.js')
+  assert.deepEqual(coreSettingDefs(OC2).find((def) => def.key === 'models.zen'), { key: 'models.zen', type: 'boolean', default: true, kind: 'config' })
+  assert.equal(coreSettingDefs(FLAVORS.opencode).some((def) => def.key === 'models.zen'), false, '1.x: not offered')
+  const deny = { action: 'provider.use', resource: 'opencode', effect: 'deny' }
+  assert.equal(setup().config.overlay().policies, undefined, 'unset: OpenCode\'s own behaviour')
+  assert.equal(setup({ settings: { coreSettings: { 'models.zen': true } } }).config.overlay().policies, undefined)
+  const { home, config } = setup({ settings: { coreSettings: { 'models.zen': false } } })
+  assert.deepEqual(config.overlay().policies, [deny])
+  // The user's own policies (their opencode.json) stay, ours after them.
+  const own = { action: 'provider.use', resource: 'xai', effect: 'deny' }
+  fs.mkdirSync(path.join(home, 'xdg', 'opencode'), { recursive: true })
+  fs.writeFileSync(path.join(home, 'xdg', 'opencode', 'opencode.json'), JSON.stringify({ policies: [own] }))
+  const user = new BridgeConfigV2({ flavor: OC2, stateDir: path.join(home, 'state'), env: { HOME: home, XDG_CONFIG_HOME: path.join(home, 'xdg'), OPENCODE_CONFIG: path.join(home, 'xdg', 'opencode', 'opencode.json'), PATH: '/usr/bin:/bin' } })
+  assert.deepEqual(user.overlay().policies, [own, deny])
+})
+
 test('GET /api/config entries merged back as v2 reads them; the bridge\'s own documents excluded by path', () => {
   const overlay = '/state/config-v2/opencode.json'
   const entries = [

@@ -20,6 +20,8 @@ import codeTranscript from './code-transcript.mjs'; // W14-code renderer-core: t
 import transcriptRest from './transcript-rest.mjs'; // W14-code transcript-rest: the Code transcript's remaining rows
 import chatImport from './import.mjs'; // Import history (source-import-history.jsx, chat-import)
 import dictation from './dictation.mjs'; // Composer dictation (source-composer-dictation.jsx)
+import officialV4 from './official-v4.mjs'; // U-15: the official 4.16336.0 copy no area file carried (merged first)
+import persona from './persona.mjs'; // U-14 / U-18: the assistant / app name sentences (electron/i18n/persona-copy.mjs), bundled pack copy
 
 // common.mjs is merged last: its wording wins where areas disagree.
-export default Object.freeze({ ...codeTranscript, ...transcriptRest, ...app, ...session, ...sidebar, ...customize, ...settings, ...panes, ...models, ...menus, ...terminal, ...windows, ...preview, ...workflows, ...agentTools, ...computerUse, ...chatImport, ...dictation, ...surfaces, ...common });
+export default Object.freeze({ ...officialV4, ...persona, ...codeTranscript,...transcriptRest, ...app, ...session, ...sidebar, ...customize, ...settings, ...panes, ...models, ...menus, ...terminal, ...windows, ...preview, ...workflows, ...agentTools, ...computerUse, ...chatImport, ...dictation, ...surfaces, ...common });

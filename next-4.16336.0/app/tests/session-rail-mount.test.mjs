@@ -592,7 +592,9 @@ test('main.jsx: the rail is wired into the chat tile (state, toggle, body row, p
   assert.deepEqual(row.openingElement.attributes.map((a) => [a.name.name, text(a.value.expression)]), [['rail', 'sessionRail'], ['host', 'sessionRailHost']]);
   const inside = elementsOf(row);
   // W14-code r3 css3-archived-band-enter: the column also takes cc43287c9 Zre's ref (useBandEnter, data-band-enter).
-  assert.match(text(inside[0]), /^<div ref=\{bandEnterRef\} className=\{`conversation \$\{!current && mode !== 'code' && section === 'new' \? homeScrollClass : ''\} \$\{sessionRail\.bandClassName\}`\}>/);
+  // chat-home r1-06: the column sits in shared-23 TT's new-page frame (SourceNewPageFrame) and the new Chat page's
+  // scroll column also carries TT's data-new-page-scroll-column.
+  assert.match(text(inside[0]), /^<SourceNewPageFrame home=\{!current && mode === 'chat' && section === 'new'\}>\n\s*<div ref=\{bandEnterRef\} \{\.\.\.\(!current && mode === 'chat' && section === 'new' \? \{ \[NEW_PAGE_SCROLL_COLUMN\]: "" \} : \{\}\)\} className=\{`conversation \$\{!current && mode !== 'code' && section === 'new' \? homeScrollClass : codeLanding \? LANDING_SCROLL_CLASS : ''\} \$\{sessionRail\.bandClassName\}`\}>/);
   assert.equal(jsxName(inside.at(-1)), 'SessionRailColumn');
   // the chat panel body wraps the keyed transcript
   const panels = findAll(ast, (node) => jsxName(node) === 'SessionRailChatBody');

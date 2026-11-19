@@ -60,7 +60,7 @@ const sha = bytes => createHash('sha256').update(bytes).digest('hex');
 const stagedPublicAssets = path.resolve(root, '../analysis/claude-4.16336.0-migrate-20261104/round2/chat-renderer-a/staging/public/assets/v1');
 
 // The cds-core graph this area was reviewed against (cds-core wave 6).
-export const CDS_CORE_MANIFEST_SHA256 = '06d2026939e5c8992713c2a0dda1b1abc9adffe7a0c223fe3c1e79eecd08d62c';
+export const CDS_CORE_MANIFEST_SHA256 = 'a0f228ae3f997f54f3e3ebafc254794bd26d8f1fc6999943a08b1d5730f638cd';
 
 export const CC1 = 'cc1aae219-BbSf__8R.js', C89 = 'c89efce1a-CleBUUAy.js', C851 = 'c851b27a8-Chd9-72r.js', KATEX_PLUGIN = 'ca129fbf3-HnH_eJBK.js';
 export const KATEX = 'cf1a02a1a-A3V2xzb_.js', REMARK_MATH = 'c6369e48b-jalMQaq2.js';

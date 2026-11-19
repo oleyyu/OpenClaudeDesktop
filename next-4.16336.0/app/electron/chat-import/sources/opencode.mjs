@@ -88,11 +88,19 @@ function firstPromptV1(db, sessionId, slice) {
   } catch {}
   return '';
 }
-function firstPromptV2(db, sessionId) {
+function firstPromptV2(db, sessionId, boundary) {
   try {
-    const row = db.prepare(`SELECT data FROM session_message WHERE session_id = ? AND type = 'user' ORDER BY seq LIMIT 1`).get(sessionId);
+    const row = boundary === undefined
+      ? db.prepare("SELECT data FROM session_message WHERE session_id = ? AND type = 'user' ORDER BY seq LIMIT 1").get(sessionId)
+      : db.prepare("SELECT data FROM session_message WHERE session_id = ? AND type = 'user' AND seq < ? ORDER BY seq LIMIT 1").get(sessionId, boundary);
     return row ? json(row.data).text ?? '' : '';
   } catch { return ''; }
+}
+function stagedBoundary(db, sessionId, revert) {
+  const messageID = json(revert).messageID;
+  return typeof messageID === 'string'
+    ? db.prepare('SELECT seq FROM session_message WHERE session_id = ? AND id = ?').get(sessionId, messageID)?.seq
+    : undefined;
 }
 const modelOf = value => {
   if (typeof value !== 'string' || !value) return null;
@@ -115,11 +123,15 @@ export function listDatabase(db, file, ctx, { source = 'opencode', extra } = {})
     if (row.parent_id && !ctx.includeSubagents) continue;
     const schema = v2.get(row.id) ? 2 : v1.get(row.id) ? 1 : 0;
     if (!schema) continue;
+    const boundary = schema === 2 ? stagedBoundary(db, row.id, row.revert) : undefined;
+    const messageCount = boundary === undefined ? (schema === 2 ? v2.get(row.id) : v1.get(row.id))
+      : db.prepare("SELECT count(*) AS n FROM session_message WHERE session_id = ? AND seq < ? AND type IN ('user', 'assistant')").get(row.id, boundary).n;
+    if (!messageCount) continue;
     out.push(makeSummary(source, row.id, {
-      sourcePath: file, title: row.title ?? '', firstPrompt: schema === 2 ? firstPromptV2(db, row.id) : firstPromptV1(db, row.id, slice),
+      sourcePath: file, title: row.title ?? '', firstPrompt: schema === 2 ? firstPromptV2(db, row.id, boundary) : firstPromptV1(db, row.id, slice),
       cwd: row.directory || null, model: modelOf(row.model), createdAt: row.time_created, updatedAt: row.time_updated,
       archived: !!row.time_archived, parentId: row.parent_id ?? null, isSubagent: !!row.parent_id,
-      messageCount: schema === 2 ? v2.get(row.id) : v1.get(row.id), extra: { schema, ...(extra?.(row) ?? {}) },
+      messageCount, extra: { schema, ...(extra?.(row) ?? {}) },
     }));
   }
   return out;
@@ -136,8 +148,13 @@ export function readDatabase(db, sessionId, { budget = rowBudget() } = {}) {
   const done = parsed => ({ ...parsed, warnings: budget.capped ? [SESSION_CAPPED_WARNING] : [] });
   const has2 = tables.has('session_message') && !!db.prepare('SELECT 1 FROM session_message WHERE session_id = ? LIMIT 1').get(sessionId);
   if (has2) {
+    const revert = tables.has('session_v2') && columnsOf(db, 'session_v2').has('revert')
+      ? db.prepare('SELECT revert FROM session_v2 WHERE id = ?').get(sessionId)?.revert
+      : null;
+    const boundary = stagedBoundary(db, sessionId, revert);
     const parts = tables.has('session_part') ? db.prepare('SELECT data FROM session_part WHERE message_id = ? ORDER BY ordinal') : null;
-    const rows = takeMessages(db.prepare('SELECT id, type, seq, time_created, data FROM session_message WHERE session_id = ? ORDER BY seq DESC'), [sessionId], budget,
+    const rows = takeMessages(db.prepare(`SELECT id, type, seq, time_created, data FROM session_message WHERE session_id = ?${boundary === undefined ? '' : ' AND seq < ?'} ORDER BY seq DESC`),
+      boundary === undefined ? [sessionId] : [sessionId, boundary], budget,
       row => (parts && row.type === 'assistant' ? takeRows(parts, [row.id], budget) : []));
     return done(itemsOfV2(rows.map(({ row, parts: found }) => {
       const data = json(row.data);
@@ -324,7 +341,7 @@ export function itemsOfV2(messages) {
       case 'user': {
         const parts = [{ text: message.text ?? '' }];
         for (const file of message.files ?? []) {
-          const url = file?.source?.uri ?? file?.uri ?? (file?.data ? `data:${file.mime};base64,${file.data}` : null);
+          const url = file?.data ? `data:${file.mime};base64,${file.data}` : file?.source?.uri ?? file?.uri;
           if (url) parts.push(filePart({ mime: file.mime, url, filename: file.name }));
         }
         list.push('user', { ts, parts });

@@ -178,7 +178,7 @@ test('SSR P2: conversations — empty state, Pinned (collapsible) then Recents, 
   // w13-close-chat-project-rows: each section's rows are Ol's table rows (one row link each).
   assert.equal(count(html, 'data-row-link=""'), 2 + 20);
   assert.ok(!text(html).includes('Chat other') && !text(html.slice(recents)).includes('Chat s22'));
-  assert.match(html, /class="self-center text-sm text-muted-as-secondary hover:text-secondary transition-colors py-2 disabled:opacity-50">Show more<\/button>/);
+  assert.match(html, /class="self-center text-sm text-muted-as-secondary hover:text-secondary enabled:hover:text-secondary-control transition-colors py-2 disabled:opacity-50">Show more<\/button>/);
   const sections = page.projectSessionSections(sessions, sessionMetadata, 'a');
   assert.deepEqual([sections.pinned.length, sections.recents.length], [2, 21]);
 });
@@ -194,6 +194,10 @@ test('SSR P1b: the project card carries ir’s overlay trigger; Pin / Unpin and 
   assert.ok(menu.includes(`data-testid="star-space-trigger" onClick={onToggleStarred} icon={isStarred ? 'PinSlash' : 'Pin'}>{t(isStarred ? 'Unpin' : 'Pin')}`));
   assert.ok(menu.includes(`data-testid="rename-space-trigger" onClick={() => setTimeout(onEdit, 100)} icon="Edit">{t('Edit details')}`));
   assert.ok(!menu.includes('archive-space-trigger'));
+  // library-pages-r1-05: 4.16336.0 c17beaa76 wr's trigger is the cds-core Button with DotsHorizontal (3.6556.2 ir: DotsVertical).
+  assert.ok(menu.includes('<CoreDropdown.Trigger render={<CoreButton iconOnly icon="DotsHorizontal" variant="ghost" tooltip={false} className="pointer-events-auto"'));
+  assert.ok(fs.readFileSync(path.join(app, '../reference/snapshots/claude-4.16336.0-20261104/ion-dist/assets/v1/c17beaa76-CF6cnZoR.js'), 'utf8')
+    .includes('render:t(p,{iconOnly:!0,icon:"DotsHorizontal",variant:"ghost",tooltip:!1,className:"pointer-events-auto"'));
 });
 
 test('local projects: instructions save / clear and reach a session; knowledge files add / remove', async (t) => {

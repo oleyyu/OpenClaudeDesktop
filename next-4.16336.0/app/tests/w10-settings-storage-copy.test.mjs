@@ -36,7 +36,7 @@ test('notdone 45: the Storage row and the Storage dialog header read the 3.6556.
   assert.ok(settings.includes("row('storage',t('Storage'),t('See how much space Claude uses on this computer.'),"));
   assert.equal(settings.includes('See how much space OpenClaude Desktop uses'), false);
   const html = render(React.createElement(pages.StorageDialog, { call: async () => ({}), settingsRoot: { current: null }, onClose() {} }));
-  assert.match(html, /<header class="ss-storage-header"><h2 id="[^"]+">Storage<\/h2><p id="[^"]+">Space Claude uses on this computer\.<\/p>/);
+  assert.match(html, /<header class="ss-storage-header"><h2 id="[^"]+">Storage<\/h2><p id="[^"]+">Space OpenClaude Desktop uses on this computer\.<\/p>/); // fix-r2 U-14: this app, was Claude
   const text = source('src/source-settings-pages.jsx');
   for (const gone of ['Space OpenClaude Desktop and local {name} data use on this computer.', 'Space OpenClaude Desktop and its agent core use on this computer.'])
     assert.equal(text.includes(gone), false, gone);
@@ -48,7 +48,7 @@ test('notdone 45: the Storage row and the Storage dialog header read the 3.6556.
     assert.equal(t('See how much space Claude uses on this computer.'), conciseCopy('See how much space Claude uses on this computer.', 'zh-CN'));
     assert.equal(t('See how much space Claude uses on this computer.'), '应用占用的磁盘空间。');
     assert.equal(conciseCopy('Space Claude uses on this computer.', 'zh-CN'), null);
-    assert.equal(t('Space Claude uses on this computer.'), 'Claude 在此电脑上占用的空间。');
+    assert.equal(t('Space Claude uses on this computer.'), 'OpenClaude Desktop 在此电脑上占用的空间。'); // fix-r2 U-14: this app, was Claude
   } finally { setLocale(DEFAULT_LOCALE); }
 });
 

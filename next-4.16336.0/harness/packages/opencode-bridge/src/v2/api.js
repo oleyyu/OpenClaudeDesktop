@@ -90,11 +90,13 @@ export class V2Api {
   /** Every item of a cursor list, page by page, until a short page (or maxPages). */
   async all(path, { query = {}, limit = 200, maxPages = 1000, location, signal } = {}) {
     const out = []
+    const seen = new Set()
     let cursor = null
     for (let pages = 0; pages < maxPages; pages++) {
       const page = await this.page(path, { query, limit, cursor, location, signal })
       out.push(...page.data)
-      if (page.data.length < limit || !page.next || page.next === cursor) break
+      if (page.data.length < limit || !page.next || seen.has(page.next)) break
+      seen.add(page.next)
       cursor = page.next
     }
     return out

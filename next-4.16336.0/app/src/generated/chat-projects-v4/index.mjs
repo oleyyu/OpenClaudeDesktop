@@ -9,4 +9,6 @@ export { useProjectsSearchKeys } from "./c444bcdd7.mjs";
 export { RenameChatDialog } from "./shared-140.mjs";
 export { useProjectRecommendations, ProjectToolsView, ProjectInstructionsDialog } from "./c9b54eb90.mjs";
 export { ProjectInstructionsSection, ProjectRailDivider, ProjectKnowledgeDropZone, ProjectMemorySection } from "./cf2f34ee4.mjs";
+export { KnowledgeRemoveDialog } from "./c9260427e.mjs";
+export { ProjectEditDetailsDialog } from "./shared-19.mjs";
 export { ProjectSessionTable, ProjectPageHeader, ProjectBreadcrumb, ProjectSessionsHeading, ProjectHeader } from "./c71dee58b.mjs";

@@ -38,6 +38,8 @@
 .skf-markdown :not(pre)>code { padding:1px 4px; border-radius:4px; background:var(--cds-alpha-1); font-size:.875em; }
 .skf-markdown pre { margin:0; overflow:auto; padding:16px; border:1px solid var(--cds-border); border-radius:8px; font:12px/22px var(--cds-font-mono); background:var(--cds-surface-2); }
 .skf-markdown table { border-collapse:collapse; width:100%; }
+/* U-45: official .prose-scroll (overflow-x:auto) — the table pans inside the card, not the preview. */
+.skf-table-scroll { min-width:0; max-width:100%; overflow-x:auto; }
 .skf-markdown :is(th,td) { border-bottom:.5px solid hsl(var(--border-300)/.3); padding:8px 16px 8px 0; text-align:left; vertical-align:top; }
 .skf-markdown th { font-weight:600; border-bottom-color:hsl(var(--border-300)/.6); }
 .skf-markdown hr { border:0; border-top:.5px solid var(--cds-border); margin:12px 6px; }

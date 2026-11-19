@@ -561,6 +561,6 @@
   "hostAdapterSha256": "b71c2d3ac03bdcad201fb60efa08b36987cbb89353a07b259979e818726d6a80",
   "cdsCore": {
     "manifest": "app/src/generated/cds-core/manifest.json",
-    "manifestSha256": "06d2026939e5c8992713c2a0dda1b1abc9adffe7a0c223fe3c1e79eecd08d62c"
+    "manifestSha256": "a0f228ae3f997f54f3e3ebafc254794bd26d8f1fc6999943a08b1d5730f638cd"
   }
 }

@@ -13,6 +13,8 @@
 //   - CodeSidebarMutationsHost / SessionLinkActionsHost: no host service (render nothing).
 import { useEffect, useLayoutEffect } from "react";
 import { openNavSessionMenu } from "./frame-sidebar-nav-host.jsx";
+import { XS as codeRowSelection } from "./generated/code-current-v4/chunk-shared-6.mjs";
+import { openNavMultiMenu } from "./sidebar-multi-menu-bridge.mjs";
 
 // The last right-click's target: the anchor the host menu returns focus to when it opens at a point.
 let lastContextTarget = null;
@@ -38,6 +40,12 @@ export function CodeSidebarActionsGate({ children }) {
       ? lastContextTarget?.closest?.("a, button, [role='button'], [tabindex]") ?? null
       : document.querySelector("[aria-haspopup='menu'][aria-expanded='true']");
     onOpenChange?.(false);
+    // U-29: official Fn `multi: ln(Zt(c), c)` (shared-6 PC): a selection of two or more Code rows holding this row opens
+    // the multi menu (ce4f4374c st) over every selected row; a bulk action then settles the nav's selection.
+    const selected = [...codeRowSelection.getState().selectedKeys];
+    const ids = selected.filter((key) => key.startsWith("code:")).map((key) => key.slice(5));
+    if (ids.length > 1 && ids.includes(id)
+      && openNavMultiMenu(ids, { anchor, point, onSettled: () => codeRowSelection.getState().clear() })) return;
     openNavSessionMenu(id, { anchor, point });
   }, [id]); // eslint-disable-line react-hooks/exhaustive-deps -- once per opened session menu
   return null;

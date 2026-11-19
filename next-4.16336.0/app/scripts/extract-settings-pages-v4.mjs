@@ -109,6 +109,11 @@ export const roots = [
   // The one copy of the editorPrefs store (shared-36 Om, export Eo): exported so the host can read and mirror it.
   { semantic: 'useEditorPrefsStore', file: S36, local: 'Om', export: 'Eo', oldCounterpart: null,
     features: ['chatTextSize: ym(Dm.chatTextSize) ? Dm.chatTextSize : "m"', 'setTranscriptWidth: (t) => e({ transcriptWidthChoice: t })'] },
+  // fix-r2 U-33: shared-20 bb (export ys), the desktop's code font size root writer (c66fe388e `function ct(){return v(),null}`):
+  // the store's codeFontSize (shared-36 Mm) onto html data-code-font-size and --epitaxy-code-font-size / --epitaxy-code-leading
+  // (yb over shared-36 dm / um), cleared when the last writer unmounts. The host mounts it once (settings-pages-host.jsx).
+  { semantic: 'useCodeFontSizeRoot', file: 'shared-20-DUEo90UF.js', local: 'bb', export: 'ys', oldCounterpart: null,
+    features: ['yb(e);', 'w(xb, r);'] },
 ];
 
 // Host adapter contract. Each cut is a service the official General page reads that the host answers from its own facts.
@@ -323,6 +328,8 @@ const chunkTargets = [
   ['c6438c669-CeVpGyFN.js', 'c6438c669.mjs'], ['c76ea0beb-CU4sD99o.js', 'c76ea0beb.mjs'], ['c93fb40ec-BxOp-lhI.js', 'c93fb40ec.mjs'],
   ['cbe9ab01c-P15fuilu.js', 'cbe9ab01c.mjs'], ['c19cfecfb-DrFO98S_.js', 'c19cfecfb.mjs'], ['ca7ba268c-BbXZXSeA.js', 'pierre-diff-parse.mjs'],
   ['c66de3d94-Bb5hHau-.js', 'transcript-view.mjs'],
+  // fix-r2 U-33: shared-20 bb (the code font size root writer) and what it enters there (yb, xb / Sb, hb).
+  ['shared-20-DUEo90UF.js', 'code-font-size-root.mjs'],
   [C51, 'settings-rows.mjs'], ['cda9efc49-K1e0W0Gw.js', 'code-appearance.mjs'],
   // B3 Claude Code page (c8b630735 ot and what it enters below the cuts)
   ['shared-123-1Hc1RTKl.js', 'shared-123.mjs'], ['shared-8-BqfCbkJd.js', 'shared-8.mjs'], ['shared-18-Cfqwgjc5.js', 'shared-18.mjs'],
@@ -335,6 +342,15 @@ const chunkTargets = [
   ['c71860c77-Cuocl2LF.js', 'developer-page.mjs'], ['c8828a060-CcxioRoe.js', 'developer.mjs'],
   ['shared-33-DtdykY0y.js', 'shared-33.mjs'],
 ];
+
+// fix-r2 U-41: c8b630735 ot (the Claude Code page; its Sessions › Worktree location select) describes its "Inside project" choice with the
+// official CLI's folder, ".claude/worktrees". The host creates those worktrees under <project>/.code/worktrees
+// (electron/worktree-prepare.mjs createWorktree `path.join(cwd, '.code', 'worktrees')`), so the description names that
+// folder. runSlicer cfg.rewrites: the literal occurs once in the official declaration; the manifest records the rewrite.
+export const WORKTREE_LOCATION_REWRITES = Object.freeze({
+  'c8b630735-Bbdb359j.js#ot': [{ from: 'description:".claude/worktrees"', to: 'description:".code/worktrees"',
+    why: 'Host fact (U-41): the app creates "Inside project" worktrees in <project>/.code/worktrees (electron/worktree-prepare.mjs), not the CLI\'s .claude/worktrees' }],
+});
 
 export async function buildConfig(cache = new Map()) {
   const { adapters, localAdapters, resolved } = await resolveCuts(cache);
@@ -363,6 +379,7 @@ export async function buildConfig(cache = new Map()) {
       [`${official.vendorFrame}#be`]: { name: 'hostReactDom', features: ['e(me())'] },
       ...localAdapters,
     },
+    rewrites: WORKTREE_LOCATION_REWRITES,
     modules: chunkTargets.map(([source, target]) => {
       const r = byFile.get(source);
       return r ? { source, target, exports: r.exports, features: r.features, ...(r.internal ? { internal: true } : {}) } : { source, target };

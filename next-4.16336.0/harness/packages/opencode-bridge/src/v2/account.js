@@ -16,9 +16,10 @@
  *                    deploymentType. Cancel: DELETE …/oauth/:attemptID. A `code` attempt takes the pasted code (…/complete)
  *   Claude           claude-agent's one method is external (claude-login): connecting only records that Claude Code is
  *                    used; `claude` itself holds the sign-in (v2/claude.js). Checked first here (installed, 2.1.248+,
- *                    `claude auth status` not signed out, serve started with it or restarted now: else an error with
- *                    the steps, at once); then the answer comes back at once (openedByAgent: the app waits, Reopen
- *                    shows the setup page) while connect/external runs, the older credentials are deleted (a new
+ *                    serve started with it or restarted now: else an error with the steps, at once). Signed out per
+ *                    `claude auth status`: `claude auth login` runs here and opens claude.ai's sign-in page (its manual
+ *                    link is the authUrl, acceptsCode), connecting once it exits signed in. Otherwise the answer comes
+ *                    back at once (openedByAgent + connecting: nothing to open) while connect/external runs, the older credentials are deleted (a new
  *                    connection is the only way to make v2 check again) and the outcome is watched for up to 120 s
  *                    (v2's probe: 30 s to start claude, 30 s more for the context windows): a needs_auth status fails
  *                    it, claude-agent models in GET /api/model with still no status succeed after v2's check had
@@ -50,6 +51,7 @@ export const CLAUDE_ID = 'claude-agent'
 export const CLAUDE_METHOD = 'claude-login'
 export const CLAUDE_LABEL = 'Claude (Claude Code login)'
 export const CLAUDE_INSTRUCTIONS = 'Run `claude auth login` in a terminal, then wait here.'
+export const CLAUDE_LOGIN_FAILED = 'Claude Code’s sign-in didn’t finish. Choose Claude again, or run `claude auth login` in a terminal.'
 export const CLAUDE_TIMEOUT = 'Couldn’t confirm that Claude Code is ready: it may still be checking. Make sure it’s installed and signed in (`claude auth login`), then choose Claude again in a moment.'
 export const CLAUDE_LOGOUT_NOTICE = 'Claude Code itself stays signed in: run `claude auth logout` in a terminal to sign out of your Claude account.'
 export const ACCOUNT_TIMING = Object.freeze({ claudeWaitMs: 120000, claudeSettleMs: 35000, pollMs: 1000, debounceMs: 250, oauthGraceMs: 30000 })
@@ -471,7 +473,6 @@ export const ACCOUNT_V2 = {
     const version = await claude.version(found)
     if (version.tooOld) throw new RpcError(-32000, `Claude Code ${version.version} is too old; ${CLAUDE_MIN_VERSION} or later is required. Run \`claude update\`.`)
     const status = await claude.authStatus({ fresh: true, found })
-    if (status.loggedIn === false) throw new RpcError(-32000, 'Claude Code is not signed in. Run `claude auth login` in a terminal, then choose Claude again.')
     const keys = claude.anthropicEnv()
     if (keys.length) this.log(`claude-agent: ${keys.join(', ')} set: Claude Code bills that, not the Claude plan`)
     let api = await this.v2Api()
@@ -493,12 +494,42 @@ export const ACCOUNT_V2 = {
     const loginId = randomUUID()
     const controller = new AbortController()
     const entry = { controller, provider: CLAUDE_ID, done: false }
+    if (status.loggedIn === false) {
+      // Signed out: Claude Code's own sign-in opens claude.ai in the browser; its manual link (the app's "Open sign-in
+      // page") ends on a code pasted back here (codeDesktop/login/code → claudeLoginCodeV2). Once it exits signed in,
+      // OpenCode is connected as below.
+      let login
+      try { login = await claude.startLogin(found) } catch (error) {
+        this.log(`claude auth login: ${error?.message ?? error}`)
+        throw new RpcError(-32000, `Claude Code couldn’t start its sign-in (${error?.message ?? error}). Run \`claude auth login\` in a terminal, then choose Claude again.`)
+      }
+      entry.claudeLogin = login
+      this.logins.set(loginId, entry)
+      controller.signal.addEventListener('abort', () => login.stop(), { once: true })
+      void login.exited.then(async ({ code, output }) => {
+        if (entry.done || controller.signal.aborted) return
+        const after = await claude.authStatus({ fresh: true, found })
+        if (code !== 0 || after.loggedIn === false) {
+          entry.done = true
+          this.logins.delete(loginId)
+          this.log(`claude auth login exited ${code}: ${output.trim().slice(-300)}`)
+          this.notify('account/login/completed', { loginId, success: false, error: CLAUDE_LOGIN_FAILED })
+          return
+        }
+        return this.claudeConnectV2(await this.v2Api(), { loginId, entry, old, signedIn: true })
+      })
+      return { type: 'chatgpt', loginId, authUrl: login.url, codeDesktop: { openedByAgent: true, acceptsCode: true } }
+    }
     this.logins.set(loginId, entry)
     void this.claudeConnectV2(api, { loginId, entry, old, signedIn: status.loggedIn === true })
-    return {
-      type: 'chatgpt', loginId, authUrl: CLAUDE_SETUP_URL,
-      codeDesktop: { openedByAgent: true, instructions: keys.length ? `${CLAUDE_INSTRUCTIONS} (${keys.join(', ')} is set: Claude Code bills that, not your Claude plan.)` : CLAUDE_INSTRUCTIONS },
-    }
+    // Already signed in (or it can't tell): nothing to open, OpenCode only connects to Claude Code (codeDesktop.connecting).
+    return { type: 'chatgpt', loginId, authUrl: CLAUDE_SETUP_URL, codeDesktop: { openedByAgent: true, connecting: true } }
+  },
+
+  /** codeDesktop/login/code for Claude: the code the manual sign-in page showed, typed into `claude auth login`. */
+  claudeLoginCodeV2(entry, code) {
+    entry.claudeLogin.submit(code)
+    return { status: 'submitted' }
   },
 
   /** connect/external, the old credentials deleted, then the outcome watched (claudeCheckV2). */

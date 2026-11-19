@@ -18,7 +18,7 @@ import { StructuredAgentError } from './structuredAgent.js';
 import { startCodexSession } from "./codexSession.js";
 import { tokensSpent, outputSpent } from "./meter.js";
 import { identityHash, rootScope, scopeTag, childScope } from "./journal.js";
-import { schemaProblem } from "./schemaValidate.js";
+import { schemaProblem, validateSchema } from "./schemaValidate.js";
 import { workflowErrorText } from './workflow-result.js';
 import { promptProvenance } from './provenance.js';
 import { withNormalizedToolOptions, ToolNarrowingError } from './toolNarrowing.js';
@@ -280,7 +280,11 @@ export function createRuntime({
     : Math.max(0, tokensSpent() - executionState.meterBase.total));
 
   let sessionSeq = 0; // deterministic session ids (s1, s2, …) within this runtime
-  const openSessions = new Set(); // live sessions awaiting close() — drained by finalize()
+  const openSessions = new Set();
+  const pendingSessionStarts = new Set();
+  const sessionLifetime = new AbortController();
+  const sessionSignal = AbortSignal.any([sessionLifetime.signal, executionState.runAbort.signal, ...defaults.signal ? [defaults.signal] : []]);
+  const sessionQueueSignal = AbortSignal.any([sessionSignal, executionState.budgetGate.signal]);
 
   // Runaway backstop shared by agent() and every session turn.
   function checkAgentCap() {
@@ -698,6 +702,9 @@ export function createRuntime({
       this._completion = null; // current turn's settle promise (-> snapshot)
       this._settled = true; // no active turn yet
       this._cancelRequested = false;
+      this._pendingSteer = null;
+      this._steerAbort = null;
+      this._closing = null;
       this._snapshot = {
         id, label, phase, threadId: driver.threadId, turnId: null,
         status: "starting", result: null, text: null, error: null,
@@ -711,10 +718,14 @@ export function createRuntime({
 
     poll() { return { ...this._snapshot }; }
 
-    _isRunning() { return isRunningStatus(this._status); }
-    _isActionable() { return this._settled || this._status === "closed"; }
-    // Resolves when the current turn settles (or immediately if none is active).
-    _settledPromise() { return this._completion ?? Promise.resolve(this._snapshot); }
+    _isRunning() { return !!this._pendingSteer || isRunningStatus(this._status); }
+    _isActionable() { return (this._settled && !this._pendingSteer) || this._status === "closed"; }
+    // Include a steer waiting for capacity or its start reply.
+    _settledPromise() {
+      const started = this._pendingSteer;
+      return started ? started.then(turn => turn.completion, () => this._snapshot)
+        : this._completion ?? Promise.resolve(this._snapshot);
+    }
 
     // Begin one turn (the initial turn or a steer). The caller MUST have acquired a
     // concurrency slot; the turn's completion releases it exactly once. On a start
@@ -736,19 +747,21 @@ export function createRuntime({
       // thread context diverges from what the later cached turns assumed, so they
       // must re-run as well (mirrors the contiguous-completed-prefix rule at start).
       const cached = this._replay ? this._replay[turnIndex] : undefined;
-      const promptMatches = cached && cached.promptHash != null && cached.promptHash === identityHash(prompt);
-      if (cached && !promptMatches) {
+      const requestHash = identityHash(prompt, { schema: turnOpts.schema });
+      const matches = cached && (cached.requestHash ? cached.requestHash === requestHash : cached.promptHash === identityHash(prompt))
+        && (turnOpts.schema ? !validateSchema(cached.result, turnOpts.schema).length : typeof cached.result === "string");
+      if (cached && !matches) {
         this._replay = null; // diverged here → stop replaying; this turn + all later run live
-        onLog?.(`  ⊝ ${kind === "steer" ? "steer" : "agent.start"} (prompt changed — re-running live): ${this.label}`);
+        onLog?.(`  ⊝ ${kind === "steer" ? "steer" : "agent.start"} (prompt or schema changed — re-running live): ${this.label}`);
       }
-      if (cached && promptMatches) {
+      if (matches) {
         this._status = "completed";
         this._settled = true;
         this._snapshot = {
           id: this.id, label: this.label, phase: this.phase,
           threadId: this._driver.threadId, turnId: null,
           status: "completed", result: cached.result ?? null,
-          text: typeof cached.result === "string" ? cached.result : null, error: null,
+          text: cached.text ?? (typeof cached.result === "string" ? cached.result : null), error: null,
           model: cached.model ?? this._reqModel, effort: cached.effort ?? effort ?? null,
           tokens: cached.tokens ?? null, ms: cached.ms ?? null,
         };
@@ -766,6 +779,7 @@ export function createRuntime({
           effort,
           timeoutMs: turnOpts.timeoutMs,
           onProgress: onProgress ? (text) => onProgress(this.label, text, sessKey) : undefined,
+          onActivity: noteSpend,
         });
       } catch (e) {
         this._turnCount--; // roll back so the session can be retried/steered
@@ -802,7 +816,7 @@ export function createRuntime({
           outcome = { status: "failed", error: String(e?.message ?? e), turnId: begun.turnId };
         }
         try {
-          return await this._settleTurn(outcome, { sessKey, turnIndex, effort, promptHash: identityHash(prompt) });
+          return await this._settleTurn(outcome, { sessKey, turnIndex, effort, promptHash: identityHash(prompt), requestHash });
         } finally {
           release(); // free the slot held for THIS turn (exactly once)
         }
@@ -811,7 +825,7 @@ export function createRuntime({
 
     // Fold a turn outcome into the snapshot, emit the terminal event, and journal it
     // (observability only). Never throws, so the completion promise never rejects.
-    async _settleTurn(outcome, { sessKey, turnIndex, effort, promptHash }) {
+    async _settleTurn(outcome, { sessKey, turnIndex, effort, promptHash, requestHash }) {
       this._settled = true;
       const snapStatus =
         outcome.status === "completed" ? "completed" :
@@ -825,6 +839,8 @@ export function createRuntime({
         error: outcome.error ?? null, model: outcome.model ?? this._reqModel,
         effort: effort ?? null, tokens: outcome.tokens ?? null, ms: outcome.ms ?? null,
       };
+      const snapshot = this._snapshot;
+      noteSpend();
       try {
         onEvent?.({
           type: "end", id: sessKey, label: this.label, phase: this.phase,
@@ -835,66 +851,93 @@ export function createRuntime({
       } catch {}
       if (journal) {
         try {
-          await journal.record(sessKey, this.label, this._snapshot.result ?? this._snapshot.text ?? null, {
+          await journal.record(sessKey, this.label, snapshot.result, {
+            ...(snapStatus === "completed" ? { outcome: "completed", text: snapshot.text } : {}),
             phase: this.phase, effort: effort ?? null, model: this._snapshot.model,
             tokens: this._snapshot.tokens, ms: this._snapshot.ms,
             session: true, sessionId: this.id, turn: turnIndex, status: snapStatus,
-            threadId: this._driver.threadId ?? null, promptHash: promptHash ?? null,
+            threadId: this._driver.threadId ?? null, promptHash, requestHash,
           });
         } catch {}
       }
-      return { ...this._snapshot };
+      return { ...snapshot };
     }
 
     async wait({ timeoutMs } = {}) {
-      if (this._settled || !this._completion) return { ...this._snapshot };
-      if (timeoutMs == null) {
-        await this._completion.catch(() => {});
-        return { ...this._snapshot };
-      }
+      if (this._isActionable()) return { ...this._snapshot };
+      const completion = this._settledPromise();
+      if (timeoutMs == null) return { ...(await completion) };
       let timer;
-      const timeoutP = new Promise((res) => { timer = setTimeout(() => res(TIMEOUT), timeoutMs); });
-      const r = await Promise.race([this._completion.then(() => null, () => null), timeoutP]);
-      clearTimeout(timer);
-      if (r === TIMEOUT) return { ...this._snapshot, status: "timed_out" }; // turn keeps running
-      return { ...this._snapshot };
+      try {
+        const result = await Promise.race([
+          completion,
+          new Promise(resolve => { timer = setTimeout(() => resolve(TIMEOUT), timeoutMs); }),
+        ]);
+        return result === TIMEOUT ? { ...this._snapshot, status: "timed_out" } : { ...result };
+      } finally {
+        clearTimeout(timer);
+      }
     }
 
     async steer(message, opts = {}) {
-      if (this._status === "closed") throw new Error(`Cannot steer closed session ${this.label}.`);
-      if (!this._settled && this._completion) {
+      if (this._status === "closed" || this._closing) throw new Error(`Cannot steer closed session ${this.label}.`);
+      if (!this._settled || this._pendingSteer) {
         throw new Error(`Cannot steer session ${this.label} while a turn is already running. Call wait(), waitAny(), or cancel() first.`);
       }
-      bumpAgentCount();
+      sessionSignal.throwIfAborted();
       checkBudget();
-      await acquire();
+      bumpAgentCount();
+      const abort = new AbortController();
+      this._steerAbort = abort;
+      const signal = AbortSignal.any([sessionQueueSignal, abort.signal]);
+      const start = (async () => {
+        await acquire(signal);
+        try {
+          signal.throwIfAborted();
+          checkBudget();
+          await this._beginTurn(message, { schema: opts.schema, effort: opts.effort, timeoutMs: opts.timeoutMs }, "steer");
+          return { completion: this._completion, snapshot: this.poll() };
+        } catch (e) {
+          release();
+          throw e;
+        }
+      })();
+      this._pendingSteer = start;
+      let turn;
       try {
-        await this._beginTurn(message, { schema: opts.schema, effort: opts.effort, timeoutMs: opts.timeoutMs }, "steer");
-      } catch (e) {
-        release();
-        throw e;
+        turn = await start;
+      } finally {
+        this._pendingSteer = null;
+        this._steerAbort = null;
       }
-      if (opts.wait === false) return { ...this._snapshot }; // running snapshot
-      await this._completion.catch(() => {});
-      return { ...this._snapshot };
+      if (opts.wait === false) return turn.snapshot;
+      return { ...(await turn.completion) };
     }
 
     async cancel() {
       if (this._status === "closed") return { ...this._snapshot };
-      if (this._settled || !this._completion) return { ...this._snapshot };
-      this._cancelRequested = true;
-      await this._driver.interruptCurrent();
-      await this._completion.catch(() => {}); // resolves interrupted -> mapped to cancelled
-      return { ...this._snapshot };
+      this._steerAbort?.abort(new Error(`Session ${this.label} cancelled.`));
+      if (this._pendingSteer) await this._pendingSteer.catch(() => {});
+      const completion = this._completion;
+      if (!completion) return { ...this._snapshot };
+      if (!this._settled) {
+        const alreadyRequested = this._cancelRequested;
+        this._cancelRequested = true;
+        if (!alreadyRequested) await this._driver.interruptCurrent();
+      }
+      return { ...(await completion) };
     }
 
-    async close() {
-      if (this._status === "closed") { openSessions.delete(this); return; }
-      if (!this._settled && this._completion) { try { await this.cancel(); } catch {} }
-      try { await this._driver.cleanup(); } catch {}
-      this._status = "closed";
-      this._snapshot = { ...this._snapshot, status: "closed" };
-      openSessions.delete(this);
+    close() {
+      if (this._closing) return this._closing;
+      this._closing = (async () => {
+        try { await this.cancel(); } catch {}
+        try { await this._driver.cleanup(); } catch {}
+        this._status = "closed";
+        this._snapshot = { ...this._snapshot, status: "closed" };
+        openSessions.delete(this);
+      })();
+      return this._closing;
     }
   }
 
@@ -929,30 +972,30 @@ export function createRuntime({
 
     // Each turn is one unit of model work: count it and gate on budget, then hold a
     // concurrency slot for the WHOLE turn (a detached running turn occupies the cap).
-    bumpAgentCount();
+    const signal = merged.signal ? AbortSignal.any([sessionQueueSignal, merged.signal]) : sessionQueueSignal;
+    signal.throwIfAborted();
     checkBudget();
-    await acquire();
+    bumpAgentCount();
+    await acquire(signal);
 
-    let driver;
+    let driver, session;
     try {
-      driver = await startSession({ ...merged, defaultModel, pinnedModel, log: onLog, resumeThreadId: resumeThreadId ?? undefined });
+      signal.throwIfAborted();
+      checkBudget();
+      driver = await startSession({ ...merged, signal, defaultModel, pinnedModel, log: onLog, resumeThreadId: resumeThreadId ?? undefined });
+      signal.throwIfAborted();
+      checkBudget();
+      const replay = driver.resumed ? replayPrefix : null;
+      session = new LiveAgentSession({ id, driver, label, phase, reqModel, effort, replay });
+      openSessions.add(session);
+      await session._beginTurn(prompt, { schema: opts.schema, effort, timeoutMs: opts.timeoutMs }, "start");
+      return session;
     } catch (e) {
       release();
-      throw e;
-    }
-
-    const replay = driver.resumed && replayPrefix ? replayPrefix : null;
-    const session = new LiveAgentSession({ id, driver, label, phase, reqModel, effort, replay });
-    openSessions.add(session);
-    try {
-      await session._beginTurn(prompt, { schema: opts.schema, effort, timeoutMs: opts.timeoutMs }, "start");
-    } catch (e) {
-      release(); // first turn never started — free the slot
-      try { await driver.cleanup(); } catch {}
+      try { await driver?.cleanup(); } catch {}
       openSessions.delete(session);
       throw e;
     }
-    return session; // returns with the first turn RUNNING (not awaited)
   }
 
   async function waitAnyLive(sessionList, { timeoutMs } = {}) {
@@ -1009,6 +1052,7 @@ export function createRuntime({
     poll() { return { ...this._snapshot }; }
     async wait() { return { ...this._snapshot }; }
     async steer(message, opts = {}) {
+      if (this._status === "closed") throw new Error(`Cannot steer closed session ${this.label}.`);
       bumpAgentCount();
       const turnIndex = this._turnCount++;
       onAgentPlan?.({ label: this.label, phase: this.phase, effort: (opts.effort ?? this._effort) ?? null, width: 1, schema: !!opts.schema, kind: "steer" });
@@ -1096,9 +1140,10 @@ export function createRuntime({
   // Close any sessions the workflow left open (cancels their active turn + cleans
   // worktrees). Called by runWorkflowSource in a finally — NEVER exposed to the script.
   async function finalize() {
-    for (const s of [...openSessions]) {
-      try { await s.close(); } catch {}
-    }
+    sessionLifetime.abort(new Error("Workflow finished"));
+    await Promise.allSettled(pendingSessionStarts);
+    await Promise.allSettled([...openSessions].map(session => session.close()));
+    executionState.finalizers.delete(finalize);
   }
   executionState.finalizers.add(finalize);
 
@@ -1118,7 +1163,14 @@ export function createRuntime({
   }
 
   // Sessionful control hangs off agent (NOT new top-level globals), per the spec.
-  agent.start = (prompt, opts) => (plan ? startPlannedSession(prompt, opts) : startLiveSession(prompt, opts));
+  agent.start = (prompt, opts) => {
+    if (plan) return startPlannedSession(prompt, opts);
+    const pending = startLiveSession(prompt, opts);
+    pendingSessionStarts.add(pending);
+    const remove = () => pendingSessionStarts.delete(pending);
+    pending.then(remove, remove);
+    return pending;
+  };
   agent.waitAny = (sessions, opts) => (plan ? waitAnyPlanned(sessions, opts) : waitAnyLive(sessions, opts));
 
   const controlMember = (id, action) => { const member = executionState.controllers.get(id); if (!member || !['skip','retry'].includes(action)) return false; if (member.queued) { if (action==='skip') { member.action='skip'; member.queue.abort(new Error('skipped by user')); } return true; } member.action=action; member.controller?.abort(`user-${action}`); return true; };

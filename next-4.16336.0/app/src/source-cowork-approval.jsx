@@ -21,7 +21,9 @@
 // the card shows "Allow for this task". In a run the official task rung sends "always" (`tn` → `di("always", {…,
 // clicked_rung: "task"})`) and Dl8 persistAlwaysAllowDecision keeps "always" and "scheduled" alike on the run's task
 // (`_s.addApprovedPermissions(r.scheduledTaskId, …)`): here acceptForSession, which routine-approvals.mjs keeps on the task.
-import { ToolApprovalCard } from "./generated/cowork-approval/index.mjs";
+// chat-cowork-1to1 r1 (cowork-r1-09): the 4.16336.0 card (c96142a4d-DqOQjECe gt over c14f706e5-Bqtc_XFV Zt,
+// src/generated/cowork-approval-v4; round2/cowork-approval/patches/source-cowork-approval-cutover.patch).
+import { ToolApprovalCard } from "./generated/cowork-approval-v4/index.mjs";
 import { useApprovalDraft } from "./use-approval-draft.js";
 import { approvalCardModel, offeredDecisions } from "./approval-card-model.mjs";
 import { coworkScheduledTaskFor } from "./cowork-runs-model.mjs";

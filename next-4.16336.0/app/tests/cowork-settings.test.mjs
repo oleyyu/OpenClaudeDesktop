@@ -289,14 +289,15 @@ test('Use memory in sessions off keeps memory out of Cowork sessions only', asyn
   } finally { fs.rmSync(dataDir, { recursive: true, force: true }); }
 });
 
-test('command palette: Settings → Memory and Settings → Cowork as the nav lists them, Cowork only while Cowork is on', async () => {
-  const { paletteActions, PALETTE_SETTINGS_SECTIONS } = await import('../src/sidebar-palette-model.mjs');
+test('command palette: Cowork is found on Settings → Code (the nav page that draws it) only while Cowork is on', async () => {
+  // fix-r2 U-28: rows are the hand-written nav's pages; Cowork folds into Code as that row's hint.
+  const { paletteActions, filterPaletteActions, PALETTE_SETTINGS_SECTIONS } = await import('../src/sidebar-palette-model.mjs');
   const ids = PALETTE_SETTINGS_SECTIONS.map(([id]) => id);
-  assert.deepEqual(ids.slice(0, 7), ['preferences', 'privacy', 'usage', 'memory', 'theme', 'code', 'cowork']);
-  assert.deepEqual(PALETTE_SETTINGS_SECTIONS.find(([id]) => id === 'cowork'), ['cowork', 'Cowork', 'Tasks']);
-  const labels = options => paletteActions({ onOpenSettings() {}, ...options }).map(action => action.label);
-  assert.ok(labels({}).includes('Settings → Cowork') && labels({}).includes('Settings → Memory'));
-  assert.equal(labels({ coworkEnabled: false }).includes('Settings → Cowork'), false);
+  assert.deepEqual(ids, ['account', 'usage', 'preferences', 'instructions', 'models', 'notifications', 'code', 'general']);
+  assert.deepEqual(PALETTE_SETTINGS_SECTIONS.find(([id]) => id === 'code'), ['code', 'Code', 'Code', ['Cowork']]);
+  const found = options => filterPaletteActions(paletteActions({ onOpenSettings() {}, ...options }), 'cowork').map(action => action.label);
+  assert.deepEqual(found({}), ['Settings → Code']);
+  assert.deepEqual(found({ coworkEnabled: false }), []);
   assert.match(local('src/source-sidebar.jsx'), /paletteActions\(\{[^}]*coworkEnabled: homeMode === 'cowork'/);
 });
 

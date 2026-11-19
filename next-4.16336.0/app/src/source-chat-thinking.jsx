@@ -9,7 +9,8 @@
 // Labels come from src/chat-thinking-model.mjs. Code keeps its own rows: the transcript marks a Chat conversation with
 // ChatThinkingSurface (default false).
 import React, { createContext, useContext } from "react";
-import { TurnStatus } from "./generated/working-line/turn-status.mjs";
+// chat-conversation r1-03: the 4.16336.0 TurnStatus (c734f318c t = cc1aae219 qv; generated/working-line-v4), was 3.6556.2.
+import { TurnStatus } from "./generated/working-line-v4/turn-status.mjs";
 import { reasoningText } from "./transcript-item-visibility.mjs";
 import { plainReasoningText } from "./reasoning-model.mjs";
 import { chatRowState, chatSearchLabel, chatSearchRun, chatThinkingLabel, chatThinkingRow } from "./chat-thinking-model.mjs";

@@ -75,8 +75,15 @@ test('manifest: 4.16336.0 snapshot, cds-core shared graph, targeted linked modul
 test('roots: the 3.6556.2 semantic names, AST-located under their reviewed locals and pinned', () => {
   assert.deepEqual(provenance.roots.map(r => `${r.file}#${r.local}=${r.name}${r.export ? `/${r.export}` : ''}`), [
     'c49573414-CW4mWVDA.js#rt=ChatMessageFeedback/c', 'cc1aae219-BbSf__8R.js#xM=ChatVersionSelector', 'cc1aae219-BbSf__8R.js#tM=MESSAGE_ACTIONS_INSET/qr',
-    'cc1aae219-BbSf__8R.js#Vj=ChatMessageWarning', 'ca2ef848d-DA54buzo.js#H9=ChatDisclaimer', 'c79f7d2ef-snkGFUaN.js#w=MessageContextMenu/MessageContextMenu',
-    'shared-6-2QYRw_Wv.js#k_=ChatFeedbackDialog/Da', 'shared-4-C_EiQb9h.js#ev=ChatRetryAction', 'shared-153-DMw2VzSq.js#Kq=messageTextFeatures']);
+    'cc1aae219-BbSf__8R.js#Vj=ChatMessageWarning',
+    // chat-conversation r3-02: ele's footer spark (Zce around W$), new in this graph.
+    'ca2ef848d-DA54buzo.js#Zce=ChatFooterSpark', 'ca2ef848d-DA54buzo.js#H9=ChatDisclaimer', 'c79f7d2ef-snkGFUaN.js#w=MessageContextMenu/MessageContextMenu',
+    'shared-6-2QYRw_Wv.js#k_=ChatFeedbackDialog/Da', 'shared-4-C_EiQb9h.js#ev=ChatRetryAction', 'shared-153-DMw2VzSq.js#Kq=messageTextFeatures',
+    // chat-conversation r2-02: the classic assistant message (cc1aae219 kw / jw) and the Chat column's msg-* insets (shared-2 vJ's _J),
+    // new 4.16336.0 roots with no 3.6556.2 counterpart in src/generated/chat-messages.
+    'c7dd2633f-CvrjtTGG.js#re=AssistantMessageRoot/N', 'c7dd2633f-CvrjtTGG.js#y=AssistantMessageText/P',
+    // chat-conversation r3-01: the Chat page's jump-to-latest button (cf854d0e8 t, ca2ef848d JO).
+    'cf854d0e8-YPmDYG3q.js#c=ChatJumpToLatest/t', 'shared-2-CsjIBQD8.js#_J=CHAT_COLUMN_MESSAGE_INSETS/Ea']);
   assert.ok(provenance.roots.every(r => r.pinned && ROOT_PINS[`${r.file}#${r.local}`] === r.declarationSha256), 'every root declaration is pinned');
   for (const r of provenance.roots) assert.ok(official(r.file).includes(ROOTS[r.file][r.local].probe), `${r.file}#${r.local} probe`);
   assert.deepEqual(provenance.inner.map(i => i.key), Object.keys(INNER));
@@ -85,7 +92,7 @@ test('roots: the 3.6556.2 semantic names, AST-located under their reviewed local
   const oldRoots = ['ChatMessageFeedback', 'MESSAGE_ACTIONS_INSET', 'messageTextFeatures', 'ChatMessageWarning', 'ChatVersionSelector', 'ChatDisclaimer',
     'MessageContextMenu', 'ChatFeedbackDialog', 'ChatRetryAction'];
   for (const name of oldRoots) assert.ok(old.modules.some(m => Object.values(m.exports).includes(name)), `3.6556.2 ${name}`);
-  assert.deepEqual(provenance.roots.map(r => r.name).sort(), [...oldRoots].sort());
+  assert.deepEqual(provenance.roots.map(r => r.name).sort(), [...oldRoots, 'AssistantMessageRoot', 'AssistantMessageText', 'CHAT_COLUMN_MESSAGE_INSETS', 'ChatFooterSpark', 'ChatJumpToLatest'].sort());
   const index = local(`${out}/index.mjs`);
   for (const name of oldRoots) assert.match(index, new RegExp(`\\b${name}\\b`));
 });
@@ -104,8 +111,9 @@ test('host boundaries: each adapted original pinned and used; re-exported from t
   const adapterText = local('src/source-chat-messages-v4-adapters.jsx');
   assert.deepEqual([...adapterText.matchAll(/from ["']([^"']+)["']/g)].map(m => m[1]),
     ['./generated/working-line-v4/shared-2.mjs', './source-chat-messages-adapters.jsx', './source-routines-shared-adapters.jsx']);
-  // The only two names defined here: shared-3 Bd's .RetryAction (working-line-v4 m7.RetryAction) and shared-7 HF's default.
-  assert.deepEqual([...adapterText.matchAll(/^export (?:const|function) (\w+)/gm)].map(m => m[1]), ['ChatMessageRetryParts', 'useChatComposerLayout']);
+  // The names defined here: shared-3 Bd's .RetryAction (working-line-v4 m7.RetryAction), shared-7 HF's default, and
+  // (chat-conversation r3-02) the footer spark's two load-time warm-ups (shared-33 KH, shared-100 _r).
+  assert.deepEqual([...adapterText.matchAll(/^export (?:const|function) (\w+)/gm)].map(m => m[1]), ['ChatMessageRetryParts', 'useChatComposerLayout', 'preloadChatActivitySprites', 'preloadChatSparkSprites']);
   assert.ok(official('shared-7-D2e77H6v.js').includes('BF=c(!1)') || /BF=\w+\(!1\)/.test(official('shared-7-D2e77H6v.js')), 'shared-7 BF = createContext(!1)');
   assert.ok(official('shared-3-IQTrO7Gx.js').includes('RetryAction:Ts.RetryAction'), 'shared-3 Bd.RetryAction = Ts.RetryAction');
 });
@@ -169,7 +177,8 @@ test('SSR: disclaimer', () => {
   assert.ok(gen, 'graph loads');
   const d = renderToStaticMarkup(h(gen.ChatDisclaimer, { conversationUuid: 't1', isTemporary: false, hasWebSearchResponse: false }));
   assert.match(d, /data-disclaimer/);
-  assert.match(text(d), /Claude is AI and can make mistakes\. Please double-check responses\./);
+  // fix-r2 U-14 (E83): the disclaimer names the running assistant (DeepSeek by default), not Claude.
+  assert.match(text(d), /DeepSeek is AI and can make mistakes\. Please double-check responses\./);
   assert.match(d, /href="https:\/\/support\.anthropic\.com\/en\/articles\/8525154/);
 });
 

@@ -57,6 +57,11 @@
 .import-history-dialog .ih-row[data-focused] { background: var(--cds-alpha-2); }
 .import-history-dialog .ih-row-main { display: flex; flex: 1; flex-direction: column; gap: 2px; min-width: 0; padding: 7px 4px; border: 0; border-radius: inherit; background: transparent; color: inherit; font: inherit; text-align: start; cursor: default; }
 .import-history-dialog .ih-folder { max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--cds-font-mono); }
+/* K-3: a list row's meta stays on one line; the folder name is the part that gives way (ellipsis), so the time never
+   wraps under it with an orphan "·". */
+.import-history-dialog .ih-row-main .ih-meta { flex-wrap: nowrap; }
+.import-history-dialog .ih-row-main .ih-meta > * { flex: none; white-space: nowrap; }
+.import-history-dialog .ih-row-main .ih-meta > .ih-folder { flex: 0 1 auto; min-width: 2.5em; max-width: none; }
 .import-history-dialog .ih-more { align-self: center; margin-top: 6px; }
 
 /* Preview. */

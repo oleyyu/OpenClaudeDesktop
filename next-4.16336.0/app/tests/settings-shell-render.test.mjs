@@ -138,7 +138,7 @@ test('chrome: Account / Usage | Appearance … | Desktop app nav with separators
   // The official rail and the local groups are gone.
   for (const gone of ['data-perf-region="settings_nav"', 'data-testid="openclaude-', 'data-testid="general-settings"', 'class="px-sm pt-md text-caption text-muted-as-secondary"'])
     assert.equal(html.includes(gone), false, gone);
-  assert.match(nav, /^<nav class="sl-nav" aria-label="Settings"><div class="ss-search" style="margin:0"><span[^>]*data-cds="Icon"[^>]*>[^<]*<\/span><input aria-label="Search settings"[^>]*\/><\/div><div class="sl-nav-list">/, 'icon + input only, first in the nav');
+  assert.match(nav, /^<nav class="sl-nav" aria-label="Settings"><div class="ss-search" style="margin:0"><span[^>]*data-cds="Icon"[^>]*>[^<]*<\/span><input aria-label="Search settings"[^>]*\/><\/div><div class="sl-nav-list scroll-fade-x scroll-fade-size-16">/, 'icon + input only, first in the nav');
   assert.equal(html.includes('Clear settings search'), false);
   assert.deepEqual([...html.matchAll(/aria-label="(Close[^"]*)"/g)].map(match => match[1]), ['Close']);
   const usage = page('usage');
@@ -286,7 +286,7 @@ test('Code › Sessions › Prompt suggestions: listed after the workflow rows o
   assert.equal(ids[ids.indexOf('promptSuggestions') - 1], 'workflowAdvanced');
   assert.equal(ids[ids.indexOf('promptSuggestions') + 1], 'sandbox');
   assert.match(control(html, 'Prompt suggestions'), /aria-checked="true"/);
-  assert.ok(html.includes('Show a suggested next prompt in the message box after MiMo replies. Suggestions add a little to your usage.') || html.includes('Show a suggested next prompt in the message box after DeepSeek replies.'));
+  assert.ok(html.includes('Show a suggested next prompt in the message box after MiMo Code replies. Suggestions add a little to your usage.') || html.includes('Show a suggested next prompt in the message box after DeepSeek replies.'));
   assert.match(control(page('code', { promptSuggestions: false }, { boot }), 'Prompt suggestions'), /aria-checked="false"/);
 });
 
@@ -317,7 +317,7 @@ test('settings tabs select on click only (Customize sub-tabs and nav items; no s
   assert.ok(strip.length > 0);
   assert.ok(strip.startsWith("<div className=\"sl-subtabs\" role=\"tablist\" aria-label={t(shownEntry.label)}>"));
   assert.match(strip, /<button key=\{id\} type="button" role="tab" aria-selected=\{pageHosts\.includes\(id\)\} onClick=\{\(\)=>\{[^}]*selectTab\(id\);setFocus\(refocus\);\}\}>\{navLabel\[id\]\}<\/button>/);
-  const navList = text.slice(text.indexOf('<div className="sl-nav-list">'), text.indexOf('</nav>}'));
+  const navList = text.slice(text.indexOf('<div className="sl-nav-list'), text.indexOf('</nav>}'));
   assert.match(navList, /<button key=\{entry\.id\} type="button" className="sl-nav-item" data-testid=\{`settings-nav-\$\{entry\.id\}`\} aria-current=\{entry\.id===shownEntry\.id\?'page':undefined\} onClick=\{\(\)=>openEntry\(entry\)\}>/);
   for (const handler of ['onFocus', 'onKeyDown', 'tabIndex']) assert.equal(strip.includes(handler) || navList.includes(handler), false, handler);
   for (const gone of ['tabHighlight', 'rovingTab', 'settingsTabIndex', '.ss-narrow [role=tab]']) assert.equal(text.includes(gone), false, gone);

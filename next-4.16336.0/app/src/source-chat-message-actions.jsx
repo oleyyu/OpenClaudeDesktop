@@ -11,7 +11,10 @@
 //        yF (branch task, not offered), Ia { "data-testid": "action-bar-retry", blocked, onRetry } (showRetry), …].
 // The host keeps that order: Copy, Good / Bad response, Retry.
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { R6 } from './generated/working-line/shared-2.mjs';
+// chat-conversation r1-01: the toolbar is the 4.16336.0 MessageActions (working-line-v4 shared-2 m7 = cc1aae219 Sd /
+// c80ec48f8 _t.Actions), the same compound ChatRetryAction (source-chat-messages-v4-adapters.jsx) and lI already use.
+import { m7 as MessageActions } from './generated/working-line-v4/shared-2.mjs';
+import { responseHeading } from './transcript-feed-nav.mjs';
 import { ChatMessageFeedback, MESSAGE_ACTIONS_INSET } from './generated/chat-messages-v4/index.mjs';
 import { ChatRetryAction } from './generated/chat-messages-v4/index.mjs';
 import { MessageContextMenu } from './generated/chat-messages-v4/index.mjs';
@@ -21,8 +24,8 @@ import { ChatFeedbackDialog } from './generated/chat-messages-v4/index.mjs';
 import { ChatFeedbackContext, ChatIncognitoContext, ChatLinkContext, incognitoNotice } from './source-chat-messages-adapters.jsx';
 import { feedbackMessage, retryPrompt } from './chat-feedback-model.mjs';
 import { markdownToClipboardHtml } from './rich-copy-html.mjs';
-import { userMessageContent } from './composer-attachments-model.mjs';
-import { getLocale } from '../electron/i18n/index.mjs';
+import { attachmentsFromInput } from './composer-attachments-model.mjs';
+import { getLocale, t } from '../electron/i18n/index.mjs';
 // w13-close-gen-dedup (chatfn-branches-05, D1): the version switcher is the generated cc1aae219 lI.
 import { ChatVersionSelector } from './generated/chat-messages-v4/index.mjs';
 import { applyMetadataPatch, normalizeGroups, showVersionNav, turnIndexIn, versionsAt } from './chat-branches-model.mjs';
@@ -40,8 +43,14 @@ import { applyMetadataPatch, normalizeGroups, showVersionNav, turnIndexIn, versi
 //   createdAt         w13-close-chat-messages (chatui-message-actions-02): the reply's time (ms), r1's
 //                     `x.created_at && h(Ic.Timestamp, { date: x.created_at, locale: Le.locale, revealOnHover: !0 })` —
 //                     Ic.Timestamp is R6.Timestamp (shared-2 `i8=Object.assign(r8,{…,Timestamp:R6.Timestamp,…})`).
+//   last              chat-conversation r1-01: this is the conversation's last reply. cc1aae219 JY's classic toolbar is
+//                     `h(Sd, { "data-testid": "message-actions", wrap: !0, defer: He, alwaysVisible: Pt, showActionsLabel: jt,
+//                     className: p(<inset>, "-mt-1", Q.isHiddenDuringStreaming && "invisible", r && "invisible") })` with
+//                     Pt = (isLastMessage || (Mt && …)) && !isHiddenDuringStreaming (Mt: the rowActionExtras gate, off here),
+//                     He = isHiddenDuringStreaming || (!Ve && t.deferActions === !0 && !h) (ca2ef848d passes deferActions: !0),
+//                     jt = fM(At): "Show message actions for {heading}", At the reply's "Claude responded: {summary}".
 export function SourceChatMessageActions({ conversationUuid, itemId, text, feedback = null, onFeedback = null, onRetry = null,
-  retryBlocked = false, retryBlockedReason, streaming = false, versions = null, onVersion = null, createdAt = null }) {
+  retryBlocked = false, retryBlockedReason, streaming = false, versions = null, onVersion = null, createdAt = null, last = false }) {
   const message = useMemo(() => feedbackMessage(itemId, feedback), [itemId, feedback]);
   const host = useMemo(() => ({
     onRatingClick: () => {},
@@ -49,9 +58,11 @@ export function SourceChatMessageActions({ conversationUuid, itemId, text, feedb
     Dialog: ChatFeedbackDialog,
   }), [itemId, onFeedback]);
   const className = [MESSAGE_ACTIONS_INSET, '-mt-1', streaming && 'invisible'].filter(Boolean).join(' ');
+  const heading = responseHeading(text, { streaming });
   return <ChatFeedbackContext.Provider value={host}>
-    <R6 data-testid="message-actions" className={className}>
-      <R6.CopyAction data-testid="action-bar-copy" getText={() => text ?? ''}
+    <MessageActions data-testid="message-actions" wrap={true} defer={true} alwaysVisible={!!last && !streaming}
+      showActionsLabel={heading ? t('Show message actions for {heading}', { heading }) : undefined} className={className}>
+      <MessageActions.CopyAction data-testid="action-bar-copy" getText={() => text ?? ''}
         getRichText={() => { try { return markdownToClipboardHtml(text ?? ''); } catch { return ''; } }} />
       {onFeedback && <ChatMessageFeedback conversationUuid={conversationUuid} message={message} agentMode={false} cdsPresets={true} />}
       {onRetry && <ChatRetryAction data-testid="action-bar-retry" blocked={retryBlocked} blockedReason={retryBlockedReason}
@@ -59,8 +70,8 @@ export function SourceChatMessageActions({ conversationUuid, itemId, text, feedb
       {/* w13-chatfn-branches: r1's next child `Y.showOptionSelector && t.changeDisplayedConversationPath && h(lI, …)`. */}
       {versions && onVersion && showVersionNav({ isStreaming: streaming, optionCount: versions.nOptions })
         && <SourceChatVersionNav message={{ ...versions, sender: 'assistant' }} changeDisplayedConversationPath={onVersion} />}
-      {Number.isFinite(createdAt) && <R6.Timestamp date={createdAt} locale={getLocale()} revealOnHover={true} />}
-    </R6>
+      {Number.isFinite(createdAt) && <MessageActions.Timestamp date={createdAt} locale={getLocale()} revealOnHover={true} />}
+    </MessageActions>
   </ChatFeedbackContext.Provider>;
 }
 
@@ -107,9 +118,11 @@ export function SourceChatMessageMenu({ point, container, onAttach, onClose }) {
 // w13-close-chat-messages: an incognito conversation (chat-incognito-model.mjs isIncognitoSession) is U9's temporary one —
 // the caller passes `isTemporary: Ce` and `incognitoString: Et` (ca2ef848d), so U9 shows the incognito notice
 // (`n ? r : …`) in place of the support link, and Vee (useIncognitoChat) reads true.
-export function SourceChatDisclaimer({ conversationUuid, onOpenLink = null, incognito = false }) {
+// marlin-chin (U-MARLIN): with the marlin design Zle renders no disclaimer here (`!zo && !Y && fe === null && u(H9, …)`);
+// the chin's GQ child is H9 `inline: !0` (src/source-chat-composer.jsx ChatMarlinChin), which takes `inline`.
+export function SourceChatDisclaimer({ conversationUuid, onOpenLink = null, incognito = false, inline = false }) {
   return <ChatLinkContext.Provider value={onOpenLink}><ChatIncognitoContext.Provider value={!!incognito}>
-    <ChatDisclaimer conversationUuid={conversationUuid} isTemporary={!!incognito} incognitoString={incognito ? incognitoNotice() : undefined} hasWebSearchResponse={false} />
+    <ChatDisclaimer conversationUuid={conversationUuid} isTemporary={!!incognito} incognitoString={incognito ? incognitoNotice() : undefined} hasWebSearchResponse={false} inline={inline || undefined} />
   </ChatIncognitoContext.Provider></ChatLinkContext.Provider>;
 }
 
@@ -237,14 +250,7 @@ export function useChatBranches({ threadId, call, canBranch = false, firstTurn =
 // preview URLs are not handed over (the send revokes its entries' previews).
 export function turnAttachments(items, turnId) {
   const user = Array.isArray(items) && turnId ? items.find((item) => item?.turnId === turnId && item.type === 'userMessage') : null;
-  const entries = [];
-  for (const part of userMessageContent(user?.content || [])) {
-    if (typeof part?.path !== 'string' || !part.path) continue;
-    const name = part.name || part.path.split(/[\\/]/).pop();
-    const kind = part.type === 'localImage' || part.type === 'image' ? 'image' : part.type === 'mention' ? 'file' : null;
-    if (kind) entries.push({ id: `resend:${turnId}:${entries.length}`, kind, status: 'ready', path: part.path, name });
-  }
-  return entries;
+  return attachmentsFromInput(user?.content, `resend:${turnId}`);
 }
 
 /** sessionMetadata after a "chat-branches" result (re-exported for the host's setSessionMetadata). */

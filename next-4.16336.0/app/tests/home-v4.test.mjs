@@ -95,7 +95,12 @@ test('generator --check: byte-identical output, finalized cds-core pin, source p
   const union8d = json(path.join(app, '../analysis/claude-4.16336.0-migrate-20261104/cds-integrate/wave8d/union.json'));
   assert.deepEqual(union8d.problems, []);
   assert.equal(union8d.owner.before, union8c.owner.after);
-  assert.equal(CDS_CORE_MANIFEST_SHA256, union8d.owner.after);
+  // cds-core wave cc2 (chat-cowork-1to1-20261117 r2 Core): the wavecc2 union proof's owner (after), built on the wave-8d
+  // owner (before) (was: assert.equal(CDS_CORE_MANIFEST_SHA256, union8d.owner.after)).
+  const unioncc2 = json(path.join(app, '../analysis/claude-4.16336.0-migrate-20261104/cds-integrate/wavecc2/union.json'));
+  assert.deepEqual(unioncc2.problems, []);
+  assert.equal(unioncc2.owner.before, union8d.owner.after);
+  assert.equal(CDS_CORE_MANIFEST_SHA256, unioncc2.owner.after);
   assert.equal(closure5b.owner.manifestSha256.wave5, wave5.manifestSha256.production);
   for (const [file, want] of Object.entries(sourcePins)) assert.equal(sha(fs.readFileSync(path.join(v4.ionSource, file))), want, file);
   assert.match(read('scripts/verify-gen-home-v4.mjs'), /extractHomeV4\(\{ check: true \}\)/);
@@ -245,7 +250,10 @@ test('SSR Chat greeting (4.16336.0 fx seat): new_page_home ruling picks the slot
   assert.equal(variant, 'home');
   assert.equal(chat.newPageLayoutVariant, variant);
   const layout = Layout.homeLayout(variant);
-  assert.ok(html.includes(`<header class="surface-greeting ${layout.greetingSlotClass}${Seat.homeGreetingSeatClass(layout.greetingPhoneSeat) ? ' ' + Seat.homeGreetingSeatClass(layout.greetingPhoneSeat) : ' '}">`), 'greeting slot follows the ruling');
+  // chat-home r1-07: shared-19 SD — `div { className: h(greetingSlotClass + seat, aC) }` (was a host header.surface-greeting).
+  const slotClass = [layout.greetingSlotClass, Seat.homeGreetingSeatClass(layout.greetingPhoneSeat), Layout.greetingSlotLiftClass].filter(Boolean).join(' ');
+  assert.equal(Layout.greetingSlotLiftClass, 'md:mt-[calc(0.75rem_-_min(var(--chorus-composer-lift,0px)_+_var(--band-slot-lift,0px),5rem))]');
+  assert.ok(html.includes(`<div data-surface-greeting="" class="${slotClass}">`), 'greeting slot follows the ruling');
   assert.match(read('src/source-surfaces.jsx'), /const homeVariant = homeLayout\(newPageLayoutVariant\);/);
   assert.ok(html.includes(`<div class="${Layout.greetingFrameClass}">`));
   assert.equal(Layout.greetingFrameClass, 'mx-auto flex w-full flex-col items-center gap-7 max-md:pt-4 max-w-2xl');
@@ -315,7 +323,8 @@ test('personalizedGreeting (shared-23 Hb) reads the local greeting table like th
 
 test('SSR Cowork home: local rows, approvals and the read state through HomeHost (sidebar expanded)', () => {
   const html = renderCowork();
-  assert.match(html, /<div class="surface-cowork-home mx-auto w-full max-w-2xl dock:order-2 dock:flex dock:flex-col" role="region" aria-label="Cowork tasks" aria-busy="false">/);
+  // U-MARLIN (2026-11-18): the below-composer slot takes shared-19's marlin width (was the non-marlin max-w-2xl).
+  assert.match(html, /<div class="surface-cowork-home mx-auto w-full max-w-\[40rem\] dock:order-2 dock:flex dock:flex-col" role="region" aria-label="Cowork tasks" aria-busy="false">/);
   assert.ok(html.includes('href="/cowork/fixture-running"'));
   assert.ok(html.includes('href="/cowork/fixture-waiting"'));
   assert.ok(html.includes('href="/cowork/fixture-unread"')); // unread (host metadata) and finished: listed until cleared
@@ -410,7 +419,7 @@ test('host wiring: production mounts the 4.16336.0 home; the 3.6556.2 home stays
   assert.match(read('src/source-cowork-home.jsx'), /import \{ CoworkHome \} from '\.\/generated\/home-chat-cowork\/shared-23\.mjs';/);
   assert.match(read('src/source-chat-home.jsx'), /from '\.\/generated\/home-chat-cowork\/shared-23\.mjs';/);
   assert.equal(typeof cowork.SourceCoworkHomeV3, 'function');
-  assert.equal(typeof chat.SourceChatGreetingV3, 'function');
+  assert.equal('SourceChatGreetingV3' in chat, false); // chat-home-r3-03: the 3.6556.2 Chat greeting is retired (was kept for the comparison)
   assert.match(read('src/main.jsx'), /import \{ SourceCoworkHome \} from '\.\/source-cowork-home\.jsx';/);
   assert.equal(HOME_V4.sharedGraph, 'cds-core');
 });

@@ -17,7 +17,9 @@ export function coworkProvider({ model, providers = [], connection = {}, keys = 
     if (!/^deepseek[-\w.]*$/.test(selected) && !(relay && connection.relayModels?.includes(selected)))
       throw new Error('Configure this model as an Anthropic Messages provider in Settings → Models to use it with Cowork.');
     base = relay ? connection.relayBaseURL : inherited.DEEPSEEK_BASE_URL || officialBaseURL;
-    key = keys[relay ? relayKeySlot : officialKeySlot] || inherited.DEEPSEEK_API_KEY;
+    // The launch environment's key belongs to its DEEPSEEK_BASE_URL: a third-party relay only gets it when it is that same origin.
+    const sameOrigin = (a, b) => { try { return new URL(a).origin === new URL(b).origin; } catch { return false; } };
+    key = keys[relay ? relayKeySlot : officialKeySlot] || (!relay || sameOrigin(base, inherited.DEEPSEEK_BASE_URL) ? inherited.DEEPSEEK_API_KEY : '');
   }
   if (!key) throw new Error('Save an API key for this provider in Settings → Models before starting Cowork.');
   const url = new URL(base);

@@ -17,7 +17,7 @@
 //   gap     an official service the host does not have (telemetry, RUM, the claude.ai API: un-stubbed paths answer the
 //           official custom-3p 503, asar/.vite/build/index.chunk-Du-Wqi0E.js), or a lazily loaded official chunk this
 //           pass does not ship (the slot draws nothing: the official no-ui / fail-open state; a loader rejects).
-import React, { createContext, useContext, useEffect, useMemo, useSyncExternalStore } from "react";
+import React, { createContext, useContext, useEffect, useLayoutEffect, useMemo, useSyncExternalStore } from "react";
 import { installFrameSidebarNavHost } from "./frame-sidebar-nav-adapter.mjs";
 import { QueryClient, QueryClientProvider } from "./generated/files-changes-v4/file-browser-query.mjs";
 import { HOST_GROWTHBOOK, growthBookFlagKey } from "./host-growthbook.mjs";
@@ -109,7 +109,7 @@ function useNavShortcut(id) {
 
 // ---- route: the official pathname of main.jsx's route ---------------------------------------------------------------
 // Desktop routes of 4.16336.0 (generated nav: "/epitaxy" Code home, `/epitaxy/${id}` a Code session, "/new" a new chat,
-// `/chat/${id}` a chat, "/code/routines", "/customize", "/projects", "/artifacts").
+// `/chat/${id}` a chat, "/code/routines", "/customize", "/projects", "/cowork-artifact").
 export function officialPathname({ mode, section = null, current = null, routineId = null } = {}) {
   if (mode === "code") {
     if (section === "routines") return routineId ? `/code/routines/${encodeURIComponent(routineId)}` : "/code/routines";
@@ -117,17 +117,21 @@ export function officialPathname({ mode, section = null, current = null, routine
   }
   if (section === "customize") return "/customize";
   if (section === "projects") return "/projects";
-  if (section === "artifacts") return "/artifacts";
-  return current ? `/chat/${encodeURIComponent(current)}` : "/new";
+  // U-12: the Cowork rail's Artifacts row is shared-21 "cowork-artifacts" (href shared-62 xu "/cowork-artifact"; LN lights it on
+  // that exact pathname); "/artifacts" is the chorus row's, not drawn on this host.
+  if (section === "artifacts") return "/cowork-artifact";
+  // U-03: an open Chat / Cowork session is its rail row's href (shared-92 tw, kind "cowork": `/cowork/${id}`), so the row is lit.
+  return current ? `/cowork/${encodeURIComponent(current)}` : "/new";
 }
 // The inverse of officialPathname: an official pathname the sliced nav navigates to (destination rows, New, session rows,
 // View all) as the host route. Paths of 4.16336.0: shared-21 IM / zM (chats /chats /recents; projects /projects; scheduled
 // /scheduled-task; routines /claude-code-desktop/scheduled /epitaxy/scheduled /code/scheduled /code/routines; customize
-// /customize /plugins /settings), shared-21 HN (epitaxy-apps /code/artifacts, artifacts /artifacts), the New row (/new, /epitaxy)
+// /customize /plugins /settings), shared-21 HN (epitaxy-apps /code/artifacts, artifacts /artifacts, cowork-artifacts /cowork-artifact), the New row (/new, /epitaxy)
 // and the session rows (/epitaxy/:id, /chat/:id). `actions` are main.jsx's: openSurface(mode, id | null), openRoutines(id | null),
 // openSection(section), openSettings(tab), showSessionsPage(mode). Returns false for a pathname the host has no route for.
 const ROUTINE_PATHS = ["/claude-code-desktop/scheduled", "/epitaxy/scheduled", "/code/scheduled", "/code/routines", "/scheduled-task"];
 const EPITAXY_PAGES = new Set(["scheduled", "projects", "flask"]);
+const COWORK_PAGES = new Set(["projects", "project", "agent", "sessions", "new", "scheduled", "artifacts", "spaces", "space"]);
 export function officialPathToHostRoute(to, actions, { mode } = {}) {
   const pathname = String(to ?? "").split(/[?#]/)[0].replace(/\/+$/, "") || "/";
   const id = (match) => decodeURIComponent(match[1]);
@@ -135,6 +139,9 @@ export function officialPathToHostRoute(to, actions, { mode } = {}) {
   if (pathname === "/epitaxy" || pathname === "/code") return actions.openSurface("code", null), true;
   if ((match = /^\/epitaxy\/([^/]+)$/.exec(pathname)) && !EPITAXY_PAGES.has(match[1])) return actions.openSurface("code", id(match)), true;
   if (pathname === "/new") return actions.openSurface("chat", null), true;
+  // U-03: a "Chats and tasks" row (shared-39 IT, ref kind "cowork": shared-92 tw `${ql}/${id}`, ql "/cowork"); the other
+  // "/cowork/…" pages (projects, project, agent, sessions, …) are not session ids.
+  if ((match = /^\/cowork\/([^/]+)$/.exec(pathname)) && !COWORK_PAGES.has(match[1])) return actions.openSurface("cowork", id(match)), true;
   if ((match = /^\/chat\/([^/]+)$/.exec(pathname))) return actions.openSurface("chat", id(match)), true;
   for (const base of ROUTINE_PATHS) {
     if (pathname === base) return actions.openRoutines(null), true;
@@ -142,7 +149,9 @@ export function officialPathToHostRoute(to, actions, { mode } = {}) {
   }
   if (pathname === "/customize" || pathname.startsWith("/customize/") || pathname === "/plugins" || pathname.startsWith("/plugins/")) return actions.openSettings("customize-skills"), true;
   if (pathname === "/projects" || pathname === "/cowork/projects") return actions.openSection("projects"), true;
-  if (pathname === "/artifacts" || pathname === "/code/artifacts") return actions.openSection("artifacts"), true;
+  // U-12: "/cowork-artifact" is the Cowork rail's Artifacts row (shared-21 "cowork-artifacts", href shared-62 xu); only the
+  // exact path: "/cowork-artifact/<id>" (shared-62 Su) is one artifact, which the host has no page for.
+  if (pathname === "/artifacts" || pathname === "/code/artifacts" || pathname === "/cowork-artifact") return actions.openSection("artifacts"), true;
   if (pathname === "/chats" || pathname === "/recents") return actions.showSessionsPage(mode === "code" ? "code" : mode ?? "chat"), true;
   return false;
 }
@@ -310,6 +319,81 @@ const localSessions = Object.freeze({
   // tear-off halos, SSH / WSL / remote git, CLI session import, share, loadArchivedSessions (archived rows are listed with
   // the rest: archivedPending false): no such host services (absent members read undefined).
 });
+// U-03 (2026-11-16): LocalAgentModeSessions (shared-0 kO = globalThis["claude.web"].LocalAgentModeSessions), the desktop's
+// local Cowork sessions. The official merged Chat / Cowork rail lists them under "Chats and tasks": shared-123 _x (started by
+// frameMountResets bB) reads getSessionList into the local agent store J, shared-2 bK → Dx (Cs) hands them to shared-39 ME,
+// which maps each with IT (ref kind "cowork", href shared-92 tw `/cowork/${id}`). The served claude.ai list (served Cowork
+// recents, conversations) needs an organization this host does not have, so this bridge is where the host's Chat and Cowork
+// sessions (main.jsx sidebarNavValue.agentSessions, officialAgentSession records) reach the rail; before it the bridge was
+// absent and the section only ever drew "View all". Same manager contract as LocalSessions above: getSessionList waits for the
+// loaded list; "initialized" re-reads it, session_updated / archived / unarchived follow one record (shared-123 _x kb / Db).
+// sessionType is left unset: "agent" / "radar" (cds-core vx) are kinds the rail does not list.
+export function officialAgentSession(session, meta = {}, live = {}) {
+  return {
+    sessionId: session.id, cwd: session.cwd,
+    title: meta.title ?? session.title ?? (sessionName(session) || undefined),
+    createdAt: timestampMs(session.createdAt ?? session.updatedAt), lastActivityAt: timestampMs(session.updatedAt ?? session.createdAt),
+    isRunning: !!live.running, pendingToolPermissions: live.pendingToolPermissions,
+    isArchived: !!(meta.archived ?? session.archived), isStarred: !!meta.pinned,
+  };
+}
+let publishedAgentSessions = null; // Map sessionId -> record (null: not loaded yet)
+const agentListeners = new Set();
+let agentWaiters = [];
+function emitAgentEvent(event) {
+  for (const listener of [...agentListeners]) {
+    try { listener(event); } catch (error) { console.warn(`frame-sidebar-nav: LocalAgentModeSessions '${event.type}' listener threw:`, error); }
+  }
+}
+export function syncAgentSessions(value) { // FrameSidebarNavHost's effect (exported for the node test)
+  const state = value?.localSessionsState;
+  if (state === "failed" && publishedAgentSessions === null) { for (const waiter of agentWaiters.splice(0)) waiter.reject(sessionListError()); return; }
+  if (state !== "loaded") return;
+  const next = new Map((value.agentSessions ?? []).map((record) => [record.sessionId, record]));
+  const previous = publishedAgentSessions;
+  publishedAgentSessions = next;
+  if (previous === null || [...previous.keys()].some((id) => !next.has(id))) {
+    for (const waiter of agentWaiters.splice(0)) waiter.resolve();
+    emitAgentEvent({ type: "initialized", sessionId: "" });
+    return;
+  }
+  for (const [sessionId, record] of next) {
+    const before = previous.get(sessionId);
+    if (before && (before === record || sameSessionRecord(before, record))) continue;
+    if (before && before.isArchived !== record.isArchived) emitAgentEvent({ type: record.isArchived ? "archived" : "session_updated", sessionId });
+    else emitAgentEvent({ type: "session_updated", sessionId });
+  }
+}
+const agentSessionList = async () => {
+  const state = live?.localSessionsState;
+  if (!(state === "loaded" && publishedAgentSessions !== null)) {
+    if (state === "failed") throw sessionListError();
+    await new Promise((resolve, reject) => agentWaiters.push({ resolve, reject }));
+  }
+  return { sessions: [...publishedAgentSessions.values()], restPending: false };
+};
+async function agentSessionAction(action, sessionId, payload) {
+  if (!live?.sessionAction) throw new Error(`LocalAgentModeSessions.${action}: the host session actions are not ready`);
+  return live.sessionAction(action, sessionId, payload);
+}
+const agentModeSessions = Object.freeze({
+  getAll: async () => (await agentSessionList()).sessions,
+  getSessionList: agentSessionList,
+  getSession: async (sessionId) => publishedAgentSessions?.get(sessionId) ?? null,
+  onOnEvent: (callback) => (agentListeners.add(callback), () => agentListeners.delete(callback)),
+  // sidebar-titlebar r1-01: the CoworkSessionRow actions (shared-2 Eq: archive vq, delete yq, rename / pin bq) over main.jsx's
+  // own session actions; the list change comes back through syncAgentSessions (archived / initialized / session_updated).
+  // The official menu asks before delete (shared-140 Od), so the host action runs without a second confirm.
+  archive: (sessionId) => agentSessionAction("archive", sessionId),
+  delete: (sessionId) => agentSessionAction("delete", sessionId),
+  updateSession: async (sessionId, patch = {}) => {
+    const { title, titleSource, isStarred, ...rest } = patch;
+    if (Object.keys(rest).length) throw new Error(`LocalAgentModeSessions.updateSession: no host service for ${Object.keys(rest).join(", ")}`);
+    if (typeof title === "string") await agentSessionAction("rename", sessionId, { name: title });
+    if (typeof isStarred === "boolean") await live?.updateSessionMetadata?.(sessionId, { pinned: isStarred });
+  },
+  // folder grants / tab groups / scheduled-task runs / remote CU locks: no host service (absent members read undefined).
+});
 // CCDScheduledTasks (shared-0 tk = globalThis["claude.web"].CCDScheduledTasks): the host's local scheduler, the one app-level
 // bridge main.jsx's SidebarRoutinesHost connects around this nav body (source-sidebar-routines.jsx connectSidebarRoutines:
 // code-routine-model.mjs createCodeRoutinesBridge over local-routines, kind "code"). A member is present only when that
@@ -384,9 +468,19 @@ function useToast() {
   const toasts = useSourceToasts();
   return useMemo(() => ({ add: (options) => toasts?.add?.(options), close: (id) => toasts?.close?.(id) }), [toasts]);
 }
+// shared-100 Jn (CommandPaletteToggleProvider) value, the one answer for Xn (useCommandPaletteToggleContext) and Zn
+// (useOptionalCommandPaletteToggle): main.jsx showSearch holds the entry ("default" / "search" / false). The classic Search
+// row calls openCommandPalette("search"); shared-55 reads entrypoint.
 function useCommandPaletteToggle() {
   const host = useHost();
-  return useMemo(() => ({ isOpen: !!host.searchOpen, open: () => host.setSearchOpen?.(true), close: () => host.setSearchOpen?.(false), toggle: () => host.setSearchOpen?.(!host.searchOpen) }), [host]);
+  const entry = host.searchEntry ?? (host.searchOpen ? "search" : null);
+  const set = host.setSearchOpen;
+  return useMemo(() => ({
+    isOpen: entry !== null, entrypoint: entry, openedBy: "click",
+    openCommandPalette: (entrypoint = "default") => set?.(entrypoint === "search" ? "search" : "default"),
+    closeCommandPalette: () => set?.(false),
+    toggleCommandPalette: () => set?.(entry === null ? "default" : false),
+  }), [entry, set]);
 }
 // The official account record carries memberships (shared-25 wV: account.memberships.find); the local account has none.
 const NO_MEMBERSHIPS = Object.freeze([]);
@@ -408,6 +502,7 @@ export const HOST_ANSWERS = {
   //  value, mounted by frame-sidebar-nav-body.jsx. The answer that stood here was shared-25 hf.performanceMetrics, another
   //  official object without markCodeSessionOpenStart.)
   useCommandPaletteToggleContext: ["host", useCommandPaletteToggle],
+  useOptionalCommandPaletteToggle: ["host", useCommandPaletteToggle], // shared-100 Zn: the Search row's openCommandPalette("search")
   useNux: ["gate", () => NO_NUX],
   useShortcut: ["host", useNavShortcut], // shared-1 C6 over the host binding table (above)
   useIncognitoMode: ["host", () => { const host = useHost(); return { incognitoModeEnabled: !!host.incognito, setIncognitoModeEnabled: (value) => host.setIncognito?.(!!value) }; }],
@@ -420,7 +515,10 @@ export const HOST_ANSWERS = {
   // defineLazyEntry (shared-123 W$) is sliced now (the official lazy-entry runtime: {Component, handle, annotateOpen} over
   // shared-92 cg); the lazy entries' load (below, LAZY.load / the generator's lazyEntry kinds) rejects with ChunkLoadError,
   // so W$ takes each entry's official failure branch (loading "no-ui" + onChunkError "fail-open": nothing drawn).
-  useDialogPreloadProps: ["gap", () => Object.freeze({})],
+  // shared-123 v$: `{onPointerEnter, onFocus, onPointerDown}` that warm the handle (`e?.preload("intent")`). U-03: the Cowork
+  // rows (nav-body `xe = Fr(Cc)`, Cc LazyCoworkSessionMachinery) call them; the empty answer threw "xe.onPointerEnter is not a
+  // function" once the rail listed sessions. The host handles' preload does nothing (lazyHandle).
+  useDialogPreloadProps: ["gap", (handle) => useMemo(() => { const warm = () => { handle?.preload?.("intent"); }; return { onPointerEnter: warm, onFocus: warm, onPointerDown: warm }; }, [handle])],
   EmojiShortcodeField: ["host", HostDialog("textField")],
   dynamicImport: ["gap", (spec) => notShipped(String(spec))],
   ExperiencePlacement: ["gate", renderNothing],
@@ -439,6 +537,7 @@ export const HOST_ANSWERS = {
   readEventStream: ["gap", async function* () {}],
   recordApiEndpointSeen: ["gap", noEffect],
   LocalSessions: ["host", localSessions],
+  LocalAgentModeSessions: ["host", agentModeSessions], // U-03: the host's Chat and Cowork sessions (above)
   CCDScheduledTasks: ["host", scheduledTasks],
   AppPreferences: ["host", appPreferences],
   AppFeatures: ["host", appFeatures],
@@ -474,9 +573,13 @@ export const navQueryClient = new QueryClient({ defaultOptions: { queries: { ret
 // FrameSidebarNavHost: main.jsx's value for this region (localSessions in the official record shape, the route, actions).
 export function FrameSidebarNavHost({ value, children }) {
   live = value;
-  publishPath(officialPathname(value));
+  // r2-05: the official router writes the pathname store (shared-25 tu) after commit, not during render; a layout effect
+  // keeps the lit row in the same paint.
+  const pathname = officialPathname(value);
+  useLayoutEffect(() => { publishPath(pathname); }, [pathname]);
   // The LocalSessions bridge's load / events follow main.jsx's list after commit (syncLocalSessions above).
   useEffect(() => { syncLocalSessions(value); }, [value.localSessionsState, value.localSessions]);
+  useEffect(() => { syncAgentSessions(value); }, [value.localSessionsState, value.agentSessions]);
   useEffect(() => { syncSupportedFeatures(value.supportedFeatures); }, [value.supportedFeatures]);
   useEffect(() => { syncUnread(value.sessionMetadata); }, [value.sessionMetadata]);
   return (

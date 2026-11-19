@@ -14,3 +14,19 @@ export const chatComposerCard = Object.freeze({
   editorMinLines: 2,
   actionsGap: "tight",
 });
+// shared-9-BgdM6Y1f.js BD (the classic editor): its root attributes and default aria-label (Ce?.ariaLabel ?? …); the testid and the
+// kind attribute are shared-1-D1bGaTaN.js mp / yp.
+export const chatComposerEditor = Object.freeze({
+  role: "textbox",
+  testId: "chat-input",
+  kindAttribute: "data-composer-editor",
+  kind: "classic",
+  ariaLabel: {
+    defaultMessage: "Write your prompt to Claude",
+    id: "uxkiTeN6WU",
+  },
+  ariaMultiline: "true",
+  ariaRequired: "false",
+  ariaInvalid: "false",
+  ariaDescribedby: "claude-code-nudge-body",
+});

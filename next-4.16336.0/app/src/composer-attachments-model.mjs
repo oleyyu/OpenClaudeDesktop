@@ -277,7 +277,7 @@ export function removeAttachment(entries, id) {
 export function skillChipInput(text, skill) {
   if (!skill || typeof skill.name !== "string" || !skill.name || typeof skill.path !== "string" || !skill.path) return null;
   const value = String(text ?? "").replace(/^\s+/, ""), token = `/${skill.name}`;
-  if (!value.startsWith(token)) return null;
+  if (value.slice(0, token.length).toLowerCase() !== token.toLowerCase()) return null;
   const rest = value.slice(token.length);
   if (rest && !/^\s/.test(rest)) return null;
   return { text: rest.replace(/^[ \u00a0]/, ""), item: { type: "skill", name: skill.name, path: skill.path } };
@@ -449,10 +449,33 @@ export function attachmentInputs(entries, { fileMentions = true, surface } = {})
   // An image for a model without vision on a core that reads it itself (asFile): a file mention, which the core
   // routes to its vision model.
   const parts = ready.map((entry) => (entry.kind === "image" && !entry.asFile
-    ? { type: "localImage", path: entry.path }
+    ? /^data:image\//i.test(entry.path) ? { type: "image", url: entry.path } : { type: "localImage", path: entry.path }
     : { type: "mention", name: entry.name || basename(entry.path), path: entry.path }));
   const note = fileMentions ? "" : attachmentNote(ready.filter((entry) => entry.kind !== "image").map((entry) => entry.path));
   return [...(note ? [{ type: "text", text: note, text_elements: [] }] : []), ...documents, ...parts];
+}
+
+/** Restore ready entries from a submitted input without depending on its old preview URLs. */
+export function attachmentsFromInput(input, id) {
+  const documents = new Map();
+  for (const part of input ?? []) {
+    if (part?.type !== "text") continue;
+    for (const doc of splitDocumentBlocks(part.text, { includeText: true }).documents) if (doc.path) documents.set(doc.path, doc);
+  }
+  const entries = [];
+  const seen = new Set();
+  for (const part of userMessageContent(input)) {
+    const file = part?.type === "image" ? part.url : part?.path;
+    if (typeof file !== "string" || !file || seen.has(file)) continue;
+    const kind = part.type === "image" || part.type === "localImage" ? "image" : part.type === "mention" ? "file" : null;
+    if (!kind) continue;
+    seen.add(file);
+    const doc = documents.get(file);
+    const name = doc?.name || part.name || (part.type === "image" ? "image" : basename(file));
+    entries.push({ id: `${id}:${entries.length}`, kind, status: "ready", path: file, name,
+      ...(doc ? { converted: { text: doc.text, pages: doc.pages, truncated: doc.truncated } } : {}) });
+  }
+  return entries;
 }
 
 export function attachmentLabel(entry) {

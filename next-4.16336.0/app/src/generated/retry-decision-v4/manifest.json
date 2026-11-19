@@ -4,7 +4,7 @@
   "generator": "scripts/extract-retry-decision.mjs",
   "adapterModule": null,
   "sharedGraph": "cds-core",
-  "sharedGraphManifestSha256": "06d2026939e5c8992713c2a0dda1b1abc9adffe7a0c223fe3c1e79eecd08d62c",
+  "sharedGraphManifestSha256": "a0f228ae3f997f54f3e3ebafc254794bd26d8f1fc6999943a08b1d5730f638cd",
   "isolatedGraph": {
     "productionGraph": "src/generated/retry-decision",
     "productionSwitchNotBeforeBatch": 6,

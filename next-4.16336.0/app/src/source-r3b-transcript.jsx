@@ -1,6 +1,8 @@
 // R3b-transcript host components: they mount the generated 2.42304.0 originals (src/generated/r3b-transcript) in the
 // local Code transcript, with the host services of src/source-r3b-transcript-adapters.jsx.
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useContext, useMemo } from 'react';
+import { createPortal } from 'react-dom';
+import { ChatReplyAfterSlot } from './source-chat-assistant-message.jsx'; // chat-conversation r3-03
 import { TranscriptRowBoundary, useTranscriptRowBoundaryGate } from './generated/r3b-transcript/transcript-row-boundary.mjs';
 import { TranscriptUnavailable } from './generated/r3b-transcript/transcript-unavailable.mjs';
 import { TranscriptUnavailableHost } from './source-r3b-transcript-adapters.jsx';
@@ -31,9 +33,14 @@ export function SourceTranscriptRowBoundary({ sessionId, item, kind, isStreaming
     toolGroupExpansion.forgetSession(sessionId);
     toolRowExpansion.forgetSession(sessionId);
   }, [sessionId]);
-  return enabled
+  // chat-conversation r3-03: in a Chat reply row the turn's reply chrome (kind "reply" given here: the toolbar and its
+  // warning, task events, the error card) follows the reply's one assistant message, as cc1aae219 JY's zn / Bn follow Rn.
+  const replySlot = useContext(ChatReplyAfterSlot);
+  const body = enabled
     ? <TranscriptRowBoundary kind={kind ?? rowBoundaryKind(item)} surface="code" resetOn={isStreaming === true} onRetry={onRetry}>{children}</TranscriptRowBoundary>
     : children;
+  if (kind === 'reply' && replySlot !== undefined) return replySlot ? createPortal(body, replySlot) : null;
+  return body;
 }
 
 // cov2-05 — cf74bc599 Wv, as the session pane (Xx) mounts it when the transcript is unavailable:

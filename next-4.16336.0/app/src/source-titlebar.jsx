@@ -60,9 +60,9 @@ import { CLOSE_PANE_SHORTCUT, CLOSE_PANE_KEYSHORTCUTS, titlebarControlClass, tit
 import { SessionRailToggle } from "./generated/session-rail-kit/rail-shell.mjs";
 import { LEAD_NO_ORIGIN_CLASS } from "./generated/session-rail-kit/rail-column.mjs";
 import { useFoldFocusHandoff } from "./titlebar-fold-focus.mjs";
-import { LOCAL_RELEASE_NOTE_VERSIONS, RELEASE_NOTE_KINDS, RELEASE_NOTE_KIND_LABELS, releaseNoteDate, releaseNoteSegments, releaseNotesFor } from "./release-notes.mjs";
+import { LOCAL_RELEASE_NOTE_VERSIONS, RELEASE_NOTE_KINDS, RELEASE_NOTE_KIND_LABELS, RELEASE_NOTE_KIND_IDS, releaseNoteDate, releaseNoteSegments, releaseNotesFor } from "./release-notes.mjs";
 import "./source-titlebar.css";
-import { t } from "../electron/i18n/index.mjs";
+import { t, tId, getLocale } from "../electron/i18n/index.mjs";
 
 // surfaces wave 2 (titlebar): a host toggle spec (titlebar-controls-model.mjs, hy's order and icons over the local panes) as
 // 4.16336.0 c73f45bc3 hy hands it to SY: `{pane, icon, label, shortcut, active, toggle}` with the label translated and
@@ -594,7 +594,9 @@ export function SourceTitlebar({
             // ca1d33d05 St (codeTitle, c593f7513 vm titleStop): the renamable title is the pane's "header"
             // F6 stop, focused without a ring.
             data-focus-region={loading || !onRename ? undefined : "header"} data-focus-region-ring="none" data-focus-region-order="pane"
-            aria-label={t("{title}, rename session", { title })}
+            // chat-conversation r1-06: a Chat title is ca2ef848d's `lc.renameTitleLabel` (shared-123 OS, "{name}, rename chat",
+            // ZLhXKk5U33); Cowork keeps the session label.
+            aria-label={surface === "chat" ? t("{name}, rename chat", { name: title }) : t("{title}, rename session", { title })}
             disabled={loading || !onRename}
             onClick={beginEdit}
             onContextMenu={openSessionContextMenu}
@@ -737,8 +739,10 @@ export function SourceTitlebar({
             inTitleRow): aria-label "Activity panel", pressed, icon TV("end") = SidebarRight, tooltip "Sidebar";
             the "cmd+shift+s" shortcut shows only while cN binds KeyS (`C = vc(kc)`): main.jsx activityKeyBound.
             w12c-wiring (coworkui-panel-05; shared-1 `function TV(e){let t=p()!=="rtl";return e==="start"===t?"Sidebar":"SidebarRight"}`,
-            p = vendor-frame Ia useDirection): under an RTL document TV("end") is Sidebar. */}
-        {surface !== "code" && onToggleActivity && <ToolButton label={t("Activity panel")} icon={globalThis.document?.documentElement?.dir === "rtl" ? "Sidebar" : "SidebarRight"}
+            p = vendor-frame Ia useDirection): under an RTL document TV("end") is Sidebar.
+            r3 sidebar-titlebar-r3-01: Cowork only. A Chat route has no KM, and shared-20 $w (topbar-activity-panel-toggle)
+            is `!e||a?null:…` with e = Mi() (a local agent session), so Chat draws nothing here. */}
+        {surface === "cowork" && onToggleActivity && <ToolButton label={t("Activity panel")} icon={globalThis.document?.documentElement?.dir === "rtl" ? "Sidebar" : "SidebarRight"}
           className={titlebarControlClass(activityOpen)} active={activityOpen} aria-pressed={activityOpen}
           tooltip={{content:t("Sidebar"), shortcut:activityShortcut ? "cmd+shift+s" : undefined, side:"bottom", automatic:false, open:menuKind ? false : undefined}} onClick={onToggleActivity} />}
         {/* c73f45bc3 Zh: the ⋮ trigger is `inert: held` (no disabled look) and text-secondary. */}
@@ -874,7 +878,7 @@ function ReleaseNoteGroup({ kind, items }) {
   if (!shown.length) return null;
   return (
     <div className="flex flex-col gap-xs">
-      <h5 className="text-caption font-medium uppercase tracking-wide text-muted-as-secondary">{t(RELEASE_NOTE_KIND_LABELS[kind])}</h5>
+      <h5 className="text-caption font-medium uppercase tracking-wide text-muted-as-secondary">{tId(RELEASE_NOTE_KIND_IDS[kind], RELEASE_NOTE_KIND_LABELS[kind])}</h5>
       <ul className="flex list-disc flex-col gap-xs ps-lg text-body text-secondary">{shown.map((item, index) => <li key={index}><ReleaseNoteText text={item.text} /></li>)}</ul>
     </div>
   );
@@ -914,7 +918,7 @@ export function LocalReleaseNotes({ open = true, onClose, onExited }) {
           : entries.map((entry) => (
             <section key={entry.version} className="flex flex-col gap-md border-b pb-lg last:border-0 last:pb-0">
               <div className="flex items-center justify-between gap-sm">
-                <h4 className="text-heading font-semibold text-primary">{releaseNoteDate(entry.date)}</h4>
+                <h4 className="text-heading font-semibold text-primary">{/* U-19: FormattedDate in the intl locale */ releaseNoteDate(entry.date, getLocale())}</h4>
                 <CdsBadge variant="neutral" className="font-mono">{entry.version}</CdsBadge>
               </div>
               {RELEASE_NOTE_KINDS.map((kind) => <ReleaseNoteGroup key={kind} kind={kind} items={entry.items} />)}

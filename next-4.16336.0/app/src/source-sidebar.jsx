@@ -1,5 +1,6 @@
 import { sidebarComposerFocus } from './sidebar-open-model.mjs';
 import React, { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { registerNavMultiMenu } from "./sidebar-multi-menu-bridge.mjs"; // U-29
 import { Icon } from "./icons";
 import { ToolButton } from "./code-ui";
 import { SourceNavButtons } from "./source-nav-buttons";
@@ -1481,6 +1482,18 @@ export function SourceSidebar({
     if (mode === "code") prefetchWorktreeProbes(multi ? [...selectionRef.current.selectedKeys] : [session.id]);
     setMenu({ kind: "session", session, multi, ...extra });
   };
+  // U-29: the official Code nav (frame-sidebar-nav, slot "overlays") keeps its own selection (code-current-v4 XS); a right
+  // click or ⋯ on a row inside a selection of two or more opens this multi menu over those rows (ce4f4374c st for
+  // c39a247c4's `multi`): the bulk items act on every selected row, then the nav's selection is settled (onSettled).
+  const navMultiMenu = useRef(null);
+  navMultiMenu.current = (ids, { anchor = null, point, onSettled } = {}) => {
+    const rows = (Array.isArray(ids) ? ids : []).map((id) => sessionById.get(id)).filter(Boolean);
+    if (!onSessionAction || mode !== "code" || rows.length < 2) return false;
+    prefetchWorktreeProbes(rows.map((row) => row.id));
+    setMenu({ kind: "session", session: rows[0], multi: true, multiRows: rows, onSettled, anchor, point });
+    return true;
+  };
+  useEffect(() => overlaySlot ? registerNavMultiMenu((ids, at) => navMultiMenu.current?.(ids, at) === true) : undefined, [overlaySlot]);
   const pinnedIds = displayed.find((group) => group.kind === "pinned")?.sessions.map((session) => session.id) || [];
   // shared-19 DY (source-sidebar-drag.jsx): rows lift with the pointer and drop into the Pinned list (pin / reorder),
   // below it (unpin), onto a custom group section, onto the session area (split view) or out of the window (a new
@@ -2213,13 +2226,15 @@ export function SourceSidebar({
           const count = [...runsByGroup.values()].flatMap((entry) => entry.runs).find((run) => run.parentId === menu.session.id)?.rows.length || 0;
           return count ? { childCount: count, collapsed: collapsedNested.has(menu.session.id), onToggle: () => toggleNested(menu.session.id) } : null;
         })()}
-        multi={menu.multi ? { count: selectedSessions.length, sessions: selectedSessions, models: bulkModels,
-          ...(() => {
-            const { pin, unpin } = multiMenuState(selectedSessions, sessionMetadata);
-            return { pin: pin ? { ...pin, sessions: pinTargets(selectedSessions, sessionMetadata, true) } : null,
-              unpin: unpin ? { ...unpin, sessions: pinTargets(selectedSessions, sessionMetadata, false) } : null };
-          })(),
-          onBulk: (action, targets, payload) => action === "delete" ? requestDelete(targets) : runBulk(action, targets, payload) } : undefined} />}
+        multi={menu.multi ? (() => {
+          // U-29: a multi menu the official nav opened (navMultiMenu) lists its selection's rows.
+          const rows = menu.multiRows ?? selectedSessions;
+          const { pin, unpin } = multiMenuState(rows, sessionMetadata);
+          return { count: rows.length, sessions: rows, models: bulkModels,
+            pin: pin ? { ...pin, sessions: pinTargets(rows, sessionMetadata, true) } : null,
+            unpin: unpin ? { ...unpin, sessions: pinTargets(rows, sessionMetadata, false) } : null,
+            onBulk: (action, targets, payload) => { menu.onSettled?.(); return action === "delete" ? requestDelete(targets) : runBulk(action, targets, payload); } };
+        })() : undefined} />}
       {menu.kind === "group" && (() => {
         const group = menu.group, custom = groupMenuKind(group) === "custom";
         const archivable = bulkTargets(group.sessions, { metadata: sessionMetadata, currentId: current, state, action: "archive" });
